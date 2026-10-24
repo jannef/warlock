@@ -62,7 +62,8 @@ fn set_score(world: &mut World, stat: Stat, score: u8) {
     actor.stats = Stats::new(scores, PerStat::splat(40));
 }
 
-/// Grants the XP that takes the player to `level`.
+/// Grants the XP that takes the player to `level`, and spends the levels' skill rolls (on the
+/// first trained skill), so only talent picks are left due.
 fn reach(world: &mut World, level: u8) {
     let spec = world.state.character.as_ref().map(|c| &c.spec);
     let factor = Factor::of(world.content(), spec);
@@ -70,6 +71,7 @@ fn reach(world: &mut World, level: u8) {
     let more = need - world.player_xp();
     run(world, &format!("xp:{more}"));
     assert_eq!(world.player_level(), level, "reached level {level}");
+    world.advance_auto();
 }
 
 fn player(world: &World) -> &Actor {
@@ -87,10 +89,14 @@ fn a_third_level_asks_for_a_talent_and_refuses_everything_else_until_it_is_made(
         w.due(),
         Some(Due {
             level: 3,
-            talents: 1
+            talents: 1,
+            rolls: 0,
         })
     );
-    assert_eq!(last(&w), "Welcome to level 3.");
+    assert!(
+        last(&w).starts_with("Your athletics improves."),
+        "the rolls spent"
+    );
     let turn = w.turn();
     for refused in ["move:E", "wait", "rest:1h", "search", "xp:10", "skip:1h"] {
         run(&mut w, refused);

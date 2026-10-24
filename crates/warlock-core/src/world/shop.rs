@@ -35,6 +35,7 @@
 
 use super::{ActorId, Deed, Spent, World};
 use crate::action::{Event, Meal, Positions};
+use crate::content::StatUse;
 use crate::content::{ActionKind, Content, MAX_FAVOUR, ShopId, ShopPlan, Shops, TerrainId};
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
@@ -409,6 +410,7 @@ impl World {
         self.hand_over(self.state.player, shop.keeper, owed);
         self.state.current_mut().shops[i].unpaid.clear();
         self.say(format!("You pay {} {owed} gold.", shop.name));
+        self.train_stat(StatUse::Trade);
         self.player_did(Deed::PaidDebt);
         Spent::NoTime
     }
@@ -498,6 +500,7 @@ impl World {
                 "You sell {what} to {name} for {} gold.",
                 deal.payment
             ));
+            self.train_stat(StatUse::Trade);
         }
         Some(spent)
     }

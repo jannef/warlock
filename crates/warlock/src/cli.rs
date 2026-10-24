@@ -22,7 +22,7 @@ pub struct Args {
     pub seed: Option<u64>,
 
     /// The character to start a new run as, RACE,GENDER,CLASS (e.g. `dwarf,female,warrior`; ids
-    /// from `data/races.toml` and `data/classes.toml`; gender male, female, or other); defaults
+    /// from `data/races.toml` and `data/classes/`; gender male, female, or other); defaults
     /// to the scenario's. Like `--seed`, it applies to the run that `--scenario`, `--new`,
     /// `--record`, or `--capture` starts; a replay's character wins.
     #[arg(long)]
@@ -79,8 +79,8 @@ pub struct Args {
     pub new: bool,
 
     /// Enable developer features in release builds (F2 reveal map, F3 next vision profile, F4
-    /// light values, F5/F9 snapshots, F6 skip an hour, F7 next weather). Always on in debug
-    /// builds.
+    /// light values, F5/F9 snapshots, F6 skip an hour, F7 next weather, New run's seed field).
+    /// Always on in debug builds.
     #[arg(long)]
     pub dev: bool,
 

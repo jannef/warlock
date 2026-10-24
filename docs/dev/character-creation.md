@@ -15,8 +15,8 @@ the birth year's)). Scores: 10 + race + gender + class + animal + element, clamp
 potentials `base_potential` + the race's, never below the score. Flags for rules:
 `Character::born_of_element("fire")`, `born_in_year_of("manticore")`. Content:
 `data/races.toml` (`content/race.rs`: `Races` with `base_potential`, `RaceDef` with `vision`,
-`age`, `stats`, `potential`, `hp`, `alignment`), `data/classes.toml` (`content/class.rs`:
-`ClassDef` with `stats`, `hp`, `alignment`; `Start::hp` is their sum, and `Start::alignment` the
+`age`, `stats`, `potential`, `hp`, `alignment`, `rolls`), `data/classes/` (`content/class.rs`:
+`ClassDef` with `stats`, `hp`, `alignment`, `known_for`, `rolls`; one file per class, `NN-id.toml` in the order offered; `Start::hp` is their sum, and `Start::alignment` the
 sum of their `alignment`s, the starting score, `docs/dev/alignment.md`),
 and `data/horoscope.toml` (`content/horoscope.rs`: `Horoscope` with `anchor_year`, `animals`,
 `elements`, `sign_of_year`, `great_cycle` (60), `name` ("Fire Manticore")); all optional.
@@ -29,13 +29,73 @@ uses it for damage. Scenarios name their character (`character = { race, gender,
 `ScenarioDef::character` and `character_name`; the `name` optional); with one, `vision`, `stats`,
 `potential`, and `hp` are refused.
 `World::new` starts as the scenario's character, `World::with_character(content, scenario, seed,
-Some(&spec))` as another, `World::with_character_named(.., name)` named; `WorldState::character`
+Some(&spec))` as another, `World::with_character_named(.., name)` named, and
+`World::start_run(.., kit)` with the starting kit or without (below); `WorldState::character`
 (the `Character`, saved, hashed) and `PerceptionView::character` (the player knows it;
-`PerceptionView::time` for their age). Replays record the spec and the name (`Replay::name`). The
-summary and the character screen show final scores only: never dice, a breakdown, a modifier, or a
-potential (the step screens and the wiki show adjustments as written in data; the wiki also gives
-the modifiers and the races' potentials exactly). Balance is not a goal; classes only adjust
-starting scores and give hit points.
+`PerceptionView::time` for their age). Replays record the spec, the name (`Replay::name`), and
+whether the run started with the kit (`Replay::kit`). The summary and the character screen show
+final scores only: never dice, a breakdown, a modifier, or a potential (the step screens and the
+wiki show adjustments as written in data; the wiki also gives the modifiers and the races'
+potentials exactly). Balance is not a goal; classes only adjust starting scores, give hit
+points, train skills and weapon skills, and give a starting kit.
+
+**Names** (#218): `Character::name` (saved, hashed: saves change). `character::check_name` is the
+one check (trimmed, 1 to `MAX_NAME` = 20 characters, no control character; what the font draws is
+the text field's business, `render::atlas::draws`). `data/names.toml` (`content/names.rs`:
+`Names`, a `male` and a `female` list by race id, checked against the races; `Names::offered`
+gives `other` both; not fingerprinted) feeds `character::random_name(content, seed, spec, draw)`,
+drawn from `character/name/<race>,<gender>/<draw>`, its own stream, so no roll moves (the class
+plays no part). `CharacterSpec::start` names the character with draw 0 (else `NAMELESS`,
+"Wanderer"); a run told no name (`with_character`, a replay or command line without one) gets
+`character::default_name`: the scenario's `character_name` for its own character, else draw 0. The
+CLI and the game take `--name`; the `stats` dump layer starts `Name Brakka` and the JSON
+`character` has `name`. Character creation's Name step (`ui/name_screen.rs`, after the class) is
+the game's text field: typed text is literal, `Context::Text` edits it (`docs/dev/screens.md`); an
+empty field gives draw 0 (`Draft::name`), and the summary starts the run with the name
+(`MenuChoice::NewRun { name, .. }`). The name is shown on the character screen, the summary, the
+death screen ("Here lies Brakka,"), and the list of saved characters (`docs/dev/saves.md`); no rule
+or message reads it yet.
+
+**Wording and the seed** (#256): everything here is deterministic in the seed, and no player-facing
+text says so (UI, messages, scenario descriptions, the wiki): randomness is "chance", "fate", or
+"random". The Random rows say `Let chance pick your race.`; "other" on the gender step says `+1 to
+one stat, chosen by fate.` and the summary shows `Other` (`gender_description`; the stat is never
+named before the run starts), while the character screen, once the run has begun, names it
+(`character_screen::gender_text`: `Other (Willpower +1)`). A release build's new run gets a seed no
+one chose (`new_run_screen::fresh_seed`; see `docs/dev/screens.md`); developer builds keep the
+seed field, and only they show the seed on the summary. Code comments, data comments, the spec, and
+these notes keep explaining the determinism exactly.
+
+**Starting kits** (spec §8 "Character creation", #257): the data side is `content/kit.rs`
+(`KitLineSpec`, parsed with the race, class, or sign as written, a string or a table;
+`Content::load_kits` resolves them into `Kit` (`KitItem { keep: Keep, one_of, trained,
+gender, magic }`) once objects, gems, slots, and weapon skills are known, checking each
+alternative with `object::parse_stacks` and `equipment::free_slot`); `RaceDef::kit`,
+`ClassDef::kit` (`ClassDef::trainable`: what a class's `trained` may name), and
+`SignPart::kit` (the horoscope's hook, empty in data). The rules are `warlock-core/src/kit.rs`:
+`kit::roll(content, character, trained, seed)` → `Pack { items, equipment }` from the stream
+`character/kit/<spec>`, the kits in `kits_of` order (class, race, animal, element), a line
+drawing only if `KitItem::applies` (one `rng.index` among alternatives, then
+`magic::loot::make` at `kit::ITEM_LEVEL` for a `magic` line); `Pack::put` joins stackables,
+`Pack::equip` uses `equipment::free_slot`. `CharacterSpec::start` returns it as `Start::kit`
+(`weapon_skills` now also returns the class-trained set: its fixed ranks and the picked
+choice sets). **Who gets it**: `World::start_run(content, scenario, seed, character, name,
+kit)` is the full constructor; `kit` is true for a run whose character the player chose:
+`Game::new_run` (New run's character creation), the game and `warlock-cli` when `--character` or
+`--name` is given, and `Replay::start` when the replay says `kit`. Everything else
+(`World::new`, `with_character`, `with_character_named`, `--scenario` alone, tests, golden
+walks, old replays) starts with the scenario's pack alone, as before kits. `WorldState::kit`
+(saved, hashed, left out while false, so other runs hash as before) records it, and
+`Replay::new` copies it into the replay. `kit::starting_pack(content, scenario, kit)` is the one
+place the starting pack is put together (the kit, if any, then `carry` on top): used by
+`World::start_run` and the summary (`ui/chargen_screen.rs::kit_words`, names from
+`Pack::names`). `rot::made_at` dates the food as before. Tests: `content/kit.rs` (parsing,
+refusals), `kit.rs` (Twin Blades and Duelist, the barbarian's pick, deterministic choices, no
+other roll moves, every worn or wielded item finds its slot, nobody Strained and only the
+aristocrat and the merchant Burdened, worst case analytically, magic unidentified, who gets the
+kit and the scenario's pack, the gender and sign hooks, a replay with and without the flag).
+The wiki's tables are `xtask/src/wiki/kits.rs` (`class-kits.md`, `race-kits.md`). The golden
+manifest's `kit = true` starts an entry's run with the kit (`tests/golden/manifest/kits.toml`).
 
 ## Birth signs' gifts and lucky days (#265)
 

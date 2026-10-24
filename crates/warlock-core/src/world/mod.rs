@@ -115,8 +115,10 @@ mod schedule;
 mod search;
 mod shoot;
 mod shop;
+mod skill_roll;
 mod spell;
 mod stars;
+mod stat_training;
 mod status;
 mod talent;
 mod talk;
@@ -203,6 +205,10 @@ pub struct WorldState {
     /// eyes and stats itself.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) character: Option<Character>,
+    /// Whether the run started with the character's starting kit (a character the player chose;
+    /// spec §8 "Character creation"); replays record it. Left out of saves when false.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub(crate) kit: bool,
     /// Whether the player's lantern (the scenario's `lantern`) is lit.
     pub(crate) lantern_lit: bool,
     /// The step that brought the player onto their overworld cell, if they walked there: `>`
@@ -425,6 +431,22 @@ impl World {
         character: Option<&CharacterSpec>,
         name: Option<&str>,
     ) -> Result<Self, WorldError> {
+        Self::start_run(content, scenario, seed, character, name, false)
+    }
+
+    /// [`World::with_character_named`]; with `kit`, the character starts with their starting
+    /// kit and the scenario's `carry` on top (spec §8 "Character creation"), as a run whose
+    /// character the player chose does (New run, `--character`, `--name`). Without it, with the
+    /// scenario's pack alone, as a dev launch on the scenario's own character does (tests,
+    /// golden walks, `--scenario` alone). A run without a character has no kit.
+    pub fn start_run(
+        content: Arc<Content>,
+        scenario: &str,
+        seed: Option<u64>,
+        character: Option<&CharacterSpec>,
+        name: Option<&str>,
+        kit: bool,
+    ) -> Result<Self, WorldError> {
         let def = content
             .scenario(scenario)
             .ok_or_else(|| WorldError::UnknownScenario(scenario.to_string()))?;
@@ -433,7 +455,7 @@ impl World {
         // without a character what the scenario gives. Without a character the player is trained
         // in nothing, has no weapon skills, and starts Neutral.
         let chosen = character.or(def.character.as_ref());
-        let (stats, vision, hp_base, skills, character, weapon_skills, alignment) = match chosen {
+        let start = match chosen {
             Some(spec) => {
                 let mut s =
                     (spec.start(&content, seed, def.start)).map_err(WorldError::Character)?;
@@ -443,6 +465,16 @@ impl World {
                         .to_string(),
                     None => crate::character::default_name(&content, def, seed, spec),
                 };
+                Some(s)
+            }
+            None => None,
+        };
+        // The character's kit, if they start with it, then the scenario's pack on top.
+        let kit = start.as_ref().filter(|_| kit).map(|s| &s.kit);
+        let pack = crate::kit::starting_pack(&content, def, kit);
+        let with_kit = kit.is_some();
+        let (stats, vision, hp_base, skills, character, weapon_skills, alignment) = match start {
+            Some(s) => {
                 let character = Some(s.character);
                 (
                     s.stats,
@@ -488,6 +520,7 @@ impl World {
             messages: MessageLog::default(),
             vision,
             character,
+            kit: with_kit,
             lantern_lit: false,
             overworld_step: None,
             recent_sounds: Vec::new(),
@@ -507,8 +540,8 @@ impl World {
             energy: 0,
             heard: Vec::new(),
             mind: Mind::default(),
-            inventory: def.carry.clone(),
-            equipment: Default::default(),
+            inventory: pack.items,
+            equipment: pack.equipment,
             stats,
             hp: 0,
             hp_base,
@@ -527,6 +560,7 @@ impl World {
             stance: CombatStance::Neutral,
             free_blows: FreeBlows::default(),
             talents: Default::default(),
+            stat_marks: Default::default(),
         };
         stars::grant(&content, state.character.as_ref(), &mut player.talents);
         player.hp = player.max_hp(&content);
@@ -661,6 +695,11 @@ impl World {
     /// The player's character, if the run has one (spec §8 "Character creation").
     pub fn character(&self) -> Option<&Character> {
         self.state.character.as_ref()
+    }
+
+    /// Whether the run started with the character's starting kit ([`World::start_run`]).
+    pub fn started_with_kit(&self) -> bool {
+        self.state.kit
     }
 
     pub fn turn(&self) -> u64 {
@@ -1027,11 +1066,15 @@ mod shoot_tests;
 #[cfg(test)]
 mod shop_tests;
 #[cfg(test)]
+mod skill_roll_tests;
+#[cfg(test)]
 mod skills_tests;
 #[cfg(test)]
 mod speed_tests;
 #[cfg(test)]
 mod stars_tests;
+#[cfg(test)]
+mod stat_training_tests;
 #[cfg(test)]
 mod stats_tests;
 #[cfg(test)]

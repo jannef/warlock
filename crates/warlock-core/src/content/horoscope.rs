@@ -17,6 +17,7 @@
 use super::talent::{TalentBook, TalentId};
 
 use super::ContentError;
+use super::kit::{Kit, KitLineSpec};
 use crate::dice::Dice;
 use crate::stats::{PerStat, Stat, adjustments};
 use serde::{Deserialize, Serialize};
@@ -44,6 +45,8 @@ struct SignSpec {
     stats: BTreeMap<Stat, Dice>,
     #[serde(default)]
     grants: Vec<String>,
+    #[serde(default)]
+    kit: Vec<KitLineSpec>,
 }
 
 #[derive(Deserialize)]
@@ -73,6 +76,11 @@ pub struct SignPart {
     /// The talents those born under it are given (gifts, and an animal's flaw), by id, in
     /// order.
     pub grants: Vec<String>,
+    /// The starting kit as written; resolved by the loader into `kit`.
+    pub(super) kit_spec: Vec<KitLineSpec>,
+    /// What those born under it add to their starting kit, after the class's and the race's
+    /// (spec §8 "Character creation"; [`super::kit`]); filled in by the loader.
+    pub kit: Kit,
 }
 
 /// A lucky day (`[[lucky]]`): those born in the year of `animal` and `element` on day `day` of
@@ -146,6 +154,8 @@ impl Horoscope {
                     description: spec.description,
                     stats,
                     grants: spec.grants,
+                    kit_spec: spec.kit,
+                    kit: Kit::default(),
                 });
             }
             Ok(list)

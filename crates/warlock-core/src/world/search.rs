@@ -35,6 +35,7 @@ use super::World;
 use super::rest::Ended;
 use crate::action::Event;
 use crate::check::check;
+use crate::content::StatUse;
 use crate::content::{ActionKind, PassiveSearch, RaceDef, TrapId, article};
 use crate::geom::Pos;
 use crate::sight::LineOfSight;
@@ -193,6 +194,7 @@ impl World {
                 let difficulty = self.difficulty_of(hidden);
                 if check(&mut self.state.rng, modifier, difficulty) {
                     self.reveal(at, hidden);
+                    self.train_stat(StatUse::Found);
                 }
             }
         }

@@ -1,0 +1,14 @@
+# Elven waybread, which elves start with (data/races.toml): light, filling, and slow to go stale.
+# Elves give it away but never sell it, so no shop trades it (worth nothing there).
+[[object]]
+id = "waybread"
+name = "wafer of waybread"
+plural = "wafers of waybread"
+glyph = "%"
+fg = "#e8dcaa"
+class = "food"
+materials = ["plant"]
+weight = 100
+value = 0
+stackable = true
+food = { nutrition = 1000, turns = 2, keeps = "60d", lasts = "180d" }

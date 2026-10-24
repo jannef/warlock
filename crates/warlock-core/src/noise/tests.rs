@@ -137,6 +137,7 @@ fn actor(content: &Content, creature: &str) -> Actor {
         stance: Default::default(),
         free_blows: Default::default(),
         talents: Default::default(),
+        stat_marks: Default::default(),
     }
 }
 

@@ -99,8 +99,8 @@ at the default start.
 
 Your starting age depends on your race: a human starts between 16 and 35 years old, an elf
 between 90 and 300 (see [Races](races.md) for every race). Your birthday can be any day of the
-year, and fate picks both: choosing another gender or class does not change them. Your birth date
-is counted back from the day the run starts: you are exactly that old on it. You get a year older on every birthday, and the character screen shows your age on the day
+year. Your birth date is counted back from the day the run starts: you are exactly that old on
+it. You get a year older on every birthday, and the character screen shows your age on the day
 you look.
 
 {{#include generated/horoscope.md}}

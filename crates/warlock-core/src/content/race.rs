@@ -5,9 +5,10 @@
 //! how much they need to eat (spec §8 "Hunger"), how much experience their levels need (spec §8
 //! "Experience"), trains them in skills (spec §8 "Skills"; dice,
 //! and humans' extra class skill), gives them starting ranks in weapon skills (spec §8
-//! "Weapon skills"; fixed numbers or dice), and says what they notice of hidden features in
-//! passing (spec §8 "Searching").
+//! "Weapon skills"; fixed numbers or dice), says what they notice of hidden features in passing
+//! (spec §8 "Searching"), and adds a few things to the starting kit (`kit`, [`super::kit`]).
 
+use super::kit::{Kit, KitLineSpec};
 use super::weapon_skill::Ranked;
 use super::{ContentError, FACTORS, PassiveSearch, WeaponSkillId, WeaponSkillTable};
 use crate::combat::MAX_BASE_HP;
@@ -62,12 +63,16 @@ struct RaceSpec {
     skills: BTreeMap<String, Dice>,
     #[serde(default)]
     class_skill: Dice,
+    #[serde(default)]
+    rolls: u8,
     #[serde(default = "normal_hunger")]
     hunger: u16,
     #[serde(default = "normal_experience")]
     experience: u16,
     #[serde(default)]
     weapon_skills: BTreeMap<String, Dice>,
+    #[serde(default)]
+    kit: Vec<KitLineSpec>,
 }
 
 /// The oldest a character may start, in years.
@@ -116,6 +121,8 @@ pub struct RaceDef {
     /// Dice added to one of the class's skills, picked when the character is made (0: none).
     /// Humans: one extra class skill.
     pub class_skill: Dice,
+    /// The skill rolls each level gives beyond the class's (spec §8 "Skills"): humans, 1.
+    pub rolls: u8,
     /// How much the player needs to eat, in percent of a human (spec §8 "Hunger"): game time
     /// burns their nutrition this much faster (a halfling, 125) or slower (an elf, 80).
     pub hunger: u16,
@@ -125,6 +132,11 @@ pub struct RaceDef {
     /// Starting ranks in weapon skills (spec §8 "Weapon skills"), in skill order: added to the
     /// class's.
     pub weapon_skills: Vec<(WeaponSkillId, Dice)>,
+    /// The starting kit as written; resolved by the loader into `kit`.
+    pub(super) kit_spec: Vec<KitLineSpec>,
+    /// What the race adds to a new character's pack after the class's kit (spec §8 "Character
+    /// creation"); filled in by the loader once objects are known.
+    pub kit: Kit,
 }
 
 /// Every race, and the base every potential starts from.
@@ -213,6 +225,13 @@ impl Races {
                     HUNGER.end()
                 )));
             }
+            if spec.rolls > super::class::MAX_ROLLS {
+                return Err(err(format!(
+                    "race `{id}`: rolls {} is more than {}",
+                    spec.rolls,
+                    super::class::MAX_ROLLS
+                )));
+            }
             if !FACTORS.contains(&spec.experience) {
                 return Err(err(format!(
                     "race `{id}`: experience {} is out of range ({} to {} percent)",
@@ -247,9 +266,12 @@ impl Races {
                 search: spec.search,
                 skills,
                 class_skill: extra,
+                rolls: spec.rolls,
                 hunger: spec.hunger,
                 experience: spec.experience,
                 weapon_skills,
+                kit_spec: spec.kit,
+                kit: Kit::default(),
             });
         }
         Ok(Self {
@@ -301,6 +323,9 @@ mod tests {
         assert!(human.skills.is_empty() && human.class_skill.is_zero());
         assert_eq!(human.hunger, 100, "a human's hunger unless named");
         assert_eq!(human.experience, 100, "a human's experience unless named");
+        assert_eq!(human.rolls, 0, "no extra skill rolls unless named");
+        let text = format!("{ONE}rolls = 1\n");
+        assert_eq!(parse(&text).expect("valid").list[0].rolls, 1);
         let dwarf = parse(&format!(
             "{ONE}size = \"small\"\nignores_burdened = true\nhunger = 110\nexperience = 115\n"
         ))
@@ -369,6 +394,7 @@ mod tests {
             (ONE.replace("15", "0"), "base_potential 0"),
             (format!("{ONE}size = \"huge\"\n"), "unknown size `huge`"),
             (format!("{ONE}hunger = 5\n"), "hunger 5 is out of range"),
+            (format!("{ONE}rolls = 11\n"), "rolls 11 is more than 10"),
             (
                 format!("{ONE}experience = 49\n"),
                 "experience 49 is out of range",

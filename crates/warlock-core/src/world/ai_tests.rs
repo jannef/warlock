@@ -766,6 +766,7 @@ fn search_the_last_seen_spot_then_go_back_and_patrol_on() {
             stance: Default::default(),
             free_blows: Default::default(),
             talents: Default::default(),
+            stat_marks: Default::default(),
         },
     );
     assert_ne!(player, rat);

@@ -149,6 +149,10 @@ pub struct Actor {
     /// actor; the player is shown only their own trained skills' values.
     #[serde(default, skip_serializing_if = "Skills::is_empty")]
     pub skills: Skills,
+    /// Its stat training marks (spec §8 "Stats"; `World::train_stat`): the player's, spent by
+    /// the checks at a level; creatures earn none. Never shown.
+    #[serde(default, skip_serializing_if = "unmarked")]
+    pub stat_marks: PerStat<u16>,
     /// The status effects it suffers (spec §8 "Status effects"; [`crate::status`]).
     #[serde(default, skip_serializing_if = "Effects::is_empty")]
     pub effects: Effects,
@@ -207,6 +211,10 @@ pub struct Actor {
 
 fn is_zero(n: &u32) -> bool {
     *n == 0
+}
+
+fn unmarked(marks: &PerStat<u16>) -> bool {
+    marks.iter().all(|(_, n)| n == 0)
 }
 
 impl Actor {

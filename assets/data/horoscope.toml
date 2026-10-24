@@ -26,6 +26,8 @@
 #                 ("Brakka, the Iron Scourge"), `description` is the reveal's line of legend, and
 #                 `grants` the extra gift (granted talents, as above). The game never says lucky
 #                 days exist until a character is born on one; the wiki lists them exactly.
+#     kit           items those born under it add to their starting kit, after the class's and
+#                   the race's: lines as in classes/README.toml's `kit` (none so far)
 #
 # Talents may ask for a sign (`needs = { animal = "roc" }`, `element = "fire"`, `lucky = true`).
 # Signs are also flags later rules may ask about: "is this character Fire-born?", "born in the

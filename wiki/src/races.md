@@ -4,8 +4,9 @@ Your race is the first choice of a new run (see [Your character](character.md)).
 starting [stats](stats.md), gives you your eyes (the [vision type](vision.md) you start with),
 sets how old you can be when you start, adds to your hit points (see
 [Combat](combat.md#hit-points)), trains you in a skill or two (humans: a little more in one of
-their class's; see [Skills](skills.md#who-trains-what)), and may give you a rank in a
-[weapon skill](weapon-skills.md) or two, added to your class's.
+their class's; see [Skills](skills.md#who-trains-what)), may give you a rank in a
+[weapon skill](weapon-skills.md) or two, added to your class's, and adds a few things to your
+[starting kit](starting-kit.md): an elf's waybread, a dwarf's pick-axe, a halfling's pipe.
 
 {{#include generated/races.md}}
 

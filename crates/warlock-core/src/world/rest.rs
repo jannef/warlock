@@ -4,7 +4,7 @@
 
 use super::{ActorId, Spent, World};
 use crate::action::{DiseaseNews, Event, MAX_REST, Rest};
-use crate::content::ActionKind;
+use crate::content::{ActionKind, StatUse};
 use crate::time::{self, GameTime};
 
 /// How a long action (a rest, digging; [`World::keep_at`]) ended.
@@ -75,6 +75,7 @@ impl World {
         let mut in_view = self.watched_in_view();
         let mut came = None;
         let alive = |w: &Self| w.state.death.is_none();
+        let mut turns = 0u32;
         while more(self) && came.is_none() && self.said == said && alive(self) {
             // What was perceived was said.
             events.clear();
@@ -84,6 +85,7 @@ impl World {
                 events.retain(|e| matches!(e, Event::Status { .. } | Event::Disease { .. }));
                 let price = act(self, events);
                 self.run_turn(price, events);
+                turns += 1;
                 let done = !more(self) || self.said != said || !alive(self);
                 // Something heard may be news (or someone muttering): perception says. So does a
                 // disease showing or going badly (news that stops a rest), and a trap going off
@@ -108,12 +110,17 @@ impl World {
             came = now_in_view.iter().find(|a| !in_view.contains(a)).copied();
             in_view = now_in_view;
         }
-        match came {
+        let ended = match came {
             _ if !alive(self) => Ended::Died,
             Some(id) => Ended::Came(id),
             None if self.said != said => Ended::Said,
             None => Ended::Done,
+        };
+        // Seen through to its end, longer than a turn: it trains Willpower (spec §8 "Stats").
+        if ended == Ended::Done && turns > 1 {
+            self.train_stat(StatUse::Endured);
         }
+        ended
     }
 
     /// When a rest toward `goal` ends: at most [`MAX_REST`] from now.

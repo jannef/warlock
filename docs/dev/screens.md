@@ -30,7 +30,11 @@ to open, read keys for, or draw one:
   and seed, each step's selection) preselect what was chosen before going back
   (`ScreenStack::picks`), else the scenario's character (the name step: what was typed, else an
   empty field), and the summary's Start is `MenuChoice::NewRun { scenario, seed, character, name
-  }`; the main menu and the Characters screen read the saved characters when they open
+  }` with the seed `ScenarioPick::seed` resolved (#256): New run's seed field exists only where
+  `input::dev_keys` is true (debug builds, `--dev`; `Launch::dev`), empty meaning the scenario's;
+  elsewhere `Screen::new` hands `NewRunScreen::new` a `new_run_screen::fresh_seed()` (the
+  platform clock and entropy, the app's, never core's) and no text mentions it
+  (`ScenarioPick::shows_seed` gates the summary's `, seed N`); the main menu and the Characters screen read the saved characters when they open
   (`Launch::characters`, from `SaveStore::characters`; no other screen lists the saves);
   `EquipItem` takes the slot selected on the
   equipment screen beneath (`ScreenStack::selected_slot`), and `Describe` the stack looked at
@@ -155,8 +159,9 @@ to open, read keys for, or draw one:
   `ui/weapon_skills_screen.rs` (an info page: sections, ranks, and a faint ten-cell marks bar,
   the fighting styles in use marked `•`; two columns from 88 wide, else one that drops its gaps
   and margins and then scrolls with ↑↓; never a benefit), `ui/chargen_screen.rs` (character creation: `ChoiceScreen` per
-  step with a Random row rolled from the seed, `SummaryScreen` (with the band `Start::alignment`
-  falls in, and a Sign row that returns to the reveal), `Draft`), `ui/sign_screen.rs`
+  step with a Random row rolled from the seed, `SummaryScreen` (with the starting kit,
+  `kit_words`, the band `Start::alignment` falls in, and a Sign row that returns to the reveal;
+  84 wide, dropping its gaps on a short console), `Draft`), `ui/sign_screen.rs`
   (`SignScreen`, *Born under the stars* after the race: the birth, the sign, its legend, a
   lucky day's line, the gifts in words with flaws as "but …", the adjustments; no rows, no
   choice: Enter opens the gender, Esc closes), `ui/name_screen.rs`

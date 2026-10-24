@@ -107,7 +107,8 @@ pub const VIEW_RADIUS: i32 = 40;
 pub struct OwnSkill {
     pub skill: SkillId,
     pub value: u16,
-    /// Toward the next point, in quarters: 0 (just gained one) to 3 (nearly there).
+    /// How practised it is, its marks' step on the skill ladder in quarters: 0 (no marks, or
+    /// just spent) to 4 (the top dice): how big its next level-up roll is, coarsely.
     pub progress: u8,
 }
 
@@ -1021,15 +1022,15 @@ impl<'a> PerceptionView<'a> {
     }
 
     /// The player's own trained skills, in skill order (spec §8 "Skills"): each one's value and
-    /// how near its next point is, coarsely. Untrained skills are not here; nor is anything of a
+    /// how practised it is, coarsely. Untrained skills are not here; nor is anything of a
     /// creature's skills, a mark, or a benefit.
     pub fn own_skills(&self) -> Vec<OwnSkill> {
-        let increase = self.content.increase();
+        let ladder = self.content.ladder();
         (self.player.skills.iter())
             .map(|(skill, trained)| OwnSkill {
                 skill,
                 value: trained.value,
-                progress: skills::progress(trained, increase),
+                progress: skills::progress(trained, ladder),
             })
             .collect()
     }

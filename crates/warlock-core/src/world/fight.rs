@@ -695,6 +695,9 @@ impl World {
         if dodged && target == self.state.player && self.trains(Use::Dodge) {
             self.train(Use::Dodge);
         }
+        if let Some(blow) = &blow {
+            self.train_fight((attacker, target), kind, blow);
+        }
         let player = self.state.player;
         if let Some(blow) = blow {
             if attacker == player {
