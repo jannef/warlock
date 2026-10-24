@@ -1,0 +1,14 @@
+[[talent]]
+id = "brawn"
+name = "Brawn"
+tree = "might"
+ranks = 2
+description = "Your blows up close hit harder: 1 more damage for each rank."
+effects = [{ kind = "melee_damage", value = 1 }]
+systems = ["combat"]
+
+[[talent.rank]]
+needs = { stats = { strength = 12 } }
+
+[[talent.rank]]
+needs = { stats = { strength = 15 } }
