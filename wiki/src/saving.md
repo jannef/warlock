@@ -22,9 +22,9 @@ Choose **Continue** on the main menu to resume the character you played last (it
 appears only if a character is saved). **Characters** lists every saved character: name, race
 and class, level, and for the one selected where they are and when you last played them (in UTC).
 Press `Enter` to resume one, or `Delete` to delete one for good (the game asks first). **New run**
-lets you pick a [scenario](introduction.md#starting-a-run) and optionally a seed (a number, or a
-word), then [create your character](character.md), and starts a fresh run with a save of its own:
-it never touches your other characters.
+lets you pick a [scenario](introduction.md#starting-a-run), then
+[create your character](character.md), and starts a fresh run with a save of its own: it never
+touches your other characters.
 
 ## Where saves are kept
 
@@ -81,6 +81,4 @@ message appears on the message line.
   longer shows it. Saves made before characters had their own (a single `run.sav`) are left where
   they are and not read.
 - Saves from before version 1.0 may be rejected after updates. From 1.0 on, saves will be migrated.
-- The run's **seed** (shown in the status bar) decides the generated levels and the weather. The
-  same seed gives the same levels and the same weather in the same game version. Seeds are not
-  kept the same across versions.
+- The status bar shows the run's **seed**: give it when you report a problem with a run.

@@ -56,7 +56,8 @@ fn set_score(world: &mut World, stat: Stat, score: u8) {
     actor.stats = Stats::new(scores, PerStat::splat(40));
 }
 
-/// Grants the XP that takes the player to `level`.
+/// Grants the XP that takes the player to `level`, and spends the levels' skill rolls (on the
+/// first trained skill), so only talent picks are left due.
 fn reach(world: &mut World, level: u8) {
     let spec = world.state.character.as_ref().map(|c| &c.spec);
     let factor = Factor::of(world.content(), spec);
@@ -64,6 +65,7 @@ fn reach(world: &mut World, level: u8) {
     let more = need - world.player_xp();
     run(world, &format!("xp:{more}"));
     assert_eq!(world.player_level(), level, "reached level {level}");
+    world.advance_auto();
 }
 
 fn player(world: &World) -> &Actor {
@@ -81,10 +83,14 @@ fn a_third_level_asks_for_a_talent_and_refuses_everything_else_until_it_is_made(
         w.due(),
         Some(Due {
             level: 3,
-            talents: 1
+            talents: 1,
+            rolls: 0,
         })
     );
-    assert_eq!(last(&w), "Welcome to level 3.");
+    assert!(
+        last(&w).starts_with("Your athletics improves."),
+        "the rolls spent"
+    );
     let turn = w.turn();
     for refused in ["move:E", "wait", "rest:1h", "search", "xp:10", "skip:1h"] {
         run(&mut w, refused);
@@ -189,9 +195,9 @@ fn several_levels_at_once_queue_their_picks_and_auto_spends_them_in_order() {
     run(&mut w, "levelup:auto");
     assert_eq!(w.due(), None);
     assert_eq!(player(&w).talents.len(), 2);
-    // Auto took the first talent of the first tree it may take: Vigour's, in file order, Hardy
-    // (this warrior's Toughness allows it).
-    assert_eq!(last(&w), "You learn Hardy (1).");
+    // Auto took the first talent of the first tree it may take: Vigour's, in file order,
+    // Clotting (this warrior's Toughness allows it).
+    assert_eq!(last(&w), "You learn Clotting.");
 }
 
 #[test]
@@ -210,17 +216,17 @@ fn a_pick_nothing_can_be_spent_on_is_dropped() {
     // With every talent the character qualifies for held, the pick is dropped too.
     let mut w = world();
     set_scores(&mut w, 1);
-    for level in [3, 6, 9, 12] {
+    for level in [3, 6, 9, 12, 15, 18] {
         reach(&mut w, level);
         run(&mut w, "levelup:auto");
         assert_eq!(w.due(), None, "level {level}");
     }
     assert_eq!(
         player(&w).talents.len(),
-        4,
-        "the four talents without prerequisites"
+        6,
+        "the six talents without prerequisites"
     );
-    reach(&mut w, 15);
+    reach(&mut w, 21);
     assert_eq!(w.due(), None, "nothing left to take: the pick is dropped");
 }
 
@@ -450,7 +456,8 @@ fn perception_and_dumps_show_talents_in_words_only() {
     let progress = dump::ascii(&w, &[Layer::Progress]);
     assert!(progress.contains("due level 3: 1 talent"), "{progress}");
     assert!(
-        progress.contains("takeable healthy, keen_ears, long_strider, lean"),
+        progress
+            .contains("takeable healthy, mighty_kick, opportunist, keen_ears, long_strider, lean"),
         "{progress}"
     );
     let view = w.perception();

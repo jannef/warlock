@@ -1,0 +1,146 @@
+# Stat training (spec §8 "Stats"; the design is docs/design/progression.md §6): using your stats
+# earns them training marks, and at every level you gain each stat gets one check to rise by a
+# point. Nothing here is shown in the game: a rise says "You feel stronger." and nothing of why.
+#
+# - Each `[[training.use]]` below gives its stat a mark with `chance` percent (1 to 100) each
+#   time you do the thing `on` names (a draw of the training stream, never the gameplay one).
+#   Marks never decay and have no cap.
+# - At a level, each stat in display order rises by 1 with chance marks / (marks + need), where
+#   need = need_base + need_per_point × the stat's score; at or above the stat's potential the
+#   chance is divided by `over_potential_divisor`, and a rise there lifts the potential with the
+#   score. A rise uses up all the stat's marks; a failed check keeps them.
+#
+# The uses (`on`): burdened, blow, dig, kick, dodge, shot, sneak, climb, hurt, big_hit, resisted,
+# plunge, found, read, identified, discovered, spot, endured, resisted_will, hungry_fight, chat,
+# trade, quest, swapped (the wiki's Stats page says each in words).
+
+[training]
+need_base = 20
+need_per_point = 3
+over_potential_divisor = 4
+
+# Strength: carrying, fighting, digging, kicking.
+[[training.use]]
+stat = "strength"
+on = "burdened"
+chance = 10
+
+[[training.use]]
+stat = "strength"
+on = "blow"
+chance = 5
+
+[[training.use]]
+stat = "strength"
+on = "dig"
+chance = 10
+
+[[training.use]]
+stat = "strength"
+on = "kick"
+chance = 20
+
+# Dexterity: dodging, shooting, sneaking, climbing.
+[[training.use]]
+stat = "dexterity"
+on = "dodge"
+chance = 20
+
+[[training.use]]
+stat = "dexterity"
+on = "shot"
+chance = 10
+
+[[training.use]]
+stat = "dexterity"
+on = "sneak"
+chance = 5
+
+[[training.use]]
+stat = "dexterity"
+on = "climb"
+chance = 50
+
+# Toughness: being hurt, fighting off disease, falling through ice.
+[[training.use]]
+stat = "toughness"
+on = "hurt"
+chance = 10
+
+[[training.use]]
+stat = "toughness"
+on = "big_hit"
+chance = 50
+
+[[training.use]]
+stat = "toughness"
+on = "resisted"
+chance = 50
+
+[[training.use]]
+stat = "toughness"
+on = "plunge"
+chance = 100
+
+# Intelligence: finding, reading, identifying, learning about creatures.
+[[training.use]]
+stat = "intelligence"
+on = "found"
+chance = 50
+
+[[training.use]]
+stat = "intelligence"
+on = "read"
+chance = 30
+
+[[training.use]]
+stat = "intelligence"
+on = "identified"
+chance = 100
+
+[[training.use]]
+stat = "intelligence"
+on = "discovered"
+chance = 100
+
+# Willpower: noticing, enduring, resisting, fighting hungry. (Spending mana will train it too.)
+[[training.use]]
+stat = "willpower"
+on = "spot"
+chance = 30
+
+[[training.use]]
+stat = "willpower"
+on = "endured"
+chance = 100
+
+[[training.use]]
+stat = "willpower"
+on = "resisted_will"
+chance = 50
+
+[[training.use]]
+stat = "willpower"
+on = "hungry_fight"
+chance = 10
+
+# Presence: talking, trading, quests, others making way.
+[[training.use]]
+stat = "presence"
+on = "chat"
+chance = 20
+
+[[training.use]]
+stat = "presence"
+on = "trade"
+chance = 20
+
+[[training.use]]
+stat = "presence"
+on = "quest"
+chance = 100
+
+[[training.use]]
+stat = "presence"
+on = "swapped"
+chance = 10

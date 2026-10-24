@@ -123,6 +123,10 @@ pub enum Action {
     /// it away; a bad failure sets it off at the player. Takes the time of `disarm`, whatever
     /// comes of it; refused (no time) without the skill or a known trap there.
     Disarm(Dir),
+    /// Catch a second wind (spec §8 "Talents"; the Second wind ability): hit points back at
+    /// once, then Winded for a while. Takes the time of `wait`; refused (no time) without the
+    /// talent or while winded.
+    SecondWind,
     /// Take talent `id` (an id in `data/talents/`), for `choice` if it takes one (spec §8
     /// "Talents"): one of the picks a level brings, made at once (nothing is banked). Refused
     /// with the reason when none is due or a prerequisite fails. Takes no game time; recorded in
@@ -614,6 +618,7 @@ impl fmt::Display for Action {
             Action::Search(1) => f.write_str("search"),
             Action::Search(turns) => write!(f, "search:{turns}"),
             Action::Disarm(d) => write!(f, "disarm:{d}"),
+            Action::SecondWind => f.write_str("second_wind"),
             Action::Talent { id, choice: None } => write!(f, "talent:{id}"),
             Action::Talent {
                 id,
@@ -689,6 +694,7 @@ impl FromStr for Action {
                 )),
             },
             "wait" => bare(Action::Wait),
+            "second_wind" => bare(Action::SecondWind),
             "ascend" => bare(Action::Ascend),
             "descend" => bare(Action::Descend),
             "lantern" => bare(Action::ToggleLantern),
@@ -1080,6 +1086,7 @@ mod tests {
                 choice: Some("Mixed".into()),
             },
             Action::Advance("stealth".into()),
+            Action::SecondWind,
             Action::LevelUpAuto,
             Action::GrantXp(2500),
             Action::Freeze {

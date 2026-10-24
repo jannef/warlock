@@ -265,12 +265,15 @@ impl World {
             "Ugh! The {} was rotten.",
             content.object(what).name
         ));
-        if rotten.vomit > 0 && self.state.rng.chance(u32::from(rotten.vomit)) {
+        // Iron stomach (spec §8 "Talents"): never vomits, and half the sickness (no draw for
+        // the vomiting it is spared).
+        let iron = self.state.player().talent_mods(&content).iron_stomach;
+        if !iron && rotten.vomit > 0 && self.state.rng.chance(u32::from(rotten.vomit)) {
             self.vomit();
             return;
         }
         let degrees = rotten.harm.roll(&mut self.state.rng);
-        self.sicken(degrees, events);
+        self.sicken(if iron { degrees / 2 } else { degrees }, events);
         // Rotten food may carry a disease (grave rot): a check to resist it (spec §8 "Diseases").
         self.expose_to(self.state.player, "rotten_food");
         self.feed(nutrition, what);
@@ -348,7 +351,8 @@ impl World {
                 self.die_of(Cause::Choked(what), self.state.time);
                 return;
             }
-            if o.vomit > 0 && self.state.rng.chance(u32::from(o.vomit)) {
+            let iron = self.state.player().talent_mods(&content).iron_stomach;
+            if !iron && o.vomit > 0 && self.state.rng.chance(u32::from(o.vomit)) {
                 self.vomit();
                 return;
             }

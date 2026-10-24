@@ -1,0 +1,11 @@
+[[talent]]
+id = "poison_resistance"
+name = "Poison resistance"
+tree = "vigour"
+description = "Poison passes through you quickly: it wears off twice as fast and never weakens you."
+needs = { stats = { toughness = 14 } }
+effects = [
+  { kind = "status_eases", status = "poisoned", value = 100 },
+  { kind = "no_penalty", status = "poisoned" },
+]
+systems = ["status"]

@@ -126,6 +126,8 @@ of the Bear", "Sharp long sword of the Bear". A rare item gets a name of two wor
 fitting what it is, and is called by its name and its base: "Grim Bite, long sword". A gem the
 item is set with (see [Gems](gems.md#items-set-with-a-gem)) goes between the prefix and the base,
 "Sharp emerald-pommelled long sword of the Bear", and shows unidentified too; a rare item keeps
-its two words and the gem follows in its base, "Grim Bite, emerald-pommelled long sword".
+its two words and the gem follows in its base, "Grim Bite, emerald-pommelled long sword". An
+item of another material than its usual one (see [Objects](objects.md#items-of-other-materials))
+names it after the gem: "Sharp emerald-pommelled bronze long sword of the Bear".
 
 {{#include generated/magic-names.md}}

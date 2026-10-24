@@ -65,3 +65,12 @@ name = "ornament-description"
 scenario = "showcase"
 actions = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*4 pickup:b"
 screen = "describe"
+
+# An item of another material (#193, #194): the storeroom's bronze great sword picked up from under
+# the spear, its material in its name and in what it is made of, heavier than steel's, and its
+# damage a point lower ("2d6-1"); the glyph in bronze's colour.
+[[golden]]
+name = "variant-description"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*3 move:N pickup:b"
+screen = "describe"

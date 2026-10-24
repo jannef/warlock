@@ -41,8 +41,7 @@ onto one tells you where it leads, and `>` enters it. You arrive on the stairs t
 On any other cell whose terrain has a local area (the "Local area" column above), press `>` to
 explore that cell on foot. You enter an outdoor area, 80 by 40 cells, made for that cell:
 
-- It is generated the first time you go there from the run's seed and the cell, and stays as you
-  left it afterwards.
+- It is generated the first time you go there, and stays as you left it afterwards.
 - What it looks like follows the terrain of the cell and its neighbors: meadows, woods with
   clearings, rocky hills with crags, marsh with pools and reeds, roads, riverbanks or lake shores
   along the sides where the overworld has them, and now and then ponds, brooks, ruins, or deer.

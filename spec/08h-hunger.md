@@ -115,6 +115,6 @@ developer notes (CLAUDE.md, `docs/dev/`).
     level and in the packs of those on it with when it was made and its stage (`food bread*2
     carried by 0: made ..., 70 hours ago, old`), and `--state` the raw `died` of each stack.
     Not now: cold slowing rot, salting or drying.
-  - Showcase: the hub's pantry keeps food rations, loaves of bread, dried meat, and apples; the
-    depths, world, and forest scenarios give starting food (§7 "Scenarios"). The thresholds are
-    generous, so the showcase is no race against the clock.
+  - Showcase: the hub's pantry keeps food rations, loaves of bread, dried meat, and apples;
+    elsewhere starting food comes with the character's kit (§8 "Character creation"). The
+    thresholds are generous, so the showcase is no race against the clock.

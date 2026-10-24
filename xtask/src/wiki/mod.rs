@@ -27,7 +27,9 @@ mod gems;
 mod healing;
 mod hearing;
 mod hunger;
+mod kits;
 mod magic;
+mod materials;
 mod moons;
 mod objects;
 mod order;
@@ -37,6 +39,7 @@ mod scrolls;
 mod searching;
 mod sight;
 mod skills;
+mod stats;
 mod talents;
 mod temperature;
 mod terrain;
@@ -142,7 +145,10 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("item-classes.md", objects::item_classes),
         ("shops.md", objects::shops),
         ("equipment.md", objects::equipment),
-        ("materials.md", objects::materials),
+        ("materials.md", materials::materials),
+        ("material-finds.md", materials::material_finds),
+        ("construction.md", materials::construction),
+        ("variants.md", materials::variants),
         ("gems.md", gems::gems),
         ("gem-sizes.md", gems::sizes),
         ("gem-cuts.md", gems::cuts),
@@ -153,11 +159,15 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("stat-modifiers.md", character::stat_modifiers),
         ("stat-uses.md", character::stat_uses),
         ("potentials.md", character::potentials),
+        ("stat-training.md", stats::stat_training),
+        ("stat-checks.md", stats::stat_checks),
         ("genders.md", character::genders),
         ("races.md", character::races),
         ("race-traits.md", character::race_traits),
         ("classes.md", character::classes),
         ("horoscope.md", character::horoscope),
+        ("class-kits.md", kits::class_kits),
+        ("race-kits.md", kits::race_kits),
         ("alignment-bands.md", alignment::alignment_bands),
         ("alignment-start.md", alignment::alignment_start),
         ("alignment-deeds.md", alignment::alignment_deeds),
@@ -168,7 +178,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("skills.md", skills::skills),
         ("skill-benefits.md", skills::skill_benefits),
         ("skill-grants.md", skills::skill_grants),
-        ("skill-increase.md", skills::skill_increase),
+        ("skill-ladder.md", skills::skill_ladder),
+        ("skill-rolls.md", skills::skill_rolls),
         ("abilities.md", abilities::abilities),
         ("weapons.md", combat::weapons),
         ("light-weapons.md", combat::light_weapons),
@@ -469,8 +480,24 @@ mod tests {
                 .contains("| Gold and ruby amulet | `\"` | amulets | gold chain, ruby setting |")
         );
         assert!(text("materials.md").contains(
-            "| Ruby | yes | gold and ruby amulets, loose gems, and items set with one |"
+            "| Ruby | - | `#d3213b` | 100% | - | - | ×1 | yes | gold and ruby amulets, loose gems, \
+             and items set with one |"
         ));
+        // Materials (#193, #194): their properties on steel's scale, how often they are found,
+        // what each item may be made of, and a long sword and chain mail in each metal.
+        assert!(
+            text("materials.md")
+                .contains("| Bronze | metal | `#cd7f32` | 112% | +0 / −1 | 80% | ×0.8 | no | - |")
+        );
+        assert!(
+            text("material-finds.md")
+                .contains("| Steel | 300 (common) | +60 | 1 | 20 (rare) | +15 |")
+        );
+        let construction = text("construction.md");
+        assert!(construction.contains("| Long sword | steel | any metal, dragonbone |"));
+        assert!(construction.contains("| Gold ring | gold | any material |"));
+        assert!(!construction.contains("| Rock |"));
+        assert!(text("variants.md").contains("| Bronze | 2 kg | +0 / −1 | 65 gold |"));
         // Gems: their worth and how often they are found, the sizes and cuts, and ornaments.
         assert!(text("gems.md").contains("| Diamond | `#e8f4ff` | 400 gold | 1.9% |"));
         assert!(text("gem-sizes.md").contains("| Small (plain) | ×1 | 1 g | 33% |"));
@@ -504,10 +531,9 @@ mod tests {
             !text("weapon-skills.md").contains("Duelist"),
             "styles have their own tables"
         );
-        assert!(
-            text("objects.md")
-                .contains("| Arrow | `/` | missiles | wood | 30 g | 1 gold | yes | Missiles |")
-        );
+        assert!(text("objects.md").contains(
+            "| Arrow | `/` | missiles | iron head, wood shaft | 30 g | 1 gold | yes | Missiles |"
+        ));
         assert!(text("objects.md").contains("| Left ring or right ring |"));
         assert!(text("objects.md").contains("| Main hand (both hands) |"));
         assert!(
@@ -637,10 +663,10 @@ mod tests {
             ),
             "{disarm}"
         );
-        assert!(
-            text("materials.md")
-                .contains("| Steel | no | stilettos, daggers, short swords, scimitars,")
-        );
+        assert!(text("materials.md").contains(
+            "| Steel | metal | `#a8b0b8` | 100% | +0 / +0 | 100% | ×1 | no | stilettos, daggers, \
+             short swords, scimitars,"
+        ));
         assert!(text("pack.md").contains("| Your own weight | 70 kg |"));
         let burden = text("burden.md");
         for row in [
@@ -730,12 +756,23 @@ mod tests {
             grants.contains("| Human | one of the class's skills `+2d4+4`, picked at random |")
         );
         assert!(grants.contains("| Commoner | Athletics `2d4+4`, Handle animal `2d4+4` |"));
-        let increase = text("skill-increase.md");
+        let ladder = text("skill-ladder.md");
         assert!(
-            increase.contains("| 99 | 13 | 837 |\n| 100 | 42 | 850 |"),
-            "{increase}"
+            ladder.contains("| 0 | `+1` | 1.0 | `1d3` | 2.0 |"),
+            "{ladder}"
         );
-        assert!(increase.contains("| 120 | 48 | 1720 |"));
+        assert!(
+            ladder.contains("| 800 | `4d5` | 12.0 | `4d5` | 12.0 |"),
+            "{ladder}"
+        );
+        let rolls = text("skill-rolls.md");
+        assert!(rolls.contains("| Bard | 4 | Bluff, Music |"), "{rolls}");
+        assert!(rolls.contains("| Commoner | 2 | - |"), "{rolls}");
+        assert!(rolls.contains("| Human | 1 |"), "{rolls}");
+        assert!(
+            rolls.contains("at 14 and one more for every 4 points"),
+            "{rolls}"
+        );
         assert!(
             text("races.md")
                 .contains("| Race | St | Dx | To | In | Wi | Pr | Vision | Starting age |"),
@@ -916,6 +953,24 @@ mod tests {
             "{horoscope}"
         );
         assert_eq!(horoscope.matches(" Salamander | 1").count(), 5);
+        // Starting kits, items as named, with how they are kept and when they come.
+        let kits = text("class-kits.md");
+        assert!(
+            kits.contains("| Commoner | a club (wielded); a turnip; 3 copper coins |"),
+            "{kits}"
+        );
+        assert!(
+            kits.contains("a dagger (wielded, with Twin Blades); a stiletto (with Duelist)"),
+            "{kits}"
+        );
+        assert!(
+            kits.contains("a gold ring (on left hand, magic or rare)"),
+            "{kits}"
+        );
+        assert!(
+            text("race-kits.md")
+                .contains("| Dwarf | a pick-axe (in use); 2 strips of dried meat |")
+        );
         // Every class is listed, in order, with its objects.
         let classes = text("item-classes.md");
         assert!(
@@ -925,13 +980,13 @@ mod tests {
         assert!(
             classes.contains(
                 "| Food | Angelica roots, apples, food rations, loaves of bread, strips of dried \
-                 meat, corpses |"
+                 meat, turnips, wafers of waybread, corpses |"
             ),
             "{classes}"
         );
         let at = |row: &str| classes.find(row).unwrap_or_else(|| panic!("{row}"));
         assert!(at("| Melee weapons |") < at("| Gems | Gems |"));
-        assert!(at("| Gems | Gems |") < at("| Miscellaneous | Rocks |"));
+        assert!(at("| Gems | Gems |") < at("| Miscellaneous | Long-stemmed pipes, lutes, rocks |"));
         assert!(
             text("creatures.md")
                 .contains("| Giant rat | `r` | Vermin | hostile | up close | no | no |")

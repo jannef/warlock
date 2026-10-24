@@ -29,7 +29,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   §8 "Searching"), `search` (points added to searching and noticing alike, −10 to 10, default
   0; elves and kobolds 2), `skills` (the skills it trains,
   by skill id: dice or a number, every result 0 to 100; §8 "Skills"), `class_skill` (dice added
-  to one of the class's skills, picked when the character is made; default none), `hunger` (how
+  to one of the class's skills, picked when the character is made; default none), `rolls` (skill
+  rolls each level gives beyond the class's, 0 to 10, default 0; humans 1), `hunger` (how
   much the character needs to eat, in percent of a human, 10 to 1000, default 100; §8 "Hunger":
   elf 80, half-elf 90, human 100, dwarf 110, halfling 125, gnome 90, half-orc 120, goblin 80,
   drow 80, kobold 80, lizardfolk 90, duergar 90, ratfolk 110),
@@ -138,12 +139,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
   corpses give and how long they keep, `{ nutrition, turns, keeps, lasts }` as for food (§7
   "Objects"): small 400 and 3, medium 1000 and 6, both keeping `"8h"` and lasting `"36h"`). The
   wiki shows its tables (the states, the races' needs, food, corpses) generated.
-- **Classes** (`data/classes.toml`, optional), in the order offered: `id`, `name`, a one-line
+- **Classes** (`data/classes/`, one file per class named `NN-id.toml` so path order is the order
+  offered; optional): `id`, `name`, a one-line
   `description`, `stats` (adjustments as for races), `hp` (as for races), `experience` (as for
   races, multiplied with the race's; §8 "Experience": wizard 125, monk 120, priest, druid, and
   witch 115, paladin 110, ranger 105, warrior and bard 100, thief 95, barbarian, aristocrat,
   craftsperson, and merchant 90, commoner 80), `alignment` (as for races, added to the race's:
-  paladin 450, Good; thief and witch −200, Callous; the rest 0), `skills` (as for races), `weapon_skills` (starting ranks as for races), `weapon_skill_choice` (two or more
+  paladin 450, Good; thief and witch −200, Callous; the rest 0), `skills` (as for races),
+  `known_for` (the skills of `skills` it is known for, its `2d6+10` ones: a level-up roll on one
+  throws its die a step up the ladder), `rolls` (skill rolls each level gives, 0 to 10, default
+  2: the thief and the ranger 3, the bard 4), `weapon_skills` (starting ranks as for races), `weapon_skill_choice` (two or more
   sets of such ranks, one picked at random when the character is made), and `styles` and
   `style_choice` (the same for fighting styles, §8 "Fighting styles"; `weapon_skills` names no
   style and `styles` nothing but styles). Each class rolls
@@ -187,8 +192,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
   every = 25 }`, one for each value reached and one more for every `every` points past the last,
   or `{ effect = EFFECT, curve = [[0, 0], [100, 60]] }`, straight between points from value 0,
   rounded down, level after the last; effects `dodge`, `quiet`, `hearing`, `burden`, `travel`,
-  the percent ones within 0 to 100). At the top, **[provisional]** `[increase]`: `marks`,
-  `per`, `soft_cap`, `past_cap` (each at least 1; default 4, 10, 100, 3). Adding a skill is one
+  the percent ones within 0 to 100). At the top, `[ladder]`: `dice` and `marks`, one per step
+  (the die a level-up roll throws from that many marks on; marks from 0, rising; each die adds at
+  least 1; default ADOM's `+1` … `4d5` from 0 … 800 marks), and `[rolls]`:
+  `intelligence_from`, `intelligence_every` (one more roll at that Intelligence and every so many
+  points above; 14, 4), `spend` (percent of the marks a roll spends, 50), `soft_cap` (from this
+  value on a roll adds half, 100); §8 "Skills". Adding a skill is one
   entry (saves then change: skill ids are indices). The 26 skills: appraise, athletics,
   balance, bluff, concentration, decipher script, disable device, escape artist, handle animal,
   heal, intimidate, knowledge, listen, metalcraft, music, open lock, search, spellcraft, spot,

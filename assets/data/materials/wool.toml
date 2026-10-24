@@ -1,0 +1,11 @@
+# Not in #194's table: the wool cloak is made of it, so another material names it well ("a fur cloak", not "a fur wool cloak"). No weapon.
+[[material]]
+id = "wool"
+name = "wool"
+group = "cloth"
+color = "#cfc4a8"
+weight = 30
+protection = 20
+value = 40
+rarity = { weight = 300 }
+gear = { weight = 300 }

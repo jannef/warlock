@@ -1,0 +1,8 @@
+[[talent]]
+id = "deflect_missiles"
+name = "Deflect missiles"
+tree = "finesse"
+description = "You slip aside from arrows and stones: Dodge +2 to your Defence against shots, throws, and trap missiles."
+needs = { talents = { dodge = 1 }, stats = { dexterity = 15 }, level = 12 }
+effects = [{ kind = "missile_dodge", value = 2 }]
+systems = ["defence", "ranged"]

@@ -11,12 +11,13 @@ hit points a level gives) is `docs/dev/experience.md`.
 |---|---|
 | `content/talent.rs` | `TalentBook` from `data/talents.toml` (settings: `max_ranks`, `[coverage]`, `[[tree]]`, `[[system]]`, each set in one file) and `data/talents/*.toml` (one `[[talent]]` a file, `ContentFiles::table("talents")` order; `TalentId` an index, saves name talents by id so it is **not** in the content fingerprint). `TalentDef` (tree, `ranks: Vec<Rank>`, `needs` for every rank plus each rank's own, `effects` per rank held plus each rank's own, `choice`, `systems`, `granted`), `Needs`/`Need` (the prerequisite kinds and their words: talents, stat scores, skill values, weapon-skill ranks, `chosen`, level, race, class, eyes, and `requires_alignment`, an `alignment::Requirement` read against `Actor::band`), `TalentEffect` (the typed effects), `Choice::options`/`name`, and the **coverage check** (`TalentBook::coverage_gap`, run at load: a `ContentError`). |
 | `talent.rs` | The runtime: `Talents` (`Vec<Taken { id, rank, choice }>` on `Actor::talents`, saved and hashed, left out of the JSON while empty), `TalentMods` (every effect summed; `Talents::mods(content)` / `Actor::talent_mods`), `Candidate` (what prerequisites read: `Candidate::player`), `unmet`, `may_take` → `Refusal` (in words), `openings`, `offers` (the pick list, tree by tree). |
-| `world/talent.rs` | `Due { level, talents }` in `Progress::due` (lowest level first); `World::level_up(from, to)` from `grant_xp` (a pick every `Experience::talent_every` levels, and the per-level hit points of talents held); `refuse_due` (the first line of `player_acts`: everything but `Talent`, `Advance`, `LevelUpAuto` is refused with "You must choose a talent first."); `take_talent`, `advance_skill` (refused until the skill ladder, #230), `level_up_auto` (dev); `settle_due` drops picks nothing can be spent on (`offers` empty), asked again after each pick. `World::due()` and `candidate()`. |
+| `world/talent.rs` | `Due { level, talents }` in `Progress::due` (lowest level first); `World::level_up(from, to)` from `grant_xp` (a pick every `Experience::talent_every` levels, and the per-level hit points of talents held); `refuse_due` (the first line of `player_acts`: everything but `Talent`, `Advance`, `LevelUpAuto` is refused with "You have skill rolls to spend." or "You must choose a talent first."); `take_talent` (the first due with a pick, so a talent may come before the rolls), `level_up_auto` (dev); `settle_due` drops talent picks nothing can be spent on (`offers` empty and no roll left) and rolls when no skill is trained, asked again after each pick. `Due { level, talents, rolls }`: a level with rolls but no pick is due too. |
+| `world/skill_roll.rs` | The skill rolls (#230, `docs/dev/skills.md`): `level_rolls`, `advance_skill` (`advance:SKILL`), `advance_auto` (`levelup:auto`'s rolls). `World::due()` and `candidate()`. |
 | `world/experience.rs` | `grant_xp` scales every gain by `TalentMods::xp_percent` and calls `level_up`; the dev `xp:N` (`grant_xp_dev`). |
 | `perception.rs` | `due()`, `own_talents()` (`OwnTalent`), `talents()` (`TalentView`: held rank, the next rank's needs with `met`, `openings`): what the level-up screen and the Talents page (#236) read. |
-| `dump.rs` | layers `talents` (held, `Hardy 2/3`) and `progress` (dev: dues, takeable ids with choices, discovered kills); JSON `talents`, `due`. |
+| `dump.rs` | layers `talents` (held, `Hardy 2/3`) and `progress` (dev: dues, `due level 3: 3 skill rolls, 1 talent`, takeable ids with choices, discovered kills); JSON `talents`, `due` (`level`, `talents`, `rolls`). |
 | `action.rs` | `Talent { id, choice }` (`talent:hardy`, `talent:weapon_focus:long_blades`; ids keep their case), `Advance(skill)`, dev `LevelUpAuto` (`levelup:auto`), `GrantXp` (`xp:N`); all `Spent::NoTime` or refused. |
-| `rng.rs` | `Rng::levels(seed)`, the `levels` stream, kept in `WorldState::levels_rng: Option<Rng>` **from the first draw** (nothing draws from it yet: skill rolls and stat checks will), so runs that never drew hash as before. |
+| `rng.rs` | `Rng::levels(seed)`, the `levels` stream, kept in `WorldState::levels_rng: Option<Rng>` **from the first draw** (the stat checks of each level, `world/stat_training.rs`; skill rolls, `world/skill_roll.rs`), so runs that never drew hash as before. |
 | `xtask/src/wiki/talents.rs` | `talents.md` (trees with the rules), `talents-by-system.md` (the coverage matrix). |
 
 ## The hooks
@@ -38,6 +39,30 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `xp_percent` | `grant_xp` (every gain: kills, discovery, quests, dev) |
 | `notice` | `search.rs`: `notices` (as if trained in Spot) and `search_modifier(Look::Passive)` |
 | `free_blow` | `World::free_blows_of`: `FreeBlows::either` of the actor's own switches and the talents' |
+| `resting_percent` | `World::healing_rate`, on resting's pace (Fast healer) |
+| `second_wind` | `world/second_wind.rs` (`Action::SecondWind`, `Ability::SecondWind` under `Source::Talent`): hit points back, then its `cooldown` status |
+| `iron_stomach` | `eat.rs`: `eat_rotten` (no vomiting, no draw for it; sickness halved) and `feed` (overeating never vomits) |
+| `status_eases` | `World::live`: the sufferer's easing pace, `TalentMods::eases_every` into `Effect::until_eases_every`/`advance_every` |
+| `no_penalty`, `penalty_percent` | `Actor::penalty` through `Effects::penalty_for` (`TalentMods::penalty`: lowerings only, toward 0) |
+| `clotting` | `World::wounded` |
+| `disease_checks`, `disease_recovery` | `World::expose`, `World::disease_turn` |
+| `kick_die` | `Actor::kick` |
+| `door_kick` | `World::kick_door` (added to Strength and athletics) |
+| `dig_percent` | `World::dig_turn` |
+| `two_handed_price` | `World::attack_price` (melee with a `two_handed` object) |
+| `critical_status` | `World::after_blow` (a confirmed critical in melee) |
+| `penetration` | `Actor::melee`, `off_hand_blow`, `bash`, `kick` (`TalentMods::penetration_for` the profile's kinds) |
+| `burden_dex` | `Actor::defence` (the burden's cap) |
+| `sure_step`, `pit_proof` | `World::step_onto_trap` → `steps_lightly` (the player's steps only) |
+| `speed_percent` | `World::burdened`, the one place every price passes (`quicker`) |
+| `missile_dodge` | `World::target_against` (from `resolve` for shots and throws, `trap_strikes` for trap missiles) |
+| `spell_damage_percent` | `World::evaded` in `spell_hurts` (bursts and bolts, before resistances) |
+
+Effects that name a status (`second_wind`'s `cooldown`, `status_eases`, `no_penalty`,
+`critical_status`) or a damage type (`penetration`) are checked at load (statuses load before
+talents) and resolved by `TalentMods::of(content, ...)`; `TalentEffect` is `Clone`, not `Copy`.
+The `any_weapon_skill` need (`Need::AnyWeaponSkill`: `roles` and `of`, resolved to skill ids
+with its words at load) is what "a melee skill at 3" asks.
 
 ## Coverage policy
 
@@ -64,10 +89,17 @@ content (fixtures) never has a pick due.
 prerequisites in words, ranks and Hardy's growth, several levels at once and `levelup:auto`,
 dropped picks, every hook, a free-blow talent, saves and replays, perception and dumps).
 
+## The trees so far
+
+Vigour, Might, and Finesse (#237) ship whole but for Battle trance and Inner calm (the class
+resources, #225); `body_talent_tests.rs` covers each one's rule, `hunger_tests.rs` Iron stomach.
+The statuses Winded (Second wind's cooldown) and Staggered (`cost = 150`, 6 s) are in
+`data/status.toml`.
+
 ## Later waves
 
-Skill rolls (#230) add `Due::rolls` and draw from `levels_rng`; stat training (#231) the stat
-checks on it; the level-up screen, the Talents page, creation picks, and `--talents` (#236) read
+Skill rolls (#230) add `Due::rolls` and draw from `levels_rng`; stat training (#231, done:
+`docs/dev/stats.md` "Training") checks every stat on it once a level, from `level_up`; the level-up screen, the Talents page, creation picks, and `--talents` (#236) read
 `PerceptionView::due`/`talents`; the talent waves add files under `data/talents/` and one read
 each; `granted` talents (races' `versatile`, the birth signs') are computed into `Actor::talents`
 by whoever grants them and never offered (`may_take` refuses them).

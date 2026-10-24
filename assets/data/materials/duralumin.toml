@@ -1,0 +1,13 @@
+# Light, but worse than steel in a fight and dearer: very rare.
+[[material]]
+id = "duralumin"
+name = "duralumin"
+group = "metal"
+color = "#b4bcc6"
+weight = 36
+to_hit = 1
+damage = -1
+protection = 90
+value = 1000
+rarity = { weight = 10 }
+gear = { weight = 5 }

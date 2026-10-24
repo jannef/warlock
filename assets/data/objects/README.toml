@@ -24,8 +24,9 @@
 #             `part` is an id in parts.toml (blade, grip, pommel, chain, setting, ...), `of` a
 #             material id, and `share` the part's percent of the weight. Every part but the first
 #             names its part and share; the main part takes what the others leave (at least 1),
-#             and decides what a single material does: the material word a name begins with
-#             (and, later, the colour, the weight, and how a weapon or armour fights). Names
+#             and decides what a single material does: the material word a name begins with,
+#             and for an item made of another material (`made_of`, below) its colour and how it
+#             fights or protects. Names
 #             show the gems and precious metals (`precious` materials) they do not mention yet:
 #             the gold amulet above is a "gold and ruby amulet", a long sword with a ruby pommel
 #             a "ruby-pommelled long sword" (parts.toml's `adjective`); a leather grip shows
@@ -33,6 +34,17 @@
 #             hidden: an unidentified amulet shows that it is gold and ruby
 #   ornament  the part a gem becomes when loot sets this object with one (a part id: `tip`),
 #             instead of its class's in gems.toml (spec §7 "Gems"): staves are gem-tipped
+#   made_of   what its main part may be made of instead (#194, spec §7 "Materials"): groups of
+#             materials (materials/README.toml: metal, wood, bone, stone, hide, cloth), material
+#             ids, or "any" (every material of a group: jewellery), e.g. `made_of = ["metal",
+#             "dragonbone"]`; it must allow the part's own material. A weapon's or ammunition's
+#             main part keeps only the materials that can be a weapon's working part, armour's
+#             and a shield's only those that can be armour; a material named by itself that
+#             cannot is an error, and so is a gem. Loot and creatures' gear make items of these
+#             (by the materials' `rarity` and `gear`), and level files may name one
+#             (`"dagger:bronze"`): "a bronze long sword", heavier, -1 damage, cheaper. Without a
+#             list an item is only ever made of its own materials. Another part may give its own
+#             in its table: `{ part = "grip", of = "leather", share = 10, made_of = ["hide"] }`
 #   weight    grams for one, at least 1
 #   value     what one is worth, in gold coins (required; 0 to 1000000): shops price their
 #             goods from it and pay part of it for what they buy (shops.toml). Junk is worth 0,

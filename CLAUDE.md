@@ -48,7 +48,9 @@ Game flags (`cargo run -p warlock -- --help`):
   `--character RACE,GENDER,CLASS` (e.g. `dwarf,female,warrior`; default: the scenario's
   character; like `--seed` it shapes the run other flags start and alone does not skip the menu),
   `--name NAME` (the character's name, up to 20 characters; default: the scenario's for its own
-  character, else one of the race's names picked from the seed; like `--character`)
+  character, else one of the race's names picked from the seed; like `--character`). A run
+  started with `--character` or `--name` (or from New run) has a chosen character and starts with
+  its starting kit; `--scenario` alone starts with the scenario's pack (docs/dev/character-creation.md)
 - `--content-dir assets` — read content from disk instead of the copy built into the binary
 - `--window WxH` (physical pixels), `--scale F` (display scale; `1` for reproducible captures)
 - `--capture out.png` — render **offscreen** (no window), save a screenshot, exit.
@@ -103,7 +105,7 @@ log, active first) from perception;
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:DIR pick:DIR ascend descend lantern
 pickup[:LETTERS] drop[:LETTERS] sell[:LETTERS] pay[:DIR] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
-eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] dig:DIR search search:N disarm:DIR chat:DIR ask:DIR:TOPIC rest:GOAL stance:NAME vision:PROFILE
+eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] dig:DIR search search:N disarm:DIR second_wind chat:DIR ask:DIR:TOPIC rest:GOAL stance:NAME vision:PROFILE
 talent:ID[:CHOICE] advance:SKILL levelup:auto xp:N
 skip:DURATION weather:KIND effect:ID@X,Y[>X,Y] identify[:LETTERS] afflict:STATUS infect:DISEASE`
 (`DIR` = N
@@ -123,7 +125,7 @@ fireball, lightning, frost), `read:b:c` reads it on inventory stack `c` (the scr
 identify); `dig:E` digs into the wall east with the tool in the Tool slot, turn
 after turn until it gives way or something interrupts; `search` searches the cells around the
 player for secret doors and hidden traps, `search:N` for up to N turns (1 to 100), stopping when
-something is found; `disarm:E` tries to disarm the trap the player knows of east of them (the
+something is found; `second_wind` uses the Second wind talent (hit points back at once, then Winded); `disarm:E` tries to disarm the trap the player knows of east of them (the
 Disarm ability, for those trained in Disable device; refused, with no time, without the skill
 or a known trap there); `chat:E` talks to the creature east of
 the player, `ask:E:rooms` asks it about topic `rooms` (an id in `assets/data/dialogue.toml`;
@@ -180,7 +182,8 @@ turn) and stat damage, the player's nutrition, its npc id and talk counts, if an
 all food on the level and in the packs of those on it with when it was made (a corpse: when it
 died) and its stage, `fresh`, `old`, `rotten`, or `gone`, which the player is never shown,
 **dev-only**), `progress` (the level-up choices due, `due level 3: 1 talent`, the talents the
-player may take now by id with their choices, and the first kills that paid, **dev-only**),
+player may take now by id with their choices, the first kills that paid, and the stat training
+marks, `stat marks St 3, To 1`, **dev-only**),
 `rooms`
 (the level's special rooms: their plain ground as the effect's `mark`, then a line per room,
 **dev-only**), `ice` (the level's temperature and the thickness of the ice on its water in cm,
@@ -200,10 +203,11 @@ special room the player stands in, if they know it), and per inventory stack (in
 order) its `letter` (the position as action text), `class` (item class id), `name`, `rarity`,
 `identified`, and `magic` (affixes only once identified). Replay
 files are JSON
-`{game_version, scenario, seed, character, name, steps:[{action, hash}]}` (`character` =
+`{game_version, scenario, seed, character, name, kit, steps:[{action, hash}]}` (`character` =
 `{race, gender, class}`, left out for a run without one; a replay without it starts as the
 scenario's, so old replays load; `name` the character's name, a replay without it gives the run's
-default name); `hash` is the FNV-1a 64 state hash (`World::state_hash`) after
+default name; `kit` true when the run started with the character's starting kit, left out
+otherwise); `hash` is the FNV-1a 64 state hash (`World::state_hash`) after
 the step, as 16 hex digits.
 
 - `--portable [DIR]` keep everything in `warlock-data` next to the game (or DIR); a `warlock-data`
@@ -218,7 +222,8 @@ the step, as 16 hex digits.
   character played last; `--dev` enables the dev keys in release
   builds (always on in debug: F2 reveal map (ground truth), F3 next vision profile, F4 light-value
   overlay, F5/F9 snapshots, F6 skip an hour (recorded as `skip:1h`), F7 next weather (recorded as
-  `weather:KIND`), F8 identify everything carried (recorded as `identify`); all listed by `?`);
+  `weather:KIND`), F8 identify everything carried (recorded as `identify`); all listed by `?`),
+  and New run's seed field (without it New run draws a random seed and never mentions it, #256);
   `--save-dir DIR` keeps saves in DIR instead of the platform data dir (`DIR/saves/<id>.sav`, one
   per character; with `--capture` or `--replay` only read).
 
@@ -251,10 +256,10 @@ file). Topics:
 - `docs/dev/combat.md` — the 2d12 rules, Defence categories, strikes, hit points and death, messages
 - `docs/dev/ranged-combat.md` — firing and throwing, missiles in flight, fires, the aiming mode
 - `docs/dev/weapon-skills.md` — ranks, marks, benefits, training hooks, the styles' grips and rows
-- `docs/dev/stats.md` — the six stats, modifiers, scores and potentials, what may be shown
+- `docs/dev/stats.md` — the six stats, modifiers, scores and potentials, what may be shown, stat training (marks by use, the level-up checks)
 - `docs/dev/burden.md` — load, limits, sizes, every penalty's one hook
 - `docs/dev/hunger.md` — satiation, eating, corpses and rot, starving
-- `docs/dev/character-creation.md` — `CharacterSpec`, races, classes, genders, the horoscope, starting rolls, names
+- `docs/dev/character-creation.md` — `CharacterSpec`, races, classes, genders, the horoscope, starting rolls, names, starting kits
 - `docs/dev/alignment.md` — the good–evil score and its bands, the deeds that move it (one hook each), what reads it
 - `docs/dev/skills.md` — trained skills, effects and uses, training marks, the skills screen
 - `docs/dev/experience.md` — the level curve, kill XP, level-ups
@@ -413,11 +418,12 @@ A successful compile does not verify anything visual. Before opening a PR:
 `*.toml` files (one per showcase room or feature, read in file-name order; entry names are
 unique across files) list one entry per showcase room plus the vast level (its start and
 its river): a scenario and text `actions` (`move:N*3 open:E`; `*N` repeats) or a `replay` file,
-and optional `character` (`human,male,paladin`: the run starts as it, not the scenario's), `window`, `scale`, `freeze_time`, `screen` (a `--screen` value: over the run, e.g.
+and optional `character` (`human,male,paladin`: the run starts as it, not the scenario's), `kit`
+(`true`: the run starts with the character's starting kit), `window`, `scale`, `freeze_time`, `screen` (a `--screen` value: over the run, e.g.
 `pause`, `help`, `settings`, `controls`, `inventory`, `equipment`, `equip-item`, `describe`,
 `character`, `skills`, `weapon-skills`, `quests`, `messages`, `pick-up`, `drop`, `eat`, `abilities`,
 `dialogue`; or over
-the main menu, the replay then unused: `main`, `characters`, `race`, `name`, `summary`), `args` (more game flags, e.g.
+the main menu, the replay then unused: `main`, `characters`, `race`, `gender`, `name`, `summary`), `args` (more game flags, e.g.
 `["--fire"]`, `["--keys", "h"]`), `tolerance` (per-channel, default 2) and `max_diff_ratio`
 (default 0.05% of pixels). Walks that fight or wait for creatures belong on hand-made levels
 (the showcase, the arena, the trap hall): a walk through a generated level breaks whenever the

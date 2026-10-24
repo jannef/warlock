@@ -5,6 +5,7 @@ glyph = "["
 fg = "#9a6838"
 class = "body_armour"
 materials = ["leather"]
+made_of = ["hide"]
 weight = 3500
 value = 40
 slot = "body"

@@ -1,0 +1,8 @@
+[[talent]]
+id = "staggering_blow"
+name = "Staggering blow"
+tree = "might"
+description = "Your best blows rock a foe on its feet: a critical hit up close leaves it staggered, slow to act next."
+needs = { stats = { strength = 15 }, level = 12 }
+effects = [{ kind = "critical_status", status = "staggered" }]
+systems = ["combat", "status"]

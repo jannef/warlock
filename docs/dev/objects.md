@@ -73,7 +73,8 @@ written, which `Stack::names` composes again for an item with parts of its own. 
 list every part
 (`Content::describe_parts`: "steel blade, leather grip"; `magic/describe.rs`'s first line).
 Materials are not hidden: nothing about them waits for identification. Construction lists per
-part (`made_of`, #194) will be checked in `part::resolve`. Tests: `content/part.rs` (the
+part (`made_of`, #194) are resolved by `part::construction` (below, "Materials and variants").
+Tests: `content/part.rs` (the
 vocabulary, the forms, shares, naming, worth), `world/parts_tests.rs` (built-in objects, names
 and descriptions, unidentified items, value by shares, generated loot and creature kits, saves
 and replays).
@@ -90,9 +91,46 @@ files, and the shop bill: known ids, a size and cut exactly on parts of a gem ma
 twice, at most `MAX_OBJECT_PARTS` in all; the gems' object is made of one gem as its main part
 (and must carry it), and no other item has a gem as its main part. Stacks join only with the
 same parts (`Stack::same_goods`), and a shop's bill counts goods, object and parts
-(`docs/dev/shops.md`). **Metal variants (#193) build on this**: a main-part `ItemPart` of
-another metal; `Stack::names` (written name + `part::names`) is where the metal word goes, and
-`[[item]]` `parts` (level files) refuse non-gems until then.
+(`docs/dev/shops.md`). Variants (below) are own parts of a non-gem material in place of a base
+part: `ItemPart::material`; `check` keeps them on their part's construction list.
+
+**Materials and variants** (spec §7 "Materials", #193, #194). `content/material.rs`:
+`MaterialDef` gains `group`, `color`, `weight` (percent of steel's), `to_hit` and `damage`
+(`MaterialDef::weapon`: `None` when neither is given, it cannot be a weapon's working part),
+`protection` (`None`: cannot be armour), and `rarity` and `gear` (`Found { weight, deeper, level
+}`, `Found::at(level)`), all optional and checked in `MaterialDef::check` (a gem has no group;
+only a material of a group is found). `VERY_RARE` (10) is the cap for a worse-but-dearer
+material, `ANY` the reserved group word. Construction lists: `made_of` in a part's table
+(`PartTable::made_of`) or the object's own `made_of` for the main part (`ObjectSpec::made_of`),
+resolved by `part::construction` in `Content::load_objects` after `ObjectSpec::resolve` (the
+object's `ObjectDef::role()`, a `PartRole`: `Weapon` for what has an `attack` or is ammunition,
+`Armour` for armour kinds and shields, else `Any`; `PartRole::allows` filters a group's
+materials, a material named alone that it refuses is an error) into `ObjectDef::construction`
+(one list per part, sorted by material id, empty when no part has one); read it with
+`ObjectDef::made_of(part)` (the list, else only the part's own material).
+`ObjectDef::is_jewellery()` (ring and amulet kinds) changes only worth and colour. The math is
+`variant.rs`: `weight` (each base part's share scaled by its material's weight over the base
+part's, integer, rounded), `weapon` (the main parts' modifier difference), `protection` (ratio,
+rounded to the nearest), `color`; `Stack::weight`, `Stack::base_protection` (the description's
+and `Stack::protection`'s base), `Stack::fg` (after a gem's colour), and `Mods::local` (to hit
+and damage, so every attack builder: melee, off hand, launcher and ammunition, thrown) read
+them; value needs nothing new (`value_with`). Names: `part::names` takes `written_for` (the base
+item's main material): a main part of another material replaces that material's whole word in
+the written name (`with_material`: spaces, hyphens, ends) or goes before it, then the precious
+parts are added as before, so the order is [ornament] [material] base. The description
+(`magic::describe::lines`) shows damage dice with the material's bonus (`Dice::plus`) and the
+scaled Protection; `base_stats(def)` (the wiki's) is the base item's. Generation (`variant::
+weights`, `draw`, `worse_but_dearer`, `Source::{Loot, Gear(level)}`): the main part's list, each
+material's `rarity` (loot, item level) or `gear` (creature level) weight, capped at `VERY_RARE`
+when worse in a fight than the base material (to hit or damage lower on what strikes, protection
+lower on armour with Protection) and dearer, never for jewellery; one draw, none for a single
+material; `magic/loot.rs` step 8 and `World::loot_of` (`docs/dev/magic-items.md`). Placements
+name a material, `"great_sword:bronze"` (`parse_stacks` / `placement`, checked by
+`item_parts::check`), and `[[item]]` `parts = [{ of = "bronze" }]` (no size or cut). Tests:
+`world/variant_tests.rs` (material checks, construction lists and their refusals, the math,
+names and colours, the description, placements and refusals, combat, saves and replays, the
+weights and the cap, loot determinism, the built-in tables, a property test over thousands of
+loot items and drops across seeds and depths, and the depth shift).
 
 **Gems** (spec §7 "Gems", #191): a gem is a material with a `gem` table (`content/gem.rs`,
 `GemDef`: `color`, `value` in gold for the plain size and cut, `rarity`, `plural`; a gem is
@@ -113,7 +151,8 @@ item level). `Stack::gem` says whether a stack is a loose gem; `Stack::names`, `
 glyph colour every screen and the map read: a loose gem's, or a ring's gem's by the ornament's
 `colour`), `Stack::weight` (a loose gem's size), and `Stack::value` follow from it.
 `magic::describe::lines` adds a line per gem part. Level files place loose gems as
-`"gem:ruby*3"` (`parse_stacks`, plain size and cut) and any gem with `[[item]]` `parts`.
+`"gem:ruby*3"` (`parse_stacks`, plain size and cut) and any gem with `[[item]]` `parts`
+(`dagger:ruby` is refused: only a loose gem names its gem).
 Loot, drops, and the item description are in `docs/dev/magic-items.md`. Tests:
 `world/gem_tests.rs` (data, value, names, naming order, colour, stacking, placements, loot
 frequency across seeds, drops, saves and a replay, the general store).

@@ -105,7 +105,8 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   `truth` (terrain, objects, traps hidden or known, secret doors as `S`, and creatures),
   `progress` (the level-up choices due, `due level 3: 1 talent`, the talents the player may
   take now by id with the choices each may be taken for, `takeable healthy,
-  weapon_focus:{bows,slings}`, and the creature types whose first kill has paid; §8 "Talents"),
+  weapon_focus:{bows,slings}`, the creature types whose first kill has paid, and the stat
+  training marks, `stat marks St 3, To 1`; §8 "Talents", "Stats"),
   and `actors` (every actor on
   the level with its hit
   points and Defence, `hp 8/12 dv 13`, its alignment (`alignment evil`; the player's score and
@@ -173,7 +174,8 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   set the next weather for three hours (`F7`, recorded as `weather:overcast` and so on), identify
   everything carried (`F8`, recorded as `identify`; §8 "Magic items").
   They are commands of their own context in the bindings table, read (and listed by Controls
-  and the `?` help, which can rebind them) only where they work.
+  and the `?` help, which can rebind them) only where they work. Dev builds (debug, or `--dev`)
+  also give New run its seed field (§6 "Main menu"); elsewhere a new run's seed is random.
 - CLAUDE.md documents build commands, architecture notes, pinned documentation references, and
   verification procedures, including the agent workflow guidance from the original brief.
   Verification uses tests, dumps, logs, and screenshots — a successful compile alone does not

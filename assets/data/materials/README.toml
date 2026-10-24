@@ -3,22 +3,57 @@
 # new material is a new file, a renamed id is a renamed file, and the same id in two files is a
 # load error naming both (docs/dev/content.md).
 #
-# Materials objects are made of, part by part (spec §7; objects/README.toml, `materials`).
+# Materials objects are made of, part by part (spec §7; objects/README.toml, `materials`), and
+# what an item made of another material than its base item is like (spec §7 "Materials", #193,
+# #194: "a bronze long sword"). Every property is on one scale, steel's (steel = weight 100, to
+# hit 0, damage 0, protection 100, value 100).
 # Fields:
 #   id        what objects name it by (`materials = ["iron"]`, `of = "iron"`)
 #   name      as names and descriptions write it
 #   precious  a gem or a precious metal (default false): the names of items it is part of show
 #             it ("gold and ruby amulet", "ruby-pommelled long sword"); plain materials show only
-#             in an item's description
+#             in an item's description, unless an item is made of one instead of its base
+#             item's material ("a bronze long sword")
+#   group     what construction lists name it by with the others of its kind (objects/README:
+#             `made_of`): metal, wood, bone, stone, hide, cloth, glass, resin. A material
+#             without one (paper, wax, food, and the gems, which are set but never made into
+#             anything) is never another item's material: `made_of = ["any"]` (jewellery) is
+#             every material of a group. A group is one word, never "any"
+#   color     "#rrggbb": the glyph of an item made of it where its base item is made of another
+#             material (default: the base item's own colour)
+#   weight    what an item of it weighs, in percent of the same item of steel (default 100, 1 to
+#             1000): an item made of another material weighs its base item's weight with each
+#             part's share scaled by its material's weight over the base part's. Metals by their
+#             real densities; the organic materials by an effective weight for items of them
+#   to_hit    to hit as a weapon's working part (a blade, a head), and
+#   damage    to every roll of its damage (-10 to 10 each): an item made of another material
+#             strikes with the difference of the two materials' modifiers. A material with
+#             neither cannot be a weapon's working part (leather, cloth); one given, the other is 0
+#   protection what of an armour's Protection an armour of it keeps, in percent (0 to 500): an
+#             armour made of another material has its Protection × its material's protection
+#             over its base item's, rounded. None: it cannot be armour (flint, obsidian)
 #   value     what it is worth, in percent of steel (default 100, 1 to 10000): an item made of
 #             other parts than its base item is worth the base item's value times what its parts
 #             are worth (each part's share of the weight times its material's value) over what
 #             the base item's are (a gem part an item carries is worth what its gem is, below)
-#   gem       makes it a gem (spec §7 "Gems"; it must be precious): an inline table of
+#   rarity    how often loot makes an item of it, among the materials its base item may be made
+#             of (its construction list, its own material too): { weight = 800, deeper = -40,
+#             level = 1 }, a weight at item level 1, `deeper` more (or less: never below 0) each
+#             item level past the first, and none below `level` (default 1). None: loot never
+#             makes anything of it. A material worse in a fight than an item's own (to hit or
+#             damage lower on a weapon, Protection lower on armour) and dearer weighs at most 10
+#             (very rare) for that item, whatever it says here; jewellery is never worse
+#   gear      the same for what creatures carry (what they drop), by the creature's level instead
+#             of the item level: primitive materials for kobolds, steel for tougher creatures
+#   gem       makes it a gem (spec §7 "Gems"; it must be precious, with no group): an inline
+#             table of
 #               color   "#rrggbb": a loose gem's glyph, and a ring set with it
 #               value   what a plain one (of the plain size and cut in gems.toml) is worth, in
 #                       gold; a gem is worth value × its size's × its cut's multiplier
 #               rarity  how often loot finds it among the gems, a weight (0: never found)
 #               plural  "rubies" (default: the name plus s)
 #             `gem = { color = "#d3213b", value = 300, rarity = 5, plural = "rubies" }`
-# Properties (weight, colour, weapon and armour modifiers, hardness, burning, rusting) come later.
+#
+# How often, in words (the wiki uses these): very common 800, common 300, uncommon 100, rare 40,
+# very rare 10 (as loot, at item level 1).
+# Properties not yet modelled: hardness, burning, rusting, and wear.

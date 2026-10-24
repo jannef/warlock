@@ -51,18 +51,23 @@ impl World {
         }
         let modifier = self.disease_modifier(actor, def.check);
         if check(&mut self.state.rng, modifier, def.difficulty) {
+            self.train_resisting(id, def.check);
             return false;
         }
         self.infect(id, disease, by)
     }
 
     /// What `actor` adds to a check against a disease whose `check` stat is `stat`: its
-    /// modifier in the stat (of the effective score, spec §8 "Stats"), and the player's race's
-    /// `disease_check` (ratfolk shrug diseases off).
+    /// modifier in the stat (of the effective score, spec §8 "Stats"), its talents' bonus
+    /// (Strong constitution, spec §8 "Talents"), and the player's race's `disease_check`
+    /// (ratfolk shrug diseases off).
     fn disease_modifier(&self, actor: &Actor, stat: Stat) -> i32 {
         let race = self.state.race_of(&self.content, actor);
         let modifier = actor.effective_stats(&self.content).modifier(stat);
-        modifier.saturating_add(race.map_or(0, |r| r.disease_check))
+        let talents = actor.talent_mods(&self.content).disease_checks;
+        modifier
+            .saturating_add(talents)
+            .saturating_add(race.map_or(0, |r| r.disease_check))
     }
 
     /// Actor `id` catches `disease`, given by `by` (if anyone): it incubates for its
@@ -131,6 +136,10 @@ impl World {
         let Some(actor) = self.state.actors.get_mut(&id) else {
             return false;
         };
+        let talents = actor.talent_mods(&content);
+        // Fever-proof (spec §8 "Talents"): fewer checks won in a row shake it off, never under 1.
+        let recovery = i32::from(def.recovery) - talents.disease_recovery;
+        let recovery = u8::try_from(recovery.max(1)).unwrap_or(def.recovery);
         let Some(infection) = actor.diseases.get_mut(disease) else {
             return true;
         };
@@ -155,9 +164,10 @@ impl World {
         let n = infection.progressions;
         if check(&mut self.state.rng, modifier, def.difficulty) {
             infection.streak = infection.streak.saturating_add(1);
-            if def.recovers() && infection.streak >= def.recovery {
+            if def.recovers() && infection.streak >= recovery {
                 self.end_disease(id, disease, events);
             }
+            self.train_resisting(id, def.check);
             return true;
         }
         infection.streak = 0;

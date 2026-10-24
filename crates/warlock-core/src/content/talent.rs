@@ -142,7 +142,7 @@ impl Choice {
 /// What a talent does, one typed effect. Each is read by one rule, where the rule already reads
 /// what magic items do (spec §8 "Talents"); a new kind is a variant here, its field in
 /// [`crate::talent::TalentMods`], and its one read.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum TalentEffect {
     /// Defence in the Dodge category (bonuses add up).
@@ -177,6 +177,58 @@ pub enum TalentEffect {
     Notice { value: i32 },
     /// A free blow the actor is given (spec §8 "Free blows").
     FreeBlow { trigger: FreeBlowTrigger },
+    /// Resting heals this percent faster on top of resting's own pace (Fast healer).
+    RestingPercent { value: i32 },
+    /// The active Second wind: `per_level` hit points per character level back at once, at
+    /// least `at_least`, then the `cooldown` status (an id in `data/status.toml`), while which
+    /// it cannot be used again.
+    SecondWind {
+        per_level: u8,
+        at_least: i32,
+        cooldown: String,
+    },
+    /// Rotten food never makes it vomit and sickens it half as much; overeating never makes it
+    /// vomit (Iron stomach).
+    IronStomach,
+    /// Status `status` eases this percent faster (100: twice as fast).
+    StatusEases { status: String, value: i32 },
+    /// Status `status` never lowers its scores.
+    NoPenalty { status: String },
+    /// A big hit makes it bleed no more, a critical one degree less (Clotting): the statuses
+    /// that come of wounds.
+    Clotting,
+    /// What its statuses take off its scores, this percent more (negative: less; Unbowed).
+    PenaltyPercent { value: i32 },
+    /// Added to its disease checks: catching one and every progression.
+    DiseaseChecks { value: i32 },
+    /// A disease needs this many checks fewer won in a row to be shaken off, never fewer than 1.
+    DiseaseRecovery { value: i32 },
+    /// Its kicks at creatures roll one die of this many sides instead of bare hands' dice.
+    KickDie { sides: u8 },
+    /// Its door kicks as if this much stronger.
+    DoorKick { value: i32 },
+    /// Its digging does this percent more work a turn.
+    DigPercent { value: i32 },
+    /// Its blows with a two-handed weapon cost this percent more (negative: cheaper).
+    TwoHandedPrice { value: i32 },
+    /// A critical it confirms in melee leaves the target suffering `status` (one degree).
+    CriticalStatus { status: String },
+    /// Its blows that can do damage of kind `damage` (an id in `data/damage_types.toml`) ignore this
+    /// much more Protection.
+    Penetration { damage: String, value: i32 },
+    /// The burden's cap on its Dexterity in Defence, this much higher.
+    BurdenDex { value: i32 },
+    /// A trap it steps onto first gets a Dexterity check against its difficulty: won, it does
+    /// not go off under it, and it is found (Light step).
+    SureStep,
+    /// Pits never catch it (Light step's second rank).
+    PitProof,
+    /// It moves and acts this percent quicker (its speed; the number is hidden in the game).
+    SpeedPercent { value: i32 },
+    /// Dodge added against shots, throws, and trap missiles.
+    MissileDodge { value: i32 },
+    /// The damage bursts and bolts (traps, scrolls) do it, this percent more (negative: less).
+    SpellDamagePercent { value: i32 },
 }
 
 /// The free blows a talent may switch on ([`crate::world::FreeBlows`]).
@@ -190,8 +242,15 @@ pub enum FreeBlowTrigger {
 }
 
 impl TalentEffect {
-    /// Whether the numbers are within what the rules expect.
-    fn check(self) -> Result<(), String> {
+    /// Whether the numbers are within what the rules expect, and the statuses and damage types
+    /// it names are in `content` (content without statuses or damage types has nothing to check
+    /// them by: they stay, and do nothing).
+    fn check(&self, content: &Content) -> Result<(), String> {
+        let status = |id: &str| {
+            (content.status_ids().next().is_none() || content.status_id(id).is_some())
+                .then_some(())
+                .ok_or_else(|| format!("names an unknown status `{id}`"))
+        };
         let bonus = |v: i32| {
             (v != 0 && BONUSES.contains(&v))
                 .then_some(())
@@ -215,18 +274,60 @@ impl TalentEffect {
             | TalentEffect::Natural { value }
             | TalentEffect::MeleeDamage { value }
             | TalentEffect::Hearing { value }
-            | TalentEffect::Notice { value } => bonus(value),
+            | TalentEffect::Notice { value }
+            | TalentEffect::DiseaseChecks { value }
+            | TalentEffect::DiseaseRecovery { value }
+            | TalentEffect::DoorKick { value }
+            | TalentEffect::BurdenDex { value }
+            | TalentEffect::MissileDodge { value } => bonus(*value),
             TalentEffect::HealingPercent { value }
             | TalentEffect::FootstepsPercent { value }
             | TalentEffect::CarryPercent { value }
             | TalentEffect::TravelPercent { value }
             | TalentEffect::HungerPercent { value }
-            | TalentEffect::XpPercent { value } => percent(value),
+            | TalentEffect::XpPercent { value }
+            | TalentEffect::RestingPercent { value }
+            | TalentEffect::PenaltyPercent { value }
+            | TalentEffect::DigPercent { value }
+            | TalentEffect::TwoHandedPrice { value }
+            | TalentEffect::SpeedPercent { value }
+            | TalentEffect::SpellDamagePercent { value } => percent(*value),
+            TalentEffect::StatusEases { status: id, value } => {
+                status(id)?;
+                percent(*value)
+            }
+            TalentEffect::NoPenalty { status: id }
+            | TalentEffect::CriticalStatus { status: id } => status(id),
+            TalentEffect::SecondWind {
+                per_level,
+                at_least,
+                cooldown,
+            } => {
+                if !(1..=20).contains(per_level) || !(0..=100).contains(at_least) {
+                    return Err("`second_wind`: per_level is 1 to 20, at_least 0 to 100".into());
+                }
+                status(cooldown)
+            }
+            TalentEffect::KickDie { sides } => {
+                if !(2..=20).contains(sides) {
+                    return Err("`kick_die`: sides is 2 to 20".into());
+                }
+                Ok(())
+            }
+            TalentEffect::Penetration {
+                damage: kind,
+                value,
+            } => {
+                if !content.damage_types().is_empty() && content.damage_type_id(kind).is_none() {
+                    return Err(format!("names an unknown damage type `{kind}`"));
+                }
+                bonus(*value)
+            }
             TalentEffect::MaxHpPerLevels {
                 per_levels,
                 at_least,
             } => {
-                if !(1..=20).contains(&per_levels) || !(0..=20).contains(&at_least) {
+                if !(1..=20).contains(per_levels) || !(0..=20).contains(at_least) {
                     return Err(
                         "`max_hp_per_levels`: per_levels is 1 to 20, at_least 0 to 20".into(),
                     );
@@ -235,7 +336,11 @@ impl TalentEffect {
             }
             TalentEffect::SilentDoors
             | TalentEffect::NoExertion
-            | TalentEffect::FreeBlow { .. } => Ok(()),
+            | TalentEffect::FreeBlow { .. }
+            | TalentEffect::IronStomach
+            | TalentEffect::Clotting
+            | TalentEffect::SureStep
+            | TalentEffect::PitProof => Ok(()),
         }
     }
 }
@@ -251,6 +356,8 @@ pub enum Need {
     Skill(SkillId, u16),
     /// A weapon skill or style at this rank at least.
     WeaponSkill(WeaponSkillId, u8),
+    /// Any one of several weapon skills at a rank at least ("a melee weapon skill 3").
+    AnyWeaponSkill(AnyWeaponSkill),
     /// The chosen weapon skill or style at this rank at least (talents with a `choice`).
     Chosen(u8),
     /// A character level.
@@ -283,6 +390,7 @@ impl Need {
             Need::WeaponSkill(id, rank) => {
                 format!("{} {rank}", content.weapon_skills().skill(*id).name)
             }
+            Need::AnyWeaponSkill(any) => format!("{} {}", any.words, any.rank),
             Need::Chosen(rank) => format!("the chosen one at {rank}"),
             Need::Level(level) => format!("level {level}"),
             Need::Race(id) => {
@@ -302,6 +410,16 @@ impl Need {
     }
 }
 
+/// A prerequisite met by any one of several weapon skills at a rank (`any_weapon_skill`).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct AnyWeaponSkill {
+    /// The skills, in file order.
+    pub skills: Vec<WeaponSkillId>,
+    pub rank: u8,
+    /// How it is said: "a melee or unarmed weapon skill", "Maces and clubs or Unarmed".
+    pub words: String,
+}
+
 /// The prerequisites of a talent, or of one of its ranks (spec §8 "Talents"): all must hold
 /// when it is chosen; none is checked again later.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -311,6 +429,7 @@ pub struct Needs {
     pub stats: PerStat<u8>,
     pub skills: Vec<(SkillId, u16)>,
     pub weapon_skills: Vec<(WeaponSkillId, u8)>,
+    pub any_weapon_skill: Option<AnyWeaponSkill>,
     pub chosen: Option<u8>,
     /// 0 asks nothing.
     pub level: u8,
@@ -336,6 +455,7 @@ impl Needs {
             .map(|(stat, score)| Need::Stat(stat, score));
         let skills = self.skills.iter().map(|&(s, v)| Need::Skill(s, v));
         let weapons = (self.weapon_skills.iter()).map(|&(w, r)| Need::WeaponSkill(w, r));
+        let any = self.any_weapon_skill.clone().map(Need::AnyWeaponSkill);
         let chosen = self.chosen.map(Need::Chosen);
         let level = (self.level > 0).then_some(Need::Level(self.level));
         let race = self.race.clone().map(Need::Race);
@@ -346,6 +466,7 @@ impl Needs {
             .chain(stats)
             .chain(skills)
             .chain(weapons)
+            .chain(any)
             .chain(chosen)
             .chain(level)
             .chain(race)
@@ -402,7 +523,7 @@ impl TalentDef {
     /// What holding `rank` (1 first) adds: the per-rank effects, then that rank's own.
     pub fn effects_at(&self, rank: u8) -> impl Iterator<Item = TalentEffect> + '_ {
         let own = (self.ranks.get(usize::from(rank.max(1)) - 1)).map(|r| r.effects.as_slice());
-        (self.effects.iter().copied()).chain(own.into_iter().flatten().copied())
+        (self.effects.iter().cloned()).chain(own.into_iter().flatten().cloned())
     }
 
     /// Whether its first rank may be taken by anyone: no prerequisites at all.
@@ -612,12 +733,63 @@ struct NeedsSpec {
     stats: BTreeMap<String, u8>,
     skills: BTreeMap<String, u16>,
     weapon_skills: BTreeMap<String, u8>,
+    any_weapon_skill: Option<AnySpec>,
     chosen: Option<u8>,
     level: u8,
     race: Option<String>,
     eyes: Option<String>,
     class: Option<String>,
     requires_alignment: Option<Requirement>,
+}
+
+/// `any_weapon_skill = { roles = ["melee"], of = ["unarmed"], rank = 3 }`: any skill of those
+/// roles, or any named, at that rank.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct AnySpec {
+    #[serde(default)]
+    roles: Vec<super::Role>,
+    #[serde(default)]
+    of: Vec<String>,
+    rank: u8,
+}
+
+/// Resolves `any_weapon_skill` against `content`'s weapon skills; `None` without them.
+fn resolve_any(spec: AnySpec, content: &Content) -> Result<Option<AnyWeaponSkill>, String> {
+    let table = content.weapon_skills();
+    if table.skills().is_empty() {
+        return Ok(None);
+    }
+    if spec.rank == 0 || spec.rank > MAX_RANK {
+        return Err(format!("`any_weapon_skill`: ranks are 1 to {MAX_RANK}"));
+    }
+    let mut named = Vec::new();
+    for name in &spec.of {
+        let id =
+            (table.id(name)).ok_or_else(|| format!("needs an unknown weapon skill `{name}`"))?;
+        named.push(id);
+    }
+    let skills: Vec<WeaponSkillId> = (table.ids())
+        .filter(|(id, def)| spec.roles.contains(&def.role) || named.contains(id))
+        .map(|(id, _)| id)
+        .collect();
+    if skills.len() < 2 {
+        return Err("`any_weapon_skill` names fewer than two skills".into());
+    }
+    let mut parts: Vec<String> = (named.iter())
+        .map(|&id| table.skill(id).name.clone())
+        .collect();
+    if !spec.roles.is_empty() {
+        let roles: Vec<String> = (spec.roles.iter())
+            .map(|r| r.id().replace('_', " "))
+            .collect();
+        parts.insert(0, format!("a {} weapon skill", roles.join(" or ")));
+    }
+    Ok(Some(AnyWeaponSkill {
+        skills,
+        rank: spec.rank,
+        words: parts.join(" or "),
+    }))
 }
 
 /// A talent as read, before the talents it needs are known.
@@ -690,6 +862,10 @@ fn resolve_needs(
         }
         weapon_skills.push((id, rank));
     }
+    let any_weapon_skill = match spec.any_weapon_skill {
+        Some(any) => resolve_any(any, content)?,
+        None => None,
+    };
     if let Some(rank) = spec.chosen {
         match choice {
             None => return Err("`chosen` needs a `choice`".into()),
@@ -733,6 +909,7 @@ fn resolve_needs(
         stats,
         skills,
         weapon_skills,
+        any_weapon_skill,
         chosen: spec.chosen,
         level: spec.level,
         race: spec.race,
@@ -887,7 +1064,7 @@ pub(super) fn parse<'a>(
             return Err(err("needs itself".into()));
         }
         for effect in &spec.effects {
-            effect.check().map_err(err)?;
+            effect.check(content).map_err(err)?;
         }
         let mut rank_defs = Vec::new();
         for (n, rank) in spec.rank.into_iter().enumerate() {
@@ -898,7 +1075,7 @@ pub(super) fn parse<'a>(
             }
             for effect in &rank.effects {
                 effect
-                    .check()
+                    .check(content)
                     .map_err(|m| err(format!("rank {}: {m}", n + 1)))?;
             }
             rank_defs.push(Rank {

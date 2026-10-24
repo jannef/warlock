@@ -5,6 +5,7 @@ glyph = "["
 fg = "#b4bac0"
 class = "helmets"
 materials = ["steel"]
+made_of = ["metal", "hide", "bone"]
 weight = 3000
 value = 120
 slot = "head"

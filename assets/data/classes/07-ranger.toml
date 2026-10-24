@@ -1,0 +1,22 @@
+[[class]]
+id = "ranger"
+name = "Ranger"
+description = "A hunter and tracker of the borderlands: sharp-eyed, sure-footed, and easier with beasts than people."
+stats = { dexterity = "1d3", toughness = 1, willpower = "1d2", presence = -1 }
+hp = 5
+experience = 105
+skills = { spot = "2d6+10", survival = "2d6+10", woodcraft = "2d6+10", athletics = "2d4+4", handle_animal = "2d4+4", listen = "2d4+4", swim = "2d4+4" }
+known_for = ["spot", "survival", "woodcraft"]
+rolls = 3
+weapon_skills = { bows = 2, short_blades = 1 }
+styles = { marksman = 1 }
+# Bow and quiver, a short sword, and leathers for the borderlands.
+kit = [
+    { wield = "short_bow" },
+    { wield = "arrow*24" },
+    { wield = "short_sword" },
+    { wear = "leather_jerkin" },
+    { wear = "leather_boots" },
+    "dried_meat*3",
+    "gold_coin*8",
+]
