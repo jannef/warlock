@@ -38,6 +38,7 @@ mod scrolls;
 mod searching;
 mod sight;
 mod skills;
+mod stats;
 mod talents;
 mod temperature;
 mod terrain;
@@ -154,6 +155,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("stat-modifiers.md", character::stat_modifiers),
         ("stat-uses.md", character::stat_uses),
         ("potentials.md", character::potentials),
+        ("stat-training.md", stats::stat_training),
+        ("stat-checks.md", stats::stat_checks),
         ("genders.md", character::genders),
         ("races.md", character::races),
         ("classes.md", character::classes),

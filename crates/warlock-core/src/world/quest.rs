@@ -26,6 +26,7 @@
 use super::talk::capitalized;
 use super::{ActorId, Deed, Spent, TopicView, World};
 use crate::action::{Event, Positions};
+use crate::content::StatUse;
 use crate::content::{Content, DialogueId, Goal, QuestDef, QuestId, QuestKind};
 use crate::object::{self, Stack};
 use crate::perception::PerceptionView;
@@ -540,6 +541,7 @@ impl World {
         }
         self.answer(id, def.texts.done.clone(), Some(topic.into()), events);
         self.say(format!("Quest complete: {}.", def.name));
+        self.train_stat(StatUse::Quest);
         let who = capitalized(&self.called(&self.state.actors[&id]));
         let mut stacks = def.reward.stacks(&content);
         crate::rot::made_at(&mut stacks, &content, self.state.time);

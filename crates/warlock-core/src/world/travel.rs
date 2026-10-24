@@ -457,6 +457,7 @@ pub(super) fn instantiate_level(
             stance: CombatStance::Neutral,
             free_blows: FreeBlows::default(),
             talents: Default::default(),
+            stat_marks: Default::default(),
         };
         actor.hp = actor.max_hp(content);
         crate::rot::made_at(&mut actor.inventory, content, state.time);

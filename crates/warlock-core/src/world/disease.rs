@@ -50,6 +50,7 @@ impl World {
         }
         let modifier = actor.effective_stats(&self.content).modifier(def.check);
         if check(&mut self.state.rng, modifier, def.difficulty) {
+            self.train_resisting(id, def.check);
             return false;
         }
         self.infect(id, disease, by)
@@ -145,6 +146,7 @@ impl World {
             if def.recovers() && infection.streak >= def.recovery {
                 self.end_disease(id, disease, events);
             }
+            self.train_resisting(id, def.check);
             return true;
         }
         infection.streak = 0;

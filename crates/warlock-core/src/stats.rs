@@ -318,6 +318,18 @@ impl Stats {
         rises
     }
 
+    /// Raises the score in `stat` by 1 by training (spec §8 "Stats": a level-up's check), past
+    /// its potential too, which then rises with it; never past [`SCORES`]. Returns whether it
+    /// rose.
+    pub fn train(&mut self, stat: Stat) -> bool {
+        let rises = self.score[stat] < *SCORES.end();
+        if rises {
+            self.score[stat] += 1;
+            self.potential[stat] = self.potential[stat].max(self.score[stat]);
+        }
+        rises
+    }
+
     /// These stats with every score adjusted by `by` (kept within [`SCORES`]; a potential below
     /// its score is raised to it): the scores the rules read while a status effect lowers some
     /// (spec §8 "Status effects").
