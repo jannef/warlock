@@ -154,6 +154,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("potentials.md", character::potentials),
         ("genders.md", character::genders),
         ("races.md", character::races),
+        ("race-traits.md", character::race_traits),
         ("classes.md", character::classes),
         ("horoscope.md", character::horoscope),
         ("alignment-bands.md", alignment::alignment_bands),
@@ -731,6 +732,15 @@ mod tests {
         assert!(text("races.md").contains("| Human | 0 | 0 | 0 | 0 | 0 | 0 | Normal | 16–35 |"));
         assert!(text("races.md").contains("| Elf | \u{2212}1 | 1d2+1 |"));
         assert!(text("races.md").contains("- **Halfling**: Small, quick"));
+        // The races' gifts and flaws beyond their stats, by name; a race with none left out.
+        let traits = text("race-traits.md");
+        assert!(
+            traits.contains("| Lizardfolk | Protection 1 (scales) | \u{2014} |"),
+            "{traits}"
+        );
+        assert!(traits.contains("dazzled from brightness 250: sees 10 cells, to-hit \u{2212}1"));
+        assert!(traits.contains("| +4 | eaten unharmed |"), "{traits}");
+        assert!(!traits.contains("| Human |"), "{traits}");
         assert!(
             text("classes.md")
                 .contains("| Wizard | \u{2212}2 | 0 | \u{2212}1d2 | 2d2+1 | +1 | 0 |"),

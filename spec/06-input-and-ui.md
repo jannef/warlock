@@ -537,7 +537,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - Screen layout: map viewport, message log, status panel (level, the player's hit points as
   `HP 18/24` (never below 0), the status effects they suffer by name, the most important first
   (`Bleeding`, `Poisoned`, `Diseased`; data order; §8 "Status effects"; never which disease, §8
-  "Diseases"), their hunger unless they are Not hungry (`Hungry`, `Weak`, `Fainting`, `Starving`,
+  "Diseases"), `Dazzled` while strong light dazzles their light-blind eyes (§8 "Character
+  creation"), their hunger unless they are Not hungry (`Hungry`, `Weak`, `Fainting`, `Starving`,
   `Satiated`, `Bloated`; §8 "Hunger"), their burden when they have one (`Burdened`, `Strained`,
   `Overloaded`; §8 "Burden"), their level as `Lv 3` (§8 "Experience"; it goes after the burden
   and before the time and the date), region (on the overworld and in

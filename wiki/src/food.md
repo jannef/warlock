@@ -36,7 +36,9 @@ Food a little past its best is fine to eat. Food past its keeping is **rotten**,
 a bad idea: "Ugh! The loaf of bread was rotten." You may vomit, and if it stays down it makes
 you sick ("You feel sick."): food poisoning, which costs hit points for a while until it wears
 off (see [Status effects](status-effects.md#poisoned)), though it still feeds you. Rotten food
-may also give you grave rot (see [Diseases](diseases.md)). Shopkeepers know rotten food when they
+may also give you grave rot (see [Diseases](diseases.md)). Ratfolk eat it without harm: "The
+loaf of bread was rotten, but your stomach does not mind." It feeds them as fresh food would, no
+more (a rotten corpse has lost whatever else its flesh did). Shopkeepers know rotten food when they
 smell it: they will not buy it, and they do not sell it either (see [Shops](shops.md)).
 
 ## Corpses

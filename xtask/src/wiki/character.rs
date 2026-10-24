@@ -242,6 +242,60 @@ pub(super) fn races(content: &Content) -> String {
     out
 }
 
+/// The races' gifts and flaws on other rules, by name: natural armour, resistances,
+/// light-blindness, disease checks, and rotten food; a race with none of them is left out.
+pub(super) fn race_traits(content: &Content) -> String {
+    let mut out = String::from(
+        "| Race | Natural armour | Resists | Strong light | Disease checks | Rotten food |\n\
+         |---|---|---|---|:---:|---|\n",
+    );
+    let mut races: Vec<_> = content.races().list.iter().collect();
+    races.sort_by(|a, b| a.name.cmp(&b.name));
+    for r in races {
+        let natural = r.natural.as_ref().map(|h| match h.defence {
+            0 => format!("Protection {} ({})", h.protection, h.name),
+            d => format!("Defence +{d}, Protection {} ({})", h.protection, h.name),
+        });
+        let resists: Vec<String> = (r.resist.iter())
+            .map(|&(kind, percent)| format!("{} {percent} %", content.damage_type(kind).name))
+            .collect();
+        let light = r.light_blind.map(|b| {
+            format!(
+                "dazzled from brightness {}: sees {} cells, to-hit {}",
+                b.glare,
+                b.sight,
+                signed(b.to_hit)
+            )
+        });
+        let disease = (r.disease_check != 0).then(|| signed(r.disease_check));
+        let rotten = r.eats_rotten.then(|| "eaten unharmed".to_string());
+        if natural.is_none()
+            && resists.is_empty()
+            && light.is_none()
+            && disease.is_none()
+            && rotten.is_none()
+        {
+            continue;
+        }
+        let dash = || "—".to_string();
+        let resists = if resists.is_empty() {
+            dash()
+        } else {
+            resists.join(", ")
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {} | {resists} | {} | {} | {} |",
+            r.name,
+            natural.unwrap_or_else(dash),
+            light.unwrap_or_else(dash),
+            disease.unwrap_or_else(dash),
+            rotten.unwrap_or_else(dash),
+        );
+    }
+    out
+}
+
 /// The classes in the order New run offers them: their stat adjustments, then what they are.
 pub(super) fn classes(content: &Content) -> String {
     let (names, align) = stat_columns();

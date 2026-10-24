@@ -139,8 +139,9 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
 - **Stats** — Strength, Dexterity, Toughness, Intelligence, Willpower, and Presence, inspired by
   D&D, for you and every creature; a character screen shows your own. Strength, Dexterity, and
   Toughness count in a fight, and Strength kicks doors in; the rest do nothing yet.
-- **Character creation** — ADOM-style, at the start of every run: seven races (elf, half-elf,
-  human, dwarf, halfling, gnome, half-orc), each with its own eyes, three genders, and fifteen
+- **Character creation** — ADOM-style, at the start of every run: thirteen races (elf, half-elf,
+  human, dwarf, halfling, gnome, half-orc, and the evil goblin, drow, kobold, lizardfolk,
+  duergar, and ratfolk), each with its own eyes, three genders, and fifteen
   classes from barbarian and wizard to merchant and commoner shape your starting stats and
   skills, with dice rolled in the background (a warrior's Strength is 1d3+1). Your age and birthday are
   random, and the year you were born gives you a horoscope sign: one of twelve mythological

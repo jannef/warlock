@@ -10,7 +10,7 @@ with one check for all of them.
 secret_door }`, `Content::search()`; optional, `SearchRules::default` without it), the Search
 and Spot skills' benefits in `data/skills.toml` (`skills::Effect::Search`, `SearchReach`,
 `Spot`; marks on `Use::Search`, `Use::Spot`), races' `passive_search` (`PassiveSearch::{All,
-Stone}`) and `search` bonus (`RaceDef`), terrain `stone`, traps' `difficulty` and `sign`
+Stone, Traps}`) and `search` bonus (`RaceDef`), terrain `stone`, traps' `difficulty` and `sign`
 (`TrapDef`), branches' `secret_doors` and `hidden_per_depth` (`DungeonDef::hidden_at`).
 
 **Secret doors** are per-cell ground truth beside the wall they look like, like locks:
@@ -33,9 +33,9 @@ where the map had `+`.
 never the player's own cell, in position order; beyond the adjacent cells only those in line of
 sight), `difficulty_of` (own difficulty + `hidden_at(depth)`), `search_modifier(Look)` (the
 effective Intelligence or Willpower modifier, the skill effect through `Actor::skill_effect`,
-the race's `search`, the passive penalty), `notices(at)` (Spot trained via
+the race's `search`, the passive penalty), `notices(at, hidden)` (Spot trained via
 `Skills::trains_effect(Effect::Spot)`, else the race's `passive_search`, `stone` read from the
-cell's terrain). `Action::Search(turns)` → `Spent::Search` → `World::search` runs `keep_at`
+cell's terrain, `traps` only for a `Hidden::Trap`). `Action::Search(turns)` → `Spent::Search` → `World::search` runs `keep_at`
 with `search_turn` (the `search` action's price first, then the active checks, then a Search
 mark), stopping when `World::found` (an unsaved counter) moves; `notice_hidden` is the passive
 check, called once per player turn at the start of `run_turn` (`schedule.rs`), so steps, waits,
