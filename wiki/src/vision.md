@@ -26,7 +26,12 @@ all: they do not see it, and it does not light anything for them.
   violet tint, and only if you see UV.
 
 Your vision type comes from your race: the table on [Races](races.md) lists each race's eyes.
-There is no way to change your eyes in play yet; a [developer key](controls.md#developer-keys)
+[Talents](talents.md) of the Shadow tree change them: **Night eyes** (normal eyes) halves the light
+a cell needs, **Dark adaptation** (darkvision) reaches 2 cells farther, **Owl eyes** (low-light)
+gives darkvision of 2 cells, and **Rune sight** sees UV light. Your eyes keep their type's name; the
+talents only change what it does. **Blood scent** (darkvision) sees a bleeding creature in your
+line of sight within 9 cells however dark it is, and **Moon-eyed** (low-light) sees a cell farther
+across the [overworld](overworld.md) at night. A [developer key](controls.md#developer-keys)
 (`F3`) cycles through the types for trying them out.
 
 Creatures have eyes of these types too, and see by the same rules (see

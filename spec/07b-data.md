@@ -547,9 +547,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   "readied", "quivered"), Tool (`ready`, "in use"; M19); the rest `wear`, "being worn". The wiki
   shows them in a generated table with what fits each.
 - **Factions** (`data/factions.toml`, optional; without it everyone is neutral): `[[faction]]`
-  with `id`, `name`, and `hostile` (faction ids). Relations are pairwise and symmetric: if A lists
-  B, A and B are hostile to each other; every pair not listed (a faction and itself too) is
-  neutral. Validation: unique ids, known ids, no faction hostile to itself, a `player` faction
+  with `id`, `name`, `hostile` (faction ids), and `animal` (default false; the vermin and the
+  wildlife are animals: a Beast-friend player, §8 "Talents", stands neutral with their creatures
+  until they attack one of a type, `World::stance` and the AI alike). Relations are pairwise and
+  symmetric: if A lists B, A and B are hostile to each other; every pair not listed (a faction
+  and itself too) is neutral. Validation: unique ids, known ids, no faction hostile to itself, a `player` faction
   (the player's), and every creature type but the player naming a known faction. The core API
   gives the stance (`Hostile` or `Neutral`) of two factions, creature types, or actors. Test
   factions: `vermin` (giant rats; hostile to the player), `kobolds` (the war band; hostile to the

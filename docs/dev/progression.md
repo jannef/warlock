@@ -15,7 +15,7 @@ hit points a level gives) is `docs/dev/experience.md`.
 | `world/skill_roll.rs` | The skill rolls (#230, `docs/dev/skills.md`): `level_rolls`, `advance_skill` (`advance:SKILL`), `advance_auto` (`levelup:auto`'s rolls). `World::due()` and `candidate()`. |
 | `world/experience.rs` | `grant_xp` scales every gain by `TalentMods::xp_percent` and calls `level_up`; the dev `xp:N` (`grant_xp_dev`). |
 | `perception.rs` | `due()`, `own_talents()` (`OwnTalent`), `talents()` (`TalentView`: held rank, the next rank's needs with `met`, `openings`): what the level-up screen and the Talents page (#236) read. |
-| `dump.rs` | layers `talents` (held, `Hardy 2/3`) and `progress` (dev: dues, `due level 3: 3 skill rolls, 1 talent`, takeable ids with choices, discovered kills); JSON `talents`, `due` (`level`, `talents`, `rolls`). |
+| `dump.rs` | layers `talents` (held, `Hardy 2/3`) and `progress` (dev: dues, `due level 3: 3 skill rolls, 1 talent`, takeable ids with choices, discovered kills, `empathy broken rat`); JSON `talents`, `due` (`level`, `talents`, `rolls`), `forecast` (Weather-wise only); the header's `weather clear then rain`. |
 | `action.rs` | `Talent { id, choice }` (`talent:hardy`, `talent:weapon_focus:long_blades`; ids keep their case), `Advance(skill)`, dev `LevelUpAuto` (`levelup:auto`), `GrantXp` (`xp:N`); all `Spent::NoTime` or refused. |
 | `rng.rs` | `Rng::levels(seed)`, the `levels` stream, kept in `WorldState::levels_rng: Option<Rng>` **from the first draw** (the stat checks of each level, `world/stat_training.rs`; skill rolls, `world/skill_roll.rs`), so runs that never drew hash as before. |
 | `xtask/src/wiki/talents.rs` | `talents.md` (trees with the rules), `talents-by-system.md` (the coverage matrix). |
@@ -33,8 +33,20 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `healing_percent` | `World::healing_rate`, summed with the regeneration affixes |
 | `footsteps_percent`, `silent_doors` | `noise::noise` (after the stealth skill and affixes; a silent door is no noise at all) |
 | `hearing` | `Actor::hearing`, with the listen skill |
+| `threshold_percent`, `darkvision`, `sees_uv` | `WorldState::eyes` (`world/eyes.rs`, the design's B4): the base profile (`WorldState::vision`) as the talents change it; `Perception::compute` reads it, so the view's `vision()` is the effective eye (id and name the base's). Creatures keep their types' profiles |
+| `scent` | `Perception::compute`: a creature suffering the status, in line of sight within the radius (not on the overworld), has its cell seen as darkvision would |
+| `night_sight` | `Perception::compute`: the overworld's sight radius at night (`daylight::phase`) |
+| `lantern_light` | `LightCache::sources`: the lit lantern's preset (gameplay light: creatures see it too) |
+| `ambush` | `World::resolve` → `World::ambushed` (`world/ambush.rs`): the dice added after the strike when it hit a creature that `World::unaware` says has not seen the attacker (`Mind::last_seen` unset, and creature sight from it misses the attacker's cell); drawn only then |
 | `carry_percent` | `burden::load` (the limit before the affixes' kilograms, kept a multiple of 3) |
 | `travel_percent` | `World::step_price` on the overworld, after the survival skill |
+| `terrain_as` | `World::step_price`: the terrain stepped onto is priced as the one it names (local and overworld alike; its ids checked once the terrain loads, `TalentBook::check_terrain`) |
+| `plunge_proof` | `World::fall_in`: no plunge damage and no draw for it |
+| `light_on_ice`, `climb_percent` | `World::tread` (the load on the ice is the body's weight alone), `World::tread_price` (the climb's price) |
+| `wading_proof` | `World::wade`: no exposure, no draw |
+| `beast_friend` | `beast_friend::befriended` (`world/beast_friend.rs`), read by `World::stance`, `ai::nearest_hostile_in_sight`, and `PerceptionView::stance`; `World::resolve` (an attack by the player) records the type in `Progress::empathy_broken` |
+| `forecast` | `Perception::compute` → `weather::forecast` (`PerceptionView::forecast`; the status bar, the dump header's `then`, JSON `forecast`) |
+| `sun_healing` | `World::healing_rate`, with the regeneration affixes, while `World::under_open_sun` |
 | `hunger_percent`, `no_exertion` | `World::hunger_percent` (the race's pace scaled), `exert` |
 | `xp_percent` | `grant_xp` (every gain: kills, discovery, quests, dev) |
 | `notice` | `search.rs`: `notices` (as if trained in Spot) and `search_modifier(Look::Passive)` |
@@ -84,16 +96,19 @@ system of the game joins the list in the PR that ships its talents. The check ru
 
 ## Determinism and saves
 
-Picks are replayed actions; prerequisites read stored scores. Nothing in talents draws from the
-gameplay stream. The hash covers `Actor::talents`, `Progress::due`, and `levels_rng`, each left
-out of the JSON while unused, so runs without talents hash as before this change. Saves change
-(`Actor::talents`, `Progress::due`, `levels_rng`, all with serde defaults). A run without talents
-content (fixtures) never has a pick due.
+Picks are replayed actions; prerequisites read stored scores. Talents draw from the gameplay
+stream only where their condition arises (Light step's check, Ambusher's die on a hit at an
+unaware creature), and some draw less (Swimmer's plunge, Marsh walker's wading, Iron stomach),
+so a run without them draws as before. The hash covers `Actor::talents`, `Progress::due`,
+`Progress::empathy_broken`, and `levels_rng`, each left out of the JSON while unused, so runs
+without talents hash as before this change. Saves change (`Actor::talents`, `Progress::due`,
+`Progress::empathy_broken`, `levels_rng`, all with serde defaults; the new light preset shifts the
+light ids after it). A run without talents content (fixtures) never has a pick due.
 
 ## Tests
 
 `content/talent.rs` (loading, validation, the coverage gaps, choice chains), `talent.rs`
-(summing, ranks per choice, serialization), `world/talent_arms_tests.rs` (the Weaponcraft and Guard hooks, the role need's words), `world/talent_tests.rs` (dues and refusals,
+(summing, ranks per choice, serialization), `world/talent_arms_tests.rs` (the Weaponcraft and Guard hooks, the role need's words), `world/land_talent_tests.rs` (the Shadow and Wayfarer hooks), `world/talent_tests.rs` (dues and refusals,
 prerequisites in words, ranks and Hardy's growth, several levels at once and `levelup:auto`,
 dropped picks, every hook, a free-blow talent, saves and replays, perception and dumps).
 
@@ -103,6 +118,14 @@ Vigour, Might, and Finesse (#237) ship whole but for Battle trance and Inner cal
 resources, #225); `body_talent_tests.rs` covers each one's rule, `hunger_tests.rs` Iron stomach.
 The statuses Winded (Second wind's cooldown) and Staggered (`cost = 150`, 6 s) are in
 `data/status.toml`.
+
+Shadow and Wayfarer (#239) ship whole but for Hooded light (it waits for the lantern's hood,
+#235: the talent narrows who has the hood ability) and Patient blade (the thief's openings,
+#225); `land_talent_tests.rs` covers each one's rule. `data/lights.toml` has the Lamplighter's
+`lantern_bright`; `data/factions.toml` marks the vermin and the wildlife `animal`. Blood scent's
+radius is 9 (the design's "4 cells" read as four beyond darkvision's five, which it needs: at 4 it
+would see nothing darkvision does not). The design's B5 (Defence by attack kind) is
+`World::target_against`, which came with Deflect missiles (#237).
 
 ## Later waves
 

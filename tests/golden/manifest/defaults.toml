@@ -5,8 +5,8 @@
 # CLAUDE.md, "Golden screenshots".
 #
 # `actions` uses the replay text syntax; `ACTION*N` repeats an action; every action must take a
-# turn (or be free by design: vision, weather, a seen spell effect, a question answered), else the
-# entry fails as blocked. Walks that fight or wait for creatures stay on hand-made levels, never a
+# turn (or be free by design: vision, weather, a seen spell effect, a question answered, the dev
+# `xp:` and a level's `talent:` and `advance:` choices), else the entry fails as blocked. Walks that fight or wait for creatures stay on hand-made levels, never a
 # generated one. Showcase walks start at the spawn (7,15) in the start room. Corridor: row y=10; its doors are at x=13 (light hall),
 # 37 (darkness chamber), 43 (patrol gallery), 63 (water garden north / effects room south) and
 # 74 (stairs nook). `[defaults]` may be set in one file only; entry names are unique across files.

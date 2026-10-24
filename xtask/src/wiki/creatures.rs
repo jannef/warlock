@@ -66,7 +66,7 @@ pub(super) fn creatures(content: &Content) -> String {
 /// Who fights whom: each faction and the factions hostile to it (relations are symmetric).
 pub(super) fn factions(content: &Content) -> String {
     let factions = content.factions();
-    let mut out = String::from("| Faction | Hostile to |\n|---|---|\n");
+    let mut out = String::from("| Faction | Hostile to | Animals |\n|---|---|---|\n");
     for (i, f) in factions.defs().iter().enumerate() {
         let id = FactionId(i as u16);
         let enemies: Vec<String> = (factions.defs().iter().enumerate())
@@ -78,7 +78,12 @@ pub(super) fn factions(content: &Content) -> String {
         } else {
             enemies.join(", ")
         };
-        let _ = writeln!(out, "| {} | {enemies} |", capital(&f.name));
+        let _ = writeln!(
+            out,
+            "| {} | {enemies} | {} |",
+            capital(&f.name),
+            yes(f.animal)
+        );
     }
     out
 }
