@@ -1,0 +1,8 @@
+[[talent]]
+id = "beast_friend"
+name = "Beast-friend"
+tree = "wayfarer"
+description = "Animals leave you be, rats and deer alike, until you attack one of their kind."
+needs = { stats = { willpower = 13 } }
+effects = [{ kind = "beast_friend" }]
+systems = ["factions"]

@@ -1,0 +1,7 @@
+[[talent]]
+id = "lamplighter"
+name = "Lamplighter"
+tree = "shadow"
+description = "You tend your lantern well: it burns brighter and reaches a cell farther."
+effects = [{ kind = "lantern_light", light = "lantern_bright" }]
+systems = ["light"]

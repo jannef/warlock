@@ -1,0 +1,9 @@
+[[talent]]
+id = "blood_scent"
+name = "Blood scent"
+tree = "shadow"
+description = "You sense bleeding creatures in the dark, as if you saw them, well beyond your darkvision."
+needs = { eyes = "darkvision" }
+# Four cells beyond the darkvision profile's five (vision.toml).
+effects = [{ kind = "scent", status = "bleeding", radius = 9 }]
+systems = ["vision"]

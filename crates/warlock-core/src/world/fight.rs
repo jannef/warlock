@@ -676,6 +676,7 @@ impl World {
         let levels = (self.level_of(attacker), self.level_of(target));
         let rng = &mut self.state.rng;
         let blow = profile.map(|profile| combat::strike(&profile, &struck, rng));
+        let blow = blow.map(|b| self.ambushed(attacker, target, b));
         events.push(Event::Attacked {
             attacker,
             target,
@@ -692,6 +693,7 @@ impl World {
         // A shopkeeper the player attacks turns on them (spec §7 "Shops").
         if attacker == self.state.player {
             self.provoke(target);
+            self.break_empathy(target);
         }
         // An attack the player dodged (Dexterity or Dodge made it miss) trains tumbling.
         let dodged = blow.is_some_and(|b| {

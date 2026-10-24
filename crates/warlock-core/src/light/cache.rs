@@ -225,11 +225,13 @@ impl LevelLights {
             pos,
             preset: fire.light,
         }));
+        // A Lamplighter's lantern burns as its talent's brighter preset (spec §8 "Talents").
         let lantern = content
             .scenario(&state.scenario)
             .and_then(|s| s.lantern.as_deref())
             .and_then(|id| content.light_id(id))
-            .filter(|_| state.lantern_lit);
+            .filter(|_| state.lantern_lit)
+            .map(|own| (state.player().talent_mods(content).lantern_light).unwrap_or(own));
         for actor in state.actors.values().filter(|a| a.level == level.id) {
             let id = u64::from(actor.id.0);
             if let Some(preset) = content.creature(actor.creature).light {

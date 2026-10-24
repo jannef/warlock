@@ -629,6 +629,7 @@ impl Content {
             content.horoscope = Some(Horoscope::parse(path, text)?);
         }
         content.load_terrain(files)?;
+        content.talents.check_terrain(&content)?;
         content.load_diseases(files)?;
         let path = "data/room_effects.toml";
         if let Some(text) = files.get_optional(path) {
