@@ -174,6 +174,11 @@ impl World {
         let mut price = level.step_price(to, step);
         if level.kind == LevelKind::Overworld {
             price = shortened(price, actor.skill_effect(&self.content, Effect::Travel));
+            // Then its talents (Long strider): a signed percent of the journey's time.
+            let percent = actor.talent_mods(&self.content).travel_percent;
+            if percent != 0 {
+                price = percent_of(price, u32::try_from((100 + percent).max(1)).unwrap_or(1));
+            }
         }
         if fleeing {
             price = percent_of(price, self.content.stance_def(actor.stance).flee_cost);

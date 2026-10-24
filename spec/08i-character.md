@@ -186,9 +186,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     - disable device: trained at all, the player can disarm traps (§8 "Disarming traps", the
       Disarm ability); points added to that check, +8 at 100 and +12 at 200 (`disarm`); a mark
       (20 %) for each try, whatever comes of it;
+    - open lock: trained at all, the player may pick locks (the Pick lock ability, §8 "Doors");
+      points added to that check, +8 at 100 and +12 at 200 (`pick`); a mark (20 %) for each try,
+      whatever comes of it;
     - athletics' climbing out of pits and escape artist (out of pits faster) wait for that rule
       (#128); swim for deep water; concentration, spellcraft, and use magic
-      device for magic; the other action skills (open lock, heal, …) for their actions.
+      device for magic; the other action skills (heal, steal, …) for their actions.
       Searching is a basic command with keys of its own (`s`, `z`), so Search is read by rules,
       not an action skill.
   - **What the player sees**: their own trained skills' values and a coarse progress (quarters)
@@ -199,10 +202,69 @@ developer notes (CLAUDE.md, `docs/dev/`).
     with an active use (`kind = "action"`) is an ability there (`warlock_core::ability`,
     `PerceptionView::abilities`), greyed out as "not usable yet": the uses come with their
     actions, and one whose use has come is that ability instead (Disable device's is "Disarm a
-    trap", §8 "Disarming traps"). Never a benefit's number, a mark, a
+    trap", §8 "Disarming traps"; Open lock's "Pick lock", §8 "Doors"). Never a benefit's number,
+    a mark, a
     chance, an untrained skill, or a creature's skills; ground-truth dev dumps (`actors`, the
     world state) show every actor's skills with their marks. Skills and marks are part of the
     world state (saved, hashed).
+- **Talents** (`warlock-core/src/talent.rs`, the runtime; `content/talent.rs`, the data;
+  `world/talent.rs`, the picks; M30, #229; design `docs/design/progression.md` §7, §10): knacks
+  a character picks as they level, each a typed effect read where the rules already read what
+  magic items do.
+  - **Data** (§7): `data/talents.toml` (the settings: `max_ranks`, `[coverage]`, the `[[tree]]`s
+    in display order, the closed `[[system]]` list) and `data/talents/<id>.toml`, one `[[talent]]`
+    a file (`id`, `name`, `tree`, `description` in the game's words, `ranks` 1 to `max_ranks`,
+    `choice` (`weapon_skill`, `style`, `element`), `needs`, `effects` per rank held,
+    `[[rank]]` with each rank's own `needs` and `effects`, `systems` from the list, `granted`:
+    given, never picked). Without the files there are no talents and no level asks for one.
+  - **When**: every `talent_every`th character level (`[levels]` in `data/experience.toml`: 3,
+    6, 9, …) brings one pick, a `Due { level, talents }` in `Progress::due` (lowest level
+    first; several levels in one turn queue theirs), handed out by `World::level_up` from
+    `grant_xp`. **Nothing is banked**: while a pick is due `World::apply` refuses every other
+    action ("You must choose a talent first."), so the level-up screen (to come, #236), the
+    CLI, and replays spend it alike with `Action::Talent { id, choice }` (`talent:hardy`,
+    `talent:weapon_focus:long_blades`; no time, recorded) and, once skill rolls exist (#230),
+    `Action::Advance` (`advance:stealth`, refused until then); the dev `levelup:auto` takes the
+    first the player may take for every choice due, the dev `xp:N` grants experience. A pick
+    nothing can be spent on (no talent the player may take: a run without talents, every
+    talent they qualify for held) is dropped, so a level never waits for the impossible.
+  - **Prerequisites** (`Needs`; all must hold at the pick and are never checked again: a score
+    lowered later keeps the talent): other talents at a rank (a talent with a choice may be
+    needed only by one of the same choice, taken for the same), stat **scores** (the stored
+    score, never the effective one), skill values, weapon skill or style ranks, the chosen
+    weapon skill's or style's rank (`chosen`), the character level, the race, the class, the
+    eyes (the race's vision profile), and the alignment band (`requires_alignment`, as quests
+    and abilities ask it, §8 "Alignment": `{ min = "good" }`). Refused in words: "You cannot
+    take Dodge: you need Dexterity 13." Ranks come one at a time ("You learn Hardy (2)."); a talent with a choice is
+    one pick per choice, each with its own ranks.
+  - **Effects** (`TalentEffect`, summed into `TalentMods` by `Actor::talent_mods`, one read
+    each): `dodge` and `natural` in Defence (natural armour on top of the creature type's own
+    or a magic item's, or alone), `melee_damage` on both hands' blows (after the affixes,
+    before the stance), `max_hp_per_levels` (hit points handed into `hp_base` and `hp` at the
+    pick and as each later level comes, as levels' own are; the floor `at_least` until
+    `level / per_levels` passes it), `healing_percent` (with the regeneration affixes),
+    `footsteps_percent` and `silent_doors` (`noise::noise`), `hearing`, `carry_percent`
+    (`burden::load`), `travel_percent` (overworld steps), `hunger_percent` and `no_exertion`,
+    `xp_percent` (every gain), `notice` (noticing in passing as if trained in Spot, with a
+    bonus), `free_blow` (a switch of `World::free_blows_of`). The first twelve: Healthy, Hardy,
+    Dodge, Brawn, Silent feet, Keen ears, Pack mule, Long strider, Lean, Good learner, Alert,
+    Thick skin.
+  - **Coverage** (the design's §8): every talent names the systems it touches; at load a
+    system not `pending` with fewer than `min_talents` talents (or `min_class` class abilities,
+    0 until the class tables), or a tree not `pending` nor `no_free` without `free_per_tree`
+    prerequisite-free talents, is a content error. A wave that ships a system's talents removes
+    its `pending`; a new system of the game joins the list in the PR that ships its talents.
+  - **Determinism and saves**: picks are replayed actions; nothing here draws from the gameplay
+    stream; the `levels` stream (`WorldState::levels_rng`, for the skill rolls and stat checks
+    to come) is made on its first draw. `Actor::talents` (by id, like affixes: adding talents
+    keeps saves; on every actor, so creatures may get some from data later), `Progress::due`,
+    and the stream are left out of the JSON while unused, so runs without talents hash as
+    before. **Saves change.**
+  - **What the player sees**: `PerceptionView::due`, `own_talents` (names for their choice,
+    the rank of how many, the description), `talents` (every talent with the next rank's
+    prerequisites and whether each holds, and the ways it may be taken now); the dumps'
+    `talents` and dev `progress` layers; JSON `talents`, `due`. Never a rule's number: the
+    wiki's Talents page states them.
 - **Weapon skills** (`warlock-core/src/weapon_skills.rs`, training; `content/weapon_skill.rs`,
   the data; M22, #134), ADOM-like, with *The Riddle of Steel*'s defaults:
   - **Skills** (`data/weapon_skills.toml`, §7): the categories weapons belong to. A skill's

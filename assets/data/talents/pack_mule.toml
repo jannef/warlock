@@ -1,0 +1,14 @@
+[[talent]]
+id = "pack_mule"
+name = "Pack mule"
+tree = "grit"
+ranks = 2
+description = "You can carry a tenth more for each rank."
+effects = [{ kind = "carry_percent", value = 10 }]
+systems = ["burden"]
+
+[[talent.rank]]
+needs = { stats = { strength = 11 } }
+
+[[talent.rank]]
+needs = { stats = { strength = 14 } }

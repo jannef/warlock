@@ -21,15 +21,24 @@
 use super::{ActorId, Cause, Death, World};
 use crate::content::ActionKind;
 use crate::hunger::Hunger;
+use crate::talent::TalentMods;
 use crate::time::GameTime;
 
 impl World {
     /// How much the player needs to eat, in percent of a human: their race's (`hunger` in
     /// `data/races.toml`), 100 without a character.
     pub(super) fn hunger_percent(&self) -> u16 {
-        (self.state.character.as_ref())
+        let race = (self.state.character.as_ref())
             .and_then(|c| c.spec.race(&self.content).ok())
-            .map_or(100, |r| r.hunger)
+            .map_or(100, |r| r.hunger);
+        // Then their talents (Lean): a signed percent of that pace, at least 1.
+        let percent = self
+            .state
+            .player()
+            .talent_mods(&self.content)
+            .hunger_percent;
+        let pace = TalentMods::scaled(u64::from(race), percent);
+        u16::try_from(pace).unwrap_or(u16::MAX).max(1)
     }
 
     /// How hungry the player is; `None` when nobody hungers.
@@ -91,7 +100,7 @@ impl World {
             return;
         };
         let points = def.exertion(kind);
-        if points == 0 {
+        if points == 0 || self.state.player().talent_mods(&content).no_exertion {
             return;
         }
         let percent = self.hunger_percent();

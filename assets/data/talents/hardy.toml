@@ -1,0 +1,17 @@
+[[talent]]
+id = "hardy"
+name = "Hardy"
+tree = "vigour"
+ranks = 3
+description = "Tougher than most: more hit points for each rank, and more as you level."
+effects = [{ kind = "max_hp_per_levels", per_levels = 4, at_least = 3 }]
+systems = ["hit_points"]
+
+[[talent.rank]]
+needs = { stats = { toughness = 11 } }
+
+[[talent.rank]]
+needs = { stats = { toughness = 14 } }
+
+[[talent.rank]]
+needs = { stats = { toughness = 17 } }

@@ -279,6 +279,7 @@ mod tests {
             "Skills",
             "  a  Appraise       not usable yet",
             "> b  Disarm a trap  in a direction",
+            "  c  Pick lock      in a direction",
             "  d  Steal          not usable yet",
             "Weapon skills",
             "  e  Shield bash    you hold no shield",
@@ -311,8 +312,12 @@ mod tests {
         // With a shield in hand it can be used; the cursor starts on the first that can be used
         // (disarming) unless the shield bash was used last.
         let world = thief(true);
-        let screen = AbilitiesScreen::new(Some(&world.perception()), None);
+        let mut screen = AbilitiesScreen::new(Some(&world.perception()), None);
         assert_eq!(screen.selected(), Some(Ability::Disarm));
+        assert_eq!(
+            screen.handle(&Press::typed('c'), &b),
+            ScreenAction::UseAbility(Ability::PickLock)
+        );
         let last = Some(Ability::ShieldBash);
         let mut screen = AbilitiesScreen::new(Some(&world.perception()), last);
         assert_eq!(screen.selected(), Some(Ability::ShieldBash));
@@ -322,10 +327,6 @@ mod tests {
             "{text}"
         );
         assert!(text.contains("Strike someone next to you with the shield you hold."));
-        assert_eq!(
-            screen.handle(&Press::typed('e'), &b),
-            ScreenAction::UseAbility(Ability::ShieldBash)
-        );
         assert_eq!(
             screen.handle(&Press::nav(Nav::Enter), &b),
             ScreenAction::UseAbility(Ability::ShieldBash)

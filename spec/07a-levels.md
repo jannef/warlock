@@ -72,9 +72,12 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   the guard post's store room holds a magic one, the shrine and the roofless chapel any.
 - **Locks in level files** (M19, §8 "Doors"): a legend entry on a closed door locks it with
   `lock = "pantry"` (a lock id: keys with that id open it, and skeleton keys) or `locked = true`
-  (a lock without an id: only a skeleton key opens it). A lock on anything but a closed door, an
-  empty lock id or `*`, or a `lock` with `locked = false` is a content error. Hand-made levels
-  need not give a lock's key (a door may be meant to be kicked in); vaults must (below).
+  (a lock without an id: only a skeleton key opens it), and `lock_difficulty = N` with either
+  sets how hard it is to pick (1 to 50; default 14, `door::LOCK_DIFFICULTY`; §8 "Doors"). A
+  lock on anything but a closed door, an empty lock id or `*`, a `lock` with `locked = false`,
+  or a `lock_difficulty` without a lock or out of range is a content error. Hand-made levels
+  need not give a lock's key (a door may be meant to be kicked in, or picked); vaults must
+  (below).
 - **Secret doors in level files** (#140, §8 "Searching"): a legend entry on a closed door makes
   it secret with `secret = true` (difficulty `data/search.toml`'s `secret_door`) or `secret = N`
   (difficulty N, 1 to 50). The cell then shows the wall around it (of its solid neighbors north,
