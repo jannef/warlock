@@ -243,6 +243,7 @@ impl Shops {
         CreatureSpawn {
             creature: self.keeper.creature,
             faction: None,
+            alignment: None,
             pos: post,
             route: Vec::new(),
             npc: None,

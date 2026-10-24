@@ -3,11 +3,11 @@
 Developer notes for working on this part of Warlock (moved from CLAUDE.md, #185); the
 rules it implements are in spec/06-input-and-ui.md. Keep it current with the code, as CLAUDE.md says.
 
-Modal screens (spec §6) — main menu, new run and character creation (race, gender, class,
-summary), pause, settings, controls, the `?` help, the inventory (`i`), the equipment screen
+Modal screens (spec §6) — main menu, the saved characters (Characters), new run and character
+creation (race, gender, class, name, summary), pause, settings, controls, the `?` help, the inventory (`i`), the equipment screen
 (`e`) and its choice of what goes in a slot, an item's description (a letter in the inventory,
 an upper-case slot letter on the equipment screen), the character screen (`@`), the weapon skills
-screen (`W`), the quest log (`q`), choosing what to
+screen (`W`), the quest log (`q`), the message history (`M`), choosing what to
 pick up (`,`/`g` on several stacks), drop (`d`), eat (`E`), or read (`r`; then, for the scroll of
 identify, what to read it on, `ScreenName::Identify`, which takes the read list's place), the
 abilities menu (`a`), the
@@ -28,15 +28,22 @@ to open, read keys for, or draw one:
   until `name` is on top (the summary going back to a step). Sub-screens read what was chosen
   below them off the stack: character creation's steps (`ScreenStack::draft`: New run's scenario
   and seed, each step's selection) preselect what was chosen before going back
-  (`ScreenStack::picks`), else the scenario's character, and the summary's Start is
-  `MenuChoice::NewRun { scenario, seed, character }`; `EquipItem` takes the slot selected on the
+  (`ScreenStack::picks`), else the scenario's character (the name step: what was typed, else an
+  empty field), and the summary's Start is `MenuChoice::NewRun { scenario, seed, character, name
+  }`; the main menu and the Characters screen read the saved characters when they open
+  (`Launch::characters`, from `SaveStore::characters`; no other screen lists the saves);
+  `EquipItem` takes the slot selected on the
   equipment screen beneath (`ScreenStack::selected_slot`), and `Describe` the stack looked at
   on the inventory or equipment screen beneath (`ScreenStack::looked_item`; the first stack
   without one, as `--screen describe` opens it over the inventory).
 - **Input**: `input::route_keys` is the one reader of `KeyboardInput`. Stack not empty: the press
   goes to the top screen as a `Press` whose `nav` comes from the `Context::Menu` bindings (Esc is
   always `Nav::Back`; see `docs/dev/settings.md` for contexts: a screen never matches a key code or
-  a character, except list letters and digits and the typed seed) (`ScreenStack::handle` →
+  a character, except list letters and digits and the typed seed) and whose `edit` comes from the
+  `Context::Text` bindings (Esc is always `Edit::Back`), for the text field, which reads only
+  `edit` and `text` (the key event's text, literal; else the character its key stands for), so
+  every key not bound there types; held keys type and erase but never accept
+  (`ScreenStack::handle` →
   `ScreenAction`: stay, close, open, a
   `MenuChoice`, or `Act(Action)`: close and apply a gameplay action, e.g. `pickup:ac`,
   `equip:body:b`; the screens beneath stay, and `screens::refresh`, after `SimSet`, shows the
@@ -107,9 +114,26 @@ to open, read keys for, or draw one:
   calls the screen's `fit` before each press, so a letter names what is drawn even before the
   first draw (`--keys`). Screens hold stack positions (`Item::position`), never letters, and
   send actions by position.
-- Prompts in the message line (open/close/bash/chat direction, rest, look mode, aiming) are
-  `InputMode`s, not screens; a question (the step onto a known trap, `input::trap_dialog`) is
-  the dialog (above). The rules never ask: a `move` steps onto whatever is there. `C` with
+- Prompts in the message line (open/close/bash/chat direction, rest, look mode, aiming,
+  `--more--`) are `InputMode`s, not screens; a question (the step onto a known trap,
+  `input::trap_dialog`) is the dialog (above).
+- **The message line and `--more--`** (`ui/more.rs`, spec §6 "Messages", #207): `Game::read` is
+  the message log as it was when the player last acted (`Game::apply` takes it before applying;
+  a new run starts with nothing read, so its welcome is news; `Game::from_world`, a resumed run,
+  has read everything; a replay's last step is news, `play_replay`; a loaded snapshot calls
+  `Game::mark_read`), and `Game::unread` lines it up with the log (which only grows at its end,
+  folds repeats into its last entry, and drops its oldest beyond `messages::CAPACITY`) to give
+  this turn's messages. `more::pages` runs them on in rows of the console's width less a margin
+  either side, split at word boundaries, in pages of `MESSAGE_ROWS`, every page but the last
+  leaving room for ` --more--`. `more::wait` (after `SimSet`, before `draw`) enters
+  `InputMode::More(0)` when a new action (`Game::applied`, or a new run) needs more than one
+  page, from play only (a dev flag's aiming or look mode keeps its mode), and follows a resize.
+  In `More(page)` `Gameplay::press` reads `Context::More` first: `MoreNext` (Space, Enter)
+  turns to `more::advance(page, count)` (play once the last page shows), `MoreSkip` (unbound)
+  and Esc go to play; every other command, and every held key's repeat, does nothing. Screens
+  keep their keys while it waits beneath them. `more::draw` draws the page waited at with
+  `--more--` after it, else the end of this turn's messages with earlier ones, one a row, in the
+  rows left. Presentation only: dumps and replays never see pages. The rules never ask: a `move` steps onto whatever is there. `C` with
   exactly one creature in view next to the player chats with it at once
   (`input::chat_partner`), else asks for a direction.
 - Screens are plain state machines tested without a window: `ui/menu.rs` (`Press`, `Hints`,
@@ -126,24 +150,40 @@ to open, read keys for, or draw one:
   `ui/equipment_screen.rs` (`EquipmentScreen`: slots by letter, which always name slots, so its
   own key `e` closes it only when it names none; `ItemScreen`: the stacks that fit one slot), `ui/character_screen.rs` (name, race, gender, class, age, birthday,
   and sign (`birth_parts`/`fit_parts`, shared with the summary), the player's scores, hit points
-  and Defence total, weight and burden thresholds; 72 wide like the summary),
+  and Defence total, the alignment band (`PerceptionView::own_alignment`), weight and burden
+  thresholds; 72 wide like the summary),
   `ui/weapon_skills_screen.rs` (an info page: sections, ranks, and a faint ten-cell marks bar,
   the fighting styles in use marked `•`; two columns from 88 wide, else one that drops its gaps
   and margins and then scrolls with ↑↓; never a benefit), `ui/chargen_screen.rs` (character creation: `ChoiceScreen` per
-  step with a Random row rolled from the seed, `SummaryScreen` (with the starting kit, `kit_words`; 84 wide, dropping its gaps on a short console), `Draft`), `ui/quest_screen.rs`
+  step with a Random row rolled from the seed, `SummaryScreen` (with the starting kit,
+  `kit_words`, and the band `Start::alignment` falls in; 84 wide, dropping its gaps on a short
+  console), `Draft`), `ui/name_screen.rs`
+  (`NameScreen`, the Name step and the game's text field: typed text literal while the font draws
+  it (`render::atlas::draws`) and there is room; the `Context::Text` keys accept, erase, put in the
+  next of the race's random names (never the one shown; not on a held key), and back out; an empty
+  field shows, dimmed, the name it gives), `ui/characters_screen.rs` (`CharactersScreen`: the saved
+  characters, the one played last first; Enter is `MenuChoice::Resume(id)`, the Erase key asks the
+  dialog whose Delete is `MenuChoice::DeleteCharacter(id)`, after which the main menu and the list
+  open afresh; `--screen characters`, with `--capture` over a read-only `--save-dir`),
+  `ui/quest_screen.rs`
   (the quest log from `PerceptionView::quests`: active then done, the selected one's objective,
-  status, and the giver's offer; read-only), `ui/dialogue_screen.rs`
+  status, and the giver's offer; read-only), `ui/messages_screen.rs` (`MessagesScreen`,
+  `ScreenName::Messages`, `--screen messages`: the message history, every message of
+  `PerceptionView::messages` wrapped with further lines indented, a dim first line on what the log
+  keeps, scrolled in lines from the newest at the bottom by `Nav::Up`/`Down` and a panel's height
+  by `Nav::PrevPage`/`NextPage`; no info page, and no `PagedList`, whose rows are lettered single
+  lines to choose from; the stack calls its `fit` before a press), `ui/dialogue_screen.rs`
   (the speaker, their last line, numbered topics; built from the last `Event::Talked`, so it never
   shows more than the player was told), `ui/abilities_screen.rs` (`AbilitiesScreen`, below),
   `ui/death_screen.rs`
-  (who or what killed the player, where, when, after how many turns).
+  (who died, "Here lies Brakka,", who or what killed them, where, when, after how many turns).
 
 Key commands `,`/`g` (pick up: one stack at once, else the `PickUp` screen), `d` (`Drop` screen),
 `i` (`Inventory` screen), `e` (`Equipment` screen), `@` (`Character` screen), `W` (`WeaponSkills`
-screen), `r` (`Read` screen, `KeyCommand::Read`: a basic command, not an ability), `p`
+screen), `M` (`KeyCommand::Messages`: the `Messages` screen), `r` (`Read` screen, `KeyCommand::Read`: a basic command, not an ability), `p`
 (`KeyCommand::Pay`), `a` (`KeyCommand::Abilities`: the `Abilities` screen), `A`
-(`KeyCommand::RepeatAbility`), and bash (`KeyCommand::Bash`, unbound) are in `input.rs` and
-`settings/keys.rs`.
+(`KeyCommand::RepeatAbility`), bash (`KeyCommand::Bash`, unbound), and disarm
+(`KeyCommand::Disarm`, unbound) are in `input.rs` and `settings/keys.rs`.
 
 **Abilities** (spec §6 "Abilities"; racial, class, skill, weapon skill and style, item; the
 owner's rule, #156) get no key of their own: they go into the one abilities menu.
@@ -151,11 +191,15 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   a variant of `Ability` (id, name, description, `Source`, `Aim`, cost `ActionKind`, the `Action`
   it makes from its aim), a line in `Ability::every` (menu order: by source, then as listed),
   who has it (`had_by`), and when it cannot be used (`unavailable` → `Unavailable` with its
-  reason). `PerceptionView::abilities` is what presentation reads (`OwnAbility`: the ability and
+  reason; `While(status)` for a status that blocks its cost's kind or is its cooldown,
+  `docs/dev/status-effects.md`; one that asks for an alignment asks `ability::strayed` first,
+  `Unavailable::Strayed`, `docs/dev/alignment.md`; `reason`/`id` take the content). `PerceptionView::abilities` is what presentation reads (`OwnAbility`: the ability and
   why it cannot be used now); the `abilities` dump layer and JSON key show the same, and the
   wiki's table (`xtask/src/wiki/abilities.rs`) lists `Ability::every`. Skills used as actions are
   `Ability::Skill(id)` until their use exists (never available); a use, when it comes, is a
-  variant of its own. `Aim` has `Nothing` and `Direction`: a target (the aiming mode) and an item
+  variant of its own, listed in its skill's place (`Ability::use_of`: the skill's benefit effect
+  names it, so `had_by` asks `Skills::trains_effect`): `Ability::Disarm`, Disable device's
+  (`docs/dev/traps.md`). `Aim` has `Nothing` and `Direction`: a target (the aiming mode) and an item
   (a `PagedList` of the pack) join it with the first ability that needs one, as a variant and an
   arm in `Gameplay::use_ability`.
 - **Menu**: `ui/abilities_screen.rs` (`AbilitiesScreen`, `ScreenName::Abilities`, `--screen
@@ -164,11 +208,13 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   letter or Enter on an available row answers `ScreenAction::UseAbility(ability)`; on an
   unavailable one it shows why and stays. Its own key closes it only when it names no row.
 - **Dispatch**: `ScreenAction::UseAbility` is the one way an ability is used, from the menu, its
-  own key (`KeyCommand::Bash` answers it from `Gameplay::press`), or the quick repeat:
+  own key (`KeyCommand::Bash` and `KeyCommand::Disarm` answer it from `Gameplay::press`), or
+  the quick repeat:
   `input::route_keys` closes the top screen if any, remembers it (`ScreenStack::last_ability`,
   cleared with the stack when a run ends, like the creation picks), and calls
   `Gameplay::use_ability`: `Aim::Direction` enters `InputMode::Ability(ability)` (the message
-  line's "In which direction? (Esc to cancel)"; a direction applies `ability.action(Some(dir))`),
+  line's "In which direction? (Esc to cancel)", disarming's "Disarm in which direction?",
+  `ui/mod.rs`; a direction applies `ability.action(Some(dir))`),
   `Aim::Nothing` applies it at once, and one that cannot be used now is applied at once with a
   placeholder direction so the rules say why and take no time (as `U` does with no tool).
 - **Quick repeat**: the menu opens on `ScreenStack::last_ability` (else the first available row);

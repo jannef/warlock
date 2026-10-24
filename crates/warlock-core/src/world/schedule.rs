@@ -14,7 +14,8 @@
 //! here ([`World::price_of`], [`World::step_price`], [`World::attack_price`],
 //! [`World::reload_price`]) are the one place that happens, so it covers every action, overworld
 //! journeys included; being Bloated (spec §8 "Hunger") raises
-//! them the same way, after the burden. Creatures on other levels are frozen (they
+//! them the same way, after the burden, and so do slowing status effects (spec §8 "Status
+//! effects": `cost`), after both. Creatures on other levels are frozen (they
 //! gain nothing until the player is back), so coming back to a level never sets off a burst of
 //! actions; the dev time skip gives nobody energy either.
 //!
@@ -28,9 +29,7 @@
 use super::{Actor, ActorId, AttackSkills, World};
 use crate::action::Event;
 use crate::content::Effect as ItemEffect;
-use crate::content::{
-    ActionKind, BASE_TURN, Benefit, LevelKind, Stance, TerrainDef, percent_of, price,
-};
+use crate::content::{ActionKind, BASE_TURN, Benefit, LevelKind, TerrainDef, percent_of, price};
 use crate::geom::Pos;
 use crate::magic::Mods;
 use crate::magic::mods::faster;
@@ -116,8 +115,8 @@ impl World {
     }
 
     /// Whether actor `id` stepping to `to` flees: some hostile creature stands next to it now and
-    /// the step takes it out of that creature's reach (spec §8 "Stances": a coward's flight is
-    /// cheaper and quieter).
+    /// the step takes it out of that creature's reach ([`World::leaves`]; spec §8 "Stances": a
+    /// coward's flight is cheaper and quieter).
     pub(super) fn flees(&self, id: ActorId, to: Pos) -> bool {
         let Some(me) = self.state.actors.get(&id) else {
             return false;
@@ -126,13 +125,7 @@ impl World {
         if stance.flee_cost == 100 && stance.flee_noise == 100 {
             return false;
         }
-        self.state.actors.values().any(|other| {
-            other.id != id
-                && other.level == me.level
-                && other.pos.chebyshev(me.pos) == 1
-                && other.pos.chebyshev(to) > 1
-                && self.stance(id, other.id) == Stance::Hostile
-        })
+        (self.state.actors.values()).any(|other| self.leaves(me, other, to))
     }
 
     /// The energy price of attack `kind` (a blow, a bash, a kick, a shot, a throw, a spell) for
@@ -192,11 +185,14 @@ impl World {
     /// "Burden"; [`crate::burden::Burden::slow`]), nothing more for a race that ignores Burdened
     /// while it is Burdened, and less of the slowdown for its skills (balance; spec §8
     /// "Skills"); and then, while it is Bloated, by `[bloated] slow` (spec §8 "Hunger",
-    /// [`World::bloated`]). An action is priced at the burden and hunger its actor has as it
-    /// begins.
+    /// [`World::bloated`]); and then by the `cost` of each of its status effects (spec §8
+    /// "Status effects": Slowed). An action is priced at the burden, hunger, and statuses its
+    /// actor has as it begins.
     fn burdened(&self, id: ActorId, price: i64) -> i64 {
-        let ease = self.state.actors[&id].skill_effect(&self.content, Effect::Burden);
-        self.bloated(id, self.load_of(id).penalty().slow_eased(price, ease))
+        let actor = &self.state.actors[&id];
+        let ease = actor.skill_effect(&self.content, Effect::Burden);
+        let price = self.bloated(id, self.load_of(id).penalty().slow_eased(price, ease));
+        actor.effects.slow(&self.content, price)
     }
 
     /// The price that leaves the player ready to act exactly at `until` (the last turn of a

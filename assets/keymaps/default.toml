@@ -30,6 +30,7 @@ character = ["@"]
 skills = ["S"]
 weapon_skills = ["W"]
 quests = ["q"]
+messages = ["M"]
 rest = ["R"]
 eat = ["E"]
 read = ["r"]
@@ -42,6 +43,7 @@ more_defensive = ["-"]
 abilities = ["a"]
 repeat_ability = ["A"]
 bash = []
+disarm = []
 pay = ["p"]
 use_tool = ["U"]
 chat = ["C"]
@@ -58,6 +60,10 @@ rest_hour = ["h"]
 rest_dawn = ["d"]
 rest_dusk = ["n"]
 
+[more] # More messages (--more--)
+more_next = ["Space", "Enter", "NumpadEnter"]
+more_skip = []
+
 [menu] # Menus and screens
 menu_up = ["ArrowUp", "k"]
 menu_down = ["ArrowDown", "j"]
@@ -70,6 +76,12 @@ mark = ["Space"]
 mark_all = [","]
 next_list_page = [">", "PageDown"]
 prev_list_page = ["<", "PageUp"]
+
+[text] # Text fields
+text_confirm = ["Enter", "NumpadEnter"]
+text_erase = ["Backspace", "Delete"]
+text_random = ["Tab"]
+text_back = []
 
 [pages] # Info pages
 page_1 = ["1"]

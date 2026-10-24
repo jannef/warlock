@@ -2,14 +2,15 @@
 //! run. A race adjusts the starting scores and the potentials (fixed numbers or dice), gives the
 //! player their eyes, sets the range of their starting age, gives the player their size
 //! (spec §8 "Burden": how much they can carry), whether being Burdened costs them nothing, and
-//! how much they need to eat (spec §8 "Hunger"), trains them in skills (spec §8 "Skills"; dice,
+//! how much they need to eat (spec §8 "Hunger"), how much experience their levels need (spec §8
+//! "Experience"), trains them in skills (spec §8 "Skills"; dice,
 //! and humans' extra class skill), gives them starting ranks in weapon skills (spec §8
 //! "Weapon skills"; fixed numbers or dice), says what they notice of hidden features in passing
 //! (spec §8 "Searching"), and adds a few things to the starting kit (`kit`, [`super::kit`]).
 
 use super::kit::{Kit, KitLineSpec};
 use super::weapon_skill::Ranked;
-use super::{ContentError, PassiveSearch, WeaponSkillId, WeaponSkillTable};
+use super::{ContentError, FACTORS, PassiveSearch, WeaponSkillId, WeaponSkillTable};
 use crate::combat::MAX_BASE_HP;
 use crate::dice::Dice;
 use crate::skills::{self, GRANTS, SkillId};
@@ -22,6 +23,10 @@ use std::ops::RangeInclusive;
 pub const HUNGER: RangeInclusive<u16> = 10..=1000;
 
 fn normal_hunger() -> u16 {
+    100
+}
+
+fn normal_experience() -> u16 {
     100
 }
 
@@ -46,6 +51,8 @@ struct RaceSpec {
     potential: BTreeMap<Stat, Dice>,
     #[serde(default)]
     hp: u16,
+    #[serde(default)]
+    alignment: i32,
     size: Option<String>,
     #[serde(default)]
     ignores_burdened: bool,
@@ -58,6 +65,8 @@ struct RaceSpec {
     class_skill: Dice,
     #[serde(default = "normal_hunger")]
     hunger: u16,
+    #[serde(default = "normal_experience")]
+    experience: u16,
     #[serde(default)]
     weapon_skills: BTreeMap<String, Dice>,
     #[serde(default)]
@@ -89,6 +98,9 @@ pub struct RaceDef {
     /// What the race adds to the hit points (spec §8 "Combat"): maximum hit points are
     /// Toughness plus the race's and the class's.
     pub hp: i32,
+    /// Its part of a new character's alignment score (spec §8 "Alignment"), added to the
+    /// class's.
+    pub alignment: i32,
     /// Its size (spec §8 "Burden"): an index into [`super::Content::sizes`], which scales how
     /// much the player can carry.
     pub size: usize,
@@ -110,6 +122,9 @@ pub struct RaceDef {
     /// How much the player needs to eat, in percent of a human (spec §8 "Hunger"): game time
     /// burns their nutrition this much faster (a halfling, 125) or slower (an elf, 80).
     pub hunger: u16,
+    /// How much experience a level needs, in percent (spec §8 "Experience"): multiplied with
+    /// the class's onto every threshold. Long-lived races pay more (an elf, 140).
+    pub experience: u16,
     /// Starting ranks in weapon skills (spec §8 "Weapon skills"), in skill order: added to the
     /// class's.
     pub weapon_skills: Vec<(WeaponSkillId, Dice)>,
@@ -183,6 +198,8 @@ impl Races {
                     spec.hp
                 )));
             }
+            let alignment = crate::alignment::check_start(spec.alignment)
+                .map_err(|m| err(format!("race `{id}`: {m}")))?;
             let size_id = spec.size.as_deref().unwrap_or(super::MEDIUM);
             let size = size_index(size_id)
                 .ok_or_else(|| err(format!("race `{id}`: unknown size `{size_id}`")))?;
@@ -204,6 +221,14 @@ impl Races {
                     HUNGER.end()
                 )));
             }
+            if !FACTORS.contains(&spec.experience) {
+                return Err(err(format!(
+                    "race `{id}`: experience {} is out of range ({} to {} percent)",
+                    spec.experience,
+                    FACTORS.start(),
+                    FACTORS.end()
+                )));
+            }
             if !SEARCH_BONUSES.contains(&spec.search) {
                 return Err(err(format!(
                     "race `{id}`: search {} is out of range ({} to {})",
@@ -223,6 +248,7 @@ impl Races {
                 stats,
                 potential,
                 hp: i32::from(spec.hp),
+                alignment,
                 size,
                 ignores_burdened: spec.ignores_burdened,
                 passive_search: spec.passive_search,
@@ -230,6 +256,7 @@ impl Races {
                 skills,
                 class_skill: extra,
                 hunger: spec.hunger,
+                experience: spec.experience,
                 weapon_skills,
                 kit_spec: spec.kit,
                 kit: Kit::default(),
@@ -283,13 +310,15 @@ mod tests {
         assert!(!human.ignores_burdened);
         assert!(human.skills.is_empty() && human.class_skill.is_zero());
         assert_eq!(human.hunger, 100, "a human's hunger unless named");
+        assert_eq!(human.experience, 100, "a human's experience unless named");
         let dwarf = parse(&format!(
-            "{ONE}size = \"small\"\nignores_burdened = true\nhunger = 110\n"
+            "{ONE}size = \"small\"\nignores_burdened = true\nhunger = 110\nexperience = 115\n"
         ))
         .expect("valid");
         assert_eq!(dwarf.list[0].size, 0);
         assert!(dwarf.list[0].ignores_burdened);
         assert_eq!(dwarf.list[0].hunger, 110);
+        assert_eq!(dwarf.list[0].experience, 115);
         let elf = parse(&format!(
             "{ONE}skills = {{ spot = \"1d6+4\", listen = 3 }}\nclass_skill = \"1d4\"\n"
         ))
@@ -350,6 +379,14 @@ mod tests {
             (ONE.replace("15", "0"), "base_potential 0"),
             (format!("{ONE}size = \"huge\"\n"), "unknown size `huge`"),
             (format!("{ONE}hunger = 5\n"), "hunger 5 is out of range"),
+            (
+                format!("{ONE}experience = 49\n"),
+                "experience 49 is out of range",
+            ),
+            (
+                format!("{ONE}experience = 201\n"),
+                "experience 201 is out of range",
+            ),
             (
                 format!("{ONE}skills = {{ luck = 5 }}\n"),
                 "race `human`: skills: unknown skill `luck`",

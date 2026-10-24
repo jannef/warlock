@@ -547,6 +547,7 @@ fn a_shield_bash_is_a_blow_with_the_shield_that_trains_shield_bashing() {
             }
             Strike::Hit { critical: true } => assert_eq!(text, "You bash the dummy hard!"),
             Strike::Soaked => unreachable!("the dummy has no Protection"),
+            Strike::Resisted => unreachable!("the dummy resists nothing"),
             Strike::Missed { .. } => {
                 missed = true;
                 assert_eq!(text, "You miss the dummy.");

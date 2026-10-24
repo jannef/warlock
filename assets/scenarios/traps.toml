@@ -2,8 +2,5 @@ name = "Trap hall"
 description = "Traps to try and traps to watch: a row of known traps, creatures on their rounds across hidden ones (fireball, lightning, spears, arrows), and scrolls of the same spells to read."
 start_level = "trap_hall"
 seed = 1
-character = { race = "human", gender = "male", class = "warrior" }
+character = { race = "human", gender = "male", class = "warrior", name = "Garrick" }
 lantern = "lantern"
-# A tour of one feature: its rooms hold what to try, and its tests and captures walk it with
-# this pack, so the character's kit stays behind (spec §8 "Character creation").
-kit = false

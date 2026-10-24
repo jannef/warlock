@@ -9,6 +9,7 @@
 
 pub mod ability;
 pub mod action;
+pub mod alignment;
 pub mod blood;
 pub mod burden;
 pub mod character;
@@ -16,6 +17,7 @@ pub mod check;
 pub mod color;
 pub mod combat;
 pub mod content;
+pub mod damage;
 pub mod daylight;
 pub mod dice;
 pub mod disease;

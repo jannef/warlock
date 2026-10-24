@@ -10,7 +10,9 @@ Chat with someone (`C`). A quest they have for you is a topic on the dialogue sc
 the quest, listed before their other topics. Ask about it to hear what they want; the screen then
 offers **Accept** and **Decline**. Declining costs nothing: ask again later and they offer it
 again. An offer you have not answered stays open until you do (one per person at a time). Some
-quests are only offered once you have done another one for the same person.
+quests are only offered once you have done another one for the same person, and some only to
+someone of the right [alignment](alignment.md): good folk offer an Evil or Wicked character no
+quest that would do them good. Helping someone is a little good.
 
 Talking about quests takes no time.
 

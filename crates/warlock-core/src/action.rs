@@ -1,7 +1,9 @@
 //! Player actions and the events a turn produces.
 
 use crate::combat::Strike;
-use crate::content::{ActionKind, CombatStance, DiseaseId, ObjectId, StatusId, TrapId};
+use crate::content::{
+    ActionKind, CombatStance, DamageTypeId, DiseaseId, ObjectId, StatusId, TrapId,
+};
 use crate::geom::{Dir, Pos};
 use crate::time::{DAY, Duration};
 use crate::weather::Weather;
@@ -111,6 +113,11 @@ pub enum Action {
     /// this many turns (each the `search` action's time, a fresh check every turn), stopping at
     /// once when something is found or something interrupts, like a rest. 1 is one search.
     Search(u8),
+    /// Try to disarm the trap the player knows of in a direction (spec §8 "Disarming traps"; the
+    /// Disarm ability): a Dexterity check plus Disable device against the trap's difficulty takes
+    /// it away; a bad failure sets it off at the player. Takes the time of `disarm`, whatever
+    /// comes of it; refused (no time) without the skill or a known trap there.
+    Disarm(Dir),
     /// Dev command: switch the player's vision profile (an id in `data/vision.toml`). Takes no
     /// game time, but changes state and perception, so replays record it like any action.
     SetVision(String),
@@ -339,6 +346,10 @@ pub enum Event {
         /// What a shot or a throw was made with: the missile (the ammunition as it flew, the
         /// thrown thing); for a shield bash, the shield; `None` for other blows and spells.
         with: Option<ObjectId>,
+        /// The kind of damage it did (spec §8 "Damage types": what a blow is said with, a
+        /// sword's slashing or piercing by what was better); `None` for a miss, an intent, or
+        /// an untyped attack.
+        damage: Option<DamageTypeId>,
     },
     /// A missile flew (spec §8 "Ranged combat"): a shot or a throw. As the player perceives it
     /// (the rest of the turn's events are kept only when seen; this one is cut to what was
@@ -508,7 +519,7 @@ pub struct Outcome {
 
 /// Text syntax for scripting: `move:E wait open:E close:W kick:N ascend descend lantern rest:1h
 /// rest:dawn rest:dusk pickup pickup:ac drop:b sell:b pay pay:W equip:body:b remove:body bash:E
-/// fire:12,5 throw:c:12,5 dig:E search search:10 eat:b eat:floor:a read:b read:b:12,5 read:b:c
+/// fire:12,5 throw:c:12,5 dig:E search search:10 disarm:E eat:b eat:floor:a read:b read:b:12,5 read:b:c
 /// chat:E ask:E:TOPIC vision:ID
 /// skip:1h
 /// weather:rain effect:fireball@12,5 effect:lightning_bolt@3,4>12,4 identify:a afflict:bleeding
@@ -518,7 +529,8 @@ pub struct Outcome {
 /// `identify` without letters take everything; `pay:DIR` pays and steps that way, out of the shop;
 /// `equip:SLOT:LETTER` puts inventory stack LETTER on in slot SLOT, `remove:SLOT` takes off what
 /// is there; `bash:DIR` bashes with the held shield; `dig:DIR` digs toward a wall; `search`
-/// searches once and `search:N` for up to N turns, 1 to [`MAX_SEARCH`]; `fire:X,Y`
+/// searches once and `search:N` for up to N turns, 1 to [`MAX_SEARCH`]; `disarm:DIR` tries to
+/// disarm the known trap that way; `fire:X,Y`
 /// shoots at the level cell (X, Y), `throw:LETTER:X,Y` throws one of inventory stack LETTER
 /// there; `eat:LETTER` eats one of inventory stack LETTER, `eat:floor:LETTER` one of the stack
 /// LETTER of the pile underfoot; `read:LETTER:X,Y` reads inventory stack LETTER (a scroll) at
@@ -575,6 +587,7 @@ impl fmt::Display for Action {
             Action::Dig(d) => write!(f, "dig:{d}"),
             Action::Search(1) => f.write_str("search"),
             Action::Search(turns) => write!(f, "search:{turns}"),
+            Action::Disarm(d) => write!(f, "disarm:{d}"),
             Action::SetVision(id) => write!(f, "vision:{id}"),
             Action::SkipTime(d) => write!(f, "skip:{d}"),
             Action::SetWeather(w) => write!(f, "weather:{}", w.id()),
@@ -632,6 +645,7 @@ impl FromStr for Action {
             "kick" => dir().map(Action::Kick),
             "bash" => dir().map(Action::Bash),
             "dig" => dir().map(Action::Dig),
+            "disarm" => dir().map(Action::Disarm),
             "search" => match arg.map(str::parse::<u8>) {
                 None => Ok(Action::Search(1)),
                 Some(Ok(turns)) if (1..=MAX_SEARCH).contains(&turns) => Ok(Action::Search(turns)),
@@ -1007,6 +1021,7 @@ mod tests {
                 Action::Kick(d),
                 Action::Bash(d),
                 Action::Dig(d),
+                Action::Disarm(d),
             ]);
         }
         assert_eq!(parse_actions(&format_actions(&all)), Ok(all));
@@ -1026,6 +1041,11 @@ mod tests {
         assert!(parse_actions("wait:E").is_err());
         assert_eq!(parse_actions("BASH:sw"), Ok(vec![Action::Bash(Dir::SW)]));
         assert!(parse_actions("bash").is_err());
+        assert_eq!(
+            parse_actions("DISARM:ne"),
+            Ok(vec![Action::Disarm(Dir::NE)])
+        );
+        assert!(parse_actions("disarm").is_err());
         assert_eq!(
             parse_actions("SEARCH search:1 search:10"),
             Ok(vec![

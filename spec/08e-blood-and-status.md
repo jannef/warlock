@@ -67,7 +67,36 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Stats**: a status's `penalty` lowers scores from a severity on (several add up, kept
     within 1 to 40); every rule reads the effective score (`Actor::effective_stats`): combat
     (to-hit, damage, Defence, hit points), burden (the limit), and healing. The player sees their
-    scores lowered on the character screen.
+    scores lowered on the character screen. A positive number raises the score instead (Raging:
+    Strength +2), and the hit points a raised Toughness allows fall back as the status ends
+    (`World::keep_hp_within_max`: above the lasting maximum, and above the maximum other statuses
+    still raise, never).
+  - **Buffs, hexes, and cooldowns** (`world/buff.rs`, #227; design `docs/design/progression.md`
+    §4.1 B1): a status may also, while it lasts,
+    - **fight** better or worse (`combat = { to_hit, damage, dodge, parry }`, each −20 to 20, as a
+      combat stance's, §8 "Stances"): to-hit and damage join every attack profile with the
+      stance's (`Actor::stanced`), Dodge and Parry the actor's Defence (Dodge stacks, of Parry the
+      highest counts), creatures' as well as the player's (a hex is a status on a creature);
+    - **slow** (`cost`, 100 to 1000 percent): every action's price is multiplied by it, after the
+      burden and Bloated (`World::burdened`, the one place every price passes); several multiply.
+      Statuses never hasten, so a creature's quickest step stays what a rest's batching counts on;
+    - **block** actions (`blocks = ["read"]`, ids in `data/actions.toml`): the rules refuse the
+      player's action of that kind before it is tried, with no time taken ("You cannot read while
+      raging."; a step into a hostile creature is `melee`, into a closed door `open_door`, off a
+      local area's edge `stairs`), and the abilities menu greys out an ability that costs one
+      (`Unavailable::While(status)`: "you are raging"). Creatures' plans do not consult it yet;
+    - **be followed** (`follows = "exhausted"`): as it ends, worn off or cured, the status it names
+      begins at one degree, caused by whoever caused the one that ended (Raging, then Exhausted:
+      the ending's message, then the beginning's). A chain never leads back to where it began, a
+      status with `follows` must end (`eases` or `cured_by`), and nothing follows into or out of
+      Diseased.
+    A **cooldown** is a status with `eases` and no tick given as an ability is used: while it
+    lasts, the ability is `Unavailable::While` it ("you are winded"), a visible limit that only
+    time lifts; nothing counts uses. An ability that buffs the player calls `World::afflict(player,
+    status, 1, player)`. The class abilities that give them come with the class tables; the
+    built-in data has the barbarian's rage as the example: Raging (5 minutes: Strength and
+    Toughness +2, Intelligence −2, no reading), then Exhausted (10 minutes: Strength −1), both
+    reached for now only by the dev `afflict:raging`.
   - **Deaths**: a tick that takes the last hit point kills by the status, at that moment
     (`Event::Died`'s `of`; the player's death records it, `Death::of`). A creature that dies of
     a status counts as killed by whoever caused it (`Effect::by`): experience (#133) credits the
@@ -77,13 +106,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Causes**: `World::afflict(actor, status, severity, by)` is the one way to give an actor a
     status: wounds and `on_hit` (below), sickness from what the player eats (§8 "Hunger"), and
     later traps and diseases.
-  - **Bleeding**: from big hits and confirmed criticals; it costs hit points, stops healing, and
+  - **Bleeding**: from big hits and confirmed criticals of slashing and piercing blows (the
+    status's `wound.from`, §8 "Damage types": a club, a fall, or a fireball opens no wound; an
+    untyped blow does); it costs hit points, stops healing, and
     eases by itself; it shows on creatures ("bleeding"). Blood dripping where the bleeder goes
-    (the stains of #127) hooks in where it ticks (`World::drip_blood`).
+    (the stains of #127) hooks in where it ticks (`World::drip_blood`). Its ticks are untyped:
+    nothing resists them.
   - **Poisoned**: from a giant rat's bite (one hit in ten, 2 degrees) and bad food (§8
     "Hunger": the sickness of a rotten corpse, or of some creatures' flesh); it costs hit points
     slowly, halves healing, and from 4 degrees lowers Strength and Dexterity by 1; stronger
-    poison lasts longer.
+    poison lasts longer. It is damage of the kind poison (`damage_type`, §8 "Damage types"): a
+    creature immune to poison is never poisoned, and a resistance takes its share off each dose
+    as it is given (rounded to the nearest; 2 degrees at 50 % is 1), never off the ticks.
   - **Shown**: the player's own by name (status bar, character screen, the `stats` dump layer),
     those with a `seen` word on creatures the player sees (look mode); never a severity or a
     timer. Effects are part of the world state (saved, covered by the state hash).

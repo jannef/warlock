@@ -10,9 +10,12 @@
 //! (a stackable one joins a stack of the same), and a `wield` or `wear` line's item into the first
 //! free slot it fits; one that finds none stays in the pack.
 //!
-//! A scenario's `carry` comes on top of the kit, or alone when the scenario says `kit = false`
-//! ([`starting_pack`]). Food learns when it was made when the run starts (`rot::made_at`), and
-//! magic items are unidentified like any loot.
+//! Who starts with it: a run whose character the player chose (New run's character creation,
+//! `--character` or `--name` in the game and `warlock-cli`, a replay that says so) starts with the
+//! kit and the scenario's `carry` on top; a run on the scenario's own character that nobody chose
+//! (`--scenario` alone, tests, golden walks) with the scenario's `carry` alone
+//! ([`starting_pack`], [`crate::world::World::start_run`]). Food learns when it was made when the
+//! run starts (`rot::made_at`), and magic items are unidentified like any loot.
 
 use crate::character::Character;
 use crate::content::{Content, Keep, Kit, ScenarioDef, WeaponSkillId};
@@ -141,14 +144,10 @@ pub fn kits_of<'c>(content: &'c Content, character: &Character) -> Vec<&'c Kit> 
     kits
 }
 
-/// What a run of `scenario` starts the player with: the character's `kit` (unless the scenario
-/// says `kit = false`), then the scenario's `carry` on top (stackable things joining the kit's).
-/// Without a character, only the scenario's.
+/// What a run of `scenario` starts the player with: the character's `kit`, if they start with
+/// it, then the scenario's `carry` on top (stackable things joining the kit's).
 pub fn starting_pack(content: &Content, scenario: &ScenarioDef, kit: Option<&Pack>) -> Pack {
-    let mut pack = match kit {
-        Some(kit) if scenario.kit => kit.clone(),
-        _ => Pack::default(),
-    };
+    let mut pack = kit.cloned().unwrap_or_default();
     for stack in &scenario.carry {
         pack.put(stack.clone(), content);
     }
@@ -420,9 +419,8 @@ mod tests {
     #[test]
     fn nobody_starts_strained_and_only_wealth_burdens() {
         // The weakest character of every race, gender, and class, with the heaviest kit their
-        // class's picks allow and the heaviest pack a scenario with kits adds on top.
+        // class's picks allow and the heaviest pack a scenario adds on top.
         let carry = (CONTENT.scenarios())
-            .filter(|s| s.kit)
             .map(|s| s.carry.iter().map(|st| st.weight(&CONTENT)).sum::<u64>())
             .max()
             .unwrap_or(0);
@@ -488,7 +486,10 @@ mod tests {
             &format!("{world}carry = [\"ration*3\", \"dried_meat*2\"]\n"),
         );
         let content = Arc::new(Content::load(&files).expect("valid"));
-        let world = World::new(content, "packed", None).expect("world");
+        let ranger: CharacterSpec = "human,male,ranger".parse().expect("a character");
+        let world = World::start_run(content.clone(), "packed", None, Some(&ranger), None, true)
+            .expect("world");
+        assert!(world.started_with_kit());
         let player = world.state().player();
         let s = start(&CONTENT, "human,male,ranger", 1);
         // The ranger's kit, first, then the world's rations; its dried meat joins the kit's.
@@ -509,17 +510,29 @@ mod tests {
             let food = CONTENT.object(stack.object).food.is_some();
             assert_eq!(stack.died, food.then_some(date), "{stack:?}");
         }
-        // The showcase leaves the kit behind: its thief starts empty-handed.
+        // Nobody chose the scenario's own character: the scenario's pack alone, as tests and
+        // golden walks start. So does a chosen one without the kit (`with_character`).
+        let packed = World::new(content.clone(), "packed", None).expect("world");
+        let chosen = World::with_character(content, "packed", None, Some(&ranger)).expect("world");
+        for world in [&packed, &chosen] {
+            let player = world.state().player();
+            assert!(!world.started_with_kit());
+            assert_eq!(player.inventory.len(), 2, "{:?}", player.inventory);
+            assert!(player.equipment.is_empty());
+        }
         let showcase = World::new(CONTENT.clone(), "showcase", None).expect("showcase");
         assert!(showcase.state().player().inventory.is_empty());
-        assert!(showcase.state().player().equipment.is_empty());
-        let def = CONTENT.scenario("showcase").expect("showcase");
-        let thief = start(&CONTENT, "human,female,thief", 1);
-        assert_eq!(
-            starting_pack(&CONTENT, def, Some(&thief.kit)),
-            Pack::default()
-        );
-        assert!(!thief.kit.items.is_empty());
+        // A chosen character in the showcase starts with the kit: there is no pack on top.
+        let thief: CharacterSpec = "human,female,thief".parse().expect("a character");
+        let kitted = World::start_run(CONTENT.clone(), "showcase", None, Some(&thief), None, true)
+            .expect("showcase");
+        let kit = start(&CONTENT, "human,female,thief", 1).kit;
+        // (The same stacks; the food now knows when it was made.)
+        let goods = |stacks: &[Stack]| -> Vec<(crate::content::ObjectId, u32)> {
+            stacks.iter().map(|s| (s.object, s.count)).collect()
+        };
+        assert_eq!(goods(&kitted.state().player().inventory), goods(&kit.items));
+        assert_eq!(kitted.state().player().equipment, kit.equipment);
     }
 
     #[test]
@@ -556,8 +569,10 @@ mod tests {
     fn a_run_with_a_kit_replays() {
         let spec: CharacterSpec = "dwarf,female,thief".parse().expect("a character");
         let mut world =
-            World::with_character(CONTENT.clone(), "world", Some(7), Some(&spec)).expect("world");
+            World::start_run(CONTENT.clone(), "world", Some(7), Some(&spec), None, true)
+                .expect("world");
         let mut replay = Replay::new(&world);
+        assert!(replay.kit && replay.to_json().contains("\"kit\": true"));
         for action in
             crate::action::parse_actions("move:E remove:main_hand drop:a wait").expect("actions")
         {
@@ -575,5 +590,14 @@ mod tests {
             .expect("a tool slot");
         let item = player.equipment.get(tool.0).expect("a tool");
         assert_eq!(player.inventory[item].object, id("pick_axe"));
+        // A replay without the flag (from before kits, or of a run on the scenario's own
+        // character) starts with the scenario's pack, as it was recorded.
+        let plain = Replay {
+            kit: false,
+            ..replay
+        };
+        assert!(!plain.to_json().contains("\"kit\""));
+        let start = plain.start(CONTENT.clone()).expect("starts");
+        assert!(start.state().player().inventory.is_empty());
     }
 }

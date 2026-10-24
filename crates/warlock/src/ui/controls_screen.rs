@@ -472,6 +472,7 @@ mod tests {
     fn key(screen: &mut ControlsScreen, b: &mut Bindings, text: &str) {
         let press = Press {
             nav: Nav::Other,
+            edit: None,
             binding: KeyBinding::from_text(text),
             repeat: false,
             text: None,
@@ -555,6 +556,7 @@ mod tests {
         nav(&mut screen, &mut b, Nav::Enter);
         let press = Press {
             nav: Nav::Other,
+            edit: None,
             binding: Some(KeyBinding::Code(bevy::prelude::KeyCode::Escape)),
             repeat: false,
             text: None,
@@ -773,6 +775,7 @@ mod tests {
         let mut b = Bindings::default();
         let question = Press {
             nav: Nav::Other,
+            edit: None,
             binding: KeyBinding::from_text("?"),
             repeat: false,
             text: Some('?'),

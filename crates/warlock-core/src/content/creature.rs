@@ -1,14 +1,18 @@
 //! Creature definitions (`assets/data/creatures/`, one file per creature; docs/dev/content.md).
 
+use super::DamageTypeId;
 use super::anim::GlyphAnim;
+use super::damage_type::TypeNames;
 use super::disease::DiseaseId;
 use super::faction::FactionId;
 use super::light::LightId;
 use super::object::MAX_BONUS;
 use super::particles::ParticleEmitter;
 use super::status::{OnHit, OnHitSpec, StatusId};
+use crate::alignment::Alignment;
 use crate::color::Rgb;
 use crate::combat::{Attack, CRITS, DEFAULT_CRIT, DEFAULT_THREAT, THREATS};
+use crate::damage::Kinds;
 use crate::dice::Dice;
 use crate::skills::Skills;
 use crate::stats::{Stat, Stats};
@@ -95,6 +99,11 @@ pub(super) struct CreatureSpec {
     pub size: Option<String>,
     /// The faction it belongs to (`data/factions.toml`).
     pub faction: Option<String>,
+    /// Where it stands between good and evil (spec §8 "Alignment"); neutral by default.
+    #[serde(default)]
+    pub alignment: Alignment,
+    /// The race it is one of (`data/races.toml`), if any.
+    pub race: Option<String>,
     /// Its eyes: a vision profile in `data/vision.toml`.
     #[serde(default = "normal_vision")]
     pub vision: String,
@@ -146,6 +155,10 @@ pub(super) struct CreatureSpec {
     pub attack: Option<NaturalAttackSpec>,
     /// Its natural armour: hide, shell, or scales.
     pub natural: Option<Hide>,
+    /// What it resists, in percent per damage type (spec §8 "Damage types"): `resist = { acid
+    /// = 50 }`; 100 is immune, negative a vulnerability. Rules only: never shown.
+    #[serde(default)]
+    pub resist: BTreeMap<String, i32>,
     /// Whether it leaves a corpse when it dies (spec §8 "Hunger"; with `data/hunger.toml`).
     #[serde(default = "yes")]
     pub corpse: bool,
@@ -218,6 +231,9 @@ impl OnEat {
 #[serde(deny_unknown_fields)]
 pub(super) struct NaturalAttackSpec {
     pub damage: Dice,
+    /// The kind of damage it does (spec §8 "Damage types"): a bite piercing, a claw slashing,
+    /// a slam bludgeoning.
+    pub damage_type: Option<TypeNames>,
     pub name: String,
     pub verb: String,
     pub threat: Option<u8>,
@@ -274,6 +290,7 @@ impl NaturalAttackSpec {
         self,
         status: impl Fn(&str) -> Option<(StatusId, u16)>,
         disease: impl Fn(&str) -> Option<DiseaseId>,
+        kinds: Kinds,
     ) -> Result<NaturalAttack, String> {
         let threat = self.threat.unwrap_or(DEFAULT_THREAT);
         let crit = self.crit.unwrap_or(DEFAULT_CRIT);
@@ -305,6 +322,7 @@ impl NaturalAttackSpec {
                 threat,
                 crit,
                 strength: None,
+                kinds,
             },
             name: self.name,
             verb: self.verb,
@@ -324,6 +342,7 @@ pub(super) struct Resolved {
     pub skills: Skills,
     pub attack: Option<NaturalAttack>,
     pub weapon_skills: WeaponSkills,
+    pub resist: Vec<(DamageTypeId, i32)>,
 }
 
 impl CreatureSpec {
@@ -338,6 +357,8 @@ impl CreatureSpec {
             weight: self.weight,
             size: r.size,
             faction: r.faction,
+            alignment: self.alignment,
+            race: self.race,
             vision: r.vision,
             sight: self.sight,
             combat: self.combat,
@@ -356,6 +377,7 @@ impl CreatureSpec {
             loot: self.loot,
             attack: r.attack,
             natural: self.natural,
+            resist: r.resist,
             corpse: self.corpse,
             on_eat: self.on_eat,
             blood: r.blood,
@@ -389,6 +411,12 @@ pub struct CreatureDef {
     /// The faction it belongs to; `None` when the content defines no factions. The player's
     /// creature belongs to [`super::PLAYER_FACTION`].
     pub faction: Option<FactionId>,
+    /// Gameplay: where it stands between good and evil (spec §8 "Alignment"), unless a level
+    /// placed it elsewhere ([`crate::world::Actor::nature`]). Never shown to the player.
+    pub alignment: Alignment,
+    /// Gameplay: the race it is one of (an id in `data/races.toml`), if any: its corpse is kin
+    /// to a character of that race (spec §8 "Alignment").
+    pub race: Option<String>,
     /// Its eyes: an index into [`super::Content::vision_profiles`]. The player's eyes come from
     /// the scenario (and the dev vision switch) instead.
     pub vision: usize,
@@ -436,6 +464,9 @@ pub struct CreatureDef {
     pub attack: Option<NaturalAttack>,
     /// Gameplay: its natural armour, if any.
     pub natural: Option<Hide>,
+    /// Gameplay: what it resists, in percent per damage type (spec §8 "Damage types"); 100 is
+    /// immune, negative a vulnerability. Rules only: the player learns it by play.
+    pub resist: Vec<(DamageTypeId, i32)>,
     /// Gameplay: whether it leaves a corpse when it dies (spec §8 "Hunger"; only with
     /// `data/hunger.toml`, which says how corpses rot and feed).
     pub corpse: bool,

@@ -15,17 +15,18 @@ when your character is made; the rest you are **untrained** in.
   too, and the summary at the end of character creation lists the skills you will start with.
 
 What a skill does for you is never shown in numbers in the game: you see the value, and feel the
-difference. This page gives the rules.
+difference. This page gives the rules, with the exact numbers.
 
 ## The skills
 
 Some skills work by themselves, all the time (**passive**); some will be used as **actions**
 (searching, picking a lock, binding a wound); some are **read by rules** when something calls for
 them (athletics when you kick a door). For now only the passive skills, Appraise, Athletics
-(kicking doors in, see [Doors](doors.md)), and Search (see [Searching](searching.md)) do
-something: the others are there to be trained, and get their uses as the game grows. The skills
-used as actions are in the [abilities menu](abilities.md) once you are trained in them, greyed
-out until their uses come.
+(kicking doors in, see [Doors](doors.md)), Search (see [Searching](searching.md)), and Disable
+device (disarming traps, see [Traps](traps.md#disarming-traps)) do something: the others are
+there to be trained, and get their uses as the game grows. The skills used as actions are in the
+[abilities menu](abilities.md) once you are trained in them, greyed out until their uses come;
+Disable device's use is there as **Disarm a trap**.
 
 {{#include generated/skills.md}}
 
@@ -62,7 +63,8 @@ so they never change a stat.
 {{#include generated/skill-grants.md}}
 
 Some creatures are trained in skills too: deer listen well, and the kobold shaman knows something
-of spells. You never see a creature's skills.
+of spells. You never see a creature's skills in the game; they are on
+[Creatures in numbers](creature-numbers.md#stats-and-skills).
 
 ## Getting better
 

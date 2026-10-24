@@ -129,9 +129,13 @@ fn affix_table(content: &Content, kind: AffixKind) -> String {
 
 /// What affix `a` does, in words, without its value: its effect's words, or the skill it adds to.
 fn effect_text(content: &Content, a: &AffixDef) -> String {
-    match a.skill {
-        Some(id) => format!("{} (a skill)", content.skill(id).name),
-        None => effect_words(a.effect),
+    match (a.skill, a.damage_type) {
+        (Some(id), _) => format!("{} (a skill)", content.skill(id).name),
+        (_, Some(kind)) if a.effect == ItemEffect::Elemental => {
+            format!("adds a die of {} damage", content.damage_type(kind).name)
+        }
+        (_, Some(kind)) => format!("{} resistance", content.damage_type(kind).name),
+        (None, None) => effect_words(a.effect),
     }
 }
 
@@ -141,6 +145,7 @@ fn effect_words(effect: ItemEffect) -> String {
         ItemEffect::ToHit => "to hit".into(),
         ItemEffect::Damage => "damage, added to every roll".into(),
         ItemEffect::ExtraDamage => "adds a die of damage".into(),
+        ItemEffect::Elemental => "adds a die of damage of a kind (fire, cold, ...)".into(),
         ItemEffect::Threat => "criticals threaten on more rolls".into(),
         ItemEffect::Crit => "critical damage multiplier".into(),
         ItemEffect::AttackSpeed => "attacks faster".into(),
@@ -158,6 +163,7 @@ fn effect_words(effect: ItemEffect) -> String {
         ItemEffect::Natural => "natural armour".into(),
         ItemEffect::MaxHp => "maximum hit points".into(),
         ItemEffect::Regeneration => "hit points come back faster".into(),
+        ItemEffect::Resistance => "resistance to a kind of damage, in percent".into(),
         ItemEffect::Stat(stat) => stat.name().into(),
         ItemEffect::MoveSpeed => "you move faster".into(),
         ItemEffect::Carry => "carrying capacity".into(),
@@ -167,7 +173,8 @@ fn effect_words(effect: ItemEffect) -> String {
     }
 }
 
-/// What a tier rolls, in words: `+1–2`, `1d3–1d4`, `20–35%`; speed in words only.
+/// What a tier rolls, exactly: `+1–2`, `1d3–1d4`, `20–35%`, `5–8% less time` (speed takes its
+/// percent off the cost, `magic::mods::faster`).
 fn tier_value(effect: ItemEffect, tier: &warlock_core::content::Tier, content: &Content) -> String {
     let range = |prefix: &str, suffix: &str| {
         if tier.min == tier.max {
@@ -176,23 +183,16 @@ fn tier_value(effect: ItemEffect, tier: &warlock_core::content::Tier, content: &
             format!("{prefix}{}–{}{suffix}", tier.min, tier.max)
         }
     };
-    let faster = |p: i32| match p {
-        ..=7 => "a little faster",
-        8..=12 => "faster",
-        _ => "much faster",
-    };
     match effect {
-        ItemEffect::ExtraDamage if tier.min == tier.max => format!("1d{}", tier.min),
-        ItemEffect::ExtraDamage => format!("1d{}–1d{}", tier.min, tier.max),
-        ItemEffect::Draw => range("", " less"),
-        ItemEffect::AttackSpeed | ItemEffect::MoveSpeed => {
-            let (lo, hi) = (faster(tier.min), faster(tier.max));
-            if lo == hi {
-                lo.to_string()
-            } else {
-                format!("{lo} to {hi}")
-            }
+        ItemEffect::ExtraDamage | ItemEffect::Elemental if tier.min == tier.max => {
+            format!("1d{}", tier.min)
         }
+        ItemEffect::ExtraDamage | ItemEffect::Elemental => {
+            format!("1d{}–1d{}", tier.min, tier.max)
+        }
+        ItemEffect::Resistance => range("+", "%"),
+        ItemEffect::Draw => range("", " less"),
+        ItemEffect::AttackSpeed | ItemEffect::MoveSpeed => range("", "% less time"),
         ItemEffect::Durability
         | ItemEffect::Weight
         | ItemEffect::Stealth

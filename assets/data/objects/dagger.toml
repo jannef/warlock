@@ -11,6 +11,7 @@ slot = "main_hand"
 light_weapon = true
 damage = "1d4"
 category = "daggers"
+damage_type = "piercing"
 threat = 20
 kind = "weapon"
 # Balanced for throwing: it tumbles end over end.

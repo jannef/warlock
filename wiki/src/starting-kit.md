@@ -40,7 +40,6 @@ trade; the commoner with a stick and a turnip.
 
 ## Scenarios
 
-Most scenarios start you with your kit, and a scenario may give you more on top. The hand-made
-tours (the showcase, the arena, the courtyard, the quarry, and the trap hall) leave your kit
-behind: their rooms hold what there is to try, and you start empty-handed. The summary says so,
-and so does the list of scenarios in the [introduction](introduction.md).
+Every run you start from **New run** starts you with your kit, whichever
+[scenario](introduction.md) you pick; a scenario may give you more on top (none does yet). The
+summary lists it all before you start.

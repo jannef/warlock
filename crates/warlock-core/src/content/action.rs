@@ -80,6 +80,8 @@ pub enum ActionKind {
     /// A turn of searching for hidden features (spec §8 "Searching"): searching for a while
     /// takes several.
     Search,
+    /// Trying to disarm a trap (spec §8 "Disarming traps"), whatever comes of it.
+    Disarm,
     /// Chatting with a creature (spec §8 "Dialogue"): a short action.
     Chat,
     /// Climbing out of the water onto ice (spec §5 "Ice"): on top of the step onto it.
@@ -112,6 +114,7 @@ impl ActionKind {
         ActionKind::Read,
         ActionKind::Dig,
         ActionKind::Search,
+        ActionKind::Disarm,
         ActionKind::Chat,
         ActionKind::Climb,
     ];
@@ -142,6 +145,7 @@ impl ActionKind {
             ActionKind::Read => "read",
             ActionKind::Dig => "dig",
             ActionKind::Search => "search",
+            ActionKind::Disarm => "disarm",
             ActionKind::Chat => "chat",
             ActionKind::Climb => "climb",
         }
@@ -162,6 +166,39 @@ impl ActionKind {
             self,
             ActionKind::Wield | ActionKind::Wear | ActionKind::BodyArmor | ActionKind::Ready
         )
+    }
+
+    /// What an actor does in it, after "cannot" ("You cannot read while raging.": a status that
+    /// `blocks` it, spec §8 "Status effects").
+    pub const fn doing(self) -> &'static str {
+        match self {
+            ActionKind::Step => "move",
+            ActionKind::Wait => "wait",
+            ActionKind::OpenDoor => "open doors",
+            ActionKind::CloseDoor => "close doors",
+            ActionKind::Unlock => "unlock doors",
+            ActionKind::Kick => "kick",
+            ActionKind::Lantern => "tend a lantern",
+            ActionKind::Stairs => "travel",
+            ActionKind::PickUp => "pick things up",
+            ActionKind::Drop => "drop things",
+            ActionKind::Melee => "fight",
+            ActionKind::Shoot => "shoot",
+            ActionKind::Throw => "throw",
+            ActionKind::Reload => "reload",
+            ActionKind::Cast => "cast spells",
+            ActionKind::Wield => "change what you hold",
+            ActionKind::Wear => "change what you wear",
+            ActionKind::BodyArmor => "change your armour",
+            ActionKind::Ready => "change what you have ready",
+            ActionKind::Eat => "eat",
+            ActionKind::Read => "read",
+            ActionKind::Dig => "dig",
+            ActionKind::Search => "search",
+            ActionKind::Disarm => "disarm traps",
+            ActionKind::Chat => "talk",
+            ActionKind::Climb => "climb",
+        }
     }
 
     fn index(self) -> usize {

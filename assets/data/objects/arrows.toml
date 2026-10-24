@@ -29,6 +29,8 @@ stackable = true
 slot = "missiles"
 ammo = "arrow"
 lit = "burning_arrow"
+# Besides the arrow's own piercing, the flame burns.
+added = { type = "fire", damage = "1d4" }
 
 # A flaming arrow as it flies and where it lands: it lights the dark around it for a minute, then
 # it has burned away.

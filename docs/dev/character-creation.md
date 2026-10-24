@@ -15,8 +15,9 @@ the birth year's)). Scores: 10 + race + gender + class + animal + element, clamp
 potentials `base_potential` + the race's, never below the score. Flags for rules:
 `Character::born_of_element("fire")`, `born_in_year_of("manticore")`. Content:
 `data/races.toml` (`content/race.rs`: `Races` with `base_potential`, `RaceDef` with `vision`,
-`age`, `stats`, `potential`, `hp`), `data/classes.toml` (`content/class.rs`: `ClassDef` with
-`stats`, `hp`; `Start::hp` is their sum),
+`age`, `stats`, `potential`, `hp`, `alignment`), `data/classes.toml` (`content/class.rs`:
+`ClassDef` with `stats`, `hp`, `alignment`; `Start::hp` is their sum, and `Start::alignment` the
+sum of their `alignment`s, the starting score, `docs/dev/alignment.md`),
 and `data/horoscope.toml` (`content/horoscope.rs`: `Horoscope` with `anchor_year`, `animals`,
 `elements`, `sign_of_year`, `great_cycle` (60), `name` ("Fire Manticore")); all optional.
 Adjustments are `PerStat<Dice>` (`stats::adjustments` checks every result is within -10..=10;
@@ -24,15 +25,19 @@ Adjustments are `PerStat<Dice>` (`stats::adjustments` checks every result is wit
 order (race, class, animal, element, race potentials): **adding a die to data changes later
 rolls** of every character with that race or class. `Dice` (`warlock-core/src/dice.rs`) is the
 one dice type (parse `2d3+1`/`-1d2`/`+2`, `Display`, `min`/`max`, `roll(&mut Rng)`); combat
-uses it for damage. Scenarios name their character (`character = { race, gender, class }`,
-`ScenarioDef::character`); with one, `vision`, `stats`, `potential`, and `hp` are refused.
+uses it for damage. Scenarios name their character (`character = { race, gender, class, name }`,
+`ScenarioDef::character` and `character_name`; the `name` optional); with one, `vision`, `stats`,
+`potential`, and `hp` are refused.
 `World::new` starts as the scenario's character, `World::with_character(content, scenario, seed,
-Some(&spec))` as another; `WorldState::character` (the `Character`, saved, hashed)
-and `PerceptionView::character` (the player knows it; `PerceptionView::time`
-for their age). Replays record only the spec. The summary and the character screen show final
-scores only: never dice, a breakdown, a modifier, or a potential (the step screens and the wiki
-show adjustments as written in data). Balance is not a goal; classes only adjust starting
-scores, give hit points, train skills and weapon skills, and give a starting kit.
+Some(&spec))` as another, `World::with_character_named(.., name)` named, and
+`World::start_run(.., kit)` with the starting kit or without (below); `WorldState::character`
+(the `Character`, saved, hashed) and `PerceptionView::character` (the player knows it;
+`PerceptionView::time` for their age). Replays record the spec, the name (`Replay::name`), and
+whether the run started with the kit (`Replay::kit`). The summary and the character screen show
+final scores only: never dice, a breakdown, a modifier, or a potential (the step screens and the
+wiki show adjustments as written in data; the wiki also gives the modifiers and the races'
+potentials exactly). Balance is not a goal; classes only adjust starting scores, give hit
+points, train skills and weapon skills, and give a starting kit.
 
 **Starting kits** (spec §8 "Character creation", #257): the data side is `content/kit.rs`
 (`KitLineSpec`, parsed with the race, class, or sign as written, a string or a table;
@@ -47,13 +52,20 @@ drawing only if `KitItem::applies` (one `rng.index` among alternatives, then
 `magic::loot::make` at `kit::ITEM_LEVEL` for a `magic` line); `Pack::put` joins stackables,
 `Pack::equip` uses `equipment::free_slot`. `CharacterSpec::start` returns it as `Start::kit`
 (`weapon_skills` now also returns the class-trained set: its fixed ranks and the picked
-choice sets). `kit::starting_pack(content, scenario, kit)` is the one place the starting pack
-is put together (the kit unless `ScenarioDef::kit` is false, then `carry` on top): used by
-`World::with_character` and the summary (`ui/chargen_screen.rs::kit_words`, names from
-`Pack::names`). No new state: the pack is the player's inventory and equipment, and
-`rot::made_at` dates the food as before. Tests: `content/kit.rs` (parsing, refusals),
-`kit.rs` (Twin Blades and Duelist, the barbarian's pick, deterministic choices, no other roll
-moves, every worn or wielded item finds its slot, nobody Strained and only the aristocrat and
-the merchant Burdened, worst case analytically, magic unidentified, the scenario's pack, the
-gender and sign hooks, a replay). The wiki's tables are `xtask/src/wiki/kits.rs`
-(`class-kits.md`, `race-kits.md`) and the scenarios table's kit column.
+choice sets). **Who gets it**: `World::start_run(content, scenario, seed, character, name,
+kit)` is the full constructor; `kit` is true for a run whose character the player chose:
+`Game::new_run` (New run's character creation), the game and `warlock-cli` when `--character` or
+`--name` is given, and `Replay::start` when the replay says `kit`. Everything else
+(`World::new`, `with_character`, `with_character_named`, `--scenario` alone, tests, golden
+walks, old replays) starts with the scenario's pack alone, as before kits. `WorldState::kit`
+(saved, hashed, left out while false, so other runs hash as before) records it, and
+`Replay::new` copies it into the replay. `kit::starting_pack(content, scenario, kit)` is the one
+place the starting pack is put together (the kit, if any, then `carry` on top): used by
+`World::start_run` and the summary (`ui/chargen_screen.rs::kit_words`, names from
+`Pack::names`). `rot::made_at` dates the food as before. Tests: `content/kit.rs` (parsing,
+refusals), `kit.rs` (Twin Blades and Duelist, the barbarian's pick, deterministic choices, no
+other roll moves, every worn or wielded item finds its slot, nobody Strained and only the
+aristocrat and the merchant Burdened, worst case analytically, magic unidentified, who gets the
+kit and the scenario's pack, the gender and sign hooks, a replay with and without the flag).
+The wiki's tables are `xtask/src/wiki/kits.rs` (`class-kits.md`, `race-kits.md`). The golden
+manifest's `kit = true` starts an entry's run with the kit (`tests/golden/manifest/kits.toml`).

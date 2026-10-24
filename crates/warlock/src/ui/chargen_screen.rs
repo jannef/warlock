@@ -1,15 +1,17 @@
 //! Character creation (spec §6 "New run", §8 "Character creation"): after the scenario and the
 //! seed, New run asks for a race, a gender, and a class, one screen each ([`ChoiceScreen`]), then
-//! shows the character ([`SummaryScreen`]): age, birthday, and birth sign, the final scores (the
-//! dice already rolled), the starting trained skills with their values, the starting kit in
-//! words, and a way back to any step.
+//! a name (`name_screen`), then shows the character ([`SummaryScreen`]): the name, age, birthday,
+//! and birth sign, the final scores (the dice already rolled), the starting trained skills with
+//! their values, the starting kit in words, the alignment band they start in (spec §8
+//! "Alignment"), and a way back to any step.
 //!
-//! The steps are screens on the stack, in order (New run, race, gender, class, summary), so Esc
-//! steps back one and the summary's "change" rows return to a step as it was left. What has been
-//! chosen so far is read off the screens on the stack ([`Draft`]); choices made before going
+//! The steps are screens on the stack, in order (New run, race, gender, class, name, summary), so
+//! Esc steps back one and the summary's "change" rows return to a step as it was left. What has
+//! been chosen so far is read off the screens on the stack ([`Draft`]); choices made before going
 //! back are remembered ([`Picks`]) and preselected when a step opens again, else the scenario's
-//! own character, else the first option. Each step has a Random row, rolled from the run seed
-//! and how often Random was pressed there, so it is reproducible.
+//! own character, else the first option (the name: an empty field). Each choice step has a
+//! Random row, rolled from the run seed and how often Random was pressed there, so it is
+//! reproducible; the name's Random draws the race's names from the seed.
 //!
 //! Like every screen these are plain state machines, testable without a window.
 
@@ -19,8 +21,10 @@ use super::screens::{MenuChoice, ScreenAction, ScreenName};
 use super::{ACCENT, TEXT, TEXT_DIM};
 use crate::input::Bindings;
 use crate::render::console::Console;
-use warlock_core::character::{CharacterSpec, Gender, Start, other_stat};
-use warlock_core::content::Content;
+use warlock_core::character::{
+    CharacterSpec, Gender, NAMELESS, Start, check_name, other_stat, random_name,
+};
+use warlock_core::content::{Content, pace_words};
 use warlock_core::dice::Dice;
 use warlock_core::kit;
 use warlock_core::rng::Rng;
@@ -28,16 +32,18 @@ use warlock_core::stats::{PerStat, Stat};
 use warlock_core::time::GameTime;
 
 /// Width of the panels: wide enough for the summary's age, birthday, and sign on one line.
-const WIDTH: i32 = 72;
+pub(super) const WIDTH: i32 = 72;
 /// Width of the summary's panel (where the console has room): wider, for the starting kit.
 const SUMMARY_WIDTH: i32 = 84;
 
-/// A step of character creation, in order.
+/// A step of character creation, in order: three choices ([`ChoiceScreen`]), then the name
+/// (`name_screen::NameScreen`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Step {
     Race,
     Gender,
     Class,
+    Name,
 }
 
 impl Step {
@@ -47,6 +53,7 @@ impl Step {
             Step::Race => ScreenName::Race,
             Step::Gender => ScreenName::Gender,
             Step::Class => ScreenName::Class,
+            Step::Name => ScreenName::Name,
         }
     }
 
@@ -55,7 +62,8 @@ impl Step {
         match self {
             Step::Race => ScreenName::Gender,
             Step::Gender => ScreenName::Class,
-            Step::Class => ScreenName::Summary,
+            Step::Class => ScreenName::Name,
+            Step::Name => ScreenName::Summary,
         }
     }
 
@@ -65,14 +73,16 @@ impl Step {
             Step::Race => "race",
             Step::Gender => "gender",
             Step::Class => "class",
+            Step::Name => "name",
         }
     }
 
-    fn title(self) -> &'static str {
+    pub(super) fn title(self) -> &'static str {
         match self {
-            Step::Race => " Choose your race (1 of 3) ",
-            Step::Gender => " Choose your gender (2 of 3) ",
-            Step::Class => " Choose your class (3 of 3) ",
+            Step::Race => " Choose your race (1 of 4) ",
+            Step::Gender => " Choose your gender (2 of 4) ",
+            Step::Class => " Choose your class (3 of 4) ",
+            Step::Name => " Choose your name (4 of 4) ",
         }
     }
 }
@@ -93,12 +103,13 @@ pub struct ScenarioPick {
 }
 
 /// Choices made in steps since left (going back), by step id; preselected when a step opens
-/// again. Forgotten when the stack is cleared.
+/// again. Forgotten when the stack is cleared. The name is what was typed (possibly nothing).
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Picks {
     pub race: Option<String>,
     pub gender: Option<String>,
     pub class: Option<String>,
+    pub name: Option<String>,
 }
 
 impl Picks {
@@ -107,6 +118,7 @@ impl Picks {
             Step::Race => self.race.as_deref(),
             Step::Gender => self.gender.as_deref(),
             Step::Class => self.class.as_deref(),
+            Step::Name => self.name.as_deref(),
         }
     }
 
@@ -115,6 +127,7 @@ impl Picks {
             Step::Race => &mut self.race,
             Step::Gender => &mut self.gender,
             Step::Class => &mut self.class,
+            Step::Name => &mut self.name,
         };
         *slot = Some(id.to_string());
     }
@@ -132,7 +145,7 @@ pub struct Draft {
 
 impl Draft {
     /// The seed of the run being set up.
-    fn seed(&self) -> u64 {
+    pub(super) fn seed(&self) -> u64 {
         self.scenario.as_ref().map_or(0, |s| s.seed)
     }
 
@@ -142,16 +155,37 @@ impl Draft {
     }
 
     /// What a step preselects when it opens: the choice remembered for it, else the scenario's
-    /// character's.
+    /// character's (no name: the Name step opens empty).
     fn preselect(&self, step: Step) -> Option<String> {
         self.remembered.get(step).map(str::to_string).or_else(|| {
             let character = self.scenario.as_ref()?.character.as_ref()?;
-            Some(match step {
-                Step::Race => character.race.clone(),
-                Step::Gender => character.gender.id().to_string(),
-                Step::Class => character.class.clone(),
-            })
+            match step {
+                Step::Race => Some(character.race.clone()),
+                Step::Gender => Some(character.gender.id().to_string()),
+                Step::Class => Some(character.class.clone()),
+                Step::Name => None,
+            }
         })
+    }
+
+    /// The name typed before going back from the Name step, if any.
+    pub(super) fn remembered_name(&self) -> Option<String> {
+        self.remembered.name.clone()
+    }
+
+    /// The character's name as chosen so far: what is typed on the Name step (or was before
+    /// going back), else, for an empty field, the first of the race's random names, else
+    /// [`NAMELESS`].
+    pub fn name(&self, content: &Content) -> String {
+        let typed = (self.chosen.get(Step::Name))
+            .or_else(|| self.remembered.get(Step::Name))
+            .and_then(|text| check_name(text).ok());
+        match typed {
+            Some(name) => name.to_string(),
+            None => (self.spec(content))
+                .and_then(|spec| random_name(content, self.seed(), &spec, 0))
+                .unwrap_or_else(|| NAMELESS.into()),
+        }
     }
 
     /// The character as chosen so far; a step not on the stack takes its preselection, else the
@@ -182,7 +216,7 @@ struct Choice {
     id: String,
     name: String,
     description: String,
-    /// Lines under the description: the stat adjustments, the race's eyes.
+    /// Lines under the description: the stat adjustments, the race's eyes, how fast levels come.
     details: Vec<String>,
 }
 
@@ -226,11 +260,13 @@ impl ChoiceScreen {
                     let eyes = content
                         .vision(&r.vision)
                         .map_or(r.vision.as_str(), |v| &v.name);
+                    let mut details = vec![adjustments(&r.stats), format!("Vision: {eyes}")];
+                    details.extend(pace_words(r.experience).map(String::from));
                     Choice {
                         id: r.id.clone(),
                         name: r.name.clone(),
                         description: r.description.clone(),
-                        details: vec![adjustments(&r.stats), format!("Vision: {eyes}")],
+                        details,
                     }
                 })
                 .collect(),
@@ -248,9 +284,14 @@ impl ChoiceScreen {
                     id: c.id.clone(),
                     name: c.name.clone(),
                     description: c.description.clone(),
-                    details: vec![adjustments(&c.stats)],
+                    details: [adjustments(&c.stats)]
+                        .into_iter()
+                        .chain(pace_words(c.experience).map(String::from))
+                        .collect(),
                 })
                 .collect(),
+            // The name is typed, on a screen of its own.
+            Step::Name => Vec::new(),
         };
         let selected = draft
             .preselect(step)
@@ -301,11 +342,11 @@ impl ChoiceScreen {
 
     pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
         // Rows: margin, the list (options and Random), a gap, the description (up to three
-        // lines), the details (up to two), a gap, the footer, the frame.
+        // lines), the details (up to three), a gap, the footer, the frame.
         let rows = self.choices.len() as i32 + 1;
-        let panel = Panel::new(console, self.step.title(), WIDTH, rows + 11);
+        let panel = Panel::new(console, self.step.title(), WIDTH, rows + 12);
         let x = panel.inner_x();
-        let visible = (panel.h - 11).clamp(1, rows);
+        let visible = (panel.h - 12).clamp(1, rows);
         let first = (self.selected as i32 - visible + 1).clamp(0, rows - visible);
         for row in first..first + visible {
             let y = panel.y + 2 + row - first;
@@ -357,8 +398,9 @@ fn gender_description(gender: Gender, seed: u64) -> String {
 }
 
 /// The summary's rows: start, or go back to a step.
-const SUMMARY_ROWS: [(&str, Option<Step>); 4] = [
+const SUMMARY_ROWS: [(&str, Option<Step>); 5] = [
     ("Start the run", None),
+    ("Name", Some(Step::Name)),
     ("Race", Some(Step::Race)),
     ("Gender", Some(Step::Gender)),
     ("Class", Some(Step::Class)),
@@ -372,60 +414,47 @@ const SKILL_GAP: i32 = 3;
 /// the scenario's values do.
 const KIT_X: i32 = 12;
 
-/// What the summary says a character starts with in the scenario being set up (spec §8
-/// "Character creation"): every stack of the starting pack as named, the kit and the scenario's
-/// own pack on top; or, when the scenario leaves the kit behind, a note and the scenario's pack.
-fn kit_words(
-    content: &Content,
-    draft: &Draft,
-    start: &Result<Start, String>,
-) -> (Option<String>, Vec<String>) {
+/// What the summary says a character starts with (spec §8 "Character creation"): every stack
+/// of the starting pack as named, their kit (a run started here always has it) and the
+/// scenario's own pack on top; "nothing" for nothing.
+fn kit_words(content: &Content, draft: &Draft, start: &Result<Start, String>) -> Vec<String> {
     let Ok(start) = start else {
-        return (None, Vec::new());
+        return Vec::new();
     };
     let scenario = (draft.scenario.as_ref()).and_then(|s| content.scenario(&s.id));
-    let Some(scenario) = scenario else {
-        return (None, start.kit.names(content));
+    let pack = match scenario {
+        Some(scenario) => kit::starting_pack(content, scenario, Some(&start.kit)),
+        None => start.kit.clone(),
     };
-    let pack = kit::starting_pack(content, scenario, Some(&start.kit)).names(content);
-    let name = &scenario.name;
-    match (scenario.kit, pack.is_empty()) {
-        (true, false) => (None, pack),
-        (true, true) => (None, vec!["nothing".into()]),
-        (false, true) => (
-            Some(format!("left behind: the {name} starts you empty-handed")),
-            Vec::new(),
-        ),
-        (false, false) => (
-            Some(format!(
-                "left behind: the {name} starts you with its own pack"
-            )),
-            pack,
-        ),
+    match pack.names(content) {
+        names if names.is_empty() => vec!["nothing".into()],
+        names => names,
     }
 }
 
-/// The character before the run starts: race, gender, and class (each a way back to its step),
-/// age, birthday, and birth sign, the final scores, the starting trained skills, the starting
-/// kit, the eyes, and the scenario and seed.
+/// The character before the run starts: name, race, gender, and class (each a way back to its
+/// step), age, birthday, and birth sign, the final scores, the starting trained skills, the
+/// starting kit, the alignment band, the eyes, and the scenario and seed.
 #[derive(Debug)]
 pub struct SummaryScreen {
     scenario: Option<ScenarioPick>,
     spec: Option<CharacterSpec>,
+    /// The name the character starts with.
+    name: String,
     /// What the character starts with, or why it cannot start.
     start: Result<Start, String>,
-    /// Race, gender, and class as shown.
-    names: [String; 3],
+    /// Race, gender, class, and name as shown, in step order.
+    names: [String; 4],
     /// Age, birthday, and birth sign, as shown.
     birth: Vec<String>,
     /// The starting trained skills, by name, with their values, in skill order.
     skills: Vec<(String, u16)>,
     /// What the character starts with, each stack as named (`a dagger (wielded)`), the
-    /// scenario's own pack included; after `kit_note`, if any.
+    /// scenario's own pack included.
     kit: Vec<String>,
-    /// Said before the kit when the scenario leaves it behind.
-    kit_note: Option<String>,
     eyes: String,
+    /// The band the character starts in (spec §8 "Alignment"); empty without alignment rules.
+    alignment: String,
     selected: usize,
 }
 
@@ -436,6 +465,7 @@ impl SummaryScreen {
             Some(spec) => spec.start(content, draft.seed(), draft.start()),
             None => Err("There are no races or classes to choose from.".into()),
         };
+        let name = draft.name(content);
         let names = match &spec {
             Some(spec) => [
                 spec.race(content)
@@ -446,6 +476,7 @@ impl SummaryScreen {
                 },
                 spec.class(content)
                     .map_or(spec.class.clone(), |c| c.name.clone()),
+                name.clone(),
             ],
             None => Default::default(),
         };
@@ -457,28 +488,34 @@ impl SummaryScreen {
                 .vision(&s.vision)
                 .map_or(s.vision.clone(), |v| v.name.clone())
         });
+        let alignment = (start.as_ref().ok())
+            .zip(content.alignment())
+            .map_or(String::new(), |(s, rules)| {
+                rules.band(s.alignment).name().to_string()
+            });
         let skills = start.as_ref().map_or(Vec::new(), |s| {
             (s.skills.iter())
                 .map(|(id, t)| (content.skill(id).name.clone(), t.value))
                 .collect()
         });
-        let (kit_note, kit) = kit_words(content, draft, &start);
+        let kit = kit_words(content, draft, &start);
         Self {
             scenario: draft.scenario.clone(),
             spec,
+            name,
             start,
             names,
             birth,
             skills,
             kit,
-            kit_note,
             eyes,
+            alignment,
             selected: 0,
         }
     }
 
-    /// The starting kit's lines in a panel `inner` cells wide: the note, then the stacks with a
-    /// comma after each but the last, wrapped beside the label.
+    /// The starting kit's lines in a panel `inner` cells wide: the stacks with a comma after each
+    /// but the last, wrapped beside the label.
     fn kit_lines(&self, inner: i32) -> Vec<String> {
         let n = self.kit.len();
         let parts: Vec<String> = (self.kit.iter().enumerate())
@@ -490,10 +527,7 @@ impl SummaryScreen {
                 }
             })
             .collect();
-        let width = inner - KIT_X;
-        let mut lines: Vec<String> = self.kit_note.iter().cloned().collect();
-        lines.extend(fit_joined(&parts, " ", width));
-        lines
+        fit_joined(&parts, " ", inner - KIT_X)
     }
 
     /// The width of a column of the starting skills: the longest name, a space, and a value.
@@ -540,6 +574,7 @@ impl SummaryScreen {
                             scenario: scenario.id.clone(),
                             seed: scenario.typed_seed,
                             character: Some(spec.clone()),
+                            name: Some(self.name.clone()),
                         });
                     }
                 }
@@ -550,10 +585,11 @@ impl SummaryScreen {
     }
 
     pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
-        // Rows: margin, start and the three choices, a gap, the birth and a gap (if any), the
+        // Rows: margin, start and the four steps, a gap, the birth and a gap (if any), the
         // stats with the skills beside them (or the skills below them, and a gap), a gap, the
-        // kit, eyes and scenario, a gap, the footer, the frame. Too tall for the console, the
-        // gaps before the kit, after the birth, and after the choices go, in that order.
+        // kit, alignment, eyes, and scenario, a gap, the footer, the frame. Too tall for the
+        // console, the gaps before the kit, after the birth, and after the steps go, in that
+        // order.
         let width = SUMMARY_WIDTH.min(console.cols() as i32);
         let birth = fit_parts(&self.birth, width - 6);
         let inner = width - 4;
@@ -565,8 +601,14 @@ impl SummaryScreen {
         };
         let kit = self.kit_lines(inner);
         let birth_rows = birth.len() as i32 + i32::from(!birth.is_empty());
-        let full =
-            SUMMARY_ROWS.len() as i32 + block + 9 + birth_rows + below_rows + kit.len() as i32;
+        let alignment_rows = i32::from(!self.alignment.is_empty());
+        let full = SUMMARY_ROWS.len() as i32
+            + block
+            + 9
+            + birth_rows
+            + below_rows
+            + alignment_rows
+            + kit.len() as i32;
         let squeeze = (full - console.rows() as i32).clamp(0, 3);
         let gap = |n: i32| i32::from(squeeze < n);
         let h = full - squeeze;
@@ -642,7 +684,15 @@ impl SummaryScreen {
             .scenario
             .as_ref()
             .map_or(String::new(), |s| format!("{}, seed {}", s.name, s.seed));
-        for (label, value) in [("Vision", &self.eyes), ("Scenario", &scenario)] {
+        let rows = [
+            ("Alignment", &self.alignment),
+            ("Vision", &self.eyes),
+            ("Scenario", &scenario),
+        ];
+        for (label, value) in rows {
+            if label == "Alignment" && value.is_empty() {
+                continue;
+            }
             if fits(y) {
                 console.print(x + 2, y, label, TEXT_DIM);
                 console.print(x + 12, y, value, TEXT);
@@ -734,7 +784,7 @@ mod tests {
         let mut class = ChoiceScreen::new(Step::Class, &CONTENT, &draft(1));
         assert_eq!(
             press(&mut class, Nav::Enter),
-            ScreenAction::Open(ScreenName::Summary)
+            ScreenAction::Open(ScreenName::Name)
         );
     }
 
@@ -748,7 +798,7 @@ mod tests {
                 s.selected = s.choices.len();
                 assert_eq!(
                     press(&mut s, Nav::Enter),
-                    ScreenAction::Open(ScreenName::Summary)
+                    ScreenAction::Open(ScreenName::Name)
                 );
                 picks.push(s.chosen().expect("a class").to_string());
             }
@@ -784,7 +834,7 @@ mod tests {
         console.resize(80, 32);
         race.draw(&mut console, &Bindings::default());
         let text = text(&console);
-        assert!(text.contains("Choose your race (1 of 3)"), "{text}");
+        assert!(text.contains("Choose your race (1 of 4)"), "{text}");
         assert!(text.contains("> Dwarf"), "{text}");
         assert!(text.contains("Stout, stubborn folk"), "{text}");
         assert!(
@@ -792,10 +842,35 @@ mod tests {
             "{text}"
         );
         assert!(text.contains("Vision: Darkvision"), "{text}");
+        assert!(text.contains("Levels come slowly."), "{text}");
         assert!(text.contains("Random"), "{text}");
         assert!(text.contains("Enter next"), "{text}");
         // Nothing hidden: no potentials (the dwarf's toughness 19), no modifiers.
         assert!(!text.contains("19") && !text.contains("otential"), "{text}");
+    }
+
+    #[test]
+    fn race_and_class_steps_say_how_fast_levels_come() {
+        // In words only, and only where the experience factor is far from 100 %.
+        let words = |step: Step, id: &str| {
+            let mut draft = draft(1);
+            draft.remembered.set(step, id);
+            let screen = ChoiceScreen::new(step, &CONTENT, &draft);
+            let mut console = Console::default();
+            console.resize(80, 40);
+            screen.draw(&mut console, &Bindings::default());
+            let text = text(&console);
+            assert!(!text.contains('%'), "{text}");
+            ["Levels come slowly.", "Levels come quickly."]
+                .into_iter()
+                .find(|w| text.contains(w))
+        };
+        assert_eq!(words(Step::Race, "elf"), Some("Levels come slowly."));
+        assert_eq!(words(Step::Race, "human"), None);
+        assert_eq!(words(Step::Race, "half_orc"), Some("Levels come quickly."));
+        assert_eq!(words(Step::Class, "wizard"), Some("Levels come slowly."));
+        assert_eq!(words(Step::Class, "warrior"), None);
+        assert_eq!(words(Step::Class, "commoner"), Some("Levels come quickly."));
     }
 
     #[test]
@@ -828,8 +903,9 @@ mod tests {
     }
 
     #[test]
-    fn the_summary_lists_the_starting_kit_or_says_it_stays_behind() {
-        // The world gives the kit: the ranger's is listed as it is named and worn.
+    fn the_summary_lists_the_starting_kit() {
+        // A run started here has the kit: the world's ranger's is listed as it is named and
+        // worn.
         let world = CONTENT.scenario("world").expect("world");
         let mut d = draft(1);
         d.scenario = Some(ScenarioPick {
@@ -850,16 +926,15 @@ mod tests {
         ] {
             assert!(text.contains(expected), "{expected:?} in\n{text}");
         }
-        assert!(!text.contains("left behind"), "{text}");
-        // The showcase leaves it behind.
+        // So does a run of the showcase, whose own pack is empty.
         let showcase = drawn(&summary("human,female,thief", 1));
         assert!(
-            showcase.contains("Kit       left behind: the Showcase starts you empty-handed"),
+            showcase.contains("Kit       a dagger (wielded)"),
             "{showcase}"
         );
         // A short console squeezes out the gaps before the kit's lines go.
         let mut console = Console::default();
-        console.resize(90, 24);
+        console.resize(90, 27);
         let mut d = d.clone();
         d.chosen.set(Step::Race, "halfling");
         d.chosen.set(Step::Class, "merchant");
@@ -884,6 +959,9 @@ mod tests {
     #[test]
     fn the_summary_shows_the_character_and_its_final_scores() {
         let text = drawn(&summary("dwarf,female,warrior", 1));
+        let spec: CharacterSpec = "dwarf,female,warrior".parse().expect("a character");
+        let name = random_name(&CONTENT, 1, &spec, 0).expect("a name");
+        assert!(text.contains(&format!("Name      {name}")), "{text}");
         for expected in [
             "Your character",
             "> Start the run",
@@ -897,6 +975,7 @@ mod tests {
             "In  Intelligence   9",
             "Wi  Willpower     12",
             "Pr  Presence       8",
+            "Alignment Neutral",
             "Vision    Darkvision",
             "Scenario  Showcase, seed 1",
             // The starting skills beside the scores: the dwarf's and the warrior's.
@@ -905,6 +984,10 @@ mod tests {
         ] {
             assert!(text.contains(expected), "{expected:?} in\n{text}");
         }
+        // A paladin starts Good: the band, never the score.
+        let paladin = drawn(&summary("human,male,paladin", 1));
+        assert!(paladin.contains("Alignment Good"), "{paladin}");
+        assert!(!paladin.contains("450"), "{paladin}");
         for skill in ["Balance", "Intimidate", "Metalcraft", "Search"] {
             assert!(text.contains(skill), "{skill:?} in\n{text}");
         }
@@ -955,16 +1038,18 @@ mod tests {
 
     #[test]
     fn the_summary_starts_the_run_or_returns_to_a_step() {
+        let spec: CharacterSpec = "gnome,other,merchant".parse().expect("a character");
         let mut s = summary("gnome,other,merchant", 7);
         assert_eq!(
             s.handle(&Press::nav(Nav::Enter)),
             ScreenAction::Choose(MenuChoice::NewRun {
                 scenario: "showcase".into(),
                 seed: Some(7),
-                character: Some("gnome,other,merchant".parse().expect("a character")),
+                character: Some(spec.clone()),
+                name: random_name(&CONTENT, 7, &spec, 0),
             })
         );
-        for step in [Step::Race, Step::Gender, Step::Class] {
+        for step in [Step::Name, Step::Race, Step::Gender, Step::Class] {
             s.handle(&Press::nav(Nav::Down));
             assert_eq!(
                 s.handle(&Press::nav(Nav::Enter)),
@@ -993,5 +1078,29 @@ mod tests {
         // Without a scenario the summary cannot start a run.
         let mut s = SummaryScreen::new(&CONTENT, &Draft::default());
         assert_eq!(s.handle(&Press::nav(Nav::Enter)), ScreenAction::Stay);
+    }
+
+    #[test]
+    fn the_name_is_what_is_typed_else_the_first_random_name() {
+        let mut d = draft(5);
+        let spec = d.spec(&CONTENT).expect("a character");
+        let first = random_name(&CONTENT, 5, &spec, 0).expect("a name");
+        assert_eq!(d.name(&CONTENT), first);
+        // Remembered from before going back, then what the Name step on the stack holds (an
+        // empty field, the random one; spaces around a name go).
+        d.remembered.set(Step::Name, "Brakka");
+        assert_eq!(d.name(&CONTENT), "Brakka");
+        d.chosen.set(Step::Name, "");
+        assert_eq!(d.name(&CONTENT), first);
+        d.chosen.set(Step::Name, " Hilde ");
+        assert_eq!(d.name(&CONTENT), "Hilde");
+        // The summary starts the run with it.
+        let mut s = SummaryScreen::new(&CONTENT, &d);
+        let ScreenAction::Choose(MenuChoice::NewRun { name, .. }) =
+            s.handle(&Press::nav(Nav::Enter))
+        else {
+            panic!("a new run");
+        };
+        assert_eq!(name.as_deref(), Some("Hilde"));
     }
 }

@@ -44,6 +44,7 @@ use super::{ActorId, World, fnv1a};
 use crate::action::{Event, MissileEnd};
 use crate::combat::{self, Blow, Profile, Strike};
 use crate::content::{ActionKind, Bolt, ObjectId, TrapEffect, TrapId};
+use crate::damage::Damage;
 use crate::geom::{Dir, Pos};
 use crate::object::Stack;
 use crate::perception::VIEW_RADIUS;
@@ -113,12 +114,12 @@ impl World {
                 let dir = dir.or_else(|| toward.and_then(|p| Dir::toward(at, p)));
                 self.trap_bolt(kind, at, dir, bolt, events);
             }
-            TrapEffect::Pit { damage } => {
+            TrapEffect::Pit { damage, kind: of } => {
                 if !self.state.actors.contains_key(&victim) {
                     return 0;
                 }
                 let climb = self.price_of(victim, ActionKind::Wait);
-                let fall = damage.roll(&mut self.state.rng);
+                let fall = Damage::new(damage.roll(&mut self.state.rng), *of);
                 let from = self.state.actors.get(&victim).map_or(at, |a| a.pos);
                 self.trap_hurts(kind, victim, (from, false), fall, events);
                 return climb;
@@ -141,9 +142,8 @@ impl World {
         events: &mut Vec<Event>,
     ) -> Option<Blow> {
         let to = self.state.actors.get(&target)?.pos;
-        let defence = self.defence_of(target);
-        let protection = self.protection_of(target);
-        let blow = combat::strike(profile, &defence, protection, &mut self.state.rng);
+        let struck = self.target_of(target);
+        let blow = combat::strike(profile, &struck, &mut self.state.rng);
         events.push(Event::TrapStruck {
             trap,
             target,
@@ -155,28 +155,30 @@ impl World {
     }
 
     /// Trap `trap` does `damage` to `target` from `source` with no roll to hit (a blast, a bolt,
-    /// a fall).
+    /// a fall), less what the target resists of its kind (spec §8 "Damage types"; nothing left
+    /// of it is [`Strike::Resisted`]).
     pub(super) fn trap_hurts(
         &mut self,
         trap: TrapId,
         target: ActorId,
         source: (Pos, bool),
-        damage: i32,
+        damage: Damage,
         events: &mut Vec<Event>,
     ) {
         let Some(to) = self.state.actors.get(&target).map(|a| a.pos) else {
             return;
         };
+        let taken = self.resisted(target, damage);
+        let mut blow = Blow::plain(taken, damage.kind);
+        if damage.amount > 0 && taken <= 0 {
+            blow.strike = Strike::Resisted;
+        }
         events.push(Event::TrapStruck {
             trap,
             target,
             to,
-            strike: Strike::Hit { critical: false },
+            strike: blow.strike,
         });
-        let blow = Blow {
-            strike: Strike::Hit { critical: false },
-            damage,
-        };
         self.trap_deals(trap, target, source, blow, events);
     }
 

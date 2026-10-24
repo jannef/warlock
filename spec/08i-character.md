@@ -8,6 +8,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
   race (`data/races.toml`), a gender (male, female, or other), and a class
   (`data/classes.toml`), chosen on New run (§6) or given on the command line (`--character
   dwarf,female,warrior`, §9); otherwise the scenario's character (§7). It decides:
+  - **Name** (#218): the character has a name, 1 to 20 characters, typed on New run's Name step
+    (after the class, before the summary; §6) or given on the command line (`--name Brakka`).
+    The step's Random, and an empty field, give one of the race's names for the gender
+    (`data/names.toml`, a `male` and a `female` list per race; `other` draws from both), drawn
+    from the stream `character/name/<race>,<gender>/<draw>`, so no other roll moves and the class
+    plays no part. A run told no name (a replay or command line without one) gives the
+    scenario's own name (§7) to its own character, else the race's first random name, else
+    "Wanderer". The name is shown on the character screen, the summary, the death screen ("Here
+    lies Brakka, …"), and the list of saved characters (§7 "Saves"); no rule or message reads it
+    yet.
   - **Age and birthday**: the starting age is uniform within the race's `age` range, the
     birthday (month, then day) uniform over the year, both from the stream
     `character/birth/<race>` (so the class and gender never move a birthday). The birth date is
@@ -41,6 +51,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Eyes**: the player's vision profile is the race's (the dev vision switch still works).
   - **Hit points**: the race's and the class's `hp` add to Toughness for the maximum ("Combat"
     below).
+  - **Alignment** ("Alignment" below): the starting score is the race's `alignment` plus the
+    class's, kept on the scale: paladins start Good, thieves and witches Callous, everyone else
+    Neutral; a race only leans (elves and halflings a little toward good, half-orcs a little
+    toward evil), never alone out of Neutral. It draws nothing.
   - **Weapon skills** ("Weapon skills" below): the race's starting ranks plus the class's, plus
     one set of the class's `weapon_skill_choice` if it has one, at most 10 each; each then
     raises the skills it defaults to. Dice among them roll from their own stream,
@@ -75,21 +89,27 @@ developer notes (CLAUDE.md, `docs/dev/`).
     a perhaps magic rapier and an heirloom ring (magic or rare), the merchant with goods and gems,
     the commoner with a stick and a turnip; nobody starts Strained, and only the aristocrat and
     the merchant may start Burdened (a test checks the weakest character of every combination,
-    every die at its least and the worst sign). A scenario's `carry` comes on top, or alone with
-    `kit = false` (§7 "Scenarios"). The summary of character creation (§6) lists what the run
-    starts with, each stack as named ("a dagger (wielded)", "2 wool cloaks"), or that the scenario
-    leaves the kit behind; it never names the seed. The wiki lists every class's kit and race's
-    additions.
+    every die at its least and the worst sign). **Who starts with it**: a run whose character
+    the player chose, that is one started from New run's character creation, or by the game or
+    `warlock-cli` with `--character` or `--name`, or a replay that records the kit; the
+    scenario's `carry` comes on top (§7 "Scenarios"). A run on the scenario's own character that
+    nobody chose (`--scenario` alone, tests, golden walks, replays from before kits) starts with
+    the scenario's pack alone, as before kits. The world state and replays record which
+    (`kit`). The summary of character creation (§6) lists what the run starts with, each stack
+    as named ("a dagger (wielded)", "2 wool cloaks"); it never names the seed. The wiki lists
+    every class's kit and race's additions.
   - Balance is deliberately not a goal: some combinations are poor (a halfling commoner), and
-    classes do nothing but adjust starting scores, give hit points, train skills, give weapon
-    skills and fighting styles, and give a starting kit. No other D&D concept comes with them
-    (alignment, spells).
-  - The character (`Character`: the race, gender, and class ids, the stat the gender raised,
-    the birth date, and the birth sign) is part of the world state (saved, hashed) and shown on
-    the character screen; replays record the choice only, and since everything else follows
-    from the content, the choice, the seed, and the start date, a run is reproduced by its
-    scenario, seed, and character. `World::new` starts as the scenario's character,
-    `World::with_character` as a given one.
+    classes do nothing but adjust starting scores, give hit points, train skills, give
+    weapon skills and fighting styles, give a starting kit, and set where the alignment starts.
+    No other D&D concept comes with them (spells; the alignment is good against evil only, not
+    D&D's grid).
+  - The character (`Character`: the name, the race, gender, and class ids, the stat the gender
+    raised, the birth date, and the birth sign) is part of the world state (saved, hashed) and
+    shown on the character screen; replays record the choice, the name, and whether the run
+    started with the kit, and since everything else follows from the content, the choice, the
+    seed, and the start date, a run is reproduced by its scenario, seed, character, name, and
+    kit. `World::new` starts as the scenario's character, `World::with_character` as a given
+    one, `World::with_character_named` named, `World::start_run` with or without the kit.
 - **Skills** (`warlock-core/src/skills.rs`, `content/skill.rs`, `world/train.rs`; M20, #132),
   ADOM-like:
   - **Trained or untrained**: every actor has a set of trained skills, each with a **value**
@@ -149,6 +169,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     - spot: trained at all, the player notices hidden features in passing (§8 "Searching");
       points added to that check, +8 at 100 and +12 at 200 (`spot`); a mark (50 %) for each
       thing noticed;
+    - disable device: trained at all, the player can disarm traps (§8 "Disarming traps", the
+      Disarm ability); points added to that check, +8 at 100 and +12 at 200 (`disarm`); a mark
+      (20 %) for each try, whatever comes of it;
     - athletics' climbing out of pits and escape artist (out of pits faster) wait for that rule
       (#128); swim for deep water; concentration, spellcraft, and use magic
       device for magic; the other action skills (open lock, heal, …) for their actions.
@@ -161,7 +184,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     are chosen from one abilities menu (§6 "Abilities", #156), unlike ADOM: each trained skill
     with an active use (`kind = "action"`) is an ability there (`warlock_core::ability`,
     `PerceptionView::abilities`), greyed out as "not usable yet": the uses come with their
-    actions. Never a benefit's number, a mark, a
+    actions, and one whose use has come is that ability instead (Disable device's is "Disarm a
+    trap", §8 "Disarming traps"). Never a benefit's number, a mark, a
     chance, an untrained skill, or a creature's skills; ground-truth dev dumps (`actors`, the
     world state) show every actor's skills with their marks. Skills and marks are part of the
     world state (saved, hashed).

@@ -3,8 +3,5 @@ description = "An old stone quarry under the hub: pick up the pick-axe, ready it
 start_level = "quarry"
 seed = 1
 # A stonecutter come to work the old quarry.
-character = { race = "human", gender = "male", class = "craftsperson" }
+character = { race = "human", gender = "male", class = "craftsperson", name = "Bram" }
 lantern = "lantern"
-# A tour of one feature: its rooms hold what to try, and its tests and captures walk it with
-# this pack, so the character's kit stays behind (spec §8 "Character creation").
-kit = false

@@ -1,0 +1,70 @@
+# Damage types (spec §8 "Damage types"): what kind of harm a blow, a missile, a trap, a spell, or
+# a fall does. Weapons (objects/*.toml `damage_type`, one id or two: a sword does the better of
+# slashing and piercing against its target), creatures' natural attacks, traps (traps.toml),
+# scrolls (`read.damage_type`), the poison status (status.toml), and water that freezes (the
+# plunge, terrain.toml) name theirs; creatures and gear resist kinds in percent (`resist`), and
+# armour may stand better or worse against a physical kind (`protects`).
+#
+# The list is ordered: the game numbers the types in file order (saves record them), so a new
+# type is a new entry, never a reordering.
+#
+# Fields:
+#   id, name   the type's id and how the player reads it ("fire")
+#   physical   Protection soaks it (the physical subtypes); an element ignores armour
+#              (default false)
+#   verb, you  what a blow of it does to its target, and the same in your person: "The kobold
+#              slashes you.", "You slash the kobold." (a weapon may name its own `verb`:
+#              "cleaves")
+#   unarmed    bare hands, kicks, and shield bashes do this kind (one type at most)
+
+[[type]]
+id = "slashing"
+name = "slashing"
+physical = true
+verb = "slashes"
+you = "slash"
+
+[[type]]
+id = "piercing"
+name = "piercing"
+physical = true
+verb = "stabs"
+you = "stab"
+
+[[type]]
+id = "bludgeoning"
+name = "bludgeoning"
+physical = true
+verb = "strikes"
+you = "strike"
+unarmed = true
+
+[[type]]
+id = "fire"
+name = "fire"
+verb = "burns"
+you = "burn"
+
+[[type]]
+id = "cold"
+name = "cold"
+verb = "chills"
+you = "chill"
+
+[[type]]
+id = "electricity"
+name = "electricity"
+verb = "shocks"
+you = "shock"
+
+[[type]]
+id = "acid"
+name = "acid"
+verb = "corrodes"
+you = "corrode"
+
+[[type]]
+id = "poison"
+name = "poison"
+verb = "poisons"
+you = "poison"

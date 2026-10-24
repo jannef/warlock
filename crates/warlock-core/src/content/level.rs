@@ -36,6 +36,7 @@ use super::shop::ShopPlan;
 use super::terrain::{StairsDir, TerrainDef, TerrainId};
 use super::trap::{Trap, TrapEffect};
 use super::{ActionKind, Content, ContentError, Cutting, MAX_ITEM_LEVEL, Rarity, Speaker};
+use crate::alignment::Alignment;
 use crate::door::{Lock, check_lock_id};
 use crate::equipment::{self, Equipment};
 use crate::geom::{Dir, Pos};
@@ -229,6 +230,9 @@ pub(super) struct LegendDetail {
     /// Faction the creature on this cell belongs to instead of its type's (`faction =
     /// "peaceful"`); an id in `data/factions.toml`.
     faction: Option<String>,
+    /// Where the creature on this cell stands between good and evil instead of its type's
+    /// (`alignment = "good"`, spec §8 "Alignment").
+    alignment: Option<Alignment>,
     /// The unique character the creature on this cell is (`npc = "hermit"`): it says what the
     /// npc's dialogue in `data/dialogue.toml` says, not its type's.
     npc: Option<String>,
@@ -318,6 +322,8 @@ pub struct CreatureSpawn {
     pub creature: CreatureId,
     /// The faction it is placed in when not its type's.
     pub faction: Option<FactionId>,
+    /// Where it stands between good and evil when not where its type does.
+    pub alignment: Option<Alignment>,
     /// The unique character it is (an npc id of `data/dialogue.toml`), if any.
     pub npc: Option<String>,
     pub pos: Pos,
@@ -597,6 +603,7 @@ pub(super) fn parse_level(
                 creatures.push(CreatureSpawn {
                     creature: id,
                     faction,
+                    alignment: detail.alignment,
                     npc: detail.npc.clone(),
                     pos,
                     route,
@@ -605,13 +612,15 @@ pub(super) fn parse_level(
                 });
             } else if detail.route.is_some()
                 || detail.faction.is_some()
+                || detail.alignment.is_some()
                 || detail.npc.is_some()
                 || detail.carry.is_some()
                 || detail.wield.is_some()
                 || detail.wear.is_some()
             {
                 return Err(err(format!(
-                    "legend `{ch}` has a faction, npc, route, carry, wield, or wear but no creature"
+                    "legend `{ch}` has a faction, alignment, npc, route, carry, wield, or wear but no \
+                     creature"
                 )));
             }
         }

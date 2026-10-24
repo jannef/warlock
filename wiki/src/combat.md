@@ -30,13 +30,20 @@ that roll, plus the attacker's bonus to hit, reaches the target's **Defence**.
 unremarkable target (Defence 10) an attacker with no bonus hits three times in four.
 
 The game never shows you your bonus to hit, the dice, or the rolls: you see what happens.
+Exactly, this is how an attack is rolled, and what adds up to its bonus to hit and its damage:
+
+{{#include generated/to-hit.md}}
+
+A creature's attacks add up the same way; their numbers are on
+[Creatures in numbers](creature-numbers.md#attacks).
 
 ## Defence
 
 Your **Defence** (shown as `Dv` on the [character screen](character.md), `@`) is 10 plus what
 protects you, in kinds:
 
-- **Dexterity**: quick feet. A clumsy character's Defence is lower than 10. Heavy armour limits
+- **Dexterity**: quick feet, your Dexterity modifier (see [Stats](stats.md#modifiers)). A
+  clumsy character's Defence is lower than 10. Heavy armour limits
   how much Dexterity can add (see the table below), and so does a heavy load: at most +3 when
   you are burdened, +1 when strained, nothing when overloaded (see [Burden](burden.md)). The
   lower limit counts.
@@ -106,8 +113,9 @@ A hit does the weapon's damage dice, at least 1:
 
 {{#include generated/weapons.md}}
 
-Messages never give numbers: "The kobold hits you.", "The giant rat bites the kobold.", "You hit
-the giant rat hard!"
+Messages never give numbers, and say what kind of blow it was: "The kobold stabs you.", "You
+slash the giant rat hard!", "The giant rat bites the kobold.", "You cleave the kobold." (see
+[Damage types](damage-types.md)).
 
 A **big hit**, one that takes at least a third of the target's hit points at once, makes it
 bleed, and some creatures' attacks can poison: see [Status effects](status-effects.md). Some bites
@@ -117,7 +125,10 @@ carry a disease: see [Diseases](diseases.md).
 
 Defence decides whether a blow lands; **Protection** (shown as `Pv` on the
 [character screen](character.md), `@`, beside your Defence) takes damage off every blow that
-does. Each hit loses between half your Protection (rounded up) and all of it, at random.
+does. Each hit loses between half your Protection (rounded up) and all of it, at random, every
+amount in between as likely:
+
+{{#include generated/protection.md}}
 
 - **Every piece adds up**: body armour, helm, gloves, boots, and cloak each add their
   Protection (the armour table above), and so does the magic of armour that is
@@ -130,13 +141,17 @@ does. Each hit loses between half your Protection (rounded up) and all of it, at
   cave beetle's shell.", "The kobold's spear glances off your chain mail shirt." It still landed,
   so it trains your weapon skill as a hit does.
 - **Some weapons pierce armour**, ignoring part of the Protection of whatever they hit. Their
-  description says so ("Pierces armour"); how much stays hidden.
+  description says so ("Pierces armour"), but never how much.
 
 {{#include generated/piercing.md}}
 
 Protection soaks the blows of weapons, claws, and bites, and a trap's arrows and spears; the
-blast of a fireball, a lightning bolt, or a fall into a pit goes straight through. You never see
-a creature's Protection, only how its armour turns your blows.
+blast of a fireball, a lightning bolt, or a fall into a pit goes straight through. It soaks
+**physical** damage only, and a piece may stand better or worse against one kind of it: chain
+mail turns a blade well and a point badly; fire, cold, and the rest go through any armour, and
+**resistances** take their share after it. See [Damage types](damage-types.md). In the game
+you never see a creature's Protection, only how its armour turns your blows; see
+[Creatures in numbers](creature-numbers.md#hit-points-defence-and-resistances).
 
 ## Stances
 
@@ -165,6 +180,23 @@ The numbers are first guesses, tuned by playtesting:
 Dodge adds to your Defence on top of everything else; Parry only counts when it beats what your
 weapon already gives. Creatures do not take stances yet.
 
+## Free blows
+
+Some fighters get a blow in for free, at no cost in time. Talents and class abilities will
+teach them (they are coming with character levels); no one fights this way yet.
+
+- **Cleave**: when your attack kills, you strike another hostile creature next to you: the next
+  one round from where your victim stood, going clockwise. Once per attack, or, with great cleave,
+  again after every cleave that kills.
+- **Riposte**: when your Parry turns a blow aside, you strike back once the attack is over (once
+  per attack, however many of its blows you parried). Shots and throws are never riposted.
+- **Opportunist**: a hostile creature that steps away from beside you is struck as it turns to
+  go; it may not live to take the step. A creature that fights this way strikes you the same
+  way when you step away from it.
+
+A free blow is a blow like any other: it can miss, wound, and kill, and it trains your weapon
+skill. It never brings another free blow, except a cleave after a cleave.
+
 ## Hit points
 
 Your **hit points** are your Toughness plus what your [race](races.md) and your
@@ -176,8 +208,12 @@ A dwarf barbarian with Toughness 16 has 6 + 8 + 16 = 30 hit points; an elf wizar
 8 has 10. You start every run unhurt. The status bar shows your hit points (`HP 18/24`), and so
 does the character screen.
 
-Creatures have hit points too, but you never see their numbers. [Look mode](controls.md) says how
-hurt a creature looks: unhurt, lightly wounded, wounded, badly wounded, or nearly dead.
+Creatures have hit points too, but you never see their numbers in the game (they are on
+[Creatures in numbers](creature-numbers.md#hit-points-defence-and-resistances)).
+[Look mode](controls.md) says how hurt a creature looks: unhurt, lightly wounded (more than two
+thirds left), wounded (more than a third), badly wounded (more than a sixth), or nearly dead:
+
+{{#include generated/health.md}}
 
 ### Getting better
 

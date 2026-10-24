@@ -84,16 +84,20 @@
 
 mod actor;
 mod ai;
+mod alignment;
 mod bleed;
+mod buff;
 mod carry;
 mod dev;
 mod dig;
+mod disarm;
 mod disease;
 mod door;
 mod eat;
 mod equip;
 mod experience;
 mod fight;
+mod free_blow;
 mod hash;
 mod hearing;
 mod hunger;
@@ -118,8 +122,12 @@ mod trap;
 mod travel;
 
 pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
+pub use alignment::Deed;
 pub use dig::{MAX_DIG, WORK_SCALE, dig_work, digs_to_break};
+pub use disarm::SPRINGS_SHORT_BY;
+pub use experience::{Discovered, Progress};
 pub use fight::{Cause, Death};
+pub use free_blow::FreeBlows;
 pub(crate) use hash::fnv1a;
 pub use level::{Fire, LevelState};
 pub use loot::Identified;
@@ -130,6 +138,7 @@ pub use talk::{Conversation, Talk, TopicView};
 use travel::{enter_room, instantiate_level, level_template};
 
 use crate::action::{Action, Event, Outcome, Rest};
+use crate::alignment::Score;
 use crate::burden::{self, Burden, Load};
 use crate::character::{Character, CharacterSpec};
 use crate::content::{ActionKind, CombatStance, Content, RoomEffectDef, StairsDir, Stance};
@@ -190,6 +199,10 @@ pub struct WorldState {
     /// eyes and stats itself.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) character: Option<Character>,
+    /// Whether the run started with the character's starting kit (a character the player chose;
+    /// spec §8 "Character creation"); replays record it. Left out of saves when false.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub(crate) kit: bool,
     /// Whether the player's lantern (the scenario's `lantern`) is lit.
     pub(crate) lantern_lit: bool,
     /// The step that brought the player onto their overworld cell, if they walked there: `>`
@@ -211,6 +224,9 @@ pub struct WorldState {
     /// The player's experience total (spec §8 "Experience"); their level follows from it.
     #[serde(default, skip_serializing_if = "is_zero")]
     pub(crate) experience: u32,
+    /// What the player has discovered for experience (spec §8 "Experience").
+    #[serde(default, skip_serializing_if = "Progress::is_empty")]
+    pub(crate) progress: Progress,
     /// The player's quests and the kills they count (spec §8 "Quests").
     #[serde(default, skip_serializing_if = "Quests::is_empty")]
     pub(crate) quests: Quests,
@@ -328,6 +344,12 @@ pub struct World {
     /// What the player's kills earned them during the current action (not saved): said after
     /// the attack's own messages.
     news: Vec<String>,
+    /// Notes the current action earned (not saved): said after its own messages and the news,
+    /// as notes that do not stop a rest (an alignment band crossed, `alignment.rs`).
+    notes: Vec<String>,
+    /// While the player strikes a free blow in another's turn (not saved): what is said
+    /// meanwhile, to join the news (`free_blow.rs`).
+    held: Option<Vec<String>>,
     /// Traps sprung since this world was created or loaded (not saved): a rest perceives every
     /// turn in which one went off (a teleport moves someone farther than a step).
     sprung: u64,
@@ -377,12 +399,42 @@ impl World {
 
     /// Starts a new run of `scenario` as `character` (spec §8 "Character creation"); without
     /// one, as the scenario's character, or if it names none, with the eyes and stats it gives.
-    /// `seed` defaults to the scenario's seed.
+    /// `seed` defaults to the scenario's seed. The character's name is the run's default
+    /// ([`character::default_name`](crate::character::default_name)).
     pub fn with_character(
         content: Arc<Content>,
         scenario: &str,
         seed: Option<u64>,
         character: Option<&CharacterSpec>,
+    ) -> Result<Self, WorldError> {
+        Self::with_character_named(content, scenario, seed, character, None)
+    }
+
+    /// [`World::with_character`], the character named `name` (checked by
+    /// [`character::check_name`](crate::character::check_name)); `None` gives the run's default
+    /// name. A run without a character has no name either.
+    pub fn with_character_named(
+        content: Arc<Content>,
+        scenario: &str,
+        seed: Option<u64>,
+        character: Option<&CharacterSpec>,
+        name: Option<&str>,
+    ) -> Result<Self, WorldError> {
+        Self::start_run(content, scenario, seed, character, name, false)
+    }
+
+    /// [`World::with_character_named`]; with `kit`, the character starts with their starting
+    /// kit and the scenario's `carry` on top (spec §8 "Character creation"), as a run whose
+    /// character the player chose does (New run, `--character`, `--name`). Without it, with the
+    /// scenario's pack alone, as a dev launch on the scenario's own character does (tests,
+    /// golden walks, `--scenario` alone). A run without a character has no kit.
+    pub fn start_run(
+        content: Arc<Content>,
+        scenario: &str,
+        seed: Option<u64>,
+        character: Option<&CharacterSpec>,
+        name: Option<&str>,
+        kit: bool,
     ) -> Result<Self, WorldError> {
         let def = content
             .scenario(scenario)
@@ -390,15 +442,27 @@ impl World {
         let seed = seed.unwrap_or(def.seed);
         // The player's hit points beyond their Toughness: what their race and class give, or
         // without a character what the scenario gives. Without a character the player is trained
-        // in nothing and has no weapon skills.
+        // in nothing, has no weapon skills, and starts Neutral.
         let chosen = character.or(def.character.as_ref());
-        let start = (chosen
-            .map(|spec| spec.start(&content, seed, def.start))
-            .transpose())
-        .map_err(WorldError::Character)?;
-        // The character's kit, the scenario's pack on top (spec §8 "Character creation").
-        let pack = crate::kit::starting_pack(&content, def, start.as_ref().map(|s| &s.kit));
-        let (stats, vision, hp_base, skills, character, weapon_skills) = match start {
+        let start = match chosen {
+            Some(spec) => {
+                let mut s =
+                    (spec.start(&content, seed, def.start)).map_err(WorldError::Character)?;
+                s.character.name = match name {
+                    Some(name) => crate::character::check_name(name)
+                        .map_err(WorldError::Character)?
+                        .to_string(),
+                    None => crate::character::default_name(&content, def, seed, spec),
+                };
+                Some(s)
+            }
+            None => None,
+        };
+        // The character's kit, if they start with it, then the scenario's pack on top.
+        let kit = start.as_ref().filter(|_| kit).map(|s| &s.kit);
+        let pack = crate::kit::starting_pack(&content, def, kit);
+        let with_kit = kit.is_some();
+        let (stats, vision, hp_base, skills, character, weapon_skills, alignment) = match start {
             Some(s) => {
                 let character = Some(s.character);
                 (
@@ -408,6 +472,7 @@ impl World {
                     s.skills,
                     character,
                     s.weapon_skills,
+                    s.alignment,
                 )
             }
             None => (
@@ -417,6 +482,7 @@ impl World {
                 Skills::default(),
                 None,
                 WeaponSkills::default(),
+                Score::ZERO,
             ),
         };
         let start = level_template(&content, seed, &def.start_level, None)?;
@@ -442,12 +508,14 @@ impl World {
             messages: MessageLog::default(),
             vision,
             character,
+            kit: with_kit,
             lantern_lit: false,
             overworld_step: None,
             recent_sounds: Vec::new(),
             weather_override: None,
             death: None,
             experience: 0,
+            progress: Progress::default(),
             quests: Quests::default(),
         };
         let mut player = Actor {
@@ -472,10 +540,13 @@ impl World {
             damage: Default::default(),
             weapon_skills,
             faction_override: None,
+            alignment: content.alignment().map(|_| alignment),
+            alignment_override: None,
             npc: None,
             talk: Talk::default(),
             satiation: content.hunger().map(|h| Satiation::new(h.start)),
             stance: CombatStance::Neutral,
+            free_blows: FreeBlows::default(),
         };
         player.hp = player.max_hp(&content);
         crate::rot::made_at(&mut player.inventory, &content, def.start);
@@ -571,6 +642,8 @@ impl World {
             said: 0,
             fallen: Vec::new(),
             news: Vec::new(),
+            notes: Vec::new(),
+            held: None,
             sprung: 0,
             found: 0,
             mutters: Vec::new(),
@@ -603,6 +676,11 @@ impl World {
     /// The player's character, if the run has one (spec §8 "Character creation").
     pub fn character(&self) -> Option<&Character> {
         self.state.character.as_ref()
+    }
+
+    /// Whether the run started with the character's starting kit ([`World::start_run`]).
+    pub fn started_with_kit(&self) -> bool {
+        self.state.kit
     }
 
     pub fn turn(&self) -> u64 {
@@ -656,6 +734,7 @@ impl World {
             death: self.state.death.as_ref(),
             experience: self.state.experience,
             quests: &self.state.quests,
+            messages: &self.state.messages,
             snapshot: &self.perception,
         }
     }
@@ -767,8 +846,13 @@ impl World {
         self.say(text);
     }
 
-    /// Logs a message; it stops a rest.
+    /// Logs a message; it stops a rest. While the player strikes in another's turn (a free blow,
+    /// `free_blow.rs`), it is held instead, to be said with the news after that turn's reports.
     fn say(&mut self, text: impl Into<String>) {
+        if let Some(held) = &mut self.held {
+            held.push(text.into());
+            return;
+        }
         self.note(text);
         self.said += 1;
     }
@@ -790,6 +874,9 @@ impl World {
 
     /// Phase 1. Returns what the action cost.
     fn player_acts(&mut self, action: &Action, events: &mut Vec<Event>) -> Spent {
+        if let Some(refused) = self.refuse_blocked(action) {
+            return refused;
+        }
         let here = self.player_pos();
         // Whether the action was done, and what kind of action it was for its cost (the same on
         // any level: taking stairs ends on another).
@@ -829,6 +916,7 @@ impl World {
             Action::Read { item, target } => return self.read(*item, *target, events),
             Action::Dig(dir) => return self.start_dig(*dir),
             Action::Search(turns) => return Spent::Search(*turns),
+            Action::Disarm(dir) => return self.disarm(*dir, events),
             Action::SetVision(id) => return self.set_vision(id),
             Action::SetStance(stance) => return self.set_stance(*stance),
             Action::SetWeather(weather) => return self.set_weather_dev(*weather),
@@ -878,9 +966,13 @@ fn article(noun: &str) -> &'static str {
 #[cfg(test)]
 mod ai_tests;
 #[cfg(test)]
+mod alignment_tests;
+#[cfg(test)]
 mod blood_tests;
 #[cfg(test)]
 mod branch_tests;
+#[cfg(test)]
+mod buff_tests;
 #[cfg(test)]
 mod burden_tests;
 #[cfg(test)]
@@ -888,7 +980,11 @@ mod character_tests;
 #[cfg(test)]
 mod cost_tests;
 #[cfg(test)]
+mod damage_tests;
+#[cfg(test)]
 mod dig_tests;
+#[cfg(test)]
+mod disarm_tests;
 #[cfg(test)]
 mod disease_tests;
 #[cfg(test)]
@@ -901,6 +997,8 @@ mod equip_tests;
 mod experience_tests;
 #[cfg(test)]
 mod fight_tests;
+#[cfg(test)]
+mod free_blow_tests;
 #[cfg(test)]
 mod gem_tests;
 #[cfg(test)]

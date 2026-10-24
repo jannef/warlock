@@ -11,6 +11,7 @@ slot = "missile_weapon"
 launches = "arrow"
 damage = "1d6"
 category = "bows"
+damage_type = "piercing"
 crit = 3
 strength = 10
 range = 10

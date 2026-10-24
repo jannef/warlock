@@ -3,7 +3,8 @@
 //! creation"; when the run has a character), their score in each stat (spec §8 "Stats") with its
 //! abbreviation and full name (as the rules read it: a score a status effect or stat damage
 //! lowers is shown lowered, in a warning color), their hit points, Defence, and Protection
-//! (spec §8 "Combat"; the totals only), the status effects they suffer, by name (spec §8 "Status
+//! (spec §8 "Combat"; the totals only), their alignment band (spec §8 "Alignment": `Kind`, never
+//! the score), the status effects they suffer, by name (spec §8 "Status
 //! effects"), the diseases they know they have, by name (spec §8 "Diseases": `Diseased  Filth
 //! fever`), what they weigh and carry, their burden, and the weights at which it changes (spec §8 "Burden": they follow from
 //! scores the player knows). Never a modifier, a potential, a to-hit, or how severe an effect
@@ -29,6 +30,28 @@ use warlock_core::time::GameTime;
 
 /// Width of the stat name column: the longest name and a space.
 const NAME_W: i32 = 14;
+
+/// The player's resistances as rows (spec §8 "Damage types"): one per word, in the order
+/// immune, resistant, vulnerable, each listing its kinds in damage type order; none at 0.
+fn resistance_rows(view: &PerceptionView<'_>) -> Vec<(&'static str, String)> {
+    use warlock_core::damage::ResistanceWord;
+    let content = view.content();
+    let own = view.own_resistances();
+    [
+        ResistanceWord::Immune,
+        ResistanceWord::Resistant,
+        ResistanceWord::Vulnerable,
+    ]
+    .into_iter()
+    .filter_map(|word| {
+        let kinds: Vec<&str> = (own.iter())
+            .filter(|(_, w)| *w == word)
+            .map(|(k, _)| content.damage_type(*k).name.as_str())
+            .collect();
+        (!kinds.is_empty()).then(|| (word.label(), kinds.join(", ")))
+    })
+    .collect()
+}
 
 /// Where a value's neighbour on its row begins (Protection beside Defence), from the value's
 /// column: room for the value and a gap.
@@ -56,6 +79,9 @@ pub struct CharacterScreen {
     /// The diseases they know they have, by name (one that has not progressed yet is only
     /// "Diseased").
     diseases: Vec<String>,
+    /// What they resist, in words only (spec §8 "Damage types"): a row per word ("Resistant
+    /// to", "Vulnerable to", "Immune to") with the kinds it holds for, in that order.
+    resistances: Vec<(&'static str, String)>,
     weight: Weight,
     /// What they carry against what they can; `None` outside a run.
     load: Option<Load>,
@@ -69,6 +95,9 @@ pub struct CharacterScreen {
     protection: i32,
     /// The combat stance's name.
     stance: String,
+    /// Their alignment band's name (spec §8 "Alignment"), never the score; `None` without
+    /// alignment rules.
+    alignment: Option<&'static str>,
 }
 
 impl CharacterScreen {
@@ -84,6 +113,7 @@ impl CharacterScreen {
                 base: PerStat::splat(warlock_core::stats::AVERAGE),
                 effects: Vec::new(),
                 diseases: Vec::new(),
+                resistances: Vec::new(),
                 weight: Weight::default(),
                 load: None,
                 progress: Progress {
@@ -95,12 +125,19 @@ impl CharacterScreen {
                 defence: warlock_core::combat::BASE_DEFENCE,
                 protection: 0,
                 stance: "Neutral".into(),
+                alignment: None,
             };
         };
         let content = view.content();
-        let name = content
-            .creature_id("player")
-            .map_or("you", |id| content.creature(id).name.as_str());
+        // The character's name, as typed; without a character, what the player is called.
+        let name = match view.character() {
+            Some(c) => c.name.clone(),
+            None => capitalized(
+                content
+                    .creature_id("player")
+                    .map_or("you", |id| content.creature(id).name.as_str()),
+            ),
+        };
         let identity = view.character().map_or(Vec::new(), |c| {
             let spec = &c.spec;
             vec![
@@ -117,7 +154,7 @@ impl CharacterScreen {
         });
         let birth = (view.character()).map_or(Vec::new(), |c| birth_parts(c, content, view.time()));
         Self {
-            name: capitalized(name),
+            name,
             identity,
             birth,
             scores: view.own_scores(),
@@ -128,6 +165,7 @@ impl CharacterScreen {
             diseases: (view.own_diseases())
                 .map(|d| content.disease(d).name.clone())
                 .collect(),
+            resistances: resistance_rows(view),
             weight: view.own_weight(),
             load: Some(view.own_load()),
             progress: view.own_experience(),
@@ -135,6 +173,7 @@ impl CharacterScreen {
             defence: view.own_defence(),
             protection: view.own_protection(),
             stance: content.stance_def(view.own_stance()).name.clone(),
+            alignment: view.own_alignment().map(|b| b.name()),
         }
     }
 
@@ -162,8 +201,10 @@ impl CharacterScreen {
             n => (n + birth.len()) as i32 + 1,
         };
         let thresholds = (self.load.as_ref()).map_or(Vec::new(), |l| thresholds(l, width));
-        let status_rows =
-            i32::from(!self.effects.is_empty()) + i32::from(!self.diseases.is_empty());
+        let status_rows = i32::from(self.alignment.is_some())
+            + i32::from(!self.effects.is_empty())
+            + i32::from(!self.diseases.is_empty())
+            + self.resistances.len() as i32;
         let h = Stat::COUNT as i32 + 15 + identity_rows + thresholds.len() as i32 + status_rows;
         let panel = Panel::new(console, " Character ", WIDTH, h);
         super::info_tabs::draw_tabs(console, &panel, bindings, super::ScreenName::Character);
@@ -235,6 +276,14 @@ impl CharacterScreen {
             }
             y += 1;
         }
+        // `    Alignment     Kind`: the band, never the score.
+        if let Some(band) = self.alignment {
+            if fits(y) {
+                console.print(x + 4, y, "Alignment", TEXT);
+                console.print(x + 4 + NAME_W, y, band, TEXT);
+            }
+            y += 1;
+        }
         // `    Status        Bleeding, Poisoned`: names only, never how bad.
         if !self.effects.is_empty() {
             if fits(y) {
@@ -249,6 +298,19 @@ impl CharacterScreen {
                 let names = capitalized(&self.diseases.join(", "));
                 console.print(x + 4, y, "Diseased", TEXT);
                 console.print(x + 4 + NAME_W, y, &names, LOWERED);
+            }
+            y += 1;
+        }
+        // `    Resistant to  fire, cold`, `    Vulnerable to acid`: words, never a percentage.
+        for (label, kinds) in &self.resistances {
+            if fits(y) {
+                let color = if *label == "Vulnerable to" {
+                    LOWERED
+                } else {
+                    TEXT
+                };
+                console.print(x + 4, y, label, TEXT);
+                console.print(x + 4 + NAME_W, y, kinds, color);
             }
             y += 1;
         }
@@ -408,10 +470,11 @@ mod tests {
                 .unwrap_or_else(|| panic!("{needle} in {text:#?}"))
         };
         assert!(row(" Character ").contains('┌') || row(" Character ").contains('─'));
+        // The character's name heads it.
         assert!(
-            row("You")
+            row("Tamsin")
                 .trim_matches(|c| c == ' ' || c == '│')
-                .starts_with("You")
+                .starts_with("Tamsin")
         );
         for expected in [
             "Race    Human",
@@ -430,7 +493,10 @@ mod tests {
             "HP  Hit points    17/17",
             "Dv  Defence       11      Pv  Protection  0",
             "Lv  Level         1",
-            "XP  Experience    0 / 20",
+            // A human thief's level 2: 767 × 95 %.
+            "XP  Experience    0 / 729",
+            // A thief starts Callous: the band, never the score.
+            "    Alignment     Callous",
         ] {
             row(expected);
         }

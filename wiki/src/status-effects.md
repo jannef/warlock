@@ -4,12 +4,14 @@ Some harm lasts longer than a blow. A deep wound keeps bleeding, and a bite can 
 behind. These **status effects** cost hit points as time passes, slow your
 [healing](healing.md), sometimes weaken you, and wear off on their own. They can kill.
 **Diseased** is a status effect too, shown while any [disease](diseases.md) has broken out; it
-lasts as long as the diseases do.
+lasts as long as the diseases do. Not every status effect harms: a rage makes you stronger for a
+while, and some leave you spent once they are over (see [Buffs and cooldowns](#buffs-and-cooldowns)).
 
 You always know what ails you: the [status bar](controls.md#the-screen) names it right after your
 hit points (`HP 12/17 · Bleeding · Poisoned`), the [character screen](character.md) lists it, and
 the message line tells you when it starts and stops. You never see how bad it is, or how long it
-will last, as a number: you see your hit points go.
+will last, as a number: you see your hit points go. The table gives the exact paces, and who
+causes what, with the chance a hit has:
 
 {{#include generated/status-effects.md}}
 
@@ -30,8 +32,9 @@ will last, as a number: you see your hit points go.
 ## Bleeding
 
 A **big hit**, one that takes at least a third of your hit points at once, or a **confirmed
-critical** ("The kobold hits you hard!") opens a wound: "You are bleeding." A critical opens a
-worse one than a big hit. Every blow can do it for now, a club's as well as a spear's.
+critical** ("The kobold stabs you hard!") opens a wound: "You are bleeding." A critical opens a
+worse one than a big hit. Only a blow that **cuts or stabs** does it: a club's, a fall's, or a
+fireball's does not (see [Damage types](damage-types.md)).
 
 While you bleed, you lose a hit point every so often, faster the worse you bleed, and your hit
 points do not come back at all. The bleeding eases by itself and stops after a while: "The
@@ -54,6 +57,29 @@ hitting and Defence to how much you can carry. The character screen shows them l
 wears off by itself: "The poison wears off."
 
 You cannot tell whether a creature is poisoned by looking at it.
+
+## Buffs and cooldowns
+
+A status effect can also help, or hinder, in other ways while it lasts (the table's last
+column says which):
+
+- **Stats.** It may raise a score as well as lower one. Hit points that a higher Toughness let
+  you heal up to go again when it ends.
+- **Fighting.** It may add to your to-hit and damage, or to your Dodge and Parry, as a
+  [combat stance](combat.md) does, on top of your stance. Creatures can suffer these too.
+- **Slowness.** It may make everything you do take longer: at 150%, half again as long.
+- **What you cannot do.** It may keep you from doing something while it lasts: a raging fighter
+  cannot read ("You cannot read while raging."). Trying takes no time. An
+  [ability](abilities.md) that would do it is greyed out: `you are raging`.
+- **What follows.** As some end, another begins: when a rage subsides, exhaustion follows.
+
+A **cooldown** is a status effect that only waits to wear off: while you are, say, winded, the
+ability that winded you cannot be used again (`you are winded`). Time is the only price; nothing
+counts how often you use an ability.
+
+**Raging** (the barbarian's rage, which comes with the class abilities): for five minutes you are
+stronger and tougher but less clever, and cannot read. Then you are **Exhausted** for ten
+minutes: a little weaker, and no rage until it passes.
 
 ## In the message line
 
