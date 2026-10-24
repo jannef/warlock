@@ -31,6 +31,9 @@
 #   disease_check points added to the character's checks against diseases (spec §8 "Diseases";
 #                 diseases.toml): resisting one they are exposed to, and each progression (-10 to
 #                 10, default 0)
+#   eats_rotten   whether the character eats rotten food without harm (spec §8 "Hunger";
+#                 hunger.toml's [rotten]): it feeds them as plain food would, and never makes them
+#                 vomit or sick or carries a disease (default false)
 #   alignment     the race's part of a new character's hidden alignment score (spec §8
 #                 "Alignment"; alignment.toml; -1000 evil to 1000 good, default 0), added to
 #                 their class's: a lean that never alone moves anyone out of Neutral

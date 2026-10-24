@@ -1,6 +1,6 @@
 //! Races' gifts and flaws in the world (spec §8 "Character creation"): a race's natural armour
 //! adds to what the player wears, and so do its resistances; strong light dazzles light-blind
-//! eyes; a disease bonus wins disease checks.
+//! eyes; a disease bonus wins disease checks; a stomach for rotten food eats it unharmed.
 
 use super::*;
 use crate::action::parse_actions;
@@ -42,6 +42,14 @@ description = "Shrugs diseases off."
 vision = "normal"
 age = [20, 30]
 disease_check = 10
+
+[[race]]
+id = "scavenger"
+name = "Scavenger"
+description = "Eats anything."
+vision = "normal"
+age = [20, 30]
+eats_rotten = true
 "##;
 
 /// A dim corridor (ambient 60, enough for normal eyes) with a brazier at its east end: its light
@@ -52,7 +60,7 @@ const CORRIDOR: &str = "\
 ###############
 ";
 
-/// A lit room: the player and nothing else.
+/// A lit room: the player on a loaf of bread (it keeps five days), and nothing else.
 const ROOM: &str = "\
 #######
 #.....#
@@ -69,7 +77,7 @@ fn files() -> ContentFiles {
         &format!(
             "name = \"Room\"\nambient = [255, 255, 255, 0]\nmap = '''\n{ROOM}'''\n\n\
              [legend]\n\
-             \"@\" = {{ terrain = \"floor\", spawn = \"player\" }}\n"
+             \"@\" = {{ terrain = \"floor\", spawn = \"player\", objects = [\"bread\"] }}\n"
         ),
     );
     files.insert(
@@ -210,4 +218,29 @@ fn a_races_disease_bonus_wins_checks_against_catching_a_disease() {
     let (human, gutsy) = (caught("human"), caught("gutsy"));
     assert!(human >= 10, "a human caught it {human} times in 40");
     assert!(gutsy <= 2, "the gutsy caught it {gutsy} times in 40");
+}
+
+#[test]
+fn a_stomach_for_rotten_food_eats_it_unharmed() {
+    let eat = |race: &str| {
+        let mut w = world(race);
+        // Five days on, the bread underfoot has rotted.
+        run(&mut w, "skip:120h");
+        let before = w.state.player().satiation.expect("hunger").nutrition;
+        w.apply(&Action::Eat(crate::action::Meal::Floor(0)));
+        let fed = w.state.player().satiation.expect("hunger").nutrition - before;
+        (w, fed)
+    };
+    let (scavenger, fed) = eat("scavenger");
+    assert!(said(
+        &scavenger,
+        "The loaf of bread was rotten, but your stomach does not mind."
+    ));
+    assert!(!said(&scavenger, "Ugh!"));
+    assert!(!said(&scavenger, "You feel sick."));
+    assert!(scavenger.state.player().effects.is_empty(), "never sick");
+    assert!(scavenger.state.player().diseases.is_empty(), "nor diseased");
+    assert!(fed > 700, "it feeds, as bread does");
+    let (human, _) = eat("human");
+    assert!(said(&human, "Ugh! The loaf of bread was rotten."));
 }

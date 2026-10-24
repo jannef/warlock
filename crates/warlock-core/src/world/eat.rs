@@ -17,7 +17,8 @@
 //!
 //! **Rotten food** (spec §8 "Hunger"; food rots by its age, `world/rot.rs`): eating any food
 //! past its keeping is risky (vomiting, else sickness and exposure to the diseases rotten food
-//! carries, [`World::expose_to`], and then it feeds). Old food is as good as fresh.
+//! carries, [`World::expose_to`], and then it feeds). Old food is as good as fresh. A race that
+//! `eats_rotten` (ratfolk) eats it without harm: it only feeds them.
 //!
 //! **Corpses**: a creature that dies leaves one on top of its pile ([`World::leave_corpse`]), its
 //! death time in the stack, from which it rots like any food. A fresh one feeds by its
@@ -244,12 +245,22 @@ impl World {
     }
 
     /// A rotten corpse: the player vomits (a chance), else it makes them sick, exposes them to
-    /// the diseases rotten food carries (grave rot), and then feeds them.
+    /// the diseases rotten food carries (grave rot), and then feeds them; a player whose race
+    /// `eats_rotten` it only feeds.
     fn eat_rotten(&mut self, nutrition: i32, what: ObjectId, events: &mut Vec<Event>) {
         let content = self.content.clone();
         let Some(rotten) = content.hunger().map(|h| &h.rotten) else {
             return;
         };
+        let race = self.state.race_of(&content, self.state.player());
+        if race.is_some_and(|r| r.eats_rotten) {
+            let name = &content.object(what).name;
+            self.say(format!(
+                "The {name} was rotten, but your stomach does not mind."
+            ));
+            self.feed(nutrition, what);
+            return;
+        }
         self.say(format!(
             "Ugh! The {} was rotten.",
             content.object(what).name
