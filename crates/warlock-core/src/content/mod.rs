@@ -44,6 +44,7 @@ mod sky;
 mod slot;
 mod spell;
 mod stance;
+mod stat_training;
 mod status;
 mod talent;
 mod terrain;
@@ -124,6 +125,7 @@ pub use sky::{MAX_MOONS, MAX_SIZE, MoonDef, PHASE_ONE, STANDARD_SIZE};
 pub use slot::{MAX_SLOTS, SlotDef, SlotId};
 pub use spell::{BOLT_LENGTHS, BURST_RADII, Bolt, Burst, BurstIce};
 pub use stance::{CombatStance, StanceDef, Stances, percent_of};
+pub use stat_training::{StatRule, StatTraining, StatUse};
 pub use status::{
     Affliction, COST_PERCENT, CombatBonus, Healing, MAX_REGEN, MAX_SEVERITY, OnHit, Penalty,
     Stacking, StatusDef, StatusId, Wound,
@@ -415,6 +417,8 @@ pub struct Content {
     trap_ids: BTreeMap<String, TrapId>,
     /// The numbers of searching for hidden features (`data/search.toml`, spec §8 "Searching").
     search: SearchRules,
+    /// The rules of stat training (`data/stats.toml`, spec §8 "Stats").
+    stat_training: StatTraining,
     factions: Factions,
     lights: Vec<LightPreset>,
     light_ids: BTreeMap<String, LightId>,
@@ -497,6 +501,7 @@ impl Content {
             traps: Vec::new(),
             trap_ids: BTreeMap::new(),
             search: SearchRules::default(),
+            stat_training: StatTraining::default(),
             factions: Factions::default(),
             lights: Vec::new(),
             light_ids: BTreeMap::new(),
@@ -650,6 +655,10 @@ impl Content {
         let path = "data/search.toml";
         if let Some(text) = files.get_optional(path) {
             content.search = SearchRules::parse(path, text)?;
+        }
+        let path = "data/stats.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.stat_training = StatTraining::parse(path, text)?;
         }
         let path = "data/dialogue.toml";
         if let Some(text) = files.get_optional(path) {
@@ -1886,6 +1895,12 @@ impl Content {
     /// else [`SearchRules::default`]).
     pub fn search(&self) -> &SearchRules {
         &self.search
+    }
+
+    /// The rules of stat training (spec §8 "Stats"; `data/stats.toml`, else
+    /// [`StatTraining::default`]: nothing trains).
+    pub fn stat_training(&self) -> &StatTraining {
+        &self.stat_training
     }
 
     pub fn material(&self, id: MaterialId) -> &MaterialDef {

@@ -116,6 +116,7 @@ mod search;
 mod shoot;
 mod shop;
 mod spell;
+mod stat_training;
 mod status;
 mod talent;
 mod talk;
@@ -526,6 +527,7 @@ impl World {
             stance: CombatStance::Neutral,
             free_blows: FreeBlows::default(),
             talents: Default::default(),
+            stat_marks: Default::default(),
         };
         player.hp = player.max_hp(&content);
         crate::rot::made_at(&mut player.inventory, &content, def.start);
@@ -1024,6 +1026,8 @@ mod shop_tests;
 mod skills_tests;
 #[cfg(test)]
 mod speed_tests;
+#[cfg(test)]
+mod stat_training_tests;
 #[cfg(test)]
 mod stats_tests;
 #[cfg(test)]
