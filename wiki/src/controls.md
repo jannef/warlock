@@ -46,6 +46,7 @@ The in-game `?` screen is authoritative: it is generated from your current key b
 | Bash with your shield (an ability: also in the abilities menu) | no key until you bind one, then a direction |
 | Throw your voice (an ability: also in the abilities menu) | no key until you bind one, then aim |
 | Disarm a trap (an ability: also in the abilities menu) | no key until you bind one, then a direction |
+| Steal (an ability: also in the abilities menu) | no key until you bind one, then a direction |
 | Hood your lantern (an ability: also in the abilities menu) | no key until you bind one |
 | Next target while aiming (with Shift: the one before) | `Tab` |
 | Use a tool: dig into a wall with a pick-axe | `U`, then a direction |
@@ -124,8 +125,8 @@ such a file, `keymaps/default.toml`.
 
 ## Prompts
 
-Opening, closing, and kicking a door, and bashing with your shield, ask `In which direction? (Esc
-to cancel)` on the message line, digging asks `Dig in which direction? (Esc to cancel)` (see
+Opening, closing, and kicking a door, bashing with your shield, and stealing ask `In which
+direction? (Esc to cancel)` on the message line, digging asks `Dig in which direction? (Esc to cancel)` (see
 [Digging and walls](digging.md)), chatting with several creatures near asks `Talk in which
 direction? (Esc to cancel)` (see [People and talk](npcs.md)), disarming a trap asks `Disarm in
 which direction? (Esc to cancel)` (see [Traps](traps.md#disarming-traps)), and

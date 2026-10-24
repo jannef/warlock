@@ -853,7 +853,7 @@ fn actor_rows(world: &World) -> Vec<String> {
                 format!("; talk said {said}, muttered {muttered}{met}")
             };
             // What it resists, in percent by kind (ground truth: never shown in play).
-            let resists: Vec<String> = (a.resistances(content).iter())
+            let resists: Vec<String> = (world.resistances_of(a.id).iter())
                 .map(|(k, p)| format!("{} {p}", content.damage_type(k).id))
                 .collect();
             let resists = if resists.is_empty() {
@@ -870,8 +870,8 @@ fn actor_rows(world: &World) -> Vec<String> {
                 a.pos,
                 a.hp,
                 a.max_hp(content),
-                a.defence(content, load.penalty()).total(),
-                a.protection(content).base,
+                world.defence_of(a.id).total(),
+                world.protection_of(a.id).base,
                 format_weight(w.total()),
                 format_weight(w.base),
                 format_weight(w.carried),
@@ -930,7 +930,7 @@ fn rows(width: i32, height: i32, glyph: impl Fn(Pos) -> char) -> Vec<String> {
 }
 
 /// One-line summary used as the dump header; under the open sky it names the weather, and it
-/// has the temperature where the player is.
+/// has the temperature where the player is (and `dazzled` while strong light dazzles them).
 fn summary(world: &World) -> String {
     let view = world.perception();
     // Spelled as in the JSON dump (`heavy_rain`).
@@ -945,9 +945,10 @@ fn summary(world: &World) -> String {
     let hunger = (view.own_hunger())
         .filter(|h| *h != Hunger::NotHungry)
         .map_or(String::new(), |h| format!(" hunger {}", h.id()));
+    let dazzled = if view.dazzled() { " dazzled" } else { "" };
     format!(
-        "turn {} time {} level {} viewer {} hp {hp}/{max}{dead}{hunger}{weather} temperature \
-         {temperature} hash {:016x}",
+        "turn {} time {} level {} viewer {} hp {hp}/{max}{dead}{hunger}{dazzled}{weather} \
+         temperature {temperature} hash {:016x}",
         world.turn(),
         world.time(),
         view.level_id(),
@@ -1148,6 +1149,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
             .map(|(k, w)| (content.damage_type(k).id.clone(), json!(w.word())))
             .collect::<serde_json::Map<String, Value>>(),
         "hunger": view.own_hunger(),
+        "dazzled": view.dazzled(),
         "death": death,
         "messages": messages,
         "layers": layer_map,
@@ -1448,9 +1450,9 @@ mod tests {
     #[test]
     fn abilities_show_what_the_player_can_do_and_why_not() {
         // The showcase thief: throwing their voice (everyone's for now), the class's skills used
-        // as actions (no use yet, but Disable device's, disarming a trap, and Open lock's, picking
-        // a lock, each in a direction), the shield bash, which needs a shield in hand, and the
-        // lantern's hood.
+        // as actions (no use yet, but Disable device's, disarming a trap, Open lock's, picking a
+        // lock, and Steal's, stealing, each in a direction), the shield bash, which needs a
+        // shield in hand, and the lantern's hood.
         let mut world = showcase();
         assert_eq!(
             layer_rows(&world, Layer::Abilities),
@@ -1459,7 +1461,7 @@ mod tests {
                 "Appraise (skill): not usable yet",
                 "Disarm a trap (skill): a direction",
                 "Pick lock (skill): a direction",
-                "Steal (skill): not usable yet",
+                "Steal (skill): a direction",
                 "Shield bash (weapon skill): you hold no shield",
                 "Hood your lantern (item): nothing",
             ]
@@ -1480,6 +1482,10 @@ mod tests {
                    "unavailable": null})
         );
         assert_eq!(value["abilities"][0]["aim"], "a cell");
+        assert_eq!(
+            value["abilities"][4],
+            json!({"id": "steal", "source": "skill", "aim": "a direction", "unavailable": null})
+        );
         // The storeroom's small shield in hand: it can be used, in a direction.
         let walk = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N \
                     pickup:a equip:off_hand:a";

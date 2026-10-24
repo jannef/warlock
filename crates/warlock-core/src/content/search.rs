@@ -69,12 +69,14 @@ impl SearchRules {
 }
 
 /// Which hidden features a race notices in passing, untrained (spec §8 "Searching"; races'
-/// `passive_search`): elves everything, dwarves what is on stone (terrain with `stone`).
+/// `passive_search`): elves everything, dwarves what is on stone (terrain with `stone`),
+/// kobolds hidden traps.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum PassiveSearch {
     All,
     Stone,
+    Traps,
 }
 
 /// A secret door on a cell (ground truth, spec §8 "Searching"): the closed door it is, and how

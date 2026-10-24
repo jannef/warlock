@@ -100,6 +100,11 @@ pub enum Action {
         dir: Dir,
         topic: String,
     },
+    /// Try to steal from the creature in a direction (spec §8 "Stealing"): one stack of what it
+    /// carries and neither wears nor wields, if the player's Dexterity and Steal skill beat its
+    /// Willpower; caught, it turns on them. Takes the time of `steal`; refused (no time) when the
+    /// player sees no one there, or someone hostile.
+    Steal(Dir),
     /// Throw the player's voice to a cell they see within [`crate::world::VOICE_RANGE`] (spec §5
     /// "Hearing"): a voice sounds there, and creatures that hear it and do not see its cell go
     /// and look. Takes the time of `throw_voice`; refused (no time) at a cell they do not see,
@@ -564,7 +569,7 @@ pub struct Outcome {
 /// rest:1h rest:dawn rest:dusk pickup pickup:ac drop:b sell:b pay pay:W equip:body:b remove:body
 /// bash:E fire:12,5 throw:c:12,5 dig:E search search:10 disarm:E eat:b eat:floor:a read:b
 /// read:b:12,5 read:b:c
-/// chat:E ask:E:TOPIC throw_voice:12,5 vision:ID
+/// chat:E ask:E:TOPIC steal:E throw_voice:12,5 vision:ID
 /// skip:1h
 /// weather:rain effect:fireball@12,5 effect:lightning_bolt@3,4>12,4 identify:a afflict:bleeding
 /// infect:filth_fever freeze:12,5,3 thaw:12,5,3` (durations: `30s`, `10m`, `2h`; LETTER names a
@@ -579,7 +584,8 @@ pub struct Outcome {
 /// there; `eat:LETTER` eats one of inventory stack LETTER, `eat:floor:LETTER` one of the stack
 /// LETTER of the pile underfoot; `read:LETTER:X,Y` reads inventory stack LETTER (a scroll) at
 /// the level cell (X, Y), `read:LETTER:LETTER` on the second inventory stack; `chat:DIR` talks to the creature that way, `ask:DIR:TOPIC` asks
-/// it about a topic by id; `hood` lowers or raises the lantern's hood; `throw_voice:X,Y` throws
+/// it about a topic by id, `steal:DIR` tries to steal from it; `hood` lowers or raises the
+/// lantern's hood; `throw_voice:X,Y` throws
 /// the player's voice to the level cell (X, Y); weather: `clear`, `overcast`, `rain`, `heavy`; `effect:ID@X,Y[>X,Y]`
 /// shows a spell effect at a cell, or from one cell toward another; the dev bursts
 /// `freeze:X,Y,R` and `thaw:X,Y,R` freeze the water and melt the ice within radius R, 0 to
@@ -630,6 +636,7 @@ impl fmt::Display for Action {
             Action::Rest(Rest::Dusk) => f.write_str("rest:dusk"),
             Action::Chat(d) => write!(f, "chat:{d}"),
             Action::Ask { dir, topic } => write!(f, "ask:{dir}:{topic}"),
+            Action::Steal(d) => write!(f, "steal:{d}"),
             Action::ThrowVoice(at) => write!(f, "throw_voice:{},{}", at.x, at.y),
             Action::SetStance(stance) => write!(f, "stance:{stance}"),
             Action::Dig(d) => write!(f, "dig:{d}"),
@@ -699,6 +706,7 @@ impl FromStr for Action {
                     topic: topic.to_string(),
                 })
             }
+            "steal" => dir().map(Action::Steal),
             "kick" => dir().map(Action::Kick),
             "pick" => dir().map(Action::PickLock),
             "bash" => dir().map(Action::Bash),
@@ -929,7 +937,7 @@ impl FromStr for Action {
                  sell[:LETTERS], pay[:DIR], equip:SLOT:LETTER, remove:SLOT, bash:DIR, fire:X,Y, \
                  throw:LETTER:X,Y, dig:DIR, eat:LETTER, eat:floor:LETTER, \
                  read:LETTER[:X,Y|:LETTER], chat:DIR, \
-                 ask:DIR:TOPIC, throw_voice:X,Y, stance:NAME, vision:ID, skip:DURATION, \
+                 ask:DIR:TOPIC, steal:DIR, throw_voice:X,Y, stance:NAME, vision:ID, skip:DURATION, \
                  weather:clear|overcast|rain|heavy, effect:ID@X,Y[>X,Y], identify[:LETTERS], \
                  afflict:STATUS, infect:DISEASE, freeze:X,Y,R, thaw:X,Y,R)"
             )),
@@ -1139,6 +1147,7 @@ mod tests {
                 Action::Open(d),
                 Action::Close(d),
                 Action::Chat(d),
+                Action::Steal(d),
                 Action::Kick(d),
                 Action::PickLock(d),
                 Action::Bash(d),
@@ -1165,6 +1174,8 @@ mod tests {
         assert!(parse_actions("wait:E").is_err());
         assert_eq!(parse_actions("BASH:sw"), Ok(vec![Action::Bash(Dir::SW)]));
         assert!(parse_actions("bash").is_err());
+        assert_eq!(parse_actions("Steal:N"), Ok(vec![Action::Steal(Dir::N)]));
+        assert!(parse_actions("steal").is_err());
         assert_eq!(
             parse_actions("DISARM:ne"),
             Ok(vec![Action::Disarm(Dir::NE)])

@@ -81,11 +81,13 @@ fn arm(w: &mut World, objects: &[&str]) {
 }
 
 fn defence(w: &World) -> crate::combat::Defence {
-    w.state.player().defence(w.content(), Burden::Unburdened)
+    w.state
+        .player()
+        .defence(w.content(), Burden::Unburdened, None)
 }
 
 fn protection(w: &World) -> i32 {
-    w.state.player().protection(w.content()).against(None)
+    w.state.player().protection(w.content(), None).against(None)
 }
 
 #[test]
@@ -298,7 +300,7 @@ fn elemental_ward_resists_the_chosen_element_by_rank() {
     let content = w.content().clone();
     let fire = content.damage_type_id("fire");
     let cold = content.damage_type_id("cold");
-    let resists = |w: &World, kind| w.state.player().resistances(&content).get(kind);
+    let resists = |w: &World, kind| w.state.player().resistances(&content, None).get(kind);
     give(&mut w, "elemental_ward", Some("fire"));
     assert_eq!(resists(&w, fire), 25);
     assert_eq!(resists(&w, cold), 0);

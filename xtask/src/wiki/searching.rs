@@ -111,6 +111,7 @@ pub(super) fn search_races(content: &Content) -> String {
         let notices = match r.passive_search {
             Some(PassiveSearch::All) => "Everything",
             Some(PassiveSearch::Stone) => "What is hidden in stone",
+            Some(PassiveSearch::Traps) => "Hidden traps",
             None if spot(&r.skills) => "Everything (trained in Spot)",
             None => "Only if their class trains Spot",
         };

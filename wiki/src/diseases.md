@@ -39,8 +39,10 @@ A check is rolled like an attack (see [Combat](combat.md)): two twelve-sided dic
 modifier of your score in the disease's stat (see [Stats](stats.md#modifiers)), against how hard
 the disease is, its **difficulty**: the check is won when the sum reaches it. Most diseases are
 fought with **Toughness**, brain fever with **Willpower**. A roll of 2 always loses, a roll of 24
-always wins. The game never shows the dice, the bonus, or how hard a disease is: you see what
-comes of it. Exactly, by your score in the stat:
+always wins. Ratfolk add 4 to every such check, catching a disease and fighting it off alike
+(see [Races](races.md#the-evil-races)). The game never shows the dice, the bonus, or how hard a
+disease is: you see what comes of it. Exactly, by your score in the stat (before a race's
+bonus):
 
 {{#include generated/disease-checks.md}}
 

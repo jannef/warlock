@@ -241,7 +241,9 @@ rate or animation.
 - **Visibility**: a cell is visible iff it is in line of sight within the maximum view range **and**
   (its perceived brightness ≥ the eye's threshold **or** its distance ≤ the darkvision radius). The
   player's own cell is always visible. Creatures are seen iff their cell is visible: creatures in
-  darkness are hidden (unless within darkvision), creatures carrying light are seen.
+  darkness are hidden (unless within darkvision), creatures carrying light are seen. A
+  **light-blind** player (their race's `light_blind`: drow) whose own cell is lit at least to its
+  `glare` is dazzled and sees nothing farther than its `sight` (§8 "Character creation").
 - **Overworld sight** is at map scale: a cell of the overworld is visible iff it is in line of
   sight within the daylight radius: 9 by day (06:30–17:30), 5 in twilight (half an hour either side
   of 06:00 and 18:00), at night 2 plus one cell per 20 of moonlight (the brightness of all moons'

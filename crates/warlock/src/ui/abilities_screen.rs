@@ -283,7 +283,7 @@ mod tests {
             "  b  Appraise           not usable yet",
             "  c  Disarm a trap      in a direction",
             "  d  Pick lock          in a direction",
-            "  e  Steal              not usable yet",
+            "  e  Steal              in a direction",
             "Weapon skills",
             "  f  Shield bash        you hold no shield",
             "Items",
@@ -335,6 +335,10 @@ mod tests {
         assert_eq!(
             screen.handle(&Press::nav(Nav::Enter), &b),
             ScreenAction::UseAbility(Ability::ShieldBash)
+        );
+        assert_eq!(
+            screen.handle(&Press::typed('e'), &b),
+            ScreenAction::UseAbility(Ability::Steal)
         );
         // `a` names the first row here (throwing one's voice), so it does not close the menu;
         // Esc does.

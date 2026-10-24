@@ -141,6 +141,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `passive_penalty` (what noticing in passing loses against searching, 0 to 20; 4), `turns` (how
   long searching for a while lasts at most, 1 to 100; 10), and `secret_door` (a secret door's
   difficulty where its level gives none, 1 to 50; 14).
+- **Stealing** (`data/steal.toml`, optional; without it nobody steals; §8 "Stealing"): `caught`,
+  the faction a creature that catches the player stealing joins (an id in `data/factions.toml`,
+  hostile to the player: `outraged`). Who can steal is the skills' business (the `steal`
+  benefit, `data/skills.toml`); a shopkeeper that catches the player is outraged by its shop's
+  rules (`data/shops.toml`'s `outraged`).
 - **Stat training** (`data/stats.toml`, optional; without it nothing trains and no level checks
   a stat; §8 "Stats"): `[training]` `need_base` (20) and `need_per_point` (3), each 0 to 200
   and not both 0, `over_potential_divisor` (4; 1 to 20), and `[[training.use]]` rules: `stat`
@@ -162,8 +167,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   one, below) `wield` (1000), `wear` (1000: helmets, cloaks, gloves, boots, rings, amulets),
   `body_armor` (3000: it takes a while to strap on), `ready` (1000: a missile weapon, missiles,
   a tool), `eat` (1000: a turn of eating; a meal takes the food's `turns`, §8 "Hunger"), `chat`
-  (500: a few words, §8 "Dialogue"), `throw_voice` (1000: throwing one's voice, §5 "Hearing"),
-  and `climb` (2000: climbing out of the water onto ice, on
+  (500: a few words, §8 "Dialogue"), `steal` (1000: trying to steal, whatever comes of it, §8
+  "Stealing"), `throw_voice` (1000: throwing one's voice, §5 "Hearing"), and `climb` (2000:
+  climbing out of the water onto ice, on
   top of the step onto it; §5 "Ice"). An action left out, or every action without the file,
   costs 1000; an unknown id or a cost out of range is a content error. The wiki shows them in a
   generated table.

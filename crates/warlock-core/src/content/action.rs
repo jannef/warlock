@@ -89,6 +89,8 @@ pub enum ActionKind {
     Disarm,
     /// Chatting with a creature (spec §8 "Dialogue"): a short action.
     Chat,
+    /// Trying to steal from a creature (spec §8 "Stealing"), whatever comes of it.
+    Steal,
     /// Throwing one's voice to a cell (spec §5 "Hearing").
     ThrowVoice,
     /// Climbing out of the water onto ice (spec §5 "Ice"): on top of the step onto it.
@@ -125,6 +127,7 @@ impl ActionKind {
         ActionKind::Search,
         ActionKind::Disarm,
         ActionKind::Chat,
+        ActionKind::Steal,
         ActionKind::ThrowVoice,
         ActionKind::Climb,
     ];
@@ -159,6 +162,7 @@ impl ActionKind {
             ActionKind::Search => "search",
             ActionKind::Disarm => "disarm",
             ActionKind::Chat => "chat",
+            ActionKind::Steal => "steal",
             ActionKind::ThrowVoice => "throw_voice",
             ActionKind::Climb => "climb",
         }
@@ -212,6 +216,7 @@ impl ActionKind {
             ActionKind::Search => "search",
             ActionKind::Disarm => "disarm traps",
             ActionKind::Chat => "talk",
+            ActionKind::Steal => "steal",
             ActionKind::ThrowVoice => "throw your voice",
             ActionKind::Climb => "climb",
         }
