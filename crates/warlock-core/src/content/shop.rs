@@ -474,6 +474,13 @@ mod tests {
         // A dagger is worth 30: the store asks 150 % and pays 30 %.
         assert_eq!(shops.price(&c, store, &dagger, 0), 45);
         assert_eq!(shops.offer(&c, store, &dagger, 0), 9);
+        // Insured: half again, never more than the price.
+        assert_eq!(shops.offer_more(&c, store, &dagger, 0, 50), 13);
+        assert_eq!(shops.offer_more(&c, store, &dagger, 0, 0), 9);
+        assert_eq!(
+            shops.offer_more(&c, store, &dagger, MOST_FAVOUR, 100),
+            shops.price(&c, store, &dagger, MOST_FAVOUR)
+        );
         // In the buyer's favour: less to pay, more offered; against them, the other way.
         assert_eq!(shops.price(&c, store, &dagger, 10), 41);
         assert_eq!(shops.offer(&c, store, &dagger, 10), 9);

@@ -534,4 +534,62 @@ mod tests {
             assert!(e.message.contains(why), "{why}: {}", e.message);
         }
     }
+
+    /// The built-in content with the aristocrat's file changed by `edit`, loaded.
+    fn with_aristocrat(
+        edit: impl Fn(&str) -> String,
+    ) -> Result<super::super::Content, ContentError> {
+        let mut files = super::super::ContentFiles::builtin();
+        let path = "data/classes/12-aristocrat.toml";
+        let text = files
+            .table("classes")
+            .find(|(p, _)| *p == path)
+            .expect("aristocrat")
+            .1;
+        let text = edit(text);
+        files.insert(path, &text);
+        super::super::Content::load(&files)
+    }
+
+    #[test]
+    fn level_tables_name_known_talents_and_trees_in_order() {
+        let content = with_aristocrat(|t| t.to_string()).expect("built-in");
+        let aristocrat = content.class("aristocrat").expect("aristocrat");
+        let book = content.talents();
+        let at = |level| -> Vec<&str> {
+            (aristocrat.abilities_to(book, level).into_iter())
+                .map(|t| book.get(t).id.as_str())
+                .collect()
+        };
+        assert_eq!(at(1), ["well_dressed"]);
+        assert_eq!(at(17), ["well_dressed", "fencing", "noblesse"]);
+        assert_eq!(at(60).len(), 9);
+        assert_eq!((aristocrat.bonus_at(10), aristocrat.bonus_at(11)), (1, 0));
+        let trees = aristocrat.bonus_trees(book).expect("named trees");
+        let names: Vec<&str> = trees.iter().map(|&t| book.tree(t).id.as_str()).collect();
+        assert_eq!(names, ["weaponcraft", "delver"]);
+        let commoner = content.class("commoner").expect("commoner");
+        assert_eq!(commoner.bonus_trees(book), None, "any tree");
+        for (edit, why) in [
+            (
+                ("\"fencing\"", "\"fencin\""),
+                "abilities: unknown talent `fencin`",
+            ),
+            (("\"delver\"]", "\"class\"]"), "`class` is the class tree"),
+            (("\"delver\"]", "\"stars\"]"), "unknown tree `stars`"),
+            (("level = 1,", "level = 0,"), "level 0 is not 1 to"),
+            (
+                ("level = 12,", "level = 2,"),
+                "listed by level, lowest first",
+            ),
+            (
+                ("talent = \"noblesse\"", "talent = \"fencing\""),
+                "`fencing` twice",
+            ),
+            (("[10, 20, 30, 45, 55]", "[20, 10]"), "ascending"),
+        ] {
+            let e = with_aristocrat(|t| t.replacen(edit.0, edit.1, 1)).unwrap_err();
+            assert!(e.message.contains(why), "{why}: {}", e.message);
+        }
+    }
 }
