@@ -226,7 +226,12 @@ impl ObjectScreen {
                         (unpaid.get(i).copied().flatten()).map(|g| format!("unpaid, {g} gold"))
                     }
                 };
-                let marks: Vec<String> = mark.into_iter().chain(price).collect();
+                // Hound's nose (spec §8 "Birth sign"): what to eat says how fresh it smells.
+                let smell = (list == ObjectList::Eat)
+                    .then(|| view.smell(s))
+                    .flatten()
+                    .map(|f| format!("smells {}", f.word()));
+                let marks: Vec<String> = mark.into_iter().chain(smell).chain(price).collect();
                 let entry = Entry {
                     item,
                     glyph: def.glyph,

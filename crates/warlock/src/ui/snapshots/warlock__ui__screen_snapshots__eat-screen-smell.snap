@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ Welcome to Showcase. Press ? for controls.
+
+
+
+
+
+
+
+
+
+
+                    ┌─ Eat ────────────────────────────────────────────────────┐
+                    │                                                          │
+                    │ Food                                                     │
+                    │ > a - % a food ration (smells fresh)              500 g  │
+                    │   b - % a loaf of bread (smells fresh)            400 g  │
+                    │                                                          │
+                    │ a-b or Enter eat   Esc cancel                            │
+                    └──────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+ The Hub  ·  HP 25/25  ·  MP 0/0  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444          ? controls

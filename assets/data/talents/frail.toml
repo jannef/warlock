@@ -1,0 +1,9 @@
+[[talent]]
+id = "frail"
+name = "Frail"
+tree = "stars"
+granted = true
+flaw = true
+description = "You are frail between fires: your maximum hit points are 10 % lower."
+effects = [{ kind = "max_hp_percent", value = -10 }]
+systems = ["hit_points"]

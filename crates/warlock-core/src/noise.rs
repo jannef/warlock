@@ -490,14 +490,13 @@ fn hearers(state: &WorldState, content: &Content, noise: Noise) -> Vec<(ActorId,
 }
 
 /// The sounds in `heard` (the player's during one turn, with hearing `threshold`) the player
-/// perceives: those whose source cell is not visible, each placed at its [`rough_place`]. A
-/// sound followed by one of the same kind within [`ONE_SOURCE`] cells is the same walker's
-/// earlier step and is left out.
+/// perceives: those whose source cell is not visible, each placed at its [`rough_place`], or
+/// footsteps at their own cell for an `exact` listener (Watchful). A sound followed by one of
+/// the same kind within [`ONE_SOURCE`] cells is the same walker's earlier step and is left out.
 pub(crate) fn perceive(
     level: &LevelState,
     content: &Content,
-    heard: &[Heard],
-    threshold: u16,
+    (heard, threshold, exact): (&[Heard], u16, bool),
     turn: u64,
     hidden: impl Fn(Pos) -> bool,
 ) -> Vec<PerceivedSound> {
@@ -513,9 +512,14 @@ pub(crate) fn perceive(
         .filter(|&(i, h)| hidden(h.at) && !followed(i))
         .map(|(_, h)| {
             let volume = Volume::of(h.loudness, threshold);
+            let pos = if exact && h.kind == SoundKind::Footsteps {
+                h.at
+            } else {
+                rough_place(level, content, h.at, volume, turn, &hidden)
+            };
             PerceivedSound {
                 kind: h.kind,
-                pos: rough_place(level, content, h.at, volume, turn, &hidden),
+                pos,
                 volume,
             }
         })

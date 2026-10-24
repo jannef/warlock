@@ -82,40 +82,42 @@ id = "roc"
 name = "Roc"
 description = "The mightiest of fliers, who soared so high it lost sight of the gate: powerful and proud, and not one for details."
 stats = { strength = 2, intelligence = -1 }
-grants = ["rocs_strength", "heedless"]
+grants = ["rocs_strength", "eyes_of_the_heights", "heedless"]
 
 [[animal]]
 id = "griffin"
 name = "Griffin"
 description = "Landed on every hilltop on the way to watch over its gold: noble and watchful, and stiff in its ways."
 stats = { willpower = 1, presence = 1, dexterity = -1 }
+grants = ["hoard_sense", "watchful", "set_in_ways"]
 
 [[animal]]
 id = "sphinx"
 name = "Sphinx"
 description = "Stopped to set every racer it met a riddle, and lost the morning to those who answered: wise and cunning, and slow to move."
 stats = { intelligence = 2, dexterity = -1 }
-grants = ["riddlers_mind", "ponderous"]
+grants = ["riddlers_mind", "old_lore", "ponderous"]
 
 [[animal]]
 id = "phoenix"
 name = "Phoenix"
 description = "Burned to ash in the noon of the Glass Waste and rose again at dusk to finish: hard to keep down and bright to behold, but frail between fires."
 stats = { toughness = 1, presence = 1, strength = -1 }
-grants = ["rise_from_ashes"]
+grants = ["rise_from_ashes", "inner_light", "frail"]
 
 [[animal]]
 id = "kraken"
 name = "Kraken"
 description = "Could not leave the water, so swam the long way round by sea and arrived on the evening tide: strong and deep, and ungainly ashore."
 stats = { strength = 1, willpower = 1, dexterity = -1 }
+grants = ["grasping_arms", "of_the_deep", "ungainly_ashore"]
 
 [[animal]]
 id = "barghest"
 name = "Barghest"
 description = "The black hound who ran last on purpose, to see every racer through, and was given the last year for it: loyal and steadfast, and grim company."
 stats = { toughness = 1, willpower = 1, presence = -1 }
-grants = ["grim_company"]
+grants = ["hounds_nose", "gatekeeper", "grim_company"]
 
 # The elements, in the order the years go through them.
 

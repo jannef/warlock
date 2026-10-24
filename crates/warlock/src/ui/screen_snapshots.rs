@@ -338,6 +338,15 @@ const CASES: &[Case] = &[
         screen: Some("eat"),
         ..BASE
     },
+    // Born under the Barghest (seed 21): Hound's nose says how fresh the food smells.
+    Case {
+        name: "eat-screen-smell",
+        seed: Some(21),
+        character: Some("human,male,warrior"),
+        run: true,
+        screen: Some("eat"),
+        ..BASE
+    },
     Case {
         name: "item-description",
         actions: "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*4 pickup \

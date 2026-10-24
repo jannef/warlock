@@ -154,6 +154,8 @@ pub struct TalentMods {
     pub silent_doors: bool,
     /// How much fainter it hears (its hearing threshold, lower).
     pub hearing: i32,
+    /// It places the footsteps it hears exactly.
+    pub exact_footsteps: bool,
     /// Percent more light its eyes need (negative: less).
     pub threshold_percent: i32,
     /// Cells farther its darkvision reaches.
@@ -164,8 +166,12 @@ pub struct TalentMods {
     pub scent: Vec<(StatusId, i32)>,
     /// Cells farther it sees on the overworld at night.
     pub night_sight: i32,
+    /// Cells farther it sees on the overworld by day.
+    pub day_sight: i32,
     /// The light preset its lantern burns as, if not the lantern's own.
     pub lantern_light: Option<LightId>,
+    /// The light it sheds wherever it is, if any.
+    pub inner_light: Option<LightId>,
     /// Damage its attacks do a creature that has not seen it, after Protection.
     pub ambush: Option<Dice>,
     /// Percent more carrying limit.
@@ -202,6 +208,8 @@ pub struct TalentMods {
     pub hunger_percent: i32,
     /// Percent more sickness from rotten food (negative: less).
     pub rot_harm_percent: i32,
+    /// It smells how fresh food is.
+    pub smell_rot: bool,
     /// Exertion burns nothing.
     pub no_exertion: bool,
     /// A meal never leaves it Bloated.
@@ -247,6 +255,8 @@ pub struct TalentMods {
     pub identify_carried: Option<u32>,
     /// Grades finer the loose gems it finds are cut.
     pub gem_cut: u8,
+    /// Percent more often its finds are loose gems.
+    pub gem_find_percent: i32,
     /// It notices hidden things in passing, with this much added; `None`: only as its skills
     /// and race allow.
     pub notice: Option<i32>,
@@ -350,6 +360,8 @@ pub struct TalentMods {
     pub unarmed_die: Option<u8>,
     /// Percent less of a stance's Dodge penalty, by stance.
     pub stance_dodge: Vec<(CombatStance, i32)>,
+    /// Changing its combat stance costs an action.
+    pub stance_costs: bool,
     /// It never catches a disease.
     pub disease_immune: bool,
     /// The stats no status lowers.
@@ -379,6 +391,8 @@ pub struct TalentMods {
     pub quivering_palm: Option<QuiveringPalm>,
     /// Hit points every level past `hp_level` adds beyond a level's own, if it has Hardened.
     pub hardened: Option<i32>,
+    /// Percent more maximum hit points (negative: fewer).
+    pub max_hp_percent: i32,
     /// Rise from the ashes, if it has it.
     pub rise: Option<Rise>,
     /// Its rising brings it back whole (Reborn whole).
@@ -594,11 +608,13 @@ impl TalentMods {
                 per_levels,
                 at_least,
             } => self.hp_per_levels.push((per_levels, at_least)),
+            TalentEffect::MaxHpPercent { value } => self.max_hp_percent += value,
             TalentEffect::Stat { stat, value } => self.stats[stat] += value,
             TalentEffect::HealingPercent { value } => self.healing_percent += value,
             TalentEffect::FootstepsPercent { value } => self.footsteps_percent += value,
             TalentEffect::SilentDoors => self.silent_doors = true,
             TalentEffect::Hearing { value } => self.hearing += value,
+            TalentEffect::ExactFootsteps => self.exact_footsteps = true,
             TalentEffect::ThresholdPercent { value } => self.threshold_percent += value,
             TalentEffect::Darkvision { value } => self.darkvision += value,
             TalentEffect::SeesUv => self.sees_uv = true,
@@ -608,8 +624,12 @@ impl TalentMods {
                 }
             }
             TalentEffect::NightSight { value } => self.night_sight += value,
+            TalentEffect::DaySight { value } => self.day_sight += value,
             TalentEffect::LanternLight { light } => {
                 self.lantern_light = content.light_id(&light).or(self.lantern_light);
+            }
+            TalentEffect::InnerLight { light } => {
+                self.inner_light = content.light_id(&light).or(self.inner_light);
             }
             TalentEffect::Ambush { dice } => self.ambush = Some(dice),
             TalentEffect::CarryPercent { value } => self.carry_percent += value,
@@ -634,6 +654,7 @@ impl TalentMods {
             TalentEffect::SunHealing { value } => self.sun_healing += value,
             TalentEffect::HungerPercent { value } => self.hunger_percent += value,
             TalentEffect::RotHarmPercent { value } => self.rot_harm_percent += value,
+            TalentEffect::SmellRot => self.smell_rot = true,
             TalentEffect::NoExertion => self.no_exertion = true,
             TalentEffect::NoBloating => self.no_bloating = true,
             TalentEffect::CorpseStatsPercent { value } => self.corpse_stats_percent += value,
@@ -660,6 +681,7 @@ impl TalentMods {
                 self.identify_carried = Some(self.identify_carried.map_or(hours, |h| h.min(hours)));
             }
             TalentEffect::GemCut { value } => self.gem_cut = self.gem_cut.saturating_add(value),
+            TalentEffect::GemFindPercent { value } => self.gem_find_percent += value,
             TalentEffect::Notice { value } => {
                 self.notice = Some(self.notice.unwrap_or(0) + value);
             }
@@ -685,6 +707,7 @@ impl TalentMods {
                     T::Riposte => self.free_blows.riposte = true,
                     T::Opportunist => self.free_blows.opportunist = true,
                     T::Flurry => self.free_blows.flurry = true,
+                    T::Gatekeeper => self.free_blows.gatekeeper = true,
                 }
             }
             TalentEffect::Weapon {
@@ -819,6 +842,7 @@ impl TalentMods {
             TalentEffect::UnarmedDie { sides } => {
                 self.unarmed_die = Some(self.unarmed_die.map_or(sides, |s| s.max(sides)));
             }
+            TalentEffect::StanceCosts => self.stance_costs = true,
             TalentEffect::RiseFromAshes {
                 hp_percent,
                 status,
