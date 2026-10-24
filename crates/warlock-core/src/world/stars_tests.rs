@@ -432,7 +432,7 @@ fn lucky_seed(spec: &str) -> u64 {
 
 #[test]
 fn the_lucky_captures_seed_is_born_on_a_lucky_day() {
-    // tests/golden/manifest/character.toml's `sign-screen-lucky` types this seed on New run.
+    // A seed that gives the showcase's human the Water Kraken on the 11th, the Deep One.
     assert_eq!(lucky_seed("human,female,thief"), 440);
     let w = World::new(BUILTIN.clone(), "showcase", Some(440)).expect("world");
     let c = w.character().expect("a character");
