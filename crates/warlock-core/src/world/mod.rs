@@ -1080,6 +1080,8 @@ mod style_tests;
 #[cfg(test)]
 mod sun_tests;
 #[cfg(test)]
+mod talent_arms_tests;
+#[cfg(test)]
 mod talent_tests;
 #[cfg(test)]
 mod talk_tests;

@@ -779,6 +779,16 @@ impl World {
         harm: Harm,
         events: &mut Vec<Event>,
     ) -> bool {
+        // Talents (spec §8 "Talents": Immune to pain): a hit does less after the soak, never
+        // below 1; what is not a hit (a status, starving) is not eased.
+        let damage = match harm {
+            Harm::Actor(_) | Harm::Trap(_) if damage > 1 => {
+                let pain =
+                    (self.state.actors.get(&id)).map_or(0, |a| a.talent_mods(&self.content).pain);
+                (damage - pain).max(1)
+            }
+            _ => damage,
+        };
         let Some(actor) = self.state.actors.get_mut(&id) else {
             return false;
         };

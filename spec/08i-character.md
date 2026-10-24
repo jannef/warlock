@@ -264,6 +264,26 @@ developer notes (CLAUDE.md, `docs/dev/`).
     bonus), `free_blow` (a switch of `World::free_blows_of`). The first twelve: Healthy, Hardy,
     Dodge, Brawn, Silent feet, Keen ears, Pack mule, Long strider, Lean, Good learner, Alert,
     Thick skin.
+  - **Weaponcraft and Guard** (#238): `weapon` adds to the benefits of the chosen weapon skill
+    or style (no `role`) or of every skill of a role, read in `Actor::benefit`, so every
+    attack, Defence, and price that reads a skill's benefits reads it: Weapon focus (+1 to hit),
+    Weapon specialization (+2 damage), Improved critical (threat one roll wider), Stylist (the
+    style's benefits one rank higher, never past 10, and only for a rank held), Two-weapon
+    training (both two-weapon penalties eased by 2), Shield expert (Shield +1; Sword and
+    Board's free bash 10 more likely where it has one), Deadly aim (+2 damage with shots),
+    Thrower (+1 damage and 10 % cheaper throws), Rapid reload (reloading 25 % cheaper);
+    `launcher_range` and `throw_range` (Far shot: +2 and +1 cells); `max_dex` (Armour
+    training: worn armour's Dexterity cap +1 a rank); `deflection` (Deflection +1);
+    `protection` (Heavy armour mastery: +1 while the armour piece worn with the most
+    Protection has 3 or more; Shield wall: +1 while holding a shield); `stance_to_hit` and
+    `flee_percent` (Stalwart: the defensive stance's to-hit penalty gone; Unflinching: the
+    coward's halved, rounded toward 0, and fleeing steps 10 % cheaper again); `pain` (Immune
+    to pain: a hit, a blow, shot, throw, or trap, does 1 less after the soak, never below 1;
+    a status's or starving's harm is no hit); `resist` (Elemental ward: 25 % a rank against
+    the chosen element, any damage type that is no physical kind, summed and capped with the
+    gear's). A weapon-skill choice is a skill that attacks: never shield blocking (it only
+    defends) nor a style (chosen as a style). Steady hand waits for the ranger's focus
+    (#225).
   - **Vigour, Might, Finesse** (#237; the design's §7.5 but for the two that wait for class
     resources, Battle trance and Inner calm): `resting_percent` (Fast healer: resting's pace
     half again, `World::healing_rate`); `second_wind` (Second wind, the first **active** talent:
