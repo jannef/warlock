@@ -1,0 +1,8 @@
+[[talent]]
+id = "winter_born"
+name = "Winter-born"
+tree = "wayfarer"
+description = "You know the ways of ice: it holds you as if you carried nothing, and you climb out onto it quickly."
+needs = { stats = { toughness = 12 } }
+effects = [{ kind = "light_on_ice" }, { kind = "climb_percent", value = -50 }]
+systems = ["ice"]

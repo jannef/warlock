@@ -13,6 +13,7 @@ use super::{
     CombatStance, Content, ContentError, MAX_LEVEL, MAX_RANK, Role, WeaponSkillId, duplicate_id,
 };
 use crate::alignment::Requirement;
+use crate::dice::Dice;
 use crate::skills::SkillId;
 use crate::stats::{PerStat, Stat};
 use serde::Deserialize;
@@ -180,6 +181,24 @@ pub enum TalentEffect {
     SilentDoors,
     /// The actor hears sounds this much fainter (its hearing threshold, lower).
     Hearing { value: i32 },
+    /// Its eyes need this percent more light to see by (negative: less; Night eyes), on the
+    /// vision profile's threshold ([`crate::world::WorldState::eyes`]).
+    ThresholdPercent { value: i32 },
+    /// Its darkvision reaches this many cells farther (from none: this far).
+    Darkvision { value: i32 },
+    /// Its eyes see ultraviolet light.
+    SeesUv,
+    /// It sees creatures suffering `status` (an id in `data/status.toml`) in its line of sight
+    /// within `radius` cells however dark it is (Blood scent).
+    Scent { status: String, radius: i32 },
+    /// Its overworld sight at night reaches this many cells farther.
+    NightSight { value: i32 },
+    /// Its lantern burns as the light preset `light` (an id in `data/lights.toml`;
+    /// Lamplighter).
+    LanternLight { light: String },
+    /// Its blows and shots at a creature that has not seen it do `dice` more damage, after
+    /// Protection (Ambusher).
+    Ambush { dice: Dice },
     /// The carrying limit, this percent more.
     CarryPercent { value: i32 },
     /// The carrying limit, this many kilograms more (on top of what magic items add).
@@ -188,6 +207,24 @@ pub enum TalentEffect {
     WeightlessCoins,
     /// Journeys on the overworld take this percent more time (negative: quicker).
     TravelPercent { value: i32 },
+    /// A step onto any of `terrains` costs what a step onto `like` does (ids in
+    /// `data/terrain.toml`; Pathfinder, Swimmer, Marsh walker).
+    TerrainAs { terrains: Vec<String>, like: String },
+    /// A plunge through ice into the water never hurts it (Swimmer).
+    PlungeProof,
+    /// Ice holds it as if it carried nothing (Winter-born).
+    LightOnIce,
+    /// Climbing out of the water onto ice costs this percent more (negative: less).
+    ClimbPercent { value: i32 },
+    /// Wading never gives it a disease (Marsh walker).
+    WadingProof,
+    /// Creatures of animal factions are neutral to it until it attacks one of that type
+    /// (Beast-friend).
+    BeastFriend,
+    /// It knows the weather of the next `hours` hours under the open sky (Weather-wise).
+    Forecast { hours: u8 },
+    /// Hit points come back this percent faster under the open sun (Sun-blessed).
+    SunHealing { value: i32 },
     /// Hunger burns this percent faster (negative: slower).
     HungerPercent { value: i32 },
     /// Exerting oneself (a blow, a shot, a throw) burns no extra nutrition.
@@ -403,6 +440,8 @@ impl TalentEffect {
             | TalentEffect::DoorKick { value }
             | TalentEffect::BurdenDex { value }
             | TalentEffect::MissileDodge { value }
+            | TalentEffect::Darkvision { value }
+            | TalentEffect::NightSight { value }
             | TalentEffect::CarryKg { value }
             | TalentEffect::Checks { value, .. }
             | TalentEffect::CriticalConfirm { value } => bonus(*value),
@@ -517,6 +556,9 @@ impl TalentEffect {
             | TalentEffect::TwoHandedPrice { value }
             | TalentEffect::SpeedPercent { value }
             | TalentEffect::SpellDamagePercent { value }
+            | TalentEffect::ThresholdPercent { value }
+            | TalentEffect::ClimbPercent { value }
+            | TalentEffect::SunHealing { value }
             | TalentEffect::QuestXpPercent { value }
             | TalentEffect::QuestGoldPercent { value }
             | TalentEffect::FavourPercent { value }
@@ -524,6 +566,38 @@ impl TalentEffect {
             | TalentEffect::SellPercent { value }
             | TalentEffect::MissileBreaks { value }
             | TalentEffect::BurdenEase { value } => percent(*value),
+            TalentEffect::Scent { status: id, radius } => {
+                if !(1..=20).contains(radius) {
+                    return Err("`scent`: radius is 1 to 20".into());
+                }
+                status(id)
+            }
+            TalentEffect::LanternLight { light } => {
+                if !content.light_presets().is_empty() && content.light_id(light).is_none() {
+                    return Err(format!("names an unknown light preset `{light}`"));
+                }
+                Ok(())
+            }
+            TalentEffect::Ambush { dice } => {
+                if dice.is_zero() {
+                    return Err("`ambush`: dice is not 0".into());
+                }
+                Ok(())
+            }
+            TalentEffect::TerrainAs { terrains, .. } => {
+                // The terrain ids are checked once the terrain has loaded
+                // ([`TalentBook::check_terrain`]).
+                if terrains.is_empty() {
+                    return Err("`terrain_as`: terrains names at least one".into());
+                }
+                Ok(())
+            }
+            TalentEffect::Forecast { hours } => {
+                if !(1..=24).contains(hours) {
+                    return Err("`forecast`: hours is 1 to 24".into());
+                }
+                Ok(())
+            }
             TalentEffect::StatusEases { status: id, value } => {
                 status(id)?;
                 percent(*value)
@@ -573,6 +647,11 @@ impl TalentEffect {
             | TalentEffect::Clotting
             | TalentEffect::SureStep
             | TalentEffect::PitProof
+            | TalentEffect::SeesUv
+            | TalentEffect::PlungeProof
+            | TalentEffect::LightOnIce
+            | TalentEffect::WadingProof
+            | TalentEffect::BeastFriend
             | TalentEffect::WeightlessCoins
             | TalentEffect::IdentifyTrades
             | TalentEffect::ItemWorth
@@ -811,6 +890,31 @@ impl TalentBook {
     /// Every talent of `tree`, in file order.
     pub fn of_tree(&self, tree: TreeId) -> impl Iterator<Item = (TalentId, &TalentDef)> {
         self.iter().filter(move |(_, t)| t.tree == tree)
+    }
+
+    /// Whether the terrain the effects name (`terrain_as`) is in `content`, once its terrain has
+    /// loaded (after the talents; content without terrain has nothing to check them by).
+    pub(super) fn check_terrain(&self, content: &Content) -> Result<(), ContentError> {
+        if content.terrain_defs().is_empty() {
+            return Ok(());
+        }
+        for (_, def) in self.iter() {
+            let effects = (def.effects.iter()).chain(def.ranks.iter().flat_map(|r| &r.effects));
+            for effect in effects {
+                let TalentEffect::TerrainAs { terrains, like } = effect else {
+                    continue;
+                };
+                if let Some(id) =
+                    (terrains.iter().chain([like])).find(|id| content.terrain_id(id).is_none())
+                {
+                    return Err(ContentError::new(
+                        &format!("data/talents/{}.toml", def.id),
+                        format!("talent `{}` names an unknown terrain `{id}`", def.id),
+                    ));
+                }
+            }
+        }
+        Ok(())
     }
 
     /// Every talent with its id, tree by tree in display order, each tree in file order: the
@@ -1533,6 +1637,29 @@ needs = { stats = { toughness = 17 }, talents = { healthy = 1 } }
                 .contains("`ranks = 2` but 1")
         );
         assert!(bad("").contains("does nothing"));
+        // The Shadow and Wayfarer effects name what exists (#239).
+        assert!(
+            bad("effects = [{ kind = \"terrain_as\", terrains = [\"lava\", \"bog\"], like = \"floor\" }]")
+                .contains("unknown terrain `bog`")
+        );
+        assert!(
+            bad("effects = [{ kind = \"terrain_as\", terrains = [], like = \"floor\" }]")
+                .contains("at least one")
+        );
+        assert!(
+            bad("effects = [{ kind = \"lantern_light\", light = \"sun\" }]")
+                .contains("unknown light preset")
+        );
+        assert!(
+            bad("effects = [{ kind = \"scent\", status = \"bleeding\", radius = 0 }]")
+                .contains("radius is 1 to 20")
+        );
+        assert!(
+            bad("effects = [{ kind = \"scent\", status = \"sniffles\", radius = 4 }]")
+                .contains("unknown status")
+        );
+        assert!(bad("effects = [{ kind = \"forecast\", hours = 0 }]").contains("1 to 24"));
+        assert!(bad("effects = [{ kind = \"ambush\", dice = \"0\" }]").contains("not 0"));
         let no_system = "[[talent]]\nid = \"x\"\nname = \"X\"\ntree = \"vigour\"\ndescription = \"d\"\n\
                          effects = [{ kind = \"dodge\", value = 1 }]\nsystems = [\"nope\"]\n";
         assert!(

@@ -1,0 +1,8 @@
+[[talent]]
+id = "owl_eyes"
+name = "Owl eyes"
+tree = "shadow"
+description = "Your keen eyes learn the dark: you see two cells around you however dark it is."
+needs = { eyes = "low_light", level = 9 }
+effects = [{ kind = "darkvision", value = 2 }]
+systems = ["vision"]

@@ -34,6 +34,9 @@ pub(super) struct FactionSpec {
     /// Factions this one is hostile to (and that are hostile to it).
     #[serde(default)]
     pub hostile: Vec<String>,
+    /// Animals (Beast-friend's, spec §8 "Talents").
+    #[serde(default)]
+    pub animal: bool,
 }
 
 #[derive(Deserialize)]
@@ -47,6 +50,8 @@ pub(super) struct FactionFile {
 pub struct FactionDef {
     pub id: String,
     pub name: String,
+    /// Its creatures are animals: a Beast-friend's neutral friends (spec §8 "Talents").
+    pub animal: bool,
 }
 
 /// Every faction and the hostility between them.
@@ -97,6 +102,7 @@ impl Factions {
             .map(|s| FactionDef {
                 id: s.id,
                 name: s.name,
+                animal: s.animal,
             })
             .collect();
         Ok(Self { defs, ids, hostile })

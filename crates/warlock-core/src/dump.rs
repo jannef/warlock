@@ -17,6 +17,7 @@ use crate::noise::{PerceivedSound, SoundKind, Volume};
 use crate::object::format_weight;
 use crate::perception::{CellView, PerceivedLight, PerceptionView};
 use crate::stats::Stat;
+use crate::weather::Weather;
 use crate::world::{Cause, World};
 use serde_json::{Value, json};
 use std::fmt::Write;
@@ -92,8 +93,9 @@ pub enum Layer {
     /// Not a map: the player's progression (spec §8 "Talents"): the choices a level still asks
     /// for (`due level 3: 3 skill rolls, 1 talent`), the talents they may take now by id with the choices
     /// each may be taken for (`takeable healthy, weapon_focus:{bows,slings}`), and the creature
-    /// types whose first kill has paid (`discovered kobold, rat`), and the stat training marks
-    /// the player holds (`stat marks St 3, To 1`). **Dev-only.**
+    /// types whose first kill has paid (`discovered kobold, rat`), the animal types a
+    /// Beast-friend attacked (`empathy broken rat`), and the stat training marks the player holds
+    /// (`stat marks St 3, To 1`). **Dev-only.**
     Progress,
     /// The level's special rooms (spec §7 "Special rooms"; ground truth): the terrain, with the
     /// plain ground of each special room drawn as its effect's `mark`, then a line per room
@@ -639,6 +641,13 @@ fn progress_rows(world: &World) -> Vec<String> {
     if !kills.is_empty() {
         rows.push(format!("discovered {}", kills.join(", ")));
     }
+    // Beast-friend: the animal types the player attacked, theirs to fight again.
+    let broken: Vec<&str> = (progress.empathy_broken.iter())
+        .map(String::as_str)
+        .collect();
+    if !broken.is_empty() {
+        rows.push(format!("empathy broken {}", broken.join(", ")));
+    }
     let marks = &world.state().player().stat_marks;
     let marked: Vec<String> = (marks.iter())
         .filter(|&(_, n)| n > 0)
@@ -937,14 +946,21 @@ fn rows(width: i32, height: i32, glyph: impl Fn(Pos) -> char) -> Vec<String> {
         .collect()
 }
 
-/// One-line summary used as the dump header; under the open sky it names the weather, and it
-/// has the temperature where the player is (and `dazzled` while strong light dazzles them).
+/// One-line summary used as the dump header; under the open sky it names the weather (and the
+/// weather coming, `then rain`, for a Weather-wise player), and it has the temperature where the
+/// player is (and `dazzled` while strong light dazzles them).
 fn summary(world: &World) -> String {
     let view = world.perception();
     // Spelled as in the JSON dump (`heavy_rain`).
+    let spelled = |w: Weather| serde_json::to_value(w).ok()?.as_str().map(str::to_string);
     let weather = (view.weather())
-        .and_then(|w| serde_json::to_value(w).ok())
-        .and_then(|v| v.as_str().map(|w| format!(" weather {w}")))
+        .and_then(spelled)
+        .map(|w| format!(" weather {w}"))
+        .unwrap_or_default();
+    // And the weather coming, for a Weather-wise player.
+    let forecast = (view.forecast())
+        .and_then(spelled)
+        .map(|w| format!(" then {w}"))
         .unwrap_or_default();
     let temperature = view.temperature();
     let (hp, max) = view.own_hp();
@@ -955,7 +971,7 @@ fn summary(world: &World) -> String {
         .map_or(String::new(), |h| format!(" hunger {}", h.id()));
     let dazzled = if view.dazzled() { " dazzled" } else { "" };
     format!(
-        "turn {} time {} level {} viewer {} hp {hp}/{max}{dead}{hunger}{dazzled}{weather} \
+        "turn {} time {} level {} viewer {} hp {hp}/{max}{dead}{hunger}{dazzled}{weather}{forecast} \
          temperature {temperature} hash {:016x}",
         world.turn(),
         world.time(),
@@ -1163,6 +1179,10 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "messages": messages,
         "layers": layer_map,
     });
+    // The weather coming, which a Weather-wise player knows (left out otherwise).
+    if let Some(coming) = view.forecast() {
+        out["forecast"] = json!(coming);
+    }
     if include_state {
         out["state"] = serde_json::to_value(world.state()).expect("state serializes");
     }

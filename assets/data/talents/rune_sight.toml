@@ -1,0 +1,8 @@
+[[talent]]
+id = "rune_sight"
+name = "Rune sight"
+tree = "shadow"
+description = "You see the light of runes and other things that glow beyond violet."
+needs = { stats = { intelligence = 14 }, level = 15 }
+effects = [{ kind = "sees_uv" }]
+systems = ["vision"]

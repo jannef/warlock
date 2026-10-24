@@ -221,6 +221,21 @@ pub fn weather_at(
     block.weather(seed, climate)
 }
 
+/// The weather coming within `hours` of `time` (Weather-wise; spec §8 "Talents"): the first
+/// weather other than the one at `time`, looked for every ten minutes; `None` when it stays.
+pub fn forecast(
+    seed: u64,
+    time: GameTime,
+    climate: &Climate,
+    over: Option<&Override>,
+    hours: u8,
+) -> Option<Weather> {
+    let now = weather_at(seed, time, climate, over);
+    (1..=u64::from(hours) * 6)
+        .map(|k| weather_at(seed, time + Duration::minutes(10 * k), climate, over))
+        .find(|&w| w != now)
+}
+
 /// The weather at `time` and its clouds; see [`weather_at`].
 pub fn conditions(
     seed: u64,

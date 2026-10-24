@@ -13,6 +13,10 @@ leaves everyone alone, and everyone leaves it alone. A faction is neutral to its
 
 {{#include generated/factions.md}}
 
+**Animals** (the factions marked so above) leave a character with the **Beast-friend**
+[talent](talents.md) alone, and are left alone by them, until that character attacks one: from
+then on creatures of that type (all giant rats, say) stand toward them as their faction does.
+
 You can tell how a creature stands toward you from what it is: look at it
 ([look mode](controls.md#look-mode)) and a hostile one is marked, as in "A giant rat (hostile,
 unhurt), on stone floor."

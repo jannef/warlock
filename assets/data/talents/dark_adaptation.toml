@@ -1,0 +1,8 @@
+[[talent]]
+id = "dark_adaptation"
+name = "Dark adaptation"
+tree = "shadow"
+description = "Your darkvision reaches two cells farther."
+needs = { eyes = "darkvision" }
+effects = [{ kind = "darkvision", value = 2 }]
+systems = ["vision"]

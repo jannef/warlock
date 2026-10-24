@@ -13,7 +13,10 @@ one file per creature named by its id (`kobold.toml`; the field documentation is
 `README.toml`), a table directory read in path order: see "Content directories" in
 `docs/dev/content.md`. Stance comes from types:
 `Content::stance(creature, creature)`, `World::stance(actor, actor)`, and for presentation only
-`PerceptionView::stance(seen actor)` (look mode's "(hostile)"). The AI is `world/ai.rs`
+`PerceptionView::stance(seen actor)` (look mode's "(hostile)"). Between the player and a creature,
+the Beast-friend talent makes `animal` factions neutral until the player attacks one of the type
+(`world/beast_friend.rs::befriended`, read by `World::stance`, the AI's `nearest_hostile_in_sight`,
+and `PerceptionView::stance`; `docs/dev/progression.md`). The AI is `world/ai.rs`
 (look → fight → search the last seen spot → look into the newest unseen noise → back to the post →
 patrol), paths `world/path.rs` (A*, fixed tie-breaks), and per-creature memory `Mind` on `Actor`
 (saved, hashed). Creature sight is `sight.rs`: the player's rules computed per creature, only for

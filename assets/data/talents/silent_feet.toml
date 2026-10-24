@@ -5,7 +5,7 @@ tree = "shadow"
 ranks = 2
 description = "Your footsteps are a fifth quieter for each rank; at the second, the doors you open and close make no sound."
 effects = [{ kind = "footsteps_percent", value = -20 }]
-systems = ["stealth"]
+systems = ["stealth", "hearing"]
 
 [[talent.rank]]
 needs = { stats = { dexterity = 12 } }

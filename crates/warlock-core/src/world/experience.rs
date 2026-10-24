@@ -32,11 +32,15 @@ pub struct Progress {
     /// The choices levels still ask for, the lowest level's first (`world/talent.rs`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub(crate) due: Vec<Due>,
+    /// The creature types (by id) of animal factions a Beast-friend has attacked, which stand
+    /// toward them as their faction does again (`world/beast_friend.rs`).
+    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+    pub(crate) empathy_broken: BTreeSet<String>,
 }
 
 impl Progress {
     pub fn is_empty(&self) -> bool {
-        self.discovered.is_empty() && self.due.is_empty()
+        self.discovered.is_empty() && self.due.is_empty() && self.empathy_broken.is_empty()
     }
 }
 

@@ -16,10 +16,11 @@
 use crate::alignment::Band;
 use crate::character::Character;
 use crate::content::{
-    Benefit, Choice, CombatStance, Content, DamageTypeId, MAX_RANK, Need, Role, StatusId,
-    TalentDef, TalentEffect, TalentId,
+    Benefit, Choice, CombatStance, Content, DamageTypeId, LightId, MAX_RANK, Need, Role, StatusId,
+    TalentDef, TalentEffect, TalentId, TerrainId,
 };
 use crate::damage::Kinds;
+use crate::dice::Dice;
 use crate::skills::{SkillId, Skills};
 use crate::stats::{PerStat, Stat, Stats};
 use crate::weapon_skills::WeaponSkills;
@@ -129,6 +130,20 @@ pub struct TalentMods {
     pub silent_doors: bool,
     /// How much fainter it hears (its hearing threshold, lower).
     pub hearing: i32,
+    /// Percent more light its eyes need (negative: less).
+    pub threshold_percent: i32,
+    /// Cells farther its darkvision reaches.
+    pub darkvision: i32,
+    /// Its eyes see ultraviolet light.
+    pub sees_uv: bool,
+    /// Statuses whose sufferers it sees in the dark, each within a radius: `(status, radius)`.
+    pub scent: Vec<(StatusId, i32)>,
+    /// Cells farther it sees on the overworld at night.
+    pub night_sight: i32,
+    /// The light preset its lantern burns as, if not the lantern's own.
+    pub lantern_light: Option<LightId>,
+    /// Damage its attacks do a creature that has not seen it, after Protection.
+    pub ambush: Option<Dice>,
     /// Percent more carrying limit.
     pub carry_percent: i32,
     /// Kilograms more carrying limit.
@@ -137,6 +152,22 @@ pub struct TalentMods {
     pub weightless_coins: bool,
     /// Percent more time an overworld journey takes (negative: quicker).
     pub travel_percent: i32,
+    /// Terrain it steps onto at another's price: `(terrain, priced as)`.
+    pub terrain_as: Vec<(TerrainId, TerrainId)>,
+    /// A plunge through ice never hurts it.
+    pub plunge_proof: bool,
+    /// Ice holds it as if it carried nothing.
+    pub light_on_ice: bool,
+    /// Percent more climbing out onto ice costs (negative: less).
+    pub climb_percent: i32,
+    /// Wading never gives it a disease.
+    pub wading_proof: bool,
+    /// Creatures of animal factions are neutral to it until it attacks one of their type.
+    pub beast_friend: bool,
+    /// The hours ahead whose weather it knows (0: none).
+    pub forecast: u8,
+    /// Percent faster hit points come back under the open sun.
+    pub sun_healing: i32,
     /// Percent faster hunger burns (negative: slower).
     pub hunger_percent: i32,
     /// Exertion burns nothing.
@@ -353,10 +384,36 @@ impl TalentMods {
             TalentEffect::FootstepsPercent { value } => self.footsteps_percent += value,
             TalentEffect::SilentDoors => self.silent_doors = true,
             TalentEffect::Hearing { value } => self.hearing += value,
+            TalentEffect::ThresholdPercent { value } => self.threshold_percent += value,
+            TalentEffect::Darkvision { value } => self.darkvision += value,
+            TalentEffect::SeesUv => self.sees_uv = true,
+            TalentEffect::Scent { status, radius } => {
+                if let Some(status) = content.status_id(&status) {
+                    self.scent.push((status, radius));
+                }
+            }
+            TalentEffect::NightSight { value } => self.night_sight += value,
+            TalentEffect::LanternLight { light } => {
+                self.lantern_light = content.light_id(&light).or(self.lantern_light);
+            }
+            TalentEffect::Ambush { dice } => self.ambush = Some(dice),
             TalentEffect::CarryPercent { value } => self.carry_percent += value,
             TalentEffect::CarryKg { value } => self.carry_kg += value,
             TalentEffect::WeightlessCoins => self.weightless_coins = true,
             TalentEffect::TravelPercent { value } => self.travel_percent += value,
+            TalentEffect::TerrainAs { terrains, like } => {
+                if let Some(like) = content.terrain_id(&like) {
+                    let terrains = terrains.iter().filter_map(|t| content.terrain_id(t));
+                    self.terrain_as.extend(terrains.map(|t| (t, like)));
+                }
+            }
+            TalentEffect::PlungeProof => self.plunge_proof = true,
+            TalentEffect::LightOnIce => self.light_on_ice = true,
+            TalentEffect::ClimbPercent { value } => self.climb_percent += value,
+            TalentEffect::WadingProof => self.wading_proof = true,
+            TalentEffect::BeastFriend => self.beast_friend = true,
+            TalentEffect::Forecast { hours } => self.forecast = self.forecast.max(hours),
+            TalentEffect::SunHealing { value } => self.sun_healing += value,
             TalentEffect::HungerPercent { value } => self.hunger_percent += value,
             TalentEffect::NoExertion => self.no_exertion = true,
             TalentEffect::XpPercent { value } => self.xp_percent += value,

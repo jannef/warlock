@@ -3,7 +3,7 @@
 use super::order;
 use super::text::{article, capital, yes};
 use std::fmt::Write as _;
-use warlock_core::content::{AffixKind, Content, LightId};
+use warlock_core::content::{AffixKind, Content, LightId, TalentEffect};
 
 pub(super) fn vision(content: &Content) -> String {
     let mut out = String::from(
@@ -79,6 +79,21 @@ fn light_name(content: &Content, id: LightId) -> String {
         .any(|s| s.lantern.as_deref() == Some(preset.id.as_str()))
     {
         return "Your lantern".into();
+    }
+    let tended: Vec<&str> = (content.talents().iter())
+        .filter(|(_, t)| {
+            let effects = t
+                .effects
+                .iter()
+                .chain(t.ranks.iter().flat_map(|r| &r.effects));
+            effects
+                .into_iter()
+                .any(|e| matches!(e, TalentEffect::LanternLight { light } if *light == preset.id))
+        })
+        .map(|(_, t)| t.name.as_str())
+        .collect();
+    if !tended.is_empty() {
+        return format!("Your lantern ({})", tended.join(", "));
     }
     let affixes: Vec<&str> = (order::affixes(content, AffixKind::Prefix).into_iter())
         .chain(order::affixes(content, AffixKind::Suffix))

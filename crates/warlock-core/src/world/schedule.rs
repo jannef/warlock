@@ -181,17 +181,26 @@ impl World {
 
     /// The energy price of actor `id` stepping onto terrain `to` on the current level, slowed by
     /// its burden ([`World::burdened`]); `fleeing` ([`World::flees`]) makes it as dear as its
-    /// stance says. On the overworld its skills (survival; spec §8 "Skills") take their percent
-    /// off the journey, rounded up (at least 1).
+    /// stance says. Terrain its talents price as another's (`terrain_as`: Pathfinder's forest,
+    /// Swimmer's water) costs that terrain's step. On the overworld its skills (survival; spec §8
+    /// "Skills") take their percent off the journey, rounded up (at least 1).
     pub(super) fn step_price(&self, id: ActorId, to: &TerrainDef, fleeing: bool) -> i64 {
         let actor = &self.state.actors[&id];
+        let talents = actor.talent_mods(&self.content);
         let step = self.cost_of(id, ActionKind::Step);
         let level = self.state.current();
+        // Its talents may price the terrain as another (Pathfinder, Swimmer, Marsh walker).
+        let to = match self.content.terrain_id(&to.id) {
+            Some(t) => (talents.terrain_as.iter())
+                .find(|(from, _)| *from == t)
+                .map_or(to, |&(_, like)| self.content.terrain(like)),
+            None => to,
+        };
         let mut price = level.step_price(to, step);
         if level.kind == LevelKind::Overworld {
             price = shortened(price, actor.skill_effect(&self.content, Effect::Travel));
             // Then its talents (Long strider): a signed percent of the journey's time.
-            let percent = actor.talent_mods(&self.content).travel_percent;
+            let percent = talents.travel_percent;
             if percent != 0 {
                 price = percent_of(price, u32::try_from((100 + percent).max(1)).unwrap_or(1));
             }
@@ -199,7 +208,7 @@ impl World {
         if fleeing {
             price = percent_of(price, self.content.stance_def(actor.stance).flee_cost);
             // Then its talents (Unflinching): a signed percent of the fleeing step.
-            let percent = actor.talent_mods(&self.content).flee_percent;
+            let percent = talents.flee_percent;
             if percent != 0 {
                 price = percent_of(price, u32::try_from((100 + percent).max(1)).unwrap_or(1));
             }
