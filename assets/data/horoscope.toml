@@ -17,7 +17,7 @@
 #     stats         adjustments to the starting scores, by stat id, as in races.toml (fixed
 #                   numbers here, small); a character gets both their animal's and their element's
 #     kit           items those born under it add to their starting kit, after the class's and
-#                   the race's: lines as in classes.toml's `kit` (none so far)
+#                   the race's: lines as in classes/README.toml's `kit` (none so far)
 #
 # Signs are also flags later rules may ask about: "is this character Fire-born?", "born in the
 # year of the Manticore?".

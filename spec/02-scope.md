@@ -103,8 +103,8 @@ Build the engine and framework, not the game. Everything built is production qua
   styles
 - Skills (M20): 26 skills in data, ADOM-like; race and class train the player in some (dice),
   creatures may list theirs, and every other skill is untrained (never shown, gives nothing).
-  Values grow without a hard cap (slowly past 100) from training marks earned by meaningful
-  use (the increase rule is provisional), and the passive ones help: tumble (Dodge in Defence),
+  Values grow without a hard cap (slowly past 100) by skill rolls at each level-up, whose dice
+  are set by the training marks meaningful use earns (ADOM's ladder), and the passive ones help: tumble (Dodge in Defence),
   stealth (quieter steps and doors), listen (hearing fainter sounds), balance (less burden
   slowdown), survival (quicker journeys); a Skills screen lists the player's (§8 "Skills")
 - Weapon skills (M22): ADOM-like marks and ranks 0 to 10 in sixteen weapon categories (shield

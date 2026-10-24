@@ -58,17 +58,23 @@ fn set_stats(world: &mut World, potential: u8) {
     world.player_mut().stats = Stats::new(PerStat::splat(10), PerStat::splat(potential));
 }
 
-/// Grants the XP that takes the player to `level`, and spends any talent pick it brings.
-fn reach(world: &mut World, level: u8) {
+/// Grants the XP that takes the player to `level`: the stat checks of each level are made then,
+/// and its talent pick and skill rolls (which draw from the same stream) wait.
+fn grant(world: &mut World, level: u8) {
     let spec = world.state.character.as_ref().map(|c| &c.spec);
     let factor = Factor::of(world.content(), spec);
     let need = world.content().experience().threshold_for(level, factor);
     let more = need - world.player_xp();
     run(world, &format!("xp:{more}"));
+    assert_eq!(world.player_level(), level, "reached level {level}");
+}
+
+/// [`grant`], then spends what the levels brought.
+fn reach(world: &mut World, level: u8) {
+    grant(world, level);
     if world.due().is_some() {
         run(world, "levelup:auto");
     }
-    assert_eq!(world.player_level(), level, "reached level {level}");
 }
 
 #[test]
@@ -170,7 +176,7 @@ fn a_level_checks_each_stat_and_a_rise_uses_up_its_marks_and_says_so_in_words() 
     set_marks(&mut w, Stat::Strength, 60_000);
     set_marks(&mut w, Stat::Intelligence, 1);
     assert!(w.state.levels_rng.is_none());
-    reach(&mut w, 2);
+    grant(&mut w, 2);
     let p = w.state.player();
     assert_eq!(p.stats.score(Stat::Strength), 11);
     assert_eq!(p.stat_marks[Stat::Strength], 0, "a rise uses up the marks");
@@ -211,7 +217,7 @@ fn a_failed_check_keeps_the_marks_and_several_levels_check_once_each() {
     let mut w = world_with(BUILTIN.clone());
     set_stats(&mut w, 18);
     set_marks(&mut w, Stat::Presence, 1);
-    reach(&mut w, 4);
+    grant(&mut w, 4);
     let p = w.state.player();
     // 1 mark against a need of 50: a long shot at each of three levels.
     if p.stats.score(Stat::Presence) == 10 {
@@ -281,7 +287,7 @@ fn without_training_data_nothing_trains_and_a_level_draws_nothing() {
     w.train_stat(StatUse::Identified);
     w.train(Use::Kick);
     assert_eq!(marks(&w), PerStat::splat(0));
-    reach(&mut w, 2);
+    grant(&mut w, 2);
     assert!(w.state.levels_rng.is_none());
 }
 

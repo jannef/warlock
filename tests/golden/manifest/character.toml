@@ -12,7 +12,7 @@ screen = "character"
 window = "960x680"
 
 # The Skills screen (#132): the showcase's thief's trained skills (never an untrained one) with
-# their values and, dimmer, how near each is to its next point; the first one's description.
+# their values and, dimmer, how practised each is (its ladder step); the first one's description.
 [[golden]]
 name = "skills-screen"
 scenario = "showcase"

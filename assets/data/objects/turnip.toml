@@ -1,4 +1,4 @@
-# The commoner's supper (data/classes.toml): a turnip, worth nothing to anyone else.
+# The commoner's supper (data/classes/): a turnip, worth nothing to anyone else.
 [[object]]
 id = "turnip"
 name = "turnip"

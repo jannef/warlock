@@ -2,7 +2,7 @@
 # character has a hidden alignment score from -1000 (as evil as can be) to 1000 (as good), never
 # shown as a number: the character screen, the character creation summary, and the `stats` dump
 # name the band it falls in. A new character starts at their race's `alignment` plus their
-# class's (races.toml, classes.toml). Creatures have a fixed `alignment` instead ("good",
+# class's (races.toml, classes/). Creatures have a fixed `alignment` instead ("good",
 # "neutral", or "evil" in their files; a level legend entry may give one of its own), which the
 # player is never shown.
 #

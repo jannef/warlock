@@ -303,17 +303,8 @@ mod tests {
     #[test]
     fn kits_move_no_other_roll() {
         let mut files = ContentFiles::builtin();
-        for (path, text) in [
-            (
-                "data/races.toml",
-                include_str!("../../../assets/data/races.toml"),
-            ),
-            (
-                "data/classes.toml",
-                include_str!("../../../assets/data/classes.toml"),
-            ),
-        ] {
-            files.insert(path, &without_kits(text));
+        for table in ["races", "classes"] {
+            files.edit_table(table, without_kits);
         }
         let plain = Content::load(&files).expect("valid without kits");
         assert!(plain.classes().iter().all(|c| c.kit.is_empty()));

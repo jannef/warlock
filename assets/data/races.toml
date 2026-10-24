@@ -12,7 +12,7 @@
 #                 within -10 to 10
 #   potential     adjustments to the potentials, the same way (hidden from the player)
 #   hp            hit points (spec §8 "Combat"; default 0): a character's maximum is their
-#                 Toughness plus their race's and their class's (classes.toml)
+#                 Toughness plus their race's and their class's (classes/)
 #   alignment     the race's part of a new character's hidden alignment score (spec §8
 #                 "Alignment"; alignment.toml; -1000 evil to 1000 good, default 0), added to
 #                 their class's: a lean that never alone moves anyone out of Neutral
@@ -31,6 +31,9 @@
 #                 0 to 100; added to the class's (a skill both train sums the two)
 #   class_skill   dice added to one of the class's skills, picked from the run seed when the
 #                 character is made (default none; humans: one extra class skill)
+#   rolls         skill rolls each level gives beyond the class's (spec §8 "Skills"; 0 to 10,
+#                 default 0; humans 1). A level-up roll on a skill the race trains (`skills`)
+#                 adds 1 (classes/README.toml)
 #   hunger        how much the character needs to eat, in percent of a human (spec §8 "Hunger";
 #                 10 to 1000, default 100): game time burns their nutrition this much faster
 #   experience    how much experience a level needs, in percent (spec §8 "Experience"; 50 to
@@ -40,13 +43,13 @@
 #                 weapon_skills.toml: a number or dice, every result within 0 to 10; added to
 #                 the class's (at most 10), then each raises the skills it defaults to
 #   kit           a few racial items for the starting kit (spec §8 "Character creation"), after
-#                 the class's: lines as in classes.toml's `kit` (a string is carried; `wield`,
+#                 the class's: lines as in classes/README.toml's `kit` (a string is carried; `wield`,
 #                 `wear`, `trained`, `gender`, `magic`, and `"a|b"` work the same, `trained`
 #                 asking what the class trained)
 #
 # A new character's score in each stat is 10 (the average), plus the race's adjustment, plus the
 # gender's (male: strength +1; female: dexterity +1; other: +1 to a stat picked from the run
-# seed), plus the class's (classes.toml), plus their birth sign's animal and element
+# seed), plus the class's (classes/), plus their birth sign's animal and element
 # (horoscope.toml), kept within 1 to 40. Its potential in each stat is `base_potential` plus the
 # race's potential adjustment, within 1 to 40 and never below the starting score. Dice are rolled
 # from the run seed and the choices, so the same seed and choices make the same character.
@@ -106,6 +109,8 @@ hp = 4
 size = "medium"
 # One extra class skill: one of the class's skills, picked when the character is made.
 class_skill = "2d4+4"
+# Quick to learn: one more skill roll every level.
+rolls = 1
 hunger = 100
 experience = 100
 # No gift and no flaw: a loaf of bread, like anyone's.

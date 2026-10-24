@@ -6,7 +6,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
 
 - **Character creation** (`warlock-core/src/character.rs`; M15): a run starts as a character, a
   race (`data/races.toml`), a gender (male, female, or other), and a class
-  (`data/classes.toml`), chosen on New run (§6) or given on the command line (`--character
+  (`data/classes/`), chosen on New run (§6) or given on the command line (`--character
   dwarf,female,warrior`, §9); otherwise the scenario's character (§7). It decides:
   - **Name** (#218): the character has a name, 1 to 20 characters, typed on New run's Name step
     (after the class, before the summary; §6) or given on the command line (`--name Brakka`).
@@ -68,7 +68,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     choice, then the chosen set's; so they never move a stat or a weapon skill roll. Each raises
     the styles it defaults to.
   - **Starting kit** (`warlock-core/src/kit.rs`, data `content/kit.rs`; #257): what the character
-    carries, wields, and wears at the start. The class's `kit` (`data/classes.toml`) comes first,
+    carries, wields, and wears at the start. The class's `kit` (`data/classes/`) comes first,
     then the race's few racial items (`data/races.toml`), then the birth sign's animal's and
     element's (`data/horoscope.toml`: the hook for the horoscope; none give anything yet). A kit
     is a list of lines, each one item or a few of one, as level files place objects: a string is
@@ -159,8 +159,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     killing peaceful creatures costs no further alignment; `shift_alignment` skipping
     `Deed::KilledPeaceful`), and *The middle way* (while Neutral: +1 Dodge and +2 on checks;
     `Actor::defence`, `check`).
-- **Skills** (`warlock-core/src/skills.rs`, `content/skill.rs`, `world/train.rs`; M20, #132),
-  ADOM-like:
+- **Skills** (`warlock-core/src/skills.rs`, `content/skill.rs`, `world/train.rs`,
+  `world/skill_roll.rs`; M20, #132; level-up rolls M30, #230), ADOM-like:
   - **Trained or untrained**: every actor has a set of trained skills, each with a **value**
     (`Actor::skills`). A skill not in it is **untrained**: it does not exist for that actor, is
     never shown, earns no marks, and gives nothing; rules that read a skill get "untrained",
@@ -174,7 +174,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     from the same stream. A creature type's skills are fixed values. A scenario without a
     character gives a player trained in nothing.
   - **Values** run 0 to 999 (`MAX_VALUE`), 100 a master; there is no hard cap, but points come
-    slowly past the soft cap (100).
+    slowly past the soft cap (100). A value grows **only by level-up rolls** (below).
   - **Training marks**: a meaningful use of a trained skill may earn it a mark, with its rule's
     chance (§7), one draw of the run's **training stream** (`training`, kept in the world state;
     never the gameplay stream, so training never changes a fight's rolls) per rule: a step of the
@@ -186,52 +186,28 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (`burdened`; a dwarf's Burdened does not), a step on the overworld (`travel`), a kick at a
     closed door (`kick`), a turn spent searching, whatever it finds (`search`), noticing
     something hidden in passing (`spot`; §8 "Searching"). Only the player trains for now;
-    creatures keep their type's skills.
-  - **[provisional] Increases**: the owner has not decided how skills increase (alternatives for
-    later: ADOM's level-up dice per class once experience exists, or marks that count only once
-    the player rests). For now a skill gains a point when its marks reach
-    `need(value) = marks + value / per`, times `past_cap` from `soft_cap` on (`[increase]` in
-    `data/skills.toml`: 4, 10, 100, 3: 4 marks at 0, 13 at 99, 42 at 100, 48 at 120; the way
-    from 100 to 120 takes about as many marks as the whole way to 100); marks left over carry.
-    A point gained is said: "Your stealth improves." (the skill's name in lower case; never a
-    number). It stops a rest like any message.
-  - **Passive benefits** (data, §7; all integer), each read in one place:
-    - tumble: Dodge in Defence (the category whose bonuses add up), +1 at 20, 40, 60, 80, and
-      100, then +1 per 25 (`Actor::defence`);
-    - stealth: percent less noise from the actor's steps and doors, 0.6 % a point to 60 % at
-      100, then to 75 % at 150 (`noise::noise`; not attacks);
-    - listen: the hearing threshold lower by 1 per 10 points, never below 1 (`Actor::hearing`,
-      for creatures' hearing and the player's perceived sounds alike);
-    - balance: percent less of the burden's slowdown, 0.6 % a point to 60 % at 100 (Burdened
-      ×1.25 becomes ×1.10, Strained ×1.5 ×1.2), then to 80 % at 200 (`World::burdened`,
-      `Burden::slow_eased`; rounded up);
-    - survival: percent less time a journey on the overworld takes, 0.2 % a point to 20 % at 100
-      (`World::step_price`);
-    - appraise: percent better prices in shops (`bargain`), 0.2 % a point to 20 % at 100, then to
-      30 % at 200 (`world::favour`; with Presence at most 50 %; §7 "Shops");
-    - athletics: points added to the Strength a kick at a closed door is rolled against (§8
-      "Doors"), +8 at 100 and +12 at 200 (`kick`; `World::kick_door`), and a mark (20 %) for
-      every kick at a door;
-    - search: points added to searching for hidden features (§8 "Searching"), +8 at 100 and
-      +12 at 200 (`search`), and from 75 a search reaches a cell farther (`search_reach`;
-      `world/search.rs`); a mark (10 %) for every turn spent searching;
-    - spot: trained at all, the player notices hidden features in passing (§8 "Searching");
-      points added to that check, +8 at 100 and +12 at 200 (`spot`); a mark (50 %) for each
-      thing noticed;
-    - disable device: trained at all, the player can disarm traps (§8 "Disarming traps", the
-      Disarm ability); points added to that check, +8 at 100 and +12 at 200 (`disarm`); a mark
-      (20 %) for each try, whatever comes of it;
-    - open lock: trained at all, the player may pick locks (the Pick lock ability, §8 "Doors");
-      points added to that check, +8 at 100 and +12 at 200 (`pick`); a mark (20 %) for each try,
-      whatever comes of it;
-    - athletics' climbing out of pits and escape artist (out of pits faster) wait for that rule
-      (#128); swim for deep water; concentration, spellcraft, and use magic
-      device for magic; the other action skills (heal, steal, …) for their actions.
-      Searching is a basic command with keys of its own (`s`, `z`), so Search is read by rules,
-      not an action skill.
-  - **What the player sees**: their own trained skills' values and a coarse progress (quarters)
-    toward the next point (`PerceptionView::own_skills`), on the Skills screen (§6) and the
-    character creation summary; the `skills` dump layer.
+    creatures keep their type's skills. Marks are a **reservoir**: they raise nothing by
+    themselves and nothing is said; they gather until a level-up roll on the skill spends them.
+  - **Level-up rolls** (design `docs/design/progression.md` §5): every level gives the player
+    **skill rolls**: their class's `rolls` (`data/classes/`: 2; the thief and the ranger 3, the
+    bard 4), their race's (`races.toml`: humans 1), and one more for an Intelligence score of
+    `intelligence_from` (14) and one more for every `intelligence_every` (4) points above it
+    (`[rolls]` in `data/skills.toml`; the score without status effects, as the character screen
+    shows it), kept in the level's `Due { rolls }` beside its talent pick (`World::level_up`;
+    `World::level_rolls`). A player trained in nothing gets none. Each roll is spent with
+    `Action::Advance` (`advance:stealth`; no time, recorded) on a **trained** skill of the
+    player's choice, any number on one skill; while any is left every other action is refused
+    ("You have skill rolls to spend."), as talents are. A roll throws the die of the skill's
+    step on the **ladder**, set by its marks (`[ladder]`: `+1` from 0 marks, `1d3` from 5, `1d5`
+    12, `2d4` 25, `3d3` 50, `3d4` 100, `3d5` 200, `4d4` 400, `4d5` 800; ADOM's), one step up
+    (the top at most) for a skill the class is **known for** (`known_for`, its `2d6+10` skills),
+    and adds **+1** for any other skill the class trains or one the race trains (both: a known-for
+    racial skill is a step up and +1); it adds the result to the value, half of it rounded up
+    from the soft cap (`soft_cap`, 100) on, and **spends** `spend` (50) percent of the skill's
+    marks rounded up (50 → 25 → 12 → 6 → 3), so the next roll on it is smaller. Rolls draw from
+    the run's **levels stream** (`WorldState::levels_rng`), never the gameplay or training
+    stream. Said: "Your stealth improves." (never the die or the marks). The dev `levelup:auto`
+    spends every roll on the first trained skill.
   - **Active uses**: skills get no keys of their own. Racial, class, skill, and style abilities
     are chosen from one abilities menu (§6 "Abilities", #156), unlike ADOM: each trained skill
     with an active use (`kind = "action"`) is an ability there (`warlock_core::ability`,
@@ -240,8 +216,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     trap", §8 "Disarming traps"; Open lock's "Pick lock", §8 "Doors"). Never a benefit's number,
     a mark, a
     chance, an untrained skill, or a creature's skills; ground-truth dev dumps (`actors`, the
-    world state) show every actor's skills with their marks. Skills and marks are part of the
-    world state (saved, hashed).
+    world state) show every actor's skills with their marks and the ladder's die for them. The
+    Skills screen's meter shows a skill's ladder step in quarters (how practised it is). Skills
+    and marks are part of the world state (saved, hashed).
 - **Talents** (`warlock-core/src/talent.rs`, the runtime; `content/talent.rs`, the data;
   `world/talent.rs`, the picks; M30, #229; design `docs/design/progression.md` §7, §10): knacks
   a character picks as they level, each a typed effect read where the rules already read what
@@ -253,16 +230,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `[[rank]]` with each rank's own `needs` and `effects`, `systems` from the list, `granted`:
     given, never picked). Without the files there are no talents and no level asks for one.
   - **When**: every `talent_every`th character level (`[levels]` in `data/experience.toml`: 3,
-    6, 9, …) brings one pick, a `Due { level, talents }` in `Progress::due` (lowest level
+    6, 9, …) brings one pick, a `Due { level, talents, rolls }` in `Progress::due` (lowest level
     first; several levels in one turn queue theirs), handed out by `World::level_up` from
     `grant_xp`. **Nothing is banked**: while a pick is due `World::apply` refuses every other
     action ("You must choose a talent first."), so the level-up screen (to come, #236), the
     CLI, and replays spend it alike with `Action::Talent { id, choice }` (`talent:hardy`,
-    `talent:weapon_focus:long_blades`; no time, recorded) and, once skill rolls exist (#230),
-    `Action::Advance` (`advance:stealth`, refused until then); the dev `levelup:auto` takes the
+    `talent:weapon_focus:long_blades`; no time, recorded) and the level's skill rolls with
+    `Action::Advance` (`advance:stealth`, "Skills" above); the dev `levelup:auto` takes the
     first the player may take for every choice due, the dev `xp:N` grants experience. A pick
     nothing can be spent on (no talent the player may take: a run without talents, every
-    talent they qualify for held) is dropped, so a level never waits for the impossible.
+    talent they qualify for held, with no skill roll left that might open one) is dropped, so a
+    level never waits for the impossible.
   - **Prerequisites** (`Needs`; all must hold at the pick and are never checked again: a score
     lowered later keeps the talent): other talents at a rank (a talent with a choice may be
     needed only by one of the same choice, taken for the same), stat **scores** (the stored

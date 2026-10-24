@@ -5,5 +5,5 @@ seed = 1
 character = { race = "human", gender = "male", class = "warrior", name = "Aldric" }
 lantern = "lantern"
 # No pack of its own: a character chosen in character creation brings food in their starting
-# kit (data/classes.toml, data/races.toml), and more on top would burden the smallest. Launched
+# kit (data/classes/, data/races.toml), and more on top would burden the smallest. Launched
 # on the scenario's own character (`--scenario` alone, tests), the player starts empty-handed.

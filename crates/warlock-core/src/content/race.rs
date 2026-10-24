@@ -63,6 +63,8 @@ struct RaceSpec {
     skills: BTreeMap<String, Dice>,
     #[serde(default)]
     class_skill: Dice,
+    #[serde(default)]
+    rolls: u8,
     #[serde(default = "normal_hunger")]
     hunger: u16,
     #[serde(default = "normal_experience")]
@@ -119,6 +121,8 @@ pub struct RaceDef {
     /// Dice added to one of the class's skills, picked when the character is made (0: none).
     /// Humans: one extra class skill.
     pub class_skill: Dice,
+    /// The skill rolls each level gives beyond the class's (spec §8 "Skills"): humans, 1.
+    pub rolls: u8,
     /// How much the player needs to eat, in percent of a human (spec §8 "Hunger"): game time
     /// burns their nutrition this much faster (a halfling, 125) or slower (an elf, 80).
     pub hunger: u16,
@@ -221,6 +225,13 @@ impl Races {
                     HUNGER.end()
                 )));
             }
+            if spec.rolls > super::class::MAX_ROLLS {
+                return Err(err(format!(
+                    "race `{id}`: rolls {} is more than {}",
+                    spec.rolls,
+                    super::class::MAX_ROLLS
+                )));
+            }
             if !FACTORS.contains(&spec.experience) {
                 return Err(err(format!(
                     "race `{id}`: experience {} is out of range ({} to {} percent)",
@@ -255,6 +266,7 @@ impl Races {
                 search: spec.search,
                 skills,
                 class_skill: extra,
+                rolls: spec.rolls,
                 hunger: spec.hunger,
                 experience: spec.experience,
                 weapon_skills,
@@ -311,6 +323,9 @@ mod tests {
         assert!(human.skills.is_empty() && human.class_skill.is_zero());
         assert_eq!(human.hunger, 100, "a human's hunger unless named");
         assert_eq!(human.experience, 100, "a human's experience unless named");
+        assert_eq!(human.rolls, 0, "no extra skill rolls unless named");
+        let text = format!("{ONE}rolls = 1\n");
+        assert_eq!(parse(&text).expect("valid").list[0].rolls, 1);
         let dwarf = parse(&format!(
             "{ONE}size = \"small\"\nignores_burdened = true\nhunger = 110\nexperience = 115\n"
         ))
@@ -379,6 +394,7 @@ mod tests {
             (ONE.replace("15", "0"), "base_potential 0"),
             (format!("{ONE}size = \"huge\"\n"), "unknown size `huge`"),
             (format!("{ONE}hunger = 5\n"), "hunger 5 is out of range"),
+            (format!("{ONE}rolls = 11\n"), "rolls 11 is more than 10"),
             (
                 format!("{ONE}experience = 49\n"),
                 "experience 49 is out of range",

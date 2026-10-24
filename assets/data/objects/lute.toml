@@ -1,4 +1,4 @@
-# A bard's lute (data/classes.toml): music for the road. Playing it waits for the Music skill's
+# A bard's lute (data/classes/): music for the road. Playing it waits for the Music skill's
 # use; until then it is carried for the tunes to come.
 [[object]]
 id = "lute"
