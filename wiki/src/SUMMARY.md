@@ -33,6 +33,7 @@
   - [Races](races.md)
   - [Classes](classes.md)
   - [Horoscope](horoscope.md)
+  - [Talents](talents.md)
 - [Stats](stats.md)
 - [Skills](skills.md)
 - [Abilities](abilities.md)

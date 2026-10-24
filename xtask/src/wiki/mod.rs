@@ -36,6 +36,7 @@ mod scrolls;
 mod searching;
 mod sight;
 mod skills;
+mod talents;
 mod temperature;
 mod terrain;
 mod text;
@@ -155,6 +156,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("races.md", character::races),
         ("classes.md", character::classes),
         ("horoscope.md", character::horoscope),
+        ("talents.md", talents::talents),
+        ("talents-by-system.md", talents::by_system),
         ("skills.md", skills::skills),
         ("skill-benefits.md", skills::skill_benefits),
         ("skill-grants.md", skills::skill_grants),
