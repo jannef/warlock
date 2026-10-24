@@ -10,6 +10,7 @@
 
 use super::affix::Once;
 use super::{Content, ContentError, MAX_LEVEL, MAX_RANK, WeaponSkillId, duplicate_id};
+use crate::alignment::Requirement;
 use crate::skills::SkillId;
 use crate::stats::{PerStat, Stat};
 use serde::Deserialize;
@@ -260,6 +261,8 @@ pub enum Need {
     Eyes(String),
     /// A class, by id.
     Class(String),
+    /// An alignment band (spec §8 "Alignment"): `{ min = "good" }` is Good or better.
+    Alignment(Requirement),
 }
 
 impl Need {
@@ -294,6 +297,7 @@ impl Need {
                 let name = content.vision(id).map_or(id.as_str(), |v| v.name.as_str());
                 format!("{} eyes", name.to_lowercase())
             }
+            Need::Alignment(required) => format!("to be {}", required.words()),
         }
     }
 }
@@ -313,6 +317,8 @@ pub struct Needs {
     pub race: Option<String>,
     pub eyes: Option<String>,
     pub class: Option<String>,
+    /// The alignment band asked (`requires_alignment`, as quests and abilities ask it).
+    pub alignment: Option<Requirement>,
 }
 
 impl Needs {
@@ -335,6 +341,7 @@ impl Needs {
         let race = self.race.clone().map(Need::Race);
         let eyes = self.eyes.clone().map(Need::Eyes);
         let class = self.class.clone().map(Need::Class);
+        let alignment = self.alignment.map(Need::Alignment);
         talents
             .chain(stats)
             .chain(skills)
@@ -344,6 +351,7 @@ impl Needs {
             .chain(race)
             .chain(eyes)
             .chain(class)
+            .chain(alignment)
     }
 }
 
@@ -609,6 +617,7 @@ struct NeedsSpec {
     race: Option<String>,
     eyes: Option<String>,
     class: Option<String>,
+    requires_alignment: Option<Requirement>,
 }
 
 /// A talent as read, before the talents it needs are known.
@@ -716,6 +725,9 @@ fn resolve_needs(
     {
         return Err(format!("needs unknown eyes `{eyes}` (a vision profile)"));
     }
+    if let Some(required) = spec.requires_alignment {
+        required.check()?;
+    }
     Ok(Needs {
         talents,
         stats,
@@ -726,6 +738,7 @@ fn resolve_needs(
         race: spec.race,
         eyes: spec.eyes,
         class: spec.class,
+        alignment: spec.requires_alignment,
     })
 }
 

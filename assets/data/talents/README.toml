@@ -30,6 +30,9 @@
 #                   level = 9                            the character level
 #                   race = "dwarf", class = "warrior"    the character's
 #                   eyes = "darkvision"                  the race's vision profile
+#                   requires_alignment = { min = "good" }   an alignment band, as quests and
+#                                                        abilities ask it (`min` the worst
+#                                                        allowed, `max` the best)
 #   effects       what every rank held adds: a list of { kind = ..., ... } (below)
 #   [[talent.rank]]  one per rank, in order (as many as `ranks`, or none): its own `needs`
 #                 besides the talent's, and its own `effects` besides the per-rank ones

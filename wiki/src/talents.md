@@ -29,9 +29,9 @@ class bonus picks, and the Talents page that lists every talent with what it nee
   by disease later does not take a talent away. They may be another talent (at a rank), a stat
   score (the score itself, as the [character screen](character.md) shows it; never what items or
   a sickness do to it), a [skill](skills.md) at a value, a [weapon skill](weapon-skills.md) or
-  style at a rank, a character level, your race, your class, or your eyes (your race's
-  [vision](vision.md)). The game names what you lack: "You cannot take Dodge: you need
-  Dexterity 13."
+  style at a rank, a character level, your race, your class, your eyes (your race's
+  [vision](vision.md)), or your [alignment](alignment.md) band. The game names what you lack:
+  "You cannot take Dodge: you need Dexterity 13."
 
 ## What a talent does
 

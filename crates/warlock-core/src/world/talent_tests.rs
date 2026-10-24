@@ -370,6 +370,37 @@ systems = ["free_blows"]
 }
 
 #[test]
+fn a_talent_may_ask_for_an_alignment_band() {
+    let mut files = ContentFiles::builtin();
+    files.insert(
+        "data/talents/test_halo.toml",
+        r#"
+[[talent]]
+id = "test_halo"
+name = "Test halo"
+tree = "vigour"
+description = "For the saintly."
+needs = { requires_alignment = { min = "saintly" } }
+effects = [{ kind = "dodge", value = 1 }]
+systems = ["hit_points"]
+"#,
+    );
+    let content = Arc::new(Content::load(&files).expect("content"));
+    let mut w = world_with(content);
+    reach(&mut w, 3);
+    run(&mut w, "talent:test_halo");
+    assert_eq!(
+        last(&w),
+        "You cannot take Test halo: you need to be Saintly or better."
+    );
+    let halo = (w.perception().talents().into_iter())
+        .find(|t| t.name == "Test halo")
+        .expect("listed");
+    assert_eq!(halo.needs[0].words, "to be Saintly or better");
+    assert!(!halo.needs[0].met);
+}
+
+#[test]
 fn talents_survive_saves_and_replays_and_runs_without_them_hash_as_before() {
     let play = || {
         let mut w = world();

@@ -13,6 +13,7 @@
 //! [`Candidate`] is everything a prerequisite may ask of whoever would take a talent, and
 //! [`unmet`] / [`may_take`] decide a pick, for the rules and for what the player is shown alike.
 
+use crate::alignment::Band;
 use crate::character::Character;
 use crate::content::{Choice, Content, Need, TalentDef, TalentEffect, TalentId};
 use crate::skills::Skills;
@@ -216,6 +217,9 @@ pub struct Candidate<'a> {
     pub race: Option<&'a str>,
     pub class: Option<&'a str>,
     pub eyes: Option<&'a str>,
+    /// The alignment band (spec §8 "Alignment"); `None` without alignment rules, when no
+    /// talent that asks for one can be taken.
+    pub band: Option<Band>,
 }
 
 impl<'a> Candidate<'a> {
@@ -238,6 +242,7 @@ impl<'a> Candidate<'a> {
             race: spec.map(|s| s.race.as_str()),
             class: spec.map(|s| s.class.as_str()),
             eyes: race.map(|r| r.vision.as_str()),
+            band: content.alignment().map(|_| actor.band(content)),
         }
     }
 
@@ -273,6 +278,7 @@ impl<'a> Candidate<'a> {
             Need::Race(id) => self.race == Some(id.as_str()),
             Need::Eyes(id) => self.eyes == Some(id.as_str()),
             Need::Class(id) => self.class == Some(id.as_str()),
+            Need::Alignment(required) => self.band.is_some_and(|band| required.allows(band)),
         }
     }
 }

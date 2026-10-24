@@ -398,7 +398,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `name`, `pending`), the closed list a talent's `systems` may name. A `[[talent]]`: `id`,
   `name`, `tree`, `description`, `ranks`, `choice` (`weapon_skill`, `style`, `element`), `needs`
   (`talents = { dodge = 1 }`, `stats = { toughness = 14 }`, `skills = { stealth = 25 }`,
-  `weapon_skills = { bows = 3 }`, `chosen`, `level`, `race`, `class`, `eyes`), `effects`
+  `weapon_skills = { bows = 3 }`, `chosen`, `level`, `race`, `class`, `eyes`,
+  `requires_alignment = { min = "good" }`), `effects`
   (`{ kind = "dodge", value = 1 }`: `dodge`, `natural`, `melee_damage`, `max_hp_per_levels
   { per_levels, at_least }`, `healing_percent`, `footsteps_percent`, `silent_doors`, `hearing`,
   `carry_percent`, `travel_percent`, `hunger_percent`, `no_exertion`, `xp_percent`, `notice`,

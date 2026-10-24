@@ -233,8 +233,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     needed only by one of the same choice, taken for the same), stat **scores** (the stored
     score, never the effective one), skill values, weapon skill or style ranks, the chosen
     weapon skill's or style's rank (`chosen`), the character level, the race, the class, the
-    eyes (the race's vision profile). Refused in words: "You cannot take Dodge: you need
-    Dexterity 13." Ranks come one at a time ("You learn Hardy (2)."); a talent with a choice is
+    eyes (the race's vision profile), and the alignment band (`requires_alignment`, as quests
+    and abilities ask it, §8 "Alignment": `{ min = "good" }`). Refused in words: "You cannot
+    take Dodge: you need Dexterity 13." Ranks come one at a time ("You learn Hardy (2)."); a talent with a choice is
     one pick per choice, each with its own ranks.
   - **Effects** (`TalentEffect`, summed into `TalentMods` by `Actor::talent_mods`, one read
     each): `dodge` and `natural` in Defence (natural armour on top of the creature type's own
