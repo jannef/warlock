@@ -1547,6 +1547,27 @@ impl Content {
             }
             self.lights.push(preset);
         }
+        // A hood names another light, which has no hood of its own.
+        for preset in &self.lights {
+            let Some(hooded) = &preset.hooded else {
+                continue;
+            };
+            match self.light_id(hooded).map(|id| self.light(id)) {
+                None => {
+                    return Err(err(format!(
+                        "light `{}`: hooded: unknown light `{hooded}`",
+                        preset.id
+                    )));
+                }
+                Some(other) if other.hooded.is_some() => {
+                    return Err(err(format!(
+                        "light `{}`: hooded: `{hooded}` has a hood of its own",
+                        preset.id
+                    )));
+                }
+                Some(_) => {}
+            }
+        }
         Ok(())
     }
 

@@ -187,8 +187,9 @@ Key commands `,`/`g` (pick up: one stack at once, else the `PickUp` screen), `d`
 screen), `M` (`KeyCommand::Messages`: the `Messages` screen), `r` (`Read` screen, `KeyCommand::Read`: a basic command, not an ability), `p`
 (`KeyCommand::Pay`), `a` (`KeyCommand::Abilities`: the `Abilities` screen), `A`
 (`KeyCommand::RepeatAbility`), bash (`KeyCommand::Bash`, unbound), disarm
-(`KeyCommand::Disarm`, unbound), picking a lock (`KeyCommand::PickLock`, unbound), and steal
-(`KeyCommand::Steal`, unbound) are in `input.rs` and `settings/keys.rs`.
+(`KeyCommand::Disarm`, unbound), picking a lock (`KeyCommand::PickLock`, unbound), steal
+(`KeyCommand::Steal`, unbound), throwing one's voice, and the lantern's hood
+(`KeyCommand::ThrowVoice`, `HoodLantern`, unbound) are in `input.rs` and `settings/keys.rs`.
 
 **Abilities** (spec §6 "Abilities"; racial, class, skill, weapon skill and style, item; the
 owner's rule, #156) get no key of their own: they go into the one abilities menu.
@@ -209,25 +210,29 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   `Ability::SecondWind` (`Source::Talent`, the menu's Talents group between Class and Skills) is
   the first active talent's (`docs/dev/progression.md`): listed while the content has a talent
   with the `second_wind` effect, had by whoever holds one, `While(winded)` during its cooldown.
-  `Aim` has
-  `Nothing` and `Direction`: a target (the aiming mode) and an item
-  (a `PagedList` of the pack) join it with the first ability that needs one, as a variant and an
-  arm in `Gameplay::use_ability`.
+  `Aim` has `Nothing`, `Direction`, and `Cell` (aimed in the targeting
+  mode, `ui/target.rs`'s `AimKind::Ability`: no line of fire, `Line::unseen` for a cell not seen
+  or solid, the reach from `Ability::range`, the action from `Ability::action_at`); an item (a
+  `PagedList` of the pack) joins them with the first ability that needs one, as a variant and an
+  arm in `Gameplay::use_ability`. Throwing one's voice (`Ability::ThrowVoice`, Class) and the
+  lantern's hood (`Ability::HoodLantern`, Items) are had by everyone until the class tables and
+  the Hooded light talent narrow `had_by`.
 - **Menu**: `ui/abilities_screen.rs` (`AbilitiesScreen`, `ScreenName::Abilities`, `--screen
   abilities`): the `PagedList<Entry, Source>`, greyed rows with their reason, the selected
   ability's description below; the stack calls its `fit` before a press like the item lists. A
   letter or Enter on an available row answers `ScreenAction::UseAbility(ability)`; on an
   unavailable one it shows why and stays. Its own key closes it only when it names no row.
 - **Dispatch**: `ScreenAction::UseAbility` is the one way an ability is used, from the menu, its
-  own key (`KeyCommand::Bash`, `KeyCommand::Disarm`, and `KeyCommand::PickLock` answer it from
+  own key (`KeyCommand::Bash`, `Disarm`, `PickLock`, `ThrowVoice`, `HoodLantern` answer it from
   `Gameplay::press`), or the quick repeat:
   `input::route_keys` closes the top screen if any, remembers it (`ScreenStack::last_ability`,
   cleared with the stack when a run ends, like the creation picks), and calls
   `Gameplay::use_ability`: `Aim::Direction` enters `InputMode::Ability(ability)` (the message
   line's "In which direction? (Esc to cancel)", disarming's "Disarm in which direction?",
   `ui/mod.rs`; a direction applies `ability.action(Some(dir))`),
-  `Aim::Nothing` applies it at once, and one that cannot be used now is applied at once with a
-  placeholder direction so the rules say why and take no time (as `U` does with no tool).
+  `Aim::Cell` starts aiming (`InputMode::Aim`, `AimKind::Ability`), `Aim::Nothing` applies it
+  at once, and one that cannot be used now is applied at once with a placeholder direction (or
+  the player's own cell) so the rules say why and take no time (as `U` does with no tool).
 - **Quick repeat**: the menu opens on `ScreenStack::last_ability` (else the first available row);
   `A` (`RepeatAbility`, passed the last ability by `route_keys`) answers `UseAbility(last)`, or
   opens the menu when there is none.

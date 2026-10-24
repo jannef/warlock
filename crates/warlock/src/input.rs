@@ -108,6 +108,9 @@ pub enum KeyCommand {
     /// Bash with the shield held, in a direction (asked for in the message line). An ability
     /// (`warlock_core::ability`): unbound by default, as the abilities menu lists it (#156).
     Bash,
+    /// Throw your voice to a place you see (aimed with a cursor on the map). An ability:
+    /// unbound by default.
+    ThrowVoice,
     /// Disarm a trap the player knows of, in a direction (asked for in the message line; spec §8
     /// "Disarming traps"). An ability: unbound by default, as the abilities menu lists it.
     Disarm,
@@ -118,6 +121,8 @@ pub enum KeyCommand {
     /// Steal from someone in a direction (asked for in the message line; spec §8 "Stealing").
     /// An ability: unbound by default, as the abilities menu lists it.
     Steal,
+    /// Lower or raise the lantern's hood. An ability: unbound by default.
+    HoodLantern,
     /// While aiming: the cursor to the next creature in view (with Shift, the one before).
     NextTarget,
     /// While aiming: the cursor to the creature in view before (no default key: Shift with
@@ -332,9 +337,11 @@ impl KeyCommand {
             KeyCommand::Abilities => "Abilities",
             KeyCommand::RepeatAbility => "Use the last ability again",
             KeyCommand::Bash => "Bash with your shield",
+            KeyCommand::ThrowVoice => "Throw your voice",
             KeyCommand::Disarm => "Disarm a trap",
             KeyCommand::PickLock => "Pick a lock",
             KeyCommand::Steal => "Steal",
+            KeyCommand::HoodLantern => "Hood your lantern",
             KeyCommand::NextTarget => "Next target (Shift: previous)",
             KeyCommand::PrevTarget => "Previous target",
             KeyCommand::Loose => "Shoot or throw",
@@ -832,11 +839,18 @@ impl Gameplay<'_> {
                     AimKind::Fire => (KeyCommand::Fire, true),
                     AimKind::Throw(_) => (KeyCommand::Throw, true),
                     AimKind::Read(_) => (KeyCommand::Read, false),
+                    // None of these uses an ability: its own key does (below), and Enter.
+                    AimKind::Ability(_) => (KeyCommand::Loose, false),
                 };
                 if command == confirm || (missile && command == KeyCommand::Missile) {
                     return self.release(aim);
                 }
                 InputMode::Aim(aim)
+            }
+            (InputMode::Aim(aim), KeyCommand::ThrowVoice)
+                if aim.kind == AimKind::Ability(Ability::ThrowVoice) =>
+            {
+                return self.release(aim);
             }
             (InputMode::Aim(_), KeyCommand::Cancel | KeyCommand::Look) => InputMode::Normal,
             (InputMode::Aim(aim), _) => InputMode::Aim(aim),
@@ -1066,6 +1080,10 @@ impl Gameplay<'_> {
                 open = Some(ScreenAction::UseAbility(Ability::ShieldBash));
                 InputMode::Normal
             }
+            (InputMode::Normal, KeyCommand::ThrowVoice) => {
+                open = Some(ScreenAction::UseAbility(Ability::ThrowVoice));
+                InputMode::Normal
+            }
             (InputMode::Normal, KeyCommand::Disarm) => {
                 open = Some(ScreenAction::UseAbility(Ability::Disarm));
                 InputMode::Normal
@@ -1076,6 +1094,10 @@ impl Gameplay<'_> {
             }
             (InputMode::Normal, KeyCommand::Steal) => {
                 open = Some(ScreenAction::UseAbility(Ability::Steal));
+                InputMode::Normal
+            }
+            (InputMode::Normal, KeyCommand::HoodLantern) => {
+                open = Some(ScreenAction::UseAbility(Ability::HoodLantern));
                 InputMode::Normal
             }
             // The one creature in view next to the player, at once; else ask which way.
@@ -1167,22 +1189,25 @@ impl Gameplay<'_> {
         None
     }
 
-    /// Uses `ability`: asks for what it needs (a direction in the message line), then applies
-    /// its action. One the player cannot use now is applied at once all the same, so the rules
-    /// say why, taking no time (a shield bash without a shield).
+    /// Uses `ability`: asks for what it needs (a direction in the message line, a cell in the
+    /// aiming mode), then applies its action. One the player cannot use now is applied at once
+    /// all the same, so the rules say why, taking no time (a shield bash without a shield).
     fn use_ability(&mut self, ability: Ability) {
         let Some(game) = &self.game else { return };
         let usable = (game.world.perception().abilities().iter())
             .any(|own| own.ability == ability && own.unavailable.is_none());
         match (usable, ability.aim()) {
             (true, ability::Aim::Direction) => *self.mode = InputMode::Ability(ability),
+            (true, ability::Aim::Cell) => self.aim(AimKind::Ability(ability)),
             (true, ability::Aim::Nothing) => {
                 if let Some(action) = ability.action(None) {
                     self.actions.write(PlayerAction(action));
                 }
             }
             (false, _) => {
-                if let Some(action) = ability.action(Some(Dir::N)) {
+                let here = game.world.player_pos();
+                let action = (ability.action(Some(Dir::N))).or_else(|| ability.action_at(here));
+                if let Some(action) = action {
                     self.actions.write(PlayerAction(action));
                 }
             }
@@ -1218,7 +1243,9 @@ impl Gameplay<'_> {
         if let Some(game) = &self.game {
             self.last.remember(&game.world.perception(), aim);
         }
-        self.actions.write(PlayerAction(aim.action()));
+        if let Some(action) = aim.action() {
+            self.actions.write(PlayerAction(action));
+        }
         *self.mode = InputMode::Normal;
     }
 }
@@ -1326,6 +1353,7 @@ fn burst_dialog(view: &PerceptionView<'_>, aim: Aim) -> Option<Dialog> {
         return None;
     };
     let noun = aim.catches_reader(view)?;
+    let read = aim.action()?;
     let stack = view.inventory().get(item)?;
     let name = &view.content().object(stack.object).name;
     Some(
@@ -1333,7 +1361,7 @@ fn burst_dialog(view: &PerceptionView<'_>, aim: Aim) -> Option<Dialog> {
             "Too close",
             format!("The {noun} may catch you too. Read the {name} anyway?"),
         )
-        .accept("Read it", aim.action())
+        .accept("Read it", read)
         .decline("Aim again", ScreenAction::Aim(aim.kind))
         .cancel("Don't read it", ScreenAction::Close),
     )

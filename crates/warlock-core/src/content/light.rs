@@ -122,6 +122,15 @@ pub struct LightPreset {
     pub color: Light,
     /// Reach in cells; the light fades to zero at squared distance `radius² + radius`.
     pub radius: i32,
+    /// The preset this light burns as with its hood lowered (spec §5 "Light sources": the
+    /// player's lantern, hooded): an id in `data/lights.toml`, itself without a hood. `None`:
+    /// it has no hood.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hooded: Option<String>,
+    /// Whether its own cell gets none of its light: a hooded lantern's hood keeps the light off
+    /// whoever carries it, so it lights the cells around them but not them.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub hollow: bool,
     /// Presentation-only: how the drawn light varies over time.
     #[serde(default)]
     pub stability: Stability,

@@ -41,6 +41,11 @@ pub enum Action {
     Descend,
     /// Light or douse the lantern the scenario gives the player. Takes a turn.
     ToggleLantern,
+    /// Lower or raise the hood of the player's lantern (spec §5 "Light sources"): hooded, it
+    /// burns dim and hollow, lighting the cells around the player but not them. A lantern that
+    /// is out is lit with its hood lowered. Takes the time of `hood` (and of `lantern` when it
+    /// lights it); refused, no time, without a lantern with a hood.
+    HoodLantern,
     /// Pick up the stacks at these positions in the pile on the player's cell (0 is the top of
     /// the pile), or everything there with none. Takes a turn (its cost: `pick_up`).
     PickUp(Positions),
@@ -100,6 +105,11 @@ pub enum Action {
     /// Willpower; caught, it turns on them. Takes the time of `steal`; refused (no time) when the
     /// player sees no one there, or someone hostile.
     Steal(Dir),
+    /// Throw the player's voice to a cell they see within [`crate::world::VOICE_RANGE`] (spec §5
+    /// "Hearing"): a voice sounds there, and creatures that hear it and do not see its cell go
+    /// and look. Takes the time of `throw_voice`; refused (no time) at a cell they do not see,
+    /// out of reach, solid, or their own.
+    ThrowVoice(Pos),
     /// Eat one of a stack, from the pack or the floor (spec §8 "Hunger"): a meal of as many
     /// turns (each the `eat` action) as the food takes, stopping early like a rest; the food is
     /// eaten and feeds at the end.
@@ -452,6 +462,11 @@ pub enum Event {
     /// "Dialogue"): what it said and what the player may ask it about. One with topics opens
     /// the dialogue screen.
     Talked(Conversation),
+    /// The player threw their voice to this cell (spec §5 "Hearing"; a cell they see): where it
+    /// sounded.
+    VoiceThrown {
+        at: Pos,
+    },
     /// A wall gave way (spec §8 "Digging") and is rubble now. Kept when the player sees the cell
     /// afterwards.
     WallBroken {
@@ -550,11 +565,11 @@ pub struct Outcome {
     pub events: Vec<Event>,
 }
 
-/// Text syntax for scripting: `move:E wait open:E close:W kick:N pick:E ascend descend lantern
+/// Text syntax for scripting: `move:E wait open:E close:W kick:N pick:E ascend descend lantern hood
 /// rest:1h rest:dawn rest:dusk pickup pickup:ac drop:b sell:b pay pay:W equip:body:b remove:body
 /// bash:E fire:12,5 throw:c:12,5 dig:E search search:10 disarm:E eat:b eat:floor:a read:b
 /// read:b:12,5 read:b:c
-/// chat:E ask:E:TOPIC steal:E vision:ID
+/// chat:E ask:E:TOPIC steal:E throw_voice:12,5 vision:ID
 /// skip:1h
 /// weather:rain effect:fireball@12,5 effect:lightning_bolt@3,4>12,4 identify:a afflict:bleeding
 /// infect:filth_fever freeze:12,5,3 thaw:12,5,3` (durations: `30s`, `10m`, `2h`; LETTER names a
@@ -569,7 +584,9 @@ pub struct Outcome {
 /// there; `eat:LETTER` eats one of inventory stack LETTER, `eat:floor:LETTER` one of the stack
 /// LETTER of the pile underfoot; `read:LETTER:X,Y` reads inventory stack LETTER (a scroll) at
 /// the level cell (X, Y), `read:LETTER:LETTER` on the second inventory stack; `chat:DIR` talks to the creature that way, `ask:DIR:TOPIC` asks
-/// it about a topic by id, `steal:DIR` tries to steal from it; weather: `clear`, `overcast`, `rain`, `heavy`; `effect:ID@X,Y[>X,Y]`
+/// it about a topic by id, `steal:DIR` tries to steal from it; `hood` lowers or raises the
+/// lantern's hood; `throw_voice:X,Y` throws
+/// the player's voice to the level cell (X, Y); weather: `clear`, `overcast`, `rain`, `heavy`; `effect:ID@X,Y[>X,Y]`
 /// shows a spell effect at a cell, or from one cell toward another; the dev bursts
 /// `freeze:X,Y,R` and `thaw:X,Y,R` freeze the water and melt the ice within radius R, 0 to
 /// [`MAX_BURST`], of cell (X, Y)).
@@ -588,6 +605,7 @@ impl fmt::Display for Action {
             Action::Ascend => f.write_str("ascend"),
             Action::Descend => f.write_str("descend"),
             Action::ToggleLantern => f.write_str("lantern"),
+            Action::HoodLantern => f.write_str("hood"),
             Action::PickUp(l) if l.is_empty() => f.write_str("pickup"),
             Action::PickUp(l) => write!(f, "pickup:{l}"),
             Action::Drop(l) if l.is_empty() => f.write_str("drop"),
@@ -619,6 +637,7 @@ impl fmt::Display for Action {
             Action::Chat(d) => write!(f, "chat:{d}"),
             Action::Ask { dir, topic } => write!(f, "ask:{dir}:{topic}"),
             Action::Steal(d) => write!(f, "steal:{d}"),
+            Action::ThrowVoice(at) => write!(f, "throw_voice:{},{}", at.x, at.y),
             Action::SetStance(stance) => write!(f, "stance:{stance}"),
             Action::Dig(d) => write!(f, "dig:{d}"),
             Action::Search(1) => f.write_str("search"),
@@ -705,6 +724,7 @@ impl FromStr for Action {
             "ascend" => bare(Action::Ascend),
             "descend" => bare(Action::Descend),
             "lantern" => bare(Action::ToggleLantern),
+            "hood" => bare(Action::HoodLantern),
             "pay" => match arg {
                 None => Ok(Action::Pay(None)),
                 Some(_) => dir().map(|d| Action::Pay(Some(d))),
@@ -765,6 +785,10 @@ impl FromStr for Action {
             "fire" => {
                 let at = arg.ok_or_else(|| "`fire` needs a cell, e.g. `fire:12,5`".to_string())?;
                 parse_cell(at).map(Action::Fire)
+            }
+            "throw_voice" => {
+                let usage = || "`throw_voice` needs a cell, e.g. `throw_voice:12,5`".to_string();
+                parse_cell(arg.ok_or_else(usage)?).map(Action::ThrowVoice)
             }
             "eat" => {
                 let usage = || "`eat` needs a letter, e.g. `eat:b` or `eat:floor:a`".to_string();
@@ -908,11 +932,12 @@ impl FromStr for Action {
             }
             _ => Err(format!(
                 "unknown action `{s}` (expected move:DIR, wait, open:DIR, close:DIR, kick:DIR, \
-                 pick:DIR, ascend, descend, lantern, rest:1h|dawn|dusk, pickup[:LETTERS], drop[:LETTERS], \
+                 pick:DIR, ascend, descend, lantern, hood, rest:1h|dawn|dusk, pickup[:LETTERS], \
+                 drop[:LETTERS], \
                  sell[:LETTERS], pay[:DIR], equip:SLOT:LETTER, remove:SLOT, bash:DIR, fire:X,Y, \
                  throw:LETTER:X,Y, dig:DIR, eat:LETTER, eat:floor:LETTER, \
                  read:LETTER[:X,Y|:LETTER], chat:DIR, \
-                 ask:DIR:TOPIC, stance:NAME, vision:ID, skip:DURATION, \
+                 ask:DIR:TOPIC, steal:DIR, throw_voice:X,Y, stance:NAME, vision:ID, skip:DURATION, \
                  weather:clear|overcast|rain|heavy, effect:ID@X,Y[>X,Y], identify[:LETTERS], \
                  afflict:STATUS, infect:DISEASE, freeze:X,Y,R, thaw:X,Y,R)"
             )),
@@ -992,6 +1017,9 @@ mod tests {
             Action::Ascend,
             Action::Descend,
             Action::ToggleLantern,
+            Action::HoodLantern,
+            Action::ThrowVoice(Pos::new(12, 5)),
+            Action::ThrowVoice(Pos::new(0, 40)),
             Action::SetStance(CombatStance::Aggressive),
             Action::SetStance(CombatStance::Coward),
             Action::SetVision("low_light".into()),
@@ -1186,6 +1214,16 @@ mod tests {
         assert!(parse_actions("vision").is_err());
         assert!(parse_actions("vision:").is_err());
         assert!(parse_actions("lantern:E").is_err());
+        assert_eq!(
+            parse_actions("HOOD throw_voice:3,-4"),
+            Ok(vec![
+                Action::HoodLantern,
+                Action::ThrowVoice(Pos::new(3, -4))
+            ])
+        );
+        for bad in ["hood:E", "throw_voice", "throw_voice:E", "throw_voice:3"] {
+            assert!(parse_actions(bad).is_err(), "{bad}");
+        }
         assert_eq!(
             parse_actions("FREEZE:12,5,4 thaw:3,4,0"),
             Ok(vec![

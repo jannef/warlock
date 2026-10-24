@@ -44,8 +44,10 @@ The in-game `?` screen is authoritative: it is generated from your current key b
 | Abilities: everything you can do because of who you are, in one menu | `a` (see [Abilities](abilities.md)) |
 | Use the ability you used last again | `A` |
 | Bash with your shield (an ability: also in the abilities menu) | no key until you bind one, then a direction |
+| Throw your voice (an ability: also in the abilities menu) | no key until you bind one, then aim |
 | Disarm a trap (an ability: also in the abilities menu) | no key until you bind one, then a direction |
 | Steal (an ability: also in the abilities menu) | no key until you bind one, then a direction |
+| Hood your lantern (an ability: also in the abilities menu) | no key until you bind one |
 | Next target while aiming (with Shift: the one before) | `Tab` |
 | Use a tool: dig into a wall with a pick-axe | `U`, then a direction |
 | Show or hide the controls | `?` |
@@ -188,6 +190,10 @@ A spell scroll you read (`r`, see [Scrolls](scrolls.md)) is aimed the same way: 
 reads it at the cursor. A lightning bolt runs through creatures, so only walls block its line;
 a fireball read so close that it may catch you asks first.
 
+Throwing your voice (an [ability](abilities.md)) is aimed the same way too, but nothing flies, so
+there is no line: the cursor is marked, and the message line says "You do not see there.", on a
+cell you do not see (or a wall), and "Out of range." beyond 6 cells. `Enter` throws it there.
+
 See [Ranged combat](ranged.md).
 
 ## Objects
@@ -208,12 +214,12 @@ A letter, or `Enter` on the marked row, eats it. See
 
 ## Abilities
 
-`a` opens the abilities menu: everything you can do because of who you are (a shield bash,
-disarming a trap, the other skills you use as actions, and later racial, class, and item
-abilities), grouped by where each
-comes from and lettered like a list of items. Choose one by its letter, or `Enter` on the `>`
-row; one you cannot use now is greyed out with why. It then asks for what it needs, such as a
-direction. The menu opens on the ability you used last, and `A` uses that one again at once.
+`a` opens the abilities menu: everything you can do because of who you are (throwing your voice,
+a shield bash, disarming a trap, the other skills you use as actions, hooding your lantern, and
+later racial and class abilities), grouped by where each comes from and lettered like a list of
+items. Choose one by its letter, or `Enter` on the `>` row; one you cannot use now is greyed out
+with why. It then asks for what it needs, such as a direction or a place to aim at. The menu opens
+on the ability you used last, and `A` uses that one again at once.
 Abilities have no keys of their own unless you give them one in Controls. See
 [Abilities](abilities.md).
 
@@ -243,7 +249,8 @@ Below the map, the **status bar** shows, from left to right:
   from 30 °C (see [Temperature and ice](temperature.md));
 - the turn count and your position (column, row);
 - `Light`: how brightly your own cell is lit, where 255 is full light (see [Light](light.md));
-- your vision type, whether your lantern is lit, and the run's seed.
+- your vision type, your lantern (`Lantern out`, `Lantern lit`, or `Lantern hooded`), and the
+  run's seed.
 
 At its right end, `? controls` reminds you where the keys are. It names the key as you bound it
 (`Esc menu` when the controls have no key), and so does the welcome line a new run starts with.

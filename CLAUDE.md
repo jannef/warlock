@@ -103,9 +103,9 @@ trained skills, `Stealth 17`), `abilities` (the abilities menu's list), and `que
 log, active first) from perception;
 `actors` (dev-only: every actor's hit points, load, stats, and skills with their marks).
 
-Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:DIR pick:DIR ascend descend lantern
+Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:DIR pick:DIR ascend descend lantern hood
 pickup[:LETTERS] drop[:LETTERS] sell[:LETTERS] pay[:DIR] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
-eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] dig:DIR search search:N disarm:DIR second_wind chat:DIR ask:DIR:TOPIC steal:DIR rest:GOAL stance:NAME vision:PROFILE
+eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] dig:DIR search search:N disarm:DIR second_wind chat:DIR ask:DIR:TOPIC steal:DIR throw_voice:X,Y rest:GOAL stance:NAME vision:PROFILE
 talent:ID[:CHOICE] advance:SKILL levelup:auto xp:N
 skip:DURATION weather:KIND effect:ID@X,Y[>X,Y] identify[:LETTERS] afflict:STATUS infect:DISEASE`
 (`DIR` = N
@@ -129,13 +129,15 @@ something is found; `second_wind` uses the Second wind talent (hit points back a
 Disarm ability, for those trained in Disable device; refused, with no time, without the skill
 or a known trap there); `chat:E` talks to the creature east of
 the player, `ask:E:rooms` asks it about topic `rooms` (an id in `assets/data/dialogue.toml`;
-quest topics are `quest-ID`, `accept-ID`, `decline-ID`, ids in `assets/data/quests.toml`),
-`steal:E` tries to steal from it (the Steal ability, spec §8 "Stealing");
+quest topics are `quest-ID`, `accept-ID`, `decline-ID`, ids in `assets/data/quests.toml`);
+`hood` lowers or raises the lantern's hood (lighting it hooded when it is out), `throw_voice:X,Y`
+throws the player's voice to level cell (X, Y) (one they see, within 6);
 `talent:hardy` takes a talent (an id in `assets/data/talents/`; `talent:weapon_focus:long_blades`
 with its choice) when a level's pick is due (every third level; until it is made every other
 action is refused), `advance:stealth` spends a level's skill roll (none yet, #230), `levelup:auto`
 is the dev action that spends every choice due with the first the player may take, and `xp:2500`
 the dev experience grant (no time; `xp:2431` brings a 100 % character to level 3);
+
 `PROFILE` = an id in
 `assets/data/vision.toml`; `GOAL` = `dawn`, `dusk`, or a duration up to `24h`; durations are
 `30s`, `10m`, `2h`; `skip` is the dev hour skip; `weather` is the dev weather override, `KIND` =

@@ -29,10 +29,11 @@ cargo xtask golden [--update | --local]                   # compare golden scree
 - Replays are JSON: `{game_version, scenario, seed, character, steps: [{action, hash}]}`, the
   character `{race, gender, class}` (left out for a run without one; a replay without it starts
   as the scenario's character, so older replays still load). Actions use a text
-  syntax (`move:E wait open:E close:W pick:E ascend descend lantern rest:1h rest:dawn rest:dusk
+  syntax (`move:E wait open:E close:W pick:E ascend descend lantern hood rest:1h rest:dawn rest:dusk
   pickup pickup:ac drop drop:b sell:b pay pay:W equip:body:b remove:body bash:E fire:12,5
   throw:c:12,5 eat:b
-  eat:floor:a dig:E search search:10 chat:E ask:E:rooms ask:E:quest-rats ask:E:accept-rats vision:darkvision
+  eat:floor:a dig:E search search:10 chat:E ask:E:rooms ask:E:quest-rats ask:E:accept-rats
+  throw_voice:12,5 vision:darkvision
   skip:1h weather:rain stance:coward effect:fireball@12,5 effect:lightning_bolt@3,4>12,4
   identify:a afflict:bleeding infect:filth_fever talent:hardy talent:weapon_focus:long_blades
   advance:stealth levelup:auto xp:2500 freeze:12,5,3 thaw:12,5,3`; `pick:DIR` tries
@@ -42,7 +43,8 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   `throw:LETTER:X,Y` throws one of inventory stack LETTER there; `eat:LETTER` eats one of
   inventory stack LETTER, `eat:floor:LETTER` one of stack LETTER of the pile underfoot;
   `chat:DIR` talks to the creature that way, `ask:DIR:TOPIC` asks it about a topic by id (a
-  quest's: `quest-ID`, `accept-ID`, `decline-ID`); the dev
+  quest's: `quest-ID`, `accept-ID`, `decline-ID`); `hood` lowers or raises the lantern's hood;
+  `throw_voice:X,Y` throws the player's voice to level cell (X, Y); the dev
   action `effect:ID@X,Y[>X,Y]` shows spell effect ID (`data/effects.toml`) as the player perceives it, a
   burst around X,Y (around the second cell, flying there from the first) or a bolt from the first
   cell toward the second (cut short by the first opaque cell); it hurts no one, takes no time,
