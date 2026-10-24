@@ -1,6 +1,7 @@
-//! Targeting (spec §6 "Targeting"): aiming a shot (`f`), a throw (`t`), or a spell scroll read
-//! (`r`, spec §8 "Scrolls") with a cursor on the map, ADOM-like. It is an input mode like look
-//! mode, not a screen: no game time passes until the missile is loosed or the scroll read.
+//! Targeting (spec §6 "Targeting"): aiming a shot (`f`), a throw (`t`), a spell scroll read
+//! (`r`, spec §8 "Scrolls"), or an ability that asks for a cell (throwing one's voice, spec §6
+//! "Abilities") with a cursor on the map, ADOM-like. It is an input mode like look mode, not a
+//! screen: no game time passes until the missile is loosed, the scroll read, or the ability used.
 //!
 //! The cursor starts on the last target if the player still sees it (a creature) or it lies on
 //! this level (a cell), else on the nearest creature in view that is hostile, else on the player.
@@ -14,8 +15,9 @@
 //! A target beyond something solid or behind a creature in the way is blocked (a bolt runs
 //! through creatures: only what is solid blocks it), one beyond the range out of range; the
 //! message line says so (never color alone). No chance to hit is shown. A burst read so close
-//! that it may catch the player asks first ([`Aim::catches_reader`]). Everything here reads the
-//! perception snapshot only.
+//! that it may catch the player asks first ([`Aim::catches_reader`]). An ability flies nowhere:
+//! it draws no line, and a cell the player does not see (or a solid one) is the muted red of a
+//! blocked target, "You do not see there.". Everything here reads the perception snapshot only.
 
 use super::look;
 use crate::game::Game;
@@ -25,6 +27,7 @@ use crate::render::free_glyph::{FreeGlyph, FreeGlyphs};
 use crate::render::grid::MapGrid;
 use crate::settings::{Role, Settings};
 use bevy::prelude::*;
+use warlock_core::ability::Ability;
 use warlock_core::color::Rgb;
 use warlock_core::content::{Cast, ScrollSpell, Stance};
 use warlock_core::fov::radius2;
@@ -48,6 +51,8 @@ pub enum AimKind {
     Throw(usize),
     /// Reading the spell scroll of inventory stack `usize` at a cell (`r`).
     Read(usize),
+    /// Using an ability that asks for a cell (from the abilities menu, or its key).
+    Ability(Ability),
 }
 
 /// Aiming: what, and where the cursor is (a level position).
@@ -152,28 +157,32 @@ impl Aim {
             AimKind::Fire => view.ready_to_fire().map(|(_, _, range)| range),
             AimKind::Throw(item) => view.throw_range(item),
             AimKind::Read(item) => scroll_spell(view, item).map(|s| s.range),
+            AimKind::Ability(ability) => ability.range(),
         }
     }
 
-    /// The action that looses it at the cursor.
-    pub fn action(&self) -> Action {
-        match self.kind {
+    /// The action that looses it at the cursor (`None`: an ability that aims at no cell).
+    pub fn action(&self) -> Option<Action> {
+        Some(match self.kind {
             AimKind::Fire => Action::Fire(self.at),
             AimKind::Throw(item) => Action::Throw { item, at: self.at },
             AimKind::Read(item) => Action::Read {
                 item,
                 target: Some(ReadTarget::Cell(self.at)),
             },
-        }
+            AimKind::Ability(ability) => return ability.action_at(self.at),
+        })
     }
 
     /// The line of fire to the cursor, as the player knows it: a bolt read from a scroll runs
-    /// through creatures, so only what is solid blocks it.
+    /// through creatures, so only what is solid blocks it. An ability flies nowhere: no line,
+    /// only whether the player sees the cursor's cell and it is within reach.
     pub fn line(&self, view: &PerceptionView<'_>) -> Line {
         let bolt = match self.kind {
             AimKind::Read(item) => {
                 scroll_spell(view, item).is_some_and(|s| matches!(s.cast, Cast::Bolt(_)))
             }
+            AimKind::Ability(ability) => return sight_line(view, self.at, ability.range()),
             _ => false,
         };
         line_of(view, view.viewer(), self.at, self.range(view), !bolt)
@@ -223,6 +232,12 @@ impl Aim {
             AimKind::Fire => ("Fire", "fires"),
             AimKind::Throw(_) => ("Throw", "throws"),
             AimKind::Read(_) => ("Read", "reads"),
+            // `ready` names the ability ("Throw your voice"), and only Enter uses it.
+            AimKind::Ability(_) => {
+                return format!(
+                    "{ready}: {next} or direction keys aim, {loose} uses it, Esc cancels."
+                );
+            }
         };
         format!(
             "{verb} {ready}: {next} or direction keys aim, {loose} or {confirm} {does}, Esc cancels."
@@ -232,10 +247,13 @@ impl Aim {
 
 impl Line {
     /// Why a missile loosed along it would not reach the cursor, said after the target's
-    /// description: "Out of range.", "The way is blocked."; nothing when it would.
+    /// description: "Out of range.", "The way is blocked.", "You do not see there."; nothing
+    /// when it would.
     pub fn status(&self) -> Option<&'static str> {
         if self.out_of_range {
             Some("Out of range.")
+        } else if self.unseen {
+            Some("You do not see there.")
         } else if self.blocked {
             Some("The way is blocked.")
         } else {
@@ -255,6 +273,9 @@ pub struct Line {
     pub blocked: bool,
     /// The cursor lies beyond the range.
     pub out_of_range: bool,
+    /// For an ability that aims at a cell: the player does not see the cursor's cell, or it is
+    /// solid.
+    pub unseen: bool,
 }
 
 /// The spell the scroll in inventory stack `item` casts, if it is one (scroll types are known on
@@ -303,6 +324,21 @@ fn line_of(
         out.blocked = true;
     }
     out
+}
+
+/// The "line" of an ability aimed at `at` that reaches `range` cells: no cells to draw, whether
+/// the player sees `at` (a cell they see that is not solid), and whether it is within reach.
+fn sight_line(view: &PerceptionView<'_>, at: Pos, range: Option<i32>) -> Line {
+    let me = view.viewer();
+    let seen = match view.cell(at) {
+        CellView::Visible(t) => view.content().terrain(t).transparent,
+        CellView::Remembered(_) | CellView::Unknown => false,
+    };
+    Line {
+        out_of_range: range.is_some_and(|r| at.dist2(me) > radius2(r)),
+        unseen: !seen,
+        ..Line::default()
+    }
 }
 
 /// The cells the line of fire is drawn over while aiming (`mode`), but those where a creature
@@ -354,7 +390,7 @@ pub fn draw_cursor(
     p: Pos,
     line: &Line,
 ) {
-    let bg = if line.blocked || line.out_of_range {
+    let bg = if line.blocked || line.out_of_range || line.unseen {
         BLOCKED_BG
     } else {
         look::CURSOR_BG
@@ -467,7 +503,8 @@ mod tests {
             Line {
                 cells,
                 blocked: false,
-                out_of_range: false
+                out_of_range: false,
+                unseen: false
             }
         );
         assert_eq!(line(&view, me, east, Some(4)).cells.len(), 4);
@@ -500,10 +537,10 @@ mod tests {
         assert_eq!(fireball.range(&view), Some(10));
         assert_eq!(
             fireball.action(),
-            Action::Read {
+            Some(Action::Read {
                 item: 1,
                 target: Some(ReadTarget::Cell(fireball.at))
-            }
+            })
         );
         // Next to the reader: it may catch them; far off it does not.
         assert_eq!(fireball.catches_reader(&view).as_deref(), Some("fireball"));
@@ -556,11 +593,11 @@ mod tests {
         assert!(text.contains("Enter or t throws"), "{text}");
         assert_eq!(
             throw.action(),
-            Action::Throw {
+            Some(Action::Throw {
                 item: 0,
                 at: Pos::new(1, 1)
-            }
+            })
         );
-        assert_eq!(aim.action(), Action::Fire(Pos::new(1, 1)));
+        assert_eq!(aim.action(), Some(Action::Fire(Pos::new(1, 1))));
     }
 }

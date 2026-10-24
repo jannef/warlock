@@ -18,7 +18,8 @@ a letter:
   [status effect](status-effects.md#buffs-and-cooldowns) keeps you from it;
 - the arrow keys move the `>` cursor, and the ability under it is described at the bottom;
 - a letter, or `Enter` on the `>` row, uses it: the menu closes, the ability asks for what it
-  needs (a direction, on the message line), and then it takes its time like any other action.
+  needs (a direction, on the message line, or a place, with the aiming cursor, see
+  [Aiming](controls.md#aiming)), and then it takes its time like any other action.
   Choosing one you cannot use only tells you why;
 - a long list shows a page at a time: `>` and `<` turn the pages, and the letters start again at
   `a` on every page;
@@ -32,6 +33,15 @@ menu).
 
 {{#include generated/abilities.md}}
 
+- **Throw your voice**: a voice sounds at a place you choose that you see, not solid, within 6
+  cells (the aiming cursor, as for a shot). It is as loud there as someone talking, and it is
+  made there, not where you stand, so creatures that hear it and cannot see that spot go to have
+  a look (see [Hearing](hearing.md#throwing-your-voice)). It takes a normal action. Everyone has
+  it.
+- **Hood your lantern**: lowers your lantern's hood, or raises it again; on a lantern that is out
+  it lights it with the hood lowered. Hooded, the lantern lights the ground around you but not you
+  (see [Your lantern](lantern.md#the-hood)). It is listed under Items, with the lantern; everyone
+  has it.
 - **Shield bash**: anyone can bash with a shield (see [Weapon skills](weapon-skills.md)), so it is
   always in the menu, and you can use it while you hold a shield. It strikes whoever stands in
   the direction you choose, in the time of a blow.
@@ -52,13 +62,13 @@ menu).
   while afterwards, greyed out until it passes; a paladin's gifts answer only while the paladin
   is Good or better (greyed out with `you have strayed` otherwise). They have no key of their own
   yet: `A` uses the one you used last again.
-- No race or item gives an ability yet.
+- No race gives an ability yet.
 
 ## Keys of their own
 
 If you use an ability often, you can give it a key in the Controls screen (the shield bash is
-"Bash with your shield", disarming "Disarm a trap", picking a lock "Pick a lock", and stealing
-"Steal", none with a
-key by default): the key uses the ability just as the menu would, asking for a direction if it
-needs one. Without a shield, it says so at once and takes no time. `a` ("Abilities") and `A`
-("Use the last ability again") can be rebound like every key.
+"Bash with your shield", disarming "Disarm a trap", picking a lock "Pick a lock", stealing
+"Steal", throwing your voice "Throw your voice", and the hood "Hood your lantern"; none has a
+key by default): the key uses the ability just as the menu would, asking for a direction or a
+place if it needs one. Without a shield, it says so at once and takes no time. `a` ("Abilities")
+and `A` ("Use the last ability again") can be rebound like every key.

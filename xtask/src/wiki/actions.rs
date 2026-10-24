@@ -42,6 +42,9 @@ pub(super) fn action_costs(content: &Content) -> String {
             }
             ActionKind::Kick => "Kicking (a door, or a creature)",
             ActionKind::Lantern => "Lighting or dousing the lantern",
+            ActionKind::Hood => {
+                "Lowering or raising the lantern's hood (lighting it hooded: on top of lighting it)"
+            }
             ActionKind::Stairs => {
                 "Taking stairs, entering a place from the overworld, or walking off an area's edge"
             }
@@ -62,6 +65,7 @@ pub(super) fn action_costs(content: &Content) -> String {
             ActionKind::Disarm => "Trying to disarm a trap (whatever comes of it)",
             ActionKind::Chat => "Chatting with someone (asking about a topic takes no time)",
             ActionKind::Steal => "Trying to steal from someone, whatever comes of it",
+            ActionKind::ThrowVoice => "Throwing your voice",
             ActionKind::Climb => {
                 "Climbing out of the water onto ice (on top of the step onto the ice)"
             }

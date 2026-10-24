@@ -48,6 +48,8 @@ pub enum ActionKind {
     Kick,
     /// Lighting or dousing the lantern.
     Lantern,
+    /// Lowering or raising the lantern's hood (spec §5 "Light sources").
+    Hood,
     /// Taking stairs: also entering a location or a local area from the overworld, and walking
     /// off the edge of a local area back to it.
     Stairs,
@@ -89,6 +91,8 @@ pub enum ActionKind {
     Chat,
     /// Trying to steal from a creature (spec §8 "Stealing"), whatever comes of it.
     Steal,
+    /// Throwing one's voice to a cell (spec §5 "Hearing").
+    ThrowVoice,
     /// Climbing out of the water onto ice (spec §5 "Ice"): on top of the step onto it.
     Climb,
 }
@@ -104,6 +108,7 @@ impl ActionKind {
         ActionKind::PickLock,
         ActionKind::Kick,
         ActionKind::Lantern,
+        ActionKind::Hood,
         ActionKind::Stairs,
         ActionKind::PickUp,
         ActionKind::Drop,
@@ -123,6 +128,7 @@ impl ActionKind {
         ActionKind::Disarm,
         ActionKind::Chat,
         ActionKind::Steal,
+        ActionKind::ThrowVoice,
         ActionKind::Climb,
     ];
 
@@ -137,6 +143,7 @@ impl ActionKind {
             ActionKind::PickLock => "pick_lock",
             ActionKind::Kick => "kick",
             ActionKind::Lantern => "lantern",
+            ActionKind::Hood => "hood",
             ActionKind::Stairs => "stairs",
             ActionKind::PickUp => "pick_up",
             ActionKind::Drop => "drop",
@@ -156,6 +163,7 @@ impl ActionKind {
             ActionKind::Disarm => "disarm",
             ActionKind::Chat => "chat",
             ActionKind::Steal => "steal",
+            ActionKind::ThrowVoice => "throw_voice",
             ActionKind::Climb => "climb",
         }
     }
@@ -189,6 +197,7 @@ impl ActionKind {
             ActionKind::PickLock => "pick locks",
             ActionKind::Kick => "kick",
             ActionKind::Lantern => "tend a lantern",
+            ActionKind::Hood => "hood a lantern",
             ActionKind::Stairs => "travel",
             ActionKind::PickUp => "pick things up",
             ActionKind::Drop => "drop things",
@@ -208,6 +217,7 @@ impl ActionKind {
             ActionKind::Disarm => "disarm traps",
             ActionKind::Chat => "talk",
             ActionKind::Steal => "steal",
+            ActionKind::ThrowVoice => "throw your voice",
             ActionKind::Climb => "climb",
         }
     }

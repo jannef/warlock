@@ -405,7 +405,7 @@ const CASES: &[Case] = &[
     Case {
         name: "trap-disarm-prompt",
         actions: "move:N*3 open:N move:N*2 move:E*67 open:S move:S*7 move:SW descend",
-        keys: Some("a Enter"),
+        keys: Some("a c"),
         ..BASE
     },
     Case {

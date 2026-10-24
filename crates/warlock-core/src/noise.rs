@@ -9,7 +9,8 @@
 //! stands ([`MELEE_NOISE`], [`SHOT_NOISE`], [`THROW_NOISE`], [`SPELL_NOISE`]); a kick at a door
 //! is a loud banging on the door ([`KICK_NOISE`], spec §8 "Doors"); a turn of digging makes
 //! digging where the digger stands ([`DIG_NOISE`]); a creature muttering to itself (spec §8
-//! "Dialogue") is a voice ([`VOICE_NOISE`]). A special room scales every noise made inside it by
+//! "Dialogue") is a voice ([`VOICE_NOISE`]), and so is the player's voice thrown to a cell they
+//! see (#235): there, not where they stand. A special room scales every noise made inside it by
 //! its effect's `noise` percent (spec §7 "Special rooms": an echoing hall doubles it, a hushed
 //! chamber takes it down to two fifths). [`noise`] is the one function that decides how loud an
 //! action is: the actor's skills (stealth; spec §8 "Skills") make its steps and doors quieter
@@ -152,7 +153,7 @@ pub const KICK_NOISE: u16 = 100;
 /// How loud a turn of digging is where the digger stands (spec §8 "Digging"): iron on stone.
 pub const DIG_NOISE: u16 = 80;
 /// How loud a creature muttering to itself is where it stands (spec §8 "Dialogue"): heard a few
-/// cells away, by those who listen.
+/// cells away, by those who listen. A voice thrown to a cell is as loud there.
 pub const VOICE_NOISE: u16 = 50;
 
 /// Something an actor does that makes noise.
@@ -172,6 +173,8 @@ pub enum Act {
     Dig,
     /// Mutters to itself, where it stands.
     Mutter,
+    /// Throws its voice to this cell: a voice sounds there.
+    ThrowVoice(Pos),
 }
 
 /// A noise made by an actor, or by a trap going off.
@@ -251,9 +254,9 @@ pub struct Recent {
 /// How loud `act` by `actor` is on `level`, `burden` being the burden it suffers
 /// ([`crate::burden::Load::penalty`]), in the special room where it is made, if any
 /// ([`plain_noise`]): the one place an action's noise is decided. The actor's skills (stealth,
-/// [`Effect::Quiet`]) take their percent off its steps and doors (not its attacks or its voice),
-/// rounded down, and the stealth affixes of what it wears off its steps (spec §8 "Magic items"),
-/// rounded down. `None` if it is silent.
+/// [`Effect::Quiet`]) take their percent off its steps and doors (not its attacks or its voice,
+/// thrown or not), rounded down, and the stealth affixes of what it wears off its steps (spec §8
+/// "Magic items"), rounded down. `None` if it is silent.
 pub fn noise(
     content: &Content,
     level: &LevelState,
@@ -262,7 +265,7 @@ pub fn noise(
     act: Act,
 ) -> Option<Noise> {
     let plain = plain_noise(content, level, actor, burden, act)?;
-    if matches!(act, Act::Attack(_) | Act::Mutter) {
+    if matches!(act, Act::Attack(_) | Act::Mutter | Act::ThrowVoice(_)) {
         return Some(plain);
     }
     let quiet = actor.skill_effect(content, Effect::Quiet).clamp(0, 100) as u16;
@@ -325,6 +328,7 @@ pub fn plain_noise(
             (sound, actor.pos, u32::from(loudness))
         }
         Act::Mutter => (SoundKind::Voice, actor.pos, u32::from(VOICE_NOISE)),
+        Act::ThrowVoice(at) => (SoundKind::Voice, at, u32::from(VOICE_NOISE)),
         Act::Kick(p) => (SoundKind::Banging, p, u32::from(KICK_NOISE)),
         Act::Dig => (SoundKind::Digging, actor.pos, u32::from(DIG_NOISE)),
     };

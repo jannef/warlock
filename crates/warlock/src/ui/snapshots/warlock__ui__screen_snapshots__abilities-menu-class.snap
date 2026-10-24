@@ -7,26 +7,26 @@ expression: "render(case, content.clone())"
 
 
 
-
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Class                                                    │
-                    │   a  Lay on hands   you are drained                      │
-                    │ > b  Smite          in a direction                       │
+                    │ > a  Throw your voice   at a place you see               │
+                    │   b  Lay on hands       you are drained                  │
+                    │   c  Smite              in a direction                   │
                     │ Skills                                                   │
-                    │   c  Handle animal  not usable yet                       │
-                    │   d  Heal           not usable yet                       │
-                    │   e  Intimidate     not usable yet                       │
+                    │   d  Handle animal      not usable yet                   │
+                    │   e  Heal               not usable yet                   │
+                    │   f  Intimidate         not usable yet                   │
                     │ Weapon skills                                            │
-                    │   f  Shield bash    in a direction                       │
+                    │   g  Shield bash        in a direction                   │
+                    │ Items                                                    │
+                    │   h  Hood your lantern                                   │
                     │                                                          │
-                    │ A blow of holy wrath in a direction (an ability), harder │
-                    │ as you grow; then you are spent a while.                 │
+                    │ Make a voice sound at a place you see nearby: those who  │
+                    │ hear it go and look there.                               │
                     │                                                          │
-                    │ a-f or Enter use   Esc close                             │
+                    │ a-h or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
-
-
 
 
 

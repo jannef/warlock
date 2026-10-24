@@ -73,7 +73,8 @@ impl Mask {
         for (i, _) in lit.iter().enumerate().filter(|(_, lit)| **lit) {
             let i = i as i32;
             let p = Pos::new(origin.x + i % side - r, origin.y + i / side - r);
-            if is_opaque(p) {
+            // A hollow light (a hooded lantern) leaves its own cell dark.
+            if is_opaque(p) || (preset.hollow && p == origin) {
                 continue;
             }
             let light = falloff(preset.color, r, p.dist2(origin));
@@ -227,11 +228,7 @@ impl LevelLights {
             pos,
             preset: fire.light,
         }));
-        let lantern = content
-            .scenario(&state.scenario)
-            .and_then(|s| s.lantern.as_deref())
-            .and_then(|id| content.light_id(id))
-            .filter(|_| state.lantern_lit);
+        let lantern = state.lantern_light(content);
         for actor in state.actors.values().filter(|a| a.level == level.id) {
             let id = u64::from(actor.id.0);
             if let Some(preset) = content.creature(actor.creature).light {
@@ -322,6 +319,8 @@ mod tests {
             id: "test".into(),
             color: Light::new(255, 255, 255, 255),
             radius,
+            hooded: None,
+            hollow: false,
             stability: Default::default(),
         }
     }

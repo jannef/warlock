@@ -207,7 +207,8 @@ pub(super) fn track(
             // a missile flies in `missiles`, a spell effect plays in `spells`; a status effect or
             // a disease shows in the status bar; talk is in the message line (and the dialogue
             // screen). A fall through the ice splashes as the step into the water there (the ice
-            // is gone). A trap shows as itself once known, and in the message line.
+            // is gone). A trap shows as itself once known, and in the message line. A thrown
+            // voice shows as a sound marker where it sounded (`sounds`).
             Event::Died { .. }
             | Event::Missile { .. }
             | Event::Spell { .. }
@@ -216,7 +217,8 @@ pub(super) fn track(
             | Event::Talked(_)
             | Event::FellThroughIce { .. }
             | Event::TrapSprung { .. }
-            | Event::TrapStruck { .. } => {}
+            | Event::TrapStruck { .. }
+            | Event::VoiceThrown { .. } => {}
             Event::LevelChanged { .. } => {
                 bursts.list.clear();
                 tints.clear();

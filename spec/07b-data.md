@@ -159,6 +159,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `close_door`, `unlock` (unlocking a door with a key, on top of opening it), `pick_lock` (2000:
   a try at picking a lock, whatever comes of it; a lock that gives opens its door on top of it,
   `open_door`; §8 "Doors"), `kick`, `lantern`,
+  `hood` (500: lowering or raising the lantern's hood; lighting it hooded costs `lantern` too),
   `stairs` (also entering a location or local area and walking off an
   area's edge), `pick_up`, `drop`, `melee` (a shield bash too), `shoot`, `throw`, `reload` (a
   missile weapon that `reloads`: a crossbow shot costs `shoot` plus `reload`, 2000), `cast`,
@@ -167,7 +168,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `body_armor` (3000: it takes a while to strap on), `ready` (1000: a missile weapon, missiles,
   a tool), `eat` (1000: a turn of eating; a meal takes the food's `turns`, §8 "Hunger"), `chat`
   (500: a few words, §8 "Dialogue"), `steal` (1000: trying to steal, whatever comes of it, §8
-  "Stealing"), and `climb` (2000: climbing out of the water onto ice, on
+  "Stealing"), `throw_voice` (1000: throwing one's voice, §5 "Hearing"), and `climb` (2000:
+  climbing out of the water onto ice, on
   top of the step onto it; §5 "Ice"). An action left out, or every action without the file,
   costs 1000; an unknown id or a cost out of range is a content error. The wiki shows them in a
   generated table.
