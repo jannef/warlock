@@ -291,12 +291,14 @@ pub(super) fn construction(
     Ok(out)
 }
 
-/// Whether `material` can be what `role` asks of a main part.
-pub fn can_be(material: &MaterialDef, role: PartRole) -> bool {
-    match role {
-        PartRole::Weapon => material.weapon().is_some(),
-        PartRole::Armour => material.protection.is_some(),
-        PartRole::Any => true,
+impl PartRole {
+    /// Whether a main part of this role may be made of `material`.
+    pub fn allows(self, material: &MaterialDef) -> bool {
+        match self {
+            PartRole::Weapon => material.weapon().is_some(),
+            PartRole::Armour => material.protection.is_some(),
+            PartRole::Any => true,
+        }
     }
 }
 
@@ -317,7 +319,7 @@ fn made_of(
             .map(|(i, _)| i)
             .collect();
         if !grouped.is_empty() {
-            let fit = grouped.into_iter().filter(|&i| can_be(&materials[i], role));
+            let fit = grouped.into_iter().filter(|&i| role.allows(&materials[i]));
             made.extend(fit.map(id));
             continue;
         }
@@ -332,7 +334,7 @@ fn made_of(
                 "`made_of`: `{name}` is a gem, set in items but never what one is made of"
             ));
         }
-        if !can_be(m, role) {
+        if !role.allows(m) {
             let why = match role {
                 PartRole::Weapon => "a weapon's working part (it has no `to_hit` or `damage`)",
                 _ => "armour (it has no `protection`)",

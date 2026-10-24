@@ -1,3 +1,13 @@
+# Common in primitive creatures' gear.
 [[material]]
 id = "bone"
 name = "bone"
+group = "bone"
+color = "#e3dac9"
+weight = 60
+to_hit = 0
+damage = -1
+protection = 50
+value = 30
+rarity = { weight = 300, deeper = -10 }
+gear = { weight = 600, deeper = -30 }

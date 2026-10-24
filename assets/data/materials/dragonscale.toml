@@ -1,0 +1,11 @@
+# Very rare, and only deep; no weapon.
+[[material]]
+id = "dragonscale"
+name = "dragonscale"
+group = "hide"
+color = "#3fa36b"
+weight = 40
+protection = 130
+value = 3000
+rarity = { weight = 10, level = 10 }
+gear = { weight = 5, level = 10 }

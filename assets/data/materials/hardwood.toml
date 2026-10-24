@@ -1,0 +1,12 @@
+[[material]]
+id = "hardwood"
+name = "hardwood"
+group = "wood"
+color = "#6e4524"
+weight = 50
+to_hit = 0
+damage = -1
+protection = 40
+value = 40
+rarity = { weight = 300 }
+gear = { weight = 300 }

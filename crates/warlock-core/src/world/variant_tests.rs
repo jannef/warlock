@@ -2,12 +2,14 @@
 //! materials' properties and construction lists are checked as content loads; a variant weighs,
 //! strikes, protects, and is worth what its material makes it, is drawn in its colour, and is
 //! named "[ornament] [material] base"; it is placed by level files, refused off its base item's
-//! list, and survives saves and replays.
+//! list, and survives saves and replays. Loot and creatures' gear draw variants by how often
+//! materials are found, and the built-in materials and lists are #193's and #194's: thousands of
+//! generated items across seeds and depths are each on their base item's list.
 
 use super::*;
 use crate::action::parse_actions;
 use crate::color::Rgb;
-use crate::content::{ContentFiles, ObjectId, PartRole};
+use crate::content::{ContentFiles, ObjectId, PartRole, VERY_RARE};
 use crate::item_parts::ItemPart;
 use crate::magic::describe::lines;
 use crate::magic::{Affix, LootGrade, Magic, Rarity, loot};
@@ -212,8 +214,16 @@ fn construction_lists_name_groups_and_materials_and_keep_their_own() {
     let id = |m: &str| content.material_id(m).expect(m);
     let sword = content.object(object(&content, "long_sword"));
     // Groups, sorted by id; the grip has no list: only its own leather.
-    let metals = ["bronze", "gold", "iron", "silver", "steel", "tin"].map(id);
+    let mut metals: Vec<_> = (content.materials().iter().enumerate())
+        .filter(|(_, m)| m.group.as_deref() == Some("metal"))
+        .map(|(i, m)| (m.id.clone(), crate::content::MaterialId(i as u16)))
+        .collect();
+    metals.sort();
+    let metals: Vec<_> = metals.into_iter().map(|(_, m)| m).collect();
     assert_eq!(sword.made_of(0), metals);
+    for metal in ["bronze", "gold", "iron", "silver", "steel", "tin"] {
+        assert!(metals.contains(&id(metal)), "{metal}");
+    }
     assert_eq!(sword.made_of(1), [id("leather")]);
     assert_eq!(sword.role(), PartRole::Weapon);
     // Groups keep what the main part can be: no leather blade, no flint mail; any material of
@@ -283,9 +293,9 @@ fn construction_lists_name_groups_and_materials_and_keep_their_own() {
     // In its table alone it is the same list.
     let kept: Vec<&str> = text.lines().filter(|l| !l.starts_with("made_of")).collect();
     files.insert(path, &kept.join("\n"));
-    let content = Content::load(&files).expect("the table's list");
-    let sword = content.object(content.object_id("long_sword").expect("sword"));
-    assert_eq!(sword.made_of(0).len(), 6);
+    let again = Content::load(&files).expect("the table's list");
+    let table = again.object(again.object_id("long_sword").expect("sword"));
+    assert_eq!(table.made_of(0), metals);
 }
 
 #[test]
@@ -572,17 +582,19 @@ fn loot_and_gear_draw_materials_by_how_often_they_are_found() {
     let sword = content.object(object(&content, "long_sword"));
     let weights = |source, level| crate::variant::weights(&content, sword, source, level);
     // By the construction list's order (material ids), each by its rarity at the item level.
-    assert_eq!(
-        weights(Source::Loot, 1),
-        [
-            (id("bronze"), 800),
-            (id("gold"), 10),
-            (id("iron"), 300),
-            (id("silver"), 10),
-            (id("steel"), 300),
-            (id("tin"), 300),
-        ]
-    );
+    let shallow = weights(Source::Loot, 1);
+    let list: Vec<_> = shallow.iter().map(|(m, _)| *m).collect();
+    assert_eq!(list, sword.made_of(0));
+    for found in [
+        (id("bronze"), 800),
+        (id("gold"), 10),
+        (id("iron"), 300),
+        (id("silver"), 10),
+        (id("steel"), 300),
+        (id("tin"), 300),
+    ] {
+        assert!(shallow.contains(&found), "{found:?}");
+    }
     // Deeper: fewer primitive metals, more steel.
     let deep = weights(Source::Loot, 11);
     assert!(deep.contains(&(id("bronze"), 400)) && deep.contains(&(id("steel"), 900)));
@@ -674,4 +686,260 @@ fn loot_rolls_variants_from_its_list_deterministically() {
             assert!(name.contains(&content.material(main).name), "{name}");
         }
     }
+}
+
+fn builtin() -> Arc<Content> {
+    Arc::new(Content::builtin().expect("built-in content"))
+}
+
+#[test]
+fn the_built_in_materials_are_the_issues_tables() {
+    let content = builtin();
+    let m = |id: &str| content.material(content.material_id(id).expect(id));
+    // #193's sixteen metals and silver: weight, weapon, armour, value.
+    let metals = [
+        ("steel", 100, 0, 0, 100, 100),
+        ("iron", 100, -1, 0, 90, 60),
+        ("tin", 93, 0, -2, 40, 40),
+        ("pewter", 93, 0, -2, 40, 50),
+        ("bronze", 112, 0, -1, 80, 80),
+        ("copper", 114, 0, -1, 60, 70),
+        ("zinc", 91, 0, -2, 50, 60),
+        ("brass", 108, 0, -1, 70, 90),
+        ("gold", 246, -2, 1, 50, 2000),
+        ("electrum", 191, -1, 0, 60, 1200),
+        ("cadmium", 110, 0, -2, 50, 400),
+        ("bendalloy", 118, 0, -1, 70, 600),
+        ("aluminium", 34, 1, -2, 70, 800),
+        ("duralumin", 36, 1, -1, 90, 1000),
+        ("chromium", 92, 0, 1, 110, 900),
+        ("nicrosil", 108, 0, 1, 110, 1000),
+        ("silver", 134, -1, -1, 50, 1500),
+    ];
+    for (id, weight, hit, damage, protection, value) in metals {
+        let def = m(id);
+        assert_eq!(def.group.as_deref(), Some("metal"), "{id}");
+        assert_eq!(
+            (def.weight, def.weapon(), def.protection, def.value),
+            (weight, Some((hit, damage)), Some(protection), value),
+            "{id}"
+        );
+        assert!(
+            def.color.is_some() && def.rarity.is_some() && def.gear.is_some(),
+            "{id}"
+        );
+    }
+    let metal_count = (content.materials().iter())
+        .filter(|d| d.group.as_deref() == Some("metal"))
+        .count();
+    assert_eq!(metal_count, metals.len());
+    for left_out in ["lerasium", "atium", "malatium"] {
+        assert!(content.material_id(left_out).is_none(), "{left_out}");
+    }
+    // A metal worse than steel and dearer is never more than very rare, at any depth; chromium
+    // and nicrosil, better and dearer, are very rare and only deeper.
+    let steel = m("steel");
+    for def in content.materials() {
+        if def.group.as_deref() != Some("metal") {
+            continue;
+        }
+        let (hit, damage) = def.weapon().expect("a weapon");
+        let worse = hit < 0 || damage < 0 || def.protection < steel.protection;
+        if worse && def.value > steel.value {
+            let found = def.rarity.expect("found");
+            assert!(found.weight <= VERY_RARE && found.deeper <= 0, "{}", def.id);
+        }
+    }
+    for deep in ["chromium", "nicrosil", "dragonbone", "dragonscale"] {
+        let found = m(deep).rarity.expect("found");
+        assert!(found.weight <= VERY_RARE && found.level > 1, "{deep}");
+    }
+    // Primitive metals the common ones; steel the usual only deeper.
+    let at = |id: &str, level| m(id).rarity.expect("found").at(level);
+    assert!(at("bronze", 1) > at("steel", 1) && at("copper", 1) > at("steel", 1));
+    for primitive in ["bronze", "copper", "iron", "tin"] {
+        assert!(at("steel", 15) > at(primitive, 15), "{primitive}");
+    }
+    // #194's organic materials (and flint and obsidian): groups and what they can be.
+    let organic = [
+        ("wood", "wood", true, true),
+        ("hardwood", "wood", true, true),
+        ("ironwood", "wood", true, true),
+        ("bone", "bone", true, true),
+        ("horn", "bone", true, true),
+        ("ivory", "bone", true, true),
+        ("chitin", "bone", true, true),
+        ("dragonbone", "bone", true, true),
+        ("flint", "stone", true, false),
+        ("obsidian", "stone", true, false),
+        ("leather", "hide", false, true),
+        ("hardened_leather", "hide", false, true),
+        ("fur", "hide", false, true),
+        ("dragonscale", "hide", false, true),
+        ("cloth", "cloth", false, true),
+        ("silk", "cloth", false, true),
+    ];
+    for (id, group, weapon, armour) in organic {
+        let def = m(id);
+        assert_eq!(def.group.as_deref(), Some(group), "{id}");
+        assert_eq!(def.weapon().is_some(), weapon, "{id}");
+        assert_eq!(def.protection.is_some(), armour, "{id}");
+    }
+    assert_eq!(m("dragonscale").protection, Some(130));
+    // Paper and wax have no group: nothing is made of them, not even jewellery.
+    for none in ["paper", "wax", "flesh", "plant"] {
+        assert!(m(none).group.is_none() && m(none).color.is_some(), "{none}");
+    }
+}
+
+#[test]
+fn the_built_in_construction_lists_make_no_silly_items() {
+    let content = builtin();
+    let id = |m: &str| content.material_id(m).expect(m);
+    let list = |o: &str| content.object(object(&content, o)).made_of(0).to_vec();
+    // Swords of metal or dragonbone; no leather, wood, or stone blade.
+    let sword = list("long_sword");
+    assert!(sword.contains(&id("bronze")) && sword.contains(&id("dragonbone")));
+    for no in ["leather", "wood", "flint", "bone"] {
+        assert!(!sword.contains(&id(no)), "{no} sword");
+    }
+    // Daggers of bone and flint too; spears by their heads; clubs of wood and bone.
+    assert!(list("dagger").contains(&id("flint")) && list("dagger").contains(&id("bone")));
+    assert!(list("spear").contains(&id("flint")));
+    assert_eq!(
+        content.object(object(&content, "spear")).material(),
+        id("iron")
+    );
+    assert!(list("club").contains(&id("ironwood")) && !list("club").contains(&id("iron")));
+    // Armour of what can be armour: no flint mail; mail of metal only; cloaks of cloth, fur,
+    // and leather.
+    assert!(!list("scale_mail").contains(&id("flint")));
+    assert!(list("scale_mail").contains(&id("dragonscale")));
+    assert!(
+        list("chain_mail")
+            .iter()
+            .all(|&m| content.material(m).group.as_deref() == Some("metal"))
+    );
+    assert!(list("wool_cloak").contains(&id("fur")) && !list("wool_cloak").contains(&id("iron")));
+    // Jewellery of any material with a group, but never paper or wax.
+    let ring = list("gold_ring");
+    assert!(ring.contains(&id("bone")) && ring.contains(&id("silk")) && ring.contains(&id("jade")));
+    assert!(!ring.contains(&id("paper")) && !ring.contains(&id("wax")));
+    // Rocks, food, potions, scrolls, coins, gems, keys: only what they are.
+    for only in [
+        "rock",
+        "ration",
+        "red_potion",
+        "scroll_of_light",
+        "gold_coin",
+        "gem",
+        "iron_key",
+        "sling_stone",
+    ] {
+        let def = content.object(object(&content, only));
+        assert_eq!(def.made_of(0), [def.material()], "{only}");
+    }
+}
+
+#[test]
+fn generated_variants_are_on_their_base_items_lists() {
+    let content = builtin();
+    let mut variants = 0;
+    let mut seen = 0;
+    for seed in 1..=8u64 {
+        for level in [1, 3, 6, 10, 15, 20] {
+            let mut loot_rng = crate::rng::Rng::stream(seed, &format!("test/loot/{level}"));
+            let mut gear_rng = crate::rng::Rng::stream(seed, &format!("test/gear/{level}"));
+            let found = (0..250)
+                .filter_map(|_| loot::roll(&content, &mut loot_rng, level, LootGrade::Any))
+                .chain((0..100).filter_map(|_| {
+                    let gear = Source::Gear(level);
+                    loot::roll_from(&content, &mut gear_rng, level, LootGrade::Magic, gear)
+                }));
+            for stack in found {
+                seen += 1;
+                assert!(stack.is_valid_for(&content), "{stack:?}");
+                if stack.gem(&content).is_some() {
+                    continue;
+                }
+                let def = content.object(stack.object);
+                let main = stack.parts(&content)[0].material;
+                assert!(def.made_of(0).contains(&main), "{} of {main:?}", def.id);
+                if main != def.material() {
+                    variants += 1;
+                    let made = content.material(main);
+                    assert!(stack.describe(&content).contains(&made.name), "{stack:?}");
+                    assert!(def.role().allows(made), "{}: {}", def.id, made.id);
+                }
+            }
+        }
+    }
+    assert!(
+        seen > 10_000 && variants > 3000,
+        "{seen} items, {variants} variants"
+    );
+}
+
+#[test]
+fn shallow_loot_is_primitive_and_steel_comes_with_depth() {
+    let content = builtin();
+    // Melee weapons whose own material is steel, by the material loot made them of.
+    let steel = content.material_id("steel").expect("steel");
+    let made = |source: Source, level: u8| {
+        let mut by: std::collections::BTreeMap<String, usize> = Default::default();
+        let mut total = 0;
+        for seed in 1..=6u64 {
+            let mut rng = crate::rng::Rng::stream(seed, &format!("test/metals/{level}"));
+            for _ in 0..3000 {
+                let grade = LootGrade::Any;
+                let Some(stack) = loot::roll_from(&content, &mut rng, level, grade, source) else {
+                    continue;
+                };
+                let def = content.object(stack.object);
+                if def.material() != steel || def.attack.is_none() {
+                    continue;
+                }
+                let main = stack.parts(&content)[0].material;
+                *by.entry(content.material(main).id.clone()).or_default() += 1;
+                total += 1;
+            }
+        }
+        (by, total)
+    };
+    let share = |by: &std::collections::BTreeMap<String, usize>, total: usize, ids: &[&str]| {
+        ids.iter()
+            .map(|id| by.get(*id).copied().unwrap_or(0))
+            .sum::<usize>()
+            * 100
+            / total
+    };
+    let (shallow, total) = made(Source::Loot, 1);
+    assert!(total > 500, "{total}");
+    let primitive = share(&shallow, total, &["bronze", "copper", "iron", "tin"]);
+    assert!(
+        primitive > 50,
+        "{primitive}% primitive at level 1: {shallow:?}"
+    );
+    let worse_dearer = [
+        "gold",
+        "silver",
+        "electrum",
+        "cadmium",
+        "bendalloy",
+        "aluminium",
+        "duralumin",
+    ];
+    assert!(share(&shallow, total, &worse_dearer) <= 3, "{shallow:?}");
+    assert_eq!(
+        share(&shallow, total, &["chromium", "nicrosil", "dragonbone"]),
+        0
+    );
+    let (deep, total) = made(Source::Loot, 15);
+    let most = deep.iter().max_by_key(|(_, n)| **n).map(|(m, _)| m.clone());
+    assert_eq!(most.as_deref(), Some("steel"), "{deep:?}");
+    assert!(share(&deep, total, &["chromium", "nicrosil", "dragonbone"]) > 0);
+    // A kobold's gear (level 2): mostly primitive, seldom steel.
+    let (kobold, total) = made(Source::Gear(2), 1);
+    assert!(share(&kobold, total, &["steel"]) < 10, "{kobold:?}");
+    assert!(share(&kobold, total, &["bronze", "copper", "iron", "tin"]) > 70);
 }

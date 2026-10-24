@@ -1,0 +1,13 @@
+# Worse than steel in a fight and dearer: very rare.
+[[material]]
+id = "cadmium"
+name = "cadmium"
+group = "metal"
+color = "#b9c3b0"
+weight = 110
+to_hit = 0
+damage = -2
+protection = 50
+value = 400
+rarity = { weight = 10 }
+gear = { weight = 5 }

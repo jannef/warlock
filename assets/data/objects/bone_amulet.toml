@@ -5,6 +5,7 @@ glyph = '"'
 fg = "#e8e0c8"
 class = "amulets"
 materials = ["bone"]
+made_of = ["any"]
 weight = 60
 value = 25
 slot = "neck"

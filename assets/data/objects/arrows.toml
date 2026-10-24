@@ -4,7 +4,8 @@ name = "arrow"
 glyph = "/"
 fg = "#c8a878"
 class = "missiles"
-materials = ["wood"]
+materials = [{ part = "head", of = "iron" }, { part = "shaft", of = "wood", share = 85 }]
+made_of = ["metal", "bone", "stone"]
 weight = 30
 value = 1
 stackable = true

@@ -8,6 +8,7 @@ materials = [
     { part = "pendant", of = "amber" },
     { part = "cord", of = "leather", share = 20 },
 ]
+made_of = ["any"]
 weight = 60
 value = 80
 slot = "neck"

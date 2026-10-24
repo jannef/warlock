@@ -6,6 +6,7 @@ glyph = "["
 fg = "#9aa0a6"
 class = "gloves"
 materials = ["iron"]
+made_of = ["metal"]
 weight = 1000
 value = 40
 slot = "hands"
