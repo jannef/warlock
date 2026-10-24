@@ -347,11 +347,16 @@ impl World {
                 by: None,
                 bled: false,
             };
+            // Unstoppable (spec §8 "Class abilities"): while raging, some statuses tick nothing.
+            let numb: &[StatusId] = match (&talents.unstoppable, talents.rage) {
+                (Some(numb), Some(rage)) if actor.effects.has(rage) => numb,
+                _ => &[],
+            };
             for e in actor.effects.iter_mut() {
                 let def = content.status(e.status);
                 let every = eases(e);
                 let (ticks, eased) = e.advance_every(def, every, step);
-                if ticks > 0 {
+                if ticks > 0 && !numb.contains(&e.status) {
                     let cost = u64::from(def.damage) * ticks;
                     moment.damage += i32::try_from(cost).unwrap_or(i32::MAX);
                     let drain = u64::from(def.mana_damage) * ticks;

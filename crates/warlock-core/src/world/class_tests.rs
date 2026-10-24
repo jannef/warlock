@@ -89,7 +89,7 @@ fn level_one_abilities_come_with_the_character_and_others_with_their_levels() {
     );
     assert!(rows.iter().filter(|r| r.contains("(class)")).count() == 1);
     // An adventurer without a table yet has none.
-    let warrior = world("warrior");
+    let warrior = world("ranger");
     let rows = dump::layer_rows(&warrior, Layer::Talents);
     assert!(rows.iter().all(|r| r.contains("(sign")), "{rows:?}");
     // Level 6 brings Fencing, as news of the level.
@@ -358,7 +358,7 @@ fn weapons_and_styles_read_the_talents_benefits() {
     let before_long = w.state.player().benefit(w.content(), Some(long));
     give(&mut w, "fencing");
     let duelist = &w.content().weapon_skills().skill(duelist).clone();
-    let (_, ranks) = mods(&w).weapon_benefit(&duelist.id, duelist.role);
+    let (_, ranks) = mods(&w).weapon_benefit(&duelist.id, duelist.role, 0);
     assert_eq!(ranks, 1, "Duelist reads a rank higher");
     give(&mut w, "big_hands");
     let maced = w.state.player().benefit(w.content(), Some(maces));

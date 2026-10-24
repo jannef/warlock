@@ -56,13 +56,13 @@ fn mods(w: &World) -> crate::talent::TalentMods {
 #[test]
 fn a_sign_grants_its_animals_then_its_elements_gifts_and_a_lucky_day_one_more() {
     let w = born_under("salamander", "wood", 2);
-    assert_eq!(held(&w), ["fleet", "slight", "supple", "evergreen"]);
+    assert_eq!(held(&w), ["fleet_footed", "slight", "supple", "evergreen"]);
     let c = w.character().expect("a character");
     assert_eq!(c.title(w.content()), None, "no lucky day on the 2nd");
     let lucky = born_under("salamander", "wood", 1);
     assert_eq!(
         held(&lucky),
-        ["fleet", "slight", "supple", "evergreen", "winners_luck"]
+        ["fleet_footed", "slight", "supple", "evergreen", "winners_luck"]
     );
     let c = lucky.character().expect("a character");
     assert_eq!(c.title(lucky.content()), Some("the Racer"));
@@ -172,7 +172,7 @@ fn a_run_without_a_sign_holds_no_gifts() {
 }
 
 #[test]
-fn fleet_and_winners_luck_are_quicker_and_ponderous_slower() {
+fn fleet_footed_and_winners_luck_are_quicker_and_ponderous_slower() {
     let normal = born_under("hydra", "fire", 5);
     let base = player(&normal).speed(normal.content());
     assert_eq!(
@@ -379,17 +379,17 @@ fn gifts_cannot_be_picked_and_dumps_mark_them() {
     w.player_mut().stats = Stats::new(PerStat::splat(18), PerStat::splat(18));
     let rows = dump::ascii(&w, &[Layer::Stats, Layer::Talents]);
     assert!(rows.contains("Sign Wood Salamander, the Racer"), "{rows}");
-    assert!(rows.contains("Fleet (sign)"), "{rows}");
+    assert!(rows.contains("Fleet-footed (sign)"), "{rows}");
     assert!(rows.contains("Slight (sign, flaw)"), "{rows}");
     let json = dump::json(&w, &[], false);
     assert_eq!(json["character"]["lucky"], "the Racer");
     assert_eq!(json["talents"][1]["flaw"], true);
     let outcome = w.apply(&crate::action::Action::Talent {
-        id: "fleet".into(),
+        id: "fleet_footed".into(),
         choice: None,
     });
     assert!(!outcome.took_turn);
-    assert_eq!(held(&w).iter().filter(|t| *t == "fleet").count(), 1);
+    assert_eq!(held(&w).iter().filter(|t| *t == "fleet_footed").count(), 1);
 }
 
 /// The built-in content with `horoscope.toml` replaced by `text`.
@@ -402,9 +402,9 @@ fn load_horoscope(edit: impl Fn(&str) -> String) -> Result<Content, String> {
 
 #[test]
 fn the_horoscope_and_the_talents_are_checked_against_each_other() {
-    let err = load_horoscope(|t| t.replacen("\"fleet\"", "\"fleeter\"", 1)).unwrap_err();
-    assert!(err.contains("unknown talent `fleeter`"), "{err}");
-    let err = load_horoscope(|t| t.replacen("\"fleet\", ", "\"hardy\", ", 1)).unwrap_err();
+    let err = load_horoscope(|t| t.replacen("\"fleet_footed\"", "\"fleeter\"", 1)).unwrap_err();
+    assert!(err.contains("unknown talent `fleet_footeder`"), "{err}");
+    let err = load_horoscope(|t| t.replacen("\"fleet_footed\", ", "\"hardy\", ", 1)).unwrap_err();
     assert!(
         err.contains("not a granted talent of the `stars` tree"),
         "{err}"
@@ -414,8 +414,8 @@ fn the_horoscope_and_the_talents_are_checked_against_each_other() {
     assert!(err.contains("a flaw: only an animal has a flaw"), "{err}");
     let err = load_horoscope(|t| t.replacen("day = 30", "day = 31", 1)).unwrap_err();
     assert!(err.contains("`day` is 1 to 30"), "{err}");
-    let err = load_horoscope(|t| t.replacen("\"slight\"]", "\"fleet\"]", 1)).unwrap_err();
-    assert!(err.contains("grants `fleet` twice"), "{err}");
+    let err = load_horoscope(|t| t.replacen("\"slight\"]", "\"fleet_footed\"]", 1)).unwrap_err();
+    assert!(err.contains("grants `fleet_footed` twice"), "{err}");
 }
 
 /// The first seed from 1 on which `spec` is born on a lucky day at the showcase's start.

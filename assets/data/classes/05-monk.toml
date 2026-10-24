@@ -19,3 +19,18 @@ kit = [
     "apple*3",
     "copper_coin*7",
 ]
+# Bonus talents from Finesse and Vigour.
+bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["finesse", "vigour"] }
+# The level table (spec §8 "Class abilities"). Flurry and Quivering palm move onto a Ki pool with
+# the alternative resources (#225).
+abilities = [
+    { level = 1, talent = "martial_arts" },
+    { level = 6, talent = "fleet" },
+    { level = 12, talent = "deflect_missiles" },
+    { level = 18, talent = "flurry" },
+    { level = 25, talent = "still_mind" },
+    { level = 32, talent = "purity_of_body" },
+    { level = 40, talent = "diamond_soul" },
+    { level = 50, talent = "quivering_palm" },
+    { level = 60, talent = "perfect_self" },
+]

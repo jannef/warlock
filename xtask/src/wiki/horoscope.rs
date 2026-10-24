@@ -9,7 +9,7 @@ use warlock_core::character::BirthDate;
 use warlock_core::content::{Content, Horoscope};
 use warlock_core::time::{DAYS_PER_MONTH, MONTHS_PER_YEAR};
 
-/// The gifts of `grants` (talent ids), one a line in a cell: "**Fleet**: speed +5 %", a flaw
+/// The gifts of `grants` (talent ids), one a line in a cell: "**Fleet-footed**: speed +5 %", a flaw
 /// marked; "—" for none.
 fn gifts(content: &Content, grants: &[String]) -> String {
     let book = content.talents();

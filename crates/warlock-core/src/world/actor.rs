@@ -472,11 +472,18 @@ impl Actor {
         // hide ([`Actor::hide`]) or a magic item's, or stands alone.
         let own = self.hide(content, race).map(|hide| hide.defence);
         let magic_natural = Some(mods.get(ItemEffect::Natural)).filter(|&n| n != 0);
+        // Thick hide (spec §8 "Class abilities"): more natural armour with no body armour on.
+        let hide = match talents.natural_unarmoured {
+            0 => 0,
+            _ if self.wears_body_armour(content) => 0,
+            more => more,
+        };
+        let added = talents.natural + hide;
         let natural: Vec<(Category, i32)> = match (own, magic_natural) {
-            (None, None) if talents.natural == 0 => Vec::new(),
-            (None, None) => vec![(Category::Natural, talents.natural)],
+            (None, None) if added == 0 => Vec::new(),
+            (None, None) => vec![(Category::Natural, added)],
             (own, magic) => (own.into_iter().chain(magic))
-                .map(|n| (Category::Natural, n + talents.natural))
+                .map(|n| (Category::Natural, n + added))
                 .collect(),
         };
         let dodge = Some(self.skill_effect(content, Effect::Dodge) + talents.dodge)
@@ -489,7 +496,12 @@ impl Actor {
                 mods.get(ItemEffect::Deflection) + talents.deflection,
             ),
         ];
-        let stance = content.stance_def(self.stance).defence();
+        // Iron stance (spec §8 "Class abilities") softens a stance's Dodge penalty.
+        let stance =
+            (content.stance_def(self.stance).defence()).map(|(category, bonus)| match category {
+                Category::Dodge => (category, talents.stance_dodge(self.stance, bonus)),
+                _ => (category, bonus),
+            });
         Defence::from_bonuses(
             std::iter::once((Category::Dexterity, dexterity))
                 .chain(worn)
@@ -518,6 +530,13 @@ impl Actor {
             return Protection::plain(base + natural);
         }
         Protection::new(content, base + natural, adjustments)
+    }
+
+    /// Whether it wears body armour: anything in a slot worn as body armour (`body_armor`, the
+    /// Body slot). Thick hide, Fast movement, and Fleet ask for none (spec §8 "Class abilities").
+    pub fn wears_body_armour(&self, content: &Content) -> bool {
+        (self.equipment.items().into_iter())
+            .any(|(slot, _)| content.slot(slot).action == ActionKind::BodyArmor)
     }
 
     /// The Protection its talents add (spec §8 "Talents": Heavy armour mastery while its body
@@ -663,7 +682,7 @@ impl Actor {
         // its kind add to the chosen skill's benefits, Deadly aim and its kind to a role's; a
         // free bash grows more likely only where there is one.
         let def = table.skill(id);
-        let (extra, ranks) = self.talent_mods(content).weapon_benefit(&def.id, def.role);
+        let (extra, ranks) = (self.talent_mods(content)).weapon_benefit(&def.id, def.role, rank);
         let base = table.benefit(id, TalentMods::raised(rank, ranks));
         let bash = if base.bash > 0 { extra.bash } else { 0 };
         base.plus(Benefit { bash, ..extra })
@@ -942,7 +961,15 @@ impl Actor {
         let mods = self.mods(content);
         let natural = content.creature(self.creature).attack.as_ref();
         let weapon = self.weapon_item(content).map(|i| &self.inventory[i]);
-        let unarmed = || Attack::unarmed(content.unarmed_damage());
+        let talents = self.talent_mods(content);
+        // Martial arts (spec §8 "Class abilities"): bare hands roll a bigger die.
+        let unarmed = || {
+            let mut fists = Attack::unarmed(content.unarmed_damage());
+            if let Some(sides) = talents.unarmed_die {
+                fists.damage = crate::dice::Dice::of(1, u32::from(sides));
+            }
+            fists
+        };
         let (attack, local, penetration, added) = match (weapon, natural) {
             (Some(stack), _) => match &content.object(stack.object).attack {
                 Some(attack) => {
@@ -971,9 +998,15 @@ impl Actor {
         profile.riders.extend(added);
         local.sharpen(&mut profile);
         mods.sharpen(&mut profile);
-        let talents = self.talent_mods(content);
         profile.bonus += talents.melee_damage;
         profile.penetration += talents.penetration_for(&profile.kinds);
+        // Brutal critical (spec §8 "Class abilities"): a two-handed weapon's criticals hit harder.
+        if talents.two_handed_crit > 0
+            && weapon.is_some_and(|s| content.object(s.object).two_handed)
+        {
+            profile.crit = (profile.crit.saturating_add(talents.two_handed_crit))
+                .min(*crate::combat::CRITS.end());
+        }
         self.stanced(content, profile)
     }
 
@@ -1103,7 +1136,8 @@ impl Actor {
         let mods = self.mods(content);
         let talents = self.talent_mods(content);
         let mut fists = Attack::unarmed(content.unarmed_damage());
-        if let Some(sides) = talents.kick_die {
+        // Mighty kick's die, or Martial arts' (spec §8 "Class abilities"), the bigger.
+        if let Some(sides) = talents.kick_die.max(talents.unarmed_die) {
             fists.damage = crate::dice::Dice::of(1, u32::from(sides));
         }
         let mut profile = Profile::melee(&fists, &self.stats_with(content, &mods))

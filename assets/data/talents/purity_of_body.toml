@@ -1,0 +1,8 @@
+[[talent]]
+id = "purity_of_body"
+name = "Purity of body"
+tree = "class"
+granted = true
+description = "No disease can take hold of you any more."
+effects = [{ kind = "disease_immune" }]
+systems = ["diseases"]

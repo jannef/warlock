@@ -18,6 +18,8 @@ const CARRIED: u64 = 1 << 63;
 const LANTERN: u64 = 1 << 62;
 /// Extra key tag for the light of a glowing magic item an actor wears or wields.
 const GLOW: u64 = 1 << 61;
+/// Extra key tag for the light an actor sheds by a status of its own (Holy radiance).
+const RADIANCE: u64 = 1 << 60;
 /// The sun's key: the lantern tag without the carried tag, which no other source has (static
 /// keys have both tags clear).
 pub(crate) const SUN_KEY: u64 = LANTERN;
@@ -254,6 +256,18 @@ impl LevelLights {
             {
                 sources.push(Source {
                     key: CARRIED | GLOW | id,
+                    pos: actor.pos,
+                    preset,
+                });
+            }
+            // Its own light while a status of its lasts (spec §8 "Class abilities": Holy
+            // radiance).
+            if !actor.talents.is_empty()
+                && let Some((status, preset)) = actor.talent_mods(content).radiance
+                && actor.effects.has(status)
+            {
+                sources.push(Source {
+                    key: CARRIED | RADIANCE | id,
                     pos: actor.pos,
                     preset,
                 });

@@ -163,6 +163,8 @@ pub enum TalentEffect {
     Dodge { value: i32 },
     /// Natural armour: added to the actor's own, whatever the best item gives.
     Natural { value: i32 },
+    /// Natural armour as `natural`, only while it wears no body armour (Thick hide).
+    NaturalUnarmoured { value: i32 },
     /// Damage added to every melee blow (the main hand's and the off hand's).
     MeleeDamage { value: i32 },
     /// Every attack threatens a critical this many natural points lower.
@@ -267,7 +269,22 @@ pub enum TalentEffect {
         bash: u8,
         #[serde(default)]
         shield: i32,
+        /// Added to a confirmed critical's multiplier (never past ×5).
+        #[serde(default)]
+        crit: u8,
+        /// Only for a skill held at this rank at least (0: any).
+        #[serde(default)]
+        at_rank: u8,
     },
+    /// The marks its attacks earn in the weapon skills of `role`, this percent more (Weapon
+    /// drill).
+    WeaponMarks { role: Role, value: i32 },
+    /// A confirmed critical's multiplier with a two-handed weapon, this much more (never past
+    /// ×5; Brutal critical).
+    TwoHandedCrit { value: u8 },
+    /// Its blows with no weapon in hand (and its kicks) roll one die of this many sides instead
+    /// of bare hands' dice (Martial arts); the biggest counts.
+    UnarmedDie { sides: u8 },
     /// The readied missile weapon shoots this many cells farther.
     LauncherRange { value: i32 },
     /// Throws reach this many cells farther.
@@ -293,6 +310,9 @@ pub enum TalentEffect {
     },
     /// The to-hit penalty of combat stance `stance`, this percent smaller (100: none).
     StanceToHit { stance: CombatStance, percent: i32 },
+    /// The Dodge penalty of combat stance `stance`, this percent smaller (100: none; Iron
+    /// stance).
+    StanceDodge { stance: CombatStance, percent: i32 },
     /// Fleeing steps (spec §8 "Stances") cost this percent more (negative: cheaper).
     FleePercent { value: i32 },
     /// Every hit on the actor (a blow, a shot, a throw, a trap) does this much less after its
@@ -310,6 +330,58 @@ pub enum TalentEffect {
         at_least: i32,
         cooldown: String,
     },
+    /// The class active Veteran's wind ([`ClassActive::VeteransWind`]): as Second wind.
+    VeteransWind {
+        per_level: u8,
+        at_least: i32,
+        cooldown: String,
+    },
+    /// The class active Lay on hands: `per_level` hit points per character level back at once,
+    /// then `degrees` of the `cooldown` status.
+    LayOnHands {
+        per_level: u8,
+        cooldown: String,
+        degrees: u16,
+    },
+    /// Lay on hands heals fully and cures every status that may be cured and every disease, and
+    /// its cooldown is half as long (Avatar).
+    Avatar,
+    /// The class active Rage: the player suffers `status` (Raging), and no rage while it or the
+    /// status it `follows` into lasts.
+    Rage { status: String },
+    /// A kill of the player's while raging keeps the rage this many seconds longer (never past
+    /// its full length; Blood frenzy).
+    BloodFrenzy { seconds: u32 },
+    /// While raging: the statuses named tick nothing, and a blow that would take the last hit
+    /// point leaves it, ending the rage (Unstoppable).
+    Unstoppable { statuses: Vec<String> },
+    /// The class active Whirlwind: a blow at every hostile beside it for the price of one
+    /// attack.
+    Whirlwind,
+    /// The class active Smite: a melee blow in a direction with one die of `sides` more damage
+    /// per `per_levels` character levels (at least one), then `degrees` of the `cooldown`
+    /// status.
+    Smite {
+        per_levels: u8,
+        sides: u8,
+        cooldown: String,
+        degrees: u16,
+    },
+    /// The class active Holy radiance: a toggle; while it suffers `status` it sheds light
+    /// `light` (an id in `data/lights.toml`).
+    Radiance { status: String, light: String },
+    /// The class active Quivering palm: an unarmed blow in a direction; a hit that wounds
+    /// leaves the target `severity` degrees of `status`; then `degrees` of the `cooldown`
+    /// status.
+    QuiveringPalm {
+        status: String,
+        severity: u16,
+        cooldown: String,
+        degrees: u16,
+    },
+    /// Every level past `hp_level` (data/experience.toml) adds hit points again, as the levels
+    /// up to it do, and `bonus` more (Hardened). Handed out as the levels come.
+    Hardened { bonus: i32 },
     /// Rotten food never makes it vomit and sickens it half as much; overeating never makes it
     /// vomit (Iron stomach).
     IronStomach,
@@ -328,6 +400,13 @@ pub enum TalentEffect {
     Checks { stat: Stat, value: i32 },
     /// A disease needs this many checks fewer won in a row to be shaken off, never fewer than 1.
     DiseaseRecovery { value: i32 },
+    /// It never catches a disease (Divine health, Purity of body): no check, no infection.
+    DiseaseImmune,
+    /// No status lowers its score in `stat` (Still mind).
+    NoPenaltyTo { stat: Stat },
+    /// What status `status` raises its scores by, this percent more (Mighty rage: Raging's
+    /// Strength and Toughness doubled); lowerings are untouched.
+    RaisePercent { status: String, value: i32 },
     /// Its kicks at creatures roll one die of this many sides instead of bare hands' dice.
     KickDie { sides: u8 },
     /// Its door kicks as if this much stronger.
@@ -357,6 +436,20 @@ pub enum TalentEffect {
     Disarm,
     /// It moves and acts this percent quicker (its speed; the number is hidden in the game).
     SpeedPercent { value: i32 },
+    /// Its steps cost this percent more (negative: cheaper), only while it wears no body armour
+    /// (if `unarmoured`), is Unburdened (if `unburdened`), and holds no shield (if `no_shield`):
+    /// Fast movement, Fleet.
+    StepPercent {
+        value: i32,
+        #[serde(default)]
+        unarmoured: bool,
+        #[serde(default)]
+        unburdened: bool,
+        #[serde(default)]
+        no_shield: bool,
+    },
+    /// Burdened costs it nothing, as a dwarf (Steadfast).
+    Steadfast,
     /// Dodge added against shots, throws, and trap missiles.
     MissileDodge { value: i32 },
     /// The damage bursts and bolts (traps, scrolls) do it, this percent more (negative: less).
@@ -371,13 +464,30 @@ pub enum FreeBlowTrigger {
     GreatCleave,
     Riposte,
     Opportunist,
+    /// A melee attack with nothing in hand strikes twice, the second blow at −2 (Flurry).
+    Flurry,
 }
 
 impl TalentEffect {
+    /// The class active it is, if it is one (spec §8 "Class abilities").
+    pub fn active(&self) -> Option<super::ClassActive> {
+        use super::ClassActive as A;
+        Some(match self {
+            TalentEffect::Rage { .. } => A::Rage,
+            TalentEffect::VeteransWind { .. } => A::VeteransWind,
+            TalentEffect::Whirlwind => A::Whirlwind,
+            TalentEffect::LayOnHands { .. } => A::LayOnHands,
+            TalentEffect::Smite { .. } => A::Smite,
+            TalentEffect::Radiance { .. } => A::HolyRadiance,
+            TalentEffect::QuiveringPalm { .. } => A::QuiveringPalm,
+            _ => return None,
+        })
+    }
+
     /// Whether the numbers are within what the rules expect, and the statuses and damage types
     /// it names are in `content` (content without statuses or damage types has nothing to check
     /// them by: they stay, and do nothing).
-    fn check(&self, content: &Content, choice: Option<Choice>) -> Result<(), String> {
+    pub(super) fn check(&self, content: &Content, choice: Option<Choice>) -> Result<(), String> {
         let status = |id: &str| {
             (content.status_ids().next().is_none() || content.status_id(id).is_some())
                 .then_some(())
@@ -404,6 +514,8 @@ impl TalentEffect {
         match self {
             TalentEffect::Dodge { value }
             | TalentEffect::Natural { value }
+            | TalentEffect::NaturalUnarmoured { value }
+            | TalentEffect::Hardened { bonus: value }
             | TalentEffect::MeleeDamage { value }
             | TalentEffect::Hearing { value }
             | TalentEffect::Notice { value }
@@ -471,7 +583,86 @@ impl TalentEffect {
                 }
             }
             TalentEffect::StanceToHit { percent: value, .. }
+            | TalentEffect::StanceDodge { percent: value, .. }
+            | TalentEffect::WeaponMarks { value, .. }
+            | TalentEffect::StepPercent { value, .. }
             | TalentEffect::FleePercent { value } => percent(*value),
+            TalentEffect::RaisePercent { status: id, value } => {
+                status(id)?;
+                percent(*value)
+            }
+            TalentEffect::TwoHandedCrit { value } => {
+                if !(1..=3).contains(value) {
+                    return Err("`two_handed_crit`: value is 1 to 3".into());
+                }
+                Ok(())
+            }
+            TalentEffect::UnarmedDie { sides } => {
+                if !(2..=20).contains(sides) {
+                    return Err("`unarmed_die`: sides is 2 to 20".into());
+                }
+                Ok(())
+            }
+            TalentEffect::VeteransWind {
+                per_level,
+                at_least,
+                cooldown,
+            } => {
+                if !(1..=20).contains(per_level) || !(0..=100).contains(at_least) {
+                    return Err("`veterans_wind`: per_level is 1 to 20, at_least 0 to 100".into());
+                }
+                status(cooldown)
+            }
+            TalentEffect::LayOnHands {
+                per_level,
+                cooldown,
+                degrees,
+            } => {
+                if !(1..=20).contains(per_level) || *degrees == 0 {
+                    return Err("`lay_on_hands`: per_level is 1 to 20, degrees at least 1".into());
+                }
+                status(cooldown)
+            }
+            TalentEffect::Smite {
+                per_levels,
+                sides,
+                cooldown,
+                degrees,
+            } => {
+                if !(1..=20).contains(per_levels) || !(2..=20).contains(sides) || *degrees == 0 {
+                    return Err("`smite`: per_levels is 1 to 20, sides 2 to 20, degrees at \
+                                least 1"
+                        .into());
+                }
+                status(cooldown)
+            }
+            TalentEffect::QuiveringPalm {
+                status: id,
+                severity,
+                cooldown,
+                degrees,
+            } => {
+                if *severity == 0 || *degrees == 0 {
+                    return Err("`quivering_palm`: severity and degrees are at least 1".into());
+                }
+                status(id)?;
+                status(cooldown)
+            }
+            TalentEffect::Rage { status: id } => status(id),
+            TalentEffect::Radiance { status: id, light } => {
+                status(id)?;
+                if content.light_id(light).is_none() {
+                    return Err(format!("names an unknown light `{light}`"));
+                }
+                Ok(())
+            }
+            TalentEffect::Unstoppable { statuses } => statuses.iter().try_for_each(|id| status(id)),
+            TalentEffect::BloodFrenzy { seconds } => {
+                if !(1..=600).contains(seconds) {
+                    return Err("`blood_frenzy`: seconds is 1 to 600".into());
+                }
+                Ok(())
+            }
             TalentEffect::Resist { value } => match choice {
                 Some(Choice::Element) => percent(*value),
                 _ => Err(
@@ -490,6 +681,8 @@ impl TalentEffect {
                 ease,
                 bash,
                 shield,
+                crit,
+                at_rank,
             } => {
                 if let Some(id) = skill {
                     if role.is_some() {
@@ -509,15 +702,17 @@ impl TalentEffect {
                     );
                 }
                 let small = [to_hit, damage, shield].iter().all(|v| BONUSES.contains(v))
-                    && [threat, ranks, ease].iter().all(|&&v| v <= 5);
+                    && [threat, ranks, ease, crit].iter().all(|&&v| v <= 5)
+                    && *at_rank <= MAX_RANK;
                 let percents = [speed, reload, bash].iter().all(|&&v| v <= 100);
                 let any = [to_hit, damage, shield].iter().any(|&&v| v != 0)
-                    || [threat, ranks, ease, speed, reload, bash]
+                    || [threat, ranks, ease, speed, reload, bash, crit]
                         .iter()
                         .any(|&&v| v != 0);
                 if !small || !percents || !any {
                     return Err("`weapon`: to_hit, damage, shield are -20 to 20; threat, \
-                                ranks, ease 0 to 5; speed, reload, bash 0 to 100; not all 0"
+                                ranks, ease, crit 0 to 5; at_rank 0 to 10; speed, reload, bash \
+                                0 to 100; not all 0"
                         .into());
                 }
                 Ok(())
@@ -594,6 +789,11 @@ impl TalentEffect {
             | TalentEffect::Clotting
             | TalentEffect::SureStep
             | TalentEffect::PitProof
+            | TalentEffect::Steadfast
+            | TalentEffect::DiseaseImmune
+            | TalentEffect::NoPenaltyTo { .. }
+            | TalentEffect::Avatar
+            | TalentEffect::Whirlwind
             | TalentEffect::WeightlessCoins
             | TalentEffect::IdentifyTrades
             | TalentEffect::ItemWorth

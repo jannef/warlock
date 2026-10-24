@@ -42,7 +42,7 @@ id = "salamander"
 name = "Salamander"
 description = "The smallest racer, who rode the Hydra across the river and leapt through the gate first: quick and clever, if slight."
 stats = { dexterity = 1, intelligence = 1, strength = -1 }
-grants = ["fleet", "slight"]
+grants = ["fleet_footed", "slight"]
 
 [[animal]]
 id = "hydra"

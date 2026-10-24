@@ -236,6 +236,14 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // A paladin of some level: the Class group, Lay on hands drained, Smite ready.
+    Case {
+        name: "abilities-menu-class",
+        character: Some("human,male,paladin"),
+        actions: "xp:100000 levelup:auto use:lay_on_hands",
+        screen: Some("abilities"),
+        ..BASE
+    },
     // Items.
     Case {
         name: "equipment-screen",
