@@ -298,6 +298,11 @@ Hard rules:
   `warlock_core::ability`, the one registry, and are used from the one abilities menu (`a`):
   never a default key of their own (an ability's own `KeyCommand` stays unbound by default,
   `settings/keys.rs::UNBOUND`). Basic commands keep their keys (`docs/dev/screens.md`).
+- Every new system ships with talents: the PR that adds it adds its `[[system]]` tag in
+  `assets/data/talents.toml` and at least the `[coverage]` bar of talents (and class abilities)
+  carrying it; resources (mana, #225's pools) are systems too. The feature issue answers the
+  template's "Talents and class abilities" section (`.github/ISSUE_TEMPLATE/feature.md`), or
+  says why none (`docs/dev/progression.md` "Coverage policy").
 - Keep modules small with clear responsibilities. No speculative abstractions, no premature
   optimization.
 
