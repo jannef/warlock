@@ -91,6 +91,7 @@ mod bleed;
 mod buff;
 mod carry;
 mod class;
+mod class_ability;
 mod dev;
 mod dig;
 mod disarm;
@@ -968,6 +969,7 @@ impl World {
             Action::Search(turns) => return Spent::Search(*turns),
             Action::Disarm(dir) => return self.disarm(*dir, events),
             Action::SecondWind => return self.second_wind(events),
+            Action::Use(active, dir) => return self.use_class(*active, *dir, events),
             Action::Talent { id, choice } => return self.take_talent(id, choice.as_deref()),
             Action::Advance(skill) => return self.advance_skill(skill),
             Action::SetVision(id) => return self.set_vision(id),
@@ -1035,6 +1037,8 @@ mod buff_tests;
 mod burden_tests;
 #[cfg(test)]
 mod character_tests;
+#[cfg(test)]
+mod class_active_tests;
 #[cfg(test)]
 mod class_tests;
 #[cfg(test)]

@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ You learn Brawn (1).
+ Warmth flows from your hands. You feel drained.
+
+
+
+
+                    ┌─ Abilities ──────────────────────────────────────────────┐
+                    │                                                          │
+                    │ Class                                                    │
+                    │   a  Lay on hands   you are drained                      │
+                    │ > b  Smite          in a direction                       │
+                    │ Skills                                                   │
+                    │   c  Handle animal  not usable yet                       │
+                    │   d  Heal           not usable yet                       │
+                    │   e  Intimidate     not usable yet                       │
+                    │ Weapon skills                                            │
+                    │   f  Shield bash    in a direction                       │
+                    │                                                          │
+                    │ A blow of holy wrath in a direction (an ability), harder │
+                    │ as you grow; then you are spent a while.                 │
+                    │                                                          │
+                    │ a-f or Enter use   Esc close                             │
+                    └──────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+ The Hub  ·  HP 56/56  ·  Drained  ·  Lv 13  ·  08:00  ·  11 Darkening, Year 1444        ? controls

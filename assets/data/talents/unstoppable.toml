@@ -1,0 +1,8 @@
+[[talent]]
+id = "unstoppable"
+name = "Unstoppable"
+tree = "class"
+granted = true
+description = "While you rage, bleeding and poison cannot hurt you, and a blow that would fell you leaves you standing, though it ends the rage."
+effects = [{ kind = "unstoppable", statuses = ["bleeding", "poisoned"] }]
+systems = ["status", "hit_points"]

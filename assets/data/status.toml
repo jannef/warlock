@@ -142,6 +142,38 @@ eases = 900
 start = "You are winded."
 end = "You have your breath back."
 
+# The cooldown of a class's blow (Smite: one degree; Quivering palm: two), five minutes a degree.
+[[status]]
+id = "spent"
+name = "Spent"
+max = 2
+stacking = "refresh"
+eases = 300
+start = "You are spent."
+end = "You feel your strength gather again."
+
+# Lay on hands' cooldown (two degrees; one with Avatar), five minutes a degree: the paladin's
+# gift waits for the mana it will cost.
+[[status]]
+id = "drained"
+name = "Drained"
+max = 2
+stacking = "refresh"
+eases = 300
+start = "You feel drained."
+end = "Your strength of spirit returns."
+
+# Holy radiance: a faint light about the paladin (the light is the ability's), until they put it
+# out again from the abilities menu.
+[[status]]
+id = "radiant"
+name = "Radiant"
+seen = "shining"
+max = 1
+stacking = "refresh"
+start = "A soft light shines about you."
+end = "Your light fades."
+
 # A staggering blow's (the Staggering blow talent): the next action, taken within a turn's time,
 # costs half again as much.
 [[status]]

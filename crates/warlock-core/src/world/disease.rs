@@ -49,6 +49,10 @@ impl World {
         if actor.diseases.has(disease) {
             return false;
         }
+        // Divine health (spec §8 "Class abilities"): never caught, nothing rolled.
+        if actor.talent_mods(&self.content).disease_immune {
+            return false;
+        }
         let modifier = self.disease_modifier(actor, def.check);
         if check(&mut self.state.rng, modifier, def.difficulty) {
             self.train_resisting(id, def.check);

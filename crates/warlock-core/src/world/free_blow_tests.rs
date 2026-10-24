@@ -507,6 +507,7 @@ fn switches_draw_nothing_until_their_triggers_fire_and_are_saved_only_when_on() 
                     great_cleave: true,
                     riposte: true,
                     opportunist: true,
+                    flurry: true,
                 };
             });
         }

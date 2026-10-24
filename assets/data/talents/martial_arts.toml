@@ -1,0 +1,8 @@
+[[talent]]
+id = "martial_arts"
+name = "Martial arts"
+tree = "class"
+granted = true
+description = "Trained hands and feet: your bare-handed blows and kicks hit far harder."
+effects = [{ kind = "unarmed_die", sides = 6 }]
+systems = ["kicks", "combat"]

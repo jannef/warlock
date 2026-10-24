@@ -1,0 +1,8 @@
+[[talent]]
+id = "fast_movement"
+name = "Fast movement"
+tree = "class"
+granted = true
+description = "Unburdened and in no body armour, you move a little quicker."
+effects = [{ kind = "step_percent", value = -10, unarmoured = true, unburdened = true }]
+systems = ["speed", "burden"]

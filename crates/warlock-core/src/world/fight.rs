@@ -507,15 +507,15 @@ impl World {
         cue: Cue,
     ) -> Option<FreeBlow> {
         match cue {
-            Cue::First(first) => {
-                (self.off_hand_or_bash(striker, target, first)).map(|(with, profile)| FreeBlow {
+            Cue::First(first) => (self.off_hand_or_bash(striker, target, first))
+                .map(|(with, profile)| FreeBlow {
                     by: striker,
                     at: target,
                     kind: Free::Second,
                     with: Some(with),
                     profile,
                 })
-            }
+                .or_else(|| self.flurry(striker, target)),
             Cue::Attacked { parried } => (self.cleave(striker, target, false))
                 .or_else(|| self.riposte(striker, target, parried)),
             Cue::Cleaved => self.cleave(striker, target, true),
@@ -771,6 +771,8 @@ impl World {
         };
         let me = self.player_mut();
         let marks = rules.earned(success, level, me.weapon_skills.rank(skill));
+        // Weapon drill (spec §8 "Class abilities"): more marks in a role's skills.
+        let marks = (me.talent_mods(&content)).marks(table.skill(skill).role, marks);
         if marks > 0 {
             for id in me.weapon_skills.train(table, skill, marks) {
                 let phrase = &table.skill(id).phrase;
@@ -799,6 +801,9 @@ impl World {
             }
             _ => damage,
         };
+        if matches!(harm, Harm::Actor(_)) && self.unstoppable(id, damage, events) {
+            return false;
+        }
         let Some(actor) = self.state.actors.get_mut(&id) else {
             return false;
         };
@@ -864,6 +869,7 @@ impl World {
             });
         } else {
             if by == Some(self.state.player) {
+                self.frenzy();
                 self.earn_kill(creature);
                 let level = self.state.current_level.clone();
                 self.tally_kill(creature, &level);
@@ -932,6 +938,28 @@ impl World {
             seen,
             (with, profile, skills),
             (&words, noisy),
+            events,
+        )
+    }
+
+    /// The player strikes `target` in melee with what they wield, as `profile` says (a class
+    /// active's blow: Smite's dice, Quivering palm's bare hand), its noise made.
+    pub(super) fn player_blow_with(
+        &mut self,
+        target: ActorId,
+        seen: bool,
+        profile: Profile,
+        events: &mut Vec<Event>,
+    ) -> Option<Blow> {
+        let skills = (self.state.player()).attack_skills(&self.content, AttackKind::Melee, None);
+        let words = |me: &Actor, content: &Content, damage| {
+            Words::of(me, AttackKind::Melee, None, damage, content)
+        };
+        self.player_strikes(
+            target,
+            seen,
+            (None, profile, skills),
+            (&words, true),
             events,
         )
     }

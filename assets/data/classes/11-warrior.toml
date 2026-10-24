@@ -19,3 +19,17 @@ kit = [
     "ration",
     "gold_coin*20",
 ]
+# Bonus talents from Weaponcraft and Guard, every sixth level from 4.
+bonus_talents = { levels = [4, 10, 16, 22, 28, 34, 46, 58], trees = ["weaponcraft", "guard"] }
+# The level table (spec §8 "Class abilities").
+abilities = [
+    { level = 1, talent = "weapon_drill" },
+    { level = 6, talent = "shield_line" },
+    { level = 12, talent = "veterans_wind" },
+    { level = 18, talent = "cleaving_strike" },
+    { level = 25, talent = "armour_drill" },
+    { level = 32, talent = "weapon_mastery" },
+    { level = 40, talent = "iron_stance" },
+    { level = 50, talent = "whirlwind" },
+    { level = 60, talent = "champion" },
+]

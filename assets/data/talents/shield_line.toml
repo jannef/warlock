@@ -1,0 +1,8 @@
+[[talent]]
+id = "shield_line"
+name = "Shield line"
+tree = "class"
+granted = true
+description = "You hold the line behind a shield: Shield +1 to your Defence while you hold one."
+effects = [{ kind = "weapon", role = "shield_block", shield = 1 }]
+systems = ["defence"]
