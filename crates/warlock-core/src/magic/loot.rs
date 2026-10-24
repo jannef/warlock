@@ -69,10 +69,29 @@ impl LootGrade {
     }
 }
 
+/// A finder's luck (spec §8 "Talents", "Birth sign"): their talents make the magic and rare
+/// rarities `magic` percent more likely (Treasure hunter), and a loose gem `gems` percent more
+/// likely (Hoard sense). The same draws either way.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Luck {
+    pub magic: i32,
+    pub gems: i32,
+}
+
+impl Luck {
+    /// The luck of a finder with `talents`.
+    pub fn of(talents: &crate::talent::TalentMods) -> Self {
+        Self {
+            magic: talents.loot_magic_percent,
+            gems: talents.gem_find_percent,
+        }
+    }
+}
+
 /// Rolls an item of loot at item level `level`, at least of `grade`, from `rng` (the module docs
 /// give the draws). `None` when content has no base item found at that level.
 pub fn roll(content: &Content, rng: &mut Rng, level: u8, grade: LootGrade) -> Option<Stack> {
-    roll_with(content, rng, level, grade, Source::Loot, 0)
+    roll_with(content, rng, level, grade, Source::Loot, Luck::default())
 }
 
 /// [`roll`], its material drawn as `source` has it: loot's by the item level, a creature's
@@ -84,22 +103,22 @@ pub fn roll_from(
     grade: LootGrade,
     source: Source,
 ) -> Option<Stack> {
-    roll_with(content, rng, level, grade, source, 0)
+    roll_with(content, rng, level, grade, source, Luck::default())
 }
 
-/// [`roll_from`] for a finder whose talents make magic and rare `luck` percent more likely
-/// (Treasure hunter, spec §8 "Talents"): their rarity weights scaled, the same draws.
+/// [`roll_from`] for a finder with `luck` ([`Luck`]): the rarity weights and the gems' chance
+/// scaled, the same draws.
 pub fn roll_with(
     content: &Content,
     rng: &mut Rng,
     level: u8,
     grade: LootGrade,
     source: Source,
-    luck: i32,
+    luck: Luck,
 ) -> Option<Stack> {
     let level = level.max(1);
     if grade == LootGrade::Any
-        && let Some(gem) = gem::find(content, rng, level)
+        && let Some(gem) = gem::find_with(content, rng, level, luck.gems)
     {
         return Some(gem);
     }
@@ -123,7 +142,7 @@ pub fn roll_with(
         rng,
         object,
         count,
-        (level, grade, luck),
+        (level, grade, luck.magic),
         Some(source),
     ))
 }

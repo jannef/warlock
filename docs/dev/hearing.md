@@ -17,7 +17,9 @@ pushing a `Heard { kind, at, loudness }` onto `Actor::heard`. A creature's list 
 since it last acted and is cleared as it acts in `World::creature_turn` (the AI reads it there
 before clearing); the player's is cleared in `World::run_turn` once the player has acted, and
 becomes `PerceptionView::sounds()` (sources not visible only; kind, `Volume`, and `rough_place`,
-never the actor; a walker's several steps within one turn are one sound). `World::hear` logs news
+never the actor; a walker's several steps within one turn are one sound; a listener with
+Watchful's `exact_footsteps`, #267, places footsteps at their own cell, `noise::perceive`'s
+`exact`). `World::hear` logs news
 (`noise::news` against `WorldState::recent_sounds`) as messages, which stop a rest (voices are said
 with their words by `World::say_mutters` instead, as notes). The app draws
 `PerceptionView::sounds()` in `ui/sounds.rs` (a still `◌` marker, always: it is information; the

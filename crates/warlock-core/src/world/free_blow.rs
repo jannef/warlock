@@ -49,6 +49,9 @@ pub struct FreeBlows {
     /// Its melee attacks with nothing in hand strike twice, the second blow at −2.
     #[serde(default, skip_serializing_if = "is_false")]
     pub flurry: bool,
+    /// A hostile stepping up beside it gives it a blow (Gatekeeper).
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub gatekeeper: bool,
 }
 
 impl FreeBlows {
@@ -65,6 +68,7 @@ impl FreeBlows {
             riposte: self.riposte || other.riposte,
             opportunist: self.opportunist || other.opportunist,
             flurry: self.flurry || other.flurry,
+            gatekeeper: self.gatekeeper || other.gatekeeper,
         }
     }
 }
@@ -90,6 +94,8 @@ pub(super) enum Cue {
     Cleaved,
     /// The target is about to step away from beside the striker, out of its reach.
     Leaves,
+    /// The target has just stepped up beside the striker.
+    Approaches,
 }
 
 /// What a blow more is.
@@ -103,17 +109,19 @@ pub(super) enum Free {
     Riposte,
     /// At a hostile stepping away.
     Opportunist,
+    /// At a hostile stepping up beside (Gatekeeper).
+    Gatekeeper,
 }
 
 impl Free {
     /// Whether it makes the noise of an attack: only the opportunist's, an attack of its own.
     pub(super) fn noisy(self) -> bool {
-        self == Free::Opportunist
+        matches!(self, Free::Opportunist | Free::Gatekeeper)
     }
 
     /// Whether it is struck in another's turn (in answer to what they did).
     fn out_of_turn(self) -> bool {
-        matches!(self, Free::Riposte | Free::Opportunist)
+        matches!(self, Free::Riposte | Free::Opportunist | Free::Gatekeeper)
     }
 }
 
@@ -189,6 +197,43 @@ impl World {
             }
         }
         self.stands(id)
+    }
+
+    /// Actor `id` has just stepped from `from` up beside a hostile gatekeeper (spec §8 "Birth
+    /// sign": Gatekeeper): each one it was not beside before strikes it as it comes, in actor
+    /// order, while it stands.
+    pub(super) fn step_up(&mut self, id: ActorId, from: Pos, events: &mut Vec<Event>) {
+        let Some(me) = self.state.actors.get(&id) else {
+            return;
+        };
+        let keepers: Vec<ActorId> = (self.state.actors.values())
+            .filter(|other| other.id != id && other.level == me.level)
+            .filter(|other| other.pos.chebyshev(me.pos) == 1 && other.pos.chebyshev(from) > 1)
+            .filter(|other| self.free_blows_of(other).gatekeeper)
+            .filter(|other| self.stance(id, other.id) == Stance::Hostile)
+            .map(|other| other.id)
+            .collect();
+        for keeper in keepers {
+            if let Some(blow) = self.second_blow(keeper, id, Cue::Approaches) {
+                self.strike_free(blow, events);
+            }
+        }
+    }
+
+    /// Actor `striker`'s blow at `mover`, which stepped up beside it ([`World::step_up`]): a
+    /// blow with what it wields, if it is a gatekeeper.
+    pub(super) fn gatekeeper(&self, striker: ActorId, mover: ActorId) -> Option<FreeBlow> {
+        if !self.stands(striker) || !self.stands(mover) {
+            return None;
+        }
+        let me = &self.state.actors[&striker];
+        self.free_blows_of(me).gatekeeper.then(|| FreeBlow {
+            by: striker,
+            at: mover,
+            kind: Free::Gatekeeper,
+            with: None,
+            profile: me.melee(&self.content),
+        })
     }
 
     /// Whether `me` stepping to `to` takes it out of the reach of `other`, a hostile beside it
