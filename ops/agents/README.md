@@ -62,6 +62,11 @@ $0.08/hour on top of tokens.
 
 ## Credentials
 
+- **Golden update runs:** the cloud token gets HTTP 403 on `gh workflow run` (seen 2026-10-24), so
+  cloud agents report that a branch needs `update_golden=true` and the integrator dispatches it
+  (`gh workflow run ci.yml --ref <branch> -f update_golden=true`); the finisher then downloads
+  and reviews the artifact as usual.
+
 - `git push` goes through Anthropic's git proxy, which uses only the session's
   `github_repository` resource token: `session.sh` reads the PAT from the Keychain (`security
   find-generic-password -a jannef -s warlock-github-pat -w`) and sends it on stdin, never on a
