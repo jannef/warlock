@@ -184,6 +184,7 @@ impl Args {
                 | ScreenName::Characters
                 | ScreenName::NewRun
                 | ScreenName::Race
+                | ScreenName::Sign
                 | ScreenName::Gender
                 | ScreenName::Class
                 | ScreenName::Name
@@ -269,7 +270,15 @@ mod tests {
         assert!(!menu(&["--screen", "settings", "--replay", "r.json"]));
         assert!(!menu(&["--screen", "inventory", "--capture", "x.png"]));
         assert!(!menu(&["--screen", "pick-up"]));
-        for creation in ["race", "gender", "class", "name", "summary", "characters"] {
+        for creation in [
+            "race",
+            "sign",
+            "gender",
+            "class",
+            "name",
+            "summary",
+            "characters",
+        ] {
             assert!(menu(&["--screen", creation, "--capture", "x.png"]));
             assert!(menu(&["--screen", creation, "--replay", "r.json"]));
         }

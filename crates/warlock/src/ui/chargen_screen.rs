@@ -1,11 +1,13 @@
 //! Character creation (spec §6 "New run", §8 "Character creation"): after the scenario and the
-//! seed, New run asks for a race, a gender, and a class, one screen each ([`ChoiceScreen`]), then
-//! a name (`name_screen`), then shows the character ([`SummaryScreen`]): the name, age, birthday,
+//! seed, New run asks for a race, reveals the birth sign (`sign_screen`), asks for a gender and a
+//! class, one screen each ([`ChoiceScreen`]), then a name (`name_screen`), then shows the
+//! character ([`SummaryScreen`]): the name, age, birthday,
 //! and birth sign, the final scores (the dice already rolled), the starting trained skills with
 //! their values, the alignment band they start in (spec §8 "Alignment"), and a way back to any
 //! step.
 //!
-//! The steps are screens on the stack, in order (New run, race, gender, class, name, summary), so
+//! The steps are screens on the stack, in order (New run, race, the sign, gender, class, name,
+//! summary), so
 //! Esc steps back one and the summary's "change" rows return to a step as it was left. What has
 //! been chosen so far is read off the screens on the stack ([`Draft`]); choices made before going
 //! back are remembered ([`Picks`]) and preselected when a step opens again, else the scenario's
@@ -54,10 +56,10 @@ impl Step {
         }
     }
 
-    /// The screen after this step.
+    /// The screen after this step (after the race, the birth sign's reveal).
     fn next(self) -> ScreenName {
         match self {
-            Step::Race => ScreenName::Gender,
+            Step::Race => ScreenName::Sign,
             Step::Gender => ScreenName::Class,
             Step::Class => ScreenName::Name,
             Step::Name => ScreenName::Summary,
@@ -147,7 +149,7 @@ impl Draft {
     }
 
     /// When the run being set up starts.
-    fn start(&self) -> GameTime {
+    pub(super) fn start(&self) -> GameTime {
         self.scenario.as_ref().map_or(GameTime::EPOCH, |s| s.start)
     }
 
@@ -218,7 +220,7 @@ struct Choice {
 }
 
 /// The stat adjustments that are not zero, in stat order, as written in data: `St 1d3+1  Dx −1`.
-fn adjustments(by: &PerStat<Dice>) -> String {
+pub(super) fn adjustments(by: &PerStat<Dice>) -> String {
     let parts: Vec<String> = (by.iter())
         .filter(|(_, v)| !v.is_zero())
         .map(|(stat, v)| format!("{} {}", stat.abbrev(), dice_text(v)))
@@ -394,13 +396,22 @@ fn gender_description(gender: Gender, seed: u64) -> String {
     }
 }
 
-/// The summary's rows: start, or go back to a step.
-const SUMMARY_ROWS: [(&str, Option<Step>); 5] = [
-    ("Start the run", None),
-    ("Name", Some(Step::Name)),
-    ("Race", Some(Step::Race)),
-    ("Gender", Some(Step::Gender)),
-    ("Class", Some(Step::Class)),
+/// What a summary row does: start the run, go back to a step, or read the sign's reveal again.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Row {
+    Start,
+    Step(Step),
+    Sign,
+}
+
+/// The summary's rows: start, go back to a step, or to the birth sign's reveal.
+const SUMMARY_ROWS: &[(&str, Row)] = &[
+    ("Start the run", Row::Start),
+    ("Name", Row::Step(Step::Name)),
+    ("Race", Row::Step(Step::Race)),
+    ("Sign", Row::Sign),
+    ("Gender", Row::Step(Step::Gender)),
+    ("Class", Row::Step(Step::Class)),
 ];
 
 /// Where the starting skills' columns begin, beside the scores (from the panel's inner edge).
@@ -421,6 +432,9 @@ pub struct SummaryScreen {
     start: Result<Start, String>,
     /// Race, gender, class, and name as shown, in step order.
     names: [String; 4],
+    /// The birth sign as shown, with a lucky day's title: `Metal Manticore, the Iron Scourge`;
+    /// empty without one.
+    sign: String,
     /// Age, birthday, and birth sign, as shown.
     birth: Vec<String>,
     /// The starting trained skills, by name, with their values, in skill order.
@@ -456,6 +470,9 @@ impl SummaryScreen {
         let birth = (start.as_ref()).map_or(Vec::new(), |s| {
             birth_parts(&s.character, content, draft.start())
         });
+        let sign = (start.as_ref().ok())
+            .and_then(|s| s.character.sign_title(content))
+            .unwrap_or_default();
         let eyes = start.as_ref().map_or(String::new(), |s| {
             content
                 .vision(&s.vision)
@@ -477,6 +494,7 @@ impl SummaryScreen {
             name,
             start,
             names,
+            sign,
             birth,
             skills,
             eyes,
@@ -520,8 +538,9 @@ impl SummaryScreen {
             Nav::Up => self.selected = (self.selected + rows - 1) % rows,
             Nav::Down => self.selected = (self.selected + 1) % rows,
             Nav::Enter => match SUMMARY_ROWS[self.selected].1 {
-                Some(step) => return ScreenAction::Return(step.screen()),
-                None => {
+                Row::Step(step) => return ScreenAction::Return(step.screen()),
+                Row::Sign => return ScreenAction::Return(ScreenName::Sign),
+                Row::Start => {
                     if let (Some(scenario), Some(spec), Ok(_)) =
                         (&self.scenario, &self.spec, &self.start)
                     {
@@ -563,7 +582,11 @@ impl SummaryScreen {
         let mut y = panel.y + 2;
         for (i, (label, step)) in SUMMARY_ROWS.iter().enumerate() {
             if fits(y) {
-                let value = step.map_or("", |s| self.names[s as usize].as_str());
+                let value = match step {
+                    Row::Start => "",
+                    Row::Step(s) => self.names[*s as usize].as_str(),
+                    Row::Sign => self.sign.as_str(),
+                };
                 panel.row(console, y, i == self.selected, label, value, 6);
             }
             y += 1;
@@ -707,7 +730,8 @@ mod tests {
         assert_eq!(race.chosen(), Some("dwarf"));
         assert_eq!(
             press(&mut race, Nav::Enter),
-            ScreenAction::Open(ScreenName::Gender)
+            ScreenAction::Open(ScreenName::Sign),
+            "the stars are revealed after the race"
         );
         assert_eq!(press(&mut race, Nav::Back), ScreenAction::Close);
         // Up from the first row is Random, the last.
@@ -938,11 +962,17 @@ mod tests {
                 name: random_name(&CONTENT, 7, &spec, 0),
             })
         );
-        for step in [Step::Name, Step::Race, Step::Gender, Step::Class] {
+        for screen in [
+            ScreenName::Name,
+            ScreenName::Race,
+            ScreenName::Sign,
+            ScreenName::Gender,
+            ScreenName::Class,
+        ] {
             s.handle(&Press::nav(Nav::Down));
             assert_eq!(
                 s.handle(&Press::nav(Nav::Enter)),
-                ScreenAction::Return(step.screen())
+                ScreenAction::Return(screen)
             );
         }
         s.handle(&Press::nav(Nav::Down));

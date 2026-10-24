@@ -24,7 +24,7 @@ Update them together whenever behavior, commands, or architecture change.
 | Dependency audit | `cargo deny check` |
 | Screenshot smoke test | `cargo xtask smoke` (writes `target/xtask/smoke.png`) |
 | Web build | `cargo xtask web` (writes `target/web/`; see "Releases, web build, logs") |
-| Web smoke test | `cargo xtask web-smoke <chrome>` (serves `target/web`, drives headless Chromium through menu → New run → race, gender, class (preselected) → name (empty: a random one) → summary → hub, checks the new character's save `warlock/saves/<id>.sav`, waits five turns, reloads, Continue, and checks the run resumed at turn 5; writes `target/xtask/web-smoke.png`; fails on logged errors; not run in CI) |
+| Web smoke test | `cargo xtask web-smoke <chrome>` (serves `target/web`, drives headless Chromium through menu → New run → race, the stars, gender, class (preselected) → name (empty: a random one) → summary → hub, checks the new character's save `warlock/saves/<id>.sav`, waits five turns, reloads, Continue, and checks the run resumed at turn 5; writes `target/xtask/web-smoke.png`; fails on logged errors; not run in CI) |
 | Regenerate the vast level | `cargo xtask gen-vast` (writes `assets/levels/vast.toml`; deterministic, never hand-edit) |
 | Check the vast level is fresh | `cargo xtask gen-vast --check` (fails if the file differs from the generator output; run it after touching `xtask/src/vast.rs`) |
 | Third-party notices | `cargo xtask licenses` (regenerates `THIRD_PARTY_LICENSES.html` with `cargo-about`, config `about.toml`/`about.hbs`; install: `cargo install cargo-about --locked --features cli`); `--check` fails when it is stale (CI runs it). **Run it after changing dependencies** (`Cargo.toml`/`Cargo.lock`); keep `about.toml`'s `accepted` list in sync with `deny.toml`'s `allow` |
@@ -63,9 +63,9 @@ Game flags (`cargo run -p warlock -- --help`):
   menu. Dev: `--screen NAME` opens a screen at startup, even with `--capture`: `main`,
   `new-run`, and `characters` (the saved characters; a capture reads them, never writes, from
   `--save-dir`, e.g. `tests/golden/saved-characters`) on the main menu (e.g. `--scale 1 --screen
-  new-run --capture target/menu.png`), and character creation's `race`, `gender`, `class`,
-  `name`, and `summary` over New run and the steps before them (each on its preselection: the
-  showcase's character, an empty name);
+  new-run --capture target/menu.png`), and character creation's `race`, `sign` (the birth
+  sign's reveal), `gender`, `class`, `name`, and `summary` over New run and the steps before
+  them (each on its preselection: the showcase's character, an empty name);
   `pause`, `help`, `inventory`, `equipment`, `character`, `weapon-skills`, `quests`, `messages` (the message history), `pick-up` (the pile on the player's cell), `drop`, `eat`, `read`, `identify` (for the first stack's scroll), and `abilities` (the abilities menu) over a run
   (e.g. after a `--replay` that walks onto a pile), `dialogue` over a run whose last action was
   talk with topics (a `--replay` ending in `chat:SE` or `ask:SE:rooms` next to the hub's hermit),
@@ -159,14 +159,16 @@ carries, grouped by item class under `Class:` header lines as the screens group 
 its position as action text names it, and weighs, worn and wielded things marked, their burden
 and its thresholds),
 `equipment` (the player's slots), `stats`
-(the player's name, race, gender, and class, then their own scores as the rules read them, then
+(the player's name, race, gender, and class, age, birth date, and sign with a lucky day's title,
+`Sign Wood Salamander, the Racer`, then their own scores as the rules read them, then
 their alignment band, `Alignment Kind`, then
 `Effects Bleeding, Diseased` when they suffer any, then `Diseases filth fever`, the diseases they
 know they have, then what they resist in words, `Resistant to cold`, `Vulnerable to fire`,
 `Immune to poison`), `weapon_skills` (the player's
 ranks and progress toward the next, `Long blades 2 (40%)`, fighting styles too, those in use
 marked `Duelist 1 (0%), in use`), `talents` (the player's talents in the order taken, `Hardy
-2/3`, `Weapon focus (long blades)`), `abilities` (the player's abilities in the abilities menu's
+2/3`, `Weapon focus (long blades)`, a birth sign's gifts first, `Fleet (sign)`, `Slight (sign,
+flaw)`), `abilities` (the player's abilities in the abilities menu's
 order, each with its source and what it asks for or why it cannot be used now: `Shield bash
 (weapon skill): a direction`, `Open lock (skill): not usable yet`), `traps` (the traps the player knows,
 one a line), `quests` (the quest log, active
@@ -192,7 +194,8 @@ word: `{"cold": "resistant"}`), `burden` (`level`, `limit`), `alignment` (the ba
 `cause`, starving, choking, or a trap, and `trap`, the id of the trap that killed),
 `known_traps`, `temperature` (°C to a tenth), `weapon_skills` (by skill id:
 `rank`, `progress`), `styles_in_use` (style ids), `talents` (in the order taken: `id`, `name`,
-`rank`, `ranks`, `choice`), `due` (the level-up choices due: `level`, `talents`, or null), `abilities` (in menu order: `id`, `source`,
+`rank`, `ranks`, `choice`, `granted`, `flaw`), `character` (`name`, `race`, `gender`, `class`,
+`raised`, `age`, `born`, `sign`, and `lucky`, a lucky day's title, only for one born on it), `due` (the level-up choices due: `level`, `talents`, or null), `abilities` (in menu order: `id`, `source`,
 `aim`, and `unavailable`, the reason's id or null), `quests` (the log: `id`, `name`, `kind`, `active`, `completed`, `giver`,
 `objective`, `status`), each seen actor's `health` and `effects` (those that show), `room` (the
 special room the player stands in, if they know it), and per inventory stack (in position
@@ -416,7 +419,7 @@ and optional `character` (`human,male,paladin`: the run starts as it, not the sc
 `pause`, `help`, `settings`, `controls`, `inventory`, `equipment`, `equip-item`, `describe`,
 `character`, `skills`, `weapon-skills`, `quests`, `messages`, `pick-up`, `drop`, `eat`, `abilities`,
 `dialogue`; or over
-the main menu, the replay then unused: `main`, `characters`, `race`, `name`, `summary`), `args` (more game flags, e.g.
+the main menu, the replay then unused: `main`, `characters`, `race`, `sign`, `name`, `summary`), `args` (more game flags, e.g.
 `["--fire"]`, `["--keys", "h"]`), `tolerance` (per-channel, default 2) and `max_diff_ratio`
 (default 0.05% of pixels). Walks that fight or wait for creatures belong on hand-made levels
 (the showcase, the arena, the trap hall): a walk through a generated level breaks whenever the

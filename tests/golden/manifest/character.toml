@@ -65,6 +65,22 @@ name = "race-screen"
 scenario = "showcase"
 screen = "race"
 
+# Born under the stars (#265), after the race step: the showcase's human's birth, sign, the
+# legend of its animal and element, its gifts in words, and the sign's stat adjustments.
+[[golden]]
+name = "sign-screen"
+scenario = "showcase"
+screen = "sign"
+
+# The same on a lucky day: seed 440 typed on New run (pinned by world/stars_tests.rs) gives the
+# showcase's human the Water Kraken on the 11th, the Deep One, whose legend shows in the accent
+# colour.
+[[golden]]
+name = "sign-screen-lucky"
+scenario = "showcase"
+screen = "new-run"
+args = ["--keys", "4 4 0 Enter Enter"]
+
 # The class step (#226), the thief preselected: below its stat adjustments, how fast its levels
 # come, in words ("Levels come quickly.": a thief needs 95 % of the experience).
 [[golden]]
