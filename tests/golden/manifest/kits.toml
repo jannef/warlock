@@ -24,5 +24,5 @@ screen = "new-run"
 window = "960x680"
 args = [
     "--keys",
-    "Down Down Down Down Down Down Down Down Enter Down Down Enter Enter Down Down Down Down Down Down Down Down Enter Enter",
+    "Down Down Down Down Down Down Down Down Enter Down Down Enter Enter Enter Down Down Down Down Down Down Down Down Enter Enter",
 ]
