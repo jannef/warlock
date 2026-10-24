@@ -400,11 +400,13 @@ A successful compile does not verify anything visual. Before opening a PR:
   `ops/agents/`, runs it on Linux instead). `main` is branch-protected: PRs
   only, the Linux, wasm32, and cargo-deny checks must pass, linear history.
 - **Merging** (`docs/dev/merging.md` has the details): agents don't chase `main`. A PR merges
-  or rebases onto `origin/main` once, when the integrator says it is next in line; after that
-  merge run `cargo fmt --all`, clippy with `-D warnings`, `cargo test --workspace`,
-  `cargo xtask wiki`, and the PR's own captures or replays (CI covers the wasm32 check, the
-  smoke test, `mdbook build wiki`, cargo-deny, and the licenses). The full check list
-  ("Verification") runs once, before the PR opens.
+  or rebases onto `origin/main` once, when the integrator says it is next in line. The cloud
+  finisher doing it also updates the golden references in the same pass ("Golden screenshots"),
+  merges `origin/main` again before pushing only if it moved into a conflict, re-verifies the
+  PR's replays, and runs clippy and `cargo test --workspace` only after conflicts or a fix of its
+  own (CI, required on every push, is the check; `main` does not require branches to be up to
+  date). The goal is the shortest total handling time. The full check list ("Verification") runs
+  once, before the PR opens.
   Agents stop when their PR is open; a finisher agent handles CI and the merge (`docs/dev/merging.md`,
   "Agents, finishers, and context").
 - **Keep PRs small**: one feature per PR, rules first (core, tests, dumps), then the UI, then
@@ -443,18 +445,28 @@ is tried: a blocked walk (an action that takes no turn and is not free), a faile
 missing reference, or a mismatch is reported and the run goes on; it fails at the end, listing
 them all (and any reference that no entry names).
 
-References are produced on **Linux CI (Mesa lavapipe) only**; other GPUs and drivers rasterize
-differently, so on macOS `cargo xtask golden` is advisory and `--local` is the way to look at the
-captures. CI compares and never updates.
+References are produced with **Mesa lavapipe only**, the renderer of the Linux CI job; other GPUs
+and drivers rasterize differently, so on macOS `cargo xtask golden` is advisory and `--local` is
+the way to look at the captures. The cloud agents' sandbox (`ops/agents/`) has the same lavapipe,
+and its captures have matched CI's every time so far, so references are made there. CI compares
+and never updates.
 
-Deliberate update procedure (after an intended visual change, e.g. lighting or effects landing):
-1. Push the branch, then Actions > CI > Run workflow on that branch with "update_golden" ticked
-   (`gh workflow run ci.yml --ref <branch> -f update_golden=true`, then `gh run watch`).
-2. `gh run download <run-id> -n golden-references -D tests/golden`, review the images (look at them,
-   and check the diff against the old ones makes sense), and commit them with the change.
+Deliberate update procedure (after an intended visual change, e.g. lighting or effects landing),
+done by the PR's cloud finisher in the same pass as its merge of `main`:
+1. `WGPU_BACKEND=vulkan cargo xtask golden` lists the entries that differ; look at each
+   `target/xtask/golden/<name>.{actual,diff}.png` and check the change explains it.
+2. `WGPU_BACKEND=vulkan cargo xtask golden --update`, then keep only the references step 1
+   flagged and the change explains (`git checkout -- tests/golden/<name>.png` the rest: rewriting
+   an unchanged screen may give sub-tolerance noise), and commit them with the merge.
 3. Adding a room, scenario, or screen: add an entry to the feature's manifest file (or a new
-   file) and generate its reference the same way, in the same PR (CI fails on an entry without a
-   reference). Never update references just to make a failing check pass.
+   file); its reference is made the same way, in the same PR (CI fails on an entry without a
+   reference). Never update references just to make a failing check pass: an unexplained
+   difference is a bug to fix.
+
+Fallback, when no cloud finisher is used or CI disagrees with the sandbox: push the branch, run
+`gh workflow run ci.yml --ref <branch> -f update_golden=true`, download its artifact with
+`gh run download <run-id> -n golden-references -D <scratch dir>`, review the images the same way,
+and copy in the explained ones.
 
 ## Releases, web build, logs
 

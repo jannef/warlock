@@ -411,6 +411,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
     several (Treasure hunter: "Intelligence 12 or Appraise 20"). The Scholar and Delver trees and
     the searching, digging, shops, magic items, scrolls, skills, and experience systems are held
     to the bar now; talk and gems wait for the racial talents.
+  - **Damage-type talents** (#248; the design's §7.5 `#151` entries): Elemental ward (Guard;
+    2 ranks, To 12 / Lv 20; chosen for an element, any kind that is not physical: 25 % a rank,
+    counted as gear in `Actor::resistances`, so it also shrinks the doses of a status that is
+    damage, Poisoned for a ward against poison, and the character screen says "Resistant to
+    fire" in words) and Crusher (Might; St 13, Maces and clubs or Unarmed 3: `penetration` +2
+    on melee blows, off-hand blows, shield bashes, and kicks that can do bludgeoning damage;
+    never shots or throws) make the `damage_types` system's two, so it is held to the coverage
+    bar. The witch's Blight (#245) is poison-typed when it lands: its burst names
+    `damage_type = "poison"`, and the Poisoned it gives meets poison resistance as every dose
+    does (`World::afflict`), so no rule of its own.
   - **Coverage** (the design's §8): every talent names the systems it touches; at load a
     system not `pending` with fewer than `min_talents` talents (or `min_class` class abilities,
     0 until the class tables), or a tree not `pending` nor `no_free` without `free_per_tree`

@@ -137,7 +137,7 @@ content (fixtures) never has a pick due.
 ## Tests
 
 `content/talent.rs` (loading, validation, the coverage gaps, choice chains), `talent.rs`
-(summing, ranks per choice, serialization), `world/talent_arms_tests.rs` (the Weaponcraft and Guard hooks, the role need's words), `world/talent_tests.rs` (dues and refusals,
+(summing, ranks per choice, serialization), `world/talent_arms_tests.rs` (the Weaponcraft and Guard hooks, the role need's words), `world/damage_talent_tests.rs` (Elemental ward and Crusher, the damage-types bar), `world/talent_tests.rs` (dues and refusals,
 prerequisites in words, ranks and Hardy's growth, several levels at once and `levelup:auto`,
 dropped picks, every hook, a free-blow talent, saves and replays, perception and dumps).
 
@@ -154,6 +154,13 @@ each rule, `quest_tests.rs` Well liked. Apprentice is the first talent with a `s
 skill, trained or not; `talent:apprentice:stealth`, three ranks per skill), Treasure hunter the
 first with an `either` prerequisite (`Need::Either`, "Intelligence 12 or Appraise 20"). The
 `talk` and `gems` systems stay pending until the racial talents (Diplomat, Gem lore) land.
+
+The damage-type talents (#248), Elemental ward (H2) and Crusher (H1), are the `damage_types`
+system's two, so it is no longer `pending`; `world/damage_talent_tests.rs` covers the ward
+against damage and status doses, its words on the character screen, Crusher by weapon kind, and
+the bar. The witch's Blight (#245) needs no read of its own for its type: its burst names
+`damage_type = "poison"`, and its Poisoned goes through `World::afflict`, which meets poison
+resistance.
 
 ## Later waves
 
