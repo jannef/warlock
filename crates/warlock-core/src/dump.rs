@@ -92,7 +92,8 @@ pub enum Layer {
     /// Not a map: the player's progression (spec §8 "Talents"): the choices a level still asks
     /// for (`due level 3: 1 talent`), the talents they may take now by id with the choices
     /// each may be taken for (`takeable healthy, weapon_focus:{bows,slings}`), and the creature
-    /// types whose first kill has paid (`discovered kobold, rat`). **Dev-only.**
+    /// types whose first kill has paid (`discovered kobold, rat`), and the stat training marks
+    /// the player holds (`stat marks St 3, To 1`). **Dev-only.**
     Progress,
     /// The level's special rooms (spec §7 "Special rooms"; ground truth): the terrain, with the
     /// plain ground of each special room drawn as its effect's `mark`, then a line per room
@@ -620,6 +621,14 @@ fn progress_rows(world: &World) -> Vec<String> {
         .collect();
     if !kills.is_empty() {
         rows.push(format!("discovered {}", kills.join(", ")));
+    }
+    let marks = &world.state().player().stat_marks;
+    let marked: Vec<String> = (marks.iter())
+        .filter(|&(_, n)| n > 0)
+        .map(|(stat, n)| format!("{} {n}", stat.abbrev()))
+        .collect();
+    if !marked.is_empty() {
+        rows.push(format!("stat marks {}", marked.join(", ")));
     }
     rows
 }

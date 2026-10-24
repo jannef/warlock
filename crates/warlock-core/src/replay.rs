@@ -77,6 +77,10 @@ pub struct Replay {
     /// The character's name; `None` for the run's default.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
+    /// Whether the run started with the character's starting kit (a character the player
+    /// chose; [`World::start_run`]); left out when false, so replays from before kits load.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub kit: bool,
     pub steps: Vec<Step>,
 }
 
@@ -90,6 +94,7 @@ impl Replay {
             seed: world.seed(),
             character: world.character().map(|c| c.spec.clone()),
             name: world.character().map(|c| c.name.clone()),
+            kit: world.started_with_kit(),
             steps: Vec::new(),
         }
     }
@@ -116,12 +121,13 @@ impl Replay {
 
     /// A fresh world at the start of this replay.
     pub fn start(&self, content: Arc<Content>) -> Result<World, WorldError> {
-        World::with_character_named(
+        World::start_run(
             content,
             &self.scenario,
             Some(self.seed),
             self.character.as_ref(),
             self.name.as_deref(),
+            self.kit,
         )
     }
 

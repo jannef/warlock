@@ -44,6 +44,7 @@ use super::{ActorId, World, fnv1a};
 use crate::action::{Event, MissileEnd};
 use crate::check::check;
 use crate::combat::{self, Blow, Profile, Strike};
+use crate::content::StatUse;
 use crate::content::{ActionKind, Bolt, ObjectId, TrapEffect, TrapId, article};
 use crate::damage::Damage;
 use crate::geom::{Dir, Pos};
@@ -160,6 +161,9 @@ impl World {
                 let fall = Damage::new(damage.roll(&mut self.state.rng), *of);
                 let from = self.state.actors.get(&victim).map_or(at, |a| a.pos);
                 self.trap_hurts(kind, victim, (from, false), fall, events);
+                if victim == self.state.player {
+                    self.train_stat(StatUse::Climb);
+                }
                 return climb;
             }
             TrapEffect::Alarm => {}

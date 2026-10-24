@@ -2,8 +2,8 @@
 //! seed, New run asks for a race, a gender, and a class, one screen each ([`ChoiceScreen`]), then
 //! a name (`name_screen`), then shows the character ([`SummaryScreen`]): the name, age, birthday,
 //! and birth sign, the final scores (the dice already rolled), the starting trained skills with
-//! their values, the alignment band they start in (spec §8 "Alignment"), and a way back to any
-//! step.
+//! their values, the starting kit in words, the alignment band they start in (spec §8
+//! "Alignment"), and a way back to any step.
 //!
 //! The steps are screens on the stack, in order (New run, race, gender, class, name, summary), so
 //! Esc steps back one and the summary's "change" rows return to a step as it was left. What has
@@ -11,27 +11,29 @@
 //! back are remembered ([`Picks`]) and preselected when a step opens again, else the scenario's
 //! own character, else the first option (the name: an empty field). Each choice step has a
 //! Random row, rolled from the run seed and how often Random was pressed there, so it is
-//! reproducible; the name's Random draws the race's names from the seed.
+//! reproducible; the name's Random draws the race's names from the seed. No text says so: to the
+//! player it is chance, and "other" never names the stat it raises (#256).
 //!
 //! Like every screen these are plain state machines, testable without a window.
 
-use super::character_screen::{birth_parts, fit_parts, gender_text};
+use super::character_screen::{birth_parts, fit_joined, fit_parts};
 use super::menu::{Hints, Nav, Panel, Press, wrap};
 use super::screens::{MenuChoice, ScreenAction, ScreenName};
 use super::{ACCENT, TEXT, TEXT_DIM};
 use crate::input::Bindings;
 use crate::render::console::Console;
-use warlock_core::character::{
-    CharacterSpec, Gender, NAMELESS, Start, check_name, other_stat, random_name,
-};
+use warlock_core::character::{CharacterSpec, Gender, NAMELESS, Start, check_name, random_name};
 use warlock_core::content::{Content, pace_words};
 use warlock_core::dice::Dice;
+use warlock_core::kit;
 use warlock_core::rng::Rng;
 use warlock_core::stats::{PerStat, Stat};
 use warlock_core::time::GameTime;
 
 /// Width of the panels: wide enough for the summary's age, birthday, and sign on one line.
 pub(super) const WIDTH: i32 = 72;
+/// Width of the summary's panel (where the console has room): wider, for the starting kit.
+const SUMMARY_WIDTH: i32 = 84;
 
 /// A step of character creation, in order: three choices ([`ChoiceScreen`]), then the name
 /// (`name_screen::NameScreen`).
@@ -89,10 +91,11 @@ impl Step {
 pub struct ScenarioPick {
     pub id: String,
     pub name: String,
-    /// The typed seed; `None` for the scenario's.
-    pub typed_seed: Option<u64>,
-    /// The seed the run will have.
+    /// The seed the run will have: in developer builds the typed one, else the scenario's; in
+    /// release builds one no one chose.
     pub seed: u64,
+    /// The seed is shown (developer builds): the summary names it.
+    pub shows_seed: bool,
     /// The scenario's own character, preselected.
     pub character: Option<CharacterSpec>,
     /// When the run starts: the character's birth counts back from it.
@@ -272,7 +275,7 @@ impl ChoiceScreen {
                 .map(|g| Choice {
                     id: g.id().to_string(),
                     name: g.name().to_string(),
-                    description: gender_description(g, seed),
+                    description: gender_description(g).to_string(),
                     details: Vec::new(),
                 })
                 .collect(),
@@ -361,7 +364,7 @@ impl ChoiceScreen {
         let (description, details) = match self.choices.get(self.selected) {
             Some(c) => (c.description.clone(), c.details.clone()),
             None => (
-                format!("Let chance (the run's seed) pick your {}.", self.step.id()),
+                format!("Let chance pick your {}.", self.step.id()),
                 Vec::new(),
             ),
         };
@@ -382,15 +385,12 @@ impl ChoiceScreen {
     }
 }
 
-/// What a gender does, for a run with `seed`: `other` names the stat it raises.
-fn gender_description(gender: Gender, seed: u64) -> String {
+/// What a gender does. `other` never names the stat it raises (#256): fate picks it.
+fn gender_description(gender: Gender) -> &'static str {
     match gender {
-        Gender::Male => "Strength +1.".into(),
-        Gender::Female => "Dexterity +1.".into(),
-        Gender::Other => format!(
-            "+1 to a stat picked by the run's seed: {} +1, with this seed.",
-            other_stat(seed).name()
-        ),
+        Gender::Male => "Strength +1.",
+        Gender::Female => "Dexterity +1.",
+        Gender::Other => "+1 to one stat, chosen by fate.",
     }
 }
 
@@ -407,10 +407,32 @@ const SUMMARY_ROWS: [(&str, Option<Step>); 5] = [
 const SKILLS_X: i32 = 26;
 /// The room between two columns of skills.
 const SKILL_GAP: i32 = 3;
+/// Where the kit's lines begin, after its label (from the panel's inner edge), as the eyes' and
+/// the scenario's values do.
+const KIT_X: i32 = 12;
+
+/// What the summary says a character starts with (spec §8 "Character creation"): every stack
+/// of the starting pack as named, their kit (a run started here always has it) and the
+/// scenario's own pack on top; "nothing" for nothing.
+fn kit_words(content: &Content, draft: &Draft, start: &Result<Start, String>) -> Vec<String> {
+    let Ok(start) = start else {
+        return Vec::new();
+    };
+    let scenario = (draft.scenario.as_ref()).and_then(|s| content.scenario(&s.id));
+    let pack = match scenario {
+        Some(scenario) => kit::starting_pack(content, scenario, Some(&start.kit)),
+        None => start.kit.clone(),
+    };
+    match pack.names(content) {
+        names if names.is_empty() => vec!["nothing".into()],
+        names => names,
+    }
+}
 
 /// The character before the run starts: name, race, gender, and class (each a way back to its
 /// step), age, birthday, and birth sign, the final scores, the starting trained skills, the
-/// eyes, and the scenario and seed.
+/// starting kit, the alignment band, the eyes, and the scenario (and in developer builds the
+/// seed).
 #[derive(Debug)]
 pub struct SummaryScreen {
     scenario: Option<ScenarioPick>,
@@ -425,6 +447,9 @@ pub struct SummaryScreen {
     birth: Vec<String>,
     /// The starting trained skills, by name, with their values, in skill order.
     skills: Vec<(String, u16)>,
+    /// What the character starts with, each stack as named (`a dagger (wielded)`), the
+    /// scenario's own pack included.
+    kit: Vec<String>,
     eyes: String,
     /// The band the character starts in (spec §8 "Alignment"); empty without alignment rules.
     alignment: String,
@@ -439,14 +464,12 @@ impl SummaryScreen {
             None => Err("There are no races or classes to choose from.".into()),
         };
         let name = draft.name(content);
+        // The gender by name alone: "other" never names the stat it raised here (#256).
         let names = match &spec {
             Some(spec) => [
                 spec.race(content)
                     .map_or(spec.race.clone(), |r| r.name.clone()),
-                match &start {
-                    Ok(start) => gender_text(&start.character),
-                    Err(_) => spec.gender.name().to_string(),
-                },
+                spec.gender.name().to_string(),
                 spec.class(content)
                     .map_or(spec.class.clone(), |c| c.name.clone()),
                 name.clone(),
@@ -471,6 +494,7 @@ impl SummaryScreen {
                 .map(|(id, t)| (content.skill(id).name.clone(), t.value))
                 .collect()
         });
+        let kit = kit_words(content, draft, &start);
         Self {
             scenario: draft.scenario.clone(),
             spec,
@@ -479,10 +503,27 @@ impl SummaryScreen {
             names,
             birth,
             skills,
+            kit,
             eyes,
             alignment,
             selected: 0,
         }
+    }
+
+    /// The starting kit's lines in a panel `inner` cells wide: the stacks with a comma after each
+    /// but the last, wrapped beside the label.
+    fn kit_lines(&self, inner: i32) -> Vec<String> {
+        let n = self.kit.len();
+        let parts: Vec<String> = (self.kit.iter().enumerate())
+            .map(|(i, name)| {
+                if i + 1 < n {
+                    format!("{name},")
+                } else {
+                    name.clone()
+                }
+            })
+            .collect();
+        fit_joined(&parts, " ", inner - KIT_X)
     }
 
     /// The width of a column of the starting skills: the longest name, a space, and a value.
@@ -527,7 +568,7 @@ impl SummaryScreen {
                     {
                         return ScreenAction::Choose(MenuChoice::NewRun {
                             scenario: scenario.id.clone(),
-                            seed: scenario.typed_seed,
+                            seed: Some(scenario.seed),
                             character: Some(spec.clone()),
                             name: Some(self.name.clone()),
                         });
@@ -541,23 +582,33 @@ impl SummaryScreen {
 
     pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
         // Rows: margin, start and the four steps, a gap, the birth and a gap (if any), the
-        // stats with the skills beside them (or the skills below them, and a gap), a gap, eyes
-        // and scenario, a gap, the footer, the frame.
-        let birth = fit_parts(&self.birth, WIDTH.min(console.cols() as i32) - 6);
-        let birth_rows = match birth.len() {
-            0 => 0,
-            n => n as i32 + 1,
-        };
-        let inner = WIDTH.min(console.cols() as i32) - 4;
+        // stats with the skills beside them (or the skills below them, and a gap), a gap, the
+        // kit, alignment, eyes, and scenario, a gap, the footer, the frame. Too tall for the
+        // console, the gaps before the kit, after the birth, and after the steps go, in that
+        // order.
+        let width = SUMMARY_WIDTH.min(console.cols() as i32);
+        let birth = fit_parts(&self.birth, width - 6);
+        let inner = width - 4;
         let (skill_rows, below) = self.skill_layout(inner);
         let block = (Stat::COUNT.max(skill_rows)) as i32;
         let below_rows = match below.len() {
             0 => 0,
             n => n as i32 + 1,
         };
+        let kit = self.kit_lines(inner);
+        let birth_rows = birth.len() as i32 + i32::from(!birth.is_empty());
         let alignment_rows = i32::from(!self.alignment.is_empty());
-        let h = SUMMARY_ROWS.len() as i32 + block + 9 + birth_rows + below_rows + alignment_rows;
-        let panel = Panel::new(console, " Your character ", WIDTH, h);
+        let full = SUMMARY_ROWS.len() as i32
+            + block
+            + 9
+            + birth_rows
+            + below_rows
+            + alignment_rows
+            + kit.len() as i32;
+        let squeeze = (full - console.rows() as i32).clamp(0, 3);
+        let gap = |n: i32| i32::from(squeeze < n);
+        let h = full - squeeze;
+        let panel = Panel::new(console, " Your character ", width, h);
         let x = panel.inner_x();
         let fits = |y: i32| y < panel.y + panel.h - 2;
         let mut y = panel.y + 2;
@@ -568,14 +619,14 @@ impl SummaryScreen {
             }
             y += 1;
         }
-        y += 1;
+        y += gap(3);
         for line in &birth {
             if fits(y) {
                 console.print(x + 2, y, line, TEXT);
             }
             y += 1;
         }
-        y += i32::from(!birth.is_empty());
+        y += i32::from(!birth.is_empty()) * gap(2);
         match &self.start {
             Ok(start) => {
                 for (i, (stat, score)) in start.stats.scores().iter().enumerate() {
@@ -615,11 +666,24 @@ impl SummaryScreen {
                 y += block;
             }
         }
-        y += 1;
-        let scenario = self
-            .scenario
-            .as_ref()
-            .map_or(String::new(), |s| format!("{}, seed {}", s.name, s.seed));
+        y += gap(1);
+        for (i, line) in kit.iter().enumerate() {
+            if fits(y) {
+                if i == 0 {
+                    console.print(x + 2, y, "Kit", TEXT_DIM);
+                }
+                console.print(x + KIT_X, y, line, TEXT);
+            }
+            y += 1;
+        }
+        // The seed only in developer builds (#256).
+        let scenario = self.scenario.as_ref().map_or(String::new(), |s| {
+            if s.shows_seed {
+                format!("{}, seed {}", s.name, s.seed)
+            } else {
+                s.name.clone()
+            }
+        });
         let rows = [
             ("Alignment", &self.alignment),
             ("Vision", &self.eyes),
@@ -656,8 +720,8 @@ mod tests {
             scenario: Some(ScenarioPick {
                 id: "showcase".into(),
                 name: showcase.name.clone(),
-                typed_seed: Some(seed),
                 seed,
+                shows_seed: true,
                 character: showcase.character.clone(),
                 start: showcase.start,
             }),
@@ -747,19 +811,31 @@ mod tests {
     }
 
     #[test]
-    fn other_names_the_stat_the_seed_raises() {
+    fn other_never_names_the_stat_it_raises_nor_random_the_seed() {
         for seed in [1, 2, 3] {
-            let gender = ChoiceScreen::new(Step::Gender, &CONTENT, &draft(seed));
+            let mut gender = ChoiceScreen::new(Step::Gender, &CONTENT, &draft(seed));
             let other = &gender.choices[2];
             assert_eq!(other.id, "other");
-            assert!(
-                other
-                    .description
-                    .contains(&format!("{} +1", other_stat(seed).name())),
-                "{}",
-                other.description
-            );
+            assert_eq!(other.description, "+1 to one stat, chosen by fate.");
+            // Other selected, then Random: neither names a stat or the seed.
+            for _ in 0..2 {
+                gender.selected = (gender.selected + 1) % (gender.choices.len() + 1);
+                let mut console = Console::default();
+                console.resize(80, 32);
+                gender.draw(&mut console, &Bindings::default());
+                let text = text(&console);
+                assert!(!text.to_lowercase().contains("seed"), "{text}");
+                for stat in Stat::ALL {
+                    assert!(!text.contains(stat.name()), "{stat:?} in\n{text}");
+                }
+            }
         }
+        let mut race = ChoiceScreen::new(Step::Race, &CONTENT, &draft(1));
+        race.selected = race.choices.len();
+        let mut console = Console::default();
+        console.resize(80, 32);
+        race.draw(&mut console, &Bindings::default());
+        assert!(text(&console).contains("Let chance pick your race."));
     }
 
     #[test]
@@ -836,6 +912,53 @@ mod tests {
         d.chosen.set(Step::Gender, spec.gender.id());
         d.chosen.set(Step::Class, &spec.class);
         SummaryScreen::new(&CONTENT, &d)
+    }
+
+    #[test]
+    fn the_summary_lists_the_starting_kit() {
+        // A run started here has the kit: the world's ranger's is listed as it is named and
+        // worn.
+        let world = CONTENT.scenario("world").expect("world");
+        let mut d = draft(1);
+        d.scenario = Some(ScenarioPick {
+            id: "world".into(),
+            name: world.name.clone(),
+            shows_seed: true,
+            seed: 1,
+            character: world.character.clone(),
+            start: world.start,
+        });
+        let text = drawn(&SummaryScreen::new(&CONTENT, &d));
+        for expected in [
+            "Kit       a short bow (readied), 24 arrows (quivered),",
+            "a short sword (wielded)",
+            "a pair of leather boots (being worn)",
+            "3 strips of dried meat",
+            "a loaf of bread",
+        ] {
+            assert!(text.contains(expected), "{expected:?} in\n{text}");
+        }
+        // So does a run of the showcase, whose own pack is empty.
+        let showcase = drawn(&summary("human,female,thief", 1));
+        assert!(
+            showcase.contains("Kit       a dagger (wielded)"),
+            "{showcase}"
+        );
+        // A short console squeezes out the gaps before the kit's lines go.
+        let mut console = Console::default();
+        console.resize(90, 27);
+        let mut d = d.clone();
+        d.chosen.set(Step::Race, "halfling");
+        d.chosen.set(Step::Class, "merchant");
+        SummaryScreen::new(&CONTENT, &d).draw(&mut console, &Bindings::default());
+        let short = super::tests::text(&console);
+        for expected in [
+            "Scenario  World, seed 1",
+            "scroll of identify",
+            "2 wool cloaks",
+        ] {
+            assert!(short.contains(expected), "{expected:?} in\n{short}");
+        }
     }
 
     fn drawn(screen: &SummaryScreen) -> String {
@@ -915,14 +1038,33 @@ mod tests {
             "{narrow}"
         );
         assert!(narrow.contains("year of the Earth Kraken"), "{narrow}");
-        // Other names the stat its seed raised.
-        let other = summary("elf,other,wizard", 3);
-        let stat = other_stat(3).name();
-        assert!(
-            drawn(&other).contains(&format!("Gender    Other ({stat} +1)")),
-            "{}",
-            drawn(&other)
-        );
+        // Other never names the stat it raised.
+        let other = drawn(&summary("elf,other,wizard", 3));
+        assert!(other.contains("Gender    Other  "), "{other}");
+        assert!(!other.contains(" +1"), "{other}");
+    }
+
+    #[test]
+    fn the_summary_names_the_seed_only_in_developer_builds() {
+        let spec: CharacterSpec = "dwarf,female,warrior".parse().expect("a character");
+        let mut d = draft(1);
+        d.chosen.set(Step::Race, &spec.race);
+        let dev = drawn(&SummaryScreen::new(&CONTENT, &d));
+        assert!(dev.contains("Scenario  Showcase, seed 1"), "{dev}");
+        if let Some(pick) = d.scenario.as_mut() {
+            pick.shows_seed = false;
+        }
+        let mut release = SummaryScreen::new(&CONTENT, &d);
+        let text = drawn(&release);
+        assert!(text.contains("Scenario  Showcase  "), "{text}");
+        assert!(!text.to_lowercase().contains("seed "), "{text}");
+        // The run still starts with the seed.
+        let ScreenAction::Choose(MenuChoice::NewRun { seed, .. }) =
+            release.handle(&Press::nav(Nav::Enter))
+        else {
+            panic!("a new run");
+        };
+        assert_eq!(seed, Some(1));
     }
 
     #[test]

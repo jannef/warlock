@@ -68,6 +68,7 @@ impl World {
                 self.state.progress.due.push(Due { level, talents: 1 });
             }
             hp += mods.hp_at(level) - mods.hp_at(level - 1);
+            self.check_stats();
         }
         if hp != 0 {
             let player = self.player_mut();

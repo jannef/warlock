@@ -132,6 +132,10 @@ struct Entry {
     seed: Option<u64>,
     /// The character the run starts as (`dwarf,female,warrior`), instead of the scenario's.
     character: Option<String>,
+    /// Start with the character's starting kit, as a run whose character the player chose does
+    /// (spec §8 "Character creation"); default false: the scenario's pack alone.
+    #[serde(default)]
+    kit: bool,
     /// Text actions (`move:N*3 open:E wait`; `*N` repeats an action); created into a replay.
     actions: Option<String>,
     /// An existing replay file, relative to `tests/golden/`.
@@ -180,9 +184,9 @@ fn make_replay(
         .map(str::parse::<CharacterSpec>)
         .transpose()
         .map_err(|e| format!("{}: {e}", entry.name))?;
-    let mut world =
-        World::with_character(content.clone(), scenario, entry.seed, character.as_ref())
-            .map_err(|e| format!("{}: {e}", entry.name))?;
+    let (seed, chosen) = (entry.seed, character.as_ref());
+    let mut world = World::start_run(content.clone(), scenario, seed, chosen, None, entry.kit)
+        .map_err(|e| format!("{}: {e}", entry.name))?;
     let mut replay = Replay::new(&world);
     let text = entry.actions.as_deref().unwrap_or("");
     let actions = parse_actions(text).map_err(|e| format!("{}: {e}", entry.name))?;
