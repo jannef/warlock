@@ -18,6 +18,10 @@
 #                 Protection, each 0 to 20 (not both 0), added to what the character wears; the
 #                 name is what a blow glances off ("The arrow glances off your scales."). Default
 #                 none
+#   resist        what the character resists, in percent per damage type (damage_types.toml),
+#                 as a creature's: { poison = 25 }, -100 (twice the harm) to 100 (immune), added
+#                 to what they wear (spec §8 "Damage types"); the game names it in words only
+#                 ("Resistant to poison"). Default none
 #   alignment     the race's part of a new character's hidden alignment score (spec §8
 #                 "Alignment"; alignment.toml; -1000 evil to 1000 good, default 0), added to
 #                 their class's: a lean that never alone moves anyone out of Neutral

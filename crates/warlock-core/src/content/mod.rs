@@ -582,7 +582,13 @@ impl Content {
             let size_index = |id: &str| content.size_index(id);
             let skill_id = |id: &str| content.skill_id(id);
             let weapons = &content.weapon_skills;
-            content.races = Races::parse(path, text, has_vision, size_index, skill_id, weapons)?;
+            let percent = crate::damage::MIN_RESISTANCE..=crate::damage::IMMUNE;
+            let resist = |m: &BTreeMap<String, i32>| {
+                content.resolve_per_kind("resist", m, percent.clone(), false)
+            };
+            content.races = Races::parse(
+                path, text, has_vision, size_index, skill_id, weapons, resist,
+            )?;
         }
         let path = "data/names.toml";
         if let Some(text) = files.get_optional(path) {

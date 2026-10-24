@@ -765,7 +765,7 @@ fn actor_rows(world: &World) -> Vec<String> {
                 format!("; talk said {said}, muttered {muttered}{met}")
             };
             // What it resists, in percent by kind (ground truth: never shown in play).
-            let resists: Vec<String> = (a.resistances(content).iter())
+            let resists: Vec<String> = (world.resistances_of(a.id).iter())
                 .map(|(k, p)| format!("{} {p}", content.damage_type(k).id))
                 .collect();
             let resists = if resists.is_empty() {

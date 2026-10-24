@@ -1085,9 +1085,12 @@ impl<'a> PerceptionView<'a> {
     /// are vulnerable to, or are immune to, in damage type order; never a percentage, and never
     /// a creature's.
     pub fn own_resistances(&self) -> Vec<(DamageTypeId, crate::damage::ResistanceWord)> {
-        (self.player.resistances(self.content).iter())
-            .filter_map(|(kind, percent)| Some((kind, crate::damage::ResistanceWord::of(percent)?)))
-            .collect()
+        (self
+            .player
+            .resistances(self.content, self.own_race())
+            .iter())
+        .filter_map(|(kind, percent)| Some((kind, crate::damage::ResistanceWord::of(percent)?)))
+        .collect()
     }
 
     /// How the run ended, once the player has died (what killed them only if they saw it).

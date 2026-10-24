@@ -6,10 +6,13 @@
 //! "Experience"), trains them in skills (spec §8 "Skills"; dice,
 //! and humans' extra class skill), gives them starting ranks in weapon skills (spec §8
 //! "Weapon skills"; fixed numbers or dice), says what they notice of hidden features in
-//! passing (spec §8 "Searching"), and may give them natural armour (spec §8 "Combat").
+//! passing (spec §8 "Searching"), and may give them natural armour (spec §8 "Combat") and
+//! resistances (spec §8 "Damage types").
 
 use super::weapon_skill::Ranked;
-use super::{ContentError, FACTORS, Hide, PassiveSearch, WeaponSkillId, WeaponSkillTable};
+use super::{
+    ContentError, DamageTypeId, FACTORS, Hide, PassiveSearch, WeaponSkillId, WeaponSkillTable,
+};
 use crate::combat::MAX_BASE_HP;
 use crate::dice::Dice;
 use crate::skills::{self, GRANTS, SkillId};
@@ -51,6 +54,8 @@ struct RaceSpec {
     #[serde(default)]
     hp: u16,
     natural: Option<Hide>,
+    #[serde(default)]
+    resist: BTreeMap<String, i32>,
     #[serde(default)]
     alignment: i32,
     size: Option<String>,
@@ -99,6 +104,9 @@ pub struct RaceDef {
     /// Its natural armour (spec §8 "Combat"), as a creature type's: Defence in the Natural
     /// category and Protection, added to what the player wears. Lizardfolk's scales.
     pub natural: Option<Hide>,
+    /// What it resists, in percent per damage type, in damage type order (spec §8 "Damage
+    /// types"), as a creature type's `resist`: added to what the player wears. Drow and poison.
+    pub resist: Vec<(DamageTypeId, i32)>,
     /// Its part of a new character's alignment score (spec §8 "Alignment"), added to the
     /// class's.
     pub alignment: i32,
@@ -143,7 +151,8 @@ pub struct Races {
 impl Races {
     /// Parses `data/races.toml`; `has_vision` says whether a vision profile id exists,
     /// `size_index` where a size id is in [`super::Content::sizes`], `skill_id` which skill a
-    /// skill id is, and `weapon_table` the weapon skills starting ranks may name.
+    /// skill id is, `weapon_table` the weapon skills starting ranks may name, and `resist`
+    /// resolves a `resist` table (damage types and percents, checked).
     pub(super) fn parse(
         file: &str,
         text: &str,
@@ -151,6 +160,7 @@ impl Races {
         size_index: impl Fn(&str) -> Option<usize>,
         skill_id: impl Fn(&str) -> Option<SkillId>,
         weapon_table: &WeaponSkillTable,
+        resist: impl Fn(&BTreeMap<String, i32>) -> Result<Vec<(DamageTypeId, i32)>, String>,
     ) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: RaceFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
@@ -197,6 +207,7 @@ impl Races {
             if let Some(hide) = &spec.natural {
                 hide.check().map_err(|m| err(format!("race `{id}`: {m}")))?;
             }
+            let resist = resist(&spec.resist).map_err(|m| err(format!("race `{id}`: {m}")))?;
             let alignment = crate::alignment::check_start(spec.alignment)
                 .map_err(|m| err(format!("race `{id}`: {m}")))?;
             let size_id = spec.size.as_deref().unwrap_or(super::MEDIUM);
@@ -248,6 +259,7 @@ impl Races {
                 potential,
                 hp: i32::from(spec.hp),
                 natural: spec.natural,
+                resist,
                 alignment,
                 size,
                 ignores_burdened: spec.ignores_burdened,
@@ -271,10 +283,14 @@ impl Races {
 mod tests {
     use super::*;
 
+    fn content() -> super::super::Content {
+        super::super::Content::builtin().expect("content")
+    }
+
     fn parse(text: &str) -> Result<Races, ContentError> {
         let sizes = ["small", "medium"];
         let skills = ["listen", "spot"];
-        let content = super::super::Content::builtin().expect("content");
+        let content = content();
         Races::parse(
             "races.toml",
             text,
@@ -282,6 +298,7 @@ mod tests {
             |s| sizes.iter().position(|id| *id == s),
             |k| (skills.iter().position(|id| *id == k)).map(|i| SkillId(i as u8)),
             content.weapon_skills(),
+            |m| content.resolve_per_kind("resist", m, -100..=100, false),
         )
     }
 
@@ -317,6 +334,18 @@ mod tests {
         let hide = scaled.list[0].natural.as_ref().expect("a hide");
         assert_eq!((hide.defence, hide.protection), (0, 1));
         assert_eq!(hide.name, "scales");
+        assert!(human.resist.is_empty(), "nothing resisted unless named");
+        let drow = parse(&format!("{ONE}resist = {{ poison = 25, fire = -10 }}\n")).expect("valid");
+        let kinds = |r: &RaceDef| -> Vec<(String, i32)> {
+            (r.resist.iter())
+                .map(|&(k, p)| (content().damage_type(k).id.clone(), p))
+                .collect()
+        };
+        assert_eq!(
+            kinds(&drow.list[0]),
+            [("fire".to_string(), -10), ("poison".to_string(), 25)],
+            "in damage type order"
+        );
         let dwarf = parse(&format!(
             "{ONE}size = \"small\"\nignores_burdened = true\nhunger = 110\nexperience = 115\n"
         ))
@@ -436,6 +465,14 @@ mod tests {
             (
                 format!("{ONE}natural = {{ protection = 1 }}\n"),
                 "missing field `name`",
+            ),
+            (
+                format!("{ONE}resist = {{ luck = 25 }}\n"),
+                "race `human`: `resist`: unknown damage type `luck`",
+            ),
+            (
+                format!("{ONE}resist = {{ poison = 101 }}\n"),
+                "`resist`: `poison` must be -100 to 100",
             ),
         ] {
             let e = parse(&text).unwrap_err();

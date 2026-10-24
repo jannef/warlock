@@ -1,5 +1,5 @@
 //! Races' gifts and flaws in the world (spec §8 "Character creation"): a race's natural armour
-//! adds to what the player wears.
+//! adds to what the player wears, and so do its resistances.
 
 use super::*;
 use crate::combat::Category;
@@ -16,6 +16,14 @@ description = "Scaly."
 vision = "normal"
 age = [20, 30]
 natural = { protection = 1, defence = 2, name = "scales" }
+
+[[race]]
+id = "hardy"
+name = "Hardy"
+description = "Hard to poison."
+vision = "normal"
+age = [20, 30]
+resist = { poison = 50 }
 "##;
 
 /// A lit room: the player and nothing else.
@@ -72,4 +80,21 @@ fn a_races_natural_armour_adds_to_defence_and_protection() {
     // Without a character, the player goes by their creature type: no hide.
     let plain = World::new(CONTENT.clone(), "racetest", Some(1)).expect("world");
     assert_eq!(plain.protection_of(plain.state.player).base, 0);
+}
+
+#[test]
+fn a_races_resistances_shrink_what_the_player_takes_and_are_told_in_words() {
+    let (human, hardy) = (world("human"), world("hardy"));
+    let poison = CONTENT.damage_type_id("poison").expect("poison");
+    let resisted = |w: &World| w.resistances_of(w.state.player).get(Some(poison));
+    assert_eq!((resisted(&human), resisted(&hardy)), (0, 50));
+    let harm = crate::damage::Damage {
+        amount: 10,
+        kind: Some(poison),
+    };
+    assert_eq!(human.resisted(human.state.player, harm), 10);
+    assert_eq!(hardy.resisted(hardy.state.player, harm), 5);
+    let words = hardy.perception().own_resistances();
+    assert_eq!(words, [(poison, crate::damage::ResistanceWord::Resistant)]);
+    assert!(human.perception().own_resistances().is_empty());
 }

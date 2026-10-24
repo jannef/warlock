@@ -428,11 +428,15 @@ impl Actor {
     }
 
     /// What it resists (spec §8 "Damage types"), in percent per kind: what its creature type
-    /// is, plus what it wears and wields (each piece's `resist`, and the resistance affixes of
-    /// all of it), capped ([`Resistances::sum`]).
-    pub fn resistances(&self, content: &Content) -> Resistances {
+    /// is and its race (`race`, the player's when the run has a character), plus what it wears
+    /// and wields (each piece's `resist`, and the resistance affixes of all of it), capped
+    /// ([`Resistances::sum`]).
+    pub fn resistances(&self, content: &Content, race: Option<&RaceDef>) -> Resistances {
         let count = content.damage_types().len();
-        let innate = content.creature(self.creature).resist.iter().copied();
+        let born = race.map_or(&[][..], |r| r.resist.as_slice());
+        let innate = (content.creature(self.creature).resist.iter())
+            .chain(born)
+            .copied();
         let worn = (self.equipment.items().into_iter())
             .filter_map(|(_, item)| self.inventory.get(item))
             .flat_map(|s| s.resists(content).iter().copied());
@@ -448,7 +452,7 @@ impl Actor {
         Target {
             defence: self.defence(content, burden, race),
             protection: self.protection(content, race),
-            resistances: self.resistances(content),
+            resistances: self.resistances(content, race),
         }
     }
 

@@ -570,11 +570,12 @@ impl World {
         )
     }
 
-    /// What actor `id` resists (spec §8 "Damage types"): its creature type's, and what it wears
-    /// and wields; nothing for one that is gone.
+    /// What actor `id` resists (spec §8 "Damage types"): its creature type's, the player's
+    /// race's, and what it wears and wields; nothing for one that is gone.
     pub(crate) fn resistances_of(&self, id: ActorId) -> Resistances {
-        (self.state.actors.get(&id))
-            .map_or_else(Resistances::default, |a| a.resistances(&self.content))
+        (self.state.actors.get(&id)).map_or_else(Resistances::default, |a| {
+            a.resistances(&self.content, self.state.race_of(&self.content, a))
+        })
     }
 
     /// The side of actor `id` a blow strikes: its Defence, Protection, and resistances.
