@@ -34,7 +34,7 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   throw:c:12,5 eat:b
   eat:floor:a dig:E search search:10 chat:E ask:E:rooms ask:E:quest-rats ask:E:accept-rats vision:darkvision
   skip:1h weather:rain stance:coward effect:fireball@12,5 effect:lightning_bolt@3,4>12,4
-  identify:a afflict:bleeding infect:filth_fever talent:hardy talent:weapon_focus:long_blades
+  identify:a afflict:bleeding drain:5 infect:filth_fever talent:hardy talent:weapon_focus:long_blades
   advance:stealth levelup:auto xp:2500 freeze:12,5,3 thaw:12,5,3`; `pick:DIR` tries
   the lock of the door that way (§8 "Doors"), `bash:DIR` bashes with the held shield that way, `dig:DIR` digs toward a direction until the wall gives way or
   something interrupts; `search` searches the cells around the player once, `search:N` for up to
@@ -58,8 +58,9 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   in, `pay` pays it, and `pay:DIR` pays and steps out that way (§7 "Shops"); `equip:SLOT:LETTER` puts inventory stack LETTER
   on in slot SLOT (a slot id of `data/slots.toml`) and `remove:SLOT` takes off what is there;
   the dev weather override takes `clear`, `overcast`, `rain`, or `heavy`; the dev `afflict:ID`
-  gives the player a degree more of status ID (`data/status.toml`), and `infect:ID` makes them
-  catch disease ID (`data/diseases.toml`); `talent:ID[:CHOICE]` takes a talent (an id in
+  gives the player a degree more of status ID (`data/status.toml`), `drain:N` spends N of their
+  mana (1 or more, through `World::spend_mana`; refused when they have less; §8 "Mana"), and
+  `infect:ID` makes them catch disease ID (`data/diseases.toml`); `talent:ID[:CHOICE]` takes a talent (an id in
   `data/talents/`, with its choice) when a level's pick is due (§8 "Talents"; every other
   action is refused until it is made), `advance:SKILL` spends a level's skill roll (none until
   #230), the dev `levelup:auto` spends every choice due with the first the player may take, and
@@ -109,7 +110,7 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   training marks, `stat marks St 3, To 1`; §8 "Talents", "Stats"),
   and `actors` (every actor on
   the level with its hit
-  points and Defence, `hp 8/12 dv 13`, its alignment (`alignment evil`; the player's score and
+  points, mana, and Defence, `hp 8/12 mp 0/0 dv 13`, its alignment (`alignment evil`; the player's score and
   band, `alignment 450 (good)`; §8 "Alignment"), its
   weight, base plus carried, what it carries and of that wears and wields, `equipped main_hand a
   spear` (magic items as they truly are, `an iron ring of the Bear (unidentified)`), what its
@@ -151,14 +152,15 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   choices due (`due`: `{level, talents}`, or null), the
   quest log (`quests`: `[{id, name,
   kind, active, completed, giver, objective, status}]`), hit points (`hp: {current, max}`),
+  mana (`mana: {current, max}`),
   Defence (`defence`, the total), hunger (`hunger`: `bloated` … `starving`, or null when nobody
   hungers), how the run ended (`death: {turn, time, place, by, of, cause, trap}` or null;
   `cause` "Starved to death", "Killed by a fireball trap", and the like when neither a creature
   nor a status effect killed them; `trap` the id of the trap that did, else null),
   recent messages,
   and optionally the full world state; the ASCII header line has the turn, the time
-  (`0001-01-01 08:00:00`), level, viewer, the player's hit points (`hp 17/17`, then `dead` once
-  they have died), their hunger unless Not hungry (`hunger hungry`), the weather under the open
+  (`0001-01-01 08:00:00`), level, viewer, the player's hit points and mana (`hp 17/17 mp 3/3`,
+  then `dead` once they have died), their hunger unless Not hungry (`hunger hungry`), the weather under the open
   sky (`weather rain`), the temperature (`temperature -3.5 °C`), and hash.
 - Freezing visual time and fixing window size and scale make screenshots reproducible. With frozen
   time, glyph animations show that moment and motion (slides, camera) completes instantly.

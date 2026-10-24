@@ -110,6 +110,7 @@ mod ice;
 mod level;
 mod lockpick;
 mod loot;
+mod mana;
 mod path;
 mod perceive;
 mod quest;
@@ -462,9 +463,10 @@ impl World {
             .scenario(scenario)
             .ok_or_else(|| WorldError::UnknownScenario(scenario.to_string()))?;
         let seed = seed.unwrap_or(def.seed);
-        // The player's hit points beyond their Toughness: what their race and class give, or
-        // without a character what the scenario gives. Without a character the player is trained
-        // in nothing, has no weapon skills, and starts Neutral.
+        // The player's hit points beyond their Toughness (and mana beyond their mental stats):
+        // what their race and class give, or without a character what the scenario gives.
+        // Without a character the player is trained in nothing, has no weapon skills, and
+        // starts Neutral.
         let chosen = character.or(def.character.as_ref());
         let start = match chosen {
             Some(spec) => {
@@ -484,29 +486,30 @@ impl World {
         let kit = start.as_ref().filter(|_| kit).map(|s| &s.kit);
         let pack = crate::kit::starting_pack(&content, def, kit);
         let with_kit = kit.is_some();
-        let (stats, vision, hp_base, skills, character, weapon_skills, alignment) = match start {
-            Some(s) => {
-                let character = Some(s.character);
-                (
-                    s.stats,
-                    s.vision,
-                    s.hp,
-                    s.skills,
-                    character,
-                    s.weapon_skills,
-                    s.alignment,
-                )
-            }
-            None => (
-                def.player_stats,
-                def.vision().to_string(),
-                i32::from(def.hp),
-                Skills::default(),
-                None,
-                WeaponSkills::default(),
-                Score::ZERO,
-            ),
-        };
+        let (stats, vision, (hp_base, mana_base), skills, character, weapon_skills, alignment) =
+            match start {
+                Some(s) => {
+                    let character = Some(s.character);
+                    (
+                        s.stats,
+                        s.vision,
+                        (s.hp, s.mana),
+                        s.skills,
+                        character,
+                        s.weapon_skills,
+                        s.alignment,
+                    )
+                }
+                None => (
+                    def.player_stats,
+                    def.vision().to_string(),
+                    (i32::from(def.hp), i32::from(def.mana)),
+                    Skills::default(),
+                    None,
+                    WeaponSkills::default(),
+                    Score::ZERO,
+                ),
+            };
         let start = level_template(&content, seed, &def.start_level, None)?;
         let player_pos = start
             .player_start
@@ -557,6 +560,9 @@ impl World {
             hp: 0,
             hp_base,
             regen: 0,
+            mana: 0,
+            mana_base,
+            mana_regen: 0,
             skills,
             effects: Default::default(),
             diseases: Default::default(),
@@ -577,6 +583,7 @@ impl World {
         let class = (state.character.as_ref()).map(|c| c.spec.class.clone());
         class::grant(&content, class.as_deref(), &mut player, 1);
         player.hp = player.max_hp(&content);
+        player.mana = player.max_mana(&content);
         crate::rot::made_at(&mut player.inventory, &content, def.start);
         state.actors.insert(ActorId(0), player);
         instantiate_level(&mut state, &content, &start);
@@ -828,8 +835,9 @@ impl World {
         let (burden, slowed) = (load.burden(), load.penalty() != Burden::Unburdened);
         let quests = self.quest_progress();
         let spent = self.player_acts(action, &mut events);
-        // Taking off what raised them lowers the player's maximum hit points.
+        // Taking off what raised them lowers the player's maximum hit points and mana.
         self.keep_hp_within_max(self.state.player);
+        self.keep_mana_within_max(self.state.player);
         self.burden_news(burden);
         self.quest_news(&quests);
         // Acting (not waiting) under a load that slows the player trains balance.
@@ -973,6 +981,7 @@ impl World {
             Action::Freeze { at, radius } => return self.freeze_dev(*at, *radius, events),
             Action::Thaw { at, radius } => return self.thaw_dev(*at, *radius, events),
             Action::Afflict(id) => return self.afflict_dev(id, events),
+            Action::Drain(amount) => return self.drain_dev(*amount),
             Action::Infect(id) => return self.infect_dev(id),
             Action::LevelUpAuto => return self.level_up_auto(),
             Action::GrantXp(xp) => return self.grant_xp_dev(*xp),
@@ -1068,6 +1077,8 @@ mod light_tests;
 mod lockpick_tests;
 #[cfg(test)]
 mod magic_tests;
+#[cfg(test)]
+mod mana_tests;
 #[cfg(test)]
 mod moon_tests;
 #[cfg(test)]

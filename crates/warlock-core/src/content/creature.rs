@@ -138,6 +138,9 @@ pub(super) struct CreatureSpec {
     /// Hit points beyond its Toughness (spec §8 "Combat").
     #[serde(default)]
     pub base_hp: u16,
+    /// Mana beyond its mental stats' modifiers (spec §8 "Mana"); casters, later.
+    #[serde(default)]
+    pub mana: u16,
     /// Its level (spec §8 "Experience"), 1 unless it says otherwise.
     #[serde(default = "first_level")]
     pub level: u8,
@@ -392,6 +395,7 @@ impl CreatureSpec {
             stats: r.stats,
             skills: r.skills,
             base_hp: i32::from(self.base_hp),
+            base_mana: i32::from(self.mana),
             level: self.level,
             xp: self.xp,
             loot: self.loot,
@@ -474,6 +478,9 @@ pub struct CreatureDef {
     /// Gameplay: hit points beyond its Toughness (spec §8 "Combat"); the player's come from the
     /// scenario instead.
     pub base_hp: i32,
+    /// Gameplay: mana beyond its mental stats' modifiers (spec §8 "Mana"); the player's come
+    /// from their race and class (the scenario's without a character). Never shown.
+    pub base_mana: i32,
     /// Gameplay: its level (spec §8 "Experience"); the player's own is their experience's.
     pub level: u8,
     /// Gameplay: the experience a kill of it is worth at its own level.

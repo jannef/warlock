@@ -2,10 +2,10 @@
 //! run. A race adjusts the starting scores and the potentials (fixed numbers or dice), gives the
 //! player their eyes, sets the range of their starting age, gives the player their size
 //! (spec §8 "Burden": how much they can carry), whether being Burdened costs them nothing, and
-//! how much they need to eat (spec §8 "Hunger"), how much experience their levels need (spec §8
-//! "Experience"), trains them in skills (spec §8 "Skills"; dice,
-//! and humans' extra class skill), gives them starting ranks in weapon skills (spec §8
-//! "Weapon skills"; fixed numbers or dice), says what they notice of hidden features in
+//! how much they need to eat (spec §8 "Hunger"), adds hit points and mana (spec §8 "Mana"), how
+//! much experience their levels need (spec §8 "Experience"), trains them in skills (spec §8
+//! "Skills"; dice, and humans' extra class skill), gives them starting ranks in weapon skills
+//! (spec §8 "Weapon skills"; fixed numbers or dice), says what they notice of hidden features in
 //! passing (spec §8 "Searching"), adds a few things to the starting kit (`kit`,
 //! [`super::kit`]), and may give them natural armour (spec §8 "Combat"), resistances (spec §8
 //! "Damage types"), eyes that strong light dazzles ([`LightBlind`]), a bonus on disease checks
@@ -19,6 +19,7 @@ use super::{
 use crate::combat::MAX_BASE_HP;
 use crate::dice::Dice;
 use crate::light::Light;
+use crate::mana::MAX_BASE_MANA;
 use crate::perception::VIEW_RADIUS;
 use crate::skills::{self, GRANTS, SkillId};
 use crate::stats::{PerStat, SCORES, Stat, adjustments};
@@ -66,6 +67,8 @@ struct RaceSpec {
     disease_check: i32,
     #[serde(default)]
     eats_rotten: bool,
+    #[serde(default)]
+    mana: u16,
     #[serde(default)]
     alignment: i32,
     size: Option<String>,
@@ -154,6 +157,9 @@ pub struct RaceDef {
     /// What the race adds to the hit points (spec §8 "Combat"): maximum hit points are
     /// Toughness plus the race's and the class's.
     pub hp: i32,
+    /// What the race adds to the mana (spec §8 "Mana"): maximum mana is the race's and the
+    /// class's plus the mental stats' modifiers.
+    pub mana: i32,
     /// Its natural armour (spec §8 "Combat"), as a creature type's: Defence in the Natural
     /// category and Protection, added to what the player wears. Lizardfolk's scales.
     pub natural: Option<Hide>,
@@ -272,6 +278,12 @@ impl Races {
                     spec.hp
                 )));
             }
+            if spec.mana > MAX_BASE_MANA {
+                return Err(err(format!(
+                    "race `{id}`: mana {} is more than {MAX_BASE_MANA}",
+                    spec.mana
+                )));
+            }
             if let Some(hide) = &spec.natural {
                 hide.check().map_err(|m| err(format!("race `{id}`: {m}")))?;
             }
@@ -346,6 +358,7 @@ impl Races {
                 stats,
                 potential,
                 hp: i32::from(spec.hp),
+                mana: i32::from(spec.mana),
                 natural: spec.natural,
                 resist,
                 light_blind: spec.light_blind,
@@ -617,5 +630,22 @@ mod tests {
             let e = parse(&text).unwrap_err();
             assert!(e.message.contains(why), "{why}: {}", e.message);
         }
+    }
+
+    #[test]
+    fn races_give_mana_up_to_the_most_a_race_may() {
+        let elf = parse(&format!("{ONE}mana = 4\n")).expect("valid");
+        assert_eq!(elf.list[0].mana, 4);
+        assert_eq!(
+            parse(ONE).expect("valid").list[0].mana,
+            0,
+            "none unless named"
+        );
+        let e = parse(&format!("{ONE}mana = 1001\n")).unwrap_err();
+        assert!(
+            e.message.contains("mana 1001 is more than 1000"),
+            "{}",
+            e.message
+        );
     }
 }

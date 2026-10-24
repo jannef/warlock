@@ -1162,6 +1162,13 @@ impl<'a> PerceptionView<'a> {
         (self.player.hp.clamp(0, max), max)
     }
 
+    /// The player's mana: what they have left (at most their maximum, never below 0) and their
+    /// maximum (spec §8 "Mana"). Never how fast it comes back.
+    pub fn own_mana(&self) -> (i32, i32) {
+        let max = self.player.max_mana(self.content);
+        (self.player.mana.clamp(0, max), max)
+    }
+
     /// The player's level, experience total, and the total at which the next level comes (none
     /// at the highest level) (spec §8 "Experience"). All of it is shown to the player.
     pub fn own_experience(&self) -> Progress {

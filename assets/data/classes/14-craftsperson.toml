@@ -4,6 +4,7 @@ name = "Craftsperson"
 description = "A smith, carpenter, or weaver who knows a trade inside out: sure hands, a patient mind, and few words."
 stats = { strength = 1, dexterity = "1d3", intelligence = 1, presence = "-1d2" }
 hp = 3
+mana = 1
 experience = 90
 skills = { metalcraft = "2d6+10", woodcraft = "2d6+10", appraise = "2d4+4" }
 known_for = ["metalcraft", "woodcraft"]

@@ -72,6 +72,8 @@ pub struct DiseaseDef {
     /// How fast hit points come back while it shows, in percent of normal, if it slows them
     /// more than its status does (the slowest counts).
     pub regen: Option<u16>,
+    /// How fast mana comes back while it shows, the same way (spec §8 "Mana").
+    pub mana_regen: Option<u16>,
     /// The ways rules may expose someone to it ([`SOURCES`]): `rotten_food`.
     pub caught: Vec<String>,
     /// The terrain it is caught in, if any.
@@ -138,6 +140,7 @@ struct DiseaseSpec {
     #[serde(default)]
     kills: bool,
     regen: Option<u16>,
+    mana_regen: Option<u16>,
     #[serde(default)]
     caught: Vec<String>,
     wading: Option<WadingSpec>,
@@ -251,6 +254,15 @@ fn resolve(
             super::status::MAX_REGEN
         ));
     }
+    if spec
+        .mana_regen
+        .is_some_and(|r| r > super::status::MAX_REGEN)
+    {
+        return Err(format!(
+            "mana_regen must be 0 to {} (percent)",
+            super::status::MAX_REGEN
+        ));
+    }
     if let Some(bad) = spec.caught.iter().find(|c| !SOURCES.contains(&c.as_str())) {
         return Err(format!(
             "caught: unknown source `{bad}` (known: {})",
@@ -298,6 +310,7 @@ fn resolve(
         recovery: spec.recovery,
         kills: spec.kills,
         regen: spec.regen,
+        mana_regen: spec.mana_regen,
         caught: spec.caught,
         wading,
         cured_by: spec.cured_by,
@@ -440,5 +453,22 @@ mod tests {
             let e = parsed(&text).unwrap_err();
             assert!(e.message.contains(why), "{why}: {}", e.message);
         }
+    }
+
+    #[test]
+    fn mana_paces_parse_and_are_checked() {
+        let (_, list) = parsed(&format!("{FEVER}mana_regen = 25\n")).expect("valid");
+        assert_eq!(list[0].mana_regen, Some(25));
+        assert_eq!(
+            parsed(FEVER).expect("valid").1[0].mana_regen,
+            None,
+            "as the status says"
+        );
+        let e = parsed(&format!("{FEVER}mana_regen = 2000\n")).unwrap_err();
+        assert!(
+            e.message.contains("mana_regen must be 0 to 1000"),
+            "{}",
+            e.message
+        );
     }
 }

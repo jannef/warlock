@@ -1,8 +1,8 @@
 //! Experience (`assets/data/experience.toml`, spec §8 "Experience"): the player's level
 //! thresholds (a curve written in kills of the player's own level, scaled by their race's and
-//! their class's experience factors), the hit points a level gives, what a kill is worth at the
-//! player's level (classic World of Warcraft scaling), and the small rewards for discovery (the
-//! first kill of a creature type, the first arrival on a level). Without the file the player
+//! their class's experience factors), the hit points and mana a level gives, what a kill is worth
+//! at the player's level (classic World of Warcraft scaling), and the small rewards for discovery
+//! (the first kill of a creature type, the first arrival on a level). Without the file the player
 //! stays at level 1, kills are scaled by a zero difference of 5, and nothing is discovered.
 
 use super::{ClassDef, Content, ContentError, RaceDef};
@@ -27,6 +27,8 @@ const MAX_SCALE: u64 = 4;
 struct ExperienceFile {
     max_level: u8,
     hp_level: u8,
+    #[serde(default)]
+    mana_level: u8,
     bonus_percent: u32,
     bonus_levels: u8,
     kills: Kills,
@@ -160,6 +162,7 @@ pub fn pace_words(experience: u16) -> Option<&'static str> {
 pub struct Experience {
     max_level: u8,
     hp_level: u8,
+    mana_level: u8,
     bonus_percent: u32,
     bonus_levels: u8,
     kills: Kills,
@@ -178,6 +181,7 @@ impl Default for Experience {
         Self {
             max_level: 1,
             hp_level: 0,
+            mana_level: 0,
             bonus_percent: 5,
             bonus_levels: 4,
             kills: Kills::default(),
@@ -222,6 +226,9 @@ impl Experience {
         }
         if p.hp_level > p.max_level {
             return Err(err("hp_level is more than max_level".into()));
+        }
+        if p.mana_level > p.max_level {
+            return Err(err("mana_level is more than max_level".into()));
         }
         let k = &p.kills;
         let params = [
@@ -268,6 +275,7 @@ impl Experience {
         Ok(Self {
             max_level: p.max_level,
             hp_level: p.hp_level,
+            mana_level: p.mana_level,
             bonus_percent: p.bonus_percent,
             bonus_levels: p.bonus_levels,
             kills: p.kills,
@@ -286,6 +294,11 @@ impl Experience {
     /// The last level whose gain adds hit points.
     pub fn hp_level(&self) -> u8 {
         self.hp_level
+    }
+
+    /// The last level whose gain adds mana (spec §8 "Mana"); 0 when the file says none.
+    pub fn mana_level(&self) -> u8 {
+        self.mana_level
     }
 
     /// How many levels above the player a monster's worth still grows, and by how many percent
@@ -629,6 +642,7 @@ mod tests {
         for (from, to) in [
             ("max_level = 60", "max_level = 0"),
             ("hp_level = 20", "hp_level = 61"),
+            ("mana_level = 30", "mana_level = 61"),
             ("from = 1\nzd = 5", "from = 2\nzd = 5"),
             ("zd = 5", "zd = 0"),
             ("plateau = 213", "plateau = 100001"),
@@ -649,5 +663,27 @@ mod tests {
             .replace("max_level = 60", "max_level = 99")
             .replace("plateau = 213", "plateau = 100000");
         assert!(Experience::parse("x", &steep).is_err());
+    }
+
+    #[test]
+    fn mana_comes_with_levels_up_to_mana_level() {
+        let none = SHIPPED.replace("mana_level = 30\n", "");
+        assert_ne!(none, SHIPPED, "mana_level is in the file");
+        assert_eq!(
+            Experience::parse("x", &none).expect("valid").mana_level(),
+            0
+        );
+        let some = format!("mana_level = 3\n{none}");
+        assert_eq!(
+            Experience::parse("x", &some).expect("valid").mana_level(),
+            3
+        );
+        let bad = format!("mana_level = 61\n{none}");
+        let e = Experience::parse("x", &bad).unwrap_err();
+        assert!(
+            e.message.contains("mana_level is more than max_level"),
+            "{}",
+            e.message
+        );
     }
 }

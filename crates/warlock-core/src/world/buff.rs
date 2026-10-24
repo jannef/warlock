@@ -77,6 +77,7 @@ impl World {
             | Action::Effect { .. }
             | Action::Identify(_)
             | Action::Afflict(_)
+            | Action::Drain(_)
             | Action::Infect(_)
             | Action::Talent { .. }
             | Action::Advance(_)

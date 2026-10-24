@@ -30,4 +30,6 @@ on top of all that, yours and anyone's, and [magic items](magic-items.md) that s
 - Creatures heal by the same rules, at their own Toughness, while you are on their level; they
   never rest.
 
+Your [mana](mana.md) comes back the same way, by your Willpower.
+
 See also [Status effects](status-effects.md) and [Combat](combat.md#hit-points).
