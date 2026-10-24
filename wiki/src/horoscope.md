@@ -75,6 +75,11 @@ tables list those already in the game.
 
 {{#include generated/horoscope-elements.md}}
 
+The Phoenix's *Rise from the ashes* comes once in a life: once you have risen, the gift is spent
+(the character screen says so) and the next death is your last. *Hound's nose* tells you how
+fresh food is in a word on the eat list (fresh, turning, or rotten); food that is turning is
+still fine to eat, rotten food is not.
+
 Your animal and your element also each change your starting [stats](stats.md) a little; both
 count. The changes are in the tables at the end of this page, added to your race's, gender's, and
 class's (see [Your character](character.md)). The changes are small and fixed: the horoscope rolls

@@ -20,6 +20,8 @@ const LANTERN: u64 = 1 << 62;
 const GLOW: u64 = 1 << 61;
 /// Extra key tag for the light an actor sheds by a status of its own (Holy radiance).
 const RADIANCE: u64 = 1 << 60;
+/// Extra key tag for the light an actor always sheds (Inner light).
+const INNER: u64 = 1 << 59;
 /// The sun's key: the lantern tag without the carried tag, which no other source has (static
 /// keys have both tags clear).
 pub(crate) const SUN_KEY: u64 = LANTERN;
@@ -258,16 +260,25 @@ impl LevelLights {
                 });
             }
             // Its own light while a status of its lasts (spec §8 "Class abilities": Holy
-            // radiance).
-            if !actor.talents.is_empty()
-                && let Some((status, preset)) = actor.talent_mods(content).radiance
-                && actor.effects.has(status)
-            {
-                sources.push(Source {
-                    key: CARRIED | RADIANCE | id,
-                    pos: actor.pos,
-                    preset,
-                });
+            // radiance), and the light it always sheds (spec §8 "Birth sign": Inner light).
+            if !actor.talents.is_empty() {
+                let talents = actor.talent_mods(content);
+                if let Some((status, preset)) = talents.radiance
+                    && actor.effects.has(status)
+                {
+                    sources.push(Source {
+                        key: CARRIED | RADIANCE | id,
+                        pos: actor.pos,
+                        preset,
+                    });
+                }
+                if let Some(preset) = talents.inner_light {
+                    sources.push(Source {
+                        key: CARRIED | INNER | id,
+                        pos: actor.pos,
+                        preset,
+                    });
+                }
             }
         }
         sources.retain(|s| !level.is_opaque(content, s.pos));

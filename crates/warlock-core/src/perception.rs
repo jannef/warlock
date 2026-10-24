@@ -142,6 +142,30 @@ pub struct OwnTalent {
     /// Their class gives it (spec §8 "Class abilities"): a class ability, or a talent their
     /// class's table hands out at their level or below.
     pub class: bool,
+    /// What it gives once in a life has been given (spec §8 "Birth sign": Rise from the ashes,
+    /// risen): "(spent)".
+    pub spent: bool,
+}
+
+/// How fresh food smells to those who can tell (spec §8 "Birth sign": Hound's nose): a word,
+/// never its age.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Freshness {
+    Fresh,
+    /// Old: still fine to eat.
+    Turning,
+    Rotten,
+}
+
+impl Freshness {
+    /// The word: `fresh`, `turning`, `rotten`.
+    pub const fn word(self) -> &'static str {
+        match self {
+            Freshness::Fresh => "fresh",
+            Freshness::Turning => "turning",
+            Freshness::Rotten => "rotten",
+        }
+    }
 }
 
 /// A talent as the Talents page and the level-up screen list it (spec §8 "Talents"): the rank
@@ -366,10 +390,12 @@ impl Perception {
         let range = match &sky {
             Some(sky) if overworld => {
                 let range = daylight::sight_under(state.time, sky, content.climate());
-                // Moon-eyed (spec §8 "Talents"): farther at night.
+                // Moon-eyed (spec §8 "Talents"): farther at night; Eyes of the heights (spec §8
+                // "Birth sign"): farther by day too.
                 match daylight::phase(state.time) {
                     DayPhase::Night => range + talents.night_sight,
-                    _ => range,
+                    DayPhase::Day => range + talents.day_sight,
+                    DayPhase::Twilight => range,
                 }
             }
             _ => VIEW_RADIUS,
@@ -668,7 +694,10 @@ impl Perception {
         let sounds = match player.hearing(content) {
             Some(threshold) => {
                 let hidden = |p: Pos| sight.get(p) == Some(&Sight::Hidden) && p != viewer;
-                noise::perceive(level, content, &player.heard, threshold, state.turn, hidden)
+                // Watchful (spec §8 "Birth sign"): footsteps placed exactly.
+                let exact = talents.exact_footsteps;
+                let heard = (&player.heard[..], threshold, exact);
+                noise::perceive(level, content, heard, state.turn, hidden)
             }
             None => Vec::new(),
         };
@@ -1229,6 +1258,10 @@ impl<'a> PerceptionView<'a> {
                     granted: def.granted && !book.tree(def.tree).class,
                     flaw: def.flaw,
                     class: class.contains(&id),
+                    spent: self.progress.happened(crate::world::RISEN)
+                        && (def.effects_at(taken.rank)).any(|e| {
+                            matches!(e, crate::content::TalentEffect::RiseFromAshes { .. })
+                        }),
                 })
             })
             .collect()
@@ -1430,6 +1463,19 @@ impl<'a> PerceptionView<'a> {
     /// here: the player sees what happens.
     pub fn sounds(&self) -> &'a [PerceivedSound] {
         &self.snapshot.sounds
+    }
+
+    /// How fresh `stack` smells to the player, if it is food and they can tell by smell (spec §8
+    /// "Birth sign": Hound's nose); `None` otherwise.
+    pub fn smell(&self, stack: &Stack) -> Option<Freshness> {
+        if self.player.talents.is_empty() || !self.player.talent_mods(self.content).smell_rot {
+            return None;
+        }
+        Some(match crate::rot::stage(self.content, stack, self.time)? {
+            crate::rot::Stage::Fresh => Freshness::Fresh,
+            crate::rot::Stage::Old => Freshness::Turning,
+            crate::rot::Stage::Rotten | crate::rot::Stage::Gone => Freshness::Rotten,
+        })
     }
 
     /// The loudest sound perceived at `p`, if any.

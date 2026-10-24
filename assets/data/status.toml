@@ -163,6 +163,20 @@ eases = 300
 start = "You feel drained."
 end = "Your strength of spirit returns."
 
+# Rising from the ashes (a birth sign's gift, spec §8 "Birth sign"): a day of weakness after, every
+# score 2 lower and hit points back half as fast.
+[[status]]
+id = "ashen"
+name = "Ashen"
+seen = "ashen"
+max = 1
+stacking = "refresh"
+eases = 86400
+regen = 50
+penalty = { from = 1, strength = -2, dexterity = -2, toughness = -2, intelligence = -2, willpower = -2, presence = -2 }
+start = "You are ashen and weak."
+end = "The last of the ash falls from you."
+
 # Holy radiance: a faint light about the paladin (the light is the ability's), until they put it
 # out again from the abilities menu.
 [[status]]

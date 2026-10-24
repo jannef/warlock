@@ -363,7 +363,24 @@ impl Actor {
     pub fn max_hp(&self, content: &Content) -> i32 {
         let mods = self.mods(content);
         let toughness = self.stats_with(content, &mods).score(Stat::Toughness);
-        combat::max_hp(toughness, self.hp_base + mods.get(ItemEffect::MaxHp))
+        self.frail(
+            content,
+            combat::max_hp(toughness, self.hp_base + mods.get(ItemEffect::MaxHp)),
+        )
+    }
+
+    /// Maximum hit points `max` as its talents scale them (spec §8 "Birth sign": Frail), never
+    /// below 1.
+    fn frail(&self, content: &Content, max: i32) -> i32 {
+        if self.talents.is_empty() {
+            return max;
+        }
+        let percent = self.talent_mods(content).max_hp_percent;
+        if percent == 0 {
+            return max;
+        }
+        let scaled = TalentMods::scaled(u64::try_from(max.max(0)).unwrap_or(0), percent);
+        i32::try_from(scaled).unwrap_or(i32::MAX).max(1)
     }
 
     /// Its maximum hit points as they will be once its penalties pass: its Toughness raised by
@@ -373,7 +390,10 @@ impl Actor {
     pub fn lasting_max_hp(&self, content: &Content) -> i32 {
         let mods = self.mods(content);
         let toughness = self.raised_with(&mods).score(Stat::Toughness);
-        combat::max_hp(toughness, self.hp_base + mods.get(ItemEffect::MaxHp))
+        self.frail(
+            content,
+            combat::max_hp(toughness, self.hp_base + mods.get(ItemEffect::MaxHp)),
+        )
     }
 
     /// Its maximum mana (spec §8 "Mana"): [`Actor::mana_base`] plus what it wears and wields

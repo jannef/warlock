@@ -52,6 +52,29 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Stonewise (notices on stone in passing, digging +25 %), Keen edge (threat +1 with every
     attack). The rest of the design's gifts land with their rules (S2–S4) and are listed in
     `grants` only then.
+  - **The Roc to the Barghest** (#267): Eyes of the heights (overworld sight +2 cells by day, +1
+    by night), Hoard sense (loot's better rarities +50 %, a find a loose gem +100 %: the same
+    draws, so maps never change), Watchful (hears 3 fainter; footsteps it hears are placed at
+    their cell, not roughly), Set in its ways (flaw: changing stance takes a wait's time), Old
+    lore (a magic item carried 24 hours is identified; reading −50 %), **Rise from the ashes**
+    (below), Inner light (an `ember` light, radius 1, always shed at the player's cell: they see
+    the cells beside them in the dark, and so does everything else), Frail (flaw: maximum hit
+    points −10 %, at least 1), Grasping arms (Twin Blades' two-weapon penalties eased by 3; Sword
+    and Board's free bash +20 % where it has one), Of the deep (ice holds them as if they
+    carried nothing, a plunge never hurts, climbing out onto ice −50 %), Ungainly ashore (flaw:
+    overworld journeys +10 %), Hound's nose (bleeding creatures seen within 6 cells however dark;
+    the eat list says whether food smells fresh, turning, or rotten: a word, never its age),
+    Gatekeeper (a free blow at a hostile stepping up beside them, §8 "Free blows").
+  - **Rise from the ashes** (the Phoenix's): **once in a life**, a hit, a trap, or a status that
+    would bring the player to 0 hit points does not kill them (starving and choking still do):
+    "You burst into flame and rise from your ashes!"; they are **Ashen** for a day (every score
+    −2, hit points back half as fast), at a third of their (Ashen) maximum hit points, and flames
+    burst from them (the `phoenix_fire` effect over the cells within 1): one roll of 1d6 fire for
+    every creature there (no roll to hit; a kill is the player's), and the ice there melts. The
+    rising is kept in the saved progression (`Progress::once`, `risen`), so it never comes again;
+    the Stars line and the talents say "Rise from the ashes (spent)". A Toughness drained to 0 by
+    a disease still kills (the rising would leave them dying of it). The flames draw from the
+    gameplay stream only when they come.
   - **Lucky days** (`[[lucky]]`): five animal–element pairs, each with a day of the month (any
     month), the day the animal's place in the Great Race: the Wood Salamander on the 1st (the
     Racer), the Metal Manticore on the 3rd (the Iron Scourge), the Fire Phoenix on the 10th (the
