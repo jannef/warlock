@@ -1,0 +1,9 @@
+[[talent]]
+id = "apprentice"
+name = "Apprentice"
+tree = "scholar"
+choice = "skill"
+ranks = 3
+description = "You take up a skill you lack, or get better at one you have; each rank, better still."
+effects = [{ kind = "train_skill", dice = "1d6+4" }]
+systems = ["skills"]

@@ -48,9 +48,11 @@ impl World {
         if actor.diseases.has(disease) {
             return false;
         }
-        // Strong constitution (spec §8 "Talents") adds to the check.
+        // Strong constitution and Iron will (spec §8 "Talents") add to the check.
+        let talents = actor.talent_mods(&self.content);
         let modifier = actor.effective_stats(&self.content).modifier(def.check)
-            + actor.talent_mods(&self.content).disease_checks;
+            + talents.disease_checks
+            + talents.checks[def.check];
         if check(&mut self.state.rng, modifier, def.difficulty) {
             self.train_resisting(id, def.check);
             return false;
@@ -121,7 +123,9 @@ impl World {
             return false;
         };
         let talents = actor.talent_mods(&content);
-        let modifier = actor.effective_stats(&content).modifier(def.check) + talents.disease_checks;
+        let modifier = actor.effective_stats(&content).modifier(def.check)
+            + talents.disease_checks
+            + talents.checks[def.check];
         // Fever-proof (spec §8 "Talents"): fewer checks won in a row shake it off, never under 1.
         let recovery = i32::from(def.recovery) - talents.disease_recovery;
         let recovery = u8::try_from(recovery.max(1)).unwrap_or(def.recovery);

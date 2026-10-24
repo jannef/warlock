@@ -1,0 +1,8 @@
+[[talent]]
+id = "sure_footed"
+name = "Sure-footed"
+tree = "grit"
+description = "Being bloated or burdened slows your steps much less."
+needs = { stats = { dexterity = 12 } }
+effects = [{ kind = "step_slowdown_percent", value = -50 }]
+systems = ["burden", "hunger"]

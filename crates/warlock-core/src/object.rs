@@ -56,6 +56,10 @@ pub struct Stack {
     /// ([`crate::rot::made_at`]).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) died: Option<GameTime>,
+    /// An unidentified magic item the player carries while they have Lore (spec §8 "Talents"):
+    /// since when (rules only). Put down, it is forgotten.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) carried: Option<GameTime>,
 }
 
 impl Stack {
@@ -67,6 +71,7 @@ impl Stack {
             magic: None,
             parts: None,
             died: None,
+            carried: None,
         }
     }
 
@@ -419,6 +424,7 @@ fn join(stacks: &mut [Stack], stack: &Stack, content: &Content) -> bool {
         Some(same) => {
             same.count += stack.count;
             same.died = oldest(same.died, stack.died);
+            same.carried = oldest(same.carried, stack.carried);
             true
         }
         None => false,
@@ -426,11 +432,15 @@ fn join(stacks: &mut [Stack], stack: &Stack, content: &Content) -> bool {
 }
 
 /// Puts `stacks` on top of `pile`, keeping their order (the first ends on top). Stackable
-/// objects join a stack of the same object already there.
+/// objects join a stack of the same object already there. What lies there is carried by no one.
 pub fn add_to_pile(pile: &mut Vec<Stack>, stacks: &[Stack], content: &Content) {
     for stack in stacks.iter().rev() {
-        if !join(pile, stack, content) {
-            pile.insert(0, stack.clone());
+        let stack = Stack {
+            carried: None,
+            ..stack.clone()
+        };
+        if !join(pile, &stack, content) {
+            pile.insert(0, stack);
         }
     }
 }

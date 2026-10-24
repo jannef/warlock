@@ -131,8 +131,9 @@ impl World {
     }
 
     /// `price` as the player pays it while Bloated: raised by `[bloated] slow` percent (rounded
-    /// up to a whole unit of energy), like a burden; as it is for anyone else.
-    pub(super) fn bloated(&self, id: super::ActorId, price: i64) -> i64 {
+    /// up to a whole unit of energy), like a burden; as it is for anyone else. `slowdown` scales
+    /// the part above the price, in percent more (negative: less; Sure-footed's steps).
+    pub(super) fn bloated(&self, id: super::ActorId, price: i64, slowdown: i32) -> i64 {
         let Some(def) = self.content.hunger() else {
             return price;
         };
@@ -141,8 +142,10 @@ impl World {
         if !bloated {
             return price;
         }
-        let slow = i64::from(def.bloated_slow);
-        price.saturating_mul(slow).saturating_add(99) / 100
+        // In hundredths of a percent, so a halved slowdown loses nothing to rounding.
+        let over = i64::from(def.bloated_slow) - 100;
+        let slow = 10_000 + over * i64::from((100 + slowdown).max(0));
+        price.saturating_mul(slow).saturating_add(9_999) / 10_000
     }
 
     /// Says how the player's hunger changed since it was `before`: getting hungrier, into Hungry

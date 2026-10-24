@@ -1,0 +1,8 @@
+[[talent]]
+id = "careful_reader"
+name = "Careful reader"
+tree = "scholar"
+description = "The bursts of the scrolls you read never catch you."
+needs = { talents = { scroll_savant = 1 } }
+effects = [{ kind = "spares_self" }]
+systems = ["scrolls"]

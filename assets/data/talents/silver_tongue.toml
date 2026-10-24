@@ -1,0 +1,8 @@
+[[talent]]
+id = "silver_tongue"
+name = "Silver tongue"
+tree = "delver"
+description = "Shopkeepers give you better prices."
+needs = { stats = { presence = 12 } }
+effects = [{ kind = "favour", value = 10 }]
+systems = ["shops"]

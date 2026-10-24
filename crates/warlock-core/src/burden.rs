@@ -221,12 +221,14 @@ pub fn load(actor: &Actor, race: Option<&RaceDef>, content: &Content) -> Load {
         stats.score(Stat::Toughness),
         content.size(size).carry,
     );
-    // Talents (Pack mule) scale the limit; magic items add to it.
-    let base = TalentMods::scaled(base, actor.talent_mods(content).carry_percent);
+    // Talents (Pack mule) scale the limit; magic items add to it. Porter shrugs off Burdened
+    // as a dwarf does.
+    let talents = actor.talent_mods(content);
+    let base = TalentMods::scaled(base, talents.carry_percent);
     Load {
         carried: weight_of(&actor.inventory, content),
         limit: with_carry(base, actor.mods(content).get(Effect::Carry)),
-        ignores_burdened,
+        ignores_burdened: ignores_burdened || talents.ignore_burdened,
     }
 }
 

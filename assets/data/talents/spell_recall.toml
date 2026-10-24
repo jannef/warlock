@@ -1,0 +1,8 @@
+[[talent]]
+id = "spell_recall"
+name = "Spell recall"
+tree = "scholar"
+description = "Now and then the writing does not fade from a scroll you read, and you may read it again."
+needs = { stats = { intelligence = 15 }, level = 12 }
+effects = [{ kind = "scroll_kept", chance = 25 }]
+systems = ["scrolls"]

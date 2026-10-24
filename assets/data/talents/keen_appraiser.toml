@@ -1,0 +1,8 @@
+[[talent]]
+id = "keen_appraiser"
+name = "Keen appraiser"
+tree = "scholar"
+description = "You can tell what things are worth, gems too: an item's description says it."
+needs = { skills = { appraise = 15 } }
+effects = [{ kind = "shows_worth" }]
+systems = ["magic_items", "shops", "gems"]

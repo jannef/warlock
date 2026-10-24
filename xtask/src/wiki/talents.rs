@@ -147,17 +147,87 @@ fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::SilentDoors => "the doors you open and close are silent".to_string(),
         TalentEffect::Hearing { value } => format!("hears sounds {value} fainter"),
         TalentEffect::CarryPercent { value } => format!("carrying limit {}", percent(value)),
+        TalentEffect::IgnoreBurdened => "being Burdened costs you nothing (as a dwarf)".to_string(),
+        TalentEffect::StepSlowdownPercent { value } => format!(
+            "the slowdown your burden and being Bloated put on your steps {}",
+            percent(value)
+        ),
         TalentEffect::TravelPercent { value } => {
             format!("overworld journey time {}", percent(value))
         }
         TalentEffect::HungerPercent { value } => format!("hunger pace {}", percent(value)),
         TalentEffect::NoExertion => "blows, shots, and throws burn no nutrition".to_string(),
+        TalentEffect::NoBloating => "a meal never leaves you Bloated: what does not fit below \
+             Bloated is lost, and you never overeat"
+            .to_string(),
+        TalentEffect::CorpseStatsPercent { value } => format!(
+            "a fresh corpse's chance to raise each stat {} (at most 100 %)",
+            percent(value)
+        ),
         TalentEffect::XpPercent { value } => format!("experience gained {}", percent(value)),
+        TalentEffect::SkillRolls { value } => format!("skill rolls every level {}", signed(value)),
+        TalentEffect::TrainSkill { dice } => format!(
+            "the chosen skill trained at {dice}, or raised by {dice} if trained (rolled as the \
+             rank is taken)"
+        ),
+        TalentEffect::Favour { value, cap } => {
+            let most = warlock_core::content::MAX_FAVOUR;
+            let mut text = format!("prices in shops {} in your favour", percent(value));
+            if cap > 0 {
+                let _ = write!(
+                    text,
+                    ", and they may move up to {} % in your favour (others: {most} %)",
+                    most + cap
+                );
+            }
+            text
+        }
+        TalentEffect::QuestGoldPercent { value } => {
+            format!("quest rewards' gold {} (rounded down)", percent(value))
+        }
+        TalentEffect::QuestXpPercent { value } => {
+            format!(
+                "quest rewards' experience {} (rounded down)",
+                percent(value)
+            )
+        }
+        TalentEffect::IdentifiesCarried { hours } => format!(
+            "a magic item you have carried for {hours} hours is identified (put down, its \
+             count starts again)"
+        ),
+        TalentEffect::ShowsWorth => "item descriptions say what things are worth, in gold, as \
+             shops value them (never their magic; rotten food nothing)"
+            .to_string(),
+        TalentEffect::LootMagicPercent { value } => format!(
+            "the weights of the rarities better than a find's least {} (anything found: magic \
+             and rare; what creatures drop, always magic: rare)",
+            percent(value)
+        ),
+        TalentEffect::ReadPercent { value } => format!("reading time {}", percent(value)),
+        TalentEffect::ScrollKept { chance } => {
+            format!("a {chance} % chance a scroll you read is not used up")
+        }
+        TalentEffect::SparesSelf => "the bursts of scrolls you read never catch you".to_string(),
         TalentEffect::Notice { value } => {
             format!(
                 "notices hidden things in passing, {} to the check",
                 signed(value)
             )
+        }
+        TalentEffect::Find { value } => format!(
+            "{} to finding hidden traps and secret doors, searching and in passing",
+            signed(value)
+        ),
+        TalentEffect::Search { value } => format!("searching {}", signed(value)),
+        TalentEffect::SearchReach { value } => {
+            format!("searching reaches {} cells", signed(value))
+        }
+        TalentEffect::TrapDamagePercent { value } => format!(
+            "damage traps do you {} (rounded down, at least 1)",
+            percent(value)
+        ),
+        TalentEffect::Checks { stat, value } => {
+            format!("checks of {} {}", stat.name(), signed(value))
         }
         TalentEffect::FreeBlow { trigger } => {
             use warlock_core::content::FreeBlowTrigger as T;
@@ -300,6 +370,9 @@ fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::KickDie { sides } => format!("kicks at creatures roll 1d{sides}"),
         TalentEffect::DoorKick { value } => {
             format!("door kicks as if Strength {}", signed(value))
+        }
+        TalentEffect::KickNoisePercent { value } => {
+            format!("door kicks' noise {}", percent(value))
         }
         TalentEffect::DigPercent { value } => format!("digging work a turn {}", percent(value)),
         TalentEffect::TwoHandedPrice { value } => {

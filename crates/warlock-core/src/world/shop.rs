@@ -36,7 +36,9 @@
 use super::{ActorId, Deed, Spent, World};
 use crate::action::{Event, Meal, Positions};
 use crate::content::StatUse;
-use crate::content::{ActionKind, Content, MAX_FAVOUR, ShopId, ShopPlan, Shops, TerrainId};
+use crate::content::{
+    ActionKind, Content, MAX_FAVOUR, MAX_FAVOUR_LIFT, ShopId, ShopPlan, Shops, TerrainId,
+};
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
 use crate::object::{self, Stack};
@@ -213,13 +215,17 @@ pub fn unpaid_parts(inventory: &[Stack], unpaid: &[Stack]) -> Vec<u32> {
 
 /// How far prices move in `actor`'s favour, in percent (spec §7 "Shops"): the shops' `presence`
 /// for each point of their Presence modifier, plus what their skills give (Appraise's
-/// bargaining), plus what a good keeper makes of their alignment (spec §8 "Alignment"), at most
-/// [`MAX_FAVOUR`] either way. Never shown.
+/// bargaining), plus what a good keeper makes of their alignment (spec §8 "Alignment"), plus
+/// what their talents give (spec §8 "Talents": Silver tongue, Haggler), at most [`MAX_FAVOUR`]
+/// either way, the most in their favour lifted by their talents (Haggler; at most
+/// [`MAX_FAVOUR_LIFT`]). Never shown.
 pub fn favour(content: &Content, shops: &Shops, actor: &super::Actor) -> i32 {
     let presence = actor.stats.modifier(Stat::Presence) * i32::from(shops.presence);
     let bargain = actor.skills.effect(content, Effect::Bargain);
     let alignment = super::alignment::keeper_favour(content, shops, actor);
-    (presence + bargain + alignment).clamp(-MAX_FAVOUR, MAX_FAVOUR)
+    let talents = actor.talent_mods(content);
+    let most = MAX_FAVOUR + talents.favour_cap.clamp(0, MAX_FAVOUR_LIFT);
+    (presence + bargain + alignment + talents.favour).clamp(-MAX_FAVOUR, most)
 }
 
 /// How many of `object` `stacks` hold.

@@ -336,7 +336,12 @@ impl World {
         from: Option<&str>,
     ) -> Result<&LevelState, WorldError> {
         if !self.state.levels.contains_key(id) {
-            let template = level_template(&self.content, self.state.seed, id, from)?;
+            let luck = self
+                .state
+                .player()
+                .talent_mods(&self.content)
+                .loot_magic_percent;
+            let template = level_template(&self.content, self.state.seed, id, (from, luck))?;
             instantiate_level(&mut self.state, &self.content, &template);
         }
         Ok(&self.state.levels[id])
@@ -379,12 +384,13 @@ pub(super) fn enter_room(state: &mut WorldState, content: &Content) -> Option<St
 
 /// The template of level `id`: a hand-made level, or one generated from the run seed: a level of
 /// a dungeon branch (`entered_from` is where the up staircase of a branch's first level leads)
-/// or a local area of the overworld.
+/// or a local area of the overworld, its loot magic and rare `luck` percent more often (the
+/// player's Treasure hunter, as they first come).
 pub(super) fn level_template<'a>(
     content: &'a Content,
     seed: u64,
     id: &str,
-    entered_from: Option<&str>,
+    (entered_from, luck): (Option<&str>, i32),
 ) -> Result<Cow<'a, LevelTemplate>, WorldError> {
     if let Some(template) = content.level(id) {
         return Ok(Cow::Borrowed(template));
@@ -392,7 +398,7 @@ pub(super) fn level_template<'a>(
     if !content.has_level(id) {
         return Err(WorldError::UnknownLevel(id.to_string()));
     }
-    crate::mapgen::generate(content, seed, id, entered_from)
+    crate::mapgen::generate_with(content, seed, id, entered_from, luck)
         .map(Cow::Owned)
         .map_err(|e| WorldError::Generation(id.to_string(), e.to_string()))
 }

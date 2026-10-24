@@ -204,7 +204,9 @@ impl World {
                 price = percent_of(price, u32::try_from((100 + percent).max(1)).unwrap_or(1));
             }
         }
-        self.burdened(id, price)
+        // Sure-footed (spec §8 "Talents"): less of the burden's and Bloated's slowdown on steps.
+        let slowdown = actor.talent_mods(&self.content).step_slowdown_percent;
+        self.slowed(id, price, slowdown)
     }
 
     /// `price` as actor `id` pays it now: ×1.25 Burdened, ×1.5 Strained or Overloaded (spec §8
@@ -215,9 +217,21 @@ impl World {
     /// "Status effects": Slowed). An action is priced at the burden, hunger, and statuses its
     /// actor has as it begins.
     fn burdened(&self, id: ActorId, price: i64) -> i64 {
+        self.slowed(id, price, 0)
+    }
+
+    /// [`World::burdened`], the slowdown its burden and being Bloated put on `price` that
+    /// `slowdown` percent more (negative: less; a step's, Sure-footed).
+    fn slowed(&self, id: ActorId, price: i64, slowdown: i32) -> i64 {
         let actor = &self.state.actors[&id];
         let ease = actor.skill_effect(&self.content, Effect::Burden);
-        let price = self.bloated(id, self.load_of(id).penalty().slow_eased(price, ease));
+        let keep = (100 - ease.clamp(0, 100)) * (100 + slowdown).max(0) / 100;
+        let ease = 100 - keep.clamp(0, 100);
+        let price = self.bloated(
+            id,
+            self.load_of(id).penalty().slow_eased(price, ease),
+            slowdown,
+        );
         let price = actor.effects.slow(&self.content, price);
         // Quick (spec §8 "Talents"): a little quicker in everything, as a higher speed would be.
         match actor.talent_mods(&self.content).speed_percent {

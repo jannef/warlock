@@ -1,0 +1,8 @@
+[[talent]]
+id = "keen_searcher"
+name = "Keen searcher"
+tree = "delver"
+description = "You search more keenly, and a cell farther."
+needs = { skills = { search = 15 } }
+effects = [{ kind = "search", value = 4 }, { kind = "search_reach", value = 1 }]
+systems = ["searching"]

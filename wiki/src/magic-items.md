@@ -45,8 +45,9 @@ Magic and rare items are **unidentified** when you find them. You see their rari
 (magic)", "an iron helm (rare)"), not their affixes or a rare item's name. Their magic works all
 the same while you wear or wield them, as in ADOM and Path of Exile: an unknown ring of Strength
 makes you stronger, and one that glows lights your way. Wearing it for a while does not tell you
-what it is. A [scroll of identify](scrolls.md#the-scroll-of-identify) will; once identified, an
-item stays known wherever it goes: "This is a Sharp long sword of the Bear!"
+what it is. A [scroll of identify](scrolls.md#the-scroll-of-identify) will, and so does carrying
+it for a day if you have the [talent](talents.md) Lore; once identified, an item stays known
+wherever it goes: "This is a Sharp long sword of the Bear!"
 
 ## What their magic does
 

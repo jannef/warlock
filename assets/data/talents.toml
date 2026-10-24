@@ -62,7 +62,6 @@ description = "The land, water, ice, and weather."
 id = "scholar"
 name = "Scholar"
 description = "Items, scrolls, gems, and learning."
-pending = true
 
 [[tree]]
 id = "grit"
@@ -73,7 +72,6 @@ description = "Hunger, burden, and will."
 id = "delver"
 name = "Delver"
 description = "Traps, searching, doors, digging, shops, and talk."
-pending = true
 
 # The closed list of systems a talent may name in its `systems` (the coverage matrix of the
 # design, docs/design/progression.md §8). A system is `pending` until its talents land; the PR
@@ -168,7 +166,6 @@ name = "Traps"
 [[system]]
 id = "searching"
 name = "Searching and secret doors"
-pending = true
 
 [[system]]
 id = "doors"
@@ -177,7 +174,6 @@ name = "Doors, locks, kicking"
 [[system]]
 id = "digging"
 name = "Digging"
-pending = true
 
 [[system]]
 id = "ice"
@@ -202,7 +198,6 @@ pending = true
 [[system]]
 id = "shops"
 name = "Shops and favour"
-pending = true
 
 [[system]]
 id = "talk"
@@ -212,12 +207,10 @@ pending = true
 [[system]]
 id = "magic_items"
 name = "Magic items and identification"
-pending = true
 
 [[system]]
 id = "scrolls"
 name = "Scrolls and casting"
-pending = true
 
 [[system]]
 id = "gems"
@@ -227,12 +220,10 @@ pending = true
 [[system]]
 id = "skills"
 name = "Skills and training"
-pending = true
 
 [[system]]
 id = "experience"
 name = "Experience"
-pending = true
 
 [[system]]
 id = "speed"

@@ -14,8 +14,9 @@
 #   systems       the systems it touches, ids from the closed list in ../talents.toml (at least
 #                 one): the coverage check counts them
 #   ranks         how many times it can be taken (1 to max_ranks, default 1): "Hardy 2/3"
-#   choice        what it is chosen for, if it takes a choice: "weapon_skill", "style", or
-#                 "element" (a damage type that is no physical kind); replays write it
+#   choice        what it is chosen for, if it takes a choice: "weapon_skill", "style", "skill"
+#                 (any skill, trained or not), or "element" (a damage type that is no physical
+#                 kind); replays write it
 #                 `talent:weapon_focus:long_blades`, and each choice is a pick of its own
 #   needs         what taking any rank asks, all of which must hold at the pick (nothing is
 #                 checked again later):
@@ -36,6 +37,9 @@
 #                   requires_alignment = { min = "good" }   an alignment band, as quests and
 #                                                        abilities ask it (`min` the worst
 #                                                        allowed, `max` the best)
+#                   either = { stats = { intelligence = 12 }, skills = { appraise = 20 } }
+#                                                        any one of what it asks (at least two;
+#                                                        no `either` within it)
 #   effects       what every rank held adds: a list of { kind = ..., ... } (below)
 #   [[talent.rank]]  one per rank, in order (as many as `ranks`, or none): its own `needs`
 #                 besides the talent's, and its own `effects` besides the per-rank ones
@@ -54,13 +58,41 @@
 #   silent_doors                  the doors it opens and closes make no sound
 #   hearing { value }             hears sounds that much fainter
 #   carry_percent { value }       carrying limit, that percent more
+#   ignore_burdened               being Burdened costs it nothing, as a dwarf's burden
+#   step_slowdown_percent { value }   the slowdown its burden and Bloated put on its steps, that
+#                                 percent more (negative: less)
 #   travel_percent { value }      overworld journeys take that percent more time (negative:
 #                                 quicker)
 #   hunger_percent { value }      hunger burns that percent faster (negative: slower)
 #   no_exertion                   blows, shots, and throws burn no extra nutrition
+#   no_bloating                   a meal never leaves it Bloated: what does not fit is lost
+#   corpse_stats_percent { value }   a fresh corpse's chances to raise its stats, that percent
+#                                 more (never above certain)
 #   xp_percent { value }          experience gained, that percent more
+#   skill_rolls { value }         skill rolls every level, that many more
+#   train_skill { dice }          the chosen skill (choice skill) trained at those dice, or
+#                                 raised by them, as the rank is taken (the levels stream)
+#   favour { value, cap }         prices in shops move that percent more in its favour, and the
+#                                 most they may move for it is cap higher (0 to 40)
+#   quest_gold_percent { value }  quest rewards' gold, that percent more
+#   quest_xp_percent { value }    quest rewards' experience, that percent more
+#   identifies_carried { hours }  a magic item it has carried that many hours is identified
+#   shows_worth                   item descriptions say what things are worth
+#   loot_magic_percent { value }  loot it finds and creatures drop: the weights of the rarities
+#                                 better than the least the find may be, that percent more
+#   read_percent { value }        reading a scroll takes that percent more time (negative: less)
+#   scroll_kept { chance }        a scroll it reads is not used up, by that chance in percent
+#   spares_self                   its own bursts never catch it
 #   notice { value }              notices hidden things in passing as if trained in Spot, with
 #                                 that much added
+#   find { value }                added to its checks to find what is hidden, searching and in
+#                                 passing
+#   search { value }              added to its searching
+#   search_reach { value }        its searching reaches that many cells farther
+#   trap_damage_percent { value } the damage traps do it, that percent more (negative: less; at
+#                                 least 1)
+#   checks { stat, value }        added to every check of that stat (diseases, noticing,
+#                                 disarming, picking locks, stepping lightly)
 #   free_blow { trigger }         a free blow: "cleave", "great_cleave", "riposte", or
 #                                 "opportunist" (spec §8 "Free blows")
 #   weapon { role, to_hit, damage, threat, ranks, speed, reload, ease, bash, shield }
@@ -99,6 +131,7 @@
 #   disease_recovery { value }    a disease needs that many fewer checks won in a row to go
 #   kick_die { sides }            its kicks at creatures roll one die of that many sides
 #   door_kick { value }           its door kicks as if that much stronger
+#   kick_noise_percent { value }  its door kicks that percent louder (negative: quieter)
 #   dig_percent { value }         its digging does that percent more work a turn
 #   two_handed_price { value }    its blows with a two-handed weapon cost that percent more
 #                                 (negative: cheaper)

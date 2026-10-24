@@ -1,0 +1,7 @@
+[[talent]]
+id = "tunneler"
+name = "Tunneler"
+tree = "delver"
+description = "You dig much faster."
+effects = [{ kind = "dig_percent", value = 50 }]
+systems = ["digging"]

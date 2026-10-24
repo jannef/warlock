@@ -1,0 +1,8 @@
+[[talent]]
+id = "iron_will"
+name = "Iron will"
+tree = "grit"
+description = "Whatever tests your will finds it harder to bend: sickness that clouds the mind, and what you notice in passing."
+needs = { stats = { willpower = 13 } }
+effects = [{ kind = "checks", stat = "willpower", value = 2 }]
+systems = ["diseases"]

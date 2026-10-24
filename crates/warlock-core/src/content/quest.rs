@@ -142,11 +142,11 @@ pub struct Reward {
 }
 
 impl Reward {
-    /// The objects it gives: the gold coins, then the items.
-    pub fn stacks(&self, content: &Content) -> Vec<Stack> {
+    /// The objects it gives: `gold` coins (its own `gold`, or more: Well liked), then the items.
+    pub fn stacks(&self, content: &Content, gold: u32) -> Vec<Stack> {
         let gold = (content.object_id(GOLD))
-            .filter(|_| self.gold > 0)
-            .map(|object| Stack::new(object, self.gold));
+            .filter(|_| gold > 0)
+            .map(|object| Stack::new(object, gold));
         gold.into_iter().chain(self.items.iter().cloned()).collect()
     }
 }

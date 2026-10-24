@@ -513,6 +513,40 @@ fn a_kill_quest_counts_the_players_kills_and_rewards_with_xp() {
 }
 
 #[test]
+fn well_liked_brings_a_quarter_more_gold_and_experience() {
+    let mut files = files_with("#########\n#E@pp...#\n#########\n", QUESTS);
+    files.insert(
+        "data/talents.toml",
+        "[[tree]]\nid = \"delver\"\nname = \"Delver\"\ndescription = \"Talk.\"\n\
+         [[system]]\nid = \"talk\"\nname = \"Talk\"\n",
+    );
+    files.insert(
+        "data/talents/well_liked.toml",
+        &include_str!("../../../../assets/data/talents/well_liked.toml")
+            .replace("\"talk\", \"experience\"", "\"talk\""),
+    );
+    let content = Content::load(&files).expect("test content is valid");
+    let mut w = World::new(Arc::new(content), "yard", None).expect("world");
+    w.player_mut().talents.take("well_liked", None);
+    take(&mut w, Dir::W, "pups");
+    kill_pups_east(&mut w, 2);
+    let xp = w.player_xp();
+    put_player(&mut w, Pos::new(2, 1));
+    ask(&mut w, Dir::W, "quest-pups");
+    // 5 gold and 50 XP, a quarter more, rounded down.
+    assert_eq!(
+        from(&w, "Quest complete: Pups.", 3),
+        [
+            "Quest complete: Pups.",
+            "The elder gives you 6 gold coins.",
+            "You gain 62 experience.",
+        ]
+    );
+    assert_eq!(w.player_xp(), xp + 62);
+    assert_eq!(carried(&w, "gold_coin"), 6);
+}
+
+#[test]
 fn kills_before_taking_it_count_but_not_others_kills_nor_other_levels() {
     // Two pups killed first, then the quest: it is done as it is taken.
     let mut w = world_on("#########\n#E@pp...#\n#########\n");

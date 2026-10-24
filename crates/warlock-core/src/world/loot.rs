@@ -3,7 +3,8 @@
 //!
 //! **Identify** ([`World::identify`]): the core API the scroll of identify (#150) calls from its
 //! action. It reveals an inventory stack's affixes ("This is a Sharp long sword of the Bear!").
-//! Wearing or wielding an item for a while does not identify it.
+//! Wearing or wielding an item for a while does not identify it; carrying one for a day does,
+//! for a player with Lore ([`World::lore`], spec §8 "Talents").
 //!
 //! **Drops**: a creature type with `loot` (a chance in percent) drops a magic or rare item where
 //! it dies, besides what it carried, or now and then a loose gem instead (by the gems' `chance`,
@@ -18,6 +19,7 @@ use crate::gem;
 use crate::magic::{LootGrade, loot};
 use crate::object::Stack;
 use crate::rng::Rng;
+use crate::time::Duration;
 use crate::variant::Source;
 
 /// What came of [`World::identify`].
@@ -49,6 +51,40 @@ impl World {
         Identified::Now(name)
     }
 
+    /// Lore (spec §8 "Talents"), after every turn ([`World::perceive`]): every unidentified
+    /// magic item the player has carried for the talent's hours is identified ("You have come
+    /// to know what you carry: this is a Sharp long sword of the Bear!"), and one they carry
+    /// with no time counted yet starts its count now (picked up, or carried when the talent
+    /// came; what is put down is forgotten). Draws nothing; nothing at all without the talent.
+    pub(super) fn lore(&mut self) {
+        let content = self.content.clone();
+        let Some(hours) = self.state.player().talent_mods(&content).identifies_carried else {
+            return;
+        };
+        let now = self.state.time;
+        let after = Duration::hours(u64::from(hours));
+        let mut known = Vec::new();
+        for stack in &mut self.player_mut().inventory {
+            if stack.is_identified() {
+                continue;
+            }
+            match stack.carried {
+                None => stack.carried = Some(now),
+                Some(since) if now.since(since) >= after => {
+                    stack.identify();
+                    stack.carried = None;
+                    known.push(stack.describe(&content));
+                }
+                Some(_) => {}
+            }
+        }
+        for name in known {
+            self.say(format!(
+                "You have come to know what you carry: this is {name}!"
+            ));
+        }
+    }
+
     /// Dev: identifies the inventory stacks `positions` names (everything with none).
     /// Takes no time; says what each turned out to be, or that there was nothing to learn.
     pub(super) fn identify_dev(&mut self, positions: &Positions) -> Spent {
@@ -78,8 +114,15 @@ impl World {
         }
         let level = self.content.item_level(&actor.level);
         let gear = Source::Gear(self.content.creature(actor.creature).level);
-        gem::find(&self.content, &mut rng, level)
-            .or_else(|| loot::roll_from(&self.content, &mut rng, level, LootGrade::Magic, gear))
+        // Treasure hunter (spec §8 "Talents"): the player's luck, whoever made the kill.
+        let luck = self
+            .state
+            .player()
+            .talent_mods(&self.content)
+            .loot_magic_percent;
+        gem::find(&self.content, &mut rng, level).or_else(|| {
+            loot::roll_with(&self.content, &mut rng, level, LootGrade::Magic, gear, luck)
+        })
     }
 
     /// Keeps actor `id`'s hit points within its maximum, which falls when it takes off something

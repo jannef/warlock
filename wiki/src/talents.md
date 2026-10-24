@@ -22,18 +22,20 @@ class bonus picks, and the Talents page that lists every talent with what it nee
 
 - A talent with **ranks** (up to three) is picked once per rank, each pick a level's talent:
   "Hardy (2)". Each rank may ask more than the last.
-- A talent with a **choice** (a weapon skill, a fighting style, an element) is picked for that
-  choice, and the same talent may be picked again for another: Weapon focus with long blades and
-  Weapon focus with bows are two talents. A weapon skill chosen is one you attack with (never
-  shield blocking); a fighting style is chosen as a style.
+- A talent with a **choice** (a weapon skill, a fighting style, a skill, an element) is picked
+  for that choice, and the same talent may be picked again for another: Weapon focus with long
+  blades and Weapon focus with bows are two talents. A weapon skill chosen is one you attack with
+  (never shield blocking); a fighting style is chosen as a style; a skill may be any skill,
+  trained or not (Apprentice, whose ranks count for each skill on its own).
 - **Prerequisites** must all hold when you pick, and are never checked again: a Strength lowered
   by disease later does not take a talent away. They may be another talent (at a rank), a stat
   score (the score itself, as the [character screen](character.md) shows it; never what items or
   a sickness do to it), a [skill](skills.md) at a value, a [weapon skill](weapon-skills.md) or
   style at a rank (or any of a kind: "a missile weapon skill 3" is bows, crossbows, or
   slings), a character level, your race, your class, your eyes (your race's
-  [vision](vision.md)), or your [alignment](alignment.md) band. The game names what you lack:
-  "You cannot take Dodge: you need Dexterity 13."
+  [vision](vision.md)), or your [alignment](alignment.md) band; a few ask for either of two
+  ("Intelligence 12 or Appraise 20"). The game names what you lack: "You cannot take Dodge: you
+  need Dexterity 13."
 
 ## What a talent does
 
@@ -41,7 +43,10 @@ In the game a talent is described in words; the tables below state the rule exac
 talents simply change a rule for good. An **active** talent (Second wind) is something you do:
 it appears in the [abilities menu](abilities.md) under Talents, and after use it leaves a
 status (Winded) during which it cannot be used again. A few talents that need the class
-resources (Battle trance, Inner calm) are still to come. Where a
+resources (Battle trance, Inner calm) or mana (Deep well, Clear mind, Meditation, Frugal caster,
+Blood magic) are still to come. Apprentice's skill points are rolled once, as the rank is
+taken. Treasure hunter changes loot as it is made: a level you have already been to keeps what
+lies there, and the levels themselves never change. Where a
 talent scales ("one hit point per four levels"), what it gave earlier grows as you level: a
 talent taken at level 3 still matters at level 50.
 

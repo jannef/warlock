@@ -120,7 +120,9 @@ pub use scroll::{Cast, Reading, ScrollSpell};
 pub use search::{
     PASSIVE_PENALTIES, PassiveSearch, SEARCH_TURNS, SearchRules, Secret, secret_look,
 };
-pub use shop::{KEEPER, Keeper, MAX_FAVOUR, MAX_SHOPS, ShopDef, ShopId, ShopPlan, Shops};
+pub use shop::{
+    KEEPER, Keeper, MAX_FAVOUR, MAX_FAVOUR_LIFT, MAX_SHOPS, ShopDef, ShopId, ShopPlan, Shops,
+};
 pub use size::{CARRY, MEDIUM, SizeDef};
 pub use skill::{SkillBook, SkillDef};
 pub use sky::{MAX_MOONS, MAX_SIZE, MoonDef, PHASE_ONE, STANDARD_SIZE};

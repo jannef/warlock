@@ -1103,6 +1103,25 @@ impl<'a> PerceptionView<'a> {
         self.progress.due.first().copied()
     }
 
+    /// What `stack` is worth, in gold, if the player can tell (spec §8 "Talents": Keen
+    /// appraiser): its value as shops reckon it, by what it is made of and how many (gems too;
+    /// never its magic, which shops do not price), and nothing for rotten food. `None` without
+    /// the talent.
+    pub fn worth(&self, stack: &Stack) -> Option<u64> {
+        if !self.player.talent_mods(self.content).shows_worth {
+            return None;
+        }
+        let rotten =
+            crate::rot::stage(self.content, stack, self.time).is_some_and(|s| s.is_rotten());
+        Some(if rotten { 0 } else { stack.value(self.content) })
+    }
+
+    /// Whether the player's own bursts spare them (spec §8 "Talents": Careful reader), so a
+    /// scroll read close needs no warning.
+    pub fn bursts_spare_me(&self) -> bool {
+        self.player.talent_mods(self.content).spares_self
+    }
+
     /// The player as prerequisites see them.
     fn candidate(&self) -> Candidate<'a> {
         let level = self.own_experience().level;

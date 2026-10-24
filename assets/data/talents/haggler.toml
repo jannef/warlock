@@ -1,0 +1,8 @@
+[[talent]]
+id = "haggler"
+name = "Haggler"
+tree = "delver"
+description = "Shopkeepers give you better prices still, better than anyone else could talk them into."
+needs = { talents = { silver_tongue = 1 }, skills = { appraise = 20 } }
+effects = [{ kind = "favour", value = 10, cap = 10 }]
+systems = ["shops"]
