@@ -6,8 +6,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
 
 - **Character creation** (`warlock-core/src/character.rs`; M15): a run starts as a character, a
   race (`data/races.toml`), a gender (male, female, or other), and a class
-  (`data/classes.toml`), chosen on New run (§6) or given on the command line (`--character
+  (`data/classes/`), chosen on New run (§6) or given on the command line (`--character
   dwarf,female,warrior`, §9); otherwise the scenario's character (§7). It decides:
+  - **Name** (#218): the character has a name, 1 to 20 characters, typed on New run's Name step
+    (after the class, before the summary; §6) or given on the command line (`--name Brakka`).
+    The step's Random, and an empty field, give one of the race's names for the gender
+    (`data/names.toml`, a `male` and a `female` list per race; `other` draws from both), drawn
+    from the stream `character/name/<race>,<gender>/<draw>`, so no other roll moves and the class
+    plays no part. A run told no name (a replay or command line without one) gives the
+    scenario's own name (§7) to its own character, else the race's first random name, else
+    "Wanderer". The name is shown on the character screen, the summary, the death screen ("Here
+    lies Brakka, …"), and the list of saved characters (§7 "Saves"); no rule or message reads it
+    yet.
   - **Age and birthday**: the starting age is uniform within the race's `age` range, the
     birthday (month, then day) uniform over the year, both from the stream
     `character/birth/<race>` (so the class and gender never move a birthday). The birth date is
@@ -25,7 +35,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `Character::born_in_year_of("manticore")`, and `Sign::is_element`/`is_animal`.
   - **Starting scores**: 10 plus the race's adjustment, plus the gender's (male: Strength +1;
     female: Dexterity +1; other: +1 to a stat picked uniformly from the run seed's
-    `character/gender` stream, so the same seed always raises the same stat), plus the class's,
+    `character/gender` stream, so the same seed always raises the same stat; character creation
+    never names it, the character screen does once the run has begun, §6), plus the class's,
     plus the birth sign's animal's and element's, kept within 1 to 40.
   - **Dice**: adjustments that are dice are rolled in the background, ADOM-like, from the stream
     `character/rolls/<race>,<gender>,<class>`, in this order: the race's scores, the class's, the
@@ -41,6 +52,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Eyes**: the player's vision profile is the race's (the dev vision switch still works).
   - **Hit points**: the race's and the class's `hp` add to Toughness for the maximum ("Combat"
     below).
+  - **Alignment** ("Alignment" below): the starting score is the race's `alignment` plus the
+    class's, kept on the scale: paladins start Good, thieves and witches Callous, everyone else
+    Neutral; a race only leans (elves and halflings a little toward good, half-orcs a little
+    toward evil), never alone out of Neutral. It draws nothing.
   - **Weapon skills** ("Weapon skills" below): the race's starting ranks plus the class's, plus
     one set of the class's `weapon_skill_choice` if it has one, at most 10 each; each then
     raises the skills it defaults to. Dice among them roll from their own stream,
@@ -52,17 +67,100 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `character/styles/<race>,<gender>,<class>`: the class's (in skill order), the pick of the
     choice, then the chosen set's; so they never move a stat or a weapon skill roll. Each raises
     the styles it defaults to.
+  - **Starting kit** (`warlock-core/src/kit.rs`, data `content/kit.rs`; #257): what the character
+    carries, wields, and wears at the start. The class's `kit` (`data/classes/`) comes first,
+    then the race's few racial items (`data/races.toml`), then the birth sign's animal's and
+    element's (`data/horoscope.toml`: the hook for the horoscope; none give anything yet). A kit
+    is a list of lines, each one item or a few of one, as level files place objects: a string is
+    carried, a table says `carry`, `wield` (wielded or readied: hands, missile weapon, missiles,
+    Tool slot), or `wear`, and may add `trained` (only if the class trained that weapon skill or
+    fighting style: its fixed ranks, or the set of its choice that was picked; never the race's
+    ranks or defaults), `gender` (only for that gender: the hook for gender's items), and
+    `magic` (a base item made as loot makes it at item level 1, its rarity rolled at least
+    `any`, `magic`, or `rare`); `"a|b|c"` is one of them. Each item goes into the pack in order
+    (a stackable one joins a stack of the same), and a `wield` or `wear` item into the first free
+    slot it fits (a second light weapon to the off hand); one that finds none is carried. Kits
+    roll from a stream of their own, `character/kit/<race>,<gender>,<class>`, in that order: a
+    line draws only if it applies, one draw to pick among alternatives, then for a `magic` line
+    the loot draws (rarity, affixes, a rare name, an ornament); so no stat, skill, weapon skill,
+    or style roll moves. Kit items are what they are: magic ones unidentified,
+    food made when the run starts (§8 "Hunger"). Data is checked when content loads (every item
+    exists, what is wielded or worn fits a slot of that kind, `magic` only on base items, a
+    class's `trained` only what it trains). Unfair on purpose: the aristocrat sets out rich, with
+    a perhaps magic rapier and an heirloom ring (magic or rare), the merchant with goods and gems,
+    the commoner with a stick and a turnip; nobody starts Strained, and only the aristocrat and
+    the merchant may start Burdened (a test checks the weakest character of every combination,
+    every die at its least and the worst sign). **Who starts with it**: a run whose character
+    the player chose, that is one started from New run's character creation, or by the game or
+    `warlock-cli` with `--character` or `--name`, or a replay that records the kit; the
+    scenario's `carry` comes on top (§7 "Scenarios"). A run on the scenario's own character that
+    nobody chose (`--scenario` alone, tests, golden walks, replays from before kits) starts with
+    the scenario's pack alone, as before kits. The world state and replays record which
+    (`kit`). The summary of character creation (§6) lists what the run starts with, each stack
+    as named ("a dagger (wielded)", "2 wool cloaks"); it never names the seed. The wiki lists
+    every class's kit and race's additions.
   - Balance is deliberately not a goal: some combinations are poor (a halfling commoner), and
-    classes do nothing but adjust starting scores, give hit points, train skills, and give
-    weapon skills and fighting styles. No other D&D concept comes with them (alignment, equipment, spells).
-  - The character (`Character`: the race, gender, and class ids, the stat the gender raised,
-    the birth date, and the birth sign) is part of the world state (saved, hashed) and shown on
-    the character screen; replays record the choice only, and since everything else follows
-    from the content, the choice, the seed, and the start date, a run is reproduced by its
-    scenario, seed, and character. `World::new` starts as the scenario's character,
-    `World::with_character` as a given one.
-- **Skills** (`warlock-core/src/skills.rs`, `content/skill.rs`, `world/train.rs`; M20, #132),
-  ADOM-like:
+    classes do nothing but adjust starting scores, give hit points, train skills, give
+    weapon skills and fighting styles, give a starting kit, and set where the alignment starts.
+    No other D&D concept comes with them (spells; the alignment is good against evil only, not
+    D&D's grid).
+  - The character (`Character`: the name, the race, gender, and class ids, the stat the gender
+    raised, the birth date, and the birth sign) is part of the world state (saved, hashed) and
+    shown on the character screen; replays record the choice, the name, and whether the run
+    started with the kit, and since everything else follows from the content, the choice, the
+    seed, and the start date, a run is reproduced by its scenario, seed, character, name, and
+    kit. `World::new` starts as the scenario's character, `World::with_character` as a given
+    one, `World::with_character_named` named, `World::start_run` with or without the kit.
+- **Alignment** (`warlock-core/src/alignment.rs`, `content/alignment.rs`, `world/alignment.rs`;
+  #254): good against evil, as ADOM has law against chaos.
+  - **The score**: the player has a hidden integer score from −1000 (as evil as can be) to 1000
+    (as good), saved and hashed, never shown as a number. They know it as one of seven
+    **bands**, by edges in `data/alignment.toml` (§7): Saintly (750 up), Good (400), Kind (150),
+    Neutral (−149 to 149), Callous (to −150), Evil (to −400), Wicked (−750 down). The band is
+    on the character screen, the character creation summary (the band the character starts
+    in), and the `stats` dump; nothing else shows it.
+  - **Creatures** have a fixed alignment instead (`alignment` in their file: good, neutral, or
+    evil; neutral by default), which a level legend entry may change for one spawn, as it does
+    a faction. The kobolds are evil, the beasts (rats, bats, beetles, deer) neutral, and the
+    showcase's people (the gardener, the bard, the hermit, the shopkeepers) good. A creature's
+    alignment is never shown (a "detect evil" ability may show it later).
+  - **What moves it**: `World::shift_alignment(actor, amount, cause)` is the one place a score
+    changes. Moves diminish, ADOM-style: a deed in the direction the score already leans (away
+    from 0) moves it by its worth times the share of the way still left to that end, rounded
+    toward 0 (halfway to good a good deed counts half, and small deeds never make a saint); a
+    deed the other way counts in full. The deeds, each worth what `[shift]` in
+    `data/alignment.toml` says: killing someone not hostile to the player (by their alignment:
+    good −150, neutral and evil −100), except a beast (a neutral creature that does not talk),
+    which may be hunted (0); killing someone hostile (evil +10, neutral and good 0); attacking a
+    shopkeeper who trades with the player (−100, once: the keeper is outraged after it);
+    leaving a shop with unpaid goods, or taking something with Steal unnoticed (theft, −100 each time); paying a
+    shopkeeper what is owed (+5); eating a corpse of the player's own race (a creature type's
+    `race`) or of a creature that talks and is not hostile to them by its type (−200); and a
+    quest's own `alignment` as it is completed (helping quests good, dark ones evil). Nothing
+    else moves it. Only the player has a score; deeds draw nothing from any random stream.
+  - **Messages**: crossing into another band says so, after the deed's own messages, as a note
+    that does not stop a rest (the band's `rise` or `fall` line: "You feel righteous.", "You
+    feel you have strayed from the path of good."); smaller moves are silent.
+  - **What reads it**: good creatures **scorn** an Evil or Wicked character, evil creatures a
+    Good or Saintly one (`Band::scorned_by`): they answer a chat with a cold line
+    (`greet_evil`, `greet_good` in `data/dialogue.toml`) instead of their greeting and
+    one-liners, and offer no quest whose `alignment` is good (topics and quests they already
+    gave stay). A quest may name the bands it is offered to (`requires_alignment`). A good
+    shopkeeper's prices move with the band, by a percent in data added to the player's favour
+    (§7 "Shops": Saintly 10 % better, Evil 10 % worse, Wicked 20 % worse); the prices shown
+    include it. Talents and class abilities (#220, #243) may ask for an alignment
+    (`requires_alignment`, `ability::strayed`): a paladin's gifts need Good or better, and a
+    paladin below that keeps them but cannot use them (greyed out, "you have strayed") until
+    they climb back. Mana reads nothing of it, for now. Gods and prayer, holy and unholy damage
+    and items, and alignment-limited artifacts will read the same band.
+  - **Talents** (proposed for the talents PR, on hooks that exist): *Righteous fury* (Good or
+    better: +1 to hit and damage against evil creatures, per 10 levels; `Profile` in
+    `attack_with`, reading the target's `Actor::nature`), *Hardened heart* (Callous or worse:
+    killing peaceful creatures costs no further alignment; `shift_alignment` skipping
+    `Deed::KilledPeaceful`), and *The middle way* (while Neutral: +1 Dodge and +2 on checks;
+    `Actor::defence`, `check`).
+- **Skills** (`warlock-core/src/skills.rs`, `content/skill.rs`, `world/train.rs`,
+  `world/skill_roll.rs`; M20, #132; level-up rolls M30, #230), ADOM-like:
   - **Trained or untrained**: every actor has a set of trained skills, each with a **value**
     (`Actor::skills`). A skill not in it is **untrained**: it does not exist for that actor, is
     never shown, earns no marks, and gives nothing; rules that read a skill get "untrained",
@@ -76,7 +174,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     from the same stream. A creature type's skills are fixed values. A scenario without a
     character gives a player trained in nothing.
   - **Values** run 0 to 999 (`MAX_VALUE`), 100 a master; there is no hard cap, but points come
-    slowly past the soft cap (100).
+    slowly past the soft cap (100). A value grows **only by level-up rolls** (below).
   - **Training marks**: a meaningful use of a trained skill may earn it a mark, with its rule's
     chance (§7), one draw of the run's **training stream** (`training`, kept in the world state;
     never the gameplay stream, so training never changes a fight's rolls) per rule: a step of the
@@ -89,58 +187,40 @@ developer notes (CLAUDE.md, `docs/dev/`).
     closed door (`kick`), a turn spent searching, whatever it finds (`search`), noticing
     something hidden in passing (`spot`; §8 "Searching"), an attempt to steal, whatever comes of
     it (`steal`; "Stealing" below). Only the player trains for now; creatures keep their type's
-    skills.
-  - **[provisional] Increases**: the owner has not decided how skills increase (alternatives for
-    later: ADOM's level-up dice per class once experience exists, or marks that count only once
-    the player rests). For now a skill gains a point when its marks reach
-    `need(value) = marks + value / per`, times `past_cap` from `soft_cap` on (`[increase]` in
-    `data/skills.toml`: 4, 10, 100, 3: 4 marks at 0, 13 at 99, 42 at 100, 48 at 120; the way
-    from 100 to 120 takes about as many marks as the whole way to 100); marks left over carry.
-    A point gained is said: "Your stealth improves." (the skill's name in lower case; never a
-    number). It stops a rest like any message.
-  - **Passive benefits** (data, §7; all integer), each read in one place:
-    - tumble: Dodge in Defence (the category whose bonuses add up), +1 at 20, 40, 60, 80, and
-      100, then +1 per 25 (`Actor::defence`);
-    - stealth: percent less noise from the actor's steps and doors, 0.6 % a point to 60 % at
-      100, then to 75 % at 150 (`noise::noise`; not attacks);
-    - listen: the hearing threshold lower by 1 per 10 points, never below 1 (`Actor::hearing`,
-      for creatures' hearing and the player's perceived sounds alike);
-    - balance: percent less of the burden's slowdown, 0.6 % a point to 60 % at 100 (Burdened
-      ×1.25 becomes ×1.10, Strained ×1.5 ×1.2), then to 80 % at 200 (`World::burdened`,
-      `Burden::slow_eased`; rounded up);
-    - survival: percent less time a journey on the overworld takes, 0.2 % a point to 20 % at 100
-      (`World::step_price`);
-    - appraise: percent better prices in shops (`bargain`), 0.2 % a point to 20 % at 100, then to
-      30 % at 200 (`world::favour`; with Presence at most 50 %; §7 "Shops");
-    - athletics: points added to the Strength a kick at a closed door is rolled against (§8
-      "Doors"), +8 at 100 and +12 at 200 (`kick`; `World::kick_door`), and a mark (20 %) for
-      every kick at a door;
-    - search: points added to searching for hidden features (§8 "Searching"), +8 at 100 and
-      +12 at 200 (`search`), and from 75 a search reaches a cell farther (`search_reach`;
-      `world/search.rs`); a mark (10 %) for every turn spent searching;
-    - spot: trained at all, the player notices hidden features in passing (§8 "Searching");
-      points added to that check, +8 at 100 and +12 at 200 (`spot`); a mark (50 %) for each
-      thing noticed;
-    - steal: trained at all, the player can steal ("Stealing" below); points added to the
-      contest, +8 at 100 and +12 at 200 (`steal`, at most 20; `world/steal.rs`); a mark (50 %)
-      for every attempt;
-    - athletics' climbing out of pits and escape artist (out of pits faster) wait for that rule
-      (#128); swim for deep water; concentration, spellcraft, and use magic
-      device for magic; the other action skills (open lock, heal, …) for their actions.
-      Searching is a basic command with keys of its own (`s`, `z`), so Search is read by rules,
-      not an action skill.
-  - **What the player sees**: their own trained skills' values and a coarse progress (quarters)
-    toward the next point (`PerceptionView::own_skills`), on the Skills screen (§6) and the
-    character creation summary; the `skills` dump layer.
+    skills. Marks are a **reservoir**: they raise nothing by
+    themselves and nothing is said; they gather until a level-up roll on the skill spends them.
+  - **Level-up rolls** (design `docs/design/progression.md` §5): every level gives the player
+    **skill rolls**: their class's `rolls` (`data/classes/`: 2; the thief and the ranger 3, the
+    bard 4), their race's (`races.toml`: humans 1), and one more for an Intelligence score of
+    `intelligence_from` (14) and one more for every `intelligence_every` (4) points above it
+    (`[rolls]` in `data/skills.toml`; the score without status effects, as the character screen
+    shows it), kept in the level's `Due { rolls }` beside its talent pick (`World::level_up`;
+    `World::level_rolls`). A player trained in nothing gets none. Each roll is spent with
+    `Action::Advance` (`advance:stealth`; no time, recorded) on a **trained** skill of the
+    player's choice, any number on one skill; while any is left every other action is refused
+    ("You have skill rolls to spend."), as talents are. A roll throws the die of the skill's
+    step on the **ladder**, set by its marks (`[ladder]`: `+1` from 0 marks, `1d3` from 5, `1d5`
+    12, `2d4` 25, `3d3` 50, `3d4` 100, `3d5` 200, `4d4` 400, `4d5` 800; ADOM's), one step up
+    (the top at most) for a skill the class is **known for** (`known_for`, its `2d6+10` skills),
+    and adds **+1** for any other skill the class trains or one the race trains (both: a known-for
+    racial skill is a step up and +1); it adds the result to the value, half of it rounded up
+    from the soft cap (`soft_cap`, 100) on, and **spends** `spend` (50) percent of the skill's
+    marks rounded up (50 → 25 → 12 → 6 → 3), so the next roll on it is smaller. Rolls draw from
+    the run's **levels stream** (`WorldState::levels_rng`), never the gameplay or training
+    stream. Said: "Your stealth improves." (never the die or the marks). The dev `levelup:auto`
+    spends every roll on the first trained skill.
   - **Active uses**: skills get no keys of their own. Racial, class, skill, and style abilities
     are chosen from one abilities menu (§6 "Abilities", #156), unlike ADOM: each trained skill
     with an active use (`kind = "action"`) is an ability there (`warlock_core::ability`,
-    `PerceptionView::abilities`), greyed out as "not usable yet" until its use comes with its
-    action, when it becomes an ability of its own in the skill's place (Steal: "Stealing"
-    below). Never a benefit's number, a mark, a
+    `PerceptionView::abilities`), greyed out as "not usable yet": the uses come with their
+    actions, and one whose use has come is that ability instead (Disable device's is "Disarm a
+    trap", §8 "Disarming traps"; Open lock's "Pick lock", §8 "Doors"; Steal's "Steal",
+    "Stealing" below). Never a benefit's number,
+    a mark, a
     chance, an untrained skill, or a creature's skills; ground-truth dev dumps (`actors`, the
-    world state) show every actor's skills with their marks. Skills and marks are part of the
-    world state (saved, hashed).
+    world state) show every actor's skills with their marks and the ladder's die for them. The
+    Skills screen's meter shows a skill's ladder step in quarters (how practised it is). Skills
+    and marks are part of the world state (saved, hashed).
 - **Stealing** (`world/steal.rs`, data `data/steal.toml`, §7; #234, the progression design's
   B7): the Steal skill's use, the abilities menu's **Steal** (`Ability::Steal`, in the skill's
   place among the Skills; a direction; `Action::Steal`, replay text `steal:DIR`; cost `steal`;
@@ -163,8 +243,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     take from the gardener.", unnoticed all the same. There is no choice of item: the player
     never sees a creature's pack (`PerceptionView::gear` is only what it wears and wields), and
     what is worn or wielded cannot be lifted unnoticed. `World::got_away_with` is the one place a
-    theft that took something has consequences beyond the goods: alignment (#254, stealing is
-    evil) hooks in there.
+    theft that took something has consequences beyond the goods: it is a theft deed for alignment
+    (§8 "Alignment": stealing is evil, as leaving a shop owing is).
   - **Caught**: the victim turns on the player. A keeper of an open shop (§7 "Shops") is outraged
     as a robbed one is: "Grimbold catches you stealing. \"Stop, thief!\"", its shop trades no
     more, and what the player owed it is stolen. Anyone else joins `data/steal.toml`'s `caught`
@@ -175,6 +255,118 @@ developer notes (CLAUDE.md, `docs/dev/`).
     from a keeper takes from its pack: its purse.
   - No limit on trying again (the owner's rule): a victim that caught the player stays angry,
     and that is the price. Presentation shows only what comes of it, never a modifier or a roll.
+- **Talents** (`warlock-core/src/talent.rs`, the runtime; `content/talent.rs`, the data;
+  `world/talent.rs`, the picks; M30, #229; design `docs/design/progression.md` §7, §10): knacks
+  a character picks as they level, each a typed effect read where the rules already read what
+  magic items do.
+  - **Data** (§7): `data/talents.toml` (the settings: `max_ranks`, `[coverage]`, the `[[tree]]`s
+    in display order, the closed `[[system]]` list) and `data/talents/<id>.toml`, one `[[talent]]`
+    a file (`id`, `name`, `tree`, `description` in the game's words, `ranks` 1 to `max_ranks`,
+    `choice` (`weapon_skill`, `style`, `element`), `needs`, `effects` per rank held,
+    `[[rank]]` with each rank's own `needs` and `effects`, `systems` from the list, `granted`:
+    given, never picked). Without the files there are no talents and no level asks for one.
+  - **When**: every `talent_every`th character level (`[levels]` in `data/experience.toml`: 3,
+    6, 9, …) brings one pick, a `Due { level, talents, rolls }` in `Progress::due` (lowest level
+    first; several levels in one turn queue theirs), handed out by `World::level_up` from
+    `grant_xp`. **Nothing is banked**: while a pick is due `World::apply` refuses every other
+    action ("You must choose a talent first."), so the level-up screen (to come, #236), the
+    CLI, and replays spend it alike with `Action::Talent { id, choice }` (`talent:hardy`,
+    `talent:weapon_focus:long_blades`; no time, recorded) and the level's skill rolls with
+    `Action::Advance` (`advance:stealth`, "Skills" above); the dev `levelup:auto` takes the
+    first the player may take for every choice due, the dev `xp:N` grants experience. A pick
+    nothing can be spent on (no talent the player may take: a run without talents, every
+    talent they qualify for held, with no skill roll left that might open one) is dropped, so a
+    level never waits for the impossible.
+  - **Prerequisites** (`Needs`; all must hold at the pick and are never checked again: a score
+    lowered later keeps the talent): other talents at a rank (a talent with a choice may be
+    needed only by one of the same choice, taken for the same), stat **scores** (the stored
+    score, never the effective one), skill values, weapon skill or style ranks, any one of
+    several weapon skills at a rank (`any_weapon_skill = { roles = ["melee", "unarmed"], of =
+    [...], rank = 3 }`: "a melee or unarmed weapon skill 3", "Maces and clubs or Unarmed 3"), the
+    chosen weapon skill's or style's rank (`chosen`), the character level, the race, the class, the
+    eyes (the race's vision profile), and the alignment band (`requires_alignment`, as quests
+    and abilities ask it, §8 "Alignment": `{ min = "good" }`). Refused in words: "You cannot
+    take Dodge: you need Dexterity 13." Ranks come one at a time ("You learn Hardy (2)."); a talent with a choice is
+    one pick per choice, each with its own ranks.
+  - **Effects** (`TalentEffect`, summed into `TalentMods` by `Actor::talent_mods`, one read
+    each): `dodge` and `natural` in Defence (natural armour on top of the creature type's own
+    or a magic item's, or alone), `melee_damage` on both hands' blows (after the affixes,
+    before the stance), `max_hp_per_levels` (hit points handed into `hp_base` and `hp` at the
+    pick and as each later level comes, as levels' own are; the floor `at_least` until
+    `level / per_levels` passes it), `healing_percent` (with the regeneration affixes),
+    `footsteps_percent` and `silent_doors` (`noise::noise`), `hearing`, `carry_percent`
+    (`burden::load`), `travel_percent` (overworld steps), `hunger_percent` and `no_exertion`,
+    `xp_percent` (every gain), `notice` (noticing in passing as if trained in Spot, with a
+    bonus), `free_blow` (a switch of `World::free_blows_of`). The first twelve: Healthy, Hardy,
+    Dodge, Brawn, Silent feet, Keen ears, Pack mule, Long strider, Lean, Good learner, Alert,
+    Thick skin.
+  - **Weaponcraft and Guard** (#238): `weapon` adds to the benefits of the chosen weapon skill
+    or style (no `role`) or of every skill of a role, read in `Actor::benefit`, so every
+    attack, Defence, and price that reads a skill's benefits reads it: Weapon focus (+1 to hit),
+    Weapon specialization (+2 damage), Improved critical (threat one roll wider), Stylist (the
+    style's benefits one rank higher, never past 10, and only for a rank held), Two-weapon
+    training (both two-weapon penalties eased by 2), Shield expert (Shield +1; Sword and
+    Board's free bash 10 more likely where it has one), Deadly aim (+2 damage with shots),
+    Thrower (+1 damage and 10 % cheaper throws), Rapid reload (reloading 25 % cheaper);
+    `launcher_range` and `throw_range` (Far shot: +2 and +1 cells); `max_dex` (Armour
+    training: worn armour's Dexterity cap +1 a rank); `deflection` (Deflection +1);
+    `protection` (Heavy armour mastery: +1 while the armour piece worn with the most
+    Protection has 3 or more; Shield wall: +1 while holding a shield); `stance_to_hit` and
+    `flee_percent` (Stalwart: the defensive stance's to-hit penalty gone; Unflinching: the
+    coward's halved, rounded toward 0, and fleeing steps 10 % cheaper again); `pain` (Immune
+    to pain: a hit, a blow, shot, throw, or trap, does 1 less after the soak, never below 1;
+    a status's or starving's harm is no hit); `resist` (Elemental ward: 25 % a rank against
+    the chosen element, any damage type that is no physical kind, summed and capped with the
+    gear's). A weapon-skill choice is a skill that attacks: never shield blocking (it only
+    defends) nor a style (chosen as a style). Steady hand waits for the ranger's focus
+    (#225).
+  - **Vigour, Might, Finesse** (#237; the design's §7.5 but for the two that wait for class
+    resources, Battle trance and Inner calm): `resting_percent` (Fast healer: resting's pace
+    half again, `World::healing_rate`); `second_wind` (Second wind, the first **active** talent:
+    `Ability::SecondWind` under the abilities menu's new **Talents** group (`Source::Talent`,
+    between Class and Skills), `Action::SecondWind` (`second_wind`): 1 hit point per character
+    level back at once, at least 8, for the time of a `wait`, then the cooldown status Winded
+    (15 minutes; "you are winded" in the menu; refused, no time, without the talent or while
+    winded)); `iron_stomach` (rotten food and overeating never make you vomit, no draw for it;
+    rotten food's sickness halved, `eat.rs`); `status_eases` and `no_penalty` (Poison
+    resistance: Poisoned eases twice as fast and never lowers scores; Clotting's bleeding twice
+    as fast: the sufferer's own easing pace in `World::live`); `clotting` (a big hit wounds no
+    more, a confirmed critical a degree less, `World::wounded`); `penalty_percent` (Unbowed:
+    each status's lowering of a score halved toward 0, raises untouched, `Effects::penalty_for`);
+    `disease_checks` (Strong constitution, +2 on catching and on every progression) and
+    `disease_recovery` (Fever-proof: a check fewer won in a row shakes a disease off, never
+    below 1, never one that does not recover); `free_blow` (Cleave, Great cleave, Riposte,
+    Opportunist); `kick_die` (Mighty kick: kicks at creatures roll 1d6) and `door_kick` (Mighty
+    kick and Breaker, +4 each to a door kick's Strength); `dig_percent` (Breaker: a quarter more
+    work a turn); `two_handed_price` (Iron grip: blows with a two-handed weapon 10 % cheaper,
+    `World::attack_price`); `critical_status` (Staggering blow: a critical confirmed in melee
+    leaves the target Staggered, `cost = 150` for 6 seconds: its next action half again as
+    dear; `World::after_blow`, no draw of its own); `penetration` (Crusher: +2 on blows and kicks
+    that can do bludgeoning damage); `burden_dex` (Nimble: the burden's Dexterity cap +1);
+    `sure_step` and `pit_proof` (Light step: a trap stepped onto gets a Dexterity check against
+    its difficulty first, two draws only with the talent; made, it does not go off and is found;
+    at rank 2 pits never catch you; steps only, never a door's trap); `speed_percent` (Quick:
+    +5 % a rank, every price divided by it in `World::burdened`, as a higher speed; hidden in the
+    game); `missile_dodge` (Deflect missiles: Dodge +2 against shots, throws, and trap missiles,
+    `World::target_against`); `spell_damage_percent` (Evasion: bursts and bolts, traps' and
+    scrolls', do half, rounded down, before resistances). The statuses these name are checked
+    at load; `data/status.toml` loads before the talents.
+  - **Coverage** (the design's §8): every talent names the systems it touches; at load a
+    system not `pending` with fewer than `min_talents` talents (or `min_class` class abilities,
+    0 until the class tables), or a tree not `pending` nor `no_free` without `free_per_tree`
+    prerequisite-free talents, is a content error. A wave that ships a system's talents removes
+    its `pending`; a new system of the game joins the list in the PR that ships its talents.
+  - **Determinism and saves**: picks are replayed actions; nothing here draws from the gameplay
+    stream; the `levels` stream (`WorldState::levels_rng`, for the skill rolls and stat checks
+    to come) is made on its first draw. `Actor::talents` (by id, like affixes: adding talents
+    keeps saves; on every actor, so creatures may get some from data later), `Progress::due`,
+    and the stream are left out of the JSON while unused, so runs without talents hash as
+    before. **Saves change.**
+  - **What the player sees**: `PerceptionView::due`, `own_talents` (names for their choice,
+    the rank of how many, the description), `talents` (every talent with the next rank's
+    prerequisites and whether each holds, and the ways it may be taken now); the dumps'
+    `talents` and dev `progress` layers; JSON `talents`, `due`. Never a rule's number: the
+    wiki's Talents page states them.
 - **Weapon skills** (`warlock-core/src/weapon_skills.rs`, training; `content/weapon_skill.rs`,
   the data; M22, #134), ADOM-like, with *The Riddle of Steel*'s defaults:
   - **Skills** (`data/weapon_skills.toml`, §7): the categories weapons belong to. A skill's

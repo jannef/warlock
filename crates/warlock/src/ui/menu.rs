@@ -2,8 +2,8 @@
 //! console.
 //!
 //! [`Press`] is a key press as screens see it, and [`Panel`] a centered frame with row helpers.
-//! [`MainMenu`] is the main menu (Continue when a save exists, New run, Settings, Controls, Quit)
-//! or, over a run, the pause menu (Resume, Settings, Controls, Save and quit to menu, Quit). Like
+//! [`MainMenu`] is the main menu (Continue, as the character played last, and Characters when a
+//! character is saved; New run, Settings, Controls, Quit) or, over a run, the pause menu (Resume, Settings, Controls, Save and quit to menu, Quit). Like
 //! every screen it is a plain state machine: it takes presses and answers with a
 //! [`ScreenAction`], so it is testable without a window. Selection is always shown by text (a `>`
 //! marker), never by color alone.
@@ -40,14 +40,31 @@ pub enum Nav {
     Other,
 }
 
+/// A key press reduced to what a text field cares about besides the text typed: the
+/// `Context::Text` command it is bound to, or Esc, which always backs out.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Edit {
+    /// Accept the text (`KeyCommand::TextConfirm`, Enter).
+    Confirm,
+    /// Back out: Esc, always, and `KeyCommand::TextBack`'s keys.
+    Back,
+    /// Erase the last character (`KeyCommand::TextErase`, Backspace).
+    Erase,
+    /// A random value (`KeyCommand::TextRandom`, Tab).
+    Random,
+}
+
 /// One key press: its menu meaning, and the binding it would make (for the rebinding screen).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Press {
     pub nav: Nav,
+    /// Its meaning in a text field, if it has one there (else it types its text).
+    pub edit: Option<Edit>,
     pub binding: Option<KeyBinding>,
     /// A held key repeating.
     pub repeat: bool,
-    /// The character the key typed, if any (for text fields such as the seed).
+    /// The character the key typed, if any (for text fields such as the seed and the name): the
+    /// key event's text, literal, else the character its key stands for.
     pub text: Option<char>,
     /// Shift was held (set by the input router, which sees the keyboard state).
     pub shift: bool,
@@ -55,7 +72,8 @@ pub struct Press {
 
 impl Press {
     /// The press as screens see it: its menu meaning comes from the `Context::Menu` bindings,
-    /// and Esc always backs out, whatever is bound (it cannot be bound: no lockout).
+    /// its text field meaning from the `Context::Text` bindings, and Esc always backs out,
+    /// whatever is bound (it cannot be bound: no lockout).
     pub fn from_input(input: &KeyboardInput, bindings: &Bindings) -> Self {
         let nav = if input.key_code == KeyCode::Escape {
             Nav::Back
@@ -75,18 +93,34 @@ impl Press {
                 _ => Nav::Other,
             }
         };
-        let text = match &input.logical_key {
-            Key::Character(c) => {
-                let mut chars = c.chars();
-                match (chars.next(), chars.next()) {
-                    (Some(ch), None) if !ch.is_control() => Some(ch),
-                    _ => None,
-                }
+        let edit = if input.key_code == KeyCode::Escape {
+            Some(Edit::Back)
+        } else {
+            match bindings.lookup_in(Context::Text, input) {
+                Some(KeyCommand::TextConfirm) => Some(Edit::Confirm),
+                Some(KeyCommand::TextBack) => Some(Edit::Back),
+                Some(KeyCommand::TextErase) => Some(Edit::Erase),
+                Some(KeyCommand::TextRandom) => Some(Edit::Random),
+                _ => None,
             }
+        };
+        // One printable character: the event's text (what the layout and dead keys made of the
+        // press), else the character the key stands for.
+        let single = |text: &str| {
+            let mut chars = text.chars();
+            match (chars.next(), chars.next()) {
+                (Some(ch), None) if !ch.is_control() => Some(ch),
+                _ => None,
+            }
+        };
+        let text = match (&input.text, &input.logical_key) {
+            (Some(text), _) => single(text),
+            (None, Key::Character(c)) => single(c),
             _ => None,
         };
         Self {
             nav,
+            edit,
             binding: KeyBinding::from_input(input),
             repeat: input.repeat,
             text,
@@ -99,6 +133,7 @@ impl Press {
     pub fn nav(nav: Nav) -> Self {
         Self {
             nav,
+            edit: None,
             binding: None,
             repeat: false,
             text: None,
@@ -111,10 +146,20 @@ impl Press {
     pub fn typed(ch: char) -> Self {
         Self {
             nav: Nav::Other,
+            edit: None,
             binding: None,
             repeat: false,
             text: Some(ch),
             shift: false,
+        }
+    }
+
+    /// A press of a text field's key `edit`.
+    #[cfg(test)]
+    pub fn edit(edit: Edit) -> Self {
+        Self {
+            edit: Some(edit),
+            ..Self::nav(Nav::Other)
         }
     }
 }
@@ -200,6 +245,7 @@ enum MainItem {
     Resume,
     SaveToMenu,
     Continue,
+    Characters,
     NewRun,
     Settings,
     Controls,
@@ -212,6 +258,7 @@ impl MainItem {
             MainItem::Resume => "Resume",
             MainItem::SaveToMenu => "Save and quit to menu",
             MainItem::Continue => "Continue",
+            MainItem::Characters => "Characters",
             MainItem::NewRun => "New run",
             MainItem::Settings => "Settings",
             MainItem::Controls => "Controls",
@@ -227,16 +274,18 @@ pub struct MainMenu {
     selected: usize,
     /// The pause menu rather than the main menu.
     pause: bool,
-    /// A saved run exists, so the main menu offers Continue.
-    has_save: bool,
+    /// The name of the character played last, if any is saved: the main menu offers to
+    /// Continue as them, and the list of saved characters.
+    last: Option<String>,
 }
 
 impl MainMenu {
-    pub fn main(has_save: bool) -> Self {
+    /// The main menu; `last` names the character played last, if any is saved.
+    pub fn main(last: Option<String>) -> Self {
         Self {
             selected: 0,
             pause: false,
-            has_save,
+            last,
         }
     }
 
@@ -244,7 +293,7 @@ impl MainMenu {
         Self {
             selected: 0,
             pause: true,
-            has_save: false,
+            last: None,
         }
     }
 
@@ -263,8 +312,8 @@ impl MainMenu {
             ];
         }
         let mut items = Vec::new();
-        if self.has_save {
-            items.push(MainItem::Continue);
+        if self.last.is_some() {
+            items.extend([MainItem::Continue, MainItem::Characters]);
         }
         items.extend([MainItem::NewRun, MainItem::Settings, MainItem::Controls]);
         // A web page cannot quit: closing the tab is the browser's job.
@@ -272,11 +321,6 @@ impl MainMenu {
             items.push(MainItem::Quit);
         }
         items
-    }
-
-    /// Stops offering Continue (the save could not be resumed).
-    pub fn drop_continue(&mut self) {
-        self.has_save = false;
     }
 
     pub fn handle(&mut self, press: &Press) -> ScreenAction {
@@ -290,6 +334,7 @@ impl MainMenu {
                 return match items[self.selected] {
                     MainItem::Resume => ScreenAction::Close,
                     MainItem::Continue => ScreenAction::Choose(MenuChoice::Continue),
+                    MainItem::Characters => ScreenAction::Open(ScreenName::Characters),
                     MainItem::SaveToMenu => save_to_menu_dialog().into(),
                     MainItem::NewRun => ScreenAction::Open(ScreenName::NewRun),
                     MainItem::Settings => ScreenAction::Open(ScreenName::Settings),
@@ -325,7 +370,12 @@ impl MainMenu {
         console.print(cx(tagline), panel.y + 4, tagline, TEXT_DIM);
         for (i, item) in items.iter().enumerate() {
             let y = panel.y + 7 + i as i32;
-            panel.row(console, y, i == self.selected, item.label(), "", 0);
+            // Continue names who it resumes.
+            let value = match item {
+                MainItem::Continue => self.last.as_deref().unwrap_or(""),
+                _ => "",
+            };
+            panel.row(console, y, i == self.selected, item.label(), value, 8);
         }
         let notice_y = panel.y + 8 + items.len() as i32;
         for (i, line) in notice_lines.iter().enumerate() {
@@ -544,21 +594,27 @@ mod tests {
     }
 
     #[test]
-    fn continue_is_offered_only_with_a_save() {
-        assert_eq!(MainMenu::main(false).items()[0], MainItem::NewRun);
-        let mut with_save = MainMenu::main(true);
-        assert_eq!(with_save.items()[0], MainItem::Continue);
+    fn continue_and_characters_are_offered_only_with_a_save() {
+        assert_eq!(MainMenu::main(None).items()[0], MainItem::NewRun);
+        let mut with_save = MainMenu::main(Some("Brakka".into()));
+        assert_eq!(
+            with_save.items()[..3],
+            [MainItem::Continue, MainItem::Characters, MainItem::NewRun]
+        );
         assert_eq!(
             press(&mut with_save, Nav::Enter),
             ScreenAction::Choose(MenuChoice::Continue)
         );
-        with_save.drop_continue();
-        assert_eq!(with_save.items()[0], MainItem::NewRun);
+        press(&mut with_save, Nav::Down);
+        assert_eq!(
+            press(&mut with_save, Nav::Enter),
+            ScreenAction::Open(ScreenName::Characters)
+        );
     }
 
     #[test]
     fn main_menu_opens_sub_screens_and_ignores_esc() {
-        let mut m = MainMenu::main(false);
+        let mut m = MainMenu::main(None);
         assert_eq!(
             press(&mut m, Nav::Enter),
             ScreenAction::Open(ScreenName::NewRun)
@@ -612,7 +668,7 @@ mod tests {
 
     #[test]
     fn quit_is_the_last_row_and_selection_wraps() {
-        let mut m = MainMenu::main(false);
+        let mut m = MainMenu::main(None);
         press(&mut m, Nav::Up);
         assert_eq!(
             press(&mut m, Nav::Enter),

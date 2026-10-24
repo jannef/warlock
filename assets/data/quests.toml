@@ -30,6 +30,12 @@
 #   done       what whoever you hand it in to says: the recipient of a bring with `to` or a
 #              delivery, else the giver
 #   requires   a quest earlier in this file that must be done first (optional)
+#   requires_alignment  the alignment bands you must be in for it to be offered (spec §8
+#              "Alignment"; optional): { min = "kind" } is Kind or better, { max = "callous" }
+#              Callous or worse, or both; a quest taken up is done whatever you become
+#   alignment  how far completing it moves your alignment (alignment.toml; -1000 to 1000,
+#              default 0): helping quests good, dark ones evil. A good giver offers no good one
+#              to an Evil or Wicked character, an evil giver none to a Good or Saintly one
 #   repeatable offered again once done (default false)
 # Texts are one line of at most 280 characters. Someone's topics (their dialogue's, one per
 # quest they give or take, and one more for an offer's accept and decline) must fit the dialogue
@@ -45,6 +51,7 @@ target = "rat"
 count = 3
 level = "arena"
 reward = { gold = 20, xp = 30 }
+alignment = 20
 offer = "Here we don't fight. Down in the arena, you may. The rats have the run of the pit again, and their squeaking comes up the stairs all night. Kill three of them for me, and I'll pay you for the quiet."
 accept = "Good. Mind their teeth. Three, now: I'll know if you count wrong."
 decline = "Then I'll sleep with my fingers in my ears. Again."
@@ -59,6 +66,7 @@ requires = "rats"
 type = "reach"
 target = "depths:3"
 reward = { gold = 50, xp = 100, items = ["jade_amulet"] }
+alignment = 15
 offer = "You've an arm, I'll give you that. Now I want eyes. Find the Depths and go down three levels, to where the caves begin. Then come back and tell me if they've woken. I'd go myself, but my knees."
 accept = "The old way in opens in the Barrowdowns, out past the courtyard. Take your lantern."
 decline = "Another time. The caves have waited this long."
@@ -74,6 +82,7 @@ type = "bring"
 target = "apple"
 count = 3
 reward = { gold = 10, xp = 15 }
+alignment = 10
 offer = "I'm starting a new tree, and I want seed from good apples. Bring me three, would you? Windfalls will do, or the pantry in the hall below keeps a basket."
 accept = "Three apples. Whole ones, mind, not half-eaten."
 decline = "Suit yourself. The tree can wait. Trees are good at that."
@@ -89,6 +98,7 @@ type = "deliver"
 target = "sealed_letter"
 to = "hermit"
 reward = { gold = 5, xp = 15 }
+alignment = 10
 offer = "I owe the old fellow by the stairs in the hall a song, but I've a road to walk. I wrote it down for him instead. Would you carry this letter down to him? It's sealed, so no learning the tune."
 accept = "My thanks! He sits by the stairs in the hall below. He mutters; you'll hear him."
 decline = "Then it waits in my pocket with the others."

@@ -1,0 +1,8 @@
+[[talent]]
+id = "thrower"
+name = "Thrower"
+tree = "weaponcraft"
+description = "Thrown weapons hit 1 harder in your hands, and you throw a little quicker."
+needs = { weapon_skills = { thrown = 2 } }
+effects = [{ kind = "weapon", role = "thrown", damage = 1, speed = 10 }]
+systems = ["ranged"]

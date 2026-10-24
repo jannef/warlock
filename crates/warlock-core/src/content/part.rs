@@ -5,24 +5,27 @@
 //! object of one material.
 //!
 //! The main part decides what a single material decides ([`ObjectDef::material`]): the material
-//! a description names first, the material word a name begins with, and (with metals and organic
-//! materials, #193 and #194) the glyph colour, the weight, and the weapon and armour modifiers.
-//! Every other part names its part and has a share of the object's weight (percent); the main
-//! part's share is what the others leave. What an object is worth follows its parts' shares
-//! and their materials' values ([`ObjectDef::value_with`]); its name shows the notable parts,
-//! gems and precious metals (`precious` materials), that it does not mention yet ([`names`]).
+//! a description names first, the material word a name begins with, and, made of another
+//! material than its base item's (#193, #194; [`crate::variant`]), the weapon and armour
+//! modifiers and the glyph colour. Every other part names its part and has a share of the
+//! object's weight (percent); the main part's share is what the others leave. What an object
+//! weighs and is worth follows its parts' shares and their materials' weights and values
+//! ([`ObjectDef::value_with`]); its name shows the notable parts, gems and precious metals
+//! (`precious` materials), that it does not mention yet, and a main part of another material
+//! than its base item's ([`names`]).
 //!
-//! Part names are a small vocabulary, so naming (and, with #194, construction rules) can refer
-//! to them; a part's `adjective` is how a notable one is written before a name
-//! ("ruby-pommelled long sword"). Without `data/parts.toml` there are none, and every object is
-//! of one unnamed part, as the shorthand writes it.
+//! Part names are a small vocabulary, so naming can refer to them; a part's `adjective` is how a
+//! notable one is written before a name ("ruby-pommelled long sword"). Without `data/parts.toml`
+//! there are none, and every object is of one unnamed part, as the shorthand writes it. Each
+//! part may say what else it may be made of, by group or material (`made_of`, #194:
+//! [`construction`]); an item of another material is made only from that list.
 //!
 //! [`ObjectDef::material`]: super::ObjectDef::material
 //! [`ObjectDef::value_with`]: super::ObjectDef::value_with
 
 use super::ContentError;
 use super::gem::Cutting;
-use super::material::{MaterialDef, MaterialId};
+use super::material::{ANY, MaterialDef, MaterialId};
 use serde::Deserialize;
 use std::collections::BTreeSet;
 
@@ -116,6 +119,8 @@ pub(super) struct PartTable {
     of: String,
     /// Its share of the object's weight, in percent (not for the main part).
     share: Option<u32>,
+    /// What it may be made of (#194): groups and materials ([`construction`]).
+    made_of: Option<Vec<String>>,
 }
 
 /// One part of an object: what part it is, what it is made of, and how much of the object it is.
@@ -223,6 +228,130 @@ pub(super) fn resolve(
     Ok(parts)
 }
 
+/// What an object's main part must be able to be, for its construction list ([`construction`]):
+/// a weapon's working part (a blade, a head: a material with weapon modifiers), armour (a
+/// material with `protection`), or anything.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PartRole {
+    Weapon,
+    Armour,
+    Any,
+}
+
+/// The construction lists of an object of `parts` (#194): for each part, the materials it may be
+/// made of, sorted by id; empty when no part has one (then each part is made only of its own
+/// material). A part's list is its table's `made_of`, or for the main part `main` (the object's
+/// own `made_of`, the shorthand); each entry names a group (every material of that `group`),
+/// `any` (every material of a group), or a material. The main part keeps only the materials
+/// that can be what `role` asks; a material named by itself that cannot is an error, and so is a
+/// list without the part's own material, or a gem (gems are set in items, never made into them).
+pub(super) fn construction(
+    entries: &[PartEntry],
+    main: Option<&[String]>,
+    parts: &[Part],
+    materials: &[MaterialDef],
+    role: PartRole,
+) -> Result<Vec<Vec<MaterialId>>, String> {
+    let main_table = match entries.first() {
+        Some(PartEntry::Part(t)) => t.made_of.as_deref(),
+        _ => None,
+    };
+    if main.is_some() && main_table.is_some() {
+        return Err(
+            "the main part's `made_of` is given twice: in its table and as the object's".into(),
+        );
+    }
+    let lists: Vec<Option<&[String]>> = (entries.iter().enumerate())
+        .map(|(i, entry)| match entry {
+            PartEntry::Part(t) if t.made_of.is_some() => t.made_of.as_deref(),
+            _ if i == 0 => main,
+            _ => None,
+        })
+        .collect();
+    if lists.iter().all(Option::is_none) {
+        return Ok(Vec::new());
+    }
+    let mut out = Vec::with_capacity(parts.len());
+    for (i, (list, part)) in lists.iter().zip(parts).enumerate() {
+        let role = if i == 0 { role } else { PartRole::Any };
+        let own = part.material;
+        let Some(list) = list else {
+            out.push(vec![own]);
+            continue;
+        };
+        let made = made_of(list, materials, role)?;
+        if !made.contains(&own) {
+            let id = &materials[usize::from(own.0)].id;
+            return Err(format!(
+                "`made_of` must allow what the part is made of, `{id}`"
+            ));
+        }
+        out.push(made);
+    }
+    Ok(out)
+}
+
+impl PartRole {
+    /// Whether a main part of this role may be made of `material`.
+    pub fn allows(self, material: &MaterialDef) -> bool {
+        match self {
+            PartRole::Weapon => material.weapon().is_some(),
+            PartRole::Armour => material.protection.is_some(),
+            PartRole::Any => true,
+        }
+    }
+}
+
+/// One construction list's materials, sorted by id and without repeats (see [`construction`]).
+fn made_of(
+    list: &[String],
+    materials: &[MaterialDef],
+    role: PartRole,
+) -> Result<Vec<MaterialId>, String> {
+    if list.is_empty() {
+        return Err("`made_of` lists one group or material at least".into());
+    }
+    let id = |i: usize| MaterialId(i as u16);
+    let mut made = BTreeSet::new();
+    for name in list {
+        let grouped: Vec<usize> = (materials.iter().enumerate())
+            .filter(|(_, m)| (m.group.as_ref()).is_some_and(|g| name == ANY || g == name))
+            .map(|(i, _)| i)
+            .collect();
+        if !grouped.is_empty() {
+            let fit = grouped.into_iter().filter(|&i| role.allows(&materials[i]));
+            made.extend(fit.map(id));
+            continue;
+        }
+        let Some(i) = materials.iter().position(|m| &m.id == name) else {
+            return Err(format!(
+                "`made_of`: `{name}` is neither a material's `group` nor a material"
+            ));
+        };
+        let m = &materials[i];
+        if m.gem.is_some() {
+            return Err(format!(
+                "`made_of`: `{name}` is a gem, set in items but never what one is made of"
+            ));
+        }
+        if !role.allows(m) {
+            let why = match role {
+                PartRole::Weapon => "a weapon's working part (it has no `to_hit` or `damage`)",
+                _ => "armour (it has no `protection`)",
+            };
+            return Err(format!("`made_of`: `{name}` cannot be {why}"));
+        }
+        made.insert(id(i));
+    }
+    let mut made: Vec<MaterialId> = made.into_iter().collect();
+    made.sort_by(|a, b| {
+        materials[usize::from(a.0)]
+            .id
+            .cmp(&materials[usize::from(b.0)].id)
+    });
+    Ok(made)
+}
+
 /// What `parts` are worth together, relative to one another: each part's share times its
 /// material's value (percent).
 pub fn worth(parts: &[Part], materials: &[MaterialDef]) -> u64 {
@@ -256,14 +385,34 @@ pub fn phrase(parts: &[Part], materials: &[MaterialDef], names: &[PartDef]) -> S
 /// with it ("gold amulet", a ruby setting: "gold and ruby amulet"; "iron and ruby ring"), else
 /// goes before the name ("gold and ruby amulet" from "amulet"). A material the name mentions as
 /// a word ("gold ring", "ruby") is not said again.
+///
+/// `written_for` is the main part's material the name was written for (its base item's): a main
+/// part of another material (a variant, #193) is named first, in place of that material's word
+/// if the name says it ("iron helm": "bronze helm"; "iron-shod boots": "bronze-shod boots"),
+/// else before the name ("bronze long sword"), so the order is [ornament] [material] name.
 pub fn names(
     name: &str,
     plural: &str,
     parts: &[Part],
+    written_for: MaterialId,
     materials: &[MaterialDef],
     kinds: &[PartDef],
 ) -> (String, String) {
     let material = |p: &Part| &materials[usize::from(p.material.0)];
+    let (name, plural) = match parts.first() {
+        Some(main) if main.material != written_for => {
+            let (base, made) = (
+                &materials[usize::from(written_for.0)].name,
+                &material(main).name,
+            );
+            (
+                with_material(name, base, made),
+                with_material(plural, base, made),
+            )
+        }
+        _ => (name.to_string(), plural.to_string()),
+    };
+    let (name, plural) = (name.as_str(), plural.as_str());
     // Whole words only: "gold" is in "gold ring" and "gold-shod boots", not in "golden".
     let words = format!(" {} ", name.replace('-', " "));
     let mentioned = |m: &str| words.contains(&format!(" {m} "));
@@ -305,6 +454,20 @@ pub fn names(
     (call(name), call(plural))
 }
 
+/// `written` made of `made` instead of `base`: `made` in place of the first whole word (between
+/// spaces, hyphens, or the ends) `base`, else before it all.
+fn with_material(written: &str, base: &str, made: &str) -> String {
+    let boundary = |c: Option<char>| c.is_none_or(|c| c == ' ' || c == '-');
+    let found = written.match_indices(base).find(|&(at, _)| {
+        boundary(written[..at].chars().next_back())
+            && boundary(written[at + base.len()..].chars().next())
+    });
+    match found {
+        Some((at, _)) => format!("{}{made}{}", &written[..at], &written[at + base.len()..]),
+        None => format!("{made} {written}"),
+    }
+}
+
 /// Words in a list: "gold", "gold and ruby", "gold, ruby, and emerald".
 fn and_list(words: &[&str]) -> String {
     match words {
@@ -326,6 +489,14 @@ mod tests {
             precious,
             value,
             gem: None,
+            group: None,
+            color: None,
+            weight: 100,
+            to_hit: None,
+            damage: None,
+            protection: None,
+            rarity: None,
+            gear: None,
         }
     }
 
@@ -375,7 +546,14 @@ mod tests {
 
     fn named(name: &str, plural: &str, text: &str) -> (String, String) {
         let parts = parse_parts(text).expect("parts");
-        names(name, plural, &parts, &materials(), &kinds())
+        names(
+            name,
+            plural,
+            &parts,
+            parts[0].material,
+            &materials(),
+            &kinds(),
+        )
     }
 
     #[test]

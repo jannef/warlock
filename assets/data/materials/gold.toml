@@ -1,4 +1,14 @@
+# Worse than steel in a fight and far dearer: very rare.
 [[material]]
 id = "gold"
 name = "gold"
 precious = true
+group = "metal"
+color = "#ffd24a"
+weight = 246
+to_hit = -2
+damage = 1
+protection = 50
+value = 2000
+rarity = { weight = 10 }
+gear = { weight = 5 }

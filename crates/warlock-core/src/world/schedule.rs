@@ -29,9 +29,7 @@
 use super::{Actor, ActorId, AttackSkills, World};
 use crate::action::Event;
 use crate::content::Effect as ItemEffect;
-use crate::content::{
-    ActionKind, BASE_TURN, Benefit, LevelKind, Stance, TerrainDef, percent_of, price,
-};
+use crate::content::{ActionKind, BASE_TURN, Benefit, LevelKind, TerrainDef, percent_of, price};
 use crate::geom::Pos;
 use crate::magic::Mods;
 use crate::magic::mods::faster;
@@ -60,6 +58,13 @@ struct Scheduled {
     id: ActorId,
     speed: u32,
     energy: i64,
+}
+
+/// `price` paid by an actor `percent` quicker (as if its speed were that much higher), rounded
+/// up, at least 1.
+fn quicker(price: i64, percent: i32) -> i64 {
+    let pace = i64::from((100 + percent).max(1));
+    ((price * 100 + pace - 1) / pace).max(1)
 }
 
 impl World {
@@ -117,8 +122,8 @@ impl World {
     }
 
     /// Whether actor `id` stepping to `to` flees: some hostile creature stands next to it now and
-    /// the step takes it out of that creature's reach (spec §8 "Stances": a coward's flight is
-    /// cheaper and quieter).
+    /// the step takes it out of that creature's reach ([`World::leaves`]; spec §8 "Stances": a
+    /// coward's flight is cheaper and quieter).
     pub(super) fn flees(&self, id: ActorId, to: Pos) -> bool {
         let Some(me) = self.state.actors.get(&id) else {
             return false;
@@ -127,13 +132,7 @@ impl World {
         if stance.flee_cost == 100 && stance.flee_noise == 100 {
             return false;
         }
-        self.state.actors.values().any(|other| {
-            other.id != id
-                && other.level == me.level
-                && other.pos.chebyshev(me.pos) == 1
-                && other.pos.chebyshev(to) > 1
-                && self.stance(id, other.id) == Stance::Hostile
-        })
+        (self.state.actors.values()).any(|other| self.leaves(me, other, to))
     }
 
     /// The energy price of attack `kind` (a blow, a bash, a kick, a shot, a throw, a spell) for
@@ -158,7 +157,16 @@ impl World {
             BASE_TURN,
         );
         let stance = self.content.stance_def(actor.stance).attack_cost;
-        self.burdened(id, percent_of(base, stance))
+        let base = percent_of(base, stance);
+        // Iron grip (spec §8 "Talents"): blows with a two-handed weapon cost less.
+        let two_handed = (with.and_then(|i| actor.inventory.get(i)))
+            .is_some_and(|s| self.content.object(s.object).two_handed);
+        let base = match actor.talent_mods(&self.content).two_handed_price {
+            0 => base,
+            _ if kind != ActionKind::Melee || !two_handed => base,
+            percent => percent_of(base, u32::try_from((100 + percent).max(0)).unwrap_or(0)),
+        };
+        self.burdened(id, base)
     }
 
     /// The energy price of reloading a missile weapon after a shot for actor `id` drawing on
@@ -182,9 +190,19 @@ impl World {
         let mut price = level.step_price(to, step);
         if level.kind == LevelKind::Overworld {
             price = shortened(price, actor.skill_effect(&self.content, Effect::Travel));
+            // Then its talents (Long strider): a signed percent of the journey's time.
+            let percent = actor.talent_mods(&self.content).travel_percent;
+            if percent != 0 {
+                price = percent_of(price, u32::try_from((100 + percent).max(1)).unwrap_or(1));
+            }
         }
         if fleeing {
             price = percent_of(price, self.content.stance_def(actor.stance).flee_cost);
+            // Then its talents (Unflinching): a signed percent of the fleeing step.
+            let percent = actor.talent_mods(&self.content).flee_percent;
+            if percent != 0 {
+                price = percent_of(price, u32::try_from((100 + percent).max(1)).unwrap_or(1));
+            }
         }
         self.burdened(id, price)
     }
@@ -200,7 +218,12 @@ impl World {
         let actor = &self.state.actors[&id];
         let ease = actor.skill_effect(&self.content, Effect::Burden);
         let price = self.bloated(id, self.load_of(id).penalty().slow_eased(price, ease));
-        actor.effects.slow(&self.content, price)
+        let price = actor.effects.slow(&self.content, price);
+        // Quick (spec §8 "Talents"): a little quicker in everything, as a higher speed would be.
+        match actor.talent_mods(&self.content).speed_percent {
+            0 => price,
+            quick => quicker(price, quick),
+        }
     }
 
     /// The price that leaves the player ready to act exactly at `until` (the last turn of a

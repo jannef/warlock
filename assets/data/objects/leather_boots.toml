@@ -6,6 +6,7 @@ glyph = "["
 fg = "#7a5434"
 class = "boots"
 materials = ["leather"]
+made_of = ["hide"]
 weight = 1000
 value = 20
 slot = "feet"

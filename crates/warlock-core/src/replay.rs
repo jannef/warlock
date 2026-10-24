@@ -6,12 +6,16 @@
 //! ```json
 //! { "game_version": "0.1.0", "scenario": "showcase", "seed": 1,
 //!   "character": { "race": "dwarf", "gender": "female", "class": "warrior" },
+//!   "name": "Brakka",
 //!   "steps": [ { "action": "move:N", "hash": "0123456789abcdef" } ] }
 //! ```
 //!
 //! `character` is left out for a run without one (a scenario that gives the player's eyes and
 //! stats itself); a replay without it starts as the scenario's character, so replays recorded
-//! before characters existed still load.
+//! before characters existed still load. `name` is the character's name, left out with the
+//! character; a replay without it gives the character the run's default name
+//! ([`default_name`](crate::character::default_name)), so replays recorded before names
+//! existed still load.
 
 use crate::action::Action;
 use crate::character::CharacterSpec;
@@ -70,6 +74,13 @@ pub struct Replay {
     /// The character the run started as; `None` for the scenario's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub character: Option<CharacterSpec>,
+    /// The character's name; `None` for the run's default.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    /// Whether the run started with the character's starting kit (a character the player
+    /// chose; [`World::start_run`]); left out when false, so replays from before kits load.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub kit: bool,
     pub steps: Vec<Step>,
 }
 
@@ -82,6 +93,8 @@ impl Replay {
             scenario: world.scenario().to_string(),
             seed: world.seed(),
             character: world.character().map(|c| c.spec.clone()),
+            name: world.character().map(|c| c.name.clone()),
+            kit: world.started_with_kit(),
             steps: Vec::new(),
         }
     }
@@ -108,11 +121,13 @@ impl Replay {
 
     /// A fresh world at the start of this replay.
     pub fn start(&self, content: Arc<Content>) -> Result<World, WorldError> {
-        World::with_character(
+        World::start_run(
             content,
             &self.scenario,
             Some(self.seed),
             self.character.as_ref(),
+            self.name.as_deref(),
+            self.kit,
         )
     }
 
@@ -257,6 +272,61 @@ mod tests {
         );
         // And it is written back without one.
         assert!(!replay.to_json().contains("character"));
+        // Recorded before names: the scenario's own name for its own character.
+        assert_eq!(replay.name, None);
+        assert_eq!(world.character().map(|c| c.name.as_str()), Some("Tamsin"));
+    }
+
+    #[test]
+    fn replays_record_and_reproduce_the_name() {
+        let dwarf: CharacterSpec = "dwarf,female,warrior".parse().expect("a character");
+        let mut world = World::with_character_named(
+            content(),
+            "showcase",
+            Some(4),
+            Some(&dwarf),
+            Some("Brakka"),
+        )
+        .expect("world");
+        let mut replay = Replay::new(&world);
+        assert_eq!(replay.name.as_deref(), Some("Brakka"));
+        for action in parse_actions("move:N wait").expect("actions") {
+            world.apply(&action);
+            replay.push(&action, &world);
+        }
+        let json: serde_json::Value = serde_json::from_str(&replay.to_json()).expect("json");
+        assert_eq!(json["name"], "Brakka");
+        let played = Replay::from_json(&replay.to_json())
+            .expect("parse")
+            .run(content())
+            .expect("verifies");
+        assert_eq!(played.character().map(|c| c.name.as_str()), Some("Brakka"));
+        // The name is saved and hashed: another name is another state.
+        let mut renamed = replay.clone();
+        renamed.name = Some("Hilde".into());
+        assert!(matches!(
+            renamed.run(content()),
+            Err(ReplayError::Diverged(_))
+        ));
+        // Without one, a character other than the scenario's gets one of their race's names.
+        let mut unnamed = replay;
+        unnamed.name = None;
+        let (world, _) = unnamed.play(content()).expect("starts");
+        let name = world.character().map(|c| c.name.clone()).expect("a name");
+        assert!(
+            content()
+                .names()
+                .offered("dwarf", crate::character::Gender::Female)
+                .contains(&name.as_str()),
+            "{name}"
+        );
+        // A name that is not one is an error.
+        let mut bad = Replay::new(&played);
+        bad.name = Some(" ".into());
+        assert!(matches!(
+            bad.run(content()),
+            Err(ReplayError::World(WorldError::Character(_)))
+        ));
     }
 
     #[test]

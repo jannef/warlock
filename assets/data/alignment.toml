@@ -1,0 +1,97 @@
+# Alignment (spec §8 "Alignment"; #254): good against evil, as ADOM has law against chaos. Every
+# character has a hidden alignment score from -1000 (as evil as can be) to 1000 (as good), never
+# shown as a number: the character screen, the character creation summary, and the `stats` dump
+# name the band it falls in. A new character starts at their race's `alignment` plus their
+# class's (races.toml, classes/). Creatures have a fixed `alignment` instead ("good",
+# "neutral", or "evil" in their files; a level legend entry may give one of its own), which the
+# player is never shown.
+#
+# What the player does moves the score, by the [shift] below, diminishing ADOM-style: a deed in
+# the direction the score already leans moves it by its worth times the share of the way still
+# left to that end of the scale (halfway to good, a good deed counts half), rounded toward 0, so
+# small deeds never make a saint; a deed the other way counts in full.
+#
+# [[band]]  the seven bands, best first, in this order: saintly, good, kind, neutral, callous,
+#           evil, wicked. Each has:
+#   from         the least score in the band (-1000 to 1000, each below the one before; wicked's
+#                is -1000)
+#   description  what it means, in a line (the wiki)
+#   rise         said when the score rises into the band (every band but wicked), as a note that
+#                does not stop a rest
+#   fall         said when the score falls into it (every band but saintly)
+#
+# [shift]  what each deed is worth before it diminishes, -1000 to 1000 (positive is good):
+#   kill_peaceful      killing someone who is not hostile to you, by their alignment:
+#                      { good, neutral, evil }
+#   kill_beast         killing a beast (a neutral creature that does not talk) that is not
+#                      hostile to you: hunting, which is no sin
+#   kill_hostile       killing someone hostile to you, by their alignment
+#   attack_shopkeeper  attacking a shopkeeper who trades with you
+#   theft              leaving a shop with goods you have not paid for, or stealing from someone
+#                      unnoticed
+#   pay_debt           paying a shopkeeper what you owe
+#   eat_kin            eating the corpse of one of your own race (a creature's `race`), or of a
+#                      creature who talks (has a dialogue) and is not hostile to you
+#
+# [shops]  favour: how much better a good shopkeeper's prices are for a customer of each band,
+#          in percent (negative: worse), added to what Presence and Appraise give (shops.toml);
+#          a band not listed 0. The prices shown include it.
+
+[[band]]
+id = "saintly"
+from = 750
+description = "A beacon of goodness: good shopkeepers ask you less, and the evil scorn you."
+rise = "You feel a holy light within you: you have become a saint."
+
+[[band]]
+id = "good"
+from = 400
+description = "Righteous and steadfast, as a paladin's oath asks: the evil scorn you."
+rise = "You feel righteous."
+fall = "You feel the holy light within you dim."
+
+[[band]]
+id = "kind"
+from = 150
+description = "Kind-hearted: you do more good than harm."
+rise = "You feel your heart warm toward the world."
+fall = "You feel you have strayed from the path of good."
+
+[[band]]
+id = "neutral"
+from = -149
+description = "Neither good nor evil: you go your own way."
+rise = "You feel the darkness in you lift."
+fall = "You feel your kindness cool."
+
+[[band]]
+id = "callous"
+from = -399
+description = "Hard-hearted: what others suffer is no concern of yours."
+rise = "You feel your heart soften a little."
+fall = "You feel your heart harden."
+
+[[band]]
+id = "evil"
+from = -749
+description = "Evil: the good scorn you, and their shopkeepers ask you more."
+rise = "You feel the worst of the darkness in you loosen its grip."
+fall = "You feel evil take root in you."
+
+[[band]]
+id = "wicked"
+from = -1000
+description = "Utterly wicked: the good scorn you, and their shopkeepers ask you much more."
+fall = "You feel utterly wicked."
+
+[shift]
+kill_peaceful = { good = -150, neutral = -100, evil = -100 }
+kill_beast = 0
+kill_hostile = { good = 0, neutral = 0, evil = 10 }
+attack_shopkeeper = -100
+theft = -100
+pay_debt = 5
+eat_kin = -200
+
+[shops]
+favour = { saintly = 10, evil = -10, wicked = -20 }

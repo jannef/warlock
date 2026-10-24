@@ -1,0 +1,10 @@
+# A halfling's pipe (data/races.toml): a comfort on the road, and nothing more yet.
+[[object]]
+id = "pipe"
+name = "long-stemmed pipe"
+glyph = "("
+fg = "#a8784c"
+class = "miscellaneous"
+materials = ["wood"]
+weight = 60
+value = 3

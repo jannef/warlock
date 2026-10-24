@@ -5,6 +5,9 @@
 # character (`npc = "..."`, given to a creature by a level's legend entry with `npc = "..."`; it
 # wins over its type's dialogue). Fields:
 #   greet    said the first time you chat with it, instead of a line (optional)
+#   greet_evil  lines a good creature says instead of its greeting and its lines while you are
+#            Evil or Wicked (spec §8 "Alignment"), in turn like the one-liners (optional; same
+#            length); greet_good the same for an evil creature while you are Good or Saintly
 #   lines    one-liners, said in turn when you chat: each once a round, in an order of the
 #            speaker's own, never the same twice in a row (at least one; at most 72 characters,
 #            so they fit the message line with the speaker's name)
@@ -24,6 +27,10 @@
 [[dialogue]]
 creature = "gardener"
 greet = "Another one up the stairs? Keep to the flagstones, if you please."
+greet_evil = [
+    "Off my flagstones. I don't want your sort near my beds.",
+    "You've blood on your hands. Keep them off my flowers.",
+]
 lines = [
     "Mind the beds. Flowers bruise if you so much as look at them.",
     "The windfalls under the tree are yours. The rest I'm counting.",
@@ -46,6 +53,10 @@ mutter = { chance = 3, verb = "grumbles", lines = [
 [[dialogue]]
 creature = "bard"
 greet = "Well met, traveller! A song for your road? No? Then a word or two."
+greet_evil = [
+    "No song for you, friend. Some deeds aren't worth singing.",
+    "I'd rather not, if it's all the same to you. Or even if it isn't.",
+]
 lines = [
     "Every road in the Wildlands ends at a tavern, if you walk long enough.",
     "They say the Barrowdowns sing at night. I've only ever heard the wind.",
@@ -88,6 +99,10 @@ reply = "Past the Hall lie the Wildlands: the Greenmarch, the Thornwood, the Bar
 [[dialogue]]
 creature = "hermit"
 greet = "Hm? A visitor. Sit, if you can find a stone nobody's sitting on."
+greet_evil = [
+    "Hm. You. I've nothing to say to the likes of you.",
+    "The dark clings to you. Go and sit somewhere else.",
+]
 lines = [
     "Every room in this hall shows you one thing. Look closely.",
     "The kobold in the gallery walks its round. It means you no harm.",
@@ -136,6 +151,10 @@ reply = "Five stairs down, two up. Down: the Vast Caverns, the quarry where they
 [[dialogue]]
 creature = "shopkeeper"
 greet = "Look around, take your time. What you pick up, you pay for at the door."
+greet_evil = [
+    "Prices are higher for your sort. Take it or leave it.",
+    "Look, but keep your hands where I can see them.",
+]
 lines = [
     "Everything on the floor is for sale. Everything.",
     "Pay at the door, and we stay friends.",

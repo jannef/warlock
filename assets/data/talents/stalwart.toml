@@ -1,0 +1,8 @@
+[[talent]]
+id = "stalwart"
+name = "Stalwart"
+tree = "guard"
+description = "Standing on the defensive costs your blows nothing of their aim."
+needs = { talents = { armour_training = 1 } }
+effects = [{ kind = "stance_to_hit", stance = "defensive", percent = 100 }]
+systems = ["stances"]

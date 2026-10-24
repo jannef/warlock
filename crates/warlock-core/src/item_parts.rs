@@ -11,7 +11,9 @@
 //!
 //! Everything is saved by id (materials, parts, sizes, cuts), as affixes are, so adding content
 //! keeps saves; an item whose ids content does not know fails [`check`] when a save loads.
-//! Metal variants (#193) will add their own main-part materials the same way.
+//! A variant (#193, #194; [`crate::variant`]) is an own part of another material, no gem, in
+//! place of a base part (the main part, as loot makes them), from that part's construction list
+//! ([`ObjectDef::made_of`]).
 
 use crate::content::{Content, Cutting, MAX_OBJECT_PARTS, MaterialId, ObjectDef, Part, PartId};
 use serde::{Deserialize, Serialize};
@@ -49,6 +51,16 @@ impl ItemPart {
                 size: gems.size(cutting.size).id.clone(),
                 cut: gems.cut(cutting.cut).id.clone(),
             }),
+        }
+    }
+
+    /// `material`, no gem, as the part `part` (`None`: the main part): an item made of another
+    /// material than its base item (a variant, #193).
+    pub fn material(content: &Content, part: Option<PartId>, material: MaterialId) -> Self {
+        Self {
+            part: part.map(|p| content.part_defs()[usize::from(p.0)].id.clone()),
+            of: content.material(material).id.clone(),
+            gem: None,
         }
     }
 }
@@ -113,7 +125,8 @@ pub fn resolve(base: &[Part], own: &[ItemPart], content: &Content) -> Vec<Part> 
 /// Whether `own` is a valid make of an item of `def` for `content` (a guard for saves and level
 /// files): known ids, a size and cut exactly on the parts of a gem material, no part named twice,
 /// at most [`MAX_OBJECT_PARTS`] parts in all; the gems' object is made of one gem, its main part,
-/// and no other item has a gem as its main part.
+/// and no other item has a gem as its main part; any other material takes a base part's place,
+/// from its construction list, and is not what that part is made of anyway.
 pub fn check(def: &ObjectDef, own: &[ItemPart], content: &Content) -> Result<(), String> {
     if own.is_empty() {
         return Err("an item's own parts list one part at least".into());
@@ -158,6 +171,26 @@ pub fn check(def: &ObjectDef, own: &[ItemPart], content: &Content) -> Result<(),
                 ));
             }
             _ => {}
+        }
+        // Another material (a variant, #193): in place of a base part, from its construction
+        // list, and not what that part is made of anyway.
+        if !is_gem {
+            let Some(i) = at else {
+                return Err(format!(
+                    "{what} of `{}`: only a gem is added to an item; another material takes the \
+                     place of a part it has",
+                    o.of
+                ));
+            };
+            if def.parts[i].material == material {
+                return Err(format!("{what} of `{}`: it is made of that anyway", o.of));
+            }
+            if !def.made_of(i).contains(&material) {
+                return Err(format!(
+                    "{what} of `{}`: not what `{}` may be made of (its `made_of`)",
+                    o.of, def.id
+                ));
+            }
         }
     }
     if def.parts.len() + added > MAX_OBJECT_PARTS {

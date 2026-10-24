@@ -29,8 +29,9 @@ fn part(content: &Content, part: &str, material: &str, share: u8) -> Part {
 }
 
 /// Every part of `stack` checks out against its base item: the same parts, valid shares, the
-/// main part first, and a name and value made of them. A stack with gems of its own (a loose gem,
-/// an ornament) is its base item's parts with its gems in their place.
+/// main part first, and a name and value made of them. A stack with parts of its own (a loose
+/// gem, an ornament, another material, #193) is its base item's parts with its own in their
+/// place, each material from its part's construction list.
 fn check_stack(content: &Content, stack: &Stack) {
     let def = content.object(stack.object);
     if let Some(own) = stack.own_parts() {
@@ -38,8 +39,18 @@ fn check_stack(content: &Content, stack: &Stack) {
         let parts = stack.parts(content);
         assert_eq!(*parts, crate::item_parts::resolve(&def.parts, own, content));
         assert_eq!(parts.iter().map(|p| u32::from(p.share)).sum::<u32>(), 100);
-        assert!(parts.iter().any(|p| p.gem.is_some()), "{}", def.id);
-        assert!(stack.value(content) > 0, "{}", def.id);
+        let varied = (def.parts.iter().zip(parts.iter())).any(|(b, p)| b.material != p.material);
+        assert!(
+            parts.iter().any(|p| p.gem.is_some()) || varied,
+            "{}",
+            def.id
+        );
+        for (i, part) in parts.iter().enumerate().take(def.parts.len()) {
+            if part.gem.is_none() {
+                assert!(def.made_of(i).contains(&part.material), "{}", def.id);
+            }
+        }
+        assert!(stack.value(content) > 0 || def.value == 0, "{}", def.id);
         return;
     }
     let parts = stack.parts(content);
@@ -159,11 +170,13 @@ fn value_follows_the_parts_materials_by_their_shares() {
     let mut files = ContentFiles::builtin();
     files.insert(
         "data/materials/gold.toml",
-        "[[material]]\nid = \"gold\"\nname = \"gold\"\nprecious = true\nvalue = 2000\n",
+        "[[material]]\nid = \"gold\"\nname = \"gold\"\nprecious = true\ngroup = \"metal\"\n\
+         value = 2000\n",
     );
     files.insert(
         "data/materials/silver.toml",
-        "[[material]]\nid = \"silver\"\nname = \"silver\"\nprecious = true\nvalue = 1500\n",
+        "[[material]]\nid = \"silver\"\nname = \"silver\"\nprecious = true\ngroup = \"metal\"\n\
+         value = 1500\n",
     );
     files.insert(
         "data/materials/ruby.toml",

@@ -185,6 +185,41 @@ fn a_caught_thief_is_turned_on_and_cannot_steal_from_them_again() {
     );
 }
 
+/// The player's alignment score.
+fn alignment(w: &World) -> i32 {
+    w.state.player().alignment.expect("a score").value()
+}
+
+#[test]
+fn only_a_theft_that_took_something_is_a_deed_for_alignment() {
+    let theft = content().alignment().expect("alignment").shift.theft;
+    assert!(theft < 0, "stealing is evil");
+    // Unnoticed, with something to take: the theft deed's worth, once.
+    let mut w = den();
+    let kobold = at(&w, Pos::new(4, 2));
+    rig(&mut w, kobold, true);
+    let before = alignment(&w);
+    w.apply(&Action::Steal(Dir::E));
+    assert!(said(&w, "You steal "));
+    assert!(alignment(&w) < before, "{before} -> {}", alignment(&w));
+    // Empty pockets, though unnoticed, took nothing: no deed.
+    let mut w = den();
+    let gardener = at(&w, Pos::new(2, 2));
+    rig(&mut w, gardener, true);
+    let before = alignment(&w);
+    w.apply(&Action::Steal(Dir::W));
+    assert_eq!(last(&w), "You find nothing to take from the gardener.");
+    assert_eq!(alignment(&w), before);
+    // Caught: the goods stayed, and so does the score.
+    let mut w = den();
+    let kobold = at(&w, Pos::new(4, 2));
+    rig(&mut w, kobold, false);
+    let before = alignment(&w);
+    w.apply(&Action::Steal(Dir::E));
+    assert!(said(&w, "catches you stealing"));
+    assert_eq!(alignment(&w), before);
+}
+
 #[test]
 fn refusals_take_no_time() {
     let mut w = den();

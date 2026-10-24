@@ -1,22 +1,178 @@
 //! Character creation (spec §8 "Character creation"): stats, genders, races, classes, and the
 //! horoscope, with adjustments as written in data.
 
-use super::text::table_text;
+use super::text::{signed, table_text};
 use super::weapon_skills;
 use std::fmt::Write as _;
 use warlock_core::character::Gender;
 use warlock_core::content::Content;
 use warlock_core::dice::Dice;
-use warlock_core::stats::{AVERAGE, PerStat, Stat};
+use warlock_core::object::format_weight;
+use warlock_core::stats::{self, AVERAGE, PerStat, SCORES, Stat};
+use warlock_core::{burden, combat};
 
-/// The stats in the order the character screen lists them, with their abbreviations. Only the
-/// names: never a modifier or a potential, nor anyone's scores.
+/// The stats in the order the character screen lists them, with their abbreviations.
 pub(super) fn stats(_content: &Content) -> String {
     let mut out = String::from("| Stat | Short |\n|---|:---:|\n");
     for stat in Stat::ALL {
         let _ = writeln!(out, "| {} | `{}` |", stat.name(), stat.abbrev());
     }
     let _ = writeln!(out, "\nA score of {AVERAGE} is average.");
+    out
+}
+
+/// Every score's modifier (spec §8 "Stats": [`stats::modifier`], D&D 3.5's), scores of one
+/// modifier on one row.
+pub(super) fn stat_modifiers(_content: &Content) -> String {
+    let mut out = String::from("| Score | Modifier |\n|:---:|:---:|\n");
+    let mut rows: Vec<(u8, u8, i32)> = Vec::new();
+    for score in SCORES {
+        let modifier = stats::modifier(i32::from(score));
+        match rows.last_mut() {
+            Some((_, last, m)) if *m == modifier => *last = score,
+            _ => rows.push((score, score, modifier)),
+        }
+    }
+    for (first, last, modifier) in rows {
+        let scores = if first == last {
+            first.to_string()
+        } else {
+            format!("{first}–{last}")
+        };
+        let _ = writeln!(out, "| {scores} | {} |", signed(modifier));
+    }
+    out
+}
+
+/// What each stat feeds, by its modifier and by its score (spec §8 "Stats"), with the numbers of
+/// the rules that read it: the carrying limit's grams a point, the regeneration pace, the shops'
+/// Presence share, and the diseases each stat's checks resist.
+pub(super) fn stat_uses(content: &Content) -> String {
+    let checks = |stat: Stat| {
+        let names: Vec<String> = (content.disease_defs().iter())
+            .filter(|d| d.check == stat)
+            .map(|d| d.name.clone())
+            .collect();
+        (!names.is_empty()).then(|| format!("checks against {}", names.join(", ")))
+    };
+    let carry = format!(
+        "the carrying limit: {} × (2 × Strength + Toughness), by size ([Burden](burden.md))",
+        format_weight(burden::GRAMS_PER_POINT)
+    );
+    let regen = format!(
+        "a hit point back every max({}, {} − {} × Toughness) seconds",
+        combat::REGEN_FASTEST,
+        combat::REGEN_SLOWEST,
+        combat::REGEN_PER_TOUGHNESS
+    );
+    let presence = content.shops().map(|s| {
+        format!(
+            "shop prices: {}% in your favour for each point ([Shops](shops.md))",
+            s.presence
+        )
+    });
+    let rows: [(Stat, Vec<Option<String>>, Vec<Option<String>>); 6] = [
+        (
+            Stat::Strength,
+            vec![
+                Some("to hit and damage up close; damage of throws".into()),
+                checks(Stat::Strength),
+            ],
+            vec![
+                Some(carry.clone()),
+                Some("a bow's draw: −1 to hit and damage for each point short".into()),
+                Some("kicking a door in: 1d(sturdiness) at or below it ([Doors](doors.md))".into()),
+                Some("digging: tool power × (Strength + 10) a turn ([Digging](digging.md))".into()),
+            ],
+        ),
+        (
+            Stat::Dexterity,
+            vec![
+                Some("Defence (capped by armour and burden); to hit with shots and throws".into()),
+                checks(Stat::Dexterity),
+            ],
+            vec![],
+        ),
+        (
+            Stat::Toughness,
+            vec![
+                Some("the hit points each level adds ([Experience](experience.md))".into()),
+                checks(Stat::Toughness),
+            ],
+            vec![
+                Some("hit points: Toughness plus race and class".into()),
+                Some(regen),
+                Some(carry),
+            ],
+        ),
+        (
+            Stat::Intelligence,
+            vec![
+                Some("searching ([Searching](searching.md))".into()),
+                checks(Stat::Intelligence),
+            ],
+            vec![],
+        ),
+        (
+            Stat::Willpower,
+            vec![
+                Some("noticing hidden things in passing ([Searching](searching.md))".into()),
+                checks(Stat::Willpower),
+            ],
+            vec![],
+        ),
+        (
+            Stat::Presence,
+            vec![presence, checks(Stat::Presence)],
+            vec![],
+        ),
+    ];
+    let mut out = String::from("| Stat | Its modifier | Its score |\n|---|---|---|\n");
+    for (stat, modifier, score) in rows {
+        let join = |parts: Vec<Option<String>>| {
+            let parts: Vec<String> = parts.into_iter().flatten().collect();
+            if parts.is_empty() {
+                "-".to_string()
+            } else {
+                parts.join("; ")
+            }
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} |",
+            stat.name(),
+            join(modifier),
+            join(score)
+        );
+    }
+    out
+}
+
+/// Each race's potentials (spec §8 "Character creation"): the races file's base potential plus
+/// the race's adjustment, rolled once at the start of a run, kept within the scores' range; a
+/// potential is never below its starting score.
+pub(super) fn potentials(content: &Content) -> String {
+    let (names, align) = stat_columns();
+    let races = content.races();
+    let mut out = format!("| Race |{names}\n|---|{align}\n");
+    let (lo, hi) = (i32::from(*SCORES.start()), i32::from(*SCORES.end()));
+    let base = i32::from(races.base_potential);
+    for r in &races.list {
+        let cells: String = (r.potential.iter())
+            .map(|(_, v)| {
+                let (min, max) = (
+                    (base + v.min()).clamp(lo, hi),
+                    (base + v.max()).clamp(lo, hi),
+                );
+                if min == max {
+                    format!(" {min} |")
+                } else {
+                    format!(" {min}–{max} |")
+                }
+            })
+            .collect();
+        let _ = writeln!(out, "| {} |{cells}", r.name);
+    }
     out
 }
 
@@ -27,7 +183,7 @@ pub(super) fn genders(_content: &Content) -> String {
         let raises = match gender {
             Gender::Male => format!("{} +1", Stat::Strength.name()),
             Gender::Female => format!("{} +1", Stat::Dexterity.name()),
-            Gender::Other => "+1 to one stat, picked by the run's seed".to_string(),
+            Gender::Other => "+1 to one stat, chosen by fate".to_string(),
         };
         let _ = writeln!(out, "| {} | {raises} |", gender.name());
     }
@@ -57,7 +213,7 @@ fn stat_cells(by: &PerStat<Dice>) -> String {
 }
 
 /// The races in the order New run offers them: their stat adjustments, vision, and starting
-/// age, then what they are. Never their potentials.
+/// age, then what they are (their potentials are [`potentials`]).
 pub(super) fn races(content: &Content) -> String {
     let (names, align) = stat_columns();
     let mut out = format!(

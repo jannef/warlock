@@ -9,6 +9,7 @@
 
 pub mod ability;
 pub mod action;
+pub mod alignment;
 pub mod blood;
 pub mod burden;
 pub mod character;
@@ -30,6 +31,7 @@ pub mod grid;
 pub mod hunger;
 pub mod ice;
 pub mod item_parts;
+pub mod kit;
 pub mod light;
 pub mod magic;
 pub mod mapgen;
@@ -45,8 +47,10 @@ mod sight;
 pub mod skills;
 pub mod stats;
 pub mod status;
+pub mod talent;
 pub mod temperature;
 pub mod time;
+pub mod variant;
 pub mod weapon_skills;
 pub mod weather;
 pub mod world;

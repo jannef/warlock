@@ -43,6 +43,8 @@ more_defensive = ["-"]
 abilities = ["a"]
 repeat_ability = ["A"]
 bash = []
+disarm = []
+pick_lock = []
 pay = ["p"]
 use_tool = ["U"]
 chat = ["C"]
@@ -75,6 +77,12 @@ mark = ["Space"]
 mark_all = [","]
 next_list_page = [">", "PageDown"]
 prev_list_page = ["<", "PageUp"]
+
+[text] # Text fields
+text_confirm = ["Enter", "NumpadEnter"]
+text_erase = ["Backspace", "Delete"]
+text_random = ["Tab"]
+text_back = []
 
 [pages] # Info pages
 page_1 = ["1"]

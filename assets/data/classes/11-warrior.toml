@@ -1,0 +1,21 @@
+[[class]]
+id = "warrior"
+name = "Warrior"
+description = "A trained fighter of the shield wall and the dueling ground: strong, steady, and well drilled."
+stats = { strength = "1d3+1", dexterity = 1, toughness = "1d3", intelligence = -1 }
+hp = 7
+experience = 100
+skills = { athletics = "2d6+10", balance = "2d4+4", intimidate = "2d4+4", swim = "2d4+4" }
+known_for = ["athletics"]
+rolls = 2
+weapon_skills = { long_blades = 2, shield_block = "1d2" }
+styles = { sword_and_board = 1 }
+# Sword and shield, plain leathers and a cap, a ration, and a soldier's pay.
+kit = [
+    { wield = "long_sword" },
+    { wield = "small_shield" },
+    { wear = "leather_jerkin" },
+    { wear = "leather_cap" },
+    "ration",
+    "gold_coin*20",
+]

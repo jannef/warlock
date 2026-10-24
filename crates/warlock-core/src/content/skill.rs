@@ -2,18 +2,20 @@
 //! what it gives. Adding a skill is one entry; what an actor has of them is
 //! [`crate::skills::Skills`].
 //!
-//! The file also holds the **[provisional]** increase curve ([`Increase`], `[increase]`): how
-//! training marks become points, until the owner decides how skills increase (#132).
+//! The file also holds how skills grow at level-up (spec §8 "Skills"): the ladder of dice their
+//! marks set ([`Ladder`], `[ladder]`) and the rolls' rules ([`RollRules`], `[rolls]`).
 
 use super::ContentError;
-use crate::skills::{Benefit, BenefitSpec, Increase, MarkRule, SkillId, SkillKind};
+use crate::skills::{Benefit, BenefitSpec, Ladder, MarkRule, RollRules, SkillId, SkillKind};
 use serde::Deserialize;
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct SkillFile {
     #[serde(default)]
-    increase: Increase,
+    ladder: Ladder,
+    #[serde(default)]
+    rolls: RollRules,
     skill: Vec<SkillSpec>,
 }
 
@@ -53,12 +55,14 @@ impl SkillDef {
     }
 }
 
-/// Every skill, and the increase curve.
+/// Every skill, and how they grow at level-up.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct SkillBook {
     pub list: Vec<SkillDef>,
-    /// **[provisional]** How marks become points.
-    pub increase: Increase,
+    /// The dice a level-up roll throws, by the skill's marks.
+    pub ladder: Ladder,
+    /// How many rolls Intelligence adds, and what a roll costs.
+    pub rolls: RollRules,
 }
 
 impl SkillBook {
@@ -66,7 +70,8 @@ impl SkillBook {
     pub(super) fn parse(file: &str, text: &str) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: SkillFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
-        parsed.increase.check().map_err(err)?;
+        parsed.ladder.check().map_err(err)?;
+        parsed.rolls.check().map_err(err)?;
         if parsed.skill.is_empty() {
             return Err(err("at least one skill is required".into()));
         }
@@ -103,7 +108,8 @@ impl SkillBook {
         }
         Ok(Self {
             list,
-            increase: parsed.increase,
+            ladder: parsed.ladder,
+            rolls: parsed.rolls,
         })
     }
 
@@ -129,12 +135,15 @@ mod tests {
     #[test]
     fn skills_read_their_marks_and_benefits() {
         let book = parse(&format!(
-            "[increase]\nmarks = 2\nper = 5\nsoft_cap = 50\npast_cap = 4\n{ONE}\
+            "[ladder]\ndice = [1, \"1d3\"]\nmarks = [0, 4]\n\
+             [rolls]\nintelligence_from = 12\nintelligence_every = 3\nspend = 40\nsoft_cap = 50\n{ONE}\
              mark = [{{ on = \"sneak\", chance = 20 }}]\n\
              benefit = [{{ effect = \"quiet\", curve = [[0, 0], [100, 60]] }}]\n"
         ))
         .expect("valid");
-        assert_eq!(book.increase.need(50), (2 + 10) * 4);
+        assert_eq!(book.ladder.die(book.ladder.step(4)).to_string(), "1d3");
+        assert_eq!(book.rolls.for_intelligence(15), 2);
+        assert_eq!(book.rolls.spent(10), 4);
         let stealth = &book.list[0];
         assert_eq!(stealth.kind, SkillKind::Passive);
         assert_eq!(
@@ -148,8 +157,12 @@ mod tests {
         assert_eq!(stealth.benefits[0].at(50), 30);
         assert_eq!(book.id("stealth"), Some(SkillId(0)));
         assert_eq!(book.id("listen"), None);
-        // Without `[increase]`, the default curve.
-        assert_eq!(parse(ONE).expect("valid").increase, Increase::default());
+        // Without `[ladder]` and `[rolls]`, ADOM's ladder and the default rules.
+        let plain = parse(ONE).expect("valid");
+        assert_eq!(
+            (plain.ladder, plain.rolls),
+            (Ladder::default(), RollRules::default())
+        );
     }
 
     #[test]
@@ -171,8 +184,18 @@ mod tests {
                 "skill `stealth`: a benefit needs",
             ),
             (
-                format!("[increase]\nmarks = 0\nper = 1\nsoft_cap = 1\npast_cap = 1\n{ONE}"),
-                "at least 1",
+                format!("[ladder]\ndice = [1]\nmarks = [3]\n{ONE}"),
+                "start at 0",
+            ),
+            (
+                format!(
+                    "[rolls]\nintelligence_from = 14\nintelligence_every = 4\nspend = 120\nsoft_cap = 100\n{ONE}"
+                ),
+                "is a percent",
+            ),
+            (
+                format!("[increase]\nmarks = 4\n{ONE}"),
+                "unknown field `increase`",
             ),
             (
                 ONE.replace("\"Stealth\"", "\" \""),

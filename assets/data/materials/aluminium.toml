@@ -1,0 +1,13 @@
+# Light, but worse than steel in a fight and dearer: very rare.
+[[material]]
+id = "aluminium"
+name = "aluminium"
+group = "metal"
+color = "#d0d5db"
+weight = 34
+to_hit = 1
+damage = -2
+protection = 70
+value = 800
+rarity = { weight = 10 }
+gear = { weight = 5 }

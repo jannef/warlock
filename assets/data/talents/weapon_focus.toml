@@ -1,0 +1,9 @@
+[[talent]]
+id = "weapon_focus"
+name = "Weapon focus"
+tree = "weaponcraft"
+choice = "weapon_skill"
+description = "You have drilled with one kind of weapon until it finds its mark more often."
+needs = { chosen = 2 }
+effects = [{ kind = "weapon", to_hit = 1 }]
+systems = ["combat", "weapon_skills"]

@@ -1,0 +1,11 @@
+# No weapon.
+[[material]]
+id = "hardened_leather"
+name = "hardened leather"
+group = "hide"
+color = "#6b3e1e"
+weight = 45
+protection = 45
+value = 80
+rarity = { weight = 300, deeper = 10 }
+gear = { weight = 300, deeper = 10 }

@@ -1,0 +1,15 @@
+[[talent]]
+id = "elemental_ward"
+name = "Elemental ward"
+tree = "guard"
+choice = "element"
+ranks = 2
+description = "You shrug off part of the harm of one element, more of it at the second rank."
+effects = [{ kind = "resist", value = 25 }]
+systems = ["damage_types"]
+
+[[talent.rank]]
+needs = { stats = { toughness = 12 } }
+
+[[talent.rank]]
+needs = { level = 20 }

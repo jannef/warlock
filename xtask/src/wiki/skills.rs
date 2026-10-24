@@ -56,11 +56,13 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::Search => "finding hidden things when you search",
         Effect::SearchReach => "searching farther around you",
         Effect::Spot => "noticing hidden things in passing",
+        Effect::Disarm => "disarming traps",
         Effect::Burden => "less slowdown from your load",
         Effect::Travel => "quicker journeys on the overworld",
         Effect::Bargain => "better prices in shops",
         Effect::Kick => "more Strength for kicking doors in",
         Effect::Steal => "stealing at all, and better",
+        Effect::Pick => "picking locks (trained at all: you can try)",
     }
 }
 
@@ -81,11 +83,13 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::Search => "searching",
             Effect::SearchReach => "search reaches",
             Effect::Spot => "noticing",
+            Effect::Disarm => "disarming traps",
             Effect::Burden => "Burdened / Strained",
             Effect::Travel => "journeys",
             Effect::Bargain => "prices",
             Effect::Kick => "kicking doors in",
             Effect::Steal => "stealing",
+            Effect::Pick => "picking locks",
         };
         let _ = write!(out, " {name}: {what} |");
     }
@@ -98,7 +102,12 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             let n = b.at(value);
             let cell = match b.effect {
                 _ if n == 0 => "—".to_string(),
-                Effect::Dodge | Effect::Search | Effect::Spot | Effect::Steal => format!("+{n}"),
+                Effect::Dodge
+                | Effect::Search
+                | Effect::Spot
+                | Effect::Steal
+                | Effect::Disarm
+                | Effect::Pick => format!("+{n}"),
                 Effect::SearchReach => format!("+{n} cell{}", if n == 1 { "" } else { "s" }),
                 Effect::Kick => format!("+{n} Strength"),
                 Effect::Quiet | Effect::Travel => format!("\u{2212}{n}%"),
@@ -177,19 +186,65 @@ pub(super) fn stealing(_content: &Content) -> String {
     out
 }
 
-/// **[provisional]** The increase curve: the marks a point needs at a range of values, and all
-/// the marks from 0.
-pub(super) fn skill_increase(content: &Content) -> String {
-    let inc = content.increase();
-    let mut out =
-        String::from("| Value | Marks for the next point | Marks from 0 |\n|---:|---:|---:|\n");
-    for value in [0, 10, 25, 50, 75, 99, 100, 101, 110, 120, 150, 200] {
+/// The skill ladder: the die a level-up roll throws by the skill's marks, and the die a skill the
+/// class is known for throws (one step up).
+pub(super) fn skill_ladder(content: &Content) -> String {
+    let ladder = content.ladder();
+    let mut out = String::from(
+        "| Marks | Die | Average | Known for: die | Known for: average |\n|---:|---|---:|---|---:|\n",
+    );
+    let average = |d: Dice| format!("{:.1}", f64::from(d.min() + d.max()) / 2.0);
+    for (step, (&marks, &die)) in ladder.marks.iter().zip(&ladder.dice).enumerate() {
+        let up = ladder.die(step + 1);
         let _ = writeln!(
             out,
-            "| {value} | {} | {} |",
-            inc.need(value),
-            inc.total(0, value)
+            "| {marks} | `{die}` | {} | `{up}` | {} |",
+            average(die),
+            average(up)
         );
     }
+    out
+}
+
+/// The skill rolls each class gives a level and the skills it is known for, then the races'
+/// extra rolls, each by name; and what Intelligence adds.
+pub(super) fn skill_rolls(content: &Content) -> String {
+    let names = |ids: &[SkillId]| -> String {
+        let parts: Vec<&str> = ids.iter().map(|&id| skill_name(content, id)).collect();
+        if parts.is_empty() {
+            "-".into()
+        } else {
+            parts.join(", ")
+        }
+    };
+    let mut out = String::from("| Class | Rolls a level | Known for |\n|---|---:|---|\n");
+    let mut classes: Vec<_> = content.classes().iter().collect();
+    classes.sort_by(|a, b| a.name.cmp(&b.name));
+    for c in classes {
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} |",
+            c.name,
+            c.rolls,
+            names(&c.known_for)
+        );
+    }
+    out.push_str("\n| Race | Extra rolls a level |\n|---|---:|\n");
+    let mut races: Vec<_> = content.races().list.iter().collect();
+    races.sort_by(|a, b| a.name.cmp(&b.name));
+    for r in races {
+        let _ = writeln!(out, "| {} | {} |", r.name, r.rolls);
+    }
+    let rules = content.skill_rolls();
+    let _ = writeln!(
+        out,
+        "\nIntelligence adds one roll at {} and one more for every {} points above it \
+         ({}: +1, {}: +2, {}: +3).",
+        rules.intelligence_from,
+        rules.intelligence_every,
+        rules.intelligence_from,
+        u16::from(rules.intelligence_from) + u16::from(rules.intelligence_every),
+        u16::from(rules.intelligence_from) + 2 * u16::from(rules.intelligence_every),
+    );
     out
 }

@@ -22,7 +22,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `combat = "melee"` (default), `"ranged"`, or `"caster"`, the latter two with a `range` (2 to its
   sight), `opens_doors` (default false), `budge` (whether the player may swap places with it
   when it is not hostile, §8 "Displacement": `always`, the default; `off_post`, not while it keeps
-  its post, going about its routine, as a shopkeeper at its counter will; `never`), and
+  its post, going about its routine, as a shopkeeper at its counter will; `never`), its
+  `alignment` (`good`, `neutral`, the default, or `evil`; §8 "Alignment": the kobolds evil, the
+  beasts neutral, the showcase's people good; never shown), an optional `race` (a race id; §8
+  "Alignment": its corpse is kin to a character of that race; the showcase's people are human;
+  not checked in content without races), and
   optionally `attack_cost`, what its attacks cost
   instead of the attack's cost in `data/actions.toml` (100 to 10 000; §8 "Time"; none of the
   built-in creatures has one yet). The kobold: darkvision, sight 10, melee, opens doors;
@@ -54,7 +58,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   never shown). For experience (§8
   "Experience"): `level` (1 to 99, default 1) and `xp` (0 to 100000, default 0; the player
   creature has neither): the kobold 2/15, the kobold archer 3/25, the kobold shaman 4/40, the
-  giant rat 1/5, the cave bat 1/3, the cave beetle 2/8, the deer 1/2. For loot (§8 "Magic
+  giant rat 1/5, the cave bat 1/3, the cave beetle 2/8, the deer 1/2; new creatures follow the
+  guideline of `data/experience.toml`, about `5 × level + 10` (§8 "Experience"). For loot (§8 "Magic
   items"): `loot`, the chance in percent (0 to 100, default 0) that it drops a magic or rare item
   where it dies: the kobold 25, the kobold archer 30, the kobold shaman 50. The giant rat and the
   cave bat bite (1d4, 1d3; the rat's bite poisons one hit in ten, 2 degrees, and exposes to
@@ -141,10 +146,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
   hostile to the player: `outraged`). Who can steal is the skills' business (the `steal`
   benefit, `data/skills.toml`); a shopkeeper that catches the player is outraged by its shop's
   rules (`data/shops.toml`'s `outraged`).
+- **Stat training** (`data/stats.toml`, optional; without it nothing trains and no level checks
+  a stat; §8 "Stats"): `[training]` `need_base` (20) and `need_per_point` (3), each 0 to 200
+  and not both 0, `over_potential_divisor` (4; 1 to 20), and `[[training.use]]` rules: `stat`
+  (a stat id), `on` (a use: `burdened`, `blow`, `dig`, `kick`, `dodge`, `shot`, `sneak`,
+  `climb`, `hurt`, `big_hit`, `resisted`, `plunge`, `found`, `read`, `identified`,
+  `discovered`, `spot`, `endured`, `resisted_will`, `hungry_fight`, `chat`, `trade`, `quest`,
+  `swapped`), and `chance` (1 to 100); a stat and use at most once.
 - **Action costs** (`data/actions.toml`, optional): action ids mapped to their cost in energy,
   e.g. `wait = 1000`, 1000 being a normal action (6 s at normal speed; §8 "Time"), 100 to
   10 000. The ids are `step` (onto terrain of `move_cost` 100), `wait`, `open_door`,
-  `close_door`, `unlock` (unlocking a door with a key, on top of opening it), `kick`, `lantern`,
+  `close_door`, `unlock` (unlocking a door with a key, on top of opening it), `pick_lock` (2000:
+  a try at picking a lock, whatever comes of it; a lock that gives opens its door on top of it,
+  `open_door`; §8 "Doors"), `kick`, `lantern`,
   `stairs` (also entering a location or local area and walking off an
   area's edge), `pick_up`, `drop`, `melee` (a shield bash too), `shoot`, `throw`, `reload` (a
   missile weapon that `reloads`: a crossbow shot costs `shoot` plus `reload`, 2000), `cast`,
@@ -174,7 +188,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   **Parts** (#199): `materials` is what an object is made of, an ordered list of parts, each of
   one material (an id in `data/materials.toml`, likewise a directory, whose `[[material]]`
   entries have an `id`, a `name`, `precious` (a gem or a precious metal, default false), and
-  `value` (percent of steel's, 1 to 10 000, default 100); more properties come later). A part is
+  `value` (percent of steel's, 1 to 10 000, default 100); the properties below, under
+  "Materials"). A part is
   a table, `{ part = "setting", of = "ruby", share = 10 }`: `part` an id in `data/parts.toml` (a
   small vocabulary, `[[part]]` with `id`, `name`, and an optional `adjective`: band, blade, chain,
   cord, grip, haft, head, inlay, lining, pendant, pommel, setting, studs, tip, trim), `of` its material,
@@ -182,14 +197,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `materials = ["steel"]`, what most objects are. **The first part is the main one**: it takes
   the share the others leave (at least 1%; it gives none), may be unnamed, and decides what a
   single material decides (`ObjectDef::material`: the material named first, the material word a
-  name begins with, and, with metals and organic materials, #193 and #194, the colour, the weight
-  scale, and weapon and armour modifiers). Every other part names its part and share; a part
+  name begins with, and, for an item of another material, its colour and its weapon and armour
+  modifiers, §7 "Materials"). Every other part names its part and share; a part
   name appears once; the old `material` key is a content error that says to write `materials`.
   **Value by shares**: an object made of other parts than its own is worth its `value` × Σ(share
   × material value) of those parts without a gem / the same sum of its own (`ObjectDef::value_with`,
   rounded to the nearest coin), plus what each gem part is worth by its size and cut (below), so
   made of its own parts it is worth its `value`. An item may carry **parts of its own** (gems,
-  below; metal variants later, #193): `Stack::parts` is its base item's parts with its own in
+  below; other materials, "Materials"): `Stack::parts` is its base item's parts with its own in
   their place, each an instance part (a part, a material, and a gem's size and cut) saved by id
   with the stack beside its magic. **Names** show the notable parts, gems and
   precious metals (`precious` materials), that the written name does not mention as a word: a
@@ -244,6 +259,74 @@ developer notes (CLAUDE.md, `docs/dev/`).
   cut"), it adds its gem's worth to the item's, and it has no rules effect yet. Like every
   material, gems show at once, identified or not. Loot rolls them (§8 "Magic items"), general
   stores buy them (§7 "Shops"), and level files place them (§7 "Levels").
+- **Materials** (#193, #194): a material's properties are on one scale, steel's (all optional,
+  so a material without them is as it was): `group` (one word, not `any`: metal, wood, bone,
+  stone, hide, cloth, glass, resin; none for paper, wax, food, and the gems, which are set in
+  items but never made into them), `color` (an item of it drawn so where its base item is of
+  another material), `weight` (percent of steel's for an item of it, 1 to 1000; metals by real
+  density, the rest an effective weight), `to_hit` and `damage` (as a weapon's working part, ±10;
+  neither: it cannot be one), `protection` (percent of an armour's Protection kept, 0 to 500;
+  none: it cannot be armour), `value` (above), `rarity` and `gear` (how often loot, by item
+  level, and creatures' gear, by creature level, make an item of it: `{ weight, deeper, level }`,
+  the weight at level 1, `deeper` per level past the first, never below 0, none below `level`).
+  The seventeen metals (#193; no lerasium, atium, or malatium), weight / to hit / damage / armour
+  / value: steel 100 / 0 / 0 / 100% / ×1, iron 100 / −1 / 0 / 90% / ×0.6, tin 93 / 0 / −2 / 40%
+  / ×0.4, pewter 93 / 0 / −2 / 40% / ×0.5, bronze 112 / 0 / −1 / 80% / ×0.8, copper 114 / 0 / −1
+  / 60% / ×0.7, zinc 91 / 0 / −2 / 50% / ×0.6, brass 108 / 0 / −1 / 70% / ×0.9, gold 246 / −2 /
+  +1 / 50% / ×20, electrum 191 / −1 / 0 / 60% / ×12, cadmium 110 / 0 / −2 / 50% / ×4, bendalloy
+  118 / 0 / −1 / 70% / ×6, aluminium 34 / +1 / −2 / 70% / ×8, duralumin 36 / +1 / −1 / 90% /
+  ×10, chromium 92 / 0 / +1 / 110% / ×9, nicrosil 108 / 0 / +1 / 110% / ×10, silver 134 / −1 /
+  −1 / 50% / ×15; the organic ones (#194): wood 40 / −1 / −2 / 30% / ×0.2, hardwood 50 / 0 / −1 /
+  40% / ×0.4, ironwood 70 / 0 / 0 / 60% / ×3, bone 60 / 0 / −1 / 50% / ×0.3, horn 50 / 0 / −1 /
+  45% / ×0.5, ivory 65 / −1 / −1 / 40% / ×5, chitin 45 / 0 / −1 / 60% / ×0.6, dragonbone 55 / +1
+  / +1 / 110% / ×25 (bone group), flint 80 / 0 / −1 / − / ×0.1, obsidian 75 / 0 / 0 / − / ×0.3
+  (stone), leather 35 / − / 30% / ×0.5, hardened leather 45 / − / 45% / ×0.8, fur 40 / − / 25% /
+  ×0.8, dragonscale 40 / − / 130% / ×30 (hide), cloth 25 / − / 15% / ×0.3, silk 18 / − / 20% /
+  ×4, and wool 30 / − / 20% / ×0.4 (cloth; the wool cloak's, so its variants name well); jade
+  (stone) and amber (resin) are jewellery materials only (×4, ×3); glass, stone, paper, wax,
+  flesh, and plant matter have colours only. Found (loot at item level 1, weights): copper and
+  bronze very common (800, fewer deeper), iron and tin common (300), steel common (300) and +60 a
+  level, the usual metal deeper; pewter, zinc, brass, horn, chitin, obsidian uncommon (100);
+  ironwood, ivory, silk, jade, amber rare (40); gold, silver, electrum, cadmium, bendalloy,
+  aluminium, duralumin very rare (10); chromium and nicrosil very rare from item level 8,
+  dragonbone and dragonscale from 10. Creatures' gear leans primitive: steel 20 at creature
+  level 1 (+15 a level), bone and flint 600, copper and bronze 600 (fewer with level).
+  **Construction lists**: each part may say what it may be made of, `made_of` in its table (the
+  main part's also as the object's own `made_of`, the shorthand), naming groups, materials, or
+  `any` (every material of a group: jewellery, so never paper or wax); it must allow the part's
+  own material; the main part of a weapon or ammunition keeps only materials that can be a
+  weapon's working part, of armour or a shield only those that can be armour (a material named
+  by itself that cannot is an error, as is a gem). Without a list a part is only its own
+  material. The built-in lists: swords metal and dragonbone; daggers metal, bone, stone; axes
+  metal, stone; spears, javelins, and arrow and bolt heads (their main part, an iron head on a
+  wooden haft or shaft) metal, bone, stone; polearms, the trident, maces, and hammers metal;
+  clubs wood, bone; staves wood, dragonbone; bows wood, horn, dragonbone; crossbows wood; padded
+  armour cloth; leather armour hide; scale mail metal, bone, dragonscale; chain and banded mail
+  metal; plate metal, chitin, dragonbone; shields wood, metal, hide, chitin, dragonscale; helmets
+  metal, hide, bone; gloves and boots hide (gauntlets and iron-shod boots metal); cloaks cloth,
+  fur, leather; pick-axe and mattock metal, stone; rings and amulets any. Rocks, food, potions,
+  scrolls, coins, gems, keys, the sling, and flaming arrows have none. **Variants**: an item made
+  of another material (an instance part, `ItemPart` with no gem in place of a base part, by id;
+  only from its part's list and never what that part is made of anyway, checked for saves, level
+  files, and placements) weighs its base weight with each part's share scaled by its material's
+  weight over the base part's (`variant::weight`, rounded, at least 1); strikes with to hit and
+  damage + the difference of the main parts' weapon modifiers (both must have them; through
+  `Mods::local`, so melee, the off hand, launchers, ammunition, and throws); keeps Protection ×
+  its main material's protection / the base's, rounded to the nearest (`Stack::base_protection`);
+  is worth what its parts are, by shares (above); and is drawn in its main material's colour (a
+  ring's gem colour first). Jewellery changes only in worth and colour. Its name gives the
+  material: in place of the base material's word if the written name says it ("iron helm":
+  "bone helm", "pair of iron-shod boots": "pair of bronze-shod boots", "gold ring": "silver
+  ring"), else before the name ("bronze long sword"), after any ornament ("emerald-pommelled
+  bronze long sword"). The description shows its parts, weight, damage dice with the material's
+  bonus ("2d6-1"), and Protection; the to-hit stays hidden. **Where variants come from**: loot
+  draws the material last (§8 "Magic items"; the item's main part from its list by `rarity` at
+  the item level), creature drops by `gear` at the creature's level; a material worse in a fight
+  than the base item's own (to hit or damage lower on what strikes or is shot, Protection lower
+  on armour with some) but dearer weighs at most 10 (`VERY_RARE`) for that item, never for
+  jewellery. Hand-made levels keep their legends' gear unless a placement names a material
+  (`"great_sword:bronze"`, or `[[item]]` `parts = [{ of = "bronze" }]`); shop stock is plain. The
+  showcase's storeroom has a bronze great sword. Not yet: rust and wear.
   Every creature in `data/creatures.toml` has a base `weight` in grams (required, at least 1).
   Things that can be worn or wielded (M16) say where they go: `slot`, a slot's id or what it
   `fits` (`slot = "body"`, `slot = "ring"` for either ring slot; an unknown one is a content
@@ -390,6 +473,22 @@ developer notes (CLAUDE.md, `docs/dev/`).
   affixes: 23 prefixes and 28 suffixes in up to four tiers (item levels 1, 3, 5, 7 for most); the wiki
   lists them in generated tables. The light presets `item_glow_faint`, `item_glow`, and
   `item_glow_bright` (radius 2, 3, 4; steady, cool) are the glowing tiers'.
+- **Talents** (`data/talents.toml`, the settings; `data/talents/`, one talent a file, read in
+  path order; optional, without them no level asks for a pick; M30, #229; §8 "Talents"):
+  `max_ranks` (3), `[coverage]` (`min_talents`, `min_class`, `free_per_tree`), `[[tree]]`s
+  (`id`, `name`, `description`, `pending`, `no_free`) in display order, and `[[system]]`s (`id`,
+  `name`, `pending`), the closed list a talent's `systems` may name. A `[[talent]]`: `id`,
+  `name`, `tree`, `description`, `ranks`, `choice` (`weapon_skill`, `style`, `element`), `needs`
+  (`talents = { dodge = 1 }`, `stats = { toughness = 14 }`, `skills = { stealth = 25 }`,
+  `weapon_skills = { bows = 3 }`, `chosen`, `level`, `race`, `class`, `eyes`,
+  `requires_alignment = { min = "good" }`), `effects`
+  (`{ kind = "dodge", value = 1 }`: `dodge`, `natural`, `melee_damage`, `max_hp_per_levels
+  { per_levels, at_least }`, `healing_percent`, `footsteps_percent`, `silent_doors`, `hearing`,
+  `carry_percent`, `travel_percent`, `hunger_percent`, `no_exertion`, `xp_percent`, `notice`,
+  `free_blow { trigger }`; bonuses −20 to 20, percents −100 to 100, never 0), `[[talent.rank]]`
+  (a rank's own `needs` and `effects`, as many as `ranks` or none), `systems` (at least one),
+  `granted`. Talents are saved by id (not in the content fingerprint); without skills content a
+  skill need is left out, as skill affixes are. Load fails on a coverage gap (§8 "Talents").
 - **Damage types** (`data/damage_types.toml`, optional; without it nothing is typed, nobody
   resists anything, and no data may name a kind; #151, §8 "Damage types"): an ordered list of
   `[[type]]`s, each with `id`, `name`, `physical` (Protection soaks it; default false), `verb`
@@ -473,12 +572,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
   legend entry with a `creature` may also name an `npc` (an npc id of `data/dialogue.toml`; one
   without a dialogue there is a content error): the unique character that creature is, which
   speaks the npc's dialogue rather than its type's (stored on the actor, saved and hashed only
-  when set). Level files may also have an `arrival` line, said each time the player arrives by
-  stairs.
+  when set). A legend entry with a `creature` may also name an `alignment` (`good`, `neutral`,
+  `evil`) that replaces its type's for that creature (`Actor::alignment_override`, saved and
+  hashed only when set; §8 "Alignment"). Level files may also have an `arrival` line, said each
+  time the player arrives by stairs.
 - **Dialogue** (`data/dialogue.toml`, optional; without it nobody talks; §8 "Dialogue"): each
   `[[dialogue]]` names exactly one of `creature` (a creature type, not the player) or `npc` (an
   npc id: lower-case letters, digits, and underscores), at most one dialogue each, and has `lines`
-  (at least one one-liner), an optional `greet`, optional `[[dialogue.topic]]`s (at most 9, each
+  (at least one one-liner), an optional `greet`, optional cold greetings (`greet_evil`, lines a
+  good speaker says to an Evil or Wicked character instead of its greeting and one-liners, in
+  turn; `greet_good`, an evil speaker's to a Good or Saintly character; §8 "Alignment"), optional
+  `[[dialogue.topic]]`s (at most 9, each
   with a unique `id` in lower-case letters, digits, and underscores, a `name`, and a `reply`), and
   an optional `mutter = { chance, verb, lines }` (`chance` in percent per action, 1 to 100; `verb`
   one lower-case word, default "mutters"; at least one line). Lines, greetings, topic names, and
@@ -487,7 +591,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Built in: the gardener (one-liners; grumbles), the wandering bard (one-liners and topics: the
   moon, the Great Race, this year, the Wildlands; sings), and the old hermit (a greeting,
   one-liners, and topics: this hall, the dark chamber, the gallery, the water garden, these
-  stairs; mutters).
+  stairs; mutters). The gardener, the bard, the hermit, and the shopkeepers have two cold
+  lines each for an evil character ("Prices are higher for your sort. Take it or leave it.").
 - **Quests** (`data/quests.toml`, optional; without it nobody gives quests; §8 "Quests"): each
   `[[quest]]` has a unique `id` (lower-case letters, digits, and underscores), a `name` (the log's
   title and the topic, at most 32 characters), a `giver` (a creature type with a dialogue, or an
@@ -501,13 +606,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
   1 000 000). Texts, one line each of at most 280 characters, neither empty nor padded: `offer`,
   `accept`, optional `decline` (default "Another time, then."), `reminder` (the giver's), and
   `done` (said by whoever it is handed in to). Optional `requires` (a quest earlier in the file,
-  done before this one is offered) and `repeatable` (default false). Everyone's topics must fit
+  done before this one is offered), `requires_alignment` (the bands it is offered to, §8
+  "Alignment": `{ min = "kind" }` Kind or better, `{ max = "callous" }` Callous or worse, or
+  both; never neither, nor a `min` above the `max`), `alignment` (how far completing it moves the
+  player's alignment, −1000 to 1000, default 0), and `repeatable` (default false). Everyone's topics must fit
   the dialogue screen's nine: their dialogue's own, one per quest they give or take in, and one
   more for an offer's accept and decline. Built in: the old hermit's "Rats in the arena" (kill 3
   giant rats in the arena; 20 gold, 30 XP) and, after it, "Three levels down" (reach the Depths 3;
   50 gold, a jade amulet, 100 XP), the gardener's "Three apples" (bring 3 apples; 10 gold, 15
   XP), and the wandering bard's "The bard's letter" (deliver a sealed letter, a new object, to the
-  old hermit; 5 gold, 15 XP).
+  old hermit; 5 gold, 15 XP). All four help someone, and are a little good (`alignment` 20, 15,
+  10, and 10).
 - **The weather** (`data/weather.toml`, optional; without it the sky is always clear and every
   month a mild 10 °C with a swing of 8): `swing` at the top (a clear day's swing of temperature
   from the coldest hour to the warmest, °C, 0 to 30), exactly 12

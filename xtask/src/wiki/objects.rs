@@ -180,46 +180,6 @@ pub(super) fn shops(content: &Content) -> String {
     out
 }
 
-/// The materials by name, whether they are precious (shown in names), and the objects with a
-/// part made of each (by class, then name).
-pub(super) fn materials(content: &Content) -> String {
-    let mut out = String::from(
-        "| Material | Precious (shown in names) | Objects made of it, in part or whole |\n\
-         |---|:---:|---|\n",
-    );
-    // A loose gem is made of its gem, never of what its object would be without one.
-    let loose = content.gems().map(|g| g.object);
-    let all: Vec<_> = (order::objects(content).into_iter())
-        .filter(|(id, _)| Some(*id) != loose)
-        .collect();
-    for (id, m) in order::materials(content) {
-        let of_it = |o: &&ObjectDef| o.parts.iter().any(|p| p.material == id);
-        let objects = all.iter().map(|(_, o)| *o).filter(of_it);
-        let mut made: Vec<&str> = (objects.clone())
-            .filter(|o| o.corpse.is_none())
-            .map(|o| o.plural.as_str())
-            .collect();
-        if objects.clone().any(|o| o.corpse.is_some()) {
-            made.push("corpses");
-        }
-        if m.gem.is_some() && loose.is_some() {
-            made.push("loose gems, and items set with one");
-        }
-        let made = if made.is_empty() {
-            "-".to_string()
-        } else {
-            made.join(", ")
-        };
-        let _ = writeln!(
-            out,
-            "| {} | {} | {made} |",
-            capital(&m.name),
-            yes(m.precious)
-        );
-    }
-    out
-}
-
 /// The player's own weight (the pack holds any number of stacks: weight is its only limit).
 pub(super) fn pack(content: &Content) -> String {
     let player = content

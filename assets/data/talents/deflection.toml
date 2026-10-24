@@ -1,0 +1,8 @@
+[[talent]]
+id = "deflection"
+name = "Deflection"
+tree = "guard"
+description = "Blows glance off you as if turned by an unseen hand: Deflection +1 to your Defence."
+needs = { stats = { willpower = 13 }, level = 9 }
+effects = [{ kind = "deflection", value = 1 }]
+systems = ["defence"]

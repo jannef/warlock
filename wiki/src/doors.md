@@ -13,7 +13,8 @@ find out when you try to open it:
 The door is locked.
 ```
 
-Trying takes no time. To get through, you need its key, or a strong leg (below).
+Trying takes no time. To get through, you need its key, a thief's touch (picking the lock,
+below), or a strong leg (kicking it in, further below).
 
 ## Keys
 
@@ -33,6 +34,35 @@ and it opens like any door. If you carry both the key made for a lock and a skel
 the one made for it.
 
 {{#include generated/keys.md}}
+
+## Picking locks
+
+If you are trained in the **Open lock** skill (thieves are), the abilities menu (`a`) has **Pick
+lock**: choose it, then a direction, and you try the lock of the closed door there, without a key.
+
+- **A try** is a check: two twelve-sided dice, plus your Dexterity modifier (half of what your
+  Dexterity is over 10, rounded down: 14 gives +2, 18 gives +4, 8 gives −1), plus what Open lock
+  gives (+8 at 100, see [Skills](skills.md)), against the lock's **difficulty**. Two ones always
+  fail and two twelves always work.
+- **Locks** are of difficulty 14 unless the place says otherwise; a vault's or a level's lock may
+  be harder or easier. In the Depths, every level down makes a lock one harder: 15 on the second
+  level, 21 on the eighth.
+- **A try takes 12 seconds** at a normal pace, whatever comes of it. If it fails, `You fail to pick
+  the lock.` and the door stays locked. You may try again as often as you like: only time is
+  lost, and nothing about the lock changes.
+- **When it works**, the lock is gone and you open the door at once, as a key would:
+  `You pick the lock and open the door.` That takes another 6 seconds, as opening a door does.
+  The door stays unlocked: close it again and it opens like any door.
+- **A trapped door** sets its trap off at you as you open it, picked or not (see
+  [Traps](traps.md#trapped-doors)). A try that fails sets nothing off.
+- Every try may earn Open lock a training mark. Trying a door that is not locked, or anything
+  else, takes no time: `That door is not locked.`, `There is no lock there.` Without the skill,
+  `You do not know how to pick locks.`
+
+How often a try works, by the lock's difficulty and what you add (your Dexterity modifier plus
+Open lock's bonus):
+
+{{#include generated/lock-picking.md}}
 
 ## Kicking
 
@@ -75,7 +105,8 @@ through the open doorway does not. See [Traps](traps.md#trapped-doors).
 
 Some creatures open closed doors (kobolds do; rats do not). A locked door stops them unless they
 carry a key that fits it: then they unlock it as they open it, as you do. A kobold guard carrying
-the key to the room it guards will walk right through. No creature kicks doors (yet).
+the key to the room it guards will walk right through. No creature kicks doors or picks locks
+(yet).
 
 ## Where you find them
 

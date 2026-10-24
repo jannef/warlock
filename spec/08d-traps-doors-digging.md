@@ -97,7 +97,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     door, not the floor: walking through the doorway never sets it off (`World::step_onto_trap`
     skips door cells, for the player, creatures, and whoever makes way; the interface never asks,
     §6 "Known traps"). Opening the door does (`o`, or walking into it, unlocking it with a key
-    too), the player's and a creature's alike (`World::swing_open`), and so does every kick at it,
+    or picking its lock too), the player's and a creature's alike (`World::swing_open`), and so does every kick at it,
     as the kick lands and before the door breaks, whether it breaks or holds. It opens and shuts
     with the door: shut again, it is set again, and opening the door again sets it off again
     while it has charges. A door kicked in takes its trap with it (`World::set_terrain`, as with a
@@ -110,6 +110,33 @@ developer notes (CLAUDE.md, `docs/dev/`).
     place of the door's, like any known trap (§4.2), and look mode names both ("An arrow trap, on
     closed door."). A secret door is never trapped, as it is never locked (a content error in a
     level file; generators never hide a trapped door). The trap hall's closets show them (§3).
+  - **Disarming traps** (`warlock-core/src/world/disarm.rs`; #232, the progression design's
+    B7): the use of the Disable device skill, an ability (§6 "Abilities": `Ability::Disarm`,
+    "Disarm a trap", in the Skills group; `KeyCommand::Disarm`, no key by default) and an action
+    with replay text, `disarm:DIR` (`Action::Disarm`). Whoever is trained in Disable device (the
+    skill with the `disarm` effect, §8 "Skills": the thief) may try to take apart a trap they
+    know of on a cell next to them, on the floor or on a door (open or shut). The try is a check
+    (§8 "Checks"; `check::roll`): 2d12 plus the Dexterity modifier (of the effective score)
+    plus what Disable device gives (`disarm`: +8 at 100, +12 at 200, at most 20) against the
+    trap's `difficulty`, the one finding it takes (with a branch's `hidden_per_depth`, §8
+    "Searching"). Made: the trap is gone (from the level and from memory), "You disarm the
+    arrow trap."; it earns nothing else. Failed: it stays, "You fail to disarm the arrow trap.";
+    failed by 5 or more (`SPRINGS_SHORT_BY`; a natural 2 fails but falls short only by what the
+    numbers say): "You set off the arrow trap!", and it goes off at the player as if they had
+    set it off from where they stand (`World::spring_trap(at, player)`, as a trapped door is
+    opened from the next cell: its arrow from the slit at them, its spears at them, its blast
+    around it, its bolt through them, a pit's fall and the climb back out (its next action
+    lost, the player still on their own cell), an alarm's bell, a teleport of them), spending
+    a charge. Every try takes the time of `disarm` (2000: 12 s at a normal pace; priced before
+    the trap may go off, plus a pit's climb) and may earn Disable device a training mark (`Use::
+    Disarm`, 20 %, the training stream), whatever comes of it; the check is two draws of the
+    gameplay stream. Nothing remembers a failed try and there is no limit on trying again (the
+    owner's rule): time and the risk are the price. Refused, with no time and no draw: without
+    the skill ("You do not know how to disarm traps."), and where the player knows of no trap
+    ("You know of no trap there.": a hidden trap is refused as an empty cell is, so trying
+    gives nothing away). Creatures do not disarm. The thief's class table (Trapfinding, level
+    6) and the Tinker talent (the craftsperson's level 32 and the gnomes') will give it to
+    those not trained in the skill when they land.
 - **Doors** (`warlock-core/src/door.rs`, the rules; `world/door.rs`, applying them; M19, #130):
   locked doors and keys, and kicking doors in.
   - **Locks** are per-cell state of a level, not terrain of their own: a locked door is the
@@ -125,6 +152,32 @@ developer notes (CLAUDE.md, `docs/dev/`).
     action, ADOM-like: `unlock` plus `open_door` (12 s at normal speed), "You unlock the door with
     your iron key and open it." The key made for the lock is used before a skeleton key; keys are
     kept. Without one: "The door is locked.", refused, no time.
+  - **Picking locks** (#233; the **Pick lock** ability, the Open lock skill's use, §6
+    "Abilities", §8 "Skills"; `Action::PickLock(dir)`, replay text `pick:DIR`; the `pick_lock`
+    action, 2000, 12 s), ADOM-like, no tool needed:
+    - **Who**: an actor trained in a skill with the `pick` effect (Open lock; thieves are, from
+      their class). Anyone else: "You do not know how to pick locks.", refused, no time.
+      Creatures do not pick locks.
+    - **A try** at the locked closed door in a direction is a check (§8 "Checks"): 2d12 plus the
+      Dexterity modifier (of the effective score) plus what Open lock gives (+8 at 100, +12 at
+      200, at most 20) against the lock's **difficulty**: its own (`lock_difficulty` in level
+      and vault legends, 1 to 50; default 14, `door::LOCK_DIFFICULTY`), plus on a dungeon branch
+      its `locks_per_depth` for each level below the first (the Depths: 1, so 14 on the first
+      level and 21 on the eighth). Two draws of the gameplay stream; a natural 2 fails and a
+      natural 24 succeeds, as every check. It takes `pick_lock` whatever comes of it, may earn
+      Open lock a training mark (`pick`, 20 %), and makes no noise of its own.
+    - **Picked**: the lock is gone and the door swings open in the same action, as with a key
+      (its noise, `DoorOpened`, and a trap on the door goes off at the picker as it swings,
+      "Trapped doors" below), on top of the try: `pick_lock` plus `open_door` (18 s), both
+      priced before the check. "You pick the lock and open the door." The door stays unlocked.
+    - **Failed**: "You fail to pick the lock." The lock holds, and nothing is remembered of the
+      try: the next may succeed, as often as the player likes (no limit, the owner's rule: time
+      is the price). A failed try sets off nothing.
+    - **Refused**, no time: a closed door without a lock ("That door is not locked.", what `o`
+      would find out at once), anything else ("There is no lock there."), or while a status
+      `blocks` `pick_lock` ("You cannot pick locks while …", §8 "Status effects").
+    - Lock difficulties are ground truth: never perceived, shown, or dumped but in the world
+      state; the wiki gives the chances by difficulty.
   - **Kicking** (`K`, then a direction; `Action::Kick`, replay text `kick:DIR`; the `kick` action,
     6 s), ADOM-like:
     - **A closed door**, locked or not, breaks with a chance of the kicker's Strength **score**

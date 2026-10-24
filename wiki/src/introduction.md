@@ -12,6 +12,12 @@ notice you, and fight each other and you: blows and arrows are rolled against yo
 and kill, and death is final (spells are only announced so far). Your stats, your weapon, and
 your armour decide how well you fight.
 
+**The numbers here are exact.** The game keeps many of them to itself and tells you in words: a
+creature looks "badly wounded", you "feel more skilled", boots make you "move faster". The wiki
+gives the rules' own numbers, generated from the game's data, so they cannot drift: your bonus
+to hit and its parts, the stat modifiers, speeds, how loud things are, what a rank gives, and
+every creature's stats, attacks, and senses ([Creatures in numbers](creature-numbers.md)).
+
 - **Play in your browser:** <https://jannef.github.io/warlock/> (needs a browser with WebGPU)
 - **Download for Windows, macOS, and Linux:** <https://github.com/jannef/warlock/releases>
 - **Source and issues:** <https://github.com/jannef/warlock>
@@ -37,11 +43,11 @@ your armour decide how well you fight.
 
 ## Starting a run
 
-The game opens on the main menu. **New run** lists the scenarios you can start, and takes an
-optional seed (see [Saving](saving.md)). Then you create your character: your race, your gender,
+The game opens on the main menu. **New run** lists the scenarios you can start (see
+[Saving](saving.md)). Then you create your character: your race, your gender,
 and your class, one step at a time, and a summary of your age, birth sign, and the stats you
 will start with (see [Your character](character.md)). Each scenario starts you somewhere else in the same world, at
-its own time of day:
+its own time of day, and you set out with your [starting kit](starting-kit.md):
 
 {{#include generated/scenarios.md}}
 

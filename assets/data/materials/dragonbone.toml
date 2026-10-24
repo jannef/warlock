@@ -1,0 +1,13 @@
+# Very rare, and only deep.
+[[material]]
+id = "dragonbone"
+name = "dragonbone"
+group = "bone"
+color = "#d8d2b8"
+weight = 55
+to_hit = 1
+damage = 1
+protection = 110
+value = 2500
+rarity = { weight = 10, level = 10 }
+gear = { weight = 5, level = 10 }

@@ -1,6 +1,6 @@
 # Parts (spec §7 "Objects and materials"): the parts objects are made of, a small vocabulary that
-# names and (later) construction rules refer to. An object lists its parts in `materials`, each of
-# one material, the first the main one (objects/README.toml):
+# names and construction lists (`made_of`) refer to. An object lists its parts in `materials`,
+# each of one material, the first the main one (objects/README.toml):
 #
 #   materials = [{ part = "chain", of = "gold" }, { part = "setting", of = "ruby", share = 10 }]
 #
@@ -64,6 +64,10 @@ adjective = "pommelled"
 [[part]]
 id = "setting"
 name = "setting"
+
+[[part]]
+id = "shaft"
+name = "shaft"
 
 [[part]]
 id = "studs"

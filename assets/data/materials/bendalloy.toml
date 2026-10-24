@@ -1,0 +1,13 @@
+# Worse than steel in a fight and dearer: very rare.
+[[material]]
+id = "bendalloy"
+name = "bendalloy"
+group = "metal"
+color = "#c9a0c8"
+weight = 118
+to_hit = 0
+damage = -1
+protection = 70
+value = 600
+rarity = { weight = 10 }
+gear = { weight = 5 }

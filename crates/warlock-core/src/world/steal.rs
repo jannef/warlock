@@ -25,6 +25,7 @@
 //! in a shop is the shop's (`shop.rs`: picking it up is owing for it, and leaving owing any way
 //! but the door is theft).
 
+use super::alignment::Deed;
 use super::talk::capitalized;
 use super::{ActorId, Spent, World};
 use crate::action::Positions;
@@ -106,12 +107,14 @@ impl World {
         self.got_away_with(victim, &stack);
     }
 
-    /// The player stole `stack` from `victim` unnoticed: says so. **The one place a theft that
-    /// took something has its consequences beyond the goods**: alignment (#254, stealing is evil)
-    /// shifts here, and anything else a successful theft should touch hooks in beside it.
+    /// The player stole `stack` from `victim` unnoticed: says so, and it is a [`Deed::Theft`]
+    /// (alignment, #254: stealing is evil). **The one place a theft that took something has its
+    /// consequences beyond the goods**: anything else a successful theft should touch hooks in
+    /// beside them.
     fn got_away_with(&mut self, victim: ActorId, stack: &Stack) {
         let what = object::phrase(std::slice::from_ref(stack), &self.content);
         let name = self.called(&self.state.actors[&victim]);
         self.say(format!("You steal {what} from {name}."));
+        self.player_did(Deed::Theft);
     }
 }

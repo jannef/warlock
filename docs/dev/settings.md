@@ -25,13 +25,17 @@ ids, and the rules in `settings/keys.rs`). **Every key the game reads is a `KeyC
 Enter; `MoreSkip`, unbound, as Esc always skips; `ui/more.rs`), `Menu` (`MenuUp`/`Down`/`Left`/`Right`,
 `Confirm`, `Back`, `Erase`, `Mark`, `MarkAll`, and the item lists' `NextListPage` (`>`,
 PageDown) and `PrevListPage` (`<`, PageUp): `Press::from_input` turns them into `Nav`, so
-screens read `press.nav`, never a key), `Pages` (Tab; the previous info page is Shift with it,
+screens read `press.nav`, never a key), `Text` (a text field, the character's name:
+`TextConfirm` (Enter; vital), `TextErase` (Backspace, Delete), `TextRandom` (Tab), `TextBack`
+(unbound: Esc always backs out); `Press::from_input` turns them into `press.edit`, and every key
+bound to none of them types its text, literally, so a text field never reads the `Menu` keys),
+`Pages` (Tab; the previous info page is Shift with it,
 `PrevPage` unbound by default), `Dialog` (`Yes`, `No`), and `Dev` (the developer
 keys: in every table, read by `input::command_in` and listed by Controls only where
 `input::dev_keys` is true). Keys are unique within a context; a mode with its own context reads it
 before play's (`command_in`). Nothing matches a `KeyCode` or a character directly but Esc (fixed:
 Cancel in play, which skips the rest at `--more--`, `Nav::Back` on every screen) and the letters
-and digits that name list rows.
+and digits that name list rows (and the text a text field types).
 Hints name keys through `Bindings::key_name` and `ui::menu::Hints` (footers), never a literal key.
 Core knows no bindings, so a message names a key by its command's id (`messages::key("help")`
 writes `{key:help}`, as the welcome line does) and the message line fills it in as bound
@@ -39,7 +43,8 @@ writes `{key:help}`, as the welcome line does) and the message line fills it in 
 Binding a key another command of the same context uses moves it
 (`Bindings::bind_primary` returns `Bound::Moved`); refused with `Conflict` are the keys of fixed
 commands outside `REBINDABLE` (Esc's Cancel) and the last key of a `VITAL` command (`MenuUp`,
-`MenuDown`, `Confirm`: what reaches Controls and its Reset all keys from anywhere). `reset_command`
+`MenuDown`, `Confirm`: what reaches Controls and its Reset all keys from anywhere; `TextConfirm`:
+what gets a new character past its name). `reset_command`
 keeps a vital command's keys rather than leave it keyless, and `ensure_vital` runs after a
 settings file or a keymap is read, so nothing can lock the player out; `--reset-keys`
 (`settings::load_for`) puts the defaults back and saves them. A command left keyless is saved as

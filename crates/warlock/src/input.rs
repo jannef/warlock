@@ -108,6 +108,13 @@ pub enum KeyCommand {
     /// Bash with the shield held, in a direction (asked for in the message line). An ability
     /// (`warlock_core::ability`): unbound by default, as the abilities menu lists it (#156).
     Bash,
+    /// Disarm a trap the player knows of, in a direction (asked for in the message line; spec §8
+    /// "Disarming traps"). An ability: unbound by default, as the abilities menu lists it.
+    Disarm,
+    /// Pick the lock of a door, in a direction (asked for in the message line; spec §8
+    /// "Doors"). An ability (`warlock_core::ability`, the Open lock skill's use): unbound by
+    /// default, as the abilities menu lists it (#156).
+    PickLock,
     /// Steal from someone in a direction (asked for in the message line; spec §8 "Stealing").
     /// An ability: unbound by default, as the abilities menu lists it.
     Steal,
@@ -143,8 +150,8 @@ pub enum KeyCommand {
     Confirm,
     /// On a menu or screen: back out, as Esc always does (no default key of its own).
     Back,
-    /// On a menu or screen: erase the last character typed (the seed), or reset the selected
-    /// command's keys (Controls).
+    /// On a menu or screen: erase the last character typed (the seed), reset the selected
+    /// command's keys (Controls), or delete the selected saved character (Characters).
     Erase,
     /// On the pick-up and drop lists: mark or unmark the selected stack.
     Mark,
@@ -154,6 +161,14 @@ pub enum KeyCommand {
     NextListPage,
     /// On an item list: the previous page of the list.
     PrevListPage,
+    /// In a text field (the character's name): accept what is typed (Enter).
+    TextConfirm,
+    /// In a text field: back out, as Esc always does (no default key of its own).
+    TextBack,
+    /// In a text field: erase the last character typed (Backspace, Delete).
+    TextErase,
+    /// In a text field: put a random value in (the name: one of the race's names; Tab).
+    TextRandom,
     /// In the confirmation dialog (quitting; paying before leaving a shop, selling): yes.
     Yes,
     /// In the confirmation dialog: no.
@@ -188,7 +203,8 @@ pub enum KeyCommand {
 /// can mean one thing in play and another on a screen (Tab: next target while aiming, next page
 /// on an info screen; `y` and `n`: moving in play, yes and no in the dialog). A mode or screen
 /// with a context of its own reads it first: the rest prompt and aiming before play's keys, an
-/// info screen's page keys and the dialog's answers before the menu keys.
+/// info screen's page keys and the dialog's answers before the menu keys. A text field reads
+/// only its own: every other key types what it types.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Context {
     /// In play: the map, the direction prompts, and look mode.
@@ -201,6 +217,9 @@ pub enum Context {
     More,
     /// On every menu and screen: moving the selection, choosing, backing out.
     Menu,
+    /// In a text field (the character's name, `ui/name_screen.rs`): accepting, erasing, a random
+    /// value, backing out. Keys bound to nothing here type.
+    Text,
     /// On an info screen ([`crate::ui`]'s numbered pages).
     Pages,
     /// The dialog's shortcuts (`ui/dialog_screen.rs`).
@@ -217,6 +236,7 @@ impl Context {
         Context::Prompt,
         Context::More,
         Context::Menu,
+        Context::Text,
         Context::Pages,
         Context::Dialog,
         Context::Dev,
@@ -230,6 +250,7 @@ impl Context {
             Context::Prompt => "Rest prompt",
             Context::More => "More messages (--more--)",
             Context::Menu => "Menus and screens",
+            Context::Text => "Text fields",
             Context::Pages => "Info pages",
             Context::Dialog => "Dialogs",
             Context::Dev => "Developer",
@@ -244,6 +265,7 @@ impl Context {
             Context::Prompt => "prompt",
             Context::More => "more",
             Context::Menu => "menu",
+            Context::Text => "text",
             Context::Pages => "pages",
             Context::Dialog => "dialog",
             Context::Dev => "dev",
@@ -262,6 +284,7 @@ impl KeyCommand {
             MoreNext | MoreSkip => Context::More,
             MenuUp | MenuDown | MenuLeft | MenuRight | Confirm | Back | Erase | Mark | MarkAll
             | NextListPage | PrevListPage => Context::Menu,
+            TextConfirm | TextBack | TextErase | TextRandom => Context::Text,
             CycleVision | SkipHour | NextWeather | IdentifyAll | RevealMap | LightValues
             | Snapshot | LoadSnapshot => Context::Dev,
             _ => Context::Play,
@@ -309,6 +332,8 @@ impl KeyCommand {
             KeyCommand::Abilities => "Abilities",
             KeyCommand::RepeatAbility => "Use the last ability again",
             KeyCommand::Bash => "Bash with your shield",
+            KeyCommand::Disarm => "Disarm a trap",
+            KeyCommand::PickLock => "Pick a lock",
             KeyCommand::Steal => "Steal",
             KeyCommand::NextTarget => "Next target (Shift: previous)",
             KeyCommand::PrevTarget => "Previous target",
@@ -322,11 +347,15 @@ impl KeyCommand {
             KeyCommand::MenuRight => "Right (change a setting)",
             KeyCommand::Confirm => "Choose",
             KeyCommand::Back => "Back (Esc always works)",
-            KeyCommand::Erase => "Erase a character / reset keys",
+            KeyCommand::Erase => "Erase, reset keys, delete a save",
             KeyCommand::Mark => "Mark a stack (pick up, drop)",
             KeyCommand::MarkAll => "Mark everything (pick up, drop)",
             KeyCommand::NextListPage => "Next page of a list",
             KeyCommand::PrevListPage => "Previous page of a list",
+            KeyCommand::TextConfirm => "Accept the text",
+            KeyCommand::TextBack => "Back (Esc always works)",
+            KeyCommand::TextErase => "Erase the last character",
+            KeyCommand::TextRandom => "A random name",
             KeyCommand::Yes => "Yes (in a dialog)",
             KeyCommand::No => "No (in a dialog)",
             KeyCommand::CycleVision => "Next vision profile (dev)",
@@ -484,6 +513,11 @@ impl Default for Bindings {
             (Code(KeyCode::PageDown), NextListPage),
             (ch("<"), PrevListPage),
             (Code(KeyCode::PageUp), PrevListPage),
+            (Code(KeyCode::Enter), TextConfirm),
+            (Code(KeyCode::NumpadEnter), TextConfirm),
+            (Code(KeyCode::Backspace), TextErase),
+            (Code(KeyCode::Delete), TextErase),
+            (Code(KeyCode::Tab), TextRandom),
             (ch("y"), Yes),
             (ch("n"), No),
             (ch("?"), Help),
@@ -510,7 +544,8 @@ impl Default for Bindings {
 
 /// Whether the developer keys work in this launch: always in debug builds, with `--dev` in
 /// release builds (spec §9). Their bindings are in every table; only where this is false are
-/// they never read, nor listed by the controls screen and the `?` help.
+/// they never read, nor listed by the controls screen and the `?` help. It also gives New run
+/// its seed field (`NewRunScreen`): elsewhere a new run's seed is no one's choice (#256).
 pub fn dev_keys(args: &Args) -> bool {
     cfg!(debug_assertions) || args.dev
 }
@@ -1031,6 +1066,14 @@ impl Gameplay<'_> {
                 open = Some(ScreenAction::UseAbility(Ability::ShieldBash));
                 InputMode::Normal
             }
+            (InputMode::Normal, KeyCommand::Disarm) => {
+                open = Some(ScreenAction::UseAbility(Ability::Disarm));
+                InputMode::Normal
+            }
+            (InputMode::Normal, KeyCommand::PickLock) => {
+                open = Some(ScreenAction::UseAbility(Ability::PickLock));
+                InputMode::Normal
+            }
             (InputMode::Normal, KeyCommand::Steal) => {
                 open = Some(ScreenAction::UseAbility(Ability::Steal));
                 InputMode::Normal
@@ -1095,6 +1138,10 @@ impl Gameplay<'_> {
                 | KeyCommand::MarkAll
                 | KeyCommand::NextListPage
                 | KeyCommand::PrevListPage
+                | KeyCommand::TextConfirm
+                | KeyCommand::TextBack
+                | KeyCommand::TextErase
+                | KeyCommand::TextRandom
                 | KeyCommand::Page(_)
                 | KeyCommand::NextPage
                 | KeyCommand::PrevPage
@@ -1221,11 +1268,16 @@ fn press_keys_at_startup(args: Res<Args>, mut presses: MessageWriter<KeyboardInp
                 Key::Character(ch.into()),
             ),
         };
+        // A character key types itself, as a keyboard's would (text fields read the text).
+        let text = match &logical_key {
+            Key::Character(ch) => Some(ch.clone()),
+            _ => None,
+        };
         presses.write(KeyboardInput {
             key_code,
             logical_key,
             state: ButtonState::Pressed,
-            text: None,
+            text,
             repeat: false,
             window: Entity::PLACEHOLDER,
         });
@@ -1357,6 +1409,14 @@ mod tests {
         assert_eq!(keys(&b, KeyCommand::Throw), ["T"]);
         assert_eq!(keys(&b, KeyCommand::WeaponSkills), ["W"]);
         assert!(keys(&b, KeyCommand::Bash).is_empty(), "an ability: unbound");
+        assert!(
+            keys(&b, KeyCommand::Disarm).is_empty(),
+            "an ability: unbound"
+        );
+        assert!(
+            keys(&b, KeyCommand::PickLock).is_empty(),
+            "an ability: unbound"
+        );
         assert!(
             keys(&b, KeyCommand::Steal).is_empty(),
             "an ability: unbound"

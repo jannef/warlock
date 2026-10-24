@@ -411,6 +411,11 @@ impl World {
             return Stepped::Blocked;
         }
         let fleeing = self.flees(id, to);
+        // Stepping away from beside a hostile opportunist, it is struck as it turns to go
+        // (`free_blow.rs`); struck down, it never steps.
+        if !self.step_away(id, to, events) {
+            return Stepped::Blocked;
+        }
         // Ice there may give way under it (spec §5 "Ice").
         let footing = self.tread(id, from, to);
         let onto = self.content.terrain(self.state.current().terrain[to]);

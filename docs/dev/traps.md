@@ -51,3 +51,22 @@ then calls `World::blast` (walls, `docs/dev/digging.md`), and one with `ice`
 FNV-1a hash, never the gameplay stream. A rest (and every long action through `World::keep_at`)
 perceives every turn in which a trap went off (`World::sprung`), besides those in which the player
 heard something.
+
+**Disarming** (spec §8 "Disarming traps", #232) is `world/disarm.rs`: `Action::Disarm(dir)`
+(`disarm:DIR`, `ActionKind::Disarm`, `disarm = 2000` in `data/actions.toml`; `buff.rs::kind_of`
+maps it for statuses that block) → `World::disarm`, one arm in `player_acts`. It refuses (no
+time, no draw) a player without the ability (`Ability::Disarm.had_by`: trained in the skill with
+`skills::Effect::Disarm`, Disable device) and a cell without a **known** trap (hidden or none:
+the same message, so a try leaks nothing). Otherwise it prices the action first (the trap may
+kill), rolls `check::roll` (`Checked::Made` / `Failed { by }`, two gameplay draws) with
+`disarm_modifier` (effective Dexterity modifier plus `Actor::skill_effect(Effect::Disarm)`)
+against `World::difficulty_of(Hidden::Trap(kind))` (search's: the trap's `difficulty` plus the
+branch's depth), reports `Use::Disarm` for marks, and then removes the trap and its
+`trap_memory` (made), says so (failed by less than `SPRINGS_SHORT_BY`, 5, re-exported from
+`world`), or calls `spring_trap(at, player)` and adds the pit's climb to the price (failed by
+more). A door's trap is the same cell's trap: nothing about doors is special. The app's
+`Ability::Disarm` asks for a direction (`InputMode::Ability`, "Disarm in which direction?") from
+the abilities menu or `KeyCommand::Disarm` (unbound). The wiki's `trap-disarm.md` table
+(`xtask/src/wiki/traps.rs::disarming`) uses `check::ways` and `check::ways_short_by`. Tests:
+`world/disarm_tests.rs` (rigged streams for each outcome, the pit's climb, a door's trap,
+refusals, the modifier, marks, the menu, saves and replays), `check.rs`, `ability.rs`.

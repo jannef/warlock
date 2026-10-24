@@ -35,6 +35,7 @@ use super::World;
 use super::rest::Ended;
 use crate::action::Event;
 use crate::check::check;
+use crate::content::StatUse;
 use crate::content::{ActionKind, PassiveSearch, RaceDef, TrapId, article};
 use crate::geom::Pos;
 use crate::sight::LineOfSight;
@@ -53,7 +54,7 @@ pub(super) enum Hidden {
 
 /// Which of the two checks.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Look {
+pub(super) enum Look {
     /// Searching: Intelligence and the Search skill.
     Active,
     /// In passing: Willpower and the Spot skill, less the passive penalty.
@@ -104,7 +105,7 @@ impl World {
     /// What the player adds to a check of `look`: the stat's modifier (of the effective score,
     /// spec §8 "Stats"), the skill's benefit, and the race's bonus; less the passive penalty in
     /// passing.
-    fn search_modifier(&self, look: Look) -> i32 {
+    pub(super) fn search_modifier(&self, look: Look) -> i32 {
         let content = &self.content;
         let player = self.state.player();
         let stats = player.effective_stats(content);
@@ -114,7 +115,9 @@ impl World {
                 stats.modifier(Stat::Intelligence) + player.skill_effect(content, Effect::Search)
             }
             Look::Passive => {
-                stats.modifier(Stat::Willpower) + player.skill_effect(content, Effect::Spot)
+                stats.modifier(Stat::Willpower)
+                    + player.skill_effect(content, Effect::Spot)
+                    + player.talent_mods(content).notice.unwrap_or(0)
                     - content.search().passive_penalty
             }
         };
@@ -122,11 +125,14 @@ impl World {
     }
 
     /// Whether the player notices the hidden feature at `at` in passing at all: trained in the
-    /// Spot skill, anything; else by their race, elves anything and dwarves what is on stone;
-    /// else nothing.
-    fn notices(&self, at: Pos) -> bool {
+    /// Spot skill, or with a talent that notices (Alert), anything; else by their race, elves
+    /// anything and dwarves what is on stone; else nothing.
+    pub(super) fn notices(&self, at: Pos) -> bool {
         let content = &self.content;
-        if (self.state.player().skills).trains_effect(content, Effect::Spot) {
+        let player = self.state.player();
+        if player.skills.trains_effect(content, Effect::Spot)
+            || player.talent_mods(content).notice.is_some()
+        {
             return true;
         }
         match self.player_race().and_then(|r| r.passive_search) {
@@ -182,6 +188,7 @@ impl World {
                 let difficulty = self.difficulty_of(hidden);
                 if check(&mut self.state.rng, modifier, difficulty) {
                     self.reveal(at, hidden);
+                    self.train_stat(StatUse::Found);
                 }
             }
         }

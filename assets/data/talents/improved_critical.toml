@@ -1,0 +1,9 @@
+[[talent]]
+id = "improved_critical"
+name = "Improved critical"
+tree = "weaponcraft"
+choice = "weapon_skill"
+description = "You know where your chosen weapon does the most harm, and find it more often."
+needs = { chosen = 7 }
+effects = [{ kind = "weapon", threat = 1 }]
+systems = ["combat", "weapon_skills"]

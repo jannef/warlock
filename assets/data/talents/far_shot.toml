@@ -1,0 +1,7 @@
+[[talent]]
+id = "far_shot"
+name = "Far shot"
+tree = "weaponcraft"
+description = "Your shots fly 2 cells farther, and what you throw 1 cell farther."
+effects = [{ kind = "launcher_range", value = 2 }, { kind = "throw_range", value = 1 }]
+systems = ["ranged"]

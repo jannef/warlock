@@ -543,20 +543,21 @@ struct AffixFile {
     suffix: Vec<AffixSpec>,
 }
 
-/// A settings table of the affix files, set once: in `file`.
-struct Once<'a, T> {
+/// A settings table of a content table's files (the affixes', the talents'), set once: in
+/// `file`.
+pub(super) struct Once<'a, T> {
     name: &'static str,
     set: Option<(&'a str, T)>,
 }
 
 impl<'a, T> Once<'a, T> {
-    fn new(name: &'static str) -> Self {
+    pub(super) fn new(name: &'static str) -> Self {
         Self { name, set: None }
     }
 
     /// Takes the table from `file`, if it has one; a second file setting it is an error naming
     /// both.
-    fn take(&mut self, file: &'a str, value: Option<T>) -> Result<(), ContentError> {
+    pub(super) fn take(&mut self, file: &'a str, value: Option<T>) -> Result<(), ContentError> {
         let Some(value) = value else { return Ok(()) };
         if let Some((first, _)) = &self.set {
             return Err(ContentError::new(
@@ -569,9 +570,14 @@ impl<'a, T> Once<'a, T> {
     }
 
     /// The table and the file it is in; missing from every file is an error naming `first`.
-    fn get(self, first: &str) -> Result<(&'a str, T), ContentError> {
+    pub(super) fn get(self, first: &str) -> Result<(&'a str, T), ContentError> {
         self.set
             .ok_or_else(|| ContentError::new(first, format!("`[{}]` is missing", self.name)))
+    }
+
+    /// The table, or `default` when no file set it.
+    pub(super) fn get_or(self, default: T) -> T {
+        self.set.map_or(default, |(_, value)| value)
     }
 }
 

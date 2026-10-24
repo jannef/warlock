@@ -12,6 +12,11 @@
 //! key. Opening a locked door while carrying a key that fits unlocks it and opens it, in one
 //! action (`unlock` plus `open_door`); without one, "The door is locked." and no time passes.
 //!
+//! **Picking** a lock (the Pick lock ability, the Open lock skill's use) opens it without a key: a
+//! Dexterity check plus what Open lock gives against the lock's **difficulty** ([`Lock::
+//! difficulty`]: its own, [`LOCK_DIFFICULTY`] unless the level gives it one, plus on a dungeon
+//! branch its `locks_per_depth` for each level below the first). Applied in `world/lockpick.rs`.
+//!
 //! **Kicking** a closed door (locked or not) breaks it with a chance of the kicker's Strength
 //! **score** in the door's `sturdiness` ([`kick_breaks`]): one draw of the gameplay stream,
 //! `1d(sturdiness) ≤ Strength`. A broken door is the terrain's `breaks_to` (a broken door,
@@ -23,6 +28,10 @@ use serde::{Deserialize, Serialize};
 /// The key text of a skeleton key: it opens every lock.
 pub const SKELETON: &str = "*";
 
+/// How hard a lock is to pick unless its level says otherwise (spec §8 "Doors"): a check of
+/// 2d12 plus the picker's modifiers against this.
+pub const LOCK_DIFFICULTY: u8 = 14;
+
 /// The lock on a closed door's cell.
 #[derive(Clone, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct Lock {
@@ -30,14 +39,25 @@ pub struct Lock {
     /// skeleton key.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
+    /// How hard it is to pick, if the level gave it a difficulty of its own; `None`:
+    /// [`LOCK_DIFFICULTY`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub difficulty: Option<u8>,
 }
 
 impl Lock {
-    /// A lock with the id `id` (`None`: only a skeleton key opens it).
+    /// A lock with the id `id` (`None`: only a skeleton key opens it), of the usual difficulty.
     pub fn new(id: Option<&str>) -> Self {
         Self {
             id: id.map(str::to_string),
+            difficulty: None,
         }
+    }
+
+    /// How hard it is to pick, before what the depth adds: its own difficulty, else
+    /// [`LOCK_DIFFICULTY`].
+    pub fn difficulty(&self) -> u8 {
+        self.difficulty.unwrap_or(LOCK_DIFFICULTY)
     }
 }
 
@@ -119,6 +139,12 @@ mod tests {
         assert!(Key::parse(" ").is_err());
         assert!(check_lock_id("*").is_err() && check_lock_id("").is_err());
         assert!(check_lock_id("pantry").is_ok());
+        assert_eq!(pantry.difficulty(), LOCK_DIFFICULTY);
+        let hard = Lock {
+            difficulty: Some(20),
+            ..pantry
+        };
+        assert_eq!(hard.difficulty(), 20);
     }
 
     #[test]

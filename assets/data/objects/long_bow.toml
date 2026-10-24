@@ -5,6 +5,7 @@ glyph = "}"
 fg = "#8c6236"
 class = "missile_weapons"
 materials = ["wood"]
+made_of = ["wood", "horn", "dragonbone"]
 weight = 1300
 value = 200
 slot = "missile_weapon"

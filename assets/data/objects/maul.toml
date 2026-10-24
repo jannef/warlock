@@ -5,6 +5,7 @@ glyph = ")"
 fg = "#848a90"
 class = "melee_weapons"
 materials = ["iron"]
+made_of = ["metal"]
 weight = 6000
 value = 90
 slot = "main_hand"

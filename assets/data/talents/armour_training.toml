@@ -1,0 +1,13 @@
+[[talent]]
+id = "armour_training"
+name = "Armour training"
+tree = "guard"
+ranks = 2
+description = "You move freely in armour: it hampers your Dexterity in Defence less, less again at the second rank."
+effects = [{ kind = "max_dex", value = 1 }]
+systems = ["defence"]
+
+[[talent.rank]]
+
+[[talent.rank]]
+needs = { stats = { strength = 13 } }

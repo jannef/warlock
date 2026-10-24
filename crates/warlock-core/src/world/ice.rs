@@ -26,6 +26,7 @@
 use super::fight::Harm;
 use super::{ActorId, LevelState, Spent, World, WorldState};
 use crate::action::{Event, SpellShape};
+use crate::content::StatUse;
 use crate::content::{ActionKind, Content, TerrainId};
 use crate::fov::compute_fov;
 use crate::geom::Pos;
@@ -294,9 +295,15 @@ impl World {
         events: &mut Vec<Event>,
     ) {
         match footing {
-            Footing::Broke { plunge: true } => self.fall_in(id, at, events),
+            Footing::Broke { plunge: true } => {
+                self.fall_in(id, at, events);
+                if id == self.state.player {
+                    self.train_stat(StatUse::Plunge);
+                }
+            }
             Footing::Held { climb: true } if id == self.state.player => {
                 self.say("You climb out onto the ice.");
+                self.train_stat(StatUse::Climb);
             }
             _ => {}
         }

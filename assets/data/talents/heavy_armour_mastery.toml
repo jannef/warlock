@@ -1,0 +1,8 @@
+[[talent]]
+id = "heavy_armour_mastery"
+name = "Heavy armour mastery"
+tree = "guard"
+description = "In heavy armour (Protection 3 or more) you take blows on its strongest parts: Protection +1."
+needs = { talents = { armour_training = 2 }, level = 12 }
+effects = [{ kind = "protection", value = 1, body_armour = 3 }]
+systems = ["protection"]

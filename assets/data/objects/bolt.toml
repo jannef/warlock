@@ -4,7 +4,8 @@ name = "crossbow bolt"
 glyph = "/"
 fg = "#b4aca0"
 class = "missiles"
-materials = ["wood"]
+materials = [{ part = "head", of = "iron" }, { part = "shaft", of = "wood", share = 80 }]
+made_of = ["metal", "bone", "stone"]
 weight = 60
 value = 2
 stackable = true

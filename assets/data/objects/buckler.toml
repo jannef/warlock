@@ -5,6 +5,7 @@ glyph = "["
 fg = "#b09070"
 class = "shields"
 materials = ["iron"]
+made_of = ["wood", "metal", "hide", "chitin", "dragonscale"]
 weight = 1500
 value = 20
 slot = "off_hand"

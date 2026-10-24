@@ -10,7 +10,8 @@ while, and some leave you spent once they are over (see [Buffs and cooldowns](#b
 You always know what ails you: the [status bar](controls.md#the-screen) names it right after your
 hit points (`HP 12/17 · Bleeding · Poisoned`), the [character screen](character.md) lists it, and
 the message line tells you when it starts and stops. You never see how bad it is, or how long it
-will last, as a number: you see your hit points go.
+will last, as a number: you see your hit points go. The table gives the exact paces, and who
+causes what, with the chance a hit has:
 
 {{#include generated/status-effects.md}}
 

@@ -35,9 +35,10 @@ is the Steal skill's use: `Action::Steal(Dir)` (replay text `steal:DIR`, cost `s
   override (saved and hashed as they already are), so saves change only by content (the new
   `ActionKind`, no new indexed id).
 - **The hook for alignment (#254)**: `World::got_away_with(victim, stack)` in `world/steal.rs`
-  is the one place a theft that took something has consequences beyond the goods (it says "You
-  steal ... from ..." now). Stealing is meant to be evil: the alignment shift goes there, one
-  call. A caught attempt and empty pockets do not reach it.
+  is the one place a theft that took something has consequences beyond the goods: it says "You
+  steal ... from ..." and calls `player_did(Deed::Theft)` (`world/alignment.rs`; `[shift] theft`
+  in `data/alignment.toml`, −100 like leaving a shop owing). A caught attempt and empty pockets
+  do not reach it.
 - **Shop goods** are never stolen with Steal: the shop's own rules (`docs/dev/shops.md`) cover
   taking from its floor. Stealing from a keeper takes from its pack (its purse); a sale it then
   cannot pay for does not happen (`deal`).

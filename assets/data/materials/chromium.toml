@@ -1,0 +1,13 @@
+# Better than steel and dearer: very rare, and only deeper.
+[[material]]
+id = "chromium"
+name = "chromium"
+group = "metal"
+color = "#e2e8ef"
+weight = 92
+to_hit = 0
+damage = 1
+protection = 110
+value = 900
+rarity = { weight = 10, deeper = 1, level = 8 }
+gear = { weight = 5, deeper = 1, level = 8 }

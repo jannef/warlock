@@ -156,6 +156,7 @@ mod tests {
     fn press(nav: Nav) -> Press {
         Press {
             nav,
+            edit: None,
             binding: None,
             repeat: false,
             text: None,
