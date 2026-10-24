@@ -258,6 +258,10 @@ impl World {
         let content = self.content.clone();
         // What rotted away while it was frozen (on another level, or over a dev skip) goes first.
         self.rot_pack(id, start);
+        // Its talents may ease some statuses faster (Regrowth, Pure blood); they do not change
+        // while time passes.
+        let talents =
+            (self.state.actors.get(&id)).map_or_else(Default::default, |a| a.talent_mods(&content));
         let mut passed = 0;
         while passed < seconds {
             let rate = self.healing_rate(id);
@@ -295,8 +299,9 @@ impl World {
             }
             for e in actor.effects.iter() {
                 let def = content.status(e.status);
+                let pace = talents.ease_factor(&content, def);
                 step = (e.until_tick(def).into_iter())
-                    .chain(e.until_eases(def))
+                    .chain(e.until_eases_at(def, pace))
                     .fold(step, u64::min);
             }
             if let Some(need) = need(actor, &content)
@@ -314,7 +319,8 @@ impl World {
             };
             for e in actor.effects.iter_mut() {
                 let def = content.status(e.status);
-                let (ticks, eased) = e.advance(def, step);
+                let pace = talents.ease_factor(&content, def);
+                let (ticks, eased) = e.advance_at(def, step, pace);
                 if ticks > 0 {
                     let cost = u64::from(def.damage) * ticks;
                     moment.damage += i32::try_from(cost).unwrap_or(i32::MAX);

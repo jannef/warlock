@@ -44,8 +44,15 @@ pub(super) fn by_system(content: &Content) -> String {
     let bar = book.coverage;
     let mut out = String::from("| System | Talents | Held to the bar |\n|---|---|---|\n");
     for (i, system) in (0u8..).zip(&book.systems) {
+        // A birth sign's gift is marked: it is given, never picked.
         let names: Vec<String> = (book.of_system(warlock_core::content::SystemId(i)))
-            .map(|(_, t)| t.name.clone())
+            .map(|(_, t)| {
+                if t.granted {
+                    format!("{} (birth sign)", t.name)
+                } else {
+                    t.name.clone()
+                }
+            })
             .collect();
         let held = if system.pending {
             "not yet (pending)".to_string()
@@ -62,17 +69,22 @@ pub(super) fn by_system(content: &Content) -> String {
     out
 }
 
-/// "Weapon focus (a weapon skill)" for a talent with a choice, else the name.
+/// "Weapon focus (a weapon skill)" for a talent with a choice, "Slight (flaw)" for a birth
+/// sign's flaw, else the name.
 fn name(def: &TalentDef) -> String {
     match def.choice {
         Some(kind) => format!("{} ({})", def.name, kind.words()),
+        None if def.flaw => format!("{} (flaw)", def.name),
         None => def.name.clone(),
     }
 }
 
 /// The prerequisites: the talent's own, then each rank's where they differ ("Toughness 11 / 14
-/// / 17"); "—" for none.
+/// / 17"); "—" for none; a granted talent is never picked.
 fn needs_text(content: &Content, def: &TalentDef) -> String {
+    if def.granted {
+        return "given by a birth sign, never picked".into();
+    }
     let words = |needs: &[Need]| -> String {
         (needs.iter())
             .map(|n| n.words(content))
@@ -108,7 +120,7 @@ fn needs_text(content: &Content, def: &TalentDef) -> String {
 
 /// What the talent does, as the rule: its per-rank effects ("per rank" when it has several
 /// ranks), then any rank's own.
-fn effects_text(def: &TalentDef) -> String {
+pub(super) fn effects_text(def: &TalentDef) -> String {
     let ranked = def.rank_count() > 1;
     let mut parts: Vec<String> = (def.effects.iter())
         .map(|e| {
@@ -134,12 +146,25 @@ fn effect_text(effect: TalentEffect) -> String {
     match effect {
         TalentEffect::Dodge { value } => format!("Dodge {}", signed(value)),
         TalentEffect::Natural { value } => format!("natural armour {}", signed(value)),
+        TalentEffect::MaxDex { value } => {
+            format!("the burden's cap on Dexterity in Defence {}", signed(value))
+        }
+        TalentEffect::Protection { value } => format!("Protection {}", signed(value)),
         TalentEffect::MeleeDamage { value } => format!("melee damage {}", signed(value)),
+        TalentEffect::Threat { value } => {
+            format!("threat range {} with every attack", signed(value))
+        }
+        TalentEffect::RerollFumble => "a natural 2 on the attack roll is rolled again, once".into(),
         TalentEffect::MaxHpPerLevels {
             per_levels,
             at_least,
         } => format!("+1 maximum hit point per {per_levels} levels, at least +{at_least}"),
         TalentEffect::HealingPercent { value } => format!("healing pace {}", percent(value)),
+        TalentEffect::Ease { of, times } => format!("{} eases {times}× as fast", of.words()),
+        TalentEffect::PoisonSparesScores => "poison never lowers your scores".into(),
+        TalentEffect::DiseaseChecks { value } => {
+            format!("disease checks {}", signed(value))
+        }
         TalentEffect::FootstepsPercent { value } => format!("footsteps {}", percent(value)),
         TalentEffect::SilentDoors => "the doors you open and close are silent".to_string(),
         TalentEffect::Hearing { value } => format!("hears sounds {value} fainter"),
@@ -147,7 +172,17 @@ fn effect_text(effect: TalentEffect) -> String {
         TalentEffect::TravelPercent { value } => {
             format!("overworld journey time {}", percent(value))
         }
+        TalentEffect::Swimmer => {
+            "wading (water, marsh) costs a plain step and never gives a disease".into()
+        }
+        TalentEffect::SpeedPercent { value } => format!("speed {}", percent(value)),
         TalentEffect::HungerPercent { value } => format!("hunger pace {}", percent(value)),
+        TalentEffect::RotHarmPercent { value } => {
+            format!(
+                "sickness from rotten food {} (rounded down)",
+                percent(value)
+            )
+        }
         TalentEffect::NoExertion => "blows, shots, and throws burn no nutrition".to_string(),
         TalentEffect::XpPercent { value } => format!("experience gained {}", percent(value)),
         TalentEffect::Notice { value } => {
@@ -156,6 +191,17 @@ fn effect_text(effect: TalentEffect) -> String {
                 signed(value)
             )
         }
+        TalentEffect::StoneSense => "notices hidden things on stone in passing".into(),
+        TalentEffect::Search { value } => {
+            format!("{} to every check to find hidden things", signed(value))
+        }
+        TalentEffect::SearchReach { value } => format!(
+            "searching reaches {value} cell{} farther",
+            if value == 1 { "" } else { "s" }
+        ),
+        TalentEffect::Kick { value } => format!("door kicks as if Strength {}", signed(value)),
+        TalentEffect::DigPercent { value } => format!("digging work {}", percent(value)),
+        TalentEffect::FavourPercent { value } => format!("shop favour {}", percent(value)),
         TalentEffect::FreeBlow { trigger } => format!("free blow: {trigger:?}").to_lowercase(),
     }
 }

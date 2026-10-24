@@ -1,0 +1,9 @@
+[[talent]]
+id = "slight"
+name = "Slight"
+tree = "stars"
+granted = true
+flaw = true
+description = "You are slight: your carrying limit is 10 % lower."
+effects = [{ kind = "carry_percent", value = -10 }]
+systems = ["burden"]

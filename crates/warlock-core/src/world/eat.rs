@@ -259,7 +259,18 @@ impl World {
             return;
         }
         let degrees = rotten.harm.roll(&mut self.state.rng);
-        self.sicken(degrees, events);
+        // Less of it for a talent that eats rot better (a birth sign's Evergreen), rounded down.
+        let percent = self.state.player().talent_mods(&content).rot_harm_percent;
+        let degrees = if percent == 0 {
+            degrees
+        } else {
+            let kept =
+                crate::talent::TalentMods::scaled(u64::try_from(degrees).unwrap_or(0), percent);
+            i32::try_from(kept).unwrap_or(0)
+        };
+        if degrees > 0 {
+            self.sicken(degrees, events);
+        }
         // Rotten food may carry a disease (grave rot): a check to resist it (spec §8 "Diseases").
         self.expose_to(self.state.player, "rotten_food");
         self.feed(nutrition, what);

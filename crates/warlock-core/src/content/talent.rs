@@ -149,14 +149,28 @@ pub enum TalentEffect {
     Dodge { value: i32 },
     /// Natural armour: added to the actor's own, whatever the best item gives.
     Natural { value: i32 },
+    /// The burden's cap on Dexterity in Defence, this much higher at every level of burden.
+    MaxDex { value: i32 },
+    /// Protection: added to what the actor wears and its natural armour.
+    Protection { value: i32 },
     /// Damage added to every melee blow (the main hand's and the off hand's).
     MeleeDamage { value: i32 },
+    /// Every attack threatens a critical this many natural points lower.
+    Threat { value: i32 },
+    /// A natural 2 on an attack roll (a fumble) is rolled again, once.
+    RerollFumble,
     /// Maximum hit points: 1 per `per_levels` character levels, at least `at_least`, handed out
     /// into the actor's base hit points when the talent is taken and as each later level comes
     /// (as levels' own hit points are), so a talent taken early keeps growing.
     MaxHpPerLevels { per_levels: u8, at_least: i32 },
     /// Hit points come back this percent faster (negative: slower).
     HealingPercent { value: i32 },
+    /// Status effects of a kind ease `times` as fast.
+    Ease { of: Ailment, times: u8 },
+    /// Poison never lowers the actor's scores (its other harm stays).
+    PoisonSparesScores,
+    /// Added to the actor's checks against diseases (resisting one, and its progressions).
+    DiseaseChecks { value: i32 },
     /// Footsteps this percent louder (negative: quieter).
     FootstepsPercent { value: i32 },
     /// The doors the actor opens and closes make no noise.
@@ -167,14 +181,32 @@ pub enum TalentEffect {
     CarryPercent { value: i32 },
     /// Journeys on the overworld take this percent more time (negative: quicker).
     TravelPercent { value: i32 },
+    /// Wading (water, marsh) costs a plain step, and never gives a disease.
+    Swimmer,
+    /// The actor's speed, this percent more (negative: slower).
+    SpeedPercent { value: i32 },
     /// Hunger burns this percent faster (negative: slower).
     HungerPercent { value: i32 },
+    /// The sickness rotten food gives, this percent more (negative: less), rounded down.
+    RotHarmPercent { value: i32 },
     /// Exerting oneself (a blow, a shot, a throw) burns no extra nutrition.
     NoExertion,
     /// Experience gained, this percent more.
     XpPercent { value: i32 },
     /// The actor notices hidden things in passing as if trained in Spot, with this much added.
     Notice { value: i32 },
+    /// The actor notices hidden things on stone in passing, as a dwarf does.
+    StoneSense,
+    /// Added to every check to find hidden things, searching and in passing.
+    Search { value: i32 },
+    /// Searching reaches this many cells farther.
+    SearchReach { value: i32 },
+    /// A door kick as if the actor's Strength were this much higher.
+    Kick { value: i32 },
+    /// Digging does this percent more work a turn.
+    DigPercent { value: i32 },
+    /// Shop prices move this percent further in the actor's favour (negative: against).
+    FavourPercent { value: i32 },
     /// A free blow the actor is given (spec §8 "Free blows").
     FreeBlow { trigger: FreeBlowTrigger },
 }
@@ -187,6 +219,36 @@ pub enum FreeBlowTrigger {
     GreatCleave,
     Riposte,
     Opportunist,
+}
+
+/// A kind of status effect a talent may make ease faster ([`TalentEffect::Ease`]), by what the
+/// status is rather than its id: `wounds` are statuses that come of wounds (bleeding), `poison`
+/// statuses of the poison damage type.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Ailment {
+    Wounds,
+    Poison,
+}
+
+impl Ailment {
+    /// Whether `status` is of this kind.
+    pub fn is(self, content: &Content, status: &super::StatusDef) -> bool {
+        match self {
+            Ailment::Wounds => status.wound.is_some(),
+            Ailment::Poison => {
+                (status.damage_type).is_some_and(|t| content.damage_type(t).id == "poison")
+            }
+        }
+    }
+
+    /// In words: "bleeding", "poison".
+    pub fn words(self) -> &'static str {
+        match self {
+            Ailment::Wounds => "bleeding",
+            Ailment::Poison => "poison",
+        }
+    }
 }
 
 impl TalentEffect {
@@ -215,13 +277,30 @@ impl TalentEffect {
             | TalentEffect::Natural { value }
             | TalentEffect::MeleeDamage { value }
             | TalentEffect::Hearing { value }
-            | TalentEffect::Notice { value } => bonus(value),
+            | TalentEffect::Notice { value }
+            | TalentEffect::MaxDex { value }
+            | TalentEffect::Protection { value }
+            | TalentEffect::Threat { value }
+            | TalentEffect::DiseaseChecks { value }
+            | TalentEffect::Search { value }
+            | TalentEffect::SearchReach { value }
+            | TalentEffect::Kick { value } => bonus(value),
             TalentEffect::HealingPercent { value }
             | TalentEffect::FootstepsPercent { value }
             | TalentEffect::CarryPercent { value }
             | TalentEffect::TravelPercent { value }
             | TalentEffect::HungerPercent { value }
-            | TalentEffect::XpPercent { value } => percent(value),
+            | TalentEffect::XpPercent { value }
+            | TalentEffect::SpeedPercent { value }
+            | TalentEffect::RotHarmPercent { value }
+            | TalentEffect::DigPercent { value }
+            | TalentEffect::FavourPercent { value } => percent(value),
+            TalentEffect::Ease { times, .. } => {
+                if !(2..=4).contains(&times) {
+                    return Err("`ease`: times is 2 to 4".into());
+                }
+                Ok(())
+            }
             TalentEffect::MaxHpPerLevels {
                 per_levels,
                 at_least,
@@ -235,6 +314,10 @@ impl TalentEffect {
             }
             TalentEffect::SilentDoors
             | TalentEffect::NoExertion
+            | TalentEffect::RerollFumble
+            | TalentEffect::PoisonSparesScores
+            | TalentEffect::Swimmer
+            | TalentEffect::StoneSense
             | TalentEffect::FreeBlow { .. } => Ok(()),
         }
     }
@@ -261,6 +344,12 @@ pub enum Need {
     Eyes(String),
     /// A class, by id.
     Class(String),
+    /// A birth sign's animal, by id (spec §8 "Birth sign").
+    Animal(String),
+    /// A birth sign's element, by id.
+    Element(String),
+    /// Born on a lucky day.
+    Lucky,
     /// An alignment band (spec §8 "Alignment"): `{ min = "good" }` is Good or better.
     Alignment(Requirement),
 }
@@ -297,6 +386,19 @@ impl Need {
                 let name = content.vision(id).map_or(id.as_str(), |v| v.name.as_str());
                 format!("{} eyes", name.to_lowercase())
             }
+            Need::Animal(id) => {
+                let name = (content.horoscope())
+                    .and_then(|h| h.animals.iter().find(|a| &a.id == id))
+                    .map_or(id.as_str(), |a| a.name.as_str());
+                format!("to be born in the year of the {name}")
+            }
+            Need::Element(id) => {
+                let name = (content.horoscope())
+                    .and_then(|h| h.elements.iter().find(|e| &e.id == id))
+                    .map_or(id.as_str(), |e| e.name.as_str());
+                format!("to be {name}-born")
+            }
+            Need::Lucky => "to be born on a lucky day".into(),
             Need::Alignment(required) => format!("to be {}", required.words()),
         }
     }
@@ -317,6 +419,10 @@ pub struct Needs {
     pub race: Option<String>,
     pub eyes: Option<String>,
     pub class: Option<String>,
+    /// The birth sign's animal and element asked, by id, and a lucky day.
+    pub animal: Option<String>,
+    pub element: Option<String>,
+    pub lucky: bool,
     /// The alignment band asked (`requires_alignment`, as quests and abilities ask it).
     pub alignment: Option<Requirement>,
 }
@@ -328,7 +434,7 @@ impl Needs {
     }
 
     /// Every prerequisite, in the order they are shown: talents, stats, skills, weapon skills,
-    /// the choice, the level, the race, the eyes, the class.
+    /// the choice, the level, the race, the eyes, the class, the sign, the alignment.
     pub fn iter(&self) -> impl Iterator<Item = Need> + '_ {
         let talents = self.talents.iter().map(|&(t, r)| Need::Talent(t, r));
         let stats = (self.stats.iter())
@@ -341,6 +447,9 @@ impl Needs {
         let race = self.race.clone().map(Need::Race);
         let eyes = self.eyes.clone().map(Need::Eyes);
         let class = self.class.clone().map(Need::Class);
+        let animal = self.animal.clone().map(Need::Animal);
+        let element = self.element.clone().map(Need::Element);
+        let lucky = self.lucky.then_some(Need::Lucky);
         let alignment = self.alignment.map(Need::Alignment);
         talents
             .chain(stats)
@@ -351,6 +460,9 @@ impl Needs {
             .chain(race)
             .chain(eyes)
             .chain(class)
+            .chain(animal)
+            .chain(element)
+            .chain(lucky)
             .chain(alignment)
     }
 }
@@ -383,6 +495,8 @@ pub struct TalentDef {
     pub systems: Vec<SystemId>,
     /// Given, never picked (a race's, a birth sign's): off every pick list.
     pub granted: bool,
+    /// A birth sign's flaw: granted, shown with "but" and dimmed, never a prerequisite.
+    pub flaw: bool,
 }
 
 impl TalentDef {
@@ -594,6 +708,8 @@ struct TalentSpec {
     systems: Vec<String>,
     #[serde(default)]
     granted: bool,
+    #[serde(default)]
+    flaw: bool,
 }
 
 #[derive(Deserialize, Default)]
@@ -617,6 +733,9 @@ struct NeedsSpec {
     race: Option<String>,
     eyes: Option<String>,
     class: Option<String>,
+    animal: Option<String>,
+    element: Option<String>,
+    lucky: bool,
     requires_alignment: Option<Requirement>,
 }
 
@@ -738,6 +857,9 @@ fn resolve_needs(
         race: spec.race,
         eyes: spec.eyes,
         class: spec.class,
+        animal: spec.animal,
+        element: spec.element,
+        lucky: spec.lucky,
         alignment: spec.requires_alignment,
     })
 }
@@ -910,6 +1032,9 @@ pub(super) fn parse<'a>(
         if spec.effects.is_empty() && rank_defs.iter().all(|r| r.effects.is_empty()) {
             return Err(err("does nothing: it needs `effects`".into()));
         }
+        if spec.flaw && !spec.granted {
+            return Err(err("a `flaw` is `granted`: nobody picks a flaw".into()));
+        }
         book.list.push(TalentDef {
             id: spec.id,
             name: spec.name,
@@ -921,6 +1046,7 @@ pub(super) fn parse<'a>(
             ranks: rank_defs,
             systems,
             granted: spec.granted,
+            flaw: spec.flaw,
         });
     }
     // A talent that needs one with a choice of its own kind is taken for the same choice: only
@@ -930,6 +1056,15 @@ pub(super) fn parse<'a>(
             (def.needs.talents.iter()).chain(def.ranks.iter().flat_map(|r| r.needs.talents.iter()));
         for &(other, _) in needed {
             let other = book.get(other);
+            if other.flaw {
+                return Err(ContentError::new(
+                    files[&def.id],
+                    format!(
+                        "talent `{}` needs `{}`, a flaw: a flaw is never a prerequisite",
+                        def.id, other.id
+                    ),
+                ));
+            }
             if let Some(kind) = other.choice
                 && def.choice != Some(kind)
             {

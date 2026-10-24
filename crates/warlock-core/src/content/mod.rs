@@ -85,7 +85,7 @@ pub use gem::{
     Cut, CutId, Cutting, GemDef, GemSize, GemSizeId, Gems, MAX_GEM_VALUE, MAX_GEM_WEIGHT,
     MAX_MULTIPLIER, Ornament, ROUGH_SATURATION, dull,
 };
-pub use horoscope::{Horoscope, Sign, SignPart};
+pub use horoscope::{Horoscope, Lucky, Sign, SignPart};
 pub use hunger::{
     Corpses, EXERTIONS, Faint, Food, HungerDef, MAX_MEAL, MAX_NUTRITION, MAX_SHELF_LIFE,
     Overeating, Rotten, Starve, States,
@@ -129,8 +129,8 @@ pub use status::{
     Stacking, StatusDef, StatusId, Wound,
 };
 pub use talent::{
-    Choice, Coverage, DEFAULT_MAX_RANKS, FreeBlowTrigger, Need, Needs, Rank, SystemDef, SystemId,
-    TalentBook, TalentDef, TalentEffect, TalentId, TreeDef, TreeId,
+    Ailment, Choice, Coverage, DEFAULT_MAX_RANKS, FreeBlowTrigger, Need, Needs, Rank, SystemDef,
+    SystemId, TalentBook, TalentDef, TalentEffect, TalentId, TreeDef, TreeId,
 };
 pub use terrain::{
     Breakable, Freeze, FreezeSpec, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId,
@@ -618,6 +618,8 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             content.horoscope = Some(Horoscope::parse(path, text)?);
         }
+        // The signs' gifts are talents, and talents may ask for a sign: checked both ways.
+        horoscope::check_talents(content.horoscope.as_ref(), &content.talents)?;
         content.load_statuses(files)?;
         content.load_terrain(files)?;
         content.load_diseases(files)?;
@@ -2191,6 +2193,12 @@ impl Content {
     /// The horoscope of `data/horoscope.toml` (none without the file).
     pub fn horoscope(&self) -> Option<&Horoscope> {
         self.horoscope.as_ref()
+    }
+
+    /// The lucky day of those born under `sign` on `born` (spec §8 "Birth sign"), if it is
+    /// one.
+    pub fn lucky(&self, sign: &Sign, born: &crate::character::BirthDate) -> Option<&Lucky> {
+        self.horoscope()?.lucky(sign, born.day)
     }
 
     /// The spell effects of `data/effects.toml`, in file order (none without the file).

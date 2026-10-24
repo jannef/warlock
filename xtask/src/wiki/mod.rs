@@ -26,6 +26,7 @@ mod experience;
 mod gems;
 mod healing;
 mod hearing;
+mod horoscope;
 mod hunger;
 mod magic;
 mod moons;
@@ -157,6 +158,9 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("races.md", character::races),
         ("classes.md", character::classes),
         ("horoscope.md", character::horoscope),
+        ("horoscope-animals.md", horoscope::animals),
+        ("horoscope-elements.md", horoscope::elements),
+        ("horoscope-lucky.md", horoscope::lucky),
         ("alignment-bands.md", alignment::alignment_bands),
         ("alignment-start.md", alignment::alignment_start),
         ("alignment-deeds.md", alignment::alignment_deeds),
@@ -906,6 +910,24 @@ mod tests {
             "{horoscope}"
         );
         assert_eq!(horoscope.matches(" Salamander | 1").count(), 5);
+        // The signs' gifts with their exact rules, and the lucky days with their odds by race.
+        let animals = text("horoscope-animals.md");
+        assert!(
+            animals.contains("| 1 | Salamander | **Fleet**: speed +5 %<br>**Slight** (flaw)"),
+            "{animals}"
+        );
+        let lucky = text("horoscope-lucky.md");
+        assert!(
+            lucky.contains("| Metal Manticore | 3 | the Iron Scourge |"),
+            "{lucky}"
+        );
+        assert!(
+            lucky.contains(
+                "| Human | 16 to 35 | the Deep One (1415); the Gate Warden (1428); \
+                            the Iron Scourge (1419) | 212 |"
+            ),
+            "{lucky}"
+        );
         // Every class is listed, in order, with its objects.
         let classes = text("item-classes.md");
         assert!(

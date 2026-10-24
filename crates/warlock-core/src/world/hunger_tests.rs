@@ -193,7 +193,8 @@ fn overworld_journeys_burn_by_the_hour() {
 fn races_need_more_or_less() {
     for (spec, burned) in [
         ("human,female,thief", 240),
-        ("halfling,male,thief", 300),
+        // Born in a Wood year: Evergreen burns 15 % slower.
+        ("halfling,male,thief", 254),
         ("elf,female,wizard", 192),
         ("half_orc,male,warrior", 288),
         ("dwarf,female,warrior", 264),

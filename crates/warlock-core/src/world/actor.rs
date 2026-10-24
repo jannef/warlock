@@ -7,8 +7,8 @@ use crate::burden::Burden;
 use crate::combat::{self, Attack, Category, Defence, Health, Profile, Target};
 use crate::content::Effect as ItemEffect;
 use crate::content::{
-    ActionKind, Benefit, CombatStance, Content, CreatureId, DamageTypeId, FactionId, Grip,
-    ObjectDef, ObjectId, Role, TwoWeapons, WeaponSkillId,
+    ActionKind, Ailment, Benefit, CombatStance, Content, CreatureId, DamageTypeId, FactionId, Grip,
+    ObjectDef, ObjectId, Role, StatusDef, TwoWeapons, WeaponSkillId,
 };
 use crate::damage::{Protection, Resistances};
 use crate::disease::Diseases;
@@ -248,6 +248,18 @@ impl Actor {
         self.talents.mods(content)
     }
 
+    /// Its speed (spec §8 "Speed"): its creature type's, scaled by its talents' (a birth sign's
+    /// Fleet, Ponderous), at least 1. Hidden from the player.
+    pub fn speed(&self, content: &Content) -> u32 {
+        let base = content.creature(self.creature).speed;
+        let percent = self.talent_mods(content).speed_percent;
+        if percent == 0 {
+            return base;
+        }
+        let scaled = TalentMods::scaled(u64::from(base), percent);
+        u32::try_from(scaled).unwrap_or(u32::MAX).max(1)
+    }
+
     /// How hungry it is (spec §8 "Hunger"); `None` for an actor that does not hunger.
     pub fn hunger(&self, content: &Content) -> Option<Hunger> {
         let def = content.hunger()?;
@@ -285,7 +297,13 @@ impl Actor {
     /// What its status effects, hunger (Weak or worse), and stat damage take off its scores, if
     /// anything.
     fn penalty(&self, content: &Content) -> Option<PerStat<i32>> {
-        let mut by = self.effects.penalty(content);
+        // A talent may spare its scores from poison (Pure blood).
+        let mut by = if !self.talents.is_empty() && self.talent_mods(content).poison_spares_scores {
+            let poison = |s: &StatusDef| Ailment::Poison.is(content, s);
+            self.effects.penalty_unless(content, poison)
+        } else {
+            self.effects.penalty(content)
+        };
         if let (Some(def), Some(hunger)) = (content.hunger(), self.hunger(content))
             && hunger.is_weak()
         {
@@ -371,7 +389,14 @@ impl Actor {
         let dexterity = self.stats_with(content, &mods).modifier(Stat::Dexterity);
         let worn = (equipped.iter())
             .filter_map(|(_, o, m, _)| Some(o.max_dex? + m.get(ItemEffect::MaxDex)));
-        let cap = worn.chain(burden.max_dex()).min();
+        let cap_talent = if self.talents.is_empty() {
+            0
+        } else {
+            self.talent_mods(content).max_dex
+        };
+        let cap = worn
+            .chain(burden.max_dex().map(|cap| cap + cap_talent))
+            .min();
         let dexterity = cap.map_or(dexterity, |cap| dexterity.min(cap));
         // A weapon readied to throw does not parry: only what is held in a hand.
         let worn = equipped.iter().flat_map(|(item, o, m, hand)| {
@@ -438,6 +463,12 @@ impl Actor {
         let base: i32 = worn.iter().map(|s| s.protection(content)).sum();
         let natural =
             (content.creature(self.creature).natural.as_ref()).map_or(0, |h| h.protection);
+        // And its talents' (Stone hide), as if it were natural armour.
+        let natural = if self.talents.is_empty() {
+            natural
+        } else {
+            natural + self.talent_mods(content).protection
+        };
         let adjustments = (worn.iter()).flat_map(|s| s.protects(content).iter().copied());
         if content.damage_types().is_empty() {
             return Protection::plain(base + natural);
@@ -851,7 +882,17 @@ impl Actor {
     /// `profile` with the to-hit and damage of its combat stance, and of its status effects
     /// (spec §8 "Status effects": a buff's or a hex's `combat`).
     pub fn stanced(&self, content: &Content, profile: Profile) -> Profile {
-        let profile = content.stance_def(self.stance).apply(profile);
+        let mut profile = content.stance_def(self.stance).apply(profile);
+        // Its talents' threat (Keen edge): criticals threaten that much lower, never below the
+        // lowest roll that can hit.
+        if !self.talents.is_empty() {
+            let threat = self.talent_mods(content).threat;
+            if threat != 0 {
+                let lowered = i32::from(profile.threat) - threat;
+                let lowest = crate::combat::FUMBLE + 1;
+                profile.threat = u8::try_from(lowered.max(lowest)).unwrap_or(profile.threat);
+            }
+        }
         self.effects.sharpen(content, profile)
     }
 

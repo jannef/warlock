@@ -1,0 +1,8 @@
+[[talent]]
+id = "riddlers_mind"
+name = "Riddler's mind"
+tree = "stars"
+granted = true
+description = "You gain 10 % more experience."
+effects = [{ kind = "xp_percent", value = 10 }]
+systems = ["experience"]

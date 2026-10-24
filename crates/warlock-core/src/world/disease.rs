@@ -48,7 +48,8 @@ impl World {
         if actor.diseases.has(disease) {
             return false;
         }
-        let modifier = actor.effective_stats(&self.content).modifier(def.check);
+        let modifier = actor.effective_stats(&self.content).modifier(def.check)
+            + actor.talent_mods(&self.content).disease_checks;
         if check(&mut self.state.rng, modifier, def.difficulty) {
             return false;
         }
@@ -86,6 +87,10 @@ impl World {
     pub(super) fn wade(&mut self, terrain: TerrainId, seconds: u64) {
         let player = self.state.player;
         let content = self.content.clone();
+        // A strong swimmer (spec §8 "Birth sign") never catches anything wading.
+        if self.state.player().talent_mods(&content).swimmer {
+            return;
+        }
         for (disease, def) in content.disease_ids() {
             let Some(wading) = def.wading.as_ref().filter(|w| w.terrain.contains(&terrain)) else {
                 continue;
@@ -117,7 +122,8 @@ impl World {
         let Some(actor) = self.state.actors.get_mut(&id) else {
             return false;
         };
-        let modifier = actor.effective_stats(&content).modifier(def.check);
+        let modifier = actor.effective_stats(&content).modifier(def.check)
+            + actor.talent_mods(&content).disease_checks;
         let Some(infection) = actor.diseases.get_mut(disease) else {
             return true;
         };

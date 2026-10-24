@@ -1,0 +1,8 @@
+[[talent]]
+id = "always_a_way"
+name = "Always a way"
+tree = "stars"
+granted = true
+description = "Secret doors and hidden traps are easier for you to find, and your searching reaches farther."
+effects = [{ kind = "search", value = 3 }, { kind = "search_reach", value = 1 }]
+systems = ["searching", "traps"]

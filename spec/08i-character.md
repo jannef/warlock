@@ -33,6 +33,39 @@ developer notes (CLAUDE.md, `docs/dev/`).
     not choose it. A sign is said element first: "the Fire Manticore". Signs are **flags** for
     later rules: `Character::born_of_element("fire")` ("is this character Fire-born?"),
     `Character::born_in_year_of("manticore")`, and `Sign::is_element`/`is_animal`.
+  - **What a sign gives** (#265; the design is `docs/design/horoscope.md`): each animal two
+    **gifts** and a **flaw**, each element two gifts, as **granted talents** of the `stars` tree
+    ("Talents" below): named by the animal's and the element's `grants`, given at birth, never on
+    a pick list (`granted = true`), a flaw (`flaw = true`) shown with "but", dimmed, and never a
+    prerequisite. They are computed from the sign and the birth day whenever a run starts or is
+    restored (`world/stars.rs`), never stored as a choice, so a gift added to the data reaches a
+    saved character; they come first among the talents held, in grant order (the animal's, the
+    element's, a lucky day's), and work like any talent, through `TalentMods` at the one rule
+    each names. The gifts whose rules exist so far: Fleet and Ponderous (speed ±5 %), Slight and
+    Roc's strength (carrying −10 % / +25 %, Roc's strength also kicks doors as if Strength +4),
+    Regrowth (healing +50 %, bleeding eases twice as fast), Strong swimmer (wading costs a plain
+    step and never gives a disease), Pure blood (disease checks +4, poison eases twice as fast
+    and never lowers the scores), Heedless and Always a way (−4 / +3 to every check to find
+    hidden things; Always a way also searches a cell farther), Riddler's mind (XP +10 %), Little
+    loved and Grim company (shop favour −10), Supple (Dodge +1, the burden's Dexterity cap +1),
+    Evergreen (hunger −15 %, rotten food's sickness halved), Stone hide (Protection +1),
+    Stonewise (notices on stone in passing, digging +25 %), Keen edge (threat +1 with every
+    attack). The rest of the design's gifts land with their rules (S2–S4) and are listed in
+    `grants` only then.
+  - **Lucky days** (`[[lucky]]`): five animal–element pairs, each with a day of the month (any
+    month), the day the animal's place in the Great Race: the Wood Salamander on the 1st (the
+    Racer), the Metal Manticore on the 3rd (the Iron Scourge), the Fire Phoenix on the 10th (the
+    Firebird), the Water Kraken on the 11th (the Deep One), and the Earth Barghest on the 30th
+    (the Gate Warden). Born in that year **and** on that day, a character has the title after
+    their name (the character and death screens: "Brakka, the Iron Scourge") and one gift more:
+    the Racer's Winner's luck (a natural 2 on the attack roll is rolled again once, two more
+    draws only then; speed +5 % more); the other four's gifts come with S5. About one character
+    in 1 800 over an even spread of births; by race at a start date, as the wiki tabulates. The
+    game never says lucky days exist until a character is born on one. The birth draws are
+    unchanged, so existing seeds keep their dates and signs.
+  - **Sign prerequisites**: a talent may ask `animal = "roc"`, `element = "fire"`, or `lucky =
+    true` ("to be born in the year of the Roc", "to be Fire-born", "to be born on a lucky
+    day"), read off `Character::sign` and the birth day.
   - **Starting scores**: 10 plus the race's adjustment, plus the gender's (male: Strength +1;
     female: Dexterity +1; other: +1 to a stat picked uniformly from the run seed's
     `character/gender` stream, so the same seed always raises the same stat), plus the class's,
@@ -216,7 +249,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     a file (`id`, `name`, `tree`, `description` in the game's words, `ranks` 1 to `max_ranks`,
     `choice` (`weapon_skill`, `style`, `element`), `needs`, `effects` per rank held,
     `[[rank]]` with each rank's own `needs` and `effects`, `systems` from the list, `granted`:
-    given, never picked). Without the files there are no talents and no level asks for one.
+    given, never picked; `flaw`: a birth sign's flaw, granted, never a prerequisite). The first
+    tree, **Stars** (`no_free`), holds the birth signs' gifts (§8 "Birth sign"). Without the
+    files there are no talents and no level asks for one.
   - **When**: every `talent_every`th character level (`[levels]` in `data/experience.toml`: 3,
     6, 9, …) brings one pick, a `Due { level, talents }` in `Progress::due` (lowest level
     first; several levels in one turn queue theirs), handed out by `World::level_up` from
@@ -233,8 +268,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     needed only by one of the same choice, taken for the same), stat **scores** (the stored
     score, never the effective one), skill values, weapon skill or style ranks, the chosen
     weapon skill's or style's rank (`chosen`), the character level, the race, the class, the
-    eyes (the race's vision profile), and the alignment band (`requires_alignment`, as quests
-    and abilities ask it, §8 "Alignment": `{ min = "good" }`). Refused in words: "You cannot
+    eyes (the race's vision profile), the birth sign's animal and element and a lucky day
+    (`animal`, `element`, `lucky`; §8 "Birth sign"), and the alignment band
+    (`requires_alignment`, as quests and abilities ask it, §8 "Alignment": `{ min = "good" }`).
+    Refused in words: "You cannot
     take Dodge: you need Dexterity 13." Ranks come one at a time ("You learn Hardy (2)."); a talent with a choice is
     one pick per choice, each with its own ranks.
   - **Effects** (`TalentEffect`, summed into `TalentMods` by `Actor::talent_mods`, one read
@@ -246,9 +283,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `footsteps_percent` and `silent_doors` (`noise::noise`), `hearing`, `carry_percent`
     (`burden::load`), `travel_percent` (overworld steps), `hunger_percent` and `no_exertion`,
     `xp_percent` (every gain), `notice` (noticing in passing as if trained in Spot, with a
-    bonus), `free_blow` (a switch of `World::free_blows_of`). The first twelve: Healthy, Hardy,
-    Dodge, Brawn, Silent feet, Keen ears, Pack mule, Long strider, Lean, Good learner, Alert,
-    Thick skin.
+    bonus), `free_blow` (a switch of `World::free_blows_of`); with the birth signs (#265):
+    `max_dex` (the burden's Dexterity cap in Defence), `protection` (added to the Protection
+    sum), `threat` (every attack's threat range, in `Actor::stanced`), `reroll_fumble` (a natural
+    2 rolled again once, `combat::strike_with`), `ease { of, times }` (bleeding or poison eases
+    that many times as fast, `World::live`), `poison_spares_scores` (`Actor::penalty`),
+    `disease_checks` (both disease checks), `swimmer` (`step_price` on wading terrain, `wade`),
+    `speed_percent` (`Actor::speed`, every read of the scheduler), `rot_harm_percent`
+    (`eat_rotten`), `stone_sense` and `search` (`search.rs::notices`, `search_modifier`),
+    `search_reach`, `kick` (`kick_door`), `dig_percent` (`dig_turn`), `favour_percent`
+    (`world::favour`). The first twelve: Healthy, Hardy, Dodge, Brawn, Silent feet, Keen ears,
+    Pack mule, Long strider, Lean, Good learner, Alert, Thick skin.
   - **Coverage** (the design's §8): every talent names the systems it touches; at load a
     system not `pending` with fewer than `min_talents` talents (or `min_class` class abilities,
     0 until the class tables), or a tree not `pending` nor `no_free` without `free_per_tree`

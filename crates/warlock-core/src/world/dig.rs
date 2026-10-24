@@ -26,6 +26,7 @@ use crate::geom::{Dir, Pos};
 use crate::noise::Act;
 use crate::sight::LineOfSight;
 use crate::stats::Stat;
+use crate::talent::TalentMods;
 use crate::time::Duration;
 
 /// The work done on a wall is kept in twentieths of a point of hardness, so a dig's work,
@@ -139,7 +140,15 @@ impl World {
             return;
         };
         let strength = player.effective_stats(&self.content).score(Stat::Strength);
+        // More for a talent that digs faster (a birth sign's Stonewise).
+        let percent = player.talent_mods(&self.content).dig_percent;
         let work = dig_work(power, strength);
+        let work = if percent == 0 {
+            work
+        } else {
+            let more = TalentMods::scaled(u64::from(work), percent);
+            u32::try_from(more).unwrap_or(u32::MAX).max(1)
+        };
         self.make_noise(self.state.player, Act::Dig);
         let level = self.state.current();
         let Some(breaks) = (level.terrain.get(at)).and_then(|t| self.content.terrain(*t).breaks)

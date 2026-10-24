@@ -1,10 +1,12 @@
 # Horoscope
 
 Everyone is born under a sign: the **animal** and the **element** of the year they were born. You
-do not choose yours. When you make a character (see [Your character](character.md)), the game
-picks your age and your birthday at random, and the year you were born decides your sign. The
-summary and the character screen (`@`) show it, for example *Age 34 · born 29 Greenleaf 1410 ·
-year of the Water Basilisk*.
+do not choose yours: the stars decide. When you make a character (see
+[Your character](character.md)), right after you choose your race the game tells you when you
+were born and under which sign, and what the stars gave you (*Born under the stars*). The summary
+and the character screen (`@`) show it again, for example *Age 34 · born 29 Greenleaf 1410 · year
+of the Water Basilisk*, and the character screen lists your sign's gifts by name on its *Stars*
+line.
 
 ## The Great Race
 
@@ -63,17 +65,42 @@ someone born on 30 Deepwinter is a sign earlier than someone born the next day, 
 
 ## What a sign does
 
-Your animal and your element each change your starting [stats](stats.md) a little; both count.
-The changes are in the tables below, added to your race's, gender's, and class's (see
-[Your character](character.md)). The changes are small and fixed: the horoscope rolls no dice.
+Your animal gives you **two gifts and a flaw**, and your element **two gifts** (elements have no
+flaws). They are [talents](talents.md) of their own tree, *Stars*: given at birth, never picked,
+and never lost. The game tells you what they do in words ("you move and act a little faster");
+the tables below give the exact rules. Some animals' and elements' gifts are still to come: the
+tables list those already in the game.
+
+{{#include generated/horoscope-animals.md}}
+
+{{#include generated/horoscope-elements.md}}
+
+Your animal and your element also each change your starting [stats](stats.md) a little; both
+count. The changes are in the tables at the end of this page, added to your race's, gender's, and
+class's (see [Your character](character.md)). The changes are small and fixed: the horoscope rolls
+no dice.
+
+## Lucky days
+
+Five signs have a **lucky day**: one animal for each element, born in its year **and** on one day
+of the month (any month). The day is the animal's place in the Great Race: the Salamander came
+first, so the 1st; the Manticore third, the Phoenix tenth, the Kraken eleventh; and the Barghest,
+who guards the gate between the cycles, the 30th, the last day of the month. Someone born on a
+lucky day has a **title** after their name ("Brakka, the Iron Scourge") and **one gift more**,
+an unfair one. The game never mentions lucky days until a character is born on one.
+
+{{#include generated/horoscope-lucky.md}}
+
+A short-lived race reaches fewer years at a given start date, so its chances differ: a human or a
+half-orc is likelier to be born lucky than an elf, and only the long-lived can be born the Racer
+at the default start.
 
 ## Your age and birthday
 
 Your starting age depends on your race: a human starts between 16 and 35 years old, an elf
 between 90 and 300 (see [Races](races.md) for every race). Your birthday can be any day of the
-year. Both come from the run's seed, so the same seed and race always give the same age and
-birthday. Your birth date is counted back from the day the run starts: you are exactly that old
-on it. You get a year older on every birthday, and the character screen shows your age on the day
+year, and fate picks both: choosing another gender or class does not change them. Your birth date
+is counted back from the day the run starts: you are exactly that old on it. You get a year older on every birthday, and the character screen shows your age on the day
 you look.
 
 {{#include generated/horoscope.md}}

@@ -1,0 +1,8 @@
+[[talent]]
+id = "regrowth"
+name = "Regrowth"
+tree = "stars"
+granted = true
+description = "Your hit points come back half again as fast, and your bleeding stops sooner."
+effects = [{ kind = "healing_percent", value = 50 }, { kind = "ease", of = "wounds", times = 2 }]
+systems = ["hit_points", "status"]

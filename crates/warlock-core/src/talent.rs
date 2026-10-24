@@ -15,7 +15,9 @@
 
 use crate::alignment::Band;
 use crate::character::Character;
-use crate::content::{Choice, Content, Need, TalentDef, TalentEffect, TalentId};
+use crate::content::{
+    Ailment, Choice, Content, Need, Sign, StatusDef, TalentDef, TalentEffect, TalentId,
+};
 use crate::skills::Skills;
 use crate::stats::Stats;
 use crate::weapon_skills::WeaponSkills;
@@ -79,6 +81,21 @@ impl Talents {
         1
     }
 
+    /// Replaces the granted talents held (those `content` marks `granted`) with `ids`, first and
+    /// in that order, each at rank 1 (spec §8 "Birth sign": a sign's gifts are computed, never
+    /// chosen). Picked talents keep their order after them; ids the content lacks are skipped.
+    pub(crate) fn regrant(&mut self, content: &Content, ids: &[&str]) {
+        let book = content.talents();
+        let is_granted = |id: &str| book.id(id).is_some_and(|t| book.get(t).granted);
+        self.0.retain(|t| !is_granted(&t.id));
+        let given = (ids.iter()).filter(|id| is_granted(id)).map(|id| Taken {
+            id: id.to_string(),
+            rank: 1,
+            choice: None,
+        });
+        self.0.splice(0..0, given);
+    }
+
     /// What every rank held does, summed ([`TalentMods`]). Talents the content no longer has
     /// do nothing.
     pub fn mods(&self, content: &Content) -> TalentMods {
@@ -109,13 +126,27 @@ pub struct TalentMods {
     pub dodge: i32,
     /// Natural armour, on top of the actor's own.
     pub natural: i32,
+    /// Added to the burden's cap on Dexterity in Defence.
+    pub max_dex: i32,
+    /// Added to its Protection.
+    pub protection: i32,
     /// Added to every melee blow's damage.
     pub melee_damage: i32,
+    /// How many natural points lower every attack threatens a critical.
+    pub threat: i32,
+    /// A fumble is rolled again, once.
+    pub reroll_fumble: bool,
     /// Hit points by level, one entry per rank held: `(per_levels, at_least)`
     /// ([`TalentMods::hp_at`]).
     pub hp_per_levels: Vec<(u8, i32)>,
     /// Percent faster hit points come back.
     pub healing_percent: i32,
+    /// Kinds of status effects that ease faster, each with how many times as fast.
+    pub eases: Vec<(Ailment, u8)>,
+    /// Poison never lowers its scores.
+    pub poison_spares_scores: bool,
+    /// Added to its checks against diseases.
+    pub disease_checks: i32,
     /// Percent louder footsteps (negative: quieter).
     pub footsteps_percent: i32,
     /// The doors it opens and closes make no noise.
@@ -126,8 +157,14 @@ pub struct TalentMods {
     pub carry_percent: i32,
     /// Percent more time an overworld journey takes (negative: quicker).
     pub travel_percent: i32,
+    /// Wading costs a plain step and gives no disease.
+    pub swimmer: bool,
+    /// Percent more speed (negative: slower).
+    pub speed_percent: i32,
     /// Percent faster hunger burns (negative: slower).
     pub hunger_percent: i32,
+    /// Percent more sickness from rotten food (negative: less).
+    pub rot_harm_percent: i32,
     /// Exertion burns nothing.
     pub no_exertion: bool,
     /// Percent more experience.
@@ -135,6 +172,18 @@ pub struct TalentMods {
     /// It notices hidden things in passing, with this much added; `None`: only as its skills
     /// and race allow.
     pub notice: Option<i32>,
+    /// It notices hidden things on stone in passing.
+    pub stone_sense: bool,
+    /// Added to every check to find hidden things.
+    pub search: i32,
+    /// Cells more its searching reaches.
+    pub search_reach: i32,
+    /// Added to its Strength for kicking doors.
+    pub kick: i32,
+    /// Percent more digging work a turn.
+    pub dig_percent: i32,
+    /// Percent shop prices move further in its favour.
+    pub favour_percent: i32,
     /// The free blows its talents switch on.
     pub free_blows: FreeBlows,
 }
@@ -158,23 +207,39 @@ impl TalentMods {
         match effect {
             TalentEffect::Dodge { value } => self.dodge += value,
             TalentEffect::Natural { value } => self.natural += value,
+            TalentEffect::MaxDex { value } => self.max_dex += value,
+            TalentEffect::Protection { value } => self.protection += value,
             TalentEffect::MeleeDamage { value } => self.melee_damage += value,
+            TalentEffect::Threat { value } => self.threat += value,
+            TalentEffect::RerollFumble => self.reroll_fumble = true,
             TalentEffect::MaxHpPerLevels {
                 per_levels,
                 at_least,
             } => self.hp_per_levels.push((per_levels, at_least)),
             TalentEffect::HealingPercent { value } => self.healing_percent += value,
+            TalentEffect::Ease { of, times } => self.eases.push((of, times)),
+            TalentEffect::PoisonSparesScores => self.poison_spares_scores = true,
+            TalentEffect::DiseaseChecks { value } => self.disease_checks += value,
             TalentEffect::FootstepsPercent { value } => self.footsteps_percent += value,
             TalentEffect::SilentDoors => self.silent_doors = true,
             TalentEffect::Hearing { value } => self.hearing += value,
             TalentEffect::CarryPercent { value } => self.carry_percent += value,
             TalentEffect::TravelPercent { value } => self.travel_percent += value,
+            TalentEffect::Swimmer => self.swimmer = true,
+            TalentEffect::SpeedPercent { value } => self.speed_percent += value,
             TalentEffect::HungerPercent { value } => self.hunger_percent += value,
+            TalentEffect::RotHarmPercent { value } => self.rot_harm_percent += value,
             TalentEffect::NoExertion => self.no_exertion = true,
             TalentEffect::XpPercent { value } => self.xp_percent += value,
             TalentEffect::Notice { value } => {
                 self.notice = Some(self.notice.unwrap_or(0) + value);
             }
+            TalentEffect::StoneSense => self.stone_sense = true,
+            TalentEffect::Search { value } => self.search += value,
+            TalentEffect::SearchReach { value } => self.search_reach += value,
+            TalentEffect::Kick { value } => self.kick += value,
+            TalentEffect::DigPercent { value } => self.dig_percent += value,
+            TalentEffect::FavourPercent { value } => self.favour_percent += value,
             TalentEffect::FreeBlow { trigger } => {
                 use crate::content::FreeBlowTrigger as T;
                 match trigger {
@@ -193,6 +258,16 @@ impl TalentMods {
         (self.hp_per_levels.iter())
             .map(|&(per, least)| (i32::from(level) / i32::from(per.max(1))).max(least))
             .sum()
+    }
+
+    /// How many times as fast `status` eases for it: the most of its `ease` effects that fit
+    /// the status, else 1.
+    pub fn ease_factor(&self, content: &Content, status: &StatusDef) -> u64 {
+        (self.eases.iter())
+            .filter(|(of, _)| of.is(content, status))
+            .map(|&(_, times)| u64::from(times))
+            .max()
+            .unwrap_or(1)
     }
 
     /// `value` scaled by a signed percent, rounded down, never below 0: the limit at
@@ -220,6 +295,9 @@ pub struct Candidate<'a> {
     /// The alignment band (spec §8 "Alignment"); `None` without alignment rules, when no
     /// talent that asks for one can be taken.
     pub band: Option<Band>,
+    /// The birth sign (spec §8 "Birth sign"), if any, and whether it is a lucky day's.
+    pub sign: Option<&'a Sign>,
+    pub lucky: bool,
 }
 
 impl<'a> Candidate<'a> {
@@ -243,6 +321,8 @@ impl<'a> Candidate<'a> {
             class: spec.map(|s| s.class.as_str()),
             eyes: race.map(|r| r.vision.as_str()),
             band: content.alignment().map(|_| actor.band(content)),
+            sign: character.and_then(|c| c.sign.as_ref()),
+            lucky: character.is_some_and(|c| c.lucky(content).is_some()),
         }
     }
 
@@ -278,6 +358,9 @@ impl<'a> Candidate<'a> {
             Need::Race(id) => self.race == Some(id.as_str()),
             Need::Eyes(id) => self.eyes == Some(id.as_str()),
             Need::Class(id) => self.class == Some(id.as_str()),
+            Need::Animal(id) => self.sign.is_some_and(|s| s.is_animal(id)),
+            Need::Element(id) => self.sign.is_some_and(|s| s.is_element(id)),
+            Need::Lucky => self.lucky,
             Need::Alignment(required) => self.band.is_some_and(|band| required.allows(band)),
         }
     }

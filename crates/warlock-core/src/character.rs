@@ -202,6 +202,44 @@ impl Character {
         ))
     }
 
+    /// The lucky day the character was born on (spec §8 "Birth sign"), if they were.
+    pub fn lucky<'c>(&self, content: &'c Content) -> Option<&'c crate::content::Lucky> {
+        content.lucky(self.sign.as_ref()?, &self.born)
+    }
+
+    /// The title a lucky day gives, after the name ("the Iron Scourge"); `None` for most.
+    pub fn title<'c>(&self, content: &'c Content) -> Option<&'c str> {
+        self.lucky(content).map(|l| l.title.as_str())
+    }
+
+    /// The name with a lucky day's title, as the character and death screens say it: `Brakka,
+    /// the Iron Scourge`; the name alone for most.
+    pub fn titled_name(&self, content: &Content) -> String {
+        match self.title(content) {
+            Some(title) => format!("{}, {title}", self.name),
+            None => self.name.clone(),
+        }
+    }
+
+    /// The sign as players say it with a lucky day's title: `Metal Manticore, the Iron
+    /// Scourge`; `None` without a sign.
+    pub fn sign_title(&self, content: &Content) -> Option<String> {
+        let name = self.sign_name(content)?;
+        Some(match self.title(content) {
+            Some(title) => format!("{name}, {title}"),
+            None => name,
+        })
+    }
+
+    /// The talents the character's sign gives them (spec §8 "Birth sign"), by id: the animal's,
+    /// the element's, then a lucky day's. None without a sign or a horoscope.
+    pub fn grants<'c>(&self, content: &'c Content) -> Vec<&'c str> {
+        match (&self.sign, content.horoscope()) {
+            (Some(sign), Some(h)) => h.grants(sign, self.born.day),
+            _ => Vec::new(),
+        }
+    }
+
     /// Whether `content` has everything this character names: race, class, and sign.
     pub fn check(&self, content: &Content) -> Result<(), String> {
         self.spec.check(content)?;
