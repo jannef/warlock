@@ -36,7 +36,7 @@ Characters screen resumes one by id (`MenuChoice::Resume`) or deletes it after t
 shows it) and the main menu opens afresh with the reason. Captures and replays never write: with
 `--save-dir` their store is read-only (`SaveStore::read_only`), so a capture can show the list of
 the characters in a folder (`tests/golden/saved-characters`, whose saves are placeholders: only the
-summaries are read). A pre-#218 `run.sav` is left alone: not read, listed, or deleted (the next
+summaries are read; the screen snapshots' `main-menu-saved` and `characters-screen` read it too). A pre-#218 `run.sav` is left alone: not read, listed, or deleted (the next
 release's format bump would reject it anyway, and its character has no name).
 
 Format and `Content::fingerprint` live in `warlock-core/src/save.rs`.

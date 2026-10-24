@@ -11,8 +11,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   happens there); macOS does not run in CI.
 - Core: unit tests; property tests for line-of-sight symmetry and for sight and light never passing
   through walls; snapshot tests of ASCII dumps; replay determinism tests.
-- Renderer: golden screenshots per showcase room, compared on Linux CI with software Vulkan.
-  Reference images are updated deliberately, never automatically.
+- Renderer: golden screenshots of what only the GPU produces (lighting regimes, sky and weather,
+  glow, water, blood, spell effects, missiles), compared on Linux CI with software Vulkan; kept
+  few on purpose (#301). Reference images are updated deliberately, never automatically.
+- UI: text snapshots of the screens (the UI console as text, `insta`), checked by
+  `cargo test`.
 - No panics on player paths; errors are shown to the player gracefully; `tracing` logs go to a file
   in release builds.
 - Every milestone ends with a downloadable, playable build for each OS, published by the tagged

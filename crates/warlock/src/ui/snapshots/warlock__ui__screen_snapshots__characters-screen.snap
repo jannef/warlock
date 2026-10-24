@@ -1,0 +1,25 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+
+
+
+
+
+
+
+
+
+              ┌─ Characters ─────────────────────────────────────────────────────────┐
+              │                                                                      │
+              │ > Brakka                Dwarf Warrior                      level 4   │
+              │   Tamsin                Human Thief                        level 2   │
+              │   Brakka                Dwarf Priest                       level 1   │
+              │                                                                      │
+              │   In The Depths 2.                                                   │
+              │   Last played 2026-10-20 14:32 UTC.                                  │
+              │                                                                      │
+              │                                                                      │
+              │ ↑↓ choose   Enter play   Del delete   Esc back                       │
+              └──────────────────────────────────────────────────────────────────────┘
