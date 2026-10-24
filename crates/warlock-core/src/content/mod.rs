@@ -44,6 +44,7 @@ mod slot;
 mod spell;
 mod stance;
 mod status;
+mod talent;
 mod terrain;
 mod trap;
 mod vault;
@@ -74,7 +75,7 @@ pub use effect::{
     MAX_SHAKE_PIXELS, Shake,
 };
 pub use experience::{
-    Discovery, Experience, FACTORS, Factor, Guideline, Kills, MAX_LEVEL, MAX_XP, pace_words,
+    Discovery, Experience, FACTORS, Factor, Guideline, Kills, Levels, MAX_LEVEL, MAX_XP, pace_words,
 };
 pub use faction::{FactionDef, FactionId, Factions, PLAYER_FACTION, Stance};
 pub use flow::{FLOW_SPEEDS, Flow};
@@ -124,6 +125,10 @@ pub use stance::{CombatStance, StanceDef, Stances, percent_of};
 pub use status::{
     Affliction, COST_PERCENT, CombatBonus, Healing, MAX_REGEN, MAX_SEVERITY, OnHit, Penalty,
     Stacking, StatusDef, StatusId, Wound,
+};
+pub use talent::{
+    Choice, Coverage, DEFAULT_MAX_RANKS, FreeBlowTrigger, Need, Needs, Rank, SystemDef, SystemId,
+    TalentBook, TalentDef, TalentEffect, TalentId, TreeDef, TreeId,
 };
 pub use terrain::{
     Breakable, Freeze, FreezeSpec, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId,
@@ -438,6 +443,9 @@ pub struct Content {
     /// The corpse object of each creature type, by creature id (`None`: it leaves none).
     corpses: Vec<Option<ObjectId>>,
     weapon_skills: WeaponSkillTable,
+    /// Talents (`data/talents.toml` and `data/talents/`, spec §8 "Talents"); none without the
+    /// files.
+    talents: TalentBook,
     /// Special rooms' effects (`data/room_effects.toml`).
     room_effects: RoomEffects,
     /// Prefixes, suffixes, and how loot rolls them (`data/affixes.toml`).
@@ -510,6 +518,7 @@ impl Content {
             corpses: Vec::new(),
             weapon_skills: WeaponSkillTable::default(),
             room_effects: RoomEffects::default(),
+            talents: TalentBook::default(),
             affixes: Affixes::default(),
             stances: Stances::default(),
             statuses: Vec::new(),
@@ -591,6 +600,10 @@ impl Content {
         let path = "data/experience.toml";
         if let Some(text) = files.get_optional(path) {
             content.experience = Experience::parse(path, text)?;
+        }
+        // The talent table (spec §8 "Talents"): optional, so no level asks for a pick without it.
+        if files.table("talents").next().is_some() {
+            content.talents = talent::parse(files.table("talents"), &content)?;
         }
         let path = "data/horoscope.toml";
         if let Some(text) = files.get_optional(path) {
@@ -2119,6 +2132,12 @@ impl Content {
     /// Every skill, with its id, in file order.
     pub fn skill_ids(&self) -> impl Iterator<Item = (SkillId, &SkillDef)> {
         (0u8..).zip(&self.skills.list).map(|(i, s)| (SkillId(i), s))
+    }
+
+    /// The talents (`data/talents.toml` and `data/talents/`, spec §8 "Talents"): none without
+    /// the files.
+    pub fn talents(&self) -> &TalentBook {
+        &self.talents
     }
 
     /// **[provisional]** How training marks become points (`[increase]` in `data/skills.toml`).

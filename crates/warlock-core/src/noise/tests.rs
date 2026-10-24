@@ -134,6 +134,7 @@ fn actor(content: &Content, creature: &str) -> Actor {
         satiation: None,
         stance: Default::default(),
         free_blows: Default::default(),
+        talents: Default::default(),
     }
 }
 

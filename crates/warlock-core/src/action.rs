@@ -113,6 +113,18 @@ pub enum Action {
     /// this many turns (each the `search` action's time, a fresh check every turn), stopping at
     /// once when something is found or something interrupts, like a rest. 1 is one search.
     Search(u8),
+    /// Take talent `id` (an id in `data/talents/`), for `choice` if it takes one (spec §8
+    /// "Talents"): one of the picks a level brings, made at once (nothing is banked). Refused
+    /// with the reason when none is due or a prerequisite fails. Takes no game time; recorded in
+    /// replays.
+    Talent {
+        id: String,
+        choice: Option<String>,
+    },
+    /// Spend one of a level's skill rolls on trained skill `skill` (spec §8 "Talents"). No
+    /// level brings rolls until the skill ladder lands (#230), so it is refused. Takes no game
+    /// time; recorded in replays.
+    Advance(String),
     /// Dev command: switch the player's vision profile (an id in `data/vision.toml`). Takes no
     /// game time, but changes state and perception, so replays record it like any action.
     SetVision(String),
@@ -143,6 +155,13 @@ pub enum Action {
     /// had failed to resist it: it incubates, then shows. Takes no game time; recorded in
     /// replays.
     Infect(String),
+    /// Dev command: spend every choice a level still asks for with the first the player may
+    /// take (spec §8 "Talents"), for tests and benchmarks. Takes no game time; recorded in
+    /// replays.
+    LevelUpAuto,
+    /// Dev command: the player gains this much experience, and any levels it brings (spec §8
+    /// "Experience"), for tests and captures. Takes no game time; recorded in replays.
+    GrantXp(u32),
     /// Dev command: an instant frost (spec §5 "Ice"): the water within `radius` of cell `at`, in
     /// its line of sight, freezes at once to ice that holds a laden person
     /// ([`crate::ice::FROST`]). Takes no game time; recorded in replays.
@@ -581,6 +600,14 @@ impl fmt::Display for Action {
             Action::Dig(d) => write!(f, "dig:{d}"),
             Action::Search(1) => f.write_str("search"),
             Action::Search(turns) => write!(f, "search:{turns}"),
+            Action::Talent { id, choice: None } => write!(f, "talent:{id}"),
+            Action::Talent {
+                id,
+                choice: Some(choice),
+            } => write!(f, "talent:{id}:{choice}"),
+            Action::Advance(skill) => write!(f, "advance:{skill}"),
+            Action::LevelUpAuto => f.write_str("levelup:auto"),
+            Action::GrantXp(xp) => write!(f, "xp:{xp}"),
             Action::SetVision(id) => write!(f, "vision:{id}"),
             Action::SkipTime(d) => write!(f, "skip:{d}"),
             Action::SetWeather(w) => write!(f, "weather:{}", w.id()),
@@ -759,6 +786,43 @@ impl FromStr for Action {
                 .ok_or_else(|| "`stance` needs a stance, e.g. `stance:coward`".to_string())?
                 .parse()
                 .map(Action::SetStance),
+            "talent" => {
+                // Ids keep their case.
+                let usage = || {
+                    "`talent` needs a talent id, e.g. `talent:hardy` or \
+                     `talent:weapon_focus:long_blades`"
+                        .to_string()
+                };
+                let rest = s.split_once(':').map(|(_, rest)| rest).ok_or_else(usage)?;
+                let (id, choice) = match rest.split_once(':') {
+                    Some((id, choice)) => (id, Some(choice)),
+                    None => (rest, None),
+                };
+                let bad = |t: &str| {
+                    t.is_empty() || t.contains([':', '@']) || t.contains(char::is_whitespace)
+                };
+                if bad(id) || choice.is_some_and(bad) {
+                    return Err(usage());
+                }
+                Ok(Action::Talent {
+                    id: id.to_string(),
+                    choice: choice.map(str::to_string),
+                })
+            }
+            "advance" => match s.split_once(':').map(|(_, id)| id) {
+                Some(id) if !id.is_empty() && !id.contains(':') => {
+                    Ok(Action::Advance(id.to_string()))
+                }
+                _ => Err("`advance` needs a skill id, e.g. `advance:stealth`".into()),
+            },
+            "levelup" => match arg {
+                Some("auto") => Ok(Action::LevelUpAuto),
+                _ => Err("`levelup` takes `auto`: `levelup:auto`".into()),
+            },
+            "xp" => match arg.and_then(|a| a.parse::<u32>().ok()) {
+                Some(xp) if xp > 0 => Ok(Action::GrantXp(xp)),
+                _ => Err("`xp` needs a number of experience points, e.g. `xp:2500`".into()),
+            },
             "vision" => match s.split_once(':').map(|(_, id)| id) {
                 Some(id) if !id.is_empty() => Ok(Action::SetVision(id.to_string())),
                 _ => Err("`vision` needs a profile id, e.g. `vision:darkvision`".into()),
@@ -987,6 +1051,21 @@ mod tests {
             Action::Afflict("Odd_Case".into()),
             Action::Infect("filth_fever".into()),
             Action::Infect("Odd_Case".into()),
+            Action::Talent {
+                id: "hardy".into(),
+                choice: None,
+            },
+            Action::Talent {
+                id: "weapon_focus".into(),
+                choice: Some("long_blades".into()),
+            },
+            Action::Talent {
+                id: "Odd_Case".into(),
+                choice: Some("Mixed".into()),
+            },
+            Action::Advance("stealth".into()),
+            Action::LevelUpAuto,
+            Action::GrantXp(2500),
             Action::Freeze {
                 at: Pos::new(40, 12),
                 radius: 3,
