@@ -842,7 +842,7 @@ fn rows(width: i32, height: i32, glyph: impl Fn(Pos) -> char) -> Vec<String> {
 }
 
 /// One-line summary used as the dump header; under the open sky it names the weather, and it
-/// has the temperature where the player is.
+/// has the temperature where the player is (and `dazzled` while strong light dazzles them).
 fn summary(world: &World) -> String {
     let view = world.perception();
     // Spelled as in the JSON dump (`heavy_rain`).
@@ -857,9 +857,10 @@ fn summary(world: &World) -> String {
     let hunger = (view.own_hunger())
         .filter(|h| *h != Hunger::NotHungry)
         .map_or(String::new(), |h| format!(" hunger {}", h.id()));
+    let dazzled = if view.dazzled() { " dazzled" } else { "" };
     format!(
-        "turn {} time {} level {} viewer {} hp {hp}/{max}{dead}{hunger}{weather} temperature \
-         {temperature} hash {:016x}",
+        "turn {} time {} level {} viewer {} hp {hp}/{max}{dead}{hunger}{dazzled}{weather} \
+         temperature {temperature} hash {:016x}",
         world.turn(),
         world.time(),
         view.level_id(),
@@ -1050,6 +1051,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
             .map(|(k, w)| (content.damage_type(k).id.clone(), json!(w.word())))
             .collect::<serde_json::Map<String, Value>>(),
         "hunger": view.own_hunger(),
+        "dazzled": view.dazzled(),
         "death": death,
         "messages": messages,
         "layers": layer_map,

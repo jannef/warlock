@@ -6,8 +6,8 @@
 //! "Experience"), trains them in skills (spec §8 "Skills"; dice,
 //! and humans' extra class skill), gives them starting ranks in weapon skills (spec §8
 //! "Weapon skills"; fixed numbers or dice), says what they notice of hidden features in
-//! passing (spec §8 "Searching"), and may give them natural armour (spec §8 "Combat") and
-//! resistances (spec §8 "Damage types").
+//! passing (spec §8 "Searching"), and may give them natural armour (spec §8 "Combat"),
+//! resistances (spec §8 "Damage types"), and eyes that strong light dazzles ([`LightBlind`]).
 
 use super::weapon_skill::Ranked;
 use super::{
@@ -15,6 +15,8 @@ use super::{
 };
 use crate::combat::MAX_BASE_HP;
 use crate::dice::Dice;
+use crate::light::Light;
+use crate::perception::VIEW_RADIUS;
 use crate::skills::{self, GRANTS, SkillId};
 use crate::stats::{PerStat, SCORES, Stat, adjustments};
 use serde::Deserialize;
@@ -56,6 +58,7 @@ struct RaceSpec {
     natural: Option<Hide>,
     #[serde(default)]
     resist: BTreeMap<String, i32>,
+    light_blind: Option<LightBlind>,
     #[serde(default)]
     alignment: i32,
     size: Option<String>,
@@ -82,6 +85,42 @@ pub const MAX_AGE: u32 = 1000;
 /// What a race may add to searching and noticing (spec §8 "Searching").
 pub const SEARCH_BONUSES: RangeInclusive<i32> = -10..=10;
 
+/// Eyes that strong light dazzles (spec §8 "Character creation"; drow): `light_blind = { glare
+/// = 250, sight = 10, to_hit = -1 }`. While the light on the player's own cell, as their eyes
+/// perceive it, is at least `glare` bright (the sun well up, a bright fire close by), they see no
+/// farther than `sight` cells and their attacks are `to_hit` worse.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct LightBlind {
+    /// The perceived brightness ([`Light::brightness`]) from which light dazzles.
+    pub glare: u16,
+    /// How far a dazzled character sees, in cells.
+    pub sight: i32,
+    /// What being dazzled adds to every attack's to-hit (0 or less).
+    pub to_hit: i32,
+}
+
+impl LightBlind {
+    /// Whether light `light` on the character's cell, as their eyes perceive it, dazzles them.
+    /// The one rule of light-blindness: perception reads it for sight, attacks for to-hit.
+    pub fn dazzled_by(&self, light: Light) -> bool {
+        light.brightness() >= self.glare
+    }
+
+    fn check(&self) -> Result<(), String> {
+        if self.glare == 0
+            || !(1..=VIEW_RADIUS).contains(&self.sight)
+            || !(-20..=0).contains(&self.to_hit)
+        {
+            return Err(format!(
+                "light_blind: `glare` must be at least 1, `sight` 1 to {VIEW_RADIUS}, and \
+                 `to_hit` -20 to 0"
+            ));
+        }
+        Ok(())
+    }
+}
+
 /// A race, in the order offered.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RaceDef {
@@ -107,6 +146,8 @@ pub struct RaceDef {
     /// What it resists, in percent per damage type, in damage type order (spec §8 "Damage
     /// types"), as a creature type's `resist`: added to what the player wears. Drow and poison.
     pub resist: Vec<(DamageTypeId, i32)>,
+    /// Whether strong light dazzles the player, and what that costs them ([`LightBlind`]).
+    pub light_blind: Option<LightBlind>,
     /// Its part of a new character's alignment score (spec §8 "Alignment"), added to the
     /// class's.
     pub alignment: i32,
@@ -208,6 +249,11 @@ impl Races {
                 hide.check().map_err(|m| err(format!("race `{id}`: {m}")))?;
             }
             let resist = resist(&spec.resist).map_err(|m| err(format!("race `{id}`: {m}")))?;
+            if let Some(blind) = &spec.light_blind {
+                blind
+                    .check()
+                    .map_err(|m| err(format!("race `{id}`: {m}")))?;
+            }
             let alignment = crate::alignment::check_start(spec.alignment)
                 .map_err(|m| err(format!("race `{id}`: {m}")))?;
             let size_id = spec.size.as_deref().unwrap_or(super::MEDIUM);
@@ -260,6 +306,7 @@ impl Races {
                 hp: i32::from(spec.hp),
                 natural: spec.natural,
                 resist,
+                light_blind: spec.light_blind,
                 alignment,
                 size,
                 ignores_burdened: spec.ignores_burdened,
@@ -335,6 +382,22 @@ mod tests {
         assert_eq!((hide.defence, hide.protection), (0, 1));
         assert_eq!(hide.name, "scales");
         assert!(human.resist.is_empty(), "nothing resisted unless named");
+        assert_eq!(
+            human.light_blind, None,
+            "light does not dazzle unless named"
+        );
+        let drow = parse(&format!(
+            "{ONE}light_blind = {{ glare = 250, sight = 10, to_hit = -1 }}\n"
+        ))
+        .expect("valid");
+        let blind = drow.list[0].light_blind.expect("light-blind");
+        assert_eq!((blind.glare, blind.sight, blind.to_hit), (250, 10, -1));
+        assert!(blind.dazzled_by(Light::new(250, 250, 250, 0)));
+        assert!(!blind.dazzled_by(Light::new(249, 249, 249, 0)));
+        assert!(
+            blind.dazzled_by(Light::new(0, 0, 0, 250)),
+            "UV, if the eyes see it"
+        );
         let drow = parse(&format!("{ONE}resist = {{ poison = 25, fire = -10 }}\n")).expect("valid");
         let kinds = |r: &RaceDef| -> Vec<(String, i32)> {
             (r.resist.iter())
@@ -473,6 +536,22 @@ mod tests {
             (
                 format!("{ONE}resist = {{ poison = 101 }}\n"),
                 "`resist`: `poison` must be -100 to 100",
+            ),
+            (
+                format!("{ONE}light_blind = {{ glare = 0, sight = 10, to_hit = -1 }}\n"),
+                "race `human`: light_blind: `glare` must be at least 1",
+            ),
+            (
+                format!("{ONE}light_blind = {{ glare = 250, sight = 41, to_hit = -1 }}\n"),
+                "`sight` 1 to 40",
+            ),
+            (
+                format!("{ONE}light_blind = {{ glare = 250, sight = 10, to_hit = 1 }}\n"),
+                "`to_hit` -20 to 0",
+            ),
+            (
+                format!("{ONE}light_blind = {{ glare = 250, sight = 10 }}\n"),
+                "missing field `to_hit`",
             ),
         ] {
             let e = parse(&text).unwrap_err();

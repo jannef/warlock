@@ -98,6 +98,7 @@ mod equip;
 mod experience;
 mod fight;
 mod free_blow;
+mod glare;
 mod hash;
 mod hearing;
 mod hunger;

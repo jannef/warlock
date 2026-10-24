@@ -58,7 +58,9 @@ impl World {
         self.burn_out();
         self.rot_away();
         let before = self.perception.weather();
+        let dazzled = self.perception.dazzled();
         *self.perception = Perception::compute(&self.state, &self.content, &mut self.lights);
+        self.glare_news(dazzled);
         self.learn_traps(events);
         let current = self.state.current_level.clone();
         if let Some(level) = self.state.levels.get_mut(&current) {

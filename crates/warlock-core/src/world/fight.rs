@@ -665,6 +665,7 @@ impl World {
         ) else {
             return None;
         };
+        let profile = profile.map(|p| self.glared(attacker, p));
         let struck = self.target_of(target);
         let levels = (self.level_of(attacker), self.level_of(target));
         let rng = &mut self.state.rng;

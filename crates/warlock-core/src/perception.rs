@@ -23,7 +23,9 @@
 //!
 //! A cell is **visible** iff it is in line of sight within [`VIEW_RADIUS`] **and** its perceived
 //! light is at least the vision profile's threshold or it lies within the darkvision radius. The
-//! player's own cell is always visible.
+//! player's own cell is always visible. A **light-blind** player (their race's
+//! [`LightBlind`](crate::content::LightBlind): drow) whose own cell is lit at least to its
+//! `glare` is dazzled: they see nothing farther than its `sight`.
 //!
 //! The overworld is seen at map scale instead: a cell is visible iff it is in line of sight
 //! within the daylight sight radius ([`daylight::overworld_sight`]: day 9, twilight 5, night 2,
@@ -276,6 +278,8 @@ pub(crate) struct Perception {
     sounds: Vec<PerceivedSound>,
     /// Cells whose blood the player sees, in position order.
     blood: Vec<Pos>,
+    /// Whether strong light dazzles the player's light-blind eyes (their race's `light_blind`).
+    dazzled: bool,
 }
 
 impl Perception {
@@ -296,7 +300,6 @@ impl Perception {
             Some(sky) if overworld => daylight::sight_under(state.time, sky, content.climate()),
             _ => VIEW_RADIUS,
         };
-        let sees = |light: Light, dist2: i32| overworld || eye.sees(light, dist2);
 
         // Line of sight.
         let mut los = Grid::new(width, height, false);
@@ -407,6 +410,15 @@ impl Perception {
             }
         }
 
+        // Light-blind eyes in glare: strong light on the viewer's own cell dazzles them, and
+        // they see nothing farther than their race says.
+        let dazzled = (state.race_of(content, state.player()))
+            .and_then(|race| race.light_blind)
+            .filter(|blind| blind.dazzled_by(light[viewer]));
+        let reach2 = radius2(dazzled.map_or(range, |blind| range.min(blind.sight)));
+        let sees =
+            |light: Light, dist2: i32| dist2 <= reach2 && (overworld || eye.sees(light, dist2));
+
         // Transparent cells: visible with enough light or within darkvision; the viewer's own
         // cell always.
         let mut sight = Grid::new(width, height, Sight::Hidden);
@@ -424,7 +436,6 @@ impl Perception {
         }
 
         // Wall completion: opaque cells bounding a transparent cell seen by eye.
-        let reach2 = radius2(range);
         for q in seen {
             for w in Dir::ALL.map(|d| q.step(d)) {
                 if sight.get(w) == Some(&Sight::Hidden) && is_opaque(w) && w.dist2(viewer) <= reach2
@@ -587,7 +598,13 @@ impl Perception {
             effects,
             sounds,
             blood,
+            dazzled: dazzled.is_some(),
         }
+    }
+
+    /// Whether strong light dazzles the player's light-blind eyes.
+    pub(crate) fn dazzled(&self) -> bool {
+        self.dazzled
     }
 
     /// Sounds heard during the last turn from sources the player does not see.
@@ -1136,6 +1153,12 @@ impl<'a> PerceptionView<'a> {
     /// The player's active vision profile.
     pub fn vision(&self) -> &'a VisionProfile {
         &self.content.vision_profiles()[self.snapshot.vision]
+    }
+
+    /// Whether strong light dazzles the player (light-blind eyes in glare): they see less far,
+    /// and fight worse. Only that it does, never how much.
+    pub fn dazzled(&self) -> bool {
+        self.snapshot.dazzled
     }
 
     /// The level's ambient light, as the player perceives it.

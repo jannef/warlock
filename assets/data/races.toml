@@ -22,6 +22,12 @@
 #                 as a creature's: { poison = 25 }, -100 (twice the harm) to 100 (immune), added
 #                 to what they wear (spec §8 "Damage types"); the game names it in words only
 #                 ("Resistant to poison"). Default none
+#   light_blind   eyes that strong light dazzles: { glare = 250, sight = 10, to_hit = -1 }.
+#                 While the light on the character's own cell, as their eyes perceive it (the
+#                 status bar's Light), is at least `glare` bright (the sun well up, a bright fire
+#                 close by), they are dazzled: they see nothing farther than `sight` cells (1 to
+#                 40) and every attack they make is `to_hit` worse (-20 to 0). The game says
+#                 when it begins and ends, and shows Dazzled while it lasts. Default none
 #   alignment     the race's part of a new character's hidden alignment score (spec §8
 #                 "Alignment"; alignment.toml; -1000 evil to 1000 good, default 0), added to
 #                 their class's: a lean that never alone moves anyone out of Neutral
