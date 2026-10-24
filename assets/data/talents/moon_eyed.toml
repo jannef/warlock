@@ -1,0 +1,8 @@
+[[talent]]
+id = "moon_eyed"
+name = "Moon-eyed"
+tree = "wayfarer"
+description = "You see farther across the land at night."
+needs = { eyes = "low_light" }
+effects = [{ kind = "night_sight", value = 1 }]
+systems = ["vision", "weather"]

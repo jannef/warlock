@@ -42,7 +42,7 @@
 //!   buffs, hexes, and cooldowns are `world/buff.rs`).
 
 use super::fight::Harm;
-use super::{ActorId, Spent, World, disease, mana, rot};
+use super::{Actor, ActorId, Spent, World, disease, mana, rot};
 use crate::action::{AttackKind, Event};
 use crate::combat::{self, Blow, Strike};
 use crate::content::Effect as ItemEffect;
@@ -228,7 +228,7 @@ impl World {
     /// without any), times the resting bonus while the player rests, times the `regen` of a
     /// special room it stands in (a sanctuary: three times; spec §7 "Special rooms"), times what
     /// the regeneration affixes of what it wears and wields add (spec §8 "Magic items": +50 % is
-    /// half again as fast). The one place that decides it. A Starving player gets none back
+    /// half again as fast), with its talents' (Healthy; Sun-blessed's under the open sun). The one place that decides it. A Starving player gets none back
     /// (spec §8 "Hunger"); disease (#139) slows it through Diseased's `regen` and its own.
     pub(crate) fn healing_rate(&self, id: ActorId) -> u32 {
         let Some(actor) = self.state.actors.get(&id) else {
@@ -249,11 +249,33 @@ impl World {
         let room = (self.state.levels.get(&actor.level))
             .and_then(|level| level.room_effect_at(&self.content, actor.pos));
         let rate = room.map_or(rate, |effect| rate * u32::from(effect.regen) / 100);
-        // Then the regeneration of what it wears and wields, and its talents' (Healthy).
-        let faster = actor.mods(&self.content).get(ItemEffect::Regeneration)
-            + actor.talent_mods(&self.content).healing_percent;
+        // Then the regeneration of what it wears and wields, and its talents' (Healthy;
+        // Sun-blessed's under the open sun).
+        let talents = actor.talent_mods(&self.content);
+        let sun = if talents.sun_healing != 0 && self.under_open_sun(actor) {
+            talents.sun_healing
+        } else {
+            0
+        };
+        let faster =
+            actor.mods(&self.content).get(ItemEffect::Regeneration) + talents.healing_percent + sun;
         let percent = u32::try_from((100 + faster).max(0)).unwrap_or(0);
         rate * percent / 100
+    }
+
+    /// Whether `actor` stands under the open sun: on the current level, under the open sky, the
+    /// sun up, and no roof over its cell (whatever the clouds).
+    fn under_open_sun(&self, actor: &Actor) -> bool {
+        let level = self.state.current();
+        actor.level == level.id
+            && level
+                .terrain
+                .get(actor.pos)
+                .is_some_and(|t| !self.content.terrain(*t).roofed)
+            && self
+                .state
+                .sky(&self.content)
+                .is_some_and(|sky| sky.sun.is_up())
     }
 
     /// `seconds` of game time from `start` pass for actors `ids` (on the current level, in

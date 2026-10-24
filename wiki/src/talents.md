@@ -53,10 +53,11 @@ In the game a talent is described in words; the tables below state the rule exac
 talents simply change a rule for good. An **active** talent (Second wind) is something you do:
 it appears in the [abilities menu](abilities.md) under Talents, and after use it leaves a
 status (Winded) during which it cannot be used again. A few talents that need the class
-resources (Battle trance, Inner calm) or mana (Deep well, Clear mind, Meditation, Frugal caster,
-Blood magic) are still to come. Apprentice's skill points are rolled once, as the rank is
-taken. Treasure hunter changes loot as it is made: a level you have already been to keeps what
-lies there, and the levels themselves never change. Where a
+resources (Battle trance, Inner calm, Patient blade), the lantern's hood (Hooded light), or mana
+(Deep well, Clear mind, Meditation, Frugal caster, Blood magic) are still to come. Apprentice's
+skill points are rolled once, as the rank is taken. Treasure hunter changes loot as it is made: a
+level you have already been to keeps what lies there, and the levels themselves never change.
+Where a
 talent scales ("one hit point per four levels"), what it gave earlier grows as you level: a
 talent taken at level 3 still matters at level 50.
 

@@ -41,14 +41,15 @@ impl WorldState {
         content.light_id(scenario.lantern.as_deref()?)
     }
 
-    /// The light the player's lantern gives now: its preset while lit, its `hooded` preset while
-    /// hooded; none while out or without a lantern. The one place the lantern's light is decided.
+    /// The light the player's lantern gives now: its preset while lit (a Lamplighter's brighter
+    /// one instead, spec §8 "Talents"), its `hooded` preset while hooded; none while out or
+    /// without a lantern. The one place the lantern's light is decided.
     pub(crate) fn lantern_light(&self, content: &Content) -> Option<LightId> {
         let preset = self.lantern_preset(content).filter(|_| self.lantern_lit)?;
         let hooded = (content.light(preset).hooded.as_deref()).and_then(|id| content.light_id(id));
         match hooded {
             Some(hooded) if self.lantern_hooded => Some(hooded),
-            _ => Some(preset),
+            _ => Some((self.player().talent_mods(content).lantern_light).unwrap_or(preset)),
         }
     }
 }

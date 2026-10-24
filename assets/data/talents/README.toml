@@ -60,6 +60,17 @@
 #   footsteps_percent { value }   footsteps that percent louder (negative: quieter)
 #   silent_doors                  the doors it opens and closes make no sound
 #   hearing { value }             hears sounds that much fainter
+#   threshold_percent { value }   its eyes need that percent more light (negative: less)
+#   darkvision { value }          its darkvision reaches that many cells farther (from none:
+#                                 that far)
+#   sees_uv                       its eyes see ultraviolet light
+#   scent { status, radius }      it sees creatures suffering that status (an id in
+#                                 ../status.toml) in its line of sight within radius cells
+#                                 (1 to 20), however dark
+#   night_sight { value }         its overworld sight at night, that many cells farther
+#   lantern_light { light }       its lantern burns as that light preset (../lights.toml)
+#   ambush { dice }               its hits on a creature that has not seen it do that many dice
+#                                 more damage, after Protection ("1d6")
 #   carry_percent { value }       carrying limit, that percent more
 #   ignore_burdened               being Burdened costs it nothing, as a dwarf's burden
 #   step_slowdown_percent { value }   the slowdown its burden and Bloated put on its steps, that
@@ -68,6 +79,17 @@
 #   weightless_coins              coins it carries weigh nothing
 #   travel_percent { value }      overworld journeys take that percent more time (negative:
 #                                 quicker)
+#   terrain_as { terrains, like } a step onto any of terrains costs what a step onto like does
+#                                 (terrain ids in ../terrain.toml)
+#   plunge_proof                  a plunge through the ice never hurts it
+#   light_on_ice                  ice holds it as if it carried nothing
+#   climb_percent { value }       climbing out onto ice costs that percent more (negative: less)
+#   wading_proof                  wading never gives it a disease
+#   beast_friend                  creatures of animal factions (../factions.toml) are neutral
+#                                 to it until it attacks one of that type
+#   forecast { hours }            it knows the weather coming within that many hours (1 to 24)
+#                                 under the open sky
+#   sun_healing { value }         hit points come back that percent faster under the open sun
 #   hunger_percent { value }      hunger burns that percent faster (negative: slower)
 #   no_exertion                   blows, shots, and throws burn no extra nutrition
 #   no_bloating                   a meal never leaves it Bloated: what does not fit is lost

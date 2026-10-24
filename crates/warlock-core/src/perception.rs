@@ -23,17 +23,22 @@
 //!
 //! A cell is **visible** iff it is in line of sight within [`VIEW_RADIUS`] **and** its perceived
 //! light is at least the vision profile's threshold or it lies within the darkvision radius. The
-//! player's own cell is always visible. A **light-blind** player (their race's
+//! player's own cell is always visible. The profile is the player's **eyes**: their vision
+//! profile as their talents change it ([`crate::world::WorldState::eyes`]: Night eyes, Dark
+//! adaptation, Owl eyes, Rune sight). Blood scent sees a bleeding creature's cell in line of
+//! sight within its radius as darkvision would. A **light-blind** player (their race's
 //! [`LightBlind`](crate::content::LightBlind): drow) whose own cell is lit at least to its
 //! `glare` is dazzled: they see nothing farther than its `sight`.
 //!
 //! The overworld is seen at map scale instead: a cell is visible iff it is in line of sight
 //! within the daylight sight radius ([`daylight::overworld_sight`]: day 9, twilight 5, night 2,
-//! more under a bright moon, less in rain), whatever its light; eyes and darkvision do not change
-//! that.
+//! more under a bright moon, less in rain; Moon-eyed adds its cells at night), whatever its
+//! light; eyes and darkvision do not change that.
 //!
 //! **Weather** ([`crate::weather`]) is known only under the open sky: on such a level the sky
 //! carries it ([`PerceptionView::weather`]), and its clouds dim the sun, the moons, and the sky.
+//! Weather-wise players also know the weather coming within its hours
+//! ([`PerceptionView::forecast`]).
 //!
 //! Light on a transparent cell is the level's ambient light, plus the light of every source that
 //! reaches it, plus weak **bounce light** reflected by the lit surfaces around it
@@ -74,7 +79,7 @@ use crate::content::{
     ItemClassId, LevelKind, LightId, ObjectId, RaceDef, RoomEffectDef, SlotId, Stance, StatusId,
     TerrainId, TrapId, VisionProfile, WeaponSkillId,
 };
-use crate::daylight;
+use crate::daylight::{self, DayPhase};
 use crate::equipment::Equipment;
 use crate::fov::{compute_fov, radius2};
 use crate::geom::{Dir, Pos};
@@ -92,7 +97,7 @@ use crate::talent::{self, Candidate};
 use crate::temperature::Temperature;
 use crate::time::GameTime;
 use crate::weapon_skills::WeaponSkills;
-use crate::weather::Weather;
+use crate::weather::{self, Weather};
 use crate::world::{
     Actor, ActorId, ActorKind, Death, Due, LevelState, Shop, WorldState, count_of, favour, part_of,
     unpaid_parts,
@@ -306,12 +311,15 @@ enum Sight {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct Perception {
     viewer: Pos,
-    /// Index into [`Content::vision_profiles`].
-    vision: usize,
+    /// The player's eyes: their vision profile as their talents change it
+    /// ([`crate::world::WorldState::eyes`]).
+    eye: VisionProfile,
     /// Perceived ambient light.
     ambient: Light,
     /// The sun, the moons, and the sky over a level under the open sky.
     sky: Option<Sky>,
+    /// The weather coming, which a Weather-wise player knows under the open sky.
+    forecast: Option<Weather>,
     /// The temperature of the air where the player is (spec §5 "Temperature").
     temperature: Temperature,
     /// Ambient plus sky plus bounce light; meaningful on visible cells only.
@@ -343,15 +351,23 @@ impl Perception {
         let viewer = state.player().pos;
         let level = state.current();
         let (width, height) = (level.width(), level.height());
-        let vision = content.vision_index(&state.vision).unwrap_or(0);
-        let eye = &content.vision_profiles()[vision];
+        let talents = state.player().talent_mods(content);
+        let eyes = state.eyes(content);
+        let eye = &eyes;
         let is_opaque = |p: Pos| level.is_opaque(content, p);
         let sky = state.sky(content);
         // On the overworld, daylight (and moonlight, and rain) sets how far one sees; light does
         // not matter.
         let overworld = level.kind == LevelKind::Overworld;
         let range = match &sky {
-            Some(sky) if overworld => daylight::sight_under(state.time, sky, content.climate()),
+            Some(sky) if overworld => {
+                let range = daylight::sight_under(state.time, sky, content.climate());
+                // Moon-eyed (spec §8 "Talents"): farther at night.
+                match daylight::phase(state.time) {
+                    DayPhase::Night => range + talents.night_sight,
+                    _ => range,
+                }
+            }
             _ => VIEW_RADIUS,
         };
 
@@ -486,6 +502,24 @@ impl Perception {
             }
             if by_eye {
                 seen.push(p);
+            }
+        }
+        // Blood scent (spec §8 "Talents"): creatures suffering a status, in line of sight within
+        // its radius, however dark their cells.
+        if !overworld && !talents.scent.is_empty() {
+            let smelt = (state.actors.values())
+                .filter(|a| a.level == level.id && a.kind == ActorKind::Creature)
+                .filter(|a| los.get(a.pos) == Some(&true) && !is_opaque(a.pos))
+                .filter(|a| {
+                    (talents.scent.iter()).any(|&(status, radius)| {
+                        a.effects.has(status) && a.pos.dist2(viewer) <= radius2(radius)
+                    })
+                });
+            for a in smelt {
+                if sight[a.pos] == Sight::Hidden {
+                    sight[a.pos] = Sight::Seen;
+                    visible_cells.push(a.pos);
+                }
             }
         }
 
@@ -636,11 +670,25 @@ impl Perception {
         };
         // The player feels the air: fixed underground, the weather's under the open sky.
         let temperature = state.temperature_on(level, content, state.time);
+        // Weather-wise (spec §8 "Talents"): the weather coming, under the open sky.
+        let forecast = (sky.is_some() && talents.forecast > 0)
+            .then(|| {
+                let over = state.weather_override.as_ref();
+                weather::forecast(
+                    state.seed,
+                    state.time,
+                    content.climate(),
+                    over,
+                    talents.forecast,
+                )
+            })
+            .flatten();
         Self {
             viewer,
-            vision,
+            eye: eyes,
             ambient,
             sky,
+            forecast,
             temperature,
             base,
             sight,
@@ -1271,8 +1319,19 @@ impl<'a> PerceptionView<'a> {
     }
 
     /// How a seen creature stands toward the player: its faction's stance (spec §7 "Factions"),
-    /// which the player knows from its type. Nothing else about factions is perceived.
+    /// which the player knows from its type; neutral for an animal a Beast-friend has not
+    /// attacked one of (spec §8 "Talents"). Nothing else about factions is perceived.
     pub fn stance(&self, actor: &SeenActor) -> Stance {
+        let animal = actor
+            .faction
+            .is_some_and(|f| self.content.factions().def(f).animal);
+        if animal
+            && actor.kind == ActorKind::Creature
+            && self.player.talent_mods(self.content).beast_friend
+            && !(self.progress.empathy_broken).contains(&self.content.creature(actor.creature).id)
+        {
+            return Stance::Neutral;
+        }
         match self.content.creature_id("player") {
             Some(player) => self
                 .content
@@ -1305,9 +1364,10 @@ impl<'a> PerceptionView<'a> {
         &self.snapshot.sources
     }
 
-    /// The player's active vision profile.
+    /// The player's eyes: their active vision profile as their talents change it (its id and
+    /// name the base profile's).
     pub fn vision(&self) -> &'a VisionProfile {
-        &self.content.vision_profiles()[self.snapshot.vision]
+        &self.snapshot.eye
     }
 
     /// Whether strong light dazzles the player (light-blind eyes in glare): they see less far,
@@ -1336,6 +1396,12 @@ impl<'a> PerceptionView<'a> {
     /// The weather, which the player knows only under the open sky; `None` elsewhere.
     pub fn weather(&self) -> Option<Weather> {
         self.snapshot.weather()
+    }
+
+    /// The weather coming within the hours a Weather-wise player foresees (spec §8 "Talents"),
+    /// if it changes; `None` when it stays, without the talent, or away from the open sky.
+    pub fn forecast(&self) -> Option<Weather> {
+        self.snapshot.forecast
     }
 
     /// The temperature of the air where the player is (spec §5 "Temperature"), which they feel,

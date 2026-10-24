@@ -102,10 +102,13 @@ impl World {
     /// The player stepped onto `terrain`, a step of `seconds`: for every disease caught there
     /// that they do not carry, one draw for its chance (`per_hour` percent an hour, by the
     /// step's length; none when it is sure), then exposure. Creatures do not catch diseases
-    /// from the land.
+    /// from the land, nor does a Marsh walker (no draw).
     pub(super) fn wade(&mut self, terrain: TerrainId, seconds: u64) {
         let player = self.state.player;
         let content = self.content.clone();
+        if self.state.player().talent_mods(&content).wading_proof {
+            return;
+        }
         for (disease, def) in content.disease_ids() {
             let Some(wading) = def.wading.as_ref().filter(|w| w.terrain.contains(&terrain)) else {
                 continue;

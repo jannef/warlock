@@ -204,6 +204,29 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::FootstepsPercent { value } => format!("footsteps {}", percent(value)),
         TalentEffect::SilentDoors => "the doors you open and close are silent".to_string(),
         TalentEffect::Hearing { value } => format!("hears sounds {value} fainter"),
+        TalentEffect::ThresholdPercent { value } => {
+            format!("the light your eyes need {}", percent(value))
+        }
+        TalentEffect::Darkvision { value } => format!("darkvision {} cells", signed(value)),
+        TalentEffect::SeesUv => "your eyes see ultraviolet light".to_string(),
+        TalentEffect::Scent { status: id, radius } => format!(
+            "sees creatures that are {} in line of sight within {radius} cells, however dark",
+            status(&id).to_lowercase()
+        ),
+        TalentEffect::NightSight { value } => {
+            format!("overworld sight at night {} cells", signed(value))
+        }
+        TalentEffect::LanternLight { light } => {
+            let reach = |id: &str| (content.light_id(id)).map_or(0, |l| content.light(l).radius);
+            format!(
+                "your lantern burns brighter: its light reaches {} cells",
+                reach(&light)
+            )
+        }
+        TalentEffect::Ambush { dice } => format!(
+            "+{dice} damage, after Protection, on a hit at a creature that has not seen you \
+             (it hunts no one it has seen, and does not see you now)"
+        ),
         TalentEffect::CarryPercent { value } => format!("carrying limit {}", percent(value)),
         TalentEffect::IgnoreBurdened => "being Burdened costs you nothing (as a dwarf)".to_string(),
         TalentEffect::StepSlowdownPercent { value } => format!(
@@ -215,6 +238,37 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::TravelPercent { value } => {
             format!("overworld journey time {}", percent(value))
         }
+        TalentEffect::TerrainAs { terrains, like } => {
+            let name = |id: &str| {
+                (content.terrain_id(id))
+                    .map_or_else(|| id.to_string(), |t| content.terrain(t).name.clone())
+            };
+            let names: Vec<String> = terrains.iter().map(|t| name(t)).collect();
+            format!(
+                "a step onto {} costs what one onto {} does",
+                names.join(", "),
+                name(&like)
+            )
+        }
+        TalentEffect::PlungeProof => "a plunge through the ice does you no harm".to_string(),
+        TalentEffect::LightOnIce => {
+            "ice holds you as if you carried nothing (your own weight only)".to_string()
+        }
+        TalentEffect::ClimbPercent { value } => {
+            format!("climbing out onto ice costs {}", percent(value))
+        }
+        TalentEffect::WadingProof => "wading never gives you a disease".to_string(),
+        TalentEffect::BeastFriend => "creatures of animal factions are neutral to you until you \
+                                      attack one of that type"
+            .to_string(),
+        TalentEffect::Forecast { hours } => format!(
+            "under the open sky you know the first change of weather within {hours} hours \
+             (the status bar's weather)"
+        ),
+        TalentEffect::SunHealing { value } => format!(
+            "healing pace {} under the open sun (sun up, no roof, whatever the clouds)",
+            percent(value)
+        ),
         TalentEffect::HungerPercent { value } => format!("hunger pace {}", percent(value)),
         TalentEffect::NoExertion => "blows, shots, and throws burn no nutrition".to_string(),
         TalentEffect::NoBloating => "a meal never leaves you Bloated: what does not fit below \

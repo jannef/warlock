@@ -31,7 +31,7 @@
 //! fight when hurt.
 
 use super::path::{Cost, Search};
-use super::{ActorId, Mind, World};
+use super::{ActorId, Mind, World, beast_friend};
 use crate::action::{AttackKind, Event};
 use crate::content::{ActionKind, Combat, Stance};
 use crate::fov::radius2;
@@ -204,6 +204,7 @@ impl World {
             .filter(|a| a.level == me.level && a.id != id && a.pos.dist2(me.pos) <= reach2)
             .filter(|a| {
                 content.stance_of(me.faction(content), a.faction(content)) == Stance::Hostile
+                    && !beast_friend::befriended(state, content, me, a)
             })
             .map(|a| (a.pos.dist2(me.pos), a.id, a.pos))
             .collect();
