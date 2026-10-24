@@ -43,13 +43,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
   hostile or heard a noise to look into, and the post it left; §8 "Creature behavior"; saves
   without it load with every creature calm), every actor's stats, scores and
   potentials (§8 "Stats"), the player's character (name, race, gender, and class,
-  the stat the gender raised, birth date, and birth sign; §8 "Character creation"),
+  the stat the gender raised, birth date, and birth sign; §8 "Character creation"), the player's
+  alignment score and the alignment a level gave a creature, if any (§8 "Alignment"; a score off
+  the scale does not load),
   what every actor wears and wields (which inventory stack is in which slot, §6
   "Equipment"), every actor's hit points (what it has left, what its race and
   class or its type add to its Toughness, and the seconds banked toward the next one back; §8
   "Combat"), the fires burning on each level (§8 "Ranged combat"), the player's
   experience total (§8 "Experience"; absent while
-  0, so a run without kills hashes as before), every actor's trained skills (value and training
+  0, so a run without kills hashes as before) and the creature types whose first kill paid
+  (absent while none), every actor's trained skills (value and training
   marks) and the training random stream (§8 "Skills"), each level's special
   rooms and whether the player has been in each (§7 "Special rooms"), every
   actor's weapon skills (its rank and marks in each, §8 "Weapon skills"), the

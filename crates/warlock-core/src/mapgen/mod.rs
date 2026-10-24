@@ -300,6 +300,7 @@ impl<'a> Canvas<'a> {
         self.creatures.push(CreatureSpawn {
             creature,
             faction: None,
+            alignment: None,
             npc: None,
             pos: start,
             route,

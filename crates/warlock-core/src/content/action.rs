@@ -41,6 +41,9 @@ pub enum ActionKind {
     CloseDoor,
     /// Unlocking a locked door with a key: part of opening it, so it costs this plus `open_door`.
     Unlock,
+    /// A try at picking a lock without a key (spec §8 "Doors"): it takes this whatever comes of
+    /// it, and a picked lock's door then opens on top of it (`open_door`).
+    PickLock,
     /// A kick (`K`): at a door, to break it, or at a creature, an unarmed blow.
     Kick,
     /// Lighting or dousing the lantern.
@@ -80,6 +83,8 @@ pub enum ActionKind {
     /// A turn of searching for hidden features (spec §8 "Searching"): searching for a while
     /// takes several.
     Search,
+    /// Trying to disarm a trap (spec §8 "Disarming traps"), whatever comes of it.
+    Disarm,
     /// Chatting with a creature (spec §8 "Dialogue"): a short action.
     Chat,
     /// Climbing out of the water onto ice (spec §5 "Ice"): on top of the step onto it.
@@ -94,6 +99,7 @@ impl ActionKind {
         ActionKind::OpenDoor,
         ActionKind::CloseDoor,
         ActionKind::Unlock,
+        ActionKind::PickLock,
         ActionKind::Kick,
         ActionKind::Lantern,
         ActionKind::Stairs,
@@ -112,6 +118,7 @@ impl ActionKind {
         ActionKind::Read,
         ActionKind::Dig,
         ActionKind::Search,
+        ActionKind::Disarm,
         ActionKind::Chat,
         ActionKind::Climb,
     ];
@@ -124,6 +131,7 @@ impl ActionKind {
             ActionKind::OpenDoor => "open_door",
             ActionKind::CloseDoor => "close_door",
             ActionKind::Unlock => "unlock",
+            ActionKind::PickLock => "pick_lock",
             ActionKind::Kick => "kick",
             ActionKind::Lantern => "lantern",
             ActionKind::Stairs => "stairs",
@@ -142,6 +150,7 @@ impl ActionKind {
             ActionKind::Read => "read",
             ActionKind::Dig => "dig",
             ActionKind::Search => "search",
+            ActionKind::Disarm => "disarm",
             ActionKind::Chat => "chat",
             ActionKind::Climb => "climb",
         }
@@ -173,6 +182,7 @@ impl ActionKind {
             ActionKind::OpenDoor => "open doors",
             ActionKind::CloseDoor => "close doors",
             ActionKind::Unlock => "unlock doors",
+            ActionKind::PickLock => "pick locks",
             ActionKind::Kick => "kick",
             ActionKind::Lantern => "tend a lantern",
             ActionKind::Stairs => "travel",
@@ -191,6 +201,7 @@ impl ActionKind {
             ActionKind::Read => "read",
             ActionKind::Dig => "dig",
             ActionKind::Search => "search",
+            ActionKind::Disarm => "disarm traps",
             ActionKind::Chat => "talk",
             ActionKind::Climb => "climb",
         }

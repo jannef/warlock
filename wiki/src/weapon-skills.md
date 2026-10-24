@@ -37,7 +37,7 @@ columns; in a small one it scrolls (↑↓). It is page 5 of the
 [info pages](controls.md#info-pages), right after your skills.
 
 The game never tells you what a rank gives you, in numbers: you see your ranks, and you feel the
-difference in a fight. The tables below are the rules.
+difference in a fight. The tables below are the rules, exactly.
 
 ## Marks and ranks
 

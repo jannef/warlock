@@ -22,7 +22,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `combat = "melee"` (default), `"ranged"`, or `"caster"`, the latter two with a `range` (2 to its
   sight), `opens_doors` (default false), `budge` (whether the player may swap places with it
   when it is not hostile, §8 "Displacement": `always`, the default; `off_post`, not while it keeps
-  its post, going about its routine, as a shopkeeper at its counter will; `never`), and
+  its post, going about its routine, as a shopkeeper at its counter will; `never`), its
+  `alignment` (`good`, `neutral`, the default, or `evil`; §8 "Alignment": the kobolds evil, the
+  beasts neutral, the showcase's people good; never shown), an optional `race` (a race id; §8
+  "Alignment": its corpse is kin to a character of that race; the showcase's people are human;
+  not checked in content without races), and
   optionally `attack_cost`, what its attacks cost
   instead of the attack's cost in `data/actions.toml` (100 to 10 000; §8 "Time"; none of the
   built-in creatures has one yet). The kobold: darkvision, sight 10, melee, opens doors;
@@ -54,7 +58,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   never shown). For experience (§8
   "Experience"): `level` (1 to 99, default 1) and `xp` (0 to 100000, default 0; the player
   creature has neither): the kobold 2/15, the kobold archer 3/25, the kobold shaman 4/40, the
-  giant rat 1/5, the cave bat 1/3, the cave beetle 2/8, the deer 1/2. For loot (§8 "Magic
+  giant rat 1/5, the cave bat 1/3, the cave beetle 2/8, the deer 1/2; new creatures follow the
+  guideline of `data/experience.toml`, about `5 × level + 10` (§8 "Experience"). For loot (§8 "Magic
   items"): `loot`, the chance in percent (0 to 100, default 0) that it drops a magic or rare item
   where it dies: the kobold 25, the kobold archer 30, the kobold shaman 50. The giant rat and the
   cave bat bite (1d4, 1d3; the rat's bite poisons one hit in ten, 2 degrees, and exposes to
@@ -139,7 +144,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Action costs** (`data/actions.toml`, optional): action ids mapped to their cost in energy,
   e.g. `wait = 1000`, 1000 being a normal action (6 s at normal speed; §8 "Time"), 100 to
   10 000. The ids are `step` (onto terrain of `move_cost` 100), `wait`, `open_door`,
-  `close_door`, `unlock` (unlocking a door with a key, on top of opening it), `kick`, `lantern`,
+  `close_door`, `unlock` (unlocking a door with a key, on top of opening it), `pick_lock` (2000:
+  a try at picking a lock, whatever comes of it; a lock that gives opens its door on top of it,
+  `open_door`; §8 "Doors"), `kick`, `lantern`,
   `stairs` (also entering a location or local area and walking off an
   area's edge), `pick_up`, `drop`, `melee` (a shield bash too), `shoot`, `throw`, `reload` (a
   missile weapon that `reloads`: a crossbow shot costs `shoot` plus `reload`, 2000), `cast`,
@@ -467,12 +474,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
   legend entry with a `creature` may also name an `npc` (an npc id of `data/dialogue.toml`; one
   without a dialogue there is a content error): the unique character that creature is, which
   speaks the npc's dialogue rather than its type's (stored on the actor, saved and hashed only
-  when set). Level files may also have an `arrival` line, said each time the player arrives by
-  stairs.
+  when set). A legend entry with a `creature` may also name an `alignment` (`good`, `neutral`,
+  `evil`) that replaces its type's for that creature (`Actor::alignment_override`, saved and
+  hashed only when set; §8 "Alignment"). Level files may also have an `arrival` line, said each
+  time the player arrives by stairs.
 - **Dialogue** (`data/dialogue.toml`, optional; without it nobody talks; §8 "Dialogue"): each
   `[[dialogue]]` names exactly one of `creature` (a creature type, not the player) or `npc` (an
   npc id: lower-case letters, digits, and underscores), at most one dialogue each, and has `lines`
-  (at least one one-liner), an optional `greet`, optional `[[dialogue.topic]]`s (at most 9, each
+  (at least one one-liner), an optional `greet`, optional cold greetings (`greet_evil`, lines a
+  good speaker says to an Evil or Wicked character instead of its greeting and one-liners, in
+  turn; `greet_good`, an evil speaker's to a Good or Saintly character; §8 "Alignment"), optional
+  `[[dialogue.topic]]`s (at most 9, each
   with a unique `id` in lower-case letters, digits, and underscores, a `name`, and a `reply`), and
   an optional `mutter = { chance, verb, lines }` (`chance` in percent per action, 1 to 100; `verb`
   one lower-case word, default "mutters"; at least one line). Lines, greetings, topic names, and
@@ -481,7 +493,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Built in: the gardener (one-liners; grumbles), the wandering bard (one-liners and topics: the
   moon, the Great Race, this year, the Wildlands; sings), and the old hermit (a greeting,
   one-liners, and topics: this hall, the dark chamber, the gallery, the water garden, these
-  stairs; mutters).
+  stairs; mutters). The gardener, the bard, the hermit, and the shopkeepers have two cold
+  lines each for an evil character ("Prices are higher for your sort. Take it or leave it.").
 - **Quests** (`data/quests.toml`, optional; without it nobody gives quests; §8 "Quests"): each
   `[[quest]]` has a unique `id` (lower-case letters, digits, and underscores), a `name` (the log's
   title and the topic, at most 32 characters), a `giver` (a creature type with a dialogue, or an
@@ -495,13 +508,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
   1 000 000). Texts, one line each of at most 280 characters, neither empty nor padded: `offer`,
   `accept`, optional `decline` (default "Another time, then."), `reminder` (the giver's), and
   `done` (said by whoever it is handed in to). Optional `requires` (a quest earlier in the file,
-  done before this one is offered) and `repeatable` (default false). Everyone's topics must fit
+  done before this one is offered), `requires_alignment` (the bands it is offered to, §8
+  "Alignment": `{ min = "kind" }` Kind or better, `{ max = "callous" }` Callous or worse, or
+  both; never neither, nor a `min` above the `max`), `alignment` (how far completing it moves the
+  player's alignment, −1000 to 1000, default 0), and `repeatable` (default false). Everyone's topics must fit
   the dialogue screen's nine: their dialogue's own, one per quest they give or take in, and one
   more for an offer's accept and decline. Built in: the old hermit's "Rats in the arena" (kill 3
   giant rats in the arena; 20 gold, 30 XP) and, after it, "Three levels down" (reach the Depths 3;
   50 gold, a jade amulet, 100 XP), the gardener's "Three apples" (bring 3 apples; 10 gold, 15
   XP), and the wandering bard's "The bard's letter" (deliver a sealed letter, a new object, to the
-  old hermit; 5 gold, 15 XP).
+  old hermit; 5 gold, 15 XP). All four help someone, and are a little good (`alignment` 20, 15,
+  10, and 10).
 - **The weather** (`data/weather.toml`, optional; without it the sky is always clear and every
   month a mild 10 °C with a swing of 8): `swing` at the top (a clear day's swing of temperature
   from the coldest hour to the warmest, °C, 0 to 30), exactly 12

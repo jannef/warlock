@@ -76,8 +76,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   the race's first random name. Each choice step lists
   its options in data order with a `>` marker, the selected option's one-line description, and
   for races and classes their stat adjustments as written in data, dice included
-  (`St 1d3+1  Dx −1`), and for races their vision; "other" on the gender step says only "+1
-  to one stat, chosen by fate." and never names the stat. Every step ends with a
+  (`St 1d3+1  Dx −1`), for races their vision, and for both how fast levels come, in words
+  ("Levels come slowly." for an `experience` of 115 % and above, "Levels come quickly." for 95 %
+  and below, nothing between; §8 "Experience"); "other" on the gender step says only "+1 to one
+  stat, chosen by fate." and never names the stat. Every step ends with a
   **Random** row ("Let chance pick your race."), rolled from the run seed and how often Random
   was pressed there. No player-facing text (here, in messages, or in the wiki) says that a roll,
   a choice, or the world follows from the seed: to the player it is chance, fate, or random
@@ -92,7 +94,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   scores (the final scores only: the dice already rolled, no breakdown, never a potential or a
   modifier) with the starting trained skills and their values beside them (§8 "Skills"; in two
   columns when there are more than six, down the first, then the second; below the scores, as
-  `Appraise 11 · Disable device 16 · …`, when the panel is too narrow), the vision, and the
+  `Appraise 11 · Disable device 16 · …`, when the panel is too narrow), the alignment band the
+  character starts in (`Alignment Good`; §8 "Alignment"; never the score), the vision, and the
   scenario (with the seed in developer builds only); the gender row says "Other" without the
   stat it raised. Once the run has begun the character screen names it (`Other (Willpower
   +1)`), as it names the rest of the character. The
@@ -278,7 +281,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   points  18/24`), Defence
   (`Dv  Defence  15`; the total only, as its Dexterity part would give away a modifier; §8
   "Combat") and Protection beside it on the same row (`Pv  Protection  3`; the total only),
-  their combat stance by name (`Stance  Neutral`; §8 "Stances"), the status effects
+  their combat stance by name (`Stance  Neutral`; §8 "Stances"), their alignment band
+  (`Alignment  Kind`; §8 "Alignment"; never the score), the status effects
   they suffer, by name, when there are any (`Status  Bleeding, Poisoned`; never how severe or for
   how long), what they resist, in words only, a row per word when there is anything to tell
   (`Immune to  poison`, `Resistant to  fire, cold`, `Vulnerable to  acid`, kinds in damage type
@@ -307,15 +311,22 @@ developer notes (CLAUDE.md, `docs/dev/`).
     item: the menu's groups, in that order), what it asks for (`Aim`: nothing, or a direction;
     a target and an item from the pack join with the first ability that needs one), its action
     cost (an `ActionKind`), who has it, and whether it can be used now and why not
-    (`Unavailable`: "you hold no shield", "not usable yet", or while a status lasts that blocks
-    its kind of action or is its cooldown, "you are winded", §8 "Status effects").
+    (`Unavailable`: "you hold no shield", "not usable yet", while a status lasts that blocks
+    its kind of action or is its cooldown, "you are winded", §8 "Status effects", or "you have
+    strayed": one that asks for an alignment the character has strayed from, §8 "Alignment",
+    kept but greyed out until they climb back; `ability::strayed`).
     `PerceptionView::abilities` lists the player's, in menu order, each with why it cannot be
     used now. Every ability is a normal core `Action` with replay text, so replays record it as
     that action.
   - **What there is**: the shield bash (§8 "Weapon skills"), which everyone has and can use
-    while holding a shield to bash with; and each skill used as an action (`kind = "action"`,
-    §8 "Skills") the player is trained in, listed but never available until its use comes (it
-    then becomes an ability of its own with its action). No race, class, or item gives one yet.
+    while holding a shield to bash with; disarming a trap (`Ability::Disarm`, "Disarm a trap",
+    §8 "Disarming traps"), Disable device's use, which whoever is trained in it has, in a
+    direction ("Disarm in which direction? (Esc to cancel)"); **Pick lock** (`Ability::PickLock`,
+    §8 "Doors", #233), Open lock's use, which whoever is trained in it has (thieves), in a
+    direction; and each other skill used as an action (`kind = "action"`, §8 "Skills") the player
+    is trained in, listed but never available until its use comes (it then becomes an ability of
+    its own with its action, listed in the skill's place: `Ability::use_of`). No race, class, or
+    item gives one yet.
   - **The menu** (a screen on the stack) lists them as the one paged list (§6 "Item lists"),
     grouped by source under a header each, lettered down each page from `a`: each row the
     ability's name and what it asks for ("in a direction"), or greyed out with why it cannot be
@@ -329,7 +340,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     can be used), so `a` Enter repeats it; `A` (`KeyCommand::RepeatAbility`) uses it again at
     once, and opens the menu when none was used yet.
   - **Keys**: an ability with an action of its own is also a rebindable key command, unbound by
-    default (the shield bash: "Bash with your shield"); bound, it uses the ability as the menu
+    default (the shield bash: "Bash with your shield", `bash`; picking a lock: "Pick a lock",
+    `pick_lock`); bound, it uses the ability as the menu
     does, and one that cannot be used now is applied at once so the rules say why, taking no
     time ("You have no shield to bash with."). New abilities register in the registry and get
     no default key.

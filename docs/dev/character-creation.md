@@ -15,8 +15,9 @@ the birth year's)). Scores: 10 + race + gender + class + animal + element, clamp
 potentials `base_potential` + the race's, never below the score. Flags for rules:
 `Character::born_of_element("fire")`, `born_in_year_of("manticore")`. Content:
 `data/races.toml` (`content/race.rs`: `Races` with `base_potential`, `RaceDef` with `vision`,
-`age`, `stats`, `potential`, `hp`), `data/classes.toml` (`content/class.rs`: `ClassDef` with
-`stats`, `hp`; `Start::hp` is their sum),
+`age`, `stats`, `potential`, `hp`, `alignment`), `data/classes.toml` (`content/class.rs`:
+`ClassDef` with `stats`, `hp`, `alignment`; `Start::hp` is their sum, and `Start::alignment` the
+sum of their `alignment`s, the starting score, `docs/dev/alignment.md`),
 and `data/horoscope.toml` (`content/horoscope.rs`: `Horoscope` with `anchor_year`, `animals`,
 `elements`, `sign_of_year`, `great_cycle` (60), `name` ("Fire Manticore")); all optional.
 Adjustments are `PerStat<Dice>` (`stats::adjustments` checks every result is within -10..=10;
@@ -32,8 +33,9 @@ Some(&spec))` as another, `World::with_character_named(.., name)` named; `WorldS
 (the `Character`, saved, hashed) and `PerceptionView::character` (the player knows it;
 `PerceptionView::time` for their age). Replays record the spec and the name (`Replay::name`). The
 summary and the character screen show final scores only: never dice, a breakdown, a modifier, or a
-potential (the step screens and the wiki show adjustments as written in data). Balance is not a
-goal; classes only adjust starting scores and give hit points.
+potential (the step screens and the wiki show adjustments as written in data; the wiki also gives
+the modifiers and the races' potentials exactly). Balance is not a goal; classes only adjust
+starting scores and give hit points.
 
 **Names** (#218): `Character::name` (saved, hashed: saves change). `character::check_name` is the
 one check (trimmed, 1 to `MAX_NAME` = 20 characters, no control character; what the font draws is

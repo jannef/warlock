@@ -62,6 +62,8 @@ pub const REBINDABLE: &[KeyCommand] = &[
     KeyCommand::Abilities,
     KeyCommand::RepeatAbility,
     KeyCommand::Bash,
+    KeyCommand::Disarm,
+    KeyCommand::PickLock,
     KeyCommand::Pay,
     KeyCommand::NextTarget,
     KeyCommand::PrevTarget,
@@ -131,6 +133,8 @@ const PAGE_IDS: [&str; 9] = [
 /// `--more--`, which Esc always does. The player may bind one in Controls.
 pub const UNBOUND: &[KeyCommand] = &[
     KeyCommand::Bash,
+    KeyCommand::Disarm,
+    KeyCommand::PickLock,
     KeyCommand::Fire,
     KeyCommand::Quit,
     KeyCommand::PrevTarget,
@@ -234,6 +238,8 @@ impl KeyCommand {
             Abilities => "abilities",
             RepeatAbility => "repeat_ability",
             Bash => "bash",
+            Disarm => "disarm",
+            PickLock => "pick_lock",
             NextTarget => "next_target",
             PrevTarget => "prev_target",
             Loose => "loose",

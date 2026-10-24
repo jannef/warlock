@@ -54,7 +54,8 @@ pub enum Layer {
     Equipment,
     /// Not a map: the player's character (`Race Dwarf`, `Gender Female`, `Class Warrior`), if
     /// any, then their own scores, one stat a line (`Strength 12`, lowered while a status effect
-    /// or stat damage lowers it), then their status effects by name (`Effects Bleeding,
+    /// or stat damage lowers it), then their alignment band (`Alignment Kind`; spec §8
+    /// "Alignment", never the score), then their status effects by name (`Effects Bleeding,
     /// Diseased`) and the diseases they know they have (`Diseases filth fever`) if any; never
     /// potentials, modifiers, how severe an effect is, or a disease's timers.
     Stats,
@@ -67,7 +68,7 @@ pub enum Layer {
     WeaponSkills,
     /// Not a map: the player's abilities in the abilities menu's order, one a line with its
     /// source and what it asks for, or why it cannot be used now (`Shield bash (weapon skill):
-    /// a direction`, `Open lock (skill): not usable yet`).
+    /// a direction`, `Steal (skill): not usable yet`).
     Abilities,
     /// Not a map: the traps the player knows on the level, one a line by position (`(12, 5)
     /// fireball trap`, `(remembered)` when out of sight); never hidden ones.
@@ -476,6 +477,9 @@ fn stat_rows(view: &PerceptionView<'_>) -> Vec<String> {
         }
     }
     rows.extend((view.own_scores().iter()).map(|(stat, score)| format!("{} {score}", stat.name())));
+    if let Some(band) = view.own_alignment() {
+        rows.push(format!("Alignment {}", band.name()));
+    }
     let effects: Vec<&str> = (view.own_effects())
         .map(|s| content.status(s).name.as_str())
         .collect();
@@ -629,7 +633,8 @@ fn actor_weapon_skills(
 }
 
 /// Every actor on the level (ground truth): id, creature, position, hit points, Defence and
-/// Protection (`dv 11 pv 3`), weight, what it carries, its burden and carrying limit, its stats
+/// Protection (`dv 11 pv 3`), its alignment (`alignment evil`; the player's score and band,
+/// `alignment 450 (good)`), weight, what it carries, its burden and carrying limit, its stats
 /// as score/potential
 /// (`St 12/15`), its trained skills with their marks toward the next point
 /// (`stealth 17 (2/5)`), its status effects with their severities (`effects bleeding 2`), the
@@ -746,6 +751,12 @@ fn actor_rows(world: &World) -> Vec<String> {
                 .map_or(String::new(), |s| format!("; weapon skills {s}"));
             // Who it is and how far its talk has got (spec §8 "Dialogue"), if anything.
             let npc = (a.npc.as_ref()).map_or(String::new(), |n| format!("; npc {n}"));
+            // Where it stands between good and evil (spec §8 "Alignment"): its score and band
+            // (the player's), or its nature.
+            let alignment = match a.alignment {
+                Some(score) => format!("; alignment {} ({})", score.value(), a.band(content).id()),
+                None => format!("; alignment {}", a.nature(content).id()),
+            };
             let talk = if a.talk.is_new() {
                 String::new()
             } else {
@@ -763,9 +774,9 @@ fn actor_rows(world: &World) -> Vec<String> {
                 format!("; resists {}", resists.join(" "))
             };
             format!(
-                "{} {} at {}: hp {}/{} dv {} pv {}; weight {} (base {} + carried {}: {carried})\
-                 {equipped}; {} (limit {}){weapons}; stats {}{skills}{effects}{diseases}{hunger}{npc}\
-                 {talk}{resists}",
+                "{} {} at {}: hp {}/{} dv {} pv {}{alignment}; weight {} (base {} + carried {}: \
+                 {carried}){equipped}; {} (limit {}){weapons}; stats {}{skills}{effects}{diseases}\
+                 {hunger}{npc}{talk}{resists}",
                 a.id,
                 content.creature(a.creature).id,
                 a.pos,
@@ -1021,6 +1032,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
             "sign": c.sign,
         })),
         "stats": view.own_scores(),
+        "alignment": view.own_alignment().map(|b| b.id()),
         "skills": skills_json(&view),
         "effects": effects,
         "diseases": diseases,
@@ -1254,7 +1266,8 @@ mod tests {
                 "Toughness 10",
                 "Intelligence 12",
                 "Willpower 11",
-                "Presence 9"
+                "Presence 9",
+                "Alignment Callous"
             ]
         );
         // Other names the stat it raised.
@@ -1336,15 +1349,16 @@ mod tests {
 
     #[test]
     fn abilities_show_what_the_player_can_do_and_why_not() {
-        // The showcase thief: the class's skills used as actions (no use yet), then the shield
-        // bash, which needs a shield in hand.
+        // The showcase thief: the class's skills used as actions (no use yet, but Disable
+        // device's, disarming a trap, and Open lock's, picking a lock, each in a direction), then
+        // the shield bash, which needs a shield in hand.
         let mut world = showcase();
         assert_eq!(
             layer_rows(&world, Layer::Abilities),
             [
                 "Appraise (skill): not usable yet",
-                "Disable device (skill): not usable yet",
-                "Open lock (skill): not usable yet",
+                "Disarm a trap (skill): a direction",
+                "Pick lock (skill): a direction",
                 "Steal (skill): not usable yet",
                 "Shield bash (weapon skill): you hold no shield",
             ]
@@ -1355,7 +1369,15 @@ mod tests {
             json!({"id": "shield_bash", "source": "weapon_skill", "aim": "a direction",
                    "unavailable": "no_shield"})
         );
-        assert_eq!(value["abilities"][2]["id"], "open_lock");
+        assert_eq!(
+            value["abilities"][1],
+            json!({"id": "disarm", "source": "skill", "aim": "a direction", "unavailable": null})
+        );
+        assert_eq!(
+            value["abilities"][2],
+            json!({"id": "pick_lock", "source": "skill", "aim": "a direction",
+                   "unavailable": null})
+        );
         // The storeroom's small shield in hand: it can be used, in a direction.
         let walk = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N \
                     pickup:a equip:off_hand:a";

@@ -82,7 +82,8 @@ A few rules from elsewhere carry over:
 - **Throwing**: a magic weapon readied in the Missile weapon slot keeps its magic when you throw
   it, and still has it where it lands. Its Parry counts only while you hold it in a hand.
 - **Speed** is never a number in the game: things "attack faster" or make you "move faster".
-  Attacks and steps are at most half again as quick.
+  Exactly, each takes its share off the time of every attack or step (the tables below), the
+  shares of everything you wear and wield adding up, to at most half the time (twice as quick).
 - **Light**: a glowing item makes its wearer carry a faint, steady light (the brightest one
   counts); it never flickers.
 - An item has at most one affix of each kind of effect.

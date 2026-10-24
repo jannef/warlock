@@ -35,11 +35,14 @@ them shows.
 
 ## Checks
 
-A check is rolled like an attack (see [Combat](combat.md)): two twelve-sided dice, plus a bonus
-from your score in the disease's stat, against how hard the disease is. Most diseases are fought
-with **Toughness**, brain fever with **Willpower**. A roll of 2 always loses, a roll of 24 always
-wins. The game never shows the dice, the bonus, or how hard a disease is: you see what comes of
-it.
+A check is rolled like an attack (see [Combat](combat.md)): two twelve-sided dice, plus the
+modifier of your score in the disease's stat (see [Stats](stats.md#modifiers)), against how hard
+the disease is, its **difficulty**: the check is won when the sum reaches it. Most diseases are
+fought with **Toughness**, brain fever with **Willpower**. A roll of 2 always loses, a roll of 24
+always wins. The game never shows the dice, the bonus, or how hard a disease is: you see what
+comes of it. Exactly, by your score in the stat:
+
+{{#include generated/disease-checks.md}}
 
 ## Stat damage
 
@@ -63,10 +66,10 @@ more (see [Healing](healing.md)). Resting still doubles the pace.
 ## Where diseases come from
 
 - **Bites**: some creatures carry a disease in their bite. Not every bite gives it to you, and
-  you may still fight it off.
+  you may still fight it off (the table above says whose bite, and how often a hit passes it on).
 - **Marshes and swamps**: crossing the marshes of a swamp, or a swamp on the
   [overworld](overworld.md), may give you marsh ague. The longer you spend in them, the likelier
-  it gets.
+  it gets: the table above gives the chance for each hour spent in them.
 - **Rotten food**: eating rotten food (of any kind) may give you grave rot.
 
 ## Grave rot

@@ -19,11 +19,11 @@
 #                 ahead. Uses: "sneak" (a step within earshot of a creature that could hear it,
 #                 before stealth made it quieter), "hear" (hearing something new: a sound that is
 #                 news), "search" (a turn spent searching, whatever it finds), "spot" (noticing
-#                 something hidden in passing), "dodge" (an attack that missed because you dodged
-#                 it), "burdened" (an
-#                 action, not waiting, while your load slows you), "travel" (a journey: a step on
-#                 the overworld), "kick" (a kick at a closed door). Only the player trains, for
-#                 now.
+#                 something hidden in passing), "disarm" (an attempt to disarm a trap, whatever
+#                 comes of it), "dodge" (an attack that missed because you dodged it), "burdened"
+#                 (an action, not waiting, while your load slows you), "travel" (a journey: a step
+#                 on the overworld), "kick" (a kick at a closed door), "pick" (a try at picking a
+#                 lock). Only the player trains, for now.
 #   benefit       what it gives, by its value: a list of { effect = EFFECT, ... } growing either
 #                 by `steps` (one for each value reached, then one more for every `every` points
 #                 past the last) or by a `curve` of [value, effect] points from value 0 (straight
@@ -34,11 +34,15 @@
 #                 spec §8 "Searching"; at most 20), "search_reach" (cells farther a search reaches
 #                 than the cells around you; at most 2), "spot" (points added to noticing hidden
 #                 features in passing, at most 20; trained, a skill with it lets you notice them
-#                 at all), "burden" (percent less of your burden's slowdown), "travel"
+#                 at all), "disarm" (points added to disarming a trap, spec §8 "Disarming
+#                 traps", at most 20; trained, a skill with it lets you disarm traps at all),
+#                 "burden" (percent less of your burden's slowdown), "travel"
 #                 (percent less time a journey on the overworld takes), "bargain" (percent better
 #                 prices in shops, together with Presence at most half; shops.toml), "kick"
 #                 (points added to the Strength a kick at a closed door is rolled against, at most
-#                 40). The percent effects stay within 0 to 100.
+#                 40), "pick" (points added to picking a lock, at most 20; trained, a skill with it
+#                 lets you pick locks at all: the Pick lock ability). The percent effects stay
+#                 within 0 to 100.
 #
 # The player sees their own trained skills and their values, never a benefit's number, a mark, or
 # a chance (the wiki describes them as rules).
@@ -107,6 +111,11 @@ id = "disable_device"
 name = "Disable device"
 description = "Taking traps and mechanisms apart without setting them off."
 kind = "action"
+mark = [{ on = "disarm", chance = 20 }]
+# Disarming a trap you know of (spec §8 "Disarming traps"; the Disarm ability): trained at all,
+# you can try; added to the Dexterity check, +8 at 100 (an arrow trap of 14 disarmed 46 % of the
+# time at Dexterity 10 becomes 93 %), +12 at 200.
+benefit = [{ effect = "disarm", curve = [[0, 0], [100, 8], [200, 12]] }]
 
 [[skill]]
 id = "escape_artist"
@@ -165,6 +174,11 @@ id = "open_lock"
 name = "Open lock"
 description = "Picking locks without the key."
 kind = "action"
+mark = [{ on = "pick", chance = 20 }]
+# Picking a lock (spec §8 "Doors"; the Pick lock ability, a direction): added to the Dexterity
+# check against the lock's difficulty, +8 at 100 (a lock of 14 picked by Dexterity 10 with 46 % of
+# the tries becomes 93 %), +12 at 200. Trained at all, it lets you try.
+benefit = [{ effect = "pick", curve = [[0, 0], [100, 8], [200, 12]] }]
 
 [[skill]]
 id = "search"

@@ -1,17 +1,22 @@
 //! Classes (`assets/data/classes.toml`, spec §8 "Character creation"): the third choice of a new
-//! run. A class adjusts the starting scores, by fixed numbers or dice, adds hit points, trains
+//! run. A class adjusts the starting scores, by fixed numbers or dice, adds hit points, sets how
+//! much experience its levels need (spec §8 "Experience"), trains
 //! the character in skills (spec §8 "Skills"), by dice, and gives starting ranks in weapon skills
 //! (spec §8 "Weapon skills") and fighting styles (spec §8 "Fighting styles"): some always, and
 //! perhaps one set of a choice, rolled when the character is made.
 
 use super::weapon_skill::Ranked;
-use super::{ContentError, WeaponSkillId, WeaponSkillTable};
+use super::{ContentError, FACTORS, WeaponSkillId, WeaponSkillTable};
 use crate::combat::MAX_BASE_HP;
 use crate::dice::Dice;
 use crate::skills::{self, SkillId};
 use crate::stats::{PerStat, Stat, adjustments};
 use serde::Deserialize;
 use std::collections::BTreeMap;
+
+fn normal_experience() -> u16 {
+    100
+}
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -29,6 +34,10 @@ struct ClassSpec {
     stats: BTreeMap<Stat, Dice>,
     #[serde(default)]
     hp: u16,
+    #[serde(default = "normal_experience")]
+    experience: u16,
+    #[serde(default)]
+    alignment: i32,
     #[serde(default)]
     skills: BTreeMap<String, Dice>,
     #[serde(default)]
@@ -52,6 +61,12 @@ pub struct ClassDef {
     pub stats: PerStat<Dice>,
     /// What the class adds to the hit points (spec §8 "Combat").
     pub hp: i32,
+    /// How much experience a level needs, in percent (spec §8 "Experience"): multiplied with
+    /// the race's onto every threshold. Patient classes pay more (a wizard, 125).
+    pub experience: u16,
+    /// Its part of a new character's alignment score (spec §8 "Alignment"), added to the
+    /// race's: a paladin starts Good.
+    pub alignment: i32,
     /// The skills it trains (spec §8 "Skills"), each by dice rolled when the character is made,
     /// in skill order; added to the race's.
     pub skills: Vec<(SkillId, Dice)>,
@@ -96,6 +111,16 @@ impl ClassDef {
                     spec.hp
                 )));
             }
+            if !FACTORS.contains(&spec.experience) {
+                return Err(err(format!(
+                    "class `{id}`: experience {} is out of range ({} to {} percent)",
+                    spec.experience,
+                    FACTORS.start(),
+                    FACTORS.end()
+                )));
+            }
+            let alignment = crate::alignment::check_start(spec.alignment)
+                .map_err(|m| err(format!("class `{id}`: {m}")))?;
             let skills = skills::grants(&spec.skills, &skill_id)
                 .map_err(|m| err(format!("class `{id}`: skills: {m}")))?;
             let ranks = |data: &BTreeMap<String, Dice>, ranked| {
@@ -127,6 +152,8 @@ impl ClassDef {
                 description: spec.description,
                 stats,
                 hp: i32::from(spec.hp),
+                experience: spec.experience,
+                alignment,
                 skills,
                 weapon_skills,
                 weapon_skill_choice,
@@ -158,6 +185,9 @@ mod tests {
         );
         let classes = parse(&text).expect("valid");
         assert!(classes[0].skills.is_empty());
+        assert_eq!(classes[0].experience, 100, "unless named");
+        let text = format!("{ONE}experience = 125\n");
+        assert_eq!(parse(&text).expect("valid")[0].experience, 125);
         let text = format!("{ONE}skills = {{ spellcraft = \"2d6+10\" }}\n");
         let wizard = parse(&text).expect("valid");
         assert_eq!(
@@ -199,6 +229,10 @@ mod tests {
                 "presence -3d4 is out of range",
             ),
             (format!("{ONE}{ONE}"), "duplicate class id `wizard`"),
+            (
+                format!("{ONE}experience = 300\n"),
+                "class `wizard`: experience 300 is out of range (50 to 200 percent)",
+            ),
             ("class = []\n".into(), "at least one class"),
             (
                 format!("{ONE}skills = {{ necromancy = 5 }}\n"),

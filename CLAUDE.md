@@ -101,9 +101,9 @@ trained skills, `Stealth 17`), `abilities` (the abilities menu's list), and `que
 log, active first) from perception;
 `actors` (dev-only: every actor's hit points, load, stats, and skills with their marks).
 
-Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:DIR ascend descend lantern
+Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:DIR pick:DIR ascend descend lantern
 pickup[:LETTERS] drop[:LETTERS] sell[:LETTERS] pay[:DIR] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
-eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] dig:DIR search search:N chat:DIR ask:DIR:TOPIC rest:GOAL stance:NAME vision:PROFILE
+eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] dig:DIR search search:N disarm:DIR chat:DIR ask:DIR:TOPIC rest:GOAL stance:NAME vision:PROFILE
 skip:DURATION weather:KIND effect:ID@X,Y[>X,Y] identify[:LETTERS] afflict:STATUS infect:DISEASE`
 (`DIR` = N
 NE E SE S SW W NW; `NAME` = aggressive, neutral, defensive, or coward (a stance, no time; `assets/data/stances.toml`); `LETTERS` = stacks by position, as letters
@@ -113,7 +113,8 @@ e.g. `pickup:ac` (the pile on the player's cell, `a` its top) or `drop:b` (the i
 are where stacks are stored, never the letters a screen's page shows; `sell:b` sells to
 the shop the player stands in and `pay` pays it (spec §7 "Shops"); `SLOT` = a slot id in
 `assets/data/slots.toml`, e.g. `equip:body:b` (put inventory stack `b` on), `remove:body`;
-`bash:DIR` bashes with the held shield, `fire:X,Y` shoots the readied missile weapon at level
+`pick:DIR` picks the lock of the door that way (the Pick lock ability: Open lock trained;
+`docs/dev/doors.md`), `bash:DIR` bashes with the held shield, `fire:X,Y` shoots the readied missile weapon at level
 cell (X, Y), `throw:c:X,Y` throws one of
 inventory stack `c` there (any weapon is thrown whole, badly: `t` in the game sends `fire` for a launcher, else `throw` for what the Missile weapon slot holds); `eat:b` eats one of inventory stack `b`, `eat:floor:a` one of the top
 stack underfoot; `read:b:12,5` reads scroll stack `b` at level cell (12, 5) (a spell scroll:
@@ -121,7 +122,9 @@ fireball, lightning, frost), `read:b:c` reads it on inventory stack `c` (the scr
 identify); `dig:E` digs into the wall east with the tool in the Tool slot, turn
 after turn until it gives way or something interrupts; `search` searches the cells around the
 player for secret doors and hidden traps, `search:N` for up to N turns (1 to 100), stopping when
-something is found; `chat:E` talks to the creature east of
+something is found; `disarm:E` tries to disarm the trap the player knows of east of them (the
+Disarm ability, for those trained in Disable device; refused, with no time, without the skill
+or a known trap there); `chat:E` talks to the creature east of
 the player, `ask:E:rooms` asks it about topic `rooms` (an id in `assets/data/dialogue.toml`;
 quest topics are `quest-ID`, `accept-ID`, `decline-ID`, ids in `assets/data/quests.toml`);
 `PROFILE` = an id in
@@ -151,6 +154,7 @@ its position as action text names it, and weighs, worn and wielded things marked
 and its thresholds),
 `equipment` (the player's slots), `stats`
 (the player's name, race, gender, and class, then their own scores as the rules read them, then
+their alignment band, `Alignment Kind`, then
 `Effects Bleeding, Diseased` when they suffer any, then `Diseases filth fever`, the diseases they
 know they have, then what they resist in words, `Resistant to cold`, `Vulnerable to fire`,
 `Immune to poison`), `weapon_skills` (the player's
@@ -161,7 +165,7 @@ order, each with its source and what it asks for or why it cannot be used now: `
 one a line), `quests` (the quest log, active
 first: name, stage, giver, objective, and status), `truth`
 (ground truth, hidden traps and secret doors (`S`) too, **dev-only**), `actors` (every actor on the level with its hit points and
-Defence and Protection, its weight, what it carries and of that wears and wields (magic items as they truly
+Defence and Protection, its alignment (`alignment evil`; the player's score and band), its weight, what it carries and of that wears and wields (magic items as they truly
 are, "(unidentified)" marked), what its magic items do to it (`magic strength +1`), its burden
 and carrying limit, its weapon skills with marks, its stats as score/potential, its status
 effects with severities, its diseases (progressions, checks won in a row, time to their next
@@ -174,7 +178,7 @@ died) and its stage, `fresh`, `old`, `rotten`, or `gone`, which the player is ne
 `0`-`9`, `a`-`z` for 10-35, `#` beyond, **dev-only**). The header line has the player's `hp
 17/17` (and `dead` once the run has ended), `hunger hungry` unless Not hungry, and the
 `temperature`; JSON dumps add `hp`, `defence`, `protection`, `resistances` (by damage type id, the
-word: `{"cold": "resistant"}`), `burden` (`level`, `limit`), `hunger`, `effects`
+word: `{"cold": "resistant"}`), `burden` (`level`, `limit`), `alignment` (the band's id), `hunger`, `effects`
 (status ids), `diseases` (the known ones' ids), `death` (with `of`, the status that killed,
 `cause`, starving, choking, or a trap, and `trap`, the id of the trap that killed),
 `known_traps`, `temperature` (°C to a tenth), `weapon_skills` (by skill id:
@@ -241,6 +245,7 @@ file). Topics:
 - `docs/dev/burden.md` — load, limits, sizes, every penalty's one hook
 - `docs/dev/hunger.md` — satiation, eating, corpses and rot, starving
 - `docs/dev/character-creation.md` — `CharacterSpec`, races, classes, genders, the horoscope, starting rolls, names
+- `docs/dev/alignment.md` — the good–evil score and its bands, the deeds that move it (one hook each), what reads it
 - `docs/dev/skills.md` — trained skills, effects and uses, training marks, the skills screen
 - `docs/dev/experience.md` — the level curve, kill XP, level-ups
 - `docs/dev/status-effects.md` — statuses and severities, healing paces, checks, diseases and stat damage
@@ -395,7 +400,7 @@ A successful compile does not verify anything visual. Before opening a PR:
 `*.toml` files (one per showcase room or feature, read in file-name order; entry names are
 unique across files) list one entry per showcase room plus the vast level (its start and
 its river): a scenario and text `actions` (`move:N*3 open:E`; `*N` repeats) or a `replay` file,
-and optional `window`, `scale`, `freeze_time`, `screen` (a `--screen` value: over the run, e.g.
+and optional `character` (`human,male,paladin`: the run starts as it, not the scenario's), `window`, `scale`, `freeze_time`, `screen` (a `--screen` value: over the run, e.g.
 `pause`, `help`, `settings`, `controls`, `inventory`, `equipment`, `equip-item`, `describe`,
 `character`, `skills`, `weapon-skills`, `quests`, `messages`, `pick-up`, `drop`, `eat`, `abilities`,
 `dialogue`; or over
