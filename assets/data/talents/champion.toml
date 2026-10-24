@@ -1,0 +1,8 @@
+[[talent]]
+id = "champion"
+name = "Champion"
+tree = "class"
+granted = true
+description = "Your critical blows with melee weapons strike harder still."
+effects = [{ kind = "weapon", role = "melee", crit = 1 }]
+systems = ["combat"]

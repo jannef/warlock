@@ -20,3 +20,18 @@ kit = [
     "dried_meat",
     "gold_coin*10",
 ]
+# Bonus talents from Guard and Vigour.
+bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["guard", "vigour"] }
+# The level table (spec §8 "Class abilities"). The gifts used from the abilities menu answer only
+# a paladin who is Good or better. Lay on hands waits for its mana (the mana PR) with a cooldown.
+abilities = [
+    { level = 1, talent = "lay_on_hands" },
+    { level = 6, talent = "divine_grace" },
+    { level = 12, talent = "smite" },
+    { level = 18, talent = "divine_health" },
+    { level = 25, talent = "shield_of_faith" },
+    { level = 32, talent = "steadfast" },
+    { level = 40, talent = "holy_radiance" },
+    { level = 50, talent = "bulwark" },
+    { level = 60, talent = "avatar" },
+]

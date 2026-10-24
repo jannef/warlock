@@ -1,0 +1,8 @@
+[[talent]]
+id = "brutal_critical"
+name = "Brutal critical"
+tree = "class"
+granted = true
+description = "Your critical blows with a two-handed weapon strike harder."
+effects = [{ kind = "two_handed_crit", value = 1 }]
+systems = ["combat"]

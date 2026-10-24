@@ -105,7 +105,7 @@ log, active first) from perception;
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:DIR pick:DIR ascend descend lantern
 pickup[:LETTERS] drop[:LETTERS] sell[:LETTERS] pay[:DIR] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
-eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] dig:DIR search search:N disarm:DIR second_wind chat:DIR ask:DIR:TOPIC steal:DIR rest:GOAL stance:NAME vision:PROFILE
+eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] dig:DIR search search:N disarm:DIR second_wind use:ID[:DIR] chat:DIR ask:DIR:TOPIC steal:DIR rest:GOAL stance:NAME vision:PROFILE
 talent:ID[:CHOICE] advance:SKILL levelup:auto xp:N
 skip:DURATION weather:KIND effect:ID@X,Y[>X,Y] identify[:LETTERS] afflict:STATUS infect:DISEASE`
 (`DIR` = N
@@ -125,7 +125,7 @@ fireball, lightning, frost), `read:b:c` reads it on inventory stack `c` (the scr
 identify); `dig:E` digs into the wall east with the tool in the Tool slot, turn
 after turn until it gives way or something interrupts; `search` searches the cells around the
 player for secret doors and hidden traps, `search:N` for up to N turns (1 to 100), stopping when
-something is found; `second_wind` uses the Second wind talent (hit points back at once, then Winded); `disarm:E` tries to disarm the trap the player knows of east of them (the
+something is found; `second_wind` uses the Second wind talent (hit points back at once, then Winded); `use:rage` uses a class ability (spec §8 "Class abilities"; `use:smite:E` one aimed in a direction: rage, veterans_wind, whirlwind, lay_on_hands, smite, holy_radiance, quivering_palm); `disarm:E` tries to disarm the trap the player knows of east of them (the
 Disarm ability, for those trained in Disable device; refused, with no time, without the skill
 or a known trap there); `chat:E` talks to the creature east of
 the player, `ask:E:rooms` asks it about topic `rooms` (an id in `assets/data/dialogue.toml`;

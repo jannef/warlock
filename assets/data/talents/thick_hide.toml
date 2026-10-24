@@ -1,0 +1,8 @@
+[[talent]]
+id = "thick_hide"
+name = "Thick hide"
+tree = "class"
+granted = true
+description = "Your skin is tough as leather: natural armour +2 while you wear no body armour."
+effects = [{ kind = "natural_unarmoured", value = 2 }]
+systems = ["defence"]

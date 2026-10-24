@@ -1,0 +1,8 @@
+[[talent]]
+id = "cleaving_strike"
+name = "Cleaving strike"
+tree = "class"
+granted = true
+description = "A blow that fells a foe carries on into another beside you; with the Cleave talent, on and on while they fall."
+effects = [{ kind = "free_blow", trigger = "cleave" }]
+systems = ["free_blows"]

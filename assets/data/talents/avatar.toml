@@ -1,0 +1,8 @@
+[[talent]]
+id = "avatar"
+name = "Avatar"
+tree = "class"
+granted = true
+description = "Your touch heals fully and cures poison, bleeding, and disease, and drains you half as long."
+effects = [{ kind = "avatar" }]
+systems = ["hit_points", "status", "diseases"]
