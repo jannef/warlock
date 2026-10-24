@@ -389,7 +389,8 @@ A successful compile does not verify anything visual. Before opening a PR:
   `Closes #N`. CI must be green before a squash merge into `main`.
 - CI runs on Linux only (`CI` workflow: fmt, clippy, tests, headless screenshots, wasm32 check,
   cargo-deny; the web build on pushes to `main`). macOS is not run in Actions: development happens
-  on macOS, so run the full local check there before every PR. `main` is branch-protected: PRs
+  on macOS, so run the full local check there before every PR (a PR built by a cloud agent,
+  `ops/agents/`, runs it on Linux instead). `main` is branch-protected: PRs
   only, the Linux, wasm32, and cargo-deny checks must pass, linear history.
 - **Merging** (`docs/dev/merging.md` has the details): agents don't chase `main`. A PR merges
   or rebases onto `origin/main` once, when the integrator says it is next in line; after that

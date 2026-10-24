@@ -1,0 +1,8 @@
+[[talent]]
+id = "rapid_reload"
+name = "Rapid reload"
+tree = "weaponcraft"
+description = "You reload a crossbow quicker."
+needs = { weapon_skills = { crossbows = 3 } }
+effects = [{ kind = "weapon", role = "launcher", reload = 25 }]
+systems = ["ranged", "weapon_skills"]

@@ -42,13 +42,11 @@ description = "Dexterity, dodging, and quickness."
 id = "weaponcraft"
 name = "Weaponcraft"
 description = "Weapon skills, fighting styles, and missiles."
-pending = true
 
 [[tree]]
 id = "guard"
 name = "Guard"
 description = "Armour, Protection, and standing firm."
-pending = true
 
 [[tree]]
 id = "shadow"
@@ -93,7 +91,6 @@ name = "Defence: Dodge, Parry, Shield, natural armour, Deflection"
 [[system]]
 id = "protection"
 name = "Protection and penetration"
-pending = true
 
 [[system]]
 id = "free_blows"
@@ -102,22 +99,18 @@ name = "Free blows"
 [[system]]
 id = "weapon_skills"
 name = "Weapon skills and marks"
-pending = true
 
 [[system]]
 id = "styles"
 name = "Fighting styles"
-pending = true
 
 [[system]]
 id = "stances"
 name = "Stances"
-pending = true
 
 [[system]]
 id = "ranged"
 name = "Ranged combat and missiles"
-pending = true
 
 [[system]]
 id = "kicks"

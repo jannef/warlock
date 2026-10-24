@@ -198,6 +198,11 @@ impl World {
         }
         if fleeing {
             price = percent_of(price, self.content.stance_def(actor.stance).flee_cost);
+            // Then its talents (Unflinching): a signed percent of the fleeing step.
+            let percent = actor.talent_mods(&self.content).flee_percent;
+            if percent != 0 {
+                price = percent_of(price, u32::try_from((100 + percent).max(1)).unwrap_or(1));
+            }
         }
         self.burdened(id, price)
     }
