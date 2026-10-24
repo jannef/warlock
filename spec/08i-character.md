@@ -191,7 +191,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     good −150, neutral and evil −100), except a beast (a neutral creature that does not talk),
     which may be hunted (0); killing someone hostile (evil +10, neutral and good 0); attacking a
     shopkeeper who trades with the player (−100, once: the keeper is outraged after it);
-    leaving a shop with unpaid goods (theft, −100; Steal, #234, will be theft too); paying a
+    leaving a shop with unpaid goods, or taking something with Steal unnoticed (theft, −100 each time); paying a
     shopkeeper what is owed (+5); eating a corpse of the player's own race (a creature type's
     `race`) or of a creature that talks and is not hostile to them by its type (−200); and a
     quest's own `alignment` as it is completed (helping quests good, dark ones evil). Nothing
@@ -243,8 +243,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     waiting (not a rest's turns) taken while the player's burden slows them, as it began
     (`burdened`; a dwarf's Burdened does not), a step on the overworld (`travel`), a kick at a
     closed door (`kick`), a turn spent searching, whatever it finds (`search`), noticing
-    something hidden in passing (`spot`; §8 "Searching"). Only the player trains for now;
-    creatures keep their type's skills. Marks are a **reservoir**: they raise nothing by
+    something hidden in passing (`spot`; §8 "Searching"), an attempt to steal, whatever comes of
+    it (`steal`; "Stealing" below). Only the player trains for now; creatures keep their type's
+    skills. Marks are a **reservoir**: they raise nothing by
     themselves and nothing is said; they gather until a level-up roll on the skill spends them.
   - **Level-up rolls** (design `docs/design/progression.md` §5): every level gives the player
     **skill rolls**: their class's `rolls` (`data/classes/`: 2; the thief and the ranger 3, the
@@ -271,12 +272,47 @@ developer notes (CLAUDE.md, `docs/dev/`).
     with an active use (`kind = "action"`) is an ability there (`warlock_core::ability`,
     `PerceptionView::abilities`), greyed out as "not usable yet": the uses come with their
     actions, and one whose use has come is that ability instead (Disable device's is "Disarm a
-    trap", §8 "Disarming traps"; Open lock's "Pick lock", §8 "Doors"). Never a benefit's number,
+    trap", §8 "Disarming traps"; Open lock's "Pick lock", §8 "Doors"; Steal's "Steal",
+    "Stealing" below). Never a benefit's number,
     a mark, a
     chance, an untrained skill, or a creature's skills; ground-truth dev dumps (`actors`, the
     world state) show every actor's skills with their marks and the ladder's die for them. The
     Skills screen's meter shows a skill's ladder step in quarters (how practised it is). Skills
     and marks are part of the world state (saved, hashed).
+- **Stealing** (`world/steal.rs`, data `data/steal.toml`, §7; #234, the progression design's
+  B7): the Steal skill's use, the abilities menu's **Steal** (`Ability::Steal`, in the skill's
+  place among the Skills; a direction; `Action::Steal`, replay text `steal:DIR`; cost `steal`;
+  a rebindable key, "Steal", unbound by default). Anyone trained in a skill with the `steal`
+  benefit has it, while `data/steal.toml` exists (without it nobody steals and the skill stays
+  "not usable yet"); the thief's class trains Steal.
+  - **Whom**: a creature on the cell in that direction that the player sees and that is not
+    hostile to them (`World::stance`). Refused, taking no time: untrained ("You do not know how
+    to steal."), no one seen there ("You see no one there to steal from."), or someone hostile
+    ("The kobold is hostile: it would never let you near enough.").
+  - **The contest** ("Checks" in §8): 2d12 + the player's Dexterity modifier + what Steal gives,
+    against 2d12 + the victim's Willpower modifier (both of the effective scores); a tie goes to
+    the thief, and their natural 2 always fails, their natural 24 always works. Four draws of
+    the gameplay stream (the victim's roll first). It takes the `steal` action's time whatever
+    comes of it (priced before anything changes hands, so the burden applies) and may earn
+    Steal a training mark.
+  - **Unnoticed**: the player takes one stack, all of it, of what the victim carries and neither
+    wears nor wields, picked uniformly (one more gameplay draw when there are two or more), "You
+    steal 7 copper coins from the kobold."; with nothing like that on it, "You find nothing to
+    take from the gardener.", unnoticed all the same. There is no choice of item: the player
+    never sees a creature's pack (`PerceptionView::gear` is only what it wears and wields), and
+    what is worn or wielded cannot be lifted unnoticed. `World::got_away_with` is the one place a
+    theft that took something has consequences beyond the goods: it is a theft deed for alignment
+    (§8 "Alignment": stealing is evil, as leaving a shop owing is).
+  - **Caught**: the victim turns on the player. A keeper of an open shop (§7 "Shops") is outraged
+    as a robbed one is: "Grimbold catches you stealing. \"Stop, thief!\"", its shop trades no
+    more, and what the player owed it is stolen. Anyone else joins `data/steal.toml`'s `caught`
+    faction (its `faction_override`, hostile to the player), so the AI and every stance follow:
+    "The kobold catches you stealing and turns on you!".
+  - **Shop goods** are not stolen this way: what lies in a shop stays the shop's rules' (picking
+    it up is owing for it; leaving owing any way but the door is theft, §7 "Shops"). Stealing
+    from a keeper takes from its pack: its purse.
+  - No limit on trying again (the owner's rule): a victim that caught the player stays angry,
+    and that is the price. Presentation shows only what comes of it, never a modifier or a roll.
 - **Talents** (`warlock-core/src/talent.rs`, the runtime; `content/talent.rs`, the data;
   `world/talent.rs`, the picks; M30, #229; design `docs/design/progression.md` §7, §10): knacks
   a character picks as they level, each a typed effect read where the rules already read what
@@ -385,6 +421,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
     trees' effects: `burden_dex` (Supple), `protection` (Stone hide), `door_kick` (Roc's
     strength), `dig_percent` (Stonewise), `status_eases` and `no_penalty` (Regrowth's bleeding,
     Pure blood's poison), `disease_checks`, `speed_percent`.
+  - **Damage-type talents** (#248; the design's §7.5 `#151` entries): Elemental ward (Guard;
+    2 ranks, To 12 / Lv 20; chosen for an element, any kind that is not physical: 25 % a rank,
+    counted as gear in `Actor::resistances`, so it also shrinks the doses of a status that is
+    damage, Poisoned for a ward against poison, and the character screen says "Resistant to
+    fire" in words) and Crusher (Might; St 13, Maces and clubs or Unarmed 3: `penetration` +2
+    on melee blows, off-hand blows, shield bashes, and kicks that can do bludgeoning damage;
+    never shots or throws) make the `damage_types` system's two, so it is held to the coverage
+    bar. The witch's Blight (#245) is poison-typed when it lands: its burst names
+    `damage_type = "poison"`, and the Poisoned it gives meets poison resistance as every dose
+    does (`World::afflict`), so no rule of its own.
   - **Coverage** (the design's §8): every talent names the systems it touches; at load a
     system not `pending` with fewer than `min_talents` talents (or `min_class` class abilities,
     0 until the class tables), or a tree not `pending` nor `no_free` without `free_per_tree`

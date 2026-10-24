@@ -138,9 +138,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
   the modifier of the stat tested (the effective score's) succeeds at the **difficulty** or
   more; a natural 2 always fails and a natural 24 always succeeds (`check::check`,
   `check::ways` for the odds: against 13 at +0, 78 of 144). Diseases are resisted and fought off
-  with them (Toughness, brain fever Willpower). The player never sees a difficulty, a modifier,
-  or a roll; they see what comes of it. Nothing limits retrying: the time a disease takes is its
-  cost.
+  with them (Toughness, brain fever Willpower). A **contest** puts one side's check against the
+  other's: the other side's natural roll plus its modifier is the difficulty, four draws, the
+  other side's roll first; a tie goes to the side making the check (`check::contest`,
+  `check::contest_ways` for the odds, of 144 × 144: even sides win a little over half). Stealing
+  is one (§8 "Stealing": Dexterity and Steal against Willpower). The player never sees a
+  difficulty, a modifier, or a roll; they see what comes of it. Nothing limits retrying: the
+  time a disease takes is its cost.
 - **Diseases** (`warlock-core/src/disease.rs`, the rules of one actor's infections;
   `world/disease.rs`, applying them; data `data/diseases.toml`, §7; M24, #139), modelled on D&D
   3.5's: the pathologies behind one umbrella status, **Diseased** (the file's `status`).

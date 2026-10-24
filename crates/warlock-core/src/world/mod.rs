@@ -122,6 +122,7 @@ mod spell;
 mod stars;
 mod stat_training;
 mod status;
+mod steal;
 mod talent;
 mod talk;
 mod train;
@@ -943,6 +944,7 @@ impl World {
             Action::Rest(goal) => return self.start_rest(*goal),
             Action::Chat(dir) => return self.chat(*dir, events),
             Action::Ask { dir, topic } => return self.ask(*dir, topic, events),
+            Action::Steal(dir) => return self.steal(*dir),
             Action::Eat(meal) => return self.eat(*meal),
             Action::Read { item, target } => return self.read(*item, *target, events),
             Action::Dig(dir) => return self.start_dig(*dir),
@@ -1018,6 +1020,8 @@ mod character_tests;
 #[cfg(test)]
 mod cost_tests;
 #[cfg(test)]
+mod damage_talent_tests;
+#[cfg(test)]
 mod damage_tests;
 #[cfg(test)]
 mod dig_tests;
@@ -1091,6 +1095,8 @@ mod stat_training_tests;
 mod stats_tests;
 #[cfg(test)]
 mod status_tests;
+#[cfg(test)]
+mod steal_tests;
 #[cfg(test)]
 mod style_tests;
 #[cfg(test)]

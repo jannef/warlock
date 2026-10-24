@@ -131,7 +131,7 @@ content (fixtures) never has a pick due.
 ## Tests
 
 `content/talent.rs` (loading, validation, the coverage gaps, choice chains), `talent.rs`
-(summing, ranks per choice, serialization), `world/talent_arms_tests.rs` (the Weaponcraft and Guard hooks, the role need's words), `world/talent_tests.rs` (dues and refusals,
+(summing, ranks per choice, serialization), `world/talent_arms_tests.rs` (the Weaponcraft and Guard hooks, the role need's words), `world/damage_talent_tests.rs` (Elemental ward and Crusher, the damage-types bar), `world/talent_tests.rs` (dues and refusals,
 prerequisites in words, ranks and Hardy's growth, several levels at once and `levelup:auto`,
 dropped picks, every hook, a free-blow talent, saves and replays, perception and dumps).
 
@@ -141,6 +141,13 @@ Vigour, Might, and Finesse (#237) ship whole but for Battle trance and Inner cal
 resources, #225); `body_talent_tests.rs` covers each one's rule, `hunger_tests.rs` Iron stomach.
 The statuses Winded (Second wind's cooldown) and Staggered (`cost = 150`, 6 s) are in
 `data/status.toml`.
+
+The damage-type talents (#248), Elemental ward (H2) and Crusher (H1), are the `damage_types`
+system's two, so it is no longer `pending`; `world/damage_talent_tests.rs` covers the ward
+against damage and status doses, its words on the character screen, Crusher by weapon kind, and
+the bar. The witch's Blight (#245) needs no read of its own for its type: its burst names
+`damage_type = "poison"`, and its Poisoned goes through `World::afflict`, which meets poison
+resistance.
 
 ## Later waves
 

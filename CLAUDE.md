@@ -105,7 +105,7 @@ log, active first) from perception;
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:DIR pick:DIR ascend descend lantern
 pickup[:LETTERS] drop[:LETTERS] sell[:LETTERS] pay[:DIR] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
-eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] dig:DIR search search:N disarm:DIR second_wind chat:DIR ask:DIR:TOPIC rest:GOAL stance:NAME vision:PROFILE
+eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] dig:DIR search search:N disarm:DIR second_wind chat:DIR ask:DIR:TOPIC steal:DIR rest:GOAL stance:NAME vision:PROFILE
 talent:ID[:CHOICE] advance:SKILL levelup:auto xp:N
 skip:DURATION weather:KIND effect:ID@X,Y[>X,Y] identify[:LETTERS] afflict:STATUS infect:DISEASE`
 (`DIR` = N
@@ -129,7 +129,8 @@ something is found; `second_wind` uses the Second wind talent (hit points back a
 Disarm ability, for those trained in Disable device; refused, with no time, without the skill
 or a known trap there); `chat:E` talks to the creature east of
 the player, `ask:E:rooms` asks it about topic `rooms` (an id in `assets/data/dialogue.toml`;
-quest topics are `quest-ID`, `accept-ID`, `decline-ID`, ids in `assets/data/quests.toml`);
+quest topics are `quest-ID`, `accept-ID`, `decline-ID`, ids in `assets/data/quests.toml`),
+`steal:E` tries to steal from it (the Steal ability, spec §8 "Stealing");
 `talent:hardy` takes a talent (an id in `assets/data/talents/`; `talent:weapon_focus:long_blades`
 with its choice) when a level's pick is due (every third level; until it is made every other
 action is refused), `advance:stealth` spends a level's skill roll (none yet, #230), `levelup:auto`
@@ -273,6 +274,7 @@ file). Topics:
 - `docs/dev/npcs.md` — unique characters, chat and ask, rotation lines and mutters, displacement
 - `docs/dev/quests.md` — quest data and stages, hooks in kills, travel, and talk, the quest log
 - `docs/dev/shops.md` — shop data, keepers, prices, buying, selling, theft, the shop dialogs
+- `docs/dev/stealing.md` — the Steal ability and action, the contest, what is taken, a caught thief, the alignment hook
 - `docs/dev/doors.md` — locks and keys, kicking, breaking, what creatures open
 - `docs/dev/digging.md` — digging tools, wall hardness, the dig loop, blasts
 - `docs/dev/traps.md` — trap data, triggering, known traps, the dev trap actions

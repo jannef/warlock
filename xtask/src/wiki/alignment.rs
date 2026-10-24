@@ -89,7 +89,10 @@ pub(super) fn alignment_deeds(content: &Content) -> String {
             "Attacking a shopkeeper who trades with you",
             s.attack_shopkeeper,
         ),
-        ("Leaving a shop with goods you have not paid for", s.theft),
+        (
+            "Leaving a shop with goods you have not paid for, or stealing unnoticed",
+            s.theft,
+        ),
         ("Paying a shopkeeper what you owe", s.pay_debt),
         (
             "Eating one of your own race, or a peaceful creature who talks",

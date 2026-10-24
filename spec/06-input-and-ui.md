@@ -341,7 +341,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     §8 "Disarming traps"), Disable device's use, which whoever is trained in it has, in a
     direction ("Disarm in which direction? (Esc to cancel)"); **Pick lock** (`Ability::PickLock`,
     §8 "Doors", #233), Open lock's use, which whoever is trained in it has (thieves), in a
-    direction; and each other skill used as an action (`kind = "action"`, §8 "Skills") the player
+    direction; **Steal** (`Ability::Steal`, §8 "Stealing"), the Steal skill's use, which whoever
+    is trained in Steal has, in a direction, in that skill's place; and each other skill used as
+    an action (`kind = "action"`, §8 "Skills") the player
     is trained in, listed but never available until its use comes (it then becomes an ability of
     its own with its action, listed in the skill's place: `Ability::use_of`); and **Second wind**
     (`Ability::SecondWind`, under Talents, §8 "Talents"), which the Second wind talent gives,
@@ -360,7 +362,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     once, and opens the menu when none was used yet.
   - **Keys**: an ability with an action of its own is also a rebindable key command, unbound by
     default (the shield bash: "Bash with your shield", `bash`; picking a lock: "Pick a lock",
-    `pick_lock`); bound, it uses the ability as the menu
+    `pick_lock`; stealing: "Steal", `steal`); bound, it uses the ability as the menu
     does, and one that cannot be used now is applied at once so the rules say why, taking no
     time ("You have no shield to bash with."). New abilities register in the registry and get
     no default key.

@@ -1,0 +1,20 @@
+# Stealing (spec §8 "Stealing"; #234): lifting a purse or a trinket from someone next to you, the
+# Steal skill's use, chosen from the abilities menu (`a`, then a direction).
+#
+# Whoever is trained in Steal (skills.toml: the skill with the `steal` benefit) can try it on any
+# creature next to them that they see and that is not hostile to them. It is a contest (spec §8
+# "Checks"): 2d12 + your Dexterity modifier + what your Steal skill gives, against 2d12 + its
+# Willpower modifier; a tie is yours, and your natural 2 always fails, your natural 24 always
+# works. It takes a turn (actions.toml `steal`) whatever comes of it, and trains Steal.
+#
+# - It works: you take one stack of what it carries and neither wears nor wields, picked at random
+#   (all of the stack: a whole purse), and it notices nothing. With nothing like that on it, you
+#   come away empty-handed, unnoticed all the same.
+# - You are caught: it turns on you, joining the faction below. A shopkeeper is outraged as a
+#   robbed one is (shops.toml `outraged`): its shop trades no more, and what you owe it is stolen.
+#
+# Try as often as you like: a creature that caught you stays angry, and that is the price.
+
+# The faction a creature that catches you stealing joins (factions.toml): it must be hostile to
+# you, so the creature comes after you.
+caught = "outraged"

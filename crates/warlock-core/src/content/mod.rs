@@ -47,6 +47,7 @@ mod spell;
 mod stance;
 mod stat_training;
 mod status;
+mod steal;
 mod talent;
 mod terrain;
 mod trap;
@@ -132,6 +133,7 @@ pub use status::{
     Affliction, COST_PERCENT, CombatBonus, Healing, MAX_REGEN, MAX_SEVERITY, OnHit, Penalty,
     Stacking, StatusDef, StatusId, Wound,
 };
+pub use steal::StealRules;
 pub use talent::{
     AnyWeaponSkill, Choice, Coverage, DEFAULT_MAX_RANKS, FreeBlowTrigger, Need, Needs, Rank,
     SystemDef, SystemId, TalentBook, TalentDef, TalentEffect, TalentId, TreeDef, TreeId,
@@ -419,6 +421,9 @@ pub struct Content {
     trap_ids: BTreeMap<String, TrapId>,
     /// The numbers of searching for hidden features (`data/search.toml`, spec §8 "Searching").
     search: SearchRules,
+    /// What becomes of a creature that catches the player stealing (`data/steal.toml`, spec §8
+    /// "Stealing"); none without the file.
+    steal: Option<StealRules>,
     /// The rules of stat training (`data/stats.toml`, spec §8 "Stats").
     stat_training: StatTraining,
     factions: Factions,
@@ -503,6 +508,7 @@ impl Content {
             traps: Vec::new(),
             trap_ids: BTreeMap::new(),
             search: SearchRules::default(),
+            steal: None,
             stat_training: StatTraining::default(),
             factions: Factions::default(),
             lights: Vec::new(),
@@ -667,6 +673,10 @@ impl Content {
         let path = "data/search.toml";
         if let Some(text) = files.get_optional(path) {
             content.search = SearchRules::parse(path, text)?;
+        }
+        let path = "data/steal.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.steal = Some(StealRules::parse(path, text, &content.factions)?);
         }
         let path = "data/stats.toml";
         if let Some(text) = files.get_optional(path) {
@@ -1955,6 +1965,12 @@ impl Content {
     /// else [`SearchRules::default`]).
     pub fn search(&self) -> &SearchRules {
         &self.search
+    }
+
+    /// The rules of stealing that live in data (spec §8 "Stealing"; `data/steal.toml`); `None`
+    /// without the file, when nobody steals.
+    pub fn steal(&self) -> Option<&StealRules> {
+        self.steal.as_ref()
     }
 
     /// The rules of stat training (spec §8 "Stats"; `data/stats.toml`, else

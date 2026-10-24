@@ -184,6 +184,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("skill-grants.md", skills::skill_grants),
         ("skill-ladder.md", skills::skill_ladder),
         ("skill-rolls.md", skills::skill_rolls),
+        ("stealing.md", skills::stealing),
         ("abilities.md", abilities::abilities),
         ("weapons.md", combat::weapons),
         ("light-weapons.md", combat::light_weapons),
@@ -640,7 +641,14 @@ mod tests {
             ),
             "{abilities}"
         );
-        assert!(abilities.contains("| Steal | Skills | everyone trained in the skill | — |"));
+        assert!(
+            abilities.contains(
+                "| Steal | Skills | everyone trained in Steal | a direction | Lift a purse or a \
+                 trinket from someone next to you who is not hostile; caught, they turn on you. | \
+                 6 seconds |"
+            ),
+            "{abilities}"
+        );
         assert!(
             abilities.contains(
                 "| Pick lock | Skills | everyone trained in Open lock | a direction | Open a \
@@ -712,19 +720,23 @@ mod tests {
                 "| Value | Appraise: prices | Athletics: kicking doors in | Balance: Burdened / \
                  Strained | Disable device: disarming traps | Listen: hears fainter by | Open \
                  lock: picking locks | Search: \
-                 searching | Search: search reaches | Spot: noticing | Stealth: noise | Survival: \
+                 searching | Search: search reaches | Spot: noticing | Steal: stealing | Stealth: noise | Survival: \
                  journeys | Tumble: Dodge |"
             ),
             "{benefits}"
         );
         assert!(benefits.contains(
-            "| 100 | 20% better | +8 Strength | ×1.1 / ×1.2 | +8 | 10 | +8 | +8 | +1 cell | +8 | \
+            "| 100 | 20% better | +8 Strength | ×1.1 / ×1.2 | +8 | 10 | +8 | +8 | +1 cell | +8 | +8 | \
              \u{2212}60% | \u{2212}20% | +5 |"
         ));
         assert!(benefits.contains(
-            "| 150 | 25% better | +10 Strength | ×1.08 / ×1.15 | +10 | 15 | +10 | +10 | +1 cell | +10 \
+            "| 150 | 25% better | +10 Strength | ×1.08 / ×1.15 | +10 | 15 | +10 | +10 | +1 cell | +10 | +10 \
              | \u{2212}75% | \u{2212}20% | +7 |"
         ));
+        // Stealing: the odds by the thief's edge, a contest of even dice.
+        let stealing = text("stealing.md");
+        assert!(stealing.contains("| +0 | 53% | 47% |"), "{stealing}");
+        assert!(stealing.contains("| \u{2212}6 | 22% | 78% |"), "{stealing}");
         // Searching: the hidden things' chances for an average character, deeper down, and who
         // notices in passing.
         let features = text("search-features.md");

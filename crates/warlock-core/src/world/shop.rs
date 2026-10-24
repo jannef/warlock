@@ -662,6 +662,20 @@ impl World {
         self.player_did(Deed::AttackedShopkeeper);
     }
 
+    /// Actor `victim` caught the player stealing from it (spec §8 "Stealing"): a keeper of an
+    /// open shop on the current level is outraged, as a robbed one is, and says so. Returns
+    /// whether it was one.
+    pub(super) fn caught_stealing(&mut self, victim: ActorId) -> bool {
+        let shops = &self.state.current().shops;
+        let Some(i) = shops.iter().position(|s| s.is_open() && s.keeper == victim) else {
+            return false;
+        };
+        let name = shops[i].name.clone();
+        self.outrage(i);
+        self.say(format!("{name} catches you stealing. \"Stop, thief!\""));
+        true
+    }
+
     /// Actor `id` on level `level` died: a shop it kept is abandoned, its goods free to take.
     pub(super) fn keeper_died(&mut self, id: ActorId, level: &str) {
         let Some(level) = self.state.levels.get_mut(level) else {

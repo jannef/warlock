@@ -35,7 +35,8 @@ or +1000.
   no harm. Beasts that do not talk (deer, rats, bats) may be hunted without a stain. Only your
   own kills count, and those of a wound you dealt.
 - **Shops**: attacking a shopkeeper who trades with you, and walking out with what you have not
-  paid for, are evil; paying what you owe is a little good.
+  paid for, are evil; so is lifting something from anyone and getting away with it (see
+  [Stealing](skills.md#stealing)); paying what you owe is a little good.
 - **Corpses**: eating a corpse of your own race, or of someone who talks and meant you no harm,
   is very evil, fresh or rotten.
 - **Quests** that help someone are a little good; a dark errand would be evil.
