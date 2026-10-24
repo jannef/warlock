@@ -36,11 +36,14 @@ fn born_with(content: Arc<Content>, animal: &str, element: &str, day: u32) -> Wo
     World::from_state(content, state).expect("restores")
 }
 
+/// The talents held except a class's abilities (a warrior's come with the character).
 fn held(w: &World) -> Vec<String> {
-    w.state
-        .player()
-        .talents
-        .iter()
+    let book = w.content().talents();
+    (w.state.player().talents.iter())
+        .filter(|t| {
+            book.id(&t.id)
+                .is_none_or(|id| !book.tree(book.get(id).tree).class)
+        })
         .map(|t| t.id.clone())
         .collect()
 }
@@ -62,7 +65,13 @@ fn a_sign_grants_its_animals_then_its_elements_gifts_and_a_lucky_day_one_more() 
     let lucky = born_under("salamander", "wood", 1);
     assert_eq!(
         held(&lucky),
-        ["fleet_footed", "slight", "supple", "evergreen", "winners_luck"]
+        [
+            "fleet_footed",
+            "slight",
+            "supple",
+            "evergreen",
+            "winners_luck"
+        ]
     );
     let c = lucky.character().expect("a character");
     assert_eq!(c.title(lucky.content()), Some("the Racer"));
@@ -137,6 +146,7 @@ fn gifts_are_granted_afresh_on_restore_and_picks_are_kept() {
     let mut state = w.state().clone();
     let actor = state.actors.get_mut(&state.player).expect("player");
     actor.talents = Default::default();
+    actor.talents.take("weapon_drill", None); // the warrior's own ability, held before the pick
     actor.talents.take("hardy", None);
     let restored = World::from_state(w.content().clone(), state).expect("restores");
     assert_eq!(
@@ -402,7 +412,8 @@ fn load_horoscope(edit: impl Fn(&str) -> String) -> Result<Content, String> {
 
 #[test]
 fn the_horoscope_and_the_talents_are_checked_against_each_other() {
-    let err = load_horoscope(|t| t.replacen("\"fleet_footed\"", "\"fleeter\"", 1)).unwrap_err();
+    let err =
+        load_horoscope(|t| t.replacen("\"fleet_footed\"", "\"fleet_footeder\"", 1)).unwrap_err();
     assert!(err.contains("unknown talent `fleet_footeder`"), "{err}");
     let err = load_horoscope(|t| t.replacen("\"fleet_footed\", ", "\"hardy\", ", 1)).unwrap_err();
     assert!(
