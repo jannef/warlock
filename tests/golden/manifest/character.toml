@@ -33,7 +33,8 @@ screen = "abilities"
 
 # The abilities menu's Class group (#243): a paladin at level 12 (the dev `xp:` grant, its picks
 # made by `levelup:auto`) has Lay on hands and Smite; Lay on hands, just used, is greyed out ("you
-# are drained", Drained on the status bar) and under the cursor (the first row), described below.
+# are drained", Drained on the status bar), so the cursor is on Smite (the first usable row),
+# described below.
 [[golden]]
 name = "abilities-menu-class"
 scenario = "showcase"
