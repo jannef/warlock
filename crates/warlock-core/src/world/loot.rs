@@ -79,11 +79,12 @@ impl World {
         }
         let level = self.content.item_level(&actor.level);
         let gear = Source::Gear(self.content.creature(actor.creature).level);
-        // Treasure hunter (spec §8 "Talents"): the player's luck, whoever made the kill.
+        // Treasure hunter (spec §8 "Talents"), Hoard sense (spec §8 "Birth sign"): the player's
+        // luck, whoever made the kill.
         let talents = self.state.player().talent_mods(&self.content);
-        let luck = talents.loot_magic_percent;
+        let luck = loot::Luck::of(&talents);
         // Jeweller (spec §8 "Class abilities"): a gem a kill drops is cut finer.
-        let gem = gem::find(&self.content, &mut rng, level).map(|mut stack| {
+        let gem = gem::find_with(&self.content, &mut rng, level, luck.gems).map(|mut stack| {
             gem::cut_finer(&self.content, &mut stack, talents.gem_cut);
             stack
         });

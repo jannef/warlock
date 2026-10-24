@@ -1,0 +1,8 @@
+[[talent]]
+id = "old_lore"
+name = "Old lore"
+tree = "stars"
+granted = true
+description = "A magic item you carry for a day tells you what it is, and you read scrolls quickly."
+effects = [{ kind = "identify_carried", hours = 24 }, { kind = "read_percent", value = -50 }]
+systems = ["magic_items", "scrolls"]

@@ -1,0 +1,9 @@
+[[talent]]
+id = "ungainly_ashore"
+name = "Ungainly ashore"
+tree = "stars"
+granted = true
+flaw = true
+description = "Journeys across the land take you a little longer."
+effects = [{ kind = "travel_percent", value = 10 }]
+systems = ["travel"]

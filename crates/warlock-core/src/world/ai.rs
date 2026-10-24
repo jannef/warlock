@@ -434,6 +434,8 @@ impl World {
         // It knows nothing of traps (spec §8 "Traps"): one there goes off; a pit costs it its
         // next action.
         let climb = self.step_onto_trap(to, id, events);
+        // Stepping up beside a hostile gatekeeper, it is struck as it comes (`free_blow.rs`).
+        self.step_up(id, from, events);
         Stepped::Moved(price + climb)
     }
 

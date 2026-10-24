@@ -187,6 +187,8 @@ pub enum TalentEffect {
     /// into the actor's base hit points when the talent is taken and as each later level comes
     /// (as levels' own hit points are), so a talent taken early keeps growing.
     MaxHpPerLevels { per_levels: u8, at_least: i32 },
+    /// Maximum hit points, this percent more (negative: fewer; never below 1; Frail).
+    MaxHpPercent { value: i32 },
     /// A stat's score and its potential, this much higher: handed out into the actor's stats
     /// when the talent is taken or given (a class ability's gift), never read again.
     Stat { stat: Stat, value: i32 },
@@ -198,6 +200,9 @@ pub enum TalentEffect {
     SilentDoors,
     /// The actor hears sounds this much fainter (its hearing threshold, lower).
     Hearing { value: i32 },
+    /// It places the footsteps it hears exactly, at the cell they came from, never roughly
+    /// (Watchful).
+    ExactFootsteps,
     /// Its eyes need this percent more light to see by (negative: less; Night eyes), on the
     /// vision profile's threshold ([`crate::world::WorldState::eyes`]).
     ThresholdPercent { value: i32 },
@@ -210,9 +215,14 @@ pub enum TalentEffect {
     Scent { status: String, radius: i32 },
     /// Its overworld sight at night reaches this many cells farther.
     NightSight { value: i32 },
+    /// Its overworld sight by day reaches this many cells farther (Eyes of the heights).
+    DaySight { value: i32 },
     /// Its lantern burns as the light preset `light` (an id in `data/lights.toml`;
     /// Lamplighter).
     LanternLight { light: String },
+    /// It sheds light `light` (an id in `data/lights.toml`) wherever it is, always (Inner
+    /// light): it sees by it, and so does everything else.
+    InnerLight { light: String },
     /// Its blows and shots at a creature that has not seen it do `dice` more damage, after
     /// Protection (Ambusher).
     Ambush { dice: Dice },
@@ -253,6 +263,8 @@ pub enum TalentEffect {
     HungerPercent { value: i32 },
     /// The sickness rotten food gives, this percent more (negative: less), rounded down.
     RotHarmPercent { value: i32 },
+    /// It smells how fresh food is: the eat list says fresh, turning, or rotten (Hound's nose).
+    SmellRot,
     /// Exerting oneself (a blow, a shot, a throw) burns no extra nutrition.
     NoExertion,
     /// A meal never leaves it Bloated: what does not fit below Bloated is lost (Gourmand).
@@ -304,6 +316,9 @@ pub enum TalentEffect {
     /// Loose gems it finds (on a level made after it held the effect, or dropped by a kill) are
     /// cut this many grades finer, at most the finest.
     GemCut { value: u8 },
+    /// Loot it finds and creatures drop is a loose gem this percent more often (Hoard sense):
+    /// the gems' chance, never above certain.
+    GemFindPercent { value: i32 },
     /// The actor notices hidden things in passing as if trained in Spot, with this much added.
     Notice { value: i32 },
     /// The actor notices hidden things on stone in passing, as a dwarf does.
@@ -392,6 +407,9 @@ pub enum TalentEffect {
     /// The Dodge penalty of combat stance `stance`, this percent smaller (100: none; Iron
     /// stance).
     StanceDodge { stance: CombatStance, percent: i32 },
+    /// Changing its combat stance costs an action, as a wait does (Set in its ways), not
+    /// nothing.
+    StanceCosts,
     /// Fleeing steps (spec §8 "Stances") cost this percent more (negative: cheaper).
     FleePercent { value: i32 },
     /// A step that takes it out of reach of every hostile beside it costs this percent more
@@ -419,6 +437,19 @@ pub enum TalentEffect {
         per_level: u8,
         at_least: i32,
         cooldown: String,
+    },
+    /// Once in its life, a hit, a trap, or a status that would kill it does not (Rise from the
+    /// ashes; not starving or choking): it rises with `hp_percent` of its hit points, a burst of
+    /// `damage` (`damage_type`) strikes every creature beside it (`spell`, an effect in
+    /// `data/effects.toml`, drawn over `radius` cells) and melts the ice there, and it suffers
+    /// `status` (Ashen).
+    RiseFromAshes {
+        hp_percent: i32,
+        status: String,
+        spell: String,
+        radius: i32,
+        damage: Dice,
+        damage_type: String,
     },
     /// The class active Veteran's wind ([`ClassActive::VeteransWind`]): as Second wind.
     VeteransWind {
@@ -576,6 +607,8 @@ pub enum FreeBlowTrigger {
     Opportunist,
     /// A melee attack with nothing in hand strikes twice, the second blow at −2 (Flurry).
     Flurry,
+    /// A hostile that steps up beside it is struck as it comes (Gatekeeper).
+    Gatekeeper,
 }
 
 impl TalentEffect {
@@ -656,6 +689,7 @@ impl TalentEffect {
             | TalentEffect::SkillRolls { value }
             | TalentEffect::Darkvision { value }
             | TalentEffect::NightSight { value }
+            | TalentEffect::DaySight { value }
             | TalentEffect::CarryKg { value }
             | TalentEffect::Checks { value, .. }
             | TalentEffect::CriticalConfirm { value }
@@ -920,6 +954,8 @@ impl TalentEffect {
             | TalentEffect::StepSlowdownPercent { value }
             | TalentEffect::CorpseStatsPercent { value }
             | TalentEffect::LootMagicPercent { value }
+            | TalentEffect::GemFindPercent { value }
+            | TalentEffect::MaxHpPercent { value }
             | TalentEffect::ReadPercent { value }
             | TalentEffect::TrapDamagePercent { value }
             | TalentEffect::KickNoisePercent { value }
@@ -937,6 +973,34 @@ impl TalentEffect {
                 if !(1..=20).contains(radius) {
                     return Err("`scent`: radius is 1 to 20".into());
                 }
+                status(id)
+            }
+            TalentEffect::InnerLight { light } => {
+                if !content.light_presets().is_empty() && content.light_id(light).is_none() {
+                    return Err(format!("names an unknown light `{light}`"));
+                }
+                Ok(())
+            }
+            TalentEffect::RiseFromAshes {
+                hp_percent,
+                status: id,
+                spell,
+                radius,
+                damage,
+                damage_type,
+            } => {
+                if !(1..=100).contains(hp_percent) || !(1..=5).contains(radius) {
+                    return Err("`rise_from_ashes`: hp_percent is 1 to 100, radius 1 to 5".into());
+                }
+                if damage.is_zero() {
+                    return Err("`rise_from_ashes`: damage is not 0".into());
+                }
+                if !content.damage_types().is_empty()
+                    && content.damage_type_id(damage_type).is_none()
+                {
+                    return Err(format!("names an unknown damage type `{damage_type}`"));
+                }
+                super::spell::check_effect(content, spell, super::effect::EffectShape::Burst)?;
                 status(id)
             }
             TalentEffect::LanternLight { light } => {
@@ -1021,6 +1085,9 @@ impl TalentEffect {
             | TalentEffect::NoBloating
             | TalentEffect::SparesSelf
             | TalentEffect::SeesUv
+            | TalentEffect::ExactFootsteps
+            | TalentEffect::SmellRot
+            | TalentEffect::StanceCosts
             | TalentEffect::PlungeProof
             | TalentEffect::LightOnIce
             | TalentEffect::WadingProof

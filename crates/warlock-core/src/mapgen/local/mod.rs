@@ -155,13 +155,13 @@ fn features(landscape: Landscape) -> Features {
     }
 }
 
-/// Generates the local area `id` (`local:x,y`) for the run with `seed`, its loot magic and rare
-/// `luck` percent more often (Treasure hunter).
+/// Generates the local area `id` (`local:x,y`) for the run with `seed`, its loot rolled with the
+/// finder's `luck` (Treasure hunter, Hoard sense).
 pub(super) fn generate(
     content: &Content,
     seed: u64,
     id: &str,
-    luck: i32,
+    luck: crate::magic::loot::Luck,
 ) -> Result<LevelTemplate, GenError> {
     let area = content
         .local_area(id)

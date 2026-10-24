@@ -107,6 +107,7 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `hardened` | `World::level_up`, as the level comes (a level's hit points again, and `bonus` more, past `hp_level`) |
 | `blood_frenzy`, `unstoppable` | `World::frenzy` (a player's kill), `World::unstoppable` (`hurt`, `Harm::Actor`), `World::live` (the numb statuses tick nothing while the rage lasts) |
 | `radiance` | `LightCache::sources` (a carried source, `RADIANCE` tag, while its status lasts) |
+| `inner_light` | `LightCache::sources` (a carried source, `INNER` tag, always: the player and the creatures see by it alike) |
 | the actives (`rage`, `veterans_wind`, `whirlwind`, `lay_on_hands`, `avatar`, `smite`, `quivering_palm`) | `world/class_ability.rs`; `Ability::Class` in `ability.rs` (`class_cooldown`: Rage's status and what it `follows`) |
 | `missile_dodge` | `World::target_against` (from `resolve` for shots and throws, `trap_strikes` for trap missiles) |
 | `spell_damage_percent` | `World::evaded` in `spell_hurts` (bursts and bolts, before resistances) |
@@ -130,6 +131,7 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `identify_trades` | `World::pay` (what was unpaid) and `World::trade` (what is sold, "That was …!") |
 | `item_worth`, `gem_worth` | `PerceptionView::appraisal` → `magic::describe::appraised` (the describe screen) |
 | `identify_carried` | `World::appraise_carried` from `live`: `Magic::carried` counts the seconds (saved, left out while 0) |
+| `gem_find_percent` | `gem::find_with` (the gems' chance scaled, at most 100) through `magic::loot::Luck` (`Luck::of(talents)`: with `loot_magic_percent`, from `level_template` and `World::loot_of`) |
 | `gem_cut` | `gem::cut_finer` in `instantiate_level` (loose gems of a level made from then on) and `World::loot_of` (a drop) |
 | `skill` | `Actor::skill_effect`, as magic items' skill bonuses |
 | `make_way` | `World::refusal`: everyone budges (sizes and overloading still stop a swap) |
@@ -140,6 +142,21 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `burden_ease` | `World::burdened` (added to Balance's ease) |
 | `disarm` | `Ability::Disarm`'s `had_by` |
 | `weapon { skill }`, `protection { per_piece }` | `TalentMods::weapon_benefit` (a fixed skill or style: Fencing's Duelist, Big hands' maces and unarmed); `talent_protection` counts the pieces worn with Protection |
+
+Birth sign gifts, the Roc to the Barghest (#267), and their hooks:
+
+| Effect | Read by |
+|---|---|
+| `day_sight` | `perception.rs`, the overworld range by day (`night_sight` at night) |
+| `exact_footsteps` | `noise::perceive` (footsteps at their own cell, never `rough_place`) |
+| `stance_costs` | `World::set_stance`: a wait's price instead of no time |
+| `max_hp_percent` | `Actor::max_hp`, `lasting_max_hp` (`Actor::frail`, at least 1) |
+| `rise_from_ashes` | `World::hurt` → `World::rise_from_ashes` (`world/stars.rs`): the player at 0 hit points of anything but `Harm::Starving` (choking never passes `hurt`), while `Progress::once` lacks `risen`; sets it, afflicts the status, hit points to the share (of the maximum with it), `Event::Spell` over `burst_cells`, one gameplay roll of the damage for every creature reached (`spell_hurts`), `shock(Heat)` |
+| `smell_rot` | `PerceptionView::smell(stack)` (a `Freshness` word from `rot::stage`, never an age), the eat list's mark |
+| `free_blow` `gatekeeper` | `World::second_blow` on `Cue::Approaches` (`World::step_up` from `creature_steps`) |
+
+`Progress::once` (saved, left out while empty) holds what may happen once in a life; the
+`talents` dump and `OwnTalent::spent` mark Rise from the ashes "(spent)" once it has.
 
 Effects that name a status (`second_wind`'s `cooldown`, `status_eases`, `no_penalty`,
 `critical_status`) or a damage type (`penetration`) are checked at load (statuses load before

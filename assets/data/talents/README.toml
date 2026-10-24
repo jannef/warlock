@@ -60,6 +60,7 @@
 #   reroll_fumble                 a natural 2 on an attack roll is rolled again, once
 #   streak { max }                each melee blow at the creature its last blow was at (in its
 #                                 turn or the next) +1 to hit per blow before it, to max (1 to 10)
+#   max_hp_percent { value }      maximum hit points, that percent more (at least 1)
 #   max_hp_per_levels { per_levels, at_least }   hit points: one per that many character
 #                                 levels, at least at_least, handed out at the pick and as each
 #                                 later level comes (as levels' own hit points are)
@@ -77,7 +78,10 @@
 #                                 ../status.toml) in its line of sight within radius cells
 #                                 (1 to 20), however dark
 #   night_sight { value }         its overworld sight at night, that many cells farther
+#   day_sight { value }           its overworld sight by day, that many cells farther
 #   lantern_light { light }       its lantern burns as that light preset (../lights.toml)
+#   inner_light { light }         it always sheds that light preset where it stands; everyone
+#                                 sees by it
 #   ambush { dice }               its hits on a creature that has not seen it do that many dice
 #                                 more damage, after Protection ("1d6")
 #   carry_percent { value }       carrying limit, that percent more
@@ -104,6 +108,8 @@
 #   hunger_percent { value }      hunger burns that percent faster (negative: slower)
 #   rot_harm_percent { value }    the sickness rotten food gives, that percent more (rounded
 #                                 down; negative: less)
+#   smell_rot                     the eat list says how fresh food smells: fresh, turning, or
+#                                 rotten
 #   no_exertion                   blows, shots, and throws burn no extra nutrition
 #   no_bloating                   a meal never leaves it Bloated: what does not fit is lost
 #   corpse_stats_percent { value }   a fresh corpse's chances to raise its stats, that percent
@@ -136,6 +142,8 @@
 #                                 worth
 #   identify_carried { hours }    a magic item carried that many hours (1 to 240) from when it
 #                                 has the effect is identified
+#   gem_find_percent { value }    loot it finds and creatures drop is a loose gem that percent
+#                                 more often (never above certain; the same draws)
 #   gem_cut { value }             loose gems it finds (on levels made from then on, dropped by
 #                                 kills) are cut that many grades finer (1 to 5)
 #   notice { value }              notices hidden things in passing as if trained in Spot, with
@@ -148,8 +156,9 @@
 #   make_way                      anyone not hostile makes way for it, those at a post too
 #   distrusted                    no one makes way for it, make_way or not
 #   free_blow { trigger }         a free blow: "cleave", "great_cleave", "riposte",
-#                                 "opportunist", or "flurry" (a melee attack with nothing in
-#                                 hand strikes twice; spec §8 "Free blows")
+#                                 "opportunist", "flurry" (a melee attack with nothing in
+#                                 hand strikes twice), or "gatekeeper" (a hostile stepping up
+#                                 beside it is struck; spec §8 "Free blows")
 #   weapon { role, skill, to_hit, damage, threat, ranks, speed, reload, ease, bash, shield, crit, at_rank }
 #                                 what attacks with some weapon skills gain, as their ranks give
 #                                 it (data/weapon_skills.toml): the weapon skill or style `skill`
@@ -182,6 +191,12 @@
 #                                 (../damage_types.toml), else to the chosen element (choice
 #                                 element)
 #   resting_percent { value }     resting heals that percent faster on top of resting's pace
+#   rise_from_ashes { hp_percent, status, spell, radius, damage, damage_type }   once in its
+#                                 life, what would kill it (not starving or choking) does not:
+#                                 it rises with hp_percent of its hit points, damage of
+#                                 damage_type strikes every creature within radius (the spell
+#                                 effect, ../effects.toml), the ice there melts, and it suffers
+#                                 status (spec §8 "Birth sign")
 #   second_wind { per_level, at_least, cooldown }   the Second wind ability: per_level hit points
 #                                 per character level back at once (at least at_least), then the
 #                                 cooldown status (an id in ../status.toml)
@@ -225,6 +240,7 @@
 #                                 much more (1 to 3, at most x5)
 #   unarmed_die { sides }         blows with nothing in hand and kicks roll one die of that many
 #                                 sides (the bigger of it and kick_die)
+#   stance_costs                  changing its combat stance takes a wait's time (free otherwise)
 #   stance_dodge { stance, percent }   that stance's Dodge penalty that percent smaller
 #   step_percent { value, unarmoured, unburdened, no_shield }   steps cost that percent more
 #                                 (negative: cheaper), only while each condition set holds

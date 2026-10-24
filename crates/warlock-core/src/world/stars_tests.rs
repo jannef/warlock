@@ -83,8 +83,10 @@ fn a_sign_grants_its_animals_then_its_elements_gifts_and_a_lucky_day_one_more() 
         c.sign_title(lucky.content()).as_deref(),
         Some("Wood Salamander, the Racer")
     );
-    // A sign whose gifts are still to come grants nothing yet.
-    assert!(held(&born_under("phoenix", "fire", 5)).is_empty());
+    // The Fire element and the lucky days but the Salamander's grant no gifts of their own.
+    let plain = held(&born_under("phoenix", "fire", 5));
+    assert_eq!(plain, ["rise_from_ashes", "inner_light", "frail"]);
+    assert_eq!(held(&born_under("phoenix", "fire", 10)), plain);
 }
 
 #[test]
@@ -144,7 +146,13 @@ fn gifts_are_granted_afresh_on_restore_and_picks_are_kept() {
     let w = born_under("roc", "earth", 9);
     assert_eq!(
         held(&w),
-        ["rocs_strength", "heedless", "stone_hide", "stonewise"]
+        [
+            "rocs_strength",
+            "eyes_of_the_heights",
+            "heedless",
+            "stone_hide",
+            "stonewise"
+        ]
     );
     // A save that lost them (or predates them) gets them back; a picked talent stays after.
     let mut state = w.state().clone();
@@ -157,6 +165,7 @@ fn gifts_are_granted_afresh_on_restore_and_picks_are_kept() {
         held(&restored),
         [
             "rocs_strength",
+            "eyes_of_the_heights",
             "heedless",
             "stone_hide",
             "stonewise",

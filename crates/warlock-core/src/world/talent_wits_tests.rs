@@ -168,6 +168,10 @@ fn treasure_hunter_finds_magic_more_often_from_the_same_draws() {
         let mut rarities = [0u32; 3];
         for _ in 0..3000 {
             let source = crate::variant::Source::Loot;
+            let luck = loot::Luck {
+                magic: luck,
+                gems: 0,
+            };
             if let Some(s) = loot::roll_with(content, &mut rng, 6, grade, source, luck) {
                 rarities[s.rarity() as usize] += 1;
             }
@@ -184,7 +188,9 @@ fn treasure_hunter_finds_magic_more_often_from_the_same_draws() {
     // The map is the same: only what the loot rolls changes.
     let id = "depths:2";
     let plain = crate::mapgen::generate(content, 5, id, None).expect("level");
-    let lucky = crate::mapgen::generate_with(content, 5, id, None, 50).expect("level");
+    let lucky =
+        crate::mapgen::generate_with(content, 5, id, None, loot::Luck { magic: 50, gems: 0 })
+            .expect("level");
     assert_eq!(plain.terrain, lucky.terrain);
     assert_eq!(
         plain.objects.keys().collect::<Vec<_>>(),

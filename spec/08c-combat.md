@@ -291,6 +291,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     as it turns to go, before it leaves its cell (`World::step_away`, from the player's step and
     `creature_steps`): it may not live to take the step. Each opportunist beside it strikes, in
     actor order.
+  - **Gatekeeper** (`gatekeeper`; the Barghest's gift, §8 "Birth sign"): a hostile that steps
+    up beside the actor from a cell out of its reach is struck as it comes, after its step
+    (`World::step_up`, from `creature_steps`); each gatekeeper it was not beside strikes, in
+    actor order. Like the opportunist's, an attack of its own: it makes the fight's noise.
   - Each is a blow like any other: its own `Event::Attacked`, blood, wounds, kills (and their
     experience), and weapon marks; free (no time, no exertion); silent but the opportunist's,
     an attack of its own (the others follow a blow that made the noise of the fight). **A free
