@@ -67,7 +67,7 @@ On every menu and screen:
 | Left / right (change a setting) | Left / Right, or `h` / `l` |
 | Choose | `Enter` |
 | Back | `Esc`, always |
-| Erase a character (the seed), reset a key (Controls), delete a saved character (Characters) | `Delete` or `Backspace` |
+| Reset a key (Controls), delete a saved character (Characters) | `Delete` or `Backspace` |
 | Mark a stack, mark everything (picking up, dropping) | `Space`, `,` |
 | Next / previous page of a list of items | `>` or `PageDown` / `<` or `PageUp` |
 
@@ -286,7 +286,7 @@ carry, and the weights at which your [burden](burden.md) changes. It takes no ti
 ## Skills
 
 `S` lists the [skills](skills.md) you are trained in, each with its value and a small meter of how
-near it is to its next point. The arrow keys pick a skill to read what it is about. It takes no
+practised it is (how big its next roll at a level-up will be). The arrow keys pick a skill to read what it is about. It takes no
 time; press `S` or `Esc` to close it.
 
 ## Info pages

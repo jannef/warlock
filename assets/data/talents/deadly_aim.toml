@@ -3,6 +3,6 @@ id = "deadly_aim"
 name = "Deadly aim"
 tree = "weaponcraft"
 description = "Your shots strike where they hurt: 2 more damage with every shot."
-needs = { stats = { dexterity = 13 }, any_weapon_skill = { launcher = 3 } }
+needs = { stats = { dexterity = 13 }, any_weapon_skill = { roles = ["launcher"], rank = 3 } }
 effects = [{ kind = "weapon", role = "launcher", damage = 2 }]
 systems = ["ranged", "combat"]

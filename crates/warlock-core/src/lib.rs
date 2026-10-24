@@ -31,6 +31,7 @@ pub mod grid;
 pub mod hunger;
 pub mod ice;
 pub mod item_parts;
+pub mod kit;
 pub mod light;
 pub mod magic;
 pub mod mapgen;

@@ -67,7 +67,8 @@ pub struct ScenarioDef {
     #[serde(default)]
     pub hp: u16,
     /// What the player starts with in their pack, as level files place objects
-    /// (`carry = ["ration*2"]`; spec §8 "Hunger": starting food).
+    /// (`carry = ["ration*2"]`): on top of the character's starting kit when they start with it
+    /// (spec §8 "Character creation"), else alone.
     #[serde(default, rename = "carry")]
     pub(super) carry_spec: Vec<String>,
     /// The player's starting pack, from `carry`; filled in by the loader.

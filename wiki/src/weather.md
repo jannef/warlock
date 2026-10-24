@@ -19,9 +19,8 @@ driest:
 
 {{#include generated/weather.md}}
 
-Over many days each weather comes up as often as its chance says. Like the levels of the run, the
-weather follows from the run's [seed](saving.md) and the time: it is the same however you spend
-the time, waiting, resting, or travelling.
+Over many days each weather comes up as often as its chance says. Nothing you do changes it: the
+weather is the same however you spend the time, waiting, resting, or travelling.
 
 ## Clouds and light
 

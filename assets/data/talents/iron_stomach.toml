@@ -1,0 +1,8 @@
+[[talent]]
+id = "iron_stomach"
+name = "Iron stomach"
+tree = "vigour"
+description = "You keep down what others cannot: rotten food never makes you vomit and sickens you less, and neither does eating too much."
+needs = { stats = { toughness = 12 } }
+effects = [{ kind = "iron_stomach" }]
+systems = ["hunger"]

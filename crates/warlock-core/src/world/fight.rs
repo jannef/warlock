@@ -581,6 +581,18 @@ impl World {
         }
     }
 
+    /// The side of actor `id` an attack strikes, a `missile` (a shot, a throw, a trap's) or
+    /// not: Deflect missiles (spec §8 "Talents") adds its Dodge against missiles.
+    pub(crate) fn target_against(&self, id: ActorId, missile: bool) -> Target {
+        let mut target = self.target_of(id);
+        let deflects =
+            (self.state.actors.get(&id)).map_or(0, |a| a.talent_mods(&self.content).missile_dodge);
+        if missile && deflects != 0 {
+            target.defence = target.defence.plus(Category::Dodge, deflects);
+        }
+        target
+    }
+
     /// What actor `id` takes of `damage` that is no blow (a blast, a bolt, a fall, the plunge
     /// into freezing water): the amount less what it resists of the kind
     /// ([`damage::resist`]); untyped harm in full.
@@ -659,7 +671,8 @@ impl World {
         ) else {
             return None;
         };
-        let struck = self.target_of(target);
+        let missile = matches!(kind, AttackKind::Ranged | AttackKind::Thrown);
+        let struck = self.target_against(target, missile);
         let levels = (self.level_of(attacker), self.level_of(target));
         let rng = &mut self.state.rng;
         let blow = profile.map(|profile| combat::strike(&profile, &struck, rng));
@@ -691,6 +704,9 @@ impl World {
         });
         if dodged && target == self.state.player && self.trains(Use::Dodge) {
             self.train(Use::Dodge);
+        }
+        if let Some(blow) = &blow {
+            self.train_fight((attacker, target), kind, blow);
         }
         let player = self.state.player;
         if let Some(blow) = blow {

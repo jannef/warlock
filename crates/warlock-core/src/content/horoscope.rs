@@ -9,6 +9,7 @@
 //! about ([`Sign::is_element`], [`Sign::is_animal`]).
 
 use super::ContentError;
+use super::kit::{Kit, KitLineSpec};
 use crate::dice::Dice;
 use crate::stats::{PerStat, Stat, adjustments};
 use serde::{Deserialize, Serialize};
@@ -32,6 +33,8 @@ struct SignSpec {
     description: String,
     #[serde(default)]
     stats: BTreeMap<Stat, Dice>,
+    #[serde(default)]
+    kit: Vec<KitLineSpec>,
 }
 
 /// An animal or an element of the horoscope.
@@ -43,6 +46,11 @@ pub struct SignPart {
     pub description: String,
     /// Adjustments to the starting scores of those born under it.
     pub stats: PerStat<Dice>,
+    /// The starting kit as written; resolved by the loader into `kit`.
+    pub(super) kit_spec: Vec<KitLineSpec>,
+    /// What those born under it add to their starting kit, after the class's and the race's
+    /// (spec §8 "Character creation"; [`super::kit`]); filled in by the loader.
+    pub kit: Kit,
 }
 
 /// The animals and elements, in the order the years go through them.
@@ -98,6 +106,8 @@ impl Horoscope {
                     name: spec.name,
                     description: spec.description,
                     stats,
+                    kit_spec: spec.kit,
+                    kit: Kit::default(),
                 });
             }
             Ok(list)

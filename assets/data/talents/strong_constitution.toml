@@ -1,0 +1,8 @@
+[[talent]]
+id = "strong_constitution"
+name = "Strong constitution"
+tree = "vigour"
+description = "Sickness finds little hold on you: you resist diseases better, both catching them and as they run their course."
+needs = { stats = { toughness = 13 } }
+effects = [{ kind = "disease_checks", value = 2 }]
+systems = ["diseases"]

@@ -30,6 +30,7 @@ use super::fight::{End, Guard, Words, attack_message, death_message};
 use super::spell::Caster;
 use super::{Cause, Spent, World};
 use crate::action::{AttackKind, Event, Positions, ReadTarget};
+use crate::content::StatUse;
 use crate::content::{ActionKind, Cast, Reading, ScrollSpell};
 use crate::geom::Pos;
 use crate::object::Stack;
@@ -90,7 +91,9 @@ impl World {
             content.object(scroll.object).name
         ));
         // Identified first: using the scroll up may move the stack it was read on.
-        self.identify(on);
+        if matches!(self.identify(on), super::Identified::Now(_)) {
+            self.train_stat(StatUse::Identified);
+        }
         self.use_up(item);
         Spent::Turn(price)
     }
@@ -222,6 +225,7 @@ impl World {
     /// Takes one of inventory stack `item` from the pack (the last empties it, and what was worn
     /// follows its letters); returns it.
     fn use_up(&mut self, item: usize) -> Option<Stack> {
+        self.train_stat(StatUse::Read);
         let player = self.player_mut();
         let stack = player.inventory.get_mut(item)?;
         let one = stack.single();

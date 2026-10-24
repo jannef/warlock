@@ -18,8 +18,7 @@ and the [weather](weather.md). Each month has a mean temperature (in the middle 
 days between go from one month's to the next). Over a day it swings around that mean: coldest
 around 04:00, before dawn, warmest around 16:00. A clear sky lets the night grow cold and the
 afternoon warm; clouds keep the night milder and the day cooler, and rain cools the air a little.
-Like the weather, the temperature follows from the run's seed and the time, so it is the same
-however you spend the time.
+Like the weather, the temperature is the same however you spend the time.
 
 In the middle of each month:
 

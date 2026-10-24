@@ -314,7 +314,7 @@ fn prerequisites_of_the_trees_are_said_in_words() {
     run(&mut w, "talent:deadly_aim");
     assert_eq!(
         last(&w),
-        "You cannot take Deadly aim: you need Dexterity 13 and a missile weapon skill at 3."
+        "You cannot take Deadly aim: you need Dexterity 13 and a missile weapon skill 3."
     );
     run(&mut w, "talent:weapon_specialization:long_blades");
     assert!(
@@ -324,18 +324,24 @@ fn prerequisites_of_the_trees_are_said_in_words() {
         "{}",
         last(&w)
     );
-    // A launcher at 3 meets "a missile weapon skill at 3".
+    // A launcher at 3 meets "a missile weapon skill 3".
     w.player_mut().stats = Stats::new(PerStat::splat(13), PerStat::splat(13));
     set_rank(&mut w, "slings", 3);
     run(&mut w, "talent:deadly_aim");
     assert_eq!(last(&w), "You learn Deadly aim.");
+    // The level's skill rolls come first, or the next level cannot be reached.
+    run(&mut w, "levelup:auto");
     // The free ones of both trees ask nothing.
     reach(&mut w, 6);
     run(&mut w, "talent:far_shot");
     assert_eq!(last(&w), "You learn Far shot.");
+    // The level's skill rolls come first, or the next level cannot be reached.
+    run(&mut w, "levelup:auto");
     reach(&mut w, 9);
     run(&mut w, "talent:armour_training");
     assert_eq!(last(&w), "You learn Armour training (1).");
+    // The level's skill rolls come first, or the next level cannot be reached.
+    run(&mut w, "levelup:auto");
     reach(&mut w, 12);
     run(&mut w, "talent:elemental_ward:cold");
     assert_eq!(last(&w), "You learn Elemental ward (cold) (1).");

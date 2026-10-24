@@ -32,13 +32,11 @@ description = "Hit points, healing, and constitution."
 id = "might"
 name = "Might"
 description = "Strength, blows, and breaking things."
-pending = true
 
 [[tree]]
 id = "finesse"
 name = "Finesse"
 description = "Dexterity, dodging, and quickness."
-pending = true
 
 [[tree]]
 id = "weaponcraft"
@@ -97,7 +95,6 @@ name = "Protection and penetration"
 [[system]]
 id = "free_blows"
 name = "Free blows"
-pending = true
 
 [[system]]
 id = "weapon_skills"
@@ -118,7 +115,6 @@ name = "Ranged combat and missiles"
 [[system]]
 id = "kicks"
 name = "Kicks and unarmed fighting"
-pending = true
 
 [[system]]
 id = "hit_points"
@@ -127,22 +123,18 @@ name = "Hit points, healing, regeneration"
 [[system]]
 id = "status"
 name = "Status effects"
-pending = true
 
 [[system]]
 id = "diseases"
 name = "Diseases and checks"
-pending = true
 
 [[system]]
 id = "hunger"
 name = "Hunger, food, corpses, rot"
-pending = true
 
 [[system]]
 id = "burden"
 name = "Burden and carrying"
-pending = true
 
 [[system]]
 id = "stealth"
@@ -172,7 +164,6 @@ pending = true
 [[system]]
 id = "traps"
 name = "Traps"
-pending = true
 
 [[system]]
 id = "searching"
@@ -182,7 +173,6 @@ pending = true
 [[system]]
 id = "doors"
 name = "Doors, locks, kicking"
-pending = true
 
 [[system]]
 id = "digging"
@@ -247,7 +237,6 @@ pending = true
 [[system]]
 id = "speed"
 name = "Speed"
-pending = true
 
 [[system]]
 id = "factions"

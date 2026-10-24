@@ -30,7 +30,11 @@ to open, read keys for, or draw one:
   and seed, each step's selection) preselect what was chosen before going back
   (`ScreenStack::picks`), else the scenario's character (the name step: what was typed, else an
   empty field), and the summary's Start is `MenuChoice::NewRun { scenario, seed, character, name
-  }`; the main menu and the Characters screen read the saved characters when they open
+  }` with the seed `ScenarioPick::seed` resolved (#256): New run's seed field exists only where
+  `input::dev_keys` is true (debug builds, `--dev`; `Launch::dev`), empty meaning the scenario's;
+  elsewhere `Screen::new` hands `NewRunScreen::new` a `new_run_screen::fresh_seed()` (the
+  platform clock and entropy, the app's, never core's) and no text mentions it
+  (`ScenarioPick::shows_seed` gates the summary's `, seed N`); the main menu and the Characters screen read the saved characters when they open
   (`Launch::characters`, from `SaveStore::characters`; no other screen lists the saves);
   `EquipItem` takes the slot selected on the
   equipment screen beneath (`ScreenStack::selected_slot`), and `Describe` the stack looked at
@@ -155,8 +159,9 @@ to open, read keys for, or draw one:
   `ui/weapon_skills_screen.rs` (an info page: sections, ranks, and a faint ten-cell marks bar,
   the fighting styles in use marked `•`; two columns from 88 wide, else one that drops its gaps
   and margins and then scrolls with ↑↓; never a benefit), `ui/chargen_screen.rs` (character creation: `ChoiceScreen` per
-  step with a Random row rolled from the seed, `SummaryScreen` (with the band `Start::alignment`
-  falls in), `Draft`), `ui/name_screen.rs`
+  step with a Random row rolled from the seed, `SummaryScreen` (with the starting kit,
+  `kit_words`, and the band `Start::alignment` falls in; 84 wide, dropping its gaps on a short
+  console), `Draft`), `ui/name_screen.rs`
   (`NameScreen`, the Name step and the game's text field: typed text literal while the font draws
   it (`render::atlas::draws`) and there is room; the `Context::Text` keys accept, erase, put in the
   next of the race's random names (never the one shown; not on a held key), and back out; an empty
@@ -199,7 +204,11 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   `Ability::Skill(id)` until their use exists (never available); a use, when it comes, is a
   variant of its own, listed in its skill's place (`Ability::use_of`: the skill's benefit effect
   names it, so `had_by` asks `Skills::trains_effect`): `Ability::Disarm`, Disable device's
-  (`docs/dev/traps.md`), and `Ability::PickLock`, Open lock's (`docs/dev/doors.md`). `Aim` has
+  (`docs/dev/traps.md`), and `Ability::PickLock`, Open lock's (`docs/dev/doors.md`).
+  `Ability::SecondWind` (`Source::Talent`, the menu's Talents group between Class and Skills) is
+  the first active talent's (`docs/dev/progression.md`): listed while the content has a talent
+  with the `second_wind` effect, had by whoever holds one, `While(winded)` during its cooldown.
+  `Aim` has
   `Nothing` and `Direction`: a target (the aiming mode) and an item
   (a `PagedList` of the pack) join it with the first ability that needs one, as a variant and an
   arm in `Gameplay::use_ability`.
