@@ -1,0 +1,8 @@
+[[talent]]
+id = "keen_appraisal"
+name = "Keen appraisal"
+tree = "class"
+granted = true
+description = "You know what things are worth: item descriptions say so."
+effects = [{ kind = "item_worth" }]
+systems = ["shops"]

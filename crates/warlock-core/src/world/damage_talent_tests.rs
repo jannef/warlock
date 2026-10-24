@@ -149,7 +149,7 @@ fn the_ward_is_chosen_for_an_element_only() {
     run(&mut w, "talent:elemental_ward:slashing");
     assert_eq!(last(&w), "`slashing` is not an element.");
     assert!(
-        w.state.player().talents.none_taken(),
+        (w.state.player().talents.iter()).all(|t| t.id != "elemental_ward"),
         "a physical kind is no element"
     );
     run(&mut w, "talent:elemental_ward:fire");

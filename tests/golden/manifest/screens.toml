@@ -1,27 +1,11 @@
-# Menu screens over a run, and the main menu.
+# The UI console over the main menu and over a run. Every other screen is a text snapshot
+# (`crates/warlock/src/ui/screen_snapshots.rs`), not a golden.
 
-# The main menu (no run; the replay goes unused), its footer naming the menu keys as bound (#159).
+# The main menu (no run; the replay goes unused).
 [[golden]]
 name = "main-menu"
 scenario = "showcase"
 screen = "main"
-
-# Saved characters (#218), read (never written) from the fixture folder `saved-characters`, whose
-# saves are placeholders: only their summaries are read. The main menu offers to continue as the
-# one played last (Brakka) and lists them all on the Characters screen: name, race and class,
-# level, and for the selected one where they are and when they were last played; two are named
-# Brakka, with saves of their own.
-[[golden]]
-name = "characters-screen"
-scenario = "showcase"
-screen = "characters"
-args = ["--save-dir", "tests/golden/saved-characters"]
-
-[[golden]]
-name = "main-menu-saved"
-scenario = "showcase"
-screen = "main"
-args = ["--save-dir", "tests/golden/saved-characters"]
 
 # The pause menu over a running game: guards against overlays being wiped (#56).
 [[golden]]
@@ -29,27 +13,3 @@ name = "pause-menu"
 scenario = "showcase"
 actions = "wait"
 screen = "pause"
-
-# The `?` help over a run: the controls list by context, read-only (#57, #159); it scrolls.
-[[golden]]
-name = "help-screen"
-scenario = "showcase"
-actions = "wait"
-screen = "help"
-window = "1280x912"
-
-# Settings over a run, opened over the pause menu (#57).
-[[golden]]
-name = "settings-screen"
-scenario = "showcase"
-actions = "wait"
-screen = "settings"
-
-# Controls over a run, opened over the pause menu (#57, #159): every command by context with its
-# keys, to rebind, and the keymap's reset, export, and import.
-[[golden]]
-name = "controls-screen"
-scenario = "showcase"
-actions = "wait"
-screen = "controls"
-window = "1280x912"

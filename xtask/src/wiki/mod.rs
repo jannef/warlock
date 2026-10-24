@@ -16,7 +16,6 @@ mod alignment;
 mod burden;
 mod calendar;
 mod character;
-mod classes;
 mod combat;
 mod creatures;
 mod damage;
@@ -166,7 +165,6 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("races.md", character::races),
         ("race-traits.md", character::race_traits),
         ("classes.md", character::classes),
-        ("class-levels.md", classes::class_levels),
         ("horoscope.md", character::horoscope),
         ("class-kits.md", kits::class_kits),
         ("race-kits.md", kits::race_kits),
@@ -177,6 +175,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("alignment-shops.md", alignment::alignment_shops),
         ("talents.md", talents::talents),
         ("talents-by-system.md", talents::by_system),
+        ("class-levels.md", talents::class_levels),
         ("skills.md", skills::skills),
         ("skill-benefits.md", skills::skill_benefits),
         ("skill-grants.md", skills::skill_grants),

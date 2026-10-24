@@ -1,0 +1,8 @@
+[[talent]]
+id = "eye_for_quality"
+name = "Eye for quality"
+tree = "class"
+granted = true
+description = "You know goods: what you buy or sell in a shop is identified."
+effects = [{ kind = "identify_trades" }]
+systems = ["magic_items", "shops"]

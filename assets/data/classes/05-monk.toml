@@ -20,92 +20,16 @@ kit = [
 ]
 # Bonus talents from Finesse and Vigour.
 bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["finesse", "vigour"] }
-
 # The level table (spec §8 "Class abilities"). Flurry and Quivering palm move onto a Ki pool with
 # the alternative resources (#225).
-[[class.ability]]
-level = 1
-id = "martial_arts"
-name = "Martial arts"
-description = "Trained hands and feet: your bare-handed blows and kicks hit far harder."
-effects = [{ kind = "unarmed_die", sides = 6 }]
-systems = ["kicks", "combat"]
-
-[[class.ability]]
-level = 6
-id = "fleet"
-name = "Fleet"
-description = "In no body armour and with no shield, you move a little quicker."
-learn = "You have grown fleet."
-effects = [{ kind = "step_percent", value = -10, unarmoured = true, no_shield = true }]
-systems = ["speed"]
-
-[[class.ability]]
-level = 12
-id = "deflect_missiles"
-name = "Deflect missiles"
-description = "You slap arrows aside: Dodge +2 against shots, throws, and trap missiles."
-learn = "You have learned to turn missiles aside."
-effects = [{ kind = "missile_dodge", value = 2 }]
-systems = ["ranged", "defence"]
-
-[[class.ability]]
-level = 18
-id = "flurry"
-name = "Flurry"
-description = "Fighting with nothing in your hands, you strike twice, the second blow a little wilder."
-learn = "You have learned the flurry of blows."
-effects = [{ kind = "free_blow", trigger = "flurry" }]
-systems = ["free_blows", "kicks"]
-
-[[class.ability]]
-level = 25
-id = "still_mind"
-name = "Still mind"
-description = "Your mind is still: you resist what tests your will more easily, and nothing that ails you dulls your wits or your will."
-learn = "Your mind has grown still."
-effects = [
-    { kind = "checks", stat = "willpower", value = 2 },
-    { kind = "no_penalty_to", stat = "intelligence" },
-    { kind = "no_penalty_to", stat = "willpower" },
+abilities = [
+    { level = 1, talent = "martial_arts" },
+    { level = 6, talent = "fleet" },
+    { level = 12, talent = "deflect_missiles" },
+    { level = 18, talent = "flurry" },
+    { level = 25, talent = "still_mind" },
+    { level = 32, talent = "purity_of_body" },
+    { level = 40, talent = "diamond_soul" },
+    { level = 50, talent = "quivering_palm" },
+    { level = 60, talent = "perfect_self" },
 ]
-systems = ["status", "diseases"]
-
-[[class.ability]]
-level = 32
-id = "purity_of_body"
-name = "Purity of body"
-description = "No disease can take hold of you any more."
-learn = "You feel pure of body."
-effects = [{ kind = "disease_immune" }]
-systems = ["diseases"]
-
-[[class.ability]]
-level = 40
-id = "diamond_soul"
-name = "Diamond soul"
-description = "Blows turn aside before they reach you: Deflection +2."
-learn = "Your soul has hardened like diamond."
-effects = [{ kind = "deflection", value = 2 }]
-systems = ["defence"]
-
-[[class.ability]]
-level = 50
-id = "quivering_palm"
-name = "Quivering palm"
-description = "A bare-handed blow (an ability) that leaves a wounded foe bleeding badly; then you are spent a while."
-learn = "You have learned the quivering palm."
-effects = [{ kind = "quivering_palm", status = "bleeding", severity = 3, cooldown = "spent", degrees = 2 }]
-systems = ["kicks", "status"]
-
-[[class.ability]]
-level = 60
-id = "perfect_self"
-name = "Perfect self"
-description = "Body and mind made perfect: your bare hands strike harder still, and find the telling spot more often and more cruelly."
-learn = "You have become your perfect self."
-effects = [
-    { kind = "unarmed_die", sides = 8 },
-    { kind = "weapon", role = "unarmed", threat = 1, crit = 1 },
-]
-systems = ["kicks", "combat"]

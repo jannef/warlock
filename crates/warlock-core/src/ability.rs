@@ -25,9 +25,7 @@
 
 use crate::action::Action;
 use crate::alignment::Requirement;
-use crate::content::{
-    ActionKind, ClassAbility, ClassActive, Content, SkillDef, StatusId, TalentEffect,
-};
+use crate::content::{ActionKind, ClassActive, Content, SkillDef, StatusId, TalentEffect};
 use crate::geom::Dir;
 use crate::skills::{Effect, SkillId};
 use crate::world::Actor;
@@ -190,7 +188,7 @@ impl Ability {
         let talents = wind.then_some(Ability::SecondWind);
         // Classes: the actives some class's table has, in their order.
         let classes = (ClassActive::ALL.iter())
-            .filter(|&&a| class_ability_of(content, a).is_some())
+            .filter(|&&a| content.class_active(a).is_some())
             .map(|&a| Ability::Class(a));
         // Weapon skills and fighting styles: the shield bash.
         let weapon_skills = [Ability::ShieldBash];
@@ -224,14 +222,18 @@ impl Ability {
 
     /// Whether `actor` has it (whether or not they can use it now): a skill, if they are trained
     /// in it; disarming, if they are trained in Disable device (the skill with the disarm
-    /// effect); picking locks, if they are trained in Open lock (the pick effect's); stealing, if
-    /// they are trained in a skill with the `steal` benefit (it is listed only when stealing is
-    /// in the game); the shield bash, everyone.
+    /// effect) or a talent lets them (the craftsperson's Tinker); picking locks, if they are
+    /// trained in Open lock (the pick effect's); stealing, if they are trained in a skill with
+    /// the `steal` benefit (it is listed only when stealing is in the game); the shield bash,
+    /// everyone.
     pub(crate) fn had_by(self, actor: &Actor, content: &Content) -> bool {
         match self {
             Ability::Class(active) => actor.talent_mods(content).has_active(active),
             Ability::Skill(id) => actor.skills.get(id).is_some(),
-            Ability::Disarm => actor.skills.trains_effect(content, Effect::Disarm),
+            Ability::Disarm => {
+                actor.skills.trains_effect(content, Effect::Disarm)
+                    || actor.talent_mods(content).disarm
+            }
             Ability::PickLock => actor.skills.trains_effect(content, Effect::Pick),
             Ability::Steal => actor.skills.trains_effect(content, Effect::Steal),
             Ability::SecondWind => actor.talent_mods(content).second_wind.is_some(),
@@ -255,7 +257,7 @@ impl Ability {
     /// Its name in the menu.
     pub fn name(self, content: &Content) -> &str {
         match self {
-            Ability::Class(active) => class_ability_of(content, active).map_or("", |a| &a.name),
+            Ability::Class(active) => content.class_active(active).map_or("", |a| &a.name),
             Ability::Skill(id) => &content.skill(id).name,
             Ability::Disarm => "Disarm a trap",
             Ability::PickLock => "Pick lock",
@@ -268,9 +270,7 @@ impl Ability {
     /// What it does, in a line.
     pub fn description(self, content: &Content) -> &str {
         match self {
-            Ability::Class(active) => {
-                class_ability_of(content, active).map_or("", |a| &a.description)
-            }
+            Ability::Class(active) => content.class_active(active).map_or("", |a| &a.description),
             Ability::Skill(id) => &content.skill(id).description,
             Ability::Disarm => {
                 "Take apart a trap you know of next to you; a clumsy try sets it off."
@@ -351,7 +351,7 @@ impl Ability {
     pub(crate) fn unavailable(self, actor: &Actor, content: &Content) -> Option<Unavailable> {
         let own = match self {
             Ability::Class(active) => {
-                let required = class_ability_of(content, active).and_then(|a| a.requires_alignment);
+                let required = content.class_active(active).and_then(|a| a.needs.alignment);
                 (strayed(actor, content, required))
                     .or_else(|| class_cooldown(actor, content, active).map(Unavailable::While))
             }
@@ -371,14 +371,6 @@ impl Ability {
             blocked.map(Unavailable::While)
         })
     }
-}
-
-/// The first class ability in `content` with active `active` (shared entries are alike: their
-/// name and description are its).
-fn class_ability_of(content: &Content, active: ClassActive) -> Option<&ClassAbility> {
-    (content.classes().iter())
-        .flat_map(|c| &c.abilities)
-        .find(|a| a.active() == Some(active))
 }
 
 /// The status of `actor`'s that keeps it from using class active `active` now: its cooldown,

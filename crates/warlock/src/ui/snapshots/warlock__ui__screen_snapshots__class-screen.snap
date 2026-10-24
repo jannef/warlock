@@ -1,0 +1,33 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+
+              ┌─ Choose your class (3 of 4) ─────────────────────────────────────────┐
+              │                                                                      │
+              │   Barbarian                                                          │
+              │   Bard                                                               │
+              │   Priest                                                             │
+              │   Druid                                                              │
+              │   Monk                                                               │
+              │   Paladin                                                            │
+              │   Ranger                                                             │
+              │ > Thief                                                              │
+              │   Wizard                                                             │
+              │   Witch                                                              │
+              │   Warrior                                                            │
+              │   Aristocrat                                                         │
+              │   Commoner                                                           │
+              │   Craftsperson                                                       │
+              │   Merchant                                                           │
+              │   Random                                                             │
+              │                                                                      │
+              │   A cutpurse, burglar, and picker of locks who lives by nimble       │
+              │   fingers and a quick wit.                                           │
+              │   St −1  Dx 1d3+1  In 1d2−1  Wi −1                                   │
+              │   Levels come quickly.                                               │
+              │                                                                      │
+              │                                                                      │
+              │                                                                      │
+              │ ↑↓ choose   Enter next   Esc back                                    │
+              └──────────────────────────────────────────────────────────────────────┘

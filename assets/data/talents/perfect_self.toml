@@ -1,0 +1,11 @@
+[[talent]]
+id = "perfect_self"
+name = "Perfect self"
+tree = "class"
+granted = true
+description = "Body and mind made perfect: your bare hands strike harder still, and find the telling spot more often and more cruelly."
+effects = [
+    { kind = "unarmed_die", sides = 8 },
+    { kind = "weapon", role = "unarmed", threat = 1, crit = 1 },
+]
+systems = ["kicks", "combat"]

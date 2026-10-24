@@ -1,0 +1,8 @@
+[[talent]]
+id = "haggler"
+name = "Haggler"
+tree = "class"
+granted = true
+description = "You never pay the first price: shopkeepers give you better deals."
+effects = [{ kind = "favour_percent", value = 15 }]
+systems = ["shops"]

@@ -21,90 +21,15 @@ kit = [
 ]
 # Bonus talents from Weaponcraft and Guard, every sixth level from 4.
 bonus_talents = { levels = [4, 10, 16, 22, 28, 34, 46, 58], trees = ["weaponcraft", "guard"] }
-
 # The level table (spec §8 "Class abilities").
-[[class.ability]]
-level = 1
-id = "weapon_drill"
-name = "Weapon drill"
-description = "Years of drill: you learn faster with every melee weapon."
-effects = [{ kind = "weapon_marks", role = "melee", value = 25 }]
-systems = ["weapon_skills"]
-
-[[class.ability]]
-level = 6
-id = "shield_wall"
-name = "Shield wall"
-description = "You hold the line behind a shield: Shield +1 to your Defence while you hold one."
-learn = "You have learned to hold the shield wall."
-effects = [{ kind = "weapon", role = "shield_block", shield = 1 }]
-systems = ["defence"]
-
-[[class.ability]]
-level = 12
-id = "veterans_wind"
-name = "Veteran's wind"
-description = "An old soldier's second breath (an ability): hit points back at once, then winded a quarter hour."
-learn = "You can now draw on a veteran's wind."
-effects = [{ kind = "veterans_wind", per_level = 1, at_least = 10, cooldown = "winded" }]
-systems = ["hit_points", "status"]
-
-[[class.ability]]
-level = 18
-id = "cleaving_strike"
-name = "Cleaving strike"
-description = "A blow that fells a foe carries on into another beside you; with the Cleave talent, on and on while they fall."
-learn = "You have learned to cleave through a falling foe."
-effects = [{ kind = "free_blow", trigger = "cleave" }]
-systems = ["free_blows"]
-
-[[class.ability]]
-level = 25
-id = "armour_drill"
-name = "Armour drill"
-description = "You move freely in armour, and it sits right: your armour hampers your dodging less, and Protection +1 while you wear any."
-learn = "You have learned to fight at ease in armour."
-effects = [
-    { kind = "max_dex", value = 1 },
-    { kind = "protection", value = 1, body_armour = 1 },
+abilities = [
+    { level = 1, talent = "weapon_drill" },
+    { level = 6, talent = "shield_line" },
+    { level = 12, talent = "veterans_wind" },
+    { level = 18, talent = "cleaving_strike" },
+    { level = 25, talent = "armour_drill" },
+    { level = 32, talent = "weapon_mastery" },
+    { level = 40, talent = "iron_stance" },
+    { level = 50, talent = "whirlwind" },
+    { level = 60, talent = "champion" },
 ]
-systems = ["protection", "defence"]
-
-[[class.ability]]
-level = 32
-id = "weapon_mastery"
-name = "Weapon mastery"
-description = "With a melee weapon you have mastered, your blows find the telling spot more often."
-learn = "You have mastered your weapons."
-effects = [{ kind = "weapon", role = "melee", threat = 1, at_rank = 8 }]
-systems = ["combat", "weapon_skills"]
-
-[[class.ability]]
-level = 40
-id = "iron_stance"
-name = "Iron stance"
-description = "Fighting aggressively costs your guard nothing, and fighting defensively costs your aim nothing."
-learn = "You have learned the iron stance."
-effects = [
-    { kind = "stance_dodge", stance = "aggressive", percent = 100 },
-    { kind = "stance_to_hit", stance = "defensive", percent = 100 },
-]
-systems = ["stances"]
-
-[[class.ability]]
-level = 50
-id = "whirlwind"
-name = "Whirlwind"
-description = "You whirl about you: a blow at every foe beside you for the time of one attack (an ability)."
-learn = "You can now strike in a whirlwind."
-effects = [{ kind = "whirlwind" }]
-systems = ["combat"]
-
-[[class.ability]]
-level = 60
-id = "champion"
-name = "Champion"
-description = "Your critical blows with melee weapons strike harder still."
-learn = "You have become a champion."
-effects = [{ kind = "weapon", role = "melee", crit = 1 }]
-systems = ["combat"]

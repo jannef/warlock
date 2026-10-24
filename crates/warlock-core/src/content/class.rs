@@ -7,16 +7,21 @@
 //! choice, rolled when the character is made. Its `kit` is what the character starts with
 //! ([`super::kit`]).
 //!
+//! Its level table (spec §8 "Class abilities") names the **class abilities** each level gives,
+//! talents of the class tree (`data/talents/`, given, never picked) or ordinary talents the class
+//! hands out, and the levels that bring a **bonus talent pick** from the trees the class names
+//! (any tree when it names none). The talents it names are checked once the talents are loaded
+//! ([`ClassDef::check_table`]).
+//!
 //! The classes are offered in path order: the files are named `NN-id.toml`, so the number keeps
 //! the order (adventurers first, then everyday folk) and a new class picks its place.
 
 use super::kit::{Kit, KitLineSpec};
 use super::weapon_skill::Ranked;
 use super::{
-    ActionKind, Content, ContentError, FACTORS, MAX_LEVEL, SystemId, TalentEffect, TreeId,
-    WeaponSkillId, WeaponSkillTable, duplicate_id,
+    ActionKind, ContentError, FACTORS, MAX_LEVEL, TalentBook, TalentId, TreeId, WeaponSkillId,
+    WeaponSkillTable, duplicate_id,
 };
-use crate::alignment::Requirement;
 use crate::combat::MAX_BASE_HP;
 use crate::dice::Dice;
 use crate::skills::{self, SkillId};
@@ -72,136 +77,36 @@ struct ClassSpec {
     style_choice: Vec<BTreeMap<String, Dice>>,
     #[serde(default)]
     kit: Vec<KitLineSpec>,
-    bonus_talents: Option<BonusSpec>,
     #[serde(default)]
-    ability: Vec<AbilitySpec>,
+    abilities: Vec<AbilitySpec>,
+    bonus_talents: Option<BonusSpec>,
 }
 
-/// `bonus_talents = { levels = [10, 20], trees = ["guard", "vigour"] }`.
-#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
+/// `{ level = 6, talent = "fencing" }`: at that level the class gives that talent.
+#[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
-pub(super) struct BonusSpec {
+struct AbilitySpec {
+    level: u8,
+    talent: String,
+}
+
+/// `{ levels = [10, 20], trees = ["guard"] }`: a bonus talent pick at each of those levels,
+/// from those trees (none: any).
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct BonusSpec {
     levels: Vec<u8>,
+    #[serde(default)]
     trees: Vec<String>,
 }
 
-/// One `[[class.ability]]` as written, resolved once the statuses, lights, and talents are
-/// known ([`ClassDef::resolve_abilities`]).
-#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub(super) struct AbilitySpec {
-    level: u8,
-    id: String,
-    name: String,
-    description: String,
-    learn: Option<String>,
-    effects: Vec<TalentEffect>,
-    systems: Vec<String>,
-    requires_alignment: Option<Requirement>,
-}
-
-/// The class actives (spec §8 "Class abilities"): what a class ability with an active effect
-/// does when it is used from the abilities menu, each its own rule (`world/class_ability.rs`).
-/// The ability that has one is named by its id (`use:rage`, `use:smite:E`).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum ClassActive {
-    /// Fly into a rage: the rage's status (Raging), then what it `follows` into.
-    Rage,
-    /// Hit points back at once, then a cooldown (the warrior's Veteran's wind).
-    VeteransWind,
-    /// A blow at every hostile beside you for the price of one attack.
-    Whirlwind,
-    /// Hit points back by the level, then a cooldown (the paladin's Lay on hands).
-    LayOnHands,
-    /// A blow in a direction with dice more damage, then a cooldown.
-    Smite,
-    /// A light of your own, on and off (a status that sheds light while it lasts).
-    HolyRadiance,
-    /// An unarmed blow in a direction that leaves a wound bleeding, then a cooldown.
-    QuiveringPalm,
-}
-
-impl ClassActive {
-    /// Every active, in menu order.
-    pub const ALL: &[ClassActive] = &[
-        ClassActive::Rage,
-        ClassActive::VeteransWind,
-        ClassActive::Whirlwind,
-        ClassActive::LayOnHands,
-        ClassActive::Smite,
-        ClassActive::HolyRadiance,
-        ClassActive::QuiveringPalm,
-    ];
-
-    /// Its id: the id of the class ability that has it, and its replay text (`use:rage`).
-    pub const fn id(self) -> &'static str {
-        match self {
-            ClassActive::Rage => "rage",
-            ClassActive::VeteransWind => "veterans_wind",
-            ClassActive::Whirlwind => "whirlwind",
-            ClassActive::LayOnHands => "lay_on_hands",
-            ClassActive::Smite => "smite",
-            ClassActive::HolyRadiance => "holy_radiance",
-            ClassActive::QuiveringPalm => "quivering_palm",
-        }
-    }
-
-    /// The active with id `id`.
-    pub fn from_id(id: &str) -> Option<Self> {
-        Self::ALL.iter().copied().find(|a| a.id() == id)
-    }
-
-    /// Whether it asks for a direction before it is used.
-    pub const fn aimed(self) -> bool {
-        matches!(self, ClassActive::Smite | ClassActive::QuiveringPalm)
-    }
-
-    /// What it costs, as an action of this kind (`data/actions.toml`).
-    pub const fn cost(self) -> ActionKind {
-        match self {
-            ClassActive::Rage | ClassActive::VeteransWind => ActionKind::Wait,
-            ClassActive::Whirlwind | ClassActive::Smite | ClassActive::QuiveringPalm => {
-                ActionKind::Melee
-            }
-            ClassActive::LayOnHands | ClassActive::HolyRadiance => ActionKind::Cast,
-        }
-    }
-}
-
-/// A class ability (spec §8 "Class abilities"): what a class gives at a level of its table,
-/// passive (its effects read where the rules read talents') or active (an effect that is a
-/// [`ClassActive`], used from the abilities menu).
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ClassAbility {
-    pub id: String,
-    pub name: String,
-    /// What it does, in the game's words (the wiki has the rule).
-    pub description: String,
-    /// The character level that brings it.
-    pub level: u8,
-    /// What the player is told as a level brings it ("You can now rage."); none at level 1.
-    pub learn: Option<String>,
-    /// What it does: summed with the talents' by [`crate::talent::TalentMods`].
-    pub effects: Vec<TalentEffect>,
-    /// The systems it touches (the coverage list).
-    pub systems: Vec<SystemId>,
-    /// The alignment band its active asks for (the paladin's gifts: Good or better).
-    pub requires_alignment: Option<Requirement>,
-}
-
-impl ClassAbility {
-    /// The active it is, if it is one.
-    pub fn active(&self) -> Option<ClassActive> {
-        self.effects.iter().find_map(TalentEffect::active)
-    }
-}
-
-/// A class ability by class and place in its table ([`Content::class_ability`]).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct ClassAbilityId {
-    pub class: u8,
-    pub index: u8,
+/// A class's bonus talent picks (spec §8 "Class abilities").
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct BonusTalents {
+    /// The levels that bring one, ascending.
+    pub levels: Vec<u8>,
+    /// The trees it comes from, by id; empty: any tree (the commoner).
+    pub trees: Vec<String>,
 }
 
 /// A class, in the order offered.
@@ -246,17 +151,13 @@ pub struct ClassDef {
     /// What the class starts with (spec §8 "Character creation"): first in a new character's
     /// pack; filled in by the loader once objects are known.
     pub kit: Kit,
-    /// The levels that bring a bonus talent pick from [`ClassDef::bonus_trees`] (spec §8
-    /// "Class abilities"), lowest first.
-    pub bonus_levels: Vec<u8>,
-    /// The trees its bonus picks come from, in display order; filled in once the talents are
-    /// known.
-    pub bonus_trees: Vec<TreeId>,
-    pub(super) bonus_spec: Option<BonusSpec>,
-    /// Its level table (spec §8 "Class abilities"), by level then file order; filled in once
-    /// the statuses, lights, and talents are known.
-    pub abilities: Vec<ClassAbility>,
-    pub(super) ability_specs: Vec<AbilitySpec>,
+    /// Its class abilities (spec §8 "Class abilities"): at each level, the talent it gives, by
+    /// id, ascending by level.
+    pub abilities: Vec<(u8, String)>,
+    /// Its bonus talent picks.
+    pub bonus_talents: BonusTalents,
+    /// The file it was read from, for the errors of [`ClassDef::check_table`].
+    pub(super) file: String,
 }
 
 impl ClassDef {
@@ -372,6 +273,44 @@ impl ClassDef {
         )?;
         let styles = ranks(&spec.styles, Ranked::Styles)?;
         let style_choice = choice("style_choice", &spec.style_choice, Ranked::Styles)?;
+        let level_ok = |l: u8| (1..=MAX_LEVEL).contains(&l);
+        let mut abilities: Vec<(u8, String)> = Vec::with_capacity(spec.abilities.len());
+        for a in spec.abilities {
+            if !level_ok(a.level) {
+                return Err(err(format!(
+                    "class `{id}`: abilities: level {} is not 1 to {MAX_LEVEL}",
+                    a.level
+                )));
+            }
+            if abilities.last().is_some_and(|(l, _)| *l > a.level) {
+                return Err(err(format!(
+                    "class `{id}`: abilities are listed by level, lowest first"
+                )));
+            }
+            if abilities.iter().any(|(_, t)| *t == a.talent) {
+                return Err(err(format!(
+                    "class `{id}`: abilities: `{}` twice",
+                    a.talent
+                )));
+            }
+            abilities.push((a.level, a.talent));
+        }
+        let bonus_talents = match spec.bonus_talents {
+            None => BonusTalents::default(),
+            Some(b) => {
+                let ascending = b.levels.windows(2).all(|w| w[0] < w[1]);
+                if b.levels.is_empty() || !ascending || !b.levels.iter().all(|&l| level_ok(l)) {
+                    return Err(err(format!(
+                        "class `{id}`: bonus_talents: levels are 1 to {MAX_LEVEL}, at least \
+                         one, ascending"
+                    )));
+                }
+                BonusTalents {
+                    levels: b.levels,
+                    trees: b.trees,
+                }
+            }
+        };
         Ok(ClassDef {
             id: spec.id,
             name: spec.name,
@@ -389,139 +328,10 @@ impl ClassDef {
             style_choice,
             kit_spec: spec.kit,
             kit: Kit::default(),
-            bonus_levels: Vec::new(),
-            bonus_trees: Vec::new(),
-            bonus_spec: spec.bonus_talents,
-            abilities: Vec::new(),
-            ability_specs: spec.ability,
+            abilities,
+            bonus_talents,
+            file: file.to_string(),
         })
-    }
-
-    /// Resolves the level table and the bonus picks written in the class's file against
-    /// `content` (statuses, lights, damage types, talent trees, and systems loaded): every
-    /// ability checked, in level order.
-    pub(super) fn resolve_abilities(
-        &self,
-        content: &Content,
-    ) -> Result<(Vec<u8>, Vec<TreeId>, Vec<ClassAbility>), String> {
-        let id = &self.id;
-        let book = content.talents();
-        let (mut levels, mut trees) = (Vec::new(), Vec::new());
-        // Content without talents has nothing to pick from and no systems to name.
-        let talents = !book.trees.is_empty() || !book.systems.is_empty();
-        if let Some(bonus) = self.bonus_spec.as_ref().filter(|_| talents) {
-            for &level in &bonus.levels {
-                if !(2..=MAX_LEVEL).contains(&level) || levels.contains(&level) {
-                    return Err(format!(
-                        "class `{id}`: bonus_talents: level {level} is not 2 to {MAX_LEVEL} \
-                         or is named twice"
-                    ));
-                }
-                levels.push(level);
-            }
-            levels.sort_unstable();
-            for name in &bonus.trees {
-                let tree = book
-                    .tree_id(name)
-                    .ok_or_else(|| format!("class `{id}`: bonus_talents: unknown tree `{name}`"))?;
-                if trees.contains(&tree) {
-                    return Err(format!("class `{id}`: bonus_talents: `{name}` twice"));
-                }
-                trees.push(tree);
-            }
-            trees.sort_unstable();
-            if levels.is_empty() || trees.is_empty() {
-                return Err(format!(
-                    "class `{id}`: bonus_talents names levels and the trees they pick from"
-                ));
-            }
-        }
-        let mut abilities: Vec<ClassAbility> = Vec::new();
-        for spec in &self.ability_specs {
-            let err = |m: String| format!("class `{id}`: ability `{}`: {m}", spec.id);
-            if abilities.iter().any(|a| a.id == spec.id) {
-                return Err(err("named twice".into()));
-            }
-            if spec.name.is_empty() || spec.description.is_empty() {
-                return Err(err("needs a name and a description".into()));
-            }
-            if !(1..=MAX_LEVEL).contains(&spec.level) {
-                return Err(err(format!("level {} is not 1 to {MAX_LEVEL}", spec.level)));
-            }
-            match (&spec.learn, spec.level) {
-                (Some(_), 1) => {
-                    return Err(err(
-                        "a level 1 ability is had from the start: no `learn`".into()
-                    ));
-                }
-                (None, l) if l > 1 => {
-                    return Err(err("needs `learn`, what a level that brings it says".into()));
-                }
-                _ => {}
-            }
-            if spec.effects.is_empty() {
-                return Err(err("does nothing: it needs `effects`".into()));
-            }
-            for effect in &spec.effects {
-                effect.check(content, None).map_err(err)?;
-            }
-            let actives: Vec<ClassActive> = spec
-                .effects
-                .iter()
-                .filter_map(TalentEffect::active)
-                .collect();
-            match actives.as_slice() {
-                [] => {}
-                [active] if active.id() == spec.id => {}
-                [active] => {
-                    return Err(err(format!(
-                        "an ability with the `{}` active has its id",
-                        active.id()
-                    )));
-                }
-                _ => return Err(err("has more than one active effect".into())),
-            }
-            if let Some(required) = spec.requires_alignment {
-                required.check().map_err(err)?;
-            }
-            if spec.systems.is_empty() {
-                return Err(err(
-                    "names no `systems` (the list in data/talents.toml)".into()
-                ));
-            }
-            let mut systems = Vec::new();
-            for name in spec.systems.iter().filter(|_| talents) {
-                let system = book.system_id(name).ok_or_else(|| {
-                    err(format!("names a system `{name}` that is not in the list"))
-                })?;
-                if systems.contains(&system) {
-                    return Err(err(format!("names system `{name}` twice")));
-                }
-                systems.push(system);
-            }
-            abilities.push(ClassAbility {
-                id: spec.id.clone(),
-                name: spec.name.clone(),
-                description: spec.description.clone(),
-                level: spec.level,
-                learn: spec.learn.clone(),
-                effects: spec.effects.clone(),
-                systems,
-                requires_alignment: spec.requires_alignment,
-            });
-        }
-        abilities.sort_by_key(|a| a.level);
-        Ok((levels, trees, abilities))
-    }
-
-    /// Its abilities at character `level` or below, in level order.
-    pub fn abilities_at(&self, level: u8) -> impl Iterator<Item = &ClassAbility> {
-        self.abilities.iter().filter(move |a| a.level <= level)
-    }
-
-    /// Whether character `level` brings a bonus talent pick.
-    pub fn bonus_at(&self, level: u8) -> bool {
-        self.bonus_levels.contains(&level)
     }
 
     /// Whether it trains skill `skill` (any of its grants, known for or not).
@@ -533,22 +343,154 @@ impl ClassDef {
     pub fn is_known_for(&self, skill: SkillId) -> bool {
         self.known_for.contains(&skill)
     }
+
+    /// The talents its level table gives up to `level`, in table order; none from a book
+    /// without a class tree (content whose talents have no class abilities, a fixture's).
+    pub fn abilities_to(&self, book: &TalentBook, level: u8) -> Vec<TalentId> {
+        if !book.has_class_tree() {
+            return Vec::new();
+        }
+        (self.abilities.iter())
+            .take_while(|(l, _)| *l <= level)
+            .filter_map(|(_, id)| book.id(id))
+            .collect()
+    }
+
+    /// The bonus talent picks level `level` brings (0 or 1).
+    pub fn bonus_at(&self, level: u8) -> u8 {
+        u8::from(self.bonus_talents.levels.contains(&level))
+    }
+
+    /// The trees of `book` its bonus picks come from, in display order; `None`: any.
+    pub fn bonus_trees(&self, book: &TalentBook) -> Option<Vec<TreeId>> {
+        if self.bonus_talents.trees.is_empty() {
+            return None;
+        }
+        let mut trees: Vec<TreeId> = (self.bonus_talents.trees.iter())
+            .filter_map(|t| book.tree_id(t))
+            .collect();
+        trees.sort();
+        Some(trees)
+    }
+
+    /// Checks its level table against `book` (once the talents are loaded; nothing to check
+    /// against a book without a class tree, whose class tables give nothing): every talent it
+    /// names is in the book, and every bonus tree is a tree that is no class tree.
+    pub(super) fn check_table(&self, book: &TalentBook) -> Result<(), ContentError> {
+        if !book.has_class_tree() {
+            return Ok(());
+        }
+        let err = |m: String| ContentError::new(&self.file, format!("class `{}`: {m}", self.id));
+        for (_, talent) in &self.abilities {
+            if book.id(talent).is_none() {
+                return Err(err(format!("abilities: unknown talent `{talent}`")));
+            }
+        }
+        for tree in &self.bonus_talents.trees {
+            match book.tree_id(tree) {
+                Some(t) if !book.tree(t).class => {}
+                Some(_) => {
+                    return Err(err(format!(
+                        "bonus_talents: `{tree}` is the class tree: nothing is picked from it"
+                    )));
+                }
+                None => return Err(err(format!("bonus_talents: unknown tree `{tree}`"))),
+            }
+        }
+        Ok(())
+    }
+}
+
+/// The class actives (spec §8 "Class abilities"): what a class ability with an active effect
+/// does when it is used from the abilities menu, each its own rule (`world/class_ability.rs`).
+/// The ability that has one is named by its id (`use:rage`, `use:smite:E`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ClassActive {
+    /// Fly into a rage: the rage's status (Raging), then what it `follows` into.
+    Rage,
+    /// Hit points back at once, then a cooldown (the warrior's Veteran's wind).
+    VeteransWind,
+    /// A blow at every hostile beside you for the price of one attack.
+    Whirlwind,
+    /// Hit points back by the level, then a cooldown (the paladin's Lay on hands).
+    LayOnHands,
+    /// A blow in a direction with dice more damage, then a cooldown.
+    Smite,
+    /// A light of your own, on and off (a status that sheds light while it lasts).
+    HolyRadiance,
+    /// An unarmed blow in a direction that leaves a wound bleeding, then a cooldown.
+    QuiveringPalm,
+}
+
+impl ClassActive {
+    /// Every active, in menu order.
+    pub const ALL: &[ClassActive] = &[
+        ClassActive::Rage,
+        ClassActive::VeteransWind,
+        ClassActive::Whirlwind,
+        ClassActive::LayOnHands,
+        ClassActive::Smite,
+        ClassActive::HolyRadiance,
+        ClassActive::QuiveringPalm,
+    ];
+
+    /// Its id: the id of the class ability that has it, and its replay text (`use:rage`).
+    pub const fn id(self) -> &'static str {
+        match self {
+            ClassActive::Rage => "rage",
+            ClassActive::VeteransWind => "veterans_wind",
+            ClassActive::Whirlwind => "whirlwind",
+            ClassActive::LayOnHands => "lay_on_hands",
+            ClassActive::Smite => "smite",
+            ClassActive::HolyRadiance => "holy_radiance",
+            ClassActive::QuiveringPalm => "quivering_palm",
+        }
+    }
+
+    /// The active with id `id`.
+    pub fn from_id(id: &str) -> Option<Self> {
+        Self::ALL.iter().copied().find(|a| a.id() == id)
+    }
+
+    /// Whether it asks for a direction before it is used.
+    pub const fn aimed(self) -> bool {
+        matches!(self, ClassActive::Smite | ClassActive::QuiveringPalm)
+    }
+
+    /// What it costs, as an action of this kind (`data/actions.toml`).
+    pub const fn cost(self) -> ActionKind {
+        match self {
+            ClassActive::Rage | ClassActive::VeteransWind => ActionKind::Wait,
+            ClassActive::Whirlwind | ClassActive::Smite | ClassActive::QuiveringPalm => {
+                ActionKind::Melee
+            }
+            ClassActive::LayOnHands | ClassActive::HolyRadiance => ActionKind::Cast,
+        }
+    }
 }
 
 /// The built-in class files of `files` without their level tables and bonus picks (for tests
-/// that load talents of their own, which those name trees and systems of).
+/// of talents, which those would put picks and abilities in the way of).
 #[cfg(test)]
 pub fn strip_tables(files: &mut super::ContentFiles) {
     let classes: Vec<(String, String)> = (files.table("classes"))
         .map(|(path, text)| {
-            let end = (text.lines())
-                .take_while(|l| {
-                    !l.starts_with("bonus_talents") && !l.starts_with("[[class.ability]]")
-                })
-                .map(|l| l.len() + 1)
-                .sum::<usize>()
-                .min(text.len());
-            (path.to_string(), text[..end].to_string())
+            let mut skipping = false;
+            let mut kept = String::new();
+            for line in text.lines() {
+                if line.starts_with("abilities = [") {
+                    skipping = true;
+                }
+                if !skipping && !line.starts_with("bonus_talents") {
+                    kept.push_str(line);
+                    kept.push('\n');
+                }
+                if skipping && line.starts_with(']') {
+                    skipping = false;
+                }
+            }
+            (path.to_string(), kept)
         })
         .collect();
     for (path, text) in classes {
@@ -686,6 +628,64 @@ mod tests {
             ),
         ] {
             let e = parse(&text).unwrap_err();
+            assert!(e.message.contains(why), "{why}: {}", e.message);
+        }
+    }
+
+    /// The built-in content with the aristocrat's file changed by `edit`, loaded.
+    fn with_aristocrat(
+        edit: impl Fn(&str) -> String,
+    ) -> Result<super::super::Content, ContentError> {
+        let mut files = super::super::ContentFiles::builtin();
+        let path = "data/classes/12-aristocrat.toml";
+        let text = files
+            .table("classes")
+            .find(|(p, _)| *p == path)
+            .expect("aristocrat")
+            .1;
+        let text = edit(text);
+        files.insert(path, &text);
+        super::super::Content::load(&files)
+    }
+
+    #[test]
+    fn level_tables_name_known_talents_and_trees_in_order() {
+        let content = with_aristocrat(|t| t.to_string()).expect("built-in");
+        let aristocrat = content.class("aristocrat").expect("aristocrat");
+        let book = content.talents();
+        let at = |level| -> Vec<&str> {
+            (aristocrat.abilities_to(book, level).into_iter())
+                .map(|t| book.get(t).id.as_str())
+                .collect()
+        };
+        assert_eq!(at(1), ["well_dressed"]);
+        assert_eq!(at(17), ["well_dressed", "fencing", "noblesse"]);
+        assert_eq!(at(60).len(), 9);
+        assert_eq!((aristocrat.bonus_at(10), aristocrat.bonus_at(11)), (1, 0));
+        let trees = aristocrat.bonus_trees(book).expect("named trees");
+        let names: Vec<&str> = trees.iter().map(|&t| book.tree(t).id.as_str()).collect();
+        assert_eq!(names, ["weaponcraft", "delver"]);
+        let commoner = content.class("commoner").expect("commoner");
+        assert_eq!(commoner.bonus_trees(book), None, "any tree");
+        for (edit, why) in [
+            (
+                ("\"fencing\"", "\"fencin\""),
+                "abilities: unknown talent `fencin`",
+            ),
+            (("\"delver\"]", "\"class\"]"), "`class` is the class tree"),
+            (("\"delver\"]", "\"stars\"]"), "unknown tree `stars`"),
+            (("level = 1,", "level = 0,"), "level 0 is not 1 to"),
+            (
+                ("level = 12,", "level = 2,"),
+                "listed by level, lowest first",
+            ),
+            (
+                ("talent = \"noblesse\"", "talent = \"fencing\""),
+                "`fencing` twice",
+            ),
+            (("[10, 20, 30, 45, 55]", "[20, 10]"), "ascending"),
+        ] {
+            let e = with_aristocrat(|t| t.replacen(edit.0, edit.1, 1)).unwrap_err();
             assert!(e.message.contains(why), "{why}: {}", e.message);
         }
     }

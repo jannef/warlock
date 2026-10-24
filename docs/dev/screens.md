@@ -210,7 +210,7 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   the first active talent's (`docs/dev/progression.md`): listed while the content has a talent
   with the `second_wind` effect, had by whoever holds one, `While(winded)` during its cooldown.
   `Ability::Class(ClassActive)` (`Source::Class`) are the class actives
-  (`docs/dev/progression.md` "Class abilities"): listed while some class's table has one, had
+  (`docs/dev/progression.md` "Class actives"): listed while some talent has one, had
   by whoever's `TalentMods` has it, `Strayed` then `While(cooldown)`; their action is
   `Action::Use`. No `KeyCommand` of their own (as Second wind's).
   `Aim` has
@@ -238,3 +238,14 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
 - **Keys**: an ability with an action of its own may have a rebindable `KeyCommand`, left unbound
   by default (`settings/keys.rs::UNBOUND`); never a default key. Shield bash is the first, Steal
   the second; a style's rank 10 abilities (later) go there too.
+
+**Text snapshots** (#301): `ui/screen_snapshots.rs` (test only) checks the screens as text, in
+place of golden screenshots. Each `Case` starts a run the way a golden entry does (scenario,
+`character`, `kit`, action text, `screen` as `--screen`, `keys` as `--keys`, `save_dir`, the
+console `size`). It runs the real systems headlessly (`open_startup_screens`, `route_keys`,
+`apply_choice`, `refresh`, `converse`, `on_death`, `more::wait`, `draw`) and snapshots the UI
+console with `insta` (`ui/snapshots/`, one file per case). The map layer and colors aren't part
+of it: map content is `warlock-cli dump`. To add one, append a case under its group in `CASES`,
+run `cargo test -p warlock screen_snapshots`, then `cargo insta review` (or
+`INSTA_UPDATE=always`, then read the diff). A changed screen shows as a text diff in the PR. New
+screens get a case here, never a golden (CLAUDE.md "Golden screenshots").

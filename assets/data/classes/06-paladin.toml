@@ -22,94 +22,16 @@ kit = [
 ]
 # Bonus talents from Guard and Vigour.
 bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["guard", "vigour"] }
-
 # The level table (spec §8 "Class abilities"). The gifts used from the abilities menu answer only
 # a paladin who is Good or better. Lay on hands waits for its mana (the mana PR) with a cooldown.
-[[class.ability]]
-level = 1
-id = "lay_on_hands"
-name = "Lay on hands"
-description = "Your touch heals (an ability): hit points back by how seasoned you are, then you are drained for a while."
-effects = [{ kind = "lay_on_hands", per_level = 2, cooldown = "drained", degrees = 2 }]
-systems = ["hit_points", "status"]
-requires_alignment = { min = "good" }
-
-[[class.ability]]
-level = 6
-id = "divine_grace"
-name = "Divine grace"
-description = "Grace guards you: you shake off disease more easily, and poison leaves you sooner."
-learn = "You feel a grace upon you."
-effects = [
-    { kind = "disease_checks", value = 2 },
-    { kind = "status_eases", status = "poisoned", value = 100 },
+abilities = [
+    { level = 1, talent = "lay_on_hands" },
+    { level = 6, talent = "divine_grace" },
+    { level = 12, talent = "smite" },
+    { level = 18, talent = "divine_health" },
+    { level = 25, talent = "shield_of_faith" },
+    { level = 32, talent = "steadfast" },
+    { level = 40, talent = "holy_radiance" },
+    { level = 50, talent = "bulwark" },
+    { level = 60, talent = "avatar" },
 ]
-systems = ["diseases", "status"]
-
-[[class.ability]]
-level = 12
-id = "smite"
-name = "Smite"
-description = "A blow of holy wrath in a direction (an ability), harder as you grow; then you are spent a while."
-learn = "You can now smite."
-effects = [{ kind = "smite", per_levels = 10, sides = 6, cooldown = "spent", degrees = 1 }]
-systems = ["combat"]
-requires_alignment = { min = "good" }
-
-[[class.ability]]
-level = 18
-id = "divine_health"
-name = "Divine health"
-description = "No disease can take hold of you any more."
-learn = "You feel pure of body."
-effects = [{ kind = "disease_immune" }]
-systems = ["diseases"]
-
-[[class.ability]]
-level = 25
-id = "shield_of_faith"
-name = "Shield of faith"
-description = "Faith steadies your shield: Shield +1 to your Defence, and fighting with weapon and shield you bash with it more often."
-learn = "Your faith has become a shield."
-effects = [
-    { kind = "weapon", role = "shield_block", shield = 1 },
-    { kind = "weapon", role = "style", bash = 10 },
-]
-systems = ["defence", "styles"]
-
-[[class.ability]]
-level = 32
-id = "steadfast"
-name = "Steadfast"
-description = "A heavy load no longer slows you until it strains you."
-learn = "You have become steadfast."
-effects = [{ kind = "steadfast" }]
-systems = ["burden"]
-
-[[class.ability]]
-level = 40
-id = "holy_radiance"
-name = "Holy radiance"
-description = "A soft light shines about you while you will it (an ability, on and off); everyone sees it."
-learn = "You can now shine with a holy light."
-effects = [{ kind = "radiance", status = "radiant", light = "item_glow" }]
-systems = ["light"]
-requires_alignment = { min = "good" }
-
-[[class.ability]]
-level = 50
-id = "bulwark"
-name = "Bulwark"
-description = "You stand like a wall: Protection +2."
-learn = "You have become a bulwark."
-effects = [{ kind = "protection", value = 2 }]
-systems = ["protection"]
-
-[[class.ability]]
-level = 60
-id = "avatar"
-name = "Avatar"
-description = "Your touch heals fully and cures poison, bleeding, and disease, and drains you half as long."
-learn = "You have become an avatar of your faith."
-effects = [{ kind = "avatar" }]
-systems = ["hit_points", "status", "diseases"]

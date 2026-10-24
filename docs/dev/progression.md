@@ -11,7 +11,9 @@ hit points a level gives) is `docs/dev/experience.md`.
 |---|---|
 | `content/talent.rs` | `TalentBook` from `data/talents.toml` (settings: `max_ranks`, `[coverage]`, `[[tree]]`, `[[system]]`, each set in one file) and `data/talents/*.toml` (one `[[talent]]` a file, `ContentFiles::table("talents")` order; `TalentId` an index, saves name talents by id so it is **not** in the content fingerprint). `TalentDef` (tree, `ranks: Vec<Rank>`, `needs` for every rank plus each rank's own, `effects` per rank held plus each rank's own, `choice`, `systems`, `granted`), `Needs`/`Need` (the prerequisite kinds and their words: talents, stat scores, skill values, weapon-skill ranks, any skill of a role (`any_weapon_skill`), `chosen`, level, race, class, eyes, and `requires_alignment`, an `alignment::Requirement` read against `Actor::band`), `TalentEffect` (the typed effects), `Choice::options`/`name`, and the **coverage check** (`TalentBook::coverage_gap`, run at load: a `ContentError`). |
 | `talent.rs` | The runtime: `Talents` (`Vec<Taken { id, rank, choice }>` on `Actor::talents`, saved and hashed, left out of the JSON while empty), `TalentMods` (every effect summed; `Talents::mods(content)` / `Actor::talent_mods`), `Candidate` (what prerequisites read: `Candidate::player`), `unmet`, `may_take` → `Refusal` (in words), `openings`, `offers` (the pick list, tree by tree). |
-| `world/talent.rs` | `Due { level, talents }` in `Progress::due` (lowest level first); `World::level_up(from, to)` from `grant_xp` (a pick every `Experience::talent_every` levels, and the per-level hit points of talents held); `refuse_due` (the first line of `player_acts`: everything but `Talent`, `Advance`, `LevelUpAuto` is refused with "You have skill rolls to spend." or "You must choose a talent first."); `take_talent` (the first due with a pick, so a talent may come before the rolls), `level_up_auto` (dev); `settle_due` drops talent picks nothing can be spent on (`offers` empty and no roll left) and rolls when no skill is trained, asked again after each pick. `Due { level, talents, rolls }`: a level with rolls but no pick is due too. |
+| `world/talent.rs` | `Due { level, talents }` in `Progress::due` (lowest level first); `World::level_up(from, to)` from `grant_xp` (a pick every `Experience::talent_every` levels, and the per-level hit points of talents held); `refuse_due` (the first line of `player_acts`: everything but `Talent`, `Advance`, `LevelUpAuto` is refused with "You have skill rolls to spend." or "You must choose a talent first."); `take_talent` (the first due with a pick, so a talent may come before the rolls), `level_up_auto` (dev); `settle_due` drops talent picks nothing can be spent on (`offers` empty and no roll left) and rolls when no skill is trained, asked again after each pick. `Due { level, talents, rolls, bonus }`: a level with rolls but no pick is due too; `bonus` are the class's bonus picks (a talent of the class's trees spends one before an ordinary pick; "You must choose a talent of Weaponcraft or Delver."), dropped like the others when nothing fits. |
+| `world/class.rs` | Class abilities (#246): `grant` gives the talents a class's level table names up to a level that the player lacks (rank 1, `hand_out` for hit points by level and stat gifts), at creation (`start_run`, level 1), as each level comes (`level_up`, with the news "You gain Fencing."), and on `from_state` (a grown table reaches saves; nothing is taken away); `bonus_trees`; `appraise_carried` (Connoisseur, from `World::live` for the player). |
+| `content/class.rs` | `ClassDef::abilities` (`[(level, talent id)]`), `bonus_talents` (`levels`, `trees`; none: any), `abilities_to`, `bonus_at`, `bonus_trees`, `check_table` (after the talents load, from `Content::check_class_tables`, which then runs the coverage check with the class abilities counted). A book without a class tree (fixtures) gives nothing and checks nothing. |
 | `world/skill_roll.rs` | The skill rolls (#230, `docs/dev/skills.md`): `level_rolls`, `advance_skill` (`advance:SKILL`), `advance_auto` (`levelup:auto`'s rolls). `World::due()` and `candidate()`. |
 | `world/experience.rs` | `grant_xp` scales every gain by `TalentMods::xp_percent` and calls `level_up`; the dev `xp:N` (`grant_xp_dev`). |
 | `perception.rs` | `due()`, `own_talents()` (`OwnTalent`), `talents()` (`TalentView`: held rank, the next rank's needs with `met`, `openings`): what the level-up screen and the Talents page (#236) read. |
@@ -19,9 +21,8 @@ hit points a level gives) is `docs/dev/experience.md`.
 | `action.rs` | `Talent { id, choice }` (`talent:hardy`, `talent:weapon_focus:long_blades`; ids keep their case), `Advance(skill)`, dev `LevelUpAuto` (`levelup:auto`), `GrantXp` (`xp:N`); all `Spent::NoTime` or refused. |
 | `rng.rs` | `Rng::levels(seed)`, the `levels` stream, kept in `WorldState::levels_rng: Option<Rng>` **from the first draw** (the stat checks of each level, `world/stat_training.rs`; skill rolls, `world/skill_roll.rs`), so runs that never drew hash as before. |
 | `xtask/src/wiki/talents.rs` | `talents.md` (trees with the rules), `talents-by-system.md` (the coverage matrix, class abilities beside the talents); `effect_text`, the rule of one effect, shared with the class tables. |
-| `content/class.rs` | The class tables (#243): `[[class.ability]]` rows resolved into `ClassAbility` (level, `learn`, `effects` of `TalentEffect`, `systems`, `requires_alignment`) and `bonus_talents` into `ClassDef::bonus_levels`/`bonus_trees`, after the statuses, lights, and talents load (`Content::load_class_abilities`, which then runs the coverage check with the class counts); `ClassActive`, the actives (id = the ability's id, aim, cost); `strip_tables` (tests that load talents of their own). Content without talents drops the bonus picks and the systems. |
-| `world/class_ability.rs` | `refresh` (the player's class abilities from class and level, in `World::assemble`: made or loaded), `World::class_level` (from `level_up`, each level: the new abilities, their `learn` news, stat gifts, Hardened's hit points), `use_class` (`Action::Use`, `use:rage`, `use:smite:E`) and the seven actives, `frenzy` (from `dies`), `unstoppable` (from `hurt`). |
-| `xtask/src/wiki/classes.rs` | `class-levels.md`: every class with a table, by name, its bonus picks and its abilities by level with the rules. |
+| `content/class.rs` (#243) | `ClassActive`, the actives (id = the ability's id, aim, cost); `strip_tables` (tests that load talents of their own). |
+| `world/class_ability.rs` | `use_class` (`Action::Use`, `use:rage`, `use:smite:E`) and the seven actives, `frenzy` (from `dies`), `unstoppable` (from `hurt`); Hardened's hit points are `level_up`'s. |
 
 ## The hooks
 
@@ -76,12 +77,30 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `disease_immune`, `checks` | `World::expose` (refused, nothing rolled), `disease_turn`, `search_modifier(Look::Passive)` (Willpower) |
 | `no_penalty_to`, `raise_percent` | `TalentMods::penalty(status, stat, by)` in `Effects::penalty_for` |
 | `free_blow` `flurry` | `World::second_blow` on `Cue::First` (`World::flurry`), after the off hand and the bash; two `cleave` sources make `great_cleave` |
-| `hardened`, `stat_gift` | handed out by `World::class_level` as the level comes |
+| `hardened` | `World::level_up`, as the level comes (a level's hit points again, and `bonus` more, past `hp_level`) |
 | `blood_frenzy`, `unstoppable` | `World::frenzy` (a player's kill), `World::unstoppable` (`hurt`, `Harm::Actor`), `World::live` (the numb statuses tick nothing while the rage lasts) |
 | `radiance` | `LightCache::sources` (a carried source, `RADIANCE` tag, while its status lasts) |
 | the actives (`rage`, `veterans_wind`, `whirlwind`, `lay_on_hands`, `avatar`, `smite`, `quivering_palm`) | `world/class_ability.rs`; `Ability::Class` in `ability.rs` (`class_cooldown`: Rage's status and what it `follows`) |
 | `missile_dodge` | `World::target_against` (from `resolve` for shots and throws, `trap_strikes` for trap missiles) |
 | `spell_damage_percent` | `World::evaded` in `spell_hurts` (bursts and bolts, before resistances) |
+| `stat` | handed out, not read: `class::hand_out` raises score and potential (`Stats::gift`) at the pick or the grant; a Toughness gift raises `hp` with the maximum |
+| `carry_kg`, `weightless_coins` | `burden::load` (with the affixes' kilograms; coins, item class `coins`, left out of the load) |
+| `quest_xp_percent`, `quest_gold_percent` | `World::complete` (`quest.rs`), before `xp_percent` |
+| `favour_percent`, `favour_cap` | `world::shop::favour` (before the cap; the cap `MAX_FAVOUR` + `favour_cap`, at most `MOST_FAVOUR`, which `Shops::price`/`offer` clamp to) |
+| `sell_percent` | `Shops::offer_more` from `World::deal` and `ShopView::offer` |
+| `credit` | `World::on_credit` in `turned_back` and `shop_step`, and `PerceptionView::owed_on_leaving` (no dialog): owing at most that, the player leaves, the debt stays on the bill |
+| `identify_trades` | `World::pay` (what was unpaid) and `World::trade` (what is sold, "That was …!") |
+| `item_worth`, `gem_worth` | `PerceptionView::appraisal` → `magic::describe::appraised` (the describe screen) |
+| `identify_carried` | `World::appraise_carried` from `live`: `Magic::carried` counts the seconds (saved, left out while 0) |
+| `gem_cut` | `gem::cut_finer` in `instantiate_level` (loose gems of a level made from then on) and `World::loot_of` (a drop) |
+| `skill` | `Actor::skill_effect`, as magic items' skill bonuses |
+| `make_way` | `World::refusal`: everyone budges (sizes and overloading still stop a swap) |
+| `missile_breaks` | `World::loose` (the break chance scaled) |
+| `checks` | the stat checks: `disease.rs` (both), `search_modifier`, `lockpick.rs`, `disarm_modifier`, `steps_lightly` |
+| `critical_confirm` | `Actor::stanced` → `Profile::confirm`, added to the confirmation roll in `combat::strike` |
+| `burden_ease` | `World::burdened` (added to Balance's ease) |
+| `disarm` | `Ability::Disarm`'s `had_by` |
+| `weapon { skill }`, `protection { per_piece }` | `TalentMods::weapon_benefit` (a fixed skill or style: Fencing's Duelist, Big hands' maces and unarmed); `talent_protection` counts the pieces worn with Protection |
 
 Effects that name a status (`second_wind`'s `cooldown`, `status_eases`, `no_penalty`,
 `critical_status`) or a damage type (`penetration`) are checked at load (statuses load before
@@ -89,32 +108,33 @@ talents) and resolved by `TalentMods::of(content, ...)`; `TalentEffect` is `Clon
 The `any_weapon_skill` need (`Need::AnyWeaponSkill`: `roles` and `of`, resolved to skill ids
 with its words at load) is what "a melee skill at 3" asks.
 
-## Class abilities
+## Class actives
 
-The class tables (`data/classes/NN-id.toml`, #243 for the warrior, barbarian, paladin, and monk)
-are passives and actives of the same `TalentEffect` kinds, plus the class's own. They are **not
-saved**: `Talents` is `(Vec<Taken>, #[serde(skip)] Vec<ClassAbilityId>)`, the second set by
-`class_ability::refresh` in `World::assemble` and by `World::class_level` in `level_up`, so a
-save, a replay, and the hash never see them (`Talents::none_taken` is the serde skip;
-`is_empty` counts both). `Talents::mods` sums the class abilities first, in level order, then
-the talents. A bonus pick is `Due::bonus`: `take_talent` spends it on a talent of
-`World::bonus_trees` first, else the level's own pick, else refuses; `settle_due` drops it when
-nothing in those trees may be taken; `levelup:auto` takes the first talent of those trees.
-Shared entries (`divine_health`/`purity_of_body`, `smite`, `deflect_missiles`, later `evasion`,
-`woodland_stride`, `second_wind`) are one effect kind each, repeated in each class's file; an
-active's name in the menu is the first class ability with it. Keys: the actives have none of
-their own (as Second wind; the abilities menu and its repeat key use them).
+The warrior, barbarian, paladin, and monk (#243) have their tables the way the everyday folk do:
+class-tree talents (`data/talents/`, `granted`) named by their class files' `abilities`, so
+they are held like any talent, saved with them, and read through `TalentMods`. Their effects are
+the talents' kinds and the class's own (the README of `data/talents/` lists them). The seven
+actives (`rage`, `veterans_wind`, `whirlwind`, `lay_on_hands`, `smite`, `radiance`,
+`quivering_palm`) are effects that `TalentEffect::active` maps to a `ClassActive`;
+`Content::class_active` finds the talent that has one, whose name and description the abilities
+menu shows and whose `requires_alignment` need the paladin's gifts ask. Shared entries are a
+talent each (`divine_health`, `purity_of_body`); the monk's Deflect missiles is the ordinary
+talent, handed out. Keys: the actives have none of their own (as Second wind; the abilities menu
+and its repeat key use them).
 
 ## Coverage policy
 
 `data/talents.toml` holds the closed `[[system]]` list and `[coverage]` (`min_talents = 2`,
 `min_class = 0` until every class has its table, `free_per_tree = 1`); class abilities are
-counted by `Content::load_class_abilities`. A talent must name systems from
+counted by `Content::check_class_tables`. A talent must name systems from
 the list; a system or tree marked `pending = true` is counted and shown in the wiki but not yet
 held to the bar. **A wave that brings a system's talents removes its `pending`** (and a tree's
 once it has a talent without prerequisites); `min_class` becomes 1 with the class tables. A new
 system of the game joins the list in the PR that ships its talents. The check runs at load, so
-`Content::builtin()` (and the game) fail on a gap; `content::talent::tests` covers the gaps.
+`Content::builtin()` (and the game) fail on a gap; `content::talent::tests` covers the gaps. Talents of a `class = true` tree are class abilities:
+not counted as talents, nor asked for a free one; the class abilities a system has are the
+talents the class tables give that name it (each once). `min_class` stays 0 until every class
+has its table (I1–I3).
 
 **Every new system ships with talents** (the owner, 2026-10-20; design §8.2), so no system is
 left with nothing that cares about it:
@@ -154,12 +174,20 @@ content (fixtures) never has a pick due.
 
 ## Tests
 
-`world/class_tests.rs` (the class tables: abilities by level and through saves, bonus picks,
-every passive's rule, the actives and their cooldowns, strayed paladins, replays);
+`world/class_active_tests.rs` (the adventurers' tables: abilities by level, bonus picks, every
+passive's rule, the actives and their cooldowns, strayed paladins, replays);
 `content/talent.rs` (loading, validation, the coverage gaps, choice chains), `talent.rs`
 (summing, ranks per choice, serialization), `world/talent_arms_tests.rs` (the Weaponcraft and Guard hooks, the role need's words), `world/damage_talent_tests.rs` (Elemental ward and Crusher, the damage-types bar), `world/talent_tests.rs` (dues and refusals,
 prerequisites in words, ranks and Hardy's growth, several levels at once and `levelup:auto`,
 dropped picks, every hook, a free-blow talent, saves and replays, perception and dumps).
+
+## Class tables
+
+The everyday folk (#246: aristocrat, commoner, craftsperson, merchant) have their tables: nine
+abilities each at 1, 6, 12, 18, 25, 32, 40, 50, 60 (34 class-tree talents, plus Riposte and
+Second wind, which their tables hand out), and bonus picks at 10, 20, 30, 45, 55. The
+warrior, barbarian, paladin, and monk (I1) have theirs, in `world/class_active_tests.rs`; the others come with I2–I3. `world/class_tests.rs` covers the grants, bonus picks,
+restores, replays, and every hook; `content::class::tests` the table checks.
 
 ## The trees so far
 

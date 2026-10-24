@@ -288,6 +288,8 @@ impl World {
             return;
         };
         let from = me.pos;
+        // Fletching (spec §8 "Class abilities"): the shooter's missiles break less often.
+        let more = me.talent_mods(&content).missile_breaks;
         let Some(stack) = me.inventory.get_mut(loose.item) else {
             return;
         };
@@ -304,6 +306,9 @@ impl World {
         // keeps its magic as it flies and lands (spec §8 "Magic items"), and a durable one breaks
         // less often.
         let breaks = break_chance(&missile, &content);
+        let breaks = u32::try_from(crate::talent::TalentMods::scaled(u64::from(breaks), more))
+            .unwrap_or(0)
+            .min(100);
         let lands = match def.lit {
             Some(lit) => Stack::one(lit),
             None => missile,

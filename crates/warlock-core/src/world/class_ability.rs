@@ -1,78 +1,22 @@
-//! Class abilities in the world (spec §8 "Class abilities", #243): what a class's level table
-//! gives. The abilities a player has are their class's at or below their level; they are not
-//! saved but set on the player's [`crate::talent::Talents`] whenever a world is made or loaded
-//! ([`refresh`]) and as each level comes ([`World::class_level`]), and their effects are read
-//! with the talents' through `Actor::talent_mods`. A level that brings one says so ("You can now
-//! rage."), and hands out what is given once (Mighty thews' scores) and Hardened's hit points.
-//!
-//! The actives are used from the abilities menu ([`crate::ability::Ability::Class`]) as
-//! [`Action::Use`] (`use:rage`, `use:smite:E`): Rage, Veteran's wind, Whirlwind, Lay on hands,
-//! Smite, Holy radiance, Quivering palm. Each refuses, taking no time, without the ability,
-//! while its cooldown (or the rage and the exhaustion after it) lasts, and while the player has
-//! strayed from the alignment it asks. Nothing here draws at random but the blows themselves.
+//! The class actives in the world (spec §8 "Class abilities"): what a class's level table gives
+//! that is used from the abilities menu ([`crate::ability::Ability::Class`]) as [`Action::Use`]
+//! (`use:rage`, `use:smite:E`): Rage, Veteran's wind, Whirlwind, Lay on hands, Smite, Holy
+//! radiance, Quivering palm. The abilities themselves are talents of the class tree, given as
+//! levels come (`world/class.rs`) and read through `Actor::talent_mods`. Each active refuses,
+//! taking no time, without the ability, while its cooldown (or the rage and the exhaustion after
+//! it) lasts, and while the player has strayed from the alignment it asks. Nothing here draws at
+//! random but the blows themselves.
 //!
 //! [`Action::Use`]: crate::action::Action::Use
 
-use super::{ActorId, Spent, World, WorldState};
+use super::{ActorId, Spent, World};
 use crate::ability::{Ability, Unavailable};
 use crate::action::{AttackKind, Event};
-use crate::content::{ActionKind, ClassAbilityId, ClassActive, Content, Factor, Stance};
+use crate::content::{ActionKind, ClassActive, Stance};
 use crate::geom::Dir;
 use crate::status::Effect;
 
-/// The class abilities the player of `state` has now: their class's at or below their level
-/// (none without a character).
-fn class_abilities(state: &WorldState, content: &Content) -> Vec<ClassAbilityId> {
-    let Some(character) = &state.character else {
-        return Vec::new();
-    };
-    let factor = Factor::of(content, Some(&character.spec));
-    let level = content.experience().level_for(state.experience, factor);
-    content.class_abilities_at(&character.spec.class, level)
-}
-
-/// Sets the player's class abilities from their class and level (a world made or loaded).
-pub(super) fn refresh(state: &mut WorldState, content: &Content) {
-    let abilities = class_abilities(state, content);
-    if let Some(player) = state.actors.get_mut(&state.player) {
-        player.talents.set_class(abilities);
-    }
-}
-
 impl World {
-    /// Level `level` came: the class abilities it brings join the player's, each said ("You can
-    /// now rage."), and what one gives once (a stat gift) is handed out. Returns the hit points
-    /// Hardened adds for this level past `hp_level` (0 below it or without it).
-    pub(super) fn class_level(&mut self, level: u8) -> i32 {
-        let content = self.content.clone();
-        let Some(class) = (self.state.character.as_ref()).map(|c| c.spec.class.clone()) else {
-            return 0;
-        };
-        let now = content.class_abilities_at(&class, level);
-        let new: Vec<ClassAbilityId> = (now.iter().copied())
-            .filter(|&id| content.class_ability(id).level == level)
-            .collect();
-        self.player_mut().talents.set_class(now);
-        for id in new {
-            let ability = content.class_ability(id);
-            if let Some(learn) = &ability.learn {
-                self.news.push(learn.clone());
-            }
-            for effect in &ability.effects {
-                if let crate::content::TalentEffect::StatGift { stat, value } = *effect {
-                    self.player_mut().stats.gift(stat, value);
-                }
-            }
-        }
-        let hardened = self.state.player().talent_mods(&content).hardened;
-        match hardened {
-            Some(bonus) if level > content.experience().hp_level() => {
-                self.level_hp(&content) + bonus
-            }
-            _ => 0,
-        }
-    }
-
     /// `use:ID[:DIR]` ([`crate::action::Action::Use`]): the player uses class active `active`,
     /// aimed `dir` if it asks for a direction. Refused, taking no time, without it, while it is
     /// unavailable, and without a direction it asks for.

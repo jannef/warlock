@@ -421,6 +421,7 @@ mod tests {
             bonus: 1,
             threat: 24,
             crit: 2,
+            confirm: 0,
             extra: None,
             penetration: 0,
             kinds: Default::default(),

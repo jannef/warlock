@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ The old hermit says: "Here we don't fight. Down in the arena, you may. The rats have the run of
+ the pit again, and their squeaking comes up the stairs all night. Kill three of them for --more--
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ The Hub  ·  HP 17/17  ·  Lv 1  ·  08:08  ·  11 Darkening, Year 1444  ·  ◑  ·  10 °C     ? controls

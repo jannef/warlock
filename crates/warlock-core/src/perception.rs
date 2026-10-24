@@ -68,7 +68,7 @@ use crate::burden::{self, Load};
 use crate::character::Character;
 use crate::combat::Health;
 use crate::content::Shops;
-use crate::content::{Choice, ClassAbility, TalentId, TreeId};
+use crate::content::{Choice, TalentId, TreeId};
 use crate::content::{
     CombatStance, Content, CreatureId, DamageTypeId, DiseaseId, FactionId, Factor, Flow,
     ItemClassId, LevelKind, LightId, ObjectId, RaceDef, RoomEffectDef, SlotId, Stance, StatusId,
@@ -130,6 +130,9 @@ pub struct OwnTalent {
     /// The choice it was taken for, by id.
     pub choice: Option<String>,
     pub description: String,
+    /// Their class gives it (spec §8 "Class abilities"): a class ability, or a talent their
+    /// class's table hands out at their level or below.
+    pub class: bool,
 }
 
 /// A talent as the Talents page and the level-up screen list it (spec §8 "Talents"): the rank
@@ -932,6 +935,16 @@ impl<'a> PerceptionView<'a> {
         &self.player.inventory
     }
 
+    /// What item descriptions show the player of worth (spec §8 "Class abilities": Keen
+    /// appraisal, Connoisseur, Appraiser), by their own abilities.
+    pub fn appraisal(&self) -> crate::magic::describe::Appraisal {
+        let talents = self.player.talent_mods(self.content);
+        crate::magic::describe::Appraisal {
+            worth: talents.item_worth,
+            gems: talents.gem_worth,
+        }
+    }
+
     /// The item class `stack` shows as (spec §7 "Objects and materials"): its base item's, which
     /// the player knows of anything they see, identified or not.
     pub fn item_class(&self, stack: &Stack) -> ItemClassId {
@@ -1131,6 +1144,11 @@ impl<'a> PerceptionView<'a> {
     /// never a rule's number.
     pub fn own_talents(&self) -> Vec<OwnTalent> {
         let book = self.content.talents();
+        let level = self.own_experience().level;
+        let class = (self.character)
+            .and_then(|c| self.content.class(&c.spec.class))
+            .map(|c| c.abilities_to(book, level))
+            .unwrap_or_default();
         (self.player.talents.iter())
             .filter_map(|taken| {
                 let id = book.id(&taken.id)?;
@@ -1143,16 +1161,9 @@ impl<'a> PerceptionView<'a> {
                     ranks: def.rank_count(),
                     choice: taken.choice.clone(),
                     description: def.description.clone(),
+                    class: class.contains(&id),
                 })
             })
-            .collect()
-    }
-
-    /// The abilities the player's class has given them at their level, in level order (spec §8
-    /// "Class abilities"); never the ones still to come.
-    pub fn own_class_abilities(&self) -> Vec<&'a ClassAbility> {
-        (self.player.talents.class().iter())
-            .map(|&id| self.content.class_ability(id))
             .collect()
     }
 
@@ -1356,6 +1367,8 @@ pub struct ShopView<'a> {
     content: &'a Content,
     /// The player's favour (`world::favour`), hidden: only prices come of it.
     favour: i32,
+    /// Percent more it pays the player for what it buys (spec §8 "Class abilities": Insured).
+    more: i32,
     /// The moment it is: rotten food is worth nothing (spec §8 "Hunger"), which only the
     /// prices tell.
     now: GameTime,
@@ -1409,7 +1422,8 @@ impl<'a> ShopView<'a> {
         if self.spoilt(stack) {
             return None;
         }
-        let offer = (self.shops).offer(self.content, self.shop.kind, stack, self.favour);
+        let offer =
+            (self.shops).offer_more(self.content, self.shop.kind, stack, self.favour, self.more);
         (offer > 0).then_some(offer)
     }
 
@@ -1441,6 +1455,7 @@ impl<'a> PerceptionView<'a> {
             shops,
             content: self.content,
             favour: favour(self.content, shops, self.player),
+            more: self.player.talent_mods(self.content).sell_percent,
             now: self.time,
         })
     }
@@ -1474,7 +1489,8 @@ impl<'a> PerceptionView<'a> {
 
     /// What the player owes, and to whom, if a step onto `to` leaves the open shop they stand in
     /// (onto ground they know is walkable): by a way out ([`ShopView::is_exit`]) the keeper turns
-    /// them back, any other way is theft, so presentation asks first.
+    /// them back, any other way is theft, so presentation asks first. Nothing when the keeper
+    /// lets them leave owing it (spec §8 "Class abilities": Credit).
     pub fn owed_on_leaving(&self, to: Pos) -> Option<(ShopView<'a>, u32)> {
         let view = self.shop_here()?;
         let walkable = match self.cell(to) {
@@ -1482,7 +1498,9 @@ impl<'a> PerceptionView<'a> {
             CellView::Unknown => false,
         };
         let owed = view.owed();
-        (!view.contains(to) && walkable && owed > 0).then_some((view, owed))
+        let credit = self.player.talent_mods(self.content).credit;
+        let on_credit = credit > 0 && owed <= credit;
+        (!view.contains(to) && walkable && owed > 0 && !on_credit).then_some((view, owed))
     }
 
     /// What the shop the player stands in offers for their own things among the inventory stacks

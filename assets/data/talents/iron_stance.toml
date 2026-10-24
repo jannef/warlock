@@ -1,0 +1,11 @@
+[[talent]]
+id = "iron_stance"
+name = "Iron stance"
+tree = "class"
+granted = true
+description = "Fighting aggressively costs your guard nothing, and fighting defensively costs your aim nothing."
+effects = [
+    { kind = "stance_dodge", stance = "aggressive", percent = 100 },
+    { kind = "stance_to_hit", stance = "defensive", percent = 100 },
+]
+systems = ["stances"]

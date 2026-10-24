@@ -1,0 +1,11 @@
+[[talent]]
+id = "mighty_rage"
+name = "Mighty rage"
+tree = "class"
+granted = true
+description = "Your rage makes you mightier still, and the exhaustion after it passes sooner."
+effects = [
+    { kind = "raise_percent", status = "raging", value = 100 },
+    { kind = "status_eases", status = "exhausted", value = 100 },
+]
+systems = ["status"]

@@ -1,0 +1,8 @@
+[[talent]]
+id = "stubborn"
+name = "Stubborn"
+tree = "class"
+granted = true
+description = "Too stubborn to fall ill or weak: you shrug off sickness a little better, and poison never saps your strength or your hands."
+effects = [{ kind = "checks", stat = "toughness", value = 1 }, { kind = "no_penalty", status = "poisoned" }]
+systems = ["diseases", "status"]

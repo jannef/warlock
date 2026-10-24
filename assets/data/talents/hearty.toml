@@ -1,0 +1,8 @@
+[[talent]]
+id = "hearty"
+name = "Hearty"
+tree = "class"
+granted = true
+description = "You make do with little: you grow hungry a little more slowly."
+effects = [{ kind = "hunger_percent", value = -10 }]
+systems = ["hunger"]

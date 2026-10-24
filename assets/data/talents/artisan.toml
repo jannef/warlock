@@ -1,0 +1,8 @@
+[[talent]]
+id = "artisan"
+name = "Artisan"
+tree = "class"
+granted = true
+description = "The work of a master: every piece of armour you wear gives Protection +1, and you do much more damage with every weapon you wield."
+effects = [{ kind = "protection", value = 1, per_piece = true }, { kind = "weapon", role = "melee", damage = 2 }]
+systems = ["protection", "combat"]

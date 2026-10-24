@@ -227,11 +227,13 @@ impl World {
     /// actor has as it begins.
     fn burdened(&self, id: ActorId, price: i64) -> i64 {
         let actor = &self.state.actors[&id];
-        let ease = actor.skill_effect(&self.content, Effect::Burden);
+        let talents = actor.talent_mods(&self.content);
+        // Hard work (spec §8 "Class abilities") eases the burden's slowdown on top of Balance.
+        let ease = actor.skill_effect(&self.content, Effect::Burden) + talents.burden_ease;
         let price = self.bloated(id, self.load_of(id).penalty().slow_eased(price, ease));
         let price = actor.effects.slow(&self.content, price);
         // Quick (spec §8 "Talents"): a little quicker in everything, as a higher speed would be.
-        match actor.talent_mods(&self.content).speed_percent {
+        match talents.speed_percent {
             0 => price,
             quick => quicker(price, quick),
         }

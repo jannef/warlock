@@ -47,10 +47,15 @@ pub(super) fn abilities(content: &Content) -> String {
 /// Who has class active `active`: the classes whose table gives it, from which level, by name
 /// ("paladins from level 12").
 fn class_holders(content: &Content, active: ClassActive) -> String {
+    let book = content.talents();
     let mut who: Vec<(String, u8)> = (content.classes().iter())
         .filter_map(|c| {
-            let a = c.abilities.iter().find(|a| a.active() == Some(active))?;
-            Some((c.name.to_lowercase(), a.level))
+            let (level, _) = c.abilities.iter().find(|(_, talent)| {
+                (book.id(talent)).is_some_and(|t| {
+                    (book.get(t).effects.iter()).any(|e| e.active() == Some(active))
+                })
+            })?;
+            Some((c.name.to_lowercase(), *level))
         })
         .collect();
     who.sort();

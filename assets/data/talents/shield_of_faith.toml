@@ -1,0 +1,11 @@
+[[talent]]
+id = "shield_of_faith"
+name = "Shield of faith"
+tree = "class"
+granted = true
+description = "Faith steadies your shield: Shield +1 to your Defence, and fighting with weapon and shield you bash with it more often."
+effects = [
+    { kind = "weapon", role = "shield_block", shield = 1 },
+    { kind = "weapon", role = "style", bash = 10 },
+]
+systems = ["defence", "styles"]

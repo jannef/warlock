@@ -22,91 +22,16 @@ kit = [
 ]
 # Bonus talents from Might and Vigour.
 bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["might", "vigour"] }
-
 # The level table (spec §8 "Class abilities"). The rage and the three that build on it move onto
 # a Rage pool with the alternative resources (#225).
-[[class.ability]]
-level = 1
-id = "rage"
-name = "Rage"
-description = "Fly into a rage (an ability): stronger and tougher, too wild to read; exhausted after, and no rage till then."
-effects = [{ kind = "rage", status = "raging" }]
-systems = ["status", "combat"]
-
-[[class.ability]]
-level = 6
-id = "thick_hide"
-name = "Thick hide"
-description = "Your skin is tough as leather: natural armour +2 while you wear no body armour."
-learn = "Your hide has thickened."
-effects = [{ kind = "natural_unarmoured", value = 2 }]
-systems = ["defence"]
-
-[[class.ability]]
-level = 12
-id = "fast_movement"
-name = "Fast movement"
-description = "Unburdened and in no body armour, you move a little quicker."
-learn = "You have grown fleet of foot."
-effects = [{ kind = "step_percent", value = -10, unarmoured = true, unburdened = true }]
-systems = ["speed", "burden"]
-
-[[class.ability]]
-level = 18
-id = "brutal_critical"
-name = "Brutal critical"
-description = "Your critical blows with a two-handed weapon strike harder."
-learn = "Your great blows have grown brutal."
-effects = [{ kind = "two_handed_crit", value = 1 }]
-systems = ["combat"]
-
-[[class.ability]]
-level = 25
-id = "hardened"
-name = "Hardened"
-description = "From now on every level adds to your hit points again, and a little more."
-learn = "You feel hardened."
-effects = [{ kind = "hardened", bonus = 1 }]
-systems = ["hit_points"]
-
-[[class.ability]]
-level = 32
-id = "mighty_thews"
-name = "Mighty thews"
-description = "Your body grows mightier: you become stronger and tougher, for good."
-learn = "Your thews swell with might."
-effects = [
-    { kind = "stat_gift", stat = "strength", value = 2 },
-    { kind = "stat_gift", stat = "toughness", value = 2 },
+abilities = [
+    { level = 1, talent = "rage" },
+    { level = 6, talent = "thick_hide" },
+    { level = 12, talent = "fast_movement" },
+    { level = 18, talent = "brutal_critical" },
+    { level = 25, talent = "hardened" },
+    { level = 32, talent = "mighty_thews" },
+    { level = 40, talent = "blood_frenzy" },
+    { level = 50, talent = "mighty_rage" },
+    { level = 60, talent = "unstoppable" },
 ]
-systems = ["combat", "burden"]
-
-[[class.ability]]
-level = 40
-id = "blood_frenzy"
-name = "Blood frenzy"
-description = "Every kill keeps your rage burning a little longer."
-learn = "You have learned to feed your rage with blood."
-effects = [{ kind = "blood_frenzy", seconds = 60 }]
-systems = ["status"]
-
-[[class.ability]]
-level = 50
-id = "mighty_rage"
-name = "Mighty rage"
-description = "Your rage makes you mightier still, and the exhaustion after it passes sooner."
-learn = "Your rage has grown mighty."
-effects = [
-    { kind = "raise_percent", status = "raging", value = 100 },
-    { kind = "status_eases", status = "exhausted", value = 100 },
-]
-systems = ["status"]
-
-[[class.ability]]
-level = 60
-id = "unstoppable"
-name = "Unstoppable"
-description = "While you rage, bleeding and poison cannot hurt you, and a blow that would fell you leaves you standing, though it ends the rage."
-learn = "You have become unstoppable."
-effects = [{ kind = "unstoppable", statuses = ["bleeding", "poisoned"] }]
-systems = ["status", "hit_points"]
