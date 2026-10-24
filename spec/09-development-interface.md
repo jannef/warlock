@@ -8,7 +8,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
 
 ```
 warlock --scenario showcase --seed 42                     # play a named scenario
-warlock --scenario depths --character dwarf,female,warrior # ... as a chosen character
+warlock --scenario depths --character dwarf,female,warrior --name Brakka # ... as a chosen character
 warlock --replay runs/doors.json \
         --freeze-time 1.5 --window 1280x720 --scale 1 \
         --capture out.png                                 # reproducible screenshot, then exit
@@ -29,14 +29,15 @@ cargo xtask golden [--update | --local]                   # compare golden scree
 - Replays are JSON: `{game_version, scenario, seed, character, steps: [{action, hash}]}`, the
   character `{race, gender, class}` (left out for a run without one; a replay without it starts
   as the scenario's character, so older replays still load). Actions use a text
-  syntax (`move:E wait open:E close:W ascend descend lantern hood rest:1h rest:dawn rest:dusk
+  syntax (`move:E wait open:E close:W pick:E ascend descend lantern hood rest:1h rest:dawn rest:dusk
   pickup pickup:ac drop drop:b sell:b pay pay:W equip:body:b remove:body bash:E fire:12,5
   throw:c:12,5 eat:b
   eat:floor:a dig:E search search:10 chat:E ask:E:rooms ask:E:quest-rats ask:E:accept-rats
   throw_voice:12,5 vision:darkvision
   skip:1h weather:rain stance:coward effect:fireball@12,5 effect:lightning_bolt@3,4>12,4
-  identify:a afflict:bleeding infect:filth_fever freeze:12,5,3 thaw:12,5,3`; `bash:DIR` bashes
-  with the held shield that way, `dig:DIR` digs toward a direction until the wall gives way or
+  identify:a afflict:bleeding infect:filth_fever talent:hardy talent:weapon_focus:long_blades
+  advance:stealth levelup:auto xp:2500 freeze:12,5,3 thaw:12,5,3`; `pick:DIR` tries
+  the lock of the door that way (§8 "Doors"), `bash:DIR` bashes with the held shield that way, `dig:DIR` digs toward a direction until the wall gives way or
   something interrupts; `search` searches the cells around the player once, `search:N` for up to
   N turns (1 to 100), stopping when something is found; `fire:X,Y` shoots at level cell (X, Y),
   `throw:LETTER:X,Y` throws one of inventory stack LETTER there; `eat:LETTER` eats one of
@@ -60,15 +61,21 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   on in slot SLOT (a slot id of `data/slots.toml`) and `remove:SLOT` takes off what is there;
   the dev weather override takes `clear`, `overcast`, `rain`, or `heavy`; the dev `afflict:ID`
   gives the player a degree more of status ID (`data/status.toml`), and `infect:ID` makes them
-  catch disease ID (`data/diseases.toml`); in scripts, `ACTION*N` repeats an
+  catch disease ID (`data/diseases.toml`); `talent:ID[:CHOICE]` takes a talent (an id in
+  `data/talents/`, with its choice) when a level's pick is due (§8 "Talents"; every other
+  action is refused until it is made), `advance:SKILL` spends a level's skill roll (none until
+  #230), the dev `levelup:auto` spends every choice due with the first the player may take, and
+  the dev `xp:N` grants N experience with the levels it brings; in scripts, `ACTION*N` repeats an
   action, e.g. `wait*10`); `hash` is the
   FNV-1a 64 hash of the
   canonical JSON encoding of `WorldState` after the step. Verification reports the first
-  diverging step. `--replay` takes its scenario, seed, and character from the file; `--record`
-  rewrites its file after every action (including replayed steps). `--character
+  diverging step. `--replay` takes its scenario, seed, character, and name from the file;
+  `--record` rewrites its file after every action (including replayed steps). `--character
   RACE,GENDER,CLASS`, like `--seed`, shapes the run that `--scenario`, `--new`, `--record`, or
   `--capture` starts (and `warlock-cli dump` and `replay --create`); without it, the scenario's
-  character.
+  character. `--name NAME` names that character (up to 20 characters; without it the scenario's
+  name for its own character, else one of the race's names from the seed, §8 "Character
+  creation"). Replays record the name (`"name"`, beside `"character"`).
 - Dump layers: `view`, `fov`, `memory` (terrain, the top object of each known pile, and known
   traps over them), `light`
   (perceived brightness of each visible cell as a digit, `0` dark to `9` fully lit or brighter),
@@ -85,18 +92,27 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   its thresholds, and what they weigh, `carried 4.2 kg (unburdened: burdened over 14 kg,
   strained over 28 kg, overloaded over 42 kg), total weight 74.2 kg`),
   `equipment` (the player's slots by letter, `c Body: a leather jerkin (b)`, `-` when empty),
-  `stats` (the player's race, gender, and class, `Race Dwarf`, their age, birthday, and
+  `stats` (the player's name, race, gender, and class, `Name Brakka`, `Race Dwarf`, their age, birthday, and
   sign, `Age 27`, `Born 3 Seedtide 1417`, `Sign Fire Manticore`, then their own scores as
-  the rules read them, `Strength 12`, then their status effects by name, `Effects Bleeding,
+  the rules read them, `Strength 12`, then their alignment band, `Alignment Kind` (never the
+  score), then their status effects by name, `Effects Bleeding,
   Diseased`, then the diseases they know they have, `Diseases filth fever`), `skills` (the player's trained skills in skill order, `Stealth 17`),
   `weapon_skills` (the player's weapon skills and fighting styles in file order with their rank
   and how far their marks are toward the next, `Long blades 2 (40%)`; at rank 10 the rank alone;
-  the styles they fight in now marked, `Duelist 1 (0%), in use`), and `quests`
+  the styles they fight in now marked, `Duelist 1 (0%), in use`), `talents` (the player's
+  talents in the order taken, each for its choice with its rank of how many, `Hardy 2/3`,
+  `Weapon focus (long blades)`; never what a rank gives), and `quests`
   (the quest log, active first: `Rats in the arena (active, from the old hermit): Kill 3 giant
   rats in the Arena. 0 / 3 killed.`) are built from the perception snapshot only;
-  `truth` (terrain, objects, traps hidden or known, secret doors as `S`, and creatures) and `actors` (every actor on
+  `truth` (terrain, objects, traps hidden or known, secret doors as `S`, and creatures),
+  `progress` (the level-up choices due, `due level 3: 1 talent`, the talents the player may
+  take now by id with the choices each may be taken for, `takeable healthy,
+  weapon_focus:{bows,slings}`, the creature types whose first kill has paid, and the stat
+  training marks, `stat marks St 3, To 1`; §8 "Talents", "Stats"),
+  and `actors` (every actor on
   the level with its hit
-  points and Defence, `hp 8/12 dv 13`, its
+  points and Defence, `hp 8/12 dv 13`, its alignment (`alignment evil`; the player's score and
+  band, `alignment 450 (good)`; §8 "Alignment"), its
   weight, base plus carried, what it carries and of that wears and wields, `equipped main_hand a
   spear` (magic items as they truly are, `an iron ring of the Bear (unidentified)`), what its
   magic items do to it by effect id, `magic strength +1 light item_glow`, its burden and carrying
@@ -127,11 +143,14 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   `identified`, and `magic`: `{level, name, affixes: [{id, tier, value}]}` once identified, else
   null; an unpaid stack with its price, `unpaid`), equipment (by slot id: letter, object, count), weight, burden (`burden: {level,
   limit}`, the limit in grams), character
-  (`{race, gender, class, raised, age, born: {year, month, day}, sign: {animal, element}}` or
-  null), scores (`stats`, by stat id), trained skills (`skills`, by skill id with their values),
+  (`{name, race, gender, class, raised, age, born: {year, month, day}, sign: {animal, element}}` or
+  null), scores (`stats`, by stat id), the alignment band (`alignment`, its id, or null without
+  alignment rules), trained skills (`skills`, by skill id with their values),
   status effects (`effects`, by id), the diseases they know they have (`diseases`, by id),
   weapon skills and fighting styles (`weapon_skills`, by skill id: `{rank, progress}`, the
   progress a percent or null at rank 10), the styles in use (`styles_in_use`, style ids), the
+  talents (`talents`, in the order taken: `{id, name, rank, ranks, choice}`) and the level-up
+  choices due (`due`: `{level, talents}`, or null), the
   quest log (`quests`: `[{id, name,
   kind, active, completed, giver, objective, status}]`), hit points (`hp: {current, max}`),
   Defence (`defence`, the total), hunger (`hunger`: `bloated` … `starving`, or null when nobody
@@ -157,7 +176,8 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   set the next weather for three hours (`F7`, recorded as `weather:overcast` and so on), identify
   everything carried (`F8`, recorded as `identify`; §8 "Magic items").
   They are commands of their own context in the bindings table, read (and listed by Controls
-  and the `?` help, which can rebind them) only where they work.
+  and the `?` help, which can rebind them) only where they work. Dev builds (debug, or `--dev`)
+  also give New run its seed field (§6 "Main menu"); elsewhere a new run's seed is random.
 - CLAUDE.md documents build commands, architecture notes, pinned documentation references, and
   verification procedures, including the agent workflow guidance from the original brief.
   Verification uses tests, dumps, logs, and screenshots — a successful compile alone does not

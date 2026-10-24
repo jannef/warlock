@@ -463,6 +463,6 @@ fn descriptions_say_base_stats_and_known_affixes_in_words() {
     let mut arrows = Stack::one(object(&c, "arrow"));
     arrows.count = 12;
     let arrows = text(&arrows);
-    assert_eq!(arrows[0], "12 arrows · wood · 360 g");
+    assert_eq!(arrows[0], "12 arrows · iron head, wood shaft · 360 g");
     assert!(arrows.contains(&"Ammunition, quivered; shot from bows".to_string()));
 }

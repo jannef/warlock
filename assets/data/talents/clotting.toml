@@ -1,0 +1,8 @@
+[[talent]]
+id = "clotting"
+name = "Clotting"
+tree = "vigour"
+description = "Your wounds close fast: a heavy blow does not make you bleed, a deadly one less, and bleeding stops twice as fast."
+needs = { stats = { toughness = 12 } }
+effects = [{ kind = "clotting" }, { kind = "status_eases", status = "bleeding", value = 100 }]
+systems = ["status"]

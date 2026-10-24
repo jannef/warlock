@@ -7,7 +7,9 @@ Content (`assets/data`, `assets/levels`, `assets/scenarios`, `assets/vaults`) is
 `warlock-core` at build time by `build.rs`. Level maps are ASCII with a legend; see
 `assets/levels/hub.toml` and spec §7. A legend entry with a `creature` may set `faction = "peaceful"` (any id in
 `data/factions.toml`) to override its type's faction for that spawn (`Actor::faction_override`; read it with
-`Actor::faction`, never the creature type's, when computing stance). The showcase (hub, vast, courtyard) is safe
+`Actor::faction`, never the creature type's, when computing stance), and `alignment = "good"`
+to override its type's alignment the same way (`Actor::alignment_override`, read with
+`Actor::nature`; `docs/dev/alignment.md`). The showcase (hub, vast, courtyard) is safe
 this way: `xtask/src/vast.rs` emits it for its rats and kobolds; fighting is the arena's and the Depths'. A level
 file's optional `arrival = "..."` line is said when the player arrives by stairs. `secret =
 true` (or a difficulty) on a closed door makes it a secret door: the cell shows the wall around
@@ -20,8 +22,9 @@ renderer through `PerceptionView::flow` (visible cells only); no rule reads it.
 ## Content directories
 
 The tables that grow entry by entry are directories, so two PRs adding an entity never touch
-the same file: `assets/data/creatures/`, `objects/` (base items included), `materials/`, and
-`affixes/`, **one file per entity, named by its id** (`creatures/kobold.toml`,
+the same file: `assets/data/creatures/`, `objects/` (base items included), `materials/`,
+`affixes/`, `talents/`, and `classes/`, **one file per entity, named by its id** (classes as
+`NN-id.toml`: their order is the order New run offers them, so the number keeps it) (`creatures/kobold.toml`,
 `affixes/of_the_bear.toml`). A family file holds several entries only for a tight set of
 variants always edited together, named after the family (`objects/arrows.toml`: the arrow, the
 flaming arrow, and the burning arrow it flies as). Each directory's `README.toml` is comments

@@ -1,9 +1,16 @@
 # Experience (spec §8 "Experience"): the player's levels and what a kill is worth. XP numbers and
 # the level are shown (ADOM-like); nothing else here is.
 #
-# Thresholds: the XP total needed to reach level n is linear × (n − 1) + quadratic × (n − 1)².
-# With 10 and 10 that is 10 × n × (n − 1): level 2 at 20, level 3 at 60, level 4 at 120, level 10
-# at 900, level 50 at 24500. max_level is the cap; XP beyond it still counts but buys nothing.
+# Thresholds, in kills (the [kills] table): with m = n − 1, a level n costs
+# k(n) = plateau × m ÷ (m + ramp) + slope_per_100 ÷ 100 × m kills of the player's own level, each
+# worth the creature XP guideline, per_level × n + base. That level's XP is k(n) × guideline(n),
+# rounded, and the XP total needed to reach level n is the sum of those for levels 2 to n. With
+# 213, 5, and 285: 38 kills for level 2 (767 XP), 163 for level 10 (45 052 XP in all), 365 for
+# level 60 (2 861 748 XP in all); about 3 000 kills of your own level to reach level 20 and
+# 15 000 to reach level 60. The first term ramps quickly toward a plateau, the second keeps every
+# level costlier than the last. A character's thresholds are these times their race's and their
+# class's `experience` percents (races.toml, classes/), rounded: an elf wizard needs 175 %,
+# a half-orc commoner 72 %. max_level is the cap; XP beyond it still counts but buys nothing.
 #
 # Hit points: each level gained up to hp_level (inclusive) adds max(1, class hp ÷ 2 + the
 # Toughness modifier) to the maximum, and the same to the current hit points. No runaway pools.
@@ -13,13 +20,36 @@
 # gives xp × (1 − difference ÷ ZD): the "zero difference" ZD grows with the player's level, and at
 # a difference of ZD or more (a grey monster) the kill gives nothing. Any other kill gives at
 # least 1.
+#
+# Discovery (the [discovery] table; optional, none without it): the player's first kill of each
+# creature type gives first_kill percent of the type's XP once more, whatever their levels ("You
+# learn something of kobolds."), and their first arrival on a level gives arrival × the level's
+# item level (a dungeon level's depth; a hand-made level's `item_level`, default 1). The level a
+# run starts on, the overworld, and its local areas give none. Neither draws anything at random.
+#
+# Levels (the [levels] table; spec §8 "Talents"): every talent_every-th level (3: levels 3, 6,
+# 9, ...) brings a talent pick (talents.toml), chosen on the spot: nothing is banked. 0, or no
+# table: never.
 
-max_level = 50
-linear = 10
-quadratic = 10
+max_level = 60
 hp_level = 20
 bonus_percent = 5
 bonus_levels = 4
+
+# The curve in kills of the player's own level, and the creature XP guideline that turns kills
+# into XP (new creatures should be worth about guideline XP at their level).
+[kills]
+plateau = 213
+ramp = 5
+slope_per_100 = 285
+guideline = { per_level = 5, base = 10 }
+
+[discovery]
+first_kill = 100
+arrival = 5
+
+[levels]
+talent_every = 3
 
 # ZD from each player level on, in order.
 [[zero_difference]]
@@ -57,3 +87,15 @@ zd = 13
 [[zero_difference]]
 from = 45
 zd = 14
+
+[[zero_difference]]
+from = 50
+zd = 15
+
+[[zero_difference]]
+from = 55
+zd = 16
+
+[[zero_difference]]
+from = 60
+zd = 17

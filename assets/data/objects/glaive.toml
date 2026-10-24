@@ -5,6 +5,7 @@ glyph = ")"
 fg = "#b0a898"
 class = "melee_weapons"
 materials = ["iron"]
+made_of = ["metal"]
 ornament = "inlay"
 weight = 5000
 value = 90

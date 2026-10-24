@@ -10,22 +10,25 @@ when your character is made; the rest you are **untrained** in.
 - A trained skill has a **value**, usually between 5 and 30 when you start. 100 is a
   master. Past 100 a skill still grows, but slowly.
 - `S` shows your **Skills** screen: every skill you are trained in, with its value, and beside it
-  a small meter (`━━──`) of how near it is to its next point. Use the arrow keys to read what each
+  a small meter (`━━──`) of how practised it is: how big its next roll at a level-up will be
+  (see [Getting better](#getting-better)). Use the arrow keys to read what each
   skill is about. It takes no time. `S` on the [character screen](character.md) (`@`) opens it
   too, and the summary at the end of character creation lists the skills you will start with.
 
 What a skill does for you is never shown in numbers in the game: you see the value, and feel the
-difference. This page gives the rules.
+difference. This page gives the rules, with the exact numbers.
 
 ## The skills
 
 Some skills work by themselves, all the time (**passive**); some will be used as **actions**
 (searching, picking a lock, binding a wound); some are **read by rules** when something calls for
 them (athletics when you kick a door). For now only the passive skills, Appraise, Athletics
-(kicking doors in, see [Doors](doors.md)), and Search (see [Searching](searching.md)) do
-something: the others are there to be trained, and get their uses as the game grows. The skills
-used as actions are in the [abilities menu](abilities.md) once you are trained in them, greyed
-out until their uses come.
+(kicking doors in, see [Doors](doors.md)), Search (see [Searching](searching.md)), Disable
+device (disarming traps, see [Traps](traps.md#disarming-traps)), and Open lock (picking locks,
+see [Doors](doors.md#picking-locks)) do something: the others are there to be trained, and get
+their uses as the game grows. The skills used as actions are in the [abilities
+menu](abilities.md) once you are trained in them, greyed out until their uses come; Disable
+device's use is there as **Disarm a trap**, Open lock's as **Pick lock**.
 
 {{#include generated/skills.md}}
 
@@ -48,6 +51,8 @@ The passive skills help you more the higher they are:
   master's search reaches a cell farther (see [Searching](searching.md)).
 - **Spot** lets you notice hidden things in passing at all, and the higher it is, the more you
   notice.
+- **Open lock** lets you pick locks at all (the Pick lock ability), and the higher it is, the
+  more often a try works (see [Doors](doors.md#picking-locks)).
 
 {{#include generated/skill-benefits.md}}
 
@@ -62,28 +67,46 @@ so they never change a stat.
 {{#include generated/skill-grants.md}}
 
 Some creatures are trained in skills too: deer listen well, and the kobold shaman knows something
-of spells. You never see a creature's skills.
+of spells. You never see a creature's skills in the game; they are on
+[Creatures in numbers](creature-numbers.md#stats-and-skills).
 
 ## Getting better
 
-Skills grow by use, the way ADOM does it: each time you use a skill in a way that matters, it may
-earn a **training mark**. The chance is shown in the table of skills above; skills you use all the
-time, such as balance, earn marks rarely, so they do not race ahead.
+Skills grow the way ADOM does it: **use charges a skill, and each new level cashes it in.**
+
+**Training marks.** Each time you use a skill in a way that matters, it may earn a **training
+mark**. The chance is shown in the table of skills above; skills you use all the time, such as
+balance, earn marks rarely, so they do not race ahead.
 
 - **Stealth**: a step that a creature nearby could have heard, if you had not stepped softly.
 - **Listen**: hearing something new.
 - **Tumble**: dodging an attack ("You dodge the kobold's spear.").
 - **Balance**: doing anything but waiting while your load slows you down.
 - **Survival**: a journey on the overworld.
+- **Open lock**: a try at picking a lock, whether it works or not.
 
-Only skills you are trained in earn marks. When a skill has enough marks it gains a point, and the
-game tells you: "Your stealth improves."
+Only skills you are trained in earn marks. Marks raise nothing by themselves: they gather until
+your next level. The Skills screen's meter shows how practised a skill is (the step its marks
+have reached on the ladder below), never the marks.
 
-**This is provisional.** How skills increase is not settled yet; for now marks alone do it. A
-point needs a few marks at first, a few more the higher the skill is, and past 100 three times as
-many: reaching 120 takes about as many marks as the whole way to 100.
+**Skill rolls.** Every level gives you a number of **skill rolls** (see
+[Experience](experience.md)). You spend each one on a trained skill of your choice, before you
+do anything else; nothing stops you putting every roll into one skill. A roll throws the die the
+skill's marks have reached on the ladder and adds it to the skill, and spends half of the skill's
+marks (rounded up), so a second roll on the same skill that level is a step or two smaller
+(50 marks → 25 → 12 → 6 → 3: `3d3`, `2d4`, `1d5`, `1d3`, `+1`). A skill with no marks still
+gains 1. Past 100 a roll adds half its result, rounded up. The game says "Your stealth improves."
 
-{{#include generated/skill-increase.md}}
+- A skill your **class is known for** (its `2d6+10` skills) throws the die one step up the
+  ladder.
+- Any **other skill your class trains**, or a skill **your race trains**, adds 1 to the roll.
+  Both stack: a halfling thief's stealth is known for and racial, one step up and +1.
+
+{{#include generated/skill-ladder.md}}
+
+How many rolls a level gives: your class's, plus your race's, plus your Intelligence's.
+
+{{#include generated/skill-rolls.md}}
 
 Only you train, for now; creatures keep the skills they have. Your skills and their marks are
 saved with your run.

@@ -1,0 +1,12 @@
+# No armour.
+[[material]]
+id = "obsidian"
+name = "obsidian"
+group = "stone"
+color = "#2a2433"
+weight = 75
+to_hit = 0
+damage = 0
+value = 30
+rarity = { weight = 100 }
+gear = { weight = 100 }

@@ -1,0 +1,22 @@
+[[class]]
+id = "druid"
+name = "Druid"
+description = "A keeper of the old ways who speaks for forest and beast: hardy and patient, and uneasy in towns."
+stats = { toughness = "1d2", willpower = "2d2", presence = -1 }
+hp = 4
+experience = 115
+skills = { handle_animal = "2d6+10", survival = "2d6+10", concentration = "2d4+4", heal = "2d4+4", listen = "2d4+4" }
+known_for = ["handle_animal", "survival"]
+rolls = 2
+weapon_skills = { staves = 2, slings = 1 }
+styles = { staff_fighter = 1 }
+# Staff and sling, a stone pouch, and the forest's gifts: a healing root and windfall apples.
+kit = [
+    { wield = "quarterstaff" },
+    { wield = "sling" },
+    { wield = "sling_stone*20" },
+    { wear = "travelling_cloak" },
+    "angelica_root",
+    "apple*4",
+    "gold_coin*3",
+]

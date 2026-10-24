@@ -1,30 +1,43 @@
 # Your character
 
-Every new run starts with **character creation**: after you pick a scenario and a seed on the
-New run screen, you choose who you are, one step at a time.
+Every new run starts with **character creation**: after you pick a scenario on the New run
+screen, you choose who you are, one step at a time.
 
 1. **Race**: your people, which shapes your stats, gives you your eyes, and sets how old you can
    be (see [Races](races.md)).
 2. **Gender**: a small push to one stat (below).
 3. **Class**: what you did before the adventure, which shapes your stats again and trains you
    in a handful of [skills](skills.md) (see [Classes](classes.md)).
-4. **Summary**: your race, gender, and class, your age, birthday, and birth sign, the
+4. **Name**: type your character's name, up to 20 characters (below).
+5. **Summary**: your name, race, gender, and class, your age, birthday, and birth sign, the
    [stats](stats.md) you will start with and, beside them, the [skills](skills.md) you are
-   trained in, your vision, and the scenario and seed. **Start the run** begins it; **Race**,
-   **Gender**, and **Class** take you back to that step.
+   trained in, your [starting kit](starting-kit.md) item by item, the
+   [alignment](alignment.md) you start in, your vision, and the scenario. **Start the run**
+   begins it; **Name**, **Race**, **Gender**, and **Class** take you back to that step.
 
-Each step lists its options with a short description, and for races and classes how they change
-your stats. Move with the arrow keys (or `j` and `k`), press `Enter` to choose and go on, and `Esc`
-to go back one step. When you go back and forward again, the steps remember what you chose.
-Every step also has **Random**, which picks an option for you. Random choices come from the run's
-seed, so the same seed rolls the same choices; pressing Random again rolls again.
+Each choice step lists its options with a short description, and for races and classes how they
+change your stats. Move with the arrow keys (or `j` and `k`), press `Enter` to choose and go on,
+and `Esc` to go back one step. When you go back and forward again, the steps remember what you
+chose. Every choice step also has **Random**, which leaves the choice to chance; come back and
+press it again for another.
+
+## Name
+
+On the name step every key types what it types (`j` and `k` too), as long as the game's font
+can draw it. `Backspace` erases, `Tab` puts in one of your people's names (by race and gender,
+picked at random; press it again for another), and `Enter` accepts. A name cannot be
+empty: accept an empty field and you get the random name it shows, dimmed. You can rebind these
+keys in Controls, under **Text fields**. Your name is shown on the character screen, the summary,
+the death screen, and the list of saved characters (see [Saving](saving.md)); it changes nothing
+else.
 
 ## Gender
 
 {{#include generated/genders.md}}
 
-For **other**, the stat comes from the run's seed: the same seed always raises the same stat.
-The gender step names it for the seed you chose, and so do the summary and the character screen.
+For **other**, fate chooses the stat. Character creation does not tell you which, and the summary
+shows only your final scores; once the run has begun, the character screen names it, with the
+rest of your character.
 
 ## Age, birthday, and sign
 
@@ -47,19 +60,19 @@ Some changes are **dice**, rolled in the background when you start, the way ADOM
 - A plain number, such as `+2` or `−1`, is always that.
 
 Classes roll their key stats: a warrior's Strength is `1d3+1`, a wizard's Intelligence `2d2+1`.
-Races are mostly plain numbers, with a little dice; the horoscope rolls none. The rolls come from
-the run's seed and your choices, so the same seed and the same choices always make the same
-character. The summary shows only the final scores, after the rolls; change a choice and the dice
-are rolled again.
+Races are mostly plain numbers, with a little dice; the horoscope rolls none. The summary shows
+only the final scores, after the rolls; change a choice and the dice are rolled again.
 
 The choices are not balanced, and they are not meant to be. Some combinations are poor on
 purpose: a halfling commoner, or a gnome barbarian, makes for a hard start. That is part of the
-fun.
+fun. The poor choices have one consolation: your race and class also set how much
+[experience](experience.md#levels) each level needs, and the long-lived races and the patient
+callings level slowly, while short-lived races and everyday folk level quickly.
 
 ## Seeing who you are
 
 The character screen (`@`) shows your race, gender, and class, your age, birthday, and sign,
-your stats, your level and experience (see [Experience](experience.md)), and your hit points (your Toughness plus what your race and class give; see
+your stats, your [alignment](alignment.md), your level and experience (see [Experience](experience.md)), and your hit points (your Toughness plus what your race and class give; see
 [Combat](combat.md#hit-points)), Defence, and Protection (see
 [Combat](combat.md#protection)), what ails you (see
 [Status effects](status-effects.md)) and which diseases you know you have (see

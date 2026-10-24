@@ -67,6 +67,12 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   rare finds, larger and finer deeper down, and what rings, amulets, and now and then weapons,
   shields, and helms are set with: "an emerald-pommelled long sword", "a gold and ruby ring".
   General stores buy them at what they are worth.
+- **Materials** — seventeen metals, from tin to nicrosil, and woods, bones, stones, hides, and
+  cloths, each with its weight, what it does as a blade or as armour, its worth, and its colour.
+  Items are found made of other materials than their usual one, by what each may be made of: "a
+  bronze long sword" (heavier, a little weaker, cheaper), "a flint spear", "a dragonbone
+  quarterstaff". Copper and bronze are common near the surface, steel deeper; kobolds carry
+  bone, flint, and bronze.
 - **Scrolls** — read with `r`: scrolls of fireball, lightning, and frost cast the traps' spells
   where you aim them (a fireball read too close asks first), and what they kill is yours; a
   scroll of identify tells you what an unidentified item is. They lie in the Depths and sell in
@@ -206,7 +212,7 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   ![A forest clearing in Thornwood at noon](images/m9-forest-clearing.png)
 
 - **Levels** — the hub, a sunlit courtyard, the arena, the quarry, the Frost Grotto, the trap hall, a 420×300 cavern, and "The Depths": rooms-and-corridors
-  and cave levels generated from the run seed (numbers or words), with hand-made vaults stamped in.
+  and cave levels generated for each run, with hand-made vaults stamped in.
 - **Special rooms** — ADOM-like, about one level of the Depths in three has a room that changes
   the rules inside it, announced the first time you step in: a shadowed room that drains every
   light, an echoing hall that makes every sound loud, a hushed chamber for sneaking, a softly

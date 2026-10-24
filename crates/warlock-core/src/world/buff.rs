@@ -46,10 +46,11 @@ impl World {
     fn kind_of(&self, action: &Action) -> Option<ActionKind> {
         Some(match action {
             Action::Move(dir) | Action::Pay(Some(dir)) => self.move_kind(*dir),
-            Action::Wait | Action::Rest(_) => ActionKind::Wait,
+            Action::Wait | Action::Rest(_) | Action::SecondWind => ActionKind::Wait,
             Action::Open(_) => ActionKind::OpenDoor,
             Action::Close(_) => ActionKind::CloseDoor,
             Action::Kick(_) => ActionKind::Kick,
+            Action::PickLock(_) => ActionKind::PickLock,
             Action::Ascend | Action::Descend => ActionKind::Stairs,
             Action::ToggleLantern => ActionKind::Lantern,
             Action::HoodLantern => ActionKind::Hood,
@@ -67,6 +68,7 @@ impl World {
             Action::Read { .. } => ActionKind::Read,
             Action::Dig(_) => ActionKind::Dig,
             Action::Search(_) => ActionKind::Search,
+            Action::Disarm(_) => ActionKind::Disarm,
             Action::Sell(_)
             | Action::Pay(None)
             | Action::SetStance(_)
@@ -77,6 +79,10 @@ impl World {
             | Action::Identify(_)
             | Action::Afflict(_)
             | Action::Infect(_)
+            | Action::Talent { .. }
+            | Action::Advance(_)
+            | Action::LevelUpAuto
+            | Action::GrantXp(_)
             | Action::Freeze { .. }
             | Action::Thaw { .. } => return None,
         })

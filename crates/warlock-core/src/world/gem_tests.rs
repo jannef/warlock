@@ -256,7 +256,9 @@ fn an_ornament_adds_its_gems_worth_to_its_item() {
     let set_ring = set(&content, "gold_ring", "setting", "ruby", "small", "fair");
     assert_eq!(set_ring.value(&content), u64::from(ring.value) + 300);
     // The gold amulet's own ruby setting gives way to a sapphire: the plain parts left (the
-    // gold chain, 90%) are worth 90% of its value, and the sapphire its own.
+    // gold chain, 90% of its weight but nearly all of its materials' worth, gold being worth
+    // twenty times the ruby's material) are worth 200 × 90 × 2000 / (90 × 2000 + 10 × 100), and
+    // the sapphire its own.
     let amulet = set(
         &content,
         "gold_amulet",
@@ -265,7 +267,7 @@ fn an_ornament_adds_its_gems_worth_to_its_item() {
         "small",
         "fair",
     );
-    assert_eq!(amulet.value(&content), 180 + 280);
+    assert_eq!(amulet.value(&content), 199 + 280);
     // Weight: an ornament weighs nothing beside its item; a loose gem what its size says.
     assert_eq!(pommelled.weight(&content), u64::from(sword.weight));
     assert_eq!(gem(&content, "ruby", "huge", "fair").weight(&content), 4);
@@ -484,7 +486,12 @@ fn placements_and_items_name_their_gems() {
             "is no gem",
         ),
         ("cut = \"fine\"", "cut = \"sparkly\"", "no cut `sparkly`"),
-        ("of = \"emerald\"", "of = \"steel\"", "are gems"),
+        (
+            "of = \"emerald\"",
+            "of = \"steel\"",
+            "only a gem has a `size`",
+        ),
+        ("of = \"emerald\"", "of = \"marble\"", "no such material"),
         (
             "of = \"emerald\"",
             "part = \"pommel\", of = \"emerald\"",
@@ -579,7 +586,9 @@ fn loot_sets_rings_often_and_weapons_sometimes() {
             continue;
         };
         let class = content.object(stack.object).class;
-        let ornamented = stack.gem(&content).is_none() && stack.own_parts().is_some();
+        // Set with a gem (its material may be its own or another, #193).
+        let ornamented =
+            stack.gem(&content).is_none() && stack.parts(&content).iter().any(|p| p.gem.is_some());
         if ornamented {
             // Never an uncut gem in an item, and the item's main part is its own.
             let parts = stack.parts(&content);

@@ -1,3 +1,7 @@
+# Colour only; never found as another item's material.
 [[material]]
 id = "stone"
 name = "stone"
+group = "stone"
+color = "#8c8a84"
+weight = 80

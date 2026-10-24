@@ -173,7 +173,8 @@ fn effect_words(effect: ItemEffect) -> String {
     }
 }
 
-/// What a tier rolls, in words: `+1–2`, `1d3–1d4`, `20–35%`; speed in words only.
+/// What a tier rolls, exactly: `+1–2`, `1d3–1d4`, `20–35%`, `5–8% less time` (speed takes its
+/// percent off the cost, `magic::mods::faster`).
 fn tier_value(effect: ItemEffect, tier: &warlock_core::content::Tier, content: &Content) -> String {
     let range = |prefix: &str, suffix: &str| {
         if tier.min == tier.max {
@@ -181,11 +182,6 @@ fn tier_value(effect: ItemEffect, tier: &warlock_core::content::Tier, content: &
         } else {
             format!("{prefix}{}–{}{suffix}", tier.min, tier.max)
         }
-    };
-    let faster = |p: i32| match p {
-        ..=7 => "a little faster",
-        8..=12 => "faster",
-        _ => "much faster",
     };
     match effect {
         ItemEffect::ExtraDamage | ItemEffect::Elemental if tier.min == tier.max => {
@@ -196,14 +192,7 @@ fn tier_value(effect: ItemEffect, tier: &warlock_core::content::Tier, content: &
         }
         ItemEffect::Resistance => range("+", "%"),
         ItemEffect::Draw => range("", " less"),
-        ItemEffect::AttackSpeed | ItemEffect::MoveSpeed => {
-            let (lo, hi) = (faster(tier.min), faster(tier.max));
-            if lo == hi {
-                lo.to_string()
-            } else {
-                format!("{lo} to {hi}")
-            }
-        }
+        ItemEffect::AttackSpeed | ItemEffect::MoveSpeed => range("", "% less time"),
         ItemEffect::Durability
         | ItemEffect::Weight
         | ItemEffect::Stealth

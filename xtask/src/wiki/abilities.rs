@@ -19,6 +19,9 @@ pub(super) fn abilities(content: &Content) -> String {
     for a in every {
         let who = match a {
             Ability::Skill(_) => "everyone trained in the skill",
+            Ability::Disarm => "everyone trained in Disable device",
+            Ability::PickLock => "everyone trained in Open lock",
+            Ability::SecondWind => "everyone with the Second wind talent (not while winded)",
             Ability::ShieldBash => "everyone (usable with a shield in hand)",
             Ability::ThrowVoice => "everyone",
             Ability::HoodLantern => "everyone (it needs a lantern with a hood)",

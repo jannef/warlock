@@ -22,11 +22,18 @@ pub struct Args {
     pub seed: Option<u64>,
 
     /// The character to start a new run as, RACE,GENDER,CLASS (e.g. `dwarf,female,warrior`; ids
-    /// from `data/races.toml` and `data/classes.toml`; gender male, female, or other); defaults
+    /// from `data/races.toml` and `data/classes/`; gender male, female, or other); defaults
     /// to the scenario's. Like `--seed`, it applies to the run that `--scenario`, `--new`,
     /// `--record`, or `--capture` starts; a replay's character wins.
     #[arg(long)]
     pub character: Option<CharacterSpec>,
+
+    /// The name of the character a new run starts as (up to 20 characters); defaults to the
+    /// scenario's for its own character, else one of the race's names picked from the seed.
+    /// Like `--character`, it applies to the run that `--scenario`, `--new`, `--record`, or
+    /// `--capture` starts; a replay's name wins.
+    #[arg(long)]
+    pub name: Option<String>,
 
     /// Apply this replay file at startup (its scenario and seed win); hashes are verified and a
     /// divergence is logged as a warning.
@@ -72,8 +79,8 @@ pub struct Args {
     pub new: bool,
 
     /// Enable developer features in release builds (F2 reveal map, F3 next vision profile, F4
-    /// light values, F5/F9 snapshots, F6 skip an hour, F7 next weather). Always on in debug
-    /// builds.
+    /// light values, F5/F9 snapshots, F6 skip an hour, F7 next weather, New run's seed field).
+    /// Always on in debug builds.
     #[arg(long)]
     pub dev: bool,
 
@@ -122,9 +129,11 @@ pub struct Args {
     #[arg(long, value_name = "FILE")]
     pub import_keys: Option<PathBuf>,
 
-    /// Dev: open this screen at startup, even with `--capture`. `main` and `new-run` open on the
-    /// main menu, and so do character creation's `race`, `gender`, `class`, and `summary` (over
-    /// New run and the steps before them, each on its preselection: the scenario's character);
+    /// Dev: open this screen at startup, even with `--capture`. `main`, `new-run`, and
+    /// `characters` (the saved characters: with `--capture`, those in `--save-dir`, read only)
+    /// open on the main menu, and so do character creation's `race`, `gender`, `class`, `name`,
+    /// and `summary` (over New run and the steps before them, each on its preselection: the
+    /// scenario's character, an empty name);
     /// `pause`, `help`, `inventory`, `equipment`, `character`, `pick-up`, and `drop` over a run,
     /// `equip-item` (choosing what goes in the first slot) over the equipment screen, and
     /// `describe` (what the first stack carried is) over the inventory; `settings`, `files`
@@ -172,10 +181,12 @@ impl Args {
         match self.screen {
             Some(
                 ScreenName::Main
+                | ScreenName::Characters
                 | ScreenName::NewRun
                 | ScreenName::Race
                 | ScreenName::Gender
                 | ScreenName::Class
+                | ScreenName::Name
                 | ScreenName::Summary,
             ) => true,
             Some(s) if s.needs_run() => false,
@@ -258,7 +269,7 @@ mod tests {
         assert!(!menu(&["--screen", "settings", "--replay", "r.json"]));
         assert!(!menu(&["--screen", "inventory", "--capture", "x.png"]));
         assert!(!menu(&["--screen", "pick-up"]));
-        for creation in ["race", "gender", "class", "summary"] {
+        for creation in ["race", "gender", "class", "name", "summary", "characters"] {
             assert!(menu(&["--screen", creation, "--capture", "x.png"]));
             assert!(menu(&["--screen", creation, "--replay", "r.json"]));
         }

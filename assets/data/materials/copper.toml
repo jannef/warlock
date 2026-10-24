@@ -1,3 +1,13 @@
+# A primitive metal: very common shallow, rarer deeper.
 [[material]]
 id = "copper"
 name = "copper"
+group = "metal"
+color = "#b87333"
+weight = 114
+to_hit = 0
+damage = -1
+protection = 60
+value = 70
+rarity = { weight = 800, deeper = -50 }
+gear = { weight = 600, deeper = -40 }

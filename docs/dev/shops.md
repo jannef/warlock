@@ -38,14 +38,16 @@ any other way, such as a wall dug open) from `player_moves`, `picked_up_goods` f
 the pack stays owed, and the keeper says so), `trade` (drop and `Action::Sell`) from
 `drop_objects`, `pay` (`Action::Pay(None)`, no time; `Action::Pay(Some(dir))`, `pay:W`, pays and
 steps out at once),
-`provoke` from `fight.rs::resolve` (the player attacking a keeper), `keeper_died` from
+`provoke` from `fight.rs::resolve` (the player attacking a keeper; `provoke`, theft in
+`shop_step`, and `pay` each make one alignment deed, `docs/dev/alignment.md`), `keeper_died` from
 `creature_dies`, `may_loose` in `shoot.rs` (unpaid goods are not shot or thrown). An outraged
 keeper gets the `outraged` faction as its `faction_override`, so the AI and stance need nothing
 new. Keepers are NPCs: `budge = "off_post"` (no swapping at the post), one-liners in
 `data/dialogue.toml`, and `World::called` names them by their shop ("Grimbold says: ...").
 Prices are by the goods, never their magic (`Stack::magic` is kept on what is sold and put back, never
 priced; keys and quest letters are worth 0). Generated shops avoid locked rooms and rooms with
-something lying in them, and `hide_traps`/`place_loot` leave shop floors alone. The player's `favour` (Presence modifier × `presence` + the Appraise `Effect::Bargain`,
-at most `MAX_FAVOUR`) is never shown: presentation reads only prices
+something lying in them, and `hide_traps`/`place_loot` leave shop floors alone. The player's `favour` (Presence modifier × `presence` + the Appraise `Effect::Bargain` + what
+a good keeper makes of their alignment band, `world/alignment.rs::keeper_favour`, at most
+`MAX_FAVOUR`) is never shown: presentation reads only prices
 (`PerceptionView::shop_at`/`shop_here`, `price_tag`, `unpaid`, `owed_on_leaving`, `sale`,
 `own_gold`; look mode, the object screens, and the shop's dialogs in `input.rs`).

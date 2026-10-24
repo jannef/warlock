@@ -6,8 +6,10 @@ rules it implements are in spec/08b-creatures.md. Keep it current with the code,
 NPCs, dialogue, and making way (spec §8 "Dialogue" and "Displacement", #146, #147):
 `content/dialogue.rs` loads `data/dialogue.toml` (per creature type, or per unique `npc` id a level
 legend entry gives a creature, `Actor::npc`; `Content::dialogue_of` prefers the npc's): rotating
-`lines`, `greet`, `[[dialogue.topic]]`s (`id`, `name`, `reply`), and `mutter` (chance per action,
-verb, lines). `world/talk.rs` is the one place talk happens: `World::chat` (`Action::Chat`, cost
+`lines`, `greet`, `greet_evil`/`greet_good` (cold lines for a character the speaker scorns for
+their alignment, said in turn instead of the greeting and lines: `World::cold_greeting`,
+`docs/dev/alignment.md`), `[[dialogue.topic]]`s (`id`, `name`, `reply`), and `mutter` (chance per
+action, verb, lines). `world/talk.rs` is the one place talk happens: `World::chat` (`Action::Chat`, cost
 `chat`), `World::ask` (`Action::Ask`, no time), `World::topics` (the one source of what an NPC can
 be asked about: quests, #148, add their topics there and answer them in `ask`), `rotation` (each
 line once a round in a per-speaker shuffled order, never twice in a row; `Actor::talk` counts what

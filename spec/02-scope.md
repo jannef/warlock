@@ -54,9 +54,11 @@ Build the engine and framework, not the game. Everything built is production qua
   (Strength, §8 "Doors"); status effects and stat damage may lower them (§8 "Status effects",
   "Diseases"); diseases are resisted with checks of Toughness or Willpower (§8 "Checks"); no
   other rule uses stats yet
-- Experience (M21): creatures have a level and an XP value; the player's own kills (melee,
+- Experience (M21, M30): creatures have a level and an XP value; the player's own kills (melee,
   shots, throws) earn XP, scaled down for monsters below the player's level as in World of
-  Warcraft, and levels (to 50) grow the hit points up to level 20 (§8 "Experience")
+  Warcraft, and so do the first kill of each creature type and the first arrival on a level;
+  levels (to 60, on a curve written in kills, times the race's and the class's experience
+  factors) grow the hit points up to level 20 (§8 "Experience")
 - Burden (M16): a carrying limit from Strength, Toughness, and size; carrying more than a third,
   two thirds, or all of it slows every action, caps Dexterity in Defence, makes steps louder, and
   overloaded, keeps the actor from moving (§8 "Burden")
@@ -101,8 +103,8 @@ Build the engine and framework, not the game. Everything built is production qua
   styles
 - Skills (M20): 26 skills in data, ADOM-like; race and class train the player in some (dice),
   creatures may list theirs, and every other skill is untrained (never shown, gives nothing).
-  Values grow without a hard cap (slowly past 100) from training marks earned by meaningful
-  use (the increase rule is provisional), and the passive ones help: tumble (Dodge in Defence),
+  Values grow without a hard cap (slowly past 100) by skill rolls at each level-up, whose dice
+  are set by the training marks meaningful use earns (ADOM's ladder), and the passive ones help: tumble (Dodge in Defence),
   stealth (quieter steps and doors), listen (hearing fainter sounds), balance (less burden
   slowdown), survival (quicker journeys); a Skills screen lists the player's (§8 "Skills")
 - Weapon skills (M22): ADOM-like marks and ranks 0 to 10 in sixteen weapon categories (shield

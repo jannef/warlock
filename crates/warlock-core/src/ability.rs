@@ -15,12 +15,19 @@
 //! [`Unavailable::While`] it, and so is one whose kind of action a status `blocks`; nothing
 //! counts uses.
 //!
+//! An ability that asks for an alignment (`requires_alignment` in its data, spec §8
+//! "Alignment": the paladin's gifts are Good or better) stays the character's when they stray
+//! from it, but cannot be used ([`Unavailable::Strayed`], "you have strayed") until they climb
+//! back: its arm of [`Ability::unavailable`] asks [`strayed`] first. The class tables (#243) and
+//! talents (#220) carry the requirement as an `Option<Requirement>` in their data.
+//!
 //! [`PerceptionView::abilities`]: crate::perception::PerceptionView::abilities
 
 use crate::action::Action;
-use crate::content::{ActionKind, Content, StatusId};
+use crate::alignment::Requirement;
+use crate::content::{ActionKind, Content, SkillDef, StatusId, TalentEffect};
 use crate::geom::{Dir, Pos};
-use crate::skills::SkillId;
+use crate::skills::{Effect, SkillId};
 use crate::world::{Actor, VOICE_RANGE};
 use std::borrow::Cow;
 
@@ -36,6 +43,20 @@ pub enum Ability {
     /// "Skills"). A use, when it comes, is a variant of its own with its action, and its skill
     /// is no longer listed as this.
     Skill(SkillId),
+    /// Disarm a trap the actor knows of, next to them (spec §8 "Disarming traps"):
+    /// [`Action::Disarm`], the use of Disable device (the skill with the disarm effect, listed as
+    /// this in its place). Had by whoever is trained in it; usable whenever they have it (the
+    /// rules refuse, taking no time, where they know of no trap).
+    Disarm,
+    /// Pick the lock of a door next to the actor (spec §8 "Doors"): [`Action::PickLock`], the
+    /// use of Open lock (the skill with the pick effect, listed as this in its place). Had by
+    /// whoever is trained in it; usable whenever they have it (the rules refuse, taking no time,
+    /// where there is no lock).
+    PickLock,
+    /// Catch a second wind (spec §8 "Talents"): [`Action::SecondWind`], the active of the
+    /// Second wind talent (a talent with the `second_wind` effect). Had by whoever holds it;
+    /// unavailable while its cooldown (Winded) lasts.
+    SecondWind,
     /// Bash with the shield held (spec §8 "Weapon skills"): [`Action::Bash`]. Everyone can bash
     /// with a shield (at shield bashing's rank 0 too), so everyone has it; it is available while
     /// a shield to bash with is held.
@@ -53,6 +74,8 @@ pub enum Source {
     Race,
     /// The character's class (throwing one's voice, everyone's until the class tables).
     Class,
+    /// A talent the character took (spec §8 "Talents"): its active ones.
+    Talent,
     /// A trained skill used as an action (spec §8 "Skills").
     Skill,
     /// A weapon skill or a fighting style (spec §8 "Weapon skills", "Fighting styles").
@@ -66,6 +89,7 @@ impl Source {
     pub const ALL: &[Source] = &[
         Source::Race,
         Source::Class,
+        Source::Talent,
         Source::Skill,
         Source::WeaponSkill,
         Source::Item,
@@ -76,6 +100,7 @@ impl Source {
         match self {
             Source::Race => "Racial",
             Source::Class => "Class",
+            Source::Talent => "Talents",
             Source::Skill => "Skills",
             Source::WeaponSkill => "Weapon skills",
             Source::Item => "Items",
@@ -87,6 +112,7 @@ impl Source {
         match self {
             Source::Race => "race",
             Source::Class => "class",
+            Source::Talent => "talent",
             Source::Skill => "skill",
             Source::WeaponSkill => "weapon_skill",
             Source::Item => "item",
@@ -113,6 +139,9 @@ pub enum Unavailable {
     NoShield,
     /// A skill whose use is not in the game yet.
     NotYet,
+    /// One that asks for an alignment the character has strayed from (spec §8 "Alignment"):
+    /// they keep it, and may use it again once they climb back.
+    Strayed,
     /// While a status lasts (spec §8 "Status effects"): one that blocks the kind of action the
     /// ability is (a raging barbarian cannot read), or the ability's cooldown, which the class
     /// abilities bring (Winded: "you are winded"). Only time lifts it.
@@ -125,6 +154,7 @@ impl Unavailable {
         match self {
             Unavailable::NoShield => "you hold no shield".into(),
             Unavailable::NotYet => "not usable yet".into(),
+            Unavailable::Strayed => "you have strayed".into(),
             Unavailable::While(status) => {
                 format!("you are {}", content.status(status).name.to_lowercase()).into()
             }
@@ -136,6 +166,7 @@ impl Unavailable {
         match self {
             Unavailable::NoShield => "no_shield".into(),
             Unavailable::NotYet => "not_yet".into(),
+            Unavailable::Strayed => "strayed".into(),
             Unavailable::While(status) => format!("while:{}", content.status(status).id).into(),
         }
     }
@@ -145,17 +176,26 @@ impl Ability {
     /// Every ability there is, in menu order: by [`Source`], then as each source lists its own.
     /// The one place abilities are registered (the wiki's table lists these).
     pub fn every(content: &Content) -> Vec<Ability> {
-        // Skills: those used as actions, in skill order.
+        // Skills: those used as actions, in skill order, each as its use once that is in the game.
         let skills = (content.skills().iter().enumerate())
             .filter(|(_, def)| def.is_active())
-            .filter_map(|(i, _)| u8::try_from(i).ok().map(|i| Ability::Skill(SkillId(i))));
+            .filter_map(|(i, def)| {
+                let id = SkillId(u8::try_from(i).ok()?);
+                Some(Ability::use_of(def).unwrap_or(Ability::Skill(id)))
+            });
         // Class: throwing one's voice.
         let class = [Ability::ThrowVoice];
+        // Talents: the active ones the talent table has.
+        let wind = (content.talents().iter())
+            .flat_map(|(_, def)| def.effects_at(def.rank_count()))
+            .any(|e| matches!(e, TalentEffect::SecondWind { .. }));
+        let talents = wind.then_some(Ability::SecondWind);
         // Weapon skills and fighting styles: the shield bash.
         let weapon_skills = [Ability::ShieldBash];
         // Items: the lantern's hood.
         let items = [Ability::HoodLantern];
         let mut all: Vec<Ability> = (class.into_iter())
+            .chain(talents)
             .chain(skills)
             .chain(weapon_skills)
             .chain(items)
@@ -164,18 +204,33 @@ impl Ability {
         all
     }
 
+    /// The ability that is the use of skill `def`, once that use is in the game: Disable device's
+    /// (the disarm effect's) is [`Ability::Disarm`], Open lock's (the pick effect's)
+    /// [`Ability::PickLock`]. `None` for a skill whose use is to come.
+    fn use_of(def: &SkillDef) -> Option<Ability> {
+        let gives = |effect| def.benefits.iter().any(|b| b.effect == effect);
+        (gives(Effect::Disarm).then_some(Ability::Disarm))
+            .or_else(|| gives(Effect::Pick).then_some(Ability::PickLock))
+    }
+
     /// Every ability `actor` has, in menu order.
     pub(crate) fn of(actor: &Actor, content: &Content) -> Vec<Ability> {
         (Ability::every(content).into_iter())
-            .filter(|a| a.had_by(actor))
+            .filter(|a| a.had_by(actor, content))
             .collect()
     }
 
     /// Whether `actor` has it (whether or not they can use it now): a skill, if they are trained
-    /// in it; the shield bash, throwing one's voice, and the lantern's hood, everyone.
-    fn had_by(self, actor: &Actor) -> bool {
+    /// in it; disarming, if they are trained in Disable device (the skill with the disarm
+    /// effect); picking locks, if they are trained in Open lock (the pick effect's); second wind,
+    /// if they hold the talent; the shield bash, throwing one's voice, and the lantern's hood,
+    /// everyone.
+    pub(crate) fn had_by(self, actor: &Actor, content: &Content) -> bool {
         match self {
             Ability::Skill(id) => actor.skills.get(id).is_some(),
+            Ability::Disarm => actor.skills.trains_effect(content, Effect::Disarm),
+            Ability::PickLock => actor.skills.trains_effect(content, Effect::Pick),
+            Ability::SecondWind => actor.talent_mods(content).second_wind.is_some(),
             Ability::ThrowVoice | Ability::ShieldBash | Ability::HoodLantern => true,
         }
     }
@@ -185,6 +240,9 @@ impl Ability {
         match self {
             Ability::Skill(id) => &content.skill(id).id,
             Ability::ThrowVoice => "throw_voice",
+            Ability::Disarm => "disarm",
+            Ability::PickLock => "pick_lock",
+            Ability::SecondWind => "second_wind",
             Ability::ShieldBash => "shield_bash",
             Ability::HoodLantern => "hood_lantern",
         }
@@ -195,6 +253,9 @@ impl Ability {
         match self {
             Ability::Skill(id) => &content.skill(id).name,
             Ability::ThrowVoice => "Throw your voice",
+            Ability::Disarm => "Disarm a trap",
+            Ability::PickLock => "Pick lock",
+            Ability::SecondWind => "Second wind",
             Ability::ShieldBash => "Shield bash",
             Ability::HoodLantern => "Hood your lantern",
         }
@@ -207,6 +268,14 @@ impl Ability {
             Ability::ThrowVoice => {
                 "Make a voice sound at a place you see nearby: those who hear it go and look there."
             }
+            Ability::Disarm => {
+                "Take apart a trap you know of next to you; a clumsy try sets it off."
+            }
+            Ability::PickLock => "Open a locked door next to you without its key.",
+            Ability::SecondWind => {
+                "Catch your breath in the thick of it: some of your hit points come back at \
+                 once, and then you are winded for a while."
+            }
             Ability::ShieldBash => "Strike someone next to you with the shield you hold.",
             Ability::HoodLantern => {
                 "Lower your lantern's hood, or raise it: hooded, it dimly lights the ground around \
@@ -218,8 +287,9 @@ impl Ability {
     /// Where it comes from: its group in the menu.
     pub const fn source(self) -> Source {
         match self {
-            Ability::Skill(_) => Source::Skill,
+            Ability::Skill(_) | Ability::Disarm | Ability::PickLock => Source::Skill,
             Ability::ThrowVoice => Source::Class,
+            Ability::SecondWind => Source::Talent,
             Ability::ShieldBash => Source::WeaponSkill,
             Ability::HoodLantern => Source::Item,
         }
@@ -228,9 +298,9 @@ impl Ability {
     /// What it asks for before it is used.
     pub const fn aim(self) -> Aim {
         match self {
-            Ability::Skill(_) | Ability::HoodLantern => Aim::Nothing,
+            Ability::Skill(_) | Ability::SecondWind | Ability::HoodLantern => Aim::Nothing,
             Ability::ThrowVoice => Aim::Cell,
-            Ability::ShieldBash => Aim::Direction,
+            Ability::Disarm | Ability::PickLock | Ability::ShieldBash => Aim::Direction,
         }
     }
 
@@ -240,6 +310,9 @@ impl Ability {
         match self {
             Ability::Skill(_) => None,
             Ability::ThrowVoice => Some(ActionKind::ThrowVoice),
+            Ability::Disarm => Some(ActionKind::Disarm),
+            Ability::PickLock => Some(ActionKind::PickLock),
+            Ability::SecondWind => Some(ActionKind::Wait),
             Ability::ShieldBash => Some(ActionKind::Melee),
             Ability::HoodLantern => Some(ActionKind::Hood),
         }
@@ -250,7 +323,12 @@ impl Ability {
     pub const fn range(self) -> Option<i32> {
         match self {
             Ability::ThrowVoice => Some(VOICE_RANGE),
-            Ability::Skill(_) | Ability::ShieldBash | Ability::HoodLantern => None,
+            Ability::Skill(_)
+            | Ability::Disarm
+            | Ability::PickLock
+            | Ability::SecondWind
+            | Ability::ShieldBash
+            | Ability::HoodLantern => None,
         }
     }
 
@@ -260,8 +338,11 @@ impl Ability {
     pub const fn action(self, dir: Option<Dir>) -> Option<Action> {
         match (self, dir) {
             (Ability::Skill(_) | Ability::ThrowVoice, _) => None,
+            (Ability::SecondWind, _) => Some(Action::SecondWind),
+            (Ability::Disarm, Some(dir)) => Some(Action::Disarm(dir)),
+            (Ability::PickLock, Some(dir)) => Some(Action::PickLock(dir)),
             (Ability::ShieldBash, Some(dir)) => Some(Action::Bash(dir)),
-            (Ability::ShieldBash, None) => None,
+            (Ability::Disarm | Ability::PickLock | Ability::ShieldBash, None) => None,
             (Ability::HoodLantern, _) => Some(Action::HoodLantern),
         }
     }
@@ -271,7 +352,12 @@ impl Ability {
     pub const fn action_at(self, at: Pos) -> Option<Action> {
         match self {
             Ability::ThrowVoice => Some(Action::ThrowVoice(at)),
-            Ability::Skill(_) | Ability::ShieldBash | Ability::HoodLantern => None,
+            Ability::Skill(_)
+            | Ability::Disarm
+            | Ability::PickLock
+            | Ability::SecondWind
+            | Ability::ShieldBash
+            | Ability::HoodLantern => None,
         }
     }
 
@@ -280,7 +366,13 @@ impl Ability {
     pub(crate) fn unavailable(self, actor: &Actor, content: &Content) -> Option<Unavailable> {
         let own = match self {
             Ability::Skill(_) => Some(Unavailable::NotYet),
-            Ability::ThrowVoice | Ability::HoodLantern => None,
+            Ability::ThrowVoice | Ability::HoodLantern | Ability::Disarm | Ability::PickLock => {
+                None
+            }
+            Ability::SecondWind => (actor.talent_mods(content).second_wind)
+                .map(|w| w.cooldown)
+                .filter(|&cooldown| actor.effects.has(cooldown))
+                .map(Unavailable::While),
             Ability::ShieldBash => actor
                 .shield(content)
                 .is_none()
@@ -291,6 +383,19 @@ impl Ability {
             blocked.map(Unavailable::While)
         })
     }
+}
+
+/// Why `actor` cannot use an ability that asks for alignment `required` (its data's
+/// `requires_alignment`; `None`: any): [`Unavailable::Strayed`] while their band falls short of
+/// it (spec §8 "Alignment"). Every ability that has a requirement asks this first in
+/// [`Ability::unavailable`].
+pub fn strayed(
+    actor: &Actor,
+    content: &Content,
+    required: Option<Requirement>,
+) -> Option<Unavailable> {
+    let band = actor.band(content);
+    (!required?.allows(band)).then_some(Unavailable::Strayed)
 }
 
 /// One of the player's abilities, as they know it: for the abilities menu.
@@ -313,7 +418,14 @@ mod tests {
         let names: Vec<&str> = Source::ALL.iter().map(|s| s.name()).collect();
         assert_eq!(
             names,
-            ["Racial", "Class", "Skills", "Weapon skills", "Items"]
+            [
+                "Racial",
+                "Class",
+                "Talents",
+                "Skills",
+                "Weapon skills",
+                "Items"
+            ]
         );
     }
 
@@ -327,7 +439,8 @@ mod tests {
             Some(&Ability::ThrowVoice),
             "the class's first"
         );
-        // The skills used as actions, in skill order, then the shield bash.
+        // The skills used as actions, in skill order (Disable device and Open lock as their uses,
+        // disarming and picking locks), then the shield bash.
         let skills: Vec<&str> = (every.iter())
             .filter(|a| a.source() == Source::Skill)
             .map(|a| a.id(&content))
@@ -338,14 +451,14 @@ mod tests {
                 "appraise",
                 "bluff",
                 "decipher_script",
-                "disable_device",
+                "disarm",
                 "handle_animal",
                 "heal",
                 "intimidate",
                 "knowledge",
                 "metalcraft",
                 "music",
-                "open_lock",
+                "pick_lock",
                 "steal",
                 "use_magic_device",
                 "woodcraft",
@@ -353,6 +466,41 @@ mod tests {
         );
         let last: Vec<Ability> = every.iter().rev().take(2).rev().copied().collect();
         assert_eq!(last, [Ability::ShieldBash, Ability::HoodLantern]);
+    }
+
+    #[test]
+    fn an_ability_that_asks_for_an_alignment_is_unavailable_to_one_who_strayed() {
+        use crate::alignment::{Band, Score};
+        use crate::character::CharacterSpec;
+        let content = std::sync::Arc::new(Content::builtin().expect("content"));
+        let paladin: CharacterSpec = "human,male,paladin".parse().unwrap();
+        let world = crate::World::with_character(content.clone(), "showcase", None, Some(&paladin))
+            .expect("world");
+        // A test ability of a paladin's: Good or better.
+        let gift = Some(Requirement {
+            min: Some(Band::Good),
+            max: None,
+        });
+        let mut me = world.state().player().clone();
+        assert_eq!(me.band(&content), Band::Good, "a paladin starts Good");
+        assert_eq!(strayed(&me, &content, gift), None);
+        assert_eq!(strayed(&me, &content, None), None, "no requirement");
+        // Fallen to Kind: kept, but greyed out.
+        me.alignment = Some(Score::new(200));
+        assert_eq!(strayed(&me, &content, gift), Some(Unavailable::Strayed));
+        assert_eq!(Unavailable::Strayed.reason(&content), "you have strayed");
+        assert_eq!(Unavailable::Strayed.id(&content), "strayed");
+        // Climbed back: usable again.
+        me.alignment = Some(Score::new(800));
+        assert_eq!(strayed(&me, &content, gift), None);
+        // A dark gift, Callous or worse, the other way round.
+        let dark = Some(Requirement {
+            min: None,
+            max: Some(Band::Callous),
+        });
+        assert_eq!(strayed(&me, &content, dark), Some(Unavailable::Strayed));
+        me.alignment = Some(Score::new(-500));
+        assert_eq!(strayed(&me, &content, dark), None);
     }
 
     #[test]
@@ -382,5 +530,42 @@ mod tests {
         assert_eq!(hood.cost(), Some(ActionKind::Hood));
         assert_eq!(hood.action(None), Some(Action::HoodLantern));
         assert_eq!((hood.range(), hood.action_at(at)), (None, None));
+    }
+
+    #[test]
+    fn disarming_is_disable_devices_use_and_asks_for_a_direction() {
+        let content = Content::builtin().expect("content");
+        let disable = (content.skills().iter())
+            .find(|s| s.id == "disable_device")
+            .expect("Disable device");
+        assert_eq!(Ability::use_of(disable), Some(Ability::Disarm));
+        let disarm = Ability::Disarm;
+        assert_eq!(disarm.aim(), Aim::Direction);
+        assert_eq!(disarm.source(), Source::Skill);
+        assert_eq!(disarm.cost(), Some(ActionKind::Disarm));
+        assert_eq!(disarm.action(Some(Dir::W)), Some(Action::Disarm(Dir::W)));
+        assert_eq!(disarm.action(None), None, "not without a direction");
+        // Its skill is listed as it, not as a skill with no use yet.
+        let every = Ability::every(&content);
+        assert!(every.contains(&Ability::Disarm));
+        let listed_as_skill = every
+            .iter()
+            .any(|a| matches!(a, Ability::Skill(id) if content.skill(*id).id == "disable_device"));
+        assert!(!listed_as_skill);
+    }
+
+    #[test]
+    fn picking_locks_is_open_locks_use_and_asks_for_a_direction() {
+        let content = Content::builtin().expect("content");
+        let open_lock = (content.skills().iter())
+            .find(|s| s.id == "open_lock")
+            .expect("Open lock");
+        assert_eq!(Ability::use_of(open_lock), Some(Ability::PickLock));
+        let pick = Ability::PickLock;
+        assert_eq!(pick.aim(), Aim::Direction);
+        assert_eq!(pick.source(), Source::Skill);
+        assert_eq!(pick.cost(), Some(ActionKind::PickLock));
+        assert_eq!(pick.action(Some(Dir::W)), Some(Action::PickLock(Dir::W)));
+        assert_eq!(pick.action(None), None, "not without a direction");
     }
 }

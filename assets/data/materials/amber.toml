@@ -1,4 +1,11 @@
+# Fossil resin, a precious material but no gem. Jewellery only: no weapon, no armour.
 [[material]]
 id = "amber"
 name = "amber"
 precious = true
+group = "resin"
+color = "#e0a040"
+weight = 40
+value = 300
+rarity = { weight = 40 }
+gear = { weight = 10 }

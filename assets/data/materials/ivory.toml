@@ -1,0 +1,13 @@
+# Rare in loot, very rare in creatures' gear.
+[[material]]
+id = "ivory"
+name = "ivory"
+group = "bone"
+color = "#fff8e7"
+weight = 65
+to_hit = -1
+damage = -1
+protection = 40
+value = 500
+rarity = { weight = 40 }
+gear = { weight = 10 }

@@ -2,8 +2,9 @@ name = "World"
 description = "The overworld: travel the Wildlands by road and wild, day and night; enter the Hall, the Vast Caverns, the Depths, or any cell's local area with >."
 start_level = "overworld"
 seed = 1
-character = { race = "human", gender = "male", class = "ranger" }
+character = { race = "human", gender = "male", class = "ranger", name = "Osric" }
 lantern = "lantern"
 start_time = "08:00"
-# Starting food (spec §8 "Hunger"): a few days of it.
-carry = ["ration*3", "dried_meat*2"]
+# No pack of its own: a character chosen in character creation brings food in their starting
+# kit (data/classes/, data/races.toml), and more on top would burden the smallest. Launched
+# on the scenario's own character (`--scenario` alone, tests), the player starts empty-handed.

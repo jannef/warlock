@@ -1,0 +1,11 @@
+# No weapon.
+[[material]]
+id = "silk"
+name = "silk"
+group = "cloth"
+color = "#f2e6f0"
+weight = 18
+protection = 20
+value = 400
+rarity = { weight = 40 }
+gear = { weight = 10 }

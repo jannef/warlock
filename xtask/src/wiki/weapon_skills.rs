@@ -5,7 +5,7 @@
 //! starting ranks of races and classes, as data writes them.
 
 use super::order;
-use super::text::capital;
+use super::text::{capital, thousands};
 use std::fmt::Write as _;
 use warlock_core::content::{
     Benefit, ClassDef, Content, Grip, MAX_RANK, Role, TwoWeapons, WeaponSkillDef, WeaponSkillId,
@@ -196,19 +196,6 @@ pub fn marks(content: &Content) -> String {
             let _ = write!(out, " {} | {} |", thousands(one), thousands(all));
         }
         out.push('\n');
-    }
-    out
-}
-
-/// `12920` as `12,920`.
-fn thousands(n: u32) -> String {
-    let digits = n.to_string();
-    let mut out = String::new();
-    for (i, c) in digits.chars().enumerate() {
-        if i > 0 && (digits.len() - i).is_multiple_of(3) {
-            out.push(',');
-        }
-        out.push(c);
     }
     out
 }

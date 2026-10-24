@@ -1,0 +1,13 @@
+[[talent]]
+id = "keen_ears"
+name = "Keen ears"
+tree = "shadow"
+ranks = 2
+description = "You hear fainter sounds, fainter still at the second rank."
+effects = [{ kind = "hearing", value = 2 }]
+systems = ["hearing"]
+
+[[talent.rank]]
+
+[[talent.rank]]
+needs = { skills = { listen = 20 } }

@@ -12,8 +12,11 @@
 #                 within -10 to 10
 #   potential     adjustments to the potentials, the same way (hidden from the player)
 #   hp            hit points (spec §8 "Combat"; default 0): a character's maximum is their
-#                 Toughness plus their race's and their class's (classes.toml)
-#   size          a size in sizes.toml (default "medium"; spec §8 "Burden"): how much the
+#                 Toughness plus their race's and their class's (classes/)
+#   alignment     the race's part of a new character's hidden alignment score (spec §8
+#                 "Alignment"; alignment.toml; -1000 evil to 1000 good, default 0), added to
+#                 their class's: a lean that never alone moves anyone out of Neutral
+#   size         a size in sizes.toml (default "medium"; spec §8 "Burden"): how much the
 #                 character can carry, 1.5 kg × (2 × Strength + Toughness), is scaled by its carry
 #   ignores_burdened  whether being Burdened, the first level of burden, costs the character
 #                 nothing (no slowdown, no cap on Dexterity in Defence, no louder steps; default
@@ -28,15 +31,25 @@
 #                 0 to 100; added to the class's (a skill both train sums the two)
 #   class_skill   dice added to one of the class's skills, picked from the run seed when the
 #                 character is made (default none; humans: one extra class skill)
+#   rolls         skill rolls each level gives beyond the class's (spec §8 "Skills"; 0 to 10,
+#                 default 0; humans 1). A level-up roll on a skill the race trains (`skills`)
+#                 adds 1 (classes/README.toml)
 #   hunger        how much the character needs to eat, in percent of a human (spec §8 "Hunger";
 #                 10 to 1000, default 100): game time burns their nutrition this much faster
+#   experience    how much experience a level needs, in percent (spec §8 "Experience"; 50 to
+#                 200, default 100): multiplied with the class's onto every threshold in
+#                 experience.toml. Long-lived races pay more, short-lived ones less
 #   weapon_skills starting ranks in weapon skills (spec §8 "Weapon skills"), by skill id in
 #                 weapon_skills.toml: a number or dice, every result within 0 to 10; added to
 #                 the class's (at most 10), then each raises the skills it defaults to
+#   kit           a few racial items for the starting kit (spec §8 "Character creation"), after
+#                 the class's: lines as in classes/README.toml's `kit` (a string is carried; `wield`,
+#                 `wear`, `trained`, `gender`, `magic`, and `"a|b"` work the same, `trained`
+#                 asking what the class trained)
 #
 # A new character's score in each stat is 10 (the average), plus the race's adjustment, plus the
 # gender's (male: strength +1; female: dexterity +1; other: +1 to a stat picked from the run
-# seed), plus the class's (classes.toml), plus their birth sign's animal and element
+# seed), plus the class's (classes/), plus their birth sign's animal and element
 # (horoscope.toml), kept within 1 to 40. Its potential in each stat is `base_potential` plus the
 # race's potential adjustment, within 1 to 40 and never below the starting score. Dice are rolled
 # from the run seed and the choices, so the same seed and choices make the same character.
@@ -55,13 +68,17 @@ age = [90, 300]
 stats = { strength = -1, dexterity = "1d2+1", toughness = -2, intelligence = 1, presence = 1 }
 potential = { strength = -2, dexterity = 3, toughness = -3, intelligence = 2, willpower = 1, presence = 1 }
 hp = 2
+alignment = 50
 size = "medium"
 skills = { listen = "1d6+4", spot = "1d6+4" }
 # Keen eyes: elves notice every hidden thing in passing, and find it more easily.
 passive_search = "all"
 search = 2
 hunger = 80
+experience = 140
 weapon_skills = { long_blades = 1, bows = 1 }
+# Elven waybread: light, filling, and slow to go stale.
+kit = ["waybread*3"]
 
 [[race]]
 id = "half_elf"
@@ -75,7 +92,10 @@ hp = 3
 size = "medium"
 skills = { bluff = "1d4+2", spot = "1d4+2" }
 hunger = 90
+experience = 105
 weapon_skills = { bows = "1d2-1" }
+# A keepsake from the elven side: a silver ring, and a wafer of waybread.
+kit = [{ wear = "silver_ring" }, "waybread"]
 
 # No gift and no flaw, but the most room to grow (rolled).
 [[race]]
@@ -89,7 +109,12 @@ hp = 4
 size = "medium"
 # One extra class skill: one of the class's skills, picked when the character is made.
 class_skill = "2d4+4"
+# Quick to learn: one more skill roll every level.
+rolls = 1
 hunger = 100
+experience = 100
+# No gift and no flaw: a loaf of bread, like anyone's.
+kit = ["bread"]
 
 [[race]]
 id = "dwarf"
@@ -108,6 +133,9 @@ ignores_burdened = true
 # They know stonework: they notice what is hidden in stone in passing (most of a dungeon).
 passive_search = "stone"
 hunger = 110
+experience = 115
+# A dwarf never goes anywhere without a pick-axe (readied in the Tool slot), and dried meat.
+kit = [{ wield = "pick_axe" }, "dried_meat*2"]
 
 [[race]]
 id = "halfling"
@@ -118,11 +146,15 @@ age = [20, 50]
 stats = { strength = -3, dexterity = 3, willpower = 1 }
 potential = { strength = -4, dexterity = 3, willpower = 1, presence = 1 }
 hp = 2
+alignment = 50
 size = "small"
 skills = { listen = "1d6+4", stealth = "1d6+4" }
 # Second breakfast.
 hunger = 125
+experience = 95
 weapon_skills = { slings = 1 }
+# A pipe, and apples for second breakfast.
+kit = ["pipe", "apple*2"]
 
 [[race]]
 id = "gnome"
@@ -136,7 +168,10 @@ hp = 3
 size = "small"
 skills = { appraise = "1d6+4", listen = "1d6+4" }
 hunger = 90
+experience = 120
 weapon_skills = { crossbows = 1 }
+# A tinkerer's pockets: a scroll of light, a candle stub, and a curious stone.
+kit = ["scroll_of_light", "candle", "gem:zircon"]
 
 [[race]]
 id = "half_orc"
@@ -147,7 +182,11 @@ age = [14, 30]
 stats = { strength = "1d2+2", toughness = 1, intelligence = "-1d3", presence = -2 }
 potential = { strength = 4, toughness = 2, intelligence = -3, presence = -3 }
 hp = 6
+alignment = -50
 size = "medium"
 skills = { intimidate = "1d6+4" }
 hunger = 120
+experience = 90
 weapon_skills = { axes = 1 }
+# A hand axe at the belt, and meat for the road.
+kit = ["hand_axe", "dried_meat*3"]

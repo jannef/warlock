@@ -58,7 +58,7 @@ map = '''
 
 /// The built-in content plus the test levels, each with a scenario of its name whose player has
 /// no character (average stats, untrained in everything); with `eager`, every mark rule's chance
-/// is 100 and every mark is a point.
+/// is 100.
 fn files(eager: bool) -> ContentFiles {
     let mut files = ContentFiles::builtin();
     for (name, level) in [("yard", YARD), ("pit", PIT), ("dark", DARK)] {
@@ -74,9 +74,6 @@ fn files(eager: bool) -> ContentFiles {
             .lines()
             .map(|line| match line.split_once("chance = ") {
                 Some((before, _)) => format!("{before}chance = 100 }}]"),
-                None if line.starts_with("marks = ") => "marks = 1".into(),
-                None if line.starts_with("soft_cap = ") => "soft_cap = 999".into(),
-                None if line.starts_with("per = ") => "per = 999".into(),
                 None => line.to_string(),
             })
             .collect();
@@ -117,6 +114,11 @@ fn value(w: &World, id: &str) -> Option<u16> {
     w.state.player().skills.value(skill(w, id))
 }
 
+/// The training marks the player's skill `id` has gathered; `None` if untrained.
+fn marks(w: &World, id: &str) -> Option<u32> {
+    (w.state.player().skills.get(skill(w, id))).map(|t| t.marks)
+}
+
 fn said(w: &World, text: &str) -> bool {
     w.messages().iter().any(|m| m.text == text)
 }
@@ -136,7 +138,8 @@ fn the_player_perceives_only_their_own_trained_skills() {
     // Trained at 0 is shown (it is not untrained); in skill order.
     assert_eq!(own, [("stealth".into(), 0), ("tumble".into(), 42)]);
     // For the abilities menu: passive skills have no active use; a skill used as an action is
-    // an ability, not available yet (no use exists), listed before the shield bash.
+    // an ability, not available yet (no use exists), listed before the shield bash; one whose
+    // use exists is that ability (Open lock: Pick lock).
     use crate::ability::{Ability, OwnAbility, Unavailable};
     let skill_abilities = |w: &World| -> Vec<OwnAbility> {
         (w.perception().abilities().into_iter())
@@ -144,17 +147,32 @@ fn the_player_perceives_only_their_own_trained_skills() {
             .collect()
     };
     assert!(skill_abilities(&w).is_empty());
-    set(&mut w, "open_lock", Some(18));
+    set(&mut w, "use_magic_device", Some(18));
     assert_eq!(
         skill_abilities(&w),
         [OwnAbility {
-            ability: Ability::Skill(skill(&w, "open_lock")),
+            ability: Ability::Skill(skill(&w, "use_magic_device")),
             unavailable: Some(Unavailable::NotYet),
         }]
     );
-    assert!(
-        (w.perception().abilities().iter()).any(|a| a.ability == Ability::ShieldBash),
-        "beside the skills, the shield bash"
+    set(&mut w, "open_lock", Some(18));
+    assert_eq!(
+        skill_abilities(&w).len(),
+        1,
+        "Open lock is no skill ability"
+    );
+    let own: Vec<Ability> = (w.perception().abilities().into_iter())
+        .map(|a| a.ability)
+        .collect();
+    assert_eq!(
+        own,
+        [
+            Ability::ThrowVoice,
+            Ability::PickLock,
+            Ability::Skill(skill(&w, "use_magic_device")),
+            Ability::ShieldBash,
+            Ability::HoodLantern
+        ]
     );
     // A creature's skills are never perceived: the arena's shaman has some, the player none of
     // its.
@@ -370,16 +388,20 @@ fn sneaking_within_earshot_trains_stealth_and_untrained_skills_never_train() {
     let mut w = eager("yard");
     set(&mut w, "stealth", Some(0));
     w.apply(&Action::Move(Dir::E));
-    assert_eq!(value(&w, "stealth"), Some(0));
-    assert!(!said(&w, "Your stealth improves."));
-    // Within earshot: a mark, and with every mark a point here, a point.
+    assert_eq!(marks(&w, "stealth"), Some(0));
+    // Within earshot: a mark, which raises nothing by itself and is not said.
     w.state.actors.get_mut(&w.state.player).expect("player").pos = Pos::new(10, 4);
     w.apply(&Action::Move(Dir::E));
-    assert_eq!(value(&w, "stealth"), Some(1));
-    assert!(said(&w, "Your stealth improves."));
+    assert_eq!(marks(&w, "stealth"), Some(1));
+    assert_eq!(
+        value(&w, "stealth"),
+        Some(0),
+        "marks wait for a level-up roll"
+    );
+    assert!(!said(&w, "Your stealth improves."));
     // Waiting is no sneaking.
     w.apply(&Action::Wait);
-    assert_eq!(value(&w, "stealth"), Some(1));
+    assert_eq!(marks(&w, "stealth"), Some(1));
 }
 
 #[test]
@@ -392,13 +414,13 @@ fn hearing_something_new_trains_listen() {
         heard += usize::from(!w.perception().sounds().is_empty());
     }
     assert!(heard > 0, "the pacing rat is heard");
-    assert!(value(&w, "listen") > Some(5), "{:?}", value(&w, "listen"));
-    assert!(said(&w, "Your listen improves."));
+    assert!(marks(&w, "listen") > Some(0), "{:?}", marks(&w, "listen"));
+    assert_eq!(value(&w, "listen"), Some(5));
     // Sounds already known are no news and train nothing.
-    let before = value(&w, "listen");
+    let before = marks(&w, "listen");
     w.apply(&Action::Wait);
     w.apply(&Action::Wait);
-    assert_eq!(value(&w, "listen"), before);
+    assert_eq!(marks(&w, "listen"), before);
 }
 
 #[test]
@@ -410,8 +432,7 @@ fn dodging_attacks_trains_tumble() {
     for _ in 0..10 {
         w.apply(&Action::Wait);
     }
-    assert!(value(&w, "tumble") > Some(500), "{:?}", value(&w, "tumble"));
-    assert!(said(&w, "Your tumble improves."));
+    assert!(marks(&w, "tumble") > Some(0), "{:?}", marks(&w, "tumble"));
     // The dodges are said too.
     assert!(said(&w, "You dodge the giant rat's bite."));
 }
@@ -425,10 +446,9 @@ fn acting_under_a_load_trains_balance() {
     let pack = vec![Stack::one(mail); 2];
     w.state.actors.get_mut(&player).expect("player").inventory = pack.clone();
     w.apply(&Action::Wait);
-    assert_eq!(value(&w, "balance"), Some(0), "waiting trains nothing");
+    assert_eq!(marks(&w, "balance"), Some(0), "waiting trains nothing");
     w.apply(&Action::Move(Dir::E));
-    assert_eq!(value(&w, "balance"), Some(1));
-    assert!(said(&w, "Your balance improves."));
+    assert_eq!(marks(&w, "balance"), Some(1));
     // Unburdened, steps train nothing.
     w.state
         .actors
@@ -437,11 +457,11 @@ fn acting_under_a_load_trains_balance() {
         .inventory
         .clear();
     w.apply(&Action::Move(Dir::E));
-    assert_eq!(value(&w, "balance"), Some(1));
+    assert_eq!(marks(&w, "balance"), Some(1));
     // A dwarf's Burdened costs nothing, so it trains nothing either.
     let spec: CharacterSpec = "dwarf,male,monk".parse().expect("a character");
     let mut dwarf = World::with_character(content(true), "yard", None, Some(&spec)).expect("world");
-    let start = value(&dwarf, "balance").expect("monks know balance");
+    assert!(value(&dwarf, "balance").is_some(), "monks know balance");
     let player = dwarf.state.player;
     dwarf
         .state
@@ -451,13 +471,13 @@ fn acting_under_a_load_trains_balance() {
         .inventory = pack;
     assert_eq!(dwarf.load_of(player).burden(), Burden::Burdened);
     dwarf.apply(&Action::Move(Dir::E));
-    assert_eq!(value(&dwarf, "balance"), Some(start));
+    assert_eq!(marks(&dwarf, "balance"), Some(0));
 }
 
 #[test]
 fn journeys_train_survival() {
     let mut w = World::new(content(true), "world", None).expect("world");
-    let start = value(&w, "survival").expect("the ranger knows survival");
+    assert!(value(&w, "survival").is_some(), "the ranger knows survival");
     // Along the road and back.
     let mut moved = 0;
     for dir in [Dir::E, Dir::W, Dir::N, Dir::S] {
@@ -466,13 +486,12 @@ fn journeys_train_survival() {
         moved += usize::from(w.player_pos() != before);
     }
     assert!(moved > 0);
-    assert_eq!(value(&w, "survival"), Some(start + moved as u16));
-    assert!(said(&w, "Your survival improves."));
+    assert_eq!(marks(&w, "survival"), Some(moved as u32));
 }
 
 #[test]
-fn training_draws_from_its_own_stream_and_marks_count_toward_the_curve() {
-    // The built-in chances and curve: stealth gets a mark 15% of the time, 4 marks a point at 0.
+fn training_draws_from_its_own_stream_and_marks_gather() {
+    // The built-in chances: stealth gets a mark 15% of the time.
     let mut w = world("yard");
     set(&mut w, "stealth", Some(0));
     let gameplay = w.state.rng.clone();
@@ -482,14 +501,15 @@ fn training_draws_from_its_own_stream_and_marks_count_toward_the_curve() {
     }
     assert_eq!(w.state.rng, gameplay, "the gameplay stream is untouched");
     assert_ne!(w.state.training, training);
-    // About 30 marks: some 7 points, with marks left over toward the next.
+    // About 30 marks, gathered for the next level-up roll; no points.
     let trained = w
         .state
         .player()
         .skills
         .get(skill(&w, "stealth"))
         .expect("trained");
-    assert!((4..=11).contains(&trained.value), "{trained:?}");
+    assert!((15..=45).contains(&trained.marks), "{trained:?}");
+    assert_eq!(trained.value, 0);
     // Uses no skill trains on change nothing.
     let before = w.state.clone();
     w.train(crate::skills::Use::Travel);
@@ -510,8 +530,8 @@ fn skills_and_marks_survive_a_save_and_replays_reproduce_training() {
         a.apply(&action);
         replay.push(&action, &a);
     }
-    let stealth = value(&a, "stealth").expect("a thief knows stealth");
-    assert!(said(&a, "Your stealth improves."), "{stealth}");
+    let stealth = marks(&a, "stealth").expect("a thief knows stealth");
+    assert!(stealth > 0, "{stealth}");
     let played = replay.run(content.clone()).expect("the replay verifies");
     assert_eq!(played.state(), a.state());
     let bytes = crate::save::encode(&a);

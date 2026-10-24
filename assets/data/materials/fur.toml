@@ -1,0 +1,11 @@
+# No weapon.
+[[material]]
+id = "fur"
+name = "fur"
+group = "hide"
+color = "#a08060"
+weight = 40
+protection = 25
+value = 80
+rarity = { weight = 300 }
+gear = { weight = 300 }

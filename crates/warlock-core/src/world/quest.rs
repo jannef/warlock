@@ -24,8 +24,9 @@
 //! quest log reads [`PerceptionView::quests`]: the player knows their quests.
 
 use super::talk::capitalized;
-use super::{ActorId, Spent, TopicView, World};
+use super::{ActorId, Deed, Spent, TopicView, World};
 use crate::action::{Event, Positions};
+use crate::content::StatUse;
 use crate::content::{Content, DialogueId, Goal, QuestDef, QuestId, QuestKind};
 use crate::object::{self, Stack};
 use crate::perception::PerceptionView;
@@ -382,10 +383,11 @@ fn quest_topic(topic: &str) -> Option<(Ask, &str)> {
 
 impl World {
     /// The quest topics of whoever speaks dialogue `speaker`, first among their topics: each
-    /// quest they may offer (or the accept and decline of the one they offered), each of theirs
+    /// quest they may offer (or the accept and decline of the one they offered; one they
+    /// [`World::offers`] the player as they stand toward them, `scorned` or not), each of theirs
     /// the player has taken up (for the reminder, or to hand it in), and each the player may hand
     /// in to them.
-    pub(super) fn quest_topics(&self, speaker: DialogueId) -> Vec<TopicView> {
+    pub(super) fn quest_topics(&self, speaker: DialogueId, scorned: bool) -> Vec<TopicView> {
         let quests = &self.state.quests;
         let mut topics = Vec::new();
         for def in self.content.quests() {
@@ -398,7 +400,9 @@ impl World {
                 if stage == Some(Stage::Offered) {
                     topics.push(topic(ACCEPT, format!("Accept: {}", def.name)));
                     topics.push(topic(DECLINE, format!("Decline: {}", def.name)));
-                } else if stage == Some(Stage::Active) || quests.available(&self.content, def) {
+                } else if stage == Some(Stage::Active)
+                    || (quests.available(&self.content, def) && self.offers(def, scorned))
+                {
                     topics.push(topic(QUEST, def.name.clone()));
                 }
             } else if def.turn_in() == speaker && stage == Some(Stage::Active) && self.ready(def) {
@@ -429,7 +433,8 @@ impl World {
         events: &mut Vec<Event>,
     ) -> Option<Spent> {
         let (ask, quest) = quest_topic(topic)?;
-        let listed = self.quest_topics(speaker).iter().any(|t| t.id == topic);
+        let scorned = self.scorns(&self.state.actors[&id]);
+        let listed = (self.quest_topics(speaker, scorned).iter()).any(|t| t.id == topic);
         let Some(q) = self.content.quest_id(quest).filter(|_| listed) else {
             let who = capitalized(&self.called(&self.state.actors[&id]));
             self.say(format!("{who} knows nothing about that."));
@@ -536,6 +541,7 @@ impl World {
         }
         self.answer(id, def.texts.done.clone(), Some(topic.into()), events);
         self.say(format!("Quest complete: {}.", def.name));
+        self.train_stat(StatUse::Quest);
         let who = capitalized(&self.called(&self.state.actors[&id]));
         let mut stacks = def.reward.stacks(&content);
         crate::rot::made_at(&mut stacks, &content, self.state.time);
@@ -551,6 +557,7 @@ impl World {
             self.grant_xp(def.reward.xp);
             self.say_news();
         }
+        self.shift_alignment(self.state.player, def.alignment, Deed::Quest);
     }
 
     /// Takes `count` of `object` out of the player's pack (stacks not worn or wielded first, the

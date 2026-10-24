@@ -4,8 +4,9 @@
 # An actor is trained in some skills, each with a value (0 to 999; 100 is a master, and points
 # past it come slowly). A skill it is not trained in does not exist for it: it is never shown and
 # gives nothing (not the same as a value of 0). Races and classes train characters in skills
-# (`skills` in races.toml and classes.toml, as dice, rolled when the character is made; a skill
-# both train sums the two); creature types may list theirs (`skills` in creatures.toml).
+# (`skills` in races.toml and classes/, as dice, rolled when the character is made; a skill
+# both train sums the two); creature types may list theirs (`skills` in creatures.toml). Skills
+# grow by the rolls of each level ([ladder] and [rolls] below).
 #
 # Fields:
 #   id, name      the skill's id (in data files and dumps) and its name, as the Skills screen
@@ -19,11 +20,12 @@
 #                 ahead. Uses: "sneak" (a step within earshot of a creature that could hear it,
 #                 before stealth made it quieter), "hear" (hearing something new: a sound that is
 #                 news), "search" (a turn spent searching, whatever it finds), "spot" (noticing
-#                 something hidden in passing), "dodge" (an attack that missed because you dodged
-#                 it), "burdened" (an
-#                 action, not waiting, while your load slows you), "travel" (a journey: a step on
-#                 the overworld), "kick" (a kick at a closed door). Only the player trains, for
-#                 now.
+#                 something hidden in passing), "disarm" (an attempt to disarm a trap, whatever
+#                 comes of it), "dodge" (an attack that missed because you dodged it), "burdened"
+#                 (an action, not waiting, while your load slows you), "travel" (a journey: a step
+#                 on the overworld), "kick" (a kick at a closed door), "pick" (a try at picking a
+#                 lock). Marks gather until a level-up roll on the skill spends them ([ladder]
+#                 below). Only the player trains, for now.
 #   benefit       what it gives, by its value: a list of { effect = EFFECT, ... } growing either
 #                 by `steps` (one for each value reached, then one more for every `every` points
 #                 past the last) or by a `curve` of [value, effect] points from value 0 (straight
@@ -34,27 +36,45 @@
 #                 spec §8 "Searching"; at most 20), "search_reach" (cells farther a search reaches
 #                 than the cells around you; at most 2), "spot" (points added to noticing hidden
 #                 features in passing, at most 20; trained, a skill with it lets you notice them
-#                 at all), "burden" (percent less of your burden's slowdown), "travel"
+#                 at all), "disarm" (points added to disarming a trap, spec §8 "Disarming
+#                 traps", at most 20; trained, a skill with it lets you disarm traps at all),
+#                 "burden" (percent less of your burden's slowdown), "travel"
 #                 (percent less time a journey on the overworld takes), "bargain" (percent better
 #                 prices in shops, together with Presence at most half; shops.toml), "kick"
 #                 (points added to the Strength a kick at a closed door is rolled against, at most
-#                 40). The percent effects stay within 0 to 100.
+#                 40), "pick" (points added to picking a lock, at most 20; trained, a skill with it
+#                 lets you pick locks at all: the Pick lock ability). The percent effects stay
+#                 within 0 to 100.
 #
 # The player sees their own trained skills and their values, never a benefit's number, a mark, or
 # a chance (the wiki describes them as rules).
 
-# [provisional] How training marks become points (#132). The owner has not decided how skills
-# will increase; this is the first option (marks alone). Others for later: ADOM's level-up dice
-# per class once experience levels exist, or marks that become points only when you rest. For
-# now a skill gains a point when its marks reach `need(value)`:
-#   need(value) = marks + value / per             below the soft cap (gentle: 4 at 0, 13 at 99)
-#   need(value) = (marks + value / per) × past_cap   from the soft cap on (42 at 100, 48 at 120)
-# so the way from 100 to 120 takes about as many marks as the whole way from 0 to 100.
-[increase]
-marks = 4
-per = 10
+# How skills grow (spec §8 "Skills", ADOM-like): only at level-up. Every level gives skill rolls
+# (the class's `rolls`, classes/README.toml; the race's, races.toml; and Intelligence's, below),
+# each spent by the player on a trained skill of their choice (`advance:SKILL`). A roll throws the
+# die its skill's training marks have reached on the ladder, one step up for a skill the class is
+# known for (`known_for`), +1 for any other skill the class or the race trains; it adds the result
+# to the value (half, rounded up, from the soft cap on) and spends `spend` percent of the marks
+# (rounded up), so the next roll on the same skill is a step or two smaller. Marks raise nothing
+# by themselves: they are a reservoir the next level cashes in. A skill without marks still rolls
+# the lowest die.
+#
+# [ladder]  dice   the die of each step, lowest first (each adds at least 1)
+#           marks  the marks each step starts at: 0 first, rising
+[ladder]
+dice = [1, "1d3", "1d5", "2d4", "3d3", "3d4", "3d5", "4d4", "4d5"]
+marks = [0, 5, 12, 25, 50, 100, 200, 400, 800]
+
+# [rolls]   intelligence_from, intelligence_every  one more roll a level at Intelligence
+#                 `intelligence_from`, and one more for every `intelligence_every` points above
+#                 it (14: +1, 18: +2, 22: +3)
+#           spend     percent of a skill's marks a roll on it spends, rounded up
+#           soft_cap  from this value on, a roll adds half its result, rounded up
+[rolls]
+intelligence_from = 14
+intelligence_every = 4
+spend = 50
 soft_cap = 100
-past_cap = 3
 
 [[skill]]
 id = "appraise"
@@ -107,6 +127,11 @@ id = "disable_device"
 name = "Disable device"
 description = "Taking traps and mechanisms apart without setting them off."
 kind = "action"
+mark = [{ on = "disarm", chance = 20 }]
+# Disarming a trap you know of (spec §8 "Disarming traps"; the Disarm ability): trained at all,
+# you can try; added to the Dexterity check, +8 at 100 (an arrow trap of 14 disarmed 46 % of the
+# time at Dexterity 10 becomes 93 %), +12 at 200.
+benefit = [{ effect = "disarm", curve = [[0, 0], [100, 8], [200, 12]] }]
 
 [[skill]]
 id = "escape_artist"
@@ -165,6 +190,11 @@ id = "open_lock"
 name = "Open lock"
 description = "Picking locks without the key."
 kind = "action"
+mark = [{ on = "pick", chance = 20 }]
+# Picking a lock (spec §8 "Doors"; the Pick lock ability, a direction): added to the Dexterity
+# check against the lock's difficulty, +8 at 100 (a lock of 14 picked by Dexterity 10 with 46 % of
+# the tries becomes 93 %), +12 at 200. Trained at all, it lets you try.
+benefit = [{ effect = "pick", curve = [[0, 0], [100, 8], [200, 12]] }]
 
 [[skill]]
 id = "search"

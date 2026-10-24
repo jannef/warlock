@@ -1,0 +1,116 @@
+# Talents (spec §8 "Talents"), one file per talent, named by its id (`hardy.toml`); a file holds
+# one `[[talent]]`. The settings (max_ranks, [coverage], the trees, the systems) stay in
+# ../talents.toml, and may be set in one file only. This file holds only the notes below: a file
+# of comments defines nothing. Saves name talents by id, so a new talent is a new file (never
+# edited into another's), a renamed id is a renamed file, and the same id in two files is a load
+# error naming both (docs/dev/content.md).
+#
+# Every talent defines:
+#   id, name      its id (in replays: `talent:hardy`) and its name, as the game shows it
+#   tree          a tree id of ../talents.toml
+#   description   what it does, in the game's words: never a number the game hides (a modifier,
+#                 a chance, a speed); where the game shows the quantity (Defence, Protection,
+#                 carrying, XP) the number may be said. The wiki shows the rule.
+#   systems       the systems it touches, ids from the closed list in ../talents.toml (at least
+#                 one): the coverage check counts them
+#   ranks         how many times it can be taken (1 to max_ranks, default 1): "Hardy 2/3"
+#   choice        what it is chosen for, if it takes a choice: "weapon_skill", "style", or
+#                 "element" (a damage type that is no physical kind); replays write it
+#                 `talent:weapon_focus:long_blades`, and each choice is a pick of its own
+#   needs         what taking any rank asks, all of which must hold at the pick (nothing is
+#                 checked again later):
+#                   talents = { dodge = 1, hardy = 2 }   those talents at those ranks; a talent
+#                                                        with a choice may be needed only by one
+#                                                        of the same choice, taken for the same
+#                   stats = { toughness = 14 }           the stored score, never the effective
+#                   skills = { stealth = 25 }            trained, at that value at least
+#                   weapon_skills = { bows = 3 }         a weapon skill or style at that rank
+#                   chosen = 2                           the chosen weapon skill or style at that
+#                                                        rank (talents with a choice)
+#                   level = 9                            the character level
+#                   race = "dwarf", class = "warrior"    the character's
+#                   eyes = "darkvision"                  the race's vision profile
+#                   any_weapon_skill = { roles = ["melee"], of = ["unarmed"], rank = 3 }
+#                                                        any one of the weapon skills of those
+#                                                        roles or named, at that rank
+#                   requires_alignment = { min = "good" }   an alignment band, as quests and
+#                                                        abilities ask it (`min` the worst
+#                                                        allowed, `max` the best)
+#   effects       what every rank held adds: a list of { kind = ..., ... } (below)
+#   [[talent.rank]]  one per rank, in order (as many as `ranks`, or none): its own `needs`
+#                 besides the talent's, and its own `effects` besides the per-rank ones
+#   granted       true: given (by a race, a birth sign), never on a pick list
+#
+# Effects (each read by one rule; a new kind is a variant in content/talent.rs, a field in
+# talent.rs's TalentMods, and one read):
+#   dodge { value }               Defence in the Dodge category (bonuses add up)
+#   natural { value }             natural armour, on top of the actor's own or an item's
+#   melee_damage { value }        damage added to every blow up close (both hands)
+#   max_hp_per_levels { per_levels, at_least }   hit points: one per that many character
+#                                 levels, at least at_least, handed out at the pick and as each
+#                                 later level comes (as levels' own hit points are)
+#   healing_percent { value }     hit points come back that percent faster (negative: slower)
+#   footsteps_percent { value }   footsteps that percent louder (negative: quieter)
+#   silent_doors                  the doors it opens and closes make no sound
+#   hearing { value }             hears sounds that much fainter
+#   carry_percent { value }       carrying limit, that percent more
+#   travel_percent { value }      overworld journeys take that percent more time (negative:
+#                                 quicker)
+#   hunger_percent { value }      hunger burns that percent faster (negative: slower)
+#   no_exertion                   blows, shots, and throws burn no extra nutrition
+#   xp_percent { value }          experience gained, that percent more
+#   notice { value }              notices hidden things in passing as if trained in Spot, with
+#                                 that much added
+#   free_blow { trigger }         a free blow: "cleave", "great_cleave", "riposte", or
+#                                 "opportunist" (spec §8 "Free blows")
+#   weapon { role, to_hit, damage, threat, ranks, speed, reload, ease, bash, shield }
+#                                 what attacks with some weapon skills gain, as their ranks give
+#                                 it (data/weapon_skills.toml): without `role` the chosen weapon
+#                                 skill or style's (a talent with that choice), else every skill
+#                                 of the role's; `ranks` reads its benefits that many ranks
+#                                 higher (a rank held, never past 10), `ease` eases both
+#                                 two-weapon penalties, `bash` adds to a free bash's chance only
+#                                 where there is one; each field 0 by default
+#   launcher_range { value }      the readied missile weapon shoots that many cells farther
+#   throw_range { value }         throws reach that many cells farther
+#   max_dex { value }             worn armour's cap on Dexterity in Defence, that much higher
+#   deflection { value }          Defence in the Deflection category, on top of magic items'
+#   protection { value, body_armour, shield }   Protection, only while the armour piece worn
+#                                 with the most Protection has body_armour at least (if set) and
+#                                 only while holding a shield (if shield = true)
+#   stance_to_hit { stance, percent }   that combat stance's to-hit penalty, that percent
+#                                 smaller (100: none)
+#   flee_percent { value }        fleeing steps cost that percent more (negative: cheaper)
+#   pain { value }                every hit (a blow, a shot, a throw, a trap) does that much
+#                                 less after the soak, never below 1
+#   resist { value }              resistance in percent to the chosen element (choice element)
+#   resting_percent { value }     resting heals that percent faster on top of resting's pace
+#   second_wind { per_level, at_least, cooldown }   the Second wind ability: per_level hit points
+#                                 per character level back at once (at least at_least), then the
+#                                 cooldown status (an id in ../status.toml)
+#   iron_stomach                  rotten food and overeating never make it vomit; rotten food
+#                                 sickens it half as much
+#   status_eases { status, value }   that status eases that percent faster
+#   no_penalty { status }         that status never lowers its scores
+#   clotting                      a big hit wounds it no more, a critical one degree less
+#   penalty_percent { value }     what its statuses take off its scores, that percent more
+#                                 (negative: less; raises are untouched)
+#   disease_checks { value }      added to its disease checks
+#   disease_recovery { value }    a disease needs that many fewer checks won in a row to go
+#   kick_die { sides }            its kicks at creatures roll one die of that many sides
+#   door_kick { value }           its door kicks as if that much stronger
+#   dig_percent { value }         its digging does that percent more work a turn
+#   two_handed_price { value }    its blows with a two-handed weapon cost that percent more
+#                                 (negative: cheaper)
+#   critical_status { status }    a critical it confirms in melee leaves the target that status
+#   penetration { damage, value } its blows that can do damage of that kind ignore that much
+#                                 more Protection
+#   burden_dex { value }          the burden's cap on its Dexterity in Defence, that much higher
+#   sure_step                     a trap it steps onto first gets a Dexterity check: made, it
+#                                 does not go off, and it is found
+#   pit_proof                     pits never catch it
+#   speed_percent { value }       it moves and acts that percent quicker (hidden in the game)
+#   missile_dodge { value }       Dodge added against shots, throws, and trap missiles
+#   spell_damage_percent { value }   the damage bursts and bolts do it, that percent more
+#                                 (negative: less)
+# Flat bonuses are -20 to 20, percents -100 to 100, never 0.

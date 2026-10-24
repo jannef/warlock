@@ -66,10 +66,11 @@ use crate::burden::{self, Load};
 use crate::character::Character;
 use crate::combat::Health;
 use crate::content::Shops;
+use crate::content::{Choice, TalentId, TreeId};
 use crate::content::{
-    CombatStance, Content, CreatureId, DamageTypeId, DiseaseId, FactionId, Flow, ItemClassId,
-    LevelKind, LightId, ObjectId, RoomEffectDef, SlotId, Stance, StatusId, TerrainId, TrapId,
-    VisionProfile, WeaponSkillId,
+    CombatStance, Content, CreatureId, DamageTypeId, DiseaseId, FactionId, Factor, Flow,
+    ItemClassId, LevelKind, LightId, ObjectId, RoomEffectDef, SlotId, Stance, StatusId, TerrainId,
+    TrapId, VisionProfile, WeaponSkillId,
 };
 use crate::daylight;
 use crate::equipment::Equipment;
@@ -85,12 +86,13 @@ use crate::noise::{self, PerceivedSound};
 use crate::object::{Stack, Weight};
 use crate::skills::{self, SkillId};
 use crate::stats::PerStat;
+use crate::talent::{self, Candidate};
 use crate::temperature::Temperature;
 use crate::time::GameTime;
 use crate::weapon_skills::WeaponSkills;
 use crate::weather::Weather;
 use crate::world::{
-    Actor, ActorId, ActorKind, Death, LevelState, Shop, WorldState, count_of, favour, part_of,
+    Actor, ActorId, ActorKind, Death, Due, LevelState, Shop, WorldState, count_of, favour, part_of,
     unpaid_parts,
 };
 use serde::Serialize;
@@ -105,8 +107,57 @@ pub const VIEW_RADIUS: i32 = 40;
 pub struct OwnSkill {
     pub skill: SkillId,
     pub value: u16,
-    /// Toward the next point, in quarters: 0 (just gained one) to 3 (nearly there).
+    /// How practised it is, its marks' step on the skill ladder in quarters: 0 (no marks, or
+    /// just spent) to 4 (the top dice): how big its next level-up roll is, coarsely.
     pub progress: u8,
+}
+
+/// One of the player's own talents (spec §8 "Talents"), as the Talents page and the character
+/// screen list it: its name for its choice, its rank of how many, and what it does in the
+/// game's words. Never a rule's number.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct OwnTalent {
+    pub id: TalentId,
+    /// "Hardy", "Weapon focus (long blades)".
+    pub name: String,
+    pub tree: TreeId,
+    /// The rank held.
+    pub rank: u8,
+    /// How many ranks it has.
+    pub ranks: u8,
+    /// The choice it was taken for, by id.
+    pub choice: Option<String>,
+    pub description: String,
+}
+
+/// A talent as the Talents page and the level-up screen list it (spec §8 "Talents"): the rank
+/// the player holds, what the next rank asks and whether each part holds, and the choices it
+/// may be taken for now.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct TalentView {
+    pub id: TalentId,
+    pub name: String,
+    pub tree: TreeId,
+    pub choice: Option<Choice>,
+    /// How many ranks it has.
+    pub ranks: u8,
+    /// The highest rank the player holds of it, for any choice (0: none).
+    pub held: u8,
+    /// Given, never picked.
+    pub granted: bool,
+    pub description: String,
+    /// What the next rank asks, in words, each with whether it holds now.
+    pub needs: Vec<NeedView>,
+    /// The ways it may be taken now: `[None]` for a talent without a choice, the choice ids
+    /// for one with a choice; empty when it may not be taken now.
+    pub openings: Vec<Option<String>>,
+}
+
+/// One prerequisite as shown: "Toughness 14", met or not.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NeedView {
+    pub words: String,
+    pub met: bool,
 }
 
 /// What the player knows about one cell.
@@ -686,6 +737,8 @@ pub struct PerceptionView<'a> {
     pub(crate) death: Option<&'a Death>,
     /// The player's experience total.
     pub(crate) experience: u32,
+    /// The player's progression: what their levels still ask them to choose.
+    pub(crate) progress: &'a crate::world::Progress,
     /// The player's quests, which they know.
     pub(crate) quests: &'a crate::world::Quests,
     /// Everything the player was told, which they know.
@@ -965,15 +1018,15 @@ impl<'a> PerceptionView<'a> {
     }
 
     /// The player's own trained skills, in skill order (spec §8 "Skills"): each one's value and
-    /// how near its next point is, coarsely. Untrained skills are not here; nor is anything of a
+    /// how practised it is, coarsely. Untrained skills are not here; nor is anything of a
     /// creature's skills, a mark, or a benefit.
     pub fn own_skills(&self) -> Vec<OwnSkill> {
-        let increase = self.content.increase();
+        let ladder = self.content.ladder();
         (self.player.skills.iter())
             .map(|(skill, trained)| OwnSkill {
                 skill,
                 value: trained.value,
-                progress: skills::progress(trained, increase),
+                progress: skills::progress(trained, ladder),
             })
             .collect()
     }
@@ -1035,12 +1088,89 @@ impl<'a> PerceptionView<'a> {
     /// at the highest level) (spec §8 "Experience"). All of it is shown to the player.
     pub fn own_experience(&self) -> Progress {
         let rules = self.content.experience();
-        let level = rules.level_for(self.experience);
+        let factor = Factor::of(self.content, self.character.map(|c| &c.spec));
+        let level = rules.level_for(self.experience, factor);
         Progress {
             level,
             xp: self.experience,
-            next: (level < rules.max_level()).then(|| rules.threshold(level + 1)),
+            next: (level < rules.max_level()).then(|| rules.threshold_for(level + 1, factor)),
         }
+    }
+
+    /// The choices a level still asks of the player (spec §8 "Talents"), if any: the level and
+    /// how many talent picks are left. Nothing else may be done until they are made.
+    pub fn due(&self) -> Option<Due> {
+        self.progress.due.first().copied()
+    }
+
+    /// The player as prerequisites see them.
+    fn candidate(&self) -> Candidate<'a> {
+        let level = self.own_experience().level;
+        Candidate::player(self.content, self.player, self.character, level)
+    }
+
+    /// The player's own talents, in the order taken (spec §8 "Talents"): each by its name for
+    /// its choice, its tree, the rank held of how many, and what it does in the game's words;
+    /// never a rule's number.
+    pub fn own_talents(&self) -> Vec<OwnTalent> {
+        let book = self.content.talents();
+        (self.player.talents.iter())
+            .filter_map(|taken| {
+                let id = book.id(&taken.id)?;
+                let def = book.get(id);
+                Some(OwnTalent {
+                    id,
+                    name: def.name_for(self.content, taken.choice.as_deref()),
+                    tree: def.tree,
+                    rank: taken.rank,
+                    ranks: def.rank_count(),
+                    choice: taken.choice.clone(),
+                    description: def.description.clone(),
+                })
+            })
+            .collect()
+    }
+
+    /// Every talent of the game, tree by tree in display order (the Talents page and the pick
+    /// list): the rank the player holds, the prerequisites of the next rank with whether each
+    /// holds, and the ways it may be taken now (none: not now).
+    pub fn talents(&self) -> Vec<TalentView> {
+        let content = self.content;
+        let who = self.candidate();
+        (content.talents().by_tree())
+            .map(|(id, def)| {
+                let held = (self.player.talents.iter())
+                    .filter(|t| t.id == def.id)
+                    .map(|t| t.rank)
+                    .max()
+                    .unwrap_or(0);
+                let next = (held + 1).min(def.rank_count());
+                let needs = (def.needs_at(next))
+                    .map(|need| NeedView {
+                        met: who.meets(content, &need, def.choice, None),
+                        words: need.words(content),
+                    })
+                    .collect();
+                TalentView {
+                    id,
+                    name: def.name.clone(),
+                    tree: def.tree,
+                    choice: def.choice,
+                    ranks: def.rank_count(),
+                    held,
+                    granted: def.granted,
+                    description: def.description.clone(),
+                    needs,
+                    openings: talent::openings(content, &who, def),
+                }
+            })
+            .collect()
+    }
+
+    /// The player's alignment band (spec §8 "Alignment"), which they know; `None` without
+    /// alignment rules. Never the score.
+    pub fn own_alignment(&self) -> Option<crate::alignment::Band> {
+        (self.content.alignment()).map(|_| self.player.band(self.content))
     }
 
     /// What the player carries against what they can (spec §8 "Burden"): their burden, and the

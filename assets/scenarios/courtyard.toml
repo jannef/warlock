@@ -2,7 +2,7 @@ name = "Courtyard"
 description = "The walled garden at dawn: sunlight, sky light, and shadows that turn with the sun."
 start_level = "courtyard"
 seed = 1
-character = { race = "human", gender = "female", class = "druid" }
+character = { race = "human", gender = "female", class = "druid", name = "Rowena" }
 lantern = "lantern"
 # Early, while the shadows are long (the turn benchmark walks here then).
 start_time = "06:30"

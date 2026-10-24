@@ -25,6 +25,7 @@
 mod abilities_screen;
 mod blood;
 mod character_screen;
+mod characters_screen;
 mod chargen_screen;
 mod controls_screen;
 mod death_screen;
@@ -43,6 +44,7 @@ mod messages_screen;
 mod missiles;
 pub(crate) mod more;
 mod motion;
+mod name_screen;
 mod new_run_screen;
 mod object_screen;
 mod paged_list;
@@ -76,6 +78,7 @@ use motion::Motion;
 use spells::Spells;
 use warlock_core::Pos;
 use warlock_core::World;
+use warlock_core::ability::Ability;
 use warlock_core::burden::Burden;
 use warlock_core::color::Rgb;
 use warlock_core::content::{MoonDef, ObjectId};
@@ -488,8 +491,12 @@ fn draw_messages(
         console.print(1, 0, prompt, ACCENT);
         return;
     }
-    if let InputMode::Ability(_) = mode {
-        console.print(1, 0, "In which direction? (Esc to cancel)", ACCENT);
+    if let InputMode::Ability(ability) = mode {
+        let prompt = match ability {
+            Ability::Disarm => "Disarm in which direction? (Esc to cancel)",
+            _ => "In which direction? (Esc to cancel)",
+        };
+        console.print(1, 0, prompt, ACCENT);
         return;
     }
     if mode == InputMode::Rest {

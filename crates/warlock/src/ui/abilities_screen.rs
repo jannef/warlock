@@ -281,6 +281,8 @@ mod tests {
             "> a  Throw your voice   at a place you see",
             "Skills",
             "  b  Appraise           not usable yet",
+            "  c  Disarm a trap      in a direction",
+            "  d  Pick lock          in a direction",
             "  e  Steal              not usable yet",
             "Weapon skills",
             "  f  Shield bash        you hold no shield",
@@ -291,6 +293,7 @@ mod tests {
             assert!(text.contains(expected), "{expected:?} in\n{text}");
         }
         // The cursor starts on the first that can be used: throwing one's voice.
+        assert_eq!(screen.selected(), Some(Ability::ThrowVoice));
         assert_eq!(screen.selected().map(|a| a.source()), Some(Source::Class));
     }
 
@@ -307,9 +310,18 @@ mod tests {
         screen.handle(&Press::nav(Nav::Down), &b);
         let text = drawn(&screen, 80, 30).join("\n");
         assert!(!text.contains("you hold no shield."), "{text}");
-        // With a shield in hand it can be used.
+        // With a shield in hand it can be used; the cursor starts on the first that can be used
+        // (throwing one's voice) unless another was used last.
         let world = thief(true);
         let mut screen = AbilitiesScreen::new(Some(&world.perception()), None);
+        assert_eq!(screen.selected(), Some(Ability::ThrowVoice));
+        assert_eq!(
+            screen.handle(&Press::typed('d'), &b),
+            ScreenAction::UseAbility(Ability::PickLock)
+        );
+        let last = Some(Ability::ShieldBash);
+        let mut screen = AbilitiesScreen::new(Some(&world.perception()), last);
+        assert_eq!(screen.selected(), Some(Ability::ShieldBash));
         assert_eq!(
             screen.handle(&Press::typed('f'), &b),
             ScreenAction::UseAbility(Ability::ShieldBash)
@@ -358,7 +370,8 @@ mod tests {
         };
         assert_eq!(none.handle(&a, &b), ScreenAction::Close);
         let world = thief(true);
-        let screen = AbilitiesScreen::new(Some(&world.perception()), None);
+        let last = Some(Ability::ShieldBash);
+        let screen = AbilitiesScreen::new(Some(&world.perception()), last);
         for (cols, rows) in [(48, 12), (30, 8), (5, 3), (0, 0)] {
             assert_eq!(drawn(&screen, cols, rows).len(), rows as usize);
         }

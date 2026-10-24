@@ -1,0 +1,11 @@
+[[talent]]
+id = "shield_expert"
+name = "Shield expert"
+tree = "weaponcraft"
+description = "Your shield turns more blows (Shield +1 to your Defence), and fighting with weapon and shield you bash with it more often."
+needs = { weapon_skills = { shield_block = 2 } }
+effects = [
+    { kind = "weapon", role = "shield_block", shield = 1 },
+    { kind = "weapon", role = "style", bash = 10 },
+]
+systems = ["defence", "styles"]

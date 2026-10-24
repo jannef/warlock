@@ -1,3 +1,12 @@
 [[material]]
 id = "brass"
 name = "brass"
+group = "metal"
+color = "#d4b04c"
+weight = 108
+to_hit = 0
+damage = -1
+protection = 70
+value = 90
+rarity = { weight = 100 }
+gear = { weight = 30 }

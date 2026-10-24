@@ -192,26 +192,54 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Experience** (`warlock-core/src/content/experience.rs`, the rules from
   `assets/data/experience.toml`; `world/experience.rs`, applying them; M21, #133). Creature types
   have a `level` (1 to 99) and an `xp` value (§7). The player has an experience total
-  (`WorldState::experience`, saved; zero is not serialized) and their level follows from it:
-  the XP needed for level n is `linear × (n − 1) + quadratic × (n − 1)²` (10 and 10: 20 for
-  level 2, 60, 120, 200, ..., 900 for level 10, 24500 for the cap, level 50; XP beyond the cap
-  counts but buys nothing). A kill is worth `Experience::kill_xp(xp, monster level, player
+  (`WorldState::experience`, saved; zero is not serialized) and their level follows from it and
+  their character (M30, #226; the design is `docs/design/progression.md` §3). **The curve is
+  written in kills** of the player's own level (`[kills]`): with m = n − 1 a level n costs
+  `k(n) = plateau × m ÷ (m + ramp) + slope_per_100 ÷ 100 × m` kills (213, 5, 285: 38 for level
+  2, 163 for level 10, 223 for 20, 365 for 60), each worth the **creature XP guideline**
+  `per_level × n + base` (5 and 10, which the creature data follows: a content test fails for a
+  type more than three times off it either way, but for the listed outliers, the bat, the deer,
+  and the shopkeeper); a level's XP is `k(n) × guideline(n)`, rounded once from the exact
+  fraction, and the threshold of level n is the sum over levels 2 to n (767 for level 2, 45 052
+  for 10, 221 097 for 20, 2 861 748 for the cap, level 60: about 3 000 such kills to reach level
+  20 and 15 000 to reach 60; a test pins the table's hash; XP beyond the cap counts but buys
+  nothing). **Race and class factors**: races and classes have `experience`, a percent of the
+  XP a level needs (50 to 200, default 100: elf 140, gnome 120, dwarf 115, half-elf 105, human
+  100, halfling 95, half-orc 90; wizard 125, monk 120, priest, druid, and witch 115, paladin 110,
+  ranger 105, warrior and bard 100, thief 95, barbarian, craftsperson, aristocrat, and merchant
+  90, commoner 80), and a character's thresholds are `(threshold × race × class + 5 000) ÷
+  10 000` (`content::Factor`; a run without a character is at 100 %): an elf wizard needs 175 %,
+  a half-orc commoner 72 %. The factor is on the thresholds only, so every source of XP is
+  scaled by it once. A kill is worth `Experience::kill_xp(xp, monster level, player
   level)`, in integers (classic World of Warcraft): at or above the player's level the XP plus 5
   % for each level of difference up to 4 (+20 %), rounded; below it `xp × (ZD − d) ÷ ZD` rounded,
   with `d` the levels below and `ZD` the "zero difference" for the player's level (5 at levels 1 to
-  7, 6 at 8–9, 7 at 10–11, 8 at 12–15, 9 at 16–19, 11 at 20–29, 12 at 30–39, 13 at 40–44, 14 from
-  45); a monster `d ≥ ZD` below is grey and gives 0, any other kill at least 1, and a creature worth
+  7, 6 at 8–9, 7 at 10–11, 8 at 12–15, 9 at 16–19, 11 at 20–29, 12 at 30–39, 13 at 40–44, 14 at
+  45–49, 15 at 50–54, 16 at 55–59, 17 at 60); a monster `d ≥ ZD` below is grey and gives 0, any other kill at least 1, and a creature worth
   0 XP gives 0. Only kills by the player count: `World::dies` awards the XP when the one who
   landed the killing blow is the player, whether by melee, a shot, or a throw (`resolve` and
   `missile_hits`), and when a creature dies of a status effect the player caused (a wound they
   dealt bleeds it to death: the effect's `by`, "Status effects" below); traps (#128) and kills
-  by other creatures give nothing. A level
+  by other creatures give nothing. **Discovery** (`[discovery]`, optional; no draw of any random
+  stream): the player's first kill of each creature type (their own, as above) gives the type's
+  XP once more, `first_kill` percent (100) of it unscaled by the levels, so even a grey one
+  teaches ("You learn something of kobolds.", the type's `plural`, said before any level it
+  earns; a type worth 0 XP teaches nothing and is not remembered); the types are remembered by id
+  in `WorldState::progress` (`Progress::discovered`, left out of the JSON while empty). The
+  player's first arrival on a level gives `arrival` (5) × the level's item level (§8 "Magic
+  items": a branch level's depth, a hand-made level's `item_level`), "You gain 10 experience for
+  finding your way here." as the turn is perceived; the level a run starts on, the overworld, and
+  local areas give none, so walking the land is worth nothing. A level is new when this arrival
+  made its state (`World::travel`), so arrivals need no memory. A level
   gained says "You feel more experienced." and "Welcome to level N." (once per kill, naming the
   last level; after the attack's own messages, or as the turn is perceived for a creature that
   bled to death), and each level gained up to `hp_level` (20)
   raises the player's maximum and current hit points (`Actor::hp_base`, `hp`) by `max(1, class
   hp ÷ 2 + the Toughness modifier)`; without a character the scenario's `hp` stands in for the
-  class's. The player is shown their level, XP, and the XP of the next level
+  class's. Every `talent_every`th level (`[levels]` in `data/experience.toml`, 3) brings a
+  talent pick, made on the spot (§8 "Talents", `World::level_up`), and every level checks
+  each stat for a rise by its training marks (§8 "Stats": "Training"); every gain is scaled by the
+  talents that teach quicker (`xp_percent`). The player is shown their level, XP, and the XP of the next level
   (`PerceptionView::own_experience`), and nothing else about the rules.
 - **Stances** (`content/stance.rs`, `data/stances.toml`; M22), after ADOM's combat tactics. The
   player is in one of four **combat stances**, `CombatStance`: aggressive, neutral (the

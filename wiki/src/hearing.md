@@ -29,7 +29,8 @@ around you hear too.
 How loud a step is also depends on what you step onto. Wading through water splashes, and
 crashing through bushes or over loose rubble is loud. Grass, flowers, the forest floor, a dirt
 road, and dust soften your steps. Steps on anything not listed here, such as stone floor,
-flagstones, and stairs, sound normal.
+flagstones, and stairs, sound normal (100%). A step's loudness is the walker's footsteps times
+the terrain's share, rounded down:
 
 {{#include generated/footsteps.md}}
 
@@ -38,15 +39,32 @@ quieter in a hushed chamber (see [Special rooms](special-rooms.md)).
 
 The overworld is silent: its steps are journeys, not footsteps.
 
+### How loud
+
+The game only ever tells you a sound is faint, clear, or loud. Exactly, every noise has a
+**loudness** where it is made; the table says how far you hear each in the open, with the hearing
+you start with (the [listen](skills.md#what-skills-give) skill makes it keener). A load makes
+your footsteps louder (above, and [Burden](burden.md)), [stealth](skills.md#what-skills-give)
+takes its share off your steps and doors, and a special room multiplies everything made in it.
+Creatures' footsteps and hearing are on [Creatures in numbers](creature-numbers.md#pace-senses-and-size).
+
+{{#include generated/noises.md}}
+
 ## How sound travels
 
 A sound spreads out from where it was made and grows fainter with every cell it travels. It goes
 around corners through open space, but never through walls or solid rock. A **closed door
-muffles** it heavily, about as much as three more cells of distance, so through a closed door you
-only hear what happens close behind it. An open door lets sound through freely. Nothing carries
-more than 30 cells.
+muffles** it heavily, so through a closed door you only hear what happens close behind it. An
+open door lets sound through freely.
 
 Sound takes the easiest way, so a noise behind a long wall may still reach you around its end.
+Exactly:
+
+{{#include generated/sound-travel.md}}
+
+What muffles sound:
+
+{{#include generated/muffling.md}}
 
 ## What you hear
 

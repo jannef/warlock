@@ -9,6 +9,7 @@ glyph = "d"
 fg = "#c89a64"
 speed = 1300
 faction = "wildlife"
+alignment = "neutral"
 sight = 12
 footsteps = 50
 hearing = 5

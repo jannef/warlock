@@ -24,7 +24,7 @@ next to the related ones, never at the end.
 - [`spec/07b-data.md`](spec/07b-data.md) — **7. Levels and data formats (continued): data definitions**: definitions (terrain, creatures, lights, vision, ...), action costs, the sky, objects and materials, magic items, weapon skills, equipment slots, factions, dialogue, quests, the weather, spell effects
 - [`spec/07c-generation.md`](spec/07c-generation.md) — **7. Levels and data formats (continued): generation**: dungeon branches, the overworld, the generators, vaults
 - [`spec/07d-shops-and-rooms.md`](spec/07d-shops-and-rooms.md) — **7. Levels and data formats (continued): shops and special rooms**: shop data and levels, special room effects
-- [`spec/07e-characters.md`](spec/07e-characters.md) — **7. Levels and data formats (continued): races, classes, and the rules' data**: stat adjustments, races, status effects, diseases, sizes, hunger, classes, skills, the horoscope
+- [`spec/07e-characters.md`](spec/07e-characters.md) — **7. Levels and data formats (continued): races, classes, and the rules' data**: stat adjustments, races, status effects, diseases, sizes, hunger, classes, alignment, skills, the horoscope
 - [`spec/07f-scenarios-and-saves.md`](spec/07f-scenarios-and-saves.md) — **7. Levels and data formats (continued): scenarios, saves, settings, replays, dumps**: scenario files, the save format and what is saved, settings, replays, dumps
 - [`spec/08a-architecture.md`](spec/08a-architecture.md) — **8. Architecture**: the pure core, data layout, the perception snapshot, turn phases, time (the calendar, action costs, the scheduler, rest)
 - [`spec/08b-creatures.md`](spec/08b-creatures.md) — **8. Architecture (continued): creatures**: creature behavior, dialogue, quests, displacement
@@ -34,7 +34,7 @@ next to the related ones, never at the end.
 - [`spec/08f-stats-and-burden.md`](spec/08f-stats-and-burden.md) — **8. Architecture (continued): stats and burden**: stats, burden
 - [`spec/08g-magic-items.md`](spec/08g-magic-items.md) — **8. Architecture (continued): magic items**: magic items: affixes, rarities, loot, identification
 - [`spec/08h-hunger.md`](spec/08h-hunger.md) — **8. Architecture (continued): hunger**: hunger, eating, corpses
-- [`spec/08i-character.md`](spec/08i-character.md) — **8. Architecture (continued): the character**: character creation, skills, weapon skills, fighting styles
+- [`spec/08i-character.md`](spec/08i-character.md) — **8. Architecture (continued): the character**: character creation, alignment, skills, weapon skills, fighting styles
 - [`spec/08j-determinism.md`](spec/08j-determinism.md) — **8. Architecture (continued): dice, events, determinism**: dice, events to effects, determinism
 - [`spec/09-development-interface.md`](spec/09-development-interface.md) — **9. Development interface**: command-line flags, the headless CLI, replays, dumps, dev keys
 - [`spec/10-quality-bar.md`](spec/10-quality-bar.md) — **10. Quality bar (Definition of Done)**: CI, tests, golden screenshots, performance budgets

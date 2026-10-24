@@ -1,3 +1,11 @@
+# No weapon.
 [[material]]
 id = "cloth"
 name = "cloth"
+group = "cloth"
+color = "#c8c0a8"
+weight = 25
+protection = 15
+value = 30
+rarity = { weight = 800, deeper = -20 }
+gear = { weight = 800 }

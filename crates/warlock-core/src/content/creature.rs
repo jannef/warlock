@@ -9,6 +9,7 @@ use super::light::LightId;
 use super::object::MAX_BONUS;
 use super::particles::ParticleEmitter;
 use super::status::{OnHit, OnHitSpec, StatusId};
+use crate::alignment::Alignment;
 use crate::color::Rgb;
 use crate::combat::{Attack, CRITS, DEFAULT_CRIT, DEFAULT_THREAT, THREATS};
 use crate::damage::Kinds;
@@ -98,6 +99,11 @@ pub(super) struct CreatureSpec {
     pub size: Option<String>,
     /// The faction it belongs to (`data/factions.toml`).
     pub faction: Option<String>,
+    /// Where it stands between good and evil (spec §8 "Alignment"); neutral by default.
+    #[serde(default)]
+    pub alignment: Alignment,
+    /// The race it is one of (`data/races.toml`), if any.
+    pub race: Option<String>,
     /// Its eyes: a vision profile in `data/vision.toml`.
     #[serde(default = "normal_vision")]
     pub vision: String,
@@ -351,6 +357,8 @@ impl CreatureSpec {
             weight: self.weight,
             size: r.size,
             faction: r.faction,
+            alignment: self.alignment,
+            race: self.race,
             vision: r.vision,
             sight: self.sight,
             combat: self.combat,
@@ -403,6 +411,12 @@ pub struct CreatureDef {
     /// The faction it belongs to; `None` when the content defines no factions. The player's
     /// creature belongs to [`super::PLAYER_FACTION`].
     pub faction: Option<FactionId>,
+    /// Gameplay: where it stands between good and evil (spec §8 "Alignment"), unless a level
+    /// placed it elsewhere ([`crate::world::Actor::nature`]). Never shown to the player.
+    pub alignment: Alignment,
+    /// Gameplay: the race it is one of (an id in `data/races.toml`), if any: its corpse is kin
+    /// to a character of that race (spec §8 "Alignment").
+    pub race: Option<String>,
     /// Its eyes: an index into [`super::Content::vision_profiles`]. The player's eyes come from
     /// the scenario (and the dev vision switch) instead.
     pub vision: usize,

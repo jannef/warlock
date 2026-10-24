@@ -24,7 +24,7 @@ Update them together whenever behavior, commands, or architecture change.
 | Dependency audit | `cargo deny check` |
 | Screenshot smoke test | `cargo xtask smoke` (writes `target/xtask/smoke.png`) |
 | Web build | `cargo xtask web` (writes `target/web/`; see "Releases, web build, logs") |
-| Web smoke test | `cargo xtask web-smoke <chrome>` (serves `target/web`, drives headless Chromium through menu → New run → race, gender, class (preselected) → summary → hub, waits five turns, reloads, Continue, and checks the run resumed at turn 5; writes `target/xtask/web-smoke.png`; fails on logged errors; not run in CI) |
+| Web smoke test | `cargo xtask web-smoke <chrome>` (serves `target/web`, drives headless Chromium through menu → New run → race, gender, class (preselected) → name (empty: a random one) → summary → hub, checks the new character's save `warlock/saves/<id>.sav`, waits five turns, reloads, Continue, and checks the run resumed at turn 5; writes `target/xtask/web-smoke.png`; fails on logged errors; not run in CI) |
 | Regenerate the vast level | `cargo xtask gen-vast` (writes `assets/levels/vast.toml`; deterministic, never hand-edit) |
 | Check the vast level is fresh | `cargo xtask gen-vast --check` (fails if the file differs from the generator output; run it after touching `xtask/src/vast.rs`) |
 | Third-party notices | `cargo xtask licenses` (regenerates `THIRD_PARTY_LICENSES.html` with `cargo-about`, config `about.toml`/`about.hbs`; install: `cargo install cargo-about --locked --features cli`); `--check` fails when it is stale (CI runs it). **Run it after changing dependencies** (`Cargo.toml`/`Cargo.lock`); keep `about.toml`'s `accepted` list in sync with `deny.toml`'s `allow` |
@@ -46,7 +46,11 @@ Game flags (`cargo run -p warlock -- --help`):
   trap hall), `--seed S`
   (default: the scenario's seed; a number, or a word hashed with FNV-1a, e.g. `--seed warlock`),
   `--character RACE,GENDER,CLASS` (e.g. `dwarf,female,warrior`; default: the scenario's
-  character; like `--seed` it shapes the run other flags start and alone does not skip the menu)
+  character; like `--seed` it shapes the run other flags start and alone does not skip the menu),
+  `--name NAME` (the character's name, up to 20 characters; default: the scenario's for its own
+  character, else one of the race's names picked from the seed; like `--character`). A run
+  started with `--character` or `--name` (or from New run) has a chosen character and starts with
+  its starting kit; `--scenario` alone starts with the scenario's pack (docs/dev/character-creation.md)
 - `--content-dir assets` — read content from disk instead of the copy built into the binary
 - `--window WxH` (physical pixels), `--scale F` (display scale; `1` for reproducible captures)
 - `--capture out.png` — render **offscreen** (no window), save a screenshot, exit.
@@ -58,10 +62,12 @@ Game flags (`cargo run -p warlock -- --help`):
   (`Settings::effective_effects(force)`). With `--freeze-time`, particle bursts from the last turn's events (a `--replay`'s last step)
   show a fixed moment of their life; fades complete instantly.
 - Without `--scenario`, `--new`, `--replay`, `--record`, or `--capture` the game opens on the main
-  menu. Dev: `--screen NAME` opens a screen at startup, even with `--capture`: `main` and
-  `new-run` on the main menu (e.g. `--scale 1 --screen new-run --capture target/menu.png`), and
-  character creation's `race`, `gender`, `class`, and `summary` over New run and the steps
-  before them (each on its preselection: the showcase's character);
+  menu. Dev: `--screen NAME` opens a screen at startup, even with `--capture`: `main`,
+  `new-run`, and `characters` (the saved characters; a capture reads them, never writes, from
+  `--save-dir`, e.g. `tests/golden/saved-characters`) on the main menu (e.g. `--scale 1 --screen
+  new-run --capture target/menu.png`), and character creation's `race`, `gender`, `class`,
+  `name`, and `summary` over New run and the steps before them (each on its preselection: the
+  showcase's character, an empty name);
   `pause`, `help`, `inventory`, `equipment`, `character`, `weapon-skills`, `quests`, `messages` (the message history), `pick-up` (the pile on the player's cell), `drop`, `eat`, `read`, `identify` (for the first stack's scroll), and `abilities` (the abilities menu) over a run
   (e.g. after a `--replay` that walks onto a pile), `dialogue` over a run whose last action was
   talk with topics (a `--replay` ending in `chat:SE` or `ask:SE:rooms` next to the hub's hermit),
@@ -86,7 +92,7 @@ Headless dev loop (`warlock-cli`, no window; `--content-dir` works here too):
 
 | Task | Command |
 |---|---|
-| ASCII dump after actions | `cargo run -p warlock-cli -- dump --scenario showcase --actions "move:N move:N" --layers view,fov,memory` (`--character dwarf,female,warrior` starts as that character, here and in `replay --create`) |
+| ASCII dump after actions | `cargo run -p warlock-cli -- dump --scenario showcase --actions "move:N move:N" --layers view,fov,memory` (`--character dwarf,female,warrior` starts as that character and `--name Brakka` names them, here and in `replay --create`) |
 | Dump a replay's end state | `... dump --replay runs/x.json [--actions "wait"] --format ascii\|json [--state]` |
 | Create a replay | `... replay --create --scenario showcase --actions "move:N wait" -o runs/x.json` |
 | Verify a replay | `... replay --verify runs/x.json` (exit 1 and first diverging step on mismatch) |
@@ -97,9 +103,10 @@ trained skills, `Stealth 17`), `abilities` (the abilities menu's list), and `que
 log, active first) from perception;
 `actors` (dev-only: every actor's hit points, load, stats, and skills with their marks).
 
-Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:DIR ascend descend lantern hood
+Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:DIR pick:DIR ascend descend lantern hood
 pickup[:LETTERS] drop[:LETTERS] sell[:LETTERS] pay[:DIR] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
-eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] dig:DIR search search:N chat:DIR ask:DIR:TOPIC throw_voice:X,Y rest:GOAL stance:NAME vision:PROFILE
+eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] dig:DIR search search:N disarm:DIR second_wind chat:DIR ask:DIR:TOPIC throw_voice:X,Y rest:GOAL stance:NAME vision:PROFILE
+talent:ID[:CHOICE] advance:SKILL levelup:auto xp:N
 skip:DURATION weather:KIND effect:ID@X,Y[>X,Y] identify[:LETTERS] afflict:STATUS infect:DISEASE`
 (`DIR` = N
 NE E SE S SW W NW; `NAME` = aggressive, neutral, defensive, or coward (a stance, no time; `assets/data/stances.toml`); `LETTERS` = stacks by position, as letters
@@ -109,7 +116,8 @@ e.g. `pickup:ac` (the pile on the player's cell, `a` its top) or `drop:b` (the i
 are where stacks are stored, never the letters a screen's page shows; `sell:b` sells to
 the shop the player stands in and `pay` pays it (spec §7 "Shops"); `SLOT` = a slot id in
 `assets/data/slots.toml`, e.g. `equip:body:b` (put inventory stack `b` on), `remove:body`;
-`bash:DIR` bashes with the held shield, `fire:X,Y` shoots the readied missile weapon at level
+`pick:DIR` picks the lock of the door that way (the Pick lock ability: Open lock trained;
+`docs/dev/doors.md`), `bash:DIR` bashes with the held shield, `fire:X,Y` shoots the readied missile weapon at level
 cell (X, Y), `throw:c:X,Y` throws one of
 inventory stack `c` there (any weapon is thrown whole, badly: `t` in the game sends `fire` for a launcher, else `throw` for what the Missile weapon slot holds); `eat:b` eats one of inventory stack `b`, `eat:floor:a` one of the top
 stack underfoot; `read:b:12,5` reads scroll stack `b` at level cell (12, 5) (a spell scroll:
@@ -117,11 +125,19 @@ fireball, lightning, frost), `read:b:c` reads it on inventory stack `c` (the scr
 identify); `dig:E` digs into the wall east with the tool in the Tool slot, turn
 after turn until it gives way or something interrupts; `search` searches the cells around the
 player for secret doors and hidden traps, `search:N` for up to N turns (1 to 100), stopping when
-something is found; `chat:E` talks to the creature east of
+something is found; `second_wind` uses the Second wind talent (hit points back at once, then Winded); `disarm:E` tries to disarm the trap the player knows of east of them (the
+Disarm ability, for those trained in Disable device; refused, with no time, without the skill
+or a known trap there); `chat:E` talks to the creature east of
 the player, `ask:E:rooms` asks it about topic `rooms` (an id in `assets/data/dialogue.toml`;
 quest topics are `quest-ID`, `accept-ID`, `decline-ID`, ids in `assets/data/quests.toml`);
 `hood` lowers or raises the lantern's hood (lighting it hooded when it is out), `throw_voice:X,Y`
 throws the player's voice to level cell (X, Y) (one they see, within 6);
+`talent:hardy` takes a talent (an id in `assets/data/talents/`; `talent:weapon_focus:long_blades`
+with its choice) when a level's pick is due (every third level; until it is made every other
+action is refused), `advance:stealth` spends a level's skill roll (none yet, #230), `levelup:auto`
+is the dev action that spends every choice due with the first the player may take, and `xp:2500`
+the dev experience grant (no time; `xp:2431` brings a 100 % character to level 3);
+
 `PROFILE` = an id in
 `assets/data/vision.toml`; `GOAL` = `dawn`, `dusk`, or a duration up to `24h`; durations are
 `30s`, `10m`, `2h`; `skip` is the dev hour skip; `weather` is the dev weather override, `KIND` =
@@ -148,44 +164,52 @@ carries, grouped by item class under `Class:` header lines as the screens group 
 its position as action text names it, and weighs, worn and wielded things marked, their burden
 and its thresholds),
 `equipment` (the player's slots), `stats`
-(the player's race, gender, and class, then their own scores as the rules read them, then
+(the player's name, race, gender, and class, then their own scores as the rules read them, then
+their alignment band, `Alignment Kind`, then
 `Effects Bleeding, Diseased` when they suffer any, then `Diseases filth fever`, the diseases they
 know they have, then what they resist in words, `Resistant to cold`, `Vulnerable to fire`,
 `Immune to poison`), `weapon_skills` (the player's
 ranks and progress toward the next, `Long blades 2 (40%)`, fighting styles too, those in use
-marked `Duelist 1 (0%), in use`), `abilities` (the player's abilities in the abilities menu's
+marked `Duelist 1 (0%), in use`), `talents` (the player's talents in the order taken, `Hardy
+2/3`, `Weapon focus (long blades)`), `abilities` (the player's abilities in the abilities menu's
 order, each with its source and what it asks for or why it cannot be used now: `Shield bash
 (weapon skill): a direction`, `Open lock (skill): not usable yet`), `traps` (the traps the player knows,
 one a line), `quests` (the quest log, active
 first: name, stage, giver, objective, and status), `truth`
 (ground truth, hidden traps and secret doors (`S`) too, **dev-only**), `actors` (every actor on the level with its hit points and
-Defence and Protection, its weight, what it carries and of that wears and wields (magic items as they truly
+Defence and Protection, its alignment (`alignment evil`; the player's score and band), its weight, what it carries and of that wears and wields (magic items as they truly
 are, "(unidentified)" marked), what its magic items do to it (`magic strength +1`), its burden
 and carrying limit, its weapon skills with marks, its stats as score/potential, its status
 effects with severities, its diseases (progressions, checks won in a row, time to their next
 turn) and stat damage, the player's nutrition, its npc id and talk counts, if any, and what it resists in percent (`resists fire 25`); then
 all food on the level and in the packs of those on it with when it was made (a corpse: when it
 died) and its stage, `fresh`, `old`, `rotten`, or `gone`, which the player is never shown,
-**dev-only**), `rooms`
+**dev-only**), `progress` (the level-up choices due, `due level 3: 1 talent`, the talents the
+player may take now by id with their choices, the first kills that paid, and the stat training
+marks, `stat marks St 3, To 1`, **dev-only**),
+`rooms`
 (the level's special rooms: their plain ground as the effect's `mark`, then a line per room,
 **dev-only**), `ice` (the level's temperature and the thickness of the ice on its water in cm,
 `0`-`9`, `a`-`z` for 10-35, `#` beyond, **dev-only**). The header line has the player's `hp
 17/17` (and `dead` once the run has ended), `hunger hungry` unless Not hungry, and the
 `temperature`; JSON dumps add `hp`, `defence`, `protection`, `resistances` (by damage type id, the
-word: `{"cold": "resistant"}`), `burden` (`level`, `limit`), `hunger`, `effects`
+word: `{"cold": "resistant"}`), `burden` (`level`, `limit`), `alignment` (the band's id), `hunger`, `effects`
 (status ids), `diseases` (the known ones' ids), `death` (with `of`, the status that killed,
 `cause`, starving, choking, or a trap, and `trap`, the id of the trap that killed),
 `known_traps`, `temperature` (°C to a tenth), `weapon_skills` (by skill id:
-`rank`, `progress`), `styles_in_use` (style ids), `abilities` (in menu order: `id`, `source`,
+`rank`, `progress`), `styles_in_use` (style ids), `talents` (in the order taken: `id`, `name`,
+`rank`, `ranks`, `choice`), `due` (the level-up choices due: `level`, `talents`, or null), `abilities` (in menu order: `id`, `source`,
 `aim`, and `unavailable`, the reason's id or null), `quests` (the log: `id`, `name`, `kind`, `active`, `completed`, `giver`,
 `objective`, `status`), each seen actor's `health` and `effects` (those that show), `room` (the
 special room the player stands in, if they know it), and per inventory stack (in position
 order) its `letter` (the position as action text), `class` (item class id), `name`, `rarity`,
 `identified`, and `magic` (affixes only once identified). Replay
 files are JSON
-`{game_version, scenario, seed, character, steps:[{action, hash}]}` (`character` =
+`{game_version, scenario, seed, character, name, kit, steps:[{action, hash}]}` (`character` =
 `{race, gender, class}`, left out for a run without one; a replay without it starts as the
-scenario's, so old replays load); `hash` is the FNV-1a 64 state hash (`World::state_hash`) after
+scenario's, so old replays load; `name` the character's name, a replay without it gives the run's
+default name; `kit` true when the run started with the character's starting kit, left out
+otherwise); `hash` is the FNV-1a 64 state hash (`World::state_hash`) after
 the step, as 16 hex digits.
 
 - `--portable [DIR]` keep everything in `warlock-data` next to the game (or DIR); a `warlock-data`
@@ -196,11 +220,14 @@ the step, as 16 hex digits.
   `--export-keys FILE` writes the keymap (every command's keys by context, the format of
   Controls' Export keys, `warlock-keys.toml`) to FILE; `--import-keys FILE` reads one into the
   settings (the commands it lists only) and says what changed; both then exit.
-- `--new` start a fresh run instead of resuming the save; `--dev` enables the dev keys in release
+- `--new` start a fresh run (a new character, with a save of its own) instead of resuming the
+  character played last; `--dev` enables the dev keys in release
   builds (always on in debug: F2 reveal map (ground truth), F3 next vision profile, F4 light-value
   overlay, F5/F9 snapshots, F6 skip an hour (recorded as `skip:1h`), F7 next weather (recorded as
-  `weather:KIND`), F8 identify everything carried (recorded as `identify`); all listed by `?`);
-  `--save-dir DIR` keeps saves in DIR instead of the platform data dir.
+  `weather:KIND`), F8 identify everything carried (recorded as `identify`); all listed by `?`),
+  and New run's seed field (without it New run draws a random seed and never mentions it, #256);
+  `--save-dir DIR` keeps saves in DIR instead of the platform data dir (`DIR/saves/<id>.sav`, one
+  per character; with `--capture` or `--replay` only read).
 
 Typical render check: `cargo run -p warlock -- --scale 1 --freeze-time 1 --capture target/shot.png`,
 then read the PNG.
@@ -221,9 +248,9 @@ tests. **Read the ones your task touches before changing code, and update them w
 file). Topics:
 
 - `docs/dev/content.md` — TOML content embedded by `build.rs`, level files and legends (faction overrides, arrival lines, water flow)
-- `docs/dev/saves.md` — storage backends (native files, browser `localStorage`), the save file and autosave, permadeath, where files live (`paths.rs`, portable mode)
+- `docs/dev/saves.md` — storage backends (native files, browser `localStorage`), one save per character and the list of them, autosave, permadeath, where files live (`paths.rs`, portable mode)
 - `docs/dev/settings.md` — `settings.toml`, effect switches, clock, palettes, rebindable key commands (`settings/keys.rs`), the `Game` resource
-- `docs/dev/screens.md` — the screen stack (open, input, draw, the dialog, info pages), prompts as input modes, the screen modules, key commands and the abilities menu
+- `docs/dev/screens.md` — the screen stack (open, input, draw, the dialog, info pages, the text field), prompts as input modes, the screen modules, key commands and the abilities menu
 - `docs/dev/time.md` — `GameTime`, the calendar, action costs and prices, the energy scheduler, rest, creature speed
 - `docs/dev/hearing.md` — noise per action, propagation, what creatures and the player hear, sound markers
 - `docs/dev/objects.md` — object and material data, parts and instance parts, gems, stacks, piles, inventories, weight, pick up and drop
@@ -231,12 +258,14 @@ file). Topics:
 - `docs/dev/combat.md` — the 2d12 rules, Defence categories, strikes, hit points and death, messages
 - `docs/dev/ranged-combat.md` — firing and throwing, missiles in flight, fires, the aiming mode
 - `docs/dev/weapon-skills.md` — ranks, marks, benefits, training hooks, the styles' grips and rows
-- `docs/dev/stats.md` — the six stats, modifiers, scores and potentials, what may be shown
+- `docs/dev/stats.md` — the six stats, modifiers, scores and potentials, what may be shown, stat training (marks by use, the level-up checks)
 - `docs/dev/burden.md` — load, limits, sizes, every penalty's one hook
 - `docs/dev/hunger.md` — satiation, eating, corpses and rot, starving
-- `docs/dev/character-creation.md` — `CharacterSpec`, races, classes, genders, the horoscope, starting rolls
+- `docs/dev/character-creation.md` — `CharacterSpec`, races, classes, genders, the horoscope, starting rolls, names, starting kits
+- `docs/dev/alignment.md` — the good–evil score and its bands, the deeds that move it (one hook each), what reads it
 - `docs/dev/skills.md` — trained skills, effects and uses, training marks, the skills screen
 - `docs/dev/experience.md` — the level curve, kill XP, level-ups
+- `docs/dev/progression.md` — talents (data, `TalentMods`, the hooks), the picks a level brings and their refusal, the `levels` stream, the coverage policy
 - `docs/dev/status-effects.md` — statuses and severities, healing paces, checks, diseases and stat damage
 - `docs/dev/blood.md` — wounds and stains, bleeding, how blood is drawn
 - `docs/dev/creatures.md` — factions and stance, the AI, paths, creature sight
@@ -362,7 +391,8 @@ A successful compile does not verify anything visual. Before opening a PR:
   `Closes #N`. CI must be green before a squash merge into `main`.
 - CI runs on Linux only (`CI` workflow: fmt, clippy, tests, headless screenshots, wasm32 check,
   cargo-deny; the web build on pushes to `main`). macOS is not run in Actions: development happens
-  on macOS, so run the full local check there before every PR. `main` is branch-protected: PRs
+  on macOS, so run the full local check there before every PR (a PR built by a cloud agent,
+  `ops/agents/`, runs it on Linux instead). `main` is branch-protected: PRs
   only, the Linux, wasm32, and cargo-deny checks must pass, linear history.
 - **Merging** (`docs/dev/merging.md` has the details): agents don't chase `main`. A PR merges
   or rebases onto `origin/main` once, when the integrator says it is next in line; after that
@@ -370,6 +400,8 @@ A successful compile does not verify anything visual. Before opening a PR:
   `cargo xtask wiki`, and the PR's own captures or replays (CI covers the wasm32 check, the
   smoke test, `mdbook build wiki`, cargo-deny, and the licenses). The full check list
   ("Verification") runs once, before the PR opens.
+  Agents stop when their PR is open; a finisher agent handles CI and the merge (`docs/dev/merging.md`,
+  "Agents, finishers, and context").
 - **Keep PRs small**: one feature per PR, rules first (core, tests, dumps), then the UI, then
   the content that uses it, when they can stand alone. The integrator schedules features by
   overlap: at most about three PRs at once that add actions or save state.
@@ -389,11 +421,12 @@ A successful compile does not verify anything visual. Before opening a PR:
 `*.toml` files (one per showcase room or feature, read in file-name order; entry names are
 unique across files) list one entry per showcase room plus the vast level (its start and
 its river): a scenario and text `actions` (`move:N*3 open:E`; `*N` repeats) or a `replay` file,
-and optional `window`, `scale`, `freeze_time`, `screen` (a `--screen` value: over the run, e.g.
+and optional `character` (`human,male,paladin`: the run starts as it, not the scenario's), `kit`
+(`true`: the run starts with the character's starting kit), `window`, `scale`, `freeze_time`, `screen` (a `--screen` value: over the run, e.g.
 `pause`, `help`, `settings`, `controls`, `inventory`, `equipment`, `equip-item`, `describe`,
 `character`, `skills`, `weapon-skills`, `quests`, `messages`, `pick-up`, `drop`, `eat`, `abilities`,
 `dialogue`; or over
-the main menu, the replay then unused: `main`, `race`, `summary`), `args` (more game flags, e.g.
+the main menu, the replay then unused: `main`, `characters`, `race`, `gender`, `name`, `summary`), `args` (more game flags, e.g.
 `["--fire"]`, `["--keys", "h"]`), `tolerance` (per-channel, default 2) and `max_diff_ratio`
 (default 0.05% of pixels). Walks that fight or wait for creatures belong on hand-made levels
 (the showcase, the arena, the trap hall): a walk through a generated level breaks whenever the

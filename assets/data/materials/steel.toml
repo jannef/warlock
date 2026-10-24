@@ -1,3 +1,11 @@
+# The measure of every other material: common, and the usual metal only deeper.
 [[material]]
 id = "steel"
 name = "steel"
+group = "metal"
+color = "#a8b0b8"
+to_hit = 0
+damage = 0
+protection = 100
+rarity = { weight = 300, deeper = 60 }
+gear = { weight = 20, deeper = 15 }

@@ -295,6 +295,7 @@ impl World {
     /// staircase.
     pub(super) fn travel(&mut self, to: &str, at: Option<Pos>) -> Result<(), WorldError> {
         let from = self.state.current_level.clone();
+        let new = !self.state.levels.contains_key(to);
         self.visit(to, Some(&from))?;
         let target = &self.state.levels[to];
         let arrival = at
@@ -317,6 +318,9 @@ impl World {
         self.state.current_level = to.to_string();
         self.state.overworld_step = None;
         self.reach(to);
+        if new {
+            self.discover_level(to);
+        }
         // Sounds remembered on the level left say nothing about this one.
         self.state.recent_sounds.clear();
         if let Some(line) = self.content.level(to).and_then(|t| t.arrival.clone()) {
@@ -445,11 +449,15 @@ pub(super) fn instantiate_level(
             damage: Default::default(),
             weapon_skills: def.weapon_skills.clone(),
             faction_override: spawn.faction,
+            alignment: None,
+            alignment_override: spawn.alignment,
             npc: spawn.npc.clone(),
             talk: Talk::default(),
             satiation: None,
             stance: CombatStance::Neutral,
             free_blows: FreeBlows::default(),
+            talents: Default::default(),
+            stat_marks: Default::default(),
         };
         actor.hp = actor.max_hp(content);
         crate::rot::made_at(&mut actor.inventory, content, state.time);

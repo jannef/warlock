@@ -49,6 +49,7 @@ use crate::content::Content;
 use crate::content::Effect as ItemEffect;
 use crate::geom::{Dir, Pos};
 use crate::skills::Effect;
+use crate::talent::TalentMods;
 use crate::world::{Actor, ActorId, LevelState, WorldState, fnv1a};
 use serde::{Deserialize, Serialize};
 use std::collections::BinaryHeap;
@@ -269,11 +270,15 @@ pub fn noise(
     }
     let quiet = actor.skill_effect(content, Effect::Quiet).clamp(0, 100) as u16;
     let loudness = u32::from(plain.loudness) * u32::from(100 - quiet) / 100;
+    // Then its talents (spec §8 "Talents": Silent feet's quieter steps and silent doors).
+    let talents = actor.talent_mods(content);
     let loudness = match act {
         Act::Step(_) => {
             let quieter = actor.mods(content).get(ItemEffect::Stealth);
-            crate::magic::mods::less(u64::from(loudness), quieter) as u32
+            let loudness = crate::magic::mods::less(u64::from(loudness), quieter);
+            TalentMods::scaled(loudness, talents.footsteps_percent) as u32
         }
+        Act::OpenDoor(_) | Act::CloseDoor(_) if talents.silent_doors => 0,
         _ => loudness,
     } as u16;
     (loudness > 0).then_some(Noise { loudness, ..plain })

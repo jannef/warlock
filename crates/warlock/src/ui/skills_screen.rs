@@ -1,6 +1,7 @@
 //! The Skills screen (spec §6; `S`, or `S` on the character screen): the player's trained skills
-//! (spec §8 "Skills"), in skill order, each with its value and, dimmer, a short meter of how near
-//! its next point is (in quarters: `━━──`). Untrained skills are not there: they do not exist for
+//! (spec §8 "Skills"), in skill order, each with its value and, dimmer, a short meter of how
+//! practised it is (its training marks' step on the skill ladder, in quarters: `━━──`): how big
+//! its next level-up roll is. Untrained skills are not there: they do not exist for
 //! the player. Never a benefit's number, a mark, or a chance: perception has none of them. The
 //! selected skill's one-line description shows at the bottom.
 //!
@@ -27,7 +28,7 @@ const NAME_W: i32 = 18;
 struct Row {
     name: String,
     value: u16,
-    /// Toward the next point, in quarters (0 to 3).
+    /// How practised it is, in quarters (0 to 4).
     progress: u8,
     description: String,
 }
@@ -123,7 +124,7 @@ impl SkillsScreen {
     }
 }
 
-/// How near a skill is to its next point, `progress` quarters of the way, as a short meter:
+/// How practised a skill is, `progress` quarters of the ladder, as a short meter:
 /// `━` for each quarter reached, `─` for the rest (`━━──`). Shape, not color, tells them apart.
 pub fn meter(progress: u8) -> String {
     let filled = usize::from(progress.min(PROGRESS_STEPS));
