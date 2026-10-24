@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ There are several objects here.
+ You pick up a Sharp emerald-pommelled long sword of the Bear.
+
+
+
+
+                  ┌─ Item ───────────────────────────────────────────────────────┐
+                  │                                                              │
+                  │ ) Sharp emerald-pommelled long sword of the Bear             │
+                  │                                                              │
+                  │ Magic emerald-pommelled long sword · steel blade, leather    │
+                  │ grip, emerald pommel · 1.8 kg                                │
+                  │ Pommel: small emerald, fine cut                              │
+                  │                                                              │
+                  │ Long blade, for the main hand                                │
+                  │ Damage 1d8; criticals on 20–24, ×2 damage                    │
+                  │ Slashing or piercing damage                                  │
+                  │                                                              │
+                  │ Item level 3                                                 │
+                  │ Prefix  Sharp: +2 damage                                     │
+                  │ Suffix  of the Bear: +2 to Strength                          │
+                  │                                                              │
+                  │ Esc close                                                    │
+                  └──────────────────────────────────────────────────────────────┘
+
+
+
+
+
+ The Hub  ·  HP 17/17  ·  MP 2/2  ·  Lv 1  ·  08:03  ·  11 Darkening, Year 1444          ? controls

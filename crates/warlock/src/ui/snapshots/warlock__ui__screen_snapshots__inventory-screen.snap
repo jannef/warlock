@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ You see here 12 gold coins.
+ You pick up 12 gold coins.
+
+
+
+
+
+              ┌─ Inventory ──────────────────────────────────────────────────────────┐
+              │                                                                      │
+              │ Melee weapons                                                        │
+              │   a - ) a dagger                                              450 g  │
+              │ Body armour                                                          │
+              │   b - [ a leather jerkin                                     3.5 kg  │
+              │ Light sources                                                        │
+              │   c - ( 2 wax candles                                         200 g  │
+              │ Coins                                                                │
+              │   d - $ 12 gold coins                                         120 g  │
+              │                                                                      │
+              │ Carrying 4.3 kg   ·   Your weight 74.3 kg (you 70 kg)                │
+              │ Burdened over 14 kg, strained over 28 kg, overloaded over 42 kg      │
+              │                                                                      │
+              │ a-d look   i or Esc close                                            │
+              └─ 1 Char · 2 Inventory · 3 Equip · 4 Skills · 5 Weapons · 6 Quests ───┘
+
+
+
+
+
+
+ The Hub  ·  HP 17/17  ·  MP 2/2  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444          ? controls

@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ The old hermit says: "Here we don't fight. Down in the arena, you may. The rats have the run of the
+ The old hermit says: "Good. Mind their teeth. Three, now: I'll know if you count wrong."
+
+
+
+
+
+                  ┌─ Quests ─────────────────────────────────────────────────────┐
+                  │                                                              │
+                  │ Active                                                       │
+                  │ > Rats in the arena                                          │
+                  │                                                              │
+                  │ Kill 3 giant rats in the Arena.                              │
+                  │ 0 / 3 killed.                                                │
+                  │                                                              │
+                  │ The old hermit: "Here we don't fight. Down in the arena, you │
+                  │ may. The rats have the run of the pit again, and their       │
+                  │ squeaking comes up the stairs all night. Kill three of them  │
+                  │ for me, and I'll pay you for the quiet."                     │
+                  │                                                              │
+                  │ ↑↓ choose   q or Esc close                                   │
+                  └─ 1 Char · 2 Inv · 3 Equip · 4 Skills · 5 Weapons · 6 Quests ─┘
+
+
+
+
+
+
+
+ The Hub  ·  HP 17/17  ·  MP 2/2  ·  Lv 1  ·  08:08  ·  11 Darkening, Year 1444          ? controls

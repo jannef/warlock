@@ -481,6 +481,7 @@ fn magic(w: &World, object: &str, id: &str, value: i32) -> Stack {
         }],
         name: None,
         identified: true,
+        carried: 0,
     };
     let object = w.content().object_id(object).expect("object");
     Stack::with_magic(object, 1, magic)

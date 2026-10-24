@@ -156,13 +156,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
   2: the thief and the ranger 3, the bard 4), `weapon_skills` (starting ranks as for races), `weapon_skill_choice` (two or more
   sets of such ranks, one picked at random when the character is made), and `styles` and
   `style_choice` (the same for fighting styles, §8 "Fighting styles"; `weapon_skills` names no
-  style and `styles` nothing but styles). Each class rolls
+  style and `styles` nothing but styles), `abilities` (the level table: `{ level, talent }`
+  rows, lowest level first, each a talent of `data/talents/` the class gives at that level, §8
+  "Class abilities"), and `bonus_talents` (`{ levels, trees }`: a bonus talent pick at each of
+  those levels from those trees, none named: any). Each class rolls
   its key stats (the warrior St `1d3+1` and To `1d3`, the wizard In `2d2+1` and To `-1d2`, the
   commoner To `1d3-1`); the rest are fixed. Adventurers: barbarian (8 hit points), bard (2),
   priest (4), druid (4), monk (5), paladin (6), ranger (5), thief (3), wizard (0), witch (1),
   warrior (7); everyday folk: aristocrat (1), commoner (3), craftsperson (3), merchant (2). A
   class adjusts the starting scores, gives hit points, sets how fast levels come, trains skills,
-  and gives starting ranks in weapon skills and fighting styles, nothing more. Skills: a few it
+  gives starting ranks in weapon skills and fighting styles, and, with a level table, class
+  abilities and bonus talents. Skills: a few it
   is known for (`2d6+10`) and a few more (`2d4+4`); the full table is in the wiki (Skills), e.g.
   the thief open lock, steal, stealth, and tumble well, appraise, disable device, escape artist,
   search, and spot a little; the ranger spot, survival, and woodcraft well, athletics, handle

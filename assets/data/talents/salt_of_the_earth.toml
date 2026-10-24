@@ -1,0 +1,8 @@
+[[talent]]
+id = "salt_of_the_earth"
+name = "Salt of the earth"
+tree = "class"
+granted = true
+description = "You mend like the country folk you come from: your wounds heal faster, and faster still as you rest."
+effects = [{ kind = "healing_percent", value = 25 }, { kind = "resting_percent", value = 25 }]
+systems = ["hit_points"]

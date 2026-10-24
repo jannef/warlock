@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ You ready 24 arrows.
+ You put on a pair of leather boots.
+
+
+
+                    ┌─ Equipment: Head ────────────────────────────────────────┐
+                    │                                                          │
+                    │ Helmets                                                  │
+                    │ > a - [ an iron helm (being worn)                1.5 kg  │
+                    │                                                          │
+                    │                                                          │
+                    │                                                          │
+                    │                                                          │
+                    │                                                          │
+                    │                                                          │
+                    │                                                          │
+                    │                                                          │
+                    │                                                          │
+                    │                                                          │
+                    │                                                          │
+                    │                                                          │
+                    │ Choose what is there to take it off.                     │
+                    │                                                          │
+                    │ a or Enter put on   Esc back                             │
+                    └──────────────────────────────────────────────────────────┘
+
+
+
+
+ The Hub  ·  HP 17/17  ·  MP 2/2  ·  Burdened  ·  Lv 1  ·  08:05  ·  11 Darkening        ? controls

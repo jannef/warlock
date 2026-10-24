@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ You pick up Dread Visage, an iron helm and a Sharp emerald-pommelled long sword of the Bear.
+ You put on Dread Visage, an iron helm.
+
+
+
+
+
+              ┌─ Inventory ──────────────────────────────────────────────────────────┐
+              │                                                                      │
+              │ Melee weapons                                                        │
+              │   a - ) a Sharp emerald-pommelled long sword of the Bear     1.8 kg  │
+              │ Missile weapons                                                      │
+              │   b - } a short bow (rare)                                    700 g  │
+              │ Helmets                                                              │
+              │   c - [ Dread Visage, an iron helm (being worn)              1.5 kg  │
+              │ Rings                                                                │
+              │   d - = a silver ring (magic)                                  10 g  │
+              │                                                                      │
+              │ Carrying 4 kg   ·   Your weight 74 kg (you 70 kg)                    │
+              │ Burdened over 14 kg, strained over 28 kg, overloaded over 42 kg      │
+              │                                                                      │
+              │ a-d look   i or Esc close                                            │
+              └─ 1 Char · 2 Inventory · 3 Equip · 4 Skills · 5 Weapons · 6 Quests ───┘
+
+
+
+
+
+
+ The Hub  ·  HP 17/23  ·  MP 2/2  ·  Lv 1  ·  08:03  ·  11 Darkening, Year 1444          ? controls

@@ -1,0 +1,24 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+
+
+
+
+
+
+
+
+
+              ┌─ Choose your name (4 of 4) ──────────────────────────────────────────┐
+              │                                                                      │
+              │   What is the name of a human thief?                                 │
+              │                                                                      │
+              │   Name: [Brakka_              ]                                      │
+              │                                                                      │
+              │   Type a name of up to 20 characters, or Tab for one of your         │
+              │   people's names. Left empty, it is Maren.                           │
+              │                                                                      │
+              │ Enter accept   Tab random   Backspace erase   Esc back               │
+              └──────────────────────────────────────────────────────────────────────┘

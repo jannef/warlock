@@ -10,6 +10,20 @@ skills = { athletics = "2d4+4", handle_animal = "2d4+4" }
 rolls = 2
 weapon_skills = { maces = 1 }
 styles = { brawler = 1 }
+# The level table (spec §8 "Class abilities"): what a hard life taught them; bonus talents from
+# any tree, the commoner's gift.
+abilities = [
+    { level = 1, talent = "hard_work" },
+    { level = 6, talent = "hearty" },
+    { level = 12, talent = "stubborn" },
+    { level = 18, talent = "big_hands" },
+    { level = 25, talent = "thick_skull" },
+    { level = 32, talent = "second_wind" },
+    { level = 40, talent = "salt_of_the_earth" },
+    { level = 50, talent = "folk_hero" },
+    { level = 60, talent = "unlikely_hero" },
+]
+bonus_talents = { levels = [10, 20, 30, 45, 55] }
 # A stick and a turnip, and three worthless coppers.
 kit = [
     { wield = "club" },

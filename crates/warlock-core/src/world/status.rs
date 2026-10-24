@@ -278,6 +278,9 @@ impl World {
         let content = self.content.clone();
         // What rotted away while it was frozen (on another level, or over a dev skip) goes first.
         self.rot_pack(id, start);
+        if id == self.state.player {
+            self.appraise_carried(seconds);
+        }
         let mut passed = 0;
         while passed < seconds {
             let rate = self.healing_rate(id);

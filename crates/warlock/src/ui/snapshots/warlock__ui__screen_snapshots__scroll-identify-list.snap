@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ There are several objects here.
+ You pick up 8 objects.
+
+
+
+
+
+
+
+
+
+                    ┌─ Identify ───────────────────────────────────────────────┐
+                    │                                                          │
+                    │ Melee weapons                                            │
+                    │ > a - ) a dagger (magic)                          450 g  │
+                    │                                                          │
+                    │ a or Enter identify   Esc cancel                         │
+                    └──────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+
+ The Trap Hall  ·  HP 22/22  ·  MP 1/1  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444    ? controls

@@ -10,6 +10,20 @@ skills = { metalcraft = "2d6+10", woodcraft = "2d6+10", appraise = "2d4+4" }
 known_for = ["metalcraft", "woodcraft"]
 rolls = 2
 weapon_skills = { axes = 1 }
+# The level table (spec §8 "Class abilities"): the tricks of a trade, one by one as the levels
+# come; bonus talents from Weaponcraft, Guard, and Delver.
+abilities = [
+    { level = 1, talent = "keen_appraisal" },
+    { level = 6, talent = "whetstone" },
+    { level = 12, talent = "fletching" },
+    { level = 18, talent = "sturdy_work" },
+    { level = 25, talent = "mining" },
+    { level = 32, talent = "tinker" },
+    { level = 40, talent = "jeweller" },
+    { level = 50, talent = "masterwork" },
+    { level = 60, talent = "artisan" },
+]
+bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["weaponcraft", "guard", "delver"] }
 # A hand axe, work gloves and boots, and something of their own making: the weaver's rope, the
 # cobbler's boots, or the smith's helm.
 kit = [

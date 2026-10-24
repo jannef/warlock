@@ -59,14 +59,15 @@ impl World {
 
     /// What `actor` adds to a check against a disease whose `check` stat is `stat`: its
     /// modifier in the stat (of the effective score, spec §8 "Stats"), its talents' bonus
-    /// (Strong constitution, spec §8 "Talents"), and the player's race's `disease_check`
+    /// (Strong constitution, and what adds to every check of the stat: Stubborn, Iron will; spec §8 "Talents"), and the player's race's `disease_check`
     /// (ratfolk shrug diseases off).
     fn disease_modifier(&self, actor: &Actor, stat: Stat) -> i32 {
         let race = self.state.race_of(&self.content, actor);
         let modifier = actor.effective_stats(&self.content).modifier(stat);
-        let talents = actor.talent_mods(&self.content).disease_checks;
+        let talents = actor.talent_mods(&self.content);
         modifier
-            .saturating_add(talents)
+            .saturating_add(talents.disease_checks)
+            .saturating_add(talents.check(stat))
             .saturating_add(race.map_or(0, |r| r.disease_check))
     }
 

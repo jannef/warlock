@@ -1,0 +1,48 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ Welcome to Showcase. Press ? ┌─ Controls ───────────────────────────────────────────────┐
+                              │                                                          │
+                              │ Esc always backs out and cancels; it cannot be rebound.  │
+                              │ Letters (a-z) and digits that pick list rows are fixed.  │
+                              │                                                          │
+                              │ In play                                                  │
+                              │ > Move north                           k Num8 ↑          │
+                              │   Move northeast                       u Num9            │
+                              │   Move east                            l Num6 →          │
+                              │   Move southeast                       n Num3            │
+                              │   Move south                           j Num2 ↓          │
+                              │   Move southwest                       b Num1            │
+                              │   Move west                            h Num4 ←          │
+                              │   Move northwest                       y Num7            │
+                              │   Wait a turn                          . Num5            │
+                              │   Search                               s                 │
+                              │   Search for a while                   z                 │
+                              │   Open a door                          o                 │
+                              │   Close a door                         c                 │
+                              │   Kick                                 K                 │
+                              │   Go down stairs                       >                 │
+                              │   Go up stairs                         <                 │
+                              │   Light / douse lantern                L                 │
+                              │   Pick up                              , g               │
+                              │   Drop                                 d                 │
+                              │   Inventory                            i                 │
+                              │   Equipment                            e                 │
+                              │   Character                            @                 │
+                              │   Skills                               S                 │
+                              │   Weapon skills                        W                 │
+                              │   Quest log                            q                 │
+                              │   Message history                      M                 │
+                              │   Rest                                 R                 │
+                              │   Eat                                  E                 │
+                              │   Read a scroll                        r                 │
+                              │   Look around                          x                 │
+                              │                                                          │
+                              │                                                          │
+                              │                                                          │
+                              │                                                          │
+                              │                                                          │
+                              │                                                          │
+                              │ Enter rebind   Del reset   Esc back                    ↓ │
+ The Hub  ·  HP 17/17  ·  MP 2└──────────────────────────────────────────────────────────┘10 °C  ·  Turn 1   ? controls

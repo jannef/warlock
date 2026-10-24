@@ -3,7 +3,8 @@
 //! letter), over the screen it came from.
 //!
 //! It names the item (in its rarity's color, spec §8 "Magic items"), says what it is (rarity,
-//! base, every part it is made of, weight) and whether it is worn or wielded, then its base
+//! base, every part it is made of, weight; and to a player with an eye for it, spec §8 "Class
+//! abilities", what it and its gems are worth) and whether it is worn or wielded, then its base
 //! stats in words (`warlock_core::magic::describe`): how it is held or worn, its damage dice and
 //! criticals, how far it shoots or is thrown, what it needs, its Defence. A magic or rare item that is
 //! identified lists its item level and its affixes in plain language ("Sharp: +2 damage", "of
@@ -65,7 +66,7 @@ impl DescribeScreen {
             title: capitalized(&stack.title(content)),
             rarity: stack.rarity(),
             mark: equipment::mark(content, view.equipment(), item),
-            lines: describe::lines(stack, content),
+            lines: describe::appraised(stack, content, view.appraisal()),
         }
     }
 
@@ -210,6 +211,32 @@ mod tests {
 
     fn has(text: &[String], needle: &str) -> bool {
         text.iter().any(|l| l.contains(needle))
+    }
+
+    #[test]
+    fn an_eye_for_worth_shows_what_things_and_gems_are_worth() {
+        // A merchant at level 32 (Appraiser) picks up the same arms.
+        let content = Arc::new(Content::builtin().expect("content"));
+        let spec = "human,male,merchant".parse().expect("a character");
+        let mut world =
+            World::with_character(content, "showcase", None, Some(&spec)).expect("world");
+        world.apply(&Action::GrantXp(2_000_000));
+        while world.due().is_some() {
+            world.apply(&Action::LevelUpAuto);
+        }
+        let walk = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*5 pickup \
+                    move:E pickup";
+        for action in warlock_core::action::parse_actions(walk).expect("actions") {
+            world.apply(&action);
+        }
+        let view = world.perception();
+        let item = view.inventory().len() - 1;
+        let sword = text(&DescribeScreen::new(Some(&view), Some(item)));
+        assert!(has(&sword, "Worth "), "{sword:#?}");
+        assert!(has(&sword, "fine cut (worth "), "{sword:#?}");
+        // Without the eye, no worth.
+        let plain = text(&DescribeScreen::new(Some(&armed().perception()), Some(3)));
+        assert!(!has(&plain, "Worth "), "{plain:#?}");
     }
 
     #[test]

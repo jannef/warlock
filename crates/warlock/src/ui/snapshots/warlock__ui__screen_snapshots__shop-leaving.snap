@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ You see here a dagger (for sale, 47 gold).
+ You pick up a dagger (unpaid, 47 gold).
+
+
+
+
+
+
+
+
+                                  ┌─ Grimbold's General Store ───┐
+                                  │                              │
+                                  │  You owe Grimbold 47 gold.   │
+                                  │                              │
+                                  │   Pay 47 gold and leave  (y) │
+                                  │ > Don't pay  (n, Esc)        │
+                                  │                              │
+                                  │ ↑/↓ choose  Enter select     │
+                                  └──────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+ The Courtyard  ·  HP 19/19  ·  MP 11/11  ·  Lv 1  ·  06:36  ·  11 Darkening  ·  Clear   ? controls

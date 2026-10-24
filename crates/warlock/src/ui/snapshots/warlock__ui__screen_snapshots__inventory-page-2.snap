@@ -1,0 +1,28 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ You┌─ Inventory ─────────────────────────────────────────────── Page 2/2 ─┐
+ boo│ Boots                                                                │
+    │   a - [ a pair of leather boots                                1 kg  │
+    │ Light sources                                                        │
+    │   b - ( 2 wax candles                                         200 g  │
+    │ Coins                                                                │
+    │   c - $ 12 gold coins                                         120 g  │
+    │                                                                      │
+    │                                                                      │
+    │                                                                      │
+    │                                                                      │
+    │                                                                      │
+    │                                                                      │
+    │                                                                      │
+    │                                                                      │
+    │                                                                      │
+    │                                                                      │
+    │                                                                      │
+    │                                                                      │
+    │ Carrying 25.1 kg (burdened)   ·   Your weight 95.1 kg (you 70 kg)    │
+    │ Burdened over 14 kg, strained over 28 kg, overloaded over 42 kg      │
+    │ > < page   a-c look   i or Esc close                                 │
+    └─ 1 Char · 2 Inventory · 3 Equip · 4 Skills · 5 Weapons · 6 Quests ───┘
+ The Hub  ·  HP 17/17  ·  MP 2/2  ·  Burdened  ·  Lv 1  ·  08:05     ? controls

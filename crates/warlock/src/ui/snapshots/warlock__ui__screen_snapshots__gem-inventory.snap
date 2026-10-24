@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ There are several objects here.
+ You pick up a medium fine sapphire, an uncut tiny garnet, and 25 gold coins.
+
+
+
+
+
+
+              ┌─ Inventory ──────────────────────────────────────────────────────────┐
+              │                                                                      │
+              │ Gems                                                                 │
+              │   a - * a medium fine sapphire                                  2 g  │
+              │   b - * an uncut tiny garnet                                    1 g  │
+              │ Coins                                                                │
+              │   c - $ 25 gold coins                                         250 g  │
+              │                                                                      │
+              │ Carrying 253 g   ·   Your weight 70.3 kg (you 70 kg)                 │
+              │ Burdened over 14 kg, strained over 28 kg, overloaded over 42 kg      │
+              │                                                                      │
+              │ a-c look   i or Esc close                                            │
+              └─ 1 Char · 2 Inventory · 3 Equip · 4 Skills · 5 Weapons · 6 Quests ───┘
+
+
+
+
+
+
+
+
+ The Hub  ·  HP 17/17  ·  MP 2/2  ·  Lv 1  ·  08:03  ·  11 Darkening, Year 1444          ? controls

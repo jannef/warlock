@@ -88,6 +88,7 @@ mod alignment;
 mod bleed;
 mod buff;
 mod carry;
+mod class;
 mod dev;
 mod dig;
 mod disarm;
@@ -575,6 +576,9 @@ impl World {
             talents: Default::default(),
             stat_marks: Default::default(),
         };
+        // The class abilities of level 1 (spec §8 "Class abilities").
+        let class = (state.character.as_ref()).map(|c| c.spec.class.clone());
+        class::grant(&content, class.as_deref(), &mut player, 1);
         player.hp = player.max_hp(&content);
         player.mana = player.max_mana(&content);
         crate::rot::made_at(&mut player.inventory, &content, def.start);
@@ -655,7 +659,11 @@ impl World {
                 actor.id
             )));
         }
-        Ok(Self::assemble(content, state))
+        // What the class gives up to the player's level, if its table grew since (spec §8
+        // "Class abilities").
+        let mut world = Self::assemble(content, state);
+        world.grant_class(world.player_level(), false);
+        Ok(world)
     }
 
     fn assemble(content: Arc<Content>, mut state: WorldState) -> Self {
@@ -1020,6 +1028,8 @@ mod buff_tests;
 mod burden_tests;
 #[cfg(test)]
 mod character_tests;
+#[cfg(test)]
+mod class_tests;
 #[cfg(test)]
 mod cost_tests;
 #[cfg(test)]

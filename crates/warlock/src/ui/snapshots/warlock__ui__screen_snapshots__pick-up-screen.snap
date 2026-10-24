@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ Welcome to Showcase. Press ? for controls.
+ There are several objects here.
+
+
+
+
+
+
+
+                    ┌─ Pick up ────────────────────────────────────────────────┐
+                    │                                                          │
+                    │ Melee weapons                                            │
+                    │ > a - ) a dagger                                  450 g  │
+                    │ Body armour                                              │
+                    │   b - [ a leather jerkin                         3.5 kg  │
+                    │ Light sources                                            │
+                    │   c - ( 2 wax candles                             200 g  │
+                    │                                                          │
+                    │ a-c mark   , all   Enter pick up   Esc cancel            │
+                    └──────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+ The Hub  ·  HP 17/17  ·  MP 2/2  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444          ? controls
