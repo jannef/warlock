@@ -344,6 +344,11 @@ fn blood_frenzy_and_unstoppable_keep_the_rage() {
     assert!(!w.hurt(player, 999, fight::Harm::Actor(kobold), &mut events));
     assert_eq!(w.state.player().hp, 1);
     assert!(!suffers(&w, player, "raging") && suffers(&w, player, "exhausted"));
+    // (This barbarian is a Phoenix: its one rising spent, nothing more stands between.)
+    w.state
+        .progress
+        .once
+        .insert(super::stars::RISEN.to_string());
     assert!(
         w.hurt(player, 999, fight::Harm::Actor(kobold), &mut events),
         "once a rage"

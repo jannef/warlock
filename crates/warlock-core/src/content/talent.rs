@@ -404,6 +404,22 @@ pub enum TalentEffect {
         at_least: i32,
         cooldown: String,
     },
+    /// Once in its life, a hit, a trap, or a status that would kill it does not (Rise from the
+    /// ashes; not starving or choking): it rises with `hp_percent` of its hit points, a burst of
+    /// `damage` (`damage_type`) strikes every creature beside it (`spell`, an effect in
+    /// `data/effects.toml`, drawn over `radius` cells) and melts the ice there, and it suffers
+    /// `status` (Ashen).
+    RiseFromAshes {
+        hp_percent: i32,
+        status: String,
+        spell: String,
+        radius: i32,
+        damage: Dice,
+        damage_type: String,
+    },
+    /// Its rising from the ashes brings it back whole (Reborn whole): every hit point, every
+    /// status effect and disease burned away, and none of the rising's own status.
+    RebornWhole,
     /// The class active Veteran's wind ([`ClassActive::VeteransWind`]): as Second wind.
     VeteransWind {
         per_level: u8,
@@ -493,6 +509,10 @@ pub enum TalentEffect {
     TwoHandedPrice { value: i32 },
     /// A critical it confirms in melee leaves the target suffering `status` (one degree).
     CriticalStatus { status: String },
+    /// A creature it hits in melee suffers `status` (one degree, caused by it), and is held by
+    /// it: the status lasts until it misses that creature, strikes another, or moves (Drowning
+    /// grip; the status `blocks` the creature's steps).
+    Grip { status: String },
     /// Added to the roll that confirms its criticals (every attack).
     CriticalConfirm { value: i32 },
     /// Its blows that can do damage of kind `damage` (an id in `data/damage_types.toml`) ignore this
@@ -876,7 +896,30 @@ impl TalentEffect {
                 percent(*value)
             }
             TalentEffect::NoPenalty { status: id }
-            | TalentEffect::CriticalStatus { status: id } => status(id),
+            | TalentEffect::CriticalStatus { status: id }
+            | TalentEffect::Grip { status: id } => status(id),
+            TalentEffect::RiseFromAshes {
+                hp_percent,
+                status: id,
+                spell,
+                radius,
+                damage,
+                damage_type,
+            } => {
+                if !(1..=100).contains(hp_percent) || !(1..=5).contains(radius) {
+                    return Err("`rise_from_ashes`: hp_percent is 1 to 100, radius 1 to 5".into());
+                }
+                if damage.is_zero() {
+                    return Err("`rise_from_ashes`: damage is not 0".into());
+                }
+                if !content.damage_types().is_empty()
+                    && content.damage_type_id(damage_type).is_none()
+                {
+                    return Err(format!("names an unknown damage type `{damage_type}`"));
+                }
+                super::spell::check_effect(content, spell, super::effect::EffectShape::Burst)?;
+                status(id)
+            }
             TalentEffect::SecondWind {
                 per_level,
                 at_least,
@@ -916,6 +959,7 @@ impl TalentEffect {
             TalentEffect::SilentDoors
             | TalentEffect::NoExertion
             | TalentEffect::RerollFumble
+            | TalentEffect::RebornWhole
             | TalentEffect::Swimmer
             | TalentEffect::StoneSense
             | TalentEffect::FreeBlow { .. }

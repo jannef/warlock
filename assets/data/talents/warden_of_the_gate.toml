@@ -1,0 +1,8 @@
+[[talent]]
+id = "warden_of_the_gate"
+name = "Warden of the gate"
+tree = "stars"
+granted = true
+description = "None leaves your side unpunished: a foe that steps away from beside you takes a blow as it goes. Protection +1, and what your afflictions take from your scores is halved."
+effects = [{ kind = "free_blow", trigger = "opportunist" }, { kind = "protection", value = 1 }, { kind = "penalty_percent", value = -50 }]
+systems = ["free_blows", "protection", "status"]

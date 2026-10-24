@@ -14,8 +14,9 @@
 //! - **Blocks**: the player cannot take an action of a kind a status of theirs `blocks` (a raging
 //!   barbarian cannot read): the rules refuse it, taking no time ([`World::refuse_blocked`]), and
 //!   the abilities menu greys out an ability that costs one
-//!   ([`crate::ability::Unavailable::While`]). Creatures' plans do not consult it yet: no status
-//!   a creature can suffer blocks anything.
+//!   ([`crate::ability::Unavailable::While`]). Creatures' plans consult it for steps only: one a
+//!   status of its blocks `step` (Held) neither steps nor opens a door, and fights back
+//!   (`lucky.rs`).
 //! - **Follows**: as a status ends, worn off or cured, the status it `follows` begins at one
 //!   degree, caused by whoever caused the one that ended (Raging, then Exhausted); hit points
 //!   above a maximum the ended status raised fall back to it ([`World::ended`]).

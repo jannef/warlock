@@ -134,6 +134,8 @@ impl World {
         if let Some(actor) = self.state.actors.get_mut(&player) {
             actor.pos = to;
         }
+        // Moving, they let go of whatever they held (Drowning grip, `lucky.rs`).
+        self.let_go(player, None);
         events.push(Event::ActorMoved {
             actor: player,
             from,
@@ -317,6 +319,7 @@ impl World {
         }
         self.state.current_level = to.to_string();
         self.state.overworld_step = None;
+        self.let_go(player, None);
         self.reach(to);
         if new {
             self.discover_level(to);

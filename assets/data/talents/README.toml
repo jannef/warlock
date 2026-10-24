@@ -173,6 +173,14 @@
 #                                 less after the soak, never below 1
 #   resist { value }              resistance in percent to the chosen element (choice element)
 #   resting_percent { value }     resting heals that percent faster on top of resting's pace
+#   rise_from_ashes { hp_percent, status, spell, radius, damage, damage_type }   once in its
+#                                 life, what would kill it (not starving or choking) does not:
+#                                 it rises with hp_percent of its hit points, damage of
+#                                 damage_type strikes every creature within radius (the spell
+#                                 effect, ../effects.toml), the ice there melts, and it suffers
+#                                 status (spec §8 "Birth sign")
+#   reborn_whole                  its rising from the ashes brings it back whole: every hit
+#                                 point, every status and disease gone, and no rising status
 #   second_wind { per_level, at_least, cooldown }   the Second wind ability: per_level hit points
 #                                 per character level back at once (at least at_least), then the
 #                                 cooldown status (an id in ../status.toml)
@@ -193,6 +201,9 @@
 #   two_handed_price { value }    its blows with a two-handed weapon cost that percent more
 #                                 (negative: cheaper)
 #   critical_status { status }    a critical it confirms in melee leaves the target that status
+#   grip { status }               a creature it hits in melee suffers that status, caused by it
+#                                 (one that `blocks` steps: held), until it misses that creature,
+#                                 strikes another, or moves
 #   critical_confirm { value }    added to the roll that confirms its criticals
 #   penetration { damage, value } its blows that can do damage of that kind ignore that much
 #                                 more Protection

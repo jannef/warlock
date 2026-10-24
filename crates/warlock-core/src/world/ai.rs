@@ -53,7 +53,7 @@ const SEARCH_LIMIT: i32 = 64;
 
 /// What a creature does with one action.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Plan {
+pub(super) enum Plan {
     Attack { target: ActorId, kind: AttackKind },
     Step(Dir),
     Patrol,
@@ -74,7 +74,7 @@ enum Route {
 
 /// What a step does.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Stepped {
+pub(super) enum Stepped {
     /// Moved, for this energy price.
     Moved(i64),
     /// Opened the closed door in the way instead, for this energy price (priced before the door
@@ -100,7 +100,10 @@ impl World {
         let heard = (self.state.actors.get_mut(&id))
             .map(|a| std::mem::take(&mut a.heard))
             .unwrap_or_default();
-        let price = match self.decide(id, &heard) {
+        // Held fast (Drowning grip, `lucky.rs`), it fights back instead of stepping.
+        let plan = self.decide(id, &heard);
+        let plan = self.held_back(id, plan);
+        let price = match plan {
             Plan::Attack {
                 target,
                 kind: AttackKind::Ranged,
@@ -383,14 +386,21 @@ impl World {
     /// ([`World::swing_open`]). Either makes noise. An overloaded
     /// creature opens doors but does not step. A creature hostile to the player does not step
     /// (or open a door) into a sanctuary ([`World::shuns`]): it waits.
-    fn creature_steps(&mut self, id: ActorId, dir: Dir, events: &mut Vec<Event>) -> Stepped {
+    pub(super) fn creature_steps(
+        &mut self,
+        id: ActorId,
+        dir: Dir,
+        events: &mut Vec<Event>,
+    ) -> Stepped {
         let level = self.state.current();
         let actor = &self.state.actors[&id];
         let (from, to) = (actor.pos, actor.pos.step(dir));
         let Some(def) = level.terrain.get(to).map(|t| self.content.terrain(*t)) else {
             return Stepped::Blocked;
         };
-        if self.shuns(id)(to) {
+        // Held fast, it cannot step at all (a status that `blocks` steps; `lucky.rs`).
+        let held = actor.effects.blocking(&self.content, ActionKind::Step);
+        if self.shuns(id)(to) || held.is_some() {
             return Stepped::Blocked;
         }
         if def.is_closed_door() && self.content.creature(actor.creature).opens_doors {

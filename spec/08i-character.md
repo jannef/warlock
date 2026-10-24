@@ -50,8 +50,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     loved and Grim company (shop favour −10), Supple (Dodge +1, the burden's Dexterity cap +1),
     Evergreen (hunger −15 %, rotten food's sickness halved), Stone hide (Protection +1),
     Stonewise (notices on stone in passing, digging +25 %), Keen edge (threat +1 with every
-    attack). The rest of the design's gifts land with their rules (S2–S4) and are listed in
-    `grants` only then.
+    attack), Rise from the ashes (the Phoenix: once in a life, a hit, a trap, or a status that
+    would kill the player does not, starving and choking still do: they rise with a third of
+    their hit points, Ashen for a day (every score −2, healing at half pace), in a burst of
+    flame, 1d6 fire to every creature beside them, no roll to hit, melting the ice there; the
+    once is `Progress::once`'s `risen`). The rest of the design's gifts land with their rules
+    (S2–S4) and are listed in `grants` only then.
   - **Lucky days** (`[[lucky]]`): five animal–element pairs, each with a day of the month (any
     month), the day the animal's place in the Great Race: the Wood Salamander on the 1st (the
     Racer), the Metal Manticore on the 3rd (the Iron Scourge), the Fire Phoenix on the 10th (the
@@ -59,7 +63,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (the Gate Warden). Born in that year **and** on that day, a character has the title after
     their name (the character and death screens: "Brakka, the Iron Scourge") and one gift more:
     the Racer's Winner's luck (a natural 2 on the attack roll is rolled again once, two more
-    draws only then; speed +5 % more); the other four's gifts come with S5. About one character
+    draws only then; speed +5 % more), the Iron Scourge's Scourge (a melee blow that kills
+    strikes at once at another foe beside them: Cleave, granted), the Firebird's Reborn whole
+    (rising from the ashes brings them back whole: every hit point, every status effect and
+    disease burned away, nothing following them, and no Ashen), the Deep One's Drowning grip
+    (a creature they hit in melee is **Held**, a status that `blocks` its steps: it cannot step,
+    and beside its holder it attacks them instead, until they miss it, strike another, or move,
+    going to another level too; no roll, no timer), and the Gate Warden's Warden of the gate (a
+    foe stepping away from beside them takes a free blow: Opportunist, granted; Protection +1;
+    what status effects take off their scores halved, rounded toward 0). About one character
     in 1 800 over an even spread of births; by race at a start date, as the wiki tabulates. The
     game never says lucky days exist until a character is born on one. The birth draws are
     unchanged, so existing seeds keep their dates and signs.

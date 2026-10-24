@@ -749,6 +749,8 @@ impl World {
                 self.after_blow(attacker, target, kind, &blow, events);
             }
         }
+        // Drowning grip (spec §8 "Birth sign"): a hit holds, a miss or another target lets go.
+        self.grip(attacker, target, kind, blow.as_ref(), events);
         blow
     }
 
@@ -816,6 +818,13 @@ impl World {
         }
         actor.hp -= damage;
         if actor.hp > 0 {
+            return false;
+        }
+        // Rise from the ashes (spec §8 "Birth sign"): once in a life, but never from starving.
+        if id == self.state.player
+            && !matches!(harm, Harm::Starving(_))
+            && self.rise_from_ashes(events)
+        {
             return false;
         }
         match harm {

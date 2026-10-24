@@ -316,6 +316,8 @@ pub struct TalentMods {
     pub two_handed_price: i32,
     /// The status a critical it confirms in melee leaves on the target.
     pub critical_status: Option<StatusId>,
+    /// The status a melee hit of its holds the creature with (Drowning grip), if any.
+    pub grip: Option<StatusId>,
     /// Added to the roll that confirms its criticals.
     pub critical_confirm: i32,
     /// More penetration for blows that can do damage of a kind: `(kind, value)`.
@@ -377,6 +379,19 @@ pub struct TalentMods {
     pub quivering_palm: Option<QuiveringPalm>,
     /// Hit points every level past `hp_level` adds beyond a level's own, if it has Hardened.
     pub hardened: Option<i32>,
+    /// Rise from the ashes, if it has it.
+    pub rise: Option<Rise>,
+    /// Its rising brings it back whole (Reborn whole).
+    pub reborn_whole: bool,
+}
+
+/// Rise from the ashes (spec §8 "Birth sign"): what rising gives back, the burst it rises in,
+/// and the status it is left with.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Rise {
+    pub hp_percent: i32,
+    pub status: StatusId,
+    pub burst: crate::content::Burst,
 }
 
 /// A step price change and what it asks ([`TalentEffect::StepPercent`]).
@@ -774,6 +789,9 @@ impl TalentMods {
             TalentEffect::KickNoisePercent { value } => self.kick_noise_percent += value,
             TalentEffect::DigPercent { value } => self.dig_percent += value,
             TalentEffect::TwoHandedPrice { value } => self.two_handed_price += value,
+            TalentEffect::Grip { status } => {
+                self.grip = content.status_id(&status).or(self.grip);
+            }
             TalentEffect::CriticalStatus { status } => {
                 self.critical_status = content.status_id(&status).or(self.critical_status);
             }
@@ -801,6 +819,31 @@ impl TalentMods {
             TalentEffect::UnarmedDie { sides } => {
                 self.unarmed_die = Some(self.unarmed_die.map_or(sides, |s| s.max(sides)));
             }
+            TalentEffect::RiseFromAshes {
+                hp_percent,
+                status,
+                spell,
+                radius,
+                damage,
+                damage_type,
+            } => {
+                if let Some(status) = content.status_id(&status) {
+                    let burst = crate::content::Burst {
+                        spell,
+                        radius,
+                        damage,
+                        kind: content.damage_type_id(&damage_type),
+                        blast: 0,
+                        ice: Some(crate::content::BurstIce::Melts),
+                    };
+                    self.rise = Some(Rise {
+                        hp_percent,
+                        status,
+                        burst,
+                    });
+                }
+            }
+            TalentEffect::RebornWhole => self.reborn_whole = true,
             TalentEffect::StanceDodge { stance, percent } => {
                 match self.stance_dodge.iter_mut().find(|(s, _)| *s == stance) {
                     Some((_, p)) => *p += percent,

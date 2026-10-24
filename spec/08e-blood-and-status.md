@@ -84,7 +84,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
       player's action of that kind before it is tried, with no time taken ("You cannot read while
       raging."; a step into a hostile creature is `melee`, into a closed door `open_door`, off a
       local area's edge `stairs`), and the abilities menu greys out an ability that costs one
-      (`Unavailable::While(status)`: "you are raging"). Creatures' plans do not consult it yet;
+      (`Unavailable::While(status)`: "you are raging"). A creature's plans consult it for
+      steps only: one held fast (a status that blocks `step`: Held, §8 "Birth sign") does not
+      step and attacks whoever holds it if they are beside it and hostile, else waits;
     - **be followed** (`follows = "exhausted"`): as it ends, worn off or cured, the status it names
       begins at one degree, caused by whoever caused the one that ended (Raging, then Exhausted:
       the ending's message, then the beginning's). A chain never leads back to where it began, a

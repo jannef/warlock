@@ -1,0 +1,8 @@
+[[talent]]
+id = "reborn_whole"
+name = "Reborn whole"
+tree = "stars"
+granted = true
+description = "Rising from your ashes brings you back whole: every wound healed, every affliction and disease burned away, and no weakness after."
+effects = [{ kind = "reborn_whole" }]
+systems = ["hit_points", "status", "diseases"]

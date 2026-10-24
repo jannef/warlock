@@ -138,6 +138,21 @@ sign; talents' `animal`/`element` needs name real ones; content without the `sta
 fixture, grants nothing). `Content::lucky`, `Character::lucky`/`title`/`titled_name`/
 `sign_title`/`grants`.
 
+The lucky days' gifts (#269): Scourge and Warden of the gate are data only (`free_blow`
+`cleave`/`opportunist`, `protection`, `penalty_percent`). Reborn whole is `reborn_whole`, read in
+`World::rise_from_ashes` (`world/stars.rs`, the Phoenix's `rise_from_ashes` kind; the once is
+`Progress::once`'s `RISEN`, saved and hashed with `Progress`, left out while empty) through
+`World::reborn_whole` (`world/lucky.rs`). Drowning grip is `grip { status = "held" }`
+(`TalentMods::grip`): `World::grip`, one line at the end of `World::resolve`, holds the target of
+a melee hit (a status caused by the holder) and lets go of every other it held (a miss lets go
+of the target too); `World::let_go` runs in `player_moves` after the step and in `travel`. Held
+`blocks = ["step"]`, the first status a creature suffers that blocks anything: `creature_steps`
+refuses every step (and door) while a status of the creature blocks `step`, and
+`World::held_back` turns the creature's plan to step or patrol into an attack on its holder if
+that one is hostile and beside it, else a wait. Nothing draws at random. Tests:
+`world/lucky_tests.rs`; the screen snapshots `character-screen-lucky` (showcase seed 440, the
+Deep One) and `death-screen-lucky` (arena seed 142, the Iron Scourge).
+
 `world/stars.rs` puts the grants into `Actor::talents` (first, in grant order, rank 1;
 `Talents::regrant` drops every granted talent of the `stars` tree first) in `World::with_character_named` and again
 in `World::from_state`: they are **never a stored choice**, so a gift added to the data reaches a
