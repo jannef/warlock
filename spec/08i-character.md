@@ -320,6 +320,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
     0 until the class tables), or a tree not `pending` nor `no_free` without `free_per_tree`
     prerequisite-free talents, is a content error. A wave that ships a system's talents removes
     its `pending`; a new system of the game joins the list in the PR that ships its talents.
+    **Policy for new systems** (design §8.2): every new system of the game ships with talents,
+    at least `min_talents` (and `min_class` class abilities), tagged with its new `[[system]]`
+    in the same PR, and its feature issue says which in the template's "Talents and class
+    abilities" section (§13), or why none (presentation only, or an extension of a system
+    already listed). Resources are systems too: mana and the pools of #225 join the list with
+    talents on their maximum, refill, and costs, and abilities that spend them carry their tag;
+    a cost in a resource stands instead of a cooldown status, never beside one. The bar is
+    data and may rise as the list grows. Developer notes: `docs/dev/progression.md` "Coverage
+    policy".
   - **Determinism and saves**: picks are replayed actions; nothing here draws from the gameplay
     stream; the `levels` stream (`WorldState::levels_rng`, for the skill rolls and stat checks
     to come) is made on its first draw. `Actor::talents` (by id, like affixes: adding talents
