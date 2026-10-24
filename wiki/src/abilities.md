@@ -38,13 +38,17 @@ menu).
 - **Disarm a trap**: everyone trained in Disable device (the thief) has it, in place of the
   skill. Choose a direction, toward a trap you know of next to you, on the floor or on a door:
   you try to take it apart (see [Traps](traps.md#disarming-traps)).
-- **Skills used as actions** (Open lock, Steal, Heal, ...): each is in the menu once you are
-  trained in it (see [Skills](skills.md)), greyed out until its use comes to the game.
+- **Pick lock**: everyone trained in Open lock (the thief) has it, in place of the skill. Choose a
+  direction, toward a closed door next to you: you try its lock (see
+  [Doors](doors.md#picking-locks)).
+- **Other skills used as actions** (Steal, Heal, ...): each is in the menu once you are trained
+  in it (see [Skills](skills.md)), greyed out until its use comes to the game.
 - No race, class, or item gives an ability yet.
 
 ## Keys of their own
 
 If you use an ability often, you can give it a key in the Controls screen (the shield bash is
-"Bash with your shield" and disarming "Disarm a trap", which have no key by default): the key uses
-the ability just as the menu would, asking for a direction if it needs one. Without a shield, it says so at once and takes no
-time. `a` ("Abilities") and `A` ("Use the last ability again") can be rebound like every key.
+"Bash with your shield", disarming "Disarm a trap", and picking a lock "Pick a lock", none with a
+key by default): the key uses the ability just as the menu would, asking for a direction if it
+needs one. Without a shield, it says so at once and takes no time. `a` ("Abilities") and `A`
+("Use the last ability again") can be rebound like every key.

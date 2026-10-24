@@ -144,7 +144,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Action costs** (`data/actions.toml`, optional): action ids mapped to their cost in energy,
   e.g. `wait = 1000`, 1000 being a normal action (6 s at normal speed; §8 "Time"), 100 to
   10 000. The ids are `step` (onto terrain of `move_cost` 100), `wait`, `open_door`,
-  `close_door`, `unlock` (unlocking a door with a key, on top of opening it), `kick`, `lantern`,
+  `close_door`, `unlock` (unlocking a door with a key, on top of opening it), `pick_lock` (2000:
+  a try at picking a lock, whatever comes of it; a lock that gives opens its door on top of it,
+  `open_door`; §8 "Doors"), `kick`, `lantern`,
   `stairs` (also entering a location or local area and walking off an
   area's edge), `pick_up`, `drop`, `melee` (a shield bash too), `shoot`, `throw`, `reload` (a
   missile weapon that `reloads`: a crossbow shot costs `shoot` plus `reload`, 2000), `cast`,

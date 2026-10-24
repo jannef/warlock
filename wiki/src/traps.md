@@ -87,8 +87,8 @@ risk) is the only price. Disarming earns no [experience](experience.md).
 
 A trap may lie on a door instead of the floor. It belongs to the door: walking through the
 doorway never sets it off, and stepping into it never asks. It goes off when someone **opens**
-the door (`o`, or walking into it; unlocking it with a key too), you or a creature that opens
-doors, and at every **kick** at the door, whether the door breaks or holds. It goes off at
+the door (`o`, or walking into it; unlocking it with a key too, or picking its lock), you or a
+creature that opens doors, and at every **kick** at the door, whether the door breaks or holds. It goes off at
 whoever opened or kicked it, from the door: an arrow shoots from the wall beside the door at them,
 a blade strikes at them, lightning runs from the door through them, and a fireball bursts out on
 both sides of the door, even while it is still shut. Pits are never on doors.

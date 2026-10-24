@@ -5,8 +5,8 @@
 //! of that they wield and wear (`wield = "spear"`, `wear = ["leather_jerkin"]`), the faction they
 //! are placed in, and the unique character they are (`npc = "hermit"`, whose dialogue they
 //! speak), stair links, lights, the flow of running water, objects, locks on closed doors:
-//! `lock = "pantry"`, a lock its keys open, or `locked = true`, one only a skeleton key opens;
-//! spec §8 "Doors", traps: `trap = "fireball"`, hidden unless `known = true`, a bolt trap's
+//! `lock = "pantry"`, a lock its keys open, or `locked = true`, one only a skeleton key opens,
+//! and `lock_difficulty = N`, how hard it is to pick (default 14); spec §8 "Doors", traps: `trap = "fireball"`, hidden unless `known = true`, a bolt trap's
 //! direction with `dir`; spec §8 "Traps", and secret doors: `secret = true` or `secret = N` (a
 //! difficulty) on a closed door, which looks like the wall around it until it is found; spec §8
 //! "Searching"). Characters not in the level's legend fall back to the shared default legend
@@ -35,7 +35,9 @@ use super::search::{Secret, SecretSpec, secret_look};
 use super::shop::ShopPlan;
 use super::terrain::{StairsDir, TerrainDef, TerrainId};
 use super::trap::{Trap, TrapEffect};
-use super::{ActionKind, Content, ContentError, Cutting, MAX_ITEM_LEVEL, Rarity, Speaker};
+use super::{
+    ActionKind, Content, ContentError, Cutting, DIFFICULTIES, MAX_ITEM_LEVEL, Rarity, Speaker,
+};
 use crate::alignment::Alignment;
 use crate::door::{Lock, check_lock_id};
 use crate::equipment::{self, Equipment};
@@ -272,6 +274,9 @@ pub(super) struct LegendDetail {
     locked: Option<bool>,
     /// The closed door on this cell is locked, with this lock id: keys of that id open it.
     lock: Option<String>,
+    /// How hard the lock on this cell is to pick (spec §8 "Doors"; default
+    /// [`crate::door::LOCK_DIFFICULTY`]); only with `lock` or `locked = true`.
+    lock_difficulty: Option<u8>,
     /// The closed door on this cell is secret (spec §8 "Searching"): `true` (the default
     /// difficulty) or its difficulty. It looks like the wall around it until it is found.
     secret: Option<SecretSpec>,
@@ -1046,17 +1051,32 @@ fn parse_ice(ch: char, entry: &LegendEntry, terrain: &TerrainDef) -> Result<Opti
 }
 
 /// The lock a legend entry puts on its cell: `lock = "id"` (a lock of that id) or `locked =
-/// true` (a lock only a skeleton key opens); none for neither or `locked = false` alone.
+/// true` (a lock only a skeleton key opens), with its `lock_difficulty` if it gives one; none for
+/// neither or `locked = false` alone.
 fn parse_lock(detail: &LegendDetail) -> Result<Option<Lock>, String> {
-    match (detail.locked, &detail.lock) {
-        (Some(false), Some(_)) => Err("has a `lock` but `locked = false`".into()),
+    let lock = match (detail.locked, &detail.lock) {
+        (Some(false), Some(_)) => return Err("has a `lock` but `locked = false`".into()),
         (_, Some(id)) => {
             check_lock_id(id)?;
-            Ok(Some(Lock::new(Some(id))))
+            Lock::new(Some(id))
         }
-        (Some(true), None) => Ok(Some(Lock::new(None))),
-        (Some(false) | None, None) => Ok(None),
-    }
+        (Some(true), None) => Lock::new(None),
+        (Some(false) | None, None) if detail.lock_difficulty.is_some() => {
+            return Err("has a `lock_difficulty` but no lock (`lock` or `locked = true`)".into());
+        }
+        (Some(false) | None, None) => return Ok(None),
+    };
+    let difficulty = match detail.lock_difficulty {
+        Some(d) if !DIFFICULTIES.contains(&i32::from(d)) => {
+            return Err(format!(
+                "`lock_difficulty` is {} to {}, not {d}",
+                DIFFICULTIES.start(),
+                DIFFICULTIES.end()
+            ));
+        }
+        d => d,
+    };
+    Ok(Some(Lock { difficulty, ..lock }))
 }
 
 /// Hides the secret doors a legend placed (spec §8 "Searching"): each cell's terrain becomes the

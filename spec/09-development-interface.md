@@ -29,13 +29,13 @@ cargo xtask golden [--update | --local]                   # compare golden scree
 - Replays are JSON: `{game_version, scenario, seed, character, steps: [{action, hash}]}`, the
   character `{race, gender, class}` (left out for a run without one; a replay without it starts
   as the scenario's character, so older replays still load). Actions use a text
-  syntax (`move:E wait open:E close:W ascend descend lantern rest:1h rest:dawn rest:dusk
+  syntax (`move:E wait open:E close:W pick:E ascend descend lantern rest:1h rest:dawn rest:dusk
   pickup pickup:ac drop drop:b sell:b pay pay:W equip:body:b remove:body bash:E fire:12,5
   throw:c:12,5 eat:b
   eat:floor:a dig:E search search:10 chat:E ask:E:rooms ask:E:quest-rats ask:E:accept-rats vision:darkvision
   skip:1h weather:rain stance:coward effect:fireball@12,5 effect:lightning_bolt@3,4>12,4
-  identify:a afflict:bleeding infect:filth_fever freeze:12,5,3 thaw:12,5,3`; `bash:DIR` bashes
-  with the held shield that way, `dig:DIR` digs toward a direction until the wall gives way or
+  identify:a afflict:bleeding infect:filth_fever freeze:12,5,3 thaw:12,5,3`; `pick:DIR` tries
+  the lock of the door that way (§8 "Doors"), `bash:DIR` bashes with the held shield that way, `dig:DIR` digs toward a direction until the wall gives way or
   something interrupts; `search` searches the cells around the player once, `search:N` for up to
   N turns (1 to 100), stopping when something is found; `fire:X,Y` shoots at level cell (X, Y),
   `throw:LETTER:X,Y` throws one of inventory stack LETTER there; `eat:LETTER` eats one of

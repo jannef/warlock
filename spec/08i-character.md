@@ -186,9 +186,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     - disable device: trained at all, the player can disarm traps (§8 "Disarming traps", the
       Disarm ability); points added to that check, +8 at 100 and +12 at 200 (`disarm`); a mark
       (20 %) for each try, whatever comes of it;
+    - open lock: trained at all, the player may pick locks (the Pick lock ability, §8 "Doors");
+      points added to that check, +8 at 100 and +12 at 200 (`pick`); a mark (20 %) for each try,
+      whatever comes of it;
     - athletics' climbing out of pits and escape artist (out of pits faster) wait for that rule
       (#128); swim for deep water; concentration, spellcraft, and use magic
-      device for magic; the other action skills (open lock, heal, …) for their actions.
+      device for magic; the other action skills (heal, steal, …) for their actions.
       Searching is a basic command with keys of its own (`s`, `z`), so Search is read by rules,
       not an action skill.
   - **What the player sees**: their own trained skills' values and a coarse progress (quarters)
@@ -199,7 +202,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     with an active use (`kind = "action"`) is an ability there (`warlock_core::ability`,
     `PerceptionView::abilities`), greyed out as "not usable yet": the uses come with their
     actions, and one whose use has come is that ability instead (Disable device's is "Disarm a
-    trap", §8 "Disarming traps"). Never a benefit's number, a mark, a
+    trap", §8 "Disarming traps"; Open lock's "Pick lock", §8 "Doors"). Never a benefit's number,
+    a mark, a
     chance, an untrained skill, or a creature's skills; ground-truth dev dumps (`actors`, the
     world state) show every actor's skills with their marks. Skills and marks are part of the
     world state (saved, hashed).
