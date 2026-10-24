@@ -75,7 +75,8 @@ may have no `tick`/`eases`/`wound`/`cured_by`, no `on_hit` names it, and `afflic
 refused), present exactly while a disease shows (`from_state` checks it). **Checks** are
 `crate::check` (`check(rng, modifier, difficulty)`: `combat::roll_natural` + the effective
 stat's modifier, natural 2 fails, 24 succeeds; `ways` for the odds): use it for any future
-stat check. Data: `content/disease.rs` (`DiseaseDef`: `difficulty`, `check` stat, `incubation`
+stat check. A disease check's modifier is `World::disease_modifier` (the stat's, plus the
+player's race's `disease_check`), for exposure and progression alike. Data: `content/disease.rs` (`DiseaseDef`: `difficulty`, `check` stat, `incubation`
 dice in days, `interval`, `damage: PerStat<Dice>`, `hp`, `recovery` (0 = never), `kills`,
 `regen`, `caught` (named `SOURCES`: `rotten_food`), `wading` (`Wading { terrain, per_hour }`),
 `cured_by`, words `onset`/`symptoms`/`recovered`; `DiseaseId` an index, in the fingerprint);

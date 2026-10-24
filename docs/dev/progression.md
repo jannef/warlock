@@ -82,6 +82,34 @@ once it has a talent without prerequisites); `min_class` becomes 1 with the clas
 system of the game joins the list in the PR that ships its talents. The check runs at load, so
 `Content::builtin()` (and the game) fail on a gap; `content::talent::tests` covers the gaps.
 
+**Every new system ships with talents** (the owner, 2026-10-20; design §8.2), so no system is
+left with nothing that cares about it:
+
+1. **The issue** says which (`.github/ISSUE_TEMPLATE/feature.md`, "Talents and class
+   abilities"): at least `min_talents` talents and their trees, at least `min_class` class
+   abilities, the system tag; or why none.
+2. **The PR** that adds the system adds, in the same PR: its `[[system]]` entry in
+   `data/talents.toml` (placed by topic beside its neighbours, never at the end; no `pending`),
+   its talents under `data/talents/` with the tag in their `systems`, the `TalentEffect`
+   variants and their one read each (above), and the wiki rows (the by-system table updates by
+   itself). Adding a tag without its talents fails the load; adding a system without a tag
+   passes, so the reviewer checks the template's answer.
+3. **What counts as a system**: a rule a talent could change (a check, a price, a pace, a
+   limit, a new action). Not one: presentation state no rule reads (blood stains), and channels
+   of existing systems (stat training is what the level-up reads, not a row). Extending a
+   system already in the list (a new trap kind) needs no new tag, only its talents' `systems`
+   kept honest.
+4. **Resources** (mana, the mana PR; the pools of #225: Rage, Focus, Openings, Ki,
+   Inspiration) are systems like any other: each joins the list with talents on its own hooks
+   (its maximum, its refill or decay, what it costs), and every ability that spends it carries
+   its tag. A cast that costs mana or a pool has no cooldown status besides (time refills it,
+   "time is the penalty"); a talent that changes a cost changes the data's cost, never adds a
+   timer. Mana and Resources are already named in the design's matrix (§8.1) with their first
+   talents (`deep_well`, … for mana; `battle_trance`, … for #225) and join the list when those
+   PRs land.
+5. **The bar is data** (`[coverage]`): raise `min_talents` or `min_class` as the list grows,
+   in its own PR, with the talents that meet it.
+
 ## Determinism and saves
 
 Picks are replayed actions; prerequisites read stored scores. Nothing in talents draws from the
@@ -93,7 +121,7 @@ content (fixtures) never has a pick due.
 ## Tests
 
 `content/talent.rs` (loading, validation, the coverage gaps, choice chains), `talent.rs`
-(summing, ranks per choice, serialization), `world/talent_arms_tests.rs` (the Weaponcraft and Guard hooks, the role need's words), `world/talent_tests.rs` (dues and refusals,
+(summing, ranks per choice, serialization), `world/talent_arms_tests.rs` (the Weaponcraft and Guard hooks, the role need's words), `world/damage_talent_tests.rs` (Elemental ward and Crusher, the damage-types bar), `world/talent_tests.rs` (dues and refusals,
 prerequisites in words, ranks and Hardy's growth, several levels at once and `levelup:auto`,
 dropped picks, every hook, a free-blow talent, saves and replays, perception and dumps).
 
@@ -103,6 +131,13 @@ Vigour, Might, and Finesse (#237) ship whole but for Battle trance and Inner cal
 resources, #225); `body_talent_tests.rs` covers each one's rule, `hunger_tests.rs` Iron stomach.
 The statuses Winded (Second wind's cooldown) and Staggered (`cost = 150`, 6 s) are in
 `data/status.toml`.
+
+The damage-type talents (#248), Elemental ward (H2) and Crusher (H1), are the `damage_types`
+system's two, so it is no longer `pending`; `world/damage_talent_tests.rs` covers the ward
+against damage and status doses, its words on the character screen, Crusher by weapon kind, and
+the bar. The witch's Blight (#245) needs no read of its own for its type: its burst names
+`damage_type = "poison"`, and its Poisoned goes through `World::afflict`, which meets poison
+resistance.
 
 ## Later waves
 

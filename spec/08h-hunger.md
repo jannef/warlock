@@ -88,6 +88,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `[rotten] vomit` (50 %) to vomit, else it makes them sick, exposes them to the diseases
     rotten food carries (grave rot, §8 "Diseases": `World::expose_to(player, "rotten_food")`), and
     feeds them; a rotten corpse's creature's `on_eat` does nothing. Old food is eaten as fresh.
+    A race that `eats_rotten` (ratfolk, #255) eats it unharmed: "The loaf of bread was rotten,
+    but your stomach does not mind.", no draw, no sickness, no exposure; it feeds them, no more.
     **Sickness** is a status effect ("Status effects" above), given through `World::afflict`:
     `[rotten] harm` (1d4) degrees of `sickness` (poisoned), "You feel sick." said at once (when
     it begins); it costs hit points as time passes and may kill (`Death::of`, "Died of poison").

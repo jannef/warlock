@@ -39,7 +39,9 @@ the pack stays owed, and the keeper says so), `trade` (drop and `Action::Sell`) 
 `drop_objects`, `pay` (`Action::Pay(None)`, no time; `Action::Pay(Some(dir))`, `pay:W`, pays and
 steps out at once),
 `provoke` from `fight.rs::resolve` (the player attacking a keeper; `provoke`, theft in
-`shop_step`, and `pay` each make one alignment deed, `docs/dev/alignment.md`), `keeper_died` from
+`shop_step`, and `pay` each make one alignment deed, `docs/dev/alignment.md`), `caught_stealing`
+from `world/steal.rs` (a keeper that catches the player stealing, `docs/dev/stealing.md`; a theft
+it does not notice takes its purse and leaves the shop open), `keeper_died` from
 `creature_dies`, `may_loose` in `shoot.rs` (unpaid goods are not shot or thrown). An outraged
 keeper gets the `outraged` faction as its `faction_override`, so the AI and stance need nothing
 new. Keepers are NPCs: `budge = "off_post"` (no swapping at the post), one-liners in

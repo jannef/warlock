@@ -44,7 +44,9 @@ through `pass_time` by `run_turn`), each change of state and each hit point lost
 moment of its own (`World::until_hungrier`, `World::digest(id, seconds)` in `world/hunger.rs`),
 so splitting time never changes the result and the player starves to death at the exact moment;
 `World::healing_rate` (the one pace) gives a Starving player none, and so does
-`World::mana_rate` (`docs/dev/mana.md`); harm from food (rotten food,
+`World::mana_rate` (`docs/dev/mana.md`); a race that `eats_rotten`
+(ratfolk) skips everything rotten food does but feed (the top of `World::eat_rotten`); harm from
+food (rotten food,
 `on_eat` `harm`) is `World::afflict` of the `sickness` status (poisoned: "You feel
 sick.", said at once by `sicken`). `run_turn` adds `faint()` to the player's price;
 `World::bloated` is inside `burdened`, so every price is slowed while Bloated; `exert(kind)`

@@ -11,8 +11,10 @@ never shows: the character screen (`@`) and the summary at character creation na
 
 Your class sets where you start, and your race leans you a little: paladins start Good, thieves
 and witches Callous, and everyone else Neutral. Elves and halflings lean a little toward good and
-half-orcs a little toward evil, never far enough to change a band on their own. The summary shows
-the band you start in.
+half-orcs a little toward evil, never far enough to change a band on their own; but the evil races
+start on the evil side, goblins, kobolds, lizardfolk, and ratfolk Callous, drow and duergar Evil
+(see [Races](races.md#the-evil-races)), so a goblin thief starts Evil and a drow paladin Neutral.
+The summary shows the band you start in.
 
 {{#include generated/alignment-start.md}}
 
@@ -33,7 +35,8 @@ or +1000.
   no harm. Beasts that do not talk (deer, rats, bats) may be hunted without a stain. Only your
   own kills count, and those of a wound you dealt.
 - **Shops**: attacking a shopkeeper who trades with you, and walking out with what you have not
-  paid for, are evil; paying what you owe is a little good.
+  paid for, are evil; so is lifting something from anyone and getting away with it (see
+  [Stealing](skills.md#stealing)); paying what you owe is a little good.
 - **Corpses**: eating a corpse of your own race, or of someone who talks and meant you no harm,
   is very evil, fresh or rotten.
 - **Quests** that help someone are a little good; a dark errand would be evil.

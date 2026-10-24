@@ -16,17 +16,40 @@
 #   mana          mana (spec §8 "Mana"; default 0, at most 1000): a character's maximum is
 #                 their race's and their class's plus the modifiers of their Intelligence,
 #                 Willpower, and Presence
+#   natural       natural armour, as a creature's (creatures/README.toml): { defence = 0,
+#                 protection = 1, name = "scales" }: Defence in the Natural category and
+#                 Protection, each 0 to 20 (not both 0), added to what the character wears; the
+#                 name is what a blow glances off ("The arrow glances off your scales."). Default
+#                 none
+#   resist        what the character resists, in percent per damage type (damage_types.toml),
+#                 as a creature's: { poison = 25 }, -100 (twice the harm) to 100 (immune), added
+#                 to what they wear (spec §8 "Damage types"); the game names it in words only
+#                 ("Resistant to poison"). Default none
+#   light_blind   eyes that strong light dazzles: { glare = 250, sight = 10, to_hit = -1 }.
+#                 While the light on the character's own cell, as their eyes perceive it (the
+#                 status bar's Light), is at least `glare` bright (the sun well up, a bright fire
+#                 close by), they are dazzled: they see nothing farther than `sight` cells (1 to
+#                 40) and every attack they make is `to_hit` worse (-20 to 0). The game says
+#                 when it begins and ends, and shows Dazzled while it lasts. Default none
+#   disease_check points added to the character's checks against diseases (spec §8 "Diseases";
+#                 diseases.toml): resisting one they are exposed to, and each progression (-10 to
+#                 10, default 0)
+#   eats_rotten   whether the character eats rotten food without harm (spec §8 "Hunger";
+#                 hunger.toml's [rotten]): it feeds them as plain food would, and never makes them
+#                 vomit or sick or carries a disease (default false)
 #   alignment     the race's part of a new character's hidden alignment score (spec §8
 #                 "Alignment"; alignment.toml; -1000 evil to 1000 good, default 0), added to
-#                 their class's: a lean that never alone moves anyone out of Neutral
+#                 their class's: most races only lean, never alone out of Neutral; the evil
+#                 races start Callous (-200) or Evil (-450)
 #   size         a size in sizes.toml (default "medium"; spec §8 "Burden"): how much the
 #                 character can carry, 1.5 kg × (2 × Strength + Toughness), is scaled by its carry
 #   ignores_burdened  whether being Burdened, the first level of burden, costs the character
 #                 nothing (no slowdown, no cap on Dexterity in Defence, no louder steps; default
 #                 false); from Strained on they are treated like everyone else
 #   passive_search  which hidden features (secret doors, hidden traps; spec §8 "Searching") the
-#                 character notices in passing without the Spot skill: "all", or "stone" (those
-#                 on stone, terrain.toml `stone`); default none: only with Spot trained
+#                 character notices in passing without the Spot skill: "all", "stone" (those
+#                 on stone, terrain.toml `stone`), or "traps" (hidden traps only); default none:
+#                 only with Spot trained
 #   search        points added to searching and to noticing in passing alike (-10 to 10,
 #                 default 0)
 #   skills        the skills the race trains (spec §8 "Skills"; skills.toml), by skill id: dice
@@ -198,3 +221,140 @@ experience = 90
 weapon_skills = { axes = 1 }
 # A hand axe at the belt, and meat for the road.
 kit = ["hand_axe", "dried_meat*3"]
+
+# The evil races (#255): each starts on the evil side, Callous or Evil (alignment.toml), with its
+# own gifts and flaws. Some are poor choices on purpose, and level faster for it. A good creature
+# scorns an Evil character by their alignment, not their race; and no creature takes a side by
+# race: hostile kobolds attack a kobold too.
+
+# The quick, crappy one: short-lived, and levels fast.
+[[race]]
+id = "goblin"
+name = "Goblin"
+description = "Small, weak, and short-lived, but quick-handed, sneaky, and at home in the dark; goblins eat little."
+vision = "darkvision"
+age = [10, 30]
+stats = { strength = -2, dexterity = 1, toughness = -1 }
+potential = { strength = -3, dexterity = 2, toughness = -2, intelligence = -1 }
+hp = 2
+alignment = -200
+size = "small"
+# Sneaking and hiding are one skill: Stealth.
+skills = { listen = "1d4+2", stealth = "1d6+6" }
+hunger = 80
+experience = 80
+weapon_skills = { short_blades = 1, slings = 1 }
+# A sneaky knife, and scraps.
+kit = ["stiletto", "dried_meat"]
+
+[[race]]
+id = "drow"
+name = "Drow"
+description = "The elves of the deep dark: graceful, sharp, and long-lived but frail, hard to poison, and dazzled by strong light."
+vision = "darkvision"
+age = [100, 400]
+stats = { dexterity = "1d2+1", toughness = -2, intelligence = 1, presence = 1 }
+potential = { strength = -1, dexterity = 3, toughness = -3, intelligence = 2, willpower = 1, presence = 1 }
+hp = 2
+resist = { poison = 25 }
+# Light-blind: in strong light (the sun well up, a bright fire close by) they see no farther
+# than ten cells, and fight a little worse.
+light_blind = { glare = 250, sight = 10, to_hit = -1 }
+alignment = -450
+size = "medium"
+skills = { spot = "1d6+4", stealth = "1d4+2" }
+# Keen eyes, like the elves': they notice every hidden thing in passing.
+passive_search = "all"
+hunger = 80
+experience = 130
+weapon_skills = { short_blades = 1, crossbows = 1 }
+
+# The weakest of all, with huge families: the cheapest experience of any race.
+# Waybread from the deep, and a scroll of light for the surface.
+kit = ["waybread*2", "scroll_of_light"]
+
+[[race]]
+id = "kobold"
+name = "Kobold"
+description = "Small, scaly, and the weakest of all, but clever with traps and quick to spot them; kobolds live fast and die young."
+vision = "darkvision"
+age = [6, 20]
+stats = { strength = -3, toughness = -1, presence = -1 }
+potential = { strength = -4, dexterity = 1, toughness = -2, intelligence = 1, presence = -2 }
+hp = 1
+alignment = -200
+size = "small"
+skills = { disable_device = "1d6+4", search = "1d4+2" }
+# Good with traps: they notice hidden traps in passing (not secret doors), and find hidden
+# things more easily.
+passive_search = "traps"
+search = 2
+hunger = 80
+experience = 75
+weapon_skills = { slings = 1, spears = 1 }
+
+# Cold-blooded: slower in the cold, once temperature has effects.
+# A candle to see by.
+kit = ["candle"]
+
+[[race]]
+id = "lizardfolk"
+name = "Lizardfolk"
+description = "Strong, tough swamp folk with scaly hides, cold-blooded and slow of wit, and alien to everyone else."
+vision = "normal"
+age = [12, 50]
+stats = { strength = 1, toughness = "1d2+1", intelligence = -1, presence = -2 }
+potential = { strength = 2, toughness = 3, intelligence = -2, presence = -3 }
+hp = 5
+# Scaly hide: natural armour, as a creature's.
+natural = { protection = 1, name = "scales" }
+alignment = -200
+size = "medium"
+skills = { survival = "1d4+2", swim = "1d6+4" }
+hunger = 90
+experience = 95
+weapon_skills = { spears = 1, thrown = 1 }
+# Dried meat, as much as they can stomach.
+kit = ["dried_meat*3"]
+
+[[race]]
+id = "duergar"
+name = "Duergar"
+description = "The dwarves' grey cousins of the deepest dark: tough, dour, and joyless, unbowed by loads and wise in stonework."
+vision = "darkvision"
+age = [40, 300]
+stats = { toughness = 2, willpower = 1, presence = -2 }
+potential = { strength = 1, toughness = 3, willpower = 2, presence = -3 }
+hp = 6
+alignment = -450
+size = "medium"
+skills = { metalcraft = "1d6+4", stealth = "1d4+2" }
+weapon_skills = { crossbows = 1, maces = 1 }
+# Like dwarves, they carry loads all their lives and know stonework.
+ignores_burdened = true
+passive_search = "stone"
+hunger = 90
+experience = 115
+# A pick for the stone, and meat.
+kit = [{ wield = "pick_axe" }, "dried_meat"]
+
+[[race]]
+id = "ratfolk"
+name = "Ratfolk"
+description = "Small, nimble scavengers of sewers and ruins: weak and shunned, but hard to sicken, and they eat anything, rotten or not."
+vision = "low_light"
+age = [8, 40]
+stats = { strength = -2, dexterity = "1d2+1", presence = -1 }
+potential = { strength = -3, dexterity = 3, toughness = 1, presence = -2 }
+hp = 2
+alignment = -200
+size = "small"
+skills = { listen = "1d4+2", stealth = "1d6+4" }
+# Hard to sicken: four more on every check against a disease.
+disease_check = 4
+eats_rotten = true
+hunger = 110
+experience = 85
+weapon_skills = { daggers = 1 }
+# Whatever was lying about.
+kit = ["turnip", "apple"]

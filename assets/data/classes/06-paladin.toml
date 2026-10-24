@@ -18,6 +18,6 @@ kit = [
     { wield = "small_shield" },
     { wear = "leather_jerkin" },
     { wear = "amber_amulet", magic = "any" },
-    "dried_meat*2",
+    "dried_meat",
     "gold_coin*10",
 ]

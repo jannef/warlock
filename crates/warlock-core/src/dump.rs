@@ -852,7 +852,7 @@ fn actor_rows(world: &World) -> Vec<String> {
                 format!("; talk said {said}, muttered {muttered}{met}")
             };
             // What it resists, in percent by kind (ground truth: never shown in play).
-            let resists: Vec<String> = (a.resistances(content).iter())
+            let resists: Vec<String> = (world.resistances_of(a.id).iter())
                 .map(|(k, p)| format!("{} {p}", content.damage_type(k).id))
                 .collect();
             let resists = if resists.is_empty() {
@@ -871,8 +871,8 @@ fn actor_rows(world: &World) -> Vec<String> {
                 a.max_hp(content),
                 a.mana,
                 a.max_mana(content),
-                a.defence(content, load.penalty()).total(),
-                a.protection(content).base,
+                world.defence_of(a.id).total(),
+                world.protection_of(a.id).base,
                 format_weight(w.total()),
                 format_weight(w.base),
                 format_weight(w.carried),
@@ -931,7 +931,7 @@ fn rows(width: i32, height: i32, glyph: impl Fn(Pos) -> char) -> Vec<String> {
 }
 
 /// One-line summary used as the dump header; under the open sky it names the weather, and it
-/// has the temperature where the player is.
+/// has the temperature where the player is (and `dazzled` while strong light dazzles them).
 fn summary(world: &World) -> String {
     let view = world.perception();
     // Spelled as in the JSON dump (`heavy_rain`).
@@ -947,8 +947,9 @@ fn summary(world: &World) -> String {
     let hunger = (view.own_hunger())
         .filter(|h| *h != Hunger::NotHungry)
         .map_or(String::new(), |h| format!(" hunger {}", h.id()));
+    let dazzled = if view.dazzled() { " dazzled" } else { "" };
     format!(
-        "turn {} time {} level {} viewer {} hp {hp}/{max} mp {mp}/{max_mp}{dead}{hunger}{weather} \
+        "turn {} time {} level {} viewer {} hp {hp}/{max} mp {mp}/{max_mp}{dead}{hunger}{dazzled}{weather} \
          temperature {temperature} hash {:016x}",
         world.turn(),
         world.time(),
@@ -1091,6 +1092,17 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         .iter()
         .map(|&l| (l.name().to_string(), json!(layer_rows(world, l))))
         .collect();
+    let talents: Vec<Value> = (view.own_talents().iter())
+        .map(|t| {
+            json!({
+                "id": content.talents().get(t.id).id,
+                "name": t.name,
+                "rank": t.rank,
+                "ranks": t.ranks,
+                "choice": t.choice,
+            })
+        })
+        .collect();
     let mut out = json!({
         "game_version": crate::GAME_VERSION,
         "scenario": world.scenario(),
@@ -1131,18 +1143,13 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "styles_in_use": (view.own_styles_in_use().into_iter())
             .map(|id| content.weapon_skills().skill(id).id.clone())
             .collect::<Vec<_>>(),
-        "talents": (view.own_talents().iter())
-            .map(|t| json!({
-                "id": content.talents().get(t.id).id,
-                "name": t.name,
-                "rank": t.rank,
-                "ranks": t.ranks,
-                "choice": t.choice,
-            }))
-            .collect::<Vec<_>>(),
+        "talents": talents,
         "due": view.due(),
         "abilities": abilities_json(&view),
         "quests": quests_json(&view),
+    });
+    // A second `json!`: one macro call this long passes the recursion limit.
+    let Value::Object(rest) = json!({
         "hp": { "current": hp, "max": max_hp },
         "mana": { "current": mana, "max": max_mana },
         "experience": view.own_experience(),
@@ -1152,10 +1159,14 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
             .map(|(k, w)| (content.damage_type(k).id.clone(), json!(w.word())))
             .collect::<serde_json::Map<String, Value>>(),
         "hunger": view.own_hunger(),
+        "dazzled": view.dazzled(),
         "death": death,
         "messages": messages,
         "layers": layer_map,
-    });
+    }) else {
+        unreachable!("an object literal")
+    };
+    out.as_object_mut().expect("an object").extend(rest);
     if include_state {
         out["state"] = serde_json::to_value(world.state()).expect("state serializes");
     }
@@ -1451,8 +1462,8 @@ mod tests {
 
     #[test]
     fn abilities_show_what_the_player_can_do_and_why_not() {
-        // The showcase thief: the class's skills used as actions (no use yet, but Disable
-        // device's, disarming a trap, and Open lock's, picking a lock, each in a direction), then
+        // The showcase thief: the class's skills used as actions (Disable device's, disarming a
+        // trap, Open lock's, picking a lock, and Steal's, stealing, each in a direction), then
         // the shield bash, which needs a shield in hand.
         let mut world = showcase();
         assert_eq!(
@@ -1461,7 +1472,7 @@ mod tests {
                 "Appraise (skill): not usable yet",
                 "Disarm a trap (skill): a direction",
                 "Pick lock (skill): a direction",
-                "Steal (skill): not usable yet",
+                "Steal (skill): a direction",
                 "Shield bash (weapon skill): you hold no shield",
             ]
         );
@@ -1479,6 +1490,10 @@ mod tests {
             value["abilities"][2],
             json!({"id": "pick_lock", "source": "skill", "aim": "a direction",
                    "unavailable": null})
+        );
+        assert_eq!(
+            value["abilities"][3],
+            json!({"id": "steal", "source": "skill", "aim": "a direction", "unavailable": null})
         );
         // The storeroom's small shield in hand: it can be used, in a direction.
         let walk = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N \

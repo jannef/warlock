@@ -274,6 +274,26 @@ pub struct Hide {
     pub name: String,
 }
 
+impl Hide {
+    /// Checks it as written in a creature's or a race's file: `defence` and `protection` each 0
+    /// to [`super::object::MAX_BONUS`], not both 0, and a `name`.
+    pub(super) fn check(&self) -> Result<(), String> {
+        let bonus = 0..=super::object::MAX_BONUS;
+        if !bonus.contains(&self.defence)
+            || !bonus.contains(&self.protection)
+            || self.defence + self.protection == 0
+            || self.name.is_empty()
+        {
+            return Err(format!(
+                "natural: `defence` and `protection` must be 0 to {}, not both 0, and `name` \
+                 given",
+                super::object::MAX_BONUS
+            ));
+        }
+        Ok(())
+    }
+}
+
 /// What a creature type's `blood` says: its colour, or `None` for `"none"` (bloodless); dark
 /// red when it says nothing.
 pub(super) fn blood(spec: Option<&str>) -> Result<Option<Rgb>, String> {

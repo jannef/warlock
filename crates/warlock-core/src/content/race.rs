@@ -6,15 +6,21 @@
 //! much experience their levels need (spec §8 "Experience"), trains them in skills (spec §8
 //! "Skills"; dice, and humans' extra class skill), gives them starting ranks in weapon skills
 //! (spec §8 "Weapon skills"; fixed numbers or dice), says what they notice of hidden features in
-//! passing (spec §8 "Searching"), and adds a few things to the starting kit (`kit`,
-//! [`super::kit`]).
+//! passing (spec §8 "Searching"), adds a few things to the starting kit (`kit`,
+//! [`super::kit`]), and may give them natural armour (spec §8 "Combat"), resistances (spec §8
+//! "Damage types"), eyes that strong light dazzles ([`LightBlind`]), a bonus on disease checks
+//! (spec §8 "Diseases"), and a stomach for rotten food (spec §8 "Hunger").
 
 use super::kit::{Kit, KitLineSpec};
 use super::weapon_skill::Ranked;
-use super::{ContentError, FACTORS, PassiveSearch, WeaponSkillId, WeaponSkillTable};
+use super::{
+    ContentError, DamageTypeId, FACTORS, Hide, PassiveSearch, WeaponSkillId, WeaponSkillTable,
+};
 use crate::combat::MAX_BASE_HP;
 use crate::dice::Dice;
+use crate::light::Light;
 use crate::mana::MAX_BASE_MANA;
+use crate::perception::VIEW_RADIUS;
 use crate::skills::{self, GRANTS, SkillId};
 use crate::stats::{PerStat, SCORES, Stat, adjustments};
 use serde::Deserialize;
@@ -53,6 +59,14 @@ struct RaceSpec {
     potential: BTreeMap<Stat, Dice>,
     #[serde(default)]
     hp: u16,
+    natural: Option<Hide>,
+    #[serde(default)]
+    resist: BTreeMap<String, i32>,
+    light_blind: Option<LightBlind>,
+    #[serde(default)]
+    disease_check: i32,
+    #[serde(default)]
+    eats_rotten: bool,
     #[serde(default)]
     mana: u16,
     #[serde(default)]
@@ -85,6 +99,45 @@ pub const MAX_AGE: u32 = 1000;
 /// What a race may add to searching and noticing (spec §8 "Searching").
 pub const SEARCH_BONUSES: RangeInclusive<i32> = -10..=10;
 
+/// What a race may add to its checks against diseases (spec §8 "Diseases").
+pub const DISEASE_BONUSES: RangeInclusive<i32> = -10..=10;
+
+/// Eyes that strong light dazzles (spec §8 "Character creation"; drow): `light_blind = { glare
+/// = 250, sight = 10, to_hit = -1 }`. While the light on the player's own cell, as their eyes
+/// perceive it, is at least `glare` bright (the sun well up, a bright fire close by), they see no
+/// farther than `sight` cells and their attacks are `to_hit` worse.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct LightBlind {
+    /// The perceived brightness ([`Light::brightness`]) from which light dazzles.
+    pub glare: u16,
+    /// How far a dazzled character sees, in cells.
+    pub sight: i32,
+    /// What being dazzled adds to every attack's to-hit (0 or less).
+    pub to_hit: i32,
+}
+
+impl LightBlind {
+    /// Whether light `light` on the character's cell, as their eyes perceive it, dazzles them.
+    /// The one rule of light-blindness: perception reads it for sight, attacks for to-hit.
+    pub fn dazzled_by(&self, light: Light) -> bool {
+        light.brightness() >= self.glare
+    }
+
+    fn check(&self) -> Result<(), String> {
+        if self.glare == 0
+            || !(1..=VIEW_RADIUS).contains(&self.sight)
+            || !(-20..=0).contains(&self.to_hit)
+        {
+            return Err(format!(
+                "light_blind: `glare` must be at least 1, `sight` 1 to {VIEW_RADIUS}, and \
+                 `to_hit` -20 to 0"
+            ));
+        }
+        Ok(())
+    }
+}
+
 /// A race, in the order offered.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RaceDef {
@@ -107,6 +160,20 @@ pub struct RaceDef {
     /// What the race adds to the mana (spec §8 "Mana"): maximum mana is the race's and the
     /// class's plus the mental stats' modifiers.
     pub mana: i32,
+    /// Its natural armour (spec §8 "Combat"), as a creature type's: Defence in the Natural
+    /// category and Protection, added to what the player wears. Lizardfolk's scales.
+    pub natural: Option<Hide>,
+    /// What it resists, in percent per damage type, in damage type order (spec §8 "Damage
+    /// types"), as a creature type's `resist`: added to what the player wears. Drow and poison.
+    pub resist: Vec<(DamageTypeId, i32)>,
+    /// Whether strong light dazzles the player, and what that costs them ([`LightBlind`]).
+    pub light_blind: Option<LightBlind>,
+    /// Points added to the player's checks against diseases (spec §8 "Diseases"): resisting
+    /// one they are exposed to, and each progression. Ratfolk.
+    pub disease_check: i32,
+    /// Whether the player eats rotten food without harm (spec §8 "Hunger"): it feeds them, no
+    /// more, as plain food would, and never sickens them or carries a disease. Ratfolk.
+    pub eats_rotten: bool,
     /// Its part of a new character's alignment score (spec §8 "Alignment"), added to the
     /// class's.
     pub alignment: i32,
@@ -158,7 +225,8 @@ pub struct Races {
 impl Races {
     /// Parses `data/races.toml`; `has_vision` says whether a vision profile id exists,
     /// `size_index` where a size id is in [`super::Content::sizes`], `skill_id` which skill a
-    /// skill id is, and `weapon_table` the weapon skills starting ranks may name.
+    /// skill id is, `weapon_table` the weapon skills starting ranks may name, and `resist`
+    /// resolves a `resist` table (damage types and percents, checked).
     pub(super) fn parse(
         file: &str,
         text: &str,
@@ -166,6 +234,7 @@ impl Races {
         size_index: impl Fn(&str) -> Option<usize>,
         skill_id: impl Fn(&str) -> Option<SkillId>,
         weapon_table: &WeaponSkillTable,
+        resist: impl Fn(&BTreeMap<String, i32>) -> Result<Vec<(DamageTypeId, i32)>, String>,
     ) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: RaceFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
@@ -215,6 +284,15 @@ impl Races {
                     spec.mana
                 )));
             }
+            if let Some(hide) = &spec.natural {
+                hide.check().map_err(|m| err(format!("race `{id}`: {m}")))?;
+            }
+            let resist = resist(&spec.resist).map_err(|m| err(format!("race `{id}`: {m}")))?;
+            if let Some(blind) = &spec.light_blind {
+                blind
+                    .check()
+                    .map_err(|m| err(format!("race `{id}`: {m}")))?;
+            }
             let alignment = crate::alignment::check_start(spec.alignment)
                 .map_err(|m| err(format!("race `{id}`: {m}")))?;
             let size_id = spec.size.as_deref().unwrap_or(super::MEDIUM);
@@ -253,6 +331,14 @@ impl Races {
                     FACTORS.end()
                 )));
             }
+            if !DISEASE_BONUSES.contains(&spec.disease_check) {
+                return Err(err(format!(
+                    "race `{id}`: disease_check {} is out of range ({} to {})",
+                    spec.disease_check,
+                    DISEASE_BONUSES.start(),
+                    DISEASE_BONUSES.end()
+                )));
+            }
             if !SEARCH_BONUSES.contains(&spec.search) {
                 return Err(err(format!(
                     "race `{id}`: search {} is out of range ({} to {})",
@@ -273,6 +359,11 @@ impl Races {
                 potential,
                 hp: i32::from(spec.hp),
                 mana: i32::from(spec.mana),
+                natural: spec.natural,
+                resist,
+                light_blind: spec.light_blind,
+                disease_check: spec.disease_check,
+                eats_rotten: spec.eats_rotten,
                 alignment,
                 size,
                 ignores_burdened: spec.ignores_burdened,
@@ -299,10 +390,14 @@ impl Races {
 mod tests {
     use super::*;
 
+    fn content() -> super::super::Content {
+        super::super::Content::builtin().expect("content")
+    }
+
     fn parse(text: &str) -> Result<Races, ContentError> {
         let sizes = ["small", "medium"];
         let skills = ["listen", "spot"];
-        let content = super::super::Content::builtin().expect("content");
+        let content = content();
         Races::parse(
             "races.toml",
             text,
@@ -310,6 +405,7 @@ mod tests {
             |s| sizes.iter().position(|id| *id == s),
             |k| (skills.iter().position(|id| *id == k)).map(|i| SkillId(i as u8)),
             content.weapon_skills(),
+            |m| content.resolve_per_kind("resist", m, -100..=100, false),
         )
     }
 
@@ -337,6 +433,47 @@ mod tests {
         assert!(human.skills.is_empty() && human.class_skill.is_zero());
         assert_eq!(human.hunger, 100, "a human's hunger unless named");
         assert_eq!(human.experience, 100, "a human's experience unless named");
+        assert_eq!(human.natural, None, "no hide unless named");
+        let scaled = parse(&format!(
+            "{ONE}natural = {{ protection = 1, name = \"scales\" }}\n"
+        ))
+        .expect("valid");
+        let hide = scaled.list[0].natural.as_ref().expect("a hide");
+        assert_eq!((hide.defence, hide.protection), (0, 1));
+        assert_eq!(hide.name, "scales");
+        assert!(human.resist.is_empty(), "nothing resisted unless named");
+        assert_eq!(
+            human.light_blind, None,
+            "light does not dazzle unless named"
+        );
+        assert_eq!(human.disease_check, 0, "no disease bonus unless named");
+        let ratfolk = parse(&format!("{ONE}disease_check = 4\neats_rotten = true\n"));
+        let ratfolk = &ratfolk.expect("valid").list[0];
+        assert_eq!(ratfolk.disease_check, 4);
+        assert!(ratfolk.eats_rotten && !human.eats_rotten);
+        let drow = parse(&format!(
+            "{ONE}light_blind = {{ glare = 250, sight = 10, to_hit = -1 }}\n"
+        ))
+        .expect("valid");
+        let blind = drow.list[0].light_blind.expect("light-blind");
+        assert_eq!((blind.glare, blind.sight, blind.to_hit), (250, 10, -1));
+        assert!(blind.dazzled_by(Light::new(250, 250, 250, 0)));
+        assert!(!blind.dazzled_by(Light::new(249, 249, 249, 0)));
+        assert!(
+            blind.dazzled_by(Light::new(0, 0, 0, 250)),
+            "UV, if the eyes see it"
+        );
+        let drow = parse(&format!("{ONE}resist = {{ poison = 25, fire = -10 }}\n")).expect("valid");
+        let kinds = |r: &RaceDef| -> Vec<(String, i32)> {
+            (r.resist.iter())
+                .map(|&(k, p)| (content().damage_type(k).id.clone(), p))
+                .collect()
+        };
+        assert_eq!(
+            kinds(&drow.list[0]),
+            [("fire".to_string(), -10), ("poison".to_string(), 25)],
+            "in damage type order"
+        );
         assert_eq!(human.rolls, 0, "no extra skill rolls unless named");
         let text = format!("{ONE}rolls = 1\n");
         assert_eq!(parse(&text).expect("valid").list[0].rolls, 1);
@@ -448,6 +585,46 @@ mod tests {
             (
                 "base_potential = 15\nrace = []\n".into(),
                 "at least one race",
+            ),
+            (
+                format!("{ONE}natural = {{ protection = 0, name = \"skin\" }}\n"),
+                "race `human`: natural: `defence` and `protection` must be 0 to 20, not both 0",
+            ),
+            (
+                format!("{ONE}natural = {{ protection = 21, name = \"skin\" }}\n"),
+                "must be 0 to 20",
+            ),
+            (
+                format!("{ONE}natural = {{ protection = 1 }}\n"),
+                "missing field `name`",
+            ),
+            (
+                format!("{ONE}resist = {{ luck = 25 }}\n"),
+                "race `human`: `resist`: unknown damage type `luck`",
+            ),
+            (
+                format!("{ONE}resist = {{ poison = 101 }}\n"),
+                "`resist`: `poison` must be -100 to 100",
+            ),
+            (
+                format!("{ONE}light_blind = {{ glare = 0, sight = 10, to_hit = -1 }}\n"),
+                "race `human`: light_blind: `glare` must be at least 1",
+            ),
+            (
+                format!("{ONE}light_blind = {{ glare = 250, sight = 41, to_hit = -1 }}\n"),
+                "`sight` 1 to 40",
+            ),
+            (
+                format!("{ONE}light_blind = {{ glare = 250, sight = 10, to_hit = 1 }}\n"),
+                "`to_hit` -20 to 0",
+            ),
+            (
+                format!("{ONE}light_blind = {{ glare = 250, sight = 10 }}\n"),
+                "missing field `to_hit`",
+            ),
+            (
+                format!("{ONE}disease_check = 11\n"),
+                "race `human`: disease_check 11 is out of range (-10 to 10)",
             ),
         ] {
             let e = parse(&text).unwrap_err();
