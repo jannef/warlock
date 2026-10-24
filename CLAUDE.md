@@ -169,7 +169,7 @@ know they have, then what they resist in words, `Resistant to cold`, `Vulnerable
 `Immune to poison`), `weapon_skills` (the player's
 ranks and progress toward the next, `Long blades 2 (40%)`, fighting styles too, those in use
 marked `Duelist 1 (0%), in use`), `talents` (the player's talents in the order taken, `Hardy
-2/3`, `Weapon focus (long blades)`), `abilities` (the player's abilities in the abilities menu's
+2/3`, `Weapon focus (long blades)`, those their class gives marked `Well dressed (class)`), `abilities` (the player's abilities in the abilities menu's
 order, each with its source and what it asks for or why it cannot be used now: `Shield bash
 (weapon skill): a direction`, `Open lock (skill): not usable yet`), `traps` (the traps the player knows,
 one a line), `quests` (the quest log, active
@@ -182,7 +182,8 @@ effects with severities, its diseases (progressions, checks won in a row, time t
 turn) and stat damage, the player's nutrition, its npc id and talk counts, if any, and what it resists in percent (`resists fire 25`); then
 all food on the level and in the packs of those on it with when it was made (a corpse: when it
 died) and its stage, `fresh`, `old`, `rotten`, or `gone`, which the player is never shown,
-**dev-only**), `progress` (the level-up choices due, `due level 3: 1 talent`, the talents the
+**dev-only**), `progress` (the level-up choices due, `due level 3: 1 talent`, `due level 30: 1
+talent, 1 bonus talent`, the talents the
 player may take now by id with their choices, the first kills that paid, and the stat training
 marks, `stat marks St 3, To 1`, **dev-only**),
 `rooms`
@@ -197,7 +198,8 @@ word: `{"cold": "resistant"}`), `burden` (`level`, `limit`), `alignment` (the ba
 `cause`, starving, choking, or a trap, and `trap`, the id of the trap that killed),
 `known_traps`, `temperature` (°C to a tenth), `weapon_skills` (by skill id:
 `rank`, `progress`), `styles_in_use` (style ids), `talents` (in the order taken: `id`, `name`,
-`rank`, `ranks`, `choice`), `due` (the level-up choices due: `level`, `talents`, or null), `abilities` (in menu order: `id`, `source`,
+`rank`, `ranks`, `choice`, `class`), `due` (the level-up choices due: `level`, `talents`,
+`rolls`, `bonus`, or null), `abilities` (in menu order: `id`, `source`,
 `aim`, and `unavailable`, the reason's id or null), `quests` (the log: `id`, `name`, `kind`, `active`, `completed`, `giver`,
 `objective`, `status`), each seen actor's `health` and `effects` (those that show), `room` (the
 special room the player stands in, if they know it), and per inventory stack (in position
@@ -321,7 +323,7 @@ long water takes to freeze, terrain, footstep loudness in words, vision profiles
 them), creatures, factions, objects, materials, equipment slots and what fits them, scenarios,
 action costs, sight radii, item classes and
 what is in each, the stats' names, races (stat adjustments as written, dice included, vision, starting
-ages, hit points), classes (stat adjustments, hit points), what each gender raises, the horoscope
+ages, hit points), classes (stat adjustments, hit points, level tables), what each gender raises, the horoscope
 (animals, elements, and the great cycle's signs and years), combat (weapons, armour and shields,
 the 2d12 hit chances and threat ranges, regeneration by Toughness), status effects (what causes
 them, what they cost, how they wear off, healing and stats) and healing paces, diseases (how
@@ -382,10 +384,12 @@ A successful compile does not verify anything visual. Before opening a PR:
 1. `cargo fmt`, clippy with `-D warnings`, `cargo test --workspace`.
 2. Simulation changes: add or update unit, property, or snapshot tests in `warlock-core`
    (`insta` snapshots live in `crates/warlock-core/src/snapshots/`, `src/mapgen/snapshots/`, and
-   `src/mapgen/local/snapshots/`; review with `cargo insta review` or `INSTA_UPDATE=always`, and read the diff). Look at the
+   `src/mapgen/local/snapshots/`, the screens' in `crates/warlock/src/ui/snapshots/`; review with `cargo insta review` or `INSTA_UPDATE=always`, and read the diff). Look at the
    result with `warlock-cli dump` (or `gen` for a generated level), and check determinism with
    `replay --create` then `replay --verify`.
 3. Rendering changes: capture a screenshot with `--capture` and **look at it** (read the PNG).
+   UI changes (screens, prompts, the message line, the status bar): add or update a case in
+   `crates/warlock/src/ui/screen_snapshots.rs` and read the text diff.
    Golden images are updated deliberately, never to make a failing check pass.
 4. Note in the PR what you verified and how.
 
@@ -400,11 +404,13 @@ A successful compile does not verify anything visual. Before opening a PR:
   `ops/agents/`, runs it on Linux instead). `main` is branch-protected: PRs
   only, the Linux, wasm32, and cargo-deny checks must pass, linear history.
 - **Merging** (`docs/dev/merging.md` has the details): agents don't chase `main`. A PR merges
-  or rebases onto `origin/main` once, when the integrator says it is next in line; after that
-  merge run `cargo fmt --all`, clippy with `-D warnings`, `cargo test --workspace`,
-  `cargo xtask wiki`, and the PR's own captures or replays (CI covers the wasm32 check, the
-  smoke test, `mdbook build wiki`, cargo-deny, and the licenses). The full check list
-  ("Verification") runs once, before the PR opens.
+  or rebases onto `origin/main` once, when the integrator says it is next in line. The cloud
+  finisher doing it also updates the golden references in the same pass ("Golden screenshots"),
+  merges `origin/main` again before pushing only if it moved into a conflict, re-verifies the
+  PR's replays, and runs clippy and `cargo test --workspace` only after conflicts or a fix of its
+  own (CI, required on every push, is the check; `main` does not require branches to be up to
+  date). The goal is the shortest total handling time. The full check list ("Verification") runs
+  once, before the PR opens.
   Agents stop when their PR is open; a finisher agent handles CI and the merge (`docs/dev/merging.md`,
   "Agents, finishers, and context").
 - **Keep PRs small**: one feature per PR, rules first (core, tests, dumps), then the UI, then
@@ -422,16 +428,27 @@ A successful compile does not verify anything visual. Before opening a PR:
 
 ## Golden screenshots
 
+**Do not add a golden screenshot unless you are certain nothing else can check the change.**
+Goldens are reserved for what only the GPU produces: lighting regimes, sun, moon and weather,
+glow and heat haze, animated water, blood tint, spell effects, a missile in flight, and one
+overlay over a run (#56's guard). In #301 they were cut from 103 to 16. Nearly every difference
+they had reported was an intended change that cost a lavapipe update pass and an image review,
+and none had caught an unintended regression. Check the cheaper tools first:
+- a screen, list, dialog, prompt, message line, or status bar → a **text snapshot**: a case in
+  `crates/warlock/src/ui/screen_snapshots.rs` (the UI console as text, `insta`; docs/dev/screens.md);
+- what is on the map, who is where, what happened → a core test, an `insta` snapshot, or a
+  `warlock-cli dump`;
+- a one-off visual check → `--capture`, looked at, and noted in the PR (not kept).
+
+A PR that adds a golden says in its description why none of these can see the change; reviewers
+and the integrator refuse one that doesn't. When in doubt, don't add one.
+
 `tests/golden/manifest/` is the manifest: `defaults.toml` holds `[defaults]`, and the other
-`*.toml` files (one per showcase room or feature, read in file-name order; entry names are
-unique across files) list one entry per showcase room plus the vast level (its start and
-its river): a scenario and text `actions` (`move:N*3 open:E`; `*N` repeats) or a `replay` file,
+`*.toml` files (one per feature, read in file-name order; entry names are unique across files)
+list the entries: a scenario and text `actions` (`move:N*3 open:E`; `*N` repeats) or a `replay` file,
 and optional `character` (`human,male,paladin`: the run starts as it, not the scenario's), `kit`
 (`true`: the run starts with the character's starting kit), `window`, `scale`, `freeze_time`, `screen` (a `--screen` value: over the run, e.g.
-`pause`, `help`, `settings`, `controls`, `inventory`, `equipment`, `equip-item`, `describe`,
-`character`, `skills`, `weapon-skills`, `quests`, `messages`, `pick-up`, `drop`, `eat`, `abilities`,
-`dialogue`; or over
-the main menu, the replay then unused: `main`, `characters`, `race`, `gender`, `name`, `summary`), `args` (more game flags, e.g.
+`pause`; or over the main menu, the replay then unused: `main`), `args` (more game flags, e.g.
 `["--fire"]`, `["--keys", "h"]`), `tolerance` (per-channel, default 2) and `max_diff_ratio`
 (default 0.05% of pixels). Walks that fight or wait for creatures belong on hand-made levels
 (the showcase, the arena, the trap hall): a walk through a generated level breaks whenever the
@@ -443,18 +460,29 @@ is tried: a blocked walk (an action that takes no turn and is not free), a faile
 missing reference, or a mismatch is reported and the run goes on; it fails at the end, listing
 them all (and any reference that no entry names).
 
-References are produced on **Linux CI (Mesa lavapipe) only**; other GPUs and drivers rasterize
-differently, so on macOS `cargo xtask golden` is advisory and `--local` is the way to look at the
-captures. CI compares and never updates.
+References are produced with **Mesa lavapipe only**, the renderer of the Linux CI job; other GPUs
+and drivers rasterize differently, so on macOS `cargo xtask golden` is advisory and `--local` is
+the way to look at the captures. The cloud agents' sandbox (`ops/agents/`) has the same lavapipe,
+and its captures have matched CI's every time so far, so references are made there. CI compares
+and never updates.
 
-Deliberate update procedure (after an intended visual change, e.g. lighting or effects landing):
-1. Push the branch, then Actions > CI > Run workflow on that branch with "update_golden" ticked
-   (`gh workflow run ci.yml --ref <branch> -f update_golden=true`, then `gh run watch`).
-2. `gh run download <run-id> -n golden-references -D tests/golden`, review the images (look at them,
-   and check the diff against the old ones makes sense), and commit them with the change.
-3. Adding a room, scenario, or screen: add an entry to the feature's manifest file (or a new
-   file) and generate its reference the same way, in the same PR (CI fails on an entry without a
-   reference). Never update references just to make a failing check pass.
+Deliberate update procedure (after an intended visual change, e.g. lighting or effects landing),
+done by the PR's cloud finisher in the same pass as its merge of `main`:
+1. `WGPU_BACKEND=vulkan cargo xtask golden` lists the entries that differ; look at each
+   `target/xtask/golden/<name>.{actual,diff}.png` and check the change explains it.
+2. `WGPU_BACKEND=vulkan cargo xtask golden --update`, then keep only the references step 1
+   flagged and the change explains (`git checkout -- tests/golden/<name>.png` the rest: rewriting
+   an unchanged screen may give sub-tolerance noise), and commit them with the merge.
+3. Adding an entry (rare; see the warning at the top of this section, and never for a screen:
+   screens are text snapshots): add it to the feature's manifest file (or a new file); its
+   reference is made the same way, in the same PR (CI fails on an entry without a
+   reference). Never update references just to make a failing check pass: an unexplained
+   difference is a bug to fix.
+
+Fallback, when no cloud finisher is used or CI disagrees with the sandbox: push the branch, run
+`gh workflow run ci.yml --ref <branch> -f update_golden=true`, download its artifact with
+`gh run download <run-id> -n golden-references -D <scratch dir>`, review the images the same way,
+and copy in the explained ones.
 
 ## Releases, web build, logs
 

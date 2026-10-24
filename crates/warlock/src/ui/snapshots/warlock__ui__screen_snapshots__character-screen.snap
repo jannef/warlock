@@ -1,0 +1,40 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ There are several objects here.
+ You pick up a leather jerkin, a dagger, and 2 wax candles.
+
+
+              ┌─ Character ──────────────────────────────────────────────────────────┐
+              │                                                                      │
+              │ Tamsin                                                               │
+              │                                                                      │
+              │ Race    Human                                                        │
+              │ Gender  Female                                                       │
+              │ Class   Thief                                                        │
+              │ Age 34 · born 29 Greenleaf 1410 · year of the Water Basilisk         │
+              │                                                                      │
+              │ St  Strength       9                                                 │
+              │ Dx  Dexterity     13                                                 │
+              │ To  Toughness     10                                                 │
+              │ In  Intelligence  12                                                 │
+              │ Wi  Willpower     11                                                 │
+              │ Pr  Presence       9                                                 │
+              │                                                                      │
+              │ Lv  Level         1                                                  │
+              │ XP  Experience    0 / 729                                            │
+              │ HP  Hit points    17/17                                              │
+              │ Dv  Defence       11      Pv  Protection  0                          │
+              │     Stance        Neutral                                            │
+              │     Alignment     Callous                                            │
+              │                                                                      │
+              │ Weight 74.2 kg (you 70 kg, carrying 4.2 kg)                          │
+              │ Burdened over 14 kg, strained over 28 kg, overloaded over 42 kg      │
+              │                                                                      │
+              │ @ or Esc close   S skills                                            │
+              └─ 1 Character · 2 Inv · 3 Equip · 4 Skills · 5 Weapons · 6 Quests ────┘
+
+
+
+ The Hub  ·  HP 17/17  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444  ·  ◑  ·  10 °C     ? controls

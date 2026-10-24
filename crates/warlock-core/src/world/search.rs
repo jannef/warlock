@@ -110,14 +110,19 @@ impl World {
         let player = self.state.player();
         let stats = player.effective_stats(content);
         let race = self.player_race().map_or(0, |r| r.search);
+        let talents = player.talent_mods(content);
+        // Talents that add to every check of a stat (spec §8 "Class abilities": Iron will).
         let own = match look {
             Look::Active => {
-                stats.modifier(Stat::Intelligence) + player.skill_effect(content, Effect::Search)
+                stats.modifier(Stat::Intelligence)
+                    + player.skill_effect(content, Effect::Search)
+                    + talents.check(Stat::Intelligence)
             }
             Look::Passive => {
                 stats.modifier(Stat::Willpower)
                     + player.skill_effect(content, Effect::Spot)
-                    + player.talent_mods(content).notice.unwrap_or(0)
+                    + talents.notice.unwrap_or(0)
+                    + talents.check(Stat::Willpower)
                     - content.search().passive_penalty
             }
         };

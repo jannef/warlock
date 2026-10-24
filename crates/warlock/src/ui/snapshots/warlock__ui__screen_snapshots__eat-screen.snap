@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ You pick up 6 strips of dried meat.
+ You see here 4 food rations.
+
+
+
+
+
+
+
+
+
+                    ┌─ Eat ────────────────────────────────────────────────────┐
+                    │                                                          │
+                    │ Food                                                     │
+                    │ > a - % 4 food rations (lying here)                2 kg  │
+                    │   b - % 6 strips of dried meat                    900 g  │
+                    │                                                          │
+                    │ a-b or Enter eat   Esc cancel                            │
+                    └──────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+ The Hub  ·  HP 17/17  ·  Lv 1  ·  08:03  ·  11 Darkening, Year 1444  ·  ◑  ·  10 °C     ? controls

@@ -988,6 +988,7 @@ fn parse_magic(spec: &ItemSpec, content: &Content) -> Result<Magic, String> {
         affixes,
         name: spec.name.clone(),
         identified: spec.identified,
+        carried: 0,
     };
     magic.check(def, content)?;
     Ok(magic)

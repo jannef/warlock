@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ You pick up a small shield.
+ You wield a small shield.
+
+
+
+
+
+                    ┌─ Abilities ──────────────────────────────────────────────┐
+                    │                                                          │
+                    │ Skills                                                   │
+                    │   a  Appraise       not usable yet                       │
+                    │ > b  Disarm a trap  in a direction                       │
+                    │   c  Pick lock      in a direction                       │
+                    │   d  Steal          in a direction                       │
+                    │ Weapon skills                                            │
+                    │   e  Shield bash    in a direction                       │
+                    │                                                          │
+                    │ Take apart a trap you know of next to you; a clumsy try  │
+                    │ sets it off.                                             │
+                    │                                                          │
+                    │ a-e or Enter use   Esc close                             │
+                    └──────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+ The Hub  ·  HP 17/17  ·  Lv 1  ·  08:03  ·  11 Darkening, Year 1444  ·  ◑  ·  10 °C     ? controls

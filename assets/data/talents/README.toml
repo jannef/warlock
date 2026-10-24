@@ -7,7 +7,8 @@
 #
 # Every talent defines:
 #   id, name      its id (in replays: `talent:hardy`) and its name, as the game shows it
-#   tree          a tree id of ../talents.toml
+#   tree          a tree id of ../talents.toml; `class` for a class ability, which a class's level
+#                 table gives (../classes/) and which needs `granted = true`
 #   description   what it does, in the game's words: never a number the game hides (a modifier,
 #                 a chance, a speed); where the game shows the quantity (Defence, Protection,
 #                 carrying, XP) the number may be said. The wiki shows the rule.
@@ -39,7 +40,7 @@
 #   effects       what every rank held adds: a list of { kind = ..., ... } (below)
 #   [[talent.rank]]  one per rank, in order (as many as `ranks`, or none): its own `needs`
 #                 besides the talent's, and its own `effects` besides the per-rank ones
-#   granted       true: given (by a race, a birth sign), never on a pick list
+#   granted       true: given (by a race, a birth sign, a class), never on a pick list
 #
 # Effects (each read by one rule; a new kind is a variant in content/talent.rs, a field in
 # talent.rs's TalentMods, and one read):
@@ -49,6 +50,8 @@
 #   max_hp_per_levels { per_levels, at_least }   hit points: one per that many character
 #                                 levels, at least at_least, handed out at the pick and as each
 #                                 later level comes (as levels' own hit points are)
+#   stat { stat, value }          a stat's score and potential that much higher (-5 to 5),
+#                                 handed out once, as it is taken or given
 #   healing_percent { value }     hit points come back that percent faster (negative: slower)
 #   footsteps_percent { value }   footsteps that percent louder (negative: quieter)
 #   silent_doors                  the doors it opens and closes make no sound
@@ -65,6 +68,8 @@
 #   ambush { dice }               its hits on a creature that has not seen it do that many dice
 #                                 more damage, after Protection ("1d6")
 #   carry_percent { value }       carrying limit, that percent more
+#   carry_kg { value }            carrying limit, that many kilograms more
+#   weightless_coins              coins it carries weigh nothing
 #   travel_percent { value }      overworld journeys take that percent more time (negative:
 #                                 quicker)
 #   terrain_as { terrains, like } a step onto any of terrains costs what a step onto like does
@@ -81,25 +86,44 @@
 #   hunger_percent { value }      hunger burns that percent faster (negative: slower)
 #   no_exertion                   blows, shots, and throws burn no extra nutrition
 #   xp_percent { value }          experience gained, that percent more
+#   quest_xp_percent { value }    the experience a quest gives, that percent more
+#   quest_gold_percent { value }  the gold a quest gives, that percent more
+#   favour_percent { value }      shop favour, that many percent more (before the cap)
+#   favour_cap { value }          the cap on shop favour, that many percent higher
+#   sell_percent { value }        shops pay that percent more for what they buy from it (never
+#                                 more than they ask)
+#   credit { gold }               keepers let it leave owing up to that much gold (1 to 1000);
+#                                 the debt stays on their bill
+#   identify_trades               what it buys or sells in a shop is identified
+#   item_worth, gem_worth         item descriptions show what things, and each gem in them, are
+#                                 worth
+#   identify_carried { hours }    a magic item carried that many hours (1 to 240) from when it
+#                                 has the effect is identified
+#   gem_cut { value }             loose gems it finds (on levels made from then on, dropped by
+#                                 kills) are cut that many grades finer (1 to 5)
 #   notice { value }              notices hidden things in passing as if trained in Spot, with
 #                                 that much added
+#   skill { skill, value }        that skill counts that much higher (an untrained one from 0)
+#   make_way                      anyone not hostile makes way for it, those at a post too
 #   free_blow { trigger }         a free blow: "cleave", "great_cleave", "riposte", or
 #                                 "opportunist" (spec §8 "Free blows")
-#   weapon { role, to_hit, damage, threat, ranks, speed, reload, ease, bash, shield }
+#   weapon { role, skill, to_hit, damage, threat, ranks, speed, reload, ease, bash, shield }
 #                                 what attacks with some weapon skills gain, as their ranks give
-#                                 it (data/weapon_skills.toml): without `role` the chosen weapon
-#                                 skill or style's (a talent with that choice), else every skill
-#                                 of the role's; `ranks` reads its benefits that many ranks
+#                                 it (data/weapon_skills.toml): the weapon skill or style `skill`
+#                                 names, else without `role` the chosen weapon skill or style's
+#                                 (a talent with that choice), else every skill of the role's; `ranks` reads its benefits that many ranks
 #                                 higher (a rank held, never past 10), `ease` eases both
 #                                 two-weapon penalties, `bash` adds to a free bash's chance only
 #                                 where there is one; each field 0 by default
 #   launcher_range { value }      the readied missile weapon shoots that many cells farther
 #   throw_range { value }         throws reach that many cells farther
+#   missile_breaks { value }      its missiles break that percent more often (negative: less)
 #   max_dex { value }             worn armour's cap on Dexterity in Defence, that much higher
 #   deflection { value }          Defence in the Deflection category, on top of magic items'
-#   protection { value, body_armour, shield }   Protection, only while the armour piece worn
-#                                 with the most Protection has body_armour at least (if set) and
-#                                 only while holding a shield (if shield = true)
+#   protection { value, body_armour, shield, per_piece }   Protection, only while the armour
+#                                 piece worn with the most Protection has body_armour at least
+#                                 (if set), only while holding a shield (if shield = true), and
+#                                 for every piece of armour worn (if per_piece = true, alone)
 #   stance_to_hit { stance, percent }   that combat stance's to-hit penalty, that percent
 #                                 smaller (100: none)
 #   flee_percent { value }        fleeing steps cost that percent more (negative: cheaper)
@@ -118,6 +142,7 @@
 #   penalty_percent { value }     what its statuses take off its scores, that percent more
 #                                 (negative: less; raises are untouched)
 #   disease_checks { value }      added to its disease checks
+#   checks { stat, value }        added to every check of that stat it makes
 #   disease_recovery { value }    a disease needs that many fewer checks won in a row to go
 #   kick_die { sides }            its kicks at creatures roll one die of that many sides
 #   door_kick { value }           its door kicks as if that much stronger
@@ -125,12 +150,15 @@
 #   two_handed_price { value }    its blows with a two-handed weapon cost that percent more
 #                                 (negative: cheaper)
 #   critical_status { status }    a critical it confirms in melee leaves the target that status
+#   critical_confirm { value }    added to the roll that confirms its criticals
 #   penetration { damage, value } its blows that can do damage of that kind ignore that much
 #                                 more Protection
 #   burden_dex { value }          the burden's cap on its Dexterity in Defence, that much higher
+#   burden_ease { value }         that percent off the burden's slowdown, on top of Balance
 #   sure_step                     a trap it steps onto first gets a Dexterity check: made, it
 #                                 does not go off, and it is found
 #   pit_proof                     pits never catch it
+#   disarm                        the Disarm ability without Disable device
 #   speed_percent { value }       it moves and acts that percent quicker (hidden in the game)
 #   missile_dodge { value }       Dodge added against shots, throws, and trap missiles
 #   spell_damage_percent { value }   the damage bursts and bolts do it, that percent more

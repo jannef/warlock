@@ -58,6 +58,14 @@ pub struct Magic {
     /// Whether the player knows its affixes.
     #[serde(default, skip_serializing_if = "is_false")]
     pub identified: bool,
+    /// The seconds the player has carried it unidentified while carrying taught them (spec §8
+    /// "Class abilities": Connoisseur), up to what that asks.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub carried: u32,
+}
+
+fn is_zero(n: &u32) -> bool {
+    *n == 0
 }
 
 fn is_false(b: &bool) -> bool {

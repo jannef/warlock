@@ -35,8 +35,9 @@ system already in the list (name the tag and the talents that already touch it).
 
 ## Tests
 
-<!-- Unit, property, or snapshot tests in warlock-core; a replay created and verified; golden
-entries for new screens; `cargo xtask wiki`. -->
+<!-- Unit, property, or snapshot tests in warlock-core; a replay created and verified; text
+snapshots for new screens (`crates/warlock/src/ui/screen_snapshots.rs`; no golden entries unless
+only the GPU can show it, CLAUDE.md "Golden screenshots"); `cargo xtask wiki`. -->
 
 ## Docs
 

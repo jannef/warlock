@@ -1,0 +1,8 @@
+[[talent]]
+id = "appraiser"
+name = "Appraiser"
+tree = "class"
+granted = true
+description = "Nothing gets past you: item descriptions say what things are worth, and what each gem in them is worth."
+effects = [{ kind = "item_worth" }, { kind = "gem_worth" }]
+systems = ["shops", "gems"]

@@ -1,0 +1,8 @@
+[[talent]]
+id = "credit"
+name = "Credit"
+tree = "class"
+granted = true
+description = "Your word is good: shopkeepers let you leave owing them up to 100 gold, to pay next time."
+effects = [{ kind = "credit", gold = 100 }]
+systems = ["shops"]

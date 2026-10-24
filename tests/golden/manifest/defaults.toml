@@ -1,3 +1,12 @@
+# STOP before adding an entry. Goldens are kept for what only the GPU produces: lighting, sky and
+# weather, glow and haze, water, blood tint, spell effects, missiles in flight, and one overlay
+# over a run. They were cut from 103 to 16 (#301) because nearly every difference they reported
+# was an intended change that cost an update pass, and none caught an unintended regression.
+# A screen, a list, a dialog, a prompt, the message line, or the status bar is a text snapshot
+# (`crates/warlock/src/ui/screen_snapshots.rs`); what is on the map is a core test or a
+# `warlock-cli dump`. Add a golden only when none of those can see the change, and say in the PR
+# why (CLAUDE.md, "Golden screenshots"). When in doubt, do not add one.
+#
 # Golden screenshots (spec §3, §10). `cargo xtask golden` reads every `*.toml` in this directory in
 # file-name order (this file holds the defaults; the others hold the entries, one file per showcase
 # room or feature), renders each entry headlessly, and compares it with `tests/golden/<name>.png`.
@@ -5,8 +14,8 @@
 # CLAUDE.md, "Golden screenshots".
 #
 # `actions` uses the replay text syntax; `ACTION*N` repeats an action; every action must take a
-# turn (or be free by design: vision, weather, a seen spell effect, a question answered, the dev
-# `xp:` and a level's `talent:` and `advance:` choices), else the entry fails as blocked. Walks that fight or wait for creatures stay on hand-made levels, never a
+# turn (or be free by design: vision, weather, a seen spell effect, a question answered), else the
+# entry fails as blocked. Walks that fight or wait for creatures stay on hand-made levels, never a
 # generated one. Showcase walks start at the spawn (7,15) in the start room. Corridor: row y=10; its doors are at x=13 (light hall),
 # 37 (darkness chamber), 43 (patrol gallery), 63 (water garden north / effects room south) and
 # 74 (stairs nook). `[defaults]` may be set in one file only; entry names are unique across files.

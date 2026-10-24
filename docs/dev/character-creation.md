@@ -17,7 +17,9 @@ potentials `base_potential` + the race's, never below the score. Flags for rules
 `data/races.toml` (`content/race.rs`: `Races` with `base_potential`, `RaceDef` with `vision`,
 `age`, `stats`, `potential`, `hp`, `natural`, `resist`, `light_blind`, `disease_check`,
 `eats_rotten`, `alignment`, `rolls`), `data/classes/` (`content/class.rs`:
-`ClassDef` with `stats`, `hp`, `alignment`, `known_for`, `rolls`; one file per class, `NN-id.toml` in the order offered; `Start::hp` is their sum, and `Start::alignment` the
+`ClassDef` with `stats`, `hp`, `alignment`, `known_for`, `rolls`, and the level table's
+`abilities` and `bonus_talents` (`docs/dev/progression.md` "Class tables"; level 1's are given
+in `start_run`); one file per class, `NN-id.toml` in the order offered; `Start::hp` is their sum, and `Start::alignment` the
 sum of their `alignment`s, the starting score, `docs/dev/alignment.md`),
 and `data/horoscope.toml` (`content/horoscope.rs`: `Horoscope` with `anchor_year`, `animals`,
 `elements`, `sign_of_year`, `great_cycle` (60), `name` ("Fire Manticore")); all optional.
@@ -119,5 +121,7 @@ refusals), `kit.rs` (Twin Blades and Duelist, the barbarian's pick, deterministi
 other roll moves, every worn or wielded item finds its slot, nobody Strained and only the
 aristocrat and the merchant Burdened, worst case analytically, magic unidentified, who gets the
 kit and the scenario's pack, the gender and sign hooks, a replay with and without the flag).
-The wiki's tables are `xtask/src/wiki/kits.rs` (`class-kits.md`, `race-kits.md`). The golden
-manifest's `kit = true` starts an entry's run with the kit (`tests/golden/manifest/kits.toml`).
+The wiki's tables are `xtask/src/wiki/kits.rs` (`class-kits.md`, `race-kits.md`). The screen
+snapshots' `kit: true` starts a case's run with the kit (`kit-equipment`, `kit-inventory`, and
+`kit-summary` in `crates/warlock/src/ui/screen_snapshots.rs`); the golden manifest's `kit = true`
+does the same for an entry.
