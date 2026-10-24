@@ -48,8 +48,8 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   - **Costs** (M13): the action decides how long it takes, and the actor's speed scales
     it. Every action that takes time has a **cost** in energy, 1000 for a normal action, given in
     `data/actions.toml` (`step`, `wait`, `open_door`, `close_door`, `unlock`, `kick`, `lantern`,
-    `stairs`, `pick_up`, `drop`, `melee`, `shoot`, `throw`, `reload`, `cast`, `wield`, `wear`,
-    `body_armor`, `ready`, `eat`, `dig`; 100 to
+    `hood`, `stairs`, `pick_up`, `drop`, `melee`, `shoot`, `throw`, `reload`, `cast`, `wield`,
+    `wear`, `body_armor`, `ready`, `eat`, `dig`, `chat`, `throw_voice`; 100 to
     10 000; an action left out, or every action without the file, costs 1000; unknown ids are
     errors), and a **base time**: 6 s
     (`BASE_TURN`) for every action but a step on the overworld. An action of cost *c* takes an

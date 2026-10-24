@@ -108,6 +108,7 @@ mod hash;
 mod hearing;
 mod hunger;
 mod ice;
+mod lantern;
 mod level;
 mod lockpick;
 mod loot;
@@ -133,6 +134,7 @@ mod talk;
 mod train;
 mod trap;
 mod travel;
+mod voice;
 
 pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
 pub use alignment::Deed;
@@ -142,6 +144,7 @@ pub use experience::{Discovered, Progress};
 pub use fight::{Cause, Death};
 pub use free_blow::FreeBlows;
 pub(crate) use hash::fnv1a;
+pub use lantern::Lantern;
 pub use level::{Fire, LevelState};
 pub use loot::Identified;
 pub use quest::{QuestRecord, QuestView, Quests, Stage};
@@ -150,6 +153,7 @@ pub use shop::{Shop, ShopStatus, count_of, favour, part_of, unpaid_parts};
 pub use talent::Due;
 pub use talk::{Conversation, Talk, TopicView};
 use travel::{enter_room, instantiate_level, level_template};
+pub use voice::VOICE_RANGE;
 
 use crate::action::{Action, Event, Outcome, Rest};
 use crate::alignment::Score;
@@ -221,6 +225,9 @@ pub struct WorldState {
     pub(crate) kit: bool,
     /// Whether the player's lantern (the scenario's `lantern`) is lit.
     pub(crate) lantern_lit: bool,
+    /// Whether its hood is lowered (`lantern.rs`): only while it is lit.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub(crate) lantern_hooded: bool,
     /// The step that brought the player onto their overworld cell, if they walked there: `>`
     /// then arrives on the side of the local area they came from. Cleared on any level change.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -537,6 +544,7 @@ impl World {
             character,
             kit: with_kit,
             lantern_lit: false,
+            lantern_hooded: false,
             overworld_step: None,
             recent_sounds: Vec::new(),
             weather_override: None,
@@ -759,14 +767,6 @@ impl World {
         &self.state.messages
     }
 
-    /// The player's lantern: `None` if the scenario gives none, else whether it is lit.
-    pub fn lantern(&self) -> Option<bool> {
-        self.content
-            .scenario(&self.state.scenario)
-            .and_then(|s| s.lantern.as_ref())
-            .map(|_| self.state.lantern_lit)
-    }
-
     /// What the player perceives right now. Rendering and dumps must go through this.
     pub fn perception(&self) -> PerceptionView<'_> {
         PerceptionView {
@@ -945,6 +945,7 @@ impl World {
             ),
             Action::Ascend => (self.take_stairs(StairsDir::Up, events), ActionKind::Stairs),
             Action::ToggleLantern => (self.toggle_lantern(), ActionKind::Lantern),
+            Action::HoodLantern => return self.hood_lantern(),
             Action::PickUp(positions) => return self.pick_up_objects(positions),
             Action::Drop(positions) => return self.drop_objects(positions),
             Action::Sell(positions) => {
@@ -963,6 +964,7 @@ impl World {
             Action::Chat(dir) => return self.chat(*dir, events),
             Action::Ask { dir, topic } => return self.ask(*dir, topic, events),
             Action::Steal(dir) => return self.steal(*dir),
+            Action::ThrowVoice(at) => return self.throw_voice(*at, events),
             Action::Eat(meal) => return self.eat(*meal),
             Action::Read { item, target } => return self.read(*item, *target, events),
             Action::Dig(dir) => return self.start_dig(*dir),
@@ -989,20 +991,6 @@ impl World {
             Action::GrantXp(xp) => return self.grant_xp_dev(*xp),
         };
         self.took(done, kind)
-    }
-
-    fn toggle_lantern(&mut self) -> bool {
-        if self.lantern().is_none() {
-            self.say("You have no lantern.");
-            return false;
-        }
-        self.state.lantern_lit = !self.state.lantern_lit;
-        if self.state.lantern_lit {
-            self.say("You light your lantern.");
-        } else {
-            self.say("You douse your lantern.");
-        }
-        true
     }
 
     /// The player takes combat stance `stance` (spec §8 "Stances"). Takes no time.
@@ -1076,6 +1064,8 @@ mod ice_tests;
 #[cfg(test)]
 mod land_talent_tests;
 #[cfg(test)]
+mod lantern_tests;
+#[cfg(test)]
 mod light_tests;
 #[cfg(test)]
 mod lockpick_tests;
@@ -1141,6 +1131,8 @@ mod time_tests;
 mod trap_tests;
 #[cfg(test)]
 mod variant_tests;
+#[cfg(test)]
+mod voice_tests;
 #[cfg(test)]
 mod weapon_skill_tests;
 #[cfg(test)]

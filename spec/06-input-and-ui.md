@@ -312,8 +312,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   rest, inventory, equipment) keep their keys; digging is an item's use (`U`), not an ability.
   - **The registry** is `warlock_core::ability`, the one place abilities are registered: every
     `Ability` has an id, a name, a description, a `Source` (race, class, talent, skill, weapon
-    skill, item: the menu's groups, in that order), what it asks for (`Aim`: nothing, or a direction;
-    a target and an item from the pack join with the first ability that needs one), its action
+    skill, item: the menu's groups, in that order), what it asks for (`Aim`: nothing, a direction,
+    or a cell, aimed in the targeting mode; an item from the pack joins with the first ability
+    that needs one), its action
     cost (an `ActionKind`), who has it, and whether it can be used now and why not
     (`Unavailable`: "you hold no shield", "not usable yet", while a status lasts that blocks
     its kind of action or is its cooldown, "you are winded", §8 "Status effects", or "you have
@@ -331,13 +332,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
     is trained in Steal has, in a direction, in that skill's place; and each other skill used as
     an action (`kind = "action"`, §8 "Skills") the player
     is trained in, listed but never available until its use comes (it then becomes an ability of
-    its own with its action, listed in the skill's place: `Ability::use_of`); and **Second wind**
+    its own with its action, listed in the skill's place: `Ability::use_of`); **Second wind**
     (`Ability::SecondWind`, under Talents, §8 "Talents"), which the Second wind talent gives,
-    asking for nothing, greyed out while Winded; and the **class actives** (`Ability::Class`,
+    asking for nothing, greyed out while Winded; the **class actives** (`Ability::Class`,
     under Class, §8 "Class abilities": Rage, Veteran's wind, Whirlwind, Lay on hands, Smite,
     Holy radiance, Quivering palm), each from the level its class's table gives it, Smite and
     Quivering palm in a direction, greyed out during their cooldowns (Rage while raging and
-    exhausted) and the paladin's while strayed. No race or item gives one yet.
+    exhausted) and the paladin's while strayed; throwing one's voice (Class; #235,
+    `throw_voice:X,Y`, the `throw_voice` action, a cell, §5 "Hearing"), the bard's in the
+    progression design and everyone's until the class tables narrow it; and hooding the lantern
+    (Items: the lantern; `hood`, nothing to aim, §5 "Light sources"), which the Hooded light
+    talent will give and everyone has until then. No race gives one yet.
   - **The menu** (a screen on the stack) lists them as the one paged list (§6 "Item lists"),
     grouped by source under a header each, lettered down each page from `a`: each row the
     ability's name and what it asks for ("in a direction"), or greyed out with why it cannot be
@@ -352,7 +357,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     once, and opens the menu when none was used yet.
   - **Keys**: an ability with an action of its own is also a rebindable key command, unbound by
     default (the shield bash: "Bash with your shield", `bash`; picking a lock: "Pick a lock",
-    `pick_lock`; stealing: "Steal", `steal`); bound, it uses the ability as the menu
+    `pick_lock`; stealing: "Steal", `steal`; "Throw your voice"; "Hood your lantern"); bound, it uses the ability as the menu
     does, and one that cannot be used now is applied at once so the rules say why, taking no
     time ("You have no shield to bash with."). New abilities register in the registry and get
     no default key.
@@ -539,6 +544,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (replay text `fire:X,Y`, `throw:LETTER:X,Y`, `read:LETTER:X,Y`; a burst that may catch the
   player asks first, above) and remembers the target, so `t` then `Enter` shoots it again; `Esc`
   cancels. Out of range or at the player's own cell, the rules refuse it and no time passes.
+  An ability that asks for a cell (throwing one's voice, above) is aimed the same way, as far as
+  it reaches (`Ability::range`), but draws no line: the cursor is muted red on a cell the player
+  does not see or that is solid ("You do not see there.") or beyond its reach ("Out of
+  range."); `Enter`, or the ability's own key if bound, uses it (`throw_voice:X,Y`).
 - **Look mode** describes what the player perceives at the cursor: a creature and its terrain,
   with how it stands toward the player and how hurt it looks ("A giant rat (hostile, unhurt), on
   stone floor."; its type tells the player its faction's stance toward them, the only faction
@@ -573,7 +582,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   "Weather"), the temperature where the player is, always (`4 °C`, or `39 °F` with the setting:
   whole degrees, rounded half away from zero; tinted a subtle cool blue below freezing and warm
   from 30 °C, the number saying it all; §5 "Temperature"), turn, position, light at the player,
-  vision profile, lantern, seed). The phase glyph
+  vision profile, lantern (`Lantern out`, `Lantern lit`, `Lantern hooded`), seed). The phase glyph
   shows the lit part of the disc, lit on the right while waxing: `○` new, `☽` waxing crescent,
   `◑` first quarter and waxing gibbous, `●` full, `◐` waning gibbous and last quarter, `☾` waning
   crescent. When the window is narrow, segments give way in priority order — seed, position,

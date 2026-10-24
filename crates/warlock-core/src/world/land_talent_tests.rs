@@ -200,6 +200,12 @@ fn lamplighter_burns_the_lantern_brighter() {
     give(&mut w, "lamplighter");
     assert!(preset(&w, "lantern_bright"));
     assert!(!preset(&w, "lantern"));
+    // Hooded, it burns as the hooded light, talent or not.
+    w.apply(&Action::HoodLantern);
+    assert!(preset(&w, "lantern_hooded"));
+    assert!(!preset(&w, "lantern_bright"));
+    w.apply(&Action::HoodLantern);
+    assert!(preset(&w, "lantern_bright"));
     assert!(
         CONTENT
             .light(CONTENT.light_id("lantern_bright").expect("bright"))

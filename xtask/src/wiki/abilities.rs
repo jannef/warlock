@@ -25,6 +25,8 @@ pub(super) fn abilities(content: &Content) -> String {
             Ability::Steal => "everyone trained in Steal".into(),
             Ability::SecondWind => "everyone with the Second wind talent (not while winded)".into(),
             Ability::ShieldBash => "everyone (usable with a shield in hand)".into(),
+            Ability::ThrowVoice => "everyone".into(),
+            Ability::HoodLantern => "everyone (it needs a lantern with a hood)".into(),
         };
         let (asks, takes) = match a.cost() {
             Some(kind) => {
@@ -70,5 +72,6 @@ fn aim(aim: Aim) -> &'static str {
     match aim {
         Aim::Nothing => "nothing",
         Aim::Direction => "a direction",
+        Aim::Cell => "a place you see",
     }
 }

@@ -478,10 +478,12 @@ fn a_shield_bash_is_a_blow_with_the_shield_that_trains_shield_bashing() {
         ability: Ability::ShieldBash,
         unavailable,
     };
-    assert_eq!(
-        w.perception().abilities(),
-        [bash(Some(Unavailable::NoShield))]
-    );
+    let listed = |w: &World| {
+        (w.perception().abilities().into_iter())
+            .filter(|a| a.ability == Ability::ShieldBash)
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(listed(&w), [bash(Some(Unavailable::NoShield))]);
     let outcome = w.apply(&Action::Bash(Dir::E));
     assert!(!outcome.took_turn);
     assert_eq!(
@@ -490,7 +492,7 @@ fn a_shield_bash_is_a_blow_with_the_shield_that_trains_shield_bashing() {
     );
     arm(&mut w, &["sword", "buckler"]);
     // With one, the abilities menu (#156) lists it available, and it asks for a direction.
-    assert_eq!(w.perception().abilities(), [bash(None)]);
+    assert_eq!(listed(&w), [bash(None)]);
     assert_eq!(Ability::ShieldBash.aim(), crate::ability::Aim::Direction);
     assert_eq!(
         Ability::ShieldBash.action(Some(Dir::E)),

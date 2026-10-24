@@ -22,6 +22,18 @@ rate or animation.
   landed, until it has burned out; §8 "Ranged combat"), creatures that carry light, the
   player's lantern (from the scenario, toggled by the player; takes a turn), and the glow of a
   magic item an actor wears or wields (its brightest; a steady preset, §8 "Magic items").
+- **The lantern's hood** (#235; `world/lantern.rs`): the lantern is out, lit, or hooded. A preset
+  may name the preset it burns as with its hood lowered (`hooded`, itself without a hood); the
+  scenario lantern's does (`lantern_hooded`: a third of the light, radius 2). A preset may be
+  `hollow`: its own cell gets none of its light, so the hooded lantern lights the cells around
+  its bearer but not them. With normal eyes the player sees their 8 neighbours by it; their own
+  cell gets only bounce light (at most 12.5 % of the ring's direct light, below every eye's
+  threshold), so creatures whose eyes need light see them only by other light, and darkvision
+  within its radius. Hooding (`hood`, the `hood` action, 500) lowers or raises the hood; on a
+  lantern that is out it lights it hooded (`lantern` + `hood`); dousing raises it. One place
+  decides the lantern's light, `WorldState::lantern_light`, which the light cache reads for
+  perception and creature sight alike, so they agree. The state is saved (`lantern_hooded`,
+  left out while false).
   Emitters must be transparent; a source in an opaque cell
   (e.g. on a closed door) gives no light. Presets also carry visual-only stability (§4.4), never
   read by rules.
@@ -309,7 +321,10 @@ rate or animation.
     bowstring (a shot, 40), chanting (a spell, 50); a turn of digging where the digger stands
     (digging, 80; §8 "Digging"). A kick at a door (§8 "Doors"), whether it holds or breaks, bangs
     on the door: banging, 100, made on the door's cell, so both sides hear it. A creature
-    muttering to itself (§8 "Dialogue") is a voice (50) where it stands. A trap going off (§8
+    muttering to itself (§8 "Dialogue") is a voice (50) where it stands; the player's voice,
+    thrown (§6 "Abilities"; #235), is a voice (50) on the cell it is thrown to, a cell they see
+    (not solid) within 6 (`VOICE_RANGE`, a disc), made there and not where they stand, and as
+    quiet as ever (stealth does not touch a voice). A trap going off (§8
     "Traps") makes the noise its data gives on its cell, made by no actor (so everyone in earshot
     hears it): an arrow trap's bowstring (40), a fireball's explosion (150), a lightning bolt's
     thunderclap (120), an alarm's bell (300, as loud as anything gets).
@@ -350,7 +365,8 @@ rate or animation.
   - **On the map**, each perceived sound is a faint, still marker (`◌`, pale grey, fainter for
     fainter sounds, never lit) at its rough place until the next turn; with glyph animation on
     it ripples in, a ring growing out of it and fading within a second. Look mode describes it
-    ("You hear footsteps here.").
+    ("You hear footsteps here."). The player does not hear their own thrown voice, but where it
+    sounded (`Event::VoiceThrown`) is marked the same way, as a loud sound, until the next turn.
 - **Creature sight** (`warlock-core/src/sight.rs`; M10): a creature sees by the player's rules,
   with its own eyes (its type's `vision`, a profile above) and radius (its `sight`, default 10,
   at most 40): an actor is seen iff its cell is in the creature's line of sight (the same

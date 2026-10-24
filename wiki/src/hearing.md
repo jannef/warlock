@@ -110,3 +110,19 @@ Your footsteps, the doors you open and close, and your attacks carry to the crea
 you, through the same rules. The [listen](skills.md#what-skills-give) skill lets you, or a
 creature, hear fainter sounds. A creature with enemies that hears something it cannot see goes to
 have a look: walk softly, and mind the doors. See [Creatures](creatures.md).
+
+## Throwing your voice
+
+You can make a voice sound somewhere else: [Throw your voice](abilities.md) in the abilities menu
+(`a`) aims a cursor, as a shot does. The place must be one you see, not a wall, and at most 6
+cells away (the same disc as missile ranges). The voice is made there, as loud as someone
+muttering to themselves (loudness 50; a sound loses 10 a cell, 14 diagonally), and spreads from
+there by the rules above; nothing is heard where you stand. Every creature it reaches hears it,
+and one with enemies that cannot see that spot goes to have a look, as at any noise: throw it
+past a corner to draw a guard away from where you want to go. One that can see the spot sees
+nothing there and stays.
+
+You made it, so you do not hear it, but the map marks where it sounded with the same dotted ring
+until your next turn. It takes a normal action (6 seconds at a normal pace), and is refused,
+taking no time, on yourself, out of reach, at a place you do not see, and on the overworld, which
+is silent.

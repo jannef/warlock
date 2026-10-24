@@ -7,6 +7,10 @@
 #             Brightness for vision thresholds is luma (54r + 183g + 19b) / 256, plus UV for eyes
 #             that see UV.
 #   radius  = reach in cells; light falls off as color · (R² − d²) / R² with R² = radius² + radius.
+#   hooded  = the light this one burns as with its hood lowered (the player's lantern, spec §5): a
+#             light id here, itself without a hood. Optional: without it the light has no hood.
+#   hollow  = true: its own cell gets none of its light (a hooded lantern lights the cells around
+#             its bearer but not them). Default false.
 #   stability.* — how the drawn light varies over time (spec §4.4). Visual only (renderer);
 #             gameplay never reads it, and the `flicker` effect switch turns it off. Every part is
 #             optional; a light without any is perfectly stable (constant hue and intensity), as
@@ -73,6 +77,7 @@ stability.dips = { depth = 0.12, every = 5, length = 0.6 }
 id = "lantern"
 color = [250, 215, 160, 0]
 radius = 5
+hooded = "lantern_hooded"
 stability.intensity = { amount = 0.05, speed = 0.6 }
 stability.hue = { degrees = 4, speed = 0.3 }
 stability.dips = { depth = 0.06, every = 14, length = 0.8 }
@@ -85,6 +90,17 @@ radius = 6
 stability.intensity = { amount = 0.05, speed = 0.6 }
 stability.hue = { degrees = 4, speed = 0.3 }
 stability.dips = { depth = 0.06, every = 14, length = 0.8 }
+
+# The lantern with its hood lowered: half its light and less than half its reach, and hollow, so it
+# lights the cells around its bearer but not their own: they see their neighbours, and eyes that
+# need light see them only by other light.
+[[light]]
+id = "lantern_hooded"
+color = [125, 108, 80, 0]
+radius = 2
+hollow = true
+stability.intensity = { amount = 0.04, speed = 0.6 }
+stability.hue = { degrees = 3, speed = 0.3 }
 
 # Water garden altar: magical, so steady (its glyph pulses instead).
 [[light]]
