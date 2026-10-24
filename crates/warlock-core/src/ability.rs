@@ -25,7 +25,7 @@
 
 use crate::action::Action;
 use crate::alignment::Requirement;
-use crate::content::{ActionKind, Content, SkillDef, StatusId};
+use crate::content::{ActionKind, Content, SkillDef, StatusId, TalentEffect};
 use crate::geom::Dir;
 use crate::skills::{Effect, SkillId};
 use crate::world::Actor;
@@ -49,6 +49,10 @@ pub enum Ability {
     /// whoever is trained in it; usable whenever they have it (the rules refuse, taking no time,
     /// where there is no lock).
     PickLock,
+    /// Catch a second wind (spec §8 "Talents"): [`Action::SecondWind`], the active of the
+    /// Second wind talent (a talent with the `second_wind` effect). Had by whoever holds it;
+    /// unavailable while its cooldown (Winded) lasts.
+    SecondWind,
     /// Bash with the shield held (spec §8 "Weapon skills"): [`Action::Bash`]. Everyone can bash
     /// with a shield (at shield bashing's rank 0 too), so everyone has it; it is available while
     /// a shield to bash with is held.
@@ -62,6 +66,8 @@ pub enum Source {
     Race,
     /// The character's class (none yet).
     Class,
+    /// A talent the character took (spec §8 "Talents"): its active ones.
+    Talent,
     /// A trained skill used as an action (spec §8 "Skills").
     Skill,
     /// A weapon skill or a fighting style (spec §8 "Weapon skills", "Fighting styles").
@@ -75,6 +81,7 @@ impl Source {
     pub const ALL: &[Source] = &[
         Source::Race,
         Source::Class,
+        Source::Talent,
         Source::Skill,
         Source::WeaponSkill,
         Source::Item,
@@ -85,6 +92,7 @@ impl Source {
         match self {
             Source::Race => "Racial",
             Source::Class => "Class",
+            Source::Talent => "Talents",
             Source::Skill => "Skills",
             Source::WeaponSkill => "Weapon skills",
             Source::Item => "Items",
@@ -96,6 +104,7 @@ impl Source {
         match self {
             Source::Race => "race",
             Source::Class => "class",
+            Source::Talent => "talent",
             Source::Skill => "skill",
             Source::WeaponSkill => "weapon_skill",
             Source::Item => "item",
@@ -164,9 +173,17 @@ impl Ability {
                 let id = SkillId(u8::try_from(i).ok()?);
                 Some(Ability::use_of(def).unwrap_or(Ability::Skill(id)))
             });
+        // Talents: the active ones the talent table has.
+        let wind = (content.talents().iter())
+            .flat_map(|(_, def)| def.effects_at(def.rank_count()))
+            .any(|e| matches!(e, TalentEffect::SecondWind { .. }));
+        let talents = wind.then_some(Ability::SecondWind);
         // Weapon skills and fighting styles: the shield bash.
         let weapon_skills = [Ability::ShieldBash];
-        let mut all: Vec<Ability> = skills.chain(weapon_skills).collect();
+        let mut all: Vec<Ability> = (talents.into_iter())
+            .chain(skills)
+            .chain(weapon_skills)
+            .collect();
         all.sort_by_key(|a| a.source());
         all
     }
@@ -196,6 +213,7 @@ impl Ability {
             Ability::Skill(id) => actor.skills.get(id).is_some(),
             Ability::Disarm => actor.skills.trains_effect(content, Effect::Disarm),
             Ability::PickLock => actor.skills.trains_effect(content, Effect::Pick),
+            Ability::SecondWind => actor.talent_mods(content).second_wind.is_some(),
             Ability::ShieldBash => true,
         }
     }
@@ -206,6 +224,7 @@ impl Ability {
             Ability::Skill(id) => &content.skill(id).id,
             Ability::Disarm => "disarm",
             Ability::PickLock => "pick_lock",
+            Ability::SecondWind => "second_wind",
             Ability::ShieldBash => "shield_bash",
         }
     }
@@ -216,6 +235,7 @@ impl Ability {
             Ability::Skill(id) => &content.skill(id).name,
             Ability::Disarm => "Disarm a trap",
             Ability::PickLock => "Pick lock",
+            Ability::SecondWind => "Second wind",
             Ability::ShieldBash => "Shield bash",
         }
     }
@@ -228,6 +248,10 @@ impl Ability {
                 "Take apart a trap you know of next to you; a clumsy try sets it off."
             }
             Ability::PickLock => "Open a locked door next to you without its key.",
+            Ability::SecondWind => {
+                "Catch your breath in the thick of it: some of your hit points come back at \
+                 once, and then you are winded for a while."
+            }
             Ability::ShieldBash => "Strike someone next to you with the shield you hold.",
         }
     }
@@ -236,6 +260,7 @@ impl Ability {
     pub const fn source(self) -> Source {
         match self {
             Ability::Skill(_) | Ability::Disarm | Ability::PickLock => Source::Skill,
+            Ability::SecondWind => Source::Talent,
             Ability::ShieldBash => Source::WeaponSkill,
         }
     }
@@ -243,7 +268,7 @@ impl Ability {
     /// What it asks for before it is used.
     pub const fn aim(self) -> Aim {
         match self {
-            Ability::Skill(_) => Aim::Nothing,
+            Ability::Skill(_) | Ability::SecondWind => Aim::Nothing,
             Ability::Disarm | Ability::PickLock | Ability::ShieldBash => Aim::Direction,
         }
     }
@@ -255,6 +280,7 @@ impl Ability {
             Ability::Skill(_) => None,
             Ability::Disarm => Some(ActionKind::Disarm),
             Ability::PickLock => Some(ActionKind::PickLock),
+            Ability::SecondWind => Some(ActionKind::Wait),
             Ability::ShieldBash => Some(ActionKind::Melee),
         }
     }
@@ -264,6 +290,7 @@ impl Ability {
     pub const fn action(self, dir: Option<Dir>) -> Option<Action> {
         match (self, dir) {
             (Ability::Skill(_), _) => None,
+            (Ability::SecondWind, _) => Some(Action::SecondWind),
             (Ability::Disarm, Some(dir)) => Some(Action::Disarm(dir)),
             (Ability::PickLock, Some(dir)) => Some(Action::PickLock(dir)),
             (Ability::ShieldBash, Some(dir)) => Some(Action::Bash(dir)),
@@ -277,6 +304,10 @@ impl Ability {
         let own = match self {
             Ability::Skill(_) => Some(Unavailable::NotYet),
             Ability::Disarm | Ability::PickLock => None,
+            Ability::SecondWind => (actor.talent_mods(content).second_wind)
+                .map(|w| w.cooldown)
+                .filter(|&cooldown| actor.effects.has(cooldown))
+                .map(Unavailable::While),
             Ability::ShieldBash => actor
                 .shield(content)
                 .is_none()
@@ -322,7 +353,14 @@ mod tests {
         let names: Vec<&str> = Source::ALL.iter().map(|s| s.name()).collect();
         assert_eq!(
             names,
-            ["Racial", "Class", "Skills", "Weapon skills", "Items"]
+            [
+                "Racial",
+                "Class",
+                "Talents",
+                "Skills",
+                "Weapon skills",
+                "Items"
+            ]
         );
     }
 

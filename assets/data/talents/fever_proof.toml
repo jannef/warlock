@@ -1,0 +1,8 @@
+[[talent]]
+id = "fever_proof"
+name = "Fever-proof"
+tree = "vigour"
+description = "You throw off a sickness sooner than most: a disease needs one fewer good day in a row to leave you, if it ever leaves."
+needs = { talents = { strong_constitution = 1 }, level = 15 }
+effects = [{ kind = "disease_recovery", value = 1 }]
+systems = ["diseases"]

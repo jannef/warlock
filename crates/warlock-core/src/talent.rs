@@ -15,7 +15,10 @@
 
 use crate::alignment::Band;
 use crate::character::Character;
-use crate::content::{Choice, Content, Need, TalentDef, TalentEffect, TalentId};
+use crate::content::{
+    Choice, Content, DamageTypeId, Need, StatusId, TalentDef, TalentEffect, TalentId,
+};
+use crate::damage::Kinds;
 use crate::skills::Skills;
 use crate::stats::Stats;
 use crate::weapon_skills::WeaponSkills;
@@ -94,7 +97,7 @@ impl Talents {
             let def = book.get(id);
             for rank in 1..=taken.rank.min(def.rank_count()) {
                 for effect in def.effects_at(rank) {
-                    mods.add(effect);
+                    mods.add(content, effect);
                 }
             }
         }
@@ -137,6 +140,63 @@ pub struct TalentMods {
     pub notice: Option<i32>,
     /// The free blows its talents switch on.
     pub free_blows: FreeBlows,
+    /// Percent faster resting heals, on top of resting's own pace.
+    pub resting_percent: i32,
+    /// The active Second wind, if it has it.
+    pub second_wind: Option<SecondWind>,
+    /// Rotten food and overeating never make it vomit, and rotten food sickens it half as much.
+    pub iron_stomach: bool,
+    /// Statuses that ease faster, by the percent: `(status, percent)`, one entry per effect.
+    pub status_eases: Vec<(StatusId, i32)>,
+    /// Statuses that never lower its scores.
+    pub no_penalty: Vec<StatusId>,
+    /// Wounds bleed less: none from a big hit, a degree less from a critical.
+    pub clotting: bool,
+    /// Percent more of what its statuses take off its scores (negative: less).
+    pub penalty_percent: i32,
+    /// Added to its disease checks.
+    pub disease_checks: i32,
+    /// Checks fewer won in a row that shake a disease off.
+    pub disease_recovery: i32,
+    /// The sides of the one die its kicks at creatures roll, if any (the most counts).
+    pub kick_die: Option<u8>,
+    /// How much stronger its door kicks are.
+    pub door_kick: i32,
+    /// Percent more work a turn of digging does.
+    pub dig_percent: i32,
+    /// Percent more its blows with a two-handed weapon cost (negative: cheaper).
+    pub two_handed_price: i32,
+    /// The status a critical it confirms in melee leaves on the target.
+    pub critical_status: Option<StatusId>,
+    /// More penetration for blows that can do damage of a kind: `(kind, value)`.
+    pub penetration: Vec<(DamageTypeId, i32)>,
+    /// How much higher the burden's cap on its Dexterity in Defence is.
+    pub burden_dex: i32,
+    /// A trap it steps onto first gets a Dexterity check.
+    pub sure_step: bool,
+    /// Pits never catch it.
+    pub pit_proof: bool,
+    /// Percent quicker it moves and acts.
+    pub speed_percent: i32,
+    /// Dodge added against shots, throws, and trap missiles.
+    pub missile_dodge: i32,
+    /// Percent more damage bursts and bolts do it (negative: less).
+    pub spell_damage_percent: i32,
+}
+
+/// The active Second wind (spec §8 "Talents"): hit points back at once, then a cooldown.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct SecondWind {
+    pub per_level: u8,
+    pub at_least: i32,
+    pub cooldown: StatusId,
+}
+
+impl SecondWind {
+    /// The hit points it gives back at character `level`.
+    pub fn hp_at(self, level: u8) -> i32 {
+        (i32::from(self.per_level) * i32::from(level)).max(self.at_least)
+    }
 }
 
 impl TalentMods {
@@ -145,16 +205,52 @@ impl TalentMods {
         *self == TalentMods::default()
     }
 
-    /// The effects of one rank, summed (what taking it adds).
-    pub fn of(effects: impl IntoIterator<Item = TalentEffect>) -> Self {
+    /// The effects of one rank, summed (what taking it adds); the statuses and damage types
+    /// they name are looked up in `content`.
+    pub fn of(content: &Content, effects: impl IntoIterator<Item = TalentEffect>) -> Self {
         let mut mods = TalentMods::default();
         for effect in effects {
-            mods.add(effect);
+            mods.add(content, effect);
         }
         mods
     }
 
-    fn add(&mut self, effect: TalentEffect) {
+    /// What a status's penalty of `by` points to a score comes to for it: none from a status
+    /// that never lowers its scores, and a lowering scaled by `penalty_percent` toward 0 (a
+    /// raise stays as it is).
+    pub fn penalty(&self, status: StatusId, by: i32) -> i32 {
+        if by >= 0 {
+            return by;
+        }
+        if self.no_penalty.contains(&status) {
+            return 0;
+        }
+        by * (100 + self.penalty_percent).max(0) / 100
+    }
+
+    /// How many seconds status `status` takes to ease by a degree for it, its usual `every`
+    /// eased by the percents faster its talents give (at least 1).
+    pub fn eases_every(&self, status: StatusId, every: u32) -> u32 {
+        let faster: i32 = (self.status_eases.iter())
+            .filter(|(s, _)| *s == status)
+            .map(|(_, p)| p)
+            .sum();
+        if faster == 0 {
+            return every;
+        }
+        let pace = u32::try_from((100 + faster).max(1)).unwrap_or(1);
+        (every * 100 / pace).max(1)
+    }
+
+    /// The penetration its talents add to a blow that can do damage of `kinds`.
+    pub fn penetration_for(&self, kinds: &Kinds) -> i32 {
+        (self.penetration.iter())
+            .filter(|(kind, _)| kinds.iter().any(|k| k == *kind))
+            .map(|(_, v)| v)
+            .sum()
+    }
+
+    fn add(&mut self, content: &Content, effect: TalentEffect) {
         match effect {
             TalentEffect::Dodge { value } => self.dodge += value,
             TalentEffect::Natural { value } => self.natural += value,
@@ -184,6 +280,56 @@ impl TalentMods {
                     T::Opportunist => self.free_blows.opportunist = true,
                 }
             }
+            TalentEffect::RestingPercent { value } => self.resting_percent += value,
+            TalentEffect::SecondWind {
+                per_level,
+                at_least,
+                cooldown,
+            } => {
+                if let Some(cooldown) = content.status_id(&cooldown) {
+                    self.second_wind = Some(SecondWind {
+                        per_level,
+                        at_least,
+                        cooldown,
+                    });
+                }
+            }
+            TalentEffect::IronStomach => self.iron_stomach = true,
+            TalentEffect::StatusEases { status, value } => {
+                if let Some(status) = content.status_id(&status) {
+                    self.status_eases.push((status, value));
+                }
+            }
+            TalentEffect::NoPenalty { status } => {
+                self.no_penalty.extend(content.status_id(&status));
+            }
+            TalentEffect::Clotting => self.clotting = true,
+            TalentEffect::PenaltyPercent { value } => self.penalty_percent += value,
+            TalentEffect::DiseaseChecks { value } => self.disease_checks += value,
+            TalentEffect::DiseaseRecovery { value } => self.disease_recovery += value,
+            TalentEffect::KickDie { sides } => {
+                self.kick_die = Some(self.kick_die.map_or(sides, |s| s.max(sides)));
+            }
+            TalentEffect::DoorKick { value } => self.door_kick += value,
+            TalentEffect::DigPercent { value } => self.dig_percent += value,
+            TalentEffect::TwoHandedPrice { value } => self.two_handed_price += value,
+            TalentEffect::CriticalStatus { status } => {
+                self.critical_status = content.status_id(&status).or(self.critical_status);
+            }
+            TalentEffect::Penetration {
+                damage: kind,
+                value,
+            } => {
+                if let Some(kind) = content.damage_type_id(&kind) {
+                    self.penetration.push((kind, value));
+                }
+            }
+            TalentEffect::BurdenDex { value } => self.burden_dex += value,
+            TalentEffect::SureStep => self.sure_step = true,
+            TalentEffect::PitProof => self.pit_proof = true,
+            TalentEffect::SpeedPercent { value } => self.speed_percent += value,
+            TalentEffect::MissileDodge { value } => self.missile_dodge += value,
+            TalentEffect::SpellDamagePercent { value } => self.spell_damage_percent += value,
         }
     }
 
@@ -267,6 +413,9 @@ impl<'a> Candidate<'a> {
             Need::Stat(stat, score) => self.stats.score(*stat) >= *score,
             Need::Skill(id, value) => self.skills.value(*id).is_some_and(|v| v >= *value),
             Need::WeaponSkill(id, rank) => self.weapon_skills.rank(*id) >= *rank,
+            Need::AnyWeaponSkill(any) => {
+                (any.skills.iter()).any(|id| self.weapon_skills.rank(*id) >= any.rank)
+            }
             Need::Chosen(rank) => match (choice, chosen) {
                 (Some(Choice::WeaponSkill | Choice::Style), Some(id)) => {
                     (content.weapon_skills().id(id))
@@ -405,39 +554,48 @@ mod tests {
 
     #[test]
     fn hit_points_by_level_grow_with_the_level_and_never_under_the_floor() {
-        let mods = TalentMods::of([TalentEffect::MaxHpPerLevels {
-            per_levels: 4,
-            at_least: 3,
-        }]);
+        let mods = TalentMods::of(
+            &Content::builtin().expect("content"),
+            [TalentEffect::MaxHpPerLevels {
+                per_levels: 4,
+                at_least: 3,
+            }],
+        );
         assert_eq!(mods.hp_at(1), 3);
         assert_eq!(mods.hp_at(12), 3);
         assert_eq!(mods.hp_at(16), 4);
         assert_eq!(mods.hp_at(60), 15);
-        let two = TalentMods::of([
-            TalentEffect::MaxHpPerLevels {
-                per_levels: 4,
-                at_least: 3,
-            },
-            TalentEffect::MaxHpPerLevels {
-                per_levels: 4,
-                at_least: 3,
-            },
-        ]);
+        let two = TalentMods::of(
+            &Content::builtin().expect("content"),
+            [
+                TalentEffect::MaxHpPerLevels {
+                    per_levels: 4,
+                    at_least: 3,
+                },
+                TalentEffect::MaxHpPerLevels {
+                    per_levels: 4,
+                    at_least: 3,
+                },
+            ],
+        );
         assert_eq!(two.hp_at(20), 10);
     }
 
     #[test]
     fn effects_sum_and_flags_switch() {
-        let mods = TalentMods::of([
-            TalentEffect::Dodge { value: 1 },
-            TalentEffect::Dodge { value: 2 },
-            TalentEffect::FootstepsPercent { value: -20 },
-            TalentEffect::SilentDoors,
-            TalentEffect::Notice { value: 2 },
-            TalentEffect::FreeBlow {
-                trigger: crate::content::FreeBlowTrigger::Riposte,
-            },
-        ]);
+        let mods = TalentMods::of(
+            &Content::builtin().expect("content"),
+            [
+                TalentEffect::Dodge { value: 1 },
+                TalentEffect::Dodge { value: 2 },
+                TalentEffect::FootstepsPercent { value: -20 },
+                TalentEffect::SilentDoors,
+                TalentEffect::Notice { value: 2 },
+                TalentEffect::FreeBlow {
+                    trigger: crate::content::FreeBlowTrigger::Riposte,
+                },
+            ],
+        );
         assert_eq!(mods.dodge, 3);
         assert_eq!(mods.footsteps_percent, -20);
         assert!(mods.silent_doors);

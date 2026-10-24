@@ -46,7 +46,7 @@ impl World {
     fn kind_of(&self, action: &Action) -> Option<ActionKind> {
         Some(match action {
             Action::Move(dir) | Action::Pay(Some(dir)) => self.move_kind(*dir),
-            Action::Wait | Action::Rest(_) => ActionKind::Wait,
+            Action::Wait | Action::Rest(_) | Action::SecondWind => ActionKind::Wait,
             Action::Open(_) => ActionKind::OpenDoor,
             Action::Close(_) => ActionKind::CloseDoor,
             Action::Kick(_) => ActionKind::Kick,

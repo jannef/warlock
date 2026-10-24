@@ -133,8 +133,8 @@ pub use status::{
     Stacking, StatusDef, StatusId, Wound,
 };
 pub use talent::{
-    Choice, Coverage, DEFAULT_MAX_RANKS, FreeBlowTrigger, Need, Needs, Rank, SystemDef, SystemId,
-    TalentBook, TalentDef, TalentEffect, TalentId, TreeDef, TreeId,
+    AnyWeaponSkill, Choice, Coverage, DEFAULT_MAX_RANKS, FreeBlowTrigger, Need, Needs, Rank,
+    SystemDef, SystemId, TalentBook, TalentDef, TalentEffect, TalentId, TreeDef, TreeId,
 };
 pub use terrain::{
     Breakable, Freeze, FreezeSpec, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId,
@@ -618,6 +618,8 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             content.experience = Experience::parse(path, text)?;
         }
+        // Statuses before talents, which may name them (a cooldown, a critical's status).
+        content.load_statuses(files)?;
         // The talent table (spec §8 "Talents"): optional, so no level asks for a pick without it.
         if files.table("talents").next().is_some() {
             content.talents = talent::parse(files.table("talents"), &content)?;
@@ -626,7 +628,6 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             content.horoscope = Some(Horoscope::parse(path, text)?);
         }
-        content.load_statuses(files)?;
         content.load_terrain(files)?;
         content.load_diseases(files)?;
         let path = "data/room_effects.toml";

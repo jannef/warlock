@@ -293,7 +293,7 @@ impl Actor {
     /// What its status effects, hunger (Weak or worse), and stat damage take off its scores, if
     /// anything.
     fn penalty(&self, content: &Content) -> Option<PerStat<i32>> {
-        let mut by = self.effects.penalty(content);
+        let mut by = (self.effects).penalty_for(content, &self.talent_mods(content));
         if let (Some(def), Some(hunger)) = (content.hunger(), self.hunger(content))
             && hunger.is_weak()
         {
@@ -379,7 +379,9 @@ impl Actor {
         let dexterity = self.stats_with(content, &mods).modifier(Stat::Dexterity);
         let worn = (equipped.iter())
             .filter_map(|(_, o, m, _)| Some(o.max_dex? + m.get(ItemEffect::MaxDex)));
-        let cap = worn.chain(burden.max_dex()).min();
+        // Nimble (spec §8 "Talents"): the burden's cap is higher.
+        let nimble = self.talent_mods(content).burden_dex;
+        let cap = worn.chain(burden.max_dex().map(|c| c + nimble)).min();
         let dexterity = cap.map_or(dexterity, |cap| dexterity.min(cap));
         // A weapon readied to throw does not parry: only what is held in a hand.
         let worn = equipped.iter().flat_map(|(item, o, m, hand)| {
@@ -852,7 +854,9 @@ impl Actor {
         profile.riders.extend(added);
         local.sharpen(&mut profile);
         mods.sharpen(&mut profile);
-        profile.bonus += self.talent_mods(content).melee_damage;
+        let talents = self.talent_mods(content);
+        profile.bonus += talents.melee_damage;
+        profile.penetration += talents.penetration_for(&profile.kinds);
         self.stanced(content, profile)
     }
 
@@ -880,7 +884,9 @@ impl Actor {
         profile.riders.extend(content.object(stack.object).added);
         Mods::local(stack, content).sharpen(&mut profile);
         mods.sharpen(&mut profile);
-        profile.bonus += self.talent_mods(content).melee_damage;
+        let talents = self.talent_mods(content);
+        profile.bonus += talents.melee_damage;
+        profile.penetration += talents.penetration_for(&profile.kinds);
         Some((stack.object, self.stanced(content, profile)))
     }
 
@@ -947,20 +953,27 @@ impl Actor {
         let mods = self.mods(content);
         let mut profile = Profile::melee(attack, &self.stats_with(content, &mods)).with(&benefit);
         mods.sharpen(&mut profile);
+        profile.penetration += self.talent_mods(content).penetration_for(&profile.kinds);
         Some((shield, self.stanced(content, profile)))
     }
 
     /// What its kicks at a creature do (spec §8 "Doors"): an unarmed blow whatever it wields
     /// (bare hands' damage, Strength to hit and to damage), with what its unarmed fighting gives,
     /// the affixes of everything it wears and wields (spec §8 "Magic items"), and its combat
-    /// stance.
+    /// stance. Mighty kick (spec §8 "Talents") rolls its one bigger die instead of bare
+    /// hands', and Crusher adds its penetration.
     pub fn kick(&self, content: &Content) -> Profile {
         let skill = content.weapon_skills().of_role(Role::Unarmed);
         let mods = self.mods(content);
-        let fists = Attack::unarmed(content.unarmed_damage());
+        let talents = self.talent_mods(content);
+        let mut fists = Attack::unarmed(content.unarmed_damage());
+        if let Some(sides) = talents.kick_die {
+            fists.damage = crate::dice::Dice::of(1, u32::from(sides));
+        }
         let mut profile = Profile::melee(&fists, &self.stats_with(content, &mods))
             .with(&self.benefit(content, skill));
         mods.sharpen(&mut profile);
+        profile.penetration += talents.penetration_for(&profile.kinds);
         self.stanced(content, profile)
     }
 }

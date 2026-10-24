@@ -1,0 +1,8 @@
+[[talent]]
+id = "fast_healer"
+name = "Fast healer"
+tree = "vigour"
+description = "Rest mends you quickly: resting heals you half again as fast."
+needs = { talents = { healthy = 1 }, stats = { toughness = 13 } }
+effects = [{ kind = "resting_percent", value = 50 }]
+systems = ["hit_points"]

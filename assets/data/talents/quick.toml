@@ -1,0 +1,14 @@
+[[talent]]
+id = "quick"
+name = "Quick"
+tree = "finesse"
+ranks = 2
+description = "You move and act a little quicker, more so at the second rank."
+effects = [{ kind = "speed_percent", value = 5 }]
+systems = ["speed"]
+
+[[talent.rank]]
+needs = { stats = { dexterity = 14 }, level = 9 }
+
+[[talent.rank]]
+needs = { stats = { dexterity = 16 }, level = 24 }

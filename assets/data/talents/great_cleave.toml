@@ -1,0 +1,8 @@
+[[talent]]
+id = "great_cleave"
+name = "Great cleave"
+tree = "might"
+description = "Cleaving goes on while your blows kill, once at each foe beside you in a turn."
+needs = { talents = { cleave = 1 }, level = 18 }
+effects = [{ kind = "free_blow", trigger = "great_cleave" }]
+systems = ["free_blows"]

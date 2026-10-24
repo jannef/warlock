@@ -9,7 +9,7 @@ resting, ...) keep their keys (see [Controls](controls.md)).
 ## The abilities menu
 
 `a` opens the abilities menu. It lists your abilities in groups, by where they come from
-(Racial, Class, Skills, Weapon skills, Items; a group you have nothing in is left out), each with
+(Racial, Class, Talents, Skills, Weapon skills, Items; a group you have nothing in is left out), each with
 a letter:
 
 - beside each, what it asks for once you choose it, such as `in a direction`;

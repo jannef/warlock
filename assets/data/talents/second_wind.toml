@@ -1,0 +1,8 @@
+[[talent]]
+id = "second_wind"
+name = "Second wind"
+tree = "vigour"
+description = "In the thick of it you can catch your breath: some of your hit points back at once (an ability), then you are winded for a quarter of an hour."
+needs = { stats = { toughness = 13 }, level = 6 }
+effects = [{ kind = "second_wind", per_level = 1, at_least = 8, cooldown = "winded" }]
+systems = ["hit_points", "status"]

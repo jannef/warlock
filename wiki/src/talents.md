@@ -35,7 +35,11 @@ class bonus picks, and the Talents page that lists every talent with what it nee
 
 ## What a talent does
 
-In the game a talent is described in words; the tables below state the rule exactly. Where a
+In the game a talent is described in words; the tables below state the rule exactly. Most
+talents simply change a rule for good. An **active** talent (Second wind) is something you do:
+it appears in the [abilities menu](abilities.md) under Talents, and after use it leaves a
+status (Winded) during which it cannot be used again. A few talents that need the class
+resources (Battle trance, Inner calm) are still to come. Where a
 talent scales ("one hit point per four levels"), what it gave earlier grows as you level: a
 talent taken at level 3 still matters at level 50.
 

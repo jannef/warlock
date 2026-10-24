@@ -39,6 +39,30 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `xp_percent` | `grant_xp` (every gain: kills, discovery, quests, dev) |
 | `notice` | `search.rs`: `notices` (as if trained in Spot) and `search_modifier(Look::Passive)` |
 | `free_blow` | `World::free_blows_of`: `FreeBlows::either` of the actor's own switches and the talents' |
+| `resting_percent` | `World::healing_rate`, on resting's pace (Fast healer) |
+| `second_wind` | `world/second_wind.rs` (`Action::SecondWind`, `Ability::SecondWind` under `Source::Talent`): hit points back, then its `cooldown` status |
+| `iron_stomach` | `eat.rs`: `eat_rotten` (no vomiting, no draw for it; sickness halved) and `feed` (overeating never vomits) |
+| `status_eases` | `World::live`: the sufferer's easing pace, `TalentMods::eases_every` into `Effect::until_eases_every`/`advance_every` |
+| `no_penalty`, `penalty_percent` | `Actor::penalty` through `Effects::penalty_for` (`TalentMods::penalty`: lowerings only, toward 0) |
+| `clotting` | `World::wounded` |
+| `disease_checks`, `disease_recovery` | `World::expose`, `World::disease_turn` |
+| `kick_die` | `Actor::kick` |
+| `door_kick` | `World::kick_door` (added to Strength and athletics) |
+| `dig_percent` | `World::dig_turn` |
+| `two_handed_price` | `World::attack_price` (melee with a `two_handed` object) |
+| `critical_status` | `World::after_blow` (a confirmed critical in melee) |
+| `penetration` | `Actor::melee`, `off_hand_blow`, `bash`, `kick` (`TalentMods::penetration_for` the profile's kinds) |
+| `burden_dex` | `Actor::defence` (the burden's cap) |
+| `sure_step`, `pit_proof` | `World::step_onto_trap` → `steps_lightly` (the player's steps only) |
+| `speed_percent` | `World::burdened`, the one place every price passes (`quicker`) |
+| `missile_dodge` | `World::target_against` (from `resolve` for shots and throws, `trap_strikes` for trap missiles) |
+| `spell_damage_percent` | `World::evaded` in `spell_hurts` (bursts and bolts, before resistances) |
+
+Effects that name a status (`second_wind`'s `cooldown`, `status_eases`, `no_penalty`,
+`critical_status`) or a damage type (`penetration`) are checked at load (statuses load before
+talents) and resolved by `TalentMods::of(content, ...)`; `TalentEffect` is `Clone`, not `Copy`.
+The `any_weapon_skill` need (`Need::AnyWeaponSkill`: `roles` and `of`, resolved to skill ids
+with its words at load) is what "a melee skill at 3" asks.
 
 ## Coverage policy
 
@@ -64,6 +88,13 @@ content (fixtures) never has a pick due.
 (summing, ranks per choice, serialization), `world/talent_tests.rs` (dues and refusals,
 prerequisites in words, ranks and Hardy's growth, several levels at once and `levelup:auto`,
 dropped picks, every hook, a free-blow talent, saves and replays, perception and dumps).
+
+## The trees so far
+
+Vigour, Might, and Finesse (#237) ship whole but for Battle trance and Inner calm (the class
+resources, #225); `body_talent_tests.rs` covers each one's rule, `hunger_tests.rs` Iron stomach.
+The statuses Winded (Second wind's cooldown) and Staggered (`cost = 150`, 6 s) are in
+`data/status.toml`.
 
 ## Later waves
 

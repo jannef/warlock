@@ -52,13 +52,6 @@ max = 1
 eases = 120
 cured_by = ["bandage"]
 follows = "winded"
-
-[[status]]
-id = "winded"
-name = "Winded"
-max = 1
-eases = 600
-start = "You are winded."
 "#;
 
 /// A room to oneself.

@@ -1,0 +1,7 @@
+[[talent]]
+id = "opportunist"
+name = "Opportunist"
+tree = "finesse"
+description = "A foe that turns from you pays for it: one that steps away from beside you takes a blow as it goes."
+effects = [{ kind = "free_blow", trigger = "opportunist" }]
+systems = ["free_blows"]

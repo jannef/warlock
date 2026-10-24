@@ -27,6 +27,7 @@ use crate::geom::{Dir, Pos};
 use crate::noise::Act;
 use crate::sight::LineOfSight;
 use crate::stats::Stat;
+use crate::talent::TalentMods;
 use crate::time::Duration;
 
 /// The work done on a wall is kept in twentieths of a point of hardness, so a dig's work,
@@ -140,7 +141,10 @@ impl World {
             return;
         };
         let strength = player.effective_stats(&self.content).score(Stat::Strength);
-        let work = dig_work(power, strength);
+        // Breaker (spec §8 "Talents"): more work a turn.
+        let faster = player.talent_mods(&self.content).dig_percent;
+        let work = TalentMods::scaled(u64::from(dig_work(power, strength)), faster);
+        let work = u32::try_from(work).unwrap_or(u32::MAX);
         self.make_noise(self.state.player, Act::Dig);
         self.train_stat(StatUse::Dig);
         let level = self.state.current();
