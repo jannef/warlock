@@ -11,9 +11,9 @@ screen, you choose who you are, one step at a time.
 4. **Name**: type your character's name, up to 20 characters (below).
 5. **Summary**: your name, race, gender, and class, your age, birthday, and birth sign, the
    [stats](stats.md) you will start with and, beside them, the [skills](skills.md) you are
-   trained in, the [alignment](alignment.md) you start in, your vision, and the scenario.
-   **Start the run** begins it; **Name**, **Race**, **Gender**, and **Class** take you back to
-   that step.
+   trained in, your [starting kit](starting-kit.md) item by item, the
+   [alignment](alignment.md) you start in, your vision, and the scenario. **Start the run**
+   begins it; **Name**, **Race**, **Gender**, and **Class** take you back to that step.
 
 Each choice step lists its options with a short description, and for races and classes how they
 change your stats. Move with the arrow keys (or `j` and `k`), press `Enter` to choose and go on,

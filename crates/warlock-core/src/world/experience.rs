@@ -14,23 +14,28 @@
 //! random. The creature types are remembered in [`Progress`]; a level is new when this arrival
 //! made its state.
 
-use super::World;
+use super::{Due, Spent, World};
 use crate::content::{Content, CreatureId, Factor, LevelKind, parse_local_area};
 use crate::stats::Stat;
+use crate::talent::TalentMods;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 
-/// The player's progression beyond the XP total (spec §8 "Experience"): what they have
-/// discovered. Left out of the saved state while empty.
+/// The player's progression beyond the XP total (spec §8 "Experience", "Talents"): what they
+/// have discovered, and what their levels still ask them to choose. Left out of the saved state
+/// while empty.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Progress {
     #[serde(default, skip_serializing_if = "Discovered::is_empty")]
     pub(crate) discovered: Discovered,
+    /// The choices levels still ask for, the lowest level's first (`world/talent.rs`).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub(crate) due: Vec<Due>,
 }
 
 impl Progress {
     pub fn is_empty(&self) -> bool {
-        self.discovered.is_empty()
+        self.discovered.is_empty() && self.due.is_empty()
     }
 }
 
@@ -104,7 +109,17 @@ impl World {
         self.grant_xp(gain);
     }
 
-    /// The player gains `gain` experience, and any levels that earns.
+    /// The dev action `xp:N` ([`crate::action::Action::GrantXp`]): the player gains `xp`
+    /// experience, and any levels that earns. Takes no time.
+    pub(super) fn grant_xp_dev(&mut self, xp: u32) -> Spent {
+        self.say(format!("You gain {xp} experience (dev)."));
+        self.grant_xp(xp);
+        Spent::NoTime
+    }
+
+    /// The player gains `gain` experience (more by the talents that teach quicker, spec §8
+    /// "Talents": Good learner), and any levels that earns, each handing out what it brings
+    /// ([`World::level_up`]).
     pub(super) fn grant_xp(&mut self, gain: u32) {
         let content = self.content.clone();
         let rules = content.experience();
@@ -112,6 +127,9 @@ impl World {
         if gain == 0 {
             return;
         }
+        let percent = self.state.player().talent_mods(&content).xp_percent;
+        let gain = TalentMods::scaled(u64::from(gain), percent);
+        let gain = u32::try_from(gain).unwrap_or(u32::MAX).max(1);
         self.state.experience = self.state.experience.saturating_add(gain);
         let after = self.player_level();
         if after == before {
@@ -127,6 +145,7 @@ impl World {
         }
         self.news.push("You feel more experienced.".into());
         self.news.push(format!("Welcome to level {after}."));
+        self.level_up(before, after);
     }
 
     /// What one level adds to the player's hit points: half the class's hit points (the

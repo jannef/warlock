@@ -779,7 +779,9 @@ fn starting_styles_come_from_the_class_and_move_no_other_roll() {
     // same.
     let mut files = ContentFiles::builtin();
     let stripped: String = (include_str!("../../../../assets/data/classes.toml").lines())
-        .filter(|l| !l.starts_with("style"))
+        // Kit lines that go with what a class trains go too (some would name a style the class
+        // no longer trains).
+        .filter(|l| !l.starts_with("style") && !l.contains("trained ="))
         .map(|l| format!("{l}\n"))
         .collect();
     files.insert("data/classes.toml", &stripped);

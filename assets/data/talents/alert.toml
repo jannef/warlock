@@ -1,0 +1,8 @@
+[[talent]]
+id = "alert"
+name = "Alert"
+tree = "delver"
+description = "You notice hidden things in passing, as the watchful do, and more often than most."
+needs = { stats = { willpower = 12 } }
+effects = [{ kind = "notice", value = 2 }]
+systems = ["searching"]

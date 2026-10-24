@@ -94,11 +94,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
   scores (the final scores only: the dice already rolled, no breakdown, never a potential or a
   modifier) with the starting trained skills and their values beside them (§8 "Skills"; in two
   columns when there are more than six, down the first, then the second; below the scores, as
-  `Appraise 11 · Disable device 16 · …`, when the panel is too narrow), the alignment band the
-  character starts in (`Alignment Good`; §8 "Alignment"; never the score), the vision, and the
-  scenario (with the seed in developer builds only); the gender row says "Other" without the
-  stat it raised. Once the run has begun the character screen names it (`Other (Willpower
-  +1)`), as it names the rest of the character. The
+  `Appraise 11 · Disable device 16 · …`, when the panel is too narrow), the starting kit (§8
+  "Character creation": every stack the run starts with, as named and where it is worn or
+  wielded, `a dagger (wielded), a leather jerkin (being worn), 2 wool cloaks`, the scenario's own
+  pack included; a run started here always has the kit), the alignment band the character starts
+  in (`Alignment Good`; §8 "Alignment"; never the score), the vision, and the scenario (with the
+  seed in developer builds only); the gender row says "Other" without the stat it raised. Once
+  the run has begun the character screen names it (`Other (Willpower +1)`), as it names the rest
+  of the character. The panel is 84 wide where the console allows; too tall for the console, it
+  drops the gaps before the kit, after the birth line, and after the steps, in that order. The
   player does not choose the age, the birthday, or the sign. Starting makes a new character with
   a save of its own: it never touches another character's (§7 "Saves"). Content without races or classes skips
   character creation: New run starts the scenario as it is.

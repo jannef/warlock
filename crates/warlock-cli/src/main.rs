@@ -83,12 +83,14 @@ struct DumpArgs {
     /// when loud), inventory (what the player carries and weighs), equipment (what they wear
     /// and wield), stats (the player's race, gender, class, and scores), skills (the player's
     /// trained skills and their values), weapon_skills (the player's weapon skills: rank and
-    /// progress toward the next), abilities (the player's abilities in the abilities menu's
+    /// progress toward the next), talents (the player's talents with their ranks and choices),
+    /// abilities (the player's abilities in the abilities menu's
     /// order: what each asks for, or why it cannot be used now), quests (the player's quest
     /// log: what each asks and how far it
     /// has got), truth (dev-only ground truth), actors (dev-only: every actor on the level with
     /// its weight, what it carries, its weapon skills with marks, its stats as score/potential,
-    /// and its trained skills with their marks), rooms (dev-only: the level's special rooms,
+    /// and its trained skills with their marks), progress (dev-only: the level-up choices due,
+    /// the talents the player may take now, and the first kills that paid), rooms (dev-only: the level's special rooms,
     /// their plain ground marked with their effect's letter, then one line per room), ice
     /// (dev-only: the temperature and the ice on the level's water, its thickness in cm: 0-9,
     /// a-z for 10-35, # beyond).
@@ -171,14 +173,18 @@ fn parse_run_actions(args: &RunArgs) -> Result<Vec<Action>, String> {
     parse_actions(args.actions.as_deref().unwrap_or("")).map_err(|e| format!("--actions: {e}"))
 }
 
-/// A fresh run of `--scenario` with `--seed`, `--character`, and `--name`.
+/// A fresh run of `--scenario` with `--seed`, `--character`, and `--name`: a character chosen
+/// with `--character` or `--name` starts with its kit, the scenario's own with the scenario's
+/// pack (spec §8 "Character creation").
 fn start(content: Arc<Content>, args: &RunArgs) -> Result<World, String> {
-    World::with_character_named(
+    let kit = args.character.is_some() || args.name.is_some();
+    World::start_run(
         content,
         &args.scenario,
         args.seed,
         args.character.as_ref(),
         args.name.as_deref(),
+        kit,
     )
     .map_err(|e| format!("cannot start scenario `{}`: {e}", args.scenario))
 }

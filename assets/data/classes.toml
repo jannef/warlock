@@ -1,6 +1,7 @@
 # Classes (spec §8 "Character creation"): the third choice of a new run, in the order offered.
-# A class adjusts the starting scores (see races.toml for how they add up), gives hit points, and
-# trains the character in skills and weapon skills: no equipment or spells come with it.
+# A class adjusts the starting scores (see races.toml for how they add up), gives hit points,
+# trains the character in skills and weapon skills, and gives a starting kit: no spells come with
+# it.
 #
 # Fields: id and name (the class's id, for the command line and saves, and its name), description
 # (one line, shown when choosing), and stats (adjustments to the starting scores by stat id:
@@ -25,6 +26,27 @@
 # for fighting styles (spec §8 "Fighting styles"; the styles in weapon_skills.toml), rolled after
 # everything else (the thief's Twin Blades or Duelist).
 #
+# kit: what the class starts with (spec §8 "Character creation"), first in the pack; the race's
+# kit (races.toml) and any the birth sign gives (horoscope.toml) come after it, and a scenario's
+# `carry` on top. Each line is one item, or a few of one, as level files place objects
+# (`"ration*2"`, `"gem:ruby"`): a string is carried, and a table says how it is kept:
+#   { carry = "..." }   in the pack (the same as a plain string)
+#   { wield = "..." }   wielded or readied: a weapon or shield in hand (a second light weapon
+#                       goes to the off hand), a missile weapon or missiles, a tool; each in the
+#                       first free slot it fits (one that finds none is carried)
+#   { wear = "..." }    worn: armour, cloaks, gloves, boots, rings, amulets
+# and may add:
+#   trained = "id"      only if the class trained that weapon skill or fighting style: its
+#                       weapon_skills or styles, or the set of its choice that was picked (the
+#                       barbarian's great axe with axes, the thief's second dagger with Twin
+#                       Blades)
+#   gender = "female"   only for that gender (male, female, or other)
+#   magic = "any"       a base item (one with a `kind`) made as loot makes it, its rarity rolled:
+#                       "any" (perhaps magic), "magic" (magic or rare), or "rare"; unidentified
+# `"a|b|c"` is one of them, picked at random when the character is made (from its own stream,
+# so no other roll moves). Food is as fresh as the run is new. Nobody starts Strained; only the
+# aristocrat and the merchant may start Burdened, by their wealth.
+#
 # The adventurers come first, then everyday folk. Balance is not a goal: some choices are poor on
 # purpose.
 
@@ -39,6 +61,15 @@ skills = { athletics = "2d6+10", survival = "2d6+10", intimidate = "2d4+4", list
 weapon_skills = { unarmed = 1 }
 weapon_skill_choice = [{ axes = 2 }, { great_blades = 2 }]
 styles = { great_weapon = 1 }
+# The wild lands' arms: a great weapon of the kind the barbarian learned, and furs.
+kit = [
+    { wield = "great_axe", trained = "axes" },
+    { wield = "great_sword", trained = "great_blades" },
+    { wear = "fur_cloak" },
+    { wear = "bone_amulet", magic = "any" },
+    "dried_meat*3",
+    "gold_coin*4",
+]
 
 [[class]]
 id = "bard"
@@ -50,6 +81,15 @@ experience = 100
 skills = { bluff = "2d6+10", music = "2d6+10", appraise = "2d4+4", decipher_script = "2d4+4", knowledge = "2d4+4", tumble = "2d4+4" }
 weapon_skills = { short_blades = 1, daggers = "1d2" }
 styles = { duelist = 1 }
+# A blade for the road, a lute for the inn, and the night's takings.
+kit = [
+    { wield = "short_sword|scimitar" },
+    { wear = "travelling_cloak" },
+    "dagger",
+    "lute",
+    "bread",
+    "gold_coin*30",
+]
 
 [[class]]
 id = "priest"
@@ -61,6 +101,17 @@ experience = 115
 skills = { heal = "2d6+10", knowledge = "2d6+10", concentration = "2d4+4", decipher_script = "2d4+4" }
 weapon_skills = { maces = 2, shield_block = 1 }
 styles = { sword_and_board = 1 }
+# Mace and buckler, the holy symbol, and candles for the rites.
+kit = [
+    { wield = "mace" },
+    { wield = "buckler" },
+    { wear = "wool_cloak" },
+    { wear = "amber_amulet" },
+    "scroll_of_light",
+    "candle*3",
+    "bread",
+    "gold_coin*10",
+]
 
 [[class]]
 id = "druid"
@@ -72,6 +123,16 @@ experience = 115
 skills = { handle_animal = "2d6+10", survival = "2d6+10", concentration = "2d4+4", heal = "2d4+4", listen = "2d4+4" }
 weapon_skills = { staves = 2, slings = 1 }
 styles = { staff_fighter = 1 }
+# Staff and sling, a stone pouch, and the forest's gifts: a healing root and windfall apples.
+kit = [
+    { wield = "quarterstaff" },
+    { wield = "sling" },
+    { wield = "sling_stone*20" },
+    { wear = "travelling_cloak" },
+    "angelica_root",
+    "apple*4",
+    "gold_coin*3",
+]
 
 [[class]]
 id = "monk"
@@ -83,6 +144,14 @@ experience = 120
 skills = { balance = "2d6+10", tumble = "2d6+10", athletics = "2d4+4", concentration = "2d4+4", escape_artist = "2d4+4", listen = "2d4+4" }
 weapon_skills = { unarmed = 2, staves = 1 }
 style_choice = [{ brawler = 1 }, { staff_fighter = 1 }]
+# A vow of poverty: a staff or bound hands, alms in copper, and an apple or three.
+kit = [
+    { wield = "quarterstaff", trained = "staff_fighter" },
+    { wear = "leather_gloves", trained = "brawler" },
+    { wear = "wool_cloak" },
+    "apple*3",
+    "copper_coin*7",
+]
 
 [[class]]
 id = "paladin"
@@ -95,6 +164,15 @@ alignment = 450
 skills = { intimidate = "2d6+10", concentration = "2d4+4", handle_animal = "2d4+4", heal = "2d4+4" }
 weapon_skills = { long_blades = 2, shield_block = "1d2", shield_bash = 1 }
 styles = { sword_and_board = 1 }
+# Sword and shield, and the order's symbol, perhaps blessed.
+kit = [
+    { wield = "long_sword" },
+    { wield = "small_shield" },
+    { wear = "leather_jerkin" },
+    { wear = "amber_amulet", magic = "any" },
+    "dried_meat*2",
+    "gold_coin*10",
+]
 
 [[class]]
 id = "ranger"
@@ -106,6 +184,16 @@ experience = 105
 skills = { spot = "2d6+10", survival = "2d6+10", woodcraft = "2d6+10", athletics = "2d4+4", handle_animal = "2d4+4", listen = "2d4+4", swim = "2d4+4" }
 weapon_skills = { bows = 2, short_blades = 1 }
 styles = { marksman = 1 }
+# Bow and quiver, a short sword, and leathers for the borderlands.
+kit = [
+    { wield = "short_bow" },
+    { wield = "arrow*24" },
+    { wield = "short_sword" },
+    { wear = "leather_jerkin" },
+    { wear = "leather_boots" },
+    "dried_meat*3",
+    "gold_coin*8",
+]
 
 [[class]]
 id = "thief"
@@ -118,6 +206,18 @@ alignment = -200
 skills = { open_lock = "2d6+10", steal = "2d6+10", stealth = "2d6+10", tumble = "2d6+10", appraise = "2d4+4", disable_device = "2d4+4", escape_artist = "2d4+4", search = "2d4+4", spot = "2d4+4" }
 weapon_skills = { daggers = 2, thrown = 1 }
 style_choice = [{ twin_blades = 1 }, { duelist = 1 }]
+# A dagger (two, for Twin Blades; a stiletto up the sleeve for the Duelist), dark leathers, and
+# a purse that was someone else's.
+kit = [
+    { wield = "dagger" },
+    { wield = "dagger", trained = "twin_blades" },
+    { carry = "stiletto", trained = "duelist" },
+    { wear = "leather_jerkin" },
+    { wear = "wool_cloak" },
+    { wear = "leather_gloves" },
+    "bread",
+    "gold_coin*25",
+]
 
 [[class]]
 id = "wizard"
@@ -128,6 +228,18 @@ hp = 0
 experience = 125
 skills = { concentration = "2d6+10", knowledge = "2d6+10", spellcraft = "2d6+10", decipher_script = "2d4+4", use_magic_device = "2d4+4" }
 weapon_skills = { staves = 1 }
+# A staff, candles for the long nights, and three scrolls: light, identify, and one spell to
+# be reckoned with.
+kit = [
+    { wield = "quarterstaff" },
+    { wear = "wool_cloak" },
+    "scroll_of_light",
+    "scroll_of_identify",
+    "scroll_of_fireball|scroll_of_frost|scroll_of_lightning",
+    "candle*4",
+    "bread",
+    "gold_coin*15",
+]
 
 [[class]]
 id = "witch"
@@ -139,6 +251,17 @@ experience = 115
 alignment = -200
 skills = { heal = "2d6+10", spellcraft = "2d6+10", concentration = "2d4+4", intimidate = "2d4+4", use_magic_device = "2d4+4" }
 weapon_skills = { daggers = 1, staves = 1 }
+# A ritual knife, a charm that may be more than it seems, herbs, and an unlabelled potion.
+kit = [
+    { wield = "dagger" },
+    { wear = "wool_cloak" },
+    { wear = "bone_amulet", magic = "any" },
+    "angelica_root*2",
+    "red_potion|blue_potion",
+    "candle*2",
+    "apple*2",
+    "gold_coin*6",
+]
 
 [[class]]
 id = "warrior"
@@ -150,6 +273,15 @@ experience = 100
 skills = { athletics = "2d6+10", balance = "2d4+4", intimidate = "2d4+4", swim = "2d4+4" }
 weapon_skills = { long_blades = 2, shield_block = "1d2" }
 styles = { sword_and_board = 1 }
+# Sword and shield, plain leathers and a cap, a ration, and a soldier's pay.
+kit = [
+    { wield = "long_sword" },
+    { wield = "small_shield" },
+    { wear = "leather_jerkin" },
+    { wear = "leather_cap" },
+    "ration",
+    "gold_coin*20",
+]
 
 [[class]]
 id = "aristocrat"
@@ -161,6 +293,17 @@ experience = 90
 skills = { knowledge = "2d6+10", bluff = "2d4+4", intimidate = "2d4+4" }
 weapon_skills = { long_blades = 1 }
 styles = { duelist = 1 }
+# Unfair on purpose: a fine rapier (perhaps enchanted), an heirloom ring (magic or rare, as
+# yet unknown), furs, a jewel, and a heavy purse, which may well weigh them down.
+kit = [
+    { wield = "rapier", magic = "any" },
+    { wear = "gold_ring", magic = "magic" },
+    { wear = "fur_cloak" },
+    { wear = "leather_boots" },
+    "gem:ruby|gem:sapphire|gem:emerald",
+    "gold_coin*300",
+    "apple*2",
+]
 
 [[class]]
 id = "commoner"
@@ -172,6 +315,12 @@ experience = 80
 skills = { athletics = "2d4+4", handle_animal = "2d4+4" }
 weapon_skills = { maces = 1 }
 styles = { brawler = 1 }
+# A stick and a turnip, and three worthless coppers.
+kit = [
+    { wield = "club" },
+    "turnip",
+    "copper_coin*3",
+]
 
 [[class]]
 id = "craftsperson"
@@ -182,6 +331,17 @@ hp = 3
 experience = 90
 skills = { metalcraft = "2d6+10", woodcraft = "2d6+10", appraise = "2d4+4" }
 weapon_skills = { axes = 1 }
+# A hand axe, work gloves and boots, and something of their own making: the weaver's rope, the
+# cobbler's boots, or the smith's helm.
+kit = [
+    { wield = "hand_axe" },
+    { wear = "leather_gloves" },
+    { wear = "leather_boots" },
+    "rope|leather_boots|iron_helm",
+    "candle*2",
+    "ration",
+    "gold_coin*25",
+]
 
 [[class]]
 id = "merchant"
@@ -192,3 +352,18 @@ hp = 2
 experience = 90
 skills = { appraise = "2d6+10", bluff = "2d6+10", knowledge = "2d4+4" }
 weapon_skills = { daggers = 1 }
+# Goods and gems: a purse, two stones to trade, and a pack of wares (cloaks, candles, rope,
+# dried meat, and a scroll of identify for appraising), heavy enough to slow the weaker.
+kit = [
+    { wield = "dagger" },
+    { wear = "travelling_cloak" },
+    { wear = "leather_boots" },
+    "gem:garnet|gem:amethyst|gem:topaz",
+    "gem:garnet|gem:amethyst|gem:topaz",
+    "gold_coin*120",
+    "wool_cloak*2",
+    "candle*10",
+    "rope",
+    "dried_meat*4",
+    "scroll_of_identify",
+]

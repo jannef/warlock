@@ -119,3 +119,27 @@ issue body, or one with many choices to review) is a **draft PR that adds
   usual, so keep design PRs to their document.
 - A document can be any length (issue and Discussion bodies stop at 65,536 characters). Prefer
   tables to prose.
+
+## Agents, finishers, and context
+
+The owner's token-saving rules (2026-10-24):
+
+1. **A feature agent stops when its PR is open.** It pushes, opens the PR, triggers CI (pushing
+   does it; if the change alters golden captures it runs
+   `gh workflow run ci.yml --ref <branch> -f update_golden=true` once and notes the run id in its
+   report), reports briefly, and stops. It never waits for CI (`gh pr checks --watch` is out),
+   never fixes CI in the same context, and is never resumed for the merge.
+2. **A finisher agent** (fresh, small context, Sonnet) later handles one PR: it reads the CI
+   result and fixes failures, downloads the golden-update artifact
+   (`gh run download <id> -n golden-references -D <scratch dir>`), compares it with the branch's
+   references (per-channel tolerance 2; byte-identical is not required), and copies in only the
+   images the change explains after looking at each (an unexplained difference is a bug to fix,
+   not a reference to update). When the integrator says the PR is next it merges `origin/main`
+   once (both sides of registry insertions; main's side of generated files and PNGs, then
+   regenerate), runs the light re-verify (fmt, clippy `-D warnings`, `cargo test --workspace`,
+   `cargo xtask wiki`, the PR's replays with `replay --verify`, re-created if hashes moved),
+   pushes, and stops. It does not merge the PR.
+3. **Agents keep contexts small**: read files in parts, grep, filter test output, never print
+   whole diffs or logs.
+
+The integrator schedules finishers: one per PR, when that PR is next in line.

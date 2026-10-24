@@ -67,16 +67,50 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `character/styles/<race>,<gender>,<class>`: the class's (in skill order), the pick of the
     choice, then the chosen set's; so they never move a stat or a weapon skill roll. Each raises
     the styles it defaults to.
+  - **Starting kit** (`warlock-core/src/kit.rs`, data `content/kit.rs`; #257): what the character
+    carries, wields, and wears at the start. The class's `kit` (`data/classes.toml`) comes first,
+    then the race's few racial items (`data/races.toml`), then the birth sign's animal's and
+    element's (`data/horoscope.toml`: the hook for the horoscope; none give anything yet). A kit
+    is a list of lines, each one item or a few of one, as level files place objects: a string is
+    carried, a table says `carry`, `wield` (wielded or readied: hands, missile weapon, missiles,
+    Tool slot), or `wear`, and may add `trained` (only if the class trained that weapon skill or
+    fighting style: its fixed ranks, or the set of its choice that was picked; never the race's
+    ranks or defaults), `gender` (only for that gender: the hook for gender's items), and
+    `magic` (a base item made as loot makes it at item level 1, its rarity rolled at least
+    `any`, `magic`, or `rare`); `"a|b|c"` is one of them. Each item goes into the pack in order
+    (a stackable one joins a stack of the same), and a `wield` or `wear` item into the first free
+    slot it fits (a second light weapon to the off hand); one that finds none is carried. Kits
+    roll from a stream of their own, `character/kit/<race>,<gender>,<class>`, in that order: a
+    line draws only if it applies, one draw to pick among alternatives, then for a `magic` line
+    the loot draws (rarity, affixes, a rare name, an ornament); so no stat, skill, weapon skill,
+    or style roll moves. Kit items are what they are: magic ones unidentified,
+    food made when the run starts (§8 "Hunger"). Data is checked when content loads (every item
+    exists, what is wielded or worn fits a slot of that kind, `magic` only on base items, a
+    class's `trained` only what it trains). Unfair on purpose: the aristocrat sets out rich, with
+    a perhaps magic rapier and an heirloom ring (magic or rare), the merchant with goods and gems,
+    the commoner with a stick and a turnip; nobody starts Strained, and only the aristocrat and
+    the merchant may start Burdened (a test checks the weakest character of every combination,
+    every die at its least and the worst sign). **Who starts with it**: a run whose character
+    the player chose, that is one started from New run's character creation, or by the game or
+    `warlock-cli` with `--character` or `--name`, or a replay that records the kit; the
+    scenario's `carry` comes on top (§7 "Scenarios"). A run on the scenario's own character that
+    nobody chose (`--scenario` alone, tests, golden walks, replays from before kits) starts with
+    the scenario's pack alone, as before kits. The world state and replays record which
+    (`kit`). The summary of character creation (§6) lists what the run starts with, each stack
+    as named ("a dagger (wielded)", "2 wool cloaks"); it never names the seed. The wiki lists
+    every class's kit and race's additions.
   - Balance is deliberately not a goal: some combinations are poor (a halfling commoner), and
     classes do nothing but adjust starting scores, give hit points, train skills, give
-    weapon skills and fighting styles, and set where the alignment starts. No other D&D concept
-    comes with them (equipment, spells; the alignment is good against evil only, not D&D's grid).
+    weapon skills and fighting styles, give a starting kit, and set where the alignment starts.
+    No other D&D concept comes with them (spells; the alignment is good against evil only, not
+    D&D's grid).
   - The character (`Character`: the name, the race, gender, and class ids, the stat the gender
     raised, the birth date, and the birth sign) is part of the world state (saved, hashed) and
-    shown on the character screen; replays record the choice and the name only, and since
-    everything else follows from the content, the choice, the seed, and the start date, a run is
-    reproduced by its scenario, seed, character, and name. `World::new` starts as the scenario's
-    character, `World::with_character` as a given one, `World::with_character_named` named.
+    shown on the character screen; replays record the choice, the name, and whether the run
+    started with the kit, and since everything else follows from the content, the choice, the
+    seed, and the start date, a run is reproduced by its scenario, seed, character, name, and
+    kit. `World::new` starts as the scenario's character, `World::with_character` as a given
+    one, `World::with_character_named` named, `World::start_run` with or without the kit.
 - **Alignment** (`warlock-core/src/alignment.rs`, `content/alignment.rs`, `world/alignment.rs`;
   #254): good against evil, as ADOM has law against chaos.
   - **The score**: the player has a hidden integer score from −1000 (as evil as can be) to 1000
@@ -208,6 +242,64 @@ developer notes (CLAUDE.md, `docs/dev/`).
     chance, an untrained skill, or a creature's skills; ground-truth dev dumps (`actors`, the
     world state) show every actor's skills with their marks. Skills and marks are part of the
     world state (saved, hashed).
+- **Talents** (`warlock-core/src/talent.rs`, the runtime; `content/talent.rs`, the data;
+  `world/talent.rs`, the picks; M30, #229; design `docs/design/progression.md` §7, §10): knacks
+  a character picks as they level, each a typed effect read where the rules already read what
+  magic items do.
+  - **Data** (§7): `data/talents.toml` (the settings: `max_ranks`, `[coverage]`, the `[[tree]]`s
+    in display order, the closed `[[system]]` list) and `data/talents/<id>.toml`, one `[[talent]]`
+    a file (`id`, `name`, `tree`, `description` in the game's words, `ranks` 1 to `max_ranks`,
+    `choice` (`weapon_skill`, `style`, `element`), `needs`, `effects` per rank held,
+    `[[rank]]` with each rank's own `needs` and `effects`, `systems` from the list, `granted`:
+    given, never picked). Without the files there are no talents and no level asks for one.
+  - **When**: every `talent_every`th character level (`[levels]` in `data/experience.toml`: 3,
+    6, 9, …) brings one pick, a `Due { level, talents }` in `Progress::due` (lowest level
+    first; several levels in one turn queue theirs), handed out by `World::level_up` from
+    `grant_xp`. **Nothing is banked**: while a pick is due `World::apply` refuses every other
+    action ("You must choose a talent first."), so the level-up screen (to come, #236), the
+    CLI, and replays spend it alike with `Action::Talent { id, choice }` (`talent:hardy`,
+    `talent:weapon_focus:long_blades`; no time, recorded) and, once skill rolls exist (#230),
+    `Action::Advance` (`advance:stealth`, refused until then); the dev `levelup:auto` takes the
+    first the player may take for every choice due, the dev `xp:N` grants experience. A pick
+    nothing can be spent on (no talent the player may take: a run without talents, every
+    talent they qualify for held) is dropped, so a level never waits for the impossible.
+  - **Prerequisites** (`Needs`; all must hold at the pick and are never checked again: a score
+    lowered later keeps the talent): other talents at a rank (a talent with a choice may be
+    needed only by one of the same choice, taken for the same), stat **scores** (the stored
+    score, never the effective one), skill values, weapon skill or style ranks, the chosen
+    weapon skill's or style's rank (`chosen`), the character level, the race, the class, the
+    eyes (the race's vision profile), and the alignment band (`requires_alignment`, as quests
+    and abilities ask it, §8 "Alignment": `{ min = "good" }`). Refused in words: "You cannot
+    take Dodge: you need Dexterity 13." Ranks come one at a time ("You learn Hardy (2)."); a talent with a choice is
+    one pick per choice, each with its own ranks.
+  - **Effects** (`TalentEffect`, summed into `TalentMods` by `Actor::talent_mods`, one read
+    each): `dodge` and `natural` in Defence (natural armour on top of the creature type's own
+    or a magic item's, or alone), `melee_damage` on both hands' blows (after the affixes,
+    before the stance), `max_hp_per_levels` (hit points handed into `hp_base` and `hp` at the
+    pick and as each later level comes, as levels' own are; the floor `at_least` until
+    `level / per_levels` passes it), `healing_percent` (with the regeneration affixes),
+    `footsteps_percent` and `silent_doors` (`noise::noise`), `hearing`, `carry_percent`
+    (`burden::load`), `travel_percent` (overworld steps), `hunger_percent` and `no_exertion`,
+    `xp_percent` (every gain), `notice` (noticing in passing as if trained in Spot, with a
+    bonus), `free_blow` (a switch of `World::free_blows_of`). The first twelve: Healthy, Hardy,
+    Dodge, Brawn, Silent feet, Keen ears, Pack mule, Long strider, Lean, Good learner, Alert,
+    Thick skin.
+  - **Coverage** (the design's §8): every talent names the systems it touches; at load a
+    system not `pending` with fewer than `min_talents` talents (or `min_class` class abilities,
+    0 until the class tables), or a tree not `pending` nor `no_free` without `free_per_tree`
+    prerequisite-free talents, is a content error. A wave that ships a system's talents removes
+    its `pending`; a new system of the game joins the list in the PR that ships its talents.
+  - **Determinism and saves**: picks are replayed actions; nothing here draws from the gameplay
+    stream; the `levels` stream (`WorldState::levels_rng`, for the skill rolls and stat checks
+    to come) is made on its first draw. `Actor::talents` (by id, like affixes: adding talents
+    keeps saves; on every actor, so creatures may get some from data later), `Progress::due`,
+    and the stream are left out of the JSON while unused, so runs without talents hash as
+    before. **Saves change.**
+  - **What the player sees**: `PerceptionView::due`, `own_talents` (names for their choice,
+    the rank of how many, the description), `talents` (every talent with the next rank's
+    prerequisites and whether each holds, and the ways it may be taken now); the dumps'
+    `talents` and dev `progress` layers; JSON `talents`, `due`. Never a rule's number: the
+    wiki's Talents page states them.
 - **Weapon skills** (`warlock-core/src/weapon_skills.rs`, training; `content/weapon_skill.rs`,
   the data; M22, #134), ADOM-like, with *The Riddle of Steel*'s defaults:
   - **Skills** (`data/weapon_skills.toml`, §7): the categories weapons belong to. A skill's

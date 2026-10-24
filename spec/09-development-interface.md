@@ -34,7 +34,8 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   throw:c:12,5 eat:b
   eat:floor:a dig:E search search:10 chat:E ask:E:rooms ask:E:quest-rats ask:E:accept-rats vision:darkvision
   skip:1h weather:rain stance:coward effect:fireball@12,5 effect:lightning_bolt@3,4>12,4
-  identify:a afflict:bleeding infect:filth_fever freeze:12,5,3 thaw:12,5,3`; `pick:DIR` tries
+  identify:a afflict:bleeding infect:filth_fever talent:hardy talent:weapon_focus:long_blades
+  advance:stealth levelup:auto xp:2500 freeze:12,5,3 thaw:12,5,3`; `pick:DIR` tries
   the lock of the door that way (§8 "Doors"), `bash:DIR` bashes with the held shield that way, `dig:DIR` digs toward a direction until the wall gives way or
   something interrupts; `search` searches the cells around the player once, `search:N` for up to
   N turns (1 to 100), stopping when something is found; `fire:X,Y` shoots at level cell (X, Y),
@@ -58,7 +59,11 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   on in slot SLOT (a slot id of `data/slots.toml`) and `remove:SLOT` takes off what is there;
   the dev weather override takes `clear`, `overcast`, `rain`, or `heavy`; the dev `afflict:ID`
   gives the player a degree more of status ID (`data/status.toml`), and `infect:ID` makes them
-  catch disease ID (`data/diseases.toml`); in scripts, `ACTION*N` repeats an
+  catch disease ID (`data/diseases.toml`); `talent:ID[:CHOICE]` takes a talent (an id in
+  `data/talents/`, with its choice) when a level's pick is due (§8 "Talents"; every other
+  action is refused until it is made), `advance:SKILL` spends a level's skill roll (none until
+  #230), the dev `levelup:auto` spends every choice due with the first the player may take, and
+  the dev `xp:N` grants N experience with the levels it brings; in scripts, `ACTION*N` repeats an
   action, e.g. `wait*10`); `hash` is the
   FNV-1a 64 hash of the
   canonical JSON encoding of `WorldState` after the step. Verification reports the first
@@ -92,10 +97,16 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   Diseased`, then the diseases they know they have, `Diseases filth fever`), `skills` (the player's trained skills in skill order, `Stealth 17`),
   `weapon_skills` (the player's weapon skills and fighting styles in file order with their rank
   and how far their marks are toward the next, `Long blades 2 (40%)`; at rank 10 the rank alone;
-  the styles they fight in now marked, `Duelist 1 (0%), in use`), and `quests`
+  the styles they fight in now marked, `Duelist 1 (0%), in use`), `talents` (the player's
+  talents in the order taken, each for its choice with its rank of how many, `Hardy 2/3`,
+  `Weapon focus (long blades)`; never what a rank gives), and `quests`
   (the quest log, active first: `Rats in the arena (active, from the old hermit): Kill 3 giant
   rats in the Arena. 0 / 3 killed.`) are built from the perception snapshot only;
-  `truth` (terrain, objects, traps hidden or known, secret doors as `S`, and creatures) and `actors` (every actor on
+  `truth` (terrain, objects, traps hidden or known, secret doors as `S`, and creatures),
+  `progress` (the level-up choices due, `due level 3: 1 talent`, the talents the player may
+  take now by id with the choices each may be taken for, `takeable healthy,
+  weapon_focus:{bows,slings}`, and the creature types whose first kill has paid; §8 "Talents"),
+  and `actors` (every actor on
   the level with its hit
   points and Defence, `hp 8/12 dv 13`, its alignment (`alignment evil`; the player's score and
   band, `alignment 450 (good)`; §8 "Alignment"), its
@@ -135,6 +146,8 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   status effects (`effects`, by id), the diseases they know they have (`diseases`, by id),
   weapon skills and fighting styles (`weapon_skills`, by skill id: `{rank, progress}`, the
   progress a percent or null at rank 10), the styles in use (`styles_in_use`, style ids), the
+  talents (`talents`, in the order taken: `{id, name, rank, ranks, choice}`) and the level-up
+  choices due (`due`: `{level, talents}`, or null), the
   quest log (`quests`: `[{id, name,
   kind, active, completed, giver, objective, status}]`), hit points (`hp: {current, max}`),
   Defence (`defence`, the total), hunger (`hunger`: `bloated` … `starving`, or null when nobody

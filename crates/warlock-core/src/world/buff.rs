@@ -77,6 +77,10 @@ impl World {
             | Action::Identify(_)
             | Action::Afflict(_)
             | Action::Infect(_)
+            | Action::Talent { .. }
+            | Action::Advance(_)
+            | Action::LevelUpAuto
+            | Action::GrantXp(_)
             | Action::Freeze { .. }
             | Action::Thaw { .. } => return None,
         })

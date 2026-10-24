@@ -23,6 +23,7 @@ mod gem;
 mod horoscope;
 mod hunger;
 mod item_class;
+mod kit;
 mod level;
 mod light;
 mod material;
@@ -45,6 +46,7 @@ mod slot;
 mod spell;
 mod stance;
 mod status;
+mod talent;
 mod terrain;
 mod trap;
 mod vault;
@@ -76,7 +78,7 @@ pub use effect::{
     MAX_SHAKE_PIXELS, Shake,
 };
 pub use experience::{
-    Discovery, Experience, FACTORS, Factor, Guideline, Kills, MAX_LEVEL, MAX_XP, pace_words,
+    Discovery, Experience, FACTORS, Factor, Guideline, Kills, Levels, MAX_LEVEL, MAX_XP, pace_words,
 };
 pub use faction::{FactionDef, FactionId, Factions, PLAYER_FACTION, Stance};
 pub use flow::{FLOW_SPEEDS, Flow};
@@ -92,6 +94,7 @@ pub use hunger::{
 #[cfg(test)]
 pub(crate) use item_class::BUILTIN as BUILTIN_ITEM_CLASSES;
 pub use item_class::{ItemClassDef, ItemClassId, MAX_ITEM_CLASSES};
+pub use kit::{Keep, Kit, KitItem};
 pub(crate) use level::validate_route;
 pub use level::{
     CreatureSpawn, EdgeExit, LevelKind, LevelTemplate, Region, StairsLink, parse_route,
@@ -126,6 +129,10 @@ pub use stance::{CombatStance, StanceDef, Stances, percent_of};
 pub use status::{
     Affliction, COST_PERCENT, CombatBonus, Healing, MAX_REGEN, MAX_SEVERITY, OnHit, Penalty,
     Stacking, StatusDef, StatusId, Wound,
+};
+pub use talent::{
+    Choice, Coverage, DEFAULT_MAX_RANKS, FreeBlowTrigger, Need, Needs, Rank, SystemDef, SystemId,
+    TalentBook, TalentDef, TalentEffect, TalentId, TreeDef, TreeId,
 };
 pub use terrain::{
     Breakable, Freeze, FreezeSpec, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId,
@@ -442,6 +449,9 @@ pub struct Content {
     /// The corpse object of each creature type, by creature id (`None`: it leaves none).
     corpses: Vec<Option<ObjectId>>,
     weapon_skills: WeaponSkillTable,
+    /// Talents (`data/talents.toml` and `data/talents/`, spec §8 "Talents"); none without the
+    /// files.
+    talents: TalentBook,
     /// Special rooms' effects (`data/room_effects.toml`).
     room_effects: RoomEffects,
     /// Prefixes, suffixes, and how loot rolls them (`data/affixes.toml`).
@@ -515,6 +525,7 @@ impl Content {
             corpses: Vec::new(),
             weapon_skills: WeaponSkillTable::default(),
             room_effects: RoomEffects::default(),
+            talents: TalentBook::default(),
             affixes: Affixes::default(),
             stances: Stances::default(),
             statuses: Vec::new(),
@@ -601,6 +612,10 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             content.experience = Experience::parse(path, text)?;
         }
+        // The talent table (spec §8 "Talents"): optional, so no level asks for a pick without it.
+        if files.table("talents").next().is_some() {
+            content.talents = talent::parse(files.table("talents"), &content)?;
+        }
         let path = "data/horoscope.toml";
         if let Some(text) = files.get_optional(path) {
             content.horoscope = Some(Horoscope::parse(path, text)?);
@@ -662,6 +677,7 @@ impl Content {
             }
             content.levels.insert(id.to_string(), level);
         }
+        content.load_kits()?;
         for (path, id, text) in files.in_dir("scenarios") {
             let mut scenario = ScenarioDef::parse(path, id, text)?;
             let err = |m: String| ContentError::new(path, format!("carry: {m}"));
@@ -1202,6 +1218,53 @@ impl Content {
         let err = |m: String| ContentError::new(path, m);
         let parsed: faction::FactionFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
         self.factions = Factions::resolve(parsed.faction).map_err(err)?;
+        Ok(())
+    }
+
+    /// The classes', races', and birth signs' starting kits (spec §8 "Character creation"), once
+    /// the objects, gems, slots, and weapon skills they name are known.
+    fn load_kits(&mut self) -> Result<(), ContentError> {
+        let classes = (self.classes.iter())
+            .map(|c| {
+                kit::resolve(&c.kit_spec, self, Some(&c.trainable())).map_err(|m| {
+                    ContentError::new("data/classes.toml", format!("class `{}`: {m}", c.id))
+                })
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        let races = (self.races.list.iter())
+            .map(|r| {
+                kit::resolve(&r.kit_spec, self, None).map_err(|m| {
+                    ContentError::new("data/races.toml", format!("race `{}`: {m}", r.id))
+                })
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        let signs = |parts: &[SignPart]| {
+            (parts.iter())
+                .map(|p| {
+                    kit::resolve(&p.kit_spec, self, None).map_err(|m| {
+                        ContentError::new("data/horoscope.toml", format!("`{}`: {m}", p.id))
+                    })
+                })
+                .collect::<Result<Vec<_>, _>>()
+        };
+        let horoscope = match &self.horoscope {
+            Some(h) => Some((signs(&h.animals)?, signs(&h.elements)?)),
+            None => None,
+        };
+        for (class, kit) in self.classes.iter_mut().zip(classes) {
+            class.kit = kit;
+        }
+        for (race, kit) in self.races.list.iter_mut().zip(races) {
+            race.kit = kit;
+        }
+        if let (Some(h), Some((animals, elements))) = (&mut self.horoscope, horoscope) {
+            for (part, kit) in (h.animals.iter_mut()).zip(animals) {
+                part.kit = kit;
+            }
+            for (part, kit) in (h.elements.iter_mut()).zip(elements) {
+                part.kit = kit;
+            }
+        }
         Ok(())
     }
 
@@ -2142,6 +2205,12 @@ impl Content {
     /// Every skill, with its id, in file order.
     pub fn skill_ids(&self) -> impl Iterator<Item = (SkillId, &SkillDef)> {
         (0u8..).zip(&self.skills.list).map(|(i, s)| (SkillId(i), s))
+    }
+
+    /// The talents (`data/talents.toml` and `data/talents/`, spec §8 "Talents"): none without
+    /// the files.
+    pub fn talents(&self) -> &TalentBook {
+        &self.talents
     }
 
     /// **[provisional]** How training marks become points (`[increase]` in `data/skills.toml`).

@@ -1,0 +1,7 @@
+[[talent]]
+id = "lean"
+name = "Lean"
+tree = "grit"
+description = "You go hungry more slowly, and exerting yourself costs you nothing."
+effects = [{ kind = "hunger_percent", value = -15 }, { kind = "no_exertion" }]
+systems = ["hunger"]

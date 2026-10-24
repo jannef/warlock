@@ -1,0 +1,63 @@
+# Talents (spec §8 "Talents"), one file per talent, named by its id (`hardy.toml`); a file holds
+# one `[[talent]]`. The settings (max_ranks, [coverage], the trees, the systems) stay in
+# ../talents.toml, and may be set in one file only. This file holds only the notes below: a file
+# of comments defines nothing. Saves name talents by id, so a new talent is a new file (never
+# edited into another's), a renamed id is a renamed file, and the same id in two files is a load
+# error naming both (docs/dev/content.md).
+#
+# Every talent defines:
+#   id, name      its id (in replays: `talent:hardy`) and its name, as the game shows it
+#   tree          a tree id of ../talents.toml
+#   description   what it does, in the game's words: never a number the game hides (a modifier,
+#                 a chance, a speed); where the game shows the quantity (Defence, Protection,
+#                 carrying, XP) the number may be said. The wiki shows the rule.
+#   systems       the systems it touches, ids from the closed list in ../talents.toml (at least
+#                 one): the coverage check counts them
+#   ranks         how many times it can be taken (1 to max_ranks, default 1): "Hardy 2/3"
+#   choice        what it is chosen for, if it takes a choice: "weapon_skill", "style", or
+#                 "element" (a damage type that is no physical kind); replays write it
+#                 `talent:weapon_focus:long_blades`, and each choice is a pick of its own
+#   needs         what taking any rank asks, all of which must hold at the pick (nothing is
+#                 checked again later):
+#                   talents = { dodge = 1, hardy = 2 }   those talents at those ranks; a talent
+#                                                        with a choice may be needed only by one
+#                                                        of the same choice, taken for the same
+#                   stats = { toughness = 14 }           the stored score, never the effective
+#                   skills = { stealth = 25 }            trained, at that value at least
+#                   weapon_skills = { bows = 3 }         a weapon skill or style at that rank
+#                   chosen = 2                           the chosen weapon skill or style at that
+#                                                        rank (talents with a choice)
+#                   level = 9                            the character level
+#                   race = "dwarf", class = "warrior"    the character's
+#                   eyes = "darkvision"                  the race's vision profile
+#                   requires_alignment = { min = "good" }   an alignment band, as quests and
+#                                                        abilities ask it (`min` the worst
+#                                                        allowed, `max` the best)
+#   effects       what every rank held adds: a list of { kind = ..., ... } (below)
+#   [[talent.rank]]  one per rank, in order (as many as `ranks`, or none): its own `needs`
+#                 besides the talent's, and its own `effects` besides the per-rank ones
+#   granted       true: given (by a race, a birth sign), never on a pick list
+#
+# Effects (each read by one rule; a new kind is a variant in content/talent.rs, a field in
+# talent.rs's TalentMods, and one read):
+#   dodge { value }               Defence in the Dodge category (bonuses add up)
+#   natural { value }             natural armour, on top of the actor's own or an item's
+#   melee_damage { value }        damage added to every blow up close (both hands)
+#   max_hp_per_levels { per_levels, at_least }   hit points: one per that many character
+#                                 levels, at least at_least, handed out at the pick and as each
+#                                 later level comes (as levels' own hit points are)
+#   healing_percent { value }     hit points come back that percent faster (negative: slower)
+#   footsteps_percent { value }   footsteps that percent louder (negative: quieter)
+#   silent_doors                  the doors it opens and closes make no sound
+#   hearing { value }             hears sounds that much fainter
+#   carry_percent { value }       carrying limit, that percent more
+#   travel_percent { value }      overworld journeys take that percent more time (negative:
+#                                 quicker)
+#   hunger_percent { value }      hunger burns that percent faster (negative: slower)
+#   no_exertion                   blows, shots, and throws burn no extra nutrition
+#   xp_percent { value }          experience gained, that percent more
+#   notice { value }              notices hidden things in passing as if trained in Spot, with
+#                                 that much added
+#   free_blow { trigger }         a free blow: "cleave", "great_cleave", "riposte", or
+#                                 "opportunist" (spec §8 "Free blows")
+# Flat bonuses are -20 to 20, percents -100 to 100, never 0.
