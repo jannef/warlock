@@ -6,5 +6,6 @@ character = { race = "human", gender = "female", class = "ranger", name = "Maren
 lantern = "lantern"
 # Early, while the shadows are long (the turn benchmark walks here then).
 start_time = "06:30"
-# Starting food (spec §8 "Hunger").
-carry = ["ration*2", "apple*3"]
+# No pack of its own: a character chosen in character creation brings food in their starting
+# kit (data/classes/, data/races.toml), and more on top would burden the smallest. Launched
+# on the scenario's own character (`--scenario` alone, tests), the player starts empty-handed.

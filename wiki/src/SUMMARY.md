@@ -32,6 +32,7 @@
 - [Your character](character.md)
   - [Races](races.md)
   - [Classes](classes.md)
+  - [Starting kit](starting-kit.md)
   - [Horoscope](horoscope.md)
   - [Alignment](alignment.md)
   - [Talents](talents.md)

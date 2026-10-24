@@ -76,4 +76,10 @@ quickest and the slowest race and class:
 Each level up to 20 raises your maximum **hit points** (and the hit points you have now) by half
 your class's hit points plus your Toughness's share, at least 1 (see
 [Combat](combat.md#hit-points)). From level 21 on, levels grow no hit points: hit point pools do
-not run away. Skills and the rest do not depend on your level.
+not run away. Each level also gives every stat a chance to rise by what you have done with it
+since (see [Stats](stats.md#training)).
+
+Every level also gives **skill rolls**: two for most classes, three for a thief or a ranger, four
+for a bard, one more for a human, and more for a high Intelligence. You spend them on your trained
+skills before you do anything else; how much each roll adds depends on how much you have used the
+skill since its last roll (see [Skills](skills.md#getting-better)).

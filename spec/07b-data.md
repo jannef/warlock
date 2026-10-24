@@ -141,6 +141,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `passive_penalty` (what noticing in passing loses against searching, 0 to 20; 4), `turns` (how
   long searching for a while lasts at most, 1 to 100; 10), and `secret_door` (a secret door's
   difficulty where its level gives none, 1 to 50; 14).
+- **Stat training** (`data/stats.toml`, optional; without it nothing trains and no level checks
+  a stat; §8 "Stats"): `[training]` `need_base` (20) and `need_per_point` (3), each 0 to 200
+  and not both 0, `over_potential_divisor` (4; 1 to 20), and `[[training.use]]` rules: `stat`
+  (a stat id), `on` (a use: `burdened`, `blow`, `dig`, `kick`, `dodge`, `shot`, `sneak`,
+  `climb`, `hurt`, `big_hit`, `resisted`, `plunge`, `found`, `read`, `identified`,
+  `discovered`, `spot`, `endured`, `resisted_will`, `hungry_fight`, `chat`, `trade`, `quest`,
+  `swapped`), and `chance` (1 to 100); a stat and use at most once.
 - **Action costs** (`data/actions.toml`, optional): action ids mapped to their cost in energy,
   e.g. `wait = 1000`, 1000 being a normal action (6 s at normal speed; §8 "Time"), 100 to
   10 000. The ids are `step` (onto terrain of `move_cost` 100), `wait`, `open_door`,

@@ -25,6 +25,7 @@
 
 use super::{Actor, ActorId, ActorKind, Spent, World};
 use crate::action::Event;
+use crate::content::StatUse;
 use crate::content::{ActionKind, Budge, Dialogue, DialogueId, Stance};
 use crate::geom::{Dir, Pos};
 use crate::noise::{self, Act, Heard, SoundKind, Volume};
@@ -220,6 +221,7 @@ impl World {
             actor.talk.met = true;
         }
         self.answer(id, line, None, events);
+        self.train_stat(StatUse::Chat);
         Spent::Turn(price)
     }
 
@@ -436,6 +438,7 @@ impl World {
         self.after_tread(id, to, footing, events);
         self.make_noise(id, Act::Step(to));
         self.say(format!("You swap places with {who}."));
+        self.train_stat(StatUse::Swapped);
         let extra = self.tread_price(id, footing) + self.step_onto_trap(to, id, events);
         if let Some(actor) = self.state.actors.get_mut(&id) {
             actor.energy = actor.energy.saturating_sub(extra);

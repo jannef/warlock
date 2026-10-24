@@ -100,12 +100,50 @@ pub fn roll_from(
         .collect();
     bases.sort_by(|a, b| content.object(a.0).id.cmp(&content.object(b.0).id));
     let object = *pick_weighted(rng, &bases)?;
-    let def = content.object(object);
-    let count = if def.kind == Some(ItemKind::Ammo) {
+    let count = if content.object(object).kind == Some(ItemKind::Ammo) {
         u32::try_from(rng.range(*AMMO.start(), *AMMO.end())).unwrap_or(1)
     } else {
         1
     };
+    Some(make_from(
+        content,
+        rng,
+        object,
+        count,
+        level,
+        grade,
+        Some(source),
+    ))
+}
+
+/// `count` of `object` made as loot makes its base item at item level `level`, at least of
+/// `grade`: draws 3 to 7 of [`roll`] (the rarity, the affixes, a rare item's name, an ornament),
+/// unidentified. What is never magic (no `kind`) draws no rarity and stays normal. A starting
+/// kit's magic items are made so (spec §8 "Character creation").
+pub fn make(
+    content: &Content,
+    rng: &mut Rng,
+    object: ObjectId,
+    count: u32,
+    level: u8,
+    grade: LootGrade,
+) -> Stack {
+    make_from(content, rng, object, count, level, grade, None)
+}
+
+/// [`make`], its material drawn as `source` has it (none for `None`: a starting kit's items
+/// keep the material they are listed with).
+fn make_from(
+    content: &Content,
+    rng: &mut Rng,
+    object: ObjectId,
+    count: u32,
+    level: u8,
+    grade: LootGrade,
+    source: Option<Source>,
+) -> Stack {
+    let level = level.max(1);
+    let def = content.object(object);
     let rarity = match def.kind {
         Some(_) => roll_rarity(content, rng, grade),
         None => Rarity::Normal,
@@ -121,14 +159,13 @@ pub fn roll_from(
     let ornament = gem::ornament(content, rng, def, level);
     // Its own parts in its base parts' order: the main part's material, then the gem it is set
     // with.
-    let own: Vec<_> = (variant::draw(content, rng, def, source, level).into_iter())
-        .chain(ornament)
-        .collect();
-    Some(if own.is_empty() {
+    let material = source.and_then(|source| variant::draw(content, rng, def, source, level));
+    let own: Vec<_> = material.into_iter().chain(ornament).collect();
+    if own.is_empty() {
         stack
     } else {
         stack.with_parts(own)
-    })
+    }
 }
 
 /// A rarity by the weights in content, leaving out those below `grade`.

@@ -23,6 +23,7 @@ mod gem;
 mod horoscope;
 mod hunger;
 mod item_class;
+mod kit;
 mod level;
 mod light;
 mod material;
@@ -44,6 +45,7 @@ mod sky;
 mod slot;
 mod spell;
 mod stance;
+mod stat_training;
 mod status;
 mod talent;
 mod terrain;
@@ -93,6 +95,7 @@ pub use hunger::{
 #[cfg(test)]
 pub(crate) use item_class::BUILTIN as BUILTIN_ITEM_CLASSES;
 pub use item_class::{ItemClassDef, ItemClassId, MAX_ITEM_CLASSES};
+pub use kit::{Keep, Kit, KitItem};
 pub(crate) use level::validate_route;
 pub use level::{
     CreatureSpawn, EdgeExit, LevelKind, LevelTemplate, Region, StairsLink, parse_route,
@@ -124,6 +127,7 @@ pub use sky::{MAX_MOONS, MAX_SIZE, MoonDef, PHASE_ONE, STANDARD_SIZE};
 pub use slot::{MAX_SLOTS, SlotDef, SlotId};
 pub use spell::{BOLT_LENGTHS, BURST_RADII, Bolt, Burst, BurstIce};
 pub use stance::{CombatStance, StanceDef, Stances, percent_of};
+pub use stat_training::{StatRule, StatTraining, StatUse};
 pub use status::{
     Affliction, COST_PERCENT, CombatBonus, Healing, MAX_REGEN, MAX_SEVERITY, OnHit, Penalty,
     Stacking, StatusDef, StatusId, Wound,
@@ -149,7 +153,7 @@ pub use weather::{
 use crate::dice::Dice;
 use crate::noise::MAX_LOUDNESS;
 use crate::perception::VIEW_RADIUS;
-use crate::skills::{Increase, SkillId, Skills};
+use crate::skills::{Ladder, RollRules, SkillId, Skills};
 use crate::stats::Stats;
 use crate::weapon_skills::WeaponSkills;
 use level::{LegendEntry, legend_char};
@@ -366,7 +370,7 @@ struct LegendFile {
 /// `data/lights.toml`, `data/vision.toml`, `data/factions.toml`, `data/dungeons.toml`,
 /// `data/calendar.toml`, `data/sky.toml`, `data/materials/`, `data/parts.toml`, `data/objects/`,
 /// `data/gems.toml`, `data/weather.toml`, `data/actions.toml`, `data/slots.toml`, `data/sizes.toml`,
-/// `data/races.toml`, `data/names.toml`, `data/classes.toml`, `data/skills.toml`,
+/// `data/races.toml`, `data/names.toml`, `data/classes/`, `data/skills.toml`,
 /// `data/horoscope.toml`,
 /// `data/effects.toml`, `data/room_effects.toml`, `data/weapon_skills.toml`, `data/stances.toml`,
 /// `data/status.toml`, `data/diseases.toml`, `data/dialogue.toml`, `data/quests.toml`,
@@ -415,6 +419,8 @@ pub struct Content {
     trap_ids: BTreeMap<String, TrapId>,
     /// The numbers of searching for hidden features (`data/search.toml`, spec §8 "Searching").
     search: SearchRules,
+    /// The rules of stat training (`data/stats.toml`, spec §8 "Stats").
+    stat_training: StatTraining,
     factions: Factions,
     lights: Vec<LightPreset>,
     light_ids: BTreeMap<String, LightId>,
@@ -497,6 +503,7 @@ impl Content {
             traps: Vec::new(),
             trap_ids: BTreeMap::new(),
             search: SearchRules::default(),
+            stat_training: StatTraining::default(),
             factions: Factions::default(),
             lights: Vec::new(),
             light_ids: BTreeMap::new(),
@@ -597,10 +604,11 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             content.names = Names::parse(path, text, |id| content.race(id).is_some())?;
         }
-        let path = "data/classes.toml";
-        if let Some(text) = files.get_optional(path) {
+        // The class table (spec §8 "Character creation"): optional, so fixtures may go without.
+        if files.table("classes").next().is_some() {
             let skill_id = |id: &str| content.skill_id(id);
-            content.classes = ClassDef::parse(path, text, skill_id, &content.weapon_skills)?;
+            let table = files.table("classes");
+            content.classes = ClassDef::parse(table, skill_id, &content.weapon_skills)?;
         }
         let path = "data/alignment.toml";
         if let Some(text) = files.get_optional(path) {
@@ -651,6 +659,10 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             content.search = SearchRules::parse(path, text)?;
         }
+        let path = "data/stats.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.stat_training = StatTraining::parse(path, text)?;
+        }
         let path = "data/dialogue.toml";
         if let Some(text) = files.get_optional(path) {
             content.dialogues = dialogue::parse(path, text, &content)?;
@@ -675,6 +687,7 @@ impl Content {
             }
             content.levels.insert(id.to_string(), level);
         }
+        content.load_kits()?;
         for (path, id, text) in files.in_dir("scenarios") {
             let mut scenario = ScenarioDef::parse(path, id, text)?;
             let err = |m: String| ContentError::new(path, format!("carry: {m}"));
@@ -1215,6 +1228,53 @@ impl Content {
         let err = |m: String| ContentError::new(path, m);
         let parsed: faction::FactionFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
         self.factions = Factions::resolve(parsed.faction).map_err(err)?;
+        Ok(())
+    }
+
+    /// The classes', races', and birth signs' starting kits (spec §8 "Character creation"), once
+    /// the objects, gems, slots, and weapon skills they name are known.
+    fn load_kits(&mut self) -> Result<(), ContentError> {
+        let classes = (self.classes.iter())
+            .map(|c| {
+                kit::resolve(&c.kit_spec, self, Some(&c.trainable())).map_err(|m| {
+                    ContentError::new("data/classes/", format!("class `{}`: {m}", c.id))
+                })
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        let races = (self.races.list.iter())
+            .map(|r| {
+                kit::resolve(&r.kit_spec, self, None).map_err(|m| {
+                    ContentError::new("data/races.toml", format!("race `{}`: {m}", r.id))
+                })
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        let signs = |parts: &[SignPart]| {
+            (parts.iter())
+                .map(|p| {
+                    kit::resolve(&p.kit_spec, self, None).map_err(|m| {
+                        ContentError::new("data/horoscope.toml", format!("`{}`: {m}", p.id))
+                    })
+                })
+                .collect::<Result<Vec<_>, _>>()
+        };
+        let horoscope = match &self.horoscope {
+            Some(h) => Some((signs(&h.animals)?, signs(&h.elements)?)),
+            None => None,
+        };
+        for (class, kit) in self.classes.iter_mut().zip(classes) {
+            class.kit = kit;
+        }
+        for (race, kit) in self.races.list.iter_mut().zip(races) {
+            race.kit = kit;
+        }
+        if let (Some(h), Some((animals, elements))) = (&mut self.horoscope, horoscope) {
+            for (part, kit) in (h.animals.iter_mut()).zip(animals) {
+                part.kit = kit;
+            }
+            for (part, kit) in (h.elements.iter_mut()).zip(elements) {
+                part.kit = kit;
+            }
+        }
         Ok(())
     }
 
@@ -1898,6 +1958,12 @@ impl Content {
         &self.search
     }
 
+    /// The rules of stat training (spec §8 "Stats"; `data/stats.toml`, else
+    /// [`StatTraining::default`]: nothing trains).
+    pub fn stat_training(&self) -> &StatTraining {
+        &self.stat_training
+    }
+
     pub fn material(&self, id: MaterialId) -> &MaterialDef {
         &self.materials[usize::from(id.0)]
     }
@@ -2127,7 +2193,7 @@ impl Content {
         &self.names
     }
 
-    /// The classes of `data/classes.toml`, in the order offered (none without the file).
+    /// The classes of `data/classes/`, in the order offered (none without the files).
     pub fn classes(&self) -> &[ClassDef] {
         &self.classes
     }
@@ -2173,9 +2239,16 @@ impl Content {
         &self.talents
     }
 
-    /// **[provisional]** How training marks become points (`[increase]` in `data/skills.toml`).
-    pub fn increase(&self) -> &Increase {
-        &self.skills.increase
+    /// The skill ladder: the die a level-up roll throws by the skill's marks (`[ladder]` in
+    /// `data/skills.toml`, spec §8 "Skills").
+    pub fn ladder(&self) -> &Ladder {
+        &self.skills.ladder
+    }
+
+    /// The skill rolls' rules: Intelligence's extra rolls, the marks a roll spends, the soft cap
+    /// (`[rolls]` in `data/skills.toml`).
+    pub fn skill_rolls(&self) -> &RollRules {
+        &self.skills.rolls
     }
 
     /// Prefixes and suffixes, and how loot rolls them (spec §8 "Magic items"); empty without

@@ -3,7 +3,7 @@ description = "A hand-made tour of every engine capability, one room per feature
 start_level = "hub"
 seed = 1
 # The player's character when the run does not choose one (New run and --character do): a
-# race (data/races.toml), a gender (male, female, or other), and a class (data/classes.toml). The
+# race (data/races.toml), a gender (male, female, or other), and a class (data/classes/). The
 # player's eyes, stats, and hit points come from it. A scenario without one gives them itself:
 # `vision` (a profile in data/vision.toml; default "normal"), `stats` and `potential` by stat id
 # (1 to 40; a missing score 10, the average; a missing potential the score; hidden from the
@@ -16,6 +16,8 @@ character = { race = "human", gender = "female", class = "thief", name = "Tamsin
 lantern = "lantern"
 # The start time (hh:mm); the date is the default, 11 Darkening 1444 (data/calendar.toml).
 start_time = "08:00"
-# A scenario may also give the player a starting pack, as level files place objects (`carry =
-# ["ration*3"]`; the depths, world, and forest scenarios give food). The showcase gives nothing:
-# its food is in the hub's pantry.
+# A character chosen in character creation (New run, --character, --name) starts with their
+# starting kit (data/classes/, data/races.toml); a scenario may give a pack on top, as level
+# files place objects (`carry = ["ration*3"]`), which is all a launch on the scenario's own
+# character starts with. The showcase gives none: its food is in the hub's pantry, its arms in
+# the storeroom.
