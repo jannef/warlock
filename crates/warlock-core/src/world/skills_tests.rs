@@ -167,14 +167,12 @@ fn the_player_perceives_only_their_own_trained_skills() {
     assert_eq!(
         own,
         [
+            Ability::ThrowVoice,
             Ability::PickLock,
             Ability::Skill(skill(&w, "use_magic_device")),
-            Ability::ShieldBash
+            Ability::ShieldBash,
+            Ability::HoodLantern
         ]
-    );
-    assert_eq!(
-        w.perception().abilities().last().map(|a| a.ability),
-        Some(Ability::ShieldBash)
     );
     // A creature's skills are never perceived: the arena's shaman has some, the player none of
     // its.

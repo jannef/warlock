@@ -103,11 +103,18 @@ radius = 2
 id = "lantern"
 color = [255, 255, 255, 0]
 radius = 3
+hooded = "lantern_hooded"
 
 [[light]]
 id = "glare"
 color = [2000, 2000, 2000, 0]
 radius = 3
+
+[[light]]
+id = "lantern_hooded"
+color = [90, 90, 90, 0]
+radius = 2
+hollow = true
 "##;
 
 const VISION: &str = r##"
@@ -652,11 +659,11 @@ fn door_changes_invalidate_cached_masks_of_lights_inside_the_room() {
 fn the_lantern_takes_a_turn_and_lights_the_way() {
     let map = "##########\n#@.......#\n##########\n";
     let mut w = dark_world(map, "normal");
-    assert_eq!(w.lantern(), Some(false));
+    assert_eq!(w.lantern(), Some(Lantern::Out));
     assert!(!visible(&w.perception(), Pos::new(2, 1)));
     let outcome = w.apply(&Action::ToggleLantern);
     assert!(outcome.took_turn);
-    assert_eq!(w.lantern(), Some(true));
+    assert_eq!(w.lantern(), Some(Lantern::Lit));
     assert!(visible(&w.perception(), Pos::new(3, 1)));
     let source = &w.perception().light_sources()[0];
     let key = source.key;
@@ -672,6 +679,78 @@ fn the_lantern_takes_a_turn_and_lights_the_way() {
 }
 
 #[test]
+fn a_hooded_lantern_lights_around_the_player_but_not_them() {
+    let map = "#########\n#.......#\n#...@...#\n#.......#\n#########\n";
+    let mut w = dark_world(map, "normal");
+    let me = w.player_pos();
+    w.apply(&Action::ToggleLantern);
+    assert!(
+        visible(&w.perception(), Pos::new(7, 2)),
+        "lit, it reaches 3 cells"
+    );
+    let outcome = w.apply(&Action::HoodLantern);
+    assert!(outcome.took_turn);
+    assert_eq!(w.lantern(), Some(Lantern::Hooded));
+    let view = w.perception();
+    let hood = &view.light_sources()[0];
+    assert_eq!(hood.pos(), Some(me));
+    assert_eq!(hood.preset(), w.content().light_id("lantern_hooded"));
+    assert!(
+        hood.contributions.iter().all(|(p, _)| *p != me),
+        "a hollow light leaves its own cell dark"
+    );
+    // The player sees their neighbours by it, no farther: the cells two away get too little.
+    for d in Dir::ALL {
+        assert!(visible(&view, me.step(d)), "{d:?}");
+    }
+    assert!(!visible(&view, Pos::new(6, 2)));
+    assert!(!visible(&view, Pos::new(7, 2)));
+    // Their own cell gets only the weak bounce off the ring around it.
+    let own = view.light(me).expect("own cell").light();
+    assert!(own.brightness() < 12, "{own:?}");
+    check_invariants(&w).expect("hooded light keeps the invariants");
+    // Raised again, it burns open.
+    w.apply(&Action::HoodLantern);
+    assert_eq!(w.lantern(), Some(Lantern::Lit));
+    assert!(visible(&w.perception(), Pos::new(7, 2)));
+    check_invariants(&w).expect("open light keeps the invariants");
+}
+
+#[test]
+fn eyes_that_need_light_do_not_see_a_hooded_bearer_whom_darkvision_sees() {
+    // The rat stands next to the player, in the ring the hood lights: the player sees it.
+    let map = "##########\n#...@r...#\n##########\n";
+    let sees_player = |w: &World, vision: &str| {
+        let content = w.content();
+        let eye = (content.vision_profiles().iter())
+            .find(|v| v.id == vision)
+            .expect("profile");
+        let rat = Pos::new(5, 1);
+        let los = crate::sight::LineOfSight::compute(rat, 10, |p| {
+            w.state.current().is_opaque(content, p)
+        });
+        let mut cold = LightCache::default();
+        crate::sight::sees(&w.state, content, &mut cold, &los, eye, w.player_pos())
+    };
+    let mut w = dark_world(map, "normal");
+    assert!(!sees_player(&w, "normal"), "in the dark, unseen");
+    w.apply(&Action::ToggleLantern);
+    assert!(sees_player(&w, "normal"), "a lit lantern shows the player");
+    w.apply(&Action::HoodLantern);
+    assert!(
+        w.perception().actor_at(Pos::new(5, 1)).is_some(),
+        "the player sees the rat"
+    );
+    assert!(
+        !sees_player(&w, "normal"),
+        "hooded, eyes that need light do not see them"
+    );
+    assert!(!sees_player(&w, "low_light"), "not even keen ones");
+    assert!(sees_player(&w, "darkvision"), "darkvision does, up close");
+    check_creature_sight(&w).expect("creature sight agrees with the player's light");
+}
+
+#[test]
 fn without_a_lantern_toggling_is_refused() {
     let mut w = load("####\n#@.#\n####\n", [0; 4], "normal", "");
     let outcome = w.apply(&Action::ToggleLantern);
@@ -681,6 +760,11 @@ fn without_a_lantern_toggling_is_refused() {
         w.messages().iter().last().map(|m| m.text.as_str()),
         Some("You have no lantern.")
     );
+    // Nor is there a hood to lower.
+    let outcome = w.apply(&Action::HoodLantern);
+    assert!(!outcome.took_turn);
+    assert_eq!(w.lantern(), None);
+    assert!(w.perception().light_sources().is_empty());
 }
 
 #[test]
@@ -775,7 +859,7 @@ fn showcase_start_room_is_lit_and_readable() {
     let w = World::new(content, "showcase", None).expect("showcase");
     let view = w.perception();
     assert_eq!(view.vision().id, "normal");
-    assert_eq!(w.lantern(), Some(false));
+    assert_eq!(w.lantern(), Some(Lantern::Out));
     // The start room spans x 1..14, y 12..19; every cell and its walls are visible.
     for y in 11..=20 {
         for x in 0..=15 {
@@ -1054,7 +1138,7 @@ proptest! {
     /// agree with a cold recomputation.
     #[test]
     fn light_invariants_hold_during_random_play(
-        steps in prop::collection::vec(0usize..12, 1..40),
+        steps in prop::collection::vec(0usize..13, 1..40),
     ) {
         let content = Arc::new(Content::builtin().expect("builtin content"));
         let mut w = World::new(content, "showcase", None).expect("showcase");
@@ -1065,7 +1149,8 @@ proptest! {
                 8 => Action::ToggleLantern,
                 9 => Action::SetVision(profiles[w.turn() as usize % 4].into()),
                 10 => Action::Open(Dir::ALL[w.turn() as usize % 8]),
-                _ => Action::Close(Dir::ALL[w.turn() as usize % 8]),
+                11 => Action::Close(Dir::ALL[w.turn() as usize % 8]),
+                _ => Action::HoodLantern,
             };
             w.apply(&action);
         }

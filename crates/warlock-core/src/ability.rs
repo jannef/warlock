@@ -26,14 +26,18 @@
 use crate::action::Action;
 use crate::alignment::Requirement;
 use crate::content::{ActionKind, ClassActive, Content, SkillDef, StatusId, TalentEffect};
-use crate::geom::Dir;
+use crate::geom::{Dir, Pos};
 use crate::skills::{Effect, SkillId};
-use crate::world::Actor;
+use crate::world::{Actor, VOICE_RANGE};
 use std::borrow::Cow;
 
 /// An ability, as the abilities menu lists it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Ability {
+    /// Throw your voice (spec §5 "Hearing"; #235): [`Action::ThrowVoice`] at a cell the player
+    /// sees. The bard's (design §4.8, at level 32); until the class tables give it to them alone,
+    /// everyone has it.
+    ThrowVoice,
     /// A class's active (spec §8 "Class abilities"): [`Action::Use`], had by whoever's class
     /// gives it at their level; unavailable while its cooldown lasts (Rage: while raging and
     /// exhausted), and, for the paladin's gifts, while they have strayed from Good.
@@ -65,6 +69,10 @@ pub enum Ability {
     /// with a shield (at shield bashing's rank 0 too), so everyone has it; it is available while
     /// a shield to bash with is held.
     ShieldBash,
+    /// Lower or raise the lantern's hood (spec §5 "Light sources"; #235): [`Action::HoodLantern`].
+    /// Listed with what the player carries, the lantern; the Hooded light talent (design §7.5)
+    /// will give it, and until then everyone has it (without a lantern the rules say so).
+    HoodLantern,
 }
 
 /// Where an ability comes from: the abilities menu's groups, in this order.
@@ -72,7 +80,8 @@ pub enum Ability {
 pub enum Source {
     /// The character's race (none yet).
     Race,
-    /// The character's class (spec §8 "Class abilities"): its actives.
+    /// The character's class (spec §8 "Class abilities"): its actives, and throwing one's voice
+    /// (everyone's until the class tables give it to the bard alone).
     Class,
     /// A talent the character took (spec §8 "Talents"): its active ones.
     Talent,
@@ -80,7 +89,7 @@ pub enum Source {
     Skill,
     /// A weapon skill or a fighting style (spec §8 "Weapon skills", "Fighting styles").
     WeaponSkill,
-    /// Something worn or carried (none yet).
+    /// Something worn or carried (the lantern's hood).
     Item,
 }
 
@@ -120,14 +129,16 @@ impl Source {
     }
 }
 
-/// What an ability asks for before it is used. A target (the aiming mode) and an item (a list of
-/// the pack) join these with the first ability that needs one.
+/// What an ability asks for before it is used. An item (a list of the pack) joins these with the
+/// first ability that needs one.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Aim {
     /// Nothing: choosing it uses it.
     Nothing,
     /// A direction, as opening a door does.
     Direction,
+    /// A cell, in the aiming mode, as a shot does ([`Ability::action_at`]).
+    Cell,
 }
 
 /// Why an ability cannot be used now: the abilities menu shows it beside the greyed-out row.
@@ -181,6 +192,8 @@ impl Ability {
                 let id = SkillId(u8::try_from(i).ok()?);
                 Some(Ability::use_of(def, content).unwrap_or(Ability::Skill(id)))
             });
+        // Class: throwing one's voice.
+        let class = [Ability::ThrowVoice];
         // Talents: the active ones the talent table has.
         let wind = (content.talents().iter())
             .flat_map(|(_, def)| def.effects_at(def.rank_count()))
@@ -192,9 +205,14 @@ impl Ability {
             .map(|&a| Ability::Class(a));
         // Weapon skills and fighting styles: the shield bash.
         let weapon_skills = [Ability::ShieldBash];
-        let mut all: Vec<Ability> = (classes.chain(talents))
+        // Items: the lantern's hood.
+        let items = [Ability::HoodLantern];
+        let mut all: Vec<Ability> = (class.into_iter())
+            .chain(classes)
+            .chain(talents)
             .chain(skills)
             .chain(weapon_skills)
+            .chain(items)
             .collect();
         all.sort_by_key(|a| a.source());
         all
@@ -224,8 +242,8 @@ impl Ability {
     /// in it; disarming, if they are trained in Disable device (the skill with the disarm
     /// effect) or a talent lets them (the craftsperson's Tinker); picking locks, if they are
     /// trained in Open lock (the pick effect's); stealing, if they are trained in a skill with
-    /// the `steal` benefit (it is listed only when stealing is in the game); the shield bash,
-    /// everyone.
+    /// the `steal` benefit (it is listed only when stealing is in the game); second wind, if they
+    /// hold the talent; the shield bash, throwing one's voice, and the lantern's hood, everyone.
     pub(crate) fn had_by(self, actor: &Actor, content: &Content) -> bool {
         match self {
             Ability::Class(active) => actor.talent_mods(content).has_active(active),
@@ -237,7 +255,7 @@ impl Ability {
             Ability::PickLock => actor.skills.trains_effect(content, Effect::Pick),
             Ability::Steal => actor.skills.trains_effect(content, Effect::Steal),
             Ability::SecondWind => actor.talent_mods(content).second_wind.is_some(),
-            Ability::ShieldBash => true,
+            Ability::ThrowVoice | Ability::ShieldBash | Ability::HoodLantern => true,
         }
     }
 
@@ -246,11 +264,13 @@ impl Ability {
         match self {
             Ability::Class(active) => active.id(),
             Ability::Skill(id) => &content.skill(id).id,
+            Ability::ThrowVoice => "throw_voice",
             Ability::Disarm => "disarm",
             Ability::PickLock => "pick_lock",
             Ability::Steal => "steal",
             Ability::SecondWind => "second_wind",
             Ability::ShieldBash => "shield_bash",
+            Ability::HoodLantern => "hood_lantern",
         }
     }
 
@@ -259,11 +279,13 @@ impl Ability {
         match self {
             Ability::Class(active) => content.class_active(active).map_or("", |a| &a.name),
             Ability::Skill(id) => &content.skill(id).name,
+            Ability::ThrowVoice => "Throw your voice",
             Ability::Disarm => "Disarm a trap",
             Ability::PickLock => "Pick lock",
             Ability::Steal => "Steal",
             Ability::SecondWind => "Second wind",
             Ability::ShieldBash => "Shield bash",
+            Ability::HoodLantern => "Hood your lantern",
         }
     }
 
@@ -272,6 +294,9 @@ impl Ability {
         match self {
             Ability::Class(active) => content.class_active(active).map_or("", |a| &a.description),
             Ability::Skill(id) => &content.skill(id).description,
+            Ability::ThrowVoice => {
+                "Make a voice sound at a place you see nearby: those who hear it go and look there."
+            }
             Ability::Disarm => {
                 "Take apart a trap you know of next to you; a clumsy try sets it off."
             }
@@ -285,6 +310,10 @@ impl Ability {
                  once, and then you are winded for a while."
             }
             Ability::ShieldBash => "Strike someone next to you with the shield you hold.",
+            Ability::HoodLantern => {
+                "Lower your lantern's hood, or raise it: hooded, it dimly lights the ground around \
+                 you but not you."
+            }
         }
     }
 
@@ -295,8 +324,10 @@ impl Ability {
             Ability::Skill(_) | Ability::Disarm | Ability::PickLock | Ability::Steal => {
                 Source::Skill
             }
+            Ability::ThrowVoice => Source::Class,
             Ability::SecondWind => Source::Talent,
             Ability::ShieldBash => Source::WeaponSkill,
+            Ability::HoodLantern => Source::Item,
         }
     }
 
@@ -304,7 +335,10 @@ impl Ability {
     pub const fn aim(self) -> Aim {
         match self {
             Ability::Class(active) if active.aimed() => Aim::Direction,
-            Ability::Class(_) | Ability::Skill(_) | Ability::SecondWind => Aim::Nothing,
+            Ability::Class(_) | Ability::Skill(_) | Ability::SecondWind | Ability::HoodLantern => {
+                Aim::Nothing
+            }
+            Ability::ThrowVoice => Aim::Cell,
             Ability::Disarm | Ability::PickLock | Ability::Steal | Ability::ShieldBash => {
                 Aim::Direction
             }
@@ -317,16 +351,35 @@ impl Ability {
         match self {
             Ability::Class(active) => Some(active.cost()),
             Ability::Skill(_) => None,
+            Ability::ThrowVoice => Some(ActionKind::ThrowVoice),
             Ability::Disarm => Some(ActionKind::Disarm),
             Ability::PickLock => Some(ActionKind::PickLock),
             Ability::Steal => Some(ActionKind::Steal),
             Ability::SecondWind => Some(ActionKind::Wait),
             Ability::ShieldBash => Some(ActionKind::Melee),
+            Ability::HoodLantern => Some(ActionKind::Hood),
+        }
+    }
+
+    /// How far a cell it aims at may be, in cells (a disc, as ranges are); `None` for one that
+    /// aims at no cell.
+    pub const fn range(self) -> Option<i32> {
+        match self {
+            Ability::ThrowVoice => Some(VOICE_RANGE),
+            Ability::Class(_)
+            | Ability::Skill(_)
+            | Ability::Disarm
+            | Ability::PickLock
+            | Ability::Steal
+            | Ability::SecondWind
+            | Ability::ShieldBash
+            | Ability::HoodLantern => None,
         }
     }
 
     /// The action it is, aimed `dir` when it asks for a direction; `None` for one with no use
-    /// yet, or one that asks for a direction without it.
+    /// yet, one that asks for a direction without it, or one that asks for a cell
+    /// ([`Ability::action_at`]).
     pub const fn action(self, dir: Option<Dir>) -> Option<Action> {
         match (self, dir) {
             (Ability::Class(active), dir) if active.aimed() => match dir {
@@ -334,7 +387,7 @@ impl Ability {
                 None => None,
             },
             (Ability::Class(active), _) => Some(Action::Use(active, None)),
-            (Ability::Skill(_), _) => None,
+            (Ability::Skill(_) | Ability::ThrowVoice, _) => None,
             (Ability::SecondWind, _) => Some(Action::SecondWind),
             (Ability::Disarm, Some(dir)) => Some(Action::Disarm(dir)),
             (Ability::PickLock, Some(dir)) => Some(Action::PickLock(dir)),
@@ -343,6 +396,23 @@ impl Ability {
             (Ability::Disarm | Ability::PickLock | Ability::Steal | Ability::ShieldBash, None) => {
                 None
             }
+            (Ability::HoodLantern, _) => Some(Action::HoodLantern),
+        }
+    }
+
+    /// The action it is, aimed at level cell `at`, for one that asks for a cell; `None` for any
+    /// other.
+    pub const fn action_at(self, at: Pos) -> Option<Action> {
+        match self {
+            Ability::ThrowVoice => Some(Action::ThrowVoice(at)),
+            Ability::Class(_)
+            | Ability::Skill(_)
+            | Ability::Disarm
+            | Ability::PickLock
+            | Ability::Steal
+            | Ability::SecondWind
+            | Ability::ShieldBash
+            | Ability::HoodLantern => None,
         }
     }
 
@@ -356,7 +426,11 @@ impl Ability {
                     .or_else(|| class_cooldown(actor, content, active).map(Unavailable::While))
             }
             Ability::Skill(_) => Some(Unavailable::NotYet),
-            Ability::Disarm | Ability::PickLock | Ability::Steal => None,
+            Ability::ThrowVoice
+            | Ability::HoodLantern
+            | Ability::Disarm
+            | Ability::PickLock
+            | Ability::Steal => None,
             Ability::SecondWind => (actor.talent_mods(content).second_wind)
                 .map(|w| w.cooldown)
                 .filter(|&cooldown| actor.effects.has(cooldown))
@@ -444,6 +518,11 @@ mod tests {
         let content = Content::builtin().expect("content");
         let every = Ability::every(&content);
         assert!(every.windows(2).all(|w| w[0].source() <= w[1].source()));
+        assert_eq!(
+            every.first(),
+            Some(&Ability::ThrowVoice),
+            "the class's first"
+        );
         // The skills used as actions, in skill order (Disable device and Open lock as their uses,
         // disarming and picking locks), then the shield bash.
         let skills: Vec<&str> = (every.iter())
@@ -469,7 +548,8 @@ mod tests {
                 "woodcraft",
             ]
         );
-        assert_eq!(every.last(), Some(&Ability::ShieldBash));
+        let last: Vec<Ability> = every.iter().rev().take(2).rev().copied().collect();
+        assert_eq!(last, [Ability::ShieldBash, Ability::HoodLantern]);
         // Stealing is in the game: the Steal skill is listed as its use.
         assert!(every.contains(&Ability::Steal));
         let steal = content.skill_id("steal").expect("steal");
@@ -544,6 +624,24 @@ mod tests {
         assert_eq!(bash.action(Some(Dir::E)), Some(Action::Bash(Dir::E)));
         assert_eq!(bash.action(None), None, "not without a direction");
         assert_eq!(Ability::Skill(SkillId(0)).action(Some(Dir::E)), None);
+        assert_eq!(bash.range(), None);
+        assert_eq!(bash.action_at(Pos::new(3, 4)), None);
+    }
+
+    #[test]
+    fn throwing_a_voice_aims_at_a_cell_and_the_hood_at_nothing() {
+        let voice = Ability::ThrowVoice;
+        assert_eq!((voice.aim(), voice.source()), (Aim::Cell, Source::Class));
+        assert_eq!(voice.cost(), Some(ActionKind::ThrowVoice));
+        assert_eq!(voice.range(), Some(VOICE_RANGE));
+        assert_eq!(voice.action(None), None, "not without a cell");
+        let at = Pos::new(3, 4);
+        assert_eq!(voice.action_at(at), Some(Action::ThrowVoice(at)));
+        let hood = Ability::HoodLantern;
+        assert_eq!((hood.aim(), hood.source()), (Aim::Nothing, Source::Item));
+        assert_eq!(hood.cost(), Some(ActionKind::Hood));
+        assert_eq!(hood.action(None), Some(Action::HoodLantern));
+        assert_eq!((hood.range(), hood.action_at(at)), (None, None));
     }
 
     #[test]

@@ -523,10 +523,14 @@ fn draw_messages(
             }
             AimKind::Throw(item) => (KeyCommand::Missile, Some(item)),
             AimKind::Read(item) => (KeyCommand::Read, Some(item)),
+            AimKind::Ability(_) => (KeyCommand::Loose, None),
         };
         let content = view.content();
-        let ready = (missile.and_then(|i| view.inventory().get(i)))
-            .map_or_else(String::new, |s| content.object(s.object).describe(1));
+        let ready = match aim.kind {
+            AimKind::Ability(ability) => ability.name(content).to_string(),
+            _ => (missile.and_then(|i| view.inventory().get(i)))
+                .map_or_else(String::new, |s| content.object(s.object).describe(1)),
+        };
         let next = key(KeyCommand::NextTarget);
         let prompt = aim.prompt(&ready, (&key(KeyCommand::Loose), &key(confirm), &next));
         console.print(1, 1, &prompt, ACCENT);
@@ -647,11 +651,7 @@ fn status_segments(world: &World, clock: Clock, unit: TemperatureUnit) -> Vec<Se
     let pos = world.player_pos();
     let time = world.time();
     let light = view.light(pos).map_or(0, |l| l.brightness());
-    let lantern = match world.lantern() {
-        Some(true) => Some("Lantern lit".to_string()),
-        Some(false) => Some("Lantern out".to_string()),
-        None => None,
-    };
+    let lantern = world.lantern().map(|l| l.name().to_string());
     let content = view.content();
     // Display order; the number is the drop priority (higher drops first when space runs out;
     // of equal ones the later first). The moon phase is cut down to its glyph and the date to

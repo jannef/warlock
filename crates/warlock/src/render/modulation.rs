@@ -173,6 +173,8 @@ mod tests {
             id: "test".into(),
             color: Light::new(color[0], color[1], color[2], 0),
             radius: 6,
+            hooded: None,
+            hollow: false,
             stability,
         }
     }

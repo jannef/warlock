@@ -226,6 +226,8 @@ mod tests {
             id: "test".into(),
             color,
             radius,
+            hooded: None,
+            hollow: false,
             stability: Default::default(),
         }
     }
