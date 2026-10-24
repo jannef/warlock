@@ -20,6 +20,8 @@ static BUILTIN: LazyLock<Arc<Content>> =
 /// A human of `class` in the showcase (seed 7), with their kit, every score 14.
 fn world(class: &str) -> World {
     let spec: CharacterSpec = format!("human,male,{class}").parse().expect("a character");
+    // Creation picks that no test here reads.
+    let spec = spec.with_talents(vec!["keen_ears".into(), "lean".into()]);
     let mut w = World::start_run(
         BUILTIN.clone(),
         "showcase",

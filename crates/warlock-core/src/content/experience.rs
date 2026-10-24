@@ -46,6 +46,9 @@ pub struct Levels {
     /// Every this many levels (3: levels 3, 6, 9, ...) brings a talent pick; 0: never.
     #[serde(default)]
     pub talent_every: u8,
+    /// Talent picks at creation for a character the player chose (a class may add more).
+    #[serde(default)]
+    pub creation_talents: u8,
 }
 
 #[derive(Deserialize)]
@@ -325,6 +328,12 @@ impl Experience {
     /// Every this many levels brings a talent pick (spec §8 "Talents"); 0: never.
     pub fn talent_every(&self) -> u8 {
         self.levels.talent_every
+    }
+
+    /// The talent picks a character the player chose takes at creation, before the class's
+    /// (spec §8 "Talents").
+    pub fn creation_talents(&self) -> u8 {
+        self.levels.creation_talents
     }
 
     /// The XP total needed to reach `level` at a factor of 100 % (0 for level 1 and below; the

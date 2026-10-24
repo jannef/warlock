@@ -40,6 +40,8 @@
 #   rolls         the skill rolls each level gives (spec §8 "Skills"; 0 to 10, default 2): the
 #                 race's (races.toml) and Intelligence's (skills.toml `[rolls]`) are added. Most
 #                 classes 2, the thief and the ranger 3, the bard 4: learning is the bard's gift
+#   creation_talents  talent picks at creation beyond everyone's (experience.toml `[levels]`
+#                 `creation_talents`; default 0): the bard, the lucky class, has 1
 #   weapon_skills starting ranks in weapon skills (spec §8 "Weapon skills"), by skill id in
 #                 weapon_skills.toml, a number or dice (every result within 0 to 10), added to the
 #                 race's (at most 10). Each starting rank then raises the weapon skills it

@@ -180,14 +180,28 @@ impl World {
     /// one of the picks due (a bonus pick first, if it is of the class's bonus trees), if its
     /// prerequisites hold; else why not, and nothing changes. Takes no time.
     pub(super) fn take_talent(&mut self, id: &str, choice: Option<&str>) -> Spent {
+        match self.learn(id, choice) {
+            Ok(news) => {
+                self.say(news);
+                self.settle_due();
+                Spent::NoTime
+            }
+            Err(why) => {
+                self.say(why);
+                Spent::Nothing
+            }
+        }
+    }
+
+    /// [`World::take_talent`] without its words: what is said of the talent learnt, or why it
+    /// cannot be taken (and nothing changes).
+    pub(super) fn learn(&mut self, id: &str, choice: Option<&str>) -> Result<String, String> {
         let content = self.content.clone();
         if !(self.state.progress.due.iter()).any(|d| d.talents > 0 || d.bonus > 0) {
-            self.say("You have no talent to choose now.");
-            return Spent::Nothing;
+            return Err("You have no talent to choose now.".into());
         }
         let Some(talent) = content.talents().id(id) else {
-            self.say(format!("There is no talent `{id}`."));
-            return Spent::Nothing;
+            return Err(format!("There is no talent `{id}`."));
         };
         let trees = self.bonus_trees();
         let bonus = self.fits_bonus(&trees, talent);
@@ -203,20 +217,16 @@ impl World {
             let names: Vec<String> = (trees.iter().flatten())
                 .map(|&t| content.talents().tree(t).name.clone())
                 .collect();
-            self.say(format!(
+            return Err(format!(
                 "You must choose a talent of {}.",
                 talent::list_with(&names, "or")
             ));
-            return Spent::Nothing;
         };
         let def = content.talents().get(talent);
         let name = def.name_for(&content, choice);
         let rank = match talent::may_take(&content, &self.candidate(), def, choice) {
             Ok(rank) => rank,
-            Err(why) => {
-                self.say(why.words(&content, &name));
-                return Spent::Nothing;
-            }
+            Err(why) => return Err(why.words(&content, &name)),
         };
         // The rank's hit points by level come now (each later level grows them), and its gifts.
         let level = self.player_level();
@@ -233,13 +243,10 @@ impl World {
         if due.is_spent() {
             self.state.progress.due.remove(at);
         }
-        if def.rank_count() > 1 {
-            self.say(format!("You learn {name} ({rank})."));
-        } else {
-            self.say(format!("You learn {name}."));
-        }
-        self.settle_due();
-        Spent::NoTime
+        Ok(match def.rank_count() > 1 {
+            true => format!("You learn {name} ({rank})."),
+            false => format!("You learn {name}."),
+        })
     }
 
     /// Apprentice (spec §8 "Talents"): every `train_skill` of `effects`, a rank just taken for

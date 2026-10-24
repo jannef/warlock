@@ -92,6 +92,7 @@ mod buff;
 mod carry;
 mod class;
 mod class_ability;
+mod creation;
 mod dev;
 mod dig;
 mod disarm;
@@ -139,6 +140,7 @@ mod voice;
 
 pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
 pub use alignment::Deed;
+pub use creation::{chosen_with_talents, creation_count, parse_talents, pick_text};
 pub use dig::{MAX_DIG, WORK_SCALE, dig_work, digs_to_break};
 pub use disarm::SPRINGS_SHORT_BY;
 pub use experience::{Discovered, Progress};
@@ -459,8 +461,33 @@ impl World {
     /// kit and the scenario's `carry` on top (spec §8 "Character creation"), as a run whose
     /// character the player chose does (New run, `--character`, `--name`). Without it, with the
     /// scenario's pack alone, as a dev launch on the scenario's own character does (tests,
-    /// golden walks, `--scenario` alone). A run without a character has no kit.
+    /// golden walks, `--scenario` alone). A run without a character has no kit. A run with the
+    /// kit also takes the character's creation picks (`world/creation.rs`): the talents `character`
+    /// names, else the Random picks, recorded in the character.
     pub fn start_run(
+        content: Arc<Content>,
+        scenario: &str,
+        seed: Option<u64>,
+        character: Option<&CharacterSpec>,
+        name: Option<&str>,
+        kit: bool,
+    ) -> Result<Self, WorldError> {
+        let mut world = Self::begin(content, scenario, seed, character, name, kit)?;
+        if world.started_with_kit() {
+            world.take_creation()?;
+            world.player_mut().mana = world.state.player().max_mana(&world.content);
+            *world.perception =
+                Perception::compute(&world.state, &world.content, &mut world.lights);
+            let current = world.state.current_level.clone();
+            if let Some(level) = world.state.levels.get_mut(&current) {
+                world.perception.remember(level);
+            }
+        }
+        Ok(world)
+    }
+
+    /// [`World::start_run`] with the creation picks still due (`world/creation.rs`).
+    fn begin(
         content: Arc<Content>,
         scenario: &str,
         seed: Option<u64>,
@@ -605,7 +632,11 @@ impl World {
         if let Some(text) = enter_room(&mut state, &content) {
             state.messages.push(0, text);
         }
-        Ok(Self::assemble(content, state))
+        let mut world = Self::assemble(content, state);
+        if with_kit {
+            world.open_creation();
+        }
+        Ok(world)
     }
 
     /// Restores a world from saved state. The player's sign's gifts are granted afresh
@@ -1037,6 +1068,8 @@ mod class_active_tests;
 mod class_tests;
 #[cfg(test)]
 mod cost_tests;
+#[cfg(test)]
+mod creation_tests;
 #[cfg(test)]
 mod damage_talent_tests;
 #[cfg(test)]
