@@ -73,8 +73,10 @@ pub fn lines(stack: &Stack, content: &Content) -> Vec<Line> {
             format!("{}: {gem}", capitalized(kind)),
         ));
     }
+    // Its own stats as it is made: another material's damage and Protection (#193).
+    let (_, damage) = crate::variant::weapon(def, &parts, content);
     out.extend(
-        base_stats(def, content)
+        stats(def, content, damage, stack.base_protection(content))
             .into_iter()
             .map(|t| line(LineKind::Stat, t)),
     );
@@ -183,6 +185,12 @@ fn cells(n: i32) -> &'static str {
 /// The base stats of `def` in words: how it is held or worn, its damage and criticals, how far it
 /// shoots or is thrown, what it needs, how quick it is, its Defence, and whether it breaks.
 pub fn base_stats(def: &ObjectDef, content: &Content) -> Vec<String> {
+    stats(def, content, 0, def.protection)
+}
+
+/// [`base_stats`] of one made of another material: `damage` more to its damage dice and
+/// `protection` its Protection.
+fn stats(def: &ObjectDef, content: &Content, damage: i32, protection: i32) -> Vec<String> {
     let mut out = Vec::new();
     if let Some(held) = how_held(def, content) {
         out.push(held);
@@ -200,7 +208,8 @@ pub fn base_stats(def: &ObjectDef, content: &Content) -> Vec<String> {
         };
         out.push(format!(
             "Damage {}{shot}; criticals on {critical}, ×{} damage",
-            attack.damage, attack.crit
+            attack.damage.plus(damage),
+            attack.crit
         ));
         // Its kinds of damage (spec §8 "Damage types"): "Slashing or piercing damage".
         let kinds: Vec<&str> = (attack.kinds.iter())
@@ -249,7 +258,7 @@ pub fn base_stats(def: &ObjectDef, content: &Content) -> Vec<String> {
     if def.armour > 0 {
         out.push(format!("Armour +{}", def.armour));
     }
-    if def.protection > 0 {
+    if protection > 0 {
         let against: Vec<String> = (def.protects.iter())
             .map(|&(k, more)| {
                 let sign = if more < 0 { "\u{2212}" } else { "+" };
@@ -261,13 +270,9 @@ pub fn base_stats(def: &ObjectDef, content: &Content) -> Vec<String> {
             })
             .collect();
         if against.is_empty() {
-            out.push(format!("Protection {}", def.protection));
+            out.push(format!("Protection {protection}"));
         } else {
-            out.push(format!(
-                "Protection {} ({})",
-                def.protection,
-                against.join(", ")
-            ));
+            out.push(format!("Protection {protection} ({})", against.join(", ")));
         }
     }
     let resists: Vec<String> = (def.resist.iter())

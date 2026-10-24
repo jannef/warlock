@@ -484,7 +484,12 @@ fn placements_and_items_name_their_gems() {
             "is no gem",
         ),
         ("cut = \"fine\"", "cut = \"sparkly\"", "no cut `sparkly`"),
-        ("of = \"emerald\"", "of = \"steel\"", "are gems"),
+        (
+            "of = \"emerald\"",
+            "of = \"steel\"",
+            "only a gem has a `size`",
+        ),
+        ("of = \"emerald\"", "of = \"marble\"", "no such material"),
         (
             "of = \"emerald\"",
             "part = \"pommel\", of = \"emerald\"",

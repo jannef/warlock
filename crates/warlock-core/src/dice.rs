@@ -56,6 +56,14 @@ impl Dice {
         }
     }
 
+    /// It with `more` added to its fixed bonus (what a weapon's material adds, #193).
+    pub const fn plus(self, more: i32) -> Self {
+        Self {
+            bonus: self.bonus + more,
+            ..self
+        }
+    }
+
     /// Whether it rolls no dice.
     pub const fn is_fixed(&self) -> bool {
         self.count == 0

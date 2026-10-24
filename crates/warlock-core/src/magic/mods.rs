@@ -150,11 +150,19 @@ impl Mods {
         }
     }
 
-    /// What `stack`'s affixes do to itself and to the attacks made with it (its local effects).
+    /// What `stack`'s affixes do to itself and to the attacks made with it (its local effects),
+    /// with what its material does to those attacks if it is made of another than its base item
+    /// (to hit and damage, [`crate::variant::weapon`]; #193).
     pub fn local(stack: &Stack, content: &Content) -> Mods {
         let mut mods = Mods::default();
         if let Some(magic) = stack.magic() {
             mods.add_magic(magic, true, stack, content);
+        }
+        if stack.own_parts().is_some() {
+            let def = content.object(stack.object);
+            let (hit, damage) = crate::variant::weapon(def, &stack.parts(content), content);
+            mods.values[Effect::ToHit.index()] += hit;
+            mods.values[Effect::Damage.index()] += damage;
         }
         mods
     }

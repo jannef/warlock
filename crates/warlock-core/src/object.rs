@@ -18,9 +18,10 @@
 //! hidden.
 //!
 //! An item made of other parts than its base item (spec §7 "Gems": a loose gem, an item set
-//! with a gem) carries them ([`crate::item_parts`]); its name, value, weight, and colour follow
-//! from them, and it joins only a stack made the same way. Materials are not hidden: the player
-//! sees them at once.
+//! with a gem; "Materials": an item of another material, a bronze long sword) carries them
+//! ([`crate::item_parts`]); its name, value, weight, colour, and what it does in a fight follow
+//! from them ([`crate::variant`]), and it joins only a stack made the same way. Materials are not
+//! hidden: the player sees them at once.
 //!
 //! Food (spec §8 "Hunger") remembers when it was made ([`Stack::died`]; a corpse, a stack of one,
 //! when its creature died): it rots from then on, and is gone in the end ([`crate::rot`]). Food
@@ -31,6 +32,7 @@ use crate::content::{Content, Cutting, DamageTypeId, MaterialId, ObjectId, Part,
 use crate::item_parts::{self, ItemPart};
 use crate::magic::{Effect, Magic, Mods, name};
 use crate::time::GameTime;
+use crate::variant;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
@@ -136,12 +138,16 @@ impl Stack {
         }
     }
 
-    /// Grams: its object's weight (a loose gem: its size's), less what a weight affix takes off,
-    /// times the count.
+    /// Grams: its object's weight (a loose gem: its size's; made of other materials, scaled by
+    /// them, [`variant::weight`]), less what a weight affix takes off, times the count.
     pub fn weight(&self, content: &Content) -> u64 {
+        let def = content.object(self.object);
         let each = match (self.gem(content), content.gems()) {
             (Some((_, cutting)), Some(gems)) => u64::from(gems.size(cutting.size).weight),
-            _ => u64::from(content.object(self.object).weight),
+            _ if self.parts.is_some() => {
+                u64::from(variant::weight(def, &self.parts(content), content))
+            }
+            _ => u64::from(def.weight),
         };
         let lighter = match self.magic {
             Some(_) => Mods::local(self, content).get(Effect::Weight),
@@ -150,15 +156,26 @@ impl Stack {
         crate::magic::mods::less(each, lighter).max(1) * u64::from(self.count)
     }
 
-    /// Its Protection while worn (spec §8 "Combat"): its object's, plus what a Protection affix
-    /// adds (the one reader of that effect; rules only, as the player knows it only once
-    /// identified).
+    /// Its Protection while worn (spec §8 "Combat"): its object's (scaled by another material,
+    /// [`Stack::base_protection`]), plus what a Protection affix adds (the one reader of that
+    /// effect; rules only, as the player knows it only once identified).
     pub(crate) fn protection(&self, content: &Content) -> i32 {
         let more = match self.magic {
             Some(_) => Mods::local(self, content).get(Effect::Protection),
             None => 0,
         };
-        content.object(self.object).protection + more
+        self.base_protection(content) + more
+    }
+
+    /// Its own Protection, without magic: its object's, scaled by its main part's material if
+    /// that is another than its base item's ([`variant::protection`]). Materials are not
+    /// hidden: the item description shows it.
+    pub fn base_protection(&self, content: &Content) -> i32 {
+        let def = content.object(self.object);
+        match self.parts {
+            Some(_) => variant::protection(def, &self.parts(content), content),
+            None => def.protection,
+        }
     }
 
     /// How its Protection stands against each physical kind, more or less than its total
@@ -211,8 +228,8 @@ impl Stack {
 
     /// What it is called as it is made, singular and plural, without an article, a count, or
     /// magic: its object's name ("long sword", "gold and ruby amulet"), named from what its file
-    /// writes with its own parts if it has any ("emerald-pommelled long sword"; [`part::names`]),
-    /// or a loose gem's ("large fine emerald", [`crate::gem::names`]).
+    /// writes with its own parts if it has any ("emerald-pommelled long sword", "bronze long
+    /// sword"; [`part::names`]), or a loose gem's ("large fine emerald", [`crate::gem::names`]).
     pub fn names(&self, content: &Content) -> (String, String) {
         let def = content.object(self.object);
         if self.parts.is_none() {
@@ -225,13 +242,16 @@ impl Stack {
             &def.written_name,
             &def.written_plural,
             &self.parts(content),
+            def.material(),
             content.materials(),
             content.part_defs(),
         )
     }
 
-    /// The colour its glyph is drawn in: its object's, a loose gem's own (duller uncut), or its
-    /// gem's on an item that takes its gem's colour (a ring set with one; spec §7 "Gems").
+    /// The colour its glyph is drawn in: its object's, a loose gem's own (duller uncut), its
+    /// gem's on an item that takes its gem's colour (a ring set with one; spec §7 "Gems"), or
+    /// else its main part's material's where that is not its base item's (a bronze long sword,
+    /// [`variant::color`]).
     pub fn fg(&self, content: &Content) -> Rgb {
         let def = content.object(self.object);
         if self.parts.is_none() {
@@ -249,7 +269,9 @@ impl Stack {
                 .copied()?;
             crate::gem::color(content, set.material, set.gem?)
         };
-        gem_color().unwrap_or(def.fg)
+        gem_color()
+            .or_else(|| variant::color(def, &self.parts(content), content))
+            .unwrap_or(def.fg)
     }
 
     /// As the player knows it: "a dagger", "12 arrows", "a Sharp long sword of the Bear", "Grim

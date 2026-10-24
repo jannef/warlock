@@ -169,6 +169,9 @@ pub(super) struct ObjectSpec {
     /// or a table (`{ part = "setting", of = "ruby", share = 10 }`; [`super::part`]).
     #[serde(default)]
     pub materials: Vec<PartEntry>,
+    /// What its main part may be made of (#194, the shorthand for its table's `made_of`): groups
+    /// and materials ([`part::construction`]).
+    pub made_of: Option<Vec<String>>,
     /// The single material objects had before parts: refused, with a pointer to `materials`.
     pub material: Option<String>,
     /// The part a gem is set as when loot ornaments it (a part id: `tip`), instead of its
@@ -314,6 +317,10 @@ pub struct ObjectDef {
     /// What it is made of, part by part, the main part first ([`ObjectDef::material`]); the
     /// shares sum to 100. Never empty.
     pub parts: Vec<Part>,
+    /// What each part may be made of (#194, [`ObjectDef::made_of`]): one list per part, in
+    /// `parts`' order, each sorted by material id; empty when no part has a list, as then each
+    /// is made only of its own material.
+    pub construction: Vec<Vec<MaterialId>>,
     /// The part a gem is set as when loot ornaments it, instead of its class's (spec §7 "Gems").
     pub ornament: Option<PartId>,
     /// Weight of one, in grams; at least 1.
@@ -469,6 +476,7 @@ impl ObjectDef {
             fg: creature.fg,
             class,
             parts: vec![Part::whole(material)],
+            construction: Vec::new(),
             ornament: None,
             weight: creature.weight,
             // Nobody buys or sells a corpse (spec §7 "Shops").
@@ -518,6 +526,34 @@ impl ObjectDef {
     /// decides what a single material decides. [`ObjectDef::parts`] has every part.
     pub fn material(&self) -> MaterialId {
         self.parts[0].material
+    }
+
+    /// What its part `part` (an index in `parts`) may be made of (#194): its construction list,
+    /// else only its own material.
+    pub fn made_of(&self, part: usize) -> &[MaterialId] {
+        match self.construction.get(part) {
+            Some(list) => list,
+            None => std::slice::from_ref(&self.parts[part].material),
+        }
+    }
+
+    /// What its main part must be able to be, for its construction list: a weapon's working
+    /// part for what strikes or is shot (a weapon, a launcher, ammunition), armour for what is
+    /// worn as armour or held as a shield, else anything.
+    pub fn role(&self) -> part::PartRole {
+        if self.attack.is_some() || self.ammo.is_some() {
+            part::PartRole::Weapon
+        } else if (self.kind).is_some_and(|k| k.is_armour() || k == ItemKind::Shield) {
+            part::PartRole::Armour
+        } else {
+            part::PartRole::Any
+        }
+    }
+
+    /// Whether it is jewellery (a ring, an amulet): another material changes only what it is
+    /// worth and how it looks (#193).
+    pub fn is_jewellery(&self) -> bool {
+        matches!(self.kind, Some(ItemKind::Ring | ItemKind::Amulet))
     }
 
     /// What one of it made of `parts` is worth, in gold coins: its `value`, scaled by what
@@ -794,6 +830,8 @@ impl ObjectSpec {
             fg: self.fg,
             class,
             parts,
+            // Resolved as content loads, once the object's role is known.
+            construction: Vec::new(),
             // Resolved as content loads, once the part names are known.
             ornament: None,
             weight: self.weight,
@@ -1108,8 +1146,9 @@ impl ObjectSpec {
 
 /// Parses objects as level files place them: ids, each optionally with a count (`"arrow*12"`),
 /// first on top; a loose gem names its gem (`"gem:ruby*3"`: the gems' object made of that gem,
-/// of the plain size and cut; spec §7 "Gems"). A stackable object becomes one stack (the same
-/// placement twice joins it); any other object becomes a stack of one per count.
+/// of the plain size and cut; spec §7 "Gems"), and anything else may name another material its
+/// base item may be made of (`"dagger:bronze"`, a variant, #193). A stackable object becomes one
+/// stack (the same placement twice joins it); any other object becomes a stack of one per count.
 pub(super) fn parse_stacks(specs: &[String], content: &Content) -> Result<Vec<Stack>, String> {
     let mut stacks: Vec<Stack> = Vec::new();
     for spec in specs {
@@ -1127,8 +1166,8 @@ pub(super) fn parse_stacks(specs: &[String], content: &Content) -> Result<Vec<St
             }
             None => (spec.trim(), 1),
         };
-        let (id, gem) = match placed.split_once(':') {
-            Some((id, gem)) => (id.trim(), Some(gem.trim())),
+        let (id, made) = match placed.split_once(':') {
+            Some((id, made)) => (id.trim(), Some(made.trim())),
             None => (placed, None),
         };
         let object = content
@@ -1139,7 +1178,7 @@ pub(super) fn parse_stacks(specs: &[String], content: &Content) -> Result<Vec<St
                 "`{id}` is a corpse: corpses lie only where creatures died"
             ));
         }
-        let stack = placed_gem(content, object, gem)?;
+        let stack = placement(content, object, made)?;
         if content.object(object).stackable {
             match stacks.iter_mut().find(|s| s.same_goods(&stack)) {
                 Some(same) => same.count += count,
@@ -1152,25 +1191,47 @@ pub(super) fn parse_stacks(specs: &[String], content: &Content) -> Result<Vec<St
     Ok(stacks)
 }
 
-/// One of `object` as a placement names it: a loose gem (the gems' object) of its `gem`, of the
-/// plain size and cut; anything else as it is (it names no gem).
-fn placed_gem(content: &Content, object: ObjectId, gem: Option<&str>) -> Result<Stack, String> {
-    let id = &content.object(object).id;
+/// One of `object` as a placement names it: a loose gem (the gems' object) of the gem it names,
+/// of the plain size and cut; anything else as it is, or made of the material it names (its
+/// main part, which must be on its construction list).
+fn placement(content: &Content, object: ObjectId, made: Option<&str>) -> Result<Stack, String> {
+    let def = content.object(object);
+    let id = &def.id;
     let loose = content.gems().filter(|g| g.object == object);
-    match (loose, gem) {
+    match (loose, made) {
         (None, None) => Ok(Stack::one(object)),
-        (None, Some(gem)) => Err(format!(
-            "`{id}:{gem}`: only a loose gem names its gem (`gem:ruby`)"
-        )),
-        (Some(_), None) => Err(format!("`{id}` is a loose gem: name its gem, `{id}:ruby`")),
-        (Some(gems), Some(gem)) => {
-            let material = (content.material_id(gem))
-                .filter(|m| content.material(*m).gem.is_some())
-                .ok_or_else(|| format!("`{id}:{gem}`: `{gem}` is no gem (data/materials/)"))?;
-            let part = ItemPart::gem(content, None, material, gems.plain());
+        (None, Some(made)) => {
+            let material = (content.material_id(made))
+                .ok_or_else(|| format!("`{id}:{made}`: `{made}` is no material"))?;
+            if content.material(material).gem.is_some() {
+                return Err(format!(
+                    "`{id}:{made}`: only a loose gem names its gem (`gem:{made}`); nothing is \
+                     made of one"
+                ));
+            }
+            let part = ItemPart::material(content, None, material);
+            crate::item_parts::check(def, std::slice::from_ref(&part), content)
+                .map_err(|m| format!("`{id}:{made}`: {m}"))?;
             Ok(Stack::one(object).with_parts(vec![part]))
         }
+        (Some(gems), Some(gem)) => placed_gem(content, object, gems, gem),
+        (Some(_), None) => Err(format!("`{id}` is a loose gem: name its gem, `{id}:ruby`")),
     }
+}
+
+/// One of the gems' `object` made of `gem`, of the plain size and cut.
+fn placed_gem(
+    content: &Content,
+    object: ObjectId,
+    gems: &super::Gems,
+    gem: &str,
+) -> Result<Stack, String> {
+    let id = &content.object(object).id;
+    let material = (content.material_id(gem))
+        .filter(|m| content.material(*m).gem.is_some())
+        .ok_or_else(|| format!("`{id}:{gem}`: `{gem}` is no gem (data/materials/)"))?;
+    let part = ItemPart::gem(content, None, material, gems.plain());
+    Ok(Stack::one(object).with_parts(vec![part]))
 }
 
 #[cfg(test)]
@@ -1189,6 +1250,7 @@ mod tests {
             fg: Rgb::WHITE,
             class: ItemClassId(0),
             parts: vec![Part::whole(MaterialId(0))],
+            construction: Vec::new(),
             ornament: None,
             weight: 1,
             value: 0,
