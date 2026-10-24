@@ -95,7 +95,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     are never soaked (added damage is always an element: a physical `added` is a content error).
     **Resistances** (`damage::Resistances`, `Actor::resistances`): a percentage per kind, what a
     creature is (`resist = { acid = 50 }` on its type) plus what it wears and wields (each piece's
-    `resist`, and the `resistance` affix effect: of the Salamander, of Warmth), summed and capped
+    `resist`, and the `resistance` affix effect: of the Salamander, of Warmth) and the talents it
+    has (Elemental ward, §8 "Talents", counts as gear does), summed and capped
     at **75** (`MAX_RESISTANCE`) above and −100 below; **100 is immunity**, and only a creature's
     own 100 is immune: gear never makes anyone immune. After the soak, each kind of a blow is
     resisted on its own (`damage::resist`: the amount less the percentage, rounded to the nearest,
