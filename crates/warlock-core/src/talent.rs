@@ -17,8 +17,7 @@ use crate::alignment::Band;
 use crate::character::Character;
 use crate::content::{
     Benefit, Choice, CombatStance, Content, DamageTypeId, LightId, MAX_RANK, Need, Role, Sign,
-    StatusId,
-    TalentDef, TalentEffect, TalentId,
+    StatusId, TalentDef, TalentEffect, TalentId,
 };
 use crate::damage::Kinds;
 use crate::skills::{SkillId, Skills};
