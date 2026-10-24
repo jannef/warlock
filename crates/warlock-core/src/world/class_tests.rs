@@ -386,11 +386,11 @@ fn armour_talents_add_protection() {
         .filter(|&(_, i)| p.inventory[i].protection(w.content()) > 0)
         .count() as i32;
     assert!(pieces > 0);
-    let worn = w.state.player().protection(w.content()).base;
+    let worn = w.state.player().protection(w.content(), None).base;
     give(&mut w, "thick_skull");
     give(&mut w, "sturdy_work");
     give(&mut w, "artisan");
-    let more = w.state.player().protection(w.content()).base;
+    let more = w.state.player().protection(w.content(), None).base;
     assert_eq!(
         more,
         worn + 1 + 1 + pieces,
