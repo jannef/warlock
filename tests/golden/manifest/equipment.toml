@@ -66,6 +66,15 @@ scenario = "showcase"
 actions = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*4 pickup:b"
 screen = "describe"
 
+# An eye for worth (#246): a merchant past level 32 (Appraiser) picks up the same sword; its
+# description adds what it is worth, and what its emerald is worth on the gem's line.
+[[golden]]
+name = "appraised-description"
+scenario = "showcase"
+character = "human,male,merchant"
+actions = "xp:2000000 levelup:auto move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*4 pickup:b"
+screen = "describe"
+
 # An item of another material (#193, #194): the storeroom's bronze great sword picked up from under
 # the spear, its material in its name and in what it is made of, heavier than steel's, and its
 # damage a point lower ("2d6-1"); the glyph in bronze's colour.

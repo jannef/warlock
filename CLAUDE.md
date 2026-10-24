@@ -315,7 +315,7 @@ long water takes to freeze, terrain, footstep loudness in words, vision profiles
 them), creatures, factions, objects, materials, equipment slots and what fits them, scenarios,
 action costs, sight radii, item classes and
 what is in each, the stats' names, races (stat adjustments as written, dice included, vision, starting
-ages, hit points), classes (stat adjustments, hit points), what each gender raises, the horoscope
+ages, hit points), classes (stat adjustments, hit points, level tables), what each gender raises, the horoscope
 (animals, elements, and the great cycle's signs and years), combat (weapons, armour and shields,
 the 2d12 hit chances and threat ranges, regeneration by Toughness), status effects (what causes
 them, what they cost, how they wear off, healing and stats) and healing paces, diseases (how
