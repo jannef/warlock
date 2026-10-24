@@ -7,7 +7,7 @@ runs and which quota pays for it.
 
 | Agent | Model | Replaces | Launcher |
 |---|---|---|---|
-| `finisher/agent.md` | Sonnet 5.5 | the local Sonnet finisher (`local/finisher.md`): CI fixes, the merge of main, golden references made in the sandbox, a last merge of main and the tests, push | `finish.sh <PR> <BRANCH> [GOLDEN_RUN] [NOTES]` |
+| `finisher/agent.md` | Sonnet 5.5 | the local Sonnet finisher (`local/finisher.md`): CI fixes, the merge of main, golden references made in the sandbox, a re-merge only on a conflict, push | `finish.sh <PR> <BRANCH> [GOLDEN_RUN] [NOTES]` |
 | `engineer/agent.md` | Opus 5.5 (Fable 5.1 with `MODEL=claude-fable-5-1`) | the local Opus feature agent (`local/feature.md`), the integrator's escalation helper, a design-doc agent, issue filing | `engineer.sh build\|fix\|design\|issues ...` |
 
 Both stop at a pushed branch or an open PR and never merge; the integrator merges as usual.
