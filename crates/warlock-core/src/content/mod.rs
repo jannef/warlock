@@ -2964,7 +2964,19 @@ mod tests {
         assert_eq!(
             races,
             [
-                "elf", "half_elf", "human", "dwarf", "halfling", "gnome", "half_orc"
+                "elf",
+                "half_elf",
+                "human",
+                "dwarf",
+                "halfling",
+                "gnome",
+                "half_orc",
+                "goblin",
+                "drow",
+                "kobold",
+                "lizardfolk",
+                "duergar",
+                "ratfolk"
             ]
         );
         // Every race offers names to every gender, and every scenario names its character.

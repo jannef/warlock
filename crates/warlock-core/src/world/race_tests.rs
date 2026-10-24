@@ -285,3 +285,20 @@ fn an_eye_for_traps_notices_traps_in_passing_but_not_secret_doors() {
     run(&mut human, "wait");
     assert_eq!(human.state.rng, before, "no check at all");
 }
+
+#[test]
+fn the_evil_races_start_callous_or_evil_with_a_neutral_class() {
+    use crate::alignment::Band;
+    for (race, band) in [
+        ("human", Band::Neutral),
+        ("goblin", Band::Callous),
+        ("drow", Band::Evil),
+        ("kobold", Band::Callous),
+        ("lizardfolk", Band::Callous),
+        ("duergar", Band::Evil),
+        ("ratfolk", Band::Callous),
+    ] {
+        let w = world(race);
+        assert_eq!(w.perception().own_alignment(), Some(band), "{race}");
+    }
+}
