@@ -101,13 +101,13 @@ pub use level::{
     CreatureSpawn, EdgeExit, LevelKind, LevelTemplate, Region, StairsLink, parse_route,
 };
 pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, MAX_LIGHT_RADIUS, Stability};
-pub use material::{MAX_MATERIAL_VALUE, MaterialDef, MaterialId};
+pub use material::{ANY, Found, MAX_MATERIAL_VALUE, MaterialDef, MaterialId, VERY_RARE};
 pub use names::{NameLists, Names};
 pub use object::{
     MAX_BONUS, MAX_DIG, MAX_PLACED, MAX_VALUE, ObjectDef, ObjectId, article, counted, weapon_noun,
 };
 pub use overworld::{Landscape, LocalArea, local_area_id, parse_local_area};
-pub use part::{MAX_OBJECT_PARTS, MAX_PARTS, Part, PartDef, PartId};
+pub use part::{MAX_OBJECT_PARTS, MAX_PARTS, Part, PartDef, PartId, PartRole};
 pub use particles::{ParticleEmitter, ParticleTrigger};
 pub use quest::{
     DEFAULT_DECLINE, GOLD, Goal, MAX_COUNT, MAX_NAME, MAX_QUEST_XP, QuestDef, QuestId, QuestKind,
@@ -1356,6 +1356,7 @@ impl Content {
                 })?),
                 None => None,
             };
+            let (entries, made_of) = (spec.materials.clone(), spec.made_of.clone());
             let (mut def, lit_as) = spec.resolve(
                 path,
                 self,
@@ -1372,10 +1373,19 @@ impl Content {
                 &self.weapon_skills,
             )?;
             def.ornament = ornament;
+            def.construction = part::construction(
+                &entries,
+                made_of.as_deref(),
+                &def.parts,
+                &self.materials,
+                def.role(),
+            )
+            .map_err(|m| ContentError::new(path, format!("object `{}`: {m}", def.id)))?;
             (def.name, def.plural) = part::names(
                 &def.name,
                 &def.plural,
                 &def.parts,
+                def.material(),
                 &self.materials,
                 &self.parts,
             );

@@ -1,0 +1,12 @@
+# Primitive creatures' blades and heads; no armour.
+[[material]]
+id = "flint"
+name = "flint"
+group = "stone"
+color = "#5b5650"
+weight = 80
+to_hit = 0
+damage = -1
+value = 10
+rarity = { weight = 300, deeper = -15 }
+gear = { weight = 600, deeper = -40 }

@@ -1,3 +1,5 @@
+# Colour only, and no group: nothing is made of it but what its base item is.
 [[material]]
 id = "wax"
 name = "wax"
+color = "#f0e6c8"

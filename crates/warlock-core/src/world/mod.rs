@@ -1090,6 +1090,8 @@ mod time_tests;
 #[cfg(test)]
 mod trap_tests;
 #[cfg(test)]
+mod variant_tests;
+#[cfg(test)]
 mod weapon_skill_tests;
 #[cfg(test)]
 mod weather_tests;

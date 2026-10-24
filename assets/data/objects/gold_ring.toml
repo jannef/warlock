@@ -5,6 +5,7 @@ glyph = "="
 fg = "#f0d060"
 class = "rings"
 materials = ["gold"]
+made_of = ["any"]
 weight = 10
 value = 150
 slot = "ring"

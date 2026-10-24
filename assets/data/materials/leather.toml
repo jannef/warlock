@@ -1,3 +1,11 @@
+# No weapon.
 [[material]]
 id = "leather"
 name = "leather"
+group = "hide"
+color = "#8b5a2b"
+weight = 35
+protection = 30
+value = 50
+rarity = { weight = 800, deeper = -20 }
+gear = { weight = 800, deeper = -30 }

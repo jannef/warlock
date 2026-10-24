@@ -24,15 +24,21 @@
 //! 6. **a rare item's name**: one draw for its first word and one for its second, which goes
 //!    with the kind of item ("Bite" for weapons, "Loop" for rings);
 //! 7. **an ornament**: an item of a class set with gems is set with one by its class's chance
-//!    (one draw, then the gem's draws: [`crate::gem::ornament`]).
+//!    (one draw, then the gem's draws: [`crate::gem::ornament`]);
+//! 8. **its material** (#193, #194): an item its construction list lets be made of other
+//!    materials is made of one by their `rarity` at the item level, or by their `gear` at the
+//!    creature's level for what a creature drops (one draw: [`crate::variant::draw`]); none for
+//!    one made only of its own.
 //!
-//! What is rolled is unidentified (its gems show at once: materials are not hidden).
+//! What is rolled is unidentified (its gems and material show at once: materials are not
+//! hidden).
 
 use super::{Affix, AffixKind, Magic, Rarity, may_roll};
 use crate::content::{Content, ItemKind, ObjectDef, ObjectId};
 use crate::gem;
 use crate::object::Stack;
 use crate::rng::Rng;
+use crate::variant::{self, Source};
 use serde::{Deserialize, Serialize};
 use std::ops::RangeInclusive;
 
@@ -66,6 +72,18 @@ impl LootGrade {
 /// Rolls an item of loot at item level `level`, at least of `grade`, from `rng` (the module docs
 /// give the draws). `None` when content has no base item found at that level.
 pub fn roll(content: &Content, rng: &mut Rng, level: u8, grade: LootGrade) -> Option<Stack> {
+    roll_from(content, rng, level, grade, Source::Loot)
+}
+
+/// [`roll`], its material drawn as `source` has it: loot's by the item level, a creature's
+/// gear by the creature's level.
+pub fn roll_from(
+    content: &Content,
+    rng: &mut Rng,
+    level: u8,
+    grade: LootGrade,
+    source: Source,
+) -> Option<Stack> {
     let level = level.max(1);
     if grade == LootGrade::Any
         && let Some(gem) = gem::find(content, rng, level)
@@ -87,7 +105,15 @@ pub fn roll(content: &Content, rng: &mut Rng, level: u8, grade: LootGrade) -> Op
     } else {
         1
     };
-    Some(make(content, rng, object, count, level, grade))
+    Some(make_from(
+        content,
+        rng,
+        object,
+        count,
+        level,
+        grade,
+        Some(source),
+    ))
 }
 
 /// `count` of `object` made as loot makes its base item at item level `level`, at least of
@@ -101,6 +127,20 @@ pub fn make(
     count: u32,
     level: u8,
     grade: LootGrade,
+) -> Stack {
+    make_from(content, rng, object, count, level, grade, None)
+}
+
+/// [`make`], its material drawn as `source` has it (none for `None`: a starting kit's items
+/// keep the material they are listed with).
+fn make_from(
+    content: &Content,
+    rng: &mut Rng,
+    object: ObjectId,
+    count: u32,
+    level: u8,
+    grade: LootGrade,
+    source: Option<Source>,
 ) -> Stack {
     let level = level.max(1);
     let def = content.object(object);
@@ -116,9 +156,15 @@ pub fn make(
         Some(magic) => Stack::with_magic(object, count, magic),
         None => Stack::new(object, count),
     };
-    match gem::ornament(content, rng, def, level) {
-        Some(part) => stack.with_parts(vec![part]),
-        None => stack,
+    let ornament = gem::ornament(content, rng, def, level);
+    // Its own parts in its base parts' order: the main part's material, then the gem it is set
+    // with.
+    let material = source.and_then(|source| variant::draw(content, rng, def, source, level));
+    let own: Vec<_> = material.into_iter().chain(ornament).collect();
+    if own.is_empty() {
+        stack
+    } else {
+        stack.with_parts(own)
     }
 }
 

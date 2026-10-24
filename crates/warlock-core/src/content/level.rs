@@ -139,7 +139,9 @@ struct PileSpec {
 /// affixes = ["sharp:2", "of_the_bear"]`, each affix an id with an optional tier (default 1)
 /// whose value is the top of the tier's range (a rare one has a `name`); and an item set with a
 /// gem or a loose gem, `parts = [{ part = "pommel", of = "emerald", size = "small", cut = "fine"
-/// }]` (spec §7 "Gems"; a loose gem's gem is its main part, no `part`), with affixes or without.
+/// }]` (spec §7 "Gems"; a loose gem's gem is its main part, no `part`), or made of another
+/// material, `parts = [{ of = "bronze" }]` (a variant, #193: no size or cut), with affixes or
+/// without.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct ItemSpec {
@@ -147,7 +149,8 @@ struct ItemSpec {
     object: String,
     #[serde(default)]
     affixes: Vec<String>,
-    /// Its gems, each in place of its base item's part of that name or besides its parts.
+    /// Its gems, each in place of its base item's part of that name or besides its parts, and
+    /// other materials in place of its base item's parts.
     #[serde(default)]
     parts: Vec<ItemPartSpec>,
     /// A rare item's name; with a name it is rare, without magic.
@@ -913,14 +916,14 @@ fn parse_flow(
 /// The item an `[[item]]` table places: magic with affixes (rare with a `name`), each affix's
 /// value the top of its tier's range, its item level that of its highest tier unless given; it
 /// must be an item its affixes may roll on (spec §8 "Magic items"). Its `parts` are gems
-/// ([`item_parts`]) it is set with, or a loose gem's gem.
+/// ([`item_parts`]) it is set with, a loose gem's gem, or other materials it is made of.
 fn parse_item(spec: &ItemSpec, content: &Content) -> Result<Stack, String> {
     let object = content
         .object_id(&spec.object)
         .ok_or_else(|| format!("unknown object `{}`", spec.object))?;
     let def = content.object(object);
     if spec.affixes.is_empty() && spec.parts.is_empty() {
-        return Err("an item has `affixes` (magic), `parts` (gems), or both".into());
+        return Err("an item has `affixes` (magic), `parts` (gems, materials), or both".into());
     }
     let count = spec.count.unwrap_or(1);
     if count == 0 || (count > 1 && !def.stackable) {
@@ -990,15 +993,31 @@ fn parse_magic(spec: &ItemSpec, content: &Content) -> Result<Magic, String> {
     Ok(magic)
 }
 
-/// A gem part an `[[item]]` names: a gem (until metal variants, #193, only gems are placed this
-/// way), of the plain size and cut unless it says otherwise.
+/// A part an `[[item]]` names: a gem, of the plain size and cut unless it says otherwise, or
+/// another material in place of one of its base item's parts (a variant, #193; no size or cut).
 fn item_part(spec: &ItemPartSpec, content: &Content) -> Result<ItemPart, String> {
+    let gem = (content.material_id(&spec.of))
+        .ok_or_else(|| format!("`of = \"{}\"`: no such material", spec.of))?;
+    let part = match &spec.part {
+        Some(id) => Some(
+            content
+                .part_id(id)
+                .ok_or_else(|| format!("no part `{id}`"))?,
+        ),
+        None => None,
+    };
+    if content.material(gem).gem.is_none() {
+        if spec.size.is_some() || spec.cut.is_some() {
+            return Err(format!(
+                "`of = \"{}\"`: only a gem has a `size` and a `cut`",
+                spec.of
+            ));
+        }
+        return Ok(ItemPart::material(content, part, gem));
+    }
     let gems = content
         .gems()
-        .ok_or("an item's `parts` are gems, and there are none without data/gems.toml")?;
-    let gem = (content.material_id(&spec.of))
-        .filter(|m| content.material(*m).gem.is_some())
-        .ok_or_else(|| format!("`of = \"{}\"`: an item's `parts` are gems", spec.of))?;
+        .ok_or("an item's gem `parts` need data/gems.toml")?;
     let plain = gems.plain();
     let size = match &spec.size {
         Some(id) => gems
@@ -1009,14 +1028,6 @@ fn item_part(spec: &ItemPartSpec, content: &Content) -> Result<ItemPart, String>
     let cut = match &spec.cut {
         Some(id) => gems.cut_id(id).ok_or_else(|| format!("no cut `{id}`"))?,
         None => plain.cut,
-    };
-    let part = match &spec.part {
-        Some(id) => Some(
-            content
-                .part_id(id)
-                .ok_or_else(|| format!("no part `{id}`"))?,
-        ),
-        None => None,
     };
     Ok(ItemPart::gem(content, part, gem, Cutting { size, cut }))
 }
