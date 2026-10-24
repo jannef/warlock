@@ -103,8 +103,8 @@ impl World {
     }
 
     /// What the player adds to a check of `look`: the stat's modifier (of the effective score,
-    /// spec §8 "Stats"), the skill's benefit, and the race's bonus; less the passive penalty in
-    /// passing.
+    /// spec §8 "Stats"), the skill's benefit, the race's bonus, and their talents' (a birth
+    /// sign's Always a way, Heedless); less the passive penalty in passing.
     pub(super) fn search_modifier(&self, look: Look) -> i32 {
         let content = &self.content;
         let player = self.state.player();
@@ -127,21 +127,24 @@ impl World {
                     - content.search().passive_penalty
             }
         };
-        own.saturating_add(race)
+        let talents = player.talent_mods(content).search;
+        own.saturating_add(race).saturating_add(talents)
     }
 
     /// Whether the player notices `hidden`, the hidden feature at `at`, in passing at all:
     /// trained in the Spot skill, or with a talent that notices (Alert), anything; else by their
-    /// race, elves anything, dwarves what is on stone, and kobolds traps; else nothing.
+    /// race, elves anything, dwarves what is on stone, and kobolds traps, or by a talent that
+    /// notices on stone (Stonewise); else nothing.
     pub(super) fn notices(&self, at: Pos, hidden: Hidden) -> bool {
         let content = &self.content;
         let player = self.state.player();
-        if player.skills.trains_effect(content, Effect::Spot)
-            || player.talent_mods(content).notice.is_some()
-        {
+        let talents = player.talent_mods(content);
+        if player.skills.trains_effect(content, Effect::Spot) || talents.notice.is_some() {
             return true;
         }
-        match self.player_race().and_then(|r| r.passive_search) {
+        let race = self.player_race().and_then(|r| r.passive_search);
+        let stone = talents.stone_sense.then_some(PassiveSearch::Stone);
+        match race.or(stone) {
             Some(PassiveSearch::All) => true,
             Some(PassiveSearch::Stone) => {
                 let terrain = self.state.current().terrain.get(at).copied();
@@ -187,7 +190,10 @@ impl World {
     /// One turn of searching: the active check for every hidden feature within reach, then a
     /// training mark's chance for the Search skill.
     fn search_turn(&mut self) {
-        let reach = 1 + (self.state.player()).skill_effect(&self.content, Effect::SearchReach);
+        let player = self.state.player();
+        let reach = 1
+            + player.skill_effect(&self.content, Effect::SearchReach)
+            + player.talent_mods(&self.content).search_reach;
         let hidden = self.hidden_near(reach);
         if !hidden.is_empty() {
             let modifier = self.search_modifier(Look::Active);

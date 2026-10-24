@@ -682,8 +682,11 @@ impl World {
         let missile = matches!(kind, AttackKind::Ranged | AttackKind::Thrown);
         let struck = self.target_against(target, missile);
         let levels = (self.level_of(attacker), self.level_of(target));
+        // A talent may roll a fumble again (a birth sign's Winner's luck).
+        let lucky = (self.state.actors.get(&attacker))
+            .is_some_and(|a| !a.talents.is_empty() && a.talent_mods(&self.content).reroll_fumble);
         let rng = &mut self.state.rng;
-        let blow = profile.map(|profile| combat::strike(&profile, &struck, rng));
+        let blow = profile.map(|profile| combat::strike_with(&profile, &struck, rng, lucky));
         let blow = blow.map(|b| self.ambushed(attacker, target, b));
         events.push(Event::Attacked {
             attacker,

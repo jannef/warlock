@@ -126,6 +126,7 @@ mod shoot;
 mod shop;
 mod skill_roll;
 mod spell;
+mod stars;
 mod stat_training;
 mod status;
 mod steal;
@@ -588,6 +589,7 @@ impl World {
             talents: Default::default(),
             stat_marks: Default::default(),
         };
+        stars::grant(&content, state.character.as_ref(), &mut player.talents);
         // The class abilities of level 1 (spec §8 "Class abilities").
         let class = (state.character.as_ref()).map(|c| c.spec.class.clone());
         class::grant(&content, class.as_deref(), &mut player, 1);
@@ -606,8 +608,9 @@ impl World {
         Ok(Self::assemble(content, state))
     }
 
-    /// Restores a world from saved state.
-    pub fn from_state(content: Arc<Content>, state: WorldState) -> Result<Self, WorldError> {
+    /// Restores a world from saved state. The player's sign's gifts are granted afresh
+    /// (`world/stars.rs`), as the content now has them.
+    pub fn from_state(content: Arc<Content>, mut state: WorldState) -> Result<Self, WorldError> {
         state.check()?;
         if content.scenario(&state.scenario).is_none() {
             return Err(WorldError::UnknownScenario(state.scenario.clone()));
@@ -672,7 +675,10 @@ impl World {
             )));
         }
         // What the class gives up to the player's level, if its table grew since (spec §8
-        // "Class abilities").
+        // "Class abilities"); a birth sign's gifts first (spec §8 "Birth sign").
+        if let Some(player) = state.actors.get_mut(&state.player) {
+            stars::grant(&content, state.character.as_ref(), &mut player.talents);
+        }
         let mut world = Self::assemble(content, state);
         world.grant_class(world.player_level(), false);
         Ok(world)
@@ -1105,6 +1111,8 @@ mod skill_roll_tests;
 mod skills_tests;
 #[cfg(test)]
 mod speed_tests;
+#[cfg(test)]
+mod stars_tests;
 #[cfg(test)]
 mod stat_training_tests;
 #[cfg(test)]

@@ -1,0 +1,9 @@
+[[talent]]
+id = "ponderous"
+name = "Ponderous"
+tree = "stars"
+granted = true
+flaw = true
+description = "You are a little slow."
+effects = [{ kind = "speed_percent", value = -5 }]
+systems = ["speed"]

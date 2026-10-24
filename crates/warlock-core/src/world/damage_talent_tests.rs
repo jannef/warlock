@@ -19,8 +19,13 @@ static BUILTIN: LazyLock<Arc<Content>> =
 /// A human warrior in the showcase, every score 14, holding nothing.
 fn world() -> World {
     let spec: CharacterSpec = "human,male,warrior".parse().expect("a character");
-    let mut w =
+    let w =
         World::with_character(BUILTIN.clone(), "showcase", Some(7), Some(&spec)).expect("world");
+    // Born under no sign, so the talents held are the ones picked (a sign's gifts are talents
+    // too: world/stars_tests.rs).
+    let mut state = w.state().clone();
+    state.character.as_mut().expect("a character").sign = None;
+    let mut w = World::from_state(BUILTIN.clone(), state).expect("restores");
     let me = w.player_mut();
     me.stats = Stats::new(PerStat::splat(14), PerStat::splat(14));
     me.equipment = Default::default();

@@ -7,6 +7,14 @@
 //! it is the year of the first animal and the first element. A sign adjusts the starting scores
 //! (the animal's and the element's adjustments both apply), and it is a flag later rules may ask
 //! about ([`Sign::is_element`], [`Sign::is_animal`]).
+//!
+//! A sign **gives** (spec §8 "Birth sign"): an animal and an element each name talents of the
+//! `stars` tree in `grants` (an animal's flaw among them), given at birth and never picked
+//! ([`Horoscope::grants`]). A **lucky day** (`[[lucky]]`, [`Lucky`]) is an animal–element pair
+//! and a day of the month: born in that year and on that day, a character has a title and one
+//! gift more.
+
+use super::talent::{TalentBook, TalentId};
 
 use super::ContentError;
 use super::kit::{Kit, KitLineSpec};
@@ -23,6 +31,8 @@ struct HoroscopeFile {
     animal: Vec<SignSpec>,
     #[serde(default)]
     element: Vec<SignSpec>,
+    #[serde(default)]
+    lucky: Vec<LuckySpec>,
 }
 
 #[derive(Deserialize)]
@@ -34,8 +44,25 @@ struct SignSpec {
     #[serde(default)]
     stats: BTreeMap<Stat, Dice>,
     #[serde(default)]
+    grants: Vec<String>,
+    #[serde(default)]
     kit: Vec<KitLineSpec>,
 }
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct LuckySpec {
+    animal: String,
+    element: String,
+    day: u32,
+    title: String,
+    description: String,
+    #[serde(default)]
+    grants: Vec<String>,
+}
+
+/// The days of a month a lucky day may fall on.
+const DAYS: std::ops::RangeInclusive<u32> = 1..=30;
 
 /// An animal or an element of the horoscope.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -46,11 +73,29 @@ pub struct SignPart {
     pub description: String,
     /// Adjustments to the starting scores of those born under it.
     pub stats: PerStat<Dice>,
+    /// The talents those born under it are given (gifts, and an animal's flaw), by id, in
+    /// order.
+    pub grants: Vec<String>,
     /// The starting kit as written; resolved by the loader into `kit`.
     pub(super) kit_spec: Vec<KitLineSpec>,
     /// What those born under it add to their starting kit, after the class's and the race's
     /// (spec §8 "Character creation"; [`super::kit`]); filled in by the loader.
     pub kit: Kit,
+}
+
+/// A lucky day (`[[lucky]]`): those born in the year of `animal` and `element` on day `day` of
+/// any month have a title and the gifts of `grants` besides their sign's.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Lucky {
+    pub animal: String,
+    pub element: String,
+    /// The day of the month, 1 to 30.
+    pub day: u32,
+    /// What follows the name: "the Iron Scourge".
+    pub title: String,
+    /// The reveal's line of legend.
+    pub description: String,
+    pub grants: Vec<String>,
 }
 
 /// The animals and elements, in the order the years go through them.
@@ -60,6 +105,8 @@ pub struct Horoscope {
     pub anchor_year: i64,
     pub animals: Vec<SignPart>,
     pub elements: Vec<SignPart>,
+    /// The lucky days, in file order.
+    pub lucky: Vec<Lucky>,
 }
 
 /// A birth sign: the animal and the element of a year, by id. A flag for the rules: "is this
@@ -106,6 +153,7 @@ impl Horoscope {
                     name: spec.name,
                     description: spec.description,
                     stats,
+                    grants: spec.grants,
                     kit_spec: spec.kit,
                     kit: Kit::default(),
                 });
@@ -122,11 +170,69 @@ impl Horoscope {
                 elements.len()
             )));
         }
+        let mut lucky: Vec<Lucky> = Vec::new();
+        for spec in parsed.lucky {
+            let pair = format!("{} {}", spec.element, spec.animal);
+            if !animals.iter().any(|a| a.id == spec.animal)
+                || !elements.iter().any(|e| e.id == spec.element)
+            {
+                return Err(err(format!(
+                    "lucky day `{pair}`: no such animal or element"
+                )));
+            }
+            if !DAYS.contains(&spec.day) {
+                return Err(err(format!(
+                    "lucky day `{pair}`: `day` is {} to {}",
+                    DAYS.start(),
+                    DAYS.end()
+                )));
+            }
+            if lucky
+                .iter()
+                .any(|l| l.animal == spec.animal && l.element == spec.element)
+            {
+                return Err(err(format!("lucky day `{pair}` twice")));
+            }
+            if spec.title.is_empty() || spec.description.is_empty() {
+                return Err(err(format!(
+                    "lucky day `{pair}` needs a title and a description"
+                )));
+            }
+            lucky.push(Lucky {
+                animal: spec.animal,
+                element: spec.element,
+                day: spec.day,
+                title: spec.title,
+                description: spec.description,
+                grants: spec.grants,
+            });
+        }
         Ok(Self {
             anchor_year: parsed.anchor_year,
             animals,
             elements,
+            lucky,
         })
+    }
+
+    /// The lucky day of `sign` if one falls on day `day` of the month.
+    pub fn lucky(&self, sign: &Sign, day: u32) -> Option<&Lucky> {
+        (self.lucky.iter())
+            .find(|l| l.animal == sign.animal && l.element == sign.element && l.day == day)
+    }
+
+    /// The talents born under `sign` on day `day` of the month gives, by id, in order: the
+    /// animal's, the element's, then a lucky day's.
+    pub fn grants(&self, sign: &Sign, day: u32) -> Vec<&str> {
+        let Some((animal, element)) = self.parts(sign) else {
+            return Vec::new();
+        };
+        let lucky = self.lucky(sign, day).map(|l| l.grants.as_slice());
+        (animal.grants.iter())
+            .chain(&element.grants)
+            .chain(lucky.into_iter().flatten())
+            .map(String::as_str)
+            .collect()
     }
 
     /// The length of a great cycle in years: every animal–element pair once (60 for 12 animals
@@ -172,6 +278,100 @@ impl Horoscope {
 
 fn gcd(a: usize, b: usize) -> usize {
     if b == 0 { a } else { gcd(b, a % b) }
+}
+
+/// Checks the horoscope and the talents against each other (spec §8 "Birth sign"): every talent
+/// a sign or a lucky day grants exists, is in the `stars` tree, and is `granted`; a flaw only
+/// among an animal's; no talent granted twice to one sign; and every sign a talent asks for
+/// (`animal`, `element`) is in the horoscope. Without a horoscope a talent that asks for a sign
+/// is never taken; without talents, nothing is granted.
+pub(super) fn check_talents(
+    horoscope: Option<&Horoscope>,
+    talents: &TalentBook,
+) -> Result<(), ContentError> {
+    let file = "data/horoscope.toml";
+    let err = |m: String| ContentError::new(file, m);
+    let Some(h) = horoscope else {
+        return Ok(());
+    };
+    // Content without the `stars` tree (a fixture's talents) grants nothing.
+    let Some(stars) = talents.tree_id("stars") else {
+        return Ok(());
+    };
+    let stars = Some(stars);
+    let granted = |what: &str, ids: &[String], flaws: bool| -> Result<(), ContentError> {
+        for id in ids {
+            let def = (talents.id(id))
+                .map(|t: TalentId| talents.get(t))
+                .ok_or_else(|| err(format!("{what} grants an unknown talent `{id}`")))?;
+            if Some(def.tree) != stars || !def.granted {
+                return Err(err(format!(
+                    "{what} grants `{id}`, which is not a granted talent of the `stars` tree"
+                )));
+            }
+            if def.flaw && !flaws {
+                return Err(err(format!(
+                    "{what} grants `{id}`, a flaw: only an animal has a flaw"
+                )));
+            }
+        }
+        Ok(())
+    };
+    for a in &h.animals {
+        granted(&format!("animal `{}`", a.id), &a.grants, true)?;
+    }
+    for e in &h.elements {
+        granted(&format!("element `{}`", e.id), &e.grants, false)?;
+    }
+    for l in &h.lucky {
+        granted(
+            &format!("lucky day `{} {}`", l.element, l.animal),
+            &l.grants,
+            false,
+        )?;
+    }
+    for a in &h.animals {
+        for e in &h.elements {
+            let sign = Sign {
+                animal: a.id.clone(),
+                element: e.id.clone(),
+            };
+            for day in DAYS {
+                let ids = h.grants(&sign, day);
+                if let Some(twice) = (ids.iter().enumerate())
+                    .find(|(i, id)| ids[..*i].contains(id))
+                    .map(|(_, id)| id)
+                {
+                    return Err(err(format!(
+                        "the {} {} grants `{twice}` twice",
+                        e.name, a.name
+                    )));
+                }
+            }
+        }
+    }
+    for (_, def) in talents.iter() {
+        let needs = std::iter::once(&def.needs).chain(def.ranks.iter().map(|r| &r.needs));
+        for needs in needs {
+            if let Some(animal) = &needs.animal
+                && !h.animals.iter().any(|a| &a.id == animal)
+            {
+                return Err(err(format!(
+                    "talent `{}` needs an unknown animal `{animal}`",
+                    def.id
+                )));
+            }
+            if let Some(element) = &needs.element
+                && !h.elements.iter().any(|e| &e.id == element)
+            {
+                return Err(err(format!(
+                    "talent `{}` needs an unknown element `{element}`",
+                    def.id
+                )));
+            }
+        }
+    }
+    Ok(())
 }
 
 #[cfg(test)]

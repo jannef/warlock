@@ -1,0 +1,8 @@
+[[talent]]
+id = "supple"
+name = "Supple"
+tree = "stars"
+granted = true
+description = "Dodge +1, and a heavy load hampers your dodging less."
+effects = [{ kind = "dodge", value = 1 }, { kind = "burden_dex", value = 1 }]
+systems = ["defence", "burden"]

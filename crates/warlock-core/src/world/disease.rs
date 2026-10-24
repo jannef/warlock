@@ -106,7 +106,10 @@ impl World {
     pub(super) fn wade(&mut self, terrain: TerrainId, seconds: u64) {
         let player = self.state.player;
         let content = self.content.clone();
-        if self.state.player().talent_mods(&content).wading_proof {
+        // A strong swimmer (spec §8 "Birth sign") never catches anything wading, nor does a
+        // Marsh walker.
+        let mods = self.state.player().talent_mods(&content);
+        if mods.swimmer || mods.wading_proof {
             return;
         }
         for (disease, def) in content.disease_ids() {

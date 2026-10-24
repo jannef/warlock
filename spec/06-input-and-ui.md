@@ -67,6 +67,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Character creation** (§8 "Character creation"): after the scenario and seed, New run asks for
   a **race**, a **gender**, and a **class**, one screen each and in that order (race first: it
   is the biggest choice and sets the player's eyes), then a **name**, then shows a **summary**.
+  Right after the race comes **Born under the stars** (§8 "Birth sign"; `--screen sign`), which
+  chooses nothing: the birth date, the sign, and the age ("You were born on 3 Seedtide 1419, in
+  the year of the Metal Manticore. You are 25 years old."), the animal's and the element's lines
+  of legend (dimmed), a lucky day's line (in the accent colour, only for one born on it: the game
+  never hints that lucky days exist), the sign's gifts by name with their words (a flaw as "but
+  Little loved", dimmed; a lucky day's gift in the accent colour), and the animal's and the
+  element's stat adjustments as written in data; Enter goes on to the gender, Esc back to the
+  race. The birth is the race's alone, so the same race always shows the same stars; never a
+  number the game hides, nor the word "seed".
   The Name step is a text field (the game's): every key types what it types, literally (`j` and
   `k` too), as long as the font draws it and the name has room (20 characters; no space first);
   the `Context::Text` commands, rebindable like every key, accept (Enter), erase the last
@@ -87,8 +96,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `k`/`j`) choose, Enter goes on, Esc goes back a step as it was left. A step opens on the
   choice made there before going back, else on the scenario's character's, else on the first
   option; the Name step opens on what was typed there before going back, else empty. The summary
-  lists Start the run, then Name, Race, Gender, and Class with their choices (Enter
-  on one returns to that step as it was left; the steps after it close), the character's age,
+  lists Start the run, then Name, Race, Sign (`Metal Manticore`, with a lucky day's title:
+  `Metal Manticore, the Iron Scourge`; Enter on it returns to the reveal), Gender, and Class with
+  their choices (Enter on one returns to that step as it was left; the steps after it close),
+  the character's age,
   birthday, and birth sign on one line (`Age 27 · born 3 Seedtide 1417 · year of the Fire
   Manticore`; the sign on a line of its own when the panel is too narrow), the six starting
   scores (the final scores only: the dice already rolled, no breakdown, never a potential or a
@@ -275,9 +286,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
   sight, noise, nor speed (its weight does, as part of the load), but for what a magic item's
   affixes do while it is worn or wielded (§8 "Magic items").
 - **Character** (`@`): who the player is, as far as they know it: their name (the character's,
-  as typed; without a character the player creature's, "You"), their race, gender, and class (`Race    Dwarf`; "other" with the stat it
+  as typed, with a lucky day's title, `Brakka, the Iron Scourge`; without a character the player
+  creature's, "You"), their race, gender, and class (`Race    Dwarf`; "other" with the stat it
   raised), their age today, birthday, and birth sign as on the summary (when the run has a
-  character), their score in each stat (§8 "Stats") in display order with its abbreviation and
+  character), under it, dimmed, the **Stars** line, their sign's gifts and flaw by name in grant
+  order (`Stars   Fleet-footed, Slight, Supple, Evergreen`; two lines at most; the words are on the
+  reveal and in the wiki), their score in each stat (§8 "Stats") in display order with its abbreviation and
   full name (`St  Strength  12`; as it is now, with what magic items they wear add; a score a
   status effect or stat damage lowers shows lowered, in a muted red; §8 "Status effects",
   "Diseases"), their level and experience (`Lv  Level  3`, `XP  Experience

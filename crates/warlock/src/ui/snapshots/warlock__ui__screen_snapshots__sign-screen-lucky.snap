@@ -1,0 +1,29 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+
+
+
+
+
+              ┌─ Born under the stars ───────────────────────────────────────────────┐
+              │                                                                      │
+              │  You were born on 11 Rainmoon 1415, in the year of the Water         │
+              │  Kraken. You are 29 years old.                                       │
+              │                                                                      │
+              │  Could not leave the water, so swam the long way round by sea and    │
+              │  arrived on the evening tide: strong and deep, and ungainly ashore.  │
+              │  Rivers and the deep sea, that always find a way: clever.            │
+              │                                                                      │
+              │  A lucky day. Once in sixty years the Kraken is born of the water,   │
+              │  and on the eleventh day it is born the Deep One.                    │
+              │                                                                      │
+              │  Always a way        Secret doors and hidden traps are easier for    │
+              │                      you to find, and your searching reaches         │
+              │                      farther.                                        │
+              │                                                                      │
+              │  Kraken: St +1  Dx −1  Wi +1   Water: In +1                          │
+              │                                                                      │
+              │ Enter continue   Esc back                                            │
+              └──────────────────────────────────────────────────────────────────────┘

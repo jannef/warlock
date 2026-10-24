@@ -29,7 +29,13 @@ fn world() -> World {
 
 fn world_with(content: Arc<Content>) -> World {
     let spec: CharacterSpec = "human,male,warrior".parse().expect("a character");
-    World::with_character(content, "showcase", Some(7), Some(&spec)).expect("world")
+    let w =
+        World::with_character(content.clone(), "showcase", Some(7), Some(&spec)).expect("world");
+    // Born under no sign, so the talents held are the ones picked (a sign's gifts are talents
+    // too: world/stars_tests.rs).
+    let mut state = w.state().clone();
+    state.character.as_mut().expect("a character").sign = None;
+    World::from_state(content, state).expect("restores")
 }
 
 fn run(world: &mut World, actions: &str) {
@@ -418,7 +424,11 @@ systems = ["hit_points"]
 #[test]
 fn talents_survive_saves_and_replays_and_runs_without_them_hash_as_before() {
     let play = || {
-        let mut w = world();
+        // Born under the sign the seed gives (a replay restarts the character from its spec),
+        // with whatever gifts it grants before the pick.
+        let spec: CharacterSpec = "human,male,warrior".parse().expect("a character");
+        let mut w = World::with_character(BUILTIN.clone(), "showcase", Some(7), Some(&spec))
+            .expect("world");
         let mut replay = Replay::new(&w);
         let spec = w.state.character.as_ref().map(|c| c.spec.clone());
         let need =
@@ -432,7 +442,8 @@ fn talents_survive_saves_and_replays_and_runs_without_them_hash_as_before() {
         (w, replay)
     };
     let (a, replay) = play();
-    assert_eq!(player(&a).talents.len(), 1);
+    let gifts = (a.character()).map_or(0, |c| c.grants(a.content()).len());
+    assert_eq!(player(&a).talents.len(), gifts + 1);
     let content = a.content().clone();
     let verified = Replay::from_json(&replay.to_json())
         .expect("json")
@@ -442,7 +453,7 @@ fn talents_survive_saves_and_replays_and_runs_without_them_hash_as_before() {
     let bytes = crate::save::encode(&a);
     let loaded = crate::save::decode(&bytes, content).expect("loads");
     assert_eq!(loaded.state(), a.state());
-    assert_eq!(loaded.perception().own_talents()[0].name, "Healthy");
+    assert_eq!(loaded.perception().own_talents()[gifts].name, "Healthy");
 
     // A run that picked nothing carries none of it: no stream, no dues, no talents.
     let mut w = world();
@@ -485,8 +496,8 @@ fn perception_and_dumps_show_talents_in_words_only() {
     assert_eq!(healthy.held, 0);
     assert_eq!(
         talents[0].tree,
-        w.content().talents().tree_id("vigour").expect("vigour"),
-        "trees in display order"
+        w.content().talents().tree_id("stars").expect("stars"),
+        "trees in display order, the birth signs' first"
     );
 
     run(&mut w, "talent:healthy");

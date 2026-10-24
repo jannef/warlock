@@ -32,6 +32,16 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | Effect | Read in |
 |---|---|
 | `dodge`, `natural` | `Actor::defence` (Dodge adds to the skills' Dodge; natural armour is added on top of the creature type's own and a magic item's, or stands alone: Thick skin stacks with an amulet of natural armour, by decision) |
+| `max_dex` | `Actor::defence`: the burden's cap on Dexterity (only while burdened) |
+| `protection` | `Actor::protection`, with the creature type's natural Protection |
+| `threat`, `reroll_fumble` | `Actor::stanced` (every attack profile; never below 3), `World::resolve` → `combat::strike_with` |
+| `ease`, `poison_spares_scores` | `World::live` (`Effect::until_eases_at`/`advance_at`), `Actor::penalty` (`Effects::penalty_unless`) |
+| `disease_checks` | `World::expose` and `disease_turn` |
+| `swimmer` | `World::step_price` (wading terrain: `world/stars.rs::wading`), `World::wade` |
+| `speed_percent` | `Actor::speed`, read by the scheduler, `price_until`, rest, and wading time |
+| `rot_harm_percent` | `eat.rs::eat_rotten` (rounded down; no sickness at 0) |
+| `stone_sense`, `search`, `search_reach` | `search.rs::notices`, `search_modifier` (both looks), `search_turn` |
+| `kick`, `dig_percent`, `favour_percent` | `kick_door`, `dig_turn`, `world::favour` |
 | `melee_damage` | `Actor::melee`, `off_hand_blow` (after the affixes, before the stance; not kicks or bashes) |
 | `max_hp_per_levels` | handed out, not read: `take_talent` adds the rank's `hp_at(level)` to `hp_base` and `hp`, `level_up` each later level's growth, as levels' own hit points are (so `Actor::max_hp` needs no level) |
 | `healing_percent` | `World::healing_rate`, summed with the regeneration affixes |
@@ -232,4 +242,6 @@ Skill rolls (#230) add `Due::rolls` and draw from `levels_rng`; stat training (#
 `docs/dev/stats.md` "Training") checks every stat on it once a level, from `level_up`; the level-up screen, the Talents page, creation picks, and `--talents` (#236) read
 `PerceptionView::due`/`talents`; the talent waves add files under `data/talents/` and one read
 each; `granted` talents (races' `versatile`, the birth signs') are computed into `Actor::talents`
-by whoever grants them and never offered (`may_take` refuses them).
+by whoever grants them and never offered (`may_take` refuses them). The birth signs' are granted
+by `world/stars.rs` at the start and on every restore (`Talents::regrant`; #265,
+`docs/dev/character-creation.md`), in the first tree, Stars (`no_free`).

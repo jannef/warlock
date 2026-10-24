@@ -16,8 +16,8 @@
 use crate::alignment::Band;
 use crate::character::Character;
 use crate::content::{
-    Benefit, Choice, CombatStance, Content, DamageTypeId, LightId, MAX_RANK, Need, Role, StatusId,
-    TalentDef, TalentEffect, TalentId, TerrainId,
+    Benefit, Choice, CombatStance, Content, DamageTypeId, LightId, MAX_RANK, Need, Role, Sign,
+    StatusId, TalentDef, TalentEffect, TalentId, TerrainId,
 };
 use crate::damage::Kinds;
 use crate::dice::Dice;
@@ -84,6 +84,24 @@ impl Talents {
         1
     }
 
+    /// Replaces the granted talents held (those of the `stars` tree `content` marks `granted`;
+    /// a class's abilities are left alone) with `ids`, first and in that order, each at rank 1
+    /// (spec §8 "Birth sign": a sign's gifts are computed, never chosen). Picked talents keep their order after them; ids the content lacks are skipped.
+    pub(crate) fn regrant(&mut self, content: &Content, ids: &[&str]) {
+        let book = content.talents();
+        let stars = book.tree_id("stars");
+        let is_granted = |id: &str| {
+            (book.id(id)).is_some_and(|t| book.get(t).granted && Some(book.get(t).tree) == stars)
+        };
+        self.0.retain(|t| !is_granted(&t.id));
+        let given = (ids.iter()).filter(|id| is_granted(id)).map(|id| Taken {
+            id: id.to_string(),
+            rank: 1,
+            choice: None,
+        });
+        self.0.splice(0..0, given);
+    }
+
     /// What every rank held does, summed ([`TalentMods`]). Talents the content no longer has
     /// do nothing.
     pub fn mods(&self, content: &Content) -> TalentMods {
@@ -118,6 +136,10 @@ pub struct TalentMods {
     pub natural_unarmoured: i32,
     /// Added to every melee blow's damage.
     pub melee_damage: i32,
+    /// How many natural points lower every attack threatens a critical.
+    pub threat: i32,
+    /// A fumble is rolled again, once.
+    pub reroll_fumble: bool,
     /// Hit points by level, one entry per rank held: `(per_levels, at_least)`
     /// ([`TalentMods::hp_at`]).
     pub hp_per_levels: Vec<(u8, i32)>,
@@ -154,6 +176,8 @@ pub struct TalentMods {
     pub weightless_coins: bool,
     /// Percent more time an overworld journey takes (negative: quicker).
     pub travel_percent: i32,
+    /// Wading costs a plain step and gives no disease.
+    pub swimmer: bool,
     /// Terrain it steps onto at another's price: `(terrain, priced as)`.
     pub terrain_as: Vec<(TerrainId, TerrainId)>,
     /// A plunge through ice never hurts it.
@@ -172,6 +196,8 @@ pub struct TalentMods {
     pub sun_healing: i32,
     /// Percent faster hunger burns (negative: slower).
     pub hunger_percent: i32,
+    /// Percent more sickness from rotten food (negative: less).
+    pub rot_harm_percent: i32,
     /// Exertion burns nothing.
     pub no_exertion: bool,
     /// Percent more experience.
@@ -202,6 +228,12 @@ pub struct TalentMods {
     /// It notices hidden things in passing, with this much added; `None`: only as its skills
     /// and race allow.
     pub notice: Option<i32>,
+    /// It notices hidden things on stone in passing.
+    pub stone_sense: bool,
+    /// Added to every check to find hidden things.
+    pub search: i32,
+    /// Cells more its searching reaches.
+    pub search_reach: i32,
     /// How much higher some skills count, by skill.
     pub skills: Vec<(SkillId, i32)>,
     /// Anyone not hostile makes way for it.
@@ -517,6 +549,8 @@ impl TalentMods {
             TalentEffect::Natural { value } => self.natural += value,
             TalentEffect::NaturalUnarmoured { value } => self.natural_unarmoured += value,
             TalentEffect::MeleeDamage { value } => self.melee_damage += value,
+            TalentEffect::Threat { value } => self.threat += value,
+            TalentEffect::RerollFumble => self.reroll_fumble = true,
             TalentEffect::MaxHpPerLevels {
                 per_levels,
                 at_least,
@@ -543,6 +577,7 @@ impl TalentMods {
             TalentEffect::CarryKg { value } => self.carry_kg += value,
             TalentEffect::WeightlessCoins => self.weightless_coins = true,
             TalentEffect::TravelPercent { value } => self.travel_percent += value,
+            TalentEffect::Swimmer => self.swimmer = true,
             TalentEffect::TerrainAs { terrains, like } => {
                 if let Some(like) = content.terrain_id(&like) {
                     let terrains = terrains.iter().filter_map(|t| content.terrain_id(t));
@@ -557,6 +592,7 @@ impl TalentMods {
             TalentEffect::Forecast { hours } => self.forecast = self.forecast.max(hours),
             TalentEffect::SunHealing { value } => self.sun_healing += value,
             TalentEffect::HungerPercent { value } => self.hunger_percent += value,
+            TalentEffect::RotHarmPercent { value } => self.rot_harm_percent += value,
             TalentEffect::NoExertion => self.no_exertion = true,
             TalentEffect::XpPercent { value } => self.xp_percent += value,
             TalentEffect::QuestXpPercent { value } => self.quest_xp_percent += value,
@@ -575,6 +611,9 @@ impl TalentMods {
             TalentEffect::Notice { value } => {
                 self.notice = Some(self.notice.unwrap_or(0) + value);
             }
+            TalentEffect::StoneSense => self.stone_sense = true,
+            TalentEffect::Search { value } => self.search += value,
+            TalentEffect::SearchReach { value } => self.search_reach += value,
             TalentEffect::Skill { skill, value } => {
                 if let Some(id) = content.skill_id(&skill) {
                     match self.skills.iter_mut().find(|(s, _)| *s == id) {
@@ -926,6 +965,9 @@ pub struct Candidate<'a> {
     /// The alignment band (spec §8 "Alignment"); `None` without alignment rules, when no
     /// talent that asks for one can be taken.
     pub band: Option<Band>,
+    /// The birth sign (spec §8 "Birth sign"), if any, and whether it is a lucky day's.
+    pub sign: Option<&'a Sign>,
+    pub lucky: bool,
 }
 
 impl<'a> Candidate<'a> {
@@ -949,6 +991,8 @@ impl<'a> Candidate<'a> {
             class: spec.map(|s| s.class.as_str()),
             eyes: race.map(|r| r.vision.as_str()),
             band: content.alignment().map(|_| actor.band(content)),
+            sign: character.and_then(|c| c.sign.as_ref()),
+            lucky: character.is_some_and(|c| c.lucky(content).is_some()),
         }
     }
 
@@ -987,6 +1031,9 @@ impl<'a> Candidate<'a> {
             Need::Race(id) => self.race == Some(id.as_str()),
             Need::Eyes(id) => self.eyes == Some(id.as_str()),
             Need::Class(id) => self.class == Some(id.as_str()),
+            Need::Animal(id) => self.sign.is_some_and(|s| s.is_animal(id)),
+            Need::Element(id) => self.sign.is_some_and(|s| s.is_element(id)),
+            Need::Lucky => self.lucky,
             Need::Alignment(required) => self.band.is_some_and(|band| required.allows(band)),
         }
     }

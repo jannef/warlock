@@ -4,7 +4,6 @@ expression: "render(case, content.clone())"
 ---
  You kick the shopkeeper. "You will pay for that!" shouts Grimbold. You feel you have strayed from
  the path of good. The shopkeeper stabs you. You are bleeding.
-
               ┌─ Character ──────────────────────────────────────────────────────────┐
               │                                                                      │
               │ Garrick                                                              │
@@ -13,6 +12,7 @@ expression: "render(case, content.clone())"
               │ Gender  Male                                                         │
               │ Class   Paladin                                                      │
               │ Age 34 · born 29 Greenleaf 1410 · year of the Water Basilisk         │
+              │ Stars   Always a way                                                 │
               │                                                                      │
               │ St  Strength      14                                                 │
               │ Dx  Dexterity      9                                                 │

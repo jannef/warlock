@@ -81,10 +81,17 @@ fn level_one_abilities_come_with_the_character_and_others_with_their_levels() {
     let mut w = world("aristocrat");
     assert!(holds(&w, "well_dressed"), "level 1's");
     assert!(!holds(&w, "fencing"));
+    // (A birth sign's gifts come first and are no business of the class.)
     let rows = dump::layer_rows(&w, Layer::Talents);
-    assert_eq!(rows, ["Well dressed (class)"]);
+    assert_eq!(
+        rows.last().map(String::as_str),
+        Some("Well dressed (class)")
+    );
+    assert!(rows.iter().filter(|r| r.contains("(class)")).count() == 1);
     // An adventurer without a table yet has none.
-    assert!(world("ranger").state.player().talents.is_empty());
+    let warrior = world("ranger");
+    let rows = dump::layer_rows(&warrior, Layer::Talents);
+    assert!(rows.iter().all(|r| r.contains("(sign")), "{rows:?}");
     // Level 6 brings Fencing, as news of the level.
     reach(&mut w, 6);
     assert!(holds(&w, "fencing"));
