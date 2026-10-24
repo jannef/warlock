@@ -32,7 +32,9 @@ effects, Weak, and stat damage; `raised_stats` is before those, for the characte
 and level-up hit points), the one source every rule reads; an attack profile is built as those stats, the
 weapon skill's benefit, the fighting style's (with the two-weapon penalty it eases), the
 affixes, then the combat stance. The regeneration affix goes
-through `World::healing_rate` like every other pace change; the Protection affix (Hardened, an
+through `World::healing_rate` like every other pace change, the mana affixes (Mystic,
+`max_mana`; of Clarity, `mana_regeneration`) through `Actor::max_mana` and `World::mana_rate`
+(`docs/dev/mana.md`; mana follows the maximum down with `World::keep_mana_within_max`); the Protection affix (Hardened, an
 item effect, local, on armour kinds: `ItemKind::is_armour`) through `Stack::protection`, which
 `Actor::protection` sums (docs/dev/combat.md); the typed effects (docs/dev/combat.md "Damage
 types"): `Effect::Elemental` (an attack effect, local on what attacks: `Mods::elemental` is one

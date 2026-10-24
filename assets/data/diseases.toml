@@ -28,6 +28,7 @@
 #               the last hit point, kills ("Died of disease")
 #   regen       how fast hit points come back while it shows, in percent of the normal pace, when
 #               slower than its status's (default: as the status says)
+#   mana_regen  how fast mana comes back while it shows, the same way (default: as the status says)
 #   caught      ways to catch it that rules name: "rotten_food" (eating a rotten corpse)
 #   wading      terrain it is caught in: { terrain = ["marsh"], per_hour = 4 }, a chance in
 #               percent for each hour spent crossing it (drawn as you step onto it, by how long
@@ -127,7 +128,7 @@ symptoms = [
 ]
 recovered = "The rot is gone from your flesh."
 
-# A fever of the mind: Willpower fights it.
+# A fever of the mind: Willpower fights it, and mana gathers at a quarter of the pace.
 [[disease]]
 id = "brain_fever"
 name = "brain fever"
@@ -135,6 +136,7 @@ difficulty = 13
 check = "willpower"
 incubation = "1d3"
 damage = { intelligence = "1d3", willpower = "1d3" }
+mana_regen = 25
 cured_by = ["remove_disease"]
 onset = "Your head throbs."
 symptoms = [

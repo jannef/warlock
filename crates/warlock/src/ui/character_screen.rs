@@ -53,9 +53,12 @@ fn resistance_rows(view: &PerceptionView<'_>) -> Vec<(&'static str, String)> {
     .collect()
 }
 
-/// Where a value's neighbour on its row begins (Protection beside Defence), from the value's
-/// column: room for the value and a gap.
+/// Where a value's neighbour on its row begins (Mana beside Hit points, Protection beside
+/// Defence), from the value's column: room for the value and a gap.
 const BESIDE: i32 = 8;
+
+/// Width of a neighbour's name column: the longest name ("Protection") and a space.
+const BESIDE_NAME_W: i32 = 11;
 
 /// Width of the panel: the birth and the burden's thresholds fit on one line each.
 const WIDTH: i32 = 72;
@@ -89,6 +92,8 @@ pub struct CharacterScreen {
     progress: Progress,
     /// Hit points left and the most.
     hp: (i32, i32),
+    /// Mana left and the most.
+    mana: (i32, i32),
     /// Defence: the total only.
     defence: i32,
     /// Protection: the total only.
@@ -122,6 +127,7 @@ impl CharacterScreen {
                     next: None,
                 },
                 hp: (0, 0),
+                mana: (0, 0),
                 defence: warlock_core::combat::BASE_DEFENCE,
                 protection: 0,
                 stance: "Neutral".into(),
@@ -170,6 +176,7 @@ impl CharacterScreen {
             load: Some(view.own_load()),
             progress: view.own_experience(),
             hp: view.own_hp(),
+            mana: view.own_mana(),
             defence: view.own_defence(),
             protection: view.own_protection(),
             stance: content.stance_def(view.own_stance()).name.clone(),
@@ -191,8 +198,8 @@ impl CharacterScreen {
 
     pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
         // Rows: margin, the name, a gap, race, gender, class, the birth, and a gap (with a
-        // character), the stats, a gap, level, experience, hit points, Defence and Protection,
-        // and stance (and the status effects and known diseases, if any), a gap, the weight, the
+        // character), the stats, a gap, level, experience, hit points and mana, Defence and
+        // Protection, and stance (and the status effects and known diseases, if any), a gap, the weight, the
         // burden's thresholds, a gap, the footer, frame.
         let width = WIDTH.min(console.cols() as i32) - 4;
         let birth = fit_parts(&self.birth, width);
@@ -248,13 +255,15 @@ impl CharacterScreen {
         y += 1;
         // `Lv  Level  3`, `XP  Experience  85 / 120` (the total alone at the highest level),
         // `HP  Hit points  18/24`, and `Dv  Defence  15` in the stats' columns, with
-        // `Pv  Protection  3` beside the Defence.
+        // `MP  Mana  5/12` beside the hit points and `Pv  Protection  3` beside the Defence.
         let (hp, max) = self.hp;
+        let (mana, max_mana) = self.mana;
+        let mana = ("MP", "Mana", format!("{mana}/{max_mana}"));
         let protection = ("Pv", "Protection", format!("{:>2}", self.protection));
         for (abbrev, name, value, beside) in [
             ("Lv", "Level", self.progress.level.to_string(), None),
             ("XP", "Experience", experience_text(&self.progress), None),
-            ("HP", "Hit points", format!("{hp}/{max}"), None),
+            ("HP", "Hit points", format!("{hp}/{max}"), Some(mana)),
             (
                 "Dv",
                 "Defence",
@@ -271,7 +280,7 @@ impl CharacterScreen {
                     let x = x + 4 + NAME_W + BESIDE;
                     console.print(x, y, abbrev, TEXT_DIM);
                     console.print(x + 4, y, name, TEXT);
-                    console.print(x + 4 + name.len() as i32 + 1, y, &value, TEXT);
+                    console.print(x + 4 + BESIDE_NAME_W, y, &value, TEXT);
                 }
             }
             y += 1;
@@ -492,7 +501,8 @@ mod tests {
             "Pr  Presence       9",
             // Toughness 10 and a human's 4 and a thief's 3; Defence 10 and Dexterity's share,
             // and no Protection beside it.
-            "HP  Hit points    17/17",
+            // Beside them a human's 1 mana and a thief's 1, and the mental stats' +1, 0, and -1.
+            "HP  Hit points    17/17   MP  Mana       2/2",
             "Dv  Defence       11      Pv  Protection  0",
             "Lv  Level         1",
             // A human thief's level 2: 767 × 95 %.

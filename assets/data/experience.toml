@@ -15,6 +15,10 @@
 # Hit points: each level gained up to hp_level (inclusive) adds max(1, class hp ÷ 2 + the
 # Toughness modifier) to the maximum, and the same to the current hit points. No runaway pools.
 #
+# Mana: each level gained up to mana_level (inclusive; default 0, none) adds max(0, class mana ÷ 2
+# + the better of the Intelligence and Willpower modifiers) to the maximum, and the same to the
+# current mana. It runs past hp_level, so casters keep growing after hit points stop.
+#
 # Scaling (classic World of Warcraft), for the player's own kills. A monster above the player is
 # worth bonus_percent more per level of difference, up to bonus_levels levels. A monster below
 # gives xp × (1 − difference ÷ ZD): the "zero difference" ZD grows with the player's level, and at
@@ -33,6 +37,7 @@
 
 max_level = 60
 hp_level = 20
+mana_level = 30
 bonus_percent = 5
 bonus_levels = 4
 

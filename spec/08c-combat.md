@@ -239,7 +239,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   bled to death), and each level gained up to `hp_level` (20)
   raises the player's maximum and current hit points (`Actor::hp_base`, `hp`) by `max(1, class
   hp ÷ 2 + the Toughness modifier)`; without a character the scenario's `hp` stands in for the
-  class's. Every `talent_every`th level (`[levels]` in `data/experience.toml`, 3) brings a
+  class's. Each level gained up to `mana_level` (30) raises their mana by `max(0, class mana ÷ 2
+  + the better of the Intelligence and Willpower modifiers)` (§8 "Mana"). Every `talent_every`th level (`[levels]` in `data/experience.toml`, 3) brings a
   talent pick, made on the spot (§8 "Talents", `World::level_up`), and every level checks
   each stat for a rise by its training marks (§8 "Stats": "Training"); every gain is scaled by the
   talents that teach quicker (`xp_percent`). The player is shown their level, XP, and the XP of the next level

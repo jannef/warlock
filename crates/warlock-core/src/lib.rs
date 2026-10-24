@@ -34,6 +34,7 @@ pub mod item_parts;
 pub mod kit;
 pub mod light;
 pub mod magic;
+pub mod mana;
 pub mod mapgen;
 pub mod messages;
 pub mod noise;

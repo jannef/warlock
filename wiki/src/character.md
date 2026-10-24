@@ -73,7 +73,7 @@ callings level slowly, while short-lived races and everyday folk level quickly.
 
 The character screen (`@`) shows your race, gender, and class, your age, birthday, and sign,
 your stats, your [alignment](alignment.md), your level and experience (see [Experience](experience.md)), and your hit points (your Toughness plus what your race and class give; see
-[Combat](combat.md#hit-points)), Defence, and Protection (see
+[Combat](combat.md#hit-points)) with your mana beside them (see [Mana](mana.md)), Defence, and Protection (see
 [Combat](combat.md#protection)), what ails you (see
 [Status effects](status-effects.md)) and which diseases you know you have (see
 [Diseases](diseases.md)), and what you weigh and carry against what you can (see

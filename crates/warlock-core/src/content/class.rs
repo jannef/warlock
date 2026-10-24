@@ -1,7 +1,7 @@
 //! Classes (`assets/data/classes/`, one file per class, spec §8 "Character creation"): the third
 //! choice of a new run. A class adjusts the starting scores, by fixed numbers or dice, adds hit
-//! points, sets how much experience its levels need (spec §8 "Experience"), trains the character
-//! in skills (spec §8 "Skills"), by dice, names the skills it is known for and how many skill
+//! points and mana (spec §8 "Mana"), sets how much experience its levels need (spec §8
+//! "Experience"), trains the character in skills (spec §8 "Skills"), by dice, names the skills it is known for and how many skill
 //! rolls each level gives, and gives starting ranks in weapon skills (spec §8 "Weapon skills")
 //! and fighting styles (spec §8 "Fighting styles"): some always, and perhaps one set of a
 //! choice, rolled when the character is made. Its `kit` is what the character starts with
@@ -24,6 +24,7 @@ use super::{
 };
 use crate::combat::MAX_BASE_HP;
 use crate::dice::Dice;
+use crate::mana::MAX_BASE_MANA;
 use crate::skills::{self, SkillId};
 use crate::stats::{PerStat, Stat, adjustments};
 use serde::Deserialize;
@@ -61,6 +62,8 @@ struct ClassSpec {
     experience: u16,
     #[serde(default)]
     alignment: i32,
+    #[serde(default)]
+    mana: u16,
     #[serde(default)]
     skills: BTreeMap<String, Dice>,
     #[serde(default)]
@@ -120,6 +123,8 @@ pub struct ClassDef {
     pub stats: PerStat<Dice>,
     /// What the class adds to the hit points (spec §8 "Combat").
     pub hp: i32,
+    /// What the class adds to the mana (spec §8 "Mana"); half of it comes with each level.
+    pub mana: i32,
     /// How much experience a level needs, in percent (spec §8 "Experience"): multiplied with
     /// the race's onto every threshold. Patient classes pay more (a wizard, 125).
     pub experience: u16,
@@ -216,6 +221,12 @@ impl ClassDef {
             return Err(err(format!(
                 "class `{id}`: hp {} is more than {MAX_BASE_HP}",
                 spec.hp
+            )));
+        }
+        if spec.mana > MAX_BASE_MANA {
+            return Err(err(format!(
+                "class `{id}`: mana {} is more than {MAX_BASE_MANA}",
+                spec.mana
             )));
         }
         if !FACTORS.contains(&spec.experience) {
@@ -317,6 +328,7 @@ impl ClassDef {
             description: spec.description,
             stats,
             hp: i32::from(spec.hp),
+            mana: i32::from(spec.mana),
             experience: spec.experience,
             alignment,
             skills,
@@ -533,6 +545,21 @@ mod tests {
             let e = parse(&text).unwrap_err();
             assert!(e.message.contains(why), "{why}: {}", e.message);
         }
+    }
+
+    #[test]
+    fn classes_give_mana_up_to_the_most_a_class_may() {
+        assert_eq!(
+            parse(&format!("{ONE}mana = 8\n")).expect("valid")[0].mana,
+            8
+        );
+        assert_eq!(parse(ONE).expect("valid")[0].mana, 0, "none unless named");
+        let e = parse(&format!("{ONE}mana = 1001\n")).unwrap_err();
+        assert!(
+            e.message.contains("mana 1001 is more than 1000"),
+            "{}",
+            e.message
+        );
     }
 
     /// The built-in content with the aristocrat's file changed by `edit`, loaded.

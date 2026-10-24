@@ -112,6 +112,10 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   stop healing, and can kill (creatures bleed to death too); strong poison saps Strength and
   Dexterity. The status bar names what ails you, look mode shows a creature bleeding; never a
   number. Hit points come back twice as fast while you rest.
+- **Mana** — a second pool beside your hit points, for the magic to come: from your race and
+  class, your Intelligence, Willpower, and Presence, your levels, and magic items. It comes back
+  with time by your Willpower, faster while you rest or in a sanctuary, slower while poisoned or
+  diseased, not at all while starving. The status bar shows it (`MP 5/12`).
 - **Diseases** — filth fever from a rat's bite, marsh ague from the swamps, grave rot from
   rotten food, and more, in the spirit of D&D 3.5: caught unseen when a hidden check fails, they
   incubate for days, then you are Diseased. Each day your body fights back with another check;

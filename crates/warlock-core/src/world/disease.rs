@@ -207,6 +207,8 @@ impl World {
             return false;
         };
         actor.hp = actor.hp.min(actor.max_hp(&content));
+        // Damage to the mental stats lowers the most mana the same way (spec §8 "Mana").
+        actor.mana = actor.mana.min(actor.max_mana(&content));
         if def.kills && no_toughness {
             self.dies(id, by, of, when, events);
             return false;

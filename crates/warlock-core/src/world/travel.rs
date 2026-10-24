@@ -456,6 +456,9 @@ pub(super) fn instantiate_level(
             hp: 0,
             hp_base: def.base_hp,
             regen: 0,
+            mana: 0,
+            mana_base: def.base_mana,
+            mana_regen: 0,
             skills: def.skills.clone(),
             effects: Default::default(),
             diseases: Default::default(),
@@ -473,6 +476,7 @@ pub(super) fn instantiate_level(
             stat_marks: Default::default(),
         };
         actor.hp = actor.max_hp(content);
+        actor.mana = actor.max_mana(content);
         crate::rot::made_at(&mut actor.inventory, content, state.time);
         state.actors.insert(actor_id, actor);
     }

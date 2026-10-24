@@ -52,24 +52,26 @@ developer notes (CLAUDE.md, `docs/dev/`).
     every roll of the damage, after the weapon's own added damage, one die per kind (the sides
     add up); a `resistance` affix (of the Salamander, of Warmth) is global: its percentage adds
     to the wearer's, capped with the rest at 75. The rest are global: the six stats,
-    maximum hit points, regeneration, Dodge (stacks), Deflection and natural armour (the best
+    maximum hit points, regeneration, maximum mana, mana regeneration (§8 "Mana"), Dodge (stacks), Deflection and natural armour (the best
     counts, with the creature's own), moving speed, carrying limit, stealth (quieter footsteps,
     §5 "Hearing"), **light** (the wearer carries the brightest light among its glowing items,
     a steady preset; `LightCache` adds it as a carried source, so creatures see by it too), and
     **skills** (§8 "Skills": a skill affix adds to that skill's value for what it gives,
     `Actor::skill_effect`, trained or not, an untrained one from 0; the Skills screen still lists
     trained values). Each rule reads them in one place: `Actor::effective_stats`, `max_hp`,
+    `max_mana`, `World::mana_rate`,
     `defence`, `melee`, `ranged`, `thrown`, `launcher_range`, `throw_range`, `skill_effect`;
     `World::cost_of` (speed); `burden::load`; `noise::noise`; `World::healing_rate`;
     `Stack::weight`. Speeds are at most 50 % off in all; an attack's weapon skill takes its
     `speed` off after them (`World::attack_price`, §8 "Weapon skills"). Pending hooks, added
     with the systems they need: affixes that raise a weapon skill's rank (#134's ranks exist;
     none roll yet), hunger (#137), and value (#145, a base `value` times rarity and affixes).
-  - **Affixes** (`data/affixes.toml`, §7): 21 prefixes (mostly offensive, flat Defence, and
+  - **Affixes** (`data/affixes.toml`, §7): 23 prefixes (mostly offensive, flat Defence, and
     life: Sharp, Heavy, Glinting, Keen, Brutal, Guarding, Reinforced, Sturdy, Supple,
     Featherweight, Nimble, Shimmering, Oaken, Hale, Vicious, Accurate, Fleet, Hunter's, Steady,
-    Radiant, Burly) and 26 suffixes (stats, speed, criticals, utility, skills: of the Bear, Lynx,
-    Ox, Owl, Sage, Lion; of Celerity, Precision, Slaying, Ruin, Mending, Stealth, Light, the
+    Radiant, Burly, Hardened, Mystic (maximum mana)) and 27 suffixes (stats, speed, criticals,
+    utility, skills: of the Bear, Lynx, Ox, Owl, Sage, Lion; of Celerity, Precision, Slaying,
+    Ruin, Mending, Clarity (mana regeneration), Stealth, Light, the
     Mule, Evasion, Warding, the Wind, Reach, Durability, the Tortoise, Vitality; of Shadows
     (stealth), the Hare (tumble), the Fox (listen), the Wanderer (survival), Balance (balance)),
     each with the kinds of item it rolls on and up to four tiers by item level; an item has at

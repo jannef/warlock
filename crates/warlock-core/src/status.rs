@@ -296,6 +296,15 @@ impl Effects {
             .min()
             .unwrap_or(100)
     }
+
+    /// How fast mana comes back while these last (spec §8 "Mana"): the slowest of their
+    /// statuses' `mana_regen`, 100 without any.
+    pub fn mana_regen(&self, content: &Content) -> u16 {
+        (self.0.iter())
+            .map(|e| content.status(e.status).mana_regen)
+            .min()
+            .unwrap_or(100)
+    }
 }
 
 #[cfg(test)]
