@@ -66,6 +66,9 @@ pub enum Layer {
     /// how far its marks are toward the next (`Long blades 2 (40%)`), the styles they fight in
     /// now marked (`Duelist 1 (0%), in use`); never what a rank gives.
     WeaponSkills,
+    /// Not a map: the player's talents in the order taken, one a line with its rank of how many
+    /// and its choice (`Hardy 2/3`, `Weapon focus (long blades)`); never what a rank gives.
+    Talents,
     /// Not a map: the player's abilities in the abilities menu's order, one a line with its
     /// source and what it asks for, or why it cannot be used now (`Shield bash (weapon skill):
     /// a direction`, `Steal (skill): not usable yet`).
@@ -86,6 +89,11 @@ pub enum Layer {
     /// nutrition, then every corpse on the level and in the player's pack with its age (ground
     /// truth). **Dev-only.**
     Actors,
+    /// Not a map: the player's progression (spec §8 "Talents"): the choices a level still asks
+    /// for (`due level 3: 1 talent`), the talents they may take now by id with the choices
+    /// each may be taken for (`takeable healthy, weapon_focus:{bows,slings}`), and the creature
+    /// types whose first kill has paid (`discovered kobold, rat`). **Dev-only.**
+    Progress,
     /// The level's special rooms (spec §7 "Special rooms"; ground truth): the terrain, with the
     /// plain ground of each special room drawn as its effect's `mark`, then a line per room
     /// (`s shadowed room at (12, 3)-(20, 9), entered`). **Dev-only.**
@@ -110,11 +118,13 @@ impl Layer {
         Layer::Stats,
         Layer::Skills,
         Layer::WeaponSkills,
+        Layer::Talents,
         Layer::Abilities,
         Layer::Traps,
         Layer::Quests,
         Layer::Truth,
         Layer::Actors,
+        Layer::Progress,
         Layer::Rooms,
         Layer::Ice,
     ];
@@ -133,11 +143,13 @@ impl Layer {
             Layer::Stats => "stats",
             Layer::Skills => "skills",
             Layer::WeaponSkills => "weapon_skills",
+            Layer::Talents => "talents",
             Layer::Abilities => "abilities",
             Layer::Traps => "traps",
             Layer::Quests => "quests",
             Layer::Truth => "truth",
             Layer::Actors => "actors",
+            Layer::Progress => "progress",
             Layer::Rooms => "rooms",
             Layer::Ice => "ice",
         }
@@ -147,7 +159,7 @@ impl Layer {
     pub const fn is_dev_only(self) -> bool {
         matches!(
             self,
-            Layer::Truth | Layer::Actors | Layer::Rooms | Layer::Ice
+            Layer::Truth | Layer::Actors | Layer::Progress | Layer::Rooms | Layer::Ice
         )
     }
 }
@@ -163,8 +175,8 @@ impl FromStr for Layer {
             .ok_or_else(|| {
                 format!(
                     "unknown layer `{s}` (expected view, fov, memory, light, sound, blood, \
-                     inventory, equipment, stats, skills, weapon_skills, abilities, traps, quests, \
-                     truth, actors, rooms, ice)"
+                     inventory, equipment, stats, skills, weapon_skills, talents, abilities, \
+                     traps, quests, truth, actors, progress, rooms, ice)"
                 )
             })
     }
@@ -180,6 +192,7 @@ pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
     match layer {
         Layer::Truth => truth_rows(world),
         Layer::Actors => actor_rows(world),
+        Layer::Progress => progress_rows(world),
         Layer::Rooms => room_rows(world),
         Layer::Ice => ice_rows(world),
         Layer::Inventory => inventory_rows(&world.perception()),
@@ -187,6 +200,7 @@ pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
         Layer::Stats => stat_rows(&world.perception()),
         Layer::Skills => skill_rows(&world.perception()),
         Layer::WeaponSkills => weapon_skill_rows(&world.perception()),
+        Layer::Talents => talent_rows(&world.perception()),
         Layer::Abilities => ability_rows(&world.perception()),
         Layer::Traps => trap_rows(&world.perception()),
         Layer::Quests => quest_rows(&world.perception()),
@@ -238,11 +252,13 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
         | Layer::Stats
         | Layer::Skills
         | Layer::WeaponSkills
+        | Layer::Talents
         | Layer::Abilities
         | Layer::Traps
         | Layer::Quests
         | Layer::Truth
         | Layer::Actors
+        | Layer::Progress
         | Layer::Rooms
         | Layer::Ice => unreachable!("not a map built from perception"),
     }
@@ -553,6 +569,59 @@ fn weapon_skill_rows(view: &PerceptionView<'_>) -> Vec<String> {
             }
         })
         .collect()
+}
+
+/// The player's talents in the order taken, one a line: its name for its choice and, for a
+/// ranked talent, the rank held of how many (`Hardy 2/3`).
+fn talent_rows(view: &PerceptionView<'_>) -> Vec<String> {
+    (view.own_talents().iter())
+        .map(|t| {
+            if t.ranks > 1 {
+                format!("{} {}/{}", t.name, t.rank, t.ranks)
+            } else {
+                t.name.clone()
+            }
+        })
+        .collect()
+}
+
+/// The player's progression (dev): the choices due, the talents they may take now with the
+/// choices each may be taken for, and the creature types whose first kill has paid.
+fn progress_rows(world: &World) -> Vec<String> {
+    let view = world.perception();
+    let content = view.content();
+    let progress = &world.state().progress;
+    let mut rows: Vec<String> = (progress.due.iter())
+        .map(|due| {
+            let s = if due.talents == 1 { "" } else { "s" };
+            format!("due level {}: {} talent{s}", due.level, due.talents)
+        })
+        .collect();
+    let takeable: Vec<String> = (view.talents().iter())
+        .filter(|t| !t.openings.is_empty())
+        .map(|t| {
+            let id = &content.talents().get(t.id).id;
+            let ways: Vec<&str> = t.openings.iter().flatten().map(String::as_str).collect();
+            if ways.is_empty() {
+                id.clone()
+            } else {
+                format!("{id}:{{{}}}", ways.join(","))
+            }
+        })
+        .collect();
+    if !takeable.is_empty() {
+        rows.push(format!("takeable {}", takeable.join(", ")));
+    }
+    let kills: Vec<&str> = progress
+        .discovered
+        .kills
+        .iter()
+        .map(String::as_str)
+        .collect();
+    if !kills.is_empty() {
+        rows.push(format!("discovered {}", kills.join(", ")));
+    }
+    rows
 }
 
 /// The player's abilities, one a line in menu order: its name, its source, and what it asks for
@@ -1040,6 +1109,16 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "styles_in_use": (view.own_styles_in_use().into_iter())
             .map(|id| content.weapon_skills().skill(id).id.clone())
             .collect::<Vec<_>>(),
+        "talents": (view.own_talents().iter())
+            .map(|t| json!({
+                "id": content.talents().get(t.id).id,
+                "name": t.name,
+                "rank": t.rank,
+                "ranks": t.ranks,
+                "choice": t.choice,
+            }))
+            .collect::<Vec<_>>(),
+        "due": view.due(),
         "abilities": abilities_json(&view),
         "quests": quests_json(&view),
         "hp": { "current": hp, "max": max_hp },

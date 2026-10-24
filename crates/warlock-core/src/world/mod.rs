@@ -117,6 +117,7 @@ mod shoot;
 mod shop;
 mod spell;
 mod status;
+mod talent;
 mod talk;
 mod train;
 mod trap;
@@ -135,6 +136,7 @@ pub use loot::Identified;
 pub use quest::{QuestRecord, QuestView, Quests, Stage};
 use rest::Ended;
 pub use shop::{Shop, ShopStatus, count_of, favour, part_of, unpaid_parts};
+pub use talent::Due;
 pub use talk::{Conversation, Talk, TopicView};
 use travel::{enter_room, instantiate_level, level_template};
 
@@ -212,6 +214,11 @@ pub struct WorldState {
     /// The training random stream (spec §8 "Skills"): the chances of training marks, apart from
     /// the gameplay stream so training never changes a fight's rolls.
     pub(crate) training: Rng,
+    /// The levels random stream (spec §8 "Talents"): what level-ups roll (skill rolls, stat
+    /// checks), apart from the gameplay stream so a level moves no fight. Made on the first
+    /// draw ([`Rng::levels`]), so a run that never drew from it hashes as before.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) levels_rng: Option<Rng>,
     /// Dev: the weather set by hand (`weather:rain`), until it runs out.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) weather_override: Option<weather::Override>,
@@ -469,6 +476,7 @@ impl World {
             seed,
             rng: Rng::gameplay(seed),
             training: Rng::training(seed),
+            levels_rng: None,
             turn: 0,
             time: def.start,
             current_level: start.id.clone(),
@@ -517,6 +525,7 @@ impl World {
             satiation: content.hunger().map(|h| Satiation::new(h.start)),
             stance: CombatStance::Neutral,
             free_blows: FreeBlows::default(),
+            talents: Default::default(),
         };
         player.hp = player.max_hp(&content);
         crate::rot::made_at(&mut player.inventory, &content, def.start);
@@ -698,6 +707,7 @@ impl World {
             time: self.state.time,
             death: self.state.death.as_ref(),
             experience: self.state.experience,
+            progress: &self.state.progress,
             quests: &self.state.quests,
             messages: &self.state.messages,
             snapshot: &self.perception,
@@ -839,6 +849,9 @@ impl World {
 
     /// Phase 1. Returns what the action cost.
     fn player_acts(&mut self, action: &Action, events: &mut Vec<Event>) -> Spent {
+        if let Some(refused) = self.refuse_due(action) {
+            return refused;
+        }
         if let Some(refused) = self.refuse_blocked(action) {
             return refused;
         }
@@ -883,6 +896,8 @@ impl World {
             Action::Dig(dir) => return self.start_dig(*dir),
             Action::Search(turns) => return Spent::Search(*turns),
             Action::Disarm(dir) => return self.disarm(*dir, events),
+            Action::Talent { id, choice } => return self.take_talent(id, choice.as_deref()),
+            Action::Advance(skill) => return self.advance_skill(skill),
             Action::SetVision(id) => return self.set_vision(id),
             Action::SetStance(stance) => return self.set_stance(*stance),
             Action::SetWeather(weather) => return self.set_weather_dev(*weather),
@@ -895,6 +910,8 @@ impl World {
             Action::Thaw { at, radius } => return self.thaw_dev(*at, *radius, events),
             Action::Afflict(id) => return self.afflict_dev(id, events),
             Action::Infect(id) => return self.infect_dev(id),
+            Action::LevelUpAuto => return self.level_up_auto(),
+            Action::GrantXp(xp) => return self.grant_xp_dev(*xp),
         };
         self.took(done, kind)
     }
@@ -1015,6 +1032,8 @@ mod status_tests;
 mod style_tests;
 #[cfg(test)]
 mod sun_tests;
+#[cfg(test)]
+mod talent_tests;
 #[cfg(test)]
 mod talk_tests;
 #[cfg(test)]

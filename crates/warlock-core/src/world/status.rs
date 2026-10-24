@@ -229,9 +229,11 @@ impl World {
         let room = (self.state.levels.get(&actor.level))
             .and_then(|level| level.room_effect_at(&self.content, actor.pos));
         let rate = room.map_or(rate, |effect| rate * u32::from(effect.regen) / 100);
-        let faster = actor.mods(&self.content).get(ItemEffect::Regeneration);
-        let faster = u32::try_from(faster.max(0)).unwrap_or(0);
-        rate * (100 + faster) / 100
+        // Then the regeneration of what it wears and wields, and its talents' (Healthy).
+        let faster = actor.mods(&self.content).get(ItemEffect::Regeneration)
+            + actor.talent_mods(&self.content).healing_percent;
+        let percent = u32::try_from((100 + faster).max(0)).unwrap_or(0);
+        rate * percent / 100
     }
 
     /// `seconds` of game time from `start` pass for actors `ids` (on the current level, in

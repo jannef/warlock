@@ -53,6 +53,16 @@ impl FreeBlows {
     pub fn is_none(&self) -> bool {
         *self == Self::default()
     }
+
+    /// Those of either: what the actor's own switches and its talents' give together.
+    pub fn either(self, other: Self) -> Self {
+        Self {
+            cleave: self.cleave || other.cleave,
+            great_cleave: self.great_cleave || other.great_cleave,
+            riposte: self.riposte || other.riposte,
+            opportunist: self.opportunist || other.opportunist,
+        }
+    }
 }
 
 fn is_false(b: &bool) -> bool {
@@ -125,7 +135,8 @@ pub(super) fn parried(blow: Option<Blow>) -> bool {
 impl World {
     /// The free blows actor `actor` is given: the one place the switches are read.
     pub(super) fn free_blows_of(&self, actor: &Actor) -> FreeBlows {
-        actor.free_blows
+        // Its own switches (class abilities), and those its talents turn on.
+        (actor.free_blows).either(actor.talent_mods(&self.content).free_blows)
     }
 
     /// Whether actor `id` still stands to strike or be struck: alive, and the run not over.
