@@ -1,0 +1,8 @@
+[[talent]]
+id = "hard_work"
+name = "Hard work"
+tree = "class"
+granted = true
+description = "A life of carrying things: a load slows you much less than it would."
+effects = [{ kind = "burden_ease", value = 60 }]
+systems = ["burden"]

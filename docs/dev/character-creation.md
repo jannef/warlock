@@ -17,7 +17,9 @@ potentials `base_potential` + the race's, never below the score. Flags for rules
 `data/races.toml` (`content/race.rs`: `Races` with `base_potential`, `RaceDef` with `vision`,
 `age`, `stats`, `potential`, `hp`, `natural`, `resist`, `light_blind`, `disease_check`,
 `eats_rotten`, `alignment`, `rolls`), `data/classes/` (`content/class.rs`:
-`ClassDef` with `stats`, `hp`, `alignment`, `known_for`, `rolls`; one file per class, `NN-id.toml` in the order offered; `Start::hp` is their sum, and `Start::alignment` the
+`ClassDef` with `stats`, `hp`, `alignment`, `known_for`, `rolls`, and the level table's
+`abilities` and `bonus_talents` (`docs/dev/progression.md` "Class tables"; level 1's are given
+in `start_run`); one file per class, `NN-id.toml` in the order offered; `Start::hp` is their sum, and `Start::alignment` the
 sum of their `alignment`s, the starting score, `docs/dev/alignment.md`),
 and `data/horoscope.toml` (`content/horoscope.rs`: `Horoscope` with `anchor_year`, `animals`,
 `elements`, `sign_of_year`, `great_cycle` (60), `name` ("Fire Manticore")); all optional.

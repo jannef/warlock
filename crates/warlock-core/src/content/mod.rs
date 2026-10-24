@@ -64,7 +64,7 @@ pub use affix::{
 pub use alignment::{AlignmentRules, BandDef, ByAlignment, Shifts};
 pub use anim::GlyphAnim;
 pub use calendar::Calendar;
-pub use class::ClassDef;
+pub use class::{BonusTalents, ClassDef};
 pub use creature::{
     Budge, Combat, CreatureDef, CreatureId, DEFAULT_SIGHT, Hide, NORMAL_SPEED, NaturalAttack,
     OnEat, SPEEDS,
@@ -121,7 +121,9 @@ pub use scroll::{Cast, Reading, ScrollSpell};
 pub use search::{
     PASSIVE_PENALTIES, PassiveSearch, SEARCH_TURNS, SearchRules, Secret, secret_look,
 };
-pub use shop::{KEEPER, Keeper, MAX_FAVOUR, MAX_SHOPS, ShopDef, ShopId, ShopPlan, Shops};
+pub use shop::{
+    KEEPER, Keeper, MAX_FAVOUR, MAX_SHOPS, MOST_FAVOUR, ShopDef, ShopId, ShopPlan, Shops,
+};
 pub use size::{CARRY, MEDIUM, SizeDef};
 pub use skill::{SkillBook, SkillDef};
 pub use sky::{MAX_MOONS, MAX_SIZE, MoonDef, PHASE_ONE, STANDARD_SIZE};
@@ -636,6 +638,7 @@ impl Content {
         if files.table("talents").next().is_some() {
             content.talents = talent::parse(files.table("talents"), &content)?;
         }
+        content.check_class_tables()?;
         let path = "data/horoscope.toml";
         if let Some(text) = files.get_optional(path) {
             content.horoscope = Some(Horoscope::parse(path, text)?);
@@ -2214,6 +2217,36 @@ impl Content {
     /// The class with id `id`.
     pub fn class(&self, id: &str) -> Option<&ClassDef> {
         self.classes.iter().find(|c| c.id == id)
+    }
+
+    /// Checks the classes' level tables against the talents (spec §8 "Class abilities"), then
+    /// the coverage bar (spec §8 "Talents"), counting as a system's class abilities the talents
+    /// the class tables give that name it, each once.
+    fn check_class_tables(&self) -> Result<(), ContentError> {
+        for class in &self.classes {
+            class.check_table(&self.talents)?;
+        }
+        let book = &self.talents;
+        let mut given: Vec<TalentId> = (self.classes.iter())
+            .flat_map(|c| c.abilities_to(book, MAX_LEVEL))
+            .collect();
+        given.sort();
+        given.dedup();
+        let class_abilities = |system: &str| {
+            let Some(system) = book.system_id(system) else {
+                return 0;
+            };
+            (given.iter())
+                .filter(|&&t| book.get(t).systems.contains(&system))
+                .count() as u32
+        };
+        match book.coverage_gap(&class_abilities) {
+            Some(gap) => Err(ContentError::new(
+                "data/talents.toml",
+                format!("coverage: {gap}"),
+            )),
+            None => Ok(()),
+        }
     }
 
     /// The alignment rules of `data/alignment.toml` (spec §8 "Alignment"); `None` without the

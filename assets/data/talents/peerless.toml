@@ -1,0 +1,8 @@
+[[talent]]
+id = "peerless"
+name = "Peerless"
+tree = "class"
+granted = true
+description = "When you find an opening you make the most of it: your critical blows land more surely."
+effects = [{ kind = "critical_confirm", value = 2 }]
+systems = ["combat"]

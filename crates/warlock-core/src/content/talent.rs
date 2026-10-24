@@ -58,6 +58,10 @@ pub struct TreeDef {
     pub pending: bool,
     /// It never needs a free talent: nothing picks from it alone (the birth signs' tree).
     pub no_free: bool,
+    /// Its talents are class abilities (spec §8 "Class abilities"): given by the class tables
+    /// (`data/classes/`), never picked, and counted by the coverage check as class abilities,
+    /// not talents.
+    pub class: bool,
 }
 
 /// A system of the game that talents may touch (`[[system]]` in the settings file): the
@@ -77,8 +81,7 @@ pub struct SystemDef {
 pub struct Coverage {
     /// The fewest talents a system may have.
     pub min_talents: u32,
-    /// The fewest class abilities a system may have (none exist yet: 0 until the class tables
-    /// land).
+    /// The fewest class abilities a system may have (0 until every class has its table).
     pub min_class: u32,
     /// The fewest talents without prerequisites a tree may have.
     pub free_per_tree: u32,
@@ -166,6 +169,9 @@ pub enum TalentEffect {
     /// into the actor's base hit points when the talent is taken and as each later level comes
     /// (as levels' own hit points are), so a talent taken early keeps growing.
     MaxHpPerLevels { per_levels: u8, at_least: i32 },
+    /// A stat's score and its potential, this much higher: handed out into the actor's stats
+    /// when the talent is taken or given (a class ability's gift), never read again.
+    Stat { stat: Stat, value: i32 },
     /// Hit points come back this percent faster (negative: slower).
     HealingPercent { value: i32 },
     /// Footsteps this percent louder (negative: quieter).
@@ -176,6 +182,10 @@ pub enum TalentEffect {
     Hearing { value: i32 },
     /// The carrying limit, this percent more.
     CarryPercent { value: i32 },
+    /// The carrying limit, this many kilograms more (on top of what magic items add).
+    CarryKg { value: i32 },
+    /// Coins it carries weigh nothing.
+    WeightlessCoins,
     /// Journeys on the overworld take this percent more time (negative: quicker).
     TravelPercent { value: i32 },
     /// Hunger burns this percent faster (negative: slower).
@@ -184,17 +194,47 @@ pub enum TalentEffect {
     NoExertion,
     /// Experience gained, this percent more.
     XpPercent { value: i32 },
+    /// The experience a quest gives, this percent more (before `xp_percent`).
+    QuestXpPercent { value: i32 },
+    /// The gold a quest gives, this percent more.
+    QuestGoldPercent { value: i32 },
+    /// Prices move this many percent more in its favour (spec §7 "Shops"), before the cap.
+    FavourPercent { value: i32 },
+    /// The cap on its favour, this many percent higher.
+    FavourCap { value: i32 },
+    /// Shops pay this percent more for what they buy from it, never more than they would ask.
+    SellPercent { value: i32 },
+    /// Keepers let it leave owing up to this much gold: the debt stays on their bill.
+    Credit { gold: u32 },
+    /// What it buys or sells in a shop is identified.
+    IdentifyTrades,
+    /// Item descriptions show what its things are worth.
+    ItemWorth,
+    /// Item descriptions show what each gem in a thing is worth.
+    GemWorth,
+    /// A magic item it has carried this many hours since it held the effect is identified.
+    IdentifyCarried { hours: u32 },
+    /// Loose gems it finds (on a level made after it held the effect, or dropped by a kill) are
+    /// cut this many grades finer, at most the finest.
+    GemCut { value: u8 },
     /// The actor notices hidden things in passing as if trained in Spot, with this much added.
     Notice { value: i32 },
+    /// A skill counts this much higher wherever its value is read (an untrained one from 0).
+    Skill { skill: String, value: i32 },
+    /// Anyone not hostile makes way for it (spec §8 "Displacement"), those keeping a post too.
+    MakeWay,
     /// A free blow the actor is given (spec §8 "Free blows").
     FreeBlow { trigger: FreeBlowTrigger },
     /// What attacks with some weapon skills gain, as their ranks give it
-    /// ([`super::Benefit`]): the chosen weapon skill or style's (no `role`; the talent takes a
-    /// choice), else every skill of `role`'s. `ranks`: its benefits read that many ranks higher
+    /// ([`super::Benefit`]): the weapon skill or style `skill` names, else the chosen one's (no
+    /// `role`; the talent takes a choice), else every skill of `role`'s. `ranks`: its benefits read that many ranks higher
     /// (a rank held, never past [`MAX_RANK`]); `bash` only where a free bash is had already.
     Weapon {
         #[serde(default)]
         role: Option<Role>,
+        /// A weapon skill or style by id: its benefits, whatever the choice (Fencing's duelist).
+        #[serde(default)]
+        skill: Option<String>,
         #[serde(default)]
         to_hit: i32,
         #[serde(default)]
@@ -218,18 +258,24 @@ pub enum TalentEffect {
     LauncherRange { value: i32 },
     /// Throws reach this many cells farther.
     ThrowRange { value: i32 },
+    /// Its missiles break this percent more often when they hit (negative: less often).
+    MissileBreaks { value: i32 },
     /// Worn armour's cap on Dexterity in Defence (`max_dex`), this much higher.
     MaxDex { value: i32 },
     /// Defence in the Deflection category, on top of what magic items give.
     Deflection { value: i32 },
     /// Protection, added to what is worn; only while the body armour worn has `body_armour`
-    /// Protection at least (if set), and only while holding a shield (if `shield`).
+    /// Protection at least (if set), only while holding a shield (if `shield`), and once for
+    /// every armour piece worn (if `per_piece`).
     Protection {
         value: i32,
         #[serde(default)]
         body_armour: Option<i32>,
         #[serde(default)]
         shield: bool,
+        /// For every piece of armour worn (anything worn with Protection of its own).
+        #[serde(default)]
+        per_piece: bool,
     },
     /// The to-hit penalty of combat stance `stance`, this percent smaller (100: none).
     StanceToHit { stance: CombatStance, percent: i32 },
@@ -264,6 +310,8 @@ pub enum TalentEffect {
     PenaltyPercent { value: i32 },
     /// Added to its disease checks: catching one and every progression.
     DiseaseChecks { value: i32 },
+    /// Added to every check of stat `stat` it makes (spec §8 "Checks").
+    Checks { stat: Stat, value: i32 },
     /// A disease needs this many checks fewer won in a row to be shaken off, never fewer than 1.
     DiseaseRecovery { value: i32 },
     /// Its kicks at creatures roll one die of this many sides instead of bare hands' dice.
@@ -276,16 +324,23 @@ pub enum TalentEffect {
     TwoHandedPrice { value: i32 },
     /// A critical it confirms in melee leaves the target suffering `status` (one degree).
     CriticalStatus { status: String },
+    /// Added to the roll that confirms its criticals (every attack).
+    CriticalConfirm { value: i32 },
     /// Its blows that can do damage of kind `damage` (an id in `data/damage_types.toml`) ignore this
     /// much more Protection.
     Penetration { damage: String, value: i32 },
     /// The burden's cap on its Dexterity in Defence, this much higher.
     BurdenDex { value: i32 },
+    /// Percent off the burden's slowdown, on top of what Balance takes off (60: Burdened ×1.10
+    /// instead of ×1.25).
+    BurdenEase { value: i32 },
     /// A trap it steps onto first gets a Dexterity check against its difficulty: won, it does
     /// not go off under it, and it is found (Light step).
     SureStep,
     /// Pits never catch it (Light step's second rank).
     PitProof,
+    /// It can disarm traps (the Disarm ability) without Disable device.
+    Disarm,
     /// It moves and acts this percent quicker (its speed; the number is hidden in the game).
     SpeedPercent { value: i32 },
     /// Dodge added against shots, throws, and trap missiles.
@@ -347,10 +402,49 @@ impl TalentEffect {
             | TalentEffect::DiseaseRecovery { value }
             | TalentEffect::DoorKick { value }
             | TalentEffect::BurdenDex { value }
-            | TalentEffect::MissileDodge { value } => bonus(*value),
+            | TalentEffect::MissileDodge { value }
+            | TalentEffect::CarryKg { value }
+            | TalentEffect::Checks { value, .. }
+            | TalentEffect::CriticalConfirm { value } => bonus(*value),
+            TalentEffect::Stat { value, .. } => {
+                if *value == 0 || !(-5..=5).contains(value) {
+                    return Err("`stat`: value is -5 to 5, not 0".into());
+                }
+                Ok(())
+            }
+            TalentEffect::Skill { skill, value } => {
+                if !content.skills().is_empty() && content.skill_id(skill).is_none() {
+                    return Err(format!("names an unknown skill `{skill}`"));
+                }
+                percent(*value)
+            }
+            TalentEffect::Credit { gold } => {
+                if !(1..=1000).contains(gold) {
+                    return Err("`credit`: gold is 1 to 1000".into());
+                }
+                Ok(())
+            }
+            TalentEffect::IdentifyCarried { hours } => {
+                if !(1..=240).contains(hours) {
+                    return Err("`identify_carried`: hours is 1 to 240".into());
+                }
+                Ok(())
+            }
+            TalentEffect::GemCut { value } => {
+                if !(1..=5).contains(value) {
+                    return Err("`gem_cut`: value is 1 to 5".into());
+                }
+                Ok(())
+            }
             TalentEffect::Protection {
-                value, body_armour, ..
+                value,
+                body_armour,
+                shield,
+                per_piece,
             } => {
+                if *per_piece && (body_armour.is_some() || *shield) {
+                    return Err("`protection`: per_piece asks nothing else".into());
+                }
                 bonus(*value)?;
                 match body_armour {
                     Some(at) if !(1..=20).contains(at) => {
@@ -369,6 +463,7 @@ impl TalentEffect {
             },
             TalentEffect::Weapon {
                 role,
+                skill,
                 to_hit,
                 damage,
                 threat,
@@ -379,10 +474,20 @@ impl TalentEffect {
                 bash,
                 shield,
             } => {
-                if role.is_none() && !matches!(choice, Some(Choice::WeaponSkill | Choice::Style)) {
+                if let Some(id) = skill {
+                    if role.is_some() {
+                        return Err("`weapon` names a `role` or a `skill`, not both".into());
+                    }
+                    let table = content.weapon_skills();
+                    if !table.skills().is_empty() && table.id(id).is_none() {
+                        return Err(format!("names an unknown weapon skill `{id}`"));
+                    }
+                } else if role.is_none()
+                    && !matches!(choice, Some(Choice::WeaponSkill | Choice::Style))
+                {
                     return Err(
-                        "`weapon` without a `role` is for the chosen weapon skill or \
-                                style: it needs that `choice`"
+                        "`weapon` without a `role` or a `skill` is for the chosen weapon skill \
+                         or style: it needs that `choice`"
                             .into(),
                     );
                 }
@@ -411,7 +516,14 @@ impl TalentEffect {
             | TalentEffect::DigPercent { value }
             | TalentEffect::TwoHandedPrice { value }
             | TalentEffect::SpeedPercent { value }
-            | TalentEffect::SpellDamagePercent { value } => percent(*value),
+            | TalentEffect::SpellDamagePercent { value }
+            | TalentEffect::QuestXpPercent { value }
+            | TalentEffect::QuestGoldPercent { value }
+            | TalentEffect::FavourPercent { value }
+            | TalentEffect::FavourCap { value }
+            | TalentEffect::SellPercent { value }
+            | TalentEffect::MissileBreaks { value }
+            | TalentEffect::BurdenEase { value } => percent(*value),
             TalentEffect::StatusEases { status: id, value } => {
                 status(id)?;
                 percent(*value)
@@ -460,7 +572,13 @@ impl TalentEffect {
             | TalentEffect::IronStomach
             | TalentEffect::Clotting
             | TalentEffect::SureStep
-            | TalentEffect::PitProof => Ok(()),
+            | TalentEffect::PitProof
+            | TalentEffect::WeightlessCoins
+            | TalentEffect::IdentifyTrades
+            | TalentEffect::ItemWorth
+            | TalentEffect::GemWorth
+            | TalentEffect::MakeWay
+            | TalentEffect::Disarm => Ok(()),
         }
     }
 }
@@ -715,6 +833,11 @@ impl TalentBook {
         &self.trees[usize::from(id.0)]
     }
 
+    /// Whether it has a class tree: whether the classes' level tables give anything.
+    pub fn has_class_tree(&self) -> bool {
+        self.trees.iter().any(|t| t.class)
+    }
+
     pub fn tree_id(&self, name: &str) -> Option<TreeId> {
         (self.trees.iter().position(|t| t.id == name)).map(|i| TreeId(i as u8))
     }
@@ -734,8 +857,9 @@ impl TalentBook {
     }
 
     /// The coverage check (spec §8 "Talents"): every system not `pending` has at least
-    /// `min_talents` talents and `min_class` class abilities (`class_abilities` counts them by
-    /// system id; none exist yet), and every tree not `pending` nor `no_free` has at least
+    /// `min_talents` talents (those of a class tree are class abilities, not talents) and
+    /// `min_class` class abilities (`class_abilities` counts them by system id: the talents the
+    /// class tables give), and every tree not `pending`, `no_free`, nor a class tree has at least
     /// `free_per_tree` talents without prerequisites. The first gap, in words.
     pub fn coverage_gap(&self, class_abilities: &dyn Fn(&str) -> u32) -> Option<String> {
         let bar = self.coverage;
@@ -743,7 +867,9 @@ impl TalentBook {
             if system.pending {
                 continue;
             }
-            let talents = self.of_system(SystemId(i)).count() as u32;
+            let talents = (self.of_system(SystemId(i)))
+                .filter(|(_, t)| !self.tree(t.tree).class)
+                .count() as u32;
             if talents < bar.min_talents {
                 return Some(format!(
                     "system `{}` has {talents} talent{} but at least {} are needed (mark it \
@@ -764,7 +890,7 @@ impl TalentBook {
             }
         }
         for (i, tree) in (0u8..).zip(&self.trees) {
-            if tree.pending || tree.no_free {
+            if tree.pending || tree.no_free || tree.class {
                 continue;
             }
             let free = self.of_tree(TreeId(i)).filter(|(_, t)| t.is_free()).count() as u32;
@@ -805,6 +931,8 @@ struct TreeSpec {
     pending: bool,
     #[serde(default)]
     no_free: bool,
+    #[serde(default)]
+    class: bool,
 }
 
 #[derive(Deserialize)]
@@ -1096,6 +1224,7 @@ pub(super) fn parse<'a>(
             description: t.description,
             pending: t.pending,
             no_free: t.no_free,
+            class: t.class,
         });
     }
     let mut system_files: BTreeMap<String, &str> = BTreeMap::new();
@@ -1163,6 +1292,12 @@ pub(super) fn parse<'a>(
         }
         let tree = (book.tree_id(&spec.tree))
             .ok_or_else(|| err(format!("unknown tree `{}`", spec.tree)))?;
+        if book.tree(tree).class && !spec.granted {
+            return Err(err(format!(
+                "is in the class tree `{}`: a class ability needs `granted = true`",
+                spec.tree
+            )));
+        }
         if spec.systems.is_empty() {
             return Err(err(
                 "names no `systems` (the coverage list in data/talents.toml)".into(),
@@ -1245,9 +1380,6 @@ pub(super) fn parse<'a>(
                 ));
             }
         }
-    }
-    if let Some(gap) = book.coverage_gap(&|_| 0) {
-        return Err(ContentError::new(first_file, format!("coverage: {gap}")));
     }
     Ok(book)
 }
