@@ -108,7 +108,7 @@ pub(super) struct TerrainSpec {
     /// open (its wall face).
     pub face: Option<String>,
     /// Water: how ice grows on it (spec §5 "Ice").
-    pub freeze: Option<Freeze>,
+    pub freeze: Option<FreezeSpec>,
     /// Ice: the thinnest ice that looks like this, in mm (spec §5 "Ice"); it lies on water.
     pub ice: Option<u16>,
     pub anim: Option<GlyphAnim>,
@@ -124,18 +124,44 @@ fn yes() -> bool {
     true
 }
 
-/// How water freezes (spec §5 "Ice"): the `freeze` table of a water terrain.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+/// The `freeze` table of a water terrain as data writes it (spec §5 "Ice"): [`Freeze`] with
+/// the kind of damage the plunge does by name (`damage_type = "cold"`).
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
+pub struct FreezeSpec {
+    pub below: i8,
+    #[serde(default = "full_rate")]
+    pub rate: u8,
+    pub plunge: Dice,
+    /// The kind of damage the plunge does (spec §8 "Damage types": cold).
+    pub damage_type: Option<String>,
+}
+
+impl FreezeSpec {
+    /// The freeze it describes, its plunge of `kind`.
+    pub(super) fn resolve(&self, kind: Option<super::DamageTypeId>) -> Freeze {
+        Freeze {
+            below: self.below,
+            rate: self.rate,
+            plunge: self.plunge,
+            kind,
+        }
+    }
+}
+
+/// How water freezes (spec §5 "Ice"): the `freeze` table of a water terrain.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Freeze {
     /// Ice grows on it while the air is colder than this, in °C: still water at 0, running water
     /// only in a harder frost. It melts above 0.
     pub below: i8,
     /// How fast it grows, in percent of still water's pace (1 to 100).
-    #[serde(default = "full_rate")]
     pub rate: u8,
     /// The hit points a fall through the ice into it takes (dice; it never takes the last one).
     pub plunge: Dice,
+    /// The kind of damage the plunge does (cold; spec §8 "Damage types"), which the one who
+    /// falls in resists; `None`: untyped.
+    pub kind: Option<super::DamageTypeId>,
 }
 
 fn full_rate() -> u8 {

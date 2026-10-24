@@ -1,0 +1,9 @@
+[[talent]]
+id = "stylist"
+name = "Stylist"
+tree = "weaponcraft"
+choice = "style"
+description = "You fight in your chosen style as one more practised than you are."
+needs = { chosen = 3 }
+effects = [{ kind = "weapon", ranks = 1 }]
+systems = ["styles"]

@@ -784,3 +784,33 @@ fn a_remedy_cures_every_disease_as_it_is_eaten_even_grave_rot() {
     assert!(w.state.player().diseases.get(grave_rot).is_none());
     assert_eq!(count_of(&w.state.player().inventory, root), 0);
 }
+
+#[test]
+fn iron_stomach_keeps_rotten_food_and_too_much_down() {
+    // Both chances to vomit certain: with Iron stomach (spec §8 "Talents") neither comes.
+    let content = content_with(&[
+        (
+            "[overeating]\nchoke = 0\nvomit = 50",
+            "[overeating]\nchoke = 0\nvomit = 100",
+        ),
+        ("[rotten]\nvomit = 50", "[rotten]\nvomit = 100"),
+    ]);
+    let mut w = world_in(&content, "pantry");
+    w.player_mut().talents.take("iron_stomach", None);
+    set_nutrition(&mut w, 6000);
+    w.apply(&Action::Eat(Meal::Floor(0)));
+    assert!(!said(&w, "You vomit!"));
+    assert!(said(&w, "You have a hard time getting it all down."));
+    let mut w = world_in(&content, "pantry");
+    w.player_mut().talents.take("iron_stomach", None);
+    let corpse = object(&w, "kobold_corpse");
+    let died = GameTime::from_seconds(w.time().seconds() - 10 * 3600);
+    let here = w.player_pos();
+    w.state
+        .current_mut()
+        .set_pile(here, vec![Stack::corpse(corpse, died)]);
+    w.apply(&Action::Eat(Meal::Floor(0)));
+    assert!(said(&w, "Ugh! The kobold corpse was rotten."));
+    assert!(!said(&w, "You vomit!"));
+    assert!(nutrition(&w) > 3900, "kept down, it feeds");
+}

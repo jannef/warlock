@@ -37,8 +37,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     count) times the markup, less the player's **favour**, rounded up and at least 1; an offer is
     the value times `pays`, plus the favour, rounded down, never more than the shop asks for the
     same. The favour (`world::favour`) is `presence` percent for each point of the Presence
-    modifier plus the Appraise skill's `bargain` benefit (§8 "Skills": 20 % at 100), together at
-    most 50 % either way. Only the prices are ever shown.
+    modifier plus the Appraise skill's `bargain` benefit (§8 "Skills": 20 % at 100), plus, at a
+    good shopkeeper's (every keeper is good), what their alignment band gives (`[shops] favour`
+    in `data/alignment.toml`, §8 "Alignment": Saintly 10, Evil −10, Wicked −20), together at
+    most 50 % either way. Only the prices are ever shown, and they include all of it.
   - **Buying**: stepping onto the shop floor from outside the keeper greets the player
     ("Welcome to Grimbold's General Store!"). While the keeper trades (`ShopStatus::Open`),
     everything traded lying on the shop floor is for sale: stepping onto it says the price ("You

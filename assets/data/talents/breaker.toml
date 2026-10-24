@@ -1,0 +1,8 @@
+[[talent]]
+id = "breaker"
+name = "Breaker"
+tree = "might"
+description = "Walls and doors yield to you: your door kicks are mightier still, and you dig faster."
+needs = { talents = { mighty_kick = 1 }, stats = { strength = 14 } }
+effects = [{ kind = "door_kick", value = 4 }, { kind = "dig_percent", value = 25 }]
+systems = ["doors", "digging"]

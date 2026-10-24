@@ -1,0 +1,27 @@
+[[class]]
+id = "merchant"
+name = "Merchant"
+description = "A trader who knows the price of everything: shrewd and persuasive, softened by years behind a counter."
+stats = { strength = -1, dexterity = -1, toughness = -1, intelligence = "1d2", presence = "1d3" }
+hp = 2
+mana = 2
+experience = 90
+skills = { appraise = "2d6+10", bluff = "2d6+10", knowledge = "2d4+4" }
+known_for = ["appraise", "bluff"]
+rolls = 2
+weapon_skills = { daggers = 1 }
+# Goods and gems: a purse, two stones to trade, and a pack of wares (cloaks, candles, rope,
+# dried meat, and a scroll of identify for appraising), heavy enough to slow the weaker.
+kit = [
+    { wield = "dagger" },
+    { wear = "travelling_cloak" },
+    { wear = "leather_boots" },
+    "gem:garnet|gem:amethyst|gem:topaz",
+    "gem:garnet|gem:amethyst|gem:topaz",
+    "gold_coin*120",
+    "wool_cloak*2",
+    "candle*10",
+    "rope",
+    "dried_meat*4",
+    "scroll_of_identify",
+]

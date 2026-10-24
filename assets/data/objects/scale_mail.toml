@@ -6,11 +6,14 @@ glyph = "["
 fg = "#a0a8a4"
 class = "body_armour"
 materials = ["iron"]
+made_of = ["metal", "bone", "dragonscale"]
 weight = 14000
 value = 300
 slot = "body"
 armour = 2
 protection = 4
+# Scales turn a blade; a blow dents them.
+protects = { slashing = 1, bludgeoning = -1 }
 max_dex = 3
 kind = "body"
 level = 4

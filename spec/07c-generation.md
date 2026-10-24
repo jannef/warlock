@@ -11,7 +11,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `[2, 4]`, at most 50), how many doors its rooms levels hide (`secret_doors = [least, most]`,
   at most 20, default none; the Depths `[1, 2]`; §8 "Searching") and how much harder its hidden
   features are for each level below the first (`hidden_per_depth`, 0 to 5, default 0; the Depths
-  1), ambient light, `loot = [fewest, most]` (items of loot on each
+  1), how much harder its locks are to pick for each level below the first, on top of each lock's
+  own difficulty (`locks_per_depth`, 0 to 5, default 0; the Depths 1; §8 "Doors"), ambient light, `loot = [fewest, most]` (items of loot on each
   level's floor, at most 50; the Depths 2 to 4; §8 "Magic items"), `temperature` (°C, −40 to 40;
   default 10; §5 "Temperature"), a `key` (a key object: its rooms levels lock a few rooms with
   the lock it opens, §8 "Doors"; the Depths' is the rusty key), and per-depth overrides of

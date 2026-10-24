@@ -10,6 +10,8 @@ glyph = "@"
 fg = "#e0c070"
 speed = 1200
 faction = "merchants"
+alignment = "good"
+race = "human"
 # It keeps to its post by the door: it does not swap places with you there.
 budge = "off_post"
 sight = 12

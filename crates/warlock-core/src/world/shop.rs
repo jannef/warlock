@@ -33,8 +33,9 @@
 //! Prices follow the player's favour ([`favour`]): their Presence and their Appraise skill, never
 //! shown but as gold.
 
-use super::{ActorId, Spent, World};
+use super::{ActorId, Deed, Spent, World};
 use crate::action::{Event, Meal, Positions};
+use crate::content::StatUse;
 use crate::content::{ActionKind, Content, MAX_FAVOUR, ShopId, ShopPlan, Shops, TerrainId};
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
@@ -212,11 +213,13 @@ pub fn unpaid_parts(inventory: &[Stack], unpaid: &[Stack]) -> Vec<u32> {
 
 /// How far prices move in `actor`'s favour, in percent (spec §7 "Shops"): the shops' `presence`
 /// for each point of their Presence modifier, plus what their skills give (Appraise's
-/// bargaining), at most [`MAX_FAVOUR`] either way. Never shown.
+/// bargaining), plus what a good keeper makes of their alignment (spec §8 "Alignment"), at most
+/// [`MAX_FAVOUR`] either way. Never shown.
 pub fn favour(content: &Content, shops: &Shops, actor: &super::Actor) -> i32 {
     let presence = actor.stats.modifier(Stat::Presence) * i32::from(shops.presence);
     let bargain = actor.skills.effect(content, Effect::Bargain);
-    (presence + bargain).clamp(-MAX_FAVOUR, MAX_FAVOUR)
+    let alignment = super::alignment::keeper_favour(content, shops, actor);
+    (presence + bargain + alignment).clamp(-MAX_FAVOUR, MAX_FAVOUR)
 }
 
 /// How many of `object` `stacks` hold.
@@ -405,6 +408,8 @@ impl World {
         self.hand_over(self.state.player, shop.keeper, owed);
         self.state.current_mut().shops[i].unpaid.clear();
         self.say(format!("You pay {} {owed} gold.", shop.name));
+        self.train_stat(StatUse::Trade);
+        self.player_did(Deed::PaidDebt);
         Spent::NoTime
     }
 
@@ -493,6 +498,7 @@ impl World {
                 "You sell {what} to {name} for {} gold.",
                 deal.payment
             ));
+            self.train_stat(StatUse::Trade);
         }
         Some(spent)
     }
@@ -622,6 +628,7 @@ impl World {
                 self.say(format!(
                     "You leave without paying. \"Stop, thief!\" shouts {name}."
                 ));
+                self.player_did(Deed::Theft);
             }
         }
     }
@@ -650,6 +657,7 @@ impl World {
         self.outrage(i);
         self.news
             .push(format!("\"You will pay for that!\" shouts {name}."));
+        self.player_did(Deed::AttackedShopkeeper);
     }
 
     /// Actor `id` on level `level` died: a shop it kept is abandoned, its goods free to take.

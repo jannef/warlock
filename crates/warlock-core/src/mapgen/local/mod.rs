@@ -333,6 +333,7 @@ fn graze(land: &mut Land, rng: &mut Rng, count: i32, start: Pos) {
             land.creatures.push(CreatureSpawn {
                 creature: land.kit.deer,
                 faction: None,
+                alignment: None,
                 npc: None,
                 pos: p,
                 route,

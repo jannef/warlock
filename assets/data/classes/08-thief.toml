@@ -1,0 +1,26 @@
+[[class]]
+id = "thief"
+name = "Thief"
+description = "A cutpurse, burglar, and picker of locks who lives by nimble fingers and a quick wit."
+stats = { strength = -1, dexterity = "1d3+1", intelligence = "1d2-1", willpower = -1 }
+hp = 3
+mana = 1
+experience = 95
+alignment = -200
+skills = { open_lock = "2d6+10", steal = "2d6+10", stealth = "2d6+10", tumble = "2d6+10", appraise = "2d4+4", disable_device = "2d4+4", escape_artist = "2d4+4", search = "2d4+4", spot = "2d4+4" }
+known_for = ["open_lock", "steal", "stealth", "tumble"]
+rolls = 3
+weapon_skills = { daggers = 2, thrown = 1 }
+style_choice = [{ twin_blades = 1 }, { duelist = 1 }]
+# A dagger (two, for Twin Blades; a stiletto up the sleeve for the Duelist), dark leathers, and
+# a purse that was someone else's.
+kit = [
+    { wield = "dagger" },
+    { wield = "dagger", trained = "twin_blades" },
+    { carry = "stiletto", trained = "duelist" },
+    { wear = "leather_jerkin" },
+    { wear = "wool_cloak" },
+    { wear = "leather_gloves" },
+    "bread",
+    "gold_coin*25",
+]

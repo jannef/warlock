@@ -5,9 +5,11 @@ glyph = "["
 fg = "#b0a080"
 class = "body_armour"
 materials = ["cloth"]
+made_of = ["cloth"]
 weight = 4000
 value = 20
 slot = "body"
 armour = 1
+resist = { cold = 10 }
 max_dex = 8
 kind = "body"

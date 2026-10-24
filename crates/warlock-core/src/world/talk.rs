@@ -25,6 +25,7 @@
 
 use super::{Actor, ActorId, ActorKind, Spent, World};
 use crate::action::Event;
+use crate::content::StatUse;
 use crate::content::{ActionKind, Budge, Dialogue, DialogueId, Stance};
 use crate::geom::{Dir, Pos};
 use crate::noise::{self, Act, Heard, SoundKind, Volume};
@@ -135,7 +136,7 @@ fn shuffle(key: u64, round: u32, n: usize) -> Vec<usize> {
 impl World {
     /// The key of `actor`'s rotation of `what` (its one-liners or its mutters): the run's seed
     /// and the actor, so each speaker has an order of its own.
-    fn rotation_key(&self, actor: ActorId, what: &[u8]) -> u64 {
+    pub(super) fn rotation_key(&self, actor: ActorId, what: &[u8]) -> u64 {
         let label = [what, &actor.0.to_le_bytes()].concat();
         crate::weather::draw(self.state.seed, &label, 0)
     }
@@ -183,7 +184,7 @@ impl World {
         let Some(id) = self.dialogue_of(actor) else {
             return Vec::new();
         };
-        let mut topics = self.quest_topics(id);
+        let mut topics = self.quest_topics(id, self.scorns(actor));
         topics.extend(self.content.dialogue(id).topics.iter().map(|t| TopicView {
             id: t.id.clone(),
             name: t.name.clone(),
@@ -206,8 +207,11 @@ impl World {
         let actor = &self.state.actors[&id];
         let d = self.content.dialogue(dialogue);
         let talk = actor.talk;
-        let line = match &d.greet {
-            Some(greet) if !talk.met => greet.clone(),
+        // Someone who scorns the player for their alignment greets them coldly instead.
+        let cold = self.cold_greeting(id, d, talk.said);
+        let line = match (cold, &d.greet) {
+            (Some(cold), _) => cold,
+            (None, Some(greet)) if !talk.met => greet.clone(),
             _ => self.one_liner(id, d, talk.said),
         };
         if let Some(actor) = self.state.actors.get_mut(&id) {
@@ -217,6 +221,7 @@ impl World {
             actor.talk.met = true;
         }
         self.answer(id, line, None, events);
+        self.train_stat(StatUse::Chat);
         Spent::Turn(price)
     }
 
@@ -433,6 +438,7 @@ impl World {
         self.after_tread(id, to, footing, events);
         self.make_noise(id, Act::Step(to));
         self.say(format!("You swap places with {who}."));
+        self.train_stat(StatUse::Swapped);
         let extra = self.tread_price(id, footing) + self.step_onto_trap(to, id, events);
         if let Some(actor) = self.state.actors.get_mut(&id) {
             actor.energy = actor.energy.saturating_sub(extra);

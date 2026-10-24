@@ -11,6 +11,7 @@
 //! | What a creature drops when it dies | `drop/<actor id>` | never; derived on demand |
 //! | Gameplay | `gameplay` | in [`crate::WorldState`], so saves continue it |
 //! | Training marks' chances (skills) | `training` | in [`crate::WorldState`] |
+//! | What level-ups roll (skill rolls, stat checks) | `levels` | in [`crate::WorldState`], from the first draw |
 //! | The stat gender "other" raises | `character/gender` | never; derived on demand |
 //! | A new character's age and birthday | `character/birth/<race>` | never |
 //! | A new character's dice | `character/rolls/<race>,<gender>,<class>` | never |
@@ -45,6 +46,14 @@ impl Rng {
     /// kept apart from the gameplay stream so training never changes a fight's rolls.
     pub fn training(run_seed: u64) -> Self {
         Self::stream(run_seed, "training")
+    }
+
+    /// The levels stream of a run (spec §8 "Talents"): what level-ups roll (skill rolls, stat
+    /// checks), apart from the gameplay stream so a level moves no fight, and apart from
+    /// training so marks and level-ups never shift each other. The world state keeps it from
+    /// the first draw on.
+    pub fn levels(run_seed: u64) -> Self {
+        Self::stream(run_seed, "levels")
     }
 
     /// The map-generation stream for `level`; `attempt` > 0 derives the stream for a retry after

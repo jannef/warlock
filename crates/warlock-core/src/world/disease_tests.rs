@@ -566,6 +566,7 @@ fn bites_expose_their_target_who_resists_with_a_check() {
     let blow = Blow {
         strike: Strike::Hit { critical: false },
         damage: 1,
+        kind: None,
     };
     let caught = |seed: u64, toughness: u8| {
         let scenario = format!("stats = {{ toughness = {toughness} }}\nhp = 1000");
@@ -677,7 +678,11 @@ fn a_creature_killed_by_a_disease_the_player_gave_it_is_their_kill() {
         assert_eq!(count(&w, "The giant rat succumbs to disease."), 1);
         w.player_xp()
     };
-    assert_eq!(rot(Some(ActorId(0))), 5, "the player's doing: their kill");
+    assert_eq!(
+        rot(Some(ActorId(0))),
+        10,
+        "the player's doing: their kill, the first of its kind"
+    );
     assert_eq!(rot(None), 0);
 }
 

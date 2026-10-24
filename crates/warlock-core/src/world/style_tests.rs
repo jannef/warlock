@@ -617,7 +617,7 @@ fn two_weapons_strike_twice_at_penalties_twin_blades_eases() {
     assert_eq!(training(&w, "duelist"), Training::default());
     // The off hand's blow is made with the dagger, and worded so ("parries your dagger").
     let me = w.state.player();
-    let words = super::fight::Words::of(me, AttackKind::Melee, Some(dagger), &content);
+    let words = super::fight::Words::of(me, AttackKind::Melee, Some(dagger), None, &content);
     assert_eq!(words, super::fight::Words::test("dagger", "hits"));
 }
 
@@ -778,11 +778,14 @@ fn starting_styles_come_from_the_class_and_move_no_other_roll() {
     // Styles roll from their own stream: without them the stats and the weapon skills are the
     // same.
     let mut files = ContentFiles::builtin();
-    let stripped: String = (include_str!("../../../../assets/data/classes.toml").lines())
-        .filter(|l| !l.starts_with("style"))
-        .map(|l| format!("{l}\n"))
-        .collect();
-    files.insert("data/classes.toml", &stripped);
+    files.edit_table("classes", |text| {
+        // Kit lines that go with what a class trains go too (some would name a style the class
+        // no longer trains).
+        (text.lines())
+            .filter(|l| !l.starts_with("style") && !l.contains("trained ="))
+            .map(|l| format!("{l}\n"))
+            .collect()
+    });
     let without = Content::load(&files).expect("valid");
     let start = BUILTIN.scenario("showcase").expect("showcase").start;
     for character in [

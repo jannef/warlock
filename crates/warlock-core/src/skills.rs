@@ -9,26 +9,29 @@
 //!   actor, is never shown, and gives nothing. That is not the same as a value of 0, which is
 //!   trained (and shown) but gives little.
 //! - **Values** start from what the race and the class grant (dice, rolled when the character is
-//!   made, [`roll_grants`]), or what a creature type lists, and grow without a hard cap: past the
-//!   soft cap (100) points come slowly ([`Increase`]). At most [`MAX_VALUE`].
+//!   made, [`roll_grants`]), or what a creature type lists, and grow only by **level-up rolls**
+//!   (spec §8 "Skills"; `world/skill_roll.rs`): past the soft cap (100) a roll adds half
+//!   ([`RollRules`]). At most [`MAX_VALUE`].
 //! - **Training marks**: a meaningful use of a skill ([`Use`]) may earn it a mark, with the
 //!   chance its rule in data gives ([`MarkRule`]), drawn from the run's own training stream
-//!   (never the gameplay stream, so training never changes a fight's rolls). **[provisional]**
-//!   When the marks reach [`Increase::need`] of the value, the skill gains a point
-//!   ([`Skills::mark`]). Only the player trains, for now.
+//!   (never the gameplay stream, so training never changes a fight's rolls). Marks are a
+//!   reservoir ([`Skills::mark`]): they raise nothing by themselves but set the die of the
+//!   skill's next level-up roll on the [`Ladder`], and the roll consumes half of them
+//!   ([`Skills::roll`]). Only the player trains, for now.
 //! - **Benefits**: a skill may give passive effects ([`Effect`]) that grow with its value
 //!   ([`Benefit`]). The rules ask an actor's skills for an effect ([`Skills::effect`]); its
 //!   untrained skills add nothing.
 //!
-//! What the player sees: their own trained skills with their values, and a coarse sense of
-//! progress toward the next point ([`progress`]). Never a benefit's number, a mark, or a chance.
+//! What the player sees: their own trained skills with their values, and a coarse sense of how
+//! practised each is (its ladder step, [`progress`]). Never a benefit's number, a mark, or a chance.
 //!
 //! **Pending hooks** (extension points for rules not on main yet): athletics will shorten the
 //! turns stuck in a pit (#128), and escape artist will take a turn off being stuck per 33 points
 //! (#128). Each becomes one more [`Effect`] (and a [`Use`] for its marks: a climb) read in that
 //! one place, with its numbers in `data/skills.toml`; until then escape artist is trained and
 //! shown but gives nothing. Athletics already adds to the Strength a kick at a door is rolled
-//! against ([`Effect::Kick`], [`Use::Kick`]).
+//! against ([`Effect::Kick`], [`Use::Kick`]), and Open lock to picking a lock ([`Effect::Pick`],
+//! [`Use::Pick`]).
 
 use crate::content::Content;
 use crate::dice::Dice;
@@ -41,18 +44,24 @@ use std::ops::RangeInclusive;
 /// The highest value a skill can reach.
 pub const MAX_VALUE: u16 = 999;
 
-/// What a grant (a race's or a class's dice, `data/races.toml`, `data/classes.toml`) may give:
+/// What a grant (a race's or a class's dice, `data/races.toml`, `data/classes/`) may give:
 /// every result its dice can have lies within.
 pub const GRANTS: RangeInclusive<i32> = 0..=100;
 
-/// How finely the player senses their progress toward a skill's next point: in quarters.
+/// How finely the player senses how practised a skill is (its ladder step): in quarters.
 pub const PROGRESS_STEPS: u8 = 4;
 
 /// The most a skill adds to searching or to noticing in passing (spec §8 "Searching").
 pub const MAX_SEARCH_BONUS: i32 = 20;
 
+/// The most a skill adds to disarming a trap (spec §8 "Disarming traps").
+pub const MAX_DISARM_BONUS: i32 = 20;
+
 /// The most cells farther a search may reach than the cells around the searcher.
 pub const MAX_SEARCH_REACH: i32 = 2;
+
+/// The most a skill adds to picking a lock (spec §8 "Doors").
+pub const MAX_PICK_BONUS: i32 = 20;
 
 /// Index of a skill in [`Content::skills`]: in file order.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
@@ -100,6 +109,9 @@ pub enum Effect {
     /// Points added to noticing hidden features in passing (spec §8 "Searching"); a skill with
     /// it, trained, lets the actor notice them at all.
     Spot,
+    /// Points added to disarming a trap (spec §8 "Disarming traps"; `world/disarm.rs`); a skill
+    /// with it, trained, lets the actor disarm traps at all (the Disarm ability).
+    Disarm,
     /// Percent less of the burden's slowdown (spec §8 "Burden"): Burdened ×1.25 becomes ×1.10
     /// at 60.
     Burden,
@@ -111,6 +123,9 @@ pub enum Effect {
     /// Points added to the Strength score a kick at a closed door is rolled against (spec §8
     /// "Doors"; `world/door.rs`).
     Kick,
+    /// Points added to picking a lock (spec §8 "Doors"; `world/lockpick.rs`); a skill with it,
+    /// trained, lets the actor pick locks at all (the Pick lock ability).
+    Pick,
 }
 
 impl Effect {
@@ -121,6 +136,8 @@ impl Effect {
             Effect::Quiet | Effect::Burden | Effect::Travel | Effect::Bargain => 100,
             Effect::Kick => *crate::stats::SCORES.end() as i32,
             Effect::Search | Effect::Spot => MAX_SEARCH_BONUS,
+            Effect::Disarm => MAX_DISARM_BONUS,
+            Effect::Pick => MAX_PICK_BONUS,
             Effect::SearchReach => MAX_SEARCH_REACH,
         }
     }
@@ -138,6 +155,8 @@ pub enum Use {
     Search,
     /// Noticing something hidden in passing (spec §8 "Searching").
     Spot,
+    /// An attempt to disarm a trap (spec §8 "Disarming traps"), whatever comes of it.
+    Disarm,
     /// An attack that missed because the actor dodged it (the Dexterity or Dodge category).
     Dodge,
     /// An action taken (not waiting) while the burden slows the actor.
@@ -146,6 +165,8 @@ pub enum Use {
     Travel,
     /// A kick at a closed door (spec §8 "Doors").
     Kick,
+    /// A try at picking a lock (spec §8 "Doors"), whatever comes of it.
+    Pick,
 }
 
 impl Use {
@@ -156,10 +177,12 @@ impl Use {
             Use::Hear => "hearing something new",
             Use::Search => "a turn spent searching",
             Use::Spot => "noticing something hidden in passing",
+            Use::Disarm => "trying to disarm a trap",
             Use::Dodge => "dodging an attack",
             Use::Burdened => "acting (not waiting) while your load slows you",
             Use::Travel => "a journey on the overworld",
             Use::Kick => "kicking at a closed door",
+            Use::Pick => "a try at picking a lock",
         }
     }
 }
@@ -257,10 +280,12 @@ impl Use {
             Use::Hear => "hear",
             Use::Search => "search",
             Use::Spot => "spot",
+            Use::Disarm => "disarm",
             Use::Dodge => "dodge",
             Use::Burdened => "burdened",
             Use::Travel => "travel",
             Use::Kick => "kick",
+            Use::Pick => "pick",
         }
     }
 }
@@ -275,10 +300,12 @@ impl Effect {
             Effect::Search => "search",
             Effect::SearchReach => "search_reach",
             Effect::Spot => "spot",
+            Effect::Disarm => "disarm",
             Effect::Burden => "burden",
             Effect::Travel => "travel",
             Effect::Bargain => "bargain",
             Effect::Kick => "kick",
+            Effect::Pick => "pick",
         }
     }
 }
@@ -313,68 +340,140 @@ impl Benefit {
     }
 }
 
-/// **[provisional]** How training marks become points (#132). The owner has not decided how
-/// skills increase; this is the first of the options (marks alone; later perhaps ADOM's level-up
-/// dice per class, or marks that count only once the player rests). Every number is data
-/// (`[increase]` in `data/skills.toml`).
-///
-/// A skill gains a point when its marks reach `need(value)`: [`Increase::marks`] at value 0, one
-/// more for every [`Increase::per`] points it has (gentle), and from the soft cap on
-/// [`Increase::past_cap`] times as many (slow: 120 is possible, but takes as long again as the
-/// way to 100).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize)]
+/// The skill ladder (spec §8 "Skills", ADOM's): the die a level-up roll on a skill throws, set by
+/// the training marks it has gathered since its last roll. `dice[i]` is thrown from `marks[i]`
+/// marks on (`[ladder]` in `data/skills.toml`: `+1` at 0 marks, `1d3` at 5, … `4d5` at 800).
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct Increase {
-    /// Marks for a point at value 0.
-    pub marks: u32,
-    /// One more mark for every this many points the skill has.
-    pub per: u16,
-    /// From this value on, points come slowly.
-    pub soft_cap: u16,
-    /// How many times as many marks a point past the soft cap needs.
-    pub past_cap: u32,
+pub struct Ladder {
+    /// The dice, one per step, lowest first.
+    pub dice: Vec<Dice>,
+    /// The marks each step starts at: 0 first, rising.
+    pub marks: Vec<u32>,
 }
 
-impl Default for Increase {
-    /// 4 marks at 0, one more every 10 points (14 at 99), and ×3 from 100 on (42 at 100).
+impl Default for Ladder {
+    /// ADOM's ladder: `+1`, `1d3`, `1d5`, `2d4`, `3d3`, `3d4`, `3d5`, `4d4`, `4d5`, the marks
+    /// roughly doubling from step to step.
     fn default() -> Self {
+        let dice = [
+            (0, 1),
+            (1, 3),
+            (1, 5),
+            (2, 4),
+            (3, 3),
+            (3, 4),
+            (3, 5),
+            (4, 4),
+            (4, 5),
+        ];
         Self {
-            marks: 4,
-            per: 10,
-            soft_cap: 100,
-            past_cap: 3,
+            dice: (dice.iter())
+                .map(|&(n, s)| {
+                    if n == 0 {
+                        Dice::fixed(s)
+                    } else {
+                        Dice::of(n as u32, s as u32)
+                    }
+                })
+                .collect(),
+            marks: vec![0, 5, 12, 25, 50, 100, 200, 400, 800],
         }
     }
 }
 
-impl Increase {
-    /// Checks that every number is at least 1.
+impl Ladder {
+    /// Checks that it has a step, a mark threshold per die, rising from 0, and dice that always
+    /// add at least 1.
     pub(crate) fn check(&self) -> Result<(), String> {
-        if self.marks == 0 || self.per == 0 || self.soft_cap == 0 || self.past_cap == 0 {
-            return Err(
-                "increase: `marks`, `per`, `soft_cap`, and `past_cap` must be at least 1".into(),
-            );
+        if self.dice.is_empty() || self.dice.len() != self.marks.len() {
+            return Err("ladder: `dice` and `marks` need one entry per step, at least one".into());
+        }
+        if self.marks[0] != 0 || self.marks.windows(2).any(|w| w[0] >= w[1]) {
+            return Err("ladder: `marks` start at 0 and rise from step to step".into());
+        }
+        if let Some(d) = self.dice.iter().find(|d| d.min() < 1) {
+            return Err(format!("ladder: every die adds at least 1, not {d}"));
         }
         Ok(())
     }
 
-    /// The marks a skill of `value` needs for its next point.
-    pub fn need(&self, value: u16) -> u32 {
-        let gentle = self.marks + u32::from(value / self.per.max(1));
-        if value >= self.soft_cap {
-            gentle.saturating_mul(self.past_cap)
-        } else {
-            gentle
-        }
+    /// The step a skill with `marks` stands on (0 the lowest).
+    pub fn step(&self, marks: u32) -> usize {
+        self.marks.iter().rposition(|&m| m <= marks).unwrap_or(0)
     }
 
-    /// All the marks a skill needs to go from `from` to `to`.
-    pub fn total(&self, from: u16, to: u16) -> u64 {
-        (from..to).map(|v| u64::from(self.need(v))).sum()
+    /// The die of step `step`, the top one for any step above it.
+    pub fn die(&self, step: usize) -> Dice {
+        self.dice[step.min(self.top())]
+    }
+
+    /// The highest step.
+    pub fn top(&self) -> usize {
+        self.dice.len().saturating_sub(1)
     }
 }
 
-/// A trained skill: its value and the training marks toward its next point.
+/// How many skill rolls a level gives beyond the class's and the race's, and what a roll costs
+/// (`[rolls]` in `data/skills.toml`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct RollRules {
+    /// One more roll for an Intelligence score of this or more…
+    pub intelligence_from: u8,
+    /// …and one more for every this many points above it.
+    pub intelligence_every: u8,
+    /// The percent of a skill's marks a roll on it consumes, rounded up.
+    pub spend: u8,
+    /// From this value on a roll adds half its result, rounded up.
+    pub soft_cap: u16,
+}
+
+impl Default for RollRules {
+    /// +1 at Intelligence 14, +2 at 18, …; a roll spends half the marks; halved from 100.
+    fn default() -> Self {
+        Self {
+            intelligence_from: 14,
+            intelligence_every: 4,
+            spend: 50,
+            soft_cap: 100,
+        }
+    }
+}
+
+impl RollRules {
+    /// Checks that the steps are at least 1 and the spend a percent.
+    pub(crate) fn check(&self) -> Result<(), String> {
+        if self.intelligence_from == 0 || self.intelligence_every == 0 || self.soft_cap == 0 {
+            return Err(
+                "rolls: `intelligence_from`, `intelligence_every`, and `soft_cap` must be \
+                        at least 1"
+                    .into(),
+            );
+        }
+        if self.spend > 100 {
+            return Err(format!("rolls: `spend` is a percent, not {}", self.spend));
+        }
+        Ok(())
+    }
+
+    /// The rolls an Intelligence score of `score` adds to a level's.
+    pub fn for_intelligence(&self, score: u8) -> u8 {
+        match score.checked_sub(self.intelligence_from) {
+            Some(above) => 1 + above / self.intelligence_every.max(1),
+            None => 0,
+        }
+    }
+
+    /// The marks a roll consumes of `marks`: [`RollRules::spend`] percent, rounded up.
+    pub fn spent(&self, marks: u32) -> u32 {
+        let spent = (u64::from(marks) * u64::from(self.spend)).div_ceil(100);
+        u32::try_from(spent).unwrap_or(marks).min(marks)
+    }
+}
+
+/// A trained skill: its value and the training marks gathered since its last level-up roll
+/// (a reservoir: they set the roll's die, [`Ladder`], and the roll consumes some).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Trained {
     pub value: u16,
@@ -386,12 +485,14 @@ fn is_zero(n: &u32) -> bool {
     *n == 0
 }
 
-/// How far a skill of `trained` is toward its next point, in [`PROGRESS_STEPS`] (0 just after
-/// a point, 3 nearly there): what the player senses, never the marks.
-pub fn progress(trained: Trained, increase: &Increase) -> u8 {
-    let need = u64::from(increase.need(trained.value).max(1));
-    let steps = u64::from(PROGRESS_STEPS);
-    (u64::from(trained.marks) * steps / need).min(steps - 1) as u8
+/// How practised a skill of `trained` is, in [`PROGRESS_STEPS`]: its marks' step on the ladder,
+/// scaled to the meter (0 at `+1`, 2 at `2d4`, full near the top). What the player senses of
+/// how big their next roll on it is, never the marks or the die.
+pub fn progress(trained: Trained, ladder: &Ladder) -> u8 {
+    let top = ladder.top().max(1);
+    let step = ladder.step(trained.marks);
+    let cells = (step * usize::from(PROGRESS_STEPS)).div_ceil(top);
+    cells.min(usize::from(PROGRESS_STEPS)) as u8
 }
 
 /// An actor's trained skills, by skill. A skill not here is untrained: it gives nothing and is
@@ -429,24 +530,31 @@ impl Skills {
         trained.value = value as u16;
     }
 
-    /// One training mark for skill `id`, if trained; when its marks reach
-    /// [`Increase::need`] of its value, it gains a point (the marks left over carry on).
-    /// Returns whether it gained one.
-    pub fn mark(&mut self, id: SkillId, increase: &Increase) -> bool {
+    /// One training mark for skill `id`, if trained (they gather until a level-up roll spends
+    /// them, [`Skills::roll`]). Returns whether it was trained.
+    pub fn mark(&mut self, id: SkillId) -> bool {
         let Some(trained) = self.0.get_mut(&id) else {
             return false;
         };
-        if trained.value >= MAX_VALUE {
-            return false;
-        }
         trained.marks = trained.marks.saturating_add(1);
-        let need = increase.need(trained.value);
-        if trained.marks < need {
-            return false;
-        }
-        trained.marks -= need;
-        trained.value += 1;
         true
+    }
+
+    /// A level-up roll of `rolled` on skill `id`, if trained: its value grows by it (by half,
+    /// rounded up, from the soft cap on; within [`MAX_VALUE`]), and the roll consumes its share
+    /// of the marks ([`RollRules::spent`]). Returns the points gained, `None` if untrained.
+    pub fn roll(&mut self, id: SkillId, rolled: i32, rules: &RollRules) -> Option<u16> {
+        let trained = self.0.get_mut(&id)?;
+        let rolled = rolled.max(0) as u32;
+        let gain = if trained.value >= rules.soft_cap {
+            rolled.div_ceil(2)
+        } else {
+            rolled
+        };
+        let before = trained.value;
+        trained.value = (u32::from(before) + gain).min(u32::from(MAX_VALUE)) as u16;
+        trained.marks -= rules.spent(trained.marks);
+        Some(trained.value - before)
     }
 
     /// What the trained skills give of `effect`, added up: each trained skill's benefits of
@@ -643,34 +751,49 @@ mod tests {
     }
 
     #[test]
-    fn the_provisional_curve_is_gentle_to_the_soft_cap_and_steep_after() {
-        let inc = Increase::default();
-        assert_eq!(inc.check(), Ok(()));
-        let need = |v| inc.need(v);
+    fn the_ladder_steps_up_with_the_marks() {
+        let ladder = Ladder::default();
+        assert_eq!(ladder.check(), Ok(()));
+        let die = |marks| ladder.die(ladder.step(marks)).to_string();
         assert_eq!(
-            [0, 9, 10, 50, 99, 100, 101, 120, 150].map(need),
-            [4, 4, 5, 9, 13, 42, 42, 48, 57]
+            [0, 4, 5, 11, 12, 25, 50, 99, 100, 200, 400, 799, 800, 9000].map(die),
+            [
+                "+1", "+1", "1d3", "1d3", "1d5", "2d4", "3d3", "3d3", "3d4", "3d5", "4d4", "4d4",
+                "4d5", "4d5"
+            ]
         );
-        // The way from 100 to 120 takes about as many marks as the whole way from 0 to 100.
-        let (to_cap, past) = (inc.total(0, 100), inc.total(100, 120));
-        assert_eq!((to_cap, past), (850, 870));
-        // Every point past the cap needs at least three times what the last point below it did.
-        assert!((100..MAX_VALUE).all(|v| inc.need(v) >= 3 * inc.need(99)));
-        let bad = Increase { per: 0, ..inc };
-        assert!(bad.check().is_err());
+        assert_eq!(ladder.die(99).to_string(), "4d5", "above the top, the top");
+        for bad in [
+            Ladder {
+                marks: vec![1],
+                dice: vec![Dice::fixed(1)],
+            },
+            Ladder {
+                marks: vec![0, 5, 5],
+                dice: vec![Dice::fixed(1); 3],
+            },
+            Ladder {
+                marks: vec![0],
+                dice: vec![],
+            },
+            Ladder {
+                marks: vec![0],
+                dice: vec![Dice::fixed(0)],
+            },
+        ] {
+            assert!(bad.check().is_err(), "{bad:?}");
+        }
     }
 
     #[test]
-    fn marks_raise_a_trained_skill_and_never_an_untrained_one() {
-        let inc = Increase::default();
+    fn rolls_grow_a_trained_skill_and_spend_half_its_marks() {
+        let rules = RollRules::default();
+        assert_eq!(rules.check(), Ok(()));
         let (stealth, listen) = (SkillId(3), SkillId(5));
         let mut skills = Skills::default();
         assert!(skills.is_empty());
-        assert_eq!(skills.value(stealth), None, "untrained");
-        assert!(
-            !skills.mark(stealth, &inc),
-            "no marks for an untrained skill"
-        );
+        assert!(!skills.mark(stealth), "no marks for an untrained skill");
+        assert_eq!(skills.roll(stealth, 3, &rules), None);
         assert_eq!(skills.get(stealth), None);
         skills.add(stealth, 0);
         assert_eq!(
@@ -678,36 +801,38 @@ mod tests {
             Some(0),
             "trained at 0 is not untrained"
         );
-        // Four marks to 1, then four more to 2.
-        for _ in 0..3 {
-            assert!(!skills.mark(stealth, &inc));
+        for _ in 0..50 {
+            assert!(skills.mark(stealth));
         }
-        assert!(skills.mark(stealth, &inc));
-        assert_eq!(skills.get(stealth), Some(Trained { value: 1, marks: 0 }));
-        skills.add(listen, 99);
-        for _ in 0..12 {
-            assert!(!skills.mark(listen, &inc));
-        }
-        assert!(skills.mark(listen, &inc), "13 marks from 99 to 100");
-        assert_eq!(skills.value(listen), Some(100));
-        assert_eq!(progress(skills.get(listen).expect("trained"), &inc), 0);
-        for _ in 0..21 {
-            skills.mark(listen, &inc);
-        }
+        assert_eq!(skills.value(stealth), Some(0), "marks alone raise nothing");
+        // 50 → 25 → 12 → 6 → 3: each roll spends half the marks, rounded up.
+        assert_eq!(skills.roll(stealth, 7, &rules), Some(7));
         assert_eq!(
-            skills.get(listen),
+            skills.get(stealth),
             Some(Trained {
-                value: 100,
-                marks: 21
+                value: 7,
+                marks: 25
             })
         );
-        assert_eq!(progress(skills.get(listen).expect("trained"), &inc), 2);
+        skills.roll(stealth, 1, &rules);
+        assert_eq!(skills.get(stealth).map(|t| t.marks), Some(12));
+        skills.roll(stealth, 1, &rules);
+        skills.roll(stealth, 1, &rules);
+        assert_eq!(skills.get(stealth).map(|t| t.marks), Some(3));
+        // From the soft cap on a roll adds half, rounded up.
+        skills.add(listen, 99);
+        assert_eq!(
+            skills.roll(listen, 5, &rules),
+            Some(5),
+            "below the cap, whole"
+        );
+        assert_eq!(skills.roll(listen, 5, &rules), Some(3));
         // Values stay within 0 to 999.
         skills.add(stealth, -50);
         assert_eq!(skills.value(stealth), Some(0));
         skills.add(stealth, 5000);
+        assert_eq!(skills.roll(stealth, 9, &rules), Some(0));
         assert_eq!(skills.value(stealth), Some(MAX_VALUE));
-        assert!(!skills.mark(stealth, &inc));
         assert_eq!(
             skills.iter().map(|(id, _)| id).collect::<Vec<_>>(),
             [stealth, listen]
@@ -715,10 +840,42 @@ mod tests {
     }
 
     #[test]
-    fn progress_is_coarse_and_never_full() {
-        let inc = Increase::default();
-        let at = |marks| progress(Trained { value: 0, marks }, &inc);
-        assert_eq!([0, 1, 2, 3, 4, 9].map(at), [0, 1, 2, 3, 3, 3]);
+    fn intelligence_adds_a_roll_from_14_and_every_4_more() {
+        let rules = RollRules::default();
+        assert_eq!(
+            [3, 13, 14, 17, 18, 21, 22, 40].map(|s| rules.for_intelligence(s)),
+            [0, 0, 1, 1, 2, 2, 3, 7]
+        );
+        assert_eq!(
+            [0, 1, 2, 3, 49, 50].map(|m| rules.spent(m)),
+            [0, 1, 1, 2, 25, 25]
+        );
+        assert!(
+            RollRules {
+                spend: 101,
+                ..rules
+            }
+            .check()
+            .is_err()
+        );
+        assert!(
+            RollRules {
+                intelligence_every: 0,
+                ..rules
+            }
+            .check()
+            .is_err()
+        );
+    }
+
+    #[test]
+    fn the_meter_shows_the_ladder_step_coarsely() {
+        let ladder = Ladder::default();
+        let at = |marks| progress(Trained { value: 0, marks }, &ladder);
+        assert_eq!(
+            [0, 5, 12, 25, 50, 100, 200, 400, 800].map(at),
+            [0, 1, 1, 2, 2, 3, 3, 4, 4]
+        );
     }
 
     #[test]
@@ -726,7 +883,7 @@ mod tests {
         let mut skills = Skills::default();
         skills.add(SkillId(2), 17);
         skills.add(SkillId(0), 0);
-        skills.mark(SkillId(2), &Increase::default());
+        skills.mark(SkillId(2));
         let json = serde_json::to_string(&skills).expect("serializes");
         assert_eq!(json, r#"{"0":{"value":0},"2":{"value":17,"marks":1}}"#);
         let back: Skills = serde_json::from_str(&json).expect("deserializes");

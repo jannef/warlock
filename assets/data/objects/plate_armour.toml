@@ -6,6 +6,7 @@ glyph = "["
 fg = "#c4ccd4"
 class = "body_armour"
 materials = ["steel"]
+made_of = ["metal", "chitin", "dragonbone"]
 weight = 22000
 value = 900
 slot = "body"

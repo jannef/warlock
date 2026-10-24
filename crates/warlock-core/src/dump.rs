@@ -54,7 +54,8 @@ pub enum Layer {
     Equipment,
     /// Not a map: the player's character (`Race Dwarf`, `Gender Female`, `Class Warrior`), if
     /// any, then their own scores, one stat a line (`Strength 12`, lowered while a status effect
-    /// or stat damage lowers it), then their status effects by name (`Effects Bleeding,
+    /// or stat damage lowers it), then their alignment band (`Alignment Kind`; spec §8
+    /// "Alignment", never the score), then their status effects by name (`Effects Bleeding,
     /// Diseased`) and the diseases they know they have (`Diseases filth fever`) if any; never
     /// potentials, modifiers, how severe an effect is, or a disease's timers.
     Stats,
@@ -65,9 +66,12 @@ pub enum Layer {
     /// how far its marks are toward the next (`Long blades 2 (40%)`), the styles they fight in
     /// now marked (`Duelist 1 (0%), in use`); never what a rank gives.
     WeaponSkills,
+    /// Not a map: the player's talents in the order taken, one a line with its rank of how many
+    /// and its choice (`Hardy 2/3`, `Weapon focus (long blades)`); never what a rank gives.
+    Talents,
     /// Not a map: the player's abilities in the abilities menu's order, one a line with its
     /// source and what it asks for, or why it cannot be used now (`Shield bash (weapon skill):
-    /// a direction`, `Open lock (skill): not usable yet`).
+    /// a direction`, `Steal (skill): not usable yet`).
     Abilities,
     /// Not a map: the traps the player knows on the level, one a line by position (`(12, 5)
     /// fireball trap`, `(remembered)` when out of sight); never hidden ones.
@@ -85,6 +89,12 @@ pub enum Layer {
     /// nutrition, then every corpse on the level and in the player's pack with its age (ground
     /// truth). **Dev-only.**
     Actors,
+    /// Not a map: the player's progression (spec §8 "Talents"): the choices a level still asks
+    /// for (`due level 3: 3 skill rolls, 1 talent`), the talents they may take now by id with the choices
+    /// each may be taken for (`takeable healthy, weapon_focus:{bows,slings}`), and the creature
+    /// types whose first kill has paid (`discovered kobold, rat`), and the stat training marks
+    /// the player holds (`stat marks St 3, To 1`). **Dev-only.**
+    Progress,
     /// The level's special rooms (spec §7 "Special rooms"; ground truth): the terrain, with the
     /// plain ground of each special room drawn as its effect's `mark`, then a line per room
     /// (`s shadowed room at (12, 3)-(20, 9), entered`). **Dev-only.**
@@ -109,11 +119,13 @@ impl Layer {
         Layer::Stats,
         Layer::Skills,
         Layer::WeaponSkills,
+        Layer::Talents,
         Layer::Abilities,
         Layer::Traps,
         Layer::Quests,
         Layer::Truth,
         Layer::Actors,
+        Layer::Progress,
         Layer::Rooms,
         Layer::Ice,
     ];
@@ -132,11 +144,13 @@ impl Layer {
             Layer::Stats => "stats",
             Layer::Skills => "skills",
             Layer::WeaponSkills => "weapon_skills",
+            Layer::Talents => "talents",
             Layer::Abilities => "abilities",
             Layer::Traps => "traps",
             Layer::Quests => "quests",
             Layer::Truth => "truth",
             Layer::Actors => "actors",
+            Layer::Progress => "progress",
             Layer::Rooms => "rooms",
             Layer::Ice => "ice",
         }
@@ -146,7 +160,7 @@ impl Layer {
     pub const fn is_dev_only(self) -> bool {
         matches!(
             self,
-            Layer::Truth | Layer::Actors | Layer::Rooms | Layer::Ice
+            Layer::Truth | Layer::Actors | Layer::Progress | Layer::Rooms | Layer::Ice
         )
     }
 }
@@ -162,8 +176,8 @@ impl FromStr for Layer {
             .ok_or_else(|| {
                 format!(
                     "unknown layer `{s}` (expected view, fov, memory, light, sound, blood, \
-                     inventory, equipment, stats, skills, weapon_skills, abilities, traps, quests, \
-                     truth, actors, rooms, ice)"
+                     inventory, equipment, stats, skills, weapon_skills, talents, abilities, \
+                     traps, quests, truth, actors, progress, rooms, ice)"
                 )
             })
     }
@@ -179,6 +193,7 @@ pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
     match layer {
         Layer::Truth => truth_rows(world),
         Layer::Actors => actor_rows(world),
+        Layer::Progress => progress_rows(world),
         Layer::Rooms => room_rows(world),
         Layer::Ice => ice_rows(world),
         Layer::Inventory => inventory_rows(&world.perception()),
@@ -186,6 +201,7 @@ pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
         Layer::Stats => stat_rows(&world.perception()),
         Layer::Skills => skill_rows(&world.perception()),
         Layer::WeaponSkills => weapon_skill_rows(&world.perception()),
+        Layer::Talents => talent_rows(&world.perception()),
         Layer::Abilities => ability_rows(&world.perception()),
         Layer::Traps => trap_rows(&world.perception()),
         Layer::Quests => quest_rows(&world.perception()),
@@ -237,11 +253,13 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
         | Layer::Stats
         | Layer::Skills
         | Layer::WeaponSkills
+        | Layer::Talents
         | Layer::Abilities
         | Layer::Traps
         | Layer::Quests
         | Layer::Truth
         | Layer::Actors
+        | Layer::Progress
         | Layer::Rooms
         | Layer::Ice => unreachable!("not a map built from perception"),
     }
@@ -448,14 +466,15 @@ fn equipment_rows(view: &PerceptionView<'_>) -> Vec<String> {
         .collect()
 }
 
-/// The player's character, if any (`Race Dwarf`, `Gender Female`, `Class Warrior`, `Age 27`,
-/// `Born 3 Seedtide 1417`, `Sign Fire Manticore`), then their own scores, one stat a line:
-/// `Strength 12`.
+/// The player's character, if any (`Name Brakka`, `Race Dwarf`, `Gender Female`, `Class
+/// Warrior`, `Age 27`, `Born 3 Seedtide 1417`, `Sign Fire Manticore`), then their own scores, one
+/// stat a line: `Strength 12`.
 fn stat_rows(view: &PerceptionView<'_>) -> Vec<String> {
     let content = view.content();
     let mut rows = Vec::new();
     if let Some(c) = view.character() {
         let spec = &c.spec;
+        rows.push(format!("Name {}", c.name));
         let race = spec
             .race(content)
             .map_or(spec.race.as_str(), |r| r.name.as_str());
@@ -475,6 +494,9 @@ fn stat_rows(view: &PerceptionView<'_>) -> Vec<String> {
         }
     }
     rows.extend((view.own_scores().iter()).map(|(stat, score)| format!("{} {score}", stat.name())));
+    if let Some(band) = view.own_alignment() {
+        rows.push(format!("Alignment {}", band.name()));
+    }
     let effects: Vec<&str> = (view.own_effects())
         .map(|s| content.status(s).name.as_str())
         .collect();
@@ -487,7 +509,30 @@ fn stat_rows(view: &PerceptionView<'_>) -> Vec<String> {
     if !diseases.is_empty() {
         rows.push(format!("Diseases {}", diseases.join(", ")));
     }
+    rows.extend(resistance_rows(view));
     rows
+}
+
+/// The player's resistances in words (spec §8 "Damage types"), a row per word: `Resistant to
+/// fire, cold`, `Vulnerable to acid`, `Immune to poison`; never a percentage.
+fn resistance_rows(view: &PerceptionView<'_>) -> Vec<String> {
+    use crate::damage::ResistanceWord;
+    let content = view.content();
+    let own = view.own_resistances();
+    [
+        ResistanceWord::Immune,
+        ResistanceWord::Resistant,
+        ResistanceWord::Vulnerable,
+    ]
+    .into_iter()
+    .filter_map(|word| {
+        let kinds: Vec<&str> = (own.iter())
+            .filter(|(_, w)| *w == word)
+            .map(|(k, _)| content.damage_type(*k).name.as_str())
+            .collect();
+        (!kinds.is_empty()).then(|| format!("{} {}", word.label(), kinds.join(", ")))
+    })
+    .collect()
 }
 
 /// The player's own trained skills, one a line in skill order: `Stealth 17`.
@@ -527,6 +572,75 @@ fn weapon_skill_rows(view: &PerceptionView<'_>) -> Vec<String> {
         .collect()
 }
 
+/// The player's talents in the order taken, one a line: its name for its choice and, for a
+/// ranked talent, the rank held of how many (`Hardy 2/3`).
+fn talent_rows(view: &PerceptionView<'_>) -> Vec<String> {
+    (view.own_talents().iter())
+        .map(|t| {
+            if t.ranks > 1 {
+                format!("{} {}/{}", t.name, t.rank, t.ranks)
+            } else {
+                t.name.clone()
+            }
+        })
+        .collect()
+}
+
+/// The player's progression (dev): the choices due, the talents they may take now with the
+/// choices each may be taken for, and the creature types whose first kill has paid.
+fn progress_rows(world: &World) -> Vec<String> {
+    let view = world.perception();
+    let content = view.content();
+    let progress = &world.state().progress;
+    let mut rows: Vec<String> = (progress.due.iter())
+        .map(|due| {
+            let count = |n: u8, what: &str| match n {
+                0 => None,
+                1 => Some(format!("1 {what}")),
+                n => Some(format!("{n} {what}s")),
+            };
+            let parts: Vec<String> = [count(due.rolls, "skill roll"), count(due.talents, "talent")]
+                .into_iter()
+                .flatten()
+                .collect();
+            format!("due level {}: {}", due.level, parts.join(", "))
+        })
+        .collect();
+    let takeable: Vec<String> = (view.talents().iter())
+        .filter(|t| !t.openings.is_empty())
+        .map(|t| {
+            let id = &content.talents().get(t.id).id;
+            let ways: Vec<&str> = t.openings.iter().flatten().map(String::as_str).collect();
+            if ways.is_empty() {
+                id.clone()
+            } else {
+                format!("{id}:{{{}}}", ways.join(","))
+            }
+        })
+        .collect();
+    if !takeable.is_empty() {
+        rows.push(format!("takeable {}", takeable.join(", ")));
+    }
+    let kills: Vec<&str> = progress
+        .discovered
+        .kills
+        .iter()
+        .map(String::as_str)
+        .collect();
+    if !kills.is_empty() {
+        rows.push(format!("discovered {}", kills.join(", ")));
+    }
+    let marks = &world.state().player().stat_marks;
+    let marked: Vec<String> = (marks.iter())
+        .filter(|&(_, n)| n > 0)
+        .map(|(stat, n)| format!("{} {n}", stat.abbrev()))
+        .collect();
+    if !marked.is_empty() {
+        rows.push(format!("stat marks {}", marked.join(", ")));
+    }
+    rows
+}
+
 /// The player's abilities, one a line in menu order: its name, its source, and what it asks for
 /// or why it cannot be used now.
 fn ability_rows(view: &PerceptionView<'_>) -> Vec<String> {
@@ -535,8 +649,8 @@ fn ability_rows(view: &PerceptionView<'_>) -> Vec<String> {
         .map(|own| {
             let a = own.ability;
             let state = match own.unavailable {
-                Some(why) => why.reason(),
-                None => aim_word(a.aim()),
+                Some(why) => why.reason(content),
+                None => aim_word(a.aim()).into(),
             };
             let source = a.source().id().replace('_', " ");
             format!("{} ({source}): {state}", a.name(content))
@@ -563,7 +677,7 @@ fn abilities_json(view: &PerceptionView<'_>) -> Value {
                 "id": a.id(content),
                 "source": a.source().id(),
                 "aim": aim_word(a.aim()),
-                "unavailable": own.unavailable.map(|why| why.id()),
+                "unavailable": own.unavailable.map(|why| why.id(content)),
             })
         })
         .collect()
@@ -605,10 +719,11 @@ fn actor_weapon_skills(
 }
 
 /// Every actor on the level (ground truth): id, creature, position, hit points, Defence and
-/// Protection (`dv 11 pv 3`), weight, what it carries, its burden and carrying limit, its stats
+/// Protection (`dv 11 pv 3`), its alignment (`alignment evil`; the player's score and band,
+/// `alignment 450 (good)`), weight, what it carries, its burden and carrying limit, its stats
 /// as score/potential
-/// (`St 12/15`), its trained skills with their marks toward the next point
-/// (`stealth 17 (2/5)`), its status effects with their severities (`effects bleeding 2`), the
+/// (`St 12/15`), its trained skills with their marks and the die those set on the ladder
+/// (`stealth 17 (7 1d3)`), its status effects with their severities (`effects bleeding 2`), the
 /// player's nutrition and hunger (`nutrition 3540 (not_hungry)`), and, if it has any, the unique
 /// character it is and how far its talk has got; then all food on the level and in the packs of
 /// those on it, with when it was made (a corpse: when its creature died) and how it has rotted
@@ -696,8 +811,9 @@ fn actor_rows(world: &World) -> Vec<String> {
                 .collect();
             let skills: Vec<String> = (a.skills.iter())
                 .map(|(id, t)| {
-                    let need = content.increase().need(t.value);
-                    format!("{} {} ({}/{need})", content.skill(id).id, t.value, t.marks)
+                    let ladder = content.ladder();
+                    let die = ladder.die(ladder.step(t.marks));
+                    format!("{} {} ({} {die})", content.skill(id).id, t.value, t.marks)
                 })
                 .collect();
             let skills = if skills.is_empty() {
@@ -722,6 +838,12 @@ fn actor_rows(world: &World) -> Vec<String> {
                 .map_or(String::new(), |s| format!("; weapon skills {s}"));
             // Who it is and how far its talk has got (spec §8 "Dialogue"), if anything.
             let npc = (a.npc.as_ref()).map_or(String::new(), |n| format!("; npc {n}"));
+            // Where it stands between good and evil (spec §8 "Alignment"): its score and band
+            // (the player's), or its nature.
+            let alignment = match a.alignment {
+                Some(score) => format!("; alignment {} ({})", score.value(), a.band(content).id()),
+                None => format!("; alignment {}", a.nature(content).id()),
+            };
             let talk = if a.talk.is_new() {
                 String::new()
             } else {
@@ -729,10 +851,19 @@ fn actor_rows(world: &World) -> Vec<String> {
                 let (said, muttered) = (a.talk.said, a.talk.muttered);
                 format!("; talk said {said}, muttered {muttered}{met}")
             };
+            // What it resists, in percent by kind (ground truth: never shown in play).
+            let resists: Vec<String> = (a.resistances(content).iter())
+                .map(|(k, p)| format!("{} {p}", content.damage_type(k).id))
+                .collect();
+            let resists = if resists.is_empty() {
+                String::new()
+            } else {
+                format!("; resists {}", resists.join(" "))
+            };
             format!(
-                "{} {} at {}: hp {}/{} mp {}/{} dv {} pv {}; weight {} (base {} + carried {}: {carried})\
-                 {equipped}; {} (limit {}){weapons}; stats {}{skills}{effects}{diseases}{hunger}{npc}\
-                 {talk}",
+                "{} {} at {}: hp {}/{} mp {}/{} dv {} pv {}{alignment}; weight {} (base {} + carried {}: \
+                 {carried}){equipped}; {} (limit {}){weapons}; stats {}{skills}{effects}{diseases}\
+                 {hunger}{npc}{talk}{resists}",
                 a.id,
                 content.creature(a.creature).id,
                 a.pos,
@@ -741,7 +872,7 @@ fn actor_rows(world: &World) -> Vec<String> {
                 a.mana,
                 a.max_mana(content),
                 a.defence(content, load.penalty()).total(),
-                a.protection(content),
+                a.protection(content).base,
                 format_weight(w.total()),
                 format_weight(w.base),
                 format_weight(w.carried),
@@ -982,6 +1113,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "weight": { "base": weight.base, "carried": weight.carried, "total": weight.total() },
         "burden": { "level": load.burden(), "limit": load.limit },
         "character": view.character().map(|c| json!({
+            "name": c.name,
             "race": c.spec.race,
             "gender": c.spec.gender,
             "class": c.spec.class,
@@ -991,6 +1123,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
             "sign": c.sign,
         })),
         "stats": view.own_scores(),
+        "alignment": view.own_alignment().map(|b| b.id()),
         "skills": skills_json(&view),
         "effects": effects,
         "diseases": diseases,
@@ -998,6 +1131,16 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "styles_in_use": (view.own_styles_in_use().into_iter())
             .map(|id| content.weapon_skills().skill(id).id.clone())
             .collect::<Vec<_>>(),
+        "talents": (view.own_talents().iter())
+            .map(|t| json!({
+                "id": content.talents().get(t.id).id,
+                "name": t.name,
+                "rank": t.rank,
+                "ranks": t.ranks,
+                "choice": t.choice,
+            }))
+            .collect::<Vec<_>>(),
+        "due": view.due(),
         "abilities": abilities_json(&view),
         "quests": quests_json(&view),
         "hp": { "current": hp, "max": max_hp },
@@ -1005,6 +1148,9 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "experience": view.own_experience(),
         "defence": view.own_defence(),
         "protection": view.own_protection(),
+        "resistances": (view.own_resistances().into_iter())
+            .map(|(k, w)| (content.damage_type(k).id.clone(), json!(w.word())))
+            .collect::<serde_json::Map<String, Value>>(),
         "hunger": view.own_hunger(),
         "death": death,
         "messages": messages,
@@ -1130,7 +1276,7 @@ mod tests {
         // The player's character, and their own scores by stat id; nothing else about stats.
         assert_eq!(
             value["character"],
-            json!({ "race": "human", "gender": "female", "class": "thief",
+            json!({ "name": "Tamsin", "race": "human", "gender": "female", "class": "thief",
                     "raised": "dexterity", "age": 34,
                     "born": { "year": 1410, "month": 5, "day": 29 },
                     "sign": { "animal": "basilisk", "element": "water" } })
@@ -1177,9 +1323,9 @@ mod tests {
         let actors = layer_rows(&arena, Layer::Actors);
         let shaman = actors.iter().find(|a| a.contains(" kobold_shaman at "));
         assert!(
-            shaman.is_some_and(
-                |s| s.ends_with("; skills concentration 20 (0/6), spellcraft 25 (0/6)")
-            ),
+            shaman.is_some_and(|s| s.ends_with(
+                "; skills concentration 20 (0 +1), spellcraft 25 (0 +1); resists fire 25"
+            )),
             "{actors:#?}"
         );
         let text = ascii(&arena, &[Layer::Skills, Layer::View]);
@@ -1210,6 +1356,7 @@ mod tests {
         assert_eq!(
             layer_rows(&world, Layer::Stats),
             [
+                "Name Tamsin",
                 "Race Human",
                 "Gender Female",
                 "Class Thief",
@@ -1221,7 +1368,8 @@ mod tests {
                 "Toughness 10",
                 "Intelligence 12",
                 "Willpower 11",
-                "Presence 9"
+                "Presence 9",
+                "Alignment Callous"
             ]
         );
         // Other names the stat it raised.
@@ -1236,12 +1384,12 @@ mod tests {
             layer_rows(&gnome, Layer::Stats)
         );
         let actors = layer_rows(&world, Layer::Actors);
-        // Every actor's stats, then its trained skills with their marks toward the next point.
+        // Every actor's stats, then its trained skills with their marks and the ladder's die.
         assert!(
             actors[0].contains(
                 "stats St 9/16 Dx 13/16 To 10/16 In 12/16 Wi 11/16 Pr 9/16; skills appraise 11 \
-                 (0/5), disable_device 16 (0/5), escape_artist 7 (0/4), open_lock 18 (0/5), \
-                 search 9 (0/4), spot 10 (0/5), steal 17 (0/5), stealth 16 (0/5), tumble 16 (0/5); \
+                 (0 +1), disable_device 16 (0 +1), escape_artist 7 (0 +1), open_lock 18 (0 +1), \
+                 search 9 (0 +1), spot 10 (0 +1), steal 17 (0 +1), stealth 16 (0 +1), tumble 16 (0 +1); \
                  nutrition 3600 (not_hungry)"
             ),
             "{}",
@@ -1303,15 +1451,16 @@ mod tests {
 
     #[test]
     fn abilities_show_what_the_player_can_do_and_why_not() {
-        // The showcase thief: the class's skills used as actions (no use yet), then the shield
-        // bash, which needs a shield in hand.
+        // The showcase thief: the class's skills used as actions (no use yet, but Disable
+        // device's, disarming a trap, and Open lock's, picking a lock, each in a direction), then
+        // the shield bash, which needs a shield in hand.
         let mut world = showcase();
         assert_eq!(
             layer_rows(&world, Layer::Abilities),
             [
                 "Appraise (skill): not usable yet",
-                "Disable device (skill): not usable yet",
-                "Open lock (skill): not usable yet",
+                "Disarm a trap (skill): a direction",
+                "Pick lock (skill): a direction",
                 "Steal (skill): not usable yet",
                 "Shield bash (weapon skill): you hold no shield",
             ]
@@ -1322,7 +1471,15 @@ mod tests {
             json!({"id": "shield_bash", "source": "weapon_skill", "aim": "a direction",
                    "unavailable": "no_shield"})
         );
-        assert_eq!(value["abilities"][2]["id"], "open_lock");
+        assert_eq!(
+            value["abilities"][1],
+            json!({"id": "disarm", "source": "skill", "aim": "a direction", "unavailable": null})
+        );
+        assert_eq!(
+            value["abilities"][2],
+            json!({"id": "pick_lock", "source": "skill", "aim": "a direction",
+                   "unavailable": null})
+        );
         // The storeroom's small shield in hand: it can be used, in a direction.
         let walk = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N \
                     pickup:a equip:off_hand:a";

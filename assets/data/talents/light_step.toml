@@ -1,0 +1,15 @@
+[[talent]]
+id = "light_step"
+name = "Light step"
+tree = "finesse"
+ranks = 2
+description = "You tread lightly: a trap you step onto may not go off under you, and you find it; at the second rank pits never catch you."
+systems = ["traps"]
+
+[[talent.rank]]
+needs = { stats = { dexterity = 12 } }
+effects = [{ kind = "sure_step" }]
+
+[[talent.rank]]
+needs = { stats = { dexterity = 14 }, level = 10 }
+effects = [{ kind = "pit_proof" }]

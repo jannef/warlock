@@ -24,10 +24,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Durability"); rare its name then the base, "Grim Bite, a long sword"; unidentified the base
     and its rarity, "a long sword (magic)", "12 arrows (rare)". The base is the object's name
     with its gems and precious metals (§7 "Objects and materials": "a gold and ruby amulet
-    (magic)"), which show identified or not, its own gems included (§7 "Gems"), so the order is
-    [prefix] [ornament] [metal, #193] base [suffix]: "a Sharp emerald-pommelled long sword of the
-    Bear"; a rare item keeps its two-word name and its gem follows in the base, "Grim Bite, an
-    emerald-pommelled long sword", and in its description. Rarity colors the name (§6).
+    (magic)"), which show identified or not, its own gems included (§7 "Gems"), and its material
+    when it is made of another than its base item's (§7 "Materials"), so the order is [prefix]
+    [ornament] [material] base [suffix]: "a Sharp emerald-pommelled bronze long sword of the
+    Bear"; a rare item keeps its two-word name and its gem and material follow in the base, "Grim
+    Bite, an emerald-pommelled long sword", and in its description. Rarity colors the name (§6).
     Combat messages name the base ("The kobold's spear glances off your armour.").
   - **Unidentified**: magic and rare items are found unidentified. The rarity shows, the affixes
     and a rare name do not, and their effects apply all the same while worn or wielded (as in
@@ -46,7 +47,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     weapon's and the ammunition's together; a throw: the thrown weapon's); on anything else
     (gloves, rings, amulets, helmets) they are **global**: every attack. Effects on the item itself
     (Armour, Protection, Shield, Parry, `max_dex`, weight) are local (the Hardened prefix adds
-    to an armour's Protection, which adds up with every other piece's). The rest are global: the six stats,
+    to an armour's Protection, which adds up with every other piece's). An `elemental` affix
+    (Flaming, Freezing; §8 "Damage types") is an attack effect too: its die of its kind rides on
+    every roll of the damage, after the weapon's own added damage, one die per kind (the sides
+    add up); a `resistance` affix (of the Salamander, of Warmth) is global: its percentage adds
+    to the wearer's, capped with the rest at 75. The rest are global: the six stats,
     maximum hit points, regeneration, maximum mana, mana regeneration (§8 "Mana"), Dodge (stacks), Deflection and natural armour (the best
     counts, with the creature's own), moving speed, carrying limit, stealth (quieter footsteps,
     §5 "Hearing"), **light** (the wearer carries the brightest light among its glowing items,
@@ -84,17 +89,21 @@ developer notes (CLAUDE.md, `docs/dev/`).
     weight among those that may roll: the item's kind in its bases, something for its effect to
     change, a tier at the item level, an effect not yet on the item), its tier (evenly among
     those at the item level), and its value (evenly in the tier's range); a rare item's name (two
-    draws); and for an item of a class with an `[[ornament]]`, whether it is set with a gem (one
-    draw against its chance, then the gem, size, and cut, never a rough cut; `gem::ornament`).
-    With nothing left to roll an item has fewer affixes, with none it is normal. Loot is found
-    unidentified (its gems show).
+    draws); for an item of a class with an `[[ornament]]`, whether it is set with a gem (one
+    draw against its chance, then the gem, size, and cut, never a rough cut; `gem::ornament`);
+    and for an item whose construction list lets it be made of other materials, its material (one
+    draw by the materials' `rarity` at the item level, or for a creature's drop their `gear` at
+    the creature's level; §7 "Materials", `variant::draw`). With nothing left to roll an item has
+    fewer affixes, with none it is normal. Loot is found unidentified (its gems and material
+    show).
   - **Where**: generated branch levels' floors hold `loot` items (the Depths 2 to 4) on plain
     floor where nothing lies, stands, shines, or leads away, and vault `loot` cells an item at
     least of their grade; outdoor ruins' loot cells too (local areas have no floor loot); all
     from the level's `loot/<level id>` stream once its map is valid (the map is the same as
     without loot). Creatures with `loot` drop a magic or rare item (grade magic) where they die,
     besides what they carried, by their chance, from the stream `drop/<actor id>`, at their
-    level's item level; by the gems' `chance` (one draw first) the drop is a loose gem instead.
+    level's item level, made of a material by the creature's level (its gear: `roll_from` with
+    `Source::Gear`); by the gems' `chance` (one draw first) the drop is a loose gem instead.
   - **Dev**: replay text `identify` / `identify:LETTERS` (`Action::Identify`, `F8` in dev
     builds: everything carried) identifies without time passing, recorded in replays.
 

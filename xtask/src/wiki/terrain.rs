@@ -76,12 +76,13 @@ pub(super) fn local_terrain(content: &Content) -> String {
         match t.muffle {
             None => {}
             Some(0) if t.walkable || t.transparent => {}
-            Some(_) => notes.push("muffles sound".into()),
+            Some(0) => notes.push("lets sound through".into()),
+            Some(m) => notes.push(format!("muffles sound by {m}")),
         }
         let footsteps = if t.walkable {
-            footsteps_word(t.step_noise)
+            footsteps_text(t.step_noise)
         } else {
-            "-"
+            "-".into()
         };
         let _ = writeln!(
             out,
@@ -99,7 +100,7 @@ pub(super) fn local_terrain(content: &Content) -> String {
     out
 }
 
-/// How loud steps onto terrain are, in words: the exact numbers are rules detail.
+/// How loud steps onto terrain are, in words.
 fn footsteps_word(step_noise: u16) -> &'static str {
     match step_noise {
         0..=90 => "quiet",
@@ -109,27 +110,34 @@ fn footsteps_word(step_noise: u16) -> &'static str {
     }
 }
 
-/// Walkable dungeon and outdoor terrain on which steps are louder or quieter than normal,
-/// grouped (spec §5 "Hearing"); the overworld is silent.
+/// How loud steps onto terrain are, in words and exactly (`step_noise`: percent of the walker's
+/// footsteps): `loud, 150%`.
+fn footsteps_text(step_noise: u16) -> String {
+    format!("{}, {step_noise}%", footsteps_word(step_noise))
+}
+
+/// Walkable dungeon and outdoor terrain on which steps are louder or quieter than normal, by how
+/// loud, loudest first (spec §5 "Hearing"); the overworld is silent.
 pub(super) fn footsteps(content: &Content) -> String {
     let ids = overworld_ids(content);
+    let walked: Vec<&TerrainDef> = (content.terrain_defs().iter())
+        .filter(|t| t.walkable && !is_overworld_terrain(t, &ids) && t.step_noise != 100)
+        .collect();
+    let mut levels: Vec<u16> = walked.iter().map(|t| t.step_noise).collect();
+    levels.sort_unstable_by(|a, b| b.cmp(a));
+    levels.dedup();
     let mut out = String::from("| Footsteps | Terrain |\n|---|---|\n");
-    for word in ["very loud", "loud", "quiet"] {
-        let names: Vec<String> = content
-            .terrain_defs()
-            .iter()
-            .filter(|t| t.walkable && !is_overworld_terrain(t, &ids))
-            .filter(|t| footsteps_word(t.step_noise) == word)
+    for level in levels {
+        let names: Vec<String> = (walked.iter())
+            .filter(|t| t.step_noise == level)
             .map(|t| t.name.clone())
             .collect();
-        if !names.is_empty() {
-            let _ = writeln!(
-                out,
-                "| {} | {} |",
-                capital(word),
-                capital(&names.join(", "))
-            );
-        }
+        let _ = writeln!(
+            out,
+            "| {} | {} |",
+            capital(&footsteps_text(level)),
+            capital(&names.join(", "))
+        );
     }
     out
 }

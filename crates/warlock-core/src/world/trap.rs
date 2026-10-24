@@ -42,11 +42,15 @@ use super::fight::Harm;
 use super::spell::Caster;
 use super::{ActorId, World, fnv1a};
 use crate::action::{Event, MissileEnd};
+use crate::check::check;
 use crate::combat::{self, Blow, Profile, Strike};
-use crate::content::{ActionKind, Bolt, ObjectId, TrapEffect, TrapId};
+use crate::content::StatUse;
+use crate::content::{ActionKind, Bolt, ObjectId, TrapEffect, TrapId, article};
+use crate::damage::Damage;
 use crate::geom::{Dir, Pos};
 use crate::object::Stack;
 use crate::perception::VIEW_RADIUS;
+use crate::stats::Stat;
 use std::collections::BTreeSet;
 
 /// How far past its victim a trap's missile flies on, at most, when it misses.
@@ -62,10 +66,46 @@ impl World {
         victim: ActorId,
         events: &mut Vec<Event>,
     ) -> i64 {
-        if self.state.current().is_door(&self.content, at) {
+        if self.state.current().is_door(&self.content, at) || self.steps_lightly(at, victim) {
             return 0;
         }
         self.spring_trap(at, victim, events)
+    }
+
+    /// Whether the player, `victim`, steps onto the trap at `at` without setting it off (Light
+    /// step, spec §8 "Talents"): a pit never catches them at its second rank; else a Dexterity
+    /// check against the trap's difficulty (two draws of the gameplay stream, only with the
+    /// talent and a trap there). Either way the trap stays, and is found.
+    fn steps_lightly(&mut self, at: Pos, victim: ActorId) -> bool {
+        if victim != self.state.player {
+            return false;
+        }
+        let Some(kind) = self.state.current().traps.get(&at).map(|t| t.kind) else {
+            return false;
+        };
+        let content = self.content.clone();
+        let player = self.state.player();
+        let talents = player.talent_mods(&content);
+        if !talents.sure_step && !talents.pit_proof {
+            return false;
+        }
+        let def = content.trap(kind);
+        let pit = matches!(def.effect, TrapEffect::Pit { .. });
+        let light = (talents.pit_proof && pit)
+            || (talents.sure_step && {
+                let dexterity = player.effective_stats(&content).modifier(Stat::Dexterity);
+                check(&mut self.state.rng, dexterity, i32::from(def.difficulty))
+            });
+        if light {
+            self.know_trap(at);
+            self.state.current_mut().trap_memory.insert(at, kind);
+            self.say(format!(
+                "You step lightly off {} {}.",
+                article(&def.name),
+                def.name
+            ));
+        }
+        light
     }
 
     /// The trap on cell `at` of the current level goes off at actor `victim`, who stepped onto it
@@ -113,14 +153,17 @@ impl World {
                 let dir = dir.or_else(|| toward.and_then(|p| Dir::toward(at, p)));
                 self.trap_bolt(kind, at, dir, bolt, events);
             }
-            TrapEffect::Pit { damage } => {
+            TrapEffect::Pit { damage, kind: of } => {
                 if !self.state.actors.contains_key(&victim) {
                     return 0;
                 }
                 let climb = self.price_of(victim, ActionKind::Wait);
-                let fall = damage.roll(&mut self.state.rng);
+                let fall = Damage::new(damage.roll(&mut self.state.rng), *of);
                 let from = self.state.actors.get(&victim).map_or(at, |a| a.pos);
                 self.trap_hurts(kind, victim, (from, false), fall, events);
+                if victim == self.state.player {
+                    self.train_stat(StatUse::Climb);
+                }
                 return climb;
             }
             TrapEffect::Alarm => {}
@@ -141,9 +184,8 @@ impl World {
         events: &mut Vec<Event>,
     ) -> Option<Blow> {
         let to = self.state.actors.get(&target)?.pos;
-        let defence = self.defence_of(target);
-        let protection = self.protection_of(target);
-        let blow = combat::strike(profile, &defence, protection, &mut self.state.rng);
+        let struck = self.target_against(target, source.1);
+        let blow = combat::strike(profile, &struck, &mut self.state.rng);
         events.push(Event::TrapStruck {
             trap,
             target,
@@ -155,28 +197,30 @@ impl World {
     }
 
     /// Trap `trap` does `damage` to `target` from `source` with no roll to hit (a blast, a bolt,
-    /// a fall).
+    /// a fall), less what the target resists of its kind (spec §8 "Damage types"; nothing left
+    /// of it is [`Strike::Resisted`]).
     pub(super) fn trap_hurts(
         &mut self,
         trap: TrapId,
         target: ActorId,
         source: (Pos, bool),
-        damage: i32,
+        damage: Damage,
         events: &mut Vec<Event>,
     ) {
         let Some(to) = self.state.actors.get(&target).map(|a| a.pos) else {
             return;
         };
+        let taken = self.resisted(target, damage);
+        let mut blow = Blow::plain(taken, damage.kind);
+        if damage.amount > 0 && taken <= 0 {
+            blow.strike = Strike::Resisted;
+        }
         events.push(Event::TrapStruck {
             trap,
             target,
             to,
-            strike: Strike::Hit { critical: false },
+            strike: blow.strike,
         });
-        let blow = Blow {
-            strike: Strike::Hit { critical: false },
-            damage,
-        };
         self.trap_deals(trap, target, source, blow, events);
     }
 

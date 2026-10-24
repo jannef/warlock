@@ -1,0 +1,22 @@
+[[class]]
+id = "bard"
+name = "Bard"
+description = "A wandering singer and teller of tales who gets by on charm, quick fingers, and a quicker tongue."
+stats = { strength = -1, dexterity = 1, toughness = -1, intelligence = "1d2", presence = "1d3+1" }
+hp = 2
+mana = 5
+experience = 100
+skills = { bluff = "2d6+10", music = "2d6+10", appraise = "2d4+4", decipher_script = "2d4+4", knowledge = "2d4+4", tumble = "2d4+4" }
+known_for = ["bluff", "music"]
+rolls = 4
+weapon_skills = { short_blades = 1, daggers = "1d2" }
+styles = { duelist = 1 }
+# A blade for the road, a lute for the inn, and the night's takings.
+kit = [
+    { wield = "short_sword|scimitar" },
+    { wear = "travelling_cloak" },
+    "dagger",
+    "lute",
+    "bread",
+    "gold_coin*30",
+]

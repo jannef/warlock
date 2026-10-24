@@ -2,7 +2,8 @@
 
 Creatures are the other glyphs that move about the world. They belong to factions, keep to their
 routines, notice what they see and hear, and some of them fight, to the death (see
-[Combat](combat.md)). This page will grow as the game does.
+[Combat](combat.md)). This page will grow as the game does. Their stats, hit points, attacks,
+speed, and senses, which the game never shows, are on [Creatures in numbers](creature-numbers.md).
 
 ## Factions
 
@@ -90,7 +91,8 @@ they see you. Light your lantern there and the war band's archer will find you.
 - Creatures move at their **own pace**. Some are quicker than you and may act more than once
   while you take one turn; some are slower and now and then let a turn of yours pass without
   acting. A creature of your own pace acts once for each normal action of yours. The game never
-  tells you a creature's pace: you learn it by watching it move.
+  tells you a creature's pace: you learn it by watching it move (or from its speed in
+  [Creatures in numbers](creature-numbers.md#pace-senses-and-size)).
 - Their actions have [costs](turns.md#what-actions-cost) like yours: a creature's step through
   water takes it twice as long as a step on open ground, and a creature type's attacks may cost
   it more or less than a normal action.
@@ -108,5 +110,9 @@ they see you. Light your lantern there and the war band's archer will find you.
   carries. They fight with it ([Equipment](equipment.md)), and drop all of it when they die.
 
 ## The creatures
+
+"Drops magic" is the chance that a creature drops a magic or rare item where it dies, besides
+what it carried (see [Magic items](magic-items.md)). Their numbers are on
+[Creatures in numbers](creature-numbers.md).
 
 {{#include generated/creatures.md}}

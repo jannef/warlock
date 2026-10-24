@@ -123,6 +123,23 @@ pub fn glyph_set(extra: impl IntoIterator<Item = char>) -> Vec<char> {
     chars
 }
 
+/// Whether the UI draws `c` as itself, never as the `?` of a missing glyph: it is in the glyph
+/// set (without content glyphs) and the font has it. What text fields accept (the name).
+pub fn draws(c: char) -> bool {
+    static DRAWN: std::sync::OnceLock<std::collections::BTreeSet<char>> =
+        std::sync::OnceLock::new();
+    DRAWN
+        .get_or_init(|| {
+            let Ok(Font(font)) = Font::load() else {
+                return Default::default();
+            };
+            (glyph_set([]).into_iter())
+                .filter(|&c| c == ' ' || font.lookup_glyph_index(c) != 0)
+                .collect()
+        })
+        .contains(&c)
+}
+
 /// Rasterizes `chars` at `px` physical pixels into cell-sized slots, `supersample` times larger
 /// (1 for the 1:1 atlas). Cell size and baseline are fixed at `px` and then scaled, so a
 /// supersampled slot holds exactly the same outline as its 1:1 slot. Characters the font lacks
@@ -302,5 +319,15 @@ mod tests {
         let unique: std::collections::BTreeSet<_> = set.iter().collect();
         assert_eq!(unique.len(), set.len());
         assert_eq!(set[0], ' ');
+    }
+
+    #[test]
+    fn text_fields_take_what_the_font_draws() {
+        for c in ['a', 'Z', '7', ' ', '\'', '-', 'é', 'Å', 'ß', 'ł', 'Ω'] {
+            assert!(draws(c), "{c:?}");
+        }
+        for c in ['\n', '\u{7}', '日', '😀'] {
+            assert!(!draws(c), "{c:?}");
+        }
     }
 }

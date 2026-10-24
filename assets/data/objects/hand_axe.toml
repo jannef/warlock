@@ -5,6 +5,7 @@ glyph = ")"
 fg = "#b4a48c"
 class = "melee_weapons"
 materials = ["iron"]
+made_of = ["metal", "stone"]
 weight = 1300
 value = 25
 slot = "main_hand"
@@ -12,6 +13,8 @@ light_weapon = true
 damage = "1d6"
 crit = 3
 category = "axes"
+damage_type = "slashing"
+verb = "cleaves"
 kind = "weapon"
 # Thrown end over end.
 range = 4

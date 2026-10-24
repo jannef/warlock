@@ -6,6 +6,7 @@ glyph = ")"
 fg = "#a87c4c"
 class = "melee_weapons"
 materials = ["wood"]
+made_of = ["wood", "dragonbone"]
 ornament = "tip"
 weight = 2000
 value = 15
@@ -13,6 +14,7 @@ slot = "main_hand"
 two_handed = true
 damage = "1d6"
 category = "staves"
+damage_type = "bludgeoning"
 kind = "weapon"
 # Held across the body: it turns blows aside.
 parry = 1

@@ -1,0 +1,8 @@
+[[talent]]
+id = "riposte"
+name = "Riposte"
+tree = "finesse"
+description = "A blow you turn aside with your weapon opens its striker to yours: you strike back at once."
+needs = { stats = { dexterity = 13 }, any_weapon_skill = { roles = ["melee", "unarmed"], rank = 5 }, level = 12 }
+effects = [{ kind = "free_blow", trigger = "riposte" }]
+systems = ["free_blows", "defence"]

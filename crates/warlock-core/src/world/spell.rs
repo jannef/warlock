@@ -24,11 +24,13 @@ use super::{ActorId, Spent, World};
 use crate::action::{AttackKind, Event, SpellShape};
 use crate::combat::{Blow, Strike};
 use crate::content::{Bolt, Burst, BurstIce, EffectShape, TrapId, TrapNoise};
+use crate::damage::Damage;
 use crate::fov::radius2;
 use crate::geom::Pos;
 use crate::ice::Shock;
 use crate::noise::{self, Noise};
 use crate::sight::LineOfSight;
+use crate::talent::TalentMods;
 use std::collections::BTreeSet;
 
 /// Who cast a spell, and so who deals its harm.
@@ -220,6 +222,7 @@ impl World {
         for (id, p) in caught {
             let edge = p.dist2(center) > inner;
             let damage = if edge { (roll / 2).max(1) } else { roll };
+            let damage = Damage::new(damage, burst.kind);
             self.spell_hurts(caster, id, (center, false), damage, events);
         }
         if burst.blast > 0 {
@@ -264,51 +267,75 @@ impl World {
             caught.extend(self.state.actor_at(&level, *p).map(|a| a.id));
         }
         for id in caught {
-            self.spell_hurts(caster, id, (origin, true), roll, events);
+            let damage = Damage::new(roll, bolt.kind);
+            self.spell_hurts(caster, id, (origin, true), damage, events);
         }
     }
 
+    /// What of a burst's or a bolt's `damage` reaches actor `id`: with Evasion (spec §8
+    /// "Talents") its share, rounded down (a spell that does nothing more is resisted).
+    pub(super) fn evaded(&self, id: ActorId, damage: Damage) -> Damage {
+        let percent = (self.state.actors.get(&id))
+            .map_or(0, |a| a.talent_mods(&self.content).spell_damage_percent);
+        if percent == 0 {
+            return damage;
+        }
+        let amount = u64::try_from(damage.amount.max(0)).unwrap_or(0);
+        let amount = i32::try_from(TalentMods::scaled(amount, percent)).unwrap_or(i32::MAX);
+        Damage::new(amount, damage.kind)
+    }
+
     /// `caster`'s spell does `damage` to `target` from `source` (a cell, and whether it flew
-    /// along a line from it), with no roll to hit: a trap's blow ([`World::trap_hurts`]), or an
-    /// actor's, dealt the way every blow is (spec §8 "Blood", "Status effects"): the event, a big
-    /// hit's blood, the damage, which may kill (a kill by the player earns its experience), and
-    /// if it lives the statuses its wound causes. A shopkeeper the player's spell reaches turns
-    /// on them, as one they strike does.
+    /// along a line from it), with no roll to hit, less what Evasion spares it ([`World::evaded`])
+    /// and what the target resists of its kind (spec §8 "Damage types"): a trap's blow
+    /// ([`World::trap_hurts`]), or an actor's, dealt
+    /// the way every blow is (spec §8 "Blood", "Status effects"): the event, a big hit's blood,
+    /// the damage, which may kill (a kill by the player earns its experience), and if it lives
+    /// the statuses its wound causes. A shopkeeper the player's spell reaches turns on them, as
+    /// one they strike does.
     fn spell_hurts(
         &mut self,
         caster: Caster,
         target: ActorId,
         source: (Pos, bool),
-        damage: i32,
+        damage: Damage,
         events: &mut Vec<Event>,
     ) {
         let by = match caster {
-            Caster::Trap(trap) => return self.trap_hurts(trap, target, source, damage, events),
+            Caster::Trap(trap) => {
+                let damage = self.evaded(target, damage);
+                return self.trap_hurts(trap, target, source, damage, events);
+            }
             Caster::Actor(by) => by,
         };
         let Some(to) = self.state.actors.get(&target).map(|a| a.pos) else {
             return;
         };
         let from = self.state.actors.get(&by).map_or(source.0, |a| a.pos);
-        let strike = Strike::Hit { critical: false };
+        let damage = self.evaded(target, damage);
+        let taken = self.resisted(target, damage);
+        let mut blow = Blow::plain(taken, damage.kind);
+        if damage.amount > 0 && taken <= 0 {
+            blow.strike = Strike::Resisted;
+        }
         events.push(Event::Attacked {
             attacker: by,
             target,
             kind: AttackKind::Spell,
             from,
             to,
-            strike: Some(strike),
+            strike: Some(blow.strike),
             with: None,
+            damage: damage.kind,
         });
         if by == self.state.player && target != by {
             self.provoke(target);
         }
-        if damage <= 0 {
+        if taken <= 0 {
             return;
         }
-        let blow = Blow { strike, damage };
         self.spill(by.0, target, source, blow);
-        if !self.hurt(target, damage, Harm::Actor(by), events) {
+        if !self.hurt(target, taken, Harm::Actor(by), events) {
             self.wounded(target, &blow, Some(by), events);
         }
     }

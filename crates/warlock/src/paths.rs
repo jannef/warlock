@@ -3,7 +3,7 @@
 //!
 //! Precedence, per location: an explicit `--config-dir` / `--save-dir` (for its own folder),
 //! then `--portable [DIR]`, then a `warlock-data` folder next to the game, then the platform's
-//! standard folders. A portable folder holds `config/`, `data/` (saves, `snapshots/`), and
+//! standard folders. A portable folder holds `config/`, `data/` (`saves/`, `snapshots/`), and
 //! `logs/`. "Next to the game" is the folder of the executable; on macOS, inside a `Warlock.app`
 //! bundle, it is the folder holding the bundle. The web build has browser storage and none of
 //! this.
@@ -17,6 +17,14 @@ use std::sync::OnceLock;
 
 /// Name of the folder that makes the game portable when it sits next to the game.
 pub const PORTABLE_DIR: &str = "warlock-data";
+
+/// The folder in the data folder that holds one save per character (`saves/<id>.sav`, beside it
+/// `<id>.toml`, what the list of saved characters shows). On the web, keys `warlock/saves/...`.
+pub const SAVES_DIR: &str = "saves";
+
+/// The folder in the data folder that holds the dev snapshots, one per character
+/// (`snapshots/<id>.sav`).
+pub const SNAPSHOTS_DIR: &str = "snapshots";
 
 /// Why a location is where it is.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -203,9 +211,14 @@ impl Locations {
         self.config.dir.as_ref().map(|d| d.join("keymaps"))
     }
 
+    /// Folder for the saves, one per character.
+    pub fn saves_dir(&self) -> Option<PathBuf> {
+        self.data.dir.as_ref().map(|d| d.join(SAVES_DIR))
+    }
+
     /// Folder for the dev snapshots.
     pub fn snapshots_dir(&self) -> Option<PathBuf> {
-        self.data.dir.as_ref().map(|d| d.join("snapshots"))
+        self.data.dir.as_ref().map(|d| d.join(SNAPSHOTS_DIR))
     }
 
     /// The entries to show, in order: settings, saves, snapshots, logs.
@@ -223,10 +236,15 @@ impl Locations {
                 self.config.dir.clone(),
                 &self.config.reason,
             ),
-            entry("Saves", "run.sav", self.data.dir.clone(), &self.data.reason),
+            entry(
+                "Saves",
+                "one save per character",
+                self.saves_dir(),
+                &self.data.reason,
+            ),
             entry(
                 "Snapshots",
-                "dev snapshots (F5/F9)",
+                "dev snapshots (F5/F9), one per character",
                 self.snapshots_dir(),
                 &self.data.reason,
             ),
@@ -453,6 +471,10 @@ mod tests {
         assert_eq!(l.data.reason, Reason::PortableFolder);
         assert_eq!(l.portable_root, Some("/game/warlock-data".into()));
         assert_eq!(
+            l.saves_dir().unwrap(),
+            Path::new("/game/warlock-data/data/saves")
+        );
+        assert_eq!(
             l.snapshots_dir().unwrap(),
             Path::new("/game/warlock-data/data/snapshots")
         );
@@ -573,7 +595,7 @@ mod tests {
         for want in [
             "Portable: everything is in /game/warlock-data",
             "Settings: /game/warlock-data/config",
-            "Saves: /game/warlock-data/data",
+            "Saves: /game/warlock-data/data/saves",
             "Snapshots: /game/warlock-data/data/snapshots",
             "Logs: /game/warlock-data/logs",
             "a warlock-data folder is next to the game",

@@ -691,6 +691,7 @@ fn attacks_the_player_does_not_perceive_leave_no_trace() {
             to,
             strike: Some(_),
             with: None,
+            ..
         } if (attacker, target, from, to) == (kobold, rat, Pos::new(3, 3), Pos::new(4, 3))
     )));
     let mut perceived = raw.clone();
@@ -760,10 +761,15 @@ fn search_the_last_seen_spot_then_go_back_and_patrol_on() {
             damage: Default::default(),
             weapon_skills: Default::default(),
             faction_override: None,
+            alignment: None,
+            alignment_override: None,
             npc: None,
             talk: Default::default(),
             satiation: None,
             stance: Default::default(),
+            free_blows: Default::default(),
+            talents: Default::default(),
+            stat_marks: Default::default(),
         },
     );
     assert_ne!(player, rat);
@@ -1082,7 +1088,7 @@ fn the_arena_fights_the_same_way_every_time() {
     let shown = messages(&a);
     for what in [
         "bites the kobold",
-        "hits the giant rat",
+        "stabs the giant rat",
         "kobold archer",
         "casts a spell at the",
         "dies.",

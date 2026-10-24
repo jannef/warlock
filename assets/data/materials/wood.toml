@@ -1,3 +1,12 @@
 [[material]]
 id = "wood"
 name = "wood"
+group = "wood"
+color = "#9c6b3c"
+weight = 40
+to_hit = -1
+damage = -2
+protection = 30
+value = 20
+rarity = { weight = 800, deeper = -30 }
+gear = { weight = 800, deeper = -40 }

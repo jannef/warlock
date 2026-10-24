@@ -31,6 +31,7 @@ The in-game `?` screen is authoritative: it is generated from your current key b
 | Skills | `S` |
 | Weapon skills | `W` |
 | Quest log | `q` |
+| Message history (see [Messages](#messages)) | `M` |
 | Info page 1 to 9 (while an info screen is open) | `1` to `9` |
 | Next / previous info page (wraps) | `Tab` / `Shift`+`Tab` |
 | Rest | `R` |
@@ -43,9 +44,11 @@ The in-game `?` screen is authoritative: it is generated from your current key b
 | Abilities: everything you can do because of who you are, in one menu | `a` (see [Abilities](abilities.md)) |
 | Use the ability you used last again | `A` |
 | Bash with your shield (an ability: also in the abilities menu) | no key until you bind one, then a direction |
+| Disarm a trap (an ability: also in the abilities menu) | no key until you bind one, then a direction |
 | Next target while aiming (with Shift: the one before) | `Tab` |
 | Use a tool: dig into a wall with a pick-axe | `U`, then a direction |
 | Show or hide the controls | `?` |
+| Show the next messages at `--more--` / skip the rest | `Space` or `Enter` / `Esc` |
 | Yes / no, when a question asks | `y` / `n` |
 | Pause menu | `Esc` |
 | Save and quit (unbound by default; use the pause menu) | none |
@@ -64,9 +67,20 @@ On every menu and screen:
 | Left / right (change a setting) | Left / Right, or `h` / `l` |
 | Choose | `Enter` |
 | Back | `Esc`, always |
-| Erase a character (the seed), reset a key (Controls) | `Delete` or `Backspace` |
+| Reset a key (Controls), delete a saved character (Characters) | `Delete` or `Backspace` |
 | Mark a stack, mark everything (picking up, dropping) | `Space`, `,` |
 | Next / previous page of a list of items | `>` or `PageDown` / `<` or `PageUp` |
+
+## Text fields
+
+In a text field (your character's name), every key types what it types, but these:
+
+| Command | Keys |
+|---|---|
+| Accept the text | `Enter` |
+| Erase the last character | `Backspace` or `Delete` |
+| A random name | `Tab` |
+| Back | `Esc`, always |
 
 On a list that names its rows by letter (your pack, a pile, the equipment slots) or by number
 (the topics someone offers), those letters and digits always pick rows, whatever
@@ -78,7 +92,7 @@ and shows a page at a time: the letters name the rows of the page you see, start
 
 You can rebind every key but `Esc` in the Controls screen (main menu or pause menu, then
 Controls). It lists the commands in groups, by where they are used: in play, while aiming, in the
-rest prompt, on menus and screens, on the info pages, in the question windows, and (in builds
+rest prompt, at `--more--`, on menus and screens, in text fields, on the info pages, in the question windows, and (in builds
 that have them) the developer keys. Select a command, press `Enter`, then press the new key. It
 becomes the command's main key, and its other keys (such as the numpad) stay. A key another
 command of the same group already uses moves to the new command, and the screen says what moved;
@@ -88,7 +102,8 @@ page on an info screen, and `y` and `n` move you in play but answer yes and no i
 
 You cannot lock yourself out: `Esc` always backs out of every screen and cancels every prompt,
 and it cannot be taken; neither can the last key of up, down, or choose on the menus, which you
-need to come back to Controls. `Delete` resets the selected command to its default keys, and
+need to come back to Controls, nor the last key that accepts a text field, which you need to name
+a new character. `Delete` resets the selected command to its default keys, and
 **Reset all keys** resets every command. If your keys still get in the way, start the game with
 `warlock --reset-keys`: every key goes back to its default, and the game starts as usual. Your keys
 are kept with your [settings](settings.md).
@@ -110,7 +125,8 @@ such a file, `keymaps/default.toml`.
 Opening, closing, and kicking a door, and bashing with your shield, ask `In which direction? (Esc
 to cancel)` on the message line, digging asks `Dig in which direction? (Esc to cancel)` (see
 [Digging and walls](digging.md)), chatting with several creatures near asks `Talk in which
-direction? (Esc to cancel)` (see [People and talk](npcs.md)), and
+direction? (Esc to cancel)` (see [People and talk](npcs.md)), disarming a trap asks `Disarm in
+which direction? (Esc to cancel)` (see [Traps](traps.md#disarming-traps)), and
 resting asks how long (see [Resting](resting.md)). Answer with a direction or the key shown, or
 press `Esc` to cancel. Pressing any other command cancels the prompt. The rest prompt's keys (`h`,
 `d`, `n`) are their own: they can be rebound without touching movement, and the prompt names
@@ -191,8 +207,9 @@ A letter, or `Enter` on the marked row, eats it. See
 
 ## Abilities
 
-`a` opens the abilities menu: everything you can do because of who you are (a shield bash, the
-skills you use as actions, and later racial, class, and item abilities), grouped by where each
+`a` opens the abilities menu: everything you can do because of who you are (a shield bash,
+disarming a trap, the other skills you use as actions, and later racial, class, and item
+abilities), grouped by where each
 comes from and lettered like a list of items. Choose one by its letter, or `Enter` on the `>`
 row; one you cannot use now is greyed out with why. It then asks for what it needs, such as a
 direction. The menu opens on the ability you used last, and `A` uses that one again at once.
@@ -206,9 +223,8 @@ stay on the equipment screen until you press `Esc`. See [Equipment](equipment.md
 
 ## The screen
 
-The map fills most of the window. Above it, the **message line** shows the last two messages;
-those from earlier turns are dimmed, and a message repeated in a row is shown once with a count,
-as in `You open the door. (×2)`. Prompts and look mode use the same line.
+The map fills most of the window. Above it, the **message line** (two rows) shows what this
+turn brought (see [Messages](#messages)). Prompts and look mode use the same line.
 
 Below the map, the **status bar** shows, from left to right:
 
@@ -239,6 +255,25 @@ temperature, the region, then the year of the date, then the date. The weather, 
 burden, your hunger, your status effects (the least urgent first), your mana, your hit points,
 and the name of the level stay longest. Parts come back as soon as there is room.
 
+## Messages
+
+The message line shows the messages of this turn, everything said since you last acted, one
+after another, wrapped at the ends of words. Rows they leave free show earlier messages, one a
+row; those from before the last turn are dimmed. A message repeated in a row is shown once with
+a count, as in `You open the door. (×2)`.
+
+When a turn says more than the two rows hold, the line shows what fits followed by `--more--`
+and waits: `Space` or `Enter` shows the rest, a page at a time, and `Esc` skips what is left of
+this turn's messages. Until then no other key does anything (a key you hold down never turns
+the page), so nothing happens that you have not read. A rest or a long dig counts as one turn
+here: what was said during it, and what stopped it, shows the same way. Both keys can be rebound in their own group in Controls
+(skipping has no key until you bind one; `Esc` always skips). A screen that opens by itself,
+such as someone answering you, comes first: `--more--` waits beneath it until it closes.
+
+`M` opens the **message history**: every message the game keeps (the last 200), the newest at
+the bottom, where it opens. The up and down keys scroll it a line at a time, `<` and `>` (or
+`PageUp` and `PageDown`) a screenful; `Esc`, `Enter`, or `M` closes it. It takes no time.
+
 ## Character
 
 `@` shows your name, your race, gender, and class, your age, birthday, and
@@ -252,7 +287,7 @@ carry, and the weights at which your [burden](burden.md) changes. It takes no ti
 ## Skills
 
 `S` lists the [skills](skills.md) you are trained in, each with its value and a small meter of how
-near it is to its next point. The arrow keys pick a skill to read what it is about. It takes no
+practised it is (how big its next roll at a level-up will be). The arrow keys pick a skill to read what it is about. It takes no
 time; press `S` or `Esc` to close it.
 
 ## Info pages

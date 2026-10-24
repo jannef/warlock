@@ -48,8 +48,11 @@ impl World {
         if actor.diseases.has(disease) {
             return false;
         }
-        let modifier = actor.effective_stats(&self.content).modifier(def.check);
+        // Strong constitution (spec §8 "Talents") adds to the check.
+        let modifier = actor.effective_stats(&self.content).modifier(def.check)
+            + actor.talent_mods(&self.content).disease_checks;
         if check(&mut self.state.rng, modifier, def.difficulty) {
+            self.train_resisting(id, def.check);
             return false;
         }
         self.infect(id, disease, by)
@@ -117,7 +120,11 @@ impl World {
         let Some(actor) = self.state.actors.get_mut(&id) else {
             return false;
         };
-        let modifier = actor.effective_stats(&content).modifier(def.check);
+        let talents = actor.talent_mods(&content);
+        let modifier = actor.effective_stats(&content).modifier(def.check) + talents.disease_checks;
+        // Fever-proof (spec §8 "Talents"): fewer checks won in a row shake it off, never under 1.
+        let recovery = i32::from(def.recovery) - talents.disease_recovery;
+        let recovery = u8::try_from(recovery.max(1)).unwrap_or(def.recovery);
         let Some(infection) = actor.diseases.get_mut(disease) else {
             return true;
         };
@@ -142,9 +149,10 @@ impl World {
         let n = infection.progressions;
         if check(&mut self.state.rng, modifier, def.difficulty) {
             infection.streak = infection.streak.saturating_add(1);
-            if def.recovers() && infection.streak >= def.recovery {
+            if def.recovers() && infection.streak >= recovery {
                 self.end_disease(id, disease, events);
             }
+            self.train_resisting(id, def.check);
             return true;
         }
         infection.streak = 0;

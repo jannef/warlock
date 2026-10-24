@@ -58,12 +58,37 @@ makes way for you onto a trap you stood on sets it off too.
 
 No trap lies on water that can freeze, and a teleport never sets you down on ice.
 
+## Disarming traps
+
+If you are trained in **Disable device** (thieves are), you can try to take apart a trap you
+know of, on the floor or on a door, from the cell next to it: **Disarm a trap** in the
+[abilities menu](abilities.md) (`a`), then the direction. A trap you have not found cannot be
+disarmed: trying where none is known only tells you "You know of no trap there.", whether one is
+hidden there or not, and takes no time.
+
+A try is a [check](diseases.md#checks): two twelve-sided dice, plus your Dexterity
+modifier, plus what your Disable device gives (+8 at 100, +12 at 200; see
+[Skills](skills.md)), against the trap's **difficulty**, the same number finding it takes (deeper
+in a dungeon, both are harder). Reach it and the trap is gone for good ("You disarm the arrow
+trap."). Fall short and it stays ("You fail to disarm the arrow trap."); fall short by **5 or
+more** and it goes off at you ("You set off the arrow trap!"), as if you had set it off where you
+stand: the arrow shoots at you from its slit, the spears strike at you, the fireball bursts
+around the trap, the lightning runs from it through you, you tumble into the pit and lose your
+next action climbing back out, the alarm rings, or you are wrenched elsewhere. A trap with
+charges spends one. A natural 2 always fails and a natural 24 always succeeds.
+
+Every try takes **12 seconds** at a normal pace, whatever comes of it, and may train Disable
+device. You can try again as often as you like: nothing remembers a failed try, and time (and the
+risk) is the only price. Disarming earns no [experience](experience.md).
+
+{{#include generated/trap-disarm.md}}
+
 ## Trapped doors
 
 A trap may lie on a door instead of the floor. It belongs to the door: walking through the
 doorway never sets it off, and stepping into it never asks. It goes off when someone **opens**
-the door (`o`, or walking into it; unlocking it with a key too), you or a creature that opens
-doors, and at every **kick** at the door, whether the door breaks or holds. It goes off at
+the door (`o`, or walking into it; unlocking it with a key too, or picking its lock), you or a
+creature that opens doors, and at every **kick** at the door, whether the door breaks or holds. It goes off at
 whoever opened or kicked it, from the door: an arrow shoots from the wall beside the door at them,
 a blade strikes at them, lightning runs from the door through them, and a fireball bursts out on
 both sides of the door, even while it is still shut. Pits are never on doors.
@@ -72,7 +97,7 @@ The trap stays with the door: shut the door again and it is set again, ready to 
 next one who opens it (unless it has run out of charges). A door you kick in takes its trap with
 it. Searching finds a door's trap like any hidden trap ("You notice that the door is trapped: an
 arrow trap."), and once you know it, it shows as `^` in place of the door. A secret door is never
-trapped.
+trapped. A door's trap can be disarmed like any other (see [Disarming traps](#disarming-traps)).
 
 ## Where traps are
 

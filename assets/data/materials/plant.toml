@@ -1,3 +1,5 @@
+# Food: no group.
 [[material]]
 id = "plant"
 name = "plant matter"
+color = "#7fa65a"

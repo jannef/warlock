@@ -4,13 +4,15 @@ name = "javelin"
 glyph = ")"
 fg = "#c4a46c"
 class = "melee_weapons"
-materials = ["wood"]
+materials = [{ part = "head", of = "iron" }, { part = "haft", of = "wood", share = 85 }]
+made_of = ["metal", "bone", "stone"]
 ornament = "inlay"
 weight = 1000
 value = 10
 slot = "main_hand"
 damage = "1d6"
 category = "spears"
+damage_type = "piercing"
 kind = "weapon"
 # Made to be thrown.
 range = 8

@@ -5,12 +5,14 @@ glyph = ")"
 fg = "#a8b4b8"
 class = "melee_weapons"
 materials = ["iron"]
+made_of = ["metal"]
 ornament = "inlay"
 weight = 2000
 value = 50
 slot = "main_hand"
 damage = "1d8"
 category = "spears"
+damage_type = "piercing"
 # Its tines catch blows.
 parry = 1
 kind = "weapon"

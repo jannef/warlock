@@ -1,0 +1,13 @@
+# Worse than steel in a fight and dearer: very rare.
+[[material]]
+id = "electrum"
+name = "electrum"
+group = "metal"
+color = "#e6d690"
+weight = 191
+to_hit = -1
+damage = 0
+protection = 60
+value = 1200
+rarity = { weight = 10 }
+gear = { weight = 5 }

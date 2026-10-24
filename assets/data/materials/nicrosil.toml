@@ -1,0 +1,13 @@
+# Better than steel and dearer: very rare, and only deeper.
+[[material]]
+id = "nicrosil"
+name = "nicrosil"
+group = "metal"
+color = "#9fa8a3"
+weight = 108
+to_hit = 0
+damage = 1
+protection = 110
+value = 1000
+rarity = { weight = 10, deeper = 1, level = 8 }
+gear = { weight = 5, deeper = 1, level = 8 }

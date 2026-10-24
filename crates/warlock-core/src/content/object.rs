@@ -27,6 +27,15 @@
 //! and the `bash` dice of a blow with it (spec §8 "Weapon skills": the shield bash). A weapon or
 //! a missile may have `penetration`: that much of a target's Protection it ignores.
 //!
+//! Damage types (spec §8 "Damage types"): every weapon (and a shield that bashes) names the
+//! kind of damage it does (`damage_type`, an id in `data/damage_types.toml`, or two: a sword's
+//! `["slashing", "piercing"]` does whichever is better against its target), and may name the
+//! `verb` its blows are said with ("cleaves") instead of the kind's; a weapon or a missile may
+//! add damage of another kind (`added = { type = "fire", damage = "1d4" }`: the flaming arrow).
+//! Anything worn or held may `resist` kinds in percent (`resist = { cold = 20 }`), and armour
+//! with Protection may stand better or worse against a physical kind (`protects = { slashing =
+//! 1, piercing = -1 }`).
+//!
 //! Every weapon names its weapon skill (`category`, an id in `data/weapon_skills.toml`; spec §8
 //! "Weapon skills"): a skill of role `melee` for what is wielded in a hand, `launcher` for a
 //! missile weapon, `thrown` for what is only thrown (a rock).
@@ -68,6 +77,7 @@
 use super::action::check_cost;
 use super::affix::{ItemKind, MAX_ITEM_LEVEL};
 use super::creature::CreatureDef;
+use super::damage_type::TypeNames;
 use super::hunger::Food;
 use super::item_class::{ItemClassDef, ItemClassId};
 use super::light::LightId;
@@ -77,15 +87,17 @@ use super::particles::ParticleEmitter;
 use super::scroll::{ReadSpec, Reading};
 use super::slot::SlotDef;
 use super::weapon_skill::{Role, WeaponSkillId, WeaponSkillTable};
-use super::{Content, ContentError, CreatureId};
+use super::{Content, ContentError, CreatureId, DamageTypeId};
 use crate::color::Rgb;
 use crate::combat::{Attack, CRITS, DEFAULT_CRIT, DEFAULT_THREAT, THREATS};
+use crate::damage::{Kinds, MAX_RESISTANCE, MIN_RESISTANCE, Rider};
 use crate::dice::Dice;
 use crate::door::Key;
 use crate::item_parts::ItemPart;
 use crate::object::Stack;
 use crate::time::{DAY, Duration};
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
 /// The largest Defence bonus one object may give, and the largest `to_hit` either way.
 pub const MAX_BONUS: i32 = 20;
@@ -157,6 +169,9 @@ pub(super) struct ObjectSpec {
     /// or a table (`{ part = "setting", of = "ruby", share = 10 }`; [`super::part`]).
     #[serde(default)]
     pub materials: Vec<PartEntry>,
+    /// What its main part may be made of (#194, the shorthand for its table's `made_of`): groups
+    /// and materials ([`part::construction`]).
+    pub made_of: Option<Vec<String>>,
     /// The single material objects had before parts: refused, with a pointer to `materials`.
     pub material: Option<String>,
     /// The part a gem is set as when loot ornaments it (a part id: `tip`), instead of its
@@ -210,6 +225,23 @@ pub(super) struct ObjectSpec {
     /// missile weapon, ammunition).
     #[serde(default)]
     pub penetration: i32,
+    /// The kind of damage a weapon does (spec §8 "Damage types"), or two of which a blow does
+    /// the better: `damage_type = "slashing"`, `["slashing", "piercing"]`. A shield's is its
+    /// bash's.
+    pub damage_type: Option<TypeNames>,
+    /// What a blow with a weapon does to its target, instead of its damage type's verb:
+    /// "cleaves".
+    pub verb: Option<String>,
+    /// Damage of another kind a weapon, a missile weapon, or ammunition adds to every hit:
+    /// `added = { type = "fire", damage = "1d4" }`.
+    pub added: Option<AddedSpec>,
+    /// What it resists while worn or held, in percent per damage type: `resist = { cold = 20 }`.
+    #[serde(default)]
+    pub resist: BTreeMap<String, i32>,
+    /// How its Protection stands against each physical kind, more or less than its
+    /// `protection`: `protects = { slashing = 1, piercing = -1 }`.
+    #[serde(default)]
+    pub protects: BTreeMap<String, i32>,
     /// The weapon skill a weapon trains and draws on (`data/weapon_skills.toml`).
     pub category: Option<String>,
     /// How far a missile weapon shoots, or a throwing weapon (anything else with a range) is
@@ -285,6 +317,10 @@ pub struct ObjectDef {
     /// What it is made of, part by part, the main part first ([`ObjectDef::material`]); the
     /// shares sum to 100. Never empty.
     pub parts: Vec<Part>,
+    /// What each part may be made of (#194, [`ObjectDef::made_of`]): one list per part, in
+    /// `parts`' order, each sorted by material id; empty when no part has a list, as then each
+    /// is made only of its own material.
+    pub construction: Vec<Vec<MaterialId>>,
     /// The part a gem is set as when loot ornaments it, instead of its class's (spec §7 "Gems").
     pub ornament: Option<PartId>,
     /// Weight of one, in grams; at least 1.
@@ -323,6 +359,16 @@ pub struct ObjectDef {
     /// How much of a target's Protection an attack with it ignores (a weapon, a missile weapon,
     /// ammunition: a shot's is its launcher's and its ammunition's together). Rules only.
     pub penetration: i32,
+    /// What a blow with it does to its target, if it says ("cleaves"); else its damage type's
+    /// verb, else "hits" (spec §8 "Damage types").
+    pub verb: Option<String>,
+    /// Damage of another kind every hit with it adds (a weapon's, a missile weapon's, or
+    /// ammunition's: a shot adds the launcher's and the ammunition's).
+    pub added: Option<Rider>,
+    /// What it resists while worn or held, in percent per damage type (spec §8 "Damage types").
+    pub resist: Vec<(DamageTypeId, i32)>,
+    /// How its Protection stands against each physical kind, more or less than `protection`.
+    pub protects: Vec<(DamageTypeId, i32)>,
     /// Its weapon skill: a weapon's `category` (`None` for anything else, and without
     /// `data/weapon_skills.toml`).
     pub skill: Option<WeaponSkillId>,
@@ -371,6 +417,38 @@ pub struct ObjectDef {
     pub read: Option<Reading>,
 }
 
+/// Damage of another kind an attack with the object adds, as data writes it: `added = { type =
+/// "fire", damage = "1d4" }`.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct AddedSpec {
+    #[serde(rename = "type")]
+    pub kind: String,
+    pub damage: Dice,
+}
+
+impl AddedSpec {
+    /// The rider it names: a damage type that is no physical kind (Protection never soaks
+    /// added damage), with dice that can do harm.
+    fn resolve(&self, content: &Content) -> Result<Rider, String> {
+        let kind = (content.damage_type_id(&self.kind))
+            .ok_or_else(|| format!("`added`: unknown damage type `{}`", self.kind))?;
+        if content.damage_type(kind).physical {
+            return Err(format!(
+                "`added`: `{}` is physical; added damage is of another kind (fire, cold, ...)",
+                self.kind
+            ));
+        }
+        if self.damage.min() < 0 || self.damage.max() < 1 {
+            return Err("`added`: `damage` must be dice that can do harm, e.g. \"1d4\"".into());
+        }
+        Ok(Rider {
+            kind,
+            dice: self.damage,
+        })
+    }
+}
+
 /// How a burning object burns where it lies: the light it gives, and for how long.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Burning {
@@ -398,6 +476,7 @@ impl ObjectDef {
             fg: creature.fg,
             class,
             parts: vec![Part::whole(material)],
+            construction: Vec::new(),
             ornament: None,
             weight: creature.weight,
             // Nobody buys or sells a corpse (spec §7 "Shops").
@@ -416,6 +495,10 @@ impl ObjectDef {
             shield: 0,
             bash: None,
             penetration: 0,
+            verb: None,
+            added: None,
+            resist: Vec::new(),
+            protects: Vec::new(),
             skill: None,
             range: None,
             reloads: false,
@@ -443,6 +526,34 @@ impl ObjectDef {
     /// decides what a single material decides. [`ObjectDef::parts`] has every part.
     pub fn material(&self) -> MaterialId {
         self.parts[0].material
+    }
+
+    /// What its part `part` (an index in `parts`) may be made of (#194): its construction list,
+    /// else only its own material.
+    pub fn made_of(&self, part: usize) -> &[MaterialId] {
+        match self.construction.get(part) {
+            Some(list) => list,
+            None => std::slice::from_ref(&self.parts[part].material),
+        }
+    }
+
+    /// What its main part must be able to be, for its construction list: a weapon's working
+    /// part for what strikes or is shot (a weapon, a launcher, ammunition), armour for what is
+    /// worn as armour or held as a shield, else anything.
+    pub fn role(&self) -> part::PartRole {
+        if self.attack.is_some() || self.ammo.is_some() {
+            part::PartRole::Weapon
+        } else if (self.kind).is_some_and(|k| k.is_armour() || k == ItemKind::Shield) {
+            part::PartRole::Armour
+        } else {
+            part::PartRole::Any
+        }
+    }
+
+    /// Whether it is jewellery (a ring, an amulet): another material changes only what it is
+    /// worth and how it looks (#193).
+    pub fn is_jewellery(&self) -> bool {
+        matches!(self.kind, Some(ItemKind::Ring | ItemKind::Amulet))
     }
 
     /// What one of it made of `parts` is worth, in gold coins: its `value`, scaled by what
@@ -538,6 +649,7 @@ impl ObjectSpec {
     pub(super) fn resolve(
         self,
         file: &str,
+        content: &Content,
         classes: &[ItemClassDef],
         parts: impl Fn(&[PartEntry]) -> Result<Vec<Part>, String>,
         light: impl Fn(&str) -> Option<LightId>,
@@ -599,7 +711,17 @@ impl ObjectSpec {
                 return Err(err(format!("`{field}` must not be empty")));
             }
         }
-        let attack = self.attack().map_err(err)?;
+        // A weapon names its kind of damage; a shield's names its bash's, else bare hands'.
+        let armed = self.damage.is_some() || self.bash.is_some();
+        let kinds = content
+            .resolve_kinds(self.damage_type.as_ref())
+            .map_err(err)?;
+        if !kinds.is_empty() && !armed {
+            return Err(err(
+                "`damage_type` is for weapons (`damage`) and shields that `bash`".into(),
+            ));
+        }
+        let attack = self.attack(kinds).map_err(err)?;
         self.check_defence().map_err(err)?;
         self.check_protection(slots).map_err(err)?;
         self.check_ranged().map_err(err)?;
@@ -608,10 +730,44 @@ impl ObjectSpec {
             (None, _) => None,
             (Some(damage), shield) if shield > 0 => Some(Attack {
                 damage,
-                ..Attack::unarmed()
+                kinds: if kinds.is_empty() {
+                    Attack::unarmed(content.unarmed_damage()).kinds
+                } else {
+                    kinds
+                },
+                ..Attack::unarmed(None)
             }),
             (Some(_), _) => return Err(err("`bash` is for shields (`shield`)".into())),
         };
+        if self.verb.as_ref().is_some_and(|v| v.trim().is_empty()) {
+            return Err(err("`verb` must not be empty".into()));
+        }
+        if self.verb.is_some() && !armed {
+            return Err(err(
+                "`verb` is for weapons (`damage`) and shields that `bash`".into(),
+            ));
+        }
+        let added = match &self.added {
+            None => None,
+            Some(_) if self.damage.is_none() && self.ammo.is_none() => {
+                return Err(err(
+                    "`added` is for weapons (`damage`) and ammunition (`ammo`)".into(),
+                ));
+            }
+            Some(spec) => Some(spec.resolve(content).map_err(err)?),
+        };
+        let percent = MIN_RESISTANCE..=MAX_RESISTANCE;
+        let resist =
+            (content.resolve_per_kind("resist", &self.resist, percent, false)).map_err(err)?;
+        if !resist.is_empty() && self.slot.is_none() {
+            return Err(err("`resist` is for things worn or held (`slot`)".into()));
+        }
+        let protects =
+            (content.resolve_per_kind("protects", &self.protects, -MAX_BONUS..=MAX_BONUS, true))
+                .map_err(err)?;
+        if !protects.is_empty() && self.protection == 0 {
+            return Err(err("`protects` is for armour with `protection`".into()));
+        }
         let burning = match (&self.light, self.burns) {
             (None, None) => None,
             (Some(id), Some(seconds)) => {
@@ -654,7 +810,7 @@ impl ObjectSpec {
         let read = self
             .read
             .clone()
-            .map(ReadSpec::resolve)
+            .map(|r| r.resolve(content))
             .transpose()
             .map_err(err)?;
         if read.is_some() && (self.slot.is_some() || self.food.is_some() || self.flies()) {
@@ -674,6 +830,8 @@ impl ObjectSpec {
             fg: self.fg,
             class,
             parts,
+            // Resolved as content loads, once the object's role is known.
+            construction: Vec::new(),
             // Resolved as content loads, once the part names are known.
             ornament: None,
             weight: self.weight,
@@ -692,6 +850,10 @@ impl ObjectSpec {
             shield: self.shield,
             bash,
             penetration: self.penetration,
+            verb: self.verb,
+            added,
+            resist,
+            protects,
             skill,
             range: self.range,
             reloads: self.reloads,
@@ -837,8 +999,8 @@ impl ObjectSpec {
     }
 
     /// The weapon it is, from `damage` and the fields that go with it: only something that is
-    /// worn or wielded is a weapon, and a missile weapon must be one.
-    fn attack(&self) -> Result<Option<Attack>, String> {
+    /// worn or wielded is a weapon, and a missile weapon must be one. Its blows do `kinds`.
+    fn attack(&self, kinds: Kinds) -> Result<Option<Attack>, String> {
         let Some(damage) = self.damage else {
             let weapon_only = [
                 ("threat", self.threat.is_some()),
@@ -886,6 +1048,7 @@ impl ObjectSpec {
             threat,
             crit,
             strength: self.strength,
+            kinds,
         }))
     }
 
@@ -983,8 +1146,9 @@ impl ObjectSpec {
 
 /// Parses objects as level files place them: ids, each optionally with a count (`"arrow*12"`),
 /// first on top; a loose gem names its gem (`"gem:ruby*3"`: the gems' object made of that gem,
-/// of the plain size and cut; spec §7 "Gems"). A stackable object becomes one stack (the same
-/// placement twice joins it); any other object becomes a stack of one per count.
+/// of the plain size and cut; spec §7 "Gems"), and anything else may name another material its
+/// base item may be made of (`"dagger:bronze"`, a variant, #193). A stackable object becomes one
+/// stack (the same placement twice joins it); any other object becomes a stack of one per count.
 pub(super) fn parse_stacks(specs: &[String], content: &Content) -> Result<Vec<Stack>, String> {
     let mut stacks: Vec<Stack> = Vec::new();
     for spec in specs {
@@ -1002,8 +1166,8 @@ pub(super) fn parse_stacks(specs: &[String], content: &Content) -> Result<Vec<St
             }
             None => (spec.trim(), 1),
         };
-        let (id, gem) = match placed.split_once(':') {
-            Some((id, gem)) => (id.trim(), Some(gem.trim())),
+        let (id, made) = match placed.split_once(':') {
+            Some((id, made)) => (id.trim(), Some(made.trim())),
             None => (placed, None),
         };
         let object = content
@@ -1014,7 +1178,7 @@ pub(super) fn parse_stacks(specs: &[String], content: &Content) -> Result<Vec<St
                 "`{id}` is a corpse: corpses lie only where creatures died"
             ));
         }
-        let stack = placed_gem(content, object, gem)?;
+        let stack = placement(content, object, made)?;
         if content.object(object).stackable {
             match stacks.iter_mut().find(|s| s.same_goods(&stack)) {
                 Some(same) => same.count += count,
@@ -1027,25 +1191,47 @@ pub(super) fn parse_stacks(specs: &[String], content: &Content) -> Result<Vec<St
     Ok(stacks)
 }
 
-/// One of `object` as a placement names it: a loose gem (the gems' object) of its `gem`, of the
-/// plain size and cut; anything else as it is (it names no gem).
-fn placed_gem(content: &Content, object: ObjectId, gem: Option<&str>) -> Result<Stack, String> {
-    let id = &content.object(object).id;
+/// One of `object` as a placement names it: a loose gem (the gems' object) of the gem it names,
+/// of the plain size and cut; anything else as it is, or made of the material it names (its
+/// main part, which must be on its construction list).
+fn placement(content: &Content, object: ObjectId, made: Option<&str>) -> Result<Stack, String> {
+    let def = content.object(object);
+    let id = &def.id;
     let loose = content.gems().filter(|g| g.object == object);
-    match (loose, gem) {
+    match (loose, made) {
         (None, None) => Ok(Stack::one(object)),
-        (None, Some(gem)) => Err(format!(
-            "`{id}:{gem}`: only a loose gem names its gem (`gem:ruby`)"
-        )),
-        (Some(_), None) => Err(format!("`{id}` is a loose gem: name its gem, `{id}:ruby`")),
-        (Some(gems), Some(gem)) => {
-            let material = (content.material_id(gem))
-                .filter(|m| content.material(*m).gem.is_some())
-                .ok_or_else(|| format!("`{id}:{gem}`: `{gem}` is no gem (data/materials/)"))?;
-            let part = ItemPart::gem(content, None, material, gems.plain());
+        (None, Some(made)) => {
+            let material = (content.material_id(made))
+                .ok_or_else(|| format!("`{id}:{made}`: `{made}` is no material"))?;
+            if content.material(material).gem.is_some() {
+                return Err(format!(
+                    "`{id}:{made}`: only a loose gem names its gem (`gem:{made}`); nothing is \
+                     made of one"
+                ));
+            }
+            let part = ItemPart::material(content, None, material);
+            crate::item_parts::check(def, std::slice::from_ref(&part), content)
+                .map_err(|m| format!("`{id}:{made}`: {m}"))?;
             Ok(Stack::one(object).with_parts(vec![part]))
         }
+        (Some(gems), Some(gem)) => placed_gem(content, object, gems, gem),
+        (Some(_), None) => Err(format!("`{id}` is a loose gem: name its gem, `{id}:ruby`")),
     }
+}
+
+/// One of the gems' `object` made of `gem`, of the plain size and cut.
+fn placed_gem(
+    content: &Content,
+    object: ObjectId,
+    gems: &super::Gems,
+    gem: &str,
+) -> Result<Stack, String> {
+    let id = &content.object(object).id;
+    let material = (content.material_id(gem))
+        .filter(|m| content.material(*m).gem.is_some())
+        .ok_or_else(|| format!("`{id}:{gem}`: `{gem}` is no gem (data/materials/)"))?;
+    let part = ItemPart::gem(content, None, material, gems.plain());
+    Ok(Stack::one(object).with_parts(vec![part]))
 }
 
 #[cfg(test)]
@@ -1064,6 +1250,7 @@ mod tests {
             fg: Rgb::WHITE,
             class: ItemClassId(0),
             parts: vec![Part::whole(MaterialId(0))],
+            construction: Vec::new(),
             ornament: None,
             weight: 1,
             value: 0,
@@ -1081,6 +1268,10 @@ mod tests {
             shield: 0,
             bash: None,
             penetration: 0,
+            verb: None,
+            added: None,
+            resist: Vec::new(),
+            protects: Vec::new(),
             skill: None,
             range: None,
             reloads: false,

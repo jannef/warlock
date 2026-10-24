@@ -13,9 +13,16 @@
 //!   ([`DEFAULT_THREAT`] 22, 3.5's natural 20) threatens; a second roll against the same Defence
 //!   confirms it, and then the damage is rolled `crit` times ([`DEFAULT_CRIT`] 2).
 //! - **Damage**: the attack's dice plus its bonus, at least 1 ([`Profile`]).
-//! - **Protection** ("Pv") takes damage off every hit that lands: one draw from ⌈Pv/2⌉ to Pv
-//!   ([`soak`]), after the critical multiplied the damage, less the attack's penetration. A hit
-//!   may be soaked to nothing ([`Strike::Soaked`]).
+//! - **Protection** ("Pv") takes damage off every physical hit that lands: one draw from ⌈Pv/2⌉
+//!   to Pv ([`soak`]), after the critical multiplied the damage, less the attack's penetration;
+//!   the Pv is the target's against the kind of damage ([`Protection`]: a piece may stand
+//!   better or worse against one physical kind), and an element is never soaked. A hit may be
+//!   soaked to nothing ([`Strike::Soaked`]).
+//! - **Damage types** (spec §8 "Damage types"): an attack does one of its [`Kinds`], whichever
+//!   is better against the target (decided before the dice, no draw), and may carry
+//!   [`Rider`]s of other kinds (a flaming arrow's fire), rolled after its own dice. After the
+//!   soak, the target's [`Resistances`] take their percentage off each kind
+//!   ([`damage::resist`]); a hit resisted to nothing is [`Strike::Resisted`].
 //! - **Hit points**: Toughness plus what race and class (a creature: its type) give
 //!   ([`max_hp`]); one comes back every `max(60 s, 360 s − 12 s × Toughness)` of game time
 //!   ([`regen_seconds`]) at the normal pace (resting and status effects change the pace,
@@ -25,7 +32,8 @@
 //! shown to the player as a number but their own hit points, Defence, and Protection: never a
 //! to-hit, a modifier, a roll, or a penetration.
 
-use crate::content::Benefit;
+use crate::content::{Benefit, DamageTypeId};
+use crate::damage::{self, Kinds, Protection, Resistances, Rider};
 use crate::dice::Dice;
 use crate::rng::Rng;
 use crate::stats::{Stat, Stats};
@@ -180,6 +188,12 @@ impl Defence {
     }
 
     /// The bonus in `category`.
+    /// This Defence with `bonus` more in `category` (a bonus against one kind of attack).
+    pub fn plus(mut self, category: Category, bonus: i32) -> Self {
+        self.bonus[category.index()] += bonus;
+        self
+    }
+
     pub fn bonus(&self, category: Category) -> i32 {
         self.bonus[category.index()]
     }
@@ -224,7 +238,7 @@ impl Defence {
 /// its critical (threat and multiplier). Built from a weapon, a creature's natural attack, or
 /// bare hands, with the attacker's stats ([`Profile::melee`], [`Profile::ranged`],
 /// [`Profile::thrown`]).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Profile {
     pub to_hit: i32,
     pub damage: Dice,
@@ -240,6 +254,12 @@ pub struct Profile {
     /// How much of the target's Protection it ignores (a weapon's or a missile's
     /// `penetration`: a war hammer, a crossbow bolt).
     pub penetration: i32,
+    /// The kinds of damage its own dice do (spec §8 "Damage types"): a blow does whichever is
+    /// better against its target; none for an untyped attack.
+    pub kinds: Kinds,
+    /// Damage of other kinds added to every roll (a flaming arrow's fire, a magic weapon's
+    /// "adds 1d4 fire damage"), rolled after the extra die, in this order; never soaked.
+    pub riders: Vec<Rider>,
 }
 
 /// What an attack is made with, as data gives it: a weapon (`data/objects.toml`) or a creature's
@@ -253,17 +273,22 @@ pub struct Attack {
     pub crit: u8,
     /// The Strength a bow needs (`None`: any).
     pub strength: Option<u8>,
+    /// The kinds of damage it does (spec §8 "Damage types"): one, or two of which a blow does
+    /// the better; none without damage types in content.
+    pub kinds: Kinds,
 }
 
 impl Attack {
-    /// Bare hands: 1d3, default critical.
-    pub fn unarmed() -> Self {
+    /// Bare hands: 1d3, default critical, of the kind `unarmed` (the content's unarmed damage
+    /// type, bludgeoning; `None`: untyped).
+    pub fn unarmed(unarmed: Option<DamageTypeId>) -> Self {
         Self {
             damage: unarmed_dice(),
             to_hit: 0,
             threat: DEFAULT_THREAT,
             crit: DEFAULT_CRIT,
             strength: None,
+            kinds: unarmed.map_or(Kinds::NONE, Kinds::one),
         }
     }
 }
@@ -343,15 +368,55 @@ impl Profile {
             crit: attack.crit,
             extra: None,
             penetration: 0,
+            kinds: attack.kinds,
+            riders: Vec::new(),
         }
     }
 
+    /// Adds `rider` to every roll of the damage (after those added before it).
+    pub fn add_rider(&mut self, rider: Rider) {
+        self.riders.push(rider);
+    }
+
     /// One roll of the damage: the dice, the extra dice if any, plus the bonus (it may be below
-    /// 1; a blow's total is at least 1).
-    fn roll_damage(&self, rng: &mut Rng) -> i32 {
+    /// 1; a blow's total is at least 1); then one roll of each rider, in order, added to
+    /// `riders` by kind.
+    fn roll_damage(&self, rng: &mut Rng, riders: &mut Vec<(DamageTypeId, i32)>) -> i32 {
         let dice = self.damage.roll(rng);
         let extra = self.extra.map_or(0, |d| d.roll(rng));
+        for rider in &self.riders {
+            let rolled = rider.dice.roll(rng).max(0);
+            match riders.iter_mut().find(|(k, _)| *k == rider.kind) {
+                Some((_, sum)) => *sum += rolled,
+                None => riders.push((rider.kind, rolled)),
+            }
+        }
         dice + extra + self.bonus
+    }
+}
+
+/// The side of an attack that is struck: its Defence, its Protection against each kind, and
+/// its resistances.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Target {
+    pub defence: Defence,
+    pub protection: Protection,
+    pub resistances: Resistances,
+}
+
+impl Target {
+    /// A target of `defence` with no Protection and no resistance (tests, intents).
+    pub fn bare(defence: Defence) -> Self {
+        Self::protected(defence, 0)
+    }
+
+    /// A target of `defence` with plain Protection `pv` against everything.
+    pub fn protected(defence: Defence, pv: i32) -> Self {
+        Self {
+            defence,
+            protection: Protection::plain(pv),
+            resistances: Resistances::default(),
+        }
     }
 }
 
@@ -368,29 +433,57 @@ pub enum Strike {
     Hit { critical: bool },
     /// It hit, but the target's Protection took all of its damage: it glanced off.
     Soaked,
+    /// It hit, but the target resisted all of what was left: it did no harm (spec §8 "Damage
+    /// types").
+    Resisted,
 }
 
 impl Strike {
-    /// Whether it landed: a hit, soaked or not.
+    /// Whether it landed: a hit, whether or not it was soaked or resisted to nothing.
     pub fn is_hit(self) -> bool {
-        matches!(self, Strike::Hit { .. } | Strike::Soaked)
+        matches!(self, Strike::Hit { .. } | Strike::Soaked | Strike::Resisted)
     }
 }
 
-/// An attack resolved: what came of it and the damage it does (0 for a miss or a hit soaked to
-/// nothing, else at least 1).
+/// An attack resolved: what came of it, the damage it does (0 for a miss or a hit soaked or
+/// resisted to nothing, else at least 1), and the kind its own dice did (what it is said with;
+/// `None` for an untyped attack or a miss).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Blow {
     pub strike: Strike,
     pub damage: i32,
+    pub kind: Option<DamageTypeId>,
 }
 
-/// Resolves an attack with `profile` against a target of `defence` and `protection`, drawing
-/// from `rng` in this order: the two dice of the attack roll; on an attributable miss one draw
-/// for why; on a threat the two dice of the confirmation roll; then one draw per damage die for
-/// each time the damage is rolled; then, on a hit against Protection above the attack's
-/// penetration, one draw for the soak ([`soak`]).
-pub fn strike(profile: &Profile, defence: &Defence, protection: i32, rng: &mut Rng) -> Blow {
+impl Blow {
+    /// A miss.
+    pub const fn missed(by: Option<Category>) -> Self {
+        Self {
+            strike: Strike::Missed { by },
+            damage: 0,
+            kind: None,
+        }
+    }
+
+    /// A plain hit of `damage` (a blast, a bolt, a fall: nothing rolled to hit) of `kind`.
+    pub const fn plain(damage: i32, kind: Option<DamageTypeId>) -> Self {
+        Self {
+            strike: Strike::Hit { critical: false },
+            damage,
+            kind,
+        }
+    }
+}
+
+/// Resolves an attack with `profile` against `target`, drawing from `rng` in this order: the
+/// two dice of the attack roll; on an attributable miss one draw for why; on a threat the two
+/// dice of the confirmation roll; then, for each time the damage is rolled, one draw per damage
+/// die, per extra die, and per rider die (in rider order); then, on a hit against Protection
+/// (against the kind done) above the attack's penetration, one draw for the soak ([`soak`]).
+/// The kind the attack does is picked before the dice ([`Kinds::best`]), and the resistances
+/// come last ([`damage::resist`]), each kind on its own: no draws.
+pub fn strike(profile: &Profile, target: &Target, rng: &mut Rng) -> Blow {
+    let defence = &target.defence;
     let dv = defence.total();
     let natural = roll_natural(rng);
     if !hits(natural, profile.to_hit, dv) {
@@ -402,34 +495,56 @@ pub fn strike(profile: &Profile, defence: &Defence, protection: i32, rng: &mut R
         } else {
             defence.why_missed(total, rng.below(weight))
         };
-        return Blow {
-            strike: Strike::Missed { by },
-            damage: 0,
-        };
+        return Blow::missed(by);
     }
+    let kind = profile.kinds.best(
+        |k| target.resistances.get(Some(k)),
+        |k| target.protection.against(Some(k)),
+    );
     let threat = natural >= i32::from(profile.threat);
     let critical = threat && hits(roll_natural(rng), profile.to_hit, dv);
     let times = if critical { profile.crit.max(1) } else { 1 };
-    let damage: i32 = (0..times).map(|_| profile.roll_damage(rng)).sum();
+    let mut riders = Vec::new();
+    let damage: i32 = (0..times)
+        .map(|_| profile.roll_damage(rng, &mut riders))
+        .sum();
     // The critical multiplied the damage first; the soak comes off once, so criticals punch
-    // through armour.
-    let damage = damage.max(1) - soak(protection - profile.penetration, rng);
-    if damage <= 0 {
+    // through armour. An element meets no armour: the Protection against it is 0.
+    let pv = target.protection.against(kind);
+    let main = damage.max(1) - soak(pv - profile.penetration, rng);
+    let added: i32 = riders.iter().map(|(_, d)| d).sum();
+    if main <= 0 && added <= 0 {
         return Blow {
             strike: Strike::Soaked,
             damage: 0,
+            kind,
+        };
+    }
+    // Then what the target resists of each kind, on its own.
+    let resisted = |kind: Option<DamageTypeId>, amount: i32| {
+        damage::resist(amount, target.resistances.get(kind))
+    };
+    let total = resisted(kind, main)
+        + (riders.iter())
+            .map(|&(k, d)| resisted(Some(k), d))
+            .sum::<i32>();
+    if total <= 0 {
+        return Blow {
+            strike: Strike::Resisted,
+            damage: 0,
+            kind,
         };
     }
     Blow {
         strike: Strike::Hit { critical },
-        damage,
+        damage: total,
+        kind,
     }
 }
 
 /// The damage `protection` takes off a hit (spec §8 "Combat": Protection, "Pv"): one draw in
-/// [`soaks`], uniform; nothing, and no draw, when it is 0 or less (an unprotected target, or a
-/// penetration that ignores all of it). One physical soak for every hit: damage types (#151)
-/// will make it soak only slashing, piercing, and bludgeoning, better or worse by kind.
+/// [`soaks`], uniform; nothing, and no draw, when it is 0 or less (an unprotected target, a
+/// penetration that ignores all of it, or an element, which no armour stops).
 pub fn soak(protection: i32, rng: &mut Rng) -> i32 {
     if protection <= 0 {
         return 0;
@@ -515,6 +630,7 @@ impl Health {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::damage::IMMUNE;
     use std::collections::BTreeMap;
 
     fn dice(text: &str) -> Dice {
@@ -530,6 +646,8 @@ mod tests {
             crit,
             extra: None,
             penetration: 0,
+            kinds: Kinds::NONE,
+            riders: Vec::new(),
         }
     }
 
@@ -543,7 +661,7 @@ mod tests {
         let mut rng = Rng::stream(5, "combat-test");
         let mut seen = std::collections::BTreeSet::new();
         for _ in 0..1000 {
-            let blow = strike(&p, &dv, 0, &mut rng);
+            let blow = strike(&p, &Target::bare(dv), &mut rng);
             if blow.strike == (Strike::Hit { critical: false }) {
                 assert!((2..=10).contains(&blow.damage), "{}", blow.damage);
                 seen.insert(blow.damage);
@@ -702,8 +820,8 @@ mod tests {
         let hard = Defence::from_bonuses([(Category::Armour, 30)]);
         let (mut hit, mut missed) = (0, 0);
         for _ in 0..2000 {
-            match strike(&profile(0, "1d4", 2, 2), &hard, 0, &mut rng).strike {
-                Strike::Hit { .. } | Strike::Soaked => hit += 1,
+            match strike(&profile(0, "1d4", 2, 2), &Target::bare(hard), &mut rng).strike {
+                Strike::Hit { .. } | Strike::Soaked | Strike::Resisted => hit += 1,
                 Strike::Missed { .. } => missed += 1,
             }
         }
@@ -722,7 +840,7 @@ mod tests {
         let mut rng = Rng::stream(3, "combat-test");
         let mut seen = BTreeMap::new();
         for _ in 0..2000 {
-            let blow = strike(&fixed(3), &dv, 0, &mut rng);
+            let blow = strike(&fixed(3), &Target::bare(dv), &mut rng);
             *seen.entry((blow.strike, blow.damage)).or_insert(0) += 1;
         }
         let keys: Vec<_> = seen.keys().copied().collect();
@@ -741,11 +859,13 @@ mod tests {
             ..profile(0, "1d4", 2, 2)
         };
         for _ in 0..500 {
-            let blow = strike(&p, &dv, 0, &mut rng);
+            let blow = strike(&p, &Target::bare(dv), &mut rng);
             match blow.strike {
                 Strike::Hit { critical: true } => assert!((4..=10).contains(&blow.damage)),
                 Strike::Hit { critical: false } => assert!((2..=5).contains(&blow.damage)),
-                Strike::Missed { .. } | Strike::Soaked => assert_eq!(blow.damage, 0),
+                Strike::Missed { .. } | Strike::Soaked | Strike::Resisted => {
+                    assert_eq!(blow.damage, 0)
+                }
             }
         }
     }
@@ -759,7 +879,7 @@ mod tests {
         };
         let mut rng = Rng::stream(4, "combat-test");
         for _ in 0..500 {
-            let blow = strike(&weak, &dv, 0, &mut rng);
+            let blow = strike(&weak, &Target::bare(dv), &mut rng);
             if blow.strike.is_hit() {
                 assert_eq!(blow.damage, 1);
             }
@@ -773,7 +893,7 @@ mod tests {
         let run = |seed| {
             let mut rng = Rng::stream(seed, "combat-test");
             (0..50)
-                .map(|_| strike(&p, &dv, 0, &mut rng))
+                .map(|_| strike(&p, &Target::bare(dv), &mut rng))
                 .collect::<Vec<_>>()
         };
         assert_eq!(run(5), run(5));
@@ -784,7 +904,7 @@ mod tests {
             // Far out of reach, everything but a natural 24 is a plain miss: two draws.
             let mut expected = rng.clone();
             let natural = roll_natural(&mut expected);
-            let blow = strike(&profile(-20, "1d4", 22, 2), &dv, 0, &mut rng);
+            let blow = strike(&profile(-20, "1d4", 22, 2), &Target::bare(dv), &mut rng);
             if natural < SURE_HIT {
                 assert_eq!(blow.strike, Strike::Missed { by: None });
                 assert_eq!(rng, expected, "two draws");
@@ -792,7 +912,7 @@ mod tests {
             // Against a high Defence a roll of 10 or more misses for a reason: one draw more.
             let mut expected = rng.clone();
             let natural = roll_natural(&mut expected);
-            let blow = strike(&profile(0, "1d4", 22, 2), &hard, 0, &mut rng);
+            let blow = strike(&profile(0, "1d4", 22, 2), &Target::bare(hard), &mut rng);
             if (BASE_DEFENCE..SURE_HIT).contains(&natural) {
                 expected.below(20);
                 let armour = Some(Category::Armour);
@@ -859,7 +979,7 @@ mod tests {
             // 5 to 7, the soak taken once.
             let mut expected = rng.clone();
             let natural = roll_natural(&mut expected);
-            let blow = strike(&fixed(3, 0), &dv, 4, &mut rng);
+            let blow = strike(&fixed(3, 0), &Target::protected(dv, 4), &mut rng);
             seen.insert((blow.strike, blow.damage));
             if natural != FUMBLE {
                 // The confirmation, the damage (fixed: no draws), then one for the soak.
@@ -889,17 +1009,163 @@ mod tests {
         // Penetration 2 against Pv 4 leaves Pv 2 (soaks 1 or 2); penetration 4 leaves none, and
         // no draw: the blow draws as against an unprotected target.
         for _ in 0..500 {
-            let blow = strike(&fixed(2, 2), &dv, 4, &mut rng);
+            let blow = strike(&fixed(2, 2), &Target::protected(dv, 4), &mut rng);
             if blow.strike == (Strike::Hit { critical: false }) {
                 assert!(matches!(blow.damage, 1 | 2), "{}", blow.damage);
             }
             let mut bare = rng.clone();
-            let through = strike(&fixed(2, 4), &dv, 4, &mut rng);
-            assert_eq!(through, strike(&fixed(2, 0), &dv, 0, &mut bare));
+            let through = strike(&fixed(2, 4), &Target::protected(dv, 4), &mut rng);
+            assert_eq!(through, strike(&fixed(2, 0), &Target::bare(dv), &mut bare));
             assert_eq!(rng, bare);
-            let past = strike(&fixed(2, 9), &dv, 4, &mut rng);
+            let past = strike(&fixed(2, 9), &Target::protected(dv, 4), &mut rng);
             assert_ne!(past.strike, Strike::Soaked);
         }
+    }
+
+    /// A target that resists `resist` (kind, percent) with `pv` against the physical kinds 0
+    /// and 1 (2 is an element), `pv` adjusted by `vs` (kind, more).
+    fn typed_target(pv: i32, vs: &[(usize, i32)], resist: &[(usize, i32)]) -> Target {
+        let mut against = vec![pv, pv, 0];
+        for &(k, more) in vs {
+            against[k] += more;
+        }
+        let resistances = Resistances::sum(
+            3,
+            resist.iter().map(|&(k, p)| (DamageTypeId(k as u8), p)),
+            [],
+        );
+        Target {
+            defence: Defence::from_bonuses([(Category::Dexterity, -10)]),
+            protection: Protection::for_test(pv, against),
+            resistances,
+        }
+    }
+
+    #[test]
+    fn a_blow_does_the_better_of_its_kinds_and_elements_meet_no_armour() {
+        let (slash, pierce, fire) = (DamageTypeId(0), DamageTypeId(1), DamageTypeId(2));
+        let sword = Profile {
+            bonus: 3,
+            kinds: Kinds::of(&[slash, pierce]).expect("two kinds"),
+            ..profile(0, "+0", 24, 2)
+        };
+        let mut rng = Rng::stream(11, "combat-test");
+        // Mail that stands +1 against slashing: the sword stabs, through Pv 2 (soaks 1 or 2).
+        let mail = typed_target(2, &[(0, 1)], &[]);
+        for _ in 0..200 {
+            let blow = strike(&sword, &mail, &mut rng);
+            if blow.strike.is_hit() {
+                assert_eq!(blow.kind, Some(pierce));
+            }
+            if blow.strike == (Strike::Hit { critical: false }) {
+                assert!(blow.damage <= 2, "{}", blow.damage);
+            }
+        }
+        // A target that resists piercing: the sword slashes, whatever the armour says.
+        let tough = typed_target(2, &[(0, 1)], &[(1, 50)]);
+        for _ in 0..50 {
+            let blow = strike(&sword, &tough, &mut rng);
+            if blow.strike.is_hit() {
+                assert_eq!(blow.kind, Some(slash));
+            }
+        }
+        // A fiery blow meets no Protection at all, and the resistance comes off after: 3 at
+        // 50 % is 2 (half up); at 100 % it is resisted, not soaked, and does nothing.
+        let torch = Profile {
+            kinds: Kinds::one(fire),
+            ..sword.clone()
+        };
+        let plated = typed_target(20, &[], &[(2, 50)]);
+        let immune = typed_target(20, &[], &[(2, IMMUNE)]);
+        let mut seen = std::collections::BTreeSet::new();
+        for _ in 0..100 {
+            let mut bare = rng.clone();
+            let blow = strike(&torch, &plated, &mut rng);
+            // No soak draw: the same draws as against nobody's armour.
+            let unarmoured = strike(&torch, &typed_target(0, &[], &[(2, 50)]), &mut bare);
+            assert_eq!(blow, unarmoured);
+            assert_eq!(rng, bare);
+            seen.insert((blow.strike, blow.damage));
+            let shrugged = strike(&torch, &immune, &mut rng);
+            if shrugged.strike.is_hit() {
+                assert_eq!((shrugged.strike, shrugged.damage), (Strike::Resisted, 0));
+            }
+        }
+        assert!(
+            seen.contains(&(Strike::Hit { critical: false }, 2)),
+            "{seen:?}"
+        );
+        assert!(!seen.iter().any(|(s, _)| *s == Strike::Soaked));
+    }
+
+    #[test]
+    fn riders_roll_after_the_weapons_dice_and_are_resisted_on_their_own() {
+        let (pierce, fire) = (DamageTypeId(1), DamageTypeId(2));
+        let arrow = Profile {
+            bonus: 2,
+            kinds: Kinds::one(pierce),
+            riders: vec![Rider {
+                kind: fire,
+                dice: Dice::of(1, 4),
+            }],
+            ..profile(0, "+0", 24, 2)
+        };
+        let mut rng = Rng::stream(12, "combat-test");
+        let plain = typed_target(0, &[], &[]);
+        for _ in 0..200 {
+            // The attack roll, (on a natural 24 the confirmation,) then for each roll of the
+            // damage (a fixed 2, no draw) the fire die, nothing else.
+            let mut expected = rng.clone();
+            let natural = roll_natural(&mut expected);
+            let blow = strike(&arrow, &plain, &mut rng);
+            if natural != FUMBLE {
+                let critical = natural == SURE_HIT && roll_natural(&mut expected) != FUMBLE;
+                let times = if critical { 2 } else { 1 };
+                let fire: i32 = (0..times).map(|_| Dice::of(1, 4).roll(&mut expected)).sum();
+                assert_eq!(rng, expected, "the rider is the last draw");
+                assert_eq!(blow.damage, 2 * times + fire);
+                assert_eq!(blow.kind, Some(pierce));
+            }
+        }
+        // Mail of Pv 4 soaks the point (2 to 4 off the 2: nothing left) but never the flame:
+        // the blow still burns for the fire die alone, and is a hit, not soaked.
+        let mail = typed_target(4, &[], &[]);
+        let mut burnt = 0;
+        for _ in 0..200 {
+            let blow = strike(&arrow, &mail, &mut rng);
+            if blow.strike == (Strike::Hit { critical: false }) {
+                assert!((1..=4).contains(&blow.damage), "{}", blow.damage);
+                burnt += 1;
+            }
+            assert_ne!(blow.strike, Strike::Soaked, "the flame is never soaked");
+        }
+        assert!(burnt > 100);
+        // Against a target immune to fire the point alone counts; one immune to both is
+        // resisted, not soaked (there was damage to resist).
+        let fireproof = typed_target(0, &[], &[(2, IMMUNE)]);
+        let unhurt = typed_target(0, &[], &[(1, IMMUNE), (2, IMMUNE)]);
+        for _ in 0..50 {
+            let blow = strike(&arrow, &fireproof, &mut rng);
+            if blow.strike == (Strike::Hit { critical: false }) {
+                assert_eq!(blow.damage, 2);
+            }
+            let blow = strike(&arrow, &unhurt, &mut rng);
+            if blow.strike.is_hit() {
+                assert_eq!((blow.strike, blow.damage), (Strike::Resisted, 0));
+            }
+        }
+        // A blow soaked to nothing with no rider is still soaked, not resisted.
+        let point = Profile {
+            riders: Vec::new(),
+            ..arrow
+        };
+        let mut soaked = false;
+        for _ in 0..100 {
+            let blow = strike(&point, &mail, &mut rng);
+            soaked |= blow.strike == Strike::Soaked;
+            assert_ne!(blow.strike, Strike::Resisted);
+        }
+        assert!(soaked);
     }
 
     #[test]
@@ -914,6 +1180,7 @@ mod tests {
             threat: 20,
             crit: 2,
             strength: None,
+            kinds: Kinds::NONE,
         };
         // Melee: Strength to hit and to damage.
         let melee = Profile::melee(&sword, &stats(16, 18));
@@ -928,6 +1195,7 @@ mod tests {
             threat: 22,
             crit: 3,
             strength: Some(14),
+            kinds: Kinds::NONE,
         };
         let strong = Profile::ranged(&bow, &stats(16, 14));
         assert_eq!((strong.to_hit, strong.bonus, strong.crit), (2, 0, 3));
@@ -935,7 +1203,7 @@ mod tests {
         let weak = Profile::ranged(&bow, &stats(11, 14));
         assert_eq!((weak.to_hit, weak.bonus), (-1, -3));
         // Bare hands: 1d3 plus Strength.
-        let fists = Profile::melee(&Attack::unarmed(), &stats(8, 10));
+        let fists = Profile::melee(&Attack::unarmed(None), &stats(8, 10));
         assert_eq!(
             (fists.damage, fists.to_hit, fists.bonus),
             (dice("1d3"), -1, -1)

@@ -11,11 +11,13 @@
 //!   its `length` cells or the first wall.
 //!
 //! Both name the `spell` effect presentation shows (`data/effects.toml`), which must be an
-//! effect of their shape when that file exists ([`check_effect`]).
+//! effect of their shape when that file exists ([`check_effect`]), and the kind of damage they
+//! do (`damage_type`, spec §8 "Damage types": the fireball fire, the frost cold, the lightning
+//! electricity), which the targets resist and no armour soaks.
 
-use super::Content;
 use super::effect::EffectShape;
 use super::terrain::MAX_HARDNESS;
+use super::{Content, DamageTypeId};
 use crate::dice::Dice;
 use crate::ice;
 use crate::perception::VIEW_RADIUS;
@@ -43,6 +45,8 @@ pub struct Burst {
     pub spell: String,
     pub radius: i32,
     pub damage: Dice,
+    /// The kind of damage it does (spec §8 "Damage types"); `None` without damage types.
+    pub kind: Option<DamageTypeId>,
     /// What it does to walls (spec §8 "Digging"): it breaks those in the blast whose hardness is
     /// below this; 0 breaks none.
     pub blast: u16,
@@ -57,6 +61,8 @@ pub struct Bolt {
     pub spell: String,
     pub length: i32,
     pub damage: Dice,
+    /// The kind of damage it does (spec §8 "Damage types"); `None` without damage types.
+    pub kind: Option<DamageTypeId>,
 }
 
 /// A spell's fields as data writes them, for [`Burst::new`] and [`Bolt::new`]: what a trap and a
@@ -65,6 +71,8 @@ pub struct Bolt {
 pub(super) struct SpellFields {
     pub spell: Option<String>,
     pub damage: Option<Dice>,
+    /// The one kind of damage it does (resolved by the caller, which knows the content).
+    pub kind: Option<DamageTypeId>,
     pub radius: Option<i32>,
     pub blast: Option<u16>,
     pub heat: bool,
@@ -115,6 +123,7 @@ impl Burst {
             spell: fields.spell()?,
             radius,
             damage: fields.damage()?,
+            kind: fields.kind,
             blast,
             ice,
         })
@@ -136,8 +145,31 @@ impl Bolt {
             spell: fields.spell()?,
             length,
             damage: fields.damage()?,
+            kind: fields.kind,
         })
     }
+}
+
+/// The one kind of damage a spell or a trap does, from its `damage_type` (`names`): one at
+/// most; none is an untyped spell.
+pub(super) fn one_kind(
+    content: &Content,
+    names: Option<&super::damage_type::TypeNames>,
+) -> Result<Option<DamageTypeId>, String> {
+    let kinds = content.resolve_kinds(names)?;
+    if kinds.iter().count() > 1 {
+        return Err("`damage_type` names one kind here".into());
+    }
+    Ok(kinds.main())
+}
+
+/// What a blow of `kind` is said with when data gives no `verb`: the kind's verb ("burns"),
+/// else "hits".
+pub(super) fn default_verb(content: &Content, kind: Option<DamageTypeId>) -> String {
+    kind.map_or_else(
+        || "hits".to_string(),
+        |k| content.damage_type(k).verb.clone(),
+    )
 }
 
 /// With spell effects in content, `spell` must name an effect of `shape` (`data/effects.toml`).

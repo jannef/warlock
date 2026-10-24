@@ -8,10 +8,12 @@ materials = [
     { part = "blade", of = "steel" },
     { part = "grip", of = "leather", share = 10 },
 ]
+made_of = ["metal", "dragonbone"]
 weight = 1800
 value = 80
 slot = "main_hand"
 damage = "1d8"
 threat = 20
 category = "long_blades"
+damage_type = ["slashing", "piercing"]
 kind = "weapon"

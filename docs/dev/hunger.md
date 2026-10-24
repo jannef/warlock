@@ -17,7 +17,7 @@ corpses), races' `hunger` percent, objects' `food = { nutrition, turns, keeps, l
 the shelf life is whole hours or days, `"8h"`, `"30d"`) and `cures` (a remedy: the means it applies with
 `World::cure` as it is eaten, `World::remedy`, checked against the statuses' and diseases'
 `cured_by` at load; the angelica root cures diseases), creatures' `corpse` (default true) and `on_eat`
-(`OnEat`), scenarios' `carry` (starting pack). Corpses are objects made at load
+(`OnEat`), scenarios' `carry` (a starting pack on top of the character's kit, docs/dev/character-creation.md). Corpses are objects made at load
 (`Content::load_hunger`, after the file's objects, id `<creature>_corpse`, `ObjectDef::corpse`
 names the creature, `Content::corpse_of`), feeding and keeping by their creature's size, and
 level files cannot place corpses. **Rot** (#195): every food stack carries `Stack::died` (when

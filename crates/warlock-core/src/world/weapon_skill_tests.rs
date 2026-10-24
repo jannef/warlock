@@ -547,6 +547,7 @@ fn a_shield_bash_is_a_blow_with_the_shield_that_trains_shield_bashing() {
             }
             Strike::Hit { critical: true } => assert_eq!(text, "You bash the dummy hard!"),
             Strike::Soaked => unreachable!("the dummy has no Protection"),
+            Strike::Resisted => unreachable!("the dummy resists nothing"),
             Strike::Missed { .. } => {
                 missed = true;
                 assert_eq!(text, "You miss the dummy.");
@@ -775,16 +776,16 @@ fn starting_ranks_come_from_race_and_class_and_never_move_the_stats() {
     assert!(picks.contains(&(3, 0)) && picks.contains(&(1, 2)));
     // Starting ranks roll from their own stream: without them the stats are the same.
     let mut files = ContentFiles::builtin();
-    for path in ["data/races.toml", "data/classes.toml"] {
-        let text = match path {
-            "data/races.toml" => include_str!("../../../../assets/data/races.toml"),
-            _ => include_str!("../../../../assets/data/classes.toml"),
-        };
-        let stripped: String = (text.lines())
-            .filter(|l| !l.starts_with("weapon_skill") && !l.starts_with("style"))
-            .map(|l| format!("{l}\n"))
-            .collect();
-        files.insert(path, &stripped);
+    for table in ["races", "classes"] {
+        files.edit_table(table, |text| {
+            (text.lines())
+                // Kit lines that go with a weapon skill or style go too (they would name what
+                // the class no longer trains).
+                .filter(|l| !l.starts_with("weapon_skill") && !l.starts_with("style"))
+                .filter(|l| !l.contains("trained ="))
+                .map(|l| format!("{l}\n"))
+                .collect()
+        });
     }
     let without = Content::load(&files).expect("valid");
     let showcase = BUILTIN.scenario("showcase").expect("showcase");

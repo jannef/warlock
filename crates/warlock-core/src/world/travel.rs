@@ -5,8 +5,8 @@
 //! the dispatch lines.
 
 use super::{
-    Actor, ActorId, ActorKind, LevelState, Mind, Patrol, Shop, Spent, Talk, World, WorldError,
-    WorldState,
+    Actor, ActorId, ActorKind, FreeBlows, LevelState, Mind, Patrol, Shop, Spent, Talk, World,
+    WorldError, WorldState,
 };
 use crate::action::{AttackKind, Event};
 use crate::burden;
@@ -113,6 +113,12 @@ impl World {
         }
         let player = self.state.player;
         let fleeing = self.flees(player, to);
+        // Stepping away from beside a hostile opportunist, they are struck as they turn to go
+        // (`free_blow.rs`), and may not live to take the step.
+        if !self.step_away(player, to, events) {
+            let onto = self.state.current().terrain[to];
+            return Spent::Turn(self.step_price(player, self.content.terrain(onto), fleeing));
+        }
         // Ice there may give way (then it is a step into the water); climbing out onto it from
         // the water takes longer.
         let footing = self.tread(player, from, to);
@@ -289,6 +295,7 @@ impl World {
     /// staircase.
     pub(super) fn travel(&mut self, to: &str, at: Option<Pos>) -> Result<(), WorldError> {
         let from = self.state.current_level.clone();
+        let new = !self.state.levels.contains_key(to);
         self.visit(to, Some(&from))?;
         let target = &self.state.levels[to];
         let arrival = at
@@ -311,6 +318,9 @@ impl World {
         self.state.current_level = to.to_string();
         self.state.overworld_step = None;
         self.reach(to);
+        if new {
+            self.discover_level(to);
+        }
         // Sounds remembered on the level left say nothing about this one.
         self.state.recent_sounds.clear();
         if let Some(line) = self.content.level(to).and_then(|t| t.arrival.clone()) {
@@ -442,10 +452,15 @@ pub(super) fn instantiate_level(
             damage: Default::default(),
             weapon_skills: def.weapon_skills.clone(),
             faction_override: spawn.faction,
+            alignment: None,
+            alignment_override: spawn.alignment,
             npc: spawn.npc.clone(),
             talk: Talk::default(),
             satiation: None,
             stance: CombatStance::Neutral,
+            free_blows: FreeBlows::default(),
+            talents: Default::default(),
+            stat_marks: Default::default(),
         };
         actor.hp = actor.max_hp(content);
         actor.mana = actor.max_mana(content);

@@ -1,0 +1,7 @@
+[[talent]]
+id = "mighty_kick"
+name = "Mighty kick"
+tree = "might"
+description = "Your kicks land like hammers: they hurt creatures more, and doors give way sooner."
+effects = [{ kind = "kick_die", sides = 6 }, { kind = "door_kick", value = 4 }]
+systems = ["kicks", "doors"]

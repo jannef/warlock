@@ -11,5 +11,6 @@ value = 0
 stackable = true
 damage = "1d3"
 category = "thrown"
+damage_type = "bludgeoning"
 range = 6
 missile = "•"

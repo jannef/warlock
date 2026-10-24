@@ -5,12 +5,14 @@ glyph = ")"
 fg = "#c8ccd4"
 class = "melee_weapons"
 materials = ["steel"]
+made_of = ["metal", "bone", "stone"]
 weight = 450
 value = 30
 slot = "main_hand"
 light_weapon = true
 damage = "1d4"
 category = "daggers"
+damage_type = "piercing"
 threat = 20
 kind = "weapon"
 # Balanced for throwing: it tumbles end over end.

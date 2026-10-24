@@ -64,6 +64,7 @@ fn hit(damage: i32, critical: bool) -> Blow {
     Blow {
         strike: Strike::Hit { critical },
         damage,
+        kind: None,
     }
 }
 

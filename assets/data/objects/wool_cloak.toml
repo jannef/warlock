@@ -4,8 +4,10 @@ name = "wool cloak"
 glyph = "["
 fg = "#6e7c5a"
 class = "cloaks"
-materials = ["cloth"]
+materials = ["wool"]
+made_of = ["cloth", "fur", "leather"]
 weight = 1200
 value = 20
 slot = "cloak"
+resist = { cold = 10 }
 kind = "cloak"

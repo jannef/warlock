@@ -1,0 +1,13 @@
+# Cold resistance, in percent.
+[[suffix]]
+id = "of_warmth"
+name = "of Warmth"
+effect = "resistance"
+damage_type = "cold"
+bases = ["body", "cloak", "gloves", "boots", "ring", "amulet"]
+tiers = [
+  { level = 1, min = 10, max = 15 },
+  { level = 3, min = 15, max = 25 },
+  { level = 5, min = 25, max = 35 },
+  { level = 7, min = 35, max = 45 },
+]

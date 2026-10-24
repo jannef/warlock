@@ -70,8 +70,9 @@ not buy it at any price, and what rots on a shop's floor is no longer for sale.
 
 Each kind of shop asks a part of an object's worth above it, and pays a part of it for what it
 buys. Your **Presence** moves prices in your favour, or against you if it is low, and so does the
-**Appraise** skill if you are trained in it: you pay less and are offered more. Neither is ever
-shown as a number; you see only the prices. Shops sell and buy by [item
+**Appraise** skill if you are trained in it: you pay less and are offered more. Shopkeepers are
+good folk, so your [alignment](alignment.md) moves their prices too: a saint pays a little less,
+an evil character more. None of it is ever shown as a number; you see only the prices. Shops sell and buy by [item
 class](objects.md#item-classes):
 
 {{#include generated/shops.md}}
