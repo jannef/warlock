@@ -143,5 +143,12 @@ message adds the fields each one lists), so they survive a wiped `/tmp`:
    pushes, and stops. It does not merge the PR.
 3. **Agents keep contexts small**: read files in parts, grep, filter test output, never print
    whole diffs or logs.
+4. **Local or cloud, never both.** Every agent job above (feature, finisher, an escalation fix, a
+   design document, filing issues) can run as a local subagent (subscription quota) or as a
+   Claude Managed Agent in a cloud sandbox (API credits) with the same brief and the same
+   stopping point; `ops/agents/README.md` has the launchers and when to pick which. The
+   integrator chooses one place per job, by quota; a cloud agent never doubles a local one. A
+   cloud-built PR is verified on Linux (the sandbox has CI's lavapipe, so `cargo xtask golden`
+   compares there) instead of on macOS.
 
 The integrator schedules finishers: one per PR, when that PR is next in line.

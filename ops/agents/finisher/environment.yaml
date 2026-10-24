@@ -1,0 +1,37 @@
+name: warlock-finisher-env
+description: Ubuntu sandbox that builds and renders the Warlock workspace (software Vulkan); GitHub, crates.io and Rust hosts only. Shared by the finisher and the engineer.
+config:
+  type: cloud
+  networking:
+    type: limited
+    allow_package_managers: true   # required for `packages`; also covers apt
+    allowed_hosts:
+      - github.com
+      - api.github.com
+      - uploads.github.com
+      - codeload.github.com
+      - objects.githubusercontent.com
+      - '*.blob.core.windows.net'   # gh run download (artifact storage)
+      - pipelines.actions.githubusercontent.com
+      - results-receiver.actions.githubusercontent.com
+      - crates.io
+      - index.crates.io
+      - static.crates.io
+      - static.rust-lang.org
+      - sh.rustup.rs
+  packages:
+    apt:
+      # the Linux CI job's list ...
+      - pkg-config
+      - libudev-dev
+      - libwayland-dev
+      - libxkbcommon-dev
+      - mesa-vulkan-drivers   # lavapipe: captures and `cargo xtask golden` as on CI
+      - libvulkan1
+      # ... plus what a bare Ubuntu image lacks for cargo and the finisher's tools
+      - build-essential
+      - git
+      - curl
+      - ca-certificates
+      - jq
+      - gh
