@@ -180,7 +180,8 @@ turn) and stat damage, the player's nutrition, its npc id and talk counts, if an
 all food on the level and in the packs of those on it with when it was made (a corpse: when it
 died) and its stage, `fresh`, `old`, `rotten`, or `gone`, which the player is never shown,
 **dev-only**), `progress` (the level-up choices due, `due level 3: 1 talent`, the talents the
-player may take now by id with their choices, and the first kills that paid, **dev-only**),
+player may take now by id with their choices, the first kills that paid, and the stat training
+marks, `stat marks St 3, To 1`, **dev-only**),
 `rooms`
 (the level's special rooms: their plain ground as the effect's `mark`, then a line per room,
 **dev-only**), `ice` (the level's temperature and the thickness of the ice on its water in cm,
@@ -250,7 +251,7 @@ file). Topics:
 - `docs/dev/combat.md` — the 2d12 rules, Defence categories, strikes, hit points and death, messages
 - `docs/dev/ranged-combat.md` — firing and throwing, missiles in flight, fires, the aiming mode
 - `docs/dev/weapon-skills.md` — ranks, marks, benefits, training hooks, the styles' grips and rows
-- `docs/dev/stats.md` — the six stats, modifiers, scores and potentials, what may be shown
+- `docs/dev/stats.md` — the six stats, modifiers, scores and potentials, what may be shown, stat training (marks by use, the level-up checks)
 - `docs/dev/burden.md` — load, limits, sizes, every penalty's one hook
 - `docs/dev/hunger.md` — satiation, eating, corpses and rot, starving
 - `docs/dev/character-creation.md` — `CharacterSpec`, races, classes, genders, the horoscope, starting rolls, names

@@ -17,14 +17,42 @@ developer notes (CLAUDE.md, `docs/dev/`).
     for the rules (`stats::modifier`, `Stats::modifier`) and is **never shown**: not in the UI,
     messages, look mode, player-facing dumps, or the wiki.
   - **Potential** (ADOM-like): each stat's natural ceiling, the score it could grow towards.
-    Stored and saved, **hidden from the player** like the modifiers. Only eating a corpse raises
-    a score yet (§8 "Hunger": by 1, never past the potential, `Stats::raise`); training comes
-    later. Hunger lowers the **effective** scores for a while (Weak: Strength and Dexterity;
+    Stored and saved, **hidden from the player** like the modifiers. Eating a corpse raises a
+    score (§8 "Hunger": by 1, never past the potential, `Stats::raise`), and so does training
+    at a level (below; past the potential too, slowly). Hunger lowers the **effective** scores for a while (Weak: Strength and Dexterity;
     `Actor::effective_stats`, which combat and burden read; `Stats::adjusted`).
   - **What the player sees**: their own scores as they are now (effective, so lowered while
     Weak), on the character screen (§6) and in the `stats` dump layer; the perception snapshot carries those and nothing else of stats
     (`PerceptionView::own_scores`). A creature's stats are never shown; ground-truth dev dumps
     (`actors`, the world state) show every actor's scores and potentials.
+  - **Training** (`data/stats.toml`, `content/stat_training.rs`, `world/stat_training.rs`;
+    #231, the design's §6): the player's uses of their stats earn **training marks**
+    (`Actor::stat_marks`, per stat, saved and hashed, left out of the JSON while none; creatures
+    earn none). Each `[[training.use]]` rule (`stat`, `on`, `chance` 1 to 100) gives its stat
+    a mark on its use, one draw of the **training** stream per rule below 100, never gameplay;
+    marks never decay and have no cap. The uses (`StatUse`), each reported where it happens:
+    Strength burdened (an action but waiting under a slowing load), blow (a melee blow of the
+    player's that hits, kicks and bashes too), dig (a turn), kick (a door); Dexterity dodge, shot
+    (a shot or throw that hits), sneak (a step within earshot), climb (onto ice, out of a pit);
+    Toughness hurt (a blow that costs hit points), big_hit (a big hit or a critical on the
+    player), resisted (a disease check won, not a Willpower one), plunge (through the ice);
+    Intelligence found (a search that finds something), read (a scroll), identified (by reading),
+    discovered (a first kill of a type); Willpower spot, endured (a long action of more than one
+    turn done to its end: a rest, a dig, a search for a while, a meal), resisted_will (a
+    Willpower disease check won), hungry_fight (a blow landed while Hungry or worse); Presence
+    chat (a chat; asking a topic takes no time and trains nothing), trade (a purchase paid or a
+    sale), quest (completed), swapped (a creature making way). The uses skills share (burdened,
+    kick, dodge, sneak, spot) are one report, `World::train`; the rest `World::train_stat`.
+    **At every level gained** (`World::level_up`, level by level), each stat in display order
+    gets one check on the **levels** stream (six draws a level, always; none without the
+    data): it rises by 1 with chance `marks / (marks + need)`, `need = need_base (20) +
+    need_per_point (3) × score` (the stored score), divided by `over_potential_divisor` (4) at
+    or above the potential, where a rise lifts the potential with the score; at most 40. A rise
+    uses up the stat's marks (a failed check keeps them) and says "You feel stronger."
+    (quicker, tougher, sharper, more resolute, more confident) after "Welcome to level N."; a
+    Toughness rise brings its hit point at once. No choice, and nothing numeric is shown: no
+    marks, chance, or potential (the dev `progress` dump layer lists the marks; the wiki states
+    the rules exactly).
   - **Stat damage** (`StatDamage`, `Actor::damage`; saved, hashed): points a disease's failed
     checks take off the scores for a while; the rules read the scores less them, never below 1,
     and they mend a point a day each once no disease shows ("Diseases" below). The player sees
