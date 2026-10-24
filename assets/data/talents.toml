@@ -246,4 +246,3 @@ pending = true
 [[system]]
 id = "damage_types"
 name = "Damage types and resistances"
-pending = true

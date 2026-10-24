@@ -37,6 +37,12 @@ not.
 
 {{#include generated/damage-armour.md}}
 
+Two [talents](talents.md) work on damage types. **Elemental ward**, taken for one element
+(fire, cold, electricity, acid, or poison), resists it 25 % a rank, two ranks at most; it counts
+as gear does, under the same cap, and a ward against poison shrinks each dose of poison too.
+**Crusher** lets your blows and kicks that can strike (a mace, a club, a staff, bare hands, a
+shield bash) ignore 2 points of the target's Protection; shots and throws are not blows.
+
 The [character screen](character.md) (`@`) says what you resist in words only: "Resistant to
 cold", "Vulnerable to fire", "Immune to poison". Item descriptions show the numbers of what you
 hold ("Resists cold 20%", "+15% cold resistance", "Protection 3 (+1 against slashing, −1 against
