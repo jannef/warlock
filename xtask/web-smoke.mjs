@@ -1,6 +1,7 @@
 // Dev tool for `cargo xtask web-smoke`: drive headless Chromium over CDP, load the web build,
-// press Enter seven times (main menu -> New run -> race -> gender -> class -> name -> summary ->
-// start, the scenario's character preselected, the name left empty: a random one), check the new
+// press Enter eight times (main menu -> New run -> race -> the stars -> gender -> class -> name ->
+// summary -> start, the scenario's character preselected, the name left empty: a random one),
+// check the new
 // character's save is in localStorage (`warlock/saves/<id>.sav`, written as the run starts), wait
 // five turns, reload the page (its pagehide hook must write the run to that save), choose Continue
 // and check the run resumed at turn 5; then pause, Quit and confirm: the page must reload to the
@@ -41,6 +42,7 @@ await send('Runtime.evaluate', { expression: "document.querySelector('canvas')?.
 await key('Enter', 'Enter', 13);   // New run
 await key('Enter', 'Enter', 13);   // Showcase: on to the race
 await key('Enter', 'Enter', 13);   // the race (the showcase's, preselected)
+await key('Enter', 'Enter', 13);   // born under the stars: on to the gender
 await key('Enter', 'Enter', 13);   // the gender
 await key('Enter', 'Enter', 13);   // the class
 await key('Enter', 'Enter', 13);   // the name (empty: a random one)

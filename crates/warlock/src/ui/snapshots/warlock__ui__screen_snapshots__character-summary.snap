@@ -3,12 +3,12 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
 
-
         ┌─ Your character ─────────────────────────────────────────────────────────────────┐
         │                                                                                  │
         │ > Start the run                                                                  │
         │   Name      Maren                                                                │
         │   Race      Human                                                                │
+        │   Sign      Water Basilisk                                                       │
         │   Gender    Female                                                               │
         │   Class     Thief                                                                │
         │                                                                                  │

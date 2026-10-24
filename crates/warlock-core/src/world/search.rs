@@ -105,7 +105,8 @@ impl World {
     /// What the player adds to a check of `look`: the stat's modifier (of the effective score,
     /// spec §8 "Stats"), the skill's benefit, and the race's bonus; less the passive penalty in
     /// passing. Then their talents (spec §8 "Talents"): Keen searcher's to searching, Alert's in
-    /// passing, Trap sense's to both, and what they add to checks of the stat.
+    /// passing, the search of Trap sense and the birth signs' (Always a way, Heedless) to both,
+    /// and what they add to checks of the stat.
     pub(super) fn search_modifier(&self, look: Look) -> i32 {
         let content = &self.content;
         let player = self.state.player();
@@ -117,7 +118,7 @@ impl World {
             Look::Active => {
                 stats.modifier(Stat::Intelligence)
                     + player.skill_effect(content, Effect::Search)
-                    + talents.search
+                    + talents.searching
                     + talents.check(Stat::Intelligence)
             }
             Look::Passive => {
@@ -129,21 +130,23 @@ impl World {
                     - content.search().passive_penalty
             }
         };
-        own.saturating_add(talents.find).saturating_add(race)
+        own.saturating_add(talents.search).saturating_add(race)
     }
 
     /// Whether the player notices `hidden`, the hidden feature at `at`, in passing at all:
     /// trained in the Spot skill, or with a talent that notices (Alert), anything; else by their
-    /// race, elves anything, dwarves what is on stone, and kobolds traps; else nothing.
+    /// race, elves anything, dwarves what is on stone, and kobolds traps, or by a talent that
+    /// notices on stone (Stonewise); else nothing.
     pub(super) fn notices(&self, at: Pos, hidden: Hidden) -> bool {
         let content = &self.content;
         let player = self.state.player();
-        if player.skills.trains_effect(content, Effect::Spot)
-            || player.talent_mods(content).notice.is_some()
-        {
+        let talents = player.talent_mods(content);
+        if player.skills.trains_effect(content, Effect::Spot) || talents.notice.is_some() {
             return true;
         }
-        match self.player_race().and_then(|r| r.passive_search) {
+        let race = self.player_race().and_then(|r| r.passive_search);
+        let stone = talents.stone_sense.then_some(PassiveSearch::Stone);
+        match race.or(stone) {
             Some(PassiveSearch::All) => true,
             Some(PassiveSearch::Stone) => {
                 let terrain = self.state.current().terrain.get(at).copied();

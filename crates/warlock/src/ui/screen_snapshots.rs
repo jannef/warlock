@@ -22,6 +22,8 @@ use warlock_core::content::Content;
 struct Case {
     name: &'static str,
     scenario: &'static str,
+    /// `--seed`; none: the scenario's.
+    seed: Option<u64>,
     /// `--character`; the run starts with its kit.
     character: Option<&'static str>,
     /// Starts with the character's starting kit without naming a character.
@@ -43,6 +45,7 @@ struct Case {
 const BASE: Case = Case {
     name: "",
     scenario: "showcase",
+    seed: None,
     character: None,
     kit: false,
     actions: "",
@@ -132,6 +135,17 @@ const CASES: &[Case] = &[
         ..BASE
     },
     Case {
+        name: "sign-screen",
+        screen: Some("sign"),
+        ..BASE
+    },
+    Case {
+        name: "sign-screen-lucky",
+        screen: Some("new-run"),
+        keys: Some("4 4 0 Enter Enter"),
+        ..BASE
+    },
+    Case {
         name: "gender-screen",
         screen: Some("gender"),
         keys: Some("Down"),
@@ -164,8 +178,8 @@ const CASES: &[Case] = &[
         scenario: "world",
         screen: Some("new-run"),
         keys: Some(
-            "Down Down Down Down Down Down Down Down Enter Down Down Enter Enter Down Down Down \
-             Down Down Down Down Down Enter Enter",
+            "Down Down Down Down Down Down Down Down Enter Down Down Enter Enter Enter Down Down \
+             Down Down Down Down Down Down Enter Enter",
         ),
         size: (100, 36),
         ..BASE
@@ -411,6 +425,8 @@ const CASES: &[Case] = &[
     Case {
         name: "death-screen",
         scenario: "arena",
+        // Pip's birth sign has gifts (#265): seed 4 is one where the fight still ends in his death.
+        seed: Some(4),
         actions: "lantern wait*14",
         ..BASE
     },
@@ -444,8 +460,15 @@ fn render(case: &Case, content: Arc<Content>) -> String {
     let game = (case.run || !case.actions.is_empty()).then(|| {
         let kit = case.kit || case.character.is_some();
         let character = args.character.as_ref();
-        let world = World::start_run(content.clone(), case.scenario, None, character, None, kit)
-            .expect("run");
+        let world = World::start_run(
+            content.clone(),
+            case.scenario,
+            case.seed,
+            character,
+            None,
+            kit,
+        )
+        .expect("run");
         let mut game = Game::from_world(world, "snapshot".into());
         let actions = warlock_core::action::parse_actions(case.actions).expect("actions");
         for action in &actions {

@@ -1,0 +1,8 @@
+[[talent]]
+id = "keen_edge"
+name = "Keen edge"
+tree = "stars"
+granted = true
+description = "Your blows bite deep: criticals come more often."
+effects = [{ kind = "threat", value = 1 }]
+systems = ["combat"]

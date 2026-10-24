@@ -21,7 +21,15 @@ free_per_tree = 1
 
 # The trees, in display order. `pending = true` while a tree's prerequisite-free talent has not
 # landed yet (the talent waves H1–H4 remove it as they land); `no_free = true` for a tree nothing
-# picks from alone (the birth signs', to come); `class = true` for the class abilities' tree.
+# picks from alone (the birth signs'); `class = true` for the class abilities' tree.
+
+# The birth signs' gifts and flaws (horoscope.toml's `grants`), granted at birth and never on a
+# pick list; the sign-limited picks join it later. Listed first: what you were born with.
+[[tree]]
+id = "stars"
+name = "Stars"
+description = "What you were born under."
+no_free = true
 
 [[tree]]
 id = "vigour"

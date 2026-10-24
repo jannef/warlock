@@ -125,3 +125,33 @@ The wiki's tables are `xtask/src/wiki/kits.rs` (`class-kits.md`, `race-kits.md`)
 snapshots' `kit: true` starts a case's run with the kit (`kit-equipment`, `kit-inventory`, and
 `kit-summary` in `crates/warlock/src/ui/screen_snapshots.rs`); the golden manifest's `kit = true`
 does the same for an entry.
+
+## Birth signs' gifts and lucky days (#265)
+
+Design: `docs/design/horoscope.md` (§3–§6, §8–§10, §12). `data/horoscope.toml`'s animals and
+elements name their gifts in `grants` (talents of the `stars` tree, `granted = true`, a `flaw`
+only among an animal's), and `[[lucky]]` lists the five lucky days (`animal`, `element`, `day`,
+`title`, `description`, `grants`). `content/horoscope.rs`: `Horoscope::lucky(sign, day)`,
+`Horoscope::grants(sign, day)` (the animal's, the element's, a lucky day's, in that order) and
+`check_talents` (run after both load: grants exist, are granted `stars` talents, none twice for a
+sign; talents' `animal`/`element` needs name real ones; content without the `stars` tree, a
+fixture, grants nothing). `Content::lucky`, `Character::lucky`/`title`/`titled_name`/
+`sign_title`/`grants`.
+
+`world/stars.rs` puts the grants into `Actor::talents` (first, in grant order, rank 1;
+`Talents::regrant` drops every granted talent of the `stars` tree first) in `World::with_character_named` and again
+in `World::from_state`: they are **never a stored choice**, so a gift added to the data reaches a
+saved character and a removed one leaves it. They change hashes of runs whose sign has gifts, as
+any rule change does; the birth draws are untouched, so seeds keep their dates and signs. The
+gifts' effects are `TalentEffect`s read at one hook each (`docs/dev/progression.md`); `stars.rs`
+also says what is wading (`wading`: terrain that freezes, or a disease's wading ground).
+
+Shown: the reveal (`ui/sign_screen.rs`, `--screen sign`, after the race), the summary's Sign row,
+the character screen's dimmed Stars line (gift names, two lines at most) and the title after the
+name (character and death screens), the `stats` dump's `Sign Wood Salamander, the Racer`, the
+`talents` dump's `(sign)` / `(sign, flaw)`, JSON `character.lucky`, `talents[].granted`/`flaw`.
+The wiki's `horoscope-animals.md`, `horoscope-elements.md`, `horoscope-lucky.md`
+(`xtask/src/wiki/horoscope.rs`) state the rules exactly and the odds by race at the showcase's
+start. Tests: `world/stars_tests.rs` (grants per sign and day, the lucky days pinned, restore,
+every hook, the prerequisites, content checks, the lucky capture's seed 440), the screen tests in
+`ui/sign_screen.rs`.

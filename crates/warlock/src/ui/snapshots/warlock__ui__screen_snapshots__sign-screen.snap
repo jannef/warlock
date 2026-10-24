@@ -1,0 +1,27 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+
+
+
+
+
+
+              ┌─ Born under the stars ───────────────────────────────────────────────┐
+              │                                                                      │
+              │  You were born on 29 Greenleaf 1410, in the year of the Water        │
+              │  Basilisk. You are 34 years old.                                     │
+              │                                                                      │
+              │  Rode coiled around the Roc's talon and slid off in front of it at   │
+              │  the gate: patient and unblinking, and trusted by no one. Rivers     │
+              │  and the deep sea, that always find a way: clever.                   │
+              │                                                                      │
+              │  Always a way        Secret doors and hidden traps are easier for    │
+              │                      you to find, and your searching reaches         │
+              │                      farther.                                        │
+              │                                                                      │
+              │  Basilisk: Wi +2  Pr −1   Water: In +1                               │
+              │                                                                      │
+              │ Enter continue   Esc back                                            │
+              └──────────────────────────────────────────────────────────────────────┘

@@ -700,7 +700,7 @@ mod tests {
                 "abilities: unknown talent `fencin`",
             ),
             (("\"delver\"]", "\"class\"]"), "`class` is the class tree"),
-            (("\"delver\"]", "\"stars\"]"), "unknown tree `stars`"),
+            (("\"delver\"]", "\"nonesuch\"]"), "unknown tree `nonesuch`"),
             (("level = 1,", "level = 0,"), "level 0 is not 1 to"),
             (
                 ("level = 12,", "level = 2,"),

@@ -43,9 +43,17 @@ Riposte, the commoner's Second wind).
   a sickness do to it), a [skill](skills.md) at a value, a [weapon skill](weapon-skills.md) or
   style at a rank (or any of a kind: "a missile weapon skill 3" is bows, crossbows, or
   slings), a character level, your race, your class, your eyes (your race's
-  [vision](vision.md)), or your [alignment](alignment.md) band; a few ask for either of two
+  [vision](vision.md)), your birth sign's animal or element or a lucky day (see
+  [Horoscope](horoscope.md)), or your [alignment](alignment.md) band; a few ask for either of two
   ("Intelligence 12 or Appraise 20"). The game names what you lack: "You cannot take Dodge: you
   need Dexterity 13."
+
+## Gifts of the stars
+
+The first tree, **Stars**, holds what your birth sign gives you: the gifts (and an animal's flaw)
+of your animal, your element, and a lucky day (see [Horoscope](horoscope.md)). They are yours
+from birth, without a pick, and nobody can pick them. A flaw is never something another talent
+asks for.
 
 ## What a talent does
 

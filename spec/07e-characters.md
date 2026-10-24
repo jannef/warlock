@@ -215,8 +215,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Horoscope** (`data/horoscope.toml`, optional; §8 "Character creation"): `anchor_year`, a
   year that starts a great cycle (1: the year of the Great Race, the first of the reckoning),
   then the `[[animal]]`s in the order of the Great Race and the `[[element]]`s, each with `id`,
-  `name`, a one-line `description`, and `stats` (small fixed adjustments). Their numbers must
-  have no common divisor, so every pair comes once a great cycle. The twelve animals:
-  Salamander, Hydra, Manticore, Unicorn, Wyvern, Basilisk, Roc, Griffin, Sphinx, Phoenix,
-  Kraken, Barghest; the five elements: Wood, Fire, Earth, Metal, Water. Without the file there
-  are no signs.
+  `name`, a one-line `description`, `stats` (small fixed adjustments), and `grants` (the talents
+  of the `stars` tree those born under it are given, §8 "Birth sign": `granted` talents, a
+  `flaw` only among an animal's). Their numbers must have no common divisor, so every pair comes
+  once a great cycle. The twelve animals: Salamander, Hydra, Manticore, Unicorn, Wyvern,
+  Basilisk, Roc, Griffin, Sphinx, Phoenix, Kraken, Barghest; the five elements: Wood, Fire,
+  Earth, Metal, Water. `[[lucky]]` entries are the lucky days: `animal`, `element`, `day` (1 to
+  30, any month), `title`, `description` (the reveal's line), and `grants` (the extra gift); no
+  pair twice. Checked against the talents at load (the grants exist, are granted talents of the
+  `stars` tree, none twice for one sign; talents' `animal`/`element` needs name real ones);
+  content without the `stars` tree grants nothing. Without the file there are no signs.

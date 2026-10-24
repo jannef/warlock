@@ -1,0 +1,9 @@
+[[talent]]
+id = "heedless"
+name = "Heedless"
+tree = "stars"
+granted = true
+flaw = true
+description = "You are not one for details: you find hidden things less often."
+effects = [{ kind = "search", value = -4 }]
+systems = ["searching", "traps"]

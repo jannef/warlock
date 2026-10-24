@@ -176,6 +176,10 @@ pub enum TalentEffect {
     NaturalUnarmoured { value: i32 },
     /// Damage added to every melee blow (the main hand's and the off hand's).
     MeleeDamage { value: i32 },
+    /// Every attack threatens a critical this many natural points lower.
+    Threat { value: i32 },
+    /// A natural 2 on an attack roll (a fumble) is rolled again, once.
+    RerollFumble,
     /// Maximum hit points: 1 per `per_levels` character levels, at least `at_least`, handed out
     /// into the actor's base hit points when the talent is taken and as each later level comes
     /// (as levels' own hit points are), so a talent taken early keeps growing.
@@ -222,6 +226,8 @@ pub enum TalentEffect {
     WeightlessCoins,
     /// Journeys on the overworld take this percent more time (negative: quicker).
     TravelPercent { value: i32 },
+    /// Wading (water, marsh) costs a plain step, and never gives a disease.
+    Swimmer,
     /// A step onto any of `terrains` costs what a step onto `like` does (ids in
     /// `data/terrain.toml`; Pathfinder, Swimmer, Marsh walker).
     TerrainAs { terrains: Vec<String>, like: String },
@@ -242,6 +248,8 @@ pub enum TalentEffect {
     SunHealing { value: i32 },
     /// Hunger burns this percent faster (negative: slower).
     HungerPercent { value: i32 },
+    /// The sickness rotten food gives, this percent more (negative: less), rounded down.
+    RotHarmPercent { value: i32 },
     /// Exerting oneself (a blow, a shot, a throw) burns no extra nutrition.
     NoExertion,
     /// A meal never leaves it Bloated: what does not fit below Bloated is lost (Gourmand).
@@ -266,13 +274,8 @@ pub enum TalentEffect {
     ScrollKept { chance: u8 },
     /// Its own bursts never catch it (Careful reader).
     SparesSelf,
-    /// Added to its checks to find what is hidden, searching and in passing: hidden traps and
-    /// secret doors are this much easier for it (Trap sense).
-    Find { value: i32 },
-    /// Added to its searching (Keen searcher).
-    Search { value: i32 },
-    /// Its searching reaches this many cells farther (Keen searcher).
-    SearchReach { value: i32 },
+    /// Added to its searching, not to noticing in passing (Keen searcher).
+    Searching { value: i32 },
     /// The damage traps do it, this percent more (negative: less; Trap sense).
     TrapDamagePercent { value: i32 },
     /// The experience a quest gives, this percent more (before `xp_percent`).
@@ -300,6 +303,12 @@ pub enum TalentEffect {
     GemCut { value: u8 },
     /// The actor notices hidden things in passing as if trained in Spot, with this much added.
     Notice { value: i32 },
+    /// The actor notices hidden things on stone in passing, as a dwarf does.
+    StoneSense,
+    /// Added to every check to find hidden things, searching and in passing.
+    Search { value: i32 },
+    /// Searching reaches this many cells farther.
+    SearchReach { value: i32 },
     /// A skill counts this much higher wherever its value is read (an untrained one from 0).
     Skill { skill: String, value: i32 },
     /// Anyone not hostile makes way for it (spec §8 "Displacement"), those keeping a post too.
@@ -586,6 +595,9 @@ impl TalentEffect {
             | TalentEffect::MeleeDamage { value }
             | TalentEffect::Hearing { value }
             | TalentEffect::Notice { value }
+            | TalentEffect::Threat { value }
+            | TalentEffect::Search { value }
+            | TalentEffect::SearchReach { value }
             | TalentEffect::LauncherRange { value }
             | TalentEffect::ThrowRange { value }
             | TalentEffect::MaxDex { value }
@@ -596,9 +608,7 @@ impl TalentEffect {
             | TalentEffect::DoorKick { value }
             | TalentEffect::BurdenDex { value }
             | TalentEffect::MissileDodge { value }
-            | TalentEffect::Find { value }
-            | TalentEffect::Search { value }
-            | TalentEffect::SearchReach { value }
+            | TalentEffect::Searching { value }
             | TalentEffect::SkillRolls { value }
             | TalentEffect::Darkvision { value }
             | TalentEffect::NightSight { value }
@@ -806,6 +816,7 @@ impl TalentEffect {
             | TalentEffect::TravelPercent { value }
             | TalentEffect::HungerPercent { value }
             | TalentEffect::XpPercent { value }
+            | TalentEffect::RotHarmPercent { value }
             | TalentEffect::RestingPercent { value }
             | TalentEffect::PenaltyPercent { value }
             | TalentEffect::DigPercent { value }
@@ -904,6 +915,9 @@ impl TalentEffect {
             }
             TalentEffect::SilentDoors
             | TalentEffect::NoExertion
+            | TalentEffect::RerollFumble
+            | TalentEffect::Swimmer
+            | TalentEffect::StoneSense
             | TalentEffect::FreeBlow { .. }
             | TalentEffect::IronStomach
             | TalentEffect::Clotting
@@ -955,6 +969,12 @@ pub enum Need {
     Eyes(String),
     /// A class, by id.
     Class(String),
+    /// A birth sign's animal, by id (spec §8 "Birth sign").
+    Animal(String),
+    /// A birth sign's element, by id.
+    Element(String),
+    /// Born on a lucky day.
+    Lucky,
     /// An alignment band (spec §8 "Alignment"): `{ min = "good" }` is Good or better.
     Alignment(Requirement),
     /// Any one of these ("Intelligence 12 or Appraise 20").
@@ -994,6 +1014,19 @@ impl Need {
                 let name = content.vision(id).map_or(id.as_str(), |v| v.name.as_str());
                 format!("{} eyes", name.to_lowercase())
             }
+            Need::Animal(id) => {
+                let name = (content.horoscope())
+                    .and_then(|h| h.animals.iter().find(|a| &a.id == id))
+                    .map_or(id.as_str(), |a| a.name.as_str());
+                format!("to be born in the year of the {name}")
+            }
+            Need::Element(id) => {
+                let name = (content.horoscope())
+                    .and_then(|h| h.elements.iter().find(|e| &e.id == id))
+                    .map_or(id.as_str(), |e| e.name.as_str());
+                format!("to be {name}-born")
+            }
+            Need::Lucky => "to be born on a lucky day".into(),
             Need::Alignment(required) => format!("to be {}", required.words()),
             Need::Either(needs) => (needs.iter())
                 .map(|n| n.words(content))
@@ -1029,6 +1062,10 @@ pub struct Needs {
     pub race: Option<String>,
     pub eyes: Option<String>,
     pub class: Option<String>,
+    /// The birth sign's animal and element asked, by id, and a lucky day.
+    pub animal: Option<String>,
+    pub element: Option<String>,
+    pub lucky: bool,
     /// The alignment band asked (`requires_alignment`, as quests and abilities ask it).
     pub alignment: Option<Requirement>,
     /// Any one of these, if set (`either`): at least two.
@@ -1042,8 +1079,8 @@ impl Needs {
     }
 
     /// Every prerequisite, in the order they are shown: talents, stats, skills, weapon skills,
-    /// the choice, the level, the race, the eyes, the class, the alignment, then any one of the
-    /// alternatives.
+    /// the choice, the level, the race, the eyes, the class, the sign, the alignment, then any one
+    /// of the alternatives.
     pub fn iter(&self) -> impl Iterator<Item = Need> + '_ {
         let talents = self.talents.iter().map(|&(t, r)| Need::Talent(t, r));
         let stats = (self.stats.iter())
@@ -1057,6 +1094,9 @@ impl Needs {
         let race = self.race.clone().map(Need::Race);
         let eyes = self.eyes.clone().map(Need::Eyes);
         let class = self.class.clone().map(Need::Class);
+        let animal = self.animal.clone().map(Need::Animal);
+        let element = self.element.clone().map(Need::Element);
+        let lucky = self.lucky.then_some(Need::Lucky);
         let alignment = self.alignment.map(Need::Alignment);
         let either = (!self.either.is_empty()).then(|| Need::Either(self.either.clone()));
         talents
@@ -1069,6 +1109,9 @@ impl Needs {
             .chain(race)
             .chain(eyes)
             .chain(class)
+            .chain(animal)
+            .chain(element)
+            .chain(lucky)
             .chain(alignment)
             .chain(either)
     }
@@ -1102,6 +1145,8 @@ pub struct TalentDef {
     pub systems: Vec<SystemId>,
     /// Given, never picked (a race's, a birth sign's): off every pick list.
     pub granted: bool,
+    /// A birth sign's flaw: granted, shown with "but" and dimmed, never a prerequisite.
+    pub flaw: bool,
 }
 
 impl TalentDef {
@@ -1348,6 +1393,8 @@ struct TalentSpec {
     systems: Vec<String>,
     #[serde(default)]
     granted: bool,
+    #[serde(default)]
+    flaw: bool,
 }
 
 #[derive(Deserialize, Default)]
@@ -1372,6 +1419,9 @@ struct NeedsSpec {
     race: Option<String>,
     eyes: Option<String>,
     class: Option<String>,
+    animal: Option<String>,
+    element: Option<String>,
+    lucky: bool,
     requires_alignment: Option<Requirement>,
     /// Alternatives: any one of what it asks will do (`either = { stats = { intelligence = 12
     /// }, skills = { appraise = 20 } }`).
@@ -1588,6 +1638,9 @@ fn resolve_needs(
         race: spec.race,
         eyes: spec.eyes,
         class: spec.class,
+        animal: spec.animal,
+        element: spec.element,
+        lucky: spec.lucky,
         alignment: spec.requires_alignment,
         either,
     })
@@ -1768,6 +1821,9 @@ pub(super) fn parse<'a>(
         if spec.effects.is_empty() && rank_defs.iter().all(|r| r.effects.is_empty()) {
             return Err(err("does nothing: it needs `effects`".into()));
         }
+        if spec.flaw && !spec.granted {
+            return Err(err("a `flaw` is `granted`: nobody picks a flaw".into()));
+        }
         book.list.push(TalentDef {
             id: spec.id,
             name: spec.name,
@@ -1779,6 +1835,7 @@ pub(super) fn parse<'a>(
             ranks: rank_defs,
             systems,
             granted: spec.granted,
+            flaw: spec.flaw,
         });
     }
     // A talent that needs one with a choice of its own kind is taken for the same choice: only
@@ -1788,6 +1845,15 @@ pub(super) fn parse<'a>(
             (def.needs.talents.iter()).chain(def.ranks.iter().flat_map(|r| r.needs.talents.iter()));
         for &(other, _) in needed {
             let other = book.get(other);
+            if other.flaw {
+                return Err(ContentError::new(
+                    files[&def.id],
+                    format!(
+                        "talent `{}` needs `{}`, a flaw: a flaw is never a prerequisite",
+                        def.id, other.id
+                    ),
+                ));
+            }
             if let Some(kind) = other.choice
                 && def.choice != Some(kind)
             {

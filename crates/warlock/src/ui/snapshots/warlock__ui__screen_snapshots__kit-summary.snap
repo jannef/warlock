@@ -5,12 +5,12 @@ expression: "render(case, content.clone())"
 
 
 
-
         ┌─ Your character ─────────────────────────────────────────────────────────────────┐
         │                                                                                  │
         │ > Start the run                                                                  │
         │   Name      Corwin                                                               │
         │   Race      Halfling                                                             │
+        │   Sign      Earth Kraken                                                         │
         │   Gender    Male                                                                 │
         │   Class     Merchant                                                             │
         │                                                                                  │

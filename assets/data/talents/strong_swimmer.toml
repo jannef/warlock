@@ -1,0 +1,8 @@
+[[talent]]
+id = "strong_swimmer"
+name = "Strong swimmer"
+tree = "stars"
+granted = true
+description = "Wading costs you no more than a step on dry land, and the marshes never make you ill."
+effects = [{ kind = "swimmer" }]
+systems = ["wading", "diseases"]

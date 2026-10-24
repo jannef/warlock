@@ -74,6 +74,9 @@ pub struct CharacterScreen {
     identity: Vec<(&'static str, String)>,
     /// Age, birthday, and birth sign ([`birth_parts`]); empty without a character.
     birth: Vec<String>,
+    /// The birth sign's gifts and flaw by name, in grant order (spec §8 "Birth sign"): the
+    /// dimmed Stars line; empty without any.
+    stars: Vec<String>,
     scores: PerStat<u8>,
     /// The scores without status effects: a score below its own is lowered.
     base: PerStat<u8>,
@@ -114,6 +117,7 @@ impl CharacterScreen {
                 name: "You".into(),
                 identity: Vec::new(),
                 birth: Vec::new(),
+                stars: Vec::new(),
                 scores: PerStat::splat(warlock_core::stats::AVERAGE),
                 base: PerStat::splat(warlock_core::stats::AVERAGE),
                 effects: Vec::new(),
@@ -135,9 +139,10 @@ impl CharacterScreen {
             };
         };
         let content = view.content();
-        // The character's name, as typed; without a character, what the player is called.
+        // The character's name, as typed, with a lucky day's title; without a character, what
+        // the player is called.
         let name = match view.character() {
-            Some(c) => c.name.clone(),
+            Some(c) => c.titled_name(content),
             None => capitalized(
                 content
                     .creature_id("player")
@@ -159,10 +164,15 @@ impl CharacterScreen {
             ]
         });
         let birth = (view.character()).map_or(Vec::new(), |c| birth_parts(c, content, view.time()));
+        let stars = (view.own_talents().into_iter())
+            .filter(|t| t.granted)
+            .map(|t| t.name)
+            .collect();
         Self {
             name,
             identity,
             birth,
+            stars,
             scores: view.own_scores(),
             base: view.own_base_scores(),
             effects: (view.own_effects())
@@ -203,9 +213,10 @@ impl CharacterScreen {
         // burden's thresholds, a gap, the footer, frame.
         let width = WIDTH.min(console.cols() as i32) - 4;
         let birth = fit_parts(&self.birth, width);
+        let stars = stars_lines(&self.stars, width);
         let identity_rows = match self.identity.len() {
             0 => 0,
-            n => (n + birth.len()) as i32 + 1,
+            n => (n + birth.len() + stars.len()) as i32 + 1,
         };
         let thresholds = (self.load.as_ref()).map_or(Vec::new(), |l| thresholds(l, width));
         let status_rows = i32::from(self.alignment.is_some())
@@ -234,6 +245,16 @@ impl CharacterScreen {
         for line in &birth {
             if fits(y) {
                 console.print(x, y, line, TEXT);
+            }
+            y += 1;
+        }
+        for (i, line) in stars.iter().enumerate() {
+            // `Stars   Fleet, Slight, Supple`: dimmed, the names lined up with the values.
+            if fits(y) {
+                if i == 0 {
+                    console.print(x, y, "Stars", TEXT_DIM);
+                }
+                console.print(x + 8, y, line, TEXT_DIM);
             }
             y += 1;
         }
@@ -376,6 +397,17 @@ fn gender_text(character: &Character) -> String {
         Gender::Other => format!("Other ({} +1)", character.raised.name()),
         gender => gender.name().to_string(),
     }
+}
+
+/// The Stars line's names (spec §8 "Birth sign"), fitted to `width` cells after the label: one
+/// line, two at most (the second ending in "…" if even that is too little).
+fn stars_lines(names: &[String], width: i32) -> Vec<String> {
+    let mut lines = fit_joined(names, ", ", width - 8);
+    if lines.len() > 2 {
+        lines.truncate(2);
+        lines[1].push('…');
+    }
+    lines
 }
 
 /// Age on `now`, birthday, and birth sign, as shown: `Age 27`, `born 3 Seedtide 1417`, `year of

@@ -1,0 +1,8 @@
+[[talent]]
+id = "fleet_footed"
+name = "Fleet-footed"
+tree = "stars"
+granted = true
+description = "You move and act a little faster."
+effects = [{ kind = "speed_percent", value = 5 }]
+systems = ["speed"]

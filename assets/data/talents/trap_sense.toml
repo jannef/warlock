@@ -4,5 +4,5 @@ name = "Trap sense"
 tree = "delver"
 description = "Hidden traps and secret doors are easier for you to find, and a trap that catches you hurts you only half as much."
 needs = { talents = { alert = 1 } }
-effects = [{ kind = "find", value = 3 }, { kind = "trap_damage_percent", value = -50 }]
+effects = [{ kind = "search", value = 3 }, { kind = "trap_damage_percent", value = -50 }]
 systems = ["searching", "traps"]

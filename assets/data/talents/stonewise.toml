@@ -1,0 +1,8 @@
+[[talent]]
+id = "stonewise"
+name = "Stonewise"
+tree = "stars"
+granted = true
+description = "You notice what is hidden in stone in passing, and you dig faster."
+effects = [{ kind = "stone_sense" }, { kind = "dig_percent", value = 25 }]
+systems = ["searching", "digging"]

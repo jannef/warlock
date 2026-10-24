@@ -32,6 +32,8 @@
 #                   level = 9                            the character level
 #                   race = "dwarf", class = "warrior"    the character's
 #                   eyes = "darkvision"                  the race's vision profile
+#                   animal = "roc", element = "fire"     the birth sign's (horoscope.toml)
+#                   lucky = true                         born on a lucky day
 #                   any_weapon_skill = { roles = ["melee"], of = ["unarmed"], rank = 3 }
 #                                                        any one of the weapon skills of those
 #                                                        roles or named, at that rank
@@ -44,13 +46,18 @@
 #   effects       what every rank held adds: a list of { kind = ..., ... } (below)
 #   [[talent.rank]]  one per rank, in order (as many as `ranks`, or none): its own `needs`
 #                 besides the talent's, and its own `effects` besides the per-rank ones
-#   granted       true: given (by a race, a birth sign, a class), never on a pick list
+#   granted       true: given (by a race, a birth sign, a class), never on a pick list; a birth sign's
+#                 gifts are in the `stars` tree and named by horoscope.toml's `grants`
+#   flaw          true: a birth sign's flaw (granted too): shown with "but" and dimmed, never
+#                 a prerequisite of another talent
 #
 # Effects (each read by one rule; a new kind is a variant in content/talent.rs, a field in
 # talent.rs's TalentMods, and one read):
 #   dodge { value }               Defence in the Dodge category (bonuses add up)
 #   natural { value }             natural armour, on top of the actor's own or an item's
 #   melee_damage { value }        damage added to every blow up close (both hands)
+#   threat { value }              every attack threatens a critical that many points lower
+#   reroll_fumble                 a natural 2 on an attack roll is rolled again, once
 #   max_hp_per_levels { per_levels, at_least }   hit points: one per that many character
 #                                 levels, at least at_least, handed out at the pick and as each
 #                                 later level comes (as levels' own hit points are)
@@ -79,6 +86,8 @@
 #   weightless_coins              coins it carries weigh nothing
 #   travel_percent { value }      overworld journeys take that percent more time (negative:
 #                                 quicker)
+#   swimmer                       wading (water, and ground a disease is caught wading in)
+#                                 costs a plain step, and never gives a disease
 #   terrain_as { terrains, like } a step onto any of terrains costs what a step onto like does
 #                                 (terrain ids in ../terrain.toml)
 #   plunge_proof                  a plunge through the ice never hurts it
@@ -91,6 +100,8 @@
 #                                 under the open sky
 #   sun_healing { value }         hit points come back that percent faster under the open sun
 #   hunger_percent { value }      hunger burns that percent faster (negative: slower)
+#   rot_harm_percent { value }    the sickness rotten food gives, that percent more (rounded
+#                                 down; negative: less)
 #   no_exertion                   blows, shots, and throws burn no extra nutrition
 #   no_bloating                   a meal never leaves it Bloated: what does not fit is lost
 #   corpse_stats_percent { value }   a fresh corpse's chances to raise its stats, that percent
@@ -127,6 +138,10 @@
 #                                 kills) are cut that many grades finer (1 to 5)
 #   notice { value }              notices hidden things in passing as if trained in Spot, with
 #                                 that much added
+#   stone_sense                   notices hidden things on stone in passing, as a dwarf does
+#   search { value }              added to every check to find hidden things (searching and in
+#                                 passing)
+#   search_reach { value }        searching reaches that many cells farther
 #   skill { skill, value }        that skill counts that much higher (an untrained one from 0)
 #   make_way                      anyone not hostile makes way for it, those at a post too
 #   free_blow { trigger }         a free blow: "cleave", "great_cleave", "riposte",

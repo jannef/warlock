@@ -59,7 +59,7 @@ impl DeathScreen {
         let mut lines = Vec::new();
         let by = match view.character() {
             Some(c) => {
-                lines.push(format!("Here lies {},", c.name));
+                lines.push(format!("Here lies {},", c.titled_name(view.content())));
                 let mut chars = by.chars();
                 chars
                     .next()
@@ -177,16 +177,33 @@ mod tests {
     #[test]
     fn it_says_who_died_where_when_and_by_what() {
         let content = Arc::new(Content::builtin().expect("content"));
-        let mut w = World::new(content, "arena", None).expect("world");
-        w.apply(&Action::ToggleLantern);
-        while w.death().is_none() {
-            w.apply(&Action::Wait);
-        }
-        let screen = DeathScreen::new(Some(&w.perception()));
-        let mut console = Console::default();
-        console.resize(80, 30);
-        screen.draw(&mut console, Clock::H24, &Bindings::default());
-        let shown = text(&console);
+        // Waiting with the lantern lit in the arena's dark corner until the kobolds' archer
+        // kills Pip unseen: the first seed it happens with (the fight goes by Pip's birth sign
+        // too).
+        let (screen, shown) = (1u64..100)
+            .find_map(|seed| {
+                let mut w = World::with_character_named(
+                    content.clone(),
+                    "arena",
+                    Some(seed),
+                    None,
+                    Some("Pip"),
+                )
+                .expect("world");
+                w.apply(&Action::ToggleLantern);
+                while w.death().is_none() {
+                    w.apply(&Action::Wait);
+                }
+                let screen = DeathScreen::new(Some(&w.perception()));
+                let mut console = Console::default();
+                console.resize(80, 30);
+                screen.draw(&mut console, Clock::H24, &Bindings::default());
+                let shown = text(&console);
+                shown
+                    .contains("something you did not see")
+                    .then_some((screen, shown))
+            })
+            .expect("an unseen killer");
         assert!(shown.contains("Y O U   D I E D"), "{shown}");
         assert!(shown.contains("in The Arena,"), "{shown}");
         assert!(shown.contains("Darkening, Year 1444, at 08:"), "{shown}");

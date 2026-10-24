@@ -135,6 +135,10 @@ pub struct OwnTalent {
     /// The choice it was taken for, by id.
     pub choice: Option<String>,
     pub description: String,
+    /// Given, not picked: a birth sign's gift (spec §8 "Birth sign").
+    pub granted: bool,
+    /// A birth sign's flaw.
+    pub flaw: bool,
     /// Their class gives it (spec §8 "Class abilities"): a class ability, or a talent their
     /// class's table hands out at their level or below.
     pub class: bool,
@@ -1222,6 +1226,8 @@ impl<'a> PerceptionView<'a> {
                     ranks: def.rank_count(),
                     choice: taken.choice.clone(),
                     description: def.description.clone(),
+                    granted: def.granted && !book.tree(def.tree).class,
+                    flaw: def.flaw,
                     class: class.contains(&id),
                 })
             })

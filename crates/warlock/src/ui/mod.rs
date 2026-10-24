@@ -54,6 +54,7 @@ mod rain;
 mod screen_snapshots;
 mod screens;
 mod settings_screen;
+mod sign_screen;
 mod skills_screen;
 mod sounds;
 mod spells;
