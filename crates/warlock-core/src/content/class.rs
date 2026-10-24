@@ -7,12 +7,21 @@
 //! choice, rolled when the character is made. Its `kit` is what the character starts with
 //! ([`super::kit`]).
 //!
+//! Its level table (spec §8 "Class abilities") names the **class abilities** each level gives,
+//! talents of the class tree (`data/talents/`, given, never picked) or ordinary talents the class
+//! hands out, and the levels that bring a **bonus talent pick** from the trees the class names
+//! (any tree when it names none). The talents it names are checked once the talents are loaded
+//! ([`ClassDef::check_table`]).
+//!
 //! The classes are offered in path order: the files are named `NN-id.toml`, so the number keeps
 //! the order (adventurers first, then everyday folk) and a new class picks its place.
 
 use super::kit::{Kit, KitLineSpec};
 use super::weapon_skill::Ranked;
-use super::{ContentError, FACTORS, WeaponSkillId, WeaponSkillTable, duplicate_id};
+use super::{
+    ContentError, FACTORS, MAX_LEVEL, TalentBook, TalentId, TreeId, WeaponSkillId,
+    WeaponSkillTable, duplicate_id,
+};
 use crate::combat::MAX_BASE_HP;
 use crate::dice::Dice;
 use crate::skills::{self, SkillId};
@@ -68,6 +77,36 @@ struct ClassSpec {
     style_choice: Vec<BTreeMap<String, Dice>>,
     #[serde(default)]
     kit: Vec<KitLineSpec>,
+    #[serde(default)]
+    abilities: Vec<AbilitySpec>,
+    bonus_talents: Option<BonusSpec>,
+}
+
+/// `{ level = 6, talent = "fencing" }`: at that level the class gives that talent.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct AbilitySpec {
+    level: u8,
+    talent: String,
+}
+
+/// `{ levels = [10, 20], trees = ["guard"] }`: a bonus talent pick at each of those levels,
+/// from those trees (none: any).
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct BonusSpec {
+    levels: Vec<u8>,
+    #[serde(default)]
+    trees: Vec<String>,
+}
+
+/// A class's bonus talent picks (spec §8 "Class abilities").
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct BonusTalents {
+    /// The levels that bring one, ascending.
+    pub levels: Vec<u8>,
+    /// The trees it comes from, by id; empty: any tree (the commoner).
+    pub trees: Vec<String>,
 }
 
 /// A class, in the order offered.
@@ -112,6 +151,13 @@ pub struct ClassDef {
     /// What the class starts with (spec §8 "Character creation"): first in a new character's
     /// pack; filled in by the loader once objects are known.
     pub kit: Kit,
+    /// Its class abilities (spec §8 "Class abilities"): at each level, the talent it gives, by
+    /// id, ascending by level.
+    pub abilities: Vec<(u8, String)>,
+    /// Its bonus talent picks.
+    pub bonus_talents: BonusTalents,
+    /// The file it was read from, for the errors of [`ClassDef::check_table`].
+    pub(super) file: String,
 }
 
 impl ClassDef {
@@ -227,6 +273,44 @@ impl ClassDef {
         )?;
         let styles = ranks(&spec.styles, Ranked::Styles)?;
         let style_choice = choice("style_choice", &spec.style_choice, Ranked::Styles)?;
+        let level_ok = |l: u8| (1..=MAX_LEVEL).contains(&l);
+        let mut abilities: Vec<(u8, String)> = Vec::with_capacity(spec.abilities.len());
+        for a in spec.abilities {
+            if !level_ok(a.level) {
+                return Err(err(format!(
+                    "class `{id}`: abilities: level {} is not 1 to {MAX_LEVEL}",
+                    a.level
+                )));
+            }
+            if abilities.last().is_some_and(|(l, _)| *l > a.level) {
+                return Err(err(format!(
+                    "class `{id}`: abilities are listed by level, lowest first"
+                )));
+            }
+            if abilities.iter().any(|(_, t)| *t == a.talent) {
+                return Err(err(format!(
+                    "class `{id}`: abilities: `{}` twice",
+                    a.talent
+                )));
+            }
+            abilities.push((a.level, a.talent));
+        }
+        let bonus_talents = match spec.bonus_talents {
+            None => BonusTalents::default(),
+            Some(b) => {
+                let ascending = b.levels.windows(2).all(|w| w[0] < w[1]);
+                if b.levels.is_empty() || !ascending || !b.levels.iter().all(|&l| level_ok(l)) {
+                    return Err(err(format!(
+                        "class `{id}`: bonus_talents: levels are 1 to {MAX_LEVEL}, at least \
+                         one, ascending"
+                    )));
+                }
+                BonusTalents {
+                    levels: b.levels,
+                    trees: b.trees,
+                }
+            }
+        };
         Ok(ClassDef {
             id: spec.id,
             name: spec.name,
@@ -244,6 +328,9 @@ impl ClassDef {
             style_choice,
             kit_spec: spec.kit,
             kit: Kit::default(),
+            abilities,
+            bonus_talents,
+            file: file.to_string(),
         })
     }
 
@@ -255,6 +342,62 @@ impl ClassDef {
     /// Whether it is known for skill `skill`.
     pub fn is_known_for(&self, skill: SkillId) -> bool {
         self.known_for.contains(&skill)
+    }
+
+    /// The talents its level table gives up to `level`, in table order; none from a book
+    /// without a class tree (content whose talents have no class abilities, a fixture's).
+    pub fn abilities_to(&self, book: &TalentBook, level: u8) -> Vec<TalentId> {
+        if !book.has_class_tree() {
+            return Vec::new();
+        }
+        (self.abilities.iter())
+            .take_while(|(l, _)| *l <= level)
+            .filter_map(|(_, id)| book.id(id))
+            .collect()
+    }
+
+    /// The bonus talent picks level `level` brings (0 or 1).
+    pub fn bonus_at(&self, level: u8) -> u8 {
+        u8::from(self.bonus_talents.levels.contains(&level))
+    }
+
+    /// The trees of `book` its bonus picks come from, in display order; `None`: any.
+    pub fn bonus_trees(&self, book: &TalentBook) -> Option<Vec<TreeId>> {
+        if self.bonus_talents.trees.is_empty() {
+            return None;
+        }
+        let mut trees: Vec<TreeId> = (self.bonus_talents.trees.iter())
+            .filter_map(|t| book.tree_id(t))
+            .collect();
+        trees.sort();
+        Some(trees)
+    }
+
+    /// Checks its level table against `book` (once the talents are loaded; nothing to check
+    /// against a book without a class tree, whose class tables give nothing): every talent it
+    /// names is in the book, and every bonus tree is a tree that is no class tree.
+    pub(super) fn check_table(&self, book: &TalentBook) -> Result<(), ContentError> {
+        if !book.has_class_tree() {
+            return Ok(());
+        }
+        let err = |m: String| ContentError::new(&self.file, format!("class `{}`: {m}", self.id));
+        for (_, talent) in &self.abilities {
+            if book.id(talent).is_none() {
+                return Err(err(format!("abilities: unknown talent `{talent}`")));
+            }
+        }
+        for tree in &self.bonus_talents.trees {
+            match book.tree_id(tree) {
+                Some(t) if !book.tree(t).class => {}
+                Some(_) => {
+                    return Err(err(format!(
+                        "bonus_talents: `{tree}` is the class tree: nothing is picked from it"
+                    )));
+                }
+                None => return Err(err(format!("bonus_talents: unknown tree `{tree}`"))),
+            }
+        }
+        Ok(())
     }
 }
 
@@ -388,6 +531,64 @@ mod tests {
             ),
         ] {
             let e = parse(&text).unwrap_err();
+            assert!(e.message.contains(why), "{why}: {}", e.message);
+        }
+    }
+
+    /// The built-in content with the aristocrat's file changed by `edit`, loaded.
+    fn with_aristocrat(
+        edit: impl Fn(&str) -> String,
+    ) -> Result<super::super::Content, ContentError> {
+        let mut files = super::super::ContentFiles::builtin();
+        let path = "data/classes/12-aristocrat.toml";
+        let text = files
+            .table("classes")
+            .find(|(p, _)| *p == path)
+            .expect("aristocrat")
+            .1;
+        let text = edit(text);
+        files.insert(path, &text);
+        super::super::Content::load(&files)
+    }
+
+    #[test]
+    fn level_tables_name_known_talents_and_trees_in_order() {
+        let content = with_aristocrat(|t| t.to_string()).expect("built-in");
+        let aristocrat = content.class("aristocrat").expect("aristocrat");
+        let book = content.talents();
+        let at = |level| -> Vec<&str> {
+            (aristocrat.abilities_to(book, level).into_iter())
+                .map(|t| book.get(t).id.as_str())
+                .collect()
+        };
+        assert_eq!(at(1), ["well_dressed"]);
+        assert_eq!(at(17), ["well_dressed", "fencing", "noblesse"]);
+        assert_eq!(at(60).len(), 9);
+        assert_eq!((aristocrat.bonus_at(10), aristocrat.bonus_at(11)), (1, 0));
+        let trees = aristocrat.bonus_trees(book).expect("named trees");
+        let names: Vec<&str> = trees.iter().map(|&t| book.tree(t).id.as_str()).collect();
+        assert_eq!(names, ["weaponcraft", "delver"]);
+        let commoner = content.class("commoner").expect("commoner");
+        assert_eq!(commoner.bonus_trees(book), None, "any tree");
+        for (edit, why) in [
+            (
+                ("\"fencing\"", "\"fencin\""),
+                "abilities: unknown talent `fencin`",
+            ),
+            (("\"delver\"]", "\"class\"]"), "`class` is the class tree"),
+            (("\"delver\"]", "\"stars\"]"), "unknown tree `stars`"),
+            (("level = 1,", "level = 0,"), "level 0 is not 1 to"),
+            (
+                ("level = 12,", "level = 2,"),
+                "listed by level, lowest first",
+            ),
+            (
+                ("talent = \"noblesse\"", "talent = \"fencing\""),
+                "`fencing` twice",
+            ),
+            (("[10, 20, 30, 45, 55]", "[20, 10]"), "ascending"),
+        ] {
+            let e = with_aristocrat(|t| t.replacen(edit.0, edit.1, 1)).unwrap_err();
             assert!(e.message.contains(why), "{why}: {}", e.message);
         }
     }

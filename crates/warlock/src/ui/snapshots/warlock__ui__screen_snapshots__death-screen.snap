@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ The kobold shaman casts a spell at the giant rat.
+ Something shoots you. You die...
+
+
+
+
+
+                        ┌──────────────────────────────────────────────────┐
+                        │                                                  │
+                        │                 Y O U   D I E D                  │
+                        │                 ═══════════════                  │
+                        │                                                  │
+                        │                  Here lies Pip,                  │
+                        │       killed by something you did not see,       │
+                        │                  in The Arena,                   │
+                        │      on 11 Darkening, Year 1444, at 08:01,       │
+                        │                 after 15 turns.                  │
+                        │             You had reached level 1.             │
+                        │                                                  │
+                        │       Your run is over; its save is gone.        │
+                        │                                                  │
+                        │ Enter or Esc  main menu                          │
+                        └──────────────────────────────────────────────────┘
+
+
+
+
+
+
+ The Arena  ·  HP 0/16  ·  Lv 1  ·  08:01  ·  11 Darkening, Year 1444  ·  ◑  ·  10 °C    ? controls

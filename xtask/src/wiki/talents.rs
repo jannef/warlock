@@ -37,6 +37,51 @@ pub(super) fn talents(content: &Content) -> String {
     out
 }
 
+/// The classes' level tables (spec §8 "Class abilities"), in the order New run offers them:
+/// each class with a table, its bonus talent picks, and every level's ability with its rule.
+pub(super) fn class_levels(content: &Content) -> String {
+    let book = content.talents();
+    let mut out = String::new();
+    for class in content.classes() {
+        if class.abilities.is_empty() && class.bonus_talents.levels.is_empty() {
+            continue;
+        }
+        let _ = writeln!(out, "### {}\n", class.name);
+        let bonus = &class.bonus_talents;
+        if !bonus.levels.is_empty() {
+            let levels: Vec<String> = bonus.levels.iter().map(u8::to_string).collect();
+            let trees = match class.bonus_trees(book) {
+                None => "any tree".to_string(),
+                Some(trees) => (trees.iter())
+                    .map(|&t| book.tree(t).name.clone())
+                    .collect::<Vec<_>>()
+                    .join(" or "),
+            };
+            let _ = writeln!(
+                out,
+                "A bonus talent at levels {}, from {trees}.\n",
+                levels.join(", ")
+            );
+        }
+        out.push_str("| Level | Ability | Effect |\n|---:|---|---|\n");
+        for (level, id) in &class.abilities {
+            let Some(talent) = book.id(id) else { continue };
+            let def = book.get(talent);
+            let _ = writeln!(
+                out,
+                "| {level} | {} | {} |",
+                def.name,
+                effects_text(content, def)
+            );
+        }
+        out.push('\n');
+    }
+    if out.is_empty() {
+        out.push_str("No class has a level table yet.\n");
+    }
+    out
+}
+
 /// The coverage matrix: every system of the closed list with the talents that touch it, and
 /// whether the bar (`[coverage]` in `data/talents.toml`) already holds it. Systems and talents
 /// sort by name, never by file order.
@@ -146,22 +191,65 @@ fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             per_levels,
             at_least,
         } => format!("+1 maximum hit point per {per_levels} levels, at least +{at_least}"),
+        TalentEffect::Stat { stat, value } => {
+            format!("{} {} (score and potential)", stat.name(), signed(value))
+        }
         TalentEffect::HealingPercent { value } => format!("healing pace {}", percent(value)),
         TalentEffect::FootstepsPercent { value } => format!("footsteps {}", percent(value)),
         TalentEffect::SilentDoors => "the doors you open and close are silent".to_string(),
         TalentEffect::Hearing { value } => format!("hears sounds {value} fainter"),
         TalentEffect::CarryPercent { value } => format!("carrying limit {}", percent(value)),
+        TalentEffect::CarryKg { value } => format!("carrying limit {} kg", signed(value)),
+        TalentEffect::WeightlessCoins => "coins you carry weigh nothing".to_string(),
         TalentEffect::TravelPercent { value } => {
             format!("overworld journey time {}", percent(value))
         }
         TalentEffect::HungerPercent { value } => format!("hunger pace {}", percent(value)),
         TalentEffect::NoExertion => "blows, shots, and throws burn no nutrition".to_string(),
         TalentEffect::XpPercent { value } => format!("experience gained {}", percent(value)),
+        TalentEffect::QuestXpPercent { value } => {
+            format!("experience from quests {}", percent(value))
+        }
+        TalentEffect::QuestGoldPercent { value } => {
+            format!("gold from quests {}", percent(value))
+        }
+        TalentEffect::FavourPercent { value } => {
+            format!("shop favour {} (before the cap)", percent(value))
+        }
+        TalentEffect::FavourCap { value } => {
+            format!("the cap on shop favour {} (50 % without)", percent(value))
+        }
+        TalentEffect::SellPercent { value } => format!(
+            "shops pay {} for what they buy from you (never more than they would ask)",
+            percent(value)
+        ),
+        TalentEffect::Credit { gold } => {
+            format!("keepers let you leave owing up to {gold} gold (the debt stays on their bill)")
+        }
+        TalentEffect::IdentifyTrades => "what you buy or sell in a shop is identified".to_string(),
+        TalentEffect::ItemWorth => "item descriptions show what things are worth".to_string(),
+        TalentEffect::GemWorth => "item descriptions show what each gem is worth".to_string(),
+        TalentEffect::IdentifyCarried { hours } => format!(
+            "a magic item you carry for {hours} hours (counted from when you gain this) is \
+             identified"
+        ),
+        TalentEffect::GemCut { value } => format!(
+            "loose gems you find are cut {value} grade finer, at most the finest (those on \
+             levels made from then on, and those kills drop)"
+        ),
         TalentEffect::Notice { value } => {
             format!(
                 "notices hidden things in passing, {} to the check",
                 signed(value)
             )
+        }
+        TalentEffect::Skill { skill, value } => {
+            let name =
+                (content.skill_id(&skill)).map_or(skill.clone(), |s| content.skill(s).name.clone());
+            format!("{name} counts {}", signed(value))
+        }
+        TalentEffect::MakeWay => {
+            "anyone not hostile makes way for you, those keeping a post too".to_string()
         }
         TalentEffect::FreeBlow { trigger } => {
             use warlock_core::content::FreeBlowTrigger as T;
@@ -180,6 +268,7 @@ fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         }
         TalentEffect::Weapon {
             role,
+            skill,
             to_hit,
             damage,
             threat,
@@ -190,15 +279,18 @@ fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             bash,
             shield,
         } => {
-            let with = match role {
-                None => "the chosen skill".to_string(),
-                Some(Role::Melee) => "every melee weapon skill".to_string(),
-                Some(Role::Launcher) => "every missile weapon skill".to_string(),
-                Some(Role::Thrown) => "throws".to_string(),
-                Some(Role::Unarmed) => "unarmed fighting".to_string(),
-                Some(Role::ShieldBlock) => "shield blocking".to_string(),
-                Some(Role::ShieldBash) => "shield bashing".to_string(),
-                Some(Role::Style) => "every fighting style".to_string(),
+            let with = match (role, skill) {
+                (_, Some(id)) => (content.weapon_skills().id(&id)).map_or(id.clone(), |w| {
+                    content.weapon_skills().skill(w).name.clone()
+                }),
+                (None, None) => "the chosen skill".to_string(),
+                (Some(Role::Melee), _) => "every melee weapon skill".to_string(),
+                (Some(Role::Launcher), _) => "every missile weapon skill".to_string(),
+                (Some(Role::Thrown), _) => "throws".to_string(),
+                (Some(Role::Unarmed), _) => "unarmed fighting".to_string(),
+                (Some(Role::ShieldBlock), _) => "shield blocking".to_string(),
+                (Some(Role::ShieldBash), _) => "shield bashing".to_string(),
+                (Some(Role::Style), _) => "every fighting style".to_string(),
             };
             let mut gains = Vec::new();
             for (value, what) in [(to_hit, "to hit"), (damage, "damage"), (shield, "Shield")] {
@@ -232,6 +324,10 @@ fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             format!("missile weapon range {} cells", signed(value))
         }
         TalentEffect::ThrowRange { value } => format!("throwing range {} cells", signed(value)),
+        TalentEffect::MissileBreaks { value } => format!(
+            "your missiles' chance to break when they hit {} (rounded down)",
+            percent(value)
+        ),
         TalentEffect::MaxDex { value } => {
             format!("worn armour's Dexterity cap {}", signed(value))
         }
@@ -240,8 +336,13 @@ fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             value,
             body_armour,
             shield,
+            per_piece,
         } => {
             let mut text = format!("Protection {}", signed(value));
+            if per_piece {
+                text +=
+                    " for every piece of armour worn (anything worn with Protection of its own)";
+            }
             if let Some(at) = body_armour {
                 text += &format!(
                     " while the armour piece worn with the most Protection has {at} or more"
@@ -297,6 +398,9 @@ fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::DiseaseChecks { value } => {
             format!("disease checks (catching, progressions) {}", signed(value))
         }
+        TalentEffect::Checks { stat, value } => {
+            format!("every {} check {}", stat.name(), signed(value))
+        }
         TalentEffect::DiseaseRecovery { value } => format!(
             "a disease goes after {value} fewer checks won in a row (at least 1; never \
              one that does not recover)"
@@ -313,6 +417,9 @@ fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "a critical you confirm in melee leaves the target {} (one degree)",
             status(&id)
         ),
+        TalentEffect::CriticalConfirm { value } => {
+            format!("the roll confirming your criticals {}", signed(value))
+        }
         TalentEffect::Penetration { damage, value } => {
             let name = (content.damage_type_id(&damage)).map_or(damage.clone(), |d| {
                 content.damage_type(d).name.to_lowercase()
@@ -325,10 +432,16 @@ fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::BurdenDex { value } => {
             format!("the burden's cap on Dexterity in Defence {}", signed(value))
         }
+        TalentEffect::BurdenEase { value } => format!(
+            "{value} % off the burden's slowdown, on top of Balance (Burdened ×1.10 for 60 %)"
+        ),
         TalentEffect::SureStep => "a trap you step onto first gets a Dexterity check against \
              its difficulty: made, it does not go off, and you find it"
             .to_string(),
         TalentEffect::PitProof => "pits never catch you (you find them)".to_string(),
+        TalentEffect::Disarm => {
+            "the Disarm ability without Disable device (Dexterity alone)".to_string()
+        }
         TalentEffect::SpeedPercent { value } => format!("speed {}", percent(value)),
         TalentEffect::MissileDodge { value } => {
             format!(

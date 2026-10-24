@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ You pick up a small shield.
+ You wield a small shield.
+
+
+
+                    ┌─ Abilities ──────────────────────────────────────────────┐
+                    │                                                          │
+                    │ Class                                                    │
+                    │ > a  Throw your voice   at a place you see               │
+                    │ Skills                                                   │
+                    │   b  Appraise           not usable yet                   │
+                    │   c  Disarm a trap      in a direction                   │
+                    │   d  Pick lock          in a direction                   │
+                    │   e  Steal              in a direction                   │
+                    │ Weapon skills                                            │
+                    │   f  Shield bash        in a direction                   │
+                    │ Items                                                    │
+                    │   g  Hood your lantern                                   │
+                    │                                                          │
+                    │ Make a voice sound at a place you see nearby: those who  │
+                    │ hear it go and look there.                               │
+                    │                                                          │
+                    │ a-g or Enter use   Esc close                             │
+                    └──────────────────────────────────────────────────────────┘
+
+
+
+
+
+ The Hub  ·  HP 17/17  ·  Lv 1  ·  08:03  ·  11 Darkening, Year 1444  ·  ◑  ·  10 °C     ? controls

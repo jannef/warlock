@@ -1,0 +1,8 @@
+[[talent]]
+id = "thick_skull"
+name = "Thick skull"
+tree = "class"
+granted = true
+description = "Blows glance off you: Protection +1."
+effects = [{ kind = "protection", value = 1 }]
+systems = ["protection"]

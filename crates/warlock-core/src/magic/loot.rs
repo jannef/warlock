@@ -231,6 +231,7 @@ fn roll_magic(
         affixes: rolled,
         name,
         identified: false,
+        carried: 0,
     })
 }
 

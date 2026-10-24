@@ -230,14 +230,17 @@ impl Ability {
 
     /// Whether `actor` has it (whether or not they can use it now): a skill, if they are trained
     /// in it; disarming, if they are trained in Disable device (the skill with the disarm
-    /// effect); picking locks, if they are trained in Open lock (the pick effect's); stealing, if
-    /// they are trained in a skill with the `steal` benefit (it is listed only when stealing is
-    /// in the game); second wind, if they hold the talent; the shield bash, throwing one's voice,
-    /// and the lantern's hood, everyone.
+    /// effect) or a talent lets them (the craftsperson's Tinker); picking locks, if they are
+    /// trained in Open lock (the pick effect's); stealing, if they are trained in a skill with
+    /// the `steal` benefit (it is listed only when stealing is in the game); second wind, if they
+    /// hold the talent; the shield bash, throwing one's voice, and the lantern's hood, everyone.
     pub(crate) fn had_by(self, actor: &Actor, content: &Content) -> bool {
         match self {
             Ability::Skill(id) => actor.skills.get(id).is_some(),
-            Ability::Disarm => actor.skills.trains_effect(content, Effect::Disarm),
+            Ability::Disarm => {
+                actor.skills.trains_effect(content, Effect::Disarm)
+                    || actor.talent_mods(content).disarm
+            }
             Ability::PickLock => actor.skills.trains_effect(content, Effect::Pick),
             Ability::Steal => actor.skills.trains_effect(content, Effect::Steal),
             Ability::SecondWind => actor.talent_mods(content).second_wind.is_some(),

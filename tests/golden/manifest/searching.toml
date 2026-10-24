@@ -1,8 +1,0 @@
-# Searching (spec §8 "Searching"): the hub's secret closet. The showcase's thief, trained in Spot,
-# notices the secret door at the west end of the hall below the storeroom in passing as she walks
-# in ("You find a secret door!"), then opens it on the closet, its gold, and its gems (#191: a
-# medium fine sapphire on top).
-[[golden]]
-name = "secret-closet"
-scenario = "showcase"
-actions = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*7 move:W*4 move:S move:W"

@@ -1,0 +1,8 @@
+[[talent]]
+id = "well_dressed"
+name = "Well dressed"
+tree = "class"
+granted = true
+description = "Fine clothes open doors and purses: shopkeepers think better of you, and those who give you work pay you a quarter more gold."
+effects = [{ kind = "favour_percent", value = 10 }, { kind = "quest_gold_percent", value = 25 }]
+systems = ["shops", "talk"]

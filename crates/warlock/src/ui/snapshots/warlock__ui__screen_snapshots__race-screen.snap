@@ -1,0 +1,32 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+
+
+              ┌─ Choose your race (1 of 4) ──────────────────────────────────────────┐
+              │                                                                      │
+              │   Elf                                                                │
+              │   Half-elf                                                           │
+              │ > Human                                                              │
+              │   Dwarf                                                              │
+              │   Halfling                                                           │
+              │   Gnome                                                              │
+              │   Half-orc                                                           │
+              │   Goblin                                                             │
+              │   Drow                                                               │
+              │   Kobold                                                             │
+              │   Lizardfolk                                                         │
+              │   Duergar                                                            │
+              │   Ratfolk                                                            │
+              │   Random                                                             │
+              │                                                                      │
+              │   Short-lived, ambitious, and everywhere: no gift and no flaw.       │
+              │   No stat changes                                                    │
+              │   Vision: Normal                                                     │
+              │                                                                      │
+              │                                                                      │
+              │                                                                      │
+              │                                                                      │
+              │ ↑↓ choose   Enter next   Esc back                                    │
+              └──────────────────────────────────────────────────────────────────────┘

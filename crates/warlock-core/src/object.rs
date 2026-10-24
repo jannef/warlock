@@ -127,6 +127,20 @@ impl Stack {
         self.magic().filter(|m| m.identified)
     }
 
+    /// Counts `seconds` more of it carried by someone who learns magic items by carrying them
+    /// (spec §8 "Class abilities": Connoisseur), if it is magic and unidentified; returns whether
+    /// it has now been carried `needed` seconds.
+    pub(crate) fn carry_for(&mut self, seconds: u64, needed: u64) -> bool {
+        match self.magic.as_mut() {
+            Some(m) if !m.identified => {
+                let carried = u64::from(m.carried).saturating_add(seconds).min(needed);
+                m.carried = u32::try_from(carried).unwrap_or(u32::MAX);
+                carried >= needed
+            }
+            _ => false,
+        }
+    }
+
     /// Identifies it; returns whether there was anything to learn.
     pub(crate) fn identify(&mut self) -> bool {
         match self.magic.as_mut() {

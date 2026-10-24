@@ -50,6 +50,8 @@ mod object_screen;
 mod paged_list;
 mod quest_screen;
 mod rain;
+#[cfg(test)]
+mod screen_snapshots;
 mod screens;
 mod settings_screen;
 mod skills_screen;

@@ -30,6 +30,7 @@ use crate::content::StatUse;
 use crate::content::{Content, DialogueId, Goal, QuestDef, QuestId, QuestKind};
 use crate::object::{self, Stack};
 use crate::perception::PerceptionView;
+use crate::talent::TalentMods;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -543,7 +544,18 @@ impl World {
         self.say(format!("Quest complete: {}.", def.name));
         self.train_stat(StatUse::Quest);
         let who = capitalized(&self.called(&self.state.actors[&id]));
+        // Class abilities (spec §8 "Class abilities": Well dressed, Folk hero, Magnate) make a
+        // quest pay more gold and experience.
+        let talents = self.state.player().talent_mods(&content);
         let mut stacks = def.reward.stacks(&content);
+        if let Some(gold) = (content.object_id(crate::content::GOLD))
+            .and_then(|g| stacks.iter_mut().find(|s| s.object == g))
+        {
+            let more = TalentMods::scaled(u64::from(gold.count), talents.quest_gold_percent);
+            gold.count = u32::try_from(more).unwrap_or(u32::MAX).max(1);
+        }
+        let xp = TalentMods::scaled(u64::from(def.reward.xp), talents.quest_xp_percent);
+        let xp = u32::try_from(xp).unwrap_or(u32::MAX);
         crate::rot::made_at(&mut stacks, &content, self.state.time);
         if !stacks.is_empty() {
             self.say(format!(
@@ -552,9 +564,9 @@ impl World {
             ));
             self.give_player(&stacks);
         }
-        if def.reward.xp > 0 {
-            self.say(format!("You gain {} experience.", def.reward.xp));
-            self.grant_xp(def.reward.xp);
+        if xp > 0 {
+            self.say(format!("You gain {xp} experience."));
+            self.grant_xp(xp);
             self.say_news();
         }
         self.shift_alignment(self.state.player, def.alignment, Deed::Quest);
