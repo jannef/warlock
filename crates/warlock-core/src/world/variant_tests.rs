@@ -10,8 +10,9 @@ use crate::color::Rgb;
 use crate::content::{ContentFiles, ObjectId, PartRole};
 use crate::item_parts::ItemPart;
 use crate::magic::describe::lines;
-use crate::magic::{Affix, Magic, Rarity};
+use crate::magic::{Affix, LootGrade, Magic, Rarity, loot};
 use crate::object::Stack;
+use crate::variant::Source;
 
 // A lit room: the player beside a bronze long sword, and a pile of a tin chain mail shirt on a
 // steel dagger.
@@ -75,13 +76,40 @@ const MATERIALS: &[(&str, &str)] = &[
     ),
 ];
 
-/// Built-in content with [`MATERIALS`], these construction lists, and the level.
+/// How often loot and creatures' gear are made of them.
+const FOUND: &[(&str, &str)] = &[
+    (
+        "steel",
+        "rarity = { weight = 300, deeper = 60 }\ngear = { weight = 20, deeper = 15 }",
+    ),
+    ("iron", "rarity = { weight = 300 }\ngear = { weight = 300 }"),
+    (
+        "bronze",
+        "rarity = { weight = 800, deeper = -40 }\ngear = { weight = 600, deeper = -25 }",
+    ),
+    (
+        "tin",
+        "rarity = { weight = 300, deeper = -20 }\ngear = { weight = 200 }",
+    ),
+    ("gold", "rarity = { weight = 10 }\ngear = { weight = 5 }"),
+    ("silver", "rarity = { weight = 10 }\ngear = { weight = 5 }"),
+    (
+        "leather",
+        "rarity = { weight = 800 }\ngear = { weight = 800 }",
+    ),
+    ("dragonscale", "rarity = { weight = 10, level = 10 }"),
+    ("bone", "rarity = { weight = 300 }\ngear = { weight = 600 }"),
+];
+
+/// Built-in content with [`MATERIALS`] as often found as [`FOUND`] says, these construction
+/// lists, and the level.
 fn test_files() -> ContentFiles {
     let mut files = ContentFiles::builtin();
     for (id, fields) in MATERIALS {
+        let found = (FOUND.iter()).find(|(m, _)| m == id).map_or("", |(_, f)| f);
         files.insert(
             &format!("data/materials/{id}.toml"),
-            &format!("[[material]]\nid = \"{id}\"\nname = \"{id}\"\n{fields}\n"),
+            &format!("[[material]]\nid = \"{id}\"\nname = \"{id}\"\n{fields}\n{found}\n"),
         );
     }
     for (id, list) in [
@@ -535,4 +563,115 @@ fn variants_survive_saves_and_replays() {
     let bone = ItemPart::material(&content, None, content.material_id("bone").expect("bone"));
     pack[0] = Stack::one(object(&content, "long_sword")).with_parts(vec![bone]);
     assert!(!pack[0].is_valid_for(&content));
+}
+
+#[test]
+fn loot_and_gear_draw_materials_by_how_often_they_are_found() {
+    let content = content();
+    let id = |m: &str| content.material_id(m).expect(m);
+    let sword = content.object(object(&content, "long_sword"));
+    let weights = |source, level| crate::variant::weights(&content, sword, source, level);
+    // By the construction list's order (material ids), each by its rarity at the item level.
+    assert_eq!(
+        weights(Source::Loot, 1),
+        [
+            (id("bronze"), 800),
+            (id("gold"), 10),
+            (id("iron"), 300),
+            (id("silver"), 10),
+            (id("steel"), 300),
+            (id("tin"), 300),
+        ]
+    );
+    // Deeper: fewer primitive metals, more steel.
+    let deep = weights(Source::Loot, 11);
+    assert!(deep.contains(&(id("bronze"), 400)) && deep.contains(&(id("steel"), 900)));
+    assert!(deep.contains(&(id("tin"), 100)));
+    // A creature's gear by its own level, whatever the item level.
+    let gear = weights(Source::Gear(1), 20);
+    assert!(gear.contains(&(id("steel"), 20)) && gear.contains(&(id("bronze"), 600)));
+    // Below its level a material is not found: dragonscale from item level 10.
+    let jerkin = content.object(object(&content, "leather_jerkin"));
+    let hides = |level| crate::variant::weights(&content, jerkin, Source::Loot, level);
+    assert!(hides(9).contains(&(id("dragonscale"), 0)));
+    assert!(hides(10).contains(&(id("dragonscale"), 10)));
+    // Nothing to draw for an object made only of its own material.
+    let rock = content.object(object(&content, "rock"));
+    assert!(crate::variant::weights(&content, rock, Source::Loot, 5).is_empty());
+}
+
+#[test]
+fn worse_but_dearer_is_very_rare_except_in_jewellery() {
+    // Gold as common as bronze: still very rare on a sword (worse to hit than steel, dearer)
+    // and mail (thinner), but not on a ring (worth only) or a helm of iron for damage.
+    let mut files = test_files();
+    files.insert(
+        "data/materials/gold.toml",
+        "[[material]]\nid = \"gold\"\nname = \"gold\"\nprecious = true\ngroup = \"metal\"\n\
+         to_hit = -2\ndamage = 1\nprotection = 50\nvalue = 2000\nrarity = { weight = 800 }\n",
+    );
+    let content = Content::load(&files).expect("content");
+    let gold = content.material_id("gold").expect("gold");
+    let weight_of = |id: &str| {
+        let def = content.object(content.object_id(id).expect(id));
+        let weights = crate::variant::weights(&content, def, Source::Loot, 1);
+        weights.iter().find(|(m, _)| *m == gold).expect("gold").1
+    };
+    assert_eq!(weight_of("long_sword"), crate::content::VERY_RARE);
+    assert_eq!(weight_of("chain_mail"), crate::content::VERY_RARE);
+    assert_eq!(weight_of("gold_ring"), 800, "a ring is worth only");
+    // Better and dearer is not capped: steel on an iron chain mail shirt.
+    let mail = content.object(content.object_id("chain_mail").expect("mail"));
+    let (iron, steel) = (
+        content.material(content.material_id("iron").expect("iron")),
+        content.material(content.material_id("steel").expect("steel")),
+    );
+    assert!(!crate::variant::worse_but_dearer(mail, iron, steel));
+    assert!(crate::variant::worse_but_dearer(
+        mail,
+        steel,
+        content.material(gold)
+    ));
+}
+
+#[test]
+fn loot_rolls_variants_from_its_list_deterministically() {
+    let content = content();
+    let roll_many = |seed: u64, level: u8| -> Vec<Stack> {
+        let mut rng = crate::rng::Rng::stream(seed, "test/variants");
+        (0..3000)
+            .filter_map(|_| loot::roll(&content, &mut rng, level, LootGrade::Any))
+            .collect()
+    };
+    let shallow = roll_many(1, 1);
+    assert_eq!(shallow, roll_many(1, 1), "the same stream, the same loot");
+    let sword = object(&content, "long_sword");
+    let swords = |found: &[Stack]| -> Vec<String> {
+        (found.iter())
+            .filter(|s| s.object == sword)
+            .map(|s| s.parts(&content)[0].material)
+            .map(|m| content.material(m).id.clone())
+            .collect()
+    };
+    let count = |list: &[String], m: &str| list.iter().filter(|x| *x == m).count();
+    let shallow_swords = swords(&shallow);
+    assert!(shallow_swords.len() > 50, "{}", shallow_swords.len());
+    // Shallow, bronze outnumbers steel; deep, steel outnumbers bronze.
+    assert!(count(&shallow_swords, "bronze") > count(&shallow_swords, "steel"));
+    let deep_swords = swords(&roll_many(2, 15));
+    assert!(count(&deep_swords, "steel") > count(&deep_swords, "bronze"));
+    // Every variant is on its base item's list, and named so (a loose gem is its gem).
+    for stack in &shallow {
+        assert!(stack.is_valid_for(&content), "{stack:?}");
+        if stack.gem(&content).is_some() {
+            continue;
+        }
+        let def = content.object(stack.object);
+        let main = stack.parts(&content)[0].material;
+        assert!(def.made_of(0).contains(&main), "{}", def.id);
+        if main != def.material() {
+            let name = stack.describe(&content);
+            assert!(name.contains(&content.material(main).name), "{name}");
+        }
+    }
 }
