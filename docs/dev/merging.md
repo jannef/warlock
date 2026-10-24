@@ -9,8 +9,10 @@ and again when the integrator says your PR is next.
 - **Don't chase main.** A PR merges (or rebases onto) `origin/main` once, when the integrator says
   it is next in line, not after every merge into `main`. Until then, keep working on the branch.
   `main`'s protection does not require branches to be up to date, so a PR behind `main` still
-  merges. The one exception: just before pushing the finisher checks whether `main` moved into a
-  conflict (`git merge-tree --write-tree HEAD origin/main`, exit 1) and only then merges it again.
+  merges. The one exception: just before pushing the finisher checks whether `main` has a new HEAD
+  (`git merge-base --is-ancestor origin/main HEAD`, exit 1) and merges it again if so, clean or not,
+  repeating up to three times, so the pushed branch holds main's current HEAD and does not go stale
+  during CI.
 - **After that merge** aim for the shortest total time: run locally only what CI does not, or
   what saves a red CI round (about 20 minutes). Always: the PR's own replays (`replay --verify`;
   CI does not run them) and the golden comparison and update in the cloud sandbox if anything
@@ -143,8 +145,8 @@ message adds the fields each one lists), so they survive a wiped `/tmp`:
    main's side of generated files and PNGs, then regenerate); it updates the golden references
    (CLAUDE.md "Golden screenshots": `cargo xtask golden`, look at every difference, `--update`,
    keep only the images the change explains; an unexplained difference is a bug to fix, not a
-   reference to update); just before pushing it merges `origin/main` again only if it moved into a
-   conflict, runs the PR's replays (`replay --verify`, re-created if hashes moved), and clippy
+   reference to update); just before pushing it merges `origin/main` again if main has a new HEAD
+   (up to three times, until the branch holds it), runs the PR's replays (`replay --verify`, re-created if hashes moved), and clippy
    `-D warnings` and `cargo test --workspace` only after conflicts or a fix of its own; it
    pushes and stops. There is no CI update run and no second CI
    round. It does not merge the PR: the integrator's merge watcher squash-merges a PR once it is
