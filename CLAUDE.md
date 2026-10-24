@@ -380,6 +380,8 @@ A successful compile does not verify anything visual. Before opening a PR:
   `cargo xtask wiki`, and the PR's own captures or replays (CI covers the wasm32 check, the
   smoke test, `mdbook build wiki`, cargo-deny, and the licenses). The full check list
   ("Verification") runs once, before the PR opens.
+  Agents stop when their PR is open; a finisher agent handles CI and the merge (`docs/dev/merging.md`,
+  "Agents, finishers, and context").
 - **Keep PRs small**: one feature per PR, rules first (core, tests, dumps), then the UI, then
   the content that uses it, when they can stand alone. The integrator schedules features by
   overlap: at most about three PRs at once that add actions or save state.
