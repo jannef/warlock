@@ -93,7 +93,7 @@ systems = ["defence"]
 level = 50
 id = "quivering_palm"
 name = "Quivering palm"
-description = "A bare-handed blow in a direction (an ability) that, if it wounds, leaves the foe bleeding badly; then you are spent for a while."
+description = "A bare-handed blow (an ability) that leaves a wounded foe bleeding badly; then you are spent a while."
 learn = "You have learned the quivering palm."
 effects = [{ kind = "quivering_palm", status = "bleeding", severity = 3, cooldown = "spent", degrees = 2 }]
 systems = ["kicks", "status"]

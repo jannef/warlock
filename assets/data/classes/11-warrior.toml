@@ -44,7 +44,7 @@ systems = ["defence"]
 level = 12
 id = "veterans_wind"
 name = "Veteran's wind"
-description = "An old soldier's second breath: hit points back at once by how seasoned you are (an ability), then you are winded for a quarter of an hour."
+description = "An old soldier's second breath (an ability): hit points back at once, then winded a quarter hour."
 learn = "You can now draw on a veteran's wind."
 effects = [{ kind = "veterans_wind", per_level = 1, at_least = 10, cooldown = "winded" }]
 systems = ["hit_points", "status"]

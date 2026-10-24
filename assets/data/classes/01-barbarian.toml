@@ -29,7 +29,7 @@ bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["might", "vigour"] }
 level = 1
 id = "rage"
 name = "Rage"
-description = "You fly into a rage (an ability): stronger and tougher for a few minutes, too wild to read; then exhausted for a while, and no rage until that passes."
+description = "Fly into a rage (an ability): stronger and tougher, too wild to read; exhausted after, and no rage till then."
 effects = [{ kind = "rage", status = "raging" }]
 systems = ["status", "combat"]
 

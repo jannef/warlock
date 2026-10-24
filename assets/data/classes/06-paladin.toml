@@ -50,7 +50,7 @@ systems = ["diseases", "status"]
 level = 12
 id = "smite"
 name = "Smite"
-description = "A blow struck with holy wrath (an ability, in a direction): more damage the more seasoned you are; then you are spent for a while."
+description = "A blow of holy wrath in a direction (an ability), harder as you grow; then you are spent a while."
 learn = "You can now smite."
 effects = [{ kind = "smite", per_levels = 10, sides = 6, cooldown = "spent", degrees = 1 }]
 systems = ["combat"]

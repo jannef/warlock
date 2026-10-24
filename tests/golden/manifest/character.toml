@@ -31,6 +31,16 @@ equip:off_hand:a
 '''
 screen = "abilities"
 
+# The abilities menu's Class group (#243): a paladin at level 12 (the dev `xp:` grant, its picks
+# made by `levelup:auto`) has Lay on hands and Smite; Lay on hands, just used, is greyed out ("you
+# are drained", Drained on the status bar) and under the cursor (the first row), described below.
+[[golden]]
+name = "abilities-menu-class"
+scenario = "showcase"
+character = "human,male,paladin"
+actions = "xp:76000 levelup:auto use:lay_on_hands"
+screen = "abilities"
+
 # Status effects (#138): four bites' worth of poison and a wound (the dev `afflict:` action), a
 # turn later. The character screen names them (never how bad) and shows Strength and Dexterity
 # lowered by the strong poison, in red; the status bar beneath names them after the hit points.
