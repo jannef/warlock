@@ -63,7 +63,7 @@ impl Step {
         match self {
             Step::Race => ScreenName::Sign,
             Step::Gender => ScreenName::Class,
-            Step::Class => ScreenName::Name,
+            Step::Class => ScreenName::ChargenTalents,
             Step::Name => ScreenName::Summary,
         }
     }
@@ -80,10 +80,10 @@ impl Step {
 
     pub(super) fn title(self) -> &'static str {
         match self {
-            Step::Race => " Choose your race (1 of 4) ",
-            Step::Gender => " Choose your gender (2 of 4) ",
-            Step::Class => " Choose your class (3 of 4) ",
-            Step::Name => " Choose your name (4 of 4) ",
+            Step::Race => " Choose your race (1 of 5) ",
+            Step::Gender => " Choose your gender (2 of 5) ",
+            Step::Class => " Choose your class (3 of 5) ",
+            Step::Name => " Choose your name (5 of 5) ",
         }
     }
 }
@@ -112,6 +112,8 @@ pub struct Picks {
     pub gender: Option<String>,
     pub class: Option<String>,
     pub name: Option<String>,
+    /// The talents marked on the Talents step, in order.
+    pub talents: Option<Vec<String>>,
 }
 
 impl Picks {
@@ -143,6 +145,9 @@ pub struct Draft {
     pub chosen: Picks,
     /// Choices remembered from steps since left.
     pub remembered: Picks,
+    /// The talents marked on the Talents step, if it is on the stack (else none: the run takes
+    /// the Random picks).
+    pub talents: Option<Vec<String>>,
 }
 
 impl Draft {
@@ -204,11 +209,8 @@ impl Draft {
             .or_else(|| self.preselect(Step::Gender))
             .and_then(|id| Gender::from_id(&id))
             .unwrap_or(Gender::Male);
-        Some(CharacterSpec {
-            race,
-            gender,
-            class,
-        })
+        let talents = self.talents.clone().unwrap_or_default();
+        Some(CharacterSpec::new(race, gender, class).with_talents(talents))
     }
 }
 
@@ -402,6 +404,7 @@ enum Row {
     Start,
     Step(Step),
     Sign,
+    Talents,
 }
 
 /// The summary's rows: start, go back to a step, or to the birth sign's reveal.
@@ -412,6 +415,7 @@ const SUMMARY_ROWS: &[(&str, Row)] = &[
     ("Sign", Row::Sign),
     ("Gender", Row::Step(Step::Gender)),
     ("Class", Row::Step(Step::Class)),
+    ("Talents", Row::Talents),
 ];
 
 /// Where the starting skills' columns begin, beside the scores (from the panel's inner edge).
@@ -437,6 +441,25 @@ fn kit_words(content: &Content, draft: &Draft, start: &Result<Start, String>) ->
     match pack.names(content) {
         names if names.is_empty() => vec!["nothing".into()],
         names => names,
+    }
+}
+
+/// The summary's Talents line: the creation picks by name (`Healthy, Weapon focus (long
+/// blades)`), or, with none marked, that chance picks them.
+fn talent_names(content: &Content, spec: Option<&CharacterSpec>) -> String {
+    let book = content.talents();
+    let names: Vec<String> = (spec.iter().flat_map(|s| &s.talents))
+        .filter_map(|pick| {
+            let (id, choice) = match pick.split_once(':') {
+                Some((id, choice)) => (id, Some(choice)),
+                None => (pick.as_str(), None),
+            };
+            book.id(id).map(|t| book.get(t).name_for(content, choice))
+        })
+        .collect();
+    match names.is_empty() {
+        true => "chosen by chance".into(),
+        false => names.join(", "),
     }
 }
 
@@ -467,6 +490,8 @@ pub struct SummaryScreen {
     eyes: String,
     /// The band the character starts in (spec §8 "Alignment"); empty without alignment rules.
     alignment: String,
+    /// The talents picked, by name (`Healthy, Lean`); "chosen by chance" for none marked.
+    talents: String,
     selected: usize,
 }
 
@@ -512,6 +537,7 @@ impl SummaryScreen {
                 .collect()
         });
         let kit = kit_words(content, draft, &start);
+        let talents = talent_names(content, spec.as_ref());
         Self {
             scenario: draft.scenario.clone(),
             spec,
@@ -524,6 +550,7 @@ impl SummaryScreen {
             kit,
             eyes,
             alignment,
+            talents,
             selected: 0,
         }
     }
@@ -581,6 +608,7 @@ impl SummaryScreen {
             Nav::Enter => match SUMMARY_ROWS[self.selected].1 {
                 Row::Step(step) => return ScreenAction::Return(step.screen()),
                 Row::Sign => return ScreenAction::Return(ScreenName::Sign),
+                Row::Talents => return ScreenAction::Return(ScreenName::ChargenTalents),
                 Row::Start => {
                     if let (Some(scenario), Some(spec), Ok(_)) =
                         (&self.scenario, &self.spec, &self.start)
@@ -637,6 +665,7 @@ impl SummaryScreen {
                     Row::Start => "",
                     Row::Step(s) => self.names[*s as usize].as_str(),
                     Row::Sign => self.sign.as_str(),
+                    Row::Talents => self.talents.as_str(),
                 };
                 panel.row(console, y, i == self.selected, label, value, 6);
             }
@@ -808,7 +837,7 @@ mod tests {
         let mut class = ChoiceScreen::new(Step::Class, &CONTENT, &draft(1));
         assert_eq!(
             press(&mut class, Nav::Enter),
-            ScreenAction::Open(ScreenName::Name)
+            ScreenAction::Open(ScreenName::ChargenTalents)
         );
     }
 
@@ -822,7 +851,7 @@ mod tests {
                 s.selected = s.choices.len();
                 assert_eq!(
                     press(&mut s, Nav::Enter),
-                    ScreenAction::Open(ScreenName::Name)
+                    ScreenAction::Open(ScreenName::ChargenTalents)
                 );
                 picks.push(s.chosen().expect("a class").to_string());
             }
@@ -870,7 +899,7 @@ mod tests {
         console.resize(80, 32);
         race.draw(&mut console, &Bindings::default());
         let text = text(&console);
-        assert!(text.contains("Choose your race (1 of 4)"), "{text}");
+        assert!(text.contains("Choose your race (1 of 5)"), "{text}");
         assert!(text.contains("> Dwarf"), "{text}");
         assert!(text.contains("Stout, stubborn folk"), "{text}");
         assert!(
@@ -1110,6 +1139,7 @@ mod tests {
             ScreenName::Sign,
             ScreenName::Gender,
             ScreenName::Class,
+            ScreenName::ChargenTalents,
         ] {
             s.handle(&Press::nav(Nav::Down));
             assert_eq!(

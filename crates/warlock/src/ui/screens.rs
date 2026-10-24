@@ -29,6 +29,7 @@ use super::abilities_screen::AbilitiesScreen;
 use super::character_screen::CharacterScreen;
 use super::characters_screen::CharactersScreen;
 use super::chargen_screen::{ChoiceScreen, Draft, Picks, Step, SummaryScreen};
+use super::chargen_talents_screen::ChargenTalentsScreen;
 use super::controls_screen::ControlsScreen;
 use super::death_screen::DeathScreen;
 use super::describe_screen::DescribeScreen;
@@ -37,6 +38,7 @@ use super::dialogue_screen::{DialogueScreen, last_talk};
 use super::equipment_screen::{EquipmentScreen, ItemScreen};
 use super::files_screen::FilesScreen;
 use super::info_tabs;
+use super::level_up_screen::LevelUpScreen;
 use super::menu::{MainMenu, Press, quit_dialog};
 use super::messages_screen::MessagesScreen;
 use super::motion::Motion;
@@ -47,6 +49,7 @@ use super::quest_screen::QuestScreen;
 use super::settings_screen::SettingsScreen;
 use super::sign_screen::SignScreen;
 use super::skills_screen::SkillsScreen;
+use super::talents_screen::TalentsScreen;
 use super::target::AimKind;
 use super::weapon_skills_screen::WeaponSkillsScreen;
 use crate::cli::Args;
@@ -60,6 +63,7 @@ use crate::settings::{Settings, SettingsStore};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use clap::ValueEnum;
+use std::sync::Arc;
 use warlock_core::Action;
 use warlock_core::ability::Ability;
 use warlock_core::character::CharacterSpec;
@@ -83,6 +87,8 @@ pub enum ScreenName {
     Gender,
     /// Choose a class (after the gender).
     Class,
+    /// Choose the talents picked at creation (after the class).
+    ChargenTalents,
     /// Type a name (after the class).
     Name,
     /// The character before the run starts: start, or go back to a step.
@@ -114,6 +120,9 @@ pub enum ScreenName {
     WeaponSkills,
     /// The player's quests, active and done (`q` in play).
     Quests,
+    /// The player's talents, then every other with what it needs (page 7; its own command,
+    /// unbound by default).
+    Talents,
     /// The message history (`M` in play): every message the log keeps, the newest at the
     /// bottom. No info page.
     Messages,
@@ -142,6 +151,11 @@ pub enum ScreenName {
     /// dies, so it is no `--screen`.
     #[value(skip)]
     Death,
+    /// A level's choices: skill rolls, then talents. It opens by itself while any are due and
+    /// cannot be left until they are made, so it is no `--screen` (a replay that ends with a
+    /// choice due opens it).
+    #[value(skip)]
+    LevelUp,
     /// The dialog (dev: the quit question). Screens and gameplay ask with
     /// [`ScreenAction::Dialog`].
     Dialog,
@@ -162,6 +176,7 @@ impl ScreenName {
                 | ScreenName::Skills
                 | ScreenName::WeaponSkills
                 | ScreenName::Quests
+                | ScreenName::Talents
                 | ScreenName::Messages
                 | ScreenName::PickUp
                 | ScreenName::Drop
@@ -172,6 +187,7 @@ impl ScreenName {
                 | ScreenName::Abilities
                 | ScreenName::Dialogue
                 | ScreenName::Death
+                | ScreenName::LevelUp
         )
     }
 }
@@ -263,6 +279,8 @@ enum Screen {
     NewRun(NewRunScreen),
     /// A step of character creation.
     Choice(ChoiceScreen),
+    /// Character creation's talents (boxed: it holds the drafted run).
+    ChargenTalents(Box<ChargenTalentsScreen>),
     /// Character creation's reveal of the birth sign.
     Sign(Box<SignScreen>),
     /// Character creation's name.
@@ -284,10 +302,12 @@ enum Screen {
     Skills(SkillsScreen),
     WeaponSkills(WeaponSkillsScreen),
     Quests(QuestScreen),
+    Talents(TalentsScreen),
     Messages(MessagesScreen),
     Abilities(AbilitiesScreen),
     Dialogue(DialogueScreen),
     Death(DeathScreen),
+    LevelUp(LevelUpScreen),
     /// The dialog.
     Dialog(DialogScreen),
 }
@@ -310,7 +330,7 @@ impl Screen {
     /// characters, the developer keys, where keymaps go).
     fn new(
         name: ScreenName,
-        content: &Content,
+        content: &Arc<Content>,
         launch: &Launch,
         run: Option<&PerceptionView<'_>>,
         draft: &Draft,
@@ -338,6 +358,9 @@ impl Screen {
             ScreenName::Sign => Screen::Sign(Box::new(SignScreen::new(content, draft))),
             ScreenName::Gender => choice(Step::Gender),
             ScreenName::Class => choice(Step::Class),
+            ScreenName::ChargenTalents => Screen::ChargenTalents(Box::new(
+                ChargenTalentsScreen::new(content, draft, draft.remembered.talents.as_deref()),
+            )),
             ScreenName::Name => Screen::Name(NameScreen::new(content, draft)),
             ScreenName::Summary => Screen::Summary(Box::new(SummaryScreen::new(content, draft))),
             ScreenName::Settings => Screen::Settings(SettingsScreen::default()),
@@ -358,6 +381,7 @@ impl Screen {
             ScreenName::Skills => Screen::Skills(SkillsScreen::new(run)),
             ScreenName::WeaponSkills => Screen::WeaponSkills(WeaponSkillsScreen::new(run)),
             ScreenName::Quests => Screen::Quests(QuestScreen::new(run)),
+            ScreenName::Talents => Screen::Talents(TalentsScreen::new(run)),
             ScreenName::Messages => Screen::Messages(MessagesScreen::new(run)),
             ScreenName::PickUp => objects(ObjectList::PickUp),
             ScreenName::Drop => objects(ObjectList::Drop),
@@ -368,6 +392,7 @@ impl Screen {
             ScreenName::Abilities => Screen::Abilities(AbilitiesScreen::new(run, beneath.ability)),
             ScreenName::Dialogue => Screen::Dialogue(DialogueScreen::new(talk, run)),
             ScreenName::Death => Screen::Death(DeathScreen::new(run)),
+            ScreenName::LevelUp => Screen::LevelUp(LevelUpScreen::new(run)),
             ScreenName::Dialog => Screen::Dialog(DialogScreen::new(quit_dialog(run.is_some()))),
         }
     }
@@ -379,6 +404,7 @@ impl Screen {
             Screen::Characters(_) => ScreenName::Characters,
             Screen::NewRun(_) => ScreenName::NewRun,
             Screen::Choice(screen) => screen.step().screen(),
+            Screen::ChargenTalents(_) => ScreenName::ChargenTalents,
             Screen::Sign(_) => ScreenName::Sign,
             Screen::Name(_) => ScreenName::Name,
             Screen::Summary(_) => ScreenName::Summary,
@@ -402,10 +428,12 @@ impl Screen {
             Screen::Skills(_) => ScreenName::Skills,
             Screen::WeaponSkills(_) => ScreenName::WeaponSkills,
             Screen::Quests(_) => ScreenName::Quests,
+            Screen::Talents(_) => ScreenName::Talents,
             Screen::Messages(_) => ScreenName::Messages,
             Screen::Abilities(_) => ScreenName::Abilities,
             Screen::Dialogue(_) => ScreenName::Dialogue,
             Screen::Death(_) => ScreenName::Death,
+            Screen::LevelUp(_) => ScreenName::LevelUp,
             Screen::Dialog(_) => ScreenName::Dialog,
         }
     }
@@ -497,6 +525,7 @@ impl ScreenStack {
                     }
                 }
                 Screen::Name(screen) => draft.chosen.set(Step::Name, screen.text()),
+                Screen::ChargenTalents(screen) => draft.talents = Some(screen.picks().to_vec()),
                 _ => {}
             }
         }
@@ -587,6 +616,16 @@ impl ScreenStack {
                 }
                 action
             }
+            Some(Screen::ChargenTalents(screen)) => {
+                if let Some((cols, rows)) = self.console {
+                    screen.fit(cols, rows);
+                }
+                let action = screen.handle(press);
+                if matches!(action, ScreenAction::Open(_) | ScreenAction::Close) {
+                    self.picks.talents = Some(screen.picks().to_vec());
+                }
+                action
+            }
             Some(Screen::Sign(screen)) => screen.handle(press),
             Some(Screen::Name(screen)) => {
                 let action = screen.handle(press);
@@ -617,6 +656,7 @@ impl ScreenStack {
             Some(Screen::Skills(screen)) => screen.handle(press, bindings),
             Some(Screen::WeaponSkills(screen)) => screen.handle(press, bindings),
             Some(Screen::Quests(screen)) => screen.handle(press, bindings),
+            Some(Screen::Talents(screen)) => screen.handle(press, bindings),
             Some(Screen::Messages(screen)) => {
                 if let Some((cols, rows)) = self.console {
                     screen.fit(cols, rows);
@@ -631,6 +671,12 @@ impl ScreenStack {
             }
             Some(Screen::Dialogue(screen)) => screen.handle(press, bindings),
             Some(Screen::Death(screen)) => screen.handle(press),
+            Some(Screen::LevelUp(screen)) => {
+                if let Some((cols, rows)) = self.console {
+                    screen.fit(cols, rows);
+                }
+                screen.handle(press)
+            }
             Some(Screen::Dialog(screen)) => screen.handle(press, bindings),
         };
         if action == ScreenAction::Stay {
@@ -667,6 +713,7 @@ impl ScreenStack {
             Some(Screen::Characters(screen)) => screen.draw(console, settings.clock, bindings),
             Some(Screen::NewRun(screen)) => screen.draw(console, bindings),
             Some(Screen::Choice(screen)) => screen.draw(console, bindings),
+            Some(Screen::ChargenTalents(screen)) => screen.draw(console, bindings),
             Some(Screen::Sign(screen)) => screen.draw(console, bindings),
             Some(Screen::Name(screen)) => screen.draw(console, bindings),
             Some(Screen::Summary(screen)) => screen.draw(console, bindings),
@@ -681,10 +728,12 @@ impl ScreenStack {
             Some(Screen::Skills(screen)) => screen.draw(console, bindings),
             Some(Screen::WeaponSkills(screen)) => screen.draw(console, bindings),
             Some(Screen::Quests(screen)) => screen.draw(console, bindings),
+            Some(Screen::Talents(screen)) => screen.draw(console, bindings),
             Some(Screen::Messages(screen)) => screen.draw(console, bindings),
             Some(Screen::Abilities(screen)) => screen.draw(console, bindings),
             Some(Screen::Dialogue(screen)) => screen.draw(console, bindings),
             Some(Screen::Death(screen)) => screen.draw(console, settings.clock, bindings),
+            Some(Screen::LevelUp(screen)) => screen.draw(console, bindings),
             Some(Screen::Dialog(screen)) => screen.draw(console, bindings),
         }
     }
@@ -809,7 +858,7 @@ pub(super) fn open_startup_screens(args: Res<Args>, game: Option<Res<Game>>, mut
 /// steps before them, each with its preselection.
 fn startup_screens(screen: Option<ScreenName>, in_run: bool) -> Vec<ScreenName> {
     use ScreenName::*;
-    let creation = [Race, Sign, Gender, Class, Name, Summary];
+    let creation = [Race, Sign, Gender, Class, ChargenTalents, Name, Summary];
     match (in_run, screen) {
         (false, Some(s)) if creation.contains(&s) => {
             let steps = creation.iter().take_while(|&&c| c != s);
@@ -853,6 +902,22 @@ pub(super) fn on_death(game: Res<Game>, mut screens: Screens) {
     }
     screens.stack.clear();
     screens.open(ScreenName::Death);
+}
+
+/// When a level's choices are due (a level just came, or a run was resumed with them due): the
+/// level-up screen opens on top, afresh on what is left (its choices close it to be applied).
+/// Nothing is banked, so it opens whenever choices are due; the death screen wins.
+pub(super) fn on_level_up(game: Res<Game>, mut screens: Screens) {
+    if !game.is_changed() || game.world.death().is_some() || screens.stack.shows_death() {
+        return;
+    }
+    if game.world.due().is_none() {
+        return;
+    }
+    if matches!(screens.stack.screens.last(), Some(Screen::LevelUp(_))) {
+        screens.stack.close();
+    }
+    screens.open(ScreenName::LevelUp);
 }
 
 /// Applies menu choices: starts or resumes a run, saves and returns to the main menu, or quits.
@@ -1099,11 +1164,30 @@ mod tests {
         );
         assert_eq!(
             startup_screens(Some(Name), false),
-            [Main, NewRun, Race, Sign, Gender, Class, Name]
+            [
+                Main,
+                NewRun,
+                Race,
+                Sign,
+                Gender,
+                Class,
+                ChargenTalents,
+                Name
+            ]
         );
         assert_eq!(
             startup_screens(Some(Summary), false),
-            [Main, NewRun, Race, Sign, Gender, Class, Name, Summary]
+            [
+                Main,
+                NewRun,
+                Race,
+                Sign,
+                Gender,
+                Class,
+                ChargenTalents,
+                Name,
+                Summary
+            ]
         );
         assert_eq!(startup_screens(Some(Characters), false), [Main, Characters]);
         assert_eq!(startup_screens(Some(Characters), true), []);
@@ -1403,9 +1487,13 @@ mod tests {
         app.update();
         assert_eq!(names(&app), [ScreenName::Main]);
         // Enter opens New run, and the next Enters, in the same frame, pick the showcase, its
-        // character's race, read the stars, the gender and class (preselected), and a name (an
+        // character's race, read the stars, the gender and class (preselected), the talents
+        // (Random, preselected), and a name (an
         // empty field: the first random one), and start it from the summary.
-        frame(&mut app, &[ENTER, ENTER, ENTER, ENTER, ENTER, ENTER, ENTER]);
+        frame(
+            &mut app,
+            &[ENTER, ENTER, ENTER, ENTER, ENTER, ENTER, ENTER, ENTER],
+        );
         assert_eq!(
             names(&app),
             [
@@ -1415,6 +1503,7 @@ mod tests {
                 ScreenName::Sign,
                 ScreenName::Gender,
                 ScreenName::Class,
+                ScreenName::ChargenTalents,
                 ScreenName::Name,
                 ScreenName::Summary
             ]
@@ -1446,7 +1535,9 @@ mod tests {
         // nothing here).
         frame(
             &mut app,
-            &[ENTER, ENTER, down, ENTER, ENTER, down, ENTER, up, ENTER],
+            &[
+                ENTER, ENTER, down, ENTER, ENTER, down, ENTER, up, ENTER, ENTER,
+            ],
         );
         assert_eq!(names(&app).last(), Some(&ScreenName::Name));
         let typed = [
@@ -1470,20 +1561,22 @@ mod tests {
         );
         // Another race (and its stars); the gender, class, and name open on what was chosen
         // before.
-        frame(&mut app, &[down, ENTER, ENTER, ENTER, ENTER, ENTER]);
+        frame(&mut app, &[down, ENTER, ENTER, ENTER, ENTER, ENTER, ENTER]);
         assert_eq!(names(&app).last(), Some(&ScreenName::Summary));
         let draft = app.world().resource::<ScreenStack>().draft();
         let spec = draft.spec(&content()).expect("a character");
         assert_eq!(spec.to_string(), "halfling,other,ranger");
         assert_eq!(draft.name(&content()), "Kaj");
         // Esc steps back one screen at a time, to the main menu.
-        for left in [7, 6, 5, 4, 3, 2, 1] {
+        for left in [8, 7, 6, 5, 4, 3, 2, 1] {
             frame(&mut app, &[ESC]);
             assert_eq!(names(&app).len(), left);
         }
         frame(
             &mut app,
-            &[ENTER, ENTER, ENTER, ENTER, ENTER, ENTER, ENTER, ENTER],
+            &[
+                ENTER, ENTER, ENTER, ENTER, ENTER, ENTER, ENTER, ENTER, ENTER,
+            ],
         );
         let game = app.world().resource::<Game>();
         let character = game.world.character().expect("a character");

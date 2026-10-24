@@ -134,10 +134,25 @@ impl Game {
             }
             None => {
                 let scenario = args.scenario_name();
-                let (character, name) = (args.character.as_ref(), args.name.as_deref());
-                // A character chosen with `--character` or `--name` starts with its kit; the
-                // scenario's own (`--scenario` alone) with the scenario's pack.
-                let kit = character.is_some() || name.is_some();
+                let name = args.name.as_deref();
+                // `--talents` picks for `--character`, else for the scenario's own character.
+                let talents = args
+                    .talents
+                    .as_deref()
+                    .map(warlock_core::world::parse_talents);
+                let character = match &talents {
+                    Some(picks) => warlock_core::world::chosen_with_talents(
+                        &content,
+                        scenario,
+                        args.character.as_ref(),
+                        picks,
+                    ),
+                    None => args.character.clone(),
+                };
+                // A character chosen with `--character`, `--name`, or `--talents` starts with
+                // its kit; the scenario's own (`--scenario` alone) with the scenario's pack.
+                let kit = args.character.is_some() || name.is_some() || talents.is_some();
+                let character = character.as_ref();
                 let mut world =
                     World::start_run(content, scenario, args.seed, character, name, kit)
                         .map_err(|e| format!("cannot start scenario `{scenario}`: {e}"))?;

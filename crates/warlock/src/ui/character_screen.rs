@@ -103,6 +103,9 @@ pub struct CharacterScreen {
     protection: i32,
     /// The combat stance's name.
     stance: String,
+    /// How many talents they have (spec §8 "Talents"): picked, and the sign's; not the class's
+    /// abilities.
+    talents: usize,
     /// Their alignment band's name (spec §8 "Alignment"), never the score; `None` without
     /// alignment rules.
     alignment: Option<&'static str>,
@@ -135,6 +138,7 @@ impl CharacterScreen {
                 defence: warlock_core::combat::BASE_DEFENCE,
                 protection: 0,
                 stance: "Neutral".into(),
+                talents: 0,
                 alignment: None,
             };
         };
@@ -190,6 +194,7 @@ impl CharacterScreen {
             defence: view.own_defence(),
             protection: view.own_protection(),
             stance: content.stance_def(view.own_stance()).name.clone(),
+            talents: view.own_talents().iter().filter(|t| !t.class).count(),
             alignment: view.own_alignment().map(|b| b.name()),
         }
     }
@@ -208,7 +213,7 @@ impl CharacterScreen {
 
     pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
         // Rows: margin, the name, a gap, race, gender, class, the birth, and a gap (with a
-        // character), the stats, a gap, level, experience, hit points and mana, Defence and
+        // character), the stats, a gap, level, experience, talents, hit points and mana, Defence and
         // Protection, and stance (and the status effects and known diseases, if any), a gap, the weight, the
         // burden's thresholds, a gap, the footer, frame.
         let width = WIDTH.min(console.cols() as i32) - 4;
@@ -223,7 +228,7 @@ impl CharacterScreen {
             + i32::from(!self.effects.is_empty())
             + i32::from(!self.diseases.is_empty())
             + self.resistances.len() as i32;
-        let h = Stat::COUNT as i32 + 15 + identity_rows + thresholds.len() as i32 + status_rows;
+        let h = Stat::COUNT as i32 + 16 + identity_rows + thresholds.len() as i32 + status_rows;
         let panel = Panel::new(console, " Character ", WIDTH, h);
         super::info_tabs::draw_tabs(console, &panel, bindings, super::ScreenName::Character);
         let x = panel.inner_x();
@@ -284,6 +289,7 @@ impl CharacterScreen {
         for (abbrev, name, value, beside) in [
             ("Lv", "Level", self.progress.level.to_string(), None),
             ("XP", "Experience", experience_text(&self.progress), None),
+            ("", "Talents", self.talents.to_string(), None),
             ("HP", "Hit points", format!("{hp}/{max}"), Some(mana)),
             (
                 "Dv",

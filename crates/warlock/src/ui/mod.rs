@@ -27,6 +27,7 @@ mod blood;
 mod character_screen;
 mod characters_screen;
 mod chargen_screen;
+mod chargen_talents_screen;
 mod controls_screen;
 mod death_screen;
 mod describe_screen;
@@ -38,6 +39,7 @@ mod equipment_screen;
 mod files_screen;
 mod glyphs;
 mod info_tabs;
+mod level_up_screen;
 mod look;
 mod menu;
 mod messages_screen;
@@ -58,6 +60,7 @@ mod sign_screen;
 mod skills_screen;
 mod sounds;
 mod spells;
+mod talents_screen;
 mod target;
 mod weapon_skills_screen;
 
@@ -161,7 +164,12 @@ impl Plugin for UiPlugin {
                         .chain()
                         .after(SimSet)
                         .run_if(resource_exists::<Game>),
-                    (screens::refresh, screens::converse, screens::on_death)
+                    (
+                        screens::refresh,
+                        screens::converse,
+                        screens::on_death,
+                        screens::on_level_up,
+                    )
                         .chain()
                         .after(SimSet)
                         .before(draw)

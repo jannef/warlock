@@ -23,7 +23,7 @@ expression: "render(case, content.clone())"
                   │ for me, and I'll pay you for the quiet."                     │
                   │                                                              │
                   │ ↑↓ choose   q or Esc close                                   │
-                  └─ 1 Char · 2 Inv · 3 Equip · 4 Skills · 5 Weapons · 6 Quests ─┘
+                  └─ 1 · 2 · 3 · 4 · 5 · 6 Quests · 7 ───────────────────────────┘
 
 
 

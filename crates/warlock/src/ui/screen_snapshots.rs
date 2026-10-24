@@ -156,6 +156,20 @@ const CASES: &[Case] = &[
         screen: Some("class"),
         ..BASE
     },
+    // The showcase's thief: Random preselected; a letter marks a talent.
+    Case {
+        name: "chargen-talents-screen",
+        screen: Some("chargen-talents"),
+        size: (100, 40),
+        ..BASE
+    },
+    Case {
+        name: "chargen-talents-marked",
+        screen: Some("chargen-talents"),
+        keys: Some("b"),
+        size: (100, 40),
+        ..BASE
+    },
     Case {
         name: "name-screen",
         screen: Some("name"),
@@ -170,7 +184,7 @@ const CASES: &[Case] = &[
     Case {
         name: "character-summary-other",
         screen: Some("gender"),
-        keys: Some("Down Enter Enter Enter"),
+        keys: Some("Down Enter Enter Enter Enter"),
         ..BASE
     },
     Case {
@@ -179,7 +193,7 @@ const CASES: &[Case] = &[
         screen: Some("new-run"),
         keys: Some(
             "Down Down Down Down Down Down Down Down Enter Down Down Enter Enter Enter Down Down \
-             Down Down Down Down Down Down Enter Enter",
+             Down Down Down Down Down Down Enter Enter Enter",
         ),
         size: (100, 36),
         ..BASE
@@ -242,6 +256,38 @@ const CASES: &[Case] = &[
         character: Some("human,male,paladin"),
         actions: "xp:100000 levelup:auto use:lay_on_hands",
         screen: Some("abilities"),
+        ..BASE
+    },
+    // Progression: a warrior gaining levels 2 and 3 at once (the level-up screen opens by
+    // itself), their talent pick, and the Talents page.
+    Case {
+        name: "level-up-rolls",
+        character: Some("human,male,warrior"),
+        actions: "xp:2431",
+        size: (100, 40),
+        ..BASE
+    },
+    Case {
+        name: "level-up-talent",
+        character: Some("human,male,warrior"),
+        actions: "xp:2431 advance:athletics*6",
+        size: (100, 40),
+        ..BASE
+    },
+    Case {
+        name: "level-up-choice",
+        character: Some("human,male,warrior"),
+        actions: "xp:2431 advance:athletics*6",
+        keys: Some("o"),
+        size: (100, 40),
+        ..BASE
+    },
+    Case {
+        name: "talents-screen",
+        character: Some("dwarf,male,warrior"),
+        run: true,
+        screen: Some("talents"),
+        size: (100, 40),
         ..BASE
     },
     // Items.
@@ -509,6 +555,7 @@ fn render(case: &Case, content: Arc<Content>) -> String {
                     screens::refresh,
                     screens::converse,
                     screens::on_death,
+                    screens::on_level_up,
                     more::wait,
                 )
                     .chain()

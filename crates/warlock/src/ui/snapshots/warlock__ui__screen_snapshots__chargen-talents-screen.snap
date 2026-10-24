@@ -1,0 +1,44 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+              ┌─ Choose your talents (4 of 5): 2 left ──────────────────── Page 1/2 ─┐
+              │                                                                      │
+              │ Chance                                                               │
+              │ > a  Random                                                          │
+              │ Vigour                                                               │
+              │   b  Healthy          Your hit points come back a quarter faster.    │
+              │ Might                                                                │
+              │   c  Mighty kick      Your kicks land like hammers: they hurt creat… │
+              │ Finesse                                                              │
+              │   d  Dodge            You slip aside from blows: Dodge +1 to your D… │
+              │   e  Light step       You tread lightly: a trap you step onto may n… │
+              │   f  Nimble           A load slows your feet less than most: your b… │
+              │   g  Opportunist      A foe that turns from you pays for it: one th… │
+              │ Weaponcraft                                                          │
+              │   h  Far shot         Your shots fly 2 cells farther, and what you … │
+              │   i  Weapon focus     You have drilled with one kind of weapon unti… │
+              │ Guard                                                                │
+              │   j  Armour training  You move freely in armour: it hampers your De… │
+              │ Shadow                                                               │
+              │   k  Keen ears        You hear fainter sounds, fainter still at the… │
+              │   l  Lamplighter      You tend your lantern well: it burns brighter… │
+              │   m  Night eyes       Your eyes grow used to the dark: you see by h… │
+              │   n  Silent feet      Your footsteps are a fifth quieter for each r… │
+              │ Wayfarer                                                             │
+              │   o  Long strider     Your journeys across the overworld go quicker. │
+              │   p  Sun-blessed      The sun mends you: under the open sun your wo… │
+              │ Scholar                                                              │
+              │   q  Apprentice       You take up a skill you lack, or get better a… │
+              │   r  Good learner     You gain 5 % more experience for each rank.    │
+              │   s  Lore             A magic item you have carried for a day gives… │
+              │   t  Treasure hunter  The loot you find, and what creatures drop, i… │
+              │ Grit                                                                 │
+              │   u  Lean             You go hungry more slowly, and exerting yours… │
+              │                                                                      │
+              │ Let chance pick your talents.                                        │
+              │                                                                      │
+              │                                                                      │
+              │                                                                      │
+              │ Enter or a letter mark   > < page   Esc back                         │
+              └──────────────────────────────────────────────────────────────────────┘
