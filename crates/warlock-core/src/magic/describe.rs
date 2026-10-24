@@ -40,6 +40,52 @@ fn line(kind: LineKind, text: impl Into<String>) -> Line {
     }
 }
 
+/// What a description shows of worth (spec §8 "Class abilities": Keen appraisal, Appraiser):
+/// nothing unless the player has an eye for it.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Appraisal {
+    /// What the thing is worth, in gold (its value: never what its unknown magic adds, which
+    /// the value leaves out).
+    pub worth: bool,
+    /// What each gem in it is worth.
+    pub gems: bool,
+}
+
+/// [`lines`] for a player with an eye for worth: a line of what it is worth after what it is
+/// (`Worth 12 gold`; `Worth 3 gold each, 9 gold in all` for a stack), and each gem's worth after
+/// its line (`Pommel: small emerald, fine cut (worth 40 gold)`), as `appraisal` shows.
+pub fn appraised(stack: &Stack, content: &Content, appraisal: Appraisal) -> Vec<Line> {
+    let mut out = lines(stack, content);
+    // The first line says what it is; a line for each gem in it follows.
+    let gems_at = 1;
+    let parts = stack.parts(content);
+    if appraisal.gems
+        && let Some(gems) = content.gems()
+    {
+        let worths = (parts.iter()).filter_map(|p| {
+            let gem = content.material(p.material).gem.as_ref();
+            p.gem
+                .map(|cutting| gem.map_or(0, |g| gems.value(g, cutting)))
+        });
+        for (line, worth) in out[gems_at..].iter_mut().zip(worths) {
+            line.text += &format!(" (worth {worth} gold)");
+        }
+    }
+    if appraisal.worth {
+        let total = stack.value(content);
+        let text = match stack.count {
+            1 => format!("Worth {total} gold"),
+            n => format!(
+                "Worth {} gold each, {total} gold in all",
+                total / u64::from(n)
+            ),
+        };
+        let at = 1 + parts.iter().filter(|p| p.gem.is_some()).count();
+        out.insert(at.min(out.len()), line(LineKind::Base, text));
+    }
+    out
+}
+
 /// The description of `stack`, as the player knows it: what it is (`Magic long sword · steel
 /// blade, leather grip · 1.8 kg`: every part, as materials show identified or not), each gem in
 /// it with its size and cut (`Pommel: small emerald, fine cut`; a loose gem's `Gem: tiny

@@ -1,0 +1,8 @@
+[[talent]]
+id = "masterwork"
+name = "Masterwork"
+tree = "class"
+granted = true
+description = "You know a weapon's every flaw and strength: your blows with any weapon you wield find their mark for a telling hit more often."
+effects = [{ kind = "weapon", role = "melee", threat = 1 }]
+systems = ["combat"]

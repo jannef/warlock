@@ -1,0 +1,8 @@
+[[talent]]
+id = "noblesse"
+name = "Noblesse"
+tree = "class"
+granted = true
+description = "Anyone not hostile steps aside for you, even a shopkeeper at their counter."
+effects = [{ kind = "make_way" }]
+systems = ["talk"]

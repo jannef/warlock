@@ -315,10 +315,17 @@ impl Actor {
     /// it wears and wields add to their values (spec §8 "Magic items"). Every rule that reads a
     /// skill's benefit reads this.
     pub fn skill_effect(&self, content: &Content, effect: Effect) -> i32 {
-        if self.equipment.is_empty() {
+        // Talents (spec §8 "Class abilities": Commanding) raise skills as magic items do.
+        let talents = match self.talents.is_empty() {
+            true => Vec::new(),
+            false => self.talent_mods(content).skills,
+        };
+        if self.equipment.is_empty() && talents.is_empty() {
             return self.skills.effect(content, effect);
         }
-        (self.skills).effect_with(content, effect, self.mods(content).skills())
+        let mut bonus = self.mods(content).skills().to_vec();
+        bonus.extend(talents);
+        (self.skills).effect_with(content, effect, &bonus)
     }
 
     /// Its maximum hit points: its (effective) Toughness plus [`Actor::hp_base`] plus what it
@@ -463,13 +470,14 @@ impl Actor {
 
     /// The Protection its talents add (spec §8 "Talents": Heavy armour mastery while its body
     /// armour, the piece it wears with the most Protection, is heavy; Shield wall while it holds
-    /// a shield).
+    /// a shield; the artisan's for every piece of armour worn, anything worn with Protection).
     fn talent_protection(&self, content: &Content) -> i32 {
         if self.talents.is_empty() {
             return 0;
         }
         let mut body = None;
         let mut shield = false;
+        let mut pieces = 0;
         for (slot, item) in self.equipment.items() {
             let Some(stack) = self.inventory.get(item) else {
                 continue;
@@ -480,9 +488,11 @@ impl Actor {
             if protection > 0 && body.is_none_or(|b| protection > b) {
                 body = Some(protection);
             }
+            pieces += i32::from(protection > 0);
             shield |= content.slot(slot).hand && object.shield > 0;
         }
-        self.talent_mods(content).protection_with(body, shield)
+        self.talent_mods(content)
+            .protection_with(body, shield, pieces)
     }
 
     /// What it resists (spec §8 "Damage types"), in percent per kind: what its creature type
@@ -912,10 +922,13 @@ impl Actor {
     pub fn stanced(&self, content: &Content, profile: Profile) -> Profile {
         let stance = content.stance_def(self.stance);
         let mut profile = stance.apply(profile);
-        // Talents (spec §8 "Talents": Stalwart, Unflinching) soften a stance's to-hit penalty.
+        // Talents (spec §8 "Talents": Stalwart, Unflinching) soften a stance's to-hit penalty;
+        // Peerless (a class ability) confirms criticals more surely.
         if !self.talents.is_empty() {
-            let softened = (self.talent_mods(content)).stance_to_hit(self.stance, stance.to_hit);
+            let talents = self.talent_mods(content);
+            let softened = talents.stance_to_hit(self.stance, stance.to_hit);
             profile.to_hit += softened - stance.to_hit;
+            profile.confirm += talents.critical_confirm;
         }
         self.effects.sharpen(content, profile)
     }

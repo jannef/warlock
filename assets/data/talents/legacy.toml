@@ -1,0 +1,8 @@
+[[talent]]
+id = "legacy"
+name = "Legacy"
+tree = "class"
+granted = true
+description = "Your name will be remembered: you gain 10 % more experience, and your bearing grows (Presence +1)."
+effects = [{ kind = "xp_percent", value = 10 }, { kind = "stat", stat = "presence", value = 1 }]
+systems = ["experience"]

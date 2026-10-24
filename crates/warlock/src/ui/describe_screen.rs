@@ -3,7 +3,8 @@
 //! letter), over the screen it came from.
 //!
 //! It names the item (in its rarity's color, spec §8 "Magic items"), says what it is (rarity,
-//! base, every part it is made of, weight) and whether it is worn or wielded, then its base
+//! base, every part it is made of, weight; and to a player with an eye for it, spec §8 "Class
+//! abilities", what it and its gems are worth) and whether it is worn or wielded, then its base
 //! stats in words (`warlock_core::magic::describe`): how it is held or worn, its damage dice and
 //! criticals, how far it shoots or is thrown, what it needs, its Defence. A magic or rare item that is
 //! identified lists its item level and its affixes in plain language ("Sharp: +2 damage", "of
@@ -65,7 +66,7 @@ impl DescribeScreen {
             title: capitalized(&stack.title(content)),
             rarity: stack.rarity(),
             mark: equipment::mark(content, view.equipment(), item),
-            lines: describe::lines(stack, content),
+            lines: describe::appraised(stack, content, view.appraisal()),
         }
     }
 

@@ -1,0 +1,8 @@
+[[talent]]
+id = "big_hands"
+name = "Big hands"
+tree = "class"
+granted = true
+description = "Hands made for work hit hard: you do more damage with maces and clubs and with your bare hands."
+effects = [{ kind = "weapon", skill = "maces", damage = 1 }, { kind = "weapon", skill = "unarmed", damage = 1 }]
+systems = ["combat", "kicks"]
