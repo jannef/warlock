@@ -6,7 +6,10 @@ expression: "render(case, content.clone())"
               │                                                                      │
               │ Your talents                                                         │
               │   Stars                                                              │
-              │ >   Stone hide  (birth sign)                                         │
+              │ >   Grasping arms  (birth sign)                                      │
+              │     Of the deep  (birth sign)                                        │
+              │     Ungainly ashore  (birth sign)                                    │
+              │     Stone hide  (birth sign)                                         │
               │     Stonewise  (birth sign)                                          │
               │   Vigour                                                             │
               │     Healthy                                                          │
@@ -32,12 +35,9 @@ expression: "render(case, content.clone())"
               │         Needs: Toughness 13, level 6                                 │
               │     Strong constitution                                              │
               │         Needs: Toughness 13                                          │
-              │     Unbowed                                                          │
-              │         Needs: Hardy 2, level 20                                     │
-              │   Might                                                              │
               │                                                                    ↓ │
-              │ Protection +1.                                                       │
-              │                                                                      │
+              │ A weapon in each hand hampers you less, and with sword and shield    │
+              │ your free bash comes more often.                                     │
               │                                                                      │
               │                                                                      │
               │ ↑↓ choose   Esc close                                                │
