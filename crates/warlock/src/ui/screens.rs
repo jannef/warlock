@@ -1806,9 +1806,9 @@ mod tests {
     #[test]
     fn picking_a_lock_asks_for_a_direction_from_the_menu_or_its_own_key() {
         let mode = |app: &App| *app.world().resource::<InputMode>();
-        // The showcase's thief is trained in Open lock: `a` `c` (Pick lock) asks for a direction.
+        // The showcase's thief is trained in Open lock: `a` `d` (Pick lock) asks for a direction.
         let mut app = app(true);
-        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyC, "c")]);
+        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyD, "d")]);
         assert!(names(&app).is_empty());
         assert_eq!(mode(&app), InputMode::Ability(Ability::PickLock));
         frame(&mut app, &[(KeyCode::KeyL, "l")]);
