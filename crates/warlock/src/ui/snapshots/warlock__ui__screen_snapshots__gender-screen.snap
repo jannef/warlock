@@ -1,0 +1,27 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+
+
+
+
+
+
+
+              ┌─ Choose your gender (2 of 4) ────────────────────────────────────────┐
+              │                                                                      │
+              │   Male                                                               │
+              │   Female                                                             │
+              │ > Other                                                              │
+              │   Random                                                             │
+              │                                                                      │
+              │   +1 to one stat, chosen by fate.                                    │
+              │                                                                      │
+              │                                                                      │
+              │                                                                      │
+              │                                                                      │
+              │                                                                      │
+              │                                                                      │
+              │ ↑↓ choose   Enter next   Esc back                                    │
+              └──────────────────────────────────────────────────────────────────────┘

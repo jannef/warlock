@@ -119,5 +119,7 @@ refusals), `kit.rs` (Twin Blades and Duelist, the barbarian's pick, deterministi
 other roll moves, every worn or wielded item finds its slot, nobody Strained and only the
 aristocrat and the merchant Burdened, worst case analytically, magic unidentified, who gets the
 kit and the scenario's pack, the gender and sign hooks, a replay with and without the flag).
-The wiki's tables are `xtask/src/wiki/kits.rs` (`class-kits.md`, `race-kits.md`). The golden
-manifest's `kit = true` starts an entry's run with the kit (`tests/golden/manifest/kits.toml`).
+The wiki's tables are `xtask/src/wiki/kits.rs` (`class-kits.md`, `race-kits.md`). The screen
+snapshots' `kit: true` starts a case's run with the kit (`kit-equipment`, `kit-inventory`, and
+`kit-summary` in `crates/warlock/src/ui/screen_snapshots.rs`); the golden manifest's `kit = true`
+does the same for an entry.
