@@ -143,6 +143,7 @@ const CASES: &[Case] = &[
         name: "sign-screen-lucky",
         screen: Some("new-run"),
         keys: Some("4 4 0 Enter Enter"),
+        size: (100, 36),
         ..BASE
     },
     Case {
@@ -188,6 +189,15 @@ const CASES: &[Case] = &[
     Case {
         name: "character-screen",
         actions: "move:SW*2 pickup",
+        screen: Some("character"),
+        size: (100, 36),
+        ..BASE
+    },
+    Case {
+        name: "character-screen-lucky",
+        // Seed 440 gives Tamsin a lucky day (#269): the Deep One, the title after the name.
+        seed: Some(440),
+        run: true,
         screen: Some("character"),
         size: (100, 36),
         ..BASE
@@ -447,6 +457,14 @@ const CASES: &[Case] = &[
         scenario: "arena",
         // Pip's birth sign has gifts (#265): seed 4 is one where the fight still ends in his death.
         seed: Some(4),
+        actions: "lantern wait*14",
+        ..BASE
+    },
+    Case {
+        name: "death-screen-lucky",
+        scenario: "arena",
+        // Seed 142 gives Pip a lucky day, the Iron Scourge (#269), and the fight his death.
+        seed: Some(142),
         actions: "lantern wait*14",
         ..BASE
     },

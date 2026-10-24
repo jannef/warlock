@@ -86,7 +86,10 @@ fn a_sign_grants_its_animals_then_its_elements_gifts_and_a_lucky_day_one_more() 
     // The Fire element and the lucky days but the Salamander's grant no gifts of their own.
     let plain = held(&born_under("phoenix", "fire", 5));
     assert_eq!(plain, ["rise_from_ashes", "inner_light", "frail"]);
-    assert_eq!(held(&born_under("phoenix", "fire", 10)), plain);
+    // The Firebird's lucky day (the 10th) adds Reborn whole.
+    let firebird = held(&born_under("phoenix", "fire", 10));
+    assert_eq!(firebird[..plain.len()], plain);
+    assert_eq!(firebird[plain.len()..], ["reborn_whole"]);
 }
 
 #[test]

@@ -1,0 +1,8 @@
+[[talent]]
+id = "scourge"
+name = "Scourge"
+tree = "stars"
+granted = true
+description = "A blow that fells a foe carries on: when your melee blow kills, you strike at once at another foe beside you."
+effects = [{ kind = "free_blow", trigger = "cleave" }]
+systems = ["free_blows"]

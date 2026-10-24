@@ -451,6 +451,9 @@ pub enum TalentEffect {
         damage: Dice,
         damage_type: String,
     },
+    /// Its rising from the ashes brings it back whole (Reborn whole): every hit point, every
+    /// status effect and disease burned away, and none of the rising's own status.
+    RebornWhole,
     /// The class active Veteran's wind ([`ClassActive::VeteransWind`]): as Second wind.
     VeteransWind {
         per_level: u8,
@@ -558,6 +561,10 @@ pub enum TalentEffect {
     TwoHandedPrice { value: i32 },
     /// A critical it confirms in melee leaves the target suffering `status` (one degree).
     CriticalStatus { status: String },
+    /// A creature it hits in melee suffers `status` (one degree, caused by it), and is held by
+    /// it: the status lasts until it misses that creature, strikes another, or moves (Drowning
+    /// grip; the status `blocks` the creature's steps).
+    Grip { status: String },
     /// Added to the roll that confirms its criticals (every attack).
     CriticalConfirm { value: i32 },
     /// Its blows that can do damage of kind `damage` (an id in `data/damage_types.toml`) ignore this
@@ -1034,7 +1041,8 @@ impl TalentEffect {
                 percent(*value)
             }
             TalentEffect::NoPenalty { status: id }
-            | TalentEffect::CriticalStatus { status: id } => status(id),
+            | TalentEffect::CriticalStatus { status: id }
+            | TalentEffect::Grip { status: id } => status(id),
             TalentEffect::SecondWind {
                 per_level,
                 at_least,
@@ -1074,6 +1082,7 @@ impl TalentEffect {
             TalentEffect::SilentDoors
             | TalentEffect::NoExertion
             | TalentEffect::RerollFumble
+            | TalentEffect::RebornWhole
             | TalentEffect::Swimmer
             | TalentEffect::StoneSense
             | TalentEffect::FreeBlow { .. }

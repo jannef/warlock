@@ -54,13 +54,16 @@ impl World {
         }
         self.state.progress.once.insert(RISEN.to_string());
         self.say("You burst into flame and rise from your ashes!");
-        self.afflict(player, rise.status, 1, None, events);
-        let me = self.player_mut();
-        let max = i64::from(me.max_hp(&content));
-        me.hp = i32::try_from(max * i64::from(rise.hp_percent) / 100)
-            .unwrap_or(i32::MAX)
-            .max(1);
-        let center = me.pos;
+        // Reborn whole (a lucky day's gift): whole again, and no Ashen (`lucky.rs`).
+        if !self.reborn_whole(events) {
+            self.afflict(player, rise.status, 1, None, events);
+            let me = self.player_mut();
+            let max = i64::from(me.max_hp(&content));
+            me.hp = i32::try_from(max * i64::from(rise.hp_percent) / 100)
+                .unwrap_or(i32::MAX)
+                .max(1);
+        }
+        let center = self.player_pos();
         let burst = &rise.burst;
         let level = self.state.current();
         let opaque = |p: Pos| p != center && level.is_opaque(&content, p);

@@ -61,8 +61,10 @@ one degree with the ended effect's `by`, and calls `keep_hp_within_max` (now the
 `lasting_max_hp` and `max_hp`, so the hit points a raised Toughness allowed fall back as the
 raise ends, while a passing penalty still keeps them). A cooldown is a status with `eases` and no
 tick; the class abilities (I1–I4) give theirs with `afflict(player, status, 1, player)` and add
-`Unavailable::While(cooldown)` in `Ability::unavailable` while it lasts. Creature AI does not read
-`blocks` yet (no creature status blocks anything). Built-in example: `raging` (penalty St +2, To
+`Unavailable::While(cooldown)` in `Ability::unavailable` while it lasts. Creature AI reads `blocks`
+for steps only: a creature a status of its blocks `step` (Held, Drowning grip's, #269) never
+steps or opens a door (`creature_steps`) and attacks its holder instead (`World::held_back`,
+`world/lucky.rs`). Built-in example: `raging` (penalty St +2, To
 +2, In −2; `blocks = ["read"]`; `follows = "exhausted"`) and `exhausted` (St −1), reached only by
 `afflict:raging` until the barbarian's table. Tests: `world/buff_tests.rs` (custom statuses on
 built-in content: combat on the player and a creature, slows and time, refusals and the greyed

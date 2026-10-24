@@ -757,6 +757,8 @@ impl World {
                 self.barbed(attacker, target, kind, events);
             }
         }
+        // Drowning grip (spec §8 "Birth sign"): a hit holds, a miss or another target lets go.
+        self.grip(attacker, target, kind, blow.as_ref(), events);
         blow
     }
 

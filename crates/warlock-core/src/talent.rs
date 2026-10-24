@@ -340,6 +340,8 @@ pub struct TalentMods {
     pub two_handed_price: i32,
     /// The status a critical it confirms in melee leaves on the target.
     pub critical_status: Option<StatusId>,
+    /// The status a melee hit of its holds the creature with (Drowning grip), if any.
+    pub grip: Option<StatusId>,
     /// Added to the roll that confirms its criticals.
     pub critical_confirm: i32,
     /// More penetration for blows that can do damage of a kind: `(kind, value)`.
@@ -407,6 +409,8 @@ pub struct TalentMods {
     pub max_hp_percent: i32,
     /// Rise from the ashes, if it has it.
     pub rise: Option<Rise>,
+    /// Its rising brings it back whole (Reborn whole).
+    pub reborn_whole: bool,
 }
 
 /// Rise from the ashes (spec §8 "Birth sign"): what rising gives back, the burst it rises in,
@@ -863,6 +867,9 @@ impl TalentMods {
             TalentEffect::KickNoisePercent { value } => self.kick_noise_percent += value,
             TalentEffect::DigPercent { value } => self.dig_percent += value,
             TalentEffect::TwoHandedPrice { value } => self.two_handed_price += value,
+            TalentEffect::Grip { status } => {
+                self.grip = content.status_id(&status).or(self.grip);
+            }
             TalentEffect::CriticalStatus { status } => {
                 self.critical_status = content.status_id(&status).or(self.critical_status);
             }
@@ -915,6 +922,7 @@ impl TalentMods {
                     });
                 }
             }
+            TalentEffect::RebornWhole => self.reborn_whole = true,
             TalentEffect::StanceDodge { stance, percent } => {
                 match self.stance_dodge.iter_mut().find(|(s, _)| *s == stance) {
                     Some((_, p)) => *p += percent,
