@@ -1,0 +1,9 @@
+[[talent]]
+id = "lay_on_hands"
+name = "Lay on hands"
+tree = "class"
+granted = true
+description = "Your touch heals (an ability): hit points back by how seasoned you are, then you are drained for a while."
+effects = [{ kind = "lay_on_hands", per_level = 2, cooldown = "drained", degrees = 2 }]
+systems = ["hit_points", "status"]
+needs = { requires_alignment = { min = "good" } }

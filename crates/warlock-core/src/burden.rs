@@ -240,7 +240,8 @@ pub fn load(actor: &Actor, race: Option<&RaceDef>, content: &Content) -> Load {
             base,
             actor.mods(content).get(Effect::Carry) + talents.carry_kg,
         ),
-        ignores_burdened: ignores_burdened || talents.ignore_burdened,
+        // Porter and Steadfast (spec §8) shrug Burdened off as a dwarf does.
+        ignores_burdened: ignores_burdened || talents.ignore_burdened || talents.steadfast,
     }
 }
 

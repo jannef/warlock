@@ -64,7 +64,9 @@ pub use affix::{
 pub use alignment::{AlignmentRules, BandDef, ByAlignment, Shifts};
 pub use anim::GlyphAnim;
 pub use calendar::Calendar;
-pub use class::{BonusTalents, ClassDef};
+#[cfg(test)]
+pub(crate) use class::strip_tables as strip_class_tables;
+pub use class::{BonusTalents, ClassActive, ClassDef};
 pub use creature::{
     Budge, Combat, CreatureDef, CreatureId, DEFAULT_SIGHT, Hide, NORMAL_SPEED, NaturalAttack,
     OnEat, SPEEDS,
@@ -2225,6 +2227,14 @@ impl Content {
     /// The class with id `id`.
     pub fn class(&self, id: &str) -> Option<&ClassDef> {
         self.classes.iter().find(|c| c.id == id)
+    }
+
+    /// The class ability that is active `active`: the talent of the class tree with its effect
+    /// (shared by the classes that have it; its name and description are the menu's).
+    pub fn class_active(&self, active: ClassActive) -> Option<&TalentDef> {
+        (self.talents.iter())
+            .map(|(_, def)| def)
+            .find(|def| def.effects.iter().any(|e| e.active() == Some(active)))
     }
 
     /// Checks the classes' level tables against the talents (spec §8 "Class abilities"), then

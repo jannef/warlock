@@ -20,3 +20,18 @@ kit = [
     "dried_meat*3",
     "gold_coin*4",
 ]
+# Bonus talents from Might and Vigour.
+bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["might", "vigour"] }
+# The level table (spec §8 "Class abilities"). The rage and the three that build on it move onto
+# a Rage pool with the alternative resources (#225).
+abilities = [
+    { level = 1, talent = "rage" },
+    { level = 6, talent = "thick_hide" },
+    { level = 12, talent = "fast_movement" },
+    { level = 18, talent = "brutal_critical" },
+    { level = 25, talent = "hardened" },
+    { level = 32, talent = "mighty_thews" },
+    { level = 40, talent = "blood_frenzy" },
+    { level = 50, talent = "mighty_rage" },
+    { level = 60, talent = "unstoppable" },
+]

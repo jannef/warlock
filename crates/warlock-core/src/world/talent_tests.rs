@@ -14,8 +14,13 @@ use crate::replay::Replay;
 use crate::stats::{PerStat, Stat, Stats};
 use std::sync::LazyLock;
 
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
+/// The built-in content without the class tables (`world/class_tests.rs` has those): the
+/// warrior's bonus picks and abilities stay out of the talents' way.
+static BUILTIN: LazyLock<Arc<Content>> = LazyLock::new(|| {
+    let mut files = ContentFiles::builtin();
+    crate::content::strip_class_tables(&mut files);
+    Arc::new(Content::load(&files).expect("content"))
+});
 
 /// A human warrior (a 100 % experience factor) in the showcase.
 fn world() -> World {

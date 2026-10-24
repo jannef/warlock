@@ -1,0 +1,11 @@
+[[talent]]
+id = "mighty_thews"
+name = "Mighty thews"
+tree = "class"
+granted = true
+description = "Your body grows mightier: you become stronger and tougher, for good."
+effects = [
+    { kind = "stat", stat = "strength", value = 2 },
+    { kind = "stat", stat = "toughness", value = 2 },
+]
+systems = ["combat", "burden"]

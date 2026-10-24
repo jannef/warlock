@@ -121,6 +121,7 @@ impl World {
                     + talents.check(Stat::Intelligence)
             }
             Look::Passive => {
+                let talents = player.talent_mods(content);
                 stats.modifier(Stat::Willpower)
                     + player.skill_effect(content, Effect::Spot)
                     + talents.notice.unwrap_or(0)
