@@ -13,12 +13,16 @@ also draws scrolls, which have no `kind` and are never magic), and
 `magic/` (`mod.rs`: `Magic`/`Affix`, the instance on a `Stack` (saved, hashed), `check`;
 `mods.rs`: `Mods::local` (an item's own and its attacks') and `Mods::worn` (what an actor wears
 and wields, global), the one aggregation every rule reads; `loot.rs`: `roll`, its draw order;
-`name.rs`: the names around `Stack::names`, the item as it is made (its gems, #191), so the order
-is [prefix] [ornament] base [suffix] and a rare item's base shows its gem; `describe.rs`: base
+`name.rs`: the names around `Stack::names`, the item as it is made (its gems, #191, and its
+material, #193), so the order is [prefix] [ornament] [material] base [suffix] and a rare item's
+base shows its gem; `describe.rs`: base
 stats, gems with their size and cut, and affixes in words for the item description screen).
-`loot::roll` first lets a find of grade `any` be a loose gem (`gem::find`) and last sets an item
-of a class with an `[[ornament]]` with a gem (`gem::ornament`); creature drops try `gem::find`
-before the magic item (`docs/dev/objects.md`, "Gems").
+`loot::roll` first lets a find of grade `any` be a loose gem (`gem::find`), then sets an item
+of a class with an `[[ornament]]` with a gem (`gem::ornament`), and last draws its material
+(`variant::draw`, step 8: by the materials' `rarity` at the item level; `loot::roll_from` takes
+a `variant::Source`, and creature drops pass `Source::Gear(creature level)`); its own parts are
+the material first, then the gem. Creature drops try `gem::find` before the magic item
+(`docs/dev/objects.md`, "Gems" and "Materials and variants").
 `world/loot.rs` has `World::identify` (the API the scroll of identify calls from its read action,
 `docs/dev/scrolls.md`),
 creature drops (`drop/<actor id>` stream), and the hit-point clamp after equipment changes

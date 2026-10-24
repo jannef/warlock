@@ -28,6 +28,7 @@ mod healing;
 mod hearing;
 mod hunger;
 mod magic;
+mod materials;
 mod moons;
 mod objects;
 mod order;
@@ -141,7 +142,10 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("item-classes.md", objects::item_classes),
         ("shops.md", objects::shops),
         ("equipment.md", objects::equipment),
-        ("materials.md", objects::materials),
+        ("materials.md", materials::materials),
+        ("material-finds.md", materials::material_finds),
+        ("construction.md", materials::construction),
+        ("variants.md", materials::variants),
         ("gems.md", gems::gems),
         ("gem-sizes.md", gems::sizes),
         ("gem-cuts.md", gems::cuts),
@@ -455,8 +459,24 @@ mod tests {
                 .contains("| Gold and ruby amulet | `\"` | amulets | gold chain, ruby setting |")
         );
         assert!(text("materials.md").contains(
-            "| Ruby | yes | gold and ruby amulets, loose gems, and items set with one |"
+            "| Ruby | - | `#d3213b` | 100% | - | - | ×1 | yes | gold and ruby amulets, loose gems, \
+             and items set with one |"
         ));
+        // Materials (#193, #194): their properties on steel's scale, how often they are found,
+        // what each item may be made of, and a long sword and chain mail in each metal.
+        assert!(
+            text("materials.md")
+                .contains("| Bronze | metal | `#cd7f32` | 112% | +0 / −1 | 80% | ×0.8 | no | - |")
+        );
+        assert!(
+            text("material-finds.md")
+                .contains("| Steel | 300 (common) | +60 | 1 | 20 (rare) | +15 |")
+        );
+        let construction = text("construction.md");
+        assert!(construction.contains("| Long sword | steel | any metal, dragonbone |"));
+        assert!(construction.contains("| Gold ring | gold | any material |"));
+        assert!(!construction.contains("| Rock |"));
+        assert!(text("variants.md").contains("| Bronze | 2 kg | +0 / −1 | 65 gold |"));
         // Gems: their worth and how often they are found, the sizes and cuts, and ornaments.
         assert!(text("gems.md").contains("| Diamond | `#e8f4ff` | 400 gold | 1.9% |"));
         assert!(text("gem-sizes.md").contains("| Small (plain) | ×1 | 1 g | 33% |"));
@@ -490,10 +510,9 @@ mod tests {
             !text("weapon-skills.md").contains("Duelist"),
             "styles have their own tables"
         );
-        assert!(
-            text("objects.md")
-                .contains("| Arrow | `/` | missiles | wood | 30 g | 1 gold | yes | Missiles |")
-        );
+        assert!(text("objects.md").contains(
+            "| Arrow | `/` | missiles | iron head, wood shaft | 30 g | 1 gold | yes | Missiles |"
+        ));
         assert!(text("objects.md").contains("| Left ring or right ring |"));
         assert!(text("objects.md").contains("| Main hand (both hands) |"));
         assert!(
@@ -616,10 +635,10 @@ mod tests {
             ),
             "{disarm}"
         );
-        assert!(
-            text("materials.md")
-                .contains("| Steel | no | stilettos, daggers, short swords, scimitars,")
-        );
+        assert!(text("materials.md").contains(
+            "| Steel | metal | `#a8b0b8` | 100% | +0 / +0 | 100% | ×1 | no | stilettos, daggers, \
+             short swords, scimitars,"
+        ));
         assert!(text("pack.md").contains("| Your own weight | 70 kg |"));
         let burden = text("burden.md");
         for row in [
