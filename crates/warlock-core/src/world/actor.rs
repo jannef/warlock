@@ -143,6 +143,19 @@ pub struct Actor {
     /// [`combat::regen_seconds`] × 100 of it is a hit point.
     #[serde(default, skip_serializing_if = "is_zero")]
     pub regen: u32,
+    /// Mana left (spec §8 "Mana"): the second pool beside hit points, which magic spends
+    /// (`World::spend_mana`, the one way).
+    #[serde(default, skip_serializing_if = "is_nought")]
+    pub mana: i32,
+    /// What its maximum mana adds to its mental stats' modifiers: the creature type's `mana`, the
+    /// player's race and class (the scenario's `mana`) and what their levels added.
+    #[serde(default, skip_serializing_if = "is_nought")]
+    pub mana_base: i32,
+    /// Progress toward its next point of mana back, like [`Actor::regen`] toward a hit point:
+    /// each second adds its mana rate in percent, and every [`crate::mana::regen_seconds`] × 100
+    /// of it is a point.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub mana_regen: u32,
     /// Its trained skills, with their values and training marks (spec §8 "Skills";
     /// [`crate::skills`]): its creature type's, the player's from their race and class. Every
     /// other skill is untrained: it gives nothing. Known to the rules (and dev tools) for every
@@ -210,6 +223,10 @@ pub struct Actor {
 }
 
 fn is_zero(n: &u32) -> bool {
+    *n == 0
+}
+
+fn is_nought(n: &i32) -> bool {
     *n == 0
 }
 
@@ -357,6 +374,24 @@ impl Actor {
         let mods = self.mods(content);
         let toughness = self.raised_with(&mods).score(Stat::Toughness);
         combat::max_hp(toughness, self.hp_base + mods.get(ItemEffect::MaxHp))
+    }
+
+    /// Its maximum mana (spec §8 "Mana"): [`Actor::mana_base`] plus what it wears and wields
+    /// adds, plus its (effective) mental stats' modifiers, at least 0. Damage to those stats
+    /// lowers it, as Toughness damage lowers the hit points.
+    pub fn max_mana(&self, content: &Content) -> i32 {
+        let mods = self.mods(content);
+        let stats = self.stats_with(content, &mods);
+        crate::mana::max_mana(&stats, self.mana_base + mods.get(ItemEffect::MaxMana))
+    }
+
+    /// Its maximum mana as it will be once its penalties pass, like
+    /// [`Actor::lasting_max_hp`]: its mental stats raised by what it wears and wields, not
+    /// lowered by its statuses, hunger, or stat damage.
+    pub fn lasting_max_mana(&self, content: &Content) -> i32 {
+        let mods = self.mods(content);
+        let stats = self.raised_with(&mods);
+        crate::mana::max_mana(&stats, self.mana_base + mods.get(ItemEffect::MaxMana))
     }
 
     /// How hurt it looks, in words.

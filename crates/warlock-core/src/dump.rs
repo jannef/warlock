@@ -873,7 +873,7 @@ fn actor_rows(world: &World) -> Vec<String> {
                 format!("; resists {}", resists.join(" "))
             };
             format!(
-                "{} {} at {}: hp {}/{} dv {} pv {}{alignment}; weight {} (base {} + carried {}: \
+                "{} {} at {}: hp {}/{} mp {}/{} dv {} pv {}{alignment}; weight {} (base {} + carried {}: \
                  {carried}){equipped}; {} (limit {}){weapons}; stats {}{skills}{effects}{diseases}\
                  {hunger}{npc}{talk}{resists}",
                 a.id,
@@ -881,6 +881,8 @@ fn actor_rows(world: &World) -> Vec<String> {
                 a.pos,
                 a.hp,
                 a.max_hp(content),
+                a.mana,
+                a.max_mana(content),
                 world.defence_of(a.id).total(),
                 world.protection_of(a.id).base,
                 format_weight(w.total()),
@@ -951,6 +953,7 @@ fn summary(world: &World) -> String {
         .unwrap_or_default();
     let temperature = view.temperature();
     let (hp, max) = view.own_hp();
+    let (mp, max_mp) = view.own_mana();
     let dead = if world.death().is_some() { " dead" } else { "" };
     // As the status bar shows it: only when it is not Not hungry.
     let hunger = (view.own_hunger())
@@ -958,7 +961,7 @@ fn summary(world: &World) -> String {
         .map_or(String::new(), |h| format!(" hunger {}", h.id()));
     let dazzled = if view.dazzled() { " dazzled" } else { "" };
     format!(
-        "turn {} time {} level {} viewer {} hp {hp}/{max}{dead}{hunger}{dazzled}{weather} \
+        "turn {} time {} level {} viewer {} hp {hp}/{max} mp {mp}/{max_mp}{dead}{hunger}{dazzled}{weather} \
          temperature {temperature} hash {:016x}",
         world.turn(),
         world.time(),
@@ -1061,6 +1064,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
     let weight = view.own_weight();
     let load = view.own_load();
     let (hp, max_hp) = view.own_hp();
+    let (mana, max_mana) = view.own_mana();
     let death = world.death().map(|d| {
         json!({
             "turn": d.turn,
@@ -1099,6 +1103,20 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
     let layer_map: serde_json::Map<String, Value> = layers
         .iter()
         .map(|&l| (l.name().to_string(), json!(layer_rows(world, l))))
+        .collect();
+    let talents: Vec<Value> = (view.own_talents().iter())
+        .map(|t| {
+            json!({
+                "id": content.talents().get(t.id).id,
+                "name": t.name,
+                "rank": t.rank,
+                "ranks": t.ranks,
+                "choice": t.choice,
+                "granted": t.granted,
+                "flaw": t.flaw,
+                "class": t.class,
+            })
+        })
         .collect();
     let mut out = json!({
         "game_version": crate::GAME_VERSION,
@@ -1147,22 +1165,15 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "styles_in_use": (view.own_styles_in_use().into_iter())
             .map(|id| content.weapon_skills().skill(id).id.clone())
             .collect::<Vec<_>>(),
-        "talents": (view.own_talents().iter())
-            .map(|t| json!({
-                "id": content.talents().get(t.id).id,
-                "name": t.name,
-                "rank": t.rank,
-                "ranks": t.ranks,
-                "choice": t.choice,
-                "granted": t.granted,
-                "flaw": t.flaw,
-                "class": t.class,
-            }))
-            .collect::<Vec<_>>(),
+        "talents": talents,
         "due": view.due(),
         "abilities": abilities_json(&view),
         "quests": quests_json(&view),
+    });
+    // A second `json!`: one macro call this long passes the recursion limit.
+    let Value::Object(rest) = json!({
         "hp": { "current": hp, "max": max_hp },
+        "mana": { "current": mana, "max": max_mana },
         "experience": view.own_experience(),
         "defence": view.own_defence(),
         "protection": view.own_protection(),
@@ -1174,7 +1185,10 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "death": death,
         "messages": messages,
         "layers": layer_map,
-    });
+    }) else {
+        unreachable!("an object literal")
+    };
+    out.as_object_mut().expect("an object").extend(rest);
     if include_state {
         out["state"] = serde_json::to_value(world.state()).expect("state serializes");
     }

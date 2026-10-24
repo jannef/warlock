@@ -24,7 +24,7 @@ expression: "render(case, content.clone())"
               │                                                                      │
               │ Lv  Level         1                                                  │
               │ XP  Experience    0 / 729                                            │
-              │ HP  Hit points    17/17                                              │
+              │ HP  Hit points    17/17   MP  Mana       2/2                         │
               │ Dv  Defence       11      Pv  Protection  0                          │
               │     Stance        Neutral                                            │
               │     Alignment     Callous                                            │
@@ -37,4 +37,4 @@ expression: "render(case, content.clone())"
               └─ 1 Character · 2 Inv · 3 Equip · 4 Skills · 5 Weapons · 6 Quests ────┘
 
 
- The Hub  ·  HP 17/17  ·  Bleeding  ·  Poisoned  ·  Lv 1  ·  08:00  ·  11 Darkening      ? controls
+ The Hub  ·  HP 17/17  ·  MP 2/2  ·  Bleeding  ·  Poisoned  ·  Lv 1  ·  08:00            ? controls

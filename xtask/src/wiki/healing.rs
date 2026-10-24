@@ -14,7 +14,7 @@ use warlock_core::time::Duration;
 
 /// A pace of healing in percent of normal, in words: `twice as fast`, `half as fast`, `not at
 /// all`.
-fn pace(percent: u32) -> String {
+pub(super) fn pace(percent: u32) -> String {
     match percent {
         0 => "not at all".into(),
         100 => "as usual".into(),

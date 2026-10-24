@@ -114,6 +114,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     toward evil), never alone out of Neutral, but the evil races (#255) start on the evil side:
     goblins, kobolds, lizardfolk, and ratfolk Callous (−200), drow and duergar Evil (−450), so a
     drow paladin starts Neutral and a goblin thief Evil. It draws nothing.
+  - **Mana**: the race's and the class's `mana` add to the mental stats' modifiers for the
+    maximum (§8 "Mana").
   - **Weapon skills** ("Weapon skills" below): the race's starting ranks plus the class's, plus
     one set of the class's `weapon_skill_choice` if it has one, at most 10 each; each then
     raises the skills it defaults to. Dice among them roll from their own stream,
