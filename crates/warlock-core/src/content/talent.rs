@@ -1043,28 +1043,6 @@ impl TalentEffect {
             TalentEffect::NoPenalty { status: id }
             | TalentEffect::CriticalStatus { status: id }
             | TalentEffect::Grip { status: id } => status(id),
-            TalentEffect::RiseFromAshes {
-                hp_percent,
-                status: id,
-                spell,
-                radius,
-                damage,
-                damage_type,
-            } => {
-                if !(1..=100).contains(hp_percent) || !(1..=5).contains(radius) {
-                    return Err("`rise_from_ashes`: hp_percent is 1 to 100, radius 1 to 5".into());
-                }
-                if damage.is_zero() {
-                    return Err("`rise_from_ashes`: damage is not 0".into());
-                }
-                if !content.damage_types().is_empty()
-                    && content.damage_type_id(damage_type).is_none()
-                {
-                    return Err(format!("names an unknown damage type `{damage_type}`"));
-                }
-                super::spell::check_effect(content, spell, super::effect::EffectShape::Burst)?;
-                status(id)
-            }
             TalentEffect::SecondWind {
                 per_level,
                 at_least,
