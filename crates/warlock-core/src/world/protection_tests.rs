@@ -165,12 +165,12 @@ fn protection_adds_up_across_what_is_worn_and_the_hide() {
     assert!(helm.iter().any(|l| l.text == "Protection 2"));
     // What soaks the most names a blow it soaked: the mail.
     let me = w.state.player();
-    assert_eq!(me.soaked_by(w.content()), Some("chain mail shirt"));
+    assert_eq!(me.soaked_by(w.content(), None), Some("chain mail shirt"));
     // A creature's hide adds to what it wears; the beetle's shell is 3, the rat has none.
     let tortoise = actor_of(&w, "tortoise");
     assert_eq!(w.protection_of(tortoise).base, 20);
     assert_eq!(w.protection_of(actor_of(&w, "rat")).base, 0);
-    let shell = w.state.actors[&tortoise].soaked_by(w.content());
+    let shell = w.state.actors[&tortoise].soaked_by(w.content(), None);
     assert_eq!(shell, Some("carapace"));
     let beetle = CONTENT.creature(CONTENT.creature_id("beetle").expect("beetle"));
     let hide = beetle.natural.as_ref().expect("a shell");

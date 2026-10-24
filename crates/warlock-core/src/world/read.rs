@@ -200,7 +200,7 @@ impl World {
                 } => {
                     let fallen = self.actor_or_fallen(target);
                     let def = fallen.map(|a| content.creature(a.creature));
-                    let guard = Guard::of(fallen, &content);
+                    let guard = Guard::of(fallen, &content, &self.state);
                     let end = match def {
                         _ if target == player => End::You,
                         Some(d) if self.perception.sees_actors_at(to) => End::Seen(&d.name),

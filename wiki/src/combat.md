@@ -53,8 +53,9 @@ protects you, in kinds:
 - **Parry**: a weapon that turns blows aside, such as the quarterstaff, and your rank with the
   weapon you wield (blades, spears, and staves), and in Duelist or Staff Fighter while you fight
   that way.
-- **Natural**: a creature's hide, shell, or scales. You have none, unless a magic item gives you
-  some.
+- **Natural**: a creature's hide, shell, or scales. You have none, unless your race gives you
+  some (lizardfolk's scales soak blows but do not turn them: see
+  [Races](races.md#the-evil-races)) or a magic item does.
 - **Dodge**: training and magic. The [tumble](skills.md#what-skills-give) skill adds to it, more
   the higher it is, and so do magic items that make you nimble.
 - **Deflection**: magic items that turn blows aside.

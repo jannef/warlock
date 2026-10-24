@@ -24,11 +24,12 @@ Some skills work by themselves, all the time (**passive**); some will be used as
 (searching, picking a lock, binding a wound); some are **read by rules** when something calls for
 them (athletics when you kick a door). For now only the passive skills, Appraise, Athletics
 (kicking doors in, see [Doors](doors.md)), Search (see [Searching](searching.md)), Disable
-device (disarming traps, see [Traps](traps.md#disarming-traps)), and Open lock (picking locks,
-see [Doors](doors.md#picking-locks)) do something: the others are there to be trained, and get
+device (disarming traps, see [Traps](traps.md#disarming-traps)), Open lock (picking locks,
+see [Doors](doors.md#picking-locks)), and Steal (see [Stealing](#stealing) below) do something:
+the others are there to be trained, and get
 their uses as the game grows. The skills used as actions are in the [abilities
 menu](abilities.md) once you are trained in them, greyed out until their uses come; Disable
-device's use is there as **Disarm a trap**, Open lock's as **Pick lock**.
+device's use is there as **Disarm a trap**, Open lock's as **Pick lock**, Steal's as **Steal**.
 
 {{#include generated/skills.md}}
 
@@ -53,6 +54,8 @@ The passive skills help you more the higher they are:
   notice.
 - **Open lock** lets you pick locks at all (the Pick lock ability), and the higher it is, the
   more often a try works (see [Doors](doors.md#picking-locks)).
+- **Steal** lets you steal at all, and the higher it is, the likelier your hand goes unnoticed
+  (see [Stealing](#stealing)).
 
 {{#include generated/skill-benefits.md}}
 
@@ -83,6 +86,7 @@ balance, earn marks rarely, so they do not race ahead.
 - **Tumble**: dodging an attack ("You dodge the kobold's spear.").
 - **Balance**: doing anything but waiting while your load slows you down.
 - **Survival**: a journey on the overworld.
+- **Steal**: every attempt to steal, whatever comes of it.
 - **Open lock**: a try at picking a lock, whether it works or not.
 
 Only skills you are trained in earn marks. Marks raise nothing by themselves: they gather until
@@ -110,3 +114,33 @@ How many rolls a level gives: your class's, plus your race's, plus your Intellig
 
 Only you train, for now; creatures keep the skills they have. Your skills and their marks are
 saved with your run.
+
+## Stealing
+
+If you are trained in **Steal** (thieves are), **Steal** is in your
+[abilities menu](abilities.md): choose it, then a direction, and you try to lift something from
+whoever stands there. You can steal only from someone you see who is not hostile to you: a
+peaceful villager, a shopkeeper, a creature that leaves you alone. It takes a turn whatever comes
+of it.
+
+Whether you go unnoticed is a contest, the same dice on both sides: 2d12 plus your Dexterity
+modifier plus what your Steal skill gives (the benefits table above), against 2d12 plus your
+victim's Willpower modifier. A tie is yours; a roll of 2 always fails and a roll of 24 always
+works. Only the difference between the two sides matters, your **edge**:
+
+{{#include generated/stealing.md}}
+
+- **Unnoticed**, you take one stack of what they carry in their pack, all of it: a whole purse.
+  You never see what someone carries in their pack, so you do not choose: your fingers find
+  something. What they wear or hold in their hands stays where it is. With nothing in their
+  pack you come away empty-handed ("You find nothing to take from the gardener."), and they
+  notice nothing all the same.
+- **Caught**, they turn on you and come after you, for good ("The kobold catches you stealing and
+  turns on you!"). A shopkeeper who catches you is outraged as a robbed one is: the shop trades
+  no more, and whatever you had not paid for is stolen (see [Shops](shops.md)).
+
+Stealing from a shopkeeper takes from their purse, never from the shop floor: what lies in a shop
+is for sale, and taking it out without paying is theft by the shop's own rules. A shopkeeper
+whose purse you lifted unnoticed still trades with you, but cannot pay for what you sell.
+
+You may try as often as you like; someone who caught you stays angry, and that is the price.

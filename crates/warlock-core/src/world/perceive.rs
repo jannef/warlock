@@ -60,7 +60,9 @@ impl World {
         self.rot_away();
         self.lore();
         let before = self.perception.weather();
+        let dazzled = self.perception.dazzled();
         *self.perception = Perception::compute(&self.state, &self.content, &mut self.lights);
+        self.glare_news(dazzled);
         self.learn_traps(events);
         let current = self.state.current_level.clone();
         if let Some(level) = self.state.levels.get_mut(&current) {
@@ -223,7 +225,7 @@ impl World {
                 }
                 if let Some(me) = self.actor_or_fallen(attacker) {
                     let words = Words::of(me, kind, with, damage, &content);
-                    let guard = Guard::of(self.actor_or_fallen(target), &content);
+                    let guard = Guard::of(self.actor_or_fallen(target), &content, &self.state);
                     let (a, t) = (end(attacker, sees_attacker), end(target, sees_target));
                     let said = attack_message(a, t, &words, kind, strike, guard);
                     reports.extend(said.map(|text| (text, true)));
@@ -348,7 +350,7 @@ impl World {
                 // A fall is said with the trap ("You fall into a pit.").
                 if seen && !matches!(def.effect, TrapEffect::Pit { .. }) {
                     let words = Words::new(&def.noun, &def.verb);
-                    let guard = Guard::of(self.actor_or_fallen(target), &content);
+                    let guard = Guard::of(self.actor_or_fallen(target), &content, &self.state);
                     let said = attack_message(
                         End::Trap(&def.noun),
                         end(target, true),

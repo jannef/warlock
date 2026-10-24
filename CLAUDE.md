@@ -105,7 +105,7 @@ log, active first) from perception;
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:DIR pick:DIR ascend descend lantern
 pickup[:LETTERS] drop[:LETTERS] sell[:LETTERS] pay[:DIR] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
-eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] dig:DIR search search:N disarm:DIR second_wind chat:DIR ask:DIR:TOPIC rest:GOAL stance:NAME vision:PROFILE
+eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] dig:DIR search search:N disarm:DIR second_wind chat:DIR ask:DIR:TOPIC steal:DIR rest:GOAL stance:NAME vision:PROFILE
 talent:ID[:CHOICE] advance:SKILL levelup:auto xp:N
 skip:DURATION weather:KIND effect:ID@X,Y[>X,Y] identify[:LETTERS] afflict:STATUS infect:DISEASE`
 (`DIR` = N
@@ -129,7 +129,8 @@ something is found; `second_wind` uses the Second wind talent (hit points back a
 Disarm ability, for those trained in Disable device; refused, with no time, without the skill
 or a known trap there); `chat:E` talks to the creature east of
 the player, `ask:E:rooms` asks it about topic `rooms` (an id in `assets/data/dialogue.toml`;
-quest topics are `quest-ID`, `accept-ID`, `decline-ID`, ids in `assets/data/quests.toml`);
+quest topics are `quest-ID`, `accept-ID`, `decline-ID`, ids in `assets/data/quests.toml`),
+`steal:E` tries to steal from it (the Steal ability, spec §8 "Stealing");
 `talent:hardy` takes a talent (an id in `assets/data/talents/`; `talent:weapon_focus:long_blades`
 with its choice) when a level's pick is due (every third level; until it is made every other
 action is refused), `advance:stealth` spends a level's skill roll (none yet, #230), `levelup:auto`
@@ -188,9 +189,10 @@ marks, `stat marks St 3, To 1`, **dev-only**),
 (the level's special rooms: their plain ground as the effect's `mark`, then a line per room,
 **dev-only**), `ice` (the level's temperature and the thickness of the ice on its water in cm,
 `0`-`9`, `a`-`z` for 10-35, `#` beyond, **dev-only**). The header line has the player's `hp
-17/17` (and `dead` once the run has ended), `hunger hungry` unless Not hungry, and the
+17/17` (and `dead` once the run has ended), `hunger hungry` unless Not hungry, `dazzled` while
+strong light dazzles light-blind eyes, and the
 `temperature`; JSON dumps add `hp`, `defence`, `protection`, `resistances` (by damage type id, the
-word: `{"cold": "resistant"}`), `burden` (`level`, `limit`), `alignment` (the band's id), `hunger`, `effects`
+word: `{"cold": "resistant"}`), `burden` (`level`, `limit`), `alignment` (the band's id), `hunger`, `dazzled`, `effects`
 (status ids), `diseases` (the known ones' ids), `death` (with `of`, the status that killed,
 `cause`, starving, choking, or a trap, and `trap`, the id of the trap that killed),
 `known_traps`, `temperature` (°C to a tenth), `weapon_skills` (by skill id:
@@ -269,6 +271,7 @@ file). Topics:
 - `docs/dev/npcs.md` — unique characters, chat and ask, rotation lines and mutters, displacement
 - `docs/dev/quests.md` — quest data and stages, hooks in kills, travel, and talk, the quest log
 - `docs/dev/shops.md` — shop data, keepers, prices, buying, selling, theft, the shop dialogs
+- `docs/dev/stealing.md` — the Steal ability and action, the contest, what is taken, a caught thief, the alignment hook
 - `docs/dev/doors.md` — locks and keys, kicking, breaking, what creatures open
 - `docs/dev/digging.md` — digging tools, wall hardness, the dig loop, blasts
 - `docs/dev/traps.md` — trap data, triggering, known traps, the dev trap actions
@@ -298,6 +301,11 @@ Hard rules:
   `warlock_core::ability`, the one registry, and are used from the one abilities menu (`a`):
   never a default key of their own (an ability's own `KeyCommand` stays unbound by default,
   `settings/keys.rs::UNBOUND`). Basic commands keep their keys (`docs/dev/screens.md`).
+- Every new system ships with talents: the PR that adds it adds its `[[system]]` tag in
+  `assets/data/talents.toml` and at least the `[coverage]` bar of talents (and class abilities)
+  carrying it; resources (mana, #225's pools) are systems too. The feature issue answers the
+  template's "Talents and class abilities" section (`.github/ISSUE_TEMPLATE/feature.md`), or
+  says why none (`docs/dev/progression.md` "Coverage policy").
 - Keep modules small with clear responsibilities. No speculative abstractions, no premature
   optimization.
 

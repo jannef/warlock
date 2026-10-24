@@ -23,7 +23,9 @@
 //!
 //! A cell is **visible** iff it is in line of sight within [`VIEW_RADIUS`] **and** its perceived
 //! light is at least the vision profile's threshold or it lies within the darkvision radius. The
-//! player's own cell is always visible.
+//! player's own cell is always visible. A **light-blind** player (their race's
+//! [`LightBlind`](crate::content::LightBlind): drow) whose own cell is lit at least to its
+//! `glare` is dazzled: they see nothing farther than its `sight`.
 //!
 //! The overworld is seen at map scale instead: a cell is visible iff it is in line of sight
 //! within the daylight sight radius ([`daylight::overworld_sight`]: day 9, twilight 5, night 2,
@@ -69,8 +71,8 @@ use crate::content::Shops;
 use crate::content::{Choice, TalentId, TreeId};
 use crate::content::{
     CombatStance, Content, CreatureId, DamageTypeId, DiseaseId, FactionId, Factor, Flow,
-    ItemClassId, LevelKind, LightId, ObjectId, RoomEffectDef, SlotId, Stance, StatusId, TerrainId,
-    TrapId, VisionProfile, WeaponSkillId,
+    ItemClassId, LevelKind, LightId, ObjectId, RaceDef, RoomEffectDef, SlotId, Stance, StatusId,
+    TerrainId, TrapId, VisionProfile, WeaponSkillId,
 };
 use crate::daylight;
 use crate::equipment::Equipment;
@@ -327,6 +329,8 @@ pub(crate) struct Perception {
     sounds: Vec<PerceivedSound>,
     /// Cells whose blood the player sees, in position order.
     blood: Vec<Pos>,
+    /// Whether strong light dazzles the player's light-blind eyes (their race's `light_blind`).
+    dazzled: bool,
 }
 
 impl Perception {
@@ -347,7 +351,6 @@ impl Perception {
             Some(sky) if overworld => daylight::sight_under(state.time, sky, content.climate()),
             _ => VIEW_RADIUS,
         };
-        let sees = |light: Light, dist2: i32| overworld || eye.sees(light, dist2);
 
         // Line of sight.
         let mut los = Grid::new(width, height, false);
@@ -458,6 +461,15 @@ impl Perception {
             }
         }
 
+        // Light-blind eyes in glare: strong light on the viewer's own cell dazzles them, and
+        // they see nothing farther than their race says.
+        let dazzled = (state.race_of(content, state.player()))
+            .and_then(|race| race.light_blind)
+            .filter(|blind| blind.dazzled_by(light[viewer]));
+        let reach2 = radius2(dazzled.map_or(range, |blind| range.min(blind.sight)));
+        let sees =
+            |light: Light, dist2: i32| dist2 <= reach2 && (overworld || eye.sees(light, dist2));
+
         // Transparent cells: visible with enough light or within darkvision; the viewer's own
         // cell always.
         let mut sight = Grid::new(width, height, Sight::Hidden);
@@ -475,7 +487,6 @@ impl Perception {
         }
 
         // Wall completion: opaque cells bounding a transparent cell seen by eye.
-        let reach2 = radius2(range);
         for q in seen {
             for w in Dir::ALL.map(|d| q.step(d)) {
                 if sight.get(w) == Some(&Sight::Hidden) && is_opaque(w) && w.dist2(viewer) <= reach2
@@ -638,7 +649,13 @@ impl Perception {
             effects,
             sounds,
             blood,
+            dazzled: dazzled.is_some(),
         }
+    }
+
+    /// Whether strong light dazzles the player's light-blind eyes.
+    pub(crate) fn dazzled(&self) -> bool {
+        self.dazzled
     }
 
     /// Sounds heard during the last turn from sources the player does not see.
@@ -1195,8 +1212,12 @@ impl<'a> PerceptionView<'a> {
     /// What the player carries against what they can (spec §8 "Burden"): their burden, and the
     /// weights at which it changes, which follow from scores they know.
     pub fn own_load(&self) -> Load {
-        let race = self.character.and_then(|c| c.spec.race(self.content).ok());
-        burden::load(self.player, race, self.content)
+        burden::load(self.player, self.own_race(), self.content)
+    }
+
+    /// The player's race, when the run has a character.
+    fn own_race(&self) -> Option<&'a RaceDef> {
+        self.character.and_then(|c| c.spec.race(self.content).ok())
     }
 
     /// The player's combat stance (spec §8 "Stances"): only its name is ever shown.
@@ -1208,22 +1229,27 @@ impl<'a> PerceptionView<'a> {
     /// their Dexterity). Only the total: its Dexterity part would give away a modifier.
     pub fn own_defence(&self) -> i32 {
         let burden = self.own_load().penalty();
-        self.player.defence(self.content, burden).total()
+        self.player
+            .defence(self.content, burden, self.own_race())
+            .total()
     }
 
     /// The player's Protection ("Pv"): the damage what they wear soaks off every hit, the total
     /// only (never what each piece does against a kind, nor a creature's).
     pub fn own_protection(&self) -> i32 {
-        self.player.protection(self.content).base
+        self.player.protection(self.content, self.own_race()).base
     }
 
     /// What the player resists (spec §8 "Damage types"), in words only: each kind they resist,
     /// are vulnerable to, or are immune to, in damage type order; never a percentage, and never
     /// a creature's.
     pub fn own_resistances(&self) -> Vec<(DamageTypeId, crate::damage::ResistanceWord)> {
-        (self.player.resistances(self.content).iter())
-            .filter_map(|(kind, percent)| Some((kind, crate::damage::ResistanceWord::of(percent)?)))
-            .collect()
+        (self
+            .player
+            .resistances(self.content, self.own_race())
+            .iter())
+        .filter_map(|(kind, percent)| Some((kind, crate::damage::ResistanceWord::of(percent)?)))
+        .collect()
     }
 
     /// How the run ended, once the player has died (what killed them only if they saw it).
@@ -1269,6 +1295,12 @@ impl<'a> PerceptionView<'a> {
     /// The player's active vision profile.
     pub fn vision(&self) -> &'a VisionProfile {
         &self.content.vision_profiles()[self.snapshot.vision]
+    }
+
+    /// Whether strong light dazzles the player (light-blind eyes in glare): they see less far,
+    /// and fight worse. Only that it does, never how much.
+    pub fn dazzled(&self) -> bool {
+        self.snapshot.dazzled
     }
 
     /// The level's ambient light, as the player perceives it.

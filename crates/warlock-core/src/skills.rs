@@ -60,6 +60,8 @@ pub const MAX_DISARM_BONUS: i32 = 20;
 /// The most cells farther a search may reach than the cells around the searcher.
 pub const MAX_SEARCH_REACH: i32 = 2;
 
+/// The most a skill adds to stealing from someone (spec §8 "Stealing").
+pub const MAX_STEAL_BONUS: i32 = 20;
 /// The most a skill adds to picking a lock (spec §8 "Doors").
 pub const MAX_PICK_BONUS: i32 = 20;
 
@@ -120,6 +122,9 @@ pub enum Effect {
     /// Percent better prices in shops (spec §7 "Shops"; `world/shop.rs`): less to pay and more
     /// offered, together with Presence at most half.
     Bargain,
+    /// Points added to stealing from someone (spec §8 "Stealing"; `world/steal.rs`); a skill
+    /// with it, trained, lets the actor steal at all (the abilities menu's Steal).
+    Steal,
     /// Points added to the Strength score a kick at a closed door is rolled against (spec §8
     /// "Doors"; `world/door.rs`).
     Kick,
@@ -136,6 +141,7 @@ impl Effect {
             Effect::Quiet | Effect::Burden | Effect::Travel | Effect::Bargain => 100,
             Effect::Kick => *crate::stats::SCORES.end() as i32,
             Effect::Search | Effect::Spot => MAX_SEARCH_BONUS,
+            Effect::Steal => MAX_STEAL_BONUS,
             Effect::Disarm => MAX_DISARM_BONUS,
             Effect::Pick => MAX_PICK_BONUS,
             Effect::SearchReach => MAX_SEARCH_REACH,
@@ -163,6 +169,8 @@ pub enum Use {
     Burdened,
     /// A step on the overworld: a journey.
     Travel,
+    /// An attempt to steal from someone (spec §8 "Stealing"), whatever comes of it.
+    Steal,
     /// A kick at a closed door (spec §8 "Doors").
     Kick,
     /// A try at picking a lock (spec §8 "Doors"), whatever comes of it.
@@ -181,6 +189,7 @@ impl Use {
             Use::Dodge => "dodging an attack",
             Use::Burdened => "acting (not waiting) while your load slows you",
             Use::Travel => "a journey on the overworld",
+            Use::Steal => "trying to steal from someone",
             Use::Kick => "kicking at a closed door",
             Use::Pick => "a try at picking a lock",
         }
@@ -284,6 +293,7 @@ impl Use {
             Use::Dodge => "dodge",
             Use::Burdened => "burdened",
             Use::Travel => "travel",
+            Use::Steal => "steal",
             Use::Kick => "kick",
             Use::Pick => "pick",
         }
@@ -304,6 +314,7 @@ impl Effect {
             Effect::Burden => "burden",
             Effect::Travel => "travel",
             Effect::Bargain => "bargain",
+            Effect::Steal => "steal",
             Effect::Kick => "kick",
             Effect::Pick => "pick",
         }
