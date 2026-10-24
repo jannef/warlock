@@ -18,11 +18,13 @@ static BUILTIN: LazyLock<Arc<Content>> =
     LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
 
 /// A human of `class` in the showcase (seed 7), with their kit, every score 14.
+/// A human of `class` in the showcase, born under no sign, so a sign's gifts (Rise from the
+/// ashes among them) leave the class's rules as the tests rig them.
 fn world(class: &str) -> World {
     let spec: CharacterSpec = format!("human,male,{class}").parse().expect("a character");
     // Creation picks that no test here reads.
     let spec = spec.with_talents(vec!["keen_ears".into(), "lean".into()]);
-    let mut w = World::start_run(
+    let w = World::start_run(
         BUILTIN.clone(),
         "showcase",
         Some(7),
@@ -31,6 +33,9 @@ fn world(class: &str) -> World {
         true,
     )
     .expect("world");
+    let mut state = w.state().clone();
+    state.character.as_mut().expect("a character").sign = None;
+    let mut w = World::from_state(BUILTIN.clone(), state).expect("restores");
     w.player_mut().stats = Stats::new(PerStat::splat(14), PerStat::splat(40));
     let max = w.state.player().max_hp(w.content());
     w.player_mut().hp = max;

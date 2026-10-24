@@ -1,0 +1,8 @@
+[[talent]]
+id = "hoard_sense"
+name = "Hoard sense"
+tree = "stars"
+granted = true
+description = "What you find and what you slay is richer more often, and gems turn up for you more often."
+effects = [{ kind = "loot_magic_percent", value = 50 }, { kind = "gem_find_percent", value = 100 }]
+systems = ["magic_items", "gems"]

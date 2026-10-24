@@ -1,0 +1,8 @@
+[[talent]]
+id = "eyes_of_the_heights"
+name = "Eyes of the heights"
+tree = "stars"
+granted = true
+description = "You see farther across the open land, by day and by night."
+effects = [{ kind = "day_sight", value = 2 }, { kind = "night_sight", value = 1 }]
+systems = ["vision"]

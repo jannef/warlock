@@ -153,6 +153,7 @@ pub use loot::Identified;
 pub use quest::{QuestRecord, QuestView, Quests, Stage};
 use rest::Ended;
 pub use shop::{Shop, ShopStatus, count_of, favour, part_of, unpaid_parts};
+pub(crate) use stars::RISEN;
 pub use talent::Due;
 pub use talk::{Conversation, Talk, TopicView};
 use travel::{enter_room, instantiate_level, level_template};
@@ -546,7 +547,7 @@ impl World {
                     Score::ZERO,
                 ),
             };
-        let start = level_template(&content, seed, &def.start_level, (None, 0))?;
+        let start = level_template(&content, seed, &def.start_level, (None, Default::default()))?;
         let player_pos = start
             .player_start
             .ok_or_else(|| WorldError::NoPlayerStart(start.id.clone()))?;
@@ -1030,10 +1031,14 @@ impl World {
         self.took(done, kind)
     }
 
-    /// The player takes combat stance `stance` (spec §8 "Stances"). Takes no time.
+    /// The player takes combat stance `stance` (spec §8 "Stances"). Takes no time, but a wait's
+    /// for those set in their ways (spec §8 "Birth sign").
     fn set_stance(&mut self, stance: CombatStance) -> Spent {
         self.player_mut().stance = stance;
         self.say(format!("You take {} stance.", stance.phrase()));
+        if self.state.player().talent_mods(&self.content).stance_costs {
+            return Spent::Turn(self.price_of(self.state.player, ActionKind::Wait));
+        }
         Spent::NoTime
     }
 }
@@ -1144,6 +1149,8 @@ mod skill_roll_tests;
 mod skills_tests;
 #[cfg(test)]
 mod speed_tests;
+#[cfg(test)]
+mod stars_roc_tests;
 #[cfg(test)]
 mod stars_tests;
 #[cfg(test)]

@@ -1,0 +1,8 @@
+[[talent]]
+id = "rise_from_ashes"
+name = "Rise from the ashes"
+tree = "stars"
+granted = true
+description = "Once in your life, what would kill you does not: you rise from your ashes in a burst of flame, weak for a day after. Starving and choking still kill."
+effects = [{ kind = "rise_from_ashes", hp_percent = 33, status = "ashen", spell = "phoenix_fire", radius = 1, damage = "1d6", damage_type = "fire" }]
+systems = ["hit_points", "status"]

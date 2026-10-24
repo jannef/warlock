@@ -1,0 +1,8 @@
+[[talent]]
+id = "of_the_deep"
+name = "Of the deep"
+tree = "stars"
+granted = true
+description = "Ice holds you as if you carried nothing, a plunge through it never hurts you, and you climb out onto it easily."
+effects = [{ kind = "light_on_ice" }, { kind = "plunge_proof" }, { kind = "climb_percent", value = -50 }]
+systems = ["ice"]

@@ -11,7 +11,13 @@ static CONTENT: LazyLock<Arc<Content>> =
     LazyLock::new(|| Arc::new(Content::builtin().expect("builtin content")));
 
 fn area(seed: u64, x: i32, y: i32) -> LevelTemplate {
-    generate(&CONTENT, seed, &local_area_id(Pos::new(x, y)), 0).expect("generates")
+    generate(
+        &CONTENT,
+        seed,
+        &local_area_id(Pos::new(x, y)),
+        Default::default(),
+    )
+    .expect("generates")
 }
 
 /// Overworld cells with every landscape and every neighbor that shapes an area (see the map in
@@ -376,7 +382,7 @@ fn arrivals_prefer_dry_ground_near_the_middle_of_the_side() {
 
 #[test]
 fn only_explorable_cells_have_areas() {
-    let err = |id: &str| generate(&CONTENT, 1, id, 0).unwrap_err();
+    let err = |id: &str| generate(&CONTENT, 1, id, Default::default()).unwrap_err();
     // Mountains, the river, and the Hall.
     for cell in ["local:0,0", "local:59,12", "local:46,23", "local:9,99"] {
         assert_eq!(err(cell), GenError::NotAGeneratedLevel(cell.into()));

@@ -1,0 +1,9 @@
+[[talent]]
+id = "set_in_ways"
+name = "Set in its ways"
+tree = "stars"
+granted = true
+flaw = true
+description = "Changing your combat stance takes you a moment."
+effects = [{ kind = "stance_costs" }]
+systems = ["stances"]

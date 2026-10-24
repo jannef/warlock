@@ -588,6 +588,7 @@ fn talent_rows(view: &PerceptionView<'_>) -> Vec<String> {
             };
             match (t.granted, t.flaw, t.class) {
                 (_, true, _) => format!("{name} (sign, flaw)"),
+                (true, false, _) if t.spent => format!("{name} (sign, spent)"),
                 (true, false, _) => format!("{name} (sign)"),
                 (false, false, true) => format!("{name} (class)"),
                 _ => name,

@@ -104,6 +104,41 @@ area = [0.1, 0.1]
 scale = 0.6
 glow = 0.8
 
+# The Phoenix rising from its ashes (spec §8 "Birth sign": Rise from the ashes): flames burst
+# from where the player fell, a short, bright, upward flare; no projectile (it starts where it
+# lands), no darkening, a small shake.
+[[effect]]
+id = "phoenix_fire"
+shape = "burst"
+radius = 1
+speed = 24
+grow = 0.12
+impact = 0.25
+linger = 0.6
+flicker = 0.05
+glyphs = "▓▒░"
+fill = 0.7
+projectile = "●"
+colors = ["#fffff0", "#ffe890", "#ffb040", "#ff7018", "#d03810", "#801808", "#3a0a04"]
+glow = 1.0
+light = { color = [900, 520, 180], radius = 5 }
+shake = { pixels = 2, radius = 4, seconds = 0.25 }
+
+# Sparks rising from the ashes.
+[[effect.particles]]
+on = "impact"
+glyphs = "'`.·"
+colors = ["#fff0a0", "#ffa030", "#c03010"]
+count = 2
+life = 0.8
+velocity = [0.0, -1.6]
+spread = [1.2, 1.0]
+gravity = -0.4
+area = [0.3, 0.3]
+scale = 0.6
+fade = 0.6
+glow = 0.8
+
 [[effect]]
 id = "lightning_bolt"
 shape = "bolt"

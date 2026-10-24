@@ -98,8 +98,15 @@ pub fn roll(
 /// Whether a find at item level `level` is a loose gem, by the gems' `chance` (one draw), and
 /// if so the gem: a stack of one.
 pub fn find(content: &Content, rng: &mut Rng, level: u8) -> Option<Stack> {
+    find_with(content, rng, level, 0)
+}
+
+/// [`find`] for a finder whose gems' chance is `more` percent higher (Hoard sense, spec §8
+/// "Birth sign"), never above certain: the same draws.
+pub fn find_with(content: &Content, rng: &mut Rng, level: u8, more: i32) -> Option<Stack> {
     let gems = content.gems()?;
-    if gems.chance == 0 || !rng.chance(u32::from(gems.chance)) {
+    let chance = crate::talent::TalentMods::scaled(u64::from(gems.chance), more).min(100);
+    if gems.chance == 0 || !rng.chance(chance as u32) {
         return None;
     }
     let (gem, cutting) = roll(content, rng, level, false)?;

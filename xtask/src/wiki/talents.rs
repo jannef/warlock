@@ -227,6 +227,12 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             per_levels,
             at_least,
         } => format!("+1 maximum hit point per {per_levels} levels, at least +{at_least}"),
+        TalentEffect::MaxHpPercent { value } => {
+            format!(
+                "maximum hit points {} (rounded down, at least 1)",
+                percent(value)
+            )
+        }
         TalentEffect::Stat { stat, value } => {
             format!("{} {} (score and potential)", stat.name(), signed(value))
         }
@@ -234,6 +240,9 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::FootstepsPercent { value } => format!("footsteps {}", percent(value)),
         TalentEffect::SilentDoors => "the doors you open and close are silent".to_string(),
         TalentEffect::Hearing { value } => format!("hears sounds {value} fainter"),
+        TalentEffect::ExactFootsteps => {
+            "footsteps you hear are placed at the cell they came from, not roughly".to_string()
+        }
         TalentEffect::ThresholdPercent { value } => {
             format!("the light your eyes need {}", percent(value))
         }
@@ -245,6 +254,16 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         ),
         TalentEffect::NightSight { value } => {
             format!("overworld sight at night {} cells", signed(value))
+        }
+        TalentEffect::DaySight { value } => {
+            format!("overworld sight by day {} cells", signed(value))
+        }
+        TalentEffect::InnerLight { light } => {
+            let reach = |id: &str| (content.light_id(id)).map_or(0, |l| content.light(l).radius);
+            format!(
+                "you always shed a faint light reaching {} cell (everyone sees it)",
+                reach(&light)
+            )
         }
         TalentEffect::LanternLight { light } => {
             let reach = |id: &str| (content.light_id(id)).map_or(0, |l| content.light(l).radius);
@@ -303,6 +322,10 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             percent(value)
         ),
         TalentEffect::HungerPercent { value } => format!("hunger pace {}", percent(value)),
+        TalentEffect::SmellRot => {
+            "the eat list says whether food smells fresh, turning (old),              or rotten"
+                .to_string()
+        }
         TalentEffect::RotHarmPercent { value } => {
             format!(
                 "sickness from rotten food {} (rounded down)",
@@ -359,6 +382,10 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "a magic item you carry for {hours} hours (counted from when you gain this) is \
              identified"
         ),
+        TalentEffect::GemFindPercent { value } => format!(
+            "the chance a find is a loose gem {} (anything found, and what creatures drop)",
+            percent(value)
+        ),
         TalentEffect::GemCut { value } => format!(
             "loose gems you find are cut {value} grade finer, at most the finest (those on \
              levels made from then on, and those kills drop)"
@@ -403,6 +430,7 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                 }
                 T::Riposte => "free blow: a blow that misses you by your Parry gives one back",
                 T::Opportunist => "free blow: a hostile that steps away from beside you takes one",
+                T::Gatekeeper => "free blow: a hostile that steps up beside you takes one",
                 T::Flurry => {
                     "free blow: a melee attack with nothing in hand strikes twice, the second blow \
                      at \u{2212}2 to hit"
@@ -489,6 +517,9 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         }
         TalentEffect::StanceDodge { stance, percent } => {
             format!("{} stance's Dodge penalty {percent} % smaller", stance.id())
+        }
+        TalentEffect::StanceCosts => {
+            "changing your combat stance takes the time of a wait (it is free otherwise)".into()
         }
         TalentEffect::StepPercent {
             value,
@@ -652,6 +683,20 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::RestingPercent { value } => {
             format!("healing pace while resting {}", percent(value))
         }
+        TalentEffect::RiseFromAshes {
+            hp_percent,
+            status: id,
+            radius,
+            damage,
+            damage_type,
+            ..
+        } => format!(
+            "once in your life, a hit, a trap, or a status that would kill you does not (starving \
+             and choking still do): you rise with {hp_percent} % of your maximum hit points \
+             (Ashen ones), {damage} {damage_type} damage strikes every creature within {radius} \
+             cell (one roll; no roll to hit) and the ice there melts, and you are {}",
+            status(&id)
+        ),
         TalentEffect::SecondWind {
             per_level,
             at_least,
