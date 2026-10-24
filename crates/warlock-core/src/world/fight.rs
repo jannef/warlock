@@ -565,8 +565,8 @@ impl World {
             .map_or_else(|| Protection::plain(0), |a| a.protection(&self.content))
     }
 
-    /// What actor `id` resists (spec §8 "Damage types"): its creature type's, and what it wears
-    /// and wields; nothing for one that is gone.
+    /// What actor `id` resists (spec §8 "Damage types"): its creature type's, what it wears and
+    /// wields, and its talents' (Elemental ward); nothing for one that is gone.
     pub(crate) fn resistances_of(&self, id: ActorId) -> Resistances {
         (self.state.actors.get(&id))
             .map_or_else(Resistances::default, |a| a.resistances(&self.content))

@@ -1006,6 +1006,8 @@ mod character_tests;
 #[cfg(test)]
 mod cost_tests;
 #[cfg(test)]
+mod damage_talent_tests;
+#[cfg(test)]
 mod damage_tests;
 #[cfg(test)]
 mod dig_tests;
