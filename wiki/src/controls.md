@@ -286,7 +286,7 @@ carry, and the weights at which your [burden](burden.md) changes. It takes no ti
 ## Skills
 
 `S` lists the [skills](skills.md) you are trained in, each with its value and a small meter of how
-near it is to its next point. The arrow keys pick a skill to read what it is about. It takes no
+practised it is (how big its next roll at a level-up will be). The arrow keys pick a skill to read what it is about. It takes no
 time; press `S` or `Esc` to close it.
 
 ## Info pages

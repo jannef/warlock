@@ -5,10 +5,26 @@ rules it implements are in spec/08i-character.md. Keep it current with the code,
 
 Skills (spec §8 "Skills", #132) live in `warlock-core`: `skills.rs` (`Skills` per actor: trained
 skills only, a missing one is untrained and gives nothing; `Effect` and `Use`, the typed benefit
-and training-mark hooks; `Benefit` growth by `steps` or a `curve`; the **provisional**
-`Increase` curve), `content/skill.rs` (`data/skills.toml`; adding a skill is one entry), and
-`world/train.rs` (marks for the player only, drawn from the `training` stream in `WorldState`,
-never the gameplay stream). Race and class grants are dice rolled in `character.rs` after every
+and training-mark hooks; `Benefit` growth by `steps` or a `curve`; `Ladder` and `RollRules`, the
+level-up rolls' data; `Skills::mark` adds a mark, `Skills::roll` applies a roll and spends the
+marks), `content/skill.rs` (`data/skills.toml`: the skills, `[ladder]`, `[rolls]`; adding a skill
+is one entry), `world/train.rs` (marks for the player only, drawn from the `training` stream in
+`WorldState`, never the gameplay stream; nothing said), and `world/skill_roll.rs` (#230: the
+level-up rolls, below).
+
+**Growth is level-up rolls only** (design `docs/design/progression.md` §5). Marks are a
+reservoir: `World::level_up` (`world/talent.rs`) puts `World::level_rolls()` rolls (class
+`rolls` + race `rolls` + `RollRules::for_intelligence` of the raised Intelligence; 0 when the
+player is trained in nothing) into each level's `Due::rolls`; `refuse_due` refuses everything
+else ("You have skill rolls to spend."); `advance:SKILL` (`World::advance_skill`) throws
+`Ladder::die(step(marks) + known_for)` from `levels_rng` (made on the first draw), adds +1 for a
+class's other or a race's skill (`World::affinity`: `ClassDef::is_known_for`/`trains`,
+`RaceDef::skills`), and `Skills::roll` adds it (halved from `soft_cap`) and spends
+`RollRules::spent` of the marks. `levelup:auto` spends rolls on the first trained skill
+(`advance_auto`). The Skills screen's meter (`skills::progress`) is the ladder step in quarters.
+Tests: `skills.rs` (ladder, rolls, meter), `content/skill.rs`, `content/class.rs`
+(`known_for`, `rolls`), `world/skill_roll_tests.rs` (counts, refusals, dice and affinities,
+streams, saves and replays), `world/skills_tests.rs` (marks by use). Race and class grants are dice rolled in `character.rs` after every
 other roll, so they never move a score. Rules read a benefit through `Actor::skill_effect`
 (the actor's skills plus what magic items' skill affixes add, `Skills::effect_with`), never
 `Skills::effect` directly. Each effect is read in one place: Dodge in

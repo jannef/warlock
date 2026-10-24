@@ -8,7 +8,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   run starts: `start_date = [year, month, day]` (all from 1; default `[1444, 11, 11]`, 11 Darkening,
   Year 1444) and `start_time = "hh:mm"` (default `"08:00"`), and the player's character when the run
   does not choose one: `character = { race = "human", gender = "female", class = "thief" }` (ids in
-  `races.toml` and `classes.toml`; gender `male`, `female`, or `other`), from which the player's
+  `races.toml` and `classes/`; gender `male`, `female`, or `other`), from which the player's
   eyes, stats, and hit points follow. A scenario without a character (test fixtures, content without
   races or classes) gives them itself: `vision` (default `normal`), `stats` and `potential` as for
   creature types (default 10 each, the potential the score), and `hp` (the hit points beyond

@@ -167,7 +167,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("skills.md", skills::skills),
         ("skill-benefits.md", skills::skill_benefits),
         ("skill-grants.md", skills::skill_grants),
-        ("skill-increase.md", skills::skill_increase),
+        ("skill-ladder.md", skills::skill_ladder),
+        ("skill-rolls.md", skills::skill_rolls),
         ("abilities.md", abilities::abilities),
         ("weapons.md", combat::weapons),
         ("light-weapons.md", combat::light_weapons),
@@ -729,12 +730,23 @@ mod tests {
             grants.contains("| Human | one of the class's skills `+2d4+4`, picked at random |")
         );
         assert!(grants.contains("| Commoner | Athletics `2d4+4`, Handle animal `2d4+4` |"));
-        let increase = text("skill-increase.md");
+        let ladder = text("skill-ladder.md");
         assert!(
-            increase.contains("| 99 | 13 | 837 |\n| 100 | 42 | 850 |"),
-            "{increase}"
+            ladder.contains("| 0 | `+1` | 1.0 | `1d3` | 2.0 |"),
+            "{ladder}"
         );
-        assert!(increase.contains("| 120 | 48 | 1720 |"));
+        assert!(
+            ladder.contains("| 800 | `4d5` | 12.0 | `4d5` | 12.0 |"),
+            "{ladder}"
+        );
+        let rolls = text("skill-rolls.md");
+        assert!(rolls.contains("| Bard | 4 | Bluff, Music |"), "{rolls}");
+        assert!(rolls.contains("| Commoner | 2 | - |"), "{rolls}");
+        assert!(rolls.contains("| Human | 1 |"), "{rolls}");
+        assert!(
+            rolls.contains("at 14 and one more for every 4 points"),
+            "{rolls}"
+        );
         assert!(
             text("races.md")
                 .contains("| Race | St | Dx | To | In | Wi | Pr | Vision | Starting age |"),
