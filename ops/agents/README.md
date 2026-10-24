@@ -42,8 +42,7 @@ a local one.
 - `fix`: the escalation path (memory: integrator-escalates-automatically). Pass the error and what
   was tried. Opus first; `MODEL=claude-fable-5-1` if Opus fails.
 - `design`: a draft PR adding only `docs/design/<topic>.md` (or a revision of one after review).
-- `issues`: splits a merged design into issues. **Needs Issues: read/write on the PAT** in the
-  Keychain and the vault (the token had contents, pull requests and actions only).
+- `issues`: splits a merged design into issues.
 
 Each launcher prints the session id. Check on it with `ant beta:sessions retrieve --session-id <id>`
 (status `idle` with `stop_reason` `end_turn` = done; read the last agent message with `ant
@@ -70,7 +69,8 @@ $0.08/hour on top of tokens.
   out.
 - The vault token is for `gh` (API, `gh run download`) only. It lives in vault
   `vlt_011CgLo82BAUBMmoHUVRfyRA` (`GH_TOKEN`, a fine-grained PAT on this repo only), managed
-  outside these files.
+  outside these files. The PAT's permissions on this repo: contents, pull requests, actions,
+  and issues, read/write.
 
 ## Environment
 

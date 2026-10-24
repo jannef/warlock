@@ -3,7 +3,7 @@
 #   ops/agents/engineer.sh build  <BRANCH> <ISSUES> [NOTES]         issues -> an open PR
 #   ops/agents/engineer.sh fix    <BRANCH> <PR> <PROBLEM> [TRIED] [NOTES]
 #   ops/agents/engineer.sh design <BRANCH> <TOPIC> <ASK> [NOTES]    a draft docs/design PR
-#   ops/agents/engineer.sh issues <DESIGN_PATH> <MILESTONE> [NOTES] (needs Issues write on the PAT)
+#   ops/agents/engineer.sh issues <DESIGN_PATH> <MILESTONE> [NOTES]
 # BUDGET_CENTS caps the session at list price (defaults: build 2000, fix 1000, design 1000, issues 300).
 set -euo pipefail
 set +x
