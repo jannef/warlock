@@ -30,6 +30,9 @@
 #                   level = 9                            the character level
 #                   race = "dwarf", class = "warrior"    the character's
 #                   eyes = "darkvision"                  the race's vision profile
+#                   any_weapon_skill = { roles = ["melee"], of = ["unarmed"], rank = 3 }
+#                                                        any one of the weapon skills of those
+#                                                        roles or named, at that rank
 #                   requires_alignment = { min = "good" }   an alignment band, as quests and
 #                                                        abilities ask it (`min` the worst
 #                                                        allowed, `max` the best)
@@ -60,4 +63,33 @@
 #                                 that much added
 #   free_blow { trigger }         a free blow: "cleave", "great_cleave", "riposte", or
 #                                 "opportunist" (spec §8 "Free blows")
+#   resting_percent { value }     resting heals that percent faster on top of resting's pace
+#   second_wind { per_level, at_least, cooldown }   the Second wind ability: per_level hit points
+#                                 per character level back at once (at least at_least), then the
+#                                 cooldown status (an id in ../status.toml)
+#   iron_stomach                  rotten food and overeating never make it vomit; rotten food
+#                                 sickens it half as much
+#   status_eases { status, value }   that status eases that percent faster
+#   no_penalty { status }         that status never lowers its scores
+#   clotting                      a big hit wounds it no more, a critical one degree less
+#   penalty_percent { value }     what its statuses take off its scores, that percent more
+#                                 (negative: less; raises are untouched)
+#   disease_checks { value }      added to its disease checks
+#   disease_recovery { value }    a disease needs that many fewer checks won in a row to go
+#   kick_die { sides }            its kicks at creatures roll one die of that many sides
+#   door_kick { value }           its door kicks as if that much stronger
+#   dig_percent { value }         its digging does that percent more work a turn
+#   two_handed_price { value }    its blows with a two-handed weapon cost that percent more
+#                                 (negative: cheaper)
+#   critical_status { status }    a critical it confirms in melee leaves the target that status
+#   penetration { damage, value } its blows that can do damage of that kind ignore that much
+#                                 more Protection
+#   burden_dex { value }          the burden's cap on its Dexterity in Defence, that much higher
+#   sure_step                     a trap it steps onto first gets a Dexterity check: made, it
+#                                 does not go off, and it is found
+#   pit_proof                     pits never catch it
+#   speed_percent { value }       it moves and acts that percent quicker (hidden in the game)
+#   missile_dodge { value }       Dodge added against shots, throws, and trap missiles
+#   spell_damage_percent { value }   the damage bursts and bolts do it, that percent more
+#                                 (negative: less)
 # Flat bonuses are -20 to 20, percents -100 to 100, never 0.

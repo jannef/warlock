@@ -123,3 +123,26 @@ eases = 600
 penalty = { from = 1, strength = -1 }
 start = "You are exhausted."
 end = "You feel rested again."
+
+# Second wind's cooldown (the Second wind talent): a quarter of an hour before the next.
+[[status]]
+id = "winded"
+name = "Winded"
+max = 1
+stacking = "refresh"
+eases = 900
+start = "You are winded."
+end = "You have your breath back."
+
+# A staggering blow's (the Staggering blow talent): the next action, taken within a turn's time,
+# costs half again as much.
+[[status]]
+id = "staggered"
+name = "Staggered"
+seen = "staggered"
+max = 1
+stacking = "refresh"
+eases = 6
+cost = 150
+start = "You stagger."
+end = "You find your feet again."

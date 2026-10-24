@@ -1,0 +1,8 @@
+[[talent]]
+id = "nimble"
+name = "Nimble"
+tree = "finesse"
+description = "A load slows your feet less than most: your burden hampers your dodging less."
+needs = { stats = { dexterity = 13 } }
+effects = [{ kind = "burden_dex", value = 1 }]
+systems = ["defence", "burden"]

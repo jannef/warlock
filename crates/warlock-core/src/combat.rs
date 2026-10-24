@@ -188,6 +188,12 @@ impl Defence {
     }
 
     /// The bonus in `category`.
+    /// This Defence with `bonus` more in `category` (a bonus against one kind of attack).
+    pub fn plus(mut self, category: Category, bonus: i32) -> Self {
+        self.bonus[category.index()] += bonus;
+        self
+    }
+
     pub fn bonus(&self, category: Category) -> i32 {
         self.bonus[category.index()]
     }

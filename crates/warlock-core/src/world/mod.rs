@@ -113,6 +113,7 @@ mod rest;
 mod rot;
 mod schedule;
 mod search;
+mod second_wind;
 mod shoot;
 mod shop;
 mod spell;
@@ -896,6 +897,7 @@ impl World {
             Action::Dig(dir) => return self.start_dig(*dir),
             Action::Search(turns) => return Spent::Search(*turns),
             Action::Disarm(dir) => return self.disarm(*dir, events),
+            Action::SecondWind => return self.second_wind(events),
             Action::Talent { id, choice } => return self.take_talent(id, choice.as_deref()),
             Action::Advance(skill) => return self.advance_skill(skill),
             Action::SetVision(id) => return self.set_vision(id),
@@ -952,6 +954,8 @@ mod ai_tests;
 mod alignment_tests;
 #[cfg(test)]
 mod blood_tests;
+#[cfg(test)]
+mod body_talent_tests;
 #[cfg(test)]
 mod branch_tests;
 #[cfg(test)]

@@ -34,6 +34,7 @@
 use crate::combat::{Category, Profile};
 use crate::content::{ActionKind, Content, Stacking, StatusDef, StatusId};
 use crate::stats::{PerStat, Stat};
+use crate::talent::TalentMods;
 use crate::world::ActorId;
 use serde::{Deserialize, Serialize};
 
@@ -85,20 +86,35 @@ impl Effect {
 
     /// Seconds until it eases by a degree (`None`: it lasts until cured).
     pub fn until_eases(&self, def: &StatusDef) -> Option<u64> {
-        let every = u64::from(def.eases?);
-        Some(until(u64::from(self.wear), every, 1))
+        self.until_eases_every(def.eases)
+    }
+
+    /// Seconds until it eases by a degree when it eases every `every` seconds (its sufferer's
+    /// own pace: a talent may ease it faster; `None`: it lasts until cured).
+    pub fn until_eases_every(&self, every: Option<u32>) -> Option<u64> {
+        Some(until(u64::from(self.wear), u64::from(every?), 1))
     }
 
     /// `seconds` pass at its present severity: returns how many times it ticked and how many
     /// degrees it eased. Callers keep `seconds` within [`Effect::until_eases`], so its severity
     /// held all along; the severity itself is left to them.
     pub fn advance(&mut self, def: &StatusDef, seconds: u64) -> (u64, u64) {
+        self.advance_every(def, def.eases, seconds)
+    }
+
+    /// [`Effect::advance`] at its sufferer's own pace of easing, a degree every `eases` seconds.
+    pub fn advance_every(
+        &mut self,
+        def: &StatusDef,
+        eases: Option<u32>,
+        seconds: u64,
+    ) -> (u64, u64) {
         let ticks = def.tick.map_or(0, |every| {
             let banked = u64::from(self.tick) + seconds * u64::from(self.severity);
             self.tick = u32::try_from(banked % u64::from(every)).unwrap_or(0);
             banked / u64::from(every)
         });
-        let eased = def.eases.map_or(0, |every| {
+        let eased = eases.map_or(0, |every| {
             let worn = u64::from(self.wear) + seconds;
             self.wear = u32::try_from(worn % u64::from(every)).unwrap_or(0);
             worn / u64::from(every)
@@ -210,12 +226,19 @@ impl Effects {
     /// What its statuses do to each score now (their penalties at their severities, added up);
     /// `None` when they do nothing to any.
     pub fn penalty(&self, content: &Content) -> Option<PerStat<i32>> {
+        self.penalty_for(content, &TalentMods::default())
+    }
+
+    /// [`Effects::penalty`] for a sufferer with `talents`: a status that never lowers its scores
+    /// takes nothing, and the lowerings shrink by what its talents say ([`TalentMods::penalty`]:
+    /// poison resistance, Unbowed).
+    pub fn penalty_for(&self, content: &Content, talents: &TalentMods) -> Option<PerStat<i32>> {
         let mut total: Option<PerStat<i32>> = None;
         for e in &self.0 {
             if let Some(by) = content.status(e.status).penalty_at(e.severity) {
                 let sum = total.get_or_insert(PerStat::splat(0));
                 for stat in Stat::ALL {
-                    sum[stat] += i32::from(by[stat]);
+                    sum[stat] += talents.penalty(e.status, i32::from(by[stat]));
                 }
             }
         }

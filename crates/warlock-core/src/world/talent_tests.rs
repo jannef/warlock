@@ -189,9 +189,9 @@ fn several_levels_at_once_queue_their_picks_and_auto_spends_them_in_order() {
     run(&mut w, "levelup:auto");
     assert_eq!(w.due(), None);
     assert_eq!(player(&w).talents.len(), 2);
-    // Auto took the first talent of the first tree it may take: Vigour's, in file order, Hardy
-    // (this warrior's Toughness allows it).
-    assert_eq!(last(&w), "You learn Hardy (1).");
+    // Auto took the first talent of the first tree it may take: Vigour's, in file order,
+    // Clotting (this warrior's Toughness allows it).
+    assert_eq!(last(&w), "You learn Clotting.");
 }
 
 #[test]
@@ -210,17 +210,17 @@ fn a_pick_nothing_can_be_spent_on_is_dropped() {
     // With every talent the character qualifies for held, the pick is dropped too.
     let mut w = world();
     set_scores(&mut w, 1);
-    for level in [3, 6, 9, 12] {
+    for level in [3, 6, 9, 12, 15, 18] {
         reach(&mut w, level);
         run(&mut w, "levelup:auto");
         assert_eq!(w.due(), None, "level {level}");
     }
     assert_eq!(
         player(&w).talents.len(),
-        4,
-        "the four talents without prerequisites"
+        6,
+        "the six talents without prerequisites"
     );
-    reach(&mut w, 15);
+    reach(&mut w, 21);
     assert_eq!(w.due(), None, "nothing left to take: the pick is dropped");
 }
 
@@ -450,7 +450,8 @@ fn perception_and_dumps_show_talents_in_words_only() {
     let progress = dump::ascii(&w, &[Layer::Progress]);
     assert!(progress.contains("due level 3: 1 talent"), "{progress}");
     assert!(
-        progress.contains("takeable healthy, keen_ears, long_strider, lean"),
+        progress
+            .contains("takeable healthy, mighty_kick, opportunist, keen_ears, long_strider, lean"),
         "{progress}"
     );
     let view = w.perception();

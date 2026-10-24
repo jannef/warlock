@@ -1,0 +1,8 @@
+[[talent]]
+id = "iron_grip"
+name = "Iron grip"
+tree = "might"
+description = "A great weapon is light in your hands: your blows with a two-handed weapon come quicker."
+needs = { stats = { strength = 13 }, any_weapon_skill = { of = ["great_blades", "polearms", "staves"], rank = 3 } }
+effects = [{ kind = "two_handed_price", value = -10 }]
+systems = ["combat", "speed"]

@@ -30,6 +30,7 @@ use crate::geom::Pos;
 use crate::ice::Shock;
 use crate::noise::{self, Noise};
 use crate::sight::LineOfSight;
+use crate::talent::TalentMods;
 use std::collections::BTreeSet;
 
 /// Who cast a spell, and so who deals its harm.
@@ -271,9 +272,23 @@ impl World {
         }
     }
 
+    /// What of a burst's or a bolt's `damage` reaches actor `id`: with Evasion (spec §8
+    /// "Talents") its share, rounded down (a spell that does nothing more is resisted).
+    pub(super) fn evaded(&self, id: ActorId, damage: Damage) -> Damage {
+        let percent = (self.state.actors.get(&id))
+            .map_or(0, |a| a.talent_mods(&self.content).spell_damage_percent);
+        if percent == 0 {
+            return damage;
+        }
+        let amount = u64::try_from(damage.amount.max(0)).unwrap_or(0);
+        let amount = i32::try_from(TalentMods::scaled(amount, percent)).unwrap_or(i32::MAX);
+        Damage::new(amount, damage.kind)
+    }
+
     /// `caster`'s spell does `damage` to `target` from `source` (a cell, and whether it flew
-    /// along a line from it), with no roll to hit and less what the target resists of its kind
-    /// (spec §8 "Damage types"): a trap's blow ([`World::trap_hurts`]), or an actor's, dealt
+    /// along a line from it), with no roll to hit, less what Evasion spares it ([`World::evaded`])
+    /// and what the target resists of its kind (spec §8 "Damage types"): a trap's blow
+    /// ([`World::trap_hurts`]), or an actor's, dealt
     /// the way every blow is (spec §8 "Blood", "Status effects"): the event, a big hit's blood,
     /// the damage, which may kill (a kill by the player earns its experience), and if it lives
     /// the statuses its wound causes. A shopkeeper the player's spell reaches turns on them, as
@@ -287,13 +302,17 @@ impl World {
         events: &mut Vec<Event>,
     ) {
         let by = match caster {
-            Caster::Trap(trap) => return self.trap_hurts(trap, target, source, damage, events),
+            Caster::Trap(trap) => {
+                let damage = self.evaded(target, damage);
+                return self.trap_hurts(trap, target, source, damage, events);
+            }
             Caster::Actor(by) => by,
         };
         let Some(to) = self.state.actors.get(&target).map(|a| a.pos) else {
             return;
         };
         let from = self.state.actors.get(&by).map_or(source.0, |a| a.pos);
+        let damage = self.evaded(target, damage);
         let taken = self.resisted(target, damage);
         let mut blow = Blow::plain(taken, damage.kind);
         if damage.amount > 0 && taken <= 0 {
