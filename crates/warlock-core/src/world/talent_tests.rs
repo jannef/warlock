@@ -3,7 +3,7 @@
 //! each talent changes the one rule it names, picks nothing can be spent on are dropped, and
 //! all of it survives saves and replays while runs without talents hash as before.
 
-use super::search::Look;
+use super::search::{Hidden, Look};
 use super::*;
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
@@ -252,7 +252,7 @@ fn each_talent_changes_the_rule_it_names() {
     assert_eq!(w.healing_rate(id), rate * 125 / 100);
 
     // Dodge and Thick skin: Defence in their categories.
-    let defence = |w: &World| player(w).defence(&content, Burden::Unburdened);
+    let defence = |w: &World| player(w).defence(&content, Burden::Unburdened, None);
     let (dodge, natural) = (
         defence(&w).bonus(crate::combat::Category::Dodge),
         defence(&w).bonus(crate::combat::Category::Natural),
@@ -297,11 +297,11 @@ fn each_talent_changes_the_rule_it_names() {
     // Alert: notices in passing, 2 better.
     let passive = w.search_modifier(Look::Passive);
     assert!(
-        !w.notices(w.player_pos()),
+        !w.notices(w.player_pos(), Hidden::Door(0)),
         "a warrior is not trained in Spot"
     );
     take(&mut w, 27, "alert");
-    assert!(w.notices(w.player_pos()));
+    assert!(w.notices(w.player_pos(), Hidden::Door(0)));
     assert_eq!(w.search_modifier(Look::Passive), passive + 2);
 
     // Silent feet: steps a fifth quieter per rank; at rank 2 (Stealth 25) silent doors.

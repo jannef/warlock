@@ -26,6 +26,10 @@ all: they do not see it, and it does not light anything for them.
   violet tint, and only if you see UV.
 
 Your vision type comes from your race: the table on [Races](races.md) lists each race's eyes.
+Drow eyes are also **light-blind**: in strong light (a perceived brightness of 250 or more on your
+own cell: the sun well up under a clear sky, a bright fire close by) you are dazzled and see
+nothing farther than ten cells, whatever your vision type (see
+[Races](races.md#the-evil-races)).
 There is no way to change your eyes in play yet; a [developer key](controls.md#developer-keys)
 (`F3`) cycles through the types for trying them out.
 

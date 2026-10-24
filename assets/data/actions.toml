@@ -63,6 +63,9 @@ disarm = 2000
 # Chatting with someone (`C`): a few words. Asking about a topic on the dialogue screen takes no
 # time.
 chat = 500
+# Trying to steal from someone next to you (the abilities menu's Steal; spec §8 "Stealing"),
+# whether it works or you are caught.
+steal = 1000
 # Climbing out of the water onto ice (spec §5 "Ice"), on top of the step onto the ice: hauling
 # oneself up out of a hole takes a few turns.
 climb = 2000

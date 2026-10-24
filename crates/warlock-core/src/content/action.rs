@@ -87,6 +87,8 @@ pub enum ActionKind {
     Disarm,
     /// Chatting with a creature (spec §8 "Dialogue"): a short action.
     Chat,
+    /// Trying to steal from a creature (spec §8 "Stealing"), whatever comes of it.
+    Steal,
     /// Climbing out of the water onto ice (spec §5 "Ice"): on top of the step onto it.
     Climb,
 }
@@ -120,6 +122,7 @@ impl ActionKind {
         ActionKind::Search,
         ActionKind::Disarm,
         ActionKind::Chat,
+        ActionKind::Steal,
         ActionKind::Climb,
     ];
 
@@ -152,6 +155,7 @@ impl ActionKind {
             ActionKind::Search => "search",
             ActionKind::Disarm => "disarm",
             ActionKind::Chat => "chat",
+            ActionKind::Steal => "steal",
             ActionKind::Climb => "climb",
         }
     }
@@ -203,6 +207,7 @@ impl ActionKind {
             ActionKind::Search => "search",
             ActionKind::Disarm => "disarm traps",
             ActionKind::Chat => "talk",
+            ActionKind::Steal => "steal",
             ActionKind::Climb => "climb",
         }
     }

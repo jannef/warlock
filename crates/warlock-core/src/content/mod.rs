@@ -47,6 +47,7 @@ mod spell;
 mod stance;
 mod stat_training;
 mod status;
+mod steal;
 mod talent;
 mod terrain;
 mod trap;
@@ -113,7 +114,7 @@ pub use quest::{
     DEFAULT_DECLINE, GOLD, Goal, MAX_COUNT, MAX_NAME, MAX_QUEST_XP, QuestDef, QuestId, QuestKind,
     QuestTexts, Reward,
 };
-pub use race::{HUNGER, RaceDef, Races};
+pub use race::{HUNGER, LightBlind, RaceDef, Races};
 pub use room_effect::{RoomEffectDef, RoomEffectId, RoomEffects, SpecialRoom};
 pub use scenario::ScenarioDef;
 pub use scroll::{Cast, Reading, ScrollSpell};
@@ -134,6 +135,7 @@ pub use status::{
     Affliction, COST_PERCENT, CombatBonus, Healing, MAX_REGEN, MAX_SEVERITY, OnHit, Penalty,
     Stacking, StatusDef, StatusId, Wound,
 };
+pub use steal::StealRules;
 pub use talent::{
     AnyWeaponSkill, Choice, Coverage, DEFAULT_MAX_RANKS, FreeBlowTrigger, Need, Needs, Rank,
     SystemDef, SystemId, TalentBook, TalentDef, TalentEffect, TalentId, TreeDef, TreeId,
@@ -421,6 +423,9 @@ pub struct Content {
     trap_ids: BTreeMap<String, TrapId>,
     /// The numbers of searching for hidden features (`data/search.toml`, spec §8 "Searching").
     search: SearchRules,
+    /// What becomes of a creature that catches the player stealing (`data/steal.toml`, spec §8
+    /// "Stealing"); none without the file.
+    steal: Option<StealRules>,
     /// The rules of stat training (`data/stats.toml`, spec §8 "Stats").
     stat_training: StatTraining,
     factions: Factions,
@@ -505,6 +510,7 @@ impl Content {
             traps: Vec::new(),
             trap_ids: BTreeMap::new(),
             search: SearchRules::default(),
+            steal: None,
             stat_training: StatTraining::default(),
             factions: Factions::default(),
             lights: Vec::new(),
@@ -600,7 +606,13 @@ impl Content {
             let size_index = |id: &str| content.size_index(id);
             let skill_id = |id: &str| content.skill_id(id);
             let weapons = &content.weapon_skills;
-            content.races = Races::parse(path, text, has_vision, size_index, skill_id, weapons)?;
+            let percent = crate::damage::MIN_RESISTANCE..=crate::damage::IMMUNE;
+            let resist = |m: &BTreeMap<String, i32>| {
+                content.resolve_per_kind("resist", m, percent.clone(), false)
+            };
+            content.races = Races::parse(
+                path, text, has_vision, size_index, skill_id, weapons, resist,
+            )?;
         }
         let path = "data/names.toml";
         if let Some(text) = files.get_optional(path) {
@@ -662,6 +674,10 @@ impl Content {
         let path = "data/search.toml";
         if let Some(text) = files.get_optional(path) {
             content.search = SearchRules::parse(path, text)?;
+        }
+        let path = "data/steal.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.steal = Some(StealRules::parse(path, text, &content.factions)?);
         }
         let path = "data/stats.toml";
         if let Some(text) = files.get_optional(path) {
@@ -1016,19 +1032,9 @@ impl Content {
             .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             let ranks = ranks.iter().map(|&(id, rank)| (id, rank.max() as u8));
             let weapon_skills = WeaponSkills::from_ranks(&self.weapon_skills, ranks);
-            if spec.natural.as_ref().is_some_and(|n| {
-                let bonus = 0..=object::MAX_BONUS;
-                !bonus.contains(&n.defence)
-                    || !bonus.contains(&n.protection)
-                    || n.defence + n.protection == 0
-                    || n.name.is_empty()
-            }) {
-                return Err(err(format!(
-                    "creature `{}`: natural: `defence` and `protection` must be 0 to {}, not both \
-                     0, and `name` given",
-                    spec.id,
-                    object::MAX_BONUS
-                )));
+            if let Some(hide) = &spec.natural {
+                hide.check()
+                    .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             }
             // The status diseases show as comes of a disease, never of a blow.
             let status = |id: &str| {
@@ -1960,6 +1966,12 @@ impl Content {
     /// else [`SearchRules::default`]).
     pub fn search(&self) -> &SearchRules {
         &self.search
+    }
+
+    /// The rules of stealing that live in data (spec §8 "Stealing"; `data/steal.toml`); `None`
+    /// without the file, when nobody steals.
+    pub fn steal(&self) -> Option<&StealRules> {
+        self.steal.as_ref()
     }
 
     /// The rules of stat training (spec §8 "Stats"; `data/stats.toml`, else
@@ -3104,7 +3116,19 @@ mod tests {
         assert_eq!(
             races,
             [
-                "elf", "half_elf", "human", "dwarf", "halfling", "gnome", "half_orc"
+                "elf",
+                "half_elf",
+                "human",
+                "dwarf",
+                "halfling",
+                "gnome",
+                "half_orc",
+                "goblin",
+                "drow",
+                "kobold",
+                "lizardfolk",
+                "duergar",
+                "ratfolk"
             ]
         );
         // Every race offers names to every gender, and every scenario names its character.

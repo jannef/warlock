@@ -76,3 +76,62 @@ female = [
   "Agra", "Bolga", "Durza", "Gharra", "Korra", "Murgha", "Nazra", "Orsha", "Rasha", "Shagra",
   "Ugra", "Zorka",
 ]
+
+[goblin]
+male = [
+  "Bogwart", "Fizzik", "Gnash", "Grak", "Krell", "Nibbik", "Ruknob", "Skrit", "Skulk", "Snikkit",
+  "Wort", "Zogg",
+]
+female = [
+  "Bogga", "Grizzla", "Gubba", "Krinna", "Mogga", "Nettik", "Rikka", "Skrella", "Snagga",
+  "Tizzle", "Vixxa", "Zibba",
+]
+
+[drow]
+male = [
+  "Azrith", "Dhuvren", "Ilzaren", "Jhaelor", "Malvhir", "Nalvyr", "Quorzyn", "Ryzvan", "Szelkar",
+  "Tazrin", "Velzar", "Vhelmar",
+]
+female = [
+  "Dhessira", "Ilzyra", "Jhalyss", "Malzhae", "Nhilra", "Quaevra", "Shyntra", "Szyrra",
+  "Talvrys", "Velraena", "Vhaessa", "Zhaelis",
+]
+
+[kobold]
+male = [
+  "Drekk", "Gribbit", "Kip", "Mekk", "Rizz", "Skib", "Snik", "Tazz", "Tikk", "Vik", "Yip", "Zub",
+]
+female = [
+  "Drissa", "Kebbi", "Lizza", "Mibbi", "Pikka", "Rissa", "Sibbi", "Snippa", "Tikka", "Vekki",
+  "Yikka", "Zekka",
+]
+
+[lizardfolk]
+male = [
+  "Hessith", "Issak", "Kassith", "Kethrass", "Ossuk", "Rassuk", "Sshar", "Sskorr", "Thssk",
+  "Tuuskar", "Vresh", "Zhurr",
+]
+female = [
+  "Asshi", "Hissra", "Ithissa", "Kessra", "Nessith", "Rhessi", "Sessa", "Sirrah", "Thessa",
+  "Ussara", "Vessika", "Zassith",
+]
+
+[duergar]
+male = [
+  "Bardek", "Drekmar", "Durgath", "Gorvin", "Grimnar", "Holgrak", "Krundar", "Murgrim", "Orlag",
+  "Skorvald", "Thrask", "Vorgrum",
+]
+female = [
+  "Baldra", "Dregga", "Durna", "Grimhilde", "Gunnra", "Hulda", "Krella", "Morgra", "Orna",
+  "Skara", "Thrasa", "Vorga",
+]
+
+[ratfolk]
+male = [
+  "Crumb", "Gnaw", "Nibs", "Patch", "Rind", "Rook", "Scabble", "Skitter", "Sniff", "Squeak",
+  "Tatter", "Whisk",
+]
+female = [
+  "Bramble", "Crumble", "Mira", "Nibbla", "Pip", "Rue", "Scritch", "Sniffa", "Sorrel", "Tansy",
+  "Twitch", "Whiska",
+]

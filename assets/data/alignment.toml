@@ -27,7 +27,8 @@
 #                      hostile to you: hunting, which is no sin
 #   kill_hostile       killing someone hostile to you, by their alignment
 #   attack_shopkeeper  attacking a shopkeeper who trades with you
-#   theft              leaving a shop with goods you have not paid for
+#   theft              leaving a shop with goods you have not paid for, or stealing from someone
+#                      unnoticed
 #   pay_debt           paying a shopkeeper what you owe
 #   eat_kin            eating the corpse of one of your own race (a creature's `race`), or of a
 #                      creature who talks (has a dialogue) and is not hostile to you

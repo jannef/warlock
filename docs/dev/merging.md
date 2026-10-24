@@ -8,10 +8,13 @@ and again when the integrator says your PR is next.
 
 - **Don't chase main.** A PR merges (or rebases onto) `origin/main` once, when the integrator says
   it is next in line, not after every merge into `main`. Until then, keep working on the branch.
-- **After that one merge** run `cargo fmt --all`, `cargo clippy --workspace --all-targets --
-  -D warnings`, `cargo test --workspace`, `cargo xtask wiki`, and the PR's own captures or
-  replays (what it changed visibly). CI covers the rest (wasm32 check, screenshot smoke test,
-  `mdbook build wiki`, `cargo deny`, the third-party licenses).
+- **After that one merge** re-verify only what CI does not or what a merge breaks. CI runs on
+  every push and is required, so it is the check; a local run of the same steps only duplicates
+  it. Always: the PR's own replays (`replay --verify`; CI does not run them) and its captures
+  if it changed something visible. Only if the merge had conflicts in code, snapshots, or
+  registries: `cargo clippy --workspace --all-targets -- -D warnings` and `cargo test
+  --workspace` (where merges break things). fmt, the wiki tables, and everything else are left
+  to CI. A clean merge is pushed after the replays.
 - **The full check list** (CLAUDE.md "Verification") runs once, before the PR opens.
 - **Keep PRs small**: one feature per PR, rules first (core, tests, dumps), then the UI, then the
   content that uses it, when they can stand alone. Small PRs merge in minutes and conflict less.
@@ -122,7 +125,9 @@ issue body, or one with many choices to review) is a **draft PR that adds
 
 ## Agents, finishers, and context
 
-The owner's token-saving rules (2026-10-24):
+The owner's token-saving rules (2026-10-24). The local subagents' briefs live in the repo, in
+`ops/agents/local/` (`feature.md` for a feature agent, `finisher.md` for a finisher; the spawn
+message adds the fields each one lists), so they survive a wiped `/tmp`:
 
 1. **A feature agent stops when its PR is open.** It pushes, opens the PR, triggers CI (pushing
    does it; if the change alters golden captures it runs
@@ -136,9 +141,9 @@ The owner's token-saving rules (2026-10-24):
    images the change explains after looking at each (an unexplained difference is a bug to fix,
    not a reference to update). When the integrator says the PR is next it merges `origin/main`
    once (both sides of registry insertions; main's side of generated files and PNGs, then
-   regenerate), runs the light re-verify (fmt, clippy `-D warnings`, `cargo test --workspace`,
-   `cargo xtask wiki`, the PR's replays with `replay --verify`, re-created if hashes moved),
-   pushes, and stops. It does not merge the PR.
+   regenerate), runs the light re-verify (the PR's replays with `replay --verify`, re-created if hashes
+   moved; clippy `-D warnings` and `cargo test --workspace` only after conflicts in code,
+   snapshots, or registries, or after a fix of its own; CI does the rest), pushes, and stops. It does not merge the PR.
 3. **Agents keep contexts small**: read files in parts, grep, filter test output, never print
    whole diffs or logs.
 4. **Local or cloud, never both.** Every agent job above (feature, finisher, an escalation fix, a
