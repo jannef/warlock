@@ -577,7 +577,7 @@ fn defence_stacks_by_category_and_armour_caps_dexterity() {
     me.equipment.put(&[slot("body")], 0);
     me.equipment.put(&[slot("off_hand")], 1);
     me.equipment.put(&[slot("main_hand")], 2);
-    let dv = me.defence(&content, Burden::Unburdened);
+    let dv = me.defence(&content, Burden::Unburdened, None);
     // The mail caps Dexterity at +1; armour 5, shield 2, parry 3.
     assert_eq!(dv.bonus(Category::Dexterity), 1);
     assert_eq!(dv.bonus(Category::Armour), 5);
@@ -593,7 +593,7 @@ fn defence_stacks_by_category_and_armour_caps_dexterity() {
     .expect("stats");
     assert_eq!(
         clumsy
-            .defence(&content, Burden::Burdened)
+            .defence(&content, Burden::Burdened, None)
             .bonus(Category::Dexterity),
         -2
     );
@@ -602,7 +602,7 @@ fn defence_stacks_by_category_and_armour_caps_dexterity() {
     let turtle = actor(&w, 1).expect("turtle");
     assert_eq!(
         turtle
-            .defence(w.content(), Burden::Unburdened)
+            .defence(w.content(), Burden::Unburdened, None)
             .bonus(Category::Natural),
         15
     );

@@ -208,7 +208,11 @@ mod tests {
         assert_eq!(worth(-200), "very strongly evil");
         let content = Content::builtin().expect("content");
         let start = alignment_start(&content);
-        assert!(start.contains("| Paladin | Good (+450) |"), "{start}");
+        // Drow and duergar first (by name): a paladin of either starts Neutral.
+        assert!(
+            start.contains("| Paladin | Neutral (0) | Neutral (0) | Good (+450) |"),
+            "{start}"
+        );
         let bands = alignment_bands(&content);
         assert!(bands.contains("| Saintly | +750 to +1000 |"), "{bands}");
         assert!(

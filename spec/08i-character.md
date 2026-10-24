@@ -50,12 +50,37 @@ developer notes (CLAUDE.md, `docs/dev/`).
     rolled), within 1 to 40 and never below the starting score. Classes, genders, and signs do
     not change potentials.
   - **Eyes**: the player's vision profile is the race's (the dev vision switch still works).
+  - **Light-blindness** (#255; a race's `light_blind = { glare, sight, to_hit }`, drow 250, 10,
+    −1): while the light on the player's own cell, as their eyes perceive it (the light the
+    perception finds there, the status bar's `Light`), is at least `glare` bright, they are
+    **dazzled**: the perception shows nothing farther than `sight` cells (line of sight and
+    light are unchanged within it; wall completion stops there too), and every attack they roll
+    is `to_hit` worse (`World::glared`, in `resolve`, from the same light on their cell then).
+    `LightBlind::dazzled_by` is the one rule; nothing else reads it. A clear sun well above the
+    horizon dazzles a drow (on the courtyard's November morning from about 07:30), an overcast
+    one does not, nor their own lantern alone (about 220); a lantern beside a brazier does. A note says when it begins ("The bright light dazzles
+    you.") and ends ("Your eyes adjust to the dimmer light."), neither stopping a rest, and the
+    status bar shows `Dazzled` while it lasts; never the numbers. Creatures are never
+    light-blind.
+  - **Gifts on other rules**: a race's `natural` armour adds to the player's Defence (Natural)
+    and Protection, as a creature type's does ("Combat" below; lizardfolk); its `resist` to what
+    they resist ("Damage types"; drow poison); its `disease_check` to every check against a
+    disease ("Diseases"; ratfolk); `eats_rotten` lets rotten food feed them unharmed ("Hunger";
+    ratfolk); and `passive_search = "traps"` lets them notice hidden traps in passing
+    ("Searching"; kobolds). `WorldState::race_of` is the one lookup of the player's race;
+    creatures go by their creature type.
+  - **Race and creatures**: no creature takes a side by the player's race: hostile kobolds
+    attack a kobold player as they would anyone, and good creatures greet a drow coldly only
+    when their alignment is Evil or worse ("Alignment" below), never for their race. Tribal
+    friendliness may come later.
   - **Hit points**: the race's and the class's `hp` add to Toughness for the maximum ("Combat"
     below).
   - **Alignment** ("Alignment" below): the starting score is the race's `alignment` plus the
     class's, kept on the scale: paladins start Good, thieves and witches Callous, everyone else
-    Neutral; a race only leans (elves and halflings a little toward good, half-orcs a little
-    toward evil), never alone out of Neutral. It draws nothing.
+    Neutral; most races only lean (elves and halflings a little toward good, half-orcs a little
+    toward evil), never alone out of Neutral, but the evil races (#255) start on the evil side:
+    goblins, kobolds, lizardfolk, and ratfolk Callous (−200), drow and duergar Evil (−450), so a
+    drow paladin starts Neutral and a goblin thief Evil. It draws nothing.
   - **Weapon skills** ("Weapon skills" below): the race's starting ranks plus the class's, plus
     one set of the class's `weapon_skill_choice` if it has one, at most 10 each; each then
     raises the skills it defaults to. Dice among them roll from their own stream,

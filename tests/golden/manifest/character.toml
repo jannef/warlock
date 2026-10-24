@@ -54,10 +54,20 @@ actions = "infect:the_shakes rest:24h*3"
 screen = "character"
 window = "960x704"
 
+# Light-blindness (#255): a drow in the courtyard three hours on, under a clear sky. The sun
+# dazzles them ("The bright light dazzles you."): they see ten cells around them and no farther
+# (beyond, the courtyard as remembered from the dawn), and the status bar says Dazzled.
+[[golden]]
+name = "drow-dazzled"
+scenario = "courtyard"
+character = "drow,female,warrior"
+actions = "skip:3h weather:clear move:E*6"
+
 # Character creation (#108, #111, #118, #218), over New run on the main menu (no run; the replay
 # goes unused; a debug build, so New run has its seed field and the summary names the seed): the
-# race step with the showcase's character's race preselected; the gender step on "other", which
-# never names the stat it raises (#256: "+1 to one stat, chosen by fate."); the name step
+# race step with the showcase's character's race preselected (thirteen races and Random: the list
+# scrolls, as the class step's does, #255); the gender step on "other", which never names the stat
+# it raises (#256: "+1 to one stat, chosen by fate."); the name step
 # with a name typed (`k` types, though it moves the selection on other screens), the keys as
 # bound, and the random name an empty field gives; and the summary of that character (race,
 # gender, and class each preselected, the name left empty: the first of the race's random names),
@@ -68,6 +78,14 @@ window = "960x704"
 name = "race-screen"
 scenario = "showcase"
 screen = "race"
+
+# The race step scrolled down to the drow (#255), one of the six evil races below the half-orc:
+# its description (light-blind, hard to poison), stat adjustments, eyes, and pace.
+[[golden]]
+name = "race-screen-drow"
+scenario = "showcase"
+screen = "race"
+args = ["--keys", "Down Down Down Down Down Down"]
 
 # The class step (#226), the thief preselected: below its stat adjustments, how fast its levels
 # come, in words ("Levels come quickly.": a thief needs 95 % of the experience).

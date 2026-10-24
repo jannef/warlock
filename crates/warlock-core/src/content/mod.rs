@@ -113,7 +113,7 @@ pub use quest::{
     DEFAULT_DECLINE, GOLD, Goal, MAX_COUNT, MAX_NAME, MAX_QUEST_XP, QuestDef, QuestId, QuestKind,
     QuestTexts, Reward,
 };
-pub use race::{HUNGER, RaceDef, Races};
+pub use race::{HUNGER, LightBlind, RaceDef, Races};
 pub use room_effect::{RoomEffectDef, RoomEffectId, RoomEffects, SpecialRoom};
 pub use scenario::ScenarioDef;
 pub use scroll::{Cast, Reading, ScrollSpell};
@@ -598,7 +598,13 @@ impl Content {
             let size_index = |id: &str| content.size_index(id);
             let skill_id = |id: &str| content.skill_id(id);
             let weapons = &content.weapon_skills;
-            content.races = Races::parse(path, text, has_vision, size_index, skill_id, weapons)?;
+            let percent = crate::damage::MIN_RESISTANCE..=crate::damage::IMMUNE;
+            let resist = |m: &BTreeMap<String, i32>| {
+                content.resolve_per_kind("resist", m, percent.clone(), false)
+            };
+            content.races = Races::parse(
+                path, text, has_vision, size_index, skill_id, weapons, resist,
+            )?;
         }
         let path = "data/names.toml";
         if let Some(text) = files.get_optional(path) {
@@ -1013,19 +1019,9 @@ impl Content {
             .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             let ranks = ranks.iter().map(|&(id, rank)| (id, rank.max() as u8));
             let weapon_skills = WeaponSkills::from_ranks(&self.weapon_skills, ranks);
-            if spec.natural.as_ref().is_some_and(|n| {
-                let bonus = 0..=object::MAX_BONUS;
-                !bonus.contains(&n.defence)
-                    || !bonus.contains(&n.protection)
-                    || n.defence + n.protection == 0
-                    || n.name.is_empty()
-            }) {
-                return Err(err(format!(
-                    "creature `{}`: natural: `defence` and `protection` must be 0 to {}, not both \
-                     0, and `name` given",
-                    spec.id,
-                    object::MAX_BONUS
-                )));
+            if let Some(hide) = &spec.natural {
+                hide.check()
+                    .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             }
             // The status diseases show as comes of a disease, never of a blow.
             let status = |id: &str| {
@@ -3071,7 +3067,19 @@ mod tests {
         assert_eq!(
             races,
             [
-                "elf", "half_elf", "human", "dwarf", "halfling", "gnome", "half_orc"
+                "elf",
+                "half_elf",
+                "human",
+                "dwarf",
+                "halfling",
+                "gnome",
+                "half_orc",
+                "goblin",
+                "drow",
+                "kobold",
+                "lizardfolk",
+                "duergar",
+                "ratfolk"
             ]
         );
         // Every race offers names to every gender, and every scenario names its character.

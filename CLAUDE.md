@@ -188,9 +188,10 @@ marks, `stat marks St 3, To 1`, **dev-only**),
 (the level's special rooms: their plain ground as the effect's `mark`, then a line per room,
 **dev-only**), `ice` (the level's temperature and the thickness of the ice on its water in cm,
 `0`-`9`, `a`-`z` for 10-35, `#` beyond, **dev-only**). The header line has the player's `hp
-17/17` (and `dead` once the run has ended), `hunger hungry` unless Not hungry, and the
+17/17` (and `dead` once the run has ended), `hunger hungry` unless Not hungry, `dazzled` while
+strong light dazzles light-blind eyes, and the
 `temperature`; JSON dumps add `hp`, `defence`, `protection`, `resistances` (by damage type id, the
-word: `{"cold": "resistant"}`), `burden` (`level`, `limit`), `alignment` (the band's id), `hunger`, `effects`
+word: `{"cold": "resistant"}`), `burden` (`level`, `limit`), `alignment` (the band's id), `hunger`, `dazzled`, `effects`
 (status ids), `diseases` (the known ones' ids), `death` (with `of`, the status that killed,
 `cause`, starving, choking, or a trap, and `trap`, the id of the trap that killed),
 `known_traps`, `temperature` (°C to a tenth), `weapon_skills` (by skill id:

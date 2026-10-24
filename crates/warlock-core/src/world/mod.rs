@@ -98,6 +98,7 @@ mod equip;
 mod experience;
 mod fight;
 mod free_blow;
+mod glare;
 mod hash;
 mod hearing;
 mod hunger;
@@ -147,7 +148,9 @@ use crate::action::{Action, Event, Outcome, Rest};
 use crate::alignment::Score;
 use crate::burden::{self, Burden, Load};
 use crate::character::{Character, CharacterSpec};
-use crate::content::{ActionKind, CombatStance, Content, RoomEffectDef, StairsDir, Stance};
+use crate::content::{
+    ActionKind, CombatStance, Content, RaceDef, RoomEffectDef, StairsDir, Stance,
+};
 use crate::geom::{Dir, Pos};
 use crate::hunger::Satiation;
 use crate::light::{LightCache, Sky};
@@ -267,22 +270,25 @@ impl WorldState {
         &self.levels[&self.current_level]
     }
 
+    /// The race of `actor`: the player's when the run has a character; `None` for anyone else,
+    /// who goes by its creature type.
+    pub(crate) fn race_of<'c>(&self, content: &'c Content, actor: &Actor) -> Option<&'c RaceDef> {
+        (self.character.as_ref())
+            .filter(|_| actor.kind == ActorKind::Player)
+            .and_then(|c| c.spec.race(content).ok())
+    }
+
     /// What `actor` carries against what it can (spec §8 "Burden"): the player by their race's
     /// size (and whether it ignores Burdened) when the run has a character, anyone else by its
     /// creature type's size.
     pub(crate) fn load(&self, content: &Content, actor: &Actor) -> Load {
-        let race = (self.character.as_ref())
-            .filter(|_| actor.kind == ActorKind::Player)
-            .and_then(|c| c.spec.race(content).ok());
-        burden::load(actor, race, content)
+        burden::load(actor, self.race_of(content, actor), content)
     }
 
     /// The size of `actor`, an index into [`Content::sizes`]: the player's race's when the run
     /// has a character, else its creature type's.
     pub(crate) fn size_of(&self, content: &Content, actor: &Actor) -> usize {
-        let race = (self.character.as_ref())
-            .filter(|_| actor.kind == ActorKind::Player)
-            .and_then(|c| c.spec.race(content).ok());
+        let race = self.race_of(content, actor);
         race.map_or(content.creature(actor.creature).size, |r| r.size)
     }
 
@@ -1051,6 +1057,8 @@ mod parts_tests;
 mod protection_tests;
 #[cfg(test)]
 mod quest_tests;
+#[cfg(test)]
+mod race_tests;
 #[cfg(test)]
 mod read_tests;
 #[cfg(test)]
