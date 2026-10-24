@@ -17,7 +17,7 @@ hit points a level gives) is `docs/dev/experience.md`.
 | `perception.rs` | `due()`, `own_talents()` (`OwnTalent`), `talents()` (`TalentView`: held rank, the next rank's needs with `met`, `openings`): what the level-up screen and the Talents page (#236) read. |
 | `dump.rs` | layers `talents` (held, `Hardy 2/3`) and `progress` (dev: dues, `due level 3: 3 skill rolls, 1 talent`, takeable ids with choices, discovered kills); JSON `talents`, `due` (`level`, `talents`, `rolls`). |
 | `action.rs` | `Talent { id, choice }` (`talent:hardy`, `talent:weapon_focus:long_blades`; ids keep their case), `Advance(skill)`, dev `LevelUpAuto` (`levelup:auto`), `GrantXp` (`xp:N`); all `Spent::NoTime` or refused. |
-| `rng.rs` | `Rng::levels(seed)`, the `levels` stream, kept in `WorldState::levels_rng: Option<Rng>` **from the first draw** (skill rolls draw from it; stat checks will), so runs that never drew hash as before. |
+| `rng.rs` | `Rng::levels(seed)`, the `levels` stream, kept in `WorldState::levels_rng: Option<Rng>` **from the first draw** (the stat checks of each level, `world/stat_training.rs`; skill rolls, `world/skill_roll.rs`), so runs that never drew hash as before. |
 | `xtask/src/wiki/talents.rs` | `talents.md` (trees with the rules), `talents-by-system.md` (the coverage matrix). |
 
 ## The hooks
@@ -67,7 +67,8 @@ dropped picks, every hook, a free-blow talent, saves and replays, perception and
 
 ## Later waves
 
-Stat training (#231) adds the stat checks on `levels_rng`; the level-up screen, the Talents page, creation picks, and `--talents` (#236) read
+Skill rolls (#230) add `Due::rolls` and draw from `levels_rng`; stat training (#231, done:
+`docs/dev/stats.md` "Training") checks every stat on it once a level, from `level_up`; the level-up screen, the Talents page, creation picks, and `--talents` (#236) read
 `PerceptionView::due`/`talents`; the talent waves add files under `data/talents/` and one read
 each; `granted` talents (races' `versatile`, the birth signs') are computed into `Actor::talents`
 by whoever grants them and never offered (`may_take` refuses them).

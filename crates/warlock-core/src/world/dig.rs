@@ -21,6 +21,7 @@
 
 use super::{Ended, LevelState, Spent, World, article};
 use crate::action::{Breach, Event, MAX_REST};
+use crate::content::StatUse;
 use crate::content::{ActionKind, LevelKind};
 use crate::geom::{Dir, Pos};
 use crate::noise::Act;
@@ -141,6 +142,7 @@ impl World {
         let strength = player.effective_stats(&self.content).score(Stat::Strength);
         let work = dig_work(power, strength);
         self.make_noise(self.state.player, Act::Dig);
+        self.train_stat(StatUse::Dig);
         let level = self.state.current();
         let Some(breaks) = (level.terrain.get(at)).and_then(|t| self.content.terrain(*t).breaks)
         else {

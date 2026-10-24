@@ -203,14 +203,17 @@ fn a_roll_spends_half_the_marks_and_draws_from_the_levels_stream_only() {
     set(&mut w, "athletics", 20, 50);
     let gameplay = w.state.rng.clone();
     let training = w.state.training.clone();
-    assert!(w.state.levels_rng.is_none(), "nothing drew from it yet");
+    let levels = w.state.levels_rng.clone();
     run(&mut w, "advance:athletics");
     assert_eq!(trained(&w, "athletics").map(|t| t.marks), Some(25));
     run(&mut w, "advance:athletics");
     assert_eq!(trained(&w, "athletics").map(|t| t.marks), Some(12));
     assert_eq!(w.state.rng, gameplay, "the gameplay stream is untouched");
     assert_eq!(w.state.training, training, "and the training stream");
-    assert!(w.state.levels_rng.is_some());
+    assert_ne!(
+        w.state.levels_rng, levels,
+        "the rolls drew from the levels stream"
+    );
     // The meter shows the ladder step: 12 marks is 1d5, a quarter.
     let view = w.perception();
     let own = view.own_skills();

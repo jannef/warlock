@@ -779,7 +779,10 @@ fn starting_ranks_come_from_race_and_class_and_never_move_the_stats() {
     for table in ["races", "classes"] {
         files.edit_table(table, |text| {
             (text.lines())
+                // Kit lines that go with a weapon skill or style go too (they would name what
+                // the class no longer trains).
                 .filter(|l| !l.starts_with("weapon_skill") && !l.starts_with("style"))
+                .filter(|l| !l.contains("trained ="))
                 .map(|l| format!("{l}\n"))
                 .collect()
         });

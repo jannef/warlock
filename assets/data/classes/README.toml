@@ -1,7 +1,7 @@
 # Classes (spec §8 "Character creation"): the third choice of a new run, one file per class
 # holding one `[[class]]`. A class adjusts the starting scores (see ../races.toml for how they add
-# up), gives hit points, and trains the character in skills and weapon skills: no equipment or
-# spells come with it. This file holds only the notes below: a file of comments defines nothing.
+# up), gives hit points, trains the character in skills and weapon skills, and gives a starting
+# kit: no spells come with it. This file holds only the notes below: a file of comments defines nothing.
 #
 # The classes are offered in path order, so the files are named `NN-id.toml` (`01-barbarian.toml`):
 # the number keeps the order. The adventurers come first, then everyday folk; a new class takes
@@ -44,5 +44,29 @@
 #   styles, style_choice  the same for fighting styles (spec §8 "Fighting styles"; the styles in
 #                 weapon_skills.toml), rolled after everything else (the thief's Twin Blades or
 #                 Duelist)
+#   kit           what the class starts with (spec §8 "Character creation"), first in the pack;
+#                 the race's kit (races.toml) and any the birth sign gives (horoscope.toml) come
+#                 after it, and a scenario's `carry` on top. Each line is one item, or a few of
+#                 one, as level files place objects (`"ration*2"`, `"gem:ruby"`): a string is
+#                 carried, and a table says how it is kept:
+#                   { carry = "..." }  in the pack (the same as a plain string)
+#                   { wield = "..." }  wielded or readied: a weapon or shield in hand (a second
+#                                      light weapon goes to the off hand), a missile weapon or
+#                                      missiles, a tool; each in the first free slot it fits (one
+#                                      that finds none is carried)
+#                   { wear = "..." }   worn: armour, cloaks, gloves, boots, rings, amulets
+#                 and may add:
+#                   trained = "id"     only if the class trained that weapon skill or fighting
+#                                      style: its weapon_skills or styles, or the set of its
+#                                      choice that was picked (the barbarian's great axe with
+#                                      axes, the thief's second dagger with Twin Blades)
+#                   gender = "female"  only for that gender (male, female, or other)
+#                   magic = "any"      a base item (one with a `kind`) made as loot makes it, its
+#                                      rarity rolled: "any" (perhaps magic), "magic" (magic or
+#                                      rare), or "rare"; unidentified
+#                 `"a|b|c"` is one of them, picked at random when the character is made (from its
+#                 own stream, so no other roll moves). Food is as fresh as the run is new. Nobody
+#                 starts Strained; only the aristocrat and the merchant may start Burdened, by
+#                 their wealth.
 #
 # Balance is not a goal: some choices are poor on purpose.

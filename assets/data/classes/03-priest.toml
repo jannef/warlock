@@ -10,3 +10,14 @@ known_for = ["heal", "knowledge"]
 rolls = 2
 weapon_skills = { maces = 2, shield_block = 1 }
 styles = { sword_and_board = 1 }
+# Mace and buckler, the holy symbol, and candles for the rites.
+kit = [
+    { wield = "mace" },
+    { wield = "buckler" },
+    { wear = "wool_cloak" },
+    { wear = "amber_amulet" },
+    "scroll_of_light",
+    "candle*3",
+    "bread",
+    "gold_coin*10",
+]

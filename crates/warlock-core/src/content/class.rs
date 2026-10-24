@@ -4,11 +4,13 @@
 //! in skills (spec §8 "Skills"), by dice, names the skills it is known for and how many skill
 //! rolls each level gives, and gives starting ranks in weapon skills (spec §8 "Weapon skills")
 //! and fighting styles (spec §8 "Fighting styles"): some always, and perhaps one set of a
-//! choice, rolled when the character is made.
+//! choice, rolled when the character is made. Its `kit` is what the character starts with
+//! ([`super::kit`]).
 //!
 //! The classes are offered in path order: the files are named `NN-id.toml`, so the number keeps
 //! the order (adventurers first, then everyday folk) and a new class picks its place.
 
+use super::kit::{Kit, KitLineSpec};
 use super::weapon_skill::Ranked;
 use super::{ContentError, FACTORS, WeaponSkillId, WeaponSkillTable, duplicate_id};
 use crate::combat::MAX_BASE_HP;
@@ -64,6 +66,8 @@ struct ClassSpec {
     styles: BTreeMap<String, Dice>,
     #[serde(default)]
     style_choice: Vec<BTreeMap<String, Dice>>,
+    #[serde(default)]
+    kit: Vec<KitLineSpec>,
 }
 
 /// A class, in the order offered.
@@ -103,6 +107,23 @@ pub struct ClassDef {
     /// Sets of starting ranks in fighting styles of which one is picked at random (the thief:
     /// Twin Blades or Duelist); empty for none.
     pub style_choice: Vec<Vec<(WeaponSkillId, Dice)>>,
+    /// The starting kit as written; resolved by the loader into `kit`.
+    pub(super) kit_spec: Vec<KitLineSpec>,
+    /// What the class starts with (spec §8 "Character creation"): first in a new character's
+    /// pack; filled in by the loader once objects are known.
+    pub kit: Kit,
+}
+
+impl ClassDef {
+    /// Every weapon skill and fighting style the class may start a character in: its fixed
+    /// ranks and every set of its choices.
+    pub fn trainable(&self) -> Vec<WeaponSkillId> {
+        let sets = (self.weapon_skill_choice.iter()).chain(&self.style_choice);
+        let ranks = (self.weapon_skills.iter())
+            .chain(&self.styles)
+            .chain(sets.flatten());
+        ranks.map(|&(id, _)| id).collect()
+    }
 }
 
 impl ClassDef {
@@ -221,6 +242,8 @@ impl ClassDef {
             weapon_skill_choice,
             styles,
             style_choice,
+            kit_spec: spec.kit,
+            kit: Kit::default(),
         })
     }
 

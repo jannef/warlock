@@ -10,3 +10,12 @@ known_for = ["athletics"]
 rolls = 2
 weapon_skills = { long_blades = 2, shield_block = "1d2" }
 styles = { sword_and_board = 1 }
+# Sword and shield, plain leathers and a cap, a ration, and a soldier's pay.
+kit = [
+    { wield = "long_sword" },
+    { wield = "small_shield" },
+    { wear = "leather_jerkin" },
+    { wear = "leather_cap" },
+    "ration",
+    "gold_coin*20",
+]

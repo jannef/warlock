@@ -1,0 +1,12 @@
+# The commoner's supper (data/classes/): a turnip, worth nothing to anyone else.
+[[object]]
+id = "turnip"
+name = "turnip"
+glyph = "%"
+fg = "#d8c4dc"
+class = "food"
+materials = ["plant"]
+weight = 250
+value = 0
+stackable = true
+food = { nutrition = 250, turns = 2, keeps = "20d", lasts = "40d" }

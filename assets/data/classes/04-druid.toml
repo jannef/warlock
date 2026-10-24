@@ -10,3 +10,13 @@ known_for = ["handle_animal", "survival"]
 rolls = 2
 weapon_skills = { staves = 2, slings = 1 }
 styles = { staff_fighter = 1 }
+# Staff and sling, a stone pouch, and the forest's gifts: a healing root and windfall apples.
+kit = [
+    { wield = "quarterstaff" },
+    { wield = "sling" },
+    { wield = "sling_stone*20" },
+    { wear = "travelling_cloak" },
+    "angelica_root",
+    "apple*4",
+    "gold_coin*3",
+]

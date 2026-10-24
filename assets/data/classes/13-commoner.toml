@@ -9,3 +9,9 @@ skills = { athletics = "2d4+4", handle_animal = "2d4+4" }
 rolls = 2
 weapon_skills = { maces = 1 }
 styles = { brawler = 1 }
+# A stick and a turnip, and three worthless coppers.
+kit = [
+    { wield = "club" },
+    "turnip",
+    "copper_coin*3",
+]

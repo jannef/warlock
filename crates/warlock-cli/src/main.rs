@@ -173,14 +173,18 @@ fn parse_run_actions(args: &RunArgs) -> Result<Vec<Action>, String> {
     parse_actions(args.actions.as_deref().unwrap_or("")).map_err(|e| format!("--actions: {e}"))
 }
 
-/// A fresh run of `--scenario` with `--seed`, `--character`, and `--name`.
+/// A fresh run of `--scenario` with `--seed`, `--character`, and `--name`: a character chosen
+/// with `--character` or `--name` starts with its kit, the scenario's own with the scenario's
+/// pack (spec §8 "Character creation").
 fn start(content: Arc<Content>, args: &RunArgs) -> Result<World, String> {
-    World::with_character_named(
+    let kit = args.character.is_some() || args.name.is_some();
+    World::start_run(
         content,
         &args.scenario,
         args.seed,
         args.character.as_ref(),
         args.name.as_deref(),
+        kit,
     )
     .map_err(|e| format!("cannot start scenario `{}`: {e}", args.scenario))
 }

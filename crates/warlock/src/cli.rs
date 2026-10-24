@@ -79,8 +79,8 @@ pub struct Args {
     pub new: bool,
 
     /// Enable developer features in release builds (F2 reveal map, F3 next vision profile, F4
-    /// light values, F5/F9 snapshots, F6 skip an hour, F7 next weather). Always on in debug
-    /// builds.
+    /// light values, F5/F9 snapshots, F6 skip an hour, F7 next weather, New run's seed field).
+    /// Always on in debug builds.
     #[arg(long)]
     pub dev: bool,
 

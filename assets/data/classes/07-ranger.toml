@@ -10,3 +10,13 @@ known_for = ["spot", "survival", "woodcraft"]
 rolls = 3
 weapon_skills = { bows = 2, short_blades = 1 }
 styles = { marksman = 1 }
+# Bow and quiver, a short sword, and leathers for the borderlands.
+kit = [
+    { wield = "short_bow" },
+    { wield = "arrow*24" },
+    { wield = "short_sword" },
+    { wear = "leather_jerkin" },
+    { wear = "leather_boots" },
+    "dried_meat*3",
+    "gold_coin*8",
+]

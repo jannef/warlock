@@ -13,9 +13,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
   races or classes) gives them itself: `vision` (default `normal`), `stats` and `potential` as for
   creature types (default 10 each, the potential the score), and `hp` (the hit points beyond
   Toughness a race and a class would give, 0 to 1000, default 0); with a character these four are
-  refused; such a player is trained in no skill (§8 "Skills"). A scenario may give the player a
-  starting pack, `carry = ["ration*3"]` (as level files place objects; no corpses): the depths three food rations, the world three food rations and two strips of dried
-  meat, the forest two food rations and three apples (§8 "Hunger"). Every built-in scenario has a
+  refused; such a player is trained in no skill (§8 "Skills"). A scenario may give a starting
+  pack, `carry = ["ration*3"]` (as level files place objects; no corpses): on top of the
+  character's starting kit when the player chose the character (§8 "Character creation":
+  New run, `--character`, `--name`; stackable things join the kit's), else alone (a launch on
+  the scenario's own character: `--scenario` alone, tests, golden walks). No built-in scenario
+  gives one: the kits bring food, and more on top would burden the smallest. Every
+  built-in scenario has a
   character with normal eyes: the showcase a human female thief, the arena a halfling male thief,
   the courtyard a human female druid, the depths and the vast level a human male warrior, the forest
   a human female ranger, the world a human male ranger. The `character` table may name them

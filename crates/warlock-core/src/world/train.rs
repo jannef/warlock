@@ -12,6 +12,7 @@
 //! Only the player trains for now; creatures keep the skills their type gives them.
 
 use super::World;
+use crate::content::StatUse;
 use crate::skills::Use;
 
 impl World {
@@ -21,6 +22,7 @@ impl World {
         let content = &self.content;
         (self.state.player().skills.iter())
             .any(|(id, _)| content.skill(id).marks.iter().any(|m| m.on == used))
+            || StatUse::of_skill(used).is_some_and(|s| self.trains_stat(s))
     }
 
     /// The player made a meaningful use `used` of their skills: each trained skill with a mark
@@ -40,6 +42,9 @@ impl World {
                 let actor = self.state.actors.get_mut(&player).expect("the player");
                 actor.skills.mark(id);
             }
+        }
+        if let Some(stat) = StatUse::of_skill(used) {
+            self.train_stat(stat);
         }
     }
 }

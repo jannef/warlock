@@ -43,12 +43,17 @@
 //!   `character/styles/<race>,<gender>,<class>`: the class's (in skill order), the pick of the
 //!   choice, then the chosen set's; so neither the stats nor the weapon skills move. Styles
 //!   raise the styles they default to, like weapon skills.
+//! - **Starting kit** (spec §8 "Character creation"): what the class gives, then the race, then
+//!   the birth sign, from yet another stream, `character/kit/<race>,<gender>,<class>`
+//!   ([`crate::kit`]); a line may go only with a weapon skill or style the class trained (the
+//!   picked choice included), so the kit follows those rolls without moving them.
 //!
 //! Everything follows from the content, the spec, the run seed, and the start date, so a run
 //! (and its replay) is reproduced by its scenario, seed, and character.
 
 use crate::alignment::Score;
-use crate::content::{Calendar, ClassDef, Content, RaceDef, ScenarioDef, Sign};
+use crate::content::{Calendar, ClassDef, Content, RaceDef, ScenarioDef, Sign, WeaponSkillId};
+use crate::kit::{self, Pack};
 use crate::rng::Rng;
 use crate::skills::{self, Skills};
 use crate::stats::{self, AVERAGE, PerStat, Stat, Stats, adjusted};
@@ -294,6 +299,9 @@ pub struct Start {
     /// The starting alignment score (spec §8 "Alignment"): the race's plus the class's.
     pub alignment: Score,
     pub character: Character,
+    /// The starting kit: what the class, the race, and the sign give (a scenario may add to it
+    /// or leave it out, [`kit::starting_pack`]).
+    pub kit: Pack,
 }
 
 impl CharacterSpec {
@@ -342,38 +350,49 @@ impl CharacterSpec {
         }
         let potential = stats::roll(&race.potential, &mut rng);
         let skills = starting_skills(race, class, &mut rng);
+        let (weapon_skills, trained) = self.weapon_skills(content, seed);
+        let character = Character {
+            name: random_name(content, seed, self, 0).unwrap_or_else(|| NAMELESS.into()),
+            spec: self.clone(),
+            raised,
+            born,
+            sign,
+        };
         Ok(Start {
             stats: starting_stats(by, potential, content.races().base_potential),
             vision: race.vision.clone(),
             hp: race.hp + class.hp,
             skills,
-            weapon_skills: self.weapon_skills(content, seed),
+            weapon_skills,
             alignment: Score::new(race.alignment + class.alignment),
-            character: Character {
-                name: random_name(content, seed, self, 0).unwrap_or_else(|| NAMELESS.into()),
-                spec: self.clone(),
-                raised,
-                born,
-                sign,
-            },
+            kit: kit::roll(content, &character, &trained, seed),
+            character,
         })
     }
 }
 
 impl CharacterSpec {
-    /// The starting ranks in weapon skills of this character in a run with `seed`: see the
-    /// module docs. Content without races or classes gives none.
-    fn weapon_skills(&self, content: &Content, seed: u64) -> WeaponSkills {
+    /// The starting ranks in weapon skills of this character in a run with `seed` (see the
+    /// module docs), and the weapon skills and styles the class trained: its fixed ranks and the
+    /// sets of its choices that were picked (what a kit's `trained` asks). Content without
+    /// races or classes gives none.
+    fn weapon_skills(&self, content: &Content, seed: u64) -> (WeaponSkills, Vec<WeaponSkillId>) {
         let (Ok(race), Ok(class)) = (self.race(content), self.class(content)) else {
-            return WeaponSkills::default();
+            return (WeaponSkills::default(), Vec::new());
         };
         let mut rng = Rng::stream(seed, &format!("character/weapon-skills/{self}"));
         let mut ranks = Vec::new();
         weapon_skills::roll_ranks(&race.weapon_skills, &mut rng, &mut ranks);
+        let mut trained: Vec<WeaponSkillId> = Vec::new();
+        let mut train = |set: &[(WeaponSkillId, crate::dice::Dice)]| {
+            trained.extend(set.iter().map(|&(id, _)| id));
+        };
+        train(&class.weapon_skills);
         weapon_skills::roll_ranks(&class.weapon_skills, &mut rng, &mut ranks);
-        let choose = |rng: &mut Rng, choice: &[weapon_skills::RankDice], ranks: &mut Vec<_>| {
+        let mut choose = |rng: &mut Rng, choice: &[weapon_skills::RankDice], ranks: &mut Vec<_>| {
             if !choice.is_empty() {
                 let picked = &choice[rng.index(choice.len())];
+                train(picked);
                 weapon_skills::roll_ranks(picked, rng, ranks);
             }
         };
@@ -381,10 +400,12 @@ impl CharacterSpec {
         let mut rng = Rng::stream(seed, &format!("character/styles/{self}"));
         weapon_skills::roll_ranks(&class.styles, &mut rng, &mut ranks);
         choose(&mut rng, &class.style_choice, &mut ranks);
+        trained.extend(class.styles.iter().map(|&(id, _)| id));
         let ranks = ranks
             .into_iter()
             .map(|(id, rank)| (id, rank.clamp(0, i32::from(crate::content::MAX_RANK)) as u8));
-        WeaponSkills::from_ranks(content.weapon_skills(), ranks)
+        let skills = WeaponSkills::from_ranks(content.weapon_skills(), ranks);
+        (skills, trained)
     }
 }
 

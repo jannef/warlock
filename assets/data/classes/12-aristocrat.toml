@@ -10,3 +10,14 @@ known_for = ["knowledge"]
 rolls = 2
 weapon_skills = { long_blades = 1 }
 styles = { duelist = 1 }
+# Unfair on purpose: a fine rapier (perhaps enchanted), an heirloom ring (magic or rare, as
+# yet unknown), furs, a jewel, and a heavy purse, which may well weigh them down.
+kit = [
+    { wield = "rapier", magic = "any" },
+    { wear = "gold_ring", magic = "magic" },
+    { wear = "fur_cloak" },
+    { wear = "leather_boots" },
+    "gem:ruby|gem:sapphire|gem:emerald",
+    "gold_coin*300",
+    "apple*2",
+]

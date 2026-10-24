@@ -10,3 +10,14 @@ skills = { heal = "2d6+10", spellcraft = "2d6+10", concentration = "2d4+4", inti
 known_for = ["heal", "spellcraft"]
 rolls = 2
 weapon_skills = { daggers = 1, staves = 1 }
+# A ritual knife, a charm that may be more than it seems, herbs, and an unlabelled potion.
+kit = [
+    { wield = "dagger" },
+    { wear = "wool_cloak" },
+    { wear = "bone_amulet", magic = "any" },
+    "angelica_root*2",
+    "red_potion|blue_potion",
+    "candle*2",
+    "apple*2",
+    "gold_coin*6",
+]

@@ -11,3 +11,15 @@ known_for = ["open_lock", "steal", "stealth", "tumble"]
 rolls = 3
 weapon_skills = { daggers = 2, thrown = 1 }
 style_choice = [{ twin_blades = 1 }, { duelist = 1 }]
+# A dagger (two, for Twin Blades; a stiletto up the sleeve for the Duelist), dark leathers, and
+# a purse that was someone else's.
+kit = [
+    { wield = "dagger" },
+    { wield = "dagger", trained = "twin_blades" },
+    { carry = "stiletto", trained = "duelist" },
+    { wear = "leather_jerkin" },
+    { wear = "wool_cloak" },
+    { wear = "leather_gloves" },
+    "bread",
+    "gold_coin*25",
+]

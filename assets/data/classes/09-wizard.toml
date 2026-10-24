@@ -9,3 +9,15 @@ skills = { concentration = "2d6+10", knowledge = "2d6+10", spellcraft = "2d6+10"
 known_for = ["concentration", "knowledge", "spellcraft"]
 rolls = 2
 weapon_skills = { staves = 1 }
+# A staff, candles for the long nights, and three scrolls: light, identify, and one spell to
+# be reckoned with.
+kit = [
+    { wield = "quarterstaff" },
+    { wear = "wool_cloak" },
+    "scroll_of_light",
+    "scroll_of_identify",
+    "scroll_of_fireball|scroll_of_frost|scroll_of_lightning",
+    "candle*4",
+    "bread",
+    "gold_coin*15",
+]

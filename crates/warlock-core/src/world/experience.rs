@@ -15,6 +15,7 @@
 //! made its state.
 
 use super::{Due, Spent, World};
+use crate::content::StatUse;
 use crate::content::{Content, CreatureId, Factor, LevelKind, parse_local_area};
 use crate::stats::Stat;
 use crate::talent::TalentMods;
@@ -87,6 +88,7 @@ impl World {
             self.news
                 .push(format!("You learn something of {}.", def.plural));
             gain += first;
+            self.train_stat(StatUse::Discovered);
         }
         self.grant_xp(gain);
     }

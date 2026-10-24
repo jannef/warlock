@@ -10,3 +10,11 @@ known_for = ["balance", "tumble"]
 rolls = 2
 weapon_skills = { unarmed = 2, staves = 1 }
 style_choice = [{ brawler = 1 }, { staff_fighter = 1 }]
+# A vow of poverty: a staff or bound hands, alms in copper, and an apple or three.
+kit = [
+    { wield = "quarterstaff", trained = "staff_fighter" },
+    { wear = "leather_gloves", trained = "brawler" },
+    { wear = "wool_cloak" },
+    "apple*3",
+    "copper_coin*7",
+]

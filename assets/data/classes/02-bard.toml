@@ -10,3 +10,12 @@ known_for = ["bluff", "music"]
 rolls = 4
 weapon_skills = { short_blades = 1, daggers = "1d2" }
 styles = { duelist = 1 }
+# A blade for the road, a lute for the inn, and the night's takings.
+kit = [
+    { wield = "short_sword|scimitar" },
+    { wear = "travelling_cloak" },
+    "dagger",
+    "lute",
+    "bread",
+    "gold_coin*30",
+]

@@ -35,7 +35,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `Character::born_in_year_of("manticore")`, and `Sign::is_element`/`is_animal`.
   - **Starting scores**: 10 plus the race's adjustment, plus the gender's (male: Strength +1;
     female: Dexterity +1; other: +1 to a stat picked uniformly from the run seed's
-    `character/gender` stream, so the same seed always raises the same stat), plus the class's,
+    `character/gender` stream, so the same seed always raises the same stat; character creation
+    never names it, the character screen does once the run has begun, §6), plus the class's,
     plus the birth sign's animal's and element's, kept within 1 to 40.
   - **Dice**: adjustments that are dice are rolled in the background, ADOM-like, from the stream
     `character/rolls/<race>,<gender>,<class>`, in this order: the race's scores, the class's, the
@@ -66,16 +67,50 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `character/styles/<race>,<gender>,<class>`: the class's (in skill order), the pick of the
     choice, then the chosen set's; so they never move a stat or a weapon skill roll. Each raises
     the styles it defaults to.
+  - **Starting kit** (`warlock-core/src/kit.rs`, data `content/kit.rs`; #257): what the character
+    carries, wields, and wears at the start. The class's `kit` (`data/classes/`) comes first,
+    then the race's few racial items (`data/races.toml`), then the birth sign's animal's and
+    element's (`data/horoscope.toml`: the hook for the horoscope; none give anything yet). A kit
+    is a list of lines, each one item or a few of one, as level files place objects: a string is
+    carried, a table says `carry`, `wield` (wielded or readied: hands, missile weapon, missiles,
+    Tool slot), or `wear`, and may add `trained` (only if the class trained that weapon skill or
+    fighting style: its fixed ranks, or the set of its choice that was picked; never the race's
+    ranks or defaults), `gender` (only for that gender: the hook for gender's items), and
+    `magic` (a base item made as loot makes it at item level 1, its rarity rolled at least
+    `any`, `magic`, or `rare`); `"a|b|c"` is one of them. Each item goes into the pack in order
+    (a stackable one joins a stack of the same), and a `wield` or `wear` item into the first free
+    slot it fits (a second light weapon to the off hand); one that finds none is carried. Kits
+    roll from a stream of their own, `character/kit/<race>,<gender>,<class>`, in that order: a
+    line draws only if it applies, one draw to pick among alternatives, then for a `magic` line
+    the loot draws (rarity, affixes, a rare name, an ornament); so no stat, skill, weapon skill,
+    or style roll moves. Kit items are what they are: magic ones unidentified,
+    food made when the run starts (§8 "Hunger"). Data is checked when content loads (every item
+    exists, what is wielded or worn fits a slot of that kind, `magic` only on base items, a
+    class's `trained` only what it trains). Unfair on purpose: the aristocrat sets out rich, with
+    a perhaps magic rapier and an heirloom ring (magic or rare), the merchant with goods and gems,
+    the commoner with a stick and a turnip; nobody starts Strained, and only the aristocrat and
+    the merchant may start Burdened (a test checks the weakest character of every combination,
+    every die at its least and the worst sign). **Who starts with it**: a run whose character
+    the player chose, that is one started from New run's character creation, or by the game or
+    `warlock-cli` with `--character` or `--name`, or a replay that records the kit; the
+    scenario's `carry` comes on top (§7 "Scenarios"). A run on the scenario's own character that
+    nobody chose (`--scenario` alone, tests, golden walks, replays from before kits) starts with
+    the scenario's pack alone, as before kits. The world state and replays record which
+    (`kit`). The summary of character creation (§6) lists what the run starts with, each stack
+    as named ("a dagger (wielded)", "2 wool cloaks"); it never names the seed. The wiki lists
+    every class's kit and race's additions.
   - Balance is deliberately not a goal: some combinations are poor (a halfling commoner), and
     classes do nothing but adjust starting scores, give hit points, train skills, give
-    weapon skills and fighting styles, and set where the alignment starts. No other D&D concept
-    comes with them (equipment, spells; the alignment is good against evil only, not D&D's grid).
+    weapon skills and fighting styles, give a starting kit, and set where the alignment starts.
+    No other D&D concept comes with them (spells; the alignment is good against evil only, not
+    D&D's grid).
   - The character (`Character`: the name, the race, gender, and class ids, the stat the gender
     raised, the birth date, and the birth sign) is part of the world state (saved, hashed) and
-    shown on the character screen; replays record the choice and the name only, and since
-    everything else follows from the content, the choice, the seed, and the start date, a run is
-    reproduced by its scenario, seed, character, and name. `World::new` starts as the scenario's
-    character, `World::with_character` as a given one, `World::with_character_named` named.
+    shown on the character screen; replays record the choice, the name, and whether the run
+    started with the kit, and since everything else follows from the content, the choice, the
+    seed, and the start date, a run is reproduced by its scenario, seed, character, name, and
+    kit. `World::new` starts as the scenario's character, `World::with_character` as a given
+    one, `World::with_character_named` named, `World::start_run` with or without the kit.
 - **Alignment** (`warlock-core/src/alignment.rs`, `content/alignment.rs`, `world/alignment.rs`;
   #254): good against evil, as ADOM has law against chaos.
   - **The score**: the player has a hidden integer score from −1000 (as evil as can be) to 1000

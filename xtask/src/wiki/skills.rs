@@ -181,7 +181,7 @@ pub(super) fn skill_ladder(content: &Content) -> String {
 }
 
 /// The skill rolls each class gives a level and the skills it is known for, then the races'
-/// extra rolls, in the order New run offers them; and what Intelligence adds.
+/// extra rolls, each by name; and what Intelligence adds.
 pub(super) fn skill_rolls(content: &Content) -> String {
     let names = |ids: &[SkillId]| -> String {
         let parts: Vec<&str> = ids.iter().map(|&id| skill_name(content, id)).collect();
@@ -192,7 +192,9 @@ pub(super) fn skill_rolls(content: &Content) -> String {
         }
     };
     let mut out = String::from("| Class | Rolls a level | Known for |\n|---|---:|---|\n");
-    for c in content.classes() {
+    let mut classes: Vec<_> = content.classes().iter().collect();
+    classes.sort_by(|a, b| a.name.cmp(&b.name));
+    for c in classes {
         let _ = writeln!(
             out,
             "| {} | {} | {} |",
@@ -202,7 +204,9 @@ pub(super) fn skill_rolls(content: &Content) -> String {
         );
     }
     out.push_str("\n| Race | Extra rolls a level |\n|---|---:|\n");
-    for r in &content.races().list {
+    let mut races: Vec<_> = content.races().list.iter().collect();
+    races.sort_by(|a, b| a.name.cmp(&b.name));
+    for r in races {
         let _ = writeln!(out, "| {} | {} |", r.name, r.rolls);
     }
     let rules = content.skill_rolls();
