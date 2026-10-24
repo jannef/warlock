@@ -657,7 +657,8 @@ fn status_segments(world: &World, clock: Clock, unit: TemperatureUnit) -> Vec<Se
     // where the player knows it, and there it matters more than the date: it changes the light
     // and how far one sees. Hit points matter most after the level: they outlast the time, and
     // so do the status effects the player suffers (by name, the most important first: the last
-    // gives way first), hunger (shown unless the player is Not hungry), and the burden (shown
+    // gives way first), Dazzled (strong light on light-blind eyes, spec §8 "Character
+    // creation"), hunger (shown unless the player is Not hungry), and the burden (shown
     // when there is one), which slows everything the player does; hunger outlasts the burden. The
     // character level (`Lv 3`) comes after them and goes before them, but after the time. The
     // temperature where the player is (always, underground too) sits after the weather; it
@@ -673,6 +674,7 @@ fn status_segments(world: &World, clock: Clock, unit: TemperatureUnit) -> Vec<Se
         Segment::new(1, format!("HP {hp}/{max_hp}")),
     ];
     let rest = [
+        (view.dazzled()).then(|| Segment::new(1, "Dazzled")),
         hunger.map(|h| Segment::new(1, h.name())),
         (burden != Burden::Unburdened).then(|| Segment::new(1, burden.name())),
         Some(Segment::new(
@@ -870,6 +872,44 @@ mod tests {
             "Hoard  ·  HP 10/10"
         );
         assert!(fit_segments(&segments, 55).contains("Burdened  ·  Lv 1  ·  08:"));
+    }
+
+    #[test]
+    fn the_status_bar_says_dazzled_while_strong_light_dazzles_light_blind_eyes() {
+        let world_as = |race: &str| {
+            let mut files = ContentFiles::builtin();
+            files.edit_table("races", |text| {
+                format!(
+                    "{text}\n[[race]]\nid = \"blind\"\nname = \"Blind\"\ndescription = \"Blind.\"\n\
+                     vision = \"normal\"\nage = [20, 30]\n\
+                     light_blind = {{ glare = 200, sight = 5, to_hit = -1 }}\n"
+                )
+            });
+            files.insert(
+                "levels/glare.toml",
+                "name = \"Glare\"\nambient = [255, 255, 255, 0]\nmap = '''\n#####\n#@..#\n#####\n'''\n\
+                 [legend]\n\"@\" = { terrain = \"floor\", spawn = \"player\" }\n",
+            );
+            files.insert(
+                "scenarios/glare.toml",
+                "name = \"Glare\"\nstart_level = \"glare\"\n",
+            );
+            let content = Arc::new(Content::load(&files).expect("valid"));
+            let spec = format!("{race},male,warrior").parse().expect("spec");
+            World::with_character(content, "glare", None, Some(&spec)).expect("world")
+        };
+        let texts = |w: &World| -> Vec<String> {
+            status_segments(w, Clock::H24, TemperatureUnit::Celsius)
+                .into_iter()
+                .map(|s| s.text)
+                .collect()
+        };
+        assert_eq!(
+            texts(&world_as("blind"))[2],
+            "Dazzled",
+            "after the hit points"
+        );
+        assert!(!texts(&world_as("human")).contains(&"Dazzled".to_string()));
     }
 
     #[test]

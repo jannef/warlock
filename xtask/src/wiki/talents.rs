@@ -38,16 +38,20 @@ pub(super) fn talents(content: &Content) -> String {
 }
 
 /// The coverage matrix: every system of the closed list with the talents that touch it, and
-/// whether the bar (`[coverage]` in `data/talents.toml`) already holds it.
+/// whether the bar (`[coverage]` in `data/talents.toml`) already holds it. Systems and talents
+/// sort by name, never by file order.
 pub(super) fn by_system(content: &Content) -> String {
     let book = content.talents();
     let bar = book.coverage;
+    let mut systems: Vec<_> = (0u8..).zip(&book.systems).collect();
+    systems.sort_by(|a, b| a.1.name.cmp(&b.1.name));
     let mut out = String::from(
         "| System | Talents | Class abilities | Held to the bar |\n|---|---|---|---|\n",
     );
-    for (i, system) in (0u8..).zip(&book.systems) {
+    for (i, system) in systems {
         let id = warlock_core::content::SystemId(i);
-        let names: Vec<String> = (book.of_system(id)).map(|(_, t)| t.name.clone()).collect();
+        let mut names: Vec<String> = (book.of_system(id)).map(|(_, t)| t.name.clone()).collect();
+        names.sort();
         // Class abilities by name (a shared one once), sorted.
         let mut class: Vec<String> = (content.classes().iter())
             .flat_map(|c| &c.abilities)

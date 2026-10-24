@@ -6,7 +6,8 @@
 //! the experience it earns: [`World::judge_kill`]), attacking a shopkeeper, theft, and paying
 //! what is owed (`shop.rs`: [`World::player_did`]), eating a corpse of one's own race or of a
 //! peaceful creature who talks (`eat.rs`: [`World::ate_corpse`]), and a quest's own shift on
-//! completion (`quest.rs`). Stealing (#234) will be a [`Deed::Theft`] too.
+//! completion (`quest.rs`). Stealing (`steal.rs`: `World::got_away_with`, a theft that took something)
+//! is a [`Deed::Theft`] too.
 //!
 //! **Readers**: good folk turn cold toward an Evil or Wicked character, evil folk toward a Good
 //! or Saintly one ([`World::scorns`]): a cold greeting in place of their words

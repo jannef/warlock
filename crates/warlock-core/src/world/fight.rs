@@ -55,7 +55,7 @@
 //! beside an opportunist its blow; [`World::second_blow`] decides each.
 
 use super::free_blow::{self, Cue, Free, FreeBlow};
-use super::{Actor, ActorId, AttackSkills, Spent, World};
+use super::{Actor, ActorId, AttackSkills, Spent, World, WorldState};
 use crate::action::{AttackKind, Event};
 use crate::combat::{self, Blow, Category, Profile, Strike, Target};
 use crate::content::{
@@ -334,14 +334,16 @@ pub(super) struct Guard<'a> {
 }
 
 impl<'a> Guard<'a> {
-    /// The guard of `target` (alive, or fallen this action), if it is known.
-    pub(super) fn of(target: Option<&Actor>, content: &'a Content) -> Self {
+    /// The guard of `target` (alive, or fallen this action), if it is known, in `state` (the
+    /// player's race may give them a hide).
+    pub(super) fn of(target: Option<&Actor>, content: &'a Content, state: &WorldState) -> Self {
         let Some(target) = target else {
             return Self::default();
         };
+        let race = state.race_of(content, target);
         Self {
-            hide: (content.creature(target.creature).natural.as_ref()).map(|h| h.name.as_str()),
-            soak: target.soaked_by(content),
+            hide: target.hide(content, race).map(|h| h.name.as_str()),
+            soak: target.soaked_by(content, race),
         }
     }
 }
@@ -555,21 +557,25 @@ impl World {
         actor.defence(
             &self.content,
             self.state.load(&self.content, actor).penalty(),
+            self.state.race_of(&self.content, actor),
         )
     }
 
     /// The Protection of actor `id` (spec §8 "Combat"): what it wears and its hide soak off
     /// every physical hit, by kind; none for one that is gone.
     pub(crate) fn protection_of(&self, id: ActorId) -> Protection {
-        (self.state.actors.get(&id))
-            .map_or_else(|| Protection::plain(0), |a| a.protection(&self.content))
+        (self.state.actors.get(&id)).map_or_else(
+            || Protection::plain(0),
+            |a| a.protection(&self.content, self.state.race_of(&self.content, a)),
+        )
     }
 
-    /// What actor `id` resists (spec §8 "Damage types"): its creature type's, and what it wears
-    /// and wields; nothing for one that is gone.
+    /// What actor `id` resists (spec §8 "Damage types"): its creature type's, the player's
+    /// race's, and what it wears and wields; nothing for one that is gone.
     pub(crate) fn resistances_of(&self, id: ActorId) -> Resistances {
-        (self.state.actors.get(&id))
-            .map_or_else(Resistances::default, |a| a.resistances(&self.content))
+        (self.state.actors.get(&id)).map_or_else(Resistances::default, |a| {
+            a.resistances(&self.content, self.state.race_of(&self.content, a))
+        })
     }
 
     /// The side of actor `id` a blow strikes: its Defence, Protection, and resistances.
@@ -671,6 +677,7 @@ impl World {
         ) else {
             return None;
         };
+        let profile = profile.map(|p| self.glared(attacker, p));
         let missile = matches!(kind, AttackKind::Ranged | AttackKind::Thrown);
         let struck = self.target_against(target, missile);
         let levels = (self.level_of(attacker), self.level_of(target));
@@ -1039,7 +1046,7 @@ impl World {
         let words = words(self.state.player(), &content, blow.and_then(|b| b.kind));
         let target_actor = self.actor_or_fallen(target);
         let name = target_actor.map(|a| content.creature(a.creature).name.as_str());
-        let guard = Guard::of(target_actor, &content);
+        let guard = Guard::of(target_actor, &content, &self.state);
         let end = match name {
             Some(name) if seen => End::Seen(name),
             _ => End::Unseen,

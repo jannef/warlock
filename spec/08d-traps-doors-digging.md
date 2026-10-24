@@ -255,8 +255,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the eight cells around them gets the passive check, if they notice such things at all:
     **elves** everything (the race's `passive_search = "all"`), **dwarves** what is on stone
     (`"stone"`: the cell's terrain is `stone`, stone walls and floors, most of a dungeon, but not
-    timber, earth, or trees), and anyone **trained in Spot** everything (a thief, a ranger);
-    everyone else nothing. Each thing noticed may earn Spot a mark (50 %).
+    timber, earth, or trees), **kobolds** hidden traps and never a secret door (`"traps"`),
+    drow like elves and duergar like dwarves, and anyone **trained in Spot** everything (a
+    thief, a ranger); everyone else nothing. Each thing noticed may earn Spot a mark (50 %).
   - **No limit on trying again** (the owner's rule): every check is rolled afresh, after every
     turn, with no memory of failed ones and no cooldown; time is the only price. Checks draw
     from the gameplay stream only when a hidden feature is in reach (two draws each), so a turn

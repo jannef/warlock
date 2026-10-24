@@ -122,7 +122,9 @@ issue body, or one with many choices to review) is a **draft PR that adds
 
 ## Agents, finishers, and context
 
-The owner's token-saving rules (2026-10-24):
+The owner's token-saving rules (2026-10-24). The local subagents' briefs live in the repo, in
+`ops/agents/local/` (`feature.md` for a feature agent, `finisher.md` for a finisher; the spawn
+message adds the fields each one lists), so they survive a wiped `/tmp`:
 
 1. **A feature agent stops when its PR is open.** It pushes, opens the PR, triggers CI (pushing
    does it; if the change alters golden captures it runs

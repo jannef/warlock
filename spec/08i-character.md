@@ -50,12 +50,37 @@ developer notes (CLAUDE.md, `docs/dev/`).
     rolled), within 1 to 40 and never below the starting score. Classes, genders, and signs do
     not change potentials.
   - **Eyes**: the player's vision profile is the race's (the dev vision switch still works).
+  - **Light-blindness** (#255; a race's `light_blind = { glare, sight, to_hit }`, drow 250, 10,
+    −1): while the light on the player's own cell, as their eyes perceive it (the light the
+    perception finds there, the status bar's `Light`), is at least `glare` bright, they are
+    **dazzled**: the perception shows nothing farther than `sight` cells (line of sight and
+    light are unchanged within it; wall completion stops there too), and every attack they roll
+    is `to_hit` worse (`World::glared`, in `resolve`, from the same light on their cell then).
+    `LightBlind::dazzled_by` is the one rule; nothing else reads it. A clear sun well above the
+    horizon dazzles a drow (on the courtyard's November morning from about 07:30), an overcast
+    one does not, nor their own lantern alone (about 220); a lantern beside a brazier does. A note says when it begins ("The bright light dazzles
+    you.") and ends ("Your eyes adjust to the dimmer light."), neither stopping a rest, and the
+    status bar shows `Dazzled` while it lasts; never the numbers. Creatures are never
+    light-blind.
+  - **Gifts on other rules**: a race's `natural` armour adds to the player's Defence (Natural)
+    and Protection, as a creature type's does ("Combat" below; lizardfolk); its `resist` to what
+    they resist ("Damage types"; drow poison); its `disease_check` to every check against a
+    disease ("Diseases"; ratfolk); `eats_rotten` lets rotten food feed them unharmed ("Hunger";
+    ratfolk); and `passive_search = "traps"` lets them notice hidden traps in passing
+    ("Searching"; kobolds). `WorldState::race_of` is the one lookup of the player's race;
+    creatures go by their creature type.
+  - **Race and creatures**: no creature takes a side by the player's race: hostile kobolds
+    attack a kobold player as they would anyone, and good creatures greet a drow coldly only
+    when their alignment is Evil or worse ("Alignment" below), never for their race. Tribal
+    friendliness may come later.
   - **Hit points**: the race's and the class's `hp` add to Toughness for the maximum ("Combat"
     below).
   - **Alignment** ("Alignment" below): the starting score is the race's `alignment` plus the
     class's, kept on the scale: paladins start Good, thieves and witches Callous, everyone else
-    Neutral; a race only leans (elves and halflings a little toward good, half-orcs a little
-    toward evil), never alone out of Neutral. It draws nothing.
+    Neutral; most races only lean (elves and halflings a little toward good, half-orcs a little
+    toward evil), never alone out of Neutral, but the evil races (#255) start on the evil side:
+    goblins, kobolds, lizardfolk, and ratfolk Callous (−200), drow and duergar Evil (−450), so a
+    drow paladin starts Neutral and a goblin thief Evil. It draws nothing.
   - **Weapon skills** ("Weapon skills" below): the race's starting ranks plus the class's, plus
     one set of the class's `weapon_skill_choice` if it has one, at most 10 each; each then
     raises the skills it defaults to. Dice among them roll from their own stream,
@@ -133,7 +158,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     good −150, neutral and evil −100), except a beast (a neutral creature that does not talk),
     which may be hunted (0); killing someone hostile (evil +10, neutral and good 0); attacking a
     shopkeeper who trades with the player (−100, once: the keeper is outraged after it);
-    leaving a shop with unpaid goods (theft, −100; Steal, #234, will be theft too); paying a
+    leaving a shop with unpaid goods, or taking something with Steal unnoticed (theft, −100 each time); paying a
     shopkeeper what is owed (+5); eating a corpse of the player's own race (a creature type's
     `race`) or of a creature that talks and is not hostile to them by its type (−200); and a
     quest's own `alignment` as it is completed (helping quests good, dark ones evil). Nothing
@@ -185,8 +210,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     waiting (not a rest's turns) taken while the player's burden slows them, as it began
     (`burdened`; a dwarf's Burdened does not), a step on the overworld (`travel`), a kick at a
     closed door (`kick`), a turn spent searching, whatever it finds (`search`), noticing
-    something hidden in passing (`spot`; §8 "Searching"). Only the player trains for now;
-    creatures keep their type's skills. Marks are a **reservoir**: they raise nothing by
+    something hidden in passing (`spot`; §8 "Searching"), an attempt to steal, whatever comes of
+    it (`steal`; "Stealing" below). Only the player trains for now; creatures keep their type's
+    skills. Marks are a **reservoir**: they raise nothing by
     themselves and nothing is said; they gather until a level-up roll on the skill spends them.
   - **Level-up rolls** (design `docs/design/progression.md` §5): every level gives the player
     **skill rolls**: their class's `rolls` (`data/classes/`: 2; the thief and the ranger 3, the
@@ -213,12 +239,47 @@ developer notes (CLAUDE.md, `docs/dev/`).
     with an active use (`kind = "action"`) is an ability there (`warlock_core::ability`,
     `PerceptionView::abilities`), greyed out as "not usable yet": the uses come with their
     actions, and one whose use has come is that ability instead (Disable device's is "Disarm a
-    trap", §8 "Disarming traps"; Open lock's "Pick lock", §8 "Doors"). Never a benefit's number,
+    trap", §8 "Disarming traps"; Open lock's "Pick lock", §8 "Doors"; Steal's "Steal",
+    "Stealing" below). Never a benefit's number,
     a mark, a
     chance, an untrained skill, or a creature's skills; ground-truth dev dumps (`actors`, the
     world state) show every actor's skills with their marks and the ladder's die for them. The
     Skills screen's meter shows a skill's ladder step in quarters (how practised it is). Skills
     and marks are part of the world state (saved, hashed).
+- **Stealing** (`world/steal.rs`, data `data/steal.toml`, §7; #234, the progression design's
+  B7): the Steal skill's use, the abilities menu's **Steal** (`Ability::Steal`, in the skill's
+  place among the Skills; a direction; `Action::Steal`, replay text `steal:DIR`; cost `steal`;
+  a rebindable key, "Steal", unbound by default). Anyone trained in a skill with the `steal`
+  benefit has it, while `data/steal.toml` exists (without it nobody steals and the skill stays
+  "not usable yet"); the thief's class trains Steal.
+  - **Whom**: a creature on the cell in that direction that the player sees and that is not
+    hostile to them (`World::stance`). Refused, taking no time: untrained ("You do not know how
+    to steal."), no one seen there ("You see no one there to steal from."), or someone hostile
+    ("The kobold is hostile: it would never let you near enough.").
+  - **The contest** ("Checks" in §8): 2d12 + the player's Dexterity modifier + what Steal gives,
+    against 2d12 + the victim's Willpower modifier (both of the effective scores); a tie goes to
+    the thief, and their natural 2 always fails, their natural 24 always works. Four draws of
+    the gameplay stream (the victim's roll first). It takes the `steal` action's time whatever
+    comes of it (priced before anything changes hands, so the burden applies) and may earn
+    Steal a training mark.
+  - **Unnoticed**: the player takes one stack, all of it, of what the victim carries and neither
+    wears nor wields, picked uniformly (one more gameplay draw when there are two or more), "You
+    steal 7 copper coins from the kobold."; with nothing like that on it, "You find nothing to
+    take from the gardener.", unnoticed all the same. There is no choice of item: the player
+    never sees a creature's pack (`PerceptionView::gear` is only what it wears and wields), and
+    what is worn or wielded cannot be lifted unnoticed. `World::got_away_with` is the one place a
+    theft that took something has consequences beyond the goods: it is a theft deed for alignment
+    (§8 "Alignment": stealing is evil, as leaving a shop owing is).
+  - **Caught**: the victim turns on the player. A keeper of an open shop (§7 "Shops") is outraged
+    as a robbed one is: "Grimbold catches you stealing. \"Stop, thief!\"", its shop trades no
+    more, and what the player owed it is stolen. Anyone else joins `data/steal.toml`'s `caught`
+    faction (its `faction_override`, hostile to the player), so the AI and every stance follow:
+    "The kobold catches you stealing and turns on you!".
+  - **Shop goods** are not stolen this way: what lies in a shop stays the shop's rules' (picking
+    it up is owing for it; leaving owing any way but the door is theft, §7 "Shops"). Stealing
+    from a keeper takes from its pack: its purse.
+  - No limit on trying again (the owner's rule): a victim that caught the player stays angry,
+    and that is the price. Presentation shows only what comes of it, never a modifier or a roll.
 - **Talents** (`warlock-core/src/talent.rs`, the runtime; `content/talent.rs`, the data;
   `world/talent.rs`, the picks; M30, #229; design `docs/design/progression.md` §7, §10): knacks
   a character picks as they level, each a typed effect read where the rules already read what
@@ -320,6 +381,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
     0 until the class tables), or a tree not `pending` nor `no_free` without `free_per_tree`
     prerequisite-free talents, is a content error. A wave that ships a system's talents removes
     its `pending`; a new system of the game joins the list in the PR that ships its talents.
+    **Policy for new systems** (design §8.2): every new system of the game ships with talents,
+    at least `min_talents` (and `min_class` class abilities), tagged with its new `[[system]]`
+    in the same PR, and its feature issue says which in the template's "Talents and class
+    abilities" section (§13), or why none (presentation only, or an extension of a system
+    already listed). Resources are systems too: mana and the pools of #225 join the list with
+    talents on their maximum, refill, and costs, and abilities that spend them carry their tag;
+    a cost in a resource stands instead of a cooldown status, never beside one. The bar is
+    data and may rise as the list grows. Developer notes: `docs/dev/progression.md` "Coverage
+    policy".
   - **Determinism and saves**: picks are replayed actions; nothing here draws from the gameplay
     stream; the `levels` stream (`WorldState::levels_rng`, for the skill rolls and stat checks
     to come) is made on its first draw. `Actor::talents` (by id, like affixes: adding talents

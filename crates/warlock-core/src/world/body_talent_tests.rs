@@ -303,7 +303,7 @@ fn nimble_raises_the_burden_cap_on_dexterity() {
     w.player_mut().equipment = Equipment::default();
     let content = w.content().clone();
     let dex = |w: &World| {
-        (w.state.player().defence(&content, Burden::Strained)).bonus(Category::Dexterity)
+        (w.state.player().defence(&content, Burden::Strained, None)).bonus(Category::Dexterity)
     };
     assert_eq!(dex(&w), 1, "Strained caps it at +1");
     give(&mut w, "nimble");

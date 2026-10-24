@@ -199,10 +199,10 @@ fn weapon_drill_shield_wall_armour_drill_and_iron_stance() {
     assert_eq!(mods.marks(crate::content::Role::Launcher, 100), 100);
     let defence = |w: &World| {
         let me = w.state.player();
-        me.defence(&content, crate::burden::Burden::Unburdened)
+        me.defence(&content, crate::burden::Burden::Unburdened, None)
     };
     let shield = defence(&w).bonus(Category::Shield);
-    let protection = w.state.player().protection(&content).against(None);
+    let protection = w.state.player().protection(&content, None).against(None);
     reach(&mut w, 6);
     assert_eq!(
         defence(&w).bonus(Category::Shield),
@@ -211,7 +211,7 @@ fn weapon_drill_shield_wall_armour_drill_and_iron_stance() {
     );
     reach(&mut w, 25);
     assert_eq!(
-        w.state.player().protection(&content).against(None),
+        w.state.player().protection(&content, None).against(None),
         protection + 1,
         "Armour drill, in the warrior's leathers"
     );
@@ -286,7 +286,7 @@ fn thick_hide_fast_movement_hardened_and_mighty_thews() {
     let content = w.content().clone();
     let natural = |w: &World| {
         let me = w.state.player();
-        (me.defence(&content, crate::burden::Burden::Unburdened)).bonus(Category::Natural)
+        (me.defence(&content, crate::burden::Burden::Unburdened, None)).bonus(Category::Natural)
     };
     assert_eq!(natural(&w), 0);
     reach(&mut w, 6);

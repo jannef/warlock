@@ -22,6 +22,7 @@ pub(super) fn abilities(content: &Content) -> String {
             Ability::Skill(_) => "everyone trained in the skill".into(),
             Ability::Disarm => "everyone trained in Disable device".into(),
             Ability::PickLock => "everyone trained in Open lock".into(),
+            Ability::Steal => "everyone trained in Steal".into(),
             Ability::SecondWind => "everyone with the Second wind talent (not while winded)".into(),
             Ability::ShieldBash => "everyone (usable with a shield in hand)".into(),
         };
