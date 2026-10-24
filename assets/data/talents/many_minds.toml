@@ -1,0 +1,9 @@
+[[talent]]
+id = "many_minds"
+name = "Many minds"
+tree = "stars"
+granted = true
+flaw = true
+description = "Your will is divided: your Willpower checks go worse."
+effects = [{ kind = "checks", stat = "willpower", value = -2 }]
+systems = ["diseases"]

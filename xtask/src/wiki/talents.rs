@@ -190,6 +190,20 @@ pub(super) fn effects_text(content: &Content, def: &TalentDef) -> String {
 }
 
 /// One effect as the rule (talents' and class abilities').
+/// A cooldown status by name and how long one degree of it lasts: "Graceless for 24 h".
+fn cooldown_for(content: &Content, id: &str) -> String {
+    let Some(status) = content.status_id(id) else {
+        return id.to_string();
+    };
+    let def = content.status(status);
+    match def.eases {
+        Some(s) if s % 3600 == 0 => format!("{} for {} h", def.name, s / 3600),
+        Some(s) if s % 60 == 0 => format!("{} for {} min", def.name, s / 60),
+        Some(s) => format!("{} for {s} s", def.name),
+        None => def.name.clone(),
+    }
+}
+
 pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
     let percent = |v: i32| format!("{} %", signed(v));
     let status = |id: &str| {
@@ -665,7 +679,69 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                 signed(-value)
             )
         }
-        TalentEffect::Resist { value } => format!("resistance to the chosen element +{value} %"),
+        TalentEffect::Resist {
+            value,
+            damage: None,
+        } => format!("resistance to the chosen element +{value} %"),
+        TalentEffect::Resist {
+            value,
+            damage: Some(kind),
+        } => {
+            let name = (content.damage_type_id(&kind))
+                .map_or(kind.clone(), |d| content.damage_type(d).name.to_lowercase());
+            format!("resistance to {name} +{value} %")
+        }
+        TalentEffect::SlipPercent { value } => format!(
+            "a step out of reach of every hostile beside you costs {}, whatever your stance",
+            percent(value)
+        ),
+        TalentEffect::Streak { max } => format!(
+            "each melee blow at the creature your last blow was at (this turn or the one \
+             before) +1 to hit per blow before it, to +{max}; anything else starts it over"
+        ),
+        TalentEffect::Barbs { damage } => format!(
+            "a creature that hits you in melee takes {damage} damage (no roll; a death of it \
+             earns no experience)"
+        ),
+        TalentEffect::WoundMore { value } => {
+            format!("a big hit that wounds you wounds {value} degree more")
+        }
+        TalentEffect::Distrusted => {
+            "no one makes way for you, whatever else would have them (Noblesse too)".to_string()
+        }
+        TalentEffect::HornsGrace {
+            cures,
+            diseases,
+            cooldown,
+        } => {
+            let names: Vec<String> = cures.iter().map(|c| status(c)).collect();
+            format!(
+                "active (the time of a wait): {} end and the first {diseases} of the diseases \
+                 that show are shaken off (refused with nothing to mend); then {}",
+                names.join(" and "),
+                cooldown_for(content, &cooldown)
+            )
+        }
+        TalentEffect::Stare {
+            status: id,
+            severity,
+            cooldown,
+        } => {
+            let (cost, eases) = (content.status_id(&id)).map_or((100, None), |s| {
+                let def = content.status(s);
+                (def.cost, def.eases)
+            });
+            let eases =
+                eases.map_or_else(String::new, |e| format!(", a degree easing every {e} s"));
+            format!(
+                "active (the time of a wait, silent): a hostile you see within {} cells that \
+                 sees you suffers {} at {severity} degrees (its actions cost {cost} %{eases}); \
+                 one that does not see you is not held, and the cooldown waits; then {}",
+                warlock_core::world::STARE_RANGE,
+                status(&id),
+                cooldown_for(content, &cooldown)
+            )
+        }
         TalentEffect::RestingPercent { value } => {
             format!("healing pace while resting {}", percent(value))
         }

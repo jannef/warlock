@@ -71,6 +71,11 @@ and never lost. The game tells you what they do in words ("you move and act a li
 the tables below give the exact rules. Some animals' and elements' gifts are still to come: the
 tables list those already in the game.
 
+Two gifts are things you do rather than rules that hold: the Unicorn's **Horn's grace** and the
+Basilisk's **Transfixing stare**. You use them from the abilities menu, under *Birth sign*; each
+then rests for a while (a status that wears off) before you can use it again. The
+[abilities](abilities.md) table lists them with everything else you can use.
+
 {{#include generated/horoscope-animals.md}}
 
 {{#include generated/horoscope-elements.md}}

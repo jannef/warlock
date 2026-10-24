@@ -1,0 +1,9 @@
+[[talent]]
+id = "heavy_footed"
+name = "Heavy-footed"
+tree = "stars"
+granted = true
+flaw = true
+description = "You are clumsy on the ground: your footsteps are louder."
+effects = [{ kind = "footsteps_percent", value = 25 }]
+systems = ["stealth"]

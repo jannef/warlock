@@ -140,6 +140,8 @@ pub struct TalentMods {
     pub threat: i32,
     /// A fumble is rolled again, once.
     pub reroll_fumble: bool,
+    /// The most to-hit a streak of blows at one creature gives (0: none; Relentless).
+    pub streak: u8,
     /// Hit points by level, one entry per rank held: `(per_levels, at_least)`
     /// ([`TalentMods::hp_at`]).
     pub hp_per_levels: Vec<(u8, i32)>,
@@ -270,6 +272,8 @@ pub struct TalentMods {
     pub skills: Vec<(SkillId, i32)>,
     /// Anyone not hostile makes way for it.
     pub make_way: bool,
+    /// No one makes way for it.
+    pub distrusted: bool,
     /// The free blows its talents switch on.
     pub free_blows: FreeBlows,
     /// What attacks with some weapon skills gain ([`TalentMods::weapon_benefit`]).
@@ -290,14 +294,22 @@ pub struct TalentMods {
     pub stance_to_hit: Vec<(CombatStance, i32)>,
     /// Percent more a fleeing step costs (negative: cheaper).
     pub flee_percent: i32,
+    /// Percent more a step out of reach of every hostile beside it costs (negative: cheaper).
+    pub slip_percent: i32,
     /// Taken off every hit after the soak, never below 1.
     pub pain: i32,
+    /// Damage a creature whose melee blow hits it takes (0: none).
+    pub barbs: i32,
     /// Resistances in percent, by element id.
     pub resist: Vec<(String, i32)>,
     /// Percent faster resting heals, on top of resting's own pace.
     pub resting_percent: i32,
     /// The active Second wind, if it has it.
     pub second_wind: Option<SecondWind>,
+    /// The birth sign's active Horn's grace, if it has it.
+    pub horns_grace: Option<HornsGrace>,
+    /// The birth sign's active Transfixing stare, if it has it.
+    pub stare: Option<Stare>,
     /// Rotten food and overeating never make it vomit, and rotten food sickens it half as much.
     pub iron_stomach: bool,
     /// Statuses that ease faster, by the percent: `(status, percent)`, one entry per effect.
@@ -306,6 +318,8 @@ pub struct TalentMods {
     pub no_penalty: Vec<StatusId>,
     /// Wounds bleed less: none from a big hit, a degree less from a critical.
     pub clotting: bool,
+    /// Degrees more a big hit wounds it.
+    pub wound_more: u16,
     /// Percent more of what its statuses take off its scores (negative: less).
     pub penalty_percent: i32,
     /// Added to its disease checks.
@@ -480,6 +494,24 @@ pub struct SecondWind {
     pub cooldown: StatusId,
 }
 
+/// The birth sign's active Horn's grace (spec §8 "Birth sign"): what it cures, then a cooldown.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct HornsGrace {
+    pub cures: Vec<StatusId>,
+    /// How many of the diseases that show it shakes off.
+    pub diseases: u8,
+    pub cooldown: StatusId,
+}
+
+/// The birth sign's active Transfixing stare (spec §8 "Birth sign"): the status it leaves on
+/// the creature stared at, then a cooldown.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Stare {
+    pub status: StatusId,
+    pub severity: u16,
+    pub cooldown: StatusId,
+}
+
 impl SecondWind {
     /// The hit points it gives back at character `level`.
     pub fn hp_at(self, level: u8) -> i32 {
@@ -491,6 +523,24 @@ impl TalentMods {
     /// Whether nothing is changed.
     pub fn is_empty(&self) -> bool {
         *self == TalentMods::default()
+    }
+
+    /// Whether it has the birth sign's active `active` (spec §8 "Birth sign").
+    pub fn has_sign_active(&self, active: crate::content::SignActive) -> bool {
+        use crate::content::SignActive as A;
+        match active {
+            A::HornsGrace => self.horns_grace.is_some(),
+            A::TransfixingStare => self.stare.is_some(),
+        }
+    }
+
+    /// The cooldown status of the birth sign's active `active`, if it has it.
+    pub fn sign_cooldown(&self, active: crate::content::SignActive) -> Option<StatusId> {
+        use crate::content::SignActive as A;
+        match active {
+            A::HornsGrace => self.horns_grace.as_ref().map(|g| g.cooldown),
+            A::TransfixingStare => self.stare.map(|s| s.cooldown),
+        }
     }
 
     /// Whether it has class active `active` (spec §8 "Class abilities").
@@ -600,6 +650,7 @@ impl TalentMods {
             TalentEffect::MeleeDamage { value } => self.melee_damage += value,
             TalentEffect::Threat { value } => self.threat += value,
             TalentEffect::RerollFumble => self.reroll_fumble = true,
+            TalentEffect::Streak { max } => self.streak = self.streak.max(max),
             TalentEffect::MaxHpPerLevels {
                 per_levels,
                 at_least,
@@ -693,6 +744,7 @@ impl TalentMods {
                 }
             }
             TalentEffect::MakeWay => self.make_way = true,
+            TalentEffect::Distrusted => self.distrusted = true,
             TalentEffect::FreeBlow { trigger } => {
                 use crate::content::FreeBlowTrigger as T;
                 match trigger {
@@ -765,9 +817,11 @@ impl TalentMods {
                 }
             }
             TalentEffect::FleePercent { value } => self.flee_percent += value,
+            TalentEffect::SlipPercent { value } => self.slip_percent += value,
             TalentEffect::Pain { value } => self.pain += value,
-            TalentEffect::Resist { value } => {
-                let element = choice.unwrap_or_default();
+            TalentEffect::Barbs { damage } => self.barbs += damage,
+            TalentEffect::Resist { value, damage } => {
+                let element = damage.as_deref().or(choice).unwrap_or_default();
                 match self.resist.iter_mut().find(|(e, _)| e == element) {
                     Some((_, r)) => *r += value,
                     None => self.resist.push((element.to_string(), value)),
@@ -797,6 +851,7 @@ impl TalentMods {
                 self.no_penalty.extend(content.status_id(&status));
             }
             TalentEffect::Clotting => self.clotting = true,
+            TalentEffect::WoundMore { value } => self.wound_more += value,
             TalentEffect::PenaltyPercent { value } => self.penalty_percent += value,
             TalentEffect::DiseaseChecks { value } => self.disease_checks += value,
             TalentEffect::Checks { stat, value } => self.checks[stat] += value,
@@ -912,6 +967,35 @@ impl TalentMods {
                 }
             }
             TalentEffect::Avatar => self.avatar = true,
+            TalentEffect::HornsGrace {
+                cures,
+                diseases,
+                cooldown,
+            } => {
+                if let Some(cooldown) = content.status_id(&cooldown) {
+                    let cures = cures.iter().filter_map(|s| content.status_id(s)).collect();
+                    self.horns_grace = Some(HornsGrace {
+                        cures,
+                        diseases,
+                        cooldown,
+                    });
+                }
+            }
+            TalentEffect::Stare {
+                status,
+                severity,
+                cooldown,
+            } => {
+                if let (Some(status), Some(cooldown)) =
+                    (content.status_id(&status), content.status_id(&cooldown))
+                {
+                    self.stare = Some(Stare {
+                        status,
+                        severity,
+                        cooldown,
+                    });
+                }
+            }
             TalentEffect::Rage { status } => {
                 self.rage = content.status_id(&status).or(self.rage);
             }

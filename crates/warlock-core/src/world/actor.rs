@@ -212,6 +212,10 @@ pub struct Actor {
     /// [`Actor::talent_mods`].
     #[serde(default, skip_serializing_if = "Talents::is_empty")]
     pub talents: Talents,
+    /// Its streak of melee blows at one creature (Relentless, spec §8 "Birth sign"): `None`
+    /// for an actor without the talent, or before its first blow.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub streak: Option<super::Streak>,
     /// The unique character its level made it (`npc` in a level legend entry), whose dialogue it
     /// speaks rather than its type's.
     #[serde(default, skip_serializing_if = "Option::is_none")]

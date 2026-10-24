@@ -163,6 +163,26 @@ eases = 300
 start = "You feel drained."
 end = "Your strength of spirit returns."
 
+# Horn's grace's cooldown (a Unicorn's birth sign gift): a day before the horn mends again.
+[[status]]
+id = "graceless"
+name = "Graceless"
+max = 1
+stacking = "refresh"
+eases = 86400
+start = "Your horn's grace is spent."
+end = "Your horn's grace returns."
+
+# The Transfixing stare's cooldown (a Basilisk's birth sign gift): two hours.
+[[status]]
+id = "spent_eyed"
+name = "Spent-eyed"
+max = 1
+stacking = "refresh"
+eases = 7200
+start = "Your eyes ache from the stare."
+end = "Your gaze is keen again."
+
 # Rising from the ashes (a birth sign's gift, spec §8 "Birth sign"): a day of weakness after, every
 # score 2 lower and hit points back half as fast.
 [[status]]
@@ -200,3 +220,16 @@ eases = 6
 cost = 150
 start = "You stagger."
 end = "You find your feet again."
+
+# The Transfixing stare's (a Basilisk's birth sign gift): a creature held by the gaze, its next
+# actions twice as slow; a degree for each, eased away a turn's time (at the slowed pace) apiece.
+[[status]]
+id = "transfixed"
+name = "Transfixed"
+seen = "transfixed"
+max = 4
+stacking = "refresh"
+eases = 12
+cost = 200
+start = "You are transfixed."
+end = "You shake off the stare."

@@ -146,6 +146,19 @@ any rule change does; the birth draws are untouched, so seeds keep their dates a
 gifts' effects are `TalentEffect`s read at one hook each (`docs/dev/progression.md`); `stars.rs`
 also says what is wading (`wading`: terrain that freezes, or a disease's wading ground).
 
+The gifts from the Salamander to the Basilisk (#266) that are more than a read at a hook live in
+`world/gifts.rs`: the actives (`SignActive` in `content/horoscope.rs`, `Ability::Sign` under
+`Source::Sign`, `Action::Gift`, `World::use_gift`: Horn's grace, the Transfixing stare at
+`STARE_RANGE`, creature sight through `World::sees_now` in `ambush.rs`), Relentless's streak
+(`Streak { target, count, turn }` on `Actor::streak`, saved and hashed and left out of the JSON
+while `None`; a blow continues it at the same target while `turn <= streak.turn + 1`, the player's
+turn counter, so anything else in between starts it over), Barbed hide (`World::barbed`,
+`Harm::Barbs`), and Slip away (`World::slipped`). The cooldowns and the stare's hold are statuses
+(`graceless`, `spent_eyed`, `transfixed` in `data/status.toml`). Most scenarios' characters are
+Water Basilisks, so their runs now notice in passing (Unblinking draws a check a turn near
+hidden things), list the stare first in the abilities menu, and are made way for by no one.
+Tests: `world/gifts_tests.rs`.
+
 The Roc to the Barghest (#267) add Eyes of the heights, Hoard sense, Watchful, Set in its ways,
 Old lore, Rise from the ashes, Inner light, Frail, Grasping arms, Of the deep, Ungainly ashore,
 Hound's nose, and Gatekeeper (their effect kinds and hooks: `docs/dev/progression.md`). Rise from
