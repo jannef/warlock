@@ -1,6 +1,7 @@
 //! Races' gifts and flaws in the world (spec §8 "Character creation"): a race's natural armour
 //! adds to what the player wears, and so do its resistances; strong light dazzles light-blind
-//! eyes; a disease bonus wins disease checks; a stomach for rotten food eats it unharmed.
+//! eyes; a disease bonus wins disease checks; a stomach for rotten food eats it unharmed; an
+//! eye for traps notices them in passing.
 
 use super::*;
 use crate::action::parse_actions;
@@ -50,6 +51,14 @@ description = "Eats anything."
 vision = "normal"
 age = [20, 30]
 eats_rotten = true
+
+[[race]]
+id = "trapwise"
+name = "Trapwise"
+description = "Notices traps."
+vision = "normal"
+age = [20, 30]
+passive_search = "traps"
 "##;
 
 /// A dim corridor (ambient 60, enough for normal eyes) with a brazier at its east end: its light
@@ -92,6 +101,19 @@ fn files() -> ContentFiles {
              \"@\" = {{ terrain = \"floor\", spawn = \"player\" }}\n\
              \"B\" = {{ terrain = \"floor\", light = \"brazier\" }}\n"
         ),
+    );
+    // A secret door west of the player, a hidden alarm trap east.
+    files.insert(
+        "levels/traptest.toml",
+        "name = \"Hall\"\nambient = [255, 255, 255, 0]\nmap = '''\n#####\n#S@a#\n#####\n'''\n\n\
+         [legend]\n\
+         \"@\" = { terrain = \"floor\", spawn = \"player\" }\n\
+         \"S\" = { terrain = \"door_closed\", secret = 1 }\n\
+         \"a\" = { terrain = \"floor\", trap = \"alarm\" }\n",
+    );
+    files.insert(
+        "scenarios/traptest.toml",
+        "name = \"Hall\"\nstart_level = \"traptest\"\nhp = 30\n",
     );
     files.insert(
         "scenarios/glaretest.toml",
@@ -243,4 +265,23 @@ fn a_stomach_for_rotten_food_eats_it_unharmed() {
     assert!(fed > 700, "it feeds, as bread does");
     let (human, _) = eat("human");
     assert!(said(&human, "Ugh! The loaf of bread was rotten."));
+}
+
+#[test]
+fn an_eye_for_traps_notices_traps_in_passing_but_not_secret_doors() {
+    // One check a turn for the trap beside them, none for the secret door.
+    let mut w = world_in("traptest", "trapwise");
+    let checked = |w: &World| {
+        let mut rng = w.state.rng.clone();
+        crate::combat::roll_natural(&mut rng);
+        rng
+    };
+    let once = checked(&w);
+    run(&mut w, "wait");
+    assert_eq!(w.state.rng, once, "one check, for the trap");
+    // A warrior of a race without the eye notices neither.
+    let mut human = world_in("traptest", "human");
+    let before = human.state.rng.clone();
+    run(&mut human, "wait");
+    assert_eq!(human.state.rng, before, "no check at all");
 }

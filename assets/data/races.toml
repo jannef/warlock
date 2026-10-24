@@ -43,8 +43,9 @@
 #                 nothing (no slowdown, no cap on Dexterity in Defence, no louder steps; default
 #                 false); from Strained on they are treated like everyone else
 #   passive_search  which hidden features (secret doors, hidden traps; spec §8 "Searching") the
-#                 character notices in passing without the Spot skill: "all", or "stone" (those
-#                 on stone, terrain.toml `stone`); default none: only with Spot trained
+#                 character notices in passing without the Spot skill: "all", "stone" (those
+#                 on stone, terrain.toml `stone`), or "traps" (hidden traps only); default none:
+#                 only with Spot trained
 #   search        points added to searching and to noticing in passing alike (-10 to 10,
 #                 default 0)
 #   skills        the skills the race trains (spec §8 "Skills"; skills.toml), by skill id: dice
