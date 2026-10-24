@@ -401,10 +401,10 @@ A successful compile does not verify anything visual. Before opening a PR:
   only, the Linux, wasm32, and cargo-deny checks must pass, linear history.
 - **Merging** (`docs/dev/merging.md` has the details): agents don't chase `main`. A PR merges
   or rebases onto `origin/main` once, when the integrator says it is next in line; after that
-  merge run `cargo fmt --all`, clippy with `-D warnings`, `cargo test --workspace`,
-  `cargo xtask wiki`, and the PR's own captures or replays (CI covers the wasm32 check, the
-  smoke test, `mdbook build wiki`, cargo-deny, and the licenses). The full check list
-  ("Verification") runs once, before the PR opens.
+  merge the PR's own replays are re-verified, and clippy and `cargo test --workspace` run only
+  if it had conflicts in code, snapshots, or registries (CI, required on every push, is the
+  check; a clean merge goes straight to it). The full check list ("Verification") runs once,
+  before the PR opens.
   Agents stop when their PR is open; a finisher agent handles CI and the merge (`docs/dev/merging.md`,
   "Agents, finishers, and context").
 - **Keep PRs small**: one feature per PR, rules first (core, tests, dumps), then the UI, then
