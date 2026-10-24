@@ -16,9 +16,9 @@
     "./ops/agents/finisher/agent.md": {
       "kind": "agent",
       "id": "agent_01LmfWDPRQsDGdSAigoEuJF9",
-      "version": "8",
-      "hash": "e1f7da8dcc46979842a5041129187372",
-      "remote_hash": "b61b07cee251a86754871e77af4459b1"
+      "version": "9",
+      "hash": "d9a111e7e65674b0c9ea63f79afadba3",
+      "remote_hash": "8bc8636698d60a46c281e5ade2fb5883"
     },
     "./ops/agents/finisher/environment.yaml": {
       "kind": "environment",
