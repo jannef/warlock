@@ -15,7 +15,9 @@
 
 use crate::alignment::Band;
 use crate::character::Character;
-use crate::content::{Choice, Content, Need, TalentDef, TalentEffect, TalentId};
+use crate::content::{
+    Benefit, Choice, CombatStance, Content, MAX_RANK, Need, Role, TalentDef, TalentEffect, TalentId,
+};
 use crate::skills::Skills;
 use crate::stats::Stats;
 use crate::weapon_skills::WeaponSkills;
@@ -94,7 +96,7 @@ impl Talents {
             let def = book.get(id);
             for rank in 1..=taken.rank.min(def.rank_count()) {
                 for effect in def.effects_at(rank) {
-                    mods.add(effect);
+                    mods.add(effect, taken.choice.as_deref());
                 }
             }
         }
@@ -137,6 +139,47 @@ pub struct TalentMods {
     pub notice: Option<i32>,
     /// The free blows its talents switch on.
     pub free_blows: FreeBlows,
+    /// What attacks with some weapon skills gain ([`TalentMods::weapon_benefit`]).
+    pub weapon: Vec<WeaponBonus>,
+    /// Cells farther the readied missile weapon shoots.
+    pub launcher_range: i32,
+    /// Cells farther throws reach.
+    pub throw_range: i32,
+    /// Added to worn armour's cap on Dexterity in Defence.
+    pub max_dex: i32,
+    /// Defence in the Deflection category.
+    pub deflection: i32,
+    /// Protection, each with what it asks to be worn ([`TalentMods::protection_with`]).
+    pub protection: Vec<Guard>,
+    /// Percent less of a stance's to-hit penalty, by stance.
+    pub stance_to_hit: Vec<(CombatStance, i32)>,
+    /// Percent more a fleeing step costs (negative: cheaper).
+    pub flee_percent: i32,
+    /// Taken off every hit after the soak, never below 1.
+    pub pain: i32,
+    /// Resistances in percent, by element id.
+    pub resist: Vec<(String, i32)>,
+}
+
+/// What a talent adds to attacks with some weapon skills: the one named `skill` (the choice it
+/// was taken for), else every skill of `role`.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct WeaponBonus {
+    pub skill: Option<String>,
+    pub role: Option<Role>,
+    pub benefit: Benefit,
+    /// Ranks higher its benefits read.
+    pub ranks: u8,
+}
+
+/// Protection a talent adds, while what it asks is worn.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Guard {
+    pub value: i32,
+    /// Only while the body armour worn has this much Protection at least.
+    pub body_armour: Option<i32>,
+    /// Only while holding a shield.
+    pub shield: bool,
 }
 
 impl TalentMods {
@@ -149,12 +192,13 @@ impl TalentMods {
     pub fn of(effects: impl IntoIterator<Item = TalentEffect>) -> Self {
         let mut mods = TalentMods::default();
         for effect in effects {
-            mods.add(effect);
+            mods.add(effect, None);
         }
         mods
     }
 
-    fn add(&mut self, effect: TalentEffect) {
+    /// Adds `effect` of a talent taken for `choice`.
+    fn add(&mut self, effect: TalentEffect, choice: Option<&str>) {
         match effect {
             TalentEffect::Dodge { value } => self.dodge += value,
             TalentEffect::Natural { value } => self.natural += value,
@@ -184,6 +228,116 @@ impl TalentMods {
                     T::Opportunist => self.free_blows.opportunist = true,
                 }
             }
+            TalentEffect::Weapon {
+                role,
+                to_hit,
+                damage,
+                threat,
+                ranks,
+                speed,
+                reload,
+                ease,
+                bash,
+                shield,
+            } => self.weapon.push(WeaponBonus {
+                skill: role
+                    .is_none()
+                    .then(|| choice.unwrap_or_default().to_string()),
+                role,
+                benefit: Benefit {
+                    to_hit,
+                    damage,
+                    shield,
+                    threat,
+                    speed,
+                    reload,
+                    ease_main: ease,
+                    ease_off: ease,
+                    bash,
+                    ..Benefit::default()
+                },
+                ranks,
+            }),
+            TalentEffect::LauncherRange { value } => self.launcher_range += value,
+            TalentEffect::ThrowRange { value } => self.throw_range += value,
+            TalentEffect::MaxDex { value } => self.max_dex += value,
+            TalentEffect::Deflection { value } => self.deflection += value,
+            TalentEffect::Protection {
+                value,
+                body_armour,
+                shield,
+            } => self.protection.push(Guard {
+                value,
+                body_armour,
+                shield,
+            }),
+            TalentEffect::StanceToHit { stance, percent } => {
+                match self.stance_to_hit.iter_mut().find(|(s, _)| *s == stance) {
+                    Some((_, p)) => *p += percent,
+                    None => self.stance_to_hit.push((stance, percent)),
+                }
+            }
+            TalentEffect::FleePercent { value } => self.flee_percent += value,
+            TalentEffect::Pain { value } => self.pain += value,
+            TalentEffect::Resist { value } => {
+                let element = choice.unwrap_or_default();
+                match self.resist.iter_mut().find(|(e, _)| e == element) {
+                    Some((_, r)) => *r += value,
+                    None => self.resist.push((element.to_string(), value)),
+                }
+            }
+        }
+    }
+
+    /// What attacks with weapon skill `id` of `role` gain beyond its ranks, and how many ranks
+    /// higher its benefits read.
+    pub fn weapon_benefit(&self, id: &str, role: Role) -> (Benefit, u8) {
+        let mut benefit = Benefit::default();
+        let mut ranks = 0u8;
+        for bonus in &self.weapon {
+            let applies = match &bonus.skill {
+                Some(skill) => skill == id,
+                None => bonus.role == Some(role),
+            };
+            if applies {
+                benefit = benefit.plus(bonus.benefit);
+                ranks = ranks.saturating_add(bonus.ranks);
+            }
+        }
+        (benefit, ranks)
+    }
+
+    /// `rank` (held) raised by `ranks`, never past [`MAX_RANK`]; an untrained skill stays 0.
+    pub fn raised(rank: u8, ranks: u8) -> u8 {
+        if rank == 0 {
+            0
+        } else {
+            rank.saturating_add(ranks).min(MAX_RANK)
+        }
+    }
+
+    /// The Protection its talents add while it wears body armour of `body` Protection (none:
+    /// no body armour) and holds a shield or not.
+    pub fn protection_with(&self, body: Option<i32>, shield: bool) -> i32 {
+        (self.protection.iter())
+            .filter(|g| g.body_armour.is_none_or(|at| body.is_some_and(|b| b >= at)))
+            .filter(|g| !g.shield || shield)
+            .map(|g| g.value)
+            .sum()
+    }
+
+    /// `to_hit` (a stance's) with its penalty softened as its talents say for `stance`.
+    pub fn stance_to_hit(&self, stance: CombatStance, to_hit: i32) -> i32 {
+        let percent = (self.stance_to_hit.iter())
+            .filter(|(s, _)| *s == stance)
+            .map(|(_, p)| *p)
+            .sum::<i32>()
+            .clamp(0, 100);
+        if to_hit >= 0 || percent == 0 {
+            to_hit
+        } else {
+            // Rounded toward 0: half of −3 is −1.
+            -((-to_hit) * (100 - percent) / 100)
         }
     }
 
@@ -267,6 +421,8 @@ impl<'a> Candidate<'a> {
             Need::Stat(stat, score) => self.stats.score(*stat) >= *score,
             Need::Skill(id, value) => self.skills.value(*id).is_some_and(|v| v >= *value),
             Need::WeaponSkill(id, rank) => self.weapon_skills.rank(*id) >= *rank,
+            Need::WeaponRole(role, rank) => (content.weapon_skills().ids())
+                .any(|(id, def)| def.role == *role && self.weapon_skills.rank(id) >= *rank),
             Need::Chosen(rank) => match (choice, chosen) {
                 (Some(Choice::WeaponSkill | Choice::Style), Some(id)) => {
                     (content.weapon_skills().id(id))

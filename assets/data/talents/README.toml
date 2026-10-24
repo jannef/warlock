@@ -25,6 +25,9 @@
 #                   stats = { toughness = 14 }           the stored score, never the effective
 #                   skills = { stealth = 25 }            trained, at that value at least
 #                   weapon_skills = { bows = 3 }         a weapon skill or style at that rank
+#                   any_weapon_skill = { launcher = 3 }  any weapon skill of that role (melee,
+#                                                        launcher, thrown, unarmed, shield_block,
+#                                                        shield_bash, style) at that rank
 #                   chosen = 2                           the chosen weapon skill or style at that
 #                                                        rank (talents with a choice)
 #                   level = 9                            the character level
@@ -60,4 +63,25 @@
 #                                 that much added
 #   free_blow { trigger }         a free blow: "cleave", "great_cleave", "riposte", or
 #                                 "opportunist" (spec §8 "Free blows")
+#   weapon { role, to_hit, damage, threat, ranks, speed, reload, ease, bash, shield }
+#                                 what attacks with some weapon skills gain, as their ranks give
+#                                 it (data/weapon_skills.toml): without `role` the chosen weapon
+#                                 skill or style's (a talent with that choice), else every skill
+#                                 of the role's; `ranks` reads its benefits that many ranks
+#                                 higher (a rank held, never past 10), `ease` eases both
+#                                 two-weapon penalties, `bash` adds to a free bash's chance only
+#                                 where there is one; each field 0 by default
+#   launcher_range { value }      the readied missile weapon shoots that many cells farther
+#   throw_range { value }         throws reach that many cells farther
+#   max_dex { value }             worn armour's cap on Dexterity in Defence, that much higher
+#   deflection { value }          Defence in the Deflection category, on top of magic items'
+#   protection { value, body_armour, shield }   Protection, only while the armour piece worn
+#                                 with the most Protection has body_armour at least (if set) and
+#                                 only while holding a shield (if shield = true)
+#   stance_to_hit { stance, percent }   that combat stance's to-hit penalty, that percent
+#                                 smaller (100: none)
+#   flee_percent { value }        fleeing steps cost that percent more (negative: cheaper)
+#   pain { value }                every hit (a blow, a shot, a throw, a trap) does that much
+#                                 less after the soak, never below 1
+#   resist { value }              resistance in percent to the chosen element (choice element)
 # Flat bonuses are -20 to 20, percents -100 to 100, never 0.

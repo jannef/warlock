@@ -9,7 +9,9 @@
 //! behind as the list grows. Without the files there are no talents, and no level asks for one.
 
 use super::affix::Once;
-use super::{Content, ContentError, MAX_LEVEL, MAX_RANK, WeaponSkillId, duplicate_id};
+use super::{
+    CombatStance, Content, ContentError, MAX_LEVEL, MAX_RANK, Role, WeaponSkillId, duplicate_id,
+};
 use crate::alignment::Requirement;
 use crate::skills::SkillId;
 use crate::stats::{PerStat, Stat};
@@ -21,6 +23,19 @@ fn article(noun: &str) -> &'static str {
     match noun.chars().next() {
         Some(c) if "aeiouAEIOU".contains(c) => "an",
         _ => "a",
+    }
+}
+
+/// "a missile weapon skill": any weapon skill of `role`, in words.
+fn role_words(role: Role) -> &'static str {
+    match role {
+        Role::Melee => "a melee weapon skill",
+        Role::Launcher => "a missile weapon skill",
+        Role::Thrown => "thrown weapons",
+        Role::Unarmed => "unarmed fighting",
+        Role::ShieldBlock => "shield blocking",
+        Role::ShieldBash => "shield bashing",
+        Role::Style => "a fighting style",
     }
 }
 
@@ -104,11 +119,17 @@ impl Choice {
         }
     }
 
+    /// Whether a weapon skill of `role` may be chosen as a weapon skill: one that attacks
+    /// (shield blocking only defends, and a style is chosen as a style).
+    fn attacks(role: Role) -> bool {
+        !matches!(role, Role::Style | Role::ShieldBlock)
+    }
+
     /// Every valid choice of this kind, by id, in file order.
     pub fn options(self, content: &Content) -> Vec<String> {
         match self {
             Choice::WeaponSkill => (content.weapon_skills().ids())
-                .filter(|(_, def)| def.role != super::Role::Style)
+                .filter(|(_, def)| Choice::attacks(def.role))
                 .map(|(_, def)| def.id.clone())
                 .collect(),
             Choice::Style => (content.weapon_skills().styles())
@@ -127,8 +148,11 @@ impl Choice {
             Choice::WeaponSkill | Choice::Style => {
                 let skill = content.weapon_skills().id(id)?;
                 let def = content.weapon_skills().skill(skill);
-                let style = def.role == super::Role::Style;
-                (style == (self == Choice::Style)).then_some(def.name.as_str())
+                let fits = match self {
+                    Choice::Style => def.role == Role::Style,
+                    _ => Choice::attacks(def.role),
+                };
+                fits.then_some(def.name.as_str())
             }
             Choice::Element => {
                 let kind = content.damage_type_id(id)?;
@@ -177,6 +201,58 @@ pub enum TalentEffect {
     Notice { value: i32 },
     /// A free blow the actor is given (spec §8 "Free blows").
     FreeBlow { trigger: FreeBlowTrigger },
+    /// What attacks with some weapon skills gain, as their ranks give it
+    /// ([`super::Benefit`]): the chosen weapon skill or style's (no `role`; the talent takes a
+    /// choice), else every skill of `role`'s. `ranks`: its benefits read that many ranks higher
+    /// (a rank held, never past [`MAX_RANK`]); `bash` only where a free bash is had already.
+    Weapon {
+        #[serde(default)]
+        role: Option<Role>,
+        #[serde(default)]
+        to_hit: i32,
+        #[serde(default)]
+        damage: i32,
+        #[serde(default)]
+        threat: u8,
+        #[serde(default)]
+        ranks: u8,
+        #[serde(default)]
+        speed: u8,
+        #[serde(default)]
+        reload: u8,
+        #[serde(default)]
+        ease: u8,
+        #[serde(default)]
+        bash: u8,
+        #[serde(default)]
+        shield: i32,
+    },
+    /// The readied missile weapon shoots this many cells farther.
+    LauncherRange { value: i32 },
+    /// Throws reach this many cells farther.
+    ThrowRange { value: i32 },
+    /// Worn armour's cap on Dexterity in Defence (`max_dex`), this much higher.
+    MaxDex { value: i32 },
+    /// Defence in the Deflection category, on top of what magic items give.
+    Deflection { value: i32 },
+    /// Protection, added to what is worn; only while the body armour worn has `body_armour`
+    /// Protection at least (if set), and only while holding a shield (if `shield`).
+    Protection {
+        value: i32,
+        #[serde(default)]
+        body_armour: Option<i32>,
+        #[serde(default)]
+        shield: bool,
+    },
+    /// The to-hit penalty of combat stance `stance`, this percent smaller (100: none).
+    StanceToHit { stance: CombatStance, percent: i32 },
+    /// Fleeing steps (spec §8 "Stances") cost this percent more (negative: cheaper).
+    FleePercent { value: i32 },
+    /// Every hit on the actor (a blow, a shot, a throw, a trap) does this much less after its
+    /// Protection soaked it, never below 1.
+    Pain { value: i32 },
+    /// Resistance in percent to the chosen element (the talent takes an `element` choice).
+    Resist { value: i32 },
 }
 
 /// The free blows a talent may switch on ([`crate::world::FreeBlows`]).
@@ -190,8 +266,8 @@ pub enum FreeBlowTrigger {
 }
 
 impl TalentEffect {
-    /// Whether the numbers are within what the rules expect.
-    fn check(self) -> Result<(), String> {
+    /// Whether the numbers are within what the rules expect, for a talent of `choice`.
+    fn check(self, choice: Option<Choice>) -> Result<(), String> {
         let bonus = |v: i32| {
             (v != 0 && BONUSES.contains(&v))
                 .then_some(())
@@ -215,7 +291,64 @@ impl TalentEffect {
             | TalentEffect::Natural { value }
             | TalentEffect::MeleeDamage { value }
             | TalentEffect::Hearing { value }
-            | TalentEffect::Notice { value } => bonus(value),
+            | TalentEffect::Notice { value }
+            | TalentEffect::LauncherRange { value }
+            | TalentEffect::ThrowRange { value }
+            | TalentEffect::MaxDex { value }
+            | TalentEffect::Deflection { value }
+            | TalentEffect::Pain { value } => bonus(value),
+            TalentEffect::Protection {
+                value, body_armour, ..
+            } => {
+                bonus(value)?;
+                match body_armour {
+                    Some(at) if !(1..=20).contains(&at) => {
+                        Err("`protection`: body_armour is 1 to 20".into())
+                    }
+                    _ => Ok(()),
+                }
+            }
+            TalentEffect::StanceToHit { percent: value, .. }
+            | TalentEffect::FleePercent { value } => percent(value),
+            TalentEffect::Resist { value } => match choice {
+                Some(Choice::Element) => percent(value),
+                _ => Err(
+                    "`resist` is for the chosen element: it needs `choice = \"element\"`".into(),
+                ),
+            },
+            TalentEffect::Weapon {
+                role,
+                to_hit,
+                damage,
+                threat,
+                ranks,
+                speed,
+                reload,
+                ease,
+                bash,
+                shield,
+            } => {
+                if role.is_none() && !matches!(choice, Some(Choice::WeaponSkill | Choice::Style)) {
+                    return Err(
+                        "`weapon` without a `role` is for the chosen weapon skill or \
+                                style: it needs that `choice`"
+                            .into(),
+                    );
+                }
+                let small = [to_hit, damage, shield].iter().all(|v| BONUSES.contains(v))
+                    && [threat, ranks, ease].iter().all(|&v| v <= 5);
+                let percents = [speed, reload, bash].iter().all(|&v| v <= 100);
+                let any = [to_hit, damage, shield].iter().any(|&v| v != 0)
+                    || [threat, ranks, ease, speed, reload, bash]
+                        .iter()
+                        .any(|&v| v != 0);
+                if !small || !percents || !any {
+                    return Err("`weapon`: to_hit, damage, shield are -20 to 20; threat, \
+                                ranks, ease 0 to 5; speed, reload, bash 0 to 100; not all 0"
+                        .into());
+                }
+                Ok(())
+            }
             TalentEffect::HealingPercent { value }
             | TalentEffect::FootstepsPercent { value }
             | TalentEffect::CarryPercent { value }
@@ -251,6 +384,8 @@ pub enum Need {
     Skill(SkillId, u16),
     /// A weapon skill or style at this rank at least.
     WeaponSkill(WeaponSkillId, u8),
+    /// Any weapon skill of this role at this rank at least ("a missile weapon skill at 3").
+    WeaponRole(Role, u8),
     /// The chosen weapon skill or style at this rank at least (talents with a `choice`).
     Chosen(u8),
     /// A character level.
@@ -283,7 +418,8 @@ impl Need {
             Need::WeaponSkill(id, rank) => {
                 format!("{} {rank}", content.weapon_skills().skill(*id).name)
             }
-            Need::Chosen(rank) => format!("the chosen one at {rank}"),
+            Need::WeaponRole(role, rank) => format!("{} at {rank}", role_words(*role)),
+            Need::Chosen(rank) => format!("the chosen skill at {rank}"),
             Need::Level(level) => format!("level {level}"),
             Need::Race(id) => {
                 let name = content.race(id).map_or(id.as_str(), |r| r.name.as_str());
@@ -311,6 +447,8 @@ pub struct Needs {
     pub stats: PerStat<u8>,
     pub skills: Vec<(SkillId, u16)>,
     pub weapon_skills: Vec<(WeaponSkillId, u8)>,
+    /// Any weapon skill of a role, at a rank (`any_weapon_skill = { launcher = 3 }`).
+    pub roles: Vec<(Role, u8)>,
     pub chosen: Option<u8>,
     /// 0 asks nothing.
     pub level: u8,
@@ -336,6 +474,10 @@ impl Needs {
             .map(|(stat, score)| Need::Stat(stat, score));
         let skills = self.skills.iter().map(|&(s, v)| Need::Skill(s, v));
         let weapons = (self.weapon_skills.iter()).map(|&(w, r)| Need::WeaponSkill(w, r));
+        let roles = self
+            .roles
+            .iter()
+            .map(|&(role, r)| Need::WeaponRole(role, r));
         let chosen = self.chosen.map(Need::Chosen);
         let level = (self.level > 0).then_some(Need::Level(self.level));
         let race = self.race.clone().map(Need::Race);
@@ -346,6 +488,7 @@ impl Needs {
             .chain(stats)
             .chain(skills)
             .chain(weapons)
+            .chain(roles)
             .chain(chosen)
             .chain(level)
             .chain(race)
@@ -612,6 +755,7 @@ struct NeedsSpec {
     stats: BTreeMap<String, u8>,
     skills: BTreeMap<String, u16>,
     weapon_skills: BTreeMap<String, u8>,
+    any_weapon_skill: BTreeMap<String, u8>,
     chosen: Option<u8>,
     level: u8,
     race: Option<String>,
@@ -690,6 +834,17 @@ fn resolve_needs(
         }
         weapon_skills.push((id, rank));
     }
+    let mut roles = Vec::new();
+    for (name, rank) in spec.any_weapon_skill {
+        let role = (Role::ALL.into_iter().find(|r| r.id() == name))
+            .ok_or_else(|| format!("needs any weapon skill of an unknown role `{name}`"))?;
+        if rank == 0 || rank > MAX_RANK {
+            return Err(format!(
+                "needs any {name} skill at {rank}: ranks are 1 to {MAX_RANK}"
+            ));
+        }
+        roles.push((role, rank));
+    }
     if let Some(rank) = spec.chosen {
         match choice {
             None => return Err("`chosen` needs a `choice`".into()),
@@ -733,6 +888,7 @@ fn resolve_needs(
         stats,
         skills,
         weapon_skills,
+        roles,
         chosen: spec.chosen,
         level: spec.level,
         race: spec.race,
@@ -887,7 +1043,7 @@ pub(super) fn parse<'a>(
             return Err(err("needs itself".into()));
         }
         for effect in &spec.effects {
-            effect.check().map_err(err)?;
+            effect.check(spec.choice).map_err(err)?;
         }
         let mut rank_defs = Vec::new();
         for (n, rank) in spec.rank.into_iter().enumerate() {
@@ -898,7 +1054,7 @@ pub(super) fn parse<'a>(
             }
             for effect in &rank.effects {
                 effect
-                    .check()
+                    .check(spec.choice)
                     .map_err(|m| err(format!("rank {}: {m}", n + 1)))?;
             }
             rank_defs.push(Rank {

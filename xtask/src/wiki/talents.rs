@@ -3,7 +3,7 @@
 
 use super::text::signed;
 use std::fmt::Write as _;
-use warlock_core::content::{Content, Need, TalentDef, TalentEffect, TreeId};
+use warlock_core::content::{Content, Need, Role, TalentDef, TalentEffect, TreeId};
 
 /// Every tree in display order: a heading, its description, and its talents (name, ranks, what
 /// each rank needs, what it does as the rule, and the systems it touches).
@@ -157,5 +157,93 @@ fn effect_text(effect: TalentEffect) -> String {
             )
         }
         TalentEffect::FreeBlow { trigger } => format!("free blow: {trigger:?}").to_lowercase(),
+        TalentEffect::Weapon {
+            role,
+            to_hit,
+            damage,
+            threat,
+            ranks,
+            speed,
+            reload,
+            ease,
+            bash,
+            shield,
+        } => {
+            let with = match role {
+                None => "the chosen skill".to_string(),
+                Some(Role::Melee) => "every melee weapon skill".to_string(),
+                Some(Role::Launcher) => "every missile weapon skill".to_string(),
+                Some(Role::Thrown) => "throws".to_string(),
+                Some(Role::Unarmed) => "unarmed fighting".to_string(),
+                Some(Role::ShieldBlock) => "shield blocking".to_string(),
+                Some(Role::ShieldBash) => "shield bashing".to_string(),
+                Some(Role::Style) => "every fighting style".to_string(),
+            };
+            let mut gains = Vec::new();
+            for (value, what) in [(to_hit, "to hit"), (damage, "damage"), (shield, "Shield")] {
+                if value != 0 {
+                    gains.push(format!("{what} {}", signed(value)));
+                }
+            }
+            if threat > 0 {
+                gains.push(format!("threat range +{threat}"));
+            }
+            if ranks > 0 {
+                gains.push(format!("benefits as {ranks} rank higher (at most 10)"));
+            }
+            if speed > 0 {
+                gains.push(format!("attacks {speed} % cheaper"));
+            }
+            if reload > 0 {
+                gains.push(format!("reloading {reload} % cheaper"));
+            }
+            if ease > 0 {
+                gains.push(format!("both two-weapon penalties eased by {ease}"));
+            }
+            if bash > 0 {
+                gains.push(format!(
+                    "a free shield bash's chance +{bash} % where there is one"
+                ));
+            }
+            format!("{} with {with}", gains.join(", "))
+        }
+        TalentEffect::LauncherRange { value } => {
+            format!("missile weapon range {} cells", signed(value))
+        }
+        TalentEffect::ThrowRange { value } => format!("throwing range {} cells", signed(value)),
+        TalentEffect::MaxDex { value } => {
+            format!("worn armour's Dexterity cap {}", signed(value))
+        }
+        TalentEffect::Deflection { value } => format!("Deflection {}", signed(value)),
+        TalentEffect::Protection {
+            value,
+            body_armour,
+            shield,
+        } => {
+            let mut text = format!("Protection {}", signed(value));
+            if let Some(at) = body_armour {
+                text += &format!(
+                    " while the armour piece worn with the most Protection has {at} or more"
+                );
+            }
+            if shield {
+                text += " while holding a shield";
+            }
+            text
+        }
+        TalentEffect::StanceToHit { stance, percent } => {
+            format!(
+                "{} stance's to-hit penalty {percent} % smaller",
+                stance.id()
+            )
+        }
+        TalentEffect::FleePercent { value } => format!("fleeing steps' cost {}", percent(value)),
+        TalentEffect::Pain { value } => {
+            format!(
+                "every hit on you {} damage after the soak, never below 1",
+                signed(-value)
+            )
+        }
+        TalentEffect::Resist { value } => format!("resistance to the chosen element +{value} %"),
     }
 }
