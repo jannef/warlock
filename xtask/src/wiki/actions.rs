@@ -61,6 +61,7 @@ pub(super) fn action_costs(content: &Content) -> String {
             ActionKind::Search => "A turn of searching (searching for a while takes several)",
             ActionKind::Disarm => "Trying to disarm a trap (whatever comes of it)",
             ActionKind::Chat => "Chatting with someone (asking about a topic takes no time)",
+            ActionKind::Steal => "Trying to steal from someone, whatever comes of it",
             ActionKind::Climb => {
                 "Climbing out of the water onto ice (on top of the step onto the ice)"
             }
