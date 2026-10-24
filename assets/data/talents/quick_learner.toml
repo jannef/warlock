@@ -1,0 +1,8 @@
+[[talent]]
+id = "quick_learner"
+name = "Quick learner"
+tree = "scholar"
+description = "Every level brings you one skill roll more."
+needs = { stats = { intelligence = 14 } }
+effects = [{ kind = "skill_rolls", value = 1 }]
+systems = ["skills"]

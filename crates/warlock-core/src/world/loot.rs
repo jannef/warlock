@@ -3,7 +3,8 @@
 //!
 //! **Identify** ([`World::identify`]): the core API the scroll of identify (#150) calls from its
 //! action. It reveals an inventory stack's affixes ("This is a Sharp long sword of the Bear!").
-//! Wearing or wielding an item for a while does not identify it.
+//! Wearing or wielding an item for a while does not identify it; carrying one for a day does,
+//! for a player with Lore ([`World::lore`], spec §8 "Talents").
 //!
 //! **Drops**: a creature type with `loot` (a chance in percent) drops a magic or rare item where
 //! it dies, besides what it carried, or now and then a loose gem instead (by the gems' `chance`,
@@ -78,13 +79,17 @@ impl World {
         }
         let level = self.content.item_level(&actor.level);
         let gear = Source::Gear(self.content.creature(actor.creature).level);
+        // Treasure hunter (spec §8 "Talents"): the player's luck, whoever made the kill.
+        let talents = self.state.player().talent_mods(&self.content);
+        let luck = talents.loot_magic_percent;
         // Jeweller (spec §8 "Class abilities"): a gem a kill drops is cut finer.
-        let finer = self.state.player().talent_mods(&self.content).gem_cut;
         let gem = gem::find(&self.content, &mut rng, level).map(|mut stack| {
-            gem::cut_finer(&self.content, &mut stack, finer);
+            gem::cut_finer(&self.content, &mut stack, talents.gem_cut);
             stack
         });
-        gem.or_else(|| loot::roll_from(&self.content, &mut rng, level, LootGrade::Magic, gear))
+        gem.or_else(|| {
+            loot::roll_with(&self.content, &mut rng, level, LootGrade::Magic, gear, luck)
+        })
     }
 
     /// Keeps actor `id`'s hit points within its maximum, which falls when it takes off something

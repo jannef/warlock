@@ -504,7 +504,7 @@ impl World {
                 Score::ZERO,
             ),
         };
-        let start = level_template(&content, seed, &def.start_level, None)?;
+        let start = level_template(&content, seed, &def.start_level, (None, 0))?;
         let player_pos = start
             .player_start
             .ok_or_else(|| WorldError::NoPlayerStart(start.id.clone()))?;
@@ -1107,6 +1107,8 @@ mod sun_tests;
 mod talent_arms_tests;
 #[cfg(test)]
 mod talent_tests;
+#[cfg(test)]
+mod talent_wits_tests;
 #[cfg(test)]
 mod talk_tests;
 #[cfg(test)]

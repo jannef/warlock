@@ -18,9 +18,9 @@ use crate::skills::SkillId;
 use crate::stats::Stat;
 
 impl World {
-    /// The skill rolls a level gives the player now: their class's `rolls`, their race's, and
-    /// Intelligence's (the score as the character screen shows it without status effects); none
-    /// while they are trained in no skill.
+    /// The skill rolls a level gives the player now: their class's `rolls`, their race's,
+    /// Intelligence's (the score as the character screen shows it without status effects), and
+    /// their talents' (Quick learner); none while they are trained in no skill.
     pub(super) fn level_rolls(&self) -> u8 {
         let content = &self.content;
         let player = self.state.player();
@@ -36,7 +36,11 @@ impl World {
         };
         let intelligence = player.raised_stats(content).score(Stat::Intelligence);
         let wits = content.skill_rolls().for_intelligence(intelligence);
-        class.saturating_add(race).saturating_add(wits)
+        let talents = u8::try_from(player.talent_mods(content).skill_rolls.max(0)).unwrap_or(0);
+        class
+            .saturating_add(race)
+            .saturating_add(wits)
+            .saturating_add(talents)
     }
 
     /// The ladder step and the bonus a roll on `skill` gets from the player's class and race:

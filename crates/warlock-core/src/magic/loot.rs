@@ -72,7 +72,7 @@ impl LootGrade {
 /// Rolls an item of loot at item level `level`, at least of `grade`, from `rng` (the module docs
 /// give the draws). `None` when content has no base item found at that level.
 pub fn roll(content: &Content, rng: &mut Rng, level: u8, grade: LootGrade) -> Option<Stack> {
-    roll_from(content, rng, level, grade, Source::Loot)
+    roll_with(content, rng, level, grade, Source::Loot, 0)
 }
 
 /// [`roll`], its material drawn as `source` has it: loot's by the item level, a creature's
@@ -83,6 +83,19 @@ pub fn roll_from(
     level: u8,
     grade: LootGrade,
     source: Source,
+) -> Option<Stack> {
+    roll_with(content, rng, level, grade, source, 0)
+}
+
+/// [`roll_from`] for a finder whose talents make magic and rare `luck` percent more likely
+/// (Treasure hunter, spec §8 "Talents"): their rarity weights scaled, the same draws.
+pub fn roll_with(
+    content: &Content,
+    rng: &mut Rng,
+    level: u8,
+    grade: LootGrade,
+    source: Source,
+    luck: i32,
 ) -> Option<Stack> {
     let level = level.max(1);
     if grade == LootGrade::Any
@@ -110,8 +123,7 @@ pub fn roll_from(
         rng,
         object,
         count,
-        level,
-        grade,
+        (level, grade, luck),
         Some(source),
     ))
 }
@@ -128,24 +140,23 @@ pub fn make(
     level: u8,
     grade: LootGrade,
 ) -> Stack {
-    make_from(content, rng, object, count, level, grade, None)
+    make_from(content, rng, object, count, (level, grade, 0), None)
 }
 
-/// [`make`], its material drawn as `source` has it (none for `None`: a starting kit's items
-/// keep the material they are listed with).
+/// [`make`] at `(level, grade, luck)` ([`roll_with`]), its material drawn as `source` has it
+/// (none for `None`: a starting kit's items keep the material they are listed with).
 fn make_from(
     content: &Content,
     rng: &mut Rng,
     object: ObjectId,
     count: u32,
-    level: u8,
-    grade: LootGrade,
+    (level, grade, luck): (u8, LootGrade, i32),
     source: Option<Source>,
 ) -> Stack {
     let level = level.max(1);
     let def = content.object(object);
     let rarity = match def.kind {
-        Some(_) => roll_rarity(content, rng, grade),
+        Some(_) => roll_rarity(content, rng, grade, luck),
         None => Rarity::Normal,
     };
     let magic = match rarity {
@@ -168,15 +179,25 @@ fn make_from(
     }
 }
 
-/// A rarity by the weights in content, leaving out those below `grade`.
-fn roll_rarity(content: &Content, rng: &mut Rng, grade: LootGrade) -> Rarity {
+/// A rarity by the weights in content, leaving out those below `grade`; the weights of those
+/// better than the least it allows `luck` percent more (Treasure hunter: magic and rare for
+/// any find, rare for a find that is magic at least), rounded down.
+fn roll_rarity(content: &Content, rng: &mut Rng, grade: LootGrade, luck: i32) -> Rarity {
     let affixes = content.affixes();
     if affixes.is_empty() {
         return Rarity::Normal;
     }
+    let lucky = |r: Rarity, weight: u32| {
+        if r > grade.least() && luck != 0 {
+            let weight = crate::talent::TalentMods::scaled(u64::from(weight), luck);
+            u32::try_from(weight).unwrap_or(u32::MAX)
+        } else {
+            weight
+        }
+    };
     let weights: Vec<(Rarity, u32)> = (Rarity::ALL.into_iter())
         .filter(|r| *r >= grade.least())
-        .map(|r| (r, affixes.rarity_weight(r)))
+        .map(|r| (r, lucky(r, affixes.rarity_weight(r))))
         .collect();
     match pick_weighted(rng, &weights) {
         Some(r) => *r,

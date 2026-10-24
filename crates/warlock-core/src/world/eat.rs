@@ -37,6 +37,7 @@ use crate::action::{DiseaseNews, Event, Meal, Positions};
 use crate::content::{ActionKind, ObjectId};
 use crate::object::{self, Stack};
 use crate::stats::Stat;
+use crate::talent::TalentMods;
 use crate::time::GameTime;
 use std::cell::Cell;
 
@@ -220,11 +221,15 @@ impl World {
             self.vomit();
             return;
         }
+        // Gourmand (spec §8 "Talents"): better chances, never above certain.
+        let more = self
+            .state
+            .player()
+            .talent_mods(&self.content)
+            .corpse_stats_percent;
         for (&stat, &chance) in &on_eat.stat {
-            if chance > 0
-                && self.state.rng.chance(u32::from(chance))
-                && self.player_mut().stats.raise(stat)
-            {
+            let chance = TalentMods::scaled(u64::from(chance), more).min(100) as u32;
+            if chance > 0 && self.state.rng.chance(chance) && self.player_mut().stats.raise(stat) {
                 self.say(rise_news(stat));
             }
         }
@@ -336,7 +341,8 @@ impl World {
 
     /// The player gains `points` of nutrition from `what`. A meal that would go past the most
     /// there can be is overeating: they may choke to death (if choking is on), else vomit, else
-    /// what does not fit is lost.
+    /// what does not fit is lost. With Gourmand (spec §8 "Talents") a meal never leaves them
+    /// Bloated: what does not fit below it is lost, and they never overeat.
     fn feed(&mut self, points: i32, what: ObjectId) {
         let content = self.content.clone();
         let Some(def) = content.hunger() else {
@@ -345,6 +351,16 @@ impl World {
         let Some(nutrition) = self.state.player().satiation.map(|s| s.nutrition) else {
             return;
         };
+        if self.state.player().talent_mods(&content).no_bloating {
+            let most = (def.states.bloated - 1).max(nutrition);
+            if nutrition.saturating_add(points) > most {
+                self.say("You eat your fill; the rest does you no good.");
+            }
+            if let Some(fed) = self.player_mut().satiation.as_mut() {
+                fed.feed(points, most);
+            }
+            return;
+        }
         if nutrition.saturating_add(points) > def.max {
             let o = def.overeating;
             if o.choke > 0 && self.state.rng.chance(u32::from(o.choke)) {

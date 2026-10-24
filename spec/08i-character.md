@@ -289,7 +289,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Data** (§7): `data/talents.toml` (the settings: `max_ranks`, `[coverage]`, the `[[tree]]`s
     in display order, the closed `[[system]]` list) and `data/talents/<id>.toml`, one `[[talent]]`
     a file (`id`, `name`, `tree`, `description` in the game's words, `ranks` 1 to `max_ranks`,
-    `choice` (`weapon_skill`, `style`, `element`), `needs`, `effects` per rank held,
+    `choice` (`weapon_skill`, `style`, `skill`, `element`), `needs`, `effects` per rank held,
     `[[rank]]` with each rank's own `needs` and `effects`, `systems` from the list, `granted`:
     given, never picked). Without the files there are no talents and no level asks for one.
   - **When**: every `talent_every`th character level (`[levels]` in `data/experience.toml`: 3,
@@ -312,7 +312,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     [...], rank = 3 }`: "a melee or unarmed weapon skill 3", "Maces and clubs or Unarmed 3"), the
     chosen weapon skill's or style's rank (`chosen`), the character level, the race, the class, the
     eyes (the race's vision profile), and the alignment band (`requires_alignment`, as quests
-    and abilities ask it, §8 "Alignment": `{ min = "good" }`). Refused in words: "You cannot
+    and abilities ask it, §8 "Alignment": `{ min = "good" }`); and any one of several (`either
+    = { stats = { intelligence = 12 }, skills = { appraise = 20 } }`: "Intelligence 12 or
+    Appraise 20"). Refused in words: "You cannot
     take Dodge: you need Dexterity 13." Ranks come one at a time ("You learn Hardy (2)."); a talent with a choice is
     one pick per choice, each with its own ranks.
   - **Effects** (`TalentEffect`, summed into `TalentMods` by `Actor::talent_mods`, one read
@@ -416,6 +418,35 @@ developer notes (CLAUDE.md, `docs/dev/`).
     is 50 % unless lifted, at most 90 %. Worth shown is the value, which never includes unknown
     magic. The adventurers' tables come with I1–I3. Dumps mark them `Well dressed (class)`;
     JSON `talents[].class`, `due.bonus`. **Saves change** (`Due::bonus`, `Magic::carried`).
+  - **Scholar, Grit, Delver** (#240; the design's §7.5 but for the five mana talents, which
+    wait for the mana PR). Their effects share what the class abilities use where the rules
+    are the same (`identify_carried`: Lore, a magic item carried 24 hours; `item_worth` and
+    `gem_worth`: Keen appraiser; `favour_percent`: Silver tongue +10 %, Haggler +15 %;
+    `quest_gold_percent` and `quest_xp_percent`: Well liked, a quarter more of each; `checks`
+    and `stat`: Iron will, +2 on Willpower checks and Presence +1). Iron will and Haggler are
+    one talent each, a Grit and a Delver talent a class's table may also give (the aristocrat's
+    Iron will, the merchant's Haggler). New: `read_percent` (Scroll savant: reading takes half
+    the time); `spares_self` (Careful reader: the reader's own burst never catches them, and the
+    game does not warn before reading one close); `scroll_kept` (Spell recall: one read in four
+    keeps the scroll, one gameplay draw a read with the talent, "The writing does not fade from
+    the scroll."); `loot_magic_percent` (Treasure hunter: the weights of the rarities better than
+    a find's least half again, so anything found is magic and rare more often and a creature's
+    drop, always magic, rare more often; from the same draws of the loot streams, so a map never
+    changes, and a level made before the talent keeps its loot); `skill_rolls` (Quick learner: a
+    roll more every level); `train_skill` (Apprentice, the `skill` choice, any skill, three ranks
+    for each: the chosen skill trained at 1d6+4, or raised by it, rolled from the `levels` stream
+    as the rank is taken); `ignore_burdened` (Porter: Burdened costs nothing, as a dwarf's);
+    `corpse_stats_percent` and `no_bloating` (Gourmand: a fresh corpse's chance to raise each stat
+    doubled, at most certain; a meal stops one short of Bloated, what does not fit is lost, and
+    nothing overeats); `step_slowdown_percent` (Sure-footed: half the slowdown the burden and
+    Bloated put on steps; other actions as before); `search`, `search_reach` (Keen searcher: +4
+    searching, a cell farther); `find` and `trap_damage_percent` (Trap sense: +3 to finding hidden
+    traps and secret doors, searching and in passing; a trap's damage halved, rounded down, at
+    least 1); `door_kick` and `kick_noise_percent` (Lockbreaker: a door kick as if 6 stronger, half
+    as loud); `dig_percent` (Tunneler: half again the work a turn). A prerequisite may be `either`
+    of several (Treasure hunter: "Intelligence 12 or Appraise 20"). The Scholar and Delver trees
+    and the searching, digging, shops, magic items, scrolls, skills, and experience systems are
+    held to the bar now; talk and gems wait for the racial talents.
   - **Damage-type talents** (#248; the design's §7.5 `#151` entries): Elemental ward (Guard;
     2 ranks, To 12 / Lv 20; chosen for an element, any kind that is not physical: 25 % a rank,
     counted as gear in `Actor::resistances`, so it also shrinks the doses of a status that is

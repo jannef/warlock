@@ -1133,6 +1133,12 @@ impl<'a> PerceptionView<'a> {
         self.progress.due.first().copied()
     }
 
+    /// Whether the player's own bursts spare them (spec §8 "Talents": Careful reader), so a
+    /// scroll read close needs no warning.
+    pub fn bursts_spare_me(&self) -> bool {
+        self.player.talent_mods(self.content).spares_self
+    }
+
     /// The player as prerequisites see them.
     fn candidate(&self) -> Candidate<'a> {
         let level = self.own_experience().level;

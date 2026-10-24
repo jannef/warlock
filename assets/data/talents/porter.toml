@@ -1,0 +1,8 @@
+[[talent]]
+id = "porter"
+name = "Porter"
+tree = "grit"
+description = "Being burdened no longer slows or hinders you, as it does not a dwarf."
+needs = { talents = { pack_mule = 2 }, stats = { toughness = 12 } }
+effects = [{ kind = "ignore_burdened" }]
+systems = ["burden"]

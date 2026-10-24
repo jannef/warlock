@@ -104,7 +104,8 @@ impl World {
 
     /// What the player adds to a check of `look`: the stat's modifier (of the effective score,
     /// spec §8 "Stats"), the skill's benefit, and the race's bonus; less the passive penalty in
-    /// passing.
+    /// passing. Then their talents (spec §8 "Talents"): Keen searcher's to searching, Alert's in
+    /// passing, Trap sense's to both, and what they add to checks of the stat.
     pub(super) fn search_modifier(&self, look: Look) -> i32 {
         let content = &self.content;
         let player = self.state.player();
@@ -116,6 +117,7 @@ impl World {
             Look::Active => {
                 stats.modifier(Stat::Intelligence)
                     + player.skill_effect(content, Effect::Search)
+                    + talents.search
                     + talents.check(Stat::Intelligence)
             }
             Look::Passive => {
@@ -126,7 +128,7 @@ impl World {
                     - content.search().passive_penalty
             }
         };
-        own.saturating_add(race)
+        own.saturating_add(talents.find).saturating_add(race)
     }
 
     /// Whether the player notices `hidden`, the hidden feature at `at`, in passing at all:
@@ -183,10 +185,14 @@ impl World {
         self.say(text);
     }
 
-    /// One turn of searching: the active check for every hidden feature within reach, then a
-    /// training mark's chance for the Search skill.
+    /// One turn of searching: the active check for every hidden feature within reach (farther
+    /// with the Search skill and Keen searcher), then a training mark's chance for the Search
+    /// skill.
     fn search_turn(&mut self) {
-        let reach = 1 + (self.state.player()).skill_effect(&self.content, Effect::SearchReach);
+        let player = self.state.player();
+        let reach = 1
+            + player.skill_effect(&self.content, Effect::SearchReach)
+            + player.talent_mods(&self.content).search_reach;
         let hidden = self.hidden_near(reach);
         if !hidden.is_empty() {
             let modifier = self.search_modifier(Look::Active);

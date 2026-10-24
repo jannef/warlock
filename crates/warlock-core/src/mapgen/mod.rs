@@ -45,6 +45,7 @@ use crate::grid::Grid;
 use crate::magic::{LootGrade, loot};
 use crate::object::{Stack, add_to_pile};
 use crate::rng::Rng;
+use crate::variant::Source;
 use std::collections::BTreeMap;
 
 /// Attempts before giving up on a level (each with its own derived stream).
@@ -336,8 +337,21 @@ pub fn generate(
     id: &str,
     entered_from: Option<&str>,
 ) -> Result<LevelTemplate, GenError> {
+    generate_with(content, seed, id, entered_from, 0)
+}
+
+/// [`generate`] for a player whose talents make loot magic and rare `luck` percent more often
+/// (Treasure hunter, spec §8 "Talents"): the same draws from the same streams, so the map is
+/// the same; only the rarities its loot rolls may differ.
+pub fn generate_with(
+    content: &Content,
+    seed: u64,
+    id: &str,
+    entered_from: Option<&str>,
+    luck: i32,
+) -> Result<LevelTemplate, GenError> {
     if content.local_area(id).is_some() {
-        return local::generate(content, seed, id);
+        return local::generate(content, seed, id, luck);
     }
     let (def, depth) = content
         .branch_level(id)
@@ -420,7 +434,13 @@ pub fn generate(
                 terrain: pal.floor,
                 count: def.loot,
             };
-            place_loot(&mut template, content, seed, &canvas.loot, Some(floor));
+            place_loot(
+                &mut template,
+                content,
+                seed,
+                &canvas.loot,
+                (Some(floor), luck),
+            );
             return Ok(template);
         }
     }
@@ -551,18 +571,19 @@ pub(crate) struct Floor {
 /// stream `loot/<level id>` so that the map is the same with or without it: first an item on
 /// each of `markers` (vaults' loot cells, at least of their grade), then the floor loot, one draw
 /// for how many (between the fewest and the most) and, for each, one for a cell of `floor`
-/// terrain where nothing lies, stands, shines, or leads away (in row order), then the item.
+/// terrain where nothing lies, stands, shines, or leads away (in row order), then the item,
+/// magic and rare `luck` percent more often ([`loot::roll_with`]).
 pub(crate) fn place_loot(
     template: &mut LevelTemplate,
     content: &Content,
     seed: u64,
     markers: &[(Pos, LootGrade)],
-    floor: Option<Floor>,
+    (floor, luck): (Option<Floor>, i32),
 ) {
     let mut rng = Rng::loot(seed, &template.id);
     let level = template.item_level;
     let place = |template: &mut LevelTemplate, rng: &mut Rng, p: Pos, grade: LootGrade| {
-        if let Some(stack) = loot::roll(content, rng, level, grade) {
+        if let Some(stack) = loot::roll_with(content, rng, level, grade, Source::Loot, luck) {
             add_to_pile(template.objects.entry(p).or_default(), &[stack], content);
         }
     };

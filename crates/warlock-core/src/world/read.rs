@@ -31,9 +31,12 @@ use super::spell::Caster;
 use super::{Cause, Spent, World};
 use crate::action::{AttackKind, Event, Positions, ReadTarget};
 use crate::content::StatUse;
-use crate::content::{ActionKind, Cast, Reading, ScrollSpell};
+use crate::content::{ActionKind, Cast, Reading, ScrollSpell, percent_of};
 use crate::geom::Pos;
 use crate::object::Stack;
+
+/// What the player is told when Spell recall keeps a scroll they read.
+const KEPT: &str = "The writing does not fade from the scroll.";
 
 impl World {
     /// The player reads one of inventory stack `item` at `target` (module docs).
@@ -84,7 +87,7 @@ impl World {
             self.say(format!("You already know what {what} is."));
             return Spent::Nothing;
         }
-        let price = self.price_of(self.state.player, ActionKind::Read);
+        let price = self.read_price();
         let scroll = self.state.player().inventory[item].single();
         self.say(format!(
             "You read the {}.",
@@ -94,7 +97,9 @@ impl World {
         if matches!(self.identify(on), super::Identified::Now(_)) {
             self.train_stat(StatUse::Identified);
         }
-        self.use_up(item);
+        if self.use_up(item).is_some_and(|(_, kept)| kept) {
+            self.say(KEPT);
+        }
         Spent::Turn(price)
     }
 
@@ -113,8 +118,8 @@ impl World {
         let player = self.state.player;
         let here = self.player_pos();
         // Priced as the reading begins, with the scroll still in the pack.
-        let price = self.price_of(player, ActionKind::Read);
-        let scroll = self.use_up(item).expect("the scroll is there");
+        let price = self.read_price();
+        let (scroll, kept) = self.use_up(item).expect("the scroll is there");
         self.say(format!(
             "You read the {}.",
             content.object(scroll.object).name
@@ -137,6 +142,9 @@ impl World {
             }
         }
         self.say_spell(spell, made, events);
+        if kept && self.state.death.is_none() {
+            self.say(KEPT);
+        }
         // Killed by their own spell (no action is taken after death, so it was this one): the
         // scroll is what killed them, not "a you".
         if let Some(death) = &mut self.state.death {
@@ -222,18 +230,34 @@ impl World {
         self.say_news();
     }
 
+    /// What reading a scroll costs the player: the `read` action's price, scaled by their
+    /// talents (Scroll savant: half), at least 1.
+    fn read_price(&self) -> i64 {
+        let price = self.price_of(self.state.player, ActionKind::Read);
+        match self.state.player().talent_mods(&self.content).read_percent {
+            0 => price,
+            more => percent_of(price, u32::try_from((100 + more).max(0)).unwrap_or(0)).max(1),
+        }
+    }
+
     /// Takes one of inventory stack `item` from the pack (the last empties it, and what was worn
-    /// follows its letters); returns it.
-    fn use_up(&mut self, item: usize) -> Option<Stack> {
+    /// follows its letters); returns it, and whether it was kept instead: with Spell recall
+    /// (spec §8 "Talents") a read keeps its scroll by the talent's chance, one draw of the
+    /// gameplay stream a read (none without it).
+    fn use_up(&mut self, item: usize) -> Option<(Stack, bool)> {
         self.train_stat(StatUse::Read);
+        let one = self.state.player().inventory.get(item)?.single();
+        let keep = self.state.player().talent_mods(&self.content).scroll_kept;
+        if keep > 0 && self.state.rng.chance(u32::from(keep)) {
+            return Some((one, true));
+        }
         let player = self.player_mut();
         let stack = player.inventory.get_mut(item)?;
-        let one = stack.single();
         stack.count -= 1;
         if stack.count == 0 {
             player.inventory.remove(item);
             player.equipment.after_removal(&Positions::of([item]));
         }
-        Some(one)
+        Some((one, false))
     }
 }

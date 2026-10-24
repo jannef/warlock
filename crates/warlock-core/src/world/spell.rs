@@ -20,7 +20,7 @@
 //! reading a scroll) are theirs, and so are its kills, which earn them experience.
 
 use super::fight::Harm;
-use super::{ActorId, Spent, World};
+use super::{Actor, ActorId, Spent, World};
 use crate::action::{AttackKind, Event, SpellShape};
 use crate::combat::{Blow, Strike};
 use crate::content::{Bolt, Burst, BurstIce, EffectShape, TrapId, TrapNoise};
@@ -190,7 +190,8 @@ impl World {
     /// reader of a scroll, from whom it flew): its effect ([`Event::Spell`] over the cells it
     /// reaches, [`burst_cells`], its own cell never stopping it (a trap's on a shut door), so
     /// what is drawn is what is hit), one roll of its damage for
-    /// everyone on them, half of it (at least 1) beyond radius − 1; then the walls its blast
+    /// everyone on them (but a caster its own burst spares, Careful reader), half of it (at
+    /// least 1) beyond radius − 1; then the walls its blast
     /// breaks ([`World::blast`]), then the ice it melts ([`World::shock`]) or the water it
     /// freezes ([`World::frost`]).
     pub(super) fn cast_burst(
@@ -215,8 +216,13 @@ impl World {
         let inner = radius2(radius - 1);
         let level = self.state.current_level.clone();
         let reached: BTreeSet<Pos> = cells.into_iter().collect();
+        // Careful reader (spec §8 "Talents"): a caster's own burst may spare it.
+        let spared = |a: &Actor| {
+            matches!(caster, Caster::Actor(id) if id == a.id)
+                && a.talent_mods(&self.content).spares_self
+        };
         let caught: Vec<(ActorId, Pos)> = (self.state.actors.values())
-            .filter(|a| a.level == level && reached.contains(&a.pos))
+            .filter(|a| a.level == level && reached.contains(&a.pos) && !spared(a))
             .map(|a| (a.id, a.pos))
             .collect();
         for (id, p) in caught {

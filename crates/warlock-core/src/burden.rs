@@ -222,6 +222,7 @@ pub fn load(actor: &Actor, race: Option<&RaceDef>, content: &Content) -> Load {
         content.size(size).carry,
     );
     // Talents (Pack mule) scale the limit; magic items and talents (Deep pockets) add to it.
+    // Porter shrugs off Burdened as a dwarf does.
     let talents = actor.talent_mods(content);
     let base = TalentMods::scaled(base, talents.carry_percent);
     // Deep pockets (spec §8 "Class abilities"): coins weigh nothing.
@@ -239,7 +240,7 @@ pub fn load(actor: &Actor, race: Option<&RaceDef>, content: &Content) -> Load {
             base,
             actor.mods(content).get(Effect::Carry) + talents.carry_kg,
         ),
-        ignores_burdened,
+        ignores_burdened: ignores_burdened || talents.ignore_burdened,
     }
 }
 

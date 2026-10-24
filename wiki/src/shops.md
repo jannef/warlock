@@ -76,9 +76,10 @@ Each kind of shop asks a part of an object's worth above it, and pays a part of 
 buys. Your **Presence** moves prices in your favour, or against you if it is low, and so does the
 **Appraise** skill if you are trained in it: you pay less and are offered more. Shopkeepers are
 good folk, so your [alignment](alignment.md) moves their prices too: a saint pays a little less,
-an evil character more. Some class abilities do too (Well dressed, Haggler, Golden tongue),
+an evil character more. Some class abilities do too (Well dressed, Golden tongue),
 and a merchant's Magnate and Golden tongue let prices move further than anyone else's; Insured
-makes shops pay half again as much (never more than they ask). None of it is ever shown as a
+makes shops pay half again as much (never more than they ask). So do the [talents](talents.md)
+Silver tongue and Haggler. None of it is ever shown as a
 number; you see only the prices. Shops sell and buy by [item
 class](objects.md#item-classes):
 
