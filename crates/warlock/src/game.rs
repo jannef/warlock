@@ -50,7 +50,8 @@ pub struct Game {
 impl Game {
     /// A fresh run of `scenario` as `character` (the scenario's if `None`) named `name` (the
     /// run's default if `None`), e.g. from the main menu, with a new save id from `store`: it
-    /// never touches another character's save.
+    /// never touches another character's save. The player chose this character, so it starts
+    /// with its starting kit (spec §8 "Character creation").
     pub fn new_run(
         content: Arc<Content>,
         store: &SaveStore,
@@ -59,7 +60,7 @@ impl Game {
         character: Option<&CharacterSpec>,
         name: Option<&str>,
     ) -> Result<Self, String> {
-        let world = World::with_character_named(content, scenario, seed, character, name)
+        let world = World::start_run(content, scenario, seed, character, name, true)
             .map_err(|e| format!("cannot start scenario `{scenario}`: {e}"))?;
         // The run's first words (the welcome) are news.
         Ok(Self {
@@ -134,8 +135,11 @@ impl Game {
             None => {
                 let scenario = args.scenario_name();
                 let (character, name) = (args.character.as_ref(), args.name.as_deref());
+                // A character chosen with `--character` or `--name` starts with its kit; the
+                // scenario's own (`--scenario` alone) with the scenario's pack.
+                let kit = character.is_some() || name.is_some();
                 let mut world =
-                    World::with_character_named(content, scenario, args.seed, character, name)
+                    World::start_run(content, scenario, args.seed, character, name, kit)
                         .map_err(|e| format!("cannot start scenario `{scenario}`: {e}"))?;
                 if let Some(message) = failure {
                     world.notice(message);

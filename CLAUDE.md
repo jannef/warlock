@@ -48,7 +48,9 @@ Game flags (`cargo run -p warlock -- --help`):
   `--character RACE,GENDER,CLASS` (e.g. `dwarf,female,warrior`; default: the scenario's
   character; like `--seed` it shapes the run other flags start and alone does not skip the menu),
   `--name NAME` (the character's name, up to 20 characters; default: the scenario's for its own
-  character, else one of the race's names picked from the seed; like `--character`)
+  character, else one of the race's names picked from the seed; like `--character`). A run
+  started with `--character` or `--name` (or from New run) has a chosen character and starts with
+  its starting kit; `--scenario` alone starts with the scenario's pack (docs/dev/character-creation.md)
 - `--content-dir assets` — read content from disk instead of the copy built into the binary
 - `--window WxH` (physical pixels), `--scale F` (display scale; `1` for reproducible captures)
 - `--capture out.png` — render **offscreen** (no window), save a screenshot, exit.
@@ -199,10 +201,11 @@ special room the player stands in, if they know it), and per inventory stack (in
 order) its `letter` (the position as action text), `class` (item class id), `name`, `rarity`,
 `identified`, and `magic` (affixes only once identified). Replay
 files are JSON
-`{game_version, scenario, seed, character, name, steps:[{action, hash}]}` (`character` =
+`{game_version, scenario, seed, character, name, kit, steps:[{action, hash}]}` (`character` =
 `{race, gender, class}`, left out for a run without one; a replay without it starts as the
 scenario's, so old replays load; `name` the character's name, a replay without it gives the run's
-default name); `hash` is the FNV-1a 64 state hash (`World::state_hash`) after
+default name; `kit` true when the run started with the character's starting kit, left out
+otherwise); `hash` is the FNV-1a 64 state hash (`World::state_hash`) after
 the step, as 16 hex digits.
 
 - `--portable [DIR]` keep everything in `warlock-data` next to the game (or DIR); a `warlock-data`
@@ -253,7 +256,7 @@ file). Topics:
 - `docs/dev/stats.md` — the six stats, modifiers, scores and potentials, what may be shown
 - `docs/dev/burden.md` — load, limits, sizes, every penalty's one hook
 - `docs/dev/hunger.md` — satiation, eating, corpses and rot, starving
-- `docs/dev/character-creation.md` — `CharacterSpec`, races, classes, genders, the horoscope, starting rolls, names
+- `docs/dev/character-creation.md` — `CharacterSpec`, races, classes, genders, the horoscope, starting rolls, names, starting kits
 - `docs/dev/alignment.md` — the good–evil score and its bands, the deeds that move it (one hook each), what reads it
 - `docs/dev/skills.md` — trained skills, effects and uses, training marks, the skills screen
 - `docs/dev/experience.md` — the level curve, kill XP, level-ups
@@ -412,7 +415,8 @@ A successful compile does not verify anything visual. Before opening a PR:
 `*.toml` files (one per showcase room or feature, read in file-name order; entry names are
 unique across files) list one entry per showcase room plus the vast level (its start and
 its river): a scenario and text `actions` (`move:N*3 open:E`; `*N` repeats) or a `replay` file,
-and optional `character` (`human,male,paladin`: the run starts as it, not the scenario's), `window`, `scale`, `freeze_time`, `screen` (a `--screen` value: over the run, e.g.
+and optional `character` (`human,male,paladin`: the run starts as it, not the scenario's), `kit`
+(`true`: the run starts with the character's starting kit), `window`, `scale`, `freeze_time`, `screen` (a `--screen` value: over the run, e.g.
 `pause`, `help`, `settings`, `controls`, `inventory`, `equipment`, `equip-item`, `describe`,
 `character`, `skills`, `weapon-skills`, `quests`, `messages`, `pick-up`, `drop`, `eat`, `abilities`,
 `dialogue`; or over

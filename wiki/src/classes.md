@@ -5,8 +5,8 @@ before you set out. For now a class changes your starting [stats](stats.md), add
 points (see [Combat](combat.md#hit-points)), trains you in a handful of
 [skills](skills.md#who-trains-what), and gives you your first ranks in a few
 [weapon skills](weapon-skills.md) (a barbarian has learned one of two) and
-[fighting styles](fighting-styles.md) (a thief or a monk one of two); no equipment or spells come
-with it.
+[fighting styles](fighting-styles.md) (a thief or a monk one of two), and decides most of your
+[starting kit](starting-kit.md); no spells come with it.
 
 The first eleven are adventurers. The last four are everyday folk: an aristocrat, a commoner, a
 craftsperson, and a merchant, who were never trained for this and mostly show it.
