@@ -1,0 +1,8 @@
+[[talent]]
+id = "tinker"
+name = "Tinker"
+tree = "class"
+granted = true
+description = "Mechanisms hold no secrets from you: you can disarm traps you know of (an ability), trained or not."
+effects = [{ kind = "disarm" }]
+systems = ["traps"]

@@ -1,0 +1,8 @@
+[[talent]]
+id = "deep_pockets"
+name = "Deep pockets"
+tree = "class"
+granted = true
+description = "You carry a fortune well: you can carry 10 kg more, and coins weigh nothing to you."
+effects = [{ kind = "carry_kg", value = 10 }, { kind = "weightless_coins" }]
+systems = ["burden"]

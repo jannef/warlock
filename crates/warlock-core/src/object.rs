@@ -56,10 +56,6 @@ pub struct Stack {
     /// ([`crate::rot::made_at`]).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) died: Option<GameTime>,
-    /// An unidentified magic item the player carries while they have Lore (spec §8 "Talents"):
-    /// since when (rules only). Put down, it is forgotten.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) carried: Option<GameTime>,
 }
 
 impl Stack {
@@ -71,7 +67,6 @@ impl Stack {
             magic: None,
             parts: None,
             died: None,
-            carried: None,
         }
     }
 
@@ -130,6 +125,20 @@ impl Stack {
     /// What it rolled, if the player has identified it: all presentation may know of its magic.
     pub fn known_magic(&self) -> Option<&Magic> {
         self.magic().filter(|m| m.identified)
+    }
+
+    /// Counts `seconds` more of it carried by someone who learns magic items by carrying them
+    /// (spec §8 "Class abilities": Connoisseur), if it is magic and unidentified; returns whether
+    /// it has now been carried `needed` seconds.
+    pub(crate) fn carry_for(&mut self, seconds: u64, needed: u64) -> bool {
+        match self.magic.as_mut() {
+            Some(m) if !m.identified => {
+                let carried = u64::from(m.carried).saturating_add(seconds).min(needed);
+                m.carried = u32::try_from(carried).unwrap_or(u32::MAX);
+                carried >= needed
+            }
+            _ => false,
+        }
     }
 
     /// Identifies it; returns whether there was anything to learn.
@@ -424,7 +433,6 @@ fn join(stacks: &mut [Stack], stack: &Stack, content: &Content) -> bool {
         Some(same) => {
             same.count += stack.count;
             same.died = oldest(same.died, stack.died);
-            same.carried = oldest(same.carried, stack.carried);
             true
         }
         None => false,
@@ -432,15 +440,11 @@ fn join(stacks: &mut [Stack], stack: &Stack, content: &Content) -> bool {
 }
 
 /// Puts `stacks` on top of `pile`, keeping their order (the first ends on top). Stackable
-/// objects join a stack of the same object already there. What lies there is carried by no one.
+/// objects join a stack of the same object already there.
 pub fn add_to_pile(pile: &mut Vec<Stack>, stacks: &[Stack], content: &Content) {
     for stack in stacks.iter().rev() {
-        let stack = Stack {
-            carried: None,
-            ..stack.clone()
-        };
-        if !join(pile, &stack, content) {
-            pile.insert(0, stack);
+        if !join(pile, stack, content) {
+            pile.insert(0, stack.clone());
         }
     }
 }

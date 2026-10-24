@@ -32,20 +32,13 @@ pub struct ShopId(pub u8);
 pub const MAX_SHOPS: usize = 32;
 /// The most stacks of goods a generated shop lays out.
 pub const MAX_ITEMS: u8 = 52;
-/// The most the player's favour moves a price, in percent either way (talents may lift the most
-/// in their favour, [`MAX_FAVOUR_LIFT`]).
+/// The most the player's favour moves a price, in percent either way.
 pub const MAX_FAVOUR: i32 = 50;
-/// How much higher talents may lift the most the player's favour moves a price in their favour
-/// (Haggler, spec §8 "Talents"), in percent.
-pub const MAX_FAVOUR_LIFT: i32 = 40;
+/// The most favour there can be once talents lift the cap (spec §8 "Class abilities": the
+/// merchant's Magnate and Golden tongue), either way.
+pub const MOST_FAVOUR: i32 = 90;
 /// The placeholder for the keeper's name in a shop's `title`.
 pub const KEEPER: &str = "{keeper}";
-
-/// `favour` within what a price may move: [`MAX_FAVOUR`] against, and that and
-/// [`MAX_FAVOUR_LIFT`] for.
-fn clamped(favour: i32) -> i32 {
-    favour.clamp(-MAX_FAVOUR, MAX_FAVOUR + MAX_FAVOUR_LIFT)
-}
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -218,15 +211,14 @@ impl Shops {
     }
 
     /// What a shop of kind `kind` asks for `stack`, in gold, from a buyer with `favour` (percent
-    /// in their favour, [`MAX_FAVOUR`] at most against them and that and [`MAX_FAVOUR_LIFT`] for
-    /// them): its value times the markup, less the favour, rounded up; at least 1 for anything
-    /// traded, 0 for anything that is not.
+    /// in their favour, [`MAX_FAVOUR`] at most either way): its value times the markup, less the
+    /// favour, rounded up; at least 1 for anything traded, 0 for anything that is not.
     pub fn price(&self, content: &Content, kind: ShopId, stack: &Stack, favour: i32) -> u32 {
         if !self.trades(content, stack) {
             return 0;
         }
         let base = self.base(content, stack) * u64::from(self.get(kind).markup);
-        let percent = u64::from((100 - clamped(favour)).unsigned_abs());
+        let percent = u64::from((100 - favour.clamp(-MOST_FAVOUR, MOST_FAVOUR)).unsigned_abs());
         let price = (base * percent).div_ceil(10_000).max(1);
         u32::try_from(price).unwrap_or(u32::MAX)
     }
@@ -235,12 +227,26 @@ impl Shops {
     /// value times what the shop pays, plus the favour, rounded down; never more than it would
     /// ask for it, and 0 for anything it does not buy.
     pub fn offer(&self, content: &Content, kind: ShopId, stack: &Stack, favour: i32) -> u32 {
+        self.offer_more(content, kind, stack, favour, 0)
+    }
+
+    /// [`Shops::offer`] to a seller shops pay `more` percent more (spec §8 "Class abilities":
+    /// Insured), still never more than it would ask.
+    pub fn offer_more(
+        &self,
+        content: &Content,
+        kind: ShopId,
+        stack: &Stack,
+        favour: i32,
+        more: i32,
+    ) -> u32 {
         if !self.buys(content, kind, stack) {
             return 0;
         }
         let base = self.base(content, stack) * u64::from(self.get(kind).pays);
-        let percent = u64::from((100 + clamped(favour)).unsigned_abs());
-        let offer = u32::try_from(base * percent / 10_000).unwrap_or(u32::MAX);
+        let percent = u64::from((100 + favour.clamp(-MOST_FAVOUR, MOST_FAVOUR)).unsigned_abs());
+        let more = u64::from((100 + more).max(0).unsigned_abs());
+        let offer = u32::try_from(base * percent * more / 1_000_000).unwrap_or(u32::MAX);
         offer.min(self.price(content, kind, stack, favour))
     }
 
@@ -468,23 +474,24 @@ mod tests {
         // A dagger is worth 30: the store asks 150 % and pays 30 %.
         assert_eq!(shops.price(&c, store, &dagger, 0), 45);
         assert_eq!(shops.offer(&c, store, &dagger, 0), 9);
+        // Insured: half again, never more than the price.
+        assert_eq!(shops.offer_more(&c, store, &dagger, 0, 50), 13);
+        assert_eq!(shops.offer_more(&c, store, &dagger, 0, 0), 9);
+        assert_eq!(
+            shops.offer_more(&c, store, &dagger, MOST_FAVOUR, 100),
+            shops.price(&c, store, &dagger, MOST_FAVOUR)
+        );
         // In the buyer's favour: less to pay, more offered; against them, the other way.
         assert_eq!(shops.price(&c, store, &dagger, 10), 41);
         assert_eq!(shops.offer(&c, store, &dagger, 10), 9);
         assert_eq!(shops.price(&c, store, &dagger, -10), 50);
-        // The favour is at most half against the buyer.
+        // The favour is at most MOST_FAVOUR either way (`world::favour` caps it at half unless
+        // talents lift the cap).
         assert_eq!(
-            shops.price(&c, store, &dagger, -90),
-            shops.price(&c, store, &dagger, -MAX_FAVOUR)
+            shops.price(&c, store, &dagger, 120),
+            shops.price(&c, store, &dagger, MOST_FAVOUR)
         );
         assert_eq!(shops.price(&c, store, &dagger, MAX_FAVOUR), 23);
-        // In their favour, talents may lift it (Haggler), as far as the lift goes.
-        let most = MAX_FAVOUR + MAX_FAVOUR_LIFT;
-        assert_eq!(shops.price(&c, store, &dagger, 60), 18);
-        assert_eq!(
-            shops.price(&c, store, &dagger, 100),
-            shops.price(&c, store, &dagger, most)
-        );
         // A stack is priced whole, then rounded: 12 arrows worth 1 each.
         let arrows = Stack::new(c.object_id("arrow").expect("arrow"), 12);
         assert_eq!(shops.price(&c, store, &arrows, 0), 18);

@@ -343,6 +343,7 @@ fn ornaments_go_in_the_naming_order_and_the_description() {
         affixes: affixes.clone(),
         name: None,
         identified: true,
+        carried: 0,
     };
     let own = sword().own_parts().expect("its pommel").to_vec();
     let sharp =
@@ -357,6 +358,7 @@ fn ornaments_go_in_the_naming_order_and_the_description() {
     );
     let unknown = Magic {
         identified: false,
+        carried: 0,
         ..magic.clone()
     };
     let hidden =

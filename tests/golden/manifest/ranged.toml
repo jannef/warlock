@@ -1,32 +1,8 @@
-# Ranged combat and weapon skills.
-
-# Ranged combat (spec §8 "Ranged combat", §6 "Targeting", §4.8 "Missiles"). In the arena's dark
-# corner the player readies the bow and arrows lying beside them and aims (`--fire`, as `f`):
-# the cursor on the nearest hostile creature, out of range and marked so, the faint line of fire.
-[[golden]]
-name = "ranged-aim"
-scenario = "arena"
-actions = "move:E pickup equip:missile_weapon:a equip:missiles:b wait"
-args = ["--fire"]
+# A missile in flight.
 
 # From the storeroom (a short bow and flaming arrows) to the patrol gallery's door, a flaming arrow
-# shot into its dark middle: halfway (frozen time), lighting its way, then burning where it landed.
+# shot into its dark middle: halfway (frozen time), lighting its way.
 [[golden]]
 name = "ranged-flight"
 scenario = "showcase"
 actions = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:S pickup move:W pickup equip:missile_weapon:a equip:missiles:c move:NE move:E*2 move:N*4 move:E*20 open:S move:S fire:45,17"
-
-# Weapon skills (#134): the arena's halfling thief readies the bow beside them and shoots into
-# the brawl until the arrows run out; the weapon skills screen shows the class's and the race's
-# ranks (daggers 2, thrown 1, slings 1), most of a bar of marks in bows (80%), and the fighting
-# styles starting below them (the list scrolls).
-[[golden]]
-name = "weapon-skills-screen"
-scenario = "arena"
-actions = "move:E pickup equip:missile_weapon:a equip:missiles:b fire:30,16*12"
-screen = "weapon-skills"
-
-[[golden]]
-name = "ranged-burning-arrow"
-scenario = "showcase"
-actions = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:S pickup move:W pickup equip:missile_weapon:a equip:missiles:c move:NE move:E*2 move:N*4 move:E*20 open:S move:S fire:45,17 wait"

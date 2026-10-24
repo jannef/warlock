@@ -54,6 +54,10 @@ anything and a small window asks first:
 Being turned back takes as long as a step. If you hold a movement key, you stop at the shop's
 edge instead of being asked.
 
+A merchant's **Credit** (and an aristocrat's **Commanding**, see
+[Classes](classes.md#levels)) lets you walk out owing up to 100 (50) gold: the keeper nods
+("you can pay next time"), and the debt stays on their bill until you come back and pay.
+
 ## Selling
 
 Drop something in a shop, and if the shop buys that kind of thing, its keeper makes an offer:
@@ -72,8 +76,10 @@ Each kind of shop asks a part of an object's worth above it, and pays a part of 
 buys. Your **Presence** moves prices in your favour, or against you if it is low, and so does the
 **Appraise** skill if you are trained in it: you pay less and are offered more. Shopkeepers are
 good folk, so your [alignment](alignment.md) moves their prices too: a saint pays a little less,
-an evil character more. So do the [talents](talents.md) Silver tongue and Haggler (Haggler also
-lifts the most prices may move in your favour, from half to 60 %). None of it is ever shown as a
+an evil character more. Some class abilities do too (Well dressed, Golden tongue),
+and a merchant's Magnate and Golden tongue let prices move further than anyone else's; Insured
+makes shops pay half again as much (never more than they ask). So do the [talents](talents.md)
+Silver tongue and Haggler. None of it is ever shown as a
 number; you see only the prices. Shops sell and buy by [item
 class](objects.md#item-classes):
 

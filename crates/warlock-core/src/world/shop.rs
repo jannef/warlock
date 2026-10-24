@@ -37,7 +37,7 @@ use super::{ActorId, Deed, Spent, World};
 use crate::action::{Event, Meal, Positions};
 use crate::content::StatUse;
 use crate::content::{
-    ActionKind, Content, MAX_FAVOUR, MAX_FAVOUR_LIFT, ShopId, ShopPlan, Shops, TerrainId,
+    ActionKind, Content, MAX_FAVOUR, MOST_FAVOUR, ShopId, ShopPlan, Shops, TerrainId,
 };
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
@@ -215,17 +215,16 @@ pub fn unpaid_parts(inventory: &[Stack], unpaid: &[Stack]) -> Vec<u32> {
 
 /// How far prices move in `actor`'s favour, in percent (spec §7 "Shops"): the shops' `presence`
 /// for each point of their Presence modifier, plus what their skills give (Appraise's
-/// bargaining), plus what a good keeper makes of their alignment (spec §8 "Alignment"), plus
-/// what their talents give (spec §8 "Talents": Silver tongue, Haggler), at most [`MAX_FAVOUR`]
-/// either way, the most in their favour lifted by their talents (Haggler; at most
-/// [`MAX_FAVOUR_LIFT`]). Never shown.
+/// bargaining), plus what a good keeper makes of their alignment (spec §8 "Alignment"), at most
+/// [`MAX_FAVOUR`] either way. Talents (spec §8 "Class abilities": Haggler, Well dressed) add
+/// theirs before the cap, and may lift it (Magnate), never past [`MOST_FAVOUR`]. Never shown.
 pub fn favour(content: &Content, shops: &Shops, actor: &super::Actor) -> i32 {
     let presence = actor.stats.modifier(Stat::Presence) * i32::from(shops.presence);
     let bargain = actor.skills.effect(content, Effect::Bargain);
     let alignment = super::alignment::keeper_favour(content, shops, actor);
     let talents = actor.talent_mods(content);
-    let most = MAX_FAVOUR + talents.favour_cap.clamp(0, MAX_FAVOUR_LIFT);
-    (presence + bargain + alignment + talents.favour).clamp(-MAX_FAVOUR, most)
+    let cap = (MAX_FAVOUR + talents.favour_cap).clamp(0, MOST_FAVOUR);
+    (presence + bargain + alignment + talents.favour_percent).clamp(-MAX_FAVOUR, cap)
 }
 
 /// How many of `object` `stacks` hold.
@@ -412,8 +411,15 @@ impl World {
             return Spent::Nothing;
         }
         self.hand_over(self.state.player, shop.keeper, owed);
+        let bought = unpaid_parts(&self.state.player().inventory, &shop.unpaid);
         self.state.current_mut().shops[i].unpaid.clear();
         self.say(format!("You pay {} {owed} gold.", shop.name));
+        // Eye for quality (spec §8 "Class abilities"): what was bought is known for what it is.
+        if self.state.player().talent_mods(&content).identify_trades {
+            for (item, _) in (bought.iter().enumerate()).filter(|&(_, &n)| n > 0) {
+                self.identify(item);
+            }
+        }
         self.train_stat(StatUse::Trade);
         self.player_did(Deed::PaidDebt);
         Spent::NoTime
@@ -451,8 +457,19 @@ impl World {
         };
         let content = self.content.clone();
         let shop = self.state.current().shops[i].clone();
-        let deal = self.deal(&shop, &inventory, &chosen, sell);
+        let mut deal = self.deal(&shop, &inventory, &chosen, sell);
         let name = shop.name.as_str();
+        // Eye for quality (spec §8 "Class abilities"): what is sold is known for what it was,
+        // once it is sold.
+        let sold = object::phrase(&deal.sold, &content);
+        let mut learned = Vec::new();
+        if self.state.player().talent_mods(&content).identify_trades {
+            for stack in &mut deal.sold {
+                if stack.identify() {
+                    learned.push(stack.describe(&content));
+                }
+            }
+        }
         if !deal.refused.is_empty() {
             let what = object::phrase(&deal.refused, &content);
             self.say(format!("{name} has no use for {what}."));
@@ -499,11 +516,13 @@ impl World {
         }
         if !deal.sold.is_empty() {
             self.hand_over(shop.keeper, self.state.player, deal.payment);
-            let what = object::phrase(&deal.sold, &content);
             self.say(format!(
-                "You sell {what} to {name} for {} gold.",
+                "You sell {sold} to {name} for {} gold.",
                 deal.payment
             ));
+            for what in learned {
+                self.say(format!("That was {what}!"));
+            }
             self.train_stat(StatUse::Trade);
         }
         Some(spent)
@@ -515,6 +534,7 @@ impl World {
         let content = self.content.clone();
         let shops = content.shops().expect("a shop is here");
         let favour = self.player_favour();
+        let more = self.state.player().talent_mods(&content).sell_percent;
         let parts = unpaid_parts(inventory, &shop.unpaid);
         let mut deal = Deal {
             leaving: vec![0; inventory.len()],
@@ -531,7 +551,7 @@ impl World {
             if own.count == 0 {
                 continue;
             }
-            let offer = shops.offer(&content, shop.kind, &own, favour);
+            let offer = shops.offer_more(&content, shop.kind, &own, favour, more);
             if offer == 0 {
                 deal.refused.push(own);
             } else if self.spoilt(&own) {
@@ -590,6 +610,9 @@ impl World {
             .iter()
             .find(|s| s.is_open() && s.contains(from) && s.is_exit(to) && !s.unpaid.is_empty())?
             .clone();
+        if self.on_credit(&shop) {
+            return None;
+        }
         let level = self.state.current();
         let free = |p: Pos| {
             p != from
@@ -615,6 +638,13 @@ impl World {
         Some(land)
     }
 
+    /// Whether the keeper of `shop` lets the player leave owing what they owe it (spec §8 "Class
+    /// abilities": Credit, Commanding): no more than their credit. The debt stays on its bill.
+    fn on_credit(&self, shop: &Shop) -> bool {
+        let credit = self.state.player().talent_mods(&self.content).credit;
+        credit > 0 && shop.owed(self.shop_kinds(), &self.content, self.player_favour()) <= credit
+    }
+
     /// The player stepped from `from` to `to` on the current level: entering an open shop the
     /// keeper greets them; leaving one owing anything (any way but its ways out, which turn them
     /// back) is theft (spec §7 "Shops").
@@ -628,6 +658,9 @@ impl World {
             let (was, is) = (shop.contains(from), shop.contains(to));
             if !was && is {
                 self.say(format!("Welcome to {}!", shop.sign(&content)));
+            } else if was && !is && !shop.unpaid.is_empty() && self.on_credit(shop) {
+                let name = shop.name.clone();
+                self.say(format!("{name} nods: you can pay next time."));
             } else if was && !is && !shop.unpaid.is_empty() {
                 let name = shop.name.clone();
                 self.outrage(i);

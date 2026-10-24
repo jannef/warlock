@@ -224,7 +224,9 @@ impl World {
     /// `slowdown` percent more (negative: less; a step's, Sure-footed).
     fn slowed(&self, id: ActorId, price: i64, slowdown: i32) -> i64 {
         let actor = &self.state.actors[&id];
-        let ease = actor.skill_effect(&self.content, Effect::Burden);
+        let talents = actor.talent_mods(&self.content);
+        // Hard work (spec §8 "Class abilities") eases the burden's slowdown on top of Balance.
+        let ease = actor.skill_effect(&self.content, Effect::Burden) + talents.burden_ease;
         let keep = (100 - ease.clamp(0, 100)) * (100 + slowdown).max(0) / 100;
         let ease = 100 - keep.clamp(0, 100);
         let price = self.bloated(
@@ -234,7 +236,7 @@ impl World {
         );
         let price = actor.effects.slow(&self.content, price);
         // Quick (spec §8 "Talents"): a little quicker in everything, as a higher speed would be.
-        match actor.talent_mods(&self.content).speed_percent {
+        match talents.speed_percent {
             0 => price,
             quick => quicker(price, quick),
         }

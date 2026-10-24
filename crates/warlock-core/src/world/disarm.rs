@@ -81,7 +81,7 @@ impl World {
         let content = &self.content;
         let player = self.state.player();
         let dexterity = player.effective_stats(content).modifier(Stat::Dexterity)
-            + player.talent_mods(content).checks[Stat::Dexterity];
+            + player.talent_mods(content).check(Stat::Dexterity);
         dexterity.saturating_add(player.skill_effect(content, Effect::Disarm))
     }
 }

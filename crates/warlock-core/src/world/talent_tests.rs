@@ -85,6 +85,7 @@ fn a_third_level_asks_for_a_talent_and_refuses_everything_else_until_it_is_made(
             level: 3,
             talents: 1,
             rolls: 0,
+            bonus: 0,
         })
     );
     assert!(

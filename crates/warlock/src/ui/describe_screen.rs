@@ -3,13 +3,13 @@
 //! letter), over the screen it came from.
 //!
 //! It names the item (in its rarity's color, spec §8 "Magic items"), says what it is (rarity,
-//! base, every part it is made of, weight) and whether it is worn or wielded, then its base
+//! base, every part it is made of, weight; and to a player with an eye for it, spec §8 "Class
+//! abilities", what it and its gems are worth) and whether it is worn or wielded, then its base
 //! stats in words (`warlock_core::magic::describe`): how it is held or worn, its damage dice and
 //! criticals, how far it shoots or is thrown, what it needs, its Defence. A magic or rare item that is
 //! identified lists its item level and its affixes in plain language ("Sharp: +2 damage", "of
 //! Celerity: attacks faster"); one that is not says its magic is unknown. Speed is said in words;
-//! nothing about the player's own to-hit or modifiers is shown. A player with Keen appraiser
-//! (spec §8 "Talents") is told what it is worth ("Worth 45 gold").
+//! nothing about the player's own to-hit or modifiers is shown.
 //!
 //! Read-only: Esc, Enter, or Back closes it. It is read from the perception snapshot when it
 //! opens; no game time passes while it is open.
@@ -60,22 +60,13 @@ impl DescribeScreen {
         };
         let content = view.content();
         let def = content.object(stack.object);
-        let mut lines = describe::lines(stack, content);
-        // Keen appraiser: what it is worth, after what it is.
-        if let Some(gold) = view.worth(stack) {
-            let at = lines
-                .iter()
-                .take_while(|l| l.kind == LineKind::Base)
-                .count();
-            lines.insert(at, worth(gold, stack.count));
-        }
         Self {
             glyph: def.glyph,
             fg: stack.fg(content),
             title: capitalized(&stack.title(content)),
             rarity: stack.rarity(),
             mark: equipment::mark(content, view.equipment(), item),
-            lines,
+            lines: describe::appraised(stack, content, view.appraisal()),
         }
     }
 
@@ -176,19 +167,6 @@ impl Default for Row {
     }
 }
 
-/// What a stack of `count` is worth, `gold` in all: "Worth 45 gold", "Worth 45 gold, 15 each".
-fn worth(gold: u64, count: u32) -> Line {
-    let text = if count > 1 {
-        format!("Worth {gold} gold, {} each", gold / u64::from(count))
-    } else {
-        format!("Worth {gold} gold")
-    };
-    Line {
-        kind: LineKind::Base,
-        text,
-    }
-}
-
 fn capitalized(text: &str) -> String {
     let mut chars = text.chars();
     chars
@@ -233,6 +211,32 @@ mod tests {
 
     fn has(text: &[String], needle: &str) -> bool {
         text.iter().any(|l| l.contains(needle))
+    }
+
+    #[test]
+    fn an_eye_for_worth_shows_what_things_and_gems_are_worth() {
+        // A merchant at level 32 (Appraiser) picks up the same arms.
+        let content = Arc::new(Content::builtin().expect("content"));
+        let spec = "human,male,merchant".parse().expect("a character");
+        let mut world =
+            World::with_character(content, "showcase", None, Some(&spec)).expect("world");
+        world.apply(&Action::GrantXp(2_000_000));
+        while world.due().is_some() {
+            world.apply(&Action::LevelUpAuto);
+        }
+        let walk = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*5 pickup \
+                    move:E pickup";
+        for action in warlock_core::action::parse_actions(walk).expect("actions") {
+            world.apply(&action);
+        }
+        let view = world.perception();
+        let item = view.inventory().len() - 1;
+        let sword = text(&DescribeScreen::new(Some(&view), Some(item)));
+        assert!(has(&sword, "Worth "), "{sword:#?}");
+        assert!(has(&sword, "fine cut (worth "), "{sword:#?}");
+        // Without the eye, no worth.
+        let plain = text(&DescribeScreen::new(Some(&armed().perception()), Some(3)));
+        assert!(!has(&plain, "Worth "), "{plain:#?}");
     }
 
     #[test]

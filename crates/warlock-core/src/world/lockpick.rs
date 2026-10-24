@@ -37,7 +37,7 @@ impl World {
         }
         let modifier = me.effective_stats(&content).modifier(Stat::Dexterity)
             + me.skill_effect(&content, Effect::Pick)
-            + me.talent_mods(&content).checks[Stat::Dexterity];
+            + me.talent_mods(&content).check(Stat::Dexterity);
         let at = self.player_pos().step(dir);
         let level = self.state.current();
         let closed = (level.terrain.get(at)).is_some_and(|t| content.terrain(*t).is_closed_door());

@@ -414,6 +414,13 @@ pub(super) fn instantiate_level(
     let id = template.id.as_str();
     let mut level = LevelState::from_template(template, content, state.time);
     crate::rot::made_at(level.objects.values_mut().flatten(), content, state.time);
+    // Jeweller (spec §8 "Class abilities"): the loose gems of a level made now are cut finer.
+    let finer = (state.actors.get(&state.player)).map_or(0, |p| p.talent_mods(content).gem_cut);
+    if finer > 0 {
+        for stack in level.objects.values_mut().flatten() {
+            crate::gem::cut_finer(content, stack, finer);
+        }
+    }
     let first = state.next_actor_id;
     for plan in &template.shops {
         let spawned = (template.creatures.iter()).position(|c| c.pos == plan.post);

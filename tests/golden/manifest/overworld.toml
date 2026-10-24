@@ -1,25 +1,8 @@
-# The overworld and its local areas.
+# The overworld at map scale.
 
 # The overworld (`world` scenario): along the road from the Hall to the bridge over the Wendle,
-# at 12:12 (sunlit, sight radius 9; the ranger's survival makes the journeys a little quicker) and
-# after a skip of three days and ten hours to 22:12 on the 14th of Darkening (cold night light with
-# a nearly full moon on top, sight radius 4).
+# at 12:12, sunlit.
 [[golden]]
 name = "overworld-noon"
 scenario = "world"
 actions = "move:E*2 move:NE move:E*6 move:NE move:E*3 weather:clear"
-
-[[golden]]
-name = "overworld-night"
-scenario = "world"
-actions = "move:E*2 move:NE move:E*6 move:NE move:E*3 skip:82h weather:clear"
-
-# A forest clearing at noon (#55): along the road west into the Thornwood and north onto a forest
-# cell, `>` into its local area (arriving on its south side), back out, and `>` again into the
-# glade in the middle (6 seconds each), at 16:44 (the ranger's survival makes the journeys a
-# little quicker); then the clock skips to 12:00 the next day. Short shadows due north of the
-# trees; the strip seen on the first visit is remembered.
-[[golden]]
-name = "forest-noon"
-scenario = "world"
-actions = "move:W*11 move:SW move:W*10 move:N descend move:S descend skip:1156m weather:clear"

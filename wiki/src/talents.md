@@ -12,11 +12,21 @@ for later, and until you have chosen, you can do nothing else ("You must choose 
 first."). A kill that brings two levels at once brings both picks, lowest level first. There is
 no changing your mind afterwards: a talent, once learned, is yours for good.
 
+Some [classes](classes.md#levels) also give a **bonus talent** at a few levels (the everyday
+folk at 10, 20, 30, 45, and 55), from the trees the class names: "You must choose a talent of
+Weaponcraft or Delver." When a level brings both kinds, a talent from the class's trees fills
+the bonus pick first. The commoner's bonus talents come from any tree.
+
 Should there be nothing you can take (a run with no talents, or every talent you qualify for
 already learned), the pick is simply lost, so a level never waits for the impossible.
 
-The level-up screen that makes the pick is on its way; so are picks at character creation, the
-class bonus picks, and the Talents page that lists every talent with what it needs.
+The level-up screen that makes the pick is on its way; so are picks at character creation and
+the Talents page that lists every talent with what it needs.
+
+**Class abilities** are talents too, of their own tree: your class gives them as its levels
+come (see [Classes](classes.md#levels)), you never pick them, and one your class gives that you
+already learned is not given again. Some are talents anyone may pick (the aristocrat's
+Riposte, the commoner's Second wind).
 
 ## Ranks, choices, prerequisites
 

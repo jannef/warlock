@@ -16,7 +16,6 @@ use crate::object::Stack;
 use crate::rng::Rng;
 use crate::stats::{PerStat, Stats};
 use crate::talent::{self, Candidate};
-use crate::time::GameTime;
 use std::sync::LazyLock;
 
 static BUILTIN: LazyLock<Arc<Content>> =
@@ -90,59 +89,29 @@ fn lore_identifies_what_has_been_carried_for_a_day() {
     let item = magic_item(&w, 3);
     w.player_mut().inventory.push(item);
     let at = w.state.player().inventory.len() - 1;
-    // Without the talent nothing is counted.
-    run(&mut w, "wait");
-    assert_eq!(w.state.player().inventory[at].carried, None);
-    give(&mut w, "lore");
-    run(&mut w, "wait");
-    let since = w.state.player().inventory[at]
-        .carried
-        .expect("counted from now");
-    assert_eq!(since, w.state.time);
-    run(&mut w, "wait*3");
+    // Without the talent a day of carrying teaches nothing.
+    run(&mut w, "rest:24h");
     assert!(!w.state.player().inventory[at].is_identified());
-    // A day later it is known, and said.
-    let day_ago = GameTime::from_seconds(w.state.time.seconds() - 24 * 3600);
-    w.player_mut().inventory[at].carried = Some(day_ago);
-    run(&mut w, "wait");
-    let stack = &w.state.player().inventory[at];
-    assert!(stack.is_identified());
-    assert_eq!(stack.carried, None);
-    let name = stack.describe(w.content());
+    give(&mut w, "lore");
+    run(&mut w, "rest:1h");
+    w.appraise_carried(22 * crate::time::HOUR);
+    assert!(!w.state.player().inventory[at].is_identified(), "23 hours");
+    w.appraise_carried(crate::time::HOUR);
+    assert!(w.state.player().inventory[at].is_identified());
     assert!(
-        said(&w).contains(&format!(
-            "You have come to know what you carry: this is {name}!"
-        )),
+        said(&w).iter().any(|m| m.starts_with("This is ")),
         "{:?}",
         said(&w)
     );
 }
 
 #[test]
-fn what_is_put_down_is_forgotten() {
-    let content = &BUILTIN;
-    let mut stack = Stack::one(content.object_id("dagger").expect("dagger"));
-    stack.carried = Some(GameTime::from_seconds(100));
-    let mut pile = Vec::new();
-    crate::object::add_to_pile(&mut pile, &[stack], content);
-    assert_eq!(pile[0].carried, None);
-}
-
-#[test]
 fn keen_appraiser_tells_what_things_are_worth() {
     let mut w = world();
-    let dagger = Stack::new(w.content().object_id("dagger").expect("dagger"), 2);
-    assert_eq!(
-        w.perception().worth(&dagger),
-        None,
-        "hidden without the talent"
-    );
+    assert_eq!(w.perception().appraisal(), Default::default());
     give(&mut w, "keen_appraiser");
-    assert_eq!(
-        w.perception().worth(&dagger),
-        Some(dagger.value(w.content()))
-    );
-    assert!(dagger.value(w.content()) > 0);
+    let appraisal = w.perception().appraisal();
+    assert!(appraisal.worth && appraisal.gems);
 }
 
 #[test]
@@ -388,7 +357,7 @@ fn lockbreaker_kicks_harder_and_quieter_and_tunneler_digs_faster() {
 }
 
 #[test]
-fn silver_tongue_and_haggler_move_prices_past_the_usual_most() {
+fn silver_tongue_and_haggler_move_prices_in_the_players_favour() {
     let mut w = world();
     let shops = w.content().shops().expect("shops").clone();
     let favour = |w: &World| super::shop::favour(w.content(), &shops, w.state.player());
@@ -396,13 +365,9 @@ fn silver_tongue_and_haggler_move_prices_past_the_usual_most() {
     give(&mut w, "silver_tongue");
     assert_eq!(favour(&w), plain + 10);
     give(&mut w, "haggler");
-    assert_eq!(favour(&w), plain + 20);
-    // Past the most anyone else may have, Haggler lifts it to 60.
+    assert_eq!(favour(&w), plain + 25);
+    // Neither lifts the cap.
     w.player_mut().stats = Stats::new(PerStat::splat(40), PerStat::splat(40));
-    let appraise = w.content().skill_id("appraise").expect("appraise");
-    w.player_mut().skills.add(appraise, 200);
-    assert_eq!(favour(&w), 60);
-    w.player_mut().talents = Default::default();
     assert_eq!(favour(&w), crate::content::MAX_FAVOUR);
 }
 

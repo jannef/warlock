@@ -10,6 +10,20 @@ known_for = ["knowledge"]
 rolls = 2
 weapon_skills = { long_blades = 1 }
 styles = { duelist = 1 }
+# The level table (spec §8 "Class abilities"): their tutors' lessons and their family's name,
+# one by one as the levels come; bonus talents from Weaponcraft and Delver.
+abilities = [
+    { level = 1, talent = "well_dressed" },
+    { level = 6, talent = "fencing" },
+    { level = 12, talent = "noblesse" },
+    { level = 18, talent = "riposte" },
+    { level = 25, talent = "connoisseur" },
+    { level = 32, talent = "iron_will" },
+    { level = 40, talent = "commanding" },
+    { level = 50, talent = "peerless" },
+    { level = 60, talent = "legacy" },
+]
+bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["weaponcraft", "delver"] }
 # Unfair on purpose: a fine rapier (perhaps enchanted), an heirloom ring (magic or rare, as
 # yet unknown), furs, a jewel, and a heavy purse, which may well weigh them down.
 kit = [

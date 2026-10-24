@@ -45,8 +45,7 @@ impl World {
         seen
     }
 
-    /// Phase 4: identifies what Lore has had carried long enough ([`World::lore`]), recomputes
-    /// perception, updates memory, tells the player about a special room they
+    /// Phase 4: recomputes perception, updates memory, tells the player about a special room they
     /// are in for the first time, says what news they heard and how the weather changed, reports
     /// the attacks they perceived, and drops events they did not see.
     pub(super) fn perceive(&mut self, events: &mut Vec<Event>) {
@@ -58,7 +57,6 @@ impl World {
         }
         self.burn_out();
         self.rot_away();
-        self.lore();
         let before = self.perception.weather();
         let dazzled = self.perception.dazzled();
         *self.perception = Perception::compute(&self.state, &self.content, &mut self.lights);

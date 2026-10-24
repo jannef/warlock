@@ -1,0 +1,8 @@
+[[talent]]
+id = "sturdy_work"
+name = "Sturdy work"
+tree = "class"
+granted = true
+description = "You keep your armour in good repair: the body armour you wear gives Protection +1."
+effects = [{ kind = "protection", value = 1, body_armour = 1 }]
+systems = ["protection"]

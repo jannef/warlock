@@ -513,36 +513,37 @@ fn a_kill_quest_counts_the_players_kills_and_rewards_with_xp() {
 }
 
 #[test]
-fn well_liked_brings_a_quarter_more_gold_and_experience() {
+fn class_abilities_make_a_quest_pay_more_gold_and_experience() {
+    // The yard with one talent: a quarter more gold, half again the experience.
     let mut files = files_with("#########\n#E@pp...#\n#########\n", QUESTS);
     files.insert(
         "data/talents.toml",
-        "[[tree]]\nid = \"delver\"\nname = \"Delver\"\ndescription = \"Talk.\"\n\
+        "[[tree]]\nid = \"class\"\nname = \"Class\"\ndescription = \"d\"\nclass = true\n\
          [[system]]\nid = \"talk\"\nname = \"Talk\"\n",
     );
     files.insert(
-        "data/talents/well_liked.toml",
-        &include_str!("../../../../assets/data/talents/well_liked.toml")
-            .replace("\"talk\", \"experience\"", "\"talk\""),
+        "data/talents/patron.toml",
+        "[[talent]]\nid = \"patron\"\nname = \"Patron\"\ntree = \"class\"\ngranted = true\n\
+         description = \"d\"\nsystems = [\"talk\"]\neffects = [\
+         { kind = \"quest_gold_percent\", value = 25 }, { kind = \"quest_xp_percent\", value = 50 }]\n",
     );
     let content = Content::load(&files).expect("test content is valid");
     let mut w = World::new(Arc::new(content), "yard", None).expect("world");
-    w.player_mut().talents.take("well_liked", None);
+    w.player_mut().talents.take("patron", None);
     take(&mut w, Dir::W, "pups");
     kill_pups_east(&mut w, 2);
     let xp = w.player_xp();
     put_player(&mut w, Pos::new(2, 1));
     ask(&mut w, Dir::W, "quest-pups");
-    // 5 gold and 50 XP, a quarter more, rounded down.
     assert_eq!(
         from(&w, "Quest complete: Pups.", 3),
         [
             "Quest complete: Pups.",
             "The elder gives you 6 gold coins.",
-            "You gain 62 experience.",
+            "You gain 75 experience.",
         ]
     );
-    assert_eq!(w.player_xp(), xp + 62);
+    assert_eq!(w.player_xp(), xp + 75);
     assert_eq!(carried(&w, "gold_coin"), 6);
 }
 

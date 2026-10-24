@@ -4,5 +4,5 @@ name = "Lore"
 tree = "scholar"
 description = "A magic item you have carried for a day gives up its secrets: you know what it is."
 needs = { stats = { intelligence = 12 } }
-effects = [{ kind = "identifies_carried", hours = 24 }]
+effects = [{ kind = "identify_carried", hours = 24 }]
 systems = ["magic_items"]
