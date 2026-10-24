@@ -331,7 +331,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     is trained in, listed but never available until its use comes (it then becomes an ability of
     its own with its action, listed in the skill's place: `Ability::use_of`); and **Second wind**
     (`Ability::SecondWind`, under Talents, §8 "Talents"), which the Second wind talent gives,
-    asking for nothing, greyed out while Winded. No race, class, or item gives one yet.
+    asking for nothing, greyed out while Winded; and the **class actives** (`Ability::Class`,
+    under Class, §8 "Class abilities": Rage, Veteran's wind, Whirlwind, Lay on hands, Smite,
+    Holy radiance, Quivering palm), each from the level its class's table gives it, Smite and
+    Quivering palm in a direction, greyed out during their cooldowns (Rage while raging and
+    exhausted) and the paladin's while strayed. No race or item gives one yet.
   - **The menu** (a screen on the stack) lists them as the one paged list (§6 "Item lists"),
     grouped by source under a header each, lettered down each page from `a`: each row the
     ability's name and what it asks for ("in a direction"), or greyed out with why it cannot be

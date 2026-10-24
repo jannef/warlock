@@ -208,6 +208,10 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   `Ability::SecondWind` (`Source::Talent`, the menu's Talents group between Class and Skills) is
   the first active talent's (`docs/dev/progression.md`): listed while the content has a talent
   with the `second_wind` effect, had by whoever holds one, `While(winded)` during its cooldown.
+  `Ability::Class(ClassActive)` (`Source::Class`) are the class actives
+  (`docs/dev/progression.md` "Class abilities"): listed while some class's table has one, had
+  by whoever's `TalentMods` has it, `Strayed` then `While(cooldown)`; their action is
+  `Action::Use`. No `KeyCommand` of their own (as Second wind's).
   `Aim` has
   `Nothing` and `Direction`: a target (the aiming mode) and an item
   (a `PagedList` of the pack) join it with the first ability that needs one, as a variant and an
