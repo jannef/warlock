@@ -322,7 +322,7 @@ mod tests {
         let mut files = ContentFiles::builtin();
         files.remove("data/races.toml");
         files.remove("data/names.toml");
-        files.remove("data/classes.toml");
+        files.remove("data/classes/");
         for id in [
             "arena",
             "courtyard",

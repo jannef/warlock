@@ -22,7 +22,7 @@ pub struct Args {
     pub seed: Option<u64>,
 
     /// The character to start a new run as, RACE,GENDER,CLASS (e.g. `dwarf,female,warrior`; ids
-    /// from `data/races.toml` and `data/classes.toml`; gender male, female, or other); defaults
+    /// from `data/races.toml` and `data/classes/`; gender male, female, or other); defaults
     /// to the scenario's. Like `--seed`, it applies to the run that `--scenario`, `--new`,
     /// `--record`, or `--capture` starts; a replay's character wins.
     #[arg(long)]

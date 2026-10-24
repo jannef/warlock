@@ -778,13 +778,14 @@ fn starting_styles_come_from_the_class_and_move_no_other_roll() {
     // Styles roll from their own stream: without them the stats and the weapon skills are the
     // same.
     let mut files = ContentFiles::builtin();
-    let stripped: String = (include_str!("../../../../assets/data/classes.toml").lines())
+    files.edit_table("classes", |text| {
         // Kit lines that go with what a class trains go too (some would name a style the class
         // no longer trains).
-        .filter(|l| !l.starts_with("style") && !l.contains("trained ="))
-        .map(|l| format!("{l}\n"))
-        .collect();
-    files.insert("data/classes.toml", &stripped);
+        (text.lines())
+            .filter(|l| !l.starts_with("style") && !l.contains("trained ="))
+            .map(|l| format!("{l}\n"))
+            .collect()
+    });
     let without = Content::load(&files).expect("valid");
     let start = BUILTIN.scenario("showcase").expect("showcase").start;
     for character in [
