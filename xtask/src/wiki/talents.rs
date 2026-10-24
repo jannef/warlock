@@ -183,7 +183,8 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             use warlock_core::content::FreeBlowTrigger as T;
             match trigger {
                 T::Cleave => {
-                    "free blow: a melee blow that kills gives one at another hostile beside you"
+                    "free blow: a melee blow that kills gives one at another hostile beside you \
+                     (Cleave and Cleaving strike together: on and on, as Great cleave)"
                 }
                 T::GreatCleave => {
                     "free blow: cleaving goes on while the blows kill (once at each hostile beside \
@@ -387,8 +388,7 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             status(&cooldown)
         ),
         TalentEffect::Hardened { bonus } => format!(
-            "every level past the last that adds hit points adds them again, {} more",
-            signed(bonus)
+            "every level past the last that adds hit points adds them again, and {bonus} more"
         ),
         TalentEffect::StatGift { stat, value } => {
             format!(
