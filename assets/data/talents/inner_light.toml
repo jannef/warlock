@@ -1,0 +1,8 @@
+[[talent]]
+id = "inner_light"
+name = "Inner light"
+tree = "stars"
+granted = true
+description = "A faint light shines about you wherever you are: you see what is beside you in the dark, and so does everything else."
+effects = [{ kind = "inner_light", light = "ember" }]
+systems = ["light", "stealth"]

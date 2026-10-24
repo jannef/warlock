@@ -1,0 +1,8 @@
+[[talent]]
+id = "watchful"
+name = "Watchful"
+tree = "stars"
+granted = true
+description = "You hear fainter sounds, and you know exactly where footsteps fall."
+effects = [{ kind = "hearing", value = 3 }, { kind = "exact_footsteps" }]
+systems = ["hearing"]

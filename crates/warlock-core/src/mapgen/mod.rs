@@ -42,7 +42,7 @@ use crate::content::{
 use crate::door::Lock;
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
-use crate::magic::{LootGrade, loot};
+use crate::magic::{LootGrade, loot, loot::Luck};
 use crate::object::{Stack, add_to_pile};
 use crate::rng::Rng;
 use crate::variant::Source;
@@ -337,18 +337,18 @@ pub fn generate(
     id: &str,
     entered_from: Option<&str>,
 ) -> Result<LevelTemplate, GenError> {
-    generate_with(content, seed, id, entered_from, 0)
+    generate_with(content, seed, id, entered_from, Luck::default())
 }
 
-/// [`generate`] for a player whose talents make loot magic and rare `luck` percent more often
-/// (Treasure hunter, spec §8 "Talents"): the same draws from the same streams, so the map is
-/// the same; only the rarities its loot rolls may differ.
+/// [`generate`] for a player whose talents give their finds `luck` ([`Luck`]: Treasure hunter,
+/// Hoard sense): the same draws from the same streams, so the map is the same; only what its
+/// loot rolls may differ.
 pub fn generate_with(
     content: &Content,
     seed: u64,
     id: &str,
     entered_from: Option<&str>,
-    luck: i32,
+    luck: Luck,
 ) -> Result<LevelTemplate, GenError> {
     if content.local_area(id).is_some() {
         return local::generate(content, seed, id, luck);
@@ -572,13 +572,13 @@ pub(crate) struct Floor {
 /// each of `markers` (vaults' loot cells, at least of their grade), then the floor loot, one draw
 /// for how many (between the fewest and the most) and, for each, one for a cell of `floor`
 /// terrain where nothing lies, stands, shines, or leads away (in row order), then the item,
-/// magic and rare `luck` percent more often ([`loot::roll_with`]).
+/// with the finder's `luck` ([`loot::roll_with`]).
 pub(crate) fn place_loot(
     template: &mut LevelTemplate,
     content: &Content,
     seed: u64,
     markers: &[(Pos, LootGrade)],
-    (floor, luck): (Option<Floor>, i32),
+    (floor, luck): (Option<Floor>, Luck),
 ) {
     let mut rng = Rng::loot(seed, &template.id);
     let level = template.item_level;

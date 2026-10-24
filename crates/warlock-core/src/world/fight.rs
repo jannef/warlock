@@ -497,7 +497,8 @@ impl World {
     /// - [`Cue::First`]: the second blow of `striker`'s melee attack on `target` (below);
     /// - [`Cue::Attacked`]: its end: a cleave if it killed `target`, else `target`'s riposte;
     /// - [`Cue::Cleaved`]: another cleave, with great cleave, after one that killed `target`;
-    /// - [`Cue::Leaves`]: `target` steps away from beside `striker`: the opportunist's blow.
+    /// - [`Cue::Leaves`]: `target` steps away from beside `striker`: the opportunist's blow;
+    /// - [`Cue::Approaches`]: `target` stepped up beside `striker`: the gatekeeper's blow.
     ///
     /// Only the second blow may draw while deciding; the free blows never do.
     pub(super) fn second_blow(
@@ -520,6 +521,7 @@ impl World {
                 .or_else(|| self.riposte(striker, target, parried)),
             Cue::Cleaved => self.cleave(striker, target, true),
             Cue::Leaves => self.opportunist(striker, target),
+            Cue::Approaches => self.gatekeeper(striker, target),
         }
     }
 
@@ -816,6 +818,13 @@ impl World {
         }
         actor.hp -= damage;
         if actor.hp > 0 {
+            return false;
+        }
+        // Rise from the ashes (spec §8 "Birth sign"): once in a life, but never from starving.
+        if id == self.state.player
+            && !matches!(harm, Harm::Starving(_))
+            && self.rise_from_ashes(events)
+        {
             return false;
         }
         match harm {

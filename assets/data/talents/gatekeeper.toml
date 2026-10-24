@@ -1,0 +1,8 @@
+[[talent]]
+id = "gatekeeper"
+name = "Gatekeeper"
+tree = "stars"
+granted = true
+description = "A foe that steps up beside you takes a free blow from you as it comes."
+effects = [{ kind = "free_blow", trigger = "gatekeeper" }]
+systems = ["free_blows"]

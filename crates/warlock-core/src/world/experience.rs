@@ -36,11 +36,23 @@ pub struct Progress {
     /// toward them as their faction does again (`world/beast_friend.rs`).
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub(crate) empathy_broken: BTreeSet<String>,
+    /// What may happen once in a life and has (spec §8 "Birth sign": `risen`, the Phoenix's
+    /// rising; `world/stars.rs`).
+    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+    pub(crate) once: BTreeSet<String>,
 }
 
 impl Progress {
     pub fn is_empty(&self) -> bool {
-        self.discovered.is_empty() && self.due.is_empty() && self.empathy_broken.is_empty()
+        self.discovered.is_empty()
+            && self.due.is_empty()
+            && self.empathy_broken.is_empty()
+            && self.once.is_empty()
+    }
+
+    /// Whether `what` has happened, of what may happen once in a life.
+    pub fn happened(&self, what: &str) -> bool {
+        self.once.contains(what)
     }
 }
 

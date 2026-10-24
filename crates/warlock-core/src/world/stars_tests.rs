@@ -140,7 +140,13 @@ fn gifts_are_granted_afresh_on_restore_and_picks_are_kept() {
     let w = born_under("roc", "earth", 9);
     assert_eq!(
         held(&w),
-        ["rocs_strength", "heedless", "stone_hide", "stonewise"]
+        [
+            "rocs_strength",
+            "eyes_of_the_heights",
+            "heedless",
+            "stone_hide",
+            "stonewise"
+        ]
     );
     // A save that lost them (or predates them) gets them back; a picked talent stays after.
     let mut state = w.state().clone();
@@ -153,6 +159,7 @@ fn gifts_are_granted_afresh_on_restore_and_picks_are_kept() {
         held(&restored),
         [
             "rocs_strength",
+            "eyes_of_the_heights",
             "heedless",
             "stone_hide",
             "stonewise",

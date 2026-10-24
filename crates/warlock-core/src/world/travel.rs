@@ -15,6 +15,7 @@ use crate::content::{
     TerrainId, local_area_id,
 };
 use crate::geom::{Dir, Pos};
+use crate::magic::loot::Luck;
 use crate::mapgen::local::arrival;
 use crate::skills::Use;
 use std::borrow::Cow;
@@ -336,11 +337,7 @@ impl World {
         from: Option<&str>,
     ) -> Result<&LevelState, WorldError> {
         if !self.state.levels.contains_key(id) {
-            let luck = self
-                .state
-                .player()
-                .talent_mods(&self.content)
-                .loot_magic_percent;
+            let luck = Luck::of(&self.state.player().talent_mods(&self.content));
             let template = level_template(&self.content, self.state.seed, id, (from, luck))?;
             instantiate_level(&mut self.state, &self.content, &template);
         }
@@ -384,13 +381,13 @@ pub(super) fn enter_room(state: &mut WorldState, content: &Content) -> Option<St
 
 /// The template of level `id`: a hand-made level, or one generated from the run seed: a level of
 /// a dungeon branch (`entered_from` is where the up staircase of a branch's first level leads)
-/// or a local area of the overworld, its loot magic and rare `luck` percent more often (the
-/// player's Treasure hunter, as they first come).
+/// or a local area of the overworld, its loot rolled with the player's `luck` as they first come
+/// (Treasure hunter, Hoard sense).
 pub(super) fn level_template<'a>(
     content: &'a Content,
     seed: u64,
     id: &str,
-    (entered_from, luck): (Option<&str>, i32),
+    (entered_from, luck): (Option<&str>, Luck),
 ) -> Result<Cow<'a, LevelTemplate>, WorldError> {
     if let Some(template) = content.level(id) {
         return Ok(Cow::Borrowed(template));

@@ -468,6 +468,51 @@ fn the_player_strikes_a_hostile_stepping_away_and_says_it_last() {
 }
 
 #[test]
+fn the_gatekeeper_strikes_a_hostile_stepping_up_beside_it() {
+    let mut w = world("#######\n#.....#\n#.@.k.#\n#.....#\n#######\n");
+    arm(&mut w, "axe");
+    let player = w.player_id();
+    let kobold = at(&w, 4, 2);
+    let step = |w: &mut World, to: Pos| {
+        let from = w.state.actors[&kobold].pos;
+        w.state.actors.get_mut(&kobold).expect("the kobold").pos = to;
+        let mut events = Vec::new();
+        w.step_up(kobold, from, &mut events);
+        events
+    };
+    // Up beside the player without the switch: nothing.
+    assert!(step(&mut w, Pos::new(3, 2)).is_empty());
+    step(&mut w, Pos::new(4, 2));
+    switch(&mut w, player, |f| f.gatekeeper = true);
+    // A step that stays out of reach: nothing.
+    assert!(step(&mut w, Pos::new(4, 1)).is_empty());
+    // Up beside: the blow.
+    let events = step(&mut w, Pos::new(3, 1));
+    assert!(matches!(
+        events.first(),
+        Some(Event::Attacked { attacker, target, .. }) if (*attacker, *target) == (player, kobold)
+    ));
+    // Already beside, a step that stays beside: nothing more.
+    assert!(step(&mut w, Pos::new(3, 2)).is_empty());
+}
+
+#[test]
+fn a_hostile_walking_up_to_the_gatekeeper_takes_its_blow() {
+    // The kobold hunts the player from three cells away: it comes, and is struck as it comes.
+    let mut w = world("#######\n#.....#\n#.@..k#\n#.....#\n#######\n");
+    arm(&mut w, "axe");
+    let player = w.player_id();
+    switch(&mut w, player, |f| f.gatekeeper = true);
+    let kobold = at(&w, 5, 2);
+    let mut struck = false;
+    for _ in 0..6 {
+        let outcome = w.apply(&Action::Wait);
+        struck |= struck_by(&outcome, player).contains(&kobold);
+    }
+    assert!(struck, "{:#?}", said(&w));
+}
+
+#[test]
 fn a_creature_walking_away_in_the_dark_takes_the_opportunists_blow() {
     // The kobold patrols east and back beside the player in the dark: it never sees them.
     let content = content_with("######\n#....#\n#.@p.#\n#....#\n######\n", 0);
@@ -508,6 +553,7 @@ fn switches_draw_nothing_until_their_triggers_fire_and_are_saved_only_when_on() 
                     riposte: true,
                     opportunist: true,
                     flurry: true,
+                    gatekeeper: true,
                 };
             });
         }

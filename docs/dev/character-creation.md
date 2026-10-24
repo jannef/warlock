@@ -146,6 +146,15 @@ any rule change does; the birth draws are untouched, so seeds keep their dates a
 gifts' effects are `TalentEffect`s read at one hook each (`docs/dev/progression.md`); `stars.rs`
 also says what is wading (`wading`: terrain that freezes, or a disease's wading ground).
 
+The Roc to the Barghest (#267) add Eyes of the heights, Hoard sense, Watchful, Set in its ways,
+Old lore, Rise from the ashes, Inner light, Frail, Grasping arms, Of the deep, Ungainly ashore,
+Hound's nose, and Gatekeeper (their effect kinds and hooks: `docs/dev/progression.md`). Rise from
+the ashes is the one gift with state: `Progress::once` keeps `risen` (`stars::RISEN`); the rising
+itself is `World::rise_from_ashes` in `stars.rs`, with the `ashen` status, the `phoenix_fire`
+effect, and Inner light's `ember` light preset in data. Tests: `world/stars_roc_tests.rs`, the
+gatekeeper's in `world/free_blow_tests.rs`, Watchful's placing in `noise/tests.rs`, the screen
+case `eat-screen-smell` (seed 21, a Barghest).
+
 The element gifts (#268): Kindled is `lantern_light` (Lamplighter's preset; the two do not
 stack), Forge-born `weapon_marks` without a `role` (every weapon skill and style, read in
 `TalentMods::marks`), Tidal `mana_regen_percent` (`World::mana_rate`). Blaze is the first

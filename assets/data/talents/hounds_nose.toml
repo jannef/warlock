@@ -1,0 +1,8 @@
+[[talent]]
+id = "hounds_nose"
+name = "Hound's nose"
+tree = "stars"
+granted = true
+description = "You smell blood on bleeding creatures nearby, even in the dark, and you can tell by smell how fresh food is."
+effects = [{ kind = "scent", status = "bleeding", radius = 6 }, { kind = "smell_rot" }]
+systems = ["vision", "hunger"]
