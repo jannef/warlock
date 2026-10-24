@@ -37,6 +37,51 @@ pub(super) fn talents(content: &Content) -> String {
     out
 }
 
+/// The classes' level tables (spec §8 "Class abilities"), in the order New run offers them:
+/// each class with a table, its bonus talent picks, and every level's ability with its rule.
+pub(super) fn class_levels(content: &Content) -> String {
+    let book = content.talents();
+    let mut out = String::new();
+    for class in content.classes() {
+        if class.abilities.is_empty() && class.bonus_talents.levels.is_empty() {
+            continue;
+        }
+        let _ = writeln!(out, "### {}\n", class.name);
+        let bonus = &class.bonus_talents;
+        if !bonus.levels.is_empty() {
+            let levels: Vec<String> = bonus.levels.iter().map(u8::to_string).collect();
+            let trees = match class.bonus_trees(book) {
+                None => "any tree".to_string(),
+                Some(trees) => (trees.iter())
+                    .map(|&t| book.tree(t).name.clone())
+                    .collect::<Vec<_>>()
+                    .join(" or "),
+            };
+            let _ = writeln!(
+                out,
+                "A bonus talent at levels {}, from {trees}.\n",
+                levels.join(", ")
+            );
+        }
+        out.push_str("| Level | Ability | Effect |\n|---:|---|---|\n");
+        for (level, id) in &class.abilities {
+            let Some(talent) = book.id(id) else { continue };
+            let def = book.get(talent);
+            let _ = writeln!(
+                out,
+                "| {level} | {} | {} |",
+                def.name,
+                effects_text(content, def)
+            );
+        }
+        out.push('\n');
+    }
+    if out.is_empty() {
+        out.push_str("No class has a level table yet.\n");
+    }
+    out
+}
+
 /// The coverage matrix: every system of the closed list with the talents that touch it, and
 /// whether the bar (`[coverage]` in `data/talents.toml`) already holds it.
 pub(super) fn by_system(content: &Content) -> String {

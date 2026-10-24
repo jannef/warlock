@@ -1457,7 +1457,8 @@ impl<'a> PerceptionView<'a> {
 
     /// What the player owes, and to whom, if a step onto `to` leaves the open shop they stand in
     /// (onto ground they know is walkable): by a way out ([`ShopView::is_exit`]) the keeper turns
-    /// them back, any other way is theft, so presentation asks first.
+    /// them back, any other way is theft, so presentation asks first. Nothing when the keeper
+    /// lets them leave owing it (spec §8 "Class abilities": Credit).
     pub fn owed_on_leaving(&self, to: Pos) -> Option<(ShopView<'a>, u32)> {
         let view = self.shop_here()?;
         let walkable = match self.cell(to) {
@@ -1465,7 +1466,9 @@ impl<'a> PerceptionView<'a> {
             CellView::Unknown => false,
         };
         let owed = view.owed();
-        (!view.contains(to) && walkable && owed > 0).then_some((view, owed))
+        let credit = self.player.talent_mods(self.content).credit;
+        let on_credit = credit > 0 && owed <= credit;
+        (!view.contains(to) && walkable && owed > 0 && !on_credit).then_some((view, owed))
     }
 
     /// What the shop the player stands in offers for their own things among the inventory stacks

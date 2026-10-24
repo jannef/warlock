@@ -168,7 +168,7 @@ know they have, then what they resist in words, `Resistant to cold`, `Vulnerable
 `Immune to poison`), `weapon_skills` (the player's
 ranks and progress toward the next, `Long blades 2 (40%)`, fighting styles too, those in use
 marked `Duelist 1 (0%), in use`), `talents` (the player's talents in the order taken, `Hardy
-2/3`, `Weapon focus (long blades)`), `abilities` (the player's abilities in the abilities menu's
+2/3`, `Weapon focus (long blades)`, those their class gives marked `Well dressed (class)`), `abilities` (the player's abilities in the abilities menu's
 order, each with its source and what it asks for or why it cannot be used now: `Shield bash
 (weapon skill): a direction`, `Open lock (skill): not usable yet`), `traps` (the traps the player knows,
 one a line), `quests` (the quest log, active
@@ -181,7 +181,8 @@ effects with severities, its diseases (progressions, checks won in a row, time t
 turn) and stat damage, the player's nutrition, its npc id and talk counts, if any, and what it resists in percent (`resists fire 25`); then
 all food on the level and in the packs of those on it with when it was made (a corpse: when it
 died) and its stage, `fresh`, `old`, `rotten`, or `gone`, which the player is never shown,
-**dev-only**), `progress` (the level-up choices due, `due level 3: 1 talent`, the talents the
+**dev-only**), `progress` (the level-up choices due, `due level 3: 1 talent`, `due level 30: 1
+talent, 1 bonus talent`, the talents the
 player may take now by id with their choices, the first kills that paid, and the stat training
 marks, `stat marks St 3, To 1`, **dev-only**),
 `rooms`
@@ -195,7 +196,8 @@ word: `{"cold": "resistant"}`), `burden` (`level`, `limit`), `alignment` (the ba
 `cause`, starving, choking, or a trap, and `trap`, the id of the trap that killed),
 `known_traps`, `temperature` (°C to a tenth), `weapon_skills` (by skill id:
 `rank`, `progress`), `styles_in_use` (style ids), `talents` (in the order taken: `id`, `name`,
-`rank`, `ranks`, `choice`), `due` (the level-up choices due: `level`, `talents`, or null), `abilities` (in menu order: `id`, `source`,
+`rank`, `ranks`, `choice`, `class`), `due` (the level-up choices due: `level`, `talents`,
+`rolls`, `bonus`, or null), `abilities` (in menu order: `id`, `source`,
 `aim`, and `unavailable`, the reason's id or null), `quests` (the log: `id`, `name`, `kind`, `active`, `completed`, `giver`,
 `objective`, `status`), each seen actor's `health` and `effects` (those that show), `room` (the
 special room the player stands in, if they know it), and per inventory stack (in position
