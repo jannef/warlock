@@ -192,21 +192,29 @@ fn make_replay(
     let actions = parse_actions(text).map_err(|e| format!("{}: {e}", entry.name))?;
     let count = actions.len();
     for (step, action) in actions.into_iter().enumerate() {
+        let before = world.state_hash();
         let outcome = world.apply(&action);
         // Switching vision, setting the weather, and the dev status effect, infection, frost,
-        // and thaw are free by design, and so are a spell effect the player sees and a question
-        // answered (asking takes no time); anything else that takes no time and no turn was
-        // refused. (A turn can pass in no time: a creature quick off the mark may kill the player
-        // at the very second they acted.)
-        let free = matches!(
+        // and thaw are free by design, and so are a spell effect the player sees, a question
+        // answered (asking takes no time), and a level's choices and the dev experience that
+        // changed something (a talent taken, a roll spent); anything else that takes no time and
+        // no turn was refused. (A turn can pass in no time: a creature quick off the mark may
+        // kill the player at the very second they acted.)
+        let levelled = matches!(
             action,
-            Action::SetVision(_)
-                | Action::SetWeather(_)
-                | Action::Afflict(_)
-                | Action::Infect(_)
-                | Action::Freeze { .. }
-                | Action::Thaw { .. }
-        ) || matches!(action, Action::Effect { .. }) && !outcome.events.is_empty()
+            Action::Talent { .. } | Action::Advance(_) | Action::LevelUpAuto | Action::GrantXp(_)
+        ) && world.state_hash() != before;
+        let free = levelled
+            || matches!(
+                action,
+                Action::SetVision(_)
+                    | Action::SetWeather(_)
+                    | Action::Afflict(_)
+                    | Action::Infect(_)
+                    | Action::Freeze { .. }
+                    | Action::Thaw { .. }
+            )
+            || matches!(action, Action::Effect { .. }) && !outcome.events.is_empty()
             || matches!(action, Action::Ask { .. })
                 && outcome.events.iter().any(|e| matches!(e, Event::Talked(_)));
         if outcome.elapsed.is_zero() && !outcome.took_turn && !free {
