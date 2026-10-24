@@ -4,5 +4,5 @@ name = "Roc's strength"
 tree = "stars"
 granted = true
 description = "You carry 25 % more, and you kick doors in as if you were much stronger."
-effects = [{ kind = "carry_percent", value = 25 }, { kind = "kick", value = 4 }]
+effects = [{ kind = "carry_percent", value = 25 }, { kind = "door_kick", value = 4 }]
 systems = ["burden", "doors"]

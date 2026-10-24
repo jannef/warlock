@@ -156,7 +156,7 @@ impl World {
             }
         };
         // The rank's hit points by level come now; each later level grows them.
-        let hp = TalentMods::of(def.effects_at(rank)).hp_at(self.player_level());
+        let hp = TalentMods::of(&self.content, def.effects_at(rank)).hp_at(self.player_level());
         let player = self.player_mut();
         player.talents.take(id, choice);
         player.hp_base += hp;

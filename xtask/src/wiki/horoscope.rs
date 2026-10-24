@@ -17,7 +17,7 @@ fn gifts(content: &Content, grants: &[String]) -> String {
         .filter_map(|id| book.id(id).map(|t| book.get(t)))
         .map(|def| {
             let flaw = if def.flaw { " (flaw)" } else { "" };
-            format!("**{}**{flaw}: {}", def.name, effects_text(def))
+            format!("**{}**{flaw}: {}", def.name, effects_text(content, def))
         })
         .collect();
     if parts.is_empty() {

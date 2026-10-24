@@ -1,0 +1,10 @@
+# Not in #194's table: the jade amulet is made of it, so another material names it well ("a gold amulet", not "a gold jade amulet"). Jewellery only: no weapon, no armour.
+[[material]]
+id = "jade"
+name = "jade"
+group = "stone"
+color = "#68c090"
+weight = 85
+value = 400
+rarity = { weight = 40 }
+gear = { weight = 10 }

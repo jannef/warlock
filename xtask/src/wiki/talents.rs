@@ -3,7 +3,7 @@
 
 use super::text::signed;
 use std::fmt::Write as _;
-use warlock_core::content::{Content, Need, TalentDef, TalentEffect, TreeId};
+use warlock_core::content::{Content, Need, Role, TalentDef, TalentEffect, TreeId};
 
 /// Every tree in display order: a heading, its description, and its talents (name, ranks, what
 /// each rank needs, what it does as the rule, and the systems it touches).
@@ -28,7 +28,7 @@ pub(super) fn talents(content: &Content) -> String {
                 name(def),
                 def.rank_count(),
                 needs_text(content, def),
-                effects_text(def),
+                effects_text(content, def),
                 systems.join(", ")
             );
         }
@@ -38,15 +38,18 @@ pub(super) fn talents(content: &Content) -> String {
 }
 
 /// The coverage matrix: every system of the closed list with the talents that touch it, and
-/// whether the bar (`[coverage]` in `data/talents.toml`) already holds it.
+/// whether the bar (`[coverage]` in `data/talents.toml`) already holds it. Systems and talents
+/// sort by name, never by file order.
 pub(super) fn by_system(content: &Content) -> String {
     let book = content.talents();
     let bar = book.coverage;
+    let mut systems: Vec<_> = (0u8..).zip(&book.systems).collect();
+    systems.sort_by(|a, b| a.1.name.cmp(&b.1.name));
     let mut out = String::from("| System | Talents | Held to the bar |\n|---|---|---|\n");
-    for (i, system) in (0u8..).zip(&book.systems) {
-        // A birth sign's gift is marked: it is given, never picked.
-        let names: Vec<String> = (book.of_system(warlock_core::content::SystemId(i)))
+    for (i, system) in systems {
+        let mut names: Vec<String> = (book.of_system(warlock_core::content::SystemId(i)))
             .map(|(_, t)| {
+                // A birth sign's gift is marked: it is given, never picked.
                 if t.granted {
                     format!("{} (birth sign)", t.name)
                 } else {
@@ -54,6 +57,7 @@ pub(super) fn by_system(content: &Content) -> String {
                 }
             })
             .collect();
+        names.sort();
         let held = if system.pending {
             "not yet (pending)".to_string()
         } else {
@@ -120,11 +124,11 @@ fn needs_text(content: &Content, def: &TalentDef) -> String {
 
 /// What the talent does, as the rule: its per-rank effects ("per rank" when it has several
 /// ranks), then any rank's own.
-pub(super) fn effects_text(def: &TalentDef) -> String {
+pub(super) fn effects_text(content: &Content, def: &TalentDef) -> String {
     let ranked = def.rank_count() > 1;
     let mut parts: Vec<String> = (def.effects.iter())
         .map(|e| {
-            let text = effect_text(*e);
+            let text = effect_text(content, e);
             if ranked {
                 format!("{text} per rank")
             } else {
@@ -134,22 +138,21 @@ pub(super) fn effects_text(def: &TalentDef) -> String {
         .collect();
     for (i, rank) in def.ranks.iter().enumerate() {
         for effect in &rank.effects {
-            parts.push(format!("rank {}: {}", i + 1, effect_text(*effect)));
+            parts.push(format!("rank {}: {}", i + 1, effect_text(content, effect)));
         }
     }
     parts.join("; ")
 }
 
 /// One effect as the rule.
-fn effect_text(effect: TalentEffect) -> String {
+fn effect_text(content: &Content, effect: &TalentEffect) -> String {
     let percent = |v: i32| format!("{} %", signed(v));
-    match effect {
+    let status = |id: &str| {
+        (content.status_id(id)).map_or_else(|| id.to_string(), |s| content.status(s).name.clone())
+    };
+    match effect.clone() {
         TalentEffect::Dodge { value } => format!("Dodge {}", signed(value)),
         TalentEffect::Natural { value } => format!("natural armour {}", signed(value)),
-        TalentEffect::MaxDex { value } => {
-            format!("the burden's cap on Dexterity in Defence {}", signed(value))
-        }
-        TalentEffect::Protection { value } => format!("Protection {}", signed(value)),
         TalentEffect::MeleeDamage { value } => format!("melee damage {}", signed(value)),
         TalentEffect::Threat { value } => {
             format!("threat range {} with every attack", signed(value))
@@ -160,11 +163,6 @@ fn effect_text(effect: TalentEffect) -> String {
             at_least,
         } => format!("+1 maximum hit point per {per_levels} levels, at least +{at_least}"),
         TalentEffect::HealingPercent { value } => format!("healing pace {}", percent(value)),
-        TalentEffect::Ease { of, times } => format!("{} eases {times}× as fast", of.words()),
-        TalentEffect::PoisonSparesScores => "poison never lowers your scores".into(),
-        TalentEffect::DiseaseChecks { value } => {
-            format!("disease checks {}", signed(value))
-        }
         TalentEffect::FootstepsPercent { value } => format!("footsteps {}", percent(value)),
         TalentEffect::SilentDoors => "the doors you open and close are silent".to_string(),
         TalentEffect::Hearing { value } => format!("hears sounds {value} fainter"),
@@ -175,7 +173,6 @@ fn effect_text(effect: TalentEffect) -> String {
         TalentEffect::Swimmer => {
             "wading (water, marsh) costs a plain step and never gives a disease".into()
         }
-        TalentEffect::SpeedPercent { value } => format!("speed {}", percent(value)),
         TalentEffect::HungerPercent { value } => format!("hunger pace {}", percent(value)),
         TalentEffect::RotHarmPercent { value } => {
             format!(
@@ -199,9 +196,183 @@ fn effect_text(effect: TalentEffect) -> String {
             "searching reaches {value} cell{} farther",
             if value == 1 { "" } else { "s" }
         ),
-        TalentEffect::Kick { value } => format!("door kicks as if Strength {}", signed(value)),
-        TalentEffect::DigPercent { value } => format!("digging work {}", percent(value)),
         TalentEffect::FavourPercent { value } => format!("shop favour {}", percent(value)),
-        TalentEffect::FreeBlow { trigger } => format!("free blow: {trigger:?}").to_lowercase(),
+        TalentEffect::FreeBlow { trigger } => {
+            use warlock_core::content::FreeBlowTrigger as T;
+            match trigger {
+                T::Cleave => {
+                    "free blow: a melee blow that kills gives one at another hostile beside you"
+                }
+                T::GreatCleave => {
+                    "free blow: cleaving goes on while the blows kill (once at each hostile beside \
+                     you a turn)"
+                }
+                T::Riposte => "free blow: a blow that misses you by your Parry gives one back",
+                T::Opportunist => "free blow: a hostile that steps away from beside you takes one",
+            }
+            .to_string()
+        }
+        TalentEffect::Weapon {
+            role,
+            to_hit,
+            damage,
+            threat,
+            ranks,
+            speed,
+            reload,
+            ease,
+            bash,
+            shield,
+        } => {
+            let with = match role {
+                None => "the chosen skill".to_string(),
+                Some(Role::Melee) => "every melee weapon skill".to_string(),
+                Some(Role::Launcher) => "every missile weapon skill".to_string(),
+                Some(Role::Thrown) => "throws".to_string(),
+                Some(Role::Unarmed) => "unarmed fighting".to_string(),
+                Some(Role::ShieldBlock) => "shield blocking".to_string(),
+                Some(Role::ShieldBash) => "shield bashing".to_string(),
+                Some(Role::Style) => "every fighting style".to_string(),
+            };
+            let mut gains = Vec::new();
+            for (value, what) in [(to_hit, "to hit"), (damage, "damage"), (shield, "Shield")] {
+                if value != 0 {
+                    gains.push(format!("{what} {}", signed(value)));
+                }
+            }
+            if threat > 0 {
+                gains.push(format!("threat range +{threat}"));
+            }
+            if ranks > 0 {
+                gains.push(format!("benefits as {ranks} rank higher (at most 10)"));
+            }
+            if speed > 0 {
+                gains.push(format!("attacks {speed} % cheaper"));
+            }
+            if reload > 0 {
+                gains.push(format!("reloading {reload} % cheaper"));
+            }
+            if ease > 0 {
+                gains.push(format!("both two-weapon penalties eased by {ease}"));
+            }
+            if bash > 0 {
+                gains.push(format!(
+                    "a free shield bash's chance +{bash} % where there is one"
+                ));
+            }
+            format!("{} with {with}", gains.join(", "))
+        }
+        TalentEffect::LauncherRange { value } => {
+            format!("missile weapon range {} cells", signed(value))
+        }
+        TalentEffect::ThrowRange { value } => format!("throwing range {} cells", signed(value)),
+        TalentEffect::MaxDex { value } => {
+            format!("worn armour's Dexterity cap {}", signed(value))
+        }
+        TalentEffect::Deflection { value } => format!("Deflection {}", signed(value)),
+        TalentEffect::Protection {
+            value,
+            body_armour,
+            shield,
+        } => {
+            let mut text = format!("Protection {}", signed(value));
+            if let Some(at) = body_armour {
+                text += &format!(
+                    " while the armour piece worn with the most Protection has {at} or more"
+                );
+            }
+            if shield {
+                text += " while holding a shield";
+            }
+            text
+        }
+        TalentEffect::StanceToHit { stance, percent } => {
+            format!(
+                "{} stance's to-hit penalty {percent} % smaller",
+                stance.id()
+            )
+        }
+        TalentEffect::FleePercent { value } => format!("fleeing steps' cost {}", percent(value)),
+        TalentEffect::Pain { value } => {
+            format!(
+                "every hit on you {} damage after the soak, never below 1",
+                signed(-value)
+            )
+        }
+        TalentEffect::Resist { value } => format!("resistance to the chosen element +{value} %"),
+        TalentEffect::RestingPercent { value } => {
+            format!("healing pace while resting {}", percent(value))
+        }
+        TalentEffect::SecondWind {
+            per_level,
+            at_least,
+            cooldown,
+        } => format!(
+            "active (the time of a wait): {per_level} hit point per level back at once, at \
+             least {at_least}; then {} (no second wind while it lasts)",
+            status(&cooldown)
+        ),
+        TalentEffect::IronStomach => "rotten food never makes you vomit and sickens you half \
+             as much (degrees halved, rounded down); overeating never makes you vomit"
+            .to_string(),
+        TalentEffect::StatusEases { status: id, value } => {
+            format!("{} eases {value} % faster", status(&id))
+        }
+        TalentEffect::NoPenalty { status: id } => {
+            format!("{} never lowers your scores", status(&id))
+        }
+        TalentEffect::Clotting => {
+            "a big hit wounds you no more; a confirmed critical one degree less".to_string()
+        }
+        TalentEffect::PenaltyPercent { value } => format!(
+            "what statuses take off your scores {} (each, rounded toward 0)",
+            percent(value)
+        ),
+        TalentEffect::DiseaseChecks { value } => {
+            format!("disease checks (catching, progressions) {}", signed(value))
+        }
+        TalentEffect::DiseaseRecovery { value } => format!(
+            "a disease goes after {value} fewer checks won in a row (at least 1; never \
+             one that does not recover)"
+        ),
+        TalentEffect::KickDie { sides } => format!("kicks at creatures roll 1d{sides}"),
+        TalentEffect::DoorKick { value } => {
+            format!("door kicks as if Strength {}", signed(value))
+        }
+        TalentEffect::DigPercent { value } => format!("digging work a turn {}", percent(value)),
+        TalentEffect::TwoHandedPrice { value } => {
+            format!("blows with a two-handed weapon cost {}", percent(value))
+        }
+        TalentEffect::CriticalStatus { status: id } => format!(
+            "a critical you confirm in melee leaves the target {} (one degree)",
+            status(&id)
+        ),
+        TalentEffect::Penetration { damage, value } => {
+            let name = (content.damage_type_id(&damage)).map_or(damage.clone(), |d| {
+                content.damage_type(d).name.to_lowercase()
+            });
+            format!(
+                "blows that can do {name} damage: penetration {}",
+                signed(value)
+            )
+        }
+        TalentEffect::BurdenDex { value } => {
+            format!("the burden's cap on Dexterity in Defence {}", signed(value))
+        }
+        TalentEffect::SureStep => "a trap you step onto first gets a Dexterity check against \
+             its difficulty: made, it does not go off, and you find it"
+            .to_string(),
+        TalentEffect::PitProof => "pits never catch you (you find them)".to_string(),
+        TalentEffect::SpeedPercent { value } => format!("speed {}", percent(value)),
+        TalentEffect::MissileDodge { value } => {
+            format!(
+                "Dodge {} against shots, throws, and trap missiles",
+                signed(value)
+            )
+        }
+        TalentEffect::SpellDamagePercent { value } => format!(
+            "damage from bursts and bolts (traps, scrolls) {} (rounded down)",
+            percent(value)
+        ),
     }
 }

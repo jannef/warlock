@@ -771,7 +771,7 @@ mod tests {
     fn steps_list_every_option_and_preselect_the_scenarios_character() {
         let d = draft(1);
         let race = ChoiceScreen::new(Step::Race, &CONTENT, &d);
-        assert_eq!(race.choices.len(), 7);
+        assert_eq!(race.choices.len(), 13);
         assert_eq!(race.chosen(), Some("human"), "the showcase's human");
         let gender = ChoiceScreen::new(Step::Gender, &CONTENT, &d);
         assert_eq!(gender.chosen(), Some("female"));

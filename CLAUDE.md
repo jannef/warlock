@@ -105,7 +105,7 @@ log, active first) from perception;
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:DIR pick:DIR ascend descend lantern
 pickup[:LETTERS] drop[:LETTERS] sell[:LETTERS] pay[:DIR] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
-eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] dig:DIR search search:N disarm:DIR chat:DIR ask:DIR:TOPIC rest:GOAL stance:NAME vision:PROFILE
+eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] dig:DIR search search:N disarm:DIR second_wind chat:DIR ask:DIR:TOPIC rest:GOAL stance:NAME vision:PROFILE
 talent:ID[:CHOICE] advance:SKILL levelup:auto xp:N
 skip:DURATION weather:KIND effect:ID@X,Y[>X,Y] identify[:LETTERS] afflict:STATUS infect:DISEASE`
 (`DIR` = N
@@ -125,7 +125,7 @@ fireball, lightning, frost), `read:b:c` reads it on inventory stack `c` (the scr
 identify); `dig:E` digs into the wall east with the tool in the Tool slot, turn
 after turn until it gives way or something interrupts; `search` searches the cells around the
 player for secret doors and hidden traps, `search:N` for up to N turns (1 to 100), stopping when
-something is found; `disarm:E` tries to disarm the trap the player knows of east of them (the
+something is found; `second_wind` uses the Second wind talent (hit points back at once, then Winded); `disarm:E` tries to disarm the trap the player knows of east of them (the
 Disarm ability, for those trained in Disable device; refused, with no time, without the skill
 or a known trap there); `chat:E` talks to the creature east of
 the player, `ask:E:rooms` asks it about topic `rooms` (an id in `assets/data/dialogue.toml`;
@@ -190,9 +190,10 @@ marks, `stat marks St 3, To 1`, **dev-only**),
 (the level's special rooms: their plain ground as the effect's `mark`, then a line per room,
 **dev-only**), `ice` (the level's temperature and the thickness of the ice on its water in cm,
 `0`-`9`, `a`-`z` for 10-35, `#` beyond, **dev-only**). The header line has the player's `hp
-17/17` (and `dead` once the run has ended), `hunger hungry` unless Not hungry, and the
+17/17` (and `dead` once the run has ended), `hunger hungry` unless Not hungry, `dazzled` while
+strong light dazzles light-blind eyes, and the
 `temperature`; JSON dumps add `hp`, `defence`, `protection`, `resistances` (by damage type id, the
-word: `{"cold": "resistant"}`), `burden` (`level`, `limit`), `alignment` (the band's id), `hunger`, `effects`
+word: `{"cold": "resistant"}`), `burden` (`level`, `limit`), `alignment` (the band's id), `hunger`, `dazzled`, `effects`
 (status ids), `diseases` (the known ones' ids), `death` (with `of`, the status that killed,
 `cause`, starving, choking, or a trap, and `trap`, the id of the trap that killed),
 `known_traps`, `temperature` (°C to a tenth), `weapon_skills` (by skill id:
@@ -301,6 +302,11 @@ Hard rules:
   `warlock_core::ability`, the one registry, and are used from the one abilities menu (`a`):
   never a default key of their own (an ability's own `KeyCommand` stays unbound by default,
   `settings/keys.rs::UNBOUND`). Basic commands keep their keys (`docs/dev/screens.md`).
+- Every new system ships with talents: the PR that adds it adds its `[[system]]` tag in
+  `assets/data/talents.toml` and at least the `[coverage]` bar of talents (and class abilities)
+  carrying it; resources (mana, #225's pools) are systems too. The feature issue answers the
+  template's "Talents and class abilities" section (`.github/ISSUE_TEMPLATE/feature.md`), or
+  says why none (`docs/dev/progression.md` "Coverage policy").
 - Keep modules small with clear responsibilities. No speculative abstractions, no premature
   optimization.
 
@@ -391,7 +397,8 @@ A successful compile does not verify anything visual. Before opening a PR:
   `Closes #N`. CI must be green before a squash merge into `main`.
 - CI runs on Linux only (`CI` workflow: fmt, clippy, tests, headless screenshots, wasm32 check,
   cargo-deny; the web build on pushes to `main`). macOS is not run in Actions: development happens
-  on macOS, so run the full local check there before every PR. `main` is branch-protected: PRs
+  on macOS, so run the full local check there before every PR (a PR built by a cloud agent,
+  `ops/agents/`, runs it on Linux instead). `main` is branch-protected: PRs
   only, the Linux, wasm32, and cargo-deny checks must pass, linear history.
 - **Merging** (`docs/dev/merging.md` has the details): agents don't chase `main`. A PR merges
   or rebases onto `origin/main` once, when the integrator says it is next in line; after that

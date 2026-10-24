@@ -4,5 +4,5 @@ name = "Regrowth"
 tree = "stars"
 granted = true
 description = "Your hit points come back half again as fast, and your bleeding stops sooner."
-effects = [{ kind = "healing_percent", value = 50 }, { kind = "ease", of = "wounds", times = 2 }]
+effects = [{ kind = "healing_percent", value = 50 }, { kind = "status_eases", status = "bleeding", value = 100 }]
 systems = ["hit_points", "status"]

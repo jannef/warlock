@@ -44,7 +44,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
 - **Objects in level files** (M11): a legend entry places a pile with `objects = ["dagger",
   "arrow*12"]` (top first; `*N` places N, as one stack if the object is stackable, else as N
   stacks of one; a loose gem names its gem, `"gem:ruby*3"`, of the plain size and cut, §7
-  "Gems"), and a creature's entry gives what it carries with `carry = ["spear",
+  "Gems"; anything else may name another material its construction list allows,
+  `"great_sword:bronze"`, §7 "Materials"), and a creature's entry gives what it carries with `carry = ["spear",
   "copper_coin*7"]` (any number of stacks), and what of that it wields and wears with `wield =
   "spear"` and `wear = ["leather_jerkin"]` (an object id or a list; M16): each the first carried
   stack of that object not yet equipped, in the first free slot that fits it (a second ring on

@@ -8,6 +8,7 @@ materials = [
     { part = "blade", of = "steel" },
     { part = "grip", of = "leather", share = 10 },
 ]
+made_of = ["metal", "dragonbone"]
 weight = 1800
 value = 80
 slot = "main_hand"

@@ -122,7 +122,9 @@ issue body, or one with many choices to review) is a **draft PR that adds
 
 ## Agents, finishers, and context
 
-The owner's token-saving rules (2026-10-24):
+The owner's token-saving rules (2026-10-24). The local subagents' briefs live in the repo, in
+`ops/agents/local/` (`feature.md` for a feature agent, `finisher.md` for a finisher; the spawn
+message adds the fields each one lists), so they survive a wiped `/tmp`:
 
 1. **A feature agent stops when its PR is open.** It pushes, opens the PR, triggers CI (pushing
    does it; if the change alters golden captures it runs
@@ -141,5 +143,12 @@ The owner's token-saving rules (2026-10-24):
    pushes, and stops. It does not merge the PR.
 3. **Agents keep contexts small**: read files in parts, grep, filter test output, never print
    whole diffs or logs.
+4. **Local or cloud, never both.** Every agent job above (feature, finisher, an escalation fix, a
+   design document, filing issues) can run as a local subagent (subscription quota) or as a
+   Claude Managed Agent in a cloud sandbox (API credits) with the same brief and the same
+   stopping point; `ops/agents/README.md` has the launchers and when to pick which. The
+   integrator chooses one place per job, by quota; a cloud agent never doubles a local one. A
+   cloud-built PR is verified on Linux (the sandbox has CI's lavapipe, so `cargo xtask golden`
+   compares there) instead of on macOS.
 
 The integrator schedules finishers: one per PR, when that PR is next in line.

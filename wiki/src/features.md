@@ -67,6 +67,12 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   rare finds, larger and finer deeper down, and what rings, amulets, and now and then weapons,
   shields, and helms are set with: "an emerald-pommelled long sword", "a gold and ruby ring".
   General stores buy them at what they are worth.
+- **Materials** — seventeen metals, from tin to nicrosil, and woods, bones, stones, hides, and
+  cloths, each with its weight, what it does as a blade or as armour, its worth, and its colour.
+  Items are found made of other materials than their usual one, by what each may be made of: "a
+  bronze long sword" (heavier, a little weaker, cheaper), "a flint spear", "a dragonbone
+  quarterstaff". Copper and bronze are common near the surface, steel deeper; kobolds carry
+  bone, flint, and bronze.
 - **Scrolls** — read with `r`: scrolls of fireball, lightning, and frost cast the traps' spells
   where you aim them (a fireball read too close asks first), and what they kill is yours; a
   scroll of identify tells you what an unidentified item is. They lie in the Depths and sell in
@@ -139,8 +145,9 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
 - **Stats** — Strength, Dexterity, Toughness, Intelligence, Willpower, and Presence, inspired by
   D&D, for you and every creature; a character screen shows your own. Strength, Dexterity, and
   Toughness count in a fight, and Strength kicks doors in; the rest do nothing yet.
-- **Character creation** — ADOM-style, at the start of every run: seven races (elf, half-elf,
-  human, dwarf, halfling, gnome, half-orc), each with its own eyes, three genders, and fifteen
+- **Character creation** — ADOM-style, at the start of every run: thirteen races (elf, half-elf,
+  human, dwarf, halfling, gnome, half-orc, and the evil goblin, drow, kobold, lizardfolk,
+  duergar, and ratfolk), each with its own eyes, three genders, and fifteen
   classes from barbarian and wizard to merchant and commoner shape your starting stats and
   skills, with dice rolled in the background (a warrior's Strength is 1d3+1). Your age and birthday are
   random, and the year you were born gives you a horoscope sign: one of twelve mythological

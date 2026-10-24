@@ -141,15 +141,10 @@ impl World {
             return;
         };
         let strength = player.effective_stats(&self.content).score(Stat::Strength);
-        // More for a talent that digs faster (a birth sign's Stonewise).
-        let percent = player.talent_mods(&self.content).dig_percent;
-        let work = dig_work(power, strength);
-        let work = if percent == 0 {
-            work
-        } else {
-            let more = TalentMods::scaled(u64::from(work), percent);
-            u32::try_from(more).unwrap_or(u32::MAX).max(1)
-        };
+        // Breaker (spec §8 "Talents"): more work a turn.
+        let faster = player.talent_mods(&self.content).dig_percent;
+        let work = TalentMods::scaled(u64::from(dig_work(power, strength)), faster);
+        let work = u32::try_from(work).unwrap_or(u32::MAX);
         self.make_noise(self.state.player, Act::Dig);
         self.train_stat(StatUse::Dig);
         let level = self.state.current();

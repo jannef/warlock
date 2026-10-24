@@ -60,6 +60,13 @@ struct Scheduled {
     energy: i64,
 }
 
+/// `price` paid by an actor `percent` quicker (as if its speed were that much higher), rounded
+/// up, at least 1.
+fn quicker(price: i64, percent: i32) -> i64 {
+    let pace = i64::from((100 + percent).max(1));
+    ((price * 100 + pace - 1) / pace).max(1)
+}
+
 impl World {
     /// The energy price of action `kind` for actor `id`: what it costs it ([`World::cost_of`])
     /// over the 6-second base, slowed by its burden ([`World::burdened`]). Steps are priced by
@@ -150,7 +157,16 @@ impl World {
             BASE_TURN,
         );
         let stance = self.content.stance_def(actor.stance).attack_cost;
-        self.burdened(id, percent_of(base, stance))
+        let base = percent_of(base, stance);
+        // Iron grip (spec §8 "Talents"): blows with a two-handed weapon cost less.
+        let two_handed = (with.and_then(|i| actor.inventory.get(i)))
+            .is_some_and(|s| self.content.object(s.object).two_handed);
+        let base = match actor.talent_mods(&self.content).two_handed_price {
+            0 => base,
+            _ if kind != ActionKind::Melee || !two_handed => base,
+            percent => percent_of(base, u32::try_from((100 + percent).max(0)).unwrap_or(0)),
+        };
+        self.burdened(id, base)
     }
 
     /// The energy price of reloading a missile weapon after a shot for actor `id` drawing on
@@ -191,6 +207,11 @@ impl World {
         }
         if fleeing {
             price = percent_of(price, self.content.stance_def(actor.stance).flee_cost);
+            // Then its talents (Unflinching): a signed percent of the fleeing step.
+            let percent = actor.talent_mods(&self.content).flee_percent;
+            if percent != 0 {
+                price = percent_of(price, u32::try_from((100 + percent).max(1)).unwrap_or(1));
+            }
         }
         self.burdened(id, price)
     }
@@ -206,7 +227,12 @@ impl World {
         let actor = &self.state.actors[&id];
         let ease = actor.skill_effect(&self.content, Effect::Burden);
         let price = self.bloated(id, self.load_of(id).penalty().slow_eased(price, ease));
-        actor.effects.slow(&self.content, price)
+        let price = actor.effects.slow(&self.content, price);
+        // Quick (spec §8 "Talents"): a little quicker in everything, as a higher speed would be.
+        match actor.talent_mods(&self.content).speed_percent {
+            0 => price,
+            quick => quicker(price, quick),
+        }
     }
 
     /// The price that leaves the player ready to act exactly at `until` (the last turn of a

@@ -4,7 +4,8 @@ name = "spear"
 glyph = ")"
 fg = "#b8955a"
 class = "melee_weapons"
-materials = ["wood"]
+materials = [{ part = "head", of = "iron" }, { part = "haft", of = "wood", share = 80 }]
+made_of = ["metal", "bone", "stone"]
 ornament = "inlay"
 weight = 1800
 value = 35

@@ -148,6 +148,13 @@ impl World {
             return;
         }
         self.wounded(target, blow, Some(attacker), events);
+        // Staggering blow (spec §8 "Talents"): a critical confirmed in melee staggers.
+        let critical = matches!(blow.strike, Strike::Hit { critical: true });
+        let staggers = (self.actor_or_fallen(attacker))
+            .and_then(|a| a.talent_mods(&self.content).critical_status);
+        if let Some(status) = staggers.filter(|_| critical && kind == AttackKind::Melee) {
+            self.afflict(target, status, 1, Some(attacker), events);
+        }
         for hit in self.on_hit_of(attacker, kind) {
             let lands = hit.chance >= 100 || self.state.rng.chance(u32::from(hit.chance));
             if !lands {
@@ -181,10 +188,16 @@ impl World {
         };
         let critical = matches!(blow.strike, Strike::Hit { critical: true });
         let big = combat::big_hit(blow.damage, victim.max_hp(&content));
+        // Clotting (spec §8 "Talents"): a big hit wounds no more, a critical a degree less.
+        let clots = victim.talent_mods(&content).clotting;
         for (status, def) in content.status_ids() {
             let degrees = (def.wound.as_ref())
                 .filter(|w| w.caused_by(blow.kind))
-                .map_or(0, |w| w.degrees(critical, big));
+                .map_or(0, |w| match (clots, critical) {
+                    (false, _) => w.degrees(critical, big),
+                    (true, false) => 0,
+                    (true, true) => w.degrees(true, big).saturating_sub(1),
+                });
             if degrees > 0 {
                 self.afflict(target, status, degrees, by, events);
             }
@@ -224,7 +237,11 @@ impl World {
         let statuses = actor.effects.regen(&self.content);
         let mut rate = u32::from(statuses.min(actor.diseases.regen(&self.content)));
         if self.resting && id == self.state.player {
-            rate = rate * u32::from(self.content.healing().resting) / 100;
+            // Resting's pace, and half again with Fast healer (spec §8 "Talents").
+            let faster = actor.talent_mods(&self.content).resting_percent;
+            let resting = u32::from(self.content.healing().resting);
+            let resting = resting * u32::try_from((100 + faster).max(0)).unwrap_or(0) / 100;
+            rate = rate * resting / 100;
         }
         let room = (self.state.levels.get(&actor.level))
             .and_then(|level| level.room_effect_at(&self.content, actor.pos));
@@ -258,10 +275,6 @@ impl World {
         let content = self.content.clone();
         // What rotted away while it was frozen (on another level, or over a dev skip) goes first.
         self.rot_pack(id, start);
-        // Its talents may ease some statuses faster (Regrowth, Pure blood); they do not change
-        // while time passes.
-        let talents =
-            (self.state.actors.get(&id)).map_or_else(Default::default, |a| a.talent_mods(&content));
         let mut passed = 0;
         while passed < seconds {
             let rate = self.healing_rate(id);
@@ -297,11 +310,15 @@ impl World {
             if let Some(r) = rots {
                 step = step.min(r.max(1));
             }
+            let talents = actor.talent_mods(&content);
+            let eases = |e: &crate::status::Effect| {
+                let def = content.status(e.status);
+                def.eases.map(|every| talents.eases_every(e.status, every))
+            };
             for e in actor.effects.iter() {
                 let def = content.status(e.status);
-                let pace = talents.ease_factor(&content, def);
                 step = (e.until_tick(def).into_iter())
-                    .chain(e.until_eases_at(def, pace))
+                    .chain(e.until_eases_every(eases(e)))
                     .fold(step, u64::min);
             }
             if let Some(need) = need(actor, &content)
@@ -319,8 +336,8 @@ impl World {
             };
             for e in actor.effects.iter_mut() {
                 let def = content.status(e.status);
-                let pace = talents.ease_factor(&content, def);
-                let (ticks, eased) = e.advance_at(def, step, pace);
+                let every = eases(e);
+                let (ticks, eased) = e.advance_every(def, every, step);
                 if ticks > 0 {
                     let cost = u64::from(def.damage) * ticks;
                     moment.damage += i32::try_from(cost).unwrap_or(i32::MAX);

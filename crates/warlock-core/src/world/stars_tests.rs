@@ -2,7 +2,7 @@
 //! talents, a lucky day one more and a title; they are computed, never stored as a choice, so a
 //! restored run gets them afresh; and each of the first gifts changes the one rule it names.
 
-use super::search::Look;
+use super::search::{Hidden, Look};
 use super::*;
 use crate::burden::Burden;
 use crate::character::CharacterSpec;
@@ -194,7 +194,7 @@ fn slight_and_rocs_strength_move_the_carrying_limit() {
     let slight = limit(&born_under("salamander", "fire", 5));
     let roc = limit(&born_under("roc", "fire", 5));
     assert!(slight < base && base < roc, "{slight} < {base} < {roc}");
-    assert_eq!(mods(&born_under("roc", "fire", 5)).kick, 4);
+    assert_eq!(mods(&born_under("roc", "fire", 5)).door_kick, 4);
 }
 
 #[test]
@@ -282,14 +282,14 @@ fn supple_dodges_and_stone_hide_soaks() {
     let plain = born_under("hydra", "fire", 5);
     let wood = born_under("hydra", "wood", 5);
     let earth = born_under("hydra", "earth", 5);
-    let defence = |w: &World, burden| player(w).defence(&BUILTIN, burden).total();
+    let defence = |w: &World, burden| player(w).defence(&BUILTIN, burden, None).total();
     assert_eq!(
         defence(&wood, Burden::Unburdened),
         defence(&plain, Burden::Unburdened) + 1
     );
-    let soak = |w: &World| player(w).protection(&BUILTIN).against(None);
+    let soak = |w: &World| player(w).protection(&BUILTIN, None).against(None);
     assert_eq!(soak(&earth), soak(&plain) + 1);
-    assert_eq!(mods(&wood).max_dex, 1);
+    assert_eq!(mods(&wood).burden_dex, 1);
     assert_eq!(mods(&wood).hunger_percent, -15);
     assert_eq!(mods(&wood).rot_harm_percent, -50);
 }
@@ -307,8 +307,8 @@ fn stonewise_notices_on_stone_and_digs_faster() {
         .find(|(_, t)| BUILTIN.terrain(**t).stone)
         .map(|(p, _)| p)
         .expect("stone somewhere");
-    assert!(earth.notices(stone));
-    assert!(!plain.notices(stone));
+    assert!(earth.notices(stone, Hidden::Door(0)));
+    assert!(!plain.notices(stone, Hidden::Door(0)));
 }
 
 #[test]
@@ -402,8 +402,8 @@ fn load_horoscope(edit: impl Fn(&str) -> String) -> Result<Content, String> {
 
 #[test]
 fn the_horoscope_and_the_talents_are_checked_against_each_other() {
-    let err = load_horoscope(|t| t.replacen("\"fleet\"", "\"nimble\"", 1)).unwrap_err();
-    assert!(err.contains("unknown talent `nimble`"), "{err}");
+    let err = load_horoscope(|t| t.replacen("\"fleet\"", "\"fleeter\"", 1)).unwrap_err();
+    assert!(err.contains("unknown talent `fleeter`"), "{err}");
     let err = load_horoscope(|t| t.replacen("\"fleet\", ", "\"hardy\", ", 1)).unwrap_err();
     assert!(
         err.contains("not a granted talent of the `stars` tree"),

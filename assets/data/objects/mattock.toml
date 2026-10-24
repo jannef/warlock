@@ -5,6 +5,7 @@ glyph = "("
 fg = "#a49680"
 class = "tools"
 materials = ["iron"]
+made_of = ["metal", "stone"]
 weight = 4500
 value = 70
 slot = "tool"

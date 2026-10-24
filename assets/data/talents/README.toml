@@ -32,6 +32,9 @@
 #                   eyes = "darkvision"                  the race's vision profile
 #                   animal = "roc", element = "fire"     the birth sign's (horoscope.toml)
 #                   lucky = true                         born on a lucky day
+#                   any_weapon_skill = { roles = ["melee"], of = ["unarmed"], rank = 3 }
+#                                                        any one of the weapon skills of those
+#                                                        roles or named, at that rank
 #                   requires_alignment = { min = "good" }   an alignment band, as quests and
 #                                                        abilities ask it (`min` the worst
 #                                                        allowed, `max` the best)
@@ -47,8 +50,6 @@
 # talent.rs's TalentMods, and one read):
 #   dodge { value }               Defence in the Dodge category (bonuses add up)
 #   natural { value }             natural armour, on top of the actor's own or an item's
-#   max_dex { value }             the burden's cap on Dexterity in Defence, that much higher
-#   protection { value }          Protection, added to what is worn and natural armour
 #   melee_damage { value }        damage added to every blow up close (both hands)
 #   threat { value }              every attack threatens a critical that many points lower
 #   reroll_fumble                 a natural 2 on an attack roll is rolled again, once
@@ -56,11 +57,6 @@
 #                                 levels, at least at_least, handed out at the pick and as each
 #                                 later level comes (as levels' own hit points are)
 #   healing_percent { value }     hit points come back that percent faster (negative: slower)
-#   ease { of, times }            statuses of a kind ease `times` (2 to 4) as fast: `of` is
-#                                 "wounds" (statuses of wounds: bleeding) or "poison" (statuses
-#                                 of the poison damage type)
-#   poison_spares_scores          poison never lowers the scores (its other harm stays)
-#   disease_checks { value }      added to every check against a disease
 #   footsteps_percent { value }   footsteps that percent louder (negative: quieter)
 #   silent_doors                  the doors it opens and closes make no sound
 #   hearing { value }             hears sounds that much fainter
@@ -69,7 +65,6 @@
 #                                 quicker)
 #   swimmer                       wading (water, and ground a disease is caught wading in)
 #                                 costs a plain step, and never gives a disease
-#   speed_percent { value }       speed, that percent more (negative: slower); hidden in the game
 #   hunger_percent { value }      hunger burns that percent faster (negative: slower)
 #   rot_harm_percent { value }    the sickness rotten food gives, that percent more (rounded
 #                                 down; negative: less)
@@ -81,9 +76,57 @@
 #   search { value }              added to every check to find hidden things (searching and in
 #                                 passing)
 #   search_reach { value }        searching reaches that many cells farther
-#   kick { value }                door kicks as if Strength were that much higher
-#   dig_percent { value }         digging does that percent more work a turn
 #   favour_percent { value }      shop prices move that percent further in its favour
 #   free_blow { trigger }         a free blow: "cleave", "great_cleave", "riposte", or
 #                                 "opportunist" (spec §8 "Free blows")
+#   weapon { role, to_hit, damage, threat, ranks, speed, reload, ease, bash, shield }
+#                                 what attacks with some weapon skills gain, as their ranks give
+#                                 it (data/weapon_skills.toml): without `role` the chosen weapon
+#                                 skill or style's (a talent with that choice), else every skill
+#                                 of the role's; `ranks` reads its benefits that many ranks
+#                                 higher (a rank held, never past 10), `ease` eases both
+#                                 two-weapon penalties, `bash` adds to a free bash's chance only
+#                                 where there is one; each field 0 by default
+#   launcher_range { value }      the readied missile weapon shoots that many cells farther
+#   throw_range { value }         throws reach that many cells farther
+#   max_dex { value }             worn armour's cap on Dexterity in Defence, that much higher
+#   deflection { value }          Defence in the Deflection category, on top of magic items'
+#   protection { value, body_armour, shield }   Protection, only while the armour piece worn
+#                                 with the most Protection has body_armour at least (if set) and
+#                                 only while holding a shield (if shield = true)
+#   stance_to_hit { stance, percent }   that combat stance's to-hit penalty, that percent
+#                                 smaller (100: none)
+#   flee_percent { value }        fleeing steps cost that percent more (negative: cheaper)
+#   pain { value }                every hit (a blow, a shot, a throw, a trap) does that much
+#                                 less after the soak, never below 1
+#   resist { value }              resistance in percent to the chosen element (choice element)
+#   resting_percent { value }     resting heals that percent faster on top of resting's pace
+#   second_wind { per_level, at_least, cooldown }   the Second wind ability: per_level hit points
+#                                 per character level back at once (at least at_least), then the
+#                                 cooldown status (an id in ../status.toml)
+#   iron_stomach                  rotten food and overeating never make it vomit; rotten food
+#                                 sickens it half as much
+#   status_eases { status, value }   that status eases that percent faster
+#   no_penalty { status }         that status never lowers its scores
+#   clotting                      a big hit wounds it no more, a critical one degree less
+#   penalty_percent { value }     what its statuses take off its scores, that percent more
+#                                 (negative: less; raises are untouched)
+#   disease_checks { value }      added to its disease checks
+#   disease_recovery { value }    a disease needs that many fewer checks won in a row to go
+#   kick_die { sides }            its kicks at creatures roll one die of that many sides
+#   door_kick { value }           its door kicks as if that much stronger
+#   dig_percent { value }         its digging does that percent more work a turn
+#   two_handed_price { value }    its blows with a two-handed weapon cost that percent more
+#                                 (negative: cheaper)
+#   critical_status { status }    a critical it confirms in melee leaves the target that status
+#   penetration { damage, value } its blows that can do damage of that kind ignore that much
+#                                 more Protection
+#   burden_dex { value }          the burden's cap on its Dexterity in Defence, that much higher
+#   sure_step                     a trap it steps onto first gets a Dexterity check: made, it
+#                                 does not go off, and it is found
+#   pit_proof                     pits never catch it
+#   speed_percent { value }       it moves and acts that percent quicker (hidden in the game)
+#   missile_dodge { value }       Dodge added against shots, throws, and trap missiles
+#   spell_damage_percent { value }   the damage bursts and bolts do it, that percent more
+#                                 (negative: less)
 # Flat bonuses are -20 to 20, percents -100 to 100, never 0.

@@ -15,7 +15,8 @@ the birth year's)). Scores: 10 + race + gender + class + animal + element, clamp
 potentials `base_potential` + the race's, never below the score. Flags for rules:
 `Character::born_of_element("fire")`, `born_in_year_of("manticore")`. Content:
 `data/races.toml` (`content/race.rs`: `Races` with `base_potential`, `RaceDef` with `vision`,
-`age`, `stats`, `potential`, `hp`, `alignment`, `rolls`), `data/classes/` (`content/class.rs`:
+`age`, `stats`, `potential`, `hp`, `natural`, `resist`, `light_blind`, `disease_check`,
+`eats_rotten`, `alignment`, `rolls`), `data/classes/` (`content/class.rs`:
 `ClassDef` with `stats`, `hp`, `alignment`, `known_for`, `rolls`; one file per class, `NN-id.toml` in the order offered; `Start::hp` is their sum, and `Start::alignment` the
 sum of their `alignment`s, the starting score, `docs/dev/alignment.md`),
 and `data/horoscope.toml` (`content/horoscope.rs`: `Horoscope` with `anchor_year`, `animals`,
@@ -38,6 +39,30 @@ final scores only: never dice, a breakdown, a modifier, or a potential (the step
 wiki show adjustments as written in data; the wiki also gives the modifiers and the races'
 potentials exactly). Balance is not a goal; classes only adjust starting scores, give hit
 points, train skills and weapon skills, and give a starting kit.
+
+**Races in the rules** (#255). `WorldState::race_of(content, actor)` is the one lookup of the
+player's race (`None` for a creature, or a run without a character); `load`, `size_of`, and every
+race trait go through it. The traits, each read in one place:
+- `natural` (`content::Hide`, as a creature's, checked by `Hide::check`): `Actor::hide(content,
+  race)` is the race's hide, else the creature type's; `Actor::defence`, `protection`,
+  `soaked_by`, and `target` take the race for it, and so does `fight::Guard::of` (the hide's name
+  in messages). `World::defence_of`/`protection_of` pass it (the dump reads those).
+- `resist` (resolved by `Content::resolve_per_kind` in `Races::parse`): `Actor::resistances(content,
+  race)` adds it to the creature type's; `World::resistances_of` passes it, so blows, blasts, and
+  status doses all see it.
+- `light_blind` (`content::LightBlind { glare, sight, to_hit }`): `LightBlind::dazzled_by(light)`
+  is the rule. `Perception::compute` reads it on the viewer's own cell (after the light, before
+  visibility) and caps the visible reach at `sight` (wall completion too), keeping `dazzled` for
+  `PerceptionView::dazzled` (the status bar's `Dazzled`, the dump header's `dazzled`, JSON
+  `dazzled`). `world/glare.rs`: `World::glared(attacker, profile)` (called once in
+  `fight::resolve`, so melee, missiles, and free blows) takes `to_hit` off while
+  `sight::light` on the attacker's cell dazzles it; `World::glare_news(before)` (in `perceive`)
+  notes when it begins and ends. Creatures never have a race, so never pay for the light.
+- `disease_check`: `World::disease_modifier(actor, stat)` (`world/disease.rs`), both checks.
+- `eats_rotten`: the top of `World::eat_rotten` (`world/eat.rs`).
+- `passive_search = "traps"` (`PassiveSearch::Traps`): `World::notices(at, hidden)`.
+Tests: `world/race_tests.rs` (test races beside the built-in ones, one trait each, and the evil
+races' starting bands); `content/race.rs` (parsing and refusals).
 
 **Names** (#218): `Character::name` (saved, hashed: saves change). `character::check_name` is the
 one check (trimmed, 1 to `MAX_NAME` = 20 characters, no control character; what the font draws is

@@ -101,19 +101,19 @@ pub use level::{
     CreatureSpawn, EdgeExit, LevelKind, LevelTemplate, Region, StairsLink, parse_route,
 };
 pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, MAX_LIGHT_RADIUS, Stability};
-pub use material::{MAX_MATERIAL_VALUE, MaterialDef, MaterialId};
+pub use material::{ANY, Found, MAX_MATERIAL_VALUE, MaterialDef, MaterialId, VERY_RARE};
 pub use names::{NameLists, Names};
 pub use object::{
     MAX_BONUS, MAX_DIG, MAX_PLACED, MAX_VALUE, ObjectDef, ObjectId, article, counted, weapon_noun,
 };
 pub use overworld::{Landscape, LocalArea, local_area_id, parse_local_area};
-pub use part::{MAX_OBJECT_PARTS, MAX_PARTS, Part, PartDef, PartId};
+pub use part::{MAX_OBJECT_PARTS, MAX_PARTS, Part, PartDef, PartId, PartRole};
 pub use particles::{ParticleEmitter, ParticleTrigger};
 pub use quest::{
     DEFAULT_DECLINE, GOLD, Goal, MAX_COUNT, MAX_NAME, MAX_QUEST_XP, QuestDef, QuestId, QuestKind,
     QuestTexts, Reward,
 };
-pub use race::{HUNGER, RaceDef, Races};
+pub use race::{HUNGER, LightBlind, RaceDef, Races};
 pub use room_effect::{RoomEffectDef, RoomEffectId, RoomEffects, SpecialRoom};
 pub use scenario::ScenarioDef;
 pub use scroll::{Cast, Reading, ScrollSpell};
@@ -133,8 +133,8 @@ pub use status::{
     Stacking, StatusDef, StatusId, Wound,
 };
 pub use talent::{
-    Ailment, Choice, Coverage, DEFAULT_MAX_RANKS, FreeBlowTrigger, Need, Needs, Rank, SystemDef,
-    SystemId, TalentBook, TalentDef, TalentEffect, TalentId, TreeDef, TreeId,
+    AnyWeaponSkill, Choice, Coverage, DEFAULT_MAX_RANKS, FreeBlowTrigger, Need, Needs, Rank,
+    SystemDef, SystemId, TalentBook, TalentDef, TalentEffect, TalentId, TreeDef, TreeId,
 };
 pub use terrain::{
     Breakable, Freeze, FreezeSpec, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId,
@@ -598,7 +598,13 @@ impl Content {
             let size_index = |id: &str| content.size_index(id);
             let skill_id = |id: &str| content.skill_id(id);
             let weapons = &content.weapon_skills;
-            content.races = Races::parse(path, text, has_vision, size_index, skill_id, weapons)?;
+            let percent = crate::damage::MIN_RESISTANCE..=crate::damage::IMMUNE;
+            let resist = |m: &BTreeMap<String, i32>| {
+                content.resolve_per_kind("resist", m, percent.clone(), false)
+            };
+            content.races = Races::parse(
+                path, text, has_vision, size_index, skill_id, weapons, resist,
+            )?;
         }
         let path = "data/names.toml";
         if let Some(text) = files.get_optional(path) {
@@ -618,6 +624,8 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             content.experience = Experience::parse(path, text)?;
         }
+        // Statuses before talents, which may name them (a cooldown, a critical's status).
+        content.load_statuses(files)?;
         // The talent table (spec §8 "Talents"): optional, so no level asks for a pick without it.
         if files.table("talents").next().is_some() {
             content.talents = talent::parse(files.table("talents"), &content)?;
@@ -628,7 +636,6 @@ impl Content {
         }
         // The signs' gifts are talents, and talents may ask for a sign: checked both ways.
         horoscope::check_talents(content.horoscope.as_ref(), &content.talents)?;
-        content.load_statuses(files)?;
         content.load_terrain(files)?;
         content.load_diseases(files)?;
         let path = "data/room_effects.toml";
@@ -1014,19 +1021,9 @@ impl Content {
             .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             let ranks = ranks.iter().map(|&(id, rank)| (id, rank.max() as u8));
             let weapon_skills = WeaponSkills::from_ranks(&self.weapon_skills, ranks);
-            if spec.natural.as_ref().is_some_and(|n| {
-                let bonus = 0..=object::MAX_BONUS;
-                !bonus.contains(&n.defence)
-                    || !bonus.contains(&n.protection)
-                    || n.defence + n.protection == 0
-                    || n.name.is_empty()
-            }) {
-                return Err(err(format!(
-                    "creature `{}`: natural: `defence` and `protection` must be 0 to {}, not both \
-                     0, and `name` given",
-                    spec.id,
-                    object::MAX_BONUS
-                )));
+            if let Some(hide) = &spec.natural {
+                hide.check()
+                    .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             }
             // The status diseases show as comes of a disease, never of a blow.
             let status = |id: &str| {
@@ -1357,6 +1354,7 @@ impl Content {
                 })?),
                 None => None,
             };
+            let (entries, made_of) = (spec.materials.clone(), spec.made_of.clone());
             let (mut def, lit_as) = spec.resolve(
                 path,
                 self,
@@ -1373,10 +1371,19 @@ impl Content {
                 &self.weapon_skills,
             )?;
             def.ornament = ornament;
+            def.construction = part::construction(
+                &entries,
+                made_of.as_deref(),
+                &def.parts,
+                &self.materials,
+                def.role(),
+            )
+            .map_err(|m| ContentError::new(path, format!("object `{}`: {m}", def.id)))?;
             (def.name, def.plural) = part::names(
                 &def.name,
                 &def.plural,
                 &def.parts,
+                def.material(),
                 &self.materials,
                 &self.parts,
             );
@@ -3068,7 +3075,19 @@ mod tests {
         assert_eq!(
             races,
             [
-                "elf", "half_elf", "human", "dwarf", "halfling", "gnome", "half_orc"
+                "elf",
+                "half_elf",
+                "human",
+                "dwarf",
+                "halfling",
+                "gnome",
+                "half_orc",
+                "goblin",
+                "drow",
+                "kobold",
+                "lizardfolk",
+                "duergar",
+                "ratfolk"
             ]
         );
         // Every race offers names to every gender, and every scenario names its character.

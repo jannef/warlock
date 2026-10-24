@@ -24,12 +24,14 @@ class bonus picks, and the Talents page that lists every talent with what it nee
   "Hardy (2)". Each rank may ask more than the last.
 - A talent with a **choice** (a weapon skill, a fighting style, an element) is picked for that
   choice, and the same talent may be picked again for another: Weapon focus with long blades and
-  Weapon focus with bows are two talents. None of these ship yet.
+  Weapon focus with bows are two talents. A weapon skill chosen is one you attack with (never
+  shield blocking); a fighting style is chosen as a style.
 - **Prerequisites** must all hold when you pick, and are never checked again: a Strength lowered
   by disease later does not take a talent away. They may be another talent (at a rank), a stat
   score (the score itself, as the [character screen](character.md) shows it; never what items or
   a sickness do to it), a [skill](skills.md) at a value, a [weapon skill](weapon-skills.md) or
-  style at a rank, a character level, your race, your class, your eyes (your race's
+  style at a rank (or any of a kind: "a missile weapon skill 3" is bows, crossbows, or
+  slings), a character level, your race, your class, your eyes (your race's
   [vision](vision.md)), your birth sign's animal or element or a lucky day (see
   [Horoscope](horoscope.md)), or your [alignment](alignment.md) band. The game names what you
   lack: "You cannot take Dodge: you need Dexterity 13."
@@ -43,7 +45,11 @@ asks for.
 
 ## What a talent does
 
-In the game a talent is described in words; the tables below state the rule exactly. Where a
+In the game a talent is described in words; the tables below state the rule exactly. Most
+talents simply change a rule for good. An **active** talent (Second wind) is something you do:
+it appears in the [abilities menu](abilities.md) under Talents, and after use it leaves a
+status (Winded) during which it cannot be used again. A few talents that need the class
+resources (Battle trance, Inner calm) are still to come. Where a
 talent scales ("one hit point per four levels"), what it gave earlier grows as you level: a
 talent taken at level 3 still matters at level 50.
 
@@ -52,7 +58,15 @@ talent taken at level 3 still matters at level 50.
 ## Coverage
 
 Every talent names the parts of the game it touches, from a fixed list, and the game checks at
-start-up that no part of the game on that list goes without talents. Parts marked pending are
-waiting for theirs.
+start-up that no part of the game on that list goes without talents: at least two talents each
+(and, once classes have their level tables, at least one class ability). Parts marked pending
+are waiting for theirs.
+
+This is a promise about the future too: **every new part of the game arrives with its
+talents**, so no system is ever left with nothing that makes it better at it. That holds for
+new resources as well: when mana arrives, it brings talents for a deeper pool, a quicker
+refill, and cheaper casting, and the same goes for each class's own pool later (a barbarian's
+rage, a ranger's focus). Abilities that cost such a resource have no waiting time on top: the
+resource coming back with time is the limit.
 
 {{#include generated/talents-by-system.md}}

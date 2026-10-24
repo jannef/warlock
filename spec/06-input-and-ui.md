@@ -325,8 +325,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   roguelike commands (move, open/close, kick, pick up/drop, eat, chat, search, look, throw/shoot,
   rest, inventory, equipment) keep their keys; digging is an item's use (`U`), not an ability.
   - **The registry** is `warlock_core::ability`, the one place abilities are registered: every
-    `Ability` has an id, a name, a description, a `Source` (race, class, skill, weapon skill,
-    item: the menu's groups, in that order), what it asks for (`Aim`: nothing, or a direction;
+    `Ability` has an id, a name, a description, a `Source` (race, class, talent, skill, weapon
+    skill, item: the menu's groups, in that order), what it asks for (`Aim`: nothing, or a direction;
     a target and an item from the pack join with the first ability that needs one), its action
     cost (an `ActionKind`), who has it, and whether it can be used now and why not
     (`Unavailable`: "you hold no shield", "not usable yet", while a status lasts that blocks
@@ -343,8 +343,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     §8 "Doors", #233), Open lock's use, which whoever is trained in it has (thieves), in a
     direction; and each other skill used as an action (`kind = "action"`, §8 "Skills") the player
     is trained in, listed but never available until its use comes (it then becomes an ability of
-    its own with its action, listed in the skill's place: `Ability::use_of`). No race, class, or
-    item gives one yet.
+    its own with its action, listed in the skill's place: `Ability::use_of`); and **Second wind**
+    (`Ability::SecondWind`, under Talents, §8 "Talents"), which the Second wind talent gives,
+    asking for nothing, greyed out while Winded. No race, class, or item gives one yet.
   - **The menu** (a screen on the stack) lists them as the one paged list (§6 "Item lists"),
     grouped by source under a header each, lettered down each page from `a`: each row the
     ability's name and what it asks for ("in a direction"), or greyed out with why it cannot be
@@ -569,7 +570,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - Screen layout: map viewport, message log, status panel (level, the player's hit points as
   `HP 18/24` (never below 0), the status effects they suffer by name, the most important first
   (`Bleeding`, `Poisoned`, `Diseased`; data order; §8 "Status effects"; never which disease, §8
-  "Diseases"), their hunger unless they are Not hungry (`Hungry`, `Weak`, `Fainting`, `Starving`,
+  "Diseases"), `Dazzled` while strong light dazzles their light-blind eyes (§8 "Character
+  creation"), their hunger unless they are Not hungry (`Hungry`, `Weak`, `Fainting`, `Starving`,
   `Satiated`, `Bloated`; §8 "Hunger"), their burden when they have one (`Burdened`, `Strained`,
   `Overloaded`; §8 "Burden"), their level as `Lv 3` (§8 "Experience"; it goes after the burden
   and before the time and the date), region (on the overworld and in

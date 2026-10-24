@@ -29,7 +29,9 @@ after it. Healing and status ticks run as the scheduler moves the clock (`World:
 (`fight::attack_message`, `death_message`; actors that died this action are in the unsaved
 `World::fallen`, so their names and words still resolve). Data: objects `damage`, `threat`,
 `crit`, `to_hit`, `strength`, `parry`, `armour`, `max_dex`, `shield` (`content/object.rs`);
-creatures `base_hp`, `attack` (`NaturalAttack`), `natural` (`Hide`); races and classes `hp`; a
+creatures `base_hp`, `attack` (`NaturalAttack`), `natural` (`Hide`; a race's `natural` is the
+player's instead, `Actor::hide(content, race)`, and a race's `resist` adds to the creature
+type's, `docs/dev/character-creation.md`); races and classes `hp`; a
 scenario without a character `hp`. Hit points live on `Actor` (`hp`, `hp_base`, `regen`;
 `max_hp(content)`, `health(content)`: the effective Toughness), saved and hashed. Presentation reads only
 `PerceptionView::own_hp`, `own_defence` (the total: its Dexterity part would give a modifier

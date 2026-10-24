@@ -83,12 +83,37 @@ developer notes (CLAUDE.md, `docs/dev/`).
     rolled), within 1 to 40 and never below the starting score. Classes, genders, and signs do
     not change potentials.
   - **Eyes**: the player's vision profile is the race's (the dev vision switch still works).
+  - **Light-blindness** (#255; a race's `light_blind = { glare, sight, to_hit }`, drow 250, 10,
+    −1): while the light on the player's own cell, as their eyes perceive it (the light the
+    perception finds there, the status bar's `Light`), is at least `glare` bright, they are
+    **dazzled**: the perception shows nothing farther than `sight` cells (line of sight and
+    light are unchanged within it; wall completion stops there too), and every attack they roll
+    is `to_hit` worse (`World::glared`, in `resolve`, from the same light on their cell then).
+    `LightBlind::dazzled_by` is the one rule; nothing else reads it. A clear sun well above the
+    horizon dazzles a drow (on the courtyard's November morning from about 07:30), an overcast
+    one does not, nor their own lantern alone (about 220); a lantern beside a brazier does. A note says when it begins ("The bright light dazzles
+    you.") and ends ("Your eyes adjust to the dimmer light."), neither stopping a rest, and the
+    status bar shows `Dazzled` while it lasts; never the numbers. Creatures are never
+    light-blind.
+  - **Gifts on other rules**: a race's `natural` armour adds to the player's Defence (Natural)
+    and Protection, as a creature type's does ("Combat" below; lizardfolk); its `resist` to what
+    they resist ("Damage types"; drow poison); its `disease_check` to every check against a
+    disease ("Diseases"; ratfolk); `eats_rotten` lets rotten food feed them unharmed ("Hunger";
+    ratfolk); and `passive_search = "traps"` lets them notice hidden traps in passing
+    ("Searching"; kobolds). `WorldState::race_of` is the one lookup of the player's race;
+    creatures go by their creature type.
+  - **Race and creatures**: no creature takes a side by the player's race: hostile kobolds
+    attack a kobold player as they would anyone, and good creatures greet a drow coldly only
+    when their alignment is Evil or worse ("Alignment" below), never for their race. Tribal
+    friendliness may come later.
   - **Hit points**: the race's and the class's `hp` add to Toughness for the maximum ("Combat"
     below).
   - **Alignment** ("Alignment" below): the starting score is the race's `alignment` plus the
     class's, kept on the scale: paladins start Good, thieves and witches Callous, everyone else
-    Neutral; a race only leans (elves and halflings a little toward good, half-orcs a little
-    toward evil), never alone out of Neutral. It draws nothing.
+    Neutral; most races only lean (elves and halflings a little toward good, half-orcs a little
+    toward evil), never alone out of Neutral, but the evil races (#255) start on the evil side:
+    goblins, kobolds, lizardfolk, and ratfolk Callous (−200), drow and duergar Evil (−450), so a
+    drow paladin starts Neutral and a goblin thief Evil. It draws nothing.
   - **Weapon skills** ("Weapon skills" below): the race's starting ranks plus the class's, plus
     one set of the class's `weapon_skill_choice` if it has one, at most 10 each; each then
     raises the skills it defaults to. Dice among them roll from their own stream,
@@ -279,8 +304,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Prerequisites** (`Needs`; all must hold at the pick and are never checked again: a score
     lowered later keeps the talent): other talents at a rank (a talent with a choice may be
     needed only by one of the same choice, taken for the same), stat **scores** (the stored
-    score, never the effective one), skill values, weapon skill or style ranks, the chosen
-    weapon skill's or style's rank (`chosen`), the character level, the race, the class, the
+    score, never the effective one), skill values, weapon skill or style ranks, any one of
+    several weapon skills at a rank (`any_weapon_skill = { roles = ["melee", "unarmed"], of =
+    [...], rank = 3 }`: "a melee or unarmed weapon skill 3", "Maces and clubs or Unarmed 3"), the
+    chosen weapon skill's or style's rank (`chosen`), the character level, the race, the class, the
     eyes (the race's vision profile), the birth sign's animal and element and a lucky day
     (`animal`, `element`, `lucky`; §8 "Birth sign"), and the alignment band
     (`requires_alignment`, as quests and abilities ask it, §8 "Alignment": `{ min = "good" }`).
@@ -296,22 +323,82 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `footsteps_percent` and `silent_doors` (`noise::noise`), `hearing`, `carry_percent`
     (`burden::load`), `travel_percent` (overworld steps), `hunger_percent` and `no_exertion`,
     `xp_percent` (every gain), `notice` (noticing in passing as if trained in Spot, with a
-    bonus), `free_blow` (a switch of `World::free_blows_of`); with the birth signs (#265):
-    `max_dex` (the burden's Dexterity cap in Defence), `protection` (added to the Protection
-    sum), `threat` (every attack's threat range, in `Actor::stanced`), `reroll_fumble` (a natural
-    2 rolled again once, `combat::strike_with`), `ease { of, times }` (bleeding or poison eases
-    that many times as fast, `World::live`), `poison_spares_scores` (`Actor::penalty`),
-    `disease_checks` (both disease checks), `swimmer` (`step_price` on wading terrain, `wade`),
-    `speed_percent` (`Actor::speed`, every read of the scheduler), `rot_harm_percent`
+    bonus), `free_blow` (a switch of `World::free_blows_of`). The first twelve: Healthy, Hardy,
+    Dodge, Brawn, Silent feet, Keen ears, Pack mule, Long strider, Lean, Good learner, Alert,
+    Thick skin.
+  - **Weaponcraft and Guard** (#238): `weapon` adds to the benefits of the chosen weapon skill
+    or style (no `role`) or of every skill of a role, read in `Actor::benefit`, so every
+    attack, Defence, and price that reads a skill's benefits reads it: Weapon focus (+1 to hit),
+    Weapon specialization (+2 damage), Improved critical (threat one roll wider), Stylist (the
+    style's benefits one rank higher, never past 10, and only for a rank held), Two-weapon
+    training (both two-weapon penalties eased by 2), Shield expert (Shield +1; Sword and
+    Board's free bash 10 more likely where it has one), Deadly aim (+2 damage with shots),
+    Thrower (+1 damage and 10 % cheaper throws), Rapid reload (reloading 25 % cheaper);
+    `launcher_range` and `throw_range` (Far shot: +2 and +1 cells); `max_dex` (Armour
+    training: worn armour's Dexterity cap +1 a rank); `deflection` (Deflection +1);
+    `protection` (Heavy armour mastery: +1 while the armour piece worn with the most
+    Protection has 3 or more; Shield wall: +1 while holding a shield); `stance_to_hit` and
+    `flee_percent` (Stalwart: the defensive stance's to-hit penalty gone; Unflinching: the
+    coward's halved, rounded toward 0, and fleeing steps 10 % cheaper again); `pain` (Immune
+    to pain: a hit, a blow, shot, throw, or trap, does 1 less after the soak, never below 1;
+    a status's or starving's harm is no hit); `resist` (Elemental ward: 25 % a rank against
+    the chosen element, any damage type that is no physical kind, summed and capped with the
+    gear's). A weapon-skill choice is a skill that attacks: never shield blocking (it only
+    defends) nor a style (chosen as a style). Steady hand waits for the ranger's focus
+    (#225).
+  - **Vigour, Might, Finesse** (#237; the design's §7.5 but for the two that wait for class
+    resources, Battle trance and Inner calm): `resting_percent` (Fast healer: resting's pace
+    half again, `World::healing_rate`); `second_wind` (Second wind, the first **active** talent:
+    `Ability::SecondWind` under the abilities menu's new **Talents** group (`Source::Talent`,
+    between Class and Skills), `Action::SecondWind` (`second_wind`): 1 hit point per character
+    level back at once, at least 8, for the time of a `wait`, then the cooldown status Winded
+    (15 minutes; "you are winded" in the menu; refused, no time, without the talent or while
+    winded)); `iron_stomach` (rotten food and overeating never make you vomit, no draw for it;
+    rotten food's sickness halved, `eat.rs`); `status_eases` and `no_penalty` (Poison
+    resistance: Poisoned eases twice as fast and never lowers scores; Clotting's bleeding twice
+    as fast: the sufferer's own easing pace in `World::live`); `clotting` (a big hit wounds no
+    more, a confirmed critical a degree less, `World::wounded`); `penalty_percent` (Unbowed:
+    each status's lowering of a score halved toward 0, raises untouched, `Effects::penalty_for`);
+    `disease_checks` (Strong constitution, +2 on catching and on every progression) and
+    `disease_recovery` (Fever-proof: a check fewer won in a row shakes a disease off, never
+    below 1, never one that does not recover); `free_blow` (Cleave, Great cleave, Riposte,
+    Opportunist); `kick_die` (Mighty kick: kicks at creatures roll 1d6) and `door_kick` (Mighty
+    kick and Breaker, +4 each to a door kick's Strength); `dig_percent` (Breaker: a quarter more
+    work a turn); `two_handed_price` (Iron grip: blows with a two-handed weapon 10 % cheaper,
+    `World::attack_price`); `critical_status` (Staggering blow: a critical confirmed in melee
+    leaves the target Staggered, `cost = 150` for 6 seconds: its next action half again as
+    dear; `World::after_blow`, no draw of its own); `penetration` (Crusher: +2 on blows and kicks
+    that can do bludgeoning damage); `burden_dex` (Nimble: the burden's Dexterity cap +1);
+    `sure_step` and `pit_proof` (Light step: a trap stepped onto gets a Dexterity check against
+    its difficulty first, two draws only with the talent; made, it does not go off and is found;
+    at rank 2 pits never catch you; steps only, never a door's trap); `speed_percent` (Quick:
+    +5 % a rank, every price divided by it in `World::burdened`, as a higher speed; hidden in the
+    game); `missile_dodge` (Deflect missiles: Dodge +2 against shots, throws, and trap missiles,
+    `World::target_against`); `spell_damage_percent` (Evasion: bursts and bolts, traps' and
+    scrolls', do half, rounded down, before resistances). The statuses these name are checked
+    at load; `data/status.toml` loads before the talents.
+  - **Birth sign gifts** (#265): the effects only the signs' talents use: `threat` (every
+    attack's threat range, in `Actor::stanced`), `reroll_fumble` (a natural 2 rolled again once,
+    `combat::strike_with`), `swimmer` (`step_price` on wading terrain, `wade`), `rot_harm_percent`
     (`eat_rotten`), `stone_sense` and `search` (`search.rs::notices`, `search_modifier`),
-    `search_reach`, `kick` (`kick_door`), `dig_percent` (`dig_turn`), `favour_percent`
-    (`world::favour`). The first twelve: Healthy, Hardy, Dodge, Brawn, Silent feet, Keen ears,
-    Pack mule, Long strider, Lean, Good learner, Alert, Thick skin.
+    `search_reach`, `favour_percent` (`world::favour`). The rest the signs share with the other
+    trees' effects: `burden_dex` (Supple), `protection` (Stone hide), `door_kick` (Roc's
+    strength), `dig_percent` (Stonewise), `status_eases` and `no_penalty` (Regrowth's bleeding,
+    Pure blood's poison), `disease_checks`, `speed_percent`.
   - **Coverage** (the design's §8): every talent names the systems it touches; at load a
     system not `pending` with fewer than `min_talents` talents (or `min_class` class abilities,
     0 until the class tables), or a tree not `pending` nor `no_free` without `free_per_tree`
     prerequisite-free talents, is a content error. A wave that ships a system's talents removes
     its `pending`; a new system of the game joins the list in the PR that ships its talents.
+    **Policy for new systems** (design §8.2): every new system of the game ships with talents,
+    at least `min_talents` (and `min_class` class abilities), tagged with its new `[[system]]`
+    in the same PR, and its feature issue says which in the template's "Talents and class
+    abilities" section (§13), or why none (presentation only, or an extension of a system
+    already listed). Resources are systems too: mana and the pools of #225 join the list with
+    talents on their maximum, refill, and costs, and abilities that spend them carry their tag;
+    a cost in a resource stands instead of a cooldown status, never beside one. The bar is
+    data and may rise as the list grows. Developer notes: `docs/dev/progression.md` "Coverage
+    policy".
   - **Determinism and saves**: picks are replayed actions; nothing here draws from the gameplay
     stream; the `levels` stream (`WorldState::levels_rng`, for the skill rolls and stat checks
     to come) is made on its first draw. `Actor::talents` (by id, like affixes: adding talents

@@ -1,0 +1,8 @@
+[[talent]]
+id = "crusher"
+name = "Crusher"
+tree = "might"
+description = "Your crushing blows and kicks drive through armour better."
+needs = { stats = { strength = 13 }, any_weapon_skill = { of = ["maces", "unarmed"], rank = 3 } }
+effects = [{ kind = "penetration", damage = "bludgeoning", value = 2 }]
+systems = ["protection", "damage_types", "kicks"]

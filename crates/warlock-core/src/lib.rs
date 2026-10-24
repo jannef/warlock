@@ -50,6 +50,7 @@ pub mod status;
 pub mod talent;
 pub mod temperature;
 pub mod time;
+pub mod variant;
 pub mod weapon_skills;
 pub mod weather;
 pub mod world;

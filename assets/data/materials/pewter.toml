@@ -1,0 +1,12 @@
+[[material]]
+id = "pewter"
+name = "pewter"
+group = "metal"
+color = "#8e9196"
+weight = 93
+to_hit = 0
+damage = -2
+protection = 40
+value = 50
+rarity = { weight = 100 }
+gear = { weight = 30 }

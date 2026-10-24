@@ -150,10 +150,11 @@ impl World {
         let def = self.content.terrain(self.state.current().terrain[p]);
         let me = self.state.player();
         let strength = me.effective_stats(&self.content).score(Stat::Strength);
-        // Its skill (athletics) and its talents (Roc's strength) add to its Strength.
-        let athletics =
-            me.skill_effect(&self.content, Effect::Kick) + me.talent_mods(&self.content).kick;
-        let force = u8::try_from(i32::from(strength) + athletics).unwrap_or(u8::MAX);
+        let athletics = me.skill_effect(&self.content, Effect::Kick);
+        // Mighty kick and Breaker (spec §8 "Talents"): as if stronger.
+        let mighty = me.talent_mods(&self.content).door_kick;
+        let force =
+            u8::try_from((i32::from(strength) + athletics + mighty).max(0)).unwrap_or(u8::MAX);
         let broken = def.kicked_in.and_then(|(to, sturdiness)| {
             kick_breaks(force, sturdiness, &mut self.state.rng).then_some(to)
         });

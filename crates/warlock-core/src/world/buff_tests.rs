@@ -52,13 +52,6 @@ max = 1
 eases = 120
 cured_by = ["bandage"]
 follows = "winded"
-
-[[status]]
-id = "winded"
-name = "Winded"
-max = 1
-eases = 600
-start = "You are winded."
 "#;
 
 /// A room to oneself.
@@ -145,12 +138,12 @@ fn buffs_and_hexes_join_every_attack_and_defence() {
     let me = |w: &World| w.state.actors[&player].clone();
     let (melee, defence) = (
         me(&w).melee(&content),
-        me(&w).defence(&content, Burden::Unburdened),
+        me(&w).defence(&content, Burden::Unburdened, None),
     );
     afflict(&mut w, player, "inspired", Some(player));
     let (buffed, guarded) = (
         me(&w).melee(&content),
-        me(&w).defence(&content, Burden::Unburdened),
+        me(&w).defence(&content, Burden::Unburdened, None),
     );
     assert_eq!(
         (buffed.to_hit, buffed.bonus),
@@ -169,7 +162,7 @@ fn buffs_and_hexes_join_every_attack_and_defence() {
     );
     // On top of the stance: both count.
     run(&mut w, "stance:aggressive");
-    let stanced = me(&w).defence(&content, Burden::Unburdened);
+    let stanced = me(&w).defence(&content, Burden::Unburdened, None);
     let aggressive = content.stance_def(crate::content::CombatStance::Aggressive);
     assert_eq!(
         stanced.bonus(Category::Dodge),
