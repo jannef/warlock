@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ A clean warmth runs through your blood. The bleeding stops. The poison wears off. Your horn's
+ grace is spent.
+
+
+
+
+                    ┌─ Abilities ──────────────────────────────────────────────┐
+                    │                                                          │
+                    │ Birth sign                                               │
+                    │   a  Horn's grace       you are graceless                │
+                    │ Class                                                    │
+                    │ > b  Throw your voice   at a place you see               │
+                    │ Skills                                                   │
+                    │   c  Intimidate         not usable yet                   │
+                    │ Weapon skills                                            │
+                    │   d  Shield bash        in a direction                   │
+                    │ Items                                                    │
+                    │   e  Hood your lantern                                   │
+                    │                                                          │
+                    │ Make a voice sound at a place you see nearby: those who  │
+                    │ hear it go and look there.                               │
+                    │                                                          │
+                    │ a-e or Enter use   Esc close                             │
+                    └──────────────────────────────────────────────────────────┘
+
+
+
+
+
+ The Hub  ·  HP 22/22  ·  MP 1/1  ·  Graceless  ·  Lv 1  ·  08:00  ·  11 Darkening       ? controls
