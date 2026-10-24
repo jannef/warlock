@@ -1,0 +1,13 @@
+# Talents (spec §8 "Talents"). Level-up choices are free steps here when they change something.
+
+# Keen appraiser (#240): three ranks of Apprentice in Appraise open it at level 12 (the dev
+# experience grant brings the levels); the storeroom's Sharp emerald-pommelled long sword of the
+# Bear then says what it is worth, after what it is.
+[[golden]]
+name = "keen-appraiser-description"
+scenario = "showcase"
+actions = '''
+xp:70000 talent:apprentice:appraise*3 talent:keen_appraiser levelup:auto
+move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*4 pickup:b
+'''
+screen = "describe"
