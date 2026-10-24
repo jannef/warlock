@@ -143,6 +143,7 @@ const CASES: &[Case] = &[
         name: "sign-screen-lucky",
         screen: Some("new-run"),
         keys: Some("4 4 0 Enter Enter"),
+        size: (100, 36),
         ..BASE
     },
     Case {

@@ -3,6 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
 
+
               ┌─ Born under the stars ───────────────────────────────────────────────┐
               │                                                                      │
               │  You were born on 11 Rainmoon 1415, in the year of the Water         │
