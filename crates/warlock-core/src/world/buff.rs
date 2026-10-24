@@ -72,6 +72,7 @@ impl World {
             Action::Search(_) => ActionKind::Search,
             Action::Disarm(_) => ActionKind::Disarm,
             Action::Use(active, _) => active.cost(),
+            Action::Gift(active, _) => active.cost(),
             Action::Sell(_)
             | Action::Pay(None)
             | Action::SetStance(_)

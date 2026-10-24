@@ -1,0 +1,9 @@
+[[talent]]
+id = "thin_skinned"
+name = "Thin-skinned"
+tree = "stars"
+granted = true
+flaw = true
+description = "You are easily hurt: a big hit makes you bleed worse."
+effects = [{ kind = "wound_more", value = 1 }]
+systems = ["status"]

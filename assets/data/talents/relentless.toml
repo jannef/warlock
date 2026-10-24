@@ -1,0 +1,8 @@
+[[talent]]
+id = "relentless"
+name = "Relentless"
+tree = "stars"
+granted = true
+description = "Blow after blow at the same foe, each lands more surely than the last."
+effects = [{ kind = "streak", max = 3 }]
+systems = ["combat"]

@@ -1,0 +1,8 @@
+[[talent]]
+id = "transfixing_stare"
+name = "Transfixing stare"
+tree = "stars"
+granted = true
+description = "The basilisk's stare: a foe nearby that sees you slows to a crawl a moment; your eyes then rest two hours."
+effects = [{ kind = "stare", status = "transfixed", severity = 2, cooldown = "spent_eyed" }]
+systems = ["status"]

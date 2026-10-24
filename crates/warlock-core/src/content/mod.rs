@@ -90,7 +90,7 @@ pub use gem::{
     Cut, CutId, Cutting, GemDef, GemSize, GemSizeId, Gems, MAX_GEM_VALUE, MAX_GEM_WEIGHT,
     MAX_MULTIPLIER, Ornament, ROUGH_SATURATION, dull,
 };
-pub use horoscope::{Horoscope, Lucky, Sign, SignPart};
+pub use horoscope::{Horoscope, Lucky, Sign, SignActive, SignPart};
 pub use hunger::{
     Corpses, EXERTIONS, Faint, Food, HungerDef, MAX_MEAL, MAX_NUTRITION, MAX_SHELF_LIFE,
     Overeating, Rotten, Starve, States,
@@ -2251,6 +2251,14 @@ impl Content {
     /// The class with id `id`.
     pub fn class(&self, id: &str) -> Option<&ClassDef> {
         self.classes.iter().find(|c| c.id == id)
+    }
+
+    /// The birth sign's gift that is active `active`: the talent of the stars tree with its
+    /// effect (its name and description are the abilities menu's; spec §8 "Birth sign").
+    pub fn sign_active(&self, active: SignActive) -> Option<&TalentDef> {
+        (self.talents.iter())
+            .map(|(_, def)| def)
+            .find(|def| def.effects.iter().any(|e| e.sign_active() == Some(active)))
     }
 
     /// The class ability that is active `active`: the talent of the class tree with its effect

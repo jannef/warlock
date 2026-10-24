@@ -142,6 +142,9 @@ pub(super) enum Harm {
     Actor(ActorId),
     /// A trap (spec §8 "Traps"): no one killed, and no one earns anything.
     Trap(TrapId),
+    /// Barbed hide's barbs (spec §8 "Birth sign"): not a blow, and a death of them earns no one
+    /// anything.
+    Barbs,
     /// A status effect's ticks or a disease (spec §8 "Status effects", "Diseases"): a death is
     /// of status `of`, caused by `by` if anyone (a wound they dealt bled it to death), at the
     /// moment `when` of the time passing.
@@ -681,6 +684,8 @@ impl World {
             return None;
         };
         let profile = profile.map(|p| self.glared(attacker, p));
+        // Relentless (spec §8 "Birth sign"): a streak of blows at one creature.
+        let profile = profile.map(|p| self.relentless(attacker, target, kind, p));
         let missile = matches!(kind, AttackKind::Ranged | AttackKind::Thrown);
         let struck = self.target_against(target, missile);
         let levels = (self.level_of(attacker), self.level_of(target));
@@ -749,6 +754,7 @@ impl World {
             let died = self.hurt(target, blow.damage, Harm::Actor(attacker), events);
             if !died {
                 self.after_blow(attacker, target, kind, &blow, events);
+                self.barbed(attacker, target, kind, events);
             }
         }
         // Drowning grip (spec §8 "Birth sign"): a hit holds, a miss or another target lets go.
@@ -837,6 +843,7 @@ impl World {
                 self.die_of(Cause::Starvation, when);
             }
             Harm::Starving(when) => self.dies(id, None, None, when, events),
+            Harm::Barbs => self.dies(id, None, None, self.state.time, events),
             Harm::Trap(trap) => {
                 // No creature and no status: the trap is what killed them (spec §8 "Traps"),
                 // and a trap's kill earns no one anything.

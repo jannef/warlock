@@ -124,8 +124,9 @@ impl World {
         // the water takes longer.
         let footing = self.tread(player, from, to);
         let onto = self.state.current().terrain[to];
-        let step = self.step_price(player, self.content.terrain(onto), fleeing)
-            + self.tread_price(player, footing);
+        let step = self.step_price(player, self.content.terrain(onto), fleeing);
+        // Slip away (spec §8 "Birth sign"): a step out of reach, cheaper.
+        let step = self.slipped(player, to, step) + self.tread_price(player, footing);
         let overworld = self.state.current().kind == LevelKind::Overworld;
         self.state.overworld_step = overworld.then_some(dir);
         if to == from {
@@ -469,6 +470,7 @@ pub(super) fn instantiate_level(
             alignment_override: spawn.alignment,
             npc: spawn.npc.clone(),
             talk: Talk::default(),
+            streak: None,
             satiation: None,
             stance: CombatStance::Neutral,
             free_blows: FreeBlows::default(),

@@ -307,7 +307,7 @@ mod tests {
 
     #[test]
     fn flaws_read_but_and_enter_goes_on_esc_back() {
-        // A Salamander: Fleet-footed, but Slight.
+        // A Salamander: Fleet-footed, Slip away, but Slight.
         let seed = (1u64..5000)
             .find(|&seed| {
                 let d = draft(seed, "human");
@@ -318,8 +318,8 @@ mod tests {
             .expect("a salamander");
         let mut screen = SignScreen::new(&CONTENT, &draft(seed, "human"));
         let names: Vec<&str> = screen.gifts.iter().map(|g| g.name.as_str()).collect();
-        assert_eq!(&names[..2], ["Fleet-footed", "but Slight"]);
-        assert_eq!(screen.gifts[1].look, Look::Dim);
+        assert_eq!(&names[..3], ["Fleet-footed", "Slip away", "but Slight"]);
+        assert_eq!(screen.gifts[2].look, Look::Dim);
         assert_eq!(
             screen.handle(&Press::nav(Nav::Enter)),
             ScreenAction::Open(ScreenName::Gender)

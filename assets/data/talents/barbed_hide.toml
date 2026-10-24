@@ -1,0 +1,8 @@
+[[talent]]
+id = "barbed_hide"
+name = "Barbed hide"
+tree = "stars"
+granted = true
+description = "Those who strike you in melee are cut by your barbs."
+effects = [{ kind = "barbs", damage = 1 }]
+systems = ["combat"]
