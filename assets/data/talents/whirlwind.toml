@@ -1,0 +1,8 @@
+[[talent]]
+id = "whirlwind"
+name = "Whirlwind"
+tree = "class"
+granted = true
+description = "You whirl about you: a blow at every foe beside you for the time of one attack (an ability)."
+effects = [{ kind = "whirlwind" }]
+systems = ["combat"]

@@ -84,7 +84,7 @@ fn level_one_abilities_come_with_the_character_and_others_with_their_levels() {
     let rows = dump::layer_rows(&w, Layer::Talents);
     assert_eq!(rows, ["Well dressed (class)"]);
     // An adventurer without a table yet has none.
-    assert!(world("warrior").state.player().talents.is_empty());
+    assert!(world("ranger").state.player().talents.is_empty());
     // Level 6 brings Fencing, as news of the level.
     reach(&mut w, 6);
     assert!(holds(&w, "fencing"));
@@ -351,7 +351,7 @@ fn weapons_and_styles_read_the_talents_benefits() {
     let before_long = w.state.player().benefit(w.content(), Some(long));
     give(&mut w, "fencing");
     let duelist = &w.content().weapon_skills().skill(duelist).clone();
-    let (_, ranks) = mods(&w).weapon_benefit(&duelist.id, duelist.role);
+    let (_, ranks) = mods(&w).weapon_benefit(&duelist.id, duelist.role, 0);
     assert_eq!(ranks, 1, "Duelist reads a rank higher");
     give(&mut w, "big_hands");
     let maced = w.state.player().benefit(w.content(), Some(maces));

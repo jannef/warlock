@@ -16,7 +16,7 @@
 use crate::alignment::Band;
 use crate::character::Character;
 use crate::content::{
-    Benefit, Choice, CombatStance, Content, DamageTypeId, MAX_RANK, Need, Role, StatusId,
+    Benefit, Choice, CombatStance, Content, DamageTypeId, LightId, MAX_RANK, Need, Role, StatusId,
     TalentDef, TalentEffect, TalentId,
 };
 use crate::damage::Kinds;
@@ -113,6 +113,8 @@ pub struct TalentMods {
     pub dodge: i32,
     /// Natural armour, on top of the actor's own.
     pub natural: i32,
+    /// Natural armour as `natural`, while it wears no body armour.
+    pub natural_unarmoured: i32,
     /// Added to every melee blow's damage.
     pub melee_damage: i32,
     /// Hit points by level, one entry per rank held: `(per_levels, at_least)`
@@ -243,10 +245,94 @@ pub struct TalentMods {
     pub disarm: bool,
     /// Percent quicker it moves and acts.
     pub speed_percent: i32,
+    /// Percents more its steps cost, each while what it asks holds.
+    pub step_percent: Vec<StepBonus>,
+    /// Burdened costs it nothing.
+    pub steadfast: bool,
     /// Dodge added against shots, throws, and trap missiles.
     pub missile_dodge: i32,
     /// Percent more damage bursts and bolts do it (negative: less).
     pub spell_damage_percent: i32,
+    /// Percent more marks its attacks earn in a role's weapon skills, by role.
+    pub weapon_marks: Vec<(Role, i32)>,
+    /// Added to a confirmed critical's multiplier with a two-handed weapon.
+    pub two_handed_crit: u8,
+    /// The sides of the one die its blows with nothing in hand and its kicks roll, if any.
+    pub unarmed_die: Option<u8>,
+    /// Percent less of a stance's Dodge penalty, by stance.
+    pub stance_dodge: Vec<(CombatStance, i32)>,
+    /// It never catches a disease.
+    pub disease_immune: bool,
+    /// The stats no status lowers.
+    pub no_penalty_to: Vec<Stat>,
+    /// Percent more of what a status raises its scores by: `(status, percent)`.
+    pub raise_percent: Vec<(StatusId, i32)>,
+    /// The active Veteran's wind, if it has it.
+    pub veterans_wind: Option<SecondWind>,
+    /// The active Lay on hands, if it has it.
+    pub lay_on_hands: Option<LayOnHands>,
+    /// Lay on hands heals fully, cures, and its cooldown is halved.
+    pub avatar: bool,
+    /// The active Rage: the status it gives, if it has it.
+    pub rage: Option<StatusId>,
+    /// Seconds a kill keeps a rage going longer.
+    pub blood_frenzy: u32,
+    /// While raging, the statuses that tick nothing, and the last hit point held once; `None`
+    /// without Unstoppable.
+    pub unstoppable: Option<Vec<StatusId>>,
+    /// The active Whirlwind.
+    pub whirlwind: bool,
+    /// The active Smite, if it has it.
+    pub smite: Option<Smite>,
+    /// The active Holy radiance: its status and the light it sheds while it lasts.
+    pub radiance: Option<(StatusId, LightId)>,
+    /// The active Quivering palm, if it has it.
+    pub quivering_palm: Option<QuiveringPalm>,
+    /// Hit points every level past `hp_level` adds beyond a level's own, if it has Hardened.
+    pub hardened: Option<i32>,
+}
+
+/// A step price change and what it asks ([`TalentEffect::StepPercent`]).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct StepBonus {
+    pub percent: i32,
+    pub unarmoured: bool,
+    pub unburdened: bool,
+    pub no_shield: bool,
+}
+
+/// The active Lay on hands (spec §8 "Class abilities").
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct LayOnHands {
+    pub per_level: u8,
+    pub cooldown: StatusId,
+    pub degrees: u16,
+}
+
+/// The active Smite (spec §8 "Class abilities").
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Smite {
+    pub per_levels: u8,
+    pub sides: u8,
+    pub cooldown: StatusId,
+    pub degrees: u16,
+}
+
+impl Smite {
+    /// The extra dice at character `level`: one die per `per_levels` levels, at least one.
+    pub fn dice_at(self, level: u8) -> crate::dice::Dice {
+        let count = (u32::from(level) / u32::from(self.per_levels.max(1))).max(1);
+        crate::dice::Dice::of(count, u32::from(self.sides))
+    }
+}
+
+/// The active Quivering palm (spec §8 "Class abilities").
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct QuiveringPalm {
+    pub status: StatusId,
+    pub severity: u16,
+    pub cooldown: StatusId,
+    pub degrees: u16,
 }
 
 /// What a talent adds to attacks with some weapon skills: the one named `skill` (the effect's
@@ -258,6 +344,8 @@ pub struct WeaponBonus {
     pub benefit: Benefit,
     /// Ranks higher its benefits read.
     pub ranks: u8,
+    /// Only for a skill held at this rank at least (0: any).
+    pub at_rank: u8,
 }
 
 /// Protection a talent adds, while what it asks is worn.
@@ -293,6 +381,20 @@ impl TalentMods {
         *self == TalentMods::default()
     }
 
+    /// Whether it has class active `active` (spec §8 "Class abilities").
+    pub fn has_active(&self, active: crate::content::ClassActive) -> bool {
+        use crate::content::ClassActive as A;
+        match active {
+            A::Rage => self.rage.is_some(),
+            A::VeteransWind => self.veterans_wind.is_some(),
+            A::Whirlwind => self.whirlwind,
+            A::LayOnHands => self.lay_on_hands.is_some(),
+            A::Smite => self.smite.is_some(),
+            A::HolyRadiance => self.radiance.is_some(),
+            A::QuiveringPalm => self.quivering_palm.is_some(),
+        }
+    }
+
     /// The effects of one rank, summed (what taking it adds); the statuses and damage types
     /// they name are looked up in `content`.
     pub fn of(content: &Content, effects: impl IntoIterator<Item = TalentEffect>) -> Self {
@@ -306,14 +408,53 @@ impl TalentMods {
     /// What a status's penalty of `by` points to a score comes to for it: none from a status
     /// that never lowers its scores, and a lowering scaled by `penalty_percent` toward 0 (a
     /// raise stays as it is).
-    pub fn penalty(&self, status: StatusId, by: i32) -> i32 {
+    pub fn penalty(&self, status: StatusId, stat: Stat, by: i32) -> i32 {
         if by >= 0 {
-            return by;
+            // Mighty rage: a raise grows by its percent.
+            let more: i32 = (self.raise_percent.iter())
+                .filter(|(s, _)| *s == status)
+                .map(|(_, p)| p)
+                .sum();
+            return by * (100 + more).max(0) / 100;
         }
-        if self.no_penalty.contains(&status) {
+        if self.no_penalty.contains(&status) || self.no_penalty_to.contains(&stat) {
             return 0;
         }
         by * (100 + self.penalty_percent).max(0) / 100
+    }
+
+    /// The percent its steps cost more, while it wears body armour (`armoured`), is Burdened or
+    /// worse (`burdened`), and holds a shield (`shield`) or not.
+    pub fn step_percent(&self, armoured: bool, burdened: bool, shield: bool) -> i32 {
+        (self.step_percent.iter())
+            .filter(|b| !(b.unarmoured && armoured))
+            .filter(|b| !(b.unburdened && burdened))
+            .filter(|b| !(b.no_shield && shield))
+            .map(|b| b.percent)
+            .sum()
+    }
+
+    /// `dodge` (a stance's) with its penalty softened as its talents say for `stance`.
+    pub fn stance_dodge(&self, stance: CombatStance, dodge: i32) -> i32 {
+        let percent = (self.stance_dodge.iter())
+            .filter(|(s, _)| *s == stance)
+            .map(|(_, p)| *p)
+            .sum::<i32>()
+            .clamp(0, 100);
+        if dodge >= 0 || percent == 0 {
+            dodge
+        } else {
+            -((-dodge) * (100 - percent) / 100)
+        }
+    }
+
+    /// `marks` weapon skill marks earned in a skill of `role`, more by its talents'.
+    pub fn marks(&self, role: Role, marks: u32) -> u32 {
+        let percent: i32 = (self.weapon_marks.iter())
+            .filter(|(r, _)| *r == role)
+            .map(|(_, p)| p)
+            .sum();
+        u32::try_from(TalentMods::scaled(u64::from(marks), percent)).unwrap_or(u32::MAX)
     }
 
     /// How many seconds status `status` takes to ease by a degree for it, its usual `every`
@@ -343,6 +484,7 @@ impl TalentMods {
         match effect {
             TalentEffect::Dodge { value } => self.dodge += value,
             TalentEffect::Natural { value } => self.natural += value,
+            TalentEffect::NaturalUnarmoured { value } => self.natural_unarmoured += value,
             TalentEffect::MeleeDamage { value } => self.melee_damage += value,
             TalentEffect::MaxHpPerLevels {
                 per_levels,
@@ -388,10 +530,13 @@ impl TalentMods {
             TalentEffect::FreeBlow { trigger } => {
                 use crate::content::FreeBlowTrigger as T;
                 match trigger {
+                    // Two cleaves together (Cleaving strike and Cleave) cleave on and on.
+                    T::Cleave if self.free_blows.cleave => self.free_blows.great_cleave = true,
                     T::Cleave => self.free_blows.cleave = true,
                     T::GreatCleave => self.free_blows.great_cleave = true,
                     T::Riposte => self.free_blows.riposte = true,
                     T::Opportunist => self.free_blows.opportunist = true,
+                    T::Flurry => self.free_blows.flurry = true,
                 }
             }
             TalentEffect::Weapon {
@@ -406,6 +551,8 @@ impl TalentMods {
                 ease,
                 bash,
                 shield,
+                crit,
+                at_rank,
             } => self.weapon.push(WeaponBonus {
                 skill: skill.or_else(|| {
                     role.is_none()
@@ -422,9 +569,11 @@ impl TalentMods {
                     ease_main: ease,
                     ease_off: ease,
                     bash,
+                    crit,
                     ..Benefit::default()
                 },
                 ranks,
+                at_rank,
             }),
             TalentEffect::LauncherRange { value } => self.launcher_range += value,
             TalentEffect::ThrowRange { value } => self.throw_range += value,
@@ -511,19 +660,129 @@ impl TalentMods {
             TalentEffect::SpeedPercent { value } => self.speed_percent += value,
             TalentEffect::MissileDodge { value } => self.missile_dodge += value,
             TalentEffect::SpellDamagePercent { value } => self.spell_damage_percent += value,
+            TalentEffect::WeaponMarks { role, value } => self.weapon_marks.push((role, value)),
+            TalentEffect::TwoHandedCrit { value } => {
+                self.two_handed_crit = self.two_handed_crit.saturating_add(value);
+            }
+            TalentEffect::UnarmedDie { sides } => {
+                self.unarmed_die = Some(self.unarmed_die.map_or(sides, |s| s.max(sides)));
+            }
+            TalentEffect::StanceDodge { stance, percent } => {
+                match self.stance_dodge.iter_mut().find(|(s, _)| *s == stance) {
+                    Some((_, p)) => *p += percent,
+                    None => self.stance_dodge.push((stance, percent)),
+                }
+            }
+            TalentEffect::StepPercent {
+                value,
+                unarmoured,
+                unburdened,
+                no_shield,
+            } => self.step_percent.push(StepBonus {
+                percent: value,
+                unarmoured,
+                unburdened,
+                no_shield,
+            }),
+            TalentEffect::Steadfast => self.steadfast = true,
+            TalentEffect::DiseaseImmune => self.disease_immune = true,
+            TalentEffect::NoPenaltyTo { stat } => self.no_penalty_to.push(stat),
+            TalentEffect::RaisePercent { status, value } => {
+                if let Some(status) = content.status_id(&status) {
+                    self.raise_percent.push((status, value));
+                }
+            }
+            TalentEffect::VeteransWind {
+                per_level,
+                at_least,
+                cooldown,
+            } => {
+                if let Some(cooldown) = content.status_id(&cooldown) {
+                    self.veterans_wind = Some(SecondWind {
+                        per_level,
+                        at_least,
+                        cooldown,
+                    });
+                }
+            }
+            TalentEffect::LayOnHands {
+                per_level,
+                cooldown,
+                degrees,
+            } => {
+                if let Some(cooldown) = content.status_id(&cooldown) {
+                    self.lay_on_hands = Some(LayOnHands {
+                        per_level,
+                        cooldown,
+                        degrees,
+                    });
+                }
+            }
+            TalentEffect::Avatar => self.avatar = true,
+            TalentEffect::Rage { status } => {
+                self.rage = content.status_id(&status).or(self.rage);
+            }
+            TalentEffect::BloodFrenzy { seconds } => self.blood_frenzy += seconds,
+            TalentEffect::Unstoppable { statuses } => {
+                let ids = statuses.iter().filter_map(|s| content.status_id(s));
+                self.unstoppable.get_or_insert_with(Vec::new).extend(ids);
+            }
+            TalentEffect::Whirlwind => self.whirlwind = true,
+            TalentEffect::Smite {
+                per_levels,
+                sides,
+                cooldown,
+                degrees,
+            } => {
+                if let Some(cooldown) = content.status_id(&cooldown) {
+                    self.smite = Some(Smite {
+                        per_levels,
+                        sides,
+                        cooldown,
+                        degrees,
+                    });
+                }
+            }
+            TalentEffect::Radiance { status, light } => {
+                if let (Some(status), Some(light)) =
+                    (content.status_id(&status), content.light_id(&light))
+                {
+                    self.radiance = Some((status, light));
+                }
+            }
+            TalentEffect::QuiveringPalm {
+                status,
+                severity,
+                cooldown,
+                degrees,
+            } => {
+                if let (Some(status), Some(cooldown)) =
+                    (content.status_id(&status), content.status_id(&cooldown))
+                {
+                    self.quivering_palm = Some(QuiveringPalm {
+                        status,
+                        severity,
+                        cooldown,
+                        degrees,
+                    });
+                }
+            }
+            TalentEffect::Hardened { bonus } => {
+                self.hardened = Some(self.hardened.unwrap_or(0) + bonus);
+            }
         }
     }
 
     /// What attacks with weapon skill `id` of `role` gain beyond its ranks, and how many ranks
     /// higher its benefits read.
-    pub fn weapon_benefit(&self, id: &str, role: Role) -> (Benefit, u8) {
+    pub fn weapon_benefit(&self, id: &str, role: Role, rank: u8) -> (Benefit, u8) {
         let mut benefit = Benefit::default();
         let mut ranks = 0u8;
         for bonus in &self.weapon {
             let applies = match &bonus.skill {
                 Some(skill) => skill == id,
                 None => bonus.role == Some(role),
-            };
+            } && rank >= bonus.at_rank;
             if applies {
                 benefit = benefit.plus(bonus.benefit);
                 ranks = ranks.saturating_add(bonus.ranks);

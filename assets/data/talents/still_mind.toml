@@ -1,0 +1,12 @@
+[[talent]]
+id = "still_mind"
+name = "Still mind"
+tree = "class"
+granted = true
+description = "Your mind is still: you resist what tests your will more easily, and nothing that ails you dulls your wits or your will."
+effects = [
+    { kind = "checks", stat = "willpower", value = 2 },
+    { kind = "no_penalty_to", stat = "intelligence" },
+    { kind = "no_penalty_to", stat = "willpower" },
+]
+systems = ["status", "diseases"]

@@ -46,6 +46,9 @@ pub struct FreeBlows {
     /// A hostile stepping away from beside it gives it a blow.
     #[serde(default, skip_serializing_if = "is_false")]
     pub opportunist: bool,
+    /// Its melee attacks with nothing in hand strike twice, the second blow at −2.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub flurry: bool,
 }
 
 impl FreeBlows {
@@ -61,9 +64,13 @@ impl FreeBlows {
             great_cleave: self.great_cleave || other.great_cleave,
             riposte: self.riposte || other.riposte,
             opportunist: self.opportunist || other.opportunist,
+            flurry: self.flurry || other.flurry,
         }
     }
 }
+
+/// The flurry's second blow's to-hit.
+const FLURRY_TO_HIT: i32 = -2;
 
 fn is_false(b: &bool) -> bool {
     !*b
@@ -251,6 +258,27 @@ impl World {
             kind: Free::Riposte,
             with: None,
             profile: me.melee(&self.content),
+        })
+    }
+
+    /// The flurry's second blow of actor `striker` at `target` (spec §8 "Class abilities":
+    /// Flurry): with nothing in hand, its bare hands again at −2 to hit. No draw.
+    pub(super) fn flurry(&self, striker: ActorId, target: ActorId) -> Option<FreeBlow> {
+        if !self.stands(striker) || !self.stands(target) {
+            return None;
+        }
+        let me = &self.state.actors[&striker];
+        if !self.free_blows_of(me).flurry || me.weapon_item(&self.content).is_some() {
+            return None;
+        }
+        let mut profile = me.melee(&self.content);
+        profile.to_hit += FLURRY_TO_HIT;
+        Some(FreeBlow {
+            by: striker,
+            at: target,
+            kind: Free::Second,
+            with: None,
+            profile,
         })
     }
 

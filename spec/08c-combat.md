@@ -272,8 +272,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   place for every extra blow. The second blow of an attack (the off hand's, Sword and Board's
   bash, §8 "Fighting styles") is one; the others are free blows, switched on per actor
   (`FreeBlows` on `Actor::free_blows`, saved and hashed but left out while none is on, read
-  only through `World::free_blows_of`; talents and class abilities switch them on, none does
-  yet):
+  only through `World::free_blows_of`; talents and class abilities switch them on; the monk's
+  Flurry, `flurry`, is a second blow of a melee attack with nothing in hand, at −2 to hit, §8
+  "Class abilities"; two sources of cleave, the Cleave talent and Cleaving strike, cleave as
+  great cleave):
   - **Cleave** (`cleave`): when the blows of an actor's melee attack (a blow and the second
     blow, a kick, a shield bash) kill its target, a blow with what it wields at another hostile
     beside it: the next one clockwise from where the target fell (decided: no draw, and a sweep

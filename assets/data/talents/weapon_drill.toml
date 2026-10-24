@@ -1,0 +1,8 @@
+[[talent]]
+id = "weapon_drill"
+name = "Weapon drill"
+tree = "class"
+granted = true
+description = "Years of drill: you learn faster with every melee weapon."
+effects = [{ kind = "weapon_marks", role = "melee", value = 25 }]
+systems = ["weapon_skills"]

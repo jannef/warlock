@@ -83,16 +83,19 @@
 #                                 that much added
 #   skill { skill, value }        that skill counts that much higher (an untrained one from 0)
 #   make_way                      anyone not hostile makes way for it, those at a post too
-#   free_blow { trigger }         a free blow: "cleave", "great_cleave", "riposte", or
-#                                 "opportunist" (spec §8 "Free blows")
-#   weapon { role, skill, to_hit, damage, threat, ranks, speed, reload, ease, bash, shield }
+#   free_blow { trigger }         a free blow: "cleave", "great_cleave", "riposte",
+#                                 "opportunist", or "flurry" (a melee attack with nothing in
+#                                 hand strikes twice; spec §8 "Free blows")
+#   weapon { role, skill, to_hit, damage, threat, ranks, speed, reload, ease, bash, shield, crit, at_rank }
 #                                 what attacks with some weapon skills gain, as their ranks give
 #                                 it (data/weapon_skills.toml): the weapon skill or style `skill`
 #                                 names, else without `role` the chosen weapon skill or style's
 #                                 (a talent with that choice), else every skill of the role's; `ranks` reads its benefits that many ranks
 #                                 higher (a rank held, never past 10), `ease` eases both
 #                                 two-weapon penalties, `bash` adds to a free bash's chance only
-#                                 where there is one; each field 0 by default
+#                                 where there is one, `crit` adds to a confirmed critical's
+#                                 multiplier (at most x5), `at_rank` asks that rank of the
+#                                 skill held at least; each field 0 by default
 #   launcher_range { value }      the readied missile weapon shoots that many cells farther
 #   throw_range { value }         throws reach that many cells farther
 #   missile_breaks { value }      its missiles break that percent more often (negative: less)
@@ -141,4 +144,41 @@
 #   missile_dodge { value }       Dodge added against shots, throws, and trap missiles
 #   spell_damage_percent { value }   the damage bursts and bolts do it, that percent more
 #                                 (negative: less)
+#   Class abilities' own (spec §8 "Class abilities"; the actives are used from the abilities
+#   menu, each one's id the ability's id, `use:rage`):
+#   natural_unarmoured { value }  natural armour, only while nothing is worn in a body armour slot
+#   weapon_marks { role, value }  the marks its attacks earn in that role's weapon skills, that
+#                                 percent more
+#   two_handed_crit { value }     a confirmed critical's multiplier with a two-handed weapon, that
+#                                 much more (1 to 3, at most x5)
+#   unarmed_die { sides }         blows with nothing in hand and kicks roll one die of that many
+#                                 sides (the bigger of it and kick_die)
+#   stance_dodge { stance, percent }   that stance's Dodge penalty that percent smaller
+#   step_percent { value, unarmoured, unburdened, no_shield }   steps cost that percent more
+#                                 (negative: cheaper), only while each condition set holds
+#   steadfast                     Burdened costs nothing, as a dwarf's
+#   disease_immune                no disease is ever caught: no check, no infection
+#   no_penalty_to { stat }        no status lowers its score in that stat
+#   raise_percent { status, value }   what that status raises its scores by, that percent more
+#   hardened { bonus }            each level past `hp_level` adds a level's hit points again, and
+#                                 bonus more
+#   rage { status }               the active Rage: it suffers that status
+#   blood_frenzy { seconds }      a kill while raging keeps the rage that long longer
+#   unstoppable { statuses }      while raging those statuses tick nothing, and a blow that would
+#                                 take the last hit point leaves it and ends the rage
+#   veterans_wind { per_level, at_least, cooldown }   the active Veteran's wind (as second_wind)
+#   whirlwind                     the active Whirlwind: a blow at every hostile beside, for the
+#                                 price of one attack
+#   lay_on_hands { per_level, cooldown, degrees }   the active Lay on hands: hit points back by
+#                                 the level, then that many degrees of the cooldown status
+#   avatar                        Lay on hands heals fully, cures what ticks and every disease,
+#                                 and its cooldown is half as long
+#   smite { per_levels, sides, cooldown, degrees }   the active Smite: a blow in a direction
+#                                 with one die of `sides` more per `per_levels` levels
+#   radiance { status, light }    the active Holy radiance: while it suffers the status it sheds
+#                                 the light
+#   quivering_palm { status, severity, cooldown, degrees }   the active Quivering palm: a
+#                                 bare-handed blow in a direction that leaves the status
+#   A class active's talent may ask `requires_alignment` (the paladin's gifts): the ability is
+#   greyed out while the character has strayed.
 # Flat bonuses are -20 to 20, percents -100 to 100, never 0.

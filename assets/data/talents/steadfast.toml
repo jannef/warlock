@@ -1,0 +1,8 @@
+[[talent]]
+id = "steadfast"
+name = "Steadfast"
+tree = "class"
+granted = true
+description = "A heavy load no longer slows you until it strains you."
+effects = [{ kind = "steadfast" }]
+systems = ["burden"]

@@ -1,0 +1,8 @@
+[[talent]]
+id = "diamond_soul"
+name = "Diamond soul"
+tree = "class"
+granted = true
+description = "Blows turn aside before they reach you: Deflection +2."
+effects = [{ kind = "deflection", value = 2 }]
+systems = ["defence"]
