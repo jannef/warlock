@@ -45,6 +45,7 @@ use super::new_run_screen::{self, NewRunScreen};
 use super::object_screen::{ObjectList, ObjectScreen};
 use super::quest_screen::QuestScreen;
 use super::settings_screen::SettingsScreen;
+use super::sign_screen::SignScreen;
 use super::skills_screen::SkillsScreen;
 use super::target::AimKind;
 use super::weapon_skills_screen::WeaponSkillsScreen;
@@ -76,6 +77,8 @@ pub enum ScreenName {
     NewRun,
     /// Character creation, over New run: choose a race.
     Race,
+    /// Born under the stars: the birth sign revealed (after the race).
+    Sign,
     /// Choose a gender (after the race).
     Gender,
     /// Choose a class (after the gender).
@@ -260,6 +263,8 @@ enum Screen {
     NewRun(NewRunScreen),
     /// A step of character creation.
     Choice(ChoiceScreen),
+    /// Character creation's reveal of the birth sign.
+    Sign(Box<SignScreen>),
     /// Character creation's name.
     Name(NameScreen),
     /// Boxed: it holds the whole character.
@@ -330,6 +335,7 @@ impl Screen {
                 Screen::NewRun(NewRunScreen::new(content, fresh))
             }
             ScreenName::Race => choice(Step::Race),
+            ScreenName::Sign => Screen::Sign(Box::new(SignScreen::new(content, draft))),
             ScreenName::Gender => choice(Step::Gender),
             ScreenName::Class => choice(Step::Class),
             ScreenName::Name => Screen::Name(NameScreen::new(content, draft)),
@@ -373,6 +379,7 @@ impl Screen {
             Screen::Characters(_) => ScreenName::Characters,
             Screen::NewRun(_) => ScreenName::NewRun,
             Screen::Choice(screen) => screen.step().screen(),
+            Screen::Sign(_) => ScreenName::Sign,
             Screen::Name(_) => ScreenName::Name,
             Screen::Summary(_) => ScreenName::Summary,
             Screen::Settings(_) => ScreenName::Settings,
@@ -580,6 +587,7 @@ impl ScreenStack {
                 }
                 action
             }
+            Some(Screen::Sign(screen)) => screen.handle(press),
             Some(Screen::Name(screen)) => {
                 let action = screen.handle(press);
                 if let ScreenAction::Open(_) = action {
@@ -659,6 +667,7 @@ impl ScreenStack {
             Some(Screen::Characters(screen)) => screen.draw(console, settings.clock, bindings),
             Some(Screen::NewRun(screen)) => screen.draw(console, bindings),
             Some(Screen::Choice(screen)) => screen.draw(console, bindings),
+            Some(Screen::Sign(screen)) => screen.draw(console, bindings),
             Some(Screen::Name(screen)) => screen.draw(console, bindings),
             Some(Screen::Summary(screen)) => screen.draw(console, bindings),
             Some(Screen::Settings(screen)) => screen.draw(console, settings, bindings),
@@ -800,7 +809,7 @@ pub(super) fn open_startup_screens(args: Res<Args>, game: Option<Res<Game>>, mut
 /// steps before them, each with its preselection.
 fn startup_screens(screen: Option<ScreenName>, in_run: bool) -> Vec<ScreenName> {
     use ScreenName::*;
-    let creation = [Race, Gender, Class, Name, Summary];
+    let creation = [Race, Sign, Gender, Class, Name, Summary];
     match (in_run, screen) {
         (false, Some(s)) if creation.contains(&s) => {
             let steps = creation.iter().take_while(|&&c| c != s);
@@ -1081,16 +1090,20 @@ mod tests {
         assert_eq!(startup_screens(Some(Dialogue), false), [Main]);
         assert_eq!(startup_screens(Some(Race), false), [Main, NewRun, Race]);
         assert_eq!(
+            startup_screens(Some(Sign), false),
+            [Main, NewRun, Race, Sign]
+        );
+        assert_eq!(
             startup_screens(Some(Class), false),
-            [Main, NewRun, Race, Gender, Class]
+            [Main, NewRun, Race, Sign, Gender, Class]
         );
         assert_eq!(
             startup_screens(Some(Name), false),
-            [Main, NewRun, Race, Gender, Class, Name]
+            [Main, NewRun, Race, Sign, Gender, Class, Name]
         );
         assert_eq!(
             startup_screens(Some(Summary), false),
-            [Main, NewRun, Race, Gender, Class, Name, Summary]
+            [Main, NewRun, Race, Sign, Gender, Class, Name, Summary]
         );
         assert_eq!(startup_screens(Some(Characters), false), [Main, Characters]);
         assert_eq!(startup_screens(Some(Characters), true), []);
@@ -1390,15 +1403,16 @@ mod tests {
         app.update();
         assert_eq!(names(&app), [ScreenName::Main]);
         // Enter opens New run, and the next Enters, in the same frame, pick the showcase, its
-        // character's race, gender, and class (preselected), and a name (an empty field: the
-        // first random one), and start it from the summary.
-        frame(&mut app, &[ENTER, ENTER, ENTER, ENTER, ENTER, ENTER]);
+        // character's race, read the stars, the gender and class (preselected), and a name (an
+        // empty field: the first random one), and start it from the summary.
+        frame(&mut app, &[ENTER, ENTER, ENTER, ENTER, ENTER, ENTER, ENTER]);
         assert_eq!(
             names(&app),
             [
                 ScreenName::Main,
                 ScreenName::NewRun,
                 ScreenName::Race,
+                ScreenName::Sign,
                 ScreenName::Gender,
                 ScreenName::Class,
                 ScreenName::Name,
@@ -1427,11 +1441,12 @@ mod tests {
         let (up, down) = ((KeyCode::ArrowUp, ""), DOWN);
         let mut app = app(false);
         app.update();
-        // New run, then race: down from human to dwarf; gender: down to other; class: up from
-        // thief to ranger; then a name, typed (`k` and `j` type, they move nothing here).
+        // New run, then race: down from human to dwarf; the stars; gender: down to other;
+        // class: up from thief to ranger; then a name, typed (`k` and `j` type, they move
+        // nothing here).
         frame(
             &mut app,
-            &[ENTER, ENTER, down, ENTER, down, ENTER, up, ENTER],
+            &[ENTER, ENTER, down, ENTER, ENTER, down, ENTER, up, ENTER],
         );
         assert_eq!(names(&app).last(), Some(&ScreenName::Name));
         let typed = [
@@ -1453,19 +1468,23 @@ mod tests {
             names(&app),
             [ScreenName::Main, ScreenName::NewRun, ScreenName::Race]
         );
-        // Another race; the gender, class, and name open on what was chosen before.
-        frame(&mut app, &[down, ENTER, ENTER, ENTER, ENTER]);
+        // Another race (and its stars); the gender, class, and name open on what was chosen
+        // before.
+        frame(&mut app, &[down, ENTER, ENTER, ENTER, ENTER, ENTER]);
         assert_eq!(names(&app).last(), Some(&ScreenName::Summary));
         let draft = app.world().resource::<ScreenStack>().draft();
         let spec = draft.spec(&content()).expect("a character");
         assert_eq!(spec.to_string(), "halfling,other,ranger");
         assert_eq!(draft.name(&content()), "Kaj");
         // Esc steps back one screen at a time, to the main menu.
-        for left in [6, 5, 4, 3, 2, 1] {
+        for left in [7, 6, 5, 4, 3, 2, 1] {
             frame(&mut app, &[ESC]);
             assert_eq!(names(&app).len(), left);
         }
-        frame(&mut app, &[ENTER, ENTER, ENTER, ENTER, ENTER, ENTER, ENTER]);
+        frame(
+            &mut app,
+            &[ENTER, ENTER, ENTER, ENTER, ENTER, ENTER, ENTER, ENTER],
+        );
         let game = app.world().resource::<Game>();
         let character = game.world.character().expect("a character");
         assert_eq!(

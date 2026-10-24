@@ -130,6 +130,10 @@ pub struct OwnTalent {
     /// The choice it was taken for, by id.
     pub choice: Option<String>,
     pub description: String,
+    /// Given, not picked: a birth sign's gift (spec §8 "Birth sign").
+    pub granted: bool,
+    /// A birth sign's flaw.
+    pub flaw: bool,
 }
 
 /// A talent as the Talents page and the level-up screen list it (spec §8 "Talents"): the rank
@@ -1143,6 +1147,8 @@ impl<'a> PerceptionView<'a> {
                     ranks: def.rank_count(),
                     choice: taken.choice.clone(),
                     description: def.description.clone(),
+                    granted: def.granted,
+                    flaw: def.flaw,
                 })
             })
             .collect()

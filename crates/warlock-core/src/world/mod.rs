@@ -119,6 +119,7 @@ mod shoot;
 mod shop;
 mod skill_roll;
 mod spell;
+mod stars;
 mod stat_training;
 mod status;
 mod steal;
@@ -569,6 +570,7 @@ impl World {
             talents: Default::default(),
             stat_marks: Default::default(),
         };
+        stars::grant(&content, state.character.as_ref(), &mut player.talents);
         player.hp = player.max_hp(&content);
         crate::rot::made_at(&mut player.inventory, &content, def.start);
         state.actors.insert(ActorId(0), player);
@@ -583,8 +585,9 @@ impl World {
         Ok(Self::assemble(content, state))
     }
 
-    /// Restores a world from saved state.
-    pub fn from_state(content: Arc<Content>, state: WorldState) -> Result<Self, WorldError> {
+    /// Restores a world from saved state. The player's sign's gifts are granted afresh
+    /// (`world/stars.rs`), as the content now has them.
+    pub fn from_state(content: Arc<Content>, mut state: WorldState) -> Result<Self, WorldError> {
         state.check()?;
         if content.scenario(&state.scenario).is_none() {
             return Err(WorldError::UnknownScenario(state.scenario.clone()));
@@ -647,6 +650,9 @@ impl World {
                 "actor {} carries diseases or stat damage this content does not allow",
                 actor.id
             )));
+        }
+        if let Some(player) = state.actors.get_mut(&state.player) {
+            stars::grant(&content, state.character.as_ref(), &mut player.talents);
         }
         Ok(Self::assemble(content, state))
     }
@@ -1081,6 +1087,8 @@ mod skill_roll_tests;
 mod skills_tests;
 #[cfg(test)]
 mod speed_tests;
+#[cfg(test)]
+mod stars_tests;
 #[cfg(test)]
 mod stat_training_tests;
 #[cfg(test)]

@@ -213,13 +213,15 @@ pub fn unpaid_parts(inventory: &[Stack], unpaid: &[Stack]) -> Vec<u32> {
 
 /// How far prices move in `actor`'s favour, in percent (spec §7 "Shops"): the shops' `presence`
 /// for each point of their Presence modifier, plus what their skills give (Appraise's
-/// bargaining), plus what a good keeper makes of their alignment (spec §8 "Alignment"), at most
-/// [`MAX_FAVOUR`] either way. Never shown.
+/// bargaining), plus what a good keeper makes of their alignment (spec §8 "Alignment"), plus
+/// what their talents give (a birth sign's Little loved: −10), at most [`MAX_FAVOUR`] either
+/// way. Never shown.
 pub fn favour(content: &Content, shops: &Shops, actor: &super::Actor) -> i32 {
     let presence = actor.stats.modifier(Stat::Presence) * i32::from(shops.presence);
     let bargain = actor.skills.effect(content, Effect::Bargain);
     let alignment = super::alignment::keeper_favour(content, shops, actor);
-    (presence + bargain + alignment).clamp(-MAX_FAVOUR, MAX_FAVOUR)
+    let talents = actor.talent_mods(content).favour_percent;
+    (presence + bargain + alignment + talents).clamp(-MAX_FAVOUR, MAX_FAVOUR)
 }
 
 /// How many of `object` `stacks` hold.

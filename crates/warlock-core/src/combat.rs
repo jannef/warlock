@@ -483,9 +483,18 @@ impl Blow {
 /// The kind the attack does is picked before the dice ([`Kinds::best`]), and the resistances
 /// come last ([`damage::resist`]), each kind on its own: no draws.
 pub fn strike(profile: &Profile, target: &Target, rng: &mut Rng) -> Blow {
+    strike_with(profile, target, rng, false)
+}
+
+/// [`strike`], and with `reroll_fumble` (a birth sign's Winner's luck) a natural 2 on the attack
+/// roll is rolled again once: two more draws right after the first two, only then.
+pub fn strike_with(profile: &Profile, target: &Target, rng: &mut Rng, reroll_fumble: bool) -> Blow {
     let defence = &target.defence;
     let dv = defence.total();
-    let natural = roll_natural(rng);
+    let mut natural = roll_natural(rng);
+    if reroll_fumble && natural == FUMBLE {
+        natural = roll_natural(rng);
+    }
     if !hits(natural, profile.to_hit, dv) {
         let total = natural + profile.to_hit;
         let weight = defence.reason_weight();

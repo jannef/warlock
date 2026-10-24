@@ -1,0 +1,8 @@
+[[talent]]
+id = "pure_blood"
+name = "Pure blood"
+tree = "stars"
+granted = true
+description = "You shake off disease more easily, and poison passes through you quickly without weakening you."
+effects = [{ kind = "disease_checks", value = 4 }, { kind = "status_eases", status = "poisoned", value = 100 }, { kind = "no_penalty", status = "poisoned" }]
+systems = ["diseases", "status"]

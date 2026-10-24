@@ -256,6 +256,18 @@ impl Actor {
         self.talents.mods(content)
     }
 
+    /// Its speed (spec §8 "Speed"): its creature type's, scaled by its talents' (a birth sign's
+    /// Fleet, Ponderous), at least 1. Hidden from the player.
+    pub fn speed(&self, content: &Content) -> u32 {
+        let base = content.creature(self.creature).speed;
+        let percent = self.talent_mods(content).speed_percent;
+        if percent == 0 {
+            return base;
+        }
+        let scaled = TalentMods::scaled(u64::from(base), percent);
+        u32::try_from(scaled).unwrap_or(u32::MAX).max(1)
+    }
+
     /// How hungry it is (spec §8 "Hunger"); `None` for an actor that does not hunger.
     pub fn hunger(&self, content: &Content) -> Option<Hunger> {
         let def = content.hunger()?;
@@ -929,6 +941,16 @@ impl Actor {
         if !self.talents.is_empty() {
             let softened = (self.talent_mods(content)).stance_to_hit(self.stance, stance.to_hit);
             profile.to_hit += softened - stance.to_hit;
+        }
+        // Its talents' threat (Keen edge): criticals threaten that much lower, never below the
+        // lowest roll that can hit.
+        if !self.talents.is_empty() {
+            let threat = self.talent_mods(content).threat;
+            if threat != 0 {
+                let lowered = i32::from(profile.threat) - threat;
+                let lowest = crate::combat::FUMBLE + 1;
+                profile.threat = u8::try_from(lowered.max(lowest)).unwrap_or(profile.threat);
+            }
         }
         self.effects.sharpen(content, profile)
     }

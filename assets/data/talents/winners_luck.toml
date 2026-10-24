@@ -1,0 +1,8 @@
+[[talent]]
+id = "winners_luck"
+name = "Winner's luck"
+tree = "stars"
+granted = true
+description = "Fortune runs with you: a blow that would go badly astray may be tried again, and you are quicker still."
+effects = [{ kind = "reroll_fumble" }, { kind = "speed_percent", value = 5 }]
+systems = ["combat", "speed"]

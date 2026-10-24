@@ -16,9 +16,20 @@
 #     description   one line: what those born under it are like
 #     stats         adjustments to the starting scores, by stat id, as in races.toml (fixed
 #                   numbers here, small); a character gets both their animal's and their element's
+#     grants        the gifts (and an animal's flaw) of those born under it: talents of the
+#                   `stars` tree marked `granted = true` (talents/), given at birth, never picked;
+#                   shown in this order on the reveal and the Talents page (the animal's, the
+#                   element's, then a lucky day's). Gifts whose rules have not landed yet are
+#                   left out until they do.
+#   [[lucky]]     a lucky day: born in the year of `animal` and `element` AND on day `day` of
+#                 any month (1 to 30), a character has a lucky sign. `title` follows their name
+#                 ("Brakka, the Iron Scourge"), `description` is the reveal's line of legend, and
+#                 `grants` the extra gift (granted talents, as above). The game never says lucky
+#                 days exist until a character is born on one; the wiki lists them exactly.
 #     kit           items those born under it add to their starting kit, after the class's and
 #                   the race's: lines as in classes/README.toml's `kit` (none so far)
 #
+# Talents may ask for a sign (`needs = { animal = "roc" }`, `element = "fire"`, `lucky = true`).
 # Signs are also flags later rules may ask about: "is this character Fire-born?", "born in the
 # year of the Manticore?".
 
@@ -31,24 +42,28 @@ id = "salamander"
 name = "Salamander"
 description = "The smallest racer, who rode the Hydra across the river and leapt through the gate first: quick and clever, if slight."
 stats = { dexterity = 1, intelligence = 1, strength = -1 }
+grants = ["fleet", "slight"]
 
 [[animal]]
 id = "hydra"
 name = "Hydra"
 description = "The strongest swimmer, who carried the Salamander across and was beaten by it at the gate: tireless and hard to kill, but of many minds."
 stats = { toughness = 2, intelligence = -1 }
+grants = ["regrowth", "strong_swimmer"]
 
 [[animal]]
 id = "manticore"
 name = "Manticore"
 description = "Ran the whole course without rest while every other racer fled its path: fierce and relentless, and little loved."
 stats = { strength = 1, toughness = 1, presence = -1 }
+grants = ["little_loved"]
 
 [[animal]]
 id = "unicorn"
 name = "Unicorn"
 description = "Crossed the river leaping from stone to stone without wetting a hoof: graceful and fair, and easily hurt."
 stats = { dexterity = 1, presence = 1, toughness = -1 }
+grants = ["pure_blood"]
 
 [[animal]]
 id = "wyvern"
@@ -67,6 +82,7 @@ id = "roc"
 name = "Roc"
 description = "The mightiest of fliers, who soared so high it lost sight of the gate: powerful and proud, and not one for details."
 stats = { strength = 2, intelligence = -1 }
+grants = ["rocs_strength", "heedless"]
 
 [[animal]]
 id = "griffin"
@@ -79,6 +95,7 @@ id = "sphinx"
 name = "Sphinx"
 description = "Stopped to set every racer it met a riddle, and lost the morning to those who answered: wise and cunning, and slow to move."
 stats = { intelligence = 2, dexterity = -1 }
+grants = ["riddlers_mind", "ponderous"]
 
 [[animal]]
 id = "phoenix"
@@ -97,6 +114,7 @@ id = "barghest"
 name = "Barghest"
 description = "The black hound who ran last on purpose, to see every racer through, and was given the last year for it: loyal and steadfast, and grim company."
 stats = { toughness = 1, willpower = 1, presence = -1 }
+grants = ["grim_company"]
 
 # The elements, in the order the years go through them.
 
@@ -105,6 +123,7 @@ id = "wood"
 name = "Wood"
 description = "Growing things that bend and do not break: supple."
 stats = { dexterity = 1 }
+grants = ["supple", "evergreen"]
 
 [[element]]
 id = "fire"
@@ -117,15 +136,62 @@ id = "earth"
 name = "Earth"
 description = "Stone and soil, slow and steady: enduring."
 stats = { toughness = 1 }
+grants = ["stone_hide", "stonewise"]
 
 [[element]]
 id = "metal"
 name = "Metal"
 description = "Iron and the forge, hard and keen: strong."
 stats = { strength = 1 }
+grants = ["keen_edge"]
 
 [[element]]
 id = "water"
 name = "Water"
 description = "Rivers and the deep sea, that always find a way: clever."
 stats = { intelligence = 1 }
+grants = ["always_a_way"]
+
+# The lucky days: one lucky animal per element, each on the day of the month that is its place in
+# the Great Race (the Salamander first, the Manticore third, the Phoenix tenth, the Kraken
+# eleventh), and the Barghest's the 30th, the last, as it guards the gate between the cycles.
+
+[[lucky]]
+animal = "salamander"
+element = "wood"
+day = 1
+title = "the Racer"
+description = "A lucky day. In the Great Race's own year, on the first day of the month, the Salamander leapt through the gate: you are born the Racer."
+grants = ["winners_luck"]
+
+[[lucky]]
+animal = "manticore"
+element = "metal"
+day = 3
+title = "the Iron Scourge"
+description = "A lucky day. Once in sixty years the Manticore is born in iron, and on the third day it is born the Iron Scourge."
+grants = []
+
+[[lucky]]
+animal = "phoenix"
+element = "fire"
+day = 10
+title = "the Firebird"
+description = "A lucky day. Once in sixty years the Phoenix is born in fire, and on the tenth day it is born the Firebird."
+grants = []
+
+[[lucky]]
+animal = "kraken"
+element = "water"
+day = 11
+title = "the Deep One"
+description = "A lucky day. Once in sixty years the Kraken is born of the water, and on the eleventh day it is born the Deep One."
+grants = []
+
+[[lucky]]
+animal = "barghest"
+element = "earth"
+day = 30
+title = "the Gate Warden"
+description = "A lucky day. Once in sixty years the Barghest is born of the earth, and on the last day of the month it is born the Gate Warden."
+grants = []

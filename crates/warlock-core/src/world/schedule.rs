@@ -188,6 +188,15 @@ impl World {
         let step = self.cost_of(id, ActionKind::Step);
         let level = self.state.current();
         let mut price = level.step_price(to, step);
+        // A strong swimmer (spec §8 "Birth sign") wades as if on dry land.
+        if level.kind != LevelKind::Overworld
+            && to.move_cost > 100
+            && !actor.talents.is_empty()
+            && actor.talent_mods(&self.content).swimmer
+            && super::stars::wading(&self.content, to)
+        {
+            price = price.min(crate::content::price(step, BASE_TURN).max(1));
+        }
         if level.kind == LevelKind::Overworld {
             price = shortened(price, actor.skill_effect(&self.content, Effect::Travel));
             // Then its talents (Long strider): a signed percent of the journey's time.
@@ -230,7 +239,7 @@ impl World {
     /// rest): all the energy they have and will gain until then.
     pub(super) fn price_until(&self, until: GameTime) -> i64 {
         let player = self.state.player();
-        let speed = i64::from(self.content.creature(player.creature).speed);
+        let speed = i64::from(player.speed(&self.content));
         let seconds = i64::try_from(until.since(self.state.time).as_seconds()).unwrap_or(i64::MAX);
         player.energy.saturating_add(speed.saturating_mul(seconds))
     }
@@ -259,7 +268,7 @@ impl World {
         let level = &self.state.current_level;
         let scheduled = |a: &Actor| Scheduled {
             id: a.id,
-            speed: self.content.creature(a.creature).speed,
+            speed: a.speed(&self.content),
             energy: a.energy,
         };
         // In the order ties go: the player, then the creatures by ascending id.
@@ -348,7 +357,7 @@ impl World {
                 let steps = i64::from((a.pos.chebyshev(player) - VIEW_RADIUS - 1).max(0));
                 let cheapest = cheapest(self.cost_of(a.id, ActionKind::Step));
                 let short = steps.saturating_mul(cheapest).saturating_sub(a.energy);
-                let speed = self.content.creature(a.creature).speed;
+                let speed = a.speed(&self.content);
                 Duration::seconds(wait(short.saturating_neg(), speed))
             })
             .min()

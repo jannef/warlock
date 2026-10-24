@@ -1,0 +1,8 @@
+[[talent]]
+id = "evergreen"
+name = "Evergreen"
+tree = "stars"
+granted = true
+description = "You hunger more slowly, and rotten food harms you less."
+effects = [{ kind = "hunger_percent", value = -15 }, { kind = "rot_harm_percent", value = -50 }]
+systems = ["hunger"]

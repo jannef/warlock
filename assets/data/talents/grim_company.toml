@@ -1,0 +1,9 @@
+[[talent]]
+id = "grim_company"
+name = "Grim company"
+tree = "stars"
+granted = true
+flaw = true
+description = "Shopkeepers think less of you: prices move 10 % against you."
+effects = [{ kind = "favour_percent", value = -10 }]
+systems = ["shops"]

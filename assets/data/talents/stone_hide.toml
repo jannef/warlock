@@ -1,0 +1,8 @@
+[[talent]]
+id = "stone_hide"
+name = "Stone hide"
+tree = "stars"
+granted = true
+description = "Protection +1."
+effects = [{ kind = "protection", value = 1 }]
+systems = ["protection"]

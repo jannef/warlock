@@ -35,8 +35,10 @@ scale = 2.0
 # Combat (spec §8 "Combat"): the player lights the lantern in the arena's dark corner and the war
 # band's archer shoots them down from the dark ("Something shoots you."). The death screen opens
 # by itself over the run as it ended. Every action must take a turn, so the walk ends with the
-# killing one.
+# killing one. Pip's birth sign has gifts now (#265), so the default seed's fight no longer ends
+# in his death: seed 4 is one where it does at the 14th wait.
 [[golden]]
 name = "death-screen"
 scenario = "arena"
+seed = 4
 actions = "lantern wait*14"

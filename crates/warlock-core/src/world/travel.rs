@@ -142,7 +142,7 @@ impl World {
         self.after_tread(player, to, footing, events);
         self.make_step_noise(player, to, fleeing);
         // Wading through a marsh may give a disease, by how long the step takes.
-        let speed = self.content.creature(self.state.player().creature).speed;
+        let speed = self.state.player().speed(&self.content);
         self.wade(
             onto,
             u64::try_from(step).unwrap_or(0) / u64::from(speed.max(1)),

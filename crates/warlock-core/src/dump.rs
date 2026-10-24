@@ -467,8 +467,9 @@ fn equipment_rows(view: &PerceptionView<'_>) -> Vec<String> {
 }
 
 /// The player's character, if any (`Name Brakka`, `Race Dwarf`, `Gender Female`, `Class
-/// Warrior`, `Age 27`, `Born 3 Seedtide 1417`, `Sign Fire Manticore`), then their own scores, one
-/// stat a line: `Strength 12`.
+/// Warrior`, `Age 27`, `Born 3 Seedtide 1417`, `Sign Fire Manticore`, with a lucky day's title
+/// `Sign Metal Manticore, the Iron Scourge`), then their own scores, one stat a line:
+/// `Strength 12`.
 fn stat_rows(view: &PerceptionView<'_>) -> Vec<String> {
     let content = view.content();
     let mut rows = Vec::new();
@@ -489,7 +490,7 @@ fn stat_rows(view: &PerceptionView<'_>) -> Vec<String> {
         rows.push(format!("Class {class}"));
         rows.push(format!("Age {}", c.age_on(view.time())));
         rows.push(format!("Born {}", c.born.text(content.calendar())));
-        if let Some(sign) = c.sign_name(content) {
+        if let Some(sign) = c.sign_title(content) {
             rows.push(format!("Sign {sign}"));
         }
     }
@@ -573,14 +574,20 @@ fn weapon_skill_rows(view: &PerceptionView<'_>) -> Vec<String> {
 }
 
 /// The player's talents in the order taken, one a line: its name for its choice and, for a
-/// ranked talent, the rank held of how many (`Hardy 2/3`).
+/// ranked talent, the rank held of how many (`Hardy 2/3`); a birth sign's gifts first, marked
+/// `(sign)`, its flaw `(sign, flaw)`.
 fn talent_rows(view: &PerceptionView<'_>) -> Vec<String> {
     (view.own_talents().iter())
         .map(|t| {
-            if t.ranks > 1 {
+            let name = if t.ranks > 1 {
                 format!("{} {}/{}", t.name, t.rank, t.ranks)
             } else {
                 t.name.clone()
+            };
+            match (t.granted, t.flaw) {
+                (_, true) => format!("{name} (sign, flaw)"),
+                (true, false) => format!("{name} (sign)"),
+                (false, false) => name,
             }
         })
         .collect()
@@ -1109,16 +1116,23 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "equipment": equipment,
         "weight": { "base": weight.base, "carried": weight.carried, "total": weight.total() },
         "burden": { "level": load.burden(), "limit": load.limit },
-        "character": view.character().map(|c| json!({
-            "name": c.name,
-            "race": c.spec.race,
-            "gender": c.spec.gender,
-            "class": c.spec.class,
-            "raised": c.raised,
-            "age": c.age_on(view.time()),
-            "born": c.born,
-            "sign": c.sign,
-        })),
+        "character": view.character().map(|c| {
+            let mut character = json!({
+                "name": c.name,
+                "race": c.spec.race,
+                "gender": c.spec.gender,
+                "class": c.spec.class,
+                "raised": c.raised,
+                "age": c.age_on(view.time()),
+                "born": c.born,
+                "sign": c.sign,
+            });
+            // A lucky day's title (spec §8 "Birth sign"), only for one born on it.
+            if let Some(title) = c.title(content) {
+                character["lucky"] = json!(title);
+            }
+            character
+        }),
         "stats": view.own_scores(),
         "alignment": view.own_alignment().map(|b| b.id()),
         "skills": skills_json(&view),
@@ -1135,6 +1149,8 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
                 "rank": t.rank,
                 "ranks": t.ranks,
                 "choice": t.choice,
+                "granted": t.granted,
+                "flaw": t.flaw,
             }))
             .collect::<Vec<_>>(),
         "due": view.due(),

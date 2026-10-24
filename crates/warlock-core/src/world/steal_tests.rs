@@ -54,9 +54,19 @@ fn content() -> Arc<Content> {
     Arc::new(Content::load(&files(false)).expect("test content is valid"))
 }
 
-fn world_as(scenario: &str, character: &str) -> World {
+/// A world with the character born under the sign the seed gives.
+fn world_signed(scenario: &str, character: &str) -> World {
     let spec = character.parse().expect("character");
     World::with_character(content(), scenario, None, Some(&spec)).expect("world")
+}
+
+/// A world with the character born under no sign, so a sign's gifts (talents granted on the
+/// run's start) leave the theft's odds and takings as the tests rig them.
+fn world_as(scenario: &str, character: &str) -> World {
+    let w = world_signed(scenario, character);
+    let mut state = w.state().clone();
+    state.character.as_mut().expect("a character").sign = None;
+    World::from_state(content(), state).expect("restores")
 }
 
 fn den() -> World {
@@ -352,7 +362,8 @@ fn a_shopkeeper_who_catches_a_thief_is_outraged() {
 
 #[test]
 fn thefts_save_replay_and_hash() {
-    let mut w = den();
+    // Signed: a replay restarts the character from its spec, under the sign the seed gives.
+    let mut w = world_signed("den", THIEF);
     let mut replay = Replay::new(&w);
     for action in parse_actions("steal:E steal:W wait steal:E").expect("actions") {
         w.apply(&action);

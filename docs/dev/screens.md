@@ -160,8 +160,11 @@ to open, read keys for, or draw one:
   the fighting styles in use marked `•`; two columns from 88 wide, else one that drops its gaps
   and margins and then scrolls with ↑↓; never a benefit), `ui/chargen_screen.rs` (character creation: `ChoiceScreen` per
   step with a Random row rolled from the seed, `SummaryScreen` (with the starting kit,
-  `kit_words`, and the band `Start::alignment` falls in; 84 wide, dropping its gaps on a short
-  console), `Draft`), `ui/name_screen.rs`
+  `kit_words`, the band `Start::alignment` falls in, and a Sign row that returns to the reveal;
+  84 wide, dropping its gaps on a short console), `Draft`), `ui/sign_screen.rs`
+  (`SignScreen`, *Born under the stars* after the race: the birth, the sign, its legend, a
+  lucky day's line, the gifts in words with flaws as "but …", the adjustments; no rows, no
+  choice: Enter opens the gender, Esc closes), `ui/name_screen.rs`
   (`NameScreen`, the Name step and the game's text field: typed text literal while the font draws
   it (`render::atlas::draws`) and there is room; the `Context::Text` keys accept, erase, put in the
   next of the race's random names (never the one shown; not on a held key), and back out; an empty
