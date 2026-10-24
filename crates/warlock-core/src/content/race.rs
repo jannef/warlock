@@ -5,11 +5,11 @@
 //! how much they need to eat (spec §8 "Hunger"), how much experience their levels need (spec §8
 //! "Experience"), trains them in skills (spec §8 "Skills"; dice,
 //! and humans' extra class skill), gives them starting ranks in weapon skills (spec §8
-//! "Weapon skills"; fixed numbers or dice), and says what they notice of hidden features in
-//! passing (spec §8 "Searching").
+//! "Weapon skills"; fixed numbers or dice), says what they notice of hidden features in
+//! passing (spec §8 "Searching"), and may give them natural armour (spec §8 "Combat").
 
 use super::weapon_skill::Ranked;
-use super::{ContentError, FACTORS, PassiveSearch, WeaponSkillId, WeaponSkillTable};
+use super::{ContentError, FACTORS, Hide, PassiveSearch, WeaponSkillId, WeaponSkillTable};
 use crate::combat::MAX_BASE_HP;
 use crate::dice::Dice;
 use crate::skills::{self, GRANTS, SkillId};
@@ -50,6 +50,7 @@ struct RaceSpec {
     potential: BTreeMap<Stat, Dice>,
     #[serde(default)]
     hp: u16,
+    natural: Option<Hide>,
     #[serde(default)]
     alignment: i32,
     size: Option<String>,
@@ -95,6 +96,9 @@ pub struct RaceDef {
     /// What the race adds to the hit points (spec §8 "Combat"): maximum hit points are
     /// Toughness plus the race's and the class's.
     pub hp: i32,
+    /// Its natural armour (spec §8 "Combat"), as a creature type's: Defence in the Natural
+    /// category and Protection, added to what the player wears. Lizardfolk's scales.
+    pub natural: Option<Hide>,
     /// Its part of a new character's alignment score (spec §8 "Alignment"), added to the
     /// class's.
     pub alignment: i32,
@@ -190,6 +194,9 @@ impl Races {
                     spec.hp
                 )));
             }
+            if let Some(hide) = &spec.natural {
+                hide.check().map_err(|m| err(format!("race `{id}`: {m}")))?;
+            }
             let alignment = crate::alignment::check_start(spec.alignment)
                 .map_err(|m| err(format!("race `{id}`: {m}")))?;
             let size_id = spec.size.as_deref().unwrap_or(super::MEDIUM);
@@ -240,6 +247,7 @@ impl Races {
                 stats,
                 potential,
                 hp: i32::from(spec.hp),
+                natural: spec.natural,
                 alignment,
                 size,
                 ignores_burdened: spec.ignores_burdened,
@@ -301,6 +309,14 @@ mod tests {
         assert!(human.skills.is_empty() && human.class_skill.is_zero());
         assert_eq!(human.hunger, 100, "a human's hunger unless named");
         assert_eq!(human.experience, 100, "a human's experience unless named");
+        assert_eq!(human.natural, None, "no hide unless named");
+        let scaled = parse(&format!(
+            "{ONE}natural = {{ protection = 1, name = \"scales\" }}\n"
+        ))
+        .expect("valid");
+        let hide = scaled.list[0].natural.as_ref().expect("a hide");
+        assert_eq!((hide.defence, hide.protection), (0, 1));
+        assert_eq!(hide.name, "scales");
         let dwarf = parse(&format!(
             "{ONE}size = \"small\"\nignores_burdened = true\nhunger = 110\nexperience = 115\n"
         ))
@@ -408,6 +424,18 @@ mod tests {
             (
                 "base_potential = 15\nrace = []\n".into(),
                 "at least one race",
+            ),
+            (
+                format!("{ONE}natural = {{ protection = 0, name = \"skin\" }}\n"),
+                "race `human`: natural: `defence` and `protection` must be 0 to 20, not both 0",
+            ),
+            (
+                format!("{ONE}natural = {{ protection = 21, name = \"skin\" }}\n"),
+                "must be 0 to 20",
+            ),
+            (
+                format!("{ONE}natural = {{ protection = 1 }}\n"),
+                "missing field `name`",
             ),
         ] {
             let e = parse(&text).unwrap_err();

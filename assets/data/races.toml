@@ -13,6 +13,11 @@
 #   potential     adjustments to the potentials, the same way (hidden from the player)
 #   hp            hit points (spec §8 "Combat"; default 0): a character's maximum is their
 #                 Toughness plus their race's and their class's (classes.toml)
+#   natural       natural armour, as a creature's (creatures/README.toml): { defence = 0,
+#                 protection = 1, name = "scales" }: Defence in the Natural category and
+#                 Protection, each 0 to 20 (not both 0), added to what the character wears; the
+#                 name is what a blow glances off ("The arrow glances off your scales."). Default
+#                 none
 #   alignment     the race's part of a new character's hidden alignment score (spec §8
 #                 "Alignment"; alignment.toml; -1000 evil to 1000 good, default 0), added to
 #                 their class's: a lean that never alone moves anyone out of Neutral

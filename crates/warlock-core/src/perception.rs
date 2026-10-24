@@ -68,8 +68,8 @@ use crate::combat::Health;
 use crate::content::Shops;
 use crate::content::{
     CombatStance, Content, CreatureId, DamageTypeId, DiseaseId, FactionId, Factor, Flow,
-    ItemClassId, LevelKind, LightId, ObjectId, RoomEffectDef, SlotId, Stance, StatusId, TerrainId,
-    TrapId, VisionProfile, WeaponSkillId,
+    ItemClassId, LevelKind, LightId, ObjectId, RaceDef, RoomEffectDef, SlotId, Stance, StatusId,
+    TerrainId, TrapId, VisionProfile, WeaponSkillId,
 };
 use crate::daylight;
 use crate::equipment::Equipment;
@@ -1053,8 +1053,12 @@ impl<'a> PerceptionView<'a> {
     /// What the player carries against what they can (spec §8 "Burden"): their burden, and the
     /// weights at which it changes, which follow from scores they know.
     pub fn own_load(&self) -> Load {
-        let race = self.character.and_then(|c| c.spec.race(self.content).ok());
-        burden::load(self.player, race, self.content)
+        burden::load(self.player, self.own_race(), self.content)
+    }
+
+    /// The player's race, when the run has a character.
+    fn own_race(&self) -> Option<&'a RaceDef> {
+        self.character.and_then(|c| c.spec.race(self.content).ok())
     }
 
     /// The player's combat stance (spec §8 "Stances"): only its name is ever shown.
@@ -1066,13 +1070,15 @@ impl<'a> PerceptionView<'a> {
     /// their Dexterity). Only the total: its Dexterity part would give away a modifier.
     pub fn own_defence(&self) -> i32 {
         let burden = self.own_load().penalty();
-        self.player.defence(self.content, burden).total()
+        self.player
+            .defence(self.content, burden, self.own_race())
+            .total()
     }
 
     /// The player's Protection ("Pv"): the damage what they wear soaks off every hit, the total
     /// only (never what each piece does against a kind, nor a creature's).
     pub fn own_protection(&self) -> i32 {
-        self.player.protection(self.content).base
+        self.player.protection(self.content, self.own_race()).base
     }
 
     /// What the player resists (spec §8 "Damage types"), in words only: each kind they resist,

@@ -986,19 +986,9 @@ impl Content {
             .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             let ranks = ranks.iter().map(|&(id, rank)| (id, rank.max() as u8));
             let weapon_skills = WeaponSkills::from_ranks(&self.weapon_skills, ranks);
-            if spec.natural.as_ref().is_some_and(|n| {
-                let bonus = 0..=object::MAX_BONUS;
-                !bonus.contains(&n.defence)
-                    || !bonus.contains(&n.protection)
-                    || n.defence + n.protection == 0
-                    || n.name.is_empty()
-            }) {
-                return Err(err(format!(
-                    "creature `{}`: natural: `defence` and `protection` must be 0 to {}, not both \
-                     0, and `name` given",
-                    spec.id,
-                    object::MAX_BONUS
-                )));
+            if let Some(hide) = &spec.natural {
+                hide.check()
+                    .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             }
             // The status diseases show as comes of a disease, never of a blow.
             let status = |id: &str| {

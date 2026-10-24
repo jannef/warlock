@@ -7,8 +7,8 @@ use crate::burden::Burden;
 use crate::combat::{self, Attack, Category, Defence, Health, Profile, Target};
 use crate::content::Effect as ItemEffect;
 use crate::content::{
-    ActionKind, Benefit, CombatStance, Content, CreatureId, DamageTypeId, FactionId, Grip,
-    ObjectDef, ObjectId, Role, TwoWeapons, WeaponSkillId,
+    ActionKind, Benefit, CombatStance, Content, CreatureId, DamageTypeId, FactionId, Grip, Hide,
+    ObjectDef, ObjectId, RaceDef, Role, TwoWeapons, WeaponSkillId,
 };
 use crate::damage::{Protection, Resistances};
 use crate::disease::Diseases;
@@ -325,17 +325,23 @@ impl Actor {
         Health::of(self.hp, self.max_hp(content))
     }
 
+    /// Its natural armour (spec §8 "Combat"): its race's (`race`, the player's when the run has
+    /// a character, [`super::WorldState::race_of`]) if it has one, else its creature type's.
+    pub fn hide<'c>(&self, content: &'c Content, race: Option<&'c RaceDef>) -> Option<&'c Hide> {
+        (race.and_then(|r| r.natural.as_ref())).or(content.creature(self.creature).natural.as_ref())
+    }
+
     /// Its Defence (spec §8 "Combat"): 10 plus its Dexterity modifier (capped by the worn
     /// armour that allows the least and by its `burden`, the burden it suffers, spec §8
     /// "Burden": the lowest cap wins), the best armour, shield, and parry of what it wears and
-    /// wields (each with what its own affixes add), its creature type's natural armour, the Dodge
+    /// wields (each with what its own affixes add), its natural armour ([`Actor::hide`]), the Dodge
     /// its skills give (tumble; spec §8 "Skills"), and the Dodge, Deflection, and natural armour
     /// its magic items give (spec §8 "Magic items"). Weapon skills add (spec §8 "Weapon skills"):
     /// the wielded weapon's skill to its parry, shield blocking to a held shield's; and so does
     /// the fighting style its hands are in (spec §8 "Fighting styles": a duelist's parry, sword
     /// and board's shield). Its combat stance and its status effects add their Dodge and Parry
     /// (spec §8 "Stances", "Status effects").
-    pub fn defence(&self, content: &Content, burden: Burden) -> Defence {
+    pub fn defence(&self, content: &Content, burden: Burden, race: Option<&RaceDef>) -> Defence {
         let mods = self.mods(content);
         let weapon = self.weapon_item(content);
         let style = self.benefit(content, self.style(content, AttackKind::Melee, None));
@@ -382,8 +388,7 @@ impl Actor {
                 ),
             ]
         });
-        let natural = (content.creature(self.creature).natural.as_ref())
-            .map(|hide| (Category::Natural, hide.defence));
+        let natural = (self.hide(content, race)).map(|hide| (Category::Natural, hide.defence));
         let dodge = Some(self.skill_effect(content, Effect::Dodge))
             .filter(|&d| d != 0)
             .map(|d| (Category::Dodge, d));
@@ -406,16 +411,15 @@ impl Actor {
 
     /// Its Protection (spec §8 "Combat"): the damage it soaks off every physical hit, the sum
     /// of what it wears (each piece's `protection` with what its own affixes add; a shield has
-    /// none) and its creature type's natural armour; against each physical kind, more or less
+    /// none) and its natural armour ([`Actor::hide`]); against each physical kind, more or less
     /// by what the pieces say (spec §8 "Damage types": chain mail +1 against slashing, −1
     /// against piercing), and nothing against an element.
-    pub fn protection(&self, content: &Content) -> Protection {
+    pub fn protection(&self, content: &Content, race: Option<&RaceDef>) -> Protection {
         let worn: Vec<&Stack> = (self.equipment.items().into_iter())
             .filter_map(|(_, item)| self.inventory.get(item))
             .collect();
         let base: i32 = worn.iter().map(|s| s.protection(content)).sum();
-        let natural =
-            (content.creature(self.creature).natural.as_ref()).map_or(0, |h| h.protection);
+        let natural = self.hide(content, race).map_or(0, |h| h.protection);
         let adjustments = (worn.iter()).flat_map(|s| s.protects(content).iter().copied());
         if content.damage_types().is_empty() {
             return Protection::plain(base + natural);
@@ -440,10 +444,10 @@ impl Actor {
 
     /// The side of it an attack strikes (spec §8 "Combat"): its Defence (its `burden` capping
     /// its Dexterity), its Protection, and its resistances.
-    pub fn target(&self, content: &Content, burden: Burden) -> Target {
+    pub fn target(&self, content: &Content, burden: Burden, race: Option<&RaceDef>) -> Target {
         Target {
-            defence: self.defence(content, burden),
-            protection: self.protection(content),
+            defence: self.defence(content, burden, race),
+            protection: self.protection(content, race),
             resistances: self.resistances(content),
         }
     }
@@ -451,7 +455,11 @@ impl Actor {
     /// What a blow that its Protection soaked to nothing glanced off, in messages: the piece it
     /// wears with the most Protection (the first in slot order of the best), else its natural
     /// armour, if either has any.
-    pub(crate) fn soaked_by<'c>(&self, content: &'c Content) -> Option<&'c str> {
+    pub(crate) fn soaked_by<'c>(
+        &self,
+        content: &'c Content,
+        race: Option<&'c RaceDef>,
+    ) -> Option<&'c str> {
         let mut best: Option<(i32, &'c str)> = None;
         for (_, item) in self.equipment.items() {
             let Some(stack) = self.inventory.get(item) else {
@@ -462,7 +470,7 @@ impl Actor {
                 best = Some((pv, content.object(stack.object).name.as_str()));
             }
         }
-        let hide = (content.creature(self.creature).natural.as_ref()).filter(|h| h.protection > 0);
+        let hide = self.hide(content, race).filter(|h| h.protection > 0);
         match (best, hide) {
             (Some((pv, _)), Some(hide)) if hide.protection > pv => Some(hide.name.as_str()),
             (Some((_, name)), _) => Some(name),
