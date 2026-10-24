@@ -7,25 +7,25 @@ expression: "render(case, content.clone())"
 
 
 
-
-
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
+                    │ Class                                                    │
+                    │ > a  Throw your voice   at a place you see               │
                     │ Skills                                                   │
-                    │   a  Appraise       not usable yet                       │
-                    │ > b  Disarm a trap  in a direction                       │
-                    │   c  Pick lock      in a direction                       │
-                    │   d  Steal          in a direction                       │
+                    │   b  Appraise           not usable yet                   │
+                    │   c  Disarm a trap      in a direction                   │
+                    │   d  Pick lock          in a direction                   │
+                    │   e  Steal              in a direction                   │
                     │ Weapon skills                                            │
-                    │   e  Shield bash    in a direction                       │
+                    │   f  Shield bash        in a direction                   │
+                    │ Items                                                    │
+                    │   g  Hood your lantern                                   │
                     │                                                          │
-                    │ Take apart a trap you know of next to you; a clumsy try  │
-                    │ sets it off.                                             │
+                    │ Make a voice sound at a place you see nearby: those who  │
+                    │ hear it go and look there.                               │
                     │                                                          │
-                    │ a-e or Enter use   Esc close                             │
+                    │ a-g or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
-
-
 
 
 
