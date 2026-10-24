@@ -1,0 +1,11 @@
+[[talent]]
+id = "divine_grace"
+name = "Divine grace"
+tree = "class"
+granted = true
+description = "Grace guards you: you shake off disease more easily, and poison leaves you sooner."
+effects = [
+    { kind = "disease_checks", value = 2 },
+    { kind = "status_eases", status = "poisoned", value = 100 },
+]
+systems = ["diseases", "status"]

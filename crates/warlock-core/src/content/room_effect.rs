@@ -5,10 +5,11 @@
 //! An effect ([`RoomEffectDef`]) may keep only part of the light ([`RoomEffectDef::light`]: a
 //! shadowed room), add a glow ([`RoomEffectDef::glow`]: a sanctuary's), make the noises made
 //! inside louder or quieter ([`RoomEffectDef::noise`]: an echoing hall, a hushed chamber), speed
-//! up regeneration ([`RoomEffectDef::regen`]), keep creatures hostile to the player out
-//! ([`RoomEffectDef::shunned`]), and have generators lay a floor of its own
-//! ([`RoomEffectDef::floor`]: a flooded room's shallow water). The rules ask one question,
-//! [`crate::World::room_effect_at`] (inside the core, the level state's `room_effect_at`).
+//! up regeneration ([`RoomEffectDef::regen`]) and mana's ([`RoomEffectDef::mana_regen`]), keep
+//! creatures hostile to the player out ([`RoomEffectDef::shunned`]), and have generators lay a
+//! floor of its own ([`RoomEffectDef::floor`]: a flooded room's shallow water). The rules ask
+//! one question, [`crate::World::room_effect_at`] (inside the core, the level state's
+//! `room_effect_at`).
 //!
 //! Where a special room lies is a [`SpecialRoom`]: a rectangle (a room of the rooms generator, an
 //! area of a level file) or a blob of cells (a cave's), kept in the level's state with whether
@@ -69,6 +70,8 @@ struct RoomEffectSpec {
     noise: u16,
     #[serde(default = "hundred")]
     regen: u16,
+    #[serde(default = "hundred")]
+    mana_regen: u16,
     #[serde(default)]
     shunned: bool,
     floor: Option<String>,
@@ -92,6 +95,8 @@ pub struct RoomEffectDef {
     pub noise: u16,
     /// Percent of the usual pace at which hit points come back inside (spec §8 "Combat").
     pub regen: u16,
+    /// Percent of the usual pace at which mana comes back inside (spec §8 "Mana").
+    pub mana_regen: u16,
     /// Creatures hostile to the player do not step into it (spec §8 "Creature behavior").
     pub shunned: bool,
     /// The floor generators lay over the room's floor (a flooded room's shallow water).
@@ -178,8 +183,11 @@ impl RoomEffects {
                     spec.light
                 )));
             }
-            for (what, value, range) in [("noise", spec.noise, NOISE), ("regen", spec.regen, REGEN)]
-            {
+            for (what, value, range) in [
+                ("noise", spec.noise, NOISE),
+                ("regen", spec.regen, REGEN),
+                ("mana_regen", spec.mana_regen, REGEN),
+            ] {
                 if !range.contains(&value) {
                     return Err(bad(format!(
                         "{what} {value} is out of range ({} to {})",
@@ -217,6 +225,7 @@ impl RoomEffects {
                 glow: spec.glow,
                 noise: spec.noise,
                 regen: spec.regen,
+                mana_regen: spec.mana_regen,
                 shunned: spec.shunned,
                 floor,
             });
@@ -422,5 +431,21 @@ mod tests {
         );
         let back: SpecialRoom = serde_json::from_str(&json).expect("deserializes");
         assert_eq!(back, rect);
+    }
+
+    #[test]
+    fn mana_paces_parse_and_are_checked() {
+        let well = format!("{SHADOWED}mana_regen = 300\n");
+        let effects = RoomEffects::parse("e.toml", &well, |_| None).expect("valid");
+        assert_eq!(effects.get(RoomEffectId(0)).mana_regen, 300);
+        let plain = RoomEffects::parse("e.toml", SHADOWED, |_| None).expect("valid");
+        assert_eq!(plain.get(RoomEffectId(0)).mana_regen, 100, "the default");
+        let e = RoomEffects::parse("e.toml", &format!("{SHADOWED}mana_regen = 0\n"), |_| None)
+            .unwrap_err();
+        assert!(
+            e.message.contains("mana_regen 0 is out of range"),
+            "{}",
+            e.message
+        );
     }
 }

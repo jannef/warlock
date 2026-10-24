@@ -282,7 +282,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   status effect or stat damage lowers shows lowered, in a muted red; §8 "Status effects",
   "Diseases"), their level and experience (`Lv  Level  3`, `XP  Experience
   85 / 120`, the total alone at the highest level; §8 "Experience"), their hit points (`HP  Hit
-  points  18/24`), Defence
+  points  18/24`) with their mana beside them on the same row (`MP  Mana  5/12`; §8 "Mana"), Defence
   (`Dv  Defence  15`; the total only, as its Dexterity part would give away a modifier; §8
   "Combat") and Protection beside it on the same row (`Pv  Protection  3`; the total only),
   their combat stance by name (`Stance  Neutral`; §8 "Stances"), their alignment band
@@ -334,9 +334,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     is trained in, listed but never available until its use comes (it then becomes an ability of
     its own with its action, listed in the skill's place: `Ability::use_of`); **Second wind**
     (`Ability::SecondWind`, under Talents, §8 "Talents"), which the Second wind talent gives,
-    asking for nothing, greyed out while Winded; throwing one's voice (Class; #235,
+    asking for nothing, greyed out while Winded; the **class actives** (`Ability::Class`,
+    under Class, §8 "Class abilities": Rage, Veteran's wind, Whirlwind, Lay on hands, Smite,
+    Holy radiance, Quivering palm), each from the level its class's table gives it, Smite and
+    Quivering palm in a direction, greyed out during their cooldowns (Rage while raging and
+    exhausted) and the paladin's while strayed; throwing one's voice (Class; #235,
     `throw_voice:X,Y`, the `throw_voice` action, a cell, §5 "Hearing"), the bard's in the
-    progression design and everyone's until the class tables come; and hooding the lantern
+    progression design and everyone's until the class tables narrow it; and hooding the lantern
     (Items: the lantern; `hood`, nothing to aim, §5 "Light sources"), which the Hooded light
     talent will give and everyone has until then. No race gives one yet.
   - **The menu** (a screen on the stack) lists them as the one paged list (§6 "Item lists"),
@@ -565,7 +569,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   sale, 45 gold), on plank floor."; §7 "Shops"), and a sound heard there ("You hear footsteps
   here.").
 - Screen layout: map viewport, message log, status panel (level, the player's hit points as
-  `HP 18/24` (never below 0), the status effects they suffer by name, the most important first
+  `HP 18/24` (never below 0), their mana as `MP 5/12` (the same way; §8 "Mana"), the status effects they suffer by name, the most important first
   (`Bleeding`, `Poisoned`, `Diseased`; data order; §8 "Status effects"; never which disease, §8
   "Diseases"), `Dazzled` while strong light dazzles their light-blind eyes (§8 "Character
   creation"), their hunger unless they are Not hungry (`Hungry`, `Weak`, `Fainting`, `Starving`,
@@ -584,7 +588,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   crescent. When the window is narrow, segments give way in priority order — seed, position,
   lantern, vision, light, turn, then the moon's phase (first cut down to its glyph), the
   temperature, region, date (first cut down to day and month, `12 Rainmoon`), weather, time,
-  burden, hunger, the status effects (the least important first), and hit points, the level name
-  last — and
+  burden, hunger, the status effects (the least important first), mana, and hit points, the
+  level name last — and
   segments that fit again in the room left take it back, most important first. Outdoors the
   weather outranks the date: it changes the light and how far one sees.

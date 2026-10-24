@@ -1,0 +1,8 @@
+[[talent]]
+id = "bulwark"
+name = "Bulwark"
+tree = "class"
+granted = true
+description = "You stand like a wall: Protection +2."
+effects = [{ kind = "protection", value = 2 }]
+systems = ["protection"]

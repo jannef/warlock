@@ -19,6 +19,11 @@
 #   hp            what the class adds to the hit points (spec §8 "Combat"; default 0): a
 #                 character's maximum is their Toughness plus their race's (races.toml) and their
 #                 class's
+#   mana          what the class adds to the mana (spec §8 "Mana"; default 0, at most 1000): a
+#                 character's maximum is their race's and their class's plus the modifiers of their
+#                 Intelligence, Willpower, and Presence, and each level up to experience.toml's
+#                 mana_level adds half the class's mana plus the better of the Intelligence and
+#                 Willpower modifiers
 #   experience    how much experience a level needs, in percent (spec §8 "Experience"; 50 to 200,
 #                 default 100), multiplied with the race's onto every threshold in
 #                 experience.toml: the patient callings pay more, everyday folk less

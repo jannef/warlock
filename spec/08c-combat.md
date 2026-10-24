@@ -239,7 +239,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   bled to death), and each level gained up to `hp_level` (20)
   raises the player's maximum and current hit points (`Actor::hp_base`, `hp`) by `max(1, class
   hp ÷ 2 + the Toughness modifier)`; without a character the scenario's `hp` stands in for the
-  class's. Every `talent_every`th level (`[levels]` in `data/experience.toml`, 3) brings a
+  class's. Each level gained up to `mana_level` (30) raises their mana by `max(0, class mana ÷ 2
+  + the better of the Intelligence and Willpower modifiers)` (§8 "Mana"). Every `talent_every`th level (`[levels]` in `data/experience.toml`, 3) brings a
   talent pick, made on the spot (§8 "Talents", `World::level_up`), and every level checks
   each stat for a rise by its training marks (§8 "Stats": "Training"); every gain is scaled by the
   talents that teach quicker (`xp_percent`). The player is shown their level, XP, and the XP of the next level
@@ -271,8 +272,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   place for every extra blow. The second blow of an attack (the off hand's, Sword and Board's
   bash, §8 "Fighting styles") is one; the others are free blows, switched on per actor
   (`FreeBlows` on `Actor::free_blows`, saved and hashed but left out while none is on, read
-  only through `World::free_blows_of`; talents and class abilities switch them on, none does
-  yet):
+  only through `World::free_blows_of`; talents and class abilities switch them on; the monk's
+  Flurry, `flurry`, is a second blow of a melee attack with nothing in hand, at −2 to hit, §8
+  "Class abilities"; two sources of cleave, the Cleave talent and Cleaving strike, cleave as
+  great cleave):
   - **Cleave** (`cleave`): when the blows of an actor's melee attack (a blow and the second
     blow, a kick, a shield bash) kill its target, a blow with what it wields at another hostile
     beside it: the next one clockwise from where the target fell (decided: no draw, and a sweep

@@ -152,13 +152,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
   100, default 100; §5 "Special rooms"), `glow` (`[r, g, b, uv]` added over the room like ambient
   light), `noise` (percent of the loudness of every noise made inside, 1 to 1000, default 100; §5
   "Hearing"), `regen` (percent of the usual pace of regeneration inside, 1 to 1000, default 100;
-  §8 "Combat"), `shunned` (creatures hostile to the player do not step in; §8 "Creature
+  §8 "Combat"), `mana_regen` (the same for mana, §8 "Mana"), `shunned` (creatures hostile to the player do not step in; §8 "Creature
   behavior"), and `floor` (terrain generators lay over the room's plain floor: walkable,
   transparent, not stairs, a door, or running water).
   - **The effects**: a *shadowed room* keeps 30 % of the light ("The light seems to drain away
     here."); an *echoing hall* doubles noise ("Your footsteps echo loudly."); a *hushed chamber*
     leaves two fifths of it ("A deep hush fills this room."); a *sanctuary* heals three times as
-    fast, glows faintly warm (`[60, 44, 22]`, about enough for normal eyes to see by), and keeps
+    fast and brings mana back three times as fast, glows faintly warm (`[60, 44, 22]`, about enough for normal eyes to see by), and keeps
     hostile creatures out ("You feel at peace here."); a *flooded room* has a floor of shallow
     water, slower (150) and loud (200) to wade ("The floor here is flooded."). Blood washing away
     in a flooded room waits for blood (#127).

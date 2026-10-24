@@ -1,0 +1,8 @@
+[[talent]]
+id = "veterans_wind"
+name = "Veteran's wind"
+tree = "class"
+granted = true
+description = "An old soldier's second breath (an ability): hit points back at once, then winded a quarter hour."
+effects = [{ kind = "veterans_wind", per_level = 1, at_least = 10, cooldown = "winded" }]
+systems = ["hit_points", "status"]

@@ -8,11 +8,12 @@
 //!   fever: `world/disease.rs`), each with one draw of the gameplay stream for its chance (none
 //!   at 100 %). Other rules call [`World::afflict`].
 //! - **Time**: as the scheduler moves the clock, every actor on the current level lives through
-//!   it ([`World::pass_time`]): its effects tick (costing hit points) and ease, and it gets hit
-//!   points back at its healing rate, in time order, so it makes no difference how the time is
-//!   cut up (by a long journey or many short actions). Diseases take their turns and stat damage
-//!   mends at their own moments too (`world/disease.rs`). At one moment a hit point back comes
-//!   first, then the ticks, then the easing, then the player's hunger, then a point of stat
+//!   it ([`World::pass_time`]): its effects tick (costing hit points, and mana for a status with
+//!   `mana_damage`) and ease, and it gets hit points back at its healing rate and mana at its
+//!   mana rate (`world/mana.rs`), in time order, so it makes no difference how the time is cut up
+//!   (by a long journey or many short actions). Diseases take their turns and stat damage mends
+//!   at their own moments too (`world/disease.rs`). At one moment a hit point back and a point
+//!   of mana back come first, then the ticks, then the easing, then the player's hunger, then a point of stat
 //!   damage mending, then the diseases' turns, then food rotting away in its pack
 //!   (`world/rot.rs`). Actors on other levels are frozen, as with energy, and the dev time skip
 //!   passes no time for anyone.
@@ -41,7 +42,7 @@
 //!   buffs, hexes, and cooldowns are `world/buff.rs`).
 
 use super::fight::Harm;
-use super::{ActorId, Spent, World, disease, rot};
+use super::{ActorId, Spent, World, disease, mana, rot};
 use crate::action::{AttackKind, Event};
 use crate::combat::{self, Blow, Strike};
 use crate::content::Effect as ItemEffect;
@@ -55,6 +56,8 @@ use crate::time::{Duration, GameTime};
 struct Moment {
     /// Hit points its effects cost then.
     damage: i32,
+    /// Mana its effects drain then (`mana_damage`).
+    drained: i32,
     /// The first status that ticked (the most important) and who caused it: a death is by it.
     by: Option<(StatusId, Option<ActorId>)>,
     /// Whether a status that bleeds ticked (blood drips).
@@ -268,7 +271,7 @@ impl World {
     }
 
     /// `seconds` of game time from `start` pass for actor `id`: its effects tick and ease, it
-    /// heals, (the player) hungers, its stat damage mends, its diseases take their turns, and
+    /// heals and gets mana back, (the player) hungers, its stat damage mends, its diseases take their turns, and
     /// the food in its pack rots away, each at the moment it happens, until the time is up or it
     /// dies.
     fn live(&mut self, id: ActorId, start: GameTime, seconds: u64, events: &mut Vec<Event>) {
@@ -281,6 +284,7 @@ impl World {
         let mut passed = 0;
         while passed < seconds {
             let rate = self.healing_rate(id);
+            let mana_rate = self.mana_rate(id);
             let hungrier = self.until_hungrier(id);
             let Some(actor) = self.state.actors.get_mut(&id) else {
                 return;
@@ -301,10 +305,11 @@ impl World {
                 && rots.is_none_or(|r| r > left)
             {
                 heal(actor, &content, left, rate);
+                mana::regain(actor, &content, left, mana_rate);
                 return;
             }
-            // Up to the next moment something happens: a tick, an easing, a hit point back, a
-            // change in its hunger (a new state, a hit point lost to starving), a disease's
+            // Up to the next moment something happens: a tick, an easing, a hit point or a point
+            // of mana back, a change in its hunger (a new state, a hit point lost to starving), a disease's
             // turn, a point of stat damage mended, or food in its pack rotting away.
             let mut step = hungrier.map_or(left, |h| h.min(left));
             if let Some(next) = disease::until_next(actor) {
@@ -330,20 +335,33 @@ impl World {
                 let bank = u64::from(actor.regen);
                 step = step.min(need.saturating_sub(bank).div_ceil(u64::from(rate)).max(1));
             }
+            if let Some(next) = mana::until_regained(actor, &content, mana_rate) {
+                step = step.min(next);
+            }
             passed += step;
             heal(actor, &content, step, rate);
+            mana::regain(actor, &content, step, mana_rate);
             let mut moment = Moment {
                 damage: 0,
+                drained: 0,
                 by: None,
                 bled: false,
+            };
+            // Unstoppable (spec §8 "Class abilities"): while raging, some statuses tick nothing.
+            let numb: &[StatusId] = match (&talents.unstoppable, talents.rage) {
+                (Some(numb), Some(rage)) if actor.effects.has(rage) => numb,
+                _ => &[],
             };
             for e in actor.effects.iter_mut() {
                 let def = content.status(e.status);
                 let every = eases(e);
                 let (ticks, eased) = e.advance_every(def, every, step);
-                if ticks > 0 {
+                if ticks > 0 && !numb.contains(&e.status) {
                     let cost = u64::from(def.damage) * ticks;
                     moment.damage += i32::try_from(cost).unwrap_or(i32::MAX);
+                    let drain = u64::from(def.mana_damage) * ticks;
+                    let drain = i32::try_from(drain).unwrap_or(i32::MAX);
+                    moment.drained = moment.drained.saturating_add(drain);
                     moment.by.get_or_insert((e.status, e.by));
                     moment.bled |= def.wound.is_some();
                 }
@@ -351,6 +369,7 @@ impl World {
                     .severity
                     .saturating_sub(u16::try_from(eased).unwrap_or(u16::MAX));
             }
+            mana::drain(actor, moment.drained);
             let spent = actor.effects.drop_spent();
             let due = disease::pass(actor, step);
             if moment.bled {

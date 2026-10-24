@@ -2,7 +2,7 @@
 
 use crate::combat::Strike;
 use crate::content::{
-    ActionKind, CombatStance, DamageTypeId, DiseaseId, ObjectId, StatusId, TrapId,
+    ActionKind, ClassActive, CombatStance, DamageTypeId, DiseaseId, ObjectId, StatusId, TrapId,
 };
 use crate::geom::{Dir, Pos};
 use crate::time::{DAY, Duration};
@@ -142,6 +142,12 @@ pub enum Action {
     /// once, then Winded for a while. Takes the time of `wait`; refused (no time) without the
     /// talent or while winded.
     SecondWind,
+    /// Use a class active (spec §8 "Class abilities"; the abilities menu's Class group): rage,
+    /// veteran's wind, whirlwind, lay on hands, holy radiance, and, aimed in a direction, smite
+    /// and quivering palm (`use:rage`, `use:smite:E`). Takes the time of its cost's action;
+    /// refused (no time) without the ability, while its cooldown lasts, or without the
+    /// direction it asks.
+    Use(ClassActive, Option<Dir>),
     /// Take talent `id` (an id in `data/talents/`), for `choice` if it takes one (spec §8
     /// "Talents"): one of the picks a level brings, made at once (nothing is banked). Refused
     /// with the reason when none is due or a prerequisite fails. Takes no game time; recorded in
@@ -180,6 +186,10 @@ pub enum Action {
     /// `data/status.toml`), as a wound or a bite would give it: for trying statuses out and for
     /// captures. Takes no game time; recorded in replays.
     Afflict(String),
+    /// Dev command: the player spends this much mana (spec §8 "Mana"), as a spell will, through
+    /// the one way to spend it; refused when they have less. For captures. Takes no game time;
+    /// recorded in replays.
+    Drain(u16),
     /// Dev command: the player catches a disease (an id in `data/diseases.toml`) as if they
     /// had failed to resist it: it incubates, then shows. Takes no game time; recorded in
     /// replays.
@@ -572,7 +582,7 @@ pub struct Outcome {
 /// chat:E ask:E:TOPIC steal:E throw_voice:12,5 vision:ID
 /// skip:1h
 /// weather:rain effect:fireball@12,5 effect:lightning_bolt@3,4>12,4 identify:a afflict:bleeding
-/// infect:filth_fever freeze:12,5,3 thaw:12,5,3` (durations: `30s`, `10m`, `2h`; LETTER names a
+/// drain:5 infect:filth_fever freeze:12,5,3 thaw:12,5,3` (durations: `30s`, `10m`, `2h`; LETTER names a
 /// stack by its position, a letter for the first 26 (`a` = 0) or a number for any (`30`), and
 /// LETTERS several, as letters (`ac`) or numbers (`0,2,30`); `pickup`, `drop`, `sell`, and
 /// `identify` without letters take everything; `pay:DIR` pays and steps that way, out of the shop;
@@ -644,6 +654,8 @@ impl fmt::Display for Action {
             Action::Search(turns) => write!(f, "search:{turns}"),
             Action::Disarm(d) => write!(f, "disarm:{d}"),
             Action::SecondWind => f.write_str("second_wind"),
+            Action::Use(active, None) => write!(f, "use:{}", active.id()),
+            Action::Use(active, Some(d)) => write!(f, "use:{}:{d}", active.id()),
             Action::Talent { id, choice: None } => write!(f, "talent:{id}"),
             Action::Talent {
                 id,
@@ -665,6 +677,7 @@ impl fmt::Display for Action {
             Action::Identify(l) if l.is_empty() => f.write_str("identify"),
             Action::Identify(l) => write!(f, "identify:{l}"),
             Action::Afflict(id) => write!(f, "afflict:{id}"),
+            Action::Drain(amount) => write!(f, "drain:{amount}"),
             Action::Infect(id) => write!(f, "infect:{id}"),
             Action::Freeze { at, radius } => write!(f, "freeze:{},{},{radius}", at.x, at.y),
             Action::Thaw { at, radius } => write!(f, "thaw:{},{},{radius}", at.x, at.y),
@@ -721,6 +734,16 @@ impl FromStr for Action {
             },
             "wait" => bare(Action::Wait),
             "second_wind" => bare(Action::SecondWind),
+            "use" => {
+                let usage = || "`use` needs a class ability, e.g. `use:rage` or `use:smite:E`";
+                let (id, dir) = match arg.ok_or_else(usage)?.split_once(':') {
+                    Some((id, dir)) => (id, Some(dir.parse::<Dir>()?)),
+                    None => (arg.unwrap_or_default(), None),
+                };
+                let active = ClassActive::from_id(id)
+                    .ok_or_else(|| format!("`{id}` is no class ability that is used"))?;
+                Ok(Action::Use(active, dir))
+            }
             "ascend" => bare(Action::Ascend),
             "descend" => bare(Action::Descend),
             "lantern" => bare(Action::ToggleLantern),
@@ -910,6 +933,10 @@ impl FromStr for Action {
                 }
                 _ => Err("`afflict` needs a status id, e.g. `afflict:bleeding`".into()),
             },
+            "drain" => match arg.map(str::parse::<u16>) {
+                Some(Ok(amount)) if amount > 0 => Ok(Action::Drain(amount)),
+                _ => Err("`drain` needs an amount of mana, 1 or more, e.g. `drain:5`".into()),
+            },
             "infect" => match s.split_once(':').map(|(_, id)| id) {
                 Some(id) if !id.is_empty() && !id.contains(':') => {
                     Ok(Action::Infect(id.to_string()))
@@ -939,7 +966,7 @@ impl FromStr for Action {
                  read:LETTER[:X,Y|:LETTER], chat:DIR, \
                  ask:DIR:TOPIC, steal:DIR, throw_voice:X,Y, stance:NAME, vision:ID, skip:DURATION, \
                  weather:clear|overcast|rain|heavy, effect:ID@X,Y[>X,Y], identify[:LETTERS], \
-                 afflict:STATUS, infect:DISEASE, freeze:X,Y,R, thaw:X,Y,R)"
+                 afflict:STATUS, drain:N, infect:DISEASE, freeze:X,Y,R, thaw:X,Y,R)"
             )),
         }
     }
@@ -1106,6 +1133,8 @@ mod tests {
             Action::Sell(Positions::of([3, 99])),
             Action::Afflict("bleeding".into()),
             Action::Afflict("Odd_Case".into()),
+            Action::Drain(1),
+            Action::Drain(u16::MAX),
             Action::Infect("filth_fever".into()),
             Action::Infect("Odd_Case".into()),
             Action::Talent {
@@ -1122,6 +1151,8 @@ mod tests {
             },
             Action::Advance("stealth".into()),
             Action::SecondWind,
+            Action::Use(ClassActive::Rage, None),
+            Action::Use(ClassActive::Smite, Some(Dir::SW)),
             Action::LevelUpAuto,
             Action::GrantXp(2500),
             Action::Freeze {
@@ -1421,6 +1452,12 @@ mod tests {
             "afflict",
             "afflict:",
             "afflict:a:b",
+            "drain",
+            "drain:",
+            "drain:0",
+            "drain:-1",
+            "drain:x",
+            "drain:65536",
             "infect",
             "infect:",
             "infect:a:b",

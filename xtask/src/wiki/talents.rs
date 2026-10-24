@@ -177,8 +177,8 @@ fn effects_text(content: &Content, def: &TalentDef) -> String {
     parts.join("; ")
 }
 
-/// One effect as the rule.
-fn effect_text(content: &Content, effect: &TalentEffect) -> String {
+/// One effect as the rule (talents' and class abilities').
+pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
     let percent = |v: i32| format!("{} %", signed(v));
     let status = |id: &str| {
         (content.status_id(id)).map_or_else(|| id.to_string(), |s| content.status(s).name.clone())
@@ -186,6 +186,12 @@ fn effect_text(content: &Content, effect: &TalentEffect) -> String {
     match effect.clone() {
         TalentEffect::Dodge { value } => format!("Dodge {}", signed(value)),
         TalentEffect::Natural { value } => format!("natural armour {}", signed(value)),
+        TalentEffect::NaturalUnarmoured { value } => {
+            format!(
+                "natural armour {} while you wear no body armour",
+                signed(value)
+            )
+        }
         TalentEffect::MeleeDamage { value } => format!("melee damage {}", signed(value)),
         TalentEffect::MaxHpPerLevels {
             per_levels,
@@ -255,7 +261,8 @@ fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             use warlock_core::content::FreeBlowTrigger as T;
             match trigger {
                 T::Cleave => {
-                    "free blow: a melee blow that kills gives one at another hostile beside you"
+                    "free blow: a melee blow that kills gives one at another hostile beside you \
+                     (Cleave and Cleaving strike together: on and on, as Great cleave)"
                 }
                 T::GreatCleave => {
                     "free blow: cleaving goes on while the blows kill (once at each hostile beside \
@@ -263,6 +270,10 @@ fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                 }
                 T::Riposte => "free blow: a blow that misses you by your Parry gives one back",
                 T::Opportunist => "free blow: a hostile that steps away from beside you takes one",
+                T::Flurry => {
+                    "free blow: a melee attack with nothing in hand strikes twice, the second blow \
+                     at \u{2212}2 to hit"
+                }
             }
             .to_string()
         }
@@ -278,6 +289,8 @@ fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             ease,
             bash,
             shield,
+            crit,
+            at_rank,
         } => {
             let with = match (role, skill) {
                 (_, Some(id)) => (content.weapon_skills().id(&id)).map_or(id.clone(), |w| {
@@ -301,6 +314,9 @@ fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             if threat > 0 {
                 gains.push(format!("threat range +{threat}"));
             }
+            if crit > 0 {
+                gains.push(format!("critical multiplier +{crit} (at most \u{d7}5)"));
+            }
             if ranks > 0 {
                 gains.push(format!("benefits as {ranks} rank higher (at most 10)"));
             }
@@ -318,8 +334,141 @@ fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                     "a free shield bash's chance +{bash} % where there is one"
                 ));
             }
-            format!("{} with {with}", gains.join(", "))
+            let rank = if at_rank > 0 {
+                format!(" at rank {at_rank} or more")
+            } else {
+                String::new()
+            };
+            format!("{} with {with}{rank}", gains.join(", "))
         }
+        TalentEffect::WeaponMarks { role, value } => {
+            let role = match role {
+                Role::Launcher => "missile".to_string(),
+                r => r.id().replace('_', " "),
+            };
+            format!("marks in every {role} weapon skill {}", percent(value))
+        }
+        TalentEffect::TwoHandedCrit { value } => {
+            format!("critical multiplier +{value} with a two-handed weapon (at most \u{d7}5)")
+        }
+        TalentEffect::UnarmedDie { sides } => {
+            format!("blows with nothing in hand and kicks roll 1d{sides}")
+        }
+        TalentEffect::StanceDodge { stance, percent } => {
+            format!("{} stance's Dodge penalty {percent} % smaller", stance.id())
+        }
+        TalentEffect::StepPercent {
+            value,
+            unarmoured,
+            unburdened,
+            no_shield,
+        } => {
+            let mut when = Vec::new();
+            if unarmoured {
+                when.push("in no body armour");
+            }
+            if unburdened {
+                when.push("Unburdened");
+            }
+            if no_shield {
+                when.push("with no shield");
+            }
+            let when = if when.is_empty() {
+                String::new()
+            } else {
+                format!(" while {}", when.join(" and "))
+            };
+            format!("steps cost {}{when}", percent(value))
+        }
+        TalentEffect::Steadfast => "Burdened costs you nothing (as a dwarf)".to_string(),
+        TalentEffect::DiseaseImmune => "you never catch a disease".to_string(),
+        TalentEffect::NoPenaltyTo { stat } => {
+            format!("no status lowers your {}", stat.name())
+        }
+        TalentEffect::RaisePercent { status: id, value } => {
+            format!(
+                "what {} raises your scores by {}",
+                status(&id),
+                percent(value)
+            )
+        }
+        TalentEffect::VeteransWind {
+            per_level,
+            at_least,
+            cooldown,
+        } => format!(
+            "active (the time of a wait): {per_level} hit point per level back at once, at \
+             least {at_least}; then {}",
+            status(&cooldown)
+        ),
+        TalentEffect::LayOnHands {
+            per_level,
+            cooldown,
+            degrees,
+        } => format!(
+            "active (the time of a cast): {per_level} hit points per level back at once; then \
+             {degrees} degrees of {}",
+            status(&cooldown)
+        ),
+        TalentEffect::Avatar => "Lay on hands heals every hit point and cures every status that \
+             ticks (bleeding, poison) and every disease, and its cooldown is half as long"
+            .to_string(),
+        TalentEffect::Rage { status: id } => format!(
+            "active (the time of a wait): you suffer {}; no rage while it or what follows it \
+             lasts",
+            status(&id)
+        ),
+        TalentEffect::BloodFrenzy { seconds } => {
+            format!(
+                "a kill of yours while raging keeps the rage {seconds} s longer (never past its full length)"
+            )
+        }
+        TalentEffect::Unstoppable { statuses } => {
+            let names: Vec<String> = statuses.iter().map(|s| status(s)).collect();
+            format!(
+                "while raging: {} tick nothing, and a blow that would take your last hit point \
+                 leaves it and ends the rage",
+                names.join(" and ")
+            )
+        }
+        TalentEffect::Whirlwind => {
+            "active (the time of a melee attack, one exertion): one blow at \
+             every hostile beside you, clockwise from the north"
+                .to_string()
+        }
+        TalentEffect::Smite {
+            per_levels,
+            sides,
+            cooldown,
+            degrees,
+        } => format!(
+            "active (the time of a melee attack), in a direction: a blow with 1d{sides} more \
+             damage per {per_levels} levels (at least 1d{sides}); then {degrees} degree of {}",
+            status(&cooldown)
+        ),
+        TalentEffect::Radiance { status: id, light } => {
+            let reach = (content.light_id(&light)).map_or(0, |l| content.light(l).radius);
+            format!(
+                "active (the time of a cast), on and off: while you are {} you shed a light \
+                 reaching {reach} cells",
+                status(&id)
+            )
+        }
+        TalentEffect::QuiveringPalm {
+            status: id,
+            severity,
+            cooldown,
+            degrees,
+        } => format!(
+            "active (the time of a melee attack), in a direction, nothing in hand: a bare-handed \
+             blow; a hit that does damage leaves {severity} degrees of {}; then {degrees} degrees \
+             of {}",
+            status(&id),
+            status(&cooldown)
+        ),
+        TalentEffect::Hardened { bonus } => format!(
+            "every level past the last that adds hit points adds them again, and {bonus} more"
+        ),
         TalentEffect::LauncherRange { value } => {
             format!("missile weapon range {} cells", signed(value))
         }

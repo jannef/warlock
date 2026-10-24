@@ -1,0 +1,8 @@
+[[talent]]
+id = "weapon_mastery"
+name = "Weapon mastery"
+tree = "class"
+granted = true
+description = "With a melee weapon you have mastered, your blows find the telling spot more often."
+effects = [{ kind = "weapon", role = "melee", threat = 1, at_rank = 8 }]
+systems = ["combat", "weapon_skills"]

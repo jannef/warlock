@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ You learn Brawn (1).
+ Warmth flows from your hands. You feel drained.
+
+
+
+                    ┌─ Abilities ──────────────────────────────────────────────┐
+                    │                                                          │
+                    │ Class                                                    │
+                    │ > a  Throw your voice   at a place you see               │
+                    │   b  Lay on hands       you are drained                  │
+                    │   c  Smite              in a direction                   │
+                    │ Skills                                                   │
+                    │   d  Handle animal      not usable yet                   │
+                    │   e  Heal               not usable yet                   │
+                    │   f  Intimidate         not usable yet                   │
+                    │ Weapon skills                                            │
+                    │   g  Shield bash        in a direction                   │
+                    │ Items                                                    │
+                    │   h  Hood your lantern                                   │
+                    │                                                          │
+                    │ Make a voice sound at a place you see nearby: those who  │
+                    │ hear it go and look there.                               │
+                    │                                                          │
+                    │ a-h or Enter use   Esc close                             │
+                    └──────────────────────────────────────────────────────────┘
+
+
+
+
+ The Hub  ·  HP 56/56  ·  MP 29/29  ·  Drained  ·  Lv 13  ·  08:00  ·  11 Darkening      ? controls

@@ -8,7 +8,8 @@ Experience (spec §8 "Experience", M21; to 60 in M30, #226, design `docs/design/
 kills (`[kills]`: `plateau`, `ramp`, `slope_per_100`, and the creature XP `guideline`), turned
 into a threshold table once at load with exact integer math (`Experience::threshold`, rounded
 once per level from the exact fraction; a test pins the table's hash, so a deliberate change to
-the curve updates it), `hp_level`, the WoW-style `kill_xp` scaling with its zero difference
+the curve updates it), `hp_level`, `mana_level` (mana per level: `World::level_up_mana`,
+`docs/dev/mana.md`), the WoW-style `kill_xp` scaling with its zero difference
 bands, and `[discovery]` (`first_kill_xp`, `arrival_xp`). A character's thresholds are scaled
 by their race's and their class's `experience` percents (`Factor`, `threshold_for`,
 `level_for(xp, factor)`); `Factor::of(content, spec)` is the one way to get the player's, and

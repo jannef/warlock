@@ -21,6 +21,8 @@
 #            1000; default 100. Louder noises carry farther; at most 300 still.
 #   regen    percent of the usual pace at which hit points come back inside, 1 to 1000;
 #            default 100
+#   mana_regen  percent of the usual pace at which mana comes back inside, 1 to 1000; default
+#            100
 #   shunned  creatures hostile to the player do not step into the room (they may still reach in
 #            with a blow from its edge, or shoot into it); default false
 #   floor    terrain generators lay over the room's floor (walkable, not stairs, doors, or
@@ -56,6 +58,7 @@ name = "sanctuary"
 mark = "p"
 enter = "You feel at peace here."
 regen = 300
+mana_regen = 300
 glow = [60, 44, 22, 0]
 shunned = true
 

@@ -1,0 +1,11 @@
+[[talent]]
+id = "armour_drill"
+name = "Armour drill"
+tree = "class"
+granted = true
+description = "You move freely in armour, and it sits right: your armour hampers your dodging less, and Protection +1 while you wear any."
+effects = [
+    { kind = "max_dex", value = 1 },
+    { kind = "protection", value = 1, body_armour = 1 },
+]
+systems = ["protection", "defence"]

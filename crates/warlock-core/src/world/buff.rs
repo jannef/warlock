@@ -70,6 +70,7 @@ impl World {
             Action::Dig(_) => ActionKind::Dig,
             Action::Search(_) => ActionKind::Search,
             Action::Disarm(_) => ActionKind::Disarm,
+            Action::Use(active, _) => active.cost(),
             Action::Sell(_)
             | Action::Pay(None)
             | Action::SetStance(_)
@@ -79,6 +80,7 @@ impl World {
             | Action::Effect { .. }
             | Action::Identify(_)
             | Action::Afflict(_)
+            | Action::Drain(_)
             | Action::Infect(_)
             | Action::Talent { .. }
             | Action::Advance(_)

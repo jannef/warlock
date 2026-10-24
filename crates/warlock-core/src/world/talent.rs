@@ -96,6 +96,14 @@ impl World {
             player.hp_base += hp;
             player.hp += hp;
             self.grant_class(level, true);
+            // Hardened: every level past the hit point levels adds a level's hit points again.
+            let hardened = self.state.player().talent_mods(&content).hardened;
+            if let Some(bonus) = hardened.filter(|_| level > content.experience().hp_level()) {
+                let hp = self.level_hp(&content) + bonus;
+                let player = self.player_mut();
+                player.hp_base += hp;
+                player.hp += hp;
+            }
             self.check_stats();
         }
         self.settle_due();

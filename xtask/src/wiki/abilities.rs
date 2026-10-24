@@ -4,7 +4,7 @@
 use super::actions::at_normal_pace;
 use std::fmt::Write as _;
 use warlock_core::ability::{Ability, Aim};
-use warlock_core::content::{BASE_TURN, Content, price};
+use warlock_core::content::{BASE_TURN, ClassActive, Content, price};
 
 /// Every ability, grouped as the menu groups them (by where they come from) and by name within a
 /// group: who has it, what it asks for, what it does, and how long it takes at a normal pace. A
@@ -18,14 +18,15 @@ pub(super) fn abilities(content: &Content) -> String {
     every.sort_by_key(|a| (a.source(), a.name(content).to_string()));
     for a in every {
         let who = match a {
-            Ability::Skill(_) => "everyone trained in the skill",
-            Ability::Disarm => "everyone trained in Disable device",
-            Ability::PickLock => "everyone trained in Open lock",
-            Ability::Steal => "everyone trained in Steal",
-            Ability::SecondWind => "everyone with the Second wind talent (not while winded)",
-            Ability::ShieldBash => "everyone (usable with a shield in hand)",
-            Ability::ThrowVoice => "everyone",
-            Ability::HoodLantern => "everyone (it needs a lantern with a hood)",
+            Ability::Class(active) => class_holders(content, active),
+            Ability::Skill(_) => "everyone trained in the skill".into(),
+            Ability::Disarm => "everyone trained in Disable device".into(),
+            Ability::PickLock => "everyone trained in Open lock".into(),
+            Ability::Steal => "everyone trained in Steal".into(),
+            Ability::SecondWind => "everyone with the Second wind talent (not while winded)".into(),
+            Ability::ShieldBash => "everyone (usable with a shield in hand)".into(),
+            Ability::ThrowVoice => "everyone".into(),
+            Ability::HoodLantern => "everyone (it needs a lantern with a hood)".into(),
         };
         let (asks, takes) = match a.cost() {
             Some(kind) => {
@@ -43,6 +44,27 @@ pub(super) fn abilities(content: &Content) -> String {
         );
     }
     out
+}
+
+/// Who has class active `active`: the classes whose table gives it, from which level, by name
+/// ("paladins from level 12").
+fn class_holders(content: &Content, active: ClassActive) -> String {
+    let book = content.talents();
+    let mut who: Vec<(String, u8)> = (content.classes().iter())
+        .filter_map(|c| {
+            let (level, _) = c.abilities.iter().find(|(_, talent)| {
+                (book.id(talent)).is_some_and(|t| {
+                    (book.get(t).effects.iter()).any(|e| e.active() == Some(active))
+                })
+            })?;
+            Some((c.name.to_lowercase(), *level))
+        })
+        .collect();
+    who.sort();
+    let parts: Vec<String> = (who.iter())
+        .map(|(class, level)| format!("{class}s from level {level}"))
+        .collect();
+    parts.join(", ")
 }
 
 /// What an ability asks for before it is used, in words.

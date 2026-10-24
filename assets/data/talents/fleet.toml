@@ -1,0 +1,8 @@
+[[talent]]
+id = "fleet"
+name = "Fleet"
+tree = "class"
+granted = true
+description = "In no body armour and with no shield, you move a little quicker."
+effects = [{ kind = "step_percent", value = -10, unarmoured = true, no_shield = true }]
+systems = ["speed"]

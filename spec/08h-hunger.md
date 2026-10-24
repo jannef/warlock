@@ -26,7 +26,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     begins (`World::run_turn`), one draw of the gameplay stream with `[fainting] chance` (5 %;
     none drawn otherwise): "You faint from hunger." and the player loses `turns` (5) turns, a
     wait's price each added to their action's, while the others act (`World::faint`).
-    **Starving**: no hit points come back (`World::healing_rate`, "Healing" above), and
+    **Starving**: no hit points come back (`World::healing_rate`, "Healing" above), nor mana
+    (`World::mana_rate`, §8 "Mana"), and
     `[starving] damage` (1) are lost every `seconds` (600) of game time (banked,
     `Satiation::starving`), until the player starves to death at that moment ("You starve to
     death...", `Cause::Starvation`; no creature killed them, so no `Event::Died`). **Bloated**: every price the player pays is raised by `[bloated] slow`

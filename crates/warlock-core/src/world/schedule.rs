@@ -196,6 +196,17 @@ impl World {
                 price = percent_of(price, u32::try_from((100 + percent).max(1)).unwrap_or(1));
             }
         }
+        // Fast movement and Fleet (spec §8 "Class abilities"): lighter steps, unarmoured.
+        let talents = actor.talent_mods(&self.content);
+        if !talents.step_percent.is_empty() {
+            let armoured = actor.wears_body_armour(&self.content);
+            let burdened = self.load_of(id).penalty() != crate::burden::Burden::Unburdened;
+            let shield = actor.shield(&self.content).is_some();
+            let percent = talents.step_percent(armoured, burdened, shield);
+            if percent != 0 {
+                price = percent_of(price, u32::try_from((100 + percent).max(1)).unwrap_or(1));
+            }
+        }
         if fleeing {
             price = percent_of(price, self.content.stance_def(actor.stance).flee_cost);
             // Then its talents (Unflinching): a signed percent of the fleeing step.

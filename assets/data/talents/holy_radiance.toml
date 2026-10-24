@@ -1,0 +1,9 @@
+[[talent]]
+id = "holy_radiance"
+name = "Holy radiance"
+tree = "class"
+granted = true
+description = "A soft light shines about you while you will it (an ability, on and off); everyone sees it."
+effects = [{ kind = "radiance", status = "radiant", light = "item_glow" }]
+systems = ["light"]
+needs = { requires_alignment = { min = "good" } }

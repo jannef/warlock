@@ -3,6 +3,8 @@
 # [healing]
 #   resting   how fast hit points come back while you rest (R), in percent of the normal pace
 #             (one hit point per max(60 s, 360 s - 12 s x Toughness) of game time)
+#   mana_resting  how fast mana comes back while you rest, in percent of the normal pace (one
+#             point per max(60 s, 360 s - 12 s x Willpower) of game time; default 200)
 #
 # [[status]], in order of importance: the status bar shows the first first, and gives way from
 # the last. A status has a severity in degrees (never shown to the player) and lives in game time:
@@ -19,6 +21,8 @@
 #   eases      seconds for it to ease by one degree; at none it is gone. None: until cured
 #   regen      how fast hit points come back while it lasts, in percent of the normal pace
 #              (default 100; 0 none). With several statuses the slowest counts
+#   mana_regen how fast mana comes back while it lasts, the same way (default 100)
+#   mana_damage  mana each tick drains (default 0; needs a tick): never below 0, never a death
 #   penalty    what it does to stats from a severity on: { from = 4, strength = -1 }; every rule
 #              reads the stat that much lower (combat, burden, hit points); several add up. A
 #              positive number raises the stat instead (-10 to 10)
@@ -48,6 +52,7 @@
 
 [healing]
 resting = 200
+mana_resting = 200
 
 # Wounds bleed: a hit point every 40 seconds for each degree, easing a degree a minute.
 [[status]]
@@ -68,7 +73,8 @@ dies = "bleeds to death"
 death = "Bled to death"
 
 # Poison works slowly: a hit point every two minutes for each degree, easing a degree every two
-# minutes, so a stronger dose lasts longer; strong poison weakens.
+# minutes, so a stronger dose lasts longer; strong poison weakens. A sick head gathers mana at
+# half the pace.
 [[status]]
 id = "poisoned"
 name = "Poisoned"
@@ -79,6 +85,7 @@ damage = 1
 damage_type = "poison"
 eases = 120
 regen = 50
+mana_regen = 50
 penalty = { from = 4, strength = -1, dexterity = -1 }
 start = "You feel sick."
 end = "The poison wears off."
@@ -88,13 +95,14 @@ death = "Died of poison"
 # What every disease shows as (diseases.toml): one status for them all, while at least one of
 # them shows (its incubation over). Diseases give it and take it away, so it has no timers or
 # cures of its own; the diseases speak for themselves (onset, symptoms, recovery), so it says
-# nothing as it begins and ends. Hit points come back at half the pace; a disease may slow them
-# more (its own regen).
+# nothing as it begins and ends. Hit points and mana come back at half the pace; a disease may
+# slow them more (its own regen and mana_regen).
 [[status]]
 id = "diseased"
 name = "Diseased"
 max = 1
 regen = 50
+mana_regen = 50
 dies = "succumbs to disease"
 death = "Died of disease"
 
@@ -133,6 +141,38 @@ stacking = "refresh"
 eases = 900
 start = "You are winded."
 end = "You have your breath back."
+
+# The cooldown of a class's blow (Smite: one degree; Quivering palm: two), five minutes a degree.
+[[status]]
+id = "spent"
+name = "Spent"
+max = 2
+stacking = "refresh"
+eases = 300
+start = "You are spent."
+end = "You feel your strength gather again."
+
+# Lay on hands' cooldown (two degrees; one with Avatar), five minutes a degree: the paladin's
+# gift waits for the mana it will cost.
+[[status]]
+id = "drained"
+name = "Drained"
+max = 2
+stacking = "refresh"
+eases = 300
+start = "You feel drained."
+end = "Your strength of spirit returns."
+
+# Holy radiance: a faint light about the paladin (the light is the ability's), until they put it
+# out again from the abilities menu.
+[[status]]
+id = "radiant"
+name = "Radiant"
+seen = "shining"
+max = 1
+stacking = "refresh"
+start = "A soft light shines about you."
+end = "Your light fades."
 
 # A staggering blow's (the Staggering blow talent): the next action, taken within a turn's time,
 # costs half again as much.

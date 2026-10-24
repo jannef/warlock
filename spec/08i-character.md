@@ -81,6 +81,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     toward evil), never alone out of Neutral, but the evil races (#255) start on the evil side:
     goblins, kobolds, lizardfolk, and ratfolk Callous (−200), drow and duergar Evil (−450), so a
     drow paladin starts Neutral and a goblin thief Evil. It draws nothing.
+  - **Mana**: the race's and the class's `mana` add to the mental stats' modifiers for the
+    maximum (§8 "Mana").
   - **Weapon skills** ("Weapon skills" below): the race's starting ranks plus the class's, plus
     one set of the class's `weapon_skill_choice` if it has one, at most 10 each; each then
     raises the skills it defaults to. Dice among them roll from their own stream,
@@ -452,6 +454,68 @@ developer notes (CLAUDE.md, `docs/dev/`).
     prerequisites and whether each holds, and the ways it may be taken now); the dumps'
     `talents` and dev `progress` layers; JSON `talents`, `due`. Never a rule's number: the
     wiki's Talents page states them.
+- **The adventurers' class tables, and the class actives** (`content/class.rs`: `ClassActive`;
+  `world/class_ability.rs`; M30, #243; design `docs/design/progression.md` §4.2–4.5): the
+  warrior, barbarian, paladin, and monk have level tables as the everyday folk do (the
+  "Class abilities" bullet above): `abilities` rows naming talents of the class tree
+  (`data/talents/`, `granted`) and `bonus_talents`.
+  - **Who has them**: given as the level comes, "You gain Rage." (the shared rules of the bullet
+    above); each is read with the talents through `Actor::talent_mods`. Their effects are the
+    talents' kinds and the class's own (the effects README of `data/talents/`); an active's
+    effect (`rage`, `veterans_wind`, `whirlwind`, `lay_on_hands`, `smite`, `radiance`,
+    `quivering_palm`) makes the talent that has it the ability's name and description in the
+    menu, and its `requires_alignment` need is what the active asks of the paladin. Monk's
+    Deflect missiles is the ordinary talent, handed out. Shared entries (`divine_health` is
+    the paladin's, `purity_of_body` the monk's) are a talent each.
+  - **Bonus picks**: warrior (Weaponcraft or Guard) at 4, 10, 16, 22, 28, 34, 46, 58;
+    barbarian (Might or Vigour), paladin (Guard or Vigour), monk (Finesse or Vigour) at 10, 20,
+    30, 45, 55; as the bullet above says.
+  - **Actives** (`Ability::Class`, the abilities menu's Class group; `Action::Use`, `use:rage`,
+    `use:smite:E`; refused, no time, without the ability, while its cooldown lasts, or while
+    the player has strayed from the band it asks): Rage (Raging: St +2, To +2, In −2, no
+    reading, 5 minutes, then Exhausted 10 minutes; no rage while either lasts; a wait's time),
+    Veteran's wind (1 hit point a level back, at least 10, then Winded; a wait), Whirlwind (a
+    blow at every hostile beside, clockwise from the north, each with the free blows the end of
+    an attack brings, for one melee attack's price and one exertion), Lay on hands (2 hit
+    points a level, then two degrees of Drained, 10 minutes, standing in for its mana until
+    the mana PR; a cast; Good or better), Smite (a blow in a direction with 1d6 more per 10
+    levels, at least 1d6, a magic weapon's extra die folded into the bonus at its average; then
+    Spent, 5 minutes; Good or better), Holy radiance (on and off: Radiant, with no end of its
+    own, sheds the faint item glow, reaching 3 cells, from the player, a light source like a
+    glowing item's; a cast; Good or better), Quivering palm (a bare-handed blow in a direction,
+    refused with a weapon in hand; a hit that does damage leaves three degrees of Bleeding;
+    then two degrees of Spent, 10 minutes).
+  - **Passives**, each one read: Weapon drill (melee weapon skill marks +25 %, `practise`),
+    Shield line and Shield of faith (Shield +1; Shield of faith also +10 to Sword and Board's
+    bash chance), Cleaving strike (the cleave free blow; with the Cleave talent too, great
+    cleave), Armour drill (worn armour's Dexterity cap +1, Protection +1 while wearing any),
+    Weapon mastery (threat +1 with melee weapon skills at rank 8 or more), Iron stance (the
+    aggressive stance's Dodge penalty and the defensive's to-hit penalty gone), Champion
+    (critical multiplier +1 with melee weapons, at most ×5); Thick hide (natural armour +2 in
+    no body armour: nothing in the Body slot), Fast movement (steps 10 % cheaper Unburdened in
+    no body armour, `World::step_price`), Brutal critical (critical multiplier +1 with a
+    two-handed weapon), Hardened (each level past `hp_level` adds the level's hit points again
+    and 1 more), Mighty thews, Blood frenzy (a kill while raging sets the rage's easing back a
+    minute, never past its full length), Mighty rage (Raging's raises doubled, Exhausted eases
+    twice as fast), Unstoppable (while raging bleeding and poison tick nothing, and a blow that
+    would take the last hit point leaves it and ends the rage, so once a rage); Divine grace
+    (disease checks +2, poison eases twice as fast), Divine health and Purity of body (no
+    disease is ever caught: `World::expose` refuses, nothing rolled), Steadfast (Burdened costs
+    nothing, as a dwarf), Bulwark (Protection +2), Avatar (Lay on hands heals fully, cures every
+    status that ticks and every disease, one degree of Drained); Martial arts (bare hands and
+    kicks roll 1d6), Fleet (steps 10 % cheaper in no body armour and with no shield), Deflect
+    missiles (Dodge +2 against missiles), Flurry (a melee attack with nothing in hand strikes
+    twice, the second at −2), Still mind (+2 on checks made with Willpower: diseases', noticing
+    in passing; no status lowers Intelligence or Willpower), Diamond soul (Deflection +2),
+    Perfect self (bare hands 1d8; unarmed threat +1, critical multiplier +1). The paladin's
+    passives do not ask for Good; only the gifts used from the menu do.
+  - **Resources to come**: Rage, Blood frenzy, Mighty rage, Unstoppable, Flurry, and Quivering
+    palm ship as statuses and passives and move onto alternative resources with #225.
+  - **Coverage**: `min_class` stays 0 until every class has its table.
+  - **What the player sees**: the news of each level ("You gain Rage."); the actives in the
+    abilities menu with their cooldowns, and the abilities in the dumps' `abilities` layer.
+    Never a number the game hides: the wiki's class tables state the rules. **Saves change**
+    (new status ids).
 - **Weapon skills** (`warlock-core/src/weapon_skills.rs`, training; `content/weapon_skill.rs`,
   the data; M22, #134), ADOM-like, with *The Riddle of Steel*'s defaults:
   - **Skills** (`data/weapon_skills.toml`, §7): the categories weapons belong to. A skill's
