@@ -4,6 +4,7 @@ name = "Merchant"
 description = "A trader who knows the price of everything: shrewd and persuasive, softened by years behind a counter."
 stats = { strength = -1, dexterity = -1, toughness = -1, intelligence = "1d2", presence = "1d3" }
 hp = 2
+mana = 2
 experience = 90
 skills = { appraise = "2d6+10", bluff = "2d6+10", knowledge = "2d4+4" }
 known_for = ["appraise", "bluff"]

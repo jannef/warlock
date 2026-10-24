@@ -292,6 +292,8 @@ pub struct Start {
     pub vision: String,
     /// What the race and the class add to the hit points (spec §8 "Combat").
     pub hp: i32,
+    /// What the race and the class add to the mana (spec §8 "Mana").
+    pub mana: i32,
     /// The trained skills, with their starting values (spec §8 "Skills").
     pub skills: Skills,
     /// Starting ranks in weapon skills, defaults included (spec §8 "Weapon skills").
@@ -362,6 +364,7 @@ impl CharacterSpec {
             stats: starting_stats(by, potential, content.races().base_potential),
             vision: race.vision.clone(),
             hp: race.hp + class.hp,
+            mana: race.mana + class.mana,
             skills,
             weapon_skills,
             alignment: Score::new(race.alignment + class.alignment),

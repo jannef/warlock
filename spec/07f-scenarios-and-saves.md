@@ -9,10 +9,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Year 1444) and `start_time = "hh:mm"` (default `"08:00"`), and the player's character when the run
   does not choose one: `character = { race = "human", gender = "female", class = "thief" }` (ids in
   `races.toml` and `classes/`; gender `male`, `female`, or `other`), from which the player's
-  eyes, stats, and hit points follow. A scenario without a character (test fixtures, content without
+  eyes, stats, hit points, and mana follow. A scenario without a character (test fixtures, content without
   races or classes) gives them itself: `vision` (default `normal`), `stats` and `potential` as for
-  creature types (default 10 each, the potential the score), and `hp` (the hit points beyond
-  Toughness a race and a class would give, 0 to 1000, default 0); with a character these four are
+  creature types (default 10 each, the potential the score), `hp` (the hit points beyond
+  Toughness a race and a class would give, 0 to 1000, default 0), and `mana` (the mana beyond the
+  mental stats' modifiers, the same way; §8 "Mana"); with a character these five are
   refused; such a player is trained in no skill (§8 "Skills"). A scenario may give a starting
   pack, `carry = ["ration*3"]` (as level files place objects; no corpses): on top of the
   character's starting kit when the player chose the character (§8 "Character creation":

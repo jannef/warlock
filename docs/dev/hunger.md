@@ -43,7 +43,8 @@ beside it: the player's nutrition burns inside `World::live` (status effects' ev
 through `pass_time` by `run_turn`), each change of state and each hit point lost to starving a
 moment of its own (`World::until_hungrier`, `World::digest(id, seconds)` in `world/hunger.rs`),
 so splitting time never changes the result and the player starves to death at the exact moment;
-`World::healing_rate` (the one pace) gives a Starving player none; a race that `eats_rotten`
+`World::healing_rate` (the one pace) gives a Starving player none, and so does
+`World::mana_rate` (`docs/dev/mana.md`); a race that `eats_rotten`
 (ratfolk) skips everything rotten food does but feed (the top of `World::eat_rotten`); harm from
 food (rotten food,
 `on_eat` `harm`) is `World::afflict` of the `sickness` status (poisoned: "You feel

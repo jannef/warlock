@@ -77,7 +77,9 @@ Each level up to 20 raises your maximum **hit points** (and the hit points you h
 your class's hit points plus your Toughness's share, at least 1 (see
 [Combat](combat.md#hit-points)). From level 21 on, levels grow no hit points: hit point pools do
 not run away. Each level also gives every stat a chance to rise by what you have done with it
-since (see [Stats](stats.md#training)).
+since (see [Stats](stats.md#training)). Up to level 30 each level raises your **mana** too, by
+half your class's mana plus what the better of your Intelligence and Willpower adds, if that
+comes to anything (see [Mana](mana.md)).
 
 Every level also gives **skill rolls**: two for most classes, three for a thief or a ranger, four
 for a bard, one more for a human, and more for a high Intelligence. You spend them on your trained

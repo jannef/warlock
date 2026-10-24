@@ -5,7 +5,7 @@
 //! character's experience factor (thresholds in `data/experience.toml`, times their race's and
 //! their class's `experience`), so only the total is saved. Each level gained, up to the file's
 //! `hp_level`, adds `max(1, class hp ÷ 2 + the Toughness modifier)` to the player's maximum hit
-//! points and to their current ones.
+//! points and to their current ones, and each up to `mana_level` adds mana (`world/mana.rs`).
 //!
 //! **Discovery** (`[discovery]`): the player's first kill of each creature type is worth the
 //! type's XP once more, unscaled ("You learn something of kobolds."), and their first arrival on
@@ -145,6 +145,7 @@ impl World {
             player.hp_base += hp;
             player.hp += hp;
         }
+        self.level_up_mana(before, after);
         self.news.push("You feel more experienced.".into());
         self.news.push(format!("Welcome to level {after}."));
         self.level_up(before, after);

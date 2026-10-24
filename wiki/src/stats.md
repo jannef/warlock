@@ -17,7 +17,7 @@ of 10 (see [Your character](character.md)). After that they grow by use: see
 Press `@` to open the **character screen**. It shows your name, your race, gender, and class,
 your age, birthday, and [birth sign](horoscope.md), your stats in the order above (with their
 short names; a stat that a status effect or a disease lowers is shown lowered, in red), your hit
-points and Defence (see [Combat](combat.md)), your weight: your own, plus what you carry (see [Objects and your pack](objects.md)), and how much you can carry (see
+points, mana (see [Mana](mana.md)), and Defence (see [Combat](combat.md)), your weight: your own, plus what you carry (see [Objects and your pack](objects.md)), and how much you can carry (see
 [Burden](burden.md)). Looking takes no time; press `@` or `Esc` to close it.
 
 Creatures have stats too, but you cannot see theirs in the game: they are on
@@ -25,8 +25,8 @@ Creatures have stats too, but you cannot see theirs in the game: they are on
 
 ## What they do
 
-In a fight (see [Combat](combat.md)), under a load (see [Burden](burden.md)), and at a door
-(see [Doors](doors.md)):
+In a fight (see [Combat](combat.md)), under a load (see [Burden](burden.md)), at a door (see
+[Doors](doors.md)), and in your mana (see [Mana](mana.md)):
 
 - **Strength** helps you hit up close and adds to the damage of your blows, and draws a bow. It
   counts double toward how much you can carry, and the stronger you are, the sooner you kick a
@@ -35,10 +35,12 @@ In a fight (see [Combat](combat.md)), under a load (see [Burden](burden.md)), an
   under a heavy load or heavy armour).
 - **Toughness** gives you hit points, and makes them come back sooner. It counts toward how much
   you can carry, and fights off most [diseases](diseases.md).
-- **Intelligence** helps you find hidden things when you search ([Searching](searching.md)).
-- **Willpower** helps you notice hidden things in passing, and fights off a few diseases (brain
-  fever).
-- **Presence** moves [shop](shops.md) prices in your favour, or against you if it is low.
+- **Intelligence** helps you find hidden things when you search ([Searching](searching.md)), and
+  adds to your [mana](mana.md).
+- **Willpower** helps you notice hidden things in passing, adds to your [mana](mana.md) and makes
+  it come back sooner, and fights off a few diseases (brain fever).
+- **Presence** moves [shop](shops.md) prices in your favour, or against you if it is low, and adds
+  to your mana.
 
 ### Modifiers
 

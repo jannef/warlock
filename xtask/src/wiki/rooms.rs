@@ -51,6 +51,9 @@ pub(super) fn special_rooms(content: &Content) -> String {
         if e.regen != 100 {
             does.push(format!("Wounds heal {} as fast.", times(e.regen)));
         }
+        if e.mana_regen != 100 {
+            does.push(format!("Mana comes back {} as fast.", times(e.mana_regen)));
+        }
         if e.shunned {
             does.push("Creatures hostile to you do not step in.".into());
         }

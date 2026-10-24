@@ -31,4 +31,4 @@ expression: "render(case, content.clone())"
               │ a-i look   i or Esc close                                            │
               └─ 1 Char · 2 Inventory · 3 Equip · 4 Skills · 5 Weapons · 6 Quests ───┘
 
- The Hub  ·  HP 17/17  ·  Burdened  ·  Lv 1  ·  08:04  ·  11 Darkening, Year 1444        ? controls
+ The Hub  ·  HP 17/17  ·  MP 2/2  ·  Burdened  ·  Lv 1  ·  08:04  ·  11 Darkening        ? controls

@@ -4,6 +4,7 @@ name = "Witch"
 description = "A hedge-magician of herbs, hexes, and old bargains: cunning, wise in strange ways, and feared."
 stats = { strength = -2, toughness = -1, intelligence = "1d3", willpower = "1d3", presence = "1d3-2" }
 hp = 1
+mana = 10
 experience = 115
 alignment = -200
 skills = { heal = "2d6+10", spellcraft = "2d6+10", concentration = "2d4+4", intimidate = "2d4+4", use_magic_device = "2d4+4" }
