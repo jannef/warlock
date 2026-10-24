@@ -69,7 +69,7 @@ fn class_holders(content: &Content, active: ClassActive) -> String {
 }
 
 /// Who has the birth sign's active `active`: those born under the animals and elements (and on
-/// the lucky days) whose gifts name its talent ("the Fire-born").
+/// the lucky days) whose gifts name its talent ("those born in the year of the Unicorn").
 fn sign_holders(content: &Content, active: SignActive) -> String {
     let Some(h) = content.horoscope() else {
         return String::new();

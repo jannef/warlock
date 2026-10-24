@@ -30,7 +30,7 @@ use crate::content::{
 };
 use crate::geom::{Dir, Pos};
 use crate::skills::{Effect, SkillId};
-use crate::world::{Actor, VOICE_RANGE};
+use crate::world::{Actor, STARE_RANGE, VOICE_RANGE};
 use std::borrow::Cow;
 
 /// An ability, as the abilities menu lists it.
@@ -388,7 +388,9 @@ impl Ability {
     pub const fn range(self) -> Option<i32> {
         match self {
             Ability::ThrowVoice => Some(VOICE_RANGE),
-            Ability::Sign(SignActive::Blaze)
+            Ability::Sign(SignActive::TransfixingStare) => Some(STARE_RANGE),
+            Ability::Sign(SignActive::HornsGrace)
+            | Ability::Sign(SignActive::Blaze)
             | Ability::Class(_)
             | Ability::Skill(_)
             | Ability::Disarm
@@ -551,7 +553,7 @@ mod tests {
         assert!(every.windows(2).all(|w| w[0].source() <= w[1].source()));
         assert_eq!(
             every.first(),
-            Some(&Ability::Sign(SignActive::Blaze)),
+            Some(&Ability::Sign(SignActive::HornsGrace)),
             "the birth sign's first"
         );
         let class = every.iter().find(|a| a.source() == Source::Class);

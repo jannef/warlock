@@ -72,6 +72,11 @@ the tables below give the exact rules. Some animals' gifts are still to come: th
 those already in the game. Fire's *Blaze* is used from the abilities menu (`a`), under *Birth
 sign*; afterwards you are *Burnt out* for a while and cannot use it again until that passes.
 
+Two gifts are things you do rather than rules that hold: the Unicorn's **Horn's grace** and the
+Basilisk's **Transfixing stare**. You use them from the abilities menu, under *Birth sign*; each
+then rests for a while (a status that wears off) before you can use it again. The
+[abilities](abilities.md) table lists them with everything else you can use.
+
 {{#include generated/horoscope-animals.md}}
 
 {{#include generated/horoscope-elements.md}}

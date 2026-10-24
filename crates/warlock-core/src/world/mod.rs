@@ -104,6 +104,7 @@ mod experience;
 mod eyes;
 mod fight;
 mod free_blow;
+mod gifts;
 mod glare;
 mod hash;
 mod hearing;
@@ -145,6 +146,7 @@ pub use disarm::SPRINGS_SHORT_BY;
 pub use experience::{Discovered, Progress};
 pub use fight::{Cause, Death};
 pub use free_blow::FreeBlows;
+pub use gifts::{STARE_RANGE, Streak};
 pub(crate) use hash::fnv1a;
 pub use lantern::Lantern;
 pub use level::{Fire, LevelState};
@@ -585,6 +587,7 @@ impl World {
             alignment_override: None,
             npc: None,
             talk: Talk::default(),
+            streak: None,
             satiation: content.hunger().map(|h| Satiation::new(h.start)),
             stance: CombatStance::Neutral,
             free_blows: FreeBlows::default(),
@@ -1070,6 +1073,8 @@ mod fight_tests;
 mod free_blow_tests;
 #[cfg(test)]
 mod gem_tests;
+#[cfg(test)]
+mod gifts_tests;
 #[cfg(test)]
 mod hearing_tests;
 #[cfg(test)]

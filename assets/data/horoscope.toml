@@ -42,40 +42,42 @@ id = "salamander"
 name = "Salamander"
 description = "The smallest racer, who rode the Hydra across the river and leapt through the gate first: quick and clever, if slight."
 stats = { dexterity = 1, intelligence = 1, strength = -1 }
-grants = ["fleet_footed", "slight"]
+grants = ["fleet_footed", "slip_away", "slight"]
 
 [[animal]]
 id = "hydra"
 name = "Hydra"
 description = "The strongest swimmer, who carried the Salamander across and was beaten by it at the gate: tireless and hard to kill, but of many minds."
 stats = { toughness = 2, intelligence = -1 }
-grants = ["regrowth", "strong_swimmer"]
+grants = ["regrowth", "strong_swimmer", "many_minds"]
 
 [[animal]]
 id = "manticore"
 name = "Manticore"
 description = "Ran the whole course without rest while every other racer fled its path: fierce and relentless, and little loved."
 stats = { strength = 1, toughness = 1, presence = -1 }
-grants = ["little_loved"]
+grants = ["relentless", "barbed_hide", "little_loved"]
 
 [[animal]]
 id = "unicorn"
 name = "Unicorn"
 description = "Crossed the river leaping from stone to stone without wetting a hoof: graceful and fair, and easily hurt."
 stats = { dexterity = 1, presence = 1, toughness = -1 }
-grants = ["pure_blood"]
+grants = ["pure_blood", "horns_grace", "thin_skinned"]
 
 [[animal]]
 id = "wyvern"
 name = "Wyvern"
 description = "Could have flown in first, but stopped to burn a path through the Mistwood for those behind: bold and generous, and clumsy on the ground."
 stats = { strength = 1, presence = 1, dexterity = -1 }
+grants = ["trailblazer", "flame_hardened", "heavy_footed"]
 
 [[animal]]
 id = "basilisk"
 name = "Basilisk"
 description = "Rode coiled around the Roc's talon and slid off in front of it at the gate: patient and unblinking, and trusted by no one."
 stats = { willpower = 2, presence = -1 }
+grants = ["unblinking", "transfixing_stare", "trusted_by_none"]
 
 [[animal]]
 id = "roc"

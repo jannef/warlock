@@ -4,7 +4,6 @@ expression: "render(case, content.clone())"
 ---
  You feel sick.
  You are bleeding.
-
               ┌─ Character ──────────────────────────────────────────────────────────┐
               │                                                                      │
               │ Tamsin                                                               │
@@ -13,7 +12,8 @@ expression: "render(case, content.clone())"
               │ Gender  Female                                                       │
               │ Class   Thief                                                        │
               │ Age 34 · born 29 Greenleaf 1410 · year of the Water Basilisk         │
-              │ Stars   Always a way, Tidal                                          │
+              │ Stars   Unblinking, Transfixing stare, Trusted by none, Always a way │
+              │         Tidal                                                        │
               │                                                                      │
               │ St  Strength       8                                                 │
               │ Dx  Dexterity     12                                                 │

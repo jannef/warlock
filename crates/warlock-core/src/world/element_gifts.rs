@@ -1,6 +1,7 @@
 //! The element gifts that are more than one read at a hook (spec §8 "Birth sign"; the talents of
 //! the `stars` tree): Fire's active, **Blaze**, used from the abilities menu's Birth sign group
-//! ([`crate::ability::Ability::Sign`]) as [`Action::Gift`] (`use:blaze`). The passive gifts
+//! ([`crate::ability::Ability::Sign`]) as [`Action::Gift`] (`use:blaze`), dispatched with the
+//! other actives by `World::use_gift` in `gifts.rs`. The passive gifts
 //! (Kindled's lantern, Forge-born's marks, Tidal's mana) are one read each where their rule
 //! lives: `WorldState::lantern_light`, `TalentMods::marks`, `World::mana_rate`.
 //!
@@ -17,7 +18,6 @@
 use super::level::Fire;
 use super::spell::{Caster, burst_cells};
 use super::{ActorId, Spent, World};
-use crate::ability::{Ability, Unavailable};
 use crate::action::{Event, SpellShape};
 use crate::content::SignActive;
 use crate::damage::Damage;
@@ -27,39 +27,8 @@ use crate::time::Duration;
 use std::collections::BTreeSet;
 
 impl World {
-    /// `use:ID[:X,Y]` ([`Action::Gift`](crate::action::Action::Gift)): the player uses the
-    /// birth sign's active `active`, at cell `at` if it asks for one. Refused, taking no time,
-    /// without it and while its cooldown lasts.
-    pub(super) fn use_gift(
-        &mut self,
-        active: SignActive,
-        _at: Option<Pos>,
-        events: &mut Vec<Event>,
-    ) -> Spent {
-        let content = self.content.clone();
-        let ability = Ability::Sign(active);
-        let me = self.state.player();
-        if !ability.had_by(me, &content) {
-            self.say("You have no such gift.");
-            return Spent::Nothing;
-        }
-        if let Some(why) = ability.unavailable(me, &content) {
-            self.say(match why {
-                Unavailable::While(status) => format!(
-                    "You are still {}.",
-                    content.status(status).name.to_lowercase()
-                ),
-                other => format!("You cannot: {}.", other.reason(&content)),
-            });
-            return Spent::Nothing;
-        }
-        match active {
-            SignActive::Blaze => self.blaze(events),
-        }
-    }
-
     /// Blaze (module docs): flames burst from the player, for the time of a `cast`.
-    fn blaze(&mut self, events: &mut Vec<Event>) -> Spent {
+    pub(super) fn blaze(&mut self, events: &mut Vec<Event>) -> Spent {
         let content = self.content.clone();
         let player = self.state.player;
         let Some(blaze) = self.state.player().talent_mods(&content).blaze else {

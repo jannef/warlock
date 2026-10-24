@@ -35,6 +35,7 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `max_dex` | `Actor::defence`: the burden's cap on Dexterity (only while burdened) |
 | `protection` | `Actor::protection`, with the creature type's natural Protection |
 | `threat`, `reroll_fumble` | `Actor::stanced` (every attack profile; never below 3), `World::resolve` → `combat::strike_with` |
+| `streak` | `World::resolve` → `World::relentless` (`world/gifts.rs`): +1 to hit a blow in the streak, to `max`, from `Actor::streak` (saved and hashed, left out while `None`) |
 | `ease`, `poison_spares_scores` | `World::live` (`Effect::until_eases_at`/`advance_at`), `Actor::penalty` (`Effects::penalty_unless`) |
 | `disease_checks` | `World::expose` and `disease_turn` |
 | `swimmer` | `World::step_price` (wading terrain: `world/stars.rs::wading`), `World::wade` |
@@ -72,14 +73,18 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `protection` | `Actor::protection` through `talent_protection` (`TalentMods::protection_with`: the piece worn with the most Protection counts as body armour; a shield in a hand slot) |
 | `stance_to_hit` | `Actor::stanced` (`TalentMods::stance_to_hit`: a penalty only, rounded toward 0) |
 | `flee_percent` | `World::step_price` while fleeing, after the stance's `flee_cost` |
+| `slip_percent` | `World::slipped` (`world/gifts.rs`), on the player's step price in `travel.rs`: some hostile beside, none beside the cell stepped to; whatever the stance |
 | `pain` | `World::hurt` for `Harm::Actor` and `Harm::Trap`, damage over 1 |
-| `resist` | `Actor::resistances`, as gear (`Resistances::sum` caps it) |
+| `barbs` | `World::resolve` → `World::barbed` (`world/gifts.rs`) after a melee blow that hurt and left the target alive: `hurt(attacker, barbs, Harm::Barbs)`, no roll, no noise, a death of it earns nothing |
+| `resist` | `Actor::resistances`, as gear (`Resistances::sum` caps it); `damage` names the kind (Flame-hardened's fire), else the choice |
 | `resting_percent` | `World::healing_rate`, on resting's pace (Fast healer) |
 | `second_wind` | `world/second_wind.rs` (`Action::SecondWind`, `Ability::SecondWind` under `Source::Talent`): hit points back, then its `cooldown` status |
+| `horns_grace`, `stare` | `world/gifts.rs` (`Action::Gift`, `Ability::Sign(SignActive)` under `Source::Sign`): the birth sign's actives, then their `cooldown` statuses (`TalentMods::sign_cooldown`) |
 | `iron_stomach` | `eat.rs`: `eat_rotten` (no vomiting, no draw for it; sickness halved) and `feed` (overeating never vomits) |
 | `status_eases` | `World::live`: the sufferer's easing pace, `TalentMods::eases_every` into `Effect::until_eases_every`/`advance_every` |
 | `no_penalty`, `penalty_percent` | `Actor::penalty` through `Effects::penalty_for` (`TalentMods::penalty`: lowerings only, toward 0) |
 | `clotting` | `World::wounded` |
+| `wound_more` | `World::wounded`: a big hit that wounds at all, that many degrees more |
 | `disease_checks`, `disease_recovery` | `World::expose`, `World::disease_turn` |
 | `kick_die` | `Actor::kick` |
 | `door_kick` | `World::kick_door` (added to Strength and athletics) |
@@ -132,6 +137,7 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `gem_cut` | `gem::cut_finer` in `instantiate_level` (loose gems of a level made from then on) and `World::loot_of` (a drop) |
 | `skill` | `Actor::skill_effect`, as magic items' skill bonuses |
 | `make_way` | `World::refusal`: everyone budges (sizes and overloading still stop a swap) |
+| `distrusted` | `World::refusal`: no one budges, `make_way` or not (Trusted by none) |
 | `missile_breaks` | `World::loose` (the break chance scaled) |
 | `checks` | the stat checks: `disease.rs` (both), `search_modifier`, `lockpick.rs`, `disarm_modifier`, `steps_lightly` |
 | `critical_confirm` | `Actor::stanced` → `Profile::confirm`, added to the confirmation roll in `combat::strike` |

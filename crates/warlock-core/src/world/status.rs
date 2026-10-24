@@ -191,8 +191,10 @@ impl World {
         };
         let critical = matches!(blow.strike, Strike::Hit { critical: true });
         let big = combat::big_hit(blow.damage, victim.max_hp(&content));
-        // Clotting (spec §8 "Talents"): a big hit wounds no more, a critical a degree less.
-        let clots = victim.talent_mods(&content).clotting;
+        // Clotting (spec §8 "Talents"): a big hit wounds no more, a critical a degree less;
+        // Thin-skinned (spec §8 "Birth sign"): a big hit that wounds, degrees more.
+        let mods = victim.talent_mods(&content);
+        let (clots, thin) = (mods.clotting, if big { mods.wound_more } else { 0 });
         for (status, def) in content.status_ids() {
             let degrees = (def.wound.as_ref())
                 .filter(|w| w.caused_by(blow.kind))
@@ -202,6 +204,7 @@ impl World {
                     (true, true) => w.degrees(true, big).saturating_sub(1),
                 });
             if degrees > 0 {
+                let degrees = degrees.saturating_add(thin);
                 self.afflict(target, status, degrees, by, events);
             }
         }

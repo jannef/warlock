@@ -12,7 +12,8 @@ expression: "render(case, content.clone())"
               │ Gender  Female                                                       │
               │ Class   Thief                                                        │
               │ Age 34 · born 29 Greenleaf 1410 · year of the Water Basilisk         │
-              │ Stars   Always a way, Tidal                                          │
+              │ Stars   Unblinking, Transfixing stare, Trusted by none, Always a way │
+              │         Tidal                                                        │
               │                                                                      │
               │ St  Strength       8                                                 │
               │ Dx  Dexterity     12                                                 │
@@ -35,6 +36,5 @@ expression: "render(case, content.clone())"
               │                                                                      │
               │ @ or Esc close   S skills                                            │
               └─ 1 Character · 2 Inv · 3 Equip · 4 Skills · 5 Weapons · 6 Quests ────┘
-
 
  The Hub  ·  HP 17/17  ·  MP 2/2  ·  Diseased  ·  Weak  ·  Lv 1  ·  08:01                ? controls

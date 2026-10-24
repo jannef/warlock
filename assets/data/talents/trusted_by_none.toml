@@ -1,0 +1,9 @@
+[[talent]]
+id = "trusted_by_none"
+name = "Trusted by none"
+tree = "stars"
+granted = true
+flaw = true
+description = "No one makes way for you: you walk around."
+effects = [{ kind = "distrusted" }]
+systems = ["talk"]

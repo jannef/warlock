@@ -125,7 +125,7 @@ fireball, lightning, frost), `read:b:c` reads it on inventory stack `c` (the scr
 identify); `dig:E` digs into the wall east with the tool in the Tool slot, turn
 after turn until it gives way or something interrupts; `search` searches the cells around the
 player for secret doors and hidden traps, `search:N` for up to N turns (1 to 100), stopping when
-something is found; `second_wind` uses the Second wind talent (hit points back at once, then Winded); `use:rage` uses a class ability (spec §8 "Class abilities"; `use:smite:E` one aimed in a direction: rage, veterans_wind, whirlwind, lay_on_hands, smite, holy_radiance, quivering_palm), or a birth sign's active gift (`use:blaze`, the Fire-born's); `disarm:E` tries to disarm the trap the player knows of east of them (the
+something is found; `second_wind` uses the Second wind talent (hit points back at once, then Winded); `use:rage` uses a class ability (spec §8 "Class abilities"; `use:smite:E` one aimed in a direction: rage, veterans_wind, whirlwind, lay_on_hands, smite, holy_radiance, quivering_palm; a birth sign's active the same way, `use:horns_grace`, `use:blaze`, or aimed at a cell, `use:transfixing_stare:12,5`); `disarm:E` tries to disarm the trap the player knows of east of them (the
 Disarm ability, for those trained in Disable device; refused, with no time, without the skill
 or a known trap there); `chat:E` talks to the creature east of
 the player, `ask:E:rooms` asks it about topic `rooms` (an id in `assets/data/dialogue.toml`;

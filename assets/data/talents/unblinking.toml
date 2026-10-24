@@ -1,0 +1,8 @@
+[[talent]]
+id = "unblinking"
+name = "Unblinking"
+tree = "stars"
+granted = true
+description = "You notice hidden things in passing, as if trained to spot them."
+effects = [{ kind = "notice", value = 2 }]
+systems = ["searching"]

@@ -146,6 +146,19 @@ any rule change does; the birth draws are untouched, so seeds keep their dates a
 gifts' effects are `TalentEffect`s read at one hook each (`docs/dev/progression.md`); `stars.rs`
 also says what is wading (`wading`: terrain that freezes, or a disease's wading ground).
 
+The gifts from the Salamander to the Basilisk (#266) that are more than a read at a hook live in
+`world/gifts.rs`: the actives (`SignActive` in `content/horoscope.rs`, `Ability::Sign` under
+`Source::Sign`, `Action::Gift`, `World::use_gift`: Horn's grace, the Transfixing stare at
+`STARE_RANGE`, creature sight through `World::sees_now` in `ambush.rs`), Relentless's streak
+(`Streak { target, count, turn }` on `Actor::streak`, saved and hashed and left out of the JSON
+while `None`; a blow continues it at the same target while `turn <= streak.turn + 1`, the player's
+turn counter, so anything else in between starts it over), Barbed hide (`World::barbed`,
+`Harm::Barbs`), and Slip away (`World::slipped`). The cooldowns and the stare's hold are statuses
+(`graceless`, `spent_eyed`, `transfixed` in `data/status.toml`). Most scenarios' characters are
+Water Basilisks, so their runs now notice in passing (Unblinking draws a check a turn near
+hidden things), list the stare first in the abilities menu, and are made way for by no one.
+Tests: `world/gifts_tests.rs`.
+
 The Roc to the Barghest (#267) add Eyes of the heights, Hoard sense, Watchful, Set in its ways,
 Old lore, Rise from the ashes, Inner light, Frail, Grasping arms, Of the deep, Ungainly ashore,
 Hound's nose, and Gatekeeper (their effect kinds and hooks: `docs/dev/progression.md`). Rise from
@@ -157,12 +170,10 @@ case `eat-screen-smell` (seed 21, a Barghest).
 
 The element gifts (#268): Kindled is `lantern_light` (Lamplighter's preset; the two do not
 stack), Forge-born `weapon_marks` without a `role` (every weapon skill and style, read in
-`TalentMods::marks`), Tidal `mana_regen_percent` (`World::mana_rate`). Blaze is the first
-**sign active**: `content::SignActive` (in `content/horoscope.rs`; id, aim, cost), the
-`TalentEffect::Blaze` that makes a talent one (`Content::sign_active`), `TalentMods::blaze`,
-`Ability::Sign` under `Source::Sign` ("Birth sign", between Racial and Class), and
-`Action::Gift(active, cell)` (`use:blaze`, priced in `buff.rs` by its cost). Its dispatch and
-rule are `world/element_gifts.rs` (`use_gift`, `blaze`, `kindle`): the burst's cells from
+`TalentMods::marks`), Tidal `mana_regen_percent` (`World::mana_rate`). Blaze is Fire's **sign active**, the third after #266's: `TalentEffect::Blaze` makes the talent
+one (`Content::sign_active`), `TalentMods::blaze`; it is used as `Action::Gift` (`use:blaze`,
+priced in `buff.rs` by its `cast` cost) and dispatched by `World::use_gift` in `world/gifts.rs`.
+Its rule is `world/element_gifts.rs` (`blaze`, `kindle`): the burst's cells from
 `spell::burst_cells`, one gameplay roll, `World::spell_hurts` for each creature but the player,
 `World::shock(Heat)`, a `LevelState::fires` entry on each walkable cell but the player's, said
 with `read.rs::say_spell` ("The blaze burns the kobold."), then the `burnt_out` status (12 h).

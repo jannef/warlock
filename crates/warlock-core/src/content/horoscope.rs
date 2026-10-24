@@ -508,21 +508,33 @@ mod tests {
 
 /// A birth sign's active gift (spec §8 "Birth sign"): a talent of the `stars` tree with an
 /// active effect, used from the abilities menu's Birth sign group as
-/// [`crate::action::Action::Gift`] (`use:blaze`).
+/// [`crate::action::Action::Gift`] (`use:horns_grace`, `use:transfixing_stare:12,5`, `use:blaze`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum SignActive {
+    /// The Unicorn's: Bleeding and Poisoned end and a disease that shows is shaken off, then a
+    /// cooldown.
+    HornsGrace,
+    /// The Basilisk's: a hostile that sees you, at a cell you see nearby, is transfixed, then a
+    /// cooldown.
+    TransfixingStare,
     /// Fire's: a burst of flame around you, then a cooldown.
     Blaze,
 }
 
 impl SignActive {
     /// Every one, in menu order.
-    pub const ALL: &[SignActive] = &[SignActive::Blaze];
+    pub const ALL: &[SignActive] = &[
+        SignActive::HornsGrace,
+        SignActive::TransfixingStare,
+        SignActive::Blaze,
+    ];
 
-    /// Its id: the id of the talent that has it, and its replay text (`use:blaze`).
+    /// Its id: the id of the talent that has it, and its replay text (`use:horns_grace`).
     pub const fn id(self) -> &'static str {
         match self {
+            SignActive::HornsGrace => "horns_grace",
+            SignActive::TransfixingStare => "transfixing_stare",
             SignActive::Blaze => "blaze",
         }
     }
@@ -534,14 +546,13 @@ impl SignActive {
 
     /// Whether it asks for a cell before it is used.
     pub const fn aimed(self) -> bool {
-        match self {
-            SignActive::Blaze => false,
-        }
+        matches!(self, SignActive::TransfixingStare)
     }
 
     /// What it costs, as an action of this kind (`data/actions.toml`).
     pub const fn cost(self) -> super::ActionKind {
         match self {
+            SignActive::HornsGrace | SignActive::TransfixingStare => super::ActionKind::Wait,
             SignActive::Blaze => super::ActionKind::Cast,
         }
     }

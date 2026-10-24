@@ -1,0 +1,8 @@
+[[talent]]
+id = "slip_away"
+name = "Slip away"
+tree = "stars"
+granted = true
+description = "A step that takes you out of reach of everyone hostile beside you is quicker."
+effects = [{ kind = "slip_percent", value = -25 }]
+systems = ["speed", "stances"]

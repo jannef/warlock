@@ -50,7 +50,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
     loved and Grim company (shop favour −10), Supple (Dodge +1, the burden's Dexterity cap +1),
     Evergreen (hunger −15 %, rotten food's sickness halved), Stone hide (Protection +1),
     Stonewise (notices on stone in passing, digging +25 %), Keen edge (threat +1 with every
-    attack); the elements' last four (#268): Blaze (Fire's **active**, from the abilities menu's
+    attack). From the Salamander to the Basilisk (#266): Slip away (a step out of reach of
+    every hostile beside, −25 %, whatever the stance), Many minds (flaw: Willpower checks −2),
+    Relentless (each melee blow at the creature the last was at, in the same turn or the next,
+    +1 to hit per blow before it, to +3; `Actor::streak`), Barbed hide (a creature whose melee
+    blow hurts the character takes 1 damage, no roll, and earns nothing if it dies of it),
+    Horn's grace and the Transfixing stare (the actives below), Thin-skinned (flaw: a big hit
+    that wounds wounds a degree more), Trailblazer (overworld journeys −20 %, forest, hills,
+    and swamp as plains), Flame-hardened (fire resistance 25 %: damage types are in, so the
+    resistance form at once, not the design's burst halving), Heavy-footed (flaw: footsteps
+    +25 %), Unblinking (notices in passing as if trained in Spot, +2), Trusted by none (flaw: no
+    one makes way, Noblesse or not).
+    The elements' last four (#268): Blaze (Fire's **active**, from the abilities menu's
     **Birth sign** group, `use:blaze`, the time of a `cast`, refused on the overworld: a burst
     of radius 1 around the player, one roll of 2d6 fire for every creature in it but them, whole
     to each, through the scrolls' cast code (Evasion and resistances apply, the kills are the
@@ -60,8 +71,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
     as Lamplighter's brighter preset, a cell farther; with Lamplighter too, no farther; the fire
     resistance comes with S7), Forge-born (marks +50 % in every weapon skill and fighting style,
     added to Weapon drill's; in words "you learn weapons quickly"), Tidal (mana regeneration
-    +25 %, added to the affixes' percent in `World::mana_rate`). The rest of the design's gifts land with their rules and are listed in
-    `grants` only then.
+    +25 %, added to the affixes' percent in `World::mana_rate`).
+    The rest of the design's gifts land with their rules and are listed in `grants` only then.
+  - **Birth sign actives** (#266): used from the abilities menu's **Birth sign** group
+    (`Ability::Sign`, `Source::Sign`, between Racial and Class) as `Action::Gift` (no key of
+    their own), each refused (no time) without it or while its cooldown status lasts. **Horn's
+    grace** (Unicorn; `use:horns_grace`, the time of a wait): Bleeding and Poisoned end and the
+    first disease that shows is shaken off, then **Graceless** for a day; refused with nothing
+    to mend. **Transfixing stare** (Basilisk; `use:transfixing_stare:X,Y`, aimed at a cell in
+    the targeting mode, within 6, the time of a wait, silent): a hostile the player sees there
+    that sees them now (creature sight) is **Transfixed** (2 degrees, every action at 200 %, a
+    degree easing every 12 s: about its next two actions), then **Spent-eyed** for two hours;
+    one that does not see them is not held ("The kobold does not meet your gaze.", the time
+    taken, no cooldown); refused at the player's cell, out of range, where they see no one, and
+    at anyone not hostile. Nothing is drawn. **Blaze** (Fire's, #268) is the third, described above.
   - **The Roc to the Barghest** (#267): Eyes of the heights (overworld sight +2 cells by day, +1
     by night), Hoard sense (loot's better rarities +50 %, a find a loose gem +100 %: the same
     draws, so maps never change), Watchful (hears 3 fainter; footsteps it hears are placed at

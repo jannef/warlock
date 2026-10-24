@@ -4,9 +4,6 @@ expression: "render(case, content.clone())"
 ---
 
 
-
-
-
               ┌─ Born under the stars ───────────────────────────────────────────────┐
               │                                                                      │
               │  You were born on 29 Greenleaf 1410, in the year of the Water        │
@@ -16,6 +13,12 @@ expression: "render(case, content.clone())"
               │  the gate: patient and unblinking, and trusted by no one. Rivers     │
               │  and the deep sea, that always find a way: clever.                   │
               │                                                                      │
+              │  Unblinking          You notice hidden things in passing, as if      │
+              │                      trained to spot them.                           │
+              │  Transfixing stare   The basilisk's stare: a foe nearby that sees    │
+              │                      you slows to a crawl a moment; your eyes then   │
+              │                      rest two hours.                                 │
+              │  but Trusted by none No one makes way for you: you walk around.      │
               │  Always a way        Secret doors and hidden traps are easier for    │
               │                      you to find, and your searching reaches         │
               │                      farther.                                        │
