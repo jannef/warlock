@@ -144,7 +144,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Action costs** (`data/actions.toml`, optional): action ids mapped to their cost in energy,
   e.g. `wait = 1000`, 1000 being a normal action (6 s at normal speed; §8 "Time"), 100 to
   10 000. The ids are `step` (onto terrain of `move_cost` 100), `wait`, `open_door`,
-  `close_door`, `unlock` (unlocking a door with a key, on top of opening it), `kick`, `lantern`,
+  `close_door`, `unlock` (unlocking a door with a key, on top of opening it), `pick_lock` (2000:
+  a try at picking a lock, whatever comes of it; a lock that gives opens its door on top of it,
+  `open_door`; §8 "Doors"), `kick`, `lantern`,
   `stairs` (also entering a location or local area and walking off an
   area's edge), `pick_up`, `drop`, `melee` (a shield bash too), `shoot`, `throw`, `reload` (a
   missile weapon that `reloads`: a crossbow shot costs `shoot` plus `reload`, 2000), `cast`,
@@ -389,6 +391,22 @@ developer notes (CLAUDE.md, `docs/dev/`).
   affixes: 23 prefixes and 28 suffixes in up to four tiers (item levels 1, 3, 5, 7 for most); the wiki
   lists them in generated tables. The light presets `item_glow_faint`, `item_glow`, and
   `item_glow_bright` (radius 2, 3, 4; steady, cool) are the glowing tiers'.
+- **Talents** (`data/talents.toml`, the settings; `data/talents/`, one talent a file, read in
+  path order; optional, without them no level asks for a pick; M30, #229; §8 "Talents"):
+  `max_ranks` (3), `[coverage]` (`min_talents`, `min_class`, `free_per_tree`), `[[tree]]`s
+  (`id`, `name`, `description`, `pending`, `no_free`) in display order, and `[[system]]`s (`id`,
+  `name`, `pending`), the closed list a talent's `systems` may name. A `[[talent]]`: `id`,
+  `name`, `tree`, `description`, `ranks`, `choice` (`weapon_skill`, `style`, `element`), `needs`
+  (`talents = { dodge = 1 }`, `stats = { toughness = 14 }`, `skills = { stealth = 25 }`,
+  `weapon_skills = { bows = 3 }`, `chosen`, `level`, `race`, `class`, `eyes`,
+  `requires_alignment = { min = "good" }`), `effects`
+  (`{ kind = "dodge", value = 1 }`: `dodge`, `natural`, `melee_damage`, `max_hp_per_levels
+  { per_levels, at_least }`, `healing_percent`, `footsteps_percent`, `silent_doors`, `hearing`,
+  `carry_percent`, `travel_percent`, `hunger_percent`, `no_exertion`, `xp_percent`, `notice`,
+  `free_blow { trigger }`; bonuses −20 to 20, percents −100 to 100, never 0), `[[talent.rank]]`
+  (a rank's own `needs` and `effects`, as many as `ranks` or none), `systems` (at least one),
+  `granted`. Talents are saved by id (not in the content fingerprint); without skills content a
+  skill need is left out, as skill affixes are. Load fails on a coverage gap (§8 "Talents").
 - **Damage types** (`data/damage_types.toml`, optional; without it nothing is typed, nobody
   resists anything, and no data may name a kind; #151, §8 "Damage types"): an ordered list of
   `[[type]]`s, each with `id`, `name`, `physical` (Protection soaks it; default false), `verb`

@@ -26,6 +26,10 @@
 # learn something of kobolds."), and their first arrival on a level gives arrival × the level's
 # item level (a dungeon level's depth; a hand-made level's `item_level`, default 1). The level a
 # run starts on, the overworld, and its local areas give none. Neither draws anything at random.
+#
+# Levels (the [levels] table; spec §8 "Talents"): every talent_every-th level (3: levels 3, 6,
+# 9, ...) brings a talent pick (talents.toml), chosen on the spot: nothing is banked. 0, or no
+# table: never.
 
 max_level = 60
 hp_level = 20
@@ -43,6 +47,9 @@ guideline = { per_level = 5, base = 10 }
 [discovery]
 first_kill = 100
 arrival = 5
+
+[levels]
+talent_every = 3
 
 # ZD from each player level on, in order.
 [[zero_difference]]

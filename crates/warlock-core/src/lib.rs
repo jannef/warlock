@@ -46,6 +46,7 @@ mod sight;
 pub mod skills;
 pub mod stats;
 pub mod status;
+pub mod talent;
 pub mod temperature;
 pub mod time;
 pub mod weapon_skills;

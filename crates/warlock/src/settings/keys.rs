@@ -63,6 +63,7 @@ pub const REBINDABLE: &[KeyCommand] = &[
     KeyCommand::RepeatAbility,
     KeyCommand::Bash,
     KeyCommand::Disarm,
+    KeyCommand::PickLock,
     KeyCommand::Pay,
     KeyCommand::NextTarget,
     KeyCommand::PrevTarget,
@@ -133,6 +134,7 @@ const PAGE_IDS: [&str; 9] = [
 pub const UNBOUND: &[KeyCommand] = &[
     KeyCommand::Bash,
     KeyCommand::Disarm,
+    KeyCommand::PickLock,
     KeyCommand::Fire,
     KeyCommand::Quit,
     KeyCommand::PrevTarget,
@@ -237,6 +239,7 @@ impl KeyCommand {
             RepeatAbility => "repeat_ability",
             Bash => "bash",
             Disarm => "disarm",
+            PickLock => "pick_lock",
             NextTarget => "next_target",
             PrevTarget => "prev_target",
             Loose => "loose",

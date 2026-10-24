@@ -37,6 +37,7 @@ mod scrolls;
 mod searching;
 mod sight;
 mod skills;
+mod talents;
 mod temperature;
 mod terrain;
 mod text;
@@ -162,6 +163,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("alignment-deeds.md", alignment::alignment_deeds),
         ("alignment-quests.md", alignment::alignment_quests),
         ("alignment-shops.md", alignment::alignment_shops),
+        ("talents.md", talents::talents),
+        ("talents-by-system.md", talents::by_system),
         ("skills.md", skills::skills),
         ("skill-benefits.md", skills::skill_benefits),
         ("skill-grants.md", skills::skill_grants),
@@ -200,6 +203,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("burden-examples.md", burden::burden_examples),
         ("doors.md", doors::doors),
         ("keys.md", doors::keys),
+        ("lock-picking.md", doors::lock_picking),
         ("hunger-states.md", hunger::hunger_states),
         ("hunger-facts.md", hunger::hunger_facts),
         ("hunger-races.md", hunger::hunger_races),
@@ -423,6 +427,15 @@ mod tests {
         );
         assert!(text("keys.md").contains("| Skeleton key | `(` | every lock |"));
         assert!(text("keys.md").contains("| Iron key | `(` | locks named `pantry` |"));
+        let picking = text("lock-picking.md");
+        assert!(
+            picking.contains("| A lock of the usual difficulty | 14 | 46% | 62% |"),
+            "{picking}"
+        );
+        assert!(
+            picking.contains("| Usual, on The Depths 8 | 21 |"),
+            "{picking}"
+        );
         assert!(
             text("footsteps.md")
                 .contains("| Very loud, 200% | Still water, running water, shallow water |")
@@ -597,7 +610,14 @@ mod tests {
             ),
             "{abilities}"
         );
-        assert!(abilities.contains("| Open lock | Skills | everyone trained in the skill | — |"));
+        assert!(abilities.contains("| Steal | Skills | everyone trained in the skill | — |"));
+        assert!(
+            abilities.contains(
+                "| Pick lock | Skills | everyone trained in Open lock | a direction | Open a \
+                 locked door next to you without its key. | 12 seconds |"
+            ),
+            "{abilities}"
+        );
         assert!(
             abilities.contains(
                 "| Disarm a trap | Skills | everyone trained in Disable device | a direction | Take \
@@ -660,18 +680,19 @@ mod tests {
         assert!(
             benefits.contains(
                 "| Value | Appraise: prices | Athletics: kicking doors in | Balance: Burdened / \
-                 Strained | Disable device: disarming traps | Listen: hears fainter by | Search: \
+                 Strained | Disable device: disarming traps | Listen: hears fainter by | Open \
+                 lock: picking locks | Search: \
                  searching | Search: search reaches | Spot: noticing | Stealth: noise | Survival: \
                  journeys | Tumble: Dodge |"
             ),
             "{benefits}"
         );
         assert!(benefits.contains(
-            "| 100 | 20% better | +8 Strength | ×1.1 / ×1.2 | +8 | 10 | +8 | +1 cell | +8 | \
+            "| 100 | 20% better | +8 Strength | ×1.1 / ×1.2 | +8 | 10 | +8 | +8 | +1 cell | +8 | \
              \u{2212}60% | \u{2212}20% | +5 |"
         ));
         assert!(benefits.contains(
-            "| 150 | 25% better | +10 Strength | ×1.08 / ×1.15 | +10 | 15 | +10 | +1 cell | +10 \
+            "| 150 | 25% better | +10 Strength | ×1.08 / ×1.15 | +10 | 15 | +10 | +10 | +1 cell | +10 \
              | \u{2212}75% | \u{2212}20% | +7 |"
         ));
         // Searching: the hidden things' chances for an average character, deeper down, and who

@@ -22,6 +22,7 @@ use crate::object::{Stack, Weight, weight_of};
 use crate::skills::{Effect, Skills};
 use crate::stats::{PerStat, Stat, StatDamage, Stats};
 use crate::status::Effects;
+use crate::talent::{TalentMods, Talents};
 use crate::weapon_skills::WeaponSkills;
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -189,6 +190,11 @@ pub struct Actor {
     /// abilities give them. Read through `World::free_blows_of`.
     #[serde(default, skip_serializing_if = "FreeBlows::is_none")]
     pub free_blows: FreeBlows,
+    /// The talents it holds (spec §8 "Talents"; [`crate::talent`]), by id: the player's picks;
+    /// a creature's empty until data gives it some. What they do is read through
+    /// [`Actor::talent_mods`].
+    #[serde(default, skip_serializing_if = "Talents::is_empty")]
+    pub talents: Talents,
     /// The unique character its level made it (`npc` in a level legend entry), whose dialogue it
     /// speaks rather than its type's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -234,6 +240,12 @@ impl Actor {
     /// effects, [`Mods::worn`]).
     pub fn mods(&self, content: &Content) -> Mods {
         Mods::worn(&self.inventory, &self.equipment, content)
+    }
+
+    /// What its talents do to it (spec §8 "Talents"; [`Talents::mods`]), the one aggregation
+    /// the rules read, beside [`Actor::mods`].
+    pub fn talent_mods(&self, content: &Content) -> TalentMods {
+        self.talents.mods(content)
     }
 
     /// How hungry it is (spec §8 "Hunger"); `None` for an actor that does not hunger.
@@ -388,12 +400,23 @@ impl Actor {
                 ),
             ]
         });
-        let natural = (self.hide(content, race)).map(|hide| (Category::Natural, hide.defence));
-        let dodge = Some(self.skill_effect(content, Effect::Dodge))
+        // Talents (spec §8 "Talents"): Dodge adds up like any Dodge; natural armour (Thick
+        // skin) comes on top of whichever natural armour is best, the race's or creature type's
+        // hide ([`Actor::hide`]) or a magic item's, or stands alone.
+        let talents = self.talent_mods(content);
+        let own = self.hide(content, race).map(|hide| hide.defence);
+        let magic_natural = Some(mods.get(ItemEffect::Natural)).filter(|&n| n != 0);
+        let natural: Vec<(Category, i32)> = match (own, magic_natural) {
+            (None, None) if talents.natural == 0 => Vec::new(),
+            (None, None) => vec![(Category::Natural, talents.natural)],
+            (own, magic) => (own.into_iter().chain(magic))
+                .map(|n| (Category::Natural, n + talents.natural))
+                .collect(),
+        };
+        let dodge = Some(self.skill_effect(content, Effect::Dodge) + talents.dodge)
             .filter(|&d| d != 0)
             .map(|d| (Category::Dodge, d));
         let magic = [
-            (Category::Natural, mods.get(ItemEffect::Natural)),
             (Category::Dodge, mods.get(ItemEffect::Dodge)),
             (Category::Deflection, mods.get(ItemEffect::Deflection)),
         ];
@@ -486,7 +509,9 @@ impl Actor {
     /// by what its skills give (listen; spec §8 "Skills"), never below 1; `None`: deaf.
     pub fn hearing(&self, content: &Content) -> Option<u16> {
         let threshold = content.creature(self.creature).hearing?;
-        let keener = self.skill_effect(content, Effect::Hearing);
+        // Its skills (listen), then its talents (Keen ears).
+        let keener =
+            self.skill_effect(content, Effect::Hearing) + self.talent_mods(content).hearing;
         Some((i32::from(threshold) - keener).max(1) as u16)
     }
 
@@ -827,10 +852,12 @@ impl Actor {
             let main = content.weapon_skills().two_weapons().main;
             profile.to_hit += TwoWeapons::eased(main, benefit.ease_main);
         }
-        // The weapon's own added damage first, then what its affixes add, then the worn ones'.
+        // The weapon's own added damage first, then what its affixes add, then the worn ones',
+        // then its talents' (spec §8 "Talents": Brawn).
         profile.riders.extend(added);
         local.sharpen(&mut profile);
         mods.sharpen(&mut profile);
+        profile.bonus += self.talent_mods(content).melee_damage;
         self.stanced(content, profile)
     }
 
@@ -858,6 +885,7 @@ impl Actor {
         profile.riders.extend(content.object(stack.object).added);
         Mods::local(stack, content).sharpen(&mut profile);
         mods.sharpen(&mut profile);
+        profile.bonus += self.talent_mods(content).melee_damage;
         Some((stack.object, self.stanced(content, profile)))
     }
 

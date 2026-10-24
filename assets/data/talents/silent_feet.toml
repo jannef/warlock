@@ -1,0 +1,15 @@
+[[talent]]
+id = "silent_feet"
+name = "Silent feet"
+tree = "shadow"
+ranks = 2
+description = "Your footsteps are a fifth quieter for each rank; at the second, the doors you open and close make no sound."
+effects = [{ kind = "footsteps_percent", value = -20 }]
+systems = ["stealth"]
+
+[[talent.rank]]
+needs = { stats = { dexterity = 12 } }
+
+[[talent.rank]]
+needs = { skills = { stealth = 25 } }
+effects = [{ kind = "silent_doors" }]

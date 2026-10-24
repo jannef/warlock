@@ -18,6 +18,7 @@
 //! traps_per_level = [2, 4]      # how many a level gets, at least and at most; default [2, 4]
 //! secret_doors = [0, 2]         # doors hidden on each level (spec §8 "Searching"); default none
 //! hidden_per_depth = 1          # hidden features this much harder to find per level down
+//! locks_per_depth = 1           # locks this much harder to pick per level down
 //! loot = [2, 4]                 # items of loot on each level's floor; default none
 //! ambient = [0, 0, 0, 0]        # optional
 //! temperature = 9               # °C; default the dungeon default (10)
@@ -96,6 +97,8 @@ struct DungeonSpec {
     #[serde(default)]
     hidden_per_depth: u8,
     #[serde(default)]
+    locks_per_depth: u8,
+    #[serde(default)]
     levels: Vec<LevelsSpec>,
 }
 
@@ -107,6 +110,8 @@ const MAX_TRAPS_PER_LEVEL: u32 = 50;
 const MAX_SECRET_DOORS: u32 = 20;
 /// The most a level down may add to how hard hidden features are to find.
 const MAX_HIDDEN_PER_DEPTH: u8 = 5;
+/// The most a level down may add to how hard locks are to pick.
+const MAX_LOCKS_PER_DEPTH: u8 = 5;
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -148,6 +153,9 @@ pub struct DungeonDef {
     /// How much harder the hidden features on a level (secret doors, hidden traps) are to find
     /// for each level below the first ([`DungeonDef::hidden_at`]).
     pub hidden_per_depth: u8,
+    /// How much harder the locks on a level are to pick for each level below the first (spec §8
+    /// "Doors"; [`DungeonDef::locks_at`]).
+    pub locks_per_depth: u8,
     /// How many items of loot lie on the floor of each level, fewest and most (spec §8 "Magic
     /// items"; item level: the depth).
     pub loot: [u8; 2],
@@ -173,14 +181,25 @@ impl DungeonDef {
     /// What finding a hidden feature on level `depth` takes beyond its own difficulty (spec §8
     /// "Searching"): [`DungeonDef::hidden_per_depth`] for each level below the first.
     pub fn hidden_at(&self, depth: u32) -> i32 {
-        let below = i32::try_from(depth.saturating_sub(1)).unwrap_or(i32::MAX);
-        i32::from(self.hidden_per_depth).saturating_mul(below)
+        per_level_below(self.hidden_per_depth, depth)
+    }
+
+    /// What picking a lock on level `depth` takes beyond the lock's own difficulty (spec §8
+    /// "Doors"): [`DungeonDef::locks_per_depth`] for each level below the first.
+    pub fn locks_at(&self, depth: u32) -> i32 {
+        per_level_below(self.locks_per_depth, depth)
     }
 
     /// The display name of level `depth`, e.g. `The Depths 3`.
     pub fn level_name(&self, depth: u32) -> String {
         format!("{} {depth}", self.name)
     }
+}
+
+/// `per_level` for each level below the first, on level `depth`.
+fn per_level_below(per_level: u8, depth: u32) -> i32 {
+    let below = i32::try_from(depth.saturating_sub(1)).unwrap_or(i32::MAX);
+    i32::from(per_level).saturating_mul(below)
 }
 
 /// Splits a branch level id `branch:N` into the branch id and the depth `N` (≥ 1).
@@ -306,6 +325,11 @@ impl DungeonFile {
                     "dungeon `{id}`: hidden_per_depth must be 0 to {MAX_HIDDEN_PER_DEPTH}"
                 )));
             }
+            if spec.locks_per_depth > MAX_LOCKS_PER_DEPTH {
+                return Err(err(format!(
+                    "dungeon `{id}`: locks_per_depth must be 0 to {MAX_LOCKS_PER_DEPTH}"
+                )));
+            }
             if spec.loot[0] > spec.loot[1] || spec.loot[1] > MAX_LOOT {
                 return Err(err(format!(
                     "dungeon `{id}`: `loot` is [fewest, most], at most {MAX_LOOT}"
@@ -329,6 +353,7 @@ impl DungeonFile {
                 traps_per_level,
                 secret_doors: spec.secret_doors,
                 hidden_per_depth: spec.hidden_per_depth,
+                locks_per_depth: spec.locks_per_depth,
                 loot: spec.loot,
                 key,
                 plans,
