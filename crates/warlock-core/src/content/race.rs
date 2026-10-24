@@ -55,6 +55,7 @@ struct RaceSpec {
     hp: u16,
     #[serde(default)]
     mana: u16,
+    #[serde(default)]
     alignment: i32,
     size: Option<String>,
     #[serde(default)]

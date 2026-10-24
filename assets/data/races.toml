@@ -154,3 +154,47 @@ potential = { strength = -4, dexterity = 3, willpower = 1, presence = 1 }
 hp = 2
 mana = 1
 alignment = 50
+size = "small"
+skills = { listen = "1d6+4", stealth = "1d6+4" }
+# Second breakfast.
+hunger = 125
+experience = 95
+weapon_skills = { slings = 1 }
+# A pipe, and apples for second breakfast.
+kit = ["pipe", "apple*2"]
+
+[[race]]
+id = "gnome"
+name = "Gnome"
+description = "Small, tireless tinkerers and illusionists, curious about everything; they see well by little light."
+vision = "low_light"
+age = [40, 150]
+stats = { strength = -2, toughness = 1, intelligence = "1d2+1", willpower = -1 }
+potential = { strength = -3, dexterity = 1, toughness = 1, intelligence = 3 }
+hp = 3
+mana = 3
+size = "small"
+skills = { appraise = "1d6+4", listen = "1d6+4" }
+hunger = 90
+experience = 120
+weapon_skills = { crossbows = 1 }
+# A tinkerer's pockets: a scroll of light, a candle stub, and a curious stone.
+kit = ["scroll_of_light", "candle", "gem:zircon"]
+
+[[race]]
+id = "half_orc"
+name = "Half-orc"
+description = "Strong, tough, and sharp-eyed in the dark, but slow with letters and short on charm."
+vision = "darkvision"
+age = [14, 30]
+stats = { strength = "1d2+2", toughness = 1, intelligence = "-1d3", presence = -2 }
+potential = { strength = 4, toughness = 2, intelligence = -3, presence = -3 }
+hp = 6
+alignment = -50
+size = "medium"
+skills = { intimidate = "1d6+4" }
+hunger = 120
+experience = 90
+weapon_skills = { axes = 1 }
+# A hand axe at the belt, and meat for the road.
+kit = ["hand_axe", "dried_meat*3"]

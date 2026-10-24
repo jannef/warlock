@@ -76,8 +76,9 @@ recovered = "The fog lifts."
 "##;
 
 // From level 3 on, levels add no mana.
-const EXPERIENCE: &str = "max_level = 50\nlinear = 10\nquadratic = 10\nhp_level = 20\n\
-                          mana_level = 3\nbonus_percent = 5\nbonus_levels = 4\n\
+const EXPERIENCE: &str = "max_level = 50\nhp_level = 20\nmana_level = 3\nbonus_percent = 5\n\
+                          bonus_levels = 4\n[kills]\nplateau = 213\nramp = 5\n\
+                          slope_per_100 = 285\nguideline = { per_level = 5, base = 10 }\n\
                           [[zero_difference]]\nfrom = 1\nzd = 5\n";
 
 // A lit hall; its east part (walls included) is a mana well.
@@ -104,6 +105,9 @@ const WELL: &str = "\n[[effect]]\nid = \"well\"\nname = \"mana well\"\nmark = \"
 fn files(scenario: &str, extra: &[(&str, &str)]) -> ContentFiles {
     let mut files = ContentFiles::builtin();
     files.insert("data/status.toml", STATUS);
+    // The talents name the built-in statuses, which STATUS replaces.
+    files.remove("data/talents/");
+    files.remove("data/talents.toml");
     let diseases = include_str!("../../../../assets/data/diseases.toml");
     files.insert("data/diseases.toml", &format!("{diseases}\n{FOG}"));
     files.insert("data/experience.toml", EXPERIENCE);
