@@ -24,12 +24,14 @@ class bonus picks, and the Talents page that lists every talent with what it nee
   "Hardy (2)". Each rank may ask more than the last.
 - A talent with a **choice** (a weapon skill, a fighting style, an element) is picked for that
   choice, and the same talent may be picked again for another: Weapon focus with long blades and
-  Weapon focus with bows are two talents. None of these ship yet.
+  Weapon focus with bows are two talents. A weapon skill chosen is one you attack with (never
+  shield blocking); a fighting style is chosen as a style.
 - **Prerequisites** must all hold when you pick, and are never checked again: a Strength lowered
   by disease later does not take a talent away. They may be another talent (at a rank), a stat
   score (the score itself, as the [character screen](character.md) shows it; never what items or
   a sickness do to it), a [skill](skills.md) at a value, a [weapon skill](weapon-skills.md) or
-  style at a rank, a character level, your race, your class, your eyes (your race's
+  style at a rank (or any of a kind: "a missile weapon skill at 3" is bows, crossbows, or
+  slings), a character level, your race, your class, your eyes (your race's
   [vision](vision.md)), or your [alignment](alignment.md) band. The game names what you lack:
   "You cannot take Dodge: you need Dexterity 13."
 

@@ -1,0 +1,8 @@
+[[talent]]
+id = "two_weapon_training"
+name = "Two-weapon training"
+tree = "weaponcraft"
+description = "A weapon in each hand hampers you less, the main hand's and the off hand's alike."
+needs = { stats = { dexterity = 13 }, weapon_skills = { twin_blades = 2 } }
+effects = [{ kind = "weapon", role = "style", ease = 2 }]
+systems = ["styles", "weapon_skills"]

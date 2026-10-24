@@ -231,8 +231,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Prerequisites** (`Needs`; all must hold at the pick and are never checked again: a score
     lowered later keeps the talent): other talents at a rank (a talent with a choice may be
     needed only by one of the same choice, taken for the same), stat **scores** (the stored
-    score, never the effective one), skill values, weapon skill or style ranks, the chosen
-    weapon skill's or style's rank (`chosen`), the character level, the race, the class, the
+    score, never the effective one), skill values, weapon skill or style ranks, any weapon
+    skill of a role at a rank (`any_weapon_skill = { launcher = 3 }`: "a missile weapon skill
+    at 3"), the chosen weapon skill's or style's rank (`chosen`), the character level, the race, the class, the
     eyes (the race's vision profile), and the alignment band (`requires_alignment`, as quests
     and abilities ask it, §8 "Alignment": `{ min = "good" }`). Refused in words: "You cannot
     take Dodge: you need Dexterity 13." Ranks come one at a time ("You learn Hardy (2)."); a talent with a choice is
@@ -249,6 +250,26 @@ developer notes (CLAUDE.md, `docs/dev/`).
     bonus), `free_blow` (a switch of `World::free_blows_of`). The first twelve: Healthy, Hardy,
     Dodge, Brawn, Silent feet, Keen ears, Pack mule, Long strider, Lean, Good learner, Alert,
     Thick skin.
+  - **Weaponcraft and Guard** (#238): `weapon` adds to the benefits of the chosen weapon skill
+    or style (no `role`) or of every skill of a role, read in `Actor::benefit`, so every
+    attack, Defence, and price that reads a skill's benefits reads it: Weapon focus (+1 to hit),
+    Weapon specialization (+2 damage), Improved critical (threat one roll wider), Stylist (the
+    style's benefits one rank higher, never past 10, and only for a rank held), Two-weapon
+    training (both two-weapon penalties eased by 2), Shield expert (Shield +1; Sword and
+    Board's free bash 10 more likely where it has one), Deadly aim (+2 damage with shots),
+    Thrower (+1 damage and 10 % cheaper throws), Rapid reload (reloading 25 % cheaper);
+    `launcher_range` and `throw_range` (Far shot: +2 and +1 cells); `max_dex` (Armour
+    training: worn armour's Dexterity cap +1 a rank); `deflection` (Deflection +1);
+    `protection` (Heavy armour mastery: +1 while the armour piece worn with the most
+    Protection has 3 or more; Shield wall: +1 while holding a shield); `stance_to_hit` and
+    `flee_percent` (Stalwart: the defensive stance's to-hit penalty gone; Unflinching: the
+    coward's halved, rounded toward 0, and fleeing steps 10 % cheaper again); `pain` (Immune
+    to pain: a hit, a blow, shot, throw, or trap, does 1 less after the soak, never below 1;
+    a status's or starving's harm is no hit); `resist` (Elemental ward: 25 % a rank against
+    the chosen element, any damage type that is no physical kind, summed and capped with the
+    gear's). A weapon-skill choice is a skill that attacks: never shield blocking (it only
+    defends) nor a style (chosen as a style). Steady hand waits for the ranger's focus
+    (#225).
   - **Coverage** (the design's §8): every talent names the systems it touches; at load a
     system not `pending` with fewer than `min_talents` talents (or `min_class` class abilities,
     0 until the class tables), or a tree not `pending` nor `no_free` without `free_per_tree`
