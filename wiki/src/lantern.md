@@ -35,7 +35,9 @@ around you but not the cell you stand on.
   them in its ring. Creatures with darkvision still see you within their darkvision, and any light
   that falls on you (a torch, daylight) shows you as usual.
 
-There is no fuel yet: the lantern burns as long as you leave it lit.
+There is no fuel yet: the lantern burns as long as you leave it lit. The **Lamplighter**
+[talent](talents.md) makes it burn brighter, a cell farther (and so you are seen from a little
+farther too); hooded, it gives the hooded light as before.
 
 If a run has no lantern, `L` tells you so and takes no time. The lantern is part of how a scenario
 starts, and every scenario in the current game gives you one.

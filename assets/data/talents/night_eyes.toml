@@ -1,0 +1,8 @@
+[[talent]]
+id = "night_eyes"
+name = "Night eyes"
+tree = "shadow"
+description = "Your eyes grow used to the dark: you see by half the light you needed."
+needs = { eyes = "normal" }
+effects = [{ kind = "threshold_percent", value = -50 }]
+systems = ["vision"]

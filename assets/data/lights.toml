@@ -82,6 +82,15 @@ stability.intensity = { amount = 0.05, speed = 0.6 }
 stability.hue = { degrees = 4, speed = 0.3 }
 stability.dips = { depth = 0.06, every = 14, length = 0.8 }
 
+# The lantern as a Lamplighter tends it (talents/lamplighter.toml): a trimmed wick, a cell farther.
+[[light]]
+id = "lantern_bright"
+color = [265, 228, 170, 0]
+radius = 6
+stability.intensity = { amount = 0.05, speed = 0.6 }
+stability.hue = { degrees = 4, speed = 0.3 }
+stability.dips = { depth = 0.06, every = 14, length = 0.8 }
+
 # The lantern with its hood lowered: half its light and less than half its reach, and hollow, so it
 # lights the cells around its bearer but not their own: they see their neighbours, and eyes that
 # need light see them only by other light.

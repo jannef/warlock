@@ -52,6 +52,9 @@ Perception knows the weather only on sky-exposed levels (`Sky::conditions`,
 `PerceptionView::weather`); `World::perceive` compares it with the previous snapshot's and says the
 change (`weather_news`: rain starting or growing heavier `say`s, which stops a rest; the rest
 `note`s, which does not). Overworld sight loses the weather's `sight` (`daylight::overworld_sight`).
+A Weather-wise player (`TalentMods::forecast`, hours) also gets `weather::forecast` in the snapshot
+(`PerceptionView::forecast`): the first `weather_at` other than the present one, every ten minutes
+up to the hours, the dev override included (no state, no draw).
 Look at the weather of a seed: `WARLOCK_SEED=1 WARLOCK_FROM=4,1 WARLOCK_DAYS=10 cargo test -p
 warlock-core --lib print_weather -- --ignored --nocapture` (a line per day, `.` clear, `o`
 overcast, `r` rain, `R` heavy). Tune the clouds and the rain with captures of the `courtyard` and
