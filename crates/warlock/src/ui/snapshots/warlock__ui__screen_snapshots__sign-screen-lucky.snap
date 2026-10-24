@@ -5,8 +5,6 @@ expression: "render(case, content.clone())"
 
 
 
-
-
               ┌─ Born under the stars ───────────────────────────────────────────────┐
               │                                                                      │
               │  You were born on 11 Rainmoon 1415, in the year of the Water         │
@@ -22,6 +20,9 @@ expression: "render(case, content.clone())"
               │  Always a way        Secret doors and hidden traps are easier for    │
               │                      you to find, and your searching reaches         │
               │                      farther.                                        │
+              │  Drowning grip       What you strike, you hold: a creature you hit   │
+              │                      in melee cannot step away until you miss it,    │
+              │                      strike another, or move.                        │
               │                                                                      │
               │  Kraken: St +1  Dx −1  Wi +1   Water: In +1                          │
               │                                                                      │
