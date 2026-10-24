@@ -17,7 +17,9 @@ potentials `base_potential` + the race's, never below the score. Flags for rules
 `data/races.toml` (`content/race.rs`: `Races` with `base_potential`, `RaceDef` with `vision`,
 `age`, `stats`, `potential`, `hp`, `natural`, `resist`, `light_blind`, `disease_check`,
 `eats_rotten`, `alignment`, `rolls`), `data/classes/` (`content/class.rs`:
-`ClassDef` with `stats`, `hp`, `alignment`, `known_for`, `rolls`; one file per class, `NN-id.toml` in the order offered; `Start::hp` is their sum, and `Start::alignment` the
+`ClassDef` with `stats`, `hp`, `alignment`, `known_for`, `rolls`, and the level table's
+`abilities` and `bonus_talents` (`docs/dev/progression.md` "Class tables"; level 1's are given
+in `start_run`); one file per class, `NN-id.toml` in the order offered; `Start::hp` is their sum, and `Start::alignment` the
 sum of their `alignment`s, the starting score, `docs/dev/alignment.md`),
 and `data/horoscope.toml` (`content/horoscope.rs`: `Horoscope` with `anchor_year`, `animals`,
 `elements`, `sign_of_year`, `great_cycle` (60), `name` ("Fire Manticore")); all optional.
@@ -119,8 +121,10 @@ refusals), `kit.rs` (Twin Blades and Duelist, the barbarian's pick, deterministi
 other roll moves, every worn or wielded item finds its slot, nobody Strained and only the
 aristocrat and the merchant Burdened, worst case analytically, magic unidentified, who gets the
 kit and the scenario's pack, the gender and sign hooks, a replay with and without the flag).
-The wiki's tables are `xtask/src/wiki/kits.rs` (`class-kits.md`, `race-kits.md`). The golden
-manifest's `kit = true` starts an entry's run with the kit (`tests/golden/manifest/kits.toml`).
+The wiki's tables are `xtask/src/wiki/kits.rs` (`class-kits.md`, `race-kits.md`). The screen
+snapshots' `kit: true` starts a case's run with the kit (`kit-equipment`, `kit-inventory`, and
+`kit-summary` in `crates/warlock/src/ui/screen_snapshots.rs`); the golden manifest's `kit = true`
+does the same for an entry.
 
 ## Birth signs' gifts and lucky days (#265)
 
@@ -135,7 +139,7 @@ fixture, grants nothing). `Content::lucky`, `Character::lucky`/`title`/`titled_n
 `sign_title`/`grants`.
 
 `world/stars.rs` puts the grants into `Actor::talents` (first, in grant order, rank 1;
-`Talents::regrant` drops every granted talent first) in `World::with_character_named` and again
+`Talents::regrant` drops every granted talent of the `stars` tree first) in `World::with_character_named` and again
 in `World::from_state`: they are **never a stored choice**, so a gift added to the data reaches a
 saved character and a removed one leaves it. They change hashes of runs whose sign has gifts, as
 any rule change does; the birth draws are untouched, so seeds keep their dates and signs. The

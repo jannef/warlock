@@ -1,0 +1,36 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+
+
+
+        ┌─ Your character ─────────────────────────────────────────────────────────────────┐
+        │                                                                                  │
+        │ > Start the run                                                                  │
+        │   Name      Corwin                                                               │
+        │   Race      Halfling                                                             │
+        │   Sign      Earth Kraken                                                         │
+        │   Gender    Male                                                                 │
+        │   Class     Merchant                                                             │
+        │                                                                                  │
+        │   Age 41 · born 2 Harvestide 1403 · year of the Earth Kraken                     │
+        │                                                                                  │
+        │   St  Strength       8    Appraise   20                                          │
+        │   Dx  Dexterity     11    Bluff      17                                          │
+        │   To  Toughness     10    Knowledge  10                                          │
+        │   In  Intelligence  11    Listen     10                                          │
+        │   Wi  Willpower     12    Stealth    10                                          │
+        │   Pr  Presence      11                                                           │
+        │                                                                                  │
+        │   Kit       a dagger (wielded), a travelling cloak (being worn),                 │
+        │             a pair of leather boots (being worn), 2 garnets, 120 gold coins,     │
+        │             2 wool cloaks, 10 wax candles, a coil of rope,                       │
+        │             4 strips of dried meat, a scroll of identify, a long-stemmed pipe,   │
+        │             2 apples                                                             │
+        │   Alignment Neutral                                                              │
+        │   Vision    Normal                                                               │
+        │   Scenario  World, seed 1                                                        │
+        │                                                                                  │
+        │ ↑↓ choose   Enter start or change   Esc back                                     │
+        └──────────────────────────────────────────────────────────────────────────────────┘

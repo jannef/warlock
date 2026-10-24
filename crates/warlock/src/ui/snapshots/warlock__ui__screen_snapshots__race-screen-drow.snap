@@ -1,0 +1,32 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+
+
+              ┌─ Choose your race (1 of 4) ──────────────────────────────────────────┐
+              │                                                                      │
+              │   Elf                                                                │
+              │   Half-elf                                                           │
+              │   Human                                                              │
+              │   Dwarf                                                              │
+              │   Halfling                                                           │
+              │   Gnome                                                              │
+              │   Half-orc                                                           │
+              │   Goblin                                                             │
+              │ > Drow                                                               │
+              │   Kobold                                                             │
+              │   Lizardfolk                                                         │
+              │   Duergar                                                            │
+              │   Ratfolk                                                            │
+              │   Random                                                             │
+              │                                                                      │
+              │   The elves of the deep dark: graceful, sharp, and long-lived but    │
+              │   frail, hard to poison, and dazzled by strong light.                │
+              │   Dx 1d2+1  To −2  In +1  Pr +1                                      │
+              │   Vision: Darkvision                                                 │
+              │   Levels come slowly.                                                │
+              │                                                                      │
+              │                                                                      │
+              │ ↑↓ choose   Enter next   Esc back                                    │
+              └──────────────────────────────────────────────────────────────────────┘

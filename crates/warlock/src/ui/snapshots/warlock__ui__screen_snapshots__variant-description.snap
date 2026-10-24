@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ There are several objects here.
+ You pick up a bronze great sword.
+
+
+
+
+
+
+                  ┌─ Item ───────────────────────────────────────────────────────┐
+                  │                                                              │
+                  │ ) Bronze great sword                                         │
+                  │                                                              │
+                  │ Bronze great sword · bronze · 3.9 kg                         │
+                  │                                                              │
+                  │ Great blade, for both hands                                  │
+                  │ Damage 2d6-1; criticals on 20–24, ×2 damage                  │
+                  │ Slashing damage                                              │
+                  │ Slow to strike                                               │
+                  │                                                              │
+                  │ Esc close                                                    │
+                  └──────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+ The Hub  ·  HP 17/17  ·  Lv 1  ·  08:03  ·  11 Darkening, Year 1444  ·  ◑  ·  10 °C     ? controls

@@ -1,0 +1,15 @@
+[[talent]]
+id = "unlikely_hero"
+name = "Unlikely hero"
+tree = "class"
+granted = true
+description = "Nobody expected it of you, least of all yourself: every one of your stats rises by 1."
+effects = [
+    { kind = "stat", stat = "strength", value = 1 },
+    { kind = "stat", stat = "dexterity", value = 1 },
+    { kind = "stat", stat = "toughness", value = 1 },
+    { kind = "stat", stat = "intelligence", value = 1 },
+    { kind = "stat", stat = "willpower", value = 1 },
+    { kind = "stat", stat = "presence", value = 1 },
+]
+systems = ["combat", "hit_points"]

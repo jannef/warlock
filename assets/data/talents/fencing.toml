@@ -1,0 +1,8 @@
+[[talent]]
+id = "fencing"
+name = "Fencing"
+tree = "class"
+granted = true
+description = "Your fencing master's lessons stay with you: you fight as a Duelist one rank better than you are."
+effects = [{ kind = "weapon", skill = "duelist", ranks = 1 }]
+systems = ["styles"]

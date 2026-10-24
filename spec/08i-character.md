@@ -158,8 +158,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     as named ("a dagger (wielded)", "2 wool cloaks"); it never names the seed. The wiki lists
     every class's kit and race's additions.
   - Balance is deliberately not a goal: some combinations are poor (a halfling commoner), and
-    classes do nothing but adjust starting scores, give hit points, train skills, give
-    weapon skills and fighting styles, give a starting kit, and set where the alignment starts.
+    classes adjust starting scores, give hit points, train skills, give weapon skills and
+    fighting styles, give a starting kit, set where the alignment starts, and (those with a
+    level table) give class abilities and bonus talent picks as their levels come ("Class
+    abilities" below).
     No other D&D concept comes with them (spells; the alignment is good against evil only, not
     D&D's grid).
   - The character (`Character`: the name, the race, gender, and class ids, the stat the gender
@@ -413,6 +415,44 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `World::target_against`); `spell_damage_percent` (Evasion: bursts and bolts, traps' and
     scrolls', do half, rounded down, before resistances). The statuses these name are checked
     at load; `data/status.toml` loads before the talents.
+  - **Class abilities** (#246; the design's §4): a class's level table (`abilities` in
+    `data/classes/`, `{ level, talent }` rows) names a talent for each of its levels 1, 6, 12,
+    18, 25, 32, 40, 50, and 60: a talent of the **Class abilities** tree (`class = true` in
+    `data/talents.toml`; `granted`, never on a pick list) or an ordinary talent it hands out
+    (the aristocrat's Riposte at 18, the commoner's Second wind at 32). The player is given each
+    at rank 1 as they reach its level ("You gain Fencing." with the level's news), level 1's at
+    creation, and again whatever is missing when a run is restored, so a grown table reaches a
+    save; one already held (picked earlier) is not given again, and nothing is taken away. What
+    a rank hands out once comes with it: hit points by level, and **stat gifts** (`stat`: score
+    and potential, Iron will's Presence +1; a Toughness gift raises the hit points with the
+    maximum). Its `bonus_talents` (`levels`, `trees`) add a **bonus pick** at those levels
+    (`Due::bonus`), of a talent from those trees (none named: any, the commoner); a talent of
+    those trees spends a bonus pick before an ordinary one, any other is refused for it ("You
+    must choose a talent of Weaponcraft or Delver."), and a bonus pick nothing fits is dropped
+    like any other. The everyday folk have theirs (bonus picks at 10, 20, 30, 45, 55):
+    aristocrat (Weaponcraft, Delver) Well dressed (favour +10 %, quest gold +25 %), Fencing
+    (Duelist one rank higher), Noblesse (anyone not hostile budges, keepers at their posts too),
+    Riposte, Connoisseur (descriptions show worth; a magic item carried 24 hours, counted from
+    then, is identified), Iron will (+2 on Willpower checks, Presence +1), Commanding
+    (Intimidate +20, credit 50 gold), Peerless (+2 on the confirmation roll), Legacy (XP +10 %,
+    Presence +1); commoner (any tree) Hard work (60 % off the burden's slowdown on top of
+    Balance), Hearty (hunger −10 %), Stubborn (+1 on Toughness checks, poison never lowers
+    scores), Big hands (+1 damage with maces and unarmed), Thick skull (Protection +1), Second
+    wind, Salt of the earth (healing and resting +25 %), Folk hero (quest XP and gold +50 %),
+    Unlikely hero (every stat +1); craftsperson (Weaponcraft, Guard, Delver) Keen appraisal
+    (descriptions show worth), Whetstone (+1 damage with melee weapons), Fletching (missiles
+    break half as often), Sturdy work (Protection +1 in body armour), Mining (digging +50 %),
+    Tinker (the Disarm ability untrained), Jeweller (loose gems found, on levels made from then
+    on and in drops, a cut finer), Masterwork (melee threat +1), Artisan (Protection +1 per armour
+    piece worn, +2 melee damage); merchant (Delver, Scholar) Haggler (favour +15 %), Deep
+    pockets (carrying +10 kg, coins weightless), Eye for quality (what is bought or sold is
+    identified), Trade routes (journeys −20 %), Credit (leave owing up to 100 gold: no
+    dialog, no theft, the debt stays on the bill), Appraiser (descriptions show worth and each
+    gem's), Insured (shops pay +50 %, never more than they ask), Magnate (quest gold +100 %, the
+    favour cap +10), Golden tongue (Presence +2, favour +10 % and its cap +10). The favour cap
+    is 50 % unless lifted, at most 90 %. Worth shown is the value, which never includes unknown
+    magic. The adventurers' tables come with I1–I3. Dumps mark them `Well dressed (class)`;
+    JSON `talents[].class`, `due.bonus`. **Saves change** (`Due::bonus`, `Magic::carried`).
   - **Birth sign gifts** (#265): the effects only the signs' talents use: `threat` (every
     attack's threat range, in `Actor::stanced`), `reroll_fumble` (a natural 2 rolled again once,
     `combat::strike_with`), `swimmer` (`step_price` on wading terrain, `wade`), `rot_harm_percent`
@@ -433,7 +473,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     does (`World::afflict`), so no rule of its own.
   - **Coverage** (the design's §8): every talent names the systems it touches; at load a
     system not `pending` with fewer than `min_talents` talents (or `min_class` class abilities,
-    0 until the class tables), or a tree not `pending` nor `no_free` without `free_per_tree`
+    the talents the class tables give, counted apart from the talents; 0 until every class has
+    its table), or a tree not `pending`, `no_free`, nor a class tree without `free_per_tree`
     prerequisite-free talents, is a content error. A wave that ships a system's talents removes
     its `pending`; a new system of the game joins the list in the PR that ships its talents.
     **Policy for new systems** (design §8.2): every new system of the game ships with talents,

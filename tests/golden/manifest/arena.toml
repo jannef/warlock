@@ -1,44 +1,8 @@
-# The arena: factions and creature behavior, blood, and the death screen.
+# The arena: blood as the renderer tints it.
 
-# The arena (spec §3, factions and creature behavior): watched from the dark south-west corner.
-# After four turns the kobold war band and the giant rats meet at the fire pit; after twelve the
-# fight is on (combat: the first kobolds have fallen, their spears where they died), and the
-# frozen moment shows the archer's shot in flight and the shaman's sparkle.
-[[golden]]
-name = "arena"
-scenario = "arena"
-actions = "wait*4"
-
-[[golden]]
-name = "arena-shot"
-scenario = "arena"
-actions = "wait*12"
-
-# Blood (spec §8 "Blood", #127): the arena after its brawl, the dead and their corpses around the
-# fire pit and subtle dark stains where they fell; and a kill against walls, on a hand-made level
-# so that no change to the generators can move it: in the hub's patrol gallery the player lights
-# the lantern and stands in the peaceful kobold's way at the gallery's north-west corner, where it
-# waits for them to move, and kicks it dead there (it never fights back): its corpse in the
-# corner, a pool under it, and blood on the walls beside it (the three to the north, flecks on
-# the west wall).
+# After forty turns the fight at the fire pit is over: corpses, pools of blood around the pit,
+# and subtle dark stains where they fell.
 [[golden]]
 name = "arena-blood"
 scenario = "arena"
 actions = "wait*40"
-
-[[golden]]
-name = "blood-wall"
-scenario = "showcase"
-actions = "move:N*3 open:N move:N*2 move:E*36 open:S move:S*3 move:SW move:W*9 move:NW lantern kick:N*18"
-scale = 2.0
-
-# Combat (spec §8 "Combat"): the player lights the lantern in the arena's dark corner and the war
-# band's archer shoots them down from the dark ("Something shoots you."). The death screen opens
-# by itself over the run as it ended. Every action must take a turn, so the walk ends with the
-# killing one. Pip's birth sign has gifts now (#265), so the default seed's fight no longer ends
-# in his death: seed 4 is one where it does at the 14th wait.
-[[golden]]
-name = "death-screen"
-scenario = "arena"
-seed = 4
-actions = "lantern wait*14"

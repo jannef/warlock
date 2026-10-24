@@ -13,7 +13,7 @@ max_ranks = 3
 # `pending` has fewer than min_talents talents or min_class class abilities, or a tree that is
 # not `pending` (nor `no_free`) has fewer than free_per_tree talents without prerequisites. So a
 # system is in the list the moment it ships with its talents, and a pick from a tree is never
-# impossible. min_class is 0 until the class tables land (#243–#246), then 1.
+# impossible. min_class is 0 until every class has its table (#243–#246), then 1.
 [coverage]
 min_talents = 2
 min_class = 0
@@ -21,7 +21,7 @@ free_per_tree = 1
 
 # The trees, in display order. `pending = true` while a tree's prerequisite-free talent has not
 # landed yet (the talent waves H1–H4 remove it as they land); `no_free = true` for a tree nothing
-# picks from alone (the birth signs').
+# picks from alone (the birth signs'); `class = true` for the class abilities' tree.
 
 # The birth signs' gifts and flaws (horoscope.toml's `grants`), granted at birth and never on a
 # pick list; the sign-limited picks join it later. Listed first: what you were born with.
@@ -82,6 +82,15 @@ id = "delver"
 name = "Delver"
 description = "Traps, searching, doors, digging, shops, and talk."
 pending = true
+
+# The class abilities (spec §8 "Class abilities"): given by the classes' level tables
+# (classes/), never picked; `class = true` keeps them off every pick list and counts them as
+# class abilities, not talents, in the coverage bar.
+[[tree]]
+id = "class"
+name = "Class abilities"
+description = "What a class teaches as its levels come."
+class = true
 
 # The closed list of systems a talent may name in its `systems` (the coverage matrix of the
 # design, docs/design/progression.md §8). A system is `pending` until its talents land; the PR

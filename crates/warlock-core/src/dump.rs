@@ -584,10 +584,11 @@ fn talent_rows(view: &PerceptionView<'_>) -> Vec<String> {
             } else {
                 t.name.clone()
             };
-            match (t.granted, t.flaw) {
-                (_, true) => format!("{name} (sign, flaw)"),
-                (true, false) => format!("{name} (sign)"),
-                (false, false) => name,
+            match (t.granted, t.flaw, t.class) {
+                (_, true, _) => format!("{name} (sign, flaw)"),
+                (true, false, _) => format!("{name} (sign)"),
+                (false, false, true) => format!("{name} (class)"),
+                _ => name,
             }
         })
         .collect()
@@ -606,10 +607,14 @@ fn progress_rows(world: &World) -> Vec<String> {
                 1 => Some(format!("1 {what}")),
                 n => Some(format!("{n} {what}s")),
             };
-            let parts: Vec<String> = [count(due.rolls, "skill roll"), count(due.talents, "talent")]
-                .into_iter()
-                .flatten()
-                .collect();
+            let parts: Vec<String> = [
+                count(due.rolls, "skill roll"),
+                count(due.talents, "talent"),
+                count(due.bonus, "bonus talent"),
+            ]
+            .into_iter()
+            .flatten()
+            .collect();
             format!("due level {}: {}", due.level, parts.join(", "))
         })
         .collect();
@@ -1151,6 +1156,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
                 "choice": t.choice,
                 "granted": t.granted,
                 "flaw": t.flaw,
+                "class": t.class,
             }))
             .collect::<Vec<_>>(),
         "due": view.due(),

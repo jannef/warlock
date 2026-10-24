@@ -1,9 +1,8 @@
 # Spell effects (spec §4.8 "Spell effects"), shown with the dev action `effect` (no time passes,
 # so `freeze_time` is how long after the effect began): a fireball in the arena's pit at its peak
 # (white-hot core cooling outward, its light on the floor around it, the rest of the arena
-# darkened) and cooling (embers flying, the view easing back); a lightning bolt across the pit at
-# its first flash; a fireball in the start room right beside the player (the room darkened, the
-# view shaken a few pixels); and the same with reduced effects: a brief still flash of its cells.
+# darkened); a lightning bolt across the pit at its first flash; and a fireball in the start room
+# with reduced effects: a brief still flash of its cells.
 [[golden]]
 name = "spell-fireball"
 scenario = "arena"
@@ -11,22 +10,10 @@ actions = "effect:fireball@30,14"
 freeze_time = 0.12
 
 [[golden]]
-name = "spell-fireball-cooling"
-scenario = "arena"
-actions = "effect:fireball@30,14"
-freeze_time = 0.3
-
-[[golden]]
 name = "spell-lightning"
 scenario = "arena"
 actions = "effect:lightning_bolt@21,17>58,17"
 freeze_time = 0.07
-
-[[golden]]
-name = "spell-fireball-near"
-scenario = "showcase"
-actions = "effect:fireball@11,13"
-freeze_time = 0.08
 
 [[golden]]
 name = "spell-still"

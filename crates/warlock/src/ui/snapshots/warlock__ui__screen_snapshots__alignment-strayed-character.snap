@@ -1,0 +1,40 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ You kick the shopkeeper. "You will pay for that!" shouts Grimbold. You feel you have strayed from
+ the path of good. The shopkeeper stabs you. You are bleeding.
+              ┌─ Character ──────────────────────────────────────────────────────────┐
+              │                                                                      │
+              │ Garrick                                                              │
+              │                                                                      │
+              │ Race    Human                                                        │
+              │ Gender  Male                                                         │
+              │ Class   Paladin                                                      │
+              │ Age 34 · born 29 Greenleaf 1410 · year of the Water Basilisk         │
+              │ Stars   Always a way                                                 │
+              │                                                                      │
+              │ St  Strength      14                                                 │
+              │ Dx  Dexterity      9                                                 │
+              │ To  Toughness     10                                                 │
+              │ In  Intelligence  10                                                 │
+              │ Wi  Willpower     13                                                 │
+              │ Pr  Presence      11                                                 │
+              │                                                                      │
+              │ Lv  Level         1                                                  │
+              │ XP  Experience    0 / 844                                            │
+              │ HP  Hit points    13/20                                              │
+              │ Dv  Defence       13      Pv  Protection  1                          │
+              │     Stance        Neutral                                            │
+              │     Alignment     Kind                                               │
+              │     Status        Bleeding                                           │
+              │     Resistant to  acid                                               │
+              │                                                                      │
+              │ Weight 79.2 kg (you 70 kg, carrying 9.2 kg)                          │
+              │ Burdened over 19 kg, strained over 38 kg, overloaded over 57 kg      │
+              │                                                                      │
+              │ @ or Esc close   S skills                                            │
+              └─ 1 Character · 2 Inv · 3 Equip · 4 Skills · 5 Weapons · 6 Quests ────┘
+
+
+ The Courtyard  ·  HP 13/20  ·  Bleeding  ·  Lv 1  ·  06:35  ·  11 Darkening  ·  Clear   ? controls

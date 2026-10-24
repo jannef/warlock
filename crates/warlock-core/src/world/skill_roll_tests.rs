@@ -121,7 +121,8 @@ fn rolls_are_due_until_spent_on_trained_skills() {
         Some(Due {
             level: 2,
             talents: 0,
-            rolls: 3
+            rolls: 3,
+            bonus: 0,
         })
     );
     let turn = w.turn();

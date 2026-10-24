@@ -248,6 +248,9 @@ pub struct Profile {
     pub threat: u8,
     /// How many times a confirmed critical rolls the damage.
     pub crit: u8,
+    /// Added to the roll that confirms a critical, on top of the to-hit (spec §8 "Class
+    /// abilities": Peerless).
+    pub confirm: i32,
     /// Dice rolled with every roll of the damage, after its own (a magic weapon's "adds 1d4
     /// damage"; spec §8 "Magic items").
     pub extra: Option<Dice>,
@@ -366,6 +369,7 @@ impl Profile {
             bonus,
             threat: attack.threat,
             crit: attack.crit,
+            confirm: 0,
             extra: None,
             penetration: 0,
             kinds: attack.kinds,
@@ -511,7 +515,7 @@ pub fn strike_with(profile: &Profile, target: &Target, rng: &mut Rng, reroll_fum
         |k| target.protection.against(Some(k)),
     );
     let threat = natural >= i32::from(profile.threat);
-    let critical = threat && hits(roll_natural(rng), profile.to_hit, dv);
+    let critical = threat && hits(roll_natural(rng), profile.to_hit + profile.confirm, dv);
     let times = if critical { profile.crit.max(1) } else { 1 };
     let mut riders = Vec::new();
     let damage: i32 = (0..times)
@@ -653,6 +657,7 @@ mod tests {
             bonus: 0,
             threat,
             crit,
+            confirm: 0,
             extra: None,
             penetration: 0,
             kinds: Kinds::NONE,

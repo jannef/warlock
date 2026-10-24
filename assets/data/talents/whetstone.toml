@@ -1,0 +1,8 @@
+[[talent]]
+id = "whetstone"
+name = "Whetstone"
+tree = "class"
+granted = true
+description = "You keep your weapons keen: you do more damage with every weapon you wield."
+effects = [{ kind = "weapon", role = "melee", damage = 1 }]
+systems = ["combat"]

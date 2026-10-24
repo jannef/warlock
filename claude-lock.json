@@ -9,16 +9,16 @@
     "./ops/agents/engineer/agent.md": {
       "kind": "agent",
       "id": "agent_01MkxiKNng1CYBurnjW1yF4N",
-      "version": "2",
-      "hash": "3ae55b459b847674af5c5f89848d793c",
-      "remote_hash": "2c6d34c86cf469ed545968d762f98f24"
+      "version": "3",
+      "hash": "fc098adce32695f67fefa619be9f65de",
+      "remote_hash": "e87f640f1489e4e653159fac067ecb25"
     },
     "./ops/agents/finisher/agent.md": {
       "kind": "agent",
       "id": "agent_01LmfWDPRQsDGdSAigoEuJF9",
-      "version": "5",
-      "hash": "cddea884ab37ad5ac85dbc67836df9dc",
-      "remote_hash": "c4bd9f843ef6b92dc32ade8e5f6c6719"
+      "version": "8",
+      "hash": "e1f7da8dcc46979842a5041129187372",
+      "remote_hash": "b61b07cee251a86754871e77af4459b1"
     },
     "./ops/agents/finisher/environment.yaml": {
       "kind": "environment",

@@ -18,4 +18,6 @@ in `Perception::remember`). Data: creature `blood` (`"#rrggbb"` or `"none"`, def
 toward the blood (dried by age) in `draw_map` before the shader lights it, so darkvision, memory
 dimming, and palettes apply as for terrain; look mode prefixes the terrain with `Stain::word`.
 The `blood` switch hides both. Tune by capturing the arena at `wait*8` (first kills) and `wait*40`
-(after the brawl) and the `blood-wall` golden's walk.
+(after the brawl, the `arena-blood` golden), and on walls with the walk of the former
+`blood-wall` golden (#301): `move:N*3 open:N move:N*2 move:E*36 open:S move:S*3 move:SW move:W*9
+move:NW lantern kick:N*18` at `--scale 2`.

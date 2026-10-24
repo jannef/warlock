@@ -78,8 +78,13 @@ impl World {
         }
         let level = self.content.item_level(&actor.level);
         let gear = Source::Gear(self.content.creature(actor.creature).level);
-        gem::find(&self.content, &mut rng, level)
-            .or_else(|| loot::roll_from(&self.content, &mut rng, level, LootGrade::Magic, gear))
+        // Jeweller (spec §8 "Class abilities"): a gem a kill drops is cut finer.
+        let finer = self.state.player().talent_mods(&self.content).gem_cut;
+        let gem = gem::find(&self.content, &mut rng, level).map(|mut stack| {
+            gem::cut_finer(&self.content, &mut stack, finer);
+            stack
+        });
+        gem.or_else(|| loot::roll_from(&self.content, &mut rng, level, LootGrade::Magic, gear))
     }
 
     /// Keeps actor `id`'s hit points within its maximum, which falls when it takes off something

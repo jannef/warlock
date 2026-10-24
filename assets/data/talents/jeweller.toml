@@ -1,0 +1,8 @@
+[[talent]]
+id = "jeweller"
+name = "Jeweller"
+tree = "class"
+granted = true
+description = "You see how a stone should be cut: the loose gems you find from now on are of a finer cut."
+effects = [{ kind = "gem_cut", value = 1 }]
+systems = ["gems"]
