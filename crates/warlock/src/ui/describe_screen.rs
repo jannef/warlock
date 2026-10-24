@@ -8,7 +8,8 @@
 //! criticals, how far it shoots or is thrown, what it needs, its Defence. A magic or rare item that is
 //! identified lists its item level and its affixes in plain language ("Sharp: +2 damage", "of
 //! Celerity: attacks faster"); one that is not says its magic is unknown. Speed is said in words;
-//! nothing about the player's own to-hit or modifiers is shown.
+//! nothing about the player's own to-hit or modifiers is shown. A player with Keen appraiser
+//! (spec §8 "Talents") is told what it is worth ("Worth 45 gold").
 //!
 //! Read-only: Esc, Enter, or Back closes it. It is read from the perception snapshot when it
 //! opens; no game time passes while it is open.
@@ -59,13 +60,22 @@ impl DescribeScreen {
         };
         let content = view.content();
         let def = content.object(stack.object);
+        let mut lines = describe::lines(stack, content);
+        // Keen appraiser: what it is worth, after what it is.
+        if let Some(gold) = view.worth(stack) {
+            let at = lines
+                .iter()
+                .take_while(|l| l.kind == LineKind::Base)
+                .count();
+            lines.insert(at, worth(gold, stack.count));
+        }
         Self {
             glyph: def.glyph,
             fg: stack.fg(content),
             title: capitalized(&stack.title(content)),
             rarity: stack.rarity(),
             mark: equipment::mark(content, view.equipment(), item),
-            lines: describe::lines(stack, content),
+            lines,
         }
     }
 
@@ -163,6 +173,19 @@ impl Default for Row {
             text: String::new(),
             color: TEXT,
         }
+    }
+}
+
+/// What a stack of `count` is worth, `gold` in all: "Worth 45 gold", "Worth 45 gold, 15 each".
+fn worth(gold: u64, count: u32) -> Line {
+    let text = if count > 1 {
+        format!("Worth {gold} gold, {} each", gold / u64::from(count))
+    } else {
+        format!("Worth {gold} gold")
+    };
+    Line {
+        kind: LineKind::Base,
+        text,
     }
 }
 
