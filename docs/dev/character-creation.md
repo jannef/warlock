@@ -39,6 +39,33 @@ wiki show adjustments as written in data; the wiki also gives the modifiers and 
 potentials exactly). Balance is not a goal; classes only adjust starting scores, give hit
 points, train skills and weapon skills, and give a starting kit.
 
+**Names** (#218): `Character::name` (saved, hashed: saves change). `character::check_name` is the
+one check (trimmed, 1 to `MAX_NAME` = 20 characters, no control character; what the font draws is
+the text field's business, `render::atlas::draws`). `data/names.toml` (`content/names.rs`:
+`Names`, a `male` and a `female` list by race id, checked against the races; `Names::offered`
+gives `other` both; not fingerprinted) feeds `character::random_name(content, seed, spec, draw)`,
+drawn from `character/name/<race>,<gender>/<draw>`, its own stream, so no roll moves (the class
+plays no part). `CharacterSpec::start` names the character with draw 0 (else `NAMELESS`,
+"Wanderer"); a run told no name (`with_character`, a replay or command line without one) gets
+`character::default_name`: the scenario's `character_name` for its own character, else draw 0. The
+CLI and the game take `--name`; the `stats` dump layer starts `Name Brakka` and the JSON
+`character` has `name`. Character creation's Name step (`ui/name_screen.rs`, after the class) is
+the game's text field: typed text is literal, `Context::Text` edits it (`docs/dev/screens.md`); an
+empty field gives draw 0 (`Draft::name`), and the summary starts the run with the name
+(`MenuChoice::NewRun { name, .. }`). The name is shown on the character screen, the summary, the
+death screen ("Here lies Brakka,"), and the list of saved characters (`docs/dev/saves.md`); no rule
+or message reads it yet.
+
+**Wording and the seed** (#256): everything here is deterministic in the seed, and no player-facing
+text says so (UI, messages, scenario descriptions, the wiki): randomness is "chance", "fate", or
+"random". The Random rows say `Let chance pick your race.`; "other" on the gender step says `+1 to
+one stat, chosen by fate.` and the summary shows `Other` (`gender_description`; the stat is never
+named before the run starts), while the character screen, once the run has begun, names it
+(`character_screen::gender_text`: `Other (Willpower +1)`). A release build's new run gets a seed no
+one chose (`new_run_screen::fresh_seed`; see `docs/dev/screens.md`); developer builds keep the
+seed field, and only they show the seed on the summary. Code comments, data comments, the spec, and
+these notes keep explaining the determinism exactly.
+
 **Starting kits** (spec §8 "Character creation", #257): the data side is `content/kit.rs`
 (`KitLineSpec`, parsed with the race, class, or sign as written, a string or a table;
 `Content::load_kits` resolves them into `Kit` (`KitItem { keep: Keep, one_of, trained,

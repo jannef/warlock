@@ -206,7 +206,7 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   ![A forest clearing in Thornwood at noon](images/m9-forest-clearing.png)
 
 - **Levels** — the hub, a sunlit courtyard, the arena, the quarry, the Frost Grotto, the trap hall, a 420×300 cavern, and "The Depths": rooms-and-corridors
-  and cave levels generated from the run seed (numbers or words), with hand-made vaults stamped in.
+  and cave levels generated for each run, with hand-made vaults stamped in.
 - **Special rooms** — ADOM-like, about one level of the Depths in three has a room that changes
   the rules inside it, announced the first time you step in: a shadowed room that drains every
   light, an echoing hall that makes every sound loud, a hushed chamber for sneaking, a softly

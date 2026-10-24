@@ -192,8 +192,8 @@ mod tests {
             scenario: Some(ScenarioPick {
                 id: "showcase".into(),
                 name: showcase.name.clone(),
-                typed_seed: None,
                 seed: 1,
+                shows_seed: true,
                 character: showcase.character.clone(),
                 start: showcase.start,
             }),
