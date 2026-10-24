@@ -88,6 +88,7 @@ mod alignment;
 mod bleed;
 mod buff;
 mod carry;
+mod class_ability;
 mod dev;
 mod dig;
 mod disarm;
@@ -645,6 +646,7 @@ impl World {
     }
 
     fn assemble(content: Arc<Content>, mut state: WorldState) -> Self {
+        class_ability::refresh(&mut state, &content);
         let mut lights = LightCache::default();
         let perception = Box::new(Perception::compute(&state, &content, &mut lights));
         perception.remember(state.current_mut());
@@ -937,6 +939,7 @@ impl World {
             Action::Search(turns) => return Spent::Search(*turns),
             Action::Disarm(dir) => return self.disarm(*dir, events),
             Action::SecondWind => return self.second_wind(events),
+            Action::Use(active, dir) => return self.use_class(*active, *dir, events),
             Action::Talent { id, choice } => return self.take_talent(id, choice.as_deref()),
             Action::Advance(skill) => return self.advance_skill(skill),
             Action::SetVision(id) => return self.set_vision(id),
@@ -1003,6 +1006,8 @@ mod buff_tests;
 mod burden_tests;
 #[cfg(test)]
 mod character_tests;
+#[cfg(test)]
+mod class_tests;
 #[cfg(test)]
 mod cost_tests;
 #[cfg(test)]

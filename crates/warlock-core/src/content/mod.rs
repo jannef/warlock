@@ -63,7 +63,9 @@ pub use affix::{
 pub use alignment::{AlignmentRules, BandDef, ByAlignment, Shifts};
 pub use anim::GlyphAnim;
 pub use calendar::Calendar;
-pub use class::ClassDef;
+#[cfg(test)]
+pub(crate) use class::strip_tables as strip_class_tables;
+pub use class::{ClassAbility, ClassAbilityId, ClassActive, ClassDef};
 pub use creature::{
     Budge, Combat, CreatureDef, CreatureId, DEFAULT_SIGHT, Hide, NORMAL_SPEED, NaturalAttack,
     OnEat, SPEEDS,
@@ -624,6 +626,8 @@ impl Content {
         if files.table("talents").next().is_some() {
             content.talents = talent::parse(files.table("talents"), &content)?;
         }
+        // The class tables after them: their abilities name statuses, lights, trees, and systems.
+        content.load_class_abilities()?;
         let path = "data/horoscope.toml";
         if let Some(text) = files.get_optional(path) {
             content.horoscope = Some(Horoscope::parse(path, text)?);
@@ -1152,6 +1156,32 @@ impl Content {
             .id(name)
             .map(Some)
             .ok_or_else(|| format!("creature `{}`: unknown faction `{name}`", spec.id))
+    }
+
+    /// Resolves every class's level table and bonus picks (spec §8 "Class abilities"), then
+    /// holds the systems to the coverage bar's class abilities (`[coverage] min_class`).
+    fn load_class_abilities(&mut self) -> Result<(), ContentError> {
+        let path = "data/classes/";
+        for i in 0..self.classes.len() {
+            let (levels, trees, abilities) = (self.classes[i].resolve_abilities(self))
+                .map_err(|m| ContentError::new(path, m))?;
+            if abilities.len() > usize::from(u8::MAX) {
+                return Err(ContentError::new(path, "too many class abilities"));
+            }
+            let class = &mut self.classes[i];
+            (class.bonus_levels, class.bonus_trees, class.abilities) = (levels, trees, abilities);
+        }
+        let count = |system: &str| -> u32 {
+            let Some(id) = self.talents.system_id(system) else {
+                return 0;
+            };
+            let abilities = self.classes.iter().flat_map(|c| &c.abilities);
+            abilities.filter(|a| a.systems.contains(&id)).count() as u32
+        };
+        if let Some(gap) = self.talents.coverage_gap(&count) {
+            return Err(ContentError::new(path, format!("coverage: {gap}")));
+        }
+        Ok(())
     }
 
     /// Status effects and the healing rules (optional: none, and the default healing).
@@ -2202,6 +2232,32 @@ impl Content {
     /// The class with id `id`.
     pub fn class(&self, id: &str) -> Option<&ClassDef> {
         self.classes.iter().find(|c| c.id == id)
+    }
+
+    /// The place of the class with id `id` in [`Content::classes`].
+    pub fn class_index(&self, id: &str) -> Option<u8> {
+        (self.classes.iter().position(|c| c.id == id)).and_then(|i| u8::try_from(i).ok())
+    }
+
+    /// A class ability (spec §8 "Class abilities").
+    pub fn class_ability(&self, id: ClassAbilityId) -> &ClassAbility {
+        &self.classes[usize::from(id.class)].abilities[usize::from(id.index)]
+    }
+
+    /// The abilities class `class` has at character `level` or below, in level order.
+    pub fn class_abilities_at(&self, class: &str, level: u8) -> Vec<ClassAbilityId> {
+        let Some(c) = self.class_index(class) else {
+            return Vec::new();
+        };
+        (self.classes[usize::from(c)].abilities.iter().enumerate())
+            .filter(|(_, a)| a.level <= level)
+            .filter_map(|(i, _)| {
+                Some(ClassAbilityId {
+                    class: c,
+                    index: u8::try_from(i).ok()?,
+                })
+            })
+            .collect()
     }
 
     /// The alignment rules of `data/alignment.toml` (spec §8 "Alignment"); `None` without the

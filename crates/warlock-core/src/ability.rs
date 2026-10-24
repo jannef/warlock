@@ -25,7 +25,9 @@
 
 use crate::action::Action;
 use crate::alignment::Requirement;
-use crate::content::{ActionKind, Content, SkillDef, StatusId, TalentEffect};
+use crate::content::{
+    ActionKind, ClassAbility, ClassActive, Content, SkillDef, StatusId, TalentEffect,
+};
 use crate::geom::Dir;
 use crate::skills::{Effect, SkillId};
 use crate::world::Actor;
@@ -34,6 +36,10 @@ use std::borrow::Cow;
 /// An ability, as the abilities menu lists it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Ability {
+    /// A class's active (spec §8 "Class abilities"): [`Action::Use`], had by whoever's class
+    /// gives it at their level; unavailable while its cooldown lasts (Rage: while raging and
+    /// exhausted), and, for the paladin's gifts, while they have strayed from Good.
+    Class(ClassActive),
     /// A skill used as an action (`kind = "action"` in `data/skills.toml`) that the actor is
     /// trained in, whose use is not in the game yet: listed, never available (spec §8
     /// "Skills"). A use, when it comes, is a variant of its own with its action, and its skill
@@ -64,7 +70,7 @@ pub enum Ability {
 pub enum Source {
     /// The character's race (none yet).
     Race,
-    /// The character's class (none yet).
+    /// The character's class (spec §8 "Class abilities"): its actives.
     Class,
     /// A talent the character took (spec §8 "Talents"): its active ones.
     Talent,
@@ -178,9 +184,13 @@ impl Ability {
             .flat_map(|(_, def)| def.effects_at(def.rank_count()))
             .any(|e| matches!(e, TalentEffect::SecondWind { .. }));
         let talents = wind.then_some(Ability::SecondWind);
+        // Classes: the actives some class's table has, in their order.
+        let classes = (ClassActive::ALL.iter())
+            .filter(|&&a| class_ability_of(content, a).is_some())
+            .map(|&a| Ability::Class(a));
         // Weapon skills and fighting styles: the shield bash.
         let weapon_skills = [Ability::ShieldBash];
-        let mut all: Vec<Ability> = (talents.into_iter())
+        let mut all: Vec<Ability> = (classes.chain(talents))
             .chain(skills)
             .chain(weapon_skills)
             .collect();
@@ -210,6 +220,7 @@ impl Ability {
     /// bash, everyone.
     pub(crate) fn had_by(self, actor: &Actor, content: &Content) -> bool {
         match self {
+            Ability::Class(active) => actor.talent_mods(content).has_active(active),
             Ability::Skill(id) => actor.skills.get(id).is_some(),
             Ability::Disarm => actor.skills.trains_effect(content, Effect::Disarm),
             Ability::PickLock => actor.skills.trains_effect(content, Effect::Pick),
@@ -221,6 +232,7 @@ impl Ability {
     /// Its id in dumps: `shield_bash`, or the skill's id.
     pub fn id(self, content: &Content) -> &str {
         match self {
+            Ability::Class(active) => active.id(),
             Ability::Skill(id) => &content.skill(id).id,
             Ability::Disarm => "disarm",
             Ability::PickLock => "pick_lock",
@@ -232,6 +244,7 @@ impl Ability {
     /// Its name in the menu.
     pub fn name(self, content: &Content) -> &str {
         match self {
+            Ability::Class(active) => class_ability_of(content, active).map_or("", |a| &a.name),
             Ability::Skill(id) => &content.skill(id).name,
             Ability::Disarm => "Disarm a trap",
             Ability::PickLock => "Pick lock",
@@ -243,6 +256,9 @@ impl Ability {
     /// What it does, in a line.
     pub fn description(self, content: &Content) -> &str {
         match self {
+            Ability::Class(active) => {
+                class_ability_of(content, active).map_or("", |a| &a.description)
+            }
             Ability::Skill(id) => &content.skill(id).description,
             Ability::Disarm => {
                 "Take apart a trap you know of next to you; a clumsy try sets it off."
@@ -259,6 +275,7 @@ impl Ability {
     /// Where it comes from: its group in the menu.
     pub const fn source(self) -> Source {
         match self {
+            Ability::Class(_) => Source::Class,
             Ability::Skill(_) | Ability::Disarm | Ability::PickLock => Source::Skill,
             Ability::SecondWind => Source::Talent,
             Ability::ShieldBash => Source::WeaponSkill,
@@ -268,7 +285,8 @@ impl Ability {
     /// What it asks for before it is used.
     pub const fn aim(self) -> Aim {
         match self {
-            Ability::Skill(_) | Ability::SecondWind => Aim::Nothing,
+            Ability::Class(active) if active.aimed() => Aim::Direction,
+            Ability::Class(_) | Ability::Skill(_) | Ability::SecondWind => Aim::Nothing,
             Ability::Disarm | Ability::PickLock | Ability::ShieldBash => Aim::Direction,
         }
     }
@@ -277,6 +295,7 @@ impl Ability {
     /// that action, spec §8 "Time"); `None` for one with no use yet.
     pub const fn cost(self) -> Option<ActionKind> {
         match self {
+            Ability::Class(active) => Some(active.cost()),
             Ability::Skill(_) => None,
             Ability::Disarm => Some(ActionKind::Disarm),
             Ability::PickLock => Some(ActionKind::PickLock),
@@ -289,6 +308,11 @@ impl Ability {
     /// yet, or one that asks for a direction without it.
     pub const fn action(self, dir: Option<Dir>) -> Option<Action> {
         match (self, dir) {
+            (Ability::Class(active), dir) if active.aimed() => match dir {
+                Some(dir) => Some(Action::Use(active, Some(dir))),
+                None => None,
+            },
+            (Ability::Class(active), _) => Some(Action::Use(active, None)),
             (Ability::Skill(_), _) => None,
             (Ability::SecondWind, _) => Some(Action::SecondWind),
             (Ability::Disarm, Some(dir)) => Some(Action::Disarm(dir)),
@@ -302,6 +326,11 @@ impl Ability {
     /// status of the actor's that blocks the kind of action it costs ([`Unavailable::While`]).
     pub(crate) fn unavailable(self, actor: &Actor, content: &Content) -> Option<Unavailable> {
         let own = match self {
+            Ability::Class(active) => {
+                let required = class_ability_of(content, active).and_then(|a| a.requires_alignment);
+                (strayed(actor, content, required))
+                    .or_else(|| class_cooldown(actor, content, active).map(Unavailable::While))
+            }
             Ability::Skill(_) => Some(Unavailable::NotYet),
             Ability::Disarm | Ability::PickLock => None,
             Ability::SecondWind => (actor.talent_mods(content).second_wind)
@@ -318,6 +347,36 @@ impl Ability {
             blocked.map(Unavailable::While)
         })
     }
+}
+
+/// The first class ability in `content` with active `active` (shared entries are alike: their
+/// name and description are its).
+fn class_ability_of(content: &Content, active: ClassActive) -> Option<&ClassAbility> {
+    (content.classes().iter())
+        .flat_map(|c| &c.abilities)
+        .find(|a| a.active() == Some(active))
+}
+
+/// The status of `actor`'s that keeps it from using class active `active` now: its cooldown,
+/// or for Rage the rage itself and what follows it.
+fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Option<StatusId> {
+    let mods = actor.talent_mods(content);
+    let cooldowns: Vec<StatusId> = match active {
+        ClassActive::Rage => (mods.rage.into_iter())
+            .flat_map(|s| [Some(s), content.status(s).follows])
+            .flatten()
+            .collect(),
+        ClassActive::VeteransWind => mods.veterans_wind.map(|w| w.cooldown).into_iter().collect(),
+        ClassActive::LayOnHands => mods.lay_on_hands.map(|h| h.cooldown).into_iter().collect(),
+        ClassActive::Smite => mods.smite.map(|s| s.cooldown).into_iter().collect(),
+        ClassActive::QuiveringPalm => mods
+            .quivering_palm
+            .map(|p| p.cooldown)
+            .into_iter()
+            .collect(),
+        ClassActive::Whirlwind | ClassActive::HolyRadiance => Vec::new(),
+    };
+    cooldowns.into_iter().find(|&s| actor.effects.has(s))
 }
 
 /// Why `actor` cannot use an ability that asks for alignment `required` (its data's

@@ -152,7 +152,7 @@ impl World {
 
     /// What one level adds to the player's hit points: half the class's hit points (the
     /// scenario's `hp` without a character) plus the Toughness modifier, at least 1.
-    fn level_hp(&self, content: &Content) -> i32 {
+    pub(super) fn level_hp(&self, content: &Content) -> i32 {
         let class_hp = match &self.state.character {
             Some(c) => c.spec.class(content).map_or(0, |class| class.hp),
             None => content

@@ -68,5 +68,38 @@
 #                 own stream, so no other roll moves). Food is as fresh as the run is new. Nobody
 #                 starts Strained; only the aristocrat and the merchant may start Burdened, by
 #                 their wealth.
+#   bonus_talents the levels that bring a bonus talent pick and the talent trees it comes from
+#                 (spec §8 "Class abilities"; ../talents.toml): { levels = [10, 20, 30, 45, 55],
+#                 trees = ["guard", "vigour"] }; the pick is due like the level's own talent
+#                 (nothing is banked) and only a talent of those trees spends it
+#   [[class.ability]]  the level table (spec §8 "Class abilities"), one per ability, after the
+#                 class's other keys:
+#                   level        the character level that brings it (1: from the start)
+#                   id, name     its id (an active's is its use's: `use:rage`) and its name
+#                   description  what it does, in the game's words: never a number the game
+#                                hides (as a talent's; ../talents/README.toml)
+#                   learn        what a level that brings it says ("You can now rage."); none at
+#                                level 1
+#                   effects      what it does: talent effects (../talents/README.toml), read
+#                                where the talents' are, and the class's own: the actives
+#                                rage { status }, veterans_wind { per_level, at_least, cooldown },
+#                                whirlwind, lay_on_hands { per_level, cooldown, degrees },
+#                                smite { per_levels, sides, cooldown, degrees },
+#                                radiance { status, light }, quivering_palm { status, severity,
+#                                cooldown, degrees } (each used from the abilities menu, its
+#                                id that of the ability), and the passives avatar,
+#                                blood_frenzy { seconds }, unstoppable { statuses },
+#                                hardened { bonus }, stat_gift { stat, value } (once, as the
+#                                level comes), steadfast, disease_immune, checks { stat, value },
+#                                no_penalty_to { stat }, raise_percent { status, value },
+#                                step_percent { value, unarmoured, unburdened, no_shield },
+#                                natural_unarmoured { value }, weapon_marks { role, value },
+#                                two_handed_crit { value }, unarmed_die { sides },
+#                                stance_dodge { stance, percent }, a free_blow of "flurry", and
+#                                weapon's crit and at_rank
+#                   systems      the systems it touches, from the list in ../talents.toml
+#                   requires_alignment  the band its active asks ({ min = "good" }: the
+#                                paladin's gifts), as talents ask it
+#                 The abilities are not saved: they follow from the class and the level.
 #
 # Balance is not a goal: some choices are poor on purpose.

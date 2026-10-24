@@ -330,6 +330,13 @@ impl Stats {
         rises
     }
 
+    /// Raises the score and the potential in `stat` by `by` (a class's gift, spec §8 "Class
+    /// abilities": Mighty thews), never past [`SCORES`].
+    pub fn gift(&mut self, stat: Stat, by: i32) {
+        self.score[stat] = adjusted(self.score[stat], by);
+        self.potential[stat] = adjusted(self.potential[stat], by).max(self.score[stat]);
+    }
+
     /// These stats with every score adjusted by `by` (kept within [`SCORES`]; a potential below
     /// its score is raised to it): the scores the rules read while a status effect lowers some
     /// (spec §8 "Status effects").

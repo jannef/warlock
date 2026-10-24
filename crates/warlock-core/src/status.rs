@@ -238,7 +238,7 @@ impl Effects {
             if let Some(by) = content.status(e.status).penalty_at(e.severity) {
                 let sum = total.get_or_insert(PerStat::splat(0));
                 for stat in Stat::ALL {
-                    sum[stat] += talents.penalty(e.status, i32::from(by[stat]));
+                    sum[stat] += talents.penalty(e.status, stat, i32::from(by[stat]));
                 }
             }
         }

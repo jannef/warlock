@@ -31,6 +31,9 @@ pub struct Due {
     /// Skill rolls left (`world/skill_roll.rs`).
     #[serde(default, skip_serializing_if = "is_zero")]
     pub rolls: u8,
+    /// Bonus talent picks left, from the class's bonus trees (spec §8 "Class abilities").
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub bonus: u8,
 }
 
 fn is_zero(n: &u8) -> bool {
@@ -40,7 +43,12 @@ fn is_zero(n: &u8) -> bool {
 impl Due {
     /// Whether nothing is left to choose.
     pub fn is_spent(&self) -> bool {
-        self.talents == 0 && self.rolls == 0
+        self.talents == 0 && self.rolls == 0 && self.bonus == 0
+    }
+
+    /// Whether a talent pick of any kind is left.
+    pub fn picks(&self) -> bool {
+        self.talents > 0 || self.bonus > 0
     }
 }
 
@@ -48,6 +56,14 @@ impl World {
     /// The choices due now, the lowest level's first; `None` when the player may act freely.
     pub fn due(&self) -> Option<Due> {
         self.state.progress.due.first().copied()
+    }
+
+    /// The trees the player's class's bonus picks come from (none without a character).
+    pub(crate) fn bonus_trees(&self) -> Vec<crate::content::TreeId> {
+        (self.state.character.as_ref())
+            .and_then(|c| c.spec.class(&self.content).ok())
+            .map(|c| c.bonus_trees.clone())
+            .unwrap_or_default()
     }
 
     /// Everything a prerequisite may ask of the player now ([`Candidate`]).
@@ -61,24 +77,30 @@ impl World {
     }
 
     /// Levels `from + 1..=to` came: each hands out what it brings (its skill rolls, a talent
-    /// pick every `talent_every` levels, `data/experience.toml`), and the hit points the
+    /// pick every `talent_every` levels, `data/experience.toml`, the class's abilities and
+    /// bonus picks at its table's levels, spec §8 "Class abilities"), and the hit points the
     /// talents held grow by at each of them.
     pub(super) fn level_up(&mut self, from: u8, to: u8) {
         let every = self.content.experience().talent_every();
-        let mods = self.state.player().talent_mods(&self.content);
         let rolls = self.level_rolls();
+        let class = (self.state.character.as_ref()).and_then(|c| c.spec.class(&self.content).ok());
+        let bonus_levels = class.map(|c| c.bonus_levels.clone()).unwrap_or_default();
         let mut hp = 0;
         for level in from.saturating_add(1)..=to {
             let talents = u8::from(every > 0 && level % every == 0);
-            if talents > 0 || rolls > 0 {
+            let bonus = u8::from(bonus_levels.contains(&level));
+            if talents > 0 || rolls > 0 || bonus > 0 {
                 (self.state.progress.due).push(Due {
                     level,
                     talents,
                     rolls,
+                    bonus,
                 });
             }
-            hp += mods.hp_at(level) - mods.hp_at(level - 1);
             self.check_stats();
+            hp += self.class_level(level);
+            let mods = self.state.player().talent_mods(&self.content);
+            hp += mods.hp_at(level) - mods.hp_at(level - 1);
         }
         if hp != 0 {
             let player = self.player_mut();
@@ -99,10 +121,14 @@ impl World {
         }
         let no_rolls = self.state.player().skills.is_empty();
         let rolls_left = !no_rolls && due.iter().any(|d| d.rolls > 0);
-        let no_talents = due.iter().any(|d| d.talents > 0)
+        let offers = talent::offers(&self.content, &self.candidate());
+        let no_talents = due.iter().any(|d| d.talents > 0) && !rolls_left && offers.is_empty();
+        let trees = self.bonus_trees();
+        let no_bonus = due.iter().any(|d| d.bonus > 0)
             && !rolls_left
-            && talent::offers(&self.content, &self.candidate()).is_empty();
-        if !no_rolls && !no_talents {
+            && !(offers.iter())
+                .any(|(id, _)| trees.contains(&self.content.talents().get(*id).tree));
+        if !no_rolls && !no_talents && !no_bonus {
             return;
         }
         for due in &mut self.state.progress.due {
@@ -111,6 +137,9 @@ impl World {
             }
             if no_talents {
                 due.talents = 0;
+            }
+            if no_bonus {
+                due.bonus = 0;
             }
         }
         self.state.progress.due.retain(|d| !d.is_spent());
@@ -138,7 +167,7 @@ impl World {
     /// Takes no time.
     pub(super) fn take_talent(&mut self, id: &str, choice: Option<&str>) -> Spent {
         let content = self.content.clone();
-        let Some(at) = (self.state.progress.due.iter()).position(|d| d.talents > 0) else {
+        let Some(at) = (self.state.progress.due.iter()).position(Due::picks) else {
             self.say("You have no talent to choose now.");
             return Spent::Nothing;
         };
@@ -148,6 +177,21 @@ impl World {
         };
         let def = content.talents().get(talent);
         let name = def.name_for(&content, choice);
+        // A bonus pick is spent on a talent of the class's bonus trees first; any other talent
+        // takes the level's own pick.
+        let trees = self.bonus_trees();
+        let due = self.state.progress.due[at];
+        let bonus = due.bonus > 0 && trees.contains(&def.tree);
+        if !bonus && due.talents == 0 {
+            let names: Vec<&str> = (trees.iter())
+                .map(|&t| content.talents().tree(t).name.as_str())
+                .collect();
+            self.say(format!(
+                "Your class's pick is from {}.",
+                crate::talent::or_list(&names)
+            ));
+            return Spent::Nothing;
+        }
         let rank = match talent::may_take(&content, &self.candidate(), def, choice) {
             Ok(rank) => rank,
             Err(why) => {
@@ -162,7 +206,11 @@ impl World {
         player.hp_base += hp;
         player.hp += hp;
         let due = &mut self.state.progress.due[at];
-        due.talents -= 1;
+        if bonus {
+            due.bonus -= 1;
+        } else {
+            due.talents -= 1;
+        }
         if due.is_spent() {
             self.state.progress.due.remove(at);
         }
@@ -186,9 +234,14 @@ impl World {
         }
         self.advance_auto();
         let content = self.content.clone();
-        while self.state.progress.due.iter().any(|d| d.talents > 0) {
+        while let Some(due) = self.state.progress.due.iter().find(|d| d.picks()).copied() {
+            let trees = self.bonus_trees();
             let offers = talent::offers(&content, &self.candidate());
-            let Some((id, ways)) = offers.into_iter().next() else {
+            // A bonus pick alone takes the first talent of the class's trees.
+            let mut offers = (offers.into_iter()).filter(|(id, _)| {
+                due.talents > 0 || trees.contains(&content.talents().get(*id).tree)
+            });
+            let Some((id, ways)) = offers.next() else {
                 break;
             };
             let talent = content.talents().get(id).id.clone();

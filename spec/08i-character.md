@@ -331,6 +331,73 @@ developer notes (CLAUDE.md, `docs/dev/`).
     prerequisites and whether each holds, and the ways it may be taken now); the dumps'
     `talents` and dev `progress` layers; JSON `talents`, `due`. Never a rule's number: the
     wiki's Talents page states them.
+- **Class abilities** (`content/class.rs`: `ClassAbility`, `ClassActive`; `world/class_ability.rs`;
+  M30, #243; design `docs/design/progression.md` §4): what a class's levels give. Each class file
+  (`data/classes/NN-id.toml`) holds its level table as `[[class.ability]]` rows (`level`, `id`,
+  `name`, `description` in the game's words, `learn`, the line a level that brings it says,
+  `effects` of the talents' kinds and the class's own, `systems` from the coverage list,
+  `requires_alignment`) and its `bonus_talents = { levels, trees }`.
+  - **Who has them**: the player's class's abilities at or below their level, never saved:
+    set on `Actor::talents` (beside the talents taken, `Talents::class`) as a world is made or
+    loaded and as each level comes, and read with the talents through `Actor::talent_mods`. A
+    level that brings one says its `learn` line after "Welcome to level N." and its stat
+    checks ("You can now rage."); what is given once (Mighty thews' +2 Strength and Toughness,
+    score and potential) is handed out then. The coming ones are never shown in the game (the
+    wiki lists the tables).
+  - **Bonus picks**: at the levels of `bonus_talents` a level brings a bonus pick (`Due::bonus`)
+    beside its own; only a talent of the class's trees spends it, refused otherwise ("Your
+    class's pick is from Weaponcraft or Guard."); a talent of those trees spends a bonus pick
+    first; like every pick it must be made before anything else and is dropped when nothing in
+    those trees may be taken. Warrior: Weaponcraft or Guard at 4, 10, 16, 22, 28, 34, 46, 58;
+    barbarian Might or Vigour, paladin Guard or Vigour, monk Finesse or Vigour at 10, 20, 30,
+    45, 55.
+  - **Actives** (`Ability::Class`, the abilities menu's Class group; `Action::Use`, `use:rage`,
+    `use:smite:E`; refused, no time, without the ability, while its cooldown lasts, or while
+    the player has strayed from the band it asks): Rage (Raging: St +2, To +2, In −2, no
+    reading, 5 minutes, then Exhausted 10 minutes; no rage while either lasts; a wait's time),
+    Veteran's wind (1 hit point a level back, at least 10, then Winded; a wait), Whirlwind (a
+    blow at every hostile beside, clockwise from the north, each with the free blows the end of
+    an attack brings, for one melee attack's price and one exertion), Lay on hands (2 hit
+    points a level, then two degrees of Drained, 10 minutes, standing in for its mana until
+    the mana PR; a cast; Good or better), Smite (a blow in a direction with 1d6 more per 10
+    levels, at least 1d6, a magic weapon's extra die folded into the bonus at its average; then
+    Spent, 5 minutes; Good or better), Holy radiance (on and off: Radiant, with no end of its
+    own, sheds the faint item glow, reaching 3 cells, from the player, a light source like a
+    glowing item's; a cast; Good or better), Quivering palm (a bare-handed blow in a direction,
+    refused with a weapon in hand; a hit that does damage leaves three degrees of Bleeding;
+    then two degrees of Spent, 10 minutes).
+  - **Passives**, each one read: Weapon drill (melee weapon skill marks +25 %, `practise`),
+    Shield wall and Shield of faith (Shield +1; Shield of faith also +10 to Sword and Board's
+    bash chance), Cleaving strike (the cleave free blow; with the Cleave talent too, great
+    cleave), Armour drill (worn armour's Dexterity cap +1, Protection +1 while wearing any),
+    Weapon mastery (threat +1 with melee weapon skills at rank 8 or more), Iron stance (the
+    aggressive stance's Dodge penalty and the defensive's to-hit penalty gone), Champion
+    (critical multiplier +1 with melee weapons, at most ×5); Thick hide (natural armour +2 in
+    no body armour: nothing in the Body slot), Fast movement (steps 10 % cheaper Unburdened in
+    no body armour, `World::step_price`), Brutal critical (critical multiplier +1 with a
+    two-handed weapon), Hardened (each level past `hp_level` adds the level's hit points again
+    and 1 more), Mighty thews, Blood frenzy (a kill while raging sets the rage's easing back a
+    minute, never past its full length), Mighty rage (Raging's raises doubled, Exhausted eases
+    twice as fast), Unstoppable (while raging bleeding and poison tick nothing, and a blow that
+    would take the last hit point leaves it and ends the rage, so once a rage); Divine grace
+    (disease checks +2, poison eases twice as fast), Divine health and Purity of body (no
+    disease is ever caught: `World::expose` refuses, nothing rolled), Steadfast (Burdened costs
+    nothing, as a dwarf), Bulwark (Protection +2), Avatar (Lay on hands heals fully, cures every
+    status that ticks and every disease, one degree of Drained); Martial arts (bare hands and
+    kicks roll 1d6), Fleet (steps 10 % cheaper in no body armour and with no shield), Deflect
+    missiles (Dodge +2 against missiles), Flurry (a melee attack with nothing in hand strikes
+    twice, the second at −2), Still mind (+2 on checks made with Willpower: diseases', noticing
+    in passing; no status lowers Intelligence or Willpower), Diamond soul (Deflection +2),
+    Perfect self (bare hands 1d8; unarmed threat +1, critical multiplier +1). The paladin's
+    passives do not ask for Good; only the gifts used from the menu do.
+  - **Resources to come**: Rage, Blood frenzy, Mighty rage, Unstoppable, Flurry, and Quivering
+    palm ship as statuses and passives and move onto alternative resources with #225.
+  - **Coverage**: class abilities name systems from the coverage list; the wiki's "by system"
+    table lists them beside the talents; `min_class` stays 0 until every class has its table.
+  - **What the player sees**: the `learn` lines; the actives in the abilities menu with their
+    cooldowns; the `class` dump layer (`Rage (used)`); `progress` (dev) says bonus picks
+    (`1 bonus talent`), JSON `due` has `bonus`. Never a number the game hides: the wiki's
+    class tables state the rules.
 - **Weapon skills** (`warlock-core/src/weapon_skills.rs`, training; `content/weapon_skill.rs`,
   the data; M22, #134), ADOM-like, with *The Riddle of Steel*'s defaults:
   - **Skills** (`data/weapon_skills.toml`, §7): the categories weapons belong to. A skill's

@@ -2,7 +2,7 @@
 
 use crate::combat::Strike;
 use crate::content::{
-    ActionKind, CombatStance, DamageTypeId, DiseaseId, ObjectId, StatusId, TrapId,
+    ActionKind, ClassActive, CombatStance, DamageTypeId, DiseaseId, ObjectId, StatusId, TrapId,
 };
 use crate::geom::{Dir, Pos};
 use crate::time::{DAY, Duration};
@@ -127,6 +127,12 @@ pub enum Action {
     /// once, then Winded for a while. Takes the time of `wait`; refused (no time) without the
     /// talent or while winded.
     SecondWind,
+    /// Use a class active (spec §8 "Class abilities"; the abilities menu's Class group): rage,
+    /// veteran's wind, whirlwind, lay on hands, holy radiance, and, aimed in a direction, smite
+    /// and quivering palm (`use:rage`, `use:smite:E`). Takes the time of its cost's action;
+    /// refused (no time) without the ability, while its cooldown lasts, or without the
+    /// direction it asks.
+    Use(ClassActive, Option<Dir>),
     /// Take talent `id` (an id in `data/talents/`), for `choice` if it takes one (spec §8
     /// "Talents"): one of the picks a level brings, made at once (nothing is banked). Refused
     /// with the reason when none is due or a prerequisite fails. Takes no game time; recorded in
@@ -619,6 +625,8 @@ impl fmt::Display for Action {
             Action::Search(turns) => write!(f, "search:{turns}"),
             Action::Disarm(d) => write!(f, "disarm:{d}"),
             Action::SecondWind => f.write_str("second_wind"),
+            Action::Use(active, None) => write!(f, "use:{}", active.id()),
+            Action::Use(active, Some(d)) => write!(f, "use:{}:{d}", active.id()),
             Action::Talent { id, choice: None } => write!(f, "talent:{id}"),
             Action::Talent {
                 id,
@@ -695,6 +703,16 @@ impl FromStr for Action {
             },
             "wait" => bare(Action::Wait),
             "second_wind" => bare(Action::SecondWind),
+            "use" => {
+                let usage = || "`use` needs a class ability, e.g. `use:rage` or `use:smite:E`";
+                let (id, dir) = match arg.ok_or_else(usage)?.split_once(':') {
+                    Some((id, dir)) => (id, Some(dir.parse::<Dir>()?)),
+                    None => (arg.unwrap_or_default(), None),
+                };
+                let active = ClassActive::from_id(id)
+                    .ok_or_else(|| format!("`{id}` is no class ability that is used"))?;
+                Ok(Action::Use(active, dir))
+            }
             "ascend" => bare(Action::Ascend),
             "descend" => bare(Action::Descend),
             "lantern" => bare(Action::ToggleLantern),
@@ -1087,6 +1105,8 @@ mod tests {
             },
             Action::Advance("stealth".into()),
             Action::SecondWind,
+            Action::Use(ClassActive::Rage, None),
+            Action::Use(ClassActive::Smite, Some(Dir::SW)),
             Action::LevelUpAuto,
             Action::GrantXp(2500),
             Action::Freeze {

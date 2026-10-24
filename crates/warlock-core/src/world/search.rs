@@ -115,9 +115,11 @@ impl World {
                 stats.modifier(Stat::Intelligence) + player.skill_effect(content, Effect::Search)
             }
             Look::Passive => {
+                let talents = player.talent_mods(content);
                 stats.modifier(Stat::Willpower)
                     + player.skill_effect(content, Effect::Spot)
-                    + player.talent_mods(content).notice.unwrap_or(0)
+                    + talents.notice.unwrap_or(0)
+                    + talents.check(Stat::Willpower)
                     - content.search().passive_penalty
             }
         };

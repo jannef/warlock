@@ -69,6 +69,10 @@ pub enum Layer {
     /// Not a map: the player's talents in the order taken, one a line with its rank of how many
     /// and its choice (`Hardy 2/3`, `Weapon focus (long blades)`); never what a rank gives.
     Talents,
+    /// Not a map: the abilities the player's class has given them, in level order, one a line
+    /// (`Weapon drill`, `Rage (used)` for one used from the abilities menu); never what one does
+    /// in numbers, nor the ones still to come.
+    Class,
     /// Not a map: the player's abilities in the abilities menu's order, one a line with its
     /// source and what it asks for, or why it cannot be used now (`Shield bash (weapon skill):
     /// a direction`, `Steal (skill): not usable yet`).
@@ -120,6 +124,7 @@ impl Layer {
         Layer::Skills,
         Layer::WeaponSkills,
         Layer::Talents,
+        Layer::Class,
         Layer::Abilities,
         Layer::Traps,
         Layer::Quests,
@@ -145,6 +150,7 @@ impl Layer {
             Layer::Skills => "skills",
             Layer::WeaponSkills => "weapon_skills",
             Layer::Talents => "talents",
+            Layer::Class => "class",
             Layer::Abilities => "abilities",
             Layer::Traps => "traps",
             Layer::Quests => "quests",
@@ -176,7 +182,7 @@ impl FromStr for Layer {
             .ok_or_else(|| {
                 format!(
                     "unknown layer `{s}` (expected view, fov, memory, light, sound, blood, \
-                     inventory, equipment, stats, skills, weapon_skills, talents, abilities, \
+                     inventory, equipment, stats, skills, weapon_skills, talents, class, abilities, \
                      traps, quests, truth, actors, progress, rooms, ice)"
                 )
             })
@@ -202,6 +208,7 @@ pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
         Layer::Skills => skill_rows(&world.perception()),
         Layer::WeaponSkills => weapon_skill_rows(&world.perception()),
         Layer::Talents => talent_rows(&world.perception()),
+        Layer::Class => class_rows(&world.perception()),
         Layer::Abilities => ability_rows(&world.perception()),
         Layer::Traps => trap_rows(&world.perception()),
         Layer::Quests => quest_rows(&world.perception()),
@@ -254,6 +261,7 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
         | Layer::Skills
         | Layer::WeaponSkills
         | Layer::Talents
+        | Layer::Class
         | Layer::Abilities
         | Layer::Traps
         | Layer::Quests
@@ -586,6 +594,17 @@ fn talent_rows(view: &PerceptionView<'_>) -> Vec<String> {
         .collect()
 }
 
+/// The abilities the player's class has given them, one a line in level order (`Rage (used)`
+/// for an active).
+fn class_rows(view: &PerceptionView<'_>) -> Vec<String> {
+    (view.own_class_abilities().iter())
+        .map(|a| match a.active() {
+            Some(_) => format!("{} (used)", a.name),
+            None => a.name.clone(),
+        })
+        .collect()
+}
+
 /// The player's progression (dev): the choices due, the talents they may take now with the
 /// choices each may be taken for, and the creature types whose first kill has paid.
 fn progress_rows(world: &World) -> Vec<String> {
@@ -599,10 +618,14 @@ fn progress_rows(world: &World) -> Vec<String> {
                 1 => Some(format!("1 {what}")),
                 n => Some(format!("{n} {what}s")),
             };
-            let parts: Vec<String> = [count(due.rolls, "skill roll"), count(due.talents, "talent")]
-                .into_iter()
-                .flatten()
-                .collect();
+            let parts: Vec<String> = [
+                count(due.rolls, "skill roll"),
+                count(due.talents, "talent"),
+                count(due.bonus, "bonus talent"),
+            ]
+            .into_iter()
+            .flatten()
+            .collect();
             format!("due level {}: {}", due.level, parts.join(", "))
         })
         .collect();

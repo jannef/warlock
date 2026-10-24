@@ -222,11 +222,13 @@ pub fn load(actor: &Actor, race: Option<&RaceDef>, content: &Content) -> Load {
         content.size(size).carry,
     );
     // Talents (Pack mule) scale the limit; magic items add to it.
-    let base = TalentMods::scaled(base, actor.talent_mods(content).carry_percent);
+    let talents = actor.talent_mods(content);
+    let base = TalentMods::scaled(base, talents.carry_percent);
     Load {
         carried: weight_of(&actor.inventory, content),
         limit: with_carry(base, actor.mods(content).get(Effect::Carry)),
-        ignores_burdened,
+        // Steadfast (spec §8 "Class abilities") shrugs Burdened off as a dwarf does.
+        ignores_burdened: ignores_burdened || talents.steadfast,
     }
 }
 

@@ -66,7 +66,7 @@ use crate::burden::{self, Load};
 use crate::character::Character;
 use crate::combat::Health;
 use crate::content::Shops;
-use crate::content::{Choice, TalentId, TreeId};
+use crate::content::{Choice, ClassAbility, TalentId, TreeId};
 use crate::content::{
     CombatStance, Content, CreatureId, DamageTypeId, DiseaseId, FactionId, Factor, Flow,
     ItemClassId, LevelKind, LightId, ObjectId, RoomEffectDef, SlotId, Stance, StatusId, TerrainId,
@@ -1128,6 +1128,14 @@ impl<'a> PerceptionView<'a> {
                     description: def.description.clone(),
                 })
             })
+            .collect()
+    }
+
+    /// The abilities the player's class has given them at their level, in level order (spec §8
+    /// "Class abilities"); never the ones still to come.
+    pub fn own_class_abilities(&self) -> Vec<&'a ClassAbility> {
+        (self.player.talents.class().iter())
+            .map(|&id| self.content.class_ability(id))
             .collect()
     }
 
