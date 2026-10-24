@@ -337,8 +337,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   roguelike commands (move, open/close, kick, pick up/drop, eat, chat, search, look, throw/shoot,
   rest, inventory, equipment) keep their keys; digging is an item's use (`U`), not an ability.
   - **The registry** is `warlock_core::ability`, the one place abilities are registered: every
-    `Ability` has an id, a name, a description, a `Source` (race, class, talent, skill, weapon
-    skill, item: the menu's groups, in that order), what it asks for (`Aim`: nothing, a direction,
+    `Ability` has an id, a name, a description, a `Source` (race, birth sign, class, talent,
+    skill, weapon skill, item: the menu's groups, in that order), what it asks for (`Aim`: nothing, a direction,
     or a cell, aimed in the targeting mode; an item from the pack joins with the first ability
     that needs one), its action
     cost (an `ActionKind`), who has it, and whether it can be used now and why not

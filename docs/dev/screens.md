@@ -225,6 +225,10 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   `Ability::SecondWind` (`Source::Talent`, the menu's Talents group between Class and Skills) is
   the first active talent's (`docs/dev/progression.md`): listed while the content has a talent
   with the `second_wind` effect, had by whoever holds one, `While(winded)` during its cooldown.
+  `Ability::Sign(SignActive)` (`Source::Sign`, the menu's Birth sign group between Racial and
+  Class) are the birth sign's actives (`docs/dev/character-creation.md`): listed while some talent
+  has one, had by whoever's `TalentMods` has it, `While(cooldown)`; their action is
+  `Action::Gift` (`use:horns_grace`, `use:transfixing_stare:X,Y`, a cell at `STARE_RANGE`).
   `Ability::Class(ClassActive)` (`Source::Class`) are the class actives
   (`docs/dev/progression.md` "Class actives"): listed while some talent has one, had
   by whoever's `TalentMods` has it, `Strayed` then `While(cooldown)`; their action is

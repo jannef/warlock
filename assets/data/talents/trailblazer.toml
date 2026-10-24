@@ -1,0 +1,11 @@
+[[talent]]
+id = "trailblazer"
+name = "Trailblazer"
+tree = "stars"
+granted = true
+description = "Your journeys across the overworld go quicker, and forest, hills, and swamp slow you no more than plains."
+effects = [
+    { kind = "travel_percent", value = -20 },
+    { kind = "terrain_as", terrains = ["forest", "hills", "swamp"], like = "plains" },
+]
+systems = ["travel"]

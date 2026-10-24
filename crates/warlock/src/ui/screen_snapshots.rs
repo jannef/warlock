@@ -290,6 +290,16 @@ const CASES: &[Case] = &[
         size: (100, 40),
         ..BASE
     },
+    // A Unicorn (seed 12) after Horn's grace: the Birth sign group, the grace greyed out while
+    // Graceless (#266).
+    Case {
+        name: "abilities-menu-sign",
+        seed: Some(12),
+        character: Some("human,male,warrior"),
+        actions: "afflict:bleeding*2 afflict:poisoned*3 use:horns_grace",
+        screen: Some("abilities"),
+        ..BASE
+    },
     // Items.
     Case {
         name: "equipment-screen",
@@ -474,7 +484,8 @@ const CASES: &[Case] = &[
     Case {
         name: "trap-disarm-prompt",
         actions: "move:N*3 open:N move:N*2 move:E*67 open:S move:S*7 move:SW descend",
-        keys: Some("a c"),
+        // `a d`: Disarm a trap, after the thief's birth sign's stare (#266).
+        keys: Some("a d"),
         ..BASE
     },
     Case {
