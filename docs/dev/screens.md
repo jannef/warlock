@@ -199,7 +199,11 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   `Ability::Skill(id)` until their use exists (never available); a use, when it comes, is a
   variant of its own, listed in its skill's place (`Ability::use_of`: the skill's benefit effect
   names it, so `had_by` asks `Skills::trains_effect`): `Ability::Disarm`, Disable device's
-  (`docs/dev/traps.md`), and `Ability::PickLock`, Open lock's (`docs/dev/doors.md`). `Aim` has
+  (`docs/dev/traps.md`), and `Ability::PickLock`, Open lock's (`docs/dev/doors.md`).
+  `Ability::SecondWind` (`Source::Talent`, the menu's Talents group between Class and Skills) is
+  the first active talent's (`docs/dev/progression.md`): listed while the content has a talent
+  with the `second_wind` effect, had by whoever holds one, `While(winded)` during its cooldown.
+  `Aim` has
   `Nothing` and `Direction`: a target (the aiming mode) and an item
   (a `PagedList` of the pack) join it with the first ability that needs one, as a variant and an
   arm in `Gameplay::use_ability`.

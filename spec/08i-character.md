@@ -231,8 +231,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Prerequisites** (`Needs`; all must hold at the pick and are never checked again: a score
     lowered later keeps the talent): other talents at a rank (a talent with a choice may be
     needed only by one of the same choice, taken for the same), stat **scores** (the stored
-    score, never the effective one), skill values, weapon skill or style ranks, the chosen
-    weapon skill's or style's rank (`chosen`), the character level, the race, the class, the
+    score, never the effective one), skill values, weapon skill or style ranks, any one of
+    several weapon skills at a rank (`any_weapon_skill = { roles = ["melee", "unarmed"], of =
+    [...], rank = 3 }`: "a melee or unarmed weapon skill 3", "Maces and clubs or Unarmed 3"), the
+    chosen weapon skill's or style's rank (`chosen`), the character level, the race, the class, the
     eyes (the race's vision profile), and the alignment band (`requires_alignment`, as quests
     and abilities ask it, §8 "Alignment": `{ min = "good" }`). Refused in words: "You cannot
     take Dodge: you need Dexterity 13." Ranks come one at a time ("You learn Hardy (2)."); a talent with a choice is
@@ -249,6 +251,37 @@ developer notes (CLAUDE.md, `docs/dev/`).
     bonus), `free_blow` (a switch of `World::free_blows_of`). The first twelve: Healthy, Hardy,
     Dodge, Brawn, Silent feet, Keen ears, Pack mule, Long strider, Lean, Good learner, Alert,
     Thick skin.
+  - **Vigour, Might, Finesse** (#237; the design's §7.5 but for the two that wait for class
+    resources, Battle trance and Inner calm): `resting_percent` (Fast healer: resting's pace
+    half again, `World::healing_rate`); `second_wind` (Second wind, the first **active** talent:
+    `Ability::SecondWind` under the abilities menu's new **Talents** group (`Source::Talent`,
+    between Class and Skills), `Action::SecondWind` (`second_wind`): 1 hit point per character
+    level back at once, at least 8, for the time of a `wait`, then the cooldown status Winded
+    (15 minutes; "you are winded" in the menu; refused, no time, without the talent or while
+    winded)); `iron_stomach` (rotten food and overeating never make you vomit, no draw for it;
+    rotten food's sickness halved, `eat.rs`); `status_eases` and `no_penalty` (Poison
+    resistance: Poisoned eases twice as fast and never lowers scores; Clotting's bleeding twice
+    as fast: the sufferer's own easing pace in `World::live`); `clotting` (a big hit wounds no
+    more, a confirmed critical a degree less, `World::wounded`); `penalty_percent` (Unbowed:
+    each status's lowering of a score halved toward 0, raises untouched, `Effects::penalty_for`);
+    `disease_checks` (Strong constitution, +2 on catching and on every progression) and
+    `disease_recovery` (Fever-proof: a check fewer won in a row shakes a disease off, never
+    below 1, never one that does not recover); `free_blow` (Cleave, Great cleave, Riposte,
+    Opportunist); `kick_die` (Mighty kick: kicks at creatures roll 1d6) and `door_kick` (Mighty
+    kick and Breaker, +4 each to a door kick's Strength); `dig_percent` (Breaker: a quarter more
+    work a turn); `two_handed_price` (Iron grip: blows with a two-handed weapon 10 % cheaper,
+    `World::attack_price`); `critical_status` (Staggering blow: a critical confirmed in melee
+    leaves the target Staggered, `cost = 150` for 6 seconds: its next action half again as
+    dear; `World::after_blow`, no draw of its own); `penetration` (Crusher: +2 on blows and kicks
+    that can do bludgeoning damage); `burden_dex` (Nimble: the burden's Dexterity cap +1);
+    `sure_step` and `pit_proof` (Light step: a trap stepped onto gets a Dexterity check against
+    its difficulty first, two draws only with the talent; made, it does not go off and is found;
+    at rank 2 pits never catch you; steps only, never a door's trap); `speed_percent` (Quick:
+    +5 % a rank, every price divided by it in `World::burdened`, as a higher speed; hidden in the
+    game); `missile_dodge` (Deflect missiles: Dodge +2 against shots, throws, and trap missiles,
+    `World::target_against`); `spell_damage_percent` (Evasion: bursts and bolts, traps' and
+    scrolls', do half, rounded down, before resistances). The statuses these name are checked
+    at load; `data/status.toml` loads before the talents.
   - **Coverage** (the design's §8): every talent names the systems it touches; at load a
     system not `pending` with fewer than `min_talents` talents (or `min_class` class abilities,
     0 until the class tables), or a tree not `pending` nor `no_free` without `free_per_tree`
