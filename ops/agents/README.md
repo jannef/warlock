@@ -7,7 +7,7 @@ runs and which quota pays for it.
 
 | Agent | Model | Replaces | Launcher |
 |---|---|---|---|
-| `finisher/agent.md` | Sonnet 5.5 | the local Sonnet finisher (`local/finisher.md`): CI fixes, golden review, the one merge of main, light re-verify, push | `finish.sh <PR> <BRANCH> [GOLDEN_RUN] [NOTES]` |
+| `finisher/agent.md` | Sonnet 5.5 | the local Sonnet finisher (`local/finisher.md`): CI fixes, the merge of main, golden references made in the sandbox, a last merge of main and the tests, push | `finish.sh <PR> <BRANCH> [GOLDEN_RUN] [NOTES]` |
 | `engineer/agent.md` | Opus 5.5 (Fable 5.1 with `MODEL=claude-fable-5-1`) | the local Opus feature agent (`local/feature.md`), the integrator's escalation helper, a design-doc agent, issue filing | `engineer.sh build\|fix\|design\|issues ...` |
 
 Both stop at a pushed branch or an open PR and never merge; the integrator merges as usual.
@@ -37,8 +37,7 @@ a local one.
 
 - `build`: issues → an open PR, verified on Linux (fmt, clippy, tests, wiki, replays, captures,
   and `cargo xtask golden`, which is meaningful here: the sandbox has the same lavapipe as CI). It
-  triggers the golden update run when captures change and reports the run id; a finisher reviews
-  it later, exactly as for a local feature agent.
+  names the golden entries its change alters; the finisher makes the references (below).
 - `fix`: the escalation path (memory: integrator-escalates-automatically). Pass the error and what
   was tried. Opus first; `MODEL=claude-fable-5-1` if Opus fails.
 - `design`: a draft PR adding only `docs/design/<topic>.md` (or a revision of one after review).
@@ -62,10 +61,12 @@ $0.08/hour on top of tokens.
 
 ## Credentials
 
-- **Golden update runs:** the cloud token gets HTTP 403 on `gh workflow run` (seen 2026-10-24), so
-  cloud agents report that a branch needs `update_golden=true` and the integrator dispatches it
-  (`gh workflow run ci.yml --ref <branch> -f update_golden=true`); the finisher then downloads
-  and reviews the artifact as usual.
+- **Golden references** are made in the sandbox, not by a CI update run: the finisher runs
+  `WGPU_BACKEND=vulkan cargo xtask golden`, views every difference, runs `--update`, keeps the
+  images the PR explains, and commits them with its merge of main (CLAUDE.md "Golden
+  screenshots"; the sandbox's lavapipe has matched CI's every time so far). So a PR whose
+  captures change gets a cloud finisher. The cloud token gets HTTP 403 on `gh workflow run`
+  (seen 2026-10-24): if the fallback CI update run is ever needed, the integrator dispatches it.
 
 - `git push` goes through Anthropic's git proxy, which uses only the session's
   `github_repository` resource token: `session.sh` reads the PAT from the Keychain (`security

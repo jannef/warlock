@@ -8,13 +8,15 @@ and again when the integrator says your PR is next.
 
 - **Don't chase main.** A PR merges (or rebases onto) `origin/main` once, when the integrator says
   it is next in line, not after every merge into `main`. Until then, keep working on the branch.
-- **After that one merge** re-verify only what CI does not or what a merge breaks. CI runs on
-  every push and is required, so it is the check; a local run of the same steps only duplicates
-  it. Always: the PR's own replays (`replay --verify`; CI does not run them) and its captures
-  if it changed something visible. Only if the merge had conflicts in code, snapshots, or
-  registries: `cargo clippy --workspace --all-targets -- -D warnings` and `cargo test
-  --workspace` (where merges break things). fmt, the wiki tables, and everything else are left
-  to CI. A clean merge is pushed after the replays.
+  The one exception is the cloud finisher's last step: just before pushing it fetches again,
+  merges `origin/main` if it moved since, and runs the full tests (below), so the PR reaches CI
+  conflict-free and green and the merge watcher can merge it.
+- **After that merge** run the PR's own replays (`replay --verify`; CI does not run them), the
+  golden comparison and update in the cloud sandbox if anything visible changed (CLAUDE.md
+  "Golden screenshots"), and, after the last merge of `main` before pushing, `cargo clippy
+  --workspace --all-targets -- -D warnings` and `cargo test --workspace`: a red CI run costs a
+  whole round, more than the local run. fmt (beyond files edited by hand), the wiki tables, and
+  everything else are left to CI.
 - **The full check list** (CLAUDE.md "Verification") runs once, before the PR opens.
 - **Keep PRs small**: one feature per PR, rules first (core, tests, dumps), then the UI, then the
   content that uses it, when they can stand alone. Small PRs merge in minutes and conflict less.
@@ -46,7 +48,7 @@ Take one side and regenerate; never resolve hunks in these by hand:
 | `assets/levels/vast.toml` | take either side, `cargo xtask gen-vast` (`--check` must pass) |
 | `THIRD_PARTY_LICENSES.html` | take either side, `cargo xtask licenses` after `Cargo.lock` is settled |
 | `Cargo.lock` | take `main`'s, then `cargo build --workspace` re-resolves your additions |
-| `tests/golden/*.png` | take `main`'s; references come only from the Linux CI workflow |
+| `tests/golden/*.png` | take `main`'s, then `WGPU_BACKEND=vulkan cargo xtask golden --update` in the cloud sandbox (lavapipe, as CI; CLAUDE.md "Golden screenshots"), never on macOS |
 | `assets/keymaps/default.toml` | take either side, `WARLOCK_UPDATE_KEYMAPS=1 cargo test -p warlock keymap` (only a changed default key makes it stale) |
 
 **Reading an insta diff.** `INSTA_UPDATE=always cargo test -p warlock-core` rewrites the `.snap`
@@ -130,20 +132,21 @@ The owner's token-saving rules (2026-10-24). The local subagents' briefs live in
 message adds the fields each one lists), so they survive a wiped `/tmp`:
 
 1. **A feature agent stops when its PR is open.** It pushes, opens the PR, triggers CI (pushing
-   does it; if the change alters golden captures it runs
-   `gh workflow run ci.yml --ref <branch> -f update_golden=true` once and notes the run id in its
-   report), reports briefly, and stops. It never waits for CI (`gh pr checks --watch` is out),
-   never fixes CI in the same context, and is never resumed for the merge.
-2. **A finisher agent** (fresh, small context, Sonnet) later handles one PR: it reads the CI
-   result and fixes failures, downloads the golden-update artifact
-   (`gh run download <id> -n golden-references -D <scratch dir>`), compares it with the branch's
-   references (per-channel tolerance 2; byte-identical is not required), and copies in only the
-   images the change explains after looking at each (an unexplained difference is a bug to fix,
-   not a reference to update). When the integrator says the PR is next it merges `origin/main`
-   once (both sides of registry insertions; main's side of generated files and PNGs, then
-   regenerate), runs the light re-verify (the PR's replays with `replay --verify`, re-created if hashes
-   moved; clippy `-D warnings` and `cargo test --workspace` only after conflicts in code,
-   snapshots, or registries, or after a fix of its own; CI does the rest), pushes, and stops. It does not merge the PR.
+   does it), names in its report the golden entries its change alters or adds (it makes no
+   references and starts no update run), reports briefly, and stops. It never waits for CI
+   (`gh pr checks --watch` is out), never fixes CI in the same context, and is never resumed for
+   the merge.
+2. **A finisher agent** (fresh, small context, Sonnet; in the cloud sandbox, for its lavapipe)
+   later handles one PR in one pass: it reads the CI result and fixes failures; when the
+   integrator says the PR is next it merges `origin/main` (both sides of registry insertions;
+   main's side of generated files and PNGs, then regenerate); it updates the golden references
+   (CLAUDE.md "Golden screenshots": `cargo xtask golden`, look at every difference, `--update`,
+   keep only the images the change explains; an unexplained difference is a bug to fix, not a
+   reference to update); just before pushing it merges `origin/main` again if it moved and runs
+   the PR's replays (`replay --verify`, re-created if hashes moved), clippy `-D warnings`, and
+   `cargo test --workspace`; it pushes and stops. There is no CI update run and no second CI
+   round. It does not merge the PR: the integrator's merge watcher squash-merges a PR once it is
+   non-draft and CLEAN. A local finisher (macOS, no lavapipe) falls back to the CI update run.
 3. **Agents keep contexts small**: read files in parts, grep, filter test output, never print
    whole diffs or logs.
 4. **Local or cloud, never both.** Every agent job above (feature, finisher, an escalation fix, a
@@ -152,6 +155,7 @@ message adds the fields each one lists), so they survive a wiped `/tmp`:
    stopping point; `ops/agents/README.md` has the launchers and when to pick which. The
    integrator chooses one place per job, by quota; a cloud agent never doubles a local one. A
    cloud-built PR is verified on Linux (the sandbox has CI's lavapipe, so `cargo xtask golden`
-   compares there) instead of on macOS.
+   compares there) instead of on macOS. A PR that changes golden captures gets a cloud finisher:
+   only there can references be made.
 
 The integrator schedules finishers: one per PR, when that PR is next in line.
