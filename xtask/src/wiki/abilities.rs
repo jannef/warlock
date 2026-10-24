@@ -21,6 +21,7 @@ pub(super) fn abilities(content: &Content) -> String {
             Ability::Skill(_) => "everyone trained in the skill",
             Ability::Disarm => "everyone trained in Disable device",
             Ability::PickLock => "everyone trained in Open lock",
+            Ability::Steal => "everyone trained in Steal",
             Ability::SecondWind => "everyone with the Second wind talent (not while winded)",
             Ability::ShieldBash => "everyone (usable with a shield in hand)",
         };

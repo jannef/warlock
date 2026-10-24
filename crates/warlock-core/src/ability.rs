@@ -49,6 +49,10 @@ pub enum Ability {
     /// whoever is trained in it; usable whenever they have it (the rules refuse, taking no time,
     /// where there is no lock).
     PickLock,
+    /// Steal from someone next to you (spec §8 "Stealing"): [`Action::Steal`], the Steal
+    /// skill's use. Whoever is trained in a skill with the `steal` benefit has it, in that
+    /// skill's place among the skills.
+    Steal,
     /// Catch a second wind (spec §8 "Talents"): [`Action::SecondWind`], the active of the
     /// Second wind talent (a talent with the `second_wind` effect). Had by whoever holds it;
     /// unavailable while its cooldown (Winded) lasts.
@@ -171,7 +175,7 @@ impl Ability {
             .filter(|(_, def)| def.is_active())
             .filter_map(|(i, def)| {
                 let id = SkillId(u8::try_from(i).ok()?);
-                Some(Ability::use_of(def).unwrap_or(Ability::Skill(id)))
+                Some(Ability::use_of(def, content).unwrap_or(Ability::Skill(id)))
             });
         // Talents: the active ones the talent table has.
         let wind = (content.talents().iter())
@@ -190,11 +194,15 @@ impl Ability {
 
     /// The ability that is the use of skill `def`, once that use is in the game: Disable device's
     /// (the disarm effect's) is [`Ability::Disarm`], Open lock's (the pick effect's)
-    /// [`Ability::PickLock`]. `None` for a skill whose use is to come.
-    fn use_of(def: &SkillDef) -> Option<Ability> {
+    /// [`Ability::PickLock`], the Steal skill's (the `steal` benefit, with `data/steal.toml`)
+    /// [`Ability::Steal`]. `None` for a skill whose use is to come.
+    fn use_of(def: &SkillDef, content: &Content) -> Option<Ability> {
         let gives = |effect| def.benefits.iter().any(|b| b.effect == effect);
         (gives(Effect::Disarm).then_some(Ability::Disarm))
             .or_else(|| gives(Effect::Pick).then_some(Ability::PickLock))
+            .or_else(|| {
+                (gives(Effect::Steal) && content.steal().is_some()).then_some(Ability::Steal)
+            })
     }
 
     /// Every ability `actor` has, in menu order.
@@ -206,24 +214,27 @@ impl Ability {
 
     /// Whether `actor` has it (whether or not they can use it now): a skill, if they are trained
     /// in it; disarming, if they are trained in Disable device (the skill with the disarm
-    /// effect); picking locks, if they are trained in Open lock (the pick effect's); the shield
-    /// bash, everyone.
+    /// effect); picking locks, if they are trained in Open lock (the pick effect's); stealing, if
+    /// they are trained in a skill with the `steal` benefit (it is listed only when stealing is
+    /// in the game); the shield bash, everyone.
     pub(crate) fn had_by(self, actor: &Actor, content: &Content) -> bool {
         match self {
             Ability::Skill(id) => actor.skills.get(id).is_some(),
             Ability::Disarm => actor.skills.trains_effect(content, Effect::Disarm),
             Ability::PickLock => actor.skills.trains_effect(content, Effect::Pick),
+            Ability::Steal => actor.skills.trains_effect(content, Effect::Steal),
             Ability::SecondWind => actor.talent_mods(content).second_wind.is_some(),
             Ability::ShieldBash => true,
         }
     }
 
-    /// Its id in dumps: `shield_bash`, or the skill's id.
+    /// Its id in dumps: `shield_bash`, `steal`, or the skill's id.
     pub fn id(self, content: &Content) -> &str {
         match self {
             Ability::Skill(id) => &content.skill(id).id,
             Ability::Disarm => "disarm",
             Ability::PickLock => "pick_lock",
+            Ability::Steal => "steal",
             Ability::SecondWind => "second_wind",
             Ability::ShieldBash => "shield_bash",
         }
@@ -235,6 +246,7 @@ impl Ability {
             Ability::Skill(id) => &content.skill(id).name,
             Ability::Disarm => "Disarm a trap",
             Ability::PickLock => "Pick lock",
+            Ability::Steal => "Steal",
             Ability::SecondWind => "Second wind",
             Ability::ShieldBash => "Shield bash",
         }
@@ -248,6 +260,10 @@ impl Ability {
                 "Take apart a trap you know of next to you; a clumsy try sets it off."
             }
             Ability::PickLock => "Open a locked door next to you without its key.",
+            Ability::Steal => {
+                "Lift a purse or a trinket from someone next to you who is not hostile; caught, \
+                 they turn on you."
+            }
             Ability::SecondWind => {
                 "Catch your breath in the thick of it: some of your hit points come back at \
                  once, and then you are winded for a while."
@@ -259,7 +275,9 @@ impl Ability {
     /// Where it comes from: its group in the menu.
     pub const fn source(self) -> Source {
         match self {
-            Ability::Skill(_) | Ability::Disarm | Ability::PickLock => Source::Skill,
+            Ability::Skill(_) | Ability::Disarm | Ability::PickLock | Ability::Steal => {
+                Source::Skill
+            }
             Ability::SecondWind => Source::Talent,
             Ability::ShieldBash => Source::WeaponSkill,
         }
@@ -269,7 +287,9 @@ impl Ability {
     pub const fn aim(self) -> Aim {
         match self {
             Ability::Skill(_) | Ability::SecondWind => Aim::Nothing,
-            Ability::Disarm | Ability::PickLock | Ability::ShieldBash => Aim::Direction,
+            Ability::Disarm | Ability::PickLock | Ability::Steal | Ability::ShieldBash => {
+                Aim::Direction
+            }
         }
     }
 
@@ -280,6 +300,7 @@ impl Ability {
             Ability::Skill(_) => None,
             Ability::Disarm => Some(ActionKind::Disarm),
             Ability::PickLock => Some(ActionKind::PickLock),
+            Ability::Steal => Some(ActionKind::Steal),
             Ability::SecondWind => Some(ActionKind::Wait),
             Ability::ShieldBash => Some(ActionKind::Melee),
         }
@@ -293,8 +314,11 @@ impl Ability {
             (Ability::SecondWind, _) => Some(Action::SecondWind),
             (Ability::Disarm, Some(dir)) => Some(Action::Disarm(dir)),
             (Ability::PickLock, Some(dir)) => Some(Action::PickLock(dir)),
+            (Ability::Steal, Some(dir)) => Some(Action::Steal(dir)),
             (Ability::ShieldBash, Some(dir)) => Some(Action::Bash(dir)),
-            (Ability::Disarm | Ability::PickLock | Ability::ShieldBash, None) => None,
+            (Ability::Disarm | Ability::PickLock | Ability::Steal | Ability::ShieldBash, None) => {
+                None
+            }
         }
     }
 
@@ -303,7 +327,7 @@ impl Ability {
     pub(crate) fn unavailable(self, actor: &Actor, content: &Content) -> Option<Unavailable> {
         let own = match self {
             Ability::Skill(_) => Some(Unavailable::NotYet),
-            Ability::Disarm | Ability::PickLock => None,
+            Ability::Disarm | Ability::PickLock | Ability::Steal => None,
             Ability::SecondWind => (actor.talent_mods(content).second_wind)
                 .map(|w| w.cooldown)
                 .filter(|&cooldown| actor.effects.has(cooldown))
@@ -395,6 +419,34 @@ mod tests {
             ]
         );
         assert_eq!(every.last(), Some(&Ability::ShieldBash));
+        // Stealing is in the game: the Steal skill is listed as its use.
+        assert!(every.contains(&Ability::Steal));
+        let steal = content.skill_id("steal").expect("steal");
+        assert!(!every.contains(&Ability::Skill(steal)));
+    }
+
+    #[test]
+    fn stealing_asks_for_a_direction_and_is_had_by_those_trained_in_it() {
+        let content = std::sync::Arc::new(Content::builtin().expect("content"));
+        let steal = Ability::Steal;
+        assert_eq!(steal.aim(), Aim::Direction);
+        assert_eq!(steal.source(), Source::Skill);
+        assert_eq!(steal.cost(), Some(ActionKind::Steal));
+        assert_eq!(steal.action(Some(Dir::N)), Some(Action::Steal(Dir::N)));
+        assert_eq!(steal.action(None), None, "not without a direction");
+        assert_eq!(steal.id(&content), "steal");
+        // The showcase's thief is trained in Steal; a warrior is not.
+        let thief = crate::World::new(content.clone(), "showcase", None).expect("thief");
+        let mine = thief.perception().abilities();
+        assert!(
+            mine.iter()
+                .any(|a| a.ability == steal && a.unavailable.is_none())
+        );
+        let spec = "human,male,warrior".parse().expect("spec");
+        let warrior =
+            crate::World::with_character(content, "showcase", None, Some(&spec)).expect("warrior");
+        let theirs = warrior.perception().abilities();
+        assert!(!theirs.iter().any(|a| a.ability == steal));
     }
 
     #[test]
@@ -449,7 +501,7 @@ mod tests {
         let disable = (content.skills().iter())
             .find(|s| s.id == "disable_device")
             .expect("Disable device");
-        assert_eq!(Ability::use_of(disable), Some(Ability::Disarm));
+        assert_eq!(Ability::use_of(disable, &content), Some(Ability::Disarm));
         let disarm = Ability::Disarm;
         assert_eq!(disarm.aim(), Aim::Direction);
         assert_eq!(disarm.source(), Source::Skill);
@@ -471,7 +523,10 @@ mod tests {
         let open_lock = (content.skills().iter())
             .find(|s| s.id == "open_lock")
             .expect("Open lock");
-        assert_eq!(Ability::use_of(open_lock), Some(Ability::PickLock));
+        assert_eq!(
+            Ability::use_of(open_lock, &content),
+            Some(Ability::PickLock)
+        );
         let pick = Ability::PickLock;
         assert_eq!(pick.aim(), Aim::Direction);
         assert_eq!(pick.source(), Source::Skill);

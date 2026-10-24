@@ -187,8 +187,8 @@ Key commands `,`/`g` (pick up: one stack at once, else the `PickUp` screen), `d`
 screen), `M` (`KeyCommand::Messages`: the `Messages` screen), `r` (`Read` screen, `KeyCommand::Read`: a basic command, not an ability), `p`
 (`KeyCommand::Pay`), `a` (`KeyCommand::Abilities`: the `Abilities` screen), `A`
 (`KeyCommand::RepeatAbility`), bash (`KeyCommand::Bash`, unbound), disarm
-(`KeyCommand::Disarm`, unbound), and picking a lock (`KeyCommand::PickLock`, unbound) are in
-`input.rs` and `settings/keys.rs`.
+(`KeyCommand::Disarm`, unbound), picking a lock (`KeyCommand::PickLock`, unbound), and steal
+(`KeyCommand::Steal`, unbound) are in `input.rs` and `settings/keys.rs`.
 
 **Abilities** (spec §6 "Abilities"; racial, class, skill, weapon skill and style, item; the
 owner's rule, #156) get no key of their own: they go into the one abilities menu.
@@ -204,7 +204,8 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   `Ability::Skill(id)` until their use exists (never available); a use, when it comes, is a
   variant of its own, listed in its skill's place (`Ability::use_of`: the skill's benefit effect
   names it, so `had_by` asks `Skills::trains_effect`): `Ability::Disarm`, Disable device's
-  (`docs/dev/traps.md`), and `Ability::PickLock`, Open lock's (`docs/dev/doors.md`).
+  (`docs/dev/traps.md`), `Ability::PickLock`, Open lock's (`docs/dev/doors.md`), and
+  `Ability::Steal`, the `steal` benefit's (`docs/dev/stealing.md`).
   `Ability::SecondWind` (`Source::Talent`, the menu's Talents group between Class and Skills) is
   the first active talent's (`docs/dev/progression.md`): listed while the content has a talent
   with the `second_wind` effect, had by whoever holds one, `While(winded)` during its cooldown.
@@ -231,5 +232,5 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   `A` (`RepeatAbility`, passed the last ability by `route_keys`) answers `UseAbility(last)`, or
   opens the menu when there is none.
 - **Keys**: an ability with an action of its own may have a rebindable `KeyCommand`, left unbound
-  by default (`settings/keys.rs::UNBOUND`); never a default key. Shield bash is the first; a
-  style's rank 10 abilities (later) go there too.
+  by default (`settings/keys.rs::UNBOUND`); never a default key. Shield bash is the first, Steal
+  the second; a style's rank 10 abilities (later) go there too.

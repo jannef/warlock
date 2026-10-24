@@ -124,10 +124,10 @@ impl World {
         own.saturating_add(race)
     }
 
-    /// Whether the player notices the hidden feature at `at` in passing at all: trained in the
-    /// Spot skill, or with a talent that notices (Alert), anything; else by their race, elves
-    /// anything and dwarves what is on stone; else nothing.
-    pub(super) fn notices(&self, at: Pos) -> bool {
+    /// Whether the player notices `hidden`, the hidden feature at `at`, in passing at all:
+    /// trained in the Spot skill, or with a talent that notices (Alert), anything; else by their
+    /// race, elves anything, dwarves what is on stone, and kobolds traps; else nothing.
+    pub(super) fn notices(&self, at: Pos, hidden: Hidden) -> bool {
         let content = &self.content;
         let player = self.state.player();
         if player.skills.trains_effect(content, Effect::Spot)
@@ -141,6 +141,7 @@ impl World {
                 let terrain = self.state.current().terrain.get(at).copied();
                 terrain.is_some_and(|t| content.terrain(t).stone)
             }
+            Some(PassiveSearch::Traps) => matches!(hidden, Hidden::Trap(_)),
             None => false,
         }
     }
@@ -207,7 +208,7 @@ impl World {
         }
         let modifier = self.search_modifier(Look::Passive);
         for (at, hidden) in hidden {
-            if !self.notices(at) {
+            if !self.notices(at, hidden) {
                 continue;
             }
             let difficulty = self.difficulty_of(hidden);

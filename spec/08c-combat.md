@@ -51,7 +51,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     marks of a hit, a shield bash may still follow it, and a missile may still break. Sources
     **add up**: each worn piece's `protection` (body armour, helmet, gloves, boots, cloak; never
     a shield, which is Defence only) with what its Protection affix adds (§8 "Magic items"), and
-    the creature type's natural armour (`natural = { defence, protection, name }`). Armour
+    the creature type's natural armour (`natural = { defence, protection, name }`; the player's
+    race's instead when it has one, `Actor::hide`: lizardfolk's scales, Protection 1). Armour
     moves part of its value from Defence to Protection: light armour stays mostly Defence (a
     leather jerkin Dv +1 / Pv 1), heavy armour mostly Protection (chain mail Dv +2 / Pv 3, plate
     Dv +1 / Pv 6); the heavy helms, gloves, boots, and the fur cloak give Pv 1 or 2; the cave
@@ -94,7 +95,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     plain extra die), the ammunition's own and its affixes' for a shot, then the worn ones'; they
     are never soaked (added damage is always an element: a physical `added` is a content error).
     **Resistances** (`damage::Resistances`, `Actor::resistances`): a percentage per kind, what a
-    creature is (`resist = { acid = 50 }` on its type) plus what it wears and wields (each piece's
+    creature is (`resist = { acid = 50 }` on its type, and the player's race's `resist`: drow
+    poison 25) plus what it wears and wields (each piece's
     `resist`, and the `resistance` affix effect: of the Salamander, of Warmth) and the talents it
     has (Elemental ward, §8 "Talents", counts as gear does), summed and capped
     at **75** (`MAX_RESISTANCE`) above and −100 below; **100 is immunity**, and only a creature's
