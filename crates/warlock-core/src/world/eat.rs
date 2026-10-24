@@ -141,6 +141,9 @@ impl World {
         let def = content.object(food.object);
         self.say(format!("You eat the {}.", def.name));
         self.ate_goods(dish.meal, &food);
+        if let Some(creature) = def.corpse {
+            self.ate_corpse(creature);
+        }
         let nutrition = def.food.map_or(0, |f| f.nutrition) as i32;
         let rotten = self.stage(&food).is_some_and(|s| s.is_rotten());
         match def.corpse {

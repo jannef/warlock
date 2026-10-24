@@ -15,12 +15,19 @@
 //! [`Unavailable::While`] it, and so is one whose kind of action a status `blocks`; nothing
 //! counts uses.
 //!
+//! An ability that asks for an alignment (`requires_alignment` in its data, spec §8
+//! "Alignment": the paladin's gifts are Good or better) stays the character's when they stray
+//! from it, but cannot be used ([`Unavailable::Strayed`], "you have strayed") until they climb
+//! back: its arm of [`Ability::unavailable`] asks [`strayed`] first. The class tables (#243) and
+//! talents (#220) carry the requirement as an `Option<Requirement>` in their data.
+//!
 //! [`PerceptionView::abilities`]: crate::perception::PerceptionView::abilities
 
 use crate::action::Action;
-use crate::content::{ActionKind, Content, StatusId};
+use crate::alignment::Requirement;
+use crate::content::{ActionKind, Content, SkillDef, StatusId};
 use crate::geom::Dir;
-use crate::skills::SkillId;
+use crate::skills::{Effect, SkillId};
 use crate::world::Actor;
 use std::borrow::Cow;
 
@@ -32,6 +39,16 @@ pub enum Ability {
     /// "Skills"). A use, when it comes, is a variant of its own with its action, and its skill
     /// is no longer listed as this.
     Skill(SkillId),
+    /// Disarm a trap the actor knows of, next to them (spec §8 "Disarming traps"):
+    /// [`Action::Disarm`], the use of Disable device (the skill with the disarm effect, listed as
+    /// this in its place). Had by whoever is trained in it; usable whenever they have it (the
+    /// rules refuse, taking no time, where they know of no trap).
+    Disarm,
+    /// Pick the lock of a door next to the actor (spec §8 "Doors"): [`Action::PickLock`], the
+    /// use of Open lock (the skill with the pick effect, listed as this in its place). Had by
+    /// whoever is trained in it; usable whenever they have it (the rules refuse, taking no time,
+    /// where there is no lock).
+    PickLock,
     /// Bash with the shield held (spec §8 "Weapon skills"): [`Action::Bash`]. Everyone can bash
     /// with a shield (at shield bashing's rank 0 too), so everyone has it; it is available while
     /// a shield to bash with is held.
@@ -103,6 +120,9 @@ pub enum Unavailable {
     NoShield,
     /// A skill whose use is not in the game yet.
     NotYet,
+    /// One that asks for an alignment the character has strayed from (spec §8 "Alignment"):
+    /// they keep it, and may use it again once they climb back.
+    Strayed,
     /// While a status lasts (spec §8 "Status effects"): one that blocks the kind of action the
     /// ability is (a raging barbarian cannot read), or the ability's cooldown, which the class
     /// abilities bring (Winded: "you are winded"). Only time lifts it.
@@ -115,6 +135,7 @@ impl Unavailable {
         match self {
             Unavailable::NoShield => "you hold no shield".into(),
             Unavailable::NotYet => "not usable yet".into(),
+            Unavailable::Strayed => "you have strayed".into(),
             Unavailable::While(status) => {
                 format!("you are {}", content.status(status).name.to_lowercase()).into()
             }
@@ -126,6 +147,7 @@ impl Unavailable {
         match self {
             Unavailable::NoShield => "no_shield".into(),
             Unavailable::NotYet => "not_yet".into(),
+            Unavailable::Strayed => "strayed".into(),
             Unavailable::While(status) => format!("while:{}", content.status(status).id).into(),
         }
     }
@@ -135,10 +157,13 @@ impl Ability {
     /// Every ability there is, in menu order: by [`Source`], then as each source lists its own.
     /// The one place abilities are registered (the wiki's table lists these).
     pub fn every(content: &Content) -> Vec<Ability> {
-        // Skills: those used as actions, in skill order.
+        // Skills: those used as actions, in skill order, each as its use once that is in the game.
         let skills = (content.skills().iter().enumerate())
             .filter(|(_, def)| def.is_active())
-            .filter_map(|(i, _)| u8::try_from(i).ok().map(|i| Ability::Skill(SkillId(i))));
+            .filter_map(|(i, def)| {
+                let id = SkillId(u8::try_from(i).ok()?);
+                Some(Ability::use_of(def).unwrap_or(Ability::Skill(id)))
+            });
         // Weapon skills and fighting styles: the shield bash.
         let weapon_skills = [Ability::ShieldBash];
         let mut all: Vec<Ability> = skills.chain(weapon_skills).collect();
@@ -146,18 +171,31 @@ impl Ability {
         all
     }
 
+    /// The ability that is the use of skill `def`, once that use is in the game: Disable device's
+    /// (the disarm effect's) is [`Ability::Disarm`], Open lock's (the pick effect's)
+    /// [`Ability::PickLock`]. `None` for a skill whose use is to come.
+    fn use_of(def: &SkillDef) -> Option<Ability> {
+        let gives = |effect| def.benefits.iter().any(|b| b.effect == effect);
+        (gives(Effect::Disarm).then_some(Ability::Disarm))
+            .or_else(|| gives(Effect::Pick).then_some(Ability::PickLock))
+    }
+
     /// Every ability `actor` has, in menu order.
     pub(crate) fn of(actor: &Actor, content: &Content) -> Vec<Ability> {
         (Ability::every(content).into_iter())
-            .filter(|a| a.had_by(actor))
+            .filter(|a| a.had_by(actor, content))
             .collect()
     }
 
     /// Whether `actor` has it (whether or not they can use it now): a skill, if they are trained
-    /// in it; the shield bash, everyone.
-    fn had_by(self, actor: &Actor) -> bool {
+    /// in it; disarming, if they are trained in Disable device (the skill with the disarm
+    /// effect); picking locks, if they are trained in Open lock (the pick effect's); the shield
+    /// bash, everyone.
+    pub(crate) fn had_by(self, actor: &Actor, content: &Content) -> bool {
         match self {
             Ability::Skill(id) => actor.skills.get(id).is_some(),
+            Ability::Disarm => actor.skills.trains_effect(content, Effect::Disarm),
+            Ability::PickLock => actor.skills.trains_effect(content, Effect::Pick),
             Ability::ShieldBash => true,
         }
     }
@@ -166,6 +204,8 @@ impl Ability {
     pub fn id(self, content: &Content) -> &str {
         match self {
             Ability::Skill(id) => &content.skill(id).id,
+            Ability::Disarm => "disarm",
+            Ability::PickLock => "pick_lock",
             Ability::ShieldBash => "shield_bash",
         }
     }
@@ -174,6 +214,8 @@ impl Ability {
     pub fn name(self, content: &Content) -> &str {
         match self {
             Ability::Skill(id) => &content.skill(id).name,
+            Ability::Disarm => "Disarm a trap",
+            Ability::PickLock => "Pick lock",
             Ability::ShieldBash => "Shield bash",
         }
     }
@@ -182,6 +224,10 @@ impl Ability {
     pub fn description(self, content: &Content) -> &str {
         match self {
             Ability::Skill(id) => &content.skill(id).description,
+            Ability::Disarm => {
+                "Take apart a trap you know of next to you; a clumsy try sets it off."
+            }
+            Ability::PickLock => "Open a locked door next to you without its key.",
             Ability::ShieldBash => "Strike someone next to you with the shield you hold.",
         }
     }
@@ -189,7 +235,7 @@ impl Ability {
     /// Where it comes from: its group in the menu.
     pub const fn source(self) -> Source {
         match self {
-            Ability::Skill(_) => Source::Skill,
+            Ability::Skill(_) | Ability::Disarm | Ability::PickLock => Source::Skill,
             Ability::ShieldBash => Source::WeaponSkill,
         }
     }
@@ -198,7 +244,7 @@ impl Ability {
     pub const fn aim(self) -> Aim {
         match self {
             Ability::Skill(_) => Aim::Nothing,
-            Ability::ShieldBash => Aim::Direction,
+            Ability::Disarm | Ability::PickLock | Ability::ShieldBash => Aim::Direction,
         }
     }
 
@@ -207,6 +253,8 @@ impl Ability {
     pub const fn cost(self) -> Option<ActionKind> {
         match self {
             Ability::Skill(_) => None,
+            Ability::Disarm => Some(ActionKind::Disarm),
+            Ability::PickLock => Some(ActionKind::PickLock),
             Ability::ShieldBash => Some(ActionKind::Melee),
         }
     }
@@ -216,8 +264,10 @@ impl Ability {
     pub const fn action(self, dir: Option<Dir>) -> Option<Action> {
         match (self, dir) {
             (Ability::Skill(_), _) => None,
+            (Ability::Disarm, Some(dir)) => Some(Action::Disarm(dir)),
+            (Ability::PickLock, Some(dir)) => Some(Action::PickLock(dir)),
             (Ability::ShieldBash, Some(dir)) => Some(Action::Bash(dir)),
-            (Ability::ShieldBash, None) => None,
+            (Ability::Disarm | Ability::PickLock | Ability::ShieldBash, None) => None,
         }
     }
 
@@ -226,6 +276,7 @@ impl Ability {
     pub(crate) fn unavailable(self, actor: &Actor, content: &Content) -> Option<Unavailable> {
         let own = match self {
             Ability::Skill(_) => Some(Unavailable::NotYet),
+            Ability::Disarm | Ability::PickLock => None,
             Ability::ShieldBash => actor
                 .shield(content)
                 .is_none()
@@ -236,6 +287,19 @@ impl Ability {
             blocked.map(Unavailable::While)
         })
     }
+}
+
+/// Why `actor` cannot use an ability that asks for alignment `required` (its data's
+/// `requires_alignment`; `None`: any): [`Unavailable::Strayed`] while their band falls short of
+/// it (spec §8 "Alignment"). Every ability that has a requirement asks this first in
+/// [`Ability::unavailable`].
+pub fn strayed(
+    actor: &Actor,
+    content: &Content,
+    required: Option<Requirement>,
+) -> Option<Unavailable> {
+    let band = actor.band(content);
+    (!required?.allows(band)).then_some(Unavailable::Strayed)
 }
 
 /// One of the player's abilities, as they know it: for the abilities menu.
@@ -267,7 +331,8 @@ mod tests {
         let content = Content::builtin().expect("content");
         let every = Ability::every(&content);
         assert!(every.windows(2).all(|w| w[0].source() <= w[1].source()));
-        // The skills used as actions, in skill order, then the shield bash.
+        // The skills used as actions, in skill order (Disable device and Open lock as their uses,
+        // disarming and picking locks), then the shield bash.
         let skills: Vec<&str> = (every.iter())
             .filter(|a| a.source() == Source::Skill)
             .map(|a| a.id(&content))
@@ -278,20 +343,55 @@ mod tests {
                 "appraise",
                 "bluff",
                 "decipher_script",
-                "disable_device",
+                "disarm",
                 "handle_animal",
                 "heal",
                 "intimidate",
                 "knowledge",
                 "metalcraft",
                 "music",
-                "open_lock",
+                "pick_lock",
                 "steal",
                 "use_magic_device",
                 "woodcraft",
             ]
         );
         assert_eq!(every.last(), Some(&Ability::ShieldBash));
+    }
+
+    #[test]
+    fn an_ability_that_asks_for_an_alignment_is_unavailable_to_one_who_strayed() {
+        use crate::alignment::{Band, Score};
+        use crate::character::CharacterSpec;
+        let content = std::sync::Arc::new(Content::builtin().expect("content"));
+        let paladin: CharacterSpec = "human,male,paladin".parse().unwrap();
+        let world = crate::World::with_character(content.clone(), "showcase", None, Some(&paladin))
+            .expect("world");
+        // A test ability of a paladin's: Good or better.
+        let gift = Some(Requirement {
+            min: Some(Band::Good),
+            max: None,
+        });
+        let mut me = world.state().player().clone();
+        assert_eq!(me.band(&content), Band::Good, "a paladin starts Good");
+        assert_eq!(strayed(&me, &content, gift), None);
+        assert_eq!(strayed(&me, &content, None), None, "no requirement");
+        // Fallen to Kind: kept, but greyed out.
+        me.alignment = Some(Score::new(200));
+        assert_eq!(strayed(&me, &content, gift), Some(Unavailable::Strayed));
+        assert_eq!(Unavailable::Strayed.reason(&content), "you have strayed");
+        assert_eq!(Unavailable::Strayed.id(&content), "strayed");
+        // Climbed back: usable again.
+        me.alignment = Some(Score::new(800));
+        assert_eq!(strayed(&me, &content, gift), None);
+        // A dark gift, Callous or worse, the other way round.
+        let dark = Some(Requirement {
+            min: None,
+            max: Some(Band::Callous),
+        });
+        assert_eq!(strayed(&me, &content, dark), Some(Unavailable::Strayed));
+        me.alignment = Some(Score::new(-500));
+        assert_eq!(strayed(&me, &content, dark), None);
     }
 
     #[test]
@@ -303,5 +403,42 @@ mod tests {
         assert_eq!(bash.action(Some(Dir::E)), Some(Action::Bash(Dir::E)));
         assert_eq!(bash.action(None), None, "not without a direction");
         assert_eq!(Ability::Skill(SkillId(0)).action(Some(Dir::E)), None);
+    }
+
+    #[test]
+    fn disarming_is_disable_devices_use_and_asks_for_a_direction() {
+        let content = Content::builtin().expect("content");
+        let disable = (content.skills().iter())
+            .find(|s| s.id == "disable_device")
+            .expect("Disable device");
+        assert_eq!(Ability::use_of(disable), Some(Ability::Disarm));
+        let disarm = Ability::Disarm;
+        assert_eq!(disarm.aim(), Aim::Direction);
+        assert_eq!(disarm.source(), Source::Skill);
+        assert_eq!(disarm.cost(), Some(ActionKind::Disarm));
+        assert_eq!(disarm.action(Some(Dir::W)), Some(Action::Disarm(Dir::W)));
+        assert_eq!(disarm.action(None), None, "not without a direction");
+        // Its skill is listed as it, not as a skill with no use yet.
+        let every = Ability::every(&content);
+        assert!(every.contains(&Ability::Disarm));
+        let listed_as_skill = every
+            .iter()
+            .any(|a| matches!(a, Ability::Skill(id) if content.skill(*id).id == "disable_device"));
+        assert!(!listed_as_skill);
+    }
+
+    #[test]
+    fn picking_locks_is_open_locks_use_and_asks_for_a_direction() {
+        let content = Content::builtin().expect("content");
+        let open_lock = (content.skills().iter())
+            .find(|s| s.id == "open_lock")
+            .expect("Open lock");
+        assert_eq!(Ability::use_of(open_lock), Some(Ability::PickLock));
+        let pick = Ability::PickLock;
+        assert_eq!(pick.aim(), Aim::Direction);
+        assert_eq!(pick.source(), Source::Skill);
+        assert_eq!(pick.cost(), Some(ActionKind::PickLock));
+        assert_eq!(pick.action(Some(Dir::W)), Some(Action::PickLock(Dir::W)));
+        assert_eq!(pick.action(None), None, "not without a direction");
     }
 }

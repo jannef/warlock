@@ -1775,6 +1775,55 @@ mod tests {
         assert_eq!(app.world().resource::<InputMode>(), &InputMode::Normal);
     }
 
+    #[test]
+    fn a_disarm_key_asks_for_a_direction_and_disarms() {
+        // Disarming is an ability: unbound by default. Bound (here to `X`), the showcase's
+        // thief, trained in Disable device, is asked which way, as the abilities menu asks.
+        let mut app = app(true);
+        {
+            let mut bindings = app.world_mut().resource_mut::<Bindings>();
+            let disarm = crate::input::KeyCommand::Disarm;
+            assert!(bindings.keys_of(disarm).is_empty());
+            let key = crate::input::KeyBinding::from_text("X").expect("a key");
+            bindings.0.push((key, disarm));
+        }
+        frame(&mut app, &[(KeyCode::KeyX, "X")]);
+        assert_eq!(
+            app.world().resource::<InputMode>(),
+            &InputMode::Ability(Ability::Disarm)
+        );
+        assert!(actions(&app).is_empty(), "nothing yet");
+        frame(&mut app, &[(KeyCode::KeyL, "l")]);
+        assert_eq!(actions(&app), [Action::Disarm(Dir::E)]);
+        assert_eq!(app.world().resource::<InputMode>(), &InputMode::Normal);
+    }
+
+    #[test]
+    fn picking_a_lock_asks_for_a_direction_from_the_menu_or_its_own_key() {
+        let mode = |app: &App| *app.world().resource::<InputMode>();
+        // The showcase's thief is trained in Open lock: `a` `c` (Pick lock) asks for a direction.
+        let mut app = app(true);
+        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyC, "c")]);
+        assert!(names(&app).is_empty());
+        assert_eq!(mode(&app), InputMode::Ability(Ability::PickLock));
+        frame(&mut app, &[(KeyCode::KeyL, "l")]);
+        assert_eq!(actions(&app), [Action::PickLock(Dir::E)]);
+        // Its own key is unbound by default; bound (here to `B`), it does the same.
+        let mut app = self::app(true);
+        {
+            let mut bindings = app.world_mut().resource_mut::<Bindings>();
+            let pick = crate::input::KeyCommand::PickLock;
+            assert!(bindings.keys_of(pick).is_empty());
+            let key = crate::input::KeyBinding::from_text("B").expect("a key");
+            bindings.0.push((key, pick));
+        }
+        frame(&mut app, &[(KeyCode::KeyB, "B")]);
+        assert_eq!(mode(&app), InputMode::Ability(Ability::PickLock));
+        frame(&mut app, &[(KeyCode::KeyH, "h")]);
+        assert_eq!(actions(&app), [Action::PickLock(Dir::W)]);
+        assert_eq!(mode(&app), InputMode::Normal);
+    }
+
     /// A run of the showcase's thief with the storeroom's small shield in hand.
     fn with_a_shield() -> App {
         let content = content();

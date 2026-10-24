@@ -8,6 +8,7 @@ glyph = "b"
 fg = "#9a7ab8"
 speed = 2000
 faction = "wildlife"
+alignment = "neutral"
 vision = "darkvision"
 sight = 8
 hearing = 3

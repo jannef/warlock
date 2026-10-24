@@ -14,6 +14,9 @@ close_door = 1000
 # Unlocking a locked door with a key, on top of opening it: opening a locked door you have the
 # key for takes unlock + open_door.
 unlock = 1000
+# A try at picking a lock without a key (the Pick lock ability, spec §8 "Doors"): it takes this
+# whatever comes of it; a lock that gives opens its door on top of it (pick_lock + open_door).
+pick_lock = 2000
 # A kick (`K`): at a door, to break it in, or at a creature, an unarmed blow.
 kick = 1000
 # Lighting or dousing the lantern.
@@ -54,6 +57,9 @@ dig = 1000
 # A turn of searching for secret doors and hidden traps around you (`s`; spec §8 "Searching"):
 # searching for a while (`z`) goes on turn after turn until something is found or interrupts it.
 search = 1000
+# Trying to disarm a trap you know of next to you (the Disarm ability; spec §8 "Disarming traps"):
+# careful work, whether it comes off, fails, or sets the trap off.
+disarm = 2000
 # Chatting with someone (`C`): a few words. Asking about a topic on the dialogue screen takes no
 # time.
 chat = 500

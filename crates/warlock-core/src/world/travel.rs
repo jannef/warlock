@@ -449,6 +449,8 @@ pub(super) fn instantiate_level(
             damage: Default::default(),
             weapon_skills: def.weapon_skills.clone(),
             faction_override: spawn.faction,
+            alignment: None,
+            alignment_override: spawn.alignment,
             npc: spawn.npc.clone(),
             talk: Talk::default(),
             satiation: None,

@@ -13,7 +13,10 @@
 #   potential     adjustments to the potentials, the same way (hidden from the player)
 #   hp            hit points (spec §8 "Combat"; default 0): a character's maximum is their
 #                 Toughness plus their race's and their class's (classes.toml)
-#   size          a size in sizes.toml (default "medium"; spec §8 "Burden"): how much the
+#   alignment     the race's part of a new character's hidden alignment score (spec §8
+#                 "Alignment"; alignment.toml; -1000 evil to 1000 good, default 0), added to
+#                 their class's: a lean that never alone moves anyone out of Neutral
+#   size         a size in sizes.toml (default "medium"; spec §8 "Burden"): how much the
 #                 character can carry, 1.5 kg × (2 × Strength + Toughness), is scaled by its carry
 #   ignores_burdened  whether being Burdened, the first level of burden, costs the character
 #                 nothing (no slowdown, no cap on Dexterity in Defence, no louder steps; default
@@ -58,6 +61,7 @@ age = [90, 300]
 stats = { strength = -1, dexterity = "1d2+1", toughness = -2, intelligence = 1, presence = 1 }
 potential = { strength = -2, dexterity = 3, toughness = -3, intelligence = 2, willpower = 1, presence = 1 }
 hp = 2
+alignment = 50
 size = "medium"
 skills = { listen = "1d6+4", spot = "1d6+4" }
 # Keen eyes: elves notice every hidden thing in passing, and find it more easily.
@@ -125,6 +129,7 @@ age = [20, 50]
 stats = { strength = -3, dexterity = 3, willpower = 1 }
 potential = { strength = -4, dexterity = 3, willpower = 1, presence = 1 }
 hp = 2
+alignment = 50
 size = "small"
 skills = { listen = "1d6+4", stealth = "1d6+4" }
 # Second breakfast.
@@ -156,6 +161,7 @@ age = [14, 30]
 stats = { strength = "1d2+2", toughness = 1, intelligence = "-1d3", presence = -2 }
 potential = { strength = 4, toughness = 2, intelligence = -3, presence = -3 }
 hp = 6
+alignment = -50
 size = "medium"
 skills = { intimidate = "1d6+4" }
 hunger = 120

@@ -51,6 +51,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Eyes**: the player's vision profile is the race's (the dev vision switch still works).
   - **Hit points**: the race's and the class's `hp` add to Toughness for the maximum ("Combat"
     below).
+  - **Alignment** ("Alignment" below): the starting score is the race's `alignment` plus the
+    class's, kept on the scale: paladins start Good, thieves and witches Callous, everyone else
+    Neutral; a race only leans (elves and halflings a little toward good, half-orcs a little
+    toward evil), never alone out of Neutral. It draws nothing.
   - **Weapon skills** ("Weapon skills" below): the race's starting ranks plus the class's, plus
     one set of the class's `weapon_skill_choice` if it has one, at most 10 each; each then
     raises the skills it defaults to. Dice among them roll from their own stream,
@@ -63,14 +67,63 @@ developer notes (CLAUDE.md, `docs/dev/`).
     choice, then the chosen set's; so they never move a stat or a weapon skill roll. Each raises
     the styles it defaults to.
   - Balance is deliberately not a goal: some combinations are poor (a halfling commoner), and
-    classes do nothing but adjust starting scores, give hit points, train skills, and give
-    weapon skills and fighting styles. No other D&D concept comes with them (alignment, equipment, spells).
+    classes do nothing but adjust starting scores, give hit points, train skills, give
+    weapon skills and fighting styles, and set where the alignment starts. No other D&D concept
+    comes with them (equipment, spells; the alignment is good against evil only, not D&D's grid).
   - The character (`Character`: the name, the race, gender, and class ids, the stat the gender
     raised, the birth date, and the birth sign) is part of the world state (saved, hashed) and
     shown on the character screen; replays record the choice and the name only, and since
     everything else follows from the content, the choice, the seed, and the start date, a run is
     reproduced by its scenario, seed, character, and name. `World::new` starts as the scenario's
     character, `World::with_character` as a given one, `World::with_character_named` named.
+- **Alignment** (`warlock-core/src/alignment.rs`, `content/alignment.rs`, `world/alignment.rs`;
+  #254): good against evil, as ADOM has law against chaos.
+  - **The score**: the player has a hidden integer score from −1000 (as evil as can be) to 1000
+    (as good), saved and hashed, never shown as a number. They know it as one of seven
+    **bands**, by edges in `data/alignment.toml` (§7): Saintly (750 up), Good (400), Kind (150),
+    Neutral (−149 to 149), Callous (to −150), Evil (to −400), Wicked (−750 down). The band is
+    on the character screen, the character creation summary (the band the character starts
+    in), and the `stats` dump; nothing else shows it.
+  - **Creatures** have a fixed alignment instead (`alignment` in their file: good, neutral, or
+    evil; neutral by default), which a level legend entry may change for one spawn, as it does
+    a faction. The kobolds are evil, the beasts (rats, bats, beetles, deer) neutral, and the
+    showcase's people (the gardener, the bard, the hermit, the shopkeepers) good. A creature's
+    alignment is never shown (a "detect evil" ability may show it later).
+  - **What moves it**: `World::shift_alignment(actor, amount, cause)` is the one place a score
+    changes. Moves diminish, ADOM-style: a deed in the direction the score already leans (away
+    from 0) moves it by its worth times the share of the way still left to that end, rounded
+    toward 0 (halfway to good a good deed counts half, and small deeds never make a saint); a
+    deed the other way counts in full. The deeds, each worth what `[shift]` in
+    `data/alignment.toml` says: killing someone not hostile to the player (by their alignment:
+    good −150, neutral and evil −100), except a beast (a neutral creature that does not talk),
+    which may be hunted (0); killing someone hostile (evil +10, neutral and good 0); attacking a
+    shopkeeper who trades with the player (−100, once: the keeper is outraged after it);
+    leaving a shop with unpaid goods (theft, −100; Steal, #234, will be theft too); paying a
+    shopkeeper what is owed (+5); eating a corpse of the player's own race (a creature type's
+    `race`) or of a creature that talks and is not hostile to them by its type (−200); and a
+    quest's own `alignment` as it is completed (helping quests good, dark ones evil). Nothing
+    else moves it. Only the player has a score; deeds draw nothing from any random stream.
+  - **Messages**: crossing into another band says so, after the deed's own messages, as a note
+    that does not stop a rest (the band's `rise` or `fall` line: "You feel righteous.", "You
+    feel you have strayed from the path of good."); smaller moves are silent.
+  - **What reads it**: good creatures **scorn** an Evil or Wicked character, evil creatures a
+    Good or Saintly one (`Band::scorned_by`): they answer a chat with a cold line
+    (`greet_evil`, `greet_good` in `data/dialogue.toml`) instead of their greeting and
+    one-liners, and offer no quest whose `alignment` is good (topics and quests they already
+    gave stay). A quest may name the bands it is offered to (`requires_alignment`). A good
+    shopkeeper's prices move with the band, by a percent in data added to the player's favour
+    (§7 "Shops": Saintly 10 % better, Evil 10 % worse, Wicked 20 % worse); the prices shown
+    include it. Talents and class abilities (#220, #243) may ask for an alignment
+    (`requires_alignment`, `ability::strayed`): a paladin's gifts need Good or better, and a
+    paladin below that keeps them but cannot use them (greyed out, "you have strayed") until
+    they climb back. Mana reads nothing of it, for now. Gods and prayer, holy and unholy damage
+    and items, and alignment-limited artifacts will read the same band.
+  - **Talents** (proposed for the talents PR, on hooks that exist): *Righteous fury* (Good or
+    better: +1 to hit and damage against evil creatures, per 10 levels; `Profile` in
+    `attack_with`, reading the target's `Actor::nature`), *Hardened heart* (Callous or worse:
+    killing peaceful creatures costs no further alignment; `shift_alignment` skipping
+    `Deed::KilledPeaceful`), and *The middle way* (while Neutral: +1 Dodge and +2 on checks;
+    `Actor::defence`, `check`).
 - **Skills** (`warlock-core/src/skills.rs`, `content/skill.rs`, `world/train.rs`; M20, #132),
   ADOM-like:
   - **Trained or untrained**: every actor has a set of trained skills, each with a **value**
@@ -130,9 +183,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
     - spot: trained at all, the player notices hidden features in passing (§8 "Searching");
       points added to that check, +8 at 100 and +12 at 200 (`spot`); a mark (50 %) for each
       thing noticed;
+    - disable device: trained at all, the player can disarm traps (§8 "Disarming traps", the
+      Disarm ability); points added to that check, +8 at 100 and +12 at 200 (`disarm`); a mark
+      (20 %) for each try, whatever comes of it;
+    - open lock: trained at all, the player may pick locks (the Pick lock ability, §8 "Doors");
+      points added to that check, +8 at 100 and +12 at 200 (`pick`); a mark (20 %) for each try,
+      whatever comes of it;
     - athletics' climbing out of pits and escape artist (out of pits faster) wait for that rule
       (#128); swim for deep water; concentration, spellcraft, and use magic
-      device for magic; the other action skills (open lock, heal, …) for their actions.
+      device for magic; the other action skills (heal, steal, …) for their actions.
       Searching is a basic command with keys of its own (`s`, `z`), so Search is read by rules,
       not an action skill.
   - **What the player sees**: their own trained skills' values and a coarse progress (quarters)
@@ -142,7 +201,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     are chosen from one abilities menu (§6 "Abilities", #156), unlike ADOM: each trained skill
     with an active use (`kind = "action"`) is an ability there (`warlock_core::ability`,
     `PerceptionView::abilities`), greyed out as "not usable yet": the uses come with their
-    actions. Never a benefit's number, a mark, a
+    actions, and one whose use has come is that ability instead (Disable device's is "Disarm a
+    trap", §8 "Disarming traps"; Open lock's "Pick lock", §8 "Doors"). Never a benefit's number,
+    a mark, a
     chance, an untrained skill, or a creature's skills; ground-truth dev dumps (`actors`, the
     world state) show every actor's skills with their marks. Skills and marks are part of the
     world state (saved, hashed).

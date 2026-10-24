@@ -3,7 +3,8 @@
 //! creation"; when the run has a character), their score in each stat (spec §8 "Stats") with its
 //! abbreviation and full name (as the rules read it: a score a status effect or stat damage
 //! lowers is shown lowered, in a warning color), their hit points, Defence, and Protection
-//! (spec §8 "Combat"; the totals only), the status effects they suffer, by name (spec §8 "Status
+//! (spec §8 "Combat"; the totals only), their alignment band (spec §8 "Alignment": `Kind`, never
+//! the score), the status effects they suffer, by name (spec §8 "Status
 //! effects"), the diseases they know they have, by name (spec §8 "Diseases": `Diseased  Filth
 //! fever`), what they weigh and carry, their burden, and the weights at which it changes (spec §8 "Burden": they follow from
 //! scores the player knows). Never a modifier, a potential, a to-hit, or how severe an effect
@@ -94,6 +95,9 @@ pub struct CharacterScreen {
     protection: i32,
     /// The combat stance's name.
     stance: String,
+    /// Their alignment band's name (spec §8 "Alignment"), never the score; `None` without
+    /// alignment rules.
+    alignment: Option<&'static str>,
 }
 
 impl CharacterScreen {
@@ -121,6 +125,7 @@ impl CharacterScreen {
                 defence: warlock_core::combat::BASE_DEFENCE,
                 protection: 0,
                 stance: "Neutral".into(),
+                alignment: None,
             };
         };
         let content = view.content();
@@ -168,6 +173,7 @@ impl CharacterScreen {
             defence: view.own_defence(),
             protection: view.own_protection(),
             stance: content.stance_def(view.own_stance()).name.clone(),
+            alignment: view.own_alignment().map(|b| b.name()),
         }
     }
 
@@ -195,7 +201,8 @@ impl CharacterScreen {
             n => (n + birth.len()) as i32 + 1,
         };
         let thresholds = (self.load.as_ref()).map_or(Vec::new(), |l| thresholds(l, width));
-        let status_rows = i32::from(!self.effects.is_empty())
+        let status_rows = i32::from(self.alignment.is_some())
+            + i32::from(!self.effects.is_empty())
             + i32::from(!self.diseases.is_empty())
             + self.resistances.len() as i32;
         let h = Stat::COUNT as i32 + 15 + identity_rows + thresholds.len() as i32 + status_rows;
@@ -266,6 +273,14 @@ impl CharacterScreen {
                     console.print(x + 4, y, name, TEXT);
                     console.print(x + 4 + name.len() as i32 + 1, y, &value, TEXT);
                 }
+            }
+            y += 1;
+        }
+        // `    Alignment     Kind`: the band, never the score.
+        if let Some(band) = self.alignment {
+            if fits(y) {
+                console.print(x + 4, y, "Alignment", TEXT);
+                console.print(x + 4 + NAME_W, y, band, TEXT);
             }
             y += 1;
         }
@@ -480,6 +495,8 @@ mod tests {
             "Lv  Level         1",
             // A human thief's level 2: 767 × 95 %.
             "XP  Experience    0 / 729",
+            // A thief starts Callous: the band, never the score.
+            "    Alignment     Callous",
         ] {
             row(expected);
         }

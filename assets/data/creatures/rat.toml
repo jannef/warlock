@@ -7,6 +7,7 @@ glyph = "r"
 fg = "#b08458"
 speed = 1200
 faction = "vermin"
+alignment = "neutral"
 vision = "low_light"
 sight = 8
 # Light on its feet, sharp of ear.

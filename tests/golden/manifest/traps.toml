@@ -1,3 +1,20 @@
+# Disarming (spec §8 "Disarming traps", #232): the showcase's thief, trained in Disable device,
+# goes down to the trap hall and notices the hidden arrow trap beside the stairs in passing. The
+# abilities menu's Disarm a trap (`a`, Enter on the first usable row) asks "Disarm in which
+# direction?" in the message line.
+[[golden]]
+name = "trap-disarm-prompt"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*7 move:SW descend"
+args = ["--keys", "a Enter"]
+
+# Then two tries north-west: the first fails ("You fail to disarm the arrow trap."), the second
+# takes it apart ("You disarm the arrow trap."), and the trap is gone from beside the stairs.
+[[golden]]
+name = "trap-disarmed"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*7 move:SW descend disarm:NW*2"
+
 # The trap hall (spec §3, §8 "Traps"): the proving row's seven known traps, the closets' trapped
 # doors (the west one's arrow trap shows), and creatures on their rounds across hidden ones. After
 # fourteen turns the hidden spear and lightning traps (turn 10) and the fireball (this turn: it is

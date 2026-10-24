@@ -29,14 +29,14 @@ cargo xtask golden [--update | --local]                   # compare golden scree
 - Replays are JSON: `{game_version, scenario, seed, character, steps: [{action, hash}]}`, the
   character `{race, gender, class}` (left out for a run without one; a replay without it starts
   as the scenario's character, so older replays still load). Actions use a text
-  syntax (`move:E wait open:E close:W ascend descend lantern rest:1h rest:dawn rest:dusk
+  syntax (`move:E wait open:E close:W pick:E ascend descend lantern rest:1h rest:dawn rest:dusk
   pickup pickup:ac drop drop:b sell:b pay pay:W equip:body:b remove:body bash:E fire:12,5
   throw:c:12,5 eat:b
   eat:floor:a dig:E search search:10 chat:E ask:E:rooms ask:E:quest-rats ask:E:accept-rats vision:darkvision
   skip:1h weather:rain stance:coward effect:fireball@12,5 effect:lightning_bolt@3,4>12,4
   identify:a afflict:bleeding infect:filth_fever talent:hardy talent:weapon_focus:long_blades
-  advance:stealth levelup:auto xp:2500 freeze:12,5,3 thaw:12,5,3`; `bash:DIR` bashes
-  with the held shield that way, `dig:DIR` digs toward a direction until the wall gives way or
+  advance:stealth levelup:auto xp:2500 freeze:12,5,3 thaw:12,5,3`; `pick:DIR` tries
+  the lock of the door that way (§8 "Doors"), `bash:DIR` bashes with the held shield that way, `dig:DIR` digs toward a direction until the wall gives way or
   something interrupts; `search` searches the cells around the player once, `search:N` for up to
   N turns (1 to 100), stopping when something is found; `fire:X,Y` shoots at level cell (X, Y),
   `throw:LETTER:X,Y` throws one of inventory stack LETTER there; `eat:LETTER` eats one of
@@ -92,7 +92,8 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   `equipment` (the player's slots by letter, `c Body: a leather jerkin (b)`, `-` when empty),
   `stats` (the player's name, race, gender, and class, `Name Brakka`, `Race Dwarf`, their age, birthday, and
   sign, `Age 27`, `Born 3 Seedtide 1417`, `Sign Fire Manticore`, then their own scores as
-  the rules read them, `Strength 12`, then their status effects by name, `Effects Bleeding,
+  the rules read them, `Strength 12`, then their alignment band, `Alignment Kind` (never the
+  score), then their status effects by name, `Effects Bleeding,
   Diseased`, then the diseases they know they have, `Diseases filth fever`), `skills` (the player's trained skills in skill order, `Stealth 17`),
   `weapon_skills` (the player's weapon skills and fighting styles in file order with their rank
   and how far their marks are toward the next, `Long blades 2 (40%)`; at rank 10 the rank alone;
@@ -107,7 +108,8 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   weapon_focus:{bows,slings}`, and the creature types whose first kill has paid; §8 "Talents"),
   and `actors` (every actor on
   the level with its hit
-  points and Defence, `hp 8/12 dv 13`, its
+  points and Defence, `hp 8/12 dv 13`, its alignment (`alignment evil`; the player's score and
+  band, `alignment 450 (good)`; §8 "Alignment"), its
   weight, base plus carried, what it carries and of that wears and wields, `equipped main_hand a
   spear` (magic items as they truly are, `an iron ring of the Bear (unidentified)`), what its
   magic items do to it by effect id, `magic strength +1 light item_glow`, its burden and carrying
@@ -139,7 +141,8 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   null; an unpaid stack with its price, `unpaid`), equipment (by slot id: letter, object, count), weight, burden (`burden: {level,
   limit}`, the limit in grams), character
   (`{name, race, gender, class, raised, age, born: {year, month, day}, sign: {animal, element}}` or
-  null), scores (`stats`, by stat id), trained skills (`skills`, by skill id with their values),
+  null), scores (`stats`, by stat id), the alignment band (`alignment`, its id, or null without
+  alignment rules), trained skills (`skills`, by skill id with their values),
   status effects (`effects`, by id), the diseases they know they have (`diseases`, by id),
   weapon skills and fighting styles (`weapon_skills`, by skill id: `{rank, progress}`, the
   progress a percent or null at rank 10), the styles in use (`styles_in_use`, style ids), the

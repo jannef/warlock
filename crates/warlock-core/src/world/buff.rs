@@ -50,6 +50,7 @@ impl World {
             Action::Open(_) => ActionKind::OpenDoor,
             Action::Close(_) => ActionKind::CloseDoor,
             Action::Kick(_) => ActionKind::Kick,
+            Action::PickLock(_) => ActionKind::PickLock,
             Action::Ascend | Action::Descend => ActionKind::Stairs,
             Action::ToggleLantern => ActionKind::Lantern,
             Action::PickUp(_) => ActionKind::PickUp,
@@ -65,6 +66,7 @@ impl World {
             Action::Read { .. } => ActionKind::Read,
             Action::Dig(_) => ActionKind::Dig,
             Action::Search(_) => ActionKind::Search,
+            Action::Disarm(_) => ActionKind::Disarm,
             Action::Sell(_)
             | Action::Pay(None)
             | Action::SetStance(_)

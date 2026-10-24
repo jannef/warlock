@@ -163,10 +163,17 @@ impl World {
         (class_hp / 2 + toughness).max(1)
     }
 
-    /// Says what the player's kills earned them, after the attack's own messages.
+    /// Says what the player's kills earned them, after the attack's own messages, then the
+    /// notes the action earned (an alignment band crossed), which do not stop a rest.
     pub(super) fn say_news(&mut self) {
         for text in std::mem::take(&mut self.news) {
             self.say(text);
+        }
+        // In a free blow the news is held for after that turn's reports, and so are the notes.
+        if self.held.is_none() {
+            for text in std::mem::take(&mut self.notes) {
+                self.note(text);
+            }
         }
     }
 }

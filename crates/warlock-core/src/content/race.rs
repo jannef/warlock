@@ -50,6 +50,8 @@ struct RaceSpec {
     potential: BTreeMap<Stat, Dice>,
     #[serde(default)]
     hp: u16,
+    #[serde(default)]
+    alignment: i32,
     size: Option<String>,
     #[serde(default)]
     ignores_burdened: bool,
@@ -93,6 +95,9 @@ pub struct RaceDef {
     /// What the race adds to the hit points (spec §8 "Combat"): maximum hit points are
     /// Toughness plus the race's and the class's.
     pub hp: i32,
+    /// Its part of a new character's alignment score (spec §8 "Alignment"), added to the
+    /// class's.
+    pub alignment: i32,
     /// Its size (spec §8 "Burden"): an index into [`super::Content::sizes`], which scales how
     /// much the player can carry.
     pub size: usize,
@@ -185,6 +190,8 @@ impl Races {
                     spec.hp
                 )));
             }
+            let alignment = crate::alignment::check_start(spec.alignment)
+                .map_err(|m| err(format!("race `{id}`: {m}")))?;
             let size_id = spec.size.as_deref().unwrap_or(super::MEDIUM);
             let size = size_index(size_id)
                 .ok_or_else(|| err(format!("race `{id}`: unknown size `{size_id}`")))?;
@@ -233,6 +240,7 @@ impl Races {
                 stats,
                 potential,
                 hp: i32::from(spec.hp),
+                alignment,
                 size,
                 ignores_burdened: spec.ignores_burdened,
                 passive_search: spec.passive_search,

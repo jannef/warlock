@@ -28,7 +28,8 @@
 //! (#128). Each becomes one more [`Effect`] (and a [`Use`] for its marks: a climb) read in that
 //! one place, with its numbers in `data/skills.toml`; until then escape artist is trained and
 //! shown but gives nothing. Athletics already adds to the Strength a kick at a door is rolled
-//! against ([`Effect::Kick`], [`Use::Kick`]).
+//! against ([`Effect::Kick`], [`Use::Kick`]), and Open lock to picking a lock ([`Effect::Pick`],
+//! [`Use::Pick`]).
 
 use crate::content::Content;
 use crate::dice::Dice;
@@ -51,8 +52,14 @@ pub const PROGRESS_STEPS: u8 = 4;
 /// The most a skill adds to searching or to noticing in passing (spec §8 "Searching").
 pub const MAX_SEARCH_BONUS: i32 = 20;
 
+/// The most a skill adds to disarming a trap (spec §8 "Disarming traps").
+pub const MAX_DISARM_BONUS: i32 = 20;
+
 /// The most cells farther a search may reach than the cells around the searcher.
 pub const MAX_SEARCH_REACH: i32 = 2;
+
+/// The most a skill adds to picking a lock (spec §8 "Doors").
+pub const MAX_PICK_BONUS: i32 = 20;
 
 /// Index of a skill in [`Content::skills`]: in file order.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
@@ -100,6 +107,9 @@ pub enum Effect {
     /// Points added to noticing hidden features in passing (spec §8 "Searching"); a skill with
     /// it, trained, lets the actor notice them at all.
     Spot,
+    /// Points added to disarming a trap (spec §8 "Disarming traps"; `world/disarm.rs`); a skill
+    /// with it, trained, lets the actor disarm traps at all (the Disarm ability).
+    Disarm,
     /// Percent less of the burden's slowdown (spec §8 "Burden"): Burdened ×1.25 becomes ×1.10
     /// at 60.
     Burden,
@@ -111,6 +121,9 @@ pub enum Effect {
     /// Points added to the Strength score a kick at a closed door is rolled against (spec §8
     /// "Doors"; `world/door.rs`).
     Kick,
+    /// Points added to picking a lock (spec §8 "Doors"; `world/lockpick.rs`); a skill with it,
+    /// trained, lets the actor pick locks at all (the Pick lock ability).
+    Pick,
 }
 
 impl Effect {
@@ -121,6 +134,8 @@ impl Effect {
             Effect::Quiet | Effect::Burden | Effect::Travel | Effect::Bargain => 100,
             Effect::Kick => *crate::stats::SCORES.end() as i32,
             Effect::Search | Effect::Spot => MAX_SEARCH_BONUS,
+            Effect::Disarm => MAX_DISARM_BONUS,
+            Effect::Pick => MAX_PICK_BONUS,
             Effect::SearchReach => MAX_SEARCH_REACH,
         }
     }
@@ -138,6 +153,8 @@ pub enum Use {
     Search,
     /// Noticing something hidden in passing (spec §8 "Searching").
     Spot,
+    /// An attempt to disarm a trap (spec §8 "Disarming traps"), whatever comes of it.
+    Disarm,
     /// An attack that missed because the actor dodged it (the Dexterity or Dodge category).
     Dodge,
     /// An action taken (not waiting) while the burden slows the actor.
@@ -146,6 +163,8 @@ pub enum Use {
     Travel,
     /// A kick at a closed door (spec §8 "Doors").
     Kick,
+    /// A try at picking a lock (spec §8 "Doors"), whatever comes of it.
+    Pick,
 }
 
 impl Use {
@@ -156,10 +175,12 @@ impl Use {
             Use::Hear => "hearing something new",
             Use::Search => "a turn spent searching",
             Use::Spot => "noticing something hidden in passing",
+            Use::Disarm => "trying to disarm a trap",
             Use::Dodge => "dodging an attack",
             Use::Burdened => "acting (not waiting) while your load slows you",
             Use::Travel => "a journey on the overworld",
             Use::Kick => "kicking at a closed door",
+            Use::Pick => "a try at picking a lock",
         }
     }
 }
@@ -257,10 +278,12 @@ impl Use {
             Use::Hear => "hear",
             Use::Search => "search",
             Use::Spot => "spot",
+            Use::Disarm => "disarm",
             Use::Dodge => "dodge",
             Use::Burdened => "burdened",
             Use::Travel => "travel",
             Use::Kick => "kick",
+            Use::Pick => "pick",
         }
     }
 }
@@ -275,10 +298,12 @@ impl Effect {
             Effect::Search => "search",
             Effect::SearchReach => "search_reach",
             Effect::Spot => "spot",
+            Effect::Disarm => "disarm",
             Effect::Burden => "burden",
             Effect::Travel => "travel",
             Effect::Bargain => "bargain",
             Effect::Kick => "kick",
+            Effect::Pick => "pick",
         }
     }
 }

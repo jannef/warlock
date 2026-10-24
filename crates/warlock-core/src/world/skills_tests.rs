@@ -136,7 +136,8 @@ fn the_player_perceives_only_their_own_trained_skills() {
     // Trained at 0 is shown (it is not untrained); in skill order.
     assert_eq!(own, [("stealth".into(), 0), ("tumble".into(), 42)]);
     // For the abilities menu: passive skills have no active use; a skill used as an action is
-    // an ability, not available yet (no use exists), listed before the shield bash.
+    // an ability, not available yet (no use exists), listed before the shield bash; one whose
+    // use exists is that ability (Open lock: Pick lock).
     use crate::ability::{Ability, OwnAbility, Unavailable};
     let skill_abilities = |w: &World| -> Vec<OwnAbility> {
         (w.perception().abilities().into_iter())
@@ -144,13 +145,30 @@ fn the_player_perceives_only_their_own_trained_skills() {
             .collect()
     };
     assert!(skill_abilities(&w).is_empty());
-    set(&mut w, "open_lock", Some(18));
+    set(&mut w, "use_magic_device", Some(18));
     assert_eq!(
         skill_abilities(&w),
         [OwnAbility {
-            ability: Ability::Skill(skill(&w, "open_lock")),
+            ability: Ability::Skill(skill(&w, "use_magic_device")),
             unavailable: Some(Unavailable::NotYet),
         }]
+    );
+    set(&mut w, "open_lock", Some(18));
+    assert_eq!(
+        skill_abilities(&w).len(),
+        1,
+        "Open lock is no skill ability"
+    );
+    let own: Vec<Ability> = (w.perception().abilities().into_iter())
+        .map(|a| a.ability)
+        .collect();
+    assert_eq!(
+        own,
+        [
+            Ability::PickLock,
+            Ability::Skill(skill(&w, "use_magic_device")),
+            Ability::ShieldBash
+        ]
     );
     assert_eq!(
         w.perception().abilities().last().map(|a| a.ability),

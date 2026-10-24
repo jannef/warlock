@@ -1166,6 +1166,12 @@ impl<'a> PerceptionView<'a> {
             .collect()
     }
 
+    /// The player's alignment band (spec §8 "Alignment"), which they know; `None` without
+    /// alignment rules. Never the score.
+    pub fn own_alignment(&self) -> Option<crate::alignment::Band> {
+        (self.content.alignment()).map(|_| self.player.band(self.content))
+    }
+
     /// What the player carries against what they can (spec §8 "Burden"): their burden, and the
     /// weights at which it changes, which follow from scores they know.
     pub fn own_load(&self) -> Load {
