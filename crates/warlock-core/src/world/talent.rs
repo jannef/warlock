@@ -1,13 +1,14 @@
 //! Levels' choices and talents in the world (spec §8 "Talents"). A level that comes
-//! ([`World::level_up`], from `grant_xp`) hands out what it brings: every `talent_every`th level
-//! a talent pick, kept as a [`Due`] in `Progress` until it is made. **Nothing is banked**: while
-//! a choice is due the rules refuse every other action ([`World::refuse_due`], "You must choose
-//! a talent first."), so the level-up screen, the headless CLI, and replays all spend a level
-//! on the spot, with [`crate::action::Action::Talent`] (`talent:hardy`,
-//! `talent:weapon_focus:long_blades`) and, once skill rolls exist,
-//! [`crate::action::Action::Advance`]. A pick nothing can be spent on (no talent the player may
-//! take) is dropped, so a level never waits for the impossible. The dev action `levelup:auto`
-//! spends every choice with the first the player may take.
+//! ([`World::level_up`], from `grant_xp`) hands out what it brings: its skill rolls
+//! (`world/skill_roll.rs`) and every `talent_every`th level a talent pick, kept as a [`Due`] in
+//! `Progress` until they are made. **Nothing is banked**: while a choice is due the rules refuse
+//! every other action ([`World::refuse_due`], "You have skill rolls to spend." / "You must
+//! choose a talent first."), so the level-up screen, the headless CLI, and replays all spend a
+//! level on the spot, with [`crate::action::Action::Advance`] (`advance:stealth`) and
+//! [`crate::action::Action::Talent`] (`talent:hardy`, `talent:weapon_focus:long_blades`). A pick
+//! nothing can be spent on (no talent the player may take, no trained skill to roll) is dropped,
+//! so a level never waits for the impossible. The dev action `levelup:auto` spends every choice
+//! with the first the player may take.
 //!
 //! What a talent does is read through `Actor::talent_mods` where each rule lives; the one
 //! hand-out here is hit points by level (Hardy): a rank's share at the pick, and each later
@@ -27,6 +28,9 @@ pub struct Due {
     /// Talent picks left.
     #[serde(default, skip_serializing_if = "is_zero")]
     pub talents: u8,
+    /// Skill rolls left (`world/skill_roll.rs`).
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub rolls: u8,
 }
 
 fn is_zero(n: &u8) -> bool {
@@ -36,7 +40,7 @@ fn is_zero(n: &u8) -> bool {
 impl Due {
     /// Whether nothing is left to choose.
     pub fn is_spent(&self) -> bool {
-        self.talents == 0
+        self.talents == 0 && self.rolls == 0
     }
 }
 
@@ -56,16 +60,22 @@ impl World {
         )
     }
 
-    /// Levels `from + 1..=to` came: each hands out what it brings (a talent pick every
-    /// `talent_every` levels, `data/experience.toml`), and the hit points the talents held
-    /// grow by at each of them.
+    /// Levels `from + 1..=to` came: each hands out what it brings (its skill rolls, a talent
+    /// pick every `talent_every` levels, `data/experience.toml`), and the hit points the
+    /// talents held grow by at each of them.
     pub(super) fn level_up(&mut self, from: u8, to: u8) {
         let every = self.content.experience().talent_every();
         let mods = self.state.player().talent_mods(&self.content);
+        let rolls = self.level_rolls();
         let mut hp = 0;
         for level in from.saturating_add(1)..=to {
-            if every > 0 && level % every == 0 {
-                self.state.progress.due.push(Due { level, talents: 1 });
+            let talents = u8::from(every > 0 && level % every == 0);
+            if talents > 0 || rolls > 0 {
+                (self.state.progress.due).push(Due {
+                    level,
+                    talents,
+                    rolls,
+                });
             }
             hp += mods.hp_at(level) - mods.hp_at(level - 1);
         }
@@ -77,29 +87,48 @@ impl World {
         self.settle_due();
     }
 
-    /// Drops the talent picks nothing can be spent on: no talent the player may take now (a
-    /// run without talents, or every talent they qualify for held). Asked again after each
+    /// Drops the choices nothing can be spent on: talent picks when no talent may be taken now
+    /// (a run without talents, or every talent they qualify for held) and no skill roll is left
+    /// that might open one, and skill rolls when no skill is trained. Asked again after each
     /// pick, so a pick that another pick unlocks is kept.
-    fn settle_due(&mut self) {
-        if self.state.progress.due.is_empty() {
+    pub(super) fn settle_due(&mut self) {
+        let due = &self.state.progress.due;
+        if due.is_empty() {
             return;
         }
-        if !talent::offers(&self.content, &self.candidate()).is_empty() {
+        let no_rolls = self.state.player().skills.is_empty();
+        let rolls_left = !no_rolls && due.iter().any(|d| d.rolls > 0);
+        let no_talents = due.iter().any(|d| d.talents > 0)
+            && !rolls_left
+            && talent::offers(&self.content, &self.candidate()).is_empty();
+        if !no_rolls && !no_talents {
             return;
         }
-        self.state.progress.due.clear();
+        for due in &mut self.state.progress.due {
+            if no_rolls {
+                due.rolls = 0;
+            }
+            if no_talents {
+                due.talents = 0;
+            }
+        }
+        self.state.progress.due.retain(|d| !d.is_spent());
     }
 
     /// Refuses `action` while a level's choices are due, unless it is one of them.
     pub(super) fn refuse_due(&mut self, action: &Action) -> Option<Spent> {
-        self.due()?;
+        let due = self.due()?;
         if matches!(
             action,
             Action::Talent { .. } | Action::Advance(_) | Action::LevelUpAuto
         ) {
             return None;
         }
-        self.say("You must choose a talent first.");
+        if due.rolls > 0 {
+            self.say("You have skill rolls to spend.");
+        } else {
+            self.say("You must choose a talent first.");
+        }
         Some(Spent::Nothing)
     }
 
@@ -108,10 +137,10 @@ impl World {
     /// Takes no time.
     pub(super) fn take_talent(&mut self, id: &str, choice: Option<&str>) -> Spent {
         let content = self.content.clone();
-        if self.due().is_none_or(|d| d.talents == 0) {
+        let Some(at) = (self.state.progress.due.iter()).position(|d| d.talents > 0) else {
             self.say("You have no talent to choose now.");
             return Spent::Nothing;
-        }
+        };
         let Some(talent) = content.talents().id(id) else {
             self.say(format!("There is no talent `{id}`."));
             return Spent::Nothing;
@@ -131,10 +160,10 @@ impl World {
         player.talents.take(id, choice);
         player.hp_base += hp;
         player.hp += hp;
-        let due = &mut self.state.progress.due[0];
+        let due = &mut self.state.progress.due[at];
         due.talents -= 1;
         if due.is_spent() {
-            self.state.progress.due.remove(0);
+            self.state.progress.due.remove(at);
         }
         if def.rank_count() > 1 {
             self.say(format!("You learn {name} ({rank})."));
@@ -145,28 +174,18 @@ impl World {
         Spent::NoTime
     }
 
-    /// `advance:SKILL` ([`Action::Advance`]): a skill roll of the level, on a trained skill.
-    /// The rolls come with the skill ladder (#230); until then no level has any, so it is
-    /// refused. Takes no time.
-    pub(super) fn advance_skill(&mut self, skill: &str) -> Spent {
-        if self.content.skill_id(skill).is_none() {
-            self.say(format!("There is no skill `{skill}`."));
-            return Spent::Nothing;
-        }
-        self.say("You have no skill rolls to spend.");
-        Spent::Nothing
-    }
-
     /// The dev action `levelup:auto` ([`Action::LevelUpAuto`]): spends every choice due with
-    /// the first the player may take (talents tree by tree, in file order, the first choice of
-    /// one with a choice), for tests and benchmarks. Takes no time.
+    /// the first the player may take (skill rolls on the first trained skill, then talents tree
+    /// by tree, in file order, the first choice of one with a choice), for tests and
+    /// benchmarks. Takes no time.
     pub(super) fn level_up_auto(&mut self) -> Spent {
         if self.due().is_none() {
             self.say("Nothing is due.");
             return Spent::Nothing;
         }
+        self.advance_auto();
         let content = self.content.clone();
-        while self.due().is_some_and(|d| d.talents > 0) {
+        while self.state.progress.due.iter().any(|d| d.talents > 0) {
             let offers = talent::offers(&content, &self.candidate());
             let Some((id, ways)) = offers.into_iter().next() else {
                 break;

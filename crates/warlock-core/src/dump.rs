@@ -90,7 +90,7 @@ pub enum Layer {
     /// truth). **Dev-only.**
     Actors,
     /// Not a map: the player's progression (spec §8 "Talents"): the choices a level still asks
-    /// for (`due level 3: 1 talent`), the talents they may take now by id with the choices
+    /// for (`due level 3: 3 skill rolls, 1 talent`), the talents they may take now by id with the choices
     /// each may be taken for (`takeable healthy, weapon_focus:{bows,slings}`), and the creature
     /// types whose first kill has paid (`discovered kobold, rat`). **Dev-only.**
     Progress,
@@ -593,8 +593,16 @@ fn progress_rows(world: &World) -> Vec<String> {
     let progress = &world.state().progress;
     let mut rows: Vec<String> = (progress.due.iter())
         .map(|due| {
-            let s = if due.talents == 1 { "" } else { "s" };
-            format!("due level {}: {} talent{s}", due.level, due.talents)
+            let count = |n: u8, what: &str| match n {
+                0 => None,
+                1 => Some(format!("1 {what}")),
+                n => Some(format!("{n} {what}s")),
+            };
+            let parts: Vec<String> = [count(due.rolls, "skill roll"), count(due.talents, "talent")]
+                .into_iter()
+                .flatten()
+                .collect();
+            format!("due level {}: {}", due.level, parts.join(", "))
         })
         .collect();
     let takeable: Vec<String> = (view.talents().iter())
@@ -705,8 +713,8 @@ fn actor_weapon_skills(
 /// Protection (`dv 11 pv 3`), its alignment (`alignment evil`; the player's score and band,
 /// `alignment 450 (good)`), weight, what it carries, its burden and carrying limit, its stats
 /// as score/potential
-/// (`St 12/15`), its trained skills with their marks toward the next point
-/// (`stealth 17 (2/5)`), its status effects with their severities (`effects bleeding 2`), the
+/// (`St 12/15`), its trained skills with their marks and the die those set on the ladder
+/// (`stealth 17 (7 1d3)`), its status effects with their severities (`effects bleeding 2`), the
 /// player's nutrition and hunger (`nutrition 3540 (not_hungry)`), and, if it has any, the unique
 /// character it is and how far its talk has got; then all food on the level and in the packs of
 /// those on it, with when it was made (a corpse: when its creature died) and how it has rotted
@@ -794,8 +802,9 @@ fn actor_rows(world: &World) -> Vec<String> {
                 .collect();
             let skills: Vec<String> = (a.skills.iter())
                 .map(|(id, t)| {
-                    let need = content.increase().need(t.value);
-                    format!("{} {} ({}/{need})", content.skill(id).id, t.value, t.marks)
+                    let ladder = content.ladder();
+                    let die = ladder.die(ladder.step(t.marks));
+                    format!("{} {} ({} {die})", content.skill(id).id, t.value, t.marks)
                 })
                 .collect();
             let skills = if skills.is_empty() {
@@ -1301,7 +1310,7 @@ mod tests {
         let shaman = actors.iter().find(|a| a.contains(" kobold_shaman at "));
         assert!(
             shaman.is_some_and(|s| s.ends_with(
-                "; skills concentration 20 (0/6), spellcraft 25 (0/6); resists fire 25"
+                "; skills concentration 20 (0 +1), spellcraft 25 (0 +1); resists fire 25"
             )),
             "{actors:#?}"
         );
@@ -1361,12 +1370,12 @@ mod tests {
             layer_rows(&gnome, Layer::Stats)
         );
         let actors = layer_rows(&world, Layer::Actors);
-        // Every actor's stats, then its trained skills with their marks toward the next point.
+        // Every actor's stats, then its trained skills with their marks and the ladder's die.
         assert!(
             actors[0].contains(
                 "stats St 9/16 Dx 13/16 To 10/16 In 12/16 Wi 11/16 Pr 9/16; skills appraise 11 \
-                 (0/5), disable_device 16 (0/5), escape_artist 7 (0/4), open_lock 18 (0/5), \
-                 search 9 (0/4), spot 10 (0/5), steal 17 (0/5), stealth 16 (0/5), tumble 16 (0/5); \
+                 (0 +1), disable_device 16 (0 +1), escape_artist 7 (0 +1), open_lock 18 (0 +1), \
+                 search 9 (0 +1), spot 10 (0 +1), steal 17 (0 +1), stealth 16 (0 +1), tumble 16 (0 +1); \
                  nutrition 3600 (not_hungry)"
             ),
             "{}",

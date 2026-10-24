@@ -69,7 +69,7 @@ impl From<Score> for i32 {
 }
 
 /// Checks a race's or a class's part of a new character's score (`alignment` in
-/// `data/races.toml` and `data/classes.toml`): −[`MAX`] to [`MAX`]; the sum is kept on the scale.
+/// `data/races.toml` and `data/classes/`): −[`MAX`] to [`MAX`]; the sum is kept on the scale.
 pub fn check_start(value: i32) -> Result<i32, String> {
     if (-MAX..=MAX).contains(&value) {
         Ok(value)

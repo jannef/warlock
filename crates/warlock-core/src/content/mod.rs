@@ -149,7 +149,7 @@ pub use weather::{
 use crate::dice::Dice;
 use crate::noise::MAX_LOUDNESS;
 use crate::perception::VIEW_RADIUS;
-use crate::skills::{Increase, SkillId, Skills};
+use crate::skills::{Ladder, RollRules, SkillId, Skills};
 use crate::stats::Stats;
 use crate::weapon_skills::WeaponSkills;
 use level::{LegendEntry, legend_char};
@@ -366,7 +366,7 @@ struct LegendFile {
 /// `data/lights.toml`, `data/vision.toml`, `data/factions.toml`, `data/dungeons.toml`,
 /// `data/calendar.toml`, `data/sky.toml`, `data/materials/`, `data/parts.toml`, `data/objects/`,
 /// `data/gems.toml`, `data/weather.toml`, `data/actions.toml`, `data/slots.toml`, `data/sizes.toml`,
-/// `data/races.toml`, `data/names.toml`, `data/classes.toml`, `data/skills.toml`,
+/// `data/races.toml`, `data/names.toml`, `data/classes/`, `data/skills.toml`,
 /// `data/horoscope.toml`,
 /// `data/effects.toml`, `data/room_effects.toml`, `data/weapon_skills.toml`, `data/stances.toml`,
 /// `data/status.toml`, `data/diseases.toml`, `data/dialogue.toml`, `data/quests.toml`,
@@ -597,10 +597,11 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             content.names = Names::parse(path, text, |id| content.race(id).is_some())?;
         }
-        let path = "data/classes.toml";
-        if let Some(text) = files.get_optional(path) {
+        // The class table (spec §8 "Character creation"): optional, so fixtures may go without.
+        if files.table("classes").next().is_some() {
             let skill_id = |id: &str| content.skill_id(id);
-            content.classes = ClassDef::parse(path, text, skill_id, &content.weapon_skills)?;
+            let table = files.table("classes");
+            content.classes = ClassDef::parse(table, skill_id, &content.weapon_skills)?;
         }
         let path = "data/alignment.toml";
         if let Some(text) = files.get_optional(path) {
@@ -2117,7 +2118,7 @@ impl Content {
         &self.names
     }
 
-    /// The classes of `data/classes.toml`, in the order offered (none without the file).
+    /// The classes of `data/classes/`, in the order offered (none without the files).
     pub fn classes(&self) -> &[ClassDef] {
         &self.classes
     }
@@ -2163,9 +2164,16 @@ impl Content {
         &self.talents
     }
 
-    /// **[provisional]** How training marks become points (`[increase]` in `data/skills.toml`).
-    pub fn increase(&self) -> &Increase {
-        &self.skills.increase
+    /// The skill ladder: the die a level-up roll throws by the skill's marks (`[ladder]` in
+    /// `data/skills.toml`, spec §8 "Skills").
+    pub fn ladder(&self) -> &Ladder {
+        &self.skills.ladder
+    }
+
+    /// The skill rolls' rules: Intelligence's extra rolls, the marks a roll spends, the soft cap
+    /// (`[rolls]` in `data/skills.toml`).
+    pub fn skill_rolls(&self) -> &RollRules {
+        &self.skills.rolls
     }
 
     /// Prefixes and suffixes, and how loot rolls them (spec §8 "Magic items"); empty without

@@ -1,0 +1,48 @@
+# Classes (spec §8 "Character creation"): the third choice of a new run, one file per class
+# holding one `[[class]]`. A class adjusts the starting scores (see ../races.toml for how they add
+# up), gives hit points, and trains the character in skills and weapon skills: no equipment or
+# spells come with it. This file holds only the notes below: a file of comments defines nothing.
+#
+# The classes are offered in path order, so the files are named `NN-id.toml` (`01-barbarian.toml`):
+# the number keeps the order. The adventurers come first, then everyday folk; a new class takes
+# the number of its place and the ones after it move up. Saves name the class by id, so a renamed
+# file keeps saves; the same id in two files is a load error naming both (docs/dev/content.md).
+#
+# Fields:
+#   id, name      the class's id (for the command line and saves) and its name
+#   description   one line, shown when choosing
+#   stats         adjustments to the starting scores by stat id (strength, dexterity, toughness,
+#                 intelligence, willpower, presence; a missing one 0): a number (`1`, `-2`) or
+#                 dice (`"1d3+1"`, `"-1d2"`), rolled in the background when the character is made,
+#                 ADOM-like; every result within -10 to 10. Each class rolls its key stats;
+#                 penalties may be rolled too
+#   hp            what the class adds to the hit points (spec §8 "Combat"; default 0): a
+#                 character's maximum is their Toughness plus their race's (races.toml) and their
+#                 class's
+#   experience    how much experience a level needs, in percent (spec §8 "Experience"; 50 to 200,
+#                 default 100), multiplied with the race's onto every threshold in
+#                 experience.toml: the patient callings pay more, everyday folk less
+#   alignment     the class's part of a new character's hidden alignment score (spec §8
+#                 "Alignment"; alignment.toml; -1000 evil to 1000 good, default 0), added to the
+#                 race's: paladins start Good, thieves and witches Callous, everyone else Neutral
+#   skills        the skills the class trains (spec §8 "Skills"; skills.toml), by skill id: dice
+#                 (`"2d6+10"`) or a number, rolled when the character is made, every result
+#                 within 0 to 100; added to the race's. Each class has a few skills it is known
+#                 for (2d6+10) and a few more (2d4+4); every other skill is untrained
+#   known_for     the skills the class is known for (its 2d6+10 ones; each one of `skills`): a
+#                 level-up roll on one throws the die one step up the skill ladder (skills.toml
+#                 `[ladder]`); a roll on one of the class's other skills adds 1 (default none)
+#   rolls         the skill rolls each level gives (spec §8 "Skills"; 0 to 10, default 2): the
+#                 race's (races.toml) and Intelligence's (skills.toml `[rolls]`) are added. Most
+#                 classes 2, the thief and the ranger 3, the bard 4: learning is the bard's gift
+#   weapon_skills starting ranks in weapon skills (spec §8 "Weapon skills"), by skill id in
+#                 weapon_skills.toml, a number or dice (every result within 0 to 10), added to the
+#                 race's (at most 10). Each starting rank then raises the weapon skills it
+#                 defaults to
+#   weapon_skill_choice  two or more such sets, of which one is picked at random when the
+#                 character is made (the barbarian's axes or great blades)
+#   styles, style_choice  the same for fighting styles (spec §8 "Fighting styles"; the styles in
+#                 weapon_skills.toml), rolled after everything else (the thief's Twin Blades or
+#                 Duelist)
+#
+# Balance is not a goal: some choices are poor on purpose.

@@ -1,6 +1,6 @@
 //! Character creation (spec §8 "Character creation"): who the player is, made when a run
 //! starts. A [`CharacterSpec`] is the choice — a race (`data/races.toml`), a gender, and a class
-//! (`data/classes.toml`) — written `dwarf,female,warrior` on the command line. A [`Character`]
+//! (`data/classes/`) — written `dwarf,female,warrior` on the command line. A [`Character`]
 //! is what came of it in a run: the name, the choice, the stat the gender raised, the birth
 //! date, and the birth sign (`data/horoscope.toml`).
 //!
@@ -511,13 +511,10 @@ mod tests {
                  stats = {{ strength = 4, dexterity = -2 }}\npotential = {{ strength = 3 }}\n"
             ),
         );
-        let classes = include_str!("../../../assets/data/classes.toml");
         files.insert(
-            "data/classes.toml",
-            &format!(
-                "{classes}\n[[class]]\nid = \"brute\"\nname = \"Brute\"\ndescription = \"\"\n\
-                 stats = {{ strength = 2, intelligence = -3 }}\n"
-            ),
+            "data/classes/99-brute.toml",
+            "[[class]]\nid = \"brute\"\nname = \"Brute\"\ndescription = \"\"\n\
+             stats = { strength = 2, intelligence = -3 }\n",
         );
         if horoscope {
             files.insert(
@@ -916,22 +913,16 @@ mod tests {
         files.remove("data/skills.toml");
         let untrained = |text: &str| -> String {
             let kept: Vec<&str> = (text.lines())
-                .filter(|l| !l.starts_with("skills = ") && !l.starts_with("class_skill = "))
+                .filter(|l| {
+                    !l.starts_with("skills = ")
+                        && !l.starts_with("class_skill = ")
+                        && !l.starts_with("known_for = ")
+                })
                 .collect();
             kept.join("\n")
         };
-        for (path, text) in [
-            (
-                "data/races.toml",
-                include_str!("../../../assets/data/races.toml"),
-            ),
-            (
-                "data/classes.toml",
-                include_str!("../../../assets/data/classes.toml"),
-            ),
-        ] {
-            files.insert(path, &untrained(text));
-        }
+        files.edit_table("races", untrained);
+        files.edit_table("classes", untrained);
         files.edit_table("creatures", untrained);
         Content::load(&files).expect("valid content")
     }

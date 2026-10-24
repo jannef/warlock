@@ -115,6 +115,7 @@ mod schedule;
 mod search;
 mod shoot;
 mod shop;
+mod skill_roll;
 mod spell;
 mod status;
 mod talent;
@@ -1020,6 +1021,8 @@ mod search_tests;
 mod shoot_tests;
 #[cfg(test)]
 mod shop_tests;
+#[cfg(test)]
+mod skill_roll_tests;
 #[cfg(test)]
 mod skills_tests;
 #[cfg(test)]

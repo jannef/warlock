@@ -9,7 +9,7 @@
 # level 60 (2 861 748 XP in all); about 3 000 kills of your own level to reach level 20 and
 # 15 000 to reach level 60. The first term ramps quickly toward a plateau, the second keeps every
 # level costlier than the last. A character's thresholds are these times their race's and their
-# class's `experience` percents (races.toml, classes.toml), rounded: an elf wizard needs 175 %,
+# class's `experience` percents (races.toml, classes/), rounded: an elf wizard needs 175 %,
 # a half-orc commoner 72 %. max_level is the cap; XP beyond it still counts but buys nothing.
 #
 # Hit points: each level gained up to hp_level (inclusive) adds max(1, class hp ÷ 2 + the
