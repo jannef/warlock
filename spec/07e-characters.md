@@ -11,36 +11,55 @@ developer notes (CLAUDE.md, `docs/dev/`).
   them: `id`, `name`, a one-line `description`, `vision` (a profile in `vision.toml`: the player's
   eyes), `age = [youngest, oldest]` (a new character's age in years, 1 to 1000), `stats`
   (adjustments to the starting scores), `potential` (adjustments to the potentials, the same way;
-  hidden from the player), `hp` (its hit points, 0 to 1000, default 0; §8 "Combat"), `alignment`
-  (its part of a new character's alignment score, −1000 to 1000, default 0; §8 "Alignment": elf
-  and halfling 50, half-orc −50, the rest 0), `size` (a size
+  hidden from the player), `hp` (its hit points, 0 to 1000, default 0; §8 "Combat"), `natural`
+  (natural armour as a creature's, `{ defence, protection, name }`, each 0 to 20, not both 0;
+  default none; §8 "Combat": lizardfolk's scales, Protection 1), `resist` (what the character
+  resists, in percent per damage type, −100 to 100, as a creature's; default none; §8 "Damage
+  types": drow poison 25), `light_blind` (`{ glare, sight, to_hit }`: eyes strong light dazzles,
+  §8 "Character creation"; default none; drow 250, 10, −1), `disease_check` (points added to
+  the checks against diseases, −10 to 10, default 0; §8 "Diseases": ratfolk 4), `eats_rotten`
+  (default false: whether rotten food feeds the character without harm; §8 "Hunger": ratfolk),
+  `alignment` (its part of a new character's alignment score, −1000 to 1000, default 0; §8
+  "Alignment": elf and halfling 50, half-orc −50, goblin, kobold, lizardfolk, and ratfolk −200
+  (Callous), drow and duergar −450 (Evil), the rest 0), `size` (a size
   in `data/sizes.toml`, default `medium`; §8 "Burden"), `ignores_burdened` (default false: whether
   Burdened, the first level of burden, costs the character nothing), `passive_search` (which
-  hidden features the character notices in passing without the Spot skill: `"all"`, elves, or
-  `"stone"`, dwarves; default none; §8 "Searching"), `search` (points added to searching and
-  noticing alike, −10 to 10, default 0; elves 2), `skills` (the skills it trains,
+  hidden features the character notices in passing without the Spot skill: `"all"`, elves and
+  drow, `"stone"`, dwarves and duergar, or `"traps"`, kobolds (hidden traps only); default none;
+  §8 "Searching"), `search` (points added to searching and noticing alike, −10 to 10, default
+  0; elves and kobolds 2), `skills` (the skills it trains,
   by skill id: dice or a number, every result 0 to 100; §8 "Skills"), `class_skill` (dice added
   to one of the class's skills, picked when the character is made; default none), `rolls` (skill
   rolls each level gives beyond the class's, 0 to 10, default 0; humans 1), `hunger` (how
   much the character needs to eat, in percent of a human, 10 to 1000, default 100; §8 "Hunger":
-  elf 80, half-elf 90, human 100, dwarf 110, halfling 125, gnome 90, half-orc 120),
+  elf 80, half-elf 90, human 100, dwarf 110, halfling 125, gnome 90, half-orc 120, goblin 80,
+  drow 80, kobold 80, lizardfolk 90, duergar 90, ratfolk 110),
   `experience` (how much XP a level needs, in percent, 50 to 200, default 100, multiplied with
   the class's; §8 "Experience": elf 140, half-elf 105, human 100, dwarf 115, halfling 95, gnome
-  120, half-orc 90; long-lived races pay more), and
+  120, half-orc 90, goblin 80, drow 130, kobold 75, lizardfolk 95, duergar 115, ratfolk 85;
+  long-lived races pay more, and the poor choices less), and
   `weapon_skills` (starting ranks by weapon skill id, a fixed number or dice, every result 0 to
   10; §8 "Weapon skills"); and at the top
   `base_potential` (1 to 40), what every potential is before the race adjusts it (15). Races are
   mostly fixed numbers, their identity, with a little dice. The races, their eyes, ages, and hit
   points: elf (low-light, 90–300, 2), half-elf (low-light, 20–60, 3), human (normal, 16–35, 4),
   dwarf (darkvision, 40–120, 6), halfling (normal, 20–50, 2), gnome (low-light, 40–150, 3), half-orc
-  (darkvision, 14–30, 6); humans adjust no score but roll `1d2` on every potential. Halflings and
-  gnomes are small, the rest medium; dwarves ignore Burdened. Their skills (`1d6+4` each): elves
-  listen and spot, half-elves bluff and spot (`1d4+2`), dwarves metalcraft and search
-  (stonecunning), halflings listen and stealth, gnomes appraise and listen, half-orcs intimidate;
+  (darkvision, 14–30, 6), and the evil races (#255): goblin (darkvision, 10–30, 2), drow
+  (darkvision, 100–400, 2), kobold (darkvision, 6–20, 1), lizardfolk (normal, 12–50, 5), duergar
+  (darkvision, 40–300, 6), ratfolk (low-light, 8–40, 2); humans adjust no score but roll `1d2` on
+  every potential. Halflings, gnomes, goblins, kobolds, and ratfolk are small, the rest medium;
+  dwarves and duergar ignore Burdened. Their skills (`1d6+4` each): elves listen and spot,
+  half-elves bluff and spot (`1d4+2`), dwarves metalcraft and search (stonecunning), halflings
+  listen and stealth, gnomes appraise and listen, half-orcs intimidate, goblins stealth
+  (`1d6+6`: sneaking and hiding are one skill) and listen (`1d4+2`), drow spot and stealth
+  (`1d4+2`), kobolds disable device and search (`1d4+2`), lizardfolk swim and survival
+  (`1d4+2`), duergar metalcraft and stealth (`1d4+2`), ratfolk stealth and listen (`1d4+2`);
   humans none, but one extra class skill (`class_skill = "2d4+4"`).
   Weapon skills (`weapon_skills`; §8 "Weapon skills"): elf long blades 1 and bows 1, half-elf
   bows `1d2-1`, dwarf axes 1 and crossbows 1, halfling slings 1, gnome crossbows 1, half-orc
-  axes 1; humans none.
+  axes 1, goblin short blades 1 and slings 1, drow short blades 1 and crossbows 1, kobold slings
+  1 and spears 1, lizardfolk spears 1 and thrown 1, duergar crossbows 1 and maces 1, ratfolk
+  daggers 1; humans none.
 - **Status effects** (`data/status.toml`, optional; without it nothing ails anyone and resting
   heals twice as fast; §8 "Status effects", "Healing"): `[healing] resting` (how fast hit points
   come back while the player rests, in percent of the normal pace, 0 to 1000; 200), then the
@@ -169,11 +188,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
   them (alphabetical), each with `id`, `name`, a one-line `description`, `kind` (`passive`,
   `action`, or `rules`: what it is for; no rule reads it), `mark` (when it earns training marks:
   `{ on = USE, chance = PERCENT }`, 1 to 100; uses `sneak`, `hear`, `dodge`, `burdened`,
-  `travel`), and `benefit` (what it gives by its value: `{ effect = EFFECT, steps = [20, 40],
+  `travel`, `steal`), and `benefit` (what it gives by its value: `{ effect = EFFECT, steps = [20, 40],
   every = 25 }`, one for each value reached and one more for every `every` points past the last,
   or `{ effect = EFFECT, curve = [[0, 0], [100, 60]] }`, straight between points from value 0,
   rounded down, level after the last; effects `dodge`, `quiet`, `hearing`, `burden`, `travel`,
-  the percent ones within 0 to 100). At the top, `[ladder]`: `dice` and `marks`, one per step
+  `steal` (points added to stealing, at most 20; trained, it lets the player steal: §8
+  "Stealing"), the percent ones within 0 to 100). At the top, `[ladder]`: `dice` and `marks`, one per step
   (the die a level-up roll throws from that many marks on; marks from 0, rising; each die adds at
   least 1; default ADOM's `+1` … `4d5` from 0 … 800 marks), and `[rolls]`:
   `intelligence_from`, `intelligence_every` (one more roll at that Intelligence and every so many

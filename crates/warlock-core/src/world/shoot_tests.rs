@@ -874,18 +874,18 @@ fn a_weapon_readied_to_throw_does_not_parry_and_nothing_readied_takes_no_time() 
     let before = w
         .state()
         .player()
-        .defence(w.content(), crate::burden::Burden::Unburdened);
+        .defence(w.content(), crate::burden::Burden::Unburdened, None);
     run(&mut w, "pickup equip:missile_weapon:a");
     let readied = w
         .state()
         .player()
-        .defence(w.content(), crate::burden::Burden::Unburdened);
+        .defence(w.content(), crate::burden::Burden::Unburdened, None);
     assert_eq!(readied.total(), before.total());
     run(&mut w, "equip:main_hand:a");
     let held = w
         .state()
         .player()
-        .defence(w.content(), crate::burden::Burden::Unburdened);
+        .defence(w.content(), crate::burden::Burden::Unburdened, None);
     assert_eq!(
         held.total(),
         before.total() + 1,

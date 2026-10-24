@@ -31,7 +31,14 @@ a cell needs, **Dark adaptation** (darkvision) reaches 2 cells farther, **Owl ey
 gives darkvision of 2 cells, and **Rune sight** sees UV light. Your eyes keep their type's name; the
 talents only change what it does. **Blood scent** (darkvision) sees a bleeding creature in your
 line of sight within 9 cells however dark it is, and **Moon-eyed** (low-light) sees a cell farther
-across the [overworld](overworld.md) at night. A [developer key](controls.md#developer-keys)
+across the [overworld](overworld.md) at night.
+
+Drow eyes are also **light-blind**: in strong light (a perceived brightness of 250 or more on your
+own cell: the sun well up under a clear sky, a bright fire close by) you are dazzled and see
+nothing farther than ten cells, whatever your vision type (see
+[Races](races.md#the-evil-races)).
+
+A [developer key](controls.md#developer-keys)
 (`F3`) cycles through the types for trying them out.
 
 Creatures have eyes of these types too, and see by the same rules (see

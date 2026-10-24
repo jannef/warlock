@@ -27,9 +27,11 @@ walking, waiting, resting, or anything else, every hidden thing on the eight cel
 gets a chance to catch your eye, a smaller one than a search would have. This chance depends on
 your **Willpower** and your **Spot** skill. Who notices things in passing:
 
-- **Elves**: everything.
-- **Dwarves**: what is hidden in **stone**, a secret door in a stone wall or a trap in a stone
-  floor: most of a dungeon, but not a door in a timber wall, or a trap in the grass.
+- **Elves** and **drow**: everything.
+- **Dwarves** and **duergar**: what is hidden in **stone**, a secret door in a stone wall or a
+  trap in a stone floor: most of a dungeon, but not a door in a timber wall, or a trap in the
+  grass.
+- **Kobolds**: hidden **traps**, anywhere, but never a secret door.
 - **Anyone trained in Spot**: everything. Some races and classes train it (below).
 - Everyone else notices nothing in passing, but can always search.
 

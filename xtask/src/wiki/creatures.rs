@@ -208,7 +208,7 @@ pub(super) fn creature_defences(content: &Content) -> String {
     );
     for (id, c) in listed(content) {
         let actor = bare(content, id);
-        let defence = actor.defence(content, Burden::Unburdened);
+        let defence = actor.defence(content, Burden::Unburdened, None);
         let parts: Vec<String> = (Category::ALL.iter())
             .filter(|&&k| defence.bonus(k) != 0)
             .map(|&k| format!("{} {}", k.name(), signed(defence.bonus(k))))

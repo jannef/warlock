@@ -96,14 +96,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
     faction (its `faction_override`, hostile to the player; ADOM-like, it comes after them), the
     shop trades no more (`ShopStatus::Outraged`), and what was owed is the player's, stolen. A
     keeper the player attacks (any attack, melee, shot, or throw, hit or miss) turns the same way
-    ("\"You will pay for that!\" shouts Grimbold."). A step out that is not a way out asks first,
+    ("\"You will pay for that!\" shouts Grimbold."), and so does a keeper that catches the
+    player stealing from it (§8 "Stealing": "Grimbold catches you stealing. \"Stop, thief!\"");
+    a theft it does not notice leaves the shop open, the keeper's purse gone (a sale it then
+    cannot pay for does not happen). A step out that is not a way out asks first,
     in the dialog: `You owe Grimbold 47 gold. Leave this way without paying, and Grimbold will
     call it theft.` with `Pay 47 gold and leave` (accept, with the gold), `Leave without paying`
     (plain: the step, theft), and `Stay` (cancel), so theft is always the player's choice.
     Unpaid goods cannot be shot or thrown ("You have not paid
     for a dagger (c)."). A keeper's death abandons its shop (`ShopStatus::Abandoned`): what lies
-    there is free to take, and its purse falls with it. Witnesses, pacifying a keeper, and the
-    steal skill come later.
+    there is free to take, and its purse falls with it. Witnesses and pacifying a keeper come
+    later; the Steal skill takes from a keeper's pack, never the shop floor (§8 "Stealing").
   - **The keeper** stays at its post (a merchant has no enemies, so it neither hunts nor looks
     into noises) until outraged; then it fights and chases like any hostile creature and goes back
     to its post when it has lost the player. It does not swap places with the player at its post

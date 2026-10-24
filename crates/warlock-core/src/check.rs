@@ -8,6 +8,10 @@
 //! traps"). Rolls come from the
 //! gameplay random stream, so they replay exactly; the player never sees a difficulty, a
 //! modifier, or a roll: they see what comes of it.
+//!
+//! A **contest** puts one side's check against the other's: the other side's natural roll plus
+//! its modifier is the difficulty (stealing, spec §8 "Stealing": the thief's Dexterity against
+//! the victim's Willpower). A tie goes to the side making the check.
 
 use crate::combat;
 use crate::rng::Rng;
@@ -56,6 +60,26 @@ pub fn ways(modifier: i32, difficulty: i32) -> u32 {
     combat::hit_ways(modifier, difficulty)
 }
 
+/// Rolls a contest: a check with `modifier` against the other side's check with `against`,
+/// whose total (its natural roll plus `against`) is the difficulty. Four draws from `rng`: the
+/// other side's natural roll, then the check's. A tie goes to the check; its natural 2 still
+/// fails and its natural 24 still succeeds.
+pub fn contest(rng: &mut Rng, modifier: i32, against: i32) -> bool {
+    let difficulty = combat::roll_natural(rng) + against;
+    check(rng, modifier, difficulty)
+}
+
+/// How many of the 144 × 144 ways both sides' dice can fall win a contest with `modifier`
+/// against `against` (out of [`CONTEST_WAYS`]).
+pub fn contest_ways(modifier: i32, against: i32) -> u32 {
+    (2..=24)
+        .map(|natural| combat::ways(natural) * ways(modifier, natural + against))
+        .sum()
+}
+
+/// Every way both sides' dice can fall in a contest: 144 × 144.
+pub const CONTEST_WAYS: u32 = 144 * 144;
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -79,6 +103,34 @@ mod tests {
         let made = (0..14_400).filter(|_| check(&mut rng, 1, 15)).count();
         let expected = 100 * ways(1, 15) as usize;
         assert!(made.abs_diff(expected) < 400, "{made} of 14400, {expected}");
+    }
+
+    #[test]
+    fn a_contest_is_a_check_against_the_other_sides_roll() {
+        // Even sides: a little better than half, ties going to the check.
+        let even = contest_ways(0, 0);
+        assert!(
+            even > CONTEST_WAYS / 2 && even < CONTEST_WAYS * 55 / 100,
+            "{even}"
+        );
+        // A modifier is worth as much on either side, and better odds never fall.
+        assert_eq!(contest_ways(3, 1), contest_ways(2, 0));
+        assert!((-10..10).all(|m| contest_ways(m, 0) <= contest_ways(m + 1, 0)));
+        // The sure ends hold however lopsided it is.
+        assert_eq!(contest_ways(-50, 50), CONTEST_WAYS / 144);
+        assert_eq!(contest_ways(50, -50), CONTEST_WAYS - CONTEST_WAYS / 144);
+        // Four draws: the other side's natural roll, then the check's.
+        let mut a = Rng::gameplay(3);
+        let mut b = a.clone();
+        let theirs = combat::roll_natural(&mut b);
+        let mine = combat::roll_natural(&mut b);
+        assert_eq!(contest(&mut a, 1, 2), combat::hits(mine, 1, theirs + 2));
+        assert_eq!(a, b);
+        // Over many rolls, it is won as often as its ways say.
+        let mut rng = Rng::gameplay(5);
+        let won = (0..20_736).filter(|_| contest(&mut rng, 2, 0)).count();
+        let expected = contest_ways(2, 0) as usize;
+        assert!(won.abs_diff(expected) < 500, "{won} of 20736, {expected}");
     }
 
     #[test]

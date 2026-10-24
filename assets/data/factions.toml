@@ -44,7 +44,8 @@ id = "merchants"
 name = "merchants"
 
 # ...until wronged: a shopkeeper robbed or attacked joins the outraged (shops.toml `outraged`),
-# hostile to the player, and comes after them.
+# hostile to the player, and comes after them. So does anyone who catches the player stealing
+# from them (steal.toml `caught`).
 [[faction]]
 id = "outraged"
 name = "outraged shopkeepers"
