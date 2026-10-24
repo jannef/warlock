@@ -180,6 +180,9 @@ pub enum TalentEffect {
     Threat { value: i32 },
     /// A natural 2 on an attack roll (a fumble) is rolled again, once.
     RerollFumble,
+    /// Each melee blow at the creature its last blow was at, in a row (its own turn or the one
+    /// before), is +1 to hit more, to `max` (Relentless; `World::streak`).
+    Streak { max: u8 },
     /// Maximum hit points: 1 per `per_levels` character levels, at least `at_least`, handed out
     /// into the actor's base hit points when the talent is taken and as each later level comes
     /// (as levels' own hit points are), so a talent taken early keeps growing.
@@ -313,6 +316,8 @@ pub enum TalentEffect {
     Skill { skill: String, value: i32 },
     /// Anyone not hostile makes way for it (spec §8 "Displacement"), those keeping a post too.
     MakeWay,
+    /// No one makes way for it (Trusted by none), whatever else would have them.
+    Distrusted,
     /// A free blow the actor is given (spec §8 "Free blows").
     FreeBlow { trigger: FreeBlowTrigger },
     /// What attacks with some weapon skills gain, as their ranks give it
@@ -389,11 +394,22 @@ pub enum TalentEffect {
     StanceDodge { stance: CombatStance, percent: i32 },
     /// Fleeing steps (spec §8 "Stances") cost this percent more (negative: cheaper).
     FleePercent { value: i32 },
+    /// A step that takes it out of reach of every hostile beside it costs this percent more
+    /// (negative: cheaper; Slip away), whatever its stance.
+    SlipPercent { value: i32 },
     /// Every hit on the actor (a blow, a shot, a throw, a trap) does this much less after its
     /// Protection soaked it, never below 1.
     Pain { value: i32 },
-    /// Resistance in percent to the chosen element (the talent takes an `element` choice).
-    Resist { value: i32 },
+    /// A creature whose melee blow hits it takes `damage` (Barbed hide): no blow, no roll, and
+    /// no experience if it dies of it.
+    Barbs { damage: i32 },
+    /// Resistance in percent to damage type `damage` (an id in `data/damage_types.toml`), else
+    /// to the chosen element (the talent takes an `element` choice).
+    Resist {
+        value: i32,
+        #[serde(default)]
+        damage: Option<String>,
+    },
     /// Resting heals this percent faster on top of resting's own pace (Fast healer).
     RestingPercent { value: i32 },
     /// The active Second wind: `per_level` hit points per character level back at once, at
@@ -456,6 +472,21 @@ pub enum TalentEffect {
     /// Every level past `hp_level` (data/experience.toml) adds hit points again, as the levels
     /// up to it do, and `bonus` more (Hardened). Handed out as the levels come.
     Hardened { bonus: i32 },
+    /// The active Horn's grace (a birth sign's): the statuses `cures` end and up to `diseases`
+    /// diseases that show are shaken off, then the `cooldown` status.
+    HornsGrace {
+        cures: Vec<String>,
+        diseases: u8,
+        cooldown: String,
+    },
+    /// The active Transfixing stare (a birth sign's): a hostile within
+    /// [`crate::world::STARE_RANGE`] cells that the player sees and that sees them suffers
+    /// `severity` degrees of `status`, then the `cooldown` status.
+    Stare {
+        status: String,
+        severity: u16,
+        cooldown: String,
+    },
     /// Rotten food never makes it vomit and sickens it half as much; overeating never makes it
     /// vomit (Iron stomach).
     IronStomach,
@@ -466,6 +497,9 @@ pub enum TalentEffect {
     /// A big hit makes it bleed no more, a critical one degree less (Clotting): the statuses
     /// that come of wounds.
     Clotting,
+    /// A big hit wounds it this many degrees more (Thin-skinned): the statuses that come of
+    /// wounds, where the hit wounds at all.
+    WoundMore { value: u16 },
     /// What its statuses take off its scores, this percent more (negative: less; Unbowed).
     PenaltyPercent { value: i32 },
     /// Added to its disease checks: catching one and every progression.
@@ -545,6 +579,16 @@ pub enum FreeBlowTrigger {
 }
 
 impl TalentEffect {
+    /// The birth sign's active it is, if it is one (spec §8 "Birth sign").
+    pub fn sign_active(&self) -> Option<super::SignActive> {
+        use super::SignActive as A;
+        Some(match self {
+            TalentEffect::HornsGrace { .. } => A::HornsGrace,
+            TalentEffect::Stare { .. } => A::TransfixingStare,
+            _ => return None,
+        })
+    }
+
     /// The class active it is, if it is one (spec §8 "Class abilities").
     pub fn active(&self) -> Option<super::ClassActive> {
         use super::ClassActive as A;
@@ -614,7 +658,8 @@ impl TalentEffect {
             | TalentEffect::NightSight { value }
             | TalentEffect::CarryKg { value }
             | TalentEffect::Checks { value, .. }
-            | TalentEffect::CriticalConfirm { value } => bonus(*value),
+            | TalentEffect::CriticalConfirm { value }
+            | TalentEffect::Barbs { damage: value } => bonus(*value),
             TalentEffect::Stat { value, .. } => {
                 if *value == 0 || !(-5..=5).contains(value) {
                     return Err("`stat`: value is -5 to 5, not 0".into());
@@ -679,7 +724,8 @@ impl TalentEffect {
             | TalentEffect::StanceDodge { percent: value, .. }
             | TalentEffect::WeaponMarks { value, .. }
             | TalentEffect::StepPercent { value, .. }
-            | TalentEffect::FleePercent { value } => percent(*value),
+            | TalentEffect::FleePercent { value }
+            | TalentEffect::SlipPercent { value } => percent(*value),
             TalentEffect::RaisePercent { status: id, value } => {
                 status(id)?;
                 percent(*value)
@@ -756,12 +802,60 @@ impl TalentEffect {
                 }
                 Ok(())
             }
-            TalentEffect::Resist { value } => match choice {
+            TalentEffect::Resist {
+                value,
+                damage: Some(kind),
+            } => {
+                if !content.damage_types().is_empty() && content.damage_type_id(kind).is_none() {
+                    return Err(format!("names an unknown damage type `{kind}`"));
+                }
+                percent(*value)
+            }
+            TalentEffect::Resist {
+                value,
+                damage: None,
+            } => match choice {
                 Some(Choice::Element) => percent(*value),
                 _ => Err(
-                    "`resist` is for the chosen element: it needs `choice = \"element\"`".into(),
+                    "`resist` without a `damage` is for the chosen element: it needs \
+                          `choice = \"element\"`"
+                        .into(),
                 ),
             },
+            TalentEffect::Streak { max } => {
+                if !(1..=10).contains(max) {
+                    return Err("`streak`: max is 1 to 10".into());
+                }
+                Ok(())
+            }
+            TalentEffect::WoundMore { value } => {
+                if !(1..=5).contains(value) {
+                    return Err("`wound_more`: value is 1 to 5".into());
+                }
+                Ok(())
+            }
+            TalentEffect::HornsGrace {
+                cures,
+                diseases,
+                cooldown,
+            } => {
+                if cures.is_empty() && *diseases == 0 {
+                    return Err("`horns_grace` cures a status or a disease".into());
+                }
+                cures.iter().try_for_each(|id| status(id))?;
+                status(cooldown)
+            }
+            TalentEffect::Stare {
+                status: id,
+                severity,
+                cooldown,
+            } => {
+                if *severity == 0 {
+                    return Err("`stare`: severity is at least 1".into());
+                }
+                status(id)?;
+                status(cooldown)
+            }
             TalentEffect::Weapon {
                 role,
                 skill,
@@ -941,6 +1035,7 @@ impl TalentEffect {
             | TalentEffect::ItemWorth
             | TalentEffect::GemWorth
             | TalentEffect::MakeWay
+            | TalentEffect::Distrusted
             | TalentEffect::Disarm => Ok(()),
         }
     }

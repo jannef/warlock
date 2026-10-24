@@ -25,10 +25,12 @@
 
 use crate::action::Action;
 use crate::alignment::Requirement;
-use crate::content::{ActionKind, ClassActive, Content, SkillDef, StatusId, TalentEffect};
+use crate::content::{
+    ActionKind, ClassActive, Content, SignActive, SkillDef, StatusId, TalentEffect,
+};
 use crate::geom::{Dir, Pos};
 use crate::skills::{Effect, SkillId};
-use crate::world::{Actor, VOICE_RANGE};
+use crate::world::{Actor, STARE_RANGE, VOICE_RANGE};
 use std::borrow::Cow;
 
 /// An ability, as the abilities menu lists it.
@@ -38,6 +40,9 @@ pub enum Ability {
     /// sees. The bard's (design §4.8, at level 32); until the class tables give it to them alone,
     /// everyone has it.
     ThrowVoice,
+    /// A birth sign's active gift (spec §8 "Birth sign"): [`Action::Gift`], had by whoever's
+    /// sign grants its talent; unavailable while its cooldown lasts.
+    Sign(SignActive),
     /// A class's active (spec §8 "Class abilities"): [`Action::Use`], had by whoever's class
     /// gives it at their level; unavailable while its cooldown lasts (Rage: while raging and
     /// exhausted), and, for the paladin's gifts, while they have strayed from Good.
@@ -80,6 +85,8 @@ pub enum Ability {
 pub enum Source {
     /// The character's race (none yet).
     Race,
+    /// The character's birth sign (spec §8 "Birth sign"): its active gifts.
+    Sign,
     /// The character's class (spec §8 "Class abilities"): its actives, and throwing one's voice
     /// (everyone's until the class tables give it to the bard alone).
     Class,
@@ -97,6 +104,7 @@ impl Source {
     /// Every source, in menu order.
     pub const ALL: &[Source] = &[
         Source::Race,
+        Source::Sign,
         Source::Class,
         Source::Talent,
         Source::Skill,
@@ -108,6 +116,7 @@ impl Source {
     pub const fn name(self) -> &'static str {
         match self {
             Source::Race => "Racial",
+            Source::Sign => "Birth sign",
             Source::Class => "Class",
             Source::Talent => "Talents",
             Source::Skill => "Skills",
@@ -120,6 +129,7 @@ impl Source {
     pub const fn id(self) -> &'static str {
         match self {
             Source::Race => "race",
+            Source::Sign => "sign",
             Source::Class => "class",
             Source::Talent => "talent",
             Source::Skill => "skill",
@@ -192,6 +202,10 @@ impl Ability {
                 let id = SkillId(u8::try_from(i).ok()?);
                 Some(Ability::use_of(def, content).unwrap_or(Ability::Skill(id)))
             });
+        // Birth sign: the active gifts some sign grants, in their order.
+        let signs = (SignActive::ALL.iter())
+            .filter(|&&a| content.sign_active(a).is_some())
+            .map(|&a| Ability::Sign(a));
         // Class: throwing one's voice.
         let class = [Ability::ThrowVoice];
         // Talents: the active ones the talent table has.
@@ -207,7 +221,7 @@ impl Ability {
         let weapon_skills = [Ability::ShieldBash];
         // Items: the lantern's hood.
         let items = [Ability::HoodLantern];
-        let mut all: Vec<Ability> = (class.into_iter())
+        let mut all: Vec<Ability> = (signs.chain(class))
             .chain(classes)
             .chain(talents)
             .chain(skills)
@@ -246,6 +260,7 @@ impl Ability {
     /// hold the talent; the shield bash, throwing one's voice, and the lantern's hood, everyone.
     pub(crate) fn had_by(self, actor: &Actor, content: &Content) -> bool {
         match self {
+            Ability::Sign(active) => actor.talent_mods(content).has_sign_active(active),
             Ability::Class(active) => actor.talent_mods(content).has_active(active),
             Ability::Skill(id) => actor.skills.get(id).is_some(),
             Ability::Disarm => {
@@ -262,6 +277,7 @@ impl Ability {
     /// Its id in dumps: `shield_bash`, `steal`, or the skill's id.
     pub fn id(self, content: &Content) -> &str {
         match self {
+            Ability::Sign(active) => active.id(),
             Ability::Class(active) => active.id(),
             Ability::Skill(id) => &content.skill(id).id,
             Ability::ThrowVoice => "throw_voice",
@@ -277,6 +293,7 @@ impl Ability {
     /// Its name in the menu.
     pub fn name(self, content: &Content) -> &str {
         match self {
+            Ability::Sign(active) => content.sign_active(active).map_or("", |a| &a.name),
             Ability::Class(active) => content.class_active(active).map_or("", |a| &a.name),
             Ability::Skill(id) => &content.skill(id).name,
             Ability::ThrowVoice => "Throw your voice",
@@ -292,6 +309,7 @@ impl Ability {
     /// What it does, in a line.
     pub fn description(self, content: &Content) -> &str {
         match self {
+            Ability::Sign(active) => content.sign_active(active).map_or("", |a| &a.description),
             Ability::Class(active) => content.class_active(active).map_or("", |a| &a.description),
             Ability::Skill(id) => &content.skill(id).description,
             Ability::ThrowVoice => {
@@ -320,6 +338,7 @@ impl Ability {
     /// Where it comes from: its group in the menu.
     pub const fn source(self) -> Source {
         match self {
+            Ability::Sign(_) => Source::Sign,
             Ability::Class(_) => Source::Class,
             Ability::Skill(_) | Ability::Disarm | Ability::PickLock | Ability::Steal => {
                 Source::Skill
@@ -334,6 +353,8 @@ impl Ability {
     /// What it asks for before it is used.
     pub const fn aim(self) -> Aim {
         match self {
+            Ability::Sign(active) if active.aimed() => Aim::Cell,
+            Ability::Sign(_) => Aim::Nothing,
             Ability::Class(active) if active.aimed() => Aim::Direction,
             Ability::Class(_) | Ability::Skill(_) | Ability::SecondWind | Ability::HoodLantern => {
                 Aim::Nothing
@@ -349,6 +370,7 @@ impl Ability {
     /// that action, spec §8 "Time"); `None` for one with no use yet.
     pub const fn cost(self) -> Option<ActionKind> {
         match self {
+            Ability::Sign(active) => Some(active.cost()),
             Ability::Class(active) => Some(active.cost()),
             Ability::Skill(_) => None,
             Ability::ThrowVoice => Some(ActionKind::ThrowVoice),
@@ -366,7 +388,9 @@ impl Ability {
     pub const fn range(self) -> Option<i32> {
         match self {
             Ability::ThrowVoice => Some(VOICE_RANGE),
-            Ability::Class(_)
+            Ability::Sign(SignActive::TransfixingStare) => Some(STARE_RANGE),
+            Ability::Sign(SignActive::HornsGrace)
+            | Ability::Class(_)
             | Ability::Skill(_)
             | Ability::Disarm
             | Ability::PickLock
@@ -387,6 +411,8 @@ impl Ability {
                 None => None,
             },
             (Ability::Class(active), _) => Some(Action::Use(active, None)),
+            (Ability::Sign(active), _) if active.aimed() => None,
+            (Ability::Sign(active), _) => Some(Action::Gift(active, None)),
             (Ability::Skill(_) | Ability::ThrowVoice, _) => None,
             (Ability::SecondWind, _) => Some(Action::SecondWind),
             (Ability::Disarm, Some(dir)) => Some(Action::Disarm(dir)),
@@ -405,7 +431,9 @@ impl Ability {
     pub const fn action_at(self, at: Pos) -> Option<Action> {
         match self {
             Ability::ThrowVoice => Some(Action::ThrowVoice(at)),
-            Ability::Class(_)
+            Ability::Sign(active) if active.aimed() => Some(Action::Gift(active, Some(at))),
+            Ability::Sign(_)
+            | Ability::Class(_)
             | Ability::Skill(_)
             | Ability::Disarm
             | Ability::PickLock
@@ -425,6 +453,9 @@ impl Ability {
                 (strayed(actor, content, required))
                     .or_else(|| class_cooldown(actor, content, active).map(Unavailable::While))
             }
+            Ability::Sign(active) => (actor.talent_mods(content).sign_cooldown(active))
+                .filter(|&cooldown| actor.effects.has(cooldown))
+                .map(Unavailable::While),
             Ability::Skill(_) => Some(Unavailable::NotYet),
             Ability::ThrowVoice
             | Ability::HoodLantern
@@ -504,6 +535,7 @@ mod tests {
             names,
             [
                 "Racial",
+                "Birth sign",
                 "Class",
                 "Talents",
                 "Skills",
@@ -520,9 +552,11 @@ mod tests {
         assert!(every.windows(2).all(|w| w[0].source() <= w[1].source()));
         assert_eq!(
             every.first(),
-            Some(&Ability::ThrowVoice),
-            "the class's first"
+            Some(&Ability::Sign(SignActive::HornsGrace)),
+            "the birth sign's first"
         );
+        let class = every.iter().find(|a| a.source() == Source::Class);
+        assert_eq!(class, Some(&Ability::ThrowVoice), "the class's first");
         // The skills used as actions, in skill order (Disable device and Open lock as their uses,
         // disarming and picking locks), then the shield bash.
         let skills: Vec<&str> = (every.iter())

@@ -981,10 +981,10 @@ mod tests {
         // The signs' gifts with their exact rules, and the lucky days with their odds by race.
         let animals = text("horoscope-animals.md");
         assert!(
-            animals
-                .contains("| 1 | Salamander | **Fleet-footed**: speed +5 %<br>**Slight** (flaw)"),
+            animals.contains("| 1 | Salamander | **Fleet-footed**: speed +5 %<br>**Slip away**"),
             "{animals}"
         );
+        assert!(animals.contains("**Slight** (flaw)"), "{animals}");
         let lucky = text("horoscope-lucky.md");
         assert!(
             lucky.contains("| Metal Manticore | 3 | the Iron Scourge |"),

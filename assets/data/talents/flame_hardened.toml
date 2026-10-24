@@ -1,0 +1,8 @@
+[[talent]]
+id = "flame_hardened"
+name = "Flame-hardened"
+tree = "stars"
+granted = true
+description = "Fire bites you less."
+effects = [{ kind = "resist", damage = "fire", value = 25 }]
+systems = ["damage_types"]

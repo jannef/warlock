@@ -302,7 +302,11 @@ fn shop_favour_and_its_cap_follow_the_talents() {
 
 #[test]
 fn noblesse_makes_anyone_not_hostile_budge() {
-    let mut w = World::new(BUILTIN.clone(), "courtyard", None).expect("courtyard");
+    let w = World::new(BUILTIN.clone(), "courtyard", None).expect("courtyard");
+    // Born under no sign: the scenario's Basilisk is trusted by none (spec §8 "Birth sign").
+    let mut state = w.state().clone();
+    state.character.as_mut().expect("a character").sign = None;
+    let mut w = World::from_state(BUILTIN.clone(), state).expect("restores");
     let keeper = w.state.current().shops[0].keeper;
     assert!(w.refusal(keeper).is_some(), "a keeper at its post keeps it");
     give(&mut w, "noblesse");

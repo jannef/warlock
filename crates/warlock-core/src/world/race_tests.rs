@@ -135,10 +135,15 @@ fn world_in(scenario: &str, race: &str) -> World {
     seeded(scenario, race, 1)
 }
 
-/// A run of `scenario` as a `race` warrior, from `seed`.
+/// A run of `scenario` as a `race` warrior, from `seed`, born under no sign (so a sign's gifts,
+/// spec §8 "Birth sign", leave the race's rules alone).
 fn seeded(scenario: &str, race: &str, seed: u64) -> World {
     let spec: CharacterSpec = format!("{race},male,warrior").parse().expect("spec");
-    World::with_character(CONTENT.clone(), scenario, Some(seed), Some(&spec)).expect("world")
+    let w =
+        World::with_character(CONTENT.clone(), scenario, Some(seed), Some(&spec)).expect("world");
+    let mut state = w.state().clone();
+    state.character.as_mut().expect("a character").sign = None;
+    World::from_state(CONTENT.clone(), state).expect("restores")
 }
 
 fn run(w: &mut World, actions: &str) {

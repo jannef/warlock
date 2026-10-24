@@ -59,7 +59,10 @@ fn mods(w: &World) -> crate::talent::TalentMods {
 #[test]
 fn a_sign_grants_its_animals_then_its_elements_gifts_and_a_lucky_day_one_more() {
     let w = born_under("salamander", "wood", 2);
-    assert_eq!(held(&w), ["fleet_footed", "slight", "supple", "evergreen"]);
+    assert_eq!(
+        held(&w),
+        ["fleet_footed", "slip_away", "slight", "supple", "evergreen"]
+    );
     let c = w.character().expect("a character");
     assert_eq!(c.title(w.content()), None, "no lucky day on the 2nd");
     let lucky = born_under("salamander", "wood", 1);
@@ -67,6 +70,7 @@ fn a_sign_grants_its_animals_then_its_elements_gifts_and_a_lucky_day_one_more() 
         held(&lucky),
         [
             "fleet_footed",
+            "slip_away",
             "slight",
             "supple",
             "evergreen",
@@ -80,7 +84,7 @@ fn a_sign_grants_its_animals_then_its_elements_gifts_and_a_lucky_day_one_more() 
         Some("Wood Salamander, the Racer")
     );
     // A sign whose gifts are still to come grants nothing yet.
-    assert!(held(&born_under("wyvern", "fire", 5)).is_empty());
+    assert!(held(&born_under("phoenix", "fire", 5)).is_empty());
 }
 
 #[test]
@@ -393,7 +397,7 @@ fn gifts_cannot_be_picked_and_dumps_mark_them() {
     assert!(rows.contains("Slight (sign, flaw)"), "{rows}");
     let json = dump::json(&w, &[], false);
     assert_eq!(json["character"]["lucky"], "the Racer");
-    assert_eq!(json["talents"][1]["flaw"], true);
+    assert_eq!(json["talents"][2]["flaw"], true);
     let outcome = w.apply(&crate::action::Action::Talent {
         id: "fleet_footed".into(),
         choice: None,

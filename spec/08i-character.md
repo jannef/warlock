@@ -50,8 +50,30 @@ developer notes (CLAUDE.md, `docs/dev/`).
     loved and Grim company (shop favour −10), Supple (Dodge +1, the burden's Dexterity cap +1),
     Evergreen (hunger −15 %, rotten food's sickness halved), Stone hide (Protection +1),
     Stonewise (notices on stone in passing, digging +25 %), Keen edge (threat +1 with every
-    attack). The rest of the design's gifts land with their rules (S2–S4) and are listed in
-    `grants` only then.
+    attack). From the Salamander to the Basilisk (#266): Slip away (a step out of reach of
+    every hostile beside, −25 %, whatever the stance), Many minds (flaw: Willpower checks −2),
+    Relentless (each melee blow at the creature the last was at, in the same turn or the next,
+    +1 to hit per blow before it, to +3; `Actor::streak`), Barbed hide (a creature whose melee
+    blow hurts the character takes 1 damage, no roll, and earns nothing if it dies of it),
+    Horn's grace and the Transfixing stare (the actives below), Thin-skinned (flaw: a big hit
+    that wounds wounds a degree more), Trailblazer (overworld journeys −20 %, forest, hills,
+    and swamp as plains), Flame-hardened (fire resistance 25 %: damage types are in, so the
+    resistance form at once, not the design's burst halving), Heavy-footed (flaw: footsteps
+    +25 %), Unblinking (notices in passing as if trained in Spot, +2), Trusted by none (flaw: no
+    one makes way, Noblesse or not). The rest of the design's gifts land with their rules
+    (S3–S4) and are listed in `grants` only then.
+  - **Birth sign actives** (#266): used from the abilities menu's **Birth sign** group
+    (`Ability::Sign`, `Source::Sign`, between Racial and Class) as `Action::Gift` (no key of
+    their own), each refused (no time) without it or while its cooldown status lasts. **Horn's
+    grace** (Unicorn; `use:horns_grace`, the time of a wait): Bleeding and Poisoned end and the
+    first disease that shows is shaken off, then **Graceless** for a day; refused with nothing
+    to mend. **Transfixing stare** (Basilisk; `use:transfixing_stare:X,Y`, aimed at a cell in
+    the targeting mode, within 6, the time of a wait, silent): a hostile the player sees there
+    that sees them now (creature sight) is **Transfixed** (2 degrees, every action at 200 %, a
+    degree easing every 12 s: about its next two actions), then **Spent-eyed** for two hours;
+    one that does not see them is not held ("The kobold does not meet your gaze.", the time
+    taken, no cooldown); refused at the player's cell, out of range, where they see no one, and
+    at anyone not hostile. Nothing is drawn.
   - **Lucky days** (`[[lucky]]`): five animal–element pairs, each with a day of the month (any
     month), the day the animal's place in the Great Race: the Wood Salamander on the 1st (the
     Racer), the Metal Manticore on the 3rd (the Iron Scourge), the Fire Phoenix on the 10th (the
