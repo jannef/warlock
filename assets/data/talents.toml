@@ -156,12 +156,10 @@ name = "Burden and carrying"
 [[system]]
 id = "stealth"
 name = "Stealth and noise"
-pending = true
 
 [[system]]
 id = "hearing"
 name = "Hearing and sounds"
-pending = true
 
 [[system]]
 id = "light"
@@ -171,7 +169,6 @@ pending = true
 [[system]]
 id = "vision"
 name = "Vision, darkvision, UV"
-pending = true
 
 [[system]]
 id = "awareness"
@@ -199,22 +196,18 @@ pending = true
 [[system]]
 id = "ice"
 name = "Ice and cold water"
-pending = true
 
 [[system]]
 id = "wading"
 name = "Wading and water"
-pending = true
 
 [[system]]
 id = "travel"
 name = "Overworld travel and local areas"
-pending = true
 
 [[system]]
 id = "weather"
 name = "Weather, sun, moon"
-pending = true
 
 [[system]]
 id = "shops"

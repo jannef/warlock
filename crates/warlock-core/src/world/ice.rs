@@ -251,7 +251,14 @@ impl World {
             self.state.current_mut().ice.remove(&to);
             return Footing::Plain;
         }
-        let load = self.state.actors[&id].weight(&content).total();
+        let actor = &self.state.actors[&id];
+        let weight = actor.weight(&content);
+        // Winter-born (spec §8 "Talents"): the ice holds it as if it carried nothing.
+        let load = if actor.talent_mods(&content).light_on_ice {
+            weight.base
+        } else {
+            weight.total()
+        };
         let broke = match ice::gives_way(ice.um, load) {
             0 => false,
             100.. => true,
@@ -309,10 +316,20 @@ impl World {
         }
     }
 
-    /// The price of what `footing` adds to a step: climbing out of the water onto ice.
+    /// The price of what `footing` adds to a step: climbing out of the water onto ice (less
+    /// for Winter-born, by its talents' `climb_percent`).
     pub(super) fn tread_price(&self, id: ActorId, footing: Footing) -> i64 {
         match footing {
-            Footing::Held { climb: true } => self.price_of(id, ActionKind::Climb),
+            Footing::Held { climb: true } => {
+                let price = self.price_of(id, ActionKind::Climb);
+                match self.state.actors[&id]
+                    .talent_mods(&self.content)
+                    .climb_percent
+                {
+                    0 => price,
+                    percent => (price * i64::from((100 + percent).max(0)) / 100).max(1),
+                }
+            }
             _ => 0,
         }
     }
@@ -330,11 +347,16 @@ impl World {
 
     /// Actor `id` plunged through the ice into the freezing water at `at`: it loses the water's
     /// `plunge` hit points, cold damage it resists like any (spec §8 "Damage types"; never the
-    /// last hit point: the cold does not kill yet, [`Harm::Spared`]). A creature's fall is said
-    /// when the player perceives it ([`World::perceive`]); the player's where it happens.
+    /// last hit point: the cold does not kill yet, [`Harm::Spared`]); none, and no draw, for a
+    /// Swimmer. A creature's fall is said when the player perceives it ([`World::perceive`]);
+    /// the player's where it happens.
     fn fall_in(&mut self, id: ActorId, at: Pos, events: &mut Vec<Event>) {
         let water = self.state.current().water_at(&self.content, at);
-        let freeze = water.and_then(|w| self.content.terrain(w).freeze);
+        let proof =
+            (self.state.actors.get(&id)).is_some_and(|a| a.talent_mods(&self.content).plunge_proof);
+        let freeze = water
+            .and_then(|w| self.content.terrain(w).freeze)
+            .filter(|_| !proof);
         let damage = freeze.map_or(0, |f| f.plunge.roll(&mut self.state.rng).max(0));
         let kind = freeze.and_then(|f| f.kind);
         let taken = self.resisted(id, crate::damage::Damage::new(damage, kind));

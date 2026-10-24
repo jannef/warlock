@@ -85,6 +85,8 @@
 mod actor;
 mod ai;
 mod alignment;
+mod ambush;
+mod beast_friend;
 mod bleed;
 mod buff;
 mod carry;
@@ -98,6 +100,7 @@ mod door;
 mod eat;
 mod equip;
 mod experience;
+mod eyes;
 mod fight;
 mod free_blow;
 mod glare;
@@ -752,9 +755,13 @@ impl World {
     }
 
     /// How actors `a` and `b` stand toward each other: the stance of their factions (spec §7
-    /// "Factions"): their types' unless a level placed them elsewhere; [`Stance::Neutral`] if either is unknown.
+    /// "Factions"): their types' unless a level placed them elsewhere; [`Stance::Neutral`] if either is unknown,
+    /// or if they are a Beast-friend and an animal they befriended ([`beast_friend::befriended`]).
     pub fn stance(&self, a: ActorId, b: ActorId) -> Stance {
         match (self.state.actors.get(&a), self.state.actors.get(&b)) {
+            (Some(a), Some(b)) if beast_friend::befriended(&self.state, &self.content, a, b) => {
+                Stance::Neutral
+            }
             (Some(a), Some(b)) => self
                 .content
                 .stance_of(a.faction(&self.content), b.faction(&self.content)),
@@ -1060,6 +1067,8 @@ mod hearing_tests;
 mod hunger_tests;
 #[cfg(test)]
 mod ice_tests;
+#[cfg(test)]
+mod land_talent_tests;
 #[cfg(test)]
 mod lantern_tests;
 #[cfg(test)]

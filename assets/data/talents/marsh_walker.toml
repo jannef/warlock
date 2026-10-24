@@ -1,0 +1,11 @@
+[[talent]]
+id = "marsh_walker"
+name = "Marsh walker"
+tree = "wayfarer"
+description = "Marsh and reeds do not slow you, and wading never gives you a disease."
+needs = { stats = { toughness = 12 } }
+effects = [
+    { kind = "terrain_as", terrains = ["marsh", "reeds"], like = "floor" },
+    { kind = "wading_proof" },
+]
+systems = ["wading", "diseases"]

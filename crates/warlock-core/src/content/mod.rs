@@ -648,6 +648,7 @@ impl Content {
         // The signs' gifts are talents, and talents may ask for a sign: checked both ways.
         horoscope::check_talents(content.horoscope.as_ref(), &content.talents)?;
         content.load_terrain(files)?;
+        content.talents.check_terrain(&content)?;
         content.load_diseases(files)?;
         let path = "data/room_effects.toml";
         if let Some(text) = files.get_optional(path) {

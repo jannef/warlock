@@ -687,6 +687,7 @@ impl World {
             .is_some_and(|a| !a.talents.is_empty() && a.talent_mods(&self.content).reroll_fumble);
         let rng = &mut self.state.rng;
         let blow = profile.map(|profile| combat::strike_with(&profile, &struck, rng, lucky));
+        let blow = blow.map(|b| self.ambushed(attacker, target, b));
         events.push(Event::Attacked {
             attacker,
             target,
@@ -703,6 +704,7 @@ impl World {
         // A shopkeeper the player attacks turns on them (spec §7 "Shops").
         if attacker == self.state.player {
             self.provoke(target);
+            self.break_empathy(target);
         }
         // An attack the player dodged (Dexterity or Dodge made it miss) trains tumbling.
         let dodged = blow.is_some_and(|b| {
