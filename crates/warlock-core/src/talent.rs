@@ -148,6 +148,8 @@ pub struct TalentMods {
     pub stats: PerStat<i32>,
     /// Percent faster hit points come back.
     pub healing_percent: i32,
+    /// Percent faster mana comes back.
+    pub mana_regen_percent: i32,
     /// Percent louder footsteps (negative: quieter).
     pub footsteps_percent: i32,
     /// The doors it opens and closes make no noise.
@@ -340,8 +342,9 @@ pub struct TalentMods {
     pub missile_dodge: i32,
     /// Percent more damage bursts and bolts do it (negative: less).
     pub spell_damage_percent: i32,
-    /// Percent more marks its attacks earn in a role's weapon skills, by role.
-    pub weapon_marks: Vec<(Role, i32)>,
+    /// Percent more marks its attacks earn in a role's weapon skills, by role (`None`: every
+    /// weapon skill and style).
+    pub weapon_marks: Vec<(Option<Role>, i32)>,
     /// Added to a confirmed critical's multiplier with a two-handed weapon.
     pub two_handed_crit: u8,
     /// The sides of the one die its blows with nothing in hand and its kicks roll, if any.
@@ -358,6 +361,8 @@ pub struct TalentMods {
     pub veterans_wind: Option<SecondWind>,
     /// The active Lay on hands, if it has it.
     pub lay_on_hands: Option<LayOnHands>,
+    /// The birth sign's active Blaze, if it has it.
+    pub blaze: Option<Blaze>,
     /// Lay on hands heals fully, cures, and its cooldown is halved.
     pub avatar: bool,
     /// The active Rage: the status it gives, if it has it.
@@ -462,10 +467,42 @@ impl SecondWind {
     }
 }
 
+/// The birth sign's active Blaze (spec §8 "Birth sign"): a burst of flame around the player,
+/// fires on the cells it reaches, then a cooldown.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Blaze {
+    pub radius: i32,
+    pub damage: Dice,
+    /// The kind of damage it does; `None` without damage types.
+    pub kind: Option<DamageTypeId>,
+    /// The effect presentation shows (`data/effects.toml`).
+    pub spell: String,
+    /// The light the fires it leaves give, and how long they burn, in seconds.
+    pub fire: LightId,
+    pub burns: u32,
+    pub cooldown: StatusId,
+}
+
 impl TalentMods {
     /// Whether nothing is changed.
     pub fn is_empty(&self) -> bool {
         *self == TalentMods::default()
+    }
+
+    /// Whether it has the birth sign's active `active` (spec §8 "Birth sign").
+    pub fn has_sign_active(&self, active: crate::content::SignActive) -> bool {
+        use crate::content::SignActive as A;
+        match active {
+            A::Blaze => self.blaze.is_some(),
+        }
+    }
+
+    /// The cooldown status of the birth sign's active `active`, if it has it.
+    pub fn sign_cooldown(&self, active: crate::content::SignActive) -> Option<StatusId> {
+        use crate::content::SignActive as A;
+        match active {
+            A::Blaze => self.blaze.as_ref().map(|b| b.cooldown),
+        }
     }
 
     /// Whether it has class active `active` (spec §8 "Class abilities").
@@ -535,10 +572,11 @@ impl TalentMods {
         }
     }
 
-    /// `marks` weapon skill marks earned in a skill of `role`, more by its talents'.
+    /// `marks` weapon skill marks earned in a skill of `role`, more by its talents' (Weapon
+    /// drill's for its role, Forge-born's for every one).
     pub fn marks(&self, role: Role, marks: u32) -> u32 {
         let percent: i32 = (self.weapon_marks.iter())
-            .filter(|(r, _)| *r == role)
+            .filter(|(r, _)| r.is_none_or(|r| r == role))
             .map(|(_, p)| p)
             .sum();
         u32::try_from(TalentMods::scaled(u64::from(marks), percent)).unwrap_or(u32::MAX)
@@ -581,6 +619,7 @@ impl TalentMods {
             } => self.hp_per_levels.push((per_levels, at_least)),
             TalentEffect::Stat { stat, value } => self.stats[stat] += value,
             TalentEffect::HealingPercent { value } => self.healing_percent += value,
+            TalentEffect::ManaRegenPercent { value } => self.mana_regen_percent += value,
             TalentEffect::FootstepsPercent { value } => self.footsteps_percent += value,
             TalentEffect::SilentDoors => self.silent_doors = true,
             TalentEffect::Hearing { value } => self.hearing += value,
@@ -849,6 +888,29 @@ impl TalentMods {
                         per_level,
                         cooldown,
                         degrees,
+                    });
+                }
+            }
+            TalentEffect::Blaze {
+                radius,
+                damage,
+                damage_type,
+                spell,
+                fire,
+                burns,
+                cooldown,
+            } => {
+                if let (Some(fire), Some(cooldown)) =
+                    (content.light_id(&fire), content.status_id(&cooldown))
+                {
+                    self.blaze = Some(Blaze {
+                        radius,
+                        damage,
+                        kind: content.damage_type_id(&damage_type),
+                        spell,
+                        fire,
+                        burns,
+                        cooldown,
                     });
                 }
             }

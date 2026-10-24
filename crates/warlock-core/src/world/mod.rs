@@ -98,6 +98,7 @@ mod disarm;
 mod disease;
 mod door;
 mod eat;
+mod element_gifts;
 mod equip;
 mod experience;
 mod eyes;
@@ -978,6 +979,7 @@ impl World {
             Action::Disarm(dir) => return self.disarm(*dir, events),
             Action::SecondWind => return self.second_wind(events),
             Action::Use(active, dir) => return self.use_class(*active, *dir, events),
+            Action::Gift(active, at) => return self.use_gift(*active, *at, events),
             Action::Talent { id, choice } => return self.take_talent(id, choice.as_deref()),
             Action::Advance(skill) => return self.advance_skill(skill),
             Action::SetVision(id) => return self.set_vision(id),
@@ -1051,6 +1053,8 @@ mod disease_tests;
 mod door_tests;
 #[cfg(test)]
 mod door_trap_tests;
+#[cfg(test)]
+mod element_gift_tests;
 #[cfg(test)]
 mod equip_tests;
 #[cfg(test)]

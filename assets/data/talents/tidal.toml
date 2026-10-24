@@ -1,0 +1,8 @@
+[[talent]]
+id = "tidal"
+name = "Tidal"
+tree = "stars"
+granted = true
+description = "Your strength of spirit comes back like the tide: mana returns to you faster."
+effects = [{ kind = "mana_regen_percent", value = 25 }]
+systems = ["mana"]

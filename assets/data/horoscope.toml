@@ -130,6 +130,7 @@ id = "fire"
 name = "Fire"
 description = "Warmth, light, and passion: bright company."
 stats = { presence = 1 }
+grants = ["blaze", "kindled"]
 
 [[element]]
 id = "earth"
@@ -143,14 +144,14 @@ id = "metal"
 name = "Metal"
 description = "Iron and the forge, hard and keen: strong."
 stats = { strength = 1 }
-grants = ["keen_edge"]
+grants = ["keen_edge", "forge_born"]
 
 [[element]]
 id = "water"
 name = "Water"
 description = "Rivers and the deep sea, that always find a way: clever."
 stats = { intelligence = 1 }
-grants = ["always_a_way"]
+grants = ["always_a_way", "tidal"]
 
 # The lucky days: one lucky animal per element, each on the day of the month that is its place in
 # the Great Race (the Salamander first, the Manticore third, the Phoenix tenth, the Kraken

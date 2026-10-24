@@ -217,6 +217,9 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             format!("{} {} (score and potential)", stat.name(), signed(value))
         }
         TalentEffect::HealingPercent { value } => format!("healing pace {}", percent(value)),
+        TalentEffect::ManaRegenPercent { value } => {
+            format!("mana regeneration pace {}", percent(value))
+        }
         TalentEffect::FootstepsPercent { value } => format!("footsteps {}", percent(value)),
         TalentEffect::SilentDoors => "the doors you open and close are silent".to_string(),
         TalentEffect::Hearing { value } => format!("hears sounds {value} fainter"),
@@ -462,8 +465,14 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         }
         TalentEffect::WeaponMarks { role, value } => {
             let role = match role {
-                Role::Launcher => "missile".to_string(),
-                r => r.id().replace('_', " "),
+                None => {
+                    return format!(
+                        "marks in every weapon skill and fighting style {}",
+                        percent(value)
+                    );
+                }
+                Some(Role::Launcher) => "missile".to_string(),
+                Some(r) => r.id().replace('_', " "),
             };
             format!("marks in every {role} weapon skill {}", percent(value))
         }
@@ -529,6 +538,31 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
              {degrees} degrees of {}",
             status(&cooldown)
         ),
+        TalentEffect::Blaze {
+            radius,
+            damage,
+            damage_type,
+            fire,
+            burns,
+            cooldown,
+            ..
+        } => {
+            let kind = (content.damage_type_id(&damage_type)).map_or(damage_type.clone(), |d| {
+                content.damage_type(d).name.to_lowercase()
+            });
+            let light = (content.light_id(&fire)).map_or(0, |l| content.light(l).radius);
+            let until = (content.status_id(&cooldown))
+                .and_then(|s| content.status(s).eases)
+                .map_or_else(String::new, |s| format!(" for {} h", s / 3600));
+            format!(
+                "active (the time of a cast; not on the overworld): a burst of radius {radius} \
+                 around you, {damage} {kind} damage (one roll) to every creature in it but you, \
+                 whole to each; it melts the ice it reaches and leaves a fire on every walkable \
+                 cell of it but yours, its light reaching {light} cells, for {burns} s; then \
+                 {}{until}",
+                status(&cooldown)
+            )
+        }
         TalentEffect::Avatar => "Lay on hands heals every hit point and cures every status that \
              ticks (bleeding, poison) and every disease, and its cooldown is half as long"
             .to_string(),

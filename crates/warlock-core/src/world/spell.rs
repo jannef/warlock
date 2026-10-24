@@ -299,7 +299,7 @@ impl World {
     /// the damage, which may kill (a kill by the player earns its experience), and if it lives
     /// the statuses its wound causes. A shopkeeper the player's spell reaches turns on them, as
     /// one they strike does.
-    fn spell_hurts(
+    pub(super) fn spell_hurts(
         &mut self,
         caster: Caster,
         target: ActorId,

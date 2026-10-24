@@ -2,7 +2,8 @@
 
 use crate::combat::Strike;
 use crate::content::{
-    ActionKind, ClassActive, CombatStance, DamageTypeId, DiseaseId, ObjectId, StatusId, TrapId,
+    ActionKind, ClassActive, CombatStance, DamageTypeId, DiseaseId, ObjectId, SignActive, StatusId,
+    TrapId,
 };
 use crate::geom::{Dir, Pos};
 use crate::time::{DAY, Duration};
@@ -148,6 +149,10 @@ pub enum Action {
     /// refused (no time) without the ability, while its cooldown lasts, or without the
     /// direction it asks.
     Use(ClassActive, Option<Dir>),
+    /// Use a birth sign's active gift (spec §8 "Birth sign"; the abilities menu's Birth sign
+    /// group): Blaze (`use:blaze`). Takes the time of its cost's action; refused (no time)
+    /// without the gift, while its cooldown lasts, or without the cell it asks (none asks yet).
+    Gift(SignActive, Option<Pos>),
     /// Take talent `id` (an id in `data/talents/`), for `choice` if it takes one (spec §8
     /// "Talents"): one of the picks a level brings, made at once (nothing is banked). Refused
     /// with the reason when none is due or a prerequisite fails. Takes no game time; recorded in
@@ -656,6 +661,8 @@ impl fmt::Display for Action {
             Action::SecondWind => f.write_str("second_wind"),
             Action::Use(active, None) => write!(f, "use:{}", active.id()),
             Action::Use(active, Some(d)) => write!(f, "use:{}:{d}", active.id()),
+            Action::Gift(active, None) => write!(f, "use:{}", active.id()),
+            Action::Gift(active, Some(at)) => write!(f, "use:{}:{},{}", active.id(), at.x, at.y),
             Action::Talent { id, choice: None } => write!(f, "talent:{id}"),
             Action::Talent {
                 id,
@@ -735,11 +742,20 @@ impl FromStr for Action {
             "wait" => bare(Action::Wait),
             "second_wind" => bare(Action::SecondWind),
             "use" => {
-                let usage = || "`use` needs a class ability, e.g. `use:rage` or `use:smite:E`";
-                let (id, dir) = match arg.ok_or_else(usage)?.split_once(':') {
-                    Some((id, dir)) => (id, Some(dir.parse::<Dir>()?)),
+                let usage = || {
+                    "`use` needs a class or birth sign ability, e.g. `use:rage`, `use:smite:E`, \
+                     or `use:blaze`"
+                };
+                let (id, aim) = match arg.ok_or_else(usage)?.split_once(':') {
+                    Some((id, aim)) => (id, Some(aim)),
                     None => (arg.unwrap_or_default(), None),
                 };
+                // A birth sign's gift, aimed at a cell if it asks for one.
+                if let Some(gift) = SignActive::from_id(id) {
+                    let at = aim.map(parse_cell).transpose()?;
+                    return Ok(Action::Gift(gift, at));
+                }
+                let dir = aim.map(str::parse::<Dir>).transpose()?;
                 let active = ClassActive::from_id(id)
                     .ok_or_else(|| format!("`{id}` is no class ability that is used"))?;
                 Ok(Action::Use(active, dir))
@@ -1153,6 +1169,7 @@ mod tests {
             Action::SecondWind,
             Action::Use(ClassActive::Rage, None),
             Action::Use(ClassActive::Smite, Some(Dir::SW)),
+            Action::Gift(SignActive::Blaze, None),
             Action::LevelUpAuto,
             Action::GrantXp(2500),
             Action::Freeze {

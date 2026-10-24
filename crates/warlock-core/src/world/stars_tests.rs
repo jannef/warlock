@@ -79,8 +79,8 @@ fn a_sign_grants_its_animals_then_its_elements_gifts_and_a_lucky_day_one_more() 
         c.sign_title(lucky.content()).as_deref(),
         Some("Wood Salamander, the Racer")
     );
-    // A sign whose gifts are still to come grants nothing yet.
-    assert!(held(&born_under("wyvern", "fire", 5)).is_empty());
+    // An animal whose gifts are still to come grants nothing yet: only the element's.
+    assert_eq!(held(&born_under("wyvern", "fire", 5)), ["blaze", "kindled"]);
 }
 
 #[test]

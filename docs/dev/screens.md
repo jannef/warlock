@@ -217,6 +217,10 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   (`docs/dev/progression.md` "Class actives"): listed while some talent has one, had
   by whoever's `TalentMods` has it, `Strayed` then `While(cooldown)`; their action is
   `Action::Use`. No `KeyCommand` of their own (as Second wind's).
+  `Ability::Sign(SignActive)` (`Source::Sign`, the menu's Birth sign group between Racial and
+  Class) are a birth sign's actives (Blaze; `docs/dev/character-creation.md`): listed while some
+  talent has one, had by whoever's sign grants it, `While(cooldown)`; their action is
+  `Action::Gift`.
   `Aim` has `Nothing`, `Direction`, and `Cell` (aimed in the targeting
   mode, `ui/target.rs`'s `AimKind::Ability`: no line of fire, `Line::unseen` for a cell not seen
   or solid, the reach from `Ability::range`, the action from `Ability::action_at`); an item (a

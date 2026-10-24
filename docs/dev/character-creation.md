@@ -146,6 +146,21 @@ any rule change does; the birth draws are untouched, so seeds keep their dates a
 gifts' effects are `TalentEffect`s read at one hook each (`docs/dev/progression.md`); `stars.rs`
 also says what is wading (`wading`: terrain that freezes, or a disease's wading ground).
 
+The element gifts (#268): Kindled is `lantern_light` (Lamplighter's preset; the two do not
+stack), Forge-born `weapon_marks` without a `role` (every weapon skill and style, read in
+`TalentMods::marks`), Tidal `mana_regen_percent` (`World::mana_rate`). Blaze is the first
+**sign active**: `content::SignActive` (in `content/horoscope.rs`; id, aim, cost), the
+`TalentEffect::Blaze` that makes a talent one (`Content::sign_active`), `TalentMods::blaze`,
+`Ability::Sign` under `Source::Sign` ("Birth sign", between Racial and Class), and
+`Action::Gift(active, cell)` (`use:blaze`, priced in `buff.rs` by its cost). Its dispatch and
+rule are `world/element_gifts.rs` (`use_gift`, `blaze`, `kindle`): the burst's cells from
+`spell::burst_cells`, one gameplay roll, `World::spell_hurts` for each creature but the player,
+`World::shock(Heat)`, a `LevelState::fires` entry on each walkable cell but the player's, said
+with `read.rs::say_spell` ("The blaze burns the kobold."), then the `burnt_out` status (12 h).
+Its look is `blaze` in `data/effects.toml`. Tests: `world/element_gift_tests.rs` (the grants,
+the burst and its cooldown, refusals, the dump row and action text, Kindled, Forge-born, Tidal,
+a replay and a save), the `abilities-menu-blaze` text snapshot.
+
 Shown: the reveal (`ui/sign_screen.rs`, `--screen sign`, after the race), the summary's Sign row,
 the character screen's dimmed Stars line (gift names, two lines at most) and the title after the
 name (character and death screens), the `stats` dump's `Sign Wood Salamander, the Racer`, the

@@ -505,3 +505,44 @@ mod tests {
         assert_eq!(parse(&text(1, 1, 1)).expect("valid").great_cycle(), 1);
     }
 }
+
+/// A birth sign's active gift (spec §8 "Birth sign"): a talent of the `stars` tree with an
+/// active effect, used from the abilities menu's Birth sign group as
+/// [`crate::action::Action::Gift`] (`use:blaze`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SignActive {
+    /// Fire's: a burst of flame around you, then a cooldown.
+    Blaze,
+}
+
+impl SignActive {
+    /// Every one, in menu order.
+    pub const ALL: &[SignActive] = &[SignActive::Blaze];
+
+    /// Its id: the id of the talent that has it, and its replay text (`use:blaze`).
+    pub const fn id(self) -> &'static str {
+        match self {
+            SignActive::Blaze => "blaze",
+        }
+    }
+
+    /// The one with id `id`.
+    pub fn from_id(id: &str) -> Option<Self> {
+        Self::ALL.iter().copied().find(|a| a.id() == id)
+    }
+
+    /// Whether it asks for a cell before it is used.
+    pub const fn aimed(self) -> bool {
+        match self {
+            SignActive::Blaze => false,
+        }
+    }
+
+    /// What it costs, as an action of this kind (`data/actions.toml`).
+    pub const fn cost(self) -> super::ActionKind {
+        match self {
+            SignActive::Blaze => super::ActionKind::Cast,
+        }
+    }
+}

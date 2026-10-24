@@ -41,6 +41,40 @@
 # With the `motion` switch off (or reduced effects) an effect is a brief, still flash of its cells:
 # no travel, light, darkening, or shake. Keep effects short: dramatic, never long or garish.
 
+# Blaze (the Fire-born's gift, spec §8 "Birth sign"): flames burst from the player onto the cells
+# beside them, smaller and quicker than a fireball; no projectile (it starts where it lands), no
+# darkening, no shake.
+[[effect]]
+id = "blaze"
+shape = "burst"
+radius = 1
+speed = 24
+grow = 0.08
+impact = 0.18
+linger = 0.45
+flicker = 0.045
+glyphs = "▓▒░"
+fill = 0.75
+projectile = "●"
+colors = ["#fffff0", "#fff0a0", "#ffc040", "#ff7a18", "#d83c10", "#901808", "#400c06"]
+glow = 0.9
+light = { color = [800, 420, 130], radius = 4 }
+
+# Embers thrown out of the flames.
+[[effect.particles]]
+on = "impact"
+glyphs = "'`.,·"
+colors = ["#fff0a0", "#ffa030", "#c03010"]
+count = 1
+life = 0.5
+velocity = [0.0, -1.0]
+spread = [2.0, 1.6]
+gravity = 1.5
+area = [0.3, 0.3]
+scale = 0.6
+fade = 0.6
+glow = 0.8
+
 [[effect]]
 id = "fireball"
 shape = "burst"

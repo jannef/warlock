@@ -68,8 +68,9 @@ someone born on 30 Deepwinter is a sign earlier than someone born the next day, 
 Your animal gives you **two gifts and a flaw**, and your element **two gifts** (elements have no
 flaws). They are [talents](talents.md) of their own tree, *Stars*: given at birth, never picked,
 and never lost. The game tells you what they do in words ("you move and act a little faster");
-the tables below give the exact rules. Some animals' and elements' gifts are still to come: the
-tables list those already in the game.
+the tables below give the exact rules. Some animals' gifts are still to come: the tables list
+those already in the game. Fire's *Blaze* is used from the abilities menu (`a`), under *Birth
+sign*; afterwards you are *Burnt out* for a while and cannot use it again until that passes.
 
 {{#include generated/horoscope-animals.md}}
 

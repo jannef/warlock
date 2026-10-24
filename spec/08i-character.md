@@ -50,8 +50,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
     loved and Grim company (shop favour −10), Supple (Dodge +1, the burden's Dexterity cap +1),
     Evergreen (hunger −15 %, rotten food's sickness halved), Stone hide (Protection +1),
     Stonewise (notices on stone in passing, digging +25 %), Keen edge (threat +1 with every
-    attack). The rest of the design's gifts land with their rules (S2–S4) and are listed in
-    `grants` only then.
+    attack); the elements' last four (#268): Blaze (Fire's **active**, from the abilities menu's
+    **Birth sign** group, `use:blaze`, the time of a `cast`, refused on the overworld: a burst
+    of radius 1 around the player, one roll of 2d6 fire for every creature in it but them, whole
+    to each, through the scrolls' cast code (Evasion and resistances apply, the kills are the
+    player's); it melts the ice it reaches and leaves a burning missile's fire, `arrow_fire` for
+    60 s, on every walkable cell of it but the player's; then the cooldown status Burnt out,
+    twelve hours, during which the menu greys it "you are burnt out"), Kindled (the lantern burns
+    as Lamplighter's brighter preset, a cell farther; with Lamplighter too, no farther; the fire
+    resistance comes with S7), Forge-born (marks +50 % in every weapon skill and fighting style,
+    added to Weapon drill's; in words "you learn weapons quickly"), Tidal (mana regeneration
+    +25 %, added to the affixes' percent in `World::mana_rate`). The rest of the design's gifts
+    land with their rules (S2, S3) and are listed in `grants` only then.
   - **Lucky days** (`[[lucky]]`): five animal–element pairs, each with a day of the month (any
     month), the day the animal's place in the Great Race: the Wood Salamander on the 1st (the
     Racer), the Metal Manticore on the 3rd (the Iron Scourge), the Fire Phoenix on the 10th (the

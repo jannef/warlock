@@ -152,6 +152,17 @@ eases = 300
 start = "You are spent."
 end = "You feel your strength gather again."
 
+# Blaze's cooldown (the Fire-born's gift, spec §8 "Birth sign"): twelve hours before the fire in
+# them kindles again. Nothing else; time is the penalty.
+[[status]]
+id = "burnt_out"
+name = "Burnt out"
+max = 1
+stacking = "refresh"
+eases = 43200
+start = "The fire in you burns low."
+end = "The fire in you kindles again."
+
 # Lay on hands' cooldown (two degrees; one with Avatar), five minutes a degree: the paladin's
 # gift waits for the mana it will cost.
 [[status]]

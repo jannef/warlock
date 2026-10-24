@@ -194,12 +194,13 @@ fn weapon_drill_shield_wall_armour_drill_and_iron_stance() {
     let content = w.content().clone();
     let mods = w.state.player().talent_mods(&content);
     let melee = crate::content::Role::Melee;
+    // The warrior is a Metal Phoenix: Forge-born's half again in every skill besides.
     assert_eq!(
         mods.marks(melee, 100),
-        125,
+        175,
         "Weapon drill: a quarter more marks"
     );
-    assert_eq!(mods.marks(crate::content::Role::Launcher, 100), 100);
+    assert_eq!(mods.marks(crate::content::Role::Launcher, 100), 150);
     let defence = |w: &World| {
         let me = w.state.player();
         me.defence(&content, crate::burden::Burden::Unburdened, None)

@@ -64,6 +64,7 @@
 #   stat { stat, value }          a stat's score and potential that much higher (-5 to 5),
 #                                 handed out once, as it is taken or given
 #   healing_percent { value }     hit points come back that percent faster (negative: slower)
+#   mana_regen_percent { value }  mana comes back that percent faster (negative: slower)
 #   footsteps_percent { value }   footsteps that percent louder (negative: quieter)
 #   silent_doors                  the doors it opens and closes make no sound
 #   hearing { value }             hears sounds that much fainter
@@ -176,7 +177,13 @@
 #   second_wind { per_level, at_least, cooldown }   the Second wind ability: per_level hit points
 #                                 per character level back at once (at least at_least), then the
 #                                 cooldown status (an id in ../status.toml)
-#   iron_stomach                  rotten food and overeating never make it vomit; rotten food
+#   blaze { radius, damage, damage_type, spell, fire, burns, cooldown }   a birth sign's active
+#                                 (Fire's Blaze, `use:blaze`): a burst of radius (1 to 3) around
+#                                 the player, damage dice of damage_type to every creature in it
+#                                 but them, ice melted, a fire of light preset `fire` burning
+#                                 `burns` seconds on every walkable cell of it but theirs, shown
+#                                 as effect `spell` (../effects.toml); then the cooldown status
+#   iron_stomach                 rotten food and overeating never make it vomit; rotten food
 #                                 sickens it half as much
 #   status_eases { status, value }   that status eases that percent faster
 #   no_penalty { status }         that status never lowers its scores
@@ -210,7 +217,7 @@
 #   menu, each one's id the ability's id, `use:rage`):
 #   natural_unarmoured { value }  natural armour, only while nothing is worn in a body armour slot
 #   weapon_marks { role, value }  the marks its attacks earn in that role's weapon skills, that
-#                                 percent more
+#                                 percent more; without `role`, in every weapon skill and style
 #   two_handed_crit { value }     a confirmed critical's multiplier with a two-handed weapon, that
 #                                 much more (1 to 3, at most x5)
 #   unarmed_die { sides }         blows with nothing in hand and kicks roll one die of that many

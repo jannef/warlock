@@ -7,7 +7,6 @@ expression: "render(case, content.clone())"
 
 
 
-
               ┌─ Born under the stars ───────────────────────────────────────────────┐
               │                                                                      │
               │  You were born on 29 Greenleaf 1410, in the year of the Water        │
@@ -20,6 +19,8 @@ expression: "render(case, content.clone())"
               │  Always a way        Secret doors and hidden traps are easier for    │
               │                      you to find, and your searching reaches         │
               │                      farther.                                        │
+              │  Tidal               Your strength of spirit comes back like the     │
+              │                      tide: mana returns to you faster.               │
               │                                                                      │
               │  Basilisk: Wi +2  Pr −1   Water: In +1                               │
               │                                                                      │
