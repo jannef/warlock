@@ -244,6 +244,11 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
              (it hunts no one it has seen, and does not see you now)"
         ),
         TalentEffect::CarryPercent { value } => format!("carrying limit {}", percent(value)),
+        TalentEffect::IgnoreBurdened => "being Burdened costs you nothing (as a dwarf)".to_string(),
+        TalentEffect::StepSlowdownPercent { value } => format!(
+            "the slowdown your burden and being Bloated put on your steps {}",
+            percent(value)
+        ),
         TalentEffect::CarryKg { value } => format!("carrying limit {} kg", signed(value)),
         TalentEffect::WeightlessCoins => "coins you carry weigh nothing".to_string(),
         TalentEffect::TravelPercent { value } => {
@@ -291,7 +296,29 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             )
         }
         TalentEffect::NoExertion => "blows, shots, and throws burn no nutrition".to_string(),
+        TalentEffect::NoBloating => "a meal never leaves you Bloated: what does not fit below \
+             Bloated is lost, and you never overeat"
+            .to_string(),
+        TalentEffect::CorpseStatsPercent { value } => format!(
+            "a fresh corpse's chance to raise each stat {} (at most 100 %)",
+            percent(value)
+        ),
         TalentEffect::XpPercent { value } => format!("experience gained {}", percent(value)),
+        TalentEffect::SkillRolls { value } => format!("skill rolls every level {}", signed(value)),
+        TalentEffect::TrainSkill { dice } => format!(
+            "the chosen skill trained at {dice}, or raised by {dice} if trained (rolled as the \
+             rank is taken)"
+        ),
+        TalentEffect::LootMagicPercent { value } => format!(
+            "the weights of the rarities better than a find's least {} (anything found: magic \
+             and rare; what creatures drop, always magic: rare)",
+            percent(value)
+        ),
+        TalentEffect::ReadPercent { value } => format!("reading time {}", percent(value)),
+        TalentEffect::ScrollKept { chance } => {
+            format!("a {chance} % chance a scroll you read is not used up")
+        }
+        TalentEffect::SparesSelf => "the bursts of scrolls you read never catch you".to_string(),
         TalentEffect::QuestXpPercent { value } => {
             format!("experience from quests {}", percent(value))
         }
@@ -332,9 +359,14 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::Search { value } => {
             format!("{} to every check to find hidden things", signed(value))
         }
+        TalentEffect::Searching { value } => format!("searching {}", signed(value)),
         TalentEffect::SearchReach { value } => format!(
             "searching reaches {value} cell{} farther",
             if value == 1 { "" } else { "s" }
+        ),
+        TalentEffect::TrapDamagePercent { value } => format!(
+            "damage traps do you {} (rounded down, at least 1)",
+            percent(value)
         ),
         TalentEffect::Skill { skill, value } => {
             let name =
@@ -644,6 +676,9 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::KickDie { sides } => format!("kicks at creatures roll 1d{sides}"),
         TalentEffect::DoorKick { value } => {
             format!("door kicks as if Strength {}", signed(value))
+        }
+        TalentEffect::KickNoisePercent { value } => {
+            format!("door kicks' noise {}", percent(value))
         }
         TalentEffect::DigPercent { value } => format!("digging work a turn {}", percent(value)),
         TalentEffect::TwoHandedPrice { value } => {

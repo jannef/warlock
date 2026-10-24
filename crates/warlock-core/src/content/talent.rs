@@ -96,6 +96,8 @@ pub enum Choice {
     WeaponSkill,
     /// A fighting style.
     Style,
+    /// A skill (an id in `data/skills.toml`), trained or not.
+    Skill,
     /// An element: a damage type (an id in `data/damage_types.toml`).
     Element,
 }
@@ -106,6 +108,7 @@ impl Choice {
         match self {
             Choice::WeaponSkill => "a weapon skill",
             Choice::Style => "a fighting style",
+            Choice::Skill => "a skill",
             Choice::Element => "an element",
         }
     }
@@ -126,6 +129,7 @@ impl Choice {
             Choice::Style => (content.weapon_skills().styles())
                 .map(|(_, def, _)| def.id.clone())
                 .collect(),
+            Choice::Skill => content.skills().iter().map(|s| s.id.clone()).collect(),
             Choice::Element => (content.damage_types().iter())
                 .filter(|t| !t.physical)
                 .map(|t| t.id.clone())
@@ -144,6 +148,10 @@ impl Choice {
                     _ => Choice::attacks(def.role),
                 };
                 fits.then_some(def.name.as_str())
+            }
+            Choice::Skill => {
+                let skill = content.skill_id(id)?;
+                Some(content.skill(skill).name.as_str())
             }
             Choice::Element => {
                 let kind = content.damage_type_id(id)?;
@@ -207,6 +215,11 @@ pub enum TalentEffect {
     Ambush { dice: Dice },
     /// The carrying limit, this percent more.
     CarryPercent { value: i32 },
+    /// Being Burdened costs it nothing, as a dwarf's burden (Porter).
+    IgnoreBurdened,
+    /// The slowdown its burden and being Bloated put on its steps, this percent more (negative:
+    /// less; Sure-footed).
+    StepSlowdownPercent { value: i32 },
     /// The carrying limit, this many kilograms more (on top of what magic items add).
     CarryKg { value: i32 },
     /// Coins it carries weigh nothing.
@@ -239,8 +252,32 @@ pub enum TalentEffect {
     RotHarmPercent { value: i32 },
     /// Exerting oneself (a blow, a shot, a throw) burns no extra nutrition.
     NoExertion,
+    /// A meal never leaves it Bloated: what does not fit below Bloated is lost (Gourmand).
+    NoBloating,
+    /// A fresh corpse's chances to raise its stats, this percent more (Gourmand).
+    CorpseStatsPercent { value: i32 },
     /// Experience gained, this percent more.
     XpPercent { value: i32 },
+    /// Skill rolls every level, this many more (Quick learner).
+    SkillRolls { value: i32 },
+    /// The chosen skill (the talent takes a `skill` choice) is trained at these dice, or grows
+    /// by them if trained already: rolled once, from the `levels` stream, as the rank is taken
+    /// (Apprentice).
+    TrainSkill { dice: crate::dice::Dice },
+    /// Loot it finds (what generated levels hold, what creatures drop) rolls magic and rare this
+    /// percent more often: their rarity weights (Treasure hunter).
+    LootMagicPercent { value: i32 },
+    /// Reading a scroll takes this percent more time (negative: less; Scroll savant).
+    ReadPercent { value: i32 },
+    /// A scroll it reads is not used up, by this chance in percent (one gameplay draw a read;
+    /// Spell recall).
+    ScrollKept { chance: u8 },
+    /// Its own bursts never catch it (Careful reader).
+    SparesSelf,
+    /// Added to its searching, not to noticing in passing (Keen searcher).
+    Searching { value: i32 },
+    /// The damage traps do it, this percent more (negative: less; Trap sense).
+    TrapDamagePercent { value: i32 },
     /// The experience a quest gives, this percent more (before `xp_percent`).
     QuestXpPercent { value: i32 },
     /// The gold a quest gives, this percent more.
@@ -448,6 +485,8 @@ pub enum TalentEffect {
     KickDie { sides: u8 },
     /// Its door kicks as if this much stronger.
     DoorKick { value: i32 },
+    /// Its door kicks are this percent louder (negative: quieter; Lockbreaker).
+    KickNoisePercent { value: i32 },
     /// Its digging does this percent more work a turn.
     DigPercent { value: i32 },
     /// Its blows with a two-handed weapon cost this percent more (negative: cheaper).
@@ -569,6 +608,8 @@ impl TalentEffect {
             | TalentEffect::DoorKick { value }
             | TalentEffect::BurdenDex { value }
             | TalentEffect::MissileDodge { value }
+            | TalentEffect::Searching { value }
+            | TalentEffect::SkillRolls { value }
             | TalentEffect::Darkvision { value }
             | TalentEffect::NightSight { value }
             | TalentEffect::CarryKg { value }
@@ -595,6 +636,19 @@ impl TalentEffect {
             TalentEffect::IdentifyCarried { hours } => {
                 if !(1..=240).contains(hours) {
                     return Err("`identify_carried`: hours is 1 to 240".into());
+                }
+                Ok(())
+            }
+            TalentEffect::TrainSkill { dice } => match choice {
+                Some(Choice::Skill) if dice.min() >= 1 && dice.max() <= 100 => Ok(()),
+                Some(Choice::Skill) => Err("`train_skill`: its dice roll 1 to 100".into()),
+                _ => Err(
+                    "`train_skill` is for the chosen skill: it needs `choice = \"skill\"`".into(),
+                ),
+            },
+            TalentEffect::ScrollKept { chance } => {
+                if !(1..=100).contains(chance) {
+                    return Err("`scroll_kept`: chance is 1 to 100".into());
                 }
                 Ok(())
             }
@@ -769,6 +823,12 @@ impl TalentEffect {
             | TalentEffect::TwoHandedPrice { value }
             | TalentEffect::SpeedPercent { value }
             | TalentEffect::SpellDamagePercent { value }
+            | TalentEffect::StepSlowdownPercent { value }
+            | TalentEffect::CorpseStatsPercent { value }
+            | TalentEffect::LootMagicPercent { value }
+            | TalentEffect::ReadPercent { value }
+            | TalentEffect::TrapDamagePercent { value }
+            | TalentEffect::KickNoisePercent { value }
             | TalentEffect::ThresholdPercent { value }
             | TalentEffect::ClimbPercent { value }
             | TalentEffect::SunHealing { value }
@@ -863,6 +923,9 @@ impl TalentEffect {
             | TalentEffect::Clotting
             | TalentEffect::SureStep
             | TalentEffect::PitProof
+            | TalentEffect::IgnoreBurdened
+            | TalentEffect::NoBloating
+            | TalentEffect::SparesSelf
             | TalentEffect::SeesUv
             | TalentEffect::PlungeProof
             | TalentEffect::LightOnIce
@@ -914,6 +977,8 @@ pub enum Need {
     Lucky,
     /// An alignment band (spec §8 "Alignment"): `{ min = "good" }` is Good or better.
     Alignment(Requirement),
+    /// Any one of these ("Intelligence 12 or Appraise 20").
+    Either(Vec<Need>),
 }
 
 impl Need {
@@ -963,6 +1028,10 @@ impl Need {
             }
             Need::Lucky => "to be born on a lucky day".into(),
             Need::Alignment(required) => format!("to be {}", required.words()),
+            Need::Either(needs) => (needs.iter())
+                .map(|n| n.words(content))
+                .collect::<Vec<_>>()
+                .join(" or "),
         }
     }
 }
@@ -999,6 +1068,8 @@ pub struct Needs {
     pub lucky: bool,
     /// The alignment band asked (`requires_alignment`, as quests and abilities ask it).
     pub alignment: Option<Requirement>,
+    /// Any one of these, if set (`either`): at least two.
+    pub either: Vec<Need>,
 }
 
 impl Needs {
@@ -1008,7 +1079,8 @@ impl Needs {
     }
 
     /// Every prerequisite, in the order they are shown: talents, stats, skills, weapon skills,
-    /// the choice, the level, the race, the eyes, the class, the sign, the alignment.
+    /// the choice, the level, the race, the eyes, the class, the sign, the alignment, then any one
+    /// of the alternatives.
     pub fn iter(&self) -> impl Iterator<Item = Need> + '_ {
         let talents = self.talents.iter().map(|&(t, r)| Need::Talent(t, r));
         let stats = (self.stats.iter())
@@ -1026,6 +1098,7 @@ impl Needs {
         let element = self.element.clone().map(Need::Element);
         let lucky = self.lucky.then_some(Need::Lucky);
         let alignment = self.alignment.map(Need::Alignment);
+        let either = (!self.either.is_empty()).then(|| Need::Either(self.either.clone()));
         talents
             .chain(stats)
             .chain(skills)
@@ -1040,6 +1113,7 @@ impl Needs {
             .chain(element)
             .chain(lucky)
             .chain(alignment)
+            .chain(either)
     }
 }
 
@@ -1349,6 +1423,27 @@ struct NeedsSpec {
     element: Option<String>,
     lucky: bool,
     requires_alignment: Option<Requirement>,
+    /// Alternatives: any one of what it asks will do (`either = { stats = { intelligence = 12
+    /// }, skills = { appraise = 20 } }`).
+    either: Option<Box<NeedsSpec>>,
+}
+
+impl NeedsSpec {
+    /// How many prerequisites it names.
+    fn count(&self) -> usize {
+        let one = |b: bool| usize::from(b);
+        self.talents.len()
+            + self.stats.len()
+            + self.skills.len()
+            + self.weapon_skills.len()
+            + one(self.any_weapon_skill.is_some())
+            + one(self.chosen.is_some())
+            + one(self.level > 0)
+            + one(self.race.is_some())
+            + one(self.eyes.is_some())
+            + one(self.class.is_some())
+            + one(self.requires_alignment.is_some())
+    }
 }
 
 /// `any_weapon_skill = { roles = ["melee"], of = ["unarmed"], rank = 3 }`: any skill of those
@@ -1481,7 +1576,9 @@ fn resolve_needs(
     if let Some(rank) = spec.chosen {
         match choice {
             None => return Err("`chosen` needs a `choice`".into()),
-            Some(Choice::Element) => return Err("`chosen` asks a rank: an element has none".into()),
+            Some(Choice::Element | Choice::Skill) => {
+                return Err("`chosen` asks a weapon skill's or style's rank".into());
+            }
             Some(_) if rank == 0 || rank > MAX_RANK => {
                 return Err(format!("`chosen` is a rank, 1 to {MAX_RANK}"));
             }
@@ -1516,6 +1613,20 @@ fn resolve_needs(
     if let Some(required) = spec.requires_alignment {
         required.check()?;
     }
+    let either = match spec.either {
+        Some(alternatives) => {
+            if alternatives.either.is_some() {
+                return Err("`either` within `either`".into());
+            }
+            if alternatives.count() < 2 {
+                return Err("`either` names fewer than two alternatives".into());
+            }
+            // Content without skills (a fixture) leaves a skill alternative out, as above.
+            let alternatives = resolve_needs(*alternatives, ids, ranks_of, choice, content)?;
+            alternatives.iter().collect()
+        }
+        None => Vec::new(),
+    };
     Ok(Needs {
         talents,
         stats,
@@ -1531,6 +1642,7 @@ fn resolve_needs(
         element: spec.element,
         lucky: spec.lucky,
         alignment: spec.requires_alignment,
+        either,
     })
 }
 
@@ -1910,6 +2022,14 @@ needs = { stats = { toughness = 17 }, talents = { healthy = 1 } }
                 .contains("`ranks = 2` but 1")
         );
         assert!(bad("").contains("does nothing"));
+        assert!(
+            bad("effects = [{ kind = \"dodge\", value = 1 }]\nneeds = { either = { level = 3 } }")
+                .contains("fewer than two")
+        );
+        assert!(
+            bad("effects = [{ kind = \"train_skill\", dice = \"1d6\" }]")
+                .contains("needs `choice = \"skill\"`")
+        );
         // The Shadow and Wayfarer effects name what exists (#239).
         assert!(
             bad("effects = [{ kind = \"terrain_as\", terrains = [\"lava\", \"bog\"], like = \"floor\" }]")
@@ -2025,6 +2145,13 @@ systems = ["hit_points"]
                 .any(|o| o == "duelist")
         );
         assert_eq!(Choice::Element.name(&content, "fire"), Some("fire"));
+        assert_eq!(Choice::Skill.name(&content, "stealth"), Some("Stealth"));
+        assert!(
+            Choice::Skill
+                .options(&content)
+                .iter()
+                .any(|o| o == "appraise")
+        );
         assert_eq!(Choice::Element.name(&content, "slashing"), None);
     }
 

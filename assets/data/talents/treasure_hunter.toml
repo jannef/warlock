@@ -1,0 +1,8 @@
+[[talent]]
+id = "treasure_hunter"
+name = "Treasure hunter"
+tree = "scholar"
+description = "The loot you find, and what creatures drop, is magic more often, and rare more often too."
+needs = { either = { stats = { intelligence = 12 }, skills = { appraise = 20 } } }
+effects = [{ kind = "loot_magic_percent", value = 50 }]
+systems = ["magic_items"]

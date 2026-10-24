@@ -1,8 +1,8 @@
 [[talent]]
 id = "iron_will"
 name = "Iron will"
-tree = "class"
-granted = true
+tree = "grit"
 description = "A will bred to command: you stand firmer against what tests your will, and your bearing grows (Presence +1)."
+needs = { stats = { willpower = 13 } }
 effects = [{ kind = "checks", stat = "willpower", value = 2 }, { kind = "stat", stat = "presence", value = 1 }]
 systems = ["diseases", "searching"]

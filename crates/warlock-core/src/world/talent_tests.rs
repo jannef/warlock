@@ -225,8 +225,22 @@ fn a_pick_nothing_can_be_spent_on_is_dropped() {
     let turn = w.turn();
     run(&mut w, "wait");
     assert_eq!(w.turn(), turn + 1);
-    // With every talent the character qualifies for held, the pick is dropped too.
-    let mut w = world();
+    // With every talent the character qualifies for held, the pick is dropped too. Apprentice
+    // (any skill, three ranks each) would keep a pick open to the last level: here it is an
+    // elf's, and its tree waits for a free talent.
+    let mut files = ContentFiles::builtin();
+    files.edit_table("talents", |text| {
+        text.replace(
+            "ranks = 3\ndescription = \"You take up",
+            "ranks = 3\nneeds = { race = \"elf\" }\ndescription = \"You take up",
+        )
+        .replace(
+            "description = \"Items, scrolls, gems, and learning.\"",
+            "description = \"Items, scrolls, gems, and learning.\"\npending = true",
+        )
+    });
+    let content = Arc::new(Content::load(&files).expect("content"));
+    let mut w = world_with(content);
     set_scores(&mut w, 1);
     let mut level = 3;
     loop {

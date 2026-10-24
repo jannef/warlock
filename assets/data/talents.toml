@@ -70,7 +70,6 @@ description = "The land, water, ice, and weather."
 id = "scholar"
 name = "Scholar"
 description = "Items, scrolls, gems, and learning."
-pending = true
 
 [[tree]]
 id = "grit"
@@ -81,7 +80,6 @@ description = "Hunger, burden, and will."
 id = "delver"
 name = "Delver"
 description = "Traps, searching, doors, digging, shops, and talk."
-pending = true
 
 # The class abilities (spec §8 "Class abilities"): given by the classes' level tables
 # (classes/), never picked; `class = true` keeps them off every pick list and counts them as
@@ -182,7 +180,6 @@ name = "Traps"
 [[system]]
 id = "searching"
 name = "Searching and secret doors"
-pending = true
 
 [[system]]
 id = "doors"
@@ -191,7 +188,6 @@ name = "Doors, locks, kicking"
 [[system]]
 id = "digging"
 name = "Digging"
-pending = true
 
 [[system]]
 id = "ice"
@@ -212,7 +208,6 @@ name = "Weather, sun, moon"
 [[system]]
 id = "shops"
 name = "Shops and favour"
-pending = true
 
 [[system]]
 id = "talk"
@@ -222,12 +217,10 @@ pending = true
 [[system]]
 id = "magic_items"
 name = "Magic items and identification"
-pending = true
 
 [[system]]
 id = "scrolls"
 name = "Scrolls and casting"
-pending = true
 
 [[system]]
 id = "gems"
@@ -237,12 +230,10 @@ pending = true
 [[system]]
 id = "skills"
 name = "Skills and training"
-pending = true
 
 [[system]]
 id = "experience"
 name = "Experience"
-pending = true
 
 [[system]]
 id = "speed"

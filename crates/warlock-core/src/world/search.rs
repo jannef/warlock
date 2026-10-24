@@ -103,8 +103,10 @@ impl World {
     }
 
     /// What the player adds to a check of `look`: the stat's modifier (of the effective score,
-    /// spec §8 "Stats"), the skill's benefit, the race's bonus, and their talents' (a birth
-    /// sign's Always a way, Heedless); less the passive penalty in passing.
+    /// spec §8 "Stats"), the skill's benefit, and the race's bonus; less the passive penalty in
+    /// passing. Then their talents (spec §8 "Talents"): Keen searcher's to searching, Alert's in
+    /// passing, the search of Trap sense and the birth signs' (Always a way, Heedless) to both,
+    /// and what they add to checks of the stat.
     pub(super) fn search_modifier(&self, look: Look) -> i32 {
         let content = &self.content;
         let player = self.state.player();
@@ -116,6 +118,7 @@ impl World {
             Look::Active => {
                 stats.modifier(Stat::Intelligence)
                     + player.skill_effect(content, Effect::Search)
+                    + talents.searching
                     + talents.check(Stat::Intelligence)
             }
             Look::Passive => {
@@ -127,8 +130,7 @@ impl World {
                     - content.search().passive_penalty
             }
         };
-        let talents = player.talent_mods(content).search;
-        own.saturating_add(race).saturating_add(talents)
+        own.saturating_add(talents.search).saturating_add(race)
     }
 
     /// Whether the player notices `hidden`, the hidden feature at `at`, in passing at all:
@@ -187,8 +189,9 @@ impl World {
         self.say(text);
     }
 
-    /// One turn of searching: the active check for every hidden feature within reach, then a
-    /// training mark's chance for the Search skill.
+    /// One turn of searching: the active check for every hidden feature within reach (farther
+    /// with the Search skill and Keen searcher), then a training mark's chance for the Search
+    /// skill.
     fn search_turn(&mut self) {
         let player = self.state.player();
         let reach = 1

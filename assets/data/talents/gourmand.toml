@@ -1,0 +1,8 @@
+[[talent]]
+id = "gourmand"
+name = "Gourmand"
+tree = "grit"
+description = "Fresh corpses strengthen you more often, and you never eat yourself bloated: you stop at your fill."
+needs = { stats = { toughness = 12 } }
+effects = [{ kind = "corpse_stats_percent", value = 100 }, { kind = "no_bloating" }]
+systems = ["hunger"]

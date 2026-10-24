@@ -9,7 +9,7 @@ hit points a level gives) is `docs/dev/experience.md`.
 
 | Where | What |
 |---|---|
-| `content/talent.rs` | `TalentBook` from `data/talents.toml` (settings: `max_ranks`, `[coverage]`, `[[tree]]`, `[[system]]`, each set in one file) and `data/talents/*.toml` (one `[[talent]]` a file, `ContentFiles::table("talents")` order; `TalentId` an index, saves name talents by id so it is **not** in the content fingerprint). `TalentDef` (tree, `ranks: Vec<Rank>`, `needs` for every rank plus each rank's own, `effects` per rank held plus each rank's own, `choice`, `systems`, `granted`), `Needs`/`Need` (the prerequisite kinds and their words: talents, stat scores, skill values, weapon-skill ranks, any skill of a role (`any_weapon_skill`), `chosen`, level, race, class, eyes, and `requires_alignment`, an `alignment::Requirement` read against `Actor::band`), `TalentEffect` (the typed effects), `Choice::options`/`name`, and the **coverage check** (`TalentBook::coverage_gap`, run at load: a `ContentError`). |
+| `content/talent.rs` | `TalentBook` from `data/talents.toml` (settings: `max_ranks`, `[coverage]`, `[[tree]]`, `[[system]]`, each set in one file) and `data/talents/*.toml` (one `[[talent]]` a file, `ContentFiles::table("talents")` order; `TalentId` an index, saves name talents by id so it is **not** in the content fingerprint). `TalentDef` (tree, `ranks: Vec<Rank>`, `needs` for every rank plus each rank's own, `effects` per rank held plus each rank's own, `choice`, `systems`, `granted`), `Needs`/`Need` (the prerequisite kinds and their words: talents, stat scores, skill values, weapon-skill ranks, any skill of a role (`any_weapon_skill`), `chosen`, level, race, class, eyes, `requires_alignment`, an `alignment::Requirement` read against `Actor::band`, and `either`, any one of several, `Need::Either`), `TalentEffect` (the typed effects), `Choice::options`/`name`, and the **coverage check** (`TalentBook::coverage_gap`, run at load: a `ContentError`). |
 | `talent.rs` | The runtime: `Talents` (`Vec<Taken { id, rank, choice }>` on `Actor::talents`, saved and hashed, left out of the JSON while empty), `TalentMods` (every effect summed; `Talents::mods(content)` / `Actor::talent_mods`), `Candidate` (what prerequisites read: `Candidate::player`), `unmet`, `may_take` → `Refusal` (in words), `openings`, `offers` (the pick list, tree by tree). |
 | `world/talent.rs` | `Due { level, talents }` in `Progress::due` (lowest level first); `World::level_up(from, to)` from `grant_xp` (a pick every `Experience::talent_every` levels, and the per-level hit points of talents held); `refuse_due` (the first line of `player_acts`: everything but `Talent`, `Advance`, `LevelUpAuto` is refused with "You have skill rolls to spend." or "You must choose a talent first."); `take_talent` (the first due with a pick, so a talent may come before the rolls), `level_up_auto` (dev); `settle_due` drops talent picks nothing can be spent on (`offers` empty and no roll left) and rolls when no skill is trained, asked again after each pick. `Due { level, talents, rolls, bonus }`: a level with rolls but no pick is due too; `bonus` are the class's bonus picks (a talent of the class's trees spends one before an ordinary pick; "You must choose a talent of Weaponcraft or Delver."), dropped like the others when nothing fits. |
 | `world/class.rs` | Class abilities (#246): `grant` gives the talents a class's level table names up to a level that the player lacks (rank 1, `hand_out` for hit points by level and stat gifts), at creation (`start_run`, level 1), as each level comes (`level_up`, with the news "You gain Fencing."), and on `from_state` (a grown table reaches saves; nothing is taken away); `bonus_trees`; `appraise_carried` (Connoisseur, from `World::live` for the player). |
@@ -105,6 +105,17 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | the actives (`rage`, `veterans_wind`, `whirlwind`, `lay_on_hands`, `avatar`, `smite`, `quivering_palm`) | `world/class_ability.rs`; `Ability::Class` in `ability.rs` (`class_cooldown`: Rage's status and what it `follows`) |
 | `missile_dodge` | `World::target_against` (from `resolve` for shots and throws, `trap_strikes` for trap missiles) |
 | `spell_damage_percent` | `World::evaded` in `spell_hurts` (bursts and bolts, before resistances) |
+| `read_percent`, `scroll_kept` | `read.rs`: `read_price`; `use_up` (one gameplay draw a read, only with the talent; "The writing does not fade from the scroll.") |
+| `spares_self` | `World::cast_burst` (the caster is never caught); `PerceptionView::bursts_spare_me`, so `Aim::catches_reader` asks nothing |
+| `loot_magic_percent` | `magic::loot::roll_with` (`roll_rarity`: the weights of the rarities above the find's least grade); `mapgen::generate_with` from `level_template` (the player's luck as a level is first made), `World::loot_of` (drops). The same draws, so maps never change |
+| `skill_rolls` | `World::level_rolls` |
+| `train_skill` | handed out, not read: `take_talent` → `train_chosen` rolls the dice from `levels_rng` into the chosen skill (`Skills::add`: trained at the roll, or raised by it) |
+| `ignore_burdened` | `burden::load` (`Load::ignores_burdened`, as a dwarf's) |
+| `no_bloating`, `corpse_stats_percent` | `eat.rs`: `feed` (nutrition stops one below Bloated, nothing overeats) and `eat_fresh` |
+| `step_slowdown_percent` | `World::step_price` → `slowed` (the burden's ease and `bloated`'s slowdown, steps only) |
+| `searching` | `search.rs::search_modifier` (searching only; Keen searcher; `search`, in both looks, is above) |
+| `trap_damage_percent` | `World::trap_deals` (before the blood and the hurt; at least 1) |
+| `kick_noise_percent` | `noise::noise` (`Act::Kick`) |
 | `stat` | handed out, not read: `class::hand_out` raises score and potential (`Stats::gift`) at the pick or the grant; a Toughness gift raises `hp` with the maximum |
 | `carry_kg`, `weightless_coins` | `burden::load` (with the affixes' kilograms; coins, item class `coins`, left out of the load) |
 | `quest_xp_percent`, `quest_gold_percent` | `World::complete` (`quest.rs`), before `xp_percent` |
@@ -220,6 +231,13 @@ Vigour, Might, and Finesse (#237) ship whole but for Battle trance and Inner cal
 resources, #225); `body_talent_tests.rs` covers each one's rule, `hunger_tests.rs` Iron stomach.
 The statuses Winded (Second wind's cooldown) and Staggered (`cost = 150`, 6 s) are in
 `data/status.toml`.
+
+Scholar, Grit, and Delver (#240) ship whole but for the five mana talents (Deep well, Clear
+mind, Meditation, Frugal caster, Blood magic: the mana PR, H6); `talent_wits_tests.rs` covers
+each rule, `quest_tests.rs` Well liked. Apprentice is the first talent with a `skill` choice (any
+skill, trained or not; `talent:apprentice:stealth`, three ranks per skill), Treasure hunter the
+first with an `either` prerequisite (`Need::Either`, "Intelligence 12 or Appraise 20"). The
+`talk` and `gems` systems stay pending until the racial talents (Diplomat, Gem lore) land.
 
 The damage-type talents (#248), Elemental ward (H2) and Crusher (H1), are the `damage_types`
 system's two, so it is no longer `pending`; `world/damage_talent_tests.rs` covers the ward

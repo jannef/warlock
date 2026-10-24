@@ -155,8 +155,14 @@ fn features(landscape: Landscape) -> Features {
     }
 }
 
-/// Generates the local area `id` (`local:x,y`) for the run with `seed`.
-pub(super) fn generate(content: &Content, seed: u64, id: &str) -> Result<LevelTemplate, GenError> {
+/// Generates the local area `id` (`local:x,y`) for the run with `seed`, its loot magic and rare
+/// `luck` percent more often (Treasure hunter).
+pub(super) fn generate(
+    content: &Content,
+    seed: u64,
+    id: &str,
+    luck: i32,
+) -> Result<LevelTemplate, GenError> {
     let area = content
         .local_area(id)
         .ok_or_else(|| GenError::NotAGeneratedLevel(id.to_string()))?;
@@ -198,7 +204,7 @@ pub(super) fn generate(content: &Content, seed: u64, id: &str) -> Result<LevelTe
         };
         if reach::validate(&template, content).is_ok() {
             // Ruins may hold loot (spec §8 "Magic items"); the land holds none of its own.
-            super::place_loot(&mut template, content, seed, &land.loot, None);
+            super::place_loot(&mut template, content, seed, &land.loot, (None, luck));
             return Ok(template);
         }
     }

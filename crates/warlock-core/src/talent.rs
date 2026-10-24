@@ -170,6 +170,10 @@ pub struct TalentMods {
     pub ambush: Option<Dice>,
     /// Percent more carrying limit.
     pub carry_percent: i32,
+    /// Being Burdened costs it nothing.
+    pub ignore_burdened: bool,
+    /// Percent more of the slowdown its burden and Bloated put on its steps (negative: less).
+    pub step_slowdown_percent: i32,
     /// Kilograms more carrying limit.
     pub carry_kg: i32,
     /// The coins it carries weigh nothing.
@@ -200,8 +204,26 @@ pub struct TalentMods {
     pub rot_harm_percent: i32,
     /// Exertion burns nothing.
     pub no_exertion: bool,
+    /// A meal never leaves it Bloated.
+    pub no_bloating: bool,
+    /// Percent more of a fresh corpse's chances to raise its stats.
+    pub corpse_stats_percent: i32,
     /// Percent more experience.
     pub xp_percent: i32,
+    /// More skill rolls every level.
+    pub skill_rolls: i32,
+    /// Percent more often loot it finds rolls magic and rare.
+    pub loot_magic_percent: i32,
+    /// Percent more time reading a scroll takes (negative: less).
+    pub read_percent: i32,
+    /// The chance in percent a scroll it reads is not used up (the most counts).
+    pub scroll_kept: u8,
+    /// Its own bursts never catch it.
+    pub spares_self: bool,
+    /// Added to its searching, not to noticing in passing.
+    pub searching: i32,
+    /// Percent more damage traps do it (negative: less).
+    pub trap_damage_percent: i32,
     /// Percent more experience from quests.
     pub quest_xp_percent: i32,
     /// Percent more gold from quests.
@@ -286,6 +308,8 @@ pub struct TalentMods {
     pub kick_die: Option<u8>,
     /// How much stronger its door kicks are.
     pub door_kick: i32,
+    /// Percent louder its door kicks are (negative: quieter).
+    pub kick_noise_percent: i32,
     /// Percent more work a turn of digging does.
     pub dig_percent: i32,
     /// Percent more its blows with a two-handed weapon cost (negative: cheaper).
@@ -574,6 +598,8 @@ impl TalentMods {
             }
             TalentEffect::Ambush { dice } => self.ambush = Some(dice),
             TalentEffect::CarryPercent { value } => self.carry_percent += value,
+            TalentEffect::IgnoreBurdened => self.ignore_burdened = true,
+            TalentEffect::StepSlowdownPercent { value } => self.step_slowdown_percent += value,
             TalentEffect::CarryKg { value } => self.carry_kg += value,
             TalentEffect::WeightlessCoins => self.weightless_coins = true,
             TalentEffect::TravelPercent { value } => self.travel_percent += value,
@@ -594,7 +620,18 @@ impl TalentMods {
             TalentEffect::HungerPercent { value } => self.hunger_percent += value,
             TalentEffect::RotHarmPercent { value } => self.rot_harm_percent += value,
             TalentEffect::NoExertion => self.no_exertion = true,
+            TalentEffect::NoBloating => self.no_bloating = true,
+            TalentEffect::CorpseStatsPercent { value } => self.corpse_stats_percent += value,
             TalentEffect::XpPercent { value } => self.xp_percent += value,
+            TalentEffect::SkillRolls { value } => self.skill_rolls += value,
+            // Handed out as the rank is taken (`World::take_talent`), never read after.
+            TalentEffect::TrainSkill { .. } => {}
+            TalentEffect::LootMagicPercent { value } => self.loot_magic_percent += value,
+            TalentEffect::ReadPercent { value } => self.read_percent += value,
+            TalentEffect::ScrollKept { chance } => self.scroll_kept = self.scroll_kept.max(chance),
+            TalentEffect::SparesSelf => self.spares_self = true,
+            TalentEffect::Searching { value } => self.searching += value,
+            TalentEffect::TrapDamagePercent { value } => self.trap_damage_percent += value,
             TalentEffect::QuestXpPercent { value } => self.quest_xp_percent += value,
             TalentEffect::QuestGoldPercent { value } => self.quest_gold_percent += value,
             TalentEffect::FavourPercent { value } => self.favour_percent += value,
@@ -734,6 +771,7 @@ impl TalentMods {
                 self.kick_die = Some(self.kick_die.map_or(sides, |s| s.max(sides)));
             }
             TalentEffect::DoorKick { value } => self.door_kick += value,
+            TalentEffect::KickNoisePercent { value } => self.kick_noise_percent += value,
             TalentEffect::DigPercent { value } => self.dig_percent += value,
             TalentEffect::TwoHandedPrice { value } => self.two_handed_price += value,
             TalentEffect::CriticalStatus { status } => {
@@ -1035,6 +1073,7 @@ impl<'a> Candidate<'a> {
             Need::Element(id) => self.sign.is_some_and(|s| s.is_element(id)),
             Need::Lucky => self.lucky,
             Need::Alignment(required) => self.band.is_some_and(|band| required.allows(band)),
+            Need::Either(needs) => (needs.iter()).any(|n| self.meets(content, n, choice, chosen)),
         }
     }
 }

@@ -51,6 +51,7 @@ use crate::geom::{Dir, Pos};
 use crate::object::Stack;
 use crate::perception::VIEW_RADIUS;
 use crate::stats::Stat;
+use crate::talent::TalentMods;
 use std::collections::BTreeSet;
 
 /// How far past its victim a trap's missile flies on, at most, when it misses.
@@ -227,17 +228,24 @@ impl World {
 
     /// Trap `trap` deals `blow` to `target`, from `source`, the way every blow is dealt (spec
     /// §8 "Blood", "Status effects"): a big hit's blood, the damage, which may kill (a trap's
-    /// kill earns no one anything), and if it lives the statuses its wound causes.
+    /// kill earns no one anything), and if it lives the statuses its wound causes. The target's
+    /// talents scale the damage first (Trap sense: half, rounded down, at least 1).
     fn trap_deals(
         &mut self,
         trap: TrapId,
         target: ActorId,
         source: (Pos, bool),
-        blow: Blow,
+        mut blow: Blow,
         events: &mut Vec<Event>,
     ) {
         if blow.damage <= 0 {
             return;
+        }
+        let percent = (self.state.actors.get(&target))
+            .map_or(0, |a| a.talent_mods(&self.content).trap_damage_percent);
+        if percent != 0 {
+            let scaled = TalentMods::scaled(u64::try_from(blow.damage).unwrap_or(0), percent);
+            blow.damage = i32::try_from(scaled).unwrap_or(i32::MAX).max(1);
         }
         self.spill(u32::from(trap.0), target, source, blow);
         if !self.hurt(target, blow.damage, Harm::Trap(trap), events) {

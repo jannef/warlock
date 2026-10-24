@@ -192,11 +192,15 @@ impl Aim {
     /// as far as they know (the rules', spec §8 "Scrolls": it flies along the line of fire and
     /// goes off on the first creature they see in its way, before the first cell they know is
     /// solid, or on the cursor; the player within its radius of that, walls between not
-    /// counted). Returns what would catch them ("fireball"); `None` for anything else.
+    /// counted). Returns what would catch them ("fireball"); `None` for anything else, and for
+    /// a player their own bursts spare (Careful reader).
     pub fn catches_reader(&self, view: &PerceptionView<'_>) -> Option<String> {
         let AimKind::Read(item) = self.kind else {
             return None;
         };
+        if view.bursts_spare_me() {
+            return None;
+        }
         let spell = scroll_spell(view, item)?;
         let Cast::Burst(burst) = &spell.cast else {
             return None;

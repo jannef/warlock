@@ -1,0 +1,8 @@
+[[talent]]
+id = "scroll_savant"
+name = "Scroll savant"
+tree = "scholar"
+description = "You read scrolls much faster."
+needs = { stats = { intelligence = 13 } }
+effects = [{ kind = "read_percent", value = -50 }]
+systems = ["scrolls"]

@@ -1,0 +1,8 @@
+[[talent]]
+id = "well_liked"
+name = "Well liked"
+tree = "delver"
+description = "Those you do quests for reward you with a quarter more gold and experience."
+needs = { stats = { presence = 13 } }
+effects = [{ kind = "quest_gold_percent", value = 25 }, { kind = "quest_xp_percent", value = 25 }]
+systems = ["talk", "experience"]
