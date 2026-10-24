@@ -1,6 +1,6 @@
 //! Races' gifts and flaws in the world (spec §8 "Character creation"): a race's natural armour
 //! adds to what the player wears, and so do its resistances; strong light dazzles light-blind
-//! eyes.
+//! eyes; a disease bonus wins disease checks.
 
 use super::*;
 use crate::action::parse_actions;
@@ -34,6 +34,14 @@ description = "Dazzled by strong light."
 vision = "normal"
 age = [20, 30]
 light_blind = { glare = 200, sight = 3, to_hit = -2 }
+
+[[race]]
+id = "gutsy"
+name = "Gutsy"
+description = "Shrugs diseases off."
+vision = "normal"
+age = [20, 30]
+disease_check = 10
 "##;
 
 /// A dim corridor (ambient 60, enough for normal eyes) with a brazier at its east end: its light
@@ -94,8 +102,13 @@ fn world(race: &str) -> World {
 
 /// A run of `scenario` as a `race` warrior.
 fn world_in(scenario: &str, race: &str) -> World {
+    seeded(scenario, race, 1)
+}
+
+/// A run of `scenario` as a `race` warrior, from `seed`.
+fn seeded(scenario: &str, race: &str, seed: u64) -> World {
     let spec: CharacterSpec = format!("{race},male,warrior").parse().expect("spec");
-    World::with_character(CONTENT.clone(), scenario, Some(1), Some(&spec)).expect("world")
+    World::with_character(CONTENT.clone(), scenario, Some(seed), Some(&spec)).expect("world")
 }
 
 fn run(w: &mut World, actions: &str) {
@@ -178,4 +191,23 @@ fn strong_light_dazzles_light_blind_eyes_cutting_sight_and_to_hit() {
     let me = human.state.player;
     let profile = human.state.player().melee(human.content());
     assert_eq!(human.glared(me, profile.clone()).to_hit, profile.to_hit);
+}
+
+#[test]
+fn a_races_disease_bonus_wins_checks_against_catching_a_disease() {
+    let fever = CONTENT.disease_id("filth_fever").expect("filth fever");
+    // Filth fever is caught on a failed Toughness check of 13: about half the time at an
+    // average score, hardly ever with 10 more.
+    let caught = |race: &str| {
+        (0..40)
+            .filter(|&seed| {
+                let mut w = seeded("racetest", race, seed);
+                let me = w.state.player;
+                w.expose(me, fever, None)
+            })
+            .count()
+    };
+    let (human, gutsy) = (caught("human"), caught("gutsy"));
+    assert!(human >= 10, "a human caught it {human} times in 40");
+    assert!(gutsy <= 2, "the gutsy caught it {gutsy} times in 40");
 }

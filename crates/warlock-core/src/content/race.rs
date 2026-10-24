@@ -7,7 +7,8 @@
 //! and humans' extra class skill), gives them starting ranks in weapon skills (spec §8
 //! "Weapon skills"; fixed numbers or dice), says what they notice of hidden features in
 //! passing (spec §8 "Searching"), and may give them natural armour (spec §8 "Combat"),
-//! resistances (spec §8 "Damage types"), and eyes that strong light dazzles ([`LightBlind`]).
+//! resistances (spec §8 "Damage types"), eyes that strong light dazzles ([`LightBlind`]), and
+//! a bonus on disease checks (spec §8 "Diseases").
 
 use super::weapon_skill::Ranked;
 use super::{
@@ -60,6 +61,8 @@ struct RaceSpec {
     resist: BTreeMap<String, i32>,
     light_blind: Option<LightBlind>,
     #[serde(default)]
+    disease_check: i32,
+    #[serde(default)]
     alignment: i32,
     size: Option<String>,
     #[serde(default)]
@@ -84,6 +87,9 @@ pub const MAX_AGE: u32 = 1000;
 
 /// What a race may add to searching and noticing (spec §8 "Searching").
 pub const SEARCH_BONUSES: RangeInclusive<i32> = -10..=10;
+
+/// What a race may add to its checks against diseases (spec §8 "Diseases").
+pub const DISEASE_BONUSES: RangeInclusive<i32> = -10..=10;
 
 /// Eyes that strong light dazzles (spec §8 "Character creation"; drow): `light_blind = { glare
 /// = 250, sight = 10, to_hit = -1 }`. While the light on the player's own cell, as their eyes
@@ -148,6 +154,9 @@ pub struct RaceDef {
     pub resist: Vec<(DamageTypeId, i32)>,
     /// Whether strong light dazzles the player, and what that costs them ([`LightBlind`]).
     pub light_blind: Option<LightBlind>,
+    /// Points added to the player's checks against diseases (spec §8 "Diseases"): resisting
+    /// one they are exposed to, and each progression. Ratfolk.
+    pub disease_check: i32,
     /// Its part of a new character's alignment score (spec §8 "Alignment"), added to the
     /// class's.
     pub alignment: i32,
@@ -285,6 +294,14 @@ impl Races {
                     FACTORS.end()
                 )));
             }
+            if !DISEASE_BONUSES.contains(&spec.disease_check) {
+                return Err(err(format!(
+                    "race `{id}`: disease_check {} is out of range ({} to {})",
+                    spec.disease_check,
+                    DISEASE_BONUSES.start(),
+                    DISEASE_BONUSES.end()
+                )));
+            }
             if !SEARCH_BONUSES.contains(&spec.search) {
                 return Err(err(format!(
                     "race `{id}`: search {} is out of range ({} to {})",
@@ -307,6 +324,7 @@ impl Races {
                 natural: spec.natural,
                 resist,
                 light_blind: spec.light_blind,
+                disease_check: spec.disease_check,
                 alignment,
                 size,
                 ignores_burdened: spec.ignores_burdened,
@@ -386,6 +404,9 @@ mod tests {
             human.light_blind, None,
             "light does not dazzle unless named"
         );
+        assert_eq!(human.disease_check, 0, "no disease bonus unless named");
+        let ratfolk = parse(&format!("{ONE}disease_check = 4\n")).expect("valid");
+        assert_eq!(ratfolk.list[0].disease_check, 4);
         let drow = parse(&format!(
             "{ONE}light_blind = {{ glare = 250, sight = 10, to_hit = -1 }}\n"
         ))
@@ -552,6 +573,10 @@ mod tests {
             (
                 format!("{ONE}light_blind = {{ glare = 250, sight = 10 }}\n"),
                 "missing field `to_hit`",
+            ),
+            (
+                format!("{ONE}disease_check = 11\n"),
+                "race `human`: disease_check 11 is out of range (-10 to 10)",
             ),
         ] {
             let e = parse(&text).unwrap_err();
