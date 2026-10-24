@@ -32,7 +32,18 @@ struct ExperienceFile {
     kills: Kills,
     #[serde(default)]
     discovery: Discovery,
+    #[serde(default)]
+    levels: Levels,
     zero_difference: Vec<Band>,
+}
+
+/// What levels bring besides hit points (`[levels]`; spec §8 "Talents").
+#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct Levels {
+    /// Every this many levels (3: levels 3, 6, 9, ...) brings a talent pick; 0: never.
+    #[serde(default)]
+    pub talent_every: u8,
 }
 
 #[derive(Deserialize)]
@@ -153,6 +164,7 @@ pub struct Experience {
     bonus_levels: u8,
     kills: Kills,
     discovery: Discovery,
+    levels: Levels,
     /// `(from player level, zero difference)`, ascending, the first from level 1.
     zero_difference: Vec<(u8, u8)>,
     /// The XP total needed to reach each level at a factor of 100 %: index 0 is level 1 (0),
@@ -170,6 +182,7 @@ impl Default for Experience {
             bonus_levels: 4,
             kills: Kills::default(),
             discovery: Discovery::default(),
+            levels: Levels::default(),
             zero_difference: vec![(1, 5)],
             thresholds: vec![0],
         }
@@ -259,6 +272,7 @@ impl Experience {
             bonus_levels: p.bonus_levels,
             kills: p.kills,
             discovery: p.discovery,
+            levels: p.levels,
             zero_difference: p.zero_difference.iter().map(|b| (b.from, b.zd)).collect(),
             thresholds,
         })
@@ -293,6 +307,11 @@ impl Experience {
     /// The rewards for discovery.
     pub fn discovery(&self) -> Discovery {
         self.discovery
+    }
+
+    /// Every this many levels brings a talent pick (spec §8 "Talents"); 0: never.
+    pub fn talent_every(&self) -> u8 {
+        self.levels.talent_every
     }
 
     /// The XP total needed to reach `level` at a factor of 100 % (0 for level 1 and below; the

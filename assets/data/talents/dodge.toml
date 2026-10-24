@@ -1,0 +1,8 @@
+[[talent]]
+id = "dodge"
+name = "Dodge"
+tree = "finesse"
+description = "You slip aside from blows: Dodge +1 to your Defence."
+needs = { stats = { dexterity = 13 } }
+effects = [{ kind = "dodge", value = 1 }]
+systems = ["defence"]

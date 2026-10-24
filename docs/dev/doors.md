@@ -18,8 +18,20 @@ lock whenever the cell stops being a closed door. Secret doors (`docs/dev/search
 per-cell state too (`secrets`, beside the wall they look like until found); a secret door is
 never locked, nor trapped. Trapped doors (`docs/dev/traps.md`): `swing_open` and `kick_door` set
 off a trap on the door at whoever opened or kicked it (`World::spring_trap`); `set_terrain` drops
-the trap with a door kicked in. Level legends lock with `lock = "id"` or
-`locked = true`; objects are keys with `key = "id"` (`"*"`: skeleton); closed doors break with
+the trap with a door kicked in. **Picking locks** (#233) is `world/lockpick.rs`
+(`World::pick_lock`, dispatched from `player_acts` for `Action::PickLock(dir)`, replay text
+`pick:DIR`, cost `pick_lock`): only for an actor trained in a skill with the `pick` effect
+(`Skills::trains_effect`: Open lock), a `crate::check` of the Dexterity modifier plus
+`skill_effect(Effect::Pick)` against `World::lock_difficulty` (the lock's own
+`Lock::difficulty`, `door::LOCK_DIFFICULTY` 14 unless a legend's `lock_difficulty` gives one,
+plus the branch's `DungeonDef::locks_at`, from `locks_per_depth` in `dungeons.toml`); both prices
+are taken before the check, `Use::Pick` trains Open lock, and a picked lock is removed and the
+door opened by `swing_open` (so a trapped door's trap goes off at the picker); a failure changes
+nothing, so trying again is free but for time. The ability is `Ability::PickLock`
+(`warlock_core::ability`, Open lock's use; `KeyCommand::PickLock`, unbound). `Lock::difficulty`
+is saved only when a level gives one (`skip_serializing_if`), so locks without one hash as
+before. Level legends lock with `lock = "id"` or
+`locked = true` (and `lock_difficulty = N`, 1 to 50); objects are keys with `key = "id"` (`"*"`: skeleton); closed doors break with
 `breaks_to` + `sturdiness` (`TerrainDef::kicked_in`; digging and blasts break only terrain with a
 `hardness`, `TerrainDef::breaks`, never a door). The AI (`world/ai.rs`) paths through a locked door, and opens it, only
 with a key (`Stepped::Unlocked`); `go_look` stops next to a spot no one can stand on (a door kicked

@@ -22,11 +22,12 @@ difference. This page gives the rules, with the exact numbers.
 Some skills work by themselves, all the time (**passive**); some will be used as **actions**
 (searching, picking a lock, binding a wound); some are **read by rules** when something calls for
 them (athletics when you kick a door). For now only the passive skills, Appraise, Athletics
-(kicking doors in, see [Doors](doors.md)), Search (see [Searching](searching.md)), and Disable
-device (disarming traps, see [Traps](traps.md#disarming-traps)) do something: the others are
-there to be trained, and get their uses as the game grows. The skills used as actions are in the
-[abilities menu](abilities.md) once you are trained in them, greyed out until their uses come;
-Disable device's use is there as **Disarm a trap**.
+(kicking doors in, see [Doors](doors.md)), Search (see [Searching](searching.md)), Disable
+device (disarming traps, see [Traps](traps.md#disarming-traps)), and Open lock (picking locks,
+see [Doors](doors.md#picking-locks)) do something: the others are there to be trained, and get
+their uses as the game grows. The skills used as actions are in the [abilities
+menu](abilities.md) once you are trained in them, greyed out until their uses come; Disable
+device's use is there as **Disarm a trap**, Open lock's as **Pick lock**.
 
 {{#include generated/skills.md}}
 
@@ -49,6 +50,8 @@ The passive skills help you more the higher they are:
   master's search reaches a cell farther (see [Searching](searching.md)).
 - **Spot** lets you notice hidden things in passing at all, and the higher it is, the more you
   notice.
+- **Open lock** lets you pick locks at all (the Pick lock ability), and the higher it is, the
+  more often a try works (see [Doors](doors.md#picking-locks)).
 
 {{#include generated/skill-benefits.md}}
 
@@ -77,6 +80,7 @@ time, such as balance, earn marks rarely, so they do not race ahead.
 - **Tumble**: dodging an attack ("You dodge the kobold's spear.").
 - **Balance**: doing anything but waiting while your load slows you down.
 - **Survival**: a journey on the overworld.
+- **Open lock**: a try at picking a lock, whether it works or not.
 
 Only skills you are trained in earn marks. When a skill has enough marks it gains a point, and the
 game tells you: "Your stealth improves."

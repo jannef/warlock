@@ -1,0 +1,7 @@
+[[talent]]
+id = "healthy"
+name = "Healthy"
+tree = "vigour"
+description = "Your hit points come back a quarter faster."
+effects = [{ kind = "healing_percent", value = 25 }]
+systems = ["hit_points"]

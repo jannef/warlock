@@ -83,12 +83,14 @@ struct DumpArgs {
     /// when loud), inventory (what the player carries and weighs), equipment (what they wear
     /// and wield), stats (the player's race, gender, class, and scores), skills (the player's
     /// trained skills and their values), weapon_skills (the player's weapon skills: rank and
-    /// progress toward the next), abilities (the player's abilities in the abilities menu's
+    /// progress toward the next), talents (the player's talents with their ranks and choices),
+    /// abilities (the player's abilities in the abilities menu's
     /// order: what each asks for, or why it cannot be used now), quests (the player's quest
     /// log: what each asks and how far it
     /// has got), truth (dev-only ground truth), actors (dev-only: every actor on the level with
     /// its weight, what it carries, its weapon skills with marks, its stats as score/potential,
-    /// and its trained skills with their marks), rooms (dev-only: the level's special rooms,
+    /// and its trained skills with their marks), progress (dev-only: the level-up choices due,
+    /// the talents the player may take now, and the first kills that paid), rooms (dev-only: the level's special rooms,
     /// their plain ground marked with their effect's letter, then one line per room), ice
     /// (dev-only: the temperature and the ice on the level's water, its thickness in cm: 0-9,
     /// a-z for 10-35, # beyond).

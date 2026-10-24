@@ -35,6 +35,7 @@
   - [Starting kit](starting-kit.md)
   - [Horoscope](horoscope.md)
   - [Alignment](alignment.md)
+  - [Talents](talents.md)
 - [Stats](stats.md)
 - [Skills](skills.md)
 - [Abilities](abilities.md)

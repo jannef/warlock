@@ -315,10 +315,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **What there is**: the shield bash (§8 "Weapon skills"), which everyone has and can use
     while holding a shield to bash with; disarming a trap (`Ability::Disarm`, "Disarm a trap",
     §8 "Disarming traps"), Disable device's use, which whoever is trained in it has, in a
-    direction ("Disarm in which direction? (Esc to cancel)"); and each other skill used as an
-    action (`kind = "action"`, §8 "Skills") the player is trained in, listed but never available
-    until its use comes (it then becomes an ability of its own with its action, listed in the
-    skill's place: `Ability::use_of`). No race, class, or item gives one yet.
+    direction ("Disarm in which direction? (Esc to cancel)"); **Pick lock** (`Ability::PickLock`,
+    §8 "Doors", #233), Open lock's use, which whoever is trained in it has (thieves), in a
+    direction; and each other skill used as an action (`kind = "action"`, §8 "Skills") the player
+    is trained in, listed but never available until its use comes (it then becomes an ability of
+    its own with its action, listed in the skill's place: `Ability::use_of`). No race, class, or
+    item gives one yet.
   - **The menu** (a screen on the stack) lists them as the one paged list (§6 "Item lists"),
     grouped by source under a header each, lettered down each page from `a`: each row the
     ability's name and what it asks for ("in a direction"), or greyed out with why it cannot be
@@ -332,7 +334,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     can be used), so `a` Enter repeats it; `A` (`KeyCommand::RepeatAbility`) uses it again at
     once, and opens the menu when none was used yet.
   - **Keys**: an ability with an action of its own is also a rebindable key command, unbound by
-    default (the shield bash: "Bash with your shield"); bound, it uses the ability as the menu
+    default (the shield bash: "Bash with your shield", `bash`; picking a lock: "Pick a lock",
+    `pick_lock`); bound, it uses the ability as the menu
     does, and one that cannot be used now is applied at once so the rules say why, taking no
     time ("You have no shield to bash with."). New abilities register in the registry and get
     no default key.

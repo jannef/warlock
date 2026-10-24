@@ -1,0 +1,17 @@
+[[talent]]
+id = "thick_skin"
+name = "Thick skin"
+tree = "guard"
+ranks = 3
+description = "Your skin turns blows: natural armour +1 to your Defence for each rank."
+effects = [{ kind = "natural", value = 1 }]
+systems = ["defence"]
+
+[[talent.rank]]
+needs = { stats = { toughness = 12 } }
+
+[[talent.rank]]
+needs = { stats = { toughness = 15 } }
+
+[[talent.rank]]
+needs = { stats = { toughness = 18 } }

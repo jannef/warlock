@@ -20,6 +20,9 @@
 #              without, so a level may get fewer
 #   hidden_per_depth  how much harder its hidden features (secret doors, hidden traps) are to
 #              find for each level below the first (0 to 5, default 0)
+#   locks_per_depth  how much harder its locks are to pick (spec §8 "Doors") for each level below
+#              the first, on top of the lock's own difficulty (14 unless a vault gives it one; 0
+#              to 5, default 0)
 #   loot       [fewest, most] items of loot on the floor of each level, rolled at the depth as
 #              item level (spec §8 "Magic items"; default none)
 #   ambient    [r, g, b, uv] light everywhere (default none)
@@ -46,6 +49,8 @@ traps = ["arrow", "arrow", "spear", "spear", "pit", "pit", "alarm", "teleport", 
 # A secret door or two on each rooms level, and everything hidden harder to find deeper down.
 secret_doors = [1, 2]
 hidden_per_depth = 1
+# Locks harder to pick deeper down too (14 on the first level, 21 on the eighth).
+locks_per_depth = 1
 # Loot on the floor of each level (spec §8 "Magic items"): its item level is the depth.
 loot = [2, 4]
 key = "rusty_key"

@@ -29,6 +29,7 @@
 use crate::content::{Content, Effect, RaceDef};
 use crate::object::{format_weight, weight_of};
 use crate::stats::Stat;
+use crate::talent::TalentMods;
 use crate::world::Actor;
 use serde::Serialize;
 
@@ -220,6 +221,8 @@ pub fn load(actor: &Actor, race: Option<&RaceDef>, content: &Content) -> Load {
         stats.score(Stat::Toughness),
         content.size(size).carry,
     );
+    // Talents (Pack mule) scale the limit; magic items add to it.
+    let base = TalentMods::scaled(base, actor.talent_mods(content).carry_percent);
     Load {
         carried: weight_of(&actor.inventory, content),
         limit: with_carry(base, actor.mods(content).get(Effect::Carry)),
