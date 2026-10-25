@@ -11,23 +11,23 @@ expression: "render(case, content.clone())"
                     │ Birth sign                                               │
                     │ > a  Transfixing stare  at a place you see               │
                     │ Class                                                    │
-                    │   b  Throw your voice   at a place you see               │
-                    │   c  Lay on hands       you are drained                  │
-                    │   d  Smite              in a direction                   │
+                    │   b  Lay on hands       you are drained                  │
+                    │   c  Smite              in a direction                   │
                     │ Skills                                                   │
-                    │   e  Handle animal      not usable yet                   │
-                    │   f  Heal               not usable yet                   │
-                    │   g  Intimidate         not usable yet                   │
+                    │   d  Handle animal      not usable yet                   │
+                    │   e  Heal               not usable yet                   │
+                    │   f  Intimidate         not usable yet                   │
                     │ Weapon skills                                            │
-                    │   h  Shield bash        in a direction                   │
+                    │   g  Shield bash        in a direction                   │
                     │ Items                                                    │
-                    │   i  Hood your lantern                                   │
+                    │   h  Hood your lantern                                   │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
-                    │ a-i or Enter use   Esc close                             │
+                    │ a-h or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
+
 
 
 

@@ -98,7 +98,11 @@ fn humans_are_granted_versatile_and_pick_one_more_at_creation_and_at_level_30() 
     assert!(versatile.granted && versatile.race && !versatile.class);
     assert_eq!(picked(&human), 3, "two and Versatile's");
     let bard = kitted("human,other,bard");
-    assert_eq!(picked(&bard), 4, "the bard's and Versatile's");
+    assert_eq!(
+        picked(&bard),
+        5,
+        "the bard's, Versatile's, and Lore, which the class table gives"
+    );
     assert_eq!(creation_count(&CONTENT, &spec("human,other,bard")), 4);
     assert_eq!(creation_count(&CONTENT, &spec("elf,other,bard")), 3);
     let dwarf = kitted("dwarf,male,warrior");

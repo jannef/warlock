@@ -153,6 +153,10 @@ pub enum Action {
     /// refused (no time) without the ability, while its cooldown lasts, or without the
     /// direction it asks.
     Use(ClassActive, Option<Dir>),
+    /// Use a class active aimed at a cell (spec §8 "Class abilities"): the ranger's Volley
+    /// (`use:volley:12,5`). Takes the time of its cost's action; refused (no time) without the
+    /// ability or while its cooldown lasts.
+    UseAt(ClassActive, Pos),
     /// Use a birth sign's active gift (spec §8 "Birth sign"; the abilities menu's Birth sign
     /// group): Horn's grace, Blaze, and, aimed at a cell, the Transfixing stare
     /// (`use:horns_grace`, `use:blaze`, `use:transfixing_stare:12,5`). Takes the time of its
@@ -679,6 +683,7 @@ impl fmt::Display for Action {
             Action::BloodMagic => f.write_str("blood_magic"),
             Action::Use(active, None) => write!(f, "use:{}", active.id()),
             Action::Use(active, Some(d)) => write!(f, "use:{}:{d}", active.id()),
+            Action::UseAt(active, at) => write!(f, "use:{}:{},{}", active.id(), at.x, at.y),
             Action::Gift(active, None) => write!(f, "use:{}", active.id()),
             Action::Gift(active, Some(at)) => write!(f, "use:{}:{},{}", active.id(), at.x, at.y),
             Action::Talent { id, choice: None } => write!(f, "talent:{id}"),
@@ -775,9 +780,15 @@ impl FromStr for Action {
                     let at = aim.map(parse_cell).transpose()?;
                     return Ok(Action::Gift(gift, at));
                 }
-                let dir = aim.map(str::parse::<Dir>).transpose()?;
                 let active = ClassActive::from_id(id)
                     .ok_or_else(|| format!("`{id}` is no class ability that is used"))?;
+                // A class active that aims at a cell, `use:volley:12,5`.
+                if active.aims_cell() {
+                    let at = aim
+                        .ok_or_else(|| format!("`use:{id}` needs a cell, e.g. `use:{id}:12,5`"))?;
+                    return Ok(Action::UseAt(active, parse_cell(at)?));
+                }
+                let dir = aim.map(str::parse::<Dir>).transpose()?;
                 Ok(Action::Use(active, dir))
             }
             "ascend" => bare(Action::Ascend),
@@ -1198,6 +1209,7 @@ mod tests {
             Action::BloodMagic,
             Action::Use(ClassActive::Rage, None),
             Action::Use(ClassActive::Smite, Some(Dir::SW)),
+            Action::UseAt(ClassActive::Volley, Pos::new(12, 5)),
             Action::Gift(SignActive::Blaze, None),
             Action::LevelUpAuto,
             Action::GrantXp(2500),

@@ -42,7 +42,7 @@ impl World {
     pub(super) fn steal(&mut self, dir: Dir) -> Spent {
         let content = self.content.clone();
         let player = self.state.player;
-        let trained = (self.state.player().skills).trains_effect(&content, Effect::Steal);
+        let trained = crate::ability::Ability::Steal.had_by(self.state.player(), &content);
         let Some(rules) = content.steal().copied().filter(|_| trained) else {
             self.say("You do not know how to steal.");
             return Spent::Nothing;

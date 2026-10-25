@@ -152,9 +152,9 @@ fn a_level_brings_its_abilities_and_says_so() {
     let restored = World::from_state(w.content().clone(), w.state().clone()).expect("restored");
     assert_eq!(class_rows(&restored), class_rows(&w));
     assert_eq!(restored.state_hash(), w.state_hash());
-    // A run without a character has none.
+    // A run on the scenario's own character has its class's too (the showcase's thief).
     let plain = World::new(BUILTIN.clone(), "showcase", Some(7)).expect("world");
-    assert!(class_rows(&plain).is_empty());
+    assert_eq!(class_rows(&plain), ["Sneak attack"]);
 }
 
 #[test]

@@ -29,11 +29,15 @@ use crate::settings::{Role, Settings};
 use bevy::prelude::*;
 use warlock_core::ability::Ability;
 use warlock_core::color::Rgb;
-use warlock_core::content::{Cast, ScrollSpell, Stance};
+use warlock_core::content::{Cast, ClassActive, ScrollSpell, Stance};
 use warlock_core::fov::radius2;
 use warlock_core::perception::{CellView, PerceptionView};
 use warlock_core::world::ActorId;
 use warlock_core::{Action, Dir, Pos, ReadTarget};
+
+/// The ranger's Volley, aimed as a shot is: its range and line of fire are the readied missile
+/// weapon's.
+const VOLLEY: Ability = Ability::Class(ClassActive::Volley);
 
 /// The path's dots: faint, warm, and never lit, so the line reads in the dark too.
 pub const PATH_GLYPH: char = '·';
@@ -157,6 +161,8 @@ impl Aim {
             AimKind::Fire => view.ready_to_fire().map(|(_, _, range)| range),
             AimKind::Throw(item) => view.throw_range(item),
             AimKind::Read(item) => scroll_spell(view, item).map(|s| s.range),
+            // A volley flies as far as a shot.
+            AimKind::Ability(VOLLEY) => view.ready_to_fire().map(|(_, _, range)| range),
             AimKind::Ability(ability) => ability.range(),
         }
     }
@@ -182,6 +188,7 @@ impl Aim {
             AimKind::Read(item) => {
                 scroll_spell(view, item).is_some_and(|s| matches!(s.cast, Cast::Bolt(_)))
             }
+            AimKind::Ability(VOLLEY) => false,
             AimKind::Ability(ability) => return sight_line(view, self.at, ability.range()),
             _ => false,
         };

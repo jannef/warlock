@@ -17,8 +17,8 @@ use crate::status::Effect;
 /// one that wears off or is cured, followed by a cooldown.
 const STATUSES: &str = r#"
 [[status]]
-id = "inspired"
-name = "Inspired"
+id = "heartened"
+name = "Heartened"
 max = 1
 eases = 300
 combat = { to_hit = 1, damage = 2, dodge = 1, parry = 3 }
@@ -140,7 +140,7 @@ fn buffs_and_hexes_join_every_attack_and_defence() {
         me(&w).melee(&content),
         me(&w).defence(&content, Burden::Unburdened, None),
     );
-    afflict(&mut w, player, "inspired", Some(player));
+    afflict(&mut w, player, "heartened", Some(player));
     let (buffed, guarded) = (
         me(&w).melee(&content),
         me(&w).defence(&content, Burden::Unburdened, None),
@@ -183,9 +183,9 @@ fn buffs_and_hexes_join_every_attack_and_defence() {
     let mut calm = world(ALONE);
     let alone = calm.player_id();
     let plain = calm.state.actors[&alone].melee(&content);
-    afflict(&mut calm, alone, "inspired", None);
+    afflict(&mut calm, alone, "heartened", None);
     run(&mut calm, "wait*51");
-    assert_eq!(effect(&calm, alone, "inspired"), None);
+    assert_eq!(effect(&calm, alone, "heartened"), None);
     assert_eq!(calm.state.actors[&alone].melee(&content), plain);
 }
 

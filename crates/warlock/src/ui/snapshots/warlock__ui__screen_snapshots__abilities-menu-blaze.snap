@@ -8,24 +8,24 @@ expression: "render(case, content.clone())"
 
 
 
+
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
                     │   a  Blaze              you are burnt out                │
-                    │ Class                                                    │
-                    │ > b  Throw your voice   at a place you see               │
                     │ Skills                                                   │
-                    │   c  Intimidate         not usable yet                   │
+                    │   b  Intimidate         not usable yet                   │
                     │ Weapon skills                                            │
-                    │   d  Shield bash        in a direction                   │
+                    │ > c  Shield bash        in a direction                   │
                     │ Items                                                    │
-                    │   e  Hood your lantern                                   │
+                    │   d  Hood your lantern                                   │
                     │                                                          │
-                    │ Make a voice sound at a place you see nearby: those who  │
-                    │ hear it go and look there.                               │
+                    │ Strike someone next to you with the shield you hold.     │
                     │                                                          │
-                    │ a-e or Enter use   Esc close                             │
+                    │                                                          │
+                    │ a-d or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
+
 
 
 

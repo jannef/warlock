@@ -1,0 +1,8 @@
+[[talent]]
+id = "pick_lock"
+name = "Pick lock"
+tree = "class"
+granted = true
+description = "You can open a locked door without its key (the Pick lock ability)."
+effects = [{ kind = "pick_lock" }]
+systems = ["doors"]

@@ -194,6 +194,9 @@ fn name(def: &TalentDef) -> String {
 /// The prerequisites: the talent's own, then each rank's where they differ ("Toughness 11 / 14
 /// / 17"); "—" for none; a granted talent is never picked.
 fn needs_text(content: &Content, def: &TalentDef) -> String {
+    if def.granted && content.talents().tree(def.tree).class {
+        return "given by a class's table, never picked".into();
+    }
     if def.granted {
         let mut races: Vec<String> = (content.races().list.iter())
             .filter(|r| r.talents.contains(&def.id))
@@ -273,6 +276,27 @@ fn cooldown_for(content: &Content, id: &str) -> String {
         Some(s) => format!("{} for {s} s", def.name),
         None => def.name.clone(),
     }
+}
+
+/// A buff status in words: its name, what it adds to fighting, and how long it lasts
+/// ("Inspired (to hit +1, Dodge +1, 5 min)").
+fn buff(content: &Content, id: &str) -> String {
+    let Some(s) = content.status_id(id).map(|s| content.status(s)) else {
+        return id.to_string();
+    };
+    let c = s.combat;
+    let parts = [
+        ("to hit", c.to_hit),
+        ("damage", c.damage),
+        ("Dodge", c.dodge),
+        ("Parry", c.parry),
+    ];
+    let mut said: Vec<String> = (parts.iter())
+        .filter(|(_, v)| *v != 0)
+        .map(|(what, v)| format!("{what} {}", signed(*v)))
+        .collect();
+    said.extend(s.eases.map(|e| format!("{} min", e / 60)));
+    format!("{} ({})", s.name, said.join(", "))
 }
 
 pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
@@ -1003,5 +1027,51 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "damage from bursts and bolts (traps, scrolls) {} (rounded down)",
             percent(value)
         ),
+        TalentEffect::FavouredPrey { to_hit, damage } => format!(
+            "against the creature type you have killed most (ties: the first to get there), \
+             to hit {} and damage {}",
+            signed(to_hit),
+            signed(damage)
+        ),
+        TalentEffect::ExactSounds => {
+            "every sound you hear is placed at the cell it came from, not roughly".to_string()
+        }
+        TalentEffect::SkyFootstepsPercent { value } => format!(
+            "footsteps under the open sky (no roof over the cell stepped to) {}",
+            percent(value)
+        ),
+        TalentEffect::SilentUnburdened => "no footsteps at all while Unburdened".to_string(),
+        TalentEffect::AttackNoisePercent { value } => {
+            format!("the noise of your attacks {}", percent(value))
+        }
+        TalentEffect::TrapEase { value } => {
+            format!("hidden traps {value} easier to find (not to disarm)")
+        }
+        TalentEffect::PickLock => "the Pick lock ability without Open lock".to_string(),
+        TalentEffect::Steal => "the Steal ability without the Steal skill".to_string(),
+        TalentEffect::ThrowVoice => "the Throw your voice ability".to_string(),
+        TalentEffect::AmbushThreat { value } => format!(
+            "attacks on a creature that has not seen you threaten a critical {value} lower \
+             (never below 3)"
+        ),
+        TalentEffect::TrainedSkills { value } => {
+            format!("every trained skill counts {}", signed(value))
+        }
+        TalentEffect::Volley {
+            shots,
+            cooldown,
+            degrees,
+        } => format!(
+            "active (the time of one shot, one exertion), at a cell: {shots} shots of the readied \
+             missile weapon; then {degrees} degree of {}",
+            status(&cooldown)
+        ),
+        TalentEffect::Inspire { status: id, mana } => format!(
+            "active (the time of a chat), {mana} mana: {}",
+            buff(content, &id)
+        ),
+        TalentEffect::Virtuoso { status: id } => {
+            format!("Inspire gives {} instead, for no mana", buff(content, &id))
+        }
     }
 }

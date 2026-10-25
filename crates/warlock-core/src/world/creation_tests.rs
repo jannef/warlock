@@ -29,8 +29,13 @@ fn start(character: &str, talents: &[&str], seed: u64) -> Result<World, WorldErr
 /// The talents picked, not given (the class's and the sign's are granted).
 fn picked(world: &World) -> Vec<String> {
     let book = world.content().talents();
+    // Not what the class's table gives (the bard's Lore is a Scholar talent).
+    let class =
+        (world.state().character.as_ref()).and_then(|c| world.content().class(&c.spec.class));
+    let given = |id: &str| class.is_some_and(|c| c.abilities.iter().any(|(_, t)| t == id));
     (world.state().player().talents.iter())
         .filter(|t| book.id(&t.id).is_some_and(|id| !book.get(id).granted))
+        .filter(|t| !given(&t.id))
         .map(|t| crate::world::pick_text(&t.id, t.choice.as_deref()))
         .collect()
 }

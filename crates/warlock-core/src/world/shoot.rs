@@ -43,11 +43,11 @@ use crate::object::{self, Stack};
 /// A missile about to be loosed: a shot or a throw (`kind`), from inventory stack `item`, what
 /// its attack does, and how far it flies.
 #[derive(Clone, Debug)]
-struct Loose {
-    kind: AttackKind,
-    item: usize,
-    profile: Profile,
-    range: i32,
+pub(super) struct Loose {
+    pub(super) kind: AttackKind,
+    pub(super) item: usize,
+    pub(super) profile: Profile,
+    pub(super) range: i32,
 }
 
 /// What ammunition of the kind missile weapon `launcher` shoots is called, in the plural:
@@ -108,7 +108,7 @@ impl World {
     /// What a shot from missile weapon `launcher` costs actor `id`: `shoot`, and `reload` too
     /// for one that needs it, less what its ranks in the launcher's skill and its fighting style
     /// take off.
-    fn shot_price(&self, id: ActorId, launcher: ObjectId) -> i64 {
+    pub(super) fn shot_price(&self, id: ActorId, launcher: ObjectId) -> i64 {
         let shot = self.skills_of(id, AttackKind::Ranged, None);
         let with = self.state.actors[&id].launcher_item(&self.content);
         let mut price = self.attack_price(id, ActionKind::Shoot, with, shot);
@@ -182,7 +182,7 @@ impl World {
     /// as they shoot (as their melee blows are); one that reaches nobody is said as it is
     /// loosed ("You shoot an arrow."). The missile's flight goes to presentation (cut to what
     /// the player sees as the turn is perceived), its attacks on creatures they see too.
-    fn player_looses(&mut self, at: Pos, loose: Loose, events: &mut Vec<Event>) {
+    pub(super) fn player_looses(&mut self, at: Pos, loose: Loose, events: &mut Vec<Event>) {
         let content = self.content.clone();
         let kind = loose.kind;
         let stack = self.state.player().inventory[loose.item].single();

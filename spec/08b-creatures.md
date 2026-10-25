@@ -100,8 +100,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     nothing. Talk about quests takes no time.
   - **Goals**: *kill* counts the player's own kills (§8 "Experience": melee, shots, throws, and a
     wound of theirs that bleeds it to death; never by others or traps) of the creature type, on its level or any level of its branch if it names
-    one. Kills are tallied per level and creature type for every type some kill quest asks for
-    (saved), so kills made before the quest was taken up count, and a repeat of a repeatable one
+    one. Kills are tallied per level and creature type, every type (saved;
+    the ranger's Favoured prey reads the same tally, §8 "Class abilities"), so kills made before the quest was taken up count, and a repeat of a repeatable one
     counts only the kills since it was taken up again. *Bring* counts what the player carries of
     the object. *Reach* is met once the player has been on the level, before taking the quest
     up too. *Deliver* is met while the player carries the item: dropping it (or losing it) blocks

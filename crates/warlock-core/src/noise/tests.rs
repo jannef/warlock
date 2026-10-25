@@ -516,7 +516,7 @@ fn a_watchful_listener_places_faint_footsteps_exactly_and_other_sounds_roughly()
     };
     let heard = [faint(SoundKind::Footsteps)];
     let door = [faint(SoundKind::DoorOpened)];
-    let places = |heard: &[Heard], exact: bool| -> Vec<Pos> {
+    let places = |heard: &[Heard], exact: Exact| -> Vec<Pos> {
         (0..30)
             .flat_map(|turn| perceive(&level, &content, (heard, 10, exact), turn, |_| true))
             .map(|s| s.pos)
@@ -524,16 +524,20 @@ fn a_watchful_listener_places_faint_footsteps_exactly_and_other_sounds_roughly()
     };
     let at = Pos::new(5, 2);
     assert!(
-        places(&heard, false).iter().any(|&p| p != at),
+        places(&heard, Exact::No).iter().any(|&p| p != at),
         "faint: rough"
     );
     assert!(
-        places(&heard, true).iter().all(|&p| p == at),
+        places(&heard, Exact::Footsteps).iter().all(|&p| p == at),
         "watchful: exact"
     );
     assert!(
-        places(&door, true).iter().any(|&p| p != at),
+        places(&door, Exact::Footsteps).iter().any(|&p| p != at),
         "a door stays rough"
+    );
+    assert!(
+        places(&door, Exact::All).iter().all(|&p| p == at),
+        "a tracker: every sound exact"
     );
 }
 
@@ -556,7 +560,7 @@ fn a_quick_walker_s_steps_in_one_turn_are_one_sound() {
         },
         step(7, 2),
     ];
-    let sounds = perceive(&level, &content, (&heard, 10, false), 5, |_| true);
+    let sounds = perceive(&level, &content, (&heard, 10, Exact::No), 5, |_| true);
     let kinds: Vec<_> = sounds.iter().map(|s| s.kind).collect();
     assert_eq!(
         kinds,
@@ -568,6 +572,6 @@ fn a_quick_walker_s_steps_in_one_turn_are_one_sound() {
     );
     assert_eq!(sounds[0].pos, Pos::new(3, 1), "the later step, loud: exact");
     // Sources the player sees are not perceived at all.
-    let unseen = perceive(&level, &content, (&heard, 10, false), 5, |p| p.x > 5);
+    let unseen = perceive(&level, &content, (&heard, 10, Exact::No), 5, |p| p.x > 5);
     assert_eq!(unseen.len(), 1);
 }

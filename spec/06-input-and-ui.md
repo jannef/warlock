@@ -363,11 +363,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (`Ability::SecondWind`, under Talents, §8 "Talents"), which the Second wind talent gives,
     asking for nothing, greyed out while Winded; the **class actives** (`Ability::Class`,
     under Class, §8 "Class abilities": Rage, Veteran's wind, Whirlwind, Lay on hands, Smite,
-    Holy radiance, Quivering palm), each from the level its class's table gives it, Smite and
+    Holy radiance, Quivering palm, Inspire; Volley at a cell, aimed as a shot is), each from the level its class's table gives it, Smite and
     Quivering palm in a direction, greyed out during their cooldowns (Rage while raging and
     exhausted) and the paladin's while strayed; throwing one's voice (Class; #235,
-    `throw_voice:X,Y`, the `throw_voice` action, a cell, §5 "Hearing"), the bard's in the
-    progression design and everyone's until the class tables narrow it; and hooding the lantern
+    `throw_voice:X,Y`, the `throw_voice` action, a cell, §5 "Hearing"), the bard's (Throw
+    your voice, level 32: a talent with the `throw_voice` effect gives it); and hooding the lantern
     (Items: the lantern; `hood`, nothing to aim, §5 "Light sources"), which the Hooded light
     talent will give and everyone has until then. No race gives one yet.
   - **The menu** (a screen on the stack) lists them as the one paged list (§6 "Item lists"),
