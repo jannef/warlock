@@ -1,0 +1,31 @@
+# The barrow wave (Cealdhlāw, docs/design/campaign.md §10.1). The biggest goblin of a band:
+# better armed, better armoured, and carrying the band's takings.
+[[creature]]
+id = "goblin_chief"
+level = 5
+xp = 35
+loot = 50
+name = "goblin chief"
+glyph = "g"
+fg = "#e07a3a"
+faction = "goblins"
+alignment = "evil"
+vision = "darkvision"
+opens_doors = true
+footsteps = 120
+hearing = 12
+weight = 50000
+stats = { strength = 14, dexterity = 12, toughness = 14, intelligence = 10, willpower = 11, presence = 12 }
+base_hp = 8
+on_eat = { message = "This goblin meat is rank!", vomit = 40 }
+weapon_skills = { maces = 2, short_blades = 1 }
+racial_weapon = "club"
+[[creature.gear]]
+chance = 40
+one_of = ["short_sword"]
+[[creature.gear]]
+chance = 70
+one_of = ["leather_jerkin"]
+[[creature.gear]]
+chance = 80
+one_of = ["copper_coin*10", "copper_coin*25"]

@@ -258,13 +258,13 @@ fn nothing_is_carried_over_the_carrying_limit() {
 fn a_racial_weapon_needs_a_rank_in_its_skill() {
     let mut files = files();
     files.insert(
-        "data/creatures/zz_goblin.toml",
-        "[[creature]]\nid = \"goblin\"\nname = \"goblin\"\nglyph = \"g\"\nfg = \"#ffffff\"\n\
+        "data/creatures/zz_hobgoblin.toml",
+        "[[creature]]\nid = \"hobgoblin\"\nname = \"hobgoblin\"\nglyph = \"g\"\nfg = \"#ffffff\"\n\
          weight = 30000\nfaction = \"kobolds\"\nracial_weapon = \"club\"\n",
     );
     let err = Content::load(&files).expect_err("no rank").to_string();
     assert!(
-        err.contains("`goblin`") && err.contains("no rank in `maces`"),
+        err.contains("`hobgoblin`") && err.contains("no rank in `maces`"),
         "{err}"
     );
     for (line, why) in [
@@ -286,9 +286,9 @@ fn a_racial_weapon_needs_a_rank_in_its_skill() {
     ] {
         let mut files = self::files();
         files.insert(
-            "data/creatures/zz_goblin.toml",
+            "data/creatures/zz_hobgoblin.toml",
             &format!(
-                "[[creature]]\nid = \"goblin\"\nname = \"goblin\"\nglyph = \"g\"\n\
+                "[[creature]]\nid = \"hobgoblin\"\nname = \"hobgoblin\"\nglyph = \"g\"\n\
                  fg = \"#ffffff\"\nweight = 30000\nfaction = \"kobolds\"\n{line}\n"
             ),
         );

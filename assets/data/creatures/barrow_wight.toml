@@ -1,0 +1,41 @@
+# Campaign-owned (docs/design/campaign.md §3.6, §10.1): the barrow wight is the Ascmearc's own
+# type and belongs in assets/campaigns/ascmearc/data/creatures/. It waits here, shared, only
+# until that campaign's directory exists (its campaign.toml needs a start scenario of its own,
+# item E, #332); the change that lands second moves this file there (a `git mv`, and its row in
+# world/bestiary_tests.rs's WAVES becomes `Some("ascmearc")`). Its id does not change.
+#
+# The barrow wave (Cealdhlāw, §10.1): the barrow wight, the lord of the barrows' dead, and the
+# target of the barrows' last quest. A caster (its spells announced until magic is designed),
+# whose touch is the grave's cold; it sees in the dark, shrugs off cold and poison, bleeds
+# nothing, and leaves no corpse. Some still bear the long sword they were buried with, now and
+# then an enchanted one.
+[[creature]]
+id = "barrow_wight"
+level = 6
+xp = 40
+loot = 40
+name = "barrow wight"
+glyph = "W"
+fg = "#a8c8e0"
+faction = "undead"
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+combat = "caster"
+range = 5
+opens_doors = true
+footsteps = 30
+hearing = 15
+weight = 50000
+stats = { strength = 13, dexterity = 12, toughness = 14, intelligence = 14, willpower = 18, presence = 14 }
+base_hp = 12
+skills = { concentration = 30, spellcraft = 35 }
+attack = { damage = "1d6", damage_type = "cold", name = "touch", verb = "touches" }
+resist = { cold = 50, poison = 100 }
+weapon_skills = { long_blades = 1 }
+corpse = false
+blood = "none"
+[[creature.gear]]
+chance = 60
+one_of = ["long_sword"]
+magic = 25

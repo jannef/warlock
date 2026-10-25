@@ -1,0 +1,26 @@
+# The barrow wave (Cealdhlāw, docs/design/campaign.md §10.1). The goblin tribes that camp in the
+# barrows' outer halls: they open doors, stamp about loudly, and fight with clubs (their racial
+# weapon, spec §8 "Creature gear").
+[[creature]]
+id = "goblin"
+level = 2
+xp = 20
+loot = 20
+name = "goblin"
+glyph = "g"
+fg = "#8aa04a"
+faction = "goblins"
+alignment = "evil"
+vision = "darkvision"
+opens_doors = true
+footsteps = 120
+hearing = 12
+weight = 30000
+size = "small"
+stats = { strength = 11, dexterity = 12, toughness = 11, intelligence = 8, willpower = 8, presence = 6 }
+on_eat = { message = "This goblin meat is rank!", vomit = 40 }
+weapon_skills = { maces = 1 }
+racial_weapon = "club"
+[[creature.gear]]
+chance = 30
+one_of = ["leather_cap"]

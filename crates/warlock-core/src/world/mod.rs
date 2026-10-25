@@ -1138,6 +1138,8 @@ mod ai_tests;
 #[cfg(test)]
 mod alignment_tests;
 #[cfg(test)]
+mod bestiary_tests;
+#[cfg(test)]
 mod blood_tests;
 #[cfg(test)]
 mod body_talent_tests;

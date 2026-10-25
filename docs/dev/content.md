@@ -5,7 +5,8 @@ rules it implements are in spec/07a-levels.md and spec/07b-data.md. Keep it curr
 
 Content (`assets/campaigns`, `assets/data`, `assets/vaults`, and for test fixtures
 `levels/` and `scenarios/` at the top) is TOML, embedded into `warlock-core` at build time by
-`build.rs`. A world's levels, scenarios, branches, quests, dialogue, and own creature types live
+`build.rs` (the test world, `campaigns/showcase/`, only with the `showcase` feature: never in a
+release; `docs/dev/campaign.md`). A world's levels, scenarios, branches, quests, dialogue, and own creature types live
 in its campaign, `assets/campaigns/<id>/` (`docs/dev/campaign.md`). Level maps are ASCII with a
 legend; see `assets/campaigns/showcase/levels/hub.toml` and spec §7. A legend entry with a `creature` may set `faction = "peaceful"` (any id in
 `data/factions.toml`) to override its type's faction for that spawn (`Actor::faction_override`; read it with

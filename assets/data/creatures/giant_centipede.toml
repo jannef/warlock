@@ -1,0 +1,28 @@
+# The barrow wave (Cealdhlāw, docs/design/campaign.md §10.1). A centipede as long as a man's
+# leg, armoured in plates; it hunts in the dark and its bite is poisonous.
+[[creature]]
+id = "giant_centipede"
+level = 3
+xp = 25
+name = "giant centipede"
+glyph = "c"
+fg = "#b06a30"
+speed = 1200
+faction = "vermin"
+alignment = "neutral"
+vision = "darkvision"
+sight = 6
+footsteps = 30
+hearing = 10
+weight = 3000
+size = "small"
+stats = { strength = 10, dexterity = 14, toughness = 11, intelligence = 1, willpower = 9, presence = 3 }
+natural = { defence = 1, protection = 1, name = "plates" }
+on_eat = { message = "Crunchy, and bitter.", vomit = 25, harm = "1d2" }
+blood = "#506020"
+[creature.attack]
+damage = "1d4"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
+on_hit = [{ status = "poisoned", chance = 25, severity = 2 }]

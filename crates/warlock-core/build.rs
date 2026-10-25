@@ -2,6 +2,10 @@
 //! included: `data/creatures/kobold.toml`, `campaigns/showcase/levels/hub.toml`) into the binary, so every build (including the web build) is
 //! self-contained. The list is in sorted path order, the order `ContentFiles::from_dir` reads
 //! a content directory in.
+//!
+//! The test world, `campaigns/showcase/`, is embedded only with the `showcase` feature (on by
+//! default, off in release builds and the web build): without it a build embeds no file of
+//! it (docs/dev/campaign.md, "The test world in release builds").
 
 use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
@@ -10,10 +14,14 @@ fn main() {
     let manifest = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").expect("set by cargo"));
     let assets = manifest.join("../../assets");
     let mut files = Vec::new();
+<<<<<<< HEAD
     // A path that does not exist is always stale to cargo (every build reruns this script and
     // rebuilds the crate), so only existing directories are named; the assets directory itself
     // is watched to notice one appearing.
     println!("cargo:rerun-if-changed={}", assets.display());
+=======
+    let showcase = std::env::var_os("CARGO_FEATURE_SHOWCASE").is_some();
+>>>>>>> origin/main
     for dir in ["campaigns", "data", "levels", "scenarios", "vaults"] {
         let path = assets.join(dir);
         if !path.exists() {
@@ -21,6 +29,9 @@ fn main() {
         }
         println!("cargo:rerun-if-changed={}", path.display());
         collect(&path, dir, &mut files);
+    }
+    if !showcase {
+        files.retain(|(rel, _)| !rel.starts_with(SHOWCASE));
     }
     files.sort();
 
@@ -39,6 +50,9 @@ fn main() {
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").expect("set by cargo"));
     std::fs::write(out_dir.join("builtin_assets.rs"), out).expect("write builtin_assets.rs");
 }
+
+/// The test world's directory, as embedded paths start.
+const SHOWCASE: &str = "campaigns/showcase/";
 
 /// Every `.toml` file under `dir`, subdirectories included, as (`rel/name`, absolute path).
 fn collect(dir: &Path, rel: &str, files: &mut Vec<(String, PathBuf)>) {
