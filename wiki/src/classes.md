@@ -29,12 +29,19 @@ a bonus talent at a few levels between, from the trees it names. An ability come
 you reach its level ("You gain Fencing."), and works from then on; in the game each is told in
 words, here exactly. A stat it raises rises for good, score and potential. Some abilities are
 used from the [abilities menu](abilities.md); the rest simply work. So far the warrior, the
-barbarian, the paladin, the monk, and the everyday folk have their tables; the other adventurers'
-are on their way.
+barbarian, the paladin, the monk, the priest, the druid, the wizard, the witch, and the everyday
+folk have their tables; the ranger's, the thief's, and the bard's are on their way.
 
 {{#include generated/class-levels.md}}
 
 A paladin's abilities used from the menu answer only while the paladin is Good or better (see
 [Alignment](alignment.md)); the passives do not ask. Lay on hands drains instead of costing mana
-until mana comes to the game. The barbarian's rage and the monk's flurry and quivering palm will
+until mana comes to the game.
+
+The priest's, druid's, wizard's, and witch's abilities used from the menu are **spells**: each
+costs the mana the table says, and is greyed out ("not enough mana") while you have less; there
+is no other wait. They stand in for the spell system to come. A spell aimed at a place flies
+and bursts exactly as a [scroll](scrolls.md)'s does, its blows and kills yours; a hex falls on
+a hostile you see within its reach. Call lightning answers only under the open sky. A priest's
+Smite is the paladin's, and answers only while the priest is Good or better. The barbarian's rage and the monk's flurry and quivering palm will
 later run on pools of their own.

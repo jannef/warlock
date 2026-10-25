@@ -37,9 +37,11 @@ issue how it interacts with mana**, and hooks in at the one place below.
     and takes `mana::until_regained` as a moment, so a point back is exact however time is cut;
     the ticks' `mana_damage` sums into `Moment::drained` and `mana::drain` takes it (never below
     0, never a death).
-  - `World::spend_mana(id, amount) -> bool`: the one way to spend; refused when short. Spells
-    and abilities call it (and say why they could not); the dev `drain:N`
-    (`Action::Drain`, `World::drain_dev`) is its only caller now.
+  - `World::spend_mana(id, amount) -> bool`: the one way to spend; refused when short. The
+    casters' spells (#245, `world/caster.rs`, docs/dev/progression.md "Caster spells") call it
+    after every check, with `Actor::spell_cost` (the one place a spell's mana is reckoned:
+    Archmage's `spell_mana_percent`), which the abilities menu's `Unavailable::NoMana` reads
+    too; the dev `drain:N` (`Action::Drain`, `World::drain_dev`) is the other caller.
   - `World::keep_mana_within_max` after every player action (in `World::apply`, beside
     `keep_hp_within_max`): down to the lasting maximum when something that raised it comes off.
     `World::disease_turn` cuts mana to the new maximum after mental stat damage, like hit points.

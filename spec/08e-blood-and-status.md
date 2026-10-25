@@ -171,7 +171,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Draining**: a status with `mana_damage` drains that much mana a tick (§7), never below 0
     and never a death. None of the built-in ones does.
   - **Spending**: `World::spend_mana(actor, amount)` is the one way to spend it, refused (nothing
-    spent) when the actor has less. Nothing calls it yet but the dev action `drain:N` ("You spend
+    spent) when the actor has less. The casters' spells call it (spec §8
+    "Class abilities": after every check, so a refused cast spends nothing), and the dev action
+    `drain:N` ("You spend
     5 mana (dev)."; refused, "You have only 3 mana (dev).", when short; no game time; recorded in
     replays).
   - **Shown**: the player's own mana and maximum (`PerceptionView::own_mana`): the status bar's

@@ -239,7 +239,10 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   `Action::Gift`.
   `Aim` has `Nothing`, `Direction`, and `Cell` (aimed in the targeting
   mode, `ui/target.rs`'s `AimKind::Ability`: no line of fire, `Line::unseen` for a cell not seen
-  or solid, the reach from `Ability::range`, the action from `Ability::action_at`); an item (a
+  or solid, the reach from `Ability::reach` (a caster's spell's from its data, every other's
+  `Ability::range`), the action from `Ability::action_at`; a caster's strike, `Ability::Spell`,
+  is aimed as a spell scroll is: `target.rs::aimed_spell` gives it the scroll's line of fire,
+  and `burst_dialog` asks "Cast it anyway?" when its burst may catch the player); an item (a
   `PagedList` of the pack) joins them with the first ability that needs one, as a variant and an
   arm in `Gameplay::use_ability`. Throwing one's voice (`Ability::ThrowVoice`, Class) and the
   lantern's hood (`Ability::HoodLantern`, Items) are had by everyone until the class tables and

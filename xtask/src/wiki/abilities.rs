@@ -4,7 +4,7 @@
 use super::actions::at_normal_pace;
 use std::fmt::Write as _;
 use warlock_core::ability::{Ability, Aim};
-use warlock_core::content::{BASE_TURN, ClassActive, Content, SignActive, price};
+use warlock_core::content::{BASE_TURN, Content, SignActive, TalentEffect, price};
 
 /// Every ability, grouped as the menu groups them (by where they come from) and by name within a
 /// group: who has it, what it asks for, what it does, and how long it takes at a normal pace. A
@@ -19,7 +19,12 @@ pub(super) fn abilities(content: &Content) -> String {
     for a in every {
         let who = match a {
             Ability::Sign(active) => sign_holders(content, active),
-            Ability::Class(active) => class_holders(content, active),
+            Ability::Class(active) => class_holders(content, |e| e.active() == Some(active)),
+            Ability::Spell(spell) => {
+                let cost = content.class_spell(spell).map_or(0, |(_, s)| s.mana);
+                let who = class_holders(content, |e| *e == TalentEffect::Spell { spell });
+                format!("{who} ({cost} mana a cast)")
+            }
             Ability::Skill(_) => "everyone trained in the skill".into(),
             Ability::Disarm => "everyone trained in Disable device".into(),
             Ability::PickLock => "everyone trained in Open lock".into(),
@@ -47,16 +52,14 @@ pub(super) fn abilities(content: &Content) -> String {
     out
 }
 
-/// Who has class active `active`: the classes whose table gives it, from which level, by name
-/// ("paladins from level 12").
-fn class_holders(content: &Content, active: ClassActive) -> String {
+/// Who has the class ability with an effect that `has` matches (an active, a spell): the classes
+/// whose table gives it, from which level, by name ("paladins from level 12").
+fn class_holders(content: &Content, has: impl Fn(&TalentEffect) -> bool) -> String {
     let book = content.talents();
     let mut who: Vec<(String, u8)> = (content.classes().iter())
         .filter_map(|c| {
             let (level, _) = c.abilities.iter().find(|(_, talent)| {
-                (book.id(talent)).is_some_and(|t| {
-                    (book.get(t).effects.iter()).any(|e| e.active() == Some(active))
-                })
+                (book.id(talent)).is_some_and(|t| (book.get(t).effects.iter()).any(&has))
             })?;
             Some((c.name.to_lowercase(), *level))
         })

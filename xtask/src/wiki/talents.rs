@@ -3,7 +3,7 @@
 
 use super::text::signed;
 use std::fmt::Write as _;
-use warlock_core::content::{Content, Need, Role, TalentDef, TalentEffect, TreeId};
+use warlock_core::content::{Cast, Content, Need, Role, SpellDef, TalentDef, TalentEffect, TreeId};
 
 /// Every tree in display order: a heading, its description, and its talents (name, ranks, what
 /// each rank needs, what it does as the rule, and the systems it touches).
@@ -901,5 +901,142 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "damage from bursts and bolts (traps, scrolls) {} (rounded down)",
             percent(value)
         ),
+        TalentEffect::Spell { spell } => content.class_spell(spell).map_or_else(
+            || spell.id().to_string(),
+            |(_, def)| spell_text(content, def),
+        ),
+        TalentEffect::SpellPower { per_die, dice } => {
+            let mut parts = Vec::new();
+            if dice > 0 {
+                parts.push(format!("{dice} more of their dice"));
+            }
+            if per_die != 0 {
+                parts.push(format!("{} on every die", signed(per_die)));
+            }
+            format!(
+                "your spells' and spell scrolls' damage: {}",
+                parts.join(", and ")
+            )
+        }
+        TalentEffect::SpellManaPercent { value } => {
+            format!("your spells' mana {} (at least 1)", percent(value))
+        }
+        TalentEffect::DeflectionUnarmoured { value } => {
+            format!("Deflection {} while you wear no body armour", signed(value))
+        }
+        TalentEffect::Purify => {
+            "rotten food never sickens you and never exposes you to a disease (it may still make \
+             you vomit)"
+                .to_string()
+        }
+        TalentEffect::CorpseHarmless => {
+            "a fresh corpse's own harm (its sickness and its vomiting) never touches you"
+                .to_string()
+        }
+        TalentEffect::MealHeals { object, dice } => {
+            let what = object.map_or_else(
+                || "a fresh corpse".to_string(),
+                |o| (content.object_id(&o)).map_or(o, |id| content.object(id).name.clone()),
+            );
+            format!("eating {what} heals {dice} hit points besides")
+        }
+        TalentEffect::DiseaseStill => "your diseases never progress: a failed check does no \
+                                       harm (they still show until shaken off or cured)"
+            .to_string(),
+        TalentEffect::StatusDamage { status: id, value } => {
+            format!(
+                "{} damage on hits against a creature {}",
+                signed(value),
+                status(&id)
+            )
+        }
+        TalentEffect::Reprieve {
+            status: id,
+            stat,
+            by,
+            ..
+        } => {
+            let stat = stat.map_or_else(String::new, |s| {
+                format!(", and {} {} for good", s.name(), signed(by))
+            });
+            format!(
+                "once in a life, what would kill you (not starving or choking) leaves you at 1 hit \
+                 point, {}{stat}",
+                status(&id)
+            )
+        }
     }
+}
+
+/// A caster's spell, as the class tables say it: what it does, its mana, and its time.
+fn spell_text(content: &Content, def: &SpellDef) -> String {
+    use warlock_core::content::Does;
+    let status = |s| content.status(s).name.clone();
+    let does = match &def.does {
+        Does::Boon {
+            status: s,
+            severity,
+        } => format!("you are {} ({severity})", status(*s)),
+        Does::Mend { heal, per_levels } => match per_levels {
+            0 => format!("{heal} hit points back"),
+            n => format!("{heal} hit points back, plus 1 per {n} levels"),
+        },
+        Does::Cleanse { cures, diseases } => {
+            let mut ends: Vec<String> = cures.iter().map(|&s| status(s)).collect();
+            if *diseases {
+                ends.push("every disease".into());
+            }
+            format!("ends {}", ends.join(" and "))
+        }
+        Does::Hex {
+            status: s,
+            severity,
+            range,
+        } => format!(
+            "a hostile you see within {range} cells suffers {} ({severity})",
+            status(*s)
+        ),
+        Does::Strike {
+            spell,
+            open_sky,
+            afflict,
+        } => {
+            let shape = match &spell.cast {
+                Cast::Burst(b) => format!(
+                    "a burst of radius {} at a cell within {} ({}){}",
+                    b.radius,
+                    spell.range,
+                    super::damage::typed_dice(content, b.damage, b.kind),
+                    super::traps::ice_text(b.ice)
+                ),
+                Cast::Bolt(b) => format!(
+                    "a bolt of {} cells ({})",
+                    b.length,
+                    super::damage::typed_dice(content, b.damage, b.kind)
+                ),
+            };
+            let sky = if *open_sky {
+                ", only under the open sky"
+            } else {
+                ""
+            };
+            let afflict = afflict.map_or_else(String::new, |(s, n)| {
+                format!("; everyone reached suffers {} ({n})", status(s))
+            });
+            format!("{shape}{afflict}{sky}")
+        }
+    };
+    let name = def
+        .name
+        .as_deref()
+        .map_or_else(String::new, |n| format!("{n}: "));
+    let casts = match def.casts {
+        1 => "a cast".to_string(),
+        n => format!("{n} casts"),
+    };
+    format!(
+        "spell `use:{}` ({casts}, {} mana): {name}{does}",
+        def.spell.id(),
+        def.mana
+    )
 }
