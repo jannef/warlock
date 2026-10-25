@@ -235,7 +235,14 @@ impl World {
     /// the regeneration affixes of what it wears and wields add (spec §8 "Magic items": +50 % is
     /// half again as fast), with its talents' (Healthy; Sun-blessed's under the open sun). The one place that decides it. A Starving player gets none back
     /// (spec §8 "Hunger"); disease (#139) slows it through Diseased's `regen` and its own.
+    #[cfg(test)]
     pub(crate) fn healing_rate(&self, id: ActorId) -> u32 {
+        self.healing_rate_at(id, self.state.time)
+    }
+
+    /// [`World::healing_rate`] at `now`, a moment of [`World::live`]: the player heals the
+    /// flavour's `birthday_healing` percent as fast on their birthday (spec §8 "Birth sign").
+    pub(crate) fn healing_rate_at(&self, id: ActorId, now: GameTime) -> u32 {
         let Some(actor) = self.state.actors.get(&id) else {
             return 0;
         };
@@ -268,7 +275,7 @@ impl World {
         let faster =
             actor.mods(&self.content).get(ItemEffect::Regeneration) + talents.healing_percent + sun;
         let percent = u32::try_from((100 + faster).max(0)).unwrap_or(0);
-        rate * percent / 100
+        rate * percent / 100 * self.birthday_healing(id, now) / 100
     }
 
     /// Whether `actor` stands under the open sun: on the current level, under the open sky, the
@@ -313,7 +320,9 @@ impl World {
         }
         let mut passed = 0;
         while passed < seconds {
-            let rate = self.healing_rate(id);
+            let now = start + Duration::seconds(passed);
+            let rate = self.healing_rate_at(id, now);
+            let birthday = self.until_birthday_turns(id, now);
             let mana_rate = self.mana_rate(id);
             let hungrier = self.until_hungrier(id);
             let paces = self.resource_paces(id);
@@ -336,6 +345,7 @@ impl World {
                 && rots.is_none_or(|r| r > left)
                 && crate::resource::until_next(&actor.resources, &content, &paces)
                     .is_none_or(|r| r > left)
+                && birthday.is_none_or(|b| b >= left)
             {
                 heal(actor, &content, left, rate);
                 mana::regain(actor, &content, left, mana_rate);
@@ -346,6 +356,10 @@ impl World {
             // of mana back, a change in its hunger (a new state, a hit point lost to starving), a disease's
             // turn, a point of stat damage mended, or food in its pack rotting away.
             let mut step = hungrier.map_or(left, |h| h.min(left));
+            // The birthday's start or end: the healing pace changes then.
+            if let Some(b) = birthday {
+                step = step.min(b.max(1));
+            }
             if let Some(next) = disease::until_next(actor) {
                 step = step.min(next);
             }

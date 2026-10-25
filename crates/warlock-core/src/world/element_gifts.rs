@@ -78,7 +78,7 @@ impl World {
             .map_or("burns", |k| content.damage_type(k).verb.as_str());
         self.say_spell((&noun, verb), made, events);
         if self.state.death.is_none() {
-            self.afflict(player, blaze.cooldown, 1, None, events);
+            self.gift_cooldown(blaze.cooldown, 1, events);
         }
         Spent::Turn(price)
     }

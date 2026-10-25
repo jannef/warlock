@@ -105,6 +105,7 @@ mod equip;
 mod experience;
 mod eyes;
 mod fight;
+mod flavour;
 mod focus;
 mod free_blow;
 mod gifts;
@@ -410,6 +411,9 @@ pub struct World {
     /// Whether the player is resting ([`World::rest`]; not saved: a rest is one action): they
     /// heal faster.
     resting: bool,
+    /// The game time of the last perception (not saved: a loaded world has just perceived its
+    /// moment): the birthday's note looks for the dawn between it and now.
+    perceived_at: GameTime,
 }
 
 /// How much time an action took.
@@ -649,6 +653,9 @@ impl World {
             state.messages.push(0, text);
         }
         let mut world = Self::assemble(content, state);
+        if let Some(text) = world.birthday_welcome() {
+            world.state.messages.push(0, text);
+        }
         if with_kit {
             world.open_creation();
         }
@@ -735,6 +742,7 @@ impl World {
         let mut lights = LightCache::default();
         let perception = Box::new(Perception::compute(&state, &content, &mut lights));
         perception.remember(state.current_mut());
+        let time = state.time;
         Self {
             content,
             state: Box::new(state),
@@ -749,6 +757,7 @@ impl World {
             found: 0,
             mutters: Vec::new(),
             resting: false,
+            perceived_at: time,
         }
     }
 
@@ -1121,6 +1130,8 @@ mod equip_tests;
 mod experience_tests;
 #[cfg(test)]
 mod fight_tests;
+#[cfg(test)]
+mod flavour_tests;
 #[cfg(test)]
 mod focus_tests;
 #[cfg(test)]

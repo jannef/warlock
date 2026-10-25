@@ -481,6 +481,16 @@ impl Ability {
         }
     }
 
+    /// [`Ability::reach`] at `time`: a full moon lengthens the Transfixing stare's (spec §8
+    /// "Birth sign", the flavour; [`Content::full_moon_reach`]).
+    pub fn reach_at(self, content: &Content, time: crate::time::GameTime) -> Option<i32> {
+        let reach = self.reach(content)?;
+        Some(match self {
+            Ability::Sign(SignActive::TransfixingStare) => reach + content.full_moon_reach(time),
+            _ => reach,
+        })
+    }
+
     /// The action it is, aimed `dir` when it asks for a direction; `None` for one with no use
     /// yet, one that asks for a direction without it, or one that asks for a cell
     /// ([`Ability::action_at`]).
