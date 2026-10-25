@@ -24,6 +24,19 @@ const WAVES: &[(&str, Option<&str>)] = &[
     // Campaign-owned, but shared until the Ascmearc's directory exists (#332): then
     // `Some("ascmearc")`, its file moved to `campaigns/ascmearc/data/creatures/`.
     ("barrow_wight", None),
+    // The delf wave (Fyrdelf, #335).
+    ("ember_beetle", None),
+    ("duergar_miner", None),
+    ("duergar_warrior", None),
+    ("ogre", None),
+    ("fire_salamander", None),
+    ("troll", None),
+    ("duergar_smith", None),
+    ("magma_crawler", None),
+    ("ash_wraith", None),
+    ("basilisk", None),
+    ("cinder_elemental", None),
+    ("fire_drake", Some("ascmearc")),
 ];
 
 #[test]
@@ -123,5 +136,86 @@ fn the_barrow_humanoids_wield_their_weapons() {
         if id == "goblin_archer" {
             assert!(quivers >= 150, "{quivers} of 200 with bow and arrows");
         }
+    }
+}
+
+#[test]
+fn the_duergar_fight_the_goblins_kin_and_leave_the_fire_be() {
+    let stance = |a: &str, b: &str| {
+        let id = |n: &str| CONTENT.creature_id(n).expect(n);
+        CONTENT.stance(id(a), id(b))
+    };
+    for (a, b, want) in [
+        ("duergar_miner", "player", Stance::Hostile),
+        ("duergar_warrior", "ogre", Stance::Hostile),
+        ("duergar_smith", "troll", Stance::Hostile),
+        ("duergar_warrior", "ash_wraith", Stance::Hostile),
+        ("duergar_miner", "duergar_smith", Stance::Neutral),
+        ("duergar_warrior", "fire_salamander", Stance::Neutral),
+        ("duergar_miner", "kobold", Stance::Neutral),
+        ("fire_drake", "player", Stance::Hostile),
+        ("cinder_elemental", "ember_beetle", Stance::Neutral),
+        ("magma_crawler", "goblin", Stance::Neutral),
+        ("ogre", "player", Stance::Hostile),
+        ("basilisk", "player", Stance::Hostile),
+    ] {
+        assert_eq!(stance(a, b), want, "{a} and {b}");
+    }
+}
+
+#[test]
+fn the_fire_things_shrug_off_fire_and_the_cold_cracks_them() {
+    let resist = |id: &str, kind: &str| {
+        let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
+        let kind = CONTENT.damage_type_id(kind).expect(kind);
+        (def.resist.iter())
+            .find(|(k, _)| *k == kind)
+            .map_or(0, |(_, r)| *r)
+    };
+    assert_eq!(resist("ember_beetle", "fire"), 50);
+    assert_eq!(resist("fire_salamander", "fire"), 100);
+    assert_eq!(resist("cinder_elemental", "fire"), 100);
+    assert_eq!(resist("fire_drake", "fire"), 100);
+    assert!(resist("magma_crawler", "cold") < 0);
+    assert!(resist("troll", "fire") < 0);
+    assert_eq!(resist("ash_wraith", "cold"), 50);
+    for id in ["magma_crawler", "ash_wraith", "cinder_elemental"] {
+        let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
+        assert!(!def.corpse, "{id}");
+    }
+    let drake = CONTENT.creature(CONTENT.creature_id("fire_drake").expect("drake"));
+    assert!(drake.unique);
+}
+
+/// Over many seeds, the delf's humanoids: the warriors' axes and the smiths' hammers in hand
+/// nine times in ten or more, the ogres' mauls four in five, a miner's pick-axe held as a tool,
+/// and whatever they wear worn.
+#[test]
+fn the_delf_humanoids_wield_their_weapons() {
+    for (id, weapon, least) in [
+        ("duergar_miner", "pick_axe", 160),
+        ("duergar_warrior", "hand_axe", 160),
+        ("duergar_smith", "war_hammer", 175),
+        ("ogre", "maul", 140),
+    ] {
+        let creature = CONTENT.creature_id(id).expect(id);
+        let mut held = 0;
+        for seed in 0..200 {
+            let pack = gear::roll(&CONTENT, &mut Rng::gear(seed, "test"), creature, 10);
+            for (i, stack) in pack.items.iter().enumerate() {
+                let object = CONTENT.object(stack.object);
+                if object.slot.is_some() {
+                    assert!(
+                        pack.equipment.holds(i),
+                        "{id} {seed}: {} not held",
+                        object.id
+                    );
+                }
+                if object.id == weapon {
+                    held += 1;
+                }
+            }
+        }
+        assert!(held >= least, "{id}: {weapon} held {held} of 200");
     }
 }

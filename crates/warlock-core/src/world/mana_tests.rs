@@ -110,6 +110,8 @@ fn files(scenario: &str, extra: &[(&str, &str)]) -> ContentFiles {
     files.remove("data/talents.toml");
     // So does the rage (its Raging).
     files.remove("data/resources.toml");
+    // And the basilisk's bite (its Sluggish).
+    files.remove("data/creatures/basilisk.toml");
     let diseases = include_str!("../../../../assets/data/diseases.toml");
     files.insert("data/diseases.toml", &format!("{diseases}\n{FOG}"));
     files.insert("data/experience.toml", EXPERIENCE);

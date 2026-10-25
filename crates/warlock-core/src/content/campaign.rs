@@ -388,16 +388,21 @@ mod tests {
         for shared in ["player", "shopkeeper", "deer", "kobold", "rat"] {
             assert_eq!(campaign_of(shared), None, "{shared}");
         }
-        // The campaigns' own types are numbered last, after every shared one: the Ascmearc's
-        // five townsfolk and people, then the showcase's three.
+        // The showcase's types are numbered last, after every shared one and the real
+        // campaigns' own.
         let first_own = content
             .creature_defs()
             .iter()
-            .position(|c| c.campaign.is_some());
-        assert_eq!(first_own, Some(content.creature_defs().len() - 8));
-        let showcase = (content.creature_defs().iter())
             .position(|c| c.campaign.as_deref() == Some("showcase"));
-        assert_eq!(showcase, Some(content.creature_defs().len() - 3));
+        assert_eq!(first_own, Some(content.creature_defs().len() - 3));
+        let first_campaign = content
+            .creature_defs()
+            .iter()
+            .position(|c| c.campaign.is_some());
+        assert!(
+            (content.creature_defs()[first_campaign.expect("a campaign type")..].iter())
+                .all(|c| c.campaign.is_some())
+        );
         assert!(
             content
                 .quests()
