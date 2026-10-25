@@ -856,16 +856,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
     a draw, only for an attacker with ambush dice), Trapfinding (searching +4; hidden traps 2
     easier to find, searching and in passing, not to disarm; the Disarm ability untrained), Pick
     lock (the Pick lock ability untrained), Uncanny dodge (the burden's Dexterity cap +2),
-    Improved sneak attack (+2d6: ambush dice of the same sides add up, so 3d6 in all), Light
+    Improved sneak attack (+2d6: ambush dice of the same sides add up, so 3d6 in all; and the
+    Openings pool, §8 "Resources"), Light
     fingers (the Steal ability untrained), Hide in plain sight (no footsteps while Unburdened;
     attacks half as loud), Master thief (an attack on an unaware creature threatens a critical
-    2 lower, never below 3); Wide learning (a skill roll more every level), Song of rest
+    2 lower, never below 3; and its finisher, an active aimed in a direction, `use:master_thief:E`,
+    for 5 openings: a melee blow that is a critical whenever it hits, with no confirmation roll,
+    `Profile::sure_critical`, for a melee attack's time; `world/openings.rs`); Wide learning (a skill roll more every level), Song of rest
     (resting heals half again as fast), Jack of all trades (every trained skill counts 5
     higher, as a skill bonus in `Actor::skill_effect`), Honeyed words (favour +15 %, quest gold
     +25 %), Legend (quest XP +50 %, Presence +1), Virtuoso (Inspire gives Inspired greatly, to
     hit +2 and Dodge +2 for 10 minutes, for no mana).
-  - **Resources to come**: Improved sneak attack and Master
-    thief (Openings), Inspire (Inspiration) move onto the pools of #225.
+  - **Resources to come**: Inspire (Inspiration) moves onto the pools of #225. The thief's
+    Openings are in (R3, #251).
   - **Saves change**: `Quests::prey`, the tally of every type, the statuses `inspired` and
     `inspired_greatly`.
 - **Weapon skills** (`warlock-core/src/weapon_skills.rs`, training; `content/weapon_skill.rs`,

@@ -1249,6 +1249,9 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "attacks on a creature that has not seen you threaten a critical {value} lower \
              (never below 3)"
         ),
+        TalentEffect::Finisher => "active (the time of a melee attack), in a direction: a blow \
+                                   that is a critical whenever it hits, with no confirmation roll"
+            .to_string(),
         TalentEffect::TrainedSkills { value } => {
             format!("every trained skill counts {}", signed(value))
         }

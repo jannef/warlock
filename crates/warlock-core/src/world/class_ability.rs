@@ -1,12 +1,13 @@
 //! The class actives in the world (spec §8 "Class abilities"): what a class's level table gives
 //! that is used from the abilities menu ([`crate::ability::Ability::Class`]) as [`Action::Use`]
 //! (`use:rage`, `use:smite:E`): Rage, Veteran's wind, Whirlwind, Lay on hands, Smite, Holy
-//! radiance, Quivering palm, Inspire (for mana, #244; the ranger's Volley, aimed at a cell, is
-//! `world/volley.rs`). The abilities themselves are talents of the class tree, given as
-//! levels come (`world/class.rs`) and read through `Actor::talent_mods`. Each active refuses,
-//! taking no time, without the ability, while its cooldown (or the rage and the exhaustion after
-//! it) lasts, and while the player has strayed from the alignment it asks. Nothing here draws at
-//! random but the blows themselves.
+//! radiance, Quivering palm, Inspire (for mana, #244), Master thief's finisher (for openings,
+//! `world/openings.rs`; the ranger's Volley, aimed at a cell, is `world/volley.rs`). The
+//! abilities themselves are talents of the class tree, given as levels come (`world/class.rs`)
+//! and read through `Actor::talent_mods`. Each active refuses, taking no time, without the
+//! ability, while its cooldown (or the rage and the exhaustion after it) lasts, while the player
+//! has strayed from the alignment it asks, and (an aimed blow) with nobody hostile there, before
+//! anything is spent. Nothing here draws at random but the blows themselves.
 //!
 //! [`Action::Use`]: crate::action::Action::Use
 
@@ -37,6 +38,10 @@ impl World {
             }
             (_, dir) => dir,
         };
+        // An aimed blow with nobody hostile there is refused before anything is spent.
+        if dir.is_some_and(|d| active.aimed() && self.hostile_toward(d).is_none()) {
+            return Spent::Nothing;
+        }
         // Its cost in an alternative resource (spec §8 "Resources"), if it has one: what
         // `unavailable` checked is there to spend.
         let player = self.state.player;
@@ -52,7 +57,10 @@ impl World {
             (ClassActive::Inspire, _) => self.inspire(events),
             (ClassActive::Smite, Some(dir)) => self.smite(dir, events),
             (ClassActive::QuiveringPalm, Some(dir)) => self.quivering_palm(dir, events),
-            (ClassActive::Smite | ClassActive::QuiveringPalm, None) => Spent::Nothing,
+            (ClassActive::MasterThief, Some(dir)) => self.finisher(dir, events),
+            (ClassActive::Smite | ClassActive::QuiveringPalm | ClassActive::MasterThief, None) => {
+                Spent::Nothing
+            }
             (ClassActive::Volley, _) => {
                 self.say("Where?");
                 Spent::Nothing
@@ -281,7 +289,7 @@ impl World {
 
     /// The hostile in `dir` of the player and whether they see it; `None` (said) when nobody,
     /// or nobody hostile, stands there.
-    fn hostile_toward(&mut self, dir: Dir) -> Option<(ActorId, bool)> {
+    pub(super) fn hostile_toward(&mut self, dir: Dir) -> Option<(ActorId, bool)> {
         let to = self.player_pos().step(dir);
         let level = &self.state.current().id;
         let Some((target, creature)) = (self.state.actor_at(level, to)).map(|a| (a.id, a.creature))

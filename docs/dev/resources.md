@@ -6,8 +6,9 @@ spec/08e-blood-and-status.md ("Resources"). Keep it current with the code, as CL
 Alternative resources (#225) are integer pools beside hit points and mana that a character holds
 once something grants them, several at once. This is the foundation; the class features of
 `docs/design/progression.md` §4.18 move onto it in R1–R5 (#249–#253): Rage (R1), Focus (R2),
-Openings (R3), Ki and Inspiration (R4), and the four resource talents (R5). Rage (R1) and Focus
-(R2) have moved (below); the others are granted only by the dev action `resource:ID` until theirs do.
+Openings (R3, in), Ki and Inspiration (R4), and the four resource talents (R5). Rage (R1), Focus
+(R2), and Openings (R3) have moved (below); the others are granted only by the dev action
+`resource:ID` until theirs do.
 
 - **Granted by talents**: the talent effect `grants_resource { resource }` collects into
   `TalentMods::grants`; `world/focus.rs::hold` gives the actor each it lacks at its start (one
@@ -74,6 +75,13 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   statuses, cost }`: `World::unstoppable` spends `cost` rage for the last hit point
   (`spend_resource`, so the rage ends at 0), and `World::live` numbs the statuses while Raging
   lasts. Raging `blocks` `cast`, so `World::spend_mana` refuses while it lasts.
+- **Openings** (R3, #251; `world/openings.rs`): Improved sneak attack grants the pool
+  (`grants_resource`); its build is the data's `sneak_attack`; Master thief's `finisher` effect is
+  the class active `ClassActive::MasterThief` (`use:master_thief:E`, aimed, the cost `resource = {
+  id = "openings", cost = 5 }` on the talent): a melee blow with `Profile::sure_critical` (every
+  hit a critical, no confirmation draw; `combat::strike_with`). `use_class` refuses an aimed
+  active with nobody hostile that way before it spends anything. Tests:
+  `world/openings_tests.rs`, and `combat.rs`'s sure-critical test.
 - **Abilities**: `Unavailable::Short(ResourceId)` ("not enough focus", `short:focus`), checked
   last in the Class arm of `Ability::unavailable` (`ability.rs::short_of`).
 - **Presentation**: `PerceptionView::own_resources() -> Vec<OwnResource>` (value clamped to the

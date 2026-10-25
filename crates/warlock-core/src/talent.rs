@@ -515,10 +515,12 @@ pub struct TalentMods {
     pub throw_voice: bool,
     /// Points lower its attacks on a creature that has not seen it threaten (Master thief).
     pub ambush_threat: u8,
+    /// The active Master thief: its finisher, a blow that is a sure critical.
+    pub finisher: bool,
     /// How much higher every skill it is trained in counts (Jack of all trades).
     pub trained_skills: i32,
     /// The alternative resources its talents grant it, in the order first named (Rapid shot's
-    /// Focus).
+    /// Focus, Improved sneak attack's Openings).
     pub grants: Vec<ResourceId>,
     /// Rapid shot's quicker shots on a resource, if it has it.
     pub rapid_shot: Option<RapidShot>,
@@ -791,6 +793,7 @@ impl TalentMods {
             A::HolyRadiance => self.radiance.is_some(),
             A::QuiveringPalm => self.quivering_palm.is_some(),
             A::Volley => self.volley.is_some(),
+            A::MasterThief => self.finisher,
             A::Inspire => self.inspire.is_some(),
         }
     }
@@ -1480,6 +1483,7 @@ impl TalentMods {
             TalentEffect::Steal => self.steal = true,
             TalentEffect::ThrowVoice => self.throw_voice = true,
             TalentEffect::AmbushThreat { value } => self.ambush_threat += value,
+            TalentEffect::Finisher => self.finisher = true,
             TalentEffect::TrainedSkills { value } => self.trained_skills += value,
             TalentEffect::GrantsResource { resource } => {
                 if let Some(resource) = content.resource_id(&resource)

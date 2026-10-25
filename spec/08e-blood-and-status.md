@@ -203,8 +203,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (their rage would never show). The class features of the progression design's §4.18 (the
   barbarian's Rage, the ranger's Focus, the thief's Openings, the monk's Ki, the bard's
   Inspiration) move onto them in follow-up changes (R1–R5); the barbarian's Rage has (R1,
-  "Rage" below) and the ranger's Focus has (R2, below), and the rest are granted by nothing in
-  play but the dev action until theirs do. Mana is separate: nothing converts between them.
+  "Rage" below), the ranger's Focus (R2) and the thief's Openings (R3) have (below), and the rest
+  are granted by nothing in play but the dev action until theirs do. Mana is separate: nothing
+  converts between them.
   - **Data** (`data/resources.toml`, §7): each resource's maximum, start, whether the status bar
     shows its maximum, how it changes over time (it **regenerates** toward its maximum or
     **decays** toward 0, a point every so many seconds, while resting too or not), whether it
@@ -249,7 +250,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     talent, §7). While the player does not hold it or holds less, the ability is unavailable
     (`Unavailable::Short`, "not enough focus" in the abilities menu, `short:focus` in dumps; using
     it says "You have too little focus.", no time); used, the cost is spent first (Volley's,
-    aimed at a cell, once its own checks pass).
+    aimed at a cell, once its own checks pass; an aimed blow with nobody hostile that way is
+    refused before it, spending nothing).
   - **Granted by talents**: a talent with the `grants_resource` effect (§7) holds its resource
     from the moment it is taken or given, at its start, and for good; a run restored gets any
     such resource its talents grant and it lacks (`world/focus.rs::hold`).
@@ -258,6 +260,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     while the ranger holds 2 spends them and takes 10 % less time (the whole price, reloading
     too; with less it is an ordinary shot, `World::rapid_shot`); Volley (level 50) costs 6 and
     has no cooldown.
+  - **Openings** (the thief's; R3, #251, `world/openings.rs`): Improved sneak attack (level 32)
+    grants them at 0 (`grants_resource`); each sneak attack that hits builds one (to 5), one
+    slips away every 120 s (20 base turns), and at 0 they stay, held. Master thief (level 60)
+    spends 5 on its finisher (§8 "Class abilities").
   - **Shown**: the player's own resources (`PerceptionView::own_resources`: each held, its value
     and maximum, in resource order): the status bar after `MP` (`Rage 11`, `Focus 7/10`), each
     with the hit points' priority after the mana, so they give way before it (§6); a row each on
@@ -276,8 +282,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (Raging blocks `cast`).
   - **Talents**: the `resources` system is in the coverage list as `pending` until the resource
     talents (Battle trance, Inner calm, Steady hand, Patient blade; R5) and the class features on
-    them (R1–R4) land; Rage, Blood frenzy, Mighty rage, and Unstoppable carry it. **Saves change**
-    (a new id group in the fingerprint).
+    them (R1–R4) land; Rage, Blood frenzy, Mighty rage, Unstoppable, Improved sneak attack, and
+    Master thief carry it. **Saves change** (a new id group in the fingerprint).
 - **Checks** (`warlock-core/src/check.rs`; M24, #139): a stat put to the test, rolled like an
   attack: 2d12 (the natural roll, `combat::roll_natural`, two draws of the gameplay stream) plus
   the modifier of the stat tested (the effective score's) succeeds at the **difficulty** or

@@ -440,6 +440,9 @@ pub enum ClassActive {
     QuiveringPalm,
     /// Shots at a cell, several for the price of one, then a cooldown (the ranger's Volley).
     Volley,
+    /// A blow in a direction that is a critical if it hits, for openings (the Master thief's
+    /// finisher).
+    MasterThief,
     /// A song that lifts the player's fighting a while, for mana (the bard's Inspire).
     Inspire,
 }
@@ -455,6 +458,7 @@ impl ClassActive {
         ClassActive::HolyRadiance,
         ClassActive::QuiveringPalm,
         ClassActive::Volley,
+        ClassActive::MasterThief,
         ClassActive::Inspire,
     ];
 
@@ -469,6 +473,7 @@ impl ClassActive {
             ClassActive::HolyRadiance => "holy_radiance",
             ClassActive::QuiveringPalm => "quivering_palm",
             ClassActive::Volley => "volley",
+            ClassActive::MasterThief => "master_thief",
             ClassActive::Inspire => "inspire",
         }
     }
@@ -480,7 +485,10 @@ impl ClassActive {
 
     /// Whether it asks for a direction before it is used.
     pub const fn aimed(self) -> bool {
-        matches!(self, ClassActive::Smite | ClassActive::QuiveringPalm)
+        matches!(
+            self,
+            ClassActive::Smite | ClassActive::QuiveringPalm | ClassActive::MasterThief
+        )
     }
 
     /// Whether it asks for a cell before it is used (`use:volley:12,5`).
@@ -492,9 +500,10 @@ impl ClassActive {
     pub const fn cost(self) -> ActionKind {
         match self {
             ClassActive::Rage | ClassActive::VeteransWind => ActionKind::Wait,
-            ClassActive::Whirlwind | ClassActive::Smite | ClassActive::QuiveringPalm => {
-                ActionKind::Melee
-            }
+            ClassActive::Whirlwind
+            | ClassActive::Smite
+            | ClassActive::QuiveringPalm
+            | ClassActive::MasterThief => ActionKind::Melee,
             ClassActive::LayOnHands | ClassActive::HolyRadiance => ActionKind::Cast,
             ClassActive::Volley => ActionKind::Shoot,
             ClassActive::Inspire => ActionKind::Chat,

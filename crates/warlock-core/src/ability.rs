@@ -601,9 +601,11 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
             .map(|p| p.cooldown)
             .into_iter()
             .collect(),
-        // Volley costs Focus instead (its talent's `resource`, [`short_of`]).
+        // Volley costs Focus and Master thief Openings instead (their talents' `resource`,
+        // [`short_of`]).
         ClassActive::Whirlwind
         | ClassActive::HolyRadiance
+        | ClassActive::MasterThief
         | ClassActive::Inspire
         | ClassActive::Volley => Vec::new(),
     };

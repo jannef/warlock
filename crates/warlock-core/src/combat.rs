@@ -251,6 +251,9 @@ pub struct Profile {
     /// Added to the roll that confirms a critical, on top of the to-hit (spec §8 "Class
     /// abilities": Peerless).
     pub confirm: i32,
+    /// Every hit is a critical, with no confirmation roll (spec §8 "Class abilities": the
+    /// Master thief's finisher).
+    pub sure_critical: bool,
     /// Dice rolled with every roll of the damage, after its own (a magic weapon's "adds 1d4
     /// damage"; spec §8 "Magic items").
     pub extra: Option<Dice>,
@@ -370,6 +373,7 @@ impl Profile {
             threat: attack.threat,
             crit: attack.crit,
             confirm: 0,
+            sure_critical: false,
             extra: None,
             penetration: 0,
             kinds: attack.kinds,
@@ -481,9 +485,10 @@ impl Blow {
 
 /// Resolves an attack with `profile` against `target`, drawing from `rng` in this order: the
 /// two dice of the attack roll; on an attributable miss one draw for why; on a threat the two
-/// dice of the confirmation roll; then, for each time the damage is rolled, one draw per damage
-/// die, per extra die, and per rider die (in rider order); then, on a hit against Protection
-/// (against the kind done) above the attack's penetration, one draw for the soak ([`soak`]).
+/// dice of the confirmation roll (none for a [`Profile::sure_critical`]); then, for each time
+/// the damage is rolled, one draw per damage die, per extra die, and per rider die (in rider
+/// order); then, on a hit against Protection (against the kind done) above the attack's
+/// penetration, one draw for the soak ([`soak`]).
 /// The kind the attack does is picked before the dice ([`Kinds::best`]), and the resistances
 /// come last ([`damage::resist`]), each kind on its own: no draws.
 pub fn strike(profile: &Profile, target: &Target, rng: &mut Rng) -> Blow {
@@ -514,8 +519,10 @@ pub fn strike_with(profile: &Profile, target: &Target, rng: &mut Rng, reroll_fum
         |k| target.resistances.get(Some(k)),
         |k| target.protection.against(Some(k)),
     );
+    // A sure critical (the finisher) asks no confirmation: no draw.
     let threat = natural >= i32::from(profile.threat);
-    let critical = threat && hits(roll_natural(rng), profile.to_hit + profile.confirm, dv);
+    let critical = profile.sure_critical
+        || (threat && hits(roll_natural(rng), profile.to_hit + profile.confirm, dv));
     let times = if critical { profile.crit.max(1) } else { 1 };
     let mut riders = Vec::new();
     let damage: i32 = (0..times)
@@ -658,6 +665,7 @@ mod tests {
             threat,
             crit,
             confirm: 0,
+            sure_critical: false,
             extra: None,
             penetration: 0,
             kinds: Kinds::NONE,
@@ -840,6 +848,44 @@ mod tests {
             }
         }
         assert!(hit < 40 && missed > 1960, "{hit} hits");
+    }
+
+    #[test]
+    fn a_sure_critical_makes_every_hit_a_critical_without_a_confirmation_roll() {
+        // Against a Defence a 12 just reaches, a sure critical's every hit is a critical, and it
+        // draws no confirmation: the same seed leaves the stream where a plain blow that does not
+        // threaten (threat 24 is out of reach of most hits) leaves it, hit for hit.
+        let dv = Defence::from_bonuses([(Category::Dexterity, 2)]);
+        let sure = Profile {
+            sure_critical: true,
+            bonus: 3,
+            ..profile(0, "+0", 24, 3)
+        };
+        let mut rng = Rng::stream(5, "combat-test");
+        let (mut hits, mut crits) = (0, 0);
+        for _ in 0..2000 {
+            let blow = strike(&sure, &Target::bare(dv), &mut rng);
+            if let Strike::Hit { critical } = blow.strike {
+                hits += 1;
+                crits += i32::from(critical);
+                assert_eq!(blow.damage, 9, "the damage rolled three times");
+            }
+        }
+        assert!(hits > 500 && hits < 2000, "{hits} hits");
+        assert_eq!(crits, hits, "every hit a critical");
+        // A missed sure critical is a miss: it needs the hit.
+        let mut one = Rng::stream(9, "combat-test");
+        let mut two = Rng::stream(9, "combat-test");
+        let plain = Profile {
+            sure_critical: false,
+            threat: 25,
+            ..sure.clone()
+        };
+        for _ in 0..200 {
+            let a = strike(&sure, &Target::bare(dv), &mut one);
+            let b = strike(&plain, &Target::bare(dv), &mut two);
+            assert_eq!(a.strike.is_hit(), b.strike.is_hit(), "no draw of its own");
+        }
     }
 
     #[test]

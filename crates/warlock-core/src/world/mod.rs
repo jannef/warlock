@@ -119,6 +119,7 @@ mod lockpick;
 mod loot;
 mod lucky;
 mod mana;
+mod openings;
 mod path;
 mod perceive;
 mod quest;
@@ -1154,6 +1155,8 @@ mod mana_tests;
 mod moon_tests;
 #[cfg(test)]
 mod object_tests;
+#[cfg(test)]
+mod openings_tests;
 #[cfg(test)]
 mod overworld_tests;
 #[cfg(test)]

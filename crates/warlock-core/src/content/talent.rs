@@ -780,6 +780,9 @@ pub enum TalentEffect {
     /// Its attacks on a creature that has not seen it threaten a critical this many points
     /// lower (Master thief).
     AmbushThreat { value: u8 },
+    /// The class active Master thief: its finisher, a melee blow in a direction that is a
+    /// critical if it hits, with no confirmation roll (its cost is the talent's `resource`).
+    Finisher,
     /// Every skill it is trained in counts this much higher (Jack of all trades).
     TrainedSkills { value: i32 },
     /// It holds alternative resource `resource` (spec §8 "Resources") from the moment it has the
@@ -846,6 +849,7 @@ impl TalentEffect {
             TalentEffect::Radiance { .. } => A::HolyRadiance,
             TalentEffect::QuiveringPalm { .. } => A::QuiveringPalm,
             TalentEffect::Volley { .. } => A::Volley,
+            TalentEffect::Finisher => A::MasterThief,
             TalentEffect::Inspire { .. } => A::Inspire,
             _ => return None,
         })
@@ -1545,6 +1549,7 @@ impl TalentEffect {
             | TalentEffect::PickLock
             | TalentEffect::Steal
             | TalentEffect::ThrowVoice
+            | TalentEffect::Finisher
             | TalentEffect::Disarm
             | TalentEffect::Spell { .. }
             | TalentEffect::Purify
