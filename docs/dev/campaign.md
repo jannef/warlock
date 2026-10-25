@@ -12,10 +12,12 @@ tables `data/dungeons/`, `data/quests/`, `data/dialogue/`, and `data/creatures/`
 semi-unique creature types: its people and bosses). Everything else under `assets/` is shared
 engine data, `assets/data/` (the common creature types, the shopkeeper's dialogue in
 `data/dialogue.toml`, the field references `data/quests.toml` and `data/dungeons.toml`, which
-hold no entries) and `assets/vaults/`. Today there is one campaign, the showcase
-(`kind = "test"`): the test world, with all nine scenarios, the hub and its levels, the
-Wildlands, the Depths, the four quests, and the hermit, gardener, and bard (dialogue and
-types).
+hold no entries) and `assets/vaults/`. There are two campaigns: the Ascmearc (`ascmearc`, kind
+`campaign`, #332), the first world to play, so far its overworld and its start scenario
+(`docs/dev/overworld.md`); and the showcase (`kind = "test"`): the test world, with all nine
+scenarios, the hub and its levels, the Wildlands, the Depths, the four quests, and the hermit,
+gardener, and bard (dialogue and types). With a campaign of kind `campaign` loaded, release
+builds' New run lists only its start, and the player wiki describes only it.
 
 `campaign.toml` (`content/campaign.rs::CampaignDef`): `id` (the directory's name, else a
 content error), `name` (New run's heading), `description`, `start` (the scenario a new run

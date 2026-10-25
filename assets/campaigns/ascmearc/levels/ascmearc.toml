@@ -1,0 +1,175 @@
+# The overworld of the Ascmearc (spec §3, §7; docs/design/campaign.md §5): the ash march at map
+# scale, 120x60. A step is a journey of the terrain's `travel_minutes` (road 20, plains 45,
+# grassland 50, forest 90, hills 120, swamp and dense forest 150, a ford 30).
+#
+# The player comes in by Beorggeat (P), the pass in Grægweall, the western wall: a closed way back,
+# with no level behind it. The road runs five cells east to Cēaptūn (T), the market town at the
+# crossroads, then on east over Hlāwdūn, the barrow downs, past Cealdhlāw (1, the cold barrow), to
+# the ford (%) over Blæcwæter and the village beyond (Fordwīc's site, the road's end at 94, 28).
+# South, the road crosses Beorhtburna by the bridge (b) and follows its south bank to Fennhām's
+# site (the road's end at 62, 43); north, it runs to the edge of Holegnwudu.
+#
+# Rivers (arrows, the way they flow), two cells wide so only a bridge or the ford crosses them:
+# Blæcwæter from the foot of Rēcbeorgas south through Micelfenn into Grægsæ (w), and Beorhtburna
+# from the western wall east into Blæcwæter. The volcano, Fyrbeorg (^), smokes on the south face
+# of Rēcbeorgas. Two dungeons are hidden until a quest reveals them: Fennmynster (2) in the
+# swamp of Micelfenn and Fyrdelf (3) in the hills of Ascdūn; no road leads to either.
+#
+# The locations that lead nowhere yet (the town, the barrow, the hidden two) get their levels
+# from later work (the town, the dungeon branches); the rest of the design's forty sites
+# are plain cells kept free for now, six cells or more apart.
+#
+# Drawn from the design's 1:2 sketch, then edited by hand; keep every walkable cell in a region
+# (a test checks).
+name = "The Ascmearc"
+kind = "overworld"
+map = '''
+MMMMMMMMMMMMMMMMMMMMMMMMMMMMMM..........................................................MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+MMMMMMMMMMMMMMMMMMMMMMMMMMMMM...........................................................MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+MMMMMMMMMMMMMMMMMMMMMMMMMMMMM......................................................M.MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+MMMMMMMMMMMMMMMMMMMMMMMMMMMMMM..............fff.....................................MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMfffffff.ffffffffff.ffffffffff......................MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+MMMMMMMMMMMMMMMMMMMMMM..MMfMMffffffffffFffffffffFfFffffffff..f.f..................MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+MMMMMMMMMMMMMMMMMM..M.....MfffffffffFfFFFFfFFFFFFFFFFFfffffffff...................MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+MMMMMMMMMMMMMMMMM.........ffffffffffFFFFFFFFFFFFFFFFFFffffFffffff...............MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+MMMMMMMMMMMMMMMMMM.....f.f.ffffFFFFFFFFFFFFFFFFFFFFFFFFFFfFfffffffff...........MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+MMMMMMMMMMMMMMMMMMM...ffffffffffFFFFFFFFFFFFFFFFFFFFFFFFFFFfffffffff.f........MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+MMMMMMMMMMMMMMMMM....ffffffffffFFFFFFFFFFFFFFFFFFFFFFFFFFFFFffffffffff..........MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+MMMMMMMMMMMM.MMMMM..ffffffffffFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFffFffffffff.........MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+MMMMMMMMMMM..M......ffffffffFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFfffffffff...........M.MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+MMMMMMMMMMM.........ffffffffFFfFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFffffffffff...........M..MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+MMMMMMMMMM........fffffffffffFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFfffffffffff............MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+MMMMMMMMMM........ffffffffffffFFFFFFFFFFFFFFFFFFFFFFFFFFFFFfffffffffff.f.............M.MMMMMM↓↓MMMMM^^MMMMMM.MMMMMMMMMMM
+MMMMMMMMMM..........ffffffffffffFFFFFFFFFFFFFFFFFFFFFFFFFFffffffffffff.................hhhMMM↙↙MMMMM^^MMMMMMM.......MMM.
+MMMMMMMMMM..........ffffffffffffFFFFFFFFFFFFFFFFFFFFFFFfFfffffffffffff................hhhhMM↓↓hhhhhhhhhh..hM............
+MMMMMMMMMM........=...ffffffffffffffFFFFFFFFFFFFFFFFFFffffffffffffffff......hh.hh.h...hhhhhh↓↓hhhhhhh...................
+MMMMMMMMMM........=...ffffffffffffffFfFFFFFFFFFFFFfFFffffffffffffffff"...h..hhhhhhhhhhhhhhhh↙↙hhhhhhhh..................
+MMMMMMMMMM........=....fffffffffffhfffFfffffffffffFfffFffffffffffffff"...h.hhhhhhhhhhhhhhhh↓↓hhhhhhhhh.hhh..............
+MMMMMMMMMM......."=...f""ffffhfhffhhfffffffhfffffffffffffffffffffffff"".hhhhhhhhhhhhhhhhhhh↙↙hhhh3hhhhhhhh..............
+MMMMMMMMMM..."""""=""f"""hfhhhhhhhhhhhhhhhhfffffffffffffffffffff""f""""hhhhhhhhhhhhhhhhhhh↓↓hhhhhhhhhhhhhhhh............
+MMMMMMMMMM."..""""="""""""hhhhhhhhhhhhhhhhhhfffffffffffffffff"ff""""""hhhhhhhhhhhhhhhhhhhh↙↙hhhhhhhhhhhhhhh.."..........
+MMMMMMMMMM""""""""="""""hhhhhhhhhhhhhhhhhhhhhffffffffffffff"""""""""""""hhhhhhhhhhhhhhhhh↙↙hhhhhhhhhhhhhhhh"""""........
+MMMMMMMMMMMM""""""="""""hhhhhhhhhh1hhhhhhhhhhhhfffffffffffff""""""""""""hhhhhhhhhhhhhhhh↙↙hhhhhhhhhhhhhhhh""""""".......
+MMMMMMMMMMMMMM""""="""hhhhhhhhhhhhhhhhhhhhhhhhhh"""f""f"""f""""""""""""""""hhhhhhhhhhhh↙↙hhhhhhhhhhhhh""""""""""""......
+MMMMMMMMMMMMMM""""="""hhhhhhhhhhhhhhhhhhhhhhh"hh"""""""""""""""""""""""""""""hhhhhhhhh↙↙hhh"hhhhhhhhh"""""""""""""......
+MMMMMMMMMMMMP=====T==================================================================%%========"""h"""""""""""""""""....
+MMMMMMMMMMMMMM""""="""""hhhhhhhhhhhhhhhhhhhhhhh"""""""""""""""""""""""""""""""hhhhhh↓↓hh""""""""""""""""""""""""""""....
+MMMMMMMMMMMMMM""""=""""""hhhhhhhhhhhhhhhhhhh"h""""""""""""""""""""""""""""""""""....↓↓""""""""""""""""""""""""""""""""..
+MMMMMMMMMMMM""""""=""""""""hh"hhhhhhhhhhhhhh""""""""""""""""""""""""""""""""""""....↙↙"""""""""""""""""""""""""""""""...
+MMMMMMMMMM"""""hh"="""""""""h""""hhh""hh"".."""""""""""""""""""""""""""""""""".....↙↙.""""""""""""""""""""""""""""""....
+MMMMMMMMMMh"""hhhh="h"""""""""""""h"""""""".""""""""""""""""""""""""""""""""""....↓↓..""""""""""""""""""""""""""""""....
+MMMMMMMMMMhhh""hhh="hhhhhh""""""""""""""""..""""""""""""""""""""""""""""""""""....↓↓....""""""""""""""""""""""""".......
+MMMMMMMMMMMhhhhhhh=hhhhhhhh"""""""""""""""..".""""""""""""""""""""""""""""""".....↓↓....""""""""""""""""""""""""""......
+MMMMMMMMMMhhhhhhhh=hhhhhhhhh""""""""""".......""""""""""""""""""""""""""""""......↙↙.....f"""""""""""""""""""wwww."..ww.
+MMMMMMMMMMMhhhhhhh=hhhhhhhh""""""""""""".......""""""""""""""""""""""""""""".....↓↓....f.f"""""""""""""""""wwwwwwwwwwwww
+MMMMMMMMMM→→→→↘hhh=hhhhhhhh"""""""""""........"."""""""""""""""""""""""""""......↓↓ffffffff"f"""..."".....wwwwwwwwwwwwww
+MMMMMMMMMM→→→→↘→→→b→→→→→↘h"""""""""""".........""""""""""""""""""""""""""".......↙↙fffffffffffff....."....wwwwwwwwwwwwww
+MMMMMMMMMMfffff→→→b→→→→→↘→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→↘"""""""""""""sssssssss↓↓sfsssssfssfffff.........wwwwwwwwwwwwww
+MMMMMMMMMMffffffff=ffffff→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→↘→→→→→→→→→→→→→↘ssssssss↓↓ssssssssssffffff.........wwwwwwwwwwwww
+MMMMMMMMMMffffffffF=ffffffffffffffff".............".......→→→→→→→→→→→→→↘→→→→→→→→↘↘sssssssssfsffff.ff......wwwwwwwwwwwwww
+MMMMMMMMMMMffffFfFFf===========================================..."sssss→→→→→→→→s↓↓sssssssssssfff.ff......wwwwwwwwwwwwww
+MMMMMMMMMMffFFFFFFFFFFFFFFFFFfffffff..............................sssssssssssssss↘↘sssssssssssfssf....wwwwwwwwwwwwwwwwww
+MMMMMMMMMMffFFFFFFFFFFFFFFFFfffffffff..........................".sssssssssssssssss↓↓ssssssssssssff...wwwwwwwwwwwwwwwwwww
+MMMMMMMMMMfFFFFFFFFFFFFFFFFFffffffffff..................""".."."ssssssssssssssssss↘↘ssssssssssssssf..wwwwwwwwwwwwwwwwwww
+MMMMMMMMMMFFFFFFFFFFFFFFFFFFffffffffff......"..".."...."""..""""sssssssssssssssssss↘↘sssssssssssss..wwwwwwwwwwwwwwwwwwww
+MMMMMMMMMMFFFFFFFFFFFFFFFFFFFFfffffff.ff...""""""""""""".""""""""sssss2sssssssssssss↘↘sssssssssss...wwwwwwwwwwwwwwwwwwww
+MMMMMMMMMMFFFFFFFFFFFFFFFFFFFFfffffffff."."""""""""""""""""""""""s"ssssssssssssssssss↘↘sssssssss.....wwwwwwwwwwwwwwwwwww
+MMMMMMMMMMMFFFFFFFFFFFFFFFFFfffffffff"""""""""""""""""""""""""""""""ssssssssssssssssss↘↘ssssss..s...wwwwwwwwwwwwwwwwwwww
+MMMMMMMMMMFMFFFFFFFFFFFFFFFFffffffffff"""""""""""""""""""""""""""""""sssssssssssssssssss↘↘ssss......wwwwwwwwwwwwwwwwwwww
+MMMMMMMMMMMMMMMMMFFFFFFFFFfffffffffff""""""""""""""""""""""""""""""""ssssssssssssssssssss↘↘wwwwwwwwwwwwwwwwwwwwwwwwwwwww
+MMMMMMMMMMMMMMMMMMMFFFFFFFFfffffffffff.""""""""""""""""""""""""""""""""sssss.sssssssssssss↓↓wwwwwwwwwwwwwwwwwwwwwwwwwwww
+MMMMMMMMMMMMMMMMMFFFfffffFffffffffff.."""""""""""""""""""""""""""""""s""""s"s...ss....s...wwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+MMMMMMMMMMMMMMMMMMFFfffffffffffffffff.""."""""""""""""""""""""""""""""""""""....ss........wwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+MMMMMMMMMMMMMMMMMMffFfffffffffff.........."""""""""""""""""""""""""""""...................wwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+MMMMMMMMMMMMMMMMMMffffffff.f.ff...........""""""""""."""""."""".""""""""..................wwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+MMMMMMMMMMMMMMMMMMf.ff....f...f.f................."......"..."."..".......................wwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+MMMMMMMMMMMMMMMMMMM.ff..................................."................................wwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+'''
+
+[legend]
+"." = "plains"
+'"' = "grassland"
+"f" = "forest"
+"F" = "dense_forest"
+"h" = "hills"
+"M" = "mountains"
+"s" = "swamp"
+"w" = "lake"
+"=" = "road"
+"b" = "bridge"
+"%" = "ford"
+# The rivers, drawn as arrows the way they flow.
+"→" = { terrain = "river", flow = "E" }
+"↗" = { terrain = "river", flow = "NE" }
+"↘" = { terrain = "river", flow = "SE" }
+"↓" = { terrain = "river", flow = "S" }
+"↙" = { terrain = "river", flow = "SW" }
+"^" = { terrain = "volcano", name = "Fyrbeorg" }
+"P" = { terrain = "mountain_pass", spawn = "player", name = "Beorggeat", note = "The way you came; snow has closed it behind you." }
+"T" = { terrain = "town", name = "Cēaptūn" }
+"1" = { terrain = "barrow", name = "Cealdhlāw" }
+"2" = { terrain = "swamp", hidden = { id = "fennmynster", terrain = "dungeon_entrance", name = "Fennmynster" } }
+"3" = { terrain = "hills", hidden = { id = "fyrdelf", terrain = "mine", name = "Fyrdelf" } }
+
+# Named regions, shown in the status bar: `area = [x0, y0, x1, y1]`, inclusive, first match wins
+# (the forests' deep hearts before the forests, the downs before the vale around them).
+
+[[region]]
+name = "Deorcholt"
+area = [10, 44, 27, 55]
+
+[[region]]
+name = "Dēopholt"
+area = [28, 6, 60, 19]
+
+[[region]]
+name = "Grægweall"
+area = [0, 0, 9, 59]
+
+[[region]]
+name = "Grægweall"
+area = [0, 0, 29, 5]
+
+[[region]]
+name = "Grægweall"
+area = [10, 25, 13, 31]
+
+[[region]]
+name = "Rēcbeorgas"
+area = [76, 0, 119, 16]
+
+[[region]]
+name = "Holegnwudu"
+area = [10, 0, 75, 21]
+
+[[region]]
+name = "Hlāwdūn"
+area = [20, 22, 46, 32]
+
+[[region]]
+name = "Cēapdenu"
+area = [10, 20, 69, 39]
+
+[[region]]
+name = "Ascdūn"
+area = [70, 17, 108, 31]
+
+[[region]]
+name = "Ēastmearc"
+area = [94, 17, 119, 44]
+
+[[region]]
+name = "Lindwudu"
+area = [10, 44, 44, 59]
+
+[[region]]
+name = "Burnadenu"
+area = [10, 40, 64, 59]
+
+[[region]]
+name = "Micelfenn"
+area = [65, 32, 96, 59]
+
+[[region]]
+name = "Grægsæ"
+area = [97, 45, 119, 59]

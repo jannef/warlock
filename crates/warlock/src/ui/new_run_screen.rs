@@ -334,7 +334,7 @@ mod tests {
             ScreenAction::Open(ScreenName::Race)
         );
         let pick = s.pick().expect("a scenario");
-        assert_eq!(pick.id, "showcase");
+        assert_eq!(pick.id, "ascmearc");
         assert_eq!((pick.seed, pick.shows_seed), (47, true));
         assert_eq!(
             pick.character.map(|c| c.to_string()).as_deref(),
@@ -374,16 +374,18 @@ mod tests {
         let pick = s.pick().expect("a scenario");
         assert_eq!((pick.seed, pick.shows_seed), (9_876_543_210, false));
         let text = drawn(&s);
-        assert!(text.contains("> Showcase"), "{text}");
+        assert!(text.contains("> The Ascmearc"), "{text}");
         assert!(!text.to_lowercase().contains("seed"), "{text}");
     }
 
     /// A world to play beside the test world: release builds list its start alone, developer
-    /// builds every scenario under its campaign's name, the playable campaign first.
+    /// builds every scenario under its campaign's name, the playable campaign first. (The
+    /// Ascmearc is left out, so the fixture is the only playable campaign.)
     #[test]
     fn a_campaign_comes_first_and_the_test_world_only_in_developer_builds() {
         use warlock_core::content::ContentFiles;
         let mut files = ContentFiles::builtin();
+        files.remove("campaigns/ascmearc/");
         let ash = "campaigns/ashland";
         files.insert(
             &format!("{ash}/campaign.toml"),
@@ -431,6 +433,7 @@ mod tests {
         files.remove("data/races.toml");
         files.remove("data/names.toml");
         files.remove("data/classes/");
+        files.remove("campaigns/ascmearc/");
         files.remove("campaigns/showcase/scenarios/");
         files.insert(
             "campaigns/showcase/scenarios/plain.toml",

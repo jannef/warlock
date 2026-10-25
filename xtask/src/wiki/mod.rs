@@ -36,6 +36,7 @@ mod materials;
 mod moons;
 mod objects;
 mod order;
+mod overworld;
 mod resources;
 mod rooms;
 mod scenarios;
@@ -124,6 +125,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("terrain-local.md", terrain::local_terrain),
         ("terrain-overworld.md", terrain::overworld_terrain),
         ("overworld-sight.md", sight::overworld_sight_table),
+        ("overworld-places.md", overworld::locations),
         ("moons.md", moons::moons),
         ("weather.md", weather::weather_chances),
         ("weather-effects.md", weather::weather_effects),
@@ -1101,9 +1103,16 @@ mod tests {
             assert!(text("lights.md").contains(row), "{row}");
         }
         let scenarios = text("scenarios.md");
-        assert!(scenarios.contains("| Showcase | 08:00, 11 Darkening, Year 1444 |"));
-        assert!(scenarios.contains("| World | 08:00, 11 Darkening, Year 1444 |"));
-        assert!(scenarios.find("| Showcase").unwrap() < scenarios.find("| Arena").unwrap());
+        // The playable campaign only: the test world leaves the player wiki.
+        assert!(scenarios.contains("| The Ascmearc | 08:00, 11 Darkening, Year 1444 |"));
+        assert!(!scenarios.contains("| Showcase"), "{scenarios}");
+        let places = text("overworld-places.md");
+        for row in [
+            "| Beorggeat | (12, 28) | Grægweall | Mountain pass | — | — |",
+            "| Fennmynster | (70, 48) | Micelfenn | Dungeon entrance | nowhere yet | until a quest reveals it |",
+        ] {
+            assert!(places.contains(row), "{row}\n{places}");
+        }
         // Hunger: the states by nutrition, each race's need, food, and corpses (what eating them
         // does is a table of its own).
         let states = text("hunger-states.md");

@@ -59,3 +59,24 @@ every revealed id as the overworld is made (`reveal::apply_revealed`). No stream
 overworld's ways in that the player sees or remembers. Tests: `world/reveal_tests.rs` (a fixture
 hiding a barrow in the Wildlands, revealed by the hermit's `depths` quest; the built-in Wildlands
 hide nothing).
+A hidden location's `to` may be left out: it leads nowhere yet, like stairs without one.
+
+Named places (#332): a legend's `name` (and `note`, a sentence for look mode) on any cell of a
+hand-made level goes into `LevelTemplate::places` (`content/level.rs::parse_place`; refused
+beside a `hidden`, which would give it away). A way in on that cell carries the name as
+`StairsLink::name`, so look mode, "The way into … is here." (`world/travel.rs`), and the
+`locations` layer name it even while it leads nowhere yet; `PerceptionView::place` gives the
+place on a cell the player sees or remembers, and `ui/look.rs` names it after the terrain and
+adds the note.
+
+The Ascmearc (#332; the campaign design §5): `assets/campaigns/ascmearc/levels/ascmearc.toml`,
+the first real campaign's overworld, 120×60, drawn from the design's 1:2 sketch by a throwaway
+script and then edited by hand (no generator: edit the file). Its legend's `P` is Beorggeat, the
+start (`mountain_pass`: no stairs, no local area, mountains on three sides, so the road east is
+the only way on); `T` Cēaptūn (`town`) and `1` Cealdhlāw (`barrow`) are named locations without
+`to` until their levels exist; `2` Fennmynster and `3` Fyrdelf are hidden. The rivers are two
+cells wide (watertight to diagonal steps), crossed only at the bridge `b` and the ford `%`.
+Regions are rectangles in first-match order (the forests' hearts first). Its scenario `ascmearc`
+starts on the pass and says its `arrival` line. Tests: `world/ascmearc_tests.rs` (regions, the
+closed way back, the town's distance, names and spacing, the rivers, the travel budget, no leak
+of the hidden two, a replay, the legend's `name` and `note` checks).

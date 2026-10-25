@@ -16,10 +16,22 @@ pub const CURSOR_BG: Rgb = Rgb::new(0xe0, 0xc0, 0x70);
 /// One line describing what the player knows about `p`: who is there, what lies there (as seen
 /// or remembered), on what (a known trap on its terrain: "on a pit on stone floor"), in which
 /// special room (once they have been in it), and what was heard there. Blood they know of there
-/// reads before the terrain ("on blood-stained stone floor") if `blood` is shown.
+/// reads before the terrain ("on blood-stained stone floor") if `blood` is shown. A named place
+/// with a note adds it after: "A mountain pass, Beorggeat. The way you came; snow has closed it
+/// behind you."
 pub fn describe(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
+    let text = describe_cell(view, p, blood);
+    match view.place(p).and_then(|place| place.note.as_deref()) {
+        Some(note) => format!("{text} {note}"),
+        None => text,
+    }
+}
+
+/// [`describe`] without a place's note.
+fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
     let content = view.content();
     // Stairs and locations name where they lead: "a staircase down, leading to The Depths 1";
+    // a named place its name: "a volcano, Fyrbeorg";
     // a wall in sight that was dug into says so: "a stone wall, partly dug".
     let named = |t| {
         let def = content.terrain(t);
@@ -30,7 +42,10 @@ pub fn describe(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
         match view.leads_to(p) {
             Some(to) => format!("{name}, leading to {to}"),
             None if view.is_dug(p) => format!("{name}, partly dug"),
-            None => name,
+            None => match view.place(p) {
+                Some(place) => format!("{name}, {}", place.name),
+                None => name,
+            },
         }
     };
     // A special room the player has been in names the ground in it: "in an echoing hall".
@@ -219,6 +234,29 @@ mod tests {
     fn world() -> World {
         let content = Arc::new(Content::builtin().expect("content"));
         World::new(content, "showcase", None).expect("world")
+    }
+
+    #[test]
+    fn named_places_say_their_name_and_note() {
+        let content = Arc::new(Content::builtin().expect("content"));
+        let mut w = World::new(content, "ascmearc", None).expect("the Ascmearc");
+        let pass = w.player_pos();
+        assert_eq!(
+            describe(&w.perception(), pass, true),
+            "You, on mountain pass, Beorggeat. The way you came; snow has closed it behind you."
+        );
+        for _ in 0..3 {
+            w.apply(&Action::Move(Dir::E));
+        }
+        let town = Pos::new(18, 28);
+        assert_eq!(
+            describe(&w.perception(), town, true),
+            "A town, leading to Cēaptūn."
+        );
+        assert_eq!(
+            describe(&w.perception(), pass, true),
+            "A mountain pass, Beorggeat. The way you came; snow has closed it behind you."
+        );
     }
 
     #[test]

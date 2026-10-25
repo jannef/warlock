@@ -22,7 +22,11 @@ in developer builds only (§6), and the player wiki leaves it out once a campaig
 A campaign's files name only its own and shared levels and creature types; ids are unique across
 every campaign; each campaign has at most one overworld, and a run's local areas are its
 campaign's overworld's; a run remembers its campaign, and a save carries that campaign's content
-fingerprint (§7 "Saves").
+fingerprint (§7 "Saves"). The first campaign to play is the Ascmearc (`assets/campaigns/ascmearc/`,
+#332, the campaign design §5): its 120×60 overworld, entered by the pass Beorggeat, a closed way
+back, with the market town Cēaptūn five road cells east, the barrow Cealdhlāw in sight of the
+road, and two dungeons hidden until quests reveal them (Fennmynster, Fyrdelf); its start
+scenario is `ascmearc`.
 
 **Level 1 — Hub (80×21)**
 
@@ -137,7 +141,10 @@ locations 30) at normal speed; every other action there (waiting, entering a loc
 area) takes its usual time, 6 s for a normal action (§8 "Time"); mountains and open water are
 impassable, and the river Wendle (drawn flowing, with legend arrows like running water; §4.3) can
 only be crossed by the bridge. Named regions (Greenmarch, Thornwood, Barrowdowns, Hollowcrag, Silvermere, Sallow
-Plains, Mirefen, Greyspine Mountains) show in the status bar.
+Plains, Mirefen, Greyspine Mountains) show in the status bar. The Ascmearc's overworld (#332) adds
+shared terrain: a `mountain_pass` (walkable, 30 minutes, nothing to explore, no way in or out),
+a `volcano` (impassable, a faint glow and a thin plume of smoke), a `ford` (a road through a
+river, 30 minutes), and the locations `town`, `barrow`, and `mine` (stairs down, 30 minutes).
 - **Locations** are stairs down: the Hall (to the hub), the cavern mouth in the Hollowcrag (to the
   vast level), and the way into the Depths in the Barrowdowns (`depths:1`). `>` on a location
   enters its level, arriving on the stairs that lead back; those stairs (`<`) lead out to the

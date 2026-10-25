@@ -98,6 +98,14 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   made. The id (lower-case letters, digits, and underscores) is unique on the overworld; a hidden
   location on any other level, on a cell that is not walkable or is a location already, with an
   unknown `terrain` or one that is no way down, an unknown `to`, or no `name` is a content error.
+  Without `to` it leads nowhere yet (its level is not built), like stairs without one.
+- **Named places** (#332): a legend entry may name the place on its cell, `name = "Beorggeat"`,
+  and give look mode a sentence about it, `note = "The way you came; snow has closed it behind
+  you."` (only with a `name`). Look mode names it on a cell the player sees or remembers ("A
+  mountain pass, Beorggeat." and the note after); a way in on that cell goes by the name (look
+  mode's "leading to Cēaptūn", "The way into Cēaptūn is here.", "You enter …"), even while it
+  leads nowhere yet. A `name` beside a `hidden` (it would give the place away), an empty one,
+  or a `note` without a `name` is a content error.
   State: `LevelState::hidden` (ground truth: the unrevealed ones, by cell) and
   `WorldState::revealed` (the ids revealed so far), both saved and hashed and left out while
   empty; a save naming a location the content does not have is refused. Only the reveal and the
