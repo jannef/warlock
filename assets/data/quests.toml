@@ -37,6 +37,10 @@
 #              default 0): helping quests good, dark ones evil. A good giver offers no good one
 #              to an Evil or Wicked character, an evil giver none to a Good or Saintly one
 #   repeatable offered again once done (default false)
+#   reveals    a hidden location of the overworld it reveals (a legend's `hidden`; optional):
+#              { location = "ID", when = "accepted" }, `when` one of "offered", "accepted"
+#              (the default), and "done". The speaker marks it on the player's map
+#   where      where the goal lies, in words, after the objective in the quest log (optional)
 # Texts are one line of at most 280 characters. Someone's topics (their dialogue's, one per
 # quest they give or take, and one more for an offer's accept and decline) must fit the dialogue
 # screen's nine.

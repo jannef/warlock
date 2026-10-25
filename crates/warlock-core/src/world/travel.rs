@@ -164,7 +164,8 @@ impl World {
         if let Some(stairs) = level.stairs_at(to) {
             let text = match (level.kind, stairs.dir, &stairs.to) {
                 (LevelKind::Overworld, StairsDir::Down, Some(target)) => {
-                    format!("The way into {} is here.", self.place_name(target))
+                    let name = (stairs.name.clone()).unwrap_or_else(|| self.place_name(target));
+                    format!("The way into {name} is here.")
                 }
                 (_, StairsDir::Down, _) => "There is a staircase down here.".into(),
                 (_, StairsDir::Up, _) => "There is a staircase up here.".into(),
@@ -283,7 +284,8 @@ impl World {
         }
         events.push(Event::LevelChanged { from, to });
         let level = self.state.current();
-        let name = level.name.clone();
+        // A revealed location goes by its own name (spec §7 "Hidden locations").
+        let name = link.name.unwrap_or_else(|| level.name.clone());
         let text = match (kind, level.kind, dir) {
             (LevelKind::Overworld, _, _) => format!("You enter {name}."),
             (_, LevelKind::Overworld, _) => format!("You climb out to {name}."),
@@ -432,6 +434,8 @@ pub(super) fn instantiate_level(
         }
     }
     state.levels.insert(id.to_string(), level);
+    // The hidden locations revealed before the overworld was made (spec §7 "Hidden locations").
+    super::reveal::apply_revealed(state, id);
     // Under the open sky its water has frozen and thawed with the weather of the last weeks.
     state.pre_roll_ice(content, id);
     for spawn in &template.creatures {
