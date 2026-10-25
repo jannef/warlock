@@ -240,6 +240,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("digging.md", digging::digging),
         ("digging-strength.md", digging::digging_strength),
         ("special-rooms.md", rooms::special_rooms),
+        ("branch-odds.md", rooms::branch_odds),
         ("magic-rarity.md", magic::magic_rarity),
         ("magic-bases.md", magic::magic_bases),
         ("magic-prefixes.md", magic::prefixes),

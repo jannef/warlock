@@ -23,6 +23,16 @@ whole room, walls and doors included, but never the room you arrive in; in the c
 patch of the cave, well away from where you arrive. The showcase hub's stairs nook is a
 sanctuary.
 
+## By dungeon
+
+Each dungeon may have odds of its own, and some of its levels other odds again: a dungeon may
+be full of flooded rooms, or never have a shop. "A room is special" is the chance for each room
+(each of eight tries in a cavern) until the level has as many as "At most a level"; the room
+is then one of those listed, each as likely. "A shop" is the chance a rooms-and-corridors level
+has one, if one of its rooms suits (see [Shops](shops.md)).
+
+{{#include generated/branch-odds.md}}
+
 ## The rooms
 
 {{#include generated/special-rooms.md}}

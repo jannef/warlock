@@ -15,8 +15,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   own difficulty (`locks_per_depth`, 0 to 5, default 0; the Depths 1; §8 "Doors"), ambient light, `loot = [fewest, most]` (items of loot on each
   level's floor, at most 50; the Depths 2 to 4; §8 "Magic items"), `temperature` (°C, −40 to 40;
   default 10; §5 "Temperature"), a `key` (a key object: its rooms levels lock a few rooms with
-  the lock it opens, §8 "Doors"; the Depths' is the rusty key), and per-depth overrides of
-  generator, size, and temperature (each default the branch's). Stairs
+  the lock it opens, §8 "Doors"; the Depths' is the rusty key), its own special-room and shop
+  odds (`room_effects`, `shops`; §7 "Special rooms", "Shops"; default the shared ones), and
+  per-depth overrides of generator, size, temperature, `room_effects`, and `shops` (each default
+  the branch's). Stairs
   (and scenarios) may target `depths:N`; content validation accepts such ids when the branch has
   that depth. A branch level is generated on its first visit from its own random stream (§8) and
   then persists like a hand-made level. Its `<` leads to `depths:N-1` (on depth 1, back to the

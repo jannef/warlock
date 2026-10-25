@@ -15,7 +15,8 @@ them). Every object has a `value` (required; test fixtures with their own object
 `merchants` and `outraged` factions, and fixtures that replace creatures or objects start from
 `ContentFiles::default()` or drop `data/shops.toml`). A shop is a `ShopPlan` in the template
 (level files: `[[shop]] kind keeper area post`; generated: `mapgen/shop.rs`, last after special
-rooms, rooms levels only, from the map stream) whose keeper is spawned at its post; at
+rooms, rooms levels only, from the map stream, by the branch's `ShopOdds`: its own `shops` table
+or the shared odds, docs/dev/mapgen.md) whose keeper is spawned at its post; at
 instantiation it becomes a `world::Shop` in `LevelState::shops` (saved, hashed; format 30): the
 keeper's actor id, its `exits` (the cells around the floor that could be walked onto or were
 doors when the level was made: the door), `unpaid` (what the player owes, counted by goods: an
