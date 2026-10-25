@@ -5,13 +5,14 @@ use bevy::prelude::*;
 use clap::Parser;
 use std::path::PathBuf;
 use warlock_core::character::CharacterSpec;
+use warlock_core::content::Content;
 
 /// Options parsed from the command line. On the web build there is no command line, so the
 /// defaults are used.
 #[derive(Debug, Clone, Parser, Resource)]
 #[command(name = "warlock", version, about = "Warlock — an ASCII roguelike")]
 pub struct Args {
-    /// Scenario to start (a file stem under a campaign's `scenarios/`, e.g. `assets/campaigns/showcase/scenarios/`; default `showcase`). Giving it
+    /// Scenario to start (a file stem under a campaign's `scenarios/`, e.g. `assets/campaigns/showcase/scenarios/`; default `showcase`, in a release build the campaign's start). Giving it
     /// skips the main menu.
     #[arg(long)]
     pub scenario: Option<String>,
@@ -173,9 +174,13 @@ pub struct Args {
 }
 
 impl Args {
-    /// The scenario to start directly.
-    pub fn scenario_name(&self) -> &str {
-        self.scenario.as_deref().unwrap_or("showcase")
+    /// The scenario to start directly: `--scenario`, else the content's default (the showcase
+    /// where the test world is built in, else the first campaign's start;
+    /// `Content::default_scenario`).
+    pub fn scenario_name<'a>(&'a self, content: &'a Content) -> &'a str {
+        (self.scenario.as_deref())
+            .or_else(|| content.default_scenario())
+            .unwrap_or_default()
     }
 
     /// Whether the game opens on the main menu. Flags that name what to run (`--scenario`,

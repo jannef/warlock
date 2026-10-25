@@ -133,7 +133,7 @@ impl Game {
                 (world, Some(replay))
             }
             None => {
-                let scenario = args.scenario_name();
+                let scenario = &args.scenario_name(&content).to_owned();
                 let name = args.name.as_deref();
                 // `--talents` picks for `--character`, else for the scenario's own character.
                 let talents = args

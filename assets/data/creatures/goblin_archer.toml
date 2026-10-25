@@ -1,0 +1,32 @@
+# The barrow wave (Cealdhlāw, docs/design/campaign.md §10.1). A goblin with a short bow (its
+# racial weapon) and a quiver; it keeps a club for when the arrows run out, and what it has not
+# loosed falls where it dies.
+[[creature]]
+id = "goblin_archer"
+level = 3
+xp = 25
+loot = 25
+name = "goblin archer"
+glyph = "g"
+fg = "#c8b050"
+faction = "goblins"
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+combat = "ranged"
+range = 7
+opens_doors = true
+footsteps = 110
+hearing = 12
+weight = 28000
+size = "small"
+stats = { strength = 10, dexterity = 14, toughness = 10, intelligence = 8, willpower = 8, presence = 6 }
+on_eat = { message = "This goblin meat is rank!", vomit = 40 }
+weapon_skills = { bows = 1, maces = 1 }
+racial_weapon = "short_bow"
+[[creature.gear]]
+chance = 95
+one_of = ["arrow*12", "arrow*20"]
+[[creature.gear]]
+chance = 50
+one_of = ["club"]

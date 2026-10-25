@@ -23,8 +23,9 @@ Update them together whenever behavior, commands, or architecture change.
 | WASM check | `cargo check -p warlock -p warlock-core --target wasm32-unknown-unknown` |
 | Dependency audit | `cargo deny check` |
 | Screenshot smoke test | `cargo xtask smoke` (writes `target/xtask/smoke.png`) |
-| Web build | `cargo xtask web` (writes `target/web/`; see "Releases, web build, logs") |
-| Web smoke test | `cargo xtask web-smoke <chrome>` (serves `target/web`, drives headless Chromium through menu → New run → race, the stars, gender, class (preselected) → talents (Random) → name (empty: a random one) → summary → hub, checks the new character's save `warlock/saves/<id>.sav`, waits five turns, reloads, Continue, and checks the run resumed at turn 5; writes `target/xtask/web-smoke.png`; fails on logged errors; not run in CI) |
+| Web build | `cargo xtask web` (writes `target/web/`, without the test world; see "Releases, web build, logs") |
+| Release configuration | `cargo build --no-default-features -p warlock -p warlock-cli` (no `showcase` feature: the test world left out, as in a release; `cargo test --no-default-features -p warlock-core -p warlock release_content` checks it; CI's `release-config` job; docs/dev/campaign.md) |
+| Web smoke test | `cargo xtask web-smoke <chrome>` (serves `target/web`, drives headless Chromium through menu → New run → the campaign's start → race, the stars, gender, class (preselected) → talents (Random) → name (empty: a random one) → summary → the run, checks the new character's save `warlock/saves/<id>.sav`, waits five turns, reloads, Continue, and checks the run resumed at turn 5; writes `target/xtask/web-smoke.png`; fails on logged errors; not run in CI) |
 | Regenerate the vast level | `cargo xtask gen-vast` (writes `assets/campaigns/showcase/levels/vast.toml`; deterministic, never hand-edit) |
 | Check the vast level is fresh | `cargo xtask gen-vast --check` (fails if the file differs from the generator output; run it after touching `xtask/src/vast.rs`) |
 | Third-party notices | `cargo xtask licenses` (regenerates `THIRD_PARTY_LICENSES.html` with `cargo-about`, config `about.toml`/`about.hbs`; install: `cargo install cargo-about --locked --features cli`); `--check` fails when it is stale (CI runs it). **Run it after changing dependencies** (`Cargo.toml`/`Cargo.lock`); keep `about.toml`'s `accepted` list in sync with `deny.toml`'s `allow` |
@@ -39,8 +40,8 @@ Update them together whenever behavior, commands, or architecture change.
 (`xtask/src/main.rs::target_dir`, the one place).
 
 Game flags (`cargo run -p warlock -- --help`):
-- `--scenario NAME` (default `showcase`; `ascmearc` starts on Beorggeat, the pass into the
-  Ascmearc, the first campaign; `depths` starts in the generated dungeon, `courtyard` in
+- `--scenario NAME` (default `showcase`, without the test world the first campaign's start; `ascmearc`
+  starts on Beorggeat, the pass into the Ascmearc, the first campaign; `depths` starts in the generated dungeon, `courtyard` in
   the sunlit courtyard at 06:30, `world` on the overworld beside the Hall, `forest` in the glade
   of a generated forest area of the overworld at 06:30, `arena` in the dark corner of the arena
   where kobolds and giant rats fight, `quarry` in the quarry beside a pick-axe, `traps` in the
@@ -428,7 +429,8 @@ A successful compile does not verify anything visual. Before opening a PR:
 - One branch and PR per issue (or a tight group of related issues); reference issues with
   `Closes #N`. CI must be green before a squash merge into `main`.
 - CI runs on Linux only (`CI` workflow: fmt, clippy, tests, headless screenshots, wasm32 check,
-  cargo-deny; the web build on pushes to `main`). macOS is not run in Actions: development happens
+  cargo-deny, the release configuration without the test world; the web build on pushes to
+  `main`). macOS is not run in Actions: development happens
   on macOS, so run the full local check there before every PR (a PR built by a cloud agent,
   `ops/agents/`, runs it on Linux instead). `main` is branch-protected: PRs
   only, the Linux, wasm32, and cargo-deny checks must pass, linear history.
@@ -521,13 +523,17 @@ x86_64 (`.zip`), macOS arm64 (`.zip` with an unsigned `Warlock.app` plus the bar
 `release/`) and the web build (`.zip` to serve from any static host) and attaches them, with
 generated notes, to a GitHub Release; `v0.x` tags are published as pre-releases. Run the workflow
 by hand (Actions > Release > Run workflow) to get the archives as workflow artifacts without
-publishing. Releases are the only place macOS and Windows runners are used.
+publishing. Releases are the only place macOS and Windows runners are used. Every release
+artifact is built with `--no-default-features`: the test world (the `showcase` feature) is never
+in a release, and the workflow checks it (docs/dev/campaign.md, "The test world in release
+builds").
 
 **Web build** (wasm32 + WebGPU; all content is embedded, nothing on the startup path may touch
 `std::fs`): one-time setup is `rustup target add wasm32-unknown-unknown` and
 `cargo install wasm-bindgen-cli --version <X> --locked`, where `<X>` is the `wasm-bindgen` version
 in `Cargo.lock` (the CLI must match exactly; `cargo xtask web` checks it and prints the command).
-Then `cargo xtask web` builds `target/web/` with the size-tuned `[profile.web]` (opt-level `s`, fat LTO,
+Then `cargo xtask web` builds `target/web/` without the test world (`--no-default-features`;
+it fails if the wasm embeds it) with the size-tuned `[profile.web]` (opt-level `s`, fat LTO,
 1 codegen unit, `panic = "abort"`) and then runs binaryen's `wasm-opt -Oz` (`brew install binaryen`;
 locally optional with a warning, required on CI, which installs a pinned binaryen 133 release — not Ubuntu's older apt package, whose `wasm-opt` exported the wrong table as `__wbindgen_externrefs` so the page could not start; `cargo xtask web` now checks that table, `xtask/src/wasm_check.rs`). `multi_threaded` is a
 native-only Bevy feature. Sizes (`warlock_bg.wasm`): 45.9 MB raw / 10.1 MB gzip / 5.9 MB brotli

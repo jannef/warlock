@@ -76,7 +76,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
   rest untrained; the player creature lists none. The deer listens (30), the kobold shaman knows
   concentration (20) and spellcraft (25). The showcase's people (M28): the gardener, the
   wandering bard, and the old hermit (speed 800), glyph `@`, of the peaceful folk by type, level
-  1 and worth no experience. For blood (§8 "Blood"; presentation only):
+  1 and worth no experience. The campaign's creatures come in waves, one per dungeon
+  (docs/design/campaign.md §10.1), each type on the `5 × level + 10` guideline and on the fields
+  above, with a gear table where it is a humanoid (§8 "Creature gear"); the wiki's creature
+  tables give every number. The barrow wave (the barrows of Cealdhlāw, danger 1 to 6): the grave
+  worm 1 (slow, a mildly poisonous bite), the barrow spider 2 (quick, silent, poisonous), the
+  goblin 2 (racial club, loud, opens doors), the goblin archer 3 (racial short bow and arrows, a
+  club in reserve), the skeleton 3 (resists piercing 50, takes bludgeoning double, no corpse, no
+  blood; an old sword or spear now and then), the zombie 3 (slow, many hit points, grave rot on
+  a hit), the giant centipede 3 (plates, poisonous), the barrow ghoul 4 (quick, keen slashing
+  claws whose criticals bleed), the goblin chief 5 (club, short sword, jerkin, coins), and the
+  barrow wight 6 (a caster whose touch is cold, resists cold, no corpse; an ancient long sword,
+  sometimes magic). The undead are immune to poison. The barrow wight is the Ascmearc's own type
+  (`docs/dev/campaign.md`) and waits in the shared `data/creatures/` until the Ascmearc's directory
+  exists. For blood (§8 "Blood"; presentation only):
   `blood`, the colour of its stains (`"#rrggbb"`; default dark red, `#6e0e0c`) or `"none"` for a
   bloodless creature; the cave beetle bleeds greenish-black ichor (`#38461a`). For hunger (§8
   "Hunger"): `corpse` (default true: it leaves a corpse when it dies; with `data/hunger.toml`),
@@ -581,7 +594,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (the player's), and every creature type but the player naming a known faction. The core API
   gives the stance (`Hostile` or `Neutral`) of two factions, creature types, or actors. Test
   factions: `vermin` (giant rats; hostile to the player), `kobolds` (the war band; hostile to the
-  player and the vermin), `wildlife` (deer, cave bats, the cave beetle; neutral to everyone), and
+  player and the vermin), `goblins` (the barrows' goblin tribes; hostile to the player, the
+  vermin, and the kobolds), `undead` (the barrows' dead; hostile to the player, the kobolds, and
+  the goblins, and leaving the vermin alone), `wildlife` (deer, cave bats, the cave beetle;
+  neutral to everyone), and
   `peaceful` ("peaceful folk", hostile to no one: the showcase's people by type, and creatures
   levels place in it); `merchants` (shopkeepers; hostile to no one) and `outraged` ("outraged
   shopkeepers", hostile to the player), which a robbed or attacked shopkeeper joins (§7

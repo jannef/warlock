@@ -19,6 +19,10 @@ engine data every campaign shares. The showcase is `assets/campaigns/showcase/` 
 `kind = "test"`: its levels and nine scenarios, the Depths, the four quests, and the hermit,
 gardener, and bard (their dialogue and their types). New run lists a test campaign's scenarios
 in developer builds only (§6), and the player wiki leaves it out once a campaign to play exists.
+**Test content never appears in a release** (#331): the showcase is built in only with the
+cargo feature `showcase`, on for every developer command, test, and benchmark and off in the
+release archives and the web build, which therefore hold no file of it and refuse its
+scenarios as unknown.
 A campaign's files name only its own and shared levels and creature types; ids are unique across
 every campaign; each campaign has at most one overworld, and a run's local areas are its
 campaign's overworld's; a run remembers its campaign, and a save carries that campaign's content

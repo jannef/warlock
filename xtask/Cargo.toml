@@ -14,7 +14,8 @@ image.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 toml.workspace = true
-warlock-core.workspace = true
+# The wiki, the goldens, and the benchmarks read the test world.
+warlock-core = { workspace = true, features = ["showcase"] }
 
 [lints]
 workspace = true

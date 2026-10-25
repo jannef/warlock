@@ -86,6 +86,38 @@ scenario of every campaign under its campaign's name, campaigns in content order
 first and the rest by id; scenarios outside every campaign last, without a heading. Skipping the
 step when there is one row is #341's.
 
+## The test world in release builds (#331, design §4)
+
+Test content never appears in a release. The cargo feature `showcase` holds it:
+
+- `warlock-core` has `[features] default = ["showcase"]`; `warlock` and `warlock-cli` have the
+  same default and forward it (`showcase = ["warlock-core/showcase"]`); the workspace table
+  takes `warlock-core` with `default-features = false`, so each member's own feature decides.
+  `xtask` asks for it (`features = ["showcase"]`): the wiki, the goldens, and the benchmarks
+  read the test world.
+- `build.rs` leaves out every file under `campaigns/showcase/` without the feature
+  (`CARGO_FEATURE_SHOWCASE`), so such a build embeds no file of the test world.
+  `--content-dir assets` still reads everything on disk: a developer tool.
+- Every documented command (`cargo build`, `test`, `run`, the xtask commands but `web`) has the
+  feature on and is unchanged. Release artifacts turn it off: the `Release` workflow builds with
+  `--no-default-features`, and `cargo xtask web` passes it itself.
+- Without a scenario named (`--new`, a bare `--capture`), the game starts
+  `Content::default_scenario`: the showcase where it is built in, else the first campaign's
+  start. `warlock-cli` keeps its default `showcase` and, in a release build, refuses it as an
+  unknown scenario.
+- **Guards**: the test `release_content` (compiled only without the feature, in
+  `content/campaign.rs` and `ui/new_run_screen.rs`) checks that `Content::builtin()` loads and
+  holds no campaign of kind `test` and nothing of one (scenario, level, dungeon, quest,
+  dialogue, creature type, vault), and that New run lists exactly the campaigns' starts, also
+  with `--dev`. CI's `release-config` job builds the release configuration, checks it for
+  wasm32, runs `cargo test --no-default-features -p warlock-core -p warlock release_content`,
+  and expects `warlock-cli dump --scenario showcase` to fail with "unknown scenario". The
+  `Release` workflow does the last on each platform's binary and checks the game binary holds
+  no `campaigns/showcase/campaign.toml` (the key of the embedded file), and `cargo xtask web`
+  checks `warlock_bg.wasm` the same way.
+- Until the Ascmearc lands (#332) a release build holds no campaign at all: New run says "No
+  scenarios are installed." Do not cut a release before it.
+
 ## The wiki (`xtask/src/wiki/order.rs::campaigns`)
 
 The wiki describes the campaigns of kind `campaign` (while there is none, every campaign): the
@@ -98,8 +130,9 @@ campaigns it does not describe (`order::described`).
 `content/campaign.rs` (a fixture second campaign, the Ashland, beside the showcase: the
 numbering, a run of each, the fingerprint and a save across a build without the test world, the
 cross-campaign refusals, the id clashes, one overworld a campaign), `new_run_screen.rs` (the
-order in release and developer builds), and the `new-run-screen` text snapshot.
+order in release and developer builds), the `new-run-screen` text snapshot, and
+`release_content` in both (compiled only in the release configuration).
 
-Not yet (the design's later items): the `showcase` cargo feature and `release_content` (#331),
-campaign vaults kept to their campaign's branches (the vault picker reads every vault), the
-save summary's and the Characters screen's campaign (#341), and `dev = true` scenarios.
+Not yet (the design's later items): campaign vaults kept to their campaign's branches (the vault
+picker reads every vault), the save summary's and the Characters screen's campaign (#341), and
+`dev = true` scenarios.

@@ -459,3 +459,27 @@ mod tests {
         }
     }
 }
+
+/// A release build (`--no-default-features`, #331): New run lists the campaigns' starts and
+/// nothing of the test world, with `--dev` too. Run by CI's release-configuration job.
+#[cfg(all(test, not(feature = "showcase")))]
+mod release {
+    use super::*;
+
+    #[test]
+    fn release_content() {
+        let content = Content::builtin().expect("a release build's content loads");
+        let starts: Vec<&str> = (content.campaigns().iter())
+            .map(|c| c.start.as_str())
+            .collect();
+        assert_eq!(rows_of(&content, false), vec![(None, starts.clone())]);
+        for (_, ids) in rows_of(&content, true) {
+            for id in ids {
+                let scenario = content.scenario(id).expect("a scenario");
+                let campaign = scenario.campaign.as_deref().expect("a campaign's");
+                let kind = content.campaign(campaign).map(|c| c.kind);
+                assert_eq!(kind, Some(CampaignKind::Campaign), "{id}");
+            }
+        }
+    }
+}

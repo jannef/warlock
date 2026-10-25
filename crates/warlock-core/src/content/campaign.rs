@@ -140,7 +140,18 @@ impl Content {
             .and_then(|d| d.campaign.as_deref())
     }
 
-    /// The overworld of campaign `campaign` (`""`: of the files outside every campaign), if it
+    /// The scenario a run starts when none is named (`--scenario` left out): the showcase where
+    /// the test world is built in, else the first campaign's start (a release build, #331);
+    /// `None` without any campaign.
+    pub fn default_scenario(&self) -> Option<&str> {
+        const SHOWCASE: &str = "showcase";
+        if self.scenario(SHOWCASE).is_some() {
+            return Some(SHOWCASE);
+        }
+        self.campaigns.first().map(|c| c.start.as_str())
+    }
+
+    /// The overworld of campaign `campaign` (`""`:of the files outside every campaign), if it
     /// has one: a campaign has at most one level of kind `overworld`.
     pub fn overworld_of(&self, campaign: &str) -> Option<&super::LevelTemplate> {
         self.levels.values().find(|l| {
@@ -431,6 +442,10 @@ mod tests {
         let mut release = files.clone();
         release.remove("campaigns/showcase/");
         let release = Content::load(&release).expect("loads without the showcase");
+        // A run that names no scenario: the showcase with the test world, else the first
+        // campaign's start.
+        assert_eq!(content.default_scenario(), Some("showcase"));
+        assert_eq!(release.default_scenario(), Some("ashland"));
         assert_eq!(
             release.fingerprint_for("ashland"),
             content.fingerprint_for("ashland")
@@ -579,5 +594,62 @@ mod tests {
         files.insert(&format!("{ASH}/levels/cinder.toml"), &overworld("Cinder"));
         let err = load(&files).expect_err("two");
         assert!(err.contains("only one level of kind `overworld`"), "{err}");
+    }
+}
+
+/// A release build's content (`--no-default-features`, #331): the test world is not in it. Run
+/// by CI's release-configuration job (`cargo test --no-default-features -p warlock-core
+/// release_content`); a default build leaves it out.
+#[cfg(all(test, not(feature = "showcase")))]
+mod release {
+    use super::*;
+
+    #[test]
+    fn release_content() {
+        let content = Content::builtin().expect("a release build's content loads");
+        for c in content.campaigns() {
+            assert_eq!(c.kind, CampaignKind::Campaign, "test campaign `{}`", c.id);
+        }
+        assert!(content.campaign("showcase").is_none());
+        assert!(content.scenario("showcase").is_none());
+        // Whatever names a campaign names a playable one; scenarios and hand-made levels belong
+        // to one (nothing is left outside `campaigns/`).
+        let playable = |c: Option<&str>| {
+            c.is_none_or(|id| {
+                (content.campaign(id)).is_some_and(|c| c.kind == CampaignKind::Campaign)
+            })
+        };
+        for s in content.scenarios() {
+            let campaign = s.campaign.as_deref();
+            assert!(
+                campaign.is_some() && playable(campaign),
+                "scenario {}",
+                s.id
+            );
+        }
+        for l in content.levels() {
+            let campaign = content.level_campaign(&l.id);
+            assert!(campaign.is_some() && playable(campaign), "level {}", l.id);
+        }
+        for d in content.dungeons() {
+            assert!(playable(d.campaign.as_deref()), "dungeon {}", d.id);
+        }
+        for q in content.quests() {
+            assert!(playable(q.campaign.as_deref()), "quest {}", q.id);
+        }
+        for d in content.dialogues() {
+            assert!(playable(d.campaign.as_deref()), "dialogue {:?}", d.speaker);
+        }
+        for c in content.creature_defs() {
+            assert!(playable(c.campaign.as_deref()), "creature {}", c.id);
+        }
+        for v in content.vaults() {
+            assert!(playable(v.campaign.as_deref()), "vault {}", v.template.id);
+        }
+        // A run that names no scenario starts the first campaign's start.
+        assert_eq!(
+            content.default_scenario(),
+            content.campaigns().first().map(|c| c.start.as_str())
+        );
     }
 }

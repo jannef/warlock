@@ -1,0 +1,27 @@
+# The barrow wave (Cealdhlāw, docs/design/campaign.md §10.1). A pale worm as long as an arm that
+# eats its way through the old graves: slow, and its bite is mildly poisonous.
+[[creature]]
+id = "grave_worm"
+level = 1
+xp = 15
+name = "grave worm"
+glyph = "w"
+fg = "#c8a8a0"
+speed = 600
+faction = "vermin"
+alignment = "neutral"
+vision = "low_light"
+sight = 5
+footsteps = 20
+hearing = 10
+weight = 3000
+size = "small"
+stats = { strength = 8, dexterity = 6, toughness = 14, intelligence = 1, willpower = 8, presence = 2 }
+on_eat = { message = "Slimy, and it tastes of the grave.", harm = "1d2" }
+blood = "#5a3a40"
+[creature.attack]
+damage = "1d3"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
+on_hit = [{ status = "poisoned", chance = 20, severity = 1 }]

@@ -51,8 +51,21 @@ jobs:
       - name: Install pinned toolchain
         run: rustup toolchain install
       - uses: Swatinem/rust-cache@v2
+      # Without the test world: `--no-default-features` leaves out the `showcase` feature
+      # (docs/dev/campaign.md, "The test world in release builds").
       - name: Release build
-        run: cargo build --release --locked --package warlock --package warlock-cli
+        run: cargo build --release --locked --no-default-features --package warlock --package warlock-cli
+      - name: No test world in the release
+        run: |
+          exe=""
+          if [ "$RUNNER_OS" = "Windows" ]; then exe=".exe"; fi
+          if out=$("target/release/warlock-cli$exe" dump --scenario showcase 2>&1); then
+            echo "the release CLI started the showcase"; exit 1
+          fi
+          grep -q "unknown scenario" <<< "$out" || { echo "$out"; exit 1; }
+          if grep -aq "campaigns/showcase/campaign.toml" "target/release/warlock$exe"; then
+            echo "the release game embeds the test world"; exit 1
+          fi
       - name: Package
         env:
           REF_NAME: ${{ github.ref_type == 'tag' && github.ref_name || format('dev-{0}', github.run_number) }}
