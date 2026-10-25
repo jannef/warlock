@@ -2,7 +2,7 @@
 //! with the exact rules the game says only in words, and how likely a lucky day is by race.
 
 use super::talents::{effects_text, needs_text};
-use super::text::table_text;
+use super::text::{signed, table_text};
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
 use warlock_core::character::BirthDate;
@@ -27,16 +27,22 @@ fn gifts(content: &Content, grants: &[String]) -> String {
     }
 }
 
-/// Every animal with its gifts and flaw, the rules exact.
+/// Every animal with its gifts and flaw, the rules exact, and its nudge to the starting
+/// alignment score (spec §8 "Alignment", #272).
 pub(super) fn animals(content: &Content) -> String {
     let Some(h) = content.horoscope() else {
         return "There is no horoscope.\n".into();
     };
-    let mut out = String::from("| | Animal | Gifts and flaw |\n|---:|---|---|\n");
+    let mut out = String::from("| | Animal | Gifts and flaw | Alignment |\n|---:|---|---|---:|\n");
     for (i, a) in h.animals.iter().enumerate() {
+        let nudge = if a.alignment == 0 {
+            "0".into()
+        } else {
+            signed(a.alignment)
+        };
         let _ = writeln!(
             out,
-            "| {} | {} | {} |",
+            "| {} | {} | {} | {nudge} |",
             i + 1,
             a.name,
             gifts(content, &a.grants)

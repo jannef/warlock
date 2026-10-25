@@ -6,8 +6,21 @@ spec/08e-blood-and-status.md ("Resources"). Keep it current with the code, as CL
 Alternative resources (#225) are integer pools beside hit points and mana that a character holds
 once something grants them, several at once. This is the foundation; the class features of
 `docs/design/progression.md` §4.18 move onto it in R1–R5 (#249–#253): Rage (R1), Focus (R2),
-Openings (R3), Ki and Inspiration (R4), and the four resource talents (R5). Rage is in (R1,
-below); the others are granted only by the dev action `resource:ID` until theirs land.
+Openings (R3), Ki and Inspiration (R4), and the four resource talents (R5). Rage (R1) and Focus
+(R2) have moved (below); the others are granted only by the dev action `resource:ID` until theirs do.
+
+- **Granted by talents**: the talent effect `grants_resource { resource }` collects into
+  `TalentMods::grants`; `world/focus.rs::hold` gives the actor each it lacks at its start (one
+  held keeps its value). Called from `class::hand_out` (a talent taken or given) and
+  `World::grant_class` (so a restored run gets one its talents grant), the only two places.
+- **Focus** (R2, #250; `world/focus.rs`): Rapid shot grants it. `TalentEffect::RapidShot {
+  resource, cost, saving }` (`TalentMods::rapid_shot`) is read in one place,
+  `World::rapid_shot`, which `shoot.rs::fire` calls on the shot's price: with `cost` held it
+  spends it and takes `saving` percent off the whole price (`percent_of`, at least 1), else the
+  price stands. Volley (`world/volley.rs`) costs `resource = { id = "focus", cost = 6 }` on its
+  talent, spent after its own checks (so a refused volley spends nothing), and has no cooldown
+  (`TalentEffect::Volley { shots }` only); its price is `shot_price`, never Rapid shot's.
+  Creatures never shoot through `fire`, so never use either. Tests: `world/focus_tests.rs`.
 
 - **Data**: `content/resource.rs` parses `data/resources.toml` into `ResourceDef`s (`id`,
   `name`, `short`, `max`, `start`, `show_max`, `over_time: Option<OverTime>` (`Regenerates {

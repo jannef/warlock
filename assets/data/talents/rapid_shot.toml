@@ -3,6 +3,9 @@ id = "rapid_shot"
 name = "Rapid shot"
 tree = "class"
 granted = true
-description = "You nock and loose quicker: your shots take less time."
-effects = [{ kind = "weapon", role = "launcher", speed = 10 }]
-systems = ["ranged", "speed"]
+description = "You gain Focus, which comes back with time but not while you rest. A shot loosed while you have focus to spare spends a little of it and takes less time."
+effects = [
+    { kind = "grants_resource", resource = "focus" },
+    { kind = "rapid_shot", resource = "focus", cost = 2, saving = 10 },
+]
+systems = ["ranged", "speed", "resources"]

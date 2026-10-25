@@ -369,7 +369,7 @@ fn a_class_active_that_costs_a_resource_is_unavailable_without_it_and_spends_it(
     assert_eq!(Unavailable::Short(focus).id(w.content()), "short:focus");
     let outcome = w.apply(&"use:rage".parse().expect("action"));
     assert!(!outcome.took_turn, "refused");
-    assert_eq!(last(&w), "You cannot: not enough focus.");
+    assert_eq!(last(&w), "You have too little focus.");
     run(&mut w, "resource:focus");
     set(&mut w, "focus", 5);
     assert_eq!(

@@ -24,11 +24,15 @@ Nothing converts between resources and mana: each is spent by what asks for it.
 
 ## The resources
 
-The barbarian's rage runs on Rage (see [Rage](#rage) below). The other classes' features that
-are to run on these pools (the ranger's rapid shot and volley, the thief's openings and finisher,
+The barbarian's rage runs on Rage (see [Rage](#rage) below). The ranger's **focus** is in play:
+rapid shot (level 12) grants it, full, and you keep it for good. A shot you loose while you
+hold 2 focus spends them and takes 10 % less time; a volley (level 50) costs 6. Focus comes
+back while you act, but not while you rest.
+
+The other classes' features that are to run on these pools (the thief's openings and finisher,
 the monk's flurry and quivering palm, the bard's inspiration) still work as their
-[class tables](classes.md) describe; they move onto the resources below in coming updates. A base
-turn is 6 seconds.
+[class tables](classes.md) describe; they move onto the resources below in coming updates, and
+until then nothing in play grants them. A base turn is 6 seconds.
 
 {{#include generated/resources.md}}
 

@@ -327,9 +327,14 @@
 #                                 critical that many points lower (1 to 5; ambush dice of the
 #                                 same sides add up: 1d6 and 2d6 are 3d6)
 #   trained_skills { value }      every skill it is trained in counts that much higher
-#   volley { shots, cooldown, degrees }   the active Volley, aimed at a cell
-#                                 (`use:volley:12,5`): shots (2 to 5) of the readied missile
-#                                 weapon there for the price of one, then the cooldown status
+#   grants_resource { resource }  it holds that alternative resource (data/resources.toml) from
+#                                 the moment it has the talent, at its start, for good
+#   rapid_shot { resource, cost, saving }   a shot it looses while it holds `cost` of the
+#                                 resource spends them and takes `saving` percent (1 to 50) less
+#                                 time; with less, an ordinary shot
+#   volley { shots }              the active Volley, aimed at a cell (`use:volley:12,5`): shots
+#                                 (2 to 5) of the readied missile weapon there for the price of
+#                                 one; what it costs is the talent's `resource`
 #   inspire { status, mana }      the active Inspire: it suffers the status, for that mana
 #                                 (no cooldown: mana is the price)
 #   virtuoso { status }           Inspire gives that status instead, and costs no mana
