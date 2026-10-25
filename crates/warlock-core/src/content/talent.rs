@@ -706,6 +706,50 @@ pub enum TalentEffect {
     SmallTarget { value: i32 },
     /// The damage bursts and bolts (traps, scrolls) do it, this percent more (negative: less).
     SpellDamagePercent { value: i32 },
+    /// A caster's spell (design §4.1 B2): the class ability's `[[talent.spell]]` names it, and
+    /// the loader adds this effect for it, so its holder has the spell (never written in data).
+    #[serde(skip_deserializing)]
+    Spell { spell: super::ClassSpell },
+    /// Its spells and spell scrolls roll `dice` dice more and add `per_die` to every die
+    /// (Scroll adept, Empower, Archmage).
+    SpellPower {
+        #[serde(default)]
+        per_die: i32,
+        #[serde(default)]
+        dice: u32,
+    },
+    /// Its spells cost this percent more mana (negative: less; Archmage), at least 1.
+    SpellManaPercent { value: i32 },
+    /// Defence in the Deflection category, only while it wears no body armour (Mage armour).
+    DeflectionUnarmoured { value: i32 },
+    /// Rotten food neither sickens it nor exposes it to a disease (Purify).
+    Purify,
+    /// A corpse's own harm (`on_eat`: sickness, vomiting) never touches it (Herb lore,
+    /// Cauldron).
+    CorpseHarmless,
+    /// Eating `object` (an id in `data/objects/`; none: a fresh corpse) also heals `dice` hit
+    /// points (Herb lore's angelica root, Cauldron's corpses).
+    MealHeals {
+        #[serde(default)]
+        object: Option<String>,
+        dice: Dice,
+    },
+    /// Its diseases never progress: they still show until shaken off or cured (Timeless body).
+    DiseaseStill,
+    /// Its blows that hit a creature suffering `status` do `value` more damage (Poison lore).
+    StatusDamage { status: String, value: i32 },
+    /// Once in its life (`once` names it), what would kill it does not (not starving or
+    /// choking): it is left at 1 hit point, suffers `status`, and `stat` is `by` lower for good;
+    /// `message` is said (Miracle, Hag's bargain).
+    Reprieve {
+        once: String,
+        status: String,
+        #[serde(default)]
+        stat: Option<Stat>,
+        #[serde(default)]
+        by: i32,
+        message: String,
+    },
     /// Against the creature type it has killed most (ties: the first to get there), its attacks
     /// are this much likelier to hit and do this much more damage (Favoured prey).
     FavouredPrey { to_hit: i32, damage: i32 },
@@ -857,6 +901,7 @@ impl TalentEffect {
             | TalentEffect::DoorKick { value }
             | TalentEffect::BurdenDex { value }
             | TalentEffect::MissileDodge { value }
+            | TalentEffect::DeflectionUnarmoured { value }
             | TalentEffect::SmallTarget { value }
             | TalentEffect::Ferocity { value }
             | TalentEffect::StoneFind { value }
@@ -1070,6 +1115,10 @@ impl TalentEffect {
                 status(cooldown)
             }
             TalentEffect::Rage { status: id } => status(id),
+            TalentEffect::StatusDamage { status: id, value } => {
+                bonus(*value)?;
+                status(id)
+            }
             TalentEffect::Radiance { status: id, light } => {
                 status(id)?;
                 if content.light_id(light).is_none() {
@@ -1282,6 +1331,7 @@ impl TalentEffect {
             | TalentEffect::TwoHandedPrice { value }
             | TalentEffect::SpeedPercent { value }
             | TalentEffect::SpellDamagePercent { value }
+            | TalentEffect::SpellManaPercent { value }
             | TalentEffect::SkyFootstepsPercent { value }
             | TalentEffect::AttackNoisePercent { value }
             | TalentEffect::StepSlowdownPercent { value }
@@ -1466,7 +1516,38 @@ impl TalentEffect {
             | TalentEffect::Steal
             | TalentEffect::ThrowVoice
             | TalentEffect::Finisher
-            | TalentEffect::Disarm => Ok(()),
+            | TalentEffect::Disarm
+            | TalentEffect::Spell { .. }
+            | TalentEffect::Purify
+            | TalentEffect::CorpseHarmless
+            | TalentEffect::DiseaseStill => Ok(()),
+            TalentEffect::SpellPower { per_die, dice } => {
+                if !(0..=5).contains(per_die) || *dice > 5 || (*per_die == 0 && *dice == 0) {
+                    return Err("`spell_power`: per_die is 0 to 5, dice 0 to 5, not both 0".into());
+                }
+                Ok(())
+            }
+            TalentEffect::MealHeals { dice, .. } => {
+                if dice.max() < 1 || dice.min() < 0 {
+                    return Err("`meal_heals`: dice that heal".into());
+                }
+                Ok(())
+            }
+            TalentEffect::Reprieve {
+                once,
+                status: id,
+                stat,
+                by,
+                message,
+            } => {
+                if once.trim().is_empty() || message.trim().is_empty() {
+                    return Err("`reprieve`: needs `once` and a `message`".into());
+                }
+                if stat.is_some() != (*by != 0) || !(-5..=5).contains(by) {
+                    return Err("`reprieve`: a `stat` with `by` -5 to 5, not 0, or neither".into());
+                }
+                status(id)
+            }
         }
     }
 }
@@ -1672,6 +1753,8 @@ pub struct TalentDef {
     pub granted: bool,
     /// A birth sign's flaw: granted, shown with "but" and dimmed, never a prerequisite.
     pub flaw: bool,
+    /// The caster's spells it gives (`[[talent.spell]]`; each has its [`TalentEffect::Spell`]).
+    pub spells: Vec<super::SpellDef>,
     /// What using its class active costs of an alternative resource (spec §8 "Resources"):
     /// `resource = { id = "focus", cost = 6 }` (0 asks only that it is held), if anything.
     pub resource: Option<ResourceCost>,
@@ -1924,6 +2007,9 @@ struct TalentSpec {
     needs: NeedsSpec,
     #[serde(default)]
     effects: Vec<TalentEffect>,
+    /// A caster's spells (`[[talent.spell]]`, `content/class_spell.rs`).
+    #[serde(default)]
+    spell: Vec<super::class_spell::SpellSpec>,
     #[serde(default)]
     rank: Vec<RankSpec>,
     #[serde(default)]
@@ -2306,6 +2392,7 @@ pub(super) fn parse<'a>(
         ranks.push(count);
     }
     let ranks_of = |id: TalentId| ranks[usize::from(id.0)];
+    let mut spell_ids = std::collections::BTreeSet::new();
     for (i, p) in pending.into_iter().enumerate() {
         let spec = p.spec;
         let err = |m: String| ContentError::new(p.file, format!("talent `{}`: {m}", spec.id));
@@ -2346,6 +2433,16 @@ pub(super) fn parse<'a>(
         for effect in &spec.effects {
             effect.check(content, spec.choice).map_err(err)?;
         }
+        let mut effects = spec.effects;
+        let mut spells: Vec<super::SpellDef> = Vec::new();
+        for raw in spec.spell {
+            let spell = raw.spell();
+            if !spell_ids.insert(spell) {
+                return Err(err(format!("spell `{}` is given twice", spell.id())));
+            }
+            spells.push(raw.resolve(content).map_err(err)?);
+            effects.push(TalentEffect::Spell { spell });
+        }
         let mut rank_defs = Vec::new();
         for (n, rank) in spec.rank.into_iter().enumerate() {
             let own = resolve_needs(rank.needs, &book.ids, &ranks_of, spec.choice, content)
@@ -2364,7 +2461,7 @@ pub(super) fn parse<'a>(
             });
         }
         rank_defs.resize_with(usize::from(count), Rank::default);
-        if spec.effects.is_empty() && rank_defs.iter().all(|r| r.effects.is_empty()) {
+        if effects.is_empty() && rank_defs.iter().all(|r| r.effects.is_empty()) {
             return Err(err("does nothing: it needs `effects`".into()));
         }
         if spec.flaw && !spec.granted {
@@ -2373,7 +2470,7 @@ pub(super) fn parse<'a>(
         let resource = match &spec.resource {
             None => None,
             Some(cost) => {
-                if !spec.effects.iter().any(|e| e.active().is_some()) {
+                if !effects.iter().any(|e| e.active().is_some()) {
                     return Err(err("a `resource` cost is for a class active".into()));
                 }
                 let resource = content.resource_id(&cost.id).ok_or_else(|| {
@@ -2398,11 +2495,12 @@ pub(super) fn parse<'a>(
             choice: spec.choice,
             description: spec.description,
             needs,
-            effects: spec.effects,
+            effects,
             ranks: rank_defs,
             systems,
             granted: spec.granted,
             flaw: spec.flaw,
+            spells,
             resource,
         });
     }

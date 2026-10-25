@@ -158,6 +158,7 @@ impl World {
             None => self.feed(nutrition, food.object),
         }
         self.remedy(&def.cures, events);
+        self.meal_heals(&food, rotten);
         if self.state.death.is_none() {
             self.hunger_news(before);
             self.burden_news(burden);
@@ -217,7 +218,14 @@ impl World {
         if let Some(text) = on_eat.message {
             self.say(text);
         }
-        if on_eat.vomit > 0 && self.state.rng.chance(u32::from(on_eat.vomit)) {
+        // Herb lore, Cauldron (spec §8 "Class abilities"): a corpse's own harm never touches
+        // them (no draw for it).
+        let harmless = self
+            .state
+            .player()
+            .talent_mods(&self.content)
+            .corpse_harmless;
+        if !harmless && on_eat.vomit > 0 && self.state.rng.chance(u32::from(on_eat.vomit)) {
             self.vomit();
             return;
         }
@@ -242,7 +250,7 @@ impl World {
                 self.say("You feel better.");
             }
         }
-        if let Some(harm) = on_eat.harm {
+        if let Some(harm) = on_eat.harm.filter(|_| !harmless) {
             let degrees = harm.roll(&mut self.state.rng);
             self.sicken(degrees, events);
         }
@@ -279,6 +287,12 @@ impl World {
             self.vomit();
             return;
         }
+        // Purify (spec §8 "Class abilities"): rotten food neither sickens them nor exposes them
+        // to a disease, and draws nothing for it.
+        if self.state.player().talent_mods(&content).purify {
+            self.feed(nutrition, what);
+            return;
+        }
         let degrees = rotten.harm.roll(&mut self.state.rng);
         // Iron stomach halves it, and a talent that eats rot better (a birth sign's Evergreen)
         // lessens it, rounded down.
@@ -297,6 +311,30 @@ impl World {
         // Rotten food may carry a disease (grave rot): a check to resist it (spec §8 "Diseases").
         self.expose_to(self.state.player, "rotten_food");
         self.feed(nutrition, what);
+    }
+
+    /// What the player's talents heal of a meal of `food` besides (spec §8 "Class abilities":
+    /// Herb lore's angelica root, Cauldron's fresh corpses): each match rolls its dice, never
+    /// past the maximum. A rotten meal heals nothing; no draw without a match.
+    fn meal_heals(&mut self, food: &Stack, rotten: bool) {
+        let mods = self.state.player().talent_mods(&self.content);
+        let corpse = self.content.object(food.object).corpse.is_some();
+        let matched: Vec<_> = (mods.meal_heals.iter())
+            .filter(|(object, _)| match object {
+                Some(o) => *o == food.object,
+                None => corpse && !rotten,
+            })
+            .map(|(_, dice)| *dice)
+            .collect();
+        for dice in matched {
+            let points = dice.roll(&mut self.state.rng).max(0);
+            let max = self.state.player().max_hp(&self.content);
+            let me = self.player_mut();
+            if points > 0 && me.hp < max {
+                me.hp = me.hp.saturating_add(points).min(max);
+                self.say("You feel better.");
+            }
+        }
     }
 
     /// What the player ate cures what `cures` names ([`World::cure`]): each disease it ends

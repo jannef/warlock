@@ -1,0 +1,8 @@
+[[talent]]
+id = "arcane_mastery"
+name = "Arcane mastery"
+tree = "class"
+granted = true
+description = "Your mana comes back twice as fast."
+effects = [{ kind = "mana_regen_percent", value = 100 }]
+systems = ["mana"]

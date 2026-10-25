@@ -1,0 +1,8 @@
+[[talent]]
+id = "arcane_lore"
+name = "Arcane lore"
+tree = "class"
+granted = true
+description = "A magic item you have carried for an hour gives up its secrets: you know what it is."
+effects = [{ kind = "identify_carried", hours = 1 }]
+systems = ["magic_items"]

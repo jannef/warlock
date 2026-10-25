@@ -1,0 +1,8 @@
+[[talent]]
+id = "empower"
+name = "Empower"
+tree = "class"
+granted = true
+description = "Your spells and your spell scrolls roll one die more."
+effects = [{ kind = "spell_power", dice = 1 }]
+systems = ["scrolls", "mana"]

@@ -163,7 +163,7 @@ impl Aim {
             AimKind::Read(item) => scroll_spell(view, item).map(|s| s.range),
             // A volley flies as far as a shot.
             AimKind::Ability(VOLLEY) => view.ready_to_fire().map(|(_, _, range)| range),
-            AimKind::Ability(ability) => ability.range(),
+            AimKind::Ability(ability) => ability.reach(view.content()),
         }
     }
 
@@ -184,12 +184,12 @@ impl Aim {
     /// through creatures, so only what is solid blocks it. An ability flies nowhere: no line,
     /// only whether the player sees the cursor's cell and it is within reach.
     pub fn line(&self, view: &PerceptionView<'_>) -> Line {
-        let bolt = match self.kind {
-            AimKind::Read(item) => {
-                scroll_spell(view, item).is_some_and(|s| matches!(s.cast, Cast::Bolt(_)))
+        let bolt = match (self.kind, aimed_spell(view, self.kind)) {
+            (AimKind::Ability(VOLLEY), _) => false,
+            (AimKind::Read(_) | AimKind::Ability(_), Some(s)) => matches!(s.cast, Cast::Bolt(_)),
+            (AimKind::Ability(ability), None) => {
+                return sight_line(view, self.at, ability.reach(view.content()));
             }
-            AimKind::Ability(VOLLEY) => false,
-            AimKind::Ability(ability) => return sight_line(view, self.at, ability.range()),
             _ => false,
         };
         line_of(view, view.viewer(), self.at, self.range(view), !bolt)
@@ -202,13 +202,10 @@ impl Aim {
     /// counted). Returns what would catch them ("fireball"); `None` for anything else, and for
     /// a player their own bursts spare (Careful reader).
     pub fn catches_reader(&self, view: &PerceptionView<'_>) -> Option<String> {
-        let AimKind::Read(item) = self.kind else {
-            return None;
-        };
         if view.bursts_spare_me() {
             return None;
         }
-        let spell = scroll_spell(view, item)?;
+        let spell = aimed_spell(view, self.kind)?;
         let Cast::Burst(burst) = &spell.cast else {
             return None;
         };
@@ -287,6 +284,18 @@ pub struct Line {
 
 /// The spell the scroll in inventory stack `item` casts, if it is one (scroll types are known on
 /// sight, spec §8 "Scrolls").
+/// The burst or bolt `kind` casts: a spell scroll's, or a caster's strike (spec §8 "Class
+/// abilities"), which flies and is aimed the same way.
+fn aimed_spell<'v>(view: &PerceptionView<'v>, kind: AimKind) -> Option<&'v ScrollSpell> {
+    match kind {
+        AimKind::Read(item) => scroll_spell(view, item),
+        AimKind::Ability(Ability::Spell(spell)) => {
+            (view.content().class_spell(spell)).and_then(|(_, def)| def.strike())
+        }
+        _ => None,
+    }
+}
+
 fn scroll_spell<'v>(view: &PerceptionView<'v>, item: usize) -> Option<&'v ScrollSpell> {
     let stack = view.inventory().get(item)?;
     let content = view.content();

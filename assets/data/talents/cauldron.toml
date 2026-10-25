@@ -1,0 +1,12 @@
+[[talent]]
+id = "cauldron"
+name = "Cauldron"
+tree = "class"
+granted = true
+description = "Your stomach is a cauldron: corpses never harm you, their gifts to your body come twice as often, and a fresh one heals you."
+effects = [
+    { kind = "corpse_harmless" },
+    { kind = "corpse_stats_percent", value = 100 },
+    { kind = "meal_heals", dice = "1d4" },
+]
+systems = ["hunger"]
