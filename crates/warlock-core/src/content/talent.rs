@@ -729,6 +729,12 @@ pub enum TalentEffect {
     /// Its attacks on a creature that has not seen it threaten a critical this many points
     /// lower (Master thief).
     AmbushThreat { value: u8 },
+    /// The class active Master thief: its finisher, a melee blow in a direction that is a
+    /// critical if it hits, with no confirmation roll (its cost is the talent's `resource`).
+    Finisher,
+    /// Holding it grants alternative resource `id` (spec §8 "Resources"): the character holds
+    /// it from the moment the talent is theirs (Improved sneak attack's Openings).
+    Resource { id: String },
     /// Every skill it is trained in counts this much higher (Jack of all trades).
     TrainedSkills { value: i32 },
     /// The class active Volley: `shots` shots at a cell for the price of one, then `degrees` of
@@ -789,6 +795,7 @@ impl TalentEffect {
             TalentEffect::Radiance { .. } => A::HolyRadiance,
             TalentEffect::QuiveringPalm { .. } => A::QuiveringPalm,
             TalentEffect::Volley { .. } => A::Volley,
+            TalentEffect::Finisher => A::MasterThief,
             TalentEffect::Inspire { .. } => A::Inspire,
             _ => return None,
         })
@@ -872,6 +879,15 @@ impl TalentEffect {
                     return Err("`ambush_threat`: value is 1 to 5".into());
                 }
                 Ok(())
+            }
+            TalentEffect::Resource { id } => {
+                // Content without resources has nothing to check it by: it stays, and grants
+                // nothing.
+                if content.resources().is_empty() || content.resource_id(id).is_some() {
+                    Ok(())
+                } else {
+                    Err(format!("names an unknown resource `{id}`"))
+                }
             }
             TalentEffect::Volley {
                 shots,
@@ -1437,6 +1453,7 @@ impl TalentEffect {
             | TalentEffect::PickLock
             | TalentEffect::Steal
             | TalentEffect::ThrowVoice
+            | TalentEffect::Finisher
             | TalentEffect::Disarm => Ok(()),
         }
     }

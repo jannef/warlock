@@ -431,6 +431,7 @@ mod tests {
             threat: 24,
             crit: 2,
             confirm: 0,
+            sure_critical: false,
             extra: None,
             penetration: 0,
             kinds: Default::default(),

@@ -51,6 +51,9 @@
 #                 in the `racial` tree and named by races.toml's `talents`
 #   flaw          true: a birth sign's flaw (granted too): shown with "but" and dimmed, never
 #                 a prerequisite of another talent
+#   resource      `{ id = "openings", cost = 5 }`: what using its class active costs of an
+#                 alternative resource (data/resources.toml; at most its max; 0 asks only that
+#                 it is held): unavailable while short, spent when used
 #
 # Effects (each read by one rule; a new kind is a variant in content/talent.rs, a field in
 # talent.rs's TalentMods, and one read):
@@ -322,6 +325,13 @@
 #   ambush_threat { value }       its attacks on a creature that has not seen it threaten a
 #                                 critical that many points lower (1 to 5; ambush dice of the
 #                                 same sides add up: 1d6 and 2d6 are 3d6)
+#   finisher                      the active Master thief, aimed in a direction
+#                                 (`use:master_thief:E`): a blow that is a critical whenever it
+#                                 hits, with no confirmation roll (its price the talent's
+#                                 `resource` cost: five openings)
+#   resource { id }               holding it grants that alternative resource
+#                                 (data/resources.toml; spec §8 "Resources"), if it is not held
+#                                 already: Improved sneak attack's Openings
 #   trained_skills { value }      every skill it is trained in counts that much higher
 #   volley { shots, cooldown, degrees }   the active Volley, aimed at a cell
 #                                 (`use:volley:12,5`): shots (2 to 5) of the readied missile

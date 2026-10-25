@@ -27,7 +27,8 @@ kit = [
 # Bonus talents from Shadow, Finesse, and Delver, every sixth level from 4.
 bonus_talents = { levels = [4, 10, 16, 22, 28, 34, 46, 58], trees = ["shadow", "finesse", "delver"] }
 # The level table (spec §8 "Class abilities"). Evasion is the Finesse talent, given. Improved
-# sneak attack and Master thief move onto an Openings pool with the alternative resources (#225).
+# sneak attack grants the Openings pool (data/resources.toml) that sneak attacks build, and
+# Master thief's finisher spends it.
 abilities = [
     { level = 1, talent = "sneak_attack" },
     { level = 6, talent = "trapfinding" },

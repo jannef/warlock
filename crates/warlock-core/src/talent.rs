@@ -16,8 +16,8 @@
 use crate::alignment::Band;
 use crate::character::Character;
 use crate::content::{
-    Benefit, Choice, CombatStance, Content, DamageTypeId, LightId, MAX_RANK, Need, Role, Sign,
-    StatusId, TalentDef, TalentEffect, TalentId, TerrainId,
+    Benefit, Choice, CombatStance, Content, DamageTypeId, LightId, MAX_RANK, Need, ResourceId,
+    Role, Sign, StatusId, TalentDef, TalentEffect, TalentId, TerrainId,
 };
 use crate::damage::Kinds;
 use crate::dice::Dice;
@@ -489,6 +489,11 @@ pub struct TalentMods {
     pub throw_voice: bool,
     /// Points lower its attacks on a creature that has not seen it threaten (Master thief).
     pub ambush_threat: u8,
+    /// The active Master thief: its finisher, a blow that is a sure critical.
+    pub finisher: bool,
+    /// The alternative resources holding it grants (spec §8 "Resources": Improved sneak
+    /// attack's Openings), in the order its effects name them, each once.
+    pub resources: Vec<ResourceId>,
     /// How much higher every skill it is trained in counts (Jack of all trades).
     pub trained_skills: i32,
     /// The active Volley, if it has it.
@@ -708,6 +713,7 @@ impl TalentMods {
             A::HolyRadiance => self.radiance.is_some(),
             A::QuiveringPalm => self.quivering_palm.is_some(),
             A::Volley => self.volley.is_some(),
+            A::MasterThief => self.finisher,
             A::Inspire => self.inspire.is_some(),
         }
     }
@@ -1339,6 +1345,13 @@ impl TalentMods {
             TalentEffect::Steal => self.steal = true,
             TalentEffect::ThrowVoice => self.throw_voice = true,
             TalentEffect::AmbushThreat { value } => self.ambush_threat += value,
+            TalentEffect::Finisher => self.finisher = true,
+            TalentEffect::Resource { id } => {
+                let resource = content.resource_id(&id);
+                if let Some(r) = resource.filter(|r| !self.resources.contains(r)) {
+                    self.resources.push(r);
+                }
+            }
             TalentEffect::TrainedSkills { value } => self.trained_skills += value,
             TalentEffect::Volley {
                 shots,

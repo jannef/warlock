@@ -560,7 +560,10 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
             .into_iter()
             .collect(),
         ClassActive::Volley => mods.volley.map(|v| v.cooldown).into_iter().collect(),
-        ClassActive::Whirlwind | ClassActive::HolyRadiance | ClassActive::Inspire => Vec::new(),
+        ClassActive::Whirlwind
+        | ClassActive::HolyRadiance
+        | ClassActive::MasterThief
+        | ClassActive::Inspire => Vec::new(),
     };
     cooldowns.into_iter().find(|&s| actor.effects.has(s))
 }

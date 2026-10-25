@@ -68,6 +68,7 @@ impl World {
         let content = self.content.clone();
         let class = self.class_id();
         let given = grant(&content, class.as_deref(), self.player_mut(), level);
+        self.grant_talent_resources(self.state.player);
         if news {
             for id in given {
                 self.news
