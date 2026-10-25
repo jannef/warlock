@@ -9,7 +9,7 @@
 //! pools an actor holds are saved by it), so a new resource is a new `[[resource]]` entry, never
 //! a reordering. Without the file there are none.
 
-use super::ContentError;
+use super::{ContentError, StatusId};
 use serde::{Deserialize, Serialize};
 
 /// Index of a resource in [`super::Content::resources`], in file order (in the content
@@ -121,6 +121,7 @@ struct ResourceSpec {
     #[serde(default)]
     ends_at_zero: bool,
     ended: Option<String>,
+    status: Option<String>,
     #[serde(default)]
     builds: Vec<BuildSpec>,
 }
@@ -158,6 +159,9 @@ pub struct ResourceDef {
     pub ends_at_zero: bool,
     /// What the player is told when it ends ("Your rage subsides."), if anything.
     pub ended: Option<String>,
+    /// The status its holder suffers while they hold it (Raging, for rage): it begins as the
+    /// resource is granted and ends with it, never easing by itself.
+    pub status: Option<StatusId>,
     /// What builds it up, and by how much, in file order (one entry per event).
     pub builds: Vec<(Build, u16)>,
 }
@@ -173,8 +177,13 @@ impl ResourceDef {
 
 /// Parses `data/resources.toml`: resources with unique ids, a maximum of 1 to
 /// [`MAX_RESOURCE`], a start no higher than it (at least 1 for one that ends at zero), at most
-/// one way of changing over time, and each building event once.
-pub(super) fn parse(file: &str, text: &str) -> Result<Vec<ResourceDef>, ContentError> {
+/// one way of changing over time, each building event once, and a `status` that `status` knows
+/// (`(id, whether it eases by itself)`) and that does not ease by itself.
+pub(super) fn parse(
+    file: &str,
+    text: &str,
+    status: impl Fn(&str) -> Option<(StatusId, bool)>,
+) -> Result<Vec<ResourceDef>, ContentError> {
     let err = |m: String| ContentError::new(file, m);
     let parsed: ResourceFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
     let mut list: Vec<ResourceDef> = Vec::new();
@@ -222,6 +231,18 @@ pub(super) fn parse(file: &str, text: &str) -> Result<Vec<ResourceDef>, ContentE
         if spec.ended.as_ref().is_some_and(|t| t.trim().is_empty()) {
             return Err(err("`ended` must not be empty"));
         }
+        let tied = match &spec.status {
+            None => None,
+            Some(name) => match status(name) {
+                None => return Err(err(&format!("names an unknown status `{name}`"))),
+                Some((_, true)) => {
+                    return Err(err(&format!(
+                        "its status `{name}` lasts while it is held: it must not `eases`"
+                    )));
+                }
+                Some((id, false)) => Some(id),
+            },
+        };
         let mut builds: Vec<(Build, u16)> = Vec::new();
         for b in &spec.builds {
             if builds.iter().any(|(on, _)| *on == b.on) {
@@ -243,6 +264,7 @@ pub(super) fn parse(file: &str, text: &str) -> Result<Vec<ResourceDef>, ContentE
             resting: spec.resting,
             ends_at_zero: spec.ends_at_zero,
             ended: spec.ended,
+            status: tied,
             builds,
         });
     }
@@ -260,13 +282,55 @@ mod tests {
                         max = 20\nstart = 12\nshow_max = false\ndecays = 6\nends_at_zero = true\n\
                         ended = \"Your rage subsides.\"\nbuilds = [{ on = \"kill\", amount = 5 }]\n";
 
+    fn none(_: &str) -> Option<(StatusId, bool)> {
+        None
+    }
+
+    #[test]
+    fn a_resource_may_bring_a_status_that_lasts_while_it_is_held() {
+        let statuses = |name: &str| match name {
+            "raging" => Some((StatusId(3), false)),
+            "winded" => Some((StatusId(4), true)),
+            _ => None,
+        };
+        let with = |status: &str| format!("{RAGE}status = \"{status}\"\n");
+        let list = parse("r.toml", &with("raging"), statuses).expect("parses");
+        assert_eq!(list[0].status, Some(StatusId(3)));
+        let bad = |status: &str| {
+            parse("r.toml", &with(status), statuses)
+                .expect_err(status)
+                .to_string()
+        };
+        assert!(bad("winded").contains("must not `eases`"));
+        assert!(bad("sulking").contains("unknown status `sulking`"));
+        assert_eq!(parse("r.toml", RAGE, none).expect("parses")[0].status, None);
+    }
+
+    #[test]
+    fn a_status_that_is_followed_must_end_by_time_a_cure_or_its_resource() {
+        use crate::content::{Content, ContentFiles};
+        let mut files = ContentFiles::builtin();
+        let (_, text) = files
+            .table("resources")
+            .next()
+            .expect("data/resources.toml");
+        let text = text.replace("status = \"raging\"\n", "");
+        files.insert("data/resources.toml", &text);
+        let e = Content::load(&files).expect_err("Raging would never end");
+        assert!(
+            e.to_string()
+                .contains("status `raging`: follows: it never ends"),
+            "{e}"
+        );
+    }
+
     #[test]
     fn resources_parse_in_order_with_their_rules() {
         let text = format!(
             "{RAGE}[[resource]]\nid = \"focus\"\nname = \"Focus\"\nshort = \"Focus\"\n\
              max = 10\nregenerates = 6\nresting = false\n"
         );
-        let list = parse("r.toml", &text).expect("parses");
+        let list = parse("r.toml", &text, none).expect("parses");
         assert_eq!(list.len(), 2);
         let rage = &list[0];
         assert_eq!((rage.max, rage.start, rage.show_max), (20, 12, false));
@@ -285,7 +349,7 @@ mod tests {
         let head = "[[resource]]\nid = \"x\"\nname = \"X\"\nshort = \"X\"\n";
         let bad = |rest: &str| {
             let text = format!("{head}{rest}");
-            parse("r.toml", &text).expect_err(rest).to_string()
+            parse("r.toml", &text, none).expect_err(rest).to_string()
         };
         assert!(bad("max = 0").contains("`max`"));
         assert!(bad("max = 1001").contains("`max`"));
@@ -301,14 +365,14 @@ mod tests {
         assert!(bad("max = 5\nbuilds = [{ on = \"sneeze\", amount = 1 }]").contains("sneeze"));
         let long = "[[resource]]\nid = \"x\"\nname = \"X\"\nshort = \"Thirteen long\"\nmax = 5\n";
         assert!(
-            parse("r.toml", long)
+            parse("r.toml", long, none)
                 .expect_err("long")
                 .to_string()
                 .contains("`short`")
         );
         let dup = format!("{RAGE}{RAGE}");
         assert!(
-            parse("r.toml", &dup)
+            parse("r.toml", &dup, none)
                 .expect_err("dup")
                 .to_string()
                 .contains("duplicate")

@@ -122,11 +122,13 @@ fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
         }
     }
     causes.extend(attacks.iter().map(String::as_str));
+    let brought = brought_by(content, status).map(|r| format!("holding {r}"));
     let sickness = (content.hunger()).and_then(|h| content.status_id(h.sickness.as_deref()?));
     if sickness.is_some_and(|s| usize::from(s.0) == status) {
         causes.push("eating rotten food");
     }
     let mut causes: Vec<String> = causes.into_iter().map(String::from).collect();
+    causes.extend(brought);
     let ending = (content.status_defs().iter())
         .filter(|s| s.follows.is_some_and(|f| usize::from(f.0) == status))
         .map(|s| format!("the end of {}", s.name));
@@ -136,6 +138,13 @@ fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
     } else {
         capital(&causes.join("; "))
     }
+}
+
+/// The resource that brings status `status` while it is held (Rage brings Raging), by name.
+fn brought_by(content: &Content, status: usize) -> Option<String> {
+    (content.resources().iter())
+        .find(|r| r.status.is_some_and(|s| usize::from(s.0) == status))
+        .map(|r| r.name.clone())
 }
 
 /// What else a status does while it lasts and as it ends, in words: its fighting bonuses (as a
@@ -211,6 +220,10 @@ pub(super) fn status_effects(content: &Content) -> String {
             }
             Some(e) => format!("a degree {}", every(e)),
             None if diseased => "when the diseases are gone".to_string(),
+            None if brought_by(content, i).is_some() => {
+                let r = brought_by(content, i).unwrap_or_default();
+                format!("when {} ends (the Resources page)", r.to_lowercase())
+            }
             None => "only when cured".to_string(),
         };
         let stats = def.penalty.as_ref().map_or_else(

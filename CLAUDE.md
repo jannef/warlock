@@ -151,11 +151,13 @@ effect, `ID` an id in `assets/data/effects.toml`: `effect:fireball@30,14` (a bur
 toward the second cell), no time and no rules effect, for captures; `identify` is the dev
 identify (magic items, no time; without letters everything carried); `afflict` is the dev status
 effect: one degree more of `STATUS`, an id in `assets/data/status.toml`, e.g.
-`afflict:poisoned*4 afflict:bleeding`, no game time (not `diseased`: that comes of a disease);
+`afflict:poisoned*4 afflict:bleeding`, no game time (not `diseased`: that comes of a disease; nor
+`raging`: that comes of `resource:rage`);
 `drain` is the dev mana drain: the player spends N mana (1 or more) through `World::spend_mana` (as an ability would: Frugal caster's cut, a Willpower training chance),
 refused when they have less, no game time, for captures (`docs/dev/mana.md`); `resource` is the
 dev resource grant: the player holds `ID`, an id in `assets/data/resources.toml`, at its start,
-through `World::grant_resource`, no game time, e.g. `resource:rage wait*3`
+through `World::grant_resource_with_status` (with the status it brings: Raging), no game time,
+e.g. `resource:rage wait*3`
 (`docs/dev/resources.md`); `infect` is the dev disease: the player catches `DISEASE`, an id in `assets/data/diseases.toml`,
 as if they had lost the check (it incubates, then shows), e.g. `infect:the_shakes rest:24h*3`,
 no game time; `freeze:X,Y,R` and `thaw:X,Y,R` are the dev frost and heat bursts (radius 0 to 20

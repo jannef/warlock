@@ -543,12 +543,18 @@ impl Ability {
                     .or_else(|| class_cooldown(actor, content, active).map(Unavailable::While))
                     .or_else(|| short_of(actor, def?.resource?))
                     .or_else(|| {
-                        // Inspire costs mana (Virtuoso's none).
+                        // Inspire costs mana (Virtuoso's none), which a status that blocks
+                        // casting (Raging) keeps from being spent.
                         let mana = (active == ClassActive::Inspire)
                             .then(|| actor.talent_mods(content).inspiring())
                             .flatten()
                             .map_or(0, |i| i.mana);
-                        (actor.mana < actor.mana_cost(content, mana)).then_some(Unavailable::NoMana)
+                        let cost = actor.mana_cost(content, mana);
+                        let blocked = (cost > 0)
+                            .then(|| actor.effects.blocking(content, ActionKind::Cast))
+                            .flatten();
+                        (blocked.map(Unavailable::While))
+                            .or((actor.mana < cost).then_some(Unavailable::NoMana))
                     })
             }
             Ability::Spell(spell) => short_of_mana(actor, content, spell),
@@ -583,7 +589,7 @@ impl Ability {
 fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Option<StatusId> {
     let mods = actor.talent_mods(content);
     let cooldowns: Vec<StatusId> = match active {
-        ClassActive::Rage => (mods.rage.into_iter())
+        ClassActive::Rage => (mods.rage_status(content).into_iter())
             .flat_map(|s| [Some(s), content.status(s).follows])
             .flatten()
             .collect(),

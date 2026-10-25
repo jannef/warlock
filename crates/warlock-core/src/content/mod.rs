@@ -649,8 +649,13 @@ impl Content {
         // Resources before talents, whose actives may cost them.
         let path = "data/resources.toml";
         if let Some(text) = files.get_optional(path) {
-            content.resources = resource::parse(path, text)?;
+            let status = |name: &str| {
+                let id = content.status_id(name)?;
+                Some((id, content.status(id).eases.is_some()))
+            };
+            content.resources = resource::parse(path, text, status)?;
         }
+        content.check_follows_end()?;
         // The talent table (spec §8 "Talents"): optional, so no level asks for a pick without it.
         if files.table("talents").next().is_some() {
             content.talents = talent::parse(files.table("talents"), &content)?;
@@ -1194,6 +1199,29 @@ impl Content {
     }
 
     /// Status effects and the healing rules (optional: none, and the default healing).
+    /// Every status that something `follows` into must end: it eases, something cures it, or
+    /// a resource brings it (Raging ends with Rage, spec §8 "Resources"), so the one that
+    /// follows it begins. Checked once the resources are loaded.
+    fn check_follows_end(&self) -> Result<(), ContentError> {
+        for def in &self.statuses {
+            let brought = (self.resources.iter()).any(|r| {
+                r.status
+                    .is_some_and(|s| self.statuses[usize::from(s.0)].id == def.id)
+            });
+            if def.follows.is_some() && def.eases.is_none() && def.cured_by.is_empty() && !brought {
+                return Err(ContentError::new(
+                    "data/status.toml",
+                    format!(
+                        "status `{}`: follows: it never ends (it has no `eases` and no \
+                         `cured_by`, and no resource brings it)",
+                        def.id
+                    ),
+                ));
+            }
+        }
+        Ok(())
+    }
+
     fn load_statuses(&mut self, files: &ContentFiles) -> Result<(), ContentError> {
         let path = "data/status.toml";
         let Some(text) = files.get_optional(path) else {

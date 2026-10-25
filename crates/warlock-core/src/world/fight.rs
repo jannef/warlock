@@ -917,7 +917,6 @@ impl World {
                 self.gain_resource(by, Build::Kill);
             }
             if by == Some(self.state.player) {
-                self.frenzy();
                 self.earn_kill(creature);
                 let level = self.state.current_level.clone();
                 self.tally_kill(creature, &level);

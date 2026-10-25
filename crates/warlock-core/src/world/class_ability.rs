@@ -106,16 +106,6 @@ impl World {
         Spent::Turn(self.price_of(player, ActionKind::Chat))
     }
 
-    /// Rage: the player suffers the rage's status (Raging), for the time of a wait.
-    fn rage(&mut self, events: &mut Vec<Event>) -> Spent {
-        let player = self.state.player;
-        let Some(status) = self.state.player().talent_mods(&self.content).rage else {
-            return Spent::Nothing;
-        };
-        self.afflict(player, status, 1, Some(player), events);
-        Spent::Turn(self.price_of(player, ActionKind::Wait))
-    }
-
     /// Veteran's wind: hit points back at once (one a level, at least its floor), then its
     /// cooldown, for the time of a wait.
     fn veterans_wind(&mut self, events: &mut Vec<Event>) -> Spent {
@@ -317,55 +307,5 @@ impl World {
         let max = self.state.player().max_hp(&self.content);
         let me = self.player_mut();
         me.hp = (me.hp + back).min(max).max(me.hp);
-    }
-
-    /// The player killed something: with Blood frenzy, a rage they are in lasts longer (its
-    /// easing set back, never past its full length).
-    pub(super) fn frenzy(&mut self) {
-        let mods = self.state.player().talent_mods(&self.content);
-        let (Some(status), seconds) = (mods.rage, mods.blood_frenzy) else {
-            return;
-        };
-        if seconds == 0 {
-            return;
-        }
-        let me = self.player_mut();
-        if let Some(rage) = me.effects.iter_mut().find(|e| e.status == status) {
-            rage.wear = rage.wear.saturating_sub(seconds);
-        }
-    }
-
-    /// Whether actor `id`, hit for `damage`, holds on with Unstoppable: a blow that would take
-    /// its last hit point while it rages leaves it that one, and the rage ends (what follows it
-    /// begins). The caller then does no more harm.
-    pub(super) fn unstoppable(
-        &mut self,
-        id: ActorId,
-        damage: i32,
-        events: &mut Vec<Event>,
-    ) -> bool {
-        let Some(actor) = self.state.actors.get(&id) else {
-            return false;
-        };
-        if actor.hp - damage > 0 || actor.hp <= 0 {
-            return false;
-        }
-        let mods = actor.talent_mods(&self.content);
-        let (Some(status), Some(_)) = (mods.rage, mods.unstoppable) else {
-            return false;
-        };
-        let Some(rage) = actor.effects.get(status).copied() else {
-            return false;
-        };
-        let Some(actor) = self.state.actors.get_mut(&id) else {
-            return false;
-        };
-        actor.hp = 1;
-        actor.effects.remove(status);
-        if id == self.state.player {
-            self.say("You refuse to fall!");
-        }
-        self.ended(id, &[rage], events);
-        true
     }
 }

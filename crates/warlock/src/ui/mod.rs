@@ -1092,11 +1092,12 @@ mod tests {
             .collect();
         // Rage shows its value alone, focus its maximum too.
         assert_eq!(texts[2..5], ["MP 0/0", "Rage 11", "Focus 10/10"]);
-        let line = "Hoard  ·  HP 10/10  ·  MP 0/0  ·  Rage 11  ·  Focus 10/10";
+        // Raging (the rage brings it) raises Toughness, and the maximum with it.
+        let line = "Hoard  ·  HP 10/12  ·  MP 0/0  ·  Rage 11  ·  Focus 10/10";
         let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius);
         assert_eq!(
             fit_segments(&segments, line.chars().count() - 1),
-            "Hoard  ·  HP 10/10  ·  MP 0/0  ·  Rage 11",
+            "Hoard  ·  HP 10/12  ·  MP 0/0  ·  Rage 11",
             "the last resource gives way first, before the mana"
         );
     }

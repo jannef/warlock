@@ -10,8 +10,8 @@
 
 use super::affix::Once;
 use super::{
-    CombatStance, Content, ContentError, MAX_LEVEL, MAX_RANK, ResourceId, Role, WeaponSkillId,
-    duplicate_id,
+    Build, CombatStance, Content, ContentError, MAX_LEVEL, MAX_RANK, MAX_RESOURCE, ResourceId,
+    Role, WeaponSkillId, duplicate_id,
 };
 use crate::alignment::Requirement;
 use crate::dice::Dice;
@@ -515,15 +515,22 @@ pub enum TalentEffect {
     /// Lay on hands heals fully and cures every status that may be cured and every disease, and
     /// its cooldown is half as long (Avatar).
     Avatar,
-    /// The class active Rage: the player suffers `status` (Raging), and no rage while it or the
-    /// status it `follows` into lasts.
-    Rage { status: String },
-    /// A kill of the player's while raging keeps the rage this many seconds longer (never past
-    /// its full length; Blood frenzy).
-    BloodFrenzy { seconds: u32 },
+    /// The class active Rage: the player is granted `resource` (Rage, spec §8 "Resources") and
+    /// suffers its status (Raging) while it lasts; no rage while that or the status it `follows`
+    /// into lasts.
+    Rage { resource: String },
+    /// Event `on` builds `resource` this much more while it is held, beside what the resource's
+    /// own `builds` give (Blood frenzy: 5 rage a kill).
+    ResourceBuild {
+        resource: String,
+        on: Build,
+        amount: u16,
+    },
+    /// `resource` holds this much more at most (Mighty rage: 10 more rage).
+    ResourceMax { resource: String, value: u16 },
     /// While raging: the statuses named tick nothing, and a blow that would take the last hit
-    /// point leaves it, ending the rage (Unstoppable).
-    Unstoppable { statuses: Vec<String> },
+    /// point leaves it for `cost` of the rage, when that much is held (Unstoppable).
+    Unstoppable { statuses: Vec<String>, cost: u16 },
     /// The class active Whirlwind: a blow at every hostile beside it for the price of one
     /// attack.
     Whirlwind,
@@ -853,9 +860,10 @@ impl TalentEffect {
                 .then_some(())
                 .ok_or_else(|| format!("names an unknown status `{id}`"))
         };
-        // A resource's maximum, if content has resources to check it by (as statuses above).
+        // A resource it names, by id; `None` for content without resources, which has nothing
+        // to check it by (it stays, and does nothing).
         let resource = |id: &str| match content.resource_id(id) {
-            Some(r) => Ok(Some(content.resource(r).max)),
+            Some(r) => Ok(Some(r)),
             None if content.resources().is_empty() => Ok(None),
             None => Err(format!("names an unknown resource `{id}`")),
         };
@@ -939,7 +947,7 @@ impl TalentEffect {
                 if !(1..=50).contains(saving) {
                     return Err("`rapid_shot`: saving is 1 to 50".into());
                 }
-                match resource(id)? {
+                match resource(id)?.map(|r| content.resource(r).max) {
                     Some(max) if *cost > max => Err(format!(
                         "`rapid_shot`: costs {cost} of `{id}`, more than its maximum {max}"
                     )),
@@ -1110,7 +1118,34 @@ impl TalentEffect {
                 }
                 status(cooldown)
             }
-            TalentEffect::Rage { status: id } => status(id),
+            TalentEffect::Rage { resource: id } => {
+                let r = resource(id)?;
+                if r.is_some_and(|r| content.resource(r).status.is_none()) {
+                    return Err(format!("`rage`: the resource `{id}` brings no `status`"));
+                }
+                Ok(())
+            }
+            TalentEffect::ResourceBuild {
+                resource: id,
+                amount,
+                ..
+            } => {
+                resource(id)?;
+                if !(1..=MAX_RESOURCE).contains(amount) {
+                    return Err(format!("`resource_build`: amount is 1 to {MAX_RESOURCE}"));
+                }
+                Ok(())
+            }
+            TalentEffect::ResourceMax {
+                resource: id,
+                value,
+            } => {
+                resource(id)?;
+                if !(1..=MAX_RESOURCE).contains(value) {
+                    return Err(format!("`resource_max`: value is 1 to {MAX_RESOURCE}"));
+                }
+                Ok(())
+            }
             TalentEffect::StatusDamage { status: id, value } => {
                 bonus(*value)?;
                 status(id)
@@ -1122,12 +1157,11 @@ impl TalentEffect {
                 }
                 Ok(())
             }
-            TalentEffect::Unstoppable { statuses } => statuses.iter().try_for_each(|id| status(id)),
-            TalentEffect::BloodFrenzy { seconds } => {
-                if !(1..=600).contains(seconds) {
-                    return Err("`blood_frenzy`: seconds is 1 to 600".into());
+            TalentEffect::Unstoppable { statuses, cost } => {
+                if !(1..=MAX_RESOURCE).contains(cost) {
+                    return Err(format!("`unstoppable`: cost is 1 to {MAX_RESOURCE}"));
                 }
-                Ok(())
+                statuses.iter().try_for_each(|id| status(id))
             }
             TalentEffect::Resist {
                 value,

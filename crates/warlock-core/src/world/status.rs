@@ -379,9 +379,10 @@ impl World {
             heal(actor, &content, step, rate);
             mana::regain(actor, &content, step, mana_rate);
             // A resource's point gained or lost (spec §8 "Resources"); one that decays to 0 and
-            // ends there ends now.
+            // ends there ends now, and the status it brought with it (the rage's Raging).
+            let mut gone = Vec::new();
             for ended in crate::resource::pass(&mut actor.resources, &content, &paces, step) {
-                resource::ended(actor, ended, events);
+                gone.extend(resource::ended(actor, &content, ended, events));
             }
             let mut moment = Moment {
                 damage: 0,
@@ -390,8 +391,8 @@ impl World {
                 bled: false,
             };
             // Unstoppable (spec §8 "Class abilities"): while raging, some statuses tick nothing.
-            let numb: &[StatusId] = match (&talents.unstoppable, talents.rage) {
-                (Some(numb), Some(rage)) if actor.effects.has(rage) => numb,
+            let numb: &[StatusId] = match (&talents.unstoppable, talents.rage_status(&content)) {
+                (Some(unstoppable), Some(rage)) if actor.effects.has(rage) => &unstoppable.numb,
                 _ => &[],
             };
             for e in actor.effects.iter_mut() {
@@ -412,7 +413,8 @@ impl World {
                     .saturating_sub(u16::try_from(eased).unwrap_or(u16::MAX));
             }
             mana::drain(actor, moment.drained);
-            let spent = actor.effects.drop_spent();
+            let mut spent = actor.effects.drop_spent();
+            spent.extend(gone);
             let due = disease::pass(actor, step);
             if moment.bled {
                 self.drip_blood(id);
@@ -458,6 +460,15 @@ impl World {
         };
         if self.content.disease_status() == Some(status) {
             self.say(format!("`{id}` comes of a disease: try `infect:DISEASE`."));
+            return Spent::Nothing;
+        }
+        // A status a resource brings lasts while that is held (spec §8 "Resources"): Raging
+        // comes of Rage.
+        if let Some(r) = (self.content.resources().iter()).find(|r| r.status == Some(status)) {
+            self.say(format!(
+                "`{id}` comes of a resource: try `resource:{}`.",
+                r.id
+            ));
             return Spent::Nothing;
         }
         let player = self.state.player;
