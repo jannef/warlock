@@ -85,6 +85,7 @@ impl World {
             | Action::Identify(_)
             | Action::Afflict(_)
             | Action::Drain(_)
+            | Action::Resource(_)
             | Action::Infect(_)
             | Action::Talent { .. }
             | Action::Advance(_)

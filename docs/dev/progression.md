@@ -349,6 +349,11 @@ hash differently from before. The dump's `talents` layer marks it `(race)`, the 
 "race", and the character screen's birth-sign list leaves it out (`OwnTalent::race`).
 `racial_tests.rs` covers each rule, the prerequisites, the picks, and a replay.
 
+The `resources` system (#225, `docs/dev/resources.md`) is in the list as `pending`: the pools are
+in, and a class active may cost one (`resource = { id, cost }` on its talent), but its talents
+(Battle trance, Inner calm, Steady hand, Patient blade: R5) and the class features moving onto it
+(R1–R4) come later; R5 removes the flag.
+
 The damage-type talents (#248), Elemental ward (H2) and Crusher (H1), are the `damage_types`
 system's two, so it is no longer `pending`; `world/damage_talent_tests.rs` covers the ward
 against damage and status doses, its words on the character screen, Crusher by weapon kind, and

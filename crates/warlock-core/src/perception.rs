@@ -73,7 +73,7 @@ use crate::burden::{self, Load};
 use crate::character::Character;
 use crate::combat::Health;
 use crate::content::Shops;
-use crate::content::{Choice, TalentId, TreeId};
+use crate::content::{Choice, ResourceId, TalentId, TreeId};
 use crate::content::{
     CombatStance, Content, CreatureId, DamageTypeId, DiseaseId, FactionId, Factor, Flow,
     ItemClassId, LevelKind, LightId, ObjectId, RaceDef, RoomEffectDef, SlotId, Stance, StatusId,
@@ -117,6 +117,15 @@ pub struct OwnSkill {
     /// How practised it is, its marks' step on the skill ladder in quarters: 0 (no marks, or
     /// just spent) to 4 (the top dice): how big its next level-up roll is, coarsely.
     pub progress: u8,
+}
+
+/// One of the player's own alternative resources (spec §8 "Resources"), as the status bar and
+/// the character screen show it: what it holds and its maximum. Never its pace.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct OwnResource {
+    pub resource: ResourceId,
+    pub value: u16,
+    pub max: u16,
 }
 
 /// One of the player's own talents (spec §8 "Talents"), as the Talents page and the character
@@ -1208,6 +1217,22 @@ impl<'a> PerceptionView<'a> {
     pub fn own_mana(&self) -> (i32, i32) {
         let max = self.player.max_mana(self.content);
         (self.player.mana.clamp(0, max), max)
+    }
+
+    /// The player's alternative resources (spec §8 "Resources"), in resource order: each one
+    /// they hold, what it holds now (at most its maximum), and its maximum. Never how fast it
+    /// changes.
+    pub fn own_resources(&self) -> Vec<OwnResource> {
+        (self.player.resources.iter())
+            .map(|pool| {
+                let max = self.player.resource_max(self.content, pool.resource);
+                OwnResource {
+                    resource: pool.resource,
+                    value: pool.value.min(max),
+                    max,
+                }
+            })
+            .collect()
     }
 
     /// The player's level, experience total, and the total at which the next level comes (none

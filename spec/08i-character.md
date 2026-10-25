@@ -753,7 +753,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Perfect self (bare hands 1d8; unarmed threat +1, critical multiplier +1). The paladin's
     passives do not ask for Good; only the gifts used from the menu do.
   - **Resources to come**: Rage, Blood frenzy, Mighty rage, Unstoppable, Flurry, and Quivering
-    palm ship as statuses and passives and move onto alternative resources with #225.
+    palm ship as statuses and passives and move onto the alternative resources (§8 "Resources",
+    #225: the pools are in; the moves are the design's R1–R5).
   - **Coverage**: `min_class` stays 0 until every class has its table.
   - **What the player sees**: the news of each level ("You gain Rage."); the actives in the
     abilities menu with their cooldowns, and the abilities in the dumps' `abilities` layer.

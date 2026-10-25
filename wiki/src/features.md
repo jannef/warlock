@@ -116,6 +116,10 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   class, your Intelligence, Willpower, and Presence, your levels, and magic items. It comes back
   with time by your Willpower, faster while you rest or in a sanctuary, slower while poisoned or
   diseased, not at all while starving. The status bar shows it (`MP 5/12`).
+- **Resources** — pools of your own beside hit points and mana, such as a barbarian's rage or a
+  ranger's focus: some come back with time, some wear off, some build up from kills and blows,
+  abilities spend them, and some end when they run out. You may hold several; the status bar
+  shows each one you hold (`Rage 7`, `Focus 7/10`).
 - **Diseases** — filth fever from a rat's bite, marsh ague from the swamps, grave rot from
   rotten food, and more, in the spirit of D&D 3.5: caught unseen when a hidden check fails, they
   incubate for days, then you are Diseased. Each day your body fights back with another check;

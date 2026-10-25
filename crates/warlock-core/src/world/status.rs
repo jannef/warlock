@@ -12,8 +12,10 @@
 //!   `mana_damage`) and ease, and it gets hit points back at its healing rate and mana at its
 //!   mana rate (`world/mana.rs`), in time order, so it makes no difference how the time is cut up
 //!   (by a long journey or many short actions). Diseases take their turns and stat damage mends
-//!   at their own moments too (`world/disease.rs`). At one moment a hit point back and a point
-//!   of mana back come first, then the ticks, then the easing, then the player's hunger, then a point of stat
+//!   at their own moments too (`world/disease.rs`), and so do the points an alternative resource
+//!   gains or loses over time (`world/resource.rs`: one that decays to 0 and ends there ends at
+//!   that moment). At one moment a hit point back, a point of mana back, and a resource's point
+//!   come first, then the ticks, then the easing, then the player's hunger, then a point of stat
 //!   damage mending, then the diseases' turns, then food rotting away in its pack
 //!   (`world/rot.rs`). Actors on other levels are frozen, as with energy, and the dev time skip
 //!   passes no time for anyone.
@@ -42,7 +44,7 @@
 //!   buffs, hexes, and cooldowns are `world/buff.rs`).
 
 use super::fight::Harm;
-use super::{Actor, ActorId, Spent, World, disease, mana, rot};
+use super::{Actor, ActorId, Spent, World, disease, mana, resource, rot};
 use crate::action::{AttackKind, Event};
 use crate::combat::{self, Blow, Strike};
 use crate::content::Effect as ItemEffect;
@@ -314,6 +316,7 @@ impl World {
             let rate = self.healing_rate(id);
             let mana_rate = self.mana_rate(id);
             let hungrier = self.until_hungrier(id);
+            let paces = self.resource_paces(id);
             let Some(actor) = self.state.actors.get_mut(&id) else {
                 return;
             };
@@ -331,9 +334,12 @@ impl World {
                 && actor.diseases.is_empty()
                 && actor.damage.is_none()
                 && rots.is_none_or(|r| r > left)
+                && crate::resource::until_next(&actor.resources, &content, &paces)
+                    .is_none_or(|r| r > left)
             {
                 heal(actor, &content, left, rate);
                 mana::regain(actor, &content, left, mana_rate);
+                crate::resource::pass(&mut actor.resources, &content, &paces, left);
                 return;
             }
             // Up to the next moment something happens: a tick, an easing, a hit point or a point
@@ -366,9 +372,17 @@ impl World {
             if let Some(next) = mana::until_regained(actor, &content, mana_rate) {
                 step = step.min(next);
             }
+            if let Some(next) = crate::resource::until_next(&actor.resources, &content, &paces) {
+                step = step.min(next);
+            }
             passed += step;
             heal(actor, &content, step, rate);
             mana::regain(actor, &content, step, mana_rate);
+            // A resource's point gained or lost (spec §8 "Resources"); one that decays to 0 and
+            // ends there ends now.
+            for ended in crate::resource::pass(&mut actor.resources, &content, &paces, step) {
+                resource::ended(actor, ended, events);
+            }
             let mut moment = Moment {
                 damage: 0,
                 drained: 0,

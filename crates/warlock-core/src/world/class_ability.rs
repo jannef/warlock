@@ -37,6 +37,12 @@ impl World {
             }
             (_, dir) => dir,
         };
+        // Its cost in an alternative resource (spec §8 "Resources"), if it has one: what
+        // `unavailable` checked is there to spend.
+        let player = self.state.player;
+        if let Some(cost) = self.content.class_active(active).and_then(|a| a.resource) {
+            self.spend_resource(player, cost.resource, cost.amount, events);
+        }
         match (active, dir) {
             (ClassActive::Rage, _) => self.rage(events),
             (ClassActive::VeteransWind, _) => self.veterans_wind(events),

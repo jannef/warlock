@@ -213,6 +213,7 @@ pub(super) fn track(
             | Event::Missile { .. }
             | Event::Spell { .. }
             | Event::Status { .. }
+            | Event::ResourceEnded { .. }
             | Event::Disease { .. }
             | Event::Talked(_)
             | Event::FellThroughIce { .. }

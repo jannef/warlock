@@ -122,6 +122,7 @@ mod perceive;
 mod quest;
 mod racial;
 mod read;
+mod resource;
 mod rest;
 mod rot;
 mod schedule;
@@ -609,6 +610,7 @@ impl World {
             mana: 0,
             mana_base,
             mana_regen: 0,
+            resources: Default::default(),
             skills,
             effects: Default::default(),
             diseases: Default::default(),
@@ -1036,6 +1038,7 @@ impl World {
             Action::Thaw { at, radius } => return self.thaw_dev(*at, *radius, events),
             Action::Afflict(id) => return self.afflict_dev(id, events),
             Action::Drain(amount) => return self.drain_dev(*amount),
+            Action::Resource(id) => return self.grant_resource_dev(id),
             Action::Infect(id) => return self.infect_dev(id),
             Action::LevelUpAuto => return self.level_up_auto(),
             Action::GrantXp(xp) => return self.grant_xp_dev(*xp),
@@ -1157,6 +1160,8 @@ mod race_tests;
 mod racial_tests;
 #[cfg(test)]
 mod read_tests;
+#[cfg(test)]
+mod resource_tests;
 #[cfg(test)]
 mod room_tests;
 #[cfg(test)]

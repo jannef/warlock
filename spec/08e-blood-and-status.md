@@ -1,4 +1,4 @@
-# Warlock specification — 8. Architecture (continued): blood, status effects, healing, mana, checks, diseases
+# Warlock specification — 8. Architecture (continued): blood, status effects, healing, mana, resources, checks, diseases
 
 Part of the specification, the source of truth for what to build; the index is
 [`specification.md`](../specification.md). Update it together with the code and the
@@ -194,6 +194,56 @@ developer notes (CLAUDE.md, `docs/dev/`).
     never the pace (hidden like `regen_seconds`); the dev `actors` layer shows every actor's.
     Mana is part of the world state (saved, covered by the state hash; an actor without any
     serializes as before).
+- **Resources** (`warlock-core/src/resource.rs`, the pools and time's rules;
+  `content/resource.rs`, the data; `world/resource.rs`, applying them; #225): alternative
+  resources, integer pools beside hit points and mana (which everyone has) that a character holds
+  once something grants them. A character may hold any number at once; creatures hold none
+  (their rage would never show). The class features of the progression design's §4.18 (the
+  barbarian's Rage, the ranger's Focus, the thief's Openings, the monk's Ki, the bard's
+  Inspiration) move onto them in follow-up changes (R1–R5); until then nothing in play grants
+  one but the dev action. Mana is separate: nothing converts between them.
+  - **Data** (`data/resources.toml`, §7): each resource's maximum, start, whether the status bar
+    shows its maximum, how it changes over time (it **regenerates** toward its maximum or
+    **decays** toward 0, a point every so many seconds, while resting too or not), whether it
+    **ends at zero**, what the player is told then, and what **builds** it (`kill`, `hit`,
+    `critical`, `struck`, `sneak_attack`, each by an amount). Ids are in the content fingerprint.
+  - **State**: `Actor::resources`, the pools it holds in resource order, each its value and its
+    progress toward the next point over time (hundredths of a second at the normal pace, like
+    `Actor::regen`); saved, covered by the state hash, and left out of the JSON while empty, so an
+    actor without any serializes as before.
+  - **The only ways a resource changes**: `World::grant_resource` (held from now on at its start,
+    or what it holds if that is more), `World::gain_resource(actor, event)` (called where the
+    event happens: a kill credited to the holder in `dies`, a blow of theirs that hits and one
+    that is a critical, and their being hit, in `resolve`; a sneak attack that hits in
+    `ambushed`; each builds every resource held that builds on it, up to its maximum; one not
+    held is not built), `World::spend_resource` (refused, nothing spent, when not held or short;
+    a cost of 0 asks only that it is held), `World::end_resource` (the holder loses it and its
+    bar; the player is told its `ended`, "Your rage subsides."), and time.
+  - **Time**: a regenerating resource gains a point every `regenerates` seconds up to its
+    maximum (its progress dropped there); a decaying one loses a point every `decays` seconds
+    down to 0, where one that ends at zero ends and one that does not sits, held, at 0. Each point
+    is a moment of `World::live`'s loop (with a hit point and a point of mana back, before the
+    ticks), so it makes no difference how time is cut up, and an end comes at its exact moment.
+    The pace (`World::resource_rate`, the one place that decides it) is 100 %, and none while the
+    player rests for a resource with `resting = false`; the maximum (`Actor::resource_max`) is
+    the data's. Both are the hooks the resource talents read (R5). Actors on other levels are
+    frozen, and the dev time skip passes none.
+  - **Ending at zero**: spent or decayed to 0, a resource that ends at zero is gone, and its bar
+    with it, until something grants it again. A rest goes on through it (the end is only
+    logged, as a status effect's end is).
+  - **Abilities**: a class active may cost a resource in data (`resource = { id, cost }` on its
+    talent, §7). While the player does not hold it or holds less, the ability is unavailable
+    (`Unavailable::Short`, "not enough focus" in the abilities menu, `short:focus` in dumps; using
+    it says "You cannot: not enough focus.", no time); used, the cost is spent first.
+  - **Shown**: the player's own resources (`PerceptionView::own_resources`: each held, its value
+    and maximum, in resource order): the status bar after `MP` (`Rage 11`, `Focus 7/10`), each
+    with the hit points' priority after the mana, so they give way before it (§6); a row each on
+    the character screen under the stance; the dump header (`rage 11/20`), JSON dumps'
+    `resources`, and the dev `actors` layer (every actor's, with progress). Never a creature's,
+    and never the pace. The dev action `resource:ID` grants one (§9; "You gain Rage: 12 (dev).").
+  - **Talents**: the `resources` system is in the coverage list as `pending` until the resource
+    talents (Battle trance, Inner calm, Steady hand, Patient blade; R5) and the class features on
+    them (R1–R4) land. **Saves change** (a new id group in the fingerprint).
 - **Checks** (`warlock-core/src/check.rs`; M24, #139): a stat put to the test, rolled like an
   attack: 2d12 (the natural roll, `combat::roll_natural`, two draws of the gameplay stream) plus
   the modifier of the stat tested (the effective score's) succeeds at the **difficulty** or

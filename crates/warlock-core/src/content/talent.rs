@@ -10,7 +10,8 @@
 
 use super::affix::Once;
 use super::{
-    CombatStance, Content, ContentError, MAX_LEVEL, MAX_RANK, Role, WeaponSkillId, duplicate_id,
+    CombatStance, Content, ContentError, MAX_LEVEL, MAX_RANK, ResourceId, Role, WeaponSkillId,
+    duplicate_id,
 };
 use crate::alignment::Requirement;
 use crate::dice::Dice;
@@ -1642,6 +1643,18 @@ pub struct TalentDef {
     pub granted: bool,
     /// A birth sign's flaw: granted, shown with "but" and dimmed, never a prerequisite.
     pub flaw: bool,
+    /// What using its class active costs of an alternative resource (spec §8 "Resources"):
+    /// `resource = { id = "focus", cost = 6 }` (0 asks only that it is held), if anything.
+    pub resource: Option<ResourceCost>,
+}
+
+/// An ability's cost in an alternative resource (spec §8 "Resources"): unavailable while the
+/// user holds less, and spent as it is used.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ResourceCost {
+    pub resource: ResourceId,
+    /// 0 asks only that it is held.
+    pub amount: u16,
 }
 
 impl TalentDef {
@@ -1890,6 +1903,15 @@ struct TalentSpec {
     granted: bool,
     #[serde(default)]
     flaw: bool,
+    resource: Option<CostSpec>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct CostSpec {
+    id: String,
+    #[serde(default)]
+    cost: u16,
 }
 
 #[derive(Deserialize, Default)]
@@ -2319,6 +2341,27 @@ pub(super) fn parse<'a>(
         if spec.flaw && !spec.granted {
             return Err(err("a `flaw` is `granted`: nobody picks a flaw".into()));
         }
+        let resource = match &spec.resource {
+            None => None,
+            Some(cost) => {
+                if !spec.effects.iter().any(|e| e.active().is_some()) {
+                    return Err(err("a `resource` cost is for a class active".into()));
+                }
+                let resource = content.resource_id(&cost.id).ok_or_else(|| {
+                    err(format!(
+                        "costs a resource `{}` that is not in data/resources.toml",
+                        cost.id
+                    ))
+                })?;
+                if cost.cost > content.resource(resource).max {
+                    return Err(err(format!("costs more `{}` than it can hold", cost.id)));
+                }
+                Some(ResourceCost {
+                    resource,
+                    amount: cost.cost,
+                })
+            }
+        };
         book.list.push(TalentDef {
             id: spec.id,
             name: spec.name,
@@ -2331,6 +2374,7 @@ pub(super) fn parse<'a>(
             systems,
             granted: spec.granted,
             flaw: spec.flaw,
+            resource,
         });
     }
     // A talent that needs one with a choice of its own kind is taken for the same choice: only
