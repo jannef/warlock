@@ -20,6 +20,17 @@ One draw in twenty (unless a place says otherwise) is made one to three dangers 
 careless step on a quiet floor can still meet something it should not. A creature marked "once a
 run" comes at most once in your life, however many floors it could come to.
 
+## A floor starts full
+
+A dungeon floor with a danger is full when you first come down to it: its population (the
+number in the tables below; by default 35 creatures for every 1000 cells you could walk on, at
+least 25 and at most 80) is chosen as above and spread over its plain floor, never within 8
+steps of a staircase, never in a shop or a sanctuary. Most walk a short beat, back and forth;
+where there is no room for one, they wait where they stand. They come armed as their kind is
+(see the creatures' gear), on top of the few the floor's own rooms and vaults hold. A creature
+marked "once a run" that you have met already is not among them. A hand-made place with a
+danger starts as it was made; only the arrivals below fill it up.
+
 ## They keep coming
 
 While you are on a floor with a danger, the creatures that live there keep coming: every so

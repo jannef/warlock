@@ -299,7 +299,7 @@ fn a_racial_weapon_needs_a_rank_in_its_skill() {
 
 /// `text` without its gear: the `racial_weapon` line and each `[[creature.gear]]` block (up to
 /// the next blank line).
-fn without_gear(text: &str) -> String {
+pub(super) fn without_gear(text: &str) -> String {
     let mut out = String::new();
     let mut in_gear = false;
     for line in text.lines() {

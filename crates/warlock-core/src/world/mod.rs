@@ -574,7 +574,12 @@ impl World {
                     Score::ZERO,
                 ),
             };
-        let start = level_template(&content, seed, &def.start_level, (None, Default::default()))?;
+        let start = level_template(
+            &content,
+            seed,
+            &def.start_level,
+            (None, &Default::default()),
+        )?;
         let player_pos = start
             .player_start
             .ok_or_else(|| WorldError::NoPlayerStart(start.id.clone()))?;

@@ -350,8 +350,12 @@ impl World {
         from: Option<&str>,
     ) -> Result<&LevelState, WorldError> {
         if !self.state.levels.contains_key(id) {
-            let luck = Luck::of(&self.state.player().talent_mods(&self.content));
-            let template = level_template(&self.content, self.state.seed, id, (from, luck))?;
+            let visit = crate::mapgen::Visit {
+                luck: Luck::of(&self.state.player().talent_mods(&self.content)),
+                player_level: self.player_level(),
+                uniques: Some(&self.state.progress.uniques),
+            };
+            let template = level_template(&self.content, self.state.seed, id, (from, &visit))?;
             instantiate_level(&mut self.state, &self.content, &template);
         }
         Ok(&self.state.levels[id])
@@ -400,7 +404,7 @@ pub(super) fn level_template<'a>(
     content: &'a Content,
     seed: u64,
     id: &str,
-    (entered_from, luck): (Option<&str>, Luck),
+    (entered_from, visit): (Option<&str>, &crate::mapgen::Visit),
 ) -> Result<Cow<'a, LevelTemplate>, WorldError> {
     if let Some(template) = content.level(id) {
         return Ok(Cow::Borrowed(template));
@@ -408,7 +412,7 @@ pub(super) fn level_template<'a>(
     if !content.has_level(id) {
         return Err(WorldError::UnknownLevel(id.to_string()));
     }
-    crate::mapgen::generate_with(content, seed, id, entered_from, luck)
+    crate::mapgen::generate_for(content, seed, id, entered_from, visit)
         .map(Cow::Owned)
         .map_err(|e| WorldError::Generation(id.to_string(), e.to_string()))
 }
@@ -455,7 +459,7 @@ pub(super) fn instantiate_level(
 }
 
 /// Makes the creature `spawn` places on level `id` (it must exist): one of its type, with the
-/// type's stats, carrying, wearing, and wielding what the spawn gives it, its food made now.
+/// type's stats, carrying, wearing, and wielding what the spawn gives it, its food made now; a unique type is remembered as met.
 pub(super) fn make_creature(
     state: &mut WorldState,
     content: &Content,
@@ -465,6 +469,10 @@ pub(super) fn make_creature(
     let actor_id = ActorId(state.next_actor_id);
     state.next_actor_id += 1;
     let def = content.creature(spawn.creature);
+    // A unique type comes once a run, however it came (spec §7 "Danger levels").
+    if def.unique {
+        state.progress.uniques.insert(def.id.clone());
+    }
     let (carry, equipment) = placed_gear(content, state.seed, id, actor_id, spawn);
     let mut actor = Actor {
         id: actor_id,

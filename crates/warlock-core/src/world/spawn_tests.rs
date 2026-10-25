@@ -4,7 +4,7 @@
 
 use super::*;
 use crate::action::parse_actions;
-use crate::content::ContentFiles;
+use crate::content::{ContentFiles, LevelTemplate};
 use crate::perception::Perception;
 use crate::time::{Duration, GameTime};
 use std::collections::BTreeSet;
@@ -72,6 +72,16 @@ population = ["kobold", "kobold_archer", "kobold_shaman"]
 [[dungeon.levels]]
 from = 3
 danger = { base = 9, per_depth = 0 }
+
+[[dungeon]]
+id = "lair"
+name = "Lair"
+generator = "caves"
+depth = 1
+size = [100, 40]
+danger = 3
+population = ["chief", "kobold"]
+population_count = 30
 "#;
 
 fn content() -> Arc<Content> {
@@ -80,6 +90,11 @@ fn content() -> Arc<Content> {
 
 /// The builtin content with the haunt as `haunt`, the chief, and the barrow.
 fn content_with(haunt: &str) -> Arc<Content> {
+    Arc::new(Content::load(&files_with(haunt)).expect("content"))
+}
+
+/// The files of [`content_with`].
+fn files_with(haunt: &str) -> ContentFiles {
     let mut files = ContentFiles::builtin();
     files.insert("levels/haunt.toml", haunt);
     files.insert("data/creatures/zz_chief.toml", CHIEF);
@@ -92,7 +107,7 @@ fn content_with(haunt: &str) -> Arc<Content> {
         "scenarios/haunt.toml",
         "name = \"Haunt\"\nstart_level = \"haunt\"\nlantern = \"lantern\"\nhp = 900\n",
     );
-    Arc::new(Content::load(&files).expect("content"))
+    files
 }
 
 fn haunt(seed: u64) -> World {
@@ -320,4 +335,142 @@ fn the_spawn_dev_action_brings_one_and_replays() {
         header.starts_with("danger 3 population 2/6 spawn next "),
         "{header}"
     );
+}
+
+/// The barrow's first floor for the run with `seed`.
+fn barrow_floor(content: &Content, seed: u64) -> LevelTemplate {
+    crate::mapgen::generate(content, seed, "barrow:1", None).expect("barrow:1")
+}
+
+/// The builtin content with the barrow but no danger anywhere: the same maps, no population.
+fn without_danger() -> Arc<Content> {
+    let mut files = ContentFiles::builtin();
+    files.insert("data/creatures/zz_chief.toml", CHIEF);
+    let plain: String = (BARROW.lines())
+        .filter(|l| !l.starts_with("danger") && !l.starts_with("population"))
+        .map(|l| format!("{l}\n"))
+        .collect();
+    let dungeons = format!(
+        "{}{plain}",
+        include_str!("../../../../assets/data/dungeons.toml")
+    );
+    files.insert("data/dungeons.toml", &dungeons);
+    Arc::new(Content::load(&files).expect("content"))
+}
+
+/// The design's §9.3 and §9.6: a generated floor of a branch with a danger is laid down full,
+/// by its walkable cells, away from the stairs, near the danger, from its own stream after the
+/// loot (the map, traps, secrets, and loot are the same with any population), and its creatures
+/// roll their gear from the level's gear stream after it.
+#[test]
+fn a_generated_floor_is_laid_down_full_and_nothing_else_moves() {
+    let content = content();
+    let plain = without_danger();
+    let mut files = files_with(HAUNT);
+    files.edit_table("creatures", super::gear_tests::without_gear);
+    let ungeared = Content::load(&files).expect("valid without gear");
+    let floor = content.terrain_id("floor").expect("floor");
+    for seed in 0..10 {
+        let with = barrow_floor(&content, seed);
+        let without = barrow_floor(&plain, seed);
+        assert_eq!(with.terrain, without.terrain, "seed {seed}");
+        assert_eq!(with.traps, without.traps, "seed {seed}");
+        assert_eq!(with.secrets, without.secrets, "seed {seed}");
+        assert_eq!(with.objects, without.objects, "seed {seed}");
+        // The generator's own creatures (patrols, a vault's) come first, as they were.
+        let (own, population) = with.creatures.split_at(without.creatures.len());
+        assert_eq!(own, without.creatures.as_slice(), "seed {seed}");
+        let walkable = (with.terrain.iter())
+            .filter(|(_, t)| content.terrain(**t).walkable)
+            .count();
+        let (_, _, spawning) = content.spawning("barrow:1").expect("rules");
+        let count = spawning
+            .count
+            .for_cells(u32::try_from(walkable).expect("cells"));
+        assert_eq!(population.len(), count as usize, "seed {seed}");
+        let danger = 2;
+        let mut cells: BTreeSet<_> = own.iter().map(|s| s.pos).collect();
+        for spawn in population {
+            let def = content.creature(spawn.creature);
+            assert!(def.level <= danger + 3, "seed {seed}: {}", def.id);
+            assert!(spawning.population.contains(&spawn.creature));
+            assert_eq!(with.terrain.get(spawn.pos), Some(&floor), "seed {seed}");
+            assert!(
+                (with.stairs.iter()).all(|s| s.pos.chebyshev(spawn.pos) >= 8),
+                "seed {seed}: {} by the stairs",
+                spawn.pos
+            );
+            assert!(cells.insert(spawn.pos), "seed {seed}: two on {}", spawn.pos);
+            // Its route loops and never steps on a trap.
+            let mut p = spawn.pos;
+            for dir in &spawn.route {
+                p = p.step(*dir);
+                assert!(!with.traps.contains_key(&p), "seed {seed}: a trap at {p}");
+            }
+            assert_eq!(p, spawn.pos);
+            assert!(!spawn.rolls_gear);
+        }
+        // The population rolls its gear too, from the level's gear stream after the generator's
+        // creatures (whose gear is as it was, above); without gear tables, it is the same
+        // population, bare.
+        let bare = |t: &LevelTemplate| -> Vec<_> {
+            (t.creatures.iter())
+                .map(|s| (s.creature, s.pos, s.route.clone()))
+                .collect()
+        };
+        assert_eq!(bare(&barrow_floor(&ungeared, seed)), bare(&with));
+        assert!(
+            population.iter().any(|s| !s.carry.is_empty()),
+            "seed {seed}: no kobold armed"
+        );
+        // The same seed lays down the same population.
+        assert_eq!(barrow_floor(&content, seed).creatures, with.creatures);
+    }
+}
+
+/// A unique type comes once a run: once on a floor, never on a floor made after it was met.
+#[test]
+fn a_unique_comes_once_in_a_population_too() {
+    let content = content();
+    let chief = |t: &LevelTemplate| {
+        (t.creatures.iter())
+            .filter(|s| content.creature(s.creature).unique)
+            .count()
+    };
+    let lair = crate::mapgen::generate(&content, 3, "lair:1", None).expect("lair");
+    assert_eq!(chief(&lair), 1);
+    let met = BTreeSet::from(["chief".to_string()]);
+    let visit = crate::mapgen::Visit {
+        uniques: Some(&met),
+        ..Default::default()
+    };
+    let lair = crate::mapgen::generate_for(&content, 3, "lair:1", None, &visit).expect("lair");
+    assert_eq!(chief(&lair), 0);
+    assert!(lair.creatures.len() >= 30);
+    // In play, the chief laid down on a floor is met: the spawns never bring him again.
+    let mut w = haunt(3);
+    w.travel("lair:1", None).expect("to the lair");
+    assert!(w.state.progress.uniques.contains("chief"));
+}
+
+/// What comes in play rolls its type's gear from its own stream, `gear/<actor id>`.
+#[test]
+fn a_spawn_rolls_its_gear_from_its_own_stream() {
+    let mut armed = 0;
+    for seed in 0..8 {
+        let mut w = haunt(seed);
+        let Some(id) = w.attempt(true) else {
+            continue;
+        };
+        let actor = &w.state.actors[&id];
+        let mut rng = crate::rng::Rng::gear(w.state.seed, &id.0.to_string());
+        let pack = crate::gear::roll(&w.content, &mut rng, actor.creature, 1);
+        assert_eq!(
+            (&actor.inventory, &actor.equipment),
+            (&pack.items, &pack.equipment),
+            "seed {seed}"
+        );
+        armed += usize::from(!actor.inventory.is_empty());
+    }
+    assert!(armed > 0, "no spawn carried anything");
 }

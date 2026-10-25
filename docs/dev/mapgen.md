@@ -18,7 +18,10 @@ without them; `docs/dev/searching.md`). The insta snapshots in
 `src/mapgen/snapshots/` and `src/mapgen/local/snapshots/` flag any change in generator output:
 review the maps in the diff, then accept them deliberately. Loot (`mapgen::place_loot`: floor
 items by the branch's `loot`, vault `loot` cells) is rolled once a map is valid, from its own
-stream `loot/<level id>`, so adding loot never changes the terrain of a generated level.
+stream `loot/<level id>`, so adding loot never changes the terrain of a generated level. On a
+branch with a danger the initial population follows (`mapgen/population.rs`, stream
+`population/<level id>`; `docs/dev/creatures.md`), then every creature's gear (`gear::arm`,
+stream `gear/<level id>`).
 
 Special rooms (spec §7 "Special rooms", M25) are data: `data/room_effects.toml`
 (`content/room_effect.rs`: effects, the per-room `chance`, `per_level`). Generators make them last

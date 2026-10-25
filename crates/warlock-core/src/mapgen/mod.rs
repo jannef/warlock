@@ -22,8 +22,10 @@
 //! 5. Hide the branch's traps (spec §8 "Traps") from the level's trap stream ([`Rng::traps`]),
 //!    then a few of its doors (secret doors, spec §8 "Searching") from its secret stream
 //!    ([`Rng::secrets`]), only where the stairs and every key are still reached without them,
-//!    then roll its loot from its loot stream ([`Rng::loot`]), then its creatures' gear from
-//!    its gear stream ([`Rng::gear`], [`crate::gear::arm`]).
+//!    then roll its loot from its loot stream ([`Rng::loot`]), then, on a branch with a danger,
+//!    lay its initial population down from its population stream ([`Rng::population`],
+//!    `population.rs`), then its creatures' gear from its gear stream ([`Rng::gear`],
+//!    [`crate::gear::arm`]).
 //!
 //! Generation is integer-only and never iterates a hash map. Seeds are stable within a game
 //! version; the snapshot tests in this module flag any change in generator output.
@@ -31,6 +33,7 @@
 mod caves;
 mod connect;
 pub mod local;
+mod population;
 mod rooms;
 mod shop;
 mod special;
@@ -365,6 +368,33 @@ pub fn generate_with(
     entered_from: Option<&str>,
     luck: Luck,
 ) -> Result<LevelTemplate, GenError> {
+    let visit = Visit {
+        luck,
+        ..Visit::default()
+    };
+    generate_for(content, seed, id, entered_from, &visit)
+}
+
+/// Whom a level is generated for, as they first come: what their talents give their finds
+/// (`luck`), their level (a player-scaled danger reads it), and the unique creature types the
+/// run has met (none comes twice). Only the loot and the initial population read it, so the map
+/// is the same for anyone.
+#[derive(Clone, Copy, Debug, Default)]
+pub struct Visit<'a> {
+    pub luck: Luck,
+    pub player_level: u8,
+    pub uniques: Option<&'a std::collections::BTreeSet<String>>,
+}
+
+/// [`generate_with`] for the player `visit` describes.
+pub fn generate_for(
+    content: &Content,
+    seed: u64,
+    id: &str,
+    entered_from: Option<&str>,
+    visit: &Visit,
+) -> Result<LevelTemplate, GenError> {
+    let luck = visit.luck;
     if content.local_area(id).is_some() {
         return local::generate(content, seed, id, luck);
     }
@@ -464,6 +494,10 @@ pub fn generate_with(
                 &canvas.loot,
                 (Some(floor), luck),
             );
+            if let Some((rule, depth, spawning)) = content.spawning(id) {
+                let danger = rule.at(depth, visit.player_level);
+                population::populate(&mut template, content, seed, (pal, danger, spawning), visit);
+            }
             crate::gear::arm(&mut template, content, seed);
             return Ok(template);
         }
