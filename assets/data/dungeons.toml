@@ -33,9 +33,19 @@
 #   key        a key (objects.toml, spec §8 "Doors"): the rooms generator locks the door of up to
 #              two rooms that have only one, with the lock this key opens, and leaves the key
 #              where the player reaches it without unlocking anything (default none: no locks)
+#   room_effects  the branch's own special-room odds (spec §7 "Special rooms"), a table:
+#              `chance` (percent a room is special, 0 to 100), `per_level` (at most this many a
+#              level, 1 to 8), `effects` (ids in room_effects.toml, picked uniformly; not empty
+#              while `chance` is above 0); each field defaults to room_effects.toml's (`effects`:
+#              all of them), e.g. `room_effects = { chance = 25, effects = ["flooded"] }`
+#   shops      the branch's own shop odds (spec §7 "Shops"), a table: `chance` (percent of its
+#              rooms levels with a shop, 0 to 100), `kinds` (ids in shops.toml, picked
+#              uniformly), `names` (the keepers' names), `keeper` (the keepers' creature type;
+#              they carry the shared `[keeper]`'s kit); each field defaults to shops.toml's,
+#              e.g. `shops = { chance = 0 }` for none
 #   [[dungeon.levels]]  per-depth overrides, first match wins:
-#              from, to (inclusive; default `from`), generator, size, temperature (each default
-#              the branch's)
+#              from, to (inclusive; default `from`), generator, size, temperature,
+#              room_effects, shops (each default the branch's; a table field by field)
 #
 # Generators build with the terrain void, wall, floor, door_closed, door_open, stairs_up,
 # stairs_down, water, sconce, fungus and the light lamp, and stamp vaults (assets/vaults).
