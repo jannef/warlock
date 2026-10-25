@@ -97,7 +97,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
   cult priest 9 (a caster with the cult's dagger, sometimes magic, and often a scroll), the marsh
   troll 9 (huge, regenerating by its Toughness), and the bog hag 11 (a caster with a staff, often
   magic; unique: a population draws her once a run). The cultist, the cult priest, and the bog
-  hag are the Ascmearc's own types. For blood (§8 "Blood"; presentation only):
+  hag are the Ascmearc's own types. The delf wave (the duergar delf of Fyrdelf, danger 8 to 19): the ember beetle 8 (a
+  burning bite, shell, resists fire 50, a faint glow), the duergar miner 9 (a pick-axe
+  held as a tool, the racial hand axe half the time, a leather cap), the duergar warrior 11
+  (racial hand axe, small shield, chain mail, sometimes magic), the ogre 12 (slow, racial maul),
+  the fire salamander 12 (immune to fire, cold double, lights its way), the troll 13 (so tough its
+  wounds close fast, fire hurts it more), the duergar smith 13 (racial war hammer, sometimes magic,
+  chain mail), the magma crawler 14 (slow, a searing touch, slag hide, cold hurts it, no corpse),
+  the ash wraith 15 (an undead caster with a cold touch, no corpse), the basilisk 16 (scales, a
+  bite that leaves one Sluggish), the cinder elemental 17 (immune to fire, bright, no corpse), and
+  the fire drake 19 (the Ascmearc's own, unique: a caster whose breath is announced, scales,
+  immune to fire). The duergar types are of the duergar race. For blood (§8 "Blood";
+  presentation only):
   `blood`, the colour of its stains (`"#rrggbb"`; default dark red, `#6e0e0c`) or `"none"` for a
   bloodless creature; the cave beetle bleeds greenish-black ichor (`#38461a`). For hunger (§8
   "Hunger"): `corpse` (default true: it leaves a corpse when it dies; with `data/hunger.toml`),
@@ -606,7 +617,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   vermin, and the kobolds), `undead` (the barrows' and the fen's dead; hostile to the player,
   the kobolds, and the goblins, and leaving the vermin alone), `marsh` ("marsh things", the
   fen's living things and the bog hag; hostile to the player; not animals as a faction), `cult`
-  ("cultists", the drowned minster's cult; hostile to the player and the marsh), `wildlife` (deer, cave bats, the cave beetle;
+  ("cultists", the drowned minster's cult; hostile to the player and the marsh), `duergar` (the
+  delf's grey dwarves; hostile to the player, the goblins (the ogres and trolls among them), and
+  the undead), `fire` ("fire things", the delf's burning creatures and the fire drake; hostile to
+  the player only), `wildlife` (deer, cave bats, the cave beetle;
   neutral to everyone), and
   `peaceful` ("peaceful folk", hostile to no one: the showcase's people by type, and creatures
   levels place in it); `merchants` (shopkeepers; hostile to no one) and `outraged` ("outraged

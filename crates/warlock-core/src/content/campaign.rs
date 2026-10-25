@@ -394,8 +394,14 @@ mod tests {
             .iter()
             .position(|c| c.campaign.as_deref() == Some("showcase"));
         assert_eq!(first_own, Some(content.creature_defs().len() - 3));
-        let first_campaign = (content.creature_defs().iter()).position(|c| c.campaign.is_some());
-        assert!(first_campaign < first_own);
+        let first_campaign = content
+            .creature_defs()
+            .iter()
+            .position(|c| c.campaign.is_some());
+        assert!(
+            (content.creature_defs()[first_campaign.expect("a campaign type")..].iter())
+                .all(|c| c.campaign.is_some())
+        );
         assert!(
             content
                 .quests()

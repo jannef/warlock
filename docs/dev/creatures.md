@@ -122,3 +122,12 @@ is a rule of its own, not content. The wisp carries the `wisp` light (`data/ligh
 (`xtask/src/wiki/creatures.rs`) pick new types up by themselves; the status-effect and disease
 tables name the bites that cause them, so `xtask/src/wiki/mod.rs`'s test rows move when a wave's
 `on_hit` names a status or disease.
+The delf wave (danger 8–19): ember beetle, duergar miner, duergar warrior, ogre, fire
+salamander, troll, duergar smith, magma crawler, ash wraith, basilisk, cinder elemental, and the
+fire drake (the Ascmearc's own, `campaigns/ascmearc/data/creatures/`, `unique`); factions
+`duergar` (hostile to the goblins, whose kin the ogre and the troll are, and to the undead,
+which the ash wraith is) and `fire` (the burning things; hostile to the player only). No
+`great_club` object exists, so the ogre's racial weapon is the maul; the pick-axe is a tool
+(`racial_weapon` must have damage), so the duergar miner carries it as a Tool-slot gear line and
+has the hand axe, the duergar's racial weapon, as a second, rarer line. The basilisk's slowing
+bite is the existing `sluggish` status.

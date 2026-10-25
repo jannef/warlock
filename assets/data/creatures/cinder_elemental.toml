@@ -1,0 +1,28 @@
+# The delf wave (Fyrdelf, docs/design/campaign.md §10.1). A walking pillar of coals and flame
+# from the volcano's heart: it burns bright, fire is its own body, and nothing of it remains when
+# it is put out.
+[[creature]]
+id = "cinder_elemental"
+level = 17
+xp = 95
+name = "cinder elemental"
+glyph = "E"
+fg = "#ffa040"
+faction = "fire"
+alignment = "neutral"
+vision = "normal"
+light = "brazier"
+glow = 0.45
+footsteps = 60
+hearing = 10
+weight = 100000
+stats = { strength = 20, dexterity = 14, toughness = 22, intelligence = 4, willpower = 16, presence = 10 }
+base_hp = 48
+resist = { fire = 100, poison = 100, cold = -50 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "3d6"
+damage_type = "fire"
+name = "touch"
+verb = "burns"
