@@ -948,7 +948,8 @@ mod tests {
             "| Bleeding | yes, \"bleeding\" | Big hits and confirmed criticals | A hit point every \
              40 seconds, faster the worse it is | A degree a minute | Not at all | — | Bandage |",
             "| A degree every 2 minutes | Half as fast |",
-            "| Poisoned | no | The giant rat's bite (10%, 2 degrees); eating rotten food |",
+            "the giant rat's bite (10%, 2 degrees); the grave worm's bite (20%, 1 degree); eating \
+             rotten food |",
             "Strength \u{2212}1, Dexterity \u{2212}1 when strong",
         ] {
             assert!(statuses.contains(row), "{row} in {statuses}");
@@ -969,7 +970,7 @@ mod tests {
             "| Filth fever | The giant rat's bite (10%) | Toughness, 54% | 1d3 days | Every day | \
              1d3 Dexterity, 1d3 Toughness | Two checks won in a row | no | Half as fast |",
             "| Marsh ague | Crossing marsh or swamp (4% an hour) |",
-            "| Grave rot | Eating rotten food |",
+            "| Grave rot | The zombie's fist (15%); eating rotten food |",
             "| Never by itself | yes |",
             "| Brain fever | — | Willpower, 54% |",
         ] {
@@ -1076,7 +1077,7 @@ mod tests {
         );
         assert!(text("creatures.md").contains("| Deer | `d` | Wildlife | neutral | never |"));
         assert!(text("creatures.md").contains("shoots from afar"));
-        assert!(text("factions.md").contains("| Kobolds | you, vermin |"));
+        assert!(text("factions.md").contains("| Kobolds | you, vermin, goblins, undead |"));
         assert!(text("factions.md").contains("| Wildlife | nobody |"));
         assert!(
             text("weather.md").contains("| Rainmoon | 20% | 30% | 35% | 15% |"),

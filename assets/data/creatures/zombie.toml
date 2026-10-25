@@ -1,0 +1,28 @@
+# The barrow wave (Cealdhlāw, docs/design/campaign.md §10.1). A corpse that walks: slow, hard to
+# put down, and its blows carry grave rot.
+[[creature]]
+id = "zombie"
+level = 3
+xp = 25
+name = "zombie"
+glyph = "z"
+fg = "#7a8a5a"
+speed = 600
+faction = "undead"
+alignment = "evil"
+vision = "darkvision"
+sight = 6
+footsteps = 90
+hearing = 8
+weight = 60000
+stats = { strength = 14, dexterity = 6, toughness = 18, intelligence = 1, willpower = 10, presence = 1 }
+base_hp = 14
+resist = { poison = 100 }
+on_eat = { message = "It was rotten long before it died.", vomit = 80, harm = "1d4" }
+blood = "#4a3a20"
+[creature.attack]
+damage = "1d6"
+damage_type = "bludgeoning"
+name = "fist"
+verb = "pummels"
+on_hit = [{ disease = "grave_rot", chance = 15 }]
