@@ -5,14 +5,9 @@ use crate::content::{CreatureSpawn, Vault};
 use crate::geom::{Dir, Pos};
 use crate::rng::Rng;
 
-/// The content's dungeon vaults in a random order.
+/// The vaults that may be stamped on the level ([`Vault::stamps_on`]) in a random order.
 pub(super) fn shuffled<'c>(canvas: &Canvas<'c>, rng: &mut Rng) -> Vec<&'c Vault> {
-    let mut vaults: Vec<&Vault> = canvas
-        .content
-        .vaults()
-        .iter()
-        .filter(|v| !v.is_outdoor())
-        .collect();
+    let mut vaults = canvas.vaults.clone();
     rng.shuffle(&mut vaults);
     vaults
 }

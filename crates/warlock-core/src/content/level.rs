@@ -126,6 +126,10 @@ struct LevelFile {
     population_count: Option<CountSpec>,
     out_of_depth: Option<u8>,
     spawn: Option<SpawnSpec>,
+    /// A vault's branches and branch levels (read by `vault::parse_dungeons`; refused on a
+    /// level).
+    #[serde(default, rename = "dungeons")]
+    _dungeons: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]
