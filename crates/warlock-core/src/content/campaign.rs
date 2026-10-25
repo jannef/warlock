@@ -365,7 +365,7 @@ mod tests {
             ]
         );
         for scenario in content.scenarios() {
-            let owner = if scenario.id == "ascmearc" {
+            let owner = if ["ascmearc", "ceaptun"].contains(&scenario.id.as_str()) {
                 "ascmearc"
             } else {
                 "showcase"
@@ -373,6 +373,7 @@ mod tests {
             assert_eq!(scenario.campaign.as_deref(), Some(owner), "{}", scenario.id);
         }
         assert_eq!(content.level_campaign("ascmearc"), Some("ascmearc"));
+        assert_eq!(content.level_campaign("ceaptun"), Some("ascmearc"));
         for level in ["hub", "overworld", "vast", "depths:3", "depths"] {
             assert_eq!(content.level_campaign(level), Some("showcase"), "{level}");
         }
@@ -387,12 +388,16 @@ mod tests {
         for shared in ["player", "shopkeeper", "deer", "kobold", "rat"] {
             assert_eq!(campaign_of(shared), None, "{shared}");
         }
-        // The showcase's types are numbered last, after every shared one.
+        // The campaigns' own types are numbered last, after every shared one: the Ascmearc's
+        // five townsfolk and people, then the showcase's three.
         let first_own = content
             .creature_defs()
             .iter()
             .position(|c| c.campaign.is_some());
-        assert_eq!(first_own, Some(content.creature_defs().len() - 3));
+        assert_eq!(first_own, Some(content.creature_defs().len() - 8));
+        let showcase = (content.creature_defs().iter())
+            .position(|c| c.campaign.as_deref() == Some("showcase"));
+        assert_eq!(showcase, Some(content.creature_defs().len() - 3));
         assert!(
             content
                 .quests()

@@ -199,7 +199,7 @@ const CASES: &[Case] = &[
         scenario: "world",
         screen: Some("new-run"),
         keys: Some(
-            "Down Down Down Down Down Down Down Down Down Enter Down Down Enter Enter Enter Down Down \
+            "Down Down Down Down Down Down Down Down Down Down Enter Down Down Enter Enter Enter Down Down \
              Down Down Down Down Down Down Enter Enter Enter",
         ),
         size: (100, 36),
@@ -525,6 +525,14 @@ const CASES: &[Case] = &[
     Case {
         name: "dialogue-screen",
         actions: concat!(hermit!(), " chat:SE ask:SE:rooms"),
+        screen: Some("dialogue"),
+        ..BASE
+    },
+    // Cēaptūn's Sister Hild: a proper name, topics, and two services with their prices (#336).
+    Case {
+        name: "dialogue-services",
+        scenario: "ceaptun",
+        actions: "move:SW*4 move:W*15 open:SW move:SW move:S*2 chat:SE",
         screen: Some("dialogue"),
         ..BASE
     },

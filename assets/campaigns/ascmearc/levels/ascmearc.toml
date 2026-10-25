@@ -15,8 +15,9 @@
 # of Rēcbeorgas. Two dungeons are hidden until a quest reveals them: Fennmynster (2) in the
 # swamp of Micelfenn and Fyrdelf (3) in the hills of Ascdūn; no road leads to either.
 #
-# The locations that lead nowhere yet (the town, the barrow, the hidden two) get their levels
-# from later work (the town, the dungeon branches); the rest of the design's forty sites
+# The town leads into Cēaptūn (levels/ceaptun.toml). The locations that lead nowhere yet (the
+# barrow, the hidden two) get their levels from later work (the dungeon branches); the rest of
+# the design's forty sites
 # are plain cells kept free for now, six cells or more apart.
 #
 # Drawn from the design's 1:2 sketch, then edited by hand; keep every walkable cell in a region
@@ -106,7 +107,7 @@ MMMMMMMMMMMMMMMMMMM.ff..................................."......................
 "↙" = { terrain = "river", flow = "SW" }
 "^" = { terrain = "volcano", name = "Fyrbeorg" }
 "P" = { terrain = "mountain_pass", spawn = "player", name = "Beorggeat", note = "The way you came; snow has closed it behind you." }
-"T" = { terrain = "town", name = "Cēaptūn" }
+"T" = { terrain = "town", name = "Cēaptūn", to = "ceaptun" }
 "1" = { terrain = "barrow", name = "Cealdhlāw" }
 "2" = { terrain = "swamp", hidden = { id = "fennmynster", terrain = "dungeon_entrance", name = "Fennmynster" } }
 "3" = { terrain = "hills", hidden = { id = "fyrdelf", terrain = "mine", name = "Fyrdelf" } }

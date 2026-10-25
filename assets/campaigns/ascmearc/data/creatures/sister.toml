@@ -1,0 +1,14 @@
+# A sister of Cēaptūn's Mynster, the temple (docs/design/campaign.md §6): Sister Hild, who cures
+# and mends for gold (her npc dialogue, campaigns/ascmearc/data/dialogue/ceaptun.toml).
+[[creature]]
+id = "sister"
+name = "sister"
+glyph = "@"
+fg = "#e6e0d0"
+faction = "peaceful"
+alignment = "good"
+race = "human"
+footsteps = 40
+hearing = 12
+weight = 62000
+stats = { strength = 9, toughness = 11, intelligence = 13, willpower = 16, presence = 13 }
