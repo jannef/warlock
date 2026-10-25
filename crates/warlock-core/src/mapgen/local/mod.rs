@@ -205,6 +205,7 @@ pub(super) fn generate(
         if reach::validate(&template, content).is_ok() {
             // Ruins may hold loot (spec §8 "Magic items"); the land holds none of its own.
             super::place_loot(&mut template, content, seed, &land.loot, (None, luck));
+            crate::gear::arm(&mut template, content, seed);
             return Ok(template);
         }
     }
@@ -345,6 +346,7 @@ fn graze(land: &mut Land, rng: &mut Rng, count: i32, start: Pos) {
                 route,
                 carry: Vec::new(),
                 equipment: Default::default(),
+                rolls_gear: true,
             });
             break;
         }

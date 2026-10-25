@@ -26,6 +26,16 @@ resist = { fire = 25 }
 # A tiny chance to take in some of its will.
 on_eat = { message = "It tastes terrible, and of bitter herbs.", vomit = 40, stat = { willpower = 3 } }
 
+# Its gear (spec §8 "Creature gear"): a bone amulet, sometimes more than it seems, and a few coins.
+[[creature.gear]]
+chance = 60
+one_of = ["bone_amulet"]
+magic = 15
+
+[[creature.gear]]
+chance = 30
+one_of = ["copper_coin*5", "copper_coin*12"]
+
 [[creature.particles]]
 on = "attack"
 glyphs = "·*+"

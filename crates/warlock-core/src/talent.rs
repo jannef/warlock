@@ -312,6 +312,8 @@ pub struct TalentMods {
     pub credit: u32,
     /// What it buys or sells is identified.
     pub identify_trades: bool,
+    /// What a creature it kills drops is identified as it lands (Scavenger).
+    pub scavenger: bool,
     /// Item descriptions show its things' worth.
     pub item_worth: bool,
     /// Item descriptions show its gems' worth.
@@ -1047,6 +1049,7 @@ impl TalentMods {
             TalentEffect::SellPercent { value } => self.sell_percent += value,
             TalentEffect::Credit { gold } => self.credit = self.credit.max(gold),
             TalentEffect::IdentifyTrades => self.identify_trades = true,
+            TalentEffect::Scavenger => self.scavenger = true,
             TalentEffect::ItemWorth => self.item_worth = true,
             TalentEffect::GemWorth => self.gem_worth = true,
             TalentEffect::IdentifyCarried { hours } => {

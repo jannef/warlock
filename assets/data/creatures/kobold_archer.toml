@@ -21,3 +21,14 @@ size = "small"
 stats = { strength = 8, dexterity = 15, toughness = 10, intelligence = 10, willpower = 10, presence = 8 }
 on_eat = { message = "This kobold meat tastes terrible!", vomit = 40 }
 weapon_skills = { bows = 1 }
+# Its gear (spec §8 "Creature gear"): a short bow as a rule, and arrows for it.
+racial_weapon = "short_bow"
+
+[[creature.gear]]
+chance = 95
+one_of = ["arrow*12", "arrow*20"]
+
+[[creature.gear]]
+chance = 20
+one_of = ["leather_cap"]
+magic = 5

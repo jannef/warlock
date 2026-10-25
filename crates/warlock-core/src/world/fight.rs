@@ -928,19 +928,24 @@ impl World {
                 self.tally_kill(creature, &level);
                 self.judge_kill(id);
             }
-            self.creature_dies(id);
+            self.creature_dies(id, by == Some(self.state.player));
         }
     }
 
     /// Creature `id` dies: it leaves the world, and what it carried (worn and wielded things
     /// too) falls on its cell, on top of what lies there, in the order it carried them, and its
-    /// corpse on top of that (spec §8 "Hunger").
-    fn creature_dies(&mut self, id: ActorId) {
+    /// corpse on top of that (spec §8 "Hunger"); identified, when the player killed it
+    /// (`by_player`) with Scavenger.
+    fn creature_dies(&mut self, id: ActorId, by_player: bool) {
         let Some(actor) = self.state.actors.remove(&id) else {
             return;
         };
         let mut dropped = actor.inventory.clone();
         dropped.extend(self.loot_of(&actor));
+        // Scavenger (spec §8 "Creature gear"): what the player's kill drops is known at once.
+        if by_player && self.state.player().talent_mods(&self.content).scavenger {
+            dropped.iter_mut().for_each(|stack| _ = stack.identify());
+        }
         if !dropped.is_empty()
             && let Some(level) = self.state.levels.get_mut(&actor.level)
         {

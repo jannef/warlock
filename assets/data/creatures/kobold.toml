@@ -20,6 +20,21 @@ hearing = 15
 stats = { strength = 9, dexterity = 13, toughness = 10, intelligence = 10, willpower = 9, presence = 8 }
 on_eat = { message = "This kobold meat tastes terrible!", vomit = 40 }
 weapon_skills = { spears = 1 }
+# Its gear (spec §8 "Creature gear"): a spear as a rule, now and then a cap or a coat.
+racial_weapon = "spear"
+
+[[creature.gear]]
+chance = 25
+one_of = ["leather_cap"]
+
+[[creature.gear]]
+chance = 15
+one_of = ["padded_coat", "leather_jerkin"]
+magic = 5
+
+[[creature.gear]]
+chance = 30
+one_of = ["copper_coin*4", "copper_coin*9"]
 
 # Sparks from the torch it carries.
 [[creature.particles]]
