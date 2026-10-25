@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ Welcome to Showcase. Press ? for controls.
+ Flames burst from you! The fire in you burns low.
+
+
+
+
+                    ┌─ Abilities ──────────────────────────────────────────────┐
+                    │                                                          │
+                    │ Birth sign                                               │
+                    │   a  Blaze              you are burnt out                │
+                    │ Class                                                    │
+                    │ > b  Throw your voice   at a place you see               │
+                    │ Skills                                                   │
+                    │   c  Intimidate         not usable yet                   │
+                    │ Weapon skills                                            │
+                    │   d  Shield bash        in a direction                   │
+                    │ Items                                                    │
+                    │   e  Hood your lantern                                   │
+                    │                                                          │
+                    │ Make a voice sound at a place you see nearby: those who  │
+                    │ hear it go and look there.                               │
+                    │                                                          │
+                    │ a-e or Enter use   Esc close                             │
+                    └──────────────────────────────────────────────────────────┘
+
+
+
+
+
+ The Hub  ·  HP 22/22  ·  MP 0/0  ·  Burnt out  ·  Lv 1  ·  08:00  ·  11 Darkening       ? controls

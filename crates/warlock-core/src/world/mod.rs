@@ -98,6 +98,7 @@ mod disarm;
 mod disease;
 mod door;
 mod eat;
+mod element_gifts;
 mod equip;
 mod experience;
 mod eyes;
@@ -1061,6 +1062,8 @@ mod disease_tests;
 mod door_tests;
 #[cfg(test)]
 mod door_trap_tests;
+#[cfg(test)]
+mod element_gift_tests;
 #[cfg(test)]
 mod equip_tests;
 #[cfg(test)]

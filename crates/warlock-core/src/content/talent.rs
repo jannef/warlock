@@ -194,6 +194,9 @@ pub enum TalentEffect {
     Stat { stat: Stat, value: i32 },
     /// Hit points come back this percent faster (negative: slower).
     HealingPercent { value: i32 },
+    /// Mana comes back this percent faster (negative: slower; Tidal), on
+    /// [`crate::world::World::mana_rate`]'s pace.
+    ManaRegenPercent { value: i32 },
     /// Footsteps this percent louder (negative: quieter).
     FootstepsPercent { value: i32 },
     /// The doors the actor opens and closes make no noise.
@@ -371,8 +374,12 @@ pub enum TalentEffect {
         at_rank: u8,
     },
     /// The marks its attacks earn in the weapon skills of `role`, this percent more (Weapon
-    /// drill).
-    WeaponMarks { role: Role, value: i32 },
+    /// drill); without a `role`, in every weapon skill and fighting style (Forge-born).
+    WeaponMarks {
+        #[serde(default)]
+        role: Option<Role>,
+        value: i32,
+    },
     /// A confirmed critical's multiplier with a two-handed weapon, this much more (never past
     /// ×5; Brutal critical).
     TwoHandedCrit { value: u8 },
@@ -503,6 +510,21 @@ pub enum TalentEffect {
         cooldown: String,
         degrees: u16,
     },
+    /// The active Blaze (a birth sign's, spec §8 "Birth sign"): a burst of `radius` around the
+    /// player that does `damage` of kind `damage_type` (an id in `data/damage_types.toml`) to
+    /// every creature it reaches but them, melts the ice it reaches, and sets each cell it
+    /// reaches but theirs burning for `burns` seconds with light preset `fire` (as a burning
+    /// missile where it lands); shown as effect `spell` (`data/effects.toml`); then the
+    /// `cooldown` status.
+    Blaze {
+        radius: i32,
+        damage: Dice,
+        damage_type: String,
+        spell: String,
+        fire: String,
+        burns: u32,
+        cooldown: String,
+    },
     /// Every level past `hp_level` (data/experience.toml) adds hit points again, as the levels
     /// up to it do, and `bonus` more (Hardened). Handed out as the levels come.
     Hardened { bonus: i32 },
@@ -625,6 +647,7 @@ impl TalentEffect {
         Some(match self {
             TalentEffect::HornsGrace { .. } => A::HornsGrace,
             TalentEffect::Stare { .. } => A::TransfixingStare,
+            TalentEffect::Blaze { .. } => A::Blaze,
             _ => return None,
         })
     }
@@ -828,6 +851,30 @@ impl TalentEffect {
                 status(id)?;
                 status(cooldown)
             }
+            TalentEffect::Blaze {
+                radius,
+                damage,
+                damage_type,
+                spell,
+                fire,
+                burns,
+                cooldown,
+            } => {
+                if !(1..=3).contains(radius) || damage.max() < 1 || damage.min() < 0 {
+                    return Err("`blaze`: radius is 1 to 3, damage dice that can do harm".into());
+                }
+                if !(1..=3600).contains(burns) || spell.trim().is_empty() {
+                    return Err("`blaze`: burns is 1 to 3600 seconds, and it names a spell".into());
+                }
+                let types = content.damage_types();
+                if !types.is_empty() && content.damage_type_id(damage_type).is_none() {
+                    return Err(format!("names an unknown damage type `{damage_type}`"));
+                }
+                if !content.light_presets().is_empty() && content.light_id(fire).is_none() {
+                    return Err(format!("names an unknown light preset `{fire}`"));
+                }
+                status(cooldown)
+            }
             TalentEffect::Rage { status: id } => status(id),
             TalentEffect::Radiance { status: id, light } => {
                 status(id)?;
@@ -946,6 +993,7 @@ impl TalentEffect {
                 Ok(())
             }
             TalentEffect::HealingPercent { value }
+            | TalentEffect::ManaRegenPercent { value }
             | TalentEffect::FootstepsPercent { value }
             | TalentEffect::CarryPercent { value }
             | TalentEffect::TravelPercent { value }
@@ -2214,6 +2262,17 @@ needs = { stats = { toughness = 17 }, talents = { healthy = 1 } }
             bad("effects = [{ kind = \"lantern_light\", light = \"sun\" }]")
                 .contains("unknown light preset")
         );
+        // The element gifts' (#268): Blaze names what exists and keeps its numbers in range.
+        let blaze = |fields: &str| bad(&format!("effects = [{{ kind = \"blaze\", {fields} }}]"));
+        let ok = "damage = \"2d6\", damage_type = \"fire\", spell = \"blaze\", \
+                  fire = \"arrow_fire\", burns = 60, cooldown = \"burnt_out\"";
+        assert!(blaze(&format!("radius = 4, {ok}")).contains("radius is 1 to 3"));
+        let fields = ok.replace("\"arrow_fire\"", "\"sun\"");
+        assert!(blaze(&format!("radius = 1, {fields}")).contains("unknown light preset"));
+        let fields = ok.replace("\"burnt_out\"", "\"smouldering\"");
+        assert!(blaze(&format!("radius = 1, {fields}")).contains("unknown status"));
+        let fields = ok.replace("\"fire\",", "\"plasma\",");
+        assert!(blaze(&format!("radius = 1, {fields}")).contains("unknown damage type"));
         assert!(
             bad("effects = [{ kind = \"scent\", status = \"bleeding\", radius = 0 }]")
                 .contains("radius is 1 to 20")

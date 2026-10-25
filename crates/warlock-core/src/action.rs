@@ -150,9 +150,9 @@ pub enum Action {
     /// direction it asks.
     Use(ClassActive, Option<Dir>),
     /// Use a birth sign's active gift (spec §8 "Birth sign"; the abilities menu's Birth sign
-    /// group): Horn's grace, and, aimed at a cell, the Transfixing stare (`use:horns_grace`,
-    /// `use:transfixing_stare:12,5`). Takes the time of its cost's action; refused (no time)
-    /// without the gift, while its cooldown lasts, or without the cell it asks.
+    /// group): Horn's grace, Blaze, and, aimed at a cell, the Transfixing stare
+    /// (`use:horns_grace`, `use:blaze`, `use:transfixing_stare:12,5`). Takes the time of its
+    /// cost's action; refused (no time) without the gift, while its cooldown lasts, or without the cell it asks.
     Gift(SignActive, Option<Pos>),
     /// Take talent `id` (an id in `data/talents/`), for `choice` if it takes one (spec §8
     /// "Talents"): one of the picks a level brings, made at once (nothing is banked). Refused
@@ -745,7 +745,7 @@ impl FromStr for Action {
             "use" => {
                 let usage = || {
                     "`use` needs a class or birth sign ability, e.g. `use:rage`, `use:smite:E`, \
-                     or `use:transfixing_stare:12,5`"
+                     `use:blaze`, or `use:transfixing_stare:12,5`"
                 };
                 let (id, aim) = match arg.ok_or_else(usage)?.split_once(':') {
                     Some((id, aim)) => (id, Some(aim)),
@@ -1170,6 +1170,7 @@ mod tests {
             Action::SecondWind,
             Action::Use(ClassActive::Rage, None),
             Action::Use(ClassActive::Smite, Some(Dir::SW)),
+            Action::Gift(SignActive::Blaze, None),
             Action::LevelUpAuto,
             Action::GrantXp(2500),
             Action::Freeze {

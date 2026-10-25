@@ -390,6 +390,7 @@ impl Ability {
             Ability::ThrowVoice => Some(VOICE_RANGE),
             Ability::Sign(SignActive::TransfixingStare) => Some(STARE_RANGE),
             Ability::Sign(SignActive::HornsGrace)
+            | Ability::Sign(SignActive::Blaze)
             | Ability::Class(_)
             | Ability::Skill(_)
             | Ability::Disarm

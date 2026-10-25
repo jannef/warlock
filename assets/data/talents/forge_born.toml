@@ -1,0 +1,8 @@
+[[talent]]
+id = "forge_born"
+name = "Forge-born"
+tree = "stars"
+granted = true
+description = "You learn weapons quickly: every weapon skill and fighting style."
+effects = [{ kind = "weapon_marks", value = 50 }]
+systems = ["weapon_skills", "styles"]

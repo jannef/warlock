@@ -30,7 +30,7 @@ impl World {
     /// the slowest `mana_regen` of its statuses and of the diseases that show (100 without
     /// any), times `[healing] mana_resting` while the player rests, times the `mana_regen` of a
     /// special room it stands in, times what the mana regeneration affixes of what it wears and
-    /// wields add (+50 % is half again as fast). None for a Starving player (spec §8 "Hunger").
+    /// wields and its talents add (+50 % is half again as fast; Tidal's +25 %). None for a Starving player (spec §8 "Hunger").
     /// The one place that decides it.
     pub(crate) fn mana_rate(&self, id: ActorId) -> u32 {
         let Some(actor) = self.state.actors.get(&id) else {
@@ -47,9 +47,13 @@ impl World {
         let room = (self.state.levels.get(&actor.level))
             .and_then(|level| level.room_effect_at(&self.content, actor.pos));
         let rate = room.map_or(rate, |effect| rate * u32::from(effect.mana_regen) / 100);
-        let faster = actor.mods(&self.content).get(ItemEffect::ManaRegeneration);
-        let faster = u32::try_from(faster.max(0)).unwrap_or(0);
-        rate * (100 + faster) / 100
+        let faster = actor
+            .mods(&self.content)
+            .get(ItemEffect::ManaRegeneration)
+            .max(0);
+        // Talents (spec §8 "Birth sign": Tidal) add their percent to the affixes'.
+        let faster = faster + actor.talent_mods(&self.content).mana_regen_percent;
+        rate * u32::try_from((100 + faster).max(0)).unwrap_or(0) / 100
     }
 
     /// Actor `id` spends `amount` of its mana (spec §8 "Mana"): the one way mana is spent.

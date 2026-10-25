@@ -28,7 +28,10 @@ issue how it interacts with mana**, and hooks in at the one place below.
 - **Hooks** (`world/mana.rs`, each the one place):
   - `World::mana_rate(id)`: the pace in percent, the twin of `World::healing_rate`: min of
     `Effects::mana_regen` and `Diseases::mana_regen`, × `mana_resting` while the player rests, ×
-    the room's `mana_regen`, × (100 + `ManaRegeneration`) / 100; 0 for a Starving player.
+    the room's `mana_regen`, × (100 + `ManaRegeneration` + `TalentMods::mana_regen_percent`) /
+    100 (the talent effect `mana_regen_percent`: Tidal, the Water-born's gift, +25; the H6
+    talents reuse it); 0 for a Starving player. The talents' `mana` system is `pending` until
+    the H6 mana talents join Tidal.
     Burden, temperature, and stances never enter it.
   - `World::live` (`world/status.rs`) calls `mana::regain` beside `heal` (in the fast path too)
     and takes `mana::until_regained` as a moment, so a point back is exact however time is cut;

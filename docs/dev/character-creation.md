@@ -183,6 +183,19 @@ effect, and Inner light's `ember` light preset in data. Tests: `world/stars_roc_
 gatekeeper's in `world/free_blow_tests.rs`, Watchful's placing in `noise/tests.rs`, the screen
 case `eat-screen-smell` (seed 21, a Barghest).
 
+The element gifts (#268): Kindled is `lantern_light` (Lamplighter's preset; the two do not
+stack), Forge-born `weapon_marks` without a `role` (every weapon skill and style, read in
+`TalentMods::marks`), Tidal `mana_regen_percent` (`World::mana_rate`). Blaze is Fire's **sign active**, the third after #266's: `TalentEffect::Blaze` makes the talent
+one (`Content::sign_active`), `TalentMods::blaze`; it is used as `Action::Gift` (`use:blaze`,
+priced in `buff.rs` by its `cast` cost) and dispatched by `World::use_gift` in `world/gifts.rs`.
+Its rule is `world/element_gifts.rs` (`blaze`, `kindle`): the burst's cells from
+`spell::burst_cells`, one gameplay roll, `World::spell_hurts` for each creature but the player,
+`World::shock(Heat)`, a `LevelState::fires` entry on each walkable cell but the player's, said
+with `read.rs::say_spell` ("The blaze burns the kobold."), then the `burnt_out` status (12 h).
+Its look is `blaze` in `data/effects.toml`. Tests: `world/element_gift_tests.rs` (the grants,
+the burst and its cooldown, refusals, the dump row and action text, Kindled, Forge-born, Tidal,
+a replay and a save), the `abilities-menu-blaze` text snapshot.
+
 Shown: the reveal (`ui/sign_screen.rs`, `--screen sign`, after the race), the summary's Sign row,
 the character screen's dimmed Stars line (gift names, two lines at most) and the title after the
 name (character and death screens), the `stats` dump's `Sign Wood Salamander, the Racer`, the
