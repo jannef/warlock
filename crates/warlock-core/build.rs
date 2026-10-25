@@ -10,8 +10,15 @@ fn main() {
     let manifest = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").expect("set by cargo"));
     let assets = manifest.join("../../assets");
     let mut files = Vec::new();
+    // A path that does not exist is always stale to cargo (every build reruns this script and
+    // rebuilds the crate), so only existing directories are named; the assets directory itself
+    // is watched to notice one appearing.
+    println!("cargo:rerun-if-changed={}", assets.display());
     for dir in ["campaigns", "data", "levels", "scenarios", "vaults"] {
         let path = assets.join(dir);
+        if !path.exists() {
+            continue;
+        }
         println!("cargo:rerun-if-changed={}", path.display());
         collect(&path, dir, &mut files);
     }
