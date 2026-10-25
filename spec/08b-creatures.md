@@ -112,6 +112,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     have reached the Depths 3. Return to the old hermit."; a delivery's item picked up again:
     "Quest updated: take the sealed letter to the old hermit."); a quest whose goal is met as it
     is taken up says so after the accept. Rewards and the XP gained are the only numbers said.
+  - **Reveals** (#327; §7 "Hidden locations"): a quest with `reveals` marks its hidden location
+    on the player's map at its stage (offered, accepted, or done), right after the speaker's
+    words: "The old hermit marks the Old Barrow on your map." A location revealed before is not
+    marked again, and said nothing of. A quest's `where` follows its objective in the log
+    ("Reach Fennmynster 3. The minster lies in Micelfenn, east of Fennhām.").
   - **No abandoning, no cap** (the owner's decision): a quest taken up stays in the log until it
     is done, and the player may have any number of them at once.
   - **State**: per quest the player has heard of, its stage (offered, active, done), how many
