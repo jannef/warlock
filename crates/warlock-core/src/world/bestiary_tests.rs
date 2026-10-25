@@ -220,7 +220,14 @@ fn the_fen_dead_and_the_mud_shrug_off_blows() {
     }
     assert!(def("will_o_wisp").light.is_some());
     // Only the bog hag comes once a run (of the fen's types).
-    for id in ["giant_leech", "giant_frog", "drowned", "crocodile", "cultist", "will_o_wisp"] {
+    for id in [
+        "giant_leech",
+        "giant_frog",
+        "drowned",
+        "crocodile",
+        "cultist",
+        "will_o_wisp",
+    ] {
         assert!(!def(id).unique, "{id}");
     }
     assert!(def("bog_hag").unique);
