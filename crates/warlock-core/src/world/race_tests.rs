@@ -303,7 +303,15 @@ fn the_evil_races_start_callous_or_evil_with_a_neutral_class() {
         ("duergar", Band::Evil),
         ("ratfolk", Band::Callous),
     ] {
-        let w = world(race);
-        assert_eq!(w.perception().own_alignment(), Some(band), "{race}");
+        // Before the stars: the race's part alone (a warrior's is 0) falls in its band.
+        let spec: CharacterSpec = format!("{race},male,warrior").parse().expect("spec");
+        let w = World::with_character(CONTENT.clone(), "racetest", Some(1), Some(&spec))
+            .expect("world");
+        let sign = (w.character().and_then(|c| c.sign.as_ref())).expect("a sign");
+        let nudge = CONTENT.horoscope().expect("a horoscope").alignment(sign);
+        let mut theirs = w.state().player().clone();
+        let score = theirs.alignment.expect("a score").value();
+        theirs.alignment = Some(crate::alignment::Score::new(score - nudge));
+        assert_eq!(theirs.band(&CONTENT), band, "{race}");
     }
 }

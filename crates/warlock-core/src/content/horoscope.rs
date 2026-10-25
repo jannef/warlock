@@ -46,6 +46,8 @@ struct SignSpec {
     #[serde(default)]
     grants: Vec<String>,
     #[serde(default)]
+    alignment: i32,
+    #[serde(default)]
     kit: Vec<KitLineSpec>,
 }
 
@@ -76,6 +78,9 @@ pub struct SignPart {
     /// The talents those born under it are given (gifts, and an animal's flaw), by id, in
     /// order.
     pub grants: Vec<String>,
+    /// An animal's part of a new character's hidden alignment score (spec §8 "Alignment"),
+    /// added to the race's and the class's; 0 for an element (elements have none).
+    pub alignment: i32,
     /// The starting kit as written; resolved by the loader into `kit`.
     pub(super) kit_spec: Vec<KitLineSpec>,
     /// What those born under it add to their starting kit, after the class's and the race's
@@ -148,12 +153,20 @@ impl Horoscope {
                 }
                 let stats = adjustments(&spec.stats)
                     .map_err(|m| err(format!("{kind} `{id}`: stats: {m}")))?;
+                if kind == "element" && spec.alignment != 0 {
+                    return Err(err(format!(
+                        "element `{id}`: only an animal nudges the alignment"
+                    )));
+                }
+                let alignment = crate::alignment::check_start(spec.alignment)
+                    .map_err(|m| err(format!("{kind} `{id}`: {m}")))?;
                 list.push(SignPart {
                     id: spec.id,
                     name: spec.name,
                     description: spec.description,
                     stats,
                     grants: spec.grants,
+                    alignment,
                     kit_spec: spec.kit,
                     kit: Kit::default(),
                 });
@@ -258,6 +271,12 @@ impl Horoscope {
             animal: animal.id.clone(),
             element: element.id.clone(),
         }
+    }
+
+    /// What `sign` adds to a new character's alignment score (spec §8 "Alignment"): its
+    /// animal's nudge (elements have none); 0 if this horoscope lacks the animal.
+    pub fn alignment(&self, sign: &Sign) -> i32 {
+        (self.animals.iter().find(|a| a.id == sign.animal)).map_or(0, |a| a.alignment)
     }
 
     /// The animal and the element of `sign`; `None` if this horoscope lacks either.
@@ -464,6 +483,10 @@ mod tests {
         .expect("valid");
         assert_eq!(h.name(&sign), "Fire Manticore");
         assert_eq!(h.animals[0].stats[Stat::Strength], Dice::fixed(1));
+        assert_eq!(
+            h.animals[0].alignment, 0,
+            "no nudge unless the file gives one"
+        );
         assert_eq!(h.sign_of_year(1444), sign);
         let unknown = Sign {
             animal: "roc".into(),
@@ -496,6 +519,14 @@ mod tests {
             (
                 text(1, 1, 1).replace("anchor_year = 1\n", ""),
                 "missing field `anchor_year`",
+            ),
+            (
+                format!("{}alignment = 50\n", text(1, 1, 1)),
+                "element `e0`: only an animal nudges the alignment",
+            ),
+            (
+                text(1, 1, 1).replace("[[element]]", "alignment = 1001\n[[element]]"),
+                "animal `a0`: alignment 1001 is out of range",
             ),
         ] {
             let e = parse(&text).unwrap_err();

@@ -214,7 +214,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Neutral; most races only lean (elves and halflings a little toward good, half-orcs a little
     toward evil), never alone out of Neutral, but the evil races (#255) start on the evil side:
     goblins, kobolds, lizardfolk, and ratfolk Callous (−200), drow and duergar Evil (−450), so a
-    drow paladin starts Neutral and a goblin thief Evil. It draws nothing.
+    drow paladin starts Neutral and a goblin thief Evil. The birth animal **nudges** it (#272;
+    `alignment` on an `[[animal]]` in `data/horoscope.toml`, elements none): Unicorn +100,
+    Griffin, Phoenix, and Wyvern +50, Kraken −50, Basilisk and Manticore −100, the rest 0; added
+    before the summary shows the band, and never shown as a number. Small against a band's width,
+    it still decides the band near an edge: a Manticore- or Basilisk-born human paladin starts
+    Kind (350), a Unicorn-born elf Kind (150). It draws nothing.
   - **Mana**: the race's and the class's `mana` add to the mental stats' modifiers for the
     maximum (§8 "Mana").
   - **Weapon skills** ("Weapon skills" below): the race's starting ranks plus the class's, plus
