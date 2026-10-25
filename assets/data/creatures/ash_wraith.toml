@@ -1,0 +1,30 @@
+# The delf wave (Fyrdelf, docs/design/campaign.md §10.1). What is left of a miner the delf's
+# fires took: grey ash held together by hate. A caster (its spells announced until magic is
+# designed) whose touch is cold as the grave; it shrugs off cold and poison, bleeds nothing, and
+# leaves nothing behind.
+[[creature]]
+id = "ash_wraith"
+level = 15
+xp = 85
+loot = 40
+name = "ash wraith"
+glyph = "W"
+fg = "#8c8c8c"
+speed = 1100
+faction = "undead"
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+combat = "caster"
+range = 6
+opens_doors = true
+footsteps = 10
+hearing = 15
+weight = 20000
+stats = { strength = 14, dexterity = 15, toughness = 16, intelligence = 16, willpower = 20, presence = 16 }
+base_hp = 34
+skills = { concentration = 45, spellcraft = 50 }
+attack = { damage = "2d6", damage_type = "cold", name = "touch", verb = "touches" }
+resist = { cold = 50, poison = 100 }
+corpse = false
+blood = "none"
