@@ -293,7 +293,7 @@ fn nothing_of_the_hidden_dungeons_reaches_perception_or_the_dumps() {
         assert!(!text.contains(leak), "{leak} in the locations");
     }
     assert_eq!(w.perception().leads_to(FENNMYNSTER), None);
-    // The dev reveal marks it; it leads nowhere until its branch is built.
+    // The dev reveal marks it, and it leads down into its branch (#338).
     act(&mut w, "reveal:fennmynster");
     assert_eq!(
         w.perception().leads_to(FENNMYNSTER).as_deref(),
@@ -301,7 +301,7 @@ fn nothing_of_the_hidden_dungeons_reaches_perception_or_the_dumps() {
     );
     put_player(&mut w, FENNMYNSTER);
     act(&mut w, "descend");
-    assert_eq!(said(&w).last().unwrap(), "These stairs lead nowhere yet.");
+    assert_eq!(w.perception().level_id(), "fennmynster:1");
 }
 
 #[test]

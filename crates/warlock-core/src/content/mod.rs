@@ -3803,7 +3803,8 @@ mod tests {
                 "shrine",
                 "stone_circle",
                 "drakes_hoard",
-                "foremans_cabin"
+                "foremans_cabin",
+                "sunken_crypt"
             ]
         );
         assert_eq!(content.vaults()[4].entrances.len(), 3);

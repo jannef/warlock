@@ -1112,7 +1112,7 @@ mod tests {
         let places = text("overworld-places.md");
         for row in [
             "| Beorggeat | (12, 28) | Grægweall | Mountain pass | — | — |",
-            "| Fennmynster | (70, 48) | Micelfenn | Dungeon entrance | nowhere yet | until a quest reveals it |",
+            "| Fennmynster | (70, 48) | Micelfenn | Dungeon entrance | Fennmynster 1 | until a quest reveals it |",
         ] {
             assert!(places.contains(row), "{row}\n{places}");
         }

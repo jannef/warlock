@@ -32,7 +32,9 @@ a dungeon vault, shared or of the branch's campaign, once a level) reaches the g
 next attempt's stream tries again; then the random vault as before. `vault::shuffled` leaves
 pinned vaults out, so a branch without named vaults draws exactly what it did (no extra draws;
 the Depths' snapshots are unchanged). Fyrdelf names the foreman's cabin on 1 to 4 and the
-drake's hoard on 12 (`mapgen/fyrdelf_tests.rs`, with the branch's first-level snapshot).
+drake's hoard on 12 (`mapgen/fyrdelf_tests.rs`, with the branch's first-level snapshot);
+Fennmynster names the sunken crypt on its bottom, 8 (`mapgen/fennmynster_tests.rs`, which also
+checks the branch's raised room odds and its lack of shops).
 
 Special rooms (spec §7 "Special rooms", M25) are data: `data/room_effects.toml`
 (`content/room_effect.rs`: effects, the per-room `chance`, `per_level`). Generators make them last

@@ -1,0 +1,42 @@
+# Fennmynster, "the fen minster" (docs/design/campaign.md §7.1; the fields: data/dungeons.toml):
+# the cellars and crypts of the drowned minster in Micelfenn, the second of the Ascmearc's first
+# dungeons. Its way in on the overworld is hidden until a quest reveals it. Eight levels of
+# cellars, many rooms of them under water, and the sunken crypt at the bottom.
+
+[[dungeon]]
+id = "fennmynster"
+name = "Fennmynster"
+generator = "rooms"
+depth = 8
+size = [80, 21]
+traps = ["pit", "frost", "alarm", "teleport"]
+# The monks hid their stores: more secret doors than the other dungeons, hidden things one harder
+# to find each level down, and locks one harder a level.
+secret_doors = [1, 3]
+hidden_per_depth = 1
+locks_per_depth = 1
+loot = [2, 4]
+key = "iron_key"
+# The marsh is mild: its water freezes nowhere.
+temperature = 6
+# Danger 4 on the first floor to 11 on the eighth (spec §7 "Danger levels"); nothing scales with
+# the player. The fen wave: the marsh's beasts and things, the minster's drowned dead, and the
+# cult that came to them (the bog hag, unique, comes once a run).
+danger = 4
+population = [
+    "giant_leech", "giant_frog", "drowned", "crocodile", "cultist", "will_o_wisp",
+    "ghost", "mud_golem", "cult_priest", "marsh_troll", "bog_hag",
+]
+# How many: the default, 35 a thousand walkable cells, 25 to 80 (a cellar floor of about 350
+# cells gets the least, 25).
+
+# The fen seeps in (spec §7 "Special rooms"): a room is special one time in four, at most two a
+# level, flooded, hushed, or shadowed.
+room_effects = { chance = 25, per_level = 2, effects = ["flooded", "hushed", "shadowed"] }
+# No one trades in the drowned minster (spec §7 "Shops").
+shops = { chance = 0 }
+
+# The bottom: the sunken crypt, where the minster kept what the water keeps now.
+[[dungeon.levels]]
+from = 8
+vaults = ["sunken_crypt"]

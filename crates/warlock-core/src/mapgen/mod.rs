@@ -758,6 +758,8 @@ pub(crate) fn out_and_back(
 }
 
 #[cfg(test)]
+mod fennmynster_tests;
+#[cfg(test)]
 mod fyrdelf_tests;
 #[cfg(test)]
 mod tests;

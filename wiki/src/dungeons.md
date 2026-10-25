@@ -54,6 +54,23 @@ floor.
 
 {{#include generated/dungeon-floors.md}}
 
+### Fennmynster
+
+**Fennmynster**, the fen minster, is what is left of a minster that sank into the marsh of
+Micelfenn: eight floors of its cellars and crypts at 6 °C. No road leads there and its way in
+cannot be found by looking: a quest must show you where it is. The fen seeps into its rooms: one
+room in four is out of the ordinary (most floors have one or two), flooded ankle-deep (slow and
+loud to wade), hushed, or shadowed. Its traps are pits, frost, alarms, and teleports, and the
+monks hid their stores well: more of its doors are secret than in the other dungeons. The
+marsh's leeches, frogs, crocodiles, wisps, mud golems, and trolls live here among the minster's
+drowned dead and its ghosts, and with them the cult that came to the ruin, cultists and their
+priests; somewhere in the dark is the bog hag, whom you meet once in your life. No one trades
+down there: Fennmynster has no shops.
+
+At the very bottom lies the **sunken crypt**: a nave of shallow water between the monks' tombs,
+where two of the drowned still stand guard, and at its far end a dry dais with an altar and a
+magic treasure on it. The crypt is on the eighth floor and nowhere else.
+
 ### Fyrdelf
 
 **Fyrdelf**, the fire delving, is the duergar's mine under the hills of Ascdūn, below the
