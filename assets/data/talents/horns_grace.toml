@@ -4,5 +4,5 @@ name = "Horn's grace"
 tree = "stars"
 granted = true
 description = "The unicorn's grace: your bleeding and poison end, and a disease is shaken off; then it rests a day."
-effects = [{ kind = "horns_grace", cures = ["bleeding", "poisoned"], diseases = 1, cooldown = "graceless" }]
+effects = [{ kind = "horns_grace", cures = ["bleeding", "poisoned"], diseases = 1, cooldown = "graceless", degrees = 3 }]
 systems = ["status", "diseases"]

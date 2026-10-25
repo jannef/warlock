@@ -181,8 +181,18 @@ pub enum TalentEffect {
     /// A natural 2 on an attack roll (a fumble) is rolled again, once.
     RerollFumble,
     /// Each melee blow at the creature its last blow was at, in a row (its own turn or the one
-    /// before), is +1 to hit more, to `max` (Relentless; `World::streak`).
-    Streak { max: u8 },
+    /// before), is +1 to hit more, to `max` (Relentless; `World::streak`); with `damage_every`
+    /// (Relentless fury), every that many blows before it in the streak add +1 damage too.
+    Streak {
+        max: u8,
+        #[serde(default)]
+        damage_every: u8,
+    },
+    /// Its off hand's blows do this much more damage (Tentacles).
+    OffHandDamage { value: i32 },
+    /// Its attacks with its best weapon skill (the highest rank it holds, ties all counting)
+    /// threaten a critical this many natural points lower (Tempered).
+    BestSkillThreat { value: i32 },
     /// Maximum hit points: 1 per `per_levels` character levels, at least `at_least`, handed out
     /// into the actor's base hit points when the talent is taken and as each later level comes
     /// (as levels' own hit points are), so a talent taken early keeps growing.
@@ -472,6 +482,10 @@ pub enum TalentEffect {
     /// Its rising from the ashes brings it back whole (Reborn whole): every hit point, every
     /// status effect and disease burned away, and none of the rising's own status.
     RebornWhole,
+    /// It may rise from the ashes once more (Second rising): a second once in its life.
+    SecondRising,
+    /// Its hit points come back while it is Starving too (Another head).
+    StarvingHeals,
     /// The class active Veteran's wind ([`ClassActive::VeteransWind`]): as Second wind.
     VeteransWind {
         per_level: u8,
@@ -536,27 +550,65 @@ pub enum TalentEffect {
         burns: u32,
         cooldown: String,
     },
-    /// Every level past `hp_level` (data/experience.toml) adds hit points again, as the levels
-    /// up to it do, and `bonus` more (Hardened). Handed out as the levels come.
-    Hardened { bonus: i32 },
-    /// The active Horn's grace (a birth sign's): the statuses `cures` end and up to `diseases`
-    /// diseases that show are shaken off, then the `cooldown` status.
-    HornsGrace {
-        cures: Vec<String>,
-        diseases: u8,
+    /// Blaze bursts out to `radius` with `damage` instead of its own (Wildfire).
+    Wildfire { radius: i32, damage: Dice },
+    /// The active Fire breath (a birth sign's pick, spec §8 "Birth sign"), aimed at a cell
+    /// within [`crate::world::BREATH_RANGE`]: a bolt of `damage` of kind `damage_type` along the
+    /// line toward it, `length` cells from the player, through everyone on it; shown as effect
+    /// `spell` (a bolt); then `degrees` of the `cooldown` status.
+    FireBreath {
+        length: i32,
+        damage: Dice,
+        damage_type: String,
+        spell: String,
         cooldown: String,
+        degrees: u16,
     },
-    /// The active Transfixing stare (a birth sign's): a hostile within
-    /// [`crate::world::STARE_RANGE`] cells that the player sees and that sees them suffers
-    /// `severity` degrees of `status`, then the `cooldown` status.
-    Stare {
+    /// The active Hound's bay (a birth sign's pick): a howl; every hostile that hears it and is
+    /// of a lower level than the player suffers `severity` degrees of `status` (one that
+    /// `flees`), then the `cooldown` status.
+    HoundsBay {
         status: String,
         severity: u16,
         cooldown: String,
     },
+    /// Every level past `hp_level` (data/experience.toml) adds hit points again, as the levels
+    /// up to it do, and `bonus` more (Hardened). Handed out as the levels come.
+    Hardened { bonus: i32 },
+    /// The active Horn's grace (a birth sign's): the statuses `cures` end and up to `diseases`
+    /// diseases that show are shaken off, then `degrees` of the `cooldown` status.
+    HornsGrace {
+        cures: Vec<String>,
+        diseases: u8,
+        cooldown: String,
+        #[serde(default = "one_degree")]
+        degrees: u16,
+    },
+    /// Horn's grace also gives back `per_level` hit points per character level, and leaves
+    /// `degrees` of its cooldown instead of its own (Horn of plenty).
+    HornOfPlenty { per_level: u8, degrees: u16 },
+    /// The active Transfixing stare (a birth sign's): a hostile within
+    /// [`crate::world::STARE_RANGE`] cells that the player sees and that sees them suffers
+    /// `severity` degrees of `status`, then `degrees` of the `cooldown` status.
+    Stare {
+        status: String,
+        severity: u16,
+        cooldown: String,
+        #[serde(default = "one_degree")]
+        degrees: u16,
+    },
+    /// The Transfixing stare leaves `severity` degrees of its status and `degrees` of its
+    /// cooldown instead of its own (Petrifying gaze).
+    PetrifyingGaze { severity: u16, degrees: u16 },
     /// Rotten food never makes it vomit and sickens it half as much; overeating never makes it
     /// vomit (Iron stomach).
     IronStomach,
+    /// Rotten food never harms it: no vomiting, no sickness, no disease, as a race that eats
+    /// rotten food (Deep roots).
+    EatsRotten,
+    /// Wading (water, and ground a disease is caught wading in) costs it a plain step (Undertow;
+    /// unlike `swimmer`, it may still catch a disease).
+    WadesFree,
     /// Status `status` eases this percent faster (100: twice as fast).
     StatusEases { status: String, value: i32 },
     /// Status `status` never lowers its scores.
@@ -637,6 +689,11 @@ pub enum TalentEffect {
     SpellDamagePercent { value: i32 },
 }
 
+/// One degree: a cooldown's default.
+fn one_degree() -> u16 {
+    1
+}
+
 /// The free blows a talent may switch on ([`crate::world::FreeBlows`]).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -659,6 +716,8 @@ impl TalentEffect {
             TalentEffect::HornsGrace { .. } => A::HornsGrace,
             TalentEffect::Stare { .. } => A::TransfixingStare,
             TalentEffect::Blaze { .. } => A::Blaze,
+            TalentEffect::FireBreath { .. } => A::FireBreath,
+            TalentEffect::HoundsBay { .. } => A::HoundsBay,
             _ => return None,
         })
     }
@@ -734,6 +793,8 @@ impl TalentEffect {
             | TalentEffect::CarryKg { value }
             | TalentEffect::Checks { value, .. }
             | TalentEffect::CriticalConfirm { value }
+            | TalentEffect::OffHandDamage { value }
+            | TalentEffect::BestSkillThreat { value }
             | TalentEffect::Barbs { damage: value } => bonus(*value),
             TalentEffect::Stat { value, .. } => {
                 if *value == 0 || !(-5..=5).contains(value) {
@@ -921,9 +982,9 @@ impl TalentEffect {
                         .into(),
                 ),
             },
-            TalentEffect::Streak { max } => {
-                if !(1..=10).contains(max) {
-                    return Err("`streak`: max is 1 to 10".into());
+            TalentEffect::Streak { max, damage_every } => {
+                if !(1..=10).contains(max) || *damage_every > 10 {
+                    return Err("`streak`: max is 1 to 10, damage_every 0 to 10".into());
                 }
                 Ok(())
             }
@@ -937,20 +998,80 @@ impl TalentEffect {
                 cures,
                 diseases,
                 cooldown,
+                degrees,
             } => {
                 if cures.is_empty() && *diseases == 0 {
                     return Err("`horns_grace` cures a status or a disease".into());
                 }
+                if *degrees == 0 {
+                    return Err("`horns_grace`: degrees is at least 1".into());
+                }
                 cures.iter().try_for_each(|id| status(id))?;
                 status(cooldown)
+            }
+            TalentEffect::HornOfPlenty { per_level, degrees } => {
+                if !(1..=20).contains(per_level) || *degrees == 0 {
+                    return Err("`horn_of_plenty`: per_level is 1 to 20, degrees at least 1".into());
+                }
+                Ok(())
             }
             TalentEffect::Stare {
                 status: id,
                 severity,
                 cooldown,
+                degrees,
+            } => {
+                if *severity == 0 || *degrees == 0 {
+                    return Err("`stare`: severity and degrees are at least 1".into());
+                }
+                status(id)?;
+                status(cooldown)
+            }
+            TalentEffect::PetrifyingGaze { severity, degrees } => {
+                if *severity == 0 || *degrees == 0 {
+                    return Err("`petrifying_gaze`: severity and degrees are at least 1".into());
+                }
+                Ok(())
+            }
+            TalentEffect::Wildfire { radius, damage } => {
+                if !(1..=3).contains(radius) || damage.max() < 1 || damage.min() < 0 {
+                    return Err("`wildfire`: radius is 1 to 3, damage dice that can do harm".into());
+                }
+                Ok(())
+            }
+            TalentEffect::FireBreath {
+                length,
+                damage,
+                damage_type,
+                spell,
+                cooldown,
+                degrees,
+            } => {
+                if !(1..=crate::world::BREATH_RANGE).contains(length)
+                    || damage.max() < 1
+                    || damage.min() < 0
+                    || *degrees == 0
+                {
+                    return Err(format!(
+                        "`fire_breath`: length is 1 to {}, damage dice that can do harm, \
+                         degrees at least 1",
+                        crate::world::BREATH_RANGE
+                    ));
+                }
+                let types = content.damage_types();
+                if !types.is_empty() && content.damage_type_id(damage_type).is_none() {
+                    return Err(format!("names an unknown damage type `{damage_type}`"));
+                }
+                super::spell::check_effect(content, spell, super::effect::EffectShape::Bolt)?;
+                status(cooldown)
+            }
+            TalentEffect::HoundsBay {
+                status: id,
+                severity,
+                cooldown,
             } => {
                 if *severity == 0 {
-                    return Err("`stare`: severity is at least 1".into());
+                    return Err("`hounds_bay`: severity is at least 1".into());
                 }
                 status(id)?;
                 status(cooldown)
@@ -1161,6 +1282,10 @@ impl TalentEffect {
             | TalentEffect::NoExertion
             | TalentEffect::RerollFumble
             | TalentEffect::RebornWhole
+            | TalentEffect::SecondRising
+            | TalentEffect::StarvingHeals
+            | TalentEffect::EatsRotten
+            | TalentEffect::WadesFree
             | TalentEffect::Swimmer
             | TalentEffect::StoneSense
             | TalentEffect::FreeBlow { .. }

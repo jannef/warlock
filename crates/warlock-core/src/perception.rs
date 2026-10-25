@@ -1257,6 +1257,15 @@ impl<'a> PerceptionView<'a> {
             .and_then(|c| self.content.class(&c.spec.class))
             .map(|c| c.abilities_to(book, level))
             .unwrap_or_default();
+        // The rising is spent once it is used up: the first with no Second rising, else both.
+        let risen = self.progress.happened(crate::world::RISEN);
+        let twice = self.progress.happened(crate::world::RISEN_TWICE);
+        let second = (self.player.talent_mods(self.content)).second_rising;
+        let spent = |e: &crate::content::TalentEffect| match e {
+            crate::content::TalentEffect::RiseFromAshes { .. } => risen && (!second || twice),
+            crate::content::TalentEffect::SecondRising => twice,
+            _ => false,
+        };
         (self.player.talents.iter())
             .filter_map(|taken| {
                 let id = book.id(&taken.id)?;
@@ -1272,10 +1281,7 @@ impl<'a> PerceptionView<'a> {
                     granted: def.granted && !book.tree(def.tree).class,
                     flaw: def.flaw,
                     class: class.contains(&id),
-                    spent: self.progress.happened(crate::world::RISEN)
-                        && (def.effects_at(taken.rank)).any(|e| {
-                            matches!(e, crate::content::TalentEffect::RiseFromAshes { .. })
-                        }),
+                    spent: (def.effects_at(taken.rank)).any(|e| spent(&e)),
                 })
             })
             .collect()
@@ -1283,11 +1289,20 @@ impl<'a> PerceptionView<'a> {
 
     /// Every talent of the game, tree by tree in display order (the Talents page and the pick
     /// list): the rank the player holds, the prerequisites of the next rank with whether each
-    /// holds, and the ways it may be taken now (none: not now).
+    /// holds, and the ways it may be taken now (none: not now). A birth sign's pick for another
+    /// sign is left out: the stars a character was born under never change (spec §8 "Birth
+    /// sign").
     pub fn talents(&self) -> Vec<TalentView> {
+        use crate::content::Need;
         let content = self.content;
         let who = self.candidate();
+        let born_for = |def: &crate::content::TalentDef| {
+            (def.needs_at(1))
+                .filter(|n| matches!(n, Need::Animal(_) | Need::Element(_) | Need::Lucky))
+                .all(|n| who.meets(content, &n, def.choice, None))
+        };
         (content.talents().by_tree())
+            .filter(|(_, def)| born_for(def))
             .map(|(id, def)| {
                 let held = (self.player.talents.iter())
                     .filter(|t| t.id == def.id)

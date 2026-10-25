@@ -1,0 +1,10 @@
+# A birth sign's pick (spec §8 "Birth sign"; horoscope design §9.1): offered only to those born
+# under its sign.
+[[talent]]
+id = "wildfire"
+name = "Wildfire"
+tree = "stars"
+description = "Your blaze burns hotter and reaches farther."
+needs = { element = "fire", level = 15 }
+effects = [{ kind = "wildfire", radius = 2, damage = "3d6" }]
+systems = ["scrolls", "ice"]

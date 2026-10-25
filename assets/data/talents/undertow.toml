@@ -1,0 +1,10 @@
+# A birth sign's pick (spec §8 "Birth sign"; horoscope design §9.1): offered only to those born
+# under its sign.
+[[talent]]
+id = "undertow"
+name = "Undertow"
+tree = "stars"
+description = "Water bears you: wading costs you no more than a step on dry land, and a plunge through the ice never hurts you."
+needs = { element = "water", level = 6 }
+effects = [{ kind = "wades_free" }, { kind = "plunge_proof" }]
+systems = ["wading", "ice"]

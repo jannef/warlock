@@ -197,11 +197,12 @@ impl World {
             None => to,
         };
         let mut price = level.step_price(to, step);
-        // A strong swimmer (spec §8 "Birth sign") wades as if on dry land.
+        // A strong swimmer (spec §8 "Birth sign") wades as if on dry land, and so does one
+        // Undertow (a Water-born's pick) bears.
         if level.kind != LevelKind::Overworld
             && to.move_cost > 100
             && !actor.talents.is_empty()
-            && actor.talent_mods(&self.content).swimmer
+            && (talents.swimmer || talents.wades_free)
             && super::stars::wading(&self.content, to)
         {
             price = price.min(crate::content::price(step, BASE_TURN).max(1));

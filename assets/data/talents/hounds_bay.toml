@@ -1,0 +1,10 @@
+# A birth sign's pick (spec §8 "Birth sign"; horoscope design §9.1): offered only to those born
+# under its sign.
+[[talent]]
+id = "hounds_bay"
+name = "Hound's bay"
+tree = "stars"
+description = "The barghest's howl: lesser foes who hear it flee from you a few moments; then your throat is raw an hour."
+needs = { animal = "barghest", level = 12 }
+effects = [{ kind = "hounds_bay", status = "frightened", severity = 3, cooldown = "hoarse" }]
+systems = ["status", "stealth"]

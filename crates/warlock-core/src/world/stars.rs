@@ -36,6 +36,8 @@ pub(super) fn wading(content: &Content, terrain: &TerrainDef) -> bool {
 
 /// What [`Progress::once`](super::Progress) records once the Phoenix has risen.
 pub(crate) const RISEN: &str = "risen";
+/// What it records once it has risen the second time Second rising allows.
+pub(crate) const RISEN_TWICE: &str = "risen_twice";
 
 impl World {
     /// The player, about to die of a hit, a trap, or a status, rises from the ashes instead if
@@ -46,13 +48,17 @@ impl World {
     pub(super) fn rise_from_ashes(&mut self, events: &mut Vec<Event>) -> bool {
         let content = self.content.clone();
         let player = self.state.player;
-        let Some(rise) = self.state.player().talent_mods(&content).rise else {
+        let mods = self.state.player().talent_mods(&content);
+        let Some(rise) = mods.rise else {
             return false;
         };
-        if self.state.progress.happened(RISEN) {
-            return false;
-        }
-        self.state.progress.once.insert(RISEN.to_string());
+        // Once in a life; Second rising (a Phoenix's pick) allows one more.
+        let flag = match (self.state.progress.happened(RISEN), mods.second_rising) {
+            (false, _) => RISEN,
+            (true, true) if !self.state.progress.happened(RISEN_TWICE) => RISEN_TWICE,
+            (true, _) => return false,
+        };
+        self.state.progress.once.insert(flag.to_string());
         self.say("You burst into flame and rise from your ashes!");
         // Reborn whole (a lucky day's gift): whole again, and no Ashen (`lucky.rs`).
         if !self.reborn_whole(events) {

@@ -142,6 +142,13 @@ pub struct TalentMods {
     pub reroll_fumble: bool,
     /// The most to-hit a streak of blows at one creature gives (0: none; Relentless).
     pub streak: u8,
+    /// Every this many blows before it in a streak add +1 damage (0: none; Relentless fury).
+    pub streak_damage_every: u8,
+    /// Added to its off hand's blows' damage (Tentacles).
+    pub off_hand_damage: i32,
+    /// How many natural points lower its attacks with its best weapon skill threaten a
+    /// critical (Tempered).
+    pub best_skill_threat: i32,
     /// Hit points by level, one entry per rank held: `(per_levels, at_least)`
     /// ([`TalentMods::hp_at`]).
     pub hp_per_levels: Vec<(u8, i32)>,
@@ -425,6 +432,42 @@ pub struct TalentMods {
     pub rise: Option<Rise>,
     /// Its rising brings it back whole (Reborn whole).
     pub reborn_whole: bool,
+    /// It may rise from the ashes once more (Second rising).
+    pub second_rising: bool,
+    /// Its hit points come back while it is Starving too (Another head).
+    pub starving_heals: bool,
+    /// Rotten food never harms it (Deep roots).
+    pub eats_rotten: bool,
+    /// Wading costs it a plain step (Undertow).
+    pub wades_free: bool,
+    /// Horn of plenty: the hit points per level Horn's grace gives back, and the degrees of its
+    /// cooldown it leaves instead.
+    pub horn_of_plenty: Option<(u8, u16)>,
+    /// Petrifying gaze: the degrees of its status the stare leaves, and of its cooldown.
+    pub petrifying_gaze: Option<(u16, u16)>,
+    /// Wildfire: Blaze's radius and damage instead of its own.
+    pub wildfire: Option<(i32, Dice)>,
+    /// The birth sign's active Fire breath, if it has it.
+    pub fire_breath: Option<FireBreath>,
+    /// The birth sign's active Hound's bay, if it has it.
+    pub hounds_bay: Option<HoundsBay>,
+}
+
+/// The active Fire breath (spec §8 "Birth sign"): a bolt of fire, then a cooldown.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FireBreath {
+    pub bolt: crate::content::Bolt,
+    pub cooldown: StatusId,
+    pub degrees: u16,
+}
+
+/// The active Hound's bay (spec §8 "Birth sign"): the status a howl leaves on lesser foes
+/// who hear it, then a cooldown.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct HoundsBay {
+    pub status: StatusId,
+    pub severity: u16,
+    pub cooldown: StatusId,
 }
 
 /// Rise from the ashes (spec §8 "Birth sign"): what rising gives back, the burst it rises in,
@@ -519,6 +562,7 @@ pub struct HornsGrace {
     /// How many of the diseases that show it shakes off.
     pub diseases: u8,
     pub cooldown: StatusId,
+    pub degrees: u16,
 }
 
 /// The birth sign's active Transfixing stare (spec §8 "Birth sign"): the status it leaves on
@@ -528,6 +572,7 @@ pub struct Stare {
     pub status: StatusId,
     pub severity: u16,
     pub cooldown: StatusId,
+    pub degrees: u16,
 }
 
 /// The active Blood magic (spec §8 "Talents"): `hp` hit points given for `mana` mana.
@@ -573,6 +618,8 @@ impl TalentMods {
             A::HornsGrace => self.horns_grace.is_some(),
             A::TransfixingStare => self.stare.is_some(),
             A::Blaze => self.blaze.is_some(),
+            A::FireBreath => self.fire_breath.is_some(),
+            A::HoundsBay => self.hounds_bay.is_some(),
         }
     }
 
@@ -583,6 +630,8 @@ impl TalentMods {
             A::HornsGrace => self.horns_grace.as_ref().map(|g| g.cooldown),
             A::TransfixingStare => self.stare.map(|s| s.cooldown),
             A::Blaze => self.blaze.as_ref().map(|b| b.cooldown),
+            A::FireBreath => self.fire_breath.as_ref().map(|b| b.cooldown),
+            A::HoundsBay => self.hounds_bay.map(|b| b.cooldown),
         }
     }
 
@@ -694,7 +743,18 @@ impl TalentMods {
             TalentEffect::MeleeDamage { value } => self.melee_damage += value,
             TalentEffect::Threat { value } => self.threat += value,
             TalentEffect::RerollFumble => self.reroll_fumble = true,
-            TalentEffect::Streak { max } => self.streak = self.streak.max(max),
+            TalentEffect::Streak { max, damage_every } => {
+                self.streak = self.streak.max(max);
+                if damage_every > 0 {
+                    let every = match self.streak_damage_every {
+                        0 => damage_every,
+                        had => had.min(damage_every),
+                    };
+                    self.streak_damage_every = every;
+                }
+            }
+            TalentEffect::OffHandDamage { value } => self.off_hand_damage += value,
+            TalentEffect::BestSkillThreat { value } => self.best_skill_threat += value,
             TalentEffect::MaxHpPerLevels {
                 per_levels,
                 at_least,
@@ -973,6 +1033,54 @@ impl TalentMods {
                 }
             }
             TalentEffect::RebornWhole => self.reborn_whole = true,
+            TalentEffect::SecondRising => self.second_rising = true,
+            TalentEffect::StarvingHeals => self.starving_heals = true,
+            TalentEffect::EatsRotten => self.eats_rotten = true,
+            TalentEffect::WadesFree => self.wades_free = true,
+            TalentEffect::HornOfPlenty { per_level, degrees } => {
+                self.horn_of_plenty = Some((per_level, degrees));
+            }
+            TalentEffect::PetrifyingGaze { severity, degrees } => {
+                self.petrifying_gaze = Some((severity, degrees));
+            }
+            TalentEffect::Wildfire { radius, damage } => self.wildfire = Some((radius, damage)),
+            TalentEffect::FireBreath {
+                length,
+                damage,
+                damage_type,
+                spell,
+                cooldown,
+                degrees,
+            } => {
+                if let Some(cooldown) = content.status_id(&cooldown) {
+                    let bolt = crate::content::Bolt {
+                        spell,
+                        length,
+                        damage,
+                        kind: content.damage_type_id(&damage_type),
+                    };
+                    self.fire_breath = Some(FireBreath {
+                        bolt,
+                        cooldown,
+                        degrees,
+                    });
+                }
+            }
+            TalentEffect::HoundsBay {
+                status,
+                severity,
+                cooldown,
+            } => {
+                if let (Some(status), Some(cooldown)) =
+                    (content.status_id(&status), content.status_id(&cooldown))
+                {
+                    self.hounds_bay = Some(HoundsBay {
+                        status,
+                        severity,
+                        cooldown,
+                    });
+                }
+            }
             TalentEffect::StanceDodge { stance, percent } => {
                 match self.stance_dodge.iter_mut().find(|(s, _)| *s == stance) {
                     Some((_, p)) => *p += percent,
@@ -1052,6 +1160,7 @@ impl TalentMods {
                 cures,
                 diseases,
                 cooldown,
+                degrees,
             } => {
                 if let Some(cooldown) = content.status_id(&cooldown) {
                     let cures = cures.iter().filter_map(|s| content.status_id(s)).collect();
@@ -1059,6 +1168,7 @@ impl TalentMods {
                         cures,
                         diseases,
                         cooldown,
+                        degrees,
                     });
                 }
             }
@@ -1066,6 +1176,7 @@ impl TalentMods {
                 status,
                 severity,
                 cooldown,
+                degrees,
             } => {
                 if let (Some(status), Some(cooldown)) =
                     (content.status_id(&status), content.status_id(&cooldown))
@@ -1074,6 +1185,7 @@ impl TalentMods {
                         status,
                         severity,
                         cooldown,
+                        degrees,
                     });
                 }
             }
