@@ -203,9 +203,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (their rage would never show). The class features of the progression design's §4.18 (the
   barbarian's Rage, the ranger's Focus, the thief's Openings, the monk's Ki, the bard's
   Inspiration) move onto them in follow-up changes (R1–R5); the barbarian's Rage has (R1,
-  "Rage" below), the ranger's Focus (R2) and the thief's Openings (R3) have (below), and the rest
-  are granted by nothing in play but the dev action until theirs do. Mana is separate: nothing
-  converts between them.
+  "Rage" below), and the ranger's Focus (R2), the thief's Openings (R3), and the monk's Ki and
+  the bard's Inspiration (R4) have (below). Mana is separate: nothing converts between them;
+  Inspiration is the one resource spent in place of mana.
   - **Data** (`data/resources.toml`, §7): each resource's maximum, start, whether the status bar
     shows its maximum, how it changes over time (it **regenerates** toward its maximum or
     **decays** toward 0, a point every so many seconds, while resting too or not), whether it
@@ -264,6 +264,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
     grants them at 0 (`grants_resource`); each sneak attack that hits builds one (to 5), one
     slips away every 120 s (20 base turns), and at 0 they stay, held. Master thief (level 60)
     spends 5 on its finisher (§8 "Class abilities").
+  - **Ki** (the monk's; R4, #252): Flurry (level 18) grants it (5, full); it comes back a point
+    every 18 s (3 base turns), resting too, and never ends. Each second blow of a flurry spends a
+    point (`flurry_cost`, in `World::flurry`): with none held there is no second blow, the
+    attack is one blow. Quivering palm (level 50) costs 5 and has no cooldown; with a weapon in
+    hand it is refused before the ki is spent. The monk's mana stays theirs, separate.
+  - **Inspiration** (the bard's; R4, #252): Inspire (level 18) grants it at 0; each kill credited
+    to the bard builds one (to 5), one fades every 180 s (30 base turns), and at 0 it stays,
+    held. Inspire spends 3 inspiration **in place of** its 3 mana while the bard holds 3 (then
+    no mana is spent, and nothing blocks it as casting), else its mana as before; Virtuoso's
+    song costs neither.
   - **Shown**: the player's own resources (`PerceptionView::own_resources`: each held, its value
     and maximum, in resource order): the status bar after `MP` (`Rage 11`, `Focus 7/10`), each
     with the hit points' priority after the mana, so they give way before it (§6); a row each on

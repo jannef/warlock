@@ -42,7 +42,8 @@ A paladin's abilities used from the menu answer only while the paladin is Good o
 until mana comes to the game. The barbarian's rage runs on a pool of its own, Rage, and the
 ranger's rapid shot and volley on [focus](resources.md) (see [Resources](resources.md)); the
 thief's sneak attacks build [openings](resources.md), which master thief's finisher spends; the
-monk's flurry and quivering palm and the bard's inspire will later run on pools of their own.
+monk's flurry and quivering palm run on [ki](resources.md), and the bard's inspire spends
+[inspiration](resources.md) when the bard has enough.
 
 The priest's, druid's, wizard's, and witch's abilities used from the menu are **spells**: each
 costs the mana the table says, and is greyed out ("you have too little mana") while you have less; there
@@ -57,6 +58,10 @@ more often. A **volley** looses three shots of your readied missile weapon at th
 at, one after another, for the time of one ordinary shot; it stops early when you run out, and
 costs 6 focus. **Rapid shot** gives you focus (10, full); every shot you loose while you have
 at least 2 spends 2 and takes 10 % less time, and with less it is an ordinary shot. The bard's
-**inspire** costs 3 mana, and can be sung again while it lasts (it starts over); a virtuoso's
-costs nothing.
+**inspire** costs 3 inspiration when you hold 3, else 3 mana, and can be sung again while it
+lasts (it starts over); a virtuoso's costs nothing at all, and keeps the inspiration.
+
+The monk's **flurry** gives you ki (5, full): every attack with nothing in your hands strikes a
+second blow, at −2 to hit, for a point of ki; with none left, the attack is a single blow.
+**Quivering palm** costs all 5 ki and has no other wait.
 
