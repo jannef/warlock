@@ -16,7 +16,8 @@
 //!   hit point and a point of mana back), at [`World::resource_rate`]'s pace, so it makes no
 //!   difference how time is cut up, and an end at zero comes at its exact moment.
 //!
-//! The maximum ([`Actor::resource_max`]) and the pace are the one hooks for the talents and class
+//! The maximum ([`Actor::resource_max`]), the start ([`Actor::resource_start`]), and the pace
+//! ([`World::resource_rate`]) are the one hooks for the talents and class
 //! features that move onto resources (the progression design §4.18; R1–R5). Mana is separate:
 //! nothing converts between them.
 
@@ -36,6 +37,19 @@ impl Actor {
             .sum();
         content.resource(resource).max.saturating_add(more)
     }
+
+    /// What `resource` holds when it is granted: its `start` in data and what its talents add
+    /// (Battle trance's 6 more rage), at most its maximum. The one place that decides it.
+    pub fn resource_start(&self, content: &Content, resource: ResourceId) -> u16 {
+        let mods = self.talent_mods(content);
+        let more: u16 = (mods.resource_start.iter())
+            .filter(|(r, _)| *r == resource)
+            .map(|(_, more)| *more)
+            .sum();
+        (content.resource(resource).start)
+            .saturating_add(more)
+            .min(self.resource_max(content, resource))
+    }
 }
 
 impl World {
@@ -45,14 +59,25 @@ impl World {
     }
 
     /// How fast `resource` changes over time for actor `id` now, in percent of its normal pace:
-    /// 100, but none while the player rests for one that does not change while resting
-    /// (`resting = false`). The one place that decides it.
+    /// 100 and what its talents add (Steady hand's focus +50, Patient blade's openings -50;
+    /// never below 0), but none while the player rests for one that does not change while
+    /// resting (`resting = false`). The one place that decides it.
     pub(crate) fn resource_rate(&self, id: ActorId, resource: ResourceId) -> u32 {
         let def = self.content.resource(resource);
         if self.resting && id == self.state.player && !def.resting {
             return 0;
         }
-        100
+        let Some(actor) = self.state.actors.get(&id) else {
+            return 100;
+        };
+        if actor.talents.is_empty() {
+            return 100;
+        }
+        let more: i32 = (actor.talent_mods(&self.content).resource_rate.iter())
+            .filter(|(r, _)| *r == resource)
+            .map(|(_, more)| *more)
+            .sum();
+        u32::try_from(100 + more).unwrap_or(0)
     }
 
     /// The pace of each resource actor `id` holds, in order: what `World::live` passes time at.
@@ -85,15 +110,13 @@ impl World {
         }
     }
 
-    /// Actor `id` is granted `resource`: it holds it from now on, at its `start` (or what it
-    /// already holds, if that is more). Says nothing: what grants it does.
+    /// Actor `id` is granted `resource`: it holds it from now on, at its start
+    /// ([`Actor::resource_start`]; or what it already holds, if that is more). Says nothing: what grants it does.
     pub(crate) fn grant_resource(&mut self, id: ActorId, resource: ResourceId) {
-        let def = self.content.resource(resource);
-        let max = self.resource_max(id, resource);
-        let start = def.start.min(max);
         let Some(actor) = self.state.actors.get_mut(&id) else {
             return;
         };
+        let start = actor.resource_start(&self.content, resource);
         let value = actor.resources.get(resource).map_or(0, |p| p.value);
         actor.resources.set(resource, value.max(start));
     }

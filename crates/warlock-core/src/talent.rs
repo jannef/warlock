@@ -56,6 +56,12 @@ impl Talents {
         self.0.iter()
     }
 
+    /// Lets go of talent `id`, every choice of it (tests: a pick made only to spend a level).
+    #[cfg(test)]
+    pub(crate) fn forget(&mut self, id: &str) {
+        self.0.retain(|t| t.id != id);
+    }
+
     /// The rank held of talent `id` taken for `choice` (0: not held).
     pub fn rank_of(&self, id: &str, choice: Option<&str>) -> u8 {
         (self.0.iter())
@@ -435,6 +441,11 @@ pub struct TalentMods {
     pub resource_builds: Vec<(ResourceId, Build, u16)>,
     /// How much more of a resource it may hold: `(resource, more)` (Mighty rage).
     pub resource_max: Vec<(ResourceId, u16)>,
+    /// How much more of a resource it holds when granted: `(resource, more)` (Battle trance).
+    pub resource_start: Vec<(ResourceId, u16)>,
+    /// How much faster a resource changes over time, in percent: `(resource, percent)` (Steady
+    /// hand's +50, Patient blade's -50).
+    pub resource_rate: Vec<(ResourceId, i32)>,
     /// While raging, the statuses that tick nothing, and what of the rage holding on to the
     /// last hit point costs; `None` without Unstoppable.
     pub unstoppable: Option<Unstoppable>,
@@ -1419,6 +1430,16 @@ impl TalentMods {
             TalentEffect::ResourceMax { resource, value } => {
                 if let Some(r) = content.resource_id(&resource) {
                     self.resource_max.push((r, value));
+                }
+            }
+            TalentEffect::ResourceStart { resource, value } => {
+                if let Some(r) = content.resource_id(&resource) {
+                    self.resource_start.push((r, value));
+                }
+            }
+            TalentEffect::ResourceRate { resource, value } => {
+                if let Some(r) = content.resource_id(&resource) {
+                    self.resource_rate.push((r, value));
                 }
             }
             TalentEffect::Unstoppable { statuses, cost } => {

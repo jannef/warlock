@@ -43,16 +43,19 @@ pub enum Build {
     /// A sneak attack of the holder's hit: a blow at a creature unaware of it (spec §8 "Class
     /// abilities": the thief's sneak attack).
     SneakAttack,
+    /// A sneak attack of the holder's killed (after its hit built `SneakAttack`).
+    SneakKill,
 }
 
 impl Build {
     /// Every event, in the order the wiki lists them.
-    pub const ALL: [Build; 5] = [
+    pub const ALL: [Build; 6] = [
         Build::Kill,
         Build::Hit,
         Build::Critical,
         Build::Struck,
         Build::SneakAttack,
+        Build::SneakKill,
     ];
 
     /// Its id in data: `sneak_attack`.
@@ -63,6 +66,7 @@ impl Build {
             Build::Critical => "critical",
             Build::Struck => "struck",
             Build::SneakAttack => "sneak_attack",
+            Build::SneakKill => "sneak_kill",
         }
     }
 
@@ -74,6 +78,7 @@ impl Build {
             Build::Critical => "a critical",
             Build::Struck => "being hit",
             Build::SneakAttack => "a sneak attack that hits",
+            Build::SneakKill => "a sneak attack that kills",
         }
     }
 }

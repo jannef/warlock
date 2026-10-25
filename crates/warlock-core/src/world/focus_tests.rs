@@ -31,6 +31,8 @@ fn ranger(level: u8) -> World {
     run(&mut w, &format!("xp:{more} levelup:auto"));
     assert_eq!(w.player_level(), level);
     assert_eq!(w.due(), None, "every choice spent");
+    // The picks may have taken Steady hand: these tests are of focus's own pace.
+    w.player_mut().talents.forget("steady_hand");
     w
 }
 

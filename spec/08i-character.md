@@ -510,10 +510,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     a status's or starving's harm is no hit); `resist` (Elemental ward: 25 % a rank against
     the chosen element, any damage type that is no physical kind, summed and capped with the
     gear's). A weapon-skill choice is a skill that attacks: never shield blocking (it only
-    defends) nor a style (chosen as a style). Steady hand waits for the ranger's focus
-    (#225).
-  - **Vigour, Might, Finesse** (#237; the design's §7.5 but for the two that wait for class
-    resources, Battle trance and Inner calm): `resting_percent` (Fast healer: resting's pace
+    defends) nor a style (chosen as a style). Steady hand (the ranger's focus) came with the
+    resource talents (R5, §8 "Resources").
+  - **Vigour, Might, Finesse** (#237; the design's §7.5; Battle trance and Inner calm, on the
+    class resources, came with R5, §8 "Resources"): `resting_percent` (Fast healer: resting's pace
     half again, `World::healing_rate`); `second_wind` (Second wind, the first **active** talent:
     `Ability::SecondWind` under the abilities menu's new **Talents** group (`Source::Talent`,
     between Class and Skills), `Action::SecondWind` (`second_wind`): 1 hit point per character
@@ -629,7 +629,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `damage_type = "poison"`, and the Poisoned it gives meets poison resistance as every dose
     does (`World::afflict`), so no rule of its own.
   - **Shadow and Wayfarer** (#239; the design's §7.5 but for Hooded light, which waits for the
-    lantern's hood (#235), and Patient blade, which waits for the thief's openings (#225)):
+    lantern's hood (#235); Patient blade, on the thief's openings, came with R5, §8
+    "Resources"):
     **effective eyes** (the design's B4, `WorldState::eyes`, §5 "Effective eyes"):
     `threshold_percent` (Night eyes: −50 %, eyes normal), `darkvision` (Dark adaptation: +2,
     eyes darkvision; Owl eyes: 2 cells for low-light eyes, level 9), `sees_uv` (Rune sight,

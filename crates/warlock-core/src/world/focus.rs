@@ -22,8 +22,7 @@ use crate::content::{Content, ResourceId, percent_of};
 pub(super) fn hold(content: &Content, actor: &mut Actor, resources: &[ResourceId]) {
     for &resource in resources {
         if actor.resources.get(resource).is_none() {
-            let start =
-                (content.resource(resource).start).min(actor.resource_max(content, resource));
+            let start = actor.resource_start(content, resource);
             actor.resources.set(resource, start);
         }
     }
