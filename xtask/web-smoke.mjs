@@ -1,6 +1,8 @@
 // Dev tool for `cargo xtask web-smoke`: drive headless Chromium over CDP, load the web build,
-// press Enter nine times (main menu -> New run -> the campaign's start (a release build: no test world) -> race -> the stars -> gender -> class -> talents -> name ->
-// summary -> start, the scenario's character preselected, the name left empty: a random one),
+// press Enter eight times (main menu -> New run, which a release build skips: it lists one
+// scenario, the Ascmearc's start, so the race opens at once -> race -> the stars -> gender ->
+// class -> talents -> name -> summary -> start, the scenario's character preselected, the name
+// left empty: a random one),
 // check the new
 // character's save is in localStorage (`warlock/saves/<id>.sav`, written as the run starts), wait
 // five turns, reload the page (its pagehide hook must write the run to that save), choose Continue
@@ -39,8 +41,7 @@ const key = async (k, code, vk) => {
   await sleep(600);
 };
 await send('Runtime.evaluate', { expression: "document.querySelector('canvas')?.focus()" });
-await key('Enter', 'Enter', 13);   // New run
-await key('Enter', 'Enter', 13);   // the campaign's start (the web build has no test world): on to the race
+await key('Enter', 'Enter', 13);   // New run: one scenario, the Ascmearc's start, so straight on to the race
 await key('Enter', 'Enter', 13);   // the race (preselected)
 await key('Enter', 'Enter', 13);   // born under the stars: on to the gender
 await key('Enter', 'Enter', 13);   // the gender
