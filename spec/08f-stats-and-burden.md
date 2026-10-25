@@ -39,7 +39,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Intelligence found (a search that finds something), read (a scroll), identified (by reading),
     discovered (a first kill of a type); Willpower spot, endured (a long action of more than one
     turn done to its end: a rest, a dig, a search for a while, a meal), resisted_will (a
-    Willpower disease check won), hungry_fight (a blow landed while Hungry or worse); Presence
+    Willpower disease check won), hungry_fight (a blow landed while Hungry or worse), cast (mana
+    spent, `World::spend_mana`; 20 %); Presence
     chat (a chat; asking a topic takes no time and trains nothing), trade (a purchase paid or a
     sale), quest (completed), swapped (a creature making way). The uses skills share (burdened,
     kick, dodge, sneak, spot) are one report, `World::train`; the rest `World::train_stat`.

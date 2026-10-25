@@ -540,7 +540,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     magic. The adventurers' tables come with I1–I3 (#243–#245). Dumps mark them `Well dressed (class)`;
     JSON `talents[].class`, `due.bonus`. **Saves change** (`Due::bonus`, `Magic::carried`).
   - **Scholar, Grit, Delver** (#240; the design's §7.5 but for the five mana talents, which
-    wait for the mana PR). Their effects share what the class abilities use where the rules
+    came with #242: Deep well, Clear mind, Meditation, Frugal caster, Blood magic, §8 "Mana"). Their effects share what the class abilities use where the rules
     are the same (`identify_carried`: Lore, a magic item carried 24 hours; `item_worth` and
     `gem_worth`: Keen appraiser; `favour_percent`: Silver tongue +10 %, Haggler +15 %;
     `quest_gold_percent` and `quest_xp_percent`: Well liked, a quarter more of each; `checks`
@@ -712,7 +712,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     reaches). `Ability::Spell` in the Class group, `Action::Cast` (`use:blessing`,
     `use:arcane_bolt:12,5`). They **cost mana instead of a cooldown** (spec §8 "Mana"):
     `World::spend_mana` after every check, `Unavailable::NoMana` ("not enough mana") while the
-    caster has less than `Actor::spell_cost`; refused, no time and no mana, without the spell,
+    caster has less than `Actor::spell_cost` (Archmage's cut, then Frugal caster's through `Actor::mana_cost`); refused, no time and no mana, without the spell,
     without the cell, out of range, with no hostile seen there to hex, or (Call lightning)
     under a roof or below ground. A strike is cast through the scrolls' shared code
     (`burst_center`, `bolt_line`, `cast_burst`, `cast_bolt`, `say_spell`): its kills are the

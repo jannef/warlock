@@ -23,7 +23,9 @@ Each level up to 30 raises it (and the mana you have now) by half your class's m
 better of your Intelligence and Willpower adds (see
 [Experience](experience.md#what-a-level-gives)): a wizard keeps growing it after hit points stop
 at level 20; a warrior with ordinary wits gains none. [Magic items](magic-items.md) that add to it
-("+5 to maximum mana") raise your most, not what you have.
+("+5 to maximum mana") raise your most, not what you have. The talent *Deep well* raises both,
+by 1 for every 4 character levels and at least 2 for each of its three ranks, as you take it and
+as each level after comes (see [Talents](talents.md)).
 
 ## How fast it comes back
 
@@ -39,8 +41,22 @@ When several status effects slow it, the slowest counts; a disease that slows it
 Diseased does counts too. Resting makes up for some of it, as it does for healing, and so does a
 sanctuary (a [special room](special-rooms.md)). Magic items that speed it ("mana comes back 50%
 faster") add on top of all that, and so does being born under Water (the gift *Tidal*: mana comes
-back 25 % faster; see [Horoscope](horoscope.md)), adding its percent to theirs. Nothing else
-changes it: not your burden, not the cold, not your combat stance.
+back 25 % faster; see [Horoscope](horoscope.md)) and the talent *Clear mind* (25 % faster too),
+adding their percents to theirs. The talent *Meditation* makes resting bring it back half again
+as fast (resting's pace times 1.5). Nothing else changes it: not your burden, not the cold, not
+your combat stance.
+
+## Spending it
+
+Whatever spends mana is refused when you have too little, and spends nothing then. Spending any
+trains your Willpower (a chance at a training mark each time; see
+[Stats](stats.md#training)). The talent *Frugal caster* makes abilities cost a fifth less mana,
+rounded to the nearest point and never below 1: 5 becomes 4, 6 becomes 5, 10 becomes 8.
+
+The talent *Blood magic* gives you an ability (in the abilities menu) that turns 5 of your hit
+points into 3 mana at once, for the time of a wait. It never takes your last hit point (with 5
+or fewer it refuses), never brings your mana above your most, and does nothing while your mana
+is full. It is not a wound: nothing soaks it, and it trains nothing.
 
 ## When the most falls
 

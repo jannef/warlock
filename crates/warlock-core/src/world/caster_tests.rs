@@ -434,6 +434,24 @@ fn spell_power_and_archmage_mana() {
 }
 
 #[test]
+fn a_spell_is_paid_through_the_talents_mana_cost() {
+    let mut w = world("priest");
+    reach(&mut w, 6);
+    let content = w.content().clone();
+    w.player_mut().talents.take("frugal_caster", None);
+    assert_eq!(w.state.player().spell_cost(&content, 4), 3, "a fifth less");
+    w.player_mut().hp = 1;
+    run(&mut w, "use:cure_wounds");
+    assert_eq!(w.state.player().mana, 37);
+    // One mana short of the cut cost: greyed out.
+    w.player_mut().mana = 2;
+    assert_eq!(
+        own(&w, ClassSpell::CureWounds),
+        Some(Some(Unavailable::NoMana))
+    );
+}
+
+#[test]
 fn mage_armour_deflects_only_without_body_armour() {
     let mut w = world("wizard");
     let content = w.content().clone();

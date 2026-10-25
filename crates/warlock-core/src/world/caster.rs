@@ -26,11 +26,18 @@ use crate::geom::Pos;
 use crate::world::ActorId;
 
 impl super::Actor {
-    /// What one of its spells that costs `base` mana costs it (spec §8 "Mana"): the one place
-    /// a spell's price in mana is reckoned, read by the cast and by the abilities menu's "not
-    /// enough mana" alike (Archmage halves it; at least 1).
-    pub fn spell_cost(&self, content: &crate::content::Content, base: u16) -> i32 {
+    /// What one of its spells that costs `base` mana asks before its talents cut the price
+    /// (spec §8 "Mana"): Archmage's `spell_mana_percent`, at least 1. What the cast gives
+    /// [`World::spend_mana`], which takes [`Actor::mana_cost`] (Frugal caster) off it.
+    pub fn spell_base(&self, content: &crate::content::Content, base: u16) -> i32 {
         self.talent_mods(content).spell_mana(base)
+    }
+
+    /// What one of its spells that costs `base` mana costs it: [`Actor::spell_base`] through
+    /// [`Actor::mana_cost`], what the cast spends, and what the abilities menu's "not enough
+    /// mana" compares with.
+    pub fn spell_cost(&self, content: &crate::content::Content, base: u16) -> i32 {
+        self.mana_cost(content, self.spell_base(content, base))
     }
 }
 
@@ -74,7 +81,7 @@ impl World {
             (_, at) => at,
         };
         let player = self.state.player;
-        let mana = self.state.player().spell_cost(&content, def.mana);
+        let mana = self.state.player().spell_base(&content, def.mana);
         let price = self.price_of(player, ActionKind::Cast) * i64::from(def.casts);
         match (&def.does, at) {
             (Does::Boon { status, severity }, _) => {

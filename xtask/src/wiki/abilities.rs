@@ -30,6 +30,7 @@ pub(super) fn abilities(content: &Content) -> String {
             Ability::PickLock => "everyone trained in Open lock".into(),
             Ability::Steal => "everyone trained in Steal".into(),
             Ability::SecondWind => "everyone with the Second wind talent (not while winded)".into(),
+            Ability::BloodMagic => "everyone with the Blood magic talent".into(),
             Ability::ShieldBash => "everyone (usable with a shield in hand)".into(),
             Ability::ThrowVoice => "everyone".into(),
             Ability::HoodLantern => "everyone (it needs a lantern with a hood)".into(),
