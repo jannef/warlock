@@ -1,0 +1,8 @@
+[[talent]]
+id = "ferocity"
+name = "Ferocity"
+tree = "racial"
+description = "Orc blood runs hot: badly hurt, you hit harder."
+needs = { race = "half_orc" }
+effects = [{ kind = "ferocity", value = 2 }]
+systems = ["combat"]

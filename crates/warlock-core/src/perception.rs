@@ -135,8 +135,11 @@ pub struct OwnTalent {
     /// The choice it was taken for, by id.
     pub choice: Option<String>,
     pub description: String,
-    /// Given, not picked: a birth sign's gift (spec §8 "Birth sign").
+    /// Given, not picked: a birth sign's gift (spec §8 "Birth sign") or a race's.
     pub granted: bool,
+    /// Their race gives it (spec §8 "Talents": the humans' Versatile), a granted talent of the
+    /// racial tree; `granted` too.
+    pub race: bool,
     /// A birth sign's flaw.
     pub flaw: bool,
     /// Their class gives it (spec §8 "Class abilities"): a class ability, or a talent their
@@ -1270,6 +1273,7 @@ impl<'a> PerceptionView<'a> {
                     choice: taken.choice.clone(),
                     description: def.description.clone(),
                     granted: def.granted && !book.tree(def.tree).class,
+                    race: def.granted && Some(def.tree) == book.tree_id("racial"),
                     flaw: def.flaw,
                     class: class.contains(&id),
                     spent: self.progress.happened(crate::world::RISEN)

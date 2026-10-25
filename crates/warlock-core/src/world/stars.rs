@@ -15,10 +15,12 @@ use crate::geom::Pos;
 use crate::ice::Shock;
 use crate::talent::Talents;
 
-/// Puts the gifts of `character`'s sign into `talents` in grant order, in place of whatever
-/// granted talents it held (none for a run without a character or a sign).
+/// Puts the talents `character`'s race grants (Versatile, `racial.rs`) and the gifts of their
+/// sign into `talents` in grant order, in place of whatever granted talents it held (none for a
+/// run without a character).
 pub(super) fn grant(content: &Content, character: Option<&Character>, talents: &mut Talents) {
-    let grants = character.map_or(Vec::new(), |c| c.grants(content));
+    let mut grants = super::racial::grants(content, character);
+    grants.extend(character.map_or(Vec::new(), |c| c.grants(content)));
     talents.regrant(content, &grants);
 }
 

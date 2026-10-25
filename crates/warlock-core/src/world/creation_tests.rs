@@ -66,9 +66,11 @@ fn a_chosen_character_takes_its_random_picks_and_records_them() {
 
 #[test]
 fn the_bard_picks_one_more_and_the_scenarios_own_character_none() {
-    let bard = start("human,other,bard", &[], 1).expect("starts");
+    let bard = start("elf,other,bard", &[], 1).expect("starts");
     assert_eq!(picked(&bard).len(), 3);
-    assert_eq!(creation_count(bard.content(), &spec("human,other,bard")), 3);
+    assert_eq!(creation_count(bard.content(), &spec("elf,other,bard")), 3);
+    // A human bard four: Versatile adds one more (racial_tests.rs).
+    assert_eq!(creation_count(bard.content(), &spec("human,other,bard")), 4);
     // A dev launch on the scenario's own character, without the kit, takes none.
     let plain = World::new(CONTENT.clone(), "showcase", None).expect("starts");
     assert!(picked(&plain).is_empty());
@@ -101,7 +103,7 @@ fn named_picks_are_taken_in_order_and_checked() {
     assert!(start("dwarf,male,warrior", &["healthy", "nonsense"], 1).is_err());
     // A choice is written after a colon.
     let focus = start(
-        "human,male,warrior",
+        "dwarf,male,warrior",
         &["weapon_focus:long_blades", "lean"],
         1,
     );

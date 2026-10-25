@@ -155,6 +155,9 @@ pub struct Load {
     pub limit: u64,
     /// Whether being Burdened costs it nothing (dwarves).
     pub ignores_burdened: bool,
+    /// Whether being Strained costs it what Burdened costs others (Stout, a dwarf's talent).
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub stout: bool,
 }
 
 impl Load {
@@ -174,10 +177,12 @@ impl Load {
     }
 
     /// The burden it suffers: its burden, but Unburdened for one that ignores Burdened while it
-    /// is Burdened. Every penalty (time, Defence, noise, moving) goes by this.
+    /// is Burdened, and Burdened for a stout one while it is Strained. Every penalty (time,
+    /// Defence, noise, moving) goes by this.
     pub fn penalty(&self) -> Burden {
         match self.burden() {
             Burden::Burdened if self.ignores_burdened => Burden::Unburdened,
+            Burden::Strained if self.stout => Burden::Burdened,
             burden => burden,
         }
     }
@@ -242,6 +247,8 @@ pub fn load(actor: &Actor, race: Option<&RaceDef>, content: &Content) -> Load {
         ),
         // Porter and Steadfast (spec §8) shrug Burdened off as a dwarf does.
         ignores_burdened: ignores_burdened || talents.ignore_burdened || talents.steadfast,
+        // Stout (a dwarf's talent): Strained costs what Burdened costs others.
+        stout: talents.stout,
     }
 }
 
@@ -261,6 +268,7 @@ mod tests {
             carried,
             limit,
             ignores_burdened: false,
+            stout: false,
         }
     }
 
@@ -326,6 +334,7 @@ mod tests {
             carried,
             limit: 66_000,
             ignores_burdened: true,
+            stout: false,
         };
         assert_eq!(dwarf(30_000).burden(), Burden::Burdened, "still burdened");
         assert_eq!(
@@ -334,6 +343,15 @@ mod tests {
             "but no penalty"
         );
         assert_eq!(dwarf(50_000).penalty(), Burden::Strained);
+        // Stout: Strained costs what Burdened costs others (not nothing, as a dwarf's Burdened).
+        let stout = |carried| Load {
+            stout: true,
+            ..dwarf(carried)
+        };
+        assert_eq!(stout(50_000).burden(), Burden::Strained);
+        assert_eq!(stout(50_000).penalty(), Burden::Burdened);
+        assert_eq!(stout(30_000).penalty(), Burden::Unburdened);
+        assert_eq!(stout(70_000).penalty(), Burden::Overloaded);
         assert_eq!(dwarf(70_000).penalty(), Burden::Overloaded);
         assert_eq!(load(30_000, 66_000).penalty(), Burden::Burdened);
     }

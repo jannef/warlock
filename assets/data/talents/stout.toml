@@ -1,0 +1,8 @@
+[[talent]]
+id = "stout"
+name = "Stout"
+tree = "racial"
+description = "Built to haul: being Strained costs you only what being Burdened costs others."
+needs = { race = "dwarf", level = 12 }
+effects = [{ kind = "stout" }]
+systems = ["burden"]

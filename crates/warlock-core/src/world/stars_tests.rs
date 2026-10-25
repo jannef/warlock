@@ -44,6 +44,11 @@ fn held(w: &World) -> Vec<String> {
             book.id(&t.id)
                 .is_none_or(|id| !book.tree(book.get(id).tree).class)
         })
+        // A race's grant (the humans' Versatile) is no gift of the sign.
+        .filter(|t| {
+            book.id(&t.id)
+                .is_none_or(|id| Some(book.get(id).tree) != book.tree_id("racial"))
+        })
         .map(|t| t.id.clone())
         .collect()
 }
@@ -418,7 +423,10 @@ fn gifts_cannot_be_picked_and_dumps_mark_them() {
     assert!(rows.contains("Slight (sign, flaw)"), "{rows}");
     let json = dump::json(&w, &[], false);
     assert_eq!(json["character"]["lucky"], "the Racer");
-    assert_eq!(json["talents"][2]["flaw"], true);
+    let slight = (json["talents"].as_array().expect("talents").iter())
+        .find(|t| t["id"] == "slight")
+        .expect("the flaw");
+    assert_eq!(slight["flaw"], true);
     let outcome = w.apply(&crate::action::Action::Talent {
         id: "fleet_footed".into(),
         choice: None,

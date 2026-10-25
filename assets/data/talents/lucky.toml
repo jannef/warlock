@@ -1,0 +1,8 @@
+[[talent]]
+id = "lucky"
+name = "Lucky"
+tree = "racial"
+description = "Halfling luck: a blow that would go badly astray may be tried again."
+needs = { race = "halfling" }
+effects = [{ kind = "reroll_fumble" }]
+systems = ["combat"]

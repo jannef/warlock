@@ -84,14 +84,18 @@ impl Talents {
         1
     }
 
-    /// Replaces the granted talents held (those of the `stars` tree `content` marks `granted`;
-    /// a class's abilities are left alone) with `ids`, first and in that order, each at rank 1
-    /// (spec §8 "Birth sign": a sign's gifts are computed, never chosen). Picked talents keep their order after them; ids the content lacks are skipped.
+    /// Replaces the granted talents held (those `content` marks `granted` outside a class tree:
+    /// a race's, the birth sign's; a class's abilities are left alone) with `ids`, first and in
+    /// that order, each at rank 1 (spec §8 "Birth sign": a sign's gifts are computed, never
+    /// chosen; a race's likewise). Picked talents keep their order after them; ids the content
+    /// lacks are skipped.
     pub(crate) fn regrant(&mut self, content: &Content, ids: &[&str]) {
         let book = content.talents();
-        let stars = book.tree_id("stars");
         let is_granted = |id: &str| {
-            (book.id(id)).is_some_and(|t| book.get(t).granted && Some(book.get(t).tree) == stars)
+            (book.id(id)).is_some_and(|t| {
+                let def = book.get(t);
+                def.granted && !book.tree(def.tree).class
+            })
         };
         self.0.retain(|t| !is_granted(&t.id));
         let given = (ids.iter()).filter(|id| is_granted(id)).map(|id| Taken {
@@ -136,6 +140,8 @@ pub struct TalentMods {
     pub natural_unarmoured: i32,
     /// Added to every melee blow's damage.
     pub melee_damage: i32,
+    /// Added to every attack's damage below a third of its hit points (Ferocity).
+    pub ferocity: i32,
     /// How many natural points lower every attack threatens a critical.
     pub threat: i32,
     /// A fumble is rolled again, once.
@@ -233,6 +239,8 @@ pub struct TalentMods {
     pub xp_percent: i32,
     /// More skill rolls every level.
     pub skill_rolls: i32,
+    /// The character levels that bring one more talent pick, once for each (1: at creation).
+    pub extra_picks: Vec<u8>,
     /// Percent more often loot it finds rolls magic and rare.
     pub loot_magic_percent: i32,
     /// Percent more time reading a scroll takes (negative: less).
@@ -275,6 +283,8 @@ pub struct TalentMods {
     pub notice: Option<i32>,
     /// It notices hidden things on stone in passing.
     pub stone_sense: bool,
+    /// Added to its checks to find what is hidden on stone.
+    pub stone_find: i32,
     /// Added to every check to find hidden things.
     pub search: i32,
     /// Cells more its searching reaches.
@@ -291,6 +301,8 @@ pub struct TalentMods {
     pub weapon: Vec<WeaponBonus>,
     /// Cells farther the readied missile weapon shoots.
     pub launcher_range: i32,
+    /// Cells farther a launcher of a weapon skill shoots, by the skill's id.
+    pub launcher_range_of: Vec<(String, i32)>,
     /// Cells farther throws reach.
     pub throw_range: i32,
     /// Percent more often its missiles break (negative: less).
@@ -339,6 +351,8 @@ pub struct TalentMods {
     pub checks: PerStat<i32>,
     /// Checks fewer won in a row that shake a disease off.
     pub disease_recovery: i32,
+    /// Percent further apart a disease's progressions come.
+    pub disease_interval_percent: i32,
     /// The sides of the one die its kicks at creatures roll, if any (the most counts).
     pub kick_die: Option<u8>,
     /// How much stronger its door kicks are.
@@ -373,8 +387,12 @@ pub struct TalentMods {
     pub step_percent: Vec<StepBonus>,
     /// Burdened costs it nothing.
     pub steadfast: bool,
+    /// Strained costs it what Burdened costs others.
+    pub stout: bool,
     /// Dodge added against shots, throws, and trap missiles.
     pub missile_dodge: i32,
+    /// Dodge added against creatures larger than it.
+    pub small_target: i32,
     /// Percent more damage bursts and bolts do it (negative: less).
     pub spell_damage_percent: i32,
     /// Percent more marks its attacks earn in a role's weapon skills, by role (`None`: every
@@ -692,6 +710,7 @@ impl TalentMods {
             TalentEffect::Natural { value } => self.natural += value,
             TalentEffect::NaturalUnarmoured { value } => self.natural_unarmoured += value,
             TalentEffect::MeleeDamage { value } => self.melee_damage += value,
+            TalentEffect::Ferocity { value } => self.ferocity += value,
             TalentEffect::Threat { value } => self.threat += value,
             TalentEffect::RerollFumble => self.reroll_fumble = true,
             TalentEffect::Streak { max } => self.streak = self.streak.max(max),
@@ -761,6 +780,7 @@ impl TalentMods {
             TalentEffect::CorpseStatsPercent { value } => self.corpse_stats_percent += value,
             TalentEffect::XpPercent { value } => self.xp_percent += value,
             TalentEffect::SkillRolls { value } => self.skill_rolls += value,
+            TalentEffect::ExtraPick { level } => self.extra_picks.push(level),
             // Handed out as the rank is taken (`World::take_talent`), never read after.
             TalentEffect::TrainSkill { .. } => {}
             TalentEffect::LootMagicPercent { value } => self.loot_magic_percent += value,
@@ -787,6 +807,7 @@ impl TalentMods {
                 self.notice = Some(self.notice.unwrap_or(0) + value);
             }
             TalentEffect::StoneSense => self.stone_sense = true,
+            TalentEffect::StoneFind { value } => self.stone_find += value,
             TalentEffect::Search { value } => self.search += value,
             TalentEffect::SearchReach { value } => self.search_reach += value,
             TalentEffect::Skill { skill, value } => {
@@ -848,7 +869,11 @@ impl TalentMods {
                 ranks,
                 at_rank,
             }),
-            TalentEffect::LauncherRange { value } => self.launcher_range += value,
+            TalentEffect::LauncherRange { value, skill: None } => self.launcher_range += value,
+            TalentEffect::LauncherRange {
+                value,
+                skill: Some(skill),
+            } => self.launcher_range_of.push((skill, value)),
             TalentEffect::ThrowRange { value } => self.throw_range += value,
             TalentEffect::MissileBreaks { value } => self.missile_breaks += value,
             TalentEffect::MaxDex { value } => self.max_dex += value,
@@ -910,6 +935,9 @@ impl TalentMods {
             TalentEffect::DiseaseChecks { value } => self.disease_checks += value,
             TalentEffect::Checks { stat, value } => self.checks[stat] += value,
             TalentEffect::DiseaseRecovery { value } => self.disease_recovery += value,
+            TalentEffect::DiseaseIntervalPercent { value } => {
+                self.disease_interval_percent += value;
+            }
             TalentEffect::KickDie { sides } => {
                 self.kick_die = Some(self.kick_die.map_or(sides, |s| s.max(sides)));
             }
@@ -939,6 +967,7 @@ impl TalentMods {
             TalentEffect::Disarm => self.disarm = true,
             TalentEffect::SpeedPercent { value } => self.speed_percent += value,
             TalentEffect::MissileDodge { value } => self.missile_dodge += value,
+            TalentEffect::SmallTarget { value } => self.small_target += value,
             TalentEffect::SpellDamagePercent { value } => self.spell_damage_percent += value,
             TalentEffect::WeaponMarks { role, value } => self.weapon_marks.push((role, value)),
             TalentEffect::TwoHandedCrit { value } => {
@@ -991,6 +1020,7 @@ impl TalentMods {
                 no_shield,
             }),
             TalentEffect::Steadfast => self.steadfast = true,
+            TalentEffect::Stout => self.stout = true,
             TalentEffect::DiseaseImmune => self.disease_immune = true,
             TalentEffect::NoPenaltyTo { stat } => self.no_penalty_to.push(stat),
             TalentEffect::RaisePercent { status, value } => {
@@ -1192,6 +1222,21 @@ impl TalentMods {
             // Rounded toward 0: half of −3 is −1.
             -((-to_hit) * (100 - percent) / 100)
         }
+    }
+
+    /// The talent picks more that character `level` brings (Versatile's; 1: at creation).
+    pub fn extra_picks_at(&self, level: u8) -> u8 {
+        let n = self.extra_picks.iter().filter(|&&l| l == level).count();
+        u8::try_from(n).unwrap_or(u8::MAX)
+    }
+
+    /// Cells farther a launcher of weapon skill `skill` (its id) shoots, by every talent.
+    pub fn launcher_range_for(&self, skill: Option<&str>) -> i32 {
+        let own: i32 = (self.launcher_range_of.iter())
+            .filter(|(s, _)| Some(s.as_str()) == skill)
+            .map(|(_, v)| v)
+            .sum();
+        self.launcher_range + own
     }
 
     /// The hit points the per-level effects give at character `level`: for each rank held,

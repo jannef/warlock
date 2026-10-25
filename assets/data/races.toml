@@ -60,7 +60,10 @@
 #   rolls         skill rolls each level gives beyond the class's (spec §8 "Skills"; 0 to 10,
 #                 default 0; humans 1). A level-up roll on a skill the race trains (`skills`)
 #                 adds 1 (classes/README.toml)
-#   hunger        how much the character needs to eat, in percent of a human (spec §8 "Hunger";
+#   talents       talents the race grants (spec §8 "Talents"), by id: `granted` talents of the
+#                 `racial` tree in talents/, held from the start and never picked (default none;
+#                 humans: Versatile). The race's other talents are picks that ask for the race
+#   hunger       how much the character needs to eat, in percent of a human (spec §8 "Hunger";
 #                 10 to 1000, default 100): game time burns their nutrition this much faster
 #   experience    how much experience a level needs, in percent (spec §8 "Experience"; 50 to
 #                 200, default 100): multiplied with the class's onto every threshold in
@@ -140,6 +143,8 @@ size = "medium"
 class_skill = "2d4+4"
 # Quick to learn: one more skill roll every level.
 rolls = 1
+# Versatile: one more talent at creation and at level 30 (talents/versatile.toml).
+talents = ["versatile"]
 hunger = 100
 experience = 100
 # No gift and no flaw: a loaf of bread, like anyone's.

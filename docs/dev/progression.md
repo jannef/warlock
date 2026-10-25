@@ -23,6 +23,7 @@ hit points a level gives) is `docs/dev/experience.md`.
 | `rng.rs` | `Rng::levels(seed)`, the `levels` stream, kept in `WorldState::levels_rng: Option<Rng>` **from the first draw** (the stat checks of each level, `world/stat_training.rs`; skill rolls, `world/skill_roll.rs`), so runs that never drew hash as before. |
 | `xtask/src/wiki/talents.rs` | `talents.md` (trees with the rules), `talents-by-system.md` (the coverage matrix, class abilities beside the talents); `effect_text`, the rule of one effect, shared with the class tables. |
 | `content/class.rs` (#243) | `ClassActive`, the actives (id = the ability's id, aim, cost); `strip_tables` (tests that load talents of their own). |
+| `world/racial.rs` | The racial talents (#241): `grants` (a race's `talents`, `data/races.toml`, put in by `stars::grant` before the sign's gifts, through `Talents::regrant`, which now replaces every granted talent outside a class tree), `World::small_target` (Small target's Dodge, from `resolve` after `target_against`, when the attacker's `size_of` is larger). `content/race.rs::check_talents` (at load): a race grants only `granted` talents of the `racial` tree. |
 | `world/class_ability.rs` | `use_class` (`Action::Use`, `use:rage`, `use:smite:E`) and the seven actives, `frenzy` (from `dies`), `unstoppable` (from `hurt`); Hardened's hit points are `level_up`'s. |
 
 ## The hooks
@@ -122,6 +123,13 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `spares_self` | `World::cast_burst` (the caster is never caught); `PerceptionView::bursts_spare_me`, so `Aim::catches_reader` asks nothing |
 | `loot_magic_percent` | `magic::loot::roll_with` (`roll_rarity`: the weights of the rarities above the find's least grade); `mapgen::generate_with` from `level_template` (the player's luck as a level is first made), `World::loot_of` (drops). The same draws, so maps never change |
 | `skill_rolls` | `World::level_rolls` |
+| `extra_pick` | `creation_count` (level 1: the race's granted talents' picks, from data alone) and `World::level_up` (`TalentMods::extra_picks_at`, added to the level's talent pick) |
+| `ferocity` | `Actor::stanced` (every attack profile), while `hp × 3 < max_hp` |
+| `stone_find` | `search.rs`: `World::stone_find(at)` added to the modifier of both looks for a hidden feature on a `stone` terrain cell |
+| `disease_interval_percent` | `World::disease_turn`: `Infection::left` set to the interval scaled (`TalentMods::scaled`, at least 1 s) |
+| `stout` | `burden::load` → `Load::stout`; `Load::penalty` gives Burdened while Strained (left out of the JSON while false) |
+| `small_target` | `World::small_target` (`world/racial.rs`) |
+| `launcher_range { skill }` | `Actor::launcher_range` through `TalentMods::launcher_range_for` (the launcher's `skill` id) |
 | `train_skill` | handed out, not read: `take_talent` → `train_chosen` rolls the dice from `levels_rng` into the chosen skill (`Skills::add`: trained at the roll, or raised by it) |
 | `ignore_burdened` | `burden::load` (`Load::ignores_burdened`, as a dwarf's) |
 | `no_bloating`, `corpse_stats_percent` | `eat.rs`: `feed` (nutrition stops one below Bloated, nothing overeats) and `eat_fresh` |
@@ -239,7 +247,8 @@ missing, or extra pick is `WorldError::Character`), else `take_random` (the stre
 ways, until none is due or none is offered), writes what was taken into the character's spec,
 recomputes perception, and says nothing. Not the kit (the scenario's own character in tests,
 walks, `--scenario` alone): no picks, so those replays keep their hashes. The humans' third pick
-(design §7.2) is H5's Versatile: it should add to `creation_count`.
+(design §7.2) is Versatile's (#241): `creation_count` adds the `extra_pick` at level 1 of the
+race's granted talents, so a human picks 3 and a human bard 4.
 
 `CharacterSpec::talents` is left out of the JSON while empty (old saves and replays load and
 start as before); `Display` stays `race,gender,class`, so the character's other streams are
@@ -290,8 +299,17 @@ Meditation, Frugal caster, Blood magic) came with #242 (H6; `docs/dev/mana.md`,
 `world/mana_talent_tests.rs`), which took the `mana` system's `pending` off. `talent_wits_tests.rs` covers
 each rule, `quest_tests.rs` Well liked. Apprentice is the first talent with a `skill` choice (any
 skill, trained or not; `talent:apprentice:stealth`, three ranks per skill), Treasure hunter the
-first with an `either` prerequisite (`Need::Either`, "Intelligence 12 or Appraise 20"). The
-`talk` and `gems` systems stay pending until the racial talents (Diplomat, Gem lore) land.
+first with an `either` prerequisite (`Need::Either`, "Intelligence 12 or Appraise 20").
+
+The racial talents (#241) are the `racial` tree (`no_free`: each asks for its race): Elven
+accuracy, Ageless, Dual heritage, Diplomat, Stone sense, Dwarven resilience, Stout, Lucky,
+Slinger, Small target, Tinkerer, Gem lore, Ferocity, Orcish hide, and the humans' granted
+Versatile. The gnome's disarming talent is `tinkerer` ("Tinkerer"), since `tinker` is the
+craftsperson's class ability of the same effect. With Diplomat and Gem lore the `talk` and `gems`
+systems are held to the bar. Granting Versatile changes every human's talents, so human runs
+hash differently from before. The dump's `talents` layer marks it `(race)`, the Talents page
+"race", and the character screen's birth-sign list leaves it out (`OwnTalent::race`).
+`racial_tests.rs` covers each rule, the prerequisites, the picks, and a replay.
 
 The damage-type talents (#248), Elemental ward (H2) and Crusher (H1), are the `damage_types`
 system's two, so it is no longer `pending`; `world/damage_talent_tests.rs` covers the ward
@@ -314,6 +332,7 @@ Skill rolls (#230) add `Due::rolls` and draw from `levels_rng`; stat training (#
 `docs/dev/stats.md` "Training") checks every stat on it once a level, from `level_up`; the level-up screen, the Talents page, creation picks, and `--talents` (#236, done) read
 `PerceptionView::due`/`talents`; the talent waves add files under `data/talents/` and one read
 each; `granted` talents (races' `versatile`, the birth signs') are computed into `Actor::talents`
-by whoever grants them and never offered (`may_take` refuses them). The birth signs' are granted
+by whoever grants them and never offered (`may_take` refuses them); a race's and the sign's
+together, by `stars::grant`. The birth signs' are granted
 by `world/stars.rs` at the start and on every restore (`Talents::regrant`; #265,
 `docs/dev/character-creation.md`), in the first tree, Stars (`no_free`).

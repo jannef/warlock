@@ -1,0 +1,8 @@
+[[talent]]
+id = "stone_sense"
+name = "Stone sense"
+tree = "racial"
+description = "Stone speaks to you: you find what is hidden in it more easily, and you dig faster."
+needs = { race = "dwarf" }
+effects = [{ kind = "stone_find", value = 4 }, { kind = "dig_percent", value = 25 }]
+systems = ["searching", "digging"]
