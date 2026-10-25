@@ -257,7 +257,9 @@ Tests: `world/caster_tests.rs`.
 
 `data/talents.toml` holds the closed `[[system]]` list and `[coverage]` (`min_talents = 2`,
 `min_class = 0` until every class has its table, `free_per_tree = 1`); class abilities are
-counted by `Content::check_class_tables`. A talent must name systems from
+counted by `Content::check_class_tables`. A `[[system]]` may set its own `min_talents` in place
+of the bar's (`SystemDef::min_talents`): `creature_gear` ships with one, Scavenger (#328). A
+talent must name systems from
 the list; a system or tree marked `pending = true` is counted and shown in the wiki but not yet
 held to the bar. **A wave that brings a system's talents removes its `pending`** (and a tree's
 once it has a talent without prerequisites); `min_class` becomes 1 with the class tables. A new

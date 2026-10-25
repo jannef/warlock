@@ -223,6 +223,10 @@ pub enum Action {
     /// had failed to resist it: it incubates, then shows. Takes no game time; recorded in
     /// replays.
     Infect(String),
+    /// Dev command: reveal a hidden location of the overworld (spec §7 "Hidden locations"), by
+    /// its id, as a quest would: it is marked on the player's map. For tests and captures. Takes
+    /// no game time; recorded in replays.
+    Reveal(String),
     /// Dev command: spend every choice a level still asks for with the first the player may
     /// take (spec §8 "Talents"), for tests and benchmarks. Takes no game time; recorded in
     /// replays.
@@ -723,6 +727,7 @@ impl fmt::Display for Action {
             Action::Drain(amount) => write!(f, "drain:{amount}"),
             Action::Resource(id) => write!(f, "resource:{id}"),
             Action::Infect(id) => write!(f, "infect:{id}"),
+            Action::Reveal(id) => write!(f, "reveal:{id}"),
             Action::Freeze { at, radius } => write!(f, "freeze:{},{},{radius}", at.x, at.y),
             Action::Thaw { at, radius } => write!(f, "thaw:{},{},{radius}", at.x, at.y),
         }
@@ -1015,6 +1020,12 @@ impl FromStr for Action {
                 }
                 _ => Err("`infect` needs a disease id, e.g. `infect:filth_fever`".into()),
             },
+            "reveal" => match s.split_once(':').map(|(_, id)| id) {
+                Some(id) if !id.is_empty() && !id.contains(':') => {
+                    Ok(Action::Reveal(id.to_string()))
+                }
+                _ => Err("`reveal` needs a hidden location id, e.g. `reveal:fennmynster`".into()),
+            },
             "freeze" | "thaw" => {
                 let usage = || format!("`{verb}` needs a cell and a radius, e.g. `{verb}:12,5,3`");
                 let (cell, radius) = arg.and_then(|a| a.rsplit_once(',')).ok_or_else(usage)?;
@@ -1038,7 +1049,7 @@ impl FromStr for Action {
                  read:LETTER[:X,Y|:LETTER], chat:DIR, \
                  ask:DIR:TOPIC, steal:DIR, throw_voice:X,Y, stance:NAME, vision:ID, skip:DURATION, \
                  weather:clear|overcast|rain|heavy, effect:ID@X,Y[>X,Y], identify[:LETTERS], \
-                 afflict:STATUS, drain:N, infect:DISEASE, freeze:X,Y,R, thaw:X,Y,R)"
+                 afflict:STATUS, drain:N, infect:DISEASE, reveal:ID, freeze:X,Y,R, thaw:X,Y,R)"
             )),
         }
     }
@@ -1212,6 +1223,7 @@ mod tests {
             Action::Resource("Odd_Case".into()),
             Action::Infect("filth_fever".into()),
             Action::Infect("Odd_Case".into()),
+            Action::Reveal("old_barrow".into()),
             Action::Talent {
                 id: "hardy".into(),
                 choice: None,

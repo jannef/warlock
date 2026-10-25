@@ -77,11 +77,15 @@ pub enum Layer {
     /// Not a map: the traps the player knows on the level, one a line by position (`(12, 5)
     /// fireball trap`, `(remembered)` when out of sight); never hidden ones.
     Traps,
+    /// Not a map: the overworld locations the player knows, one a line by position (`(45, 23)
+    /// The Hall`), from what they see and remember (a hidden location only once revealed);
+    /// `no known locations` elsewhere or when there are none.
+    Locations,
     /// Not a map: the player's quest log, one quest a line, active first (`Rats in the arena
     /// (active, from the old hermit): Kill 3 giant rats in the Arena. 2 / 3 killed.`).
     Quests,
-    /// Ground truth: all terrain, objects, traps (hidden ones too), secret doors (`S`), and
-    /// actors on the level.
+    /// Ground truth: all terrain, objects, traps (hidden ones too), secret doors (`S`), hidden
+    /// locations (by their entrance's glyph), and actors on the level.
     /// **Dev-only.**
     Truth,
     /// Not a map: every actor on the level with its weight, what it carries (and of that wears
@@ -124,6 +128,7 @@ impl Layer {
         Layer::Talents,
         Layer::Abilities,
         Layer::Traps,
+        Layer::Locations,
         Layer::Quests,
         Layer::Truth,
         Layer::Actors,
@@ -149,6 +154,7 @@ impl Layer {
             Layer::Talents => "talents",
             Layer::Abilities => "abilities",
             Layer::Traps => "traps",
+            Layer::Locations => "locations",
             Layer::Quests => "quests",
             Layer::Truth => "truth",
             Layer::Actors => "actors",
@@ -179,7 +185,7 @@ impl FromStr for Layer {
                 format!(
                     "unknown layer `{s}` (expected view, fov, memory, light, sound, blood, \
                      inventory, equipment, stats, skills, weapon_skills, talents, abilities, \
-                     traps, quests, truth, actors, progress, rooms, ice)"
+                     traps, locations, quests, truth, actors, progress, rooms, ice)"
                 )
             })
     }
@@ -206,6 +212,7 @@ pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
         Layer::Talents => talent_rows(&world.perception()),
         Layer::Abilities => ability_rows(&world.perception()),
         Layer::Traps => trap_rows(&world.perception()),
+        Layer::Locations => location_rows(&world.perception()),
         Layer::Quests => quest_rows(&world.perception()),
         _ => {
             let view = world.perception();
@@ -258,6 +265,7 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
         | Layer::Talents
         | Layer::Abilities
         | Layer::Traps
+        | Layer::Locations
         | Layer::Quests
         | Layer::Truth
         | Layer::Actors
@@ -340,8 +348,9 @@ fn truth_rows(world: &World) -> Vec<String> {
             (None, Some(trap), _) => content.trap(trap.kind).glyph,
             (None, None, Some(top)) => content.object(top.object).glyph,
             (None, None, None) if level.secret_at(p).is_some() => 'S',
-            (None, None, None) => level
-                .terrain_at(p)
+            // A hidden location by its entrance's glyph (spec §7 "Hidden locations").
+            (None, None, None) => (level.hidden_at(p).map(|h| h.terrain))
+                .or(level.terrain_at(p))
                 .map_or(' ', |t| content.terrain(t).glyph),
         }
     })
@@ -374,6 +383,19 @@ fn room_rows(world: &World) -> Vec<String> {
         ));
     }
     out
+}
+
+/// The overworld locations the player knows, one a line by position: `(45, 23) The Hall`; `no
+/// known locations` when there are none (and on any other level).
+fn location_rows(view: &PerceptionView<'_>) -> Vec<String> {
+    let rows: Vec<String> = (view.known_locations().into_iter())
+        .map(|(p, name)| format!("{p} {name}"))
+        .collect();
+    if rows.is_empty() {
+        vec!["no known locations".into()]
+    } else {
+        rows
+    }
 }
 
 /// The traps the player knows on the level, one a line by position: `(12, 5) fireball trap`,
@@ -1054,11 +1076,12 @@ pub fn ascii(world: &World, layers: &[Layer]) -> String {
 /// know it (its effect id; else null), the open shop they stand in (`shop`: its sign, keeper,
 /// and what they owe there; else null), the weather (under the open sky; else null), the
 /// temperature (°C, to a tenth), seen actors (with the status effects that show on them), heard
-/// sounds, known traps (`known_traps`: position, trap id, and whether in sight), the player's
-/// inventory (with what of each stack is unpaid, priced), equipment (by slot id), weight, scores
-/// (by stat id), status effects (by id), the diseases they know (by id), recent messages, the
-/// requested layers as arrays of rows, and optionally the full
-/// [`crate::WorldState`] under `state` (with the current level's `danger`, ground truth).
+/// sounds, known traps (`known_traps`: position, trap id, and whether in sight), known overworld
+/// locations (`known_locations`: position and name), the player's inventory (with what of each
+/// stack is unpaid, priced), equipment (by slot id), weight, scores (by stat id), status effects
+/// (by id), the diseases they know (by id), recent messages, the requested layers as arrays of
+/// rows, and optionally the full [`crate::WorldState`] under `state` (with the current level's
+/// `danger`, ground truth).
 pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
     let view = world.perception();
     let content = world.content();
@@ -1160,6 +1183,9 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
             json!({ "pos": p, "trap": content.trap(trap).id, "seen": view.sees_objects_at(p) })
         })
         .collect();
+    let locations: Vec<Value> = (view.known_locations().into_iter())
+        .map(|(p, name)| json!({ "pos": p, "name": name }))
+        .collect();
     let layer_map: serde_json::Map<String, Value> = layers
         .iter()
         .map(|&l| (l.name().to_string(), json!(layer_rows(world, l))))
@@ -1195,6 +1221,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "seen_actors": seen,
         "heard_sounds": view.sounds(),
         "known_traps": traps,
+        "known_locations": locations,
         "inventory": inventory,
         "equipment": equipment,
         "weight": { "base": weight.base, "carried": weight.carried, "total": weight.total() },

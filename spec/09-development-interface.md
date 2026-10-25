@@ -35,7 +35,7 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   eat:floor:a dig:E search search:10 chat:E ask:E:rooms ask:E:quest-rats ask:E:accept-rats
   throw_voice:12,5 vision:darkvision
   skip:1h weather:rain spawn stance:coward effect:fireball@12,5 effect:lightning_bolt@3,4>12,4
-  identify:a afflict:bleeding drain:5 infect:filth_fever talent:hardy talent:weapon_focus:long_blades
+  identify:a afflict:bleeding drain:5 infect:filth_fever reveal:fennmynster talent:hardy talent:weapon_focus:long_blades
   advance:stealth levelup:auto xp:2500 freeze:12,5,3 thaw:12,5,3`; `pick:DIR` tries
   the lock of the door that way (§8 "Doors"), `bash:DIR` bashes with the held shield that way, `dig:DIR` digs toward a direction until the wall gives way or
   something interrupts; `search` searches the cells around the player once, `search:N` for up to
@@ -64,7 +64,9 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   mana (1 or more, through `World::spend_mana`; refused when they have less; §8 "Mana"),
   `resource:ID` grants them alternative resource ID (`data/resources.toml`, at its start,
   through `World::grant_resource`; no time; §8 "Resources"), and
-  `infect:ID` makes them catch disease ID (`data/diseases.toml`); `spawn` makes one attempt to
+  `infect:ID` makes them catch disease ID (`data/diseases.toml`); `reveal:ID` reveals hidden location ID
+  of the overworld at once, as a quest would, marked on the map (§7 "Hidden locations"; no time);
+  `spawn` makes one attempt to
   bring a creature to the current level now, whatever its cap and chance (§7 "Danger levels";
   refused at danger 0; no time); `talent:ID[:CHOICE]` takes a talent (an id in
   `data/talents/`, with its choice) when a level's pick is due (§8 "Talents"; every other
@@ -89,7 +91,9 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   `d` digging, `v` a voice, `a` an alarm bell, `e` an explosion, `t` a thunderclap, upper case
   when loud),
   `traps` (the traps the player knows, one a line, `(12, 5) fireball trap`, `(remembered)` when
-  out of sight; `no known traps`),
+  out of sight; `no known traps`), `locations` (the overworld locations the player knows, one a
+  line, `(45, 23) The Hall`, a hidden one only once revealed; `no known locations`, also on any
+  other level),
   `inventory` (what the player carries, grouped by item class as the screens group it, a
   `Melee weapons:` line before each class, each stack by its position as action text names it
   with weights and what is worn or wielded marked, `b - a leather jerkin (being worn) (3.5 kg)`, and in a shop what is unpaid, `c - a
@@ -142,7 +146,8 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   sky; else null), the temperature where the player is (`temperature`, °C to a tenth), seen
   actors (each with how hurt it looks, `health`: `unhurt`,
   `lightly_wounded`, `wounded`, `badly_wounded`, `nearly_dead`, and the status effects that show
-  on it, `effects`, by id), heard sounds, known traps (`known_traps: [{pos, trap, seen}]`), the
+  on it, `effects`, by id), heard sounds, known traps (`known_traps: [{pos, trap, seen}]`), known
+  overworld locations (`known_locations: [{pos, name}]`), the
   player's
   inventory (each stack's letter, object, count, weight, `name` as the player knows it, `rarity`,
   `identified`, and `magic`: `{level, name, affixes: [{id, tier, value}]}` once identified, else

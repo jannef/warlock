@@ -27,8 +27,9 @@ use serde::de::{self, MapAccess, Visitor};
 use serde::{Deserialize, Deserializer};
 use std::fmt;
 
-/// How a kit item is kept.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+/// How a kit item (or a creature's gear, [`super::gear`]) is kept.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum Keep {
     /// In the pack.
     Carry,
@@ -173,7 +174,7 @@ pub(super) fn resolve(
             .collect::<Result<Vec<_>, _>>()
             .map_err(at)?;
         for stacks in &one_of {
-            check_kept(spec, stacks, content).map_err(at)?;
+            check_kept(spec.keep, spec.magic.is_some(), stacks, content).map_err(at)?;
         }
         let trained = match &spec.trained {
             None => None,
@@ -201,24 +202,30 @@ pub(super) fn resolve(
     Ok(Kit(kit))
 }
 
-/// Whether one alternative of `spec`, `stacks`, may be kept as it says: what is wielded or worn
-/// is one stack that goes in a slot of that kind, and what is made magic is a base item.
-fn check_kept(spec: &KitLineSpec, stacks: &[Stack], content: &Content) -> Result<(), String> {
+/// Whether one alternative of a line, `stacks`, may be kept as `keep` says: what is wielded or
+/// worn is one stack that goes in a slot of that kind, and what may be made `magic` is a base
+/// item.
+pub(super) fn check_kept(
+    keep: Keep,
+    magic: bool,
+    stacks: &[Stack],
+    content: &Content,
+) -> Result<(), String> {
     for stack in stacks {
         let def = content.object(stack.object);
-        if spec.magic.is_some() && def.kind.is_none() {
+        if magic && def.kind.is_none() {
             return Err(format!(
                 "`magic`: `{}` is never magic (it has no `kind`)",
                 def.id
             ));
         }
-        if spec.keep == Keep::Carry {
+        if keep == Keep::Carry {
             continue;
         }
         if stacks.len() > 1 {
             return Err(format!(
                 "`{}`: wield or wear one at a time (it does not stack)",
-                spec.keep.id()
+                keep.id()
             ));
         }
         let slot = equipment::free_slot(content, &Equipment::default(), stack.object)
@@ -227,7 +234,7 @@ fn check_kept(spec: &KitLineSpec, stacks: &[Stack], content: &Content) -> Result
             content.slot(slot).action,
             ActionKind::Wield | ActionKind::Ready
         );
-        if held != (spec.keep == Keep::Wield) {
+        if held != (keep == Keep::Wield) {
             let (is, other) = if held {
                 ("wielded, not worn", "wield")
             } else {

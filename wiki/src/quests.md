@@ -31,6 +31,10 @@ Talking about quests takes no time.
   to carry to someone else and hand in there. Without it in your pack you cannot hand it in: if
   you drop it, pick it up again.
 
+Some quests lead to a place nobody has found on their own: the person marks a
+[hidden location](overworld.md#hidden-locations) on your map, and the quest log says where it
+lies.
+
 When something you do brings a quest along, the message line says so: "Quest updated: 2 / 3
 giant rats.", and when it is done, "Quest updated: 3 / 3 giant rats. Return to the old hermit."
 

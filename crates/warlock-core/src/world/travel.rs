@@ -15,9 +15,11 @@ use crate::content::{
     ActionKind, CombatStance, Content, CreatureSpawn, EdgeExit, LevelKind, LevelTemplate,
     StairsDir, Stance, TerrainId, local_area_id,
 };
+use crate::equipment::Equipment;
 use crate::geom::{Dir, Pos};
 use crate::magic::loot::Luck;
 use crate::mapgen::local::arrival;
+use crate::object::Stack;
 use crate::skills::Use;
 use std::borrow::Cow;
 
@@ -165,7 +167,8 @@ impl World {
         if let Some(stairs) = level.stairs_at(to) {
             let text = match (level.kind, stairs.dir, &stairs.to) {
                 (LevelKind::Overworld, StairsDir::Down, Some(target)) => {
-                    format!("The way into {} is here.", self.place_name(target))
+                    let name = (stairs.name.clone()).unwrap_or_else(|| self.place_name(target));
+                    format!("The way into {name} is here.")
                 }
                 (_, StairsDir::Down, _) => "There is a staircase down here.".into(),
                 (_, StairsDir::Up, _) => "There is a staircase up here.".into(),
@@ -284,7 +287,8 @@ impl World {
         }
         events.push(Event::LevelChanged { from, to });
         let level = self.state.current();
-        let name = level.name.clone();
+        // A revealed location goes by its own name (spec §7 "Hidden locations").
+        let name = link.name.unwrap_or_else(|| level.name.clone());
         let text = match (kind, level.kind, dir) {
             (LevelKind::Overworld, _, _) => format!("You enter {name}."),
             (_, LevelKind::Overworld, _) => format!("You climb out to {name}."),
@@ -441,6 +445,8 @@ pub(super) fn instantiate_level(
         level.spawner = Some(Spawner::new(state.seed, id, state.time, spawning.every));
     }
     state.levels.insert(id.to_string(), level);
+    // The hidden locations revealed before the overworld was made (spec §7 "Hidden locations").
+    super::reveal::apply_revealed(state, id);
     // Under the open sky its water has frozen and thawed with the weather of the last weeks.
     state.pre_roll_ice(content, id);
     for spawn in &template.creatures {
@@ -459,6 +465,7 @@ pub(super) fn make_creature(
     let actor_id = ActorId(state.next_actor_id);
     state.next_actor_id += 1;
     let def = content.creature(spawn.creature);
+    let (carry, equipment) = placed_gear(content, state.seed, id, actor_id, spawn);
     let mut actor = Actor {
         id: actor_id,
         kind: ActorKind::Creature,
@@ -472,8 +479,8 @@ pub(super) fn make_creature(
         energy: 0,
         heard: Vec::new(),
         mind: Mind::default(),
-        inventory: spawn.carry.clone(),
-        equipment: spawn.equipment.clone(),
+        inventory: carry,
+        equipment,
         stats: def.stats,
         hp: 0,
         hp_base: def.base_hp,
@@ -504,4 +511,22 @@ pub(super) fn make_creature(
     crate::rot::made_at(&mut actor.inventory, content, state.time);
     state.actors.insert(actor_id, actor);
     actor_id
+}
+
+/// What creature `spawn`, placed on level `level` as actor `id`, carries and of that wears and
+/// wields: its fixed kit (or the gear its generated level rolled), or else its type's gear,
+/// rolled now from `gear/<actor id>` at the level's item level (spec §8 "Creature gear").
+fn placed_gear(
+    content: &Content,
+    seed: u64,
+    level: &str,
+    id: ActorId,
+    spawn: &CreatureSpawn,
+) -> (Vec<Stack>, Equipment) {
+    if !spawn.rolls_gear {
+        return (spawn.carry.clone(), spawn.equipment.clone());
+    }
+    let mut rng = crate::rng::Rng::gear(seed, &id.0.to_string());
+    let pack = crate::gear::roll(content, &mut rng, spawn.creature, content.item_level(level));
+    (pack.items, pack.equipment)
 }

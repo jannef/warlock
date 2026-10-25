@@ -46,6 +46,22 @@ cell out of a freshly computed `Perception`'s sight and `AWAY` cells off, the ro
 `mapgen::out_and_back`, then `travel::make_creature`, the one way a creature is made from a
 `CreatureSpawn`), and the dev `spawn` action. A spawn bumps `World::spawned`, so a rest perceives
 after that turn. Uniques are remembered in `Progress::uniques` by type id. The initial population
-of a generated floor and its `bench-turns` entry are the follow-up (C2), and a spawn's gear comes
-with #M's `gear::roll`. Tests: `world/spawn_tests.rs` (the property test of the design's §9.6,
+of a generated floor and its `bench-turns` entry are the follow-up (C2); a spawn sets `rolls_gear`, so `make_creature` rolls its gear. Tests: `world/spawn_tests.rs` (the property test of the design's §9.6,
 frozen floors, the talents, determinism), `content/danger.rs` (rules, counts, weights, draws).
+
+Creature gear (spec §8 "Creature gear", #328): the data is `content/gear.rs` (`GearLineSpec`
+as written, kept on `CreatureDef::gear_spec` until objects load, then `Content::load_gear`
+resolves `CreatureDef::gear`: the racial weapon's line first, `Keep` defaults by the slot an
+object fits, `kit::check_kept` shared with the starting kits, and the racial-weapon rank check).
+The rolls are `gear.rs`: `gear::roll(content, rng, creature, item_level) -> kit::Pack` (the
+kit's `Pack::put`/`equip`, `loot::make_as` for a magic piece, `variant::draw` with
+`Source::Gear(creature level)` for a plain one, the burden guard against `burden::limit` of the
+type's stats and size). Who rolls is `CreatureSpawn::rolls_gear` (true for a legend or vault
+entry without `carry`/`wield`/`wear`, `Canvas::add_patrol`, the local areas' deer; false for a
+keeper): a generated level clears it in `gear::arm` (stream `gear/<level id>`, after
+`place_loot`, in both `mapgen::generate_with` and `mapgen::local::generate`), and
+`world/travel.rs::placed_gear` rolls the rest as `instantiate_level` places them (stream
+`gear/<actor id>`). A spawn path added later (the danger levels' population and spawns) sets
+`rolls_gear` or calls `gear::roll` itself. Scavenger is one hook in `World::creature_dies`
+(`TalentMods::scavenger`, the kill the player's). Tests: `world/gear_tests.rs`; the mapgen
+snapshots print each spawn's gear.

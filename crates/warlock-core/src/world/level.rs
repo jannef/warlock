@@ -8,8 +8,8 @@ use super::spawn::Spawner;
 use crate::blood::{Spatter, Stain};
 use crate::color::Rgb;
 use crate::content::{
-    Content, EdgeExit, Flow, LevelKind, LevelTemplate, LightId, RoomEffectDef, Secret, SpecialRoom,
-    StairsLink, TerrainDef, TerrainId, Trap, TrapId,
+    Content, EdgeExit, Flow, HiddenLocation, LevelKind, LevelTemplate, LightId, RoomEffectDef,
+    Secret, SpecialRoom, StairsLink, TerrainDef, TerrainId, Trap, TrapId,
 };
 use crate::door::Lock;
 use crate::geom::Pos;
@@ -76,6 +76,11 @@ pub struct LevelState {
     /// wall each looks like; found, it becomes its door and is gone from here. Ground truth.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
     pub(crate) secrets: BTreeMap<Pos, Secret>,
+    /// Hidden locations not yet revealed, by position (spec §7 "Hidden locations"; the
+    /// overworld only): the cell's terrain is the plain terrain each shows; revealed, it becomes
+    /// its entrance and is gone from here. Ground truth.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
+    pub(crate) hidden: BTreeMap<Pos, HiddenLocation>,
     /// Blood on cells, by position (spec §8 "Blood"). Presentation-only: no rule reads it.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
     pub(crate) blood: BTreeMap<Pos, Stain>,
@@ -148,6 +153,7 @@ impl LevelState {
             fires: BTreeMap::new(),
             locks: template.locks.clone(),
             secrets: template.secrets.clone(),
+            hidden: template.hidden.clone(),
             blood: BTreeMap::new(),
             blood_memory: BTreeMap::new(),
             dug: BTreeMap::new(),
@@ -230,6 +236,13 @@ impl LevelState {
     /// rules, **for developer tools only**.
     pub fn secret_at(&self, p: Pos) -> Option<&Secret> {
         self.secrets.get(&p)
+    }
+
+    /// The hidden location at `p`, if one is there and not yet revealed (ground truth: the cell
+    /// is the plain terrain it shows). Only reachable through [`crate::World::ground_truth`]
+    /// outside the rules, **for developer tools only**.
+    pub fn hidden_at(&self, p: Pos) -> Option<&HiddenLocation> {
+        self.hidden.get(&p)
     }
 
     /// Blood of `color` lands here at `now`: on a cell whose terrain holds it, it adds to the
@@ -356,6 +369,7 @@ impl LevelState {
             && trap_kinds.all(|t| usize::from(t.0) < traps)
             && (self.ice.iter()).all(|(p, i)| water(&i.water) && self.terrain.in_bounds(*p))
             && (self.shops.iter()).all(|s| s.is_valid_for(content, self.width(), self.height()))
+            && (self.hidden.iter()).all(|(p, h)| known(&h.terrain) && self.terrain.in_bounds(*p))
     }
 }
 

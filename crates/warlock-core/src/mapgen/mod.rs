@@ -22,7 +22,8 @@
 //! 5. Hide the branch's traps (spec §8 "Traps") from the level's trap stream ([`Rng::traps`]),
 //!    then a few of its doors (secret doors, spec §8 "Searching") from its secret stream
 //!    ([`Rng::secrets`]), only where the stairs and every key are still reached without them,
-//!    then roll its loot from its loot stream ([`Rng::loot`]).
+//!    then roll its loot from its loot stream ([`Rng::loot`]), then its creatures' gear from
+//!    its gear stream ([`Rng::gear`], [`crate::gear::arm`]).
 //!
 //! Generation is integer-only and never iterates a hash map. Seeds are stable within a game
 //! version; the snapshot tests in this module flag any change in generator output.
@@ -307,6 +308,7 @@ impl<'a> Canvas<'a> {
             route,
             carry: Vec::new(),
             equipment: Default::default(),
+            rolls_gear: true,
         });
         true
     }
@@ -393,12 +395,14 @@ pub fn generate_with(
             pos: up,
             dir: StairsDir::Up,
             to: up_to.clone(),
+            name: None,
         }];
         if let Some(pos) = down {
             stairs.push(StairsLink {
                 pos,
                 dir: StairsDir::Down,
                 to: down_to.clone(),
+                name: None,
             });
         }
         let item_level = content.item_level(id);
@@ -418,6 +422,7 @@ pub fn generate_with(
             traps: canvas.traps,
             locks: canvas.locks,
             secrets: canvas.secrets,
+            hidden: BTreeMap::new(),
             regions: Vec::new(),
             rooms: canvas.rooms,
             shops: canvas.shops,
@@ -443,6 +448,7 @@ pub fn generate_with(
                 &canvas.loot,
                 (Some(floor), luck),
             );
+            crate::gear::arm(&mut template, content, seed);
             return Ok(template);
         }
     }

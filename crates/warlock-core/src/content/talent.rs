@@ -74,6 +74,9 @@ pub struct SystemDef {
     pub name: String,
     /// Its talents are still to come: counted and shown, not yet required.
     pub pending: bool,
+    /// The fewest talents it may have, when not the bar's (`[coverage]`): a young system that
+    /// ships with one (`creature_gear`, Scavenger).
+    pub min_talents: Option<u32>,
 }
 
 /// The bar the coverage check holds every system and tree to (`[coverage]`); without the table,
@@ -336,6 +339,8 @@ pub enum TalentEffect {
     Credit { gold: u32 },
     /// What it buys or sells in a shop is identified.
     IdentifyTrades,
+    /// What a creature it kills drops is identified as it lands (spec §8 "Creature gear").
+    Scavenger,
     /// Item descriptions show what its things are worth.
     ItemWorth,
     /// Item descriptions show what each gem in a thing is worth.
@@ -1599,6 +1604,7 @@ impl TalentEffect {
             | TalentEffect::Whirlwind
             | TalentEffect::WeightlessCoins
             | TalentEffect::IdentifyTrades
+            | TalentEffect::Scavenger
             | TalentEffect::ItemWorth
             | TalentEffect::GemWorth
             | TalentEffect::MakeWay
@@ -2013,13 +2019,13 @@ impl TalentBook {
             let talents = (self.of_system(SystemId(i)))
                 .filter(|(_, t)| !self.tree(t.tree).class)
                 .count() as u32;
-            if talents < bar.min_talents {
+            let least = system.min_talents.unwrap_or(bar.min_talents);
+            if talents < least {
                 return Some(format!(
-                    "system `{}` has {talents} talent{} but at least {} are needed (mark it \
+                    "system `{}` has {talents} talent{} but at least {least} are needed (mark it \
                      `pending = true` until they land)",
                     system.id,
                     if talents == 1 { "" } else { "s" },
-                    bar.min_talents
                 ));
             }
             let abilities = class_abilities(&system.id);
@@ -2085,6 +2091,7 @@ struct SystemSpec {
     name: String,
     #[serde(default)]
     pending: bool,
+    min_talents: Option<u32>,
 }
 
 #[derive(Deserialize)]
@@ -2443,6 +2450,7 @@ pub(super) fn parse<'a>(
             id: s.id,
             name: s.name,
             pending: s.pending,
+            min_talents: s.min_talents,
         });
     }
     if book.trees.len() > usize::from(u8::MAX) || book.systems.len() > usize::from(u8::MAX) {

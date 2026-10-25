@@ -162,6 +162,19 @@ pub fn make(
     make_from(content, rng, object, count, (level, grade, 0), None)
 }
 
+/// [`make`] for a creature's gear (spec §8 "Creature gear"): its material drawn as `source` has
+/// it (a creature's, by its level) after the rest.
+pub fn make_as(
+    content: &Content,
+    rng: &mut Rng,
+    object: ObjectId,
+    count: u32,
+    (level, grade): (u8, LootGrade),
+    source: Source,
+) -> Stack {
+    make_from(content, rng, object, count, (level, grade, 0), Some(source))
+}
+
 /// [`make`] at `(level, grade, luck)` ([`roll_with`]), its material drawn as `source` has it
 /// (none for `None`: a starting kit's items keep the material they are listed with).
 fn make_from(

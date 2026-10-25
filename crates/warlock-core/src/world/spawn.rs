@@ -180,6 +180,7 @@ impl World {
             route,
             carry: Vec::new(),
             equipment: Default::default(),
+            rolls_gear: true,
         };
         let actor = travel::make_creature(&mut self.state, &self.content, &id, &spawn);
         let def = self.content.creature(creature);
