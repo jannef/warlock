@@ -1918,10 +1918,10 @@ mod tests {
     #[test]
     fn picking_a_lock_asks_for_a_direction_from_the_menu_or_its_own_key() {
         let mode = |app: &App| *app.world().resource::<InputMode>();
-        // The showcase's thief is trained in Open lock: `a` `e` (Pick lock, after their birth
-        // sign's stare) asks for a direction.
+        // The showcase's thief is trained in Open lock: `a` `d` (Pick lock, after their birth
+        // sign's stare and Appraise) asks for a direction.
         let mut app = app(true);
-        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyE, "e")]);
+        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyD, "d")]);
         assert!(names(&app).is_empty());
         assert_eq!(mode(&app), InputMode::Ability(Ability::PickLock));
         frame(&mut app, &[(KeyCode::KeyL, "l")]);
@@ -1945,10 +1945,10 @@ mod tests {
     #[test]
     fn stealing_asks_for_a_direction_from_the_menu_or_its_own_key() {
         let mode = |app: &App| *app.world().resource::<InputMode>();
-        // The showcase's thief can steal: `a` `f` (Steal) asks for a direction in the message
+        // The showcase's thief can steal: `a` `e` (Steal) asks for a direction in the message
         // line, and a direction steals.
         let mut app = app(true);
-        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyF, "f")]);
+        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyE, "e")]);
         assert!(names(&app).is_empty());
         assert_eq!(mode(&app), InputMode::Ability(Ability::Steal));
         frame(&mut app, &[(KeyCode::KeyL, "l")]);
@@ -1986,21 +1986,21 @@ mod tests {
         const ABILITIES: (KeyCode, &str) = (KeyCode::KeyA, "a");
         const REPEAT: (KeyCode, &str) = (KeyCode::KeyA, "A");
         let mode = |app: &App| *app.world().resource::<InputMode>();
-        // Without a shield: the menu opens on `a`; the shield bash (`g`) is greyed out, so its
+        // Without a shield: the menu opens on `a`; the shield bash (`f`) is greyed out, so its
         // letter only says why; Esc closes the menu, and no time passed.
         let mut app = app(true);
         frame(&mut app, &[ABILITIES]);
         assert_eq!(names(&app), [ScreenName::Abilities]);
-        frame(&mut app, &[(KeyCode::KeyG, "g")]);
+        frame(&mut app, &[(KeyCode::KeyF, "f")]);
         assert_eq!(names(&app), [ScreenName::Abilities]);
         frame(&mut app, &[ESC]);
         assert!(names(&app).is_empty() && actions(&app).is_empty());
         // The quick repeat with nothing used yet opens the menu.
         frame(&mut app, &[REPEAT]);
         assert_eq!(names(&app), [ScreenName::Abilities]);
-        // With a shield: `a` `g` closes the menu and asks for a direction; a direction bashes.
+        // With a shield: `a` `f` closes the menu and asks for a direction; a direction bashes.
         let mut app = with_a_shield();
-        frame(&mut app, &[ABILITIES, (KeyCode::KeyG, "g")]);
+        frame(&mut app, &[ABILITIES, (KeyCode::KeyF, "f")]);
         assert!(names(&app).is_empty());
         assert_eq!(mode(&app), InputMode::Ability(Ability::ShieldBash));
         frame(&mut app, &[(KeyCode::KeyL, "l")]);
@@ -2018,14 +2018,48 @@ mod tests {
         assert_eq!(actions(&app), [Action::Bash(Dir::E), Action::Bash(Dir::W)]);
     }
 
+    /// A run of a bard of level 32, who throws their voice (#244), with keys bound for it and
+    /// the lantern's hood (`B`, `J`: both unbound by default).
+    fn bard() -> App {
+        let content = content();
+        let spec: warlock_core::character::CharacterSpec =
+            "human,female,bard".parse().expect("a bard");
+        let mut world = warlock_core::World::start_run(
+            content.clone(),
+            "showcase",
+            None,
+            Some(&spec),
+            None,
+            false,
+        )
+        .expect("run");
+        let factor = warlock_core::content::Factor::of(&content, Some(&spec));
+        let need = content.experience().threshold_for(32, factor);
+        let walk = format!("xp:{need} levelup:auto");
+        for action in warlock_core::action::parse_actions(&walk).expect("actions") {
+            world.apply(&action);
+        }
+        let mut app = app_with(content, Some(Game::from_world(world, "bard-1".into())));
+        let mut bindings = app.world_mut().resource_mut::<Bindings>();
+        for (key, command) in [
+            ("B", crate::input::KeyCommand::ThrowVoice),
+            ("J", crate::input::KeyCommand::HoodLantern),
+        ] {
+            assert!(bindings.keys_of(command).is_empty(), "unbound by default");
+            let key = crate::input::KeyBinding::from_text(key).expect("a key");
+            bindings.0.push((key, command));
+        }
+        app
+    }
+
     #[test]
     fn a_thrown_voice_is_aimed_at_a_cell_and_the_hood_needs_nothing() {
         let mode = |app: &App| *app.world().resource::<InputMode>();
-        // `a` `b` (after the birth sign's stare): throwing one's voice starts aiming, on the
-        // player (no one in view); two steps east and Enter throw it there.
-        let mut app = app(true);
+        // The bard's Throw your voice starts aiming, on the player (no one in view); two steps
+        // east and Enter throw it there.
+        let mut app = bard();
         let me = app.world().resource::<Game>().world.player_pos();
-        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyB, "b")]);
+        frame(&mut app, &[(KeyCode::KeyB, "B")]);
         assert!(names(&app).is_empty());
         let aim = match mode(&app) {
             InputMode::Aim(aim) => aim,
@@ -2040,8 +2074,8 @@ mod tests {
         assert_eq!(mode(&app), InputMode::Normal);
         let at = Pos::new(me.x + 2, me.y);
         assert_eq!(actions(&app), [Action::ThrowVoice(at)]);
-        // `a` `h`: the lantern's hood, at once.
-        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyH, "h")]);
+        // The lantern's hood, at once.
+        frame(&mut app, &[(KeyCode::KeyJ, "J")]);
         assert_eq!(actions(&app), [Action::ThrowVoice(at), Action::HoodLantern]);
     }
 

@@ -268,6 +268,15 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // A bard of level 32 with too little mana (#244): Throw your voice aimed at a place, Inspire
+    // greyed out for mana.
+    Case {
+        name: "abilities-menu-bard",
+        character: Some("human,female,bard"),
+        actions: "xp:1000000 levelup:auto drain:94",
+        screen: Some("abilities"),
+        ..BASE
+    },
     // Progression: a warrior gaining levels 2 and 3 at once (the level-up screen opens by
     // itself), their talent pick, and the Talents page.
     Case {
@@ -503,8 +512,8 @@ const CASES: &[Case] = &[
     Case {
         name: "trap-disarm-prompt",
         actions: "move:N*3 open:N move:N*2 move:E*67 open:S move:S*7 move:SW descend",
-        // `a d`: Disarm a trap, after the thief's birth sign's stare (#266).
-        keys: Some("a d"),
+        // `a c`: Disarm a trap, after the thief's birth sign's stare (#266) and Appraise.
+        keys: Some("a c"),
         ..BASE
     },
     Case {
