@@ -40,6 +40,6 @@ trade; the commoner with a stick and a turnip.
 
 ## Scenarios
 
-Every run you start from **New run** starts you with your kit, whichever
-[scenario](introduction.md) you pick; a scenario may give you more on top (none does yet). The
-summary lists it all before you start.
+Every run you start from **New run** starts you with your kit, and nothing else: the
+[Ascmearc](ascmearc.md)'s start gives you nothing on top. The summary lists it all before you
+start.

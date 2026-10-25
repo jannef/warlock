@@ -3,4 +3,5 @@ race = "Dwarf"
 class = "Priest"
 level = 1
 place = "The Courtyard"
+campaign = "The Showcase"
 played = 1792314600

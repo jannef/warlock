@@ -78,17 +78,18 @@ your step's time ("You swap places with the deer."); it walks back to where it s
 and carries on. A few will not make way ("The sentry doesn't budge."), which takes no time; see
 [People and talk](npcs.md#getting-past).
 
-The showcase's people (the gardener, the bard, the hermit) are peaceful folk by nature, and talk
-to you (see [People and talk](npcs.md)). Some creatures are hostile by nature but placed among
-the **peaceful folk** by the place they live in: the kobold in the showcase hub and the kobolds and rats of the Vast Caverns walk their
-rounds and never attack you. The showcase is safe. Fighting happens in the arena and in the Depths.
+The people of Cēaptūn (the townsfolk, Sister Hild, Godgifu, the reeve, the mine-factor) are
+peaceful folk by nature, and talk to you (see [People and talk](npcs.md)): the town is safe.
+A creature hostile by nature may also be placed among the **peaceful folk** by the place it lives
+in: then it walks its rounds and never attacks you. Fighting happens in the dungeons (see
+[Dungeons and danger](dungeons.md)).
 
 **Shopkeepers** are **merchants**, who trade with everyone and fight no one, until you rob or
 attack one: then it joins the outraged shopkeepers and comes after you (see [Shops](shops.md)).
 
-The **Arena** scenario (see [Starting a run](introduction.md#starting-a-run)) is the place to watch
-this: a kobold war band and a pack of giant rats fight to the death there, and turn on you when
-they see you. Light your lantern there and the war band's archer will find you.
+Creatures of factions at war fight each other on sight, wherever they meet: a kobold war band
+and a pack of giant rats fight to the death, and turn on you when they see you. Light your
+lantern near them and a war band's archer will find you.
 
 ## Pace and levels
 
@@ -108,8 +109,8 @@ they see you. Light your lantern there and the war band's archer will find you.
   carry a light. You never remember where one was.
 - Creatures make noise as they walk (bats fly silently), so you may hear one you cannot see, and
   they hear your steps, doors, and attacks.
-- Some creatures carry [objects](objects.md), and wear or wield some of them: the kobolds of the
-  arena carry spears, their archer a bow and arrows, their shaman an amulet. You see what a
+- Some creatures carry [objects](objects.md), and wear or wield some of them: a kobold may carry a
+  spear, a kobold archer a bow and arrows. You see what a
   creature wears and wields ([look mode](controls.md#look-mode) says it), never what else it
   carries. They fight with it ([Equipment](equipment.md)), and drop all of it when they die.
 - Creatures you meet in the dungeons (and those a place puts somewhere without a set kit) come

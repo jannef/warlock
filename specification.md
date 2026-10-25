@@ -17,6 +17,7 @@ next to the related ones, never at the end.
 - [`spec/01-vision.md`](spec/01-vision.md) — **1. Vision**: what Warlock is and the targets
 - [`spec/02-scope.md`](spec/02-scope.md) — **2. Scope of the first phase**: the engine and framework phase: everything in scope, feature by feature
 - [`spec/03-showcase-world.md`](spec/03-showcase-world.md) — **3. Showcase world**: the hub's rooms, the arena, the courtyard, the vast level, the depths, the overworld and its areas, scenarios
+- [`spec/03b-campaign.md`](spec/03b-campaign.md) — **3b. The first campaign: the Ascmearc**: the world a release plays, New run's release start, the Characters screen's campaign, the overworld, its names and locations, the wiki
 - [`spec/04-rendering.md`](spec/04-rendering.md) — **4. Rendering**: glyphs, layers, glyph animation, visual lighting, perception states, motion and time, readability and reduced effects, effects (particles, glow, post, rain, blood, spell effects)
 - [`spec/05-visibility.md`](spec/05-visibility.md) — **5. Visibility, light, and vision**: line of sight, light (sources, falloff, bounce, wall faces, special rooms), sunlight, moonlight, weather, temperature, ice, brightness, visibility, overworld sight, vision profiles, memory, hearing, creature sight, the perception API
 - [`spec/06-input-and-ui.md`](spec/06-input-and-ui.md) — **6. Input and UI**: screens and the dialog, menus, settings and rebinding, the inventory, equipment, character, skills, weapon skills, quest log, and death screens, chat, rest, eat, dig, messages, attacks, targeting, look mode

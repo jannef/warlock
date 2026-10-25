@@ -1,4 +1,5 @@
-# A campaign (spec §3, docs/dev/campaign.md; the fields are in campaigns/showcase/campaign.toml).
+# A campaign (spec §3, docs/dev/campaign.md; the fields are described in the showcase's
+# `campaign.toml`; never write that file's path here: release builds are checked for it, #331).
 #
 # The Ascmearc, "the ash march": the first world of the game (docs/design/campaign.md). Its
 # places are named in Old English, plain words for what each place is (the design's §5.8).

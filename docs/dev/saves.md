@@ -20,7 +20,8 @@ panics. Only the `web-sys` features in `crates/warlock/Cargo.toml` are enabled (
 a slug of its name and the lowest free number (`characters::fresh_id`: `brakka-1`, then
 `brakka-2`; an id is taken while any file of it is left: its save, a kept `.sav.bad`, its summary,
 its snapshot), and the files `saves/<id>.sav` (the world, `warlock_core::save`) and, beside it,
-`saves/<id>.toml` (`save::Summary`: name, race and class names, level, place, and when it was last
+`saves/<id>.toml` (`save::Summary`: name, race and class names, level, place, the campaign's name
+(`docs/dev/campaign.md`), and when it was last
 saved, wall-clock seconds since 1970, shown in UTC by `save::played_text`), so the list of saved
 characters (`SaveStore::characters`, the one played last first) reads no save. A save without a
 readable summary is listed by its id. The run in progress carries its id (`Game::save_id`, given by

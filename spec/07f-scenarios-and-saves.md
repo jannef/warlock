@@ -98,7 +98,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   clock. **One save per character**: each character's save is `saves/<id>.sav` in the platform
   data directory, its id a slug of the name and the lowest free number (`brakka-1`; a second
   Brakka is `brakka-2`), and beside it `saves/<id>.toml`, what the list of saved characters shows
-  (name, race, class, level, place, and when last played, wall-clock time, shown in UTC), so the
+  (name, race, class, level, place and its campaign's name, and when last played, wall-clock
+  time, shown in UTC), so the
   list reads no save. The run in progress knows its id, and every way of saving writes that
   character's files only: a run starting (so a new character is listed at once), quitting from the
   pause menu (closing the window saves too), autosave every 50 turns and on level change, the web

@@ -33,24 +33,8 @@ remembered map, with the moonlight on top of it. See [Sun, moon, and sky](sun.md
 
 ## The Ascmearc
 
-The Ascmearc, "the ash march", is 120 by 60 cells, several days of travel across. You come
-into it by **Beorggeat**, a pass in Grægweall, the mountain wall on its western edge. Snow
-closes the pass behind you: it is no way back, and there is nothing to explore there. The road
-runs five cells east to **Cēaptūn**, the market town, and on from there: east over the barrow
-downs of Hlāwdūn to the ford over Blæcwæter, south over the bridge on Beorhtburna and along its
-bank, and north to the edge of the holly wood. The volcano **Fyrbeorg** smokes on the south face
-of Rēcbeorgas, the range in the north-east. The names are Old English: plain words for what each
-place is.
-
-{{#include generated/overworld-places.md}}
-
-**Cēaptūn** is the first place to go: a walled market town, safe, with four shops on its
-square, the Mynster (the temple, where you may rest and Sister Hild cures and mends for gold),
-and the Gæsthūs, the inn, where Godgifu has news of the march (see [Shops](shops.md) and
-[People and talk](npcs.md)). Its stairs up lead back out to its cell. The places that lead
-"nowhere yet" are still being built: for now `>` there says so. The two
-hidden ones are where they will be once a quest tells you of them (see "Hidden locations"
-below); until then each is the land it looks like.
+The overworld you play on is the Ascmearc's, 120 by 60 cells: its places, regions, names, and
+the whole map are on [The Ascmearc](ascmearc.md).
 
 ## Locations
 

@@ -1,7 +1,8 @@
 # Campaigns
 
 Developer notes for campaigns, the seam between worlds (#325, design `docs/design/campaign.md`
-§3). The rules are in spec/03-showcase-world.md ("The showcase is a test campaign") and
+§3). The rules are in spec/03b-campaign.md (the Ascmearc, New run, the Characters screen),
+spec/03-showcase-world.md ("The showcase is a test campaign"), and
 spec/07f-scenarios-and-saves.md. Keep this current with the code, as CLAUDE.md says.
 
 ## What is a campaign's
@@ -83,8 +84,27 @@ campaign, `""` for a fixture outside every campaign. `World::campaign`, `World::
 A release build lists the start scenario of every campaign of kind `campaign` (while there is
 none, every campaign's start: the showcase's). A developer build (debug or `--dev`) lists every
 scenario of every campaign under its campaign's name, campaigns in content order, the start
-first and the rest by id; scenarios outside every campaign last, without a heading. Skipping the
-step when there is one row is #341's.
+first and the rest by id; scenarios outside every campaign last, without a heading.
+
+**One row skips the step** (#341, design §3.5): a release build lists one scenario, the
+Ascmearc's start, so `NewRunScreen::skips` (one scenario, and races and classes to create a
+character from) is true. `Screens::open_on` then opens the race step over it at once; the New
+run screen stays on the stack unseen, so `ScreenStack::draft` reads its pick (the scenario and
+the fresh seed) as before, and `ScreenStack::close` closes it too when the step above it closes,
+so Esc on the race goes back to the main menu. `--screen race` and the later steps open over it
+as usual (`open_startup_screens` skips a screen already on top); `--screen new-run` in a release
+build shows the race step. A developer build lists the test world too and shows the screen.
+Tests: `new_run_screen.rs` (`skips` in both builds), `screens.rs`
+(`a_release_new_run_is_skipped_both_ways`), and `release_content` (one row).
+
+## The Characters screen's campaign (#341, design §3.4)
+
+The save summary (`saves/<id>.toml`, `save::Summary`) keeps `campaign`, the run's campaign's
+name (`The Ascmearc`; left out when empty, `#[serde(default)]` for summaries written before).
+The Characters screen names it beside the place, `In Cēaptūn (The Ascmearc).`, only when more
+than one campaign is installed (a developer build, with the test world): a release build has
+one. The fixture summaries under `tests/golden/saved-characters/` (the `characters-screen` text
+snapshot) carry `The Showcase`.
 
 ## The test world in release builds (#331, design §4)
 
@@ -115,8 +135,8 @@ Test content never appears in a release. The cargo feature `showcase` holds it:
   `Release` workflow does the last on each platform's binary and checks the game binary holds
   no `campaigns/showcase/campaign.toml` (the key of the embedded file), and `cargo xtask web`
   checks `warlock_bg.wasm` the same way.
-- Until the Ascmearc lands (#332) a release build holds no campaign at all: New run says "No
-  scenarios are installed." Do not cut a release before it.
+- A release build holds one campaign, the Ascmearc (#332): New run goes straight to the race
+  ("New run" above). Without any campaign it would say "No scenarios are installed." 
 
 ## Cēaptūn, the Ascmearc's market town (#336, design §6)
 
@@ -162,5 +182,5 @@ A branch level's `vaults` (#339, docs/dev/mapgen.md) keeps the vaults it names t
 (`Vault::pinned`, left out of `vault::shuffled`): those may be shared or of the branch's campaign,
 never another's.
 
-Not yet (the design's later items): the save summary's and the Characters screen's campaign (#341), and
-`dev = true` scenarios.
+Not yet (the design's later items): `dev = true` scenarios (not needed while a release build lists
+only the campaigns' starts: the dev scenarios `ceaptun`, `fyrdelf`, ... are never listed there).
