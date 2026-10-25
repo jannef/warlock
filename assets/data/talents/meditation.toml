@@ -1,0 +1,8 @@
+[[talent]]
+id = "meditation"
+name = "Meditation"
+tree = "scholar"
+description = "You rest in stillness: resting brings your mana back half again as fast."
+needs = { talents = { clear_mind = 1 } }
+effects = [{ kind = "mana_resting_percent", value = 50 }]
+systems = ["mana"]
