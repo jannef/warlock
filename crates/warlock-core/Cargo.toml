@@ -22,5 +22,12 @@ toml.workspace = true
 insta.workspace = true
 proptest = "1.12"
 
+[features]
+# The test world (`assets/campaigns/showcase/`), embedded only with this feature: on for every
+# dev command, test, and benchmark; release builds and `cargo xtask web` turn it off with
+# `--no-default-features` (docs/dev/campaign.md, "The test world in release builds").
+default = ["showcase"]
+showcase = []
+
 [lints]
 workspace = true
