@@ -161,6 +161,8 @@
 #   credit { gold }               keepers let it leave owing up to that much gold (1 to 1000);
 #                                 the debt stays on their bill
 #   identify_trades               what it buys or sells in a shop is identified
+#   pilgrim                       temple services cost half (rounded up), and a cure also mends
+#                                 a point of each damaged stat
 #   item_worth, gem_worth         item descriptions show what things, and each gem in them, are
 #                                 worth
 #   identify_carried { hours }    a magic item carried that many hours (1 to 240) from when it

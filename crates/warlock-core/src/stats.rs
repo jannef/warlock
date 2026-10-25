@@ -417,6 +417,11 @@ impl StatDamage {
         }
     }
 
+    /// Every point mends at once (a temple's mending), and nothing is banked toward the next.
+    pub fn mend_all(&mut self) {
+        *self = Self::default();
+    }
+
     /// Whether it makes sense for an actor with `stats`: no score damaged to below 1, and less
     /// than a day toward mending.
     pub fn is_valid_for(&self, stats: &Stats) -> bool {

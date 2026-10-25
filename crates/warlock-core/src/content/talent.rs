@@ -339,6 +339,9 @@ pub enum TalentEffect {
     Credit { gold: u32 },
     /// What it buys or sells in a shop is identified.
     IdentifyTrades,
+    /// Temple services cost it half, and a cure also mends a point of each damaged stat
+    /// (Pilgrim; `world/service.rs`).
+    Pilgrim,
     /// What a creature it kills drops is identified as it lands (spec §8 "Creature gear").
     Scavenger,
     /// Item descriptions show what its things are worth.
@@ -1604,6 +1607,7 @@ impl TalentEffect {
             | TalentEffect::Whirlwind
             | TalentEffect::WeightlessCoins
             | TalentEffect::IdentifyTrades
+            | TalentEffect::Pilgrim
             | TalentEffect::Scavenger
             | TalentEffect::ItemWorth
             | TalentEffect::GemWorth
@@ -2006,7 +2010,7 @@ impl TalentBook {
     }
 
     /// The coverage check (spec §8 "Talents"): every system not `pending` has at least
-    /// `min_talents` talents (those of a class tree are class abilities, not talents) and
+    /// `min_talents` talents (its own `min_talents`, if it gives one) (those of a class tree are class abilities, not talents) and
     /// `min_class` class abilities (`class_abilities` counts them by system id: the talents the
     /// class tables give), and every tree not `pending`, `no_free`, nor a class tree has at least
     /// `free_per_tree` talents without prerequisites. The first gap, in words.

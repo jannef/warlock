@@ -419,6 +419,7 @@ impl World {
             let topic = |prefix: &str, name: String| TopicView {
                 id: format!("{prefix}{}", def.id),
                 name,
+                price: None,
             };
             let stage = quests.stage(def);
             if def.giver == speaker {

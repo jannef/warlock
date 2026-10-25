@@ -7,7 +7,9 @@
 //! said the first time the player chats with it, optional cold greetings (`greet_evil`, said by a
 //! good speaker to an Evil or Wicked character in place of its greeting and lines, and
 //! `greet_good`, by an evil one to a Good or Saintly character; spec §8 "Alignment"), optional `[[dialogue.topic]]`s (`id`, `name`,
-//! `reply`) asked about on the dialogue screen, and an optional `mutter`: the percent chance per
+//! `reply`) asked about on the dialogue screen, optional `[[dialogue.service]]`s (`id`, `name`,
+//! `price`, `does`, `reply`, `nothing`: a cure or a mending for gold, asked for like a topic;
+//! `world/service.rs`), and an optional `mutter`: the percent chance per
 //! action that it mutters one of the mutter's `lines` (with a `verb`, "mutters" by default) while
 //! the player is near enough to hear it.
 
@@ -50,6 +52,8 @@ struct DialogueSpec {
     lines: Vec<String>,
     #[serde(default)]
     topic: Vec<Topic>,
+    #[serde(default)]
+    service: Vec<Service>,
     mutter: Option<MutterSpec>,
 }
 
@@ -82,6 +86,45 @@ pub struct Topic {
     pub reply: String,
 }
 
+/// What a paid service does (`does`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ServiceKind {
+    /// Ends every status and disease that prayer cures (`cured_by` lists `prayer`).
+    Cure,
+    /// Mends every point of stat damage at once.
+    Mend,
+}
+
+impl ServiceKind {
+    /// Its id in the data: `cure`, `mend`.
+    pub fn id(self) -> &'static str {
+        match self {
+            Self::Cure => "cure",
+            Self::Mend => "mend",
+        }
+    }
+}
+
+/// A service sold for gold, asked for on the dialogue screen like a topic (campaign design
+/// §6.1).
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Service {
+    /// Its id in replays (`ask:E:cure`), unique among the speaker's topics.
+    pub id: String,
+    /// What the player picks: "A cure for what ails you" (the screen adds the price).
+    pub name: String,
+    /// What it costs, in the shops' currency, before talents.
+    pub price: u32,
+    /// What it does.
+    pub does: ServiceKind,
+    /// What the speaker says when it is done.
+    pub reply: String,
+    /// What the speaker says when there is nothing to do: "Nothing ails you, child."
+    pub nothing: String,
+}
+
 /// What a creature mutters to itself now and then.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Mutter {
@@ -108,6 +151,8 @@ pub struct Dialogue {
     pub lines: Vec<String>,
     /// What the player may ask about; with any, chatting opens the dialogue screen.
     pub topics: Vec<Topic>,
+    /// What the speaker sells as a service, listed after the topics.
+    pub services: Vec<Service>,
     pub mutter: Option<Mutter>,
 }
 
@@ -115,6 +160,11 @@ impl Dialogue {
     /// The topic with id `id`.
     pub fn topic(&self, id: &str) -> Option<&Topic> {
         self.topics.iter().find(|t| t.id == id)
+    }
+
+    /// The service with id `id`.
+    pub fn service(&self, id: &str) -> Option<&Service> {
+        self.services.iter().find(|s| s.id == id)
     }
 }
 
@@ -164,8 +214,8 @@ pub(super) fn parse(
             .chain(&spec.greet_evil)
             .chain(&spec.greet_good);
         check_lines(said, MAX_LINE).map_err(bad)?;
-        if spec.topic.len() > MAX_TOPICS {
-            return Err(bad(format!("at most {MAX_TOPICS} topics")));
+        if spec.topic.len() + spec.service.len() > MAX_TOPICS {
+            return Err(bad(format!("at most {MAX_TOPICS} topics and services")));
         }
         for (i, topic) in spec.topic.iter().enumerate() {
             if !is_id(&topic.id) {
@@ -180,6 +230,30 @@ pub(super) fn parse(
             check_lines([&topic.name], MAX_LINE)
                 .and_then(|()| check_lines([&topic.reply], MAX_REPLY))
                 .map_err(|m| bad(format!("topic `{}`: {m}", topic.id)))?;
+        }
+        for (i, service) in spec.service.iter().enumerate() {
+            let bad = |m: String| bad(format!("service `{}`: {m}", service.id));
+            if !is_id(&service.id) {
+                return Err(bad(
+                    "ids are lower-case letters, digits, and underscores".into()
+                ));
+            }
+            let taken = (spec.topic.iter()).any(|t| t.id == service.id)
+                || spec.service[..i].iter().any(|s| s.id == service.id);
+            if taken {
+                return Err(bad("its id is a topic's or another service's".into()));
+            }
+            if service.price == 0 {
+                return Err(bad("`price` is at least 1 gold".into()));
+            }
+            if content.shops().is_none() {
+                return Err(bad(
+                    "it is paid in the shops' currency: data/shops.toml is needed".into(),
+                ));
+            }
+            check_lines([&service.name], MAX_LINE)
+                .and_then(|()| check_lines([&service.reply, &service.nothing], MAX_REPLY))
+                .map_err(bad)?;
         }
         let mutter = match spec.mutter {
             Some(m) => {
@@ -213,6 +287,7 @@ pub(super) fn parse(
             greet_good: spec.greet_good,
             lines: spec.lines,
             topics: spec.topic,
+            services: spec.service,
             mutter,
         });
     }
