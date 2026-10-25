@@ -7,24 +7,24 @@ expression: "render(case, content.clone())"
 
 
 
+
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
                     │   a  Fire breath        you are drained                  │
                     │ Class                                                    │
-                    │ > b  Throw your voice   at a place you see               │
-                    │   c  Veteran's wind                                      │
+                    │ > b  Veteran's wind                                      │
                     │ Skills                                                   │
-                    │   d  Intimidate         not usable yet                   │
+                    │   c  Intimidate         not usable yet                   │
                     │ Weapon skills                                            │
-                    │   e  Shield bash        in a direction                   │
+                    │   d  Shield bash        in a direction                   │
                     │ Items                                                    │
-                    │   f  Hood your lantern                                   │
+                    │   e  Hood your lantern                                   │
                     │                                                          │
-                    │ Make a voice sound at a place you see nearby: those who  │
-                    │ hear it go and look there.                               │
+                    │ An old soldier's second breath (an ability): hit points  │
+                    │ back at once, then winded a quarter hour.                │
                     │                                                          │
-                    │ a-f or Enter use   Esc close                             │
+                    │ a-e or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
 
 
