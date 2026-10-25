@@ -1,0 +1,30 @@
+# The fen wave (Fennmynster, docs/design/campaign.md §10.1). A pale light that drifts over the
+# fen and leads travellers astray: it glows, makes no sound, is hard to hit, and casts (its
+# spells announced until magic is designed). Nothing of it remains when it goes out.
+[[creature]]
+id = "will_o_wisp"
+level = 7
+xp = 45
+name = "will-o'-wisp"
+plural = "will-o'-wisps"
+glyph = "y"
+fg = "#c8f0e0"
+light = "wisp"
+glow = 0.6
+faction = "marsh"
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+combat = "caster"
+range = 5
+hearing = 12
+weight = 100
+size = "small"
+stats = { strength = 3, dexterity = 20, toughness = 8, intelligence = 12, willpower = 16, presence = 14 }
+base_hp = 10
+skills = { concentration = 25, spellcraft = 30 }
+natural = { defence = 6, protection = 0, name = "flickering form" }
+attack = { damage = "1d6", damage_type = "electricity", name = "spark", verb = "shocks" }
+resist = { electricity = 100, poison = 100 }
+corpse = false
+blood = "none"
