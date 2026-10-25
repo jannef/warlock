@@ -1,0 +1,24 @@
+# Vault of the Ascmearc (docs/design/campaign.md §7.2): the drake's hoard at the bottom of Fyrdelf.
+# A hall ringed with pools of lava, where the fire drake sleeps on the gold the duergar dug and
+# the treasure of those who came for it. Fyrdelf names it for its twelfth floor (`vaults` in its
+# `[[dungeon.levels]]`), so it is stamped there and nowhere else, and the drake (unique) is met
+# only there.
+name = "Drake's hoard"
+map = '''
+#################
+#LLL....$....LLL#
+#L..$...r...$..L#
+#.......D.......+
+#L..$...m...$..L#
+#LLL....$....LLL#
+#################
+'''
+
+[legend]
+"L" = "lava"
+# The drake at rest on its hoard: it wakes to what it sees or hears.
+"D" = { terrain = "floor", creature = "fire_drake" }
+# The hoard (spec §8 "Magic items"): a rare thing and a magic one, rolled when the level is made.
+"r" = { terrain = "floor", loot = "rare" }
+"m" = { terrain = "floor", loot = "magic" }
+"$" = { terrain = "floor", objects = ["gold_coin*150"] }
