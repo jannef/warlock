@@ -4,7 +4,8 @@ Developer notes for working on this part of Warlock (moved from CLAUDE.md, #185)
 rules it implements are in spec/08b-creatures.md. Keep it current with the code, as CLAUDE.md says.
 
 NPCs, dialogue, and making way (spec §8 "Dialogue" and "Displacement", #146, #147):
-`content/dialogue.rs` loads `data/dialogue.toml` (per creature type, or per unique `npc` id a level
+`content/dialogue.rs` loads the `dialogue` table (`data/dialogue.toml`, the shopkeeper's, and each
+campaign's `data/dialogue/`: the showcase's hermit, gardener, and bard) (per creature type, or per unique `npc` id a level
 legend entry gives a creature, `Actor::npc`; `Content::dialogue_of` prefers the npc's): rotating
 `lines`, `greet`, `greet_evil`/`greet_good` (cold lines for a character the speaker scorns for
 their alignment, said in turn instead of the greeting and lines: `World::cold_greeting`,

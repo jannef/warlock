@@ -3,7 +3,8 @@
 Developer notes for working on this part of Warlock (moved from CLAUDE.md, #185); the
 rules it implements are in spec/08b-creatures.md. Keep it current with the code, as CLAUDE.md says.
 
-Quests (spec §8 "Quests", #148): `content/quest.rs` loads `data/quests.toml` after levels and
+Quests (spec §8 "Quests", #148): `content/quest.rs` loads the `quests` table (`data/quests.toml`, the field reference, and each
+campaign's `data/quests/`; the showcase's four in `campaigns/showcase/data/quests/showcase.toml`) after levels and
 dungeons (`QuestDef`: `giver` a `DialogueId`, `Goal::{Kill, Bring, Reach, Deliver}`, `Reward`,
 `QuestTexts`, `requires`, `requires_alignment`, `alignment`, `repeatable`; validation including everyone's topic budget of nine;
 `Content::speaker_name` names a giver without an actor). `world/quest.rs` is the rules: quest

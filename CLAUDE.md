@@ -25,7 +25,7 @@ Update them together whenever behavior, commands, or architecture change.
 | Screenshot smoke test | `cargo xtask smoke` (writes `target/xtask/smoke.png`) |
 | Web build | `cargo xtask web` (writes `target/web/`; see "Releases, web build, logs") |
 | Web smoke test | `cargo xtask web-smoke <chrome>` (serves `target/web`, drives headless Chromium through menu → New run → race, the stars, gender, class (preselected) → talents (Random) → name (empty: a random one) → summary → hub, checks the new character's save `warlock/saves/<id>.sav`, waits five turns, reloads, Continue, and checks the run resumed at turn 5; writes `target/xtask/web-smoke.png`; fails on logged errors; not run in CI) |
-| Regenerate the vast level | `cargo xtask gen-vast` (writes `assets/levels/vast.toml`; deterministic, never hand-edit) |
+| Regenerate the vast level | `cargo xtask gen-vast` (writes `assets/campaigns/showcase/levels/vast.toml`; deterministic, never hand-edit) |
 | Check the vast level is fresh | `cargo xtask gen-vast --check` (fails if the file differs from the generator output; run it after touching `xtask/src/vast.rs`) |
 | Third-party notices | `cargo xtask licenses` (regenerates `THIRD_PARTY_LICENSES.html` with `cargo-about`, config `about.toml`/`about.hbs`; install: `cargo install cargo-about --locked --features cli`); `--check` fails when it is stale (CI runs it). **Run it after changing dependencies** (`Cargo.toml`/`Cargo.lock`); keep `about.toml`'s `accepted` list in sync with `deny.toml`'s `allow` |
 | Player wiki tables | `cargo xtask wiki` (writes `wiki/src/generated/*.md` from the game data; not committed: CI and the release workflow run it before `mdbook build wiki`), `--build` (also runs `mdbook build wiki` into `wiki/book/`; needs `cargo install mdbook --locked`) |
@@ -100,7 +100,7 @@ Headless dev loop (`warlock-cli`, no window; `--content-dir` works here too):
 | Dump a replay's end state | `... dump --replay runs/x.json [--actions "wait"] --format ascii\|json [--state]` |
 | Create a replay | `... replay --create --scenario showcase --actions "move:N wait" -o runs/x.json` |
 | Verify a replay | `... replay --verify runs/x.json` (exit 1 and first diverging step on mismatch) |
-| Preview a generated level | `... gen --level depths:3 --seed warlock` (ground truth; `*` = light placed on floor, `&` = locked door, `S` = secret door; `^` = a trap, hidden ones too; a special room's floor by its effect's letter; also local areas, `--level local:49,23`) |
+| Preview a generated level | `... gen --level depths:3 --seed warlock` (ground truth; `*` = light placed on floor, `&` = locked door, `S` = secret door; `^` = a trap, hidden ones too; a special room's floor by its effect's letter; also local areas of a campaign's overworld, `--level local:49,23`, `--campaign showcase` the default) |
 
 Dump layers beyond the map ones: `inventory`, `equipment`, `stats`, `skills` (the player's
 trained skills, `Stealth 17`), `abilities` (the abilities menu's list), and `quests` (the quest
@@ -132,8 +132,8 @@ player for secret doors and hidden traps, `search:N` for up to N turns (1 to 100
 something is found; `second_wind` uses the Second wind talent (hit points back at once, then Winded); `blood_magic` the Blood magic talent (hit points for mana, never the last); `use:rage` uses a class ability (spec §8 "Class abilities"; `use:smite:E` one aimed in a direction: rage, veterans_wind, whirlwind, lay_on_hands, smite, holy_radiance, quivering_palm, master_thief, inspire; `use:volley:12,5` one aimed at a cell; a birth sign's active the same way, `use:horns_grace`, `use:blaze`, `use:hounds_bay`, or aimed at a cell, `use:transfixing_stare:12,5`, `use:fire_breath:12,5`; a caster's spell too, paid in mana, `use:blessing`, or aimed at a cell, `use:arcane_bolt:12,5`: blessing, cure_wounds, remove_disease, call_lightning, flame, frost, arcane_bolt, fire_burst, evil_eye, hex_of_weakness, curse_of_sloth, blight); `disarm:E` tries to disarm the trap the player knows of east of them (the
 Disarm ability, for those trained in Disable device; refused, with no time, without the skill
 or a known trap there); `chat:E` talks to the creature east of
-the player, `ask:E:rooms` asks it about topic `rooms` (an id in `assets/data/dialogue.toml`;
-quest topics are `quest-ID`, `accept-ID`, `decline-ID`, ids in `assets/data/quests.toml`);
+the player, `ask:E:rooms` asks it about topic `rooms` (an id in a campaign's `data/dialogue/`;
+quest topics are `quest-ID`, `accept-ID`, `decline-ID`, ids in a campaign's `data/quests/`);
 `hood` lowers or raises the lantern's hood (lighting it hooded when it is out), `throw_voice:X,Y`
 throws the player's voice to level cell (X, Y) (one they see, within 6; the bard's, refused without the ability);
 `talent:hardy` takes a talent (an id in `assets/data/talents/`; `talent:weapon_focus:long_blades`
@@ -256,7 +256,7 @@ crates/warlock-core   plain Rust, no Bevy, deterministic simulation
 crates/warlock-cli    headless dev tool on top of core (no Bevy)
 crates/warlock        Bevy app: rendering, input, UI, effects, platform
 xtask                 screenshot capture, golden-image comparison, vast level generator, benchmarks
-assets                fonts, data definitions, levels, scenarios, vaults
+assets                fonts, data definitions, vaults, campaigns (each a world: levels, scenarios, ...)
 ```
 
 Each subsystem has a topic file under `docs/dev/` with its modules, data, invariants, and
@@ -265,6 +265,7 @@ tests. **Read the ones your task touches before changing code, and update them w
 file). Topics:
 
 - `docs/dev/content.md` — TOML content embedded by `build.rs`, level files and legends (faction overrides, arrival lines, water flow)
+- `docs/dev/campaign.md` — campaigns: `assets/campaigns/<id>/`, `campaign.toml`, what is a campaign's and what is shared, the cross-campaign checks, a run's campaign, the fingerprint per campaign, New run's order
 - `docs/dev/saves.md` — storage backends (native files, browser `localStorage`), one save per character and the list of them, autosave, permadeath, where files live (`paths.rs`, portable mode)
 - `docs/dev/settings.md` — `settings.toml`, effect switches, clock, palettes, rebindable key commands (`settings/keys.rs`), the `Game` resource
 - `docs/dev/screens.md` — the screen stack (open, input, draw, the dialog, info pages, the text field), prompts as input modes, the screen modules, key commands and the abilities menu

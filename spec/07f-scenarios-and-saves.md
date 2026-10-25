@@ -4,7 +4,7 @@ Part of the specification, the source of truth for what to build; the index is
 [`specification.md`](../specification.md). Update it together with the code and the
 developer notes (CLAUDE.md, `docs/dev/`).
 
-- **Scenarios** (`assets/scenarios/*.toml`): level set, start position, lantern, options, when the
+- **Scenarios** (`assets/campaigns/<id>/scenarios/*.toml`, each of its campaign, §3): level set, start position, lantern, options, when the
   run starts: `start_date = [year, month, day]` (all from 1; default `[1444, 11, 11]`, 11 Darkening,
   Year 1444) and `start_time = "hh:mm"` (default `"08:00"`), and the player's character when the run
   does not choose one: `character = { race = "human", gender = "female", class = "thief" }` (ids in
