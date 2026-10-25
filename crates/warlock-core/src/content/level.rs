@@ -9,7 +9,9 @@
 //! and `lock_difficulty = N`, how hard it is to pick (default 14); spec §8 "Doors", traps: `trap = "fireball"`, hidden unless `known = true`, a bolt trap's
 //! direction with `dir`; spec §8 "Traps", and secret doors: `secret = true` or `secret = N` (a
 //! difficulty) on a closed door, which looks like the wall around it until it is found; spec §8
-//! "Searching"). Characters not in the level's legend fall back to the shared default legend
+//! "Searching", and on the overworld hidden locations: `hidden = { id, terrain, to, name }` on a
+//! plain cell, which shows that cell until a quest reveals it; spec §7 "Hidden locations").
+//! Characters not in the level's legend fall back to the shared default legend
 //! (`assets/data/legend.toml`, which has arrows for running water). Objects
 //! may also be placed without a legend character: `[[pile]]` tables with `at = [x, y]` and
 //! `objects`. Objects are written as ids with an optional count, top of the pile first:
@@ -283,6 +285,21 @@ pub(super) struct LegendDetail {
     /// The closed door on this cell is secret (spec §8 "Searching"): `true` (the default
     /// difficulty) or its difficulty. It looks like the wall around it until it is found.
     secret: Option<SecretSpec>,
+    /// A location hidden on this overworld cell until a quest reveals it (spec §7 "Hidden
+    /// locations"): `hidden = { id, terrain, to, name }`. Until then the cell is the plain
+    /// terrain it shows, in every way.
+    hidden: Option<HiddenSpec>,
+}
+
+/// A legend entry's hidden location: the location's `id` (what quests' `reveals` name), the
+/// `terrain` the cell becomes (stairs down), the level `to` it leads, and its `name`.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(super) struct HiddenSpec {
+    id: String,
+    terrain: String,
+    to: String,
+    name: String,
 }
 
 /// One object id or a list of them.
@@ -354,6 +371,24 @@ pub struct StairsLink {
     pub dir: StairsDir,
     /// Target level id; `None` for stairs that lead nowhere yet.
     pub to: Option<String>,
+    /// What the place it leads to is called, when not its level's name: a revealed hidden
+    /// location's `name` (spec §7 "Hidden locations").
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+}
+
+/// A location hidden on an overworld cell until a quest reveals it (spec §7 "Hidden
+/// locations"): until then the cell is the plain terrain it shows. Ground truth.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct HiddenLocation {
+    /// The location's id: what a quest's `reveals` names.
+    pub id: String,
+    /// The terrain the cell becomes when revealed: an entrance, stairs down.
+    pub terrain: TerrainId,
+    /// The level it leads to.
+    pub to: String,
+    /// What it is called once known.
+    pub name: String,
 }
 
 /// A parsed, validated level ready to instantiate: from a level file, or generated (see
@@ -384,6 +419,9 @@ pub struct LevelTemplate {
     /// Secret doors, by position (spec §8 "Searching"): the terrain there is the wall each
     /// looks like until it is found.
     pub secrets: BTreeMap<Pos, Secret>,
+    /// Hidden locations, by position (spec §7 "Hidden locations"; the overworld only): the
+    /// terrain there is the plain terrain each shows until a quest reveals it.
+    pub hidden: BTreeMap<Pos, HiddenLocation>,
     /// Named areas, first match wins.
     pub regions: Vec<Region>,
     /// Special rooms (spec §7 "Special rooms"), none overlapping another.
@@ -482,6 +520,7 @@ pub(super) fn parse_level(
     let mut loot = Vec::new();
     let mut locks = BTreeMap::new();
     let mut secret_doors: Vec<(Pos, TerrainId, u8)> = Vec::new();
+    let mut hidden = BTreeMap::new();
 
     for (y, row) in rows.iter().enumerate() {
         for x in 0..width as usize {
@@ -511,6 +550,7 @@ pub(super) fn parse_level(
                     pos,
                     dir,
                     to: detail.and_then(|d| d.to.clone()),
+                    name: None,
                 });
             } else if detail.is_some_and(|d| d.to.is_some()) {
                 return Err(err(format!(
@@ -519,6 +559,20 @@ pub(super) fn parse_level(
                 )));
             }
             let Some(detail) = detail else { continue };
+            if let Some(spec) = &detail.hidden {
+                let location = parse_hidden(spec, parsed.kind, terrain, content)
+                    .map_err(|m| err(format!("legend `{ch}`: {m}")))?;
+                if hidden
+                    .values()
+                    .any(|h: &HiddenLocation| h.id == location.id)
+                {
+                    return Err(err(format!(
+                        "legend `{ch}`: hidden location `{}` is placed twice",
+                        location.id
+                    )));
+                }
+                hidden.insert(pos, location);
+            }
             if let Some(lock) =
                 parse_lock(detail).map_err(|m| err(format!("legend `{ch}`: {m}")))?
             {
@@ -757,6 +811,7 @@ pub(super) fn parse_level(
         traps,
         locks,
         secrets,
+        hidden,
         regions,
         rooms,
         shops,
@@ -782,6 +837,51 @@ pub(super) fn parse_level(
         }
     }
     Ok(template)
+}
+
+/// A legend entry's hidden location on a cell of `terrain` (spec §7 "Hidden locations"): only
+/// on the overworld, on a walkable cell that is no location already, becoming stairs down. Where
+/// it leads is checked with the other stairs' targets.
+fn parse_hidden(
+    spec: &HiddenSpec,
+    kind: LevelKind,
+    terrain: TerrainId,
+    content: &Content,
+) -> Result<HiddenLocation, String> {
+    let id = &spec.id;
+    if kind != LevelKind::Overworld {
+        return Err("only the overworld has hidden locations".into());
+    }
+    if !super::dialogue::is_id(id) {
+        return Err(format!(
+            "hidden location `{id}`: ids are lower-case letters, digits, and underscores"
+        ));
+    }
+    let shown = content.terrain(terrain);
+    if !shown.walkable || shown.stairs.is_some() {
+        return Err(format!(
+            "hidden location `{id}` lies on terrain `{}`: only on walkable terrain that is no \
+             location already",
+            shown.id
+        ));
+    }
+    let entrance = (content.terrain_id(&spec.terrain))
+        .ok_or_else(|| format!("hidden location `{id}`: unknown terrain `{}`", spec.terrain))?;
+    if content.terrain(entrance).stairs != Some(StairsDir::Down) {
+        return Err(format!(
+            "hidden location `{id}`: terrain `{}` is no way down",
+            spec.terrain
+        ));
+    }
+    if spec.name.trim().is_empty() {
+        return Err(format!("hidden location `{id}` has no name"));
+    }
+    Ok(HiddenLocation {
+        id: id.clone(),
+        terrain: entrance,
+        to: spec.to.clone(),
+        name: spec.name.clone(),
+    })
 }
 
 /// A level file's shops (spec §7 "Shops"): each of a kind `data/shops.toml` has, over an area

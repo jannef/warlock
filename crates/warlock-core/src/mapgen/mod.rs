@@ -395,12 +395,14 @@ pub fn generate_with(
             pos: up,
             dir: StairsDir::Up,
             to: up_to.clone(),
+            name: None,
         }];
         if let Some(pos) = down {
             stairs.push(StairsLink {
                 pos,
                 dir: StairsDir::Down,
                 to: down_to.clone(),
+                name: None,
             });
         }
         let item_level = content.item_level(id);
@@ -420,6 +422,7 @@ pub fn generate_with(
             traps: canvas.traps,
             locks: canvas.locks,
             secrets: canvas.secrets,
+            hidden: BTreeMap::new(),
             regions: Vec::new(),
             rooms: canvas.rooms,
             shops: canvas.shops,

@@ -189,6 +189,7 @@ pub(super) fn generate(
             traps: Default::default(),
             locks: land.locks,
             secrets: Default::default(),
+            hidden: Default::default(),
             regions: Vec::new(),
             rooms: Vec::new(),
             shops: Vec::new(),

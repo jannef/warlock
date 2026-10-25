@@ -36,6 +36,17 @@ Some cells are **locations**: ways into other levels such as a hall, a cave, or 
 onto one tells you where it leads, and `>` enters it. You arrive on the stairs that lead back, and
 `<` there takes you out to the overworld at the location.
 
+### Hidden locations
+
+Some locations are **hidden**: until someone tells you where one is, its cell is just the land
+it looks like, a stretch of swamp or forest, in every way. Walking onto it is a journey through
+that land, and `>` explores it like any other cell. Searching does not find one: **only a
+quest reveals it**. A quest that does, as it is offered, as you take it up, or as you hand it in,
+has its giver mark the place on your map ("… marks the old barrow on your map."):
+from then on the overworld shows the way in at that cell, wherever you were when you heard of
+it, and it leads in like any other location. The quest log may say in words where the place
+lies. Hearing of it a second time changes nothing.
+
 ## Local areas
 
 On any other cell whose terrain has a local area (the "Local area" column above), press `>` to

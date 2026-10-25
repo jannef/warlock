@@ -106,7 +106,8 @@ pub use item_class::{ItemClassDef, ItemClassId, MAX_ITEM_CLASSES};
 pub use kit::{Keep, Kit, KitItem};
 pub(crate) use level::validate_route;
 pub use level::{
-    CreatureSpawn, EdgeExit, LevelKind, LevelTemplate, Region, StairsLink, parse_route,
+    CreatureSpawn, EdgeExit, HiddenLocation, LevelKind, LevelTemplate, Region, StairsLink,
+    parse_route,
 };
 pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, MAX_LIGHT_RADIUS, Stability};
 pub use material::{ANY, Found, MAX_MATERIAL_VALUE, MaterialDef, MaterialId, VERY_RARE};
@@ -119,7 +120,7 @@ pub use part::{MAX_OBJECT_PARTS, MAX_PARTS, Part, PartDef, PartId, PartRole};
 pub use particles::{ParticleEmitter, ParticleTrigger};
 pub use quest::{
     DEFAULT_DECLINE, GOLD, Goal, MAX_COUNT, MAX_NAME, MAX_QUEST_XP, QuestDef, QuestId, QuestKind,
-    QuestTexts, Reward,
+    QuestTexts, Reveal, RevealWhen, Reward,
 };
 pub use race::{HUNGER, LightBlind, RaceDef, Races};
 pub use resource::{Build, MAX_EVERY, MAX_RESOURCE, MAX_SHORT, OverTime, ResourceDef, ResourceId};
@@ -1731,7 +1732,7 @@ impl Content {
         .transpose()
     }
 
-    /// Cross-file checks: at most one overworld, stair targets, and each scenario's start level,
+    /// Cross-file checks: at most one overworld, stair and hidden location targets, and each scenario's start level,
     /// vision profile, lantern, and character's race and class exist. Levels of dungeon branches (`depths:3`) and local areas
     /// of the overworld (`local:12,30`) count as existing.
     fn validate(&self) -> Result<(), ContentError> {
@@ -1753,6 +1754,17 @@ impl Content {
                     return Err(ContentError::new(
                         &format!("levels/{}.toml", level.id),
                         format!("stairs at {} lead to unknown level `{to}`", link.pos),
+                    ));
+                }
+            }
+            for (pos, hidden) in &level.hidden {
+                if !self.has_level(&hidden.to) {
+                    return Err(ContentError::new(
+                        &format!("levels/{}.toml", level.id),
+                        format!(
+                            "hidden location `{}` at {pos} leads to unknown level `{}`",
+                            hidden.id, hidden.to
+                        ),
                     ));
                 }
             }

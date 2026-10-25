@@ -88,6 +88,7 @@ impl World {
             | Action::Drain(_)
             | Action::Resource(_)
             | Action::Infect(_)
+            | Action::Reveal(_)
             | Action::Talent { .. }
             | Action::Advance(_)
             | Action::LevelUpAuto

@@ -8,7 +8,7 @@
 //! level, it then persists with the run. What the area looks like follows the [`Landscape`] of
 //! its cell and of the cells around it (a river or a lake beside it, a road through it).
 
-use super::{Content, LevelKind, LevelTemplate, TerrainId};
+use super::{Content, HiddenLocation, LevelKind, LevelTemplate, TerrainId};
 use crate::geom::{Dir, Pos};
 use serde::Deserialize;
 
@@ -93,6 +93,14 @@ impl Content {
         self.levels
             .values()
             .find(|l| l.kind == LevelKind::Overworld)
+    }
+
+    /// The overworld's hidden location `id` and its cell (spec §7 "Hidden locations"), if the
+    /// overworld has one by that id.
+    pub fn hidden_location(&self, id: &str) -> Option<(Pos, &HiddenLocation)> {
+        (self.overworld()?.hidden.iter())
+            .find(|(_, h)| h.id == id)
+            .map(|(p, h)| (*p, h))
     }
 
     /// The local area with level id `id` (`local:x,y`), if the overworld has an explorable cell

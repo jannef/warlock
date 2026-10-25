@@ -85,6 +85,25 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   on anything but an unlocked closed door, or one with no wall beside it, is a content error.
   Indoor vaults place secret doors the same way and generators stamp them with the vault (a key
   must not lie behind one); outdoor vaults have none.
+- **Hidden locations** (#327, the campaign design §8): a legend entry on the overworld may hide a
+  location on its cell, `"2" = { terrain = "swamp", hidden = { id = "fennmynster", terrain =
+  "dungeon_entrance", to = "fennmynster:1", name = "Fennmynster" } }`. Until a quest reveals it
+  (§8 "Quests", `reveals`) the cell is the plain terrain it shows in every way: a swamp cell, its
+  travel time, its local area, no stairs link; the view, memory, look mode, and every
+  perception-built dump show the swamp, as a secret door is the wall it looks like. Revealed
+  (`World::reveal_location`, `world/reveal.rs`), the cell becomes `terrain` (stairs down) leading
+  `to`, the location goes by `name` (look mode, "The way into Fennmynster is here.", "You enter
+  Fennmynster."), and it is **marked on the player's map** (their memory of the overworld holds
+  the entrance) wherever they are; revealed before the overworld is made, it is applied as it is
+  made. The id (lower-case letters, digits, and underscores) is unique on the overworld; a hidden
+  location on any other level, on a cell that is not walkable or is a location already, with an
+  unknown `terrain` or one that is no way down, an unknown `to`, or no `name` is a content error.
+  State: `LevelState::hidden` (ground truth: the unrevealed ones, by cell) and
+  `WorldState::revealed` (the ids revealed so far), both saved and hashed and left out while
+  empty; a save naming a location the content does not have is refused. Only the reveal and the
+  dev views read `hidden`: the `truth` layer and F2 draw a hidden entrance by its glyph. Quests
+  are the only key: there is no search for one on the overworld. The dev action `reveal:ID`
+  reveals one at once (no time).
 - **Traps in level files** (M18; §8 "Traps"): a legend entry places a trap with `trap = "id"` (an
   id in `data/traps.toml`), hidden unless `known = true`, and for a bolt trap optionally the way
   its bolt runs, `dir = "E"` (default: along the longest clear line from it). Traps lie only on
