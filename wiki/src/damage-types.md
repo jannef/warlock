@@ -43,6 +43,10 @@ as gear does, under the same cap, and a ward against poison shrinks each dose of
 **Crusher** lets your blows and kicks that can strike (a mace, a club, a staff, bare hands, a
 shield bash) ignore 2 points of the target's Protection; shots and throws are not blows.
 
+Three [birth-sign gifts](horoscope.md) resist too, 25 % each, counted as gear under the same cap:
+the Wyvern's **Flame-hardened** and the Fire element's **Kindled** resist fire (a Fire Wyvern has
+both, 50 %), and the Kraken's **Of the deep** resists cold.
+
 The [character screen](character.md) (`@`) says what you resist in words only: "Resistant to
 cold", "Vulnerable to fire", "Immune to poison". Item descriptions show the numbers of what you
 hold ("Resists cold 20%", "+15% cold resistance", "Protection 3 (+1 against slashing, −1 against
