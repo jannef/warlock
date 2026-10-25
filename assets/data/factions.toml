@@ -24,6 +24,19 @@ id = "kobolds"
 name = "kobolds"
 hostile = ["player", "vermin"]
 
+# The goblin tribes of the barrows (Cealdhlāw): they raid the kobolds' warrens and eat the vermin.
+[[faction]]
+id = "goblins"
+name = "goblins"
+hostile = ["player", "vermin", "kobolds"]
+
+# The restless dead of the barrows: skeletons, zombies, ghouls, wights. They hate the living,
+# the player, the kobolds, and the goblins alike.
+[[faction]]
+id = "undead"
+name = "undead"
+hostile = ["player", "kobolds", "goblins"]
+
 # Folk who mean the player no harm, whatever they are: the showcase's people (the gardener, the
 # bard, the hermit) by type, and others placed here by levels with `faction = "peaceful"` in a
 # legend entry (the showcase hub and caverns), overriding the faction of the creature's type.

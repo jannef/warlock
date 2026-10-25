@@ -1,0 +1,27 @@
+# The barrow wave (Cealdhlāw, docs/design/campaign.md §10.1). The bones of the barrows' dead,
+# risen: arrows and spear points slip between its ribs, but a mace shatters it. Bloodless, and it
+# leaves no corpse. Some still hold the sword or spear they were buried with.
+[[creature]]
+id = "skeleton"
+level = 3
+xp = 25
+name = "skeleton"
+glyph = "z"
+fg = "#e8e4d0"
+faction = "undead"
+alignment = "evil"
+vision = "darkvision"
+sight = 10
+footsteps = 60
+hearing = 10
+weight = 12000
+stats = { strength = 12, dexterity = 11, toughness = 12, intelligence = 3, willpower = 20, presence = 2 }
+base_hp = 4
+attack = { damage = "1d4", damage_type = "slashing", name = "claw", verb = "claws" }
+resist = { piercing = 50, bludgeoning = -50, poison = 100 }
+weapon_skills = { short_blades = 1, spears = 1 }
+corpse = false
+blood = "none"
+[[creature.gear]]
+chance = 30
+one_of = ["short_sword", "spear"]
