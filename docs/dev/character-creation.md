@@ -199,6 +199,12 @@ Its look is `blaze` in `data/effects.toml`. Tests: `world/element_gift_tests.rs`
 the burst and its cooldown, refusals, the dump row and action text, Kindled, Forge-born, Tidal,
 a replay and a save), the `abilities-menu-blaze` text snapshot.
 
+The damage-type forms (#271): Flame-hardened (#266), Kindled, and Of the deep each carry a
+`resist` effect of 25 % (fire, fire, cold) beside their other effects, tagged `damage_types`;
+they sum in `Actor::resistances` with gear and Elemental ward under `Resistances::sum`'s cap
+(a Fire Wyvern resists fire 50 %). The design's burst halving never landed: damage types were
+in first. Test: `world/gifts_tests.rs::the_damage_type_forms_resist_fire_and_cold`.
+
 Shown: the reveal (`ui/sign_screen.rs`, `--screen sign`, after the race), the summary's Sign row,
 the character screen's dimmed Stars line (gift names, two lines at most) and the title after the
 name (character and death screens), the `stats` dump's `Sign Wood Salamander, the Racer`, the
