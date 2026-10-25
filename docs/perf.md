@@ -58,13 +58,27 @@ Full population (#326, 2026-10-25, same machine under load from other builds, lo
 4 to 6): the `delf` row is a generated 120×60 cave floor of a fixture branch of danger 8 laid
 down at its full population (80 creatures, the ceiling of the campaign design's §9.3), the
 player with hit points enough to walk among them. Its turns take 0.59 ms on average and 1.36 ms
-at most (budget 16 ms, the vast level's), so the ceiling of 80 stays. A night's rest there takes
+at most (budget 16 ms, the vast level's), so the ceiling of 80 stays. A night's rest there took
 about 7.7 s for 7200 six-second turns (the hub's and the vast level's took 0.53 s and 0.59 s in
-the same run): with 80 creatures some are always within the view range, so every turn is
-perceived, and all 80 act every turn (about 1 ms a turn, as the walk's). The row shows the rest but does not hold
-it to the 500 ms budget (`REST_UNJUDGED` in `xtask/src/bench.rs`); making a night's rest on a
-full floor fast is an open question for the owner (letting far creatures that are not hunting
-skip turns while the player rests would be the obvious lever).
+the same run): with 80 creatures some are always within the view range, so every turn was
+perceived, and all 80 acted every turn (about 1 ms a turn, as the walk's).
+
+Coarse turns while resting (#349, 2026-10-25, same machine, load average 6 to 7): far creatures
+take their turns in strides of up to 20 steps while the player rests (spec §8 "Coarse turns
+while resting", `world/stride.rs`), busy ones far away at 20 times the price, and a rest's turn
+past the out-of-view stretch is looked at by the rules of sight for the watched creatures' cells
+alone instead of a whole perception when nothing but movement happened. With them, and with
+three changes that make every turn cheaper (`Actor::talent_mods` borrows a shared empty
+`TalentMods` for an actor without talents instead of building one, a creature with nothing to
+live through skips working out its healing paces in `World::live`, and a step away from beside
+creatures checks adjacency before free-blow talents), the `delf` row's rest is judged again:
+210 ms for 4962 turns (eight rests, each but the first cut short by a cave beetle wandering into
+view; about 300 ms a night at that pace), against 7.7 s. The same run's other rests: hub 88 ms,
+vast 60 ms, depths 52 ms, courtyard 94 ms, overworld 41 ms, forest 48 ms, the moonlit courtyard
+and forest 92 ms and 46 ms, the arena fight 64 ms. Counted in instructions (`/usr/bin/time -l`,
+which load does not skew), the `delf` rest went from about 123 billion to about 5 billion; a
+profile of what is left shows ordinary creature turns near the player, `World::live` for every
+actor at every moment the clock stops, and the rest's sight checks, in about equal parts.
 
 Frame time is nearly identical across levels and resolutions, which means the loop is CPU or
 submission bound on this machine; the offscreen run at the default 60 Hz pacing is bounded by the

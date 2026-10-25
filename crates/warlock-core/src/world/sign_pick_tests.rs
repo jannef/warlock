@@ -90,7 +90,7 @@ fn severity(w: &World, who: ActorId, id: &str) -> u16 {
 }
 
 fn mods(w: &World) -> crate::talent::TalentMods {
-    w.state.player().talent_mods(w.content())
+    w.state.player().talent_mods(w.content()).into_owned()
 }
 
 fn own(w: &World, active: SignActive) -> Option<Option<Unavailable>> {

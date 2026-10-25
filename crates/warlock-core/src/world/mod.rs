@@ -145,6 +145,7 @@ mod stars;
 mod stat_training;
 mod status;
 mod steal;
+mod stride;
 mod talent;
 mod talk;
 mod train;
@@ -417,6 +418,9 @@ pub struct World {
     /// Creatures that came to the player's level since this world was created or loaded (not
     /// saved): a rest perceives every turn in which one came (`spawn.rs`).
     spawned: u64,
+    /// Terrain changes made on any level since this world was created or loaded (not saved;
+    /// [`World::set_terrain`]): a rest keeps the player's line of sight while it is unchanged.
+    reshaped: u64,
     /// Hidden features the player found since this world was created or loaded (not saved):
     /// searching for a while stops when one is found (`search.rs`).
     found: u64,
@@ -794,6 +798,7 @@ impl World {
             held: None,
             sprung: 0,
             spawned: 0,
+            reshaped: 0,
             found: 0,
             mutters: Vec::new(),
             resting: false,
@@ -1281,6 +1286,8 @@ mod stats_tests;
 mod status_tests;
 #[cfg(test)]
 mod steal_tests;
+#[cfg(test)]
+mod stride_tests;
 #[cfg(test)]
 mod style_tests;
 #[cfg(test)]

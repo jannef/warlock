@@ -31,7 +31,7 @@ impl World {
     pub(super) fn blaze(&mut self, events: &mut Vec<Event>) -> Spent {
         let content = self.content.clone();
         let player = self.state.player;
-        let mods = self.state.player().talent_mods(&content);
+        let mods = self.state.player().talent_mods(&content).into_owned();
         let Some(mut blaze) = mods.blaze else {
             return Spent::Nothing;
         };

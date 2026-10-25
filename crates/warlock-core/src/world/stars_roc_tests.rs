@@ -41,7 +41,7 @@ fn unborn() -> World {
 }
 
 fn mods(w: &World) -> crate::talent::TalentMods {
-    w.state.player().talent_mods(w.content())
+    w.state.player().talent_mods(w.content()).into_owned()
 }
 
 fn said(w: &World) -> Vec<String> {

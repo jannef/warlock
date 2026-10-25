@@ -307,11 +307,44 @@ impl World {
         }
     }
 
+    /// Whether `seconds` of game time from `start` change nothing for creature `id` (not the
+    /// player): at full hit points and mana, with no effects, diseases, stat damage, resources,
+    /// hunger, birthday, or food in its pack to rot. Then [`World::live`] only empties its
+    /// healing banks, as it would, without working out its paces (a full floor's creatures
+    /// live through every moment of a rest).
+    fn untouched_by(&mut self, id: ActorId, start: GameTime, seconds: u64) -> bool {
+        let content = &self.content;
+        let Some(actor) = self.state.actors.get(&id) else {
+            return false;
+        };
+        let quiet = id != self.state.player
+            && actor.hp > 0
+            && actor.effects.is_empty()
+            && actor.diseases.is_empty()
+            && actor.damage.is_none()
+            && actor.resources.is_empty()
+            && actor.satiation.is_none()
+            && rot::until_rots(&actor.inventory, content, start).is_none()
+            && self
+                .until_birthday_turns(id, start)
+                .is_none_or(|b| b >= seconds)
+            && actor.is_whole(content);
+        if quiet && let Some(actor) = self.state.actors.get_mut(&id) {
+            actor.regen = 0;
+            actor.mana_regen = 0;
+        }
+        quiet
+    }
+
     /// `seconds` of game time from `start` pass for actor `id`: its effects tick and ease, it
     /// heals and gets mana back, (the player) hungers, its stat damage mends, its diseases take their turns, and
     /// the food in its pack rots away, each at the moment it happens, until the time is up or it
     /// dies.
     fn live(&mut self, id: ActorId, start: GameTime, seconds: u64, events: &mut Vec<Event>) {
+        // Nothing to live through (and nothing in its pack that rots).
+        if self.untouched_by(id, start, seconds) {
+            return;
+        }
         let content = self.content.clone();
         // What rotted away while it was frozen (on another level, or over a dev skip) goes first.
         self.rot_pack(id, start);

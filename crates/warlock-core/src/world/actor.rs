@@ -26,7 +26,9 @@ use crate::status::Effects;
 use crate::talent::{TalentMods, Talents};
 use crate::weapon_skills::WeaponSkills;
 use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
 use std::fmt;
+use std::sync::LazyLock;
 
 /// Stable actor identity. Ids are never reused within a run; actors ready at the same moment act
 /// in ascending id order, after the player.
@@ -279,9 +281,15 @@ impl Actor {
     }
 
     /// What its talents do to it (spec §8 "Talents"; [`Talents::mods`]), the one aggregation
-    /// the rules read, beside [`Actor::mods`].
-    pub fn talent_mods(&self, content: &Content) -> TalentMods {
-        self.talents.mods(content)
+    /// the rules read, beside [`Actor::mods`]. Without talents (most creatures), nothing, and
+    /// nothing to sum or copy: the rules read it many times a turn.
+    pub fn talent_mods(&self, content: &Content) -> Cow<'static, TalentMods> {
+        static NONE: LazyLock<TalentMods> = LazyLock::new(TalentMods::default);
+        if self.talents.is_empty() {
+            Cow::Borrowed(&NONE)
+        } else {
+            Cow::Owned(self.talents.mods(content))
+        }
     }
 
     /// Its speed (spec §8 "Speed"): its creature type's, scaled by its talents' (a birth sign's
@@ -359,7 +367,7 @@ impl Actor {
         let talents = match self.talents.is_empty() {
             true => Vec::new(),
             false => {
-                let mods = self.talent_mods(content);
+                let mods = self.talent_mods(content).into_owned();
                 let mut skills = mods.skills;
                 // Jack of all trades: every trained skill counts higher.
                 if mods.trained_skills != 0 {
@@ -414,6 +422,20 @@ impl Actor {
             content,
             combat::max_hp(toughness, self.hp_base + mods.get(ItemEffect::MaxHp)),
         )
+    }
+
+    /// Whether it has all its hit points ([`Actor::max_hp`]) and mana ([`Actor::max_mana`]),
+    /// what it wears and its stats worked out once for both.
+    pub fn is_whole(&self, content: &Content) -> bool {
+        let mods = self.mods(content);
+        let stats = self.stats_with(content, &mods);
+        let max_hp = combat::max_hp(
+            stats.score(Stat::Toughness),
+            self.hp_base + mods.get(ItemEffect::MaxHp),
+        );
+        let max_mana =
+            crate::mana::max_mana(&stats, self.mana_base + mods.get(ItemEffect::MaxMana));
+        self.hp >= self.frail(content, max_hp) && self.mana >= max_mana
     }
 
     /// Its maximum mana (spec §8 "Mana"): [`Actor::mana_base`] plus what it wears and wields
@@ -627,7 +649,7 @@ impl Actor {
             .flat_map(|s| s.resists(content).iter().copied());
         let magic = self.mods(content);
         // Talents (spec §8 "Talents": Elemental ward) count as gear does.
-        let talents = (self.talent_mods(content).resist.into_iter())
+        let talents = (self.talent_mods(content).into_owned().resist.into_iter())
             .filter_map(|(element, r)| Some((content.damage_type_id(&element)?, r)));
         let gear: Vec<(DamageTypeId, i32)> = (worn.chain(magic.resistances().iter().copied()))
             .chain(talents)

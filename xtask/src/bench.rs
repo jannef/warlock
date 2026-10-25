@@ -58,12 +58,6 @@ const CASES: [(&str, &str, f64, u64); 10] = [
     ("bench_delf", "delf", 16.0, 0),
 ];
 
-/// Cases whose night's rest is measured and shown but not held to [`REST_BUDGET_MS`]: on a
-/// floor at full population some of its 80 creatures are always near enough that every turn is
-/// perceived, and every one of them acts every turn, so the rest takes seconds
-/// (`docs/perf.md`, "Full population"; an open question for the owner, not a regression).
-const REST_UNJUDGED: [&str; 1] = ["delf"];
-
 /// The builtin content with the bench's cave branch and its scenario.
 fn content() -> Result<Content, String> {
     let mut files = ContentFiles::builtin();
@@ -174,18 +168,16 @@ pub fn run() -> Result<(), String> {
     let mut failed = false;
     for (scenario, label, budget, skip) in CASES {
         let s = measure(&content, scenario, skip)?;
-        let judged = !REST_UNJUDGED.contains(&label);
-        let ok = s.max_ms <= budget && (!judged || s.rest_ms <= REST_BUDGET_MS);
+        let ok = s.max_ms <= budget && s.rest_ms <= REST_BUDGET_MS;
         failed |= !ok;
         println!(
-            "{label:<6} {:>6} {:>10.3} {:>10.3} {budget:>10.1}  {:>11} {:>8.1}  {}{}",
+            "{label:<6} {:>6} {:>10.3} {:>10.3} {budget:>10.1}  {:>11} {:>8.1}  {}",
             s.turns,
             s.avg_ms,
             s.max_ms,
             s.rest_turns,
             s.rest_ms,
             if ok { "ok" } else { "OVER BUDGET" },
-            if judged { "" } else { "  (rest not judged)" }
         );
     }
     // A rest beside a fight nobody perceives, until one side is dead: every fighter

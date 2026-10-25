@@ -153,6 +153,34 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     change when the rest stops (sounds carry at most 30 cells, less than the view range, so none
     is missed), and a night's rest stays fast on large levels
     (`cargo xtask bench-turns` times one; budget 500 ms; also one beside a fight in the
-    arena out of the player's sight and hearing, which goes on until one side is dead).
+    arena out of the player's sight and hearing, which goes on until one side is dead, and one
+    on a generated floor at full population, 80 creatures). Past that stretch a turn still
+    passes without perception when all that happened was creatures moving (and the events kept
+    for the next perception) and the creatures that could stop the rest whom the player sees,
+    by the rules of sight for their cells alone, are those seen before: the same answer a
+    perception would give (not on the overworld, nor with Blood scent or light-blind eyes,
+    where a perception sees by more than line of sight and light).
+  - **Coarse turns while resting** (#349; `world/stride.rs`): while the player rests, a creature
+    on a local level that has no dialogue and is **away** from them takes its turns coarsely.
+    Away: it means the player no harm, or neither the player nor a spot its mind is set on
+    (where it last saw a hostile, a noise it goes to look into) is within its sight radius of
+    the player. An away creature that is **idle** (going about its routine: nothing seen,
+    heard, or set on, no status effects, able to move, no hostile within its sight radius)
+    **strides**: one action of up to 20 steps of its patrol route at once, priced as those steps
+    are, each onto a plain cell (walkable, no door, ice, or trap, nobody there, not one it shuns)
+    on which the player did not see creatures when they last looked, from which no hostile is
+    within its sight radius, and from which its step could not be heard by the player; it stops
+    before the first that is not, and makes one step's noise where it ends. Without a route, or
+    with someone standing on its next step, it waits 20 waits at once. Its pace stays its own
+    (the same energy for the same steps), so a patrol still walks into view and stops a rest, and
+    near the player (in view, in earshot, within its sight of them) it goes turn by turn. An away
+    creature that is **busy** (a fight with another creature, a noise to look into, the way back
+    to its post) acts as usual at 20 times the price: far from the player the rest's world runs
+    that much slower for it. So an away creature notices a hostile or a noise up to a stride
+    later, its steps within a stride are not heard (by other creatures; the player is out of
+    earshot), and fights and searches far from the player go slower; nothing changes outside a
+    rest. The rest counts a stride's head start in the stretch above. Deterministic: no
+    randomness, creatures in the scheduler's order (a stride reads the perception the rest last
+    computed, which is part of the run).
   - **Dev skip** (`F6` in dev builds, replay text `skip:1h`) moves the clock ahead at once;
     nobody acts or gains energy and no turn passes, but it is recorded like any action.

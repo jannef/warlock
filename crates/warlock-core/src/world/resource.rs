@@ -128,7 +128,10 @@ impl World {
         let Some(actor) = self.state.actors.get(&id) else {
             return;
         };
-        let talents = actor.talent_mods(&self.content).resource_builds;
+        let talents = actor
+            .talent_mods(&self.content)
+            .into_owned()
+            .resource_builds;
         let gains: Vec<(ResourceId, u16, u16)> = (actor.resources.iter())
             .filter_map(|pool| {
                 let more = (talents.iter())

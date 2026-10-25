@@ -58,7 +58,13 @@ impl World {
     pub(super) fn fire_breath(&mut self, at: Pos, events: &mut Vec<Event>) -> Spent {
         let content = self.content.clone();
         let player = self.state.player;
-        let Some(breath) = self.state.player().talent_mods(&content).fire_breath else {
+        let Some(breath) = self
+            .state
+            .player()
+            .talent_mods(&content)
+            .into_owned()
+            .fire_breath
+        else {
             return Spent::Nothing;
         };
         if !self.can_loose_here() || !self.within_reach(at, BREATH_RANGE, "breathe fire") {

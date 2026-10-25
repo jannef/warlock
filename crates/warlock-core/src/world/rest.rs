@@ -4,8 +4,16 @@
 
 use super::{ActorId, Spent, World};
 use crate::action::{DiseaseNews, Event, MAX_REST, Rest};
-use crate::content::{ActionKind, StatUse};
+use crate::content::{ActionKind, LevelKind, StatUse};
+use crate::fov::radius2;
+use crate::geom::Pos;
+use crate::perception::VIEW_RADIUS;
+use crate::sight::{self, LineOfSight};
 use crate::time::{self, GameTime};
+
+/// The player's line of sight as a long action keeps it: for the terrain changes made so far
+/// ([`World::reshaped`]) and where they stand.
+pub(super) type Sightline = ((u64, Pos), LineOfSight);
 
 /// How a long action (a rest, digging; [`World::keep_at`]) ended.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -77,6 +85,8 @@ impl World {
         let mut came = None;
         let alive = |w: &Self| w.state.death.is_none();
         let mut turns = 0u32;
+        // The player's line of sight, kept while they stay put and the terrain is unchanged.
+        let mut sightline = None;
         while more(self) && came.is_none() && self.said == said && alive(self) {
             // What was perceived was said.
             events.clear();
@@ -103,13 +113,17 @@ impl World {
                 let trapped = self.sprung != sprung;
                 // A creature that came may walk into view sooner than the others could.
                 let newcomer = self.spawned != spawned;
-                if done
-                    || heard
-                    || ill
-                    || trapped
-                    || newcomer
-                    || self.state.time > unseen_until
-                    || self.weather_turned()
+                if done || heard || ill || trapped || newcomer || self.weather_turned() {
+                    break;
+                }
+                // Past the time a creature could have come into view, the player looks, unless
+                // all that happened was creatures moving and those the player would see are
+                // those they saw.
+                if self.state.time > unseen_until
+                    && !(events.iter().all(Self::passes_unseen)
+                        && self
+                            .watched_in_sight(&mut sightline)
+                            .is_some_and(|seen| seen == in_view))
                 {
                     break;
                 }
@@ -130,6 +144,61 @@ impl World {
             self.train_stat(StatUse::Endured);
         }
         ended
+    }
+
+    /// Whether a long action's turn with `event` in it may pass without perception: a creature
+    /// moving, or one of the events kept for the next perception.
+    fn passes_unseen(event: &Event) -> bool {
+        matches!(
+            event,
+            Event::ActorMoved { .. }
+                | Event::Status { .. }
+                | Event::ResourceEnded { .. }
+                | Event::Disease { .. }
+        )
+    }
+
+    /// The creatures that disturb a rest ([`World::disturbs_rest`]) the player sees now, in actor
+    /// order: [`World::watched_in_view`] as a fresh perception would find it, worked out by the
+    /// rules of sight ([`sight::sees`], the perception's own) for their cells alone. `None`
+    /// where the perception sees by more than line of sight and light: on the overworld, with
+    /// Blood scent, with light-blind eyes.
+    pub(super) fn watched_in_sight(
+        &mut self,
+        kept: &mut Option<Sightline>,
+    ) -> Option<Vec<ActorId>> {
+        let content = self.content.clone();
+        let state = &self.state;
+        let level = state.current();
+        let player = state.player();
+        if level.kind == LevelKind::Overworld
+            || !player.talent_mods(&content).scent.is_empty()
+            || (state.race_of(&content, player)).is_some_and(|r| r.light_blind.is_some())
+        {
+            return None;
+        }
+        let viewer = player.pos;
+        let near: Vec<(ActorId, Pos)> = (state.actors.values())
+            .filter(|a| a.level == level.id && a.pos.dist2(viewer) <= radius2(VIEW_RADIUS))
+            .filter(|a| self.disturbs_rest(a))
+            .map(|a| (a.id, a.pos))
+            .collect();
+        if near.is_empty() {
+            return Some(Vec::new());
+        }
+        let key = (self.reshaped, viewer);
+        let los = match kept.take() {
+            Some((k, los)) if k == key => los,
+            _ => LineOfSight::compute(viewer, VIEW_RADIUS, |p| level.is_opaque(&content, p)),
+        };
+        let eye = state.eyes(&content);
+        let World { state, lights, .. } = self;
+        let seen = near
+            .into_iter()
+            .filter(|&(_, p)| sight::sees(state, &content, lights, &los, &eye, p));
+        let seen = seen.map(|(id, _)| id).collect();
+        *kept = Some((key, los));
+        Some(seen)
     }
 
     /// When a rest toward `goal` ends: at most [`MAX_REST`] from now.

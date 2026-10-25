@@ -32,6 +32,7 @@
 //! it (`sign_picks.rs`).
 
 use super::path::{Cost, Search};
+use super::stride::Coarse;
 use super::{ActorId, Mind, World, beast_friend};
 use crate::action::{AttackKind, Event};
 use crate::content::{ActionKind, Combat, Stance};
@@ -98,6 +99,12 @@ impl World {
     /// the player perceive (events, noise) starts here too. What the creature heard since it
     /// last acted ([`super::Actor::heard`]) is read here and spent.
     pub(super) fn creature_turn(&mut self, id: ActorId, events: &mut Vec<Event>) -> i64 {
+        // Away from a resting player, it takes coarse turns (`stride.rs`).
+        let slow = match self.coarse_turn(id, events) {
+            Coarse::Strode(price) => return price,
+            Coarse::Slow => true,
+            Coarse::Usual => false,
+        };
         let heard = (self.state.actors.get_mut(&id))
             .map(|a| std::mem::take(&mut a.heard))
             .unwrap_or_default();
@@ -125,7 +132,11 @@ impl World {
         };
         // Going about its routine, it may mutter to itself (`talk.rs`).
         self.mutter(id);
-        price
+        if slow {
+            price.saturating_mul(i64::from(super::stride::STRIDE))
+        } else {
+            price
+        }
     }
 
     /// Creature `id` steps in `dir` ([`World::creature_steps`]); returns what it did and its
