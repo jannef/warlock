@@ -13,7 +13,8 @@ offered only when `World::offers` it: the player's band meets its `requires_alig
 giver who scorns them offers none whose `alignment` is good; `complete` makes the quest's
 `alignment` shift, `docs/dev/alignment.md`); `Quests` in
 `WorldState` (records by quest id: stage, completed, counted, reached; the kill tally by level
-and creature id, only for types a kill quest asks for), left out of the JSON while empty so runs
+and creature id, for every type (#244: the ranger's Favoured prey reads it too), and `prey`, the
+type killed most, the first to get there of those tied), left out of the JSON while empty so runs
 without quests hash as before. Hooks: `fight.rs::dies` tallies the
 player's kills (`tally_kill`, beside `earn_kill`, so a creature bled to death by the player's
 wound counts too), `travel` marks reach quests (`reach`), and `World::apply` snapshots active
