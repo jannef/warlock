@@ -310,6 +310,15 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // A Fire-born warrior (a Fire Kraken) after a Blaze: the Birth sign group, burnt out.
+    Case {
+        name: "abilities-menu-blaze",
+        seed: Some(15),
+        character: Some("human,male,warrior"),
+        actions: "use:blaze",
+        screen: Some("abilities"),
+        ..BASE
+    },
     // Items.
     Case {
         name: "equipment-screen",

@@ -141,7 +141,7 @@ impl World {
                 self.cast_bolt(Caster::Actor(player), here, &path, bolt, &mut made);
             }
         }
-        self.say_spell(spell, made, events);
+        self.say_spell((&spell.noun, &spell.verb), made, events);
         if kept && self.state.death.is_none() {
             self.say(KEPT);
         }
@@ -185,11 +185,17 @@ impl World {
     /// are said at once, as their shots are): each blow on someone they see or themselves, and
     /// the deaths of those they saw; then any news it brought (a level gained). Its events go to
     /// presentation the same way: the spell's own, and the blows and deaths seen. The player's
-    /// own death is said as the turn is perceived.
-    fn say_spell(&mut self, spell: &ScrollSpell, made: Vec<Event>, events: &mut Vec<Event>) {
+    /// own death is said as the turn is perceived. `(noun, verb)` say the spell's blows ("the
+    /// fireball burns"); a birth sign's Blaze is said the same way.
+    pub(super) fn say_spell(
+        &mut self,
+        (noun, verb): (&str, &str),
+        made: Vec<Event>,
+        events: &mut Vec<Event>,
+    ) {
         let content = self.content.clone();
         let player = self.state.player;
-        let words = Words::new(&spell.noun, &spell.verb);
+        let words = Words::new(noun, verb);
         let mut said = Vec::new();
         // Whom the last blow struck, as the player saw them (if they did).
         let mut seen: Option<End<'_>> = None;
@@ -206,7 +212,7 @@ impl World {
                         Some(d) if self.perception.sees_actors_at(to) => End::Seen(&d.name),
                         _ => End::Unseen,
                     };
-                    let caster = End::Trap(&spell.noun);
+                    let caster = End::Trap(noun);
                     let kind = AttackKind::Spell;
                     said.extend(attack_message(caster, end, &words, kind, strike, guard));
                     seen = (end != End::Unseen).then_some(end);

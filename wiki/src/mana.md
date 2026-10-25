@@ -37,8 +37,9 @@ Resting, some status effects and diseases, starving, and special rooms change th
 When several status effects slow it, the slowest counts; a disease that slows it more than being
 Diseased does counts too. Resting makes up for some of it, as it does for healing, and so does a
 sanctuary (a [special room](special-rooms.md)). Magic items that speed it ("mana comes back 50%
-faster") add on top of all that. Nothing else changes it: not your burden, not the cold, not your
-combat stance.
+faster") add on top of all that, and so does being born under Water (the gift *Tidal*: mana comes
+back 25 % faster; see [Horoscope](horoscope.md)), adding its percent to theirs. Nothing else
+changes it: not your burden, not the cold, not your combat stance.
 
 ## When the most falls
 

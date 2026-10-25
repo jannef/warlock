@@ -66,6 +66,7 @@ impl World {
                 self.say("At whom?");
                 Spent::Nothing
             }
+            (SignActive::Blaze, _) => self.blaze(events),
         }
     }
 

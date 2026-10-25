@@ -163,8 +163,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `mana_regen` of its status effects (poison 50, Diseased 50) and of the diseases that show
     (brain fever 25), times `[healing] mana_resting` (200) while the player rests, times the
     `mana_regen` of a special room it stands in (a sanctuary 300), times (100 + the mana
-    regeneration affixes of what it wears and wields) / 100; a Starving player gets none (§8
-    "Hunger"; Weak lowers only the stats it lowers). Burden, temperature, and combat stances do
+    regeneration affixes of what it wears and wields, plus its talents' percent: Tidal +25) / 100;
+    a Starving player gets none (§8 "Hunger"; Weak lowers only the stats it lowers). Burden, temperature, and combat stances do
     nothing to it. A point back is a moment of `World::live`'s loop ("Status effects" above: it
     comes with a hit point back, before the ticks), so it makes no difference how time is cut up;
     actors on other levels are frozen, and the dev time skip passes none.

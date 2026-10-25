@@ -63,7 +63,12 @@ fn gifts(w: &World) -> Vec<String> {
 
 #[test]
 fn the_animals_from_the_roc_to_the_barghest_grant_their_gifts_and_flaws() {
-    let animal = |id: &str| gifts(&born_under(id, "fire"));
+    // The animal's gifts only: a Fire year adds the element's Blaze and Kindled after them.
+    let animal = |id: &str| {
+        let mut held = gifts(&born_under(id, "fire"));
+        assert_eq!(held.split_off(held.len() - 2), ["blaze", "kindled"]);
+        held
+    };
     assert_eq!(
         animal("roc"),
         ["rocs_strength", "eyes_of_the_heights", "heedless"]

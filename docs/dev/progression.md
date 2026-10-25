@@ -47,6 +47,7 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `melee_damage` | `Actor::melee`, `off_hand_blow` (after the affixes, before the stance; not kicks or bashes) |
 | `max_hp_per_levels` | handed out, not read: `take_talent` adds the rank's `hp_at(level)` to `hp_base` and `hp`, `level_up` each later level's growth, as levels' own hit points are (so `Actor::max_hp` needs no level) |
 | `healing_percent` | `World::healing_rate`, summed with the regeneration affixes |
+| `mana_regen_percent` | `World::mana_rate`, summed with the mana regeneration affixes (Tidal) |
 | `footsteps_percent`, `silent_doors` | `noise::noise` (after the stealth skill and affixes; a silent door is no noise at all) |
 | `hearing` | `Actor::hearing`, with the listen skill |
 | `threshold_percent`, `darkvision`, `sees_uv` | `WorldState::eyes` (`world/eyes.rs`, the design's B4): the base profile (`WorldState::vision`) as the talents change it; `Perception::compute` reads it, so the view's `vision()` is the effective eye (id and name the base's). Creatures keep their types' profiles |
@@ -97,7 +98,8 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `speed_percent` | `World::burdened`, the one place every price passes (`quicker`) |
 | `natural_unarmoured` | `Actor::defence` (no body armour: nothing in a `body_armor` slot, `Actor::wears_body_armour`) |
 | `weapon` `crit`, `at_rank` | `TalentMods::weapon_benefit` (the held rank passed in) |
-| `weapon_marks` | `World::practise` (`TalentMods::marks`) |
+| `weapon_marks` | `World::practise` (`TalentMods::marks`; no `role`: every skill, Forge-born) |
+| `blaze` | `world/element_gifts.rs` (`Action::Gift`, `Ability::Sign` under `Source::Sign`): the burst, the fires, then its `cooldown` status |
 | `two_handed_crit`, `unarmed_die` | `Actor::melee` (and `kick` for the die, the bigger of it and `kick_die`) |
 | `stance_dodge` | `Actor::defence`, the stance's Dodge (`TalentMods::stance_dodge`) |
 | `step_percent` | `World::step_price` (`TalentMods::step_percent`: body armour, burden, shield) |
