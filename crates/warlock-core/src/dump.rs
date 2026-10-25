@@ -193,8 +193,8 @@ pub fn parse_layers(text: &str) -> Result<Vec<Layer>, String> {
 /// Renders one layer as rows of text with trailing spaces trimmed.
 pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
     match layer {
-        Layer::Truth => truth_rows(world),
-        Layer::Actors => actor_rows(world),
+        Layer::Truth => [spawn_header(world), truth_rows(world)].concat(),
+        Layer::Actors => [spawn_header(world), actor_rows(world)].concat(),
         Layer::Progress => progress_rows(world),
         Layer::Rooms => room_rows(world),
         Layer::Ice => ice_rows(world),
@@ -306,6 +306,24 @@ pub fn blood_digit(stain: &Stain) -> char {
 pub fn light_digit(light: PerceivedLight) -> char {
     let tenths = (u32::from(light.brightness()) * 10 / 256).min(9);
     char::from_digit(tenths, 10).unwrap_or('9')
+}
+
+/// Dev: the header of the `truth` and `actors` layers on a level with a danger rule (spec §7
+/// "Danger levels"): `danger 3 population 2/6 spawn next 08:15:00`, its creatures hostile to
+/// the player against its cap; none elsewhere.
+fn spawn_header(world: &World) -> Vec<String> {
+    let Some((danger, hostiles, cap, next)) = world.spawn_status() else {
+        return Vec::new();
+    };
+    let next = format!(
+        "{:02}:{:02}:{:02}",
+        next.hour(),
+        next.minute(),
+        next.second()
+    );
+    vec![format!(
+        "danger {danger} population {hostiles}/{cap} spawn next {next}"
+    )]
 }
 
 fn truth_rows(world: &World) -> Vec<String> {
@@ -1040,7 +1058,7 @@ pub fn ascii(world: &World, layers: &[Layer]) -> String {
 /// inventory (with what of each stack is unpaid, priced), equipment (by slot id), weight, scores
 /// (by stat id), status effects (by id), the diseases they know (by id), recent messages, the
 /// requested layers as arrays of rows, and optionally the full
-/// [`crate::WorldState`] under `state`.
+/// [`crate::WorldState`] under `state` (with the current level's `danger`, ground truth).
 pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
     let view = world.perception();
     let content = world.content();
@@ -1244,6 +1262,8 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
     }
     if include_state {
         out["state"] = serde_json::to_value(world.state()).expect("state serializes");
+        // The current level's danger (spec §7 "Danger levels"): ground truth, never stored.
+        out["danger"] = json!(world.danger(&world.state().current_level));
     }
     out
 }

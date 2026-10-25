@@ -4,6 +4,7 @@
 //! there, special rooms entered, and terrain changing under the light. `world/mod.rs` has only
 //! the dispatch lines.
 
+use super::spawn::Spawner;
 use super::{
     Actor, ActorId, ActorKind, FreeBlows, LevelState, Mind, Patrol, Shop, Spent, Talk, World,
     WorldError, WorldState,
@@ -11,8 +12,8 @@ use super::{
 use crate::action::{AttackKind, Event};
 use crate::burden;
 use crate::content::{
-    ActionKind, CombatStance, Content, EdgeExit, LevelKind, LevelTemplate, StairsDir, Stance,
-    TerrainId, local_area_id,
+    ActionKind, CombatStance, Content, CreatureSpawn, EdgeExit, LevelKind, LevelTemplate,
+    StairsDir, Stance, TerrainId, local_area_id,
 };
 use crate::geom::{Dir, Pos};
 use crate::magic::loot::Luck;
@@ -326,6 +327,10 @@ impl World {
         if new {
             self.discover_level(to);
         }
+        // Floors the player was not on stay frozen: what comes, comes from now on; and Sixth
+        // sense says how the place feels (spec §7 "Danger levels").
+        self.arrive_spawner(to);
+        self.sense_danger(to);
         // Sounds remembered on the level left say nothing about this one.
         self.state.recent_sounds.clear();
         if let Some(line) = self.content.level(to).and_then(|t| t.arrival.clone()) {
@@ -431,56 +436,72 @@ pub(super) fn instantiate_level(
             level.shops.push(shop);
         }
     }
+    // A level with a danger rule keeps what comes to it (spec §7 "Danger levels").
+    if let Some((_, _, spawning)) = content.spawning(id) {
+        level.spawner = Some(Spawner::new(state.seed, id, state.time, spawning.every));
+    }
     state.levels.insert(id.to_string(), level);
     // Under the open sky its water has frozen and thawed with the weather of the last weeks.
     state.pre_roll_ice(content, id);
     for spawn in &template.creatures {
-        let actor_id = ActorId(state.next_actor_id);
-        state.next_actor_id += 1;
-        let def = content.creature(spawn.creature);
-        let mut actor = Actor {
-            id: actor_id,
-            kind: ActorKind::Creature,
-            creature: spawn.creature,
-            level: id.to_string(),
-            pos: spawn.pos,
-            patrol: (!spawn.route.is_empty()).then(|| Patrol {
-                route: spawn.route.clone(),
-                step: 0,
-            }),
-            energy: 0,
-            heard: Vec::new(),
-            mind: Mind::default(),
-            inventory: spawn.carry.clone(),
-            equipment: spawn.equipment.clone(),
-            stats: def.stats,
-            hp: 0,
-            hp_base: def.base_hp,
-            regen: 0,
-            mana: 0,
-            mana_base: def.base_mana,
-            mana_regen: 0,
-            resources: Default::default(),
-            skills: def.skills.clone(),
-            effects: Default::default(),
-            diseases: Default::default(),
-            damage: Default::default(),
-            weapon_skills: def.weapon_skills.clone(),
-            faction_override: spawn.faction,
-            alignment: None,
-            alignment_override: spawn.alignment,
-            npc: spawn.npc.clone(),
-            talk: Talk::default(),
-            streak: None,
-            satiation: None,
-            stance: CombatStance::Neutral,
-            free_blows: FreeBlows::default(),
-            talents: Default::default(),
-            stat_marks: Default::default(),
-        };
-        actor.hp = actor.max_hp(content);
-        actor.mana = actor.max_mana(content);
-        crate::rot::made_at(&mut actor.inventory, content, state.time);
-        state.actors.insert(actor_id, actor);
+        make_creature(state, content, id, spawn);
     }
+}
+
+/// Makes the creature `spawn` places on level `id` (it must exist): one of its type, with the
+/// type's stats, carrying, wearing, and wielding what the spawn gives it, its food made now.
+pub(super) fn make_creature(
+    state: &mut WorldState,
+    content: &Content,
+    id: &str,
+    spawn: &CreatureSpawn,
+) -> ActorId {
+    let actor_id = ActorId(state.next_actor_id);
+    state.next_actor_id += 1;
+    let def = content.creature(spawn.creature);
+    let mut actor = Actor {
+        id: actor_id,
+        kind: ActorKind::Creature,
+        creature: spawn.creature,
+        level: id.to_string(),
+        pos: spawn.pos,
+        patrol: (!spawn.route.is_empty()).then(|| Patrol {
+            route: spawn.route.clone(),
+            step: 0,
+        }),
+        energy: 0,
+        heard: Vec::new(),
+        mind: Mind::default(),
+        inventory: spawn.carry.clone(),
+        equipment: spawn.equipment.clone(),
+        stats: def.stats,
+        hp: 0,
+        hp_base: def.base_hp,
+        regen: 0,
+        mana: 0,
+        mana_base: def.base_mana,
+        mana_regen: 0,
+        resources: Default::default(),
+        skills: def.skills.clone(),
+        effects: Default::default(),
+        diseases: Default::default(),
+        damage: Default::default(),
+        weapon_skills: def.weapon_skills.clone(),
+        faction_override: spawn.faction,
+        alignment: None,
+        alignment_override: spawn.alignment,
+        npc: spawn.npc.clone(),
+        talk: Talk::default(),
+        streak: None,
+        satiation: None,
+        stance: CombatStance::Neutral,
+        free_blows: FreeBlows::default(),
+        talents: Default::default(),
+        stat_marks: Default::default(),
+    };
+    actor.hp = actor.max_hp(content);
+    actor.mana = actor.max_mana(content);
+    crate::rot::made_at(&mut actor.inventory, content, state.time);
+    state.actors.insert(actor_id, actor);
+    actor_id
 }

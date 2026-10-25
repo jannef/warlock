@@ -23,6 +23,11 @@
 //! ambient = [0, 0, 0, 0]        # optional
 //! temperature = 9               # °C; default the dungeon default (10)
 //! key = "rusty_key"             # optional: rooms levels lock a few rooms with its lock
+//! danger = 4                    # optional (spec §7 "Danger levels"; `super::danger`): its
+//! population = ["rat"]          # floors' danger, who lives there, how many, and how they
+//! population_count = 40         # come back; none: danger 0, nothing comes
+//! out_of_depth = 5
+//! spawn = { every = "15m", chance = 60 }
 //!
 //! [[dungeon.levels]]            # optional per-depth overrides, first match wins
 //! from = 3
@@ -30,10 +35,12 @@
 //! generator = "caves"           # default: the branch's generator
 //! size = [120, 60]              # default: the branch's size
 //! temperature = 7               # default: the branch's temperature
+//! danger = { base = 9, per_depth = 2 }   # default: the branch's (which it needs)
 //! ```
 
 use super::ContentError;
 use super::creature::CreatureId;
+use super::danger::{CountSpec, DangerRule, DangerSpec, SpawnSpec, Spawning, SpawningSpec};
 use super::object::ObjectId;
 use super::trap::TrapId;
 use crate::light::Light;
@@ -98,6 +105,13 @@ struct DungeonSpec {
     hidden_per_depth: u8,
     #[serde(default)]
     locks_per_depth: u8,
+    /// How dangerous its floors are (spec §7 "Danger levels"); none: 0, nothing comes.
+    danger: Option<DangerSpec>,
+    /// The creature types that live there; default: `creatures`.
+    population: Option<Vec<String>>,
+    population_count: Option<CountSpec>,
+    out_of_depth: Option<u8>,
+    spawn: Option<SpawnSpec>,
     #[serde(default)]
     levels: Vec<LevelsSpec>,
 }
@@ -121,6 +135,7 @@ struct LevelsSpec {
     generator: Option<Generator>,
     size: Option<[i32; 2]>,
     temperature: Option<i8>,
+    danger: Option<DangerSpec>,
 }
 
 /// How one level of a branch is generated.
@@ -131,6 +146,8 @@ pub struct LevelPlan {
     pub height: i32,
     /// Its temperature (spec §5 "Temperature"); `None`: the dungeon default.
     pub temperature: Option<Temperature>,
+    /// How dangerous it is (spec §7 "Danger levels"); `None`: danger 0, nothing comes.
+    pub danger: Option<DangerRule>,
 }
 
 /// A validated dungeon branch.
@@ -162,6 +179,9 @@ pub struct DungeonDef {
     /// The key to the rooms the rooms generator locks (spec §8 "Doors"): it locks them with the
     /// lock this key opens and leaves one where the player can reach it. `None`: no locked rooms.
     pub key: Option<ObjectId>,
+    /// What lives on its floors and how it comes back (spec §7 "Danger levels"); `None`: its
+    /// floors have danger 0 and only the generator's patrols.
+    pub spawning: Option<Spawning>,
     /// One plan per depth, index `depth - 1`.
     plans: Vec<LevelPlan>,
 }
@@ -213,12 +233,12 @@ pub fn parse_branch_level(id: &str) -> Option<(&str, u32)> {
 }
 
 impl DungeonFile {
-    /// Validates every branch; `creature_id` resolves creature names, `key_id` the names of
-    /// keys (objects that open a lock), `trap_id` trap names.
+    /// Validates every branch; `creature_id` resolves creature names (with their levels),
+    /// `key_id` the names of keys (objects that open a lock), `trap_id` trap names.
     pub(super) fn resolve(
         self,
         file: &str,
-        creature_id: impl Fn(&str) -> Option<CreatureId>,
+        creature_id: impl Fn(&str) -> Option<(CreatureId, u8)>,
         key_id: impl Fn(&str) -> Option<ObjectId>,
         trap_id: impl Fn(&str) -> Option<TrapId>,
     ) -> Result<Vec<DungeonDef>, ContentError> {
@@ -249,6 +269,25 @@ impl DungeonFile {
                 }
             };
             check_size(spec.generator, spec.size)?;
+            let creatures = spec
+                .creatures
+                .iter()
+                .map(|c| {
+                    creature_id(c)
+                        .map(|(c, _)| c)
+                        .ok_or_else(|| err(format!("dungeon `{id}` uses unknown creature `{c}`")))
+                })
+                .collect::<Result<Vec<_>, _>>()?;
+            let spawning = SpawningSpec {
+                danger: spec.danger,
+                population: spec.population,
+                population_count: spec.population_count,
+                out_of_depth: spec.out_of_depth,
+                spawn: spec.spawn,
+            }
+            .resolve(true, &creatures, &creature_id)
+            .map_err(|m| err(format!("dungeon `{id}`: {m}")))?;
+            let branch_danger = spawning.as_ref().map(|(rule, _)| *rule);
             let mut plans = Vec::new();
             for depth in 1..=spec.depth {
                 let over = spec
@@ -263,6 +302,18 @@ impl DungeonFile {
                     ),
                     None => (spec.generator, spec.size, spec.temperature),
                 };
+                let danger = match over.and_then(|l| l.danger) {
+                    Some(_) if branch_danger.is_none() => {
+                        return Err(err(format!(
+                            "dungeon `{id}`: a level's `danger` needs the branch's"
+                        )));
+                    }
+                    Some(d) => Some(
+                        d.resolve(1, true)
+                            .map_err(|m| err(format!("dungeon `{id}`: {m}")))?,
+                    ),
+                    None => branch_danger,
+                };
                 check_size(generator, [width, height])?;
                 if let Some(c) = temperature.filter(|c| !LEVEL_TEMPERATURES.contains(c)) {
                     return Err(err(format!(
@@ -276,6 +327,7 @@ impl DungeonFile {
                     width,
                     height,
                     temperature: temperature.map(|c| Temperature::degrees(c.into())),
+                    danger,
                 });
             }
             for l in &spec.levels {
@@ -287,14 +339,6 @@ impl DungeonFile {
                     )));
                 }
             }
-            let creatures = spec
-                .creatures
-                .iter()
-                .map(|c| {
-                    creature_id(c)
-                        .ok_or_else(|| err(format!("dungeon `{id}` uses unknown creature `{c}`")))
-                })
-                .collect::<Result<Vec<_>, _>>()?;
             let traps = (spec.traps.iter())
                 .map(|t| {
                     trap_id(t).ok_or_else(|| err(format!("dungeon `{id}` uses unknown trap `{t}`")))
@@ -356,6 +400,7 @@ impl DungeonFile {
                 locks_per_depth: spec.locks_per_depth,
                 loot: spec.loot,
                 key,
+                spawning: spawning.map(|(_, s)| s),
                 plans,
             });
         }
@@ -372,7 +417,7 @@ mod tests {
             toml::from_str(text).map_err(|e| ContentError::new("d", e.to_string()))?;
         file.resolve(
             "d",
-            |c| (c == "rat").then_some(CreatureId(1)),
+            |c| (c == "rat").then_some((CreatureId(1), 1)),
             |k| (k == "key").then_some(ObjectId(2)),
             |t| (t == "pit").then_some(TrapId(0)),
         )
@@ -430,6 +475,7 @@ mod tests {
                 width: 120,
                 height: 60,
                 temperature: None,
+                danger: None,
             })
         );
         assert_eq!(d.plan(4).map(|p| p.width), Some(80));
@@ -458,6 +504,32 @@ mod tests {
         );
         let hot = format!("{plain}temperature = 41\n");
         assert!(resolve(&hot).unwrap_err().message.contains("temperature"));
+    }
+
+    #[test]
+    fn floors_take_the_branch_danger_or_their_own() {
+        let base = "[[dungeon]]\nid = \"d\"\ngenerator = \"rooms\"\ndepth = 3\nsize = [80, 21]\n\
+                    creatures = [\"rat\"]\n";
+        let none = resolve(base).unwrap();
+        assert!(none[0].spawning.is_none() && none[0].plan(1).unwrap().danger.is_none());
+        let defs = resolve(&format!(
+            "{base}danger = 2\n[[dungeon.levels]]\nfrom = 3\ndanger = {{ base = 9, per_depth = 0 }}\n"
+        ))
+        .unwrap();
+        let at = |depth| defs[0].plan(depth).unwrap().danger.unwrap().at(depth, 1);
+        assert_eq!((at(1), at(2), at(3)), (2, 3, 9));
+        // The population defaults to the patrols.
+        assert_eq!(
+            defs[0].spawning.as_ref().unwrap().population,
+            [CreatureId(1)]
+        );
+        let lone = format!("{base}[[dungeon.levels]]\nfrom = 3\ndanger = 4\n");
+        assert!(
+            resolve(&lone)
+                .unwrap_err()
+                .message
+                .contains("needs the branch")
+        );
     }
 
     #[test]

@@ -31,9 +31,22 @@
 #   key        a key (objects.toml, spec §8 "Doors"): the rooms generator locks the door of up to
 #              two rooms that have only one, with the lock this key opens, and leaves the key
 #              where the player reaches it without unlocking anything (default none: no locks)
+#   danger     how dangerous its floors are (spec §7 "Danger levels"; default none: 0, and
+#              nothing comes): `danger = 4` is `{ base = 4, per_depth = 1 }`, the floor at depth d
+#              `base + (d - 1) × per_depth` (base 0 to 99, per_depth 0 to 5); `player = {
+#              percent, from, max }` adds percent % of each player level past `from`, at most
+#              `max` (an area that grows with the player). With a danger, also:
+#   population  creature ids that live there (default `creatures`); each type's level is its
+#              danger, and draws favour types at about the floor's
+#   population_count  how many a floor holds: a number, or `{ per_1000, least, most }` by its
+#              walkable cells (default { per_1000 = 35, least = 25, most = 80 }; at most 200)
+#   out_of_depth  percent of draws made 1 to 3 dangers deeper (default 5)
+#   spawn      `{ every = "15m", chance = 60, cap = N }` (the defaults; cap: the population):
+#              while the player is on a floor, every `every` a creature comes with `chance` %
+#              unless the floor holds `cap` creatures hostile to the player
 #   [[dungeon.levels]]  per-depth overrides, first match wins:
-#              from, to (inclusive; default `from`), generator, size, temperature (each default
-#              the branch's)
+#              from, to (inclusive; default `from`), generator, size, temperature, danger (each
+#              default the branch's; a danger here needs the branch's)
 #
 # Generators build with the terrain void, wall, floor, door_closed, door_open, stairs_up,
 # stairs_down, water, sconce, fungus and the light lamp, and stamp vaults (assets/vaults).

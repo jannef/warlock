@@ -22,6 +22,7 @@ mod damage;
 mod dialogue;
 mod digging;
 mod doors;
+mod dungeons;
 mod experience;
 mod gems;
 mod healing;
@@ -138,6 +139,9 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("creature-defences.md", creatures::creature_defences),
         ("creature-attacks.md", creatures::creature_attacks),
         ("creature-senses.md", creatures::creature_senses),
+        ("dungeons.md", dungeons::dungeons),
+        ("dungeon-floors.md", dungeons::dungeon_floors),
+        ("danger-weights.md", dungeons::danger_weights),
         ("dialogue.md", dialogue::dialogue),
         ("quests.md", dialogue::quests),
         ("footsteps.md", terrain::footsteps),

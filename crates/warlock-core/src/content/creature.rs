@@ -147,6 +147,10 @@ pub(super) struct CreatureSpec {
     /// The experience a kill of it is worth at its own level; none: nothing.
     #[serde(default)]
     pub xp: u32,
+    /// Whether at most one of it comes in a run (spec §7 "Danger levels"): a branch's
+    /// population draws it once, never again.
+    #[serde(default)]
+    pub unique: bool,
     /// Its trained skills by skill id, with their values (spec §8 "Skills"); the rest untrained.
     #[serde(default)]
     pub skills: BTreeMap<String, u16>,
@@ -398,6 +402,7 @@ impl CreatureSpec {
             base_mana: i32::from(self.mana),
             level: self.level,
             xp: self.xp,
+            unique: self.unique,
             loot: self.loot,
             attack: r.attack,
             natural: self.natural,
@@ -485,6 +490,9 @@ pub struct CreatureDef {
     pub level: u8,
     /// Gameplay: the experience a kill of it is worth at its own level.
     pub xp: u32,
+    /// Gameplay: whether at most one of it is drawn in a run by a population (spec §7 "Danger
+    /// levels"; [`crate::world::Progress`] remembers those drawn).
+    pub unique: bool,
     /// Gameplay: the chance in percent that it drops a magic or rare item where it dies.
     pub loot: u8,
     /// Gameplay: its natural attack, used when it wields no weapon; `None`: bare hands (1d3).

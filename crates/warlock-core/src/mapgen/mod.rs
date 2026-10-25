@@ -426,6 +426,8 @@ pub fn generate_with(
             loot: Vec::new(),
             temperature: plan.temperature,
             ice: Default::default(),
+            // Its branch's, asked of [`Content::spawning`].
+            spawning: None,
         };
         if connect::validate(&template, content).is_ok() {
             hide_traps(&mut template, content, pal, seed, def);

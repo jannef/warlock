@@ -194,6 +194,11 @@ id = "awareness"
 name = "Creature sight and awareness"
 pending = true
 
+# Danger levels (#326): how dangerous a level is, and the creatures that keep coming to it.
+[[system]]
+id = "danger"
+name = "Danger levels and creatures that come"
+
 [[system]]
 id = "traps"
 name = "Traps"

@@ -4,6 +4,7 @@
 //! its shops (spec §7 "Shops").
 
 use super::shop::Shop;
+use super::spawn::Spawner;
 use crate::blood::{Spatter, Stain};
 use crate::color::Rgb;
 use crate::content::{
@@ -109,6 +110,10 @@ pub struct LevelState {
     /// there, and how its keeper stands toward them.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub(crate) shops: Vec<Shop>,
+    /// What comes to the level over time (spec §7 "Danger levels"; `world/spawn.rs`): only on a
+    /// level with a danger rule, so every other level's state is as it was.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) spawner: Option<Spawner>,
 }
 
 impl LevelState {
@@ -156,6 +161,7 @@ impl LevelState {
             }),
             ice,
             ice_until: crate::ice::tick_floor(now),
+            spawner: None,
         };
         let iced: Vec<Pos> = level.ice.keys().copied().collect();
         for p in iced {

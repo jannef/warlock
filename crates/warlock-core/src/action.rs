@@ -188,6 +188,10 @@ pub enum Action {
     /// Dev command: set the weather for three hours of game time ([`crate::weather::OVERRIDE`]),
     /// then the weather of the day returns. Takes no game time; recorded in replays.
     SetWeather(Weather),
+    /// Dev command: one attempt to bring a creature to the current level now (spec §7 "Danger
+    /// levels"), whatever its cap and chance: a type by its danger, out of the player's sight.
+    /// Refused on a level of danger 0. Takes no game time; recorded in replays.
+    Spawn,
     /// Dev command: show spell effect `effect` (an id in `data/effects.toml`) at level cell `at`,
     /// or from `at` toward `to`: a burst around `at` (around `to`, flying there from `at`), or a
     /// bolt from `at` to `to` (cut short by the first opaque cell). It only shows: it hurts no
@@ -705,6 +709,7 @@ impl fmt::Display for Action {
             Action::SetVision(id) => write!(f, "vision:{id}"),
             Action::SkipTime(d) => write!(f, "skip:{d}"),
             Action::SetWeather(w) => write!(f, "weather:{}", w.id()),
+            Action::Spawn => f.write_str("spawn"),
             Action::Effect { effect, at, to } => {
                 write!(f, "effect:{effect}@{},{}", at.x, at.y)?;
                 match to {
@@ -840,6 +845,7 @@ impl FromStr for Action {
                 Some(d) if !d.is_zero() => Ok(Action::SkipTime(d)),
                 _ => Err("`skip` needs a positive duration, e.g. `skip:1h`".into()),
             },
+            "spawn" => bare(Action::Spawn),
             "weather" => match arg.and_then(Weather::from_id) {
                 Some(w) => Ok(Action::SetWeather(w)),
                 None => Err("`weather` needs `clear`, `overcast`, `rain`, or `heavy`".into()),
@@ -1123,6 +1129,7 @@ mod tests {
             Action::Rest(Rest::Dusk),
             Action::SkipTime(Duration::hours(1)),
             Action::SkipTime(Duration::seconds(30)),
+            Action::Spawn,
             Action::PickUp(Positions::default()),
             Action::PickUp(Positions::of([0])),
             Action::PickUp(Positions::of([0, 2, 25])),
@@ -1551,6 +1558,7 @@ mod tests {
             "skip",
             "skip:0s",
             "skip:x",
+            "spawn:3",
             "chat",
             "chat:up",
             "ask",

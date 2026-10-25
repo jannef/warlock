@@ -1,0 +1,9 @@
+[[talent]]
+id = "sixth_sense"
+name = "Sixth sense"
+tree = "delver"
+ranks = 2
+description = "You feel how dangerous a place is for you as you arrive; at the second rank, you sense when something new stirs on your level."
+needs = { talents = { alert = 1 } }
+effects = [{ kind = "danger_sense", value = 1 }]
+systems = ["danger"]

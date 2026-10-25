@@ -24,8 +24,13 @@
 //! tables mark shops (spec §7 "Shops"): `kind` (an id in `data/shops.toml`), the `keeper`'s
 //! name, the shop floor's `area` (inclusive: everything lying there is for sale), and the
 //! keeper's `post` on it, where the keeper (`data/shops.toml`'s `[keeper]`) is spawned.
+//! Optional `danger = N` (spec §7 "Danger levels"; 0 to 99, or `{ base, player }`) with
+//! `population` (creature ids), `population_count`, `out_of_depth`, and `spawn`, as a dungeon
+//! branch gives them (`super::danger`): creatures of about that danger keep coming while the
+//! player is there; none on the overworld.
 
 use super::creature::CreatureId;
+use super::danger::{CountSpec, DangerRule, DangerSpec, SpawnSpec, Spawning, SpawningSpec};
 use super::faction::FactionId;
 use super::flow::{FLOW_SPEEDS, Flow};
 use super::light::LightId;
@@ -112,6 +117,13 @@ struct LevelFile {
     /// Shops (spec §7 "Shops").
     #[serde(default)]
     shop: Vec<ShopSpec>,
+    /// How dangerous it is (spec §7 "Danger levels"); none: 0, nothing comes.
+    danger: Option<DangerSpec>,
+    /// The creature types that live there (needed with a `danger`).
+    population: Option<Vec<String>>,
+    population_count: Option<CountSpec>,
+    out_of_depth: Option<u8>,
+    spawn: Option<SpawnSpec>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -400,6 +412,10 @@ pub struct LevelTemplate {
     pub temperature: Option<Temperature>,
     /// Ice on water, by position, in µm (spec §5 "Ice"); only on water that freezes.
     pub ice: BTreeMap<Pos, u32>,
+    /// A hand-made level's danger and what lives there (spec §7 "Danger levels"); `None`:
+    /// danger 0, nothing comes. A generated level's is its branch's
+    /// ([`Content::spawning`]).
+    pub spawning: Option<(DangerRule, Spawning)>,
 }
 
 impl LevelTemplate {
@@ -734,6 +750,20 @@ pub(super) fn parse_level(
         }
         c => c.map(|c| Temperature::degrees(c.into())),
     };
+    let spawning = SpawningSpec {
+        danger: parsed.danger,
+        population: parsed.population,
+        population_count: parsed.population_count,
+        out_of_depth: parsed.out_of_depth,
+        spawn: parsed.spawn,
+    }
+    .resolve(false, &[], |name| {
+        (content.creature_id(name)).map(|c| (c, content.creature(c).level))
+    })
+    .map_err(err)?;
+    if spawning.is_some() && parsed.kind == LevelKind::Overworld {
+        return Err(err("the overworld has no `danger`".into()));
+    }
     let template = LevelTemplate {
         id: id.to_string(),
         name: parsed.name,
@@ -758,6 +788,7 @@ pub(super) fn parse_level(
         loot,
         temperature,
         ice,
+        spawning,
     };
     for spawn in &template.creatures {
         validate_route(&template, content, spawn).map_err(err)?;

@@ -82,6 +82,7 @@ impl World {
             | Action::SetVision(_)
             | Action::SkipTime(_)
             | Action::SetWeather(_)
+            | Action::Spawn
             | Action::Effect { .. }
             | Action::Identify(_)
             | Action::Afflict(_)
