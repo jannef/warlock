@@ -156,7 +156,7 @@ fn unbowed_halves_what_statuses_take_and_keeps_what_they_give() {
     give(&mut w, "unbowed");
     run(&mut w, "afflict:exhausted");
     assert_eq!(strength(&w), 14, "-1 halved toward 0");
-    run(&mut w, "afflict:raging");
+    run(&mut w, "resource:rage");
     assert_eq!(strength(&w), 16, "a raise stays whole");
 }
 

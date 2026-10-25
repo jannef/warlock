@@ -108,6 +108,8 @@ fn files(scenario: &str, extra: &[(&str, &str)]) -> ContentFiles {
     // The talents name the built-in statuses, which STATUS replaces.
     files.remove("data/talents/");
     files.remove("data/talents.toml");
+    // So does the rage (its Raging).
+    files.remove("data/resources.toml");
     let diseases = include_str!("../../../../assets/data/diseases.toml");
     files.insert("data/diseases.toml", &format!("{diseases}\n{FOG}"));
     files.insert("data/experience.toml", EXPERIENCE);

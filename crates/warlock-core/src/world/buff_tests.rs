@@ -281,8 +281,14 @@ fn the_built_in_rage_raises_and_lowers_scores_blocks_reading_and_is_followed_by_
     let scores = |w: &World| w.state.actors[&player].effective_stats(&content);
     let calm = scores(&w);
     let lasting = w.state.player().lasting_max_hp(&content);
+    // Raging comes of the Rage resource (spec §8 "Resources"), not of `afflict`.
     run(&mut w, "afflict:raging");
-    assert_eq!(last_message(&w), "You fly into a rage!");
+    assert_eq!(
+        last_message(&w),
+        "`raging` comes of a resource: try `resource:rage`."
+    );
+    run(&mut w, "resource:rage");
+    assert!(messages(&w).contains(&"You fly into a rage!".to_string()));
     let raging = scores(&w);
     for (stat, by) in [
         (Stat::Strength, 2),
@@ -300,8 +306,11 @@ fn the_built_in_rage_raises_and_lowers_scores_blocks_reading_and_is_followed_by_
     w.state.actors.get_mut(&player).expect("player").hp = max;
     run(&mut w, "read:a");
     assert_eq!(last_message(&w), "You cannot read while raging.");
-    // Five minutes later the rage ends, and exhaustion follows at that moment.
-    run(&mut w, "wait*50");
+    // Its twelve points of rage gone, a point a base turn, the rage ends, and exhaustion
+    // follows at that moment.
+    run(&mut w, "wait*11");
+    assert!(effect(&w, player, "raging").is_some());
+    run(&mut w, "wait");
     assert_eq!(effect(&w, player, "raging"), None);
     let exhausted = effect(&w, player, "exhausted").expect("exhausted");
     assert_eq!((exhausted.severity, exhausted.wear), (1, 0));

@@ -8,7 +8,7 @@ use crate::ability::{Ability, Unavailable};
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::combat::Category;
-use crate::content::{ClassActive, Factor, StatusId};
+use crate::content::{Build, ClassActive, Factor, StatusId};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::stats::{PerStat, Stat, Stats};
@@ -279,19 +279,70 @@ fn rage_raises_strength_blocks_reading_and_exhausts() {
         own(&w, ClassActive::Rage),
         Some(Some(Unavailable::While(raging)))
     );
+    // Raging lasts while the Rage resource does: twelve points, a point lost a base turn (the
+    // first in the rage's own turn).
+    assert_eq!(rage(&w), Some(11));
     run(&mut w, "use:rage");
     assert_eq!(last(&w), "You are still raging.");
-    // Five minutes on, exhausted: no rage until that passes.
-    run(&mut w, "wait*51");
-    assert!(suffers(&w, player, "exhausted"));
+    run(&mut w, "wait*10");
+    assert_eq!(rage(&w), Some(1));
+    assert!(suffers(&w, player, "raging"));
+    // At zero the rage ends, its bar with it, and exhaustion follows: no rage until that passes.
+    run(&mut w, "wait");
+    assert_eq!(rage(&w), None);
+    assert!(!suffers(&w, player, "raging") && suffers(&w, player, "exhausted"));
     run(&mut w, "use:rage");
     assert_eq!(last(&w), "You are still exhausted.");
-    // Mighty rage: twice the Strength.
+    // Mighty rage: twice the Strength, and room for ten more rage.
     let mut w = world("barbarian");
+    let rage_id = content.resource_id("rage").expect("rage");
+    assert_eq!(w.state.player().resource_max(&content, rage_id), 20);
     reach(&mut w, 50);
+    assert_eq!(w.state.player().resource_max(&content, rage_id), 30);
     let calm = strength(&w);
     run(&mut w, "use:rage");
     assert_eq!(strength(&w), calm + 4);
+}
+
+/// The player's rage (the Rage resource), if they hold it.
+fn rage(w: &World) -> Option<u16> {
+    let rage = w.content().resource_id("rage").expect("rage");
+    w.state.player().resources.get(rage).map(|p| p.value)
+}
+
+/// Sets the player's rage, which they hold.
+fn set_rage(w: &mut World, value: u16) {
+    let rage = w.content().resource_id("rage").expect("rage");
+    w.player_mut()
+        .resources
+        .get_mut(rage)
+        .expect("raging")
+        .value = value;
+}
+
+#[test]
+fn raging_ended_otherwise_takes_the_rage_with_it() {
+    let mut w = world("barbarian");
+    let player = w.state.player;
+    run(&mut w, "use:rage");
+    let raging = status(&w, "raging");
+    let effect = *w.state.player().effects.get(raging).expect("raging");
+    w.player_mut().effects.remove(raging);
+    let mut events = Vec::new();
+    w.ended(player, &[effect], &mut events);
+    assert_eq!(rage(&w), None, "no Raging, no rage");
+    assert!(suffers(&w, player, "exhausted"));
+}
+
+#[test]
+fn a_rage_spends_no_mana() {
+    let mut w = world("barbarian");
+    let player = w.state.player;
+    w.player_mut().mana = 5;
+    run(&mut w, "use:rage");
+    assert!(!w.spend_mana(player, 1), "raging: no mana is spent");
+    run(&mut w, "drain:1");
+    assert_eq!(w.state.player().mana, 5);
 }
 
 #[test]
@@ -333,28 +384,35 @@ fn thick_hide_fast_movement_hardened_and_mighty_thews() {
 
 #[test]
 fn blood_frenzy_and_unstoppable_keep_the_rage() {
+    // Before Blood frenzy a kill builds no rage.
     let mut w = world("barbarian");
-    reach(&mut w, 60);
     let player = w.state.player;
     run(&mut w, "use:rage");
-    // A kill sets the rage's easing back a minute.
-    let raging = status(&w, "raging");
-    w.player_mut().effects.iter_mut().for_each(|e| e.wear = 200);
-    w.frenzy();
-    assert_eq!(
-        w.state.player().effects.get(raging).map(|e| e.wear),
-        Some(140)
-    );
+    w.gain_resource(player, Build::Kill);
+    assert_eq!(rage(&w), Some(11));
+    // With it, five rage a kill (up to Mighty rage's thirty).
+    let mut w = world("barbarian");
+    reach(&mut w, 60);
+    run(&mut w, "use:rage");
+    w.gain_resource(player, Build::Kill);
+    assert_eq!(rage(&w), Some(16));
+    set_rage(&mut w, 28);
+    w.gain_resource(player, Build::Kill);
+    assert_eq!(rage(&w), Some(30), "never past the maximum");
     // While raging, bleeding ticks nothing.
     let hp = w.state.player().hp;
     run(&mut w, "afflict:bleeding wait*4");
     assert_eq!(w.state.player().hp, hp, "no blood lost while raging");
-    // A blow that would fell the raging barbarian leaves 1 hit point and ends the rage.
+    // A blow that would fell the raging barbarian leaves 1 hit point for ten rage.
+    set_rage(&mut w, 25);
     let kobold = beside(&mut w, "kobold", 5);
     let mut events = Vec::new();
     assert!(!w.hurt(player, 999, fight::Harm::Actor(kobold), &mut events));
     assert_eq!(w.state.player().hp, 1);
-    assert!(!suffers(&w, player, "raging") && suffers(&w, player, "exhausted"));
+    assert_eq!(rage(&w), Some(15));
+    assert!(suffers(&w, player, "raging"), "the rage goes on");
+    assert!(!w.hurt(player, 999, fight::Harm::Actor(kobold), &mut events));
+    assert_eq!(rage(&w), Some(5));
     // (This barbarian is a Phoenix: its one rising spent, nothing more stands between.)
     w.state
         .progress
@@ -362,8 +420,17 @@ fn blood_frenzy_and_unstoppable_keep_the_rage() {
         .insert(super::stars::RISEN.to_string());
     assert!(
         w.hurt(player, 999, fight::Harm::Actor(kobold), &mut events),
-        "once a rage"
+        "too little rage left to hold on"
     );
+    // Spending the last of it ends the rage: exhaustion follows.
+    let mut w = world("barbarian");
+    reach(&mut w, 60);
+    run(&mut w, "use:rage");
+    set_rage(&mut w, 10);
+    let kobold = beside(&mut w, "kobold", 5);
+    assert!(!w.hurt(player, 999, fight::Harm::Actor(kobold), &mut events));
+    assert_eq!((w.state.player().hp, rage(&w)), (1, None));
+    assert!(!suffers(&w, player, "raging") && suffers(&w, player, "exhausted"));
 }
 
 #[test]

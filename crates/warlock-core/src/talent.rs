@@ -16,8 +16,8 @@
 use crate::alignment::Band;
 use crate::character::Character;
 use crate::content::{
-    Benefit, Choice, CombatStance, Content, DamageTypeId, LightId, MAX_RANK, Need, Role, Sign,
-    StatusId, TalentDef, TalentEffect, TalentId, TerrainId,
+    Benefit, Build, Choice, CombatStance, Content, DamageTypeId, LightId, MAX_RANK, Need,
+    ResourceId, Role, Sign, StatusId, TalentDef, TalentEffect, TalentId, TerrainId,
 };
 use crate::damage::Kinds;
 use crate::dice::Dice;
@@ -427,13 +427,17 @@ pub struct TalentMods {
     pub blaze: Option<Blaze>,
     /// Lay on hands heals fully, cures, and its cooldown is halved.
     pub avatar: bool,
-    /// The active Rage: the status it gives, if it has it.
-    pub rage: Option<StatusId>,
-    /// Seconds a kill keeps a rage going longer.
-    pub blood_frenzy: u32,
-    /// While raging, the statuses that tick nothing, and the last hit point held once; `None`
-    /// without Unstoppable.
-    pub unstoppable: Option<Vec<StatusId>>,
+    /// The active Rage: the resource it grants (Rage, which brings the Raging status), if it
+    /// has it.
+    pub rage: Option<ResourceId>,
+    /// What events build resources beyond the resources' own `builds`: `(resource, on,
+    /// amount)` (Blood frenzy's rage a kill).
+    pub resource_builds: Vec<(ResourceId, Build, u16)>,
+    /// How much more of a resource it may hold: `(resource, more)` (Mighty rage).
+    pub resource_max: Vec<(ResourceId, u16)>,
+    /// While raging, the statuses that tick nothing, and what of the rage holding on to the
+    /// last hit point costs; `None` without Unstoppable.
+    pub unstoppable: Option<Unstoppable>,
     /// The active Whirlwind.
     pub whirlwind: bool,
     /// The active Smite, if it has it.
@@ -608,6 +612,14 @@ pub struct Guard {
     pub per_piece: bool,
 }
 
+/// Unstoppable (spec §8 "Class abilities"): while raging, the statuses in `numb` tick nothing,
+/// and a blow that would take the last hit point leaves it for `cost` of the rage.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct Unstoppable {
+    pub numb: Vec<StatusId>,
+    pub cost: u16,
+}
+
 /// The active Second wind (spec §8 "Talents"): hit points back at once, then a cooldown.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct SecondWind {
@@ -694,6 +706,11 @@ impl TalentMods {
             A::FireBreath => self.fire_breath.as_ref().map(|b| b.cooldown),
             A::HoundsBay => self.hounds_bay.map(|b| b.cooldown),
         }
+    }
+
+    /// The status the active Rage brings (Raging: its resource's `status`), if it has Rage.
+    pub fn rage_status(&self, content: &Content) -> Option<StatusId> {
+        content.resource(self.rage?).status
     }
 
     /// Whether it has class active `active` (spec §8 "Class abilities").
@@ -1275,13 +1292,28 @@ impl TalentMods {
                     });
                 }
             }
-            TalentEffect::Rage { status } => {
-                self.rage = content.status_id(&status).or(self.rage);
+            TalentEffect::Rage { resource } => {
+                self.rage = content.resource_id(&resource).or(self.rage);
             }
-            TalentEffect::BloodFrenzy { seconds } => self.blood_frenzy += seconds,
-            TalentEffect::Unstoppable { statuses } => {
+            TalentEffect::ResourceBuild {
+                resource,
+                on,
+                amount,
+            } => {
+                if let Some(r) = content.resource_id(&resource) {
+                    self.resource_builds.push((r, on, amount));
+                }
+            }
+            TalentEffect::ResourceMax { resource, value } => {
+                if let Some(r) = content.resource_id(&resource) {
+                    self.resource_max.push((r, value));
+                }
+            }
+            TalentEffect::Unstoppable { statuses, cost } => {
                 let ids = statuses.iter().filter_map(|s| content.status_id(s));
-                self.unstoppable.get_or_insert_with(Vec::new).extend(ids);
+                let held = self.unstoppable.get_or_insert_with(Unstoppable::default);
+                held.numb.extend(ids);
+                held.cost = held.cost.max(cost);
             }
             TalentEffect::Whirlwind => self.whirlwind = true,
             TalentEffect::Smite {

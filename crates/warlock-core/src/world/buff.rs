@@ -139,6 +139,7 @@ impl World {
                 self.afflict(id, next, 1, e.by, events);
             }
         }
+        self.end_resources_of(id, ended, events);
         self.keep_hp_within_max(id);
     }
 }

@@ -112,7 +112,12 @@ fn granting_holds_it_at_its_start_and_takes_no_time() {
     let outcome = w.apply(&"resource:rage".parse().expect("action"));
     assert!(!outcome.took_turn);
     assert_eq!(held(&w, "rage"), Some(12));
-    assert_eq!(last(&w), "You gain Rage: 12 (dev).");
+    let said: Vec<String> = w.messages().iter().map(|m| m.display()).collect();
+    assert!(said.contains(&"You gain Rage: 12 (dev).".to_string()));
+    assert!(
+        said.contains(&"You fly into a rage!".to_string()),
+        "with its Raging"
+    );
     // Again: what it holds, if that is more than its start.
     set(&mut w, "rage", 17);
     run(&mut w, "resource:rage");
@@ -247,9 +252,16 @@ fn spending_is_refused_when_short_and_ends_one_that_ends_at_zero() {
     assert!(w.spend_resource(player, rage, 12, &mut events));
     assert_eq!(held(&w, "rage"), None, "spent to 0, it ends");
     assert!(matches!(
-        events.as_slice(),
-        [Event::ResourceEnded { resource, .. }] if *resource == rage
+        events.first(),
+        Some(Event::ResourceEnded { resource, .. }) if *resource == rage
     ));
+    let raging = w.content().status_id("raging").expect("raging");
+    assert!(
+        events
+            .iter()
+            .any(|e| matches!(e, Event::Status { status, began: false, .. } if *status == raging)),
+        "its Raging ends with it"
+    );
     // Ending one leaves the others.
     assert_eq!(held(&w, "focus"), Some(6));
 }
