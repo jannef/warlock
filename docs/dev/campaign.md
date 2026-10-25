@@ -153,4 +153,5 @@ order in release and developer builds), the `new-run-screen` text snapshot, and
 
 Not yet (the design's later items): campaign vaults kept to their campaign's branches (the vault
 picker reads every vault), the save summary's and the Characters screen's campaign (#341), and
-`dev = true` scenarios.
+`dev = true` scenarios. A branch level's `vaults` (#339, docs/dev/mapgen.md) keeps the vaults it
+names to itself: those may be shared or of the branch's campaign, never another's.

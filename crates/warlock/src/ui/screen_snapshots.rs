@@ -199,8 +199,8 @@ const CASES: &[Case] = &[
         scenario: "world",
         screen: Some("new-run"),
         keys: Some(
-            "Down Down Down Down Down Down Down Down Down Down Enter Down Down Enter Enter Enter Down Down \
-             Down Down Down Down Down Down Enter Enter Enter",
+            "Up Enter Down Down Enter Enter Enter Down Down Down Down Down Down Down Down Enter \
+             Enter Enter",
         ),
         size: (100, 36),
         ..BASE

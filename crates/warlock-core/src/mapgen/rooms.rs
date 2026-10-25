@@ -1,8 +1,8 @@
 //! Rooms and corridors (ADOM-like): walled rectangular rooms joined by corridors dug through rock,
 //! with doors where corridors enter rooms.
 //!
-//! 1. Maybe stamp a vault first; it joins the level like a room whose only doors are its
-//!    entrances.
+//! 1. Stamp the vaults the branch level names (each for certain, else the attempt fails), then
+//!    maybe one other; a vault joins the level like a room whose only doors are its entrances.
 //! 2. Scatter non-overlapping rooms (random attempts, at least two cells of rock apart).
 //! 3. Join the rooms along a minimum spanning tree of their centers, so everything is connected,
 //!    plus a few extra corridors for loops. A corridor is the cheapest path from a door spot on one
@@ -19,7 +19,7 @@
 
 use super::connect::cheapest_path;
 use super::{Canvas, Needs, shop, special, vault};
-use crate::content::{ObjectId, SpecialRoom, StairsDir};
+use crate::content::{ObjectId, SpecialRoom, StairsDir, Vault};
 use crate::door::{Key, Lock};
 use crate::geom::{Dir, Pos};
 use crate::object::Stack;
@@ -111,6 +111,9 @@ fn manhattan(a: Pos, b: Pos) -> i32 {
 
 pub(super) fn build(canvas: &mut Canvas, rng: &mut Rng, needs: Needs) -> Option<()> {
     let mut rooms = Vec::new();
+    for v in vault::named(canvas, needs.vaults) {
+        place_named(canvas, rng, &mut rooms, v)?;
+    }
     if rng.chance(VAULT_CHANCE) {
         place_vault(canvas, rng, &mut rooms);
     }
@@ -254,6 +257,22 @@ fn place_vault(canvas: &mut Canvas, rng: &mut Rng, rooms: &mut Vec<Room>) {
         });
         return;
     }
+}
+
+/// Stamps `vault`, which the branch level names, on a random spot among all where it fits;
+/// `None` if it fits nowhere.
+fn place_named(canvas: &mut Canvas, rng: &mut Rng, rooms: &mut Vec<Room>, v: &Vault) -> Option<()> {
+    let at = *rng.pick(&vault::spots(canvas, v))?;
+    let doors = vault::stamp(canvas, v, at);
+    rooms.push(Room {
+        x: at.x,
+        y: at.y,
+        w: v.width(),
+        h: v.height(),
+        doors,
+        vault: true,
+    });
+    Some(())
 }
 
 /// Scatters rooms by random attempts until the target count (about one per 200 cells).

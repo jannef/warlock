@@ -4,8 +4,9 @@
 //!    at least five rock neighbors and stays rock with at least four.
 //! 2. Keep the largest 4-connected cave; everything else is rock. Too small a cave is a failed
 //!    attempt.
-//! 3. Stamp one or two vaults into solid rock (a random spot among all that fit) and tunnel from
-//!    each entrance to the cave.
+//! 3. Stamp the vaults the branch level names (each for certain, else the attempt fails), then
+//!    one or two others, into solid rock (a random spot among all that fit) and tunnel from each
+//!    entrance to the cave.
 //! 4. A few pools of shallow water.
 //! 5. The up staircase in a roomy spot; the down staircase in a roomy spot far from it (by walking
 //!    distance).
@@ -16,7 +17,7 @@
 
 use super::connect::{cheapest_path, distances, flood};
 use super::{Canvas, Needs, out_and_back, special, vault};
-use crate::content::StairsDir;
+use crate::content::{StairsDir, Vault};
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
 use crate::rng::Rng;
@@ -37,8 +38,13 @@ pub(super) fn build(canvas: &mut Canvas, rng: &mut Rng, needs: Needs) -> Option<
         smooth(canvas);
     }
     keep_largest_cave(canvas)?;
+    let named = vault::named(canvas, needs.vaults);
+    if place_vaults(canvas, rng, &named, named.len()) < named.len() {
+        return None;
+    }
     let vaults = 1 + usize::from(rng.chance(30));
-    place_vaults(canvas, rng, vaults);
+    let shuffled = vault::shuffled(canvas, rng);
+    place_vaults(canvas, rng, &shuffled, vaults);
     pools(canvas, rng);
     let up = place_stairs(canvas, rng, needs)?;
     light(canvas, rng, up);
@@ -110,22 +116,15 @@ fn keep_largest_cave(canvas: &mut Canvas) -> Option<()> {
     Some(())
 }
 
-/// Stamps up to `count` vaults into solid rock, each joined to the cave by a tunnel from every
-/// entrance.
-fn place_vaults(canvas: &mut Canvas, rng: &mut Rng, count: usize) {
+/// Stamps up to `count` of `vaults`, in order, into solid rock, each joined to the cave by a
+/// tunnel from every entrance; returns how many it stamped.
+fn place_vaults(canvas: &mut Canvas, rng: &mut Rng, vaults: &[&Vault], count: usize) -> usize {
     let mut placed = 0;
-    for v in vault::shuffled(canvas, rng) {
+    for &v in vaults {
         if placed == count {
             break;
         }
-        let (max_x, max_y) = (
-            canvas.width() - 2 - v.width(),
-            canvas.height() - 2 - v.height(),
-        );
-        let spots: Vec<Pos> = (2..=max_y)
-            .flat_map(|y| (2..=max_x).map(move |x| Pos::new(x, y)))
-            .filter(|at| vault::fits(canvas, v, *at))
-            .collect();
+        let spots = vault::spots(canvas, v);
         for _ in 0..8 {
             let Some(&at) = rng.pick(&spots) else { break };
             let inside = |p: Pos| {
@@ -150,6 +149,7 @@ fn place_vaults(canvas: &mut Canvas, rng: &mut Rng, count: usize) {
             break;
         }
     }
+    placed
 }
 
 /// The cells from `start` through rock to the nearest open cave cell (at most `MAX_TUNNEL` long),

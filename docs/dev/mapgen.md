@@ -24,6 +24,16 @@ branch with a danger the initial population follows (`mapgen/population.rs`, str
 `population/<level id>`; `docs/dev/creatures.md`), then every creature's gear (`gear::arm`,
 stream `gear/<level id>`).
 
+Named vaults (#339): a `[[dungeon.levels]]` range's `vaults` (`DungeonDef::vaults(depth)`,
+checked and marked `Vault::pinned` by `Content::pin_vaults` once the branch's campaign is known:
+a dungeon vault, shared or of the branch's campaign, once a level) reaches the generators as
+`Needs::vaults`. Both stamp them first, each on a random spot among every one where it fits
+(`vault::spots`; caves also need its tunnels), and fail the attempt if one fits nowhere, so the
+next attempt's stream tries again; then the random vault as before. `vault::shuffled` leaves
+pinned vaults out, so a branch without named vaults draws exactly what it did (no extra draws;
+the Depths' snapshots are unchanged). Fyrdelf names the foreman's cabin on 1 to 4 and the
+drake's hoard on 12 (`mapgen/fyrdelf_tests.rs`, with the branch's first-level snapshot).
+
 Special rooms (spec §7 "Special rooms", M25) are data: `data/room_effects.toml`
 (`content/room_effect.rs`: effects, the per-room `chance`, `per_level`). Generators make them last
 (`mapgen/special.rs`, from the level's map stream, so levels without one are unchanged; rooms

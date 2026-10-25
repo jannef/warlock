@@ -365,7 +365,7 @@ mod tests {
             ]
         );
         for scenario in content.scenarios() {
-            let owner = if ["ascmearc", "ceaptun"].contains(&scenario.id.as_str()) {
+            let owner = if ["ascmearc", "ceaptun", "fyrdelf"].contains(&scenario.id.as_str()) {
                 "ascmearc"
             } else {
                 "showcase"
