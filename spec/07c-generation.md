@@ -23,6 +23,38 @@ developer notes (CLAUDE.md, `docs/dev/`).
   that depth. A branch level is generated on its first visit from its own random stream (§8) and
   then persists like a hand-made level. Its `<` leads to `depths:N-1` (on depth 1, back to the
   level it was first entered from), its `>` to `depths:N+1` (the deepest level has none).
+- **Danger levels** (#326; `content/danger.rs`, `world/spawn.rs`; the design is
+  `docs/design/campaign.md` §9): every level has a danger, computed when asked
+  (`World::danger`), never stored. A branch's `danger = 4` (or `{ base, per_depth, player }`;
+  `base` 0 to 99, `per_depth` 0 to 5, default 1) gives its floor at depth *d*
+  `base + (d − 1) × per_depth`, and a `[[dungeon.levels]]` range may give its own `danger`; a
+  hand-made level's `danger = N` (0 to 99, or `{ base, player }`) is its own; the overworld,
+  local areas, and every level without one have 0, and nothing comes there (every showcase
+  level and the Depths: unchanged). `player = { percent, from, max }` scales an area with the
+  player (ADOM's puppy cave): `+ max(0, level − from) × percent / 100`, at most `max`; no area
+  uses it yet. With a danger come `population` (creature ids; a branch's default its
+  `creatures`), `population_count` (a number, or `{ per_1000, least, most }`, default 35 per
+  1000 walkable cells, 25 to 80; at most 200), `out_of_depth` (percent, default 5), and
+  `spawn = { every, chance, cap }` (default `15m`, 60 %, cap the population). A creature type's
+  `level` is its danger; a draw at danger *D* weighs a type of level *L* 4 at `D` and `D − 1`, 2
+  at `D − 2` and `D − 3`, 1 down to `D − 8`, else 0 (above *D* too), uniform among equal weights
+  over the types sorted by id; with `out_of_depth` % the draw is made at `D + 1` to `D + 3`
+  instead. A type with `unique = true` is drawn once a run (`Progress::uniques`). **Spawning**:
+  a level with a danger keeps a spawner in its state (`LevelState::spawner`: the next attempt's
+  time and the stream `spawn/<level id>`; none elsewhere, so other levels' states are as they
+  were). At the end of every turn (`run_turn` → `spawn_tick`) each attempt due on the current
+  level is made: skipped while the level holds as many creatures hostile to the player as its
+  cap, else with its chance a type is drawn and placed on a cell out of the player's view by the
+  perception rules and at least 8 cells (Chebyshev) from them, walkable, free, and no stairs,
+  door, shop floor, or sanctuary (up to 32 tries, else nothing comes), with a short out-and-back
+  route where one fits, else a post. Floors the player is not on stay frozen: on arrival the next
+  attempt is put off to `every` from then. A rest perceives after any turn in which one came. The
+  dev action `spawn` makes one attempt now, whatever the cap and chance. Talents (system
+  `danger`): Quiet delver (`spawn_every_percent` 100: attempts half as often), Sixth sense
+  (`danger_sense`, 2 ranks: on arrival "This place feels quiet / uneasy / dangerous / deadly."
+  at danger up to level − 4 / level / level + 3 / beyond; at 2, the note "Something stirs in the
+  dark." when one comes). Hidden in the game; the wiki's dungeons page states it all. The
+  initial population of a generated floor (§9.3 of the design) is #326's follow-up, C2.
 - **The overworld**: at most one level of kind `overworld`. Its stairs down are locations; every
   other cell whose terrain has a `local` ground names a local area, level id `local:x,y` (canonical
   decimal, no signs or leading zeros), which stairs and scenarios may also target. A local area is

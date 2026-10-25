@@ -173,6 +173,11 @@
 #                                 kills) are cut that many grades finer (1 to 5)
 #   notice { value }              notices hidden things in passing as if trained in Spot, with
 #                                 that much added
+#   danger_sense { value }        senses a level's danger (spec §7 "Danger levels"): at 1, how a
+#                                 level feels on arrival, against its own level; at 2, a note
+#                                 when a creature comes to its level (ranks add up)
+#   spawn_every_percent { value } the time between attempts to bring creatures to its level
+#                                 that percent longer
 #   stone_sense                   notices hidden things on stone in passing, as a dwarf does
 #   stone_find { value }          added to its checks to find what is hidden on stone,
 #                                 searching and in passing

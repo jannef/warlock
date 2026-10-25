@@ -18,9 +18,9 @@ expression: "render(case, content.clone())"
             │   g  Armour training             1/2  You move freely in armour: it ham… │
             │   h  Unflinching                      Even as a coward you keep your he… │
             │ Shadow                                                                   │
-            │   i  Lamplighter                      You tend your lantern well: it bu… │
+            │   i  Keen ears                   1/2  You hear fainter sounds, fainter … │
+            │   j  Night eyes                       Your eyes grow used to the dark: … │
             │ Wayfarer                                                                 │
-            │   j  Long strider                     Your journeys across the overworl… │
             │   k  Pilgrim                          You have knelt in many temples: t… │
             │   l  Sun-blessed                      The sun mends you: under the open… │
             │   m  Swimmer                          Water does not slow you: you wade… │

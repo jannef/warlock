@@ -365,6 +365,12 @@ pub enum TalentEffect {
     StoneFind { value: i32 },
     /// Added to every check to find hidden things, searching and in passing.
     Search { value: i32 },
+    /// Senses the danger of a level (spec §7 "Danger levels"): from 1, how a level feels on
+    /// arrival; from 2, a note when something comes to the level (Sixth sense, one per rank).
+    DangerSense { value: i32 },
+    /// The creatures that come to a level the actor is on come this percent less often (the
+    /// time between attempts this percent longer; Quiet delver).
+    SpawnEveryPercent { value: i32 },
     /// Searching reaches this many cells farther.
     SearchReach { value: i32 },
     /// A skill counts this much higher wherever its value is read (an untrained one from 0).
@@ -929,6 +935,7 @@ impl TalentEffect {
             | TalentEffect::MeleeDamage { value }
             | TalentEffect::Hearing { value }
             | TalentEffect::Notice { value }
+            | TalentEffect::DangerSense { value }
             | TalentEffect::Threat { value }
             | TalentEffect::Search { value }
             | TalentEffect::SearchReach { value }
@@ -1421,6 +1428,7 @@ impl TalentEffect {
             | TalentEffect::RestingPercent { value }
             | TalentEffect::PenaltyPercent { value }
             | TalentEffect::DigPercent { value }
+            | TalentEffect::SpawnEveryPercent { value }
             | TalentEffect::TwoHandedPrice { value }
             | TalentEffect::SpeedPercent { value }
             | TalentEffect::SpellDamagePercent { value }

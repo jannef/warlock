@@ -337,6 +337,10 @@ pub struct TalentMods {
     pub stone_find: i32,
     /// Added to every check to find hidden things.
     pub search: i32,
+    /// How well it senses a level's danger (Sixth sense's ranks; `world/spawn.rs`).
+    pub danger_sense: i32,
+    /// Percent longer between the attempts to bring creatures to its level (Quiet delver).
+    pub spawn_every_percent: i32,
     /// Cells more its searching reaches.
     pub search_reach: i32,
     /// How much higher some skills count, by skill.
@@ -1067,6 +1071,8 @@ impl TalentMods {
             TalentEffect::StoneSense => self.stone_sense = true,
             TalentEffect::StoneFind { value } => self.stone_find += value,
             TalentEffect::Search { value } => self.search += value,
+            TalentEffect::DangerSense { value } => self.danger_sense += value,
+            TalentEffect::SpawnEveryPercent { value } => self.spawn_every_percent += value,
             TalentEffect::SearchReach { value } => self.search_reach += value,
             TalentEffect::Skill { skill, value } => {
                 if let Some(id) = content.skill_id(&skill) {
