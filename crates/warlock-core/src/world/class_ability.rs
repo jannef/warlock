@@ -1,7 +1,8 @@
 //! The class actives in the world (spec §8 "Class abilities"): what a class's level table gives
 //! that is used from the abilities menu ([`crate::ability::Ability::Class`]) as [`Action::Use`]
 //! (`use:rage`, `use:smite:E`): Rage, Veteran's wind, Whirlwind, Lay on hands, Smite, Holy
-//! radiance, Quivering palm, Inspire (for mana, #244), Master thief's finisher (for openings,
+//! radiance, Quivering palm (for ki), Inspire (for inspiration or mana, #244, R4), Master thief's
+//! finisher (for openings,
 //! `world/openings.rs`; the ranger's Volley, aimed at a cell, is `world/volley.rs`). The
 //! abilities themselves are talents of the class tree, given as levels come (`world/class.rs`)
 //! and read through `Actor::talent_mods`. Each active refuses, taking no time, without the
@@ -38,8 +39,15 @@ impl World {
             }
             (_, dir) => dir,
         };
-        // An aimed blow with nobody hostile there is refused before anything is spent.
+        // An aimed blow with nobody hostile there is refused before anything is spent, and so is
+        // a quivering palm with a weapon in hand.
         if dir.is_some_and(|d| active.aimed() && self.hostile_toward(d).is_none()) {
+            return Spent::Nothing;
+        }
+        if active == ClassActive::QuiveringPalm
+            && self.state.player().weapon_item(&self.content).is_some()
+        {
+            self.say("Your hands are not free.");
             return Spent::Nothing;
         }
         // Its cost in an alternative resource (spec §8 "Resources"), if it has one: what
@@ -99,14 +107,17 @@ impl World {
         true
     }
 
-    /// Inspire: the player sings themselves (Inspired), spending its mana (Virtuoso: a greater
-    /// inspiration, for none), for the time of a `chat`.
+    /// Inspire: the player sings themselves (Inspired), spending its inspiration while they
+    /// hold enough, else its mana (Virtuoso: a greater inspiration, for nothing), for the time
+    /// of a `chat`.
     fn inspire(&mut self, events: &mut Vec<Event>) -> Spent {
         let player = self.state.player;
         let Some(inspire) = self.state.player().talent_mods(&self.content).inspiring() else {
             return Spent::Nothing;
         };
-        if !self.spend_mana(player, inspire.mana) {
+        let inspired = (inspire.instead)
+            .is_some_and(|c| self.spend_resource(player, c.resource, c.amount, events));
+        if !inspired && !self.spend_mana(player, inspire.mana) {
             self.say("You have too little mana.");
             return Spent::Nothing;
         }
@@ -244,18 +255,14 @@ impl World {
     }
 
     /// Quivering palm: a blow of the player's bare hand at the hostile in `dir`; a hit that
-    /// does damage leaves it bleeding (the palm's degrees); then its cooldown. Refused (no time)
-    /// with a weapon in hand or no hostile there.
+    /// does damage leaves it bleeding (the palm's degrees). Its ki was spent by `use_class`,
+    /// which refused (no time) with a weapon in hand or no hostile there.
     fn quivering_palm(&mut self, dir: Dir, events: &mut Vec<Event>) -> Spent {
         let content = self.content.clone();
         let player = self.state.player;
         let Some(palm) = self.state.player().talent_mods(&content).quivering_palm else {
             return Spent::Nothing;
         };
-        if self.state.player().weapon_item(&content).is_some() {
-            self.say("Your hands are not free.");
-            return Spent::Nothing;
-        }
         let Some((target, seen)) = self.hostile_toward(dir) else {
             return Spent::Nothing;
         };
@@ -270,7 +277,6 @@ impl World {
         }
         self.after_attack(player, target, super::free_blow::parried(blow), events);
         self.exert(ActionKind::Melee);
-        self.afflict(player, palm.cooldown, palm.degrees, None, events);
         Spent::Turn(price)
     }
 

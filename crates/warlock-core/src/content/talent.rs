@@ -553,14 +553,9 @@ pub enum TalentEffect {
     /// `light` (an id in `data/lights.toml`).
     Radiance { status: String, light: String },
     /// The class active Quivering palm: an unarmed blow in a direction; a hit that wounds
-    /// leaves the target `severity` degrees of `status`; then `degrees` of the `cooldown`
-    /// status.
-    QuiveringPalm {
-        status: String,
-        severity: u16,
-        cooldown: String,
-        degrees: u16,
-    },
+    /// leaves the target `severity` degrees of `status` (what it costs is the talent's
+    /// `resource`: Ki).
+    QuiveringPalm { status: String, severity: u16 },
     /// The active Blaze (a birth sign's, spec §8 "Birth sign"): a burst of `radius` around the
     /// player that does `damage` of kind `damage_type` (an id in `data/damage_types.toml`) to
     /// every creature it reaches but them, melts the ice it reaches, and sets each cell it
@@ -801,11 +796,22 @@ pub enum TalentEffect {
         cost: u16,
         saving: u8,
     },
+    /// Each second blow of its flurry spends `cost` of `resource`; holding less, it strikes
+    /// none (Flurry, on Ki).
+    FlurryCost { resource: String, cost: u16 },
     /// The class active Volley: `shots` shots at a cell for the price of one (what it costs is
     /// the talent's `resource`, if anything).
     Volley { shots: u8 },
-    /// The class active Inspire: it suffers `status` (Inspired), for `mana` mana.
-    Inspire { status: String, mana: i32 },
+    /// The class active Inspire: it suffers `status` (Inspired), for `mana` mana; or, while it
+    /// holds `cost` of `resource` (Inspiration), for those in place of the mana.
+    Inspire {
+        status: String,
+        mana: i32,
+        #[serde(default)]
+        resource: Option<String>,
+        #[serde(default)]
+        cost: u16,
+    },
     /// Inspire gives `status` instead, and costs no mana (Virtuoso).
     Virtuoso { status: String },
 }
@@ -876,6 +882,18 @@ impl TalentEffect {
             Some(r) => Ok(Some(r)),
             None if content.resources().is_empty() => Ok(None),
             None => Err(format!("names an unknown resource `{id}`")),
+        };
+        // A cost of 1 to the maximum of the resource `id` names, for effect `kind`.
+        let resource_cost = |kind: &str, id: &str, cost: u16| {
+            if cost == 0 {
+                return Err(format!("`{kind}`: cost is at least 1"));
+            }
+            match resource(id)?.map(|r| content.resource(r).max) {
+                Some(max) if cost > max => Err(format!(
+                    "`{kind}`: costs {cost} of `{id}`, more than its maximum {max}"
+                )),
+                _ => Ok(()),
+            }
         };
         let bonus = |v: i32| {
             (v != 0 && BONUSES.contains(&v))
@@ -970,11 +988,24 @@ impl TalentEffect {
                 }
                 Ok(())
             }
-            TalentEffect::Inspire { status: id, mana } => {
+            TalentEffect::Inspire {
+                status: id,
+                mana,
+                resource: instead,
+                cost,
+            } => {
                 if !(0..=100).contains(mana) {
                     return Err("`inspire`: mana is 0 to 100".into());
                 }
+                if let Some(instead) = instead {
+                    resource_cost("inspire", instead, *cost)?;
+                } else if *cost != 0 {
+                    return Err("`inspire`: a `cost` needs its `resource`".into());
+                }
                 status(id)
+            }
+            TalentEffect::FlurryCost { resource: id, cost } => {
+                resource_cost("flurry_cost", id, *cost)
             }
             TalentEffect::Virtuoso { status: id } => status(id),
             TalentEffect::Stat { value, .. } => {
@@ -1095,14 +1126,11 @@ impl TalentEffect {
             TalentEffect::QuiveringPalm {
                 status: id,
                 severity,
-                cooldown,
-                degrees,
             } => {
-                if *severity == 0 || *degrees == 0 {
-                    return Err("`quivering_palm`: severity and degrees are at least 1".into());
+                if *severity == 0 {
+                    return Err("`quivering_palm`: severity is at least 1".into());
                 }
-                status(id)?;
-                status(cooldown)
+                status(id)
             }
             TalentEffect::Blaze {
                 radius,

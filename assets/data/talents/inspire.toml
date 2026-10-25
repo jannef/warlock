@@ -3,6 +3,9 @@ id = "inspire"
 name = "Inspire"
 tree = "class"
 granted = true
-description = "Sing yourself to courage (an ability, for mana): a while surer to hit and quicker to dodge."
-effects = [{ kind = "inspire", status = "inspired", mana = 3 }]
-systems = ["mana", "status", "combat"]
+description = "You gain Inspiration, which your own kills build and time wears away. Sing yourself to courage (an ability): a while surer to hit and quicker to dodge, for inspiration when you have enough, else for mana."
+effects = [
+    { kind = "grants_resource", resource = "inspiration" },
+    { kind = "inspire", status = "inspired", mana = 3, resource = "inspiration", cost = 3 },
+]
+systems = ["mana", "status", "combat", "resources"]

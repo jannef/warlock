@@ -853,14 +853,10 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::QuiveringPalm {
             status: id,
             severity,
-            cooldown,
-            degrees,
         } => format!(
             "active (the time of a melee attack), in a direction, nothing in hand: a bare-handed \
-             blow; a hit that does damage leaves {severity} degrees of {}; then {degrees} degrees \
-             of {}",
-            status(&id),
-            status(&cooldown)
+             blow; a hit that does damage leaves {severity} degrees of {}",
+            status(&id)
         ),
         TalentEffect::Hardened { bonus } => format!(
             "every level past the last that adds hit points adds them again, and {bonus} more"
@@ -1291,16 +1287,34 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "a shot you loose while you hold {cost} {} spends them and takes {saving} % less time",
             resource_name(content, &resource).to_lowercase()
         ),
+        TalentEffect::FlurryCost { resource, cost } => format!(
+            "each second blow of the flurry spends {cost} {}; with less, there is none",
+            resource_name(content, &resource).to_lowercase()
+        ),
         TalentEffect::Volley { shots } => format!(
             "active (the time of one shot, one exertion), at a cell: {shots} shots of the readied \
              missile weapon"
         ),
-        TalentEffect::Inspire { status: id, mana } => format!(
-            "active (the time of a chat), {mana} mana: {}",
-            buff(content, &id)
-        ),
+        TalentEffect::Inspire {
+            status: id,
+            mana,
+            resource,
+            cost,
+        } => {
+            let price = match resource {
+                Some(r) => format!(
+                    "{cost} {} while you hold that much, else {mana} mana",
+                    resource_name(content, &r).to_lowercase()
+                ),
+                None => format!("{mana} mana"),
+            };
+            format!(
+                "active (the time of a chat), {price}: {}",
+                buff(content, &id)
+            )
+        }
         TalentEffect::Virtuoso { status: id } => {
-            format!("Inspire gives {} instead, for no mana", buff(content, &id))
+            format!("Inspire gives {} instead, for nothing", buff(content, &id))
         }
     }
 }

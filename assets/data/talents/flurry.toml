@@ -3,6 +3,10 @@ id = "flurry"
 name = "Flurry"
 tree = "class"
 granted = true
-description = "Fighting with nothing in your hands, you strike twice, the second blow a little wilder."
-effects = [{ kind = "free_blow", trigger = "flurry" }]
-systems = ["free_blows", "kicks"]
+description = "You gain Ki, which comes back with time, resting too. Fighting with nothing in your hands, you strike twice, the second blow a little wilder, for a point of ki."
+effects = [
+    { kind = "grants_resource", resource = "ki" },
+    { kind = "free_blow", trigger = "flurry" },
+    { kind = "flurry_cost", resource = "ki", cost = 1 },
+]
+systems = ["free_blows", "kicks", "resources"]

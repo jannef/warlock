@@ -494,7 +494,7 @@ impl World {
         let blow = self.attack_with(attacker, target, kind, profile, events);
         if kind == AttackKind::Melee {
             let mut parried = free_blow::parried(blow);
-            if let Some(second) = self.second_blow(attacker, target, Cue::First(blow)) {
+            if let Some(second) = self.second_blow(attacker, target, Cue::First(blow), events) {
                 parried |= free_blow::parried(self.strike_free(second, events));
             }
             self.after_attack(attacker, target, parried, events);
@@ -511,12 +511,14 @@ impl World {
     /// - [`Cue::Leaves`]: `target` steps away from beside `striker`: the opportunist's blow;
     /// - [`Cue::Approaches`]: `target` stepped up beside `striker`: the gatekeeper's blow.
     ///
-    /// Only the second blow may draw while deciding; the free blows never do.
+    /// Only the second blow may draw while deciding, and only the flurry spends (its ki); the
+    /// free blows do neither.
     pub(super) fn second_blow(
         &mut self,
         striker: ActorId,
         target: ActorId,
         cue: Cue,
+        events: &mut Vec<Event>,
     ) -> Option<FreeBlow> {
         match cue {
             Cue::First(first) => (self.off_hand_or_bash(striker, target, first))
@@ -527,7 +529,7 @@ impl World {
                     with: Some(with),
                     profile,
                 })
-                .or_else(|| self.flurry(striker, target)),
+                .or_else(|| self.flurry(striker, target, events)),
             Cue::Attacked { parried } => (self.cleave(striker, target, false))
                 .or_else(|| self.riposte(striker, target, parried)),
             Cue::Cleaved => self.cleave(striker, target, true),
@@ -960,7 +962,7 @@ impl World {
         let player = self.state.player;
         let first = self.player_blow(target, seen, None, events);
         let mut parried = free_blow::parried(first);
-        if let Some(second) = self.second_blow(player, target, Cue::First(first)) {
+        if let Some(second) = self.second_blow(player, target, Cue::First(first), events) {
             parried |= free_blow::parried(self.player_blow(target, seen, Some(second), events));
         }
         self.after_attack(player, target, parried, events);

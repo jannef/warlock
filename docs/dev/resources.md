@@ -6,9 +6,8 @@ spec/08e-blood-and-status.md ("Resources"). Keep it current with the code, as CL
 Alternative resources (#225) are integer pools beside hit points and mana that a character holds
 once something grants them, several at once. This is the foundation; the class features of
 `docs/design/progression.md` §4.18 move onto it in R1–R5 (#249–#253): Rage (R1), Focus (R2),
-Openings (R3, in), Ki and Inspiration (R4), and the four resource talents (R5, in). Rage (R1), Focus
-(R2), and Openings (R3) have moved (below); the others are granted only by the dev action
-`resource:ID` until theirs do.
+Openings (R3), Ki and Inspiration (R4), and the four resource talents (R5). Rage (R1), Focus
+(R2), Openings (R3), Ki, and Inspiration (R4), and the resource talents (R5) have moved (below).
 
 - **Granted by talents**: the talent effect `grants_resource { resource }` collects into
   `TalentMods::grants`; `world/focus.rs::hold` gives the actor each it lacks at its start (one
@@ -79,6 +78,19 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   statuses, cost }`: `World::unstoppable` spends `cost` rage for the last hit point
   (`spend_resource`, so the rage ends at 0), and `World::live` numbs the statuses while Raging
   lasts. Raging `blocks` `cast`, so `World::spend_mana` refuses while it lasts.
+- **Ki** (R4, #252): Flurry grants it (`grants_resource`) and carries
+  `TalentEffect::FlurryCost { resource, cost }` (`TalentMods::flurry_cost`), read in one place,
+  `World::flurry` (`free_blow.rs`, from `second_blow` on `Cue::First`, which now takes `events`
+  for the spend): the second blow is decided only once its cost is spent; short, none. Quivering
+  palm costs `resource = { id = "ki", cost = 5 }` on its talent and lost its cooldown
+  (`TalentEffect::QuiveringPalm { status, severity }`); `use_class` refuses it with a weapon in
+  hand before the spend. Tests: `world/ki_tests.rs`.
+- **Inspiration** (R4, #252): Inspire grants it and its effect names what it spends instead of
+  mana, `inspire { status, mana, resource, cost }` (`talent::Inspire::instead`, a
+  `ResourceCost`; Virtuoso's `inspiring()` clears it, so its song costs nothing).
+  `World::inspire` spends the resource when held (`spend_resource`), else the mana;
+  `Ability::unavailable` checks mana (and the casting block) only when the resource falls
+  short. Tests: `world/ki_tests.rs`.
 - **Openings** (R3, #251; `world/openings.rs`): Improved sneak attack grants the pool
   (`grants_resource`); its build is the data's `sneak_attack`; Master thief's `finisher` effect is
   the class active `ClassActive::MasterThief` (`use:master_thief:E`, aimed, the cost `resource = {

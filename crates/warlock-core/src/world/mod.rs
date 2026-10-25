@@ -1147,6 +1147,8 @@ mod hunger_tests;
 #[cfg(test)]
 mod ice_tests;
 #[cfg(test)]
+mod ki_tests;
+#[cfg(test)]
 mod land_talent_tests;
 #[cfg(test)]
 mod lantern_tests;

@@ -319,8 +319,9 @@
 #                                 with one die of `sides` more per `per_levels` levels
 #   radiance { status, light }    the active Holy radiance: while it suffers the status it sheds
 #                                 the light
-#   quivering_palm { status, severity, cooldown, degrees }   the active Quivering palm: a
-#                                 bare-handed blow in a direction that leaves the status
+#   quivering_palm { status, severity }   the active Quivering palm: a bare-handed blow in a
+#                                 direction (what it costs is the talent's `resource`: five ki)
+#                                 that leaves the status
 #   The casters' (spec §8 "Class abilities"; the priest's, druid's, wizard's, witch's):
 #   spell_power { per_die, dice }   its spells and spell scrolls add per_die to every die (0 to
 #                                 5) and roll dice dice more (0 to 5)
@@ -365,12 +366,15 @@
 #   rapid_shot { resource, cost, saving }   a shot it looses while it holds `cost` of the
 #                                 resource spends them and takes `saving` percent (1 to 50) less
 #                                 time; with less, an ordinary shot
+#   flurry_cost { resource, cost }   each second blow of its flurry spends `cost` of the
+#                                 resource; with less, it strikes none
 #   volley { shots }              the active Volley, aimed at a cell (`use:volley:12,5`): shots
 #                                 (2 to 5) of the readied missile weapon there for the price of
 #                                 one; what it costs is the talent's `resource`
-#   inspire { status, mana }      the active Inspire: it suffers the status, for that mana
-#                                 (no cooldown: mana is the price)
-#   virtuoso { status }           Inspire gives that status instead, and costs no mana
+#   inspire { status, mana, resource, cost }   the active Inspire: it suffers the status, for
+#                                 `cost` of the resource while it holds that much (optional),
+#                                 else for that mana (no cooldown: the cost is the price)
+#   virtuoso { status }           Inspire gives that status instead, and costs nothing
 #   A birth sign's actives (spec §8 "Birth sign"; the abilities menu's Birth sign group, the
 #   talent's id the ability's id, `use:horns_grace`):
 #   horns_grace { cures, diseases, cooldown, degrees }   the active Horn's grace: the statuses

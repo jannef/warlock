@@ -118,6 +118,7 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `disease_immune`, `checks` | `World::expose` (refused, nothing rolled), `disease_turn`, `search_modifier(Look::Passive)` (Willpower) |
 | `no_penalty_to`, `raise_percent` | `TalentMods::penalty(status, stat, by)` in `Effects::penalty_for` |
 | `free_blow` `flurry` | `World::second_blow` on `Cue::First` (`World::flurry`), after the off hand and the bash; two `cleave` sources make `great_cleave` |
+| `flurry_cost` | `World::flurry`: the second blow spends its cost (Ki) first, else none (`TalentMods::flurry_cost`; `docs/dev/resources.md`) |
 | `hardened` | `World::level_up`, as the level comes (a level's hit points again, and `bonus` more, past `hp_level`) |
 | `resource_build` (Blood frenzy, Patient blade), `resource_max` (Mighty rage, Inner calm), `resource_start` (Battle trance), `resource_rate` (Battle trance, Inner calm, Steady hand, Patient blade) | `World::gain_resource` (beside the resource's own `builds`), `Actor::resource_max`, `Actor::resource_start` (`World::grant_resource`, `focus::hold`), `World::resource_rate` |
 | `unstoppable` | `World::unstoppable` (`hurt`, `Harm::Actor`: `cost` of the rage via `spend_resource`), `World::live` (the numb statuses tick nothing while Raging lasts) |
@@ -131,7 +132,7 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `disease_still` | `World::disease_turn`: a failed check does nothing and counts no progression |
 | `status_damage` | `World::resolve` → `World::lore_blow` (a hit at a creature suffering the status) |
 | `reprieve` | `World::hurt` → `World::reprieve` (after Rise from the ashes; `Progress::once`) |
-| `inspire`, `virtuoso` | `world/class_ability.rs` (`World::inspire`: `TalentMods::inspiring`, `World::spend_mana`); `Ability::unavailable` (`Unavailable::NoMana`) |
+| `inspire`, `virtuoso` | `world/class_ability.rs` (`World::inspire`: `TalentMods::inspiring`, its `instead` resource via `World::spend_resource`, else `World::spend_mana`); `Ability::unavailable` (`Unavailable::NoMana` when the resource falls short too) |
 | `volley` | `world/volley.rs` (`Action::UseAt`, `World::use_class_at`; `ClassActive::aims_cell`, `Aim::Cell`; the UI aims it as a shot, `ui/target.rs`) |
 | `favoured_prey` | `World::resolve` → `World::favoured` (`world/ambush.rs`), against `Quests::prey` |
 | `ambush` (summed), `ambush_threat` | `World::resolve` → `World::sneaking` (before the strike), `sneak_threat`, `ambushed`; `Dice::and` adds the dice of the same sides |

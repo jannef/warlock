@@ -553,12 +553,15 @@ impl Ability {
                     .or_else(|| class_cooldown(actor, content, active).map(Unavailable::While))
                     .or_else(|| short_of(actor, def?.resource?))
                     .or_else(|| {
-                        // Inspire costs mana (Virtuoso's none), which a status that blocks
-                        // casting (Raging) keeps from being spent.
-                        let mana = (active == ClassActive::Inspire)
+                        // Inspire costs its inspiration while that is held, else mana
+                        // (Virtuoso's none), which a status that blocks casting (Raging) keeps
+                        // from being spent.
+                        let inspire = (active == ClassActive::Inspire)
                             .then(|| actor.talent_mods(content).inspiring())
-                            .flatten()
-                            .map_or(0, |i| i.mana);
+                            .flatten();
+                        let inspired = (inspire.and_then(|i| i.instead))
+                            .is_some_and(|c| short_of(actor, c).is_none());
+                        let mana = inspire.filter(|_| !inspired).map_or(0, |i| i.mana);
                         let cost = actor.mana_cost(content, mana);
                         let blocked = (cost > 0)
                             .then(|| actor.effects.blocking(content, ActionKind::Cast))
@@ -606,15 +609,11 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
         ClassActive::VeteransWind => mods.veterans_wind.map(|w| w.cooldown).into_iter().collect(),
         ClassActive::LayOnHands => mods.lay_on_hands.map(|h| h.cooldown).into_iter().collect(),
         ClassActive::Smite => mods.smite.map(|s| s.cooldown).into_iter().collect(),
-        ClassActive::QuiveringPalm => mods
-            .quivering_palm
-            .map(|p| p.cooldown)
-            .into_iter()
-            .collect(),
-        // Volley costs Focus and Master thief Openings instead (their talents' `resource`,
-        // [`short_of`]).
+        // Volley costs Focus, Master thief Openings, and Quivering palm Ki instead (their
+        // talents' `resource`, [`short_of`]).
         ClassActive::Whirlwind
         | ClassActive::HolyRadiance
+        | ClassActive::QuiveringPalm
         | ClassActive::MasterThief
         | ClassActive::Inspire
         | ClassActive::Volley => Vec::new(),

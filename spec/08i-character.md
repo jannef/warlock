@@ -756,8 +756,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Spent, 5 minutes; Good or better), Holy radiance (on and off: Radiant, with no end of its
     own, sheds the faint item glow, reaching 3 cells, from the player, a light source like a
     glowing item's; a cast; Good or better), Quivering palm (a bare-handed blow in a direction,
-    refused with a weapon in hand; a hit that does damage leaves three degrees of Bleeding;
-    then two degrees of Spent, 10 minutes).
+    refused with a weapon in hand before anything is spent; a hit that does damage leaves three
+    degrees of Bleeding; for 5 Ki, §8 "Resources", and no cooldown).
   - **Passives**, each one read: Weapon drill (melee weapon skill marks +25 %, `practise`),
     Shield line and Shield of faith (Shield +1; Shield of faith also +10 to Sword and Board's
     bash chance), Cleaving strike (the cleave free blow; with the Cleave talent too, great
@@ -777,14 +777,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
     nothing, as a dwarf), Bulwark (Protection +2), Avatar (Lay on hands heals fully, cures every
     status that ticks and every disease, one degree of Drained); Martial arts (bare hands and
     kicks roll 1d6), Fleet (steps 10 % cheaper in no body armour and with no shield), Deflect
-    missiles (Dodge +2 against missiles), Flurry (a melee attack with nothing in hand strikes
-    twice, the second at −2), Still mind (+2 on checks made with Willpower: diseases', noticing
+    missiles (Dodge +2 against missiles), Flurry (grants Ki, §8 "Resources"; a melee attack
+    with nothing in hand strikes twice, the second at −2, for a point of ki; with none, once),
+    Still mind (+2 on checks made with Willpower: diseases', noticing
     in passing; no status lowers Intelligence or Willpower), Diamond soul (Deflection +2),
     Perfect self (bare hands 1d8; unarmed threat +1, critical multiplier +1). The paladin's
     passives do not ask for Good; only the gifts used from the menu do.
   - **Resources**: Rage, Blood frenzy, Mighty rage, and Unstoppable run on the Rage resource
-    (§8 "Resources", R1). Flurry and Quivering palm ship as passives and statuses and move onto
-    the alternative resources in the design's R4.
+    (§8 "Resources", R1); Flurry and Quivering palm on the Ki resource (R4, #252).
   - **Coverage**: `min_class` stays 0 until every class has its table.
 - **The casters' class tables, and their spells** (`content/class_spell.rs`: `ClassSpell`,
   `SpellDef`; `world/caster.rs`; M30, #245; design §4.9–4.12, §3.7): the priest, druid, wizard,
@@ -862,9 +862,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     focus" while short, "You have too little focus." if used), spent as it is loosed and priced
     as one ordinary shot (Rapid shot does not touch it); refused as a shot is, spending
     nothing), Inspire
-    (the bard's, 18: Inspired, to hit +1 and Dodge +1 for 5 minutes, for 3 mana, the time of a
-    chat; no cooldown, mana is the price: greyed out "you have too little mana",
-    `Unavailable::NoMana`, while the player has less). Throw your voice (the bard's, 32) is no
+    (the bard's, 18: grants Inspiration, §8 "Resources"; Inspired, to hit +1 and Dodge +1 for 5
+    minutes, for 3 inspiration while the bard holds 3, else 3 mana, the time of a chat; no
+    cooldown, the cost is the price: greyed out "you have too little mana",
+    `Unavailable::NoMana`, while the player has neither). Throw your voice (the bard's, 32) is no
     longer everyone's: the ability is had by a talent with the `throw_voice` effect (the
     action is refused, "You do not know how to throw your voice.", without it).
   - **Passives**, each one read: Favoured prey (+1 to hit, +2 damage against `Quests::prey`, any
@@ -890,9 +891,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (resting heals half again as fast), Jack of all trades (every trained skill counts 5
     higher, as a skill bonus in `Actor::skill_effect`), Honeyed words (favour +15 %, quest gold
     +25 %), Legend (quest XP +50 %, Presence +1), Virtuoso (Inspire gives Inspired greatly, to
-    hit +2 and Dodge +2 for 10 minutes, for no mana).
-  - **Resources to come**: Inspire (Inspiration) moves onto the pools of #225. The thief's
-    Openings are in (R3, #251).
+    hit +2 and Dodge +2 for 10 minutes, for nothing: neither mana nor inspiration).
+  - **Resources**: the ranger's Focus (R2, #250), the thief's Openings (R3, #251), and the
+    bard's Inspiration (R4, #252) are in.
   - **Saves change**: `Quests::prey`, the tally of every type, the statuses `inspired` and
     `inspired_greatly`.
 - **Weapon skills** (`warlock-core/src/weapon_skills.rs`, training; `content/weapon_skill.rs`,

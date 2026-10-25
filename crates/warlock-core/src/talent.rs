@@ -17,7 +17,7 @@ use crate::alignment::Band;
 use crate::character::Character;
 use crate::content::{
     Benefit, Build, Choice, CombatStance, Content, DamageTypeId, LightId, MAX_RANK, Need,
-    ResourceId, Role, Sign, StatusId, TalentDef, TalentEffect, TalentId, TerrainId,
+    ResourceCost, ResourceId, Role, Sign, StatusId, TalentDef, TalentEffect, TalentId, TerrainId,
 };
 use crate::damage::Kinds;
 use crate::dice::Dice;
@@ -567,6 +567,8 @@ pub struct TalentMods {
     pub grants: Vec<ResourceId>,
     /// Rapid shot's quicker shots on a resource, if it has it.
     pub rapid_shot: Option<RapidShot>,
+    /// What each second blow of its flurry costs, if anything (Flurry, on Ki).
+    pub flurry_cost: Option<ResourceCost>,
     /// The active Volley, if it has it.
     pub volley: Option<Volley>,
     /// The active Inspire, if it has it.
@@ -618,11 +620,13 @@ pub struct HoundsBay {
     pub cooldown: StatusId,
 }
 
-/// The active Inspire (spec §8 "Class abilities"): the status it gives, and its mana.
+/// The active Inspire (spec §8 "Class abilities"): the status it gives, its mana, and what it
+/// spends in place of the mana while that is held (Inspiration).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Inspire {
     pub status: StatusId,
     pub mana: i32,
+    pub instead: Option<ResourceCost>,
 }
 
 /// Rise from the ashes (spec §8 "Birth sign"): what rising gives back, the burst it rises in,
@@ -673,8 +677,6 @@ impl Smite {
 pub struct QuiveringPalm {
     pub status: StatusId,
     pub severity: u16,
-    pub cooldown: StatusId,
-    pub degrees: u16,
 }
 
 /// What a talent adds to attacks with some weapon skills: the one named `skill` (the effect's
@@ -845,7 +847,11 @@ impl TalentMods {
     pub fn inspiring(&self) -> Option<Inspire> {
         let inspire = self.inspire?;
         Some(match self.virtuoso {
-            Some(status) => Inspire { status, mana: 0 },
+            Some(status) => Inspire {
+                status,
+                mana: 0,
+                instead: None,
+            },
             None => inspire,
         })
     }
@@ -1503,21 +1509,9 @@ impl TalentMods {
                     self.radiance = Some((status, light));
                 }
             }
-            TalentEffect::QuiveringPalm {
-                status,
-                severity,
-                cooldown,
-                degrees,
-            } => {
-                if let (Some(status), Some(cooldown)) =
-                    (content.status_id(&status), content.status_id(&cooldown))
-                {
-                    self.quivering_palm = Some(QuiveringPalm {
-                        status,
-                        severity,
-                        cooldown,
-                        degrees,
-                    });
+            TalentEffect::QuiveringPalm { status, severity } => {
+                if let Some(status) = content.status_id(&status) {
+                    self.quivering_palm = Some(QuiveringPalm { status, severity });
                 }
             }
             TalentEffect::Hardened { bonus } => {
@@ -1559,9 +1553,33 @@ impl TalentMods {
                 }
             }
             TalentEffect::Volley { shots } => self.volley = Some(Volley { shots }),
-            TalentEffect::Inspire { status, mana } => {
+            TalentEffect::Inspire {
+                status,
+                mana,
+                resource,
+                cost,
+            } => {
                 if let Some(status) = content.status_id(&status) {
-                    self.inspire = Some(Inspire { status, mana });
+                    let instead =
+                        (resource.and_then(|r| content.resource_id(&r))).map(|resource| {
+                            ResourceCost {
+                                resource,
+                                amount: cost,
+                            }
+                        });
+                    self.inspire = Some(Inspire {
+                        status,
+                        mana,
+                        instead,
+                    });
+                }
+            }
+            TalentEffect::FlurryCost { resource, cost } => {
+                if let Some(resource) = content.resource_id(&resource) {
+                    self.flurry_cost = Some(ResourceCost {
+                        resource,
+                        amount: cost,
+                    });
                 }
             }
             TalentEffect::Virtuoso { status } => self.virtuoso = content.status_id(&status),
