@@ -7,7 +7,7 @@ Alternative resources (#225) are integer pools beside hit points and mana that a
 once something grants them, several at once. This is the foundation; the class features of
 `docs/design/progression.md` §4.18 move onto it in R1–R5 (#249–#253): Rage (R1), Focus (R2),
 Openings (R3), Ki and Inspiration (R4), and the four resource talents (R5). Rage (R1), Focus
-(R2), Openings (R3), Ki, and Inspiration (R4) have moved (below).
+(R2), Openings (R3), Ki, and Inspiration (R4), and the resource talents (R5) have moved (below).
 
 - **Granted by talents**: the talent effect `grants_resource { resource }` collects into
   `TalentMods::grants`; `world/focus.rs::hold` gives the actor each it lacks at its start (one
@@ -62,10 +62,14 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
     resources `pass` returns as ended are ended at that moment. Progress is dropped when there
     is nowhere to go (full, or empty) and kept at a standstill (a rest that stops it).
 - **Hooks for R1–R5**: `Actor::resource_max(content, resource)` (the maximum plus the talents'
-  `resource_max`: Mighty rage's 30, Inner calm's +2) and `World::resource_rate(id, resource)` (the
-  pace in percent: 0 while resting for `resting = false`; Battle trance's slower decay, Steady
-  hand's and Inner calm's faster regeneration). A talent's `resource_build { resource, on,
-  amount }` is a build only its holder has (Blood frenzy's 5 rage a kill).
+  `resource_max`: Mighty rage's 30, Inner calm's +2), `Actor::resource_start(content, resource)`
+  (the data's start plus the talents' `resource_start`, at most the maximum: Battle trance's 18
+  rage; read by `World::grant_resource` and `focus::hold`), and `World::resource_rate(id,
+  resource)` (the pace in percent: 0 while resting for `resting = false`, else 100 plus the
+  talents' `resource_rate`, never below 0: Battle trance's −33, Inner calm's and Steady hand's
+  +50, Patient blade's −50). A talent's `resource_build { resource, on, amount }` is a build only
+  its holder has (Blood frenzy's 5 rage a kill; Patient blade's opening on `sneak_kill`, which
+  `World::resolve` raises after a sneak attack's blow kills, after `sneak_attack`'s).
 - **Rage** (R1, #249; `world/rage.rs`): the talent effect `rage { resource = "rage" }`
   (`TalentMods::rage: Option<ResourceId>`, `rage_status` its resource's status) makes the Rage
   ability grant the pool with Raging (`World::rage`); the cooldown is Raging and what it `follows`
@@ -101,9 +105,11 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   before it; `show_max` picks `Focus 7/10` or `Rage 7`), the character screen's rows under the
   stance. Dumps: the header's `rage 11/20`, JSON `resources: [{id, current, max}]`, the dev
   `actors` layer's `resources rage 11/20 (progress)`. Never a creature's, never a pace.
-- **Talents**: `[[system]] id = "resources"` in `data/talents.toml`, `pending` until R5's
-  talents (and R1–R4's class features) carry it; Rage, Blood frenzy, Mighty rage, and
-  Unstoppable (class abilities) carry it now.
+- **Talents**: `[[system]] id = "resources"` in `data/talents.toml`, held to the coverage bar
+  since R5 (#253): Battle trance, Inner calm, Steady hand, and Patient blade (the only
+  class-limited picks), and the class abilities Rage, Blood frenzy, Mighty rage, Unstoppable,
+  Rapid shot, Volley, Improved sneak attack, and Master thief. Tests:
+  `world/resource_talent_tests.rs`.
 - **Wiki**: `xtask/src/wiki/resources.rs` (the table) for `wiki/src/resources.md`.
 - **Tests**: `content/resource.rs` (parsing, refusals, a resource's status, a followed status
   that never ends), `world/class_active_tests.rs` (Rage's course on the pool, Mighty rage's

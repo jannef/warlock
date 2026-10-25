@@ -777,6 +777,10 @@ impl World {
         {
             self.bleed((attacker, target), from, kind, blow);
             let died = self.hurt(target, blow.damage, Harm::Actor(attacker), events);
+            // A sneak attack that kills builds more (Patient blade's openings).
+            if died && unseen {
+                self.gain_resource(attacker, Build::SneakKill);
+            }
             if !died {
                 self.after_blow(attacker, target, kind, &blow, events);
                 self.barbed(attacker, target, kind, events);

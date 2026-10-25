@@ -120,7 +120,7 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `free_blow` `flurry` | `World::second_blow` on `Cue::First` (`World::flurry`), after the off hand and the bash; two `cleave` sources make `great_cleave` |
 | `flurry_cost` | `World::flurry`: the second blow spends its cost (Ki) first, else none (`TalentMods::flurry_cost`; `docs/dev/resources.md`) |
 | `hardened` | `World::level_up`, as the level comes (a level's hit points again, and `bonus` more, past `hp_level`) |
-| `resource_build` (Blood frenzy), `resource_max` (Mighty rage) | `World::gain_resource` (beside the resource's own `builds`), `Actor::resource_max` |
+| `resource_build` (Blood frenzy, Patient blade), `resource_max` (Mighty rage, Inner calm), `resource_start` (Battle trance), `resource_rate` (Battle trance, Inner calm, Steady hand, Patient blade) | `World::gain_resource` (beside the resource's own `builds`), `Actor::resource_max`, `Actor::resource_start` (`World::grant_resource`, `focus::hold`), `World::resource_rate` |
 | `unstoppable` | `World::unstoppable` (`hurt`, `Harm::Actor`: `cost` of the rage via `spend_resource`), `World::live` (the numb statuses tick nothing while Raging lasts) |
 | `radiance` | `LightCache::sources` (a carried source, `RADIANCE` tag, while its status lasts) |
 | `inner_light` | `LightCache::sources` (a carried source, `INNER` tag, always: the player and the creatures see by it alike) |
@@ -356,8 +356,8 @@ restores, replays, and every hook; `content::class::tests` the table checks.
 
 ## The trees so far
 
-Vigour, Might, and Finesse (#237) ship whole but for Battle trance and Inner calm (the class
-resources, #225); `body_talent_tests.rs` covers each one's rule, `hunger_tests.rs` Iron stomach.
+Vigour, Might, and Finesse (#237) ship whole; Battle trance and Inner calm (the class
+resources) came with R5 (#253); `body_talent_tests.rs` covers each one's rule, `hunger_tests.rs` Iron stomach.
 The statuses Winded (Second wind's cooldown) and Staggered (`cost = 150`, 6 s) are in
 `data/status.toml`.
 
@@ -378,10 +378,14 @@ hash differently from before. The dump's `talents` layer marks it `(race)`, the 
 "race", and the character screen's birth-sign list leaves it out (`OwnTalent::race`).
 `racial_tests.rs` covers each rule, the prerequisites, the picks, and a replay.
 
-The `resources` system (#225, `docs/dev/resources.md`) is in the list as `pending`: the pools are
-in, and a class active may cost one (`resource = { id, cost }` on its talent), but its talents
-(Battle trance, Inner calm, Steady hand, Patient blade: R5) and the class features moving onto it
-(R1–R4) come later; R5 removes the flag.
+The `resources` system (#225, `docs/dev/resources.md`) is in the list: its four talents (R5,
+#253) are Battle trance (Might, barbarian 6: rage starts 6 higher, decays at 67 %), Inner calm
+(Finesse, monk 18: ki +2 at most, back at 150 %), Steady hand (Weaponcraft, ranger 12: focus back
+at 150 %), and Patient blade (Shadow, thief 32: openings decay at 50 %, and a sneak attack that
+kills builds one more, the `sneak_kill` event); the only class-limited picks
+(`needs = { class, level }`). `world/resource_talent_tests.rs` covers each rule and the
+prerequisites. A talent of a resource the class has not been granted yet (Inner calm before
+Flurry grants ki, R4) holds the change until it is.
 
 The damage-type talents (#248), Elemental ward (H2) and Crusher (H1), are the `damage_types`
 system's two, so it is no longer `pending`; `world/damage_talent_tests.rs` covers the ward

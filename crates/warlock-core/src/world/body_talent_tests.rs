@@ -435,6 +435,6 @@ fn every_talent_of_the_three_trees_loads_with_its_effects() {
         assert!(!book.tree(tree).pending, "the tree is held to the bar");
     }
     let count = |tree: &str| book.of_tree(book.tree_id(tree).expect("tree")).count();
-    // 26 of the design's 28: Battle trance and Inner calm wait for the class resources (#225).
-    assert_eq!(count("vigour") + count("might") + count("finesse"), 26);
+    // The design's 28, Battle trance and Inner calm (the class resources, R5) among them.
+    assert_eq!(count("vigour") + count("might") + count("finesse"), 28);
 }

@@ -1,0 +1,11 @@
+[[talent]]
+id = "battle_trance"
+name = "Battle trance"
+tree = "might"
+description = "Your rage starts 6 higher and burns down more slowly."
+needs = { class = "barbarian", level = 6 }
+effects = [
+    { kind = "resource_start", resource = "rage", value = 6 },
+    { kind = "resource_rate", resource = "rage", value = -33 },
+]
+systems = ["resources"]

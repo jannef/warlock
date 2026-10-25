@@ -1174,6 +1174,8 @@ mod racial_tests;
 #[cfg(test)]
 mod read_tests;
 #[cfg(test)]
+mod resource_talent_tests;
+#[cfg(test)]
 mod resource_tests;
 #[cfg(test)]
 mod room_tests;

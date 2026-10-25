@@ -210,7 +210,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     shows its maximum, how it changes over time (it **regenerates** toward its maximum or
     **decays** toward 0, a point every so many seconds, while resting too or not), whether it
     **ends at zero**, what the player is told then, what **builds** it (`kill`, `hit`,
-    `critical`, `struck`, `sneak_attack`, each by an amount), and the **status** it brings, if
+    `critical`, `struck`, `sneak_attack`, `sneak_kill`, each by an amount), and the **status** it brings, if
     any (Rage: Raging), which lasts exactly as long as the resource is held. Ids are in the
     content fingerprint.
   - **State**: `Actor::resources`, the pools it holds in resource order, each its value and its
@@ -221,12 +221,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
     or what it holds if that is more), `World::gain_resource(actor, event)` (called where the
     event happens: a kill credited to the holder in `dies`, a blow of theirs that hits and one
     that is a critical, and their being hit, in `resolve`; a sneak attack that hits in
-    `ambushed`; each builds every resource held that builds on it, up to its maximum; one not
+    `ambushed`, and one whose blow kills (`sneak_kill`, after the hit's) in `resolve`; each builds every resource held that builds on it, up to its maximum; one not
     held is not built), `World::spend_resource` (refused, nothing spent, when not held or short;
     a cost of 0 asks only that it is held), `World::end_resource` (the holder loses it and its
-    bar; the player is told its `ended`, if it has one), and time. Talents add to two of them:
-    a `resource_build` builds a held resource on an event beyond its own `builds`, and a
-    `resource_max` raises its maximum (`Actor::resource_max`).
+    bar; the player is told its `ended`, if it has one), and time. Talents add to them: a
+    `resource_build` builds a held resource on an event beyond its own `builds`, a
+    `resource_max` raises its maximum (`Actor::resource_max`), a `resource_start` what it holds
+    when granted (`Actor::resource_start`, at most the maximum), and a `resource_rate` its pace
+    over time in percent (`World::resource_rate`).
   - **Its status**: a resource with a `status` brings it: granted by
     `World::grant_resource_with_status` (the Rage ability, the dev action), the status begins
     (said as it begins, "You fly into a rage!"); as the resource ends, spent, decayed, or
@@ -239,9 +241,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     down to 0, where one that ends at zero ends and one that does not sits, held, at 0. Each point
     is a moment of `World::live`'s loop (with a hit point and a point of mana back, before the
     ticks), so it makes no difference how time is cut up, and an end comes at its exact moment.
-    The pace (`World::resource_rate`, the one place that decides it) is 100 %, and none while the
-    player rests for a resource with `resting = false`; the maximum (`Actor::resource_max`) is
-    the data's. Both are the hooks the resource talents read (R5). Actors on other levels are
+    The pace (`World::resource_rate`, the one place that decides it) is 100 % plus what the
+    holder's talents add (`resource_rate`, never below 0), and none while the player rests for a
+    resource with `resting = false`; the maximum (`Actor::resource_max`) is the data's plus the
+    talents' `resource_max`. Both are hooks the resource talents read (R5). Actors on other levels are
     frozen, and the dev time skip passes none.
   - **Ending at zero**: spent or decayed to 0, a resource that ends at zero is gone, and its bar
     with it, until something grants it again. A rest goes on through it (the end is only
@@ -290,10 +293,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (`World::spend_resource`; refused, so the blow falls, with less), as often as the rage
     holds; spent to nothing, the rage ends and Exhausted follows. While raging no mana is spent
     (Raging blocks `cast`).
-  - **Talents**: the `resources` system is in the coverage list as `pending` until the resource
-    talents (Battle trance, Inner calm, Steady hand, Patient blade; R5) and the class features on
-    them (R1–R4) land; Rage, Blood frenzy, Mighty rage, Unstoppable, Improved sneak attack, and
-    Master thief carry it. **Saves change** (a new id group in the fingerprint).
+  - **Talents** (R5, #253): the `resources` system is in the coverage list, held to its bar by
+    the four resource talents, the only picks limited to a class (a resource belongs to the class
+    that has it): **Battle trance** (Might; barbarian, level 6): rage starts 6 higher (18) and
+    decays at 67 % of its pace; **Inner calm** (Finesse; monk, level 18): ki holds 2 more (7) and
+    comes back at 150 %; **Steady hand** (Weaponcraft; ranger, level 12): focus comes back at
+    150 % (still not while resting); **Patient blade** (Shadow; thief, level 32): openings decay
+    at 50 %, and a sneak attack that kills builds one more (two in all). Rage, Blood frenzy,
+    Mighty rage, Unstoppable, Rapid shot, Volley, Improved sneak attack, and Master thief carry
+    it too. **Saves change** (a new id group in the fingerprint).
 - **Checks** (`warlock-core/src/check.rs`; M24, #139): a stat put to the test, rolled like an
   attack: 2d12 (the natural roll, `combat::roll_natural`, two draws of the gameplay stream) plus
   the modifier of the stat tested (the effective score's) succeeds at the **difficulty** or

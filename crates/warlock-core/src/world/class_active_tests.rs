@@ -72,6 +72,8 @@ pub(super) fn reach(world: &mut World, level: u8) {
         run(world, "levelup:auto");
     }
     assert_eq!(world.due(), None, "every choice spent");
+    // The picks may have taken Battle trance: these tests are of the rage's own course.
+    world.player_mut().talents.forget("battle_trance");
 }
 
 fn status(world: &World, id: &str) -> StatusId {

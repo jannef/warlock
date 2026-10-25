@@ -1,0 +1,8 @@
+[[talent]]
+id = "steady_hand"
+name = "Steady hand"
+tree = "weaponcraft"
+description = "Your focus comes back faster."
+needs = { class = "ranger", level = 12 }
+effects = [{ kind = "resource_rate", resource = "focus", value = 50 }]
+systems = ["ranged", "resources"]

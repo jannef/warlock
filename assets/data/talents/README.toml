@@ -300,6 +300,11 @@
 #   resource_build { resource, on, amount }   event `on` (a resource's `builds` events) builds
 #                                 that resource that much more while it is held
 #   resource_max { resource, value }   that resource holds that much more at most
+#   resource_start { resource, value }   that resource is granted holding that much more (never
+#                                 above its maximum)
+#   resource_rate { resource, value }   that resource changes over time that percent faster
+#                                 (negative: slower): regenerating comes back sooner, decaying
+#                                 wears off sooner
 #   unstoppable { statuses, cost }   while raging those statuses tick nothing, and a blow that
 #                                 would take the last hit point leaves it for `cost` of the rage
 #                                 (when that much is held; spent to nothing, the rage ends)
