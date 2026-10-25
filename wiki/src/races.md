@@ -59,3 +59,10 @@ and the status bar shows `Dazzled` while it lasts.
 The races' gifts and flaws beyond their stats, exactly:
 
 {{#include generated/race-traits.md}}
+
+## Racial talents
+
+Each race but the humans has [talents](talents.md#racial-talents) only its own may pick, in the
+Racial tree; humans are given Versatile instead, one more talent at creation and at level 30.
+
+{{#include generated/talents-racial.md}}

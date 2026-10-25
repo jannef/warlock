@@ -57,6 +57,11 @@ fn gifts(w: &World) -> Vec<String> {
             book.id(&t.id)
                 .is_none_or(|id| !book.tree(book.get(id).tree).class)
         })
+        // A race's grant (the humans' Versatile) is no gift of the sign.
+        .filter(|t| {
+            book.id(&t.id)
+                .is_none_or(|id| Some(book.get(id).tree) != book.tree_id("racial"))
+        })
         .map(|t| t.id.clone())
         .collect()
 }

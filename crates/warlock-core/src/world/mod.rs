@@ -120,6 +120,7 @@ mod mana;
 mod path;
 mod perceive;
 mod quest;
+mod racial;
 mod read;
 mod rest;
 mod rot;
@@ -1148,6 +1149,8 @@ mod protection_tests;
 mod quest_tests;
 #[cfg(test)]
 mod race_tests;
+#[cfg(test)]
+mod racial_tests;
 #[cfg(test)]
 mod read_tests;
 #[cfg(test)]

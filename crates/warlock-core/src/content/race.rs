@@ -14,7 +14,8 @@
 use super::kit::{Kit, KitLineSpec};
 use super::weapon_skill::Ranked;
 use super::{
-    ContentError, DamageTypeId, FACTORS, Hide, PassiveSearch, WeaponSkillId, WeaponSkillTable,
+    ContentError, DamageTypeId, FACTORS, Hide, PassiveSearch, TalentBook, WeaponSkillId,
+    WeaponSkillTable,
 };
 use crate::combat::MAX_BASE_HP;
 use crate::dice::Dice;
@@ -83,6 +84,8 @@ struct RaceSpec {
     class_skill: Dice,
     #[serde(default)]
     rolls: u8,
+    #[serde(default)]
+    talents: Vec<String>,
     #[serde(default = "normal_hunger")]
     hunger: u16,
     #[serde(default = "normal_experience")]
@@ -91,6 +94,30 @@ struct RaceSpec {
     weapon_skills: BTreeMap<String, Dice>,
     #[serde(default)]
     kit: Vec<KitLineSpec>,
+}
+
+/// Checks the races' granted talents against the talents (spec §8 "Talents"): each exists, is
+/// in the `racial` tree, and is `granted`. Content without that tree (a fixture's talents)
+/// grants nothing, so it checks nothing.
+pub(super) fn check_talents(races: &Races, talents: &TalentBook) -> Result<(), ContentError> {
+    let Some(racial) = talents.tree_id("racial") else {
+        return Ok(());
+    };
+    for race in &races.list {
+        for id in &race.talents {
+            let def = (talents.id(id)).map(|t| talents.get(t));
+            if !def.is_some_and(|d| d.granted && d.tree == racial) {
+                return Err(ContentError::new(
+                    "data/races.toml",
+                    format!(
+                        "race `{}` grants `{id}`, which is not a granted talent of the `racial` tree",
+                        race.id
+                    ),
+                ));
+            }
+        }
+    }
+    Ok(())
 }
 
 /// The oldest a character may start, in years.
@@ -197,6 +224,9 @@ pub struct RaceDef {
     pub class_skill: Dice,
     /// The skill rolls each level gives beyond the class's (spec §8 "Skills"): humans, 1.
     pub rolls: u8,
+    /// The talents the race grants (spec §8 "Talents": the humans' Versatile), by id: granted
+    /// talents of the `racial` tree ([`check_talents`]), held from the start, never picked.
+    pub talents: Vec<String>,
     /// How much the player needs to eat, in percent of a human (spec §8 "Hunger"): game time
     /// burns their nutrition this much faster (a halfling, 125) or slower (an elf, 80).
     pub hunger: u16,
@@ -372,6 +402,7 @@ impl Races {
                 skills,
                 class_skill: extra,
                 rolls: spec.rolls,
+                talents: spec.talents,
                 hunger: spec.hunger,
                 experience: spec.experience,
                 weapon_skills,

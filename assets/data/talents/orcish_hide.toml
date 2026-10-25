@@ -1,0 +1,8 @@
+[[talent]]
+id = "orcish_hide"
+name = "Orcish hide"
+tree = "racial"
+description = "A thick orcish hide: Protection +1."
+needs = { race = "half_orc", stats = { toughness = 13 } }
+effects = [{ kind = "protection", value = 1 }]
+systems = ["protection"]

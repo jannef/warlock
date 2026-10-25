@@ -176,6 +176,8 @@ pub enum TalentEffect {
     NaturalUnarmoured { value: i32 },
     /// Damage added to every melee blow (the main hand's and the off hand's).
     MeleeDamage { value: i32 },
+    /// Damage added to every attack it makes while below a third of its hit points (Ferocity).
+    Ferocity { value: i32 },
     /// Every attack threatens a critical this many natural points lower.
     Threat { value: i32 },
     /// A natural 2 on an attack roll (a fumble) is rolled again, once.
@@ -299,6 +301,8 @@ pub enum TalentEffect {
     XpPercent { value: i32 },
     /// Skill rolls every level, this many more (Quick learner).
     SkillRolls { value: i32 },
+    /// One more talent pick at character level `level` (1: at creation; Versatile).
+    ExtraPick { level: u8 },
     /// The chosen skill (the talent takes a `skill` choice) is trained at these dice, or grows
     /// by them if trained already: rolled once, from the `levels` stream, as the rank is taken
     /// (Apprentice).
@@ -347,6 +351,9 @@ pub enum TalentEffect {
     Notice { value: i32 },
     /// The actor notices hidden things on stone in passing, as a dwarf does.
     StoneSense,
+    /// Added to its checks to find what is hidden on stone, searching and in passing (Stone
+    /// sense).
+    StoneFind { value: i32 },
     /// Added to every check to find hidden things, searching and in passing.
     Search { value: i32 },
     /// Searching reaches this many cells farther.
@@ -407,8 +414,13 @@ pub enum TalentEffect {
     /// Its blows with no weapon in hand (and its kicks) roll one die of this many sides instead
     /// of bare hands' dice (Martial arts); the biggest counts.
     UnarmedDie { sides: u8 },
-    /// The readied missile weapon shoots this many cells farther.
-    LauncherRange { value: i32 },
+    /// The readied missile weapon shoots this many cells farther; with `skill` (a weapon skill
+    /// id), only a launcher of that skill (Slinger's slings).
+    LauncherRange {
+        value: i32,
+        #[serde(default)]
+        skill: Option<String>,
+    },
     /// Throws reach this many cells farther.
     ThrowRange { value: i32 },
     /// Its missiles break this percent more often when they hit (negative: less often).
@@ -625,6 +637,8 @@ pub enum TalentEffect {
     DiseaseChecks { value: i32 },
     /// Added to every check of stat `stat` it makes (spec §8 "Checks").
     Checks { stat: Stat, value: i32 },
+    /// A disease's progressions come this percent further apart (negative: closer; Ageless).
+    DiseaseIntervalPercent { value: i32 },
     /// A disease needs this many checks fewer won in a row to be shaken off, never fewer than 1.
     DiseaseRecovery { value: i32 },
     /// It never catches a disease (Divine health, Purity of body): no check, no infection.
@@ -683,8 +697,12 @@ pub enum TalentEffect {
     },
     /// Burdened costs it nothing, as a dwarf (Steadfast).
     Steadfast,
+    /// Strained costs it what Burdened costs others (Stout).
+    Stout,
     /// Dodge added against shots, throws, and trap missiles.
     MissileDodge { value: i32 },
+    /// Dodge added against the attacks of creatures larger than it (Small target).
+    SmallTarget { value: i32 },
     /// The damage bursts and bolts (traps, scrolls) do it, this percent more (negative: less).
     SpellDamagePercent { value: i32 },
 }
@@ -775,7 +793,6 @@ impl TalentEffect {
             | TalentEffect::Threat { value }
             | TalentEffect::Search { value }
             | TalentEffect::SearchReach { value }
-            | TalentEffect::LauncherRange { value }
             | TalentEffect::ThrowRange { value }
             | TalentEffect::MaxDex { value }
             | TalentEffect::Deflection { value }
@@ -785,6 +802,9 @@ impl TalentEffect {
             | TalentEffect::DoorKick { value }
             | TalentEffect::BurdenDex { value }
             | TalentEffect::MissileDodge { value }
+            | TalentEffect::SmallTarget { value }
+            | TalentEffect::Ferocity { value }
+            | TalentEffect::StoneFind { value }
             | TalentEffect::Searching { value }
             | TalentEffect::SkillRolls { value }
             | TalentEffect::Darkvision { value }
@@ -1124,7 +1144,27 @@ impl TalentEffect {
                 }
                 Ok(())
             }
+            TalentEffect::LauncherRange { value, skill } => {
+                let table = content.weapon_skills();
+                if let Some(id) = skill
+                    && !table.skills().is_empty()
+                    && table.id(id).is_none()
+                {
+                    return Err(format!("names an unknown weapon skill `{id}`"));
+                }
+                bonus(*value)
+            }
+            TalentEffect::ExtraPick { level } => {
+                if !(1..=crate::content::MAX_LEVEL).contains(level) {
+                    return Err(format!(
+                        "`extra_pick`: level is 1 to {}",
+                        crate::content::MAX_LEVEL
+                    ));
+                }
+                Ok(())
+            }
             TalentEffect::HealingPercent { value }
+            | TalentEffect::DiseaseIntervalPercent { value }
             | TalentEffect::ManaRegenPercent { value }
             | TalentEffect::ManaRestingPercent { value }
             | TalentEffect::ManaCostPercent { value }
@@ -1305,6 +1345,7 @@ impl TalentEffect {
             | TalentEffect::WadingProof
             | TalentEffect::BeastFriend
             | TalentEffect::Steadfast
+            | TalentEffect::Stout
             | TalentEffect::DiseaseImmune
             | TalentEffect::NoPenaltyTo { .. }
             | TalentEffect::Avatar

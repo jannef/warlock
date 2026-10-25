@@ -7,7 +7,8 @@ on), some have several **ranks**, and most ask something of you first.
 ## When you pick
 
 A new character picks **two talents at creation**, on the Talents step after the class; the
-**bard**, the lucky class, picks three. The list shows the talents the character you have made so
+**bard**, the lucky class, picks one more, and so does a **human** (their racial Versatile, below):
+a human bard picks four. The list shows the talents the character you have made so
 far may take (its scores, skills, class abilities, and birth sign count), and marking one may
 open another that needs it (Healthy, then Fast healer). The **Random** row lets chance pick
 them, and a character started without picks (from the command line) gets those same random
@@ -18,7 +19,8 @@ picks. The [character](character.md) screen counts your talents.
 Every third **level** brings a talent: levels 3, 6, 9, and so on, twenty by level 60 (see
 [Experience](experience.md)). The pick is made **the moment the level comes**: nothing is banked
 for later, and until you have chosen, you can do nothing else ("You must choose a talent
-first."). A kill that brings two levels at once brings both picks, lowest level first. There is
+first."). A human's Versatile brings a second talent at level 30. A kill that brings two levels
+at once brings both picks, lowest level first. There is
 no changing your mind afterwards: a talent, once learned, is yours for good.
 
 Some [classes](classes.md#levels) also give a **bonus talent** at a few levels (the everyday
@@ -70,6 +72,15 @@ The first tree, **Stars**, holds what your birth sign gives you: the gifts (and 
 of your animal, your element, and a lucky day (see [Horoscope](horoscope.md)). They are yours
 from birth, without a pick, and nobody can pick them. A flaw is never something another talent
 asks for.
+
+## Racial talents
+
+The **Racial** tree holds what each people is good at. Every talent in it asks for its race (and
+some for a score, a level, or a weapon skill besides), so only an elf may take Elven accuracy and
+only a dwarf Stone sense; they are picked like any other talent. Humans, who have no gift of
+their own, are instead given **Versatile** from the start: one more talent at creation and one
+more at level 30. Like the gifts of the stars it is never on a pick list, and the
+[character](character.md) screen's Talents page marks it as your race's.
 
 ## What a talent does
 

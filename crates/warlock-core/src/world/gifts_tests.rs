@@ -8,6 +8,7 @@ use crate::action::{AttackKind, parse_actions};
 use crate::character::CharacterSpec;
 use crate::combat::{Blow, Profile, Strike};
 use crate::content::{Sign, SignActive, StatusId};
+use crate::damage::Damage;
 use crate::geom::Pos;
 use crate::stats::{PerStat, Stats};
 use std::sync::LazyLock;
@@ -101,6 +102,7 @@ fn each_sign_grants_its_gifts_and_flaw_in_order() {
             .filter(|t| book.id(&t.id).is_some_and(|id| book.get(id).granted))
             .filter(|t| !["supple", "evergreen"].contains(&t.id.as_str()))
             .filter(|t| !book.tree(book.get(book.id(&t.id).unwrap()).tree).class)
+            .filter(|t| t.id != "versatile")
             .map(|t| t.id.clone())
             .collect::<Vec<_>>()
     };
@@ -269,14 +271,31 @@ fn trailblazers_cross_rough_country_as_plains_and_journey_quicker() {
 }
 
 #[test]
-fn flame_hardened_resists_fire() {
-    let fire = BUILTIN.damage_type_id("fire");
+fn the_damage_type_forms_resist_fire_and_cold() {
+    // Flame-hardened (the Wyvern), Kindled (Fire), and Of the deep (the Kraken): 25 % each,
+    // summed where a sign has two (a Fire Wyvern), and nothing for the unborn.
+    let (fire, cold) = (
+        BUILTIN.damage_type_id("fire"),
+        BUILTIN.damage_type_id("cold"),
+    );
     let resists = |sign| {
         let w = born("showcase", sign);
-        w.resistances_of(w.state.player).get(fire)
+        let all = w.resistances_of(w.state.player);
+        (all.get(fire), all.get(cold))
     };
-    assert_eq!(resists(Some(("wood", "wyvern"))), 25);
-    assert_eq!(resists(None), 0);
+    assert_eq!(resists(Some(("wood", "wyvern"))), (25, 0));
+    assert_eq!(resists(Some(("fire", "salamander"))), (25, 0));
+    assert_eq!(resists(Some(("fire", "wyvern"))), (50, 0));
+    assert_eq!(resists(Some(("wood", "kraken"))), (0, 25));
+    assert_eq!(resists(Some(("fire", "kraken"))), (25, 25));
+    assert_eq!(resists(None), (0, 0));
+    // And what reaches them: a blast of 8 fire or cold, a quarter less.
+    let w = born("showcase", Some(("fire", "kraken")));
+    let player = w.state.player;
+    assert_eq!(w.resisted(player, Damage::new(8, fire)), 6);
+    assert_eq!(w.resisted(player, Damage::new(8, cold)), 6);
+    let unborn = born("showcase", None);
+    assert_eq!(unborn.resisted(player, Damage::new(8, cold)), 8);
 }
 
 #[test]
