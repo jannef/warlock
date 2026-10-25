@@ -173,6 +173,8 @@ fn web() -> Result<(), String> {
             "--profile",
             "web",
             "--locked",
+            // A release artifact: without the test world (`showcase`, docs/dev/campaign.md).
+            "--no-default-features",
             "--package",
             "warlock",
             "--target",
@@ -209,6 +211,7 @@ fn web() -> Result<(), String> {
     }
     optimize_wasm(&out.join("warlock_bg.wasm"))?;
     wasm_check::check(&out.join("warlock_bg.wasm"))?;
+    no_test_world(&out.join("warlock_bg.wasm"))?;
     // Stamp the workspace version into the page (like `release/Info.plist.in`).
     let page = std::fs::read_to_string(root.join("web/index.html"))
         .map_err(|e| format!("cannot read web/index.html: {e}"))?;
@@ -224,6 +227,21 @@ fn web() -> Result<(), String> {
         out.display(),
         out.display()
     );
+    Ok(())
+}
+
+/// Fails when a release artifact embeds the test world: its `campaign.toml`'s path is a key of
+/// the embedded content table (`warlock-core/build.rs`) whenever the `showcase` feature is on.
+fn no_test_world(artifact: &Path) -> Result<(), String> {
+    const MARKER: &[u8] = b"campaigns/showcase/campaign.toml";
+    let bytes =
+        std::fs::read(artifact).map_err(|e| format!("cannot read {}: {e}", artifact.display()))?;
+    if bytes.windows(MARKER.len()).any(|w| w == MARKER) {
+        return Err(format!(
+            "{} embeds the test world (built with the `showcase` feature)",
+            artifact.display()
+        ));
+    }
     Ok(())
 }
 

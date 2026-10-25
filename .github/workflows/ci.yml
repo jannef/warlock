@@ -106,6 +106,36 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: cargo check --package warlock --package warlock-core --target wasm32-unknown-unknown --locked
 
+  # The release configuration (`--no-default-features`: no `showcase` feature, so no test world;
+  # docs/dev/campaign.md): it builds, checks for the web, its content holds no campaign of kind
+  # `test` (`release_content`), and the CLI refuses the showcase as an unknown scenario.
+  release-config:
+    name: Release configuration (no test world)
+    needs: changes
+    if: ${{ !cancelled() && !inputs.update_golden && needs.changes.outputs.code != 'false' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends pkg-config libudev-dev libwayland-dev libxkbcommon-dev
+      - name: Install pinned toolchain
+        run: rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+      - name: Build
+        run: cargo build --no-default-features --locked --package warlock --package warlock-cli
+      - name: wasm32 check
+        run: cargo check --no-default-features --locked --package warlock --package warlock-core --target wasm32-unknown-unknown
+      - name: release_content
+        run: cargo test --no-default-features --locked --package warlock-core --package warlock release_content
+      - name: The CLI refuses the showcase
+        run: |
+          if out=$(target/debug/warlock-cli dump --scenario showcase 2>&1); then
+            echo "the release CLI started the showcase"; exit 1
+          fi
+          grep -q "unknown scenario" <<< "$out" || { echo "$out"; exit 1; }
+
   # Builds the browser version on main only; PRs get the quicker wasm32 check above.
   web:
     name: Web build (WebGPU)
