@@ -88,6 +88,13 @@ impl Rng {
         Self::stream(run_seed, &format!("loot/{level}"))
     }
 
+    /// The population stream of generated level `level` (spec §7 "Danger levels"): its initial
+    /// creatures, their cells and routes, drawn once its loot is (so the map, traps, secrets, and
+    /// loot are the same with any population).
+    pub fn population(run_seed: u64, level: &str) -> Self {
+        Self::stream(run_seed, &format!("population/{level}"))
+    }
+
     /// The spawn stream of level `level` (spec §7 "Danger levels"): what comes to it over time,
     /// apart from `gameplay` and its generation streams, so a fight rolls the same with or
     /// without a spawn between two blows. The level's state keeps it.

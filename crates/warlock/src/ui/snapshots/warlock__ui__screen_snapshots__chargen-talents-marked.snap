@@ -27,13 +27,14 @@ expression: "render(case, content.clone())"
               │   n  Silent feet      Your footsteps are a fifth quieter for each r… │
               │ Wayfarer                                                             │
               │   o  Long strider     Your journeys across the overworld go quicker. │
-              │   p  Sun-blessed      The sun mends you: under the open sun your wo… │
+              │   p  Pilgrim          You have knelt in many temples: their cures a… │
+              │   q  Sun-blessed      The sun mends you: under the open sun your wo… │
               │ Scholar                                                              │
-              │   q  Apprentice       You take up a skill you lack, or get better a… │
-              │   r  Deep well        Your power runs deep: more mana for each rank… │
-              │   s  Good learner     You gain 5 % more experience for each rank.    │
-              │   t  Lore             A magic item you have carried for a day gives… │
-              │   u  Treasure hunter  The loot you find, and what creatures drop, i… │
+              │   r  Apprentice       You take up a skill you lack, or get better a… │
+              │   s  Deep well        Your power runs deep: more mana for each rank… │
+              │   t  Good learner     You gain 5 % more experience for each rank.    │
+              │   u  Lore             A magic item you have carried for a day gives… │
+              │   v  Treasure hunter  The loot you find, and what creatures drop, i… │
               │                                                                      │
               │ Your hit points come back a quarter faster.                          │
               │                                                                      │

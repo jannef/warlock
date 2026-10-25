@@ -525,6 +525,11 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             format!("keepers let you leave owing up to {gold} gold (the debt stays on their bill)")
         }
         TalentEffect::IdentifyTrades => "what you buy or sell in a shop is identified".to_string(),
+        TalentEffect::Pilgrim => {
+            "temple services cost half (rounded up), and a cure also mends one point of each \
+             damaged stat"
+                .to_string()
+        }
         TalentEffect::Scavenger => {
             "what a creature you kill drops is identified as it lands".to_string()
         }

@@ -1,7 +1,8 @@
 //! `cargo xtask bench-turns`: turn-processing time in the hub, the vast level, the first
 //! generated level of the depths, the sunlit courtyard at dawn, the overworld, a generated
 //! forest area of the overworld at dawn, the courtyard and the forest area at midnight under the
-//! full moon, and the arena, where a dozen creatures fight (spec §10 budgets; a generated 80×21
+//! full moon, the arena, where a dozen creatures fight, and a generated 120×60 cave floor at
+//! full population, 80 creatures of danger 8 (the vast level's budget; spec §10 budgets; a generated 80×21
 //! level, the courtyard, the 100×50 overworld, an 80×40 local area, and the 72×21 arena get the
 //! hub's), and the time a night's rest takes on each (dusk to dawn: 7200 turns of six seconds,
 //! the overworld's too). Fights are real: a walk that gets the player killed starts over from
@@ -9,7 +10,7 @@
 
 use std::sync::Arc;
 use std::time::Instant;
-use warlock_core::content::Content;
+use warlock_core::content::{Content, ContentFiles};
 use warlock_core::time::{DAWN, DUSK, Duration};
 use warlock_core::{Action, Dir, Rest, World};
 
@@ -21,8 +22,24 @@ const REST_BUDGET_MS: f64 = 500.0;
 /// (the 16th), in minutes.
 const TO_FULL_MOON: u64 = (14 * 24 + 17) * 60 + 30;
 
+/// A cave branch of the campaign's deepest kind (spec §7 "Danger levels"): a 120×60 floor of
+/// danger 8 laid down at full population (80 creatures, the ceiling), every one awake to the
+/// player, who has hit points enough to walk among them; the turn budget is the vast level's.
+const DELF_BRANCH: &str = r#"
+[[dungeon]]
+id = "bench_delf"
+name = "Bench delf"
+generator = "caves"
+depth = 1
+size = [120, 60]
+danger = 8
+population = ["bat", "beetle", "kobold", "kobold_archer", "kobold_shaman", "rat"]
+"#;
+const DELF_SCENARIO: &str = "name = \"Bench delf\"\nstart_level = \"bench_delf:1\"\nseed = 1\n\
+                             lantern = \"lantern\"\nhp = 900\n";
+
 /// (scenario, level label, budget in ms, minutes skipped before the walk)
-const CASES: [(&str, &str, f64, u64); 9] = [
+const CASES: [(&str, &str, f64, u64); 10] = [
     ("showcase", "hub", 5.0, 0),
     ("vast", "vast", 16.0, 0),
     ("depths", "depths", 5.0, 0),
@@ -37,7 +54,27 @@ const CASES: [(&str, &str, f64, u64); 9] = [
     ("forest", "f-moon", 5.0, TO_FULL_MOON),
     // Every creature thinks: they see, path, and attack each other (and the player) all along.
     ("arena", "arena", 5.0, 0),
+    // A generated 120×60 cave floor at full population (`DELF_BRANCH`).
+    ("bench_delf", "delf", 16.0, 0),
 ];
+
+/// Cases whose night's rest is measured and shown but not held to [`REST_BUDGET_MS`]: on a
+/// floor at full population some of its 80 creatures are always near enough that every turn is
+/// perceived, and every one of them acts every turn, so the rest takes seconds
+/// (`docs/perf.md`, "Full population"; an open question for the owner, not a regression).
+const REST_UNJUDGED: [&str; 1] = ["delf"];
+
+/// The builtin content with the bench's cave branch and its scenario.
+fn content() -> Result<Content, String> {
+    let mut files = ContentFiles::builtin();
+    let dungeons = format!(
+        "{}{DELF_BRANCH}",
+        include_str!("../../assets/data/dungeons.toml")
+    );
+    files.insert("data/dungeons.toml", &dungeons);
+    files.insert("scenarios/bench_delf.toml", DELF_SCENARIO);
+    Content::load(&files).map_err(|e| e.to_string())
+}
 
 /// Tiny deterministic generator for the scripted walk (kept local; the game RNG is not involved).
 fn next(state: &mut u64) -> u64 {
@@ -129,7 +166,7 @@ pub fn run() -> Result<(), String> {
             "warning: debug build; run `cargo xtask bench-turns` in release for real numbers"
         );
     }
-    let content = Arc::new(Content::builtin().map_err(|e| e.to_string())?);
+    let content = Arc::new(content()?);
     println!(
         "{:<6} {:>6} {:>10} {:>10} {:>10}  {:>11} {:>8}  verdict (rest budget {REST_BUDGET_MS} ms)",
         "level", "turns", "avg ms", "max ms", "budget ms", "rest turns", "rest ms"
@@ -137,16 +174,18 @@ pub fn run() -> Result<(), String> {
     let mut failed = false;
     for (scenario, label, budget, skip) in CASES {
         let s = measure(&content, scenario, skip)?;
-        let ok = s.max_ms <= budget && s.rest_ms <= REST_BUDGET_MS;
+        let judged = !REST_UNJUDGED.contains(&label);
+        let ok = s.max_ms <= budget && (!judged || s.rest_ms <= REST_BUDGET_MS);
         failed |= !ok;
         println!(
-            "{label:<6} {:>6} {:>10.3} {:>10.3} {budget:>10.1}  {:>11} {:>8.1}  {}",
+            "{label:<6} {:>6} {:>10.3} {:>10.3} {budget:>10.1}  {:>11} {:>8.1}  {}{}",
             s.turns,
             s.avg_ms,
             s.max_ms,
             s.rest_turns,
             s.rest_ms,
-            if ok { "ok" } else { "OVER BUDGET" }
+            if ok { "ok" } else { "OVER BUDGET" },
+            if judged { "" } else { "  (rest not judged)" }
         );
     }
     // A rest beside a fight nobody perceives, until one side is dead: every fighter

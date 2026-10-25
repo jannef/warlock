@@ -312,6 +312,9 @@ pub struct TalentMods {
     pub credit: u32,
     /// What it buys or sells is identified.
     pub identify_trades: bool,
+    /// Temple services cost it half, and a cure also mends a point of each damaged stat
+    /// (Pilgrim).
+    pub services: bool,
     /// What a creature it kills drops is identified as it lands (Scavenger).
     pub scavenger: bool,
     /// Item descriptions show its things' worth.
@@ -1053,6 +1056,7 @@ impl TalentMods {
             TalentEffect::SellPercent { value } => self.sell_percent += value,
             TalentEffect::Credit { gold } => self.credit = self.credit.max(gold),
             TalentEffect::IdentifyTrades => self.identify_trades = true,
+            TalentEffect::Pilgrim => self.services = true,
             TalentEffect::Scavenger => self.scavenger = true,
             TalentEffect::ItemWorth => self.item_worth = true,
             TalentEffect::GemWorth => self.gem_worth = true,

@@ -53,8 +53,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `danger`): Quiet delver (`spawn_every_percent` 100: attempts half as often), Sixth sense
   (`danger_sense`, 2 ranks: on arrival "This place feels quiet / uneasy / dangerous / deadly."
   at danger up to level − 4 / level / level + 3 / beyond; at 2, the note "Something stirs in the
-  dark." when one comes). Hidden in the game; the wiki's dungeons page states it all. The
-  initial population of a generated floor (§9.3 of the design) is #326's follow-up, C2.
+  dark." when one comes). Hidden in the game; the wiki's dungeons page states it all.
+  **The initial population**: a generated floor of a branch with a danger is laid down full:
+  its `population_count` for the floor's walkable cells (by default 35 per 1000, 25 to 80; on
+  top of the generator's own patrols), each creature drawn by the weights above, a unique type
+  not if the run has met it, then placed on plain floor free of creatures, lights, traps, and
+  shops, outside a sanctuary, and at least 8 cells (Chebyshev) from every staircase, with a short
+  out-and-back route over cells as free (no door, no trap) where one fits, else a post. The draws
+  come from the level's own stream `population/<level id>` after its loot and before its
+  creatures' gear (which they roll like every creature without a fixed kit), so its map, traps,
+  secrets, and loot are the same with any population. A hand-made level with a danger starts as
+  its file lays it out; its `population_count` is only the cap its spawns refill toward. A unique
+  type placed on any level is met. A generated 120×60 cave floor at full population is a
+  `bench-turns` entry (16 ms a turn).
 - **The overworld**: at most one level of kind `overworld`. Its stairs down are locations; every
   other cell whose terrain has a `local` ground names a local area, level id `local:x,y` (canonical
   decimal, no signs or leading zeros), which stairs and scenarios may also target. A local area is

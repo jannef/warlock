@@ -37,6 +37,26 @@ Chatting takes a few words' time (half a normal action, 3 seconds; see
 Some people have work for you: their quests are topics too, listed first. See
 [Quests](quests.md).
 
+## Services
+
+A few people sell a **service**: a cure, or a mending, for gold. Services are listed on their
+screen after their topics, with the price: `A cure for what ails you (60 gold)`. Pick one as you
+would a topic. If there is something to do and you carry the gold, you pay (the coins go into
+their purse), they do it, and it takes the time of a chat; their price is fixed (no haggling:
+neither Presence nor Appraise moves it).
+
+- **A cure** ends every disease you have, even one that has not broken out yet (they can tell),
+  and grave rot too. Damage a disease did to your stats stays and mends a point a day as usual,
+  or all at once with a mending.
+- **A mending** gives back every point of stat damage at once. It is refused while a disease
+  shows ("Be cured first."): the disease would only take them again.
+- With nothing to cure or mend they tell you so, and you keep your gold. Without enough gold you
+  are told "You cannot pay." Neither takes any time.
+- The **Pilgrim** talent (Wayfarer) halves the price (rounded up), and its cures also mend a
+  point of each damaged stat (see [Talents](talents.md)).
+
+{{#include generated/services.md}}
+
 ## Muttering
 
 Now and then, while they go about their business and you are within a few cells, people mutter

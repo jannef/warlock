@@ -55,7 +55,11 @@ impl DialogueScreen {
         let toward = Dir::from_delta(actor.pos.x - me.x, actor.pos.y - me.y);
         let name = &view.content().creature(actor.creature).name;
         let topics: Vec<(String, String)> = (talk.topics.iter())
-            .map(|t| (t.id.clone(), t.name.clone()))
+            .map(|t| match t.price {
+                // A service (`world/service.rs`) with its price.
+                Some(price) => (t.id.clone(), format!("{} ({price} gold)", t.name)),
+                None => (t.id.clone(), t.name.clone()),
+            })
             .collect();
         let selected = (talk.asked.as_ref())
             .and_then(|asked| topics.iter().position(|(id, _)| id == asked))
@@ -222,6 +226,28 @@ mod tests {
         assert!(shown.contains("  2  This hall"), "{shown}");
         assert!(shown.contains("  6  These stairs"), "{shown}");
         assert!(shown.contains("1-6 or Enter  ask"), "{shown}");
+    }
+
+    #[test]
+    fn a_service_shows_its_price() {
+        let (world, outcome) = at_the_hermit();
+        let view = world.perception();
+        let mut talk = last_talk(&outcome).expect("talked").clone();
+        talk.topics.push(warlock_core::world::TopicView {
+            id: "cure".into(),
+            name: "A cure for what ails you".into(),
+            price: Some(60),
+        });
+        let screen = DialogueScreen::new(Some(&talk), Some(&view));
+        let mut console = Console::default();
+        console.resize(80, 30);
+        screen.draw(&mut console, &Bindings::default());
+        let shown = text(&console);
+        assert!(shown.contains("  6  These stairs"), "{shown}");
+        assert!(
+            shown.contains("  7  A cure for what ails you (60 gold)"),
+            "{shown}"
+        );
     }
 
     #[test]

@@ -31,7 +31,7 @@ Update them together whenever behavior, commands, or architecture change.
 | Player wiki tables | `cargo xtask wiki` (writes `wiki/src/generated/*.md` from the game data; not committed: CI and the release workflow run it before `mdbook build wiki`), `--build` (also runs `mdbook build wiki` into `wiki/book/`; needs `cargo install mdbook --locked`) |
 | Golden screenshots | `cargo xtask golden` (compare; authoritative on Linux only), `--local` (capture to `target/xtask/golden/*.local.png`, no compare), `--update` (rewrite references; see "Golden screenshots") |
 | Frame-time benchmark | `cargo xtask bench-frames [WxH]` (release, offscreen; method and results in `docs/perf.md`) |
-| Turn-time benchmark | `cargo xtask bench-turns` (re-runs itself in release; budgets: hub 5 ms, vast 16 ms, generated depths level 5 ms, sunlit courtyard at dawn 5 ms, overworld 5 ms, generated forest area at dawn 5 ms, courtyard and forest area at full-moon midnight 5 ms, arena 5 ms per turn; a dusk-to-dawn rest 500 ms, also beside the arena's fight going on unseen until one side is dead (a walk that gets the player killed starts over, untimed), and rested on to dawn when rain wakes the player) |
+| Turn-time benchmark | `cargo xtask bench-turns` (re-runs itself in release; budgets: hub 5 ms, vast 16 ms, generated depths level 5 ms, sunlit courtyard at dawn 5 ms, overworld 5 ms, generated forest area at dawn 5 ms, courtyard and forest area at full-moon midnight 5 ms, arena 5 ms, a generated 120×60 cave floor at full population (a fixture branch of danger 8, `delf`) 16 ms per turn; a dusk-to-dawn rest 500 ms (shown but not judged for `delf`, `docs/perf.md`), also beside the arena's fight going on unseen until one side is dead (a walk that gets the player killed starts over, untimed), and rested on to dawn when rain wakes the player) |
 | Light stress benchmark | `cargo test --release -p warlock-core turn_cost -- --ignored --nocapture` (400×300, 825 lights; again outdoors at 06:15) |
 
 `target/` in the xtask rows is Cargo's target directory: xtask follows `CARGO_TARGET_DIR` (else
@@ -133,7 +133,9 @@ something is found; `second_wind` uses the Second wind talent (hit points back a
 Disarm ability, for those trained in Disable device; refused, with no time, without the skill
 or a known trap there); `chat:E` talks to the creature east of
 the player, `ask:E:rooms` asks it about topic `rooms` (an id in a campaign's `data/dialogue/`;
-quest topics are `quest-ID`, `accept-ID`, `decline-ID`, ids in a campaign's `data/quests/`);
+quest topics are `quest-ID`, `accept-ID`, `decline-ID`, ids in a campaign's `data/quests/`; a
+service is asked for by its id the same way, `ask:E:cure`, paid in gold and taking a chat's time,
+docs/dev/npcs.md);
 `hood` lowers or raises the lantern's hood (lighting it hooded when it is out), `throw_voice:X,Y`
 throws the player's voice to level cell (X, Y) (one they see, within 6; the bard's, refused without the ability);
 `talent:hardy` takes a talent (an id in `assets/data/talents/`; `talent:weapon_focus:long_blades`

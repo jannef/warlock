@@ -134,6 +134,7 @@ mod rot;
 mod schedule;
 mod search;
 mod second_wind;
+mod service;
 mod shoot;
 mod shop;
 mod sign_picks;
@@ -583,7 +584,7 @@ impl World {
             &content,
             (&campaign, seed),
             &def.start_level,
-            (None, Default::default()),
+            (None, &Default::default()),
         )?;
         let player_pos = start
             .player_start
@@ -1250,6 +1251,8 @@ mod room_tests;
 mod rot_tests;
 #[cfg(test)]
 mod search_tests;
+#[cfg(test)]
+mod service_tests;
 #[cfg(test)]
 mod shoot_tests;
 #[cfg(test)]

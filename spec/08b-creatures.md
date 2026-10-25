@@ -86,6 +86,21 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (§6). Asking (`Action::Ask { dir, topic }`, replay text `ask:E:rooms`) takes no time and gets
     the topic's reply; an unknown topic is "The sage knows nothing about that." `World::topics`
     is the one place topics come from: quests ("Quests" below) add theirs there, first.
+  - **Services** (`world/service.rs`; the campaign design §6.1, #329): a dialogue's
+    `[[dialogue.service]]`s (`id`, `name`, `price` in gold, `does` = `cure` or `mend`, `reply`,
+    `nothing`) are sold for gold and asked for like topics (`ask:E:cure`): `World::topics` lists
+    them after the topics with their price now (`TopicView::price`; the dialogue screen shows
+    "A cure for what ails you (60 gold)"). Refused, taking no time and nothing taken, with the
+    `nothing` line when there is nothing to do (a cure: no status or disease, incubating ones
+    included, lists `prayer` in its `cured_by`; a mending: no stat damage), with "Be cured
+    first." for a mending while a disease shows, and with "You cannot pay." without the gold.
+    Otherwise the price moves from the player's pack into the speaker's in the shops' currency
+    (`hand_over`, the purse code `pay` uses), `cure` ends what `prayer` cures (`World::cure`;
+    every disease lists it) and `mend` clears every point of stat damage (`World::mend`), the
+    speaker says the `reply`, and it takes the time of `chat`. The price is the data's, never
+    moved by favour; the Pilgrim talent halves it (rounded up) and has a cure also mend a point
+    of each damaged stat (`TalentMods::services`). No alignment shift, no stream drawn, no new
+    state.
   - **Muttering**: after each of its actions, a creature whose dialogue has a `mutter`, that goes
     about its routine (its mind calm) within 5 cells of the player (as far as a voice carries), mutters
     with its `chance` (a hash of the run seed, the actor, and the moment: the gameplay stream is
