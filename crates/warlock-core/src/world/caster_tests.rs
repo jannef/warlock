@@ -22,7 +22,12 @@ fn world(class: &str) -> World {
     let spec: CharacterSpec = format!("human,female,{class}")
         .parse()
         .expect("a character");
-    let spec = spec.with_talents(vec!["keen_ears".into(), "lean".into()]);
+    // Creation picks that no test here reads (a human's three: Versatile adds one).
+    let spec = spec.with_talents(vec![
+        "keen_ears".into(),
+        "lean".into(),
+        "long_strider".into(),
+    ]);
     let w = World::start_run(
         BUILTIN.clone(),
         "showcase",
