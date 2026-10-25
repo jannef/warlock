@@ -8,7 +8,10 @@ use crate::rng::Rng;
 /// The vaults that may be stamped on the level ([`Vault::stamps_on`]) in a random order, but
 /// those a branch level names ([`Vault::pinned`]): they are stamped only where named.
 pub(super) fn shuffled<'c>(canvas: &Canvas<'c>, rng: &mut Rng) -> Vec<&'c Vault> {
-    let mut vaults: Vec<&Vault> = (canvas.vaults.iter()).copied().filter(|v| !v.pinned).collect();
+    let mut vaults: Vec<&Vault> = (canvas.vaults.iter())
+        .copied()
+        .filter(|v| !v.pinned)
+        .collect();
     rng.shuffle(&mut vaults);
     vaults
 }
