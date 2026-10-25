@@ -775,13 +775,19 @@ pub enum TalentEffect {
     AmbushThreat { value: u8 },
     /// Every skill it is trained in counts this much higher (Jack of all trades).
     TrainedSkills { value: i32 },
-    /// The class active Volley: `shots` shots at a cell for the price of one, then `degrees` of
-    /// the `cooldown` status.
-    Volley {
-        shots: u8,
-        cooldown: String,
-        degrees: u16,
+    /// It holds alternative resource `resource` (spec §8 "Resources") from the moment it has the
+    /// talent, for good (Rapid shot's Focus).
+    GrantsResource { resource: String },
+    /// A shot it looses while it holds `cost` of `resource` spends them and takes `saving`
+    /// percent less time (Rapid shot, on Focus).
+    RapidShot {
+        resource: String,
+        cost: u16,
+        saving: u8,
     },
+    /// The class active Volley: `shots` shots at a cell for the price of one (what it costs is
+    /// the talent's `resource`, if anything).
+    Volley { shots: u8 },
     /// The class active Inspire: it suffers `status` (Inspired), for `mana` mana.
     Inspire { status: String, mana: i32 },
     /// Inspire gives `status` instead, and costs no mana (Virtuoso).
@@ -846,6 +852,12 @@ impl TalentEffect {
             (content.status_ids().next().is_none() || content.status_id(id).is_some())
                 .then_some(())
                 .ok_or_else(|| format!("names an unknown status `{id}`"))
+        };
+        // A resource's maximum, if content has resources to check it by (as statuses above).
+        let resource = |id: &str| match content.resource_id(id) {
+            Some(r) => Ok(Some(content.resource(r).max)),
+            None if content.resources().is_empty() => Ok(None),
+            None => Err(format!("names an unknown resource `{id}`")),
         };
         let bonus = |v: i32| {
             (v != 0 && BONUSES.contains(&v))
@@ -918,15 +930,27 @@ impl TalentEffect {
                 }
                 Ok(())
             }
-            TalentEffect::Volley {
-                shots,
-                cooldown,
-                degrees,
+            TalentEffect::GrantsResource { resource: id } => resource(id).map(|_| ()),
+            TalentEffect::RapidShot {
+                resource: id,
+                cost,
+                saving,
             } => {
-                if !(2..=5).contains(shots) || *degrees == 0 {
-                    return Err("`volley`: shots is 2 to 5, degrees at least 1".into());
+                if !(1..=50).contains(saving) {
+                    return Err("`rapid_shot`: saving is 1 to 50".into());
                 }
-                status(cooldown)
+                match resource(id)? {
+                    Some(max) if *cost > max => Err(format!(
+                        "`rapid_shot`: costs {cost} of `{id}`, more than its maximum {max}"
+                    )),
+                    _ => Ok(()),
+                }
+            }
+            TalentEffect::Volley { shots } => {
+                if !(2..=5).contains(shots) {
+                    return Err("`volley`: shots is 2 to 5".into());
+                }
+                Ok(())
             }
             TalentEffect::Inspire { status: id, mana } => {
                 if !(0..=100).contains(mana) {

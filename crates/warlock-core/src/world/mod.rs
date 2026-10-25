@@ -105,6 +105,7 @@ mod equip;
 mod experience;
 mod eyes;
 mod fight;
+mod focus;
 mod free_blow;
 mod gifts;
 mod glare;
@@ -1118,6 +1119,8 @@ mod equip_tests;
 mod experience_tests;
 #[cfg(test)]
 mod fight_tests;
+#[cfg(test)]
+mod focus_tests;
 #[cfg(test)]
 mod free_blow_tests;
 #[cfg(test)]

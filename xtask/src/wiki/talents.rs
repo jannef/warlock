@@ -262,6 +262,10 @@ pub(super) fn effects_text(content: &Content, def: &TalentDef) -> String {
             parts.push(format!("rank {}: {}", i + 1, effect_text(content, effect)));
         }
     }
+    if let Some(cost) = def.resource {
+        let name = content.resource(cost.resource).name.to_lowercase();
+        parts.push(format!("costs {} {name}", cost.amount));
+    }
     parts.join("; ")
 }
 
@@ -294,6 +298,11 @@ fn sign_cooldown(content: &Content, active: SignActive, degrees: u16) -> String 
         || format!("{degrees} degree of its cooldown"),
         |id| cooldown_for(content, &id, degrees),
     )
+}
+
+/// An alternative resource's name ("Focus"), or its id when content has none by it.
+fn resource_name(content: &Content, id: &str) -> String {
+    (content.resource_id(id)).map_or_else(|| id.to_string(), |r| content.resource(r).name.clone())
 }
 
 /// A buff status in words: its name, what it adds to fighting, and how long it lasts
@@ -1218,14 +1227,23 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::TrainedSkills { value } => {
             format!("every trained skill counts {}", signed(value))
         }
-        TalentEffect::Volley {
-            shots,
-            cooldown,
-            degrees,
+        TalentEffect::GrantsResource { resource } => {
+            format!(
+                "you hold {} from now on (see Resources)",
+                resource_name(content, &resource)
+            )
+        }
+        TalentEffect::RapidShot {
+            resource,
+            cost,
+            saving,
         } => format!(
+            "a shot you loose while you hold {cost} {} spends them and takes {saving} % less time",
+            resource_name(content, &resource).to_lowercase()
+        ),
+        TalentEffect::Volley { shots } => format!(
             "active (the time of one shot, one exertion), at a cell: {shots} shots of the readied \
-             missile weapon; then {degrees} degree of {}",
-            status(&cooldown)
+             missile weapon"
         ),
         TalentEffect::Inspire { status: id, mana } => format!(
             "active (the time of a chat), {mana} mana: {}",

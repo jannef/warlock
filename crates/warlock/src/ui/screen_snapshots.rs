@@ -242,6 +242,8 @@ const CASES: &[Case] = &[
         name: "alignment-strayed-character",
         scenario: "courtyard",
         character: Some("human,male,paladin"),
+        // Seed 3: a paladin whose birth animal nudges nothing (#272), so he starts Good.
+        seed: Some(3),
         actions: "move:E*36 move:S pickup move:NE move:NE pickup:b move:SE move:E*5 move:S*5 \
             move:E*5 kick:N",
         screen: Some("character"),
@@ -272,6 +274,8 @@ const CASES: &[Case] = &[
     Case {
         name: "abilities-menu-class",
         character: Some("human,male,paladin"),
+        // Seed 12: a Unicorn-born paladin (#272: Good, and a Birth sign gift in the menu).
+        seed: Some(12),
         actions: "xp:100000 levelup:auto use:lay_on_hands",
         screen: Some("abilities"),
         ..BASE

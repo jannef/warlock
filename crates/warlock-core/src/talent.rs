@@ -16,8 +16,8 @@
 use crate::alignment::Band;
 use crate::character::Character;
 use crate::content::{
-    Benefit, Choice, CombatStance, Content, DamageTypeId, LightId, MAX_RANK, Need, Role, Sign,
-    StatusId, TalentDef, TalentEffect, TalentId, TerrainId,
+    Benefit, Choice, CombatStance, Content, DamageTypeId, LightId, MAX_RANK, Need, ResourceId,
+    Role, Sign, StatusId, TalentDef, TalentEffect, TalentId, TerrainId,
 };
 use crate::damage::Kinds;
 use crate::dice::Dice;
@@ -513,6 +513,11 @@ pub struct TalentMods {
     pub ambush_threat: u8,
     /// How much higher every skill it is trained in counts (Jack of all trades).
     pub trained_skills: i32,
+    /// The alternative resources its talents grant it, in the order first named (Rapid shot's
+    /// Focus).
+    pub grants: Vec<ResourceId>,
+    /// Rapid shot's quicker shots on a resource, if it has it.
+    pub rapid_shot: Option<RapidShot>,
     /// The active Volley, if it has it.
     pub volley: Option<Volley>,
     /// The active Inspire, if it has it.
@@ -539,12 +544,20 @@ pub struct FireBreath {
     pub degrees: u16,
 }
 
-/// The active Volley (spec §8 "Class abilities"): shots at a cell, then a cooldown.
+/// The active Volley (spec §8 "Class abilities"): shots at a cell for the price of one; it costs
+/// what its talent's `resource` says (Focus).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Volley {
     pub shots: u8,
-    pub cooldown: StatusId,
-    pub degrees: u16,
+}
+
+/// Rapid shot (spec §8 "Resources"): a shot spends `cost` of `resource` (Focus), when there is
+/// that much, and takes `saving` percent less time.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct RapidShot {
+    pub resource: ResourceId,
+    pub cost: u16,
+    pub saving: u8,
 }
 
 /// The active Hound's bay (spec §8 "Birth sign"): the status a howl leaves on lesser foes
@@ -1436,19 +1449,27 @@ impl TalentMods {
             TalentEffect::ThrowVoice => self.throw_voice = true,
             TalentEffect::AmbushThreat { value } => self.ambush_threat += value,
             TalentEffect::TrainedSkills { value } => self.trained_skills += value,
-            TalentEffect::Volley {
-                shots,
-                cooldown,
-                degrees,
+            TalentEffect::GrantsResource { resource } => {
+                if let Some(resource) = content.resource_id(&resource)
+                    && !self.grants.contains(&resource)
+                {
+                    self.grants.push(resource);
+                }
+            }
+            TalentEffect::RapidShot {
+                resource,
+                cost,
+                saving,
             } => {
-                if let Some(cooldown) = content.status_id(&cooldown) {
-                    self.volley = Some(Volley {
-                        shots,
-                        cooldown,
-                        degrees,
+                if let Some(resource) = content.resource_id(&resource) {
+                    self.rapid_shot = Some(RapidShot {
+                        resource,
+                        cost,
+                        saving,
                     });
                 }
             }
+            TalentEffect::Volley { shots } => self.volley = Some(Volley { shots }),
             TalentEffect::Inspire { status, mana } => {
                 if let Some(status) = content.status_id(&status) {
                     self.inspire = Some(Inspire { status, mana });

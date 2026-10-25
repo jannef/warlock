@@ -39,9 +39,10 @@ nothing in its place.
 
 A paladin's abilities used from the menu answer only while the paladin is Good or better (see
 [Alignment](alignment.md)); the passives do not ask. Lay on hands drains instead of costing mana
-until mana comes to the game. The barbarian's rage, the monk's flurry and quivering palm,
-the ranger's rapid shot and volley, the thief's improved sneak attack and master thief, and the
-bard's inspire will later run on pools of their own.
+until mana comes to the game. The ranger's rapid shot and volley run on
+[focus](resources.md); the barbarian's rage, the monk's flurry and quivering palm, the thief's
+improved sneak attack and master thief, and the bard's inspire will later run on pools of their
+own.
 
 The priest's, druid's, wizard's, and witch's abilities used from the menu are **spells**: each
 costs the mana the table says, and is greyed out ("you have too little mana") while you have less; there
@@ -53,7 +54,9 @@ Smite is the paladin's, and answers only while the priest is Good or better.
 The ranger's **favoured prey** is the kind of creature you have killed most, counted over every
 level; when two are tied, the one that got there first stays favoured until another is killed
 more often. A **volley** looses three shots of your readied missile weapon at the place you aim
-at, one after another, for the time of one shot; it stops early when you run out. The bard's
+at, one after another, for the time of one ordinary shot; it stops early when you run out, and
+costs 6 focus. **Rapid shot** gives you focus (10, full); every shot you loose while you have
+at least 2 spends 2 and takes 10 % less time, and with less it is an ordinary shot. The bard's
 **inspire** costs 3 mana, and can be sung again while it lasts (it starts over); a virtuoso's
 costs nothing.
 
