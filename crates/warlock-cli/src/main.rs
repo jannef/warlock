@@ -3,6 +3,7 @@
 //! ```text
 //! warlock-cli dump --scenario showcase --actions "move:N move:N" --layers view,fov
 //! warlock-cli dump --scenario showcase --character dwarf,female,warrior --name Brakka --layers stats
+//! warlock-cli dump --character dwarf,male,warrior --talents healthy,lean --layers talents
 //! warlock-cli replay --create --scenario showcase --actions "move:N wait" -o run.json
 //! warlock-cli replay --verify run.json
 //! warlock-cli gen --level depths:3 --seed warlock
@@ -62,6 +63,11 @@ struct RunArgs {
     /// given).
     #[arg(long)]
     name: Option<String>,
+    /// The talents picked at creation, by id, separated by commas (`hardy,weapon_focus:long_blades`,
+    /// a choice after a colon); defaults to the character's Random picks. Like `--character`, it
+    /// starts the run with the character's kit (ignored when `--replay` is given).
+    #[arg(long)]
+    talents: Option<String>,
     /// Actions as text, e.g. "move:E move:SE wait open:E close:W kick:N descend ascend pickup:ab
     /// drop:a bash:E chat:E ask:E:rooms".
     #[arg(long)]
@@ -177,12 +183,25 @@ fn parse_run_actions(args: &RunArgs) -> Result<Vec<Action>, String> {
 /// with `--character` or `--name` starts with its kit, the scenario's own with the scenario's
 /// pack (spec §8 "Character creation").
 fn start(content: Arc<Content>, args: &RunArgs) -> Result<World, String> {
-    let kit = args.character.is_some() || args.name.is_some();
+    let kit = args.character.is_some() || args.name.is_some() || args.talents.is_some();
+    let talents = args
+        .talents
+        .as_deref()
+        .map(warlock_core::world::parse_talents);
+    let character = match &talents {
+        Some(talents) => warlock_core::world::chosen_with_talents(
+            &content,
+            &args.scenario,
+            args.character.as_ref(),
+            talents,
+        ),
+        None => args.character.clone(),
+    };
     World::start_run(
         content,
         &args.scenario,
         args.seed,
-        args.character.as_ref(),
+        character.as_ref(),
         args.name.as_deref(),
         kit,
     )
@@ -323,8 +342,24 @@ mod tests {
         );
         assert!(run(&["--character", "dwarf,woman,warrior"]).is_err());
         let orc = run(&["--character", "orc,male,warrior"]).expect("parses");
-        let err = start(content, &orc).expect_err("refused");
+        let err = start(content.clone(), &orc).expect_err("refused");
         assert!(err.contains("unknown race `orc`"), "{err}");
+        // `--talents` names the creation picks, of the scenario's own character without one.
+        let picks = &[
+            "--character",
+            "dwarf,male,warrior",
+            "--talents",
+            "healthy,lean",
+        ];
+        let world = start(content.clone(), &run(picks).expect("parses")).expect("starts");
+        let spec = &world.character().expect("a character").spec;
+        assert_eq!(spec.talents, ["healthy", "lean"]);
+        let own = run(&["--talents", "healthy,lean"]).expect("parses");
+        let world = start(content.clone(), &own).expect("starts");
+        assert!(world.started_with_kit());
+        let bad = run(&["--character", "dwarf,male,warrior", "--talents", "healthy"]);
+        let err = start(content, &bad.expect("parses")).expect_err("too few");
+        assert!(err.contains("takes 2 at creation"), "{err}");
     }
 
     #[test]

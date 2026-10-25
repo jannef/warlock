@@ -12,11 +12,12 @@ hit points a level gives) is `docs/dev/experience.md`.
 | `content/talent.rs` | `TalentBook` from `data/talents.toml` (settings: `max_ranks`, `[coverage]`, `[[tree]]`, `[[system]]`, each set in one file) and `data/talents/*.toml` (one `[[talent]]` a file, `ContentFiles::table("talents")` order; `TalentId` an index, saves name talents by id so it is **not** in the content fingerprint). `TalentDef` (tree, `ranks: Vec<Rank>`, `needs` for every rank plus each rank's own, `effects` per rank held plus each rank's own, `choice`, `systems`, `granted`), `Needs`/`Need` (the prerequisite kinds and their words: talents, stat scores, skill values, weapon-skill ranks, any skill of a role (`any_weapon_skill`), `chosen`, level, race, class, eyes, `requires_alignment`, an `alignment::Requirement` read against `Actor::band`, and `either`, any one of several, `Need::Either`), `TalentEffect` (the typed effects), `Choice::options`/`name`, and the **coverage check** (`TalentBook::coverage_gap`, run at load: a `ContentError`). |
 | `talent.rs` | The runtime: `Talents` (`Vec<Taken { id, rank, choice }>` on `Actor::talents`, saved and hashed, left out of the JSON while empty), `TalentMods` (every effect summed; `Talents::mods(content)` / `Actor::talent_mods`), `Candidate` (what prerequisites read: `Candidate::player`), `unmet`, `may_take` → `Refusal` (in words), `openings`, `offers` (the pick list, tree by tree). |
 | `world/talent.rs` | `Due { level, talents }` in `Progress::due` (lowest level first); `World::level_up(from, to)` from `grant_xp` (a pick every `Experience::talent_every` levels, and the per-level hit points of talents held); `refuse_due` (the first line of `player_acts`: everything but `Talent`, `Advance`, `LevelUpAuto` is refused with "You have skill rolls to spend." or "You must choose a talent first."); `take_talent` (the first due with a pick, so a talent may come before the rolls), `level_up_auto` (dev); `settle_due` drops talent picks nothing can be spent on (`offers` empty and no roll left) and rolls when no skill is trained, asked again after each pick. `Due { level, talents, rolls, bonus }`: a level with rolls but no pick is due too; `bonus` are the class's bonus picks (a talent of the class's trees spends one before an ordinary pick; "You must choose a talent of Weaponcraft or Delver."), dropped like the others when nothing fits. |
+| `world/creation.rs` | Creation picks (#236; below): `creation_count`, `World::open_creation` (a level 1 `Due` from `begin`, for a run with the kit), `take_creation` (from `start_run`: the spec's picks, else `take_random` on the `character/talents/<spec>` stream; recorded in `CharacterSpec::talents`), `World::draft` / `creation_offers` / `random_creation` (character creation's Talents step), `chosen_with_talents` and `parse_talents` (`--talents`). `World::learn` (`world/talent.rs`) is `take_talent` without its words. |
 | `world/class.rs` | Class abilities (#246): `grant` gives the talents a class's level table names up to a level that the player lacks (rank 1, `hand_out` for hit points by level and stat gifts), at creation (`start_run`, level 1), as each level comes (`level_up`, with the news "You gain Fencing."), and on `from_state` (a grown table reaches saves; nothing is taken away); `bonus_trees`; `appraise_carried` (Connoisseur, from `World::live` for the player). |
 | `content/class.rs` | `ClassDef::abilities` (`[(level, talent id)]`), `bonus_talents` (`levels`, `trees`; none: any), `abilities_to`, `bonus_at`, `bonus_trees`, `check_table` (after the talents load, from `Content::check_class_tables`, which then runs the coverage check with the class abilities counted). A book without a class tree (fixtures) gives nothing and checks nothing. |
 | `world/skill_roll.rs` | The skill rolls (#230, `docs/dev/skills.md`): `level_rolls`, `advance_skill` (`advance:SKILL`), `advance_auto` (`levelup:auto`'s rolls). `World::due()` and `candidate()`. |
 | `world/experience.rs` | `grant_xp` scales every gain by `TalentMods::xp_percent` and calls `level_up`; the dev `xp:N` (`grant_xp_dev`). |
-| `perception.rs` | `due()`, `own_talents()` (`OwnTalent`), `talents()` (`TalentView`: held rank, the next rank's needs with `met`, `openings`): what the level-up screen and the Talents page (#236) read. |
+| `perception.rs` | `due()`, `dues()` (every level's, for the level-up screen's sequence), `bonus_trees()`, `own_talents()` (`OwnTalent`), `talents()` (`TalentView`: held rank, the next rank's needs with `met`, `openings`): what the level-up screen (`ui/level_up_screen.rs`), the Talents page (`ui/talents_screen.rs`), and the creation step (`ui/chargen_talents_screen.rs`) read (`docs/dev/screens.md`). |
 | `dump.rs` | layers `talents` (held, `Hardy 2/3`) and `progress` (dev: dues, `due level 3: 3 skill rolls, 1 talent`, takeable ids with choices, discovered kills, `empathy broken rat`); JSON `talents`, `due` (`level`, `talents`, `rolls`), `forecast` (Weather-wise only); the header's `weather clear then rain`. |
 | `action.rs` | `Talent { id, choice }` (`talent:hardy`, `talent:weapon_focus:long_blades`; ids keep their case), `Advance(skill)`, dev `LevelUpAuto` (`levelup:auto`), `GrantXp` (`xp:N`); all `Spent::NoTime` or refused. |
 | `rng.rs` | `Rng::levels(seed)`, the `levels` stream, kept in `WorldState::levels_rng: Option<Rng>` **from the first draw** (the stat checks of each level, `world/stat_training.rs`; skill rolls, `world/skill_roll.rs`), so runs that never drew hash as before. |
@@ -222,6 +223,29 @@ left with nothing that cares about it:
 5. **The bar is data** (`[coverage]`): raise `min_talents` or `min_class` as the list grows,
    in its own PR, with the talents that meet it.
 
+## Creation picks
+
+A run that starts with the character's kit (`WorldState::kit`: New run, `--character`,
+`--name`, `--talents`) takes `[levels] creation_talents` (2, `data/experience.toml`) plus the
+class's `creation_talents` (the bard's 1, `data/classes/`). `World::begin` (the old body of
+`start_run`) opens them as a `Due { level: 1, talents }`; `start_run` then spends it with
+`take_creation`: `CharacterSpec::talents` in order (each `World::learn`: an unknown, refused,
+missing, or extra pick is `WorldError::Character`), else `take_random` (the stream
+`character/talents/<race>,<gender>,<class>`: an index into `talent::offers` then into the talent's
+ways, until none is due or none is offered), writes what was taken into the character's spec,
+recomputes perception, and says nothing. Not the kit (the scenario's own character in tests,
+walks, `--scenario` alone): no picks, so those replays keep their hashes. The humans' third pick
+(design §7.2) is H5's Versatile: it should add to `creation_count`.
+
+`CharacterSpec::talents` is left out of the JSON while empty (old saves and replays load and
+start as before); `Display` stays `race,gender,class`, so the character's other streams are
+unchanged, and `same_choice` compares without the picks (`default_name`).
+
+The creation step reads a drafted run (`World::draft`: `begin` with the kit, the picks left
+due), cloned per question: `creation_offers(picks)` takes `picks` on a clone and returns what is
+left and what may come next; `random_creation` runs `take_random` on a clone. Tests:
+`world/creation_tests.rs`.
+
 ## Determinism and saves
 
 Picks are replayed actions; prerequisites read stored scores. Talents draw from the gameplay
@@ -282,7 +306,7 @@ would see nothing darkvision does not). The design's B5 (Defence by attack kind)
 ## Later waves
 
 Skill rolls (#230) add `Due::rolls` and draw from `levels_rng`; stat training (#231, done:
-`docs/dev/stats.md` "Training") checks every stat on it once a level, from `level_up`; the level-up screen, the Talents page, creation picks, and `--talents` (#236) read
+`docs/dev/stats.md` "Training") checks every stat on it once a level, from `level_up`; the level-up screen, the Talents page, creation picks, and `--talents` (#236, done) read
 `PerceptionView::due`/`talents`; the talent waves add files under `data/talents/` and one read
 each; `granted` talents (races' `versatile`, the birth signs') are computed into `Actor::talents`
 by whoever grants them and never offered (`may_take` refuses them). The birth signs' are granted

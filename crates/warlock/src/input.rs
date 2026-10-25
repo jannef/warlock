@@ -71,6 +71,8 @@ pub enum KeyCommand {
     WeaponSkills,
     /// Show the player's quests, active and done (no time passes).
     Quests,
+    /// Show the player's talents, and every other with what it needs (no time passes).
+    Talents,
     /// Show the messages so far, the newest at the bottom (no time passes).
     Messages,
     /// Ask how long to rest (an hour, until dawn, until dusk).
@@ -319,6 +321,7 @@ impl KeyCommand {
             KeyCommand::Skills => "Skills",
             KeyCommand::WeaponSkills => "Weapon skills",
             KeyCommand::Quests => "Quest log",
+            KeyCommand::Talents => "Talents",
             KeyCommand::Messages => "Message history",
             KeyCommand::Rest => "Rest",
             KeyCommand::RestHour => "Rest an hour",
@@ -1012,6 +1015,10 @@ impl Gameplay<'_> {
             }
             (InputMode::Normal, KeyCommand::WeaponSkills) => {
                 open = Some(ScreenAction::Open(ScreenName::WeaponSkills));
+                InputMode::Normal
+            }
+            (InputMode::Normal, KeyCommand::Talents) => {
+                open = Some(ScreenAction::Open(ScreenName::Talents));
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::Eat) => {

@@ -1221,6 +1221,20 @@ impl<'a> PerceptionView<'a> {
         self.progress.due.first().copied()
     }
 
+    /// Every level's choices still due, the lowest level's first (several levels gained in one
+    /// turn are one sequence on the level-up screen).
+    pub fn dues(&self) -> &[Due] {
+        &self.progress.due
+    }
+
+    /// The trees a bonus pick is of (the player's class's `bonus_talents`); `None`: any.
+    pub fn bonus_trees(&self) -> Option<Vec<TreeId>> {
+        let class = self
+            .character
+            .and_then(|c| self.content.class(&c.spec.class));
+        class.and_then(|c| c.bonus_trees(self.content.talents()))
+    }
+
     /// Whether the player's own bursts spare them (spec §8 "Talents": Careful reader), so a
     /// scroll read close needs no warning.
     pub fn bursts_spare_me(&self) -> bool {

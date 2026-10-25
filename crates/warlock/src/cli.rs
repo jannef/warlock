@@ -35,6 +35,13 @@ pub struct Args {
     #[arg(long)]
     pub name: Option<String>,
 
+    /// The talents the character of a new run picks at creation, by id, separated by commas
+    /// (`hardy,weapon_focus:long_blades`, a choice after a colon); defaults to the character's
+    /// Random picks. Like `--character`, it applies to the run that `--scenario`, `--new`,
+    /// `--record`, or `--capture` starts (with the character's kit); a replay's picks win.
+    #[arg(long, value_name = "IDS")]
+    pub talents: Option<String>,
+
     /// Apply this replay file at startup (its scenario and seed win); hashes are verified and a
     /// divergence is logged as a warning.
     #[arg(long)]
@@ -131,10 +138,11 @@ pub struct Args {
 
     /// Dev: open this screen at startup, even with `--capture`. `main`, `new-run`, and
     /// `characters` (the saved characters: with `--capture`, those in `--save-dir`, read only)
-    /// open on the main menu, and so do character creation's `race`, `gender`, `class`, `name`,
-    /// and `summary` (over New run and the steps before them, each on its preselection: the
-    /// scenario's character, an empty name);
-    /// `pause`, `help`, `inventory`, `equipment`, `character`, `pick-up`, and `drop` over a run,
+    /// open on the main menu, and so do character creation's `race`, `gender`, `class`,
+    /// `chargen-talents`, `name`, and `summary` (over New run and the steps before them, each on
+    /// its preselection: the scenario's character, an empty name);
+    /// `pause`, `help`, `inventory`, `equipment`, `character`, `talents`, `pick-up`, and `drop`
+    /// over a run,
     /// `equip-item` (choosing what goes in the first slot) over the equipment screen, and
     /// `describe` (what the first stack carried is) over the inventory; `settings`, `files`
     /// (over Settings), and `controls` over the main menu, or over the pause menu when `--scenario`,
@@ -187,6 +195,7 @@ impl Args {
                 | ScreenName::Sign
                 | ScreenName::Gender
                 | ScreenName::Class
+                | ScreenName::ChargenTalents
                 | ScreenName::Name
                 | ScreenName::Summary,
             ) => true,

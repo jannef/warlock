@@ -6,6 +6,15 @@ on), some have several **ranks**, and most ask something of you first.
 
 ## When you pick
 
+A new character picks **two talents at creation**, on the Talents step after the class; the
+**bard**, the lucky class, picks three. The list shows the talents the character you have made so
+far may take (its scores, skills, class abilities, and birth sign count), and marking one may
+open another that needs it (Healthy, then Fast healer). The **Random** row lets chance pick
+them, and a character started without picks (from the command line) gets those same random
+picks. The [character](character.md) screen counts your talents.
+
+{{#include generated/talents-creation.md}}
+
 Every third **level** brings a talent: levels 3, 6, 9, and so on, twenty by level 60 (see
 [Experience](experience.md)). The pick is made **the moment the level comes**: nothing is banked
 for later, and until you have chosen, you can do nothing else ("You must choose a talent
@@ -20,8 +29,15 @@ the bonus pick first. The commoner's bonus talents come from any tree.
 Should there be nothing you can take (a run with no talents, or every talent you qualify for
 already learned), the pick is simply lost, so a level never waits for the impossible.
 
-The level-up screen that makes the pick is on its way; so are picks at character creation and
-the Talents page that lists every talent with what it needs.
+The **level-up screen** opens by itself when a level comes. It walks the level's choices in
+order: the [skill rolls](skills.md) first, then a bonus talent, then the level's talent, listing
+only the talents you may take now, by tree. A talent with a choice (Weapon focus, Apprentice)
+asks for it next. The screen can't be closed until everything is chosen. Two levels at once are
+one sequence, the lower level's choices first.
+
+The **Talents page** (page 7 of the information pages) lists your talents, then every other
+talent you could still pick, by tree, with what it needs; the parts you already meet stand out
+from those you don't, so you can plan a build there.
 
 **Class abilities** are talents too, of their own tree: your class gives them as its levels
 come (see [Classes](classes.md#levels)), you never pick them, and one your class gives that you

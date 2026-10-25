@@ -22,6 +22,8 @@ static BUILTIN: LazyLock<Arc<Content>> =
 /// ashes among them) leave the class's rules as the tests rig them.
 fn world(class: &str) -> World {
     let spec: CharacterSpec = format!("human,male,{class}").parse().expect("a character");
+    // Creation picks that no test here reads.
+    let spec = spec.with_talents(vec!["keen_ears".into(), "lean".into()]);
     let w = World::start_run(
         BUILTIN.clone(),
         "showcase",

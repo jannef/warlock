@@ -3,8 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  You kick the shopkeeper. "You will pay for that!" shouts Grimbold. You feel you have strayed from
- the path of good. The shopkeeper stabs you. You are bleeding.
-              ┌─ Character ──────────────────────────────────────────────────────────┐
+ the path of g┌─ Character ──────────────────────────────────────────────────────────┐
               │                                                                      │
               │ Garrick                                                              │
               │                                                                      │
@@ -24,6 +23,7 @@ expression: "render(case, content.clone())"
               │                                                                      │
               │ Lv  Level         1                                                  │
               │ XP  Experience    0 / 844                                            │
+              │     Talents       7                                                  │
               │ HP  Hit points    13/20   MP  Mana       5/5                         │
               │ Dv  Defence       13      Pv  Protection  1                          │
               │     Stance        Neutral                                            │
@@ -35,6 +35,6 @@ expression: "render(case, content.clone())"
               │ Burdened over 19 kg, strained over 38 kg, overloaded over 57 kg      │
               │                                                                      │
               │ @ or Esc close   S skills                                            │
-              └─ 1 Character · 2 Inv · 3 Equip · 4 Skills · 5 Weapons · 6 Quests ────┘
+              └─ 1 Char · 2 Inv · 3 Equip · 4 Skills · 5 Weapons · 6 Quests · 7 Tal ─┘
 
  The Courtyard  ·  HP 13/20  ·  MP 5/5  ·  Bleeding  ·  Lv 1  ·  06:35  ·  Clear         ? controls

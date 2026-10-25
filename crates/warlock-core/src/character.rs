@@ -117,15 +117,21 @@ pub fn other_stat(seed: u64) -> Stat {
     Stat::ALL[rng.index(Stat::COUNT)]
 }
 
-/// What the player chooses: a race, a gender, and a class, by id. Written
-/// `race,gender,class` (`dwarf,female,warrior`) on the command line; an object with those
-/// three fields in scenarios, replays, and saves.
+/// What the player chooses: a race, a gender, and a class, by id, and the talents picked at
+/// creation. Written `race,gender,class` (`dwarf,female,warrior`) on the command line (the
+/// talents with `--talents`); an object with those fields in scenarios, replays, and saves.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CharacterSpec {
     pub race: String,
     pub gender: Gender,
     pub class: String,
+    /// The talents picked at creation (spec §8 "Talents"), in the order taken, each `id` or
+    /// `id:choice` (`weapon_focus:long_blades`). Empty: none chosen, so a run that starts with
+    /// the character's kit takes the Random picks (`world/creation.rs`) and records them here.
+    /// Left out of the JSON while empty, so replays and saves from before creation picks load.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub talents: Vec<String>,
 }
 
 /// A date on the calendar that may lie before its year 1: a birth date. `month` is 1 to 12,
@@ -315,7 +321,7 @@ pub fn default_name(
     spec: &CharacterSpec,
 ) -> String {
     (scenario.character.as_ref())
-        .filter(|own| *own == spec)
+        .filter(|own| own.same_choice(spec))
         .and(scenario.character_name.clone())
         .or_else(|| random_name(content, seed, spec, 0))
         .unwrap_or_else(|| NAMELESS.into())
@@ -345,6 +351,27 @@ pub struct Start {
 }
 
 impl CharacterSpec {
+    /// A character of `race`, `gender`, and `class`, with no talents picked yet.
+    pub fn new(race: impl Into<String>, gender: Gender, class: impl Into<String>) -> Self {
+        Self {
+            race: race.into(),
+            gender,
+            class: class.into(),
+            talents: Vec::new(),
+        }
+    }
+
+    /// Whether `other` is the same race, gender, and class (whatever talents either picked).
+    pub fn same_choice(&self, other: &CharacterSpec) -> bool {
+        self.race == other.race && self.gender == other.gender && self.class == other.class
+    }
+
+    /// This race, gender, and class with `talents` picked at creation.
+    pub fn with_talents(mut self, talents: Vec<String>) -> Self {
+        self.talents = talents;
+        self
+    }
+
     /// The race, or why there is none.
     pub fn race<'c>(&self, content: &'c Content) -> Result<&'c RaceDef, String> {
         content
@@ -512,11 +539,7 @@ impl FromStr for CharacterSpec {
                 "the race and the class must be named, got `{text}`"
             ));
         }
-        Ok(Self {
-            race: race.to_string(),
-            gender,
-            class: class.to_string(),
-        })
+        Ok(Self::new(race, gender, class))
     }
 }
 
@@ -997,11 +1020,7 @@ mod tests {
         for race in &content.races().list {
             for class in content.classes() {
                 for gender in Gender::ALL {
-                    let spec = CharacterSpec {
-                        race: race.id.clone(),
-                        gender,
-                        class: class.id.clone(),
-                    };
+                    let spec = CharacterSpec::new(&race.id, gender, &class.id);
                     for seed in 0..3 {
                         let with = spec.start(&content, seed, start_date()).expect("starts");
                         let without = spec.start(&plain, seed, start_date()).expect("starts");
@@ -1079,11 +1098,7 @@ mod tests {
         for race in &content.races().list {
             for gender in Gender::ALL {
                 for class in content.classes() {
-                    let spec = CharacterSpec {
-                        race: race.id.clone(),
-                        gender,
-                        class: class.id.clone(),
-                    };
+                    let spec = CharacterSpec::new(&race.id, gender, &class.id);
                     for seed in 0..4 {
                         let start = spec.start(&content, seed, start_date()).expect("starts");
                         for stat in Stat::ALL {

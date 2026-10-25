@@ -4,7 +4,7 @@ Developer notes for working on this part of Warlock (moved from CLAUDE.md, #185)
 rules it implements are in spec/06-input-and-ui.md. Keep it current with the code, as CLAUDE.md says.
 
 Modal screens (spec §6) — main menu, the saved characters (Characters), new run and character
-creation (race, gender, class, name, summary), pause, settings, controls, the `?` help, the inventory (`i`), the equipment screen
+creation (race, gender, class, talents, name, summary), pause, settings, controls, the `?` help, the inventory (`i`), the equipment screen
 (`e`) and its choice of what goes in a slot, an item's description (a letter in the inventory,
 an upper-case slot letter on the equipment screen), the character screen (`@`), the weapon skills
 screen (`W`), the quest log (`q`), the message history (`M`), choosing what to
@@ -16,7 +16,11 @@ dialogue screen (opened by
 `Event::Talked`; asking is `ScreenAction::Act(Action::Ask)`, which closes it, and the answer
 reopens it on the topic asked, also when no topics are left), and the death screen (opened by
 `screens::on_death` when `World::death` is set; Enter/Esc is `MenuChoice::LeaveRun`, back to the
-main menu without saving; no `--screen`: capture a dead replay instead) — are one
+main menu without saving; no `--screen`: capture a dead replay instead), the level-up screen (opened by
+`screens::on_level_up` whenever `World::due` is set and the game changed, over whatever is open, the
+death screen winning; its choices are `ScreenAction::Act`, which closes it, and it opens again on
+what is left; no `--screen`: a replay that ends with choices due opens it), and the Talents page
+(page 7, `KeyCommand::Talents`, unbound) — are one
 screen stack (`ui/screens.rs`, the `ScreenStack` resource); add a screen there, never a second way
 to open, read keys for, or draw one:
 - **Open**: `Screens::open(ScreenName)` (a `SystemParam` over the stack, content, save store, and
@@ -85,7 +89,7 @@ to open, read keys for, or draw one:
   `--screen dialog` shows the quit dialog. On wasm, quit saves then reloads the page
   (`storage::web::reload`; `AppExit` also reloads), and the main menu has no Quit.
 - **Info pages** (`ui/info_tabs.rs`): the screens about the player (Character, Inventory,
-  Equipment, Skills, Weapon skills, Quests) are an ordered group, `PAGES`, each with its name and
+  Equipment, Skills, Weapon skills, Quests, Talents) are an ordered group, `PAGES`, each with its name and
   a short name for the tab line ("Inv"). The tab line takes the first of these that fits the
   panel: every name; the current page's name and the others' short names; every short name; the
   current page's name and the others' keys; bare keys. While one is the top screen, the page keys replace
@@ -182,6 +186,14 @@ to open, read keys for, or draw one:
   lines to choose from; the stack calls its `fit` before a press), `ui/dialogue_screen.rs`
   (the speaker, their last line, numbered topics; built from the last `Event::Talked`, so it never
   shows more than the player was told), `ui/abilities_screen.rs` (`AbilitiesScreen`, below),
+  `ui/level_up_screen.rs` (`LevelUpScreen`: the first `Due`'s step, rolls, then a bonus pick of
+  `PerceptionView::bonus_trees`, then the talent, each a `PagedList` whose letters are `Act`s; a
+  talent with several openings lists them in its place; Esc only says what is left, in the panel;
+  the stack calls its `fit` before a press), `ui/talents_screen.rs` (`TalentsScreen`, the Talents
+  page: own talents, then the others with `NeedView`s, scrolling), `ui/chargen_talents_screen.rs`
+  (`ChargenTalentsScreen`, the creation step: a `World::draft` held for the screen's life, marks
+  checked with `creation_offers`, Random and Done under Chance; its marks are
+  `ScreenStack::draft`'s `talents`, remembered in `Picks::talents` on leaving),
   `ui/death_screen.rs`
   (who died, "Here lies Brakka,", who or what killed them, where, when, after how many turns).
 

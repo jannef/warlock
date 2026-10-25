@@ -11,7 +11,7 @@ expression: "render(case, content.clone())"
 
 
 
-              ┌─ Choose your name (4 of 4) ──────────────────────────────────────────┐
+              ┌─ Choose your name (5 of 5) ──────────────────────────────────────────┐
               │                                                                      │
               │   What is the name of a human thief?                                 │
               │                                                                      │

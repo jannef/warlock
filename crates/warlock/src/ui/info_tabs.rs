@@ -22,6 +22,7 @@ const PAGES: &[(ScreenName, &str, &str)] = &[
     (ScreenName::Skills, "Skills", "Skills"),
     (ScreenName::WeaponSkills, "Weapon skills", "Weapons"),
     (ScreenName::Quests, "Quests", "Quests"),
+    (ScreenName::Talents, "Talents", "Tal"),
 ];
 
 /// How a page is named on the tab line.
@@ -173,8 +174,9 @@ mod tests {
         assert_eq!(switch(Character, &tab(false), &b), replace(Inventory));
         assert_eq!(switch(Skills, &tab(false), &b), replace(WeaponSkills));
         assert_eq!(switch(WeaponSkills, &tab(false), &b), replace(Quests));
-        assert_eq!(switch(Quests, &tab(false), &b), replace(Character));
-        assert_eq!(switch(Character, &tab(true), &b), replace(Quests));
+        assert_eq!(switch(Quests, &tab(false), &b), replace(Talents));
+        assert_eq!(switch(Talents, &tab(false), &b), replace(Character));
+        assert_eq!(switch(Character, &tab(true), &b), replace(Talents));
         // PageUp and PageDown turn the pages of an item list instead (the inventory is one).
         let up = press(KeyBinding::Code(KeyCode::PageUp), false);
         assert_eq!(switch(Inventory, &up, &b), None);
@@ -215,25 +217,26 @@ mod tests {
         };
         let inventory = |w| line(ScreenName::Inventory, w);
         assert_eq!(
-            inventory(79),
-            "1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapon skills · 6 Quests"
+            inventory(91),
+            "1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapon skills · 6 Quests · \
+             7 Talents"
         );
-        // The 72-wide panels (68 cells for tabs): the current page by its name, the others by
-        // their short names.
-        let short = "1 Char · 2 Inventory · 3 Equip · 4 Skills · 5 Weapons · 6 Quests";
-        assert_eq!((inventory(78), inventory(64)), (short.into(), short.into()));
+        // The current page by its name, the others by their short names.
+        let short = "1 Char · 2 Inventory · 3 Equip · 4 Skills · 5 Weapons · 6 Quests · 7 Tal";
+        assert_eq!((inventory(90), inventory(72)), (short.into(), short.into()));
         assert_eq!(
-            line(ScreenName::WeaponSkills, 68),
-            "1 Char · 2 Inv · 3 Equip · 4 Skills · 5 Weapon skills · 6 Quests"
+            line(ScreenName::WeaponSkills, 76),
+            "1 Char · 2 Inv · 3 Equip · 4 Skills · 5 Weapon skills · 6 Quests · 7 Tal"
         );
-        let shortest = "1 Char · 2 Inv · 3 Equip · 4 Skills · 5 Weapons · 6 Quests";
+        // The 72-wide panels (68 cells for tabs): every page by its short name.
+        let shortest = "1 Char · 2 Inv · 3 Equip · 4 Skills · 5 Weapons · 6 Quests · 7 Tal";
         assert_eq!(
-            (inventory(63), inventory(58)),
+            (inventory(71), inventory(66)),
             (shortest.into(), shortest.into())
         );
-        assert_eq!(inventory(57), "1 · 2 Inventory · 3 · 4 · 5 · 6");
-        assert_eq!(inventory(31), "1 · 2 Inventory · 3 · 4 · 5 · 6");
-        assert_eq!(inventory(30), "1 · 2 · 3 · 4 · 5 · 6");
+        assert_eq!(inventory(65), "1 · 2 Inventory · 3 · 4 · 5 · 6 · 7");
+        assert_eq!(inventory(35), "1 · 2 Inventory · 3 · 4 · 5 · 6 · 7");
+        assert_eq!(inventory(34), "1 · 2 · 3 · 4 · 5 · 6 · 7");
         assert_eq!(inventory(20), "");
     }
 }

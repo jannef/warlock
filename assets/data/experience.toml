@@ -33,7 +33,8 @@
 #
 # Levels (the [levels] table; spec §8 "Talents"): every talent_every-th level (3: levels 3, 6,
 # 9, ...) brings a talent pick (talents.toml), chosen on the spot: nothing is banked. 0, or no
-# table: never.
+# table: never. A character the player chose (New run, `--character`) takes creation_talents
+# picks at creation (a class may add more: classes/), on the creation Talents step or at random.
 
 max_level = 60
 hp_level = 20
@@ -55,6 +56,7 @@ arrival = 5
 
 [levels]
 talent_every = 3
+creation_talents = 2
 
 # ZD from each player level on, in order.
 [[zero_difference]]

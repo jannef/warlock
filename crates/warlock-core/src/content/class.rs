@@ -71,6 +71,8 @@ struct ClassSpec {
     #[serde(default = "two_rolls")]
     rolls: u8,
     #[serde(default)]
+    creation_talents: u8,
+    #[serde(default)]
     weapon_skills: BTreeMap<String, Dice>,
     #[serde(default)]
     weapon_skill_choice: Vec<BTreeMap<String, Dice>>,
@@ -140,6 +142,8 @@ pub struct ClassDef {
     /// The skill rolls each level gives (spec §8 "Skills"), before the race's and
     /// Intelligence's.
     pub rolls: u8,
+    /// Talent picks at creation beyond everyone's (spec §8 "Talents": the bard's one more).
+    pub creation_talents: u8,
     /// Starting ranks in weapon skills (spec §8 "Weapon skills"), in skill order: added to the
     /// race's.
     pub weapon_skills: Vec<(WeaponSkillId, Dice)>,
@@ -334,6 +338,7 @@ impl ClassDef {
             skills,
             known_for,
             rolls: spec.rolls,
+            creation_talents: spec.creation_talents,
             weapon_skills,
             weapon_skill_choice,
             styles,

@@ -294,7 +294,7 @@ mod tests {
         let content = content();
         let mut s = NameScreen::new(&content, &draft(&content));
         let text = drawn(&s);
-        assert!(text.contains("Choose your name (4 of 4)"), "{text}");
+        assert!(text.contains("Choose your name (5 of 5)"), "{text}");
         assert!(
             text.contains("What is the name of a human thief?"),
             "{text}"

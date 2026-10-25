@@ -3,7 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
 
-              ┌─ Choose your class (3 of 4) ─────────────────────────────────────────┐
+              ┌─ Choose your class (3 of 5) ─────────────────────────────────────────┐
               │                                                                      │
               │   Barbarian                                                          │
               │   Bard                                                               │

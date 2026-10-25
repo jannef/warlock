@@ -124,11 +124,7 @@ impl ScenarioDef {
         })?;
         def.player_stats = Stats::from_data(&def.stats, &def.potential).map_err(err)?;
         if let Some(table) = def.character_table.take() {
-            def.character = Some(CharacterSpec {
-                race: table.race,
-                gender: table.gender,
-                class: table.class,
-            });
+            def.character = Some(CharacterSpec::new(table.race, table.gender, table.class));
             def.character_name = match &table.name {
                 Some(name) => Some(check_name(name).map_err(err)?.to_string()),
                 None => None,

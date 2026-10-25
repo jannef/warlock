@@ -1,0 +1,44 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ Welcome to Showcase. Press ? for controls.
+ You gain 2431 experience (dev). You feel more experienced. Welcome to level 3.
+
+
+
+
+
+
+
+
+
+
+
+            ┌─ Level 2 · Skill rolls 3 ────────────────────────────────────────────────┐
+            │                                                                          │
+            │ Skills                                                                   │
+            │ > a  Athletics    18  ────                                               │
+            │   b  Balance       9  ────                                               │
+            │   c  Intimidate    8  ────                                               │
+            │   d  Swim         18  ────                                               │
+            │                                                                          │
+            │ Running, jumping, climbing, and kicking: strength put to use.            │
+            │                                                                          │
+            │                                                                          │
+            │                                                                          │
+            │ a-d or Enter roll   Level 3 next                                         │
+            └──────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+
+
+ The Hub  ·  HP 28/28  ·  MP 3/3  ·  Lv 3  ·  08:00  ·  11 Darkening, Year 1444          ? controls
