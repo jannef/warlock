@@ -584,7 +584,7 @@ mod tests {
         let at = |needle: &str| text.iter().position(|l| l.contains(needle));
         let thresholds = "Burdened over 14 kg, strained over 28 kg, overloaded over 42 kg";
         assert_eq!(at(thresholds), at("Weight 73.5 kg").map(|y| y + 1));
-        row("@ or Esc close   S skills");
+        row("@ or Esc close   A skills");
         let empty_handed = drawn(&showcase(), 80, 30);
         assert!(
             (empty_handed.iter()).any(|l| l.contains("Weight 70 kg, carrying nothing")),
@@ -778,8 +778,8 @@ mod tests {
             ScreenAction::Close
         );
         let s = Press {
-            binding: KeyBinding::from_text("S"),
-            ..Press::typed('S')
+            binding: KeyBinding::from_text("A"),
+            ..Press::typed('A')
         };
         assert_eq!(
             screen.handle(&s, &b),

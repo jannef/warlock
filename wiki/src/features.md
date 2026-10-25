@@ -133,7 +133,7 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   hide a few on every level; a trap hall beside the arena lets you try them and watch them catch
   creatures.
 - **Searching** — secret doors look like the wall and hidden traps like the floor until you find
-  them: search (`s`, or `z` for a while) with your Intelligence and Search skill, or notice them in
+  them: search (`s`, or `f` for a while) with your Intelligence and Search skill, or notice them in
   passing with your Willpower, if you are an elf, a dwarf (in stone), or trained in Spot. Every
   turn is a fresh try. The Depths hide a door or two on their levels of rooms, never one you need.
 - **Burden** — everything you carry weighs on you: past a third of what your Strength and
@@ -141,7 +141,7 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   armour-like caps keep your Dexterity from helping your Defence, and your footsteps get louder.
   Dwarves shrug off the first level. The inventory shows where the thresholds lie.
 - **Doors** — some are locked, and look like any other until you try them: a key made for the
-  lock, or a skeleton key, opens it. Or kick it in (`K`): the stronger you are, the sooner it
+  lock, or a skeleton key, opens it. Or kick it in (`k`): the stronger you are, the sooner it
   breaks, and every kick bangs through the halls. Kobolds open doors, but a locked one only with
   its key; the dungeon's locked rooms always leave their key within reach.
 - **Hunger** — ADOM-style: time empties your stomach (resting and long journeys too), faster for
@@ -166,10 +166,10 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   meaningful use may earn a training mark; past 100 they grow slowly), and the passive ones help
   already: tumbling adds to your Defence, stealth quiets your steps and doors, listening lets you
   hear fainter sounds, balance eases a heavy load, and survival speeds your journeys. A Skills
-  screen (`S`) shows their values, never the numbers behind them.
+  screen (`A`) shows their values, never the numbers behind them.
 - **Abilities** — unlike ADOM's key for each, one menu (`a`) holds everything you can do
   because of who you are: a shield bash, the skills you use as actions, and later racial, class,
-  and item abilities. What you cannot use right now is greyed out with why, and `A` repeats the
+  and item abilities. What you cannot use right now is greyed out with why, and `X` repeats the
   last one.
 - **Living glyphs and effects** — still ponds that glint in the torchlight, streams and a river
   that visibly flow and foam against rocks, a pulsing altar, flickering torches, sparks and

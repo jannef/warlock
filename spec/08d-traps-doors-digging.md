@@ -178,7 +178,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
       `blocks` `pick_lock` ("You cannot pick locks while …", §8 "Status effects").
     - Lock difficulties are ground truth: never perceived, shown, or dumped but in the world
       state; the wiki gives the chances by difficulty.
-  - **Kicking** (`K`, then a direction; `Action::Kick`, replay text `kick:DIR`; the `kick` action,
+  - **Kicking** (`k`, then a direction; `Action::Kick`, replay text `kick:DIR`; the `kick` action,
     6 s), ADOM-like:
     - **A closed door**, locked or not, breaks with a chance of the kicker's Strength **score**
       (never the modifier) in the door's `sturdiness` (§7): one draw of the gameplay stream,
@@ -238,7 +238,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
       (+8 at 100, +12 at 200), plus the race's `search`, less `passive_penalty` (4).
     The player never sees a difficulty, a modifier, or a roll: an average searcher (Intelligence
     10, untrained) finds a secret door of 14 with 46 % of their turns of searching.
-  - **Searching** (`s`: `Action::Search(1)`, replay text `search`; `z`, searching for a while:
+  - **Searching** (`s`: `Action::Search(1)`, replay text `search`; `f`, searching for a while:
     `search:N`, N up to 100, the key sending `data/search.toml`'s `turns`, 10): each turn is the
     `search` action (1000, 6 s; slowed by burden like every price) and gives every hidden feature
     within reach the active check: the eight cells around the player (never their own: a trap
@@ -280,7 +280,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     neither does any cell on a level's edge, whatever its terrain, so no level is dug out of. Solid
     rock (`void`) shows its `face`, a stone wall, once a cell next to it is broken open, as
     generated levels wall their open ground, so a tunnel is walled like a corridor.
-  - **Digging** (`Action::Dig(dir)`, `dig:E`; key `U`): with a digging tool ready (the first thing
+  - **Digging** (`Action::Dig(dir)`, `dig:E`; key `u`): with a digging tool ready (the first thing
     worn or wielded with `dig` power: a pick-axe, 10, or a mattock, 15, in the Tool slot), into the
     wall next to the player in that direction. Refused, taking no time: without a tool ("You have
     no digging tool ready."), toward open ground ("There is nothing to dig there."), toward

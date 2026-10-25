@@ -21,7 +21,7 @@ expression: "render(case, content.clone())"
               │ Carrying 253 g   ·   Your weight 70.3 kg (you 70 kg)                 │
               │ Burdened over 14 kg, strained over 28 kg, overloaded over 42 kg      │
               │                                                                      │
-              │ a-c look   i or Esc close                                            │
+              │ a-c look   I or Esc close                                            │
               └─ 1 Char · 2 Inv · 3 Equip · 4 Skills · 5 Weapons · 6 Quests · 7 Tal ─┘
 
 

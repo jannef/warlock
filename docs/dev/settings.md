@@ -53,6 +53,16 @@ an empty list and loads unbound. Rebindable commands have stable ids, unique acr
 `REBINDABLE` next to its group, its `Context` in `KeyCommand::context`, a default key in
 `Bindings::default` or an entry in `UNBOUND`), never a key read of its own.
 
+The default keys (`Bindings::default`) are ADOM's (#350; the source is ADOM's manual, its
+"Miscellaneous commands" list): a command ADOM has takes ADOM's key in its context, one ADOM lacks
+(or has only behind a prefix like `:m` or `w s`, or Ctrl, which a binding cannot hold) a key ADOM
+leaves free (`f`, `*`, `v`, `b`, `X`), and Throw is Missile's `t` in capitals. Movement is the
+numpad and the arrows only (ADOM's `k`, `l`, `u` are kick, look, use a tool). A new default
+key must not be an ADOM key of another command. Changing defaults never rewrites a player's file:
+`settings.toml` lists every command's keys once written, so an old file keeps its old keymap, and
+`Bindings::from_table` gives a command the file does not list (new, or unbound when the file was
+written, like Quit before `S`) its defaults minus any key a listed command of its context has.
+
 The keymap file (`settings/keymap.rs`, #159): `export` writes every rebindable command by context
 (`[play]`, `[aim]`, ... from `Context::id`, `version = 1`); `import` applies a file to the live
 bindings the way rebinding does (only the listed commands change, keys move within a context, the

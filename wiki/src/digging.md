@@ -7,9 +7,9 @@ walk on (a little slowly) and see across.
 ## Digging
 
 1. **Get a digging tool.** A pick-axe or a mattock goes in the **Tool** slot of your
-   [equipment](equipment.md): press `e`, then `m` (Tool), then the tool's letter. The hub's
+   [equipment](equipment.md): press `i`, then `m` (Tool), then the tool's letter. The hub's
    storeroom has a pick-axe, and the quarry has both.
-2. **Dig.** Press `U` (use a tool), then a direction: "Dig in which direction?". You start digging into
+2. **Dig.** Press `u` (use a tool), then a direction: "Dig in which direction?". You start digging into
    the wall next to you ("You dig into the stone wall.").
 3. **Keep at it.** Digging goes on by itself, turn after turn, as [resting](resting.md) does, until
    the wall gives way: "After 6 minutes, the stone wall crumbles."
@@ -27,7 +27,7 @@ And with a pick-axe at other Strength scores:
 
 {{#include generated/digging-strength.md}}
 
-Without a tool ready, `U` tells you so: "You have no digging tool ready." Pointing it at open
+Without a tool ready, `u` tells you so: "You have no digging tool ready." Pointing it at open
 ground says "There is nothing to dig there."
 
 ### Stopping and going on
@@ -35,7 +35,7 @@ ground says "There is nothing to dig there."
 Digging stops early, just like resting, when a creature comes into view ("A kobold comes into
 view; you stop digging after 3 minutes.") or something worth a message happens: a sound you hear,
 an attack on you, the rain starting. **What you dug stays dug**: the wall keeps the work you put
-into it, and the next `U` toward it goes on from there ("You go on digging at the stone wall.").
+into it, and the next `u` toward it goes on from there ("You go on digging at the stone wall.").
 Look mode calls a wall you have started on "partly dug". A dig also stops after a day of work, if
 it ever runs that long.
 

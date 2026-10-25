@@ -63,6 +63,6 @@ last turn) → `finish` (take one, with its age; then rotten food of any kind (`
 `Stack::died`, `Death::cause`).
 `creature_dies` calls `leave_corpse` (corpse on top); `perceive` calls `rot_away` (the current
 level's piles). Presentation: `PerceptionView::own_hunger` (the status bar segment
-after the HP, priority 1, hidden while Not hungry), `E` (`KeyCommand::Eat`, id `eat`) opens
+after the HP, priority 1, hidden while Not hungry), `e` (`KeyCommand::Eat`, id `eat`) opens
 `ScreenName::Eat` (`ObjectList::Eat`). Long tests that rest or travel for days remove
 `data/hunger.toml` (or the player starves).

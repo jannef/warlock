@@ -421,7 +421,7 @@ mod tests {
         b.bind_primary(KeyCommand::MenuUp, ch("w")).unwrap();
         b.bind_primary(KeyCommand::Loose, ch("f")).unwrap();
         b.bind_primary(KeyCommand::Quit, ch("Q")).unwrap();
-        b.bind_primary(KeyCommand::Wait, ch("K")).unwrap(); // Kick is left without a key.
+        b.bind_primary(KeyCommand::Wait, ch("k")).unwrap(); // Kick is left without a key.
         b
     }
 
@@ -525,8 +525,8 @@ mod tests {
             version = 1
             [play]
             wait = ["x"]
-            look = ["x", "X"]
-            open = ["K"]
+            look = ["x", "Y"]
+            open = ["k"]
             [menu]
             mark = ["ArrowUp"]
             [aim]
@@ -535,10 +535,10 @@ mod tests {
         let report = import(&mut b, text).unwrap();
         // Two listed commands claim `x`: the first in the controls screen's order keeps it.
         assert_eq!(b.owner(&ch("x")), Some(KeyCommand::Wait));
-        assert_eq!(b.keys_of(KeyCommand::Look), vec![&ch("X")]);
-        // `K` moves from Kick, which has no key left; `o` while aiming leaves Open alone.
+        assert_eq!(b.keys_of(KeyCommand::Look), vec![&ch("Y")]);
+        // `k` moves from Kick, which has no key left; `o` while aiming leaves Open alone.
         assert!(b.keys_of(KeyCommand::Kick).is_empty());
-        assert_eq!(b.owner(&ch("o")), None, "Open took K instead");
+        assert_eq!(b.owner(&ch("o")), None, "Open took k instead");
         assert_eq!(b.owner_in(Context::Aim, &ch("o")), Some(KeyCommand::Loose));
         // ↑ moves from Menu up, which keeps `k`; never from Move north in play.
         let up = KeyBinding::Code(KeyCode::ArrowUp);

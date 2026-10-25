@@ -1,7 +1,7 @@
 # Healing
 
 Lost hit points come back by themselves, with time. There is nothing to do but let the time pass,
-and [resting](resting.md) (`R`) is the quickest way to do that.
+and [resting](resting.md) (`b`) is the quickest way to do that.
 
 ## How fast
 

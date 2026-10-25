@@ -82,12 +82,12 @@ Game flags (`cargo run -p warlock -- --help`):
   `--config-dir DIR` keeps `settings.toml` in DIR; captures and replays otherwise use default
   settings and never write the file.
 
-- `--fire` (dev) — start the run aiming the readied missile weapon, as `f` (unbound by default) would (captures of the
+- `--fire` (dev) — start the run aiming the readied missile weapon, as the Fire command (unbound by default; `t` covers it) would (captures of the
   targeting line; golden entries pass it with `args = ["--fire"]`). `--look X,Y` (dev) — start
   in look mode with the cursor on level cell (X, Y) (captures of what look mode says, e.g. a
   shop's price). `--keys "KEYS"` (dev) — press keys at startup, after any `--replay`, as if typed
   (single characters, or `Enter`, `Esc`, `Tab`, `Up`, `Down`, `Left`, `Right`), so captures show
-  what they open: `--keys h` at a shop's door owing (the pay dialog), `--keys "d b Enter"`
+  what they open: `--keys Left` at a shop's door owing (the pay dialog), `--keys "d b Enter"`
   (a sell offer).
 - `--replay FILE` — apply a replay at startup (its scenario/seed/character win; a hash divergence
   is logged as a warning), so `--capture` can screenshot any state. `--record FILE` — write every applied

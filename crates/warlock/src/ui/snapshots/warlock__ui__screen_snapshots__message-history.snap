@@ -21,7 +21,7 @@ expression: "render(case, content.clone())"
 │   the pit again, and their squeaking comes up the stairs all night. Kill three of them for me,   │
 │   and I'll pay you for the quiet."                                                               │
 │                                                                                                  │
-│ M or Esc close                                                                                   │
+│ v or Esc close                                                                                   │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 
 
