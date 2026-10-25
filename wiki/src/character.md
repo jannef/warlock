@@ -1,7 +1,8 @@
 # Your character
 
-Every new run starts with **character creation**: after you pick a scenario on the New run
-screen, you choose who you are, one step at a time.
+Every new run starts with **character creation**: **New run** on the main menu goes straight
+to it, and you choose who you are, one step at a time, before you set out into
+[the Ascmearc](ascmearc.md).
 
 1. **Race**: your people, which shapes your stats, gives you your eyes, and sets how old you can
    be (see [Races](races.md)).
@@ -14,7 +15,7 @@ screen, you choose who you are, one step at a time.
 6. **Summary**: your name, race, gender, class, and talents, your age, birthday, and birth sign, the
    [stats](stats.md) you will start with and, beside them, the [skills](skills.md) you are
    trained in, your [starting kit](starting-kit.md) item by item, the
-   [alignment](alignment.md) you start in, your vision, and the scenario. **Start the run**
+   [alignment](alignment.md) you start in, your vision, and where you start. **Start the run**
    begins it; **Name**, **Race**, **Gender**, **Class**, and **Talents** take you back to that
    step.
 

@@ -25,7 +25,7 @@ Update them together whenever behavior, commands, or architecture change.
 | Screenshot smoke test | `cargo xtask smoke` (writes `target/xtask/smoke.png`) |
 | Web build | `cargo xtask web` (writes `target/web/`, without the test world; see "Releases, web build, logs") |
 | Release configuration | `cargo build --no-default-features -p warlock -p warlock-cli` (no `showcase` feature: the test world left out, as in a release; `cargo test --no-default-features -p warlock-core -p warlock release_content` checks it; CI's `release-config` job; docs/dev/campaign.md) |
-| Web smoke test | `cargo xtask web-smoke <chrome>` (serves `target/web`, drives headless Chromium through menu → New run → the campaign's start → race, the stars, gender, class (preselected) → talents (Random) → name (empty: a random one) → summary → the run, checks the new character's save `warlock/saves/<id>.sav`, waits five turns, reloads, Continue, and checks the run resumed at turn 5; writes `target/xtask/web-smoke.png`; fails on logged errors; not run in CI) |
+| Web smoke test | `cargo xtask web-smoke <chrome>` (serves `target/web`, drives headless Chromium through menu → New run (skipped: the web build lists one scenario, the Ascmearc's start, so it opens on the race) → race, the stars, gender, class (preselected) → talents (Random) → name (empty: a random one) → summary → the run on Beorggeat, checks the new character's save `warlock/saves/<id>.sav`, waits five turns, reloads, Continue, and checks the run resumed at turn 5; writes `target/xtask/web-smoke.png`; fails on logged errors; not run in CI) |
 | Regenerate the vast level | `cargo xtask gen-vast` (writes `assets/campaigns/showcase/levels/vast.toml`; deterministic, never hand-edit) |
 | Check the vast level is fresh | `cargo xtask gen-vast --check` (fails if the file differs from the generator output; run it after touching `xtask/src/vast.rs`) |
 | Third-party notices | `cargo xtask licenses` (regenerates `THIRD_PARTY_LICENSES.html` with `cargo-about`, config `about.toml`/`about.hbs`; install: `cargo install cargo-about --locked --features cli`); `--check` fails when it is stale (CI runs it). **Run it after changing dependencies** (`Cargo.toml`/`Cargo.lock`); keep `about.toml`'s `accepted` list in sync with `deny.toml`'s `allow` |
@@ -71,10 +71,11 @@ Game flags (`cargo run -p warlock -- --help`):
   menu. Dev: `--screen NAME` opens a screen at startup, even with `--capture`: `main`,
   `new-run`, and `characters` (the saved characters; a capture reads them, never writes, from
   `--save-dir`, e.g. `tests/golden/saved-characters`) on the main menu (e.g. `--scale 1 --screen
-  new-run --capture target/menu.png`), and character creation's `race`, `sign` (the birth
+  new-run --capture target/menu.png`; a release build, which skips New run, shows the race),
+  and character creation's `race`, `sign` (the birth
   sign's reveal), `gender`, `class`, `chargen-talents` (the creation picks), `name`, and
   `summary` over New run and the steps before
-  them (each on its preselection: the showcase's character, an empty name);
+  them (each on its preselection: the first scenario's character, the Ascmearc's, an empty name);
   `pause`, `help`, `inventory`, `equipment`, `character`, `weapon-skills`, `quests`, `talents` (the Talents page), `messages` (the message history), `pick-up` (the pile on the player's cell), `drop`, `eat`, `read`, `identify` (for the first stack's scroll), and `abilities` (the abilities menu) over a run
   (e.g. after a `--replay` that walks onto a pile), `dialogue` over a run whose last action was
   talk with topics (a `--replay` ending in `chat:SE` or `ask:SE:rooms` next to the hub's hermit),
@@ -277,7 +278,7 @@ tests. **Read the ones your task touches before changing code, and update them w
 file). Topics:
 
 - `docs/dev/content.md` — TOML content embedded by `build.rs`, level files and legends (faction overrides, arrival lines, water flow)
-- `docs/dev/campaign.md` — campaigns: `assets/campaigns/<id>/`, `campaign.toml`, what is a campaign's and what is shared, the cross-campaign checks, a run's campaign, the fingerprint per campaign, New run's order
+- `docs/dev/campaign.md` — campaigns: `assets/campaigns/<id>/`, `campaign.toml`, what is a campaign's and what is shared, the cross-campaign checks, a run's campaign, the fingerprint per campaign, New run's order and its skip in a release, the Characters screen's campaign
 - `docs/dev/saves.md` — storage backends (native files, browser `localStorage`), one save per character and the list of them, autosave, permadeath, where files live (`paths.rs`, portable mode)
 - `docs/dev/settings.md` — `settings.toml`, effect switches, clock, palettes, rebindable key commands (`settings/keys.rs`), the `Game` resource
 - `docs/dev/screens.md` — the screen stack (open, input, draw, the dialog, info pages, the text field), prompts as input modes, the screen modules, key commands and the abilities menu

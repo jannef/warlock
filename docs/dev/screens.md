@@ -38,7 +38,10 @@ to open, read keys for, or draw one:
   `input::dev_keys` is true (debug builds, `--dev`; `Launch::dev`), empty meaning the scenario's;
   elsewhere `Screen::new` hands `NewRunScreen::new` a `new_run_screen::fresh_seed()` (the
   platform clock and entropy, the app's, never core's) and no text mentions it
-  (`ScenarioPick::shows_seed` gates the summary's `, seed N`); the main menu and the Characters screen read the saved characters when they open
+  (`ScenarioPick::shows_seed` gates the summary's `, seed N`); a New run with one scenario (a
+  release build) is skipped: `Screens::open_on` opens the race over it at once, and
+  `ScreenStack::close` takes it off with the race (`NewRunScreen::skips`,
+  `docs/dev/campaign.md`); the main menu and the Characters screen read the saved characters when they open
   (`Launch::characters`, from `SaveStore::characters`; no other screen lists the saves);
   `EquipItem` takes the slot selected on the
   equipment screen beneath (`ScreenStack::selected_slot`), and `Describe` the stack looked at
