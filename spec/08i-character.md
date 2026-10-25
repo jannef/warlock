@@ -77,14 +77,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (`Ability::Sign`, `Source::Sign`, between Racial and Class) as `Action::Gift` (no key of
     their own), each refused (no time) without it or while its cooldown status lasts. **Horn's
     grace** (Unicorn; `use:horns_grace`, the time of a wait): Bleeding and Poisoned end and the
-    first disease that shows is shaken off, then **Graceless** for a day; refused with nothing
-    to mend. **Transfixing stare** (Basilisk; `use:transfixing_stare:X,Y`, aimed at a cell in
+    first disease that shows is shaken off, then **Graceless** for a day (three degrees of
+    eight hours); refused with nothing to mend. **Transfixing stare** (Basilisk; `use:transfixing_stare:X,Y`, aimed at a cell in
     the targeting mode, within 6, the time of a wait, silent): a hostile the player sees there
     that sees them now (creature sight) is **Transfixed** (2 degrees, every action at 200 %, a
-    degree easing every 12 s: about its next two actions), then **Spent-eyed** for two hours;
+    degree easing every 12 s: about its next two actions), then **Spent-eyed** for two hours
+    (two degrees of an hour);
     one that does not see them is not held ("The kobold does not meet your gaze.", the time
     taken, no cooldown); refused at the player's cell, out of range, where they see no one, and
-    at anyone not hostile. Nothing is drawn. **Blaze** (Fire's, #268) is the third, described above.
+    at anyone not hostile. Nothing is drawn. **Blaze** (Fire's, #268) is the third, described
+    above; **Fire breath** and **Hound's bay**, two signs' picks, the fourth and fifth (below).
   - **The Roc to the Barghest** (#267): Eyes of the heights (overworld sight +2 cells by day, +1
     by night), Hoard sense (loot's better rarities +50 %, a find a loose gem +100 %: the same
     draws, so maps never change), Watchful (hears 3 fainter; footsteps it hears are placed at
@@ -105,9 +107,43 @@ developer notes (CLAUDE.md, `docs/dev/`).
     burst from them (the `phoenix_fire` effect over the cells within 1): one roll of 1d6 fire for
     every creature there (no roll to hit; a kill is the player's), and the ice there melts. The
     rising is kept in the saved progression (`Progress::once`, `risen`), so it never comes again;
-    the Stars line and the talents say "Rise from the ashes (spent)". A Toughness drained to 0 by
+    the Stars line and the talents say "Rise from the ashes (spent)". With **Second rising** (a
+    pick, below) it comes once more (`risen_twice`), and only then is it spent. A Toughness
+    drained to 0 by
     a disease still kills (the rising would leave them dying of it). The flames draw from the
     gameplay stream only when they come.
+  - **Sign-limited picks** (#270; design §9.1): the Stars tree also holds one talent per animal
+    and per element that is **picked**, not granted: offered on the level-up screen and the
+    creation Talents step like any talent whose prerequisites hold, the sign among them
+    (`needs = { animal = "wyvern", level = 15 }`, said "to be born in the year of the Wyvern",
+    "to be Wood-born"). The Talents page leaves out the picks of other signs (the stars never
+    change); the wiki lists them all. Hare-footed (Salamander, level 12: speed +5 % more),
+    Another head (Hydra, 9: hit points come back while Starving, resting heals +100 %), Relentless
+    fury (Manticore, 9: the streak runs to +5, and every two blows before it +1 damage), Horn of
+    plenty (Unicorn, 9: Horn's grace also gives back a hit point per level, never past the
+    maximum, so a wound alone is cause enough, and leaves one degree of Graceless, eight hours),
+    **Fire breath** (Wyvern, 15: an active, `use:fire_breath:X,Y`, aimed at a cell within 8, the
+    time of a `cast`, refused on the overworld: a bolt along the line toward it and on, 4 cells
+    or to the first wall, one roll of 2d6 fire for everyone on it through the scrolls' cast code,
+    the `fire_breath` effect; then two degrees of Drained, ten minutes, shared with Lay on hands),
+    Petrifying gaze (Basilisk, 12: the stare leaves 4 degrees of Transfixed and one of
+    Spent-eyed, an hour), Roc's grip (Roc, Strength 14: carrying +25 % more, Burdened costs
+    nothing), Dragon's hoard (Griffin, 12: Hoard sense's odds half again, loot +25 % and gems
+    +50 %, shop favour +10 %), Riddle of the Sphinx (Sphinx, Intelligence 14: a skill roll more
+    every level), Second rising (Phoenix, 18), Tentacles (Kraken, Twin Blades 3: off-hand blows
+    +2 damage), **Hound's bay** (Barghest, 12: an active, `use:hounds_bay`, the time of a wait,
+    refused on the overworld: a howl, `Act::Howl`, loudness 150, heard as "a howl" (`h` in the
+    sound layer); every hostile that hears it by the hearing rules and whose creature level is
+    below the player's is **Frightened**, 3 degrees easing a turn apiece, caused by the player;
+    then **Hoarse** for an hour; no check, nothing drawn), Deep roots (Wood, 9: Dodge +1, rotten
+    food eaten as by a race that eats it), Wildfire (Fire, 15: Blaze out to radius 2 for 3d6),
+    Bedrock (Earth, 12: Protection +1, pits never catch them), Tempered (Metal, a weapon skill
+    at 5: threat +1 with the weapon skill they hold at the highest rank, ties all counting; not
+    styles or shield skills), Undertow (Water, 6: wading costs a plain step, a plunge through
+    the ice never hurts; a disease may still be caught wading). A **frightened** creature (a
+    status that `flees`) steps away from whoever frightened it, to the free cell beside it
+    farthest from them (Chebyshev, then straight-line distance, the first in direction order on
+    a tie), while a step takes it farther; cornered, it fights as it would have.
   - **Lucky days** (`[[lucky]]`): five animal–element pairs, each with a day of the month (any
     month), the day the animal's place in the Great Race: the Wood Salamander on the 1st (the
     Racer), the Metal Manticore on the 3rd (the Iron Scourge), the Fire Phoenix on the 10th (the

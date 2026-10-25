@@ -64,7 +64,9 @@ tick; the class abilities (I1–I4) give theirs with `afflict(player, status, 1,
 `Unavailable::While(cooldown)` in `Ability::unavailable` while it lasts. Creature AI reads `blocks`
 for steps only: a creature a status of its blocks `step` (Held, Drowning grip's, #269) never
 steps or opens a door (`creature_steps`) and attacks its holder instead (`World::held_back`,
-`world/lucky.rs`). Built-in example: `raging` (penalty St +2, To
+`world/lucky.rs`). A status that `flees` (Frightened, Hound's bay's, #270) makes a creature step
+away from its `by` instead while a step takes it farther (`World::frightened`,
+`world/sign_picks.rs`, before `held_back`). Built-in example: `raging` (penalty St +2, To
 +2, In −2; `blocks = ["read"]`; `follows = "exhausted"`) and `exhausted` (St −1), reached only by
 `afflict:raging` until the barbarian's table. Tests: `world/buff_tests.rs` (custom statuses on
 built-in content: combat on the player and a creature, slows and time, refusals and the greyed

@@ -7,7 +7,9 @@ Hearing (spec §5 "Hearing") lives in `warlock-core/src/noise.rs`. `noise::noise
 actor, burden, Act)` is the one place an action's loudness is decided (creature `footsteps` ×
 terrain `step_noise` percent × the burden's `footsteps()` percent for `Act::Step`, the door's
 `toggle_noise` for `Act::OpenDoor`/`CloseDoor`, `VOICE_NOISE` for `Act::Mutter` and for
-`Act::ThrowVoice(at)`, which is made on that cell, not the actor's; `make_noise` passes the actor's
+`Act::ThrowVoice(at)`, which is made on that cell, not the actor's, `HOWL_NOISE` for `Act::Howl`
+(Hound's bay, #270: `SoundKind::Howl`, "a howl", `h` in the sound layer; `noise::hearers` tells
+the howler who hears it); `make_noise` passes the actor's
 `Load::penalty`):
 a new noisy action gets an `Act` variant there, and its call site in the feature's module (the makers are `world/hearing.rs`) is one
 `self.make_noise(actor, Act::…)` where the action happens. `noise::make` delivers it at once to

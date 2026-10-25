@@ -1,12 +1,12 @@
 //! The birth signs' gifts (spec §8 "Birth sign"): what each animal, element, and lucky day gives,
 //! with the exact rules the game says only in words, and how likely a lucky day is by race.
 
-use super::talents::effects_text;
+use super::talents::{effects_text, needs_text};
 use super::text::table_text;
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
 use warlock_core::character::BirthDate;
-use warlock_core::content::{Content, Horoscope};
+use warlock_core::content::{Content, Horoscope, Need, TalentDef};
 use warlock_core::time::{DAYS_PER_MONTH, MONTHS_PER_YEAR};
 
 /// The gifts of `grants` (talent ids), one a line in a cell: "**Fleet-footed**: speed +5 %", a flaw
@@ -53,6 +53,50 @@ pub(super) fn elements(content: &Content) -> String {
     let mut out = String::from("| Element | Gifts |\n|---|---|\n");
     for e in &h.elements {
         let _ = writeln!(out, "| {} | {} |", e.name, gifts(content, &e.grants));
+    }
+    out
+}
+
+/// The sign-limited picks of the Stars tree (talents a level-up or creation may pick, only
+/// for those born under their sign): by sign, the animals in the order of the Great Race and
+/// then the elements in theirs, with what each needs besides and its rule exact.
+pub(super) fn talents(content: &Content) -> String {
+    let Some(h) = content.horoscope() else {
+        return "There is no horoscope.\n".into();
+    };
+    let book = content.talents();
+    let Some(stars) = book.tree_id("stars") else {
+        return "There is no Stars tree.\n".into();
+    };
+    // The sign a pick asks for, as a sort key (the animals first) and a name.
+    let sign = |def: &TalentDef| -> Option<(usize, String)> {
+        def.needs_at(1).find_map(|need| match need {
+            Need::Animal(id) => {
+                (h.animals.iter().position(|a| a.id == id)).map(|i| (i, h.animals[i].name.clone()))
+            }
+            Need::Element(id) => (h.elements.iter().position(|e| e.id == id))
+                .map(|i| (h.animals.len() + i, format!("{}-born", h.elements[i].name))),
+            _ => None,
+        })
+    };
+    let mut rows: Vec<((usize, String), &TalentDef)> = (book.of_tree(stars))
+        .map(|(_, def)| def)
+        .filter(|def| !def.granted)
+        .filter_map(|def| sign(def).map(|s| (s, def)))
+        .collect();
+    rows.sort_by(|a, b| (a.0.0, &a.1.name).cmp(&(b.0.0, &b.1.name)));
+    if rows.is_empty() {
+        return "No sign has a pick yet.\n".into();
+    }
+    let mut out = String::from("| Sign | Pick | Needs | Effect |\n|---|---|---|---|\n");
+    for ((_, name), def) in rows {
+        let _ = writeln!(
+            out,
+            "| {name} | {} | {} | {} |",
+            def.name,
+            needs_text(content, def),
+            effects_text(content, def)
+        );
     }
     out
 }

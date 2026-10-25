@@ -199,11 +199,27 @@ Its look is `blaze` in `data/effects.toml`. Tests: `world/element_gift_tests.rs`
 the burst and its cooldown, refusals, the dump row and action text, Kindled, Forge-born, Tidal,
 a replay and a save), the `abilities-menu-blaze` text snapshot.
 
+The sign-limited picks (#270): seventeen non-granted talents of the `stars` tree, one per animal
+and per element, each with an `animal` or `element` need (and most a level), offered by
+`talent::offers` like any talent (the level-up screen, the creation Talents step); the Talents
+page (`PerceptionView::talents`) leaves out those of other signs. Their rules are one read each
+at the hooks in `docs/dev/progression.md` ("Sign-limited picks"), and `world/sign_picks.rs` holds
+what is more: the two new sign actives (`SignActive::FireBreath`, aimed at a cell within
+`BREATH_RANGE`, a bolt by `World::cast_bolt` along `read.rs::bolt_line`; `SignActive::HoundsBay`,
+`Act::Howl` and `noise::hearers` for who hears it), `World::frightened` (the AI hook before
+`held_back`: a creature with a status that `flees` steps away from its `by`), and Horn of
+plenty's healing. Second rising is the second `Progress::once` flag, `risen_twice`
+(`stars::RISEN_TWICE`), read by `World::rise_from_ashes` and `OwnTalent::spent`. Graceless and
+Spent-eyed are now cooldowns of several degrees (3 × 8 h, 2 × 1 h; `horns_grace`/`stare` give
+`degrees`), so the picks shorten them by giving fewer. Tests: `world/sign_pick_tests.rs` (each
+pick offered only under its sign, every rule, the actives' refusals and cooldowns, the fear).
+
 Shown: the reveal (`ui/sign_screen.rs`, `--screen sign`, after the race), the summary's Sign row,
 the character screen's dimmed Stars line (gift names, two lines at most) and the title after the
 name (character and death screens), the `stats` dump's `Sign Wood Salamander, the Racer`, the
 `talents` dump's `(sign)` / `(sign, flaw)`, JSON `character.lucky`, `talents[].granted`/`flaw`.
-The wiki's `horoscope-animals.md`, `horoscope-elements.md`, `horoscope-lucky.md`
+The wiki's `horoscope-animals.md`, `horoscope-elements.md`, `horoscope-lucky.md`,
+`horoscope-talents.md` (the picks by sign)
 (`xtask/src/wiki/horoscope.rs`) state the rules exactly and the odds by race at the showcase's
 start. Tests: `world/stars_tests.rs` (grants per sign and day, the lucky days pinned, restore,
 every hook, the prerequisites, content checks, the lucky capture's seed 440), the screen tests in

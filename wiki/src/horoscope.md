@@ -81,8 +81,21 @@ then rests for a while (a status that wears off) before you can use it again. Th
 
 {{#include generated/horoscope-elements.md}}
 
-The Phoenix's *Rise from the ashes* comes once in a life: once you have risen, the gift is spent
-(the character screen says so) and the next death is your last. *Hound's nose* tells you how
+## Picks for your sign
+
+Every animal and every element also has **one talent of the Stars tree that only those born
+under it may pick**, at a level-up or at character creation, like any other talent whose
+prerequisites hold: most ask a level as well, a few a stat or a weapon skill. The Talents page
+(and the level-up screen) shows only your own sign's. Most make one of your gifts stronger (the
+Salamander's *Hare-footed* is quicker still, the Phoenix's *Second rising* rises from the ashes
+once more); two are things you do, used from the abilities menu under *Birth sign*: the Wyvern's
+**Fire breath** and the Barghest's **Hound's bay**, each resting a while after.
+
+{{#include generated/horoscope-talents.md}}
+
+The Phoenix's *Rise from the ashes* comes once in a life (twice with the pick *Second rising*):
+once you have risen, the gift is spent (the character screen says so) and the next death is your
+last. *Hound's nose* tells you how
 fresh food is in a word on the eat list (fresh, turning, or rotten); food that is turning is
 still fine to eat, rotten food is not.
 
