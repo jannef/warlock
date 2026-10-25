@@ -40,6 +40,6 @@ at). Generated levels: `Needs::key` (the branch's `key` in `dungeons.toml`) make
 `lock_rooms` lock up to two single-door rooms and drop the key in an unlocked room;
 `connect::validate` checks locks sit on closed doors and that the stairs and a key to each lock
 (`LevelTemplate::has_key_for`, lying or carried) are reachable without unlocking anything; vaults
-must hold their own keys (`content/vault.rs`, `check_keys`). The app binds `K` (`KeyCommand::Kick`,
+must hold their own keys (`content/vault.rs`, `check_keys`). The app binds `k` (`KeyCommand::Kick`,
 a direction prompt like open/close, bash, and dig) and bursts the door terrain's `toggle` particles on
 `Event::DoorKicked`/`DoorBroken`.

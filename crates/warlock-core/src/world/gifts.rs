@@ -84,7 +84,7 @@ impl World {
         let content = self.content.clone();
         let player = self.state.player;
         let me = self.state.player();
-        let mods = me.talent_mods(&content);
+        let mods = me.talent_mods(&content).into_owned();
         let Some(grace) = mods.horns_grace else {
             return Spent::Nothing;
         };

@@ -298,7 +298,13 @@ impl World {
     /// stat for good; its words are said. Returns whether it saved them (never twice).
     pub(super) fn reprieve(&mut self, events: &mut Vec<Event>) -> bool {
         let player = self.state.player;
-        let Some(reprieve) = self.state.player().talent_mods(&self.content).reprieve else {
+        let Some(reprieve) = self
+            .state
+            .player()
+            .talent_mods(&self.content)
+            .into_owned()
+            .reprieve
+        else {
             return false;
         };
         if self.state.progress.happened(&reprieve.once) {

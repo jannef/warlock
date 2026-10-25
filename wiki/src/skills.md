@@ -9,10 +9,10 @@ when your character is made; the rest you are **untrained** in.
   grow.
 - A trained skill has a **value**, usually between 5 and 30 when you start. 100 is a
   master. Past 100 a skill still grows, but slowly.
-- `S` shows your **Skills** screen: every skill you are trained in, with its value, and beside it
+- `A` shows your **Skills** screen: every skill you are trained in, with its value, and beside it
   a small meter (`━━──`) of how practised it is: how big its next roll at a level-up will be
   (see [Getting better](#getting-better)). Use the arrow keys to read what each
-  skill is about. It takes no time. `S` on the [character screen](character.md) (`@`) opens it
+  skill is about. It takes no time. `A` on the [character screen](character.md) (`@`) opens it
   too, and the summary at the end of character creation lists the skills you will start with.
 
 What a skill does for you is never shown in numbers in the game: you see the value, and feel the
@@ -48,7 +48,7 @@ The passive skills help you more the higher they are:
 - **Survival** makes your journeys on the [overworld](overworld.md) quicker. It does nothing in a
   local area or a dungeon.
 - **Appraise** gets you better prices in [shops](shops.md): you pay less and are offered more.
-- **Search** helps you find secret doors and hidden traps when you search (`s`, `z`), and a
+- **Search** helps you find secret doors and hidden traps when you search (`s`, `f`), and a
   master's search reaches a cell farther (see [Searching](searching.md)).
 - **Spot** lets you notice hidden things in passing at all, and the higher it is, the more you
   notice.

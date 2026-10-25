@@ -513,9 +513,12 @@ mod tests {
             Bindings::default(),
         );
         nav(&mut screen, &mut b, Nav::Enter);
-        key(&mut screen, &mut b, "j");
-        assert_eq!(message(&screen), "j moved to Move north (was Move south).");
-        let j = KeyBinding::from_text("j").unwrap();
+        key(&mut screen, &mut b, "Numpad2");
+        assert_eq!(
+            message(&screen),
+            "Num2 moved to Move north (was Move south)."
+        );
+        let j = KeyBinding::from_text("Numpad2").unwrap();
         assert_eq!(b.owner(&j), Some(KeyCommand::Move(Dir::N)));
         // Kick has one key: it is left with none, and the table shows that.
         let old = b.keys_of(KeyCommand::Kick)[0].display();
@@ -752,7 +755,7 @@ mod tests {
         let has = |needle: &str| text.iter().any(|l| l.contains(needle));
         assert!(
             text.iter()
-                .any(|l| l.contains("Move north") && l.contains("k Num8 ↑"))
+                .any(|l| l.contains("Move north") && l.contains("Num8 ↑"))
         );
         assert!(
             text.iter()

@@ -181,7 +181,7 @@ mod tests {
             "  Tumble             16  ────",
             "Judging what a thing is worth and what it is",
             "made of.",
-            "↑↓ choose   S or Esc close",
+            "↑↓ choose   A or Esc close",
         ] {
             assert!(text.contains(expected), "{expected:?} in\n{text}");
         }
@@ -213,8 +213,8 @@ mod tests {
         assert_eq!(screen.selected, 0);
         assert_eq!(screen.handle(&Press::typed('a'), &b), ScreenAction::Stay);
         let s = Press {
-            binding: KeyBinding::from_text("S"),
-            ..Press::typed('S')
+            binding: KeyBinding::from_text("A"),
+            ..Press::typed('A')
         };
         assert_eq!(screen.handle(&s, &b), ScreenAction::Close);
         assert_eq!(

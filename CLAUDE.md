@@ -32,7 +32,7 @@ Update them together whenever behavior, commands, or architecture change.
 | Player wiki tables | `cargo xtask wiki` (writes `wiki/src/generated/*.md` from the game data; not committed: CI and the release workflow run it before `mdbook build wiki`), `--build` (also runs `mdbook build wiki` into `wiki/book/`; needs `cargo install mdbook --locked`) |
 | Golden screenshots | `cargo xtask golden` (compare; authoritative on Linux only), `--local` (capture to `target/xtask/golden/*.local.png`, no compare), `--update` (rewrite references; see "Golden screenshots") |
 | Frame-time benchmark | `cargo xtask bench-frames [WxH]` (release, offscreen; method and results in `docs/perf.md`) |
-| Turn-time benchmark | `cargo xtask bench-turns` (re-runs itself in release; budgets: hub 5 ms, vast 16 ms, generated depths level 5 ms, sunlit courtyard at dawn 5 ms, overworld 5 ms, generated forest area at dawn 5 ms, courtyard and forest area at full-moon midnight 5 ms, arena 5 ms, a generated 120×60 cave floor at full population (a fixture branch of danger 8, `delf`) 16 ms per turn; a dusk-to-dawn rest 500 ms (shown but not judged for `delf`, `docs/perf.md`), also beside the arena's fight going on unseen until one side is dead (a walk that gets the player killed starts over, untimed), and rested on to dawn when rain wakes the player) |
+| Turn-time benchmark | `cargo xtask bench-turns` (re-runs itself in release; budgets: hub 5 ms, vast 16 ms, generated depths level 5 ms, sunlit courtyard at dawn 5 ms, overworld 5 ms, generated forest area at dawn 5 ms, courtyard and forest area at full-moon midnight 5 ms, arena 5 ms, a generated 120×60 cave floor at full population (a fixture branch of danger 8, `delf`) 16 ms per turn; a dusk-to-dawn rest 500 ms (on `delf` too: far creatures take coarse turns while the player rests, `docs/dev/creatures.md`), also beside the arena's fight going on unseen until one side is dead (a walk that gets the player killed starts over, untimed), and rested on to dawn when rain wakes the player) |
 | Light stress benchmark | `cargo test --release -p warlock-core turn_cost -- --ignored --nocapture` (400×300, 825 lights; again outdoors at 06:15) |
 
 `target/` in the xtask rows is Cargo's target directory: xtask follows `CARGO_TARGET_DIR` (else
@@ -83,12 +83,12 @@ Game flags (`cargo run -p warlock -- --help`):
   `--config-dir DIR` keeps `settings.toml` in DIR; captures and replays otherwise use default
   settings and never write the file.
 
-- `--fire` (dev) — start the run aiming the readied missile weapon, as `f` (unbound by default) would (captures of the
+- `--fire` (dev) — start the run aiming the readied missile weapon, as the Fire command (unbound by default; `t` covers it) would (captures of the
   targeting line; golden entries pass it with `args = ["--fire"]`). `--look X,Y` (dev) — start
   in look mode with the cursor on level cell (X, Y) (captures of what look mode says, e.g. a
   shop's price). `--keys "KEYS"` (dev) — press keys at startup, after any `--replay`, as if typed
   (single characters, or `Enter`, `Esc`, `Tab`, `Up`, `Down`, `Left`, `Right`), so captures show
-  what they open: `--keys h` at a shop's door owing (the pay dialog), `--keys "d b Enter"`
+  what they open: `--keys Left` at a shop's door owing (the pay dialog), `--keys "d b Enter"`
   (a sell offer).
 - `--replay FILE` — apply a replay at startup (its scenario/seed/character win; a hash divergence
   is logged as a warning), so `--capture` can screenshot any state. `--record FILE` — write every applied

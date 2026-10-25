@@ -12,7 +12,7 @@ or press `o` and a direction. An open door (`'`) lets you, your light, and sound
 `c` and a direction to close it again; you cannot close a door while something stands or lies in the doorway.
 Opening and closing doors makes noise (see [Hearing](hearing.md)). Some creatures open doors too;
 none closes them (see [Creatures](creatures.md)). Some doors are locked, and every closed door
-can be kicked in with `K`, leaving a broken door (`,`) that stays open for good: see
+can be kicked in with `k`, leaving a broken door (`,`) that stays open for good: see
 [Doors](doors.md).
 
 The game remembers a door as you last saw it: one you saw open stays drawn open until you see it

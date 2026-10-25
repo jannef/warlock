@@ -14,7 +14,7 @@ wear still weighs what it weighs.
 
 ## The equipment screen
 
-Press `e`. The screen lists every slot with its letter and what is in it, or `—` when it is
+Press `i`. The screen lists every slot with its letter and what is in it, or `—` when it is
 empty, and below them what you carry and weigh, as the inventory does:
 
 {{#include generated/equipment.md}}
@@ -23,7 +23,7 @@ empty, and below them what you carry and weigh, as the inventory does:
 long putting one on there, or taking it off, takes at a normal pace.
 
 - Press a slot's letter, or move the `>` with the arrow keys and press `Enter`, to choose what
-  goes there. On this screen every letter names a slot, even `e`, `h`, `j`, `k`, `l`, and `m`.
+  goes there. On this screen every letter names a slot, even `e`, `i`, `k`, `l`, and `m`.
 - Press a slot's letter in upper case (`A` to `M`) to look at what is in it (see
   [Magic items](magic-items.md#looking-at-an-item)).
 - The next screen lists what you carry that fits the slot (see [Lists of
@@ -51,7 +51,7 @@ do it: creatures act meanwhile, just as when you wait. Looking at the screens ta
   shoots one kind of missile ("shoots arrows" in the table above). You can ready any missiles,
   matching or not, but only the matching ones can be shot ([Ranged combat](ranged.md)). The
   Missile weapon slot also takes any weapon and rocks: `t` throws what is readied there.
-- **Tools** go in the Tool slot: a pick-axe or a mattock ready there is what you dig with (`U`;
+- **Tools** go in the Tool slot: a pick-axe or a mattock ready there is what you dig with (`u`;
   see [Digging and walls](digging.md)). Other tools, such as keys, rope, and candles, fit nowhere
   yet.
 - Things that are not equipment (potions, food, coins) fit nowhere.

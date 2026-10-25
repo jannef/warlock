@@ -880,7 +880,7 @@ mod tests {
         row("│ Body armour");
         assert!(row("Carrying").contains("Carrying 4.2 kg"));
         assert!(row("Carrying").contains("Your weight 74.2 kg (you 70 kg)"));
-        assert!(row("Esc close").contains("a-c look   i or Esc close"));
+        assert!(row("Esc close").contains("a-c look   I or Esc close"));
         // A stack's letter opens its description; `i` (naming no stack here) closes, like Esc.
         assert_eq!(
             screen.handle(&typed('b'), &b),
@@ -889,8 +889,8 @@ mod tests {
         assert_eq!(screen.looked(), Some(0), "the jerkin");
         assert_eq!(screen.handle(&typed('e'), &b), ScreenAction::Stay);
         let i = Press {
-            binding: crate::input::KeyBinding::from_text("i"),
-            ..typed('i')
+            binding: crate::input::KeyBinding::from_text("I"),
+            ..typed('I')
         };
         assert_eq!(screen.handle(&i, &b), ScreenAction::Close);
         assert_eq!(
@@ -938,7 +938,7 @@ mod tests {
             "│ Burdened over 15 kg,  ",
             "│ strained over 30 kg,  ",
             "│ overloaded over 45 kg  ",
-            "i or Esc close",
+            "I or Esc close",
         ] {
             assert!(
                 text.iter().any(|l| l.contains(expected)),
@@ -1043,7 +1043,7 @@ mod tests {
         assert!(has(&text, "t - ) a dagger") && !has(&text, "u - "));
         assert!(!has(&text, "leather cap"));
         assert!(
-            has(&text, "> < page   a-t look   i or Esc close"),
+            has(&text, "> < page   a-t look   I or Esc close"),
             "{text:#?}"
         );
         // `>` (the next list page) turns it: the caps and the cloaks, each under its header (no
@@ -1138,7 +1138,7 @@ mod tests {
         assert!(!has(&text, "Page "), "{text:#?}");
         assert!(has(&text, "i - [ a pair of leather boots"));
         assert!(has(&text, "Carrying 20.9 kg (burdened)"));
-        assert!(has(&text, "a-i look   i or Esc close"));
+        assert!(has(&text, "a-i look   I or Esc close"));
     }
 
     #[test]

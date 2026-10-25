@@ -27,7 +27,15 @@ for one who talks and fights no one, `World::disturbs_rest`), a message (`say`; 
 stop it), or death (`Ended`), perceiving only after turns in which a creature that disturbs a
 rest could have come into view (`out_of_view_for`, which accounts for speed and the cheapest
 step and leaves out those who talk and fight no one), in which the player heard something, or in
-which the weather the player would see changed (`weather_turned`). A new action that takes time
+which the weather the player would see changed (`weather_turned`); past that stretch a turn
+still passes unperceived when its events are only creatures moving (and the kept kinds) and
+`World::watched_in_sight` (the rules of sight, `sight::sees`, for the cells of the creatures
+that disturb a rest, with the player's line of sight kept while `World::reshaped`, bumped by
+`set_terrain`, and their cell are unchanged) finds the same creatures in view; `None` on the
+overworld, with Blood scent, and for light-blind eyes, where only a perception will do
+(`stride_tests::a_rest_sees_whom_a_perception_sees`). While the player rests (`World::resting`),
+creatures away from them take coarse turns (`world/stride.rs`, `docs/dev/creatures.md`), and
+`out_of_view_for` counts a stride's head start. A new action that takes time
 needs an `ActionKind` (with its id and a line in `data/actions.toml`) and must return its price
 there,
 asked through `price_of`/`step_price`/`price_for`: those apply the actor's burden (`docs/dev/burden.md`,
@@ -50,5 +58,5 @@ Speed (`speed` in `data/creatures.toml`, default 1000 = the player's; any player
 is rules-only: never put it in perception, the UI, or messages; energy is per actor in
 `WorldState` (saved, hashed); creatures on other levels and the dev skip gain none.
 Levels carry `kind` (no turn length of their own); terrain carries `move_cost` (percent); scenarios
-carry `start_date`/`start_time`. Rest (`R`) is a message-line input mode (`InputMode::Rest`,
+carry `start_date`/`start_time`. Rest (`b`) is a message-line input mode (`InputMode::Rest`,
 `input::REST_CHOICES`), not a menu screen.

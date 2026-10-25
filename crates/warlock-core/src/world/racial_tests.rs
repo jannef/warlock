@@ -45,7 +45,7 @@ fn give(w: &mut World, id: &str) {
 }
 
 fn mods(w: &World) -> talent::TalentMods {
-    w.state.player().talent_mods(w.content())
+    w.state.player().talent_mods(w.content()).into_owned()
 }
 
 /// The talents the player may pick now, by id.

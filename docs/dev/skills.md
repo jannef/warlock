@@ -41,7 +41,7 @@ is reported where it happens (`make_noise`, `hear`, `fight.rs::resolve`, `apply`
 `kick_door`, `search_turn` for `search`, `notice_hidden` for `spot`, `World::disarm` for
 `disarm`, `pick_lock` for `pick`, `World::steal` for `steal`). A new
 effect or use is a variant there plus its one hook. The player sees values only
-(`PerceptionView::own_skills`, the Skills screen `ui/skills_screen.rs`, `S`); never marks or
+(`PerceptionView::own_skills`, the Skills screen `ui/skills_screen.rs`, `A`); never marks or
 benefit numbers. Skills get no keys of their own: active uses are chosen from the one abilities
 menu (#156, `docs/dev/screens.md`): each trained skill of kind `action` is an `Ability::Skill`
 there (`warlock_core::ability`), unavailable ("not usable yet") until its use exists, when it

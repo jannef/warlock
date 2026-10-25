@@ -1,6 +1,6 @@
 # Food and corpses
 
-Food (`%`) keeps [hunger](hunger.md) at bay. Press `E` to eat: a list shows what you can eat,
+Food (`%`) keeps [hunger](hunger.md) at bay. Press `e` to eat: a list shows what you can eat,
 first what lies where you stand ("lying here"), then the food you carry (see [Lists of
 objects](objects.md#lists-of-objects)). A letter, or `Enter` on the marked row, eats it.
 

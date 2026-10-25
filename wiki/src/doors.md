@@ -66,7 +66,7 @@ Open lock's bonus):
 
 ## Kicking
 
-Press `K` and a direction to kick. A kick takes a normal action (6 seconds).
+Press `k` and a direction to kick. A kick takes a normal action (6 seconds).
 
 - **A closed door**, locked or not, may break. The chance is your Strength in the door's
   sturdiness: against a sturdiness of 30, Strength 9 breaks it three kicks in ten, Strength 15

@@ -82,7 +82,7 @@ the days: to a shop, for a cure.
 
 ## Cures
 
-An **angelica root** (`%`) cures every disease you have the moment you eat it (`E`), grave rot
+An **angelica root** (`%`) cures every disease you have the moment you eat it (`e`), grave rot
 too, and even one that has not broken out yet: "The rot is gone from your flesh." It feeds you a
 little, too. Shops that sell food sell it (a general store or a provisioner, found in the
 Depths), and Grimbold's General Store in the courtyard has one. Potions will come.

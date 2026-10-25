@@ -1,6 +1,6 @@
 # Your lantern
 
-You carry a lantern. Press `L` to light it, and `L` again to douse it. Each is a normal action (6
+You carry a lantern. Press `*` to light it, and `*` again to douse it. Each is a normal action (6
 seconds), and the lantern starts unlit.
 
 A lit lantern is a [light source](light.md) that moves with you: a warm light whose reach is in
@@ -39,5 +39,5 @@ There is no fuel yet: the lantern burns as long as you leave it lit. The **Lampl
 [talent](talents.md) makes it burn brighter, a cell farther (and so you are seen from a little
 farther too); hooded, it gives the hooded light as before.
 
-If a run has no lantern, `L` tells you so and takes no time. The lantern is part of how a scenario
+If a run has no lantern, `*` tells you so and takes no time. The lantern is part of how a scenario
 starts, and every scenario in the current game gives you one.

@@ -58,7 +58,7 @@ fn player(w: &World) -> &Actor {
 }
 
 fn mods(w: &World) -> crate::talent::TalentMods {
-    player(w).talent_mods(w.content())
+    player(w).talent_mods(w.content()).into_owned()
 }
 
 #[test]

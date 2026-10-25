@@ -91,7 +91,7 @@ A few rules from elsewhere carry over:
 
 ## Looking at an item
 
-In your pack (`i`), press an item's letter to look at it; on the equipment screen (`e`), press a
+In your pack (`I`), press an item's letter to look at it; on the equipment screen (`i`), press a
 slot's letter in upper case (`A` to `L`). The description names the item, says what it is
 (rarity, base, every part it is made of, weight: "Magic long sword · steel blade, leather grip ·
 1.8 kg") and whether you wear or wield it, then its base stats in words (how it is held or worn,

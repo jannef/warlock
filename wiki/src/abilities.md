@@ -26,7 +26,7 @@ a letter:
 - `Esc` closes the menu.
 
 Looking at the menu takes no time. It remembers the ability you used last and opens on it, so
-`a` `Enter` uses it again, and `A` does the same in one key (with nothing used yet, `A` opens the
+`a` `Enter` uses it again, and `X` does the same in one key (with nothing used yet, `X` opens the
 menu).
 
 ## Every ability
@@ -61,7 +61,7 @@ menu).
   each under Class from the level that brings it. Most leave you spent, winded, or drained for a
   while afterwards, greyed out until it passes; a paladin's gifts answer only while the paladin
   is Good or better (greyed out with `you have strayed` otherwise). They have no key of their own
-  yet: `A` uses the one you used last again.
+  yet: `X` uses the one you used last again.
 - No race gives an ability yet.
 
 ## Keys of their own
@@ -71,4 +71,4 @@ If you use an ability often, you can give it a key in the Controls screen (the s
 "Steal", throwing your voice "Throw your voice", and the hood "Hood your lantern"; none has a
 key by default): the key uses the ability just as the menu would, asking for a direction or a
 place if it needs one. Without a shield, it says so at once and takes no time. `a` ("Abilities")
-and `A` ("Use the last ability again") can be rebound like every key.
+and `X` ("Use the last ability again") can be rebound like every key.

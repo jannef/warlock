@@ -176,7 +176,7 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   sky (`weather rain`), the temperature (`temperature -3.5 °C`), and hash.
 - Freezing visual time and fixing window size and scale make screenshots reproducible. With frozen
   time, glyph animations show that moment and motion (slides, camera) completes instantly.
-- `--fire` (dev) starts the run aiming the readied missile weapon, as `f` would, so captures show
+- `--fire` (dev) starts the run aiming the readied missile weapon, as the Fire command would, so captures show
   the targeting line (golden manifest entries pass it with `args`); `--look X,Y` (dev) starts in
   look mode with the cursor on level cell (X, Y), so captures show what look mode says there;
   `--keys "KEYS"` (dev) presses keys at startup, after any replay, as if typed, so captures show

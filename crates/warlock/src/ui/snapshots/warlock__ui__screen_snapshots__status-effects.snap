@@ -34,7 +34,7 @@ expression: "render(case, content.clone())"
               │ Weight 70 kg, carrying nothing                                       │
               │ Burdened over 13 kg, strained over 26 kg, overloaded over 39 kg      │
               │                                                                      │
-              │ @ or Esc close   S skills                                            │
+              │ @ or Esc close   A skills                                            │
               └─ 1 Char · 2 Inv · 3 Equip · 4 Skills · 5 Weapons · 6 Quests · 7 Tal ─┘
 
  The Hub  ·  HP 17/17  ·  MP 2/2  ·  Bleeding  ·  Poisoned  ·  Lv 1  ·  08:00            ? controls

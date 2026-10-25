@@ -1230,6 +1230,10 @@ mod tests {
     const ENTER: (KeyCode, &str) = (KeyCode::Enter, "");
     const HELP: (KeyCode, &str) = (KeyCode::Slash, "?");
     const WAIT: (KeyCode, &str) = (KeyCode::Period, ".");
+    // Directions on the numpad, ADOM's movement keys (#350).
+    const NORTH: (KeyCode, &str) = (KeyCode::Numpad8, "8");
+    const EAST: (KeyCode, &str) = (KeyCode::Numpad6, "6");
+    const WEST: (KeyCode, &str) = (KeyCode::Numpad4, "4");
 
     /// An app with the router and the screen systems, on the main menu or in a run.
     fn app(run: bool) -> App {
@@ -1372,10 +1376,10 @@ mod tests {
         frame(&mut app, &[ESC]);
         assert_eq!(app.world().resource::<InputMode>(), &InputMode::Normal);
         assert!(names(&app).is_empty());
-        frame(&mut app, &[(KeyCode::KeyO, "o"), (KeyCode::KeyK, "k")]);
+        frame(&mut app, &[(KeyCode::KeyO, "o"), NORTH]);
         assert_eq!(actions(&app), [Action::Open(Dir::N)]);
         // Look mode: Esc leaves it, `?` does nothing there.
-        frame(&mut app, &[(KeyCode::KeyX, "x"), HELP]);
+        frame(&mut app, &[(KeyCode::KeyL, "l"), HELP]);
         assert!(matches!(
             app.world().resource::<InputMode>(),
             InputMode::Look(_)
@@ -1384,7 +1388,7 @@ mod tests {
         assert_eq!(app.world().resource::<InputMode>(), &InputMode::Normal);
         assert!(names(&app).is_empty());
         // The rest prompt: Esc cancels it; a letter answers it.
-        let rest = (KeyCode::KeyR, "R");
+        let rest = (KeyCode::KeyB, "b");
         frame(&mut app, &[rest]);
         assert_eq!(app.world().resource::<InputMode>(), &InputMode::Rest);
         frame(&mut app, &[ESC]);
@@ -1400,13 +1404,13 @@ mod tests {
 
     #[test]
     fn using_a_tool_asks_which_way_to_dig_only_with_one_ready() {
-        const USE: (KeyCode, &str) = (KeyCode::KeyU, "U");
+        const USE: (KeyCode, &str) = (KeyCode::KeyU, "u");
         // Nothing to dig with: the rules say so at once, and no prompt opens.
         let mut app = app(true);
         frame(&mut app, &[USE]);
         assert_eq!(actions(&app), [Action::Dig(Dir::N)]);
         assert_eq!(app.world().resource::<InputMode>(), &InputMode::Normal);
-        // In the quarry with the pick-axe ready: `U` asks for a direction, Esc cancels it, and a
+        // In the quarry with the pick-axe ready: `u` asks for a direction, Esc cancels it, and a
         // direction digs.
         let content = content();
         let mut world = warlock_core::World::new(content.clone(), "quarry", None).expect("run");
@@ -1424,7 +1428,7 @@ mod tests {
         frame(&mut app, &[ESC]);
         assert_eq!(app.world().resource::<InputMode>(), &InputMode::Normal);
         assert!(names(&app).is_empty() && actions(&app).is_empty());
-        frame(&mut app, &[USE, (KeyCode::KeyL, "l")]);
+        frame(&mut app, &[USE, EAST]);
         assert_eq!(actions(&app), [Action::Dig(Dir::E)]);
     }
 
@@ -1457,7 +1461,7 @@ mod tests {
         let second = aim(&app).expect("still aiming");
         assert_ne!(second.at, first.at);
         assert!(view.actor_at(second.at).is_some());
-        frame(&mut app, &[(KeyCode::KeyL, "l")]);
+        frame(&mut app, &[EAST]);
         let moved = aim(&app).expect("still aiming");
         assert_eq!(moved.at, second.at.step(Dir::E));
         // `?` does nothing while aiming; Esc cancels and shoots nothing.
@@ -1605,11 +1609,7 @@ mod tests {
         let content = content();
         let world = in_the_shop(content.clone());
         let mut app = app_with(content, Some(Game::from_world(world, "tamsin-1".into())));
-        let (west, yes, no) = (
-            (KeyCode::KeyH, "h"),
-            (KeyCode::KeyY, "y"),
-            (KeyCode::KeyN, "n"),
-        );
+        let (west, yes, no) = (WEST, (KeyCode::KeyY, "y"), (KeyCode::KeyN, "n"));
         frame(&mut app, &[west]);
         assert_eq!(names(&app), [ScreenName::Dialog], "pay and leave?");
         assert!(
@@ -1687,7 +1687,7 @@ mod tests {
         let (comma, b, i, d) = (
             (KeyCode::Comma, ","),
             (KeyCode::KeyB, "b"),
-            (KeyCode::KeyI, "i"),
+            (KeyCode::KeyI, "I"),
             (KeyCode::KeyD, "d"),
         );
         frame(&mut app, &[comma]);
@@ -1698,11 +1698,11 @@ mod tests {
             actions(&app),
             [Action::PickUp(Positions::of([1])), Action::Wait]
         );
-        // `g` picks up too; Esc cancels without an action.
-        frame(&mut app, &[(KeyCode::KeyG, "g"), ESC]);
+        // `;` picks up too; Esc cancels without an action.
+        frame(&mut app, &[(KeyCode::Semicolon, ";"), ESC]);
         assert!(names(&app).is_empty());
         assert_eq!(actions(&app).len(), 2);
-        // The inventory opens and closes on `i`; `d` chooses what to drop.
+        // The inventory opens and closes on `I`; `d` chooses what to drop.
         frame(&mut app, &[i]);
         assert_eq!(names(&app), [ScreenName::Inventory]);
         frame(&mut app, &[i]);
@@ -1727,12 +1727,12 @@ mod tests {
         }
         assert_eq!(world.perception().inventory().len(), 2);
         let mut app = app_with(content, Some(Game::from_world(world, "tamsin-1".into())));
-        let (e, c, a) = (
-            (KeyCode::KeyE, "e"),
+        let (i, c, a) = (
+            (KeyCode::KeyI, "i"),
             (KeyCode::KeyC, "c"),
             (KeyCode::KeyA, "a"),
         );
-        frame(&mut app, &[e]);
+        frame(&mut app, &[i]);
         assert_eq!(names(&app), [ScreenName::Equipment]);
         // `c` is the body's letter: its choice opens over the equipment screen.
         frame(&mut app, &[c]);
@@ -1788,7 +1788,7 @@ mod tests {
                 .find(|l: &String| l.contains("c  Body"))
                 .unwrap_or_default()
         };
-        frame(&mut app, &[(KeyCode::KeyE, "e")]);
+        frame(&mut app, &[(KeyCode::KeyI, "i")]);
         assert!(worn(&app).contains('—'), "{}", worn(&app));
         frame(&mut app, &[(KeyCode::KeyC, "c"), (KeyCode::KeyA, "a")]);
         assert_eq!(names(&app), [ScreenName::Equipment]);
@@ -1887,30 +1887,30 @@ mod tests {
             app.world().resource::<InputMode>(),
             &InputMode::Ability(Ability::ShieldBash)
         );
-        frame(&mut app, &[(KeyCode::KeyL, "l")]);
+        frame(&mut app, &[EAST]);
         assert_eq!(actions(&app), [Action::Bash(Dir::E)]);
         assert_eq!(app.world().resource::<InputMode>(), &InputMode::Normal);
     }
 
     #[test]
     fn a_disarm_key_asks_for_a_direction_and_disarms() {
-        // Disarming is an ability: unbound by default. Bound (here to `X`), the showcase's
+        // Disarming is an ability: unbound by default. Bound (here to `Y`), the showcase's
         // thief, trained in Disable device, is asked which way, as the abilities menu asks.
         let mut app = app(true);
         {
             let mut bindings = app.world_mut().resource_mut::<Bindings>();
             let disarm = crate::input::KeyCommand::Disarm;
             assert!(bindings.keys_of(disarm).is_empty());
-            let key = crate::input::KeyBinding::from_text("X").expect("a key");
+            let key = crate::input::KeyBinding::from_text("Y").expect("a key");
             bindings.0.push((key, disarm));
         }
-        frame(&mut app, &[(KeyCode::KeyX, "X")]);
+        frame(&mut app, &[(KeyCode::KeyY, "Y")]);
         assert_eq!(
             app.world().resource::<InputMode>(),
             &InputMode::Ability(Ability::Disarm)
         );
         assert!(actions(&app).is_empty(), "nothing yet");
-        frame(&mut app, &[(KeyCode::KeyL, "l")]);
+        frame(&mut app, &[EAST]);
         assert_eq!(actions(&app), [Action::Disarm(Dir::E)]);
         assert_eq!(app.world().resource::<InputMode>(), &InputMode::Normal);
     }
@@ -1924,7 +1924,7 @@ mod tests {
         frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyD, "d")]);
         assert!(names(&app).is_empty());
         assert_eq!(mode(&app), InputMode::Ability(Ability::PickLock));
-        frame(&mut app, &[(KeyCode::KeyL, "l")]);
+        frame(&mut app, &[EAST]);
         assert_eq!(actions(&app), [Action::PickLock(Dir::E)]);
         // Its own key is unbound by default; bound (here to `B`), it does the same.
         let mut app = self::app(true);
@@ -1937,7 +1937,7 @@ mod tests {
         }
         frame(&mut app, &[(KeyCode::KeyB, "B")]);
         assert_eq!(mode(&app), InputMode::Ability(Ability::PickLock));
-        frame(&mut app, &[(KeyCode::KeyH, "h")]);
+        frame(&mut app, &[WEST]);
         assert_eq!(actions(&app), [Action::PickLock(Dir::W)]);
         assert_eq!(mode(&app), InputMode::Normal);
     }
@@ -1951,20 +1951,20 @@ mod tests {
         frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyE, "e")]);
         assert!(names(&app).is_empty());
         assert_eq!(mode(&app), InputMode::Ability(Ability::Steal));
-        frame(&mut app, &[(KeyCode::KeyL, "l")]);
+        frame(&mut app, &[EAST]);
         assert_eq!(actions(&app), [Action::Steal(Dir::E)]);
-        // Unbound by default; bound (here to `X`), it asks the same.
+        // Unbound by default; bound (here to `Y`), it asks the same.
         let mut app = self::app(true);
         {
             let mut bindings = app.world_mut().resource_mut::<Bindings>();
             let steal = crate::input::KeyCommand::Steal;
             assert!(bindings.keys_of(steal).is_empty());
-            let key = crate::input::KeyBinding::from_text("X").expect("a key");
+            let key = crate::input::KeyBinding::from_text("Y").expect("a key");
             bindings.0.push((key, steal));
         }
-        frame(&mut app, &[(KeyCode::KeyX, "X")]);
+        frame(&mut app, &[(KeyCode::KeyY, "Y")]);
         assert_eq!(mode(&app), InputMode::Ability(Ability::Steal));
-        frame(&mut app, &[(KeyCode::KeyH, "h")]);
+        frame(&mut app, &[WEST]);
         assert_eq!(actions(&app), [Action::Steal(Dir::W)]);
         assert_eq!(mode(&app), InputMode::Normal);
     }
@@ -1984,7 +1984,7 @@ mod tests {
     #[test]
     fn the_abilities_menu_uses_an_ability_and_remembers_it_for_the_quick_repeat() {
         const ABILITIES: (KeyCode, &str) = (KeyCode::KeyA, "a");
-        const REPEAT: (KeyCode, &str) = (KeyCode::KeyA, "A");
+        const REPEAT: (KeyCode, &str) = (KeyCode::KeyX, "X");
         let mode = |app: &App| *app.world().resource::<InputMode>();
         // Without a shield: the menu opens on `a`; the shield bash (`f`) is greyed out, so its
         // letter only says why; Esc closes the menu, and no time passed.
@@ -2003,18 +2003,18 @@ mod tests {
         frame(&mut app, &[ABILITIES, (KeyCode::KeyF, "f")]);
         assert!(names(&app).is_empty());
         assert_eq!(mode(&app), InputMode::Ability(Ability::ShieldBash));
-        frame(&mut app, &[(KeyCode::KeyL, "l")]);
+        frame(&mut app, &[EAST]);
         assert_eq!(actions(&app), [Action::Bash(Dir::E)]);
         let stack = app.world().resource::<ScreenStack>();
         assert_eq!(stack.last_ability(), Some(Ability::ShieldBash));
-        // `A` uses it again; Esc cancels the direction prompt rather than pausing.
+        // `X` uses it again; Esc cancels the direction prompt rather than pausing.
         frame(&mut app, &[REPEAT]);
         assert_eq!(mode(&app), InputMode::Ability(Ability::ShieldBash));
         frame(&mut app, &[ESC]);
         assert_eq!(mode(&app), InputMode::Normal);
         assert!(names(&app).is_empty());
         // The menu opens on it, so Enter repeats it too.
-        frame(&mut app, &[ABILITIES, ENTER, (KeyCode::KeyH, "h")]);
+        frame(&mut app, &[ABILITIES, ENTER, WEST]);
         assert_eq!(actions(&app), [Action::Bash(Dir::E), Action::Bash(Dir::W)]);
     }
 
@@ -2067,10 +2067,7 @@ mod tests {
         };
         assert_eq!(aim.kind, AimKind::Ability(Ability::ThrowVoice));
         assert_eq!(aim.at, me);
-        frame(
-            &mut app,
-            &[(KeyCode::KeyL, "l"), (KeyCode::KeyL, "l"), ENTER],
-        );
+        frame(&mut app, &[EAST, EAST, ENTER]);
         assert_eq!(mode(&app), InputMode::Normal);
         let at = Pos::new(me.x + 2, me.y);
         assert_eq!(actions(&app), [Action::ThrowVoice(at)]);
@@ -2280,7 +2277,7 @@ mod tests {
             app.world().resource::<InputMode>(),
             &InputMode::Direction(crate::input::KeyCommand::Chat)
         );
-        frame(&mut app, &[(KeyCode::KeyL, "l")]);
+        frame(&mut app, &[EAST]);
         assert_eq!(actions(&app), [Action::Chat(Dir::E)]);
         assert!(names(&app).is_empty());
     }
@@ -2409,7 +2406,7 @@ mod tests {
         // Other keys do nothing: no move, no wait, no screen.
         frame(
             &mut app,
-            &[(KeyCode::KeyJ, "j"), WAIT, HELP, (KeyCode::KeyM, "M")],
+            &[(KeyCode::Numpad2, "2"), WAIT, HELP, (KeyCode::KeyV, "v")],
         );
         assert_eq!(actions(&app).len(), 1);
         assert!(names(&app).is_empty());
@@ -2443,9 +2440,9 @@ mod tests {
     #[test]
     fn the_message_history_opens_with_its_key_and_closes_with_it() {
         let mut app = app(true);
-        frame(&mut app, &[(KeyCode::KeyM, "M")]);
+        frame(&mut app, &[(KeyCode::KeyV, "v")]);
         assert_eq!(names(&app), [ScreenName::Messages]);
-        frame(&mut app, &[(KeyCode::KeyM, "M")]);
+        frame(&mut app, &[(KeyCode::KeyV, "v")]);
         assert!(names(&app).is_empty());
     }
 }

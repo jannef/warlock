@@ -81,7 +81,7 @@ your stats, your [alignment](alignment.md), your level and experience (see [Expe
 [Combat](combat.md#protection)), each [resource](resources.md) you hold, what ails you (see
 [Status effects](status-effects.md)) and which diseases you know you have (see
 [Diseases](diseases.md)), and what you weigh and carry against what you can (see
-[Burden](burden.md)). `S` there, or anywhere in play, shows your [skills](skills.md), and `W`
+[Burden](burden.md)). `A` there, or anywhere in play, shows your [skills](skills.md), and `W`
 your ranks in each [weapon skill](weapon-skills.md), which your race and class start you with,
 and in each [fighting style](fighting-styles.md), which your class starts you with. The game
 does not change your race, gender, class, or sign once a run has started; you get a year older

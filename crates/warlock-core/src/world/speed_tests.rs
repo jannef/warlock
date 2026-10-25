@@ -497,11 +497,12 @@ fn resting_accounts_for_fast_creatures() {
     // the energy for them after 159 s; the slow one 59 cells away has 18 steps, 120 s.
     let w = world("hall");
     assert_eq!(w.out_of_view_for(), Duration::seconds(120));
-    // Resting stops on the very turn waiting would see a creature come into view, in the same
-    // state.
+    // Resting stops on the very turn resting turn by turn (a rest of one turn after another,
+    // each looked at) would see a creature come into view, in the same state: the far ones
+    // stride alike in both (`stride.rs`).
     let mut waited = world("hall");
     while waited.creatures_in_view().is_empty() {
-        waited.apply(&Action::Wait);
+        waited.apply(&Action::Rest(Rest::For(Duration::seconds(6))));
         assert!(waited.turn() < 1000, "no creature ever came into view");
     }
     let mut rested = world("hall");
@@ -511,13 +512,13 @@ fn resting_accounts_for_fast_creatures() {
     assert_eq!(rested.time(), waited.time());
     assert_eq!(rested.state().actors, waited.state().actors);
     assert_eq!(rested.creatures_in_view(), waited.creatures_in_view());
-    // Resting on, they come and go; each rest stops like waiting would.
+    // Resting on, they come and go; each rest stops like resting turn by turn would.
     for _ in 0..5 {
         let mut waited = rested.clone();
         let mut seen = waited.creatures_in_view();
         let start = waited.turn();
         loop {
-            waited.apply(&Action::Wait);
+            waited.apply(&Action::Rest(Rest::For(Duration::seconds(6))));
             let now = waited.creatures_in_view();
             if now.iter().any(|a| !seen.contains(a)) || waited.turn() - start == 600 {
                 break;
