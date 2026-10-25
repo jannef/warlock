@@ -183,10 +183,6 @@ impl World {
             rolls_gear: true,
         };
         let actor = travel::make_creature(&mut self.state, &self.content, &id, &spawn);
-        let def = self.content.creature(creature);
-        if def.unique {
-            self.state.progress.uniques.insert(def.id.clone());
-        }
         self.spawned += 1;
         if self.state.player().talent_mods(&self.content).danger_sense >= 2 {
             self.note(STIRS);

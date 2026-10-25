@@ -45,9 +45,20 @@ Sixth sense's arrival note), `attempt` (the cap by `World::stance`, the chance, 
 cell out of a freshly computed `Perception`'s sight and `AWAY` cells off, the route by
 `mapgen::out_and_back`, then `travel::make_creature`, the one way a creature is made from a
 `CreatureSpawn`), and the dev `spawn` action. A spawn bumps `World::spawned`, so a rest perceives
-after that turn. Uniques are remembered in `Progress::uniques` by type id. The initial population
-of a generated floor and its `bench-turns` entry are the follow-up (C2); a spawn sets `rolls_gear`, so `make_creature` rolls its gear. Tests: `world/spawn_tests.rs` (the property test of the design's §9.6,
-frozen floors, the talents, determinism), `content/danger.rs` (rules, counts, weights, draws).
+after that turn. Uniques are remembered in `Progress::uniques` by type id, in `make_creature`
+(however one came: a spawn, a population, a level file). A spawn sets `rolls_gear`, so
+`make_creature` rolls its gear from `gear/<actor id>`. The initial population of a generated
+floor is `mapgen/population.rs` (`populate`, one call in `mapgen::generate_for` after
+`place_loot` and before `gear::arm`; stream `population/<level id>`, `Rng::population`): the
+count by walkable cells, the draw by `danger::draw`, a cell from the free plain-floor cells in
+row order (`swap_remove` of a drawn index), a route by `out_and_back`. Whom a level is made for
+is `mapgen::Visit` (the luck, the player's level for a scaled danger, the uniques met;
+`travel::level_template` builds it; `generate_with` is `generate_for` with only the luck).
+`cargo xtask bench-turns` has a `delf` row: a fixture 120×60 cave branch of danger 8 at full
+population (`xtask/src/bench.rs`). Tests: `world/spawn_tests.rs` (the property test of the
+design's §9.6, the population of a generated floor and that nothing else moves, uniques in a
+population, a spawn's gear stream, frozen floors, the talents, determinism),
+`content/danger.rs` (rules, counts, weights, draws).
 
 Creature gear (spec §8 "Creature gear", #328): the data is `content/gear.rs` (`GearLineSpec`
 as written, kept on `CreatureDef::gear_spec` until objects load, then `Content::load_gear`
@@ -61,7 +72,8 @@ entry without `carry`/`wield`/`wear`, `Canvas::add_patrol`, the local areas' dee
 keeper): a generated level clears it in `gear::arm` (stream `gear/<level id>`, after
 `place_loot`, in both `mapgen::generate_with` and `mapgen::local::generate`), and
 `world/travel.rs::placed_gear` rolls the rest as `instantiate_level` places them (stream
-`gear/<actor id>`). A spawn path added later (the danger levels' population and spawns) sets
-`rolls_gear` or calls `gear::roll` itself. Scavenger is one hook in `World::creature_dies`
+`gear/<actor id>`). The danger levels' paths set `rolls_gear`: the initial population of a
+generated floor (rolled by `gear::arm` after it) and a spawn in play (rolled by
+`make_creature`). Scavenger is one hook in `World::creature_dies`
 (`TalentMods::scavenger`, the kill the player's). Tests: `world/gear_tests.rs`; the mapgen
 snapshots print each spawn's gear.
