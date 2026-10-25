@@ -18,6 +18,11 @@ expression: "render(case, content.clone())"
               │   Class abilities                                                    │
               │     Weapon drill  (class)                                            │
               │ Other talents                                                        │
+              │   Stars                                                              │
+              │     Bedrock                                                          │
+              │         Needs: level 12, to be Earth-born                            │
+              │     Tentacles                                                        │
+              │         Needs: Twin Blades 3, to be born in the year of the Kraken   │
               │   Vigour                                                             │
               │     Clotting                                                         │
               │         Needs: Toughness 12                                          │
@@ -30,11 +35,6 @@ expression: "render(case, content.clone())"
               │     Iron stomach                                                     │
               │         Needs: Toughness 12                                          │
               │     Poison resistance                                                │
-              │         Needs: Toughness 14                                          │
-              │     Second wind                                                      │
-              │         Needs: Toughness 13, level 6                                 │
-              │     Strong constitution                                              │
-              │         Needs: Toughness 13                                          │
               │                                                                    ↓ │
               │ A weapon in each hand hampers you less, and with sword and shield    │
               │ your free bash comes more often.                                     │

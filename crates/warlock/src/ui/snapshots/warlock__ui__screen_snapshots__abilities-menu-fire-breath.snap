@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ You learn Brawn (1).
+ Fire roars from your throat! You feel drained.
+
+
+
+                    ┌─ Abilities ──────────────────────────────────────────────┐
+                    │                                                          │
+                    │ Birth sign                                               │
+                    │   a  Fire breath        you are drained                  │
+                    │ Class                                                    │
+                    │ > b  Throw your voice   at a place you see               │
+                    │   c  Veteran's wind                                      │
+                    │ Skills                                                   │
+                    │   d  Intimidate         not usable yet                   │
+                    │ Weapon skills                                            │
+                    │   e  Shield bash        in a direction                   │
+                    │ Items                                                    │
+                    │   f  Hood your lantern                                   │
+                    │                                                          │
+                    │ Make a voice sound at a place you see nearby: those who  │
+                    │ hear it go and look there.                               │
+                    │                                                          │
+                    │ a-f or Enter use   Esc close                             │
+                    └──────────────────────────────────────────────────────────┘
+
+
+
+
+
+ The Hub  ·  HP 84/84  ·  MP 0/0  ·  Drained  ·  Lv 22  ·  08:00  ·  11 Darkening        ? controls
