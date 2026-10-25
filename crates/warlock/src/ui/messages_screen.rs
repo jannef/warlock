@@ -248,7 +248,7 @@ mod tests {
         let mut screen = MessagesScreen::new(None);
         let bindings = Bindings::default();
         let own = Press {
-            binding: Some(KeyBinding::Char("M".into())),
+            binding: Some(KeyBinding::Char("v".into())),
             ..press(Nav::Other)
         };
         assert_eq!(screen.handle(&own, &bindings), ScreenAction::Close);

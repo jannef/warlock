@@ -442,15 +442,10 @@ impl Default for Bindings {
         use KeyBinding::{Char, Code};
         use KeyCommand::*;
         let ch = |s: &str| Char(s.to_string());
+        // ADOM's default keys where ADOM has the command (#350; ADOM's manual, "Miscellaneous
+        // commands"), else a key ADOM does not use. Movement is ADOM's: the numpad and the arrows
+        // (its letters are other commands: `k` kick, `l` look, `u` use a tool).
         let mut table = Self(vec![
-            (ch("k"), Move(Dir::N)),
-            (ch("u"), Move(Dir::NE)),
-            (ch("l"), Move(Dir::E)),
-            (ch("n"), Move(Dir::SE)),
-            (ch("j"), Move(Dir::S)),
-            (ch("b"), Move(Dir::SW)),
-            (ch("h"), Move(Dir::W)),
-            (ch("y"), Move(Dir::NW)),
             (Code(KeyCode::Numpad8), Move(Dir::N)),
             (Code(KeyCode::Numpad9), Move(Dir::NE)),
             (Code(KeyCode::Numpad6), Move(Dir::E)),
@@ -466,34 +461,35 @@ impl Default for Bindings {
             (ch("."), Wait),
             (Code(KeyCode::Numpad5), Wait),
             (ch("s"), Search),
-            (ch("z"), SearchLong),
+            (ch("f"), SearchLong),
             (ch("o"), Open),
             (ch("c"), Close),
-            (ch("K"), Kick),
+            (ch("k"), Kick),
             (ch(">"), Descend),
             (ch("<"), Ascend),
-            (ch("L"), Lantern),
+            (ch("*"), Lantern),
             (ch(","), PickUp),
-            (ch("g"), PickUp),
+            (ch(";"), PickUp),
             (ch("d"), Drop),
-            (ch("i"), Inventory),
-            (ch("e"), Equipment),
+            (ch("I"), Inventory),
+            (ch("i"), Equipment),
             (ch("@"), Character),
-            (ch("S"), Skills),
+            (ch("A"), Skills),
             (ch("W"), WeaponSkills),
             (ch("q"), Quests),
-            (ch("M"), Messages),
-            (ch("R"), Rest),
-            (ch("E"), Eat),
+            (ch("v"), Messages),
+            (ch("b"), Rest),
+            (ch("e"), Eat),
             (ch("r"), Read),
-            (ch("x"), Look),
+            (ch("l"), Look),
             (ch("t"), Missile),
             (ch("T"), Throw),
             (ch("+"), MoreAggressive),
             (ch("-"), MoreDefensive),
             (ch("a"), Abilities),
-            (ch("A"), RepeatAbility),
+            (ch("X"), RepeatAbility),
             (ch("C"), Chat),
+            (ch("S"), Quit),
             (Code(KeyCode::Tab), NextTarget),
             (Code(KeyCode::Enter), Loose),
             (Code(KeyCode::NumpadEnter), Loose),
@@ -503,7 +499,7 @@ impl Default for Bindings {
             (Code(KeyCode::Space), MoreNext),
             (Code(KeyCode::Enter), MoreNext),
             (Code(KeyCode::NumpadEnter), MoreNext),
-            (ch("U"), UseTool),
+            (ch("u"), UseTool),
             (ch("p"), Pay),
             (Code(KeyCode::ArrowUp), MenuUp),
             (ch("k"), MenuUp),
@@ -1427,28 +1423,31 @@ mod tests {
     }
 
     #[test]
-    fn default_keys_cover_vi_numpad_and_arrows() {
+    fn default_keys_are_adoms_numpad_and_arrows() {
         let b = Bindings::default();
-        assert_eq!(keys(&b, KeyCommand::Move(Dir::N)), ["k", "Num8", "↑"]);
-        assert_eq!(keys(&b, KeyCommand::Move(Dir::NE)), ["u", "Num9"]);
+        assert_eq!(keys(&b, KeyCommand::Move(Dir::N)), ["Num8", "↑"]);
+        assert_eq!(keys(&b, KeyCommand::Move(Dir::NE)), ["Num9"]);
         assert_eq!(keys(&b, KeyCommand::Descend), [">"]);
-        assert!(keys(&b, KeyCommand::Quit).is_empty(), "unbound by default");
-        assert_eq!(keys(&b, KeyCommand::Lantern), ["L"]);
-        assert_eq!(keys(&b, KeyCommand::Kick), ["K"]);
+        assert_eq!(keys(&b, KeyCommand::Quit), ["S"]);
+        assert_eq!(keys(&b, KeyCommand::Lantern), ["*"]);
+        assert_eq!(keys(&b, KeyCommand::Kick), ["k"]);
         assert_eq!(keys(&b, KeyCommand::Help), ["?"]);
         assert_eq!(keys(&b, KeyCommand::Cancel), ["Esc"]);
-        assert_eq!(keys(&b, KeyCommand::Rest), ["R"]);
+        assert_eq!(keys(&b, KeyCommand::Rest), ["b"]);
         assert_eq!(keys(&b, KeyCommand::Search), ["s"]);
-        assert_eq!(keys(&b, KeyCommand::SearchLong), ["z"]);
-        assert_eq!(keys(&b, KeyCommand::PickUp), [",", "g"]);
+        assert_eq!(keys(&b, KeyCommand::SearchLong), ["f"]);
+        assert_eq!(keys(&b, KeyCommand::PickUp), [",", ";"]);
         assert_eq!(keys(&b, KeyCommand::Drop), ["d"]);
-        assert_eq!(keys(&b, KeyCommand::Inventory), ["i"]);
-        assert_eq!(keys(&b, KeyCommand::Equipment), ["e"]);
+        assert_eq!(keys(&b, KeyCommand::Inventory), ["I"]);
+        assert_eq!(keys(&b, KeyCommand::Equipment), ["i"]);
+        assert_eq!(keys(&b, KeyCommand::Skills), ["A"]);
+        assert_eq!(keys(&b, KeyCommand::Look), ["l"]);
+        assert_eq!(keys(&b, KeyCommand::Messages), ["v"]);
         assert_eq!(keys(&b, KeyCommand::Character), ["@"]);
         assert_eq!(keys(&b, KeyCommand::Missile), ["t"]);
         assert!(
             keys(&b, KeyCommand::Fire).is_empty(),
-            "f has no default key"
+            "no default key: t (Missile) shoots"
         );
         assert_eq!(keys(&b, KeyCommand::Throw), ["T"]);
         assert_eq!(keys(&b, KeyCommand::WeaponSkills), ["W"]);
@@ -1466,14 +1465,14 @@ mod tests {
             "an ability: unbound"
         );
         assert_eq!(keys(&b, KeyCommand::Abilities), ["a"]);
-        assert_eq!(keys(&b, KeyCommand::RepeatAbility), ["A"]);
+        assert_eq!(keys(&b, KeyCommand::RepeatAbility), ["X"]);
         assert_eq!(keys(&b, KeyCommand::MoreAggressive), ["+"]);
         assert_eq!(keys(&b, KeyCommand::MoreDefensive), ["-"]);
-        assert_eq!(keys(&b, KeyCommand::Eat), ["E"]);
-        assert_eq!(keys(&b, KeyCommand::UseTool), ["U"]);
+        assert_eq!(keys(&b, KeyCommand::Eat), ["e"]);
+        assert_eq!(keys(&b, KeyCommand::UseTool), ["u"]);
         assert_eq!(keys(&b, KeyCommand::Chat), ["C"]);
         assert_eq!(keys(&b, KeyCommand::Pay), ["p"]);
-        // The dialog's answers are their own context: `y` and `n` move the player in play.
+        // The dialog's answers are their own context.
         assert_eq!(keys(&b, KeyCommand::Yes), ["y"]);
         assert_eq!(keys(&b, KeyCommand::No), ["n"]);
     }
@@ -1527,10 +1526,11 @@ mod tests {
     #[test]
     fn modes_read_their_own_context_first() {
         let b = Bindings::default();
-        let (h, n, tab) = (
-            press(KeyCode::KeyH, "h"),
+        let (d, n, tab, west) = (
+            press(KeyCode::KeyD, "d"),
             press(KeyCode::KeyN, "n"),
             press(KeyCode::Tab, ""),
+            press(KeyCode::Numpad4, "4"),
         );
         let enter = KeyboardInput {
             logical_key: Key::Enter,
@@ -1548,15 +1548,12 @@ mod tests {
             &LastTarget::default(),
         ));
         let read = |mode, key: &KeyboardInput, dev| command_in(mode, key, &b, dev);
-        assert_eq!(
-            read(InputMode::Normal, &h, false),
-            Some(KeyCommand::Move(Dir::W))
-        );
-        assert_eq!(read(InputMode::Rest, &h, false), Some(KeyCommand::RestHour));
+        assert_eq!(read(InputMode::Normal, &d, false), Some(KeyCommand::Drop));
+        assert_eq!(read(InputMode::Rest, &d, false), Some(KeyCommand::RestDawn));
         assert_eq!(read(InputMode::Rest, &n, false), Some(KeyCommand::RestDusk));
         assert_eq!(read(aim, &tab, false), Some(KeyCommand::NextTarget));
         assert_eq!(read(aim, &enter, false), Some(KeyCommand::Loose));
-        assert_eq!(read(aim, &h, false), Some(KeyCommand::Move(Dir::W)));
+        assert_eq!(read(aim, &west, false), Some(KeyCommand::Move(Dir::W)));
         assert_eq!(read(InputMode::Normal, &tab, false), None);
         assert_eq!(read(InputMode::Normal, &enter, false), None);
         // The developer keys only where they are on, and only in plain play.

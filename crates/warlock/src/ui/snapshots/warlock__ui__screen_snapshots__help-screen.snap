@@ -8,37 +8,37 @@ expression: "render(case, content.clone())"
                               │ Letters (a-z) and digits that pick list rows are fixed.  │
                               │                                                          │
                               │ In play                                                  │
-                              │   Move north                           k Num8 ↑          │
-                              │   Move northeast                       u Num9            │
-                              │   Move east                            l Num6 →          │
-                              │   Move southeast                       n Num3            │
-                              │   Move south                           j Num2 ↓          │
-                              │   Move southwest                       b Num1            │
-                              │   Move west                            h Num4 ←          │
-                              │   Move northwest                       y Num7            │
+                              │   Move north                           Num8 ↑            │
+                              │   Move northeast                       Num9              │
+                              │   Move east                            Num6 →            │
+                              │   Move southeast                       Num3              │
+                              │   Move south                           Num2 ↓            │
+                              │   Move southwest                       Num1              │
+                              │   Move west                            Num4 ←            │
+                              │   Move northwest                       Num7              │
                               │   Wait a turn                          . Num5            │
                               │   Search                               s                 │
-                              │   Search for a while                   z                 │
+                              │   Search for a while                   f                 │
                               │   Open a door                          o                 │
                               │   Close a door                         c                 │
-                              │   Kick                                 K                 │
+                              │   Kick                                 k                 │
                               │   Go down stairs                       >                 │
                               │   Go up stairs                         <                 │
-                              │   Light / douse lantern                L                 │
-                              │   Pick up                              , g               │
+                              │   Light / douse lantern                *                 │
+                              │   Pick up                              , ;               │
                               │   Drop                                 d                 │
-                              │   Inventory                            i                 │
-                              │   Equipment                            e                 │
+                              │   Inventory                            I                 │
+                              │   Equipment                            i                 │
                               │   Character                            @                 │
-                              │   Skills                               S                 │
+                              │   Skills                               A                 │
                               │   Weapon skills                        W                 │
                               │   Quest log                            q                 │
                               │   Talents                              (none)            │
-                              │   Message history                      M                 │
-                              │   Rest                                 R                 │
-                              │   Eat                                  E                 │
+                              │   Message history                      v                 │
+                              │   Rest                                 b                 │
+                              │   Eat                                  e                 │
                               │   Read a scroll                        r                 │
-                              │   Look around                          x                 │
+                              │   Look around                          l                 │
                               │   Throw or shoot the missile weapon    t                 │
                               │   Fire missile weapon                  (none)            │
                               │   Throw from the pack                  T                 │

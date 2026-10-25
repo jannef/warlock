@@ -131,9 +131,9 @@ const PAGE_IDS: [&str; 9] = [
 ];
 
 /// Rebindable commands with no key by default: abilities (`warlock_core::ability`), which the
-/// abilities menu (#156) lists instead of a key each; `f` (fire), which `t` covers; Quit, done
-/// from the pause menu; the previous target and the previous info page, which Shift with the
-/// next one's key picks; and Back (in menus and in text fields) and skipping the rest at
+/// abilities menu (#156) lists instead of a key each; Fire, which the Missile command's `t`
+/// (ADOM's shoot/throw key, #350) covers; Talents; the previous target and the previous info
+/// page, which Shift with the next one's key picks; and Back (in menus and in text fields) and skipping the rest at
 /// `--more--`, which Esc always does. The player may bind one in Controls.
 pub const UNBOUND: &[KeyCommand] = &[
     KeyCommand::Bash,
@@ -144,7 +144,6 @@ pub const UNBOUND: &[KeyCommand] = &[
     KeyCommand::HoodLantern,
     KeyCommand::Fire,
     KeyCommand::Talents,
-    KeyCommand::Quit,
     KeyCommand::PrevTarget,
     KeyCommand::MoreSkip,
     KeyCommand::PrevPage,
@@ -580,6 +579,20 @@ impl Bindings {
                 bindings.set_keys(command, keys);
             }
         }
+        // The file's keys win over the defaults of the commands it does not list (a command new
+        // since it was written, or one given a default key since, as Quit got `S`, #350): such a
+        // command loses a default key a listed command of its context has. The file's own keys
+        // are never rewritten.
+        let listed = |c: &KeyCommand| c.id().is_some_and(|id| table.contains_key(id));
+        let claimed: Vec<(Context, KeyBinding)> = (bindings.0.iter())
+            .filter(|(_, c)| listed(c))
+            .map(|(k, c)| (c.context(), k.clone()))
+            .collect();
+        bindings.0.retain(|(k, c)| {
+            listed(c)
+                || !REBINDABLE.contains(c)
+                || !claimed.iter().any(|(cc, ck)| *cc == c.context() && ck == k)
+        });
         // A key may belong to one command only: later users lose it.
         for (key, first, second) in bindings.conflicts() {
             warnings.push(format!(
@@ -677,17 +690,18 @@ mod tests {
     #[test]
     fn moving_a_key_keeps_the_old_commands_other_keys() {
         let mut b = Bindings::default();
-        let got = b.bind_primary(KeyCommand::Wait, ch("k")).unwrap();
+        let up = KeyBinding::Code(KeyCode::ArrowUp);
+        let got = b.bind_primary(KeyCommand::Wait, up.clone()).unwrap();
         assert_eq!(
             got,
             Bound::Moved {
-                key: ch("k"),
+                key: up.clone(),
                 from: KeyCommand::Move(Dir::N),
                 keyless: false
             }
         );
-        assert_eq!(b.keys_of(KeyCommand::Move(Dir::N)).len(), 2);
-        assert_eq!(b.owner(&ch("k")), Some(KeyCommand::Wait));
+        assert_eq!(b.keys_of(KeyCommand::Move(Dir::N)).len(), 1);
+        assert_eq!(b.owner(&up), Some(KeyCommand::Wait));
         assert!(b.conflicts().is_empty());
     }
 
@@ -729,7 +743,7 @@ mod tests {
     #[test]
     fn a_keyless_command_survives_a_save_and_load() {
         let mut b = Bindings::default();
-        b.bind_primary(KeyCommand::Wait, ch("K")).unwrap();
+        b.bind_primary(KeyCommand::Wait, ch("k")).unwrap();
         assert!(b.keys_of(KeyCommand::Kick).is_empty());
         let text = toml::to_string(&b.to_map()).unwrap();
         let table: toml::Table = toml::from_str(&text).unwrap();
@@ -739,7 +753,7 @@ mod tests {
         assert!(back.keys_of(KeyCommand::Kick).is_empty());
         assert_eq!(back.to_map(), b.to_map());
         // Commands unbound by default stay out of the file.
-        assert!(!b.to_map().contains_key("quit"));
+        assert!(!b.to_map().contains_key("talents"));
     }
 
     #[test]
@@ -751,7 +765,7 @@ mod tests {
             .iter()
             .map(|k| k.to_text())
             .collect();
-        assert_eq!(keys, ["w", "Numpad8", "ArrowUp"]);
+        assert_eq!(keys, ["w", "ArrowUp"]);
         assert!(b.conflicts().is_empty());
         // Choosing an alternate promotes it to primary.
         b.bind_primary(KeyCommand::Move(Dir::N), KeyBinding::Code(KeyCode::ArrowUp))
@@ -760,7 +774,7 @@ mod tests {
             b.keys_of(KeyCommand::Move(Dir::N))[0],
             &KeyBinding::Code(KeyCode::ArrowUp)
         );
-        assert_eq!(b.keys_of(KeyCommand::Move(Dir::N)).len(), 3);
+        assert_eq!(b.keys_of(KeyCommand::Move(Dir::N)).len(), 2);
     }
 
     #[test]
@@ -780,7 +794,7 @@ mod tests {
         let table: toml::Table = toml::from_str(
             r#"
             wait = ["w", "Numpad5"]
-            open = ["k"]
+            look = ["w"]
             close = ["Banana", 7]
             ghost = ["x"]
             help = "?"
@@ -790,15 +804,41 @@ mod tests {
         let mut warnings = Vec::new();
         let b = Bindings::from_table(&table, &mut warnings);
         assert_eq!(b.keys_of(KeyCommand::Wait)[0], &ch("w"));
-        // `k` stays with Move north; Open falls back to its default.
-        assert_eq!(b.owner(&ch("k")), Some(KeyCommand::Move(Dir::N)));
-        assert_eq!(b.keys_of(KeyCommand::Open), vec![&ch("o")]);
+        // `w` stays with Wait; Look falls back to its default.
+        assert_eq!(b.owner(&ch("w")), Some(KeyCommand::Wait));
+        assert_eq!(b.keys_of(KeyCommand::Look), vec![&ch("l")]);
         assert_eq!(b.keys_of(KeyCommand::Close), vec![&ch("c")]);
         assert_eq!(b.keys_of(KeyCommand::Help), vec![&ch("?")]);
         assert!(b.conflicts().is_empty());
         for needle in ["ghost", "used by both", "bindings.close", "bindings.help"] {
             assert!(warnings.iter().any(|w| w.contains(needle)), "{needle}");
         }
+    }
+
+    #[test]
+    fn an_old_files_keys_win_over_new_defaults() {
+        // A file written before #350: the old keys, and no `quit` (unbound then). Its keys stay
+        // the player's own; Quit, unlisted, gives up its new default `S` to Skills.
+        let table: toml::Table = toml::from_str(
+            r#"
+            move_n = ["k", "Numpad8", "ArrowUp"]
+            kick = ["K"]
+            look = ["x"]
+            skills = ["S"]
+            "#,
+        )
+        .unwrap();
+        let mut warnings = Vec::new();
+        let b = Bindings::from_table(&table, &mut warnings);
+        assert!(warnings.is_empty(), "{warnings:?}");
+        assert_eq!(b.owner(&ch("k")), Some(KeyCommand::Move(Dir::N)));
+        assert_eq!(b.keys_of(KeyCommand::Kick), vec![&ch("K")]);
+        assert_eq!(b.keys_of(KeyCommand::Look), vec![&ch("x")]);
+        assert_eq!(b.keys_of(KeyCommand::Skills), vec![&ch("S")]);
+        assert!(b.keys_of(KeyCommand::Quit).is_empty());
+        // Commands it does not list and nobody took a key from have the new defaults.
+        assert_eq!(b.keys_of(KeyCommand::Equipment), vec![&ch("i")]);
+        assert!(b.conflicts().is_empty());
     }
 
     #[test]

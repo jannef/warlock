@@ -563,7 +563,7 @@ const CASES: &[Case] = &[
         name: "shop-leaving",
         scenario: "courtyard",
         actions: concat!(shop!(), " move:E move:NE pickup move:W move:SW"),
-        keys: Some("h"),
+        keys: Some("Left"),
         ..BASE
     },
     Case {
