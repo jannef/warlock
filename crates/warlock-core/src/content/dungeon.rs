@@ -36,12 +36,31 @@
 //! size = [120, 60]              # default: the branch's size
 //! temperature = 7               # default: the branch's temperature
 //! danger = { base = 9, per_depth = 2 }   # default: the branch's (which it needs)
+//! room_effects = { chance = 40 } # default: the branch's (below), field by field
+//!
+//! [dungeon.room_effects]        # optional: the branch's own special-room odds
+//! chance = 25                   # percent a room is special; default the shared `chance`
+//! per_level = 2                 # at most this many a level (1 to 8); default the shared
+//! effects = ["flooded"]         # ids in room_effects.toml, picked uniformly; default all
+//!
+//! [dungeon.shops]               # optional: the branch's own shop odds
+//! chance = 100                  # percent of rooms levels with a shop; default the shared
+//! kinds = ["general_store"]     # ids in shops.toml, picked uniformly; default all
+//! names = ["Durin"]             # the keepers' names; default the shared `names`
+//! keeper = "shopkeeper"         # the keepers' creature type; default the shared `[keeper]`'s
 //! ```
+//!
+//! A branch without the tables gets the shared odds of `room_effects.toml` and `shops.toml`
+//! ([`RoomOdds::shared`], [`ShopOdds::shared`]), resolved here once per depth
+//! ([`DungeonDef::room_odds`], [`DungeonDef::shop_odds`]); the generators draw the same way
+//! whichever odds they read, so a branch without the tables generates what it did before them.
 
 use super::ContentError;
 use super::creature::CreatureId;
 use super::danger::{CountSpec, DangerRule, DangerSpec, SpawnSpec, Spawning, SpawningSpec};
 use super::object::ObjectId;
+use super::room_effect::{RoomEffectId, RoomEffects};
+use super::shop::{ShopId, Shops};
 use super::trap::TrapId;
 use crate::light::Light;
 use crate::temperature::{LEVEL_TEMPERATURES, Temperature};
@@ -112,8 +131,207 @@ struct DungeonSpec {
     population_count: Option<CountSpec>,
     out_of_depth: Option<u8>,
     spawn: Option<SpawnSpec>,
+    room_effects: Option<RoomOddsSpec>,
+    shops: Option<ShopOddsSpec>,
     #[serde(default)]
     levels: Vec<LevelsSpec>,
+}
+
+/// A branch's (or a range of its depths') `room_effects` table: each field left out falls back
+/// to the branch's table, then to the shared `room_effects.toml`.
+#[derive(Clone, Debug, Default, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RoomOddsSpec {
+    chance: Option<u8>,
+    per_level: Option<u8>,
+    effects: Option<Vec<String>>,
+}
+
+/// A branch's (or a range of its depths') `shops` table, falling back as [`RoomOddsSpec`] does.
+#[derive(Clone, Debug, Default, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ShopOddsSpec {
+    chance: Option<u8>,
+    kinds: Option<Vec<String>>,
+    names: Option<Vec<String>>,
+    keeper: Option<String>,
+}
+
+/// The most special rooms a branch may give a level.
+const MAX_ROOMS_PER_LEVEL: u8 = 8;
+
+/// How often a generated level's rooms are special, and with which effects (spec §7 "Special
+/// rooms"): the shared odds of `room_effects.toml` or a branch's own.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RoomOdds {
+    /// Percent per room (each of a cave's chambers) to be special.
+    pub chance: u8,
+    /// At most this many special rooms a level.
+    pub per_level: u8,
+    /// The effects a special room gets, picked uniformly.
+    pub effects: Vec<RoomEffectId>,
+}
+
+impl RoomOdds {
+    /// The shared odds: `room_effects.toml`'s `chance` and `per_level`, every effect in file
+    /// order (so the uniform pick draws what it did before branches had odds of their own).
+    pub fn shared(rooms: &RoomEffects) -> Self {
+        Self {
+            chance: rooms.chance,
+            per_level: rooms.per_level,
+            effects: (0..rooms.defs().len())
+                .filter_map(|i| u8::try_from(i).ok().map(RoomEffectId))
+                .collect(),
+        }
+    }
+
+    /// Whether levels with these odds get special rooms at all.
+    pub fn generated(&self) -> bool {
+        self.chance > 0 && self.per_level > 0 && !self.effects.is_empty()
+    }
+}
+
+/// How often a generated rooms level has a shop, of which kinds, and who keeps it (spec §7
+/// "Shops"): the shared odds of `shops.toml` or a branch's own.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ShopOdds {
+    /// Percent of rooms levels (with a fitting room) with a shop.
+    pub chance: u8,
+    /// The kinds a shop may be, picked uniformly.
+    pub kinds: Vec<ShopId>,
+    /// The keepers' names, picked uniformly.
+    pub names: Vec<String>,
+    /// The keepers' creature type (each carries, wields, and wears the shared `[keeper]`'s kit).
+    pub keeper: CreatureId,
+}
+
+impl ShopOdds {
+    /// The shared odds: `shops.toml`'s `chance`, every kind in file order, its `names`, and its
+    /// `[keeper]`'s creature.
+    pub fn shared(shops: &Shops) -> Self {
+        Self {
+            chance: shops.chance,
+            kinds: (0..shops.defs().len())
+                .filter_map(|i| u8::try_from(i).ok().map(ShopId))
+                .collect(),
+            names: shops.names.clone(),
+            keeper: shops.keeper.creature,
+        }
+    }
+
+    /// Whether levels with these odds get shops at all.
+    pub fn generated(&self) -> bool {
+        self.chance > 0 && !self.kinds.is_empty() && !self.names.is_empty()
+    }
+}
+
+/// A percent from data: 0 to 100.
+fn check_percent(chance: Option<u8>) -> Result<(), String> {
+    match chance {
+        Some(c) if c > 100 => Err(format!("chance {c} is a percent: 0 to 100")),
+        _ => Ok(()),
+    }
+}
+
+impl RoomOddsSpec {
+    /// A depth's table: `over`'s fields (its `[[dungeon.levels]]` entry), else `branch`'s.
+    fn layer(over: Option<&Self>, branch: Option<&Self>) -> Self {
+        let over = over.cloned().unwrap_or_default();
+        let branch = branch.cloned().unwrap_or_default();
+        Self {
+            chance: over.chance.or(branch.chance),
+            per_level: over.per_level.or(branch.per_level),
+            effects: over.effects.or(branch.effects),
+        }
+    }
+
+    /// The odds, the shared ones filling in what the table leaves out.
+    fn resolve(self, rooms: &RoomEffects) -> Result<RoomOdds, String> {
+        let given = self.chance.is_some() || self.per_level.is_some() || self.effects.is_some();
+        let shared = RoomOdds::shared(rooms);
+        check_percent(self.chance)?;
+        if self
+            .per_level
+            .is_some_and(|n| !(1..=MAX_ROOMS_PER_LEVEL).contains(&n))
+        {
+            return Err(format!("per_level must be 1 to {MAX_ROOMS_PER_LEVEL}"));
+        }
+        let effects = match self.effects {
+            Some(names) => (names.iter())
+                .map(|e| {
+                    (rooms.id(e)).ok_or_else(|| format!("unknown effect `{e}` (room_effects.toml)"))
+                })
+                .collect::<Result<Vec<_>, _>>()?,
+            None => shared.effects,
+        };
+        let odds = RoomOdds {
+            chance: self.chance.unwrap_or(shared.chance),
+            per_level: self.per_level.unwrap_or(shared.per_level),
+            effects,
+        };
+        if given && odds.chance > 0 && odds.effects.is_empty() {
+            return Err("`effects` must name at least one effect while `chance` is above 0".into());
+        }
+        Ok(odds)
+    }
+}
+
+impl ShopOddsSpec {
+    /// A depth's table: `over`'s fields (its `[[dungeon.levels]]` entry), else `branch`'s.
+    fn layer(over: Option<&Self>, branch: Option<&Self>) -> Self {
+        let over = over.cloned().unwrap_or_default();
+        let branch = branch.cloned().unwrap_or_default();
+        Self {
+            chance: over.chance.or(branch.chance),
+            kinds: over.kinds.or(branch.kinds),
+            names: over.names.or(branch.names),
+            keeper: over.keeper.or(branch.keeper),
+        }
+    }
+
+    /// The odds, the shared ones filling in what the table leaves out; `creature_id` resolves
+    /// the keeper's creature type.
+    fn resolve(
+        self,
+        shops: &Shops,
+        creature_id: impl Fn(&str) -> Option<CreatureId>,
+    ) -> Result<ShopOdds, String> {
+        let given = self.chance.is_some()
+            || self.kinds.is_some()
+            || self.names.is_some()
+            || self.keeper.is_some();
+        let shared = ShopOdds::shared(shops);
+        check_percent(self.chance)?;
+        let kinds = match self.kinds {
+            Some(names) => (names.iter())
+                .map(|k| {
+                    shops
+                        .id(k)
+                        .ok_or_else(|| format!("unknown shop `{k}` (shops.toml)"))
+                })
+                .collect::<Result<Vec<_>, _>>()?,
+            None => shared.kinds,
+        };
+        if self.names.iter().flatten().any(|n| n.trim().is_empty()) {
+            return Err("`names` must not be empty".into());
+        }
+        let keeper = match self.keeper {
+            Some(k) => (creature_id(&k))
+                .filter(|_| k != "player")
+                .ok_or_else(|| format!("unknown keeper creature `{k}`"))?,
+            None => shared.keeper,
+        };
+        let odds = ShopOdds {
+            chance: self.chance.unwrap_or(shared.chance),
+            kinds,
+            names: self.names.unwrap_or(shared.names),
+            keeper,
+        };
+        if given && odds.chance > 0 && (odds.kinds.is_empty() || odds.names.is_empty()) {
+            return Err("`kinds` and `names` must not be empty while `chance` is above 0".into());
+        }
+        Ok(odds)
+    }
 }
 
 /// How many traps a level gets unless its branch says otherwise: 2 to 4.
@@ -136,6 +354,8 @@ struct LevelsSpec {
     size: Option<[i32; 2]>,
     temperature: Option<i8>,
     danger: Option<DangerSpec>,
+    room_effects: Option<RoomOddsSpec>,
+    shops: Option<ShopOddsSpec>,
 }
 
 /// How one level of a branch is generated.
@@ -184,6 +404,10 @@ pub struct DungeonDef {
     pub spawning: Option<Spawning>,
     /// One plan per depth, index `depth - 1`.
     plans: Vec<LevelPlan>,
+    /// The special-room odds per depth, index `depth - 1`.
+    room_odds: Vec<RoomOdds>,
+    /// The shop odds per depth, index `depth - 1`; empty without `shops.toml`.
+    shop_odds: Vec<ShopOdds>,
 }
 
 impl DungeonDef {
@@ -191,6 +415,18 @@ impl DungeonDef {
     pub fn plan(&self, depth: u32) -> Option<LevelPlan> {
         let i = usize::try_from(depth.checked_sub(1)?).ok()?;
         self.plans.get(i).copied()
+    }
+
+    /// The special-room odds of level `depth` (1-based), if the branch has that level.
+    pub fn room_odds(&self, depth: u32) -> Option<&RoomOdds> {
+        self.room_odds
+            .get(usize::try_from(depth.checked_sub(1)?).ok()?)
+    }
+
+    /// The shop odds of level `depth` (1-based); `None` without `shops.toml`.
+    pub fn shop_odds(&self, depth: u32) -> Option<&ShopOdds> {
+        self.shop_odds
+            .get(usize::try_from(depth.checked_sub(1)?).ok()?)
     }
 
     /// The level id of `depth`, e.g. `depths:3`.
@@ -234,13 +470,16 @@ pub fn parse_branch_level(id: &str) -> Option<(&str, u32)> {
 
 impl DungeonFile {
     /// Validates every branch; `creature_id` resolves creature names (with their levels),
-    /// `key_id` the names of keys (objects that open a lock), `trap_id` trap names.
+    /// `key_id` the names of keys (objects that open a lock), `trap_id` trap names; `rooms` and
+    /// `shops` are the shared special-room and shop odds a branch's own tables fall back to.
     pub(super) fn resolve(
         self,
         file: &str,
         creature_id: impl Fn(&str) -> Option<(CreatureId, u8)>,
         key_id: impl Fn(&str) -> Option<ObjectId>,
         trap_id: impl Fn(&str) -> Option<TrapId>,
+        rooms: &RoomEffects,
+        shops: Option<&Shops>,
     ) -> Result<Vec<DungeonDef>, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let mut defs: Vec<DungeonDef> = Vec::new();
@@ -289,6 +528,7 @@ impl DungeonFile {
             .map_err(|m| err(format!("dungeon `{id}`: {m}")))?;
             let branch_danger = spawning.as_ref().map(|(rule, _)| *rule);
             let mut plans = Vec::new();
+            let (mut room_odds, mut shop_odds) = (Vec::new(), Vec::new());
             for depth in 1..=spec.depth {
                 let over = spec
                     .levels
@@ -329,6 +569,30 @@ impl DungeonFile {
                     temperature: temperature.map(|c| Temperature::degrees(c.into())),
                     danger,
                 });
+                let room_spec = RoomOddsSpec::layer(
+                    over.and_then(|l| l.room_effects.as_ref()),
+                    spec.room_effects.as_ref(),
+                );
+                room_odds.push(
+                    room_spec
+                        .resolve(rooms)
+                        .map_err(|m| err(format!("dungeon `{id}`: room_effects: {m}")))?,
+                );
+                let shop_spec =
+                    ShopOddsSpec::layer(over.and_then(|l| l.shops.as_ref()), spec.shops.as_ref());
+                match shops {
+                    Some(shops) => shop_odds.push(
+                        shop_spec
+                            .resolve(shops, |name| creature_id(name).map(|(id, _)| id))
+                            .map_err(|m| err(format!("dungeon `{id}`: shops: {m}")))?,
+                    ),
+                    None if spec.shops.is_some() || over.is_some_and(|l| l.shops.is_some()) => {
+                        return Err(err(format!(
+                            "dungeon `{id}`: `shops` needs data/shops.toml"
+                        )));
+                    }
+                    None => {}
+                }
             }
             for l in &spec.levels {
                 let to = l.to.unwrap_or(l.from);
@@ -402,6 +666,8 @@ impl DungeonFile {
                 key,
                 spawning: spawning.map(|(_, s)| s),
                 plans,
+                room_odds,
+                shop_odds,
             });
         }
         Ok(defs)
@@ -420,7 +686,92 @@ mod tests {
             |c| (c == "rat").then_some((CreatureId(1), 1)),
             |k| (k == "key").then_some(ObjectId(2)),
             |t| (t == "pit").then_some(TrapId(0)),
+            &rooms(),
+            None,
         )
+    }
+
+    /// Three effects, a 7 % chance, one a level.
+    fn rooms() -> RoomEffects {
+        let effect = |id: &str, mark: char| {
+            format!(
+                "[[effect]]\nid = \"{id}\"\nname = \"{id}\"\nmark = \"{mark}\"\nenter = \"In.\"\n"
+            )
+        };
+        let text = format!(
+            "chance = 7\nper_level = 1\n{}{}{}",
+            effect("hushed", 'h'),
+            effect("shadowed", 's'),
+            effect("echoing", 'e')
+        );
+        RoomEffects::parse("r", &text, |_| None).expect("room effects")
+    }
+
+    #[test]
+    fn branches_and_depths_set_their_special_room_odds() {
+        let base = "[[dungeon]]\nid = \"a\"\ngenerator = \"rooms\"\ndepth = 4\nsize = [80, 21]\n";
+        let shared = resolve(base).unwrap();
+        for depth in 1..=4 {
+            assert_eq!(
+                shared[0].room_odds(depth),
+                Some(&RoomOdds::shared(&rooms())),
+                "no table: the shared odds"
+            );
+        }
+        assert_eq!(shared[0].room_odds(5), None);
+        assert_eq!(shared[0].shop_odds(1), None, "no shops.toml");
+        let own = resolve(&format!(
+            "{base}room_effects = {{ chance = 25, per_level = 2, effects = [\"echoing\"] }}\n\
+             [[dungeon.levels]]\nfrom = 3\nto = 4\nroom_effects = {{ effects = [\"hushed\", \
+             \"shadowed\"] }}\n"
+        ))
+        .unwrap();
+        let odds = |depth| own[0].room_odds(depth).cloned().unwrap();
+        assert_eq!(
+            odds(1),
+            RoomOdds {
+                chance: 25,
+                per_level: 2,
+                effects: vec![RoomEffectId(2)]
+            }
+        );
+        // A depth's table overrides the branch's field by field.
+        assert_eq!(
+            odds(3),
+            RoomOdds {
+                chance: 25,
+                per_level: 2,
+                effects: vec![RoomEffectId(0), RoomEffectId(1)]
+            }
+        );
+        let only_chance = resolve(&format!("{base}room_effects = {{ chance = 40 }}\n")).unwrap();
+        let odds = only_chance[0].room_odds(2).unwrap();
+        assert_eq!(
+            (odds.chance, odds.per_level, odds.effects.len()),
+            (40, 1, 3)
+        );
+        for (bad, says) in [
+            ("room_effects = { chance = 101 }\n", "percent"),
+            ("room_effects = { per_level = 0 }\n", "per_level"),
+            ("room_effects = { per_level = 9 }\n", "per_level"),
+            (
+                "room_effects = { effects = [\"lava\"] }\n",
+                "unknown effect",
+            ),
+            ("room_effects = { effects = [] }\n", "at least one"),
+            ("room_effects = { odds = 3 }\n", "unknown field"),
+            ("shops = { chance = 0 }\n", "shops.toml"),
+        ] {
+            let e = resolve(&format!("{base}{bad}")).unwrap_err().message;
+            assert!(e.contains(says), "{bad}: {e}");
+        }
+        // No chance needs no effects.
+        assert!(
+            resolve(&format!(
+                "{base}room_effects = {{ chance = 0, effects = [] }}\n"
+            ))
+            .is_ok()
+        );
     }
 
     #[test]

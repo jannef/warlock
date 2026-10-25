@@ -468,6 +468,96 @@ fn shops_come_about_one_level_in_seven() {
     assert!(by_kind.iter().all(|n| *n > 5), "{by_kind:?}");
 }
 
+/// The built-in content plus two branches with odds of their own (spec §7 "Shops", "Special
+/// rooms"): one whose special rooms are only ever flooded and that has no shops, rooms on top
+/// and caves below; one that always tries for a general store kept by a kobold, Durin, and has
+/// no special rooms.
+static FIXTURE: LazyLock<Content> = LazyLock::new(|| {
+    let mut files = ContentFiles::builtin();
+    let fixture = "\n\
+         [[dungeon]]\nid = \"fixture_flooded\"\ngenerator = \"rooms\"\ndepth = 2\n\
+         size = [80, 21]\n\
+         room_effects = { chance = 60, per_level = 3, effects = [\"flooded\"] }\n\
+         shops = { chance = 0 }\n\
+         [[dungeon.levels]]\nfrom = 2\ngenerator = \"caves\"\nsize = [100, 40]\n\
+         [[dungeon]]\nid = \"fixture_traders\"\ngenerator = \"rooms\"\ndepth = 1\n\
+         size = [80, 21]\nroom_effects = { chance = 0 }\n\
+         shops = { chance = 100, kinds = [\"general_store\"], names = [\"Durin\"], \
+         keeper = \"kobold\" }\n";
+    // Appended once, to the first of the table's files.
+    let mut once = Some(fixture);
+    files.edit_table("dungeons", |text| {
+        format!("{text}{}", once.take().unwrap_or_default())
+    });
+    Content::load(&files).expect("fixture content")
+});
+
+/// A branch's own `room_effects` replace the shared odds: only its effects, as many a level as
+/// its `per_level`; and `shops = { chance = 0 }` means never a shop.
+#[test]
+fn a_branch_with_flooded_rooms_only_makes_flooded_rooms_and_no_shops() {
+    let flooded = FIXTURE.room_effects().id("flooded").expect("flooded");
+    let (mut levels_with, mut most, mut by_depth) = (0, 0, [0; 2]);
+    for seed in 0..60 {
+        for depth in 1..=2 {
+            let id = format!("fixture_flooded:{depth}");
+            let level = generate(&FIXTURE, seed, &id, None).expect("generates");
+            assert!(level.shops.is_empty(), "seed {seed}: {id} has a shop");
+            assert!(level.rooms.iter().all(|r| r.effect == flooded), "{id}");
+            assert!(level.rooms.len() <= 3, "{id}: per_level");
+            if !level.rooms.is_empty() {
+                levels_with += 1;
+                by_depth[depth as usize - 1] += 1;
+            }
+            most = most.max(level.rooms.len());
+        }
+    }
+    assert!(levels_with > 90, "{levels_with} of 120 levels have one");
+    assert!(
+        by_depth.iter().all(|n| *n > 30),
+        "rooms and caves: {by_depth:?}"
+    );
+    assert!(most > 1, "more than one a level");
+}
+
+/// A branch's own `shops`: its kind, its keepers' names and creature, and its chance; and
+/// `room_effects = { chance = 0 }` means never a special room.
+#[test]
+fn a_branch_with_traders_keeps_its_own_shops() {
+    let shops = FIXTURE.shops().expect("shops");
+    let store = shops.id("general_store").expect("general store");
+    let kobold = FIXTURE.creature_id("kobold").expect("kobold");
+    let mut with_shop = 0;
+    for seed in 0..60 {
+        let level = generate(&FIXTURE, seed, "fixture_traders:1", None).expect("generates");
+        assert!(level.rooms.is_empty(), "seed {seed}: a special room");
+        let Some(shop) = level.shops.first() else {
+            continue;
+        };
+        with_shop += 1;
+        assert_eq!((shop.kind, shop.keeper.as_str()), (store, "Durin"));
+        let keeper = (level.creatures.iter())
+            .find(|c| c.pos == shop.post)
+            .expect("a keeper at the post");
+        assert_eq!(keeper.creature, kobold);
+        assert_eq!(keeper.carry, shops.keeper.carry, "the shared keeper's kit");
+    }
+    assert!(with_shop > 40, "{with_shop} of 60 levels have a shop");
+}
+
+/// The odds a branch without tables reads are the shared ones, so the Depths generate as they
+/// did before branches had odds of their own (the snapshots above hold the maps).
+#[test]
+fn branches_without_tables_read_the_shared_odds() {
+    let depths = CONTENT.dungeon("depths").expect("the Depths");
+    let shared_rooms = crate::content::RoomOdds::shared(CONTENT.room_effects());
+    let shared_shops = crate::content::ShopOdds::shared(CONTENT.shops().expect("shops"));
+    for depth in 1..=depths.depth {
+        assert_eq!(depths.room_odds(depth), Some(&shared_rooms));
+        assert_eq!(depths.shop_odds(depth), Some(&shared_shops));
+    }
+}
+
 /// What a generated shop promises (see `shop.rs`).
 fn check_shop(level: &LevelTemplate, shop: &ShopPlan) {
     let shops = CONTENT.shops().expect("shops");

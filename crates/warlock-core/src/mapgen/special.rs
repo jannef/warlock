@@ -1,8 +1,9 @@
 //! Special rooms in generated levels (spec §7 "Special rooms").
 //!
 //! Each room of a rooms level (but the arrival room and vaults), and each of [`CAVE_CHAMBERS`]
-//! chambers a cave level tries, is special with the content's `chance`, until the level has
-//! `per_level` of them; the effect is picked uniformly. A rooms level's special room is the room
+//! chambers a cave level tries, is special with the branch's `chance` (its `room_effects` table,
+//! else the shared one: `Canvas::room_odds`), until the level has `per_level` of them; the
+//! effect is picked uniformly among the branch's `effects`. A rooms level's special room is the room
 //! with its walls and doors; a cave's is a blob of its floor ([`chamber`]) with the rock around
 //! it. The effect's floor, if it has one (a flooded room's shallow water), is laid over the
 //! plain floor in it (doorways too). A room whose effect creatures shun (a sanctuary) is never one
@@ -28,15 +29,14 @@ const AWAY: i32 = 10;
 /// Rolls whether the next room or chamber is special and with what effect: `None` when the
 /// level has as many special rooms as it may get, or the roll fails.
 pub(super) fn roll(canvas: &Canvas, rng: &mut Rng) -> Option<RoomEffectId> {
-    let effects = canvas.content.room_effects();
-    if !effects.generated() || canvas.rooms.len() >= usize::from(effects.per_level) {
+    let odds = canvas.room_odds;
+    if !odds.generated() || canvas.rooms.len() >= usize::from(odds.per_level) {
         return None;
     }
-    if !rng.chance(u32::from(effects.chance)) {
+    if !rng.chance(u32::from(odds.chance)) {
         return None;
     }
-    let index = rng.index(effects.defs().len());
-    Some(RoomEffectId(u8::try_from(index).ok()?))
+    odds.effects.get(rng.index(odds.effects.len())).copied()
 }
 
 /// Makes `room` special, laying its effect's floor over the plain floor in it: unless it

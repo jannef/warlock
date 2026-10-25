@@ -73,3 +73,67 @@ pub(super) fn special_rooms(content: &Content) -> String {
     }
     out
 }
+
+/// Each branch's special-room and shop odds (spec §7 "Special rooms", "Shops"), its depths with
+/// the same odds in one row, branches by name: the chance a room is special, how many a level
+/// may get, which rooms, the chance a rooms-and-corridors level has a shop (if it has a room
+/// that fits), its kinds, and who keeps it.
+pub(super) fn branch_odds(content: &Content) -> String {
+    let mut out = String::from(
+        "| Levels | A room is special | At most a level | Special rooms | A shop | Shops | Kept by |\n\
+         |---|:---:|:---:|---|:---:|---|---|\n",
+    );
+    let none = || ("never".to_string(), "—".to_string(), "—".to_string());
+    let mut branches: Vec<_> = content.dungeons().collect();
+    branches.sort_by(|a, b| a.name.cmp(&b.name));
+    for def in branches {
+        let odds = |depth| (def.room_odds(depth), def.shop_odds(depth));
+        let mut from = 1;
+        for depth in 1..=def.depth {
+            if depth < def.depth && odds(depth + 1) == odds(depth) {
+                continue;
+            }
+            let levels = if from == depth {
+                def.level_name(depth)
+            } else {
+                format!("{} {from}–{depth}", def.name)
+            };
+            from = depth + 1;
+            let (Some(rooms), shops) = odds(depth) else {
+                continue;
+            };
+            let (chance, most, effects) = if rooms.generated() {
+                let effects: Vec<String> = (rooms.effects.iter())
+                    .map(|e| capital(&content.room_effect(*e).name))
+                    .collect();
+                (
+                    format!("{}%", rooms.chance),
+                    rooms.per_level.to_string(),
+                    effects.join(", "),
+                )
+            } else {
+                none()
+            };
+            let (shop, kinds, keeper) = match (shops, content.shops()) {
+                (Some(s), Some(all)) if s.generated() => {
+                    let kinds = if s.kinds.len() == all.defs().len() {
+                        "Any".to_string()
+                    } else {
+                        (s.kinds.iter())
+                            .map(|k| all.get(*k).name.clone())
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    };
+                    let keeper = capital(&content.creature(s.keeper).name);
+                    (format!("{}%", s.chance), kinds, keeper)
+                }
+                _ => none(),
+            };
+            let _ = writeln!(
+                out,
+                "| {levels} | {chance} | {most} | {effects} | {shop} | {kinds} | {keeper} |"
+            );
+        }
+    }
+    out
+}
