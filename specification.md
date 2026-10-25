@@ -30,7 +30,7 @@ next to the related ones, never at the end.
 - [`spec/08b-creatures.md`](spec/08b-creatures.md) — **8. Architecture (continued): creatures**: creature behavior, dialogue, quests, displacement
 - [`spec/08c-combat.md`](spec/08c-combat.md) — **8. Architecture (continued): combat**: combat, experience, stances, ranged combat
 - [`spec/08d-traps-doors-digging.md`](spec/08d-traps-doors-digging.md) — **8. Architecture (continued): traps, doors, digging**: traps, doors, searching, digging
-- [`spec/08e-blood-and-status.md`](spec/08e-blood-and-status.md) — **8. Architecture (continued): blood, status effects, healing, mana, checks, diseases**: blood, status effects, healing, mana, checks, diseases
+- [`spec/08e-blood-and-status.md`](spec/08e-blood-and-status.md) — **8. Architecture (continued): blood, status effects, healing, mana, resources, checks, diseases**: blood, status effects, healing, mana, resources, checks, diseases
 - [`spec/08f-stats-and-burden.md`](spec/08f-stats-and-burden.md) — **8. Architecture (continued): stats and burden**: stats, burden
 - [`spec/08g-magic-items.md`](spec/08g-magic-items.md) — **8. Architecture (continued): magic items**: magic items: affixes, rarities, loot, identification
 - [`spec/08h-hunger.md`](spec/08h-hunger.md) — **8. Architecture (continued): hunger**: hunger, eating, corpses

@@ -502,6 +502,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
   electricity, acid, poison. The status effects (`data/status.toml`, §8 "Status effects") name
   the kinds that wound (`wound.from = ["slashing", "piercing"]`: bleeding; none named: any) and
   the kind a status is (`damage_type = "poison"`: poisoned).
+- **Resources** (`data/resources.toml`, optional; without it there are none; #225, §8
+  "Resources"): an ordered list of `[[resource]]`s, each with `id`, `name` (the character
+  screen's), `short` (the status bar's label, at most 12 characters), `max` (1 to 1000), `start`
+  (what it holds when granted; default `max`; at most `max`, above 0 for one that ends at zero),
+  `show_max` (the status bar shows `Focus 7/10` rather than `Rage 7`; default true),
+  `regenerates` or `decays` (a point back, or lost, every that many seconds of game time, 1 to
+  86400; at most one of the two), `resting` (it changes over time while the player rests;
+  default true), `ends_at_zero` (default false), `ended` (what the player is told when it ends;
+  needs `ends_at_zero`), and `builds` (`[{ on = "kill", amount = 5 }]`, each event once, amounts
+  1 to 1000; events `kill`, `hit`, `critical`, `struck`, `sneak_attack`). Ids are indices (in
+  the content fingerprint), so a new resource is a new entry. Built in, the progression design's
+  first guesses (§4.18): Rage, Focus, Openings, Ki, Inspiration. A class active (a talent of the
+  class tree with an active effect) may cost one: `resource = { id = "focus", cost = 6 }` (0
+  asks only that it is held; at most its `max`).
 - **Weapon skills** (`data/weapon_skills.toml`, optional; without it nobody has weapon skills and
   weapons name none; M22, §8 "Weapon skills"): `[marks]` (`attempt`, `hit`, `per_level`, at most
   1000, and `most`, a percent 100 to 1000), `[curves]` (named lists of the marks each rank asks

@@ -35,6 +35,7 @@ mod materials;
 mod moons;
 mod objects;
 mod order;
+mod resources;
 mod rooms;
 mod scenarios;
 mod scrolls;
@@ -213,6 +214,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("mana.md", mana::races_and_classes),
         ("mana-regeneration.md", mana::regeneration),
         ("mana-paces.md", mana::paces),
+        ("resources.md", resources::resources),
         ("experience-levels.md", experience::experience_levels),
         ("experience-factors.md", experience::experience_factors),
         ("experience-discovery.md", experience::experience_discovery),
@@ -910,6 +912,17 @@ mod tests {
         assert!(text("mana-regeneration.md").contains("| 10 | 4 minutes |"));
         assert!(text("mana.md").contains("| Wizard | 12 |"));
         assert!(text("mana-paces.md").contains("| In a sanctuary | three times as fast |"));
+        let resources = text("resources.md");
+        assert!(
+            resources.contains(
+                "| Rage | 20 | 12 | a point lost every 6 seconds | - | ends, and its bar goes |"
+            ),
+            "{resources}"
+        );
+        assert!(resources.contains(
+            "| Focus | 10 | 10 | a point back every 6 seconds, not while resting | - | stays, empty |"
+        ));
+        assert!(resources.contains("| +1 for a kill |"));
         let healing = text("healing.md");
         for row in [
             "| Resting (`R`) | twice as fast |",

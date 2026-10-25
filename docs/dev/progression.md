@@ -288,6 +288,11 @@ skill, trained or not; `talent:apprentice:stealth`, three ranks per skill), Trea
 first with an `either` prerequisite (`Need::Either`, "Intelligence 12 or Appraise 20"). The
 `talk` and `gems` systems stay pending until the racial talents (Diplomat, Gem lore) land.
 
+The `resources` system (#225, `docs/dev/resources.md`) is in the list as `pending`: the pools are
+in, and a class active may cost one (`resource = { id, cost }` on its talent), but its talents
+(Battle trance, Inner calm, Steady hand, Patient blade: R5) and the class features moving onto it
+(R1–R4) come later; R5 removes the flag.
+
 The damage-type talents (#248), Elemental ward (H2) and Crusher (H1), are the `damage_types`
 system's two, so it is no longer `pending`; `world/damage_talent_tests.rs` covers the ward
 against damage and status doses, its words on the character screen, Crusher by weapon kind, and
