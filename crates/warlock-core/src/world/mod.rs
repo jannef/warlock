@@ -716,7 +716,9 @@ impl World {
                 "the quests know `{id}`, which this content does not have"
             )));
         }
-        if let Some(id) = (state.revealed.iter()).find(|id| content.hidden_location(&state.campaign, id).is_none()) {
+        if let Some(id) = (state.revealed.iter())
+            .find(|id| content.hidden_location(&state.campaign, id).is_none())
+        {
             return Err(WorldError::InconsistentState(format!(
                 "hidden location `{id}` was revealed, which this content does not have"
             )));
