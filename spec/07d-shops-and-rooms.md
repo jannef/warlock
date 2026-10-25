@@ -129,6 +129,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
     About one level of the Depths in six gets one (a test keeps it between 11 and 20 % over
     1200 levels; 16 % now: rooms levels lock some of their single-door rooms, which never become
     shops, and neither does a room where a key was left).
+  - **A branch's own shops** (`shops` on a branch in `data/dungeons.toml`, or on a range of its
+    depths in `[[dungeon.levels]]`, which overrides the branch's table field by field): `chance`
+    (0 to 100), `kinds` (ids of kinds, the draw uniform among them), `names`, and `keeper` (a
+    creature type, the campaign's own allowed; it carries, wields, and wears the shared
+    `[keeper]`'s kit), each defaulting to `shops.toml`'s. `kinds` and `names` may not be empty
+    while `chance` is above 0. The draws are the same ones from the same stream, so a branch
+    without the table generates what it would without the setting; `shops = { chance = 0 }`
+    means none.
   - **Level files** mark shops with `[[shop]] kind = "general_store" keeper = "Grimbold" area =
     [x0, y0, x1, y1] post = [x, y]` (the shop floor, inclusive, inside the map, not overlapping
     another shop; the post walkable, on it, and where no creature or the player starts); the
@@ -171,6 +179,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the rock around it. The effect's `floor` replaces plain floor in it (doorways too). A shunned
     effect never goes where a creature patrols. About 40 % of generated levels get one (a test
     keeps it between a third and a half over 1200 levels).
+  - **A branch's own special rooms** (`room_effects` on a branch in `data/dungeons.toml`, or on a
+    range of its depths in `[[dungeon.levels]]`, overriding the branch's table field by field):
+    `chance` (0 to 100), `per_level` (1 to 8), and `effects` (ids, the pick uniform among them;
+    not empty while `chance` is above 0), each defaulting to `room_effects.toml`'s (`effects`:
+    every effect). The one chance roll and the one uniform pick are unchanged, so a branch
+    without the table generates the same map as before (the Depths' snapshots hold it).
   - **Level files** mark rooms with `[[room]] effect = "sanctuary" area = [x0, y0, x1, y1]`
     (inclusive, walls and doors included; inside the map; rooms never overlap; vaults mark none).
     A hand-made level draws its own floor (a flooded room's water). The hub's stairs nook is a

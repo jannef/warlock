@@ -1,5 +1,6 @@
 //! Shops in generated levels (spec §7 "Shops"): last of all, after special rooms, with the
-//! content's `chance` a rooms level turns one room into a shop, at most one a level. Like special
+//! branch's `chance` (its `shops` table, else the shared one: `Canvas::shop_odds`) a rooms level
+//! turns one room into a shop, at most one a level. Like special
 //! rooms it draws from the level's map stream after everything else, so a level without a shop is
 //! exactly the map it would be without them.
 //!
@@ -12,7 +13,7 @@
 //! cells), one a cell, each drawn uniformly from what it stocks, a stackable one in a bundle.
 
 use super::Canvas;
-use crate::content::{ObjectId, ShopId, ShopPlan};
+use crate::content::{ObjectId, ShopPlan};
 use crate::geom::{Dir, Pos};
 use crate::object::Stack;
 use crate::rng::Rng;
@@ -46,18 +47,18 @@ impl Candidate {
 
 /// Maybe makes one of `candidates` a shop (see the module docs).
 pub(super) fn place(canvas: &mut Canvas, rng: &mut Rng, candidates: &[Candidate]) {
-    let Some(shops) = canvas.content.shops().filter(|s| s.generated()) else {
+    let (Some(shops), Some(odds)) = (canvas.content.shops(), canvas.shop_odds) else {
         return;
     };
-    if !rng.chance(u32::from(shops.chance)) {
+    if !odds.generated() || !rng.chance(u32::from(odds.chance)) {
         return;
     }
     let fit: Vec<&Candidate> = candidates.iter().filter(|c| suits(canvas, c)).collect();
     let Some(&room) = rng.pick(&fit) else {
         return;
     };
-    let kind = ShopId(u8::try_from(rng.index(shops.defs().len())).unwrap_or(0));
-    let keeper = rng.pick(&shops.names).cloned().unwrap_or_default();
+    let kind = odds.kinds[rng.index(odds.kinds.len())];
+    let keeper = rng.pick(&odds.names).cloned().unwrap_or_default();
     let front = room.door.step(room.out.opposite());
     let beside = match room.out {
         Dir::N | Dir::S => [Dir::W, Dir::E],
@@ -97,7 +98,9 @@ pub(super) fn place(canvas: &mut Canvas, rng: &mut Rng, candidates: &[Candidate]
         };
         canvas.objects.insert(p, vec![Stack::new(object, count)]);
     }
-    canvas.creatures.push(shops.keeper_spawn(post));
+    let mut spawn = shops.keeper_spawn(post);
+    spawn.creature = odds.keeper;
+    canvas.creatures.push(spawn);
     canvas.shops.push(ShopPlan {
         kind,
         keeper,

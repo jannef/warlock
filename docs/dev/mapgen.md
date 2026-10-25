@@ -35,3 +35,16 @@ hostile creatures shunning a sanctuary (`World::shuns` in `ai.rs`). A flooded ro
 louder steps come from its floor terrain (`shallow_water`). `enter_room` (world/travel.rs) says the
 first-entry message; `PerceptionView::room` gives look mode the rooms the player knows;
 `PerceptionView::light_kept` lets the renderer dim its own transient light in a shadowed room.
+
+A branch may set its own special-room and shop odds (`room_effects`, `shops` on a `[[dungeon]]`
+or a `[[dungeon.levels]]` range; spec §7, campaign design §7.3). `content/dungeon.rs` resolves
+them once per depth at load, field by field (the range's table, the branch's, the shared
+`room_effects.toml` / `shops.toml`), into `RoomOdds` / `ShopOdds` (`DungeonDef::room_odds`,
+`shop_odds`; the shared ones are `RoomOdds::shared`, `ShopOdds::shared`: every effect and kind in
+file order). `generate_with` hands the depth's odds to the `Canvas` (`room_odds`, `shop_odds`),
+and `special::roll` and `shop::place` read them instead of the content's: the same chance roll
+and the same uniform picks with the same counts, so a branch without the tables draws exactly
+what it did before (the Depths' snapshots and `branches_without_tables_read_the_shared_odds`).
+A branch's `keeper` replaces only the keeper's creature type; the kit is the shared `[keeper]`'s.
+Fixture branches in `mapgen/tests.rs` (`FIXTURE`) check that flooded-only odds make only flooded
+rooms and `shops = { chance = 0 }` no shop.

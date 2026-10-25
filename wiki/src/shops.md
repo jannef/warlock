@@ -6,7 +6,8 @@ shopkeeper has a name, and every shop a sign: "Grimbold's General Store".
 
 You find a shop in the walled courtyard up the stairs from the hall, Grimbold's General Store,
 and now and then one in the Depths: about one level in six has one, in a room with a single
-door (never in the caverns, never in the room you arrive in).
+door (never in the caverns, never in the room you arrive in). Each dungeon has its own odds,
+kinds of shop, and keepers (the table under [Special rooms](special-rooms.md#by-dungeon)).
 
 ## Money
 
