@@ -2,8 +2,10 @@
 //! ([`crate::action::Action::UseAt`], `use:volley:12,5`). The readied missile weapon shoots its
 //! `shots` at the cell, one after another, for the price of one shot and one exertion; each is
 //! a shot as `fire` looses it (its own flight, attack, and missile). It stops early when the
-//! ammunition runs out or the player falls. Then its cooldown (Spent). Refused, taking no time,
-//! as a shot is (nothing ready, out of range, on the overworld) and as a class active is.
+//! ammunition runs out or the player falls. It costs Focus (its talent's `resource`; R2,
+//! `world/focus.rs`), spent as it is loosed. Refused, taking no time and spending nothing, as a
+//! shot is (nothing ready, out of range, on the overworld) and as a class active is (short of
+//! focus among them).
 
 use super::shoot::Loose;
 use super::{Spent, World};
@@ -60,8 +62,11 @@ impl World {
         if !self.within_reach(at, range, "shoot") {
             return Spent::Nothing;
         }
-        // Priced as the first shot begins; the rest come free.
+        // Priced as the first shot begins; the rest come free. Its focus goes now.
         let price = self.shot_price(player, launcher);
+        if let Some(cost) = (content.class_active(ClassActive::Volley)).and_then(|a| a.resource) {
+            self.spend_resource(player, cost.resource, cost.amount, events);
+        }
         self.say("You loose a volley!");
         for _ in 0..volley.shots {
             if self.state.death.is_some() {
@@ -81,7 +86,6 @@ impl World {
             self.player_looses(at, loose, events);
         }
         self.exert(ActionKind::Shoot);
-        self.afflict(player, volley.cooldown, volley.degrees, None, events);
         Spent::Turn(price)
     }
 }

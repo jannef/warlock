@@ -80,6 +80,10 @@ impl World {
                     )
                 }
                 Unavailable::NoMana => "You have too little mana.".to_string(),
+                Unavailable::Short(resource) => format!(
+                    "You have too little {}.",
+                    content.resource(resource).name.to_lowercase()
+                ),
                 other => format!("You cannot: {}.", other.reason(&content)),
             });
             return false;
