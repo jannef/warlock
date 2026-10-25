@@ -1,0 +1,8 @@
+[[talent]]
+id = "clear_mind"
+name = "Clear mind"
+tree = "scholar"
+description = "A mind at peace gathers its strength quickly: mana comes back to you faster."
+needs = { stats = { willpower = 12 } }
+effects = [{ kind = "mana_regen_percent", value = 25 }]
+systems = ["mana"]

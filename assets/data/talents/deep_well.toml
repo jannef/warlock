@@ -1,0 +1,17 @@
+[[talent]]
+id = "deep_well"
+name = "Deep well"
+tree = "scholar"
+ranks = 3
+description = "Your power runs deep: more mana for each rank, and more as you level."
+effects = [{ kind = "max_mana_per_levels", per_levels = 4, at_least = 2 }]
+systems = ["mana"]
+
+[[talent.rank]]
+needs = { either = { stats = { intelligence = 12, willpower = 12 } } }
+
+[[talent.rank]]
+needs = { level = 10 }
+
+[[talent.rank]]
+needs = { level = 25 }

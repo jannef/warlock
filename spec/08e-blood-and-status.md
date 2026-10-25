@@ -163,17 +163,31 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `mana_regen` of its status effects (poison 50, Diseased 50) and of the diseases that show
     (brain fever 25), times `[healing] mana_resting` (200) while the player rests, times the
     `mana_regen` of a special room it stands in (a sanctuary 300), times (100 + the mana
-    regeneration affixes of what it wears and wields, plus its talents' percent: Tidal +25) / 100;
+    regeneration affixes of what it wears and wields, plus its talents' percent: Tidal and Clear
+    mind +25) / 100, resting's 200 raised by Meditation's +50 % to 300;
     a Starving player gets none (§8 "Hunger"; Weak lowers only the stats it lowers). Burden, temperature, and combat stances do
     nothing to it. A point back is a moment of `World::live`'s loop ("Status effects" above: it
     comes with a hit point back, before the ticks), so it makes no difference how time is cut up;
     actors on other levels are frozen, and the dev time skip passes none.
   - **Draining**: a status with `mana_damage` drains that much mana a tick (§7), never below 0
     and never a death. None of the built-in ones does.
-  - **Spending**: `World::spend_mana(actor, amount)` is the one way to spend it, refused (nothing
-    spent) when the actor has less. Nothing calls it yet but the dev action `drain:N` ("You spend
-    5 mana (dev)."; refused, "You have only 3 mana (dev).", when short; no game time; recorded in
-    replays).
+  - **Spending**: `World::spend_mana(actor, base)` is the one way to spend it, refused (nothing
+    spent) when the actor has less than the cost: `base` as its talents make it
+    (`Actor::mana_cost`, `TalentMods::mana_cost`: Frugal caster's −20 %, rounded to the nearest,
+    never below 1 for a cost above 0). The player's spending of any is the `cast` use of the
+    stats (§8 "Stats": a Willpower mark, 20 %, from the training stream). Nothing calls it yet but
+    the dev action `drain:N`, which stands in for an ability's cost ("You spend 5 mana (dev).",
+    the cost as spent; refused, "You have only 3 mana (dev).", when short; no game time; recorded
+    in replays).
+  - **Talents** (#242, the Scholar tree, §8 "Talents"): Deep well (`max_mana_per_levels`, 3
+    ranks: 1 mana per 4 character levels, at least 2, a rank; handed out into `mana_base` and
+    the mana at the pick and as each later level comes, as Hardy's hit points, past `mana_level`
+    too), Clear mind (`mana_regen_percent` +25), Meditation (`mana_resting_percent` +50, on
+    resting's pace), Frugal caster (`mana_cost_percent` −20), and Blood magic (`blood_magic`, an
+    active in the abilities menu, `blood_magic` in replays: 5 hit points for 3 mana, up to the
+    maximum, for the time of a wait; refused, no time, with 5 hit points or fewer ("You have too
+    little blood left to give.") or full mana ("Your mana is already full."); not a blow: no
+    Protection, no pain, no training, never a death).
   - **Shown**: the player's own mana and maximum (`PerceptionView::own_mana`): the status bar's
     `MP 5/12` right after the hit points, giving way like them (§6), the character screen beside
     the hit points, the dump header's `mp`, and JSON dumps' `mana`. Never a creature's mana, and

@@ -151,7 +151,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   and not both 0, `over_potential_divisor` (4; 1 to 20), and `[[training.use]]` rules: `stat`
   (a stat id), `on` (a use: `burdened`, `blow`, `dig`, `kick`, `dodge`, `shot`, `sneak`,
   `climb`, `hurt`, `big_hit`, `resisted`, `plunge`, `found`, `read`, `identified`,
-  `discovered`, `spot`, `endured`, `resisted_will`, `hungry_fight`, `chat`, `trade`, `quest`,
+  `discovered`, `spot`, `endured`, `resisted_will`, `hungry_fight`, `cast`, `chat`, `trade`, `quest`,
   `swapped`), and `chance` (1 to 100); a stat and use at most once.
 - **Action costs** (`data/actions.toml`, optional): action ids mapped to their cost in energy,
   e.g. `wait = 1000`, 1000 being a normal action (6 s at normal speed; §8 "Time"), 100 to

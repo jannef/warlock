@@ -72,8 +72,8 @@ impl World {
 
     /// Levels `from + 1..=to` came: each hands out what it brings (its skill rolls, a talent
     /// pick every `talent_every` levels, `data/experience.toml`, a bonus pick at the class's
-    /// levels for one, and the class abilities it gives), and the hit points the talents held
-    /// grow by at each of them.
+    /// levels for one, and the class abilities it gives), and the hit points and mana the
+    /// talents held grow by at each of them.
     pub(super) fn level_up(&mut self, from: u8, to: u8) {
         let content = self.content.clone();
         let every = content.experience().talent_every();
@@ -93,9 +93,12 @@ impl World {
             // What the talents held grow by, then what this level's class abilities give.
             let mods = self.state.player().talent_mods(&content);
             let hp = mods.hp_at(level) - mods.hp_at(level - 1);
+            let mana = mods.mana_at(level) - mods.mana_at(level - 1);
             let player = self.player_mut();
             player.hp_base += hp;
             player.hp += hp;
+            player.mana_base += mana;
+            player.mana += mana;
             self.grant_class(level, true);
             // Hardened: every level past the hit point levels adds a level's hit points again.
             let hardened = self.state.player().talent_mods(&content).hardened;

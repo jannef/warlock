@@ -143,6 +143,10 @@ pub enum Action {
     /// once, then Winded for a while. Takes the time of `wait`; refused (no time) without the
     /// talent or while winded.
     SecondWind,
+    /// Blood magic (spec §8 "Talents"; the Blood magic ability): give some hit points for some
+    /// mana. Takes the time of `wait`; refused (no time) without the talent, when it would cost
+    /// the last hit point, or while mana is full.
+    BloodMagic,
     /// Use a class active (spec §8 "Class abilities"; the abilities menu's Class group): rage,
     /// veteran's wind, whirlwind, lay on hands, holy radiance, and, aimed in a direction, smite
     /// and quivering palm (`use:rage`, `use:smite:E`). Takes the time of its cost's action;
@@ -672,6 +676,7 @@ impl fmt::Display for Action {
             Action::Search(turns) => write!(f, "search:{turns}"),
             Action::Disarm(d) => write!(f, "disarm:{d}"),
             Action::SecondWind => f.write_str("second_wind"),
+            Action::BloodMagic => f.write_str("blood_magic"),
             Action::Use(active, None) => write!(f, "use:{}", active.id()),
             Action::Use(active, Some(d)) => write!(f, "use:{}:{d}", active.id()),
             Action::Gift(active, None) => write!(f, "use:{}", active.id()),
@@ -755,6 +760,7 @@ impl FromStr for Action {
             },
             "wait" => bare(Action::Wait),
             "second_wind" => bare(Action::SecondWind),
+            "blood_magic" => bare(Action::BloodMagic),
             "use" => {
                 let usage = || {
                     "`use` needs a class or birth sign ability, e.g. `use:rage`, `use:smite:E`, \
@@ -1189,6 +1195,7 @@ mod tests {
             },
             Action::Advance("stealth".into()),
             Action::SecondWind,
+            Action::BloodMagic,
             Action::Use(ClassActive::Rage, None),
             Action::Use(ClassActive::Smite, Some(Dir::SW)),
             Action::Gift(SignActive::Blaze, None),
