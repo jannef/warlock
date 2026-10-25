@@ -222,6 +222,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Basilisk, Roc, Griffin, Sphinx, Phoenix, Kraken, Barghest; the five elements: Wood, Fire,
   Earth, Metal, Water. `[[lucky]]` entries are the lucky days: `animal`, `element`, `day` (1 to
   30, any month), `title`, `description` (the reveal's line), and `grants` (the extra gift); no
-  pair twice. Checked against the talents at load (the grants exist, are granted talents of the
+  pair twice. An optional `[flavour]` table (§8 "Birth sign", the calendar and moon flavour):
+  `birthday_healing` and `birth_month_cooldown` (percents, 1 to 400, default 100),
+  `full_moon_reach` (cells, 0 to 10, default 0), and `full_moon_light` (a light preset, default
+  none); without it, none of the flavour. Checked against the talents at load (the grants exist, are granted talents of the
   `stars` tree, none twice for one sign; talents' `animal`/`element` needs name real ones);
   content without the `stars` tree grants nothing. Without the file there are no signs.

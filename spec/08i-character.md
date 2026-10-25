@@ -164,6 +164,29 @@ developer notes (CLAUDE.md, `docs/dev/`).
     in 1 800 over an even spread of births; by race at a start date, as the wiki tabulates. The
     game never says lucky days exist until a character is born on one. The birth draws are
     unchanged, so existing seeds keep their dates and signs.
+  - **Calendar and moon flavour** (#273; design §7; `[flavour]` in `data/horoscope.toml`, and
+    none of it without the table; `world/flavour.rs`): pure functions of the game time, the
+    birth date, and the moons, drawing nothing. **The birthday** (the birth month and day):
+    from midnight to midnight the player heals `birthday_healing` percent as fast (125), the
+    last factor of `World::healing_rate_at`; both midnights are moments of `World::live`, so
+    the healing is exact however time is split. At that day's dawn, when a perception's
+    interval passes it, a note (it never stops a rest), "It is your birthday.", and the same
+    line when a run begins on the birthday. **The birth month**: a sign active's cooldown
+    status (Graceless, Spent-eyed, Burnt out, Drained after Fire breath, Hoarse; Ashen is not a
+    cooldown and is untouched) lasts `birth_month_cooldown` percent as long (50) when it is
+    used in the birth month: `World::gift_cooldown`, the one place a sign active applies its
+    cooldown, leaves fewer degrees, the last partly worn (three degrees of eight hours become
+    two, the second's first four hours worn). **The full moon**: while a moon is within a
+    sixtieth of its cycle of full (`MoonDef::phase_at`; half a day either side for the built-in
+    30-day moon) and above the horizon with the sun down, wherever the player is (under clouds
+    or underground too), the gifts with a reach reach `full_moon_reach` cells farther (2;
+    `Content::full_moon_reach`, the one read): Hound's nose's scent (6 to 8), the Transfixing
+    stare (6 to 8; `Ability::reach_at`, which the targeting mode reads too), and Eyes of the
+    heights at night (+1 to +3); only the gifts' (`TalentMods::gift_reach` marks the `scent`
+    and `night_sight` of `stars` talents: Blood scent and Moon-eyed are not lengthened). Inner
+    light burns as `full_moon_light` (`ember_full`, radius 2) instead of its `ember`. Nothing
+    new is shown: the status bar shows the moon's phase already, the cooldown its status, and
+    the wiki the numbers. The design's element seasons stay deferred.
   - **Sign prerequisites**: a talent may ask `animal = "roc"`, `element = "fire"`, or `lucky =
     true` ("to be born in the year of the Roc", "to be Fire-born", "to be born on a lucky
     day"), read off `Character::sign` and the birth day.

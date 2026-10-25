@@ -171,6 +171,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("horoscope.md", character::horoscope),
         ("horoscope-animals.md", horoscope::animals),
         ("horoscope-elements.md", horoscope::elements),
+        ("horoscope-flavour.md", horoscope::flavour),
         ("horoscope-lucky.md", horoscope::lucky),
         ("horoscope-talents.md", horoscope::talents),
         ("class-kits.md", kits::class_kits),

@@ -221,6 +221,25 @@ they sum in `Actor::resistances` with gear and Elemental ward under `Resistances
 (a Fire Wyvern resists fire 50 %). The design's burst halving never landed: damage types were
 in first. Test: `world/gifts_tests.rs::the_damage_type_forms_resist_fire_and_cold`.
 
+The calendar and moon flavour (#273, design §7): `[flavour]` in `data/horoscope.toml` parses into
+`Horoscope::flavour` (`content/horoscope.rs::Flavour`, its light preset resolved after the
+lights load; `Content::flavour`). Without the table every read below is a no-op. The hooks:
+`World::healing_rate_at` (the birthday's percent, last; `world/flavour.rs::birthday_healing`)
+with `World::live` stopping at the birthday's midnights (`until_birthday_turns`, only on the
+birthday and its eve, so other days' rests are unchanged); `World::perceive` calls
+`birthday_news` with the time of the last perception (`World::perceived_at`, not saved: a
+loaded world has just perceived its moment), and `World::with_character` adds the line when a
+run begins on the birthday; `World::gift_cooldown` replaces the five sign actives' `afflict` of
+their cooldowns (birth month: fewer degrees, the last part worn; the actor's own easing pace,
+`TalentMods::eases_every`, counted); `Content::full_moon_reach(time)` (via
+`content/horoscope.rs::full_moon_up`) is read by perception's scent and overworld night sight
+(only for the reaches `TalentMods::gift_reach` marks: `scent` and `night_sight` effects of
+`stars` talents, noted in `Talents::mods`) and by `Ability::reach_at` (the stare, its rule
+in `world/gifts.rs` and the targeting mode); `LightCache::sources` swaps Inner light's preset
+for `Flavour::inner_light_at`. Tests: `world/flavour_tests.rs` (the birthday's pace and its
+exactness over splits, the note, the halved cooldown, the moon's reaches, the content checks),
+`world/land_talent_tests.rs::a_full_moon_lets_hounds_nose_smell_blood_two_cells_farther`.
+
 Shown: the reveal (`ui/sign_screen.rs`, `--screen sign`, after the race), the summary's Sign row,
 the character screen's dimmed Stars line (gift names, two lines at most) and the title after the
 name (character and death screens), the `stats` dump's `Sign Wood Salamander, the Racer`, the
