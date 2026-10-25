@@ -34,7 +34,7 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   throw:c:12,5 eat:b
   eat:floor:a dig:E search search:10 chat:E ask:E:rooms ask:E:quest-rats ask:E:accept-rats
   throw_voice:12,5 vision:darkvision
-  skip:1h weather:rain stance:coward effect:fireball@12,5 effect:lightning_bolt@3,4>12,4
+  skip:1h weather:rain spawn stance:coward effect:fireball@12,5 effect:lightning_bolt@3,4>12,4
   identify:a afflict:bleeding drain:5 infect:filth_fever reveal:fennmynster talent:hardy talent:weapon_focus:long_blades
   advance:stealth levelup:auto xp:2500 freeze:12,5,3 thaw:12,5,3`; `pick:DIR` tries
   the lock of the door that way (§8 "Doors"), `bash:DIR` bashes with the held shield that way, `dig:DIR` digs toward a direction until the wall gives way or
@@ -66,7 +66,9 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   through `World::grant_resource`; no time; §8 "Resources"), and
   `infect:ID` makes them catch disease ID (`data/diseases.toml`); `reveal:ID` reveals hidden location ID
   of the overworld at once, as a quest would, marked on the map (§7 "Hidden locations"; no time);
-  `talent:ID[:CHOICE]` takes a talent (an id in
+  `spawn` makes one attempt to
+  bring a creature to the current level now, whatever its cap and chance (§7 "Danger levels";
+  refused at danger 0; no time); `talent:ID[:CHOICE]` takes a talent (an id in
   `data/talents/`, with its choice) when a level's pick is due (§8 "Talents"; every other
   action is refused until it is made), `advance:SKILL` spends a level's skill roll (none until
   #230), the dev `levelup:auto` spends every choice due with the first the player may take, and

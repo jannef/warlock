@@ -202,6 +202,8 @@ pub(super) fn generate(
             // Under the open sky: the weather's temperature, and ice as it brings.
             temperature: None,
             ice: Default::default(),
+            // Local areas have no danger.
+            spawning: None,
         };
         if reach::validate(&template, content).is_ok() {
             // Ruins may hold loot (spec §8 "Magic items"); the land holds none of its own.

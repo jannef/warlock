@@ -81,7 +81,7 @@ impl World {
             // What was perceived was said.
             events.clear();
             let unseen_until = self.state.time + self.out_of_view_for();
-            let sprung = self.sprung;
+            let (sprung, spawned) = (self.sprung, self.spawned);
             loop {
                 events.retain(|e| {
                     matches!(
@@ -101,10 +101,13 @@ impl World {
                     |e| matches!(e, Event::Disease { news, .. } if *news != DiseaseNews::Recovered),
                 );
                 let trapped = self.sprung != sprung;
+                // A creature that came may walk into view sooner than the others could.
+                let newcomer = self.spawned != spawned;
                 if done
                     || heard
                     || ill
                     || trapped
+                    || newcomer
                     || self.state.time > unseen_until
                     || self.weather_turned()
                 {

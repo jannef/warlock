@@ -1,0 +1,296 @@
+//! Danger levels and creatures that keep coming (spec §7 "Danger levels"): every level has a
+//! danger that can always be computed ([`World::danger`]), and on a level whose data gives one
+//! creatures of about that danger keep coming while the player is there.
+//!
+//! Each such level keeps a [`Spawner`] in its state: when the next attempt is due and its own
+//! random stream (`spawn/<level id>`, apart from `gameplay` and every generation stream, so a
+//! fight rolls the same with or without a spawn between two blows). At the end of every turn
+//! ([`World::spawn_tick`], from `run_turn`) the attempts whose time has come on the **current**
+//! level are made, several if a rest passed hours; levels the player is not on stay frozen (the
+//! next attempt is put off to `every` after the player's arrival, `travel.rs`). An attempt is
+//! skipped while the level holds as many creatures hostile to the player as its cap; else, with
+//! its chance, it draws a type of the level's population by the danger
+//! ([`crate::content::danger::draw`]: a unique type once a run), a cell out of the player's view
+//! by the perception rules and at least [`AWAY`] cells from them (walkable, free, no stairs,
+//! door, shop floor, or sanctuary; up to [`TRIES`] draws, else nothing comes), and a short route
+//! where one fits, else a post. The newcomer is an ordinary creature from then on.
+//!
+//! Danger is hidden in the game: the Sixth sense talent says it in words, relative to the
+//! player; dev dumps and the wiki state it.
+
+use super::{ActorId, World, travel};
+use crate::content::danger::{self, Spawning};
+use crate::content::{CreatureSpawn, Stance};
+use crate::geom::Pos;
+use crate::perception::Perception;
+use crate::rng::Rng;
+use crate::time::{Duration, GameTime};
+use serde::{Deserialize, Serialize};
+
+/// The fewest cells (Chebyshev) between the player and a creature that comes.
+pub const AWAY: i32 = 8;
+/// How many cells an attempt tries before it gives up.
+const TRIES: u32 = 32;
+/// What Sixth sense notes when something comes.
+pub const STIRS: &str = "Something stirs in the dark.";
+
+/// What comes to a level over time: when the next attempt is due and the level's own stream.
+/// Kept in the level's state (saved, hashed) only on a level with a danger rule, so every other
+/// level's state is as it was.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Spawner {
+    /// When the next attempt is due.
+    pub(crate) at: GameTime,
+    /// The level's spawn stream, `spawn/<level id>`.
+    pub(crate) rng: Rng,
+}
+
+impl Spawner {
+    /// The spawner of level `id` made at `now`: its first attempt `every` from now.
+    pub(crate) fn new(seed: u64, id: &str, now: GameTime, every: Duration) -> Self {
+        Self {
+            at: now + every,
+            rng: Rng::spawn(seed, id),
+        }
+    }
+}
+
+/// How the danger of a level feels against the player's level (Sixth sense), in words.
+pub fn feeling(danger: u8, player_level: u8) -> &'static str {
+    let (d, l) = (i32::from(danger), i32::from(player_level));
+    if d <= l - 4 {
+        "quiet"
+    } else if d <= l {
+        "uneasy"
+    } else if d <= l + 3 {
+        "dangerous"
+    } else {
+        "deadly"
+    }
+}
+
+impl World {
+    /// The danger of level `id` now (spec §7 "Danger levels"): its branch's or its own rule at
+    /// its depth, with the player's level for a player-scaled area; 0 where nothing is given.
+    /// Computed when asked, never stored.
+    pub fn danger(&self, id: &str) -> u8 {
+        (self.content.spawning(id))
+            .map_or(0, |(rule, depth, _)| rule.at(depth, self.player_level()))
+    }
+
+    /// Dev: the danger of the current level, its creatures hostile to the player against its
+    /// cap, and when the next attempt is due, for the dumps' headers; `None` on a level with no
+    /// danger rule.
+    pub fn spawn_status(&self) -> Option<(u8, u32, u32, GameTime)> {
+        let level = self.state.current();
+        let (_, _, spawning) = self.content.spawning(&level.id)?;
+        let at = level.spawner.as_ref()?.at;
+        let cap = spawning.cap_for(self.walkable_cells());
+        Some((self.danger(&level.id), self.hostiles_here(), cap, at))
+    }
+
+    /// The walkable cells of the current level (what its population is counted by).
+    fn walkable_cells(&self) -> u32 {
+        let level = self.state.current();
+        let content = &self.content;
+        let n = (level.terrain.iter())
+            .filter(|(_, t)| content.terrain(**t).walkable)
+            .count();
+        u32::try_from(n).unwrap_or(u32::MAX)
+    }
+
+    /// The creatures on the current level hostile to the player.
+    fn hostiles_here(&self) -> u32 {
+        let (player, level) = (self.state.player, &self.state.current_level);
+        let here = (self.state.actors.values()).filter(|a| a.level == *level && a.id != player);
+        let n = here
+            .filter(|a| self.stance(player, a.id) == Stance::Hostile)
+            .count();
+        u32::try_from(n).unwrap_or(u32::MAX)
+    }
+
+    /// The end of a turn: every attempt due on the current level is made (spec §7 "Danger
+    /// levels"). Quiet delver puts each next attempt off longer.
+    pub(super) fn spawn_tick(&mut self) {
+        let id = self.state.current_level.clone();
+        let Some((_, _, spawning)) = self.content.spawning(&id) else {
+            return;
+        };
+        let every = self.spawn_every(spawning);
+        while self.state.death.is_none() {
+            let now = self.state.time;
+            let Some(spawner) = self.state.current_mut().spawner.as_mut() else {
+                return;
+            };
+            if spawner.at > now {
+                return;
+            }
+            spawner.at += every;
+            self.attempt(false);
+        }
+    }
+
+    /// The time between attempts on a level for the player as they are (Quiet delver: longer).
+    fn spawn_every(&self, spawning: &Spawning) -> Duration {
+        let slower = self
+            .state
+            .player()
+            .talent_mods(&self.content)
+            .spawn_every_percent;
+        let percent = u64::try_from(100 + slower.max(0)).unwrap_or(100);
+        let every = spawning.every.as_seconds().saturating_mul(percent) / 100;
+        Duration::seconds(every.max(1))
+    }
+
+    /// When the player arrives on level `id`: its next attempt is `every` from now, as if no
+    /// time had passed there (floors the player is not on stay frozen).
+    pub(super) fn arrive_spawner(&mut self, id: &str) {
+        let Some((_, _, spawning)) = self.content.spawning(id) else {
+            return;
+        };
+        let at = self.state.time + self.spawn_every(spawning);
+        if let Some(spawner) = (self.state.levels.get_mut(id)).and_then(|l| l.spawner.as_mut()) {
+            spawner.at = at;
+        }
+    }
+
+    /// One attempt on the current level; `forced` (the dev action) skips the cap and the chance.
+    /// Returns the creature that came, if one did.
+    pub(super) fn attempt(&mut self, forced: bool) -> Option<ActorId> {
+        let id = self.state.current_level.clone();
+        let (_, _, spawning) = self.content.spawning(&id)?;
+        let spawning = spawning.clone();
+        let danger = self.danger(&id);
+        if danger == 0 {
+            return None;
+        }
+        if !forced && self.hostiles_here() >= spawning.cap_for(self.walkable_cells()) {
+            return None;
+        }
+        let mut spawner = self.state.current_mut().spawner.take()?;
+        let came = self.draw_spawn(&mut spawner.rng, &spawning, danger, forced);
+        self.state.current_mut().spawner = Some(spawner);
+        let (creature, pos, route) = came?;
+        let spawn = CreatureSpawn {
+            creature,
+            faction: None,
+            alignment: None,
+            npc: None,
+            pos,
+            route,
+            carry: Vec::new(),
+            equipment: Default::default(),
+            rolls_gear: true,
+        };
+        let actor = travel::make_creature(&mut self.state, &self.content, &id, &spawn);
+        let def = self.content.creature(creature);
+        if def.unique {
+            self.state.progress.uniques.insert(def.id.clone());
+        }
+        self.spawned += 1;
+        if self.state.player().talent_mods(&self.content).danger_sense >= 2 {
+            self.note(STIRS);
+        }
+        Some(actor)
+    }
+
+    /// The draws of one attempt from the level's stream: the chance (unless `forced`), the type,
+    /// the cell, and the route.
+    fn draw_spawn(
+        &mut self,
+        rng: &mut Rng,
+        spawning: &Spawning,
+        danger: u8,
+        forced: bool,
+    ) -> Option<(crate::content::CreatureId, Pos, Vec<crate::geom::Dir>)> {
+        if !forced && !rng.chance(spawning.chance.into()) {
+            return None;
+        }
+        let content = &self.content;
+        let once = &self.state.progress.uniques;
+        let candidates: Vec<_> = (spawning.population.iter())
+            .map(|&c| (c, content.creature(c)))
+            .filter(|(_, def)| !(def.unique && once.contains(&def.id)))
+            .map(|(c, def)| (c, def.level))
+            .collect();
+        let creature = danger::draw(rng, &candidates, danger, spawning.out_of_depth)?;
+        let seen = Perception::compute(&self.state, &self.content, &mut self.lights);
+        let level = self.state.current();
+        let (content, player) = (&self.content, self.state.player().pos);
+        let free = |p: Pos| {
+            level.is_walkable(content, p)
+                && self.state.actor_at(&level.id, p).is_none()
+                && level.stairs_at(p).is_none()
+                && !level.is_door(content, p)
+                && !level.shops.iter().any(|s| s.contains(p))
+                && !(level.room_at(p)).is_some_and(|r| content.room_effect(r.effect).shunned)
+        };
+        let (w, h) = (level.width(), level.height());
+        let mut cell = None;
+        for _ in 0..TRIES {
+            let p = Pos::new(rng.range(0, w - 1), rng.range(0, h - 1));
+            if p.chebyshev(player) >= AWAY && !seen.sees_actors_at(p) && free(p) {
+                cell = Some(p);
+                break;
+            }
+        }
+        let pos = cell?;
+        let len = rng.range(4, 10);
+        let route = crate::mapgen::out_and_back(rng, pos, len, |p| level.is_walkable(content, p))
+            .unwrap_or_default();
+        Some((creature, pos, route))
+    }
+
+    /// The dev action `spawn` ([`crate::action::Action::Spawn`]): one attempt on the current
+    /// level now, whatever its cap and chance. Takes no time.
+    pub(super) fn spawn_dev(&mut self) -> super::Spent {
+        if self.danger(&self.state.current_level.clone()) == 0 {
+            self.say("Nothing comes here: the level has no danger (dev).");
+            return super::Spent::Nothing;
+        }
+        match self.attempt(true) {
+            Some(actor) => {
+                let name = self
+                    .content
+                    .creature(self.state.actors[&actor].creature)
+                    .name
+                    .clone();
+                self.say(format!("A {name} comes (dev)."));
+            }
+            None => self.say("Nothing could come: no cell out of sight (dev)."),
+        }
+        super::Spent::NoTime
+    }
+
+    /// Sixth sense on arrival: how the level's danger feels against the player's level, a note.
+    pub(super) fn sense_danger(&mut self, id: &str) {
+        if self.content.spawning(id).is_none()
+            || self.state.player().talent_mods(&self.content).danger_sense < 1
+        {
+            return;
+        }
+        let feels = feeling(self.danger(id), self.player_level());
+        self.note(format!("This place feels {feels}."));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_feeling_goes_by_the_danger_against_the_player() {
+        let at = |d| feeling(d, 10);
+        assert_eq!(
+            [at(6), at(7), at(10), at(11), at(13), at(14)],
+            [
+                "quiet",
+                "uneasy",
+                "uneasy",
+                "dangerous",
+                "dangerous",
+                "deadly"
+            ]
+        );
+    }
+}

@@ -13,6 +13,7 @@ mod class;
 mod class_spell;
 mod creature;
 mod damage_type;
+pub mod danger;
 mod dialogue;
 mod disease;
 mod dungeon;
@@ -76,6 +77,7 @@ pub use creature::{
     OnEat, SPEEDS,
 };
 pub use damage_type::{DamageTypeDef, DamageTypeId, MAX_DAMAGE_TYPES};
+pub use danger::{Count, DangerRule, PlayerScale, Spawning};
 pub use dialogue::{
     Dialogue, DialogueId, MAX_LINE, MAX_REPLY, MAX_TOPICS, MUTTER_CHANCES, Mutter, Speaker, Topic,
 };
@@ -1672,7 +1674,7 @@ impl Content {
         };
         let resolved = parsed.resolve(
             path,
-            |name| self.creature_id(name),
+            |name| (self.creature_id(name)).map(|c| (c, self.creature(c).level)),
             key_id,
             |name| self.trap_id(name),
             &self.room_effects,
@@ -2302,6 +2304,19 @@ impl Content {
         let (branch, depth) = parse_branch_level(id)?;
         let def = self.dungeons.get(branch)?;
         def.plan(depth).map(|_| (def, depth))
+    }
+
+    /// How dangerous level `id` is and what lives there (spec §7 "Danger levels"): its danger
+    /// rule, the depth to read it at (1 on a hand-made level), and its spawning rules. `None`:
+    /// danger 0, nothing comes (the overworld, local areas, every level that gives no `danger`).
+    pub fn spawning(&self, id: &str) -> Option<(DangerRule, u32, &Spawning)> {
+        if let Some(template) = self.levels.get(id) {
+            let (rule, spawning) = template.spawning.as_ref()?;
+            return Some((*rule, 1, spawning));
+        }
+        let (branch, depth) = self.branch_level(id)?;
+        let rule = branch.plan(depth)?.danger?;
+        Some((rule, depth, branch.spawning.as_ref()?))
     }
 
     pub fn dungeon(&self, id: &str) -> Option<&DungeonDef> {

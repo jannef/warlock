@@ -1,0 +1,7 @@
+[[talent]]
+id = "quiet_delver"
+name = "Quiet delver"
+tree = "delver"
+description = "You go about a dungeon so quietly that what lives there finds its way to you only half as often."
+effects = [{ kind = "spawn_every_percent", value = 100 }]
+systems = ["danger"]

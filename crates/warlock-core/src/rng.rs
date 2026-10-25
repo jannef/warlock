@@ -9,6 +9,7 @@
 //! | Hidden traps, per generated level | `traps/<level id>` | never |
 //! | A generated level's loot | `loot/<level id>` | never; derived on demand |
 //! | What a creature drops when it dies | `drop/<actor id>` | never; derived on demand |
+//! | What comes to a level with a danger (spec §7 "Danger levels") | `spawn/<level id>` | in the level's state, from its making |
 //! | A generated level's creatures' gear | `gear/<level id>` | never; derived on demand |
 //! | A creature's gear, placed in play | `gear/<actor id>` | never; derived on demand |
 //! | Gameplay | `gameplay` | in [`crate::WorldState`], so saves continue it |
@@ -85,6 +86,13 @@ impl Rng {
     /// and in its vaults, rolled once the map is built, so the map is the same without it.
     pub fn loot(run_seed: u64, level: &str) -> Self {
         Self::stream(run_seed, &format!("loot/{level}"))
+    }
+
+    /// The spawn stream of level `level` (spec §7 "Danger levels"): what comes to it over time,
+    /// apart from `gameplay` and its generation streams, so a fight rolls the same with or
+    /// without a spawn between two blows. The level's state keeps it.
+    pub fn spawn(run_seed: u64, level: &str) -> Self {
+        Self::stream(run_seed, &format!("spawn/{level}"))
     }
 
     /// The gear stream of `key` (spec §8 "Creature gear"): a generated level's id, rolled once

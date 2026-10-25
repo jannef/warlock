@@ -548,6 +548,15 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                 signed(value)
             )
         }
+        TalentEffect::DangerSense { value } => format!(
+            "danger sense +{value} (at 1: how a level feels as you arrive: quiet at a danger 4 or \
+             more below your level, uneasy up to your level, dangerous up to 3 above it, else \
+             deadly; at 2 also a note when a creature comes to your level)"
+        ),
+        TalentEffect::SpawnEveryPercent { value } => format!(
+            "the time between attempts to bring a creature to your level {}",
+            percent(value)
+        ),
         TalentEffect::StoneSense => "notices hidden things on stone in passing".into(),
         TalentEffect::StoneFind { value } => format!(
             "{} to every check to find what is hidden on stone, searching and in passing",
