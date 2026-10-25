@@ -268,6 +268,15 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // A priest blessed and drained to their last mana: the spells in the Class
+    // group, those that cost more than is left greyed out ("not enough mana").
+    Case {
+        name: "abilities-menu-spells",
+        character: Some("human,female,priest"),
+        actions: "xp:100000 levelup:auto use:blessing drain:94",
+        screen: Some("abilities"),
+        ..BASE
+    },
     // Progression: a warrior gaining levels 2 and 3 at once (the level-up screen opens by
     // itself), their talent pick, and the Talents page.
     Case {
