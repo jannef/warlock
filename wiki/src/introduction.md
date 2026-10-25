@@ -32,8 +32,8 @@ every creature's stats, attacks, and senses ([Creatures in numbers](creature-num
   explain how time passes.
 - [Light](light.md), [Sight and memory](sight.md), [Vision types](vision.md), and
   [Hearing](hearing.md) explain what you can see and hear, and why.
-- [Sun, moon, and sky](sun.md), [Weather](weather.md), and [The overworld](overworld.md) explain
-  the outdoors.
+- [The Ascmearc](ascmearc.md) is the world you play in. [Sun, moon, and sky](sun.md),
+  [Weather](weather.md), and [The overworld](overworld.md) explain the outdoors.
 - [Your character](character.md), with its [Races](races.md), [Classes](classes.md), and
   [Horoscope](horoscope.md), and [Stats](stats.md) explain who you are; [Combat](combat.md) how
   fights go, and how you die.
@@ -43,8 +43,8 @@ every creature's stats, attacks, and senses ([Creatures in numbers](creature-num
 
 ## Starting a run
 
-The game opens on the main menu. **New run** lists the worlds you can start in (see
-[Saving](saving.md)). Then you create your character: your race, your gender,
+The game opens on the main menu. **New run** starts a new character in the Ascmearc, the
+world you play in (see [Saving](saving.md) for the characters you keep). You create your character: your race, your gender,
 and your class, one step at a time, and a summary of your age, birth sign, and the stats you
 will start with (see [Your character](character.md)). You set out with your
 [starting kit](starting-kit.md):
@@ -57,7 +57,7 @@ they match the version of the game this wiki was published with.
 **The Ascmearc**, "the ash march", is the first world. You come down into it through
 **Beorggeat**, a pass in the mountains of its western edge; snow closes the pass behind you, so
 there is no way back. The road runs east to **Cēaptūn**, a market town an easy morning's walk
-away (see [The overworld](overworld.md)).
+away (see [The Ascmearc](ascmearc.md)).
 
 Apart from the land itself and its places, this wiki does not describe levels or walk you
 through them: the game's world is still being built.

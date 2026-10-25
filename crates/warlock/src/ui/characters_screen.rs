@@ -1,6 +1,7 @@
 //! The Characters screen (spec §6 "Characters", §7 "Saves"), from the main menu: every saved
 //! character, the one played last first, with its race, class, and level, and for the selected
-//! one where it is and when it was last played. Choose one to resume it; the Erase key deletes
+//! one where it is (and in which campaign, when more than one is installed: a developer build)
+//! and when it was last played. Choose one to resume it; the Erase key deletes
 //! the selected one, through the one dialog. A save without a readable summary is listed by its
 //! id.
 //!
@@ -13,7 +14,7 @@ use super::screens::{MenuChoice, ScreenAction};
 use super::{TEXT, TEXT_DIM};
 use crate::input::Bindings;
 use crate::render::console::Console;
-use crate::save::{SavedCharacter, played_text};
+use crate::save::{SavedCharacter, Summary, played_text};
 use crate::settings::Clock;
 
 /// The panel's width.
@@ -28,13 +29,28 @@ const LEVEL_END: i32 = 66;
 pub struct CharactersScreen {
     characters: Vec<SavedCharacter>,
     selected: usize,
+    /// More than one campaign is installed (a developer build, with the test world): the place
+    /// is named with its campaign.
+    campaigns: bool,
 }
 
 impl CharactersScreen {
-    pub fn new(characters: Vec<SavedCharacter>) -> Self {
+    /// The list of `characters`; `campaigns` when more than one campaign is installed.
+    pub fn new(characters: Vec<SavedCharacter>, campaigns: bool) -> Self {
         Self {
             characters,
             selected: 0,
+            campaigns,
+        }
+    }
+
+    /// Where a character is: `In Cēaptūn.`, or with more than one campaign installed and the
+    /// summary's campaign known, `In Cēaptūn (The Ascmearc).`
+    fn place(&self, summary: &Summary) -> String {
+        if self.campaigns && !summary.campaign.is_empty() {
+            format!("In {} ({}).", summary.place, summary.campaign)
+        } else {
+            format!("In {}.", summary.place)
         }
     }
 
@@ -113,7 +129,7 @@ impl CharactersScreen {
                 summary: Some(summary),
                 ..
             }) => vec![
-                format!("In {}.", summary.place),
+                self.place(summary),
                 format!("Last played {}.", played_text(summary.played, clock)),
             ],
             Some(_) => vec!["Nothing is known of this save until it is played.".into()],
@@ -138,7 +154,6 @@ impl CharactersScreen {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::save::Summary;
 
     fn saved(id: &str, name: &str, level: u32) -> SavedCharacter {
         SavedCharacter {
@@ -149,20 +164,22 @@ mod tests {
                 class: "Warrior".into(),
                 level,
                 place: "the Hub".into(),
+                campaign: "The Showcase".into(),
                 played: 1_781_654_400,
             }),
         }
     }
 
     fn screen() -> CharactersScreen {
-        CharactersScreen::new(vec![
+        let characters = vec![
             saved("brakka-2", "Brakka", 3),
             saved("brakka-1", "Brakka", 1),
             SavedCharacter {
                 id: "tamsin-1".into(),
                 summary: None,
             },
-        ])
+        ];
+        CharactersScreen::new(characters, false)
     }
 
     fn drawn(screen: &CharactersScreen) -> String {
@@ -220,6 +237,19 @@ mod tests {
         let text = drawn(&s);
         assert!(text.contains("> tamsin-1"), "{text}");
         assert!(text.contains("Nothing is known"), "{text}");
-        assert!(drawn(&CharactersScreen::new(Vec::new())).contains("No saved characters."));
+        assert!(drawn(&CharactersScreen::new(Vec::new(), false)).contains("No saved characters."));
+    }
+
+    /// With more than one campaign installed (a developer build) the place names its campaign;
+    /// a summary from before campaigns were kept just its place.
+    #[test]
+    fn the_place_names_its_campaign_when_there_are_several() {
+        let mut s = screen();
+        s.campaigns = true;
+        assert!(drawn(&s).contains("In the Hub (The Showcase)."));
+        if let Some(summary) = &mut s.characters[0].summary {
+            summary.campaign.clear();
+        }
+        assert!(drawn(&s).contains("In the Hub."));
     }
 }

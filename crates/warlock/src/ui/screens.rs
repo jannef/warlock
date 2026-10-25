@@ -346,7 +346,8 @@ impl Screen {
                 Screen::Menu(MainMenu::main(last))
             }
             ScreenName::Characters => {
-                Screen::Characters(CharactersScreen::new(launch.characters.clone()))
+                let campaigns = content.campaigns().len() > 1;
+                Screen::Characters(CharactersScreen::new(launch.characters.clone(), campaigns))
             }
             ScreenName::Pause => Screen::Menu(MainMenu::pause()),
             // A release build's new run gets a seed no one chooses; a developer may type one.
@@ -478,9 +479,18 @@ impl ScreenStack {
         self.screens.iter().map(Screen::name).collect()
     }
 
-    /// Closes the top screen.
+    /// Closes the top screen, and New run beneath it if it was skipped
+    /// ([`NewRunScreen::skips`]): Esc on the race step goes back to the menu.
     pub fn close(&mut self) {
         self.screens.pop();
+        if matches!(self.screens.last(), Some(Screen::NewRun(screen)) if screen.skips()) {
+            self.screens.pop();
+        }
+    }
+
+    /// The top screen's name, if any screen is open.
+    fn top(&self) -> Option<ScreenName> {
+        self.screens.last().map(Screen::name)
     }
 
     /// Closes screens until `name` is on top; all of them if it is not open.
@@ -793,7 +803,13 @@ impl Screens<'_> {
         };
         let content = &self.content.0;
         let screen = Screen::new(name, content, &launch, view.as_ref(), &draft, beneath, talk);
+        // New run with one scenario to choose (a release build) is skipped: the race step opens
+        // over it at once.
+        let skipped = matches!(&screen, Screen::NewRun(screen) if screen.skips());
         self.stack.screens.push(screen);
+        if skipped {
+            self.open_on(ScreenName::Race, item);
+        }
     }
 
     /// Replaces the top screen with screen `name`: the same stack depth, so closing it returns
@@ -848,7 +864,10 @@ pub(super) fn converse(
 /// Opens the screens the command line asks for (see [`startup_screens`]).
 pub(super) fn open_startup_screens(args: Res<Args>, game: Option<Res<Game>>, mut screens: Screens) {
     for name in startup_screens(args.screen, game.is_some()) {
-        screens.open(name);
+        // A skipped New run has opened the race step already.
+        if screens.stack.top() != Some(name) {
+            screens.open(name);
+        }
     }
 }
 
@@ -1527,6 +1546,35 @@ mod tests {
         assert_eq!(game.save_id, format!("{}-1", name.to_lowercase()));
         frame(&mut app, &[WAIT]);
         assert_eq!(actions(&app), [Action::Wait]);
+    }
+
+    /// A release build's New run lists one scenario, the campaign's start, so it is skipped:
+    /// the race step opens over it at once (reading its pick), and Esc there goes back to the
+    /// main menu. (Tests are developer builds, so the stack is built by hand.)
+    #[test]
+    fn a_release_new_run_is_skipped_both_ways() {
+        let content = content();
+        let release = NewRunScreen::new(&content, Some(5));
+        assert!(release.skips());
+        let mut stack = ScreenStack::default();
+        stack.screens.push(Screen::Menu(MainMenu::main(None)));
+        stack.screens.push(Screen::NewRun(release));
+        let draft = stack.draft();
+        let pick = draft.scenario.as_ref().map(|p| p.id.as_str());
+        assert_eq!(pick, Some("ascmearc"));
+        let race = ChoiceScreen::new(Step::Race, &content, &draft);
+        stack.screens.push(Screen::Choice(race));
+        stack.close();
+        assert_eq!(stack.names(), [ScreenName::Main]);
+        // A developer build's New run is shown, and closing what is above it leaves it open.
+        stack
+            .screens
+            .push(Screen::NewRun(NewRunScreen::new(&content, None)));
+        stack
+            .screens
+            .push(Screen::Settings(SettingsScreen::default()));
+        stack.close();
+        assert_eq!(stack.names(), [ScreenName::Main, ScreenName::NewRun]);
     }
 
     #[test]

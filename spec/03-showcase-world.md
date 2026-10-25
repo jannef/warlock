@@ -30,8 +30,8 @@ fingerprint (§7 "Saves"). The first campaign to play is the Ascmearc (`assets/c
 #332, the campaign design §5): its 120×60 overworld, entered by the pass Beorggeat, a closed way
 back, with the market town Cēaptūn five road cells east, the barrow Cealdhlāw in sight of the
 road, and two dungeons hidden until quests reveal them (Fennmynster, Fyrdelf); its start
-scenario is `ascmearc`. **Cēaptūn** (#336, the campaign design §6; level `ceaptun`, 90×32,
-outdoor, item level 1, danger 0) is entered from the town's overworld cell and left by the `<`
+scenario is `ascmearc`, the one a release's New run starts (§3b). **Cēaptūn** (#336, the
+campaign design §6; level `ceaptun`, 90×32, outdoor, item level 1, danger 0) is entered from the town's overworld cell and left by the `<`
 on its market square: walled on the pass side and open to the river, it has four shops on the
 square (a general store, the Forge, the Armourer's, the Provisioner's, their goods on their
 floors), the Mynster (the temple, a sanctuary) where Sister Hild cures and mends for gold (§8

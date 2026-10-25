@@ -2,7 +2,10 @@
 //! optional seed. The start scenario of every campaign of kind `campaign` comes first; developer
 //! builds then list every scenario of every campaign, the test world's too, under its
 //! campaign's name ([`rows`], spec §3). Enter goes on to character creation ([`super::chargen_screen`]), or with
-//! content that has no races or classes, starts the run as the scenario's. A release build's run
+//! content that has no races or classes, starts the run as the scenario's. With one scenario to
+//! choose (a release build, which lists only the campaign's start) the screen is skipped
+//! ([`NewRunScreen::skips`]): it stays on the stack, unseen, holding the pick, and the race step
+//! opens over it at once (`screens.rs`). A release build's run
 //! gets a seed no one chooses ([`fresh_seed`], drawn when the screen opens), and the screen never
 //! mentions it (#256).
 
@@ -91,6 +94,14 @@ impl NewRunScreen {
                 None => Seed::Field(String::new()),
             },
         }
+    }
+
+    /// Whether the screen is skipped: it has one scenario, and a character to create for it.
+    /// Character creation's race step then opens over it at once, and closing that step closes
+    /// this one too, so the player goes from the main menu straight to the race and back (spec
+    /// §3 "Campaigns").
+    pub fn skips(&self) -> bool {
+        self.scenarios.len() == 1 && self.creates_characters
     }
 
     /// The selected scenario and the seed, for character creation.
@@ -376,6 +387,10 @@ mod tests {
         let text = drawn(&s);
         assert!(text.contains("> The Ascmearc"), "{text}");
         assert!(!text.to_lowercase().contains("seed"), "{text}");
+        // One row: the screen is skipped, straight on to the race. A developer build lists the
+        // test world too, so its screen is shown.
+        assert!(s.skips());
+        assert!(!screen().skips());
     }
 
     /// A world to play beside the test world: release builds list its start alone, developer
@@ -407,6 +422,7 @@ mod tests {
         let ids = |s: &NewRunScreen| s.scenarios.iter().map(|i| i.id.clone()).collect::<Vec<_>>();
         assert_eq!(ids(&release), ["ashland"]);
         assert_eq!(release.rows, [Row::Scenario(0)]);
+        assert!(release.skips());
         let dev = NewRunScreen::new(&content, None);
         assert_eq!(ids(&dev)[..3], ["ashland", "cinders", "showcase"]);
         assert_eq!(dev.rows[0], Row::Heading("The Ashland".into()));
@@ -447,6 +463,10 @@ mod tests {
         let default = content.scenario("plain").expect("plain").seed;
         for (fresh, seed) in [(None, default), (Some(77), 77)] {
             let mut s = NewRunScreen::new(&content, fresh);
+            assert!(
+                !s.skips(),
+                "no character to create: Enter starts the run here"
+            );
             assert_eq!(
                 s.handle(&Press::nav(Nav::Enter)),
                 ScreenAction::Choose(MenuChoice::NewRun {
@@ -473,6 +493,9 @@ mod release {
             .map(|c| c.start.as_str())
             .collect();
         assert_eq!(rows_of(&content, false), vec![(None, starts.clone())]);
+        // One campaign: New run's step is skipped, straight on to the race.
+        assert_eq!(starts.len(), 1, "{starts:?}");
+        assert!(NewRunScreen::new(&content, Some(1)).skips());
         for (_, ids) in rows_of(&content, true) {
             for id in ids {
                 let scenario = content.scenario(id).expect("a scenario");

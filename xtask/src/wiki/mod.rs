@@ -126,6 +126,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("terrain-overworld.md", terrain::overworld_terrain),
         ("overworld-sight.md", sight::overworld_sight_table),
         ("overworld-places.md", overworld::locations),
+        ("overworld-map.md", overworld::map),
+        ("overworld-regions.md", overworld::regions),
         ("moons.md", moons::moons),
         ("weather.md", weather::weather_chances),
         ("weather-effects.md", weather::weather_effects),
@@ -1109,6 +1111,8 @@ mod tests {
         // The playable campaign only: the test world leaves the player wiki.
         assert!(scenarios.contains("| The Ascmearc | 08:00, 11 Darkening, Year 1444 |"));
         assert!(!scenarios.contains("| Showcase"), "{scenarios}");
+        // Only the start a release's New run starts: the dev scenarios are left out.
+        assert!(!scenarios.contains("| Cēaptūn |"), "{scenarios}");
         let places = text("overworld-places.md");
         for row in [
             "| Beorggeat | (12, 28) | Grægweall | Mountain pass | — | — |",
@@ -1116,6 +1120,23 @@ mod tests {
         ] {
             assert!(places.contains(row), "{row}\n{places}");
         }
+        // The map: 60 rows of 120 cells, the hidden ways in drawn (the wiki tells the truth),
+        // and its key; the regions in the order they match.
+        let map = text("overworld-map.md");
+        assert!(map.contains("**The Ascmearc**, 120 by 60 cells"), "{map}");
+        let rows: Vec<&str> = (map
+            .split("```text\n")
+            .nth(1)
+            .and_then(|m| m.split("```").next()))
+        .expect("a code block")
+        .lines()
+        .collect();
+        assert_eq!(rows.len(), 60);
+        assert!(rows.iter().all(|r| r.chars().count() == 120));
+        assert!(map.contains("| Mountain pass |"), "{map}");
+        let regions = text("overworld-regions.md");
+        assert!(regions.contains("| Cēapdenu |"), "{regions}");
+        assert!(!regions.contains("Wildlands"), "{regions}");
         // Hunger: the states by nutrition, each race's need, food, and corpses (what eating them
         // does is a table of its own).
         let states = text("hunger-states.md");

@@ -55,7 +55,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Main menu** (drawn in glyphs; the game opens on it unless `--scenario`, `--new`, `--replay`,
   `--record`, or `--capture` name what to run): Continue (only if a character is saved: it
   resumes the one played last, and names them), Characters (likewise), New run (scenario list
-  from content, then character creation), Settings, Controls, Quit. A new run's seed is no
+  from content, then character creation; with one scenario to choose, as in a release build,
+  which lists only the campaign's start, the list is skipped and New run opens on the race,
+  where Esc goes back to the menu, §3 "The Ascmearc"), Settings, Controls, Quit. A new run's seed is no
   one's choice (#256): New run draws a fresh one from the platform's clock and entropy when it
   opens (the app's, never the rules'), and once drawn it is the run's like any seed (saved,
   recorded in replays, shown in the status bar). Only developer builds (debug, or `--dev`: the
@@ -63,8 +65,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   like `--seed`); empty means the scenario's own seed, so dev runs and captures stay
   reproducible. The summary names the seed only there.
 - **Characters** (#218, §7 "Saves"): every saved character, the one played last first: the name,
-  race and class, and level, and for the selected one where they are and when they were last
-  played (wall-clock, in UTC). Up/Down choose, Enter resumes the one selected, the Erase key
+  race and class, and level, and for the selected one where they are (with the campaign's name
+  when more than one is installed, as in a developer build: "In Cēaptūn (The Ascmearc).") and
+  when they were last played (wall-clock, in UTC). Up/Down choose, Enter resumes the one selected, the Erase key
   (`Delete`) deletes it after the one dialog ("Delete Brakka's save? The character is gone for
   good."; Keep is selected first), Esc goes back. A save whose summary cannot be read is listed
   by its file's id; one that cannot be resumed is kept as unusable and leaves the list, and the

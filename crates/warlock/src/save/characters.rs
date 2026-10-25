@@ -1,7 +1,8 @@
 //! The saved characters (spec §7 "Saves"): each character has a save of its own, named by an id
 //! made of a slug of the name and a number (`brakka-1`, `brakka-2`: two Brakkas live side by
 //! side). Beside each save (`saves/<id>.sav`) lies its summary (`saves/<id>.toml`): what the
-//! list of saved characters shows (name, race, class, level, place, when last played), so the
+//! list of saved characters shows (name, race, class, level, place and campaign, when last
+//! played), so the
 //! list reads no save.
 //!
 //! When a character was last played is wall-clock time, which only the app knows: seconds since
@@ -31,6 +32,10 @@ pub struct Summary {
     /// Where the character is: the level's name.
     #[serde(default)]
     pub place: String,
+    /// The world the character is in: its campaign's name (`The Ascmearc`); empty in a summary
+    /// written before it was kept, or for a run outside every campaign.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub campaign: String,
     /// When the character was last saved: seconds since 1970 (UTC).
     #[serde(default)]
     pub played: u64,
@@ -55,6 +60,8 @@ impl Summary {
             class,
             level: u32::from(view.own_experience().level),
             place: view.level_name().to_string(),
+            campaign: (content.campaign(world.campaign()))
+                .map_or_else(String::new, |c| c.name.clone()),
             played,
         }
     }
@@ -198,6 +205,7 @@ mod tests {
         assert_eq!(summary.race_and_class(), "Human Thief");
         assert_eq!(summary.level, 1);
         assert_eq!(summary.place, world.perception().level_name());
+        assert_eq!(summary.campaign, "The Showcase");
         assert_eq!(Summary::from_text(&summary.to_text()), Some(summary));
         assert_eq!(Summary::from_text("not = [a summary"), None);
     }
@@ -212,6 +220,7 @@ mod tests {
                 class: String::new(),
                 level: 1,
                 place: String::new(),
+                campaign: String::new(),
                 played,
             }),
         };
