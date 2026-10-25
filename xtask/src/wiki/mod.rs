@@ -40,6 +40,7 @@ mod rooms;
 mod scenarios;
 mod scrolls;
 mod searching;
+mod services;
 mod sight;
 mod skills;
 mod stats;
@@ -140,6 +141,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("creature-senses.md", creatures::creature_senses),
         ("dialogue.md", dialogue::dialogue),
         ("quests.md", dialogue::quests),
+        ("services.md", services::services),
         ("footsteps.md", terrain::footsteps),
         ("noises.md", hearing::noises),
         ("sound-travel.md", hearing::sound_travel),
