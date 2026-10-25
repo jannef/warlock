@@ -79,7 +79,7 @@ pub use dialogue::{
     Dialogue, DialogueId, MAX_LINE, MAX_REPLY, MAX_TOPICS, MUTTER_CHANCES, Mutter, Speaker, Topic,
 };
 pub use disease::{DIFFICULTIES, DiseaseDef, DiseaseId, SOURCES, Wading};
-pub use dungeon::{DungeonDef, Generator, LevelPlan, parse_branch_level};
+pub use dungeon::{DungeonDef, Generator, LevelPlan, RoomOdds, ShopOdds, parse_branch_level};
 pub use effect::{
     Darken, EffectDef, EffectLight, EffectShape, FILL_GLYPH, MAX_BURST_RADIUS, MAX_DARKEN,
     MAX_SHAKE_PIXELS, Shake,
@@ -1650,6 +1650,8 @@ impl Content {
             |name| self.creature_id(name),
             key_id,
             |name| self.trap_id(name),
+            &self.room_effects,
+            self.shops.as_ref(),
         )?;
         for def in resolved {
             if self.levels.contains_key(&def.id) {

@@ -37,7 +37,8 @@ mod vault;
 
 use crate::content::{
     Content, CreatureId, CreatureSpawn, Flow, Generator, LevelKind, LevelTemplate, LightId,
-    ObjectId, Secret, ShopPlan, SpecialRoom, StairsDir, StairsLink, TerrainId, Trap, secret_look,
+    ObjectId, RoomOdds, Secret, ShopOdds, ShopPlan, SpecialRoom, StairsDir, StairsLink, TerrainId,
+    Trap, secret_look,
 };
 use crate::door::Lock;
 use crate::geom::{Dir, Pos};
@@ -159,6 +160,10 @@ pub(crate) struct Needs<'a> {
 pub(crate) struct Canvas<'a> {
     pub content: &'a Content,
     pub pal: Palette,
+    /// How often the level's rooms are special, and with what (the branch's odds at its depth).
+    pub room_odds: &'a RoomOdds,
+    /// How often the level has a shop, and what kind (the branch's); `None`: no shops at all.
+    pub shop_odds: Option<&'a ShopOdds>,
     pub terrain: Grid<TerrainId>,
     pub lights: BTreeMap<Pos, LightId>,
     /// Flow of running water stamped from vaults (generators make none of their own).
@@ -185,10 +190,18 @@ pub(crate) struct Canvas<'a> {
 }
 
 impl<'a> Canvas<'a> {
-    fn new(content: &'a Content, pal: Palette, width: i32, height: i32) -> Self {
+    fn new(
+        content: &'a Content,
+        pal: Palette,
+        (room_odds, shop_odds): (&'a RoomOdds, Option<&'a ShopOdds>),
+        width: i32,
+        height: i32,
+    ) -> Self {
         Self {
             content,
             pal,
+            room_odds,
+            shop_odds,
             terrain: Grid::new(width, height, pal.void),
             lights: BTreeMap::new(),
             flow: BTreeMap::new(),
@@ -360,6 +373,9 @@ pub fn generate_with(
         .plan(depth)
         .ok_or_else(|| GenError::NotAGeneratedLevel(id.to_string()))?;
     let pal = Palette::resolve(content).map_err(GenError::Content)?;
+    let room_odds =
+        (def.room_odds(depth)).ok_or_else(|| GenError::NotAGeneratedLevel(id.to_string()))?;
+    let odds = (room_odds, def.shop_odds(depth));
     let needs = Needs {
         down: depth < def.depth,
         creatures: &def.creatures,
@@ -374,7 +390,7 @@ pub fn generate_with(
 
     for attempt in 0..MAX_ATTEMPTS {
         let mut rng = Rng::map(seed, id, attempt);
-        let mut canvas = Canvas::new(content, pal, plan.width, plan.height);
+        let mut canvas = Canvas::new(content, pal, odds, plan.width, plan.height);
         let built = match plan.generator {
             Generator::Rooms => rooms::build(&mut canvas, &mut rng, needs),
             Generator::Caves => caves::build(&mut canvas, &mut rng, needs),
