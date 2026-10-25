@@ -4,9 +4,9 @@
 use crate::render::console::{Cell, Console};
 use warlock_core::Pos;
 use warlock_core::color::Rgb;
-use warlock_core::content::{ActionKind, Stance};
+use warlock_core::content::{ActionKind, Content, ServiceKind, Stance};
 use warlock_core::object::{Stack, phrase, phrase_with};
-use warlock_core::perception::{CellView, PerceptionView};
+use warlock_core::perception::{CellView, PerceptionView, SeenActor};
 use warlock_core::world::ActorId;
 
 /// Cursor colors: dark glyph on a warm highlight, so it reads on any terrain and under any light.
@@ -120,11 +120,21 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
                     .map(|word| format!(", {word}"))
                     .collect();
                 let gear = gear(view, actor.id);
-                format!(
-                    "{} {name} ({stance}{health}{effects}){gear}, on {}{here}.",
-                    article(name),
-                    terrain(t)
-                )
+                // A unique character the player knows by name: "Sister Hild (unhurt), who
+                // cures and mends for gold, on plank floor."
+                let proper = (actor.dialogue).and_then(|d| content.dialogue(d).name.as_deref());
+                match proper {
+                    Some(proper) => format!(
+                        "{proper} ({stance}{health}{effects}){}{gear}, on {}{here}.",
+                        services(content, actor),
+                        terrain(t)
+                    ),
+                    None => format!(
+                        "{} {name} ({stance}{health}{effects}){gear}, on {}{here}.",
+                        article(name),
+                        terrain(t)
+                    ),
+                }
             }
             (None, Some(things)) => format!("{}, on {}.", capitalize(things), terrain(t)),
             (None, None) => format!("{}.", capitalize(&with_article(&terrain(t)))),
@@ -138,6 +148,29 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
         },
         (CellView::Unknown, Some(heard)) => format!("{heard} here."),
         (CellView::Unknown, None) => "You don't know what is there.".to_string(),
+    }
+}
+
+/// What a seen creature sells as a service, as it reads after its name: ", who cures and mends
+/// for gold"; nothing if it sells none (campaign design §6.1).
+fn services(content: &Content, actor: &SeenActor) -> String {
+    let Some(dialogue) = actor.dialogue else {
+        return String::new();
+    };
+    let mut verbs: Vec<&str> = Vec::new();
+    for service in &content.dialogue(dialogue).services {
+        let verb = match service.does {
+            ServiceKind::Cure => "cures",
+            ServiceKind::Mend => "mends",
+        };
+        if !verbs.contains(&verb) {
+            verbs.push(verb);
+        }
+    }
+    match verbs.as_slice() {
+        [] => String::new(),
+        [one] => format!(", who {one} for gold"),
+        [rest @ .., last] => format!(", who {} and {last} for gold", rest.join(", ")),
     }
 }
 
@@ -256,6 +289,21 @@ mod tests {
         assert_eq!(
             describe(&w.perception(), pass, true),
             "A mountain pass, Beorggeat. The way you came; snow has closed it behind you."
+        );
+    }
+
+    #[test]
+    fn people_are_named_with_the_services_they_sell() {
+        let content = Arc::new(Content::builtin().expect("content"));
+        let mut w = World::new(content, "ceaptun", None).expect("Cēaptūn");
+        let walk = "move:SW*4 move:W*15 open:SW move:SW move:S*2";
+        for action in warlock_core::action::parse_actions(walk).expect("actions") {
+            w.apply(&action);
+        }
+        assert_eq!(w.player_pos(), Pos::new(26, 24), "inside the Mynster");
+        assert_eq!(
+            describe(&w.perception(), Pos::new(27, 25), true),
+            "Sister Hild (unhurt), who cures and mends for gold, on plank floor in a sanctuary."
         );
     }
 

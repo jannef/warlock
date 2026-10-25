@@ -6,6 +6,8 @@
 # Each [[dialogue]] belongs to a creature type (`creature = "gardener"`) or to one unique
 # character (`npc = "..."`, given to a creature by a level's legend entry with `npc = "..."`; it
 # wins over its type's dialogue). Fields:
+#   name     an npc's proper name ("Sister Hild"; optional, npcs only, 1 to 24 characters):
+#            messages, look mode, and the dialogue screen call it so, without an article
 #   greet    said the first time you chat with it, instead of a line (optional)
 #   greet_evil  lines a good creature says instead of its greeting and its lines while you are
 #            Evil or Wicked (spec §8 "Alignment"), in turn like the one-liners (optional; same
