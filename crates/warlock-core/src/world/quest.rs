@@ -267,9 +267,9 @@ impl PerceptionView<'_> {
     }
 }
 
-/// What whoever speaks dialogue `id` is called in messages: "the old hermit".
+/// What whoever speaks dialogue `id` is called in messages: "the old hermit", "Sister Hild".
 fn speaker_called(content: &Content, id: DialogueId) -> String {
-    format!("the {}", content.speaker_name(id))
+    content.speaker_called(id)
 }
 
 /// `name` as it reads inside a sentence: "The Arena" becomes "the Arena".

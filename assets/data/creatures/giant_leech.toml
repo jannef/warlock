@@ -1,0 +1,28 @@
+# The fen wave (Fennmynster, docs/design/campaign.md §10.1). A leech as long as a forearm that
+# waits in the minster's flooded halls: it latches on and drinks, and the wound it leaves bleeds.
+[[creature]]
+id = "giant_leech"
+level = 4
+xp = 30
+name = "giant leech"
+glyph = "w"
+fg = "#7a2a38"
+speed = 800
+faction = "marsh"
+alignment = "neutral"
+vision = "low_light"
+sight = 5
+footsteps = 10
+hearing = 10
+weight = 6000
+size = "small"
+stats = { strength = 11, dexterity = 9, toughness = 16, intelligence = 1, willpower = 10, presence = 2 }
+base_hp = 6
+on_eat = { message = "It is mostly someone else's blood.", vomit = 50, heal = "1d2" }
+blood = "#5a1018"
+[creature.attack]
+damage = "1d4"
+damage_type = "piercing"
+name = "sucker"
+verb = "latches onto"
+on_hit = [{ status = "bleeding", chance = 40, severity = 1 }]

@@ -21,8 +21,19 @@ const WAVES: &[(&str, Option<&str>)] = &[
     ("giant_centipede", None),
     ("barrow_ghoul", None),
     ("goblin_chief", None),
-    // The Ascmearc's own (`campaigns/ascmearc/data/creatures/`).
     ("barrow_wight", Some("ascmearc")),
+    // The fen wave (Fennmynster, #334).
+    ("giant_leech", None),
+    ("giant_frog", None),
+    ("drowned", None),
+    ("crocodile", None),
+    ("cultist", Some("ascmearc")),
+    ("will_o_wisp", None),
+    ("ghost", None),
+    ("mud_golem", None),
+    ("cult_priest", Some("ascmearc")),
+    ("marsh_troll", None),
+    ("bog_hag", Some("ascmearc")),
     // The delf wave (Fyrdelf, #335).
     ("ember_beetle", None),
     ("duergar_miner", None),
@@ -139,6 +150,32 @@ fn the_barrow_humanoids_wield_their_weapons() {
 }
 
 #[test]
+fn the_cult_fights_the_marsh_and_leaves_the_dead_alone() {
+    let stance = |a: &str, b: &str| {
+        let id = |n: &str| CONTENT.creature_id(n).expect(n);
+        CONTENT.stance(id(a), id(b))
+    };
+    for (a, b, want) in [
+        ("giant_leech", "player", Stance::Hostile),
+        ("crocodile", "player", Stance::Hostile),
+        ("bog_hag", "player", Stance::Hostile),
+        ("cultist", "player", Stance::Hostile),
+        ("cultist", "marsh_troll", Stance::Hostile),
+        ("cult_priest", "bog_hag", Stance::Hostile),
+        ("cultist", "cult_priest", Stance::Neutral),
+        ("cultist", "drowned", Stance::Neutral),
+        ("giant_frog", "bog_hag", Stance::Neutral),
+        ("will_o_wisp", "mud_golem", Stance::Neutral),
+        // The fen's dead are the barrows' kin: undead, hostile to the goblins, not to the fen.
+        ("drowned", "goblin", Stance::Hostile),
+        ("ghost", "skeleton", Stance::Neutral),
+        ("ghost", "crocodile", Stance::Neutral),
+    ] {
+        assert_eq!(stance(a, b), want, "{a} and {b}");
+    }
+}
+
+#[test]
 fn the_duergar_fight_the_goblins_kin_and_leave_the_fire_be() {
     let stance = |a: &str, b: &str| {
         let id = |n: &str| CONTENT.creature_id(n).expect(n);
@@ -159,6 +196,69 @@ fn the_duergar_fight_the_goblins_kin_and_leave_the_fire_be() {
         ("basilisk", "player", Stance::Hostile),
     ] {
         assert_eq!(stance(a, b), want, "{a} and {b}");
+    }
+}
+
+#[test]
+fn the_fen_dead_and_the_mud_shrug_off_blows() {
+    let def = |id: &str| CONTENT.creature(CONTENT.creature_id(id).expect(id));
+    let resist = |id: &str, kind: &str| {
+        let kind = CONTENT.damage_type_id(kind).expect(kind);
+        (def(id).resist.iter())
+            .find(|(k, _)| *k == kind)
+            .map_or(0, |(_, r)| *r)
+    };
+    for kind in ["slashing", "piercing", "bludgeoning"] {
+        assert_eq!(resist("ghost", kind), 50, "{kind}");
+    }
+    assert_eq!(resist("drowned", "poison"), 100);
+    let hide = |id: &str| def(id).natural.as_ref().map(|h| (h.defence, h.protection));
+    assert_eq!(hide("mud_golem"), Some((0, 5)));
+    assert_eq!(hide("crocodile"), Some((2, 3)));
+    for id in ["ghost", "mud_golem", "will_o_wisp"] {
+        assert!(!def(id).corpse && def(id).blood.is_none(), "{id}");
+    }
+    assert!(def("will_o_wisp").light.is_some());
+    // Only the bog hag comes once a run (of the fen's types).
+    for id in [
+        "giant_leech",
+        "giant_frog",
+        "drowned",
+        "crocodile",
+        "cultist",
+        "will_o_wisp",
+    ] {
+        assert!(!def(id).unique, "{id}");
+    }
+    assert!(def("bog_hag").unique);
+}
+
+/// Over many seeds, the cult's daggers and the hag's staff: wielded whenever carried, and about
+/// as often as their lines say; the cult's scrolls come now and then.
+#[test]
+fn the_cult_bears_its_daggers_and_the_hag_her_staff() {
+    for (id, weapon, least, scrolls_least) in [
+        ("cultist", "dagger", 160, 10),
+        ("cult_priest", "dagger", 160, 50),
+        ("bog_hag", "quarterstaff", 140, 0),
+    ] {
+        let creature = CONTENT.creature_id(id).expect(id);
+        let (mut armed, mut scrolls) = (0, 0);
+        for seed in 0..200 {
+            let pack = gear::roll(&CONTENT, &mut Rng::gear(seed, "test"), creature, 6);
+            for (i, stack) in pack.items.iter().enumerate() {
+                let object = CONTENT.object(stack.object);
+                if object.id == weapon {
+                    assert!(pack.equipment.holds(i), "{id} {seed}: {weapon} not held");
+                    armed += 1;
+                }
+                if object.id.starts_with("scroll_of_") {
+                    scrolls += 1;
+                }
+            }
+        }
+        assert!(armed >= least, "{id}: {armed} of 200 armed");
+        assert!(scrolls >= scrolls_least, "{id}: {scrolls} scrolls");
     }
 }
 

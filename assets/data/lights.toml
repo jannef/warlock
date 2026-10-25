@@ -129,6 +129,13 @@ id = "crystal_amber"
 color = [320, 220, 40, 0]
 radius = 7
 
+# The will-o'-wisp (creatures/will_o_wisp.toml): a pale, cold light that lights a few cells
+# around it; magical, so steady.
+[[light]]
+id = "wisp"
+color = [110, 190, 170, 0]
+radius = 3
+
 # Darkness chamber: too faint for normal eyes (even in pairs, bounce included: brightness 37 < 40);
 # low-light eyes (12) see it and the floor glowing about two cells around it.
 [[light]]

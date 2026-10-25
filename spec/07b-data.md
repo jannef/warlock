@@ -88,8 +88,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
   claws whose criticals bleed), the goblin chief 5 (club, short sword, jerkin, coins), and the
   barrow wight 6 (a caster whose touch is cold, resists cold, no corpse; an ancient long sword,
   sometimes magic). The undead are immune to poison. The barrow wight is the Ascmearc's own type
-  (`docs/dev/campaign.md`) and waits in the shared `data/creatures/` until the Ascmearc's directory
-  exists. The delf wave (the duergar delf of Fyrdelf, danger 8 to 19): the ember beetle 8 (a
+  (`docs/dev/campaign.md`). The fen wave (the drowned minster of Fennmynster, danger 4 to 11):
+  the giant leech 4 (its bite leaves a bleeding wound), the giant frog 4 (quick), the drowned 5
+  (undead, slow, filth fever on a hit), the crocodile 6 (a strong bite, scales 2/3), the
+  cultist 6 (racial dagger, a scroll now and then), the will-o'-wisp 7 (a caster that glows,
+  silent, hard to hit, no corpse), the ghost 8 (undead, resists slashing, piercing, and
+  bludgeoning 50, a cold touch, no corpse), the mud golem 8 (slow, protection 5, no corpse), the
+  cult priest 9 (a caster with the cult's dagger, sometimes magic, and often a scroll), the marsh
+  troll 9 (huge, regenerating by its Toughness), and the bog hag 11 (a caster with a staff, often
+  magic; unique: a population draws her once a run). The cultist, the cult priest, and the bog
+  hag are the Ascmearc's own types. The delf wave (the duergar delf of Fyrdelf, danger 8 to 19): the ember beetle 8 (a
   burning bite, shell, resists fire 50, a faint glow), the duergar miner 9 (a pick-axe
   held as a tool, the racial hand axe half the time, a leather cap), the duergar warrior 11
   (racial hand axe, small shield, chain mail, sometimes magic), the ogre 12 (slow, racial maul),
@@ -606,10 +614,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
   gives the stance (`Hostile` or `Neutral`) of two factions, creature types, or actors. Test
   factions: `vermin` (giant rats; hostile to the player), `kobolds` (the war band; hostile to the
   player and the vermin), `goblins` (the barrows' goblin tribes; hostile to the player, the
-  vermin, and the kobolds), `undead` (the barrows' dead; hostile to the player, the kobolds, and
-  the goblins, and leaving the vermin alone), `duergar` (the delf's grey dwarves; hostile to the
-  player, the goblins (the ogres and trolls among them), and the undead), `fire` ("fire things",
-  the delf's burning creatures and the fire drake; hostile to the player only), `wildlife` (deer, cave bats, the cave beetle;
+  vermin, and the kobolds), `undead` (the barrows' and the fen's dead; hostile to the player,
+  the kobolds, and the goblins, and leaving the vermin alone), `marsh` ("marsh things", the
+  fen's living things and the bog hag; hostile to the player; not animals as a faction), `cult`
+  ("cultists", the drowned minster's cult; hostile to the player and the marsh), `duergar` (the
+  delf's grey dwarves; hostile to the player, the goblins (the ogres and trolls among them), and
+  the undead), `fire` ("fire things", the delf's burning creatures and the fire drake; hostile to
+  the player only), `wildlife` (deer, cave bats, the cave beetle;
   neutral to everyone), and
   `peaceful` ("peaceful folk", hostile to no one: the showcase's people by type, and creatures
   levels place in it); `merchants` (shopkeepers; hostile to no one) and `outraged` ("outraged
@@ -629,7 +640,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   time the player arrives by stairs.
 - **Dialogue** (`data/dialogue.toml`, optional; without it nobody talks; §8 "Dialogue"): each
   `[[dialogue]]` names exactly one of `creature` (a creature type, not the player) or `npc` (an
-  npc id: lower-case letters, digits, and underscores), at most one dialogue each, and has `lines`
+  npc id: lower-case letters, digits, and underscores; an npc's may give its proper `name`, 1 to
+  24 characters, "Sister Hild": messages, look mode, and the dialogue screen call it so, without
+  an article, and quest texts name it so as a giver), at most one dialogue each, and has `lines`
   (at least one one-liner), an optional `greet`, optional cold greetings (`greet_evil`, lines a
   good speaker says to an Evil or Wicked character instead of its greeting and one-liners, in
   turn; `greet_good`, an evil speaker's to a Good or Saintly character; §8 "Alignment"), optional

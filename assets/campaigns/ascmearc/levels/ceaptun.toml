@@ -1,0 +1,299 @@
+# Cēaptūn, "the market town" (docs/design/campaign.md §6; spec §3): the trading town at the
+# crossroads below the pass, where the mountain road meets the river roads. A hand-made outdoor
+# level (sky, sun, weather; the pond and the well freeze in a hard winter), entered from its cell
+# on the Ascmearc's overworld; its `<` on the square leads back out there. Walled on the pass
+# side (west), open to the river (east, Beorhtburna's mill race). Everyone here is peaceful
+# (the townsfolk, the people, and the merchants), so the town is safe unless the player steals.
+#
+# The square: the stairs up (<) to the overworld, the well, two braziers, and the townsfolk
+# (villagers, 1-6) on their rounds of the square, the lanes, and the main street.
+#
+# North of the square, four shops (spec §7 "Shops"), each a timber house with its door open on
+# the lane and its goods on the plank floor (the [[shop]] and [[pile]] tables at the end): the
+# general store (west), the Forge (a fire in the smith's corner), the Armourer's, and the
+# Provisioner's (food for the road; angelica root here and at the general store). Their keepers
+# are the shopkeepers of data/shops.toml, named here.
+#
+# South of the square: the Mynster (stone), the temple, a sanctuary (the [[room]] table: wounds
+# heal faster and nothing hostile steps in) where Sister Hild (H) cures and mends for gold; the
+# Gæsthūs (the inn), where Godgifu (G) has news of the march and bread on the table for
+# travellers; Reeve Leofric's house (L); and Factor Wulfrun's office (F). A shrine stone stands
+# by the Mynster's door.
+#
+# Texture: the granary by the wall, fields inside the wall, the pond north-east, and outside
+# the gate the gallows hill (a dead tree on rocky ground) beside the road from the pass.
+name = "Cēaptūn"
+kind = "outdoor"
+arrival = "Market day in Cēaptūn: the square is loud."
+item_level = 1
+map = '''
+TTTTTT#TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT↓↓TT
+......#...............................................................................↓↓..
+......#.WWWWWWWW...............................................................*......↓↓..
+.rrrr.#.WppppppW...WWWWWWWWWWWWW..WWWWWWWWWWW...WWWWWWWWWWW...WWWWWWWWWWW.....~~~~~...↓↓..
+.rxrr.#.WppppppW...WpppppppppppW..WBppppppppW...WpppppppppW...WpppppppppW....~~~~~~~.T↓↓..
+.rrrr.#.WppppppW...WppppplpppppW..WpppppppppW...WpppplppppW...WpppplppppW....~~~~~~~..↓↓.T
+.rrrr.#.WppppppW...WpppppppppppW..WpppplppppW...WpppppppppW...WpppppppppW.....~~~~~...↓↓..
+......#.WppppppW...WpppppppppppW..WpppppppppW...WpppppppppW...WpppppppppW........6....↓↓..
+......#.WWW+WWWW...WpppppppppppW..WpppppppppW...WpppppppppW...WpppppppppW...T...**....↓↓..
+.T....#............WWWWWt'tWWWWW..WWWWt'tWWWW...WWWWt'tWWWW...WWWWt'tWWWW.............↓↓..
+......#..........:3::::::::::::::::::::::::::::::::::::::::::::::::::::::::::.........↓↓..
+...T..#."""""""..:................:::::::::::::::::::::::.............................↓↓..
+......#."""""""..:..............T.::1::::::::::::::::::::.T...........T...............↓↓T.
+......#."""""""..:.............*..:::::::::::~:::::::::::..*...T..............T.......↓↓..
+......#..........:.............*..:::::::::::::::::::::::..*..........................↓↓..
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::↓↓..
+:::::::::4::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::↓↓..
+......#..........:................:::::::::::<@::::::::::.............................↓↓..
+.bbb..#..........:...............T:::::B:::::::::::B:::::...T.............T...........↓↓..
+.bbb..#."""""""".:................:2:::::::::::::::::::::**...........................↓↓..
+......#."""""""".:................:::::::::::::::::::::::.............................↓↓..
+..T...#."""""""".:::5::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::.....↓↓..
+......#.""T"""""...######t+t######....WWWWWWt+tWWWWWW...WWWW+WWWW...WWWW+WWWW.........↓↓.T
+......#.""""""""...#ppppppppppppp#.O..WpppppppppppppW...WpppppppW...WpppppppW.....T...↓↓..
+......#.""""""""...#pplppppppplpp#....WpppppppppppppW...WpppppppW...WpppppppW.........↓↓..
+....T.#.""""""""T..#pppppppHppppp#.**.WpplppppppplppW.T.WplpppppW.T.WppppplpW.........↓↓..
+......#.""""""""...#ppppppppppppp#.*..WpppppppGpppppW...WpppLpppW...WpppFpppW.........↓↓..
+......#.""""""""...#pplppp_ppplpp#....WpppppppppppppW...WpppppppW...WpppppppW...T.....↓↓T.
+.T....#.""""""""T..#ppppppppppppp#....WpppppppppppppW...WWWWWWWWW...WWWWWWWWW.........↓↓..
+......#.""""""""...###############..T.WWWWWWWWWWWWWWW..T..............................↓↓..
+......#...............................................................................↓↓..
+TTTTTT#TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT↓↓TT
+'''
+
+[legend]
+"." = "grass"
+":" = "flagstones"
+"T" = "tree"
+"*" = "flowers"
+'"' = "tall_grass"
+"b" = "bush"
+"r" = "rocky_ground"
+"x" = "dead_tree"
+"O" = "standing_stone"
+"W" = "timber_wall"
+"p" = "plank_floor"
+"l" = { terrain = "plank_floor", light = "lamp" }
+"t" = "sconce"
+"B" = "brazier"
+"↓" = { terrain = "running_water", flow = "S" }
+"<" = { terrain = "stairs_up", to = "ascmearc" }
+"@" = { terrain = "flagstones", spawn = "player" }
+# The townsfolk on their rounds.
+"1" = { terrain = "flagstones", creature = "villager", route = "E18 W18" }
+"2" = { terrain = "flagstones", creature = "villager", route = "E20 W20" }
+"3" = { terrain = "flagstones", creature = "villager", route = "E56 W56" }
+"4" = { terrain = "flagstones", creature = "villager", route = "E22 W22" }
+"5" = { terrain = "flagstones", creature = "villager", route = "E58 W58" }
+"6" = { terrain = "grass", creature = "villager" }
+# The town's people (campaigns/ascmearc/data/dialogue/ceaptun.toml).
+"H" = { terrain = "plank_floor", creature = "sister", npc = "hild" }
+"G" = { terrain = "plank_floor", creature = "innkeeper", npc = "godgifu" }
+"L" = { terrain = "plank_floor", creature = "reeve", npc = "leofric" }
+"F" = { terrain = "plank_floor", creature = "mine_factor", npc = "wulfrun" }
+
+# The Mynster, walls and door included, is a sanctuary (data/room_effects.toml).
+[[room]]
+effect = "sanctuary"
+area = [19, 22, 33, 29]
+
+# Bread and apples on the Gæsthūs's table, free to travellers.
+[[pile]]
+at = [44, 26]
+objects = ["bread*2", "apple*3"]
+
+# The general store: a bit of everything.
+[[shop]]
+kind = "general_store"
+keeper = "Ælfric"
+area = [20, 4, 30, 8]
+post = [25, 8]
+
+[[pile]]
+at = [21, 4]
+objects = ["dagger"]
+
+[[pile]]
+at = [23, 4]
+objects = ["quarterstaff"]
+
+[[pile]]
+at = [27, 4]
+objects = ["sling"]
+
+[[pile]]
+at = [29, 4]
+objects = ["short_bow"]
+
+[[pile]]
+at = [21, 6]
+objects = ["arrow*20"]
+
+[[pile]]
+at = [23, 6]
+objects = ["leather_jerkin"]
+
+[[pile]]
+at = [27, 6]
+objects = ["small_shield"]
+
+[[pile]]
+at = [29, 6]
+objects = ["wool_cloak"]
+
+[[pile]]
+at = [21, 8]
+objects = ["red_potion"]
+
+[[pile]]
+at = [23, 8]
+objects = ["angelica_root"]
+
+[[pile]]
+at = [27, 8]
+objects = ["rope", "candle*4"]
+
+[[pile]]
+at = [29, 8]
+objects = ["scroll_of_light"]
+
+# The Forge: arms and missiles. The smith's fire burns in the corner.
+[[shop]]
+kind = "weaponsmith"
+keeper = "Eadric"
+area = [35, 4, 43, 8]
+post = [39, 8]
+
+[[pile]]
+at = [37, 4]
+objects = ["short_sword"]
+
+[[pile]]
+at = [39, 4]
+objects = ["long_sword"]
+
+[[pile]]
+at = [41, 4]
+objects = ["spear"]
+
+[[pile]]
+at = [43, 4]
+objects = ["war_hammer"]
+
+[[pile]]
+at = [36, 6]
+objects = ["hand_axe"]
+
+[[pile]]
+at = [38, 6]
+objects = ["mace"]
+
+[[pile]]
+at = [41, 6]
+objects = ["battle_axe"]
+
+[[pile]]
+at = [43, 6]
+objects = ["javelin*3"]
+
+[[pile]]
+at = [36, 8]
+objects = ["arrow*30"]
+
+[[pile]]
+at = [42, 8]
+objects = ["bolt*20"]
+
+# The Armourer's: armour, helms, shields, gloves, boots, and cloaks.
+[[shop]]
+kind = "armourer"
+keeper = "Beornwyn"
+area = [49, 4, 57, 8]
+post = [53, 8]
+
+[[pile]]
+at = [49, 4]
+objects = ["leather_cap"]
+
+[[pile]]
+at = [51, 4]
+objects = ["iron_helm"]
+
+[[pile]]
+at = [55, 4]
+objects = ["padded_coat"]
+
+[[pile]]
+at = [57, 4]
+objects = ["studded_leather"]
+
+[[pile]]
+at = [49, 6]
+objects = ["chain_mail"]
+
+[[pile]]
+at = [51, 6]
+objects = ["buckler"]
+
+[[pile]]
+at = [55, 6]
+objects = ["large_shield"]
+
+[[pile]]
+at = [57, 6]
+objects = ["leather_gloves"]
+
+[[pile]]
+at = [49, 8]
+objects = ["leather_boots"]
+
+[[pile]]
+at = [51, 8]
+objects = ["iron_shod_boots"]
+
+[[pile]]
+at = [55, 8]
+objects = ["travelling_cloak"]
+
+[[pile]]
+at = [57, 8]
+objects = ["fur_cloak"]
+
+# The Provisioner's: food for the road (docs/design/campaign.md §5.6), light, and tools.
+[[shop]]
+kind = "provisioner"
+keeper = "Cyneburg"
+area = [63, 4, 71, 8]
+post = [67, 8]
+
+[[pile]]
+at = [63, 4]
+objects = ["ration*8"]
+
+[[pile]]
+at = [65, 4]
+objects = ["bread*6"]
+
+[[pile]]
+at = [69, 4]
+objects = ["dried_meat*10"]
+
+[[pile]]
+at = [71, 4]
+objects = ["apple*12"]
+
+[[pile]]
+at = [63, 6]
+objects = ["angelica_root"]
+
+[[pile]]
+at = [65, 6]
+objects = ["candle*6"]
+
+[[pile]]
+at = [69, 6]
+objects = ["rope"]
+
+[[pile]]
+at = [71, 6]
+objects = ["pick_axe"]

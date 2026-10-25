@@ -41,7 +41,8 @@ Update them together whenever behavior, commands, or architecture change.
 
 Game flags (`cargo run -p warlock -- --help`):
 - `--scenario NAME` (default `showcase`, without the test world the first campaign's start; `ascmearc`
-  starts on Beorggeat, the pass into the Ascmearc, the first campaign; `depths` starts in the generated dungeon, `courtyard` in
+  starts on Beorggeat, the pass into the Ascmearc, the first campaign; `ceaptun` on the market
+  square of its town, Cēaptūn, with 60 gold; `depths` starts in the generated dungeon, `courtyard` in
   the sunlit courtyard at 06:30, `world` on the overworld beside the Hall, `forest` in the glade
   of a generated forest area of the overworld at 06:30, `arena` in the dark corner of the arena
   where kobolds and giant rats fight, `quarry` in the quarry beside a pick-axe, `traps` in the

@@ -145,14 +145,17 @@ impl World {
         crate::weather::draw(self.state.seed, &label, 0)
     }
 
-    /// What `actor` is called in messages: "the gardener", or a shop's keeper by its name
-    /// ("Grimbold"; spec §7 "Shops").
+    /// What `actor` is called in messages: "the gardener", a shop's keeper by its name
+    /// ("Grimbold"; spec §7 "Shops"), or a unique character by its proper name ("Sister Hild").
     pub(super) fn called(&self, actor: &Actor) -> String {
         let keeper = (self.state.levels.get(&actor.level))
             .and_then(|level| level.shops.iter().find(|s| s.keeper == actor.id));
-        match keeper {
-            Some(shop) => shop.name.clone(),
-            None => format!("the {}", self.content.creature(actor.creature).name),
+        let proper =
+            (self.dialogue_of(actor)).and_then(|d| self.content.dialogue(d).name.as_deref());
+        match (keeper, proper) {
+            (Some(shop), _) => shop.name.clone(),
+            (None, Some(name)) => name.to_string(),
+            (None, None) => format!("the {}", self.content.creature(actor.creature).name),
         }
     }
 

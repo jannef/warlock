@@ -69,7 +69,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   it lands. The wiki's creatures table states each type's gear exactly.
 - **Dialogue** (`warlock-core/src/content/dialogue.rs`, the data; `world/talk.rs`, the rules;
   M28, #146): NPCs are creatures with a dialogue (§7), by their type or by the unique `npc` id
-  their level gave them (which wins).
+  their level gave them (which wins). A unique character with a proper name (the dialogue's
+  `name`, #336) is called by it: `Sister Hild says: "…"`, and in look mode "Sister Hild (unhurt),
+  who cures and mends for gold, on plank floor." (the services it sells, in words).
   - **Chatting** (`Action::Chat(dir)`, replay text `chat:E`; §6 "Chat") with a creature the player
     sees on that cell takes the time of `chat`. One without a dialogue does not answer ("The
     giant rat doesn't answer."), one hostile to the player is in no mood ("The brigand is in no

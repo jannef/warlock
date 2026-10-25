@@ -2,12 +2,12 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
-
                     ┌─ New run ────────────────────────────────────────────────┐
                     │                                                          │
                     │ The Ascmearc                                             │
                     │ > The Ascmearc                                           │
                     │   Cealdhlāw                                              │
+                    │   Cēaptūn                                                │
                     │   Fyrdelf                                                │
                     │ The Showcase                                             │
                     │   Showcase                                               │

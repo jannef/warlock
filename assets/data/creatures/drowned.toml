@@ -1,0 +1,30 @@
+# The fen wave (Fennmynster, docs/design/campaign.md §10.1). The minster's drowned dead, risen
+# swollen from the black water: slow, cold, untouched by poison, and their blows carry the filth
+# of the marsh.
+[[creature]]
+id = "drowned"
+level = 5
+xp = 35
+name = "drowned"
+plural = "drowned"
+glyph = "z"
+fg = "#6a8a9a"
+speed = 700
+faction = "undead"
+alignment = "evil"
+vision = "darkvision"
+sight = 7
+footsteps = 70
+hearing = 8
+weight = 70000
+stats = { strength = 15, dexterity = 7, toughness = 17, intelligence = 1, willpower = 12, presence = 1 }
+base_hp = 12
+resist = { poison = 100, cold = 25 }
+on_eat = { message = "Waterlogged and putrid.", vomit = 90, harm = "1d4" }
+blood = "#3a4a3a"
+[creature.attack]
+damage = "1d8"
+damage_type = "bludgeoning"
+name = "fist"
+verb = "pummels"
+on_hit = [{ disease = "filth_fever", chance = 20 }]

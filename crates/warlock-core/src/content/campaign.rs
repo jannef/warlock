@@ -366,7 +366,9 @@ mod tests {
             ]
         );
         for scenario in content.scenarios() {
-            let owner = if ["ascmearc", "cealdhlaw", "fyrdelf"].contains(&scenario.id.as_str()) {
+            let owner = if ["ascmearc", "ceaptun", "cealdhlaw", "fyrdelf"]
+                .contains(&scenario.id.as_str())
+            {
                 "ascmearc"
             } else {
                 "showcase"
@@ -374,6 +376,7 @@ mod tests {
             assert_eq!(scenario.campaign.as_deref(), Some(owner), "{}", scenario.id);
         }
         assert_eq!(content.level_campaign("ascmearc"), Some("ascmearc"));
+        assert_eq!(content.level_campaign("ceaptun"), Some("ascmearc"));
         for level in ["hub", "overworld", "vast", "depths:3", "depths"] {
             assert_eq!(content.level_campaign(level), Some("showcase"), "{level}");
         }

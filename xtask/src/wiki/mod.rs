@@ -946,8 +946,9 @@ mod tests {
         }
         let statuses = text("status-effects.md");
         for row in [
-            "| Bleeding | yes, \"bleeding\" | Big hits and confirmed criticals | A hit point every \
-             40 seconds, faster the worse it is | A degree a minute | Not at all | — | Bandage |",
+            "| Bleeding | yes, \"bleeding\" | Big hits and confirmed criticals; the giant leech's \
+             sucker (40%, 1 degree) | A hit point every 40 seconds, faster the worse it is | A \
+             degree a minute | Not at all | — | Bandage |",
             "| A degree every 2 minutes | Half as fast |",
             "the giant rat's bite (10%, 2 degrees); the grave worm's bite (20%, 1 degree); eating \
              rotten food |",
@@ -968,7 +969,7 @@ mod tests {
         }
         let diseases = text("diseases.md");
         for row in [
-            "| Filth fever | The giant rat's bite (10%) | Toughness, 54% | 1d3 days | Every day | \
+            "| Filth fever | The drowned's fist (20%); the giant rat's bite (10%) | Toughness, 54% | 1d3 days | Every day | \
              1d3 Dexterity, 1d3 Toughness | Two checks won in a row | no | Half as fast |",
             "| Marsh ague | Crossing marsh or swamp (4% an hour) |",
             "| Grave rot | The zombie's fist (15%); eating rotten food |",
@@ -1080,6 +1081,7 @@ mod tests {
         assert!(text("creatures.md").contains("shoots from afar"));
         assert!(text("factions.md").contains("| Kobolds | you, vermin, goblins, undead |"));
         assert!(text("factions.md").contains("| Wildlife | nobody |"));
+        assert!(text("factions.md").contains("| Cultists | you, marsh things | no |"));
         assert!(
             text("weather.md").contains("| Rainmoon | 20% | 30% | 35% | 15% |"),
             "{}",

@@ -1,0 +1,12 @@
+# A developer's start in Cēaptūn, the Ascmearc's market town (docs/design/campaign.md §6, §11.3):
+# on the market square beside the stairs up to the overworld, on the start's November morning.
+# Listed on New run in developer builds only (a release lists the campaign's start).
+name = "Cēaptūn"
+description = "The market town of the Ascmearc: its shops, the Mynster and Sister Hild, the Gæsthūs, and the townsfolk."
+start_level = "ceaptun"
+seed = 2
+character = { race = "human", gender = "male", class = "warrior", name = "Wulfstan" }
+lantern = "lantern"
+start_time = "08:00"
+# No pack of its own (a heavy one would burden the weakest characters New run may choose): a
+# chosen character brings its starting kit's gold, and anyone can sell to the shops.

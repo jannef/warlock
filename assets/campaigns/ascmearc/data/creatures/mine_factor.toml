@@ -1,0 +1,14 @@
+# The mine factor of Cēaptūn, who bought and sold the old mines' ore (docs/design/campaign.md §6):
+# Factor Wulfrun (her npc dialogue, campaigns/ascmearc/data/dialogue/ceaptun.toml).
+[[creature]]
+id = "mine_factor"
+name = "mine factor"
+glyph = "@"
+fg = "#c8a040"
+faction = "peaceful"
+alignment = "neutral"
+race = "human"
+footsteps = 50
+hearing = 10
+weight = 66000
+stats = { strength = 10, toughness = 11, intelligence = 14, presence = 12 }

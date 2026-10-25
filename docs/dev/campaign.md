@@ -14,7 +14,7 @@ engine data, `assets/data/` (the common creature types, the shopkeeper's dialogu
 `data/dialogue.toml`, the field references `data/quests.toml` and `data/dungeons.toml`, which
 hold no entries) and `assets/vaults/`. There are two campaigns: the Ascmearc (`ascmearc`, kind
 `campaign`, #332), the first world to play, so far its overworld and its start scenario
-(`docs/dev/overworld.md`); and the showcase (`kind = "test"`): the test world, with all nine
+(`docs/dev/overworld.md`) and its market town Cēaptūn (#336, below); and the showcase (`kind = "test"`): the test world, with all nine
 scenarios, the hub and its levels, the Wildlands, the Depths, the four quests, and the hermit,
 gardener, and bard (dialogue and types). With a campaign of kind `campaign` loaded, release
 builds' New run lists only its start, and the player wiki describes only it.
@@ -117,6 +117,24 @@ Test content never appears in a release. The cargo feature `showcase` holds it:
   checks `warlock_bg.wasm` the same way.
 - Until the Ascmearc lands (#332) a release build holds no campaign at all: New run says "No
   scenarios are installed." Do not cut a release before it.
+
+## Cēaptūn, the Ascmearc's market town (#336, design §6)
+
+`campaigns/ascmearc/levels/ceaptun.toml` (90×32, `kind = "outdoor"`, `item_level = 1`, no
+danger), entered from the overworld's `T` (`to = "ceaptun"`) and left by the `<` on its square
+(`to = "ascmearc"`). The map was drawn by a throwaway script and is edited by hand now. Its
+`[[shop]]`s (general store, weaponsmith, armourer, provisioner; keepers named in Old English)
+lay out `[[pile]]`s of goods each kind buys; the Mynster is a `sanctuary` `[[room]]`. The people
+are campaign creature types (`data/creatures/{villager,sister,innkeeper,reeve,mine_factor}.toml`)
+and their words are `data/dialogue/ceaptun.toml`: the `villager` type's one-liners and mutters,
+and the npcs `hild` (Sister Hild: two topics, the `cure` 60 and `mend` 40 services), `godgifu`
+(five rumour topics, never a reveal), `leofric`, and `wulfrun`, each with a proper `name`
+(`Dialogue::name`: `World::called`, `Content::speaker_name`/`speaker_called`, look mode and the
+dialogue screen through `SeenActor::dialogue`). No quests yet (the design's item H). The dev
+scenario `ceaptun` starts on the square (seed 2, a warrior, 60 gold). Tests:
+`world/ceaptun_tests.rs` (the way in and out, the shops' goods, everyone at peace, names, the
+sanctuary and the services, Godgifu's topics, the view snapshot `ceaptun_start`, a replay),
+`ui/look.rs` (Sister Hild's look line), the `dialogue-services` text snapshot.
 
 ## The wiki (`xtask/src/wiki/order.rs::campaigns`)
 

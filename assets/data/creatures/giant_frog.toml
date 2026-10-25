@@ -1,0 +1,26 @@
+# The fen wave (Fennmynster, docs/design/campaign.md §10.1). A frog the size of a dog that lives
+# in the fen's pools: quick, and its wide mouth bites hard.
+[[creature]]
+id = "giant_frog"
+level = 4
+xp = 30
+name = "giant frog"
+glyph = "R"
+fg = "#5a9a3a"
+speed = 1400
+faction = "marsh"
+alignment = "neutral"
+vision = "low_light"
+sight = 8
+footsteps = 40
+hearing = 12
+weight = 20000
+size = "small"
+stats = { strength = 12, dexterity = 15, toughness = 12, intelligence = 2, willpower = 8, presence = 3 }
+base_hp = 4
+on_eat = { message = "Like chicken, they say.", satiation = 300 }
+[creature.attack]
+damage = "1d6"
+damage_type = "bludgeoning"
+name = "bite"
+verb = "bites"
