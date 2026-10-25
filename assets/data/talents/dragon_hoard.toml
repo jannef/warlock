@@ -1,0 +1,10 @@
+# A birth sign's pick (spec §8 "Birth sign"; horoscope design §9.1): offered only to those born
+# under its sign.
+[[talent]]
+id = "dragon_hoard"
+name = "Dragon's hoard"
+tree = "stars"
+description = "Riches find you: what you find and slay is richer more often still, gems turn up more often still, and shop favour +10 %."
+needs = { animal = "griffin", level = 12 }
+effects = [{ kind = "loot_magic_percent", value = 25 }, { kind = "gem_find_percent", value = 50 }, { kind = "favour_percent", value = 10 }]
+systems = ["magic_items", "gems", "shops"]

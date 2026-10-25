@@ -172,6 +172,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("horoscope-animals.md", horoscope::animals),
         ("horoscope-elements.md", horoscope::elements),
         ("horoscope-lucky.md", horoscope::lucky),
+        ("horoscope-talents.md", horoscope::talents),
         ("class-kits.md", kits::class_kits),
         ("race-kits.md", kits::race_kits),
         ("alignment-bands.md", alignment::alignment_bands),
@@ -1000,6 +1001,19 @@ mod tests {
             "{animals}"
         );
         assert!(animals.contains("**Slight** (flaw)"), "{animals}");
+        // The sign-limited picks, by sign in the Great Race's order, the elements after.
+        let picks = text("horoscope-talents.md");
+        assert!(
+            picks.contains(
+                "| Salamander | Hare-footed | level 12, to be born in the year of the \
+                            Salamander | speed +5 % |"
+            ),
+            "{picks}"
+        );
+        assert!(
+            picks.find("| Barghest |") < picks.find("| Wood-born |"),
+            "{picks}"
+        );
         let lucky = text("horoscope-lucky.md");
         assert!(
             lucky.contains("| Metal Manticore | 3 | the Iron Scourge |"),

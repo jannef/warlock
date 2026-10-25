@@ -520,6 +520,11 @@ pub enum SignActive {
     TransfixingStare,
     /// Fire's: a burst of flame around you, then a cooldown.
     Blaze,
+    /// The Wyvern's pick (Fire breath): a bolt of fire toward a cell, then a cooldown.
+    FireBreath,
+    /// The Barghest's pick (Hound's bay): a howl that sends lesser foes who hear it fleeing,
+    /// then a cooldown.
+    HoundsBay,
 }
 
 impl SignActive {
@@ -528,6 +533,8 @@ impl SignActive {
         SignActive::HornsGrace,
         SignActive::TransfixingStare,
         SignActive::Blaze,
+        SignActive::FireBreath,
+        SignActive::HoundsBay,
     ];
 
     /// Its id: the id of the talent that has it, and its replay text (`use:horns_grace`).
@@ -536,6 +543,8 @@ impl SignActive {
             SignActive::HornsGrace => "horns_grace",
             SignActive::TransfixingStare => "transfixing_stare",
             SignActive::Blaze => "blaze",
+            SignActive::FireBreath => "fire_breath",
+            SignActive::HoundsBay => "hounds_bay",
         }
     }
 
@@ -546,14 +555,16 @@ impl SignActive {
 
     /// Whether it asks for a cell before it is used.
     pub const fn aimed(self) -> bool {
-        matches!(self, SignActive::TransfixingStare)
+        matches!(self, SignActive::TransfixingStare | SignActive::FireBreath)
     }
 
     /// What it costs, as an action of this kind (`data/actions.toml`).
     pub const fn cost(self) -> super::ActionKind {
         match self {
-            SignActive::HornsGrace | SignActive::TransfixingStare => super::ActionKind::Wait,
-            SignActive::Blaze => super::ActionKind::Cast,
+            SignActive::HornsGrace | SignActive::TransfixingStare | SignActive::HoundsBay => {
+                super::ActionKind::Wait
+            }
+            SignActive::Blaze | SignActive::FireBreath => super::ActionKind::Cast,
         }
     }
 }

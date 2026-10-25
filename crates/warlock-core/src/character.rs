@@ -602,6 +602,14 @@ mod tests {
              stats = { strength = 2, intelligence = -3 }\n",
         );
         if horoscope {
+            // The builtin signs' picks name animals and elements this horoscope lacks.
+            let picks: Vec<String> = (files.table("talents"))
+                .filter(|(_, text)| text.contains("animal = ") || text.contains("element = "))
+                .map(|(path, _)| path.to_string())
+                .collect();
+            for path in picks {
+                files.remove(&path);
+            }
             files.insert(
                 "data/horoscope.toml",
                 "anchor_year = 1\n\

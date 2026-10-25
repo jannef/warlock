@@ -336,6 +336,27 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // A Wyvern warrior (seed 2) who picked Fire breath (#270) and breathed it: the Birth sign
+    // group, drained.
+    Case {
+        name: "abilities-menu-fire-breath",
+        seed: Some(2),
+        character: Some("human,male,warrior"),
+        actions: "xp:300000 talent:fire_breath levelup:auto use:fire_breath:11,15",
+        screen: Some("abilities"),
+        ..BASE
+    },
+    // A Barghest warrior (seed 21) in the arena who picked Hound's bay (#270) and howled: the
+    // kobolds who heard it flee.
+    Case {
+        name: "abilities-menu-hounds-bay",
+        scenario: "arena",
+        seed: Some(21),
+        character: Some("human,male,warrior"),
+        actions: "xp:300000 talent:hounds_bay levelup:auto use:hounds_bay",
+        screen: Some("abilities"),
+        ..BASE
+    },
     // A wizard with Blood magic (#242), after giving blood for mana: the Talents group.
     Case {
         name: "abilities-menu-blood-magic",

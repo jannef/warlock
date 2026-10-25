@@ -1,0 +1,10 @@
+# A birth sign's pick (spec §8 "Birth sign"; horoscope design §9.1): offered only to those born
+# under its sign.
+[[talent]]
+id = "relentless_fury"
+name = "Relentless fury"
+tree = "stars"
+description = "Your streak of blows at one foe runs longer, and as it runs your blows bite harder."
+needs = { animal = "manticore", level = 9 }
+effects = [{ kind = "streak", max = 5, damage_every = 2 }]
+systems = ["combat"]

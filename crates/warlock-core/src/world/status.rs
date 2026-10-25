@@ -239,7 +239,10 @@ impl World {
         let Some(actor) = self.state.actors.get(&id) else {
             return 0;
         };
-        if actor.hunger(&self.content) == Some(Hunger::Starving) {
+        // Starving, no hit point comes back; Another head (a Hydra's pick) heals on.
+        if actor.hunger(&self.content) == Some(Hunger::Starving)
+            && !(!actor.talents.is_empty() && actor.talent_mods(&self.content).starving_heals)
+        {
             return 0;
         }
         let statuses = actor.effects.regen(&self.content);

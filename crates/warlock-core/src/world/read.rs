@@ -174,7 +174,7 @@ impl World {
 
     /// The cells a bolt read from `from` at `at` runs over: the line through `at` and on, after
     /// `from`, at most `length` cells, cut short before the first opaque cell.
-    fn bolt_line(&self, from: Pos, at: Pos, length: i32) -> Vec<Pos> {
+    pub(super) fn bolt_line(&self, from: Pos, at: Pos, length: i32) -> Vec<Pos> {
         let level = self.state.current();
         (from.ray(at).take(length.max(1) as usize))
             .take_while(|&p| !level.is_opaque(&self.content, p))

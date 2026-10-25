@@ -96,6 +96,8 @@ pub enum SoundKind {
     Digging,
     /// Someone muttering to themselves (spec §8 "Dialogue").
     Voice,
+    /// A howl: a Barghest's Hound's bay (spec §8 "Birth sign").
+    Howl,
     /// A bell: an alarm trap (spec §8 "Traps").
     Bell,
     /// An explosion: a fireball trap.
@@ -117,6 +119,7 @@ impl SoundKind {
             SoundKind::Banging => "banging",
             SoundKind::Digging => "digging",
             SoundKind::Voice => "voice",
+            SoundKind::Howl => "howl",
             SoundKind::Bell => "bell",
             SoundKind::Explosion => "explosion",
             SoundKind::Thunder => "thunder",
@@ -135,6 +138,7 @@ impl SoundKind {
             SoundKind::Banging => "banging",
             SoundKind::Digging => "digging",
             SoundKind::Voice => "a voice",
+            SoundKind::Howl => "a howl",
             SoundKind::Bell => "a bell ring",
             SoundKind::Explosion => "an explosion",
             SoundKind::Thunder => "a thunderclap",
@@ -155,6 +159,9 @@ pub const DIG_NOISE: u16 = 80;
 /// How loud a creature muttering to itself is where it stands (spec §8 "Dialogue"): heard a few
 /// cells away, by those who listen. A voice thrown to a cell is as loud there.
 pub const VOICE_NOISE: u16 = 50;
+/// How loud a howl is where the howler stands (spec §8 "Birth sign": Hound's bay): it carries
+/// well beyond a fight's noise.
+pub const HOWL_NOISE: u16 = 150;
 
 /// Something an actor does that makes noise.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -175,6 +182,8 @@ pub enum Act {
     Mutter,
     /// Throws its voice to this cell: a voice sounds there.
     ThrowVoice(Pos),
+    /// Howls, where it stands (Hound's bay).
+    Howl,
 }
 
 /// A noise made by an actor, or by a trap going off.
@@ -275,7 +284,7 @@ pub fn noise(
         let loudness = TalentMods::scaled(u64::from(plain.loudness), percent) as u16;
         return (loudness > 0).then_some(Noise { loudness, ..plain });
     }
-    if matches!(act, Act::Mutter | Act::ThrowVoice(_)) {
+    if matches!(act, Act::Mutter | Act::ThrowVoice(_) | Act::Howl) {
         return Some(plain);
     }
     let quiet = actor.skill_effect(content, Effect::Quiet).clamp(0, 100) as u16;
@@ -353,6 +362,7 @@ pub fn plain_noise(
         }
         Act::Mutter => (SoundKind::Voice, actor.pos, u32::from(VOICE_NOISE)),
         Act::ThrowVoice(at) => (SoundKind::Voice, at, u32::from(VOICE_NOISE)),
+        Act::Howl => (SoundKind::Howl, actor.pos, u32::from(HOWL_NOISE)),
         Act::Kick(p) => (SoundKind::Banging, p, u32::from(KICK_NOISE)),
         Act::Dig => (SoundKind::Digging, actor.pos, u32::from(DIG_NOISE)),
     };
@@ -485,7 +495,7 @@ pub(crate) fn heard_by_anyone(state: &WorldState, content: &Content, noise: Nois
 /// The actors on the current level, but its maker, that `noise` reaches at least at their
 /// hearing threshold ([`Actor::hearing`]), with how loud it is where each stands. None on the
 /// overworld, which is silent.
-fn hearers(state: &WorldState, content: &Content, noise: Noise) -> Vec<(ActorId, u16)> {
+pub(crate) fn hearers(state: &WorldState, content: &Content, noise: Noise) -> Vec<(ActorId, u16)> {
     let level = state.current();
     if level.kind == crate::content::LevelKind::Overworld {
         return Vec::new();

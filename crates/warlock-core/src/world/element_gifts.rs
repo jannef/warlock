@@ -31,9 +31,14 @@ impl World {
     pub(super) fn blaze(&mut self, events: &mut Vec<Event>) -> Spent {
         let content = self.content.clone();
         let player = self.state.player;
-        let Some(blaze) = self.state.player().talent_mods(&content).blaze else {
+        let mods = self.state.player().talent_mods(&content);
+        let Some(mut blaze) = mods.blaze else {
             return Spent::Nothing;
         };
+        // Wildfire (a Fire-born's pick): hotter, and farther.
+        if let Some((radius, damage)) = mods.wildfire {
+            (blaze.radius, blaze.damage) = (radius, damage);
+        }
         if !self.can_loose_here() {
             return Spent::Nothing;
         }

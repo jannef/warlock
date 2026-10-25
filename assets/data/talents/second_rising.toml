@@ -1,0 +1,10 @@
+# A birth sign's pick (spec §8 "Birth sign"; horoscope design §9.1): offered only to those born
+# under its sign.
+[[talent]]
+id = "second_rising"
+name = "Second rising"
+tree = "stars"
+description = "The phoenix rises twice: you may rise from your ashes once more."
+needs = { animal = "phoenix", level = 18 }
+effects = [{ kind = "second_rising" }]
+systems = ["hit_points"]

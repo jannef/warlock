@@ -130,6 +130,7 @@ mod search;
 mod second_wind;
 mod shoot;
 mod shop;
+mod sign_picks;
 mod skill_roll;
 mod spell;
 mod stars;
@@ -160,7 +161,8 @@ pub use loot::Identified;
 pub use quest::{QuestRecord, QuestView, Quests, Stage};
 use rest::Ended;
 pub use shop::{Shop, ShopStatus, count_of, favour, part_of, unpaid_parts};
-pub(crate) use stars::RISEN;
+pub use sign_picks::BREATH_RANGE;
+pub(crate) use stars::{RISEN, RISEN_TWICE};
 pub use talent::Due;
 pub use talk::{Conversation, Talk, TopicView};
 use travel::{enter_room, instantiate_level, level_template};
@@ -1170,6 +1172,8 @@ mod search_tests;
 mod shoot_tests;
 #[cfg(test)]
 mod shop_tests;
+#[cfg(test)]
+mod sign_pick_tests;
 #[cfg(test)]
 mod skill_roll_tests;
 #[cfg(test)]
