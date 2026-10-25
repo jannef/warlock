@@ -83,7 +83,7 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `slip_percent` | `World::slipped` (`world/gifts.rs`), on the player's step price in `travel.rs`: some hostile beside, none beside the cell stepped to; whatever the stance |
 | `pain` | `World::hurt` for `Harm::Actor` and `Harm::Trap`, damage over 1 |
 | `barbs` | `World::resolve` → `World::barbed` (`world/gifts.rs`) after a melee blow that hurt and left the target alive: `hurt(attacker, barbs, Harm::Barbs)`, no roll, no noise, a death of it earns nothing |
-| `resist` | `Actor::resistances`, as gear (`Resistances::sum` caps it); `damage` names the kind (Flame-hardened's fire), else the choice |
+| `resist` | `Actor::resistances`, as gear (`Resistances::sum` caps it); `damage` names the kind (Flame-hardened's and Kindled's fire, Of the deep's cold), else the choice |
 | `resting_percent` | `World::healing_rate`, on resting's pace (Fast healer) |
 | `second_wind` | `world/second_wind.rs` (`Action::SecondWind`, `Ability::SecondWind` under `Source::Talent`): hit points back, then its `cooldown` status |
 | `horns_grace`, `stare` | `world/gifts.rs` (`Action::Gift`, `Ability::Sign(SignActive)` under `Source::Sign`): the birth sign's actives, then their `cooldown` statuses (`TalentMods::sign_cooldown`) |
