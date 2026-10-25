@@ -13,8 +13,8 @@
 //!
 //! **Goals**, and how far they have got ([`progress`]):
 //! - kill: the player's own kills of the creature type (on its level or branch, if it names
-//!   one), counted from a tally of the kills of every creature type some kill quest asks for
-//!   (so kills made before the quest was taken count; a repeat counts only those since);
+//!   one), counted from a tally of the kills of every creature type (so kills
+//!   made before the quest was taken count; a repeat counts only those since);
 //! - bring: how many of the object the player carries;
 //! - reach: whether the player has been to the level (before taking the quest too);
 //! - deliver: whether the player carries the object the giver handed over. Dropping it blocks
@@ -79,15 +79,28 @@ pub struct Quests {
     /// The quests the player has heard of, by id.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     records: BTreeMap<String, QuestRecord>,
-    /// The player's kills of creature types some kill quest asks for: by level id, then by
-    /// creature type id.
+    /// The player's kills of every creature type: by level id, then by creature type id.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     kills: BTreeMap<String, BTreeMap<String, u32>>,
+    /// The creature type the player has killed most, the first to get there of those tied
+    /// (the ranger's Favoured prey, spec §8 "Class abilities"); `None` before the first kill.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    prey: Option<String>,
 }
 
 impl Quests {
     pub fn is_empty(&self) -> bool {
-        self.records.is_empty() && self.kills.is_empty()
+        self.records.is_empty() && self.kills.is_empty() && self.prey.is_none()
+    }
+
+    /// How many creatures of type `id` the player has killed, on every level.
+    pub fn killed(&self, id: &str) -> u32 {
+        self.kills.values().filter_map(|k| k.get(id)).sum()
+    }
+
+    /// The creature type the player has killed most (ties: the first to get there).
+    pub fn prey(&self) -> Option<&str> {
+        self.prey.as_deref()
     }
 
     /// Where quest `id` stands, if the player has heard of it.
@@ -112,6 +125,7 @@ impl Quests {
         let quest = (self.records.keys()).find(|id| content.quest_id(id).is_none());
         let creature = (self.kills.values())
             .flat_map(BTreeMap::keys)
+            .chain(self.prey.iter())
             .find(|id| content.creature_id(id).is_none());
         quest.or(creature).cloned()
     }
@@ -606,22 +620,18 @@ impl World {
         }
     }
 
-    /// The player killed a creature of type `creature` on level `level`: tallied if some kill
-    /// quest asks for that type.
+    /// The player killed a creature of type `creature` on level `level`: tallied, whatever the
+    /// type (the design's B6: kill quests and the ranger's Favoured prey read it). The type
+    /// killed most becomes the favoured prey once it is killed more often than the one before.
     pub(super) fn tally_kill(&mut self, creature: crate::content::CreatureId, level: &str) {
-        let asked = (self.content.quests().iter())
-            .any(|q| matches!(q.goal, Goal::Kill { creature: c, .. } if c == creature));
-        if !asked {
-            return;
-        }
         let id = self.content.creature(creature).id.clone();
-        let kills = self
-            .state
-            .quests
-            .kills
-            .entry(level.to_string())
-            .or_default();
-        *kills.entry(id).or_default() += 1;
+        let quests = &mut self.state.quests;
+        let kills = quests.kills.entry(level.to_string()).or_default();
+        *kills.entry(id.clone()).or_default() += 1;
+        let prey = quests.prey.as_deref().map_or(0, |p| quests.killed(p));
+        if quests.killed(&id) > prey {
+            quests.prey = Some(id);
+        }
     }
 
     /// The player arrived on level `level`: active reach quests there are reached.

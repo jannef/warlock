@@ -21,3 +21,18 @@ kit = [
     "bread",
     "gold_coin*30",
 ]
+# Bonus talents from Scholar and Delver.
+bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["scholar", "delver"] }
+# The level table (spec §8 "Class abilities"). Lore is the Scholar talent, given. Inspire moves
+# onto an Inspiration pool with the alternative resources (#225).
+abilities = [
+    { level = 1, talent = "lore" },
+    { level = 6, talent = "wide_learning" },
+    { level = 12, talent = "song_of_rest" },
+    { level = 18, talent = "inspire" },
+    { level = 25, talent = "jack_of_all_trades" },
+    { level = 32, talent = "throw_voice" },
+    { level = 40, talent = "honeyed_words" },
+    { level = 50, talent = "legend" },
+    { level = 60, talent = "virtuoso" },
+]

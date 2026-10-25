@@ -465,6 +465,34 @@ pub struct TalentMods {
     pub status_damage: Vec<(StatusId, i32)>,
     /// Its once-in-a-life reprieve from death, if it has one.
     pub reprieve: Option<Reprieve>,
+    /// To hit and damage against its favoured prey (Favoured prey, Master hunter).
+    pub favoured_prey: (i32, i32),
+    /// It places every sound it hears exactly (Tracker).
+    pub exact_sounds: bool,
+    /// Percent more loudness of its footsteps under the open sky (Camouflage).
+    pub sky_footsteps_percent: i32,
+    /// Its steps are silent while it is Unburdened (Hide in plain sight).
+    pub silent_unburdened: bool,
+    /// Percent more loudness of its attacks.
+    pub attack_noise_percent: i32,
+    /// How much easier hidden traps are for it to find (Trapfinding).
+    pub trap_ease: i32,
+    /// It has the Pick lock ability without Open lock.
+    pub pick_lock: bool,
+    /// It has the Steal ability without the Steal skill.
+    pub steal: bool,
+    /// It has the Throw your voice ability.
+    pub throw_voice: bool,
+    /// Points lower its attacks on a creature that has not seen it threaten (Master thief).
+    pub ambush_threat: u8,
+    /// How much higher every skill it is trained in counts (Jack of all trades).
+    pub trained_skills: i32,
+    /// The active Volley, if it has it.
+    pub volley: Option<Volley>,
+    /// The active Inspire, if it has it.
+    pub inspire: Option<Inspire>,
+    /// The status Inspire gives instead, for no mana (Virtuoso).
+    pub virtuoso: Option<StatusId>,
 }
 
 /// A once-in-a-life reprieve from death (Miracle, Hag's bargain): what it is called in
@@ -475,6 +503,21 @@ pub struct Reprieve {
     pub status: StatusId,
     pub stat: Option<(Stat, i32)>,
     pub message: String,
+}
+
+/// The active Volley (spec §8 "Class abilities"): shots at a cell, then a cooldown.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Volley {
+    pub shots: u8,
+    pub cooldown: StatusId,
+    pub degrees: u16,
+}
+
+/// The active Inspire (spec §8 "Class abilities"): the status it gives, and its mana.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Inspire {
+    pub status: StatusId,
+    pub mana: i32,
 }
 
 /// Rise from the ashes (spec §8 "Birth sign"): what rising gives back, the burst it rises in,
@@ -668,7 +711,18 @@ impl TalentMods {
             A::Smite => self.smite.is_some(),
             A::HolyRadiance => self.radiance.is_some(),
             A::QuiveringPalm => self.quivering_palm.is_some(),
+            A::Volley => self.volley.is_some(),
+            A::Inspire => self.inspire.is_some(),
         }
+    }
+
+    /// What Inspire gives and costs, if it has it: Virtuoso's status for no mana, else its own.
+    pub fn inspiring(&self) -> Option<Inspire> {
+        let inspire = self.inspire?;
+        Some(match self.virtuoso {
+            Some(status) => Inspire { status, mana: 0 },
+            None => inspire,
+        })
     }
 
     /// The effects of one rank, summed (what taking it adds); the statuses and damage types
@@ -804,7 +858,9 @@ impl TalentMods {
             TalentEffect::InnerLight { light } => {
                 self.inner_light = content.light_id(&light).or(self.inner_light);
             }
-            TalentEffect::Ambush { dice } => self.ambush = Some(dice),
+            TalentEffect::Ambush { dice } => {
+                self.ambush = Some(self.ambush.map_or(dice, |had| had.and(dice)));
+            }
             TalentEffect::CarryPercent { value } => self.carry_percent += value,
             TalentEffect::IgnoreBurdened => self.ignore_burdened = true,
             TalentEffect::StepSlowdownPercent { value } => self.step_slowdown_percent += value,
@@ -1254,6 +1310,39 @@ impl TalentMods {
             TalentEffect::Hardened { bonus } => {
                 self.hardened = Some(self.hardened.unwrap_or(0) + bonus);
             }
+            TalentEffect::FavouredPrey { to_hit, damage } => {
+                self.favoured_prey.0 += to_hit;
+                self.favoured_prey.1 += damage;
+            }
+            TalentEffect::ExactSounds => self.exact_sounds = true,
+            TalentEffect::SkyFootstepsPercent { value } => self.sky_footsteps_percent += value,
+            TalentEffect::SilentUnburdened => self.silent_unburdened = true,
+            TalentEffect::AttackNoisePercent { value } => self.attack_noise_percent += value,
+            TalentEffect::TrapEase { value } => self.trap_ease += value,
+            TalentEffect::PickLock => self.pick_lock = true,
+            TalentEffect::Steal => self.steal = true,
+            TalentEffect::ThrowVoice => self.throw_voice = true,
+            TalentEffect::AmbushThreat { value } => self.ambush_threat += value,
+            TalentEffect::TrainedSkills { value } => self.trained_skills += value,
+            TalentEffect::Volley {
+                shots,
+                cooldown,
+                degrees,
+            } => {
+                if let Some(cooldown) = content.status_id(&cooldown) {
+                    self.volley = Some(Volley {
+                        shots,
+                        cooldown,
+                        degrees,
+                    });
+                }
+            }
+            TalentEffect::Inspire { status, mana } => {
+                if let Some(status) = content.status_id(&status) {
+                    self.inspire = Some(Inspire { status, mana });
+                }
+            }
+            TalentEffect::Virtuoso { status } => self.virtuoso = content.status_id(&status),
         }
     }
 

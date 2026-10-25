@@ -63,7 +63,7 @@ impl World {
         }
         if let Some(why) = ability.unavailable(me, &content) {
             self.say(match why {
-                Unavailable::NoMana => "You have not enough mana.".to_string(),
+                Unavailable::NoMana => "You have too little mana.".to_string(),
                 Unavailable::While(status) => format!(
                     "You are {}: you cannot cast now.",
                     content.status(status).name.to_lowercase()

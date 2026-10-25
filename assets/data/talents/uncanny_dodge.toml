@@ -1,0 +1,8 @@
+[[talent]]
+id = "uncanny_dodge"
+name = "Uncanny dodge"
+tree = "class"
+granted = true
+description = "However laden, you twist aside: your burden takes less of your Dexterity from your Defence."
+effects = [{ kind = "burden_dex", value = 2 }]
+systems = ["defence", "burden"]

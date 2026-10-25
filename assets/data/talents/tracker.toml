@@ -1,0 +1,11 @@
+[[talent]]
+id = "tracker"
+name = "Tracker"
+tree = "class"
+granted = true
+description = "Your ears are a hunter's: you hear fainter sounds, and know where every sound you hear was made."
+effects = [
+    { kind = "hearing", value = 3 },
+    { kind = "exact_sounds" },
+]
+systems = ["hearing"]

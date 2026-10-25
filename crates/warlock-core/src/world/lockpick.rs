@@ -31,7 +31,7 @@ impl World {
     pub(super) fn pick_lock(&mut self, dir: Dir, events: &mut Vec<Event>) -> Spent {
         let content = self.content.clone();
         let me = self.state.player();
-        if !me.skills.trains_effect(&content, Effect::Pick) {
+        if !crate::ability::Ability::PickLock.had_by(me, &content) {
             self.say("You do not know how to pick locks.");
             return Spent::Nothing;
         }

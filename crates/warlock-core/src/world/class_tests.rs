@@ -88,14 +88,6 @@ fn level_one_abilities_come_with_the_character_and_others_with_their_levels() {
         Some("Well dressed (class)")
     );
     assert!(rows.iter().filter(|r| r.contains("(class)")).count() == 1);
-    // An adventurer without a table yet has none.
-    let warrior = world("ranger");
-    let rows = dump::layer_rows(&warrior, Layer::Talents);
-    assert!(
-        rows.iter()
-            .all(|r| r.contains("(sign") || r.contains("(race)")),
-        "{rows:?}"
-    );
     // Level 6 brings Fencing, as news of the level.
     reach(&mut w, 6);
     assert!(holds(&w, "fencing"));

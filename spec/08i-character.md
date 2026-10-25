@@ -732,7 +732,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     burst or a bolt, exactly a scroll's `read` table; `open_sky`; `status` on everyone it
     reaches). `Ability::Spell` in the Class group, `Action::Cast` (`use:blessing`,
     `use:arcane_bolt:12,5`). They **cost mana instead of a cooldown** (spec §8 "Mana"):
-    `World::spend_mana` after every check, `Unavailable::NoMana` ("not enough mana") while the
+    `World::spend_mana` after every check, `Unavailable::NoMana` ("you have too little mana") while the
     caster has less than `Actor::spell_cost` (Archmage's cut, then Frugal caster's through `Actor::mana_cost`); refused, no time and no mana, without the spell,
     without the cell, out of range, with no hostile seen there to hex, or (Call lightning)
     under a roof or below ground. A strike is cast through the scrolls' shared code
@@ -778,6 +778,49 @@ developer notes (CLAUDE.md, `docs/dev/`).
     abilities menu with their cooldowns, and the abilities in the dumps' `abilities` layer.
     Never a number the game hides: the wiki's class tables state the rules. **Saves change**
     (new status ids).
+- **The ranger's, thief's, and bard's tables** (M30, #244; design §4.6–4.8, §4.1 B6): as the
+  adventurers' above. Shared entries are the ordinary talents, handed out: Evasion (Finesse;
+  the ranger's at 32, the thief's at 18) and Lore (Scholar; the bard's at 1). One the player
+  picked before its level comes is not given again.
+  - **The kill tally** (the design's B6, `Quests::kills`): every kill of the player's is
+    tallied by level and creature type, whatever the type (kill quests read the same tally);
+    `Quests::prey` is the type killed most, the first to get there of those tied (it changes
+    only when another is killed more often). Saved, hashed, left out while empty.
+  - **Bonus picks**: ranger (Weaponcraft, Wayfarer) and bard (Scholar, Delver) at 10, 20, 30,
+    45, 55; thief (Finesse, Shadow, Delver) at 4, 10, 16, 22, 28, 34, 46, 58.
+  - **Actives**: Volley (the ranger's, 50: `Action::UseAt`, `use:volley:X,Y`, aimed at a cell
+    as a shot is; the readied missile weapon's three shots there, one after another, each its
+    own flight and attack, for the price of one shot and one exertion; it stops when the
+    ammunition runs out; then one degree of Spent, 5 minutes; refused as a shot is), Inspire
+    (the bard's, 18: Inspired, to hit +1 and Dodge +1 for 5 minutes, for 3 mana, the time of a
+    chat; no cooldown, mana is the price: greyed out "you have too little mana",
+    `Unavailable::NoMana`, while the player has less). Throw your voice (the bard's, 32) is no
+    longer everyone's: the ability is had by a talent with the `throw_voice` effect (the
+    action is refused, "You do not know how to throw your voice.", without it).
+  - **Passives**, each one read: Favoured prey (+1 to hit, +2 damage against `Quests::prey`, any
+    attack, in `World::resolve`), Tracker (hears 3 fainter; every sound it hears placed at its
+    own cell, `noise::Exact::All`), Rapid shot (shots 10 % quicker, the launcher skills'
+    `speed`), Woodland stride (forest floor, bushes, reeds, tall grass, and marsh priced as
+    grass; their noise stays), Swift tracker (overworld journeys −20 %), Camouflage (footsteps
+    under the open sky, the level sky-exposed and the cell stepped to unroofed, −50 %, summed
+    with the other footstep percents), Master hunter (bows and crossbows threat +1; Favoured
+    prey +1 and +2 more); Sneak attack (Ambusher's rule: +1d6 after Protection on a hit at a
+    creature that has not seen the thief; the unaware check is made before the strike, without
+    a draw, only for an attacker with ambush dice), Trapfinding (searching +4; hidden traps 2
+    easier to find, searching and in passing, not to disarm; the Disarm ability untrained), Pick
+    lock (the Pick lock ability untrained), Uncanny dodge (the burden's Dexterity cap +2),
+    Improved sneak attack (+2d6: ambush dice of the same sides add up, so 3d6 in all), Light
+    fingers (the Steal ability untrained), Hide in plain sight (no footsteps while Unburdened;
+    attacks half as loud), Master thief (an attack on an unaware creature threatens a critical
+    2 lower, never below 3); Wide learning (a skill roll more every level), Song of rest
+    (resting heals half again as fast), Jack of all trades (every trained skill counts 5
+    higher, as a skill bonus in `Actor::skill_effect`), Honeyed words (favour +15 %, quest gold
+    +25 %), Legend (quest XP +50 %, Presence +1), Virtuoso (Inspire gives Inspired greatly, to
+    hit +2 and Dodge +2 for 10 minutes, for no mana).
+  - **Resources to come**: Rapid shot and Volley (Focus), Improved sneak attack and Master
+    thief (Openings), Inspire (Inspiration) move onto the pools of #225.
+  - **Saves change**: `Quests::prey`, the tally of every type, the statuses `inspired` and
+    `inspired_greatly`.
 - **Weapon skills** (`warlock-core/src/weapon_skills.rs`, training; `content/weapon_skill.rs`,
   the data; M22, #134), ADOM-like, with *The Riddle of Steel*'s defaults:
   - **Skills** (`data/weapon_skills.toml`, §7): the categories weapons belong to. A skill's

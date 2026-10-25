@@ -1,7 +1,8 @@
 //! The class actives in the world (spec §8 "Class abilities"): what a class's level table gives
 //! that is used from the abilities menu ([`crate::ability::Ability::Class`]) as [`Action::Use`]
 //! (`use:rage`, `use:smite:E`): Rage, Veteran's wind, Whirlwind, Lay on hands, Smite, Holy
-//! radiance, Quivering palm. The abilities themselves are talents of the class tree, given as
+//! radiance, Quivering palm, Inspire (for mana, #244; the ranger's Volley, aimed at a cell, is
+//! `world/volley.rs`). The abilities themselves are talents of the class tree, given as
 //! levels come (`world/class.rs`) and read through `Actor::talent_mods`. Each active refuses,
 //! taking no time, without the ability, while its cooldown (or the rage and the exhaustion after
 //! it) lasts, and while the player has strayed from the alignment it asks. Nothing here draws at
@@ -26,24 +27,7 @@ impl World {
         dir: Option<Dir>,
         events: &mut Vec<Event>,
     ) -> Spent {
-        let content = self.content.clone();
-        let ability = Ability::Class(active);
-        let me = self.state.player();
-        if !ability.had_by(me, &content) {
-            self.say("You have no such ability.");
-            return Spent::Nothing;
-        }
-        if let Some(why) = ability.unavailable(me, &content) {
-            self.say(match why {
-                Unavailable::Strayed => "You have strayed: your gift does not answer.".to_string(),
-                Unavailable::While(status) => {
-                    format!(
-                        "You are still {}.",
-                        content.status(status).name.to_lowercase()
-                    )
-                }
-                other => format!("You cannot: {}.", other.reason(&content)),
-            });
+        if !self.may_use_class(active) {
             return Spent::Nothing;
         }
         let dir = match (active.aimed(), dir) {
@@ -59,10 +43,57 @@ impl World {
             (ClassActive::Whirlwind, _) => self.whirlwind(events),
             (ClassActive::LayOnHands, _) => self.lay_on_hands(events),
             (ClassActive::HolyRadiance, _) => self.holy_radiance(events),
+            (ClassActive::Inspire, _) => self.inspire(events),
             (ClassActive::Smite, Some(dir)) => self.smite(dir, events),
             (ClassActive::QuiveringPalm, Some(dir)) => self.quivering_palm(dir, events),
             (ClassActive::Smite | ClassActive::QuiveringPalm, None) => Spent::Nothing,
+            (ClassActive::Volley, _) => {
+                self.say("Where?");
+                Spent::Nothing
+            }
         }
+    }
+
+    /// Whether the player may use class active `active` now: they have it, and it is available
+    /// (said when not).
+    pub(super) fn may_use_class(&mut self, active: ClassActive) -> bool {
+        let content = self.content.clone();
+        let ability = Ability::Class(active);
+        let me = self.state.player();
+        if !ability.had_by(me, &content) {
+            self.say("You have no such ability.");
+            return false;
+        }
+        if let Some(why) = ability.unavailable(me, &content) {
+            self.say(match why {
+                Unavailable::Strayed => "You have strayed: your gift does not answer.".to_string(),
+                Unavailable::While(status) => {
+                    format!(
+                        "You are still {}.",
+                        content.status(status).name.to_lowercase()
+                    )
+                }
+                Unavailable::NoMana => "You have too little mana.".to_string(),
+                other => format!("You cannot: {}.", other.reason(&content)),
+            });
+            return false;
+        }
+        true
+    }
+
+    /// Inspire: the player sings themselves (Inspired), spending its mana (Virtuoso: a greater
+    /// inspiration, for none), for the time of a `chat`.
+    fn inspire(&mut self, events: &mut Vec<Event>) -> Spent {
+        let player = self.state.player;
+        let Some(inspire) = self.state.player().talent_mods(&self.content).inspiring() else {
+            return Spent::Nothing;
+        };
+        if !self.spend_mana(player, inspire.mana) {
+            self.say("You have too little mana.");
+            return Spent::Nothing;
+        }
+        self.afflict(player, inspire.status, 1, Some(player), events);
+        Spent::Turn(self.price_of(player, ActionKind::Chat))
     }
 
     /// Rage: the player suffers the rage's status (Raging), for the time of a wait.

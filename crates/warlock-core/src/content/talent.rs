@@ -697,6 +697,42 @@ pub enum TalentEffect {
         by: i32,
         message: String,
     },
+    /// Against the creature type it has killed most (ties: the first to get there), its attacks
+    /// are this much likelier to hit and do this much more damage (Favoured prey).
+    FavouredPrey { to_hit: i32, damage: i32 },
+    /// It places every sound it hears where it was made (Tracker).
+    ExactSounds,
+    /// Its footsteps under the open sky (no roof over the cell stepped to) are this percent
+    /// louder (negative: quieter; Camouflage).
+    SkyFootstepsPercent { value: i32 },
+    /// Its steps make no sound while it is Unburdened (Hide in plain sight).
+    SilentUnburdened,
+    /// Its attacks are this percent louder (negative: quieter).
+    AttackNoisePercent { value: i32 },
+    /// Hidden traps are this much easier for it to find (Trapfinding).
+    TrapEase { value: i32 },
+    /// It can pick locks (the Pick lock ability) without Open lock.
+    PickLock,
+    /// It can steal (the Steal ability) without the Steal skill.
+    Steal,
+    /// It can throw its voice (the Throw your voice ability; the bard's).
+    ThrowVoice,
+    /// Its attacks on a creature that has not seen it threaten a critical this many points
+    /// lower (Master thief).
+    AmbushThreat { value: u8 },
+    /// Every skill it is trained in counts this much higher (Jack of all trades).
+    TrainedSkills { value: i32 },
+    /// The class active Volley: `shots` shots at a cell for the price of one, then `degrees` of
+    /// the `cooldown` status.
+    Volley {
+        shots: u8,
+        cooldown: String,
+        degrees: u16,
+    },
+    /// The class active Inspire: it suffers `status` (Inspired), for `mana` mana.
+    Inspire { status: String, mana: i32 },
+    /// Inspire gives `status` instead, and costs no mana (Virtuoso).
+    Virtuoso { status: String },
 }
 
 /// The free blows a talent may switch on ([`crate::world::FreeBlows`]).
@@ -736,6 +772,8 @@ impl TalentEffect {
             TalentEffect::Smite { .. } => A::Smite,
             TalentEffect::Radiance { .. } => A::HolyRadiance,
             TalentEffect::QuiveringPalm { .. } => A::QuiveringPalm,
+            TalentEffect::Volley { .. } => A::Volley,
+            TalentEffect::Inspire { .. } => A::Inspire,
             _ => return None,
         })
     }
@@ -799,7 +837,42 @@ impl TalentEffect {
             | TalentEffect::CarryKg { value }
             | TalentEffect::Checks { value, .. }
             | TalentEffect::CriticalConfirm { value }
+            | TalentEffect::TrapEase { value }
+            | TalentEffect::TrainedSkills { value }
             | TalentEffect::Barbs { damage: value } => bonus(*value),
+            TalentEffect::FavouredPrey { to_hit, damage } => {
+                if [to_hit, damage].iter().all(|&&v| v == 0)
+                    || ![to_hit, damage].iter().all(|v| BONUSES.contains(v))
+                {
+                    return Err(
+                        "`favoured_prey`: to_hit and damage are -20 to 20, not both 0".into(),
+                    );
+                }
+                Ok(())
+            }
+            TalentEffect::AmbushThreat { value } => {
+                if !(1..=5).contains(value) {
+                    return Err("`ambush_threat`: value is 1 to 5".into());
+                }
+                Ok(())
+            }
+            TalentEffect::Volley {
+                shots,
+                cooldown,
+                degrees,
+            } => {
+                if !(2..=5).contains(shots) || *degrees == 0 {
+                    return Err("`volley`: shots is 2 to 5, degrees at least 1".into());
+                }
+                status(cooldown)
+            }
+            TalentEffect::Inspire { status: id, mana } => {
+                if !(0..=100).contains(mana) {
+                    return Err("`inspire`: mana is 0 to 100".into());
+                }
+                status(id)
+            }
+            TalentEffect::Virtuoso { status: id } => status(id),
             TalentEffect::Stat { value, .. } => {
                 if *value == 0 || !(-5..=5).contains(value) {
                     return Err("`stat`: value is -5 to 5, not 0".into());
@@ -1109,6 +1182,8 @@ impl TalentEffect {
             | TalentEffect::SpeedPercent { value }
             | TalentEffect::SpellDamagePercent { value }
             | TalentEffect::SpellManaPercent { value }
+            | TalentEffect::SkyFootstepsPercent { value }
+            | TalentEffect::AttackNoisePercent { value }
             | TalentEffect::StepSlowdownPercent { value }
             | TalentEffect::CorpseStatsPercent { value }
             | TalentEffect::LootMagicPercent { value }
@@ -1281,6 +1356,11 @@ impl TalentEffect {
             | TalentEffect::GemWorth
             | TalentEffect::MakeWay
             | TalentEffect::Distrusted
+            | TalentEffect::ExactSounds
+            | TalentEffect::SilentUnburdened
+            | TalentEffect::PickLock
+            | TalentEffect::Steal
+            | TalentEffect::ThrowVoice
             | TalentEffect::Disarm
             | TalentEffect::Spell { .. }
             | TalentEffect::Purify

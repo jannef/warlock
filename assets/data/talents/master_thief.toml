@@ -1,0 +1,8 @@
+[[talent]]
+id = "master_thief"
+name = "Master thief"
+tree = "class"
+granted = true
+description = "Your sneak attacks find the telling spot far more often."
+effects = [{ kind = "ambush_threat", value = 2 }]
+systems = ["combat", "stealth"]

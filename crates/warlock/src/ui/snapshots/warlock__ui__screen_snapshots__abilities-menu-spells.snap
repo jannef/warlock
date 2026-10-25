@@ -5,28 +5,28 @@ expression: "render(case, content.clone())"
  You feel blessed.
  You spend 94 mana (dev).
 
+
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
                     │ > a  Transfixing stare  at a place you see               │
                     │ Class                                                    │
-                    │   b  Throw your voice   at a place you see               │
-                    │   c  Blessing                                            │
-                    │   d  Cure wounds        not enough mana                  │
-                    │   e  Remove disease     not enough mana                  │
+                    │   b  Blessing                                            │
+                    │   c  Cure wounds        you have too little mana         │
+                    │   d  Remove disease     you have too little mana         │
                     │ Skills                                                   │
-                    │   f  Decipher script    not usable yet                   │
-                    │   g  Heal               not usable yet                   │
-                    │   h  Knowledge          not usable yet                   │
+                    │   e  Decipher script    not usable yet                   │
+                    │   f  Heal               not usable yet                   │
+                    │   g  Knowledge          not usable yet                   │
                     │ Weapon skills                                            │
-                    │   i  Shield bash        in a direction                   │
+                    │   h  Shield bash        in a direction                   │
                     │ Items                                                    │
-                    │   j  Hood your lantern                                   │
+                    │   i  Hood your lantern                                   │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
-                    │ a-j or Enter use   Esc close                             │
+                    │ a-i or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
 
 

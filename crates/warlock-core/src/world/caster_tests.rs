@@ -264,10 +264,10 @@ fn blessing_costs_mana_and_wants_more_than_there_is() {
         own(&w, ClassSpell::Blessing),
         Some(Some(Unavailable::NoMana))
     );
-    assert_eq!(Unavailable::NoMana.reason(w.content()), "not enough mana");
+    assert_eq!(Unavailable::NoMana.reason(w.content()), "you have too little mana");
     let turn = w.state.turn;
     run(&mut w, "use:blessing");
-    assert_eq!(last(&w), "You have not enough mana.");
+    assert_eq!(last(&w), "You have too little mana.");
     assert_eq!((w.state.turn, w.state.player().mana), (turn, 1));
     // A spell the class does not give.
     run(&mut w, "use:arcane_bolt:12,5");

@@ -694,6 +694,10 @@ impl World {
         let profile = profile.map(|p| self.glared(attacker, p));
         // Relentless (spec §8 "Birth sign"): a streak of blows at one creature.
         let profile = profile.map(|p| self.relentless(attacker, target, kind, p));
+        // Favoured prey and a sneak attack (spec §8 "Class abilities").
+        let profile = profile.map(|p| self.favoured(attacker, target, p));
+        let unseen = profile.is_some() && self.sneaking(attacker, target);
+        let profile = profile.map(|p| self.sneak_threat(attacker, unseen, p));
         let missile = matches!(kind, AttackKind::Ranged | AttackKind::Thrown);
         let struck = self.target_against(target, missile);
         let struck = self.small_target(attacker, target, struck);
@@ -703,7 +707,7 @@ impl World {
             .is_some_and(|a| !a.talents.is_empty() && a.talent_mods(&self.content).reroll_fumble);
         let rng = &mut self.state.rng;
         let blow = profile.map(|profile| combat::strike_with(&profile, &struck, rng, lucky));
-        let blow = blow.map(|b| self.ambushed(attacker, target, b));
+        let blow = blow.map(|b| self.ambushed(attacker, unseen, b));
         let blow = blow.map(|b| self.lore_blow(attacker, target, b));
         events.push(Event::Attacked {
             attacker,

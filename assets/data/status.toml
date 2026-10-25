@@ -246,6 +246,31 @@ penalty = { from = 1, willpower = 1 }
 start = "You feel blessed."
 end = "Your blessing fades."
 
+# Inspire (the bard's song, spec §8 "Class abilities"): five minutes of a lifted heart, a little
+# surer to hit and quicker to dodge. Its price is mana, not a cooldown.
+[[status]]
+id = "inspired"
+name = "Inspired"
+seen = "inspired"
+max = 1
+stacking = "refresh"
+eases = 300
+combat = { to_hit = 1, dodge = 1 }
+start = "Your song lifts your heart."
+end = "The song fades from your heart."
+
+# Inspire as a Virtuoso sings it: ten minutes, and more of it.
+[[status]]
+id = "inspired_greatly"
+name = "Inspired"
+seen = "inspired"
+max = 1
+stacking = "refresh"
+eases = 600
+combat = { to_hit = 2, dodge = 2 }
+start = "Your song soars, and your heart with it."
+end = "The song fades from your heart."
+
 # A staggering blow's (the Staggering blow talent): the next action, taken within a turn's time,
 # costs half again as much.
 [[status]]
