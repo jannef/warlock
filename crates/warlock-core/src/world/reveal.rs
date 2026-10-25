@@ -78,7 +78,7 @@ fn reveal_on(state: &mut WorldState, level_id: &str, id: &str) -> Option<Pos> {
     level.stairs.push(StairsLink {
         pos: at,
         dir: StairsDir::Down,
-        to: Some(location.to),
+        to: location.to,
         name: Some(location.name),
     });
     Some(at)
