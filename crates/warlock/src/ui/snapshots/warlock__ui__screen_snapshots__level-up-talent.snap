@@ -2,12 +2,12 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- Welcome to ┌─ Level 3 · Talent 1 ─────────────────────────────────────────────────────┐
+ Welcome to ┌─ Level 3 · Talent 1 ────────────────────────────────────────── Page 1/2 ─┐
  Your athlet│                                                                          │
             │ Vigour                                                                   │
             │ > a  Hardy                       1/3  Tougher than most: more hit point… │
+            │   b  Healthy                          Your hit points come back a quart… │
             │ Might                                                                    │
-            │   b  Brawn                       1/2  Your blows up close hit harder: 1… │
             │   c  Mighty kick                      Your kicks land like hammers: the… │
             │ Finesse                                                                  │
             │   d  Opportunist                      A foe that turns from you pays fo… │
@@ -18,7 +18,7 @@ expression: "render(case, content.clone())"
             │   g  Armour training             1/2  You move freely in armour: it ham… │
             │   h  Unflinching                      Even as a coward you keep your he… │
             │ Shadow                                                                   │
-            │   i  Lamplighter                      You tend your lantern well: it bu… │
+            │   i  Keen ears                   1/2  You hear fainter sounds, fainter … │
             │   j  Night eyes                       Your eyes grow used to the dark: … │
             │ Wayfarer                                                                 │
             │   k  Long strider                     Your journeys across the overworl… │
@@ -27,18 +27,18 @@ expression: "render(case, content.clone())"
             │   n  Weather-wise                     You read the sky: under it you kn… │
             │ Scholar                                                                  │
             │   o  Apprentice                  1/3  You take up a skill you lack, or … │
+            │   p  Clear mind                       A mind at peace gathers its stren… │
+            │   q  Deep well                   1/3  Your power runs deep: more mana f… │
             │ Grit                                                                     │
-            │   p  Lean                             You go hungry more slowly, and ex… │
-            │   q  Pack mule                   1/2  You can carry a tenth more for ea… │
+            │   r  Lean                             You go hungry more slowly, and ex… │
+            │   s  Pack mule                   1/2  You can carry a tenth more for ea… │
             │ Delver                                                                   │
-            │   r  Alert                            You notice hidden things in passi… │
-            │   s  Lockbreaker                      Your door kicks are mightier, and… │
-            │   t  Tunneler                         You dig much faster.               │
+            │   t  Alert                            You notice hidden things in passi… │
+            │   u  Lockbreaker                      Your door kicks are mightier, and… │
             │                                                                          │
             │ Tougher than most: more hit points for each rank, and more as you level. │
             │                                                                          │
             │                                                                          │
             │                                                                          │
-            │ a-t or Enter choose                                                      │
-            └──────────────────────────────────────────────────────────────────────────┘
- The Hub  ·  HP 28/28  ·  MP 3/3  ·  Lv 3  ·  08:00  ·  11 Darkening, Year 1444          ? controls
+            │ a-u or Enter choose   > < page                                           │
+ The Hub  · └──────────────────────────────────────────────────────────────────────────┘ ? controls
