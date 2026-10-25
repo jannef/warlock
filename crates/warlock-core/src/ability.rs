@@ -559,8 +559,11 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
             .map(|p| p.cooldown)
             .into_iter()
             .collect(),
-        ClassActive::Volley => mods.volley.map(|v| v.cooldown).into_iter().collect(),
-        ClassActive::Whirlwind | ClassActive::HolyRadiance | ClassActive::Inspire => Vec::new(),
+        // Volley costs Focus instead (its talent's `resource`, [`short_of`]).
+        ClassActive::Whirlwind
+        | ClassActive::HolyRadiance
+        | ClassActive::Inspire
+        | ClassActive::Volley => Vec::new(),
     };
     cooldowns.into_iter().find(|&s| actor.effects.has(s))
 }

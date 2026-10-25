@@ -247,14 +247,12 @@ fn rapid_shot_woodland_stride_and_swift_tracker() {
     let content = w.content().clone();
     let player = w.state.player;
     let terrain = |id: &str| content.terrain(content.terrain_id(id).expect("terrain"));
-    let shot = |w: &World| {
-        let me = w.state.player();
-        let (launcher, _) = me.launcher(&content).expect("a bow");
-        w.shot_price(player, launcher)
-    };
-    let before = shot(&w);
+    let focus = content.resource_id("focus").expect("focus");
+    assert!(w.state.player().resources.get(focus).is_none());
     reach(&mut w, 12);
-    assert!(shot(&w) < before, "Rapid shot: {} < {before}", shot(&w));
+    // Rapid shot grants Focus (its quicker shots are `focus_tests.rs`'s).
+    let held = w.state.player().resources.get(focus).map(|p| p.value);
+    assert_eq!(held, Some(10), "Rapid shot: Focus, full");
     let grass = w.step_price(player, terrain("grass"), false);
     assert!(w.step_price(player, terrain("bush"), false) > grass);
     reach(&mut w, 18);
@@ -474,12 +472,17 @@ fn a_volley_looses_three_shots_for_one_then_spends() {
     assert_eq!(w.state.turn, turn + 1, "one shot's time");
     assert_eq!(count(&w), arrows - 3, "three arrows loosed");
     assert!(said(&w).contains(&"You loose a volley!".to_string()));
-    assert!(suffers(&w, "spent"));
+    // It costs Focus, not a cooldown (spec §8 "Resources"): 6 of the 10, one back since.
+    assert!(!suffers(&w, "spent"));
     assert!(!out.events.is_empty());
-    let spent = content.status_id("spent").expect("spent");
-    assert_eq!(own(&w, volley), Some(Some(Unavailable::While(spent))));
+    let focus = content.resource_id("focus").expect("focus");
+    let held = w.state.player().resources.get(focus).map(|p| p.value);
+    assert!(held.is_some_and(|v| (4..6).contains(&v)), "{held:?}");
+    assert_eq!(own(&w, volley), Some(Some(Unavailable::Short(focus))));
+    let turn = w.state.turn;
     run(&mut w, &format!("use:volley:{},{}", at.x, at.y));
-    assert_eq!(last(&w), "You are still spent.");
+    assert_eq!(last(&w), "You have too little focus.");
+    assert_eq!(w.state.turn, turn, "refused, no time");
 }
 
 #[test]
