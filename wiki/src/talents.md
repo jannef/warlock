@@ -76,9 +76,10 @@ asks for.
 In the game a talent is described in words; the tables below state the rule exactly. Most
 talents simply change a rule for good. An **active** talent (Second wind) is something you do:
 it appears in the [abilities menu](abilities.md) under Talents, and after use it leaves a
-status (Winded) during which it cannot be used again. A few talents that need the class
-resources (Battle trance, Inner calm, Patient blade), the lantern's hood (Hooded light), or mana
-(Deep well, Clear mind, Meditation, Frugal caster, Blood magic) are still to come. Apprentice's
+status (Winded) during which it cannot be used again; Blood magic is active too, and has no
+waiting time: it costs hit points instead (see [Mana](mana.md#spending-it)). A few talents that
+need the class resources (Battle trance, Inner calm, Patient blade) or the lantern's hood
+(Hooded light) are still to come. Apprentice's
 skill points are rolled once, as the rank is taken. Treasure hunter changes loot as it is made: a
 level you have already been to keeps what lies there, and the levels themselves never change.
 Where a
@@ -96,8 +97,8 @@ are waiting for theirs.
 
 This is a promise about the future too: **every new part of the game arrives with its
 talents**, so no system is ever left with nothing that makes it better at it. That holds for
-new resources as well: when mana arrives, it brings talents for a deeper pool, a quicker
-refill, and cheaper casting, and the same goes for each class's own pool later (a barbarian's
+new resources as well: mana came with talents for a deeper pool, a quicker refill, and cheaper
+casting, and the same goes for each class's own pool later (a barbarian's
 rage, a ranger's focus). Abilities that cost such a resource have no waiting time on top: the
 resource coming back with time is the limit.
 

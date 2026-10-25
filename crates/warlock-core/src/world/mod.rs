@@ -1015,6 +1015,7 @@ impl World {
             Action::Search(turns) => return Spent::Search(*turns),
             Action::Disarm(dir) => return self.disarm(*dir, events),
             Action::SecondWind => return self.second_wind(events),
+            Action::BloodMagic => return self.blood_magic(),
             Action::Use(active, dir) => return self.use_class(*active, *dir, events),
             Action::UseAt(active, at) => return self.use_class_at(*active, *at, events),
             Action::Gift(active, at) => return self.use_gift(*active, *at, events),
@@ -1131,6 +1132,8 @@ mod lockpick_tests;
 mod lucky_tests;
 #[cfg(test)]
 mod magic_tests;
+#[cfg(test)]
+mod mana_talent_tests;
 #[cfg(test)]
 mod mana_tests;
 #[cfg(test)]

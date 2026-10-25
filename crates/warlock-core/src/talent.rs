@@ -152,6 +152,15 @@ pub struct TalentMods {
     pub healing_percent: i32,
     /// Percent faster mana comes back.
     pub mana_regen_percent: i32,
+    /// Mana by level, one entry per rank held: `(per_levels, at_least)`
+    /// ([`TalentMods::mana_at`]).
+    pub mana_per_levels: Vec<(u8, i32)>,
+    /// Percent faster resting brings mana back, on top of resting's own pace.
+    pub mana_resting_percent: i32,
+    /// Percent more abilities cost in mana (negative: less; [`TalentMods::mana_cost`]).
+    pub mana_cost_percent: i32,
+    /// The active Blood magic, if it has it.
+    pub blood_magic: Option<BloodMagic>,
     /// Percent louder footsteps (negative: quieter).
     pub footsteps_percent: i32,
     /// The doors it opens and closes make no noise.
@@ -564,6 +573,13 @@ pub struct Stare {
     pub cooldown: StatusId,
 }
 
+/// The active Blood magic (spec §8 "Talents"): `hp` hit points given for `mana` mana.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct BloodMagic {
+    pub hp: i32,
+    pub mana: i32,
+}
+
 impl SecondWind {
     /// The hit points it gives back at character `level`.
     pub fn hp_at(self, level: u8) -> i32 {
@@ -741,6 +757,15 @@ impl TalentMods {
             TalentEffect::Stat { stat, value } => self.stats[stat] += value,
             TalentEffect::HealingPercent { value } => self.healing_percent += value,
             TalentEffect::ManaRegenPercent { value } => self.mana_regen_percent += value,
+            TalentEffect::MaxManaPerLevels {
+                per_levels,
+                at_least,
+            } => self.mana_per_levels.push((per_levels, at_least)),
+            TalentEffect::ManaRestingPercent { value } => self.mana_resting_percent += value,
+            TalentEffect::ManaCostPercent { value } => self.mana_cost_percent += value,
+            TalentEffect::BloodMagic { hp, mana } => {
+                self.blood_magic = Some(BloodMagic { hp, mana });
+            }
             TalentEffect::FootstepsPercent { value } => self.footsteps_percent += value,
             TalentEffect::SilentDoors => self.silent_doors = true,
             TalentEffect::Hearing { value } => self.hearing += value,
@@ -1261,9 +1286,24 @@ impl TalentMods {
     /// The hit points the per-level effects give at character `level`: for each rank held,
     /// one per `per_levels` levels, at least `at_least`.
     pub fn hp_at(&self, level: u8) -> i32 {
-        (self.hp_per_levels.iter())
-            .map(|&(per, least)| (i32::from(level) / i32::from(per.max(1))).max(least))
-            .sum()
+        per_levels_at(&self.hp_per_levels, level)
+    }
+
+    /// The mana the per-level effects give at character `level` (Deep well), as
+    /// [`TalentMods::hp_at`] does hit points.
+    pub fn mana_at(&self, level: u8) -> i32 {
+        per_levels_at(&self.mana_per_levels, level)
+    }
+
+    /// What an ability whose cost is `base` mana costs with these talents: `mana_cost_percent`
+    /// more (Frugal caster's −20: a fifth less), rounded to the nearest, never below 1 for a
+    /// cost above 0.
+    pub fn mana_cost(&self, base: i32) -> i32 {
+        if base <= 0 || self.mana_cost_percent == 0 {
+            return base;
+        }
+        let scaled = (base * (100 + self.mana_cost_percent).max(0) + 50) / 100;
+        scaled.max(1)
     }
 
     /// `value` scaled by a signed percent, rounded down, never below 0: the limit at
@@ -1272,6 +1312,14 @@ impl TalentMods {
         let factor = u64::try_from((100 + percent).max(0)).unwrap_or(0);
         value.saturating_mul(factor) / 100
     }
+}
+
+/// What per-level effects `(per_levels, at_least)` give at character `level`: for each, one per
+/// `per_levels` levels, at least `at_least`.
+fn per_levels_at(effects: &[(u8, i32)], level: u8) -> i32 {
+    (effects.iter())
+        .map(|&(per, least)| (i32::from(level) / i32::from(per.max(1))).max(least))
+        .sum()
 }
 
 /// Everything a prerequisite may ask of whoever would take a talent (spec §8 "Talents"): the

@@ -328,6 +328,15 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // A wizard with Blood magic (#242), after giving blood for mana: the Talents group.
+    Case {
+        name: "abilities-menu-blood-magic",
+        seed: Some(4),
+        character: Some("elf,female,wizard"),
+        actions: "xp:200000 talent:blood_magic levelup:auto drain:20 blood_magic",
+        screen: Some("abilities"),
+        ..BASE
+    },
     // Items.
     Case {
         name: "equipment-screen",

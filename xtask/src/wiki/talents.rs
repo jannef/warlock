@@ -280,6 +280,21 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::ManaRegenPercent { value } => {
             format!("mana regeneration pace {}", percent(value))
         }
+        TalentEffect::MaxManaPerLevels {
+            per_levels,
+            at_least,
+        } => format!("+1 maximum mana per {per_levels} levels, at least +{at_least}"),
+        TalentEffect::ManaRestingPercent { value } => {
+            format!("mana regeneration pace while resting {}", percent(value))
+        }
+        TalentEffect::ManaCostPercent { value } => format!(
+            "abilities' mana costs {} (rounded to the nearest, at least 1)",
+            percent(value)
+        ),
+        TalentEffect::BloodMagic { hp, mana } => format!(
+            "active (the time of a wait): give {hp} hit points (never your last) for {mana} \
+             mana, up to your maximum; not while your mana is full"
+        ),
         TalentEffect::FootstepsPercent { value } => format!("footsteps {}", percent(value)),
         TalentEffect::SilentDoors => "the doors you open and close are silent".to_string(),
         TalentEffect::Hearing { value } => format!("hears sounds {value} fainter"),

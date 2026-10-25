@@ -70,6 +70,11 @@ pub enum Ability {
     /// Second wind talent (a talent with the `second_wind` effect). Had by whoever holds it;
     /// unavailable while its cooldown (Winded) lasts.
     SecondWind,
+    /// Blood magic (spec §8 "Talents"): [`Action::BloodMagic`], the active of the Blood magic
+    /// talent (a talent with the `blood_magic` effect): hit points given for mana. Had by
+    /// whoever holds it; usable whenever they have it (the rules refuse, taking no time, when
+    /// it would cost their last hit point or their mana is full).
+    BloodMagic,
     /// Bash with the shield held (spec §8 "Weapon skills"): [`Action::Bash`]. Everyone can bash
     /// with a shield (at shield bashing's rank 0 too), so everyone has it; it is available while
     /// a shield to bash with is held.
@@ -216,7 +221,12 @@ impl Ability {
         let wind = (content.talents().iter())
             .flat_map(|(_, def)| def.effects_at(def.rank_count()))
             .any(|e| matches!(e, TalentEffect::SecondWind { .. }));
-        let talents = wind.then_some(Ability::SecondWind);
+        let blood = (content.talents().iter())
+            .flat_map(|(_, def)| def.effects_at(def.rank_count()))
+            .any(|e| matches!(e, TalentEffect::BloodMagic { .. }));
+        let talents = (wind.then_some(Ability::SecondWind))
+            .into_iter()
+            .chain(blood.then_some(Ability::BloodMagic));
         // Classes: the actives some class's table has, in their order.
         let classes = (ClassActive::ALL.iter())
             .filter(|&&a| content.class_active(a).is_some())
@@ -283,6 +293,7 @@ impl Ability {
                     || actor.talent_mods(content).steal
             }
             Ability::SecondWind => actor.talent_mods(content).second_wind.is_some(),
+            Ability::BloodMagic => actor.talent_mods(content).blood_magic.is_some(),
             Ability::ThrowVoice => actor.talent_mods(content).throw_voice,
             Ability::ShieldBash | Ability::HoodLantern => true,
         }
@@ -299,6 +310,7 @@ impl Ability {
             Ability::PickLock => "pick_lock",
             Ability::Steal => "steal",
             Ability::SecondWind => "second_wind",
+            Ability::BloodMagic => "blood_magic",
             Ability::ShieldBash => "shield_bash",
             Ability::HoodLantern => "hood_lantern",
         }
@@ -315,6 +327,7 @@ impl Ability {
             Ability::PickLock => "Pick lock",
             Ability::Steal => "Steal",
             Ability::SecondWind => "Second wind",
+            Ability::BloodMagic => "Blood magic",
             Ability::ShieldBash => "Shield bash",
             Ability::HoodLantern => "Hood your lantern",
         }
@@ -341,6 +354,10 @@ impl Ability {
                 "Catch your breath in the thick of it: some of your hit points come back at \
                  once, and then you are winded for a while."
             }
+            Ability::BloodMagic => {
+                "Give some of your hit points, never the last, to have some of your mana back at \
+                 once."
+            }
             Ability::ShieldBash => "Strike someone next to you with the shield you hold.",
             Ability::HoodLantern => {
                 "Lower your lantern's hood, or raise it: hooded, it dimly lights the ground around \
@@ -358,7 +375,7 @@ impl Ability {
                 Source::Skill
             }
             Ability::ThrowVoice => Source::Class,
-            Ability::SecondWind => Source::Talent,
+            Ability::SecondWind | Ability::BloodMagic => Source::Talent,
             Ability::ShieldBash => Source::WeaponSkill,
             Ability::HoodLantern => Source::Item,
         }
@@ -371,9 +388,11 @@ impl Ability {
             Ability::Sign(_) => Aim::Nothing,
             Ability::Class(active) if active.aimed() => Aim::Direction,
             Ability::Class(active) if active.aims_cell() => Aim::Cell,
-            Ability::Class(_) | Ability::Skill(_) | Ability::SecondWind | Ability::HoodLantern => {
-                Aim::Nothing
-            }
+            Ability::Class(_)
+            | Ability::Skill(_)
+            | Ability::SecondWind
+            | Ability::BloodMagic
+            | Ability::HoodLantern => Aim::Nothing,
             Ability::ThrowVoice => Aim::Cell,
             Ability::Disarm | Ability::PickLock | Ability::Steal | Ability::ShieldBash => {
                 Aim::Direction
@@ -392,7 +411,7 @@ impl Ability {
             Ability::Disarm => Some(ActionKind::Disarm),
             Ability::PickLock => Some(ActionKind::PickLock),
             Ability::Steal => Some(ActionKind::Steal),
-            Ability::SecondWind => Some(ActionKind::Wait),
+            Ability::SecondWind | Ability::BloodMagic => Some(ActionKind::Wait),
             Ability::ShieldBash => Some(ActionKind::Melee),
             Ability::HoodLantern => Some(ActionKind::Hood),
         }
@@ -412,6 +431,7 @@ impl Ability {
             | Ability::PickLock
             | Ability::Steal
             | Ability::SecondWind
+            | Ability::BloodMagic
             | Ability::ShieldBash
             | Ability::HoodLantern => None,
         }
@@ -432,6 +452,7 @@ impl Ability {
             (Ability::Sign(active), _) => Some(Action::Gift(active, None)),
             (Ability::Skill(_) | Ability::ThrowVoice, _) => None,
             (Ability::SecondWind, _) => Some(Action::SecondWind),
+            (Ability::BloodMagic, _) => Some(Action::BloodMagic),
             (Ability::Disarm, Some(dir)) => Some(Action::Disarm(dir)),
             (Ability::PickLock, Some(dir)) => Some(Action::PickLock(dir)),
             (Ability::Steal, Some(dir)) => Some(Action::Steal(dir)),
@@ -457,6 +478,7 @@ impl Ability {
             | Ability::PickLock
             | Ability::Steal
             | Ability::SecondWind
+            | Ability::BloodMagic
             | Ability::ShieldBash
             | Ability::HoodLantern => None,
         }
@@ -476,7 +498,7 @@ impl Ability {
                             .then(|| actor.talent_mods(content).inspiring())
                             .flatten()
                             .map_or(0, |i| i.mana);
-                        (actor.mana < mana).then_some(Unavailable::NoMana)
+                        (actor.mana < actor.mana_cost(content, mana)).then_some(Unavailable::NoMana)
                     })
             }
             Ability::Sign(active) => (actor.talent_mods(content).sign_cooldown(active))
@@ -487,7 +509,8 @@ impl Ability {
             | Ability::HoodLantern
             | Ability::Disarm
             | Ability::PickLock
-            | Ability::Steal => None,
+            | Ability::Steal
+            | Ability::BloodMagic => None,
             Ability::SecondWind => (actor.talent_mods(content).second_wind)
                 .map(|w| w.cooldown)
                 .filter(|&cooldown| actor.effects.has(cooldown))

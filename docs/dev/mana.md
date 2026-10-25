@@ -5,7 +5,8 @@ spec/08e-blood-and-status.md ("Mana"). Keep it current with the code, as CLAUDE.
 
 Mana (spec §8 "Mana", #223) is a second pool beside hit points, built the same way, for magic to
 spend (the progression design, #220, gives classes mana values, per-level gains, and abilities
-and talents that cost or raise it; none of that is built yet). **Every new system says in its
+and talents that cost or raise it; the values, the gains, and the talents (#242) are built,
+the abilities that cost it come with the caster class tables, I3). **Every new system says in its
 issue how it interacts with mana**, and hooks in at the one place below.
 
 - **Pure rules**: `warlock-core/src/mana.rs`: `max_mana(stats, base)` (base plus the mental
@@ -29,17 +30,30 @@ issue how it interacts with mana**, and hooks in at the one place below.
   - `World::mana_rate(id)`: the pace in percent, the twin of `World::healing_rate`: min of
     `Effects::mana_regen` and `Diseases::mana_regen`, × `mana_resting` while the player rests, ×
     the room's `mana_regen`, × (100 + `ManaRegeneration` + `TalentMods::mana_regen_percent`) /
-    100 (the talent effect `mana_regen_percent`: Tidal, the Water-born's gift, +25; the H6
-    talents reuse it); 0 for a Starving player. The talents' `mana` system is `pending` until
-    the H6 mana talents join Tidal.
+    100 (the talent effect `mana_regen_percent`: Tidal, the Water-born's gift, and Clear mind,
+    +25 each); resting's pace is raised by `TalentMods::mana_resting_percent` first
+    (Meditation, +50); 0 for a Starving player.
     Burden, temperature, and stances never enter it.
   - `World::live` (`world/status.rs`) calls `mana::regain` beside `heal` (in the fast path too)
     and takes `mana::until_regained` as a moment, so a point back is exact however time is cut;
     the ticks' `mana_damage` sums into `Moment::drained` and `mana::drain` takes it (never below
     0, never a death).
-  - `World::spend_mana(id, amount) -> bool`: the one way to spend; refused when short. Spells
-    and abilities call it (and say why they could not); the dev `drain:N`
-    (`Action::Drain`, `World::drain_dev`) is its only caller now.
+  - `World::spend_mana(id, base) -> bool`: the one way to spend; refused when short. The cost
+    is `Actor::mana_cost(content, base)` (`TalentMods::mana_cost`: `mana_cost_percent`,
+    Frugal caster's −20, rounded to the nearest, at least 1 for a cost above 0); an ability that
+    greys out without the mana compares that, not its base. The player's spend of any is
+    `StatUse::Cast` (`train_stat`: a Willpower mark at 20 %, `data/stats.toml`). Spells and
+    abilities call it (and say why they could not); the dev `drain:N` (`Action::Drain`,
+    `World::drain_dev`, through the same cut and training, saying the cost spent) is its only
+    caller now.
+  - Deep well's mana by level (`max_mana_per_levels`, `TalentMods::mana_at`) is handed out like
+    Hardy's hit points: `class::hand_out` at the pick, `World::level_up` as each level comes
+    (no `mana_level` cap), into `mana_base` and `mana`.
+  - `World::blood_magic` (`Action::BloodMagic`, `blood_magic`; `Ability::BloodMagic`, the
+    talent's active): `TalentMods::blood_magic` (`hp`, `mana`) hit points straight off `hp`
+    (not `hurt`: no Protection, pain, training, or death, since it refuses at `hp <= cost`) for
+    mana up to the maximum, a wait's price; refused, no time, without it, low on blood, or full.
+    The menu lists it as usable whenever held (the rules refuse).
   - `World::keep_mana_within_max` after every player action (in `World::apply`, beside
     `keep_hp_within_max`): down to the lasting maximum when something that raised it comes off.
     `World::disease_turn` cuts mana to the new maximum after mental stat damage, like hit points.
@@ -48,8 +62,7 @@ issue how it interacts with mana**, and hooks in at the one place below.
     `mana_level` (30; `World::level_mana`; the scenario's `mana` without a character). The race
     and class values and this formula are the progression design's (`docs/design/progression.md`
     §3.7), which also plans what spends mana: caster abilities costing it
-    (`Unavailable::NoMana`), spending training Willpower, the Scholar talents (Arcane mastery
-    through `World::mana_rate`).
+    (`Unavailable::NoMana`, I3).
 - **Presentation**: `PerceptionView::own_mana()` (current clamped to the maximum, and the
   maximum) is all the UI gets: the status bar's `MP 5/12` (`ui::status_segments`, priority 1
   right after HP, so it gives way after everything else of that priority, before the HP), the
@@ -58,7 +71,8 @@ issue how it interacts with mana**, and hooks in at the one place below.
   layer shows every actor's `mp`. Never a creature's mana or any pace in the game.
 - **Wiki**: `xtask/src/wiki/mana.rs` (race and class mana, regeneration by Willpower, what
   changes the pace) for `wiki/src/mana.md`; the special rooms table says the room's pace.
-- **Tests**: `mana.rs` (the formulas), `world/mana_tests.rs` (maximum from data and stats,
+- **Tests**: `mana.rs` (the formulas), `world/mana_talent_tests.rs` (the five talents, the
+  `cast` training), `world/mana_tests.rs` (maximum from data and stats,
   creature mana and serialization, regeneration by Willpower and resting, time cut differently,
   drains, statuses, diseases, starving, rooms, burden and stances doing nothing, the penalty that
   passes, disease damage, spending and `drain:N`, levels, magic items, saves, replays), and the
