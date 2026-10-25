@@ -1,0 +1,14 @@
+# The reeve of Cēaptūn, who keeps the town's peace and its coin (docs/design/campaign.md §6):
+# Reeve Leofric (his npc dialogue, campaigns/ascmearc/data/dialogue/ceaptun.toml).
+[[creature]]
+id = "reeve"
+name = "reeve"
+glyph = "@"
+fg = "#7c98c8"
+faction = "peaceful"
+alignment = "good"
+race = "human"
+footsteps = 50
+hearing = 10
+weight = 84000
+stats = { strength = 12, toughness = 12, intelligence = 12, presence = 12 }

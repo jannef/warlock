@@ -1162,6 +1162,8 @@ mod burden_tests;
 #[cfg(test)]
 mod caster_tests;
 #[cfg(test)]
+mod ceaptun_tests;
+#[cfg(test)]
 mod character_tests;
 #[cfg(test)]
 mod class_active_tests;

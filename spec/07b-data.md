@@ -640,7 +640,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   time the player arrives by stairs.
 - **Dialogue** (`data/dialogue.toml`, optional; without it nobody talks; §8 "Dialogue"): each
   `[[dialogue]]` names exactly one of `creature` (a creature type, not the player) or `npc` (an
-  npc id: lower-case letters, digits, and underscores), at most one dialogue each, and has `lines`
+  npc id: lower-case letters, digits, and underscores; an npc's may give its proper `name`, 1 to
+  24 characters, "Sister Hild": messages, look mode, and the dialogue screen call it so, without
+  an article, and quest texts name it so as a giver), at most one dialogue each, and has `lines`
   (at least one one-liner), an optional `greet`, optional cold greetings (`greet_evil`, lines a
   good speaker says to an Evil or Wicked character instead of its greeting and one-liners, in
   turn; `greet_good`, an evil speaker's to a Good or Saintly character; §8 "Alignment"), optional

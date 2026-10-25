@@ -73,7 +73,7 @@ use crate::burden::{self, Load};
 use crate::character::Character;
 use crate::combat::Health;
 use crate::content::Shops;
-use crate::content::{Choice, ResourceId, TalentId, TreeId};
+use crate::content::{Choice, DialogueId, ResourceId, TalentId, TreeId};
 use crate::content::{
     CombatStance, Content, CreatureId, DamageTypeId, DiseaseId, FactionId, Factor, Flow,
     ItemClassId, LevelKind, LightId, ObjectId, Place, RaceDef, RoomEffectDef, SlotId, Stance,
@@ -228,6 +228,10 @@ pub struct SeenActor {
     pub id: ActorId,
     pub kind: ActorKind,
     pub creature: CreatureId,
+    /// What it says when talked to, if anything (`Content::dialogue_of`): a unique character's
+    /// proper name and the services it sells are known by sight.
+    #[serde(skip)]
+    pub dialogue: Option<DialogueId>,
     /// The faction it fights for (its type's, or the one its level placed it in).
     #[serde(skip)]
     pub faction: Option<FactionId>,
@@ -676,6 +680,7 @@ impl Perception {
                 id: a.id,
                 kind: a.kind,
                 creature: a.creature,
+                dialogue: content.dialogue_of(a.creature, a.npc.as_deref()),
                 faction: a.faction(content),
                 pos: a.pos,
                 health: a.health(content),

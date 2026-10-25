@@ -27,7 +27,13 @@ its energy; it takes its old cell as its `Mind::post` and
 route) unless `World::refusal` says why not (the type's `budge`: `never`, or `off_post` while its
 mind is calm, ready for shopkeepers, #145; it cannot move; or it is two sizes or more larger:
 sizes are listed smallest first). What an actor is called in messages comes from
-`World::called` ("the gardener"): named shopkeepers go there. Creatures that talk and fight no one
+`World::called` ("the gardener"): named shopkeepers go there, and so do unique characters with a
+proper name (an npc dialogue's `name`, `Dialogue::name`, #336: "Sister Hild", no article; also
+`Content::speaker_name`/`speaker_called` for quest texts and the wiki). Presentation knows a seen
+creature's dialogue from `SeenActor::dialogue` (`Content::dialogue_of`, not serialized): look
+mode names an npc by its proper name with the services it sells in words ("Sister Hild
+(unhurt), who cures and mends for gold, on plank floor."), and the dialogue screen's title is
+the name. Creatures that talk and fight no one
 never stop a rest by coming into view (`World::disturbs_rest`).
 
 **Services** (#329, the campaign design §6.1; spec §8 "Dialogue"): `world/service.rs`.

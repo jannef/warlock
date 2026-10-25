@@ -44,7 +44,11 @@ place is.
 
 {{#include generated/overworld-places.md}}
 
-The places that lead "nowhere yet" are still being built: for now `>` there says so. The two
+**Cēaptūn** is the first place to go: a walled market town, safe, with four shops on its
+square, the Mynster (the temple, where you may rest and Sister Hild cures and mends for gold),
+and the Gæsthūs, the inn, where Godgifu has news of the march (see [Shops](shops.md) and
+[People and talk](npcs.md)). Its stairs up lead back out to its cell. The places that lead
+"nowhere yet" are still being built: for now `>` there says so. The two
 hidden ones are where they will be once a quest tells you of them (see "Hidden locations"
 below); until then each is the land it looks like.
 

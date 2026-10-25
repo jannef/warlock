@@ -322,9 +322,13 @@ impl Content {
             .unwrap_or_else(|| place.to_string())
     }
 
-    /// What whoever speaks dialogue `id` is called, without an article: its creature type's
-    /// name ("old hermit"), or for a unique npc that of the creature a level makes it.
+    /// What whoever speaks dialogue `id` is called, without an article: a unique npc's proper
+    /// name ("Sister Hild"), its creature type's name ("old hermit"), or for a unique npc
+    /// without one that of the creature a level makes it.
     pub fn speaker_name(&self, id: DialogueId) -> String {
+        if let Some(name) = &self.dialogue(id).name {
+            return name.clone();
+        }
         let creature = match &self.dialogue(id).speaker {
             Speaker::Creature(c) => Some(*c),
             Speaker::Npc(npc) => (self.levels.values())
