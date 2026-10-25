@@ -54,6 +54,18 @@ for cells where a hostile stands, nearest first, with line of sight only out to 
 darkvision before light, and bounce light only when the rest of the light falls short (before
 those, the same rest took about 1 s).
 
+Full population (#326, 2026-10-25, same machine under load from other builds, load average
+4 to 6): the `delf` row is a generated 120×60 cave floor of a fixture branch of danger 8 laid
+down at its full population (80 creatures, the ceiling of the campaign design's §9.3), the
+player with hit points enough to walk among them. Its turns take 0.59 ms on average and 1.36 ms
+at most (budget 16 ms, the vast level's), so the ceiling of 80 stays. A night's rest there takes
+about 7.7 s for 7200 six-second turns (the hub's and the vast level's took 0.53 s and 0.59 s in
+the same run): with 80 creatures some are always within the view range, so every turn is
+perceived, and all 80 act every turn (about 1 ms a turn, as the walk's). The row shows the rest but does not hold
+it to the 500 ms budget (`REST_UNJUDGED` in `xtask/src/bench.rs`); making a night's rest on a
+full floor fast is an open question for the owner (letting far creatures that are not hunting
+skip turns while the player rests would be the obvious lever).
+
 Frame time is nearly identical across levels and resolutions, which means the loop is CPU or
 submission bound on this machine; the offscreen run at the default 60 Hz pacing is bounded by the
 sleep granularity, not by rendering. All budgets are met with a large margin. Before lighting and
