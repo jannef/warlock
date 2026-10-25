@@ -1,8 +1,5 @@
 # Campaign-owned (docs/design/campaign.md §3.6, §10.1): the barrow wight is the Ascmearc's own
-# type and belongs in assets/campaigns/ascmearc/data/creatures/. It waits here, shared, only
-# until that campaign's directory exists (its campaign.toml needs a start scenario of its own,
-# item E, #332); the change that lands second moves this file there (a `git mv`, and its row in
-# world/bestiary_tests.rs's WAVES becomes `Some("ascmearc")`). Its id does not change.
+# type, numbered after the shared block; only the Ascmearc's files may name it.
 #
 # The barrow wave (Cealdhlāw, §10.1): the barrow wight, the lord of the barrows' dead, and the
 # target of the barrows' last quest. A caster (its spells announced until magic is designed),

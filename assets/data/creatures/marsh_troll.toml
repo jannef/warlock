@@ -1,0 +1,29 @@
+# The fen wave (Fennmynster, docs/design/campaign.md §10.1). A troll of the fen, green with
+# weed: huge, hard to put down, and its wounds close quickly (by its great Toughness, as every
+# creature's do).
+[[creature]]
+id = "marsh_troll"
+level = 9
+xp = 55
+loot = 30
+name = "marsh troll"
+glyph = "T"
+fg = "#4a7a4a"
+faction = "marsh"
+alignment = "evil"
+vision = "darkvision"
+sight = 8
+opens_doors = true
+footsteps = 110
+hearing = 10
+weight = 220000
+stats = { strength = 19, dexterity = 10, toughness = 24, intelligence = 5, willpower = 10, presence = 5 }
+base_hp = 24
+natural = { defence = 1, protection = 2, name = "hide" }
+on_eat = { message = "Gristle and marsh water.", vomit = 50, stat = { toughness = 5 } }
+blood = "#2a4a2a"
+[creature.attack]
+damage = "1d10"
+damage_type = "slashing"
+name = "claws"
+verb = "rakes"

@@ -37,6 +37,21 @@ id = "undead"
 name = "undead"
 hostile = ["player", "kobolds", "goblins"]
 
+# The living things of the great fen (Fennmynster): leeches, frogs, crocodiles, wisps, mud
+# golems, marsh trolls, and the bog hag they serve. Not animals as a faction (the trolls, the
+# wisps, and the hag are not), so a Beast-friend calms none of them.
+[[faction]]
+id = "marsh"
+name = "marsh things"
+hostile = ["player"]
+
+# The cult of the drowned minster (Fennmynster): cultists and their priests. They would bind the
+# fen to their rites, so the marsh things fight them; the drowned dead they leave alone.
+[[faction]]
+id = "cult"
+name = "cultists"
+hostile = ["player", "marsh"]
+
 # Folk who mean the player no harm, whatever they are: the showcase's people (the gardener, the
 # bard, the hermit) by type, and others placed here by levels with `faction = "peaceful"` in a
 # legend entry (the showcase hub and caverns), overriding the faction of the creature's type.

@@ -14,6 +14,8 @@ const FACTIONS: &str = "[[faction]]\nid = \"player\"\nname = \"you\"\n\
      [[faction]]\nid = \"kobolds\"\nname = \"kobolds\"\n\
      [[faction]]\nid = \"goblins\"\nname = \"goblins\"\n\
      [[faction]]\nid = \"undead\"\nname = \"undead\"\n\
+     [[faction]]\nid = \"marsh\"\nname = \"marsh things\"\n\
+     [[faction]]\nid = \"cult\"\nname = \"cultists\"\n\
      [[faction]]\nid = \"wildlife\"\nname = \"wildlife\"\n\
      [[faction]]\nid = \"peaceful\"\nname = \"peaceful folk\"\n\
      [[faction]]\nid = \"merchants\"\nname = \"merchants\"\n\

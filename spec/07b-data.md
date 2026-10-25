@@ -88,8 +88,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
   claws whose criticals bleed), the goblin chief 5 (club, short sword, jerkin, coins), and the
   barrow wight 6 (a caster whose touch is cold, resists cold, no corpse; an ancient long sword,
   sometimes magic). The undead are immune to poison. The barrow wight is the Ascmearc's own type
-  (`docs/dev/campaign.md`) and waits in the shared `data/creatures/` until the Ascmearc's directory
-  exists. For blood (§8 "Blood"; presentation only):
+  (`docs/dev/campaign.md`). The fen wave (the drowned minster of Fennmynster, danger 4 to 11):
+  the giant leech 4 (its bite leaves a bleeding wound), the giant frog 4 (quick), the drowned 5
+  (undead, slow, filth fever on a hit), the crocodile 6 (a strong bite, scales 2/3), the
+  cultist 6 (racial dagger, a scroll now and then), the will-o'-wisp 7 (a caster that glows,
+  silent, hard to hit, no corpse), the ghost 8 (undead, resists slashing, piercing, and
+  bludgeoning 50, a cold touch, no corpse), the mud golem 8 (slow, protection 5, no corpse), the
+  cult priest 9 (a caster with the cult's dagger, sometimes magic, and often a scroll), the marsh
+  troll 9 (huge, regenerating by its Toughness), and the bog hag 11 (a caster with a staff, often
+  magic; unique: a population draws her once a run). The cultist, the cult priest, and the bog
+  hag are the Ascmearc's own types. For blood (§8 "Blood"; presentation only):
   `blood`, the colour of its stains (`"#rrggbb"`; default dark red, `#6e0e0c`) or `"none"` for a
   bloodless creature; the cave beetle bleeds greenish-black ichor (`#38461a`). For hunger (§8
   "Hunger"): `corpse` (default true: it leaves a corpse when it dies; with `data/hunger.toml`),
@@ -595,8 +603,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   gives the stance (`Hostile` or `Neutral`) of two factions, creature types, or actors. Test
   factions: `vermin` (giant rats; hostile to the player), `kobolds` (the war band; hostile to the
   player and the vermin), `goblins` (the barrows' goblin tribes; hostile to the player, the
-  vermin, and the kobolds), `undead` (the barrows' dead; hostile to the player, the kobolds, and
-  the goblins, and leaving the vermin alone), `wildlife` (deer, cave bats, the cave beetle;
+  vermin, and the kobolds), `undead` (the barrows' and the fen's dead; hostile to the player,
+  the kobolds, and the goblins, and leaving the vermin alone), `marsh` ("marsh things", the
+  fen's living things and the bog hag; hostile to the player; not animals as a faction), `cult`
+  ("cultists", the drowned minster's cult; hostile to the player and the marsh), `wildlife` (deer, cave bats, the cave beetle;
   neutral to everyone), and
   `peaceful` ("peaceful folk", hostile to no one: the showcase's people by type, and creatures
   levels place in it); `merchants` (shopkeepers; hostile to no one) and `outraged` ("outraged

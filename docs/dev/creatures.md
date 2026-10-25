@@ -100,10 +100,8 @@ The campaign's creature waves (docs/design/campaign.md §10.1; #333 the barrow w
 wave, #335 the delf wave): content only, on the fields above. A wave adds
 - one file per type: the common ones in `data/creatures/` (shared), the campaign's own people and
   bosses in `campaigns/<id>/data/creatures/` (numbered after the shared block, only that
-  campaign's files may name them; `docs/dev/campaign.md`). The barrow wight is the Ascmearc's own
-  but sits in `data/creatures/` until `campaigns/ascmearc/` exists (its `campaign.toml` needs a
-  start scenario of its own, #332): whichever of the two lands second moves it with `git mv` and
-  marks it in the test below. Each file starts with a comment naming its wave; `xp` follows
+  campaign's files may name them; `docs/dev/campaign.md`), the Ascmearc's in
+  `campaigns/ascmearc/data/creatures/`. Each file starts with a comment naming its wave; `xp` follows
   `5 × level + 10`; a humanoid has `racial_weapon` with a rank in its skill and `[[creature.gear]]`
   lines (a second weapon of another skill wants a rank there too, so it benefits);
 - its factions in `data/factions.toml`, inserted by group (after the kobolds), never at the end.
@@ -114,7 +112,13 @@ wave, #335 the delf wave): content only, on the fields above. A wave adds
   stances in that file's faction test.
 The barrow wave (danger 1–6): grave worm, barrow spider, goblin, goblin archer, skeleton, zombie,
 giant centipede, barrow ghoul, goblin chief, barrow wight; factions `goblins` and `undead` (the
-undead are immune to poison by `resist`, and leave the vermin alone). The wiki's creature tables
+undead are immune to poison by `resist`, and leave the vermin alone); the barrow wight is the
+Ascmearc's. The fen wave (danger 4–11): giant leech, giant frog, drowned, crocodile, cultist,
+will-o'-wisp, ghost, mud golem, cult priest, marsh troll, bog hag; factions `marsh` (the fen's
+living things, not an animal faction) and `cult` (hostile to the marsh); the drowned and the
+ghost are `undead`. The cultist, the cult priest, and the bog hag (`unique`) are the Ascmearc's.
+The design's marsh eel (`habitat = "water"`) is left out: placing and keeping a creature in water
+is a rule of its own, not content. The wisp carries the `wisp` light (`data/lights.toml`). The wiki's creature tables
 (`xtask/src/wiki/creatures.rs`) pick new types up by themselves; the status-effect and disease
 tables name the bites that cause them, so `xtask/src/wiki/mod.rs`'s test rows move when a wave's
 `on_hit` names a status or disease.

@@ -1,0 +1,37 @@
+# Campaign-owned (docs/design/campaign.md §3.6, §10.1): the cult is the Ascmearc's own, so its
+# types are numbered after the shared block and only the Ascmearc's files may name them.
+#
+# The fen wave (Fennmynster, §10.1): a priest of the drowned minster's cult, who leads its rites
+# and curses those who come (a caster: its curses announced until magic is designed). It bears
+# the cult's dagger, now and then an enchanted one, and often a scroll.
+[[creature]]
+id = "cult_priest"
+level = 9
+xp = 55
+loot = 50
+name = "cult priest"
+glyph = "@"
+fg = "#d04a8a"
+faction = "cult"
+alignment = "evil"
+race = "human"
+combat = "caster"
+range = 6
+opens_doors = true
+footsteps = 80
+hearing = 14
+weight = 70000
+stats = { strength = 11, dexterity = 13, toughness = 13, intelligence = 15, willpower = 17, presence = 15 }
+base_hp = 16
+skills = { concentration = 40, spellcraft = 45 }
+weapon_skills = { daggers = 2 }
+racial_weapon = "dagger"
+# The racial weapon's line written out, for its magic.
+[[creature.gear]]
+chance = 90
+one_of = ["dagger"]
+keep = "wield"
+magic = 20
+[[creature.gear]]
+chance = 40
+one_of = ["scroll_of_light", "scroll_of_identify", "scroll_of_frost", "scroll_of_fireball", "scroll_of_lightning"]

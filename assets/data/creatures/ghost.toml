@@ -1,0 +1,22 @@
+# The fen wave (Fennmynster, docs/design/campaign.md §10.1). The ghost of a monk of the drowned
+# minster: blades and clubs pass half through it, it makes no sound, sees in the dark, its touch
+# chills, and it leaves nothing behind.
+[[creature]]
+id = "ghost"
+level = 8
+xp = 50
+name = "ghost"
+glyph = "G"
+fg = "#d8e0f0"
+faction = "undead"
+alignment = "evil"
+vision = "darkvision"
+sight = 10
+hearing = 15
+weight = 1000
+stats = { strength = 12, dexterity = 14, toughness = 12, intelligence = 10, willpower = 18, presence = 14 }
+base_hp = 14
+attack = { damage = "1d8", damage_type = "cold", name = "touch", verb = "touches" }
+resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50, poison = 100 }
+corpse = false
+blood = "none"

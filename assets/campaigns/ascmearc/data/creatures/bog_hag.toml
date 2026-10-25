@@ -1,0 +1,38 @@
+# Campaign-owned (docs/design/campaign.md §3.6, §10.1): the bog hag is the Ascmearc's own, so
+# she is numbered after the shared block and only the Ascmearc's files may name her.
+#
+# The fen wave (Fennmynster, §10.1): the bog hag, the old power of the great fen, whom the marsh
+# things serve and the cult would bind. There is one: `unique`, so a population draws her at most
+# once in a run (spec §7 "Danger levels"). A caster (her spells announced until magic is
+# designed), she leans on a staff that is often more than it seems.
+[[creature]]
+id = "bog_hag"
+level = 11
+xp = 65
+loot = 75
+unique = true
+name = "bog hag"
+glyph = "h"
+fg = "#8ac05a"
+faction = "marsh"
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+combat = "caster"
+range = 6
+opens_doors = true
+footsteps = 50
+hearing = 18
+weight = 55000
+stats = { strength = 14, dexterity = 12, toughness = 16, intelligence = 17, willpower = 20, presence = 16 }
+base_hp = 26
+skills = { concentration = 50, spellcraft = 60 }
+attack = { damage = "1d8", damage_type = "slashing", name = "claws", verb = "claws" }
+resist = { poison = 50, cold = 25 }
+weapon_skills = { staves = 2 }
+on_eat = { message = "Bitter as the fen.", vomit = 60, harm = "1d4", stat = { willpower = 5 } }
+blood = "#3a5a2a"
+[[creature.gear]]
+chance = 80
+one_of = ["quarterstaff"]
+magic = 50

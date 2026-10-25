@@ -1,0 +1,28 @@
+# Campaign-owned (docs/design/campaign.md §3.6, §10.1): the cult is the Ascmearc's own, so its
+# types are numbered after the shared block and only the Ascmearc's files may name them.
+#
+# The fen wave (Fennmynster, §10.1): a cultist of the drowned minster, sworn to whatever sleeps
+# under the black water. They fight with daggers (their racial weapon, spec §8 "Creature gear"),
+# open doors, and now and then carry a scroll from the minster's library.
+[[creature]]
+id = "cultist"
+level = 6
+xp = 40
+loot = 25
+name = "cultist"
+glyph = "@"
+fg = "#a05a7a"
+faction = "cult"
+alignment = "evil"
+race = "human"
+opens_doors = true
+footsteps = 90
+hearing = 12
+weight = 70000
+stats = { strength = 12, dexterity = 14, toughness = 12, intelligence = 11, willpower = 12, presence = 10 }
+base_hp = 10
+weapon_skills = { daggers = 2 }
+racial_weapon = "dagger"
+[[creature.gear]]
+chance = 15
+one_of = ["scroll_of_light", "scroll_of_identify", "scroll_of_frost", "scroll_of_fireball"]
