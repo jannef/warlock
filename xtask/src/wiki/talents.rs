@@ -773,6 +773,9 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
              cell (one roll; no roll to hit) and the ice there melts, and you are {}",
             status(&id)
         ),
+        TalentEffect::RebornWhole => "rising from the ashes brings you back whole: every hit \
+             point, every status effect and disease gone (nothing follows them), and no Ashen"
+            .to_string(),
         TalentEffect::SecondWind {
             per_level,
             at_least,
@@ -821,6 +824,11 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         }
         TalentEffect::CriticalStatus { status: id } => format!(
             "a critical you confirm in melee leaves the target {} (one degree)",
+            status(&id)
+        ),
+        TalentEffect::Grip { status: id } => format!(
+            "a creature you hit in melee is {} (it cannot step; beside you, it attacks you \
+             instead) until you miss it, strike another, or move; no roll",
             status(&id)
         ),
         TalentEffect::CriticalConfirm { value } => {

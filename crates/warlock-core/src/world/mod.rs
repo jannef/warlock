@@ -114,6 +114,7 @@ mod lantern;
 mod level;
 mod lockpick;
 mod loot;
+mod lucky;
 mod mana;
 mod path;
 mod perceive;
@@ -1119,6 +1120,8 @@ mod lantern_tests;
 mod light_tests;
 #[cfg(test)]
 mod lockpick_tests;
+#[cfg(test)]
+mod lucky_tests;
 #[cfg(test)]
 mod magic_tests;
 #[cfg(test)]
