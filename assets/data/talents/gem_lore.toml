@@ -1,0 +1,8 @@
+[[talent]]
+id = "gem_lore"
+name = "Gem lore"
+tree = "racial"
+description = "Gnomes know their stones: you see what each gem is worth, and you find gems twice as often."
+needs = { race = "gnome" }
+effects = [{ kind = "gem_worth" }, { kind = "gem_find_percent", value = 100 }]
+systems = ["gems"]

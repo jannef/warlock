@@ -1,0 +1,8 @@
+[[talent]]
+id = "ageless"
+name = "Ageless"
+tree = "racial"
+description = "Time touches you lightly: hunger comes slower, and a disease runs its course at half the pace."
+needs = { race = "elf", level = 9 }
+effects = [{ kind = "hunger_percent", value = -20 }, { kind = "disease_interval_percent", value = 100 }]
+systems = ["hunger", "diseases"]

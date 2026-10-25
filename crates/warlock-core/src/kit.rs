@@ -433,6 +433,7 @@ mod tests {
                             carried,
                             limit,
                             ignores_burdened: race.ignores_burdened,
+                            stout: false,
                         };
                         let worst = load(kit + carry).penalty();
                         assert!(worst < Burden::Strained, "{character}: {kit} g of {limit}");

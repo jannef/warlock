@@ -101,6 +101,7 @@ fn each_sign_grants_its_gifts_and_flaw_in_order() {
             .filter(|t| book.id(&t.id).is_some_and(|id| book.get(id).granted))
             .filter(|t| !["supple", "evergreen"].contains(&t.id.as_str()))
             .filter(|t| !book.tree(book.get(book.id(&t.id).unwrap()).tree).class)
+            .filter(|t| t.id != "versatile")
             .map(|t| t.id.clone())
             .collect::<Vec<_>>()
     };

@@ -1,0 +1,8 @@
+[[talent]]
+id = "slinger"
+name = "Slinger"
+tree = "racial"
+description = "Raised with a sling in hand: your sling stones hit harder and fly farther."
+needs = { race = "halfling", weapon_skills = { slings = 2 } }
+effects = [{ kind = "weapon", skill = "slings", damage = 1 }, { kind = "launcher_range", value = 2, skill = "slings" }]
+systems = ["ranged"]

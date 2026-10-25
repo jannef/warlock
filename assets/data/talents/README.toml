@@ -47,7 +47,8 @@
 #   [[talent.rank]]  one per rank, in order (as many as `ranks`, or none): its own `needs`
 #                 besides the talent's, and its own `effects` besides the per-rank ones
 #   granted       true: given (by a race, a birth sign, a class), never on a pick list; a birth sign's
-#                 gifts are in the `stars` tree and named by horoscope.toml's `grants`
+#                 gifts are in the `stars` tree and named by horoscope.toml's `grants`, a race's
+#                 in the `racial` tree and named by races.toml's `talents`
 #   flaw          true: a birth sign's flaw (granted too): shown with "but" and dimmed, never
 #                 a prerequisite of another talent
 #
@@ -56,6 +57,8 @@
 #   dodge { value }               Defence in the Dodge category (bonuses add up)
 #   natural { value }             natural armour, on top of the actor's own or an item's
 #   melee_damage { value }        damage added to every blow up close (both hands)
+#   ferocity { value }            damage added to every attack while below a third of its hit
+#                                 points
 #   threat { value }              every attack threatens a critical that many points lower
 #   reroll_fumble                 a natural 2 on an attack roll is rolled again, once
 #   streak { max }                each melee blow at the creature its last blow was at (in its
@@ -117,6 +120,7 @@
 #                                 more (never above certain)
 #   xp_percent { value }          experience gained, that percent more
 #   skill_rolls { value }         skill rolls every level, that many more
+#   extra_pick { level }          one more talent pick at that character level (1: at creation)
 #   train_skill { dice }          the chosen skill (choice skill) trained at those dice, or
 #                                 raised by them, as the rank is taken (the levels stream)
 #   loot_magic_percent { value }  loot it finds and creatures drop: the weights of the rarities
@@ -150,6 +154,8 @@
 #   notice { value }              notices hidden things in passing as if trained in Spot, with
 #                                 that much added
 #   stone_sense                   notices hidden things on stone in passing, as a dwarf does
+#   stone_find { value }          added to its checks to find what is hidden on stone,
+#                                 searching and in passing
 #   search { value }              added to every check to find hidden things (searching and in
 #                                 passing)
 #   search_reach { value }        searching reaches that many cells farther
@@ -170,7 +176,8 @@
 #                                 where there is one, `crit` adds to a confirmed critical's
 #                                 multiplier (at most x5), `at_rank` asks that rank of the
 #                                 skill held at least; each field 0 by default
-#   launcher_range { value }      the readied missile weapon shoots that many cells farther
+#   launcher_range { value, skill }   the readied missile weapon shoots that many cells
+#                                 farther; with `skill` (a weapon skill id), only a launcher of it
 #   throw_range { value }         throws reach that many cells farther
 #   missile_breaks { value }      its missiles break that percent more often (negative: less)
 #   max_dex { value }             worn armour's cap on Dexterity in Defence, that much higher
@@ -220,6 +227,8 @@
 #   disease_checks { value }      added to its disease checks
 #   checks { stat, value }        added to every check of that stat it makes
 #   disease_recovery { value }    a disease needs that many fewer checks won in a row to go
+#   disease_interval_percent { value }   a disease's progressions come that percent further
+#                                 apart (100: twice as far)
 #   kick_die { sides }            its kicks at creatures roll one die of that many sides
 #   door_kick { value }           its door kicks as if that much stronger
 #   kick_noise_percent { value }  its door kicks that percent louder (negative: quieter)
@@ -241,6 +250,7 @@
 #   disarm                        the Disarm ability without Disable device
 #   speed_percent { value }       it moves and acts that percent quicker (hidden in the game)
 #   missile_dodge { value }       Dodge added against shots, throws, and trap missiles
+#   small_target { value }        Dodge added against the attacks of creatures larger than it
 #   spell_damage_percent { value }   the damage bursts and bolts do it, that percent more
 #                                 (negative: less)
 #   Class abilities' own (spec §8 "Class abilities"; the actives are used from the abilities
@@ -257,6 +267,7 @@
 #   step_percent { value, unarmoured, unburdened, no_shield }   steps cost that percent more
 #                                 (negative: cheaper), only while each condition set holds
 #   steadfast                     Burdened costs nothing, as a dwarf's
+#   stout                         Strained costs what Burdened costs others
 #   disease_immune                no disease is ever caught: no check, no infection
 #   no_penalty_to { stat }        no status lowers its score in that stat
 #   raise_percent { status, value }   what that status raises its scores by, that percent more
