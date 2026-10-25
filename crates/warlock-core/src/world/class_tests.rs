@@ -91,7 +91,11 @@ fn level_one_abilities_come_with_the_character_and_others_with_their_levels() {
     // An adventurer without a table yet has none.
     let warrior = world("priest");
     let rows = dump::layer_rows(&warrior, Layer::Talents);
-    assert!(rows.iter().all(|r| r.contains("(sign")), "{rows:?}");
+    assert!(
+        rows.iter()
+            .all(|r| r.contains("(sign") || r.contains("(race)")),
+        "{rows:?}"
+    );
     // Level 6 brings Fencing, as news of the level.
     reach(&mut w, 6);
     assert!(holds(&w, "fencing"));
@@ -222,21 +226,24 @@ fn a_level_with_both_picks_spends_the_bonus_on_a_talent_of_its_trees() {
         w.player_mut().weapon_skills.raise(table, id, 9);
     }
     arrive(&mut w, 30);
+    // Two ordinary picks: a human's Versatile adds one at level 30.
     let due = w.due().expect("level 30 is due");
-    assert_eq!((due.talents, due.bonus), (1, 1));
+    assert_eq!((due.talents, due.bonus), (2, 1));
     let rows = dump::layer_rows(&w, Layer::Progress);
     assert!(
-        rows.contains(&"due level 30: 1 talent, 1 bonus talent".to_string()),
+        rows.contains(&"due level 30: 2 talents, 1 bonus talent".to_string()),
         "{rows:?}"
     );
     // A talent of no bonus tree fills the ordinary pick; the bonus waits for its trees.
     let trees = w.bonus_trees().expect("the aristocrat's trees");
     let book = BUILTIN.talents();
-    let (other, _) = (crate::talent::offers(w.content(), &w.candidate()).into_iter())
-        .find(|(t, ways)| !trees.contains(&book.get(*t).tree) && ways == &[None])
-        .expect("a talent of another tree");
-    let other = book.get(other).id.clone();
-    run(&mut w, &format!("talent:{other}"));
+    for _ in 0..2 {
+        let (other, _) = (crate::talent::offers(w.content(), &w.candidate()).into_iter())
+            .find(|(t, ways)| !trees.contains(&book.get(*t).tree) && ways == &[None])
+            .expect("a talent of another tree");
+        let other = book.get(other).id.clone();
+        run(&mut w, &format!("talent:{other}"));
+    }
     let due = w.due().expect("the bonus is left");
     assert_eq!((due.talents, due.bonus), (0, 1), "{:?}", said(&w));
     let (fits, ways) = (crate::talent::offers(w.content(), &w.candidate()).into_iter())

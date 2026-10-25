@@ -158,12 +158,26 @@ impl World {
         let stone = talents.stone_sense.then_some(PassiveSearch::Stone);
         match race.or(stone) {
             Some(PassiveSearch::All) => true,
-            Some(PassiveSearch::Stone) => {
-                let terrain = self.state.current().terrain.get(at).copied();
-                terrain.is_some_and(|t| content.terrain(t).stone)
-            }
+            Some(PassiveSearch::Stone) => self.on_stone(at),
             Some(PassiveSearch::Traps) => matches!(hidden, Hidden::Trap(_)),
             None => false,
+        }
+    }
+
+    /// Whether `at` on the current level is stone (a wall, a floor of rock).
+    fn on_stone(&self, at: Pos) -> bool {
+        let terrain = self.state.current().terrain.get(at).copied();
+        terrain.is_some_and(|t| self.content.terrain(t).stone)
+    }
+
+    /// What the player's talents add to finding what is hidden at `at` for its being on stone
+    /// (Stone sense, a dwarf's): both looks, searching and in passing.
+    pub(super) fn stone_find(&self, at: Pos) -> i32 {
+        let bonus = self.state.player().talent_mods(&self.content).stone_find;
+        if bonus != 0 && self.on_stone(at) {
+            bonus
+        } else {
+            0
         }
     }
 
@@ -212,6 +226,7 @@ impl World {
             let modifier = self.search_modifier(Look::Active);
             for (at, hidden) in hidden {
                 let difficulty = self.finding(hidden);
+                let modifier = modifier + self.stone_find(at);
                 if check(&mut self.state.rng, modifier, difficulty) {
                     self.reveal(at, hidden);
                     self.train_stat(StatUse::Found);
@@ -237,6 +252,7 @@ impl World {
                 continue;
             }
             let difficulty = self.finding(hidden);
+            let modifier = modifier + self.stone_find(at);
             if check(&mut self.state.rng, modifier, difficulty) {
                 self.reveal(at, hidden);
                 if self.trains(Use::Spot) {

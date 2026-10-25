@@ -23,10 +23,10 @@ static BUILTIN: LazyLock<Arc<Content>> =
 /// 14.
 fn world(class: &str) -> World {
     let spec: CharacterSpec = format!("human,male,{class}").parse().expect("a character");
-    // Creation picks that no test here reads.
-    let mut picks = vec!["keen_ears".into(), "lean".into()];
+    // Creation picks that no test here reads (a human's Versatile adds one).
+    let mut picks = vec!["keen_ears".into(), "lean".into(), "healthy".into()];
     if class == "bard" {
-        picks.push("healthy".into());
+        picks.push("tunneler".into());
     }
     let spec = spec.with_talents(picks);
     let w = World::start_run(

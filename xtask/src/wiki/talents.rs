@@ -51,6 +51,50 @@ pub(super) fn creation(content: &Content) -> String {
     out
 }
 
+/// The racial talents (spec §8 "Talents", the Racial tree), race by race: those a race grants,
+/// then those that ask for it, each with what else it needs and its rule. Races and talents
+/// sort by name.
+pub(super) fn racial(content: &Content) -> String {
+    let book = content.talents();
+    let Some(tree) = book.tree_id("racial") else {
+        return "No racial talents yet.\n".to_string();
+    };
+    let mut races: Vec<_> = content.races().list.iter().collect();
+    races.sort_by(|a, b| a.name.cmp(&b.name));
+    let mut out = String::from("| Race | Talent | Needs | Effect |\n|---|---|---|---|\n");
+    for race in races {
+        let mut rows: Vec<&TalentDef> = (book.of_tree(tree))
+            .map(|(_, t)| t)
+            .filter(|t| {
+                race.talents.contains(&t.id)
+                    || t.needs
+                        .iter()
+                        .any(|n| matches!(&n, Need::Race(id) if *id == race.id))
+            })
+            .collect();
+        rows.sort_by_key(|t| (!t.granted, t.name.clone()));
+        for def in rows {
+            let others: Vec<String> = (def.needs.iter())
+                .filter(|n| !matches!(n, Need::Race(_)))
+                .map(|n| n.words(content))
+                .collect();
+            let needs = match (def.granted, others.is_empty()) {
+                (true, _) => "given, never picked".to_string(),
+                (false, true) => "—".to_string(),
+                (false, false) => others.join(", "),
+            };
+            let _ = writeln!(
+                out,
+                "| {} | {} | {needs} | {} |",
+                race.name,
+                def.name,
+                effects_text(content, def)
+            );
+        }
+    }
+    out
+}
+
 /// The classes' level tables (spec §8 "Class abilities"), in the order New run offers them:
 /// each class with a table, its bonus talent picks, and every level's ability with its rule.
 pub(super) fn class_levels(content: &Content) -> String {
@@ -108,9 +152,12 @@ pub(super) fn by_system(content: &Content) -> String {
     for (i, system) in systems {
         let mut names: Vec<String> = (book.of_system(warlock_core::content::SystemId(i)))
             .map(|(_, t)| {
-                // A class ability and a birth sign's gift are marked: given, never picked.
+                // A class's, a race's, or a birth sign's gift is marked: given, never picked.
+                let racial = book.tree_id("racial");
                 if t.granted && book.tree(t.tree).class {
                     format!("{} (class)", t.name)
+                } else if t.granted && Some(t.tree) == racial {
+                    format!("{} (race)", t.name)
                 } else if t.granted {
                     format!("{} (birth sign)", t.name)
                 } else {
@@ -151,6 +198,14 @@ fn needs_text(content: &Content, def: &TalentDef) -> String {
         return "given by a class's table, never picked".into();
     }
     if def.granted {
+        let mut races: Vec<String> = (content.races().list.iter())
+            .filter(|r| r.talents.contains(&def.id))
+            .map(|r| r.name.to_lowercase())
+            .collect();
+        races.sort();
+        if !races.is_empty() {
+            return format!("given to every {}, never picked", races.join(", "));
+        }
         return "given by a birth sign, never picked".into();
     }
     let words = |needs: &[Need]| -> String {
@@ -259,6 +314,10 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             )
         }
         TalentEffect::MeleeDamage { value } => format!("melee damage {}", signed(value)),
+        TalentEffect::Ferocity { value } => format!(
+            "damage {} with every attack while below a third of your hit points",
+            signed(value)
+        ),
         TalentEffect::Threat { value } => {
             format!("threat range {} with every attack", signed(value))
         }
@@ -400,6 +459,8 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         ),
         TalentEffect::XpPercent { value } => format!("experience gained {}", percent(value)),
         TalentEffect::SkillRolls { value } => format!("skill rolls every level {}", signed(value)),
+        TalentEffect::ExtraPick { level: 1 } => "one more talent at creation".to_string(),
+        TalentEffect::ExtraPick { level } => format!("one more talent at level {level}"),
         TalentEffect::TrainSkill { dice } => format!(
             "the chosen skill trained at {dice}, or raised by {dice} if trained (rolled as the \
              rank is taken)"
@@ -455,6 +516,10 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             )
         }
         TalentEffect::StoneSense => "notices hidden things on stone in passing".into(),
+        TalentEffect::StoneFind { value } => format!(
+            "{} to every check to find what is hidden on stone, searching and in passing",
+            signed(value)
+        ),
         TalentEffect::Search { value } => {
             format!("{} to every check to find hidden things", signed(value))
         }
@@ -609,6 +674,10 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             format!("steps cost {}{when}", percent(value))
         }
         TalentEffect::Steadfast => "Burdened costs you nothing (as a dwarf)".to_string(),
+        TalentEffect::Stout => {
+            "Strained costs you what Burdened costs others (slowdown, Dexterity cap, noise)"
+                .to_string()
+        }
         TalentEffect::DiseaseImmune => "you never catch a disease".to_string(),
         TalentEffect::NoPenaltyTo { stat } => {
             format!("no status lowers your {}", stat.name())
@@ -722,8 +791,16 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::Hardened { bonus } => format!(
             "every level past the last that adds hit points adds them again, and {bonus} more"
         ),
-        TalentEffect::LauncherRange { value } => {
+        TalentEffect::LauncherRange { value, skill: None } => {
             format!("missile weapon range {} cells", signed(value))
+        }
+        TalentEffect::LauncherRange {
+            value,
+            skill: Some(skill),
+        } => {
+            let table = content.weapon_skills();
+            let name = (table.id(&skill)).map_or(skill.clone(), |s| table.skill(s).name.clone());
+            format!("range {} cells with launchers of {name}", signed(value))
         }
         TalentEffect::ThrowRange { value } => format!("throwing range {} cells", signed(value)),
         TalentEffect::MissileBreaks { value } => format!(
@@ -882,6 +959,10 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::Checks { stat, value } => {
             format!("every {} check {}", stat.name(), signed(value))
         }
+        TalentEffect::DiseaseIntervalPercent { value } => format!(
+            "a disease's progressions come {} further apart",
+            percent(value)
+        ),
         TalentEffect::DiseaseRecovery { value } => format!(
             "a disease goes after {value} fewer checks won in a row (at least 1; never \
              one that does not recover)"
@@ -938,6 +1019,10 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                 signed(value)
             )
         }
+        TalentEffect::SmallTarget { value } => format!(
+            "Dodge {} against the attacks of creatures larger than you",
+            signed(value)
+        ),
         TalentEffect::SpellDamagePercent { value } => format!(
             "damage from bursts and bolts (traps, scrolls) {} (rounded down)",
             percent(value)

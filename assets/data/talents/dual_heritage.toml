@@ -1,0 +1,8 @@
+[[talent]]
+id = "dual_heritage"
+name = "Dual heritage"
+tree = "racial"
+description = "Two peoples taught you their ways: you learn more at every level."
+needs = { race = "half_elf" }
+effects = [{ kind = "skill_rolls", value = 1 }]
+systems = ["skills"]
