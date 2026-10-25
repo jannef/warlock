@@ -33,7 +33,29 @@ struct HoroscopeFile {
     element: Vec<SignSpec>,
     #[serde(default)]
     lucky: Vec<LuckySpec>,
+    flavour: Option<FlavourSpec>,
 }
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct FlavourSpec {
+    #[serde(default = "hundred")]
+    birthday_healing: u32,
+    #[serde(default = "hundred")]
+    birth_month_cooldown: u32,
+    #[serde(default)]
+    full_moon_reach: i32,
+    full_moon_light: Option<String>,
+}
+
+fn hundred() -> u32 {
+    100
+}
+
+/// The percents a `[flavour]` table may give.
+const FLAVOUR_PERCENTS: std::ops::RangeInclusive<u32> = 1..=400;
+/// The cells a full moon may add to a gift's reach.
+const FULL_MOON_REACHES: std::ops::RangeInclusive<i32> = 0..=10;
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -112,6 +134,96 @@ pub struct Horoscope {
     pub elements: Vec<SignPart>,
     /// The lucky days, in file order.
     pub lucky: Vec<Lucky>,
+    /// The calendar and the moons' small touches on the gifts (`[flavour]`); none without the
+    /// table.
+    pub flavour: Option<Flavour>,
+}
+
+/// The calendar and moon flavour of the gifts (`[flavour]`, spec §8 "Birth sign"): pure
+/// functions of the time and the birth date, read at one hook each (`world/flavour.rs`).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Flavour {
+    /// Percent of the healing pace on the character's birthday (125: a quarter faster).
+    pub birthday_healing: u32,
+    /// Percent of a sign active's cooldown when it is used in the birth month (50: half).
+    pub birth_month_cooldown: u32,
+    /// Cells added to the gifts with a reach while a full moon is up (Hound's nose, the
+    /// Transfixing stare, Eyes of the heights at night).
+    pub full_moon_reach: i32,
+    /// The light preset Inner light burns as while a full moon is up, as written; resolved by
+    /// the loader into `full_moon_light`.
+    pub(super) full_moon_light_spec: Option<String>,
+    /// The light preset Inner light burns as while a full moon is up.
+    pub full_moon_light: Option<crate::content::LightId>,
+}
+
+/// [`crate::content::MoonDef::phase_at`]'s distance from full within which a moon counts as
+/// full: a sixtieth of its cycle either way (a thirtieth of the cycle in all, half a day each
+/// side of the moment for the built-in 30-day moon).
+pub const FULL_MOON_WITHIN: u32 = super::sky::PHASE_ONE / 60;
+
+/// Whether a full moon is up at `time` (spec §8 "Birth sign", the flavour): some moon of
+/// `moons` within [`FULL_MOON_WITHIN`] of full, above the horizon, and the sun down. Wherever
+/// the player is, under the sky, under clouds, or underground: the moon pulls all the same.
+pub fn full_moon_up(time: crate::time::GameTime, moons: &[super::MoonDef]) -> bool {
+    use crate::light::{Moon, Sun};
+    let sun = Sun::at(time);
+    if sun.is_up() {
+        return false;
+    }
+    (moons.iter().enumerate()).any(|(i, def)| {
+        let phase = def.phase_at(time);
+        phase.abs_diff(super::sky::PHASE_ONE / 2) <= FULL_MOON_WITHIN
+            && Moon::at(time, &sun, def, i as u8).elevation > 0
+    })
+}
+
+impl Flavour {
+    /// What a full moon adds to a gift's reach at `time` (0 without one up).
+    pub fn reach_at(&self, time: crate::time::GameTime, moons: &[super::MoonDef]) -> i32 {
+        if self.full_moon_reach == 0 || !full_moon_up(time, moons) {
+            return 0;
+        }
+        self.full_moon_reach
+    }
+
+    /// The light preset Inner light burns as at `time`, if a full moon changes it.
+    pub fn inner_light_at(
+        &self,
+        time: crate::time::GameTime,
+        moons: &[super::MoonDef],
+    ) -> Option<crate::content::LightId> {
+        self.full_moon_light.filter(|_| full_moon_up(time, moons))
+    }
+
+    fn parse(spec: FlavourSpec) -> Result<Self, String> {
+        for (field, value) in [
+            ("birthday_healing", spec.birthday_healing),
+            ("birth_month_cooldown", spec.birth_month_cooldown),
+        ] {
+            if !FLAVOUR_PERCENTS.contains(&value) {
+                return Err(format!(
+                    "flavour: `{field}` is {} to {} percent",
+                    FLAVOUR_PERCENTS.start(),
+                    FLAVOUR_PERCENTS.end()
+                ));
+            }
+        }
+        if !FULL_MOON_REACHES.contains(&spec.full_moon_reach) {
+            return Err(format!(
+                "flavour: `full_moon_reach` is {} to {} cells",
+                FULL_MOON_REACHES.start(),
+                FULL_MOON_REACHES.end()
+            ));
+        }
+        Ok(Self {
+            birthday_healing: spec.birthday_healing,
+            birth_month_cooldown: spec.birth_month_cooldown,
+            full_moon_reach: spec.full_moon_reach,
+            full_moon_light_spec: spec.full_moon_light,
+            full_moon_light: None,
+        })
+    }
 }
 
 /// A birth sign: the animal and the element of a year, by id. A flag for the rules: "is this
@@ -220,11 +332,13 @@ impl Horoscope {
                 grants: spec.grants,
             });
         }
+        let flavour = (parsed.flavour.map(Flavour::parse).transpose()).map_err(err)?;
         Ok(Self {
             anchor_year: parsed.anchor_year,
             animals,
             elements,
             lucky,
+            flavour,
         })
     }
 
@@ -293,6 +407,27 @@ impl Horoscope {
             None => format!("{} {}", sign.element, sign.animal),
         }
     }
+}
+
+/// Resolves the `[flavour]` table's light preset against the loaded lights: an unknown one is
+/// an error.
+pub(super) fn resolve_flavour(
+    horoscope: &mut Horoscope,
+    light_id: impl Fn(&str) -> Option<crate::content::LightId>,
+) -> Result<(), ContentError> {
+    let Some(flavour) = horoscope.flavour.as_mut() else {
+        return Ok(());
+    };
+    if let Some(name) = &flavour.full_moon_light_spec {
+        let id = light_id(name).ok_or_else(|| {
+            ContentError::new(
+                "data/horoscope.toml",
+                format!("flavour: `full_moon_light` names an unknown light `{name}`"),
+            )
+        })?;
+        flavour.full_moon_light = Some(id);
+    }
+    Ok(())
 }
 
 fn gcd(a: usize, b: usize) -> usize {

@@ -273,6 +273,10 @@ impl LevelLights {
                     });
                 }
                 if let Some(preset) = talents.inner_light {
+                    // A full moon brightens it (spec §8 "Birth sign", the flavour).
+                    let moon = (content.flavour())
+                        .and_then(|f| f.inner_light_at(state.time, content.moons()));
+                    let preset = moon.unwrap_or(preset);
                     sources.push(Source {
                         key: CARRIED | INNER | id,
                         pos: actor.pos,

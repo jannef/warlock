@@ -120,13 +120,18 @@ impl Talents {
             return mods;
         }
         let book = content.talents();
+        let stars = book.tree_id("stars");
         for taken in &self.0 {
             let Some(id) = book.id(&taken.id) else {
                 continue;
             };
             let def = book.get(id);
+            let gift = stars.is_some_and(|t| t == def.tree);
             for rank in 1..=taken.rank.min(def.rank_count()) {
                 for effect in def.effects_at(rank) {
+                    if gift {
+                        mods.gift_reach.note(content, &effect);
+                    }
                     mods.add(content, effect, taken.choice.as_deref());
                 }
             }
@@ -135,9 +140,36 @@ impl Talents {
     }
 }
 
+/// Which of an actor's reaches come of a birth sign's gifts (talents of the `stars` tree), the
+/// ones a full moon lengthens (spec §8 "Birth sign", the flavour; the stare and Inner light are
+/// gifts only, so they need no mark).
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct GiftReach {
+    /// The statuses of the `scent` entries a gift gives (Hound's nose: bleeding).
+    pub scent: Vec<StatusId>,
+    /// Whether a gift lengthens its sight on the overworld at night (Eyes of the heights).
+    pub night_sight: bool,
+}
+
+impl GiftReach {
+    fn note(&mut self, content: &Content, effect: &TalentEffect) {
+        match effect {
+            TalentEffect::Scent { status, .. } => {
+                if let Some(status) = content.status_id(status) {
+                    self.scent.push(status);
+                }
+            }
+            TalentEffect::NightSight { .. } => self.night_sight = true,
+            _ => {}
+        }
+    }
+}
+
 /// What an actor's talents do, summed: one field per effect kind, read by one rule each.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct TalentMods {
+    /// Which of its reaches are a birth sign's gifts (a full moon lengthens them).
+    pub gift_reach: GiftReach,
     /// Defence in the Dodge category.
     pub dodge: i32,
     /// Natural armour, on top of the actor's own.

@@ -404,8 +404,14 @@ impl Perception {
                 let range = daylight::sight_under(state.time, sky, content.climate());
                 // Moon-eyed (spec §8 "Talents"): farther at night; Eyes of the heights (spec §8
                 // "Birth sign"): farther by day too.
+                // A full moon lengthens a gift's (spec §8 "Birth sign", the flavour).
+                let moon = if talents.gift_reach.night_sight {
+                    content.full_moon_reach(state.time)
+                } else {
+                    0
+                };
                 match daylight::phase(state.time) {
-                    DayPhase::Night => range + talents.night_sight,
+                    DayPhase::Night => range + talents.night_sight + moon,
                     DayPhase::Day => range + talents.day_sight,
                     DayPhase::Twilight => range,
                 }
@@ -549,12 +555,27 @@ impl Perception {
         // Blood scent (spec §8 "Talents"): creatures suffering a status, in line of sight within
         // its radius, however dark their cells.
         if !overworld && !talents.scent.is_empty() {
+            // A full moon lengthens a gift's (Hound's nose; spec §8 "Birth sign").
+            let moon = if talents.gift_reach.scent.is_empty() {
+                0
+            } else {
+                content.full_moon_reach(state.time)
+            };
+            let reach = |status: StatusId, radius: i32| {
+                radius
+                    + if talents.gift_reach.scent.contains(&status) {
+                        moon
+                    } else {
+                        0
+                    }
+            };
             let smelt = (state.actors.values())
                 .filter(|a| a.level == level.id && a.kind == ActorKind::Creature)
                 .filter(|a| los.get(a.pos) == Some(&true) && !is_opaque(a.pos))
                 .filter(|a| {
                     (talents.scent.iter()).any(|&(status, radius)| {
-                        a.effects.has(status) && a.pos.dist2(viewer) <= radius2(radius)
+                        a.effects.has(status)
+                            && a.pos.dist2(viewer) <= radius2(reach(status, radius))
                     })
                 });
             for a in smelt {

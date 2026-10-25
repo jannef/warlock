@@ -123,6 +123,15 @@ A short-lived race reaches fewer years at a given start date, so its chances dif
 half-orc is likelier to be born lucky than an elf, and only the long-lived can be born the Racer
 at the default start.
 
+## Your birthday, your month, and the full moon
+
+The calendar and the moons touch a few gifts, a little: on your birthday you heal faster, in the
+month you were born your sign's actives rest sooner, and while the moon is full and up the gifts
+that reach out reach farther. The game shows nothing new for them (the status bar already shows
+the moon's phase); here are the exact rules.
+
+{{#include generated/horoscope-flavour.md}}
+
 ## Your age and birthday
 
 Your starting age depends on your race: a human starts between 16 and 35 years old, an elf

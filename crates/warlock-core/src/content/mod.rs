@@ -93,7 +93,7 @@ pub use gem::{
     Cut, CutId, Cutting, GemDef, GemSize, GemSizeId, Gems, MAX_GEM_VALUE, MAX_GEM_WEIGHT,
     MAX_MULTIPLIER, Ornament, ROUGH_SATURATION, dull,
 };
-pub use horoscope::{Horoscope, Lucky, Sign, SignActive, SignPart};
+pub use horoscope::{FULL_MOON_WITHIN, Flavour, Horoscope, Lucky, Sign, SignActive, SignPart};
 pub use hunger::{
     Corpses, EXERTIONS, Faint, Food, HungerDef, MAX_MEAL, MAX_NUTRITION, MAX_SHELF_LIFE,
     Overeating, Rotten, Starve, States,
@@ -665,7 +665,9 @@ impl Content {
         race::check_talents(&content.races, &content.talents)?;
         let path = "data/horoscope.toml";
         if let Some(text) = files.get_optional(path) {
-            content.horoscope = Some(Horoscope::parse(path, text)?);
+            let mut horoscope = Horoscope::parse(path, text)?;
+            horoscope::resolve_flavour(&mut horoscope, |name| content.light_id(name))?;
+            content.horoscope = Some(horoscope);
         }
         // The signs' gifts are talents, and talents may ask for a sign: checked both ways.
         horoscope::check_talents(content.horoscope.as_ref(), &content.talents)?;
@@ -2442,6 +2444,17 @@ impl Content {
     /// The horoscope of `data/horoscope.toml` (none without the file).
     pub fn horoscope(&self) -> Option<&Horoscope> {
         self.horoscope.as_ref()
+    }
+
+    /// The horoscope's calendar and moon flavour (`[flavour]`), if it has the table.
+    pub fn flavour(&self) -> Option<&Flavour> {
+        self.horoscope.as_ref()?.flavour.as_ref()
+    }
+
+    /// The cells a full moon adds at `time` to the reaches of a birth sign's gifts (spec §8
+    /// "Birth sign"): the flavour's `full_moon_reach` while one is up, else 0. The one read.
+    pub fn full_moon_reach(&self, time: crate::time::GameTime) -> i32 {
+        self.flavour().map_or(0, |f| f.reach_at(time, &self.moons))
     }
 
     /// The lucky day of those born under `sign` on `born` (spec §8 "Birth sign"), if it is

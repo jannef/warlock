@@ -147,6 +147,11 @@ impl Effects {
         self.0.iter().find(|e| e.status == status)
     }
 
+    /// Its effect of `status`, to change, if it suffers it.
+    pub(crate) fn get_mut(&mut self, status: StatusId) -> Option<&mut Effect> {
+        self.0.iter_mut().find(|e| e.status == status)
+    }
+
     pub fn has(&self, status: StatusId) -> bool {
         self.get(status).is_some()
     }

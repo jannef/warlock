@@ -163,7 +163,7 @@ impl Aim {
             AimKind::Read(item) => scroll_spell(view, item).map(|s| s.range),
             // A volley flies as far as a shot.
             AimKind::Ability(VOLLEY) => view.ready_to_fire().map(|(_, _, range)| range),
-            AimKind::Ability(ability) => ability.reach(view.content()),
+            AimKind::Ability(ability) => ability.reach_at(view.content(), view.time()),
         }
     }
 
@@ -188,7 +188,7 @@ impl Aim {
             (AimKind::Ability(VOLLEY), _) => false,
             (AimKind::Read(_) | AimKind::Ability(_), Some(s)) => matches!(s.cast, Cast::Bolt(_)),
             (AimKind::Ability(ability), None) => {
-                return sight_line(view, self.at, ability.reach(view.content()));
+                return sight_line(view, self.at, ability.reach_at(view.content(), view.time()));
             }
             _ => false,
         };

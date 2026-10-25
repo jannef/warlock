@@ -107,6 +107,69 @@ pub(super) fn talents(content: &Content) -> String {
     out
 }
 
+/// The calendar and moon flavour (`[flavour]`, #273): the birthday's healing, the birth month's
+/// cooldowns, and the full moon's reaches, exactly.
+pub(super) fn flavour(content: &Content) -> String {
+    let Some(f) = content.flavour() else {
+        return "Neither the calendar nor the moons touch the gifts.\n".into();
+    };
+    let light = |name: &str| {
+        content
+            .light_id(name)
+            .map(|id| content.light(id).radius)
+            .unwrap_or(0)
+    };
+    let mut out = String::from("| When | What changes |\n|---|---|\n");
+    let _ = writeln!(
+        out,
+        "| Your birthday (its month and day, midnight to midnight) | hit points come back at {} % \
+         of the pace (all your other healing modifiers apply first); at its dawn, or if a run \
+         begins on it, you are told \"It is your birthday.\" |",
+        f.birthday_healing
+    );
+    let _ = writeln!(
+        out,
+        "| Using a birth sign's active in your birth month | its cooldown (Graceless, Spent-eyed, \
+         Burnt out, Drained after Fire breath, Hoarse) lasts {} % as long, rounded up to the \
+         second; Ashen is no cooldown and is untouched |",
+        f.birth_month_cooldown
+    );
+    let parts = warlock_core::content::PHASE_ONE / warlock_core::content::FULL_MOON_WITHIN;
+    let example = (content.moons().first())
+        .map(|m| {
+            format!(
+                ": {} hours each way for the {}, a cycle of {} days",
+                m.period_days * 24 / parts,
+                m.name,
+                m.period_days
+            )
+        })
+        .unwrap_or_default();
+    let moon = format!(
+        "| A full moon up (within 1/{parts} of its cycle of full, either side{example}; above the \
+         horizon; the sun down; anywhere, underground and under clouds too) | Hound's nose \
+         smells, the Transfixing stare reaches, and Eyes of the heights sees at night {} {} \
+         farther",
+        f.full_moon_reach,
+        if f.full_moon_reach == 1 {
+            "cell"
+        } else {
+            "cells"
+        }
+    );
+    let inner = (f.full_moon_light)
+        .map(|id| {
+            format!(
+                "; Inner light shines to radius {} (from {})",
+                content.light(id).radius,
+                light("ember")
+            )
+        })
+        .unwrap_or_default();
+    let _ = writeln!(out, "{moon}{inner} |");
+    out
+}
+
 /// The years of the sign `animal`–`element` in the great cycle that holds `year` and the one
 /// before it.
 fn years_of(h: &Horoscope, animal: &str, element: &str, year: i64) -> Vec<i64> {

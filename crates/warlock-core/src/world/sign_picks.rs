@@ -77,7 +77,7 @@ impl World {
         let verb = (breath.bolt.kind).map_or("burns", |k| content.damage_type(k).verb.as_str());
         self.say_spell((&noun, verb), made, events);
         if self.state.death.is_none() {
-            self.afflict(player, breath.cooldown, breath.degrees, None, events);
+            self.gift_cooldown(breath.cooldown, breath.degrees, events);
         }
         Spent::Turn(price)
     }
@@ -119,7 +119,7 @@ impl World {
         for who in fled {
             self.say(format!("{who} cowers and flees from you."));
         }
-        self.afflict(player, bay.cooldown, 1, None, events);
+        self.gift_cooldown(bay.cooldown, 1, events);
         Spent::Turn(price)
     }
 
