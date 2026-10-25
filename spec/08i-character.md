@@ -773,7 +773,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Actives**: Volley (the ranger's, 50: `Action::UseAt`, `use:volley:X,Y`, aimed at a cell
     as a shot is; the readied missile weapon's three shots there, one after another, each its
     own flight and attack, for the price of one shot and one exertion; it stops when the
-    ammunition runs out; then one degree of Spent, 5 minutes; refused as a shot is), Inspire
+    ammunition runs out; it costs 6 Focus (§8 "Resources"; no cooldown: greyed out "not enough
+    focus" while short, "You have too little focus." if used), spent as it is loosed and priced
+    as one ordinary shot (Rapid shot does not touch it); refused as a shot is, spending
+    nothing), Inspire
     (the bard's, 18: Inspired, to hit +1 and Dodge +1 for 5 minutes, for 3 mana, the time of a
     chat; no cooldown, mana is the price: greyed out "you have too little mana",
     `Unavailable::NoMana`, while the player has less). Throw your voice (the bard's, 32) is no
@@ -781,8 +784,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     action is refused, "You do not know how to throw your voice.", without it).
   - **Passives**, each one read: Favoured prey (+1 to hit, +2 damage against `Quests::prey`, any
     attack, in `World::resolve`), Tracker (hears 3 fainter; every sound it hears placed at its
-    own cell, `noise::Exact::All`), Rapid shot (shots 10 % quicker, the launcher skills'
-    `speed`), Woodland stride (forest floor, bushes, reeds, tall grass, and marsh priced as
+    own cell, `noise::Exact::All`), Rapid shot (grants Focus, §8 "Resources"; a shot loosed
+    with `fire` while the ranger holds 2 focus spends them and takes 10 % less time, the whole
+    shot's price; with less it is an ordinary shot; `world/focus.rs`), Woodland stride (forest floor, bushes, reeds, tall grass, and marsh priced as
     grass; their noise stays), Swift tracker (overworld journeys −20 %), Camouflage (footsteps
     under the open sky, the level sky-exposed and the cell stepped to unroofed, −50 %, summed
     with the other footstep percents), Master hunter (bows and crossbows threat +1; Favoured
@@ -799,7 +803,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     higher, as a skill bonus in `Actor::skill_effect`), Honeyed words (favour +15 %, quest gold
     +25 %), Legend (quest XP +50 %, Presence +1), Virtuoso (Inspire gives Inspired greatly, to
     hit +2 and Dodge +2 for 10 minutes, for no mana).
-  - **Resources to come**: Rapid shot and Volley (Focus), Improved sneak attack and Master
+  - **Resources to come**: Improved sneak attack and Master
     thief (Openings), Inspire (Inspiration) move onto the pools of #225.
   - **Saves change**: `Quests::prey`, the tally of every type, the statuses `inspired` and
     `inspired_greatly`.
