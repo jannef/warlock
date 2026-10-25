@@ -6,6 +6,7 @@
 
 use super::{ActorId, ActorKind, World};
 use crate::combat::Blow;
+use crate::content::Build;
 use crate::fov::radius2;
 use crate::sight::{self, LineOfSight};
 
@@ -22,6 +23,8 @@ impl World {
             return blow;
         }
         let extra = dice.roll(&mut self.state.rng).max(0);
+        // A sneak attack that hits builds the attacker's resources (spec §8 "Resources").
+        self.gain_resource(attacker, Build::SneakAttack);
         Blow {
             damage: blow.damage + extra,
             ..blow

@@ -857,6 +857,20 @@ fn actor_rows(world: &World) -> Vec<String> {
                 format!("; effects {}", effects.join(", "))
             };
             let diseases = disease_text(a, content);
+            // Its alternative resources (spec §8 "Resources"): value/maximum, and the progress
+            // toward the next point over time in hundredths of a second.
+            let resources: Vec<String> = (a.resources.iter())
+                .map(|p| {
+                    let id = &content.resource(p.resource).id;
+                    let max = a.resource_max(content, p.resource);
+                    format!("{id} {}/{max} ({})", p.value, p.progress)
+                })
+                .collect();
+            let resources = if resources.is_empty() {
+                String::new()
+            } else {
+                format!(" resources {}", resources.join(", "))
+            };
             let weapons = actor_weapon_skills(content, a)
                 .map_or(String::new(), |s| format!("; weapon skills {s}"));
             // Who it is and how far its talk has got (spec §8 "Dialogue"), if anything.
@@ -884,7 +898,7 @@ fn actor_rows(world: &World) -> Vec<String> {
                 format!("; resists {}", resists.join(" "))
             };
             format!(
-                "{} {} at {}: hp {}/{} mp {}/{} dv {} pv {}{alignment}; weight {} (base {} + carried {}: \
+                "{} {} at {}: hp {}/{} mp {}/{}{resources} dv {} pv {}{alignment}; weight {} (base {} + carried {}: \
                  {carried}){equipped}; {} (limit {}){weapons}; stats {}{skills}{effects}{diseases}\
                  {hunger}{npc}{talk}{resists}",
                 a.id,
@@ -972,6 +986,13 @@ fn summary(world: &World) -> String {
     let temperature = view.temperature();
     let (hp, max) = view.own_hp();
     let (mp, max_mp) = view.own_mana();
+    // The resources the player holds, as the status bar shows them (spec §8 "Resources").
+    let resources: String = (view.own_resources().iter())
+        .map(|r| {
+            let id = &view.content().resource(r.resource).id;
+            format!(" {id} {}/{}", r.value, r.max)
+        })
+        .collect();
     let dead = if world.death().is_some() { " dead" } else { "" };
     // As the status bar shows it: only when it is not Not hungry.
     let hunger = (view.own_hunger())
@@ -979,7 +1000,7 @@ fn summary(world: &World) -> String {
         .map_or(String::new(), |h| format!(" hunger {}", h.id()));
     let dazzled = if view.dazzled() { " dazzled" } else { "" };
     format!(
-        "turn {} time {} level {} viewer {} hp {hp}/{max} mp {mp}/{max_mp}{dead}{hunger}{dazzled}{weather}{forecast} \
+        "turn {} time {} level {} viewer {} hp {hp}/{max} mp {mp}/{max_mp}{resources}{dead}{hunger}{dazzled}{weather}{forecast} \
          temperature {temperature} hash {:016x}",
         world.turn(),
         world.time(),
@@ -1192,6 +1213,13 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
     let Value::Object(rest) = json!({
         "hp": { "current": hp, "max": max_hp },
         "mana": { "current": mana, "max": max_mana },
+        "resources": (view.own_resources().iter())
+            .map(|r| json!({
+                "id": content.resource(r.resource).id,
+                "current": r.value,
+                "max": r.max,
+            }))
+            .collect::<Vec<_>>(),
         "experience": view.own_experience(),
         "defence": view.own_defence(),
         "protection": view.own_protection(),

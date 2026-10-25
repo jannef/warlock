@@ -254,6 +254,13 @@ impl World {
                 }
                 actor == player
             }
+            Event::ResourceEnded { actor, resource } => {
+                let ended = content.resource(resource).ended.clone();
+                if let Some(text) = ended.filter(|_| actor == player) {
+                    reports.push((text, false));
+                }
+                actor == player
+            }
             Event::Disease {
                 actor,
                 disease,

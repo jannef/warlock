@@ -1,0 +1,79 @@
+# Alternative resources (spec §8 "Resources", #225): integer pools beside hit points and mana
+# that a character holds once something grants them (a class ability, a talent; the class
+# features of docs/design/progression.md §4.18 move onto these in follow-up changes). A character
+# may hold any number of them at once; creatures hold none. The player sees each one they hold in
+# the status bar after MP and on the character screen; never how fast it changes.
+#
+# The list is ordered: the game numbers resources in file order (saves record them), so a new
+# resource is a new entry, never a reordering.
+#
+# Fields:
+#   id, name      the resource's id and how the player reads it ("Rage")
+#   short         its status bar label, at most 12 characters (`Rage 7`)
+#   max           the most it holds, 1 to 1000
+#   start         what it holds when granted (default: max; above 0 for one that ends at zero)
+#   show_max      the status bar shows the maximum too, `Focus 7/10` (default true), or the
+#                 value alone, `Rage 7`
+#   regenerates   one point back every this many seconds of game time, up to max (6 s is a
+#                 base turn); or
+#   decays        one point lost every this many seconds, down to 0 (at most one of the two)
+#   resting       it changes over time while the player rests (default true)
+#   ends_at_zero  at 0 the character loses it, and its bar, until something grants it again
+#                 (default false: it sits at 0)
+#   ended         what the player is told when it ends ("Your rage subsides."; needs
+#                 ends_at_zero)
+#   builds        what builds it up, each event once: [{ on = "kill", amount = 5 }]; events are
+#                 kill (a kill credited to the holder), hit (a blow of theirs hits), critical (a
+#                 blow of theirs is a critical), struck (they are hit), and sneak_attack (a sneak
+#                 attack of theirs hits)
+#
+# The numbers are the progression design's first guesses (§4.18).
+
+# The barbarian's rage: it counts down a point a base turn, resting too, and ends at zero.
+[[resource]]
+id = "rage"
+name = "Rage"
+short = "Rage"
+max = 20
+start = 12
+show_max = false
+decays = 6
+ends_at_zero = true
+ended = "Your rage subsides."
+
+# The ranger's focus: it comes back a point a base turn, but not while resting.
+[[resource]]
+id = "focus"
+name = "Focus"
+short = "Focus"
+max = 10
+regenerates = 6
+resting = false
+
+# The thief's openings: built by sneak attacks, a point lost every 20 base turns.
+[[resource]]
+id = "openings"
+name = "Openings"
+short = "Openings"
+max = 5
+start = 0
+decays = 120
+builds = [{ on = "sneak_attack", amount = 1 }]
+
+# The monk's ki: a point back every three base turns, resting too.
+[[resource]]
+id = "ki"
+name = "Ki"
+short = "Ki"
+max = 5
+regenerates = 18
+
+# The bard's inspiration: built by the bard's own kills, a point lost every 30 base turns.
+[[resource]]
+id = "inspiration"
+name = "Inspiration"
+short = "Inspiration"
+max = 5
+start = 0
+decays = 180
+builds = [{ on = "kill", amount = 1 }]

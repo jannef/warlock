@@ -59,7 +59,7 @@ use super::{Actor, ActorId, AttackSkills, Spent, World, WorldState};
 use crate::action::{AttackKind, Event};
 use crate::combat::{self, Blow, Category, Profile, Strike, Target};
 use crate::content::{
-    ActionKind, Content, CreatureId, DamageTypeId, Grip, ObjectDef, ObjectId, Role, Stance,
+    ActionKind, Build, Content, CreatureId, DamageTypeId, Grip, ObjectDef, ObjectId, Role, Stance,
     StatusId, TrapId, WeaponSkillId, article,
 };
 use crate::damage::{self, Damage, Protection, Resistances};
@@ -747,6 +747,15 @@ impl World {
                 self.practise(block, true, levels.0);
             }
         }
+        // Resources built by blows (spec §8 "Resources"): a hit and a critical build the
+        // attacker's, being hit the target's.
+        if let Some(Strike::Hit { critical }) = blow.map(|b| b.strike) {
+            self.gain_resource(attacker, Build::Hit);
+            if critical {
+                self.gain_resource(attacker, Build::Critical);
+            }
+            self.gain_resource(target, Build::Struck);
+        }
         if let Some(blow) = blow
             && blow.damage > 0
         {
@@ -889,6 +898,10 @@ impl World {
                 cause: None,
             });
         } else {
+            // A kill builds the killer's resources (spec §8 "Resources").
+            if let Some(by) = by {
+                self.gain_resource(by, Build::Kill);
+            }
             if by == Some(self.state.player) {
                 self.frenzy();
                 self.earn_kill(creature);

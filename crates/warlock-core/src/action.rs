@@ -2,8 +2,8 @@
 
 use crate::combat::Strike;
 use crate::content::{
-    ActionKind, ClassActive, CombatStance, DamageTypeId, DiseaseId, ObjectId, SignActive, StatusId,
-    TrapId,
+    ActionKind, ClassActive, CombatStance, DamageTypeId, DiseaseId, ObjectId, ResourceId,
+    SignActive, StatusId, TrapId,
 };
 use crate::geom::{Dir, Pos};
 use crate::time::{DAY, Duration};
@@ -196,6 +196,11 @@ pub enum Action {
     /// the one way to spend it; refused when they have less. For captures. Takes no game time;
     /// recorded in replays.
     Drain(u16),
+    /// Dev command: the player is granted an alternative resource (an id in
+    /// `data/resources.toml`, spec §8 "Resources") at its start, as the ability that grants it
+    /// will, through the one way to grant it. For trying resources out and for captures. Takes no
+    /// game time; recorded in replays.
+    Resource(String),
     /// Dev command: the player catches a disease (an id in `data/diseases.toml`) as if they
     /// had failed to resist it: it incubates, then shows. Takes no game time; recorded in
     /// replays.
@@ -437,6 +442,13 @@ pub enum Event {
         actor: ActorId,
         status: StatusId,
         began: bool,
+    },
+    /// An alternative resource that ends at zero ended on an actor (spec §8 "Resources"): its
+    /// bar is gone. Only the player's own, which they always perceive: said in the message line
+    /// in the resource's words (its `ended`, "Your rage subsides.").
+    ResourceEnded {
+        actor: ActorId,
+        resource: ResourceId,
     },
     /// A disease of the player's showed itself, went badly at a progression, or left them (spec
     /// §8 "Diseases"). Only the player's own, which they always perceive: said in the message
@@ -686,6 +698,7 @@ impl fmt::Display for Action {
             Action::Identify(l) => write!(f, "identify:{l}"),
             Action::Afflict(id) => write!(f, "afflict:{id}"),
             Action::Drain(amount) => write!(f, "drain:{amount}"),
+            Action::Resource(id) => write!(f, "resource:{id}"),
             Action::Infect(id) => write!(f, "infect:{id}"),
             Action::Freeze { at, radius } => write!(f, "freeze:{},{},{radius}", at.x, at.y),
             Action::Thaw { at, radius } => write!(f, "thaw:{},{},{radius}", at.x, at.y),
@@ -954,6 +967,12 @@ impl FromStr for Action {
                 Some(Ok(amount)) if amount > 0 => Ok(Action::Drain(amount)),
                 _ => Err("`drain` needs an amount of mana, 1 or more, e.g. `drain:5`".into()),
             },
+            "resource" => match s.split_once(':').map(|(_, id)| id) {
+                Some(id) if !id.is_empty() && !id.contains(':') => {
+                    Ok(Action::Resource(id.to_string()))
+                }
+                _ => Err("`resource` needs a resource id, e.g. `resource:rage`".into()),
+            },
             "infect" => match s.split_once(':').map(|(_, id)| id) {
                 Some(id) if !id.is_empty() && !id.contains(':') => {
                     Ok(Action::Infect(id.to_string()))
@@ -1152,6 +1171,8 @@ mod tests {
             Action::Afflict("Odd_Case".into()),
             Action::Drain(1),
             Action::Drain(u16::MAX),
+            Action::Resource("rage".into()),
+            Action::Resource("Odd_Case".into()),
             Action::Infect("filth_fever".into()),
             Action::Infect("Odd_Case".into()),
             Action::Talent {
@@ -1476,6 +1497,9 @@ mod tests {
             "drain:-1",
             "drain:x",
             "drain:65536",
+            "resource",
+            "resource:",
+            "resource:a:b",
             "infect",
             "infect:",
             "infect:a:b",

@@ -41,6 +41,7 @@ pub mod noise;
 pub mod object;
 pub mod perception;
 pub mod replay;
+pub mod resource;
 pub mod rng;
 pub mod rot;
 pub mod save;

@@ -26,7 +26,8 @@
 use crate::action::Action;
 use crate::alignment::Requirement;
 use crate::content::{
-    ActionKind, ClassActive, Content, SignActive, SkillDef, StatusId, TalentEffect,
+    ActionKind, ClassActive, Content, ResourceCost, ResourceId, SignActive, SkillDef, StatusId,
+    TalentEffect,
 };
 use crate::geom::{Dir, Pos};
 use crate::skills::{Effect, SkillId};
@@ -165,6 +166,9 @@ pub enum Unavailable {
     /// ability is (a raging barbarian cannot read), or the ability's cooldown, which the class
     /// abilities bring (Winded: "you are winded"). Only time lifts it.
     While(StatusId),
+    /// One that costs an alternative resource the character does not hold, or holds too little
+    /// of (spec §8 "Resources"): "not enough focus".
+    Short(ResourceId),
 }
 
 impl Unavailable {
@@ -177,6 +181,10 @@ impl Unavailable {
             Unavailable::While(status) => {
                 format!("you are {}", content.status(status).name.to_lowercase()).into()
             }
+            Unavailable::Short(resource) => {
+                let name = content.resource(resource).name.to_lowercase();
+                format!("not enough {name}").into()
+            }
         }
     }
 
@@ -187,6 +195,9 @@ impl Unavailable {
             Unavailable::NotYet => "not_yet".into(),
             Unavailable::Strayed => "strayed".into(),
             Unavailable::While(status) => format!("while:{}", content.status(status).id).into(),
+            Unavailable::Short(resource) => {
+                format!("short:{}", content.resource(resource).id).into()
+            }
         }
     }
 }
@@ -450,9 +461,11 @@ impl Ability {
     pub(crate) fn unavailable(self, actor: &Actor, content: &Content) -> Option<Unavailable> {
         let own = match self {
             Ability::Class(active) => {
-                let required = content.class_active(active).and_then(|a| a.needs.alignment);
+                let def = content.class_active(active);
+                let required = def.and_then(|a| a.needs.alignment);
                 (strayed(actor, content, required))
                     .or_else(|| class_cooldown(actor, content, active).map(Unavailable::While))
+                    .or_else(|| short_of(actor, def?.resource?))
             }
             Ability::Sign(active) => (actor.talent_mods(content).sign_cooldown(active))
                 .filter(|&cooldown| actor.effects.has(cooldown))
@@ -499,6 +512,13 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
         ClassActive::Whirlwind | ClassActive::HolyRadiance => Vec::new(),
     };
     cooldowns.into_iter().find(|&s| actor.effects.has(s))
+}
+
+/// Why `actor` cannot use an ability that costs `cost` (spec §8 "Resources"):
+/// [`Unavailable::Short`] while they do not hold the resource or hold less than it costs.
+fn short_of(actor: &Actor, cost: ResourceCost) -> Option<Unavailable> {
+    let held = actor.resources.get(cost.resource).map(|p| p.value);
+    (held.is_none_or(|v| v < cost.amount)).then_some(Unavailable::Short(cost.resource))
 }
 
 /// Why `actor` cannot use an ability that asks for alignment `required` (its data's

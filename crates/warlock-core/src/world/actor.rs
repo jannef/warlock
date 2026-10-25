@@ -19,6 +19,7 @@ use crate::hunger::{Hunger, Satiation};
 use crate::magic::Mods;
 use crate::noise::Heard;
 use crate::object::{Stack, Weight, weight_of};
+use crate::resource::Pools;
 use crate::skills::{Effect, Skills};
 use crate::stats::{PerStat, Stat, StatDamage, Stats};
 use crate::status::Effects;
@@ -156,6 +157,12 @@ pub struct Actor {
     /// of it is a point.
     #[serde(default, skip_serializing_if = "is_zero")]
     pub mana_regen: u32,
+    /// The alternative resources it holds (spec §8 "Resources"; [`crate::resource`]): pools
+    /// beside hit points and mana that something granted it (Rage, Focus), in resource order.
+    /// None for most actors (creatures get none); changed only through `World::grant_resource`,
+    /// `gain_resource`, `spend_resource`, `end_resource`, and time passing (`World::live`).
+    #[serde(default, skip_serializing_if = "Pools::is_empty")]
+    pub resources: Pools,
     /// Its trained skills, with their values and training marks (spec §8 "Skills";
     /// [`crate::skills`]): its creature type's, the player's from their race and class. Every
     /// other skill is untrained: it gives nothing. Known to the rules (and dev tools) for every
