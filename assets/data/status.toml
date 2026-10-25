@@ -244,3 +244,16 @@ eases = 12
 cost = 200
 start = "You are transfixed."
 end = "You shake off the stare."
+
+# Held in a Drowning grip (a lucky day's gift, spec §8 "Birth sign"): a creature the Deep One hits
+# in melee cannot step until they miss it, strike another, or move; it fights back instead. No
+# timer: the holder lets go.
+[[status]]
+id = "held"
+name = "Held"
+seen = "held"
+max = 1
+stacking = "refresh"
+blocks = ["step"]
+start = "You are held fast."
+end = "You are free to move."

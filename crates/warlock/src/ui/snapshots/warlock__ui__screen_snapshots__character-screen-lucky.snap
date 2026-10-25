@@ -1,0 +1,40 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ Welcome to Showcase. Press ? for controls.
+
+
+              ┌─ Character ──────────────────────────────────────────────────────────┐
+              │                                                                      │
+              │ Tamsin, the Deep One                                                 │
+              │                                                                      │
+              │ Race    Human                                                        │
+              │ Gender  Female                                                       │
+              │ Class   Thief                                                        │
+              │ Age 29 · born 11 Rainmoon 1415 · year of the Water Kraken            │
+              │ Stars   Grasping arms, Of the deep, Ungainly ashore, Always a way    │
+              │         Tidal, Drowning grip                                         │
+              │                                                                      │
+              │ St  Strength      10                                                 │
+              │ Dx  Dexterity     13                                                 │
+              │ To  Toughness     10                                                 │
+              │ In  Intelligence  11                                                 │
+              │ Wi  Willpower     10                                                 │
+              │ Pr  Presence      10                                                 │
+              │                                                                      │
+              │ Lv  Level         1                                                  │
+              │ XP  Experience    0 / 729                                            │
+              │ HP  Hit points    17/17   MP  Mana       2/2                         │
+              │ Dv  Defence       11      Pv  Protection  0                          │
+              │     Stance        Neutral                                            │
+              │     Alignment     Callous                                            │
+              │                                                                      │
+              │ Weight 70 kg, carrying nothing                                       │
+              │ Burdened over 15 kg, strained over 30 kg, overloaded over 45 kg      │
+              │                                                                      │
+              │ @ or Esc close   S skills                                            │
+              └─ 1 Character · 2 Inv · 3 Equip · 4 Skills · 5 Weapons · 6 Quests ────┘
+
+
+ The Hub  ·  HP 17/17  ·  MP 2/2  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444          ? controls

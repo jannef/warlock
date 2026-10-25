@@ -95,7 +95,10 @@ fn a_sign_grants_its_animals_then_its_elements_gifts_and_a_lucky_day_one_more() 
             "kindled"
         ]
     );
-    assert_eq!(held(&born_under("phoenix", "fire", 10)), plain);
+    // The Firebird's lucky day (the 10th) adds Reborn whole.
+    let firebird = held(&born_under("phoenix", "fire", 10));
+    assert_eq!(firebird[..plain.len()], plain);
+    assert_eq!(firebird[plain.len()..], ["reborn_whole"]);
 }
 
 #[test]

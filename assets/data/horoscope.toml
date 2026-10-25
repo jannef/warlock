@@ -176,7 +176,7 @@ element = "metal"
 day = 3
 title = "the Iron Scourge"
 description = "A lucky day. Once in sixty years the Manticore is born in iron, and on the third day it is born the Iron Scourge."
-grants = []
+grants = ["scourge"]
 
 [[lucky]]
 animal = "phoenix"
@@ -184,7 +184,7 @@ element = "fire"
 day = 10
 title = "the Firebird"
 description = "A lucky day. Once in sixty years the Phoenix is born in fire, and on the tenth day it is born the Firebird."
-grants = []
+grants = ["reborn_whole"]
 
 [[lucky]]
 animal = "kraken"
@@ -192,7 +192,7 @@ element = "water"
 day = 11
 title = "the Deep One"
 description = "A lucky day. Once in sixty years the Kraken is born of the water, and on the eleventh day it is born the Deep One."
-grants = []
+grants = ["drowning_grip"]
 
 [[lucky]]
 animal = "barghest"
@@ -200,4 +200,4 @@ element = "earth"
 day = 30
 title = "the Gate Warden"
 description = "A lucky day. Once in sixty years the Barghest is born of the earth, and on the last day of the month it is born the Gate Warden."
-grants = []
+grants = ["warden_of_the_gate"]
