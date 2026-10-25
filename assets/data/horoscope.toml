@@ -21,6 +21,9 @@
 #                   shown in this order on the reveal and the Talents page (the animal's, the
 #                   element's, then a lucky day's). Gifts whose rules have not landed yet are
 #                   left out until they do.
+#     alignment     an animal's nudge to a new character's hidden alignment score (spec §8
+#                   "Alignment"; alignment.toml; default 0), added to the race's and the
+#                   class's; small against the bands' width, never shown. Elements have none.
 #   [[lucky]]     a lucky day: born in the year of `animal` and `element` AND on day `day` of
 #                 any month (1 to 30), a character has a lucky sign. `title` follows their name
 #                 ("Brakka, the Iron Scourge"), `description` is the reveal's line of legend, and
@@ -57,6 +60,7 @@ name = "Manticore"
 description = "Ran the whole course without rest while every other racer fled its path: fierce and relentless, and little loved."
 stats = { strength = 1, toughness = 1, presence = -1 }
 grants = ["relentless", "barbed_hide", "little_loved"]
+alignment = -100
 
 [[animal]]
 id = "unicorn"
@@ -64,6 +68,7 @@ name = "Unicorn"
 description = "Crossed the river leaping from stone to stone without wetting a hoof: graceful and fair, and easily hurt."
 stats = { dexterity = 1, presence = 1, toughness = -1 }
 grants = ["pure_blood", "horns_grace", "thin_skinned"]
+alignment = 100
 
 [[animal]]
 id = "wyvern"
@@ -71,6 +76,7 @@ name = "Wyvern"
 description = "Could have flown in first, but stopped to burn a path through the Mistwood for those behind: bold and generous, and clumsy on the ground."
 stats = { strength = 1, presence = 1, dexterity = -1 }
 grants = ["trailblazer", "flame_hardened", "heavy_footed"]
+alignment = 50
 
 [[animal]]
 id = "basilisk"
@@ -78,6 +84,7 @@ name = "Basilisk"
 description = "Rode coiled around the Roc's talon and slid off in front of it at the gate: patient and unblinking, and trusted by no one."
 stats = { willpower = 2, presence = -1 }
 grants = ["unblinking", "transfixing_stare", "trusted_by_none"]
+alignment = -100
 
 [[animal]]
 id = "roc"
@@ -92,6 +99,7 @@ name = "Griffin"
 description = "Landed on every hilltop on the way to watch over its gold: noble and watchful, and stiff in its ways."
 stats = { willpower = 1, presence = 1, dexterity = -1 }
 grants = ["hoard_sense", "watchful", "set_in_ways"]
+alignment = 50
 
 [[animal]]
 id = "sphinx"
@@ -106,6 +114,7 @@ name = "Phoenix"
 description = "Burned to ash in the noon of the Glass Waste and rose again at dusk to finish: hard to keep down and bright to behold, but frail between fires."
 stats = { toughness = 1, presence = 1, strength = -1 }
 grants = ["rise_from_ashes", "inner_light", "frail"]
+alignment = 50
 
 [[animal]]
 id = "kraken"
@@ -113,6 +122,7 @@ name = "Kraken"
 description = "Could not leave the water, so swam the long way round by sea and arrived on the evening tide: strong and deep, and ungainly ashore."
 stats = { strength = 1, willpower = 1, dexterity = -1 }
 grants = ["grasping_arms", "of_the_deep", "ungainly_ashore"]
+alignment = -50
 
 [[animal]]
 id = "barghest"

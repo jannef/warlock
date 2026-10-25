@@ -6,7 +6,7 @@
 use super::*;
 use crate::action::{Meal, parse_actions};
 use crate::alignment::{Alignment, Band, Requirement, Score};
-use crate::content::ContentFiles;
+use crate::content::{ContentFiles, Sign};
 use crate::object::Stack;
 use crate::replay::Replay;
 
@@ -279,6 +279,15 @@ fn set_score(w: &mut World, value: i32) {
     w.state.actors.get_mut(&player).expect("player").alignment = Some(Score::new(value));
 }
 
+/// What the player's birth animal added to their starting score (spec §8 "Alignment").
+fn nudge(w: &World) -> i32 {
+    let sign = (w.character().and_then(|c| c.sign.as_ref())).expect("a sign");
+    w.content()
+        .horoscope()
+        .expect("a horoscope")
+        .alignment(sign)
+}
+
 fn band(w: &World) -> Band {
     w.perception().own_alignment().expect("alignment rules")
 }
@@ -304,27 +313,89 @@ fn kick_to_death(w: &mut World, dir: Dir) {
 }
 
 #[test]
-fn characters_start_in_their_race_and_class_band() {
+fn characters_start_in_their_race_class_and_sign_band() {
     let content = builtin();
+    let rules = content.alignment().expect("alignment rules");
     let start = |spec: &str| {
         let spec: CharacterSpec = spec.parse().expect("spec");
         let w =
             World::with_character(content.clone(), "showcase", None, Some(&spec)).expect("world");
-        (score(&w), band(&w))
+        (score(&w) - nudge(&w), score(&w), band(&w))
     };
-    assert_eq!(start("human,male,paladin"), (450, Band::Good));
-    assert_eq!(start("human,female,thief"), (-200, Band::Callous));
-    assert_eq!(start("human,other,witch"), (-200, Band::Callous));
-    assert_eq!(start("dwarf,female,warrior"), (0, Band::Neutral));
-    // A race leans a little, never alone out of Neutral.
-    assert_eq!(start("elf,female,wizard"), (50, Band::Neutral));
-    assert_eq!(start("half_orc,male,paladin"), (400, Band::Good));
-    assert_eq!(start("halfling,male,thief"), (-150, Band::Callous));
+    // The race's and the class's parts; a race leans a little, never alone out of Neutral.
+    for (spec, theirs) in [
+        ("human,male,paladin", 450),
+        ("human,female,thief", -200),
+        ("human,other,witch", -200),
+        ("dwarf,female,warrior", 0),
+        ("elf,female,wizard", 50),
+        ("half_orc,male,paladin", 400),
+        ("halfling,male,thief", -150),
+    ] {
+        let (before_the_stars, score, band) = start(spec);
+        assert_eq!(before_the_stars, theirs, "{spec}");
+        assert_eq!(band, rules.band(Score::new(score)), "{spec}");
+    }
+    // The showcase's human paladin is Basilisk-born: the stars take them down to Kind.
+    assert_eq!(start("human,male,paladin"), (450, 350, Band::Kind));
     // The summary's start says the same, before the run.
     let spec: CharacterSpec = "human,male,paladin".parse().unwrap();
     let showcase = content.scenario("showcase").expect("showcase");
     let s = spec.start(&content, 1, showcase.start).expect("start");
-    assert_eq!(s.alignment, Score::new(450));
+    let w = World::with_character(content.clone(), "showcase", Some(1), Some(&spec)).expect("w");
+    assert_eq!(s.alignment, Score::new(score(&w)));
+}
+
+#[test]
+fn the_birth_animal_nudges_the_starting_score_and_the_element_not() {
+    // The design's table (docs/design/horoscope.md §9.2), pinned against the data.
+    let table = [
+        ("salamander", 0),
+        ("hydra", 0),
+        ("manticore", -100),
+        ("unicorn", 100),
+        ("wyvern", 50),
+        ("basilisk", -100),
+        ("roc", 0),
+        ("griffin", 50),
+        ("sphinx", 0),
+        ("phoenix", 50),
+        ("kraken", -50),
+        ("barghest", 0),
+    ];
+    let content = builtin();
+    let horoscope = content.horoscope().expect("a horoscope");
+    assert!(horoscope.elements.iter().all(|e| e.alignment == 0));
+    let today = content.scenario("showcase").expect("showcase").start;
+    // A human warrior's own part is 0, so the start is the nudge alone; a paladin's 450 plus it.
+    let mut seen = std::collections::BTreeMap::new();
+    for seed in 0..400 {
+        for (spec, theirs) in [("human,male,warrior", 0), ("human,female,paladin", 450)] {
+            let spec: CharacterSpec = spec.parse().unwrap();
+            let s = spec.start(&content, seed, today).expect("start");
+            let sign = s.character.sign.clone().expect("a sign");
+            let (_, nudge) = *table
+                .iter()
+                .find(|(a, _)| *a == sign.animal)
+                .expect("known");
+            assert_eq!(s.alignment, Score::new(theirs + nudge), "{spec} {sign:?}");
+            seen.insert(sign.animal.clone(), sign.element.clone());
+        }
+    }
+    assert_eq!(seen.len(), table.len(), "every animal seen: {seen:?}");
+    // The same animal under another element: the same nudge.
+    let wood = Sign {
+        animal: "unicorn".into(),
+        element: "wood".into(),
+    };
+    let water = Sign {
+        element: "water".into(),
+        ..wood.clone()
+    };
+    assert_eq!(horoscope.alignment(&wood), 100);
+    assert_eq!(horoscope.alignment(&water), 100);
+    // Kept on the scale: a Unicorn-born at the far good end stays there.
+    assert_eq!(Score::new(1000 + 100), Score::new(1000));
 }
 
 #[test]
@@ -537,13 +608,14 @@ fn in_shop() -> World {
     let mut w = World::new(builtin(), "courtyard", None).expect("courtyard");
     run(&mut w, INTO_SHOP);
     assert_eq!(w.player_pos(), Pos::new(54, 14), "in the shop");
+    // A human druid's 0, before the stars (the courtyard's sign nudges it to -100).
+    set_score(&mut w, 0);
     w
 }
 
 #[test]
 fn paying_is_a_little_good_and_theft_and_attacking_the_keeper_evil() {
     let mut w = in_shop();
-    assert_eq!(score(&w), 0, "a human druid");
     run(&mut w, "move:E move:NE pickup pay");
     assert!(said(&w, "You pay Grimbold"));
     assert_eq!(score(&w), 5);
@@ -615,6 +687,8 @@ fn eating_kin_is_evil() {
         let here = w.player_pos();
         let fresh = Stack::corpse(corpse, w.time());
         w.state.current_mut().set_pile(here, vec![fresh]);
+        // Neutral, whatever the stars gave (a deed counts in full from 0).
+        set_score(&mut w, 0);
         let before = score(&w);
         w.apply(&Action::Eat(Meal::Floor(0)));
         assert!(said(&w, "You eat the"), "{}", last(&w));
@@ -643,6 +717,8 @@ fn a_paladin_who_kills_the_peaceful_strays_from_their_gifts() {
     let content = builtin();
     let spec: CharacterSpec = "human,male,paladin".parse().expect("spec");
     let mut w = World::with_character(content, "showcase", None, Some(&spec)).expect("world");
+    // The paladin's own start, before the stars (the showcase's is Basilisk-born).
+    set_score(&mut w, 450);
     let gift = Some(Requirement {
         min: Some(Band::Good),
         max: None,

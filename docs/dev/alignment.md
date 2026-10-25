@@ -29,8 +29,10 @@ Alignment is good against evil, ADOM's law and chaos turned. Three modules:
   `keeper_favour` (free function: a good `[keeper]` type's favour by band).
 
 **State.** `Actor::alignment: Option<Score>` is the player's score (set at the start when the
-content has the rules: `Start::alignment`, the race's plus the class's `alignment`, or 0 without a
-character); `Actor::alignment_override: Option<Alignment>` is a level legend entry's `alignment`
+content has the rules: `Start::alignment`, the race's plus the class's `alignment` plus the birth
+animal's nudge, `Horoscope::alignment(sign)` (#272: `alignment` on an `[[animal]]` in
+`data/horoscope.toml`, checked by `check_start`; an element with one is refused on load), or 0
+without a character); `Actor::alignment_override: Option<Alignment>` is a level legend entry's `alignment`
 (`CreatureSpawn::alignment`). Read the one that counts with `Actor::nature(content)` (a score's
 band's side, else the override, else the type's `CreatureDef::alignment`) and
 `Actor::band(content)` (a score's band, else the nature's band, Neutral without rules). Both
@@ -64,7 +66,7 @@ Hardened heart, The middle way) hook into `attack_with` (the target's `nature`),
 
 **Tests.** `alignment.rs` (diminishing, bands, scorn, requirements, loading), `content/alignment.rs`
 (the built-in bands cover the scale, news, bad files), `ability.rs` (a test ability's
-requirement), `world/alignment_tests.rs` (starting bands, each deed, diminishing in play, notes
+requirement), `world/alignment_tests.rs` (starting bands, the birth animal's nudge, each deed, diminishing in play, notes
 after the deed that do not count as said, cold greetings, quest gating and shifts, a good keeper's
 prices, eating kin, a paladin straying, save and replay). The wiki's tables are
 `xtask/src/wiki/alignment.rs`.
