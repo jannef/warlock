@@ -358,6 +358,8 @@ impl World {
                 actor.energy = s.energy;
             }
         }
+        // What comes to the level meanwhile (spec §7 "Danger levels").
+        self.spawn_tick();
     }
 
     /// How long from now no creature on the current level that disturbs a rest

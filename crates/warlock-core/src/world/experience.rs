@@ -40,6 +40,10 @@ pub struct Progress {
     /// rising; `world/stars.rs`).
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub(crate) once: BTreeSet<String>,
+    /// The unique creature types (by id) a population has brought, never again (spec §7
+    /// "Danger levels"; `world/spawn.rs`).
+    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+    pub(crate) uniques: BTreeSet<String>,
 }
 
 impl Progress {
@@ -48,6 +52,7 @@ impl Progress {
             && self.due.is_empty()
             && self.empathy_broken.is_empty()
             && self.once.is_empty()
+            && self.uniques.is_empty()
     }
 
     /// Whether `what` has happened, of what may happen once in a life.

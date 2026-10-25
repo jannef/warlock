@@ -34,7 +34,7 @@ expression: "render(case, content.clone())"
             │ Delver                                                                   │
             │   s  Alert                            You notice hidden things in passi… │
             │   t  Lockbreaker                      Your door kicks are mightier, and… │
-            │   u  Scavenger                        You have an eye for what the fall… │
+            │   u  Quiet delver                     You go about a dungeon so quietly… │
             │                                                                          │
             │ Tougher than most: more hit points for each rank, and more as you level. │
             │                                                                          │

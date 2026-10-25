@@ -138,6 +138,7 @@ mod shoot;
 mod shop;
 mod sign_picks;
 mod skill_roll;
+mod spawn;
 mod spell;
 mod stars;
 mod stat_training;
@@ -412,6 +413,9 @@ pub struct World {
     /// Traps sprung since this world was created or loaded (not saved): a rest perceives every
     /// turn in which one went off (a teleport moves someone farther than a step).
     sprung: u64,
+    /// Creatures that came to the player's level since this world was created or loaded (not
+    /// saved): a rest perceives every turn in which one came (`spawn.rs`).
+    spawned: u64,
     /// Hidden features the player found since this world was created or loaded (not saved):
     /// searching for a while stops when one is found (`search.rs`).
     found: u64,
@@ -786,6 +790,7 @@ impl World {
             notes: Vec::new(),
             held: None,
             sprung: 0,
+            spawned: 0,
             found: 0,
             mutters: Vec::new(),
             resting: false,
@@ -1087,6 +1092,7 @@ impl World {
             Action::SetStance(stance) => return self.set_stance(*stance),
             Action::SetWeather(weather) => return self.set_weather_dev(*weather),
             Action::SkipTime(duration) => return self.skip_time_dev(*duration),
+            Action::Spawn => return self.spawn_dev(),
             Action::Effect { effect, at, to } => {
                 return self.show_effect(effect, *at, *to, events);
             }
@@ -1252,6 +1258,8 @@ mod sign_pick_tests;
 mod skill_roll_tests;
 #[cfg(test)]
 mod skills_tests;
+#[cfg(test)]
+mod spawn_tests;
 #[cfg(test)]
 mod speed_tests;
 #[cfg(test)]

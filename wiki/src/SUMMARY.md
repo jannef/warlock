@@ -19,6 +19,7 @@
 - [Terrain](terrain.md)
   - [Digging and walls](digging.md)
 - [Doors](doors.md)
+- [Dungeons and danger](dungeons.md)
 - [Special rooms](special-rooms.md)
 - [Objects and your pack](objects.md)
   - [Gems](gems.md)

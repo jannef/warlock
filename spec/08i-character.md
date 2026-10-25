@@ -677,7 +677,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (Sun-blessed: healing half again as fast while the sun is up over an unroofed cell of the
     current level, whatever the clouds, `World::healing_rate`). Silent feet also counts toward
     the hearing system. The light, awareness, and factions systems stay `pending` until Hooded
-    light and the class tables bring their second talent.
+    light and the class tables bring their second talent. The `danger` system (#326, §7 "Danger
+    levels") came with its two: Quiet delver (`spawn_every_percent`) and Sixth sense
+    (`danger_sense`, 2 ranks, after Alert), both Delver.
     The Defence by attack kind of the design's B5 landed with Deflect missiles (#237,
     `World::target_against`).
   - **Racial talents** (#241; the design's §7.5 Racial): the `racial` tree (`no_free`), each
