@@ -5,11 +5,32 @@ use crate::content::{CreatureSpawn, Vault};
 use crate::geom::{Dir, Pos};
 use crate::rng::Rng;
 
-/// The vaults that may be stamped on the level ([`Vault::stamps_on`]) in a random order.
+/// The vaults that may be stamped on the level ([`Vault::stamps_on`]) in a random order, but
+/// those a branch level names ([`Vault::pinned`]): they are stamped only where named.
 pub(super) fn shuffled<'c>(canvas: &Canvas<'c>, rng: &mut Rng) -> Vec<&'c Vault> {
-    let mut vaults = canvas.vaults.clone();
+    let mut vaults: Vec<&Vault> = (canvas.vaults.iter()).copied().filter(|v| !v.pinned).collect();
     rng.shuffle(&mut vaults);
     vaults
+}
+
+/// The vaults `names` (a branch level's `vaults`, checked at load), in that order.
+pub(super) fn named<'c>(canvas: &Canvas<'c>, names: &[String]) -> Vec<&'c Vault> {
+    let vaults = canvas.content.vaults();
+    (names.iter())
+        .filter_map(|n| vaults.iter().find(|v| v.id() == n))
+        .collect()
+}
+
+/// Every top-left corner where `vault` [`fits`], in row order.
+pub(super) fn spots(canvas: &Canvas, vault: &Vault) -> Vec<Pos> {
+    let (max_x, max_y) = (
+        canvas.width() - 2 - vault.width(),
+        canvas.height() - 2 - vault.height(),
+    );
+    (2..=max_y)
+        .flat_map(|y| (2..=max_x).map(move |x| Pos::new(x, y)))
+        .filter(|at| fits(canvas, vault, *at))
+        .collect()
 }
 
 /// Whether `vault` with its top-left corner at `at` lies on untouched rock, with a ring of rock

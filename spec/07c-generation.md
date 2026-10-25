@@ -18,7 +18,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   the lock it opens, §8 "Doors"; the Depths' is the rusty key), its own special-room and shop
   odds (`room_effects`, `shops`; §7 "Special rooms", "Shops"; default the shared ones), and
   per-depth overrides of generator, size, temperature, `room_effects`, and `shops` (each default
-  the branch's). Stairs
+  the branch's), and the vaults a range of depths stamps for certain (`vaults`, see "Vaults"). Stairs
   (and scenarios) may target `depths:N`; content validation accepts such ids when the branch has
   that depth. A branch level is generated on its first visit from its own random stream (§8) and
   then persists like a hand-made level. Its `<` leads to `depths:N-1` (on depth 1, back to the
@@ -137,4 +137,25 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (`assets/vaults/`) stamps in every branch; a campaign's (`campaigns/<id>/vaults/`) only in that
   campaign's branches; and a vault whose file gives `dungeons` (branch ids, or branch levels such
   as `"cealdhlaw:2"`, of its own campaign) only there (the Ascmearc's barrow chamber: Cealdhlāw's
-  rooms levels, 1 and 2).
+  rooms levels, 1 and 2). A `[[dungeon.levels]]` range
+  may name vaults (`vaults = ["drakes_hoard"]`, #339): each is stamped on every level of the range
+  for certain (a generation attempt that cannot fit one is made again), before any vault drawn at
+  random, and a vault a branch level names is never drawn at random anywhere (a quest's target
+  is where the branch says, once). A named vault is a dungeon vault, shared or of the branch's
+  own campaign, and named once a level.
+- **Fyrdelf** (#339; `campaigns/ascmearc/data/dungeons/fyrdelf.toml`; the design is
+  `docs/design/campaign.md` §7): the Ascmearc's deepest first dungeon, the duergar's mine under
+  Ascdūn, its way in a hidden location of the overworld (97, 21) leading to `fyrdelf:1`. Twelve
+  levels: galleries (rooms, 80×21) on 1 to 4, the deep workings (caves, 120×60) on 5 to 12;
+  10 °C on the galleries, 16 °C on 5 to 8, 20 °C on 9 to 11, 24 °C at the bottom. Danger 8 to
+  19, nothing scaled by the player; its population is the delf wave (§7b) with the bats,
+  kobolds, and giant centipedes of the upper galleries, at the default count (25 on a gallery
+  floor, 80 in the workings). Arrow, spear, fireball, lightning, and alarm traps; no to two secret
+  doors a gallery level, hidden things one harder each level down, locks two; 3 to 5 items of
+  loot; the brass key. Every gallery level with a fitting room has a general store
+  (`shops = { chance = 100 }`: about one gallery floor in four) kept by a **duergar trader** (the
+  campaign's own keeper type, with the shared keeper's kit). Its vaults (`campaigns/ascmearc/vaults/`):
+  the **foreman's cabin** on each gallery level (a duergar miner at his post, a pick-axe, a lamp,
+  a brass key) and the **drake's hoard** on level 12 alone (the fire drake on its gold, a rare
+  and a magic find, ringed with lava). The drake is not in the population, so it is met there
+  only. The `fyrdelf` dev scenario starts on level 1.

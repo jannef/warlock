@@ -1,0 +1,28 @@
+# Vault of the Ascmearc (docs/design/campaign.md §7.2): the foreman's cabin in Fyrdelf's galleries.
+# A timber-floored lodging cut into the rock: the foreman, a duergar miner, keeps the front room;
+# behind a plank wall lie his spare pick-axe, his lamp, and a key to the delf's locked rooms.
+# Fyrdelf names it for its floors 1 to 4 (`vaults` in its `[[dungeon.levels]]`), so it is stamped
+# on each of them and nowhere else.
+name = "Foreman's cabin"
+map = '''
+###########
+#ppp|ppppp#
+#p*p+pppfp+
+#ppp|ppppp#
+###########
+'''
+
+[legend]
+"p" = "plank_floor"
+"|" = "timber_wall"
+"*" = { terrain = "plank_floor", light = "lamp" }
+# The foreman at his post: a duergar miner, with the gear his kind carries.
+"f" = { terrain = "plank_floor", creature = "duergar_miner" }
+
+[[pile]]
+at = [1, 1]
+objects = ["pick_axe"]
+
+[[pile]]
+at = [3, 3]
+objects = ["brass_key"]

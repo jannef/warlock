@@ -140,5 +140,9 @@ campaign's; a level file giving `dungeons` is refused). `generate_for` puts the 
 the `Canvas` (`Canvas::vaults`), which `vault::shuffled` shuffles, so a branch that no campaign
 vault names draws exactly what it did. Tests: `mapgen/cealdhlaw_tests.rs`.
 
+A branch level's `vaults` (#339, docs/dev/mapgen.md) keeps the vaults it names to itself
+(`Vault::pinned`, left out of `vault::shuffled`): those may be shared or of the branch's campaign,
+never another's.
+
 Not yet (the design's later items): the save summary's and the Characters screen's campaign (#341), and
 `dev = true` scenarios.

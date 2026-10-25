@@ -157,6 +157,9 @@ pub(crate) struct Needs<'a> {
     pub creatures: &'a [CreatureId],
     /// The key to the rooms the level locks (the branch's); `None`: it locks none.
     pub key: Option<ObjectId>,
+    /// Vaults (ids) the level stamps for certain (its branch level's `vaults`): a generator
+    /// that cannot fit one fails the attempt.
+    pub vaults: &'a [String],
 }
 
 /// A level under construction.
@@ -415,6 +418,7 @@ pub fn generate_for(
         down: depth < def.depth,
         creatures: &def.creatures,
         key: def.key,
+        vaults: def.vaults(depth),
     };
     let up_to = if depth > 1 {
         Some(def.level_id(depth - 1))
@@ -762,5 +766,7 @@ pub(crate) fn out_and_back(
 
 #[cfg(test)]
 mod cealdhlaw_tests;
+#[cfg(test)]
+mod fyrdelf_tests;
 #[cfg(test)]
 mod tests;

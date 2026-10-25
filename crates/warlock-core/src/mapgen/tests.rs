@@ -30,7 +30,7 @@ fn level(seed: u64, depth: u32) -> LevelTemplate {
 }
 
 /// Header (name, stairs, creatures, traps) plus the map, for snapshots.
-fn describe(level: &LevelTemplate) -> String {
+pub(super) fn describe(level: &LevelTemplate) -> String {
     describe_in(&CONTENT, level)
 }
 
@@ -728,9 +728,12 @@ fn vaults_are_stamped_verbatim_with_their_lights_and_creatures() {
             }
         }
     }
-    // Dungeons get every dungeon vault and never the ruins meant for the overworld's local areas.
+    // Dungeons get every dungeon vault and never the ruins meant for the overworld's local areas,
+    // nor the vaults a branch level names (stamped only there).
     for (vault, count) in vaults.iter().zip(&seen) {
-        if vault.is_outdoor() {
+        if vault.pinned {
+            assert_eq!(*count, 0, "vault `{}` stamped where not named", vault.id());
+        } else if vault.is_outdoor() {
             assert_eq!(*count, 0, "outdoor vault `{}` in a dungeon", vault.id());
         } else {
             assert!(*count > 0, "vault `{}` never placed", vault.id());

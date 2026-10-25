@@ -109,7 +109,7 @@ MMMMMMMMMMMMMMMMMMM.ff..................................."......................
 "T" = { terrain = "town", name = "Cēaptūn" }
 "1" = { terrain = "barrow", name = "Cealdhlāw", to = "cealdhlaw:1" }
 "2" = { terrain = "swamp", hidden = { id = "fennmynster", terrain = "dungeon_entrance", name = "Fennmynster" } }
-"3" = { terrain = "hills", hidden = { id = "fyrdelf", terrain = "mine", name = "Fyrdelf" } }
+"3" = { terrain = "hills", hidden = { id = "fyrdelf", terrain = "mine", to = "fyrdelf:1", name = "Fyrdelf" } }
 
 # Named regions, shown in the status bar: `area = [x0, y0, x1, y1]`, inclusive, first match wins
 # (the forests' deep hearts before the forests, the downs before the vale around them).

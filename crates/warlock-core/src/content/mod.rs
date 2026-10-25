@@ -1755,12 +1755,43 @@ impl Content {
                     ));
                 }
                 def.campaign = campaign::of_path(path).map(str::to_string);
+                self.pin_vaults(&def)
+                    .map_err(|m| ContentError::new(path, format!("dungeon `{}`: {m}", def.id)))?;
                 self.dungeons.insert(def.id.clone(), def);
             }
         }
         if !self.dungeons.is_empty() {
             crate::mapgen::Palette::resolve(self)
                 .map_err(|m| ContentError::new("data/dungeons.toml", m))?;
+        }
+        Ok(())
+    }
+
+    /// Checks the vaults branch `def`'s levels name (dungeon vaults, shared or of its campaign,
+    /// once a level) and marks them [`Vault::pinned`].
+    fn pin_vaults(&mut self, def: &DungeonDef) -> Result<(), String> {
+        for depth in 1..=def.depth {
+            let names = def.vaults(depth);
+            for (i, name) in names.iter().enumerate() {
+                if names[..i].contains(name) {
+                    return Err(format!("level {depth} names vault `{name}` twice"));
+                }
+                let vault = (self.vaults.iter_mut())
+                    .find(|v| v.id() == name)
+                    .ok_or_else(|| format!("unknown vault `{name}`"))?;
+                if vault.is_outdoor() {
+                    return Err(format!(
+                        "vault `{name}` is outdoor: it stamps in no dungeon"
+                    ));
+                }
+                if vault.campaign.is_some() && vault.campaign != def.campaign {
+                    let theirs = vault.campaign.as_deref().unwrap_or_default();
+                    return Err(format!(
+                        "vault `{name}` is {theirs}'s: a branch stamps its own campaign's or shared ones"
+                    ));
+                }
+                vault.pinned = true;
+            }
         }
         Ok(())
     }
@@ -3783,7 +3814,9 @@ mod tests {
                 "shrine",
                 "stone_circle",
                 // The campaigns' own, after the shared ones.
-                "barrow_chamber"
+                "barrow_chamber",
+                "drakes_hoard",
+                "foremans_cabin"
             ]
         );
         assert_eq!(content.vaults()[4].entrances.len(), 3);

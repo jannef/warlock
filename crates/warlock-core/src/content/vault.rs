@@ -18,6 +18,8 @@
 //! Where a dungeon vault stamps ([`Vault::stamps_on`]): a shared one (`assets/vaults/`) in every
 //! branch, a campaign's (`campaigns/<id>/vaults/`) only in that campaign's branches, and one whose
 //! file names `dungeons` (branch ids, or branch levels such as `"cealdhlaw:2"`) only there.
+//! A branch level may name vaults (`vaults` in `[[dungeon.levels]]`): each is stamped on that
+//! level for certain, and a vault so named ([`Vault::pinned`]) is never drawn at random.
 
 use super::dungeon::{DungeonDef, parse_branch_level};
 use super::level::{LevelKind, LevelTemplate};
@@ -38,6 +40,11 @@ pub struct Vault {
     /// The branches (`"cealdhlaw"`) and branch levels (`"cealdhlaw:2"`) it stamps in; empty:
     /// every branch it may (its campaign's, or all of them for a shared vault).
     pub dungeons: Vec<String>,
+    /// Named by a branch level's `vaults` ([`DungeonDef::vaults`]): stamped there for certain
+    /// and never drawn at random.
+    ///
+    /// [`DungeonDef::vaults`]: super::DungeonDef::vaults
+    pub pinned: bool,
 }
 
 /// The vault-only field of a vault file (the level-file parser reads the rest and ignores it).
@@ -141,6 +148,7 @@ impl Vault {
             entrances,
             campaign: None,
             dungeons: Vec::new(),
+            pinned: false,
         })
     }
 

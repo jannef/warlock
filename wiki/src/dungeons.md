@@ -61,3 +61,22 @@ behind it something of worth lies on a plinth. The skeleton carries the bronze k
 ### Floor by floor
 
 {{#include generated/dungeon-floors.md}}
+
+### Fyrdelf
+
+**Fyrdelf**, the fire delving, is the duergar's mine under the hills of Ascdūn, below the
+volcano. No road leads there and its way in cannot be found by looking: a quest must show you
+where it is. Its first four floors are the galleries, rooms and passages at 10 °C; the eight
+below are the deep workings, wide caves that grow hotter toward the volcano's heart (16 °C,
+then 20 °C, and 24 °C at the bottom). Its traps are arrows, spears, fireballs, lightning, and
+alarms, few of its doors are hidden, and its locks are the hardest to pick of the three
+dungeons. The duergar dig here, miners, warriors, and smiths, among ember beetles, salamanders,
+magma crawlers, cinder elementals, ash wraiths, basilisks, ogres, and trolls, with kobolds,
+centipedes, and bats in the upper galleries.
+
+Every gallery floor holds a **foreman's cabin**: a timber-floored lodging where a duergar miner
+keeps watch, with a spare pick-axe, his lamp, and a brass key to the delf's locked rooms behind a
+plank wall. Duergar traders keep general stores in the galleries, where a room is fit for one
+(about one gallery floor in four). At the very bottom lies the **drake's hoard**: a hall ringed
+with lava where the fire drake sleeps on its gold, with a rare treasure and a magic one. The
+drake lives nowhere else.
