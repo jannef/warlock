@@ -166,9 +166,11 @@ impl World {
         self.shop_step(from, to);
         let level = self.state.current();
         if let Some(stairs) = level.stairs_at(to) {
-            let text = match (level.kind, stairs.dir, &stairs.to) {
-                (LevelKind::Overworld, StairsDir::Down, Some(target)) => {
-                    let name = (stairs.name.clone()).unwrap_or_else(|| self.place_name(target));
+            // A location goes by its name, even while it leads nowhere yet.
+            let named =
+                (stairs.name.clone()).or_else(|| Some(self.place_name(stairs.to.as_ref()?)));
+            let text = match (level.kind, stairs.dir, named) {
+                (LevelKind::Overworld, StairsDir::Down, Some(name)) => {
                     format!("The way into {name} is here.")
                 }
                 (_, StairsDir::Down, _) => "There is a staircase down here.".into(),

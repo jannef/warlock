@@ -111,7 +111,7 @@ pub use item_class::{ItemClassDef, ItemClassId, MAX_ITEM_CLASSES};
 pub use kit::{Keep, Kit, KitItem};
 pub(crate) use level::validate_route;
 pub use level::{
-    CreatureSpawn, EdgeExit, HiddenLocation, LevelKind, LevelTemplate, Region, StairsLink,
+    CreatureSpawn, EdgeExit, HiddenLocation, LevelKind, LevelTemplate, Place, Region, StairsLink,
     parse_route,
 };
 pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, MAX_LIGHT_RADIUS, Stability};
@@ -1825,12 +1825,14 @@ impl Content {
                 }
             }
             for (pos, hidden) in &level.hidden {
-                if !self.has_level(campaign, &hidden.to) {
+                if let Some(to) = &hidden.to
+                    && !self.has_level(campaign, to)
+                {
                     return Err(ContentError::new(
-                        &format!("levels/{}.toml", level.id),
+                        &self.level_file(&level.id),
                         format!(
-                            "hidden location `{}` at {pos} leads to unknown level `{}`",
-                            hidden.id, hidden.to
+                            "hidden location `{}` at {pos} leads to unknown level `{to}`",
+                            hidden.id
                         ),
                     ));
                 }

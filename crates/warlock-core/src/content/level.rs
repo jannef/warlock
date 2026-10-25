@@ -301,6 +301,11 @@ pub(super) struct LegendDetail {
     /// locations"): `hidden = { id, terrain, to, name }`. Until then the cell is the plain
     /// terrain it shows, in every way.
     hidden: Option<HiddenSpec>,
+    /// The name of the place on this cell (`name = "Beorggeat"`): a location's, or a landmark's;
+    /// look mode names it, and a way in on this cell goes by it.
+    name: Option<String>,
+    /// A sentence look mode adds about the named place on this cell; only with `name`.
+    note: Option<String>,
 }
 
 /// A legend entry's hidden location: the location's `id` (what quests' `reveals` name), the
@@ -310,7 +315,9 @@ pub(super) struct LegendDetail {
 pub(super) struct HiddenSpec {
     id: String,
     terrain: String,
-    to: String,
+    /// None: it leads nowhere yet (its level is not built), like stairs without a `to`.
+    #[serde(default)]
+    to: Option<String>,
     name: String,
 }
 
@@ -397,10 +404,19 @@ pub struct HiddenLocation {
     pub id: String,
     /// The terrain the cell becomes when revealed: an entrance, stairs down.
     pub terrain: TerrainId,
-    /// The level it leads to.
-    pub to: String,
+    /// The level it leads to; `None`: nowhere yet.
+    pub to: Option<String>,
     /// What it is called once known.
     pub name: String,
+}
+
+/// A named place on a cell of a hand-made level (a legend's `name`): a location, a landmark.
+/// Look mode names it on a cell the player sees or remembers; it is no secret.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Place {
+    pub name: String,
+    /// A sentence look mode adds about it.
+    pub note: Option<String>,
 }
 
 /// A parsed, validated level ready to instantiate: from a level file, or generated (see
@@ -434,6 +450,8 @@ pub struct LevelTemplate {
     /// Hidden locations, by position (spec §7 "Hidden locations"; the overworld only): the
     /// terrain there is the plain terrain each shows until a quest reveals it.
     pub hidden: BTreeMap<Pos, HiddenLocation>,
+    /// Named places, by position (a legend's `name`); a way in on such a cell goes by its name.
+    pub places: BTreeMap<Pos, Place>,
     /// Named areas, first match wins.
     pub regions: Vec<Region>,
     /// Special rooms (spec §7 "Special rooms"), none overlapping another.
@@ -537,6 +555,7 @@ pub(super) fn parse_level(
     let mut locks = BTreeMap::new();
     let mut secret_doors: Vec<(Pos, TerrainId, u8)> = Vec::new();
     let mut hidden = BTreeMap::new();
+    let mut places = BTreeMap::new();
 
     for (y, row) in rows.iter().enumerate() {
         for x in 0..width as usize {
@@ -561,12 +580,16 @@ pub(super) fn parse_level(
             if let Some(um) = parse_ice(ch, entry, content.terrain(terrain)).map_err(err)? {
                 ice.insert(pos, um);
             }
+            let place = detail
+                .and_then(|d| parse_place(d).transpose())
+                .transpose()
+                .map_err(|m| err(format!("legend `{ch}`: {m}")))?;
             if let Some(dir) = content.terrain(terrain).stairs {
                 stairs.push(StairsLink {
                     pos,
                     dir,
                     to: detail.and_then(|d| d.to.clone()),
-                    name: None,
+                    name: place.as_ref().map(|p| p.name.clone()),
                 });
             } else if detail.is_some_and(|d| d.to.is_some()) {
                 return Err(err(format!(
@@ -575,6 +598,9 @@ pub(super) fn parse_level(
                 )));
             }
             let Some(detail) = detail else { continue };
+            if let Some(place) = place {
+                places.insert(pos, place);
+            }
             if let Some(spec) = &detail.hidden {
                 let location = parse_hidden(spec, parsed.kind, terrain, content)
                     .map_err(|m| err(format!("legend `{ch}`: {m}")))?;
@@ -842,6 +868,7 @@ pub(super) fn parse_level(
         locks,
         secrets,
         hidden,
+        places,
         regions,
         rooms,
         shops,
@@ -868,6 +895,30 @@ pub(super) fn parse_level(
         }
     }
     Ok(template)
+}
+
+/// A legend entry's named place (`name`, and `note` with it), if it has one. A hidden location
+/// takes its name from `hidden` once revealed: a `name` beside it would give it away.
+fn parse_place(detail: &LegendDetail) -> Result<Option<Place>, String> {
+    let Some(name) = &detail.name else {
+        return match detail.note {
+            Some(_) => Err("a `note` needs a `name`".into()),
+            None => Ok(None),
+        };
+    };
+    if name.trim().is_empty() {
+        return Err("the `name` is empty".into());
+    }
+    if detail.hidden.is_some() {
+        return Err("a hidden location has its name in `hidden` only".into());
+    }
+    if detail.note.as_ref().is_some_and(|n| n.trim().is_empty()) {
+        return Err("the `note` is empty".into());
+    }
+    Ok(Some(Place {
+        name: name.clone(),
+        note: detail.note.clone(),
+    }))
 }
 
 /// A legend entry's hidden location on a cell of `terrain` (spec §7 "Hidden locations"): only

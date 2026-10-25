@@ -4,11 +4,12 @@ expression: "render(case, content.clone())"
 ---
 
 
-
                     ┌─ New run ────────────────────────────────────────────────┐
                     │                                                          │
+                    │ The Ascmearc                                             │
+                    │ > The Ascmearc                                           │
                     │ The Showcase                                             │
-                    │ > Showcase                                               │
+                    │   Showcase                                               │
                     │   Arena                                                  │
                     │   Courtyard                                              │
                     │   Depths                                                 │
@@ -18,13 +19,13 @@ expression: "render(case, content.clone())"
                     │   Vast                                                   │
                     │   World                                                  │
                     │                                                          │
-                    │   A hand-made tour of every engine capability, one room  │
-                    │   per feature. A safe place: its creatures keep to their │
-                    │   rounds and leave you alone. For a fight, take the      │
-                    │   stairs down to the arena.                              │
+                    │   Come down through Beorggeat into the Ascmearc; the     │
+                    │   market town of Cēaptūn lies a short way east along the │
+                    │   road.                                                  │
                     │                                                          │
                     │   Seed: [(default: 1)_]                                  │
                     │   Type a number or a word to set a seed.                 │
+                    │                                                          │
                     │                                                          │
                     │                                                          │
                     │ ↑↓ scenario   Enter next   Esc back                      │

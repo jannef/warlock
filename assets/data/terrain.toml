@@ -806,6 +806,42 @@ bg = "#1c1b21"
 walkable = false
 transparent = false
 
+# A cut through a mountain range: walkable, but nothing to explore (no local area) and no way
+# into anywhere. Beorggeat, where the Ascmearc begins (campaign design §5.1).
+[[terrain]]
+id = "mountain_pass"
+name = "mountain pass"
+glyph = ")"
+fg = "#c6c2cc"
+bg = "#1c1b21"
+travel_minutes = 30
+
+# A fire mountain standing in a range: impassable, glowing faintly, a thin plume of smoke.
+[[terrain]]
+id = "volcano"
+name = "volcano"
+glyph = "▲"
+fg = "#d4553a"
+bg = "#2a0e08"
+walkable = false
+transparent = false
+glow = 0.35
+
+# Smoke rising slowly from the crater, now and then.
+[[terrain.particles]]
+glyphs = "°·."
+colors = ["#8a6a60", "#5a4c48", "#2e2826"]
+rate = 0.4
+life = 3.0
+velocity = [0.15, -0.5]
+spread = [0.1, 0.15]
+gravity = -0.05
+offset = [0.0, -0.4]
+area = [0.2, 0.05]
+sway = 0.25
+scale = 0.6
+fade = 0.7
+
 [[terrain]]
 id = "swamp"
 name = "swamp"
@@ -859,6 +895,16 @@ travel_minutes = 20
 # Roads in the local areas beside it lead onto it. Local areas lay it where a road fords water.
 landscape = "road"
 
+# A road wading through a river: slower than a bridge.
+[[terrain]]
+id = "ford"
+name = "ford"
+glyph = "≈"
+fg = "#f4e2b0"
+bg = "#2c3a44"
+travel_minutes = 30
+landscape = "road"
+
 # Locations: stairs down into other levels (the overworld's legend gives each its `to`).
 
 [[terrain]]
@@ -887,6 +933,37 @@ name = "dungeon entrance"
 glyph = ">"
 fg = "#f0e6c8"
 bg = "#120e0c"
+stairs = "down"
+glow = 0.2
+travel_minutes = 30
+
+[[terrain]]
+id = "town"
+name = "town"
+glyph = "#"
+fg = "#f0b868"
+bg = "#24170a"
+stairs = "down"
+glow = 0.3
+travel_minutes = 30
+
+# A burial mound with a way in: pale against the downs (a cave mouth is darker).
+[[terrain]]
+id = "barrow"
+name = "barrow"
+glyph = "∩"
+fg = "#e4e8d4"
+bg = "#1a1c12"
+stairs = "down"
+glow = 0.2
+travel_minutes = 30
+
+[[terrain]]
+id = "mine"
+name = "mine"
+glyph = ">"
+fg = "#d8a040"
+bg = "#1c1206"
 stairs = "down"
 glow = 0.2
 travel_minutes = 30

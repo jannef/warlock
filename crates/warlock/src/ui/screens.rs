@@ -1490,7 +1490,7 @@ mod tests {
         let mut app = app(false);
         app.update();
         assert_eq!(names(&app), [ScreenName::Main]);
-        // Enter opens New run, and the next Enters, in the same frame, pick the showcase, its
+        // Enter opens New run, and the next Enters, in the same frame, pick the Ascmearc, its
         // character's race, read the stars, the gender and class (preselected), the talents
         // (Random, preselected), and a name (an
         // empty field: the first random one), and start it from the summary.

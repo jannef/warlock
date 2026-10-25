@@ -26,6 +26,10 @@ pub struct ScenarioDef {
     #[serde(default)]
     pub description: String,
     pub start_level: String,
+    /// A line said as a run of it starts, after the welcome (the start of a campaign: "The pass
+    /// opens on the Ascmearc."); default none.
+    #[serde(default)]
+    pub arrival: Option<String>,
     /// Seed used when none is given on the command line.
     #[serde(default)]
     pub seed: u64,

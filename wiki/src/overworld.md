@@ -9,7 +9,8 @@ A step on the overworld takes as long as the terrain you step onto: minutes or h
 action takes its usual time, as anywhere else: waiting takes 6 seconds, and so does entering a
 location or a local area with `>` (see [Turns and movement](turns.md)). Resting passes the hours
 quickly all the same (see [Resting](resting.md)).
-Mountains and open water cannot be crossed; a river can only be crossed by a bridge.
+Mountains, volcanoes, and open water cannot be crossed; a river can only be crossed by a bridge
+or at a ford.
 
 {{#include generated/terrain-overworld.md}}
 
@@ -29,6 +30,23 @@ sight; ordinary forest does not.
 
 At night the overworld is drawn by a faint cold light so the cells in sight stand out from the dim
 remembered map, with the moonlight on top of it. See [Sun, moon, and sky](sun.md).
+
+## The Ascmearc
+
+The Ascmearc, "the ash march", is 120 by 60 cells, several days of travel across. You come
+into it by **Beorggeat**, a pass in Grægweall, the mountain wall on its western edge. Snow
+closes the pass behind you: it is no way back, and there is nothing to explore there. The road
+runs five cells east to **Cēaptūn**, the market town, and on from there: east over the barrow
+downs of Hlāwdūn to the ford over Blæcwæter, south over the bridge on Beorhtburna and along its
+bank, and north to the edge of the holly wood. The volcano **Fyrbeorg** smokes on the south face
+of Rēcbeorgas, the range in the north-east. The names are Old English: plain words for what each
+place is.
+
+{{#include generated/overworld-places.md}}
+
+The places that lead "nowhere yet" are still being built: for now `>` there says so. The two
+hidden ones are where they will be once a quest tells you of them (see "Hidden locations"
+below); until then each is the land it looks like.
 
 ## Locations
 

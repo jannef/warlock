@@ -469,6 +469,7 @@ pub fn generate_for(
             locks: canvas.locks,
             secrets: canvas.secrets,
             hidden: BTreeMap::new(),
+            places: BTreeMap::new(),
             regions: Vec::new(),
             rooms: canvas.rooms,
             shops: canvas.shops,

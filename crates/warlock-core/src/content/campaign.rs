@@ -319,9 +319,11 @@ mod tests {
     }
 
     /// The built-in content and a second world, the Ashland (kind `campaign`): a town level, a
-    /// start scenario, and a creature type of its own, the villager.
+    /// start scenario, and a creature type of its own, the villager. The Ascmearc is left out:
+    /// the fixture is the one playable campaign.
     fn with_ashland() -> ContentFiles {
         let mut files = ContentFiles::builtin();
+        files.remove("campaigns/ascmearc/");
         files.insert(
             &format!("{ASH}/campaign.toml"),
             "id = \"ashland\"\nname = \"The Ashland\"\nstart = \"ashland\"\n",
@@ -355,15 +357,22 @@ mod tests {
             .iter()
             .map(|c| (c.id.as_str(), c.kind))
             .collect();
-        assert_eq!(ids, [("showcase", CampaignKind::Test)]);
+        assert_eq!(
+            ids,
+            [
+                ("ascmearc", CampaignKind::Campaign),
+                ("showcase", CampaignKind::Test)
+            ]
+        );
         for scenario in content.scenarios() {
-            assert_eq!(
-                scenario.campaign.as_deref(),
-                Some("showcase"),
-                "{}",
-                scenario.id
-            );
+            let owner = if scenario.id == "ascmearc" {
+                "ascmearc"
+            } else {
+                "showcase"
+            };
+            assert_eq!(scenario.campaign.as_deref(), Some(owner), "{}", scenario.id);
         }
+        assert_eq!(content.level_campaign("ascmearc"), Some("ascmearc"));
         for level in ["hub", "overworld", "vast", "depths:3", "depths"] {
             assert_eq!(content.level_campaign(level), Some("showcase"), "{level}");
         }

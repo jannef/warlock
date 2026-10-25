@@ -76,8 +76,8 @@ use crate::content::Shops;
 use crate::content::{Choice, ResourceId, TalentId, TreeId};
 use crate::content::{
     CombatStance, Content, CreatureId, DamageTypeId, DiseaseId, FactionId, Factor, Flow,
-    ItemClassId, LevelKind, LightId, ObjectId, RaceDef, RoomEffectDef, SlotId, Stance, StatusId,
-    TerrainId, TrapId, VisionProfile, WeaponSkillId,
+    ItemClassId, LevelKind, LightId, ObjectId, Place, RaceDef, RoomEffectDef, SlotId, Stance,
+    StatusId, TerrainId, TrapId, VisionProfile, WeaponSkillId,
 };
 use crate::daylight::{self, DayPhase};
 use crate::equipment::Equipment;
@@ -946,9 +946,18 @@ impl<'a> PerceptionView<'a> {
             return None;
         }
         let link = self.level.stairs_at(p)?;
-        let to = link.to.as_deref()?;
-        // A revealed hidden location goes by its own name (spec §7 "Hidden locations").
-        (link.name.clone()).or_else(|| self.content.level_display_name(to))
+        // A named location (a legend's `name`, a revealed hidden location's) goes by its own
+        // name, even while it leads nowhere yet (spec §7 "Hidden locations").
+        (link.name.clone()).or_else(|| self.content.level_display_name(link.to.as_deref()?))
+    }
+
+    /// The named place at `p` (a legend's `name`: a location, a landmark), if the player sees
+    /// or remembers the cell.
+    pub fn place(&self, p: Pos) -> Option<&'a Place> {
+        if matches!(self.cell(p), CellView::Unknown) {
+            return None;
+        }
+        self.content.level(&self.level.id)?.places.get(&p)
     }
 
     /// The locations the player knows on the overworld, by position, each with its name: the

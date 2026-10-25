@@ -121,7 +121,7 @@ fn the_legend_hides_a_location_on_the_overworld() {
         .hidden_location("showcase", "old_barrow")
         .expect("hidden");
     assert_eq!(at, BARROW);
-    assert_eq!(hidden.to, "depths:1");
+    assert_eq!(hidden.to.as_deref(), Some("depths:1"));
     assert_eq!(hidden.name, "The Old Barrow");
     assert_eq!(content.terrain(hidden.terrain).id, "dungeon_entrance");
 }

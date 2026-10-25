@@ -43,22 +43,21 @@ every creature's stats, attacks, and senses ([Creatures in numbers](creature-num
 
 ## Starting a run
 
-The game opens on the main menu. **New run** lists the scenarios you can start (see
+The game opens on the main menu. **New run** lists the worlds you can start in (see
 [Saving](saving.md)). Then you create your character: your race, your gender,
 and your class, one step at a time, and a summary of your age, birth sign, and the stats you
-will start with (see [Your character](character.md)). Each scenario starts you somewhere else in the same world, at
-its own time of day, and you set out with your [starting kit](starting-kit.md):
+will start with (see [Your character](character.md)). You set out with your
+[starting kit](starting-kit.md):
 
 {{#include generated/scenarios.md}}
 
 Tables in this wiki that list names, times, or numbers are generated from the game's own data, so
 they match the version of the game this wiki was published with.
 
-The Showcase is a safe place: its creatures keep to their rounds and leave you alone, and it has
-no traps. The **Arena**, reached by the stairs down from the showcase hub's stairs nook, is the
-place to watch and join fights; the **Quarry**, down another staircase there, the place to
-[dig](digging.md); the **Trap hall**, down a third, the place to learn [traps](traps.md); and the
-generated **Depths** are the real dungeon, where creatures hunt you and traps lie hidden.
+**The Ascmearc**, "the ash march", is the first world. You come down into it through
+**Beorggeat**, a pass in the mountains of its western edge; snow closes the pass behind you, so
+there is no way back. The road runs east to **Cēaptūn**, a market town an easy morning's walk
+away (see [The overworld](overworld.md)).
 
-Apart from where the scenarios start, this wiki does not describe places or walk you through
-levels: the game's world is still being built.
+Apart from the land itself and its places, this wiki does not describe levels or walk you
+through them: the game's world is still being built.

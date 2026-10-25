@@ -1,0 +1,14 @@
+# The start of the Ascmearc (docs/design/campaign.md §5.1): on Beorggeat, the pass in the
+# western wall, on a November morning. Snow has closed the pass behind the player; the road
+# runs east to Cēaptūn, five road cells away.
+name = "The Ascmearc"
+description = "Come down through Beorggeat into the Ascmearc; the market town of Cēaptūn lies a short way east along the road."
+start_level = "ascmearc"
+arrival = "The pass opens on the Ascmearc. Far to the east, Fyrbeorg smokes."
+seed = 1
+character = { race = "human", gender = "female", class = "thief", name = "Eadgyth" }
+lantern = "lantern"
+start_time = "08:00"
+# No pack of its own: a character chosen in character creation brings food in their starting
+# kit. Launched on the scenario's own character (`--scenario` alone, tests), the player starts
+# empty-handed.

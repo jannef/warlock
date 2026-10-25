@@ -676,6 +676,9 @@ impl World {
         let help = crate::messages::key("help");
         let welcome = format!("Welcome to {}. Press {help} for controls.", def.name);
         state.messages.push(0, welcome);
+        if let Some(line) = &def.arrival {
+            state.messages.push(0, line.clone());
+        }
         if let Some(text) = enter_room(&mut state, &content) {
             state.messages.push(0, text);
         }
@@ -1142,6 +1145,8 @@ fn article(noun: &str) -> &'static str {
 mod ai_tests;
 #[cfg(test)]
 mod alignment_tests;
+#[cfg(test)]
+mod ascmearc_tests;
 #[cfg(test)]
 mod bestiary_tests;
 #[cfg(test)]
