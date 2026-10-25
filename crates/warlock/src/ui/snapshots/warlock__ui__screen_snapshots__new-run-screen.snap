@@ -1,0 +1,31 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+
+
+
+                    ┌─ New run ────────────────────────────────────────────────┐
+                    │                                                          │
+                    │ The Showcase                                             │
+                    │ > Showcase                                               │
+                    │   Arena                                                  │
+                    │   Courtyard                                              │
+                    │   Depths                                                 │
+                    │   Forest                                                 │
+                    │   Quarry                                                 │
+                    │   Trap hall                                              │
+                    │   Vast                                                   │
+                    │   World                                                  │
+                    │                                                          │
+                    │   A hand-made tour of every engine capability, one room  │
+                    │   per feature. A safe place: its creatures keep to their │
+                    │   rounds and leave you alone. For a fight, take the      │
+                    │   stairs down to the arena.                              │
+                    │                                                          │
+                    │   Seed: [(default: 1)_]                                  │
+                    │   Type a number or a word to set a seed.                 │
+                    │                                                          │
+                    │                                                          │
+                    │ ↑↓ scenario   Enter next   Esc back                      │
+                    └──────────────────────────────────────────────────────────┘

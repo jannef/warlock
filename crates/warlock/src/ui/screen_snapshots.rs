@@ -96,6 +96,12 @@ const CASES: &[Case] = &[
         save_dir: Some("tests/golden/saved-characters"),
         ..BASE
     },
+    // Every scenario under its campaign's name (a developer build), the start first.
+    Case {
+        name: "new-run-screen",
+        screen: Some("new-run"),
+        ..BASE
+    },
     Case {
         name: "pause-menu",
         actions: "wait",

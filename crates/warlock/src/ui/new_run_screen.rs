@@ -1,5 +1,7 @@
 //! The New run screen (spec §6): the scenarios from content and, in developer builds, an
-//! optional seed. Enter goes on to character creation ([`super::chargen_screen`]), or with
+//! optional seed. The start scenario of every campaign of kind `campaign` comes first; developer
+//! builds then list every scenario of every campaign, the test world's too, under its
+//! campaign's name ([`rows`], spec §3). Enter goes on to character creation ([`super::chargen_screen`]), or with
 //! content that has no races or classes, starts the run as the scenario's. A release build's run
 //! gets a seed no one chooses ([`fresh_seed`], drawn when the screen opens), and the screen never
 //! mentions it (#256).
@@ -11,7 +13,7 @@ use super::{TEXT, TEXT_DIM};
 use crate::input::Bindings;
 use crate::render::console::Console;
 use warlock_core::character::CharacterSpec;
-use warlock_core::content::Content;
+use warlock_core::content::{CampaignKind, Content};
 use warlock_core::time::GameTime;
 
 /// A scenario as listed on the screen.
@@ -37,10 +39,21 @@ enum Seed {
     Fresh(u64),
 }
 
+/// A line of the scenario list.
+#[derive(Clone, Debug, PartialEq, Eq)]
+enum Row {
+    /// A campaign's name, over its scenarios (developer builds).
+    Heading(String),
+    /// The scenario at this index of [`NewRunScreen::scenarios`].
+    Scenario(usize),
+}
+
 /// The New run screen: a scenario list and, in developer builds, a seed field.
 #[derive(Debug)]
 pub struct NewRunScreen {
     scenarios: Vec<ScenarioInfo>,
+    /// The list as drawn: the scenarios, under their campaigns' names in developer builds.
+    rows: Vec<Row>,
     /// The content has races and classes to choose a character from.
     creates_characters: bool,
     selected: usize,
@@ -52,21 +65,25 @@ impl NewRunScreen {
     /// has no seed field; `None` in developer builds, which show the field. A new run is a new
     /// character with a save of its own: it touches no other character's.
     pub fn new(content: &Content, fresh: Option<u64>) -> Self {
-        let mut scenarios: Vec<ScenarioInfo> = content
-            .scenarios()
-            .map(|s| ScenarioInfo {
-                id: s.id.clone(),
-                name: s.name.clone(),
-                description: s.description.clone(),
-                seed: s.seed,
-                character: s.character.clone(),
-                start: s.start,
-            })
-            .collect();
-        // The showcase (the command-line default) comes first and is preselected.
-        scenarios.sort_by_key(|s| s.id != "showcase");
+        let mut scenarios = Vec::new();
+        let mut rows = Vec::new();
+        for (heading, ids) in rows_of(content, fresh.is_none()) {
+            rows.extend(heading.map(Row::Heading));
+            for s in ids.into_iter().filter_map(|id| content.scenario(id)) {
+                rows.push(Row::Scenario(scenarios.len()));
+                scenarios.push(ScenarioInfo {
+                    id: s.id.clone(),
+                    name: s.name.clone(),
+                    description: s.description.clone(),
+                    seed: s.seed,
+                    character: s.character.clone(),
+                    start: s.start,
+                });
+            }
+        }
         Self {
             scenarios,
+            rows,
             creates_characters: !content.races().list.is_empty() && !content.classes().is_empty(),
             selected: 0,
             seed: match fresh {
@@ -148,15 +165,23 @@ impl NewRunScreen {
             Seed::Fresh(_) => None,
         };
         // The seed field and its hint take three rows, with the gap above them.
-        let h = 11 + 3 * i32::from(field.is_some()) + self.scenarios.len() as i32;
+        let h = 11 + 3 * i32::from(field.is_some()) + self.rows.len() as i32;
         let panel = Panel::new(console, " New run ", 60, h);
         let x = panel.inner_x();
         let mut y = panel.y + 2;
         if self.scenarios.is_empty() {
             console.print(x, y, "No scenarios are installed.", TEXT);
         }
-        for (i, info) in self.scenarios.iter().enumerate() {
-            panel.row(console, y, i == self.selected, &info.name, "", 0);
+        for row in &self.rows {
+            match row {
+                Row::Heading(name) => {
+                    console.print(x, y, name, TEXT_DIM);
+                }
+                Row::Scenario(i) => {
+                    let name = &self.scenarios[*i].name;
+                    panel.row(console, y, *i == self.selected, name, "", 0);
+                }
+            }
             y += 1;
         }
         y += 1;
@@ -196,6 +221,50 @@ impl NewRunScreen {
         );
         panel.footer(console, &footer);
     }
+}
+
+/// The scenario list's groups, each with its heading (none in a release build) and scenario
+/// ids, in order: first the start scenario of every campaign of kind `campaign`. A release build
+/// (`dev` false) lists only those (or, while content has no such campaign, every campaign's
+/// start scenario); a developer build lists every scenario of every campaign under its name,
+/// the campaigns in content order (the test ones last), each start scenario first and the rest
+/// by id, then any scenario outside every campaign (test fixtures), without a heading.
+fn rows_of(content: &Content, dev: bool) -> Vec<(Option<String>, Vec<&str>)> {
+    let campaigns = content.campaigns();
+    let playable = || {
+        campaigns
+            .iter()
+            .filter(|c| c.kind == CampaignKind::Campaign)
+    };
+    if !dev {
+        let mut starts: Vec<&str> = playable().map(|c| c.start.as_str()).collect();
+        if starts.is_empty() {
+            starts = campaigns.iter().map(|c| c.start.as_str()).collect();
+        }
+        return vec![(None, starts)];
+    }
+    fn of<'a>(content: &'a Content, campaign: Option<&'a str>) -> Vec<&'a str> {
+        (content.scenarios())
+            .filter(|s| s.campaign.as_deref() == campaign)
+            .map(|s| s.id.as_str())
+            .collect()
+    }
+    let mut groups = Vec::new();
+    for c in campaigns {
+        let ids = std::iter::once(c.start.as_str())
+            .chain(
+                of(content, Some(&c.id))
+                    .into_iter()
+                    .filter(|id| *id != c.start),
+            )
+            .collect();
+        groups.push((Some(c.name.clone()), ids));
+    }
+    let loose = of(content, None);
+    if !loose.is_empty() {
+        groups.push((None, loose));
+    }
+    groups
 }
 
 /// A seed for a release build's new run, which no one chooses (#256): the clock (in
@@ -309,6 +378,45 @@ mod tests {
         assert!(!text.to_lowercase().contains("seed"), "{text}");
     }
 
+    /// A world to play beside the test world: release builds list its start alone, developer
+    /// builds every scenario under its campaign's name, the playable campaign first.
+    #[test]
+    fn a_campaign_comes_first_and_the_test_world_only_in_developer_builds() {
+        use warlock_core::content::ContentFiles;
+        let mut files = ContentFiles::builtin();
+        let ash = "campaigns/ashland";
+        files.insert(
+            &format!("{ash}/campaign.toml"),
+            "id = \"ashland\"\nname = \"The Ashland\"\nstart = \"ashland\"\n",
+        );
+        for (id, name) in [("ashland", "Ashland"), ("cinders", "Cinders")] {
+            files.insert(
+                &format!("{ash}/scenarios/{id}.toml"),
+                &format!("name = \"{name}\"\nstart_level = \"town\"\n"),
+            );
+        }
+        files.insert(
+            &format!("{ash}/levels/town.toml"),
+            "name = \"Town\"\nmap = '''\n#@#\n'''\n[legend]\n\
+             \"@\" = { terrain = \"floor\", spawn = \"player\" }\n",
+        );
+        let content = Content::load(&files).expect("valid");
+        let release = NewRunScreen::new(&content, Some(5));
+        let ids = |s: &NewRunScreen| s.scenarios.iter().map(|i| i.id.clone()).collect::<Vec<_>>();
+        assert_eq!(ids(&release), ["ashland"]);
+        assert_eq!(release.rows, [Row::Scenario(0)]);
+        let dev = NewRunScreen::new(&content, None);
+        assert_eq!(ids(&dev)[..3], ["ashland", "cinders", "showcase"]);
+        assert_eq!(dev.rows[0], Row::Heading("The Ashland".into()));
+        assert_eq!(dev.rows[3], Row::Heading("The Showcase".into()));
+        assert_eq!(dev.pick().map(|p| p.id).as_deref(), Some("ashland"));
+        let text = drawn(&dev);
+        assert!(
+            text.contains("The Ashland") && text.contains("> Ashland"),
+            "{text}"
+        );
+    }
+
     #[test]
     fn fresh_seeds_differ_and_stay_short() {
         let seeds: std::collections::BTreeSet<u64> = (0..8).map(|_| fresh_seed()).collect();
@@ -323,22 +431,14 @@ mod tests {
         files.remove("data/races.toml");
         files.remove("data/names.toml");
         files.remove("data/classes/");
-        for id in [
-            "arena",
-            "courtyard",
-            "depths",
-            "forest",
-            "quarry",
-            "showcase",
-            "traps",
-            "vast",
-            "world",
-        ] {
-            files.remove(&format!("scenarios/{id}.toml"));
-        }
+        files.remove("campaigns/showcase/scenarios/");
         files.insert(
-            "scenarios/plain.toml",
+            "campaigns/showcase/scenarios/plain.toml",
             "name = \"Plain\"\nstart_level = \"hub\"\n",
+        );
+        files.insert(
+            "campaigns/showcase/campaign.toml",
+            "id = \"showcase\"\nname = \"Plain\"\nstart = \"plain\"\nkind = \"test\"\n",
         );
         let content = Content::load(&files).expect("valid");
         let default = content.scenario("plain").expect("plain").seed;
