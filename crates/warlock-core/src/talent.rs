@@ -753,11 +753,11 @@ impl TalentMods {
         }
     }
 
-<<<<<<< HEAD
     /// The status the active Rage brings (Raging: its resource's `status`), if it has Rage.
     pub fn rage_status(&self, content: &Content) -> Option<StatusId> {
         content.resource(self.rage?).status
-=======
+    }
+
     /// Whether it has the caster's spell `spell` (spec §8 "Class abilities").
     pub fn has_spell(&self, spell: crate::content::ClassSpell) -> bool {
         self.spells.contains(&spell)
@@ -777,7 +777,6 @@ impl TalentMods {
     pub fn spell_mana(&self, mana: u16) -> i32 {
         let scaled = TalentMods::scaled(u64::from(mana), self.spell_mana_percent);
         i32::try_from(scaled).unwrap_or(i32::MAX).max(1)
->>>>>>> origin/main
     }
 
     /// Whether it has class active `active` (spec §8 "Class abilities").

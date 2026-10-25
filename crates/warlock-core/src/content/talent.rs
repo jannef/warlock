@@ -1118,7 +1118,6 @@ impl TalentEffect {
                 }
                 status(cooldown)
             }
-<<<<<<< HEAD
             TalentEffect::Rage { resource: id } => {
                 let r = resource(id)?;
                 if r.is_some_and(|r| content.resource(r).status.is_none()) {
@@ -1146,12 +1145,10 @@ impl TalentEffect {
                     return Err(format!("`resource_max`: value is 1 to {MAX_RESOURCE}"));
                 }
                 Ok(())
-=======
-            TalentEffect::Rage { status: id } => status(id),
+            }
             TalentEffect::StatusDamage { status: id, value } => {
                 bonus(*value)?;
                 status(id)
->>>>>>> origin/main
             }
             TalentEffect::Radiance { status: id, light } => {
                 status(id)?;
