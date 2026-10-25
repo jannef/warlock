@@ -1,0 +1,8 @@
+[[talent]]
+id = "sneak_attack"
+name = "Sneak attack"
+tree = "class"
+granted = true
+description = "Your blows, shots, and throws hurt more when they fall on a creature that has not seen you."
+effects = [{ kind = "ambush", dice = "1d6" }]
+systems = ["combat", "stealth"]

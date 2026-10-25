@@ -16,9 +16,13 @@ use crate::noise::Act;
 pub const VOICE_RANGE: i32 = 6;
 
 impl World {
-    /// The player throws their voice to `at`: refused, taking no time, on the overworld (which
-    /// is silent), at their own cell, out of reach, or at a cell they do not see or that is solid.
+    /// The player throws their voice to `at`: refused, taking no time, without the ability (the
+    /// bard's Throw your voice), on the overworld (which is silent), at their own cell, out of reach, or at a cell they do not see or that is solid.
     pub(super) fn throw_voice(&mut self, at: Pos, events: &mut Vec<Event>) -> Spent {
+        if !crate::ability::Ability::ThrowVoice.had_by(self.state.player(), &self.content) {
+            self.say("You do not know how to throw your voice.");
+            return Spent::Nothing;
+        }
         if !self.can_loose_here() || !self.within_reach(at, VOICE_RANGE, "throw your voice") {
             return Spent::Nothing;
         }

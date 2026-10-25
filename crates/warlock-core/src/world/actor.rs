@@ -351,7 +351,16 @@ impl Actor {
         // Talents (spec §8 "Class abilities": Commanding) raise skills as magic items do.
         let talents = match self.talents.is_empty() {
             true => Vec::new(),
-            false => self.talent_mods(content).skills,
+            false => {
+                let mods = self.talent_mods(content);
+                let mut skills = mods.skills;
+                // Jack of all trades: every trained skill counts higher.
+                if mods.trained_skills != 0 {
+                    let trained = self.skills.iter().map(|(id, _)| (id, mods.trained_skills));
+                    skills.extend(trained);
+                }
+                skills
+            }
         };
         if self.equipment.is_empty() && talents.is_empty() {
             return self.skills.effect(content, effect);

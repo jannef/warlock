@@ -102,6 +102,16 @@ impl World {
         own.saturating_add(deeper)
     }
 
+    /// What finding `hidden` takes the player: its difficulty, a hidden trap less the
+    /// Trapfinding talent's ease (spec §8 "Class abilities"; disarming is not eased).
+    pub(super) fn finding(&self, hidden: Hidden) -> i32 {
+        let ease = match hidden {
+            Hidden::Trap(_) => self.state.player().talent_mods(&self.content).trap_ease,
+            Hidden::Door(_) => 0,
+        };
+        self.difficulty_of(hidden) - ease
+    }
+
     /// What the player adds to a check of `look`: the stat's modifier (of the effective score,
     /// spec §8 "Stats"), the skill's benefit, and the race's bonus; less the passive penalty in
     /// passing. Then their talents (spec §8 "Talents"): Keen searcher's to searching, Alert's in
@@ -201,7 +211,7 @@ impl World {
         if !hidden.is_empty() {
             let modifier = self.search_modifier(Look::Active);
             for (at, hidden) in hidden {
-                let difficulty = self.difficulty_of(hidden);
+                let difficulty = self.finding(hidden);
                 if check(&mut self.state.rng, modifier, difficulty) {
                     self.reveal(at, hidden);
                     self.train_stat(StatUse::Found);
@@ -226,7 +236,7 @@ impl World {
             if !self.notices(at, hidden) {
                 continue;
             }
-            let difficulty = self.difficulty_of(hidden);
+            let difficulty = self.finding(hidden);
             if check(&mut self.state.rng, modifier, difficulty) {
                 self.reveal(at, hidden);
                 if self.trains(Use::Spot) {

@@ -438,6 +438,10 @@ pub enum ClassActive {
     HolyRadiance,
     /// An unarmed blow in a direction that leaves a wound bleeding, then a cooldown.
     QuiveringPalm,
+    /// Shots at a cell, several for the price of one, then a cooldown (the ranger's Volley).
+    Volley,
+    /// A song that lifts the player's fighting a while, for mana (the bard's Inspire).
+    Inspire,
 }
 
 impl ClassActive {
@@ -450,6 +454,8 @@ impl ClassActive {
         ClassActive::Smite,
         ClassActive::HolyRadiance,
         ClassActive::QuiveringPalm,
+        ClassActive::Volley,
+        ClassActive::Inspire,
     ];
 
     /// Its id: the id of the class ability that has it, and its replay text (`use:rage`).
@@ -462,6 +468,8 @@ impl ClassActive {
             ClassActive::Smite => "smite",
             ClassActive::HolyRadiance => "holy_radiance",
             ClassActive::QuiveringPalm => "quivering_palm",
+            ClassActive::Volley => "volley",
+            ClassActive::Inspire => "inspire",
         }
     }
 
@@ -475,6 +483,11 @@ impl ClassActive {
         matches!(self, ClassActive::Smite | ClassActive::QuiveringPalm)
     }
 
+    /// Whether it asks for a cell before it is used (`use:volley:12,5`).
+    pub const fn aims_cell(self) -> bool {
+        matches!(self, ClassActive::Volley)
+    }
+
     /// What it costs, as an action of this kind (`data/actions.toml`).
     pub const fn cost(self) -> ActionKind {
         match self {
@@ -483,6 +496,8 @@ impl ClassActive {
                 ActionKind::Melee
             }
             ClassActive::LayOnHands | ClassActive::HolyRadiance => ActionKind::Cast,
+            ClassActive::Volley => ActionKind::Shoot,
+            ClassActive::Inspire => ActionKind::Chat,
         }
     }
 }

@@ -1,0 +1,8 @@
+[[talent]]
+id = "song_of_rest"
+name = "Song of rest"
+tree = "class"
+granted = true
+description = "A song while you rest: resting heals you half again as fast."
+effects = [{ kind = "resting_percent", value = 50 }]
+systems = ["hit_points"]

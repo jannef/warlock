@@ -694,8 +694,13 @@ impl Perception {
         let sounds = match player.hearing(content) {
             Some(threshold) => {
                 let hidden = |p: Pos| sight.get(p) == Some(&Sight::Hidden) && p != viewer;
-                // Watchful (spec §8 "Birth sign"): footsteps placed exactly.
-                let exact = talents.exact_footsteps;
+                // Watchful (spec §8 "Birth sign"): footsteps placed exactly; the ranger's
+                // Tracker: every sound.
+                let exact = match (talents.exact_sounds, talents.exact_footsteps) {
+                    (true, _) => noise::Exact::All,
+                    (false, true) => noise::Exact::Footsteps,
+                    (false, false) => noise::Exact::No,
+                };
                 let heard = (&player.heard[..], threshold, exact);
                 noise::perceive(level, content, heard, state.turn, hidden)
             }
