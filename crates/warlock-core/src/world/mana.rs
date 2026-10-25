@@ -14,13 +14,16 @@
 //!   [`until_regained`]), so it makes no difference how time is cut up. Burden, temperature, and
 //!   combat stances do nothing to it.
 //! - **Spending** ([`World::spend_mana`]): the one way, refused when the actor has too little.
-//!   Magic will spend it; for now only the dev action `drain:N` does ([`World::drain_dev`]).
+//!   What an ability costs passes the actor's talents first ([`Actor::mana_cost`]: Frugal
+//!   caster), and the player's spending is a `cast` use of their stats (it trains Willpower).
+//!   Abilities will spend it; for now only the dev action `drain:N` does ([`World::drain_dev`]).
+//! - **Blood magic** ([`World::blood_magic`]): the talent's active trades hit points for mana.
 //! - **Draining**: a status whose ticks have `mana_damage` drains that much a tick (`live`),
 //!   never below 0 and never a death.
 
 use super::{Actor, ActorId, Spent, World};
-use crate::content::Content;
 use crate::content::Effect as ItemEffect;
+use crate::content::{ActionKind, Content, StatUse};
 use crate::hunger::Hunger;
 use crate::mana;
 use crate::stats::Stat;
@@ -28,10 +31,11 @@ use crate::stats::Stat;
 impl World {
     /// How fast actor `id` gets mana back now, in percent of the normal pace (spec §8 "Mana"):
     /// the slowest `mana_regen` of its statuses and of the diseases that show (100 without
-    /// any), times `[healing] mana_resting` while the player rests, times the `mana_regen` of a
-    /// special room it stands in, times what the mana regeneration affixes of what it wears and
-    /// wields and its talents add (+50 % is half again as fast; Tidal's +25 %). None for a Starving player (spec §8 "Hunger").
-    /// The one place that decides it.
+    /// any), times `[healing] mana_resting` while the player rests (Meditation adds its percent
+    /// to that), times the `mana_regen` of a special room it stands in, times what the mana
+    /// regeneration affixes of what it wears and wields and its talents add (+50 % is half
+    /// again as fast; Tidal's and Clear mind's +25 %). None for a Starving player (spec §8
+    /// "Hunger"). The one place that decides it.
     pub(crate) fn mana_rate(&self, id: ActorId) -> u32 {
         let Some(actor) = self.state.actors.get(&id) else {
             return 0;
@@ -42,7 +46,11 @@ impl World {
         let statuses = actor.effects.mana_regen(&self.content);
         let mut rate = u32::from(statuses.min(actor.diseases.mana_regen(&self.content)));
         if self.resting && id == self.state.player {
-            rate = rate * u32::from(self.content.healing().mana_resting) / 100;
+            // Resting's pace, and half again with Meditation (spec §8 "Talents").
+            let faster = actor.talent_mods(&self.content).mana_resting_percent;
+            let resting = u32::from(self.content.healing().mana_resting);
+            let resting = resting * u32::try_from((100 + faster).max(0)).unwrap_or(0) / 100;
+            rate = rate * resting / 100;
         }
         let room = (self.state.levels.get(&actor.level))
             .and_then(|level| level.room_effect_at(&self.content, actor.pos));
@@ -56,17 +64,25 @@ impl World {
         rate * u32::try_from((100 + faster).max(0)).unwrap_or(0) / 100
     }
 
-    /// Actor `id` spends `amount` of its mana (spec §8 "Mana"): the one way mana is spent.
-    /// Refused, spending nothing, when it has less than that (or `amount` is below 0); returns
-    /// whether it was spent. Says nothing: the spell or ability that spends it does.
-    pub(crate) fn spend_mana(&mut self, id: ActorId, amount: i32) -> bool {
+    /// Actor `id` spends what costs `base` mana (spec §8 "Mana"): the one way mana is spent.
+    /// The cost is what its talents make of `base` ([`Actor::mana_cost`]: Frugal caster's fifth
+    /// less). Refused, spending nothing, when it has less than that (or `base` is below 0);
+    /// returns whether it was spent. The player's spending of any is a `cast` use of their
+    /// stats (spec §8 "Stats": it trains Willpower). Says nothing: the spell or ability that
+    /// spends it does.
+    pub(crate) fn spend_mana(&mut self, id: ActorId, base: i32) -> bool {
+        let content = self.content.clone();
         let Some(actor) = self.state.actors.get_mut(&id) else {
             return false;
         };
-        if amount < 0 || actor.mana < amount {
+        let cost = actor.mana_cost(&content, base);
+        if cost < 0 || actor.mana < cost {
             return false;
         }
-        actor.mana -= amount;
+        actor.mana -= cost;
+        if id == self.state.player && cost > 0 {
+            self.train_stat(StatUse::Cast);
+        }
         true
     }
 
@@ -114,17 +130,57 @@ impl World {
         (class_mana / 2 + mind).max(0)
     }
 
-    /// The dev action `drain:N` ([`crate::action::Action::Drain`]): the player spends `amount`
-    /// mana ([`World::spend_mana`]), for captures. Refused when they have less. Takes no time.
+    /// The dev action `drain:N` ([`crate::action::Action::Drain`]): the player spends what
+    /// costs `amount` mana ([`World::spend_mana`], as an ability would: Frugal caster's cut,
+    /// and the `cast` use), for captures. Refused when they have less. Takes no time.
     pub(super) fn drain_dev(&mut self, amount: u16) -> Spent {
         let player = self.state.player;
+        let cost = (self.state.player()).mana_cost(&self.content, i32::from(amount));
         if !self.spend_mana(player, i32::from(amount)) {
             let left = self.state.player().mana;
             self.say(format!("You have only {left} mana (dev)."));
             return Spent::Nothing;
         }
-        self.say(format!("You spend {amount} mana (dev)."));
+        self.say(format!("You spend {cost} mana (dev)."));
         Spent::NoTime
+    }
+
+    /// Blood magic (spec §8 "Talents", the Scholar tree's active): the player gives the
+    /// talent's hit points for its mana, for the time of a wait. Refused, taking no time,
+    /// without the talent, when it would cost their last hit point, and while their mana is
+    /// full. Nothing is drawn; it is not a blow (no Protection, no pain, no training of
+    /// Toughness), and never a death.
+    pub(super) fn blood_magic(&mut self) -> Spent {
+        let content = self.content.clone();
+        let player = self.state.player;
+        let me = self.state.player();
+        let Some(blood) = me.talent_mods(&content).blood_magic else {
+            self.say("You know no blood magic.");
+            return Spent::Nothing;
+        };
+        if me.hp <= blood.hp {
+            self.say("You have too little blood left to give.");
+            return Spent::Nothing;
+        }
+        let max = me.max_mana(&content);
+        if me.mana >= max {
+            self.say("Your mana is already full.");
+            return Spent::Nothing;
+        }
+        let me = self.player_mut();
+        me.hp -= blood.hp;
+        me.mana = (me.mana + blood.mana).min(max);
+        self.say("You give your blood, and power wells up in you.");
+        Spent::Turn(self.price_of(player, ActionKind::Wait))
+    }
+}
+
+impl Actor {
+    /// What an ability whose cost is `base` mana costs this actor, its talents' changes made
+    /// ([`crate::talent::TalentMods::mana_cost`]: Frugal caster). What a check of whether it
+    /// has the mana compares with, and what [`World::spend_mana`] takes.
+    pub fn mana_cost(&self, content: &Content, base: i32) -> i32 {
+        self.talent_mods(content).mana_cost(base)
     }
 }
 

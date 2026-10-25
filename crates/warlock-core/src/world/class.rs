@@ -15,9 +15,9 @@ use crate::content::{Content, TalentDef, TalentId};
 use crate::talent::TalentMods;
 
 /// Hands out what holding rank `rank` of `def` gives once, as it is taken or given at character
-/// `level`: its hit points by level, into `actor`'s base hit points and hit points, and its stat
-/// gifts, into its scores and potentials (a gift of Toughness raises its hit points with its
-/// maximum).
+/// `level`: its hit points by level, into `actor`'s base hit points and hit points, its mana by
+/// level likewise (Deep well), and its stat gifts, into its scores and potentials (a gift of
+/// Toughness raises its hit points with its maximum).
 pub(super) fn hand_out(content: &Content, actor: &mut Actor, def: &TalentDef, rank: u8, level: u8) {
     let mods = TalentMods::of(content, def.effects_at(rank));
     let before = actor.max_hp(content);
@@ -27,6 +27,8 @@ pub(super) fn hand_out(content: &Content, actor: &mut Actor, def: &TalentDef, ra
     let hp = mods.hp_at(level) + actor.max_hp(content) - before;
     actor.hp_base += mods.hp_at(level);
     actor.hp += hp;
+    actor.mana_base += mods.mana_at(level);
+    actor.mana += mods.mana_at(level);
 }
 
 /// Gives `actor` the talents `class` (an id; none without a class) gives up to `level` that it

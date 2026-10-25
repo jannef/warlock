@@ -47,7 +47,11 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `melee_damage` | `Actor::melee`, `off_hand_blow` (after the affixes, before the stance; not kicks or bashes) |
 | `max_hp_per_levels` | handed out, not read: `take_talent` adds the rank's `hp_at(level)` to `hp_base` and `hp`, `level_up` each later level's growth, as levels' own hit points are (so `Actor::max_hp` needs no level) |
 | `healing_percent` | `World::healing_rate`, summed with the regeneration affixes |
-| `mana_regen_percent` | `World::mana_rate`, summed with the mana regeneration affixes (Tidal) |
+| `mana_regen_percent` | `World::mana_rate`, summed with the mana regeneration affixes (Tidal, Clear mind) |
+| `max_mana_per_levels` | handed out, not read: `class::hand_out` adds the rank's `mana_at(level)` to `mana_base` and `mana`, `level_up` each later level's growth (Deep well; past `mana_level` too) |
+| `mana_resting_percent` | `World::mana_rate`, on resting's pace (Meditation) |
+| `mana_cost_percent` | `World::spend_mana` through `Actor::mana_cost` (`TalentMods::mana_cost`: rounded to the nearest, at least 1; Frugal caster) |
+| `blood_magic` | `world/mana.rs::blood_magic` (`Action::BloodMagic`, `Ability::BloodMagic` under `Source::Talent`): hit points for mana, no cooldown |
 | `footsteps_percent`, `silent_doors` | `noise::noise` (after the stealth skill and affixes; a silent door is no noise at all) |
 | `hearing` | `Actor::hearing`, with the listen skill |
 | `threshold_percent`, `darkvision`, `sees_uv` | `WorldState::eyes` (`world/eyes.rs`, the design's B4): the base profile (`WorldState::vision`) as the talents change it; `Perception::compute` reads it, so the view's `vision()` is the effective eye (id and name the base's). Creatures keep their types' profiles |
@@ -281,8 +285,9 @@ resources, #225); `body_talent_tests.rs` covers each one's rule, `hunger_tests.r
 The statuses Winded (Second wind's cooldown) and Staggered (`cost = 150`, 6 s) are in
 `data/status.toml`.
 
-Scholar, Grit, and Delver (#240) ship whole but for the five mana talents (Deep well, Clear
-mind, Meditation, Frugal caster, Blood magic: the mana PR, H6); `talent_wits_tests.rs` covers
+Scholar, Grit, and Delver (#240) ship whole; their five mana talents (Deep well, Clear mind,
+Meditation, Frugal caster, Blood magic) came with #242 (H6; `docs/dev/mana.md`,
+`world/mana_talent_tests.rs`), which took the `mana` system's `pending` off. `talent_wits_tests.rs` covers
 each rule, `quest_tests.rs` Well liked. Apprentice is the first talent with a `skill` choice (any
 skill, trained or not; `talent:apprentice:stealth`, three ranks per skill), Treasure hunter the
 first with an `either` prerequisite (`Need::Either`, "Intelligence 12 or Appraise 20"). The

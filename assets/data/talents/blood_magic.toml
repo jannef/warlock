@@ -1,0 +1,8 @@
+[[talent]]
+id = "blood_magic"
+name = "Blood magic"
+tree = "scholar"
+description = "Your blood is power: give some of your hit points, never the last, for mana at once (an ability)."
+needs = { stats = { willpower = 13 }, level = 12 }
+effects = [{ kind = "blood_magic", hp = 5, mana = 3 }]
+systems = ["mana", "hit_points"]

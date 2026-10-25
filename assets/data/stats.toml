@@ -103,7 +103,7 @@ stat = "intelligence"
 on = "discovered"
 chance = 100
 
-# Willpower: noticing, enduring, resisting, fighting hungry. (Spending mana will train it too.)
+# Willpower: noticing, enduring, resisting, fighting hungry, spending mana.
 [[training.use]]
 stat = "willpower"
 on = "spot"
@@ -123,6 +123,11 @@ chance = 50
 stat = "willpower"
 on = "hungry_fight"
 chance = 10
+
+[[training.use]]
+stat = "willpower"
+on = "cast"
+chance = 20
 
 # Presence: talking, trading, quests, others making way.
 [[training.use]]
