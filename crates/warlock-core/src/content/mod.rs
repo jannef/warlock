@@ -643,6 +643,8 @@ impl Content {
             content.talents = talent::parse(files.table("talents"), &content)?;
         }
         content.check_class_tables()?;
+        // The races' granted talents (Versatile) are talents of the racial tree.
+        race::check_talents(&content.races, &content.talents)?;
         let path = "data/horoscope.toml";
         if let Some(text) = files.get_optional(path) {
             content.horoscope = Some(Horoscope::parse(path, text)?);

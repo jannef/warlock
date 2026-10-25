@@ -421,7 +421,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (scores, skills, the class's level 1 abilities, the sign's gifts), and picks may chain
     (Healthy, then Fast healer). Character creation's Talents step (§6 "New run") reads the run
     drafted (`World::draft`, `creation_offers`, `random_creation`). The humans' extra pick is
-    their racial Versatile's (to come, H5).
+    their racial Versatile's (#241): a human picks 3, a human bard 4.
   - **Prerequisites** (`Needs`; all must hold at the pick and are never checked again: a score
     lowered later keeps the talent): other talents at a rank (a talent with a choice may be
     needed only by one of the same choice, taken for the same), stat **scores** (the stored
@@ -568,7 +568,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     as loud); `dig_percent` (Tunneler: half again the work a turn). A prerequisite may be `either`
     of several (Treasure hunter: "Intelligence 12 or Appraise 20"). The Scholar and Delver trees
     and the searching, digging, shops, magic items, scrolls, skills, and experience systems are
-    held to the bar now; talk and gems wait for the racial talents.
+    held to the bar now; talk and gems with the racial talents (#241).
   - **Birth sign gifts** (#265): the effects only the signs' talents use: `threat` (every
     attack's threat range, in `Actor::stanced`), `reroll_fumble` (a natural 2 rolled again once,
     `combat::strike_with`), `swimmer` (`step_price` on wading terrain, `wade`), `rot_harm_percent`
@@ -615,6 +615,26 @@ developer notes (CLAUDE.md, `docs/dev/`).
     light and the class tables bring their second talent.
     The Defence by attack kind of the design's B5 landed with Deflect missiles (#237,
     `World::target_against`).
+  - **Racial talents** (#241; the design's §7.5 Racial): the `racial` tree (`no_free`), each
+    talent asking for its race. Elf: Elven accuracy (bows 3: threat +1 with bows, `weapon`),
+    Ageless (level 9: hunger 20 % slower, and `disease_interval_percent` 100, a disease's
+    progressions twice as far apart, `World::disease_turn`). Half-elf: Dual heritage (a skill
+    roll more every level), Diplomat (Presence 11: favour +10 %, quest gold +25 %). Dwarf: Stone
+    sense (`stone_find` +4 to finding what is hidden on a `stone` cell, searching and in
+    passing; digging +25 %), Dwarven resilience (Toughness 14: Poisoned eases twice as fast,
+    disease checks +2), Stout (level 12: `stout`, Strained costs what Burdened costs others,
+    `Load::penalty`). Halfling: Lucky (`reroll_fumble`), Slinger (slings 2: sling damage +1, and
+    `launcher_range` with `skill = "slings"`, +2 cells for a sling only), Small target
+    (Dexterity 13: `small_target`, Dodge +1 against an attacker of a larger size,
+    `World::small_target` after `target_against`). Gnome: Tinkerer (Intelligence 12: the Disarm
+    ability, as the craftsperson's Tinker, whose id it cannot share), Gem lore (gem worth shown,
+    gems found twice as often). Half-orc: Ferocity (`ferocity` +2 damage on every attack while
+    below a third of the hit points, `Actor::stanced`), Orcish hide (Toughness 13: Protection
+    +1). Humans are **granted Versatile** (`talents = ["versatile"]` in `data/races.toml`; a
+    race may grant only granted talents of the racial tree, checked at load): `extra_pick` at
+    level 1 (a creation pick more, `creation_count`) and at level 30 (`World::level_up`). A
+    race's grants join the birth sign's (`stars::grant`, at the start and on every restore),
+    shown as the race's ("(race)" in the dump). The talk and gems systems are held to the bar.
   - **Coverage** (the design's §8): every talent names the systems it touches; at load a
     system not `pending` with fewer than `min_talents` talents (or `min_class` class abilities,
     the talents the class tables give, counted apart from the talents; 0 until every class has

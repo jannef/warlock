@@ -88,6 +88,7 @@ impl TalentsScreen {
             }
             let from = match () {
                 () if talent.class => Some("class"),
+                () if talent.race => Some("race"),
                 () if talent.granted => Some("birth sign"),
                 () => None,
             };

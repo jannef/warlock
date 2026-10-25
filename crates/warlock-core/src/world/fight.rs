@@ -696,6 +696,7 @@ impl World {
         let profile = profile.map(|p| self.relentless(attacker, target, kind, p));
         let missile = matches!(kind, AttackKind::Ranged | AttackKind::Thrown);
         let struck = self.target_against(target, missile);
+        let struck = self.small_target(attacker, target, struck);
         let levels = (self.level_of(attacker), self.level_of(target));
         // A talent may roll a fumble again (a birth sign's Winner's luck).
         let lucky = (self.state.actors.get(&attacker))

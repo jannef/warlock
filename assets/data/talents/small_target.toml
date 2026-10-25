@@ -1,0 +1,8 @@
+[[talent]]
+id = "small_target"
+name = "Small target"
+tree = "racial"
+description = "Hard for the big to hit: Dodge +1 against creatures larger than you."
+needs = { race = "halfling", stats = { dexterity = 13 } }
+effects = [{ kind = "small_target", value = 1 }]
+systems = ["defence"]

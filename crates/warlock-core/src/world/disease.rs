@@ -32,6 +32,7 @@ use crate::action::{DiseaseNews, Event};
 use crate::check::check;
 use crate::content::{DiseaseId, TerrainId};
 use crate::stats::Stat;
+use crate::talent::TalentMods;
 use crate::time::{DAY, GameTime};
 
 /// The odds of a `per_hour` chance are out of this many percent-seconds: 100 % of an hour.
@@ -151,6 +152,14 @@ impl World {
         // Fever-proof (spec §8 "Talents"): fewer checks won in a row shake it off, never under 1.
         let recovery = i32::from(def.recovery) - talents.disease_recovery;
         let recovery = u8::try_from(recovery.max(1)).unwrap_or(def.recovery);
+        // Ageless (an elf's): the progressions come further apart.
+        let interval = match talents.disease_interval_percent {
+            0 => interval,
+            percent => {
+                let scaled = TalentMods::scaled(u64::from(interval), percent).max(1);
+                u32::try_from(scaled).unwrap_or(u32::MAX)
+            }
+        };
         let Some(infection) = actor.diseases.get_mut(disease) else {
             return true;
         };

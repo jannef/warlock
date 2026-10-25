@@ -905,8 +905,11 @@ impl Actor {
     /// How far its missile weapon shoots, in cells: its `range`, and what its affixes add.
     pub fn launcher_range(&self, content: &Content) -> Option<i32> {
         let stack = self.inventory.get(self.launcher_item(content)?)?;
-        let range = content.object(stack.object).range?;
-        let talents = self.talent_mods(content).launcher_range;
+        let object = content.object(stack.object);
+        let range = object.range?;
+        // Its talents' (Far shot), and those for a launcher of its skill (Slinger's slings).
+        let skill = (object.skill).map(|s| content.weapon_skills().skill(s).id.as_str());
+        let talents = self.talent_mods(content).launcher_range_for(skill);
         Some(range + Mods::local(stack, content).get(ItemEffect::Range) + talents)
     }
 
@@ -1052,6 +1055,10 @@ impl Actor {
             let softened = talents.stance_to_hit(self.stance, stance.to_hit);
             profile.to_hit += softened - stance.to_hit;
             profile.confirm += talents.critical_confirm;
+            // Ferocity (a half-orc's): every attack hits harder below a third of its hit points.
+            if talents.ferocity != 0 && self.hp.saturating_mul(3) < self.max_hp(content) {
+                profile.bonus += talents.ferocity;
+            }
         }
         // Its talents' threat (Keen edge): criticals threaten that much lower, never below the
         // lowest roll that can hit.

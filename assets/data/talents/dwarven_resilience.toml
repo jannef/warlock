@@ -1,0 +1,8 @@
+[[talent]]
+id = "dwarven_resilience"
+name = "Dwarven resilience"
+tree = "racial"
+description = "Hard to sicken: poison leaves you sooner, and you shake off disease more easily."
+needs = { race = "dwarf", stats = { toughness = 14 } }
+effects = [{ kind = "status_eases", status = "poisoned", value = 100 }, { kind = "disease_checks", value = 2 }]
+systems = ["status", "diseases"]

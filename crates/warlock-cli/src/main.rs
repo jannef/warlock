@@ -354,7 +354,8 @@ mod tests {
         let world = start(content.clone(), &run(picks).expect("parses")).expect("starts");
         let spec = &world.character().expect("a character").spec;
         assert_eq!(spec.talents, ["healthy", "lean"]);
-        let own = run(&["--talents", "healthy,lean"]).expect("parses");
+        // The showcase's Tamsin is human: three (Versatile's one more).
+        let own = run(&["--talents", "healthy,lean,long_strider"]).expect("parses");
         let world = start(content.clone(), &own).expect("starts");
         assert!(world.started_with_kit());
         let bad = run(&["--character", "dwarf,male,warrior", "--talents", "healthy"]);

@@ -1,0 +1,8 @@
+[[talent]]
+id = "tinkerer"
+name = "Tinkerer"
+tree = "racial"
+description = "A gnome's clever fingers: you can disarm traps you know of (an ability), trained or not."
+needs = { race = "gnome", stats = { intelligence = 12 } }
+effects = [{ kind = "disarm" }]
+systems = ["traps"]
