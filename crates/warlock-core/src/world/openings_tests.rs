@@ -196,7 +196,7 @@ fn the_finisher_needs_five_openings_and_a_hostile() {
     assert_eq!(row, "Master thief (class): not enough openings");
     let outcome = w.apply(&"use:master_thief:E".parse().expect("action"));
     assert!(!outcome.took_turn);
-    assert_eq!(last(&w), "You cannot: not enough openings.");
+    assert_eq!(last(&w), "You have too little openings.");
     // With five, but nobody there: refused, and nothing spent.
     set(&mut w, 5);
     assert_eq!(finisher.unavailable(w.state.player(), w.content()), None);

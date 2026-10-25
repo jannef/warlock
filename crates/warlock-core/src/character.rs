@@ -342,7 +342,8 @@ pub struct Start {
     pub skills: Skills,
     /// Starting ranks in weapon skills, defaults included (spec §8 "Weapon skills").
     pub weapon_skills: WeaponSkills,
-    /// The starting alignment score (spec §8 "Alignment"): the race's plus the class's.
+    /// The starting alignment score (spec §8 "Alignment"): the race's plus the class's plus the
+    /// birth animal's nudge, kept on the scale.
     pub alignment: Score,
     pub character: Character,
     /// The starting kit: what the class, the race, and the sign give (a scenario may add to it
@@ -415,6 +416,9 @@ impl CharacterSpec {
             add(stats::roll(&animal.stats, &mut rng));
             add(stats::roll(&element.stats, &mut rng));
         }
+        let nudge = horoscope
+            .zip(sign.as_ref())
+            .map_or(0, |(h, s)| h.alignment(s));
         let potential = stats::roll(&race.potential, &mut rng);
         let skills = starting_skills(race, class, &mut rng);
         let (weapon_skills, trained) = self.weapon_skills(content, seed);
@@ -432,7 +436,7 @@ impl CharacterSpec {
             mana: race.mana + class.mana,
             skills,
             weapon_skills,
-            alignment: Score::new(race.alignment + class.alignment),
+            alignment: Score::new(race.alignment + class.alignment + nudge),
             kit: kit::roll(content, &character, &trained, seed),
             character,
         })

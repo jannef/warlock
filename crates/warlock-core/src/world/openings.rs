@@ -4,35 +4,15 @@
 //! thief's finisher spends it for a blow that is a critical if it hits, with no confirmation
 //! roll ([`crate::combat::Profile::sure_critical`]).
 //!
-//! The grant is the general one for talents that grant a resource (a `resource` effect):
-//! [`World::grant_talent_resources`], called wherever the class hands out its table
-//! (`world/class.rs::grant_class`: creation, every level, and a restored run), so a saved
-//! character whose table grew a resource gets it on load. It grants only what is not held, so it
-//! never refills a pool.
+//! The grant is the general one for talents that grant a resource (`grants_resource`,
+//! `world/focus.rs::hold`).
 
-use super::{ActorId, Spent, World};
+use super::{Spent, World};
 use crate::action::{AttackKind, Event};
 use crate::content::ActionKind;
 use crate::geom::Dir;
 
 impl World {
-    /// Actor `id` holds every resource its talents grant ([`crate::talent::TalentMods`]'s
-    /// `resources`): each it does not hold yet is granted ([`World::grant_resource`]).
-    pub(super) fn grant_talent_resources(&mut self, id: ActorId) {
-        let Some(actor) = self.state.actors.get(&id) else {
-            return;
-        };
-        if actor.talents.is_empty() {
-            return;
-        }
-        let missing: Vec<_> = (actor.talent_mods(&self.content).resources.into_iter())
-            .filter(|&r| actor.resources.get(r).is_none())
-            .collect();
-        for resource in missing {
-            self.grant_resource(id, resource);
-        }
-    }
-
     /// Master thief's finisher: a blow with what the player wields at the hostile in `dir` that
     /// is a critical if it hits (no confirmation roll), for the price of a melee attack and its
     /// exertion. Its openings were spent by `use_class`, which refused (no time) with no

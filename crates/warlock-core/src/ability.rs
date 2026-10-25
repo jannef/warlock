@@ -559,11 +559,13 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
             .map(|p| p.cooldown)
             .into_iter()
             .collect(),
-        ClassActive::Volley => mods.volley.map(|v| v.cooldown).into_iter().collect(),
+        // Volley costs Focus and Master thief Openings instead (their talents' `resource`,
+        // [`short_of`]).
         ClassActive::Whirlwind
         | ClassActive::HolyRadiance
         | ClassActive::MasterThief
-        | ClassActive::Inspire => Vec::new(),
+        | ClassActive::Inspire
+        | ClassActive::Volley => Vec::new(),
     };
     cooldowns.into_iter().find(|&s| actor.effects.has(s))
 }
@@ -703,6 +705,8 @@ mod tests {
             max: None,
         });
         let mut me = world.state().player().clone();
+        // A paladin's own start, before the stars (the showcase's is Basilisk-born).
+        me.alignment = Some(Score::new(450));
         assert_eq!(me.band(&content), Band::Good, "a paladin starts Good");
         assert_eq!(strayed(&me, &content, gift), None);
         assert_eq!(strayed(&me, &content, None), None, "no requirement");

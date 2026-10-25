@@ -1050,9 +1050,14 @@ mod tests {
             assert!(text.contains(expected), "{expected:?} in\n{text}");
         }
         // A paladin starts Good: the band, never the score.
-        let paladin = drawn(&summary("human,male,paladin", 1));
+        let paladin = drawn(&summary("human,male,paladin", 3));
         assert!(paladin.contains("Alignment Good"), "{paladin}");
         assert!(!paladin.contains("450"), "{paladin}");
+        // Born in a Basilisk year the stars nudge them down to Kind (#272), unsaid but the band.
+        let basilisk = drawn(&summary("human,male,paladin", 1));
+        assert!(basilisk.contains("Basilisk"), "{basilisk}");
+        assert!(basilisk.contains("Alignment Kind"), "{basilisk}");
+        assert!(!basilisk.contains("350"), "{basilisk}");
         for skill in ["Balance", "Intimidate", "Metalcraft", "Search"] {
             assert!(text.contains(skill), "{skill:?} in\n{text}");
         }

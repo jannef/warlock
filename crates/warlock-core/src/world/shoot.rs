@@ -100,6 +100,7 @@ impl World {
         // Priced as the shot begins (every attack is), before the missile leaves and the
         // exertion, which may leave the player hungrier (no longer Bloated).
         let price = self.shot_price(self.state.player, launcher);
+        let price = self.rapid_shot(self.state.player, price, events);
         self.player_looses(at, loose, events);
         self.exert(ActionKind::Shoot);
         Spent::Turn(price)

@@ -14,7 +14,12 @@ and witches Callous, and everyone else Neutral. Elves and halflings lean a littl
 half-orcs a little toward evil, never far enough to change a band on their own; but the evil races
 start on the evil side, goblins, kobolds, lizardfolk, and ratfolk Callous, drow and duergar Evil
 (see [Races](races.md#the-evil-races)), so a goblin thief starts Evil and a drow paladin Neutral.
-The summary shows the band you start in.
+Then the stars nudge you: the animal of your birth year adds to the score (the
+[Horoscope](horoscope.md#what-a-sign-does) page's *Alignment* column): the Unicorn +100, the
+Griffin, Phoenix, and Wyvern +50, the Kraken −50, the Basilisk and Manticore −100, the others
+nothing. It is small, but near an edge it decides the band: a human paladin born under the
+Manticore or the Basilisk starts Kind (+350), an elf wizard born under the Unicorn Kind (+150).
+The summary shows the band you start in. The table below is before the stars.
 
 {{#include generated/alignment-start.md}}
 

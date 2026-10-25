@@ -77,6 +77,10 @@ Basilisk's **Transfixing stare**. You use them from the abilities menu, under *B
 then rests for a while (a status that wears off) before you can use it again. The
 [abilities](abilities.md) table lists them with everything else you can use.
 
+Your animal also nudges where your [alignment](alignment.md#where-you-start) starts: the
+*Alignment* column is what it adds to your starting score (elements add nothing). The game never
+shows the number, only the band you start in.
+
 {{#include generated/horoscope-animals.md}}
 
 {{#include generated/horoscope-elements.md}}

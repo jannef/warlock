@@ -10,7 +10,7 @@
 //! The one ability here that runs with time is Connoisseur's: a magic item carried long enough
 //! is identified ([`World::appraise_carried`]).
 
-use super::{Actor, World};
+use super::{Actor, World, focus};
 use crate::content::{Content, TalentDef, TalentId};
 use crate::talent::TalentMods;
 
@@ -29,6 +29,7 @@ pub(super) fn hand_out(content: &Content, actor: &mut Actor, def: &TalentDef, ra
     actor.hp += hp;
     actor.mana_base += mods.mana_at(level);
     actor.mana += mods.mana_at(level);
+    focus::hold(content, actor, &mods.grants);
 }
 
 /// Gives `actor` the talents `class` (an id; none without a class) gives up to `level` that it
@@ -68,7 +69,9 @@ impl World {
         let content = self.content.clone();
         let class = self.class_id();
         let given = grant(&content, class.as_deref(), self.player_mut(), level);
-        self.grant_talent_resources(self.state.player);
+        // A run restored keeps what its talents grant (spec §8 "Resources").
+        let grants = self.state.player().talent_mods(&content).grants;
+        focus::hold(&content, self.player_mut(), &grants);
         if news {
             for id in given {
                 self.news

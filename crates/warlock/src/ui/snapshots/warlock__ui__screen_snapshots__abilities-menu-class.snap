@@ -2,14 +2,14 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You learn Petrifying gaze.
+ You learn Horn of plenty.
  Warmth flows from your hands. You feel drained.
 
 
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
-                    │ > a  Transfixing stare  at a place you see               │
+                    │ > a  Horn's grace                                        │
                     │ Class                                                    │
                     │   b  Lay on hands       you are drained                  │
                     │   c  Smite              in a direction                   │
@@ -22,8 +22,8 @@ expression: "render(case, content.clone())"
                     │ Items                                                    │
                     │   h  Hood your lantern                                   │
                     │                                                          │
-                    │ The basilisk's stare: a foe nearby that sees you slows   │
-                    │ to a crawl a moment; your eyes then rest two hours.      │
+                    │ The unicorn's grace: your bleeding and poison end, and a │
+                    │ disease is shaken off; then it rests a day.              │
                     │                                                          │
                     │ a-h or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
@@ -31,4 +31,4 @@ expression: "render(case, content.clone())"
 
 
 
- The Hub  ·  HP 56/56  ·  MP 29/29  ·  Drained  ·  Lv 13  ·  08:00  ·  11 Darkening      ? controls
+ The Hub  ·  HP 43/43  ·  MP 18/18  ·  Drained  ·  Lv 13  ·  08:00  ·  11 Darkening      ? controls
