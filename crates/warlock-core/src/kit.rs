@@ -472,7 +472,7 @@ mod tests {
     fn the_scenarios_pack_comes_on_top_or_alone() {
         // The world's ranger with a scenario's food on top.
         let mut files = ContentFiles::builtin();
-        let world = include_str!("../../../assets/scenarios/world.toml");
+        let world = include_str!("../../../assets/campaigns/showcase/scenarios/world.toml");
         files.insert(
             "scenarios/packed.toml",
             &format!("{world}carry = [\"ration*3\", \"dried_meat*2\"]\n"),

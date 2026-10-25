@@ -1,0 +1,18 @@
+# A campaign (spec §3, docs/dev/campaign.md): a world of its own, with its overworld and levels
+# (levels/), the scenarios that start in it (scenarios/), its dungeon branches, quests, dialogue,
+# and its own creature types (data/dungeons/, data/quests/, data/dialogue/, data/creatures/), and
+# any vaults only it stamps (vaults/). Everything else under assets/ is shared by every campaign.
+# Fields:
+#   id           the directory's name
+#   name         what New run groups the campaign's scenarios under
+#   description  a line about the world
+#   start        the scenario a new run of the campaign starts (one of its own)
+#   kind         "campaign" (the default) or "test": a test world, whose scenarios New run lists
+#                in developer builds only, and which the player wiki leaves out
+#
+# The showcase: the test world, a hand-made tour of every engine capability (spec §3).
+id = "showcase"
+name = "The Showcase"
+description = "A small world that shows everything the game can do, one room per feature."
+start = "showcase"
+kind = "test"

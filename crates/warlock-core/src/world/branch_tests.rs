@@ -171,7 +171,8 @@ fn generated_levels_depend_only_on_seed_and_id() {
         b.apply(action);
     }
     assert_eq!(a.state(), b.state());
-    let generated = crate::mapgen::generate(&CONTENT, 11, "depths:2", None).expect("generates");
+    let generated =
+        crate::mapgen::generate(&CONTENT, ("showcase", 11), "depths:2", None).expect("generates");
     assert_eq!(a.state.levels["depths:2"].terrain, generated.terrain);
     assert_ne!(
         depths(12).state.current().terrain,

@@ -327,7 +327,7 @@ mod web_hooks {
             let summary = Summary::of(&game.world, characters::now());
             web::set_pending(Some(web::Pending {
                 state: game.world.state().clone(),
-                fingerprint: game.world.content().fingerprint(),
+                fingerprint: game.world.fingerprint(),
                 file: save_file(&game.save_id),
                 beside: (summary_file(&game.save_id), summary.to_text()),
             }));

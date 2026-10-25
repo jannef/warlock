@@ -409,6 +409,7 @@ impl CreatureSpec {
             anim: self.anim,
             glow: self.glow,
             particles: self.particles,
+            campaign: None,
         }
     }
 }
@@ -512,4 +513,7 @@ pub struct CreatureDef {
     pub glow: f32,
     /// Presentation-only: glyph particle emitters that move with the creature.
     pub particles: Vec<ParticleEmitter>,
+    /// The campaign whose own type it is (`campaigns/<id>/data/creatures/`, spec §3); `None`
+    /// for a shared one. Only that campaign's files may name it.
+    pub campaign: Option<String>,
 }

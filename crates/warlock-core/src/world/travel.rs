@@ -222,7 +222,7 @@ impl World {
     /// its start (the middle) if they did not walk there.
     pub(super) fn enter_local_area(&mut self, events: &mut Vec<Event>) -> bool {
         let id = local_area_id(self.player_pos());
-        let Some(area) = self.content.local_area(&id) else {
+        let Some(area) = self.content.local_area(&self.state.campaign, &id) else {
             self.say("There is nothing to explore here.");
             return false;
         };
@@ -342,7 +342,12 @@ impl World {
     ) -> Result<&LevelState, WorldError> {
         if !self.state.levels.contains_key(id) {
             let luck = Luck::of(&self.state.player().talent_mods(&self.content));
-            let template = level_template(&self.content, self.state.seed, id, (from, luck))?;
+            let template = level_template(
+                &self.content,
+                (&self.state.campaign, self.state.seed),
+                id,
+                (from, luck),
+            )?;
             instantiate_level(&mut self.state, &self.content, &template);
         }
         Ok(&self.state.levels[id])
@@ -389,17 +394,17 @@ pub(super) fn enter_room(state: &mut WorldState, content: &Content) -> Option<St
 /// (Treasure hunter, Hoard sense).
 pub(super) fn level_template<'a>(
     content: &'a Content,
-    seed: u64,
+    (campaign, seed): (&str, u64),
     id: &str,
     (entered_from, luck): (Option<&str>, Luck),
 ) -> Result<Cow<'a, LevelTemplate>, WorldError> {
     if let Some(template) = content.level(id) {
         return Ok(Cow::Borrowed(template));
     }
-    if !content.has_level(id) {
+    if !content.has_level(campaign, id) {
         return Err(WorldError::UnknownLevel(id.to_string()));
     }
-    crate::mapgen::generate_with(content, seed, id, entered_from, luck)
+    crate::mapgen::generate_with(content, (campaign, seed), id, entered_from, luck)
         .map(Cow::Owned)
         .map_err(|e| WorldError::Generation(id.to_string(), e.to_string()))
 }

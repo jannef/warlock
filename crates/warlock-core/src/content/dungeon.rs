@@ -164,6 +164,8 @@ pub struct DungeonDef {
     pub key: Option<ObjectId>,
     /// One plan per depth, index `depth - 1`.
     plans: Vec<LevelPlan>,
+    /// The campaign whose `data/dungeons/` it is in; `None` outside every campaign.
+    pub campaign: Option<String>,
 }
 
 impl DungeonDef {
@@ -357,6 +359,7 @@ impl DungeonFile {
                 loot: spec.loot,
                 key,
                 plans,
+                campaign: None,
             });
         }
         Ok(defs)

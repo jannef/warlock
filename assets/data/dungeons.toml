@@ -1,4 +1,6 @@
-# Dungeon branches (spec §7): stacks of procedurally generated levels. Stairs lead into a branch
+# Dungeon branches (spec §7): stacks of procedurally generated levels. This file is the field
+# reference: the branches are a campaign's, in its data/dungeons/ (the showcase's Depths:
+# campaigns/showcase/data/dungeons/showcase.toml; spec §3). Stairs lead into a branch
 # with `to = "<id>:<depth>"` (e.g. `to = "depths:1"`), and a scenario may start in one. Each level
 # is generated on its first visit from the run seed and its id, then persists like a hand-made
 # level. Its `<` leads one level up (on depth 1: back where the player came from), its `>` one
@@ -37,35 +39,3 @@
 #
 # Generators build with the terrain void, wall, floor, door_closed, door_open, stairs_up,
 # stairs_down, water, sconce, fungus and the light lamp, and stamp vaults (assets/vaults).
-
-[[dungeon]]
-id = "depths"
-name = "The Depths"
-generator = "rooms"
-depth = 8
-size = [80, 21]
-creatures = ["rat", "bat", "kobold"]
-traps = ["arrow", "arrow", "spear", "spear", "pit", "pit", "alarm", "teleport", "fireball", "frost", "lightning_bolt"]
-# A secret door or two on each rooms level, and everything hidden harder to find deeper down.
-secret_doors = [1, 2]
-hidden_per_depth = 1
-# Locks harder to pick deeper down too (14 on the first level, 21 on the eighth).
-locks_per_depth = 1
-# Loot on the floor of each level (spec §8 "Magic items"): its item level is the depth.
-loot = [2, 4]
-key = "rusty_key"
-# Cool, as cellars are, and colder deeper down (never freezing).
-temperature = 10
-
-# Depths 3 to 5 are caverns.
-[[dungeon.levels]]
-from = 3
-to = 5
-generator = "caves"
-size = [120, 60]
-temperature = 8
-
-[[dungeon.levels]]
-from = 6
-to = 8
-temperature = 6

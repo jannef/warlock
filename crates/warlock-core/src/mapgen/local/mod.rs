@@ -159,12 +159,12 @@ fn features(landscape: Landscape) -> Features {
 /// finder's `luck` (Treasure hunter, Hoard sense).
 pub(super) fn generate(
     content: &Content,
-    seed: u64,
+    (campaign, seed): (&str, u64),
     id: &str,
     luck: crate::magic::loot::Luck,
 ) -> Result<LevelTemplate, GenError> {
     let area = content
-        .local_area(id)
+        .local_area(campaign, id)
         .ok_or_else(|| GenError::NotAGeneratedLevel(id.to_string()))?;
     let kit = Kit::resolve(content).map_err(GenError::Content)?;
     let setting = Setting::read(content, &area);

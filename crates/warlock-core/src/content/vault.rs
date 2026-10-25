@@ -27,6 +27,8 @@ pub struct Vault {
     /// Entrance doors on the edge (outdoor vaults: every open edge cell), each with the
     /// direction leading out of the vault.
     pub entrances: Vec<(Pos, Dir)>,
+    /// The campaign whose `vaults/` it is in (spec §3); `None` for a shared one.
+    pub campaign: Option<String>,
 }
 
 impl Vault {
@@ -114,6 +116,7 @@ impl Vault {
         Ok(Self {
             template,
             entrances,
+            campaign: None,
         })
     }
 

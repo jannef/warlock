@@ -137,6 +137,9 @@ struct GenArgs {
     /// Run seed: a number, or a word that is hashed.
     #[arg(long, value_parser = parse_seed, default_value = "1")]
     seed: u64,
+    /// The campaign whose overworld a local area is of (spec §3).
+    #[arg(long, default_value = "showcase")]
+    campaign: String,
 }
 
 fn main() -> ExitCode {
@@ -265,7 +268,7 @@ fn replay_command(content: Arc<Content>, args: ReplayArgs) -> Result<(), String>
 /// walkable cells of a special room show its effect's letter). On a branch's first level the up staircase leads nowhere here: it
 /// depends on where the player came from.
 fn gen_command(content: &Content, args: &GenArgs) -> Result<(), String> {
-    let level = mapgen::generate(content, args.seed, &args.level, None)
+    let level = mapgen::generate(content, (&args.campaign, args.seed), &args.level, None)
         .map_err(|e| format!("cannot generate `{}`: {e}", args.level))?;
     println!(
         "{} ({}, {}x{}, seed {})",
@@ -369,6 +372,7 @@ mod tests {
         let args = GenArgs {
             level: "depths:2".into(),
             seed: 1,
+            campaign: "showcase".into(),
         };
         assert!(gen_command(&content, &args).is_ok());
         let local = GenArgs {
@@ -378,7 +382,7 @@ mod tests {
         assert!(gen_command(&content, &local).is_ok());
         let bad = GenArgs {
             level: "hub".into(),
-            seed: 1,
+            ..local
         };
         assert!(gen_command(&content, &bad).is_err());
     }

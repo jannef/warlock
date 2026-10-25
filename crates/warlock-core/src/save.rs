@@ -109,7 +109,7 @@ struct EnvelopeIn {
 
 /// Serializes the world's state into save bytes.
 pub fn encode(world: &World) -> Vec<u8> {
-    encode_state(world.state(), world.content().fingerprint())
+    encode_state(world.state(), world.fingerprint())
 }
 
 /// Serializes a state (for example a clone taken earlier) with the content fingerprint of the
@@ -128,6 +128,17 @@ pub fn encode_state(state: &WorldState, content_fingerprint: u64) -> Vec<u8> {
     let json = serde_json::to_vec(&envelope).unwrap_or_default();
     let _ = gz.write_all(&json);
     gz.finish().unwrap_or_default()
+}
+
+/// The campaign of a saved state: its own, or for a state without one its scenario's.
+fn campaign_of(state: &serde_json::Value, content: &Content) -> String {
+    let field = |name: &str| state.get(name).and_then(serde_json::Value::as_str);
+    match field("campaign").filter(|c| !c.is_empty()) {
+        Some(campaign) => campaign.to_string(),
+        None => (field("scenario").and_then(|s| content.scenario(s)))
+            .and_then(|s| s.campaign.clone())
+            .unwrap_or_default(),
+    }
 }
 
 /// Restores a world from save bytes, validating it against `content`.
@@ -156,7 +167,9 @@ pub fn decode(bytes: &[u8], content: Arc<Content>) -> Result<World, SaveError> {
             supported: FORMAT_VERSION,
         });
     }
-    if envelope.content_fingerprint != content.fingerprint() {
+    if envelope.content_fingerprint
+        != content.fingerprint_for(&campaign_of(&envelope.state, &content))
+    {
         return Err(SaveError::ContentMismatch);
     }
     let state: WorldState =
@@ -197,7 +210,7 @@ mod tests {
     #[test]
     fn encode_state_matches_encode() {
         let w = world();
-        let parked = (w.state().clone(), w.content().fingerprint());
+        let parked = (w.state().clone(), w.fingerprint());
         assert_eq!(encode_state(&parked.0, parked.1), encode(&w));
     }
 
@@ -224,7 +237,7 @@ mod tests {
         let mut envelope = serde_json::json!({
             "magic": MAGIC,
             "format_version": FORMAT_VERSION,
-            "content_fingerprint": w.content().fingerprint(),
+            "content_fingerprint": w.fingerprint(),
         });
         envelope["state"] = state;
         let restored = decode(&gz(&envelope.to_string()), content()).expect("loads");
@@ -275,7 +288,7 @@ mod tests {
         ));
         let bad_state = format!(
             r#"{{"magic":"WARLOCK-SAVE","format_version":{FORMAT_VERSION},"content_fingerprint":{},"state":{{"seed":"x"}}}}"#,
-            content().fingerprint()
+            content().fingerprint_for("")
         );
         assert!(matches!(
             decode(&gz(&bad_state), content()),

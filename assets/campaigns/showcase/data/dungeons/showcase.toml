@@ -1,0 +1,33 @@
+# The showcase's dungeon branch, the Depths (the fields: data/dungeons.toml).
+
+[[dungeon]]
+id = "depths"
+name = "The Depths"
+generator = "rooms"
+depth = 8
+size = [80, 21]
+creatures = ["rat", "bat", "kobold"]
+traps = ["arrow", "arrow", "spear", "spear", "pit", "pit", "alarm", "teleport", "fireball", "frost", "lightning_bolt"]
+# A secret door or two on each rooms level, and everything hidden harder to find deeper down.
+secret_doors = [1, 2]
+hidden_per_depth = 1
+# Locks harder to pick deeper down too (14 on the first level, 21 on the eighth).
+locks_per_depth = 1
+# Loot on the floor of each level (spec §8 "Magic items"): its item level is the depth.
+loot = [2, 4]
+key = "rusty_key"
+# Cool, as cellars are, and colder deeper down (never freezing).
+temperature = 10
+
+# Depths 3 to 5 are caverns.
+[[dungeon.levels]]
+from = 3
+to = 5
+generator = "caves"
+size = [120, 60]
+temperature = 8
+
+[[dungeon.levels]]
+from = 6
+to = 8
+temperature = 6

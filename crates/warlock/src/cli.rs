@@ -11,7 +11,7 @@ use warlock_core::character::CharacterSpec;
 #[derive(Debug, Clone, Parser, Resource)]
 #[command(name = "warlock", version, about = "Warlock — an ASCII roguelike")]
 pub struct Args {
-    /// Scenario to start (a file stem under `assets/scenarios/`; default `showcase`). Giving it
+    /// Scenario to start (a file stem under a campaign's `scenarios/`, e.g. `assets/campaigns/showcase/scenarios/`; default `showcase`). Giving it
     /// skips the main menu.
     #[arg(long)]
     pub scenario: Option<String>,

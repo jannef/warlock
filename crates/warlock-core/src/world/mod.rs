@@ -217,6 +217,11 @@ pub enum WorldError {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct WorldState {
     pub(crate) scenario: String,
+    /// The campaign the run is of (spec §3): its scenario's. Local areas are its overworld's,
+    /// and saves carry its content fingerprint ([`Content::fingerprint_for`]). A save without
+    /// one takes its scenario's ([`World::from_state`]).
+    #[serde(default)]
+    pub(crate) campaign: String,
     pub(crate) seed: u64,
     /// The gameplay random stream (spec §8), continued across saves. Map generation never draws
     /// from it: each generated level has its own stream derived from the seed and its id.
@@ -564,7 +569,13 @@ impl World {
                     Score::ZERO,
                 ),
             };
-        let start = level_template(&content, seed, &def.start_level, (None, Default::default()))?;
+        let campaign = def.campaign.clone().unwrap_or_default();
+        let start = level_template(
+            &content,
+            (&campaign, seed),
+            &def.start_level,
+            (None, Default::default()),
+        )?;
         let player_pos = start
             .player_start
             .ok_or_else(|| WorldError::NoPlayerStart(start.id.clone()))?;
@@ -574,6 +585,7 @@ impl World {
 
         let mut state = WorldState {
             scenario: def.id.clone(),
+            campaign,
             seed,
             rng: Rng::gameplay(seed),
             training: Rng::training(seed),
@@ -666,8 +678,17 @@ impl World {
     /// (`world/stars.rs`), as the content now has them.
     pub fn from_state(content: Arc<Content>, mut state: WorldState) -> Result<Self, WorldError> {
         state.check()?;
-        if content.scenario(&state.scenario).is_none() {
+        let Some(scenario) = content.scenario(&state.scenario) else {
             return Err(WorldError::UnknownScenario(state.scenario.clone()));
+        };
+        let campaign = scenario.campaign.as_deref().unwrap_or_default();
+        if state.campaign.is_empty() {
+            state.campaign = campaign.to_string();
+        } else if state.campaign != campaign {
+            return Err(WorldError::InconsistentState(format!(
+                "campaign `{}` is not scenario `{}`'s",
+                state.campaign, state.scenario
+            )));
         }
         if content.vision(&state.vision).is_none() {
             return Err(WorldError::InconsistentState(format!(
@@ -763,6 +784,17 @@ impl World {
 
     pub fn content(&self) -> &Arc<Content> {
         &self.content
+    }
+
+    /// The campaign the run is of (spec §3).
+    pub fn campaign(&self) -> &str {
+        &self.state.campaign
+    }
+
+    /// The content fingerprint a save of the run carries: its campaign's
+    /// ([`Content::fingerprint_for`]).
+    pub fn fingerprint(&self) -> u64 {
+        self.content.fingerprint_for(&self.state.campaign)
     }
 
     pub fn state(&self) -> &WorldState {

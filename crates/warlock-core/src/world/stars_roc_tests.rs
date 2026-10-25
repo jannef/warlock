@@ -167,8 +167,9 @@ fn hoard_sense_finds_magic_and_gems_more_often_from_the_same_draws() {
     );
     // The map is the same: only what the loot rolls changes.
     let id = "depths:2";
-    let plain = crate::mapgen::generate(content, 5, id, None).expect("level");
-    let lucky = crate::mapgen::generate_with(content, 5, id, None, luck).expect("level");
+    let plain = crate::mapgen::generate(content, ("showcase", 5), id, None).expect("level");
+    let lucky =
+        crate::mapgen::generate_with(content, ("showcase", 5), id, None, luck).expect("level");
     assert_eq!(plain.terrain, lucky.terrain);
 }
 

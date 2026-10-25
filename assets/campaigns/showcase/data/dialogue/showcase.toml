@@ -1,0 +1,124 @@
+# The showcase's people: the gardener, the bard, and the hermit (the fields: data/dialogue.toml).
+
+# The courtyard's gardener: one-liners, no topics.
+[[dialogue]]
+creature = "gardener"
+greet = "Another one up the stairs? Keep to the flagstones, if you please."
+greet_evil = [
+    "Off my flagstones. I don't want your sort near my beds.",
+    "You've blood on your hands. Keep them off my flowers.",
+]
+lines = [
+    "Mind the beds. Flowers bruise if you so much as look at them.",
+    "The windfalls under the tree are yours. The rest I'm counting.",
+    "Rain in Rainmoon, sun in Highsun. The garden keeps its own calendar.",
+    "Walls keep the wind out. Nothing keeps the weeds out.",
+    "Plant by the waxing moon, weed by the waning. My mother's rule.",
+    "The standing stones were here before the wall. I mow around them.",
+    "Come Deepwinter the beds sleep, and so do I.",
+    "Don't drink from the pond. The frogs have opinions about that.",
+]
+mutter = { chance = 3, verb = "grumbles", lines = [
+    "Weeds. Always the weeds.",
+    "Who keeps walking on my beds?",
+    "Nothing grows in the gazebo's shade. Nothing.",
+    "Slugs again. A plague of slugs.",
+    "Frost by Deepwinter, mark my words.",
+] }
+
+# The wandering bard in the courtyard: the world at large, the moon, the year, the Great Race.
+[[dialogue]]
+creature = "bard"
+greet = "Well met, traveller! A song for your road? No? Then a word or two."
+greet_evil = [
+    "No song for you, friend. Some deeds aren't worth singing.",
+    "I'd rather not, if it's all the same to you. Or even if it isn't.",
+]
+lines = [
+    "Every road in the Wildlands ends at a tavern, if you walk long enough.",
+    "They say the Barrowdowns sing at night. I've only ever heard the wind.",
+    "The moon here wears a faint violet. Pretty, unless you think of omens.",
+    "1444: a Metal Unicorn year. Graceful, they say, and hard as iron.",
+    "Cross the Wendle by the bridge or not at all. The river keeps things.",
+    "Silvermere by moonlight. I've a song about it. You would weep.",
+    "The Hall below has more doors than a tale has twists.",
+    "A bard is paid in coin, in bread, or in stories. I take all three.",
+]
+mutter = { chance = 4, verb = "sings", lines = [
+    "Oh, the Salamander rode on the Hydra's neck...",
+    "Down from the Ash Peaks, over the Glass Waste...",
+    "Over the Wendle and under the moon...",
+    "...and last came the Barghest, who waited for all...",
+    "Thornwood, Thornwood, mind where you tread...",
+] }
+
+[[dialogue.topic]]
+id = "moon"
+name = "The moon"
+reply = "One moon, and she keeps better time than any clock: new on the first of the month, full on the sixteenth, dark again by the thirtieth. Her light is faint, a little violet. Enough to cross a meadow by, if your eyes are good. Not enough to read by."
+
+[[dialogue.topic]]
+id = "great_race"
+name = "The Great Race"
+reply = "When the years had no names, the Keeper of Days called the beasts of legend to race from the Ash Peaks to the Gate of Dawn. The first twelve through the gate each got a year. The little Salamander won, riding the Hydra's neck. The Barghest came last, on purpose."
+
+[[dialogue.topic]]
+id = "year"
+name = "This year"
+reply = "Fourteen forty-four, a Metal Unicorn year. The great cycle last turned in 1441, a Wood Salamander year, as it does every sixty. They say children of a Unicorn year are graceful, and easily hurt. I was born in a Fire year, which explains a great deal."
+
+[[dialogue.topic]]
+id = "wildlands"
+name = "The Wildlands"
+reply = "Past the Hall lie the Wildlands: the Greenmarch, the Thornwood, the Barrowdowns where the old way into the Depths opens, Hollowcrag and its caverns, and the Greyspine over all of it. Keep to the road. It is slow, but it gets there."
+
+# The old hermit by the hub's stairs: he knows the hall's rooms, and tells you about them.
+[[dialogue]]
+creature = "hermit"
+greet = "Hm? A visitor. Sit, if you can find a stone nobody's sitting on."
+greet_evil = [
+    "Hm. You. I've nothing to say to the likes of you.",
+    "The dark clings to you. Go and sit somewhere else.",
+]
+lines = [
+    "Every room in this hall shows you one thing. Look closely.",
+    "The kobold in the gallery walks its round. It means you no harm.",
+    "The arena is down one of these stairs. Fight there. Here, we don't.",
+    "Light a lantern in the dark, and the dark looks back.",
+    "One stair here climbs to a garden under the sky. Watch the shadows.",
+    "Water remembers every light that touches it. Mind the ponds.",
+    "Some see by moonlight, some by no light at all. It's in the eyes.",
+    "I was young when they built this hall. I'm still not sure what for.",
+]
+mutter = { chance = 3, lines = [
+    "Forty years in this hall. Or fifty. Who counts.",
+    "Somebody's left a door open again.",
+    "The crystals hum when nobody listens.",
+    "A polite kobold. What is the world coming to.",
+    "My knees say rain. My knees are usually right.",
+] }
+
+[[dialogue.topic]]
+id = "rooms"
+name = "This hall"
+reply = "Along the corridor, north side: the hall of lights, the dark chamber, the water garden. South side: the west room, a storeroom and a pantry behind their doors, the gallery, the room of fire and dust, and this nook. Each shows you one thing."
+
+[[dialogue.topic]]
+id = "dark"
+name = "The dark chamber"
+reply = "The chamber behind the hall of lights is dark on purpose. A rune there glows only for eyes that see past violet, and the fungus only for eyes made for the night. Something lies on its floor that only darkvision will show you."
+
+[[dialogue.topic]]
+id = "gallery"
+name = "The gallery"
+reply = "A beetle and a bat run their lanes in the gallery, and a kobold with a torch walks round them. You'll hear them through the door before you see them. In the dark middle, only the torch shows you anything."
+
+[[dialogue.topic]]
+id = "water"
+name = "The water garden"
+reply = "A spring runs out of the east wall into the ponds, and a rill carries the overflow west. Between them stands an old altar with a ring before it. Nobody has taken the ring. Odd, that."
+
+[[dialogue.topic]]
+id = "stairs"
+name = "These stairs"
+reply = "Five stairs down, two up. Down: the Vast Caverns, the quarry where they dig, the Frost Grotto, the trap hall, and the arena, where the fighting is. Up: the courtyard garden, and the road out into the Wildlands. Everything in this hall is safe. Down there, not everything is."
