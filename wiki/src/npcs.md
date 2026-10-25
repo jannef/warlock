@@ -1,14 +1,18 @@
 # People and talk
 
 Not everyone you meet wants to fight. Some creatures are **people**: they go about their business,
-talk when you talk to them, and now and then mutter to themselves. In the showcase you meet three:
+talk when you talk to them, and now and then mutter to themselves. In Cēaptūn, the market town
+of the Ascmearc, you meet:
 
-- a **gardener**, pacing beside the flower bed by the ruined wall of the courtyard;
-- a **wandering bard**, walking his round of the meadow east of the courtyard's gazebo;
-- an **old hermit**, sitting in the lamplit corner of the hub's stairs nook. He knows the hall's
-  rooms, and tells you about them if you ask.
+- the **townsfolk**, going about the square and the lanes on market day;
+- **Sister Hild**, in the Mynster, the town's temple: she cures and mends for gold (see
+  "Services" below), and anyone may rest on the Mynster's floor, a sanctuary;
+- **Godgifu**, who keeps the Gæsthūs, the inn: she hears every rumour in the march, and the
+  bread on her table is free to travellers;
+- **Reeve Leofric**, who keeps the town's peace and its coin, at home south of the square;
+- **Factor Wulfrun**, who bought and sold the ore of mines that have gone quiet, in her office.
 
-They belong to the **peaceful folk** (see [Creatures](creatures.md#factions)): they never fight,
+The people of the town are known by their names: `Sister Hild says: "…"`. They belong to the **peaceful folk** (see [Creatures](creatures.md#factions)): they never fight,
 not even if you attack them.
 
 ## Chatting

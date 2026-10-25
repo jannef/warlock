@@ -4,8 +4,9 @@ As in ADOM, some rooms are shops: a room full of goods, and a shopkeeper standin
 **general store** sells a bit of everything; **specialty shops** sell one kind of thing. Every
 shopkeeper has a name, and every shop a sign: "Grimbold's General Store".
 
-You find a shop in the walled courtyard up the stairs from the hall, Grimbold's General Store,
-and now and then one in the Depths: about one level in six has one, in a room with a single
+Cēaptūn, the market town of the Ascmearc, has four on its square: Ælfric's General Store,
+Eadric's Forge (weapons and missiles), Beornwyn's Armoury, and Cyneburg's Provisions (food for
+the road, candles, rope, and tools). Dungeons have one now and then: about one level in six has one, in a room with a single
 door (never in the caverns, never in the room you arrive in). Each dungeon has its own odds,
 kinds of shop, and keepers (the table under [Special rooms](special-rooms.md#by-dungeon)).
 
@@ -96,7 +97,7 @@ the same way, and so does one who catches you picking their pocket with the Stea
 catches you stealing. \"Stop, thief!\""; see [Stealing](skills.md#stealing)). A purse lifted
 unnoticed leaves the shop open, though the shopkeeper cannot pay for what you sell until they
 have gold again. Shopkeepers are tough, quick, and well armed: stealing is always your choice,
-and the courtyard stays safe unless you make it. An angry shopkeeper trades no more.
+and the town stays safe unless you make it. An angry shopkeeper trades no more.
 
 While you owe for something, you cannot shoot or throw it.
 
