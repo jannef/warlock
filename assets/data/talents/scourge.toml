@@ -3,6 +3,6 @@ id = "scourge"
 name = "Scourge"
 tree = "stars"
 granted = true
-description = "A blow that fells a foe carries on: when your melee blow kills, you strike at once at another foe beside you."
-effects = [{ kind = "free_blow", trigger = "cleave" }]
+description = "A blow that fells a foe carries on: when your melee blow kills, you strike at once at another foe beside you. Those who strike you are cut in return."
+effects = [{ kind = "free_blow", trigger = "cleave" }, { kind = "barbs", damage = 2 }]
 systems = ["free_blows"]
