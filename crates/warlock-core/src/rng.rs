@@ -9,6 +9,8 @@
 //! | Hidden traps, per generated level | `traps/<level id>` | never |
 //! | A generated level's loot | `loot/<level id>` | never; derived on demand |
 //! | What a creature drops when it dies | `drop/<actor id>` | never; derived on demand |
+//! | A generated level's creatures' gear | `gear/<level id>` | never; derived on demand |
+//! | A creature's gear, placed in play | `gear/<actor id>` | never; derived on demand |
 //! | Gameplay | `gameplay` | in [`crate::WorldState`], so saves continue it |
 //! | Training marks' chances (skills) | `training` | in [`crate::WorldState`] |
 //! | What level-ups roll (skill rolls, stat checks) | `levels` | in [`crate::WorldState`], from the first draw |
@@ -83,6 +85,13 @@ impl Rng {
     /// and in its vaults, rolled once the map is built, so the map is the same without it.
     pub fn loot(run_seed: u64, level: &str) -> Self {
         Self::stream(run_seed, &format!("loot/{level}"))
+    }
+
+    /// The gear stream of `key` (spec §8 "Creature gear"): a generated level's id, rolled once
+    /// its loot is (so the map, traps, secrets, and loot are the same without it), or an actor's
+    /// id for a creature placed in play without a fixed kit.
+    pub fn gear(run_seed: u64, key: &str) -> Self {
+        Self::stream(run_seed, &format!("gear/{key}"))
     }
 
     pub fn next_u32(&mut self) -> u32 {

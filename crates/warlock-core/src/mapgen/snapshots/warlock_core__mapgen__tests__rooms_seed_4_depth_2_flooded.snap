@@ -5,7 +5,7 @@ expression: describe(&flooded)
 The Depths 2 (depths:2) 80x21
 stairs Up at (32, 10) -> depths:1
 stairs Down at (70, 7) -> depths:3
-kobold at (60, 8) route E E E E E E E E E S S S W W W W W W W W W N N N
+kobold at (60, 8) route E E E E E E E E E S S S W W W W W W W W W N N N carrying a bone spear (wielded), a copper cap (being worn)
 rat at (7, 10) route E E E E E S S W W W W W N N
 arrow trap at (28, 13)
 lightning_bolt trap at (33, 12)

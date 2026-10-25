@@ -13,7 +13,7 @@ max_ranks = 3
 # `pending` has fewer than min_talents talents or min_class class abilities, or a tree that is
 # not `pending` (nor `no_free`) has fewer than free_per_tree talents without prerequisites. So a
 # system is in the list the moment it ships with its talents, and a pick from a tree is never
-# impossible. min_class is 0 until every class has its table (#243–#246), then 1.
+# impossible. A [[system]] may set its own min_talents (a young system shipped with one). min_class is 0 until every class has its table (#243–#246), then 1.
 [coverage]
 min_talents = 2
 min_class = 0
@@ -264,6 +264,13 @@ name = "Experience"
 [[system]]
 id = "speed"
 name = "Speed"
+
+# Creature gear (#328): what creatures spawn carrying, wielding, and wearing, and drop where they
+# die; it ships with one talent, Scavenger (a second, Disarming blow, waits for a disarm action).
+[[system]]
+id = "creature_gear"
+name = "The gear creatures carry and drop"
+min_talents = 1
 
 [[system]]
 id = "factions"

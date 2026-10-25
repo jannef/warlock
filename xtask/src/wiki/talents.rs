@@ -171,9 +171,10 @@ pub(super) fn by_system(content: &Content) -> String {
         let held = if system.pending {
             "not yet (pending)".to_string()
         } else {
-            let least = system.min_talents.unwrap_or(bar.min_talents);
-            let plural = if least == 1 { "" } else { "s" };
-            format!("yes ({least} talent{plural} at least)")
+            match system.min_talents.unwrap_or(bar.min_talents) {
+                1 => "yes (1 talent at least)".to_string(),
+                least => format!("yes ({least} talents at least)"),
+            }
         };
         let talents = if names.is_empty() {
             "—".to_string()
@@ -528,6 +529,9 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "temple services cost half (rounded up), and a cure also mends one point of each \
              damaged stat"
                 .to_string()
+        }
+        TalentEffect::Scavenger => {
+            "what a creature you kill drops is identified as it lands".to_string()
         }
         TalentEffect::ItemWorth => "item descriptions show what things are worth".to_string(),
         TalentEffect::GemWorth => "item descriptions show what each gem is worth".to_string(),

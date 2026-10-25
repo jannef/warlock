@@ -74,7 +74,8 @@ pub struct SystemDef {
     pub name: String,
     /// Its talents are still to come: counted and shown, not yet required.
     pub pending: bool,
-    /// The fewest talents it may have, if not the coverage bar's (a small system: one).
+    /// The fewest talents it may have, when not the bar's (`[coverage]`): a young system that
+    /// ships with one (`creature_gear`, Scavenger).
     pub min_talents: Option<u32>,
 }
 
@@ -341,6 +342,8 @@ pub enum TalentEffect {
     /// Temple services cost it half, and a cure also mends a point of each damaged stat
     /// (Pilgrim; `world/service.rs`).
     Pilgrim,
+    /// What a creature it kills drops is identified as it lands (spec §8 "Creature gear").
+    Scavenger,
     /// Item descriptions show what its things are worth.
     ItemWorth,
     /// Item descriptions show what each gem in a thing is worth.
@@ -1597,6 +1600,7 @@ impl TalentEffect {
             | TalentEffect::WeightlessCoins
             | TalentEffect::IdentifyTrades
             | TalentEffect::Pilgrim
+            | TalentEffect::Scavenger
             | TalentEffect::ItemWorth
             | TalentEffect::GemWorth
             | TalentEffect::MakeWay
@@ -2014,11 +2018,10 @@ impl TalentBook {
             let least = system.min_talents.unwrap_or(bar.min_talents);
             if talents < least {
                 return Some(format!(
-                    "system `{}` has {talents} talent{} but at least {} are needed (mark it \
+                    "system `{}` has {talents} talent{} but at least {least} are needed (mark it \
                      `pending = true` until they land)",
                     system.id,
                     if talents == 1 { "" } else { "s" },
-                    least
                 ));
             }
             let abilities = class_abilities(&system.id);

@@ -111,7 +111,7 @@ Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:
 pickup[:LETTERS] drop[:LETTERS] sell[:LETTERS] pay[:DIR] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
 eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] dig:DIR search search:N disarm:DIR second_wind blood_magic use:ID[:DIR] chat:DIR ask:DIR:TOPIC steal:DIR throw_voice:X,Y rest:GOAL stance:NAME vision:PROFILE
 talent:ID[:CHOICE] advance:SKILL levelup:auto xp:N
-skip:DURATION weather:KIND effect:ID@X,Y[>X,Y] identify[:LETTERS] afflict:STATUS drain:N resource:ID infect:DISEASE`
+skip:DURATION weather:KIND effect:ID@X,Y[>X,Y] identify[:LETTERS] afflict:STATUS drain:N resource:ID infect:DISEASE reveal:ID`
 (`DIR` = N
 NE E SE S SW W NW; `NAME` = aggressive, neutral, defensive, or coward (a stance, no time; `assets/data/stances.toml`); `LETTERS` = stacks by position, as letters
 for the first 26 (`a` = 0, the first) or numbers for any (`0,2,30`; mixed works too, `ac,30`),
@@ -162,7 +162,9 @@ through `World::grant_resource_with_status` (with the status it brings: Raging),
 e.g. `resource:rage wait*3`
 (`docs/dev/resources.md`); `infect` is the dev disease: the player catches `DISEASE`, an id in `assets/data/diseases.toml`,
 as if they had lost the check (it incubates, then shows), e.g. `infect:the_shakes rest:24h*3`,
-no game time; `freeze:X,Y,R` and `thaw:X,Y,R` are the dev frost and heat bursts (radius 0 to 20
+no game time; `reveal` is the dev reveal: hidden location `ID` of the overworld (a legend's `hidden`,
+`docs/dev/overworld.md`) is revealed and marked on the map as a quest would, no game time;
+`freeze:X,Y,R` and `thaw:X,Y,R` are the dev frost and heat bursts (radius 0 to 20
 around level cell (X, Y), in its line of sight; no time); `ACTION*N` repeats one, e.g.
 `wait*10`). Dump layers: `view` (what the player sees), `fov` (`*` visible),
 `memory` (seen terrain, remembered objects, and known traps), `light` (perceived brightness of
@@ -187,9 +189,11 @@ marked `Duelist 1 (0%), in use`), `talents` (the player's talents in the order t
 2/3`, `Weapon focus (long blades)`, a birth sign's gifts first, `Fleet-footed (sign)`, `Slight (sign, flaw)`, those their class gives marked `Well dressed (class)`), `abilities` (the player's abilities in the abilities menu's
 order, each with its source and what it asks for or why it cannot be used now: `Shield bash
 (weapon skill): a direction`, `Open lock (skill): not usable yet`), `traps` (the traps the player knows,
-one a line), `quests` (the quest log, active
+one a line), `locations` (the overworld locations the player knows, `(45, 23) The Hall`, a hidden
+one only once revealed), `quests` (the quest log, active
 first: name, stage, giver, objective, and status), `truth`
-(ground truth, hidden traps and secret doors (`S`) too, **dev-only**), `actors` (every actor on the level with its hit points, mana, its resources (`resources rage
+(ground truth, hidden traps and secret doors (`S`) too, and hidden locations by their entrance's
+glyph, **dev-only**), `actors` (every actor on the level with its hit points, mana, its resources (`resources rage
 11/20 (0)`, with progress), and
 Defence and Protection, its alignment (`alignment evil`; the player's score and band), its weight, what it carries and of that wears and wields (magic items as they truly
 are, "(unidentified)" marked), what its magic items do to it (`magic strength +1`), its burden
@@ -213,7 +217,7 @@ ones held: `id`, `current`, `max`), `defence`, `protection`, `resistances` (by d
 word: `{"cold": "resistant"}`), `burden` (`level`, `limit`), `alignment` (the band's id), `hunger`, `dazzled`, `effects`
 (status ids), `diseases` (the known ones' ids), `death` (with `of`, the status that killed,
 `cause`, starving, choking, or a trap, and `trap`, the id of the trap that killed),
-`known_traps`, `temperature` (°C to a tenth), `weapon_skills` (by skill id:
+`known_traps`, `known_locations` (`pos`, `name`), `temperature` (°C to a tenth), `weapon_skills` (by skill id:
 `rank`, `progress`), `styles_in_use` (style ids), `talents` (in the order taken: `id`, `name`,
 `rank`, `ranks`, `choice`, `class`, `granted`, `flaw`), `character` (`name`, `race`, `gender`, `class`,
 `raised`, `age`, `born`, `sign`, and `lucky`, a lucky day's title, only for one born on it), `due` (the level-up choices due: `level`, `talents`,

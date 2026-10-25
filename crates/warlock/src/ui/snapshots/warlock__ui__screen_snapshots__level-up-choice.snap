@@ -2,43 +2,43 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
+ Welcome to level 3.
  Your athletics improves. (×6)
- You learn Weather-wise.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            ┌─ Level 3 · Talent 1 ─────────────────────────────────────────────────────┐
+            │                                                                          │
+            │ Apprentice                                                               │
+            │ > a  Appraise                                                            │
+            │   b  Athletics                                                           │
+            │   c  Balance                                                             │
+            │   d  Bluff                                                               │
+            │   e  Concentration                                                       │
+            │   f  Decipher script                                                     │
+            │   g  Disable device                                                      │
+            │   h  Escape artist                                                       │
+            │   i  Handle animal                                                       │
+            │   j  Heal                                                                │
+            │   k  Intimidate                                                          │
+            │   l  Knowledge                                                           │
+            │   m  Listen                                                              │
+            │   n  Metalcraft                                                          │
+            │   o  Music                                                               │
+            │   p  Open lock                                                           │
+            │   q  Search                                                              │
+            │   r  Spellcraft                                                          │
+            │   s  Spot                                                                │
+            │   t  Steal                                                               │
+            │   u  Stealth                                                             │
+            │   v  Survival                                                            │
+            │   w  Swim                                                                │
+            │   x  Tumble                                                              │
+            │   y  Use magic device                                                    │
+            │   z  Woodcraft                                                           │
+            │                                                                          │
+            │ You take up a skill you lack, or get better at one you have; each rank,  │
+            │ better still.                                                            │
+            │                                                                          │
+            │                                                                          │
+            │ a-z or Enter choose   Esc back                                           │
+            └──────────────────────────────────────────────────────────────────────────┘
 
  The Hub  ·  HP 28/28  ·  MP 3/3  ·  Lv 3  ·  08:00  ·  11 Darkening, Year 1444          ? controls

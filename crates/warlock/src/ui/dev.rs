@@ -1,8 +1,9 @@
 //! Developer overlays (spec §9), toggled by dev keys (debug builds or `--dev`; see the bindings
 //! table, so the `?` help lists them):
 //! - **Reveal map** draws ground truth — terrain, objects, and creatures the player does not
-//!   see — in a cold violet nothing else uses. It is the one place presentation reads ground
-//!   truth (`World::ground_truth`), and is clearly dev-only.
+//!   see — in a cold violet nothing else uses, and hidden traps and hidden locations (spec §7
+//!   "Hidden locations", by their entrance's glyph) in its accent. It is the one place
+//!   presentation reads ground truth (`World::ground_truth`), and is clearly dev-only.
 //! - **Light values** replaces each visible cell's glyph with its perceived brightness as a digit,
 //!   like the dump's `light` layer (`0` dark to `9` fully lit); the shader still lights the cell,
 //!   so the digit shows the light's color too.
@@ -93,6 +94,31 @@ pub(super) fn draw_map_overlays(grid: &mut MapGrid, world: &World, overlays: Dev
             });
             grid.free_terrain.retain(|(q, _)| *q != p);
             let ch = content.trap(trap.kind).glyph;
+            grid.console.put(
+                x,
+                y,
+                Cell {
+                    ch,
+                    fg: DEV_ACCENT,
+                    bg,
+                },
+            );
+        }
+        // Hidden locations not yet revealed, by their entrance's glyph, in view too (the cell
+        // shows its plain terrain there).
+        for &((x, y), p) in &positions {
+            let Some(hidden) = level.hidden_at(p) else {
+                continue;
+            };
+            if view.actor_at(p).is_some() {
+                continue;
+            }
+            let bg = level.terrain_at(p).map_or(Rgb::BLACK, |t| {
+                let bg = content.terrain(t).bg;
+                if view.is_visible(p) { bg } else { revealed(bg) }
+            });
+            grid.free_terrain.retain(|(q, _)| *q != p);
+            let ch = content.terrain(hidden.terrain).glyph;
             grid.console.put(
                 x,
                 y,

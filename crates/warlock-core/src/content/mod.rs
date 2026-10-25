@@ -20,6 +20,7 @@ mod effect;
 mod experience;
 mod faction;
 mod flow;
+mod gear;
 mod gem;
 mod horoscope;
 mod hunger;
@@ -90,6 +91,7 @@ pub use experience::{
 };
 pub use faction::{FactionDef, FactionId, Factions, PLAYER_FACTION, Stance};
 pub use flow::{FLOW_SPEEDS, Flow};
+pub use gear::{Gear, GearLine, RACIAL_CHANCE};
 pub use gem::{
     Cut, CutId, Cutting, GemDef, GemSize, GemSizeId, Gems, MAX_GEM_VALUE, MAX_GEM_WEIGHT,
     MAX_MULTIPLIER, Ornament, ROUGH_SATURATION, dull,
@@ -105,7 +107,8 @@ pub use item_class::{ItemClassDef, ItemClassId, MAX_ITEM_CLASSES};
 pub use kit::{Keep, Kit, KitItem};
 pub(crate) use level::validate_route;
 pub use level::{
-    CreatureSpawn, EdgeExit, LevelKind, LevelTemplate, Region, StairsLink, parse_route,
+    CreatureSpawn, EdgeExit, HiddenLocation, LevelKind, LevelTemplate, Region, StairsLink,
+    parse_route,
 };
 pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, MAX_LIGHT_RADIUS, Stability};
 pub use material::{ANY, Found, MAX_MATERIAL_VALUE, MaterialDef, MaterialId, VERY_RARE};
@@ -118,7 +121,7 @@ pub use part::{MAX_OBJECT_PARTS, MAX_PARTS, Part, PartDef, PartId, PartRole};
 pub use particles::{ParticleEmitter, ParticleTrigger};
 pub use quest::{
     DEFAULT_DECLINE, GOLD, Goal, MAX_COUNT, MAX_NAME, MAX_QUEST_XP, QuestDef, QuestId, QuestKind,
-    QuestTexts, Reward,
+    QuestTexts, Reveal, RevealWhen, Reward,
 };
 pub use race::{HUNGER, LightBlind, RaceDef, Races};
 pub use resource::{Build, MAX_EVERY, MAX_RESOURCE, MAX_SHORT, OverTime, ResourceDef, ResourceId};
@@ -687,6 +690,7 @@ impl Content {
         content.load_creatures(files)?;
         content.load_objects(files)?;
         content.load_gems(files)?;
+        content.load_gear()?;
         let path = "data/shops.toml";
         if let Some(text) = files.get_optional(path) {
             content.shops = Some(Shops::parse(path, text, &content)?);
@@ -1304,6 +1308,27 @@ impl Content {
 
     /// The classes', races', and birth signs' starting kits (spec §8 "Character creation"), once
     /// the objects, gems, slots, and weapon skills they name are known.
+    /// Resolves the creature types' gear (spec §8 "Creature gear") once objects are known.
+    fn load_gear(&mut self) -> Result<(), ContentError> {
+        let gear = (self.creatures.iter())
+            .map(|c| {
+                gear::resolve(&c.gear_spec, self, |skill| c.weapon_skills.rank(skill)).map_err(
+                    |m| ContentError::new("data/creatures/", format!("creature `{}`: {m}", c.id)),
+                )
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        for (creature, gear) in self.creatures.iter_mut().zip(gear) {
+            if creature.id == "player" && !gear.is_empty() {
+                return Err(ContentError::new(
+                    "data/creatures/",
+                    "creature `player`: the player's gear is their starting kit",
+                ));
+            }
+            creature.gear = gear;
+        }
+        Ok(())
+    }
+
     fn load_kits(&mut self) -> Result<(), ContentError> {
         let classes = (self.classes.iter())
             .map(|c| {
@@ -1708,7 +1733,7 @@ impl Content {
         .transpose()
     }
 
-    /// Cross-file checks: at most one overworld, stair targets, and each scenario's start level,
+    /// Cross-file checks: at most one overworld, stair and hidden location targets, and each scenario's start level,
     /// vision profile, lantern, and character's race and class exist. Levels of dungeon branches (`depths:3`) and local areas
     /// of the overworld (`local:12,30`) count as existing.
     fn validate(&self) -> Result<(), ContentError> {
@@ -1730,6 +1755,17 @@ impl Content {
                     return Err(ContentError::new(
                         &format!("levels/{}.toml", level.id),
                         format!("stairs at {} lead to unknown level `{to}`", link.pos),
+                    ));
+                }
+            }
+            for (pos, hidden) in &level.hidden {
+                if !self.has_level(&hidden.to) {
+                    return Err(ContentError::new(
+                        &format!("levels/{}.toml", level.id),
+                        format!(
+                            "hidden location `{}` at {pos} leads to unknown level `{}`",
+                            hidden.id, hidden.to
+                        ),
                     ));
                 }
             }

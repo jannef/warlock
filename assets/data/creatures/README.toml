@@ -84,6 +84,23 @@
 #             spec §8 "Fighting styles"); each raises the skills it defaults to. Creatures do not
 #             train (yet); the player's come from their race and class
 #
+# Gear (spec §8 "Creature gear"; rules only, the wiki states it): what a creature of the type
+# spawns carrying, wielding, and wearing when a level gives it no fixed kit (a legend entry
+# without carry, wield, or wear; a generated level's creatures). Combat reads it as it reads the
+# player's, and it falls where the creature dies.
+#   racial_weapon  the weapon its kind favours (an object with damage): the first gear line,
+#             { chance = 90, one_of = [racial_weapon], keep = "wield" }, unless a [[creature.gear]]
+#             line names it alone (with another chance). The type must have a rank in its weapon
+#             skill (weapon_skills): the affinity is the rank
+#   [[creature.gear]]  lines tried in order, each: chance (percent that it gives anything),
+#             one_of (objects as level files place them, one drawn: ["padded_coat",
+#             "leather_jerkin"], ["arrow*20"]), keep ("wield", "wear", or "carry"; default by the
+#             object: what a hand, the missile weapon or missiles slot, or the Tool slot takes is
+#             wielded, what another slot takes worn, the rest carried), magic (percent that the
+#             piece is made magic as loot is, at the floor's item level; default 0). Each piece
+#             is made of a material by the materials' `gear` at the creature's level; one that
+#             would overload the creature is left out
+#
 # Corpses (spec §8 "Hunger"; with hunger.toml; never shown to the player before they try):
 #   corpse    whether it leaves a corpse when it dies (default true): a "kobold corpse" (`%` in its
 #             color) weighing what it does, feeding by its size (hunger.toml)
