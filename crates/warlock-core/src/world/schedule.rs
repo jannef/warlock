@@ -388,12 +388,18 @@ impl World {
             })
         };
         let player = self.player_pos();
+        // While the player rests, an idle creature may take a whole stride at once.
+        let ahead = if self.resting {
+            super::stride::STRIDE
+        } else {
+            0
+        };
         self.state
             .actors
             .values()
             .filter(|a| a.level == level.id && self.disturbs_rest(a))
             .map(|a| {
-                let steps = i64::from((a.pos.chebyshev(player) - VIEW_RADIUS - 1).max(0));
+                let steps = i64::from((a.pos.chebyshev(player) - VIEW_RADIUS - 1 - ahead).max(0));
                 let cheapest = cheapest(self.cost_of(a.id, ActionKind::Step));
                 let short = steps.saturating_mul(cheapest).saturating_sub(a.energy);
                 let speed = a.speed(&self.content);

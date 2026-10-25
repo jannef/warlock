@@ -157,7 +157,7 @@ impl World {
     }
 
     /// The dialogue `actor` speaks: its npc's, else its type's.
-    fn dialogue_of(&self, actor: &Actor) -> Option<DialogueId> {
+    pub(super) fn dialogue_of(&self, actor: &Actor) -> Option<DialogueId> {
         self.content
             .dialogue_of(actor.creature, actor.npc.as_deref())
     }

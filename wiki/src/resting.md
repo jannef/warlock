@@ -18,8 +18,24 @@ it is that time exactly.
 ## How resting works
 
 Resting is a single action that waits turn after turn, each wait a normal action (6 seconds), on
-the overworld too. Creatures keep acting and the world keeps being updated as usual, and the last
-wait is cut short so the rest ends exactly at its goal. A rest never lasts more than a day.
+the overworld too. Creatures keep acting and the world keeps being updated, and the last wait is
+cut short so the rest ends exactly at its goal. A rest never lasts more than a day.
+
+While you rest, creatures away from you take their turns coarsely, so a night's rest on a level
+full of them is quick. A creature is away unless it is hostile to you and you (or the spot it
+is heading for) are within its sight. Away from you:
+
+- a creature going about its routine (seeing no enemy within its sight, hearing nothing worth a
+  look, with no status effects) walks up to **20 steps** of its round at once and then waits them
+  out, so it keeps its own pace. It never takes such a stride onto a cell where you saw creatures
+  when you last looked, nor where you could hear its step, nor to where it could see an enemy,
+  and only its last step is heard. One standing still, or with someone in its way, waits 20
+  turns at once.
+- a creature busy with something else (fighting another creature, looking into a noise, going
+  back to its post) acts as usual but **20 times slower**.
+
+Near you, in view, or in earshot, creatures take every turn as usual, and outside a rest they
+always do.
 
 A rest stops early when:
 

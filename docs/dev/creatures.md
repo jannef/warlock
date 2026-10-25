@@ -55,7 +55,25 @@ row order (`swap_remove` of a drawn index), a route by `out_and_back`. Whom a le
 is `mapgen::Visit` (the luck, the player's level for a scaled danger, the uniques met;
 `travel::level_template` builds it; `generate_with` is `generate_for` with only the luck).
 `cargo xtask bench-turns` has a `delf` row: a fixture 120×60 cave branch of danger 8 at full
-population (`xtask/src/bench.rs`). Tests: `world/spawn_tests.rs` (the property test of the
+population (`xtask/src/bench.rs`); its night's rest is held to the 500 ms budget thanks to coarse
+turns.
+
+Coarse turns while the player rests (#349, spec §8 "Coarse turns while resting"): `world/stride.rs`,
+one call at the top of `World::creature_turn` (`coarse_turn` → `Coarse::Strode(price)` returns at
+once, `Slow` multiplies the usual action's price by `STRIDE`, `Usual` is the usual turn). `away`
+(the player rests, a local level, no dialogue, and not hostile to the player within its sight
+radius, nor its mind's `last_seen`/`noise`), `idle` (calm, nothing heard worth a look, no
+statuses, able to move, no hostile within its sight radius; returns the hostiles within its
+sight plus a stride), `stride_path` (up to `STRIDE` = 20 route steps onto plain cells: walkable,
+no door, ice, trap, actor, or shunned cell, not a cell the player's last perception saw creatures
+on, not within its step noise's reach of the player, none within its sight of a hostile; prices
+and step noise cached per terrain), and a stride's one `make_step_noise` at its end. An idle
+creature whose next route cell is taken waits `STRIDE` waits; one whose first step is not plain
+takes its turn as usual. Outside a rest nothing here runs. Tests: `world/stride_tests.rs` (pace
+kept, busy ones slowed, turn by turn near the player, replays, the rest's sight equals a
+perception's); the rest-versus-waiting tests in `time_tests`, `cost_tests`, `hearing_tests`, and
+`talk_tests` still hold (their creatures cross into view or earshot turn by turn), and
+`speed_tests::resting_accounts_for_fast_creatures` compares a rest with resting turn by turn. Tests: `world/spawn_tests.rs` (the property test of the
 design's §9.6, the population of a generated floor and that nothing else moves, uniques in a
 population, a spawn's gear stream, frozen floors, the talents, determinism),
 `content/danger.rs` (rules, counts, weights, draws).

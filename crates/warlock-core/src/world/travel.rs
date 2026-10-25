@@ -40,6 +40,7 @@ impl World {
         let def = self.content.terrain(terrain);
         let (closed_door, door) = (def.is_closed_door(), def.is_door());
         let was_door = self.state.current().is_door(&self.content, p);
+        self.reshaped += 1;
         let level = self.state.current_mut();
         level.terrain.set(p, terrain);
         if !closed_door {
