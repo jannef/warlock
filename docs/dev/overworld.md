@@ -3,13 +3,14 @@
 Developer notes for working on this part of Warlock (moved from CLAUDE.md, #185); the
 rules it implements are in spec/07c-generation.md. Keep it current with the code, as CLAUDE.md says.
 
-The overworld (spec §3, §5, §7) is `assets/levels/overworld.toml`, the one level of kind
-`overworld` (`LevelKind::Overworld`: a step's base time is the terrain's `travel_minutes`; every
+A campaign's overworld (spec §3, §5, §7; the showcase's is
+`assets/campaigns/showcase/levels/overworld.toml`) is its one level of kind `overworld`
+(`Content::overworld_of(campaign)`; a run's local areas are its campaign's, `docs/dev/campaign.md`) (`LevelKind::Overworld`: a step's base time is the terrain's `travel_minutes`; every
 other action, waiting and `>` included, the usual 6 s).
 Its locations are stairs-down terrain (`hall`, `cave_mouth`, `dungeon_entrance`) whose legend `to`
 names the level; the level's `<` with `to = "overworld"` leads back to the location (`World::travel`
 arrives on the stairs leading back). `>` on any other cell enters the local area `local:x,y`
-(`content/overworld.rs`: `local_area_id`, `parse_local_area`, `Content::local_area`, valid where
+(`content/overworld.rs`: `local_area_id`, `parse_local_area`, `Content::local_area(campaign, id)`, valid where
 the terrain has a `local` ground and a land or road `landscape`), generated on the first visit by
 the outdoor generator (`mapgen/local/`, below); the edge exit (`exit` in `LevelState`) makes
 walking off any edge return to the cell. `>` arrives on the side the player walked onto the cell

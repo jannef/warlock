@@ -346,16 +346,16 @@ impl<'a> Canvas<'a> {
     }
 }
 
-/// Generates the level `id` for the run with `seed`: a branch level (e.g. `depths:3`; on a
-/// branch's first level the up staircase leads to `entered_from`, or nowhere if `None`) or a
-/// local area (`local:12,30`).
+/// Generates the level `id` for a run of campaign `campaign` with `seed`: a branch level (e.g.
+/// `depths:3`; on a branch's first level the up staircase leads to `entered_from`, or nowhere if
+/// `None`) or a local area of the campaign's overworld (`local:12,30`).
 pub fn generate(
     content: &Content,
-    seed: u64,
+    (campaign, seed): (&str, u64),
     id: &str,
     entered_from: Option<&str>,
 ) -> Result<LevelTemplate, GenError> {
-    generate_with(content, seed, id, entered_from, Luck::default())
+    generate_with(content, (campaign, seed), id, entered_from, Luck::default())
 }
 
 /// [`generate`] for a player whose talents give their finds `luck` ([`Luck`]: Treasure hunter,
@@ -363,7 +363,7 @@ pub fn generate(
 /// loot rolls may differ.
 pub fn generate_with(
     content: &Content,
-    seed: u64,
+    (campaign, seed): (&str, u64),
     id: &str,
     entered_from: Option<&str>,
     luck: Luck,
@@ -372,7 +372,7 @@ pub fn generate_with(
         luck,
         ..Visit::default()
     };
-    generate_for(content, seed, id, entered_from, &visit)
+    generate_for(content, (campaign, seed), id, entered_from, &visit)
 }
 
 /// Whom a level is generated for, as they first come: what their talents give their finds
@@ -389,14 +389,14 @@ pub struct Visit<'a> {
 /// [`generate_with`] for the player `visit` describes.
 pub fn generate_for(
     content: &Content,
-    seed: u64,
+    (campaign, seed): (&str, u64),
     id: &str,
     entered_from: Option<&str>,
     visit: &Visit,
 ) -> Result<LevelTemplate, GenError> {
     let luck = visit.luck;
-    if content.local_area(id).is_some() {
-        return local::generate(content, seed, id, luck);
+    if content.local_area(campaign, id).is_some() {
+        return local::generate(content, (campaign, seed), id, luck);
     }
     let (def, depth) = content
         .branch_level(id)

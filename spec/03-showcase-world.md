@@ -10,6 +10,20 @@ From M1 on, the playable build is a hand-authored **showcase world** where `@` w
 per engine capability. Each milestone adds or upgrades rooms. The showcase world is also the
 regression scene for golden screenshots, replays, and snapshot tests.
 
+**The showcase is a test campaign** (M32, `docs/design/campaign.md` §3). A campaign is a world of
+its own, with nothing linking it to another: its overworld and levels, the scenarios that start
+in it, its dungeon branches, quests, people (dialogue), and its own creature types, in
+`assets/campaigns/<id>/` with a `campaign.toml` (name, description, the scenario a new run
+starts, and `kind`). Everything else (terrain, objects, the common creature types, rules) is
+engine data every campaign shares. The showcase is `assets/campaigns/showcase/` with
+`kind = "test"`: its levels and nine scenarios, the Depths, the four quests, and the hermit,
+gardener, and bard (their dialogue and their types). New run lists a test campaign's scenarios
+in developer builds only (§6), and the player wiki leaves it out once a campaign to play exists.
+A campaign's files name only its own and shared levels and creature types; ids are unique across
+every campaign; each campaign has at most one overworld, and a run's local areas are its
+campaign's overworld's; a run remembers its campaign, and a save carries that campaign's content
+fingerprint (§7 "Saves").
+
 **Level 1 — Hub (80×21)**
 
 | Room | Demonstrates | Milestone |
@@ -115,7 +129,7 @@ where the player reaches it, and the guard post vault's store room is locked, it
 carried by the kobold on guard (M19). The `depths` scenario starts on its first level.
 
 **The Overworld (M9)**: *The Wildlands*, a hand-authored 100×50 map of the land at large
-(`levels/overworld.toml`, level kind `overworld`), ADOM-like. Overworld terrain: plains,
+(`campaigns/showcase/levels/overworld.toml`, level kind `overworld`), ADOM-like. Overworld terrain: plains,
 grassland, forest, dense forest, hills, mountain ranges, swamp, rivers and deep water, roads, a
 bridge, and locations. A step is a journey: it takes the destination terrain's `travel_minutes`
 (road and bridge 20, plains 45, grassland 50, forest 90, hills 120, swamp and dense forest 150,

@@ -339,7 +339,7 @@ fn the_spawn_dev_action_brings_one_and_replays() {
 
 /// The barrow's first floor for the run with `seed`.
 fn barrow_floor(content: &Content, seed: u64) -> LevelTemplate {
-    crate::mapgen::generate(content, seed, "barrow:1", None).expect("barrow:1")
+    crate::mapgen::generate(content, ("showcase", seed), "barrow:1", None).expect("barrow:1")
 }
 
 /// The builtin content with the barrow but no danger anywhere: the same maps, no population.
@@ -437,14 +437,15 @@ fn a_unique_comes_once_in_a_population_too() {
             .filter(|s| content.creature(s.creature).unique)
             .count()
     };
-    let lair = crate::mapgen::generate(&content, 3, "lair:1", None).expect("lair");
+    let lair = crate::mapgen::generate(&content, ("showcase", 3), "lair:1", None).expect("lair");
     assert_eq!(chief(&lair), 1);
     let met = BTreeSet::from(["chief".to_string()]);
     let visit = crate::mapgen::Visit {
         uniques: Some(&met),
         ..Default::default()
     };
-    let lair = crate::mapgen::generate_for(&content, 3, "lair:1", None, &visit).expect("lair");
+    let lair = crate::mapgen::generate_for(&content, ("showcase", 3), "lair:1", None, &visit)
+        .expect("lair");
     assert_eq!(chief(&lair), 0);
     assert!(lair.creatures.len() >= 30);
     // In play, the chief laid down on a floor is met: the spawns never bring him again.

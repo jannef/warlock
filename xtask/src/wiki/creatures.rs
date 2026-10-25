@@ -20,14 +20,32 @@ use warlock_core::stats::Stat;
 use warlock_core::world::{Actor, ActorId, ActorKind};
 
 /// How a creature stands toward the player and how it attacks, as seen in play, how often it
-/// drops a magic item, and the gear it may spawn with. By name.
+/// drops a magic item, and the gear it may spawn with. By name: the shared types, then each
+/// campaign's own (spec §3) under its name.
 pub(super) fn creatures(content: &Content) -> String {
+    let mut out = creature_table(content, None);
+    for campaign in order::campaigns(content) {
+        let own = creature_table(content, Some(&campaign.id));
+        if own.lines().count() > 2 {
+            let _ = write!(
+                out,
+                "\n**{}** has creatures of its own:\n\n{own}",
+                campaign.name
+            );
+        }
+    }
+    out
+}
+
+/// [`creatures`]' table of the types of campaign `campaign` (`None`: the shared types).
+fn creature_table(content: &Content, campaign: Option<&str>) -> String {
     let mut out = String::from(
         "| Creature | Glyph | Faction | Toward you | Attacks | Opens doors | Carries a light | \
          Drops magic | Gear |\n|---|:---:|---|---|---|:---:|:---:|:---:|---|\n",
     );
     let player = content.creature_id("player");
-    for (id, c) in listed(content) {
+    let theirs = (listed(content).into_iter()).filter(|(_, c)| c.campaign.as_deref() == campaign);
+    for (id, c) in theirs {
         let faction = c.faction.map_or_else(
             || "none".into(),
             |f| capital(&content.factions().def(f).name),

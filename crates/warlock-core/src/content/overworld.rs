@@ -1,6 +1,6 @@
 //! The overworld and its local areas (spec §3, §7).
 //!
-//! The overworld is the one level of kind `overworld`: a map of the land at large in the usual
+//! A campaign's overworld is its one level of kind `overworld` (spec §3): a map of the land at large in the usual
 //! level format, with overworld terrain (each with `travel_minutes`) and locations, which are
 //! stairs down to other levels. Every other overworld cell whose terrain names a `local` ground
 //! leads into a **local area**, an outdoor level generated on the first visit
@@ -8,7 +8,7 @@
 //! level, it then persists with the run. What the area looks like follows the [`Landscape`] of
 //! its cell and of the cells around it (a river or a lake beside it, a road through it).
 
-use super::{Content, HiddenLocation, LevelKind, LevelTemplate, TerrainId};
+use super::{Content, HiddenLocation, LevelTemplate, TerrainId};
 use crate::geom::{Dir, Pos};
 use serde::Deserialize;
 
@@ -88,26 +88,20 @@ impl LocalArea<'_> {
 }
 
 impl Content {
-    /// The overworld: the level of kind `overworld`, if content has one (it has at most one).
-    pub fn overworld(&self) -> Option<&LevelTemplate> {
-        self.levels
-            .values()
-            .find(|l| l.kind == LevelKind::Overworld)
-    }
-
-    /// The overworld's hidden location `id` and its cell (spec §7 "Hidden locations"), if the
-    /// overworld has one by that id.
-    pub fn hidden_location(&self, id: &str) -> Option<(Pos, &HiddenLocation)> {
-        (self.overworld()?.hidden.iter())
+    /// The campaign `campaign`'s hidden location `id` and its cell (spec §7 "Hidden locations"),
+    /// if its overworld ([`Content::overworld_of`]) has one by that id.
+    pub fn hidden_location(&self, campaign: &str, id: &str) -> Option<(Pos, &HiddenLocation)> {
+        (self.overworld_of(campaign)?.hidden.iter())
             .find(|(_, h)| h.id == id)
             .map(|(p, h)| (*p, h))
     }
 
-    /// The local area with level id `id` (`local:x,y`), if the overworld has an explorable cell
-    /// there: in bounds, walkable, with a `local` ground, and not a location.
-    pub fn local_area(&self, id: &str) -> Option<LocalArea<'_>> {
+    /// The local area with level id `id` (`local:x,y`) of campaign `campaign`'s overworld
+    /// ([`Content::overworld_of`]), if it has an explorable cell there: in bounds, walkable,
+    /// with a `local` ground, and not a location.
+    pub fn local_area(&self, campaign: &str, id: &str) -> Option<LocalArea<'_>> {
         let pos = parse_local_area(id)?;
-        let overworld = self.overworld()?;
+        let overworld = self.overworld_of(campaign)?;
         let terrain = *overworld.terrain.get(pos)?;
         let def = self.terrain(terrain);
         let ground = def.local.filter(|_| def.walkable && def.stairs.is_none())?;
@@ -159,22 +153,32 @@ mod tests {
                 "name = \"W\"\nkind = \"overworld\"\n{extra}map = '''\n{map}'''\n[legend]\n\".\" = \"plains\"\n\"#\" = \"floor\"\n"
             )
         };
-        let err = load_with(|f| f.insert("levels/overworld.toml", &overworld("", "..#\n")));
+        let err = load_with(|f| {
+            f.insert(
+                "campaigns/showcase/levels/overworld.toml",
+                &overworld("", "..#\n"),
+            )
+        });
         assert!(
             err.as_ref()
                 .is_err_and(|e| e.contains("`floor` is walkable but has no travel_minutes")),
             "{err:?}"
         );
-        let err = load_with(|f| f.insert("levels/second.toml", &overworld("", "...\n")));
+        let err = load_with(|f| {
+            f.insert(
+                "campaigns/showcase/levels/second.toml",
+                &overworld("", "...\n"),
+            )
+        });
         assert!(
             err.as_ref()
-                .is_err_and(|e| e.contains("only one level of kind `overworld`")),
+                .is_err_and(|e| e.contains("can have only one level of kind `overworld`")),
             "{err:?}"
         );
         let region = "[[region]]\nname = \"Far\"\narea = [0, 0, 3, 0]\n";
         let err = load_with(|f| {
             let text = format!("{}{region}", overworld("", "...\n"));
-            f.insert("levels/overworld.toml", &text);
+            f.insert("campaigns/showcase/levels/overworld.toml", &text);
         });
         assert!(
             err.as_ref()
@@ -212,25 +216,25 @@ mod tests {
     #[test]
     fn builtin_overworld_cells_have_local_areas_but_locations_do_not() {
         let content = Content::builtin().expect("builtin content");
-        let overworld = content.overworld().expect("an overworld");
+        let overworld = content.overworld_of("showcase").expect("an overworld");
         let mut explorable = 0;
         for y in 0..overworld.terrain.height() {
             for x in 0..overworld.terrain.width() {
                 let p = Pos::new(x, y);
                 let def = content.terrain(overworld.terrain[p]);
-                let local = content.local_area(&local_area_id(p));
+                let local = content.local_area("showcase", &local_area_id(p));
                 if def.stairs.is_some() || !def.walkable {
                     assert!(local.is_none(), "{p} {}", def.id);
                 }
                 if let Some(area) = local {
                     assert!(content.terrain(area.ground).walkable);
-                    assert!(content.has_level(&local_area_id(p)));
+                    assert!(content.has_level("showcase", &local_area_id(p)));
                     explorable += 1;
                 }
             }
         }
         assert!(explorable > 1000, "{explorable} explorable cells");
         let outside = Pos::new(overworld.terrain.width(), 0);
-        assert!(!content.has_level(&local_area_id(outside)));
+        assert!(!content.has_level("showcase", &local_area_id(outside)));
     }
 }

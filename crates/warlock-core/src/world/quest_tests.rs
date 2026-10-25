@@ -930,7 +930,7 @@ fn quest_files_are_validated() {
             quest("type = \"bring\"\ntarget = \"apple\""),
             quest("type = \"bring\"\ntarget = \"apple\"")
         ),
-        "there is already one",
+        "duplicate quest id `q`",
     );
     bad(
         &quest("type = \"bring\"\ntarget = \"apple\"").replace("\"O.\"", "\" O.\""),

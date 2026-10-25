@@ -50,7 +50,7 @@ fn with_overworld(map: &str) -> Arc<Content> {
 fn overworld_files(map: &str) -> ContentFiles {
     let mut files = clear_files();
     files.insert(
-        "levels/overworld.toml",
+        "campaigns/showcase/levels/overworld.toml",
         &format!(
             "name = \"Test Wilds\"\nkind = \"overworld\"\nmap = '''\n{map}'''\n[legend]\n\
              \".\" = \"plains\"\n'\"' = \"grassland\"\n\"f\" = \"forest\"\n\
@@ -62,7 +62,7 @@ fn overworld_files(map: &str) -> ContentFiles {
     );
     // The `forest` scenario starts in a local area of the real overworld.
     files.insert(
-        "scenarios/forest.toml",
+        "campaigns/showcase/scenarios/forest.toml",
         "name = \"Forest\"\nstart_level = \"overworld\"\n",
     );
     files
@@ -146,7 +146,10 @@ fn leave(world: &mut World, dir: Dir) -> usize {
 
 /// The overworld cell of the location leading to `to`.
 fn location(world: &World, to: &str) -> Pos {
-    let overworld = world.content.overworld().expect("an overworld");
+    let overworld = world
+        .content
+        .overworld_of("showcase")
+        .expect("an overworld");
     overworld
         .stairs
         .iter()
@@ -171,7 +174,7 @@ fn the_world_scenario_starts_on_the_overworld_beside_the_hall() {
 #[test]
 fn every_walkable_overworld_cell_has_a_region_and_every_location_a_level() {
     let content = &*CONTENT;
-    let overworld = content.overworld().expect("an overworld");
+    let overworld = content.overworld_of("showcase").expect("an overworld");
     for y in 0..overworld.terrain.height() {
         for x in 0..overworld.terrain.width() {
             let p = Pos::new(x, y);
@@ -487,7 +490,8 @@ fn local_areas_persist_per_overworld_cell() {
         "in from the west"
     );
     // Same area as generated on the first visit, memory included.
-    let generated = crate::mapgen::generate(&CONTENT, world.seed(), &id, None).expect("generates");
+    let generated = crate::mapgen::generate(&CONTENT, ("showcase", world.seed()), &id, None)
+        .expect("generates");
     assert_eq!(world.state.current().terrain, generated.terrain);
     assert!(
         world.state.levels[&id]
@@ -744,7 +748,7 @@ fn overworld_replays_verify_and_saves_continue_identically() {
 fn a_run_may_start_in_a_local_area() {
     let mut files = clear_files();
     files.insert(
-        "scenarios/meadow.toml",
+        "campaigns/showcase/scenarios/meadow.toml",
         "name = \"Meadow\"\nstart_level = \"local:49,23\"\n",
     );
     let content = Arc::new(Content::load(&files).expect("loads"));

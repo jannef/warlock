@@ -1,4 +1,4 @@
-//! Quests (`assets/data/quests.toml`, spec §7 "Quests", §8 "Quests", #148): simple, ADOM-like
+//! Quests (`assets/data/quests.toml` and the campaigns' `data/quests/`, spec §7 "Quests", §8 "Quests", #148): simple, ADOM-like
 //! errands people give the player through their dialogue topics.
 //!
 //! Each `[[quest]]` has an `id`, a `name` (the quest log's title and the topic it is asked
@@ -222,6 +222,8 @@ pub struct QuestDef {
     pub alignment: i32,
     /// Offered again once done.
     pub repeatable: bool,
+    /// The campaign whose `data/quests/` it is in; `None` outside every campaign.
+    pub campaign: Option<String>,
     /// The hidden location it reveals, and at which stage (spec §7 "Hidden locations").
     pub reveals: Option<Reveal>,
     /// Where its goal lies, in words, after the objective in the quest log ("The minster lies
@@ -267,6 +269,29 @@ impl QuestDef {
             } => *target == creature && place.as_deref().is_none_or(|p| content.is_in(level, p)),
             _ => false,
         }
+    }
+
+    /// The levels or branches it names: a kill's `level`, a reach's target.
+    pub fn places(&self) -> impl Iterator<Item = &str> {
+        let place = match &self.goal {
+            Goal::Kill { level, .. } => level.as_deref(),
+            Goal::Reach { level } => Some(level.as_str()),
+            _ => None,
+        };
+        place.into_iter()
+    }
+
+    /// The creature type a kill quest is after.
+    pub fn kill_target(&self) -> Option<CreatureId> {
+        match self.goal {
+            Goal::Kill { creature, .. } => Some(creature),
+            _ => None,
+        }
+    }
+
+    /// Everyone it names: the giver, and whoever it is handed in to.
+    pub fn speakers(&self) -> impl Iterator<Item = DialogueId> {
+        [self.giver, self.turn_in()].into_iter()
     }
 }
 
@@ -327,30 +352,38 @@ impl Content {
     }
 }
 
-/// Parses `data/quests.toml` against the creatures, objects, dialogues, levels, and dungeon
-/// branches loaded already.
-pub(super) fn parse(
-    file: &str,
-    text: &str,
+/// Parses the quest table (`data/quests.toml`, `data/quests/`, and each campaign's
+/// `data/quests/`; [`super::ContentFiles::table`]) against the creatures, objects, dialogues,
+/// levels, and dungeon branches loaded already.
+pub(super) fn parse<'a>(
+    table: impl Iterator<Item = (&'a str, &'a str)>,
     content: &Content,
 ) -> Result<Vec<QuestDef>, ContentError> {
-    let err = |m: String| ContentError::new(file, m);
-    let parsed: QuestFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
-    let mut quests: Vec<QuestDef> = Vec::with_capacity(parsed.quest.len());
-    for spec in parsed.quest {
-        let id = spec.id.clone();
-        let bad = |m: String| err(format!("quest `{id}`: {m}"));
-        if !is_id(&spec.id) {
-            return Err(bad(
-                "ids are lower-case letters, digits, and underscores".into()
-            ));
+    let mut quests: Vec<QuestDef> = Vec::new();
+    let mut seen: std::collections::BTreeMap<String, &str> = std::collections::BTreeMap::new();
+    let mut last = "data/quests.toml";
+    for (file, text) in table {
+        last = file;
+        let err = |m: String| ContentError::new(file, m);
+        let parsed: QuestFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
+        for spec in parsed.quest {
+            let id = spec.id.clone();
+            let bad = |m: String| err(format!("quest `{id}`: {m}"));
+            if !is_id(&spec.id) {
+                return Err(bad(
+                    "ids are lower-case letters, digits, and underscores".into()
+                ));
+            }
+            if let Some(first) = seen.insert(spec.id.clone(), file) {
+                return Err(super::duplicate_id("quest", &spec.id, file, first));
+            }
+            let campaign = super::campaign::of_path(file);
+            let mut quest = resolve(spec, &quests, (content, campaign)).map_err(bad)?;
+            quest.campaign = campaign.map(str::to_string);
+            quests.push(quest);
         }
-        if quests.iter().any(|q| q.id == spec.id) {
-            return Err(bad("there is already one".into()));
-        }
-        let quest = resolve(spec, &quests, content).map_err(bad)?;
-        quests.push(quest);
     }
+    let err = |m: String| ContentError::new(last, m);
     if quests.len() > usize::from(u16::MAX) {
         return Err(err("too many quests".into()));
     }
@@ -359,7 +392,13 @@ pub(super) fn parse(
 }
 
 /// One quest as written, checked against `content` and the quests before it.
-fn resolve(spec: QuestSpec, before: &[QuestDef], content: &Content) -> Result<QuestDef, String> {
+/// `campaign` is the one whose table it is in (its local areas are the ones a quest may name).
+fn resolve(
+    spec: QuestSpec,
+    before: &[QuestDef],
+    (content, campaign): (&Content, Option<&str>),
+) -> Result<QuestDef, String> {
+    let campaign = campaign.unwrap_or_default();
     if spec.name.chars().count() > MAX_NAME {
         return Err(format!("`name` is at most {MAX_NAME} characters"));
     }
@@ -390,7 +429,7 @@ fn resolve(spec: QuestSpec, before: &[QuestDef], content: &Content) -> Result<Qu
                 .filter(|_| spec.target != "player")
                 .ok_or_else(|| format!("unknown creature `{}`", spec.target))?;
             if let Some(level) = &spec.level
-                && !content.has_level(level)
+                && !content.has_level(campaign, level)
                 && content.dungeon(level).is_none()
             {
                 return Err(format!("unknown level or dungeon branch `{level}`"));
@@ -414,7 +453,7 @@ fn resolve(spec: QuestSpec, before: &[QuestDef], content: &Content) -> Result<Qu
             unused("level", spec.level.is_some())?;
             unused("to", spec.to.is_some())?;
             unused("count", spec.count.is_some())?;
-            if !content.has_level(&spec.target) {
+            if !content.has_level(campaign, &spec.target) {
                 return Err(format!("unknown level `{}`", spec.target));
             }
             if spec.repeatable {
@@ -474,7 +513,7 @@ fn resolve(spec: QuestSpec, before: &[QuestDef], content: &Content) -> Result<Qu
         None => None,
     };
     let reveals = match spec.reveals {
-        Some(r) if content.hidden_location(&r.location).is_none() => {
+        Some(r) if content.hidden_location(campaign, &r.location).is_none() => {
             return Err(format!(
                 "`reveals`: the overworld has no hidden location `{}`",
                 r.location
@@ -510,6 +549,7 @@ fn resolve(spec: QuestSpec, before: &[QuestDef], content: &Content) -> Result<Qu
         requires_alignment: spec.requires_alignment,
         alignment: spec.alignment,
         repeatable: spec.repeatable,
+        campaign: None,
         reveals,
         where_: spec.where_,
     })

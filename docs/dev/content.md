@@ -3,9 +3,11 @@
 Developer notes for working on this part of Warlock (moved from CLAUDE.md, #185); the
 rules it implements are in spec/07a-levels.md and spec/07b-data.md. Keep it current with the code, as CLAUDE.md says.
 
-Content (`assets/data`, `assets/levels`, `assets/scenarios`, `assets/vaults`) is TOML, embedded into
-`warlock-core` at build time by `build.rs`. Level maps are ASCII with a legend; see
-`assets/levels/hub.toml` and spec §7. A legend entry with a `creature` may set `faction = "peaceful"` (any id in
+Content (`assets/campaigns`, `assets/data`, `assets/vaults`, and for test fixtures
+`levels/` and `scenarios/` at the top) is TOML, embedded into `warlock-core` at build time by
+`build.rs`. A world's levels, scenarios, branches, quests, dialogue, and own creature types live
+in its campaign, `assets/campaigns/<id>/` (`docs/dev/campaign.md`). Level maps are ASCII with a
+legend; see `assets/campaigns/showcase/levels/hub.toml` and spec §7. A legend entry with a `creature` may set `faction = "peaceful"` (any id in
 `data/factions.toml`) to override its type's faction for that spawn (`Actor::faction_override`; read it with
 `Actor::faction`, never the creature type's, when computing stance), and `alignment = "good"`
 to override its type's alignment the same way (`Actor::alignment_override`, read with
@@ -30,10 +32,13 @@ variants always edited together, named after the family (`objects/arrows.toml`: 
 flaming arrow, and the burning arrow it flies as). Each directory's `README.toml` is comments
 only (the field documentation and notes for authors; a file of comments defines nothing, the
 loaders take a missing array as empty). `build.rs` embeds and `ContentFiles::from_dir` reads
-`assets/{data,levels,scenarios,vaults}` recursively, both in sorted path order, and a table
-loader reads `ContentFiles::table(name)`: `data/<name>.toml` first, if there is one (a whole
-table in one file is still accepted, so test fixtures that insert it keep working), then
-`data/<name>/**/*.toml` in path order. Ids (`CreatureId`, `ObjectId`, `MaterialId`, an affix's
+`assets/{campaigns,data,levels,scenarios,vaults}` recursively, both in sorted path order, and a
+table loader reads `ContentFiles::table(name)`: `data/<name>.toml` first, if there is one (a
+whole table in one file is still accepted, so test fixtures that insert it keep working), then
+`data/<name>/**/*.toml` in path order, then each campaign's `data/<name>/**/*.toml`
+(`ContentFiles::campaign_order`: playable campaigns, then test ones). `quests`, `dialogue`, and
+`dungeons` are tables too: their single files hold the field reference and the shared entries
+(the shopkeeper's dialogue), the campaigns their own. Ids (`CreatureId`, `ObjectId`, `MaterialId`, an affix's
 index) are indices in that order and feed the content fingerprint, so moving entries between
 files changes ids and invalidates saves (the release bump covers it). Each file is parsed on its
 own, so an error names the file the bad entry is in; **a duplicate id across files is a

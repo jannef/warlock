@@ -386,10 +386,11 @@ fn bad_lock_difficulties_are_reported() {
         assert!(err.contains(expected), "{legend}: {err}");
     }
     let mut files = files(false);
-    let (_, dungeons) = files.table("dungeons").next().expect("data/dungeons.toml");
+    let path = "campaigns/showcase/data/dungeons/showcase.toml";
+    let (_, dungeons) = (files.table("dungeons").find(|(p, _)| *p == path)).expect("the depths");
     let steep = dungeons.replace("locks_per_depth = 1", "locks_per_depth = 6");
     assert_ne!(steep, dungeons);
-    files.insert("data/dungeons.toml", &steep);
+    files.insert(path, &steep);
     let err = Content::load(&files).unwrap_err().message;
     assert!(err.contains("locks_per_depth must be 0 to 5"), "{err}");
 }

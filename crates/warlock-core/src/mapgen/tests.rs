@@ -20,7 +20,13 @@ static CONTENT: LazyLock<Arc<Content>> = LazyLock::new(|| {
 });
 
 fn level(seed: u64, depth: u32) -> LevelTemplate {
-    generate(&CONTENT, seed, &format!("depths:{depth}"), Some("vast")).expect("generates")
+    generate(
+        &CONTENT,
+        ("showcase", seed),
+        &format!("depths:{depth}"),
+        Some("vast"),
+    )
+    .expect("generates")
 }
 
 /// Header (name, stairs, creatures, traps) plus the map, for snapshots.
@@ -307,11 +313,11 @@ fn check(level: &LevelTemplate, depth: u32) -> Result<(), TestCaseError> {
 /// way the level can do without (`check`).
 #[test]
 fn rooms_levels_hide_a_few_doors_of_their_own() {
-    let text = include_str!("../../../../assets/data/dungeons.toml");
+    let text = include_str!("../../../../assets/campaigns/showcase/data/dungeons/showcase.toml");
     let without = text.replace("secret_doors = [1, 2]\n", "");
     assert_ne!(without, text, "the depths hide doors");
     let mut files = ContentFiles::builtin();
-    files.insert("data/dungeons.toml", &without);
+    files.insert("campaigns/showcase/data/dungeons/showcase.toml", &without);
     let plain = Content::load(&files).expect("content");
     let [_, most] = CONTENT.dungeon("depths").expect("depths").secret_doors;
     let (mut levels, mut doors) = (0, 0);
@@ -319,7 +325,7 @@ fn rooms_levels_hide_a_few_doors_of_their_own() {
         for depth in [1, 2, 6, 7, 8] {
             let level = level(seed, depth);
             let id = format!("depths:{depth}");
-            let bare = generate(&plain, seed, &id, Some("vast")).expect("generates");
+            let bare = generate(&plain, ("showcase", seed), &id, Some("vast")).expect("generates");
             assert!(bare.secrets.is_empty());
             let mut opened = level.terrain.clone();
             for (p, secret) in &level.secrets {
@@ -501,7 +507,7 @@ fn a_branch_with_flooded_rooms_only_makes_flooded_rooms_and_no_shops() {
     for seed in 0..60 {
         for depth in 1..=2 {
             let id = format!("fixture_flooded:{depth}");
-            let level = generate(&FIXTURE, seed, &id, None).expect("generates");
+            let level = generate(&FIXTURE, ("showcase", seed), &id, None).expect("generates");
             assert!(level.shops.is_empty(), "seed {seed}: {id} has a shop");
             assert!(level.rooms.iter().all(|r| r.effect == flooded), "{id}");
             assert!(level.rooms.len() <= 3, "{id}: per_level");
@@ -529,7 +535,8 @@ fn a_branch_with_traders_keeps_its_own_shops() {
     let kobold = FIXTURE.creature_id("kobold").expect("kobold");
     let mut with_shop = 0;
     for seed in 0..60 {
-        let level = generate(&FIXTURE, seed, "fixture_traders:1", None).expect("generates");
+        let level =
+            generate(&FIXTURE, ("showcase", seed), "fixture_traders:1", None).expect("generates");
         assert!(level.rooms.is_empty(), "seed {seed}: a special room");
         let Some(shop) = level.shops.first() else {
             continue;
@@ -611,7 +618,7 @@ fn is_door(level: &LevelTemplate, p: Pos) -> bool {
 fn seeds_and_levels_give_different_maps() {
     assert_ne!(ascii(&level(1, 1), &CONTENT), ascii(&level(2, 1), &CONTENT));
     assert_ne!(ascii(&level(1, 1), &CONTENT), ascii(&level(1, 2), &CONTENT));
-    let from_nowhere = generate(&CONTENT, 1, "depths:1", None).expect("generates");
+    let from_nowhere = generate(&CONTENT, ("showcase", 1), "depths:1", None).expect("generates");
     assert_eq!(from_nowhere.stairs[0].to, None);
     assert_eq!(
         from_nowhere.terrain,
@@ -646,17 +653,18 @@ fn generated_levels_hide_a_few_traps_of_their_own() {
     // Without traps in the branch the map is the same.
     let mut files = ContentFiles::builtin();
     let dungeons =
-        include_str!("../../../../assets/data/dungeons.toml").replace("traps = [", "# traps = [");
-    files.insert("data/dungeons.toml", &dungeons);
+        include_str!("../../../../assets/campaigns/showcase/data/dungeons/showcase.toml")
+            .replace("traps = [", "# traps = [");
+    files.insert("campaigns/showcase/data/dungeons/showcase.toml", &dungeons);
     let bare = Content::load(&files).expect("content");
-    let plain = generate(&bare, 1, "depths:1", Some("vast")).expect("generates");
+    let plain = generate(&bare, ("showcase", 1), "depths:1", Some("vast")).expect("generates");
     assert_eq!(plain.terrain, level(1, 1).terrain);
     assert!(plain.traps.is_empty());
 }
 
 #[test]
 fn only_branch_levels_generate() {
-    let err = |id: &str| generate(&CONTENT, 1, id, None).unwrap_err();
+    let err = |id: &str| generate(&CONTENT, ("showcase", 1), id, None).unwrap_err();
     assert_eq!(err("hub"), GenError::NotAGeneratedLevel("hub".into()));
     assert_eq!(
         err("depths:9"),

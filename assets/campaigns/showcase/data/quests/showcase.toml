@@ -1,0 +1,65 @@
+# The showcase's quests (the fields: data/quests.toml).
+
+# The old hermit in the hub's stairs nook: the rats of the arena, then a look into the Depths.
+[[quest]]
+id = "rats"
+name = "Rats in the arena"
+giver = "hermit"
+type = "kill"
+target = "rat"
+count = 3
+level = "arena"
+reward = { gold = 20, xp = 30 }
+alignment = 20
+offer = "Here we don't fight. Down in the arena, you may. The rats have the run of the pit again, and their squeaking comes up the stairs all night. Kill three of them for me, and I'll pay you for the quiet."
+accept = "Good. Mind their teeth. Three, now: I'll know if you count wrong."
+decline = "Then I'll sleep with my fingers in my ears. Again."
+reminder = "Three rats from the arena, and not one fewer. The stairs down are right there."
+done = "Three fewer rats. My ears and I thank you. Here, for your trouble."
+
+[[quest]]
+id = "depths"
+name = "Three levels down"
+giver = "hermit"
+requires = "rats"
+type = "reach"
+target = "depths:3"
+reward = { gold = 50, xp = 100, items = ["jade_amulet"] }
+alignment = 15
+offer = "You've an arm, I'll give you that. Now I want eyes. Find the Depths and go down three levels, to where the caves begin. Then come back and tell me if they've woken. I'd go myself, but my knees."
+accept = "The old way in opens in the Barrowdowns, out past the courtyard. Take your lantern."
+decline = "Another time. The caves have waited this long."
+reminder = "Three levels down into the Depths, where the caves begin. The way in is in the Barrowdowns."
+done = "Awake, are they? I thought as much. Here: this was mine, long ago. It saw me through worse."
+
+# The courtyard's gardener: three apples.
+[[quest]]
+id = "apples"
+name = "Three apples"
+giver = "gardener"
+type = "bring"
+target = "apple"
+count = 3
+reward = { gold = 10, xp = 15 }
+alignment = 10
+offer = "I'm starting a new tree, and I want seed from good apples. Bring me three, would you? Windfalls will do, or the pantry in the hall below keeps a basket."
+accept = "Three apples. Whole ones, mind, not half-eaten."
+decline = "Suit yourself. The tree can wait. Trees are good at that."
+reminder = "Still waiting on those three apples. The tree isn't getting any younger. Neither am I."
+done = "Lovely. Good firm ones. Here, for your trouble. And mind the beds on your way out."
+
+# The wandering bard: a letter for the old hermit.
+[[quest]]
+id = "letter"
+name = "The bard's letter"
+giver = "bard"
+type = "deliver"
+target = "sealed_letter"
+to = "hermit"
+reward = { gold = 5, xp = 15 }
+alignment = 10
+offer = "I owe the old fellow by the stairs in the hall a song, but I've a road to walk. I wrote it down for him instead. Would you carry this letter down to him? It's sealed, so no learning the tune."
+accept = "My thanks! He sits by the stairs in the hall below. He mutters; you'll hear him."
+decline = "Then it waits in my pocket with the others."
+reminder = "The letter goes to the old hermit, by the stairs in the hall below. He's expecting it, more or less."
+done = "A letter? From the bard? Hm. A song, and he's spelled half the words wrong. Thank him for me. Here, for the walk."

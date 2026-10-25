@@ -9,6 +9,7 @@ mod affix;
 mod alignment;
 mod anim;
 mod calendar;
+mod campaign;
 mod class;
 mod class_spell;
 mod creature;
@@ -68,6 +69,7 @@ pub use affix::{
 pub use alignment::{AlignmentRules, BandDef, ByAlignment, Shifts};
 pub use anim::GlyphAnim;
 pub use calendar::Calendar;
+pub use campaign::{CAMPAIGNS, CampaignDef, CampaignKind};
 #[cfg(test)]
 pub(crate) use class::strip_tables as strip_class_tables;
 pub use class::{BonusTalents, ClassActive, ClassDef};
@@ -223,9 +225,9 @@ impl ContentFiles {
         files
     }
 
-    /// Reads the `data/`, `levels/`, `scenarios/`, and `vaults/` TOML files under `root`,
-    /// subdirectories included (`data/creatures/kobold.toml`): the same set, under the same
-    /// paths, as `build.rs` embeds.
+    /// Reads the `campaigns/`, `data/`, `levels/`, `scenarios/`, and `vaults/` TOML files under
+    /// `root`, subdirectories included (`data/creatures/kobold.toml`): the same set, under the
+    /// same paths, as `build.rs` embeds.
     pub fn from_dir(root: &Path) -> std::io::Result<Self> {
         fn collect(dir: &Path, rel: &str, files: &mut ContentFiles) -> std::io::Result<()> {
             let Ok(entries) = std::fs::read_dir(dir) else {
@@ -243,7 +245,7 @@ impl ContentFiles {
             Ok(())
         }
         let mut files = Self::default();
-        for dir in ["data", "levels", "scenarios", "vaults"] {
+        for dir in [CAMPAIGNS, "data", "levels", "scenarios", "vaults"] {
             collect(&root.join(dir), dir, &mut files)?;
         }
         Ok(files)
@@ -263,17 +265,26 @@ impl ContentFiles {
 
     /// The files of the content table `name`, in the order its entries are numbered:
     /// `data/<name>.toml` first, if there is one, then every file under `data/<name>/`
-    /// (subdirectories included) in path order. Each is `(path, text)`.
+    /// (subdirectories included) in path order, then every campaign's `data/<name>/` the same
+    /// way, the campaigns in [`ContentFiles::campaign_order`]. Each is `(path, text)`.
     pub fn table<'a>(&'a self, name: &str) -> impl Iterator<Item = (&'a str, &'a str)> {
         let single = format!("data/{name}.toml");
-        let dir = format!("data/{name}/");
-        let first = self.files.get_key_value(&single);
-        let rest = self
-            .files
-            .range(dir.clone()..)
-            .take_while(move |(p, _)| p.starts_with(&dir))
-            .filter(|(p, _)| p.ends_with(".toml"));
-        (first.into_iter().chain(rest)).map(|(p, t)| (p.as_str(), t.as_str()))
+        let mut all: Vec<(&str, &str)> = (self.files.get_key_value(&single).into_iter())
+            .map(|(p, t)| (p.as_str(), t.as_str()))
+            .collect();
+        let campaigns = self.campaign_order();
+        let dirs = std::iter::once(format!("data/{name}/")).chain(
+            campaigns
+                .iter()
+                .map(|c| format!("{CAMPAIGNS}/{c}/data/{name}/")),
+        );
+        for dir in dirs {
+            let files = (self.files.range(dir.clone()..))
+                .take_while(|(p, _)| p.starts_with(&dir))
+                .filter(|(p, _)| p.ends_with(".toml"));
+            all.extend(files.map(|(p, t)| (p.as_str(), t.as_str())));
+        }
+        all.into_iter()
     }
 
     /// Rewrites every file of table `name` with `edit` (tests: a built-in creature with a line
@@ -296,13 +307,22 @@ impl ContentFiles {
         self.files.get(path).map(String::as_str)
     }
 
-    /// Files directly under `dir/` with their stem (`levels/hub.toml` → `hub`).
-    fn in_dir<'a>(&'a self, dir: &'a str) -> impl Iterator<Item = (&'a str, &'a str, &'a str)> {
-        self.files.iter().filter_map(move |(path, text)| {
-            let rest = path.strip_prefix(dir)?.strip_prefix('/')?;
-            let stem = rest.strip_suffix(".toml")?;
-            (!stem.contains('/')).then_some((path.as_str(), stem, text.as_str()))
-        })
+    /// Files directly under `dir/` with their stem (`levels/hub.toml` → `hub`), then those
+    /// directly under each campaign's `dir/` (`campaigns/showcase/levels/hub.toml`), the
+    /// campaigns in [`ContentFiles::campaign_order`]: each `(path, stem, text)`.
+    fn in_dir<'a>(&'a self, dir: &'a str) -> Vec<(&'a str, &'a str, &'a str)> {
+        let under = |prefix: String| {
+            self.files.iter().filter_map(move |(path, text)| {
+                let rest = path.strip_prefix(&prefix)?;
+                let stem = rest.strip_suffix(".toml")?;
+                (!stem.contains('/')).then_some((path.as_str(), stem, text.as_str()))
+            })
+        };
+        let mut all: Vec<_> = under(format!("{dir}/")).collect();
+        for campaign in self.campaign_order() {
+            all.extend(under(format!("{CAMPAIGNS}/{campaign}/{dir}/")));
+        }
+        all
     }
 }
 
@@ -449,7 +469,11 @@ pub struct Content {
     vision_ids: BTreeMap<String, usize>,
     /// In `data/sizes.toml` order.
     sizes: Vec<SizeDef>,
+    /// The campaigns (spec §3), in [`ContentFiles::campaign_order`].
+    campaigns: Vec<CampaignDef>,
     levels: BTreeMap<String, LevelTemplate>,
+    /// The campaign of each hand-made level: `None` for one outside every campaign.
+    level_campaigns: BTreeMap<String, Option<String>>,
     scenarios: BTreeMap<String, ScenarioDef>,
     dungeons: BTreeMap<String, DungeonDef>,
     /// Sorted by id.
@@ -535,7 +559,9 @@ impl Content {
             visions: Vec::new(),
             vision_ids: BTreeMap::new(),
             sizes: vec![SizeDef::medium()],
+            campaigns: Vec::new(),
             levels: BTreeMap::new(),
+            level_campaigns: BTreeMap::new(),
             scenarios: BTreeMap::new(),
             dungeons: BTreeMap::new(),
             vaults: Vec::new(),
@@ -569,6 +595,7 @@ impl Content {
             quests: Vec::new(),
             shops: None,
         };
+        content.campaigns = campaign::parse(files)?;
         let path = "data/calendar.toml";
         if let Some(text) = files.get_optional(path) {
             content.calendar = Calendar::parse(path, text)?;
@@ -719,10 +746,7 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             content.stat_training = StatTraining::parse(path, text)?;
         }
-        let path = "data/dialogue.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.dialogues = dialogue::parse(path, text, &content)?;
-        }
+        content.dialogues = dialogue::parse(files.table("dialogue"), &content)?;
         content.load_hunger(files)?;
 
         let path = "data/legend.toml";
@@ -733,7 +757,11 @@ impl Content {
             default_legend.insert(legend_char(path, &key)?, entry);
         }
 
+        let mut seen: BTreeMap<String, &str> = BTreeMap::new();
         for (path, id, text) in files.in_dir("levels") {
+            if let Some(first) = seen.insert(id.to_string(), path) {
+                return Err(duplicate_id("level", id, path, first));
+            }
             let level = level::parse_level(path, id, text, &content, &default_legend)?;
             if let Some((at, _)) = level.loot.first() {
                 return Err(ContentError::new(
@@ -741,26 +769,50 @@ impl Content {
                     format!("`loot` at {at}: loot is rolled only in vaults"),
                 ));
             }
+            let campaign = campaign::of_path(path).map(str::to_string);
+            content.level_campaigns.insert(id.to_string(), campaign);
             content.levels.insert(id.to_string(), level);
         }
         content.load_kits()?;
+        let mut seen: BTreeMap<String, &str> = BTreeMap::new();
         for (path, id, text) in files.in_dir("scenarios") {
+            if let Some(first) = seen.insert(id.to_string(), path) {
+                return Err(duplicate_id("scenario", id, path, first));
+            }
             let mut scenario = ScenarioDef::parse(path, id, text)?;
             let err = |m: String| ContentError::new(path, format!("carry: {m}"));
             scenario.carry = object::parse_stacks(&scenario.carry_spec, &content).map_err(err)?;
+            scenario.campaign = campaign::of_path(path).map(str::to_string);
             content.scenarios.insert(id.to_string(), scenario);
         }
+        let mut seen: BTreeMap<String, &str> = BTreeMap::new();
         for (path, id, text) in files.in_dir("vaults") {
+            if let Some(first) = seen.insert(id.to_string(), path) {
+                return Err(duplicate_id("vault", id, path, first));
+            }
             let template = level::parse_level(path, id, text, &content, &default_legend)?;
-            let vault = Vault::new(template, &content).map_err(|m| ContentError::new(path, m))?;
+            let mut vault =
+                Vault::new(template, &content).map_err(|m| ContentError::new(path, m))?;
+            vault.campaign = campaign::of_path(path).map(str::to_string);
             content.vaults.push(vault);
         }
         content.load_dungeons(files)?;
-        let path = "data/quests.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.quests = quest::parse(path, text, &content)?;
+        // A scenario outside every campaign (a test fixture) plays in its start level's.
+        let loose: Vec<(String, Option<String>)> = (content.scenarios.values())
+            .filter(|s| s.campaign.is_none())
+            .map(|s| {
+                let campaign = content.level_campaign(&s.start_level);
+                (s.id.clone(), campaign.map(str::to_string))
+            })
+            .collect();
+        for (id, campaign) in loose {
+            if let Some(s) = content.scenarios.get_mut(&id) {
+                s.campaign = campaign;
+            }
         }
+        content.quests = quest::parse(files.table("quests"), &content)?;
         content.validate()?;
+        content.check_campaigns()?;
         Ok(content)
     }
 
@@ -1145,7 +1197,9 @@ impl Content {
                     )));
                 }
             }
-            self.creatures.push(spec.resolve(resolved));
+            let mut def = spec.resolve(resolved);
+            def.campaign = campaign::of_path(path).map(str::to_string);
+            self.creatures.push(def);
         }
         if !self.creature_ids.contains_key("player") {
             return Err(ContentError::new(
@@ -1663,35 +1717,39 @@ impl Content {
     }
 
     fn load_dungeons(&mut self, files: &ContentFiles) -> Result<(), ContentError> {
-        let path = "data/dungeons.toml";
-        let Some(text) = files.get_optional(path) else {
-            return Ok(());
-        };
-        let parsed: dungeon::DungeonFile =
-            toml::from_str(text).map_err(|e| ContentError::new(path, e.to_string()))?;
-        let key_id = |name: &str| {
-            self.object_id(name)
-                .filter(|o| self.object(*o).key.is_some())
-        };
-        let resolved = parsed.resolve(
-            path,
-            |name| (self.creature_id(name)).map(|c| (c, self.creature(c).level)),
-            key_id,
-            |name| self.trap_id(name),
-            &self.room_effects,
-            self.shops.as_ref(),
-        )?;
-        for def in resolved {
-            if self.levels.contains_key(&def.id) {
-                return Err(ContentError::new(
-                    path,
-                    format!("dungeon `{}` has the same id as a level", def.id),
-                ));
+        let mut seen: BTreeMap<String, &str> = BTreeMap::new();
+        for (path, text) in files.table("dungeons") {
+            let parsed: dungeon::DungeonFile =
+                toml::from_str(text).map_err(|e| ContentError::new(path, e.to_string()))?;
+            let key_id = |name: &str| {
+                self.object_id(name)
+                    .filter(|o| self.object(*o).key.is_some())
+            };
+            let resolved = parsed.resolve(
+                path,
+                |name| (self.creature_id(name)).map(|c| (c, self.creature(c).level)),
+                key_id,
+                |name| self.trap_id(name),
+                &self.room_effects,
+                self.shops.as_ref(),
+            )?;
+            for mut def in resolved {
+                if let Some(first) = seen.insert(def.id.clone(), path) {
+                    return Err(duplicate_id("dungeon", &def.id, path, first));
+                }
+                if self.levels.contains_key(&def.id) {
+                    return Err(ContentError::new(
+                        path,
+                        format!("dungeon `{}` has the same id as a level", def.id),
+                    ));
+                }
+                def.campaign = campaign::of_path(path).map(str::to_string);
+                self.dungeons.insert(def.id.clone(), def);
             }
-            self.dungeons.insert(def.id.clone(), def);
         }
         if !self.dungeons.is_empty() {
-            crate::mapgen::Palette::resolve(self).map_err(|m| ContentError::new(path, m))?;
+            crate::mapgen::Palette::resolve(self)
+                .map_err(|m| ContentError::new("data/dungeons.toml", m))?;
         }
         Ok(())
     }
@@ -1741,29 +1799,33 @@ impl Content {
     /// vision profile, lantern, and character's race and class exist. Levels of dungeon branches (`depths:3`) and local areas
     /// of the overworld (`local:12,30`) count as existing.
     fn validate(&self) -> Result<(), ContentError> {
-        let mut overworlds = self
-            .levels
-            .values()
-            .filter(|l| l.kind == LevelKind::Overworld);
-        if let (Some(_), Some(second)) = (overworlds.next(), overworlds.next()) {
-            return Err(ContentError::new(
-                &format!("levels/{}.toml", second.id),
-                "there can be only one level of kind `overworld`",
-            ));
+        // At most one overworld a campaign (and one outside every campaign).
+        let mut overworlds: BTreeMap<Option<&str>, &str> = BTreeMap::new();
+        for level in (self.levels.values()).filter(|l| l.kind == LevelKind::Overworld) {
+            if overworlds
+                .insert(self.level_campaign(&level.id), &level.id)
+                .is_some()
+            {
+                return Err(ContentError::new(
+                    &self.level_file(&level.id),
+                    "a campaign can have only one level of kind `overworld`",
+                ));
+            }
         }
         for level in self.levels.values() {
+            let campaign = self.level_campaign(&level.id).unwrap_or_default();
             for link in &level.stairs {
                 if let Some(to) = &link.to
-                    && !self.has_level(to)
+                    && !self.has_level(campaign, to)
                 {
                     return Err(ContentError::new(
-                        &format!("levels/{}.toml", level.id),
+                        &self.level_file(&level.id),
                         format!("stairs at {} lead to unknown level `{to}`", link.pos),
                     ));
                 }
             }
             for (pos, hidden) in &level.hidden {
-                if !self.has_level(&hidden.to) {
+                if !self.has_level(campaign, &hidden.to) {
                     return Err(ContentError::new(
                         &format!("levels/{}.toml", level.id),
                         format!(
@@ -1776,7 +1838,8 @@ impl Content {
         }
         for scenario in self.scenarios.values() {
             let file = format!("scenarios/{}.toml", scenario.id);
-            if !self.has_level(&scenario.start_level) {
+            let campaign = scenario.campaign.as_deref().unwrap_or_default();
+            if !self.has_level(campaign, &scenario.start_level) {
                 return Err(ContentError::new(
                     &file,
                     format!("unknown start level `{}`", scenario.start_level),
@@ -1808,7 +1871,12 @@ impl Content {
 
     /// A stable hash (64-bit FNV-1a) of the ordered terrain, creature, level, light, dungeon,
     /// object, slot, skill, room effect, weapon skill, status, disease, trap, damage type,
-    /// resource, and shop ids.
+    /// resource, and shop ids, as a run of campaign `campaign` sees them (spec §3): the levels
+    /// and dungeon branches of other campaigns left out, and so are the creature types of other
+    /// campaigns numbered after every one the run may meet, with their corpses (the objects
+    /// after every other). A save of a campaign then loads in a build that holds more campaigns
+    /// or fewer, as long as its indices are the same: a release build without the test world
+    /// (whose types come last) and a developer build with it.
     ///
     /// `TerrainId`, `CreatureId`, `LightId`, `ObjectId`, `SlotId`, `SkillId`, `RoomEffectId`,
     /// `WeaponSkillId`, `StatusId`, `DiseaseId`, `TrapId`, `DamageTypeId`, `ResourceId`, and
@@ -1816,20 +1884,43 @@ impl Content {
     /// indices, so a save
     /// is only meaningful for content with the same ids in the same order; saves record this
     /// fingerprint to detect a mismatch.
-    pub fn fingerprint(&self) -> u64 {
+    pub fn fingerprint_for(&self, campaign: &str) -> u64 {
         let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
         let mut feed = |bytes: &[u8]| {
             for &b in bytes {
                 hash = (hash ^ u64::from(b)).wrapping_mul(0x0000_0100_0000_01b3);
             }
         };
+        let ours = |owner: Option<&str>| owner.is_none_or(|c| c == campaign);
+        // Indices count: only the other campaigns' types after the last the run may meet go.
+        let creatures = (self.creatures.iter())
+            .rposition(|c| ours(c.campaign.as_deref()))
+            .map_or(0, |i| i + 1);
+        let gone: BTreeSet<ObjectId> = self.corpses[creatures..]
+            .iter()
+            .flatten()
+            .copied()
+            .collect();
+        let objects = (0..self.objects.len())
+            .rposition(|i| !gone.contains(&ObjectId(i as u16)))
+            .map_or(0, |i| i + 1);
         let groups: &[Vec<&str>] = &[
             self.terrain.iter().map(|t| t.id.as_str()).collect(),
-            self.creatures.iter().map(|c| c.id.as_str()).collect(),
-            self.levels.keys().map(String::as_str).collect(),
+            (self.creatures[..creatures].iter())
+                .map(|c| c.id.as_str())
+                .collect(),
+            (self.levels.keys())
+                .filter(|id| ours(self.level_campaign(id)))
+                .map(String::as_str)
+                .collect(),
             self.lights.iter().map(|l| l.id.as_str()).collect(),
-            self.dungeons.keys().map(String::as_str).collect(),
-            self.objects.iter().map(|o| o.id.as_str()).collect(),
+            (self.dungeons.values())
+                .filter(|d| ours(d.campaign.as_deref()))
+                .map(|d| d.id.as_str())
+                .collect(),
+            (self.objects[..objects].iter())
+                .map(|o| o.id.as_str())
+                .collect(),
             self.slots.iter().map(|s| s.id.as_str()).collect(),
             self.skills.list.iter().map(|s| s.id.as_str()).collect(),
             (self.room_effects.defs().iter())
@@ -2281,12 +2372,12 @@ impl Content {
         self.levels.get(id)
     }
 
-    /// Whether `id` names a hand-made level, a level of a dungeon branch, or a local area of the
-    /// overworld.
-    pub fn has_level(&self, id: &str) -> bool {
+    /// Whether `id` names a hand-made level, a level of a dungeon branch, or a local area of
+    /// campaign `campaign`'s overworld (`""`: of the one outside every campaign).
+    pub fn has_level(&self, campaign: &str, id: &str) -> bool {
         self.levels.contains_key(id)
             || self.branch_level(id).is_some()
-            || self.local_area(id).is_some()
+            || self.local_area(campaign, id).is_some()
     }
 
     /// The name a player would know a level by: a hand-made level's name or a branch level's
@@ -2856,14 +2947,22 @@ mod tests {
 
     #[test]
     fn fingerprint_is_stable_and_tracks_ids() {
-        let a = Content::builtin().expect("content").fingerprint();
-        assert_eq!(a, Content::builtin().expect("content").fingerprint());
+        let a = Content::builtin()
+            .expect("content")
+            .fingerprint_for("showcase");
+        assert_eq!(
+            a,
+            Content::builtin()
+                .expect("content")
+                .fingerprint_for("showcase")
+        );
         let mut files = ContentFiles::builtin();
-        let hub = files.get("levels/hub.toml").expect("hub").to_string();
-        files.insert("levels/hub_copy.toml", &hub);
-        if let Ok(other) = Content::load(&files) {
-            assert_ne!(a, other.fingerprint());
-        }
+        let hub = (files.get("campaigns/showcase/levels/hub.toml"))
+            .expect("hub")
+            .to_string();
+        files.insert("campaigns/showcase/levels/hub_copy.toml", &hub);
+        let other = Content::load(&files).expect("loads");
+        assert_ne!(a, other.fingerprint_for("showcase"));
     }
 
     fn minimal_files(level_map: &str, extra_legend: &str) -> ContentFiles {
@@ -3570,16 +3669,21 @@ mod tests {
     #[test]
     fn stairs_and_scenarios_may_lead_into_dungeon_branches() {
         let content = Content::builtin().unwrap();
-        assert!(content.has_level("depths:8") && !content.has_level("depths:9"));
+        assert!(
+            content.has_level("showcase", "depths:8") && !content.has_level("showcase", "depths:9")
+        );
         let (branch, depth) = content.branch_level("depths:3").unwrap();
         assert_eq!((branch.id.as_str(), depth), ("depths", 3));
         assert_eq!(content.scenario("depths").unwrap().start_level, "depths:1");
 
         let with_target = |to: &str| {
             let mut files = ContentFiles::builtin();
-            let hub = files.get("levels/hub.toml").unwrap().to_string();
+            let hub = files
+                .get("campaigns/showcase/levels/hub.toml")
+                .unwrap()
+                .to_string();
             files.insert(
-                "levels/hub.toml",
+                "campaigns/showcase/levels/hub.toml",
                 &hub.replace("to = \"vast\"", &format!("to = \"{to}\"")),
             );
             Content::load(&files)
@@ -4104,7 +4208,10 @@ mod tests {
         // Slots enter the fingerprint: equipment is saved by slot index.
         let without = load("", &object("")).expect("loads");
         let with = load(&slots, &object("")).expect("loads");
-        assert_ne!(without.fingerprint(), with.fingerprint());
+        assert_ne!(
+            without.fingerprint_for("showcase"),
+            with.fingerprint_for("showcase")
+        );
     }
 
     #[test]

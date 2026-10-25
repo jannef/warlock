@@ -519,8 +519,8 @@ mod tests {
         let other = Content::load(&files).expect("changed effects load");
         let builtin = Content::builtin().expect("builtin content");
         assert_eq!(
-            other.fingerprint(),
-            builtin.fingerprint(),
+            other.fingerprint_for("showcase"),
+            builtin.fingerprint_for("showcase"),
             "saves stay valid"
         );
         let actions = crate::action::parse_actions(

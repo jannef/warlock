@@ -11,8 +11,9 @@ use crate::content::{ContentFiles, RevealWhen};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 
-const OVERWORLD: &str = include_str!("../../../../assets/levels/overworld.toml");
-const QUESTS: &str = include_str!("../../../../assets/data/quests.toml");
+const OVERWORLD: &str = include_str!("../../../../assets/campaigns/showcase/levels/overworld.toml");
+const QUESTS: &str =
+    include_str!("../../../../assets/campaigns/showcase/data/quests/showcase.toml");
 
 /// The hidden barrow's cell: a swamp cell of the Mirefen.
 const BARROW: Pos = Pos::new(50, 43);
@@ -38,7 +39,10 @@ fn overworld_with(legend: &str) -> String {
 /// quest revealing it `when` (none: it reveals nothing).
 fn files(when: Option<RevealWhen>) -> ContentFiles {
     let mut files = ContentFiles::builtin();
-    files.insert("levels/overworld.toml", &overworld_with(LEGEND));
+    files.insert(
+        "campaigns/showcase/levels/overworld.toml",
+        &overworld_with(LEGEND),
+    );
     let when = match when {
         None => None,
         Some(RevealWhen::Offered) => Some("offered"),
@@ -51,7 +55,7 @@ fn files(when: Option<RevealWhen>) -> ContentFiles {
              where = \"{WHERE}\""
         );
         files.insert(
-            "data/quests.toml",
+            "campaigns/showcase/data/quests/showcase.toml",
             &QUESTS.replacen("target = \"depths:3\"", &reveals, 1),
         );
     }
@@ -109,11 +113,13 @@ fn act(world: &mut World, actions: &str) {
 #[test]
 fn the_legend_hides_a_location_on_the_overworld() {
     let content = content(None);
-    let overworld = content.overworld().expect("an overworld");
+    let overworld = content.overworld_of("showcase").expect("an overworld");
     let swamp = content.terrain_id("swamp").expect("swamp");
     assert_eq!(overworld.terrain[BARROW], swamp);
     assert!(overworld.stairs.iter().all(|s| s.pos != BARROW));
-    let (at, hidden) = content.hidden_location("old_barrow").expect("hidden");
+    let (at, hidden) = content
+        .hidden_location("showcase", "old_barrow")
+        .expect("hidden");
     assert_eq!(at, BARROW);
     assert_eq!(hidden.to, "depths:1");
     assert_eq!(hidden.name, "The Old Barrow");
@@ -371,7 +377,10 @@ fn error(files: &ContentFiles) -> String {
 fn content_checks_hidden_locations_and_reveals() {
     let with = |legend: &str| {
         let mut files = ContentFiles::builtin();
-        files.insert("levels/overworld.toml", &overworld_with(legend));
+        files.insert(
+            "campaigns/showcase/levels/overworld.toml",
+            &overworld_with(legend),
+        );
         files
     };
     let hidden = |terrain: &str, at: &str, to: &str| {
@@ -403,14 +412,14 @@ fn content_checks_hidden_locations_and_reveals() {
     }
     // Only on the overworld.
     let mut files = ContentFiles::builtin();
-    let arena = include_str!("../../../../assets/levels/arena.toml").replacen(
+    let arena = include_str!("../../../../assets/campaigns/showcase/levels/arena.toml").replacen(
         "[legend]\n",
         "[legend]\n\"9\" = { terrain = \"floor\", hidden = { id = \"pit\", terrain = \
          \"stairs_down\", to = \"hub\", name = \"The Pit\" } }\n",
         1,
     );
     let arena = arena.replacen("map = '''\n#", "map = '''\n9", 1);
-    files.insert("levels/arena.toml", &arena);
+    files.insert("campaigns/showcase/levels/arena.toml", &arena);
     assert!(
         error(&files).contains("only the overworld"),
         "{}",
@@ -432,7 +441,7 @@ fn files_with_quest_reveal(location: &str) -> ContentFiles {
     let mut files = files(None);
     let reveals = format!("target = \"depths:3\"\nreveals = {{ location = \"{location}\" }}");
     files.insert(
-        "data/quests.toml",
+        "campaigns/showcase/data/quests/showcase.toml",
         &QUESTS.replacen("target = \"depths:3\"", &reveals, 1),
     );
     files

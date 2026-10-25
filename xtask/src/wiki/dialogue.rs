@@ -4,18 +4,26 @@ use super::text::{capital, yes};
 use std::fmt::Write as _;
 use warlock_core::content::{Content, Speaker};
 
-/// Who talks (`data/dialogue.toml`): each speaker, whether they greet you, how many one-liners
+/// Who talks (`data/dialogue.toml` and the campaigns' `data/dialogue/`, those the wiki
+/// describes, by name): each speaker, whether they greet you, how many one-liners
 /// they take turns with, what you may ask them about, and how they mutter. The lines themselves
 /// are left to the game.
 pub(super) fn dialogue(content: &Content) -> String {
     let mut out = String::from(
         "| Who | Greets you | One-liners | Topics | Mutters |\n|---|:---:|---:|---|---|\n",
     );
-    for d in content.dialogues() {
-        let who = match &d.speaker {
-            Speaker::Creature(c) => capital(&content.creature(*c).name),
-            Speaker::Npc(npc) => format!("`{npc}` (a unique character)"),
-        };
+    let mut rows: Vec<_> = (content.dialogues().iter())
+        .filter(|d| super::order::described(content, d.campaign.as_deref()))
+        .map(|d| {
+            let who = match &d.speaker {
+                Speaker::Creature(c) => capital(&content.creature(*c).name),
+                Speaker::Npc(npc) => format!("`{npc}` (a unique character)"),
+            };
+            (who, d)
+        })
+        .collect();
+    rows.sort_by_cached_key(|(who, _)| who.to_lowercase());
+    for (who, d) in rows {
         let topics: Vec<&str> = d.topics.iter().map(|t| t.name.as_str()).collect();
         let topics = if topics.is_empty() {
             "—".to_string()

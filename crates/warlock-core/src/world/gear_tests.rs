@@ -342,8 +342,10 @@ fn generated_levels_roll_gear_from_their_own_stream_and_nothing_else_moves() {
     for seed in 0..6 {
         for depth in 1..=4 {
             let id = format!("depths:{depth}");
-            let with = crate::mapgen::generate(&builtin, seed, &id, None).expect("level");
-            let without = crate::mapgen::generate(&plain, seed, &id, None).expect("level");
+            let with =
+                crate::mapgen::generate(&builtin, ("showcase", seed), &id, None).expect("level");
+            let without =
+                crate::mapgen::generate(&plain, ("showcase", seed), &id, None).expect("level");
             // The map, its traps, secrets, loot, and creatures are the same; only their kits.
             assert_eq!(bare(&with), bare(&without), "{id} {seed}");
             // The kits rolled are the level's gear stream, in spawn order; a vault's fixed kit

@@ -225,7 +225,8 @@ fn loot_and_creature_kits_are_made_of_their_base_items_parts() {
     for seed in [1, 7, 42] {
         for depth in 1..=6 {
             let id = format!("depths:{depth}");
-            let level = crate::mapgen::generate(&content, seed, &id, None).expect("level");
+            let level =
+                crate::mapgen::generate(&content, ("showcase", seed), &id, None).expect("level");
             let floor = level.objects.values().flatten();
             let kits = level.creatures.iter().flat_map(|c| c.carry.iter());
             for stack in floor.chain(kits) {

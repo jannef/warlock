@@ -48,7 +48,7 @@ Take one side and regenerate; never resolve hunks in these by hand:
 |---|---|
 | `wiki/src/generated/*.md` | not committed any more (`.gitignore`); `cargo xtask wiki` writes them |
 | insta snapshots (`crates/warlock-core/src/snapshots/`, `src/mapgen/snapshots/`, `src/mapgen/local/snapshots/`) | take `main`'s (`git checkout --theirs -- <path>` while merging main), then `INSTA_UPDATE=always cargo test -p warlock-core`, then read the diff (below) |
-| `assets/levels/vast.toml` | take either side, `cargo xtask gen-vast` (`--check` must pass) |
+| `assets/campaigns/showcase/levels/vast.toml` | take either side, `cargo xtask gen-vast` (`--check` must pass) |
 | `THIRD_PARTY_LICENSES.html` | take either side, `cargo xtask licenses` after `Cargo.lock` is settled |
 | `Cargo.lock` | take `main`'s, then `cargo build --workspace` re-resolves your additions |
 | `tests/golden/*.png` | take `main`'s, then `WGPU_BACKEND=vulkan cargo xtask golden --update` in the cloud sandbox (lavapipe, as CI; CLAUDE.md "Golden screenshots"), never on macOS |

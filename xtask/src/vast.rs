@@ -1,4 +1,4 @@
-//! `cargo xtask gen-vast`: deterministic generator for `assets/levels/vast.toml` (spec §3 Level 2).
+//! `cargo xtask gen-vast`: deterministic generator for `assets/campaigns/showcase/levels/vast.toml` (spec §3 Level 2).
 //!
 //! Pipeline: cellular-automata caverns, keep the largest connected cave, carve a winding river of
 //! running water (its flow follows the channel south; a few boulders break it), scatter pillars,
@@ -33,7 +33,7 @@ const STAIRS: u8 = b'<';
 /// Creature types hostile to the player: placed in the `peaceful` faction on this level.
 const HOSTILE_KINDS: [&str; 2] = ["rat", "kobold"];
 
-/// Stairs down into the procedurally generated `depths` branch (`assets/data/dungeons.toml`).
+/// Stairs down into the procedurally generated `depths` branch (`assets/campaigns/showcase/data/dungeons/showcase.toml`).
 const DEPTHS: u8 = b'>';
 /// Stairs up and out to the overworld (the cavern mouth there leads back down).
 const MOUTH: u8 = b'^';
@@ -659,7 +659,7 @@ mod tests {
         let a = generate().expect("generates");
         assert_eq!(a, generate().expect("generates"));
         let mut files = ContentFiles::builtin();
-        files.insert("levels/vast.toml", &a);
+        files.insert("campaigns/showcase/levels/vast.toml", &a);
         let content = Content::load(&files).expect("vast level loads");
         let level = content.level("vast").expect("vast level exists");
         assert_eq!(

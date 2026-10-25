@@ -187,10 +187,15 @@ fn treasure_hunter_finds_magic_more_often_from_the_same_draws() {
     assert!(rare_l > rare);
     // The map is the same: only what the loot rolls changes.
     let id = "depths:2";
-    let plain = crate::mapgen::generate(content, 5, id, None).expect("level");
-    let lucky =
-        crate::mapgen::generate_with(content, 5, id, None, loot::Luck { magic: 50, gems: 0 })
-            .expect("level");
+    let plain = crate::mapgen::generate(content, ("showcase", 5), id, None).expect("level");
+    let lucky = crate::mapgen::generate_with(
+        content,
+        ("showcase", 5),
+        id,
+        None,
+        loot::Luck { magic: 50, gems: 0 },
+    )
+    .expect("level");
     assert_eq!(plain.terrain, lucky.terrain);
     assert_eq!(
         plain.objects.keys().collect::<Vec<_>>(),

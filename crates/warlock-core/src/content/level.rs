@@ -1,4 +1,4 @@
-//! Hand-authored level files (`assets/levels/*.toml`, spec §7).
+//! Hand-authored level files (`levels/*.toml` of each campaign, `assets/campaigns/<id>/levels/`, spec §7).
 //!
 //! A level is a multiline ASCII `map` plus a `legend` mapping characters to terrain and to things
 //! placed on that terrain (player start, creatures with patrol routes, what they carry, and what

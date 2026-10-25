@@ -404,6 +404,8 @@ pub struct DungeonDef {
     pub spawning: Option<Spawning>,
     /// One plan per depth, index `depth - 1`.
     plans: Vec<LevelPlan>,
+    /// The campaign whose `data/dungeons/` it is in; `None` outside every campaign.
+    pub campaign: Option<String>,
     /// The special-room odds per depth, index `depth - 1`.
     room_odds: Vec<RoomOdds>,
     /// The shop odds per depth, index `depth - 1`; empty without `shops.toml`.
@@ -666,6 +668,7 @@ impl DungeonFile {
                 key,
                 spawning: spawning.map(|(_, s)| s),
                 plans,
+                campaign: None,
                 room_odds,
                 shop_odds,
             });

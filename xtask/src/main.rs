@@ -4,7 +4,7 @@
 //! - `smoke`: run the game with `--capture` and check that something was rendered.
 //! - `web`: build the WebGPU site into `target/web` (needs `wasm-bindgen-cli`, see CLAUDE.md).
 //! - `web-smoke [CHROME]`: load `target/web` in headless Chromium, start a run, screenshot it.
-//! - `gen-vast [--check]`: regenerate `assets/levels/vast.toml` (`--check` fails if it is stale).
+//! - `gen-vast [--check]`: regenerate `assets/campaigns/showcase/levels/vast.toml` (`--check` fails if it is stale).
 //! - `licenses [--check]`: regenerate `THIRD_PARTY_LICENSES.html` (needs `cargo-about`).
 //! - `golden [--update | --local]`: compare headless captures with `tests/golden/*.png`.
 //! - `wiki [--build]`: write the player wiki's generated tables (`--build`: run mdBook).
@@ -321,7 +321,7 @@ fn web_smoke(args: &[String]) -> Result<(), String> {
 }
 
 fn gen_vast(check: bool) -> Result<(), String> {
-    let path = workspace_root().join("assets/levels/vast.toml");
+    let path = workspace_root().join("assets/campaigns/showcase/levels/vast.toml");
     let text = vast::generate()?;
     if check {
         let current = std::fs::read_to_string(&path).unwrap_or_default();

@@ -1,4 +1,4 @@
-//! Scenarios (`assets/scenarios/*.toml`): a named starting setup for a run.
+//! Scenarios (`assets/campaigns/<id>/scenarios/*.toml`): a named starting setup for a run.
 
 use super::ContentError;
 use crate::character::{CharacterSpec, Gender, check_name};
@@ -17,6 +17,11 @@ pub struct ScenarioDef {
     /// File stem; filled in by the loader.
     #[serde(skip)]
     pub id: String,
+    /// The campaign it starts a run of (spec §3): the one whose `scenarios/` it is in, or for a
+    /// scenario outside every campaign (a test fixture), its start level's; filled in by the
+    /// loader.
+    #[serde(skip)]
+    pub campaign: Option<String>,
     pub name: String,
     #[serde(default)]
     pub description: String,

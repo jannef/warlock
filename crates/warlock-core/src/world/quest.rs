@@ -503,7 +503,10 @@ impl World {
         if !self.reveal_location(&reveal.location) {
             return;
         }
-        let Some((_, location)) = self.content.hidden_location(&reveal.location) else {
+        let Some((_, location)) = self
+            .content
+            .hidden_location(&self.state.campaign, &reveal.location)
+        else {
             return;
         };
         let place = in_sentence(&location.name);

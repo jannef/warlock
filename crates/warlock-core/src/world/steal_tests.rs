@@ -372,7 +372,7 @@ fn thefts_save_replay_and_hash() {
     let (again, divergence) = replay.play(content()).expect("plays");
     assert!(divergence.is_none(), "the replay verifies");
     assert_eq!(again.state_hash(), w.state_hash());
-    let bytes = crate::save::encode_state(w.state(), w.content().fingerprint());
+    let bytes = crate::save::encode_state(w.state(), w.fingerprint());
     let loaded = crate::save::decode(&bytes, content()).expect("loads");
     assert_eq!(loaded.state_hash(), w.state_hash());
 }

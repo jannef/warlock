@@ -16,10 +16,19 @@ impl World {
     /// as it is made ([`apply_revealed`]). Returns whether anything changed: `false` for a
     /// location revealed before, or one the overworld does not have.
     pub(super) fn reveal_location(&mut self, id: &str) -> bool {
-        let Some(overworld) = self.content.overworld().map(|o| o.id.clone()) else {
+        let Some(overworld) = self
+            .content
+            .overworld_of(&self.state.campaign)
+            .map(|o| o.id.clone())
+        else {
             return false;
         };
-        if self.content.hidden_location(id).is_none() || !self.state.revealed.insert(id.into()) {
+        if self
+            .content
+            .hidden_location(&self.state.campaign, id)
+            .is_none()
+            || !self.state.revealed.insert(id.into())
+        {
             return false;
         }
         if let Some(at) = reveal_on(&mut self.state, &overworld, id)
@@ -34,7 +43,7 @@ impl World {
     /// The dev action `reveal:ID` ([`crate::action::Action::Reveal`]): reveals hidden location
     /// `id` as a quest would, marking it on the map. Takes no time.
     pub(super) fn reveal_dev(&mut self, id: &str) -> Spent {
-        let Some((_, location)) = self.content.hidden_location(id) else {
+        let Some((_, location)) = self.content.hidden_location(&self.state.campaign, id) else {
             self.say(format!("There is no hidden location `{id}`."));
             return Spent::Nothing;
         };

@@ -1,4 +1,4 @@
-//! Dialogue (`assets/data/dialogue.toml`, spec §7 "Dialogue", #146): what creatures say when the
+//! Dialogue (`assets/data/dialogue.toml` and the campaigns' `data/dialogue/`, spec §7 "Dialogue", #146): what creatures say when the
 //! player chats with them (`C`), and what some of them mutter to themselves.
 //!
 //! Each `[[dialogue]]` belongs to a creature type (`creature = "gardener"`) or to one unique
@@ -35,6 +35,7 @@ pub struct DialogueId(pub u16);
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct DialogueFile {
+    #[serde(default)]
     dialogue: Vec<DialogueSpec>,
 }
 
@@ -154,6 +155,9 @@ pub struct Dialogue {
     /// What the speaker sells as a service, listed after the topics.
     pub services: Vec<Service>,
     pub mutter: Option<Mutter>,
+    /// The campaign whose `data/dialogue/` it is in; `None` for shared ones (the shopkeeper's)
+    /// and those outside every campaign.
+    pub campaign: Option<String>,
 }
 
 impl Dialogue {
@@ -168,15 +172,37 @@ impl Dialogue {
     }
 }
 
-/// Parses `data/dialogue.toml` against the creature types loaded already.
-pub(super) fn parse(
-    file: &str,
-    text: &str,
+/// Parses the dialogue table (`data/dialogue.toml`, `data/dialogue/`, and each campaign's
+/// `data/dialogue/`; [`super::ContentFiles::table`]) against the creature types loaded already.
+pub(super) fn parse<'a>(
+    table: impl Iterator<Item = (&'a str, &'a str)>,
     content: &Content,
 ) -> Result<Vec<Dialogue>, ContentError> {
+    let mut dialogues: Vec<Dialogue> = Vec::new();
+    let mut files: Vec<&str> = Vec::new();
+    for (file, text) in table {
+        parse_file(file, text, content, &mut dialogues, &mut files)?;
+    }
+    if dialogues.len() > usize::from(u16::MAX) {
+        return Err(ContentError::new(
+            files.last().copied().unwrap_or("data/dialogue.toml"),
+            "too many dialogues",
+        ));
+    }
+    Ok(dialogues)
+}
+
+/// One file of the dialogue table, added to `dialogues` (and `files`, the file of each).
+fn parse_file<'a>(
+    file: &'a str,
+    text: &str,
+    content: &Content,
+    dialogues: &mut Vec<Dialogue>,
+    files: &mut Vec<&'a str>,
+) -> Result<(), ContentError> {
     let err = |m: String| ContentError::new(file, m);
     let parsed: DialogueFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
-    let mut dialogues: Vec<Dialogue> = Vec::with_capacity(parsed.dialogue.len());
+    let campaign = super::campaign::of_path(file).map(str::to_string);
     for spec in parsed.dialogue {
         let speaker = match (spec.creature, spec.npc) {
             (Some(id), None) => match content.creature_id(&id) {
@@ -203,8 +229,13 @@ pub(super) fn parse(
             Speaker::Npc(npc) => format!("npc `{npc}`"),
         };
         let bad = |m: String| err(format!("dialogue of {who}: {m}"));
-        if dialogues.iter().any(|d| d.speaker == speaker) {
-            return Err(bad("there is already one".into()));
+        if let Some(i) = dialogues.iter().position(|d| d.speaker == speaker) {
+            let also = if files[i] == file {
+                String::new()
+            } else {
+                format!(" (also in {})", files[i])
+            };
+            return Err(bad(format!("there is already one{also}")));
         }
         if spec.lines.is_empty() {
             return Err(bad("`lines` needs at least one line".into()));
@@ -289,12 +320,11 @@ pub(super) fn parse(
             topics: spec.topic,
             services: spec.service,
             mutter,
+            campaign: campaign.clone(),
         });
+        files.push(file);
     }
-    if dialogues.len() > usize::from(u16::MAX) {
-        return Err(err("too many dialogues".into()));
-    }
-    Ok(dialogues)
+    Ok(())
 }
 
 /// Whether `id` is a topic or npc id: lower-case letters, digits, and underscores.

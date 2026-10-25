@@ -121,6 +121,7 @@
 
 # Notes on the groups, in the order they were kept in:
 #
-# The showcase's people (spec §3): folk who talk (data/dialogue.toml, `C` to chat) and mutter to
-# themselves now and then. Peaceful by type: they never fight, and you swap places with them
-# when they are in your way.
+# The showcase's people (spec §3), its own types in campaigns/showcase/data/creatures/ (a
+# campaign's types are its files there, numbered after these; only its own files may name them):
+# folk who talk (its data/dialogue/, `C` to chat) and mutter to themselves now and then.
+# Peaceful by type: they never fight, and you swap places with them when they are in your way.
