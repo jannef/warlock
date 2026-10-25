@@ -64,6 +64,20 @@ impl Dice {
         }
     }
 
+    /// It with `more` dice of its sides and `per_die` added to every die (a caster's talents:
+    /// Empower, Scroll adept); a fixed number or negative dice stay as they are.
+    pub const fn empowered(self, more: u32, per_die: i32) -> Self {
+        if self.count == 0 || self.negative {
+            return self;
+        }
+        let count = self.count + more;
+        Self {
+            count,
+            bonus: self.bonus + per_die * count as i32,
+            ..self
+        }
+    }
+
     /// It and `other` rolled together, as one: dice of the same sides (and sign) add up
     /// (`1d6` and `2d6`: `3d6`), as do fixed bonuses; otherwise the one with the higher best
     /// result counts (Sneak attack and Improved sneak attack).

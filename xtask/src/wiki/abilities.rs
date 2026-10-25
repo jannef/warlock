@@ -20,6 +20,11 @@ pub(super) fn abilities(content: &Content) -> String {
         let who = match a {
             Ability::Sign(active) => sign_holders(content, active),
             Ability::Class(active) => class_holders(content, active),
+            Ability::Spell(spell) => {
+                let cost = content.class_spell(spell).map_or(0, |(_, s)| s.mana);
+                let who = table_holders(content, |e| *e == TalentEffect::Spell { spell });
+                format!("{who} ({cost} mana a cast)")
+            }
             Ability::Skill(_) => "everyone trained in the skill".into(),
             Ability::Disarm => "everyone trained in Disable device".into(),
             Ability::PickLock => "everyone trained in Open lock".into(),

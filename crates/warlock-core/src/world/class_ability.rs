@@ -303,7 +303,7 @@ impl World {
     }
 
     /// The player gets `back` hit points, never past their maximum (nor fewer than they have).
-    fn heal_player(&mut self, back: i32) {
+    pub(super) fn heal_player(&mut self, back: i32) {
         let max = self.state.player().max_hp(&self.content);
         let me = self.player_mut();
         me.hp = (me.hp + back).min(max).max(me.hp);

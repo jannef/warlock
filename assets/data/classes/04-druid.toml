@@ -21,3 +21,19 @@ kit = [
     "apple*4",
     "gold_coin*3",
 ]
+# Bonus talents from Wayfarer and Vigour.
+bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["wayfarer", "vigour"] }
+# The level table (spec §8 "Class abilities").
+# Call lightning and Flame and frost are spells paid in mana (the placeholders until the
+# spell system); Woodland stride is the ranger's too.
+abilities = [
+    { level = 1, talent = "wild_empathy" },
+    { level = 6, talent = "woodland_stride" },
+    { level = 12, talent = "weather_sense" },
+    { level = 18, talent = "natures_ward" },
+    { level = 25, talent = "winters_friend" },
+    { level = 32, talent = "call_lightning" },
+    { level = 40, talent = "sun_and_moon" },
+    { level = 50, talent = "flame_and_frost" },
+    { level = 60, talent = "timeless_body" },
+]

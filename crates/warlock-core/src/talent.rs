@@ -454,6 +454,28 @@ pub struct TalentMods {
     pub rise: Option<Rise>,
     /// Its rising brings it back whole (Reborn whole).
     pub reborn_whole: bool,
+    /// The caster's spells it has (design §4.1 B2), in the order taken.
+    pub spells: Vec<crate::content::ClassSpell>,
+    /// Added to every die of its spells and spell scrolls.
+    pub spell_per_die: i32,
+    /// Dice more its spells and spell scrolls roll.
+    pub spell_dice: u32,
+    /// Percent more mana its spells cost (negative: less).
+    pub spell_mana_percent: i32,
+    /// Deflection while it wears no body armour.
+    pub deflection_unarmoured: i32,
+    /// Rotten food neither sickens it nor exposes it to a disease.
+    pub purify: bool,
+    /// A corpse's own harm never touches it.
+    pub corpse_harmless: bool,
+    /// Hit points a meal heals besides: `(object, dice)`, `None` for a fresh corpse.
+    pub meal_heals: Vec<(Option<crate::content::ObjectId>, Dice)>,
+    /// Its diseases never progress.
+    pub disease_still: bool,
+    /// Damage more against a creature suffering a status: `(status, value)`.
+    pub status_damage: Vec<(StatusId, i32)>,
+    /// Its once-in-a-life reprieve from death, if it has one.
+    pub reprieve: Option<Reprieve>,
     /// It may rise from the ashes once more (Second rising).
     pub second_rising: bool,
     /// Its hit points come back while it is Starving too (Another head).
@@ -506,6 +528,16 @@ pub struct TalentMods {
     pub inspire: Option<Inspire>,
     /// The status Inspire gives instead, for no mana (Virtuoso).
     pub virtuoso: Option<StatusId>,
+}
+
+/// A once-in-a-life reprieve from death (Miracle, Hag's bargain): what it is called in
+/// `Progress::once`, the status it leaves, the stat it takes for good, and its words.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Reprieve {
+    pub once: String,
+    pub status: StatusId,
+    pub stat: Option<(Stat, i32)>,
+    pub message: String,
 }
 
 /// The active Fire breath (spec §8 "Birth sign"): a bolt of fire, then a cooldown.
@@ -721,9 +753,31 @@ impl TalentMods {
         }
     }
 
+<<<<<<< HEAD
     /// The status the active Rage brings (Raging: its resource's `status`), if it has Rage.
     pub fn rage_status(&self, content: &Content) -> Option<StatusId> {
         content.resource(self.rage?).status
+=======
+    /// Whether it has the caster's spell `spell` (spec §8 "Class abilities").
+    pub fn has_spell(&self, spell: crate::content::ClassSpell) -> bool {
+        self.spells.contains(&spell)
+    }
+
+    /// `dice` of one of its spells (or spell scrolls), as its talents make them: `spell_dice`
+    /// dice more of the same sides, and `spell_per_die` added to every die.
+    pub fn spell_damage(&self, dice: Dice) -> Dice {
+        if self.spell_dice == 0 && self.spell_per_die == 0 {
+            return dice;
+        }
+        dice.empowered(self.spell_dice, self.spell_per_die)
+    }
+
+    /// The mana one of its spells that costs `mana` costs it: scaled by `spell_mana_percent`,
+    /// at least 1.
+    pub fn spell_mana(&self, mana: u16) -> i32 {
+        let scaled = TalentMods::scaled(u64::from(mana), self.spell_mana_percent);
+        i32::try_from(scaled).unwrap_or(i32::MAX).max(1)
+>>>>>>> origin/main
     }
 
     /// Whether it has class active `active` (spec §8 "Class abilities").
@@ -1115,6 +1169,49 @@ impl TalentMods {
             TalentEffect::MissileDodge { value } => self.missile_dodge += value,
             TalentEffect::SmallTarget { value } => self.small_target += value,
             TalentEffect::SpellDamagePercent { value } => self.spell_damage_percent += value,
+            TalentEffect::Spell { spell } => {
+                if !self.spells.contains(&spell) {
+                    self.spells.push(spell);
+                }
+            }
+            TalentEffect::SpellPower { per_die, dice } => {
+                self.spell_per_die += per_die;
+                self.spell_dice += dice;
+            }
+            TalentEffect::SpellManaPercent { value } => self.spell_mana_percent += value,
+            TalentEffect::DeflectionUnarmoured { value } => self.deflection_unarmoured += value,
+            TalentEffect::Purify => self.purify = true,
+            TalentEffect::CorpseHarmless => self.corpse_harmless = true,
+            TalentEffect::MealHeals { object, dice } => match object {
+                None => self.meal_heals.push((None, dice)),
+                Some(name) => {
+                    if let Some(id) = content.object_id(&name) {
+                        self.meal_heals.push((Some(id), dice));
+                    }
+                }
+            },
+            TalentEffect::DiseaseStill => self.disease_still = true,
+            TalentEffect::StatusDamage { status, value } => {
+                if let Some(status) = content.status_id(&status) {
+                    self.status_damage.push((status, value));
+                }
+            }
+            TalentEffect::Reprieve {
+                once,
+                status,
+                stat,
+                by,
+                message,
+            } => {
+                if let Some(status) = content.status_id(&status) {
+                    self.reprieve = Some(Reprieve {
+                        once,
+                        status,
+                        stat: stat.map(|s| (s, by)),
+                        message,
+                    });
+                }
+            }
             TalentEffect::WeaponMarks { role, value } => self.weapon_marks.push((role, value)),
             TalentEffect::TwoHandedCrit { value } => {
                 self.two_handed_crit = self.two_handed_crit.saturating_add(value);

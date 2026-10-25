@@ -10,6 +10,7 @@ mod alignment;
 mod anim;
 mod calendar;
 mod class;
+mod class_spell;
 mod creature;
 mod damage_type;
 mod dialogue;
@@ -68,6 +69,7 @@ pub use calendar::Calendar;
 #[cfg(test)]
 pub(crate) use class::strip_tables as strip_class_tables;
 pub use class::{BonusTalents, ClassActive, ClassDef};
+pub use class_spell::{ClassSpell, Does, MAX_HEX_RANGE, SpellDef, SpellKind};
 pub use creature::{
     Budge, Combat, CreatureDef, CreatureId, DEFAULT_SIGHT, Hide, NORMAL_SPEED, NaturalAttack,
     OnEat, SPEEDS,
@@ -2327,6 +2329,16 @@ impl Content {
         (self.talents.iter())
             .map(|(_, def)| def)
             .find(|def| def.effects.iter().any(|e| e.active() == Some(active)))
+    }
+
+    /// The caster's spell `spell` (spec §8 "Class abilities"): the class ability whose
+    /// `[[talent.spell]]` names it, and its definition (the abilities menu's name and description
+    /// are the spell's own, else the talent's).
+    pub fn class_spell(&self, spell: ClassSpell) -> Option<(&TalentDef, &SpellDef)> {
+        (self.talents.iter()).find_map(|(_, def)| {
+            let found = def.spells.iter().find(|s| s.spell == spell)?;
+            Some((def, found))
+        })
     }
 
     /// Checks the classes' level tables against the talents (spec §8 "Class abilities"), then

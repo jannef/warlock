@@ -1,0 +1,8 @@
+[[talent]]
+id = "mage_armour"
+name = "Mage armour"
+tree = "class"
+granted = true
+description = "A ward of force about you while you wear no body armour: Deflection +2 to your Defence."
+effects = [{ kind = "deflection_unarmoured", value = 2 }]
+systems = ["defence"]

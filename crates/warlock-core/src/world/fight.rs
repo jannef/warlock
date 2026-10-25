@@ -103,6 +103,8 @@ pub enum Cause {
     Trap(TrapId),
     /// The spell of a scroll of this kind they read caught them (spec §8 "Scrolls").
     Scroll(ObjectId),
+    /// A spell of their own caught them (spec §8 "Class abilities").
+    Spell(crate::content::ClassSpell),
 }
 
 impl Cause {
@@ -118,6 +120,12 @@ impl Cause {
                 format!("Killed by {} {name}", article(name))
             }
             Cause::Scroll(o) => format!("Killed by their own {}", content.object(o).name),
+            Cause::Spell(spell) => {
+                let noun = (content.class_spell(spell))
+                    .and_then(|(_, s)| s.strike().map(|s| s.noun.clone()))
+                    .unwrap_or_else(|| "spell".into());
+                format!("Killed by their own {noun}")
+            }
         }
     }
 
@@ -128,7 +136,7 @@ impl Cause {
         match self {
             Cause::Starvation => "You starve to death...".into(),
             Cause::Choked(o) => format!("You choke to death on the {}...", name(o)),
-            Cause::Trap(_) | Cause::Scroll(_) => "You die...".into(),
+            Cause::Trap(_) | Cause::Scroll(_) | Cause::Spell(_) => "You die...".into(),
         }
     }
 }
@@ -700,6 +708,7 @@ impl World {
         let rng = &mut self.state.rng;
         let blow = profile.map(|profile| combat::strike_with(&profile, &struck, rng, lucky));
         let blow = blow.map(|b| self.ambushed(attacker, unseen, b));
+        let blow = blow.map(|b| self.lore_blow(attacker, target, b));
         events.push(Event::Attacked {
             attacker,
             target,
@@ -845,7 +854,7 @@ impl World {
         // Rise from the ashes (spec §8 "Birth sign"): once in a life, but never from starving.
         if id == self.state.player
             && !matches!(harm, Harm::Starving(_))
-            && self.rise_from_ashes(events)
+            && (self.rise_from_ashes(events) || self.reprieve(events))
         {
             return false;
         }

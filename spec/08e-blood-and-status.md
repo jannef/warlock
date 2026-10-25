@@ -176,8 +176,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     spent) when the actor has less than the cost: `base` as its talents make it
     (`Actor::mana_cost`, `TalentMods::mana_cost`: Frugal caster's −20 %, rounded to the nearest,
     never below 1 for a cost above 0). The player's spending of any is the `cast` use of the
-    stats (§8 "Stats": a Willpower mark, 20 %, from the training stream). Nothing calls it yet but
-    the dev action `drain:N`, which stands in for an ability's cost ("You spend 5 mana (dev).",
+    stats (§8 "Stats": a Willpower mark, 20 %, from the training stream). The casters' spells call it (spec §8
+    "Class abilities": after every check, so a refused cast spends nothing), as does the dev
+    action `drain:N`, which stands in for an ability's cost ("You spend 5 mana (dev).",
     the cost as spent; refused, "You have only 3 mana (dev).", when short; no game time; recorded
     in replays).
   - **Talents** (#242, the Scholar tree, §8 "Talents"): Deep well (`max_mana_per_levels`, 3

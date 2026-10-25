@@ -1,0 +1,12 @@
+[[talent]]
+id = "winters_friend"
+name = "Winter's friend"
+tree = "class"
+granted = true
+description = "Winter knows you: ice holds you as if you carried nothing, a plunge through it never hurts you, and you climb out at once."
+effects = [
+    { kind = "light_on_ice" },
+    { kind = "plunge_proof" },
+    { kind = "climb_percent", value = -100 },
+]
+systems = ["ice"]

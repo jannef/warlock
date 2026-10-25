@@ -22,3 +22,18 @@ kit = [
     "apple*2",
     "gold_coin*6",
 ]
+# Bonus talents from Scholar and Grit.
+bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["scholar", "grit"] }
+# The level table (spec §8 "Class abilities").
+# The hexes and Blight are spells paid in mana (the placeholders until the spell system).
+abilities = [
+    { level = 1, talent = "herb_lore" },
+    { level = 6, talent = "evil_eye" },
+    { level = 12, talent = "poison_lore" },
+    { level = 18, talent = "hex_of_weakness" },
+    { level = 25, talent = "second_sight" },
+    { level = 32, talent = "curse_of_sloth" },
+    { level = 40, talent = "blight" },
+    { level = 50, talent = "cauldron" },
+    { level = 60, talent = "hags_bargain" },
+]

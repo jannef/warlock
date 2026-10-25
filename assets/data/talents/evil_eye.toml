@@ -1,0 +1,13 @@
+[[talent]]
+id = "evil_eye"
+name = "Evil eye"
+tree = "class"
+granted = true
+description = "Cast the evil eye on a foe you see nearby (a spell, paid in mana): hexed a minute, its blows land worse."
+systems = ["mana", "status"]
+
+[[talent.spell]]
+spell = "evil_eye"
+mana = 2
+status = "ill_wished"
+range = 6

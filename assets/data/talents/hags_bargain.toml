@@ -1,0 +1,8 @@
+[[talent]]
+id = "hags_bargain"
+name = "Hag's bargain"
+tree = "class"
+granted = true
+description = "Once in your life, death passes you by for a price: you are left at the edge of it, worn thin a day, and less fair for good."
+effects = [{ kind = "reprieve", once = "hags_bargain", status = "worn_thin", stat = "presence", by = -2, message = "Something old takes its price, and you do not die." }]
+systems = ["hit_points"]

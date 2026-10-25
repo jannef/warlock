@@ -313,6 +313,27 @@
 #                                 the light
 #   quivering_palm { status, severity, cooldown, degrees }   the active Quivering palm: a
 #                                 bare-handed blow in a direction that leaves the status
+#   The casters' (spec §8 "Class abilities"; the priest's, druid's, wizard's, witch's):
+#   spell_power { per_die, dice }   its spells and spell scrolls add per_die to every die (0 to
+#                                 5) and roll dice dice more (0 to 5)
+#   spell_mana_percent { value }  its spells cost that percent more mana (negative: less; at
+#                                 least 1)
+#   deflection_unarmoured { value }   Deflection, only while nothing is worn in a body armour slot
+#   purify                        rotten food neither sickens it nor exposes it to a disease
+#   corpse_harmless               a fresh corpse's own harm (on_eat sickness, vomiting) never
+#   meal_heals { object, dice }   eating that object (no object: a fresh corpse) heals dice too
+#   disease_still                 a failed disease check does nothing: its diseases never progress
+#   status_damage { status, value }   its hits on a creature suffering that status do value more
+#   reprieve { once, status, stat, by, message }   once in its life (`once` names it), what
+#                                 would kill it (not starving or choking) leaves it at 1 hit
+#                                 point with the status, stat by lower for good, message said
+#   [[talent.spell]]              a caster's spell, used from the abilities menu (`use:ID`,
+#                                 `use:ID:X,Y`), paid in mana instead of a cooldown
+#                                 (crates/warlock-core/src/content/class_spell.rs has the
+#                                 fields): spell (its id), mana, casts, name and description (a
+#                                 talent with two), and what its kind asks: status, severity,
+#                                 heal, per_levels, cures, diseases, range, cast (a scroll's
+#                                 `read` table: a burst or a bolt), open_sky
 #   favoured_prey { to_hit, damage }   against the creature type it has killed most (ties: the
 #                                 first to get there), its attacks gain that to-hit and damage
 #   exact_sounds                  every sound it hears is placed where it was made

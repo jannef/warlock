@@ -1352,15 +1352,24 @@ fn command_in(
         })
 }
 
-/// The question before reading a scroll whose burst may catch the player too, aimed by `aim`
-/// (as far as they know, [`Aim::catches_reader`]): read it anyway, aim again (back at the same
-/// cursor, the target remembered), or not read it.
+/// The question before reading a scroll (or casting a spell, spec §8 "Class abilities") whose
+/// burst may catch the player too, aimed by `aim` (as far as they know,
+/// [`Aim::catches_reader`]): read (cast) it anyway, aim again (back at the same cursor, the
+/// target remembered), or not.
 fn burst_dialog(view: &PerceptionView<'_>, aim: Aim) -> Option<Dialog> {
-    let AimKind::Read(item) = aim.kind else {
-        return None;
-    };
     let noun = aim.catches_reader(view)?;
     let read = aim.action()?;
+    let AimKind::Read(item) = aim.kind else {
+        return Some(
+            Dialog::new(
+                "Too close",
+                format!("The {noun} may catch you too. Cast it anyway?"),
+            )
+            .accept("Cast it", read)
+            .decline("Aim again", ScreenAction::Aim(aim.kind))
+            .cancel("Don't cast it", ScreenAction::Close),
+        );
+    };
     let stack = view.inventory().get(item)?;
     let name = &view.content().object(stack.object).name;
     Some(

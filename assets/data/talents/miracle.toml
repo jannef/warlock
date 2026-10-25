@@ -1,0 +1,8 @@
+[[talent]]
+id = "miracle"
+name = "Miracle"
+tree = "class"
+granted = true
+description = "Once in your life, a blow that would kill you leaves you standing at the edge of death, worn thin for a day."
+effects = [{ kind = "reprieve", once = "miracle", status = "worn_thin", message = "A miracle! You do not fall." }]
+systems = ["hit_points"]

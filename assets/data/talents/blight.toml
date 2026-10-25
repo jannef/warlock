@@ -1,0 +1,24 @@
+[[talent]]
+id = "blight"
+name = "Blight"
+tree = "class"
+granted = true
+description = "A burst of blight where you aim it (a spell, paid in mana): it withers flesh and poisons everyone it reaches."
+systems = ["mana", "damage_types", "status"]
+
+[[talent.spell]]
+spell = "blight"
+mana = 8
+status = "poisoned"
+severity = 2
+[talent.spell.cast]
+kind = "burst"
+spell = "blight"
+noun = "blight"
+verb = "withers"
+message = "A sickly cloud bursts from your hands!"
+radius = 2
+damage = "2d6"
+damage_type = "poison"
+range = 8
+noise = { sound = "explosion", loudness = 60 }

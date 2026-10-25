@@ -42,10 +42,13 @@ issue how it interacts with mana**, and hooks in at the one place below.
     is `Actor::mana_cost(content, base)` (`TalentMods::mana_cost`: `mana_cost_percent`,
     Frugal caster's −20, rounded to the nearest, at least 1 for a cost above 0); an ability that
     greys out without the mana compares that, not its base. The player's spend of any is
-    `StatUse::Cast` (`train_stat`: a Willpower mark at 20 %, `data/stats.toml`). Spells and
-    abilities call it (and say why they could not); the dev `drain:N` (`Action::Drain`,
-    `World::drain_dev`, through the same cut and training, saying the cost spent) is its only
-    caller now.
+    `StatUse::Cast` (`train_stat`: a Willpower mark at 20 %, `data/stats.toml`). The casters'
+    spells (#245, `world/caster.rs`, docs/dev/progression.md "Caster spells") call it after every
+    check with `Actor::spell_base` (Archmage's `spell_mana_percent`; the talents' cut is
+    `spend_mana`'s), and `Actor::spell_cost` (`spell_base` through `Actor::mana_cost`) is what the
+    menu's `Unavailable::NoMana` compares; abilities call it (and say why they could not); the dev `drain:N` (`Action::Drain`,
+    `World::drain_dev`, through the same cut and training, saying the cost spent) is another
+    caller.
   - Deep well's mana by level (`max_mana_per_levels`, `TalentMods::mana_at`) is handed out like
     Hardy's hit points: `class::hand_out` at the pick, `World::level_up` as each level comes
     (no `mana_level` cap), into `mana_base` and `mana`.

@@ -526,6 +526,12 @@ impl Actor {
                 .map(|n| (Category::Natural, n + added))
                 .collect(),
         };
+        // Mage armour (spec §8 "Class abilities"): Deflection with no body armour on.
+        let mage_armour = match talents.deflection_unarmoured {
+            0 => 0,
+            _ if self.wears_body_armour(content) => 0,
+            more => more,
+        };
         let dodge = Some(self.skill_effect(content, Effect::Dodge) + talents.dodge)
             .filter(|&d| d != 0)
             .map(|d| (Category::Dodge, d));
@@ -533,7 +539,7 @@ impl Actor {
             (Category::Dodge, mods.get(ItemEffect::Dodge)),
             (
                 Category::Deflection,
-                mods.get(ItemEffect::Deflection) + talents.deflection,
+                mods.get(ItemEffect::Deflection) + talents.deflection + mage_armour,
             ),
         ];
         // Iron stance (spec §8 "Class abilities") softens a stance's Dodge penalty.

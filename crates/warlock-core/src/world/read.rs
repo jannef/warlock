@@ -128,17 +128,23 @@ impl World {
             self.say(text.clone());
         }
         let mut made = Vec::new();
+        // Scroll adept, Empower (spec §8 "Class abilities"): the reader's talents on its dice.
+        let mods = self.state.player().talent_mods(&content);
         match &spell.cast {
             Cast::Burst(burst) => {
                 let center = self.burst_center(here, at, spell.range);
                 self.sound_at(spell.noise, center);
                 let caster = Caster::Actor(player);
-                self.cast_burst(caster, (here, center), burst, &mut made);
+                let mut burst = burst.clone();
+                burst.damage = mods.spell_damage(burst.damage);
+                self.cast_burst(caster, (here, center), &burst, &mut made);
             }
             Cast::Bolt(bolt) => {
                 let path = self.bolt_line(here, at, bolt.length);
                 self.sound_at(spell.noise, here);
-                self.cast_bolt(Caster::Actor(player), here, &path, bolt, &mut made);
+                let mut bolt = bolt.clone();
+                bolt.damage = mods.spell_damage(bolt.damage);
+                self.cast_bolt(Caster::Actor(player), here, &path, &bolt, &mut made);
             }
         }
         self.say_spell((&spell.noun, &spell.verb), made, events);
@@ -156,7 +162,7 @@ impl World {
 
     /// Where a burst read from `from` at `at` goes off (module docs): the first cell on the
     /// line through `at` someone stands on, the last before an opaque cell, or `at`.
-    fn burst_center(&self, from: Pos, at: Pos, range: i32) -> Pos {
+    pub(super) fn burst_center(&self, from: Pos, at: Pos, range: i32) -> Pos {
         let level = self.state.current();
         let mut center = from;
         let steps = from.chebyshev(at).clamp(0, range.max(0)) as usize;
