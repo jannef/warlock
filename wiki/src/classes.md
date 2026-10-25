@@ -39,10 +39,10 @@ nothing in its place.
 
 A paladin's abilities used from the menu answer only while the paladin is Good or better (see
 [Alignment](alignment.md)); the passives do not ask. Lay on hands drains instead of costing mana
-until mana comes to the game. The ranger's rapid shot and volley run on
-[focus](resources.md); the barbarian's rage, the monk's flurry and quivering palm, and the
-bard's inspire will later run on pools of their own. The thief's sneak attacks already build
-[openings](resources.md), which master thief's finisher spends.
+until mana comes to the game. The barbarian's rage runs on a pool of its own, Rage, and the
+ranger's rapid shot and volley on [focus](resources.md) (see [Resources](resources.md)); the
+thief's sneak attacks build [openings](resources.md), which master thief's finisher spends; the
+monk's flurry and quivering palm and the bard's inspire will later run on pools of their own.
 
 The priest's, druid's, wizard's, and witch's abilities used from the menu are **spells**: each
 costs the mana the table says, and is greyed out ("you have too little mana") while you have less; there

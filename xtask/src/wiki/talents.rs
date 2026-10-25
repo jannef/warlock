@@ -762,21 +762,46 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::Avatar => "Lay on hands heals every hit point and cures every status that \
              ticks (bleeding, poison) and every disease, and its cooldown is half as long"
             .to_string(),
-        TalentEffect::Rage { status: id } => format!(
-            "active (the time of a wait): you suffer {}; no rage while it or what follows it \
-             lasts",
-            status(&id)
-        ),
-        TalentEffect::BloodFrenzy { seconds } => {
+        TalentEffect::Rage { resource: id } => {
+            let rage = content.resource_id(&id).map(|r| content.resource(r));
+            let gain = rage.map_or(id.clone(), |r| {
+                format!("{} {}", r.start, r.name.to_lowercase())
+            });
+            let brings = rage.and_then(|r| r.status).map_or_else(String::new, |s| {
+                format!(
+                    ", and you are {} while you hold any",
+                    content.status(s).name
+                )
+            });
             format!(
-                "a kill of yours while raging keeps the rage {seconds} s longer (never past its full length)"
+                "active (the time of a wait): you gain {gain} (see Resources){brings}; no rage \
+                 while it or what follows it lasts"
             )
         }
-        TalentEffect::Unstoppable { statuses } => {
+        TalentEffect::ResourceBuild {
+            resource: id,
+            on,
+            amount,
+        } => format!(
+            "{} builds {amount} more {} while you hold it",
+            on.words(),
+            resource_name(content, &id).to_lowercase()
+        ),
+        TalentEffect::ResourceMax {
+            resource: id,
+            value,
+        } => {
+            format!(
+                "{} holds {value} more at most",
+                resource_name(content, &id).to_lowercase()
+            )
+        }
+        TalentEffect::Unstoppable { statuses, cost } => {
             let names: Vec<String> = statuses.iter().map(|s| status(s)).collect();
             format!(
                 "while raging: {} tick nothing, and a blow that would take your last hit point \
-                 leaves it and ends the rage",
+                 leaves it for {cost} rage, when you have that much (spending the last of it \
+                 ends the rage)",
                 names.join(" and ")
             )
         }

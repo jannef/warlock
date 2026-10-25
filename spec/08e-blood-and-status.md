@@ -96,9 +96,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     lasts, the ability is `Unavailable::While` it ("you are winded"), a visible limit that only
     time lifts; nothing counts uses. An ability that buffs the player calls `World::afflict(player,
     status, 1, player)`. The class abilities that give them come with the class tables; the
-    built-in data has the barbarian's rage as the example: Raging (5 minutes: Strength and
-    Toughness +2, Intelligence −2, no reading), then Exhausted (10 minutes: Strength −1), both
-    reached for now only by the dev `afflict:raging`.
+    built-in data has the barbarian's rage as the example: Raging (Strength and Toughness +2,
+    Intelligence −2, no reading or casting, while the Rage resource lasts, "Resources" below),
+    then Exhausted (10 minutes: Strength −1). A status that `blocks` casting also refuses every
+    spending of mana (`World::spend_mana`) and greys out an ability that costs mana.
   - **Deaths**: a tick that takes the last hit point kills by the status, at that moment
     (`Event::Died`'s `of`; the player's death records it, `Death::of`). A creature that dies of
     a status counts as killed by whoever caused it (`Effect::by`): experience (#133) credits the
@@ -201,15 +202,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
   once something grants them. A character may hold any number at once; creatures hold none
   (their rage would never show). The class features of the progression design's §4.18 (the
   barbarian's Rage, the ranger's Focus, the thief's Openings, the monk's Ki, the bard's
-  Inspiration) move onto them in follow-up changes (R1–R5); the ranger's Focus (R2) and the thief's
-  Openings (R3) have (below), and the rest are granted by nothing in play but the dev action until
-  theirs do. Mana is
-  separate: nothing converts between them.
+  Inspiration) move onto them in follow-up changes (R1–R5); the barbarian's Rage has (R1,
+  "Rage" below), the ranger's Focus (R2) and the thief's Openings (R3) have (below), and the rest
+  are granted by nothing in play but the dev action until theirs do. Mana is separate: nothing
+  converts between them.
   - **Data** (`data/resources.toml`, §7): each resource's maximum, start, whether the status bar
     shows its maximum, how it changes over time (it **regenerates** toward its maximum or
     **decays** toward 0, a point every so many seconds, while resting too or not), whether it
-    **ends at zero**, what the player is told then, and what **builds** it (`kill`, `hit`,
-    `critical`, `struck`, `sneak_attack`, each by an amount). Ids are in the content fingerprint.
+    **ends at zero**, what the player is told then, what **builds** it (`kill`, `hit`,
+    `critical`, `struck`, `sneak_attack`, each by an amount), and the **status** it brings, if
+    any (Rage: Raging), which lasts exactly as long as the resource is held. Ids are in the
+    content fingerprint.
   - **State**: `Actor::resources`, the pools it holds in resource order, each its value and its
     progress toward the next point over time (hundredths of a second at the normal pace, like
     `Actor::regen`); saved, covered by the state hash, and left out of the JSON while empty, so an
@@ -221,7 +224,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `ambushed`; each builds every resource held that builds on it, up to its maximum; one not
     held is not built), `World::spend_resource` (refused, nothing spent, when not held or short;
     a cost of 0 asks only that it is held), `World::end_resource` (the holder loses it and its
-    bar; the player is told its `ended`, "Your rage subsides."), and time.
+    bar; the player is told its `ended`, if it has one), and time. Talents add to two of them:
+    a `resource_build` builds a held resource on an event beyond its own `builds`, and a
+    `resource_max` raises its maximum (`Actor::resource_max`).
+  - **Its status**: a resource with a `status` brings it: granted by
+    `World::grant_resource_with_status` (the Rage ability, the dev action), the status begins
+    (said as it begins, "You fly into a rage!"); as the resource ends, spent, decayed, or
+    otherwise, the status ends at that moment, with its end said ("Your rage subsides.") and what
+    it `follows` into beginning; and should the status end some other way (a cure), the resource
+    ends with it. Such a status must not ease by itself (refused at load), and the dev `afflict`
+    refuses it ("`raging` comes of a resource: try `resource:rage`.").
   - **Time**: a regenerating resource gains a point every `regenerates` seconds up to its
     maximum (its progress dropped there); a decaying one loses a point every `decays` seconds
     down to 0, where one that ends at zero ends and one that does not sits, held, at 0. Each point
@@ -258,9 +270,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the character screen under the stance; the dump header (`rage 11/20`), JSON dumps'
     `resources`, and the dev `actors` layer (every actor's, with progress). Never a creature's,
     and never the pace. The dev action `resource:ID` grants one (§9; "You gain Rage: 12 (dev).").
+  - **Rage** (the barbarian's, R1; `world/rage.rs`): the Rage ability (a wait's time) grants the
+    Rage resource (20 at most, starting at 12, a point lost every 6 s, resting too; it ends at
+    zero) and with it Raging; the action's own wait costs the first point. No rage while Raging
+    or Exhausted lasts. Blood frenzy (level 40): each kill credited to the barbarian builds 5
+    rage (a `resource_build`). Mighty rage (50): Raging's raises doubled, 10 more rage at most,
+    Exhausted eases twice as fast. Unstoppable (60): while raging, bleeding and poison tick
+    nothing, and a blow (`Harm::Actor`) that would take the last hit point leaves it for 10 rage
+    (`World::spend_resource`; refused, so the blow falls, with less), as often as the rage
+    holds; spent to nothing, the rage ends and Exhausted follows. While raging no mana is spent
+    (Raging blocks `cast`).
   - **Talents**: the `resources` system is in the coverage list as `pending` until the resource
     talents (Battle trance, Inner calm, Steady hand, Patient blade; R5) and the class features on
-    them (R1–R4) land; Improved sneak attack and Master thief carry it. **Saves change** (a new id group in the fingerprint).
+    them (R1–R4) land; Rage, Blood frenzy, Mighty rage, Unstoppable, Improved sneak attack, and
+    Master thief carry it. **Saves change** (a new id group in the fingerprint).
 - **Checks** (`warlock-core/src/check.rs`; M24, #139): a stat put to the test, rolled like an
   attack: 2d12 (the natural roll, `combat::roll_natural`, two draws of the gameplay stream) plus
   the modifier of the stat tested (the effective score's) succeeds at the **difficulty** or
@@ -329,5 +352,6 @@ developer notes (CLAUDE.md, `docs/dev/`).
     stores and provisioners stock it among their food. Potions and priests will apply cures too.
   - **Dev**: the action `infect:ID` makes the player catch a disease as if they had lost the
     check (it incubates; no game time; recorded in replays; "You catch filth fever (dev)."), for
-    tests and captures. `afflict:diseased` is refused: Diseased comes of a disease.
+    tests and captures. `afflict:diseased` is refused: Diseased comes of a disease; so is a
+    status a resource brings (`afflict:raging`: Raging comes of `resource:rage`).
   - Infections and stat damage are part of the world state (saved, covered by the state hash).

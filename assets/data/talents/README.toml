@@ -295,10 +295,14 @@
 #   raise_percent { status, value }   what that status raises its scores by, that percent more
 #   hardened { bonus }            each level past `hp_level` adds a level's hit points again, and
 #                                 bonus more
-#   rage { status }               the active Rage: it suffers that status
-#   blood_frenzy { seconds }      a kill while raging keeps the rage that long longer
-#   unstoppable { statuses }      while raging those statuses tick nothing, and a blow that would
-#                                 take the last hit point leaves it and ends the rage
+#   rage { resource }             the active Rage: it is granted that resource (resources.toml)
+#                                 and suffers the status it brings while it lasts
+#   resource_build { resource, on, amount }   event `on` (a resource's `builds` events) builds
+#                                 that resource that much more while it is held
+#   resource_max { resource, value }   that resource holds that much more at most
+#   unstoppable { statuses, cost }   while raging those statuses tick nothing, and a blow that
+#                                 would take the last hit point leaves it for `cost` of the rage
+#                                 (when that much is held; spent to nothing, the rage ends)
 #   veterans_wind { per_level, at_least, cooldown }   the active Veteran's wind (as second_wind)
 #   whirlwind                     the active Whirlwind: a blow at every hostile beside, for the
 #                                 price of one attack

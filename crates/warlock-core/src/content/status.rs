@@ -507,9 +507,6 @@ fn resolve(
         ));
     }
     let blocks = blocks(&spec.blocks)?;
-    if spec.follows.is_some() && spec.eases.is_none() && spec.cured_by.is_empty() {
-        return Err("follows: it never ends (it has no `eases` and no `cured_by`)".into());
-    }
     if let Some(w) = &spec.wound
         && (w.big_hit > spec.max || w.critical > spec.max || w.big_hit + w.critical == 0)
     {
@@ -811,10 +808,6 @@ mod tests {
             (
                 format!("{RAGING}{EXHAUSTED}follows = \"raging\"\n"),
                 "status `raging`: follows: it leads back to itself",
-            ),
-            (
-                raging("eases = 300\n", ""),
-                "follows: it never ends (it has no `eases` and no `cured_by`)",
             ),
         ] {
             let e = parse("status.toml", &text, |_| None).unwrap_err();

@@ -36,10 +36,13 @@ pub(super) fn resources(content: &Content) -> String {
         } else {
             built.join(", ")
         };
+        let brings = def.status.map_or_else(String::new, |s| {
+            format!(", and {} with it", content.status(s).name)
+        });
         let zero = if def.ends_at_zero {
-            "ends, and its bar goes"
+            format!("ends, and its bar goes{brings}")
         } else {
-            "stays, empty"
+            "stays, empty".to_string()
         };
         let _ = writeln!(
             out,

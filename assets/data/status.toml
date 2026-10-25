@@ -32,7 +32,7 @@
 #   cost       what every action costs while it lasts, in percent of its price (100 to 1000;
 #              default 100): 150 is half again as slow. Several multiply
 #   blocks     the actions refused while it lasts, by their ids in actions.toml: ["read"]; an
-#              ability that costs one cannot be used either
+#              ability that costs one cannot be used either; "cast" also refuses spending mana
 #   flees      true: a creature suffering it runs from the one who gave it (else the nearest foe
 #              it sees) while a step takes it farther away, and fights only when cornered
 #   follows    a status that begins (at one degree) as this one ends, worn off or cured: a rage's
@@ -109,17 +109,17 @@ dies = "succumbs to disease"
 death = "Died of disease"
 
 # Buffs and cooldowns (a class's abilities give them; the dev action `afflict:raging` too).
-# A barbarian's rage: stronger and tougher for five minutes, too wild to read; then exhausted for
-# ten, and no rage until that passes.
+# A barbarian's rage: stronger and tougher, too wild to read or to cast; it lasts while their
+# Rage lasts (resources.toml: the status of the rage resource, so it never eases by itself);
+# then exhausted for ten minutes, and no rage until that passes.
 [[status]]
 id = "raging"
 name = "Raging"
 seen = "raging"
 max = 1
 stacking = "refresh"
-eases = 300
 penalty = { from = 1, strength = 2, toughness = 2, intelligence = -2 }
-blocks = ["read"]
+blocks = ["read", "cast"]
 follows = "exhausted"
 start = "You fly into a rage!"
 end = "Your rage subsides."

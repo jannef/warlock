@@ -67,7 +67,8 @@ impl World {
     /// Actor `id` spends what costs `base` mana (spec §8 "Mana"): the one way mana is spent.
     /// The cost is what its talents make of `base` ([`Actor::mana_cost`]: Frugal caster's fifth
     /// less). Refused, spending nothing, when it has less than that (or `base` is below 0);
-    /// returns whether it was spent. The player's spending of any is a `cast` use of their
+    /// returns whether it was spent, and while a status of theirs blocks casting (a raging
+    /// barbarian spends none). The player's spending of any is a `cast` use of their
     /// stats (spec §8 "Stats": it trains Willpower). Says nothing: the spell or ability that
     /// spends it does.
     pub(crate) fn spend_mana(&mut self, id: ActorId, base: i32) -> bool {
@@ -77,6 +78,10 @@ impl World {
         };
         let cost = actor.mana_cost(&content, base);
         if cost < 0 || actor.mana < cost {
+            return false;
+        }
+        // A status that blocks casting (Raging) blocks spending mana on anything.
+        if cost > 0 && actor.effects.blocking(&content, ActionKind::Cast).is_some() {
             return false;
         }
         actor.mana -= cost;

@@ -66,9 +66,13 @@ for steps only: a creature a status of its blocks `step` (Held, Drowning grip's,
 steps or opens a door (`creature_steps`) and attacks its holder instead (`World::held_back`,
 `world/lucky.rs`). A status that `flees` (Frightened, Hound's bay's, #270) makes a creature step
 away from its `by` instead while a step takes it farther (`World::frightened`,
-`world/sign_picks.rs`, before `held_back`). Built-in example: `raging` (penalty St +2, To
-+2, In −2; `blocks = ["read"]`; `follows = "exhausted"`) and `exhausted` (St −1), reached only by
-`afflict:raging` until the barbarian's table. Tests: `world/buff_tests.rs` (custom statuses on
+`world/sign_picks.rs`, before `held_back`). A status that blocks `cast` also refuses spending
+mana (`World::spend_mana`) and greys out a class active that costs mana (`Ability::unavailable`).
+Built-in example: `raging` (penalty St +2, To +2, In −2; `blocks = ["read", "cast"]`; `follows =
+"exhausted"`; no `eases`: the Rage resource brings it and ends it, `docs/dev/resources.md`) and
+`exhausted` (St −1). A followed status must end: it eases, is cured, or a resource brings it
+(`Content::check_follows_end`, after the resources load). `afflict:raging` is refused, as
+`afflict:diseased` is. Tests: `world/buff_tests.rs` (custom statuses on
 built-in content: combat on the player and a creature, slows and time, refusals and the greyed
 shield bash, the rage's whole course, cures followed, saves and replays), the parse tests in
 `content/status.rs`, `Effects` in `status.rs`.

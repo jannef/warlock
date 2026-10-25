@@ -22,6 +22,9 @@
 #                 (default false: it sits at 0)
 #   ended         what the player is told when it ends ("Your rage subsides."; needs
 #                 ends_at_zero)
+#   status        a status (status.toml) its holder suffers while they hold it: it begins as the
+#                 resource is granted and ends with it (and the resource with the status, if
+#                 something cures that), so it must not `eases` by itself (rage: Raging)
 #   builds        what builds it up, each event once: [{ on = "kill", amount = 5 }]; events are
 #                 kill (a kill credited to the holder), hit (a blow of theirs hits), critical (a
 #                 blow of theirs is a critical), struck (they are hit), and sneak_attack (a sneak
@@ -29,7 +32,10 @@
 #
 # The numbers are the progression design's first guesses (§4.18).
 
-# The barbarian's rage: it counts down a point a base turn, resting too, and ends at zero.
+# The barbarian's rage (the Rage ability): it counts down a point a base turn, resting too, and
+# ends at zero, taking the Raging status with it (whose end is what the player is told; then
+# Exhausted follows). Blood frenzy builds it by kills, Mighty rage raises its maximum, and
+# Unstoppable spends it (talents/).
 [[resource]]
 id = "rage"
 name = "Rage"
@@ -39,7 +45,7 @@ start = 12
 show_max = false
 decays = 6
 ends_at_zero = true
-ended = "Your rage subsides."
+status = "raging"
 
 # The ranger's focus: it comes back a point a base turn, but not while resting.
 [[resource]]
