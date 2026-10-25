@@ -200,8 +200,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   once something grants them. A character may hold any number at once; creatures hold none
   (their rage would never show). The class features of the progression design's §4.18 (the
   barbarian's Rage, the ranger's Focus, the thief's Openings, the monk's Ki, the bard's
-  Inspiration) move onto them in follow-up changes (R1–R5); until then nothing in play grants
-  one but the dev action. Mana is separate: nothing converts between them.
+  Inspiration) move onto them in follow-up changes (R1–R5); the thief's Openings are in (R3,
+  below). Mana is separate: nothing converts between them.
   - **Data** (`data/resources.toml`, §7): each resource's maximum, start, whether the status bar
     shows its maximum, how it changes over time (it **regenerates** toward its maximum or
     **decays** toward 0, a point every so many seconds, while resting too or not), whether it
@@ -234,7 +234,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Abilities**: a class active may cost a resource in data (`resource = { id, cost }` on its
     talent, §7). While the player does not hold it or holds less, the ability is unavailable
     (`Unavailable::Short`, "not enough focus" in the abilities menu, `short:focus` in dumps; using
-    it says "You cannot: not enough focus.", no time); used, the cost is spent first.
+    it says "You cannot: not enough focus.", no time); used, the cost is spent first (an aimed
+    blow with nobody hostile that way is refused before it, spending nothing).
+  - **Granted by talents**: a talent with a `resource` effect grants that resource while it is
+    held (`TalentMods::resources`; `World::grant_talent_resources`, called wherever the class
+    hands out its table: creation, every level, and a restored run, so a saved character whose
+    table grew one gets it on load). It grants only a resource not held, so it never refills one.
+  - **Openings** (the thief's; R3, #251, `world/openings.rs`): Improved sneak attack (level 32)
+    grants them at 0; each sneak attack that hits builds one (to 5), one slips away every 120 s
+    (20 base turns), and at 0 they stay, held. Master thief (level 60) spends 5 on its finisher
+    (§8 "Class abilities").
   - **Shown**: the player's own resources (`PerceptionView::own_resources`: each held, its value
     and maximum, in resource order): the status bar after `MP` (`Rage 11`, `Focus 7/10`), each
     with the hit points' priority after the mana, so they give way before it (§6); a row each on
@@ -243,7 +252,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     and never the pace. The dev action `resource:ID` grants one (§9; "You gain Rage: 12 (dev).").
   - **Talents**: the `resources` system is in the coverage list as `pending` until the resource
     talents (Battle trance, Inner calm, Steady hand, Patient blade; R5) and the class features on
-    them (R1–R4) land. **Saves change** (a new id group in the fingerprint).
+    them (R1–R4) land; Improved sneak attack and Master thief carry it. **Saves change** (a new id group in the fingerprint).
 - **Checks** (`warlock-core/src/check.rs`; M24, #139): a stat put to the test, rolled like an
   attack: 2d12 (the natural roll, `combat::roll_natural`, two draws of the gameplay stream) plus
   the modifier of the stat tested (the effective score's) succeeds at the **difficulty** or

@@ -6,8 +6,8 @@ spec/08e-blood-and-status.md ("Resources"). Keep it current with the code, as CL
 Alternative resources (#225) are integer pools beside hit points and mana that a character holds
 once something grants them, several at once. This is the foundation; the class features of
 `docs/design/progression.md` §4.18 move onto it in R1–R5 (#249–#253): Rage (R1), Focus (R2),
-Openings (R3), Ki and Inspiration (R4), and the four resource talents (R5). Until then only the
-dev action `resource:ID` grants one.
+Openings (R3, in), Ki and Inspiration (R4), and the four resource talents (R5). Talents grant
+them (below); the dev action `resource:ID` grants any.
 
 - **Data**: `content/resource.rs` parses `data/resources.toml` into `ResourceDef`s (`id`,
   `name`, `short`, `max`, `start`, `show_max`, `over_time: Option<OverTime>` (`Regenerates {
@@ -41,6 +41,18 @@ dev action `resource:ID` grants one.
     `resource::pass` for the step (in the fast path too, when no point is due within it); the
     resources `pass` returns as ended are ended at that moment. Progress is dropped when there
     is nowhere to go (full, or empty) and kept at a standstill (a rest that stops it).
+- **Granted by talents**: a `resource { id }` talent effect (`TalentEffect::Resource`,
+  `TalentMods::resources`, checked against the data) grants that resource while the talent is
+  held: `world/openings.rs::grant_talent_resources`, called from `world/class.rs::grant_class`
+  (creation, every level-up, and `World::from_state`, so an old save gets it on load); only one
+  not held, so it never refills a pool.
+- **Openings** (R3, #251; `world/openings.rs`): Improved sneak attack grants the pool; its build
+  is the data's `sneak_attack`; Master thief's `finisher` effect is the class active
+  `ClassActive::MasterThief` (`use:master_thief:E`, aimed, the cost `resource = { id =
+  "openings", cost = 5 }` on the talent): a melee blow with `Profile::sure_critical` (every hit a
+  critical, no confirmation draw; `combat::strike_with`). `use_class` refuses an aimed active
+  with nobody hostile that way before it spends anything. Tests: `world/openings_tests.rs`, and
+  `combat.rs`'s sure-critical test.
 - **Hooks for R1–R5**: `Actor::resource_max(content, resource)` (the maximum: Mighty rage's 30,
   Inner calm's +2) and `World::resource_rate(id, resource)` (the pace in percent: 0 while resting
   for `resting = false`; Battle trance's slower decay, Steady hand's and Inner calm's faster

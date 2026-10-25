@@ -260,6 +260,10 @@ pub(super) fn effects_text(content: &Content, def: &TalentDef) -> String {
             parts.push(format!("rank {}: {}", i + 1, effect_text(content, effect)));
         }
     }
+    if let Some(cost) = &def.resource {
+        let name = content.resource(cost.resource).name.to_lowercase();
+        parts.push(format!("the active costs {} {name}", cost.amount));
+    }
     parts.join("; ")
 }
 
@@ -1149,6 +1153,14 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "attacks on a creature that has not seen you threaten a critical {value} lower \
              (never below 3)"
         ),
+        TalentEffect::Finisher => "active (the time of a melee attack), in a direction: a blow \
+                                   that is a critical whenever it hits, with no confirmation roll"
+            .to_string(),
+        TalentEffect::Resource { id } => {
+            let name =
+                (content.resource_id(&id)).map_or(id.clone(), |r| content.resource(r).name.clone());
+            format!("you hold {name} (see Resources)")
+        }
         TalentEffect::TrainedSkills { value } => {
             format!("every trained skill counts {}", signed(value))
         }

@@ -25,9 +25,14 @@ Nothing converts between resources and mana: each is spent by what asks for it.
 ## The resources
 
 The classes' features that are to run on these pools (the barbarian's rage, the ranger's rapid
-shot and volley, the thief's openings and finisher, the monk's flurry and quivering palm, the
-bard's inspiration) still work as their [class tables](classes.md) describe; they move onto the
-resources below in coming updates, and until then nothing in play grants one. A base turn is 6
-seconds.
+shot and volley, the monk's flurry and quivering palm, the bard's inspiration) still work as
+their [class tables](classes.md) describe; they move onto the resources below in coming updates.
+A base turn is 6 seconds.
+
+The thief's **openings** are in: a thief of level 32 (Improved sneak attack) holds them, starting
+at 0. Every sneak attack that hits gives one, up to 5, and one slips away every 20 base turns
+(2 minutes); empty, they stay with you. At level 60 Master thief's **finisher** (an ability,
+aimed in a direction) spends all 5 for a melee blow that is a critical whenever it hits: no
+confirmation roll is made. A miss still spends them.
 
 {{#include generated/resources.md}}
