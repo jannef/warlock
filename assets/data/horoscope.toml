@@ -32,11 +32,33 @@
 #     kit           items those born under it add to their starting kit, after the class's and
 #                   the race's: lines as in classes/README.toml's `kit` (none so far)
 #
+#   [flavour]     the calendar's and the moons' small touches on the gifts (optional: without
+#                 the table, none of them):
+#     birthday_healing      percent of the healing pace on the character's birthday (1 to 400;
+#                           default 100); at that day's dawn, or when a run begins on it, they
+#                           are told "It is your birthday."
+#     birth_month_cooldown  percent of a sign active's cooldown when it is used in the birth
+#                           month (1 to 400; default 100): Horn's grace, the Transfixing stare,
+#                           Blaze, Fire breath, Hound's bay
+#     full_moon_reach       cells added to the gifts with a reach while a full moon is up (0 to
+#                           10; default 0): Hound's nose, the Transfixing stare, and Eyes of the
+#                           heights at night. A moon is full within a sixtieth of its cycle
+#                           either side of the moment; it is up above the horizon with the sun
+#                           down, wherever the player is
+#     full_moon_light       the light preset (lights.toml) Inner light burns as while a full
+#                           moon is up (default: its own)
+#
 # Talents may ask for a sign (`needs = { animal = "roc" }`, `element = "fire"`, `lucky = true`).
 # Signs are also flags later rules may ask about: "is this character Fire-born?", "born in the
 # year of the Manticore?".
 
 anchor_year = 1
+
+[flavour]
+birthday_healing = 125
+birth_month_cooldown = 50
+full_moon_reach = 2
+full_moon_light = "ember_full"
 
 # The animals, in the order of the Great Race.
 

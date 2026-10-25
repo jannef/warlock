@@ -112,17 +112,18 @@ impl World {
         for disease in diseases {
             self.end_disease(player, disease, events);
         }
-        self.afflict(player, grace.cooldown, degrees, None, events);
+        self.gift_cooldown(grace.cooldown, degrees, events);
         Spent::Turn(self.price_of(player, ActionKind::Wait))
     }
 
-    /// The Transfixing stare at `at`: a hostile there, within [`STARE_RANGE`], that the player
-    /// sees and that sees them now suffers the stare's status, and the player its cooldown; one
-    /// that does not see them is not caught, and the cooldown waits. Silent; the time of a
-    /// wait. Refused, taking no time, at the player's own cell, out of reach, where they see no
+    /// The Transfixing stare at `at`: a hostile there, within [`STARE_RANGE`] (more under a full
+    /// moon), that the player sees and that sees them now suffers the stare's status, and the
+    /// player its cooldown; one that does not see them is not caught, and the cooldown waits.
+    /// Silent; the time of a wait. Refused, taking no time, at the player's own cell, out of reach, where they see no
     /// one, and at anyone not hostile.
     fn transfixing_stare(&mut self, at: Pos, events: &mut Vec<Event>) -> Spent {
         let content = self.content.clone();
+        let ability = Ability::Sign(SignActive::TransfixingStare);
         let player = self.state.player;
         let mods = self.state.player().talent_mods(&content);
         let Some(stare) = mods.stare else {
@@ -132,7 +133,9 @@ impl World {
         let (severity, degrees) = mods
             .petrifying_gaze
             .unwrap_or((stare.severity, stare.degrees));
-        if !self.within_reach(at, STARE_RANGE, "stare") {
+        // A full moon lengthens it (spec §8 "Birth sign", the flavour).
+        let range = (ability.reach_at(&content, self.state.time)).unwrap_or(STARE_RANGE);
+        if !self.within_reach(at, range, "stare") {
             return Spent::Nothing;
         }
         let level = self.state.current().id.clone();
@@ -153,7 +156,7 @@ impl World {
         }
         self.afflict(target, stare.status, severity, Some(player), events);
         self.say(format!("{who} freezes under your gaze."));
-        self.afflict(player, stare.cooldown, degrees, None, events);
+        self.gift_cooldown(stare.cooldown, degrees, events);
         Spent::Turn(price)
     }
 

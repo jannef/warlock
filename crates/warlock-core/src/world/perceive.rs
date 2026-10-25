@@ -58,6 +58,7 @@ impl World {
         self.burn_out();
         self.rot_away();
         let before = self.perception.weather();
+        let then = std::mem::replace(&mut self.perceived_at, now);
         let dazzled = self.perception.dazzled();
         *self.perception = Perception::compute(&self.state, &self.content, &mut self.lights);
         self.glare_news(dazzled);
@@ -74,6 +75,7 @@ impl World {
         if let (Some(from), Some(to)) = (before, self.perception.weather()) {
             self.weather_news(from, to);
         }
+        self.birthday_news(then);
         let reports = self.perceive_events(events);
         for (text, stops_rest) in reports {
             if stops_rest {

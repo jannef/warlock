@@ -162,6 +162,32 @@ fn blood_scent_sees_a_bleeding_creature_in_the_dark() {
 }
 
 #[test]
+fn a_full_moon_lets_hounds_nose_smell_blood_two_cells_farther() {
+    // Hound's nose reaches six cells: the rat bleeds seven off. The built-in moon is full at
+    // the start of the 16th (spec §8 "Birth sign", the flavour; underground all the same).
+    let mut w = world("den");
+    let rat = creature(&w);
+    w.state.vision = "darkvision".into();
+    give(&mut w, "hounds_nose");
+    let bleeding = CONTENT.status_id("bleeding").expect("bleeding");
+    w.afflict(rat, bleeding, 1, None, &mut Vec::new());
+    let at = |day: u32| crate::time::GameTime::from_calendar(1444, 11, day, 0, 0).expect("a date");
+    w.state.time = at(12);
+    look(&mut w);
+    assert!(!sees(&w, rat), "a waxing moon: out of reach");
+    w.state.time = at(16);
+    look(&mut w);
+    assert!(sees(&w, rat), "the full moon: two cells more");
+    // Blood scent is no gift: the moon does not lengthen it.
+    w.player_mut().talents = Default::default();
+    give(&mut w, "blood_scent");
+    let reach = w.state.player().talent_mods(&CONTENT).scent[0].1;
+    if reach < 7 {
+        assert!(!sees(&w, rat), "Blood scent's {reach} cells");
+    }
+}
+
+#[test]
 fn moon_eyed_sees_farther_on_the_overworld_at_night() {
     let mut w = world("world");
     run(&mut w, "rest:dusk skip:3h");
