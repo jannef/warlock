@@ -3,6 +3,9 @@ id = "kindled"
 name = "Kindled"
 tree = "stars"
 granted = true
-description = "Fire burns gladly for you: your lantern reaches a cell farther."
-effects = [{ kind = "lantern_light", light = "lantern_bright" }]
-systems = ["light"]
+description = "Fire burns gladly for you and bites you less: your lantern reaches a cell farther."
+effects = [
+    { kind = "lantern_light", light = "lantern_bright" },
+    { kind = "resist", damage = "fire", value = 25 },
+]
+systems = ["damage_types", "light"]

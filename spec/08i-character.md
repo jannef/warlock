@@ -58,7 +58,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Horn's grace and the Transfixing stare (the actives below), Thin-skinned (flaw: a big hit
     that wounds wounds a degree more), Trailblazer (overworld journeys −20 %, forest, hills,
     and swamp as plains), Flame-hardened (fire resistance 25 %: damage types are in, so the
-    resistance form at once, not the design's burst halving), Heavy-footed (flaw: footsteps
+    resistance form at once, not the design's burst halving; a Fire Wyvern's Kindled adds its
+    own 25 %), Heavy-footed (flaw: footsteps
     +25 %), Unblinking (notices in passing as if trained in Spot, +2), Trusted by none (flaw: no
     one makes way, Noblesse or not).
     The elements' last four (#268): Blaze (Fire's **active**, from the abilities menu's
@@ -68,8 +69,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     player's); it melts the ice it reaches and leaves a burning missile's fire, `arrow_fire` for
     60 s, on every walkable cell of it but the player's; then the cooldown status Burnt out,
     twelve hours, during which the menu greys it "you are burnt out"), Kindled (the lantern burns
-    as Lamplighter's brighter preset, a cell farther; with Lamplighter too, no farther; the fire
-    resistance comes with S7), Forge-born (marks +50 % in every weapon skill and fighting style,
+    as Lamplighter's brighter preset, a cell farther; with Lamplighter too, no farther; and fire
+    resistance 25 %, #271), Forge-born (marks +50 % in every weapon skill and fighting style,
     added to Weapon drill's; in words "you learn weapons quickly"), Tidal (mana regeneration
     +25 %, added to the affixes' percent in `World::mana_rate`).
     The rest of the design's gifts land with their rules and are listed in `grants` only then.
@@ -94,7 +95,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the cells beside them in the dark, and so does everything else), Frail (flaw: maximum hit
     points −10 %, at least 1), Grasping arms (Twin Blades' two-weapon penalties eased by 3; Sword
     and Board's free bash +20 % where it has one), Of the deep (ice holds them as if they
-    carried nothing, a plunge never hurts, climbing out onto ice −50 %), Ungainly ashore (flaw:
+    carried nothing, a plunge never hurts, climbing out onto ice −50 %, and cold resistance 25 %, #271), Ungainly ashore (flaw:
     overworld journeys +10 %), Hound's nose (bleeding creatures seen within 6 cells however dark;
     the eat list says whether food smells fresh, turning, or rotten: a word, never its age),
     Gatekeeper (a free blow at a hostile stepping up beside them, §8 "Free blows").
