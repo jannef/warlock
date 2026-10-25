@@ -76,7 +76,8 @@ pub use creature::{
 };
 pub use damage_type::{DamageTypeDef, DamageTypeId, MAX_DAMAGE_TYPES};
 pub use dialogue::{
-    Dialogue, DialogueId, MAX_LINE, MAX_REPLY, MAX_TOPICS, MUTTER_CHANCES, Mutter, Speaker, Topic,
+    Dialogue, DialogueId, MAX_LINE, MAX_REPLY, MAX_TOPICS, MUTTER_CHANCES, Mutter, Service,
+    ServiceKind, Speaker, Topic,
 };
 pub use disease::{DIFFICULTIES, DiseaseDef, DiseaseId, SOURCES, Wading};
 pub use dungeon::{DungeonDef, Generator, LevelPlan, parse_branch_level};

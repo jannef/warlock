@@ -74,6 +74,8 @@ pub struct SystemDef {
     pub name: String,
     /// Its talents are still to come: counted and shown, not yet required.
     pub pending: bool,
+    /// The fewest talents it may have, if not the coverage bar's (a small system: one).
+    pub min_talents: Option<u32>,
 }
 
 /// The bar the coverage check holds every system and tree to (`[coverage]`); without the table,
@@ -336,6 +338,9 @@ pub enum TalentEffect {
     Credit { gold: u32 },
     /// What it buys or sells in a shop is identified.
     IdentifyTrades,
+    /// Temple services cost it half, and a cure also mends a point of each damaged stat
+    /// (Pilgrim; `world/service.rs`).
+    Pilgrim,
     /// Item descriptions show what its things are worth.
     ItemWorth,
     /// Item descriptions show what each gem in a thing is worth.
@@ -1591,6 +1596,7 @@ impl TalentEffect {
             | TalentEffect::Whirlwind
             | TalentEffect::WeightlessCoins
             | TalentEffect::IdentifyTrades
+            | TalentEffect::Pilgrim
             | TalentEffect::ItemWorth
             | TalentEffect::GemWorth
             | TalentEffect::MakeWay
@@ -1992,7 +1998,7 @@ impl TalentBook {
     }
 
     /// The coverage check (spec §8 "Talents"): every system not `pending` has at least
-    /// `min_talents` talents (those of a class tree are class abilities, not talents) and
+    /// `min_talents` talents (its own `min_talents`, if it gives one) (those of a class tree are class abilities, not talents) and
     /// `min_class` class abilities (`class_abilities` counts them by system id: the talents the
     /// class tables give), and every tree not `pending`, `no_free`, nor a class tree has at least
     /// `free_per_tree` talents without prerequisites. The first gap, in words.
@@ -2005,13 +2011,14 @@ impl TalentBook {
             let talents = (self.of_system(SystemId(i)))
                 .filter(|(_, t)| !self.tree(t.tree).class)
                 .count() as u32;
-            if talents < bar.min_talents {
+            let least = system.min_talents.unwrap_or(bar.min_talents);
+            if talents < least {
                 return Some(format!(
                     "system `{}` has {talents} talent{} but at least {} are needed (mark it \
                      `pending = true` until they land)",
                     system.id,
                     if talents == 1 { "" } else { "s" },
-                    bar.min_talents
+                    least
                 ));
             }
             let abilities = class_abilities(&system.id);
@@ -2077,6 +2084,7 @@ struct SystemSpec {
     name: String,
     #[serde(default)]
     pending: bool,
+    min_talents: Option<u32>,
 }
 
 #[derive(Deserialize)]
@@ -2435,6 +2443,7 @@ pub(super) fn parse<'a>(
             id: s.id,
             name: s.name,
             pending: s.pending,
+            min_talents: s.min_talents,
         });
     }
     if book.trees.len() > usize::from(u8::MAX) || book.systems.len() > usize::from(u8::MAX) {

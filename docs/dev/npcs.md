@@ -8,10 +8,13 @@ NPCs, dialogue, and making way (spec §8 "Dialogue" and "Displacement", #146, #1
 legend entry gives a creature, `Actor::npc`; `Content::dialogue_of` prefers the npc's): rotating
 `lines`, `greet`, `greet_evil`/`greet_good` (cold lines for a character the speaker scorns for
 their alignment, said in turn instead of the greeting and lines: `World::cold_greeting`,
-`docs/dev/alignment.md`), `[[dialogue.topic]]`s (`id`, `name`, `reply`), and `mutter` (chance per
-action, verb, lines). `world/talk.rs` is the one place talk happens: `World::chat` (`Action::Chat`, cost
+`docs/dev/alignment.md`), `[[dialogue.topic]]`s (`id`, `name`, `reply`), `[[dialogue.service]]`s
+(`id`, `name`, `price`, `does`, `reply`, `nothing`; topic and service ids share one namespace, at
+most nine of them together, and a service needs `data/shops.toml` for its currency), and `mutter`
+(chance per action, verb, lines). `world/talk.rs` is the one place talk happens: `World::chat` (`Action::Chat`, cost
 `chat`), `World::ask` (`Action::Ask`, no time), `World::topics` (the one source of what an NPC can
-be asked about: quests, #148, add their topics there and answer them in `ask`), `rotation` (each
+be asked about: quests, #148, add their topics there and answer them in `ask`; services follow
+the topics with `TopicView::price`), `rotation` (each
 line once a round in a per-speaker shuffled order, never twice in a row; `Actor::talk` counts what
 was said; with `Actor::npc` saved and hashed), mutters (`World::mutter` after each `creature_turn`, a hash roll that never
 draws on the gameplay stream; `Act::Mutter` noise; `say_mutters` logs what the player heard, with
@@ -25,3 +28,17 @@ mind is calm, ready for shopkeepers, #145; it cannot move; or it is two sizes or
 sizes are listed smallest first). What an actor is called in messages comes from
 `World::called` ("the gardener"): named shopkeepers go there. Creatures that talk and fight no one
 never stop a rest by coming into view (`World::disturbs_rest`).
+
+**Services** (#329, the campaign design §6.1; spec §8 "Dialogue"): `world/service.rs`.
+`World::ask` hands a topic id it is not a quest's to `World::ask_service` before the dialogue's
+topics; it checks there is something to do (`prayer_cures`: a status or disease, showing or not,
+whose `cured_by` lists `service::PRAYER`; or stat damage, with no disease showing for a mend),
+then the gold (`service_price`: the data's price, halved rounded up with `TalentMods::services`,
+Pilgrim), pays through `shop.rs`'s `hand_over` (the purse code `pay` uses; the coins go to the
+speaker), and does it: `World::cure(player, "prayer")` (every disease in `data/diseases.toml`
+lists `prayer`; with Pilgrim a point of each damaged stat mends after, unless a disease still
+shows) or `World::mend` (`StatDamage::mend_all`). The reply goes through `World::answer`, so the
+dialogue screen reopens on the service. Refusals take no time; a service done takes `chat`'s.
+Nothing is saved that was not before, and no stream is drawn. Tests: `world/service_tests.rs`
+(a fixture sister on the built-in content; prices, refusals, Pilgrim, the replay and the save),
+the screen's row in `ui/dialogue_screen.rs`; the wiki's table is `xtask/src/wiki/services.rs`.

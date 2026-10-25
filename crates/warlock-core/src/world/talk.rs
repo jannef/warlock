@@ -7,7 +7,8 @@
 //! ([`Event::Talked`] carries what it said and its topics), where asking about a topic
 //! ([`Action::Ask`](crate::Action::Ask)) takes no time. A creature with nothing to say, or one
 //! hostile to the player, gives a non-answer. Quests (#148, `quest.rs`) add topics of their own
-//! in [`World::topics`], answered in [`World::ask`].
+//! in [`World::topics`], answered in [`World::ask`]; services (`service.rs`) are asked for the
+//! same way, listed after the topics with their price.
 //!
 //! **Muttering**: a creature whose dialogue has a `mutter` may mutter one of its lines (in turn,
 //! like the one-liners) with each action, by its `chance`, while it goes about its routine and
@@ -66,6 +67,9 @@ pub struct TopicView {
     pub id: String,
     /// What the player picks: "The rooms".
     pub name: String,
+    /// What it costs, in gold, for a service (`service.rs`); none for a topic.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub price: Option<u32>,
 }
 
 /// A creature's answer to the player (an [`Event::Talked`]).
@@ -176,7 +180,8 @@ impl World {
     }
 
     /// What the player may ask `actor` about: its quest topics first (`quest.rs`), then its
-    /// dialogue's topics. The one place topics come from.
+    /// dialogue's topics, then its services with their prices now (`service.rs`). The one place
+    /// topics come from.
     pub fn topics(&self, actor: ActorId) -> Vec<TopicView> {
         let Some(actor) = self.state.actors.get(&actor) else {
             return Vec::new();
@@ -185,9 +190,16 @@ impl World {
             return Vec::new();
         };
         let mut topics = self.quest_topics(id, self.scorns(actor));
-        topics.extend(self.content.dialogue(id).topics.iter().map(|t| TopicView {
+        let dialogue = self.content.dialogue(id);
+        topics.extend(dialogue.topics.iter().map(|t| TopicView {
             id: t.id.clone(),
             name: t.name.clone(),
+            price: None,
+        }));
+        topics.extend(dialogue.services.iter().map(|s| TopicView {
+            id: s.id.clone(),
+            name: s.name.clone(),
+            price: Some(self.service_price(s.price)),
         }));
         topics
     }
@@ -226,7 +238,7 @@ impl World {
     }
 
     /// Asks the creature in `dir` about `topic` (see the module docs; quest topics are answered
-    /// in `quest.rs`). Takes no time; refused when the player sees no one there or it knows
+    /// in `quest.rs`, services done in `service.rs`, which takes time). Takes no time; refused when the player sees no one there or it knows
     /// nothing of the topic.
     pub(super) fn ask(&mut self, dir: Dir, topic: &str, events: &mut Vec<Event>) -> Spent {
         let at = self.player_pos().step(dir);
@@ -238,6 +250,9 @@ impl World {
             return Spent::Nothing;
         };
         if let Some(spent) = self.ask_quest(id, dialogue, topic, events) {
+            return spent;
+        }
+        if let Some(spent) = self.ask_service(id, dialogue, topic, events) {
             return spent;
         }
         let reply = (self.content.dialogue(dialogue).topic(topic)).map(|t| t.reply.clone());

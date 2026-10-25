@@ -102,7 +102,8 @@ class = true
 # The closed list of systems a talent may name in its `systems` (the coverage matrix of the
 # design, docs/design/progression.md §8). A system is `pending` until its talents land; the PR
 # that brings them removes the flag, and the bar holds from then on. A new system of the game
-# joins the list in the PR that ships its talents, never before.
+# joins the list in the PR that ships its talents, never before. A small system may ask for
+# fewer talents than the bar with a `min_talents` of its own.
 
 [[system]]
 id = "combat"
@@ -233,6 +234,12 @@ name = "Shops and favour"
 [[system]]
 id = "talk"
 name = "Quests, talk, people"
+
+# Services (campaign design §6.1): cures and mendings for gold, asked for like dialogue topics.
+[[system]]
+id = "services"
+name = "Services: paid cures and mendings"
+min_talents = 1
 
 [[system]]
 id = "magic_items"

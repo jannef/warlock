@@ -425,8 +425,9 @@ impl World {
         Spent::NoTime
     }
 
-    /// Moves `amount` gold from actor `from`'s pack into actor `to`'s.
-    fn hand_over(&mut self, from: ActorId, to: ActorId, amount: u32) {
+    /// Moves `amount` gold from actor `from`'s pack into actor `to`'s (paying a shop, a
+    /// service's price).
+    pub(super) fn hand_over(&mut self, from: ActorId, to: ActorId, amount: u32) {
         let currency = self.shop_kinds().currency;
         if let Some(giver) = self.state.actors.get_mut(&from) {
             let gone = take(&mut giver.inventory, currency, amount);

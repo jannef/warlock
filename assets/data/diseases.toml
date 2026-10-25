@@ -34,7 +34,8 @@
 #               percent for each hour spent crossing it (drawn as you step onto it, by how long
 #               the step takes), then a check to resist it
 #   cured_by    the means that cure it at once: eating a remedy that `cures` it (objects: the
-#               angelica root cures `remove_disease`), later potions and priests
+#               angelica root cures `remove_disease`), a temple's cure (`prayer`, a service in
+#               dialogue: every disease lists it), later potions
 #   onset       said when it shows (stops a rest)
 #   symptoms    said when a progression goes badly, in turn (each stops a rest)
 #   recovered   said when it is gone (lets a rest go on)
@@ -50,7 +51,7 @@ name = "filth fever"
 difficulty = 13
 incubation = "1d3"
 damage = { dexterity = "1d3", toughness = "1d3" }
-cured_by = ["remove_disease"]
+cured_by = ["remove_disease", "prayer"]
 onset = "You feel feverish."
 symptoms = [
     "Fever wracks you.",
@@ -65,7 +66,7 @@ name = "red ache"
 difficulty = 16
 incubation = "1d3"
 damage = { strength = "1d6" }
-cured_by = ["remove_disease"]
+cured_by = ["remove_disease", "prayer"]
 onset = "Your skin flushes red, and your muscles ache."
 symptoms = [
     "Your muscles burn with a deep ache.",
@@ -80,7 +81,7 @@ name = "the shakes"
 difficulty = 14
 incubation = 1
 damage = { dexterity = "1d6" }
-cured_by = ["remove_disease"]
+cured_by = ["remove_disease", "prayer"]
 onset = "Your hands begin to tremble."
 symptoms = [
     "You shake uncontrollably.",
@@ -99,7 +100,7 @@ incubation = "1d4"
 damage = { toughness = "1d3" }
 regen = 25
 wading = { terrain = ["marsh", "swamp"], per_hour = 4 }
-cured_by = ["remove_disease"]
+cured_by = ["remove_disease", "prayer"]
 onset = "A chill settles into your bones."
 symptoms = [
     "You shiver with marsh fever.",
@@ -119,7 +120,7 @@ damage = { toughness = "1d4", presence = "1d4" }
 recovery = 0
 kills = true
 caught = ["rotten_food"]
-cured_by = ["remove_disease"]
+cured_by = ["remove_disease", "prayer"]
 onset = "Your skin turns grey and clammy."
 symptoms = [
     "Your flesh rots.",
@@ -137,7 +138,7 @@ check = "willpower"
 incubation = "1d3"
 damage = { intelligence = "1d3", willpower = "1d3" }
 mana_regen = 25
-cured_by = ["remove_disease"]
+cured_by = ["remove_disease", "prayer"]
 onset = "Your head throbs."
 symptoms = [
     "Your thoughts swim in a fever.",
