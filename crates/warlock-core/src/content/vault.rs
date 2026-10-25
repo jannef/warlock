@@ -14,6 +14,9 @@
 //! area's own ground, every open cell on its edge (walkable, a door, or void) is an entrance, and
 //! every walkable cell must be reachable from its edge. Dungeon generators use only dungeon
 //! vaults, local areas only outdoor ones.
+//!
+//! A branch level may name vaults (`vaults` in `[[dungeon.levels]]`): each is stamped on that
+//! level for certain, and a vault so named ([`Vault::pinned`]) is never drawn at random.
 
 use super::level::{LevelKind, LevelTemplate};
 use super::{Content, TerrainId};
@@ -29,6 +32,11 @@ pub struct Vault {
     pub entrances: Vec<(Pos, Dir)>,
     /// The campaign whose `vaults/` it is in (spec §3); `None` for a shared one.
     pub campaign: Option<String>,
+    /// Named by a branch level's `vaults` ([`DungeonDef::vaults`]): stamped there for certain
+    /// and never drawn at random.
+    ///
+    /// [`DungeonDef::vaults`]: super::DungeonDef::vaults
+    pub pinned: bool,
 }
 
 impl Vault {
@@ -117,6 +125,7 @@ impl Vault {
             template,
             entrances,
             campaign: None,
+            pinned: false,
         })
     }
 

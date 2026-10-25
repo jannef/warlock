@@ -131,3 +131,8 @@ which the ash wraith is) and `fire` (the burning things; hostile to the player o
 (`racial_weapon` must have damage), so the duergar miner carries it as a Tool-slot gear line and
 has the hand axe, the duergar's racial weapon, as a second, rarer line. The basilisk's slowing
 bite is the existing `sluggish` status.
+Fyrdelf (#339) is where the wave lives: its branch's `population` (with the bats, kobolds, and
+giant centipedes the shallow floors draw on), leaving out the drake, which only the drake's
+hoard places (a vault its twelfth level names, so a run meets it once, there). Its stores are
+kept by the `duergar_trader` (the Ascmearc's own type, `merchants`, the shopkeeper's level and
+XP, an outlier of the XP guideline like the shopkeeper).

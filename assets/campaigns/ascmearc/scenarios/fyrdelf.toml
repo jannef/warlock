@@ -1,0 +1,9 @@
+# A dev scenario of the Ascmearc (docs/design/campaign.md §7): straight into Fyrdelf, the duergar's
+# mine below the volcano. Its first level's `<` leads nowhere here (the run did not come down from
+# the overworld); come in from the overworld, it leads back to Ascdūn.
+name = "Fyrdelf"
+description = "Straight into Fyrdelf, the fire delving under Ascdūn: twelve levels of galleries and deep workings."
+start_level = "fyrdelf:1"
+seed = 1
+character = { race = "human", gender = "female", class = "thief", name = "Eadgyth" }
+lantern = "lantern"

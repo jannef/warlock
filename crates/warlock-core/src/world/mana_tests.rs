@@ -112,8 +112,11 @@ fn files(scenario: &str, extra: &[(&str, &str)]) -> ContentFiles {
     files.remove("data/resources.toml");
     // And the giant leech's bite (its Bleeding).
     files.remove("data/creatures/giant_leech.toml");
-    // And the basilisk's bite (its Sluggish).
+    // And the basilisk's bite (its Sluggish), and so from Fyrdelf, where it lives.
     files.remove("data/creatures/basilisk.toml");
+    let fyrdelf = "campaigns/ascmearc/data/dungeons/fyrdelf.toml";
+    let text = include_str!("../../../../assets/campaigns/ascmearc/data/dungeons/fyrdelf.toml");
+    files.insert(fyrdelf, &text.replace("\"basilisk\", ", ""));
     let diseases = include_str!("../../../../assets/data/diseases.toml");
     files.insert("data/diseases.toml", &format!("{diseases}\n{FOG}"));
     files.insert("data/experience.toml", EXPERIENCE);

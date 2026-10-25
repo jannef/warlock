@@ -1,0 +1,60 @@
+---
+source: crates/warlock-core/src/mapgen/fyrdelf_tests.rs
+expression: "describe(&level(1, 1))"
+---
+Fyrdelf 1 (fyrdelf:1) 80x21
+stairs Up at (21, 13) -> ascmearc
+stairs Down at (59, 16) -> fyrdelf:2
+duergar_miner at (24, 6) route  carrying a copper pick-axe (in use)
+kobold at (32, 16) route E E W W carrying a brass key
+ember_beetle at (42, 9) route W W W E E E E W W W E E E W W W W E E E
+ember_beetle at (36, 16) route S N N E W S S N
+kobold_shaman at (2, 15) route N E E E E E W W W W W S
+kobold_shaman at (50, 10) route S S W W W N N S S E E E N N carrying a horn amulet (being worn), 12 copper coins
+kobold_archer at (47, 6) route S W N E W S E N carrying a horn short bow (readied), 12 horn arrows (quivered)
+kobold_shaman at (35, 10) route W W N N N E W S S S E E carrying 12 copper coins
+bat at (4, 11) route S N N N S S N N S S S N
+kobold_shaman at (50, 12) route N N N S S S N N N S S S carrying a cloth amulet (being worn)
+ember_beetle at (3, 14) route E E S S N N W W
+giant_centipede at (46, 11) route N N N N N E E W W S S S S S
+ember_beetle at (37, 17) route W N N E S S W N N S S E N N W S S E
+ember_beetle at (49, 9) route W W W N N S S E E E
+kobold at (66, 7) route E E E E E W W W W W carrying a bone cap (being worn)
+ember_beetle at (68, 10) route W W W W W W W E E E E E E E
+bat at (30, 9) route W W E W W N N N S N S S S E E W E E
+ember_beetle at (68, 7) route E E E E W W W E E E W W W W
+kobold_shaman at (7, 15) route S S E E E W W E E W W W N N carrying a fur amulet (being worn)
+kobold_shaman at (48, 6) route W E E S S S N N N W W E carrying 12 copper coins
+kobold_shaman at (36, 7) route S S S W W W E E E N N N carrying a wood amulet (being worn)
+kobold at (71, 11) route E E E W W W N S E E E W W W carrying a bone spear (wielded), a chitin cap (being worn)
+ember_beetle at (50, 9) route N S S W W E E N N S
+kobold at (7, 17) route N E E E S W E N W W W S carrying a flint spear (wielded)
+ember_beetle at (47, 11) route S N N N N N N E E W W S S S S S S N
+ember_beetle at (34, 10) route E E N N N S S S W E N N N S S S W W
+duergar_miner at (36, 10) route W W W N S E E E carrying a bronze pick-axe (in use), a flint hand axe (wielded), a chitin cap (being worn)
+spear trap at (27, 16)
+alarm trap at (56, 10)
+arrow trap at (67, 11)
+2 placed lights
+special room flooded at (2, 1)-(6, 8)
+
+  #####
+  #fff#
+  #fff#
+  #fff#         ###########
+  #fff#         #(..#.....###                #######
+  #fff#         #...+...h.+.#   #######      #.kk.¡#        #################
+  #¡ff#         #..(#.....#.#   #...k¡#      #.....#        #¡....k.a......[#
+  ##+##         ###########.#####....?########.....#        #...............#
+   #.#                    #...b.......'...a..+...aa##########...............#
+   #.#                    #.#####.akh.########....k.....^...+.......a.......#
+   #b#                    #.#   #######      #ca...#######.##......^...k...¡#
+   #.#           #######  #.#                #¡...k#     #.####'#############
+ ###S#######     #...<¡####.#                #######     #.#  #.#
+ #.a......¡#     #.....+....# ###########                #.#  #.#
+ #k....k...#######.....####.# #....#.)..#               ##+####+###
+ #.........+..)..S.....#  #^# #.k..&a.*.#               #..>....)¡#
+ #¡....k...#####.#¡....#  #.# #....#(a%.#               #.........#
+ ###########   #.####+#####.#####+#######               #¡........#
+               #..................#                     ###########
+               ####################

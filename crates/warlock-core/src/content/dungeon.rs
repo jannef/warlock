@@ -356,6 +356,9 @@ struct LevelsSpec {
     danger: Option<DangerSpec>,
     room_effects: Option<RoomOddsSpec>,
     shops: Option<ShopOddsSpec>,
+    /// Vaults (by id) stamped on each of these levels, and nowhere else.
+    #[serde(default)]
+    vaults: Vec<String>,
 }
 
 /// How one level of a branch is generated.
@@ -410,6 +413,9 @@ pub struct DungeonDef {
     room_odds: Vec<RoomOdds>,
     /// The shop odds per depth, index `depth - 1`; empty without `shops.toml`.
     shop_odds: Vec<ShopOdds>,
+    /// The vaults (ids) each depth stamps for certain, index `depth - 1` (checked against the
+    /// vaults by `Content::load_dungeons`).
+    vaults: Vec<Vec<String>>,
 }
 
 impl DungeonDef {
@@ -429,6 +435,19 @@ impl DungeonDef {
     pub fn shop_odds(&self, depth: u32) -> Option<&ShopOdds> {
         self.shop_odds
             .get(usize::try_from(depth.checked_sub(1)?).ok()?)
+    }
+
+    /// The vaults (ids) level `depth` (1-based) stamps for certain: a `[[dungeon.levels]]`
+    /// entry's `vaults`. A vault named by any branch level is stamped only where it is named.
+    pub fn vaults(&self, depth: u32) -> &[String] {
+        let i = depth.checked_sub(1).and_then(|i| usize::try_from(i).ok());
+        i.and_then(|i| self.vaults.get(i))
+            .map_or(&[], Vec::as_slice)
+    }
+
+    /// Every vault id some level of the branch names.
+    pub fn named_vaults(&self) -> impl Iterator<Item = &str> {
+        self.vaults.iter().flatten().map(String::as_str)
     }
 
     /// The level id of `depth`, e.g. `depths:3`.
@@ -531,6 +550,7 @@ impl DungeonFile {
             let branch_danger = spawning.as_ref().map(|(rule, _)| *rule);
             let mut plans = Vec::new();
             let (mut room_odds, mut shop_odds) = (Vec::new(), Vec::new());
+            let mut vaults = Vec::new();
             for depth in 1..=spec.depth {
                 let over = spec
                     .levels
@@ -571,6 +591,7 @@ impl DungeonFile {
                     temperature: temperature.map(|c| Temperature::degrees(c.into())),
                     danger,
                 });
+                vaults.push(over.map(|l| l.vaults.clone()).unwrap_or_default());
                 let room_spec = RoomOddsSpec::layer(
                     over.and_then(|l| l.room_effects.as_ref()),
                     spec.room_effects.as_ref(),
@@ -671,6 +692,7 @@ impl DungeonFile {
                 campaign: None,
                 room_odds,
                 shop_odds,
+                vaults,
             });
         }
         Ok(defs)

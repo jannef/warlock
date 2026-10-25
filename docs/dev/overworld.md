@@ -79,4 +79,6 @@ cells wide (watertight to diagonal steps), crossed only at the bridge `b` and th
 Regions are rectangles in first-match order (the forests' hearts first). Its scenario `ascmearc`
 starts on the pass and says its `arrival` line. Tests: `world/ascmearc_tests.rs` (regions, the
 closed way back, the town's distance, names and spacing, the rivers, the travel budget, no leak
-of the hidden two, a replay, the legend's `name` and `note` checks).
+of the hidden two, a replay, the legend's `name` and `note` checks). Fyrdelf's hidden entry
+leads to `fyrdelf:1` (#339; `mapgen/fyrdelf_tests.rs` reveals it with the dev `reveal:fyrdelf`,
+walks there, goes down and back up as a replay).
