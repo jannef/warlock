@@ -1,0 +1,29 @@
+# Campaign-owned (docs/design/campaign.md §3.6): the Ascmearc's own type, which only its files
+# may name.
+#
+# The duergar traders of Fyrdelf (§7.1): a duergar who keeps a store in the delf's galleries
+# (the branch's `shops`, data/shops.toml's shared kit and purse) and stays at its post beside the
+# door. Like every keeper it trades with all and fights no one until robbed or attacked: then it
+# is outraged, and dangerous. Dour and tough rather than quick, and it sees in the dark.
+[[creature]]
+id = "duergar_trader"
+level = 18
+xp = 400
+name = "duergar trader"
+glyph = "h"
+fg = "#c8a070"
+speed = 1100
+faction = "merchants"
+alignment = "neutral"
+race = "duergar"
+vision = "darkvision"
+# It keeps to its post by the door: it does not swap places with you there.
+budge = "off_post"
+sight = 12
+opens_doors = true
+footsteps = 60
+hearing = 8
+weight = 70000
+stats = { strength = 18, dexterity = 13, toughness = 20, intelligence = 13, willpower = 16, presence = 11 }
+base_hp = 64
+skills = { appraise = 60 }

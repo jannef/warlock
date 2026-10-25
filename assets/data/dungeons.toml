@@ -59,7 +59,9 @@
 #   [[dungeon.levels]]  per-depth overrides, first match wins:
 #              from, to (inclusive; default `from`), generator, size, temperature, danger,
 #              room_effects, shops (each default the branch's; a danger here needs the branch's;
-#              a table field by field)
+#              a table field by field), and `vaults` (vault ids, shared or the branch's
+#              campaign's: each stamped on every level of the range for certain, and never drawn
+#              at random anywhere, e.g. `vaults = ["drakes_hoard"]`)
 #
 # Generators build with the terrain void, wall, floor, door_closed, door_open, stairs_up,
 # stairs_down, water, sconce, fungus and the light lamp, and stamp vaults (assets/vaults).

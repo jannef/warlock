@@ -1,0 +1,69 @@
+# Fyrdelf, "the fire delving" (docs/design/campaign.md §7.1; the fields: data/dungeons.toml): the
+# duergar's mine under the hills of Ascdūn, below the volcano, the deepest of the Ascmearc's
+# first dungeons. Its way in on the overworld is hidden until a quest reveals it. Four levels of
+# galleries, then eight of the deep workings, hotter the deeper they go, and the fire drake's
+# hoard at the bottom.
+
+[[dungeon]]
+id = "fyrdelf"
+name = "Fyrdelf"
+generator = "rooms"
+depth = 12
+size = [80, 21]
+traps = ["arrow", "spear", "fireball", "lightning_bolt", "alarm"]
+# Few secret doors (the duergar dig, they do not hide), hidden things harder to find deeper down,
+# and the hardest locks of the three dungeons.
+secret_doors = [0, 2]
+hidden_per_depth = 1
+locks_per_depth = 2
+loot = [3, 5]
+key = "brass_key"
+temperature = 10
+# Danger 8 on the first floor to 19 on the twelfth (spec §7 "Danger levels"); nothing scales with
+# the player. The delf wave, and the bats, kobolds, and centipedes of the upper galleries that
+# the shallow floors draw on too. The fire drake is not among them: it lives only on its hoard
+# (the vault at depth 12), so a run meets it there and nowhere else.
+danger = 8
+population = [
+    "bat", "kobold", "kobold_archer", "kobold_shaman", "giant_centipede",
+    "ember_beetle", "duergar_miner", "duergar_warrior", "duergar_smith", "ogre", "troll",
+    "fire_salamander", "magma_crawler", "ash_wraith", "basilisk", "cinder_elemental",
+]
+# How many: the default, 35 a thousand walkable cells, 25 to 80. A gallery floor (about 350 cells)
+# gets the least, 25, as Cealdhlāw's passages do; the deep workings (about 3 000) the ceiling, 80.
+
+# The duergar traders (spec §7 "Shops"): every gallery floor with a fitting room has a general
+# store kept by a duergar. Shops stand on rooms levels only, so the deep workings have none.
+shops = { chance = 100, kinds = ["general_store"], keeper = "duergar_trader", names = [
+    "Bardek", "Drekmar", "Gorvin", "Holgrak", "Murgrim", "Skorvald",
+    "Baldra", "Dregga", "Gunnra", "Hulda", "Krella", "Orna",
+] }
+
+# The galleries: each has its foreman's cabin.
+[[dungeon.levels]]
+from = 1
+to = 4
+vaults = ["foremans_cabin"]
+
+# The deep workings: caverns, warmer with every level nearer the volcano's heart.
+[[dungeon.levels]]
+from = 5
+to = 8
+generator = "caves"
+size = [120, 60]
+temperature = 16
+
+[[dungeon.levels]]
+from = 9
+to = 11
+generator = "caves"
+size = [120, 60]
+temperature = 20
+
+# The bottom: the fire drake on its hoard.
+[[dungeon.levels]]
+from = 12
+generator = "caves"
+size = [120, 60]
+temperature = 24
+vaults = ["drakes_hoard"]
