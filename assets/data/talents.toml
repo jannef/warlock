@@ -150,6 +150,14 @@ name = "Hit points, healing, regeneration"
 id = "mana"
 name = "Mana"
 
+# Alternative resources (#225): pools beside hit points and mana (Rage, Focus, Openings, Ki,
+# Inspiration). Pending until the resource talents (R5: Battle trance, Inner calm, Steady hand,
+# Patient blade) and the class features that move onto them (R1-R4) land.
+[[system]]
+id = "resources"
+name = "Resources"
+pending = true
+
 [[system]]
 id = "status"
 name = "Status effects"

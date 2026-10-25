@@ -755,6 +755,7 @@ fn search_the_last_seen_spot_then_go_back_and_patrol_on() {
             mana: 0,
             mana_base: 0,
             mana_regen: 0,
+            resources: Default::default(),
             skills: Default::default(),
             effects: Default::default(),
             diseases: Default::default(),

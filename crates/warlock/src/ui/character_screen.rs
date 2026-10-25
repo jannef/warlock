@@ -103,6 +103,9 @@ pub struct CharacterScreen {
     protection: i32,
     /// The combat stance's name.
     stance: String,
+    /// The alternative resources they hold (spec §8 "Resources"), in resource order: the name,
+    /// and what it holds of its maximum (`7/20`).
+    resources: Vec<(String, String)>,
     /// How many talents they have (spec §8 "Talents"): picked, and the sign's; not the class's
     /// abilities.
     talents: usize,
@@ -138,6 +141,7 @@ impl CharacterScreen {
                 defence: warlock_core::combat::BASE_DEFENCE,
                 protection: 0,
                 stance: "Neutral".into(),
+                resources: Vec::new(),
                 talents: 0,
                 alignment: None,
             };
@@ -197,6 +201,12 @@ impl CharacterScreen {
             defence: view.own_defence(),
             protection: view.own_protection(),
             stance: content.stance_def(view.own_stance()).name.clone(),
+            resources: (view.own_resources().iter())
+                .map(|r| {
+                    let name = content.resource(r.resource).name.clone();
+                    (name, format!("{}/{}", r.value, r.max))
+                })
+                .collect(),
             talents: view.own_talents().iter().filter(|t| !t.class).count(),
             alignment: view.own_alignment().map(|b| b.name()),
         }
@@ -217,7 +227,7 @@ impl CharacterScreen {
     pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
         // Rows: margin, the name, a gap, race, gender, class, the birth, and a gap (with a
         // character), the stats, a gap, level, experience, talents, hit points and mana, Defence and
-        // Protection, and stance (and the status effects and known diseases, if any), a gap, the weight, the
+        // Protection, and stance (and the resources held, the status effects and known diseases, if any), a gap, the weight, the
         // burden's thresholds, a gap, the footer, frame.
         let width = WIDTH.min(console.cols() as i32) - 4;
         let birth = fit_parts(&self.birth, width);
@@ -227,7 +237,8 @@ impl CharacterScreen {
             n => (n + birth.len() + stars.len()) as i32 + 1,
         };
         let thresholds = (self.load.as_ref()).map_or(Vec::new(), |l| thresholds(l, width));
-        let status_rows = i32::from(self.alignment.is_some())
+        let status_rows = self.resources.len() as i32
+            + i32::from(self.alignment.is_some())
             + i32::from(!self.effects.is_empty())
             + i32::from(!self.diseases.is_empty())
             + self.resistances.len() as i32;
@@ -312,6 +323,14 @@ impl CharacterScreen {
                     console.print(x + 4, y, name, TEXT);
                     console.print(x + 4 + BESIDE_NAME_W, y, &value, TEXT);
                 }
+            }
+            y += 1;
+        }
+        // `    Rage          7/20`: each resource held, under the stance.
+        for (name, value) in &self.resources {
+            if fits(y) {
+                console.print(x + 4, y, name, TEXT);
+                console.print(x + 4 + NAME_W, y, value, TEXT);
             }
             y += 1;
         }

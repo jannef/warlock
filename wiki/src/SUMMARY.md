@@ -50,6 +50,7 @@
   - [Diseases](diseases.md)
   - [Healing](healing.md)
   - [Mana](mana.md)
+  - [Resources](resources.md)
 - [Creatures](creatures.md)
   - [Creatures in numbers](creature-numbers.md)
   - [People and talk](npcs.md)

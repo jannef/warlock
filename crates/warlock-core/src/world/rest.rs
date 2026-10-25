@@ -64,7 +64,8 @@ impl World {
     /// showed or went badly (news that stops a rest), and in which no trap went off (a teleport
     /// moves a creature farther than its steps) pass without perception, which cannot change the
     /// outcome; only the last turn's events are kept, and the player's status effects beginning
-    /// and ending in the others, and their diseases' news (so they are said).
+    /// and ending in the others, their resources ending, and their diseases' news (so they are
+    /// said).
     pub(super) fn keep_at(
         &mut self,
         events: &mut Vec<Event>,
@@ -82,7 +83,12 @@ impl World {
             let unseen_until = self.state.time + self.out_of_view_for();
             let sprung = self.sprung;
             loop {
-                events.retain(|e| matches!(e, Event::Status { .. } | Event::Disease { .. }));
+                events.retain(|e| {
+                    matches!(
+                        e,
+                        Event::Status { .. } | Event::ResourceEnded { .. } | Event::Disease { .. }
+                    )
+                });
                 let price = act(self, events);
                 self.run_turn(price, events);
                 turns += 1;

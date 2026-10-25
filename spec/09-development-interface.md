@@ -61,7 +61,9 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   on in slot SLOT (a slot id of `data/slots.toml`) and `remove:SLOT` takes off what is there;
   the dev weather override takes `clear`, `overcast`, `rain`, or `heavy`; the dev `afflict:ID`
   gives the player a degree more of status ID (`data/status.toml`), `drain:N` spends N of their
-  mana (1 or more, through `World::spend_mana`; refused when they have less; §8 "Mana"), and
+  mana (1 or more, through `World::spend_mana`; refused when they have less; §8 "Mana"),
+  `resource:ID` grants them alternative resource ID (`data/resources.toml`, at its start,
+  through `World::grant_resource`; no time; §8 "Resources"), and
   `infect:ID` makes them catch disease ID (`data/diseases.toml`); `talent:ID[:CHOICE]` takes a talent (an id in
   `data/talents/`, with its choice) when a level's pick is due (§8 "Talents"; every other
   action is refused until it is made), `advance:SKILL` spends a level's skill roll (none until
@@ -112,7 +114,7 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   training marks, `stat marks St 3, To 1`; §8 "Talents", "Stats"),
   and `actors` (every actor on
   the level with its hit
-  points, mana, and Defence, `hp 8/12 mp 0/0 dv 13`, its alignment (`alignment evil`; the player's score and
+  points, mana, its alternative resources with their progress (`resources rage 11/20 (0)`), and Defence, `hp 8/12 mp 0/0 dv 13`, its alignment (`alignment evil`; the player's score and
   band, `alignment 450 (good)`; §8 "Alignment"), its
   weight, base plus carried, what it carries and of that wears and wields, `equipped main_hand a
   spear` (magic items as they truly are, `an iron ring of the Bear (unidentified)`), what its
@@ -154,7 +156,8 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   choices due (`due`: `{level, talents}`, or null), the
   quest log (`quests`: `[{id, name,
   kind, active, completed, giver, objective, status}]`), hit points (`hp: {current, max}`),
-  mana (`mana: {current, max}`),
+  mana (`mana: {current, max}`), the alternative resources held (`resources: [{id, current,
+  max}]`, in resource order),
   Defence (`defence`, the total), hunger (`hunger`: `bloated` … `starving`, or null when nobody
   hungers), how the run ended (`death: {turn, time, place, by, of, cause, trap}` or null;
   `cause` "Starved to death", "Killed by a fireball trap", and the like when neither a creature
@@ -162,7 +165,7 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   recent messages,
   and optionally the full world state; the ASCII header line has the turn, the time
   (`0001-01-01 08:00:00`), level, viewer, the player's hit points and mana (`hp 17/17 mp 3/3`,
-  then `dead` once they have died), their hunger unless Not hungry (`hunger hungry`), the weather under the open
+  then each resource they hold, `rage 11/20`, then `dead` once they have died), their hunger unless Not hungry (`hunger hungry`), the weather under the open
   sky (`weather rain`), the temperature (`temperature -3.5 °C`), and hash.
 - Freezing visual time and fixing window size and scale make screenshots reproducible. With frozen
   time, glyph animations show that moment and motion (slides, camera) completes instantly.

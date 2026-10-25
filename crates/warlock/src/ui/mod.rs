@@ -667,8 +667,9 @@ fn status_segments(world: &World, clock: Clock, unit: TemperatureUnit) -> Vec<Se
     // of equal ones the later first). The moon phase is cut down to its glyph and the date to
     // its day and month before they are dropped. The weather shows only under the open sky,
     // where the player knows it, and there it matters more than the date: it changes the light
-    // and how far one sees. Hit points matter most after the level, and mana right after them:
-    // they outlast the time, and so do the status effects the player suffers (by name, the most
+    // and how far one sees. Hit points matter most after the level, and mana right after them,
+    // then each alternative resource the player holds (`Rage 7`, `Focus 7/10`; spec §8
+    // "Resources"), giving way before mana: they outlast the time, and so do the status effects the player suffers (by name, the most
     // important first: the last gives way first), Dazzled (strong light on light-blind eyes,
     // spec §8 "Character creation"), hunger (shown unless the player is Not hungry), and the burden (shown
     // when there is one), which slows everything the player does; hunger outlasts the burden. The
@@ -680,6 +681,14 @@ fn status_segments(world: &World, clock: Clock, unit: TemperatureUnit) -> Vec<Se
     let (mp, max_mp) = view.own_mana();
     let burden = view.own_load().burden();
     let hunger = view.own_hunger().filter(|h| *h != Hunger::NotHungry);
+    let resources = (view.own_resources().into_iter()).map(|r| {
+        let def = content.resource(r.resource);
+        let text = match def.show_max {
+            true => format!("{} {}/{}", def.short, r.value, r.max),
+            false => format!("{} {}", def.short, r.value),
+        };
+        Segment::new(1, text)
+    });
     let effects = (view.own_effects()).map(|s| Segment::new(1, content.status(s).name.clone()));
     let stance = view.own_stance();
     let head = [
@@ -712,6 +721,7 @@ fn status_segments(world: &World, clock: Clock, unit: TemperatureUnit) -> Vec<Se
         Some(Segment::new(11, format!("Seed {}", world.seed()))),
     ];
     (head.into_iter())
+        .chain(resources)
         .chain(effects)
         .chain(rest.into_iter().flatten())
         .collect()
@@ -1068,6 +1078,27 @@ mod tests {
         world.apply(&Action::Drain(7));
         let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius);
         assert_eq!(segments[2].text, "MP 5/12");
+    }
+
+    #[test]
+    fn the_status_bar_shows_each_resource_held_after_the_mana() {
+        let mut world = hoard();
+        world.apply(&Action::Resource("rage".into()));
+        world.apply(&Action::Resource("focus".into()));
+        world.apply(&Action::Wait);
+        let texts: Vec<String> = status_segments(&world, Clock::H24, TemperatureUnit::Celsius)
+            .into_iter()
+            .map(|s| s.text)
+            .collect();
+        // Rage shows its value alone, focus its maximum too.
+        assert_eq!(texts[2..5], ["MP 0/0", "Rage 11", "Focus 10/10"]);
+        let line = "Hoard  ·  HP 10/10  ·  MP 0/0  ·  Rage 11  ·  Focus 10/10";
+        let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius);
+        assert_eq!(
+            fit_segments(&segments, line.chars().count() - 1),
+            "Hoard  ·  HP 10/10  ·  MP 0/0  ·  Rage 11",
+            "the last resource gives way first, before the mana"
+        );
     }
 
     #[test]

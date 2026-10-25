@@ -26,7 +26,8 @@
 use crate::action::Action;
 use crate::alignment::Requirement;
 use crate::content::{
-    ActionKind, ClassActive, ClassSpell, Content, SignActive, SkillDef, StatusId, TalentEffect,
+    ActionKind, ClassActive, ClassSpell, Content, ResourceCost, ResourceId, SignActive, SkillDef,
+    StatusId, TalentEffect,
 };
 use crate::geom::{Dir, Pos};
 use crate::skills::{Effect, SkillId};
@@ -174,6 +175,9 @@ pub enum Unavailable {
     /// ability is (a raging barbarian cannot read), or the ability's cooldown, which the class
     /// abilities bring (Winded: "you are winded"). Only time lifts it.
     While(StatusId),
+    /// One that costs an alternative resource the character does not hold, or holds too little
+    /// of (spec §8 "Resources"): "not enough focus".
+    Short(ResourceId),
     /// One that costs more mana than the actor has (spec §8 "Mana"): time brings it back.
     NoMana,
 }
@@ -189,6 +193,10 @@ impl Unavailable {
             Unavailable::While(status) => {
                 format!("you are {}", content.status(status).name.to_lowercase()).into()
             }
+            Unavailable::Short(resource) => {
+                let name = content.resource(resource).name.to_lowercase();
+                format!("not enough {name}").into()
+            }
         }
     }
 
@@ -200,6 +208,9 @@ impl Unavailable {
             Unavailable::Strayed => "strayed".into(),
             Unavailable::NoMana => "no_mana".into(),
             Unavailable::While(status) => format!("while:{}", content.status(status).id).into(),
+            Unavailable::Short(resource) => {
+                format!("short:{}", content.resource(resource).id).into()
+            }
         }
     }
 }
@@ -526,9 +537,11 @@ impl Ability {
     pub(crate) fn unavailable(self, actor: &Actor, content: &Content) -> Option<Unavailable> {
         let own = match self {
             Ability::Class(active) => {
-                let required = content.class_active(active).and_then(|a| a.needs.alignment);
+                let def = content.class_active(active);
+                let required = def.and_then(|a| a.needs.alignment);
                 (strayed(actor, content, required))
                     .or_else(|| class_cooldown(actor, content, active).map(Unavailable::While))
+                    .or_else(|| short_of(actor, def?.resource?))
                     .or_else(|| {
                         // Inspire costs mana (Virtuoso's none).
                         let mana = (active == ClassActive::Inspire)
@@ -593,6 +606,13 @@ fn short_of_mana(actor: &Actor, content: &Content, spell: ClassSpell) -> Option<
     let (_, def) = content.class_spell(spell)?;
     let cost = actor.spell_cost(content, def.mana);
     (actor.mana < cost).then_some(Unavailable::NoMana)
+}
+
+/// Why `actor` cannot use an ability that costs `cost` (spec §8 "Resources"):
+/// [`Unavailable::Short`] while they do not hold the resource or hold less than it costs.
+fn short_of(actor: &Actor, cost: ResourceCost) -> Option<Unavailable> {
+    let held = actor.resources.get(cost.resource).map(|p| p.value);
+    (held.is_none_or(|v| v < cost.amount)).then_some(Unavailable::Short(cost.resource))
 }
 
 /// Why `actor` cannot use an ability that asks for alignment `required` (its data's

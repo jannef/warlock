@@ -231,6 +231,14 @@ const CASES: &[Case] = &[
         ..BASE
     },
     Case {
+        // Alternative resources (#225): a row each under the stance, and in the status bar.
+        name: "resources",
+        actions: "resource:rage resource:focus wait",
+        screen: Some("character"),
+        size: (100, 36),
+        ..BASE
+    },
+    Case {
         name: "alignment-strayed-character",
         scenario: "courtyard",
         character: Some("human,male,paladin"),

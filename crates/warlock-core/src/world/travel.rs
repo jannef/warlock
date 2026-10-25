@@ -460,6 +460,7 @@ pub(super) fn instantiate_level(
             mana: 0,
             mana_base: def.base_mana,
             mana_regen: 0,
+            resources: Default::default(),
             skills: def.skills.clone(),
             effects: Default::default(),
             diseases: Default::default(),

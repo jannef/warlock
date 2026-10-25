@@ -35,6 +35,7 @@ pub(crate) mod part;
 mod particles;
 mod quest;
 mod race;
+mod resource;
 mod room_effect;
 mod scenario;
 mod scroll;
@@ -119,6 +120,7 @@ pub use quest::{
     QuestTexts, Reward,
 };
 pub use race::{HUNGER, LightBlind, RaceDef, Races};
+pub use resource::{Build, MAX_EVERY, MAX_RESOURCE, MAX_SHORT, OverTime, ResourceDef, ResourceId};
 pub use room_effect::{RoomEffectDef, RoomEffectId, RoomEffects, SpecialRoom};
 pub use scenario::ScenarioDef;
 pub use scroll::{Cast, Reading, ScrollSpell};
@@ -142,7 +144,8 @@ pub use status::{
 pub use steal::StealRules;
 pub use talent::{
     AnyWeaponSkill, Choice, Coverage, DEFAULT_MAX_RANKS, FreeBlowTrigger, Need, Needs, Rank,
-    SystemDef, SystemId, TalentBook, TalentDef, TalentEffect, TalentId, TreeDef, TreeId,
+    ResourceCost, SystemDef, SystemId, TalentBook, TalentDef, TalentEffect, TalentId, TreeDef,
+    TreeId,
 };
 pub use terrain::{
     Breakable, Freeze, FreezeSpec, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId,
@@ -381,7 +384,8 @@ struct LegendFile {
 /// `data/races.toml`, `data/names.toml`, `data/classes/`, `data/skills.toml`,
 /// `data/horoscope.toml`,
 /// `data/effects.toml`, `data/room_effects.toml`, `data/weapon_skills.toml`, `data/stances.toml`,
-/// `data/status.toml`, `data/diseases.toml`, `data/dialogue.toml`, `data/quests.toml`,
+/// `data/status.toml`, `data/resources.toml`, `data/diseases.toml`, `data/dialogue.toml`,
+/// `data/quests.toml`,
 /// `data/traps.toml`, and `data/shops.toml` are optional (without effects, spell effects are not
 /// drawn; without traps or shops there are none). Without vision
 /// profiles, a single `normal` profile that needs no light is used, so content without lighting
@@ -474,6 +478,9 @@ pub struct Content {
     stances: Stances,
     /// In `data/status.toml` order: most important first.
     statuses: Vec<StatusDef>,
+    /// Alternative resources (`data/resources.toml`, spec §8 "Resources"), in file order; none
+    /// without the file.
+    resources: Vec<ResourceDef>,
     status_ids: BTreeMap<String, StatusId>,
     healing: Healing,
     /// In `data/diseases.toml` order.
@@ -546,6 +553,7 @@ impl Content {
             affixes: Affixes::default(),
             stances: Stances::default(),
             statuses: Vec::new(),
+            resources: Vec::new(),
             status_ids: BTreeMap::new(),
             healing: Healing::default(),
             diseases: Vec::new(),
@@ -638,6 +646,11 @@ impl Content {
         }
         // Statuses before talents, which may name them (a cooldown, a critical's status).
         content.load_statuses(files)?;
+        // Resources before talents, whose actives may cost them.
+        let path = "data/resources.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.resources = resource::parse(path, text)?;
+        }
         // The talent table (spec §8 "Talents"): optional, so no level asks for a pick without it.
         if files.table("talents").next().is_some() {
             content.talents = talent::parse(files.table("talents"), &content)?;
@@ -1723,11 +1736,12 @@ impl Content {
     }
 
     /// A stable hash (64-bit FNV-1a) of the ordered terrain, creature, level, light, dungeon,
-    /// object, slot, skill, room effect, weapon skill, status, disease, trap, damage type, and
-    /// shop ids.
+    /// object, slot, skill, room effect, weapon skill, status, disease, trap, damage type,
+    /// resource, and shop ids.
     ///
     /// `TerrainId`, `CreatureId`, `LightId`, `ObjectId`, `SlotId`, `SkillId`, `RoomEffectId`,
-    /// `WeaponSkillId`, `StatusId`, `DiseaseId`, `TrapId`, `DamageTypeId`, and `ShopId` are
+    /// `WeaponSkillId`, `StatusId`, `DiseaseId`, `TrapId`, `DamageTypeId`, `ResourceId`, and
+    /// `ShopId` are
     /// indices, so a save
     /// is only meaningful for content with the same ids in the same order; saves record this
     /// fingerprint to detect a mismatch.
@@ -1757,6 +1771,7 @@ impl Content {
             self.diseases.iter().map(|d| d.id.as_str()).collect(),
             self.traps.iter().map(|t| t.id.as_str()).collect(),
             self.damage_types.iter().map(|t| t.id.as_str()).collect(),
+            self.resources.iter().map(|r| r.id.as_str()).collect(),
             (self.shops.iter().flat_map(|s| s.defs()))
                 .map(|d| d.id.as_str())
                 .collect(),
@@ -1828,6 +1843,21 @@ impl Content {
     pub fn damage_type_id(&self, name: &str) -> Option<DamageTypeId> {
         let i = self.damage_types.iter().position(|t| t.id == name)?;
         u8::try_from(i).ok().map(DamageTypeId)
+    }
+
+    /// The alternative resources (spec §8 "Resources"), in file order (by [`ResourceId`]);
+    /// empty without `data/resources.toml`.
+    pub fn resources(&self) -> &[ResourceDef] {
+        &self.resources
+    }
+
+    pub fn resource(&self, id: ResourceId) -> &ResourceDef {
+        &self.resources[usize::from(id.0)]
+    }
+
+    pub fn resource_id(&self, name: &str) -> Option<ResourceId> {
+        let i = self.resources.iter().position(|r| r.id == name)?;
+        u16::try_from(i).ok().map(ResourceId)
     }
 
     /// The kind of damage bare hands, kicks, and shield bashes do (the type marked `unarmed`),

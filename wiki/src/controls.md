@@ -238,6 +238,7 @@ Below the map, the **status bar** shows, from left to right:
 - the name of the level, and on the overworld and in its local areas the region you are in;
 - your hit points, as `HP 18/24`: what you have left of your most (see [Combat](combat.md));
 - your mana, as `MP 5/12`, the same way (see [Mana](mana.md));
+- each resource you hold, as `Rage 7` or `Focus 7/10` (see [Resources](resources.md));
 - what ails you, if anything, the most urgent first: `Bleeding`, `Poisoned`, `Diseased` (see
   [Status effects](status-effects.md) and [Diseases](diseases.md));
 - how hungry you are, unless you are not hungry: `Hungry`, `Weak`, `Fainting`, `Starving`,
@@ -260,7 +261,8 @@ When the window is too narrow for everything, the status bar leaves out the leas
 first: the seed, your position, your lantern, your vision, the light at your feet, and the turn
 count; then it shortens the moon's phase to its picture, and only then drops it; then the
 temperature, the region, then the year of the date, then the date. The weather, the time, your
-burden, your hunger, your status effects (the least urgent first), your mana, your hit points,
+burden, your hunger, your status effects (the least urgent first), your resources (the last
+first), your mana, your hit points,
 and the name of the level stay longest. Parts come back as soon as there is room.
 
 ## Messages

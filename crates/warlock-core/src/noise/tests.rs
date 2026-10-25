@@ -126,6 +126,7 @@ fn actor(content: &Content, creature: &str) -> Actor {
         mana: 0,
         mana_base: 0,
         mana_regen: 0,
+        resources: Default::default(),
         skills: Default::default(),
         effects: Default::default(),
         diseases: Default::default(),
