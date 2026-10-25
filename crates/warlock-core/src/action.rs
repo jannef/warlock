@@ -2,8 +2,8 @@
 
 use crate::combat::Strike;
 use crate::content::{
-    ActionKind, ClassActive, CombatStance, DamageTypeId, DiseaseId, ObjectId, SignActive, StatusId,
-    TrapId,
+    ActionKind, ClassActive, ClassSpell, CombatStance, DamageTypeId, DiseaseId, ObjectId,
+    SignActive, StatusId, TrapId,
 };
 use crate::geom::{Dir, Pos};
 use crate::time::{DAY, Duration};
@@ -149,6 +149,12 @@ pub enum Action {
     /// refused (no time) without the ability, while its cooldown lasts, or without the
     /// direction it asks.
     Use(ClassActive, Option<Dir>),
+    /// Cast a caster's spell (spec §8 "Class abilities"; the abilities menu's Class group, the
+    /// casters' placeholders until the spell system): blessing, cure wounds, remove disease, and,
+    /// aimed at a cell, the hexes and the strikes (`use:blessing`, `use:arcane_bolt:12,5`). Takes
+    /// the time of its `cast`s and its mana; refused (no time) without the spell, without the
+    /// mana, or without the cell it asks.
+    Cast(ClassSpell, Option<Pos>),
     /// Use a birth sign's active gift (spec §8 "Birth sign"; the abilities menu's Birth sign
     /// group): Horn's grace, Blaze, and, aimed at a cell, the Transfixing stare
     /// (`use:horns_grace`, `use:blaze`, `use:transfixing_stare:12,5`). Takes the time of its
@@ -662,6 +668,8 @@ impl fmt::Display for Action {
             Action::SecondWind => f.write_str("second_wind"),
             Action::Use(active, None) => write!(f, "use:{}", active.id()),
             Action::Use(active, Some(d)) => write!(f, "use:{}:{d}", active.id()),
+            Action::Cast(spell, None) => write!(f, "use:{}", spell.id()),
+            Action::Cast(spell, Some(at)) => write!(f, "use:{}:{},{}", spell.id(), at.x, at.y),
             Action::Gift(active, None) => write!(f, "use:{}", active.id()),
             Action::Gift(active, Some(at)) => write!(f, "use:{}:{},{}", active.id(), at.x, at.y),
             Action::Talent { id, choice: None } => write!(f, "talent:{id}"),
@@ -751,6 +759,11 @@ impl FromStr for Action {
                     Some((id, aim)) => (id, Some(aim)),
                     None => (arg.unwrap_or_default(), None),
                 };
+                // A caster's spell aims at a cell too, `use:arcane_bolt:12,5`.
+                if let Some(spell) = ClassSpell::from_id(id) {
+                    let at = aim.map(parse_cell).transpose()?;
+                    return Ok(Action::Cast(spell, at));
+                }
                 // A birth sign's gift aims at a cell, `use:transfixing_stare:12,5`.
                 if let Some(gift) = SignActive::from_id(id) {
                     let at = aim.map(parse_cell).transpose()?;
@@ -1171,6 +1184,8 @@ mod tests {
             Action::Use(ClassActive::Rage, None),
             Action::Use(ClassActive::Smite, Some(Dir::SW)),
             Action::Gift(SignActive::Blaze, None),
+            Action::Cast(ClassSpell::Blessing, None),
+            Action::Cast(ClassSpell::ArcaneBolt, Some(Pos::new(12, 5))),
             Action::LevelUpAuto,
             Action::GrantXp(2500),
             Action::Freeze {

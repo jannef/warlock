@@ -1,0 +1,11 @@
+[[talent]]
+id = "poison_lore"
+name = "Poison lore"
+tree = "class"
+granted = true
+description = "You know poison: it leaves you twice as fast, and your blows hurt a poisoned foe more."
+effects = [
+    { kind = "status_eases", status = "poisoned", value = 100 },
+    { kind = "status_damage", status = "poisoned", value = 2 },
+]
+systems = ["status", "combat"]

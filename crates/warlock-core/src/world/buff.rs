@@ -73,6 +73,7 @@ impl World {
             Action::Disarm(_) => ActionKind::Disarm,
             Action::Use(active, _) => active.cost(),
             Action::Gift(active, _) => active.cost(),
+            Action::Cast(..) => ActionKind::Cast,
             Action::Sell(_)
             | Action::Pay(None)
             | Action::SetStance(_)

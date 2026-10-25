@@ -219,5 +219,31 @@ pub(super) fn check_spells(content: &Content) -> Result<(), String> {
         }
         .map_err(|m| format!("object `{}`: `read`: {m}", o.id))?;
     }
+    // The casters' strikes (`[[talent.spell]]`) cast the same way, and the meals their talents
+    // name are objects (both loaded after the talents).
+    for (_, def) in content.talents().iter() {
+        for spell in def.spells.iter().filter_map(|s| s.strike()) {
+            match &spell.cast {
+                Cast::Burst(b) => check_effect(content, &b.spell, EffectShape::Burst),
+                Cast::Bolt(b) => check_effect(content, &b.spell, EffectShape::Bolt),
+            }
+            .map_err(|m| format!("talent `{}`: `cast`: {m}", def.id))?;
+        }
+        let meals = (def.effects.iter()).chain(def.ranks.iter().flat_map(|r| r.effects.iter()));
+        for effect in meals {
+            if let super::TalentEffect::MealHeals {
+                object: Some(object),
+                ..
+            } = effect
+                && !content.object_defs().is_empty()
+                && content.object_id(object).is_none()
+            {
+                return Err(format!(
+                    "talent `{}`: `meal_heals` names an unknown object `{object}`",
+                    def.id
+                ));
+            }
+        }
+    }
     Ok(())
 }

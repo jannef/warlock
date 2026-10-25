@@ -1,0 +1,8 @@
+[[talent]]
+id = "purify"
+name = "Purify"
+tree = "class"
+granted = true
+description = "Rotten food you eat neither sickens you nor carries a disease into you."
+effects = [{ kind = "purify" }]
+systems = ["hunger", "diseases"]

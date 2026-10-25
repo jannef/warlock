@@ -64,6 +64,20 @@ impl Dice {
         }
     }
 
+    /// It with `more` dice of its sides and `per_die` added to every die (a caster's talents:
+    /// Empower, Scroll adept); a fixed number or negative dice stay as they are.
+    pub const fn empowered(self, more: u32, per_die: i32) -> Self {
+        if self.count == 0 || self.negative {
+            return self;
+        }
+        let count = self.count + more;
+        Self {
+            count,
+            bonus: self.bonus + per_die * count as i32,
+            ..self
+        }
+    }
+
     /// Whether it rolls no dice.
     pub const fn is_fixed(&self) -> bool {
         self.count == 0

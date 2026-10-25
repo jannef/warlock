@@ -208,6 +208,20 @@ penalty = { from = 1, strength = -2, dexterity = -2, toughness = -2, intelligenc
 start = "You are ashen and weak."
 end = "The last of the ash falls from you."
 
+# A reprieve's price (the priest's Miracle, the witch's Hag's bargain, spec §8 "Class abilities"):
+# a day at the edge of death, hit points and mana back half as fast.
+[[status]]
+id = "worn_thin"
+name = "Worn thin"
+seen = "worn"
+max = 1
+stacking = "refresh"
+eases = 86400
+regen = 50
+mana_regen = 50
+start = "You feel worn thin."
+end = "You feel whole again."
+
 # Holy radiance: a faint light about the paladin (the light is the ability's), until they put it
 # out again from the abilities menu.
 [[status]]
@@ -218,6 +232,19 @@ max = 1
 stacking = "refresh"
 start = "A soft light shines about you."
 end = "Your light fades."
+
+# Blessing's (the priest's spell): ten minutes of a god's favour, blows truer and the will firmer.
+[[status]]
+id = "blessed"
+name = "Blessed"
+seen = "blessed"
+max = 1
+stacking = "refresh"
+eases = 600
+combat = { to_hit = 1 }
+penalty = { from = 1, willpower = 1 }
+start = "You feel blessed."
+end = "Your blessing fades."
 
 # A staggering blow's (the Staggering blow talent): the next action, taken within a turn's time,
 # costs half again as much.
@@ -244,6 +271,42 @@ eases = 12
 cost = 200
 start = "You are transfixed."
 end = "You shake off the stare."
+
+# The witch's hexes (spec §8 "Class abilities"), on creatures she sees: the Evil eye's minute of
+# fumbling blows, the Hex of weakness's two minutes of weak and clumsy limbs, and the Curse of
+# sloth's minute in which everything takes half again as long.
+[[status]]
+id = "ill_wished"
+name = "Hexed"
+seen = "hexed"
+max = 1
+stacking = "refresh"
+eases = 60
+combat = { to_hit = -2 }
+start = "You feel hexed."
+end = "The hex lifts."
+
+[[status]]
+id = "weakened"
+name = "Weakened"
+seen = "weakened"
+max = 1
+stacking = "refresh"
+eases = 120
+penalty = { from = 1, strength = -2, dexterity = -2 }
+start = "You feel weak."
+end = "Your strength returns."
+
+[[status]]
+id = "sluggish"
+name = "Sluggish"
+seen = "sluggish"
+max = 1
+stacking = "refresh"
+eases = 60
+cost = 150
+start = "You feel sluggish."
+end = "You feel quick again."
 
 # Held in a Drowning grip (a lucky day's gift, spec §8 "Birth sign"): a creature the Deep One hits
 # in melee cannot step until they miss it, strike another, or move; it fights back instead. No

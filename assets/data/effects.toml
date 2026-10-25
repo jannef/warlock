@@ -189,6 +189,22 @@ light = { color = [520, 620, 1000], radius = 5 }
 darken = { amount = 0.7, seconds = 0.45 }
 shake = { pixels = 3, radius = 5, seconds = 0.22 }
 
+# The wizard's arcane bolt (spec §8 "Class abilities"): a thin violet line of force, quicker and
+# dimmer than lightning, no shake.
+[[effect]]
+id = "arcane_bolt"
+shape = "bolt"
+speed = 500
+impact = 0.2
+flashes = 2
+linger = 0.25
+flicker = 0.04
+glyphs = "─"
+colors = ["#f4e8ff", "#d8b8ff", "#a878f0", "#7a48d0", "#4a2890", "#241448"]
+glow = 0.7
+branches = 0.02
+light = { color = [520, 380, 820], radius = 3 }
+
 # A frost burst (spec §5 "Ice"): a quiet, cold flash of rime over the cells it reaches, which
 # freezes the water there (the dev action `freeze:X,Y,R` shows it with its own radius; frost
 # traps and spells will). No shake and no darkening: a breath of cold light and a few crystals.
@@ -222,3 +238,21 @@ area = [0.4, 0.4]
 scale = 0.6
 fade = 0.7
 glow = 0.3
+
+# The witch's blight (spec §8 "Class abilities"): a slow, sickly green cloud over the cells it
+# reaches. No shake and no darkening.
+[[effect]]
+id = "blight"
+shape = "burst"
+radius = 2
+speed = 14
+grow = 0.2
+impact = 0.2
+linger = 0.8
+flicker = 0.1
+glyphs = "▒░·"
+fill = 0.25
+projectile = "*"
+colors = ["#e8ffc0", "#b8e070", "#7aa83a", "#4e7a24", "#2c4a14", "#14240a"]
+glow = 0.3
+light = { color = [260, 420, 160], radius = 4 }
