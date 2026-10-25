@@ -510,8 +510,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `regenerates` or `decays` (a point back, or lost, every that many seconds of game time, 1 to
   86400; at most one of the two), `resting` (it changes over time while the player rests;
   default true), `ends_at_zero` (default false), `ended` (what the player is told when it ends;
-  needs `ends_at_zero`), and `builds` (`[{ on = "kill", amount = 5 }]`, each event once, amounts
-  1 to 1000; events `kill`, `hit`, `critical`, `struck`, `sneak_attack`). Ids are indices (in
+  needs `ends_at_zero`), `builds` (`[{ on = "kill", amount = 5 }]`, each event once, amounts
+  1 to 1000; events `kill`, `hit`, `critical`, `struck`, `sneak_attack`), and `status` (a status
+  id: its holder suffers it while they hold the resource; it must not `eases`; Rage brings
+  Raging). A status that something `follows` into and that neither eases nor is cured must be
+  some resource's status. Ids are indices (in
   the content fingerprint), so a new resource is a new entry. Built in, the progression design's
   first guesses (§4.18): Rage, Focus, Openings, Ki, Inspiration. A class active (a talent of the
   class tree with an active effect) may cost one: `resource = { id = "focus", cost = 6 }` (0

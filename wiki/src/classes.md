@@ -38,9 +38,10 @@ place.
 
 A paladin's abilities used from the menu answer only while the paladin is Good or better (see
 [Alignment](alignment.md)); the passives do not ask. Lay on hands drains instead of costing mana
-until mana comes to the game. The barbarian's rage, the monk's flurry and quivering palm,
-the ranger's rapid shot and volley, the thief's improved sneak attack and master thief, and the
-bard's inspire will later run on pools of their own.
+until mana comes to the game. The barbarian's rage runs on a pool of its own, Rage (see
+[Resources](resources.md)); the monk's flurry and quivering palm, the ranger's rapid shot and
+volley, the thief's improved sneak attack and master thief, and the bard's inspire will later
+too.
 
 The ranger's **favoured prey** is the kind of creature you have killed most, counted over every
 level; when two are tied, the one that got there first stays favoured until another is killed

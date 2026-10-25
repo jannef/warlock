@@ -24,10 +24,27 @@ Nothing converts between resources and mana: each is spent by what asks for it.
 
 ## The resources
 
-The classes' features that are to run on these pools (the barbarian's rage, the ranger's rapid
-shot and volley, the thief's openings and finisher, the monk's flurry and quivering palm, the
-bard's inspiration) still work as their [class tables](classes.md) describe; they move onto the
-resources below in coming updates, and until then nothing in play grants one. A base turn is 6
-seconds.
+The barbarian's rage runs on Rage (see [Rage](#rage) below). The other classes' features that
+are to run on these pools (the ranger's rapid shot and volley, the thief's openings and finisher,
+the monk's flurry and quivering palm, the bard's inspiration) still work as their
+[class tables](classes.md) describe; they move onto the resources below in coming updates. A base
+turn is 6 seconds.
 
 {{#include generated/resources.md}}
+
+## Rage
+
+A barbarian's **Rage** ability (from the abilities menu, the time of a wait) gives them 12 rage,
+and they are **Raging** (see [Status effects](status-effects.md)) for as long as they hold any:
+Strength +2 and Toughness +2, Intelligence −2, and they can neither read nor spend mana. Rage
+wears off a point a base turn, the turn of the rage itself first, resting too; at none the rage
+ends, its bar with it, and the barbarian is Exhausted for ten minutes, with no rage until that
+passes. Something that ends the Raging otherwise ends the rage too. The barbarian's later levels
+add to it (see [Talents](talents.md)):
+
+- **Blood frenzy** (level 40): every kill while raging builds 5 rage.
+- **Mighty rage** (level 50): Raging gives Strength +4 and Toughness +4, rage holds up to 30, and
+  the exhaustion lasts five minutes.
+- **Unstoppable** (level 60): while raging, bleeding and poison cost no hit points, and a blow
+  that would take your last hit point leaves it to you for 10 rage, as often as you have that
+  much; spending the last of it ends the rage.

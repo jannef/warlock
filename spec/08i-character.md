@@ -715,8 +715,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     30, 45, 55; as the bullet above says.
   - **Actives** (`Ability::Class`, the abilities menu's Class group; `Action::Use`, `use:rage`,
     `use:smite:E`; refused, no time, without the ability, while its cooldown lasts, or while
-    the player has strayed from the band it asks): Rage (Raging: St +2, To +2, In −2, no
-    reading, 5 minutes, then Exhausted 10 minutes; no rage while either lasts; a wait's time),
+    the player has strayed from the band it asks): Rage (the Rage resource and with it Raging:
+    St +2, To +2, In −2, no reading or casting, while the rage lasts, §8 "Resources"; then
+    Exhausted 10 minutes; no rage while either lasts; a wait's time),
     Veteran's wind (1 hit point a level back, at least 10, then Winded; a wait), Whirlwind (a
     blow at every hostile beside, clockwise from the north, each with the free blows the end of
     an attack brings, for one melee attack's price and one exertion), Lay on hands (2 hit
@@ -738,10 +739,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     no body armour: nothing in the Body slot), Fast movement (steps 10 % cheaper Unburdened in
     no body armour, `World::step_price`), Brutal critical (critical multiplier +1 with a
     two-handed weapon), Hardened (each level past `hp_level` adds the level's hit points again
-    and 1 more), Mighty thews, Blood frenzy (a kill while raging sets the rage's easing back a
-    minute, never past its full length), Mighty rage (Raging's raises doubled, Exhausted eases
-    twice as fast), Unstoppable (while raging bleeding and poison tick nothing, and a blow that
-    would take the last hit point leaves it and ends the rage, so once a rage); Divine grace
+    and 1 more), Mighty thews, Blood frenzy (a kill while raging builds 5 rage), Mighty rage
+    (Raging's raises doubled, 10 more rage at most, Exhausted eases twice as fast), Unstoppable
+    (while raging bleeding and poison tick nothing, and a blow that would take the last hit point
+    leaves it for 10 rage, while that much is held); Divine grace
     (disease checks +2, poison eases twice as fast), Divine health and Purity of body (no
     disease is ever caught: `World::expose` refuses, nothing rolled), Steadfast (Burdened costs
     nothing, as a dwarf), Bulwark (Protection +2), Avatar (Lay on hands heals fully, cures every
@@ -752,9 +753,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     in passing; no status lowers Intelligence or Willpower), Diamond soul (Deflection +2),
     Perfect self (bare hands 1d8; unarmed threat +1, critical multiplier +1). The paladin's
     passives do not ask for Good; only the gifts used from the menu do.
-  - **Resources to come**: Rage, Blood frenzy, Mighty rage, Unstoppable, Flurry, and Quivering
-    palm ship as statuses and passives and move onto the alternative resources (§8 "Resources",
-    #225: the pools are in; the moves are the design's R1–R5).
+  - **Resources**: Rage, Blood frenzy, Mighty rage, and Unstoppable run on the Rage resource
+    (§8 "Resources", R1). Flurry and Quivering palm ship as passives and statuses and move onto
+    the alternative resources in the design's R4.
   - **Coverage**: `min_class` stays 0 until every class has its table.
   - **What the player sees**: the news of each level ("You gain Rage."); the actives in the
     abilities menu with their cooldowns, and the abilities in the dumps' `abilities` layer.

@@ -77,9 +77,10 @@ A **cooldown** is a status effect that only waits to wear off: while you are, sa
 ability that winded you cannot be used again (`you are winded`). Time is the only price; nothing
 counts how often you use an ability.
 
-**Raging** (the barbarian's rage, which comes with the class abilities): for five minutes you are
-stronger and tougher but less clever, and cannot read. Then you are **Exhausted** for ten
-minutes: a little weaker, and no rage until it passes.
+**Raging** (the barbarian's rage, which comes with the class abilities): while your
+[rage](resources.md) lasts you are stronger and tougher but less clever, and cannot read or spend
+mana. When the rage runs out you are **Exhausted** for ten minutes: a little weaker, and no rage
+until it passes.
 
 ## In the message line
 
