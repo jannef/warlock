@@ -1,0 +1,12 @@
+[[talent]]
+id = "herb_lore"
+name = "Herb lore"
+tree = "class"
+granted = true
+description = "You know what is good to eat: rotten food sickens you half as much, a corpse's own harm never touches you, and the angelica root heals you too."
+effects = [
+    { kind = "rot_harm_percent", value = -50 },
+    { kind = "corpse_harmless" },
+    { kind = "meal_heals", object = "angelica_root", dice = "1d6" },
+]
+systems = ["hunger"]

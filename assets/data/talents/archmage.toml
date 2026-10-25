@@ -1,0 +1,11 @@
+[[talent]]
+id = "archmage"
+name = "Archmage"
+tree = "class"
+granted = true
+description = "Your spells and spell scrolls strike much harder, and your spells cost half the mana."
+effects = [
+    { kind = "spell_power", per_die = 2 },
+    { kind = "spell_mana_percent", value = -50 },
+]
+systems = ["mana", "scrolls"]

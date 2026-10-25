@@ -1,0 +1,11 @@
+[[talent]]
+id = "natures_ward"
+name = "Nature's ward"
+tree = "class"
+granted = true
+description = "Nature keeps you: wading never gives you a disease, and poison leaves you twice as fast."
+effects = [
+    { kind = "wading_proof" },
+    { kind = "status_eases", status = "poisoned", value = 100 },
+]
+systems = ["wading", "status"]

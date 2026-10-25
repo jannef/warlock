@@ -26,8 +26,8 @@
 use crate::action::Action;
 use crate::alignment::Requirement;
 use crate::content::{
-    ActionKind, ClassActive, Content, ResourceCost, ResourceId, SignActive, SkillDef, StatusId,
-    TalentEffect,
+    ActionKind, ClassActive, ClassSpell, Content, ResourceCost, ResourceId, SignActive, SkillDef,
+    StatusId, TalentEffect,
 };
 use crate::geom::{Dir, Pos};
 use crate::skills::{Effect, SkillId};
@@ -48,6 +48,10 @@ pub enum Ability {
     /// gives it at their level; unavailable while its cooldown lasts (Rage: while raging and
     /// exhausted), and, for the paladin's gifts, while they have strayed from Good.
     Class(ClassActive),
+    /// A caster's spell (spec §8 "Class abilities"; the placeholders until the spell system):
+    /// [`Action::Cast`], had by whoever's class gives the ability that names it; unavailable
+    /// without the mana it costs.
+    Spell(ClassSpell),
     /// A skill used as an action (`kind = "action"` in `data/skills.toml`) that the actor is
     /// trained in, whose use is not in the game yet: listed, never available (spec §8
     /// "Skills"). A use, when it comes, is a variant of its own with its action, and its skill
@@ -242,12 +246,17 @@ impl Ability {
         let classes = (ClassActive::ALL.iter())
             .filter(|&&a| content.class_active(a).is_some())
             .map(|&a| Ability::Class(a));
+        // The casters' spells some class's table has, in their order.
+        let spells = (ClassSpell::ALL.iter())
+            .filter(|&&s| content.class_spell(s).is_some())
+            .map(|&s| Ability::Spell(s));
         // Weapon skills and fighting styles: the shield bash.
         let weapon_skills = [Ability::ShieldBash];
         // Items: the lantern's hood.
         let items = [Ability::HoodLantern];
         let mut all: Vec<Ability> = (signs.chain(class))
             .chain(classes)
+            .chain(spells)
             .chain(talents)
             .chain(skills)
             .chain(weapon_skills)
@@ -289,6 +298,7 @@ impl Ability {
         match self {
             Ability::Sign(active) => actor.talent_mods(content).has_sign_active(active),
             Ability::Class(active) => actor.talent_mods(content).has_active(active),
+            Ability::Spell(spell) => actor.talent_mods(content).has_spell(spell),
             Ability::Skill(id) => actor.skills.get(id).is_some(),
             Ability::Disarm => {
                 actor.skills.trains_effect(content, Effect::Disarm)
@@ -315,6 +325,7 @@ impl Ability {
         match self {
             Ability::Sign(active) => active.id(),
             Ability::Class(active) => active.id(),
+            Ability::Spell(spell) => spell.id(),
             Ability::Skill(id) => &content.skill(id).id,
             Ability::ThrowVoice => "throw_voice",
             Ability::Disarm => "disarm",
@@ -332,6 +343,9 @@ impl Ability {
         match self {
             Ability::Sign(active) => content.sign_active(active).map_or("", |a| &a.name),
             Ability::Class(active) => content.class_active(active).map_or("", |a| &a.name),
+            Ability::Spell(spell) => content
+                .class_spell(spell)
+                .map_or("", |(t, s)| s.name.as_deref().unwrap_or(&t.name)),
             Ability::Skill(id) => &content.skill(id).name,
             Ability::ThrowVoice => "Throw your voice",
             Ability::Disarm => "Disarm a trap",
@@ -349,6 +363,9 @@ impl Ability {
         match self {
             Ability::Sign(active) => content.sign_active(active).map_or("", |a| &a.description),
             Ability::Class(active) => content.class_active(active).map_or("", |a| &a.description),
+            Ability::Spell(spell) => (content.class_spell(spell)).map_or("", |(t, s)| {
+                s.description.as_deref().unwrap_or(&t.description)
+            }),
             Ability::Skill(id) => &content.skill(id).description,
             Ability::ThrowVoice => {
                 "Make a voice sound at a place you see nearby: those who hear it go and look there."
@@ -381,7 +398,7 @@ impl Ability {
     pub const fn source(self) -> Source {
         match self {
             Ability::Sign(_) => Source::Sign,
-            Ability::Class(_) => Source::Class,
+            Ability::Class(_) | Ability::Spell(_) => Source::Class,
             Ability::Skill(_) | Ability::Disarm | Ability::PickLock | Ability::Steal => {
                 Source::Skill
             }
@@ -398,6 +415,8 @@ impl Ability {
             Ability::Sign(active) if active.aimed() => Aim::Cell,
             Ability::Sign(_) => Aim::Nothing,
             Ability::Class(active) if active.aimed() => Aim::Direction,
+            Ability::Spell(spell) if spell.aimed() => Aim::Cell,
+            Ability::Spell(_) => Aim::Nothing,
             Ability::Class(active) if active.aims_cell() => Aim::Cell,
             Ability::Class(_)
             | Ability::Skill(_)
@@ -417,6 +436,7 @@ impl Ability {
         match self {
             Ability::Sign(active) => Some(active.cost()),
             Ability::Class(active) => Some(active.cost()),
+            Ability::Spell(_) => Some(ActionKind::Cast),
             Ability::Skill(_) => None,
             Ability::ThrowVoice => Some(ActionKind::ThrowVoice),
             Ability::Disarm => Some(ActionKind::Disarm),
@@ -439,6 +459,7 @@ impl Ability {
             | Ability::Sign(SignActive::Blaze)
             | Ability::Sign(SignActive::HoundsBay)
             | Ability::Class(_)
+            | Ability::Spell(_)
             | Ability::Skill(_)
             | Ability::Disarm
             | Ability::PickLock
@@ -447,6 +468,16 @@ impl Ability {
             | Ability::BloodMagic
             | Ability::ShieldBash
             | Ability::HoodLantern => None,
+        }
+    }
+
+    /// How far a cell it aims at may be, in cells, with what `content` says of it: a spell's
+    /// range is its data's (a hex's `range`, a burst's flight, a bolt's length); every other
+    /// ability's is [`Ability::range`].
+    pub fn reach(self, content: &Content) -> Option<i32> {
+        match self {
+            Ability::Spell(spell) => content.class_spell(spell).and_then(|(_, s)| s.range()),
+            other => other.range(),
         }
     }
 
@@ -463,6 +494,8 @@ impl Ability {
             (Ability::Class(active), _) => Some(Action::Use(active, None)),
             (Ability::Sign(active), _) if active.aimed() => None,
             (Ability::Sign(active), _) => Some(Action::Gift(active, None)),
+            (Ability::Spell(spell), _) if spell.aimed() => None,
+            (Ability::Spell(spell), _) => Some(Action::Cast(spell, None)),
             (Ability::Skill(_) | Ability::ThrowVoice, _) => None,
             (Ability::SecondWind, _) => Some(Action::SecondWind),
             (Ability::BloodMagic, _) => Some(Action::BloodMagic),
@@ -483,8 +516,10 @@ impl Ability {
         match self {
             Ability::ThrowVoice => Some(Action::ThrowVoice(at)),
             Ability::Sign(active) if active.aimed() => Some(Action::Gift(active, Some(at))),
+            Ability::Spell(spell) if spell.aimed() => Some(Action::Cast(spell, Some(at))),
             Ability::Class(active) if active.aims_cell() => Some(Action::UseAt(active, at)),
             Ability::Sign(_)
+            | Ability::Spell(_)
             | Ability::Class(_)
             | Ability::Skill(_)
             | Ability::Disarm
@@ -516,6 +551,7 @@ impl Ability {
                         (actor.mana < actor.mana_cost(content, mana)).then_some(Unavailable::NoMana)
                     })
             }
+            Ability::Spell(spell) => short_of_mana(actor, content, spell),
             Ability::Sign(active) => (actor.talent_mods(content).sign_cooldown(active))
                 .filter(|&cooldown| actor.effects.has(cooldown))
                 .map(Unavailable::While),
@@ -566,6 +602,13 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
         | ClassActive::Volley => Vec::new(),
     };
     cooldowns.into_iter().find(|&s| actor.effects.has(s))
+}
+
+/// [`Unavailable::NoMana`] when `actor` has less mana than spell `spell` costs them.
+fn short_of_mana(actor: &Actor, content: &Content, spell: ClassSpell) -> Option<Unavailable> {
+    let (_, def) = content.class_spell(spell)?;
+    let cost = actor.spell_cost(content, def.mana);
+    (actor.mana < cost).then_some(Unavailable::NoMana)
 }
 
 /// Why `actor` cannot use an ability that costs `cost` (spec §8 "Resources"):

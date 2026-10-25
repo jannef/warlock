@@ -280,6 +280,15 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // A priest blessed and drained to their last mana: the spells in the Class
+    // group, those that cost more than is left greyed out ("you have too little mana").
+    Case {
+        name: "abilities-menu-spells",
+        character: Some("human,female,priest"),
+        actions: "xp:100000 levelup:auto use:blessing drain:94",
+        screen: Some("abilities"),
+        ..BASE
+    },
     // A bard of level 32 with too little mana (#244): Throw your voice aimed at a place, Inspire
     // greyed out for mana.
     Case {

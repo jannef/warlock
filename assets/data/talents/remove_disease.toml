@@ -1,0 +1,13 @@
+[[talent]]
+id = "remove_disease"
+name = "Remove disease"
+tree = "class"
+granted = true
+description = "A rite of cleansing (a spell, paid in mana): every disease you carry and any poison in you are gone."
+systems = ["mana", "diseases", "status"]
+
+[[talent.spell]]
+spell = "remove_disease"
+mana = 10
+cures = ["poisoned"]
+diseases = true

@@ -90,6 +90,7 @@ mod beast_friend;
 mod bleed;
 mod buff;
 mod carry;
+mod caster;
 mod class;
 mod class_ability;
 mod creation;
@@ -1025,6 +1026,7 @@ impl World {
             Action::Use(active, dir) => return self.use_class(*active, *dir, events),
             Action::UseAt(active, at) => return self.use_class_at(*active, *at, events),
             Action::Gift(active, at) => return self.use_gift(*active, *at, events),
+            Action::Cast(spell, at) => return self.cast_spell(*spell, *at, events),
             Action::Talent { id, choice } => return self.take_talent(id, choice.as_deref()),
             Action::Advance(skill) => return self.advance_skill(skill),
             Action::SetVision(id) => return self.set_vision(id),
@@ -1081,6 +1083,8 @@ mod branch_tests;
 mod buff_tests;
 #[cfg(test)]
 mod burden_tests;
+#[cfg(test)]
+mod caster_tests;
 #[cfg(test)]
 mod character_tests;
 #[cfg(test)]

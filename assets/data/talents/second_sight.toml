@@ -1,0 +1,11 @@
+[[talent]]
+id = "second_sight"
+name = "Second sight"
+tree = "class"
+granted = true
+description = "You see what is hidden: you notice hidden things in passing, and find them more easily when you search."
+effects = [
+    { kind = "notice", value = 2 },
+    { kind = "searching", value = 2 },
+]
+systems = ["searching"]

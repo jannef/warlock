@@ -1,0 +1,43 @@
+[[talent]]
+id = "flame_and_frost"
+name = "Flame and frost"
+tree = "class"
+granted = true
+description = "Two spells, paid in mana: a ball of flame, or a burst of bitter frost, at a place you aim at."
+systems = ["mana", "ice"]
+
+[[talent.spell]]
+spell = "flame"
+name = "Flame"
+description = "A ball of flame that bursts where you aim it (a spell, paid in mana): it breaks walls and melts ice."
+mana = 10
+[talent.spell.cast]
+kind = "burst"
+spell = "fireball"
+noun = "flame"
+verb = "burns"
+message = "A ball of flame leaps from your hands!"
+radius = 2
+damage = "3d6"
+damage_type = "fire"
+range = 10
+blast = 1000
+heat = true
+noise = { sound = "explosion", loudness = 150 }
+
+[[talent.spell]]
+spell = "frost"
+name = "Frost"
+description = "A burst of bitter cold where you aim it (a spell, paid in mana): the water it reaches freezes."
+mana = 10
+[talent.spell.cast]
+kind = "burst"
+spell = "frost_burst"
+noun = "frost"
+verb = "bites"
+message = "Bitter cold bursts from your hands!"
+radius = 2
+damage = "2d6"
+damage_type = "cold"
+range = 10
+frost = 100

@@ -23,6 +23,8 @@ hit points a level gives) is `docs/dev/experience.md`.
 | `rng.rs` | `Rng::levels(seed)`, the `levels` stream, kept in `WorldState::levels_rng: Option<Rng>` **from the first draw** (the stat checks of each level, `world/stat_training.rs`; skill rolls, `world/skill_roll.rs`), so runs that never drew hash as before. |
 | `xtask/src/wiki/talents.rs` | `talents.md` (trees with the rules), `talents-by-system.md` (the coverage matrix, class abilities beside the talents); `effect_text`, the rule of one effect, shared with the class tables. |
 | `content/class.rs` (#243) | `ClassActive`, the actives (id = the ability's id, aim, cost); `strip_tables` (tests that load talents of their own). |
+| `content/class_spell.rs` (#245) | `ClassSpell` (the casters' spells: id, kind, `aimed`), `SpellSpec` (`[[talent.spell]]`, read with the talent; a strike's `cast` is a scroll's `ReadSpec`), `SpellDef`/`Does` (boon, mend, cleanse, hex, strike), resolved into `TalentDef::spells`; `Content::class_spell`. |
+| `world/caster.rs` | `cast_spell` (`Action::Cast`, `use:blessing`, `use:arcane_bolt:12,5`), `Actor::spell_cost`, the strike on the scrolls' shared code, `reprieve` (Miracle, Hag's bargain, from `hurt`), `lore_blow` (Poison lore, from `resolve`). |
 | `world/racial.rs` | The racial talents (#241): `grants` (a race's `talents`, `data/races.toml`, put in by `stars::grant` before the sign's gifts, through `Talents::regrant`, which now replaces every granted talent outside a class tree), `World::small_target` (Small target's Dodge, from `resolve` after `target_against`, when the attacker's `size_of` is larger). `content/race.rs::check_talents` (at load): a race grants only `granted` talents of the `racial` tree. |
 | `world/class_ability.rs` | `use_class` (`Action::Use`, `use:rage`, `use:smite:E`), `may_use_class`, and the actives but Volley (Inspire, #244, among them), `frenzy` (from `dies`), `unstoppable` (from `hurt`); Hardened's hit points are `level_up`'s. |
 | `world/volley.rs` | `use_class_at` (`Action::UseAt`, a class active aimed at a cell: `use:volley:12,5`) and the ranger's Volley (#244), on 6 Focus (#250). |
@@ -120,6 +122,13 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `radiance` | `LightCache::sources` (a carried source, `RADIANCE` tag, while its status lasts) |
 | `inner_light` | `LightCache::sources` (a carried source, `INNER` tag, always: the player and the creatures see by it alike) |
 | the actives (`rage`, `veterans_wind`, `whirlwind`, `lay_on_hands`, `avatar`, `smite`, `quivering_palm`) | `world/class_ability.rs`; `Ability::Class` in `ability.rs` (`class_cooldown`: Rage's status and what it `follows`) |
+| `spell` (from `[[talent.spell]]`) | `TalentMods::spells` → `Ability::Spell`'s `had_by`; `world/caster.rs` |
+| `spell_power`, `spell_mana_percent` | `TalentMods::spell_damage` in `World::strike` and `read_spell`; `Actor::spell_cost` (the cast and `Unavailable::NoMana`) |
+| `deflection_unarmoured` | `Actor::defence` (Deflection, no body armour: Mage armour) |
+| `purify`, `corpse_harmless`, `meal_heals` | `eat.rs`: `eat_rotten` (no sickness, no exposure, no draw), `eat_fresh` (no `on_eat` harm or vomiting, no draw), `meal_heals` from `finish` (an object, or a fresh corpse) |
+| `disease_still` | `World::disease_turn`: a failed check does nothing and counts no progression |
+| `status_damage` | `World::resolve` → `World::lore_blow` (a hit at a creature suffering the status) |
+| `reprieve` | `World::hurt` → `World::reprieve` (after Rise from the ashes; `Progress::once`) |
 | `inspire`, `virtuoso` | `world/class_ability.rs` (`World::inspire`: `TalentMods::inspiring`, `World::spend_mana`); `Ability::unavailable` (`Unavailable::NoMana`) |
 | `volley` | `world/volley.rs` (`Action::UseAt`, `World::use_class_at`; `ClassActive::aims_cell`, `Aim::Cell`; the UI aims it as a shot, `ui/target.rs`) |
 | `favoured_prey` | `World::resolve` → `World::favoured` (`world/ambush.rs`), against `Quests::prey` |
@@ -225,6 +234,22 @@ talent each (`divine_health`, `purity_of_body`); the monk's Deflect missiles is 
 talent, handed out. Keys: the actives have none of their own (as Second wind; the abilities menu
 and its repeat key use them).
 
+## Caster spells
+
+The priest, druid, wizard, and witch (#245) have their tables as the others do; their actives
+are **spells** (`ClassSpell`, `Ability::Spell`, `Action::Cast`), placeholders for the spell
+system, defined by a class ability's `[[talent.spell]]` (the loader adds a `spell` effect for
+each, so `TalentMods::spells` says who has it; a spell id is given once in all the talents).
+They cost mana (`Actor::spell_cost`, `World::spend_mana`) and never a cooldown;
+`Unavailable::NoMana` greys them out. A refusal (no cell, out of range, no hostile seen to
+hex, no sky, nothing to cure, not hurt) spends neither time nor mana. Shared entries: the
+priest names the paladin's `smite` (so it asks Good) and `divine_health`, the druid the
+ranger's `woodland_stride` (#244 writes the same file), the wizard the Scholar `spell_recall`.
+The design's priest "Shield of faith" is `ward_of_faith` (Deflection +1): the id is the
+paladin's. New statuses: Blessed, Hexed (`ill_wished`), Weakened, Sluggish (`sluggish`, cost
+150), Worn thin (the reprieves'); new effects `arcane_bolt` and `blight` in `data/effects.toml`.
+Tests: `world/caster_tests.rs`.
+
 ## Coverage policy
 
 `data/talents.toml` holds the closed `[[system]]` list and `[coverage]` (`min_talents = 2`,
@@ -319,7 +344,7 @@ Second wind, which their tables hand out), and bonus picks at 10, 20, 30, 45, 55
 warrior, barbarian, paladin, and monk (I1) have theirs, in `world/class_active_tests.rs`; the
 ranger, thief, and bard (I2, #244) theirs, in `world/class_rogue_tests.rs` (the kill tally and
 Favoured prey, every passive, Volley and Inspire, the abilities the thief and bard get
-untrained); the casters come with I3. The I2 tables hand out two ordinary talents (Evasion,
+untrained); the priest, druid, wizard, and witch (I3, #245) theirs, in `world/caster_tests.rs`. The I2 tables hand out two ordinary talents (Evasion,
 Lore), so a creation pick or a bonus pick may already have taken one; the table then gives
 nothing in its place (as the monk's Deflect missiles). The showcase's and the arena's own
 characters are thieves, the forest's and the world's rangers: their runs start with Sneak attack

@@ -1,0 +1,22 @@
+[[talent]]
+id = "call_lightning"
+name = "Call lightning"
+tree = "class"
+granted = true
+description = "Call the sky's fire down (a spell, paid in mana): under the open sky, a bolt of lightning toward a place you aim at."
+systems = ["mana", "weather"]
+
+[[talent.spell]]
+spell = "call_lightning"
+mana = 8
+open_sky = true
+[talent.spell.cast]
+kind = "bolt"
+spell = "lightning_bolt"
+noun = "lightning"
+verb = "strikes"
+message = "Lightning answers your call!"
+length = 8
+damage = "4d6"
+damage_type = "electricity"
+noise = { sound = "thunder", loudness = 140 }

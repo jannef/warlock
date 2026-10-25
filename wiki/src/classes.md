@@ -29,10 +29,11 @@ a bonus talent at a few levels between, from the trees it names. An ability come
 you reach its level ("You gain Fencing."), and works from then on; in the game each is told in
 words, here exactly. A stat it raises rises for good, score and potential. Some abilities are
 used from the [abilities menu](abilities.md); the rest simply work. So far the warrior, the
-barbarian, the paladin, the monk, the ranger, the thief, the bard, and the everyday folk have
-their tables; the casters' are on their way. A table may hand out an ordinary talent (the ranger's
-and the thief's Evasion, the bard's Lore); if you took it already, the level gives nothing in its
-place.
+barbarian, the paladin, the monk, the priest, the druid, the wizard, the witch, the ranger, the
+thief, the bard, and the everyday folk have their tables. A table may hand out an ordinary talent
+(the ranger's and the thief's Evasion, the bard's Lore); if you took it already, the level gives
+nothing in its place.
+
 
 {{#include generated/class-levels.md}}
 
@@ -43,6 +44,13 @@ until mana comes to the game. The ranger's rapid shot and volley run on
 improved sneak attack and master thief, and the bard's inspire will later run on pools of their
 own.
 
+The priest's, druid's, wizard's, and witch's abilities used from the menu are **spells**: each
+costs the mana the table says, and is greyed out ("you have too little mana") while you have less; there
+is no other wait. They stand in for the spell system to come. A spell aimed at a place flies
+and bursts exactly as a [scroll](scrolls.md)'s does, its blows and kills yours; a hex falls on
+a hostile you see within its reach. Call lightning answers only under the open sky. A priest's
+Smite is the paladin's, and answers only while the priest is Good or better.
+
 The ranger's **favoured prey** is the kind of creature you have killed most, counted over every
 level; when two are tied, the one that got there first stays favoured until another is killed
 more often. A **volley** looses three shots of your readied missile weapon at the place you aim
@@ -51,3 +59,4 @@ costs 6 focus. **Rapid shot** gives you focus (10, full); every shot you loose w
 at least 2 spends 2 and takes 10 % less time, and with less it is an ordinary shot. The bard's
 **inspire** costs 3 mana, and can be sung again while it lasts (it starts over); a virtuoso's
 costs nothing.
+
