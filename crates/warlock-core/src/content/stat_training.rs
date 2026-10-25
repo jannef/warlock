@@ -66,6 +66,8 @@ pub enum StatUse {
     ResistedWill,
     /// A blow of the player's that lands while they are Hungry or worse.
     HungryFight,
+    /// Mana spent on an ability (`World::spend_mana`).
+    Cast,
     /// A chat (asking about a topic takes no time, so it trains nothing).
     Chat,
     /// A purchase paid for or a sale made.
@@ -117,6 +119,7 @@ impl StatUse {
             }
             StatUse::ResistedWill => "fighting off a disease with Willpower (brain fever)",
             StatUse::HungryFight => "a blow of yours that lands while you are Hungry or worse",
+            StatUse::Cast => "spending mana on an ability",
             StatUse::Chat => "chatting with someone",
             StatUse::Trade => "paying for goods, or selling",
             StatUse::Quest => "completing a quest",

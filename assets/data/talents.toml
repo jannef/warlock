@@ -144,12 +144,11 @@ name = "Kicks and unarmed fighting"
 id = "hit_points"
 name = "Hit points, healing, regeneration"
 
-# Mana (#223): its maximum, its regeneration, what spends it. Pending until the mana talents (H6:
-# Deep well, Clear mind, ...) join Tidal, the Water-born's gift.
+# Mana (#223): its maximum, its regeneration, what spends it (the Scholar tree's mana talents,
+# #242, and Tidal, the Water-born's gift).
 [[system]]
 id = "mana"
 name = "Mana"
-pending = true
 
 [[system]]
 id = "status"

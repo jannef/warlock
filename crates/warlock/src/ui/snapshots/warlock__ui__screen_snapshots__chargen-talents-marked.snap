@@ -30,11 +30,10 @@ expression: "render(case, content.clone())"
               │   p  Sun-blessed      The sun mends you: under the open sun your wo… │
               │ Scholar                                                              │
               │   q  Apprentice       You take up a skill you lack, or get better a… │
-              │   r  Good learner     You gain 5 % more experience for each rank.    │
-              │   s  Lore             A magic item you have carried for a day gives… │
-              │   t  Treasure hunter  The loot you find, and what creatures drop, i… │
-              │ Grit                                                                 │
-              │   u  Lean             You go hungry more slowly, and exerting yours… │
+              │   r  Deep well        Your power runs deep: more mana for each rank… │
+              │   s  Good learner     You gain 5 % more experience for each rank.    │
+              │   t  Lore             A magic item you have carried for a day gives… │
+              │   u  Treasure hunter  The loot you find, and what creatures drop, i… │
               │                                                                      │
               │ Your hit points come back a quarter faster.                          │
               │                                                                      │

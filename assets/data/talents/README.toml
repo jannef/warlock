@@ -71,6 +71,15 @@
 #                                 handed out once, as it is taken or given
 #   healing_percent { value }     hit points come back that percent faster (negative: slower)
 #   mana_regen_percent { value }  mana comes back that percent faster (negative: slower)
+#   max_mana_per_levels { per_levels, at_least }   mana: one per that many character levels,
+#                                 at least at_least, handed out at the pick and as each later
+#                                 level comes (as max_hp_per_levels)
+#   mana_resting_percent { value }   resting brings mana back that percent faster on top of
+#                                 resting's pace
+#   mana_cost_percent { value }   abilities cost that percent more mana (negative: less; never
+#                                 below 1)
+#   blood_magic { hp, mana }      the Blood magic ability: hp hit points (never the last) given
+#                                 for mana mana, for the time of a wait
 #   footsteps_percent { value }   footsteps that percent louder (negative: quieter)
 #   silent_doors                  the doors it opens and closes make no sound
 #   hearing { value }             hears sounds that much fainter

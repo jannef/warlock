@@ -199,6 +199,17 @@ pub enum TalentEffect {
     /// Mana comes back this percent faster (negative: slower; Tidal), on
     /// [`crate::world::World::mana_rate`]'s pace.
     ManaRegenPercent { value: i32 },
+    /// Maximum mana: 1 per `per_levels` character levels, at least `at_least`, handed out into
+    /// the actor's base mana when the talent is taken and as each later level comes, as
+    /// `max_hp_per_levels` does hit points (Deep well).
+    MaxManaPerLevels { per_levels: u8, at_least: i32 },
+    /// Resting brings mana back this percent faster on top of resting's own pace (Meditation).
+    ManaRestingPercent { value: i32 },
+    /// What abilities cost in mana, this percent more (negative: less; never below 1; Frugal
+    /// caster), in [`crate::world::World::spend_mana`].
+    ManaCostPercent { value: i32 },
+    /// The active Blood magic: give `hp` hit points (never the last) for `mana` mana.
+    BloodMagic { hp: i32, mana: i32 },
     /// Footsteps this percent louder (negative: quieter).
     FootstepsPercent { value: i32 },
     /// The doors the actor opens and closes make no noise.
@@ -1034,6 +1045,8 @@ impl TalentEffect {
             TalentEffect::HealingPercent { value }
             | TalentEffect::DiseaseIntervalPercent { value }
             | TalentEffect::ManaRegenPercent { value }
+            | TalentEffect::ManaRestingPercent { value }
+            | TalentEffect::ManaCostPercent { value }
             | TalentEffect::FootstepsPercent { value }
             | TalentEffect::CarryPercent { value }
             | TalentEffect::TravelPercent { value }
@@ -1164,6 +1177,23 @@ impl TalentEffect {
                     return Err(
                         "`max_hp_per_levels`: per_levels is 1 to 20, at_least 0 to 20".into(),
                     );
+                }
+                Ok(())
+            }
+            TalentEffect::MaxManaPerLevels {
+                per_levels,
+                at_least,
+            } => {
+                if !(1..=20).contains(per_levels) || !(0..=20).contains(at_least) {
+                    return Err(
+                        "`max_mana_per_levels`: per_levels is 1 to 20, at_least 0 to 20".into(),
+                    );
+                }
+                Ok(())
+            }
+            TalentEffect::BloodMagic { hp, mana } => {
+                if !(1..=50).contains(hp) || !(1..=50).contains(mana) {
+                    return Err("`blood_magic`: hp and mana are 1 to 50".into());
                 }
                 Ok(())
             }
