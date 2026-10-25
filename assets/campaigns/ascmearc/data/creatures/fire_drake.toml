@@ -1,0 +1,41 @@
+# Campaign-owned (docs/design/campaign.md §3.6): the Ascmearc's own type, which only its files
+# may name.
+#
+# The delf wave (Fyrdelf, §10.1): the fire drake that sleeps on its hoard at the bottom of the
+# delf, the last of the volcano's wyrms and the target of the delf's last quest. Once a run
+# (`unique`). Its breath is a spell, announced until magic is designed; its jaws are real
+# enough. Fire cannot hurt it, its scales turn most blades, and it lights its lair. It carries
+# nothing: its hoard is the vault's.
+[[creature]]
+id = "fire_drake"
+level = 19
+xp = 105
+loot = 100
+unique = true
+name = "fire drake"
+glyph = "D"
+fg = "#e0402a"
+faction = "fire"
+alignment = "evil"
+vision = "darkvision"
+sight = 14
+combat = "caster"
+range = 6
+light = "lava"
+glow = 0.35
+footsteps = 160
+hearing = 15
+weight = 2000000
+stats = { strength = 26, dexterity = 12, toughness = 26, intelligence = 16, willpower = 20, presence = 20 }
+base_hp = 90
+skills = { concentration = 50, spellcraft = 50 }
+natural = { defence = 3, protection = 5, name = "scales" }
+resist = { fire = 100, cold = -25 }
+on_eat = { message = "The drake's flesh burns going down, and leaves you stronger.", vomit = 20, stat = { strength = 25, toughness = 25 } }
+blood = "#a0200a"
+[creature.attack]
+damage = "3d8"
+damage_type = "piercing"
+name = "jaws"
+verb = "bites"
+threat = 19

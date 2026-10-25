@@ -1,0 +1,32 @@
+# The delf wave (Fyrdelf, docs/design/campaign.md §10.1). A thick worm of stone and slag that
+# eats its way through the hot rock near the volcano's heart (it leaves its tunnels behind; it
+# does not dig through yours): it burns what it touches, shrugs off fire, and cracks in the cold.
+# Nothing is left of it to eat.
+[[creature]]
+id = "magma_crawler"
+level = 14
+xp = 80
+name = "magma crawler"
+glyph = "w"
+fg = "#ff5a1a"
+speed = 800
+faction = "fire"
+alignment = "neutral"
+vision = "darkvision"
+sight = 6
+light = "lava"
+glow = 0.35
+footsteps = 100
+hearing = 8
+weight = 200000
+stats = { strength = 20, dexterity = 6, toughness = 20, intelligence = 1, willpower = 12, presence = 2 }
+base_hp = 36
+natural = { defence = 0, protection = 4, name = "slag hide" }
+resist = { fire = 75, cold = -50, poison = 100 }
+corpse = false
+blood = "#c83a0a"
+[creature.attack]
+damage = "2d8"
+damage_type = "fire"
+name = "touch"
+verb = "sears"

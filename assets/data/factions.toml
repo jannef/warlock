@@ -37,6 +37,21 @@ id = "undead"
 name = "undead"
 hostile = ["player", "kobolds", "goblins"]
 
+# The grey dwarves of the deep delf (Fyrdelf): miners, warriors, smiths. They hate the living who
+# come down their shafts, the goblins' kin (the ogres and trolls of the deep among them), and
+# the dead the fires made; the fire things they leave be.
+[[faction]]
+id = "duergar"
+name = "duergar"
+hostile = ["player", "goblins", "undead"]
+
+# The fire things of the volcano's deep (Fyrdelf): ember beetles, salamanders, magma crawlers,
+# cinder elementals, the fire drake. They burn the player and leave everyone else alone.
+[[faction]]
+id = "fire"
+name = "fire things"
+hostile = ["player"]
+
 # Folk who mean the player no harm, whatever they are: the showcase's people (the gardener, the
 # bard, the hermit) by type, and others placed here by levels with `faction = "peaceful"` in a
 # legend entry (the showcase hub and caverns), overriding the faction of the creature's type.

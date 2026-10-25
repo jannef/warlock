@@ -1,0 +1,37 @@
+# The delf wave (Fyrdelf, docs/design/campaign.md §10.1). The grey dwarves who work the deep
+# delf's seams. Most carry the pick-axe they dig with (a tool in their hands: creatures do not
+# dig, and they fight with what else they hold), some the hand axe of their kind (their racial
+# weapon, spec §8 "Creature gear"), and a few a leather cap. They see in the dark.
+[[creature]]
+id = "duergar_miner"
+level = 9
+xp = 55
+loot = 20
+name = "duergar miner"
+glyph = "h"
+fg = "#9a948c"
+faction = "duergar"
+alignment = "evil"
+race = "duergar"
+vision = "darkvision"
+opens_doors = true
+footsteps = 90
+hearing = 12
+weight = 65000
+stats = { strength = 16, dexterity = 11, toughness = 16, intelligence = 10, willpower = 12, presence = 7 }
+base_hp = 16
+weapon_skills = { axes = 1, maces = 1 }
+attack = { damage = "1d4", damage_type = "bludgeoning", name = "fist", verb = "punches" }
+on_eat = { message = "Tough and sour, like old leather.", vomit = 25 }
+racial_weapon = "hand_axe"
+[[creature.gear]]
+chance = 90
+one_of = ["pick_axe"]
+keep = "wield"
+[[creature.gear]]
+chance = 50
+one_of = ["hand_axe"]
+keep = "wield"
+[[creature.gear]]
+chance = 40
+one_of = ["leather_cap"]
