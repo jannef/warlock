@@ -1,0 +1,34 @@
+# The delf wave (Fyrdelf, docs/design/campaign.md §10.1). A master of the grey dwarves' forges:
+# strong as an ox, in chain mail, swinging the war hammer of the craft (the smith's racial
+# weapon, spec §8 "Creature gear"; now and then one better made than any other), and carrying
+# the forge's best work.
+[[creature]]
+id = "duergar_smith"
+level = 13
+xp = 75
+loot = 75
+name = "duergar smith"
+glyph = "h"
+fg = "#c87a3a"
+faction = "duergar"
+alignment = "evil"
+race = "duergar"
+vision = "darkvision"
+opens_doors = true
+footsteps = 110
+hearing = 12
+weight = 80000
+stats = { strength = 20, dexterity = 11, toughness = 18, intelligence = 12, willpower = 14, presence = 9 }
+base_hp = 30
+weapon_skills = { maces = 3 }
+resist = { fire = 25 }
+on_eat = { message = "Tough and sour, and it smells of the forge.", vomit = 25 }
+racial_weapon = "war_hammer"
+[[creature.gear]]
+chance = 95
+one_of = ["war_hammer"]
+keep = "wield"
+magic = 15
+[[creature.gear]]
+chance = 80
+one_of = ["chain_mail"]

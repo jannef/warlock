@@ -1,0 +1,29 @@
+# The delf wave (Fyrdelf, docs/design/campaign.md §10.1). A heavy, many-legged lizard of the hot
+# deep, scaled like a lord's mail: its bite numbs the limbs, so that everything takes longer
+# (Sluggish).
+[[creature]]
+id = "basilisk"
+level = 16
+xp = 90
+name = "basilisk"
+glyph = "R"
+fg = "#7a9a3a"
+speed = 900
+faction = "vermin"
+alignment = "neutral"
+vision = "darkvision"
+footsteps = 70
+hearing = 10
+weight = 150000
+stats = { strength = 20, dexterity = 10, toughness = 20, intelligence = 2, willpower = 16, presence = 8 }
+base_hp = 44
+natural = { defence = 2, protection = 4, name = "scales" }
+resist = { poison = 50 }
+on_eat = { message = "Your tongue goes numb.", vomit = 40, harm = "1d4" }
+blood = "#4a6a1a"
+[creature.attack]
+damage = "2d8"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
+on_hit = [{ status = "sluggish", chance = 30, severity = 1 }]

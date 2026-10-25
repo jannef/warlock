@@ -1,0 +1,30 @@
+# The delf wave (Fyrdelf, docs/design/campaign.md §10.1). A beetle as big as a dog that grazes on
+# the coals of the deep mines: its shell smoulders with a faint glow, its bite burns, and
+# fire does it little harm.
+[[creature]]
+id = "ember_beetle"
+level = 8
+xp = 50
+name = "ember beetle"
+glyph = "a"
+fg = "#e0602a"
+faction = "fire"
+alignment = "neutral"
+vision = "darkvision"
+sight = 6
+glow = 0.3
+footsteps = 40
+hearing = 8
+weight = 25000
+size = "small"
+stats = { strength = 15, dexterity = 10, toughness = 14, intelligence = 1, willpower = 8, presence = 2 }
+base_hp = 14
+natural = { defence = 2, protection = 3, name = "shell" }
+resist = { fire = 50 }
+on_eat = { message = "It is still warm inside, and tastes of ash.", vomit = 20, satiation = 200 }
+blood = "#c8501a"
+[creature.attack]
+damage = "2d4"
+damage_type = "fire"
+name = "bite"
+verb = "bites"
