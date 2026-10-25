@@ -260,13 +260,15 @@ impl World {
     /// A rotten corpse: the player vomits (a chance), else it makes them sick, exposes them to
     /// the diseases rotten food carries (grave rot), and then feeds them; a player whose race
     /// `eats_rotten` it only feeds.
-    fn eat_rotten(&mut self, nutrition: i32, what: ObjectId, events: &mut Vec<Event>) {
+    pub(super) fn eat_rotten(&mut self, nutrition: i32, what: ObjectId, events: &mut Vec<Event>) {
         let content = self.content.clone();
         let Some(rotten) = content.hunger().map(|h| &h.rotten) else {
             return;
         };
         let race = self.state.race_of(&content, self.state.player());
-        if race.is_some_and(|r| r.eats_rotten) {
+        // Deep roots (a Wood-born's pick) eats it as such a race does.
+        let rooted = self.state.player().talent_mods(&content).eats_rotten;
+        if rooted || race.is_some_and(|r| r.eats_rotten) {
             let name = &content.object(what).name;
             self.say(format!(
                 "The {name} was rotten, but your stomach does not mind."

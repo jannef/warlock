@@ -1,0 +1,10 @@
+# A birth sign's pick (spec §8 "Birth sign"; horoscope design §9.1): offered only to those born
+# under its sign.
+[[talent]]
+id = "deep_roots"
+name = "Deep roots"
+tree = "stars"
+description = "Rooted like an old tree: Dodge +1, and rotten food never harms you."
+needs = { element = "wood", level = 9 }
+effects = [{ kind = "dodge", value = 1 }, { kind = "eats_rotten" }]
+systems = ["defence", "hunger"]

@@ -1,0 +1,10 @@
+# A birth sign's pick (spec §8 "Birth sign"; horoscope design §9.1): offered only to those born
+# under its sign.
+[[talent]]
+id = "another_head"
+name = "Another head"
+tree = "stars"
+description = "The hydra's heads grow back: your hit points come back even while you starve, and resting heals you twice as fast."
+needs = { animal = "hydra", level = 9 }
+effects = [{ kind = "starving_heals" }, { kind = "resting_percent", value = 100 }]
+systems = ["hit_points", "hunger"]

@@ -1,0 +1,10 @@
+# A birth sign's pick (spec §8 "Birth sign"; horoscope design §9.1): offered only to those born
+# under its sign.
+[[talent]]
+id = "fire_breath"
+name = "Fire breath"
+tree = "stars"
+description = "The wyvern's breath: a gout of fire roars from you toward a place you choose, burning everyone in its way; then your fire is drained a while."
+needs = { animal = "wyvern", level = 15 }
+effects = [{ kind = "fire_breath", length = 4, damage = "2d6", damage_type = "fire", spell = "fire_breath", cooldown = "drained", degrees = 2 }]
+systems = ["scrolls", "damage_types"]

@@ -61,8 +61,14 @@
 #                                 points
 #   threat { value }              every attack threatens a critical that many points lower
 #   reroll_fumble                 a natural 2 on an attack roll is rolled again, once
-#   streak { max }                each melee blow at the creature its last blow was at (in its
-#                                 turn or the next) +1 to hit per blow before it, to max (1 to 10)
+#   streak { max, damage_every }  each melee blow at the creature its last blow was at (in its
+#                                 turn or the next) +1 to hit per blow before it, to max (1 to 10);
+#                                 with damage_every (0 to 10), +1 damage per that many blows before
+#                                 it, as far as the streak counts
+#   off_hand_damage { value }     its off hand's blows do that much more damage
+#   best_skill_threat { value }   its attacks with the weapon skill it holds at the highest rank
+#                                 (melee, unarmed, launcher, thrown; ties all count) threaten a
+#                                 critical that many points lower
 #   max_hp_percent { value }      maximum hit points, that percent more (at least 1)
 #   max_hp_per_levels { per_levels, at_least }   hit points: one per that many character
 #                                 levels, at least at_least, handed out at the pick and as each
@@ -216,6 +222,10 @@
 #                                 status (spec §8 "Birth sign")
 #   reborn_whole                  its rising from the ashes brings it back whole: every hit
 #                                 point, every status and disease gone, and no rising status
+#   second_rising                 it may rise from the ashes once more
+#   starving_heals                its hit points come back while it is Starving too
+#   eats_rotten                   rotten food never harms it, as a race that eats rotten food
+#   wades_free                    wading costs it a plain step (it may still catch a disease)
 #   second_wind { per_level, at_least, cooldown }   the Second wind ability: per_level hit points
 #                                 per character level back at once (at least at_least), then the
 #                                 cooldown status (an id in ../status.toml)
@@ -342,13 +352,28 @@
 #   virtuoso { status }           Inspire gives that status instead, and costs no mana
 #   A birth sign's actives (spec §8 "Birth sign"; the abilities menu's Birth sign group, the
 #   talent's id the ability's id, `use:horns_grace`):
-#   horns_grace { cures, diseases, cooldown }   the active Horn's grace: the statuses `cures`
-#                                 end and the first `diseases` diseases that show are shaken
-#                                 off, then the cooldown status
-#   stare { status, severity, cooldown }   the active Transfixing stare, aimed at a cell
-#                                 (`use:transfixing_stare:12,5`): a hostile there within 6 cells
-#                                 that the player sees and that sees them suffers `severity`
-#                                 degrees of `status`, then the cooldown status
+#   horns_grace { cures, diseases, cooldown, degrees }   the active Horn's grace: the statuses
+#                                 `cures` end and the first `diseases` diseases that show are
+#                                 shaken off, then `degrees` (default 1) of the cooldown status
+#   horn_of_plenty { per_level, degrees }   Horn's grace also gives back per_level hit points
+#                                 per character level, and leaves `degrees` of its cooldown
+#   stare { status, severity, cooldown, degrees }   the active Transfixing stare, aimed at a
+#                                 cell (`use:transfixing_stare:12,5`): a hostile there within 6
+#                                 cells that the player sees and that sees them suffers
+#                                 `severity` degrees of `status`, then `degrees` (default 1) of
+#                                 the cooldown status
+#   petrifying_gaze { severity, degrees }   the stare leaves those degrees of its status and of
+#                                 its cooldown instead
+#   wildfire { radius, damage }   Blaze bursts out to radius (1 to 3) for damage instead
+#   fire_breath { length, damage, damage_type, spell, cooldown, degrees }   the active Fire
+#                                 breath, aimed at a cell within 8 (`use:fire_breath:12,5`): a
+#                                 bolt (`spell`, a bolt effect) along the line toward it, length
+#                                 cells (1 to 8), damage dice of damage_type to everyone on it;
+#                                 then `degrees` of the cooldown status
+#   hounds_bay { status, severity, cooldown }   the active Hound's bay (`use:hounds_bay`): a
+#                                 howl; every hostile that hears it, of a lower level than the
+#                                 player, suffers `severity` degrees of `status` (one that
+#                                 `flees`); then the cooldown status
 #   A class active's talent may ask `requires_alignment` (the paladin's gifts): the ability is
 #   greyed out while the character has strayed.
 # Flat bonuses are -20 to 20, percents -100 to 100, never 0.

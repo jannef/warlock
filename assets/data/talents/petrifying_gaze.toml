@@ -1,0 +1,10 @@
+# A birth sign's pick (spec §8 "Birth sign"; horoscope design §9.1): offered only to those born
+# under its sign.
+[[talent]]
+id = "petrifying_gaze"
+name = "Petrifying gaze"
+tree = "stars"
+description = "Your stare holds a foe twice as long, and your eyes rest only an hour after."
+needs = { animal = "basilisk", level = 12 }
+effects = [{ kind = "petrifying_gaze", severity = 4, degrees = 1 }]
+systems = ["status"]

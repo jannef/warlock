@@ -193,6 +193,26 @@ Birth sign gifts, the Roc to the Barghest (#267), and their hooks:
 `Progress::once` (saved, left out while empty) holds what may happen once in a life; the
 `talents` dump and `OwnTalent::spent` mark Rise from the ashes "(spent)" once it has.
 
+Sign-limited picks (#270; `world/sign_picks.rs`), and their hooks:
+
+| Effect | Read by |
+|---|---|
+| `streak { damage_every }` | `World::relentless` (`gifts.rs`): +1 to `Profile::bonus` per that many blows before it, as far as the streak counts |
+| `starving_heals` | `World::healing_rate`: Starving no longer stops healing |
+| `horn_of_plenty { per_level, degrees }` | `World::horns_grace` via `World::horn_of_plenty`: hit points back (never past the maximum, and cause enough alone), the cooldown's degrees |
+| `petrifying_gaze { severity, degrees }` | `World::transfixing_stare`: the status's and the cooldown's degrees |
+| `fire_breath` | `World::fire_breath` (`SignActive::FireBreath`) |
+| `hounds_bay` | `World::hounds_bay` (`SignActive::HoundsBay`); the status's `flees` read by `World::frightened` in `creature_turn` |
+| `wildfire { radius, damage }` | `World::blaze` (`element_gifts.rs`): radius and damage instead |
+| `second_rising` | `World::rise_from_ashes` (`stars.rs`): `risen_twice` after `risen` |
+| `off_hand_damage` | `Actor::off_hand_blow` |
+| `best_skill_threat` | `Actor::benefit` for a skill `Actor::knows_best` (a melee, unarmed, launcher, or thrown skill held at the top rank) |
+| `eats_rotten` | `eat.rs::eat_rotten`: as a race that `eats_rotten` |
+| `wades_free` | `World::step_price`, beside `swimmer` (no disease immunity) |
+
+The rest (Hare-footed, Roc's grip, Dragon's hoard, Riddle of the Sphinx, Deep roots' Dodge,
+Bedrock, Undertow's plunge) are existing kinds.
+
 Effects that name a status (`second_wind`'s `cooldown`, `status_eases`, `no_penalty`,
 `critical_status`) or a damage type (`penetration`) are checked at load (statuses load before
 talents) and resolved by `TalentMods::of(content, ...)`; `TalentEffect` is `Clone`, not `Copy`.

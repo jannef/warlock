@@ -1,0 +1,10 @@
+# A birth sign's pick (spec §8 "Birth sign"; horoscope design §9.1): offered only to those born
+# under its sign.
+[[talent]]
+id = "tentacles"
+name = "Tentacles"
+tree = "stars"
+description = "A weapon in each hand, your off hand's blows strike harder."
+needs = { animal = "kraken", weapon_skills = { twin_blades = 3 } }
+effects = [{ kind = "off_hand_damage", value = 2 }]
+systems = ["styles", "combat"]

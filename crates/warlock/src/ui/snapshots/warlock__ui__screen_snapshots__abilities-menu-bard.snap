@@ -2,7 +2,7 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You learn Far shot.
+ You learn Light step (1).
  You spend 94 mana (dev).
 
                     ┌─ Abilities ──────────────────────────────────────────────┐

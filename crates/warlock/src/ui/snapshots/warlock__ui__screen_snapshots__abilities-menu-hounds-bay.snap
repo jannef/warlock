@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ You throw back your head and howl! The kobold archer cowers and flees from you. The kobold cowers
+ and flees from you. (×2) Your throat is raw from the howl.
+
+
+
+
+                    ┌─ Abilities ──────────────────────────────────────────────┐
+                    │                                                          │
+                    │ Birth sign                                               │
+                    │   a  Hound's bay        you are hoarse                   │
+                    │ Class                                                    │
+                    │ > b  Veteran's wind                                      │
+                    │ Skills                                                   │
+                    │   c  Intimidate         not usable yet                   │
+                    │ Weapon skills                                            │
+                    │   d  Shield bash        in a direction                   │
+                    │ Items                                                    │
+                    │   e  Hood your lantern                                   │
+                    │                                                          │
+                    │ An old soldier's second breath (an ability): hit points  │
+                    │ back at once, then winded a quarter hour.                │
+                    │                                                          │
+                    │ a-e or Enter use   Esc close                             │
+                    └──────────────────────────────────────────────────────────┘
+
+
+
+
+
+ The Arena  ·  HP 120/120  ·  MP 0/0  ·  Hoarse  ·  Lv 22  ·  08:00  ·  11 Darkening     ? controls

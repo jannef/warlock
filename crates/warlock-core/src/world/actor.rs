@@ -721,10 +721,34 @@ impl Actor {
         // its kind add to the chosen skill's benefits, Deadly aim and its kind to a role's; a
         // free bash grows more likely only where there is one.
         let def = table.skill(id);
-        let (extra, ranks) = (self.talent_mods(content)).weapon_benefit(&def.id, def.role, rank);
+        let talents = self.talent_mods(content);
+        let (extra, ranks) = talents.weapon_benefit(&def.id, def.role, rank);
         let base = table.benefit(id, TalentMods::raised(rank, ranks));
         let bash = if base.bash > 0 { extra.bash } else { 0 };
-        base.plus(Benefit { bash, ..extra })
+        let mut benefit = base.plus(Benefit { bash, ..extra });
+        // Tempered (a Metal-born's pick): the weapon skill it knows best threatens lower.
+        if talents.best_skill_threat > 0 && self.knows_best(content, id) {
+            let more = u8::try_from(talents.best_skill_threat).unwrap_or(u8::MAX);
+            benefit.threat = benefit.threat.saturating_add(more);
+        }
+        benefit
+    }
+
+    /// Whether weapon skill `id` is one it knows best (Tempered): a weapon skill, no fighting
+    /// style nor shield skill, held at a rank no other weapon skill of it beats.
+    pub fn knows_best(&self, content: &Content, id: WeaponSkillId) -> bool {
+        let table = content.weapon_skills();
+        let weapon = |w: WeaponSkillId| {
+            matches!(
+                table.skill(w).role,
+                Role::Melee | Role::Unarmed | Role::Launcher | Role::Thrown
+            )
+        };
+        let rank = self.weapon_skills.rank(id);
+        rank > 0
+            && weapon(id)
+            && (self.weapon_skills.trained())
+                .all(|(other, _)| !weapon(other) || self.weapon_skills.rank(other) <= rank)
     }
 
     /// The weapon skill of its melee blows: the wielded weapon's, else unarmed (bare hands and
@@ -1100,7 +1124,8 @@ impl Actor {
         Mods::local(stack, content).sharpen(&mut profile);
         mods.sharpen(&mut profile);
         let talents = self.talent_mods(content);
-        profile.bonus += talents.melee_damage;
+        // Tentacles (a Kraken's pick): the off hand's blows harder.
+        profile.bonus += talents.melee_damage + talents.off_hand_damage;
         profile.penetration += talents.penetration_for(&profile.kinds);
         Some((stack.object, self.stanced(content, profile)))
     }

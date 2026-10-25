@@ -173,6 +173,22 @@ scale = 0.6
 fade = 0.6
 glow = 0.8
 
+# Fire breath (a Wyvern's pick, spec §8 "Birth sign"): a short gout of flame along a line, slower
+# and warmer than lightning, with no forks, darkening, or shake.
+[[effect]]
+id = "fire_breath"
+shape = "bolt"
+speed = 40
+impact = 0.22
+flashes = 1
+linger = 0.4
+flicker = 0.05
+glyphs = "▓▒"
+colors = ["#fff0a0", "#ffc040", "#ff7a18", "#d83c10", "#901808", "#400c06"]
+glow = 0.8
+branches = 0.0
+light = { color = [800, 420, 130], radius = 3 }
+
 [[effect]]
 id = "lightning_bolt"
 shape = "bolt"

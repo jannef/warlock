@@ -67,19 +67,29 @@ impl World {
                 Spent::Nothing
             }
             (SignActive::Blaze, _) => self.blaze(events),
+            (SignActive::FireBreath, Some(at)) => self.fire_breath(at, events),
+            (SignActive::FireBreath, None) => {
+                self.say("Where to?");
+                Spent::Nothing
+            }
+            (SignActive::HoundsBay, _) => self.hounds_bay(events),
         }
     }
 
     /// Horn's grace: the statuses it cures end (Bleeding, Poisoned) and the first diseases that
-    /// show are shaken off, then its cooldown, for the time of a wait. Refused, taking no time,
-    /// with nothing it would mend.
+    /// show are shaken off, then its cooldown, for the time of a wait; with Horn of plenty
+    /// (`sign_picks.rs`) hit points come back too, and the cooldown is shorter. Refused, taking
+    /// no time, with nothing it would mend.
     fn horns_grace(&mut self, events: &mut Vec<Event>) -> Spent {
         let content = self.content.clone();
         let player = self.state.player;
         let me = self.state.player();
-        let Some(grace) = me.talent_mods(&content).horns_grace else {
+        let mods = me.talent_mods(&content);
+        let Some(grace) = mods.horns_grace else {
             return Spent::Nothing;
         };
+        let (heal, degrees) = self.horn_of_plenty(mods.horn_of_plenty, grace.degrees);
+        let me = self.state.player();
         let ended: Vec<Effect> = (me.effects.iter())
             .filter(|e| grace.cures.contains(&e.status))
             .copied()
@@ -89,11 +99,12 @@ impl World {
             .map(|i| i.disease)
             .take(usize::from(grace.diseases))
             .collect();
-        if ended.is_empty() && diseases.is_empty() {
+        if ended.is_empty() && diseases.is_empty() && heal == 0 {
             self.say("There is nothing for your horn's grace to mend.");
             return Spent::Nothing;
         }
         self.say("A clean warmth runs through your blood.");
+        self.player_mut().hp += heal;
         for e in &ended {
             self.player_mut().effects.remove(e.status);
         }
@@ -101,7 +112,7 @@ impl World {
         for disease in diseases {
             self.end_disease(player, disease, events);
         }
-        self.afflict(player, grace.cooldown, 1, None, events);
+        self.afflict(player, grace.cooldown, degrees, None, events);
         Spent::Turn(self.price_of(player, ActionKind::Wait))
     }
 
@@ -113,9 +124,14 @@ impl World {
     fn transfixing_stare(&mut self, at: Pos, events: &mut Vec<Event>) -> Spent {
         let content = self.content.clone();
         let player = self.state.player;
-        let Some(stare) = self.state.player().talent_mods(&content).stare else {
+        let mods = self.state.player().talent_mods(&content);
+        let Some(stare) = mods.stare else {
             return Spent::Nothing;
         };
+        // Petrifying gaze (`sign_picks.rs`): held longer, rested sooner.
+        let (severity, degrees) = mods
+            .petrifying_gaze
+            .unwrap_or((stare.severity, stare.degrees));
         if !self.within_reach(at, STARE_RANGE, "stare") {
             return Spent::Nothing;
         }
@@ -135,9 +151,9 @@ impl World {
             self.say(format!("{who} does not meet your gaze."));
             return Spent::Turn(price);
         }
-        self.afflict(target, stare.status, stare.severity, Some(player), events);
+        self.afflict(target, stare.status, severity, Some(player), events);
         self.say(format!("{who} freezes under your gaze."));
-        self.afflict(player, stare.cooldown, 1, None, events);
+        self.afflict(player, stare.cooldown, degrees, None, events);
         Spent::Turn(price)
     }
 
@@ -159,7 +175,8 @@ impl World {
         if kind != AttackKind::Melee || me.talents.is_empty() {
             return profile;
         }
-        let max = me.talent_mods(&self.content).streak;
+        let mods = me.talent_mods(&self.content);
+        let max = mods.streak;
         if max == 0 {
             return profile;
         }
@@ -167,6 +184,11 @@ impl World {
             .filter(|s| s.target == target && turn <= s.turn + 1)
             .map_or(0, |s| s.count);
         profile.to_hit += i32::from(before.min(max));
+        // Relentless fury: every so many blows before it bite +1 harder, as far as the streak
+        // counts.
+        if let Some(more) = before.min(max).checked_div(mods.streak_damage_every) {
+            profile.bonus += i32::from(more);
+        }
         me.streak = Some(Streak {
             target,
             count: before.saturating_add(1),

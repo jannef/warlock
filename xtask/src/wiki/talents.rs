@@ -3,7 +3,9 @@
 
 use super::text::signed;
 use std::fmt::Write as _;
-use warlock_core::content::{Cast, Content, Need, Role, SpellDef, TalentDef, TalentEffect, TreeId};
+use warlock_core::content::{
+    Cast, Content, Need, Role, SignActive, SpellDef, TalentDef, TalentEffect, TreeId,
+};
 
 /// Every tree in display order: a heading, its description, and its talents (name, ranks, what
 /// each rank needs, what it does as the rule, and the systems it touches).
@@ -193,7 +195,7 @@ fn name(def: &TalentDef) -> String {
 
 /// The prerequisites: the talent's own, then each rank's where they differ ("Toughness 11 / 14
 /// / 17"); "—" for none; a granted talent is never picked.
-fn needs_text(content: &Content, def: &TalentDef) -> String {
+pub(super) fn needs_text(content: &Content, def: &TalentDef) -> String {
     if def.granted && content.talents().tree(def.tree).class {
         return "given by a class's table, never picked".into();
     }
@@ -264,18 +266,34 @@ pub(super) fn effects_text(content: &Content, def: &TalentDef) -> String {
 }
 
 /// One effect as the rule (talents' and class abilities').
-/// A cooldown status by name and how long one degree of it lasts: "Graceless for 24 h".
-fn cooldown_for(content: &Content, id: &str) -> String {
+/// A cooldown status by name and how long `degrees` of it last: "Graceless for 24 h".
+fn cooldown_for(content: &Content, id: &str, degrees: u16) -> String {
     let Some(status) = content.status_id(id) else {
         return id.to_string();
     };
     let def = content.status(status);
-    match def.eases {
+    match def.eases.map(|s| s * u32::from(degrees)) {
         Some(s) if s % 3600 == 0 => format!("{} for {} h", def.name, s / 3600),
         Some(s) if s % 60 == 0 => format!("{} for {} min", def.name, s / 60),
         Some(s) => format!("{} for {s} s", def.name),
         None => def.name.clone(),
     }
+}
+
+/// The cooldown of the birth sign's active `active` at `degrees`, as [`cooldown_for`] says it.
+fn sign_cooldown(content: &Content, active: SignActive, degrees: u16) -> String {
+    let id = (content.sign_active(active).into_iter())
+        .flat_map(|def| def.effects.iter())
+        .find_map(|e| match e {
+            TalentEffect::HornsGrace { cooldown, .. } | TalentEffect::Stare { cooldown, .. } => {
+                Some(cooldown.clone())
+            }
+            _ => None,
+        });
+    id.map_or_else(
+        || format!("{degrees} degree of its cooldown"),
+        |id| cooldown_for(content, &id, degrees),
+    )
 }
 
 /// A buff status in words: its name, what it adds to fighting, and how long it lasts
@@ -861,9 +879,25 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "a step out of reach of every hostile beside you costs {}, whatever your stance",
             percent(value)
         ),
-        TalentEffect::Streak { max } => format!(
-            "each melee blow at the creature your last blow was at (this turn or the one \
-             before) +1 to hit per blow before it, to +{max}; anything else starts it over"
+        TalentEffect::Streak { max, damage_every } => {
+            let damage = if damage_every > 0 {
+                format!(", and +1 damage for every {damage_every} blows before it")
+            } else {
+                String::new()
+            };
+            format!(
+                "each melee blow at the creature your last blow was at (this turn or the one \
+                 before) +1 to hit per blow before it, to +{max}{damage}; anything else starts \
+                 it over"
+            )
+        }
+        TalentEffect::OffHandDamage { value } => {
+            format!("off-hand blows {} damage", signed(value))
+        }
+        TalentEffect::BestSkillThreat { value } => format!(
+            "attacks with your best weapon skill (the highest rank you hold of the melee, \
+             unarmed, launcher, and thrown skills; ties all count) threaten a critical {value} \
+             lower"
         ),
         TalentEffect::Barbs { damage } => format!(
             "a creature that hits you in melee takes {damage} damage (no roll; a death of it \
@@ -879,19 +913,26 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             cures,
             diseases,
             cooldown,
+            degrees,
         } => {
             let names: Vec<String> = cures.iter().map(|c| status(c)).collect();
             format!(
                 "active (the time of a wait): {} end and the first {diseases} of the diseases \
                  that show are shaken off (refused with nothing to mend); then {}",
                 names.join(" and "),
-                cooldown_for(content, &cooldown)
+                cooldown_for(content, &cooldown, degrees)
             )
         }
+        TalentEffect::HornOfPlenty { per_level, degrees } => format!(
+            "Horn's grace also gives back {per_level} hit point per level (never past your \
+             maximum; it may then be used with only wounds to mend), and leaves {} instead",
+            sign_cooldown(content, SignActive::HornsGrace, degrees)
+        ),
         TalentEffect::Stare {
             status: id,
             severity,
             cooldown,
+            degrees,
         } => {
             let (cost, eases) = (content.status_id(&id)).map_or((100, None), |s| {
                 let def = content.status(s);
@@ -905,7 +946,51 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                  one that does not see you is not held, and the cooldown waits; then {}",
                 warlock_core::world::STARE_RANGE,
                 status(&id),
-                cooldown_for(content, &cooldown)
+                cooldown_for(content, &cooldown, degrees)
+            )
+        }
+        TalentEffect::PetrifyingGaze { severity, degrees } => format!(
+            "the Transfixing stare leaves {severity} degrees of its status, and leaves {} instead",
+            sign_cooldown(content, SignActive::TransfixingStare, degrees)
+        ),
+        TalentEffect::Wildfire { radius, damage } => {
+            format!("Blaze bursts out to radius {radius} and does {damage} instead")
+        }
+        TalentEffect::FireBreath {
+            length,
+            damage,
+            damage_type,
+            cooldown,
+            degrees,
+            ..
+        } => {
+            let kind = (content.damage_type_id(&damage_type)).map_or(damage_type.clone(), |d| {
+                content.damage_type(d).name.to_lowercase()
+            });
+            format!(
+                "active (the time of a cast; not on the overworld), aimed at a cell within {} \
+                 cells: a bolt along the line toward it and on, {length} cells long or to the \
+                 first wall, {damage} {kind} damage (one roll) to everyone on it; then {}",
+                warlock_core::world::BREATH_RANGE,
+                cooldown_for(content, &cooldown, degrees)
+            )
+        }
+        TalentEffect::HoundsBay {
+            status: id,
+            severity,
+            cooldown,
+        } => {
+            let eases = (content.status_id(&id))
+                .and_then(|s| content.status(s).eases)
+                .map_or_else(String::new, |e| format!(", a degree easing every {e} s"));
+            format!(
+                "active (the time of a wait; not on the overworld): a howl of loudness {}; \
+                 every hostile that hears it and whose level is below yours suffers {} at \
+                 {severity} degrees (it runs from you while a step takes it farther{eases}); \
+                 no check; then {}",
+                warlock_core::noise::HOWL_NOISE,
+                status(&id),
+                cooldown_for(content, &cooldown, 1)
             )
         }
         TalentEffect::RestingPercent { value } => {
@@ -927,6 +1012,18 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         ),
         TalentEffect::RebornWhole => "rising from the ashes brings you back whole: every hit \
              point, every status effect and disease gone (nothing follows them), and no Ashen"
+            .to_string(),
+        TalentEffect::SecondRising => {
+            "you may rise from the ashes a second time in your life".to_string()
+        }
+        TalentEffect::StarvingHeals => {
+            "hit points come back while you are Starving too (at your usual pace)".to_string()
+        }
+        TalentEffect::EatsRotten => "rotten food never harms you: no vomiting, no sickness, no \
+             disease (as a race that eats rotten food)"
+            .to_string(),
+        TalentEffect::WadesFree => "wading (water, and ground a disease is caught wading in) \
+             costs you a plain step; a disease may still be caught"
             .to_string(),
         TalentEffect::SecondWind {
             per_level,

@@ -1,0 +1,10 @@
+# A birth sign's pick (spec §8 "Birth sign"; horoscope design §9.1): offered only to those born
+# under its sign.
+[[talent]]
+id = "tempered"
+name = "Tempered"
+tree = "stars"
+description = "Tempered like good steel: with the weapon skill you know best, criticals come more often."
+needs = { element = "metal", any_weapon_skill = { roles = ["melee", "unarmed", "launcher", "thrown"], rank = 5 } }
+effects = [{ kind = "best_skill_threat", value = 1 }]
+systems = ["combat", "weapon_skills"]

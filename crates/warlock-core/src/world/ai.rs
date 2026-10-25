@@ -28,7 +28,8 @@
 //! and comes down to lie where it fell); a ranged creature with nothing left to shoot fights in
 //! melee. Spells stay intents until magic is designed. Each is an [`Event::Attacked`], a noise, and, if the player perceives it, a
 //! message. Steps and opened doors make noise too. Creatures neither flee nor change how they
-//! fight when hurt.
+//! fight when hurt; a frightened one (a status that `flees`: Hound's bay) runs from who frightened
+//! it (`sign_picks.rs`).
 
 use super::path::{Cost, Search};
 use super::{ActorId, Mind, World, beast_friend};
@@ -100,8 +101,10 @@ impl World {
         let heard = (self.state.actors.get_mut(&id))
             .map(|a| std::mem::take(&mut a.heard))
             .unwrap_or_default();
-        // Held fast (Drowning grip, `lucky.rs`), it fights back instead of stepping.
+        // Frightened (Hound's bay, `sign_picks.rs`), it runs; held fast (Drowning grip,
+        // `lucky.rs`), it fights back instead of stepping.
         let plan = self.decide(id, &heard);
+        let plan = self.frightened(id, plan);
         let plan = self.held_back(id, plan);
         let price = match plan {
             Plan::Attack {
@@ -368,7 +371,7 @@ impl World {
     /// Which cells creature `id` keeps out of on the current level: a creature hostile to the
     /// player does not step into a special room whose effect it shuns (a sanctuary, spec §7
     /// "Special rooms") from outside it; one already inside may move about in it, and leave.
-    fn shuns(&self, id: ActorId) -> impl Fn(Pos) -> bool + '_ {
+    pub(super) fn shuns(&self, id: ActorId) -> impl Fn(Pos) -> bool + '_ {
         let level = self.state.current();
         let hostile = self.stance(id, self.state.player) == Stance::Hostile;
         let inside = (self.state.actors.get(&id)).and_then(|me| level.room_at(me.pos));
