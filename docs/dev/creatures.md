@@ -32,3 +32,20 @@ messages built in `World::perceive_events` (unseen ends are "something"). The ap
 (`ui/effects.rs`, `particles` switch); `Event::Died` has no effect of its own. No creature
 behavior may use randomness (combat rolls are the rules', from the gameplay stream); tie-breaks
 are by distance, direction order, and actor id.
+
+Danger levels and spawning (spec §7 "Danger levels", #326): the data is `content/danger.rs`
+(`DangerRule`, `Spawning`, `weight` and `draw`, the field parsing shared by `data/dungeons.toml`
+and level files), reached through `Content::spawning(level id)` (a hand-made level's own, else
+its branch's at the depth; `None`: danger 0). The rules are `world/spawn.rs`: `World::danger`
+(computed, never stored), `LevelState::spawner` (the next attempt's time and the stream
+`spawn/<level id>`, `Rng::spawn`; made with a level that has a danger rule, else absent so other
+levels hash as before), `spawn_tick` (one call at the end of `run_turn`: every attempt due on the
+current level), `arrive_spawner` and `sense_danger` (one line each in `travel`: frozen floors,
+Sixth sense's arrival note), `attempt` (the cap by `World::stance`, the chance, the draw, the
+cell out of a freshly computed `Perception`'s sight and `AWAY` cells off, the route by
+`mapgen::out_and_back`, then `travel::make_creature`, the one way a creature is made from a
+`CreatureSpawn`), and the dev `spawn` action. A spawn bumps `World::spawned`, so a rest perceives
+after that turn. Uniques are remembered in `Progress::uniques` by type id. The initial population
+of a generated floor and its `bench-turns` entry are the follow-up (C2), and a spawn's gear comes
+with #M's `gear::roll`. Tests: `world/spawn_tests.rs` (the property test of the design's §9.6,
+frozen floors, the talents, determinism), `content/danger.rs` (rules, counts, weights, draws).
