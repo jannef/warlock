@@ -5,6 +5,7 @@ use super::anim::GlyphAnim;
 use super::damage_type::TypeNames;
 use super::disease::DiseaseId;
 use super::faction::FactionId;
+use super::gear::{Gear, GearLineSpec, GearSpec};
 use super::light::LightId;
 use super::object::MAX_BONUS;
 use super::particles::ParticleEmitter;
@@ -173,6 +174,11 @@ pub(super) struct CreatureSpec {
     /// Its ranks in weapon skills (spec §8 "Weapon skills"), by skill id.
     #[serde(default)]
     pub weapon_skills: BTreeMap<String, u8>,
+    /// The weapon its kind favours (spec §8 "Creature gear"): it carries one by a high chance.
+    pub racial_weapon: Option<String>,
+    /// What it may spawn with, line by line (spec §8 "Creature gear").
+    #[serde(default)]
+    pub gear: Vec<GearLineSpec>,
     pub anim: Option<GlyphAnim>,
     #[serde(default)]
     pub glow: f32,
@@ -406,6 +412,11 @@ impl CreatureSpec {
             on_eat: self.on_eat,
             blood: r.blood,
             weapon_skills: r.weapon_skills,
+            gear: Gear::default(),
+            gear_spec: GearSpec {
+                racial_weapon: self.racial_weapon,
+                lines: self.gear,
+            },
             anim: self.anim,
             glow: self.glow,
             particles: self.particles,
@@ -507,6 +518,11 @@ pub struct CreatureDef {
     /// skills"), defaults included. Rules only: never shown. The player's come from their race
     /// and class.
     pub weapon_skills: WeaponSkills,
+    /// Gameplay: what a creature of this type may spawn carrying, wielding, and wearing (spec §8
+    /// "Creature gear"), unless a level gives it a fixed kit. Rules only (the wiki states it).
+    pub gear: Gear,
+    /// Its gear as written, resolved once objects are known.
+    pub(super) gear_spec: GearSpec,
     /// Presentation-only.
     pub anim: Option<GlyphAnim>,
     /// Presentation-only: how much the glyph glows (bloom), 0 to 1.

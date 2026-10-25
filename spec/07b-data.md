@@ -631,7 +631,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   done before this one is offered), `requires_alignment` (the bands it is offered to, §8
   "Alignment": `{ min = "kind" }` Kind or better, `{ max = "callous" }` Callous or worse, or
   both; never neither, nor a `min` above the `max`), `alignment` (how far completing it moves the
-  player's alignment, −1000 to 1000, default 0), and `repeatable` (default false). Everyone's topics must fit
+  player's alignment, −1000 to 1000, default 0), `repeatable` (default false), `reveals = {
+  location = "ID", when = "accepted" }` (a hidden location of the overworld it reveals, §7
+  "Hidden locations", as it is `offered`, `accepted` (the default), or `done`; several quests
+  may reveal the same one, the first to get there does), and `where` (where its goal lies, in
+  words, after the objective in the quest log; one line of at most 280 characters). Everyone's topics must fit
   the dialogue screen's nine: their dialogue's own, one per quest they give or take in, and one
   more for an offer's accept and decline. Built in: the old hermit's "Rats in the arena" (kill 3
   giant rats in the arena; 20 gold, 30 XP) and, after it, "Three levels down" (reach the Depths 3;

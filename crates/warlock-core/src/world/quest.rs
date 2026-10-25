@@ -27,7 +27,7 @@ use super::talk::capitalized;
 use super::{ActorId, Deed, Spent, TopicView, World};
 use crate::action::{Event, Positions};
 use crate::content::StatUse;
-use crate::content::{Content, DialogueId, Goal, QuestDef, QuestId, QuestKind};
+use crate::content::{Content, DialogueId, Goal, QuestDef, QuestId, QuestKind, RevealWhen};
 use crate::object::{self, Stack};
 use crate::perception::PerceptionView;
 use crate::talent::TalentMods;
@@ -290,8 +290,18 @@ fn creatures(content: &Content, creature: crate::content::CreatureId, n: u32) ->
     }
 }
 
-/// What quest `def` asks, as the log says it: "Kill 3 giant rats in the Arena."
+/// What quest `def` asks, as the log says it: "Kill 3 giant rats in the Arena.", then where,
+/// if the quest says so in words ("Reach the Depths. The way in lies in the Barrowdowns.").
 fn objective(content: &Content, def: &QuestDef) -> String {
+    let asks = asks(content, def);
+    match &def.where_ {
+        Some(place) => format!("{asks} {place}"),
+        None => asks,
+    }
+}
+
+/// What quest `def` asks, without where.
+fn asks(content: &Content, def: &QuestDef) -> String {
     match &def.goal {
         Goal::Kill {
             creature,
@@ -470,6 +480,7 @@ impl World {
             Ask::Quest => {
                 self.offer(q);
                 self.answer(id, def.texts.offer.clone(), Some(topic.into()), events);
+                self.reveal_at(id, def, RevealWhen::Offered);
                 Spent::NoTime
             }
             Ask::Accept => self.accept(id, q, topic, events),
@@ -479,6 +490,24 @@ impl World {
                 Spent::NoTime
             }
         })
+    }
+
+    /// Quest `def` reached stage `when`: if it reveals its hidden location then (spec §7
+    /// "Hidden locations"), creature `id`, who speaks for it, marks the location on the player's
+    /// map. A location revealed before is not marked again.
+    fn reveal_at(&mut self, id: ActorId, def: &QuestDef, when: RevealWhen) {
+        let Some(reveal) = def.reveals.as_ref().filter(|r| r.when == when) else {
+            return;
+        };
+        if !self.reveal_location(&reveal.location) {
+            return;
+        }
+        let Some((_, location)) = self.content.hidden_location(&self.state.campaign, &reveal.location) else {
+            return;
+        };
+        let place = in_sentence(&location.name);
+        let who = capitalized(&self.called(&self.state.actors[&id]));
+        self.say(format!("{who} marks {place} on your map."));
     }
 
     /// Quest `q` is offered: its giver withdraws any other offer still waiting for an answer.
@@ -527,6 +556,7 @@ impl World {
             record.reached = reached;
         }
         self.answer(id, def.texts.accept.clone(), Some(topic.into()), events);
+        self.reveal_at(id, def, RevealWhen::Accepted);
         if let Some(letter) = given {
             let who = capitalized(&self.called(&self.state.actors[&id]));
             self.say(format!("{who} gives you {}.", letter.describe(&content)));
@@ -555,6 +585,7 @@ impl World {
             record.counted = 0;
         }
         self.answer(id, def.texts.done.clone(), Some(topic.into()), events);
+        self.reveal_at(id, def, RevealWhen::Done);
         self.say(format!("Quest complete: {}.", def.name));
         self.train_stat(StatUse::Quest);
         let who = capitalized(&self.called(&self.state.actors[&id]));

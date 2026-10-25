@@ -19,9 +19,9 @@ use warlock_core::object::format_weight;
 use warlock_core::stats::Stat;
 use warlock_core::world::{Actor, ActorId, ActorKind};
 
-/// How a creature stands toward the player and how it attacks, as seen in play, and how often it
-/// drops a magic item. By name: the shared types, then each campaign's own (spec §3) under its
-/// name.
+/// How a creature stands toward the player and how it attacks, as seen in play, how often it
+/// drops a magic item, and the gear it may spawn with. By name: the shared types, then each
+/// campaign's own (spec §3) under its name.
 pub(super) fn creatures(content: &Content) -> String {
     let mut out = creature_table(content, None);
     for campaign in order::campaigns(content) {
@@ -41,7 +41,7 @@ pub(super) fn creatures(content: &Content) -> String {
 fn creature_table(content: &Content, campaign: Option<&str>) -> String {
     let mut out = String::from(
         "| Creature | Glyph | Faction | Toward you | Attacks | Opens doors | Carries a light | \
-         Drops magic |\n|---|:---:|---|---|---|:---:|:---:|:---:|\n",
+         Drops magic | Gear |\n|---|:---:|---|---|---|:---:|:---:|:---:|---|\n",
     );
     let player = content.creature_id("player");
     let theirs = (listed(content).into_iter()).filter(|(_, c)| c.campaign.as_deref() == campaign);
@@ -71,14 +71,45 @@ fn creature_table(content: &Content, campaign: Option<&str>) -> String {
         };
         let _ = writeln!(
             out,
-            "| {} | {} | {faction} | {stance} | {attacks} | {} | {} | {drops} |",
+            "| {} | {} | {faction} | {stance} | {attacks} | {} | {} | {drops} | {} |",
             capital(&c.name),
             glyph(c.glyph),
             yes(c.opens_doors),
-            yes(c.light.is_some())
+            yes(c.light.is_some()),
+            gear(content, c)
         );
     }
     out
+}
+
+/// A creature type's gear table in words (spec §8 "Creature gear"): each line in the order it is
+/// tried, its alternatives, its chance, and the chance it is magic; the racial weapon marked.
+fn gear(content: &Content, c: &CreatureDef) -> String {
+    let racial = c.gear.racial_weapon;
+    let lines: Vec<String> = (c.gear.lines.iter())
+        .map(|line| {
+            let alternatives: Vec<String> = (line.one_of.iter())
+                .map(|(stacks, _)| {
+                    let names: Vec<String> = stacks.iter().map(|s| s.describe(content)).collect();
+                    names.join(" and ")
+                })
+                .collect();
+            let mut text = format!("{} {}%", alternatives.join(" or "), line.chance);
+            let only = |o| line.one_of.len() == 1 && line.one_of[0].0.iter().any(|s| s.object == o);
+            if racial.is_some_and(only) {
+                text.push_str(" (racial weapon)");
+            }
+            if line.magic > 0 {
+                let _ = write!(text, " (magic {}%)", line.magic);
+            }
+            text
+        })
+        .collect();
+    if lines.is_empty() {
+        "-".into()
+    } else {
+        lines.join("; ")
+    }
 }
 
 /// Who fights whom: each faction and the factions hostile to it (relations are symmetric).

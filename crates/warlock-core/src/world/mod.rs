@@ -129,6 +129,7 @@ mod rage;
 mod read;
 mod resource;
 mod rest;
+mod reveal;
 mod rot;
 mod schedule;
 mod search;
@@ -193,7 +194,7 @@ use crate::time::{Duration, GameTime};
 use crate::weapon_skills::WeaponSkills;
 use crate::weather;
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
 /// Why a world could not be created or restored.
@@ -281,6 +282,10 @@ pub struct WorldState {
     /// The player's quests and the kills they count (spec §8 "Quests").
     #[serde(default, skip_serializing_if = "Quests::is_empty")]
     pub(crate) quests: Quests,
+    /// The hidden locations revealed so far, by id (spec §7 "Hidden locations"): applied to the
+    /// overworld as it is made, if it was not yet when they were revealed.
+    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+    pub(crate) revealed: BTreeSet<String>,
 }
 
 fn is_zero(n: &u32) -> bool {
@@ -610,6 +615,7 @@ impl World {
             experience: 0,
             progress: Progress::default(),
             quests: Quests::default(),
+            revealed: BTreeSet::new(),
         };
         let mut player = Actor {
             id: ActorId(0),
@@ -704,6 +710,11 @@ impl World {
         if let Some(id) = state.quests.unknown_to(&content) {
             return Err(WorldError::InconsistentState(format!(
                 "the quests know `{id}`, which this content does not have"
+            )));
+        }
+        if let Some(id) = (state.revealed.iter()).find(|id| content.hidden_location(&state.campaign, id).is_none()) {
+            return Err(WorldError::InconsistentState(format!(
+                "hidden location `{id}` was revealed, which this content does not have"
             )));
         }
         if let Some(level) = state.levels.values().find(|l| !l.ids_valid_for(&content)) {
@@ -1086,6 +1097,7 @@ impl World {
             Action::Drain(amount) => return self.drain_dev(*amount),
             Action::Resource(id) => return self.grant_resource_dev(id, events),
             Action::Infect(id) => return self.infect_dev(id),
+            Action::Reveal(id) => return self.reveal_dev(id),
             Action::LevelUpAuto => return self.level_up_auto(),
             Action::GrantXp(xp) => return self.grant_xp_dev(*xp),
         };
@@ -1169,6 +1181,8 @@ mod focus_tests;
 #[cfg(test)]
 mod free_blow_tests;
 #[cfg(test)]
+mod gear_tests;
+#[cfg(test)]
 mod gem_tests;
 #[cfg(test)]
 mod gifts_tests;
@@ -1220,6 +1234,8 @@ mod read_tests;
 mod resource_talent_tests;
 #[cfg(test)]
 mod resource_tests;
+#[cfg(test)]
+mod reveal_tests;
 #[cfg(test)]
 mod room_tests;
 #[cfg(test)]

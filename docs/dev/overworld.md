@@ -40,3 +40,22 @@ validation, `arrival`). Overworld terrain picks its generator with `landscape` i
 `WARLOCK_AREAS="25,20 60,44" cargo test -p warlock-core --lib print_areas -- --ignored
 --nocapture` prints areas with one character per terrain (`WARLOCK_SEED` for the seed), and the
 `forest` scenario or `--content-dir` scenarios with `start_level = "local:x,y"` capture them.
+
+Hidden locations (#327; spec §7 "Hidden locations"; the campaign design §8): a legend's `hidden =
+{ id, terrain, to, name }` on a plain overworld cell (`content/level.rs::parse_hidden`; `to` is
+checked with the stairs' targets in `Content::validate`) goes into `LevelTemplate::hidden` and
+`LevelState::hidden` (by cell; ground truth). It works like a secret door: the terrain grid holds
+the plain terrain, so the view, memory, look mode, local areas (`Content::local_area` reads the
+template), and every perception-built dump show it with no filter; only `world/reveal.rs` and the
+dev views (`dump.rs::truth_rows`, the F2 overlay in `ui/dev.rs`) read `hidden`.
+`World::reveal_location(id)` (the one reveal, called by `world/quest.rs` at a quest's
+`reveals.when` and by the dev action `reveal:ID`) records the id in `WorldState::revealed`; if the
+overworld is instantiated, `reveal_on` takes the entry out of `hidden`, sets the terrain and the
+player's memory of the cell (the map is marked wherever they are), and pushes a `StairsLink`
+with the location's `name` (`StairsLink::name`, preferred by `PerceptionView::leads_to` and the
+"The way into … is here." and "You enter …" messages); otherwise `instantiate_level` applies
+every revealed id as the overworld is made (`reveal::apply_revealed`). No stream is drawn.
+`PerceptionView::known_locations` (the `locations` dump layer, JSON `known_locations`) lists the
+overworld's ways in that the player sees or remembers. Tests: `world/reveal_tests.rs` (a fixture
+hiding a barrow in the Wildlands, revealed by the hermit's `depths` quest; the built-in Wildlands
+hide nothing).

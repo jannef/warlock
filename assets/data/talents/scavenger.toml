@@ -1,0 +1,7 @@
+[[talent]]
+id = "scavenger"
+name = "Scavenger"
+tree = "delver"
+description = "You have an eye for what the fallen carried: what a creature you kill drops is identified as it lands."
+effects = [{ kind = "scavenger" }]
+systems = ["creature_gear", "magic_items"]

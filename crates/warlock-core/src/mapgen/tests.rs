@@ -40,7 +40,17 @@ fn describe(level: &LevelTemplate) -> String {
     for c in &level.creatures {
         let route: Vec<&str> = c.route.iter().map(|d| d.name()).collect();
         let name = &CONTENT.creature(c.creature).id;
-        let _ = writeln!(out, "{name} at {} route {}", c.pos, route.join(" "));
+        let _ = write!(out, "{name} at {} route {}", c.pos, route.join(" "));
+        // Its gear (spec §8 "Creature gear"), with what of it is worn and wielded.
+        let pack = crate::kit::Pack {
+            items: c.carry.clone(),
+            equipment: c.equipment.clone(),
+        };
+        let gear = pack.names(&CONTENT);
+        if !gear.is_empty() {
+            let _ = write!(out, " carrying {}", gear.join(", "));
+        }
+        let _ = writeln!(out);
     }
     for (p, trap) in &level.traps {
         let _ = writeln!(out, "{} trap at {p}", CONTENT.trap(trap.kind).id);

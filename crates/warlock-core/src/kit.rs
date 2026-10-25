@@ -37,7 +37,7 @@ pub struct Pack {
 impl Pack {
     /// Puts `stack` in the pack (it joins a stack of the same if it stacks, else goes last) and
     /// returns where it is.
-    fn put(&mut self, stack: Stack, content: &Content) -> usize {
+    pub(crate) fn put(&mut self, stack: Stack, content: &Content) -> usize {
         let counts: Vec<u32> = self.items.iter().map(|s| s.count).collect();
         object::add_to_inventory(&mut self.items, stack, content);
         (0..counts.len())
@@ -78,7 +78,7 @@ impl Pack {
 
     /// Wields or wears the stack at `item` in the first free slot it fits, unless it is already;
     /// it stays carried when no slot is free.
-    fn equip(&mut self, item: usize, content: &Content) {
+    pub(crate) fn equip(&mut self, item: usize, content: &Content) {
         let object = self.items[item].object;
         if self.equipment.holds(item) {
             return;

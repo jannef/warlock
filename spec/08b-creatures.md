@@ -51,6 +51,22 @@ developer notes (CLAUDE.md, `docs/dev/`).
   ("Displacement" below). Creatures neither flee nor
   fight differently when hurt. What a creature has in mind (last seen, noise to look into, post)
   is part of the world state.
+- **Creature gear** (`warlock-core/src/gear.rs`, the rolls; `content/gear.rs`, the data; #328,
+  campaign design §10.3): a creature type may have a `racial_weapon` (a weapon it must have a
+  rank in: the affinity is the rank, which combat applies) and `[[creature.gear]]` lines
+  (`chance`, `one_of`, `keep`, `magic`; `data/creatures/README.toml`). The racial weapon is the
+  first line, 90 % and wielded, unless a line names it alone. A creature made from the type
+  without a fixed kit (a generated level's creatures; a level legend's or vault's entry with no
+  `carry`, `wield`, or `wear`) rolls the lines in order: each by its chance, one of its
+  alternatives, made magic by its `magic` chance (as loot is, at least magic, at the floor's
+  item level, unidentified) or else plain, of a material by the materials' `gear` at the
+  creature's level; a piece that would overload the creature is left out, one with no free slot
+  stays carried. It fights with what it wields and wears (combat reads it as it reads anyone's),
+  a ranged creature shoots with its bow and arrows, and all of it falls where it dies with the
+  rest of what it carried. Others see what it wears and wields, never what else it carries.
+  Gear adds no state: it is the creature's inventory and equipment. **Scavenger** (Delver
+  talent, the `creature_gear` system): what a creature the player kills drops is identified as
+  it lands. The wiki's creatures table states each type's gear exactly.
 - **Dialogue** (`warlock-core/src/content/dialogue.rs`, the data; `world/talk.rs`, the rules;
   M28, #146): NPCs are creatures with a dialogue (§7), by their type or by the unique `npc` id
   their level gave them (which wins).
@@ -112,6 +128,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     have reached the Depths 3. Return to the old hermit."; a delivery's item picked up again:
     "Quest updated: take the sealed letter to the old hermit."); a quest whose goal is met as it
     is taken up says so after the accept. Rewards and the XP gained are the only numbers said.
+  - **Reveals** (#327; §7 "Hidden locations"): a quest with `reveals` marks its hidden location
+    on the player's map at its stage (offered, accepted, or done), right after the speaker's
+    words: "The old hermit marks the Old Barrow on your map." A location revealed before is not
+    marked again, and said nothing of. A quest's `where` follows its objective in the log
+    ("Reach Fennmynster 3. The minster lies in Micelfenn, east of Fennhām.").
   - **No abandoning, no cap** (the owner's decision): a quest taken up stays in the log until it
     is done, and the player may have any number of them at once.
   - **State**: per quest the player has heard of, its stage (offered, active, done), how many

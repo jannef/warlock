@@ -112,6 +112,14 @@ they see you. Light your lantern there and the war band's archer will find you.
   arena carry spears, their archer a bow and arrows, their shaman an amulet. You see what a
   creature wears and wields ([look mode](controls.md#look-mode) says it), never what else it
   carries. They fight with it ([Equipment](equipment.md)), and drop all of it when they die.
+- Creatures you meet in the dungeons (and those a place puts somewhere without a set kit) come
+  with gear of their own, by their kind's table ("Gear" below): each line in turn by its
+  chance, one of what it lists, and now and then a magic piece (made as loot is, at the floor's
+  item level, and unidentified). A kind's **racial weapon** is the first line, 90% unless the
+  table says otherwise, and every kind with one is trained in its weapon skill. What a creature
+  could not carry (over its carrying limit) it goes without, and what it gets is made of a
+  material by the creature's level, as the drops are. The **Scavenger** talent identifies what a
+  creature you kill drops as it lands.
 
 ## The creatures
 

@@ -945,8 +945,24 @@ impl<'a> PerceptionView<'a> {
         if matches!(self.cell(p), CellView::Unknown) {
             return None;
         }
-        let to = self.level.stairs_at(p)?.to.as_deref()?;
-        self.content.level_display_name(to)
+        let link = self.level.stairs_at(p)?;
+        let to = link.to.as_deref()?;
+        // A revealed hidden location goes by its own name (spec §7 "Hidden locations").
+        (link.name.clone()).or_else(|| self.content.level_display_name(to))
+    }
+
+    /// The locations the player knows on the overworld, by position, each with its name: the
+    /// ways into other places on cells they see or remember (a hidden location only once
+    /// revealed, when it is one of them). Empty on any other level.
+    pub fn known_locations(&self) -> Vec<(Pos, String)> {
+        if self.level.kind() != LevelKind::Overworld {
+            return Vec::new();
+        }
+        let mut known: Vec<(Pos, String)> = (self.level.stairs.iter())
+            .filter_map(|s| Some((s.pos, self.leads_to(s.pos)?)))
+            .collect();
+        known.sort_by_key(|(p, _)| (p.y, p.x));
+        known
     }
 
     pub fn width(&self) -> i32 {

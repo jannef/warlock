@@ -19,7 +19,9 @@
 //! and `xp`, each optional. `requires` names a quest (earlier in the file) that must be done
 //! before this one is offered, and `requires_alignment` the bands the player must be in for it
 //! to be offered (spec §8 "Alignment"); `alignment` moves their score as it is completed;
-//! `repeatable` quests are offered again once done (never a reach).
+//! `repeatable` quests are offered again once done (never a reach). `reveals` names a hidden
+//! location of the overworld revealed as the quest is offered, accepted (the default), or done
+//! (spec §7 "Hidden locations"), and `where` says where its goal lies after the objective.
 
 use super::creature::CreatureId;
 use super::dialogue::{DialogueId, MAX_LINE, MAX_REPLY, MAX_TOPICS, Speaker, check_lines, is_id};
@@ -98,6 +100,39 @@ struct QuestSpec {
     alignment: i32,
     #[serde(default)]
     repeatable: bool,
+    reveals: Option<RevealSpec>,
+    #[serde(rename = "where")]
+    where_: Option<String>,
+}
+
+/// A quest's `reveals = { location = "ID", when = "accepted" }`.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RevealSpec {
+    location: String,
+    #[serde(default)]
+    when: RevealWhen,
+}
+
+/// At which of a quest's stages its hidden location is revealed (spec §7 "Hidden locations").
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum RevealWhen {
+    /// As the giver offers it: where it is, as a tip.
+    Offered,
+    /// As the player accepts it.
+    #[default]
+    Accepted,
+    /// As it is done.
+    Done,
+}
+
+/// The hidden location a quest reveals, and when (spec §7 "Hidden locations").
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Reveal {
+    /// A hidden location of the overworld, by id.
+    pub location: String,
+    pub when: RevealWhen,
 }
 
 #[derive(Default, Deserialize)]
@@ -189,6 +224,11 @@ pub struct QuestDef {
     pub repeatable: bool,
     /// The campaign whose `data/quests/` it is in; `None` outside every campaign.
     pub campaign: Option<String>,
+    /// The hidden location it reveals, and at which stage (spec §7 "Hidden locations").
+    pub reveals: Option<Reveal>,
+    /// Where its goal lies, in words, after the objective in the quest log ("The minster lies
+    /// in Micelfenn, east of Fennhām.").
+    pub where_: Option<String>,
 }
 
 impl QuestDef {
@@ -472,6 +512,22 @@ fn resolve(
         ),
         None => None,
     };
+    let reveals = match spec.reveals {
+        Some(r) if content.hidden_location(campaign, &r.location).is_none() => {
+            return Err(format!(
+                "`reveals`: the overworld has no hidden location `{}`",
+                r.location
+            ));
+        }
+        Some(r) => Some(Reveal {
+            location: r.location,
+            when: r.when,
+        }),
+        None => None,
+    };
+    if let Some(text) = &spec.where_ {
+        check_lines([text], MAX_REPLY)?;
+    }
     Ok(QuestDef {
         id: spec.id,
         name: spec.name,
@@ -494,6 +550,8 @@ fn resolve(
         alignment: spec.alignment,
         repeatable: spec.repeatable,
         campaign: None,
+        reveals,
+        where_: spec.where_,
     })
 }
 
