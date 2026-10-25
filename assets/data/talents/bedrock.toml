@@ -1,0 +1,10 @@
+# A birth sign's pick (spec §8 "Birth sign"; horoscope design §9.1): offered only to those born
+# under its sign.
+[[talent]]
+id = "bedrock"
+name = "Bedrock"
+tree = "stars"
+description = "Earth holds you up: Protection +1, and a pit never catches you."
+needs = { element = "earth", level = 12 }
+effects = [{ kind = "protection", value = 1 }, { kind = "pit_proof" }]
+systems = ["protection", "traps"]

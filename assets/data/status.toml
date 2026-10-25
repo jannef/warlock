@@ -33,6 +33,8 @@
 #              default 100): 150 is half again as slow. Several multiply
 #   blocks     the actions refused while it lasts, by their ids in actions.toml: ["read"]; an
 #              ability that costs one cannot be used either
+#   flees      true: a creature suffering it runs from the one who gave it (else the nearest foe
+#              it sees) while a step takes it farther away, and fights only when cornered
 #   follows    a status that begins (at one degree) as this one ends, worn off or cured: a rage's
 #              exhaustion. A status with no tick that eases away is a cooldown: while it lasts,
 #              the ability that gave it cannot be used again
@@ -174,23 +176,25 @@ eases = 300
 start = "You feel drained."
 end = "Your strength of spirit returns."
 
-# Horn's grace's cooldown (a Unicorn's birth sign gift): a day before the horn mends again.
+# Horn's grace's cooldown (a Unicorn's birth sign gift): a day before the horn mends again, three
+# degrees of eight hours (Horn of plenty leaves one).
 [[status]]
 id = "graceless"
 name = "Graceless"
-max = 1
+max = 3
 stacking = "refresh"
-eases = 86400
+eases = 28800
 start = "Your horn's grace is spent."
 end = "Your horn's grace returns."
 
-# The Transfixing stare's cooldown (a Basilisk's birth sign gift): two hours.
+# The Transfixing stare's cooldown (a Basilisk's birth sign gift): two hours, two degrees of an
+# hour (Petrifying gaze leaves one).
 [[status]]
 id = "spent_eyed"
 name = "Spent-eyed"
-max = 1
+max = 2
 stacking = "refresh"
-eases = 7200
+eases = 3600
 start = "Your eyes ache from the stare."
 end = "Your gaze is keen again."
 
@@ -269,6 +273,29 @@ eases = 12
 cost = 200
 start = "You are transfixed."
 end = "You shake off the stare."
+
+# Hound's bay's (a Barghest's birth sign pick): a creature that heard the howl and is of a lower
+# level runs from the howler, a degree for each turn, a turn's time apiece.
+[[status]]
+id = "frightened"
+name = "Frightened"
+seen = "frightened"
+max = 3
+stacking = "refresh"
+eases = 6
+flees = true
+start = "You are frightened."
+end = "You master your fear."
+
+# Hound's bay's cooldown: an hour before the howl comes again.
+[[status]]
+id = "hoarse"
+name = "Hoarse"
+max = 1
+stacking = "refresh"
+eases = 3600
+start = "Your throat is raw from the howl."
+end = "Your voice is your own again."
 
 # Held in a Drowning grip (a lucky day's gift, spec §8 "Birth sign"): a creature the Deep One hits
 # in melee cannot step until they miss it, strike another, or move; it fights back instead. No

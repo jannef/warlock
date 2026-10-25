@@ -1,0 +1,10 @@
+# A birth sign's pick (spec §8 "Birth sign"; horoscope design §9.1): offered only to those born
+# under its sign.
+[[talent]]
+id = "rocs_grip"
+name = "Roc's grip"
+tree = "stars"
+description = "You carry 25 % more again, and being Burdened costs you nothing."
+needs = { animal = "roc", stats = { strength = 14 } }
+effects = [{ kind = "carry_percent", value = 25 }, { kind = "ignore_burdened" }]
+systems = ["burden"]

@@ -30,7 +30,7 @@ use crate::content::{
 };
 use crate::geom::{Dir, Pos};
 use crate::skills::{Effect, SkillId};
-use crate::world::{Actor, STARE_RANGE, VOICE_RANGE};
+use crate::world::{Actor, BREATH_RANGE, STARE_RANGE, VOICE_RANGE};
 use std::borrow::Cow;
 
 /// An ability, as the abilities menu lists it.
@@ -423,8 +423,10 @@ impl Ability {
         match self {
             Ability::ThrowVoice => Some(VOICE_RANGE),
             Ability::Sign(SignActive::TransfixingStare) => Some(STARE_RANGE),
+            Ability::Sign(SignActive::FireBreath) => Some(BREATH_RANGE),
             Ability::Sign(SignActive::HornsGrace)
             | Ability::Sign(SignActive::Blaze)
+            | Ability::Sign(SignActive::HoundsBay)
             | Ability::Class(_)
             | Ability::Skill(_)
             | Ability::Disarm

@@ -1,0 +1,10 @@
+# A birth sign's pick (spec §8 "Birth sign"; horoscope design §9.1): offered only to those born
+# under its sign.
+[[talent]]
+id = "riddle_of_the_sphinx"
+name = "Riddle of the Sphinx"
+tree = "stars"
+description = "The sphinx's riddles sharpen you: one more skill roll every level."
+needs = { animal = "sphinx", stats = { intelligence = 14 } }
+effects = [{ kind = "skill_rolls", value = 1 }]
+systems = ["skills"]

@@ -289,6 +289,8 @@ struct StatusSpec {
     cost: u32,
     #[serde(default)]
     blocks: Vec<String>,
+    #[serde(default)]
+    flees: bool,
     follows: Option<String>,
     wound: Option<WoundSpec>,
     /// The kind of damage it is (poison): a target immune to it never suffers it, and a
@@ -355,6 +357,10 @@ pub struct StatusDef {
     /// The actions refused while it lasts, by their kind (`read`: a raging barbarian cannot
     /// read); an ability that costs one of them cannot be used.
     pub blocks: Vec<ActionKind>,
+    /// A creature suffering it runs from the one who gave it, or from the nearest foe it sees,
+    /// instead of fighting, while a step takes it farther away (Frightened; spec §8 "Birth
+    /// sign": Hound's bay).
+    pub flees: bool,
     /// The status that begins (at one degree) as this one ends, worn off or cured: Raging is
     /// followed by Exhausted. A chain never leads back to where it began.
     pub follows: Option<StatusId>,
@@ -551,6 +557,7 @@ fn resolve(
         combat: spec.combat,
         cost: spec.cost,
         blocks,
+        flees: spec.flees,
         follows: None,
         wound,
         damage_type,
