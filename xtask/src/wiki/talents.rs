@@ -171,7 +171,10 @@ pub(super) fn by_system(content: &Content) -> String {
         let held = if system.pending {
             "not yet (pending)".to_string()
         } else {
-            format!("yes ({} talents at least)", bar.min_talents)
+            match system.min_talents.unwrap_or(bar.min_talents) {
+                1 => "yes (1 talent at least)".to_string(),
+                least => format!("yes ({least} talents at least)"),
+            }
         };
         let talents = if names.is_empty() {
             "—".to_string()
@@ -522,6 +525,9 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             format!("keepers let you leave owing up to {gold} gold (the debt stays on their bill)")
         }
         TalentEffect::IdentifyTrades => "what you buy or sell in a shop is identified".to_string(),
+        TalentEffect::Scavenger => {
+            "what a creature you kill drops is identified as it lands".to_string()
+        }
         TalentEffect::ItemWorth => "item descriptions show what things are worth".to_string(),
         TalentEffect::GemWorth => "item descriptions show what each gem is worth".to_string(),
         TalentEffect::IdentifyCarried { hours } => format!(

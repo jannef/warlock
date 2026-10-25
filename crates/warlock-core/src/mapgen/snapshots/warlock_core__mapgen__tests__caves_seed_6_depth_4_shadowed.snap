@@ -5,7 +5,7 @@ expression: describe(&shadowed)
 The Depths 4 (depths:4) 120x60
 stairs Up at (27, 9) -> depths:3
 stairs Down at (89, 50) -> depths:5
-kobold at (60, 10) route W W W W E E E E
+kobold at (60, 10) route W W W W E E E E carrying a flint spear (wielded)
 rat at (65, 12) route S S S S S S N N N N N N
 bat at (116, 27) route N S S E N S W N N S
 frost trap at (43, 49)
