@@ -1,0 +1,8 @@
+[[talent]]
+id = "light_fingers"
+name = "Light fingers"
+tree = "class"
+granted = true
+description = "You can lift a purse from someone next to you who is not hostile (the Steal ability); caught, they turn on you."
+effects = [{ kind = "steal" }]
+systems = ["stealth", "factions"]

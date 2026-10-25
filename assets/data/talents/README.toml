@@ -309,6 +309,26 @@
 #                                 the light
 #   quivering_palm { status, severity, cooldown, degrees }   the active Quivering palm: a
 #                                 bare-handed blow in a direction that leaves the status
+#   favoured_prey { to_hit, damage }   against the creature type it has killed most (ties: the
+#                                 first to get there), its attacks gain that to-hit and damage
+#   exact_sounds                  every sound it hears is placed where it was made
+#   sky_footsteps_percent { value }   its footsteps under the open sky (no roof over the cell
+#                                 stepped to) that percent louder (negative: quieter)
+#   silent_unburdened             its steps make no sound while it is Unburdened
+#   attack_noise_percent { value }   its attacks that percent louder (negative: quieter)
+#   trap_ease { value }           hidden traps that much easier for it to find (not to disarm)
+#   pick_lock, steal, throw_voice the Pick lock ability without Open lock, the Steal ability
+#                                 without the Steal skill, the Throw your voice ability
+#   ambush_threat { value }       its attacks on a creature that has not seen it threaten a
+#                                 critical that many points lower (1 to 5; ambush dice of the
+#                                 same sides add up: 1d6 and 2d6 are 3d6)
+#   trained_skills { value }      every skill it is trained in counts that much higher
+#   volley { shots, cooldown, degrees }   the active Volley, aimed at a cell
+#                                 (`use:volley:12,5`): shots (2 to 5) of the readied missile
+#                                 weapon there for the price of one, then the cooldown status
+#   inspire { status, mana }      the active Inspire: it suffers the status, for that mana
+#                                 (no cooldown: mana is the price)
+#   virtuoso { status }           Inspire gives that status instead, and costs no mana
 #   A birth sign's actives (spec §8 "Birth sign"; the abilities menu's Birth sign group, the
 #   talent's id the ability's id, `use:horns_grace`):
 #   horns_grace { cures, diseases, cooldown, degrees }   the active Horn's grace: the statuses

@@ -1,0 +1,8 @@
+[[talent]]
+id = "jack_of_all_trades"
+name = "Jack of all trades"
+tree = "class"
+granted = true
+description = "Every skill you are trained in counts a little higher."
+effects = [{ kind = "trained_skills", value = 5 }]
+systems = ["skills"]

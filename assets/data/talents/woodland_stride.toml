@@ -1,0 +1,8 @@
+[[talent]]
+id = "woodland_stride"
+name = "Woodland stride"
+tree = "class"
+granted = true
+description = "Forest floor, bushes, reeds, tall grass, and marsh slow you no more than open ground (they rustle as before)."
+effects = [{ kind = "terrain_as", terrains = ["forest_floor", "bush", "reeds", "tall_grass", "marsh"], like = "grass" }]
+systems = ["speed"]

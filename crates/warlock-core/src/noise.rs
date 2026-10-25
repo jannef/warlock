@@ -265,7 +265,8 @@ pub struct Recent {
 /// ([`plain_noise`]): the one place an action's noise is decided. The actor's skills (stealth,
 /// [`Effect::Quiet`]) take their percent off its steps and doors (not its attacks or its voice,
 /// thrown or not), rounded down, and the stealth affixes of what it wears off its steps (spec §8
-/// "Magic items"), rounded down. `None` if it is silent.
+/// "Magic items"), rounded down; then its talents' percents (attacks too: Hide in plain sight).
+/// `None` if it is silent.
 pub fn noise(
     content: &Content,
     level: &LevelState,
@@ -274,10 +275,16 @@ pub fn noise(
     act: Act,
 ) -> Option<Noise> {
     let plain = plain_noise(content, level, actor, burden, act)?;
-    if matches!(
-        act,
-        Act::Attack(_) | Act::Mutter | Act::ThrowVoice(_) | Act::Howl
-    ) {
+    if let Act::Attack(_) = act {
+        // The thief's Hide in plain sight: quieter attacks.
+        if actor.talents.is_empty() {
+            return Some(plain);
+        }
+        let percent = actor.talent_mods(content).attack_noise_percent;
+        let loudness = TalentMods::scaled(u64::from(plain.loudness), percent) as u16;
+        return (loudness > 0).then_some(Noise { loudness, ..plain });
+    }
+    if matches!(act, Act::Mutter | Act::ThrowVoice(_) | Act::Howl) {
         return Some(plain);
     }
     let quiet = actor.skill_effect(content, Effect::Quiet).clamp(0, 100) as u16;
@@ -286,10 +293,24 @@ pub fn noise(
     // Lockbreaker's quieter kicks).
     let talents = actor.talent_mods(content);
     let loudness = match act {
-        Act::Step(_) => {
+        // Hide in plain sight: no footsteps at all while Unburdened.
+        Act::Step(_) if talents.silent_unburdened && burden == Burden::Unburdened => 0,
+        Act::Step(to) => {
             let quieter = actor.mods(content).get(ItemEffect::Stealth);
             let loudness = crate::magic::mods::less(u64::from(loudness), quieter);
-            TalentMods::scaled(loudness, talents.footsteps_percent) as u32
+            // Camouflage: quieter under the open sky (no roof over the cell stepped to).
+            let roofed = level
+                .terrain
+                .get(to)
+                .is_some_and(|t| content.terrain(*t).roofed);
+            let sky = level.kind.is_sky_exposed() && !roofed;
+            let percent = talents.footsteps_percent
+                + if sky {
+                    talents.sky_footsteps_percent
+                } else {
+                    0
+                };
+            TalentMods::scaled(loudness, percent) as u32
         }
         Act::OpenDoor(_) | Act::CloseDoor(_) if talents.silent_doors => 0,
         Act::Kick(_) => TalentMods::scaled(u64::from(loudness), talents.kick_noise_percent) as u32,
@@ -502,14 +523,36 @@ pub(crate) fn hearers(state: &WorldState, content: &Content, noise: Noise) -> Ve
         .collect()
 }
 
+/// Which sounds a listener places where they were made, not roughly ([`perceive`]).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum Exact {
+    /// None: every sound at its rough place.
+    No,
+    /// Footsteps (a birth sign's Watchful).
+    Footsteps,
+    /// Every sound (the ranger's Tracker).
+    All,
+}
+
+impl Exact {
+    fn places(self, kind: SoundKind) -> bool {
+        match self {
+            Exact::No => false,
+            Exact::Footsteps => kind == SoundKind::Footsteps,
+            Exact::All => true,
+        }
+    }
+}
+
 /// The sounds in `heard` (the player's during one turn, with hearing `threshold`) the player
-/// perceives: those whose source cell is not visible, each placed at its [`rough_place`], or
-/// footsteps at their own cell for an `exact` listener (Watchful). A sound followed by one of
-/// the same kind within [`ONE_SOURCE`] cells is the same walker's earlier step and is left out.
+/// perceives: those whose source cell is not visible, each placed at its [`rough_place`], or at
+/// their own cell for the kinds an `exact` listener places so (Watchful, Tracker). A sound
+/// followed by one of the same kind within [`ONE_SOURCE`] cells is the same walker's earlier step
+/// and is left out.
 pub(crate) fn perceive(
     level: &LevelState,
     content: &Content,
-    (heard, threshold, exact): (&[Heard], u16, bool),
+    (heard, threshold, exact): (&[Heard], u16, Exact),
     turn: u64,
     hidden: impl Fn(Pos) -> bool,
 ) -> Vec<PerceivedSound> {
@@ -525,7 +568,7 @@ pub(crate) fn perceive(
         .filter(|&(i, h)| hidden(h.at) && !followed(i))
         .map(|(_, h)| {
             let volume = Volume::of(h.loudness, threshold);
-            let pos = if exact && h.kind == SoundKind::Footsteps {
+            let pos = if exact.places(h.kind) {
                 h.at
             } else {
                 rough_place(level, content, h.at, volume, turn, &hidden)

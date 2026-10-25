@@ -1,0 +1,8 @@
+[[talent]]
+id = "favoured_prey"
+name = "Favoured prey"
+tree = "class"
+granted = true
+description = "You know the ways of what you hunt: against the kind of creature you have killed most, your attacks are surer and deadlier."
+effects = [{ kind = "favoured_prey", to_hit = 1, damage = 2 }]
+systems = ["combat"]

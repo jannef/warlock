@@ -1,0 +1,8 @@
+[[talent]]
+id = "throw_voice"
+name = "Throw your voice"
+tree = "class"
+granted = true
+description = "Make a voice sound at a place you see nearby (an ability): those who hear it go and look there."
+effects = [{ kind = "throw_voice" }]
+systems = ["hearing", "stealth"]

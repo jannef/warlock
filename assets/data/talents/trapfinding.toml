@@ -1,0 +1,12 @@
+[[talent]]
+id = "trapfinding"
+name = "Trapfinding"
+tree = "class"
+granted = true
+description = "You have an eye for traps: you search better, hidden traps are easier for you to find, and you can disarm them (an ability)."
+effects = [
+    { kind = "searching", value = 4 },
+    { kind = "trap_ease", value = 2 },
+    { kind = "disarm" },
+]
+systems = ["searching", "traps"]

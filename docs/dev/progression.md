@@ -24,7 +24,9 @@ hit points a level gives) is `docs/dev/experience.md`.
 | `xtask/src/wiki/talents.rs` | `talents.md` (trees with the rules), `talents-by-system.md` (the coverage matrix, class abilities beside the talents); `effect_text`, the rule of one effect, shared with the class tables. |
 | `content/class.rs` (#243) | `ClassActive`, the actives (id = the ability's id, aim, cost); `strip_tables` (tests that load talents of their own). |
 | `world/racial.rs` | The racial talents (#241): `grants` (a race's `talents`, `data/races.toml`, put in by `stars::grant` before the sign's gifts, through `Talents::regrant`, which now replaces every granted talent outside a class tree), `World::small_target` (Small target's Dodge, from `resolve` after `target_against`, when the attacker's `size_of` is larger). `content/race.rs::check_talents` (at load): a race grants only `granted` talents of the `racial` tree. |
-| `world/class_ability.rs` | `use_class` (`Action::Use`, `use:rage`, `use:smite:E`) and the seven actives, `frenzy` (from `dies`), `unstoppable` (from `hurt`); Hardened's hit points are `level_up`'s. |
+| `world/class_ability.rs` | `use_class` (`Action::Use`, `use:rage`, `use:smite:E`), `may_use_class`, and the actives but Volley (Inspire, #244, among them), `frenzy` (from `dies`), `unstoppable` (from `hurt`); Hardened's hit points are `level_up`'s. |
+| `world/volley.rs` | `use_class_at` (`Action::UseAt`, a class active aimed at a cell: `use:volley:12,5`) and the ranger's Volley (#244). |
+| `world/quest.rs` | `tally_kill` (every kill of the player's, by level and type; `Quests::prey`, `killed`): the design's B6. |
 
 ## The hooks
 
@@ -117,6 +119,15 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `radiance` | `LightCache::sources` (a carried source, `RADIANCE` tag, while its status lasts) |
 | `inner_light` | `LightCache::sources` (a carried source, `INNER` tag, always: the player and the creatures see by it alike) |
 | the actives (`rage`, `veterans_wind`, `whirlwind`, `lay_on_hands`, `avatar`, `smite`, `quivering_palm`) | `world/class_ability.rs`; `Ability::Class` in `ability.rs` (`class_cooldown`: Rage's status and what it `follows`) |
+| `inspire`, `virtuoso` | `world/class_ability.rs` (`World::inspire`: `TalentMods::inspiring`, `World::spend_mana`); `Ability::unavailable` (`Unavailable::NoMana`) |
+| `volley` | `world/volley.rs` (`Action::UseAt`, `World::use_class_at`; `ClassActive::aims_cell`, `Aim::Cell`; the UI aims it as a shot, `ui/target.rs`) |
+| `favoured_prey` | `World::resolve` → `World::favoured` (`world/ambush.rs`), against `Quests::prey` |
+| `ambush` (summed), `ambush_threat` | `World::resolve` → `World::sneaking` (before the strike), `sneak_threat`, `ambushed`; `Dice::and` adds the dice of the same sides |
+| `exact_sounds` | `Perception::compute` → `noise::perceive` (`noise::Exact::All`) |
+| `sky_footsteps_percent`, `silent_unburdened`, `attack_noise_percent` | `noise::noise` (steps onto an unroofed cell of a sky-exposed level; steps while Unburdened; attacks) |
+| `trap_ease` | `search.rs::finding` (searching and in passing; `difficulty_of`, which disarming reads, is unchanged) |
+| `pick_lock`, `steal`, `throw_voice` | `Ability::had_by` (and the actions' refusals: `lockpick.rs`, `steal.rs`, `voice.rs` ask it) |
+| `trained_skills` | `Actor::skill_effect` (a bonus for every trained skill, as `skill`'s) |
 | `missile_dodge` | `World::target_against` (from `resolve` for shots and throws, `trap_strikes` for trap missiles) |
 | `spell_damage_percent` | `World::evaded` in `spell_hurts` (bursts and bolts, before resistances) |
 | `read_percent`, `scroll_kept` | `read.rs`: `read_price`; `use_up` (one gameplay draw a read, only with the talent; "The writing does not fade from the scroll.") |
@@ -304,7 +315,14 @@ dropped picks, every hook, a free-blow talent, saves and replays, perception and
 The everyday folk (#246: aristocrat, commoner, craftsperson, merchant) have their tables: nine
 abilities each at 1, 6, 12, 18, 25, 32, 40, 50, 60 (34 class-tree talents, plus Riposte and
 Second wind, which their tables hand out), and bonus picks at 10, 20, 30, 45, 55. The
-warrior, barbarian, paladin, and monk (I1) have theirs, in `world/class_active_tests.rs`; the others come with I2–I3. `world/class_tests.rs` covers the grants, bonus picks,
+warrior, barbarian, paladin, and monk (I1) have theirs, in `world/class_active_tests.rs`; the
+ranger, thief, and bard (I2, #244) theirs, in `world/class_rogue_tests.rs` (the kill tally and
+Favoured prey, every passive, Volley and Inspire, the abilities the thief and bard get
+untrained); the casters come with I3. The I2 tables hand out two ordinary talents (Evasion,
+Lore), so a creation pick or a bonus pick may already have taken one; the table then gives
+nothing in its place (as the monk's Deflect missiles). The showcase's and the arena's own
+characters are thieves, the forest's and the world's rangers: their runs start with Sneak attack
+or Favoured prey. `world/class_tests.rs` covers the grants, bonus picks,
 restores, replays, and every hook; `content::class::tests` the table checks.
 
 ## The trees so far

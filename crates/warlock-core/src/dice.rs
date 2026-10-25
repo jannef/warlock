@@ -64,6 +64,25 @@ impl Dice {
         }
     }
 
+    /// It and `other` rolled together, as one: dice of the same sides (and sign) add up
+    /// (`1d6` and `2d6`: `3d6`), as do fixed bonuses; otherwise the one with the higher best
+    /// result counts (Sneak attack and Improved sneak attack).
+    pub fn and(self, other: Self) -> Self {
+        if self.negative == other.negative && (self.sides == other.sides || other.is_fixed()) {
+            Self {
+                count: self.count + other.count,
+                bonus: self.bonus + other.bonus,
+                ..self
+            }
+        } else if self.is_fixed() && !self.negative && !other.negative {
+            other.plus(self.bonus)
+        } else if other.max() > self.max() {
+            other
+        } else {
+            self
+        }
+    }
+
     /// Whether it rolls no dice.
     pub const fn is_fixed(&self) -> bool {
         self.count == 0

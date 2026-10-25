@@ -1,0 +1,8 @@
+[[talent]]
+id = "inspire"
+name = "Inspire"
+tree = "class"
+granted = true
+description = "Sing yourself to courage (an ability, for mana): a while surer to hit and quicker to dodge."
+effects = [{ kind = "inspire", status = "inspired", mana = 3 }]
+systems = ["mana", "status", "combat"]

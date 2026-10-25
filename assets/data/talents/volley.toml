@@ -1,0 +1,8 @@
+[[talent]]
+id = "volley"
+name = "Volley"
+tree = "class"
+granted = true
+description = "Loose a volley at a place you aim at (an ability): three shots for the time of one; then you are spent a while."
+effects = [{ kind = "volley", shots = 3, cooldown = "spent", degrees = 1 }]
+systems = ["ranged", "combat"]

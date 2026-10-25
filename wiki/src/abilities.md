@@ -36,8 +36,8 @@ menu).
 - **Throw your voice**: a voice sounds at a place you choose that you see, not solid, within 6
   cells (the aiming cursor, as for a shot). It is as loud there as someone talking, and it is
   made there, not where you stand, so creatures that hear it and cannot see that spot go to have
-  a look (see [Hearing](hearing.md#throwing-your-voice)). It takes a normal action. Everyone has
-  it.
+  a look (see [Hearing](hearing.md#throwing-your-voice)). It takes a normal action. Bards learn it at level 32
+  (see [Classes](classes.md)).
 - **Hood your lantern**: lowers your lantern's hood, or raises it again; on a lantern that is out
   it lights it with the hood lowered. Hooded, the lantern lights the ground around you but not you
   (see [Your lantern](lantern.md#the-hood)). It is listed under Items, with the lantern; everyone

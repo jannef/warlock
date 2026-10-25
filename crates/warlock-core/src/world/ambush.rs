@@ -1,24 +1,57 @@
-//! Ambusher (spec §8 "Talents"): an attack on a creature that has not seen its attacker does
-//! the talent's dice more damage, after Protection. "Has not seen" is the creature's own: it
-//! hunts no one it has seen ([`super::Mind::last_seen`] unset) and its eyes, by creature sight
-//! ([`crate::sight`]), do not see the attacker's cell now. The dice are drawn from the gameplay
-//! stream only when a hit lands with the talent on an unaware creature.
+//! Ambusher (spec §8 "Talents") and the thief's Sneak attack (spec §8 "Class abilities"): an
+//! attack on a creature that has not seen its attacker does the talents' dice more damage, after
+//! Protection (Sneak attack's and Improved sneak attack's dice add up, `Dice::and`), and with
+//! Master thief threatens a critical sooner. "Has not seen" is the creature's own: it hunts no
+//! one it has seen ([`super::Mind::last_seen`] unset) and its eyes, by creature sight
+//! ([`crate::sight`]), do not see the attacker's cell now. It is asked before the strike, only
+//! of an attacker with the dice (no draw); the dice are drawn from the gameplay stream only when
+//! a hit lands on an unaware creature.
+//!
+//! The ranger's Favoured prey is here too: against the creature type the player has killed most
+//! ([`super::Quests::prey`]), its attacks hit likelier and do more damage.
 
 use super::{ActorId, ActorKind, World};
-use crate::combat::Blow;
+use crate::combat::{Blow, Profile};
 use crate::fov::radius2;
 use crate::sight::{self, LineOfSight};
 
 impl World {
-    /// `blow` by `attacker` at `target` with the Ambusher's damage added when it hit a creature
-    /// that has not seen the attacker.
-    pub(super) fn ambushed(&mut self, attacker: ActorId, target: ActorId, blow: Blow) -> Blow {
+    /// Whether `attacker` falls on `target` unseen with its ambush dice: it has them, and the
+    /// creature has not seen it.
+    pub(super) fn sneaking(&mut self, attacker: ActorId, target: ActorId) -> bool {
+        let has = (self.state.actors.get(&attacker)).is_some_and(|a| {
+            !a.talents.is_empty() && a.talent_mods(&self.content).ambush.is_some()
+        });
+        has && self.unaware(target, attacker)
+    }
+
+    /// `profile` of an attack by `attacker`, `unseen` (it is [`World::sneaking`]), with Master
+    /// thief's lower threat (never below 3).
+    pub(super) fn sneak_threat(
+        &self,
+        attacker: ActorId,
+        unseen: bool,
+        mut profile: Profile,
+    ) -> Profile {
+        if !unseen {
+            return profile;
+        }
+        if let Some(a) = self.state.actors.get(&attacker) {
+            let lower = a.talent_mods(&self.content).ambush_threat;
+            profile.threat = profile.threat.saturating_sub(lower).max(3);
+        }
+        profile
+    }
+
+    /// `blow` by `attacker`, `unseen` (it is [`World::sneaking`]), with the ambush dice added
+    /// when it hit.
+    pub(super) fn ambushed(&mut self, attacker: ActorId, unseen: bool, blow: Blow) -> Blow {
         let Some(dice) =
             (self.state.actors.get(&attacker)).and_then(|a| a.talent_mods(&self.content).ambush)
         else {
             return blow;
         };
-        if !blow.strike.is_hit() || !self.unaware(target, attacker) {
+        if !unseen || !blow.strike.is_hit() {
             return blow;
         }
         let extra = dice.roll(&mut self.state.rng).max(0);
@@ -26,6 +59,34 @@ impl World {
             damage: blow.damage + extra,
             ..blow
         }
+    }
+
+    /// `profile` of an attack by `attacker` at `target`, with Favoured prey's to-hit and damage
+    /// when the player makes it at a creature of the type they have killed most.
+    pub(super) fn favoured(
+        &self,
+        attacker: ActorId,
+        target: ActorId,
+        mut profile: Profile,
+    ) -> Profile {
+        if attacker != self.state.player {
+            return profile;
+        }
+        let me = self.state.player();
+        if me.talents.is_empty() {
+            return profile;
+        }
+        let (to_hit, damage) = me.talent_mods(&self.content).favoured_prey;
+        if (to_hit, damage) == (0, 0) {
+            return profile;
+        }
+        let prey = self.state.quests.prey();
+        let creature = self.state.actors.get(&target).map(|a| a.creature);
+        if creature.is_some_and(|c| prey == Some(self.content.creature(c).id.as_str())) {
+            profile.to_hit += to_hit;
+            profile.bonus += damage;
+        }
+        profile
     }
 
     /// Whether creature `id` has not seen actor `other`: it hunts no one it has seen, and it does

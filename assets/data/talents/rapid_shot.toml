@@ -1,0 +1,8 @@
+[[talent]]
+id = "rapid_shot"
+name = "Rapid shot"
+tree = "class"
+granted = true
+description = "You nock and loose quicker: your shots take less time."
+effects = [{ kind = "weapon", role = "launcher", speed = 10 }]
+systems = ["ranged", "speed"]
