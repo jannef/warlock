@@ -1,0 +1,11 @@
+[[talent]]
+id = "hide_in_plain_sight"
+name = "Hide in plain sight"
+tree = "class"
+granted = true
+description = "Unburdened, your footsteps make no sound at all, and your attacks are quieter."
+effects = [
+    { kind = "silent_unburdened" },
+    { kind = "attack_noise_percent", value = -50 },
+]
+systems = ["stealth", "burden"]

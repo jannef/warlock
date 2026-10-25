@@ -6,28 +6,28 @@ expression: "render(case, content.clone())"
  You give your blood, and power wells up in you.
 
 
+
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
                     │ > a  Transfixing stare  at a place you see               │
-                    │ Class                                                    │
-                    │   b  Throw your voice   at a place you see               │
                     │ Talents                                                  │
-                    │   c  Blood magic                                         │
+                    │   b  Blood magic                                         │
                     │ Skills                                                   │
-                    │   d  Decipher script    not usable yet                   │
-                    │   e  Knowledge          not usable yet                   │
-                    │   f  Use magic device   not usable yet                   │
+                    │   c  Decipher script    not usable yet                   │
+                    │   d  Knowledge          not usable yet                   │
+                    │   e  Use magic device   not usable yet                   │
                     │ Weapon skills                                            │
-                    │   g  Shield bash        you hold no shield               │
+                    │   f  Shield bash        you hold no shield               │
                     │ Items                                                    │
-                    │   h  Hood your lantern                                   │
+                    │   g  Hood your lantern                                   │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
-                    │ a-h or Enter use   Esc close                             │
+                    │ a-g or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
+
 
 
 

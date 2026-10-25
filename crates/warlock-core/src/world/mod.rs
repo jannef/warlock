@@ -141,6 +141,7 @@ mod train;
 mod trap;
 mod travel;
 mod voice;
+mod volley;
 
 pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
 pub use alignment::Deed;
@@ -1017,6 +1018,7 @@ impl World {
             Action::SecondWind => return self.second_wind(events),
             Action::BloodMagic => return self.blood_magic(),
             Action::Use(active, dir) => return self.use_class(*active, *dir, events),
+            Action::UseAt(active, at) => return self.use_class_at(*active, *at, events),
             Action::Gift(active, at) => return self.use_gift(*active, *at, events),
             Action::Talent { id, choice } => return self.take_talent(id, choice.as_deref()),
             Action::Advance(skill) => return self.advance_skill(skill),
@@ -1077,6 +1079,8 @@ mod burden_tests;
 mod character_tests;
 #[cfg(test)]
 mod class_active_tests;
+#[cfg(test)]
+mod class_rogue_tests;
 #[cfg(test)]
 mod class_tests;
 #[cfg(test)]

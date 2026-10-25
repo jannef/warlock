@@ -226,7 +226,14 @@ fn ambusher_hurts_a_creature_that_has_not_seen_you() {
         damage: 2,
         kind: None,
     };
-    assert_eq!(w.ambushed(player, rat, hit), hit, "without the talent");
+    assert_eq!(
+        {
+            let unseen = w.sneaking(player, rat);
+            w.ambushed(player, unseen, hit)
+        },
+        hit,
+        "without the talent"
+    );
     give(&mut w, "ambusher");
     assert!(
         w.unaware(rat, player),
@@ -234,21 +241,44 @@ fn ambusher_hurts_a_creature_that_has_not_seen_you() {
     );
     let rng = w.state.rng.clone();
     let missed = Blow::missed(None);
-    assert_eq!(w.ambushed(player, rat, missed), missed, "a miss");
+    assert_eq!(
+        {
+            let unseen = w.sneaking(player, rat);
+            w.ambushed(player, unseen, missed)
+        },
+        missed,
+        "a miss"
+    );
     assert_eq!(w.state.rng, rng, "nothing drawn for a miss");
-    let ambushed = w.ambushed(player, rat, hit).damage;
+    let ambushed = {
+        let unseen = w.sneaking(player, rat);
+        w.ambushed(player, unseen, hit)
+    }
+    .damage;
     assert!((3..=8).contains(&ambushed), "{ambushed}");
     // A creature hunting someone it has seen is no longer unaware.
     w.state.actors.get_mut(&rat).expect("rat").mind.last_seen = Some(Pos::new(1, 1));
     assert!(!w.unaware(rat, player));
-    assert_eq!(w.ambushed(player, rat, hit), hit);
+    assert_eq!(
+        {
+            let unseen = w.sneaking(player, rat);
+            w.ambushed(player, unseen, hit)
+        },
+        hit
+    );
     // Nor is one that sees the player, in the light.
     let mut lit = world("den");
     give(&mut lit, "ambusher");
     let rat = creature(&lit);
     lit.state.current_mut().ambient = Light::new(255, 255, 255, 0);
     assert!(!lit.unaware(rat, player));
-    assert_eq!(lit.ambushed(player, rat, hit), hit);
+    assert_eq!(
+        {
+            let unseen = lit.sneaking(player, rat);
+            lit.ambushed(player, unseen, hit)
+        },
+        hit
+    );
 }
 
 #[test]

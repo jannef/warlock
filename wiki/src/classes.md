@@ -29,12 +29,22 @@ a bonus talent at a few levels between, from the trees it names. An ability come
 you reach its level ("You gain Fencing."), and works from then on; in the game each is told in
 words, here exactly. A stat it raises rises for good, score and potential. Some abilities are
 used from the [abilities menu](abilities.md); the rest simply work. So far the warrior, the
-barbarian, the paladin, the monk, and the everyday folk have their tables; the other adventurers'
-are on their way.
+barbarian, the paladin, the monk, the ranger, the thief, the bard, and the everyday folk have
+their tables; the casters' are on their way. A table may hand out an ordinary talent (the ranger's
+and the thief's Evasion, the bard's Lore); if you took it already, the level gives nothing in its
+place.
 
 {{#include generated/class-levels.md}}
 
 A paladin's abilities used from the menu answer only while the paladin is Good or better (see
 [Alignment](alignment.md)); the passives do not ask. Lay on hands drains instead of costing mana
-until mana comes to the game. The barbarian's rage and the monk's flurry and quivering palm will
-later run on pools of their own.
+until mana comes to the game. The barbarian's rage, the monk's flurry and quivering palm,
+the ranger's rapid shot and volley, the thief's improved sneak attack and master thief, and the
+bard's inspire will later run on pools of their own.
+
+The ranger's **favoured prey** is the kind of creature you have killed most, counted over every
+level; when two are tied, the one that got there first stays favoured until another is killed
+more often. A **volley** looses three shots of your readied missile weapon at the place you aim
+at, one after another, for the time of one shot; it stops early when you run out. The bard's
+**inspire** costs 3 mana, and can be sung again while it lasts (it starts over); a virtuoso's
+costs nothing.

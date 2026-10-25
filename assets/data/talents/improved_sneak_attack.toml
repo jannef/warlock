@@ -1,0 +1,8 @@
+[[talent]]
+id = "improved_sneak_attack"
+name = "Improved sneak attack"
+tree = "class"
+granted = true
+description = "Your sneak attacks hurt far more."
+effects = [{ kind = "ambush", dice = "2d6" }]
+systems = ["combat", "stealth"]

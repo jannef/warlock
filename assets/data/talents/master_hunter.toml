@@ -1,0 +1,12 @@
+[[talent]]
+id = "master_hunter"
+name = "Master hunter"
+tree = "class"
+granted = true
+description = "Your bow and crossbow find the telling spot more often, and your favoured prey fears you more than ever."
+effects = [
+    { kind = "weapon", skill = "bows", threat = 1 },
+    { kind = "weapon", skill = "crossbows", threat = 1 },
+    { kind = "favoured_prey", to_hit = 1, damage = 2 },
+]
+systems = ["ranged", "weapon_skills"]

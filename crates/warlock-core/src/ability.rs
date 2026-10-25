@@ -37,8 +37,8 @@ use std::borrow::Cow;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Ability {
     /// Throw your voice (spec §5 "Hearing"; #235): [`Action::ThrowVoice`] at a cell the player
-    /// sees. The bard's (design §4.8, at level 32); until the class tables give it to them alone,
-    /// everyone has it.
+    /// sees. The bard's (design §4.8, at level 32): had by whoever holds a talent with the
+    /// `throw_voice` effect.
     ThrowVoice,
     /// A birth sign's active gift (spec §8 "Birth sign"): [`Action::Gift`], had by whoever's
     /// sign grants its talent; unavailable while its cooldown lasts.
@@ -170,6 +170,8 @@ pub enum Unavailable {
     /// ability is (a raging barbarian cannot read), or the ability's cooldown, which the class
     /// abilities bring (Winded: "you are winded"). Only time lifts it.
     While(StatusId),
+    /// One that costs more mana than the actor has (spec §8 "Mana"): time brings it back.
+    NoMana,
 }
 
 impl Unavailable {
@@ -179,6 +181,7 @@ impl Unavailable {
             Unavailable::NoShield => "you hold no shield".into(),
             Unavailable::NotYet => "not usable yet".into(),
             Unavailable::Strayed => "you have strayed".into(),
+            Unavailable::NoMana => "you have too little mana".into(),
             Unavailable::While(status) => {
                 format!("you are {}", content.status(status).name.to_lowercase()).into()
             }
@@ -191,6 +194,7 @@ impl Unavailable {
             Unavailable::NoShield => "no_shield".into(),
             Unavailable::NotYet => "not_yet".into(),
             Unavailable::Strayed => "strayed".into(),
+            Unavailable::NoMana => "no_mana".into(),
             Unavailable::While(status) => format!("while:{}", content.status(status).id).into(),
         }
     }
@@ -265,9 +269,11 @@ impl Ability {
     /// Whether `actor` has it (whether or not they can use it now): a skill, if they are trained
     /// in it; disarming, if they are trained in Disable device (the skill with the disarm
     /// effect) or a talent lets them (the craftsperson's Tinker); picking locks, if they are
-    /// trained in Open lock (the pick effect's); stealing, if they are trained in a skill with
-    /// the `steal` benefit (it is listed only when stealing is in the game); second wind, if they
-    /// hold the talent; the shield bash, throwing one's voice, and the lantern's hood, everyone.
+    /// trained in Open lock (the pick effect's) or a talent lets them (the thief's Pick lock);
+    /// stealing, if they are trained in a skill with the `steal` benefit or a talent lets them
+    /// (the thief's Light fingers; it is listed only when stealing is in the game); second wind,
+    /// if they hold the talent; throwing one's voice, if a talent gives it (the bard's); the
+    /// shield bash and the lantern's hood, everyone.
     pub(crate) fn had_by(self, actor: &Actor, content: &Content) -> bool {
         match self {
             Ability::Sign(active) => actor.talent_mods(content).has_sign_active(active),
@@ -277,11 +283,19 @@ impl Ability {
                 actor.skills.trains_effect(content, Effect::Disarm)
                     || actor.talent_mods(content).disarm
             }
-            Ability::PickLock => actor.skills.trains_effect(content, Effect::Pick),
-            Ability::Steal => actor.skills.trains_effect(content, Effect::Steal),
+            // The thief's Pick lock and Light fingers give them without the skills.
+            Ability::PickLock => {
+                actor.skills.trains_effect(content, Effect::Pick)
+                    || actor.talent_mods(content).pick_lock
+            }
+            Ability::Steal => {
+                actor.skills.trains_effect(content, Effect::Steal)
+                    || actor.talent_mods(content).steal
+            }
             Ability::SecondWind => actor.talent_mods(content).second_wind.is_some(),
             Ability::BloodMagic => actor.talent_mods(content).blood_magic.is_some(),
-            Ability::ThrowVoice | Ability::ShieldBash | Ability::HoodLantern => true,
+            Ability::ThrowVoice => actor.talent_mods(content).throw_voice,
+            Ability::ShieldBash | Ability::HoodLantern => true,
         }
     }
 
@@ -373,6 +387,7 @@ impl Ability {
             Ability::Sign(active) if active.aimed() => Aim::Cell,
             Ability::Sign(_) => Aim::Nothing,
             Ability::Class(active) if active.aimed() => Aim::Direction,
+            Ability::Class(active) if active.aims_cell() => Aim::Cell,
             Ability::Class(_)
             | Ability::Skill(_)
             | Ability::SecondWind
@@ -431,6 +446,7 @@ impl Ability {
                 Some(dir) => Some(Action::Use(active, Some(dir))),
                 None => None,
             },
+            (Ability::Class(active), _) if active.aims_cell() => None,
             (Ability::Class(active), _) => Some(Action::Use(active, None)),
             (Ability::Sign(active), _) if active.aimed() => None,
             (Ability::Sign(active), _) => Some(Action::Gift(active, None)),
@@ -454,6 +470,7 @@ impl Ability {
         match self {
             Ability::ThrowVoice => Some(Action::ThrowVoice(at)),
             Ability::Sign(active) if active.aimed() => Some(Action::Gift(active, Some(at))),
+            Ability::Class(active) if active.aims_cell() => Some(Action::UseAt(active, at)),
             Ability::Sign(_)
             | Ability::Class(_)
             | Ability::Skill(_)
@@ -475,6 +492,14 @@ impl Ability {
                 let required = content.class_active(active).and_then(|a| a.needs.alignment);
                 (strayed(actor, content, required))
                     .or_else(|| class_cooldown(actor, content, active).map(Unavailable::While))
+                    .or_else(|| {
+                        // Inspire costs mana (Virtuoso's none).
+                        let mana = (active == ClassActive::Inspire)
+                            .then(|| actor.talent_mods(content).inspiring())
+                            .flatten()
+                            .map_or(0, |i| i.mana);
+                        (actor.mana < actor.mana_cost(content, mana)).then_some(Unavailable::NoMana)
+                    })
             }
             Ability::Sign(active) => (actor.talent_mods(content).sign_cooldown(active))
                 .filter(|&cooldown| actor.effects.has(cooldown))
@@ -519,7 +544,8 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
             .map(|p| p.cooldown)
             .into_iter()
             .collect(),
-        ClassActive::Whirlwind | ClassActive::HolyRadiance => Vec::new(),
+        ClassActive::Volley => mods.volley.map(|v| v.cooldown).into_iter().collect(),
+        ClassActive::Whirlwind | ClassActive::HolyRadiance | ClassActive::Inspire => Vec::new(),
     };
     cooldowns.into_iter().find(|&s| actor.effects.has(s))
 }

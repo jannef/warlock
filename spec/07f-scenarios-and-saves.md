@@ -84,8 +84,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   content does not have, a tier or value out of range, or more affixes than the rarity allows
   makes the save inconsistent; affixes are recorded by id, so adding affixes does not change the
   content fingerprint), the player's quests and the kills they count (§8 "Quests";
-  left out while the player has heard of none and killed nothing a kill quest asks
-  for; quests and creature types are recorded by id, so a save naming one this content does not
+  left out while the player has heard of none and killed nothing; quests and creature types are recorded by id, so a save naming one this content does not
   have is inconsistent), the traps on each level (kind, whether the player knows it, charges
   left, a bolt's direction), the known traps as the player remembers them, and a trap as what
   killed the player (§8 "Traps"), every actor's fighting styles (after its

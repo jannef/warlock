@@ -97,9 +97,41 @@ fn world() -> World {
         "scenarios/room.toml",
         "name = \"R\"\nstart_level = \"room\"\nhp = 500\n",
     );
+    // The bard's Throw your voice, which gives the ability (#244).
+    files.insert("data/talents.toml", TALENTS);
+    files.insert("data/talents/throw_voice.toml", THROW_VOICE);
     let content = Arc::new(Content::load(&files).expect("fixture content is valid"));
-    World::new(content, "room", None).expect("world")
+    let mut w = World::new(content, "room", None).expect("world");
+    w.player_mut().talents.take("throw_voice", None);
+    w
 }
+
+const TALENTS: &str = r#"
+[coverage]
+min_talents = 1
+min_class = 0
+free_per_tree = 0
+[[tree]]
+id = "class"
+name = "Class"
+description = "Class abilities."
+class = true
+[[system]]
+id = "hearing"
+name = "Hearing"
+pending = true
+"#;
+
+const THROW_VOICE: &str = r#"
+[[talent]]
+id = "throw_voice"
+name = "Throw your voice"
+tree = "class"
+granted = true
+description = "A voice where you will."
+effects = [{ kind = "throw_voice" }]
+systems = ["hearing"]
+"#;
 
 fn last_message(w: &World) -> String {
     w.messages()
