@@ -1137,6 +1137,8 @@ mod focus_tests;
 #[cfg(test)]
 mod free_blow_tests;
 #[cfg(test)]
+mod gear_tests;
+#[cfg(test)]
 mod gem_tests;
 #[cfg(test)]
 mod gifts_tests;

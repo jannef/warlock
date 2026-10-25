@@ -341,6 +341,10 @@ pub struct CreatureSpawn {
     pub carry: Vec<Stack>,
     /// What of that it wears and wields.
     pub equipment: Equipment,
+    /// Whether its gear is still to be rolled by its type's table (spec §8 "Creature gear"):
+    /// true for a creature placed without a fixed kit (`carry`, `wield`, or `wear`), until a
+    /// generated level rolls it ([`crate::gear::arm`]) or the creature is placed in play.
+    pub rolls_gear: bool,
 }
 
 /// A staircase cell and where it leads.
@@ -608,6 +612,8 @@ pub(super) fn parse_level(
                 };
                 let equipment = equip(detail, &carry, content)
                     .map_err(|m| err(format!("legend `{ch}`: {m}")))?;
+                let fixed =
+                    detail.carry.is_some() || detail.wield.is_some() || detail.wear.is_some();
                 creatures.push(CreatureSpawn {
                     creature: id,
                     faction,
@@ -617,6 +623,7 @@ pub(super) fn parse_level(
                     route,
                     carry,
                     equipment,
+                    rolls_gear: !fixed,
                 });
             } else if detail.route.is_some()
                 || detail.faction.is_some()

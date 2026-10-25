@@ -20,6 +20,7 @@ mod effect;
 mod experience;
 mod faction;
 mod flow;
+mod gear;
 mod gem;
 mod horoscope;
 mod hunger;
@@ -89,6 +90,7 @@ pub use experience::{
 };
 pub use faction::{FactionDef, FactionId, Factions, PLAYER_FACTION, Stance};
 pub use flow::{FLOW_SPEEDS, Flow};
+pub use gear::{Gear, GearLine, RACIAL_CHANCE};
 pub use gem::{
     Cut, CutId, Cutting, GemDef, GemSize, GemSizeId, Gems, MAX_GEM_VALUE, MAX_GEM_WEIGHT,
     MAX_MULTIPLIER, Ornament, ROUGH_SATURATION, dull,
@@ -686,6 +688,7 @@ impl Content {
         content.load_creatures(files)?;
         content.load_objects(files)?;
         content.load_gems(files)?;
+        content.load_gear()?;
         let path = "data/shops.toml";
         if let Some(text) = files.get_optional(path) {
             content.shops = Some(Shops::parse(path, text, &content)?);
@@ -1303,6 +1306,27 @@ impl Content {
 
     /// The classes', races', and birth signs' starting kits (spec §8 "Character creation"), once
     /// the objects, gems, slots, and weapon skills they name are known.
+    /// Resolves the creature types' gear (spec §8 "Creature gear") once objects are known.
+    fn load_gear(&mut self) -> Result<(), ContentError> {
+        let gear = (self.creatures.iter())
+            .map(|c| {
+                gear::resolve(&c.gear_spec, self, |skill| c.weapon_skills.rank(skill)).map_err(
+                    |m| ContentError::new("data/creatures/", format!("creature `{}`: {m}", c.id)),
+                )
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        for (creature, gear) in self.creatures.iter_mut().zip(gear) {
+            if creature.id == "player" && !gear.is_empty() {
+                return Err(ContentError::new(
+                    "data/creatures/",
+                    "creature `player`: the player's gear is their starting kit",
+                ));
+            }
+            creature.gear = gear;
+        }
+        Ok(())
+    }
+
     fn load_kits(&mut self) -> Result<(), ContentError> {
         let classes = (self.classes.iter())
             .map(|c| {

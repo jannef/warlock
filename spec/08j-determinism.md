@@ -30,7 +30,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   hides (`secrets/<level id>`, after its traps, so the map is the same with or without them, §8
   "Searching"); a generated
   level's loot (`loot/<level id>`, drawn once its map is valid and its traps hidden, so the map
-  is the same with or without it); what a creature drops when it dies (`drop/<actor id>`, so a
+  is the same with or without it); a generated level's creatures' gear (`gear/<level id>`, in
+  spawn order after its loot, so the rest of the level is the same with or without it, §8
+  "Creature gear"); the gear of a creature placed in play without a fixed kit (`gear/<actor
+  id>`: a hand-made level's, rolled as the level is first entered); what a creature drops when
+  it dies (`drop/<actor id>`, so a
   kill never changes a later roll of the gameplay stream; actor ids are never reused);
   gameplay (`gameplay`, kept in the world state and saved; a teleport trap's destination is a
   hash, never this stream, §8 "Traps"); character creation (derived on

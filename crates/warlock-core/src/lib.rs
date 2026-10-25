@@ -25,6 +25,7 @@ pub mod door;
 pub mod dump;
 pub mod equipment;
 pub mod fov;
+pub mod gear;
 pub mod gem;
 pub mod geom;
 pub mod grid;

@@ -11,12 +11,14 @@ use super::{
 use crate::action::{AttackKind, Event};
 use crate::burden;
 use crate::content::{
-    ActionKind, CombatStance, Content, EdgeExit, LevelKind, LevelTemplate, StairsDir, Stance,
-    TerrainId, local_area_id,
+    ActionKind, CombatStance, Content, CreatureSpawn, EdgeExit, LevelKind, LevelTemplate,
+    StairsDir, Stance, TerrainId, local_area_id,
 };
+use crate::equipment::Equipment;
 use crate::geom::{Dir, Pos};
 use crate::magic::loot::Luck;
 use crate::mapgen::local::arrival;
+use crate::object::Stack;
 use crate::skills::Use;
 use std::borrow::Cow;
 
@@ -438,6 +440,7 @@ pub(super) fn instantiate_level(
         let actor_id = ActorId(state.next_actor_id);
         state.next_actor_id += 1;
         let def = content.creature(spawn.creature);
+        let (carry, equipment) = placed_gear(content, state.seed, id, actor_id, spawn);
         let mut actor = Actor {
             id: actor_id,
             kind: ActorKind::Creature,
@@ -451,8 +454,8 @@ pub(super) fn instantiate_level(
             energy: 0,
             heard: Vec::new(),
             mind: Mind::default(),
-            inventory: spawn.carry.clone(),
-            equipment: spawn.equipment.clone(),
+            inventory: carry,
+            equipment,
             stats: def.stats,
             hp: 0,
             hp_base: def.base_hp,
@@ -483,4 +486,22 @@ pub(super) fn instantiate_level(
         crate::rot::made_at(&mut actor.inventory, content, state.time);
         state.actors.insert(actor_id, actor);
     }
+}
+
+/// What creature `spawn`, placed on level `level` as actor `id`, carries and of that wears and
+/// wields: its fixed kit (or the gear its generated level rolled), or else its type's gear,
+/// rolled now from `gear/<actor id>` at the level's item level (spec §8 "Creature gear").
+fn placed_gear(
+    content: &Content,
+    seed: u64,
+    level: &str,
+    id: ActorId,
+    spawn: &CreatureSpawn,
+) -> (Vec<Stack>, Equipment) {
+    if !spawn.rolls_gear {
+        return (spawn.carry.clone(), spawn.equipment.clone());
+    }
+    let mut rng = crate::rng::Rng::gear(seed, &id.0.to_string());
+    let pack = crate::gear::roll(content, &mut rng, spawn.creature, content.item_level(level));
+    (pack.items, pack.equipment)
 }
