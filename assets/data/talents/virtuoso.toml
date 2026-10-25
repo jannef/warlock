@@ -3,6 +3,6 @@ id = "virtuoso"
 name = "Virtuoso"
 tree = "class"
 granted = true
-description = "Your Inspire lifts you higher and longer, and costs you no mana."
+description = "Your Inspire lifts you higher and longer, and costs you nothing."
 effects = [{ kind = "virtuoso", status = "inspired_greatly" }]
 systems = ["mana", "status"]

@@ -20,7 +20,7 @@ static BUILTIN: LazyLock<Arc<Content>> =
 /// A human of `class` in the showcase (seed 7), with their kit, every score 14.
 /// A human of `class` in the showcase, born under no sign, so a sign's gifts (Rise from the
 /// ashes among them) leave the class's rules as the tests rig them.
-fn world(class: &str) -> World {
+pub(super) fn world(class: &str) -> World {
     let spec: CharacterSpec = format!("human,male,{class}").parse().expect("a character");
     // Creation picks that no test here reads (a human's three: Versatile adds one).
     let spec = spec.with_talents(vec![
@@ -46,7 +46,7 @@ fn world(class: &str) -> World {
     w
 }
 
-fn run(world: &mut World, actions: &str) {
+pub(super) fn run(world: &mut World, actions: &str) {
     for action in parse_actions(actions).expect("actions") {
         world.apply(&action);
     }
@@ -56,12 +56,12 @@ fn said(world: &World) -> Vec<String> {
     world.messages().iter().map(|m| m.display()).collect()
 }
 
-fn last(world: &World) -> String {
+pub(super) fn last(world: &World) -> String {
     said(world).last().cloned().unwrap_or_default()
 }
 
 /// Grants the XP that takes the player to `level` and spends every choice it brings.
-fn reach(world: &mut World, level: u8) {
+pub(super) fn reach(world: &mut World, level: u8) {
     let spec = world.state.character.as_ref().map(|c| &c.spec);
     let factor = Factor::of(world.content(), spec);
     let need = world.content().experience().threshold_for(level, factor);
@@ -78,7 +78,7 @@ fn status(world: &World, id: &str) -> StatusId {
     world.content().status_id(id).expect("a status")
 }
 
-fn suffers(world: &World, who: ActorId, id: &str) -> bool {
+pub(super) fn suffers(world: &World, who: ActorId, id: &str) -> bool {
     world.state.actors[&who].effects.has(status(world, id))
 }
 
@@ -96,7 +96,7 @@ fn own(world: &World, active: ClassActive) -> Option<Option<Unavailable>> {
 }
 
 /// A creature of type `creature` placed east of the player, with `hp` hit points; its id.
-fn beside(world: &mut World, creature: &str, hp: i32) -> ActorId {
+pub(super) fn beside(world: &mut World, creature: &str, hp: i32) -> ActorId {
     let content = world.content().clone();
     let at = world.player_pos().step(Dir::E);
     let template = (world.state.actors.values())
@@ -536,7 +536,7 @@ fn martial_arts_flurry_still_mind_and_quivering_palm() {
     reach(&mut w, 18);
     let kobold = beside(&mut w, "kobold", 500);
     let player = w.state.player;
-    let flurry = w.flurry(player, kobold).expect("a second blow");
+    let flurry = (w.flurry(player, kobold, &mut Vec::new())).expect("a second blow");
     assert_eq!(
         flurry.profile.to_hit,
         w.state.player().melee(&content).to_hit - 2
@@ -554,7 +554,10 @@ fn martial_arts_flurry_still_mind_and_quivering_palm() {
     // Quivering palm: a wounding blow leaves the foe bleeding three degrees.
     reach(&mut w, 50);
     run(&mut w, "use:quivering_palm:E");
-    assert!(suffers(&w, player, "spent"));
+    assert!(
+        !suffers(&w, player, "spent"),
+        "no cooldown: ki is the price"
+    );
     let bleeding = status(&w, "bleeding");
     let wounded =
         (w.state.actors.get(&kobold)).map(|k| (k.hp, k.effects.get(bleeding).map(|e| e.severity)));

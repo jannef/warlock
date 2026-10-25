@@ -169,12 +169,12 @@ impl World {
         parried: bool,
         events: &mut Vec<Event>,
     ) {
-        let mut next = self.second_blow(attacker, target, Cue::Attacked { parried });
+        let mut next = self.second_blow(attacker, target, Cue::Attacked { parried }, events);
         while let Some(blow) = next {
             let (by, at, kind) = (blow.by, blow.at, blow.kind);
             self.strike_free(blow, events);
             next = match kind {
-                Free::Cleave => self.second_blow(by, at, Cue::Cleaved),
+                Free::Cleave => self.second_blow(by, at, Cue::Cleaved, events),
                 _ => None,
             };
         }
@@ -192,7 +192,7 @@ impl World {
             .map(|other| other.id)
             .collect();
         for other in behind {
-            if let Some(blow) = self.second_blow(other, id, Cue::Leaves) {
+            if let Some(blow) = self.second_blow(other, id, Cue::Leaves, events) {
                 self.strike_free(blow, events);
             }
         }
@@ -214,7 +214,7 @@ impl World {
             .map(|other| other.id)
             .collect();
         for keeper in keepers {
-            if let Some(blow) = self.second_blow(keeper, id, Cue::Approaches) {
+            if let Some(blow) = self.second_blow(keeper, id, Cue::Approaches, events) {
                 self.strike_free(blow, events);
             }
         }
@@ -307,8 +307,14 @@ impl World {
     }
 
     /// The flurry's second blow of actor `striker` at `target` (spec §8 "Class abilities":
-    /// Flurry): with nothing in hand, its bare hands again at −2 to hit. No draw.
-    pub(super) fn flurry(&self, striker: ActorId, target: ActorId) -> Option<FreeBlow> {
+    /// Flurry): with nothing in hand, its bare hands again at −2 to hit, spending what it costs
+    /// (a point of Ki, `flurry_cost`; holding less, no blow). No draw.
+    pub(super) fn flurry(
+        &mut self,
+        striker: ActorId,
+        target: ActorId,
+        events: &mut Vec<Event>,
+    ) -> Option<FreeBlow> {
         if !self.stands(striker) || !self.stands(target) {
             return None;
         }
@@ -316,6 +322,12 @@ impl World {
         if !self.free_blows_of(me).flurry || me.weapon_item(&self.content).is_some() {
             return None;
         }
+        if let Some(cost) = me.talent_mods(&self.content).flurry_cost
+            && !self.spend_resource(striker, cost.resource, cost.amount, events)
+        {
+            return None;
+        }
+        let me = &self.state.actors[&striker];
         let mut profile = me.melee(&self.content);
         profile.to_hit += FLURRY_TO_HIT;
         Some(FreeBlow {
