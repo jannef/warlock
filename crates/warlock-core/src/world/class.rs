@@ -70,7 +70,12 @@ impl World {
         let class = self.class_id();
         let given = grant(&content, class.as_deref(), self.player_mut(), level);
         // A run restored keeps what its talents grant (spec §8 "Resources").
-        let grants = self.state.player().talent_mods(&content).grants;
+        let grants = self
+            .state
+            .player()
+            .talent_mods(&content)
+            .into_owned()
+            .grants;
         focus::hold(&content, self.player_mut(), &grants);
         if news {
             for id in given {

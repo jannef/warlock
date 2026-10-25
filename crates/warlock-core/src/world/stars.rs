@@ -50,7 +50,7 @@ impl World {
     pub(super) fn rise_from_ashes(&mut self, events: &mut Vec<Event>) -> bool {
         let content = self.content.clone();
         let player = self.state.player;
-        let mods = self.state.player().talent_mods(&content);
+        let mods = self.state.player().talent_mods(&content).into_owned();
         let Some(rise) = mods.rise else {
             return false;
         };

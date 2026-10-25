@@ -73,7 +73,11 @@ fn give(world: &mut World, id: &str) {
 }
 
 fn mods(world: &World) -> crate::talent::TalentMods {
-    world.state.player().talent_mods(world.content())
+    world
+        .state
+        .player()
+        .talent_mods(world.content())
+        .into_owned()
 }
 
 #[test]

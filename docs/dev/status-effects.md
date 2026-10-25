@@ -25,7 +25,9 @@ with one gameplay draw per chance below 100), `World::healing_rate` (min of the 
 `regen`, × resting for the player while `World::resting`, none for a Starving player, × a
 special room's `regen`, × (100 + the regeneration affixes of what the actor wears and wields) %),
 and `World::pass_time` → `live`, called by `run_turn` for every scheduled actor as the clock
-moves: an event loop over the next tick, easing, hit point or point of mana back (mana's pace and
+moves (a creature with nothing to live through, `untouched_by`: whole, no statuses, diseases,
+stat damage, resources, hunger, birthday, or perishable food, only has its healing banks emptied,
+as the loop would, without its paces being worked out): an event loop over the next tick, easing, hit point or point of mana back (mana's pace and
 drains: `docs/dev/mana.md`), or change in the player's hunger (`docs/dev/hunger.md`), so
 splitting time never
 changes the result, the ticks' damage and then starving's through `hurt` (`Harm::Status`,

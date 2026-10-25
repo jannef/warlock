@@ -188,7 +188,8 @@ impl World {
             return false;
         };
         let behind: Vec<ActorId> = (self.state.actors.values())
-            .filter(|other| self.free_blows_of(other).opportunist && self.leaves(me, other, to))
+            // Who it leaves first: its talents are dear to read.
+            .filter(|other| self.leaves(me, other, to) && self.free_blows_of(other).opportunist)
             .map(|other| other.id)
             .collect();
         for other in behind {
