@@ -58,3 +58,21 @@ add to it (see [Talents](talents.md)):
 - **Unstoppable** (level 60): while raging, bleeding and poison cost no hit points, and a blow
   that would take your last hit point leaves it to you for 10 rage, as often as you have that
   much; spending the last of it ends the rage.
+
+## Talents on resources
+
+Four [talents](talents.md) change a resource, and only the class that has it may take them (a
+pick from their trees, from the level given):
+
+- **Battle trance** (Might; barbarian, level 6): your rage starts at 18 instead of 12 (never
+  above its most), and wears off at two thirds of its pace: a point about every 9 seconds
+  instead of every 6.
+- **Inner calm** (Finesse; monk, level 18): ki holds up to 7 instead of 5, and comes back half
+  again as fast: a point every 12 seconds instead of every 18.
+- **Steady hand** (Weaponcraft; ranger, level 12): focus comes back half again as fast, a point
+  every 4 seconds instead of every 6; still not while you rest.
+- **Patient blade** (Shadow; thief, level 32): openings slip away half as fast, a point every 40
+  base turns instead of every 20, and a sneak attack that kills gives two openings instead of
+  one.
+
+Inner calm changes nothing until something grants the monk ki.

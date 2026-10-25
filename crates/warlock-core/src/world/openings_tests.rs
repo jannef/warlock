@@ -60,6 +60,8 @@ fn reach(world: &mut World, level: u8) {
         run(world, "levelup:auto");
     }
     assert_eq!(world.due(), None, "every choice spent");
+    // The picks may have taken Patient blade: these tests are of the openings' own pace.
+    world.player_mut().talents.forget("patient_blade");
 }
 
 fn openings(world: &World) -> ResourceId {

@@ -528,6 +528,12 @@ pub enum TalentEffect {
     },
     /// `resource` holds this much more at most (Mighty rage: 10 more rage).
     ResourceMax { resource: String, value: u16 },
+    /// `resource` is granted holding this much more (Battle trance: rage starts 6 higher).
+    ResourceStart { resource: String, value: u16 },
+    /// `resource` changes over time this percent faster (negative: slower): one that
+    /// regenerates comes back sooner, one that decays wears off sooner (Steady hand, Patient
+    /// blade).
+    ResourceRate { resource: String, value: i32 },
     /// While raging: the statuses named tick nothing, and a blow that would take the last hit
     /// point leaves it for `cost` of the rage, when that much is held (Unstoppable).
     Unstoppable { statuses: Vec<String>, cost: u16 },
@@ -1149,6 +1155,23 @@ impl TalentEffect {
                     return Err(format!("`resource_max`: value is 1 to {MAX_RESOURCE}"));
                 }
                 Ok(())
+            }
+            TalentEffect::ResourceStart {
+                resource: id,
+                value,
+            } => {
+                resource(id)?;
+                if !(1..=MAX_RESOURCE).contains(value) {
+                    return Err(format!("`resource_start`: value is 1 to {MAX_RESOURCE}"));
+                }
+                Ok(())
+            }
+            TalentEffect::ResourceRate {
+                resource: id,
+                value,
+            } => {
+                resource(id)?;
+                percent(*value)
             }
             TalentEffect::StatusDamage { status: id, value } => {
                 bonus(*value)?;

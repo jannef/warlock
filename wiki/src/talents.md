@@ -88,9 +88,10 @@ In the game a talent is described in words; the tables below state the rule exac
 talents simply change a rule for good. An **active** talent (Second wind) is something you do:
 it appears in the [abilities menu](abilities.md) under Talents, and after use it leaves a
 status (Winded) during which it cannot be used again; Blood magic is active too, and has no
-waiting time: it costs hit points instead (see [Mana](mana.md#spending-it)). A few talents that
-need the class resources (Battle trance, Inner calm, Patient blade) or the lantern's hood
-(Hooded light) are still to come. Apprentice's
+waiting time: it costs hit points instead (see [Mana](mana.md#spending-it)). Four talents
+work on a class's [resources](resources.md#talents-on-resources) and can be taken only by that
+class (Battle trance, Inner calm, Steady hand, Patient blade); one that needs the lantern's hood
+(Hooded light) is still to come. Apprentice's
 skill points are rolled once, as the rank is taken. Treasure hunter changes loot as it is made: a
 level you have already been to keeps what lies there, and the levels themselves never change.
 Where a

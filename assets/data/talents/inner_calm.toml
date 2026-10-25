@@ -1,0 +1,11 @@
+[[talent]]
+id = "inner_calm"
+name = "Inner calm"
+tree = "finesse"
+description = "Your ki holds 2 more at most and comes back faster."
+needs = { class = "monk", level = 18 }
+effects = [
+    { kind = "resource_max", resource = "ki", value = 2 },
+    { kind = "resource_rate", resource = "ki", value = 50 },
+]
+systems = ["resources"]

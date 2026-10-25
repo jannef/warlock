@@ -1,0 +1,11 @@
+[[talent]]
+id = "patient_blade"
+name = "Patient blade"
+tree = "shadow"
+description = "Your openings fade more slowly, and a sneak attack that kills gives you two."
+needs = { class = "thief", level = 32 }
+effects = [
+    { kind = "resource_rate", resource = "openings", value = -50 },
+    { kind = "resource_build", resource = "openings", on = "sneak_kill", amount = 1 },
+]
+systems = ["stealth", "resources"]

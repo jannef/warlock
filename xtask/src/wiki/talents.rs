@@ -4,7 +4,7 @@
 use super::text::signed;
 use std::fmt::Write as _;
 use warlock_core::content::{
-    Cast, Content, Need, Role, SignActive, SpellDef, TalentDef, TalentEffect, TreeId,
+    Cast, Content, Need, OverTime, Role, SignActive, SpellDef, TalentDef, TalentEffect, TreeId,
 };
 
 /// Every tree in display order: a heading, its description, and its talents (name, ranks, what
@@ -794,6 +794,28 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             format!(
                 "{} holds {value} more at most",
                 resource_name(content, &id).to_lowercase()
+            )
+        }
+        TalentEffect::ResourceStart {
+            resource: id,
+            value,
+        } => format!(
+            "{} starts {value} higher when you gain it",
+            resource_name(content, &id).to_lowercase()
+        ),
+        TalentEffect::ResourceRate {
+            resource: id,
+            value,
+        } => {
+            let r = content.resource_id(&id).map(|r| content.resource(r));
+            let way = match r.and_then(|r| r.over_time) {
+                Some(OverTime::Decays { .. }) => "decay",
+                _ => "regeneration",
+            };
+            format!(
+                "{} {way} pace {}",
+                resource_name(content, &id).to_lowercase(),
+                percent(value)
             )
         }
         TalentEffect::Unstoppable { statuses, cost } => {
