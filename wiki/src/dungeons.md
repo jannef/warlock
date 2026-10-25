@@ -48,6 +48,14 @@ floor.
 
 ## The dungeons
 
+**Cealdhlāw**, the cold barrow, is the Ascmearc's first dungeon, its way in on the downs of
+Hlāwdūn east of Cēaptūn. Its first two floors are the barrow's passages and chambers; the four
+below are the hollows of the hill, wide caves. It is cold (8 °C), its traps are arrows, spears,
+pits, and alarms, and its dead walk: grave worms, skeletons, zombies, ghouls, and the barrow
+wight, with goblins, kobolds, and vermin among them. On either of its first two floors you may
+find the **barrow chamber**: a skeleton paces a burial hall before a locked bronze door, and
+behind it something of worth lies on a plinth. The skeleton carries the bronze key.
+
 {{#include generated/dungeons.md}}
 
 ### Floor by floor

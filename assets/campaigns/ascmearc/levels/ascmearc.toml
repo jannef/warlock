@@ -107,7 +107,7 @@ MMMMMMMMMMMMMMMMMMM.ff..................................."......................
 "^" = { terrain = "volcano", name = "Fyrbeorg" }
 "P" = { terrain = "mountain_pass", spawn = "player", name = "Beorggeat", note = "The way you came; snow has closed it behind you." }
 "T" = { terrain = "town", name = "Cēaptūn" }
-"1" = { terrain = "barrow", name = "Cealdhlāw" }
+"1" = { terrain = "barrow", name = "Cealdhlāw", to = "cealdhlaw:1" }
 "2" = { terrain = "swamp", hidden = { id = "fennmynster", terrain = "dungeon_entrance", name = "Fennmynster" } }
 "3" = { terrain = "hills", hidden = { id = "fyrdelf", terrain = "mine", name = "Fyrdelf" } }
 

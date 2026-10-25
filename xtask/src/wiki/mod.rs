@@ -511,10 +511,9 @@ mod tests {
         ));
         // Materials (#193, #194): their properties on steel's scale, how often they are found,
         // what each item may be made of, and a long sword and chain mail in each metal.
-        assert!(
-            text("materials.md")
-                .contains("| Bronze | metal | `#cd7f32` | 112% | +0 / −1 | 80% | ×0.8 | no | - |")
-        );
+        assert!(text("materials.md").contains(
+            "| Bronze | metal | `#cd7f32` | 112% | +0 / −1 | 80% | ×0.8 | no | bronze keys |"
+        ));
         assert!(
             text("material-finds.md")
                 .contains("| Steel | 300 (common) | +60 | 1 | 20 (rare) | +15 |")

@@ -73,8 +73,8 @@ The Ascmearc (#332; the campaign design §5): `assets/campaigns/ascmearc/levels/
 the first real campaign's overworld, 120×60, drawn from the design's 1:2 sketch by a throwaway
 script and then edited by hand (no generator: edit the file). Its legend's `P` is Beorggeat, the
 start (`mountain_pass`: no stairs, no local area, mountains on three sides, so the road east is
-the only way on); `T` Cēaptūn (`town`) and `1` Cealdhlāw (`barrow`) are named locations without
-`to` until their levels exist; `2` Fennmynster and `3` Fyrdelf are hidden. The rivers are two
+the only way on); `T` Cēaptūn (`town`) is a named location without `to` until its level exists,
+and `1` Cealdhlāw (`barrow`) leads to `cealdhlaw:1` (#337, `docs/dev/mapgen.md`); `2` Fennmynster and `3` Fyrdelf are hidden. The rivers are two
 cells wide (watertight to diagonal steps), crossed only at the bridge `b` and the ford `%`.
 Regions are rectangles in first-match order (the forests' hearts first). Its scenario `ascmearc`
 starts on the pass and says its `arrival` line. Tests: `world/ascmearc_tests.rs` (regions, the

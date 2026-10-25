@@ -1,0 +1,28 @@
+# Vault: the barrow chamber (docs/design/campaign.md §7.2), stamped on Cealdhlāw's rooms levels
+# only (`dungeons`; a campaign's vault stamps in that campaign's branches alone, spec §7). A
+# skeleton walks the old burial hall; behind a locked bronze door the grave goods lie on a plinth
+# (the altar), lit by its faint glow. The guardian carries the key (spec §8 "Doors"): take it from
+# its bones, or kick the door in.
+name = "Barrow chamber"
+dungeons = ["cealdhlaw:1", "cealdhlaw:2"]
+map = '''
+#############
+#...#####...#
+#...#._.#...#
+#...#...#...#
+#...##L##...#
+#.z.........#
+######+######
+'''
+
+[legend]
+"z" = { terrain = "floor", creature = "skeleton", route = "E8 W8", carry = ["short_sword", "bronze_key"], wield = "short_sword" }
+# A reward (spec §8 "Magic items"): something magic or rare on the plinth, rolled when the level
+# is generated.
+"_" = { terrain = "altar", loot = "magic" }
+"L" = { terrain = "door_closed", lock = "barrow_chamber" }
+
+# Grave goods: the coins the dead were buried with, before the plinth.
+[[pile]]
+at = [6, 3]
+objects = ["copper_coin*24"]

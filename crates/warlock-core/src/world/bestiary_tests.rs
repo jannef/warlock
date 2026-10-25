@@ -21,9 +21,8 @@ const WAVES: &[(&str, Option<&str>)] = &[
     ("giant_centipede", None),
     ("barrow_ghoul", None),
     ("goblin_chief", None),
-    // Campaign-owned, but shared until the Ascmearc's directory exists (#332): then
-    // `Some("ascmearc")`, its file moved to `campaigns/ascmearc/data/creatures/`.
-    ("barrow_wight", None),
+    // The Ascmearc's own (`campaigns/ascmearc/data/creatures/`).
+    ("barrow_wight", Some("ascmearc")),
 ];
 
 #[test]

@@ -51,7 +51,7 @@ starts, one of the campaign's own), and `kind`, `campaign` (default) or `test`.
 - A campaign's file names its own campaign's or shared levels and creature types, never
   another campaign's: stairs `to`, a scenario's `start_level`, a quest's `level`, `target`
   (reach), kill target, giver and recipient, a level or vault legend's `creature`, a branch's
-  `creatures`, and a dialogue's `creature` ("`campaigns/ashland/levels/town.toml`: names level
+  `creatures` and `population` (and a level's `population`), a vault's `dungeons`, and a dialogue's `creature` ("`campaigns/ashland/levels/town.toml`: names level
   `hub`, a level of campaign `showcase`").
 - Shared data names shared creature types only (`data/shops.toml`'s `[keeper]`, the shared
   `vaults/`).
@@ -133,6 +133,12 @@ cross-campaign refusals, the id clashes, one overworld a campaign), `new_run_scr
 order in release and developer builds), the `new-run-screen` text snapshot, and
 `release_content` in both (compiled only in the release configuration).
 
-Not yet (the design's later items): campaign vaults kept to their campaign's branches (the vault
-picker reads every vault), the save summary's and the Characters screen's campaign (#341), and
+Vaults (#337): `Vault::stamps_on(def, depth)` keeps a campaign's vaults to its own branches, and
+to the branches or branch levels its file's `dungeons` names (`vault::parse_dungeons`, checked by
+`Vault::check_dungeons` once the branches are loaded: they must exist and be the vault's own
+campaign's; a level file giving `dungeons` is refused). `generate_for` puts the level's list on
+the `Canvas` (`Canvas::vaults`), which `vault::shuffled` shuffles, so a branch that no campaign
+vault names draws exactly what it did. Tests: `mapgen/cealdhlaw_tests.rs`.
+
+Not yet (the design's later items): the save summary's and the Characters screen's campaign (#341), and
 `dev = true` scenarios.

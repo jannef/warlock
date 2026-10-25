@@ -100,11 +100,9 @@ The campaign's creature waves (docs/design/campaign.md §10.1; #333 the barrow w
 wave, #335 the delf wave): content only, on the fields above. A wave adds
 - one file per type: the common ones in `data/creatures/` (shared), the campaign's own people and
   bosses in `campaigns/<id>/data/creatures/` (numbered after the shared block, only that
-  campaign's files may name them; `docs/dev/campaign.md`). The barrow wight is the Ascmearc's own
-  but sits in `data/creatures/` until `campaigns/ascmearc/` exists (its `campaign.toml` needs a
-  start scenario of its own, #332): whichever of the two lands second moves it with `git mv` and
-  marks it in the test below. Each file starts with a comment naming its wave; `xp` follows
-  `5 × level + 10`; a humanoid has `racial_weapon` with a rank in its skill and `[[creature.gear]]`
+  campaign's files may name them; `docs/dev/campaign.md`; the barrow wight is the Ascmearc's own,
+  `campaigns/ascmearc/data/creatures/barrow_wight.toml`). Each file starts with a comment naming
+  its wave; `xp` follows `5 × level + 10`; a humanoid has `racial_weapon` with a rank in its skill and `[[creature.gear]]`
   lines (a second weapon of another skill wants a rank there too, so it benefits);
 - its factions in `data/factions.toml`, inserted by group (after the kobolds), never at the end.
   Four test fixtures write their own neutral factions file over the shipped one

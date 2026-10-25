@@ -23,6 +23,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
   that depth. A branch level is generated on its first visit from its own random stream (§8) and
   then persists like a hand-made level. Its `<` leads to `depths:N-1` (on depth 1, back to the
   level it was first entered from), its `>` to `depths:N+1` (the deepest level has none).
+  The Ascmearc's first branch is **Cealdhlāw** (`cealdhlaw`, #337; the campaign design §7), the
+  cold barrow under Hlāwdūn, its way in on the overworld from the start: six floors, the barrow's
+  passages (rooms, 80×21) on 1–2 and the hill's hollows (caves, 100×40) on 3–6, danger 1 to 6
+  (`danger = 1`), its population the six old hostiles and the barrow wave (§7 "Data"),
+  `population_count = { per_1000 = 30 }` (25 on a rooms floor, about 70 in the caves), the
+  arrow, spear, pit, and alarm traps, secret doors, locks, and loot as the Depths', the rusty
+  key, 8 °C, and the shared special-room and shop odds. Its vault is the barrow chamber
+  (Cealdhlāw 1 and 2 only). Its dev scenario `cealdhlaw` starts on the first floor.
 - **Danger levels** (#326; `content/danger.rs`, `world/spawn.rs`; the design is
   `docs/design/campaign.md` §9): every level has a danger, computed when asked
   (`World::danger`), never stored. A branch's `danger = 4` (or `{ base, per_depth, player }`;
@@ -125,4 +133,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `kind = "outdoor"` are ruins for local areas, stamped on open land with a ring of open ground
   around them: their spaces (`void`) keep the area's own ground, every open cell on their edge is
   a way in, and their walkable cells are reachable from the edge; they have no traps. Dungeon
-  generators use only dungeon vaults, local areas only outdoor ones.
+  generators use only dungeon vaults, local areas only outdoor ones. A shared vault
+  (`assets/vaults/`) stamps in every branch; a campaign's (`campaigns/<id>/vaults/`) only in that
+  campaign's branches; and a vault whose file gives `dungeons` (branch ids, or branch levels such
+  as `"cealdhlaw:2"`, of its own campaign) only there (the Ascmearc's barrow chamber: Cealdhlāw's
+  rooms levels, 1 and 2).

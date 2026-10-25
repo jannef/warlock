@@ -195,6 +195,9 @@ impl Content {
             for spawn in &level.creatures {
                 self.check_creature(&file, owner.as_deref(), spawn.creature)?;
             }
+            for &creature in level.spawning.iter().flat_map(|(_, s)| &s.population) {
+                self.check_creature(&file, owner.as_deref(), creature)?;
+            }
         }
         for scenario in self.scenarios.values() {
             if let Some(owner) = scenario.campaign.as_deref() {
@@ -204,17 +207,15 @@ impl Content {
         }
         for vault in &self.vaults {
             let owner = vault.campaign.as_deref();
-            let file = match owner {
-                Some(c) => format!("{CAMPAIGNS}/{c}/vaults/{}.toml", vault.template.id),
-                None => format!("vaults/{}.toml", vault.template.id),
-            };
+            let file = vault.file();
             for spawn in &vault.template.creatures {
                 self.check_creature(&file, owner, spawn.creature)?;
             }
         }
         for dungeon in self.dungeons.values() {
             let file = table_file(dungeon.campaign.as_deref(), "dungeons");
-            for &creature in &dungeon.creatures {
+            let lives = dungeon.spawning.iter().flat_map(|s| &s.population);
+            for &creature in dungeon.creatures.iter().chain(lives) {
                 self.check_creature(&file, dungeon.campaign.as_deref(), creature)?;
             }
         }
@@ -365,7 +366,7 @@ mod tests {
             ]
         );
         for scenario in content.scenarios() {
-            let owner = if scenario.id == "ascmearc" {
+            let owner = if ["ascmearc", "cealdhlaw"].contains(&scenario.id.as_str()) {
                 "ascmearc"
             } else {
                 "showcase"
@@ -387,12 +388,13 @@ mod tests {
         for shared in ["player", "shopkeeper", "deer", "kobold", "rat"] {
             assert_eq!(campaign_of(shared), None, "{shared}");
         }
-        // The showcase's types are numbered last, after every shared one.
-        let first_own = content
-            .creature_defs()
-            .iter()
-            .position(|c| c.campaign.is_some());
-        assert_eq!(first_own, Some(content.creature_defs().len() - 3));
+        // The showcase's types are numbered last, after every shared one and the Ascmearc's.
+        let defs = content.creature_defs();
+        let first_own = defs.iter().position(|c| c.campaign.is_some());
+        let showcase = (defs.iter()).position(|c| c.campaign.as_deref() == Some("showcase"));
+        assert_eq!(showcase, Some(defs.len() - 3));
+        let ascmearc = first_own.map(|i| defs[i].campaign.as_deref());
+        assert_eq!(ascmearc, Some(Some("ascmearc")));
         assert!(
             content
                 .quests()
