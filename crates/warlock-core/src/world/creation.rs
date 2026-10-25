@@ -38,13 +38,18 @@ pub fn pick_text(id: &str, choice: Option<&str>) -> String {
     }
 }
 
-/// How many talents a character of `spec` picks at creation: everyone's, and the class's more.
+/// How many talents a character of `spec` picks at creation: everyone's, the class's more (the
+/// bard's), and the more its race's granted talents give (the humans' Versatile).
 pub fn creation_count(content: &Content, spec: &CharacterSpec) -> u8 {
     let class = content.class(&spec.class).map_or(0, |c| c.creation_talents);
-    content
-        .experience()
-        .creation_talents()
+    let mut granted = talent::Talents::default();
+    for id in content.race(&spec.race).map_or(&[][..], |r| &r.talents[..]) {
+        granted.take(id, None);
+    }
+    let race = granted.mods(content).extra_picks_at(1);
+    (content.experience().creation_talents())
         .saturating_add(class)
+        .saturating_add(race)
 }
 
 /// `--talents`: the character a run of `scenario` starts as when its creation picks are named,

@@ -1,0 +1,8 @@
+[[talent]]
+id = "elven_accuracy"
+name = "Elven accuracy"
+tree = "racial"
+description = "An elven archer's eye: your arrows find the weak places more often."
+needs = { race = "elf", weapon_skills = { bows = 3 } }
+effects = [{ kind = "weapon", skill = "bows", threat = 1 }]
+systems = ["ranged", "combat"]

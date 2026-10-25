@@ -94,6 +94,7 @@ pub(super) fn burden_examples(content: &Content) -> String {
             carried: 0,
             limit: burden::limit(strength, toughness, content.size(r.size).carry),
             ignores_burdened: r.ignores_burdened,
+            stout: false,
         };
         let [burdened, strained, overloaded] = load.thresholds().map(|(_, g)| format_weight(g));
         let _ = writeln!(

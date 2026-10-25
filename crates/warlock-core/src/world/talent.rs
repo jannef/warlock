@@ -80,7 +80,13 @@ impl World {
         let rolls = self.level_rolls();
         let class = (self.state.character.as_ref()).and_then(|c| content.class(&c.spec.class));
         for level in from.saturating_add(1)..=to {
-            let talents = u8::from(every > 0 && level % every == 0);
+            // Versatile (the humans'): one more pick at its levels.
+            let more = self
+                .state
+                .player()
+                .talent_mods(&content)
+                .extra_picks_at(level);
+            let talents = u8::from(every > 0 && level % every == 0).saturating_add(more);
             let bonus = class.map_or(0, |c| c.bonus_at(level));
             if talents > 0 || rolls > 0 || bonus > 0 {
                 (self.state.progress.due).push(Due {

@@ -35,7 +35,10 @@ fn world_with(content: Arc<Content>) -> World {
     // too: world/stars_tests.rs).
     let mut state = w.state().clone();
     state.character.as_mut().expect("a character").sign = None;
-    World::from_state(content, state).expect("restores")
+    let mut w = World::from_state(content.clone(), state).expect("restores");
+    // Nor the race's grant (a human's Versatile, world/racial_tests.rs) until a restore.
+    w.player_mut().talents.regrant(&content, &[]);
+    w
 }
 
 fn run(world: &mut World, actions: &str) {
@@ -456,7 +459,8 @@ fn talents_survive_saves_and_replays_and_runs_without_them_hash_as_before() {
         (w, replay)
     };
     let (a, replay) = play();
-    let gifts = (a.character()).map_or(0, |c| c.grants(a.content()).len());
+    // The sign's gifts and the race's Versatile, then the pick.
+    let gifts = (a.character()).map_or(0, |c| c.grants(a.content()).len()) + 1;
     assert_eq!(player(&a).talents.len(), gifts + 1);
     let content = a.content().clone();
     let verified = Replay::from_json(&replay.to_json())

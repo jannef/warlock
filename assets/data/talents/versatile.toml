@@ -1,0 +1,8 @@
+[[talent]]
+id = "versatile"
+name = "Versatile"
+tree = "racial"
+granted = true
+description = "Humans turn their hand to anything: one more talent when you are made, and one more at level 30."
+effects = [{ kind = "extra_pick", level = 1 }, { kind = "extra_pick", level = 30 }]
+systems = ["experience"]

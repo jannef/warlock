@@ -8,8 +8,8 @@ screen, you choose who you are, one step at a time.
 2. **Gender**: a small push to one stat (below).
 3. **Class**: what you did before the adventure, which shapes your stats again and trains you
    in a handful of [skills](skills.md) (see [Classes](classes.md)).
-4. **Talents**: pick two [talents](talents.md) (a bard three) from those your character may
-   take; a letter or `Enter` marks one, **Random** lets chance pick, **Done** goes on.
+4. **Talents**: pick two [talents](talents.md) (a bard or a human three, a human bard four)
+   from those your character may take; a letter or `Enter` marks one, **Random** lets chance pick, **Done** goes on.
 5. **Name**: type your character's name, up to 20 characters (below).
 6. **Summary**: your name, race, gender, class, and talents, your age, birthday, and birth sign, the
    [stats](stats.md) you will start with and, beside them, the [skills](skills.md) you are

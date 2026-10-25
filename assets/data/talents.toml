@@ -81,6 +81,15 @@ id = "delver"
 name = "Delver"
 description = "Traps, searching, doors, digging, shops, and talk."
 
+# What a people is good at: each talent asks for its race, so nothing picks from it alone
+# (`no_free`). A race's own grant (races.toml `talents`: the humans' Versatile) is a `granted`
+# talent here, never on a pick list.
+[[tree]]
+id = "racial"
+name = "Racial"
+description = "What your people are good at."
+no_free = true
+
 # The class abilities (spec §8 "Class abilities"): given by the classes' level tables
 # (classes/), never picked; `class = true` keeps them off every pick list and counts them as
 # class abilities, not talents, in the coverage bar.
@@ -226,7 +235,6 @@ name = "Shops and favour"
 [[system]]
 id = "talk"
 name = "Quests, talk, people"
-pending = true
 
 [[system]]
 id = "magic_items"
@@ -239,7 +247,6 @@ name = "Scrolls and casting"
 [[system]]
 id = "gems"
 name = "Gems"
-pending = true
 
 [[system]]
 id = "skills"

@@ -482,7 +482,7 @@ mod tests {
         let content = content();
         let draft = draft(&content, "human,female,bard");
         let mut screen = ChargenTalentsScreen::new(&content, &draft, None);
-        assert_eq!(screen.count, 3);
+        assert_eq!(screen.count, 4, "the bard's and Versatile's");
         let random = (screen.entries.iter())
             .position(|e| e.name == "Random")
             .expect("a Random row");

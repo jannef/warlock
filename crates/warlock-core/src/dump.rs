@@ -576,8 +576,8 @@ fn weapon_skill_rows(view: &PerceptionView<'_>) -> Vec<String> {
 }
 
 /// The player's talents in the order taken, one a line: its name for its choice and, for a
-/// ranked talent, the rank held of how many (`Hardy 2/3`); a birth sign's gifts first, marked
-/// `(sign)`, its flaw `(sign, flaw)`.
+/// ranked talent, the rank held of how many (`Hardy 2/3`); a race's and a birth sign's gifts
+/// first, marked `(race)` and `(sign)`, the sign's flaw `(sign, flaw)`.
 fn talent_rows(view: &PerceptionView<'_>) -> Vec<String> {
     (view.own_talents().iter())
         .map(|t| {
@@ -588,6 +588,7 @@ fn talent_rows(view: &PerceptionView<'_>) -> Vec<String> {
             };
             match (t.granted, t.flaw, t.class) {
                 (_, true, _) => format!("{name} (sign, flaw)"),
+                (true, false, _) if t.race => format!("{name} (race)"),
                 (true, false, _) if t.spent => format!("{name} (sign, spent)"),
                 (true, false, _) => format!("{name} (sign)"),
                 (false, false, true) => format!("{name} (class)"),
