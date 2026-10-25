@@ -6,7 +6,7 @@ You can fight from a distance: shoot with a **missile weapon** (a bow, a crossbo
 
 ## Getting ready
 
-Ready what you will shoot or throw on the [equipment](equipment.md) screen (`e`). The **Missile
+Ready what you will shoot or throw on the [equipment](equipment.md) screen (`i`). The **Missile
 weapon slot** takes a missile weapon, or any weapon, or anything made for throwing (a stack of
 rocks); the **Missiles slot** takes the ammunition. Each missile weapon shoots its own kind: bows
 shoot arrows, crossbows bolts, slings stones (see [Ammunition](ammunition.md)).

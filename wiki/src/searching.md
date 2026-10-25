@@ -9,7 +9,7 @@ kind who notices such things. Both work the same way for every hidden thing.
 ## Searching
 
 - `s` searches the cells around you, once: it takes a turn (6 seconds).
-- `z` **searches for a while**: turn after turn, up to 10 turns, and it stops at once when you
+- `f` **searches for a while**: turn after turn, up to 10 turns, and it stops at once when you
   find something. Like a rest, it also stops when a creature comes into view or something
   happens worth a message.
 
@@ -51,7 +51,7 @@ Either way you remember it at once, even in the dark.
 ## How hard things are to find
 
 Each hidden thing has its own difficulty. The table gives the chances for an average character
-(Intelligence and Willpower 10, untrained): a single turn of searching, ten turns of it (one `z`),
+(Intelligence and Willpower 10, untrained): a single turn of searching, ten turns of it (one `f`),
 and a single turn of noticing in passing. Better scores, a trained skill, and an elf's eye do
 better.
 

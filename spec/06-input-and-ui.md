@@ -6,7 +6,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
 
 ## 6. Input and UI
 
-- Keyboard-first. Default sets: vi-keys (`hjklyubn`), numpad, arrows (4 directions).
+- Keyboard-first. The default keys are ADOM's (#350): every command ADOM has takes ADOM's key
+  (its manual's command list); one ADOM lacks, or has only behind a prefix (`:m`, `w s`) or Ctrl
+  (which bindings cannot hold), takes a key ADOM does not use. Movement is ADOM's: the numpad
+  and the arrows (4 directions); the vi keys are not bound by default, as ADOM puts kick, look,
+  and use a tool on `k`, `l`, and `u`. A settings file keeps the keys it lists (the player's own
+  keymap is never rewritten); a command it does not list takes its default keys but those a
+  listed command of its context has (`Bindings::from_table`).
 - Symbol commands (`<`, `>`, `?`) are bound by **logical key**, so they work on non-US layouts.
 - Bindings live in the settings file. The `?` help (the controls list, read-only) is generated from
   the binding table, so it is always accurate. Every key is rebindable (below).
@@ -28,8 +34,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (accept, decline, cancel, or plain), and what choosing it does (a menu choice, a game action,
   or a further dialog in its place). It sizes itself to its content and lists the options in a
   column, each with its shortcut keys. ↑/↓ (and ←/→) move the selection and Enter takes it;
-  the Yes and No keys (`y` and `n` by default; rebindable, in a context of their own, as `y` and
-  `n` move the player in play) pick the accept option and the decline option (else the cancel
+  the Yes and No keys (`y` and `n` by default; rebindable, in a context of their own) pick the accept option and the decline option (else the cancel
   one); Esc picks the cancel option (else the decline one). The safe option (cancel, else
   decline) is selected at first, so Enter alone never does what the player might regret. A held
   key's repeats never open or answer it.
@@ -176,21 +181,21 @@ developer notes (CLAUDE.md, `docs/dev/`).
   file without a version (command ids at the top level, or a settings file's `[bindings]`) is
   read too, and a newer version as far as this one knows. The defaults ship as
   `keymaps/default.toml` beside the game.
-- First-phase commands: move, wait, search (`s`, a turn; `z`, for a while: up to 10 turns,
+- First-phase commands: move, wait, search (`s`, a turn; `f`, for a while: up to 10 turns,
   stopping when something is found or interrupts, like a rest; §8 "Searching"; basic commands,
-  not abilities), open/close door, kick (`K`, then a direction; §8 "Doors"),
-  ascend/descend, light/douse lantern (`L`),
-  pick up (`,` or `g`), drop (`d`), inventory (`i`), equipment (`e`), character (`@`), skills
-  (`S`), weapon skills (`W`), quest log (`q`), rest (`R`), eat (`E`), read (`r`; a basic
-  command, not an ability), look, shoot or throw what
+  not abilities), open/close door, kick (`k`, then a direction; §8 "Doors"),
+  ascend/descend, light/douse lantern (`*`),
+  pick up (`,` or `;`), drop (`d`), equipment (`i`), inventory (`I`), character (`@`), skills
+  (`A`), weapon skills (`W`), quest log (`q`), rest (`b`), eat (`e`), read (`r`; a basic
+  command, not an ability), look (`l`), shoot or throw what
   is in the missile weapon slot
-  (`t`), throw from the pack (`T`), fire (`f`, unbound by default), more aggressive / more
+  (`t`), throw from the pack (`T`), fire (unbound by default: `t` does it), more aggressive / more
   defensive combat stance (`+` / `-`; §8 "Stances"), the abilities menu (`a`, below) and the
-  quick repeat of the ability used last (`A`), bash with a shield (an ability, below: no key by
+  quick repeat of the ability used last (`X`), bash with a shield (an ability, below: no key by
   default; bound in Controls, it asks for a direction, like opening a door), next target
-  (`Tab`, while aiming), use a tool (`U`, then a direction: dig), chat (`C`), pay (`p`, in a
+  (`Tab`, while aiming), use a tool (`u`, then a direction: dig), chat (`C`), pay (`p`, in a
   shop; §7 "Shops"), help, save and quit
-  (rebindable, unbound by default: quitting is done from the pause menu). Every way to quit (the
+  (`S`, ADOM's). Every way to quit (the
   pause menu's Save and quit to menu and Quit, the main menu's Quit, a bound quick key) asks
   first, in the dialog (`Save the run and quit Warlock?`: `Save and quit`, `Stay`; closing the
   window or the tab does not ask). On the web Quit saves and reloads the page to a fresh main
@@ -221,7 +226,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   it. There is no scrolling. Letters always name stacks on a list, never commands. Marks belong
   to stacks, not letters, so they stay as the pages turn. Actions name stacks by where they are
   stored (their position), never by a page's letter, and no message names a letter.
-- **Pick up** (`,` or `g`) takes a lone stack at once. Where several lie, the list shows them
+- **Pick up** (`,` or `;`) takes a lone stack at once. Where several lie, the list shows them
   (above) with glyph, name, and weight: a letter marks or unmarks its stack (`+` marked, `-`
   not), `,` marks everything (on every page), the arrows move the `>` cursor and Space marks its
   row, Enter picks up the marked stacks (the cursor's row if none is marked), Esc cancels. **Drop**
@@ -236,7 +241,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   adds them to what the player owes, and dropping puts back what is unpaid and offers to buy the
   player's own things (§7 "Shops"); the inventory and drop screens mark what is unpaid
   ("(unpaid, 45 gold)"), the pick-up screen what is for sale.
-- **Inventory** (`i`): what the player carries, ADOM-like: as many stacks as they can carry
+- **Inventory** (`I`, ADOM's backpack key): what the player carries, ADOM-like: as many stacks as they can carry
   (weight is the only limit, §8 "Burden"), in the item list (above), each with its glyph, name,
   and weight, then what the player carries (with their burden when they have one,
   §8 "Burden": `Carrying 28.4 kg (burdened)`) and their weight (their own plus what they carry),
@@ -247,8 +252,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (a tool), and a two-handed weapon "(wielded in both hands)"; the drop screen marks it the same
   way. Names are in their rarity's color (§8 "Magic items": magic a soft blue, rare a pale
   yellow; normal as ever; palettes apply as to all UI text); the glyph keeps its own. It takes no
-  action: a stack's letter opens its **description** (below); `i` (when it is no stack's letter)
-  or Esc closes it.
+  action: a stack's letter opens its **description** (below); `I` or Esc closes it.
 - **Item description** (#149): one carried stack as the player knows it, opened by its letter in
   the inventory or by a slot's upper-case letter (`A` to `M`) on the equipment screen, over the
   screen it came from: its glyph and name (in its rarity's color, with its mark if worn or
@@ -269,7 +273,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   attacks faster" (affix magnitudes are item properties and shown; speed only in words; global
   attack effects say "with every attack"). Never the player's own to-hit or a modifier.
   Read-only; Esc, Back, or Enter closes it.
-- **Equipment** (`e`; M16), as in ADOM: the slots, lettered `a` to `m` in this order — Head, Neck,
+- **Equipment** (`i`, ADOM's; M16), as in ADOM: the slots, lettered `a` to `m` in this order — Head, Neck,
   Body, Cloak, Main hand, Off hand, Hands, Left ring, Right ring, Feet, Missile weapon, Missiles,
   Tool (data, `data/slots.toml`, §7, so more can be added; the Tool slot came with M19) — each with
   what is in it (glyph, name, weight) or `—`, then what the player carries and weighs. A two-handed
@@ -323,20 +327,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `Weight 98.4 kg (you 70 kg, carrying 28.4 kg, burdened)`), and, dimmer, the weights at which
   their burden changes, as in the inventory (§8 "Burden"). The panel is 72 wide, so the birth and
   the thresholds take a line each. Never a modifier, a potential, or a to-hit, which the player
-  does not know. Read-only; `@`, Enter, or Esc closes it, and the Skills key (`S`) opens the
+  does not know. Read-only; `@`, Enter, or Esc closes it, and the Skills key (`A`) opens the
   Skills screen over it. The status bar does not show stats: it is full at common window sizes.
-- **Skills** (`S`; §8 "Skills"): the player's trained skills, in skill order (data order), each
+- **Skills** (`A`, ADOM's skills key; §8 "Skills"): the player's trained skills, in skill order (data order), each
   with its name, its value, and, dimmer, a four-cell meter of how near its next point is in
   quarters (`━` for each quarter reached, `─` for the rest: `━━──`; shape, not color, tells them
   apart); untrained skills are not there ("You are not trained in any skill." when none is).
   ↑↓ choose a skill, whose one-line description shows below the list (a list taller than the
-  panel scrolls). Never a benefit's number, a mark, or a chance. Read-only; `S`, Enter, or Esc
+  panel scrolls). Never a benefit's number, a mark, or a chance. Read-only; `A`, Enter, or Esc
   closes it (back to the character screen when opened from there).
 - **Abilities** (the owner's rule; #156): everything the character can actively do because of
   who they are — racial, class, skill (active skill uses), weapon skill and fighting style, and
   item abilities — goes into one abilities menu (`a`), not a key each, unlike ADOM. Basic
   roguelike commands (move, open/close, kick, pick up/drop, eat, chat, search, look, throw/shoot,
-  rest, inventory, equipment) keep their keys; digging is an item's use (`U`), not an ability.
+  rest, inventory, equipment) keep their keys; digging is an item's use (`u`), not an ability.
   - **The registry** is `warlock_core::ability`, the one place abilities are registered: every
     `Ability` has an id, a name, a description, a `Source` (race, birth sign, class, talent,
     skill, weapon skill, item: the menu's groups, in that order), what it asks for (`Aim`: nothing, a direction,
@@ -380,7 +384,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     it; so does `a` when it names no row (an empty menu: "You have no abilities."). No time
     passes while it is open.
   - **Quick repeat**: the menu opens on the ability used last in the run (else the first that
-    can be used), so `a` Enter repeats it; `A` (`KeyCommand::RepeatAbility`) uses it again at
+    can be used), so `a` Enter repeats it; `X` (`KeyCommand::RepeatAbility`) uses it again at
     once, and opens the menu when none was used yet.
   - **Keys**: an ability with an action of its own is also a rebindable key command, unbound by
     default (the shield bash: "Bash with your shield", `bash`; picking a lock: "Pick a lock",
@@ -476,7 +480,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   topics (§8 "Quests") come first.
   Chatting takes the time of `chat` (§7 "Action costs"); with no creature the player sees there,
   it is refused ("You see no one there to talk to.") and takes none.
-- **Rest** (`R`) asks in the message line: `Rest: (h)our, until (d)awn, until (n)ightfall? (Esc to
+- **Rest** (`b`) asks in the message line: `Rest: (h)our, until (d)awn, until (n)ightfall? (Esc to
   cancel)`. `h` rests an hour, `d` until 06:00, `n` until 18:00 (replay text `rest:1h`,
   `rest:dawn`, `rest:dusk`); any other command cancels. Resting is one action that passes turn
   after turn and stops early when a creature comes into view (not one who talks and fights no
@@ -493,7 +497,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   feel satiated."), and someone muttering (§8 "Dialogue"), which are logged all the same. Hit points come back twice as fast while resting
   (§8 "Healing").
   It is a gameplay input mode like the open/close/kick direction prompt, not a menu screen.
-- **Eat** (`E`; §8 "Hunger") opens the choice of what to eat: the food lying on the player's
+- **Eat** (`e`; §8 "Hunger") opens the choice of what to eat: the food lying on the player's
   cell first (marked "lying here"; the `>` cursor starts on it, as ADOM asks about the floor
   first), then the food in the inventory, in the item list (above); with nothing, "You have
   nothing to eat." A letter, or Enter on the `>` row, eats it (replay text by position: `eat:b`
@@ -509,7 +513,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   below), and the scroll of identify replaces the list with the unidentified stacks the player
   carries ("You carry nothing unidentified."), where a letter or Enter reads it on that stack
   (replay text `read:LETTER:LETTER`, the scroll then the stack). Esc cancels either list.
-- **Dig** (`U`, "use a tool", ADOM's use-item key, an item's use rather than an ability; §8
+- **Dig** (`u`, "use a tool", ADOM's use-tool key, an item's use rather than an ability; §8
   "Digging") asks in the message line `Dig in which direction? (Esc to cancel)`; a direction
   digs (replay text `dig:E`), any other command cancels. With no digging tool ready nothing is
   asked: the rules say so at once ("You have no digging tool ready."). Digging goes on turn
@@ -529,10 +533,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   page; a screen open over the run (the dialogue screen) keeps its keys, and `--more--` waits
   beneath it. A rest or another long action shows what stopped it the same way. Presentation only:
   the rules, replays, and dumps never see pages; captures show the first page.
-- **Message history** (`M`, ADOM's Ctrl-P; #207): a screen of every message the log keeps (the
+- **Message history** (`v`; ADOM's `:m`; #207): a screen of every message the log keeps (the
   last 200, which it says at the top), oldest first, the newest at the bottom, each wrapped to the
   panel (further lines indented). It opens on the newest; the up and down keys scroll a line, the
-  list page keys (`>`/PageDown, `<`/PageUp) a panel's height; Esc, Enter, or `M` closes it. It
+  list page keys (`>`/PageDown, `<`/PageUp) a panel's height; Esc, Enter, or `v` closes it. It
   reads the message log of the perception snapshot, takes no time, and is no info page (those
   are about the character).
 - **Attacks** (§8 "Combat") are reported when the player perceives them: they see the attacker
@@ -577,7 +581,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `IMPROVISED_RANGE` cells, in `combat.rs`); with nothing there, or no ammunition, it is refused
   ("You have nothing ready to throw or shoot.", "You have no arrows ready."). `T` opens the choice
   of what to throw: the inventory's throwing weapons, in the item list (a letter or Enter
-  chooses; "You have nothing to throw."). `f` (no default key) aims the readied launcher only.
+  chooses; "You have nothing to throw."). Fire (no default key) aims the readied launcher only.
   A spell scroll chosen to read (`r`, above) is aimed the same way, as far as its spell reaches
   (its `range`; a bolt's length); a bolt's line is blocked only by what is solid, as it runs
   through creatures. Aiming is an input mode like look mode: no time passes.

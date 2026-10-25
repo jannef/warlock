@@ -50,5 +50,5 @@ Speed (`speed` in `data/creatures.toml`, default 1000 = the player's; any player
 is rules-only: never put it in perception, the UI, or messages; energy is per actor in
 `WorldState` (saved, hashed); creatures on other levels and the dev skip gain none.
 Levels carry `kind` (no turn length of their own); terrain carries `move_cost` (percent); scenarios
-carry `start_date`/`start_time`. Rest (`R`) is a message-line input mode (`InputMode::Rest`,
+carry `start_date`/`start_time`. Rest (`b`) is a message-line input mode (`InputMode::Rest`,
 `input::REST_CHOICES`), not a menu screen.

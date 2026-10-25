@@ -1,6 +1,6 @@
 # Resting
 
-Press `R` to rest. The message line asks:
+Press `b` to rest. The message line asks:
 
 ```
 Rest: (h)our, until (d)awn, until (n)ightfall? (Esc to cancel)

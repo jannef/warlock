@@ -16,7 +16,7 @@ seconds, and so do entering a place with `>` and walking off the edge of an outd
 the overworld. Only steps on the overworld are different: each is a journey (below). Picking up
 or dropping takes one action however many stacks you take. Putting on or taking off
 [equipment](equipment.md) takes its slot's time for each thing that moves, so a swap takes both.
-Looking at your pack (`i`) or your equipment (`e`) takes no time, and neither does anything that
+Looking at your pack (`I`) or your equipment (`i`) takes no time, and neither does anything that
 is refused, such as walking into a wall.
 
 The clock counts whole seconds, so an action of 8.4 seconds shows as 8 or 9 seconds on it, but a

@@ -4,11 +4,11 @@ Developer notes for working on this part of Warlock (moved from CLAUDE.md, #185)
 rules it implements are in spec/06-input-and-ui.md. Keep it current with the code, as CLAUDE.md says.
 
 Modal screens (spec §6) — main menu, the saved characters (Characters), new run and character
-creation (race, gender, class, talents, name, summary), pause, settings, controls, the `?` help, the inventory (`i`), the equipment screen
-(`e`) and its choice of what goes in a slot, an item's description (a letter in the inventory,
+creation (race, gender, class, talents, name, summary), pause, settings, controls, the `?` help, the inventory (`I`), the equipment screen
+(`i`) and its choice of what goes in a slot, an item's description (a letter in the inventory,
 an upper-case slot letter on the equipment screen), the character screen (`@`), the weapon skills
-screen (`W`), the quest log (`q`), the message history (`M`), choosing what to
-pick up (`,`/`g` on several stacks), drop (`d`), eat (`E`), or read (`r`; then, for the scroll of
+screen (`W`), the quest log (`q`), the message history (`v`), choosing what to
+pick up (`,`/`;` on several stacks), drop (`d`), eat (`e`), or read (`r`; then, for the scroll of
 identify, what to read it on, `ScreenName::Identify`, which takes the read list's place), the
 abilities menu (`a`), the
 dialogue screen (opened by
@@ -24,7 +24,7 @@ what is left; no `--screen`: a replay that ends with choices due opens it), and 
 screen stack (`ui/screens.rs`, the `ScreenStack` resource); add a screen there, never a second way
 to open, read keys for, or draw one:
 - **Open**: `Screens::open(ScreenName)` (a `SystemParam` over the stack, content, save store, and
-  the run, if any) is the one way a screen opens: `?`, `i`, `e`, `@`, `W`, `,`, `d`, and Esc in play,
+  the run, if any) is the one way a screen opens: `?`, `I`, `i`, `@`, `W`, `,`, `d`, and Esc in play,
   sub-screens, the startup main menu and `--screen`, and the return to the main menu after a run.
   Screens that show the run read the perception snapshot when they open (no time passes while
   they are open but for an action chosen on one). Back/Esc pops the top screen, so a sub-screen
@@ -73,8 +73,8 @@ to open, read keys for, or draw one:
   text).accept(..).decline(..).cancel(..).plain(..)`, or `Dialog::yes_no(title, text, yes,
   outcome, no)` for a plain question. It sizes itself to its content and draws the options in
   a column, each with its shortcut keys. Keys: the menu keys move the selection, Enter takes it;
-  the `Context::Dialog` commands `KeyCommand::Yes`/`No` (`y`/`n` by default, rebindable; their
-  own context because `y`/`n` move the player in play) pick the Accept option and the Decline
+  the `Context::Dialog` commands `KeyCommand::Yes`/`No` (`y`/`n` by default, rebindable, in their
+  own context) pick the Accept option and the Decline
   option (else Cancel); Esc picks Cancel (else Decline; else closes); the safe option (Cancel,
   else Decline) is selected first. A menu choice pops the dialog and is applied as usual, an
   action closes it and is applied (`play.act`, which may answer with a dialog of its own: the
@@ -151,12 +151,12 @@ to open, read keys for, or draw one:
   read-only, the developer keys only where they work), `ui/object_screen.rs` (inventory, pick up,
   drop, throw, eat; in the choices letters always name stacks, even `h j k l`; the eat choice
   lists food lying here first ("lying here"), then the pack's; in the inventory a letter opens
-  the stack's description, and `i` closes it only when it names none; marks belong to stacks
+  the stack's description, and `I` closes it; marks belong to stacks
   (positions), so they stay as pages turn),
   `ui/describe_screen.rs` (`DescribeScreen`: one stack as the player knows it, from
   `magic::describe`; names everywhere in their rarity's color, `ui::rarity_color`),
   `ui/equipment_screen.rs` (`EquipmentScreen`: slots by letter, which always name slots, so its
-  own key `e` closes it only when it names none; `ItemScreen`: the stacks that fit one slot), `ui/character_screen.rs` (name, race, gender, class, age, birthday,
+  own key `i` closes it only when it names none (with 13 slots `i` always names one); `ItemScreen`: the stacks that fit one slot), `ui/character_screen.rs` (name, race, gender, class, age, birthday,
   and sign (`birth_parts`/`fit_parts`, shared with the summary), the player's scores, hit points
   and Defence total, the alignment band (`PerceptionView::own_alignment`), weight and burden
   thresholds; 72 wide like the summary),
@@ -197,14 +197,14 @@ to open, read keys for, or draw one:
   `ui/death_screen.rs`
   (who died, "Here lies Brakka,", who or what killed them, where, when, after how many turns).
 
-Key commands `,`/`g` (pick up: one stack at once, else the `PickUp` screen), `d` (`Drop` screen),
-`i` (`Inventory` screen), `e` (`Equipment` screen), `@` (`Character` screen), `W` (`WeaponSkills`
-screen), `M` (`KeyCommand::Messages`: the `Messages` screen), `r` (`Read` screen, `KeyCommand::Read`: a basic command, not an ability), `p`
-(`KeyCommand::Pay`), `a` (`KeyCommand::Abilities`: the `Abilities` screen), `A`
+Key commands `,`/`;` (pick up: one stack at once, else the `PickUp` screen), `d` (`Drop` screen),
+`I` (`Inventory` screen), `i` (`Equipment` screen), `@` (`Character` screen), `W` (`WeaponSkills`
+screen), `v` (`KeyCommand::Messages`: the `Messages` screen), `r` (`Read` screen, `KeyCommand::Read`: a basic command, not an ability), `p`
+(`KeyCommand::Pay`), `a` (`KeyCommand::Abilities`: the `Abilities` screen), `X`
 (`KeyCommand::RepeatAbility`), bash (`KeyCommand::Bash`, unbound), disarm
 (`KeyCommand::Disarm`, unbound), picking a lock (`KeyCommand::PickLock`, unbound), steal
 (`KeyCommand::Steal`, unbound), throwing one's voice, and the lantern's hood
-(`KeyCommand::ThrowVoice`, `HoodLantern`, unbound) are in `input.rs` and `settings/keys.rs`.
+(`KeyCommand::ThrowVoice`, `HoodLantern`, unbound) are in `input.rs` and `settings/keys.rs`; their default keys are ADOM's (#350, `docs/dev/settings.md`).
 
 **Abilities** (spec §6 "Abilities"; racial, class, skill, weapon skill and style, item; the
 owner's rule, #156) get no key of their own: they go into the one abilities menu.
@@ -265,9 +265,9 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   `ui/mod.rs`; a direction applies `ability.action(Some(dir))`),
   `Aim::Cell` starts aiming (`InputMode::Aim`, `AimKind::Ability`), `Aim::Nothing` applies it
   at once, and one that cannot be used now is applied at once with a placeholder direction (or
-  the player's own cell) so the rules say why and take no time (as `U` does with no tool).
+  the player's own cell) so the rules say why and take no time (as `u` does with no tool).
 - **Quick repeat**: the menu opens on `ScreenStack::last_ability` (else the first available row);
-  `A` (`RepeatAbility`, passed the last ability by `route_keys`) answers `UseAbility(last)`, or
+  `X` (`RepeatAbility`, passed the last ability by `route_keys`) answers `UseAbility(last)`, or
   opens the menu when there is none.
 - **Keys**: an ability with an action of its own may have a rebindable `KeyCommand`, left unbound
   by default (`settings/keys.rs::UNBOUND`); never a default key. Shield bash is the first, Steal

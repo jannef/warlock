@@ -82,7 +82,7 @@ A sound you hear shows on the map as a faint dotted ring, `◌`, until your next
 - With glyph animation on, a ring ripples out of the marker when you hear it. With reduced
   effects the marker is simply still; it never disappears, because it is information.
 
-[Look mode](controls.md#look-mode) (`x`) describes a marker: "You hear footsteps here.", "You faintly hear
+[Look mode](controls.md#look-mode) (`l`) describes a marker: "You hear footsteps here.", "You faintly hear
 footsteps here.", or "You hear footsteps here, where you remember a stone floor."
 
 ## Messages

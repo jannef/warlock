@@ -57,7 +57,7 @@ Creatures carry by the same rules, from their own Strength, Toughness, and size.
   right after your hit points; it is one of the last things to give way on a narrow screen.
 - A **message** says when it changes: "You are burdened.", "You strain under your load.", "You
   carry too much to move.", "You are no longer burdened."
-- The **inventory** (`i`) and the **character screen** (`@`) show what you carry, your burden
+- The **inventory** (`I`) and the **character screen** (`@`) show what you carry, your burden
   if you have one, and the weights at which it changes:
   `Burdened over 15 kg, strained over 30 kg, overloaded over 45 kg`.
 

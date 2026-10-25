@@ -3,7 +3,7 @@
 Developer notes for working on this part of Warlock (moved from CLAUDE.md, #185); the
 rules it implements are in spec/08c-combat.md. Keep it current with the code, as CLAUDE.md says.
 
-Ranged combat (spec §8 "Ranged combat"; keys: `t` shoots or throws the Missile weapon slot's contents, `T` is the throw chooser, `f` unbound but rebindable; the slot `takes_weapons`) lives in `warlock-core/src/world/shoot.rs`: `fire`,
+Ranged combat (spec §8 "Ranged combat"; keys: `t` shoots or throws the Missile weapon slot's contents, `T` is the throw chooser, Fire unbound but rebindable; the slot `takes_weapons`) lives in `warlock-core/src/world/shoot.rs`: `fire`,
 `throw`, and `creature_shoots` loose one missile (`loose`): it leaves its stack, makes its noise
 once, flies along `Pos::ray` (the line the AI's `clear_shot` checks) over transparent cells as far
 as the weapon's `range`, attacks whoever stands in its way (`World::missile_hits`, no noise) until
