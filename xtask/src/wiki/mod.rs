@@ -312,7 +312,10 @@ mod tests {
         has("creature-stats.md", "| Deer | 1 | 2 |");
         // Rarity (#373): each type's tier, and the tiers' factors.
         has("creature-stats.md", "| Kobold shaman | 4 | 40 | Rare |");
-        has("creature-rarities.md", "| Very rare | 10% | bog hag, cinder elemental |");
+        has(
+            "creature-rarities.md",
+            "| Very rare | 10% | bog hag, cinder elemental |",
+        );
         has("creature-stats.md", "| Listen 30 | - |");
         has(
             "creature-defences.md",
