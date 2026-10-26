@@ -18,7 +18,7 @@ The in-game `?` screen is authoritative: it is generated from your current key b
 | Close a door | `c`, then a direction |
 | Kick (a door, to break it in, or a creature) | `k`, then a direction (see [Doors](doors.md)) |
 | Go down stairs, or enter a place on the overworld | `>` |
-| Go up stairs | `<` |
+| Go up stairs, or leave an outdoor area when no enemy is about | `<` |
 | Light or douse the lantern | `*` |
 | Pick up | `,` or `;` |
 | Drop | `d` |

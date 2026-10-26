@@ -31,8 +31,9 @@ fingerprint (§7 "Saves"). The first campaign to play is the Ascmearc (`assets/c
 back, with the market town Cēaptūn five road cells east, the barrow Cealdhlāw in sight of the
 road, and two dungeons hidden until quests reveal them (Fennmynster, Fyrdelf); its start
 scenario is `ascmearc`, the one a release's New run starts (§3b). **Cēaptūn** (#336, the
-campaign design §6; level `ceaptun`, 90×32, outdoor, item level 1, danger 0) is entered from the town's overworld cell and left by the `<`
-on its market square: walled on the pass side and open to the river, it has four shops on the
+campaign design §6; level `ceaptun`, 90×32, outdoor, item level 1, danger 0) is entered from the town's overworld cell, arriving on its market
+square, and has no stairs: it is left by walking off its edge, or with `<` when no enemy is
+about (§7 "Leaving an outdoor area"): walled on the pass side and open to the river, it has four shops on the
 square (a general store, the Forge, the Armourer's, the Provisioner's, their goods on their
 floors), the Mynster (the temple, a sanctuary) where Sister Hild cures and mends for gold (§8
 "Dialogue", Services), the Gæsthūs (the inn) where Godgifu tells rumours of the march (never a
@@ -168,7 +169,8 @@ river, 30 minutes), and the locations `town`, `barrow`, and `mine` (stairs down,
   player arrives on the side (or corner) they walked onto the cell from — stepping east onto it,
   on the area's west edge, on the road if they came along one — or in a glade in the middle if
   they did not walk there (arriving by stairs or back from the area itself). Walking off any edge
-  returns to the overworld cell. What an area looks like follows its overworld terrain's
+  returns to the overworld cell, and so does `<` when no enemy is about (§7 "Leaving an outdoor
+  area"). What an area looks like follows its overworld terrain's
   landscape and its neighbors:
   - *plains*: dry grass with greener hollows, tall grass, a lone tree or a copse, bushes,
     boulders; *grassland*: green meadows, tall grass, wildflowers and buttercups, copses fringed

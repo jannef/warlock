@@ -231,7 +231,8 @@ impl Region {
     }
 }
 
-/// Where walking off the edge of a level leads: from a local area, back to its overworld cell.
+/// Where walking off the edge of a level leads: from a local area, or a hand-made outdoor level
+/// an overworld location leads into (`overworld::link_edge_exits`), back to that overworld cell.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EdgeExit {
     /// The level id (the overworld).
@@ -469,7 +470,8 @@ pub struct LevelTemplate {
     /// Shops (spec §7 "Shops"), none overlapping another; each keeper is among `creatures`, at
     /// the shop's post.
     pub shops: Vec<ShopPlan>,
-    /// Where walking off the edge leads (local areas); `None`: the edge cannot be crossed.
+    /// Where walking off the edge leads (local areas, and hand-made outdoor levels an overworld
+    /// location leads into); `None`: the edge cannot be crossed.
     pub exit: Option<EdgeExit>,
     /// The item level of loot here (spec §8 "Magic items"): a hand-made level's `item_level`
     /// (default 1), a branch level's depth.

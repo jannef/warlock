@@ -846,6 +846,7 @@ impl Content {
             content.level_campaigns.insert(id.to_string(), campaign);
             content.levels.insert(id.to_string(), level);
         }
+        overworld::link_edge_exits(&mut content.levels);
         content.load_kits()?;
         let mut seen: BTreeMap<String, &str> = BTreeMap::new();
         for (path, id, text) in files.in_dir("scenarios") {
