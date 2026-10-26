@@ -236,6 +236,7 @@ fn capitalized(text: &str) -> String {
 mod tests {
     use super::*;
     use std::sync::Arc;
+    use crate::ui::dialog_screen::DialogScreen;
     use warlock_core::World;
     use warlock_core::action::parse_actions;
     use warlock_core::content::Content;
@@ -302,6 +303,52 @@ mod tests {
             shown.contains("  7  A cure for what ails you (60 gold)"),
             "{shown}"
         );
+    }
+
+    /// The dialog an appraisal of `items` things at 100 gold each opens, as text, for a player
+    /// with `gold`; or what asking does when it opens none.
+    fn appraisal(items: u32, gold: u32) -> Result<String, ScreenAction> {
+        let (world, outcome) = at_the_hermit();
+        let view = world.perception();
+        let mut talk = last_talk(&outcome).expect("talked").clone();
+        talk.topics.push(warlock_core::world::TopicView {
+            id: "identify".into(),
+            name: "An appraisal of your goods".into(),
+            price: Some(100),
+            items: Some(items),
+        });
+        let mut screen = DialogueScreen::new(Some(&talk), Some(&view));
+        screen.gold = gold;
+        let mut console = Console::default();
+        console.resize(80, 30);
+        let bindings = Bindings::default();
+        screen.draw(&mut console, &bindings);
+        let shown = text(&console);
+        assert!(
+            shown.contains("  7  An appraisal of your goods (100 gold each)"),
+            "{shown}"
+        );
+        match screen.handle(&Press::typed('7'), &bindings) {
+            ScreenAction::Dialog(dialog) => {
+                let mut console = Console::default();
+                console.resize(80, 30);
+                DialogScreen::new(*dialog).draw(&mut console, &bindings);
+                Ok(text(&console))
+            }
+            other => Err(other),
+        }
+    }
+
+    #[test]
+    fn an_appraisal_asks_first_with_the_total() {
+        insta::assert_snapshot!("appraisal-pay", appraisal(3, 500).expect("a dialog"));
+        insta::assert_snapshot!("appraisal-short", appraisal(3, 120).expect("a dialog"));
+        // With nothing to pay for, it asks straight away (and is told so, for nothing).
+        let ask = Action::Ask {
+            dir: Dir::SE,
+            topic: "identify".into(),
+        };
+        assert_eq!(appraisal(0, 500), Err(ScreenAction::Act(ask)));
     }
 
     #[test]

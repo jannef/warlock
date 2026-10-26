@@ -580,6 +580,14 @@ const CASES: &[Case] = &[
         screen: Some("dialogue"),
         ..BASE
     },
+    // Cēaptūn's Factor Wulfrun: an appraisal, priced per thing (#432).
+    Case {
+        name: "dialogue-appraisal",
+        scenario: "ceaptun",
+        actions: "move:E*26 move:S*4 open:S move:S*4 chat:S",
+        screen: Some("dialogue"),
+        ..BASE
+    },
     Case {
         name: "quest-offer",
         actions: concat!(hermit!(), " chat:SE ask:SE:quest-rats"),
