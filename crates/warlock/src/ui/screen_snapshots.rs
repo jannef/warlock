@@ -351,7 +351,7 @@ const CASES: &[Case] = &[
         name: "level-up-choice",
         character: Some("human,male,warrior"),
         actions: "xp:2431 advance:athletics*6",
-        keys: Some("p"),
+        keys: Some("q"),
         size: (100, 40),
         ..BASE
     },
