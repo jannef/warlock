@@ -137,7 +137,10 @@ fn everything_is_identified_for_the_total_and_it_takes_a_chats_time() {
     assert!(w.time() > before, "it takes time");
     assert_eq!(gold(&w), 200, "three stacks at 100 gold each");
     assert!(knows_all(&w), "magic items and scroll types alike");
-    let fireball = w.content().object_id("scroll_of_fireball").expect("fireball");
+    let fireball = w
+        .content()
+        .object_id("scroll_of_fireball")
+        .expect("fireball");
     assert!(w.lore().is_identified(fireball), "the type, from now on");
     let said = said(&w);
     let names = [
@@ -148,7 +151,10 @@ fn everything_is_identified_for_the_total_and_it_takes_a_chats_time() {
     for name in names {
         assert!(said.iter().any(|m| m == name), "{name}: {said:?}");
     }
-    let paid = said.iter().position(|m| m.starts_with("You pay ")).expect("paid");
+    let paid = said
+        .iter()
+        .position(|m| m.starts_with("You pay "))
+        .expect("paid");
     assert_eq!(said[paid], "You pay the old hermit 300 gold.");
     assert_eq!(
         said.last().map(String::as_str),

@@ -76,9 +76,7 @@ impl DialogueScreen {
                 (None, _) => (t.id.clone(), t.name.clone()),
             })
             .collect();
-        let per_item = (talk.topics.iter())
-            .map(|t| t.price.zip(t.items))
-            .collect();
+        let per_item = (talk.topics.iter()).map(|t| t.price.zip(t.items)).collect();
         let selected = (talk.asked.as_ref())
             .and_then(|asked| topics.iter().position(|(id, _)| id == asked))
             .unwrap_or(0);
@@ -235,8 +233,8 @@ fn capitalized(text: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::Arc;
     use crate::ui::dialog_screen::DialogScreen;
+    use std::sync::Arc;
     use warlock_core::World;
     use warlock_core::action::parse_actions;
     use warlock_core::content::Content;
@@ -307,7 +305,7 @@ mod tests {
 
     /// The dialog an appraisal of `items` things at 100 gold each opens, as text, for a player
     /// with `gold`; or what asking does when it opens none.
-    fn appraisal(items: u32, gold: u32) -> Result<String, ScreenAction> {
+    fn appraisal(items: u32, gold: u32) -> Result<String, Box<ScreenAction>> {
         let (world, outcome) = at_the_hermit();
         let view = world.perception();
         let mut talk = last_talk(&outcome).expect("talked").clone();
@@ -335,7 +333,7 @@ mod tests {
                 DialogScreen::new(*dialog).draw(&mut console, &bindings);
                 Ok(text(&console))
             }
-            other => Err(other),
+            other => Err(Box::new(other)),
         }
     }
 
@@ -348,7 +346,7 @@ mod tests {
             dir: Dir::SE,
             topic: "identify".into(),
         };
-        assert_eq!(appraisal(0, 500), Err(ScreenAction::Act(ask)));
+        assert_eq!(appraisal(0, 500), Err(Box::new(ScreenAction::Act(ask))));
     }
 
     #[test]

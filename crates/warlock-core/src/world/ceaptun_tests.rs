@@ -229,11 +229,18 @@ fn factor_wulfrun_identifies_what_the_player_carries_for_gold() {
     assert_eq!((service.price, service.items), (Some(100), Some(0)));
     put_player(&mut w, WULFRUN.step(Dir::W));
     act(&mut w, "ask:E:identify");
-    assert!(said(&w).last().unwrap().starts_with("Factor Wulfrun says: \"You know everything"));
+    assert!(
+        said(&w)
+            .last()
+            .unwrap()
+            .starts_with("Factor Wulfrun says: \"You know everything")
+    );
     assert_eq!(gold(&w), 60);
     // An unidentified scroll: 100 gold, more than the player has.
     let scroll = CONTENT.object_id("scroll_of_fireball").expect("fireball");
-    w.player_mut().inventory.push(crate::object::Stack::one(scroll));
+    w.player_mut()
+        .inventory
+        .push(crate::object::Stack::one(scroll));
     act(&mut w, "ask:E:identify");
     assert_eq!(said(&w).last().unwrap(), "You cannot pay.");
     assert_eq!(w.unidentified().len(), 1);
