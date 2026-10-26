@@ -71,6 +71,21 @@ developer notes (CLAUDE.md, `docs/dev/`).
     no quest (§8 "Quests"), even when they lured the creature there. Traps never lie on water
     that freezes (§5 "Ice": ice would cover them; a content error in a level file), so a fall into
     a pit and a fall through the ice never meet.
+  - **Sidestepping a known trap** (`world/sidestep.rs`, #476): the player who steps onto a trap
+    they know of, of their own will (a `move` onto it, after the interface's question), may avoid
+    it. The chance in percent is `[avoid]` in `data/traps.toml`: `base` (55) plus `per_point`
+    (10) for each point of their **dodge**, the Dexterity and Dodge categories of their Defence
+    (§8 "Combat": the Dexterity modifier capped by the worn armour that allows the least and by
+    the burden, plus every Dodge bonus: the Dodge skill, talents, magic items, the stance,
+    statuses), kept within `min` (15) and `max` (90): never certain, never hopeless. One draw of
+    the gameplay random stream, only when a known trap lies on the cell (not on a door: a door's
+    trap goes off as the door opens, "Trapped doors" below). An avoided trap stays as it was (no
+    charge spent, still known), nothing goes off, the step costs what it costs, the player is told
+    in words ("You deftly avoid the arrow trap.", "You step lightly over the pit."), and it counts
+    as a dodge for training (`Use::Dodge`: Tumble's marks, Dexterity's stat marks). Otherwise the
+    trap goes off, and the Light step talent's check still applies (§8 "Talents"). A hidden trap
+    gets no chance (it goes off; the Light step talent is its only escape), and neither does a
+    step the player did not choose (turned back from a shop's door, §7 "Shops") nor a creature.
   - **Events**: `Event::TrapSprung { trap, at, victim }`, then what came of it: the shot's
     `Event::Missile`, a burst's or bolt's `Event::Spell { effect, origin, shape, cells }` (the
     spell effect a trap names in data, which must be an effect of `data/effects.toml` of the same

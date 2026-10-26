@@ -127,9 +127,13 @@ impl World {
         // Out of a shop's door owing anything: the keeper turns the player back (spec §7
         // "Shops"), a step the other way, or none at all if the shop floor is full; whoever
         // stood in the door stays there.
+        // Turned back, the player did not choose the cell they step onto: no sidestepping a
+        // trap there (`sidestep.rs`).
+        let mut willing = true;
         if let Some(back) = self.turned_back(from, to) {
             to = back;
             swap = None;
+            willing = false;
         }
         let player = self.state.player;
         let fleeing = self.flees(player, to);
@@ -208,8 +212,13 @@ impl World {
         if let Some(text) = text {
             self.say(text);
         }
-        // A trap there goes off (spec §8 "Traps"); a pit costs the next action too.
-        let climb = self.step_onto_trap(to, player, events);
+        // A trap there goes off (spec §8 "Traps"), unless the player knew of it and stepped
+        // past it of their own will (`sidestep.rs`); a pit costs the next action too.
+        let climb = if willing {
+            self.step_willingly(to, events)
+        } else {
+            self.step_onto_trap(to, player, events)
+        };
         Spent::Turn(step + climb)
     }
 
