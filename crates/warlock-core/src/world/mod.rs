@@ -1285,6 +1285,8 @@ mod hunger_tests;
 #[cfg(test)]
 mod ice_tests;
 #[cfg(test)]
+mod identify_service_tests;
+#[cfg(test)]
 mod incorporeal_tests;
 #[cfg(test)]
 mod ki_tests;
