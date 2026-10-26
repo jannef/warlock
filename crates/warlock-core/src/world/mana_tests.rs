@@ -88,7 +88,7 @@ eases = 6
 blocks = ["step"]
 hold = { check = "strength", difficulty = 13, turns = "3d4" }
 
-# Named by the elementals' on_hit (#453): kept as the built-in ones are, untouched by mana.
+# Named by the elementals' (#453) and trolls' (#456) on_hit: kept as the built-in ones are, untouched by mana.
 [[status]]
 id = "staggered"
 name = "Staggered"

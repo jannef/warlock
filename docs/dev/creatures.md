@@ -16,6 +16,7 @@ Per-tribe notes:
 - `docs/dev/creatures/hobgoblins.md`: the hobgoblins (#454; the goblin tribe's second tier)
 - `docs/dev/creatures/fey.md`: the fey (#452; the courts, `provoked`, the roster)
 - `docs/dev/creatures/orcs.md`: the orc tribe and its wargs (#455; faction, tags, formulas, populations)
+- `docs/dev/creatures/trolls.md`: the troll tribe (#456; faction, tag, formulas, attack cost, population)
 
 ## Overview
 

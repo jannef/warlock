@@ -1,0 +1,33 @@
+# The troll tribe (#456). A troll with two heads that never agree on anything but dinner: one
+# watches while the other bites, so it is hard to sneak by and quick to bite again, and its bites
+# leave wounds that bleed. Its wounds close as you watch, and fire hurts it more than steel.
+[[creature]]
+id = "two_headed_troll"
+level = 30
+xp = 160
+rarity = "uncommon"
+name = "two-headed troll"
+glyph = "T"
+fg = "#a07050"
+attack_cost = 700
+faction = "troll"
+tags = ["troll"]
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+footsteps = 170
+hearing = 14
+weight = 500000
+stats = { strength = 30, dexterity = 13, toughness = 33, intelligence = 9, willpower = 16, presence = 7 }
+base_hp = 120
+natural = { defence = 2, protection = 2, name = "hide" }
+resist = { fire = -50 }
+on_eat = { message = "Twice the troll, and twice as tough.", vomit = 50, stat = { toughness = 5 } }
+blood = "#3a4a20"
+[creature.attack]
+damage = "3d10"
+damage_type = "piercing"
+name = "bites"
+verb = "bites"
+to_hit = 3
+on_hit = [{ status = "bleeding", chance = 20, severity = 1 }]

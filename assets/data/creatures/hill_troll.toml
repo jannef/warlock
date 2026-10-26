@@ -1,0 +1,38 @@
+# The troll tribe (#456). A troll of the high moors and the hills' hollows, broad as a cart and
+# brown as the turf it sleeps under: slow, heavy-handed enough to knock a man off his feet, often
+# dragging a maul it took from someone. Its wounds close as you watch (its great Toughness), and
+# fire hurts it more than steel.
+[[creature]]
+id = "hill_troll"
+level = 15
+xp = 85
+name = "hill troll"
+glyph = "T"
+fg = "#8a7a5a"
+speed = 950
+faction = "troll"
+tags = ["troll"]
+alignment = "evil"
+vision = "darkvision"
+sight = 8
+footsteps = 160
+hearing = 10
+weight = 350000
+stats = { strength = 24, dexterity = 10, toughness = 27, intelligence = 7, willpower = 13, presence = 6 }
+base_hp = 60
+natural = { defence = 1, protection = 2, name = "hide" }
+weapon_skills = { maces = 2 }
+resist = { fire = -50 }
+on_eat = { message = "Tough as boot leather, and it smells of peat.", vomit = 50, stat = { toughness = 5 } }
+blood = "#2a4a20"
+[creature.attack]
+damage = "3d8"
+damage_type = "slashing"
+name = "claws"
+verb = "rakes"
+on_hit = [{ status = "staggered", chance = 15, severity = 1 }]
+# Its gear (spec §8 "Creature gear"): a maul half the time, taken from someone who needed it.
+[[creature.gear]]
+chance = 50
+one_of = ["maul"]
+keep = "wield"
