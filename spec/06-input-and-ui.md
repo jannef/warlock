@@ -621,7 +621,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   floor", "A blood-smeared stone wall."; §8 "Blood"; not with the blood switch off), where
   stairs lead, a known trap as part of the ground ("A fireball trap, on stone floor.", "A kobold
   (hostile, unhurt), on a pit on stone floor.", "You remember a pit here, on stone floor."; §8
-  "Traps"), the special room walkable ground lies in once the player has been inside it ("A
+  "Traps"), the special room walkable ground lies in once the player has been inside it (or, with Sense
+  of place, has seen it; never a whole level's effect) ("A
   stone floor in an echoing hall.", "You remember a stone floor here, in a sanctuary."; §7
   "Special rooms"), the price of goods for sale in a shop on a cell in sight ("A dagger (for
   sale, 45 gold), on plank floor."; §7 "Shops"), and a sound heard there ("You hear footsteps

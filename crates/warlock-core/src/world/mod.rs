@@ -49,7 +49,7 @@
 //! until they burn out.
 //!
 //! Special rooms (spec §7 "Special rooms", [`crate::content::RoomEffectDef`]): a level's special
-//! rooms change the rules inside them, through one question, [`World::room_effect_at`]: the
+//! rooms change the rules inside them, through one question, [`World::effects_at`]: the
 //! light (and so what the player and creatures see), the noise made there, regeneration, and
 //! whether creatures hostile to the player step in. The first time the player is inside one they
 //! are told what it is.
@@ -132,6 +132,7 @@ mod read;
 mod resource;
 mod rest;
 mod reveal;
+mod rooms;
 mod rot;
 mod schedule;
 mod search;
@@ -183,9 +184,7 @@ use crate::action::{Action, Event, Outcome, Rest};
 use crate::alignment::Score;
 use crate::burden::{self, Burden, Load};
 use crate::character::{Character, CharacterSpec};
-use crate::content::{
-    ActionKind, CombatStance, Content, RaceDef, RoomEffectDef, StairsDir, Stance,
-};
+use crate::content::{ActionKind, CombatStance, Content, Here, RaceDef, StairsDir, Stance};
 use crate::geom::{Dir, Pos};
 use crate::hunger::Satiation;
 use crate::light::{LightCache, Sky};
@@ -682,6 +681,9 @@ impl World {
         if let Some(line) = &def.arrival {
             state.messages.push(0, line.clone());
         }
+        if let Some(text) = rooms::pervade_line(&state, &content) {
+            state.messages.push(0, text);
+        }
         if let Some(text) = enter_room(&mut state, &content) {
             state.messages.push(0, text);
         }
@@ -938,13 +940,14 @@ impl World {
         (level, actors)
     }
 
-    /// The effect of the special room at `pos` on level `level`, if that level has been visited
-    /// and a special room lies there (spec §7 "Special rooms"). This is the one question the rules
-    /// ask of special rooms (through the level's state inside the core); ground truth, **for the
-    /// rules, tests, and developer tools**: the player knows only the rooms they have been in
-    /// ([`PerceptionView::room`]).
-    pub fn room_effect_at(&self, level: &str, pos: Pos) -> Option<&RoomEffectDef> {
-        (self.state.levels.get(level)?).room_effect_at(&self.content, pos)
+    /// What the special rooms do at `pos` on level `level` (spec §7 "Special rooms"): the effect
+    /// of the room there and the one covering the level, none for a level not visited. This is
+    /// the one question the rules ask of special rooms (through the level's state inside the
+    /// core); ground truth, **for the rules, tests, and developer tools**: the player knows only
+    /// the rooms they have been in ([`PerceptionView::room`]).
+    pub fn effects_at(&self, level: &str, pos: Pos) -> Here<'_> {
+        (self.state.levels.get(level))
+            .map_or_else(Here::default, |l| l.effects_at(&self.content, pos))
     }
 
     /// Applies one player action and runs the rest of the turn if it took time. Once the player

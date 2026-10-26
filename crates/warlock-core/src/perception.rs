@@ -923,14 +923,25 @@ impl<'a> PerceptionView<'a> {
         self.content.level(level)?.region_at(at)
     }
 
+    /// The effect covering the whole level (spec §7 "Special rooms"), which the player was told
+    /// of on arrival.
+    pub fn pervading(&self) -> Option<&'a RoomEffectDef> {
+        (self.level.pervading).map(|id| self.content.room_effect(id))
+    }
+
     /// The special room at `p` (spec §7 "Special rooms"), if the player knows it: they have been
-    /// inside it, and `p` is a cell they see or remember.
+    /// inside it (or, with Sense of place, seen a cell of it), and `p` is a cell they see or
+    /// remember.
     pub fn room(&self, p: Pos) -> Option<&'a RoomEffectDef> {
         if matches!(self.cell(p), CellView::Unknown) {
             return None;
         }
-        let room = self.level.room_at(p).filter(|r| r.entered)?;
-        Some(self.content.room_effect(room.effect))
+        let room = self.level.room_at(p)?;
+        // Sense of place knows a room's nature from a glimpse (spec §8 "Talents").
+        let senses = || {
+            !self.player.talents.is_empty() && self.player.talent_mods(self.content).sense_of_place
+        };
+        (room.entered || (room.glimpsed && senses())).then(|| self.content.room_effect(room.effect))
     }
 
     /// The percent of all light a special room keeps at a visible cell (a shadowed room's
@@ -940,8 +951,7 @@ impl<'a> PerceptionView<'a> {
         if !self.snapshot.is_visible(p) {
             return None;
         }
-        let room = self.level.room_effect_at(self.content, p);
-        Some(room.map_or(100, |effect| effect.light))
+        Some(self.level.effects_at(self.content, p).light())
     }
 
     /// Where the stairs or location at `p` lead, by name — only for cells the player sees or

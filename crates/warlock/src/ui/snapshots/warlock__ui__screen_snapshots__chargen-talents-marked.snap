@@ -28,13 +28,13 @@ expression: "render(case, content.clone())"
               │ Wayfarer                                                             │
               │   o  Long strider     Your journeys across the overworld go quicker. │
               │   p  Pilgrim          You have knelt in many temples: their cures a… │
-              │   q  Sun-blessed      The sun mends you: under the open sun your wo… │
+              │   q  Sense of place   You read a place at a glance: a special room'… │
+              │   r  Sun-blessed      The sun mends you: under the open sun your wo… │
               │ Scholar                                                              │
-              │   r  Apprentice       You take up a skill you lack, or get better a… │
-              │   s  Deep well        Your power runs deep: more mana for each rank… │
-              │   t  Good learner     You gain 5 % more experience for each rank.    │
-              │   u  Lore             A magic item you have carried for a day gives… │
-              │   v  Treasure hunter  The loot you find, and what creatures drop, i… │
+              │   s  Apprentice       You take up a skill you lack, or get better a… │
+              │   t  Deep well        Your power runs deep: more mana for each rank… │
+              │   u  Good learner     You gain 5 % more experience for each rank.    │
+              │   v  Lore             A magic item you have carried for a day gives… │
               │                                                                      │
               │ Your hit points come back a quarter faster.                          │
               │                                                                      │

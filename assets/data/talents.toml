@@ -205,6 +205,11 @@ pending = true
 id = "danger"
 name = "Danger levels and creatures that come"
 
+# Special rooms (#402): rooms, and rarely whole levels, that change the rules inside them.
+[[system]]
+id = "special_rooms"
+name = "Special rooms"
+
 [[system]]
 id = "traps"
 name = "Traps"

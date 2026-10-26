@@ -16,9 +16,12 @@ From then on you know the room: [look mode](controls.md#look-mode) names it on a
 you see or remember ("A stone floor in an echoing hall.", "You remember a stone floor here, in a
 sanctuary."). Before you have been inside, it is just a room, though you may notice something
 odd about it from the doorway: an unnatural darkness, a faint warm glow, water on the floor.
+Some rooms give themselves away from outside: the first time you see any part of one, a line
+hints at what lies there. The talent *Sense of place* (Wayfarer) lets you know a room's nature
+as soon as you see it, without stepping in.
 
-Special rooms are not terribly common, but not rare either: about one level of a generated dungeon in two
-or three has one, and a level never has more than one. In the rooms-and-corridors levels it is a
+Special rooms are not terribly common, but not rare either: about three levels of a generated
+dungeon in five have one, and a level never has more than one (some dungeons allow more). In the rooms-and-corridors levels it is a
 whole room, walls and doors included, but never the room you arrive in; in the caverns it is a
 patch of the cave, well away from where you arrive. Cēaptūn's Mynster is a
 sanctuary.
@@ -28,12 +31,26 @@ sanctuary.
 Each dungeon may have odds of its own, and some of its levels other odds again: a dungeon may
 be full of flooded rooms, or never have a shop. "A room is special" is the chance for each room
 (each of eight tries in a cavern) until the level has as many as "At most a level"; the room
-is then one of those listed, each as likely. "A shop" is the chance a rooms-and-corridors level
+is then drawn: the rooms a dungeon favours keep their fixed share of the draws, a room it bans
+never comes, and every other room comes by its weight (in the table of rooms below), so a dungeon
+gets every kind of room it does not ban, the newest too. "A shop" is the chance a rooms-and-corridors level
 has one, if one of its rooms suits (see [Shops](shops.md)).
 
 {{#include generated/branch-odds.md}}
 
+## Whole levels
+
+Very rarely, a room's effect does not stay in a room: when a level draws a room that can, there
+is a small chance (its "Whole level" chance below) that the effect covers the **whole level**
+instead, and the room is plain. You are told each time you arrive on such a level, and the
+effect holds everywhere on it. Where a room's effect and a whole level's meet, both apply: a
+shadowed room on a gloomy level is darker still. No room can do this yet; cursed and draining
+rooms will.
+
 ## The rooms
+
+"Weight" is how often a room is drawn against the others, and "Share" the part of all draws it
+gets where a dungeon favours or bans nothing. "Only" says where it can come at all.
 
 {{#include generated/special-rooms.md}}
 
@@ -53,6 +70,12 @@ has one, if one of its rooms suits (see [Shops](shops.md)).
   hostile to you come and go as they please.
 - **Flooded room.** Ankle-deep water over the floor: wading through it is slower than walking,
   and every step splashes loudly (see [Terrain](terrain.md#water)).
+- **Black chamber.** A dark that swallows every light, your lantern included: nothing is lit
+  inside at all. Only darkvision sees in it, so creatures inside are hidden from normal eyes, and
+  you from theirs.
+
+The talent *Hallowed rest* (Grit) makes a room that quickens healing or mana quicken it half
+again more for you: a sanctuary's three times as fast becomes four times.
 
 Only what happens inside counts: a sound made in an echoing hall is loud wherever it is heard,
 while one made outside and heard inside is not changed. Light outside a shadowed room is as

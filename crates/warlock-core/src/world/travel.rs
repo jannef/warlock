@@ -358,6 +358,9 @@ impl World {
         if let Some(line) = self.content.arrival(to) {
             self.say(line.to_string());
         }
+        if let Some(line) = super::rooms::pervade_line(&self.state, &self.content) {
+            self.say(line);
+        }
         Ok(())
     }
 
@@ -416,6 +419,7 @@ pub(super) fn enter_room(state: &mut WorldState, content: &Content) -> Option<St
         return None;
     }
     room.entered = true;
+    room.glimpsed = true;
     Some(content.room_effect(room.effect).enter.clone())
 }
 

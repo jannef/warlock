@@ -44,7 +44,8 @@
 //! [dungeon.room_effects]        # optional: the branch's own special-room odds
 //! chance = 25                   # percent a room is special; default the shared `chance`
 //! per_level = 2                 # at most this many a level (1 to 8); default the shared
-//! effects = ["flooded"]         # ids in room_effects.toml, picked uniformly; default all
+//! favoured = { flooded = 40 }   # effects with a fixed share of the draws, in percent
+//! banned = ["sanctuary"]        # effects never drawn here; the rest by their own `weight`
 //!
 //! [dungeon.shops]               # optional: the branch's own shop odds
 //! chance = 100                  # percent of rooms levels with a shop; default the shared
@@ -54,9 +55,9 @@
 //! ```
 //!
 //! A branch without the tables gets the shared odds of `room_effects.toml` and `shops.toml`
-//! ([`RoomOdds::shared`], [`ShopOdds::shared`]), resolved here once per depth
-//! ([`DungeonDef::room_odds`], [`DungeonDef::shop_odds`]); the generators draw the same way
-//! whichever odds they read, so a branch without the tables generates what it did before them.
+//! ([`RoomOdds::shared`]: no favoured or banned effects; [`ShopOdds::shared`]), resolved here
+//! once per depth ([`DungeonDef::room_odds`], [`DungeonDef::shop_odds`]); the generators draw
+//! the same way whichever odds they read. The old `effects` list is refused.
 
 use super::ContentError;
 use super::creature::CreatureId;
@@ -71,6 +72,7 @@ use super::trap::TrapId;
 use crate::light::Light;
 use crate::temperature::{LEVEL_TEMPERATURES, Temperature};
 use serde::Deserialize;
+use std::collections::BTreeMap;
 
 /// The most items of loot a branch level's floor may hold.
 pub const MAX_LOOT: u8 = 50;
@@ -158,7 +160,10 @@ struct DungeonSpec {
 struct RoomOddsSpec {
     chance: Option<u8>,
     per_level: Option<u8>,
-    effects: Option<Vec<String>>,
+    favoured: Option<BTreeMap<String, u8>>,
+    banned: Option<Vec<String>>,
+    /// Retired: refused with a pointer to `favoured` and `banned`.
+    effects: Option<toml::Value>,
 }
 
 /// A branch's (or a range of its depths') `shops` table, falling back as [`RoomOddsSpec`] does.
@@ -174,34 +179,48 @@ struct ShopOddsSpec {
 /// The most special rooms a branch may give a level.
 const MAX_ROOMS_PER_LEVEL: u8 = 8;
 
-/// How often a generated level's rooms are special, and with which effects (spec §7 "Special
-/// rooms"): the shared odds of `room_effects.toml` or a branch's own.
+/// How often a generated level's rooms are special, and which effects they get (spec §7
+/// "Special rooms"): the shared odds of `room_effects.toml` or a branch's own. The effects not
+/// banned are drawn by their own `weight`, but the favoured ones, which keep a fixed share of the
+/// draws (`mapgen/special.rs`).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RoomOdds {
     /// Percent per room (each of a cave's chambers) to be special.
     pub chance: u8,
     /// At most this many special rooms a level.
     pub per_level: u8,
-    /// The effects a special room gets, picked uniformly.
-    pub effects: Vec<RoomEffectId>,
+    /// Effects with a fixed share of the draws, in percent (together at most 100), in effect
+    /// order.
+    pub favoured: Vec<(RoomEffectId, u8)>,
+    /// Effects never drawn, in effect order.
+    pub banned: Vec<RoomEffectId>,
 }
 
 impl RoomOdds {
-    /// The shared odds: `room_effects.toml`'s `chance` and `per_level`, every effect in file
-    /// order (so the uniform pick draws what it did before branches had odds of their own).
+    /// The shared odds: `room_effects.toml`'s `chance` and `per_level`, nothing favoured or
+    /// banned.
     pub fn shared(rooms: &RoomEffects) -> Self {
         Self {
             chance: rooms.chance,
             per_level: rooms.per_level,
-            effects: (0..rooms.defs().len())
-                .filter_map(|i| u8::try_from(i).ok().map(RoomEffectId))
-                .collect(),
+            favoured: Vec::new(),
+            banned: Vec::new(),
         }
     }
 
     /// Whether levels with these odds get special rooms at all.
     pub fn generated(&self) -> bool {
-        self.chance > 0 && self.per_level > 0 && !self.effects.is_empty()
+        self.chance > 0 && self.per_level > 0
+    }
+
+    /// The share of the draws `effect` keeps here, if it is favoured.
+    pub fn share(&self, effect: RoomEffectId) -> Option<u8> {
+        (self.favoured.iter()).find_map(|&(e, share)| (e == effect).then_some(share))
+    }
+
+    /// Whether `effect` is never drawn here.
+    pub fn bans(&self, effect: RoomEffectId) -> bool {
+        self.banned.contains(&effect)
     }
 }
 
@@ -255,13 +274,21 @@ impl RoomOddsSpec {
         Self {
             chance: over.chance.or(branch.chance),
             per_level: over.per_level.or(branch.per_level),
+            favoured: over.favoured.or(branch.favoured),
+            banned: over.banned.or(branch.banned),
             effects: over.effects.or(branch.effects),
         }
     }
 
     /// The odds, the shared ones filling in what the table leaves out.
     fn resolve(self, rooms: &RoomEffects) -> Result<RoomOdds, String> {
-        let given = self.chance.is_some() || self.per_level.is_some() || self.effects.is_some();
+        if self.effects.is_some() {
+            return Err(
+                "`effects` is retired: name `favoured` effects (each with its share of \
+                        the draws) and `banned` ones instead"
+                    .into(),
+            );
+        }
         let shared = RoomOdds::shared(rooms);
         check_percent(self.chance)?;
         if self
@@ -270,21 +297,40 @@ impl RoomOddsSpec {
         {
             return Err(format!("per_level must be 1 to {MAX_ROOMS_PER_LEVEL}"));
         }
-        let effects = match self.effects {
-            Some(names) => (names.iter())
-                .map(|e| {
-                    (rooms.id(e)).ok_or_else(|| format!("unknown effect `{e}` (room_effects.toml)"))
-                })
-                .collect::<Result<Vec<_>, _>>()?,
-            None => shared.effects,
+        let id = |e: &str| {
+            (rooms.id(e)).ok_or_else(|| format!("unknown effect `{e}` (room_effects.toml)"))
         };
+        let mut favoured = Vec::new();
+        for (name, &share) in self.favoured.iter().flatten() {
+            if !(1..=100).contains(&share) {
+                return Err(format!("favoured `{name}`: a share is 1 to 100 (percent)"));
+            }
+            favoured.push((id(name)?, share));
+        }
+        favoured.sort();
+        let mut banned = (self.banned.iter().flatten())
+            .map(|e| id(e))
+            .collect::<Result<Vec<_>, _>>()?;
+        banned.sort();
+        banned.dedup();
+        if let Some(&(both, _)) = favoured.iter().find(|(e, _)| banned.contains(e)) {
+            let name = &rooms.get(both).id;
+            return Err(format!("`{name}` is both favoured and banned"));
+        }
+        let shares: u32 = favoured.iter().map(|&(_, s)| u32::from(s)).sum();
+        if shares > 100 {
+            return Err(format!(
+                "the favoured shares add up to {shares}: at most 100"
+            ));
+        }
         let odds = RoomOdds {
             chance: self.chance.unwrap_or(shared.chance),
             per_level: self.per_level.unwrap_or(shared.per_level),
-            effects,
+            favoured,
+            banned,
         };
-        if given && odds.chance > 0 && odds.effects.is_empty() {
-            return Err("`effects` must name at least one effect while `chance` is above 0".into());
+        if odds.chance > 0 && !rooms.defs().is_empty() && odds.banned.len() >= rooms.defs().len() {
+            return Err("every effect is banned while `chance` is above 0".into());
         }
         Ok(odds)
     }
@@ -779,9 +825,10 @@ mod tests {
         assert_eq!(shared[0].room_odds(5), None);
         assert_eq!(shared[0].shop_odds(1), None, "no shops.toml");
         let own = resolve(&format!(
-            "{base}room_effects = {{ chance = 25, per_level = 2, effects = [\"echoing\"] }}\n\
-             [[dungeon.levels]]\nfrom = 3\nto = 4\nroom_effects = {{ effects = [\"hushed\", \
-             \"shadowed\"] }}\n"
+            "{base}room_effects = {{ chance = 25, per_level = 2, favoured = {{ echoing = 40 }}, \
+             banned = [\"hushed\"] }}\n\
+             [[dungeon.levels]]\nfrom = 3\nto = 4\nroom_effects = {{ favoured = {{ shadowed = 30, \
+             hushed = 20 }}, banned = [] }}\n"
         ))
         .unwrap();
         let odds = |depth| own[0].room_odds(depth).cloned().unwrap();
@@ -790,43 +837,66 @@ mod tests {
             RoomOdds {
                 chance: 25,
                 per_level: 2,
-                effects: vec![RoomEffectId(2)]
+                favoured: vec![(RoomEffectId(2), 40)],
+                banned: vec![RoomEffectId(0)],
             }
         );
-        // A depth's table overrides the branch's field by field.
+        // A depth's table overrides the branch's field by field; favoured in effect order.
         assert_eq!(
             odds(3),
             RoomOdds {
                 chance: 25,
                 per_level: 2,
-                effects: vec![RoomEffectId(0), RoomEffectId(1)]
+                favoured: vec![(RoomEffectId(0), 20), (RoomEffectId(1), 30)],
+                banned: vec![],
             }
         );
+        assert_eq!(odds(3).share(RoomEffectId(1)), Some(30));
+        assert!(odds(1).bans(RoomEffectId(0)) && !odds(1).bans(RoomEffectId(2)));
         let only_chance = resolve(&format!("{base}room_effects = {{ chance = 40 }}\n")).unwrap();
         let odds = only_chance[0].room_odds(2).unwrap();
-        assert_eq!(
-            (odds.chance, odds.per_level, odds.effects.len()),
-            (40, 1, 3)
-        );
+        assert_eq!((odds.chance, odds.per_level), (40, 1));
+        assert!(odds.favoured.is_empty() && odds.banned.is_empty());
         for (bad, says) in [
             ("room_effects = { chance = 101 }\n", "percent"),
             ("room_effects = { per_level = 0 }\n", "per_level"),
             ("room_effects = { per_level = 9 }\n", "per_level"),
             (
-                "room_effects = { effects = [\"lava\"] }\n",
-                "unknown effect",
+                "room_effects = { favoured = { lava = 10 } }\n",
+                "unknown effect `lava`",
             ),
-            ("room_effects = { effects = [] }\n", "at least one"),
+            ("room_effects = { banned = [\"lava\"] }\n", "unknown effect"),
+            (
+                "room_effects = { effects = [\"hushed\"] }\n",
+                "`effects` is retired",
+            ),
+            (
+                "room_effects = { favoured = { hushed = 10 }, banned = [\"hushed\"] }\n",
+                "both favoured and banned",
+            ),
+            (
+                "room_effects = { favoured = { hushed = 60, echoing = 50 } }\n",
+                "add up to 110",
+            ),
+            (
+                "room_effects = { favoured = { hushed = 0 } }\n",
+                "a share is 1 to 100",
+            ),
+            (
+                "room_effects = { banned = [\"hushed\", \"shadowed\", \"echoing\"] }\n",
+                "every effect is banned",
+            ),
             ("room_effects = { odds = 3 }\n", "unknown field"),
             ("shops = { chance = 0 }\n", "shops.toml"),
         ] {
             let e = resolve(&format!("{base}{bad}")).unwrap_err().message;
             assert!(e.contains(says), "{bad}: {e}");
         }
-        // No chance needs no effects.
+        // No chance may ban them all.
         assert!(
             resolve(&format!(
-                "{base}room_effects = {{ chance = 0, effects = [] }}\n"
+                "{base}room_effects = {{ chance = 0, banned = [\"hushed\", \"shadowed\", \
+                 \"echoing\"] }}\n"
             ))
             .is_ok()
         );

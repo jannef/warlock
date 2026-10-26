@@ -341,6 +341,10 @@ pub struct TalentMods {
     pub danger_sense: i32,
     /// Percent longer between the attempts to bring creatures to its level (Quiet delver).
     pub spawn_every_percent: i32,
+    /// It knows a special room's nature from a glimpse (Sense of place).
+    pub sense_of_place: bool,
+    /// Percent more a special room's quickening of healing and mana (Hallowed rest).
+    pub room_pace_percent: i32,
     /// Cells more its searching reaches.
     pub search_reach: i32,
     /// How much higher some skills count, by skill.
@@ -1075,6 +1079,8 @@ impl TalentMods {
             TalentEffect::Search { value } => self.search += value,
             TalentEffect::DangerSense { value } => self.danger_sense += value,
             TalentEffect::SpawnEveryPercent { value } => self.spawn_every_percent += value,
+            TalentEffect::SenseOfPlace => self.sense_of_place = true,
+            TalentEffect::RoomPacePercent { value } => self.room_pace_percent += value,
             TalentEffect::SearchReach { value } => self.search_reach += value,
             TalentEffect::Skill { skill, value } => {
                 if let Some(id) = content.skill_id(&skill) {

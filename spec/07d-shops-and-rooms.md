@@ -149,52 +149,85 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `unpaid`, `owed_on_leaving`, `sale`, `own_gold`): an open shop's sign, its keeper's name, its
     prices for them, what they owe, and their own gold; never a value, a markup, or how their
     Presence and skills move the prices.
-- **Special rooms** (`data/room_effects.toml`, optional; without it there are none; M25),
-  ADOM-like: a room of a generated level, or an area a hand-made level marks, carries an
-  **effect** that changes the rules while one is inside it. Top level: `chance` (percent, 0 to
-  100: how likely each candidate room is to be special) and `per_level` (at most this many special
-  rooms a generated level, default 1). Each `[[effect]]` (at most 32, in file order; ids are
-  indices, in the save fingerprint): `id`, `name` (without an article: "echoing hall"), `mark` (one
+- **Special rooms** (`data/room_effects.toml`, optional; without it there are none; M25, #402;
+  developer notes `docs/dev/special-rooms.md`, the second wave's design
+  `docs/design/special-rooms.md`), ADOM-like: a room of a generated level, or an area a
+  hand-made level marks, carries an **effect** (a *feature*) that changes the rules while one is
+  inside it; rarely one covers a whole level. Top level: `chance` (percent, 0 to 100: how likely
+  each candidate room is to be special; 12) and `per_level` (at most this many special rooms a
+  generated level, default 1). Each `[[effect]]` (at most 32, in file order; ids are indices, in
+  the save fingerprint): `id`, `name` (without an article: "echoing hall"), `mark` (one
   character, unique: the `rooms` dev layer), `enter` (the message the first time the player is
-  inside one), and what it does, each optional: `light` (percent of all light kept inside, 0 to
+  inside one), `weight` (1 to 100, default 10: how often it is drawn), and, each optional: `near`
+  (said the first time a cell of such a room comes into the player's view from outside it),
+  `level_chance` (percent, default 0) with `pervade` (said on every arrival on a level it covers),
+  the eligibility `needs_danger` (only on a level with a danger), `needs_below` (only on a branch
+  level with another below it), `min_cells` and `max_cells` (only for a room of at least / at
+  most that many floor cells), and what it does: `light` (percent of all light kept inside, 0 to
   100, default 100; §5 "Special rooms"), `glow` (`[r, g, b, uv]` added over the room like ambient
   light), `noise` (percent of the loudness of every noise made inside, 1 to 1000, default 100; §5
   "Hearing"), `regen` (percent of the usual pace of regeneration inside, 1 to 1000, default 100;
-  §8 "Combat"), `mana_regen` (the same for mana, §8 "Mana"), `shunned` (creatures hostile to the player do not step in; §8 "Creature
-  behavior"), and `floor` (terrain generators lay over the room's plain floor: walkable,
-  transparent, not stairs, a door, or running water).
-  - **The effects**: a *shadowed room* keeps 30 % of the light ("The light seems to drain away
-    here."); an *echoing hall* doubles noise ("Your footsteps echo loudly."); a *hushed chamber*
-    leaves two fifths of it ("A deep hush fills this room."); a *sanctuary* heals three times as
-    fast and brings mana back three times as fast, glows faintly warm (`[60, 44, 22]`, about enough for normal eyes to see by), and keeps
-    hostile creatures out ("You feel at peace here."); a *flooded room* has a floor of shallow
-    water, slower (150) and loud (200) to wade ("The floor here is flooded."). Blood washing away
-    in a flooded room waits for blood (#127).
-  - **Generation** (`mapgen/special.rs`): last of all, each room of a rooms level but the arrival
-    room and vaults, and each of eight chambers a caves level tries, is special with `chance`
-    (7 %) until the level has `per_level` (1); the effect is drawn uniformly, from the level's
-    map stream. A rooms level's special room is the room's rectangle, walls and doors included;
-    a cave's is a blob: the floor 4-connected to a random free floor cell more than 10 cells
-    (Chebyshev) from the arrival, within radius 5 of it (at least 12 cells; vaults left out), plus
-    the rock around it. The effect's `floor` replaces plain floor in it (doorways too). A shunned
-    effect never goes where a creature patrols. About 40 % of generated levels get one (a test
-    keeps it between a third and a half over 1200 levels).
-  - **A branch's own special rooms** (`room_effects` on a branch in `data/dungeons.toml`, or on a
-    range of its depths in `[[dungeon.levels]]`, overriding the branch's table field by field):
-    `chance` (0 to 100), `per_level` (1 to 8), and `effects` (ids, the pick uniform among them;
-    not empty while `chance` is above 0), each defaulting to `room_effects.toml`'s (`effects`:
-    every effect). The one chance roll and the one uniform pick are unchanged, so a branch
-    without the table generates the same map as before (the Depths' snapshots hold it).
+  §8 "Combat"), `mana_regen` (the same for mana, §8 "Mana"), `shunned` (creatures hostile to the
+  player do not step in; §8 "Creature behavior"), and `floor` (terrain generators lay over the
+  room's plain floor: walkable, transparent, not stairs, a door, or running water). An effect
+  with a `level_chance` needs its `pervade` line and is neither `shunned` nor lays a `floor`.
+  - **The effects** (weights in brackets): a *shadowed room* (10) keeps 30 % of the light ("The
+    light seems to drain away here."); an *echoing hall* (8) doubles noise ("Your footsteps echo
+    loudly."); a *hushed chamber* (8) leaves two fifths of it ("A deep hush fills this room."); a
+    *sanctuary* (6) heals three times as fast and brings mana back three times as fast, glows
+    faintly warm (`[60, 44, 22]`, about enough for normal eyes to see by), and keeps hostile
+    creatures out ("You feel at peace here."); a *flooded room* (8) has a floor of shallow water,
+    slower (150) and loud (200) to wade ("The floor here is flooded."); a *black chamber* (5)
+    keeps no light at all, carried light too, so only darkvision sees in it ("The dark here
+    swallows your light."). None covers a whole level yet. Blood washing away in a flooded room
+    waits for blood (#127).
+  - **Generation** (`mapgen/special.rs`): last of all, from the level's map stream, each room of
+    a rooms level but the arrival room and vaults, and each of eight chambers a caves level
+    tries, is special with `chance` until the level has `per_level`. A rooms level's special room
+    is the room's rectangle, walls and doors included; a cave's is a blob: the floor 4-connected
+    to a random free floor cell more than 10 cells (Chebyshev) from the arrival, within radius 5
+    of it (at least 12 cells; vaults left out), plus the rock around it. Its effect is then
+    drawn among the effects the room is **eligible** for (its floor cells, the level's danger
+    and whether a level lies below) and the dungeon does not ban: if any is favoured, one draw in
+    0..100 walks the favoured ones in effect order by their shares; past them, or with none
+    favoured, a weighted draw by `weight` over the others (or, when every eligible effect is
+    favoured, over the favoured ones by their shares). For an effect with a `level_chance`, one
+    more draw: with that chance it covers the **whole level** and the room stays plain (it
+    counts toward `per_level`; at most one a level). The effect's `floor` replaces plain floor in
+    the room (doorways too). A shunned effect never goes where a creature patrols. About 60 % of
+    generated levels get a special room (a test keeps it between half and seven tenths over 1200
+    levels).
+  - **A dungeon's own special rooms** (`room_effects` on a branch in a campaign's
+    `data/dungeons/`, or on a range of its depths in `[[dungeon.levels]]`, overriding the
+    branch's table field by field): `chance` (0 to 100), `per_level` (1 to 8), `favoured = { id
+    = share }` (fixed shares of its draws in percent, 1 to 100 each, at most 100 together: a
+    favoured effect keeps its share however many effects are added) and `banned = [ids]` (never
+    drawn), each defaulting to `room_effects.toml`'s (no favoured, none banned). Unknown ids, an
+    effect both favoured and banned, shares over 100, and every effect banned while `chance` is
+    above 0 are content errors; the old `effects` list is refused, pointing to `favoured` and
+    `banned`. A new effect therefore turns up in every dungeon that does not ban it.
+    Fennmynster: `chance` 25, `per_level` 2, favoured flooded 35, hushed 15, shadowed 15.
   - **Level files** mark rooms with `[[room]] effect = "sanctuary" area = [x0, y0, x1, y1]`
-    (inclusive, walls and doors included; inside the map; rooms never overlap; vaults mark none).
-    A hand-made level draws its own floor (a flooded room's water). The hub's stairs nook is a
-    sanctuary.
+    (inclusive, walls and doors included; inside the map; rooms never overlap; vaults mark none),
+    and may name an effect covering the whole level with a top-level `effect = "..."` (one that
+    can cover a level; never on the overworld). A hand-made level draws its own floor (a flooded
+    room's water). The hub's stairs nook is a sanctuary.
   - **State**: each level state keeps its special rooms (`LevelState::rooms`: the effect, its
-    box, a blob's cells, and whether the player has been inside; saved and hashed, format
-    version 15). The rules ask one question, `World::room_effect_at(level, pos)` (inside the core
-    the level state's `room_effect_at`): light and creature sight, noise, regeneration, and
-    creatures that shun a sanctuary. The first time the player's cell is in a special room
-    (after any action, or arriving there), the room is marked entered and its `enter` message is
-    said; never again for that room. Perception knows a room only once entered
-    (`PerceptionView::room`, on cells seen or remembered): look mode names it (§6). The light it
-    changes is seen like any light, before and after.
+    box, a blob's cells, whether the player has seen a cell of it (`glimpsed`) and been inside
+    (`entered`)) and the effect covering it (`LevelState::pervading`); saved and hashed, each
+    left out while empty. The rules ask one question, `World::effects_at(level, pos)` (inside the
+    core the level state's `effects_at`), which gives the room's effect and the level's, folded
+    the same way by every reader (percents multiply, glows add, flags hold if either does): light
+    and creature sight, noise, regeneration and mana, and creatures that shun a sanctuary (by the
+    room alone). The first time a cell of a room comes into the player's view it is glimpsed and
+    its `near` line said (not when they first see it from inside); the first time the player's
+    cell is in a special room (after any action, or arriving there), the room is marked entered
+    and its `enter` message is said; never again for that room. On every arrival on a level an
+    effect covers, its `pervade` line is said (with Sense of place, followed by "The whole level
+    is like a gloomy room."). Perception knows a room only once entered (with Sense of place, once
+    glimpsed; `PerceptionView::room`, on cells seen or remembered): look mode names it (§6); it
+    never names the whole level's effect (`PerceptionView::pervading`, JSON dumps' `pervading`).
+    The light it changes is seen like any light, before and after.
+  - **Talents** (system `special_rooms`, §8 "Talents"): Sense of place (a room known from a
+    glimpse; a whole level's effect named on arrival) and Hallowed rest (a room's quickening of
+    healing and mana half again more).

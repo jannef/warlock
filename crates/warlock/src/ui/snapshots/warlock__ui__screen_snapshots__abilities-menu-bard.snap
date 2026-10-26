@@ -2,7 +2,7 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You learn Light step (1).
+ You learn Mighty kick.
  You spend 94 mana (dev).
 
                     ┌─ Abilities ──────────────────────────────────────────────┐

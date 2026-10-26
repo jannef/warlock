@@ -315,7 +315,8 @@ file). Topics:
 - `docs/dev/magic-items.md` — affixes, rarities, base items, loot, identification, the item description
 - `docs/dev/scrolls.md` — reading, spell scrolls on the traps' shared spell code, the scroll of identify, the read and identify lists
 - `docs/dev/overworld.md` — the overworld level, locations, sight at map scale, generated local areas
-- `docs/dev/mapgen.md` — RNG streams, dungeon branches, generators, vaults, snapshots, special rooms
+- `docs/dev/mapgen.md` — RNG streams, dungeon branches, generators, vaults, snapshots
+- `docs/dev/special-rooms.md` — room effects as data, the draw (weights, favoured and banned, eligibility), whole-level effects, `effects_at`, what the player is told
 - `docs/dev/rendering.md` — the three layers, the console shader, visual lighting and creature shadows, light stability, particles, glow, post, rain, spell effects, the `ui/` modules
 - `docs/dev/sky.md` — the sun's path, the moons, the sky, weather blocks and clouds
 - `docs/dev/temperature.md` — air temperature, freezing water, ice thickness, falling in

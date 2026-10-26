@@ -22,7 +22,8 @@
 //! `[[region]]` tables name areas of the level (`name`, `area = [x0, y0, x1, y1]`, inclusive; the
 //! first match wins), shown in the status bar. Optional `[[room]]` tables mark special rooms
 //! (spec §7 "Special rooms"): `effect` (an id in `data/room_effects.toml`) over `area = [x0, y0,
-//! x1, y1]` (inclusive, walls and doors included); rooms do not overlap. Optional `[[shop]]`
+//! x1, y1]` (inclusive, walls and doors included); rooms do not overlap; a top-level `effect`
+//! (one that can, never on the overworld) covers the whole level. Optional `[[shop]]`
 //! tables mark shops (spec §7 "Shops"): `kind` (an id in `data/shops.toml`), the `keeper`'s
 //! name, the shop floor's `area` (inclusive: everything lying there is for sale), and the
 //! keeper's `post` on it, where the keeper (`data/shops.toml`'s `[keeper]`) is spawned.
@@ -39,7 +40,7 @@ use super::faction::FactionId;
 use super::flow::{FLOW_SPEEDS, Flow};
 use super::light::LightId;
 use super::object::parse_stacks;
-use super::room_effect::SpecialRoom;
+use super::room_effect::{RoomEffectId, SpecialRoom};
 use super::search::{Secret, SecretSpec, secret_look};
 use super::shop::ShopPlan;
 use super::terrain::{StairsDir, TerrainDef, TerrainId};
@@ -110,6 +111,8 @@ struct LevelFile {
     /// Special rooms (spec §7 "Special rooms").
     #[serde(default)]
     room: Vec<RoomSpec>,
+    /// A special room's effect covering the whole level (spec §7 "Special rooms"); default none.
+    effect: Option<String>,
     /// Objects placed by position rather than by a legend character.
     #[serde(default)]
     pile: Vec<PileSpec>,
@@ -465,6 +468,8 @@ pub struct LevelTemplate {
     pub regions: Vec<Region>,
     /// Special rooms (spec §7 "Special rooms"), none overlapping another.
     pub rooms: Vec<SpecialRoom>,
+    /// The effect covering the whole level, if one does (spec §7 "Special rooms").
+    pub pervading: Option<RoomEffectId>,
     /// Shops (spec §7 "Shops"), none overlapping another; each keeper is among `creatures`, at
     /// the shop's post.
     pub shops: Vec<ShopPlan>,
@@ -787,6 +792,24 @@ pub(super) fn parse_level(
         rooms.push(room);
     }
 
+    let pervading = match &parsed.effect {
+        Some(_) if parsed.kind == LevelKind::Overworld => {
+            return Err(err("the overworld has no `effect`".into()));
+        }
+        Some(name) => {
+            let id = (content.room_effects().id(name))
+                .ok_or_else(|| err(format!("unknown effect `{name}` (room_effects.toml)")))?;
+            if !content.room_effect(id).can_pervade() {
+                return Err(err(format!(
+                    "effect `{name}` cannot cover a whole level: it needs a `pervade` line, and \
+                     none that creatures shun or that lays a floor can"
+                )));
+            }
+            Some(id)
+        }
+        None => None,
+    };
+
     let mut terrain = Grid::from_vec(width, height, cells);
     let secrets = hide_secret_doors(&mut terrain, &secret_doors, content).map_err(err)?;
     for spec in parsed.pile {
@@ -888,6 +911,7 @@ pub(super) fn parse_level(
         places,
         regions,
         rooms,
+        pervading,
         shops,
         exit: None,
         item_level,
