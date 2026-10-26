@@ -141,7 +141,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
   tongue that holds fast), the gibbering shade 18 (incorporeal, a cold touch that drains
   Intelligence), the bone wyvern 18 (a sting, bone with protection 2), the revenant 19 (very
   tough, a long sword half the time), the fetch 19 (incorporeal, a cold touch that frightens), and
-  the mummy priest 20 (a caster whose touch carries mummy rot, sometimes something worth taking). The duergar types are of the duergar race. For blood (§8 "Blood";
+  the mummy priest 20 (a caster whose touch carries mummy rot, sometimes something worth taking).
+  The orc tribe (#455; faction `orcs`, tag `orc` but for the wargs; glyph `o`, the wargs `C`;
+  all shared): the orc runt 3 (small, a knife), the orc warrior 5 (racial scimitar, a jerkin, a
+  cap, a shield now and then), the orc archer 6 (a short bow and arrows, a scimitar in reserve),
+  the warg 7 (quick, a bite that may bleed), the orc raider 9 (quick, a battle axe), the orc
+  shaman 10 (a caster with a staff and a bone amulet, sometimes magic), the orc berserker 12
+  (quick for its bulk, unarmoured, a great axe), the orc veteran 15 (scimitar, scale mail, helm,
+  and shield), the orc bowman 17 (a composite bow, studded leather), and the orc war chief 20
+  (scimitar, mail and helm often magic, a shield, coins) live in Cealdhlāw's (runt, warrior,
+  archer, warg) and Fyrdelf's (warg to war chief) populations; the dire warg 22 (very quick,
+  thick hide, a deep-tearing bite), the orc high shaman 24 (a caster, its amulet often magic), and
+  the orc warlord 28 (very rare: banded mail, great helm, large shield, a battle axe, gold) wait
+  in none for deeper places. The duergar types are of the duergar race. For blood (§8 "Blood";
   presentation only):
   `blood`, the colour of its stains (`"#rrggbb"`; default dark red, `#6e0e0c`) or `"none"` for a
   bloodless creature; the cave beetle bleeds greenish-black ichor (`#38461a`). For hunger (§8
@@ -648,7 +660,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   gives the stance (`Hostile` or `Neutral`) of two factions, creature types, or actors. Test
   factions: `vermin` (giant rats; hostile to the player), `kobolds` (the war band; hostile to the
   player and the vermin), `goblins` (the barrows' goblin tribes; hostile to the player, the
-  vermin, and the kobolds), `undead` (the barrows' and the fen's dead; hostile to the player,
+  vermin, and the kobolds), `orcs` (the orc tribe and its wargs, #455; hostile to the player,
+  the vermin, the kobolds, the undead, and the duergar, and neutral to the goblins), `undead`
+  (the barrows' and the fen's dead; hostile to the player,
   the kobolds, and the goblins, and leaving the vermin alone), `marsh` ("marsh things", the
   fen's living things and the bog hag; hostile to the player; not animals as a faction), `cult`
   ("cultists", the drowned minster's cult; hostile to the player and the marsh), `duergar` (the

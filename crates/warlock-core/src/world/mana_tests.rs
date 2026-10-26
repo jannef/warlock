@@ -72,6 +72,13 @@ max = 4
 eases = 12
 cost = 200
 
+# Named by the wargs' bites (#455), untouched by mana.
+[[status]]
+id = "bleeding"
+name = "Bleeding"
+max = 5
+eases = 6
+
 [[status]]
 id = "held"
 name = "Held"

@@ -1,0 +1,26 @@
+# The orc tribe (#455; content::orc_roster_tests checks the numbers). A huge orc who fights
+# unarmoured in a frenzy: quick for its bulk, with a great axe (its racial weapon) swung in both
+# hands.
+[[creature]]
+id = "orc_berserker"
+level = 12
+xp = 70
+rarity = "uncommon"
+loot = 25
+name = "orc berserker"
+glyph = "o"
+fg = "#d04030"
+speed = 1200
+faction = "orcs"
+tags = ["orc"]
+alignment = "evil"
+vision = "darkvision"
+opens_doors = true
+footsteps = 150
+hearing = 12
+weight = 110000
+stats = { strength = 22, dexterity = 11, toughness = 22, intelligence = 9, willpower = 13, presence = 8 }
+base_hp = 48
+on_eat = { message = "This orc meat is rank!", vomit = 30, stat = { strength = 2 } }
+weapon_skills = { axes = 2, great_weapon = 1 }
+racial_weapon = "great_axe"

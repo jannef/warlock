@@ -17,7 +17,7 @@ giant_leech at (8, 17) route E E S W W E E N W W
 giant_frog at (56, 12) route W W W W W W W W W W E E E E E E E E E E
 giant_leech at (28, 16) route W W S W E N E E
 giant_leech at (27, 15) route S S W W E E N N
-barrow_ghoul at (57, 12) route S N N E W S S N
+barrow_spider at (57, 12) route S N N E W S S N
 giant_leech at (7, 12) route S S S S S E E E S W E N W W W N N N N N
 giant_leech at (28, 9) route N E S W N E S N W S E N W S
 giant_leech at (15, 16) route W W W E E W W E E E
@@ -28,7 +28,7 @@ giant_frog at (58, 7) route N S S N N S S N N S
 giant_leech at (53, 3) route E E S W E E E E W W W W E N W W
 giant_frog at (29, 15) route S S W W W W E E E E N N
 giant_leech at (21, 16) route W W W W W E W E E E E E
-grave_worm at (23, 16) route W W E E W W E E W W E E W W E E W W E E
+kobold at (23, 16) route W W E E W W E E W W E E W W E E W W E E carrying a bone spear (wielded), a bone cap (being worn), a leather jerkin (being worn), 4 copper coins
 giant_frog at (57, 13) route N S N N E E E E E N S W W W W W S S N S
 alarm trap at (28, 7)
 teleport trap at (38, 4)
@@ -47,11 +47,11 @@ pit trap at (60, 12)
                           #.w.'.#     #.#               ##'#############
                           #R..#.#     #.#               #¡...........).#
      #######              ##.##w#     #.#  ##############.............(#
-     #.w..¡#               #.##.#    ##S####z......w....Rz..^.......>..#
+     #.w..¡#               #.##.#    ##S####z......w....Rs..^.......>..#
      #.....#               #.##.######.....#.############Ry...........¡#
      #.....#            ####.##y......R....S.#          ################
      #.....##############..w.R#.######¡.R..###
-     #...w.&...w.....w.wS.?.w.'.#    #######
+     #...w.&...w.....w.kS.?.w.'.#    #######
      #..w..##############w....###
      #¡....#            #######
      #######

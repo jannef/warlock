@@ -38,6 +38,7 @@ fn files() -> ContentFiles {
          [[faction]]\nid = \"vermin\"\nname = \"vermin\"\n\
          [[faction]]\nid = \"kobolds\"\nname = \"kobolds\"\n\
          [[faction]]\nid = \"goblins\"\nname = \"goblins\"\n\
+         [[faction]]\nid = \"orcs\"\nname = \"orcs\"\n\
          [[faction]]\nid = \"undead\"\nname = \"undead\"\n\
          [[faction]]\nid = \"marsh\"\nname = \"marsh things\"\n\
          [[faction]]\nid = \"cult\"\nname = \"cultists\"\n\

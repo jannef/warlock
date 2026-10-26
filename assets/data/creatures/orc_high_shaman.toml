@@ -1,0 +1,49 @@
+# The orc tribe (#455; content::orc_roster_tests checks the numbers). The tribe's eldest shaman,
+# who speaks for its dark gods: curses from farther off (announced only, as every creature
+# caster's), a staff (its racial weapon), and a bone amulet that is often more than it seems.
+[[creature]]
+id = "orc_high_shaman"
+level = 24
+xp = 130
+rarity = "rare"
+loot = 60
+name = "orc high shaman"
+glyph = "o"
+fg = "#e070e0"
+faction = "orcs"
+tags = ["orc", "caster"]
+alignment = "evil"
+vision = "darkvision"
+combat = "caster"
+range = 6
+opens_doors = true
+footsteps = 110
+hearing = 13
+weight = 70000
+stats = { strength = 19, dexterity = 16, toughness = 22, intelligence = 16, willpower = 21, presence = 11 }
+base_hp = 48
+skills = { concentration = 82, spellcraft = 87 }
+on_eat = { message = "It tastes rank, and of smoke and bitter herbs.", vomit = 30, stat = { willpower = 5 } }
+weapon_skills = { staves = 4 }
+racial_weapon = "quarterstaff"
+
+[[creature.gear]]
+chance = 80
+one_of = ["bone_amulet"]
+magic = 30
+
+[[creature.gear]]
+chance = 60
+one_of = ["copper_coin*20", "gold_coin*2"]
+
+[[creature.particles]]
+on = "attack"
+glyphs = "·*+"
+colors = ["#ffd0f0", "#d050d0", "#702070"]
+count = 6
+life = 0.45
+spread = [1.0, 1.0]
+area = [0.15, 0.15]
+scale = 0.5
+fade = 0.6
+glow = 0.6

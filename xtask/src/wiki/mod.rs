@@ -969,8 +969,9 @@ mod tests {
         }
         let statuses = text("status-effects.md");
         for row in [
-            "| Bleeding | yes, \"bleeding\" | Big hits and confirmed criticals; the giant leech's \
-             sucker (40%, 1 degree) | A hit point every 40 seconds, faster the worse it is | A \
+            "| Bleeding | yes, \"bleeding\" | Big hits and confirmed criticals; the dire warg's \
+             bite (15%, 1 degree); the giant leech's sucker (40%, 1 degree); the warg's bite \
+             (10%, 1 degree) | A hit point every 40 seconds, faster the worse it is | A \
              degree a minute | Not at all | — | Bandage |",
             "| A degree every 2 minutes | Half as fast |",
             "the giant rat's bite (10%, 2 degrees); the grave worm's bite (20%, 1 degree); eating \
@@ -1108,7 +1109,7 @@ mod tests {
         );
         assert!(text("creatures.md").contains("| Deer | `d` | Wildlife | neutral | never |"));
         assert!(text("creatures.md").contains("shoots from afar"));
-        assert!(text("factions.md").contains("| Kobolds | you, vermin, goblins, undead |"));
+        assert!(text("factions.md").contains("| Kobolds | you, vermin, goblins, orcs, undead |"));
         assert!(text("factions.md").contains("| Wildlife | nobody |"));
         assert!(text("factions.md").contains("| Cultists | you, marsh things | no |"));
         assert!(

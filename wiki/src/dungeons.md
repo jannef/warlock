@@ -76,7 +76,8 @@ Hlāwdūn east of Cēaptūn. Its first two floors are the barrow's passages and 
 below are the hollows of the hill, wide caves. It is cold (8 °C), its traps are arrows, spears,
 pits, and alarms, and its dead walk: crawling hands and the bones of rats and wolves, skeletons
 (some with bows, some armed and shielded warriors), zombies (kobolds among them), ghouls, and the
-barrow wight, with goblins, kobolds, and vermin among them. On its second floor, always, lies the
+barrow wight, with goblins, kobolds, and vermin among them, and in the hollows an orc war band
+with its wargs. On its second floor, always, lies the
 **barrow chamber**: a skeleton paces a burial hall before a locked bronze door, and behind it
 the silver chalice Sister Hild wants back lies on a plinth. The skeleton carries the bronze key.
 On the first floor you feel cold air breathing up from the mound.
@@ -122,7 +123,8 @@ magma crawlers, cinder elementals, ash wraiths, basilisks, ogres, and trolls, an
 delf's fires left: ogre zombies and grave hounds, burning skulls, the charred dead, duergar
 skeletons still in their helms, rotting trolls, and the spirits of the miners, knockers and
 spectres, that pass through the rock, with kobolds,
-centipedes, and bats in the upper galleries.
+centipedes, and bats in the upper galleries. Orc war bands raid the mine, the duergar's enemies:
+raiders, archers, shamans, berserkers, veterans, and their wargs, and now and then a war chief.
 
 Every gallery floor holds a **foreman's cabin**: a timber-floored lodging where a duergar miner
 keeps watch, with a spare pick-axe, his lamp, and a brass key to the delf's locked rooms behind a

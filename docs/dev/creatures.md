@@ -199,3 +199,16 @@ vampire spawn, hand of glory, gallows dead, gibbering shade, bone wyvern, revena
 mummy priest ship in no population (deep undead wait for deep places, #383), and the ghost is
 incorporeal (wall Defence 2). The roster's holds (`held`, #431) are `{ status = "held", chance,
 difficulty }`: the ghast's and fen ghoul's claws 10 % at 15, the gallows dead's tongue 20 % at 17.
+The orc tribe (#455): shared types, one file each in `assets/data/creatures/` (`orc_*`, `warg`,
+`dire_warg`), faction `orcs` (inserted after `goblins`; listed in the four fixture factions files
+too), tag `orc` on every orc (the wargs carry none, as the ogre carries no `goblin`), `archer` and
+`caster` on the bowmen and shamans. `content/orc_roster_tests.rs` holds the formulas (#455's
+issue): each `orcs` type has a role in `ROLES`, is on the XP guideline, its St/Dx/To within 1 of
+`12 + 0.4L`, `10 + 0.25L`, `12 + 0.4L` plus the role's adjustment, its max HP within ±35 % of the
+undead roster's shape, its racial weapon at rank `1 + L/7`, and the wargs' bites on #383's dice;
+two types or more in each band of 3–7, 8–14, 15–21, and 22–30; the stances; and the gear rolls
+(armed nine times in ten, the bowmen with arrows). Populations: Cealdhlāw the runt, warrior,
+archer, and warg; Fyrdelf the warg, raider, shaman, berserker, veteran, bowman, and war chief
+(level 20: only out of depth); the dire warg, high shaman, and warlord are in none. Riders on
+`on_hit` fire only on natural attacks, so the armed orcs have none; the wargs' bites carry
+`bleeding` (the mana tests' status fixture lists it for them).

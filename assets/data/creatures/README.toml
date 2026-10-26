@@ -46,7 +46,8 @@
 # quests, comes from data/plurals.toml (default the word plus "s"): a tag or a creature name
 # with an irregular plural adds its line there. **Tag every new creature** that belongs to a
 # group or a role below (a new tag only when something could use it):
-#   groups   kobold, goblin (not the ogre or the troll, who only run with them), undead (every
+#   groups   kobold, goblin (not the ogre or the troll, who only run with them), orc (not the
+#            wargs, who only run with them), undead (every
 #            creature of the "undead" faction: content::tag's test fails without it), vermin
 #            (not the basilisk), marsh-thing (the fens' living things and the bog hag),
 #            duergar (not their trader, a merchant), fire-thing (the delf's burning things)
