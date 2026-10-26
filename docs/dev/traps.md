@@ -12,7 +12,16 @@ trap hall (`levels/trap_hall.toml`, scenario `traps`) has one of each. They live
 victim)` in `world/trap.rs` is the one way a trap goes off: stepping onto a cell calls it through
 `World::step_onto_trap` (the player in `player_moves`, creatures in `ai.rs::creature_steps`, one
 who makes way for the player onto their old cell in `talk.rs::swap_places`, its pit's climb taken
-off its energy), and returns the extra energy a pit costs. **Trapped doors** (spec §8 "Trapped
+off its energy), and returns the extra energy a pit costs. **Sidestepping** (spec §8 "Traps",
+#476) is `world/sidestep.rs`: `player_moves` calls `World::step_willingly` instead (not when
+`turned_back` changed the cell), which first gives a **known** trap off a door the chance
+`Content::trap_avoid()` (`content::TrapAvoid`, `[avoid]` in `data/traps.toml`: `base` +
+`per_point` × dodge within `min`..`max`) at `World::trap_dodge` (the Dexterity plus Dodge
+categories of `defence_of`, so armour, burden, talents, magic, stance, and statuses all count),
+one `rng.chance` draw of the gameplay stream; avoided, the trap is left untouched, the player told,
+and `Use::Dodge` reported for marks; else `step_onto_trap` as before (with the Light step talent's
+own check, `steps_lightly`). Tests: `world/sidestep_tests.rs`; the wiki's `trap-avoid.md` table
+(`xtask/src/wiki/traps.rs::avoiding`) reads `TrapAvoid::chance`. **Trapped doors** (spec §8 "Trapped
 doors", #174): a trap may lie on a door, closed or open (`TerrainDef::is_door`,
 `LevelState::is_door`), of any kind but a pit (`TrapEffect::fits_door`, checked by
 `content/level.rs::parse_trap`, which also refuses a trapped secret door; `mapgen::hide_secrets`

@@ -281,6 +281,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("search-depths.md", searching::search_depths),
         ("search-races.md", searching::search_races),
         ("traps.md", traps::traps),
+        ("trap-avoid.md", traps::avoiding),
         ("trap-disarm.md", traps::disarming),
     ];
     let mut files: Vec<(String, String)> = tables
@@ -705,6 +706,26 @@ mod tests {
             "{abilities}"
         );
         assert!(!abilities.contains("| Disable device |"), "{abilities}");
+        // Stepping past a known trap: 55% at dodge 0, 10% a point, from 15% to 90%.
+        let avoid = text("trap-avoid.md");
+        assert!(
+            avoid.contains("| \u{2212}4 or less | 15% | Dexterity 3 or less |"),
+            "{avoid}"
+        );
+        assert!(
+            avoid.contains("| +0 | 55% | Dexterity 10 or 11 |"),
+            "{avoid}"
+        );
+        assert!(
+            avoid.contains("| +2 | 75% | Dexterity 14 or 15; Dexterity 10 with Tumble 40 |"),
+            "{avoid}"
+        );
+        assert!(
+            avoid.contains(
+                "| +4 or more | 90% | Dexterity 18 or more; Dexterity 10 with Tumble 80 |"
+            ),
+            "{avoid}"
+        );
         // Disarming: an arrow trap (14) at Dexterity 10 is 66 of 144 rolls, set off by 36 (a
         // natural 9 or less); at Dexterity 14 (+2) 89 and 21; with Disable device 100 (+8 more)
         // all but a natural 2 or 3, and never set off.
@@ -749,7 +770,7 @@ mod tests {
         assert!(
             skills.contains(
                 "| Tumble | passive | Rolling, diving, and twisting out of harm's way. | a Dodge \
-                 bonus to Defence | dodging an attack (40%) |"
+                 bonus to Defence | dodging an attack or a known trap (40%) |"
             ),
             "{skills}"
         );

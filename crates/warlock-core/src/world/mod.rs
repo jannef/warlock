@@ -144,6 +144,7 @@ mod second_wind;
 mod service;
 mod shoot;
 mod shop;
+mod sidestep;
 mod sign_picks;
 mod skill_roll;
 mod spawn;
@@ -1338,6 +1339,8 @@ mod service_tests;
 mod shoot_tests;
 #[cfg(test)]
 mod shop_tests;
+#[cfg(test)]
+mod sidestep_tests;
 #[cfg(test)]
 mod sign_pick_tests;
 #[cfg(test)]

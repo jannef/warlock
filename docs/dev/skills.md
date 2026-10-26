@@ -39,7 +39,8 @@ trained at all lets the player notice in passing, `Skills::trains_effect`), disa
 `docs/dev/stealing.md`); each use
 is reported where it happens (`make_noise`, `hear`, `fight.rs::resolve`, `apply`, `player_moves`,
 `kick_door`, `search_turn` for `search`, `notice_hidden` for `spot`, `World::disarm` for
-`disarm`, `pick_lock` for `pick`, `World::steal` for `steal`). A new
+`disarm`, `pick_lock` for `pick`, `World::steal` for `steal`, and `World::sidesteps` for a
+known trap avoided, `dodge`, besides `fight.rs::resolve`). A new
 effect or use is a variant there plus its one hook. The player sees values only
 (`PerceptionView::own_skills`, the Skills screen `ui/skills_screen.rs`, `A`); never marks or
 benefit numbers. Skills get no keys of their own: active uses are chosen from the one abilities
