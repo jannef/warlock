@@ -90,7 +90,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
   above, with a gear table where it is a humanoid (§8 "Creature gear"). The creature types are
   the files in `assets/data/creatures/` (a campaign's own in its `data/creatures/`); the wiki's
   generated tables (`cargo xtask wiki`) list them with their numbers, so adding a creature never
-  edits this spec. For blood (§8 "Blood";
+  edits this spec. The animated objects' types are not files there: they are generated from
+  `data/animated.toml` (the tiers, the drop rule, what every animated type is, the material
+  groups) and `data/animated/` (one household body a file: its object, level, rarity, speed,
+  attack, and how it moves and dies), numbered after the shared creature files and before every
+  campaign's (§8 "Animated objects"). A creature may list the statuses it never suffers,
+  `immune = ["poisoned", "bleeding"]` (`diseased`: every disease), and its death line's verb,
+  `dies = "splinters"`. For blood (§8 "Blood";
   presentation only):
   `blood`, the colour of its stains (`"#rrggbb"`; default dark red, `#6e0e0c`) or `"none"` for a
   bloodless creature; the cave beetle bleeds greenish-black ichor (`#38461a`). For hunger (§8
@@ -239,7 +245,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `"` amulets. **Item classes** (#189) say what kind of thing an object is, ADOM-like:
   `data/item_classes.toml` is their ordered list (`[[class]]` with `id`, `name`, the header item
   lists show, `kinds`, and `corpses`): melee weapons, missile weapons, missiles, shields, body
-  armour, helmets, cloaks, gloves, boots, rings, amulets, light sources, tools, food (corpses
+  armour, helmets, cloaks, gloves, boots, rings, amulets, light sources, tools, household goods
+  (what animated household things are made of), food (corpses
   included, `corpses = true`), potions, scrolls, gems, coins, miscellaneous. Every object names
   its class (`class`, required); a class lists the magic item kinds (`kind`, §8 "Magic items")
   of its objects, each kind in one class only, so an object of a kind is of that kind's class

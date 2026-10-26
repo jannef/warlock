@@ -13,6 +13,7 @@
 mod abilities;
 mod actions;
 mod alignment;
+mod animated;
 mod burden;
 mod calendar;
 mod character;
@@ -147,6 +148,10 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("creature-defences.md", creatures::creature_defences),
         ("creature-attacks.md", creatures::creature_attacks),
         ("creature-senses.md", creatures::creature_senses),
+        ("animated-tiers.md", animated::animated_tiers),
+        ("animated-numbers.md", animated::animated_numbers),
+        ("animated-bodies.md", animated::animated_bodies),
+        ("animated-groups.md", animated::animated_groups),
         ("dungeons.md", dungeons::dungeons),
         ("dungeon-floors.md", dungeons::dungeon_floors),
         ("danger-weights.md", dungeons::danger_weights),

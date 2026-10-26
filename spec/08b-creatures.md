@@ -73,6 +73,27 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Not yet: immunity to weapons that are not magical (the hook is `World::resolve` in
   `fight.rs`); bolts and bursts stop at walls, so spells do not reach one inside. The example is
   the stone haunt (`stone_haunt`), which no level places yet.
+- **Animated objects** (`warlock-core/src/content/animated.rs`, the types; `animated.rs`, what
+  one is made of; `world/animated.rs`, the drops and the talents; #483, design
+  `docs/design/animated-objects.md`): things a will set moving, each an **ordinary creature
+  type generated when content loads**. The household tier (levels 1 to 8) is one type per body
+  in `data/animated/` (`animated_candlestick`, "animated candlestick"), at the body's level: its
+  numbers are the undead roster's formulas (#383) with the tier's adjustments (small: two dice
+  steps under the curve), its natural Protection, resistances, and death line ("The animated
+  chair splinters.") by its object's base material's group, and the rest as
+  `data/animated.toml`'s `[creature]` gives every animated type: faction `animated` (hostile to
+  the player only), tags `animated` and `construct`, darkvision, no corpse, no blood, and
+  **immune** to the diseased, poisoned, and bleeding statuses. A creature of it **is** its
+  body: a real household object (class `household`) of a material drawn by the materials'
+  `gear` weights at its level (a silver candlestick is rare), carried in no slot, rolled from
+  `animated/<level id>` on a generated level (spawn order, after gear) and `animated/<actor id>`
+  for every other spawn; a legend may give the material (`animated = { material = "silver" }`).
+  It is seen by its body (the object's glyph in its material's colour; look mode adds "of
+  silver" and how it moves). When it dies its body falls **whole** by `[drops] intact` (50 %,
+  plus the player's Salvager), drawn from `drop/<actor id>`, else nothing of it. Nothing can be
+  stolen from one ("It is all of a piece.", no time). Talents (system `animated`): Salvager,
+  Unbinder (+1 to hit, +2 damage against a creature tagged `animated`). Blades, hollow armour,
+  and panoplies follow (#484 to #487, #463).
 - **Creature gear** (`warlock-core/src/gear.rs`, the rolls; `content/gear.rs`, the data; #328,
   campaign design §10.3): a creature type may have a `racial_weapon` (a weapon it must have a
   rank in: the affinity is the rank, which combat applies) and `[[creature.gear]]` lines
