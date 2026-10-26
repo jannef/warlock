@@ -351,9 +351,18 @@ impl WorldState {
 
     /// What `actor` carries against what it can (spec §8 "Burden"): the player by their race's
     /// size (and whether it ignores Burdened) when the run has a character, anyone else by its
-    /// creature type's size.
+    /// creature type's size; inside a special room that scales the limit (a heavy hall), by its
+    /// percent. The one place the rules ask for a load.
     pub(crate) fn load(&self, content: &Content, actor: &Actor) -> Load {
-        burden::load(actor, self.race_of(content, actor), content)
+        self.load_at(content, actor, actor.pos)
+    }
+
+    /// [`WorldState::load`] as it would be were `actor` at `pos` on its level (a step into a
+    /// heavy hall).
+    pub(crate) fn load_at(&self, content: &Content, actor: &Actor, pos: Pos) -> Load {
+        let room =
+            (self.levels.get(&actor.level)).map_or(100, |l| l.effects_at(content, pos).burden());
+        burden::load(actor, self.race_of(content, actor), content, room)
     }
 
     /// The size of `actor`, an index into [`Content::sizes`]: the player's race's when the run
@@ -1288,6 +1297,8 @@ mod gem_tests;
 mod gifts_tests;
 #[cfg(test)]
 mod hearing_tests;
+#[cfg(test)]
+mod heavy_hall_tests;
 #[cfg(test)]
 mod hold_tests;
 #[cfg(test)]

@@ -60,6 +60,8 @@ mod plural;
 mod quest;
 mod race;
 mod resource;
+#[cfg(test)]
+mod room_burden_tests;
 mod room_effect;
 #[cfg(test)]
 mod room_temperature_tests;
