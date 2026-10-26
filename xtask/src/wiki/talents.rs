@@ -572,6 +572,10 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             percent(value),
             100 + 200 * (100 + value) / 100
         ),
+        TalentEffect::RoomStatusImmune { status: id } => format!(
+            "a special room's (or a whole level's) {} never takes you",
+            status(&id)
+        ),
         TalentEffect::StoneSense => "notices hidden things on stone in passing".into(),
         TalentEffect::StoneFind { value } => format!(
             "{} to every check to find what is hidden on stone, searching and in passing",

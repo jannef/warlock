@@ -797,7 +797,11 @@ impl Content {
                 let id = content.terrain_id(name)?;
                 Some((id, content.terrain(id)))
             };
-            content.room_effects = RoomEffects::parse(path, text, terrain)?;
+            let status = |name: &str| {
+                let id = content.status_id(name)?;
+                Some((id, content.status(id)))
+            };
+            content.room_effects = RoomEffects::parse_with(path, text, terrain, status)?;
         }
         content.load_factions(files)?;
         content.load_creatures(files)?;

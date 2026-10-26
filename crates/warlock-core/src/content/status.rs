@@ -523,6 +523,22 @@ impl StatusDef {
             .filter(|p| severity >= p.from)
             .map(|p| &p.by)
     }
+
+    /// Whether all it does is to mana (drains it, slows its return): nothing to one with no mana,
+    /// so a room's status of this kind passes such a one by (`World::dwell`).
+    pub fn touches_only_mana(&self) -> bool {
+        (self.mana_damage > 0 || self.mana_regen != 100)
+            && self.damage == 0
+            && self.regen == 100
+            && self.penalty.is_none()
+            && self.combat == CombatBonus::default()
+            && self.cost == 100
+            && self.blocks.is_empty()
+            && !self.flees
+            && self.follows.is_none()
+            && self.wound.is_none()
+            && self.hold.is_none()
+    }
 }
 
 /// Parses `data/status.toml`: the healing rules and the statuses in file order; `damage`
