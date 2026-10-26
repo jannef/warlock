@@ -188,7 +188,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - First-phase commands: move, wait, search (`s`, a turn; `S`, for a while: up to 10 turns,
   stopping when something is found or interrupts, like a rest; §8 "Searching"; basic commands,
   not abilities), open/close door, kick (`k`, then a direction; §8 "Doors"),
-  ascend/descend, light/douse lantern (`*`),
+  ascend/descend (ascend also leaves an outdoor area when no enemy is about, §7 "Leaving an
+  outdoor area"), light/douse lantern (`*`),
   pick up (`,` or `;`), drop (`d`), equipment (`i`), inventory (`I`), character (`@`), skills
   (`A`), weapon skills (`W`), quest log (`q`), rest (`b`), eat (`e`), read (`r`; a basic
   command, not an ability), look (`l`), shoot or throw what

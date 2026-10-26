@@ -47,6 +47,14 @@ const WAVES: &[(&str, Option<&str>)] = &[
     ("basilisk", None),
     ("cinder_elemental", None),
     ("fire_drake", Some("ascmearc")),
+    // The goblin tribe's second tier (#454): the hobgoblins, all shared.
+    ("hobgoblin", None),
+    ("hobgoblin_archer", None),
+    ("hobgoblin_legionnaire", None),
+    ("hobgoblin_warcaster", None),
+    ("hobgoblin_sergeant", None),
+    ("hobgoblin_captain", None),
+    ("hobgoblin_warlord", None),
     // The undead roster, batch 1 (#384): levels 1 to 10, all shared.
     ("crawling_hand", None),
     ("skeletal_rat", None),
@@ -117,6 +125,11 @@ fn goblins_and_the_undead_fight_the_kobolds_and_each_other() {
         ("goblin", "kobold", Stance::Hostile),
         ("goblin", "rat", Stance::Hostile),
         ("goblin", "goblin_chief", Stance::Neutral),
+        // The hobgoblins (#454) are of the goblins' faction: the kobolds' and the duergar's foes.
+        ("hobgoblin", "goblin", Stance::Neutral),
+        ("hobgoblin_captain", "ogre", Stance::Neutral),
+        ("hobgoblin", "kobold", Stance::Hostile),
+        ("hobgoblin_legionnaire", "duergar_warrior", Stance::Hostile),
         ("skeleton", "player", Stance::Hostile),
         ("zombie", "kobold", Stance::Hostile),
         ("barrow_ghoul", "goblin", Stance::Hostile),

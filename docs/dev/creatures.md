@@ -13,6 +13,7 @@ Per-tribe notes:
 - `docs/dev/creatures/campaign-waves.md`: the barrow, fen, and delf waves (the non-undead notes)
 - `docs/dev/creatures/yugoloth.md`: the yugoloths (#446; faction, tags, riders)
 - `docs/dev/creatures/hags.md`: the hags (#451; faction, tag, riders)
+- `docs/dev/creatures/hobgoblins.md`: the hobgoblins (#454; the goblin tribe's second tier)
 
 ## Overview
 

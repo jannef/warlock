@@ -226,7 +226,9 @@ impl World {
             .map_or_else(|| id.to_string(), |t| t.name.clone())
     }
 
-    /// Walks off the edge of a local area, back to its overworld cell: like taking stairs.
+    /// Walks off the edge of an outdoor area (a local area, or a hand-made one an overworld
+    /// location leads into), back to its overworld cell: like taking stairs. The quick leave
+    /// (`quick_leave.rs`) goes the same way.
     pub(super) fn leave_by_edge(&mut self, exit: EdgeExit, events: &mut Vec<Event>) -> Spent {
         let from = self.state.current_level.clone();
         if let Err(err) = self.travel(&exit.to, Some(exit.pos)) {
@@ -287,6 +289,11 @@ impl World {
         let Some(link) = link else {
             if kind == LevelKind::Overworld && dir == StairsDir::Down {
                 return self.enter_local_area(events);
+            }
+            if dir == StairsDir::Up
+                && let Some(done) = self.quick_leave(events)
+            {
+                return done;
             }
             self.say(format!("You see no way {way} here."));
             return false;

@@ -1,0 +1,39 @@
+# The goblin tribe's second tier (#454). The hobgoblins' drilled bowmen: a long bow (its racial
+# weapon), a full quiver, and a short sword for when the line closes.
+[[creature]]
+id = "hobgoblin_archer"
+level = 10
+xp = 60
+rarity = "uncommon"
+loot = 25
+name = "hobgoblin archer"
+glyph = "g"
+fg = "#c86478"
+faction = "goblins"
+tags = ["goblin", "hobgoblin", "archer"]
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+combat = "ranged"
+range = 8
+opens_doors = true
+footsteps = 120
+hearing = 12
+weight = 70000
+stats = { strength = 14, dexterity = 16, toughness = 16, intelligence = 11, willpower = 13, presence = 11 }
+base_hp = 23
+on_eat = { message = "This hobgoblin meat is rank!", vomit = 35 }
+weapon_skills = { bows = 2, short_blades = 1 }
+racial_weapon = "long_bow"
+[[creature.gear]]
+chance = 95
+one_of = ["arrow*15", "arrow*25"]
+[[creature.gear]]
+chance = 60
+one_of = ["short_sword"]
+[[creature.gear]]
+chance = 60
+one_of = ["studded_leather"]
+[[creature.gear]]
+chance = 40
+one_of = ["leather_cap"]
