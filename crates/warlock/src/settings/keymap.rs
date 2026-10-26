@@ -25,7 +25,7 @@
 //! `--export-keys` / `--import-keys`, `main.rs`), and on the web a download and a file picker.
 
 use crate::input::{Bindings, Context, KeyBinding, KeyCommand};
-use crate::settings::keys::{REBINDABLE, VITAL};
+use crate::settings::keys::{REBINDABLE, RETIRED, VITAL};
 use std::path::PathBuf;
 
 /// The file's name in the config folder, and the web download's.
@@ -135,6 +135,9 @@ fn listed(table: &toml::Table, warnings: &mut Vec<String>) -> Vec<(KeyCommand, V
     let mut listed: Vec<(KeyCommand, Vec<KeyBinding>)> = Vec::new();
     for (place, id, value) in entries {
         let Some(command) = KeyCommand::from_id(id) else {
+            if RETIRED.contains(&id) {
+                continue;
+            }
             warnings.push(format!("{place}: unknown command; skipped"));
             continue;
         };

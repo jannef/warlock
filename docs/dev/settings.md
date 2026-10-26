@@ -66,7 +66,7 @@ written, like Search for a while before `S`) its defaults minus any key a listed
 The keymap file (`settings/keymap.rs`, #159): `export` writes every rebindable command by context
 (`[play]`, `[aim]`, ... from `Context::id`, `version = 1`); `import` applies a file to the live
 bindings the way rebinding does (only the listed commands change, keys move within a context, the
-first listed in `REBINDABLE` order wins a key, unknown ids and keys are warnings, the lockout rules
+first listed in `REBINDABLE` order wins a key, unknown ids and keys are warnings, except the ids in `keys::RETIRED` (deleted commands such as `fire`, dropped silently, in `from_table` too), the lockout rules
 hold) and returns a `Report`; version 0 is a flat table of ids or a settings file's `[bindings]`.
 `KeymapFile` (from `SettingsStore::keymap`) is where Controls' Export keys and Import keys go:
 `warlock-keys.toml` beside `settings.toml` (desktop), the browser (a blob download; a file input

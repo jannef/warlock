@@ -56,7 +56,6 @@ pub const REBINDABLE: &[KeyCommand] = &[
     KeyCommand::Read,
     KeyCommand::Look,
     KeyCommand::Missile,
-    KeyCommand::Fire,
     KeyCommand::Throw,
     KeyCommand::MoreAggressive,
     KeyCommand::MoreDefensive,
@@ -125,14 +124,17 @@ pub const VITAL: &[KeyCommand] = &[
     KeyCommand::TextConfirm,
 ];
 
+/// Ids of commands that were removed: an old settings or keymap file may still list them, and
+/// they are dropped without a warning. Add an id here when a command is deleted.
+pub const RETIRED: &[&str] = &["fire"];
+
 /// The settings ids of [`KeyCommand::Page`] 1 to 9.
 const PAGE_IDS: [&str; 9] = [
     "page_1", "page_2", "page_3", "page_4", "page_5", "page_6", "page_7", "page_8", "page_9",
 ];
 
 /// Rebindable commands with no key by default: abilities (`warlock_core::ability`), which the
-/// abilities menu (#156) lists instead of a key each; Fire, which the Missile command's `t`
-/// (ADOM's shoot/throw key, #350) covers; Talents; the previous target and the previous info
+/// abilities menu (#156) lists instead of a key each; Talents; the previous target and the previous info
 /// page, which Shift with the next one's key picks; and Back (in menus and in text fields) and skipping the rest at
 /// `--more--`, which Esc always does. The player may bind one in Controls.
 pub const UNBOUND: &[KeyCommand] = &[
@@ -142,7 +144,6 @@ pub const UNBOUND: &[KeyCommand] = &[
     KeyCommand::PickLock,
     KeyCommand::Steal,
     KeyCommand::HoodLantern,
-    KeyCommand::Fire,
     KeyCommand::Talents,
     KeyCommand::Quit,
     KeyCommand::PrevTarget,
@@ -240,7 +241,6 @@ impl KeyCommand {
             Read => "read",
             Look => "look",
             Missile => "missile",
-            Fire => "fire",
             Throw => "throw",
             MoreAggressive => "more_aggressive",
             MoreDefensive => "more_defensive",
@@ -544,7 +544,7 @@ impl Bindings {
     pub fn from_table(table: &toml::Table, warnings: &mut Vec<String>) -> Self {
         let mut bindings = Bindings::default();
         for id in table.keys() {
-            if KeyCommand::from_id(id).is_none() {
+            if KeyCommand::from_id(id).is_none() && !RETIRED.contains(&id.as_str()) {
                 warnings.push(format!("bindings: unknown command `{id}` ignored"));
             }
         }
@@ -622,6 +622,17 @@ impl Bindings {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_retired_command_is_dropped_without_a_warning() {
+        let table: toml::Table = toml::from_str("fire = [\"f\"]\nghost = [\"g\"]").unwrap();
+        let mut warnings = Vec::new();
+        Bindings::from_table(&table, &mut warnings);
+        assert_eq!(warnings, ["bindings: unknown command `ghost` ignored"]);
+        let mut b = Bindings::default();
+        let report = crate::settings::keymap::import(&mut b, "fire = [\"f\"]").unwrap();
+        assert!(report.warnings.is_empty() && report.changed.is_empty());
+    }
 
     fn ch(s: &str) -> KeyBinding {
         KeyBinding::Char(s.into())
