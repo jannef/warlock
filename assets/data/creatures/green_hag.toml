@@ -1,0 +1,39 @@
+# The hags (#451): the bog hag's kin, shared types on the undead roster's formulas (#383). A witch
+# of the swamps and the deep woods, green-skinned and lank-haired, who lies and beguiles: her
+# illusions hold the eye still, and the misery she spreads sours every blow. A caster (her spells
+# announced until creature magic lands). Illusions themselves wait for a mechanic of their own.
+[[creature]]
+id = "green_hag"
+level = 18
+xp = 100
+rarity = "rare"
+loot = 50
+name = "green hag"
+glyph = "h"
+fg = "#2f7a5a"
+faction = "hags"
+tags = ["hag", "caster"]
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+combat = "caster"
+range = 6
+opens_doors = true
+footsteps = 20
+hearing = 18
+weight = 60000
+stats = { strength = 15, dexterity = 14, toughness = 19, intelligence = 21, willpower = 26, presence = 21 }
+base_hp = 36
+skills = { concentration = 64, spellcraft = 69 }
+resist = { poison = 25 }
+on_eat = { message = "Bitter as swamp weed.", vomit = 60, harm = "1d4", stat = { intelligence = 5 } }
+blood = "#2a4a30"
+[creature.attack]
+damage = "2d8"
+damage_type = "slashing"
+name = "claws"
+verb = "claws"
+on_hit = [
+    { status = "transfixed", chance = 10, severity = 2 },
+    { status = "ill_wished", chance = 15, severity = 1 },
+]

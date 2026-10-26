@@ -5,14 +5,29 @@
 #
 # Generation: every room of a rooms level but the arrival room (and vaults), and each of eight
 # chambers a cave level tries, is special with `chance` percent; at most `per_level` special
-# rooms a level. The effect is picked uniformly. With 7 % and one a level, about one level in
-# three has one. A cave's special room is a blob of its floor, away from the arrival.
+# rooms a level. The effect is drawn by the effects' `weight`s among those the room is eligible
+# for (a dungeon may give some a fixed share, `favoured`, and ban others, `banned`: its
+# `room_effects`). With 12 % and one a level, about three levels in five have one. A cave's
+# special room is a blob of its floor, away from the arrival. Rarely the effect drawn covers the
+# whole level instead (`level_chance`); a level file may name one (`effect = "..."`).
 #
 # Fields of an effect:
 #   id       the effect's id (level files name it: `[[room]] effect = "hushed"`)
 #   name     what it is called, without an article ("echoing hall"), in look mode and the wiki
 #   mark     one character marking its cells in the `rooms` dev dump layer
 #   enter    the message the first time the player enters such a room
+#   weight   how often it is drawn against the others where no dungeon says otherwise, 1 to 100;
+#            default 10
+#   near     the message the first time a cell of such a room comes into view from outside it;
+#            default none
+#   level_chance  percent of the levels that draw it for a room that it covers whole instead
+#            (the room stays plain), 0 to 100; default 0. Needs `pervade`, and never with
+#            `shunned` or `floor`
+#   pervade  the message each time the player arrives on a level it covers whole
+#   needs_danger  drawn only on a level with a danger; default false
+#   needs_below   drawn only on a dungeon level with another below it; default false
+#   min_cells, max_cells  drawn only for a room of at least / at most this many floor cells;
+#            default no limit
 #   light    percent of all light kept inside (ambient, sky, bounce, every source: placed lights,
 #            carried ones, fires, the sun and the moons), 0 to 100; default 100
 #   glow     light added over the room, [r, g, b, uv] (it lights the room like ambient light);
@@ -28,7 +43,7 @@
 #   floor    terrain generators lay over the room's floor (walkable, not stairs, doors, or
 #            running water); a hand-made level draws its own
 
-chance = 7
+chance = 12
 per_level = 1
 
 [[effect]]
@@ -36,6 +51,7 @@ id = "shadowed"
 name = "shadowed room"
 mark = "s"
 enter = "The light seems to drain away here."
+weight = 10
 light = 30
 
 [[effect]]
@@ -43,6 +59,7 @@ id = "echoing"
 name = "echoing hall"
 mark = "e"
 enter = "Your footsteps echo loudly."
+weight = 8
 noise = 200
 
 [[effect]]
@@ -50,6 +67,7 @@ id = "hushed"
 name = "hushed chamber"
 mark = "h"
 enter = "A deep hush fills this room."
+weight = 8
 noise = 40
 
 [[effect]]
@@ -57,6 +75,7 @@ id = "sanctuary"
 name = "sanctuary"
 mark = "p"
 enter = "You feel at peace here."
+weight = 6
 regen = 300
 mana_regen = 300
 glow = [60, 44, 22, 0]
@@ -67,4 +86,13 @@ id = "flooded"
 name = "flooded room"
 mark = "f"
 enter = "The floor here is flooded."
+weight = 8
 floor = "shallow_water"
+
+[[effect]]
+id = "black"
+name = "black chamber"
+mark = "b"
+enter = "The dark here swallows your light."
+weight = 5
+light = 0

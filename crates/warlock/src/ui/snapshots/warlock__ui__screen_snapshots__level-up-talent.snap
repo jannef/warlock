@@ -19,26 +19,26 @@ expression: "render(case, content.clone())"
             │   h  Unflinching                      Even as a coward you keep your he… │
             │ Shadow                                                                   │
             │   i  Keen ears                   1/2  You hear fainter sounds, fainter … │
-            │   j  Night eyes                       Your eyes grow used to the dark: … │
+            │   j  Lamplighter                      You tend your lantern well: it bu… │
             │ Wayfarer                                                                 │
-            │   k  Pilgrim                          You have knelt in many temples: t… │
-            │   l  Sun-blessed                      The sun mends you: under the open… │
-            │   m  Swimmer                          Water does not slow you: you wade… │
-            │   n  Weather-wise                     You read the sky: under it you kn… │
+            │   k  Long strider                     Your journeys across the overworl… │
+            │   l  Sense of place                   You read a place at a glance: a s… │
+            │   m  Sun-blessed                      The sun mends you: under the open… │
+            │   n  Swimmer                          Water does not slow you: you wade… │
+            │   o  Weather-wise                     You read the sky: under it you kn… │
             │ Scholar                                                                  │
-            │   o  Apprentice                  1/3  You take up a skill you lack, or … │
-            │   p  Clear mind                       A mind at peace gathers its stren… │
-            │   q  Deep well                   1/3  Your power runs deep: more mana f… │
+            │   p  Apprentice                  1/3  You take up a skill you lack, or … │
+            │   q  Clear mind                       A mind at peace gathers its stren… │
+            │   r  Deep well                   1/3  Your power runs deep: more mana f… │
             │ Grit                                                                     │
-            │   r  Lean                             You go hungry more slowly, and ex… │
-            │   s  Pack mule                   1/2  You can carry a tenth more for ea… │
-            │   t  Unbroken soul                    Your self holds fast: the touch o… │
-            │ Delver                                                                   │
-            │   u  Alert                            You notice hidden things in passi… │
+            │   s  Hallowed rest                    Where a place lends you strength,… │
+            │   t  Lean                             You go hungry more slowly, and ex… │
+            │   u  Pack mule                   1/2  You can carry a tenth more for ea… │
+            │   v  Unbroken soul                    Your self holds fast: the touch o… │
             │                                                                          │
             │ Tougher than most: more hit points for each rank, and more as you level. │
             │                                                                          │
             │                                                                          │
             │                                                                          │
-            │ a-u or Enter choose   > < page                                           │
+            │ a-v or Enter choose   > < page                                           │
  The Hub  · └──────────────────────────────────────────────────────────────────────────┘ ? controls

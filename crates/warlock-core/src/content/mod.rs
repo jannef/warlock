@@ -27,6 +27,8 @@ mod faction;
 mod flow;
 mod gear;
 mod gem;
+#[cfg(test)]
+mod hag_roster_tests;
 mod horoscope;
 mod hunger;
 mod item_class;
@@ -143,7 +145,7 @@ pub use quest::{
 };
 pub use race::{HUNGER, LightBlind, RaceDef, Races};
 pub use resource::{Build, MAX_EVERY, MAX_RESOURCE, MAX_SHORT, OverTime, ResourceDef, ResourceId};
-pub use room_effect::{RoomEffectDef, RoomEffectId, RoomEffects, SpecialRoom};
+pub use room_effect::{Here, RoomEffectDef, RoomEffectId, RoomEffects, SpecialRoom};
 pub use scenario::ScenarioDef;
 pub use scroll::{Cast, Reading, ScrollSpell};
 pub use scroll_label::ScrollLabelDef;

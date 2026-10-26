@@ -1,0 +1,33 @@
+# The hags (#451): the bog hag's kin, shared types on the undead roster's formulas (#383). The
+# greatest of the hags in body, a head taller than an ogre, with skin as hard as iron and claws
+# of iron: what she catches she crushes in her embrace and does not let go.
+[[creature]]
+id = "annis_hag"
+level = 34
+xp = 180
+rarity = "rare"
+loot = 40
+name = "annis hag"
+glyph = "h"
+fg = "#8a4a3a"
+faction = "hags"
+tags = ["hag"]
+alignment = "evil"
+vision = "darkvision"
+sight = 10
+opens_doors = true
+footsteps = 120
+hearing = 15
+weight = 250000
+stats = { strength = 30, dexterity = 16, toughness = 31, intelligence = 24, willpower = 28, presence = 24 }
+base_hp = 136
+natural = { defence = 2, protection = 2, name = "iron-hard skin" }
+on_eat = { message = "Gristle like iron wire.", vomit = 60, harm = "1d4", stat = { strength = 5 } }
+blood = "#3a2420"
+[creature.attack]
+damage = "4d8"
+damage_type = "slashing"
+name = "iron claws"
+verb = "rakes"
+to_hit = 3
+on_hit = [{ status = "held", chance = 20, difficulty = 18 }]

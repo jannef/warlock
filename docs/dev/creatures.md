@@ -199,21 +199,6 @@ vampire spawn, hand of glory, gallows dead, gibbering shade, bone wyvern, revena
 mummy priest ship in no population, as does all of batch 3 (levels 21 and up) (deep undead wait for deep places, #383), and the ghost is
 incorporeal (wall Defence 2). The roster's holds (`held`, #431) are `{ status = "held", chance,
 difficulty }`: the ghast's and fen ghoul's claws 10 % at 15, the gallows dead's tongue 20 % at 17, the lich's touch 15 % at 18 (12 + level ÷ 5, as a drain's).
-The devil roster (#448): ten shared types, one file each in `assets/data/creatures/` (the lemure
-5, imp 9, bearded devil 20, barbed devil 26, bone devil 32, erinyes 38, chain devil 42, horned
-devil 48, ice devil 55, pit fiend 66), faction `devil` (hostile to the player only; once the
-demons' `demon` faction is in, the two are to be made hostile to each other), tags `devil` and
-`fiend`. They follow #383's formulas by level and role (shambler: the lemure; small: the imp;
-brute: the horned devil, ice devil, and pit fiend; standard: the rest);
-`content/devil_roster_tests.rs` (`ROLES`) checks every `devil` type's tags, XP, max HP, and dice
-within ±35 %, and that the hierarchy's levels climb. One natural attack each (creatures have no
-multi-attack): the riders are poisoned (imp, bearded devil, bone devil, pit fiend), bleeding
-(barbed and horned devils), held (the chain devil, 25 % at 20), and sluggish (the ice devil's
-cold claws, `damage_type = "cold"`). Fire 100 and poison 50 for all, cold 50 from the bearded
-devil up (the ice devil 100), poison 100 for the bone devil and the pit fiend; no corpses. They
-ship in no population. Waiting for mechanics (#448's follow-ups): several attacks a turn,
-flight, the imp's shapes and invisibility, creature spells, animated chains, thorns, summoning,
-auras, a `large` size.
 The yugoloths (#446): five shared types, one file each in `assets/data/creatures/`, faction
 `yugoloth` (hostile to the player only; neutral to everyone else, the demons and devils included,
 since relations are only symmetric hostile lists and there is no hire yet), tags `["yugoloth",
@@ -225,3 +210,15 @@ tags (faction and `yugoloth` tag go together). Their riders map onto what exists
 barbed tongue holds (20 % at 18) and bleeds, the nycaloth's claws bleed, the arcanaloth's poison,
 the ultroloth's blows carry its gaze (transfixed, frightened). They ship in no population (no
 danger window reaches level 22 yet).
+The hags (#451): the green hag 18 (caster), sea hag 26 (standard), annis hag 34 (brute), and
+bheur hag 42 (caster), shared types in `assets/data/creatures/` on the undead roster's formulas;
+`content/hag_roster_tests.rs` holds every type of the `hags` faction to them (its own `ROLES`,
+±35 %) and checks the `hag` tag, which the bog hag (faction `marsh`, the fen's) carries too.
+Faction `hags` (hostile to the player only), so the fixtures that write their own factions file
+list it. Their riders are existing mechanics only: the green hag's `transfixed` and `ill_wished`
+(illusions and misery), the sea hag's `frightened` and a Toughness drain (her death gaze), the
+annis hag's `held` (her embrace, grip 18), the bheur hag's cold damage and `sluggish` (no hunger
+rider exists); `world/mana_tests.rs` drops the green and bheur hags with its own status file.
+Illusions, death gazes, blizzards, shapeshifting, covens, and water-dwelling (the sea hag walks
+the land only, #196) are follow-ups. They ship in no population: only Fyrdelf's window (8–19)
+reaches the green hag's level, and a volcano is no place for her.

@@ -151,7 +151,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
   worms, a disease that may kill), the bone drake 27 (bone with protection 4), the dread wraith 28
   (quick, incorporeal, a touch that drains Toughness), the headless knight 29 (quick, a long
   sword or a glaive, frightens), the lich 30 (a caster whose touch holds and drains
-  Intelligence), and the rotting drake 30 (slow, grave rot). The yugoloths (#446; faction `yugoloth`, mercenary fiends of the lower planes, immune to acid and poison, resisting fire, cold, and lightning 50, no corpse; in no population yet, no danger window reaches them): the mezzoloth 22 (an insectlike foot soldier, a trident most of the time, chitin), the canoloth 29 (a quick doglike guardian whose barbed tongue may hold fast and leave a bleeding wound), the nycaloth 36 (a winged killer with an enormous great axe, sometimes magic, and claws that leave bleeding wounds), the arcanaloth 46 (a jackal-headed caster whose claws poison, sometimes something worth taking), and the ultroloth 58 (the commander, whose enormous eyes may transfix or frighten whoever it strikes). The devil roster (#448; faction `devil`, tags `devil` and `fiend`, in no population yet), from the bottom of the hierarchy up: the lemure 5 (mindless, slow, in herds), the imp 9 (small, quick, a poisonous sting), the bearded devil 20 (a glaive half the time, a poisonous beard), the barbed devil 26 (claws that leave one bleeding), the bone devil 32 (a strongly poisonous sting, immune to poison), the erinyes 38 (a sword and mail, often magic), the chain devil 42 (chains that hold fast), the horned devil 48 (a fork, a tail whose wounds bleed), the ice devil 55 (frost claws that do cold damage and slow, immune to cold), and the pit fiend 66 (a venomous bite, immune to poison, something worth taking). Every devil is immune to fire and resists poison, and from the bearded devil up cold; none leaves a corpse. The duergar types are of the duergar race. For blood (§8 "Blood";
+  Intelligence), and the rotting drake 30 (slow, grave rot). The yugoloths (#446; faction `yugoloth`, mercenary fiends of the lower planes, immune to acid and poison, resisting fire, cold, and lightning 50, no corpse; in no population yet, no danger window reaches them): the mezzoloth 22 (an insectlike foot soldier, a trident most of the time, chitin), the canoloth 29 (a quick doglike guardian whose barbed tongue may hold fast and leave a bleeding wound), the nycaloth 36 (a winged killer with an enormous great axe, sometimes magic, and claws that leave bleeding wounds), the arcanaloth 46 (a jackal-headed caster whose claws poison, sometimes something worth taking), and the ultroloth 58 (the commander, whose enormous eyes may transfix or frighten whoever it strikes). The hags (#451), the bog hag's kin, in no population
+  yet either (faction `hags`, tag `hag`; the bog hag carries the tag too): the green hag 18 (a
+  caster whose claws may transfix or hex), the sea hag 26 (a hag of shores and fens, on land only:
+  claws that frighten and a gaze that drains Toughness), the annis hag 34 (huge, iron-hard skin,
+  iron claws whose embrace holds fast), and the bheur hag 42 (a caster whose icy staff does cold
+  damage and leaves one Sluggish, immune to cold, fire hurts her more). The duergar types are of the duergar race. For blood (§8 "Blood";
   presentation only):
   `blood`, the colour of its stains (`"#rrggbb"`; default dark red, `#6e0e0c`) or `"none"` for a
   bloodless creature; the cave beetle bleeds greenish-black ichor (`#38461a`). For hunger (§8
@@ -672,10 +677,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   vermin, and the kobolds), `undead` (the barrows' and the fen's dead; hostile to the player,
   the kobolds, and the goblins, and leaving the vermin alone), `marsh` ("marsh things", the
   fen's living things and the bog hag; hostile to the player; not animals as a faction), `cult`
-  ("cultists", the drowned minster's cult; hostile to the player and the marsh), `duergar` (the
+  ("cultists", the drowned minster's cult; hostile to the player and the marsh), `hags`
+  (the bog hag's kin, #451; hostile to the player only), `duergar` (the
   delf's grey dwarves; hostile to the player, the goblins (the ogres and trolls among them), and
   the undead), `fire` ("fire things", the delf's burning creatures and the fire drake; hostile to
-  the player only), `devil` ("devils", #448; hostile to the player only), `yugoloth` ("yugoloths", mercenary fiends of the lower planes; hostile to the player only: hired by none, at war with none), `wildlife` (deer, cave bats, the cave beetle;
+  the player only), `yugoloth` ("yugoloths", mercenary fiends of the lower planes; hostile to the player only: hired by none, at war with none), `wildlife` (deer, cave bats, the cave beetle;
   neutral to everyone), and
   `peaceful` ("peaceful folk", hostile to no one: the showcase's people by type, and creatures
   levels place in it); `merchants` (shopkeepers; hostile to no one) and `outraged` ("outraged

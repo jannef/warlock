@@ -152,6 +152,9 @@ fn files(scenario: &str, extra: &[(&str, &str)]) -> ContentFiles {
     for devil in ["barbed_devil", "horned_devil", "ice_devil"] {
         files.remove(&format!("data/creatures/{devil}.toml"));
     }
+    // And the green hag's claws (Hexed) and the bheur hag's staff (Sluggish), in no population.
+    files.remove("data/creatures/green_hag.toml");
+    files.remove("data/creatures/bheur_hag.toml");
     // And the canoloth's tongue and the nycaloth's claws (their Bleeding; in no population).
     files.remove("data/creatures/canoloth.toml");
     files.remove("data/creatures/nycaloth.toml");
