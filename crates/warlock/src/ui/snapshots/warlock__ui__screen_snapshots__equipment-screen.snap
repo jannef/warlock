@@ -7,26 +7,26 @@ expression: "render(case, content.clone())"
 
 
 
-                    ┌─ Equipment ──────────────────────────────────────────────┐
-                    │                                                          │
-                    │ > a  Head           [ an iron helm               1.5 kg  │
-                    │   b  Neck             —                                  │
-                    │   c  Body           [ a chain mail shirt          11 kg  │
-                    │   d  Cloak            —                                  │
-                    │   e  Main hand      ) a quarterstaff (both hands)  2 kg  │
-                    │   f  Off hand       ) a quarterstaff (both hands)        │
-                    │   g  Hands            —                                  │
-                    │   h  Left ring        —                                  │
-                    │   i  Right ring       —                                  │
-                    │   j  Feet           [ a pair of leather boots      1 kg  │
-                    │   k  Missile weapon } a short bow                 700 g  │
-                    │   l  Missiles       / 24 arrows                   720 g  │
-                    │   m  Tool             —                                  │
-                    │                                                          │
-                    │ Carrying 20.9 kg   ·   Your weight 90.9 kg (you 70 kg)   │
-                    │                                                          │
-                    │ a-m choose a slot   A-M look   Esc close                 │
-                    └─ 1 · 2 · 3 Equipment · 4 · 5 · 6 · 7 ────────────────────┘
+    ┌─ Equipment ─────────────────────────────────────────────────────────────────────────────┐
+    │                                                                                         │
+    │ > a  Head           [ an iron helm                                              1.5 kg  │
+    │   b  Neck             —                                                                 │
+    │   c  Body           [ a chain mail shirt                                         11 kg  │
+    │   d  Cloak            —                                                                 │
+    │   e  Main hand      ) a quarterstaff (both hands)                                 2 kg  │
+    │   f  Off hand       ) a quarterstaff (both hands)                                       │
+    │   g  Hands            —                                                                 │
+    │   h  Left ring        —                                                                 │
+    │   i  Right ring       —                                                                 │
+    │   j  Feet           [ a pair of leather boots                                     1 kg  │
+    │   k  Missile weapon } a short bow                                                700 g  │
+    │   l  Missiles       / 24 arrows                                                  720 g  │
+    │   m  Tool             —                                                                 │
+    │                                                                                         │
+    │ Carrying 20.9 kg   ·   Your weight 90.9 kg (you 70 kg)                                  │
+    │                                                                                         │
+    │ a-m choose a slot   A-M look   Esc close                                                │
+    └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘
 
 
 

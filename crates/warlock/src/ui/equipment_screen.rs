@@ -192,7 +192,12 @@ impl EquipmentScreen {
     pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
         // Rows: margin, the slots, a gap, the weight, a gap, the footer, the frame.
         let count = self.rows.len().max(1) as i32;
-        let panel = Panel::new(console, " Equipment ", WIDTH, count + 7);
+        let panel = Panel::new(
+            console,
+            " Equipment ",
+            super::info_tabs::panel_width(WIDTH),
+            count + 7,
+        );
         super::info_tabs::draw_tabs(console, &panel, bindings, super::ScreenName::Equipment);
         let x = panel.inner_x();
         let right = panel.x + panel.w - 3;
