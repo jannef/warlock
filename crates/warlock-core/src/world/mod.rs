@@ -113,6 +113,7 @@ mod gifts;
 mod glare;
 mod hash;
 mod hearing;
+mod hold;
 mod hunger;
 mod ice;
 mod incorporeal;
@@ -1047,6 +1048,10 @@ impl World {
         if let Some(refused) = self.refuse_due(action) {
             return refused;
         }
+        // A step while held is a struggle to break free (`hold.rs`).
+        if let Some(spent) = self.struggle(action) {
+            return spent;
+        }
         if let Some(refused) = self.refuse_blocked(action) {
             return refused;
         }
@@ -1218,6 +1223,8 @@ mod gem_tests;
 mod gifts_tests;
 #[cfg(test)]
 mod hearing_tests;
+#[cfg(test)]
+mod hold_tests;
 #[cfg(test)]
 mod hunger_tests;
 #[cfg(test)]

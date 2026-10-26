@@ -87,6 +87,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
       (`Unavailable::While(status)`: "you are raging"). A creature's plans consult it for
       steps only: one held fast (a status that blocks `step`: Held, §8 "Birth sign") does not
       step and attacks whoever holds it if they are beside it and hostile, else waits;
+    - **hold** (`hold = { check, difficulty, turns }`, #431; `world/hold.rs`): whoever caused it
+      (`Effect::by`, saved) holds the sufferer. A hold ends at once (as if worn off: "You are free
+      to move.") when the holder is dead, on another level, not beside the held one, or itself
+      suffers a status that blocks its steps or slows it (`cost` above 100); asked after the
+      player's action, after every creature's turn, and as the turn ends. It lasts at most
+      `turns` (3d4 for Held): a dose's degrees are drawn from those dice, and it eases a degree a
+      turn (`eases = 6`; `stacking = "highest"`, so a new hit keeps the longer). The held
+      player's step (not an attack) is a struggle: a check of `check` (Strength: its effective
+      modifier and what talents add to Strength checks) against the holder's grip, its attack's
+      `on_hit` entry's `difficulty` (`{ status = "held", chance = 10, difficulty = 15 }`), else
+      the hold's own `difficulty` (13). Made, "You break free of the ghast." and the step goes
+      ahead; failed, "You struggle, but the ghast holds you fast." and the turn is spent (a
+      step's price). Creatures never struggle. A hold no one caused (`afflict:held`) ends only by
+      its turns or a struggle. Drowning grip's Held is the same status;
     - **be followed** (`follows = "exhausted"`): as it ends, worn off or cured, the status it names
       begins at one degree, caused by whoever caused the one that ended (Raging, then Exhausted:
       the ending's message, then the beginning's). A chain never leads back to where it began, a
