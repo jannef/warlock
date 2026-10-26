@@ -40,6 +40,38 @@ their own scroll gets `Death::cause = Cause::Scroll(object)` ("Killed by their o
 fireball"). The scroll of identify calls `World::identify` on the stack named before using the
 scroll up (positions shift after).
 
+**Unidentified scrolls** (#393, `scroll_label.rs`): every readable object type (`read`) has a
+label for the run, "a scroll labelled ZUNBAR". `content/scroll_label.rs` reads
+`data/scroll_labels.toml` (`ScrollLabelDef`: `name`/`plural` with `{label}`, the one `fg` of
+every unknown scroll, `syllables` least and most, `parts`); without the file nothing is
+labelled. `Labels::draw(content, seed)` draws them all at once from the stream
+`identification`, types sorted by object id string, each label different (after 100 equal
+draws a number tells it apart): derived, held in `World::labels` (made in `World::assemble`,
+so new and loaded worlds alike), never saved. What the player knows is
+`WorldState::known_scrolls` (`BTreeSet<ObjectId>`, saved and hashed, left out while empty, so
+runs that never identify a scroll hash as before; saves change). `World::learn_scroll(object)`
+adds a labelled type (true if it was news); it is called by `say_read` (every read, spell or
+identify: "You read the scroll labelled ZUNBAR." then "It is a scroll of fireball."), by
+`World::identify` (a labelled scroll stack: "This is 2 scrolls of lightning!"; so the dev
+`identify` and F8 too), and `World::new` puts the kit's readable scrolls in the set (a chosen
+character knows their kit; a scenario's own pack is not a kit).
+
+`Lore` (`World::lore()`, `PerceptionView::lore()`) is how everything the player is shown names
+a stack: `describe`, `title`, `names`, `fg`, `describe_object(object, count)`, `knows(stack)`
+(type and magic both), `is_identified(object)` (the type: what the study list, #396, asks;
+identified is not learned, so an identified spell scroll may be studied by one who has not
+learned its spell, a labelled one by nobody), `label(object)`. Use it, never
+`Stack::describe`, wherever a name reaches the player: messages (`object::phrase` and
+`phrase_with` take a `Lore`), screens (`object_screen`, `describe_screen` through
+`describe::appraised`, the map's pile colour, look), and player-facing dumps (`inventory`,
+`equipment`, the JSON's `name` and `identified`). `Lore::plain(content)` names everything as it
+is (tests, starting-kit summaries). Dev dumps (`actors`) keep `describe_truth`. Prices are true
+(a shop's price can hint at a label, as in ADOM). The read list still dispatches on the true
+`read` (a spell is aimed, identify opens the identify list), so the prompt that follows tells a
+spell from identify; the design's "no cancelling once the target is known" belongs to the spells
+work (#395/#396). The identify list (`ObjectList::Identify`) lists the stacks `Lore::knows`
+is false for. Tests: `world/scroll_label_tests.rs`.
+
 Presentation: `r` is `KeyCommand::Read` (id `read`, next to Eat), opening `ScreenName::Read`
 (`ObjectList::Read`, the paged list of readable stacks). A spell scroll answers
 `ScreenAction::Aim(AimKind::Read(item))`: the aiming mode (`ui/target.rs`) with the scroll's
@@ -52,15 +84,19 @@ identify list (`ObjectList::Identify(scroll)`, the unidentified stacks) acts
 `Action::Read { item: scroll, target: Item(i) }`. Spell visuals are the traps' (`ui/spells.rs`
 draws `Event::Spell`; a burst's origin is the reader, so it flies there first).
 
-The casters' strikes (#245, `world/caster.rs`) are a scroll's spell without the scroll: a
-class ability's `[[talent.spell]]` names a `cast` table that `ReadSpec` reads, and `World::strike`
-casts it through `burst_center`, `bolt_line`, `cast_burst`/`cast_bolt`, and `say_spell`, as
-`read_spell` does (`Cause::Spell` for a caster killed by their own). Both apply the reader's
-`TalentMods::spell_damage` (Scroll adept, Empower, Archmage) to the dice first; `check_spells`
-checks the talents' spell effects too.
+Spells (the one cast path, `world/cast.rs`, docs/dev/spells.md) share this code: a burst spell
+goes through `burst_center` and `cast_burst`, a line through `bolt_line` and `cast_bolt`, and
+both are said with `say_spell`, as `read_spell` does (`Cause::Spell` for a caster killed by their
+own). Both apply the caster's `TalentMods::spell_damage` (Scroll adept, Empower, Archmage) to the
+dice first; a spell's roll is then held to its cap (`Burst::cap`, `Bolt::cap`), a scroll's is
+not (`None`). `spell_def::check_effects` checks spells' effects the way `check_spells` checks
+scrolls'.
 
-Content and places: the trap hall (`levels/trap_hall.toml`) has a pile of scrolls and an
-unidentified dagger beside the arrival; general stores stock and buy the `scrolls` class. The
+Content and places: the trap hall (`levels/trap_hall.toml`) has a pile of scrolls (two of each
+spell, three of identify) and an unidentified dagger beside the arrival; general stores stock and
+buy the `scrolls` class, and a generated one always lays out scrolls of identify (`always` in
+`data/shops.toml`; Cēaptūn's has three by hand). The scroll of identify's `frequency` is 300,
+the spell scrolls' 50 to 60. The
 wiki's table is `xtask/src/wiki/scrolls.rs` (`scrolls.md`), sharing `ice_text`/`sound_text`
 with the traps' table. Tests: `world/read_tests.rs` (the shared casts match the traps', bursts
 and bolts, kills and experience, refusals, identify, death, saves and replays, loot), the read

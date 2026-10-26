@@ -1,5 +1,5 @@
 //! Cēaptūn, the Ascmearc's market town (#336; docs/design/campaign.md §6): entered from its
-//! overworld cell and left by its stairs, its four shops and their goods, everyone in it at
+//! overworld cell and left by its edge, its four shops and their goods, everyone in it at
 //! peace with the player, the Mynster a sanctuary where Sister Hild cures and mends for gold, the
 //! people known by their proper names, Godgifu's rumours (never a reveal), the dev scenario, and
 //! a replay.
@@ -13,7 +13,6 @@ use std::sync::LazyLock;
 
 const SCENARIO: &str = include_str!("../../../../assets/campaigns/ascmearc/scenarios/ceaptun.toml");
 const TOWN_CELL: Pos = Pos::new(18, 28);
-const STAIRS: Pos = Pos::new(45, 17);
 const START: Pos = Pos::new(46, 17);
 const HILD: Pos = Pos::new(27, 25);
 const GODGIFU: Pos = Pos::new(46, 26);
@@ -63,28 +62,32 @@ fn who(world: &World, at: Pos) -> ActorId {
 }
 
 #[test]
-fn the_town_is_entered_from_its_overworld_cell_and_left_by_its_stairs() {
+fn the_town_is_entered_from_its_overworld_cell_and_left_by_its_edge() {
     let mut w = World::new(CONTENT.clone(), "ascmearc", None).expect("the Ascmearc");
     act(&mut w, "move:E*6");
     assert_eq!(w.player_pos(), TOWN_CELL);
     assert_eq!(said(&w).last().unwrap(), "The way into Cēaptūn is here.");
     act(&mut w, "descend");
     assert_eq!(w.state.current_level, "ceaptun");
-    assert_eq!(w.player_pos(), STAIRS, "on the stairs that lead back");
+    assert_eq!(w.player_pos(), START, "on the square");
     let words = said(&w);
     assert!(words.contains(&"Market day in Cēaptūn: the square is loud.".to_string()));
     assert!(words.contains(&"You enter Cēaptūn.".to_string()));
-    assert_eq!(
-        w.perception().leads_to(STAIRS).as_deref(),
-        Some("The Ascmearc")
-    );
-    act(&mut w, "ascend");
+    // No stairs anywhere: the town is left by its edge, like any outdoor area.
+    let level = CONTENT.level("ceaptun").expect("the town's level");
+    assert!(level.stairs.is_empty(), "{:?}", level.stairs);
+    let exit = level.exit.as_ref().expect("an edge exit");
+    assert_eq!((exit.to.as_str(), exit.pos), ("ascmearc", TOWN_CELL));
+    // West along the main street, out of the gate, and off the edge.
+    put_player(&mut w, Pos::new(0, 16));
+    act(&mut w, "move:W");
     assert_eq!(w.state.current_level, "ascmearc");
     assert_eq!(w.player_pos(), TOWN_CELL);
+    assert_eq!(said(&w).last().unwrap(), "You return to The Ascmearc.");
 }
 
 #[test]
-fn the_dev_scenario_starts_on_the_square_beside_the_stairs() {
+fn the_dev_scenario_starts_on_the_square() {
     let w = town();
     assert_eq!(w.state.current_level, "ceaptun");
     assert_eq!(w.player_pos(), START);

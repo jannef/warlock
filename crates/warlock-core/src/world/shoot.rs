@@ -152,7 +152,7 @@ impl World {
         let (Some(range), Some(profile)) =
             (me.throw_range(item, &content), me.thrown(item, &content))
         else {
-            let what = stack.single().describe(&content);
+            let what = self.lore().describe(&stack.single());
             self.say(format!("You cannot throw {what}."));
             return Spent::Nothing;
         };
@@ -253,7 +253,7 @@ impl World {
                 AttackKind::Thrown => "throw",
                 _ => "shoot",
             };
-            let what = stack.describe(&content);
+            let what = self.lore().describe(&stack);
             said.insert(0, format!("You {verb} {what}."));
         }
         if last {

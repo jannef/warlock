@@ -67,6 +67,7 @@ impl World {
         if let Some(level) = self.state.levels.get_mut(&current) {
             self.perception.remember(level);
         }
+        self.glimpse_rooms();
         if let Some(text) = enter_room(&mut self.state, &self.content) {
             self.say(text);
         }

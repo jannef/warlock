@@ -3,38 +3,38 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  You fly into a rage!
- You gain Focu┌─ Character ──────────────────────────────────────────────────────────┐
-              │                                                                      │
-              │ Tamsin                                                               │
-              │                                                                      │
-              │ Race    Human                                                        │
-              │ Gender  Female                                                       │
-              │ Class   Thief                                                        │
-              │ Age 34 · born 29 Greenleaf 1410 · year of the Water Basilisk         │
-              │ Stars   Unblinking, Transfixing stare, Trusted by none, Always a way │
-              │         Tidal                                                        │
-              │                                                                      │
-              │ St  Strength      11                                                 │
-              │ Dx  Dexterity     13                                                 │
-              │ To  Toughness     12                                                 │
-              │ In  Intelligence  10                                                 │
-              │ Wi  Willpower     11                                                 │
-              │ Pr  Presence       9                                                 │
-              │                                                                      │
-              │ Lv  Level         1                                                  │
-              │ XP  Experience    0 / 729                                            │
-              │     Talents       6                                                  │
-              │ HP  Hit points    17/19   MP  Mana       1/1                         │
-              │ Dv  Defence       11      Pv  Protection  0                          │
-              │     Stance        Neutral                                            │
-              │     Rage          11/20                                              │
-              │     Focus         10/10                                              │
-              │     Alignment     Callous                                            │
-              │     Status        Raging                                             │
-              │                                                                      │
-              │ Weight 70 kg, carrying nothing                                       │
-              │ Burdened over 17 kg, strained over 34 kg, overloaded over 51 kg      │
-              │                                                                      │
-              │ @ or Esc close   A skills                                            │
-              └─ 1 Char · 2 Inv · 3 Equip · 4 Skills · 5 Weapons · 6 Quests · 7 Tal ─┘
+ You┌─ Character ─────────────────────────────────────────────────────────────────────────────┐
+    │                                                                                         │
+    │ Tamsin                                                                                  │
+    │                                                                                         │
+    │ Race    Human                                                                           │
+    │ Gender  Female                                                                          │
+    │ Class   Thief                                                                           │
+    │ Age 34 · born 29 Greenleaf 1410 · year of the Water Basilisk                            │
+    │ Stars   Unblinking, Transfixing stare, Trusted by none, Always a way, Tidal             │
+    │                                                                                         │
+    │ St  Strength      11                                                                    │
+    │ Dx  Dexterity     13                                                                    │
+    │ To  Toughness     12                                                                    │
+    │ In  Intelligence  10                                                                    │
+    │ Wi  Willpower     11                                                                    │
+    │ Pr  Presence       9                                                                    │
+    │                                                                                         │
+    │ Lv  Level         1                                                                     │
+    │ XP  Experience    0 / 729                                                               │
+    │     Talents       6                                                                     │
+    │ HP  Hit points    17/19   MP  Mana       1/1                                            │
+    │ Dv  Defence       11      Pv  Protection  0                                             │
+    │     Stance        Neutral                                                               │
+    │     Rage          11/20                                                                 │
+    │     Focus         10/10                                                                 │
+    │     Alignment     Callous                                                               │
+    │     Status        Raging                                                                │
+    │                                                                                         │
+    │ Weight 70 kg, carrying nothing                                                          │
+    │ Burdened over 17 kg, strained over 34 kg, overloaded over 51 kg                         │
+    │                                                                                         │
+    │ @ or Esc close   A skills                                                               │
+    └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘
+
  The Hub  ·  HP 17/19  ·  MP 1/1  ·  Rage 11  ·  Focus 10/10  ·  Raging  ·  Lv 1         ? controls

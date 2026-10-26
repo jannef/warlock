@@ -8,7 +8,7 @@ use crate::combat::{self, Attack, Category, Defence, Health, Profile, Target};
 use crate::content::Effect as ItemEffect;
 use crate::content::{
     ActionKind, Benefit, CombatStance, Content, CreatureId, DamageTypeId, FactionId, Grip, Hide,
-    ObjectDef, ObjectId, RaceDef, Role, TwoWeapons, WeaponSkillId,
+    ObjectDef, ObjectId, RaceDef, Role, StatusId, TwoWeapons, VisionProfile, WeaponSkillId,
 };
 use crate::damage::{Protection, Resistances};
 use crate::disease::Diseases;
@@ -288,6 +288,48 @@ impl Actor {
     /// effects, [`Mods::worn`]).
     pub fn mods(&self, content: &Content) -> Mods {
         Mods::worn(&self.inventory, &self.equipment, content)
+    }
+
+    /// The vision profile (an index into [`Content::vision_profiles`]) a unique item it wears
+    /// lets it see with (spec §8 "Magic items": Vision), if any: the first.
+    pub fn worn_vision(&self, content: &Content) -> Option<usize> {
+        crate::magic::worn_powers(&self.inventory, &self.equipment, content).find_map(|p| match p {
+            crate::content::Power::Vision(index) => Some(*index),
+            _ => None,
+        })
+    }
+
+    /// What it is told when a unique item it wears wards off `status` (spec §8 "Magic items":
+    /// Ward), if one does.
+    pub fn ward<'c>(&'c self, content: &'c Content, status: StatusId) -> Option<&'c str> {
+        crate::magic::worn_powers(&self.inventory, &self.equipment, content).find_map(|p| match p {
+            crate::content::Power::Ward { status: s, message } if *s == status => {
+                Some(message.as_str())
+            }
+            _ => None,
+        })
+    }
+
+    /// The eyes it sees with (spec §5 "Vision"): `base` (its type's profile, or the player's),
+    /// with what a unique item it wears gives (Vision) where that is better: the lower
+    /// threshold, the farther darkvision, ultraviolet if either sees it. Its id and name stay
+    /// the base's.
+    pub fn eyes<'c>(
+        &self,
+        content: &'c Content,
+        base: &'c VisionProfile,
+    ) -> Cow<'c, VisionProfile> {
+        match self.worn_vision(content) {
+            None => Cow::Borrowed(base),
+            Some(index) => {
+                let power = &content.vision_profiles()[index];
+                let mut eye = base.clone();
+                eye.threshold = eye.threshold.min(power.threshold);
+                eye.darkvision = eye.darkvision.max(power.darkvision);
+                eye.sees_uv |= power.sees_uv;
+                Cow::Owned(eye)
+            }
+        }
     }
 
     /// What its talents do to it (spec §8 "Talents"; [`Talents::mods`]), the one aggregation

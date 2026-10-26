@@ -493,7 +493,11 @@ mod tests {
         let content = Content::builtin().expect("content");
         let table = creature_tags(&content);
         assert!(
-            table.contains("| `goblin` | goblins | goblin, goblin archer, goblin chief |"),
+            table.contains(
+                "| `goblin` | goblins | goblin, goblin archer, goblin chief, hobgoblin, \
+                 hobgoblin archer, hobgoblin captain, hobgoblin legionnaire, hobgoblin sergeant, \
+                 hobgoblin warcaster, hobgoblin warlord |"
+            ),
             "{table}"
         );
         assert!(

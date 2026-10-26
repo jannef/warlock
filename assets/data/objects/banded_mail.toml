@@ -10,6 +10,7 @@ made_of = ["metal"]
 weight = 17000
 value = 400
 slot = "body"
+spell_cost_percent = 30
 armour = 1
 protection = 5
 protects = { slashing = 1 }

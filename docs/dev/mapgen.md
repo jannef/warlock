@@ -1,7 +1,8 @@
 # Procedural generation and special rooms
 
 Developer notes for working on this part of Warlock (moved from CLAUDE.md, #185); the
-rules it implements are in spec/07c-generation.md and spec/07d-shops-and-rooms.md. Keep it current with the code, as CLAUDE.md says.
+rules it implements are in spec/07c-generation.md and spec/07d-shops-and-rooms.md; special
+rooms are in `docs/dev/special-rooms.md`. Keep it current with the code, as CLAUDE.md says.
 
 Procedural generation (spec §7, §8) lives in `warlock-core`: `rng.rs` (ChaCha8 streams derived
 from the run seed: `map/<level id>` per generated level, `gameplay` kept in `WorldState`;
@@ -36,34 +37,21 @@ drake's hoard on 12 (`mapgen/fyrdelf_tests.rs`, with the branch's first-level sn
 Fennmynster names the sunken crypt on its bottom, 8 (`mapgen/fennmynster_tests.rs`, which also
 checks the branch's raised room odds and its lack of shops).
 
-Special rooms (spec §7 "Special rooms", M25) are data: `data/room_effects.toml`
-(`content/room_effect.rs`: effects, the per-room `chance`, `per_level`). Generators make them last
-(`mapgen/special.rs`, from the level's map stream, so levels without one are unchanged; rooms
-levels: a room's rectangle, walls included; caves: a floor blob away from the arrival), and level
-files mark them (`[[room]] effect area`; the hub's stairs nook is a sanctuary). They live in
-`LevelState::rooms` (saved, with whether the player has been in each), and the rules ask one
-question, `LevelState::room_effect_at` (public: `World::room_effect_at`): perception light and
-creature sight (`room_shade` on every part of a cell's light, `room_glow` in the base light —
-change `perception.rs` and `sight.rs` together; `special_rooms_keep_the_light_invariants` checks
-they agree), noise (`noise::noise`), healing (the room's `regen` in `World::healing_rate`, the one
-pace hook), and
-hostile creatures shunning a sanctuary (`World::shuns` in `ai.rs`). A flooded room's slower,
-louder steps come from its floor terrain (`shallow_water`). `enter_room` (world/travel.rs) says the
-first-entry message; `PerceptionView::room` gives look mode the rooms the player knows;
-`PerceptionView::light_kept` lets the renderer dim its own transient light in a shadowed room.
+Special rooms (spec §7 "Special rooms") have their own topic file, `docs/dev/special-rooms.md`:
+the effects' data, the draw (`mapgen/special.rs`, last, from the level's map stream), the whole-level
+version, and what the rules ask of them.
 
 A branch may set its own special-room and shop odds (`room_effects`, `shops` on a `[[dungeon]]`
 or a `[[dungeon.levels]]` range; spec §7, campaign design §7.3). `content/dungeon.rs` resolves
 them once per depth at load, field by field (the range's table, the branch's, the shared
 `room_effects.toml` / `shops.toml`), into `RoomOdds` / `ShopOdds` (`DungeonDef::room_odds`,
-`shop_odds`; the shared ones are `RoomOdds::shared`, `ShopOdds::shared`: every effect and kind in
-file order). `generate_with` hands the depth's odds to the `Canvas` (`room_odds`, `shop_odds`),
-and `special::roll` and `shop::place` read them instead of the content's: the same chance roll
-and the same uniform picks with the same counts, so a branch without the tables draws exactly
-what it did before (the Depths' snapshots and `branches_without_tables_read_the_shared_odds`).
-A branch's `keeper` replaces only the keeper's creature type; the kit is the shared `[keeper]`'s.
-Fixture branches in `mapgen/tests.rs` (`FIXTURE`) check that flooded-only odds make only flooded
-rooms and `shops = { chance = 0 }` no shop.
+`shop_odds`; the shared ones are `RoomOdds::shared`, `ShopOdds::shared`: every kind in file
+order). `generate_with` hands the depth's odds to the `Canvas` (`room_odds`, `shop_odds`), and
+`special.rs` and `shop::place` read them instead of the content's (the room odds:
+`docs/dev/special-rooms.md`). A branch's `keeper` replaces only the keeper's creature type; the
+kit is the shared `[keeper]`'s. Fixture branches in `mapgen/tests.rs` (`FIXTURE`) check that a
+branch favouring only flooded rooms makes only flooded rooms and `shops = { chance = 0 }` no
+shop.
 
 Which vaults a level may get (#337): `generate_for` keeps those whose `Vault::stamps_on(def,
 depth)` holds (a dungeon vault, shared or of the branch's campaign, on a branch or level its

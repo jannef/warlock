@@ -33,6 +33,7 @@ fn item(c: &Content, id: &str, affixes: &[(&str, u8, i32)], name: Option<&str>) 
         name: name.map(String::from),
         identified: false,
         carried: 0,
+        unique: None,
     };
     magic
         .check(c.object(object(c, id)), c)
@@ -260,6 +261,7 @@ fn bad_items_are_refused() {
         name: name.map(String::from),
         identified: false,
         carried: 0,
+        unique: None,
     };
     let bad = [
         (magic(&[], None), "an affix"),

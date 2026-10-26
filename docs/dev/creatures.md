@@ -1,4 +1,22 @@
-# Factions and creature behavior
+# Creature subsystem
+
+**Rule: a roster PR adds or edits ONLY its own `docs/dev/creatures/<tribe>.md`; it never edits
+this file.** This file is the stable overview of the creature subsystem (factions, the AI,
+sight, spawning, gear, incorporeal creatures, coarse turns); every tribe's or wave's roster
+notes, per-creature facts, and test-row lists live in the per-tribe files below. The spec's
+creature and faction lists are likewise not edited by a roster (`spec/07b-data.md` points at
+`assets/data/creatures/` and `assets/data/factions.toml`). A new tribe adds a new file and one
+line here only if it truly is a new family, in the same PR as nothing else shares.
+
+Per-tribe notes:
+- `docs/dev/creatures/undead.md`: the undead roster (#383; batches, population lines, holds, drains)
+- `docs/dev/creatures/campaign-waves.md`: the barrow, fen, and delf waves (the non-undead notes)
+- `docs/dev/creatures/yugoloth.md`: the yugoloths (#446; faction, tags, riders)
+- `docs/dev/creatures/hags.md`: the hags (#451; faction, tag, riders)
+- `docs/dev/creatures/hobgoblins.md`: the hobgoblins (#454; the goblin tribe's second tier)
+- `docs/dev/creatures/giants.md`: the giants and ogres (#457; faction, tags, throws)
+
+## Overview
 
 Developer notes for working on this part of Warlock (moved from CLAUDE.md, #185); the
 rules it implements are in spec/08b-creatures.md. Keep it current with the code, as CLAUDE.md says.
@@ -30,9 +48,7 @@ visible cell in the light property tests (and under each weather in `weather_tes
 the sky from `WorldState::sky` (the weather's clouds included) and overworld sight from
 `daylight::sight_under` (rain included). A creature's attack is `World::attack` (`docs/dev/combat.md`):
 `Event::Attacked` (kept only when the player sees both ends), a noise (`noise::Act::Attack`), and
-messages built in `World::perceive_events` (unseen ends are "something"). A creature's throw
-(`world/hurl.rs`: `World::hurls_at` in the AI's fight step, before the melee/ranged/caster
-choice; `World::creature_hurls`) is said by `hurl::throw_messages`. The app shows a lunge
+messages built in `World::perceive_events` (unseen ends are "something"). The app shows a lunge
 (`ui/motion.rs`, `motion` switch), a shot glyph, and a creature's `on = "attack"` particle burst
 (`ui/effects.rs`, `particles` switch); `Event::Died` has no effect of its own. No creature
 behavior may use randomness (combat rolls are the rules', from the gameplay stream); tie-breaks
@@ -144,6 +160,8 @@ generated floor (rolled by `gear::arm` after it) and a spawn in play (rolled by
 (`TalentMods::scavenger`, the kill the player's). Tests: `world/gear_tests.rs`; the mapgen
 snapshots print each spawn's gear.
 
+## Creature waves
+
 The campaign's creature waves (docs/design/campaign.md §10.1; #333 the barrow wave, #334 the fen
 wave, #335 the delf wave): content only, on the fields above. A wave adds
 - one file per type: the common ones in `data/creatures/` (shared), the campaign's own people and
@@ -158,60 +176,3 @@ wave, #335 the delf wave): content only, on the fields above. A wave adds
   too, or the shipped types naming it fail to load;
 - its rows in `world/bestiary_tests.rs`'s `WAVES` (the type and its owning campaign), and its
   stances in that file's faction test.
-The barrow wave (danger 1–6): grave worm, barrow spider, goblin, goblin archer, skeleton, zombie,
-giant centipede, barrow ghoul, goblin chief, barrow wight; factions `goblins` and `undead` (the
-undead are immune to poison by `resist`, and leave the vermin alone); the barrow wight is the
-Ascmearc's. The fen wave (danger 4–11): giant leech, giant frog, drowned, crocodile, cultist,
-will-o'-wisp, ghost, mud golem, cult priest, marsh troll, bog hag; factions `marsh` (the fen's
-living things, not an animal faction) and `cult` (hostile to the marsh); the drowned and the
-ghost are `undead`. The cultist, the cult priest, and the bog hag (`unique`) are the Ascmearc's.
-The design's marsh eel (`habitat = "water"`) is left out: placing and keeping a creature in water
-is a rule of its own, not content. The wisp carries the `wisp` light (`data/lights.toml`). The wiki's creature tables
-(`xtask/src/wiki/creatures.rs`) pick new types up by themselves; the status-effect and disease
-tables name the bites that cause them, so `xtask/src/wiki/mod.rs`'s test rows move when a wave's
-`on_hit` names a status or disease. A drain in `on_hit` (`docs/dev/stats.md` "Drain", #382) is shown in the creature attack table (`on_hit` text) and in `drain-attacks.md`; the pale drinker, the first drainer, is in no population yet.
-The delf wave (danger 8–19): ember beetle, duergar miner, duergar warrior, ogre, fire
-salamander, troll, duergar smith, magma crawler, ash wraith, basilisk, cinder elemental, and the
-fire drake (the Ascmearc's own, `campaigns/ascmearc/data/creatures/`, `unique`); factions
-`duergar` (hostile to the goblins, whose kin the troll is, to the giants, whose least the ogre
-is, and to the undead, which the ash wraith is) and `fire` (the burning things; hostile to the player only). No
-`great_club` object exists, so the ogre's racial weapon is the maul; the pick-axe is a tool
-(`racial_weapon` must have damage), so the duergar miner carries it as a Tool-slot gear line and
-has the hand axe, the duergar's racial weapon, as a second, rarer line. The basilisk's slowing
-bite is the existing `sluggish` status.
-Fyrdelf (#339) is where the wave lives: its branch's `population` (with the bats, kobolds, and
-giant centipedes the shallow floors draw on), leaving out the drake, which only the drake's
-hoard places (a vault its twelfth level names, so a run meets it once, there). Its stores are
-kept by the `duergar_trader` (the Ascmearc's own type, `merchants`, the shopkeeper's level and
-XP, an outlier of the XP guideline like the shopkeeper).
-Fennmynster (#338) is where the fen wave lives: all eleven are its branch's `population`, the bog
-hag too (unique, so the population and spawns bring her once a run); the sunken crypt at its
-bottom adds two drowned standing guard in its water.
-The undead roster (#383; batch 1 #384, levels 1–10; batch 2 #385, 11–20): shared types, one file each in
-`assets/data/creatures/`, on the conventions noted in that directory's `README.toml`. Each batch
-adds its types to `content/undead_roster_tests.rs` (`ROLES`, the type's role) and raises
-`ROSTER_TOP`: every `undead` type must be on the XP guideline (`OFF_GUIDELINE` lists the pale
-drinker), lie within ±35 % of #383's max HP and dice formulas for its level and role, and every
-level from 1 to `ROSTER_TOP` must have one. Batch 1's population lines: Cealdhlāw the crawling
-hand, skeletal rat, kobold zombie, skeleton archer, skeletal wolf, and skeleton warrior;
-Fennmynster the corpse candle, poltergeist, ghast, shadow, and bog body; Fyrdelf the ogre zombie
-and grave hound. Batch 2's: Fennmynster the wraith and fen ghoul; Fyrdelf the burning skull,
-knocker, spectre, charred dead, duergar skeleton, and rotting troll. The mummy, barghest, draugr,
-vampire spawn, hand of glory, gallows dead, gibbering shade, bone wyvern, revenant, fetch, and
-mummy priest ship in no population (deep undead wait for deep places, #383), and the ghost is
-incorporeal (wall Defence 2). The roster's holds (`held`, #431) are `{ status = "held", chance,
-difficulty }`: the ghast's and fen ghoul's claws 10 % at 15, the gallows dead's tongue 20 % at 17.
-The giant tribe (#457, levels 12 to 50): faction `giant` (hostile to the player, the vermin, and
-the kobolds, as the ogre was among the goblins, so Fyrdelf plays as before; the duergar and the
-undead list it; the goblins and their kin stay neutral), tags `giant` on every type and `ogre` on
-the ogre, ogre mauler, and ogre mage, `caster` on the ogre mage and giant shaman. The ogre moved
-there from `goblins`, and its fist went from 1d8 to 2d8 to sit on the formula. Shared types, one
-file each; `content/giant_roster_tests.rs` keeps them to #457's formulas (#383's for a living
-brute: `ROLES` gives each its role, giant, ogre, or caster; max HP and dice within ±35 %, the XP
-guideline, the tags, and every giant but the shaman throws a boulder at the level's dice from
-5 + L/10 cells, the stone giant two farther). The giants fight with a natural attack named for
-their giant-sized weapon (no loot to carry off) and throw (`[creature.throw]`, `world/hurl.rs`,
-`docs/dev/ranged-combat.md`); the ogres carry mauls and throw nothing. Fyrdelf's population adds
-the ogre mauler and ogre mage; the giants (`H`) ship in no population until a deep place takes
-them. Only small and medium sizes exist, so they are medium with huge weights (a large size is a
-follow-up).

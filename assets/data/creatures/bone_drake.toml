@@ -1,0 +1,26 @@
+# The undead roster (#383, batch 3). The bones of a young drake, raised: claws and a long bare
+# tail, and no breath left in it. Its bones turn a blade's point and shrug off arrows; a club
+# shatters them, and it leaves no corpse. Not yet in any dungeon's population.
+[[creature]]
+id = "bone_drake"
+level = 27
+xp = 145
+rarity = "uncommon"
+name = "bone drake"
+glyph = "D"
+fg = "#d0d8e0"
+faction = "undead"
+tags = ["undead", "skeleton"]
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+footsteps = 90
+hearing = 10
+weight = 400000
+stats = { strength = 27, dexterity = 15, toughness = 28, intelligence = 2, willpower = 25, presence = 2 }
+base_hp = 108
+natural = { defence = 1, protection = 4, name = "bones" }
+attack = { damage = "3d10", damage_type = "slashing", name = "claws", verb = "claws", to_hit = 2 }
+resist = { piercing = 50, bludgeoning = -50, poison = 100 }
+corpse = false
+blood = "none"

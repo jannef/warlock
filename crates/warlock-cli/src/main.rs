@@ -285,6 +285,9 @@ fn gen_command(content: &Content, args: &GenArgs) -> Result<(), String> {
     if let Some(exit) = &level.exit {
         println!("edges -> {} at {}", exit.to, exit.pos);
     }
+    if let Some(id) = level.pervading {
+        println!("pervading {}", content.room_effect(id).name);
+    }
     for room in &level.rooms {
         let effect = content.room_effect(room.effect);
         println!(

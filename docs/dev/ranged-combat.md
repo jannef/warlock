@@ -16,7 +16,8 @@ the missile leaving and the marks it earns change only the next) plus `reload_pr
 launcher that `reloads`, so the stance and burden change them too. `Event::Missile` carries the path; `perceive_events` cuts it to what the player
 saw (a burning missile: everything in their line of sight). In the app, `ui/target.rs` is the
 aiming input mode (`InputMode::Aim`: cursor start, Tab cycling, the line of fire as the player
-knows it, `LastTarget`; `AimKind::Read` aims a spell scroll too, `docs/dev/scrolls.md`), `ui/missiles.rs` flies missiles on the free-glyph layer (glyphs turned
+knows it, `LastTarget`; `AimKind::Read` aims a spell scroll too, `docs/dev/scrolls.md`; a spell, `AimKind::Ability`
+of `Ability::Spell`, is aimed by its shape at the player's own reach, `docs/dev/spells.md`), `ui/missiles.rs` flies missiles on the free-glyph layer (glyphs turned
 with `FreeGlyph::turn`, trail, embers via `particles::trail`, impact puff) and writes this frame's
 `render::lighting::Transients` (the moving light of a burning missile, and landed lights held back
 until it arrives; `draw_map`, object glow, and object particles hold back what is `arriving` too).

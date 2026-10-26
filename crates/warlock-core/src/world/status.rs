@@ -72,7 +72,8 @@ impl World {
     /// damage (poison; spec §8 "Damage types") meets the actor's resistance to it: an immune
     /// actor never suffers it, and a resistance takes its share off the dose (rounded to the
     /// nearest, half up; a dose shrunk to nothing is no dose). The player is told when it
-    /// begins.
+    /// begins. A unique item the actor wears that wards off the status (spec §8 "Magic items":
+    /// Ward) refuses it, and the player is told so.
     pub(crate) fn afflict(
         &mut self,
         id: ActorId,
@@ -81,6 +82,16 @@ impl World {
         by: Option<ActorId>,
         events: &mut Vec<Event>,
     ) {
+        // A unique item's Ward (spec §8 "Magic items"): never taken, and the player is told.
+        let ward = (self.state.actors.get(&id))
+            .and_then(|a| a.ward(&self.content, status))
+            .map(str::to_string);
+        if let Some(message) = ward {
+            if id == self.state.player {
+                self.say(message);
+            }
+            return;
+        }
         let def = self.content.status(status);
         let severity = match def.damage_type {
             None => severity,
@@ -143,13 +154,14 @@ impl World {
 
     /// A blow by `attacker` with an attack of `kind` hit `target` and left it alive: the
     /// statuses its wound causes (bleeding from a big hit or a confirmed critical), then the
-    /// `on_hit` effects of the attack, each by its chance.
+    /// `on_hit` effects of the attack, each by its chance: its natural attack's, then `made`,
+    /// what the attack's profile carries (a unique weapon's Inflict power).
     pub(super) fn after_blow(
         &mut self,
         attacker: ActorId,
         target: ActorId,
         kind: AttackKind,
-        blow: &Blow,
+        (blow, made): (&Blow, &[OnHit]),
         events: &mut Vec<Event>,
     ) {
         if !self.state.actors.contains_key(&target) {
@@ -163,7 +175,9 @@ impl World {
         if let Some(status) = staggers.filter(|_| critical && kind == AttackKind::Melee) {
             self.afflict(target, status, 1, Some(attacker), events);
         }
-        for hit in self.on_hit_of(attacker, kind) {
+        let mut hits = self.on_hit_of(attacker, kind);
+        hits.extend_from_slice(made);
+        for hit in hits {
             let lands = hit.chance >= 100 || self.state.rng.chance(u32::from(hit.chance));
             if !lands {
                 continue;
@@ -220,8 +234,8 @@ impl World {
     }
 
     /// What a hit by `attacker` with an attack of `kind` may cause besides its damage: its
-    /// natural attack's `on_hit` when it fights with it (a blow with no weapon in hand).
-    /// Weapons and ammunition (poisoned arrows) could carry their own later.
+    /// natural attack's `on_hit` when it fights with it (a blow with no weapon in hand). A unique
+    /// weapon's Inflict power comes with the attack's profile instead ([`World::after_blow`]).
     fn on_hit_of(&self, attacker: ActorId, kind: AttackKind) -> Vec<OnHit> {
         let Some(me) = self.actor_or_fallen(attacker) else {
             return Vec::new();
@@ -272,9 +286,10 @@ impl World {
             let resting = resting * u32::try_from((100 + faster).max(0)).unwrap_or(0) / 100;
             rate = rate * resting / 100;
         }
-        let room = (self.state.levels.get(&actor.level))
-            .and_then(|level| level.room_effect_at(&self.content, actor.pos));
-        let rate = room.map_or(rate, |effect| rate * u32::from(effect.regen) / 100);
+        let room = (self.state.levels.get(&actor.level)).map_or(100, |level| {
+            level.effects_at(&self.content, actor.pos).regen()
+        });
+        let rate = rate * self.room_pace(actor, room) / 100;
         // Then the regeneration of what it wears and wields, and its talents' (Healthy;
         // Sun-blessed's under the open sun).
         let talents = actor.talent_mods(&self.content);
