@@ -45,6 +45,9 @@ fn least_casting() -> u8 {
 /// The casting percents a class may have (spec §8 "Spells"): everyone casts a little.
 pub const CASTING: std::ops::RangeInclusive<u8> = 1..=100;
 
+/// The affinities a class may have with a school of magic, in study check points.
+pub const AFFINITY: std::ops::RangeInclusive<i8> = -10..=10;
+
 /// The most skill rolls a class may give a level.
 pub const MAX_ROLLS: u8 = 10;
 
@@ -73,6 +76,8 @@ struct ClassSpec {
     mana: u16,
     #[serde(default = "least_casting")]
     casting: u8,
+    #[serde(default)]
+    affinity: BTreeMap<super::spell_def::School, i8>,
     #[serde(default)]
     skills: BTreeMap<String, Dice>,
     #[serde(default)]
@@ -139,6 +144,9 @@ pub struct ClassDef {
     /// Its casting percent (spec §8 "Spells"): a character's caster level is this percent of
     /// their level (a wizard 100, a warrior 25), before talents and items.
     pub casting: u8,
+    /// Its affinity with the schools of magic (spec §8 "Spells"): points off the difficulty of
+    /// studying a spell of the school (a malus when negative); a school it leaves out, 0.
+    pub affinity: BTreeMap<super::spell_def::School, i8>,
     /// How much experience a level needs, in percent (spec §8 "Experience"): multiplied with
     /// the race's onto every threshold. Patient classes pay more (a wizard, 125).
     pub experience: u16,
@@ -253,6 +261,14 @@ impl ClassDef {
                 CASTING.end()
             )));
         }
+        if let Some((school, n)) = (spec.affinity.iter()).find(|(_, n)| !AFFINITY.contains(*n)) {
+            return Err(err(format!(
+                "class `{id}`: affinity {n} with {} is out of range ({} to {})",
+                school.id(),
+                AFFINITY.start(),
+                AFFINITY.end()
+            )));
+        }
         if !FACTORS.contains(&spec.experience) {
             return Err(err(format!(
                 "class `{id}`: experience {} is out of range ({} to {} percent)",
@@ -354,6 +370,7 @@ impl ClassDef {
             hp: i32::from(spec.hp),
             mana: i32::from(spec.mana),
             casting: spec.casting,
+            affinity: spec.affinity,
             experience: spec.experience,
             alignment,
             skills,

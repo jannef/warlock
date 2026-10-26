@@ -138,6 +138,7 @@ fn actor(content: &Content, creature: &str) -> Actor {
         alignment_override: None,
         npc: None,
         talk: Default::default(),
+        spells: Default::default(),
         streak: None,
         satiation: None,
         stance: Default::default(),

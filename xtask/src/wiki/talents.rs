@@ -502,6 +502,14 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             percent(value)
         ),
         TalentEffect::ReadPercent { value } => format!("reading time {}", percent(value)),
+        TalentEffect::Study {
+            bonus,
+            percent: time,
+        } => format!(
+            "study check {}, study time {}",
+            signed(bonus),
+            percent(time)
+        ),
         TalentEffect::ScrollKept { chance } => {
             format!("a {chance} % chance a scroll you read is not used up")
         }

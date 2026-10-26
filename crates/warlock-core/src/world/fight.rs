@@ -121,7 +121,7 @@ impl Cause {
             }
             Cause::Scroll(o) => format!("Killed by their own {}", content.object(o).name),
             Cause::Spell(spell) => {
-                let noun = (content.class_spell(spell))
+                let noun = (content.spell_of(spell))
                     .map_or_else(|| "spell".into(), |s| s.look.noun.clone());
                 format!("Killed by their own {noun}")
             }

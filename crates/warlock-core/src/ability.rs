@@ -253,7 +253,7 @@ impl Ability {
             .map(|&a| Ability::Class(a));
         // The casters' spells some class's table has, in their order.
         let spells = (ClassSpell::ALL.iter())
-            .filter(|&&s| content.class_spell(s).is_some())
+            .filter(|&&s| content.spell_of(s).is_some())
             .map(|&s| Ability::Spell(s));
         // Weapon skills and fighting styles: the shield bash.
         let weapon_skills = [Ability::ShieldBash];
@@ -303,7 +303,7 @@ impl Ability {
         match self {
             Ability::Sign(active) => actor.talent_mods(content).has_sign_active(active),
             Ability::Class(active) => actor.talent_mods(content).has_active(active),
-            Ability::Spell(spell) => actor.talent_mods(content).has_spell(spell),
+            Ability::Spell(spell) => actor.knows_spell(content, spell),
             Ability::Skill(id) => actor.skills.get(id).is_some(),
             Ability::Disarm => {
                 actor.skills.trains_effect(content, Effect::Disarm)
@@ -348,7 +348,7 @@ impl Ability {
         match self {
             Ability::Sign(active) => content.sign_active(active).map_or("", |a| &a.name),
             Ability::Class(active) => content.class_active(active).map_or("", |a| &a.name),
-            Ability::Spell(spell) => content.class_spell(spell).map_or("", |s| &s.name),
+            Ability::Spell(spell) => content.spell_of(spell).map_or("", |s| &s.name),
             Ability::Skill(id) => &content.skill(id).name,
             Ability::ThrowVoice => "Throw your voice",
             Ability::Disarm => "Disarm a trap",
@@ -366,7 +366,7 @@ impl Ability {
         match self {
             Ability::Sign(active) => content.sign_active(active).map_or("", |a| &a.description),
             Ability::Class(active) => content.class_active(active).map_or("", |a| &a.description),
-            Ability::Spell(spell) => content.class_spell(spell).map_or("", |s| &s.description),
+            Ability::Spell(spell) => content.spell_of(spell).map_or("", |s| &s.description),
             Ability::Skill(id) => &content.skill(id).description,
             Ability::ThrowVoice => {
                 "Make a voice sound at a place you see nearby: those who hear it go and look there."
@@ -478,7 +478,7 @@ impl Ability {
     /// own is [`Actor::spell_reach`]); every other ability's is [`Ability::range`].
     pub fn reach(self, content: &Content) -> Option<i32> {
         match self {
-            Ability::Spell(spell) => content.class_spell(spell).and_then(|s| s.base_reach()),
+            Ability::Spell(spell) => content.spell_of(spell).and_then(|s| s.base_reach()),
             other => other.range(),
         }
     }
@@ -635,7 +635,7 @@ pub fn spell_unavailable(
 ) -> Option<Unavailable> {
     let ability = Ability::Spell(spell);
     ability.unavailable(actor, content).or_else(|| {
-        let def = content.class_spell(spell)?;
+        let def = content.spell_of(spell)?;
         (actor.mana < actor.spell_cost(content, def, caster_level)).then_some(Unavailable::NoMana)
     })
 }

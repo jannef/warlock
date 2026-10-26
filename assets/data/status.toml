@@ -142,7 +142,7 @@ seen = "raging"
 max = 1
 stacking = "refresh"
 penalty = { from = 1, strength = 2, toughness = 2, intelligence = -2 }
-blocks = ["read", "cast"]
+blocks = ["read", "study", "cast"]
 follows = "exhausted"
 start = "You fly into a rage!"
 end = "Your rage subsides."

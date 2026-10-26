@@ -13,14 +13,15 @@
 //! damage = "3d6"
 //! range = 8             # how far a burst flies (a bolt reaches its `length`)
 //! noise = { sound = "explosion", loudness = 150 }
+//! teaches = "fire_burst" # the spell of data/spells/ studying it teaches (spec §8 "Spells")
 //! ```
 
-use super::Content;
 use super::damage_type::TypeNames;
 use super::effect::EffectShape;
 use super::object::MAX_RANGE;
 use super::spell::{Bolt, Burst, SpellFields, check_effect, default_verb, one_kind};
 use super::trap::TrapNoise;
+use super::{ClassSpell, Content};
 use crate::dice::Dice;
 use crate::noise::MAX_LOUDNESS;
 use serde::Deserialize;
@@ -67,6 +68,9 @@ pub(super) struct ReadSpec {
     /// `burst`, `bolt`: the noise it makes where it goes off (a burst's center, the reader for a
     /// bolt), heard like a trap's: by everyone in earshot.
     noise: Option<TrapNoise>,
+    /// `burst`, `bolt`: the spell studying the scroll teaches (`study:b`, spec §8 "Spells"), an
+    /// id of `data/spells/`; none: it teaches nothing.
+    teaches: Option<String>,
 }
 
 /// What reading a scroll does.
@@ -90,6 +94,8 @@ pub struct ScrollSpell {
     /// Said as it is read: "The fireball explodes!"
     pub message: Option<String>,
     pub noise: Option<TrapNoise>,
+    /// The spell studying it teaches (spec §8 "Spells"), if any.
+    pub teaches: Option<ClassSpell>,
 }
 
 /// The shape of a scroll's spell, with the traps' rules.
@@ -144,6 +150,7 @@ impl ReadSpec {
         allowed("heat", self.heat, burst)?;
         allowed("frost", self.frost.is_some(), burst)?;
         allowed("length", self.length.is_some(), kind == Kind::Bolt)?;
+        allowed("teaches", self.teaches.is_some(), spelled)?;
         if self.message.as_ref().is_some_and(|m| m.trim().is_empty()) {
             return Err("`read`: `message` must not be empty".into());
         }
@@ -168,6 +175,17 @@ impl ReadSpec {
         }
         let damage_kind =
             one_kind(content, self.damage_type.as_ref()).map_err(|m| format!("`read`: {m}"))?;
+        // A spell it teaches is one the abilities menu can cast, with its file (spells load
+        // before objects).
+        let teaches = match &self.teaches {
+            None => None,
+            Some(id) => {
+                let spell = ClassSpell::from_id(id)
+                    .filter(|&s| content.spells().is_empty() || content.spell_of(s).is_some())
+                    .ok_or_else(|| format!("`read`: `teaches` names an unknown spell `{id}`"))?;
+                Some(spell)
+            }
+        };
         let fields = SpellFields {
             spell: self.spell,
             damage: self.damage,
@@ -202,6 +220,7 @@ impl ReadSpec {
                 .unwrap_or_else(|| default_verb(content, damage_kind)),
             message: self.message,
             noise: self.noise,
+            teaches,
         }))
     }
 }

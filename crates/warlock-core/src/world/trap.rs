@@ -377,7 +377,7 @@ impl World {
     }
 
     /// Moves `victim` from the teleport trap on `at` to a free cell of the level (module docs).
-    fn teleport(&mut self, victim: ActorId, at: Pos, events: &mut Vec<Event>) {
+    pub(super) fn teleport(&mut self, victim: ActorId, at: Pos, events: &mut Vec<Event>) {
         let state = &self.state;
         let Some(from) = state.actors.get(&victim).map(|a| a.pos) else {
             return;

@@ -48,6 +48,7 @@ mod horoscope;
 mod hunger;
 mod item_class;
 mod kit;
+mod learning;
 mod level;
 mod light;
 mod material;
@@ -147,6 +148,7 @@ pub use hunger::{
 pub(crate) use item_class::BUILTIN as BUILTIN_ITEM_CLASSES;
 pub use item_class::{ItemClassDef, ItemClassId, MAX_ITEM_CLASSES};
 pub use kit::{Keep, Kit, KitItem};
+pub use learning::{Band, Mishap, MishapEffect, StudyRules, drawn_among};
 pub(crate) use level::validate_route;
 pub use level::{
     CreatureSpawn, EdgeExit, HiddenLocation, LevelKind, LevelTemplate, Place, Region, StairsLink,
@@ -562,6 +564,10 @@ pub struct Content {
     weapon_skills: WeaponSkillTable,
     /// The spells' tier table (`data/spells.toml`, spec §8 "Spells"); none without the file.
     spell_rules: Option<SpellRules>,
+    /// The study check and its time (`data/study.toml`, spec §8 "Spells"); none without it.
+    study: Option<StudyRules>,
+    /// What a failed study may bring (`data/mishaps/`), in path order.
+    mishaps: Vec<Mishap>,
     /// Spells (`data/spells/`, spec §8 "Spells"), in path order; none without the files.
     spells: Vec<SpellData>,
     /// Talents (`data/talents.toml` and `data/talents/`, spec §8 "Talents"); none without the
@@ -658,6 +664,8 @@ impl Content {
             weapon_skills: WeaponSkillTable::default(),
             room_effects: RoomEffects::default(),
             spell_rules: None,
+            study: None,
+            mishaps: Vec::new(),
             spells: Vec::new(),
             talents: TalentBook::default(),
             affixes: Affixes::default(),
@@ -838,6 +846,12 @@ impl Content {
             let (traps, ids, avoid) = trap::parse(path, text, &content)?;
             (content.traps, content.trap_ids, content.trap_avoid) = (traps, ids, avoid);
         }
+        // Learning spells (spec §8 "Spells"): mishaps name statuses and creatures.
+        let path = "data/study.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.study = Some(StudyRules::parse(path, text)?);
+        }
+        content.mishaps = learning::parse(files.table("mishaps"), &content)?;
         let path = "data/search.toml";
         if let Some(text) = files.get_optional(path) {
             content.search = SearchRules::parse(path, text)?;
@@ -2901,16 +2915,23 @@ impl Content {
     /// `data/spells/`, when a class ability gives it (its `spell` effect names it); `None`
     /// otherwise.
     pub fn class_spell(&self, spell: ClassSpell) -> Option<&SpellData> {
-        let given = (self.talents.iter()).any(|(_, def)| {
+        self.spell_of(spell).filter(|_| self.class_gives(spell))
+    }
+
+    /// The spell `spell` names in `data/spells/`, whoever has it (a class ability, or study:
+    /// spec §8 "Spells"); `None` without its file.
+    pub fn spell_of(&self, spell: ClassSpell) -> Option<&SpellData> {
+        self.spell_id(spell.id()).map(|id| self.spell(id))
+    }
+
+    /// Whether a class ability gives `spell` (its `spell` effect names it).
+    fn class_gives(&self, spell: ClassSpell) -> bool {
+        (self.talents.iter()).any(|(_, def)| {
             (def.effects
                 .iter()
                 .chain(def.ranks.iter().flat_map(|r| r.effects.iter())))
             .any(|e| matches!(e, TalentEffect::Spell { spell: s } if *s == spell))
-        });
-        given
-            .then(|| self.spell_id(spell.id()))
-            .flatten()
-            .map(|id| self.spell(id))
+        })
     }
 
     /// Checks the classes' level tables against the talents (spec §8 "Class abilities"), then
@@ -2976,6 +2997,17 @@ impl Content {
     /// The spells' tier table (`data/spells.toml`, spec §8 "Spells"): none without the file.
     pub fn spell_rules(&self) -> Option<&SpellRules> {
         self.spell_rules.as_ref()
+    }
+
+    /// The study check and its time (`data/study.toml`, spec §8 "Spells"): none without it,
+    /// and then nothing can be studied.
+    pub fn study_rules(&self) -> Option<&StudyRules> {
+        self.study.as_ref()
+    }
+
+    /// What a failed study may bring (`data/mishaps/`), in path order.
+    pub fn mishaps(&self) -> &[Mishap] {
+        &self.mishaps
     }
 
     /// The spells (`data/spells/`, spec §8 "Spells"), in path order: a [`SpellId`] is an index.

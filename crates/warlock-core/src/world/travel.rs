@@ -556,6 +556,7 @@ pub(super) fn make_creature(
         alignment_override: spawn.alignment,
         npc: spawn.npc.clone(),
         talk: Talk::default(),
+        spells: Default::default(),
         streak: None,
         satiation: None,
         stance: CombatStance::Neutral,

@@ -71,6 +71,13 @@ id = "scholar"
 name = "Scholar"
 description = "Items, scrolls, gems, and learning."
 
+# Spells (the magic design, docs/design/magic.md §10): learning and casting them. Quick study is
+# its first talent (#396); #400 brings the rest.
+[[tree]]
+id = "spellcraft"
+name = "Spellcraft"
+description = "Learning spells and casting them."
+
 [[tree]]
 id = "grit"
 name = "Grit"
@@ -152,7 +159,8 @@ id = "mana"
 name = "Mana"
 
 # Spells (the magic design, docs/design/magic.md): tiers, caster level, learning, casting. Its
-# talents (the Spellcraft tree) come with #400, which removes the flag.
+# first talent is Quick study (#396); the rest of the Spellcraft tree comes with #400, which
+# removes the flag.
 [[system]]
 id = "spells"
 name = "Spells and caster level"

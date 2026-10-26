@@ -207,7 +207,10 @@ to open, read keys for, or draw one:
 
 Key commands `,`/`;` (pick up: one stack at once, else the `PickUp` screen), `d` (`Drop` screen),
 `I` (`Inventory` screen), `i` (`Equipment` screen), `@` (`Character` screen), `W` (`WeaponSkills`
-screen), `v` (`KeyCommand::Messages`: the `Messages` screen), `r` (`Read` screen, `KeyCommand::Read`: a basic command, not an ability), `p`
+screen), `v` (`KeyCommand::Messages`: the `Messages` screen), `r` (`Read` screen, `KeyCommand::Read`: a basic command, not an ability), `L` (`Study` screen,
+`KeyCommand::Study`, next to Read: `ObjectList::Study` from `PerceptionView::studies`, each row
+marked with its spell and the chance in words, a pick asking in the one dialog before
+`Action::Study`), `p`
 (`KeyCommand::Pay`), `a` (`KeyCommand::Abilities`: the `Abilities` screen), `X`
 (`KeyCommand::RepeatAbility`), bash (`KeyCommand::Bash`, unbound), disarm
 (`KeyCommand::Disarm`, unbound), picking a lock (`KeyCommand::PickLock`, unbound), steal

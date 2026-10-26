@@ -26,7 +26,8 @@ You learn what a kind of scroll is, for good, in one of four ways:
 - **Your starting kit**: you know the scrolls you start with.
 
 Knowing what a scroll is does not teach you its spell: a scroll you know by name is still only a
-scroll (studying spells will come with magic). The scroll of light cannot be read, and is known
+scroll, but once you know it you may study it to learn its spell for good (see
+[Magic](magic.md#learning-spells-from-scrolls)). The scroll of light cannot be read, and is known
 on sight. A shop's price for an unknown scroll is its true price.
 
 ## Spell scrolls

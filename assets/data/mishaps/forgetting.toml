@@ -1,0 +1,6 @@
+[[mishap]]
+id = "forgetting"
+band = "bad"
+weight = 10
+message = "The words leave a gap in your memory."
+effect = { kind = "lose_mark" }

@@ -1,0 +1,6 @@
+[[mishap]]
+id = "torn_loose"
+band = "bad"
+weight = 30
+message = "The spell tears loose from the page!"
+effect = { kind = "backfire" }

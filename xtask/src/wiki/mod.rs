@@ -31,6 +31,7 @@ mod hearing;
 mod horoscope;
 mod hunger;
 mod kits;
+mod learning;
 mod magic;
 mod mana;
 mod materials;
@@ -245,6 +246,10 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("spell-casting.md", spells::casting),
         ("spell-list.md", spells::list),
         ("spell-armour.md", spells::armour),
+        ("study-chances.md", learning::chances),
+        ("study-times.md", learning::times),
+        ("study-affinities.md", learning::affinities),
+        ("mishaps.md", learning::mishaps),
         ("resources.md", resources::resources),
         ("experience-levels.md", experience::experience_levels),
         ("experience-factors.md", experience::experience_factors),
@@ -786,20 +791,20 @@ mod tests {
         assert!(
             benefits.contains(
                 "| Value | Appraise: prices | Athletics: kicking doors in | Balance: Burdened / \
-                 Strained | Disable device: disarming traps | Listen: hears fainter by | Open \
-                 lock: picking locks | Search: \
-                 searching | Search: search reaches | Spot: noticing | Steal: stealing | Stealth: noise | Survival: \
-                 journeys | Tumble: Dodge |"
+                 Strained | Decipher script: study check | Disable device: disarming traps | \
+                 Listen: hears fainter by | Open lock: picking locks | Search: searching | \
+                 Search: search reaches | Spellcraft: study check | Spot: noticing | Steal: \
+                 stealing | Stealth: noise | Survival: journeys | Tumble: Dodge |"
             ),
             "{benefits}"
         );
         assert!(benefits.contains(
-            "| 100 | 20% better | +8 Strength | ×1.1 / ×1.2 | +8 | 10 | +8 | +8 | +1 cell | +8 | +8 | \
-             \u{2212}60% | \u{2212}20% | +5 |"
+            "| 100 | 20% better | +8 Strength | ×1.1 / ×1.2 | +10 | +8 | 10 | +8 | +8 | +1 cell | +10 \
+             | +8 | +8 | \u{2212}60% | \u{2212}20% | +5 |"
         ));
         assert!(benefits.contains(
-            "| 150 | 25% better | +10 Strength | ×1.08 / ×1.15 | +10 | 15 | +10 | +10 | +1 cell | +10 | +10 \
-             | \u{2212}75% | \u{2212}20% | +7 |"
+            "| 150 | 25% better | +10 Strength | ×1.08 / ×1.15 | +15 | +10 | 15 | +10 | +10 | +1 cell \
+             | +15 | +10 | +10 | \u{2212}75% | \u{2212}20% | +7 |"
         ));
         // Stealing: the odds by the thief's edge, a contest of even dice.
         let stealing = text("stealing.md");
@@ -1025,8 +1030,8 @@ mod tests {
         for row in [
             "| Raging | yes, \"raging\" | Holding Rage | Nothing | When rage ends (the Resources \
              page) |",
-            "| Strength +2, Toughness +2, Intelligence \u{2212}2 | — | You cannot read or cast \
-             spells; Exhausted follows it |",
+            "| Strength +2, Toughness +2, Intelligence \u{2212}2 | — | You cannot read, study, or \
+             cast spells; Exhausted follows it |",
             "| Exhausted | no | The end of Raging | Nothing |",
         ] {
             assert!(statuses.contains(row), "{row} in {statuses}");
