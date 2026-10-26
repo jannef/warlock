@@ -136,3 +136,6 @@ giant centipedes the shallow floors draw on), leaving out the drake, which only 
 hoard places (a vault its twelfth level names, so a run meets it once, there). Its stores are
 kept by the `duergar_trader` (the Ascmearc's own type, `merchants`, the shopkeeper's level and
 XP, an outlier of the XP guideline like the shopkeeper).
+Fennmynster (#338) is where the fen wave lives: all eleven are its branch's `population`, the bog
+hag too (unique, so the population and spawns bring her once a run); the sunken crypt at its
+bottom adds two drowned standing guard in its water.

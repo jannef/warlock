@@ -143,6 +143,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
   random, and a vault a branch level names is never drawn at random anywhere (a quest's target
   is where the branch says, once). A named vault is a dungeon vault, shared or of the branch's
   own campaign, and named once a level.
+- **Fennmynster** (#338; `campaigns/ascmearc/data/dungeons/fennmynster.toml`; the design is
+  `docs/design/campaign.md` §7): the cellars and crypts of the drowned minster in Micelfenn, its
+  way in a hidden location of the overworld (70, 48) leading to `fennmynster:1`. Eight levels of
+  rooms, 80×21, at 6 °C. Danger 4 to 11, nothing scaled by the player; its population is the fen
+  wave (§7b), the bog hag among them (unique: once a run), at the default count (25 a floor). Pit,
+  frost, alarm, and teleport traps; one to three secret doors a level, hidden things one harder
+  each level down, locks one; 2 to 4 items of loot; the iron key. Its own room odds: a room is
+  special with 25 % (at most two a level), flooded, hushed, or shadowed, so most levels have one
+  and a third of them are flooded; no shops (`shops = { chance = 0 }`). Its vault
+  (`campaigns/ascmearc/vaults/`): the **sunken crypt** on level 8 alone, a nave of shallow water
+  between tombs, two drowned on guard, and at its far end a dry dais with an altar and a magic
+  find on it. The `fennmynster` dev scenario starts on level 1.
 - **Fyrdelf** (#339; `campaigns/ascmearc/data/dungeons/fyrdelf.toml`; the design is
   `docs/design/campaign.md` §7): the Ascmearc's deepest first dungeon, the duergar's mine under
   Ascdūn, its way in a hidden location of the overworld (97, 21) leading to `fyrdelf:1`. Twelve

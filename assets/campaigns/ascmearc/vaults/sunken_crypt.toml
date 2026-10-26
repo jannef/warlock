@@ -1,0 +1,24 @@
+# Vault of the Ascmearc (docs/design/campaign.md §7.2): the sunken crypt at the bottom of
+# Fennmynster. The minster's crypt, long under the fen's water: a flooded nave between the monks'
+# tombs, ankle-deep (slow and loud to wade), where the drowned still keep their watch, and at its
+# far end a dry dais with the altar and what the minster kept on it. Fennmynster names it for its
+# eighth floor (`vaults` in its `[[dungeon.levels]]`), so it is stamped there and nowhere else.
+name = "Sunken crypt"
+map = '''
+#################
+#,~~~~~~~~~~~~..#
+#~~#~~~#~~~#~~.,#
++~~~~d~~~~~~d~.m#
+#~~#~~~#~~~#~~.,#
+#,~~~~~~~~~~~~..#
+#################
+'''
+
+[legend]
+"~" = "shallow_water"
+"," = "fungus"
+# The drowned keep the crypt, standing in its water.
+"d" = { terrain = "shallow_water", creature = "drowned" }
+# What the minster kept (spec §8 "Magic items"): a magic thing on the altar, rolled when the level
+# is made.
+"m" = { terrain = "altar", loot = "magic" }

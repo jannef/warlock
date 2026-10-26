@@ -81,4 +81,5 @@ starts on the pass and says its `arrival` line. Tests: `world/ascmearc_tests.rs`
 closed way back, the town's distance, names and spacing, the rivers, the travel budget, no leak
 of the hidden two, a replay, the legend's `name` and `note` checks). Fyrdelf's hidden entry
 leads to `fyrdelf:1` (#339; `mapgen/fyrdelf_tests.rs` reveals it with the dev `reveal:fyrdelf`,
-walks there, goes down and back up as a replay).
+walks there, goes down and back up as a replay). Fennmynster's leads to `fennmynster:1` (#338;
+`mapgen/fennmynster_tests.rs` does the same from Micelfenn's cell, (70, 48)).

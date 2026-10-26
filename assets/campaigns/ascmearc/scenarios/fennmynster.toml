@@ -1,0 +1,9 @@
+# A dev scenario of the Ascmearc (docs/design/campaign.md §7): straight into Fennmynster, the
+# cellars of the drowned minster. Its first level's `<` leads nowhere here (the run did not come
+# down from the overworld); come in from the overworld, it leads back to Micelfenn.
+name = "Fennmynster"
+description = "Straight into Fennmynster, the drowned minster in the fen: eight levels of flooded cellars and crypts."
+start_level = "fennmynster:1"
+seed = 1
+character = { race = "human", gender = "female", class = "thief", name = "Eadgyth" }
+lantern = "lantern"

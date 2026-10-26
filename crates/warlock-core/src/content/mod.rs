@@ -3816,7 +3816,8 @@ mod tests {
                 // The campaigns' own, after the shared ones.
                 "barrow_chamber",
                 "drakes_hoard",
-                "foremans_cabin"
+                "foremans_cabin",
+                "sunken_crypt"
             ]
         );
         assert_eq!(content.vaults()[4].entrances.len(), 3);
