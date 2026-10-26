@@ -98,7 +98,7 @@ and shows a page at a time: the letters name the rows of the page you see, start
 
 ## Rebinding keys
 
-You can rebind every key but `Esc` in the Controls screen (main menu or pause menu, then
+Keys of menus, lists, screens, and prompts are fixed; new ones are never rebindable. Where the Controls screen lists such keys, it is the current state, and a later update may fix them. You can rebind the keys of play in the Controls screen (main menu or pause menu, then
 Controls). It lists the commands in groups, by where they are used: in play, while aiming, in the
 rest prompt, at `--more--`, on menus and screens, in text fields, on the info pages, in the question windows, and (in builds
 that have them) the developer keys. Select a command, press `Enter`, then press the new key. It

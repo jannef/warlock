@@ -331,10 +331,15 @@ Hard rules:
 - Rendering, UI, and dumps read the per-turn **perception snapshot** only — never ground truth —
   so hidden information cannot leak. The only exception is an explicit dev "reveal" mode.
 - Gameplay outcomes never depend on frame rate, animation, or visual randomness.
-- Every key the game reads goes through the binding system: a `KeyCommand` in its
-  `input::Context`, rebindable in Controls and listed by `?`. Never match a `KeyCode` or a typed
-  character in a screen or an input mode (only Esc and the letters and digits naming list rows
-  are fixed); hints name keys as bound (`docs/dev/settings.md`).
+- Only play-context (gameplay) commands are rebindable: a `KeyCommand` in `input::Context::Play`,
+  rebindable in Controls and listed by `?`. The keys of menus, menu lists (rows named by letters
+  and digits, paging, confirm and cancel inside lists), screens, info pages, prompts, dialogs,
+  text fields, and the targeting mode are FIXED, never rebindable (owner, 2026-10-26: "do not
+  fucking make menus rebindable. that just gets too messy"; "at least menu lists like that. it
+  just won't work"). New ones are plain fixed keys in their screen or input-mode code, named in
+  the screen's hint line; add no `KeyCommand` or `Context` entry for them. Existing menu-context
+  bindings stay as they are for now (not widened, not removed; a cleanup is a later owner call)
+  (`docs/dev/settings.md`).
 - Abilities (racial, class, skill, weapon skill and style, item; #156) register in
   `warlock_core::ability`, the one registry, and are used from the one abilities menu (`a`):
   never a default key of their own (an ability's own `KeyCommand` stays unbound by default,
