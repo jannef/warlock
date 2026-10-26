@@ -44,6 +44,7 @@ use super::search::{Secret, SecretSpec, secret_look};
 use super::shop::ShopPlan;
 use super::terrain::{StairsDir, TerrainDef, TerrainId};
 use super::trap::{Trap, TrapEffect};
+use super::unique::UNIQUE;
 use super::{
     ActionKind, Content, ContentError, Cutting, DIFFICULTIES, MAX_ITEM_LEVEL, Rarity, Speaker,
 };
@@ -191,7 +192,7 @@ struct ItemSpec {
 /// and its size and cut (the plain ones if not given).
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
-struct ItemPartSpec {
+pub(super) struct ItemPartSpec {
     part: Option<String>,
     of: String,
     size: Option<String>,
@@ -1160,9 +1161,25 @@ fn parse_item(spec: &ItemSpec, content: &Content) -> Result<Stack, String> {
 /// What a magic or rare `[[item]]` rolled: rare with a `name`, else magic.
 fn parse_magic(spec: &ItemSpec, content: &Content) -> Result<Magic, String> {
     let def = content.object(content.object_id(&spec.object).expect("checked"));
+    let mut magic = magic_of(def, &spec.affixes, spec.name.clone(), spec.level, content)?;
+    magic.identified = spec.identified;
+    Ok(magic)
+}
+
+/// The magic of an item of `def` placed by hand with `written` affixes (each an id with an
+/// optional tier, default 1, whose value is the top of the tier's range): rare with a `name`,
+/// else magic; of item level `level`, or that of its highest tier; unidentified; checked against
+/// `def` ([`Magic::check`]). An `[[item]]` and a unique item (`super::unique`) are made so.
+pub(super) fn magic_of(
+    def: &super::ObjectDef,
+    written: &[String],
+    name: Option<String>,
+    level: Option<u8>,
+    content: &Content,
+) -> Result<Magic, String> {
     let mut affixes = Vec::new();
     let mut highest = 1;
-    for text in &spec.affixes {
+    for text in written {
         let (id, tier) = match text.split_once(':') {
             Some((id, tier)) => {
                 let tier = tier
@@ -1183,18 +1200,19 @@ fn parse_magic(spec: &ItemSpec, content: &Content) -> Result<Magic, String> {
             value: t.max,
         });
     }
-    let rarity = if spec.name.is_some() {
+    let rarity = if name.is_some() {
         Rarity::Rare
     } else {
         Rarity::Magic
     };
     let magic = Magic {
         rarity,
-        level: spec.level.unwrap_or(highest),
+        level: level.unwrap_or(highest),
         affixes,
-        name: spec.name.clone(),
-        identified: spec.identified,
+        name,
+        identified: false,
         carried: 0,
+        unique: None,
     };
     magic.check(def, content)?;
     Ok(magic)
@@ -1202,7 +1220,7 @@ fn parse_magic(spec: &ItemSpec, content: &Content) -> Result<Magic, String> {
 
 /// A part an `[[item]]` names: a gem, of the plain size and cut unless it says otherwise, or
 /// another material in place of one of its base item's parts (a variant, #193; no size or cut).
-fn item_part(spec: &ItemPartSpec, content: &Content) -> Result<ItemPart, String> {
+pub(super) fn item_part(spec: &ItemPartSpec, content: &Content) -> Result<ItemPart, String> {
     let gem = (content.material_id(&spec.of))
         .ok_or_else(|| format!("`of = \"{}\"`: no such material", spec.of))?;
     let part = match &spec.part {
@@ -1364,12 +1382,26 @@ pub(super) fn equip_ids(
     for (wields, list) in [(true, wield), (false, wear)] {
         let verb = if wields { "wield" } else { "wear" };
         for id in list {
-            let object = content
-                .object_id(id)
-                .ok_or_else(|| format!("{verb}: unknown object `{id}`"))?;
-            let item = (0..carry.len())
-                .find(|&i| carry[i].object == object && !equipment.holds(i))
-                .ok_or_else(|| format!("{verb}s `{id}`, which it does not carry"))?;
+            // A unique item (`unique:widowmaker`) is the one carried, not another placement.
+            let (object, item) = match id.strip_prefix(UNIQUE) {
+                Some(unique) => {
+                    let is =
+                        |s: &Stack| s.magic().and_then(|m| m.unique.as_deref()) == Some(unique);
+                    let item = (0..carry.len())
+                        .find(|&i| is(&carry[i]) && !equipment.holds(i))
+                        .ok_or_else(|| format!("{verb}s `{id}`, which it does not carry"))?;
+                    (carry[item].object, item)
+                }
+                None => {
+                    let object = content
+                        .object_id(id)
+                        .ok_or_else(|| format!("{verb}: unknown object `{id}`"))?;
+                    let item = (0..carry.len())
+                        .find(|&i| carry[i].object == object && !equipment.holds(i))
+                        .ok_or_else(|| format!("{verb}s `{id}`, which it does not carry"))?;
+                    (object, item)
+                }
+            };
             let slot = equipment::free_slot(content, &equipment, object)
                 .ok_or_else(|| format!("cannot {verb} `{id}`: no free slot fits it"))?;
             let held = matches!(

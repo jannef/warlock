@@ -105,6 +105,8 @@ const WELL: &str = "\n[[effect]]\nid = \"well\"\nname = \"mana well\"\nmark = \"
 fn files(scenario: &str, extra: &[(&str, &str)]) -> ContentFiles {
     let mut files = ContentFiles::builtin();
     files.insert("data/status.toml", STATUS);
+    // Its own statuses: the uniques' powers name statuses it leaves out.
+    files.remove("campaigns/ascmearc/data/uniques");
     // The talents name the built-in statuses, which STATUS replaces.
     files.remove("data/talents/");
     files.remove("data/talents.toml");
@@ -494,6 +496,7 @@ fn magic(w: &World, object: &str, id: &str, value: i32) -> Stack {
         name: None,
         identified: true,
         carried: 0,
+        unique: None,
     };
     let object = w.content().object_id(object).expect("object");
     Stack::with_magic(object, 1, magic)

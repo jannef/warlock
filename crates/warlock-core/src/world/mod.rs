@@ -243,6 +243,10 @@ pub struct WorldState {
     pub(crate) messages: MessageLog,
     /// The player's vision profile (an id in `data/vision.toml`).
     pub(crate) vision: String,
+    /// Whether `vision` is the dev `vision:` override, which a unique item's Vision power never
+    /// betters (`world/eyes.rs`).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub(crate) vision_dev: bool,
     /// The player's character (spec §8 "Character creation"): race, gender, and class, the stat
     /// the gender raised, birth date, and birth sign; none when the scenario gives the player's
     /// eyes and stats itself.
@@ -615,6 +619,7 @@ impl World {
             next_actor_id: 1,
             messages: MessageLog::default(),
             vision,
+            vision_dev: false,
             character,
             kit: with_kit,
             lantern_lit: false,
@@ -1322,6 +1327,8 @@ mod tests;
 mod time_tests;
 #[cfg(test)]
 mod trap_tests;
+#[cfg(test)]
+mod unique_tests;
 #[cfg(test)]
 mod variant_tests;
 #[cfg(test)]

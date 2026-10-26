@@ -57,6 +57,7 @@ mod steal;
 mod talent;
 mod terrain;
 mod trap;
+mod unique;
 mod vault;
 mod vision;
 mod weapon_skill;
@@ -161,6 +162,7 @@ pub use terrain::{
     Breakable, Freeze, FreezeSpec, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId,
 };
 pub use trap::{MAX_CHARGES, Trap, TrapDef, TrapEffect, TrapId, TrapNoise};
+pub use unique::{Power, UNIQUE, UniqueDef, Uniques};
 pub use vault::Vault;
 pub use vision::VisionProfile;
 pub use weapon_skill::{
@@ -454,6 +456,8 @@ pub struct Content {
     object_ids: BTreeMap<String, ObjectId>,
     /// Gem sizes, cuts, and ornaments (`data/gems.toml`); none without the file.
     gems: Option<Gems>,
+    /// Unique items (`data/uniques/`, each campaign's too; spec §8 "Magic items").
+    uniques: Uniques,
     /// Equipment slots, in display order.
     slots: Vec<SlotDef>,
     /// Trap types, in file order.
@@ -556,6 +560,7 @@ impl Content {
             objects: Vec::new(),
             object_ids: BTreeMap::new(),
             gems: None,
+            uniques: Uniques::default(),
             slots: Vec::new(),
             traps: Vec::new(),
             trap_ids: BTreeMap::new(),
@@ -734,6 +739,8 @@ impl Content {
         content.load_creatures(files)?;
         content.load_objects(files)?;
         content.load_gems(files)?;
+        // Unique items before everything that may place one (gear, shops, levels, kits, quests).
+        content.uniques = unique::parse(files.table("uniques"), &content)?;
         content.load_gear()?;
         let path = "data/shops.toml";
         if let Some(text) = files.get_optional(path) {
@@ -2350,6 +2357,22 @@ impl Content {
     /// file: no gems are found or set.
     pub fn gems(&self) -> Option<&Gems> {
         self.gems.as_ref()
+    }
+
+    /// The unique items (spec §8 "Magic items"), in table order.
+    pub fn uniques(&self) -> impl Iterator<Item = &UniqueDef> {
+        self.uniques.iter()
+    }
+
+    /// Unique item `id`.
+    pub fn unique(&self, id: &str) -> Option<&UniqueDef> {
+        self.uniques.get(id)
+    }
+
+    /// Unique item `id` as a placement makes it (`unique:ID`): refused for an unknown id, and
+    /// for a second placement anywhere in the content.
+    pub(super) fn place_unique(&self, id: &str) -> Result<crate::object::Stack, String> {
+        self.uniques.place(id)
     }
 
     /// The part names of `data/parts.toml`, in file order (by [`PartId`]).

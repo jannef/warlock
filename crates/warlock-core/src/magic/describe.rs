@@ -24,6 +24,10 @@ pub enum LineKind {
     Note,
     /// An affix: its kind ("Prefix"), name, and what it does.
     Affix(AffixKind),
+    /// A unique item's power, in words ("Its every cut poisons.").
+    Power,
+    /// A unique item's lore: the last line.
+    Lore,
 }
 
 /// One line of a description.
@@ -140,6 +144,16 @@ pub fn lines(stack: &Stack, content: &Content) -> Vec<Line> {
             for rolled in magic.rolled(content) {
                 let text = format!("{}: {}", rolled.def.name, phrase(&rolled, kind, content));
                 out.push(line(LineKind::Affix(rolled.def.kind), text));
+            }
+            // A unique item's power and lore (spec §8 "Magic items").
+            if let Some(unique) = magic.unique.as_deref().and_then(|id| content.unique(id)) {
+                out.extend(
+                    unique
+                        .phrase
+                        .iter()
+                        .map(|p| line(LineKind::Power, p.as_str())),
+                );
+                out.extend(unique.lore.iter().map(|l| line(LineKind::Lore, l.as_str())));
             }
         }
     }

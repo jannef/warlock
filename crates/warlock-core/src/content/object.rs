@@ -1147,8 +1147,10 @@ impl ObjectSpec {
 /// Parses objects as level files place them: ids, each optionally with a count (`"arrow*12"`),
 /// first on top; a loose gem names its gem (`"gem:ruby*3"`: the gems' object made of that gem,
 /// of the plain size and cut; spec §7 "Gems"), and anything else may name another material its
-/// base item may be made of (`"dagger:bronze"`, a variant, #193). A stackable object becomes one
-/// stack (the same placement twice joins it); any other object becomes a stack of one per count.
+/// base item may be made of (`"dagger:bronze"`, a variant, #193), and a unique item is named by
+/// its id (`"unique:widowmaker"`, spec §8 "Magic items": once in all content). A stackable
+/// object becomes one stack (the same placement twice joins it); any other object becomes a
+/// stack of one per count.
 pub(super) fn parse_stacks(specs: &[String], content: &Content) -> Result<Vec<Stack>, String> {
     let mut stacks: Vec<Stack> = Vec::new();
     for spec in specs {
@@ -1166,6 +1168,14 @@ pub(super) fn parse_stacks(specs: &[String], content: &Content) -> Result<Vec<St
             }
             None => (spec.trim(), 1),
         };
+        // A unique item (`unique:widowmaker`), one and once (`super::unique`).
+        if let Some(unique) = placed.strip_prefix(super::UNIQUE) {
+            if count != 1 {
+                return Err(format!("`{spec}`: a unique item is placed one at a time"));
+            }
+            stacks.push(content.place_unique(unique.trim())?);
+            continue;
+        }
         let (id, made) = match placed.split_once(':') {
             Some((id, made)) => (id.trim(), Some(made.trim())),
             None => (placed, None),

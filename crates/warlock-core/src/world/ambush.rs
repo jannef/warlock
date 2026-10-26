@@ -130,7 +130,7 @@ impl World {
         let level = state.current();
         let reach = LineOfSight::radius_for(d2).min(radius);
         let los = LineOfSight::compute(me.pos, reach, |p| level.is_opaque(content, p));
-        let eye = &content.vision_profiles()[def.vision];
-        sight::sees(state, content, lights, &los, eye, at)
+        let eye = me.eyes(content, &content.vision_profiles()[def.vision]);
+        sight::sees(state, content, lights, &los, &eye, at)
     }
 }
