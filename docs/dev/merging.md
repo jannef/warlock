@@ -9,17 +9,14 @@ and again when the integrator says your PR is next.
 - **Don't chase main.** A PR merges (or rebases onto) `origin/main` once, when the integrator says
   it is next in line, not after every merge into `main`. Until then, keep working on the branch.
   `main`'s protection does not require branches to be up to date, so a PR behind `main` still
-  merges. The one exception: just before pushing the finisher checks whether `main` has a new HEAD
-  (`git merge-base --is-ancestor origin/main HEAD`, exit 1) and merges it again if so, clean or not,
-  repeating up to three times, so the pushed branch holds main's current HEAD and does not go stale
-  during CI.
-- **After that merge** aim for the shortest total time: run locally only what CI does not, or
-  what saves a red CI round (about 20 minutes). Always: the PR's own replays (`replay --verify`;
-  CI does not run them) and the golden comparison and update in the cloud sandbox if anything
-  visible changed (CLAUDE.md "Golden screenshots"). Only if a merge had conflicts in code,
-  snapshots, or registries, or after a fix of the finisher's own: `cargo clippy --workspace
-  --all-targets -- -D warnings` and `cargo test --workspace` (where merges break things). fmt,
-  the wiki tables, and everything else are left to CI; a clean merge is pushed after the replays.
+  merges. The finisher does not re-merge `main` just before pushing.
+- **Push early.** The owner's rule (2026-10-26): a finisher pushes a fix as soon as the merge
+  conflicts are potentially fixed, after a quick compile and with no clippy, tests, replays, or
+  goldens first. If CI fails, it fails; CI that is already ahead (red) is ahead of the game. The
+  finisher keeps verifying in its session after the push (the PR's own replays, which CI does not
+  run; clippy and `cargo test --workspace` after conflicts in code, snapshots, or registries or a
+  fix of its own; the golden update in the cloud sandbox if anything visible changed, CLAUDE.md
+  "Golden screenshots"), pushes each follow-up fix at once, and stops the checks when CI is green.
 - **The full check list** (CLAUDE.md "Verification") runs once, before the PR opens.
 - **Keep PRs small**: one feature per PR, rules first (core, tests, dumps), then the UI, then the
   content that uses it, when they can stand alone. Small PRs merge in minutes and conflict less.
@@ -162,10 +159,11 @@ message adds the fields each one lists), so they survive a wiped `/tmp`:
    main's side of generated files and PNGs, then regenerate); it updates the golden references
    (CLAUDE.md "Golden screenshots": `cargo xtask golden`, look at every difference, `--update`,
    keep only the images the change explains; an unexplained difference is a bug to fix, not a
-   reference to update); just before pushing it merges `origin/main` again if main has a new HEAD
-   (up to three times, until the branch holds it), runs the PR's replays (`replay --verify`, re-created if hashes moved), and clippy
-   `-D warnings` and `cargo test --workspace` only after conflicts or a fix of its own; it
-   pushes and stops. There is no CI update run and no second CI
+   reference to update); it pushes as soon as the conflicts are potentially fixed (a quick compile,
+   no re-merge of `origin/main` before pushing), then keeps verifying in the session: the PR's
+   replays (`replay --verify`, re-created if hashes moved), and clippy `-D warnings` and
+   `cargo test --workspace` only after conflicts or a fix of its own, pushing follow-up fixes and
+   stopping the checks once CI is green. There is no CI update run and no second CI
    round. It does not merge the PR: the integrator's merge watcher squash-merges a PR once it is
    non-draft and CLEAN. A local finisher (macOS, no lavapipe) falls back to the CI update run.
 3. **Agents keep contexts small**: read files in parts, grep, filter test output, never print
