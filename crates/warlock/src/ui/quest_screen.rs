@@ -91,14 +91,14 @@ impl QuestScreen {
     }
 
     pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
-        let width = WIDTH.min(console.cols() as i32);
+        let width = super::info_tabs::panel_width(WIDTH).min(console.cols() as i32);
         let inner = width - 4;
         let list = self.list();
         let details = self.details(inner);
         // Rows: margin, the list (or a line saying there is none), a gap, the details, a gap,
         // the footer, the frame.
         let body = list.len().max(1) as i32 + 1 + details.len() as i32;
-        let panel = Panel::new(console, " Quests ", WIDTH, body + 5);
+        let panel = Panel::new(console, " Quests ", width, body + 5);
         info_tabs_line(console, &panel, bindings);
         let x = panel.inner_x();
         let fits = |y: i32| y < panel.y + panel.h - 2;
