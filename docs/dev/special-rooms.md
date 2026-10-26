@@ -14,12 +14,14 @@ indices (in the save fingerprint; new effects go at the end). Fields: `id`, `nam
 `needs_below`, `min_cells`, `max_cells` ([`RoomEffectDef::eligible`]), and what it does: `light`,
 `glow`, `noise`, `regen`, `mana_regen`, `shunned`, `floor`, `status` (a status id, resolved and
 checked at load: it must ease, at least `DWELL_EASES`, 10 s a degree; `RoomEffects::parse_with`
-takes the statuses' lookup, `parse` in tests none). An effect with `level_chance` must have
+takes the statuses' lookup, `parse` in tests none), and `temperature` (degrees Celsius added to
+the level's, -40 to 40, default 0). An effect with `level_chance` must have
 a `pervade` line and be neither `shunned` nor lay a `floor` (`RoomEffectDef::can_pervade`); a level
 file's `effect` is held to the same.
 
 Features today: shadowed (10), echoing (8), hushed (8), sanctuary (6), flooded (8), black chamber
-(5, `light = 0`), draining (6, `status = "ebbing"`, `level_chance` 5, #403). Draining is the
+(5, `light = 0`), draining (6, `status = "ebbing"`, `level_chance` 5, #403), hot (5, "sweltering
+chamber", `temperature = 25`, #404), cold (5, "frigid hall", `temperature = -25`). Draining is the
 first with a `level_chance` (cursed rooms bring theirs).
 
 A dungeon's `room_effects` (on a branch or a `[[dungeon.levels]]` range; `content/dungeon.rs`,
@@ -29,7 +31,7 @@ together at most 100) and `banned = [ids]`, resolved into `RoomOdds { chance, pe
 favoured, banned }` (`RoomOdds::shared` has neither list). Content errors: unknown ids, an id both
 favoured and banned, shares over 100, every feature banned while `chance` is above 0, and the
 retired `effects` list (refused, pointing to `favoured` and `banned`). Fennmynster favours flooded
-35, hushed 15, shadowed 15 (its cursed share and its bans on hot rooms and forges come with those
+35, hushed 15, shadowed 15, and bans hot (its cursed share and its ban on forges come with those
 rooms).
 
 ## Generation
@@ -88,6 +90,24 @@ the same for the player and holds through the coarse turns too. Leaving, the sta
 own `eases` (Ebbing: 30 s). A creature holding a status is not idle, so it does not stride
 (`stride.rs`): creatures in a draining room take turn-by-turn (busy, slowed) turns in a rest.
 
+## Hot and cold rooms
+
+A room's `temperature` sets its cells' temperature and nothing else (design §8, decisions 9 and
+10): no status, damage, or effect on items or food; whatever the temperature does is the
+environment's. `Here::warmth` adds the effects' degrees (the room's and the level's);
+`WorldState::temperature_at(level, content, time, pos)` (`world/ice.rs`) is the one place a
+cell's temperature is decided: `temperature_on` (the level's, outside every room) plus
+`LevelState::warmth_at`. Readers: perception (`PerceptionView::temperature`, the status bar's
+number, at the player's cell), `World::temperature` (the player's cell; dump headers) and
+`World::temperature_at`, and the ice: `LevelState::advance_ice` groups cells by (water,
+thickness, warmth), open water by (water, warmth) for each warmth the level has
+(`LevelState::warmths`: outside every room and each room's), and ticks each group at the air
+plus its warmth, so a year's catch-up is still a few groups. A level with a hot or a cold room
+(`LevelState::has_warmth`) gets `pre_roll_ice`'s 30 days of weather when it is made, as a level
+under the open sky does, so a cold room's pool is frozen when first seen; other underground
+levels do not, as before. Neither may pervade (no `level_chance`: a hot level is its
+`temperature`).
+
 ## What the player is told
 
 `world/rooms.rs`: `glimpse_rooms` (in `perceive`, before `enter_room`) marks each room of which
@@ -115,4 +135,8 @@ System `special_rooms` (`data/talents.toml`): Sense of place (wayfarer, `sense_o
 `mapgen/fennmynster_tests.rs`, `world/room_tests.rs` (each effect in play, messages, pervading
 levels, the talents, saving), `world/dwell_tests.rs` (a room's status: Ebbing on the player and on
 creatures, not on one without mana, through a rest, over a drained level, eased after leaving,
-Anchored mind, saving).
+Anchored mind, saving), `content/room_temperature_tests.rs` (the field, its range, `Here::warmth`),
+`world/room_temperature_tests.rs` (hot and cold rooms: the cells' temperature, the player's and
+the status bar's, no status, a cold room's pool frozen on a mild level and not beside it, ice
+melting in a hot room in a frost, the pre-roll only with such a room, alike however time passes,
+a year's catch-up).
