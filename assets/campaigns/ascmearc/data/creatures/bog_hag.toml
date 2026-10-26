@@ -16,6 +16,7 @@ name = "bog hag"
 glyph = "h"
 fg = "#8ac05a"
 faction = "marsh"
+tags = ["marsh-thing", "caster"]
 alignment = "evil"
 vision = "darkvision"
 sight = 12

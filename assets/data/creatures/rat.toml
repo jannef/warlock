@@ -8,6 +8,7 @@ glyph = "r"
 fg = "#b08458"
 speed = 1200
 faction = "vermin"
+tags = ["vermin"]
 alignment = "neutral"
 vision = "low_light"
 sight = 8

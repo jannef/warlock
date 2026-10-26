@@ -37,6 +37,7 @@ mod object;
 mod overworld;
 pub(crate) mod part;
 mod particles;
+mod plural;
 mod quest;
 mod race;
 mod resource;
@@ -56,10 +57,10 @@ mod stance;
 mod stat_training;
 mod status;
 mod steal;
+mod tag;
 mod talent;
 mod terrain;
 mod trap;
-mod tribe;
 #[cfg(test)]
 mod undead_roster_tests;
 mod vault;
@@ -130,9 +131,10 @@ pub use object::{
 pub use overworld::{Landscape, LocalArea, local_area_id, parse_local_area};
 pub use part::{MAX_OBJECT_PARTS, MAX_PARTS, Part, PartDef, PartId, PartRole, and_list};
 pub use particles::{ParticleEmitter, ParticleTrigger};
+pub use plural::{MAX_WORD, Plurals};
 pub use quest::{
-    DEFAULT_DECLINE, GOLD, Goal, KillTarget, MAX_COUNT, MAX_NAME, MAX_QUEST_XP, QuestDef, QuestId,
-    QuestKind, QuestTexts, Reveal, RevealWhen, Reward, TRIBE_TARGET,
+    DEFAULT_DECLINE, GOLD, Goal, KillTarget, MAX_COUNT, MAX_NAME, MAX_QUEST_XP, MAX_TAG_COUNT,
+    QuestDef, QuestId, QuestKind, QuestTexts, Reveal, RevealWhen, Reward,
 };
 pub use race::{HUNGER, LightBlind, RaceDef, Races};
 pub use resource::{Build, MAX_EVERY, MAX_RESOURCE, MAX_SHORT, OverTime, ResourceDef, ResourceId};
@@ -162,6 +164,7 @@ pub use status::{
     MAX_SEVERITY, OnHit, Penalty, Stacking, StatusDef, StatusId, Wound,
 };
 pub use steal::StealRules;
+pub use tag::{MAX_TAG, TAG_TARGET, spoken};
 pub use talent::{
     AnyWeaponSkill, Choice, Coverage, DEFAULT_MAX_RANKS, FreeBlowTrigger, Need, Needs, Rank,
     ResourceCost, SystemDef, SystemId, TalentBook, TalentDef, TalentEffect, TalentId, TreeDef,
@@ -171,7 +174,6 @@ pub use terrain::{
     Breakable, Freeze, FreezeSpec, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId,
 };
 pub use trap::{MAX_CHARGES, Trap, TrapDef, TrapEffect, TrapId, TrapNoise};
-pub use tribe::{MAX_TRIBE_COUNT, MAX_TRIBE_NAME, TribeDef, TribeId};
 pub use vault::Vault;
 pub use vision::VisionProfile;
 pub use weapon_skill::{
@@ -425,7 +427,7 @@ struct LegendFile {
 /// `data/horoscope.toml`,
 /// `data/effects.toml`, `data/room_effects.toml`, `data/weapon_skills.toml`, `data/stances.toml`,
 /// `data/status.toml`, `data/resources.toml`, `data/diseases.toml`, `data/dialogue.toml`,
-/// `data/tribes/`, `data/quests.toml`,
+/// `data/plurals.toml`, `data/quests.toml`,
 /// `data/traps.toml`, and `data/shops.toml` are optional (without effects, spell effects are not
 /// drawn; without traps or shops there are none). Without vision
 /// profiles, a single `normal` profile that needs no light is used, so content without lighting
@@ -442,7 +444,8 @@ struct LegendFile {
 /// skills nobody is trained in anything; without a horoscope, characters are born under no sign;
 /// without room effects there are no special rooms; without weapon skills nobody has any, and
 /// weapons name no category; without statuses nothing ails anyone, and resting heals twice as
-/// fast; without diseases nobody falls ill; without dialogue, nobody talks; without tribes, no quest asks for one; without quests,
+/// fast; without diseases nobody falls ill; without dialogue, nobody talks; without plurals, every plural is the word and an "s";
+/// without quests,
 /// nobody asks anything of the player; without `data/hunger.toml` nobody hungers, nothing is
 /// eaten, food does not rot, and creatures leave no corpses.
 #[derive(Debug)]
@@ -547,8 +550,8 @@ pub struct Content {
     disease_status: Option<StatusId>,
     /// What creatures say (`data/dialogue.toml`), in file order.
     dialogues: Vec<Dialogue>,
-    /// Named groups of creature types (`data/tribes/`), in table order.
-    tribes: Vec<TribeDef>,
+    /// The plural dictionary (`data/plurals.toml` and each campaign's).
+    plurals: Plurals,
     /// What people ask of the player (`data/quests.toml`), in file order.
     quests: Vec<QuestDef>,
     /// Shops (`data/shops.toml`); none without the file.
@@ -626,11 +629,12 @@ impl Content {
             disease_ids: BTreeMap::new(),
             disease_status: None,
             dialogues: Vec::new(),
-            tribes: Vec::new(),
+            plurals: Plurals::default(),
             quests: Vec::new(),
             shops: None,
         };
         content.campaigns = campaign::parse(files)?;
+        content.load_plurals(files)?;
         let path = "data/calendar.toml";
         if let Some(text) = files.get_optional(path) {
             content.calendar = Calendar::parse(path, text)?;
@@ -875,7 +879,6 @@ impl Content {
                 s.campaign = campaign;
             }
         }
-        content.tribes = tribe::parse(files.table("tribes"), &content)?;
         content.quests = quest::parse(files.table("quests"), &content)?;
         content.validate()?;
         content.check_campaigns()?;
@@ -1086,6 +1089,26 @@ impl Content {
         Ok(())
     }
 
+    /// The plural dictionary: `data/plurals.toml`, then each campaign's `data/plurals.toml`, in
+    /// one (a word given two plurals is an error).
+    fn load_plurals(&mut self, files: &ContentFiles) -> Result<(), ContentError> {
+        let campaigns = files.campaign_order();
+        let paths = std::iter::once("data/plurals.toml".to_string()).chain(
+            (campaigns.iter()).map(|c| format!("{}/{c}/data/plurals.toml", campaign::CAMPAIGNS)),
+        );
+        for path in paths {
+            if let Some(text) = files.get_optional(&path) {
+                self.plurals.add(&path, text)?;
+            }
+        }
+        Ok(())
+    }
+
+    /// The plural of `word` by the plural dictionary ([`Plurals::plural`]): "wolves", "goblins".
+    pub fn plural(&self, word: &str) -> String {
+        self.plurals.plural(word)
+    }
+
     /// The creature table: `data/creatures.toml` and `data/creatures/*.toml`, numbered in path
     /// order (the single file first); required, with a `player`.
     fn load_creatures(&mut self, files: &ContentFiles) -> Result<(), ContentError> {
@@ -1094,9 +1117,18 @@ impl Content {
         };
         let specs = load_table(files, "creatures", |f: CreatureFile| f.creature)?;
         let mut seen: BTreeMap<String, &str> = BTreeMap::new();
-        for (i, (path, spec)) in specs.into_iter().enumerate() {
+        for (i, (path, mut spec)) in specs.into_iter().enumerate() {
             let err = |m: String| ContentError::new(path, m);
             let id = CreatureId(u16::try_from(i).map_err(|_| err("too many creatures".into()))?);
+            for (n, t) in spec.tags.iter().enumerate() {
+                tag::check(t).map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
+                if spec.tags[..n].contains(t) {
+                    return Err(err(format!("creature `{}`: tag `{t}` twice", spec.id)));
+                }
+            }
+            if spec.plural.is_none() {
+                spec.plural = Some(self.plural(&spec.name));
+            }
             if let Some(first) = seen.insert(spec.id.clone(), path) {
                 return Err(duplicate_id("creature", &spec.id, path, first));
             }

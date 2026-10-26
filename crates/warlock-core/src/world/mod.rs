@@ -1349,6 +1349,8 @@ mod style_tests;
 #[cfg(test)]
 mod sun_tests;
 #[cfg(test)]
+mod tag_tests;
+#[cfg(test)]
 mod talent_arms_tests;
 #[cfg(test)]
 mod talent_tests;
@@ -1362,8 +1364,6 @@ mod tests;
 mod time_tests;
 #[cfg(test)]
 mod trap_tests;
-#[cfg(test)]
-mod tribe_tests;
 #[cfg(test)]
 mod variant_tests;
 #[cfg(test)]

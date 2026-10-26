@@ -1,9 +1,0 @@
-# Vermin (spec §8 "Quests", docs/design/adventurers-guild.md §6): rats, worms, spiders, and
-# centipedes; the basilisk keeps their company but is no vermin.
-[[tribe]]
-id = "vermin"
-name = "vermin"
-plural = "vermin"
-factions = ["vermin"]
-except = ["basilisk"]
-except_note = "Not the basilisks, mind."

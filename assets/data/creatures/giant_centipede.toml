@@ -10,6 +10,7 @@ glyph = "c"
 fg = "#b06a30"
 speed = 1200
 faction = "vermin"
+tags = ["vermin"]
 alignment = "neutral"
 vision = "darkvision"
 sight = 6
