@@ -500,6 +500,22 @@ const CASES: &[Case] = &[
         screen: Some("describe"),
         ..BASE
     },
+    // A unique item (the quarry's Stonebiter): unidentified, a rare dagger; identified, its
+    // name, affixes, power, and lore.
+    Case {
+        name: "unique-description-unidentified",
+        scenario: "quarry",
+        actions: "move:W pickup",
+        screen: Some("describe"),
+        ..BASE
+    },
+    Case {
+        name: "unique-description",
+        scenario: "quarry",
+        actions: "move:W pickup identify",
+        screen: Some("describe"),
+        ..BASE
+    },
     // Scrolls.
     Case {
         name: "scroll-read-list",

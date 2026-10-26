@@ -343,6 +343,7 @@ fn the_scroll_of_identify_identifies_an_item_and_is_used_up() {
             name: None,
             identified: false,
             carried: 0,
+            unique: None,
         };
         Stack::with_magic(id, 1, magic)
     };
