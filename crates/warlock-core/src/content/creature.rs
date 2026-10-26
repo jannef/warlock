@@ -2,6 +2,7 @@
 
 use super::DamageTypeId;
 use super::anim::GlyphAnim;
+use super::animated::AnimatedDef;
 use super::damage_type::TypeNames;
 use super::disease::DiseaseId;
 use super::faction::FactionId;
@@ -190,6 +191,12 @@ pub(super) struct CreatureSpec {
     /// The colour of its blood (`"#rrggbb"`), or `"none"` for a bloodless creature; none:
     /// dark red ([`crate::blood::RED`]).
     pub blood: Option<String>,
+    /// The status effects it never suffers, by id (`immune = ["poisoned", "bleeding"]`;
+    /// `diseased` is every disease): spec §8 "Status effects".
+    #[serde(default)]
+    pub immune: Vec<String>,
+    /// The verb of its death line ("The animated chair splinters."); none: "dies".
+    pub dies: Option<String>,
     /// Its ranks in weapon skills (spec §8 "Weapon skills"), by skill id.
     #[serde(default)]
     pub weapon_skills: BTreeMap<String, u8>,
@@ -203,6 +210,9 @@ pub(super) struct CreatureSpec {
     pub glow: f32,
     #[serde(default)]
     pub particles: Vec<ParticleEmitter>,
+    /// What makes a generated type an animated one (`content/animated.rs`); never written.
+    #[serde(skip)]
+    pub animated: Option<AnimatedDef>,
 }
 
 /// What eating a creature's fresh corpse does (spec §8 "Hunger"), beyond feeding the eater by
@@ -417,6 +427,7 @@ pub(super) struct Resolved {
     pub attack: Option<NaturalAttack>,
     pub weapon_skills: WeaponSkills,
     pub resist: Vec<(DamageTypeId, i32)>,
+    pub immune: Vec<StatusId>,
 }
 
 impl CreatureSpec {
@@ -462,6 +473,9 @@ impl CreatureSpec {
             corpse: self.corpse,
             on_eat: self.on_eat,
             blood: r.blood,
+            immune: r.immune,
+            dies: self.dies,
+            animated: self.animated,
             weapon_skills: r.weapon_skills,
             gear: Gear::default(),
             gear_spec: GearSpec {
@@ -473,6 +487,13 @@ impl CreatureSpec {
             particles: self.particles,
             campaign: None,
         }
+    }
+}
+
+impl CreatureDef {
+    /// The verb of its death line: its type's `dies`, else "dies".
+    pub fn death_verb(&self) -> &str {
+        self.dies.as_deref().unwrap_or("dies")
     }
 }
 
@@ -583,6 +604,15 @@ pub struct CreatureDef {
     pub on_eat: Option<OnEat>,
     /// Presentation-only: the colour of its blood (spec §8 "Blood"); `None`: it does not bleed.
     pub blood: Option<Rgb>,
+    /// Gameplay: the status effects it never suffers (spec §8 "Status effects"): refused where
+    /// they are given (`World::afflict`), and the diseases' status for every disease
+    /// (`World::expose`). Rules only (the wiki states it).
+    pub immune: Vec<StatusId>,
+    /// Presentation-only: the verb of its death line ("splinters"); `None`: "dies".
+    pub dies: Option<String>,
+    /// Gameplay: what makes it an animated object (spec §8 "Animated objects"), for a type
+    /// generated from `data/animated/`; `None` for every other.
+    pub animated: Option<AnimatedDef>,
     /// Gameplay: the ranks in weapon skills a creature of this type has (spec §8 "Weapon
     /// skills"), defaults included. Rules only: never shown. The player's come from their race
     /// and class.

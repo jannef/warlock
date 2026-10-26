@@ -1,0 +1,9 @@
+# A hopping stool.
+[[body]]
+id = "stool"
+object = "stool"
+level = 1
+rarity = "common"
+speed = 900
+attack = { damage_type = "bludgeoning", name = "legs", verb = "barges" }
+moves = "hopping"

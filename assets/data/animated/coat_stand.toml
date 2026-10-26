@@ -1,0 +1,9 @@
+# A coat stand that lurches into the living: the tallest of them.
+[[body]]
+id = "coat_stand"
+object = "coat_stand"
+level = 8
+rarity = "uncommon"
+speed = 800
+attack = { damage_type = "bludgeoning", name = "arms", verb = "lurches into" }
+moves = "lurching"

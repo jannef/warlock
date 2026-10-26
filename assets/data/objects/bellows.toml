@@ -1,0 +1,12 @@
+# A fireside's bellows: wood boards and a leather lung.
+# Household goods (#483): what an animated household thing (data/animated/) is made of.
+[[object]]
+id = "bellows"
+name = "pair of bellows"
+plural = "pairs of bellows"
+glyph = "("
+fg = "#9c6b3c"
+class = "household"
+materials = ["wood", { part = "lining", of = "leather", share = 40 }]
+weight = 1500
+value = 5

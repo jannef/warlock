@@ -1,0 +1,10 @@
+# A pair of bellows that wheezes after the living.
+[[body]]
+id = "bellows"
+object = "bellows"
+level = 5
+rarity = "uncommon"
+speed = 1000
+attack = { damage_type = "bludgeoning", name = "boards", verb = "buffets" }
+name = "animated bellows"
+plural = "animated bellows"

@@ -1,0 +1,12 @@
+# A teapot.
+# Household goods (#483): what an animated household thing (data/animated/) is made of.
+[[object]]
+id = "teapot"
+name = "teapot"
+glyph = "("
+fg = "#d4b04c"
+class = "household"
+materials = ["brass"]
+made_of = ["brass", "pewter", "silver"]
+weight = 1000
+value = 8

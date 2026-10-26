@@ -1,0 +1,11 @@
+# A wooden bucket, iron-banded.
+# Household goods (#483): what an animated household thing (data/animated/) is made of.
+[[object]]
+id = "bucket"
+name = "bucket"
+glyph = "("
+fg = "#9c6b3c"
+class = "household"
+materials = ["wood", { part = "band", of = "iron", share = 20 }]
+weight = 1800
+value = 2

@@ -522,6 +522,7 @@ pub fn generate_for(
                 population::populate(&mut template, content, seed, (pal, danger, spawning), visit);
             }
             crate::gear::arm(&mut template, content, seed);
+            crate::animated::arm(&mut template, content, seed);
             return Ok(template);
         }
     }

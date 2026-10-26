@@ -1,0 +1,12 @@
+# A kettle for the hearth.
+# Household goods (#483): what an animated household thing (data/animated/) is made of.
+[[object]]
+id = "kettle"
+name = "kettle"
+glyph = "("
+fg = "#7a7d80"
+class = "household"
+materials = ["iron"]
+made_of = ["iron", "copper"]
+weight = 1500
+value = 6

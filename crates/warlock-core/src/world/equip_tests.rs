@@ -48,6 +48,7 @@ fn files() -> ContentFiles {
          [[faction]]\nid = \"fire\"\nname = \"fire things\"\n\
          [[faction]]\nid = \"demon\"\nname = \"demons\"\n\
          [[faction]]\nid = \"elemental\"\nname = \"elementals\"\n\
+         [[faction]]\nid = \"animated\"\nname = \"animated things\"\n\
          [[faction]]\nid = \"seelie\"\nname = \"Seelie court\"\n\
          [[faction]]\nid = \"unseelie\"\nname = \"Unseelie court\"\n\
          [[faction]]\nid = \"fiends\"\nname = \"fiends\"\n\

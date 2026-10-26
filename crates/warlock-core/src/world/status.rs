@@ -82,6 +82,12 @@ impl World {
         by: Option<ActorId>,
         events: &mut Vec<Event>,
     ) {
+        // Immune by its type (spec §8 "Status effects": an animated thing never bleeds).
+        if (self.state.actors.get(&id))
+            .is_some_and(|a| self.content.creature(a.creature).immune.contains(&status))
+        {
+            return;
+        }
         // A unique item's Ward (spec §8 "Magic items"): never taken, and the player is told.
         let ward = (self.state.actors.get(&id))
             .and_then(|a| a.ward(&self.content, status))

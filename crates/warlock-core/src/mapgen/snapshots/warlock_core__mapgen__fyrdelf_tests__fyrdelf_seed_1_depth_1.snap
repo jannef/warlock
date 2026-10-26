@@ -29,7 +29,7 @@ ember_beetle at (65, 8) route S S W W W E E E N N
 ember_beetle at (50, 7) route S S S S S W E N N N N N
 kobold_archer at (50, 12) route W W W N N N S S S E E E carrying a hardwood short bow (readied), 12 tin arrows (quivered)
 ember_beetle at (6, 17) route E E N N N E S S S N N N W S S S W W
-barrow_spider at (37, 10) route W W W N S E E E
+bat at (37, 10) route W W W N S E E E
 dretch at (36, 7) route S S S W W W N S E E E N N N
 bat at (67, 9) route S E E E E E W W W W W N
 spear trap at (27, 16)
@@ -47,7 +47,7 @@ special room flooded at (2, 1)-(6, 8)
   #¡ff#         #..(#.....#.#   #...u¡#      #....a#        #¡.............[#
   ##+##         ###########.#####....?########ca...#        #...aa..........#
    #a#                    #...b.......'......+.....##########......b........#
-   #.#                    #.#####..c.s########..........^...+.......a...a...#
+   #.#                    #.#####..c.b########..........^...+.......a...a...#
    #.#                    #.#   #######      #.....#######.##......^.......¡#
    #.#           #######  #.#                #¡.a.k#     #.####'#############
  ###S#######     #...<¡####.#                #######     #.#  #.#

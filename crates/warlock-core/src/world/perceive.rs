@@ -292,7 +292,7 @@ impl World {
                 of: Some(status),
             } => {
                 if actor == player {
-                    reports.push((death_message(End::You), true));
+                    reports.push((death_message(End::You, ""), true));
                     return true;
                 }
                 let seen = perception.sees_actors_at(at);
@@ -307,12 +307,12 @@ impl World {
                 None => actor == player,
                 Some(Last::Attack(_, _, _, by)) if actor == player => {
                     killer_seen = Some(by);
-                    reports.push((death_message(End::You), true));
+                    reports.push((death_message(End::You, ""), true));
                     true
                 }
                 // A trap's victim: the death records the trap, not who was seen.
                 Some(Last::Trap(..)) if actor == player => {
-                    reports.push((death_message(End::You), true));
+                    reports.push((death_message(End::You, ""), true));
                     true
                 }
                 // A death by the player's hand was said with their blow, and recorded only if
@@ -321,7 +321,9 @@ impl World {
                 Some(Last::Attack(_, target, seen, _) | Last::Trap(target, seen)) => {
                     let seen = seen && target == actor;
                     if seen {
-                        reports.push((death_message(end(actor, true)), true));
+                        let dies = (self.actor_or_fallen(actor))
+                            .map_or("dies", |a| content.creature(a.creature).death_verb());
+                        reports.push((death_message(end(actor, true), dies), true));
                     }
                     seen
                 }

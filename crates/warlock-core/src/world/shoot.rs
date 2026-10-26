@@ -201,7 +201,7 @@ impl World {
         );
         let mut said = Vec::new();
         // Whether the player saw the target of the last attack, and how it reads.
-        let mut seen: Option<End<'_>> = None;
+        let mut seen: Option<(End<'_>, &str)> = None;
         let mut attacked = false;
         for event in made {
             match event {
@@ -217,14 +217,15 @@ impl World {
                         _ => End::Unseen,
                     };
                     said.extend(attack_message(End::You, end, &words, kind, strike, guard));
-                    seen = (end != End::Unseen).then_some(end);
+                    seen =
+                        (end != End::Unseen).then(|| (end, def.map_or("dies", |d| d.death_verb())));
                     if seen.is_some() {
                         events.push(event);
                     }
                 }
                 Event::Died { .. } => {
-                    if let Some(end) = seen {
-                        said.push(death_message(end));
+                    if let Some((end, dies)) = seen {
+                        said.push(death_message(end, dies));
                         events.push(event);
                     }
                 }

@@ -24,12 +24,14 @@ temperature = 6
 # the player. The fen wave: the marsh's beasts and things, the minster's drowned dead, and the
 # cult that came to them (the bog hag, unique, comes once a run). Fey of damp and dark places
 # (#452) haunt its cellars too: the pixie, the boggle, and the darkling, each of either court.
+# The drowned church's candlesticks, books, and lanterns stir too (#483: animated objects).
 danger = 4
 population = [
     "corpse_candle", "giant_leech", "giant_frog", "pixie", "drowned", "crocodile", "cultist",
     "lesser_water_elemental", "poltergeist", "will_o_wisp", "boggle", "ghast", "ghost", "shadow",
     "mud_golem", "cult_priest", "darkling", "marsh_troll", "bog_body", "wraith", "fen_ghoul",
     "bog_hag",
+    "animated_candlestick", "animated_book", "animated_lantern", "animated_rug",
 ]
 # How many: the default, 35 a thousand walkable cells, 25 to 80 (a cellar floor of about 350
 # cells gets the least, 25).

@@ -1,0 +1,11 @@
+# A heavy iron cooking pot.
+# Household goods (#483): what an animated household thing (data/animated/) is made of.
+[[object]]
+id = "cooking_pot"
+name = "cooking pot"
+glyph = "("
+fg = "#7a7d80"
+class = "household"
+materials = ["iron"]
+weight = 3000
+value = 6

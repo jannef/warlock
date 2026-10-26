@@ -8,6 +8,9 @@ mod action;
 mod affix;
 mod alignment;
 mod anim;
+pub mod animated;
+#[cfg(test)]
+mod animated_tests;
 mod calendar;
 mod campaign;
 mod class;
@@ -96,6 +99,7 @@ pub use affix::{
 };
 pub use alignment::{AlignmentRules, BandDef, ByAlignment, Shifts};
 pub use anim::GlyphAnim;
+pub use animated::{Animated, AnimatedDef, Body, ID_PREFIX, Numbers};
 pub use calendar::Calendar;
 pub use campaign::{CAMPAIGNS, CampaignDef, CampaignKind};
 #[cfg(test)]
@@ -478,6 +482,9 @@ pub struct Content {
     ice: Vec<(u16, TerrainId)>,
     creatures: Vec<CreatureDef>,
     creature_ids: BTreeMap<String, CreatureId>,
+    /// Animated objects (`data/animated.toml`, `data/animated/`; spec §8 "Animated objects"):
+    /// their creature types are generated into [`Content::creatures`].
+    animated: Animated,
     /// Damage types (`data/damage_types.toml`), in file order; none without the file.
     damage_types: Vec<DamageTypeDef>,
     materials: Vec<MaterialDef>,
@@ -597,6 +604,7 @@ impl Content {
             ice: Vec::new(),
             creatures: Vec::new(),
             creature_ids: BTreeMap::new(),
+            animated: Animated::default(),
             damage_types: Vec::new(),
             materials: Vec::new(),
             material_ids: BTreeMap::new(),
@@ -796,8 +804,10 @@ impl Content {
             content.room_effects = RoomEffects::parse(path, text, terrain)?;
         }
         content.load_factions(files)?;
-        content.load_creatures(files)?;
+        // Objects before creatures: an animated type is generated from its body's object.
         content.load_objects(files)?;
+        content.animated = Animated::parse(files, &content)?;
+        content.load_creatures(files)?;
         content.load_gems(files)?;
         // Unique items before everything that may place one (gear, shops, levels, kits, quests).
         content.uniques = unique::parse(files.table("uniques"), &content)?;
@@ -1147,7 +1157,17 @@ impl Content {
         let Some((first_file, _)) = files.table("creatures").next() else {
             return Err(ContentError::new("data/creatures.toml", "file is missing"));
         };
-        let specs = load_table(files, "creatures", |f: CreatureFile| f.creature)?;
+        let mut specs = load_table(files, "creatures", |f: CreatureFile| f.creature)?;
+        // Animated types after the shared files, before every campaign's (docs/dev/animated.md),
+        // each named by its body's file.
+        let generated = self.animated.specs(self)?;
+        let at = (specs.iter())
+            .position(|(p, _)| campaign::of_path(p).is_some())
+            .unwrap_or(specs.len());
+        let file = |p: &str| (files.table("animated").map(|(q, _)| q)).find(|q| *q == p);
+        let generated =
+            (generated.into_iter()).map(|(p, spec)| (file(&p).unwrap_or(animated::RULES), spec));
+        specs.splice(at..at, generated);
         let mut seen: BTreeMap<String, &str> = BTreeMap::new();
         for (i, (path, mut spec)) in specs.into_iter().enumerate() {
             let err = |m: String| ContentError::new(path, m);
@@ -1311,6 +1331,19 @@ impl Content {
                 })?;
             let blood = creature::blood(spec.blood.as_deref())
                 .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
+            let immune = (spec.immune.iter())
+                .map(|s| self.status_id(s))
+                .collect::<Option<Vec<_>>>()
+                .ok_or_else(|| err(format!("creature `{}`: immune: unknown status", spec.id)))?;
+            if spec.dies.as_ref().is_some_and(|d| d.trim().is_empty()) {
+                return Err(err(format!(
+                    "creature `{}`: `dies` must not be empty",
+                    spec.id
+                )));
+            }
+            if let Some(animated) = &mut spec.animated {
+                animated.family = id;
+            }
             let resolved = creature::Resolved {
                 blood,
                 rarity,
@@ -1321,6 +1354,7 @@ impl Content {
                 attack,
                 weapon_skills,
                 resist,
+                immune,
                 faction: self.creature_faction(&spec).map_err(err)?,
                 factions: self.creature_factions(&spec).map_err(err)?,
                 vision: self.vision_index(&spec.vision).ok_or_else(|| {
@@ -2249,6 +2283,17 @@ impl Content {
 
     pub fn creature_defs(&self) -> &[CreatureDef] {
         &self.creatures
+    }
+
+    /// Animated objects (spec §8 "Animated objects"): the tiers, the drop rule, and the bodies
+    /// their household types are generated from; empty without `data/animated.toml`.
+    pub fn animated(&self) -> &Animated {
+        &self.animated
+    }
+
+    /// The household body creature type `creature` is made of, if it is an animated one.
+    pub fn animated_body(&self, creature: CreatureId) -> Option<&Body> {
+        (self.animated).body_of(self.creature(creature).animated.as_ref())
     }
 
     /// The damage types (spec §8 "Damage types"), in file order (by [`DamageTypeId`]); empty

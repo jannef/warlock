@@ -211,6 +211,7 @@ pub(super) fn generate(
             // Ruins may hold loot (spec §8 "Magic items"); the land holds none of its own.
             super::place_loot(&mut template, content, seed, &land.loot, (None, luck));
             crate::gear::arm(&mut template, content, seed);
+            crate::animated::arm(&mut template, content, seed);
             return Ok(template);
         }
     }

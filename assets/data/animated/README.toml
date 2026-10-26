@@ -1,0 +1,22 @@
+# Household bodies (spec §8 "Animated objects"; docs/dev/animated.md), one file per body, named by
+# its id (`candlestick.toml`); this file holds only the notes. Each body becomes one creature
+# type, generated when content loads: `animated_<id>` ("animated candlestick"), numbered in path
+# order after the shared data/creatures/ files and before every campaign's. Its numbers come from
+# the household tier in data/animated.toml at the body's level; the rest from here:
+#
+#   id       the body's id; its type is `animated_<id>` (an id a creature file uses is an error)
+#   object   the real object it is made of (data/objects/, class `household`): its name, glyph,
+#            weight, and materials; what it draws its material from (a silver candlestick) and
+#            what it drops
+#   level    its type's level, within the household tier's levels
+#   rarity   its type's rarity (data/creature_rarities.toml); default common
+#   speed    its pace (default 1000)
+#   attack   { damage_type, name, verb }: its blow, dice by the tier's formula
+#   on_hit   as a creature's attack's (the rug's `held`); default none
+#   name     its type's name instead of "animated " and the object's ("clatter of cutlery");
+#            `plural` with it, else by data/plurals.toml
+#   count    [least, most]: a stackable object's count as its body (cutlery, 3 to 6); default 1
+#   moves    look mode's word for how it moves ("rocking"); default none
+#   dies     its death line's verb ("topples and lies still"); default by its object's material
+#            group (data/animated.toml)
+#   light    a light preset it carries (data/lights.toml); default none
