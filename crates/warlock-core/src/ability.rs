@@ -713,7 +713,6 @@ mod tests {
                 "music",
                 "pick_lock",
                 "steal",
-                "use_magic_device",
                 "woodcraft",
             ]
         );

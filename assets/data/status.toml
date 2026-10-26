@@ -49,6 +49,13 @@
 #   start, end what the player is told as it begins and ends ("end" lets a rest go on)
 #   dies       what a creature you see does when it kills it ("The giant rat bleeds to death.")
 #   death      the death screen's line when it kills you
+#   hold       makes it a hold: whoever caused it holds the sufferer, and it ends when the holder
+#              dies, leaves the sufferer's side, or is held or slowed (a cost above 100) itself.
+#              { check = "strength", difficulty = 13, turns = "3d4" }: the held player's step is
+#              a check of `check` (default strength) against the holder's grip (its on_hit
+#              entry's `difficulty`, else this one, 1 to 40): made, they break free and step;
+#              failed, the turn is spent. A dose's degrees are drawn from `turns` (1 to max), and
+#              a hold needs `eases` (a degree a turn: 6), stacking "highest", and blocks "step"
 # Creatures' attacks may cause statuses too: `on_hit` in creatures.toml. Diseases (diseases.toml)
 # show as one status here, named by their `status`.
 
@@ -360,15 +367,20 @@ eases = 3600
 start = "Your throat is raw from the howl."
 end = "Your voice is your own again."
 
-# Held in a Drowning grip (a lucky day's gift, spec §8 "Birth sign"): a creature the Deep One hits
-# in melee cannot step until they miss it, strike another, or move; it fights back instead. No
-# timer: the holder lets go.
+# Held: a hold (spec §8 "Status effects"). A creature's bite may hold (on_hit, a creature's
+# `{ status = "held", chance = 10, difficulty = 15 }`), and a Drowning grip (a lucky day's gift,
+# spec §8 "Birth sign") holds a creature the Deep One hits in melee until they miss it, strike
+# another, or move. The held cannot step (a creature fights back instead; the player struggles,
+# a Strength check against the grip); it ends as the holder dies, leaves, or is held or slowed,
+# and after 3d4 turns at most (a degree a turn; a new hit draws again, keeping the longer).
 [[status]]
 id = "held"
 name = "Held"
 seen = "held"
-max = 1
-stacking = "refresh"
+max = 12
+stacking = "highest"
+eases = 6
 blocks = ["step"]
+hold = { check = "strength", difficulty = 13, turns = "3d4" }
 start = "You are held fast."
 end = "You are free to move."

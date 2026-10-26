@@ -146,7 +146,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Classes** (`data/classes/`, one file per class named `NN-id.toml` so path order is the order
   offered; optional): `id`, `name`, a one-line
   `description`, `stats` (adjustments as for races), `hp` and `mana` (as for races; half the
-  class's mana comes with each level up to `mana_level`), `experience` (as for
+  class's mana comes with each level up to `mana_level`), `casting` (the casting percent, 1 to
+  100, default 25: a character's caster level is this percent of their level, §8 "Spells";
+  wizard, witch, priest, and druid 100, bard and aristocrat 75, paladin, ranger, and monk 50,
+  the rest 25), `experience` (as for
   races, multiplied with the race's; §8 "Experience": wizard 125, monk 120, priest, druid, and
   witch 115, paladin 110, ranger 105, warrior and bard 100, thief 95, barbarian, aristocrat,
   craftsperson, and merchant 90, commoner 80), `alignment` (as for races, added to the race's:
@@ -171,7 +174,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   the thief open lock, steal, stealth, and tumble well, appraise, disable device, escape artist,
   search, and spot a little; the ranger spot, survival, and woodcraft well, athletics, handle
   animal, listen, and swim a little; the wizard concentration, knowledge, and spellcraft well,
-  decipher script and use magic device a little; the commoner athletics and handle animal a
+  decipher script a little; the commoner athletics and handle animal a
   little. Weapon skills: barbarian unarmed 1 and axes 2 or great blades 2, bard short blades 1
   and daggers `1d2`, priest maces 2 and shield blocking 1, druid staves 2 and slings 1, monk
   unarmed 2 and staves 1, paladin long blades 2, shield blocking `1d2`, and shield bashing 1,
@@ -208,10 +211,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `intelligence_from`, `intelligence_every` (one more roll at that Intelligence and every so many
   points above; 14, 4), `spend` (percent of the marks a roll spends, 50), `soft_cap` (from this
   value on a roll adds half, 100); §8 "Skills". Adding a skill is one
-  entry (saves then change: skill ids are indices). The 26 skills: appraise, athletics,
+  entry (saves then change: skill ids are indices). The 25 skills: appraise, athletics,
   balance, bluff, concentration, decipher script, disable device, escape artist, handle animal,
   heal, intimidate, knowledge, listen, metalcraft, music, open lock, search, spellcraft, spot,
-  steal, stealth, survival, swim, tumble, use magic device, woodcraft.
+  steal, stealth, survival, swim, tumble, woodcraft.
 - **Horoscope** (`data/horoscope.toml`, optional; §8 "Character creation"): `anchor_year`, a
   year that starts a great cycle (1: the year of the Great Race, the first of the reckoning),
   then the `[[animal]]`s in the order of the Great Race and the `[[element]]`s, each with `id`,

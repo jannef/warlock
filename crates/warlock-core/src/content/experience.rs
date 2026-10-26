@@ -651,7 +651,7 @@ mod tests {
         for (from, to) in [
             ("max_level = 60", "max_level = 0"),
             ("hp_level = 20", "hp_level = 61"),
-            ("mana_level = 30", "mana_level = 61"),
+            ("mana_level = 60", "mana_level = 61"),
             ("from = 1\nzd = 5", "from = 2\nzd = 5"),
             ("zd = 5", "zd = 0"),
             ("plateau = 213", "plateau = 100001"),
@@ -676,7 +676,13 @@ mod tests {
 
     #[test]
     fn mana_comes_with_levels_up_to_mana_level() {
-        let none = SHIPPED.replace("mana_level = 30\n", "");
+        // Mana grows to the last level, 60, for tier 9's comfortable caster level (spec §8
+        // "Spells").
+        assert_eq!(
+            Experience::parse("x", SHIPPED).expect("valid").mana_level(),
+            60
+        );
+        let none = SHIPPED.replace("mana_level = 60\n", "");
         assert_ne!(none, SHIPPED, "mana_level is in the file");
         assert_eq!(
             Experience::parse("x", &none).expect("valid").mana_level(),

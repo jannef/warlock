@@ -97,6 +97,26 @@ impl Dice {
         }
     }
 
+    /// How many dice it rolls (0 for a fixed number).
+    pub const fn count(&self) -> u32 {
+        self.count
+    }
+
+    /// How many sides its dice have (0 for a fixed number).
+    pub const fn sides(&self) -> u32 {
+        self.sides
+    }
+
+    /// Its fixed bonus (`+1` of `2d3+1`).
+    pub const fn bonus(&self) -> i32 {
+        self.bonus
+    }
+
+    /// Whether its dice are subtracted (`-1d2`).
+    pub const fn is_negative(&self) -> bool {
+        self.negative
+    }
+
     /// Whether it rolls no dice.
     pub const fn is_fixed(&self) -> bool {
         self.count == 0

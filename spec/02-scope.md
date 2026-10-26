@@ -35,10 +35,10 @@ Build the engine and framework, not the game. Everything built is production qua
   tick and wear off in game time, stack, can be cured, lower stats, slow healing, and can kill;
   bleeding from big hits and confirmed criticals, poison from a giant rat's bite; hit points come
   back twice as fast while resting (§8 "Status effects", "Healing"). Diseases (M24, #139): one
-  umbrella status, Diseased, over six pathologies in the D&D 3.5 spirit that are caught by a
+  umbrella status, Diseased, over seven pathologies in the D&D 3.5 spirit that are caught by a
   failed check, incubate unseen, progress daily with a check each (a loss costs stat damage),
-  are shaken off by two checks won in a row (grave rot never, and it can kill), and slow healing;
-  stat damage mends a point a day once they are gone (§8 "Checks", "Diseases")
+  are shaken off by two checks won in a row (grave rot and mummy rot never, and grave rot can
+  kill), and slow healing; stat damage mends a point a day once they are gone (§8 "Checks", "Diseases")
 - Moons with phases and moonlight, weather starting with rain (M12)
 - Temperature and ice (M26): a fixed temperature underground, under the open sky one that follows
   the month, the time of day, and the weather, always shown in the status bar; water that freezes
@@ -101,7 +101,7 @@ Build the engine and framework, not the game. Everything built is production qua
   elements) adjusts the stats too (§8 "Character creation"); race and class also give hit points
   (§8 "Combat"), trained skills (§8 "Skills"), and starting ranks in weapon skills and fighting
   styles
-- Skills (M20): 26 skills in data, ADOM-like; race and class train the player in some (dice),
+- Skills (M20): 25 skills in data, ADOM-like; race and class train the player in some (dice),
   creatures may list theirs, and every other skill is untrained (never shown, gives nothing).
   Values grow without a hard cap (slowly past 100) by skill rolls at each level-up, whose dice
   are set by the training marks meaningful use earns (ADOM's ladder), and the passive ones help: tumble (Dodge in Defence),

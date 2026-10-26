@@ -1,0 +1,31 @@
+# The undead roster (#383, batch 1). One of the fen's old dead, tanned dark by the peat and risen
+# from it: slow, hard as leather, cold to the touch and hardened to the cold, and its blows carry
+# the marsh ague. Its corpse is not food.
+[[creature]]
+id = "bog_body"
+level = 9
+xp = 55
+rarity = "common"
+name = "bog body"
+plural = "bog bodies"
+glyph = "z"
+fg = "#8a6a40"
+speed = 650
+faction = "undead"
+alignment = "evil"
+vision = "darkvision"
+sight = 6
+footsteps = 80
+hearing = 8
+weight = 40000
+stats = { strength = 17, dexterity = 5, toughness = 21, intelligence = 2, willpower = 19, presence = 2 }
+base_hp = 34
+resist = { cold = 25, poison = 100 }
+on_eat = { message = "Peat-black leather, and worse beneath.", vomit = 90, harm = "1d4" }
+blood = "#3a2a18"
+[creature.attack]
+damage = "2d6"
+damage_type = "bludgeoning"
+name = "fist"
+verb = "pummels"
+on_hit = [{ disease = "marsh_ague", chance = 15 }]

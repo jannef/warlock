@@ -62,7 +62,7 @@ issue how it interacts with mana**, and hooks in at the one place below.
     `World::disease_turn` cuts mana to the new maximum after mental stat damage, like hit points.
   - `World::level_up_mana(before, after)` from `grant_xp`: `max(0, class mana ÷ 2 + the better
     of the raised Intelligence and Willpower modifiers)` (`mana::level_modifier`) per level up to
-    `mana_level` (30; `World::level_mana`; the scenario's `mana` without a character). The race
+    `mana_level` (60; `World::level_mana`; the scenario's `mana` without a character). The race
     and class values and this formula are the progression design's (`docs/design/progression.md`
     §3.7), which also plans what spends mana: caster abilities costing it
     (`Unavailable::NoMana`, I3).

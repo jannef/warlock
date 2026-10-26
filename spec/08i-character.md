@@ -158,7 +158,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     disease burned away, nothing following them, and no Ashen), the Deep One's Drowning grip
     (a creature they hit in melee is **Held**, a status that `blocks` its steps: it cannot step,
     and beside its holder it attacks them instead, until they miss it, strike another, or move,
-    going to another level too; no roll, no timer), and the Gate Warden's Warden of the gate (a
+    going to another level too; no roll; like every hold it also ends after 3d4 turns from the
+    last hit, or as the held creature is knocked away or the holder is held or slowed, §8 "Status
+    effects"), and the Gate Warden's Warden of the gate (a
     foe stepping away from beside them takes a free blow: Opportunist, granted; Protection +1;
     what status effects take off their scores halved, rounded toward 0). About one character
     in 1 800 over an even spread of births; by race at a start date, as the wiki tabulates. The

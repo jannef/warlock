@@ -1,0 +1,30 @@
+# The undead roster (#383, batch 1). A kobold the barrow's dead took and raised: slow, stubborn,
+# and its fists now and then carry grave rot. Its corpse was rotten long before it fell.
+[[creature]]
+id = "kobold_zombie"
+level = 2
+xp = 20
+rarity = "common"
+name = "kobold zombie"
+glyph = "z"
+fg = "#6aa070"
+speed = 600
+faction = "undead"
+alignment = "evil"
+vision = "darkvision"
+sight = 6
+footsteps = 70
+hearing = 8
+weight = 25000
+size = "small"
+stats = { strength = 14, dexterity = 5, toughness = 18, intelligence = 2, willpower = 17, presence = 2 }
+base_hp = 8
+resist = { poison = 100 }
+on_eat = { message = "It was rotten long before it died.", vomit = 80, harm = "1d3" }
+blood = "#3a4a28"
+[creature.attack]
+damage = "1d6"
+damage_type = "bludgeoning"
+name = "fist"
+verb = "pummels"
+on_hit = [{ disease = "grave_rot", chance = 5 }]

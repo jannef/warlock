@@ -45,12 +45,14 @@ mod searching;
 mod services;
 mod sight;
 mod skills;
+mod spells;
 mod stats;
 mod talents;
 mod temperature;
 mod terrain;
 mod text;
 mod traps;
+mod tribes;
 mod vision;
 mod weapon_skills;
 mod weather;
@@ -140,6 +142,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("lights.md", vision::lights),
         ("creatures.md", creatures::creatures),
         ("factions.md", creatures::factions),
+        ("tribes.md", tribes::tribes),
         ("creature-stats.md", creatures::creature_stats),
         ("creature-defences.md", creatures::creature_defences),
         ("creature-attacks.md", creatures::creature_attacks),
@@ -230,6 +233,10 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("mana.md", mana::races_and_classes),
         ("mana-regeneration.md", mana::regeneration),
         ("mana-paces.md", mana::paces),
+        ("spell-tiers.md", spells::tiers),
+        ("spell-shapes.md", spells::shapes),
+        ("spell-resolutions.md", spells::resolutions),
+        ("spell-casting.md", spells::casting),
         ("resources.md", resources::resources),
         ("experience-levels.md", experience::experience_levels),
         ("experience-factors.md", experience::experience_factors),
@@ -744,7 +751,7 @@ mod tests {
             "{skills}"
         );
         assert!(skills.contains("| Swim | read by rules |"));
-        assert_eq!(skills.matches("\n| ").count(), 1 + 26, "{skills}");
+        assert_eq!(skills.matches("\n| ").count(), 1 + 25, "{skills}");
         let benefits = text("skill-benefits.md");
         assert!(
             benefits.contains(
@@ -934,6 +941,12 @@ mod tests {
         assert!(text("mana-regeneration.md").contains("| 10 | 4 minutes |"));
         assert!(text("mana.md").contains("| Wizard | 12 |"));
         assert!(text("mana-paces.md").contains("| In a sanctuary | three times as fast |"));
+        assert!(text("spell-tiers.md").contains("| 0 (cantrip) | 1 | 1 | 6 |"));
+        assert!(text("spell-tiers.md").contains("| 9 | 60 | 56 | 90 |"));
+        assert!(text("spell-shapes.md").contains("| cone | yes | ×1.6 |"));
+        assert!(text("spell-shapes.md").contains("| burst, radius 3 | yes | ×3 |"));
+        assert!(text("spell-resolutions.md").contains("| touch | 120 % | ×0.7 |"));
+        assert!(text("spell-casting.md").contains("| Wizard | 100 % |"));
         let resources = text("resources.md");
         assert!(
             resources.contains(
@@ -980,10 +993,14 @@ mod tests {
         }
         let diseases = text("diseases.md");
         for row in [
-            "| Filth fever | The drowned's fist (20%); the giant rat's bite (10%) | Toughness, 54% | 1d3 days | Every day | \
-             1d3 Dexterity, 1d3 Toughness | Two checks won in a row | no | Half as fast |",
-            "| Marsh ague | Crossing marsh or swamp (4% an hour) |",
-            "| Grave rot | The zombie's fist (15%); eating rotten food |",
+            "| Filth fever | The drowned's fist (20%); the ghast's claws (10%); the giant rat's bite \
+             (10%) | Toughness, 54% | 1d3 days | Every day | 1d3 Dexterity, 1d3 Toughness | Two \
+             checks won in a row | no | Half as fast |",
+            "| Marsh ague | The bog body's fist (15%); crossing marsh or swamp (4% an hour) |",
+            "| Grave rot | The grave hound's bite (10%); the kobold zombie's fist (5%); the ogre \
+             zombie's fist (10%); the zombie's fist (15%); eating rotten food |",
+            "| Mummy rot | The mummy's fist (20%) | Toughness, 31% | 1d3 days | Every 3 days | 1d4 \
+             Toughness | Never by itself | no |",
             "| Never by itself | yes |",
             "| Brain fever | — | Willpower, 54% |",
         ] {

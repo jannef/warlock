@@ -310,6 +310,11 @@ fn on_hit(content: &Content, attack: &NaturalAttack) -> Vec<String> {
                     content.status(status).name.to_lowercase()
                 )
             }
+            Affliction::Hold { status, difficulty } => {
+                let def = content.status(status);
+                let grip = difficulty.or(def.hold.map(|h| h.difficulty)).unwrap_or(0);
+                format!("{}% {} (grip {grip})", o.chance, def.name.to_lowercase())
+            }
             Affliction::Disease(d) => format!(
                 "{}% {} (unless resisted)",
                 o.chance,

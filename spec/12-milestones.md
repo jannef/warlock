@@ -79,7 +79,7 @@ Each milestone ships a playable build.
   too), kicking doors in by Strength against sturdiness and kicking creatures (#130); locked rooms
   with reachable keys in the generated Depths, a locked store room in a vault, a locked pantry in
   the hub.
-- **M20 Skills** — 26 skills in data (#132): trained or untrained (never shown, gives nothing),
+- **M20 Skills** — 25 skills in data (#132): trained or untrained (never shown, gives nothing),
   values from race and class dice and creature data, training marks on meaningful use with a
   provisional increase rule (gentle to 100, slow past it), passive benefits for tumble, stealth,
   listen, balance, and survival, a Skills screen (`S`), and the starting skills on the character

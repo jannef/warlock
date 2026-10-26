@@ -1,0 +1,52 @@
+# Spells (spec §8 "Spells", the magic design docs/design/magic.md §3 and §5): the tier table
+# every spell is measured by. The spells themselves are in spells/, one file each.
+#
+# A spell has a tier, 0 (a cantrip) to 9. Each tier has, in the arrays of [tiers], one value per
+# tier, tier 0 first:
+#   comfortable  the caster level at which learning a spell of the tier is certain and casting it
+#                costs its base cost; ascending, the first 1. A caster level's tier is the
+#                highest tier whose comfortable level it has reached (a caster level 2 is at
+#                tier 0); a spell above it is overreach
+#   cost         the tier's base mana cost, for a single-target spell; ascending, at least 1
+#   ceiling      the greatest damage a single-target spell of the tier may do in one cast at its
+#                highest roll; ascending. The load-time check (spells/README.toml) holds every
+#                spell under its tier's ceiling times its resolution's `damage` percent
+#
+# overreach_cost  percent more mana per tier a spell is above the caster's level's tier (50: one
+#                 tier over costs half again, two tiers double)
+#
+# [shapes]: what a shape multiplies the base cost by, in percent. Single targets (ray, bolt,
+# touch, self) and the areas (cone, line, burst): area is expensive. `burst` is a list by radius,
+# radius 1 first: its length is the largest radius a burst may have.
+#
+# [resolution]: how a spell finds its targets, and what that does to its damage cap and cost,
+# both in percent: `damage` of the tier's ceiling is the most it may do to one target, `cost`
+# multiplies the base cost (an area spell's cost is its shape's).
+#   attack  the 2d12 attack roll against Defence; full damage, can critical
+#   auto    no roll, always hits; less damage
+#   area    everyone in the shape, no roll (Evasion halves); less damage per target
+#   touch   an attack roll at adjacency only; more damage, cheaper
+#
+# First guesses, to be tuned by play (the magic design §12).
+
+overreach_cost = 50
+
+[tiers]
+comfortable = [1, 3, 6, 12, 18, 25, 32, 40, 50, 60]
+cost = [1, 3, 6, 11, 16, 22, 29, 37, 46, 56]
+ceiling = [6, 12, 18, 24, 32, 40, 50, 62, 76, 90]
+
+[shapes]
+ray = 100
+bolt = 100
+touch = 100
+self = 100
+cone = 160
+line = 180
+burst = [180, 240, 300]
+
+[resolution]
+attack = { damage = 100, cost = 100 }
+auto = { damage = 75, cost = 100 }
+area = { damage = 80, cost = 100 }
+touch = { damage = 120, cost = 70 }

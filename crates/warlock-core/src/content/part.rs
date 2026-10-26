@@ -469,7 +469,7 @@ fn with_material(written: &str, base: &str, made: &str) -> String {
 }
 
 /// Words in a list: "gold", "gold and ruby", "gold, ruby, and emerald".
-fn and_list(words: &[&str]) -> String {
+pub fn and_list(words: &[&str]) -> String {
     match words {
         [] => String::new(),
         [one] => (*one).to_string(),

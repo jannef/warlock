@@ -5,8 +5,9 @@ description = "A scholar of the arcane who traded sunlight for candlelight: bril
 stats = { strength = -2, toughness = "-1d2", intelligence = "2d2+1", willpower = 1 }
 hp = 0
 mana = 12
+casting = 100
 experience = 125
-skills = { concentration = "2d6+10", knowledge = "2d6+10", spellcraft = "2d6+10", decipher_script = "2d4+4", use_magic_device = "2d4+4" }
+skills = { concentration = "2d6+10", knowledge = "2d6+10", spellcraft = "2d6+10", decipher_script = "2d4+4" }
 known_for = ["concentration", "knowledge", "spellcraft"]
 rolls = 2
 weapon_skills = { staves = 1 }

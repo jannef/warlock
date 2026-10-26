@@ -301,7 +301,7 @@ const CASES: &[Case] = &[
     Case {
         name: "abilities-menu-bard",
         character: Some("human,female,bard"),
-        actions: "xp:1000000 levelup:auto drain:94",
+        actions: "xp:1000000 levelup:auto drain:118",
         screen: Some("abilities"),
         ..BASE
     },

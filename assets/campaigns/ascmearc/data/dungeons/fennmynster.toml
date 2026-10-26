@@ -25,8 +25,9 @@ temperature = 6
 # cult that came to them (the bog hag, unique, comes once a run).
 danger = 4
 population = [
-    "giant_leech", "giant_frog", "drowned", "crocodile", "cultist", "will_o_wisp",
-    "ghost", "mud_golem", "cult_priest", "marsh_troll", "bog_hag",
+    "corpse_candle", "giant_leech", "giant_frog", "drowned", "crocodile", "cultist",
+    "poltergeist", "will_o_wisp", "ghast", "ghost", "shadow", "mud_golem", "cult_priest",
+    "marsh_troll", "bog_body", "bog_hag",
 ]
 # How many: the default, 35 a thousand walkable cells, 25 to 80 (a cellar floor of about 350
 # cells gets the least, 25).

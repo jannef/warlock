@@ -55,7 +55,8 @@ pub enum Layer {
     Equipment,
     /// Not a map: the player's character (`Race Dwarf`, `Gender Female`, `Class Warrior`), if
     /// any, then their own scores, one stat a line (`Strength 12`, lowered while a status effect
-    /// or stat damage lowers it), then their alignment band (`Alignment Kind`; spec §8
+    /// or stat damage lowers it), then their caster level (`Caster level 3`; spec §8 "Spells"),
+    /// then their alignment band (`Alignment Kind`; spec §8
     /// "Alignment", never the score), then their status effects by name (`Effects Bleeding,
     /// Diseased`) and the diseases they know they have (`Diseases filth fever`) if any; never
     /// potentials, modifiers, how severe an effect is, or a disease's timers.
@@ -517,7 +518,7 @@ fn equipment_rows(view: &PerceptionView<'_>) -> Vec<String> {
 /// The player's character, if any (`Name Brakka`, `Race Dwarf`, `Gender Female`, `Class
 /// Warrior`, `Age 27`, `Born 3 Seedtide 1417`, `Sign Fire Manticore`, with a lucky day's title
 /// `Sign Metal Manticore, the Iron Scourge`), then their own scores, one stat a line:
-/// `Strength 12`.
+/// `Strength 12`, then their caster level: `Caster level 3`.
 fn stat_rows(view: &PerceptionView<'_>) -> Vec<String> {
     let content = view.content();
     let mut rows = Vec::new();
@@ -543,6 +544,7 @@ fn stat_rows(view: &PerceptionView<'_>) -> Vec<String> {
         }
     }
     rows.extend((view.own_scores().iter()).map(|(stat, score)| format!("{} {score}", stat.name())));
+    rows.push(format!("Caster level {}", view.own_caster_level()));
     if let Some(band) = view.own_alignment() {
         rows.push(format!("Alignment {}", band.name()));
     }
@@ -1274,6 +1276,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
     let Value::Object(rest) = json!({
         "hp": { "current": hp, "max": max_hp },
         "mana": { "current": mana, "max": max_mana },
+        "caster_level": view.own_caster_level(),
         "resources": (view.own_resources().iter())
             .map(|r| json!({
                 "id": content.resource(r.resource).id,
@@ -1515,6 +1518,7 @@ mod tests {
                 "Intelligence 12",
                 "Willpower 11",
                 "Presence 9",
+                "Caster level 1",
                 "Alignment Callous"
             ]
         );

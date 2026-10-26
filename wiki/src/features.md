@@ -159,7 +159,7 @@ dungeons under the barrows, the fen, and the hills.
   random, and the year you were born gives you a horoscope sign: one of twelve mythological
   animals and five elements, sixty signs in a great cycle (the Fire Manticore, the Water
   Basilisk). Not balanced, on purpose: some characters are a challenge.
-- **Skills** — 26 ADOM-like skills, from stealth and tumble to open lock and spellcraft. Your race
+- **Skills** — 25 ADOM-like skills, from stealth and tumble to open lock and spellcraft. Your race
   and class train you in a few; the rest you simply do not have. Skills grow with use (each
   meaningful use may earn a training mark; past 100 they grow slowly), and the passive ones help
   already: tumbling adds to your Defence, stealth quiets your steps and doors, listening lets you
