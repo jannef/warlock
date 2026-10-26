@@ -33,6 +33,24 @@ messages built in `World::perceive_events` (unseen ends are "something"). The ap
 behavior may use randomness (combat rolls are the rules', from the gameplay stream); tie-breaks
 are by distance, direction order, and actor id.
 
+Incorporeal creatures (spec §8 "Incorporeal creatures", #381): the data is a creature type's
+`incorporeal = { wall_defence }` (`content/creature.rs::Incorporeal`, checked in `Content::load`
+beside `natural`; `Content::incorporeal(type)`). The rules are `world/incorporeal.rs`:
+`LevelState::phaseable` (solid terrain, neither walkable nor transparent, off the level's edge:
+walls, rock, closed doors), `World::in_wall`, `World::wall_defence` (read by
+`World::defence_of`: the Wall category, `combat::Category::Wall`), and `World::landing` (where
+a dying creature's things fall: `creature_dies` moves the dead actor's cell there before its
+pile and corpse). The hooks, one each: `ai.rs::route` (a solid cell costs `1 + WALL` and may be
+a goal), `ai.rs::creature_steps` (through a solid cell, a closed door left shut; no `tread`, no
+`step_onto_trap`), `travel.rs::player_moves` (a seen hostile inside a solid cell is struck at,
+`World::strike_at`), and `shoot.rs` (a missile reaching an opaque cell attacks whoever stands
+inside it). Sight is unchanged: the player's perception already sees a wall cell (and so an
+actor in it) by its lit face or darkvision; `sight::sees` sees opaque cells only within
+darkvision. The message for a miss the wall turned is `fight::attack_message`'s `Category::Wall`
+arm. The example type is `stone_haunt` (placed by no level). Tests:
+`world/incorporeal_tests.rs`, `shoot_tests::a_shade_in_a_wall_is_shot_there_...`,
+`spawn_tests::an_incorporeal_creature_is_never_placed_inside_a_wall`.
+
 Danger levels and spawning (spec §7 "Danger levels", #326): the data is `content/danger.rs`
 (`DangerRule`, `Spawning`, `level_weight`, `weight` and `draw`, the field parsing shared by
 `data/dungeons.toml` and level files), reached through `Content::spawning(level id)` (a hand-made level's own, else

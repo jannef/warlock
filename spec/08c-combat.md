@@ -37,7 +37,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     0 Overloaded ("Burden" below), the lowest cap winning; a penalty counts in full), **Armour** (worn
     `armour`), **Shield** (held `shield`), **Parry** (a wielded weapon's `parry`), **Natural** (the
     creature type's `natural` armour, or a magic item's), **Dodge** (the tumble skill's bonus,
-    "Skills" below, and magic items), and **Deflection** (magic items). Within a category only
+    "Skills" below, and magic items), **Deflection** (magic items), and **Wall** (an
+    incorporeal creature's `wall_defence` while it stands inside solid terrain, §8 "Incorporeal
+    creatures"). Within a category only
     the highest bonus counts, except Dodge, whose bonuses add up. A magic item's own Armour,
     Shield, Parry, and `max_dex` affixes add to that item's; its Dexterity affixes raise the
     score (§8 "Magic items").
@@ -133,7 +135,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     attacker at +0 misses 69 % of the time: 36 % of those plain, 32 % the armour, 21 % a dodge,
     11 % the shield. The reason is in the attack's `strike` and its message (§6): Dexterity and
     Dodge are dodges, Armour and Natural glance off, Shield blocks, Parry parries, Deflection
-    turns aside. Later rules hook in there (dodges training Dexterity, shield and parry effects).
+    turns aside, Wall strikes stone ("Your sword strikes stone where the stone haunt hides in
+    the wall."). Later rules hook in there (dodges training Dexterity, shield and parry effects).
   - **Order of draws**: the two dice of the attack roll; on an attributable miss one draw for
     why; on a threat the two dice of the confirmation; then one draw per damage die each time the
     damage is rolled (the attack's own dice, then a magic weapon's extra die, "adds 1d4
@@ -329,7 +332,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Flight**: along the integer line from the shooter through the cell aimed at and on beyond
     it (`Pos::ray`: up to that cell exactly the line of fire creatures check), cell by cell, as
     far as the weapon's range, over transparent cells only: it stops before the first opaque one
-    (and the level's edge). Whoever stands on a cell it reaches is attacked in turn
+    (and the level's edge), attacking first an incorporeal creature standing inside that opaque
+    cell (§8 "Incorporeal creatures": lost in the stone on a hit, down before the wall on a
+    miss). Whoever stands on a cell it reaches is attacked in turn
     (`World::missile_hits`: rolled against their Defence, no noise of its own), until one is hit;
     on a miss it flies on. At the cell aimed at it comes down if nobody stands there; past
     someone it missed there it flies on.

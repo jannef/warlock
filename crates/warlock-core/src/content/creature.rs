@@ -166,6 +166,9 @@ pub(super) struct CreatureSpec {
     pub attack: Option<NaturalAttackSpec>,
     /// Its natural armour: hide, shell, or scales.
     pub natural: Option<Hide>,
+    /// Whether it passes through solid terrain, and its Defence inside it (spec §8
+    /// "Incorporeal creatures").
+    pub incorporeal: Option<Incorporeal>,
     /// What it resists, in percent per damage type (spec §8 "Damage types"): `resist = { acid
     /// = 50 }`; 100 is immune, negative a vulnerability. Rules only: never shown.
     #[serde(default)]
@@ -307,6 +310,30 @@ impl Hide {
     }
 }
 
+/// An incorporeal creature's nature (spec §8 "Incorporeal creatures"): `incorporeal = {
+/// wall_defence = 4 }`. It passes through solid terrain (neither walkable nor transparent: walls,
+/// rock, closed doors) off the level's edge, and may stand inside it, where it is harder to hit.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Incorporeal {
+    /// Its bonus to Defence while inside solid terrain (the Wall category).
+    #[serde(default)]
+    pub wall_defence: i32,
+}
+
+impl Incorporeal {
+    /// Checks it as written: `wall_defence` 0 to [`super::object::MAX_BONUS`].
+    pub(super) fn check(&self) -> Result<(), String> {
+        if !(0..=super::object::MAX_BONUS).contains(&self.wall_defence) {
+            return Err(format!(
+                "incorporeal: `wall_defence` must be 0 to {}",
+                super::object::MAX_BONUS
+            ));
+        }
+        Ok(())
+    }
+}
+
 /// What a creature type's `blood` says: its colour, or `None` for `"none"` (bloodless); dark
 /// red when it says nothing.
 pub(super) fn blood(spec: Option<&str>) -> Result<Option<Rgb>, String> {
@@ -417,6 +444,7 @@ impl CreatureSpec {
             loot: self.loot,
             attack: r.attack,
             natural: self.natural,
+            incorporeal: self.incorporeal,
             resist: r.resist,
             corpse: self.corpse,
             on_eat: self.on_eat,
@@ -519,6 +547,10 @@ pub struct CreatureDef {
     pub attack: Option<NaturalAttack>,
     /// Gameplay: its natural armour, if any.
     pub natural: Option<Hide>,
+    /// Gameplay: whether it passes through solid terrain and stands inside it, and its Defence
+    /// there (spec §8 "Incorporeal creatures"); `None`: it does not. Rules only (the wiki
+    /// states it).
+    pub incorporeal: Option<Incorporeal>,
     /// Gameplay: what it resists, in percent per damage type (spec §8 "Damage types"); 100 is
     /// immune, negative a vulnerability. Rules only: the player learns it by play.
     pub resist: Vec<(DamageTypeId, i32)>,

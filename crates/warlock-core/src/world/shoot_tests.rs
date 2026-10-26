@@ -65,6 +65,17 @@ weight = 30000
 faction = "wildlife"
 base_hp = 1000
 
+# A shade standing in a wall (`incorporeal.rs`), as harmless as the post.
+[[creature]]
+id = "shade"
+name = "shade"
+glyph = "G"
+fg = "#a0a0a0"
+weight = 500
+faction = "wildlife"
+base_hp = 1000
+incorporeal = { wall_defence = 4 }
+
 [[creature]]
 id = "watcher"
 name = "kobold"
@@ -275,6 +286,7 @@ const LEGEND: &str = r##"
 "#" = "wall"
 ":" = "chasm"
 "P" = { terrain = "floor", creature = "post" }
+"G" = { terrain = "wall", creature = "shade" }
 "k" = { terrain = "floor", creature = "watcher" }
 "##;
 
@@ -499,6 +511,44 @@ fn a_missile_attacks_whoever_stands_in_its_way_and_flies_on_when_it_misses() {
     let arrows = |p| level.objects_at(p).first().map_or(0, |s| s.count);
     assert_eq!(arrows(Pos::new(4, 1)), hits, "under the post");
     assert_eq!(arrows(Pos::new(7, 1)), misses, "where it was aimed");
+}
+
+#[test]
+fn a_shade_in_a_wall_is_shot_there_and_the_arrows_that_miss_fall_before_it() {
+    let map = "#########\n#@...G..#\n#########\n";
+    let mut w = armed(map, "\"bow\", \"arrow*40\"", false);
+    let shade = ActorId(1);
+    let wall = Pos::new(5, 1);
+    let (mut hits, mut misses, mut stone) = (0, 0, false);
+    for _ in 0..30 {
+        let out = w.apply(&Action::Fire(wall));
+        assert!(out.took_turn);
+        let [(path, end)] = &missiles(&out)[..] else {
+            panic!("one missile");
+        };
+        let struck = (out.events.iter()).any(|e| {
+            matches!(e, Event::Attacked { target, strike: Some(s), .. } if *target == shade && s.is_hit())
+        });
+        if struck {
+            hits += 1;
+            assert_eq!((path.last(), *end), (Some(&wall), MissileEnd::Struck));
+        } else {
+            misses += 1;
+            assert_eq!(
+                (path.last(), *end),
+                (Some(&Pos::new(4, 1)), MissileEnd::Fell)
+            );
+            // A miss the wall turned is put down to it.
+            stone |=
+                last_message(&w) == "Your arrow strikes stone where the shade hides in the wall.";
+        }
+    }
+    assert!(hits > 3 && misses > 3, "{hits} hits, {misses} misses");
+    assert!(stone, "some miss was the wall's");
+    assert_eq!(w.state.actors[&shade].pos, wall);
+    // What hit is lost in the stone; what missed lies before the wall.
+    assert!(pile(&w, wall).is_empty());
+    assert_eq!(pile(&w, Pos::new(4, 1)), [("arrow".to_string(), misses)]);
 }
 
 #[test]

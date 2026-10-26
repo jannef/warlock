@@ -4,7 +4,8 @@
 //! **Flight**: a missile flies along the integer line from the shooter through the cell aimed at
 //! and on beyond it ([`Pos::ray`]: up to that cell the line a creature checks for a clear shot),
 //! one cell after another, as far as its range (the rounded radius, like every radius), over
-//! transparent cells only: it stops before the first opaque one. Whoever stands on its way is
+//! transparent cells only: it stops before the first opaque one (attacking an incorporeal
+//! creature that stands inside it first, `incorporeal.rs`). Whoever stands on its way is
 //! attacked in turn, against their Defence, until it hits one. Aimed at a cell where nobody
 //! stands it comes down on that cell; having missed whoever stood there, it flies on.
 //!
@@ -322,7 +323,24 @@ impl World {
         let mut struck = false;
         for cell in from.ray(at) {
             let level = self.state.current();
-            if cell.dist2(from) > reach || level.is_opaque(&content, cell) {
+            if cell.dist2(from) > reach {
+                break;
+            }
+            if level.is_opaque(&content, cell) {
+                // An incorporeal creature inside the wall (`incorporeal.rs`) is attacked there:
+                // a hit is lost in the stone with it, a miss falls before the wall.
+                let inside = (self.state.actor_at(&level.id, cell))
+                    .filter(|a| a.id != shooter)
+                    .map(|a| a.id);
+                if let Some(target) = inside {
+                    let with = (loose.kind, ammo);
+                    let profile = loose.profile.clone();
+                    let blow = self.missile_hits(shooter, target, with, profile, &mut attacks);
+                    if blow.is_some_and(|b| b.strike.is_hit()) {
+                        path.push(cell);
+                        struck = true;
+                    }
+                }
                 break;
             }
             path.push(cell);
