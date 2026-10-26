@@ -94,6 +94,15 @@ The creatures of a [teeming den](special-rooms.md#teeming-dens) lie **asleep** (
 mode): a sleeper does nothing at all and has seen no one, so a sneak attack always lands on it.
 Time never wakes it; noise loud enough, any harm, or a waking neighbour's cry does.
 
+## Silenced
+
+A [silent vault](special-rooms.md) swallows every sound. While you stand in one, and ten seconds
+after you leave, you are **Silenced** ("The silence closes around you."): you cannot cast a
+spell (nor spend mana on anything), read a scroll, or throw your voice; trying takes no time.
+Out of the vault sound comes back: "Sound returns." Creatures inside are silenced just as you
+are, and you can see it on them ("silenced"): a caster that cannot cast closes in to fight
+hand to hand.
+
 ## Buffs and cooldowns
 
 A status effect can also help, or hinder, in other ways while it lasts (the table's last

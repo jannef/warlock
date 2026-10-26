@@ -16,8 +16,8 @@
 #                 one): the coverage check counts them
 #   ranks         how many times it can be taken (1 to max_ranks, default 1): "Hardy 2/3"
 #   choice        what it is chosen for, if it takes a choice: "weapon_skill", "style", "skill"
-#                 (any skill, trained or not), or "element" (a damage type that is no physical
-#                 kind); replays write it
+#                 (any skill, trained or not), "element" (a damage type that is no physical
+#                 kind), or "tag" (a creature tag some type carries); replays write it
 #                 `talent:weapon_focus:long_blades`, and each choice is a pick of its own
 #   needs         what taking any rank asks, all of which must hold at the pick (nothing is
 #                 checked again later):
@@ -355,6 +355,10 @@
 #                                 paid in mana as its data says
 #   favoured_prey { to_hit, damage }   against the creature type it has killed most (ties: the
 #                                 first to get there), its attacks gain that to-hit and damage
+#   sworn_foe { to_hit, damage }  against creature types carrying the tag it was taken for (a
+#                                 talent with `choice = "tag"`), that to-hit and damage
+#   quarry_sense                  arriving on a level that holds a living creature an active
+#                                 kill quest of its still asks for, it is told so
 #   exact_sounds                  every sound it hears is placed where it was made
 #   sky_footsteps_percent { value }   its footsteps under the open sky (no roof over the cell
 #                                 stepped to) that percent louder (negative: quieter)

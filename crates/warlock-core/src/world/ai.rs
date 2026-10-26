@@ -275,9 +275,11 @@ impl World {
         let shoots = (me.launcher(&self.content))
             .filter(|_| me.ammunition_item(&self.content).is_some())
             .and_then(|(launcher, _)| self.content.object(launcher).range);
+        // A caster whose casting is blocked (Silenced, in a silent vault) fights in melee.
+        let casts = (me.effects.blocking(&self.content, ActionKind::Cast)).is_none();
         let (kind, range) = match (def.combat, shoots) {
             (Combat::Ranged, Some(reach)) => (AttackKind::Ranged, def.range.min(reach)),
-            (Combat::Caster, _) => (AttackKind::Spell, def.range),
+            (Combat::Caster, _) if casts => (AttackKind::Spell, def.range),
             _ if me.pos.chebyshev(at) <= 1 => return attack(AttackKind::Melee),
             _ => return close_in(),
         };

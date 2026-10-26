@@ -84,6 +84,11 @@ gets where a dungeon favours or bans nothing. "Only" says where it can come at a
 - **Frigid hall.** Bitter cold: 25 °C colder than the level around it, with a faint blue glow.
   Its water freezes even on a mild level, so a pool in it is usually solid ice. The cold does
   nothing to you yet.
+- **Silent vault.** A dead silence: every noise made inside is a hundredth as loud, so a fight
+  there is barely heard even next door (see [Hearing](hearing.md)). Everyone inside, you and
+  creatures alike, is *Silenced* (see [Status effects](status-effects.md)) for as long as they
+  stay and ten seconds after they leave: no spell can be cast, no scroll read, and no voice
+  thrown. A wizard and a kobold shaman fight with sticks in it; a thief walks through unheard.
 - **Heavy hall.** The stones pull at whatever you carry: inside, your carrying limit is half
   what it is anywhere else, so a load that was light makes you burdened, and armour that only
   burdened you strains you (see [Burden](burden.md)). Creatures carry less inside too. If what

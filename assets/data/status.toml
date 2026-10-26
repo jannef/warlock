@@ -144,6 +144,19 @@ seen = "asleep"
 max = 1
 sleeps = true
 
+# Silenced, a silent vault's: no spell is cast, no scroll read, and no voice thrown while it
+# lasts, creatures' spells too; ten seconds after leaving.
+[[status]]
+id = "silenced"
+name = "Silenced"
+seen = "silenced"
+max = 1
+stacking = "refresh"
+eases = 10
+blocks = ["cast", "read", "throw_voice"]
+start = "The silence closes around you."
+end = "Sound returns."
+
 # Buffs and cooldowns (a class's abilities give them; the dev action `afflict:raging` too).
 # A barbarian's rage: stronger and tougher, too wild to read or to cast; it lasts while their
 # Rage lasts (resources.toml: the status of the rage resource, so it never eases by itself);

@@ -26,8 +26,9 @@ file's `effect` is held to the same.
 Features today: shadowed (10), echoing (8), hushed (8), sanctuary (6), flooded (8), black chamber
 (5, `light = 0`), draining (6, `status = "ebbing"`, `level_chance` 5, #403), teeming den (8,
 `needs_danger`, `min_cells` 16, `swarm`, #405), hot (5, "sweltering chamber", `temperature = 25`,
-#404), cold (5, "frigid hall", `temperature = -25`), heavy (4,
-"heavy hall", `burden = 50`, #412). Draining is the
+#404), cold (5, "frigid hall", `temperature = -25`), silent vault
+(5, `silent`, `noise = 1`, `status = "silenced"`, #409), heavy (4, "heavy hall", `burden = 50`,
+#412). Draining is the
 first with a `level_chance` (cursed rooms bring theirs).
 
 A dungeon's `room_effects` (on a branch or a `[[dungeon.levels]]` range; `content/dungeon.rs`,
@@ -137,8 +138,22 @@ effect with a status: so it holds at every stretch, whatever cuts the time (the 
 rest's turns, a creature's coarse turn while the player rests, `stride.rs`, which may cost far
 more than `eases`). The design (§3.3) put it after each action; at the start of each stretch is
 the same for the player and holds through the coarse turns too. Leaving, the status eases by its
-own `eases` (Ebbing: 30 s). A creature holding a status is not idle, so it does not stride
+own `eases` (Ebbing: 30 s). `World::settle_in` (`rooms.rs`) dwells everyone on the current
+level at once as the player arrives there (`World::travel`) and as a run starts (`World::new`), so
+an actor standing in such a room holds its status before its first action (else a shaman standing
+in a silent vault on arrival would get one spell off). A creature holding a status is not idle, so it does not stride
 (`stride.rs`): creatures in a draining room take turn-by-turn (busy, slowed) turns in a rest.
+
+## The silent vault
+
+`silent` (design §9.1): `noise = 1` and `status = "silenced"`. Silenced (`data/status.toml`,
+beside Ebbing) has no tick and `blocks = ["cast", "read", "throw_voice"]`, so the existing block
+rules do the work: `World::refuse_blocked` refuses the player's casts, scrolls, and thrown voice
+with no time, the abilities menu greys out what costs them (`Unavailable::While`), and
+`World::spend_mana` spends nothing while casting is blocked. Creatures: `ai.rs::fight` lets a
+`Combat::Caster` cast only while its statuses do not block `cast`; silenced, it closes in and
+fights in melee like any other. Not a mana-only status, so creatures without mana hold it too
+(and so take turn-by-turn turns in a rest while inside, as with any status).
 
 ## Hot and cold rooms
 
@@ -207,7 +222,9 @@ Anchored mind, saving), `world/den_tests.rs` (the den's data and refusals, sleep
 turn and never wake by time, quiet and loud noises and the cry cascade, a kicked door, a step,
 Hush-foot, a blow, sneak attacks, the waking line and look mode's word, the spawn cap, Sixth
 sense, saving, and a generated den's sleepers and hoard over a fixture branch),
-`content/room_temperature_tests.rs` (the field, its range, `Here::warmth`),
+`world/silent_tests.rs` (the silent vault: its data, the player's
+refusals and the easing, the hundredth of noise, creatures silenced and a shaman fighting in
+melee, silenced from the start, saving), `content/room_temperature_tests.rs` (the field, its range, `Here::warmth`),
 `world/room_temperature_tests.rs` (hot and cold rooms: the cells' temperature, the player's and
 the status bar's, no status, a cold room's pool frozen on a mild level and not beside it, ice
 melting in a hot room in a frost, the pre-roll only with such a room, alike however time passes,

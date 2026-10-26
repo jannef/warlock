@@ -98,11 +98,11 @@ fn the_objective_names_the_tag_and_its_types() {
     };
     assert_eq!(
         objective("cull"),
-        "Kill 150 kobolds: kobolds, kobold archers, and kobold shamans."
+        "The shopkeeper wants you to kill 150 kobolds: kobolds, kobold archers, and kobold shamans."
     );
     assert_eq!(
         objective("arena_cull"),
-        "Kill 3 kobolds in the Arena: kobolds, kobold archers, and kobold shamans."
+        "The shopkeeper wants you to kill 3 kobolds in the Arena: kobolds, kobold archers, and kobold shamans."
     );
 }
 
@@ -186,7 +186,7 @@ fn what_renames_the_noun() {
     let quest = quests.iter().find(|q| q.id == "cull").expect("logged");
     assert_eq!(
         quest.objective,
-        "Kill 150 scalies: kobolds, kobold archers, and kobold shamans."
+        "The shopkeeper wants you to kill 150 scalies: kobolds, kobold archers, and kobold shamans."
     );
     // Bled to death of the player's wound, during an action: the progress is said.
     let (player, kobold) = (w.player_id(), first(&w, "kobold"));

@@ -385,6 +385,7 @@ impl World {
         // sense says how the place feels (spec §7 "Danger levels").
         self.arrive_spawner(to);
         self.sense_danger(to);
+        self.sense_quarry(to);
         // Sounds remembered on the level left say nothing about this one.
         self.state.recent_sounds.clear();
         if let Some(line) = self.content.arrival(to) {
@@ -393,6 +394,7 @@ impl World {
         if let Some(line) = super::rooms::pervade_line(&self.state, &self.content) {
             self.say(line);
         }
+        let _ = self.settle_in();
         Ok(())
     }
 

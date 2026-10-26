@@ -13,17 +13,17 @@ expression: "render(case, content.clone())"
                   │ "Here we don't fight. Down in the arena, you may. The rats   │
                   │ have the run of the pit again, and their squeaking comes up  │
                   │ the stairs all night. Kill three of them for me, and I'll    │
-                  │ pay you for the quiet."                                      │
+                  │ pay you for the quiet. Good. Mind their teeth. Three, now:   │
+                  │ I'll know if you count wrong."                               │
                   │                                                              │
-                  │ > 1  Accept: Rats in the arena                               │
-                  │   2  Decline: Rats in the arena                              │
-                  │   3  This hall                                               │
-                  │   4  The dark chamber                                        │
-                  │   5  The gallery                                             │
-                  │   6  The water garden                                        │
-                  │   7  These stairs                                            │
+                  │ > 1  Rats in the arena                                       │
+                  │   2  This hall                                               │
+                  │   3  The dark chamber                                        │
+                  │   4  The gallery                                             │
+                  │   5  The water garden                                        │
+                  │   6  These stairs                                            │
                   │                                                              │
-                  │ 1-7 or Enter  ask    Esc  leave                              │
+                  │ 1-6 or Enter  ask    Esc  leave                              │
                   └──────────────────────────────────────────────────────────────┘
 
 

@@ -2294,24 +2294,19 @@ mod tests {
         assert_eq!(game.world.turn(), turn);
         let last = game.world.messages().iter().last().map(|m| m.text.clone());
         assert!(last.is_some_and(|m| m.contains("Five stairs")));
-        // His quest comes first: asking hears the offer, and the screen reopens on accepting it.
+        // His quest comes first: asking gives it, and the screen reopens with it as a topic
+        // still (now the reminder).
         frame(&mut app, &[(KeyCode::Digit1, "1")]);
         let topics = |app: &App| {
             let game = app.world().resource::<Game>();
             let talk = last_talk(&game.last_outcome).expect("talk");
             (talk.topics.iter().map(|t| t.name.clone()).take(2)).collect::<Vec<_>>()
         };
-        assert_eq!(names(&app), [ScreenName::Dialogue]);
-        assert_eq!(
-            topics(&app),
-            ["Accept: Rats in the arena", "Decline: Rats in the arena"]
-        );
-        frame(&mut app, &[(KeyCode::Digit1, "1")]);
-        let accept = Action::Ask {
+        let given = Action::Ask {
             dir: Dir::SE,
-            topic: "accept-rats".into(),
+            topic: "quest-rats".into(),
         };
-        assert_eq!(actions(&app).last(), Some(&accept));
+        assert_eq!(actions(&app).last(), Some(&given));
         assert_eq!(names(&app), [ScreenName::Dialogue]);
         assert_eq!(topics(&app)[0], "Rats in the arena");
         let game = app.world().resource::<Game>();

@@ -158,6 +158,15 @@ glow = [0, 8, 22, 0]
 temperature = -25
 
 [[effect]]
+id = "silent"
+name = "silent vault"
+mark = "v"
+enter = "Your footsteps make no sound at all."
+weight = 5
+noise = 1
+status = "silenced"
+
+[[effect]]
 id = "heavy"
 name = "heavy hall"
 mark = "w"

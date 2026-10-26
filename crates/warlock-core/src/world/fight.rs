@@ -954,6 +954,12 @@ impl World {
         let Some(actor) = self.state.actors.remove(&id) else {
             return;
         };
+        // A named monster's death meets every quest after it, whoever caused it (design §8.4).
+        let def = self.content.creature(actor.creature);
+        if def.unique {
+            let slain = def.id.clone();
+            self.state.quests.slay(&slain);
+        }
         let mut dropped = actor.inventory.clone();
         dropped.extend(self.loot_of(&actor));
         // Scavenger (spec §8 "Creature gear"): what the player's kill drops is known at once.

@@ -65,7 +65,8 @@ impl World {
     }
 
     /// `profile` of an attack by `attacker` at `target`, with Favoured prey's to-hit and damage
-    /// when the player makes it at a creature of the type they have killed most.
+    /// when the player makes it at a creature of the type they have killed most, and Sworn
+    /// foe's at one whose type carries the tag it was taken for (each tag sworn adds).
     pub(super) fn favoured(
         &self,
         attacker: ActorId,
@@ -79,12 +80,19 @@ impl World {
         if me.talents.is_empty() {
             return profile;
         }
-        let (to_hit, damage) = me.talent_mods(&self.content).favoured_prey;
+        let mods = me.talent_mods(&self.content);
+        let creature = self.state.actors.get(&target).map(|a| a.creature);
+        for (tag, to_hit, damage) in &mods.sworn_foe {
+            if creature.is_some_and(|c| self.content.has_tag(c, tag)) {
+                profile.to_hit += to_hit;
+                profile.bonus += damage;
+            }
+        }
+        let (to_hit, damage) = mods.favoured_prey;
         if (to_hit, damage) == (0, 0) {
             return profile;
         }
         let prey = self.state.quests.prey();
-        let creature = self.state.actors.get(&target).map(|a| a.creature);
         if creature.is_some_and(|c| prey == Some(self.content.creature(c).id.as_str())) {
             profile.to_hit += to_hit;
             profile.bonus += damage;

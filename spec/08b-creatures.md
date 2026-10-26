@@ -149,13 +149,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
   #148): simple, ADOM-like errands people give through their dialogue topics. No escorts, timers,
   or branching outcomes.
   - **Topics** (first among a speaker's, in file order): a quest a giver may offer (what it
-    requires done; new to the player, or done and `repeatable`) is a topic named after it,
-    `quest-ID` (replay text `ask:E:quest-rats`). Asking hears the `offer`; it then waits for an
-    answer, as the topics `accept-ID` ("Accept: Rats in the arena") and `decline-ID` ("Decline:
-    …"), one offer per giver at a time (hearing another withdraws it). Declining says `decline`
-    and forgets the offer. Accepting says `accept` and makes the quest active; a delivery's giver
-    hands the item over ("The wandering bard gives you a sealed letter."; the pack has room for
-    anything, §6 "Item lists"). An
+    requires done; new to the player, or done and `repeatable`; a rolled one while its pool holds
+    something) is a topic named after it, `quest-ID` (replay text `ask:E:quest-rats`). **Asking
+    gives it** (#422; the owner: a roguelike, not an MMO, so there is no accepting and no
+    declining): the giver says the `offer`, then its `accept` line (if any) in the same reply, a
+    rolled quest draws its target (below), and the quest is active at once, on the log with its
+    first breadcrumb; a delivery's giver hands the item over ("The wandering bard gives you a
+    sealed letter."; the pack has room for anything, §6 "Item lists"). The topics `accept-ID`
+    and `decline-ID` of older replays are no one's and refused. An
     active quest stays a topic of its giver, who says the `reminder` until its goal is met; it is
     also a topic of whoever it is handed in to (the recipient of a delivery or of a bring with
     `to`) while its goal is met. Asking the one it is handed in to once the goal is met completes
@@ -169,8 +170,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     wound of theirs that bleeds it to death; never by others or traps) of the creature type, or
     of any type carrying a **creature tag** (below), on its level or any level of its branch if it names
     one, else on every level summed. Kills are tallied per level and creature type, every type (saved;
-    the ranger's Favoured prey reads the same tally, §8 "Class abilities"), so kills made before the quest was taken up count, and a repeat of a repeatable one
-    counts only the kills since it was taken up again. *Bring* counts what the player carries of
+    the ranger's Favoured prey reads the same tally, §8 "Class abilities"), so kills made before an
+    authored quest was given count, and a rolled quest or a repeat of a repeatable one counts only
+    the kills since it was given. A kill of a **named monster** (a `unique` type; `count` 1) is
+    met by its death, at any hand (the player's, a trap's, another creature's) and whenever it
+    died, before the quest was given too (the guild design §8.4: no quest can be softlocked):
+    every death passes `creature_dies`, which keeps the dead unique types (`Quests::slain`,
+    saved). This is the one place the log may know what the player did not see. *Bring* counts what the player carries of
     the object. *Reach* is met once the player has been on the level, before taking the quest
     up too. *Deliver* is met while the player carries the item: dropping it (or losing it) blocks
     the quest until they pick it up again (it cannot be handed in without it).
@@ -194,19 +200,47 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (bring: "… apples. Return to the gardener." or "Take them to …"; reach: "Quest updated: you
     have reached the Depths 3. Return to the old hermit."; a delivery's item picked up again:
     "Quest updated: take the sealed letter to the old hermit."); a quest whose goal is met as it
-    is taken up says so after the accept. Rewards and the XP gained are the only numbers said.
+    is given says so after the giver's words. Rewards and the XP gained are the only numbers said.
+  - **Rolled quests** (`content/quest_roll.rs`, `world/quest_roll.rs`; #422, the guild design
+    §5): a kill or bring quest may draw its target as it is given instead of naming it: a
+    `pick` (`creatures` of branches' populations, no uniques, of the branches the player can
+    enter; `tags`, one with a member in such a branch of the quest's campaign; `objects` of an
+    item class, with `loot` only those loot holds) or authored `[[quest.variant]]`s (a target,
+    a `weight`, and its own `reveals`, `where`, and texts). A branch can be entered unless a
+    hidden location of the run's overworld leads into it unrevealed (§7 "Hidden locations"): a
+    roll never names a place the player cannot go. The draw uses the keyed stream
+    `quest/<id>` once, as the quest is given (never kept; inputs: the content and the locations
+    revealed, so a replay draws the same), over the pool in content order, uniformly or by
+    weight. What it drew, the **roll** (target id, variant id, count), is saved in the quest's
+    record: **no rerolls**, it stands until the quest is done. The texts (all but `name`) say
+    the roll through placeholders: `{target}`, `{targets}`, `{a_target}` (a named monster's
+    proper name alone, "the fire drake" for a lower-case one), `{count}`, `{members}` (a tag's
+    types), `{branch}` (the first branch, in the pick's order, it lives in), `{where}`, each
+    also capitalised (`{A_target}`); every text, filled for every target the pool can hold, is
+    checked at load (one line, at most 280 characters, no unknown placeholder). A variant's
+    `reveals` (`when = "given"`) marks its own location only. Dev: `quest_roll:ID:TARGET`
+    (§9) replaces an active rolled quest's roll while it has no progress (a target its pool
+    can hold wherever the player can go, or a variant id), its kills counted from then and a
+    variant's reveal made; no time.
   - **Reveals** (#327; §7 "Hidden locations"): a quest with `reveals` marks its hidden location
-    on the player's map at its stage (offered, accepted, or done), right after the speaker's
-    words: "The old hermit marks the Old Barrow on your map." A location revealed before is not
-    marked again, and said nothing of. A quest's `where` follows its objective in the log
-    ("Reach Fennmynster 3. The minster lies in Micelfenn, east of Fennhām.").
-  - **No abandoning, no cap** (the owner's decision): a quest taken up stays in the log until it
+    on the player's map as it is given (`when = "given"`, the default) or done, right after the
+    speaker's words: "The old hermit marks the Old Barrow on your map." A location revealed
+    before is not marked again, and said nothing of. A quest's `where` follows its objective in
+    the log.
+  - **The log's first breadcrumb**: the objective reads as the giver's wish, for every quest:
+    "Sister Hild wants you to reach Fennmynster 3. The minster lies in Micelfenn, east of
+    Fennhām.", "The gardener wants you to bring 3 apples." (a bring to the giver names no
+    recipient), "Godgifu wants you to kill 100 kobolds: kobolds, kobold archers, and kobold
+    shamans.", then the progress line, then "Return to …".
+  - **No abandoning, no cap** (the owner's decision): a quest given stays in the log until it
     is done, and the player may have any number of them at once.
-  - **State**: per quest the player has heard of, its stage (offered, active, done), how many
-    times it was completed, the kills counted before a repeat, and whether a reach quest's level
-    was reached; and the kill tally. Saved and hashed, left out of the state while empty, so runs
-    without quests hash as before. Presentation reads `PerceptionView::quests()` (the log: name,
-    giver, the offer, objective, status), never ground truth: the player knows their quests.
+  - **State**: per quest the player has heard of, its stage (active or done; an `offered`
+    record of an older save, an offer never answered, loads as active), how many times it was
+    completed, the kills counted before a rolled quest or a repeat, whether a reach quest's level
+    was reached, and a rolled quest's roll; the kill tally; and the unique types slain. Saved and
+    hashed, each left out while empty, so runs without quests hash as before. Presentation reads
+    `PerceptionView::quests()` (the log: name, giver, the offer, objective, the rolled target,
+    status), never ground truth: the player knows their quests and what they were sent for.
 - **Displacement** (`world/talk.rs`; M28, #147): the player moving into a creature that is not
   hostile to them (neutral or peaceful) swaps places with it: the player steps onto its cell (the
   step's time and noise) and it onto the player's (its footsteps), its own turn unaffected; "You

@@ -351,7 +351,8 @@ const CASES: &[Case] = &[
         name: "level-up-choice",
         character: Some("human,male,warrior"),
         actions: "xp:2431 advance:athletics*6",
-        keys: Some("q"),
+        // Apprentice's letter on the talent list.
+        keys: Some("s"),
         size: (100, 40),
         ..BASE
     },
@@ -617,9 +618,26 @@ const CASES: &[Case] = &[
         screen: Some("dialogue"),
         ..BASE
     },
+    // A rolled quest (#422): the courtyard's gardener, whose offer names what was drawn as it
+    // was given.
+    Case {
+        name: "quest-offer-rolled",
+        scenario: "courtyard",
+        actions: "move:E*9 move:NE*6 wait*12 move:E ask:N:quest-slug_charm",
+        screen: Some("dialogue"),
+        ..BASE
+    },
     Case {
         name: "quest-log",
-        actions: concat!(hermit!(), " ask:SE:quest-rats ask:SE:accept-rats"),
+        actions: concat!(hermit!(), " ask:SE:quest-rats"),
+        screen: Some("quests"),
+        ..BASE
+    },
+    // A rolled quest's first breadcrumb, filled.
+    Case {
+        name: "quest-log-rolled",
+        scenario: "courtyard",
+        actions: "move:E*9 move:NE*6 wait*12 move:E ask:N:quest-slug_charm",
         screen: Some("quests"),
         ..BASE
     },

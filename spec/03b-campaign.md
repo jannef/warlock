@@ -49,13 +49,13 @@ every new run starts in it.
     the barrow wight in Cealdhlāw; 150 gold, a chain mail shirt, 250 XP).
   - **Sister Hild**: "Grave goods" (bring the silver chalice from the barrow chamber, Cealdhlāw
     2; 40 gold, 60 XP), "The fen minster" (reach Fennmynster 3; it **reveals Fennmynster** as it
-    is accepted; 80 gold, 2 angelica roots, 160 XP), "What the water keeps" (bring the minster
+    is given; 80 gold, 2 angelica roots, 160 XP), "What the water keeps" (bring the minster
     reliquary from the sunken crypt, Fennmynster 8; 250 gold, 450 XP).
   - **Factor Wulfrun**: "The foreman's ledger" (deliver her ledger to Godgifu at the Gæsthūs; 10
     gold, 20 XP), "The lost shaft" (reach Fyrdelf 2; offered once the ledger and "The barrow's
     heart" are both done, since Fyrdelf starts at danger 8; it **reveals Fyrdelf** as it is
-    accepted; 100 gold, 220 XP), "Fire in the deep" (kill the fire drake in Fyrdelf; 500 gold,
-    900 XP).
+    given; 100 gold, 220 XP), "Fire in the deep" (kill the fire drake in Fyrdelf, a named
+    monster: its death counts however it came; 500 gold, 900 XP).
   Every quest helps someone and is a little good (`alignment` 5 to 30). Each reach and bring
   quest and the delivery say in the log where their goal lies (`where`). The chalice, the
   reliquary, and the ledger are objects of their own, worth nothing to a shop. The three

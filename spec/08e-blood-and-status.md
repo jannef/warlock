@@ -194,6 +194,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
     mana coming back (`mana_regen` 0); one degree, renewed while one stays, eased half a minute
     after leaving ("Your power ebbs away.", "Your power stops ebbing."; on creatures "ebbing").
     Anchored mind (§8 "Talents") spares the one who has it.
+  - **Silenced** (#409): a silent vault's status (§7 "Special rooms"), held by everyone inside,
+    creatures too: one degree, renewed while one stays, eased ten seconds after leaving ("The
+    silence closes around you.", "Sound returns."; on creatures "silenced"). It `blocks` `cast`,
+    `read`, and `throw_voice`: the player's spells, scrolls, and thrown voice are refused with no
+    time ("You cannot cast spells while silenced."), mana cannot be spent, and a caster creature
+    fights in melee instead of casting (`ai.rs::fight`). Everyone on a level that gives a status
+    takes it as the player arrives (and as a run starts), so one standing in the vault is silenced
+    before its first action.
   - **Spending**: `World::spend_mana(actor, base)` is the one way to spend it, refused (nothing
     spent) when the actor has less than the cost: `base` as its talents make it
     (`Actor::mana_cost`, `TalentMods::mana_cost`: Frugal caster's −20 %, rounded to the nearest,

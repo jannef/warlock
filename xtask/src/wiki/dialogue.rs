@@ -2,7 +2,7 @@
 
 use super::text::{capital, yes};
 use std::fmt::Write as _;
-use warlock_core::content::{Content, RevealWhen, Reward, Speaker};
+use warlock_core::content::{Content, Reward, Speaker};
 use warlock_core::world::quest_asks;
 
 /// Who talks (`data/dialogue.toml` and the campaigns' `data/dialogue/`, those the wiki
@@ -76,12 +76,7 @@ pub(super) fn quests(content: &Content) -> String {
                 let campaign = q.campaign.as_deref().unwrap_or_default();
                 let name = (content.hidden_location(campaign, &r.location))
                     .map_or(r.location.as_str(), |(_, h)| h.name.as_str());
-                let when = match r.when {
-                    RevealWhen::Offered => "offered",
-                    RevealWhen::Accepted => "accepted",
-                    RevealWhen::Done => "done",
-                };
-                format!("{name} (when {when})")
+                format!("{name} (when {})", r.when.id())
             },
         );
         let _ = writeln!(
