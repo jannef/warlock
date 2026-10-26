@@ -329,7 +329,13 @@ fn each_mishap_does_what_it_says() {
     let hp = w.state.player().hp;
     let fire = lesson(&w, "scroll_of_fireball", ClassSpell::FireBurst);
     w.mishap(&mishap(&w, "eruption"), fire, &mut events);
-    assert!(w.state.player().hp < hp, "burnt");
+    let lost = hp - w.state.player().hp;
+    let def = w.content.spell_of(ClassSpell::FireBurst).expect("spell");
+    let cap = w.content.spell_rules().expect("rules").cap_of(def);
+    assert!(
+        lost > 0 && lost <= cap,
+        "burnt, never past the cap: {lost} of {cap}"
+    );
 }
 
 #[test]

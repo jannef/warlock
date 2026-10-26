@@ -178,7 +178,13 @@ fn also(content: &Content, def: &StatusDef) -> String {
     }
     if !def.blocks.is_empty() {
         let doing: Vec<&str> = def.blocks.iter().map(|k| k.doing()).collect();
-        parts.push(format!("you cannot {}", doing.join(" or ")));
+        let list = match doing.as_slice() {
+            [init @ .., one, last] if !init.is_empty() => {
+                format!("{}, {one}, or {last}", init.join(", "))
+            }
+            _ => doing.join(" or "),
+        };
+        parts.push(format!("you cannot {list}"));
     }
     if let Some(next) = def.follows {
         parts.push(format!("{} follows it", content.status(next).name));

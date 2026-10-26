@@ -36,7 +36,9 @@ search, search reach, and spot in `world/search.rs` (`search_modifier`, `search_
 trained at all lets the player notice in passing, `Skills::trains_effect`), disarm in
 `world/disarm.rs` (`disarm_modifier`; trained at all, Disable device gives the Disarm ability,
 `Ability::had_by`), steal in `world/steal.rs` (trained at all lets the player steal,
-`docs/dev/stealing.md`); each use
+`docs/dev/stealing.md`), study (Spellcraft and Decipher script: points off the study check) in
+`world/learn.rs::study_odds` (docs/dev/spells.md "Learning"; its use `Use::Study`, reported
+when a study ends, is also `StatUse::Study`); each use
 is reported where it happens (`make_noise`, `hear`, `fight.rs::resolve`, `apply`, `player_moves`,
 `kick_door`, `search_turn` for `search`, `notice_hidden` for `spot`, `World::disarm` for
 `disarm`, `pick_lock` for `pick`, `World::steal` for `steal`, and `World::sidesteps` for a

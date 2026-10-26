@@ -78,7 +78,7 @@ Game flags (`cargo run -p warlock -- --help`):
   sign's reveal), `gender`, `class`, `chargen-talents` (the creation picks), `name`, and
   `summary` over New run and the steps before
   them (each on its preselection: the first scenario's character, the Ascmearc's, an empty name);
-  `pause`, `help`, `inventory`, `equipment`, `character`, `weapon-skills`, `quests`, `talents` (the Talents page), `messages` (the message history), `pick-up` (the pile on the player's cell), `drop`, `eat`, `read`, `identify` (for the first stack's scroll), and `abilities` (the abilities menu) over a run
+  `pause`, `help`, `inventory`, `equipment`, `character`, `weapon-skills`, `quests`, `talents` (the Talents page), `messages` (the message history), `pick-up` (the pile on the player's cell), `drop`, `eat`, `read`, `study` (the scrolls one could study), `identify` (for the first stack's scroll), and `abilities` (the abilities menu) over a run
   (e.g. after a `--replay` that walks onto a pile), `dialogue` over a run whose last action was
   talk with topics (a `--replay` ending in `chat:SE` or `ask:SE:rooms` next to the hub's hermit),
   `equip-item` (the choice for the first slot, Head) over the equipment screen; `settings`,
@@ -115,7 +115,7 @@ log, active first) from perception;
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:DIR pick:DIR ascend descend lantern hood
 pickup[:LETTERS] drop[:LETTERS] sell[:LETTERS] pay[:DIR] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
-eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] dig:DIR search search:N disarm:DIR second_wind blood_magic use:ID[:DIR] chat:DIR ask:DIR:TOPIC steal:DIR throw_voice:X,Y rest:GOAL stance:NAME vision:PROFILE
+eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] study:LETTER dig:DIR search search:N disarm:DIR second_wind blood_magic use:ID[:DIR] chat:DIR ask:DIR:TOPIC steal:DIR throw_voice:X,Y rest:GOAL stance:NAME vision:PROFILE
 talent:ID[:CHOICE] advance:SKILL levelup:auto xp:N
 skip:DURATION weather:KIND spawn effect:ID@X,Y[>X,Y] identify[:LETTERS] afflict:STATUS drain:N resource:ID infect:DISEASE reveal:ID`
 (`DIR` = N
@@ -132,7 +132,8 @@ cell (X, Y), `throw:c:X,Y` throws one of
 inventory stack `c` there (any weapon is thrown whole, badly: `t` in the game sends `fire` for a launcher, else `throw` for what the Missile weapon slot holds); `eat:b` eats one of inventory stack `b`, `eat:floor:a` one of the top
 stack underfoot; `read:b:12,5` reads scroll stack `b` at level cell (12, 5) (a spell scroll:
 fireball, lightning, frost), `read:b:c` reads it on inventory stack `c` (the scroll of
-identify); `dig:E` digs into the wall east with the tool in the Tool slot, turn
+identify); `study:c` studies scroll stack `c` to learn the spell it teaches
+(docs/dev/spells.md "Learning"); `dig:E` digs into the wall east with the tool in the Tool slot, turn
 after turn until it gives way or something interrupts; `search` searches the cells around the
 player for secret doors and hidden traps, `search:N` for up to N turns (1 to 100), stopping when
 something is found; `second_wind` uses the Second wind talent (hit points back at once, then Winded); `blood_magic` the Blood magic talent (hit points for mana, never the last); `use:rage` uses a class ability (spec §8 "Class abilities"; `use:smite:E` one aimed in a direction: rage, veterans_wind, whirlwind, lay_on_hands, smite, holy_radiance, quivering_palm, master_thief, inspire; `use:volley:12,5` one aimed at a cell; a birth sign's active the same way, `use:horns_grace`, `use:blaze`, `use:hounds_bay`, or aimed at a cell, `use:transfixing_stare:12,5`, `use:fire_breath:12,5`; a caster's spell too, paid in mana, `use:blessing`, or aimed at a cell, `use:arcane_bolt:12,5`: blessing, cure_wounds, remove_disease, call_lightning, flame, frost, arcane_bolt, fire_burst, evil_eye, hex_of_weakness, curse_of_sloth, blight); `disarm:E` tries to disarm the trap the player knows of east of them (the
@@ -196,7 +197,9 @@ ranks and progress toward the next, `Long blades 2 (40%)`, fighting styles too, 
 marked `Duelist 1 (0%), in use`), `attacks` (the player's ready attacks as the character
 screen shows them: `Main hand long sword: +4 to hit, 1d8+2 slashing`, `Off hand dagger: ...`,
 `Missile short bow: +3 to hit, 1d6 piercing, range 10`; unidentified magic left out), `talents` (the player's talents in the order taken, `Hardy
-2/3`, `Weapon focus (long blades)`, a birth sign's gifts first, `Fleet-footed (sign)`, `Slight (sign, flaw)`, those their class gives marked `Well dressed (class)`), `abilities` (the player's abilities in the abilities menu's
+2/3`, `Weapon focus (long blades)`, a birth sign's gifts first, `Fleet-footed (sign)`, `Slight (sign, flaw)`, those their class gives marked `Well dressed (class)`), `spells` (the spells the player knows with tier and cost, then the
+scrolls they could study with the chance in words: `study c, a scroll of frost: Frost, a
+struggle`), `abilities` (the player's abilities in the abilities menu's
 order, each with its source and what it asks for or why it cannot be used now: `Shield bash
 (weapon skill): a direction`, `Open lock (skill): not usable yet`), `traps` (the traps the player knows,
 one a line), `locations` (the overworld locations the player knows, `(45, 23) The Hall`, a hidden
@@ -216,7 +219,8 @@ died) and its stage, `fresh`, `old`, `rotten`, or `gone`, which the player is ne
 **dev-only**), `progress` (the level-up choices due, `due level 3: 1 talent`, `due level 30: 1
 talent, 1 bonus talent`, the talents the
 player may take now by id with their choices, the first kills that paid, and the stat training
-marks, `stat marks St 3, To 1`, **dev-only**),
+marks, `stat marks St 3, To 1`, and the exact study odds, `study c frost: overreach 2, +0
+against 20, 15/144`, **dev-only**),
 `rooms`
 (the level's special rooms: their plain ground as the effect's `mark`, then a line per room,
 **dev-only**), `ice` (the level's temperature and the thickness of the ice on its water in cm,

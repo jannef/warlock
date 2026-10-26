@@ -318,7 +318,7 @@ impl World {
             MishapEffect::Status { status, severity } => {
                 self.afflict(player, status, severity, None, events);
             }
-            MishapEffect::Backfire => self.backfire(lesson.object, events),
+            MishapEffect::Backfire => self.backfire(lesson, events),
             MishapEffect::Mana { percent } => {
                 let me = self.player_mut();
                 let lost = (me.mana.max(0) * i32::from(percent) + 99) / 100;
@@ -357,23 +357,36 @@ impl World {
         }
     }
 
-    /// The spell of the scroll of `object` goes off on its reader: a burst around them, a bolt
-    /// through their own cell. A death by it is the scroll's.
-    fn backfire(&mut self, object: ObjectId, events: &mut Vec<Event>) {
+    /// The spell of the scroll studied goes off on its reader: a burst around them, a bolt
+    /// through their own cell, its roll held to the cap of the spell it teaches. A death by it
+    /// is the scroll's.
+    fn backfire(&mut self, lesson: Lesson, events: &mut Vec<Event>) {
         let content = self.content.clone();
+        let object = lesson.object;
         let Some(Reading::Spell(spell)) = &content.object(object).read else {
             return;
         };
+        let cap = (content.spell_rules())
+            .zip(content.spell_of(lesson.spell))
+            .map(|(rules, def)| rules.cap_of(def));
         let player = self.state.player;
         let here = self.player_pos();
         let mut made = Vec::new();
         self.sound_at(spell.noise, here);
         match &spell.cast {
             Cast::Burst(burst) => {
-                self.cast_burst(Caster::Actor(player), (here, here), burst, &mut made);
+                let burst = crate::content::Burst {
+                    cap,
+                    ..burst.clone()
+                };
+                self.cast_burst(Caster::Actor(player), (here, here), &burst, &mut made);
             }
             Cast::Bolt(bolt) => {
-                self.cast_bolt(Caster::Actor(player), here, &[here], bolt, &mut made);
+                let bolt = crate::content::Bolt {
+                    cap,
+                    ..bolt.clone()
+                };
+                self.cast_bolt(Caster::Actor(player), here, &[here], &bolt, &mut made);
             }
         }
         self.say_spell((&spell.noun, &spell.verb), made, events);
