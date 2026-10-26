@@ -19,11 +19,11 @@ expression: "render(case, content.clone())"
 │ The old hermit says: "Hm? A visitor. Sit, if you can find a stone nobody's sitting on."          │
 │ The old hermit says: "Here we don't fight. Down in the arena, you may. The rats have the run of  │
 │   the pit again, and their squeaking comes up the stairs all night. Kill three of them for me,   │
-│   and I'll pay you for the quiet."                                                               │
+│   and I'll pay you for the quiet. Good. Mind their teeth. Three, now: I'll know if you count     │
+│   wrong."                                                                                        │
 │                                                                                                  │
 │ v or Esc close                                                                                   │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
-
 
 
 

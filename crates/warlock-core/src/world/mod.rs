@@ -133,6 +133,7 @@ mod openings;
 mod path;
 mod perceive;
 mod quest;
+mod quest_roll;
 mod quick_leave;
 mod racial;
 mod rage;
@@ -183,7 +184,7 @@ pub use lantern::Lantern;
 pub use learn::{Odds, study_odds, study_turns};
 pub use level::{Fire, LevelState};
 pub use loot::Identified;
-pub use quest::{QuestRecord, QuestView, Quests, Stage, asks as quest_asks};
+pub use quest::{QuestRecord, QuestView, Quests, Stage, asks as quest_asks, wants as quest_wants};
 use rest::Ended;
 pub use shop::{Shop, ShopStatus, count_of, favour, part_of, unpaid_parts};
 pub use sign_picks::BREATH_RANGE;
@@ -351,9 +352,18 @@ impl WorldState {
 
     /// What `actor` carries against what it can (spec §8 "Burden"): the player by their race's
     /// size (and whether it ignores Burdened) when the run has a character, anyone else by its
-    /// creature type's size.
+    /// creature type's size; inside a special room that scales the limit (a heavy hall), by its
+    /// percent. The one place the rules ask for a load.
     pub(crate) fn load(&self, content: &Content, actor: &Actor) -> Load {
-        burden::load(actor, self.race_of(content, actor), content)
+        self.load_at(content, actor, actor.pos)
+    }
+
+    /// [`WorldState::load`] as it would be were `actor` at `pos` on its level (a step into a
+    /// heavy hall).
+    pub(crate) fn load_at(&self, content: &Content, actor: &Actor, pos: Pos) -> Load {
+        let room =
+            (self.levels.get(&actor.level)).map_or(100, |l| l.effects_at(content, pos).burden());
+        burden::load(actor, self.race_of(content, actor), content, room)
     }
 
     /// The size of `actor`, an index into [`Content::sizes`]: the player's race's when the run
@@ -1178,6 +1188,7 @@ impl World {
             Action::Resource(id) => return self.grant_resource_dev(id, events),
             Action::Infect(id) => return self.infect_dev(id),
             Action::Reveal(id) => return self.reveal_dev(id),
+            Action::QuestRoll { quest, target } => return self.quest_roll_dev(quest, target),
             Action::LevelUpAuto => return self.level_up_auto(),
             Action::GrantXp(xp) => return self.grant_xp_dev(*xp),
         };
@@ -1275,6 +1286,8 @@ mod experience_tests;
 #[cfg(test)]
 mod fight_tests;
 #[cfg(test)]
+mod fixture_factions;
+#[cfg(test)]
 mod flavour_tests;
 #[cfg(test)]
 mod focus_tests;
@@ -1288,6 +1301,8 @@ mod gem_tests;
 mod gifts_tests;
 #[cfg(test)]
 mod hearing_tests;
+#[cfg(test)]
+mod heavy_hall_tests;
 #[cfg(test)]
 mod hold_tests;
 #[cfg(test)]
@@ -1332,6 +1347,8 @@ mod overworld_tests;
 mod parts_tests;
 #[cfg(test)]
 mod protection_tests;
+#[cfg(test)]
+mod quest_roll_tests;
 #[cfg(test)]
 mod quest_tests;
 #[cfg(test)]

@@ -2,8 +2,10 @@
 //! their dialogue topics ([`World::topics`], answered in [`World::ask`]).
 //!
 //! **Flow**: a giver lists each quest it has for the player as a topic (`quest-ID`, named after
-//! the quest). Asking it hears the offer, which then waits for an answer: `accept-ID` or
-//! `decline-ID` (one offer per giver at a time). An active quest stays a topic of its giver
+//! the quest). Asking it **gives** the quest (#422: no accepting, no declining): the giver says
+//! the offer (and the quest's `accept` line after it), a rolled quest draws its target
+//! (`world/quest_roll.rs`), and the quest is active at once, on the log with its first
+//! breadcrumb ("Sister Hild wants you to ..."). An active quest stays a topic of its giver
 //! (the reminder) and, once its goal is met, of whoever it is handed in to; asking that one
 //! completes it: what it asks for leaves the pack, they say their thanks, and the reward
 //! follows (gold coins and items into the pack, or at the player's feet if it is full; XP).
@@ -14,8 +16,9 @@
 //! **Goals**, and how far they have got ([`progress`]):
 //! - kill: the player's own kills of the creature type, or of any type carrying the tag (on
 //!   its level or branch, if it names one; else on every level summed), counted from a tally of
-//!   the kills of every creature type (so kills made before the quest was taken count; a repeat
-//!   counts only those since);
+//!   the kills of every creature type (so kills made before the quest was given count; a rolled
+//!   quest or a repeat counts only those since). A unique type (a named monster) is met by its
+//!   death, at any hand and whenever it died ([`Quests::slain`], design §8.4);
 //! - bring: how many of the object the player carries;
 //! - reach: whether the player has been to the level (before taking the quest too);
 //! - deliver: whether the player carries the object the giver handed over. Dropping it blocks
@@ -29,46 +32,47 @@ use super::{ActorId, Deed, Spent, TopicView, World};
 use crate::action::{Event, Positions};
 use crate::content::StatUse;
 use crate::content::{
-    Content, DialogueId, Goal, KillTarget, QuestDef, QuestId, QuestKind, RevealWhen,
+    Content, DialogueId, Goal, KillTarget, Pick, QuestDef, QuestId, QuestKind, RevealWhen, Roll,
+    Rolled,
 };
 use crate::object::{self, Stack};
 use crate::perception::PerceptionView;
 use crate::talent::TalentMods;
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+use std::borrow::Cow;
+use std::collections::{BTreeMap, BTreeSet};
 
-/// The topic of a quest: its offer, reminder, or hand-in (`quest-rats`).
+/// The topic of a quest: its giving, reminder, or hand-in (`quest-rats`).
 const QUEST: &str = "quest-";
-/// The topic that accepts an offer (`accept-rats`).
-const ACCEPT: &str = "accept-";
-/// The topic that declines an offer (`decline-rats`).
-const DECLINE: &str = "decline-";
 
 /// Where a quest the player has heard of stands.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Stage {
-    /// Offered, waiting for the player to accept or decline.
-    Offered,
-    /// Taken up.
+    /// Given. (An offer of an older save, `offered`, waiting for an answer that no longer
+    /// exists, loads as given.)
+    #[serde(alias = "offered")]
     Active,
     /// Done (a repeatable one may be offered again).
     Done,
 }
 
 /// How far a quest has got (saved).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct QuestRecord {
     pub stage: Stage,
     /// How many times the player has completed it.
     #[serde(default, skip_serializing_if = "is_zero")]
     pub completed: u32,
-    /// A repeated kill quest: the kills already counted when it was taken up again.
+    /// A rolled or repeated kill quest: the kills already counted when it was given.
     #[serde(default, skip_serializing_if = "is_zero")]
     pub counted: u32,
     /// A reach quest: the player has been there.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub reached: bool,
+    /// A rolled quest: what was drawn as it was given (never drawn again until it is done).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub roll: Option<Roll>,
 }
 
 fn is_zero(n: &u32) -> bool {
@@ -81,7 +85,7 @@ fn is_zero(n: &u32) -> bool {
 pub struct Quests {
     /// The quests the player has heard of, by id.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    records: BTreeMap<String, QuestRecord>,
+    pub(super) records: BTreeMap<String, QuestRecord>,
     /// The player's kills of every creature type: by level id, then by creature type id.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     kills: BTreeMap<String, BTreeMap<String, u32>>,
@@ -89,11 +93,23 @@ pub struct Quests {
     /// (the ranger's Favoured prey, spec §8 "Class abilities"); `None` before the first kill.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     prey: Option<String>,
+    /// The unique creature types (named monsters) that have died, at any hand (design §8.4):
+    /// a kill quest after one is met by its death.
+    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+    slain: BTreeSet<String>,
 }
 
 impl Quests {
     pub fn is_empty(&self) -> bool {
-        self.records.is_empty() && self.kills.is_empty() && self.prey.is_none()
+        self.records.is_empty()
+            && self.kills.is_empty()
+            && self.prey.is_none()
+            && self.slain.is_empty()
+    }
+
+    /// The unique creature types that have died, by id.
+    pub fn slain(&self) -> impl Iterator<Item = &str> {
+        self.slain.iter().map(String::as_str)
     }
 
     /// How many creatures of type `id` the player has killed, on every level.
@@ -125,12 +141,31 @@ impl Quests {
     /// A quest or creature type these records name that `content` does not have (a guard for
     /// saves).
     pub(crate) fn unknown_to(&self, content: &Content) -> Option<String> {
-        let quest = (self.records.keys()).find(|id| content.quest_id(id).is_none());
+        let quest = (self.records.iter()).find_map(|(id, r)| {
+            let Some(q) = content.quest_id(id) else {
+                return Some(id.clone());
+            };
+            let roll = r.roll.as_ref()?;
+            let def = content.quest(q);
+            let known = def.is_rolled() && crate::content::roll_known(content, def, roll);
+            (!known).then(|| format!("{id} ({})", roll.target))
+        });
         let creature = (self.kills.values())
             .flat_map(BTreeMap::keys)
             .chain(self.prey.iter())
-            .find(|id| content.creature_id(id).is_none());
-        quest.or(creature).cloned()
+            .chain(self.slain.iter())
+            .find(|id| content.creature_id(id).is_none())
+            .cloned();
+        quest.or(creature)
+    }
+
+    /// Quest `def` as the player was given it: a rolled one after its roll, its texts filled
+    /// ([`QuestDef::rolled`]); else as it is.
+    pub(crate) fn given<'a>(&self, content: &Content, def: &'a QuestDef) -> Cow<'a, QuestDef> {
+        match self.records.get(&def.id).and_then(|r| r.roll.as_ref()) {
+            Some(roll) if def.is_rolled() => Cow::Owned(def.rolled(content, roll)),
+            _ => Cow::Borrowed(def),
+        }
     }
 
     fn stage(&self, def: &QuestDef) -> Option<Stage> {
@@ -138,7 +173,7 @@ impl Quests {
     }
 
     /// Whether quest `def` is active.
-    fn is_active(&self, def: &QuestDef) -> bool {
+    pub(super) fn is_active(&self, def: &QuestDef) -> bool {
         self.stage(def) == Some(Stage::Active)
     }
 
@@ -157,7 +192,7 @@ impl Quests {
     }
 
     /// The player's kills that count toward kill quest `def`, all of them.
-    fn kills_for(&self, content: &Content, def: &QuestDef) -> u32 {
+    pub(super) fn kills_for(&self, content: &Content, def: &QuestDef) -> u32 {
         (self.kills.iter())
             .flat_map(|(level, kills)| kills.iter().map(move |(c, n)| (level, c, *n)))
             .filter(|(level, c, _)| {
@@ -167,14 +202,9 @@ impl Quests {
             .sum()
     }
 
-    /// The quest goes back to before it was offered: forgotten if never done, else done.
-    fn withdraw(&mut self, def: &QuestDef) {
-        match self.records.get_mut(&def.id) {
-            Some(r) if r.completed > 0 => r.stage = Stage::Done,
-            _ => {
-                self.records.remove(&def.id);
-            }
-        }
+    /// A unique creature type, `id`, died.
+    pub(super) fn slay(&mut self, id: &str) {
+        self.slain.insert(id.to_string());
     }
 }
 
@@ -186,6 +216,7 @@ pub(crate) fn progress(
     inventory: &[Stack],
     def: &QuestDef,
 ) -> (u32, u32) {
+    let def = &*quests.given(content, def);
     let record = quests.records.get(&def.id);
     let carried = |object| -> u32 {
         (inventory.iter())
@@ -194,6 +225,15 @@ pub(crate) fn progress(
             .sum()
     };
     let (have, need) = match def.goal {
+        // A named monster: its death, whoever or whatever caused it, whenever.
+        Goal::Kill {
+            target: KillTarget::Creature(c),
+            count,
+            ..
+        } if content.creature(c).unique => {
+            let id = &content.creature(c).id;
+            (u32::from(quests.slain.contains(id)), count)
+        }
         Goal::Kill { count, .. } => {
             let counted = record.map_or(0, |r| r.counted);
             (
@@ -222,8 +262,11 @@ pub struct QuestView {
     pub giver: String,
     /// What the giver asked, in their words.
     pub offer: String,
-    /// What it asks: "Kill 3 giant rats in the Arena."
+    /// What it asks, as its first breadcrumb: "The old hermit wants you to kill 3 giant rats
+    /// in the Arena.", then where, if the quest says.
     pub objective: String,
+    /// A rolled quest: what was drawn (a creature type, `tag:` and a tag, or an object type id).
+    pub target: Option<String>,
     /// How far it has got: "2 / 3 killed.", "Return to the old hermit.", "Done."
     pub status: String,
 }
@@ -234,6 +277,7 @@ impl PerceptionView<'_> {
     pub fn quests(&self) -> Vec<QuestView> {
         let content = self.content;
         let view = |def: &QuestDef, record: &QuestRecord| {
+            let def = &*self.quests.given(content, def);
             let active = record.stage == Stage::Active;
             let status = if active {
                 status(content, self.quests, &self.player.inventory, def)
@@ -251,6 +295,7 @@ impl PerceptionView<'_> {
                 giver: speaker_called(content, def.giver),
                 offer: def.texts.offer.clone(),
                 objective: objective(content, def),
+                target: record.roll.as_ref().map(|r| r.target.clone()),
                 status,
             }
         };
@@ -259,8 +304,7 @@ impl PerceptionView<'_> {
                 let record = self.quests.records.get(&def.id)?;
                 let shown = match record.stage {
                     Stage::Active => active,
-                    // A repeatable quest offered again was done before.
-                    Stage::Done | Stage::Offered => !active && record.completed > 0,
+                    Stage::Done => !active && record.completed > 0,
                 };
                 shown.then(|| view(def, record))
             })
@@ -294,29 +338,26 @@ fn kill_noun(content: &Content, def: &QuestDef, one: bool) -> String {
     }
 }
 
-/// `n` of what kill quest `def` is after: "a kobold shaman", "3 giant rats", "100 goblins".
+/// `n` of what kill quest `def` is after: "a kobold shaman", "3 giant rats", "100 goblins";
+/// one unique by its name ("Black Wystan", "the fire drake": [`crate::content::one_of`]).
 fn creatures(content: &Content, def: &QuestDef, n: u32) -> String {
     let name = kill_noun(content, def, n == 1);
+    let unique = matches!(
+        &def.goal,
+        Goal::Kill { target: KillTarget::Creature(c), what: None, .. } if content.creature(*c).unique
+    );
     if n == 1 {
-        format!("{} {name}", crate::content::article(&name))
+        crate::content::one_of(&name, unique)
     } else {
         format!("{n} {name}")
     }
 }
 
-/// The types carrying tag `tag` that quest `def`'s run can meet, by their plurals: "goblins,
-/// goblin archers, and goblin chiefs".
-pub fn members(content: &Content, def: &QuestDef, tag: &str) -> String {
-    let plurals: Vec<&str> = (content.tagged_in(tag, def.campaign.as_deref()))
-        .map(|c| content.creature(c).plural.as_str())
-        .collect();
-    crate::content::and_list(&plurals)
-}
-
-/// What quest `def` asks, as the log says it: "Kill 3 giant rats in the Arena.", then where,
-/// if the quest says so in words ("Reach the Depths. The way in lies in the Barrowdowns.").
+/// What quest `def` asks, as the log says it, its first breadcrumb: "The old hermit wants you
+/// to kill 3 giant rats in the Arena.", then where, if the quest says so in words ("The way in
+/// lies in the Barrowdowns.").
 fn objective(content: &Content, def: &QuestDef) -> String {
-    let asks = asks(content, def);
+    let asks = wants(content, def);
     match &def.where_ {
         Some(place) => format!("{asks} {place}"),
         None => asks,
@@ -324,8 +365,12 @@ fn objective(content: &Content, def: &QuestDef) -> String {
 }
 
 /// What quest `def` asks, without where ("Kill 5 giant rats in Cealdhlāw."): the log's
-/// objective, and the wiki's goal.
+/// objective, and the wiki's goal (of a rolled quest, its pool: "Kill a creature drawn from
+/// the populations of Cealdhlāw and Fyrdelf.").
 pub fn asks(content: &Content, def: &QuestDef) -> String {
+    if let Some(rolled) = &def.roll {
+        return rolled_asks(content, def, rolled);
+    }
     match &def.goal {
         Goal::Kill {
             target,
@@ -337,7 +382,7 @@ pub fn asks(content: &Content, def: &QuestDef) -> String {
                 format!(" in {}", in_sentence(&content.place_name(l)))
             });
             let who = match target {
-                KillTarget::Tag(tag) => format!(": {}", members(content, def, tag)),
+                KillTarget::Tag(tag) => format!(": {}", def.members(content, tag)),
                 KillTarget::Creature(_) => String::new(),
             };
             format!("Kill {}{place}{who}.", creatures(content, def, *count))
@@ -354,6 +399,100 @@ pub fn asks(content: &Content, def: &QuestDef) -> String {
             speaker_called(content, *to)
         ),
     }
+}
+
+/// What rolled quest `def` asks, by its pool, for the wiki.
+fn rolled_asks(content: &Content, def: &QuestDef, rolled: &Rolled) -> String {
+    let n = def.count();
+    let some = |one: &str, many: &str| {
+        if n == 1 {
+            format!("{} {one}", crate::content::article(one))
+        } else {
+            format!("{n} {many}")
+        }
+    };
+    match rolled {
+        Rolled::Pick(Pick::Creatures(branches)) => {
+            let names: Vec<String> = branches.iter().map(|b| content.place_name(b)).collect();
+            let names: Vec<&str> = names.iter().map(String::as_str).collect();
+            format!(
+                "Kill {} of one type drawn at random from the populations of {} (of those \
+                 open when it is given; no uniques).",
+                some("creature", "creatures"),
+                crate::content::and_list(&names)
+            )
+        }
+        Rolled::Pick(Pick::Tags(tags)) => {
+            let plurals: Vec<String> = (tags.iter())
+                .map(|t| content.plural(&crate::content::spoken(t)))
+                .collect();
+            let plurals: Vec<&str> = plurals.iter().map(String::as_str).collect();
+            format!(
+                "Kill {} of one kind drawn at random from {}.",
+                some("creature", "creatures"),
+                crate::content::and_list(&plurals)
+            )
+        }
+        Rolled::Pick(Pick::Objects { class, loot }) => {
+            let class = &content.item_class(*class).name;
+            let loot = if *loot { " that loot can hold" } else { "" };
+            format!(
+                "Bring {} of one type of the {class}{loot}, drawn at random, to {}.",
+                some("item", "items"),
+                speaker_called(content, def.turn_in())
+            )
+        }
+        Rolled::Variants(variants) => {
+            let names: Vec<String> = (variants.iter())
+                .map(|v| {
+                    let given = def.rolled(
+                        content,
+                        &Roll {
+                            target: v.target.clone(),
+                            variant: Some(v.id.clone()),
+                            count: n,
+                        },
+                    );
+                    match &given.goal {
+                        Goal::Kill { .. } => creatures(content, &given, n),
+                        Goal::Bring { object, .. } => content.object(*object).describe(n),
+                        _ => v.id.clone(),
+                    }
+                })
+                .collect();
+            let names: Vec<&str> = names.iter().map(String::as_str).collect();
+            let verb = if def.kind() == QuestKind::Kill {
+                "Kill"
+            } else {
+                "Bring"
+            };
+            format!(
+                "{verb} one of {}, drawn at random.",
+                crate::content::and_list(&names)
+            )
+        }
+    }
+}
+
+/// What quest `def` asks as its first breadcrumb in the log (#422): "Sister Hild wants you to
+/// bring a silver chalice.", "Wat wants you to kill 100 goblins: goblins, goblin archers, and
+/// goblin chiefs.".
+pub fn wants(content: &Content, def: &QuestDef) -> String {
+    let giver = capitalized(&speaker_called(content, def.giver));
+    let asks = match def.goal {
+        Goal::Bring { object, count, .. } if def.turn_in() == def.giver => {
+            format!("bring {}.", content.object(object).describe(count))
+        }
+        _ => {
+            let asks = asks(content, def);
+            let mut chars = asks.chars();
+            match chars.next() {
+                Some(first) => first.to_lowercase().chain(chars).collect(),
+                None => asks,
+            }
+        }
+    };
+    format!("{giver} wants you to {asks}")
 }
 
 /// Where active quest `def` stands, as the log says it.
@@ -414,66 +553,51 @@ fn progress_news(content: &Content, def: &QuestDef, (have, need): (u32, u32)) ->
     text
 }
 
-/// What a quest topic asks.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Ask {
-    /// The offer, the reminder, or handing it in.
-    Quest,
-    Accept,
-    Decline,
-}
-
-/// The quest a topic id is about, and what it asks; `None` for any other topic.
-fn quest_topic(topic: &str) -> Option<(Ask, &str)> {
-    [
-        (QUEST, Ask::Quest),
-        (ACCEPT, Ask::Accept),
-        (DECLINE, Ask::Decline),
-    ]
-    .into_iter()
-    .find_map(|(prefix, ask)| topic.strip_prefix(prefix).map(|id| (ask, id)))
+/// The quest a topic id is about; `None` for any other topic (`accept-ID` and `decline-ID` of
+/// older replays are no quest topics any more, and refused as topics nobody has).
+fn quest_topic(topic: &str) -> Option<&str> {
+    topic.strip_prefix(QUEST)
 }
 
 impl World {
     /// The quest topics of whoever speaks dialogue `speaker`, first among their topics: each
-    /// quest they may offer (or the accept and decline of the one they offered; one they
-    /// [`World::offers`] the player as they stand toward them, `scorned` or not), each of theirs
-    /// the player has taken up (for the reminder, or to hand it in), and each the player may hand
+    /// quest they may give (one they [`World::offers`] the player as they stand toward them,
+    /// `scorned` or not; a rolled one only while its pool holds something), each of theirs the
+    /// player has been given (for the reminder, or to hand it in), and each the player may hand
     /// in to them.
     pub(super) fn quest_topics(&self, speaker: DialogueId, scorned: bool) -> Vec<TopicView> {
         let quests = &self.state.quests;
         let mut topics = Vec::new();
         for def in self.content.quests() {
-            let topic = |prefix: &str, name: String| TopicView {
-                id: format!("{prefix}{}", def.id),
-                name,
+            let topic = || TopicView {
+                id: format!("{QUEST}{}", def.id),
+                name: def.name.clone(),
                 price: None,
                 items: None,
             };
-            let stage = quests.stage(def);
+            let active = quests.is_active(def);
             if def.giver == speaker {
-                if stage == Some(Stage::Offered) {
-                    topics.push(topic(ACCEPT, format!("Accept: {}", def.name)));
-                    topics.push(topic(DECLINE, format!("Decline: {}", def.name)));
-                } else if stage == Some(Stage::Active)
-                    || (quests.available(&self.content, def) && self.offers(def, scorned))
+                if active
+                    || (quests.available(&self.content, def)
+                        && self.offers(def, scorned)
+                        && (!def.is_rolled() || !self.quest_pool(def).is_empty()))
                 {
-                    topics.push(topic(QUEST, def.name.clone()));
+                    topics.push(topic());
                 }
-            } else if def.turn_in() == speaker && stage == Some(Stage::Active) && self.ready(def) {
-                topics.push(topic(QUEST, def.name.clone()));
+            } else if def.turn_in() == speaker && active && self.ready(def) {
+                topics.push(topic());
             }
         }
         topics
     }
 
     /// Whether active quest `def`'s goal is met.
-    fn ready(&self, def: &QuestDef) -> bool {
+    pub(super) fn ready(&self, def: &QuestDef) -> bool {
         let (have, need) = self.progress_of(def);
         have >= need
     }
 
-    fn progress_of(&self, def: &QuestDef) -> (u32, u32) {
+    pub(super) fn progress_of(&self, def: &QuestDef) -> (u32, u32) {
         let inventory = &self.state.player().inventory;
         progress(&self.content, &self.state.quests, inventory, def)
     }
@@ -487,7 +611,7 @@ impl World {
         topic: &str,
         events: &mut Vec<Event>,
     ) -> Option<Spent> {
-        let (ask, quest) = quest_topic(topic)?;
+        let quest = quest_topic(topic)?;
         let scorned = self.scorns(&self.state.actors[&id]);
         let listed = (self.quest_topics(speaker, scorned).iter()).any(|t| t.id == topic);
         let Some(q) = self.content.quest_id(quest).filter(|_| listed) else {
@@ -497,34 +621,23 @@ impl World {
         };
         let content = self.content.clone();
         let def = content.quest(q);
-        Some(match ask {
-            Ask::Quest if self.state.quests.is_active(def) => {
-                if speaker == def.turn_in() && self.ready(def) {
-                    self.complete(id, q, topic, events);
-                    Spent::NoTime
-                } else {
-                    self.answer(id, def.texts.reminder.clone(), Some(topic.into()), events);
-                    Spent::Nothing
-                }
-            }
-            Ask::Quest => {
-                self.offer(q);
-                self.answer(id, def.texts.offer.clone(), Some(topic.into()), events);
-                self.reveal_at(id, def, RevealWhen::Offered);
-                Spent::NoTime
-            }
-            Ask::Accept => self.accept(id, q, topic, events),
-            Ask::Decline => {
-                self.state.quests.withdraw(def);
-                self.answer(id, def.texts.decline.clone(), Some(topic.into()), events);
-                Spent::NoTime
-            }
+        if !self.state.quests.is_active(def) {
+            self.give(id, q, topic, events);
+            return Some(Spent::NoTime);
+        }
+        Some(if speaker == def.turn_in() && self.ready(def) {
+            self.complete(id, q, topic, events);
+            Spent::NoTime
+        } else {
+            let given = self.state.quests.given(&content, def).into_owned();
+            self.answer(id, given.texts.reminder, Some(topic.into()), events);
+            Spent::Nothing
         })
     }
 
-    /// Quest `def` reached stage `when`: if it reveals its hidden location then (spec §7
-    /// "Hidden locations"), creature `id`, who speaks for it, marks the location on the player's
-    /// map. A location revealed before is not marked again.
+    /// Quest `def` (as given) reached stage `when`: if it reveals its hidden location then
+    /// (spec §7 "Hidden locations"), creature `id`, who speaks for it, marks the location on the
+    /// player's map. A location revealed before is not marked again.
     fn reveal_at(&mut self, id: ActorId, def: &QuestDef, when: RevealWhen) {
         let Some(reveal) = def.reveals.as_ref().filter(|r| r.when == when) else {
             return;
@@ -543,32 +656,38 @@ impl World {
         self.say(format!("{who} marks {place} on your map."));
     }
 
-    /// Quest `q` is offered: its giver withdraws any other offer still waiting for an answer.
-    fn offer(&mut self, q: QuestId) {
+    /// Creature `id` gives the player quest `q` (#422): a rolled quest draws its target, the
+    /// quest is active at once (a kill quest counting from now when it is rolled or a repeat),
+    /// the giver says the offer and their `accept` line, reveals what it reveals as given, and
+    /// hands over what is to be delivered; if its goal is met already, the player is told.
+    fn give(&mut self, id: ActorId, q: QuestId, topic: &str, events: &mut Vec<Event>) {
         let content = self.content.clone();
         let def = content.quest(q);
-        for other in content.quests() {
-            let waiting = self.state.quests.stage(other) == Some(Stage::Offered);
-            if other.giver == def.giver && other.id != def.id && waiting {
-                self.state.quests.withdraw(other);
-            }
-        }
-        let quests = &mut self.state.quests.records;
-        let record = quests.entry(def.id.clone()).or_insert(QuestRecord {
-            stage: Stage::Offered,
+        let roll = def.is_rolled().then(|| self.roll_quest(def)).flatten();
+        let reached = match &def.goal {
+            Goal::Reach { level } => self.state.levels.contains_key(level),
+            _ => false,
+        };
+        let quests = &mut self.state.quests;
+        let record = quests.records.entry(def.id.clone()).or_insert(QuestRecord {
+            stage: Stage::Active,
             completed: 0,
             counted: 0,
             reached: false,
+            roll: None,
         });
-        record.stage = Stage::Offered;
-    }
-
-    /// The player accepts quest `q` from creature `id`: it becomes active, the giver hands over
-    /// what is to be delivered, and if its goal is met already, the player is told.
-    fn accept(&mut self, id: ActorId, q: QuestId, topic: &str, events: &mut Vec<Event>) -> Spent {
-        let content = self.content.clone();
-        let def = content.quest(q);
-        let given = match def.goal {
+        let repeat = record.completed > 0;
+        record.stage = Stage::Active;
+        record.reached = reached;
+        record.roll = roll;
+        let rolled = record.roll.is_some();
+        let given = quests.given(&content, def).into_owned();
+        let kills = quests.kills_for(&content, &given);
+        if let Some(record) = quests.records.get_mut(&def.id) {
+            // A rolled quest, or a repeat, counts only the kills from now on.
+            record.counted = if rolled || repeat { kills } else { 0 };
+        }
+        let handed = match given.goal {
             Goal::Deliver { object, .. } => {
                 let mut letter = Stack::one(object);
                 crate::rot::made_at([&mut letter], &content, self.state.time);
@@ -577,35 +696,31 @@ impl World {
             }
             _ => None,
         };
-        let kills = self.state.quests.kills_for(&content, def);
-        let reached = match &def.goal {
-            Goal::Reach { level } => self.state.levels.contains_key(level),
-            _ => false,
+        let line = match &given.texts.accept {
+            Some(accept) => format!("{} {accept}", given.texts.offer),
+            None => given.texts.offer.clone(),
         };
-        if let Some(record) = self.state.quests.records.get_mut(&def.id) {
-            record.stage = Stage::Active;
-            // A repeat counts only the kills from now on.
-            record.counted = if record.completed > 0 { kills } else { 0 };
-            record.reached = reached;
-        }
-        self.answer(id, def.texts.accept.clone(), Some(topic.into()), events);
-        self.reveal_at(id, def, RevealWhen::Accepted);
-        if let Some(letter) = given {
+        self.answer(id, line, Some(topic.into()), events);
+        self.reveal_at(id, &given, RevealWhen::Given);
+        if let Some(letter) = handed {
             let who = capitalized(&self.called(&self.state.actors[&id]));
             self.say(format!("{who} gives you {}.", letter.describe(&content)));
         }
         let progress = self.progress_of(def);
-        if def.kind() != QuestKind::Deliver && progress.0 >= progress.1 {
-            self.say(progress_news(&content, def, progress));
+        if given.kind() != QuestKind::Deliver && progress.0 >= progress.1 {
+            self.say(progress_news(&content, &given, progress));
         }
-        Spent::NoTime
     }
-
     /// Creature `id` takes quest `q` in: what it asks for leaves the pack, they say their thanks,
     /// and the reward follows.
     fn complete(&mut self, id: ActorId, q: QuestId, topic: &str, events: &mut Vec<Event>) {
         let content = self.content.clone();
-        let def = content.quest(q);
+        let given = self
+            .state
+            .quests
+            .given(&content, content.quest(q))
+            .into_owned();
+        let def = &given;
         if let Some((object, count)) = def.hand_in() {
             let handed = self.take_from_pack(object, count);
             let what = object::phrase(&handed, self.lore());
@@ -730,7 +845,8 @@ impl World {
             }
             let now = self.progress_of(def);
             if now.0 > had {
-                self.say(progress_news(&content, def, now));
+                let given = self.state.quests.given(&content, def).into_owned();
+                self.say(progress_news(&content, &given, now));
             }
         }
     }

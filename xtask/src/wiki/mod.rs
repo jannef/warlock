@@ -307,6 +307,18 @@ fn generate(content: &Content) -> Vec<(String, String)> {
 mod tests {
     use super::*;
 
+    /// The line of `page` that starts with `start` must contain every fragment: a row that lists
+    /// creatures is checked by the parts that stay, so a new creature edits no assertion (#473).
+    fn row_has(page: &str, start: &str, fragments: &[&str]) {
+        let line = page
+            .lines()
+            .find(|line| line.starts_with(start))
+            .unwrap_or_else(|| panic!("no row {start:?} in {page}"));
+        for fragment in fragments {
+            assert!(line.contains(fragment), "{fragment:?} in {line}");
+        }
+    }
+
     /// The numbers the game keeps to itself are stated exactly (#264): creatures, stats, speed,
     /// hearing, combat, diseases, and corpses.
     #[test]
@@ -332,9 +344,10 @@ mod tests {
         has("creature-stats.md", "| Deer | 1 | 2 |");
         // Rarity (#373): each type's tier, and the tiers' factors.
         has("creature-stats.md", "| Kobold shaman | 4 | 40 | Rare |");
-        has(
-            "creature-rarities.md",
-            "| Very rare | 10% | bog hag, cinder elemental |",
+        row_has(
+            text("creature-rarities.md"),
+            "| Very rare | 10% | ",
+            &["bog hag", "cinder elemental"],
         );
         has("creature-stats.md", "| Listen 30 | - |");
         has(
@@ -1006,21 +1019,34 @@ mod tests {
             assert!(healing.contains(row), "{row} in {healing}");
         }
         let statuses = text("status-effects.md");
+        row_has(
+            statuses,
+            "| Bleeding | yes, \"bleeding\" | ",
+            &[
+                "Big hits and confirmed criticals; ",
+                "the elder troll's claws (20%, 2 degrees)",
+                "the forest troll's claws (20%, 1 degree)",
+                "the giant leech's sucker (40%, 1 degree)",
+                "the two-headed troll's bites (20%, 1 degree)",
+                "| A hit point every 40 seconds, faster the worse it is | A degree a minute | Not at \
+                 all | — | Bandage |",
+            ],
+        );
         for row in [
-            "| Bleeding | yes, \"bleeding\" | Big hits and confirmed criticals; ",
-            "the elder troll's claws (20%, 2 degrees); ",
-            "the forest troll's claws (20%, 1 degree); ",
-            "; the giant leech's sucker (40%, 1 degree); ",
-            "the two-headed troll's bites (20%, 1 degree)",
-            "| A hit point every 40 seconds, faster the worse it is | A degree a minute | Not at \
-             all | — | Bandage |",
             "| A degree every 2 minutes | Half as fast |",
-            "the giant rat's bite (10%, 2 degrees); the grave worm's bite (20%, 1 degree); ",
             "; eating rotten food |",
             "Strength \u{2212}1, Dexterity \u{2212}1 when strong",
         ] {
             assert!(statuses.contains(row), "{row} in {statuses}");
         }
+        row_has(
+            statuses,
+            "| Poisoned | ",
+            &[
+                "the giant rat's bite (10%, 2 degrees)",
+                "the grave worm's bite (20%, 1 degree)",
+            ],
+        );
         assert!(statuses.contains("| Diseased | no | Any disease, once it shows | Nothing |"));
         // Buffs and cooldowns: a raise, what it keeps you from, and what follows it.
         for row in [
@@ -1033,28 +1059,44 @@ mod tests {
             assert!(statuses.contains(row), "{row} in {statuses}");
         }
         let diseases = text("diseases.md");
-        for row in [
-            "| Filth fever | The charnel heap's slam (15%); the dretch's claws (10%); the drowned's fist \
-             (20%); the ghast's claws (10%); the ghoul lord's claws (15%); the giant rat's bite \
-             (10%); the nosferatu's bite (15%) | Toughness, 54% | 1d3 days | Every day | 1d3 \
-             Dexterity, 1d3 Toughness | Two checks won in a row | no | Half as fast |",
-            "| Marsh ague | The bog body's fist (15%); the drowned king's slam (25%); the fen \
-             ghoul's claws (10%); crossing marsh or swamp (4% an hour) |",
-            "| Grave rot | The charnel titan's slam (25%); the ghoul king's claws (20%); the grave \
-             hound's bite (10%); the kobold zombie's fist (5%); the ogre zombie's fist (10%); the \
-             rotting dragon's bite (25%); the rotting drake's bite (20%); the rotting troll's claws \
-             (15%); the zombie's fist (15%); eating rotten food |",
-            "| Mummy rot | The mummy's fist (20%); the mummy king's fist (35%); the mummy lord's fist \
-             (25%); the mummy priest's \
-             touch (15%) | Toughness, 31% \
-             | 1d3 days | Every 3 days | 1d4 Toughness | Never by itself | no |",
-            "| Never by itself | yes |",
-            "| Burrowing worms | The wormhost's fist (25%); the wormlord's touch (35%) | Toughness, 25% | 1 day | Every day | \
-             1d4 Toughness, 1d3 Intelligence, 2d6 hit points | Two checks won in a row | yes |",
-            "| Brain fever | — | Willpower, 54% |",
-        ] {
-            assert!(diseases.contains(row), "{row} in {diseases}");
-        }
+        row_has(
+            diseases,
+            "| Filth fever | ",
+            &[
+                "the giant rat's bite (10%)",
+                "| Toughness, 54% | 1d3 days | Every day | 1d3 Dexterity, 1d3 Toughness | Two checks \
+                 won in a row | no | Half as fast |",
+            ],
+        );
+        row_has(
+            diseases,
+            "| Marsh ague | ",
+            &["crossing marsh or swamp (4% an hour)"],
+        );
+        row_has(
+            diseases,
+            "| Grave rot | ",
+            &["the zombie's fist (15%)", "eating rotten food |"],
+        );
+        row_has(
+            diseases,
+            "| Mummy rot | ",
+            &[
+                "mummy's fist (20%)",
+                "| Toughness, 31% | 1d3 days | Every 3 days | 1d4 Toughness | Never by itself | no |",
+            ],
+        );
+        row_has(
+            diseases,
+            "| Burrowing worms | ",
+            &[
+                "wormhost's fist (25%)",
+                "| Toughness, 25% | 1 day | Every day | 1d4 Toughness, 1d3 Intelligence, 2d6 hit \
+                 points | Two checks won in a row | yes |",
+            ],
+        );
+        assert!(diseases.contains("| Never by itself | yes |"));
+        assert!(diseases.contains("| Brain fever | — | Willpower, 54% |"));
         assert!(healing.contains("| Diseased with marsh ague | a quarter as fast |"));
         // The races' potentials have their own table.
         assert!(!text("races.md").contains("otential"));
@@ -1156,10 +1198,12 @@ mod tests {
         );
         assert!(text("creatures.md").contains("| Deer | `d` | Wildlife | neutral | never |"));
         assert!(text("creatures.md").contains("shoots from afar"));
-        assert!(
-            text("factions.md").contains(
-                "| Kobolds | you, vermin, goblins, orcs, undead, giants, trolls, demons |"
-            )
+        row_has(
+            text("factions.md"),
+            "| Kobolds | ",
+            &[
+                "you", "vermin", "goblins", "orcs", "undead", "giants", "trolls", "demons",
+            ],
         );
         assert!(text("factions.md").contains("| Wildlife | nobody |"));
         assert!(text("factions.md").contains("| Cultists | you, marsh things | no |"));
@@ -1176,9 +1220,19 @@ mod tests {
                 .contains("| Night, a full moon high in the sky, overcast | 3 cells |")
         );
         // Lights go by what the player sees: the terrain, the carrier, the lantern, the crystal.
+        row_has(
+            text("lights.md"),
+            "| Torch carried by ",
+            &[
+                "a balor",
+                "a burning skull",
+                "a kobold",
+                "a nightmare",
+                " | 6 cells |",
+            ],
+        );
         for row in [
             "| Wall torch | 7 cells |",
-            "| Torch carried by a balor or a burning skull or a kobold or a nightmare | 6 cells |",
             "| Your lantern | 5 cells |",
             "| Light crystal (red) | 7 cells |",
             "| Faint rune | 4 cells | UV only",

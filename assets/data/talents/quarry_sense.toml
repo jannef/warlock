@@ -1,0 +1,7 @@
+[[talent]]
+id = "quarry_sense"
+name = "Quarry sense"
+tree = "delver"
+description = "You know when what you were sent to kill is near: arriving on a level, you sense whether your quarry is there."
+effects = [{ kind = "quarry_sense" }]
+systems = ["bounties"]

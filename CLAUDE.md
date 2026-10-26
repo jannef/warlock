@@ -117,7 +117,7 @@ Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:
 pickup[:LETTERS] drop[:LETTERS] sell[:LETTERS] pay[:DIR] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
 eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] study:LETTER dig:DIR search search:N disarm:DIR second_wind blood_magic use:ID[:DIR] chat:DIR ask:DIR:TOPIC steal:DIR throw_voice:X,Y rest:GOAL stance:NAME vision:PROFILE
 talent:ID[:CHOICE] advance:SKILL levelup:auto xp:N
-skip:DURATION weather:KIND spawn effect:ID@X,Y[>X,Y] identify[:LETTERS] afflict:STATUS drain:N resource:ID infect:DISEASE reveal:ID`
+skip:DURATION weather:KIND spawn effect:ID@X,Y[>X,Y] identify[:LETTERS] afflict:STATUS drain:N resource:ID infect:DISEASE reveal:ID quest_roll:ID:TARGET`
 (`DIR` = N
 NE E SE S SW W NW; `NAME` = aggressive, neutral, defensive, or coward (a stance, no time; `assets/data/stances.toml`); `LETTERS` = stacks by position, as letters
 for the first 26 (`a` = 0, the first) or numbers for any (`0,2,30`; mixed works too, `ac,30`),
@@ -141,7 +141,8 @@ something is found; `second_wind` uses the Second wind talent (hit points back a
 Disarm ability, for those trained in Disable device; refused, with no time, without the skill
 or a known trap there); `chat:E` talks to the creature east of
 the player, `ask:E:rooms` asks it about topic `rooms` (an id in a campaign's `data/dialogue/`;
-quest topics are `quest-ID`, `accept-ID`, `decline-ID`, ids in a campaign's `data/quests/`; a
+quest topics are `quest-ID`, ids in a campaign's `data/quests/`: asking gives the quest, there is
+no accepting or declining (#422); a
 service is asked for by its id the same way, `ask:E:cure`, paid in gold and taking a chat's time,
 docs/dev/npcs.md);
 `hood` lowers or raises the lantern's hood (lighting it hooded when it is out), `throw_voice:X,Y`
@@ -174,6 +175,9 @@ e.g. `resource:rage wait*3`
 as if they had lost the check (it incubates, then shows), e.g. `infect:the_shakes rest:24h*3`,
 no game time; `reveal` is the dev reveal: hidden location `ID` of the overworld (a legend's `hidden`,
 `docs/dev/overworld.md`) is revealed and marked on the map as a quest would, no game time;
+`quest_roll` is the dev roll: active rolled quest `ID`, with no progress yet, draws `TARGET`
+instead (a creature, `tag:` a tag, or an object id its pool can hold, or a variant id; its kills
+count from then, a variant's reveal is made; `docs/dev/quests.md`), no game time;
 `freeze:X,Y,R` and `thaw:X,Y,R` are the dev frost and heat bursts (radius 0 to 20
 around level cell (X, Y), in its line of sight; no time); `ACTION*N` repeats one, e.g.
 `wait*10`). Dump layers: `view` (what the player sees), `fov` (`*` visible),
@@ -219,7 +223,9 @@ all food on the level and in the packs of those on it with when it was made (a c
 died) and its stage, `fresh`, `old`, `rotten`, or `gone`, which the player is never shown,
 **dev-only**), `progress` (the level-up choices due, `due level 3: 1 talent`, `due level 30: 1
 talent, 1 bonus talent`, the talents the
-player may take now by id with their choices, the first kills that paid, and the stat training
+player may take now by id with their choices, the first kills that paid, each rolled quest's
+draw and the size of its pool now, `roll slug_charm scroll_of_lightning x1 of 4`, the named
+monsters dead, `slain fire_drake`, the stat training
 marks, `stat marks St 3, To 1`, and the exact study odds, `study c frost: overreach 2, +0
 against 20, 15/144`, **dev-only**),
 `rooms`
@@ -239,7 +245,7 @@ word: `{"cold": "resistant"}`), `burden` (`level`, `limit`), `alignment` (the ba
 `rank`, `ranks`, `choice`, `class`, `granted`, `flaw`), `character` (`name`, `race`, `gender`, `class`,
 `raised`, `age`, `born`, `sign`, and `lucky`, a lucky day's title, only for one born on it), `due` (the level-up choices due: `level`, `talents`,
 `rolls`, `bonus`, or null), `abilities` (in menu order: `id`, `source`,
-`aim`, and `unavailable`, the reason's id or null), `quests` (the log: `id`, `name`, `kind`, `active`, `completed`, `giver`,
+`aim`, and `unavailable`, the reason's id or null), `quests` (the log: `id`, `name`, `kind`, `active`, `completed`, `giver`, `target` (what a rolled quest drew, else null),
 `objective`, `status`), each seen actor's `health` and `effects` (those that show), `room` (the
 special room the player stands in, if they know it), and per inventory stack (in position
 order) its `letter` (the position as action text), `class` (item class id), `name`, `rarity`,

@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ The gardener says: "My old master swore that the words of a spell, said over a bed, kept the slugs
+ off. Bring me a scroll of lightning, would you? I'll only read the first line. Probably."
+
+
+
+
+
+
+    ┌─ Quests ────────────────────────────────────────────────────────────────────────────────┐
+    │                                                                                         │
+    │ Active                                                                                  │
+    │ > Words for the beds                                                                    │
+    │                                                                                         │
+    │ The gardener wants you to bring a scroll of lightning.                                  │
+    │ You carry 0 / 1.                                                                        │
+    │                                                                                         │
+    │ The gardener: "My old master swore that the words of a spell, said over a bed, kept the │
+    │ slugs off. Bring me a scroll of lightning, would you? I'll only read the first line.    │
+    │ Probably."                                                                              │
+    │                                                                                         │
+    │ ↑↓ choose   q or Esc close                                                              │
+    └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘
+
+
+
+
+
+
+
+ The Courtyard  ·  HP 19/19  ·  MP 11/11  ·  Lv 1  ·  06:32  ·  11 Darkening  ·  Clear   ? controls

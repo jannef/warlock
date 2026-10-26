@@ -93,6 +93,18 @@ pub(super) fn special_rooms(content: &Content) -> String {
                 e.temperature.unsigned_abs()
             ));
         }
+        if e.burden != 100 {
+            does.push(format!(
+                "Everyone's carrying limit is {} what it is outside, so a load weighs on one {} \
+                 as much.",
+                times(e.burden),
+                times(
+                    (10_000 / u32::from(e.burden))
+                        .try_into()
+                        .unwrap_or(u16::MAX)
+                ),
+            ));
+        }
         let mut said = format!("\"{}\"", e.enter);
         if let Some(near) = &e.near {
             let _ = write!(said, " From outside: \"{near}\"");
