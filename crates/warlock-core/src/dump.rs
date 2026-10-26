@@ -443,7 +443,8 @@ pub fn ice_char(ice: Ice) -> char {
     }
 }
 
-/// The ice on the level (ground truth): a line with the temperature there and when the ice was
+/// The ice on the level (ground truth): a line with the temperature where the player stands (a
+/// hot or a cold room's included) and when the ice was
 /// brought up to date, then the map, each iced cell's thickness ([`ice_char`]) over the terrain.
 fn ice_rows(world: &World) -> Vec<String> {
     let content = world.content();

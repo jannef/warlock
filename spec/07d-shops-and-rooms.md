@@ -172,8 +172,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   player do not step in; §8 "Creature behavior"), `floor` (terrain generators lay over the
   room's plain floor: walkable, transparent, not stairs, a door, or running water), and `status`
   (a status everyone inside holds while they stay, below; it must ease, at least 10 seconds a
-  degree, the longest single action, so it never lapses while one stays), and `swarm` (a
-  teeming den's numbers, below; needs `needs_danger`). An effect with a `level_chance` needs its
+  degree, the longest single action, so it never lapses while one stays), `swarm` (a
+  teeming den's numbers, below; needs `needs_danger`), and `temperature` (degrees Celsius added
+  to the level's inside, −40 to 40, default 0; below). An effect with a `level_chance` needs its
   `pervade` line and is neither `shunned`, nor lays a `floor`, nor is a den.
   - **The effects** (weights in brackets): a *shadowed room* (10) keeps 30 % of the light ("The
     light seems to drain away here."); an *echoing hall* (8) doubles noise ("Your footsteps echo
@@ -190,7 +191,21 @@ developer notes (CLAUDE.md, `docs/dev/`).
     power."); a *teeming den* (8, #405; only on a level with a danger, in a room of at least 16
     floor cells) is full of sleeping creatures and their hoard (below; "A warm, rank smell
     drifts out of the dark ahead." when glimpsed, "You hear slow breathing all around you." on
-    entering). Blood washing away in a flooded room waits for blood (#127).
+    entering); a *sweltering chamber* (5, #404) is 25 °C warmer than the level and glows a faint
+    red (`[30, 10, 0]`; "A wave of heat meets you."); a *frigid hall* (5) is 25 °C colder and
+    glows a faint blue (`[0, 8, 22]`; "Your breath mists in the bitter cold."). Blood washing
+    away in a flooded room waits for blood (#127).
+  - **Hot and cold rooms** (`temperature`, #404): a room sets its cells' temperature and
+    nothing else: no status, no damage, nothing done to items or food. The temperature at a cell
+    is decided in one place, `WorldState::temperature_at` (the level's, §5 "Temperature", plus
+    what the effects there add, the room's and the whole level's), and whatever the temperature
+    does is the environment's, so a hot room is like any hot place. Today that is two things:
+    the status bar shows the temperature of the player's cell, so stepping in shows the change,
+    and the ice follows it (§5 "Ice": a cold room's water freezes on a 10 °C level, ice melts in
+    a hot room in a frost). A level with a hot or a cold room has had the same 30 days of
+    weather as a level under the open sky when it is first made, so a cold room's pool is
+    frozen when one first comes upon it. Neither covers a whole level (a hot level is its
+    `temperature`). Fennmynster bans the sweltering chamber.
   - **A status while inside** (`status`, #403): as time passes, at the start of each stretch of
     it (`World::pass_time`: so after every action, the player's and each creature's, at every
     turn of a rest or another long action, and through a creature's coarse turns while the
@@ -264,7 +279,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     effect both favoured and banned, shares over 100, and every effect banned while `chance` is
     above 0 are content errors; the old `effects` list is refused, pointing to `favoured` and
     `banned`. A new effect therefore turns up in every dungeon that does not ban it.
-    Fennmynster: `chance` 25, `per_level` 2, favoured flooded 35, hushed 15, shadowed 15.
+    Fennmynster: `chance` 25, `per_level` 2, favoured flooded 35, hushed 15, shadowed 15,
+    banned hot.
   - **Level files** mark rooms with `[[room]] effect = "sanctuary" area = [x0, y0, x1, y1]`
     (inclusive, walls and doors included; inside the map; rooms never overlap; vaults mark none),
     and may name an effect covering the whole level with a top-level `effect = "..."` (one that

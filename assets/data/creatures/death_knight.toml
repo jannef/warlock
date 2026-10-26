@@ -1,0 +1,44 @@
+# The undead roster (#383, batch 5). A champion damned for his crimes and risen in his black
+# plate, grave-cold and all but untouched by cold: he swings an enchanted great sword with the
+# skill he had in life, and keeps things worth taking. He opens doors. Not yet in any dungeon's
+# population.
+[[creature]]
+id = "death_knight"
+level = 45
+xp = 235
+rarity = "rare"
+loot = 80
+name = "death knight"
+glyph = "Z"
+fg = "#884040"
+speed = 1100
+faction = "undead"
+tags = ["undead"]
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+opens_doors = true
+footsteps = 100
+hearing = 12
+weight = 90000
+stats = { strength = 29, dexterity = 21, toughness = 30, intelligence = 28, willpower = 32, presence = 28 }
+base_hp = 112
+natural = { defence = 3, protection = 0, name = "dead flesh" }
+resist = { cold = 50, poison = 100 }
+weapon_skills = { long_blades = 6 }
+on_eat = { message = "Grave-cold meat, kept in black iron.", vomit = 80, harm = "1d4" }
+blood = "#202838"
+[creature.attack]
+damage = "3d12"
+damage_type = "bludgeoning"
+name = "slam"
+verb = "slams"
+to_hit = 4
+# Its gear (spec §8 "Creature gear"): the arms he was damned in.
+[[creature.gear]]
+chance = 95
+one_of = ["great_sword"]
+magic = 50
+[[creature.gear]]
+chance = 95
+one_of = ["plate_armour"]

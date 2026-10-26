@@ -1,0 +1,33 @@
+# The undead roster (#383, batch 5). The bones of a grown dragon, raised: claws and a long bare
+# tail, and no breath left in it (creature breath waits for creature magic). Its bones turn a
+# blade's point and shrug off arrows; a club shatters them, and it leaves no corpse. Not yet in
+# any dungeon's population.
+[[creature]]
+id = "bone_dragon"
+level = 50
+xp = 260
+rarity = "rare"
+name = "bone dragon"
+glyph = "D"
+fg = "#f0ece0"
+speed = 1050
+faction = "undead"
+tags = ["undead", "skeleton"]
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+footsteps = 110
+hearing = 10
+weight = 900000
+stats = { strength = 36, dexterity = 20, toughness = 37, intelligence = 2, willpower = 34, presence = 2 }
+base_hp = 200
+natural = { defence = 4, protection = 7, name = "bones" }
+resist = { piercing = 50, bludgeoning = -50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "4d10"
+damage_type = "slashing"
+name = "claws"
+verb = "claws"
+to_hit = 5

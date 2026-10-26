@@ -13,8 +13,10 @@ interpolated between mid-months) plus a cosine day swing (coldest 04:00; `swing`
 file, times each weather's `swing` percent) less the weather's `chill`, blended across weather
 changes by `weather::blend` (the one place the clouds' and the temperature's hour-long
 transition is decided). `WorldState::temperature_on(level, ..)` is the one place a level's
-temperature is decided; `World::temperature()` (ground truth) and `PerceptionView::temperature()`
-(the player feels it, anywhere) read it. The status bar always shows it (`ui::status_segments`,
+temperature is decided, and `WorldState::temperature_at(level, .., pos)` a cell's (the level's
+plus a hot or a cold special room's, `docs/dev/special-rooms.md`); `World::temperature()` (ground
+truth, at the player's cell), `World::temperature_at`, and `PerceptionView::temperature()` (the
+player feels it where they stand) read it. The status bar always shows it (`ui::status_segments`,
 priority 4, after the weather; cool tint below 0, warm from 30 Â°C), in the settings' unit.
 Nothing feels the cold yet.
 
@@ -25,11 +27,12 @@ like (`Content::ice_terrain`, `ice_look`). Ice is kept per level, sparsely, in Â
 too thin), so sight, memory, look mode, and noise just follow; ice and freezing water are
 transparent and lightless (validated), so light masks never need invalidating. **Never tick
 ice per cell per second**: `LevelState::advance_ice` brings a level up to a time in fixed
-10-minute ticks of the clock (`ice::ticks`, each at its middle's temperature; `ice_until` the
-last tick done), grouping cells by (water, thickness), so it is exact however time passed (rests,
+10-minute ticks of the clock (`ice::ticks`, each at its middle's temperature plus a special
+room's warmth at the cell; `ice_until` the last tick done), grouping cells by (water, thickness,
+warmth), so it is exact however time passed (rests,
 skips, journeys) and a year away is cheap. It runs on the current level as the clock moves
 (`run_turn`) and as perception begins, and for a new sky-exposed level over `ice::PRE_ROLL` (30
-days) on instantiation. Stepping onto ice goes through `World::tread` (player and creatures
+days) on instantiation (and for a new level with a hot or a cold room). Stepping onto ice goes through `World::tread` (player and creatures
 alike, and one who makes way for the player onto their old cell, `talk.rs::swap_places`; weight
 from `Actor::weight`, `ice::gives_way`: no draw up to what it holds, a gameplay draw up to twice
 that), then `tread_price` (the `climb` action from water onto ice) and `after_tread` (the plunge:

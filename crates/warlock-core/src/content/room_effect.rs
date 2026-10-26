@@ -28,6 +28,7 @@
 use super::{ContentError, StatusDef, StatusId, TerrainDef, TerrainId};
 use crate::geom::Pos;
 use crate::light::Light;
+use crate::temperature::Temperature;
 use serde::{Deserialize, Serialize};
 use std::ops::RangeInclusive;
 
@@ -46,6 +47,8 @@ pub const WEIGHT: RangeInclusive<u8> = 1..=100;
 /// The fewest seconds a room's status may take to ease a degree: the longest single action, so
 /// it never lapses while one stays inside.
 pub const DWELL_EASES: u32 = 10;
+/// The degrees Celsius an effect may add to the level's temperature (spec §7 "Special rooms").
+pub const TEMPERATURE: RangeInclusive<i8> = -40..=40;
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -107,6 +110,8 @@ struct RoomEffectSpec {
     floor: Option<String>,
     status: Option<String>,
     swarm: Option<Swarm>,
+    #[serde(default)]
+    temperature: i8,
 }
 
 /// A teeming den's numbers (`swarm = { per_cells = 4, ... }`, spec §7 "Special rooms"): the
@@ -241,6 +246,9 @@ pub struct RoomEffectDef {
     pub status: Option<StatusId>,
     /// A teeming den's numbers: generators fill such a room with sleepers and their hoard.
     pub swarm: Option<Swarm>,
+    /// Degrees Celsius added to the level's temperature inside (a hot room's +25, a cold room's
+    /// -25); `WorldState::temperature_at` is the one place it is read.
+    pub temperature: i8,
 }
 
 impl RoomEffectDef {
@@ -339,6 +347,11 @@ impl<'c> Here<'c> {
     /// The den's numbers here, if a teeming den is here (the room's, never a whole level's).
     pub fn swarm(&self) -> Option<&'c Swarm> {
         self.room.and_then(|e| e.swarm.as_ref())
+    }
+
+    /// What the effects here add to the level's temperature: their degrees, added up.
+    pub fn warmth(&self) -> Temperature {
+        Temperature::degrees(self.each().map(|e| i32::from(e.temperature)).sum())
     }
 
     /// The statuses held here, the room's first: both apply.
@@ -462,6 +475,14 @@ impl RoomEffects {
                     )));
                 }
             }
+            if !TEMPERATURE.contains(&spec.temperature) {
+                return Err(bad(format!(
+                    "temperature {} is out of range ({} to {} °C)",
+                    spec.temperature,
+                    TEMPERATURE.start(),
+                    TEMPERATURE.end()
+                )));
+            }
             let floor = match &spec.floor {
                 Some(name) => {
                     let (id, def) =
@@ -524,6 +545,7 @@ impl RoomEffects {
                 floor,
                 status,
                 swarm: spec.swarm,
+                temperature: spec.temperature,
             };
             if def.level_chance > 0 && !def.can_pervade() {
                 return Err(err(format!(

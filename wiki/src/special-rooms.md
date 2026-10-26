@@ -78,6 +78,12 @@ gets where a dungeon favours or bans nothing. "Only" says where it can come at a
   comes back meanwhile, so a fight between casters in a draining room soon becomes a brawl. It
   glows a faint cold violet. One floor in twenty that draws a draining room is drained
   throughout instead.
+- **Sweltering chamber.** Hot air: it is 25 °C warmer than the level around it, and glows a
+  faint red. The heat does nothing to you yet, but ice melts in it (see
+  [Temperature and ice](temperature.md)). The status bar shows the heat as you step in.
+- **Frigid hall.** Bitter cold: 25 °C colder than the level around it, with a faint blue glow.
+  Its water freezes even on a mild level, so a pool in it is usually solid ice. The cold does
+  nothing to you yet.
 - **Teeming den.** A room full of sleeping creatures and the things they have gathered. You may
   smell it before you see it, and you hear it when you step in. See below.
 

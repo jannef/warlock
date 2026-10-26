@@ -1,0 +1,39 @@
+# The undead roster (#383, batch 5). A vampire grown old in its power, lord of a brood: quick,
+# opening doors, with a stare that holds the living still and a bite that drinks their Toughness
+# for good unless the body holds on (a temple's mending gives it back). It keeps things worth
+# taking. Not yet in any dungeon's population.
+[[creature]]
+id = "vampire_lord"
+level = 45
+xp = 235
+rarity = "rare"
+loot = 75
+name = "vampire lord"
+glyph = "V"
+fg = "#502060"
+speed = 1400
+faction = "undead"
+tags = ["undead"]
+alignment = "evil"
+vision = "darkvision"
+sight = 14
+opens_doors = true
+footsteps = 15
+hearing = 20
+weight = 60000
+stats = { strength = 29, dexterity = 26, toughness = 29, intelligence = 28, willpower = 32, presence = 28 }
+base_hp = 101
+natural = { defence = 3, protection = 0, name = "dead flesh" }
+resist = { poison = 100 }
+on_eat = { message = "Cold, and thick as old wine.", vomit = 90, harm = "1d6" }
+blood = "#3a1a20"
+[creature.attack]
+damage = "4d8"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
+to_hit = 4
+on_hit = [
+    { drain = "toughness", points = 2, chance = 15, check = "toughness", difficulty = 21 },
+    { status = "transfixed", chance = 15, severity = 2 },
+]

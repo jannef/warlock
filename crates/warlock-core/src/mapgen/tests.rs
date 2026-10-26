@@ -94,9 +94,9 @@ fn caves_snapshot() {
 /// rooms"), their plain ground drawn as the effect's mark.
 #[test]
 fn special_room_snapshots() {
-    let flooded = level(5, 2);
+    let flooded = level(1, 2);
     assert_eq!(flooded.rooms.len(), 1);
-    insta::assert_snapshot!("rooms_seed_5_depth_2_flooded", describe(&flooded));
+    insta::assert_snapshot!("rooms_seed_1_depth_2_flooded", describe(&flooded));
     let shadowed = level(9, 4);
     assert_eq!(shadowed.rooms.len(), 1);
     insta::assert_snapshot!("caves_seed_9_depth_4_shadowed", describe(&shadowed));

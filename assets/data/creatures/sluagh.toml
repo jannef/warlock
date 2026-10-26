@@ -1,0 +1,36 @@
+# The undead roster (#383, batch 5). The host of the restless dead of the Highland tales, flying
+# in a dark flock on the evening wind: swifter than any other spirit, its claws send the living
+# running. It drifts through walls and doors; blades and clubs pass half through it. Not yet in
+# any dungeon's population.
+[[creature]]
+id = "sluagh"
+level = 43
+xp = 225
+rarity = "uncommon"
+name = "sluagh"
+glyph = "G"
+fg = "#6a8a8a"
+speed = 1600
+faction = "undead"
+tags = ["undead", "spirit"]
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+hearing = 15
+weight = 100
+stats = { strength = 26, dexterity = 24, toughness = 26, intelligence = 27, willpower = 31, presence = 27 }
+base_hp = 64
+natural = { defence = 6, protection = 0, name = "insubstantial form" }
+incorporeal = { wall_defence = 6 }
+resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "3d10"
+damage_type = "slashing"
+name = "claws"
+verb = "claws"
+to_hit = 4
+on_hit = [
+    { status = "frightened", chance = 25, severity = 2 },
+]

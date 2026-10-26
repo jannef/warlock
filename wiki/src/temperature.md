@@ -11,6 +11,12 @@ Dungeons are cool and steady: 10 °C unless a place is colder or warmer, and the
 night, whatever the weather outside. Deeper levels may be a little colder, and some places are
 below freezing.
 
+A [special room](special-rooms.md) may be hotter or colder than the level around it: a
+*sweltering chamber* is 25 °C warmer, a *frigid hall* 25 °C colder. The status bar shows the
+temperature where you stand, so it changes as you step in, and the water in such a room freezes
+or thaws by the room's temperature: a frigid hall's pool is frozen on a level where every other
+pool is open.
+
 ## Under the open sky
 
 Outdoors and on the [overworld](overworld.md) the temperature follows the month, the time of day,
