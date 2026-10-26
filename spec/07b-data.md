@@ -49,7 +49,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   chance = 10, severity = 2 }]`, the chance in percent (1 to 100) and the severity in degrees (1
   to the status's `max`; §8 "Status effects"), or `{ disease = "filth_fever", chance = 10 }`
   (exposure to the disease, which the target then resists with a check; §8 "Diseases"; never the
-  status diseases show as); without one, bare hands: 1d3, "fist", "hits"); and
+  status diseases show as), or `{ drain = "strength", points = 1, chance = 100, check =
+  "willpower", difficulty = 14 }` (a drain: unless the target makes a check of `check`, Willpower
+  by default, against `difficulty`, 1 to 40, `points`, 1 to 5 (default 1), come off its score in
+  the stat for good; `drain = "random"` draws one of the six each time; §8 "Stats": "Drain");
+  without one, bare hands: 1d3, "fist", "hits"); and
   `natural`, its natural armour (`{ defence = 1, protection = 3, name = "shell" }`: `defence`
   in the Natural category of Defence, `protection` soaking damage off every hit with what it
   wears, each 0 to 20, not both 0; the name is said when it turns or soaks a blow); `resist`,

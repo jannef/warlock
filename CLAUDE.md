@@ -208,7 +208,7 @@ Defence and Protection, its alignment (`alignment evil`; the player's score and 
 are, "(unidentified)" marked), what its magic items do to it (`magic strength +1`), its burden
 and carrying limit, its weapon skills with marks, its stats as score/potential, its status
 effects with severities, its diseases (progressions, checks won in a row, time to their next
-turn) and stat damage, the player's nutrition, its npc id and talk counts, if any, and what it resists in percent (`resists fire 25`); then
+turn), stat damage, and drained points (`drained St 2`), the player's nutrition, its npc id and talk counts, if any, and what it resists in percent (`resists fire 25`); then
 all food on the level and in the packs of those on it with when it was made (a corpse: when it
 died) and its stage, `fresh`, `old`, `rotten`, or `gone`, which the player is never shown,
 **dev-only**), `progress` (the level-up choices due, `due level 3: 1 talent`, `due level 30: 1

@@ -58,6 +58,22 @@ developer notes (CLAUDE.md, `docs/dev/`).
     checks take off the scores for a while; the rules read the scores less them, never below 1,
     and they mend a point a day each once no disease shows ("Diseases" below). The player sees
     their scores lowered, never the damage as a number apart.
+  - **Drain** (#382; `world/drain.rs`, `Stats::drain`, `Actor::drained`; saved, hashed): the
+    touch of some undead takes points off a stat **for good**. A natural attack's `on_hit` may
+    name a drain (§7 "Data"); a hit that lands, leaves its target alive, and wins its chance
+    makes the target check the drain's stat (Willpower by default; its modifier, what talents add
+    to every check of that stat, and `drain_checks`) against the drain's difficulty. Made,
+    nothing is lost; failed, the points come off the stat's score (a `random` drain draws the
+    stat first, one more draw) while the potential stays, so lost points may be won back slowly
+    (training, corpses). No drain takes a score below 3 (`DRAIN_FLOOR`) nor below what the
+    stat damage on it needs; hit points and mana are cut down to the new maxima, never below 1
+    hit point, so a drain never kills. `Actor::drained` counts the points by stat: a temple's
+    mending (the `mend` service) gives them all back with the stat damage. The player is told
+    in words ("You feel your strength drain away!", or "A deathly chill passes through you."
+    when it holds), never the points; their score shows lowered. Life (level) drains, a scroll
+    of restoration, and a sustaining affix are not in the game yet. The pale drinker is the
+    first drainer (not yet in any dungeon's population). Talents: Unbroken soul, Iron will,
+    and the paladin's Divine grace (the `drain` system).
   - **What uses them**: combat (Strength to hit and to damage in melee, Dexterity to hit with
     shots and in Defence, Toughness in hit points and regeneration; "Combat" above) and burden
     (Strength and Toughness scores, never modifiers, in the carrying limit; "Burden" below), and

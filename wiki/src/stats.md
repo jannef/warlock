@@ -72,8 +72,9 @@ and Dexterity by one while it lasts, for everything they do (see
 Strength and Dexterity; see [Hunger](hunger.md)). Diseases take points off your stats (**stat
 damage**), which come back a point a day once no disease shows (see [Diseases](diseases.md)).
 Eating the corpse of some creatures may raise one for good, as far as it can grow (see
-[Food and corpses](food.md)), and so may [training](#training) at a new level. Nothing else
-raises or lowers them for good.
+[Food and corpses](food.md)), and so may [training](#training) at a new level. The touch of some
+undead lowers one for good ([Drained stats](#drained-stats)). Nothing else raises or lowers them
+for good.
 
 ## Training
 
@@ -100,3 +101,24 @@ lifts the potential with the score: a long career outgrows its nature slowly, ne
 Below the potential:
 
 {{#include generated/stat-checks.md}}
+
+## Drained stats
+
+Some of the undead drink the life out of the living. When such a creature's touch hits you and
+you live, you make a **check** of a stat (Willpower, unless the creature says otherwise): 2d12
+plus the stat's modifier against the drain's difficulty, as a disease's check. If you hold, "A
+deathly chill passes through you." and nothing is lost. If not, points come off one of your stats
+**for good** ("You feel your strength drain away!"): your score is simply lower from then on,
+for everything it does. A drain of Toughness lowers your most hit points, one of Intelligence,
+Willpower, or Presence your most mana; it never kills you, and no drain takes a score below 3
+(nor below what the stat damage on it needs). Resting never brings drained points back.
+
+Your **potential** stays where it was, so a drained stat may grow back by
+[training](#training) and corpses like any other. A temple's **mending** gives every drained
+point back at once, with any stat damage (see [Services](npcs.md#services)). Talents help you
+hold: **Unbroken soul** (+4 to the check), **Iron will** (+2 to every Willpower check), and the
+paladin's **Divine grace** (+2 to the check); see [Talents](talents.md).
+
+The creatures that drain:
+
+{{#include generated/drain-attacks.md}}
