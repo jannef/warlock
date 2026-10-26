@@ -51,6 +51,10 @@ slows you by a tenth instead of a quarter, and strained by a fifth instead of a 
 
 Creatures carry by the same rules, from their own Strength, Toughness, and size.
 
+In a **heavy hall** (a [special room](special-rooms.md)) everyone's limit is halved while they
+are inside: the same load is a heavier burden there. You cannot step into one if you would be
+overloaded inside, but you can always step out.
+
 ## What you see
 
 - The **status bar** shows your burden when you have one (`Burdened`, `Strained`, `Overloaded`),
