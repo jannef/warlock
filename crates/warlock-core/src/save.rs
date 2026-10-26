@@ -71,7 +71,10 @@ const MAGIC: &str = "WARLOCK-SAVE";
 /// 30: shops: level states keep their shops (`LevelState::shops`: the keeper, the ways out,
 ///     what the player owes, how the keeper stands); content fingerprints cover shop ids, and
 ///     objects have values.
-pub const FORMAT_VERSION: u32 = 30;
+/// 31: the first campaign (0.6.0): campaigns as directories, danger and spawning, hidden
+///     locations and reveals, creature gear, temple services, quests and proper names; new
+///     content ids change the fingerprint.
+pub const FORMAT_VERSION: u32 = 31;
 /// Upper bound on the decompressed size, so a hostile file cannot exhaust memory.
 const MAX_JSON_BYTES: u64 = 256 * 1024 * 1024;
 
