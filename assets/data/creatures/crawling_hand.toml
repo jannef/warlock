@@ -1,0 +1,26 @@
+# The undead roster (#383, batch 1). A severed hand that will not lie still: it drags itself
+# along on its fingers and claws at ankles. Bone and dried sinew, so arrows find little to hit
+# and a club cracks it; bloodless, and it leaves nothing behind.
+[[creature]]
+id = "crawling_hand"
+level = 1
+xp = 15
+rarity = "common"
+name = "crawling hand"
+glyph = "z"
+fg = "#d09888"
+speed = 1100
+faction = "undead"
+alignment = "evil"
+vision = "darkvision"
+sight = 6
+footsteps = 15
+hearing = 10
+weight = 500
+size = "small"
+stats = { strength = 7, dexterity = 14, toughness = 8, intelligence = 2, willpower = 16, presence = 2 }
+base_hp = 1
+attack = { damage = "1d3", damage_type = "slashing", name = "claw", verb = "claws" }
+resist = { piercing = 50, bludgeoning = -50, poison = 100 }
+corpse = false
+blood = "none"

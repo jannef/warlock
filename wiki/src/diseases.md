@@ -80,6 +80,12 @@ Grave rot never goes by itself, and it can kill: when its damage takes your Toug
 you die of it, and the death screen says "Died of disease". A grave rot caught is a race against
 the days: to a shop, for a cure.
 
+## Mummy rot
+
+The touch of a mummy may give you mummy rot. Like grave rot it never goes by itself, but it is
+slower: every few days it dries a little more Toughness out of you. It does not kill, yet the
+Toughness it takes stays gone until a cure ends it.
+
 ## Cures
 
 An **angelica root** (`%`) cures every disease you have the moment you eat it (`e`), grave rot

@@ -1,0 +1,29 @@
+# The undead roster (#383, batch 1). An ogre the delf's dead raised: as slow as any zombie, but
+# its fists still carry an ogre's weight, and grave rot with them.
+[[creature]]
+id = "ogre_zombie"
+level = 9
+xp = 55
+rarity = "uncommon"
+name = "ogre zombie"
+glyph = "Z"
+fg = "#8a9a6a"
+speed = 700
+faction = "undead"
+alignment = "evil"
+vision = "darkvision"
+sight = 6
+footsteps = 120
+hearing = 8
+weight = 220000
+stats = { strength = 20, dexterity = 10, toughness = 21, intelligence = 2, willpower = 19, presence = 2 }
+base_hp = 36
+resist = { poison = 100 }
+on_eat = { message = "It was rotten long before it died.", vomit = 80, harm = "1d4" }
+blood = "#4a3a20"
+[creature.attack]
+damage = "2d8"
+damage_type = "bludgeoning"
+name = "fist"
+verb = "pummels"
+on_hit = [{ disease = "grave_rot", chance = 10 }]
