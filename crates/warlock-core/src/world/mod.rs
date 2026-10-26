@@ -133,6 +133,7 @@ mod openings;
 mod path;
 mod perceive;
 mod quest;
+mod quest_roll;
 mod quick_leave;
 mod racial;
 mod rage;
@@ -183,7 +184,7 @@ pub use lantern::Lantern;
 pub use learn::{Odds, study_odds, study_turns};
 pub use level::{Fire, LevelState};
 pub use loot::Identified;
-pub use quest::{QuestRecord, QuestView, Quests, Stage, asks as quest_asks};
+pub use quest::{QuestRecord, QuestView, Quests, Stage, asks as quest_asks, wants as quest_wants};
 use rest::Ended;
 pub use shop::{Shop, ShopStatus, count_of, favour, part_of, unpaid_parts};
 pub use sign_picks::BREATH_RANGE;
@@ -1187,6 +1188,7 @@ impl World {
             Action::Resource(id) => return self.grant_resource_dev(id, events),
             Action::Infect(id) => return self.infect_dev(id),
             Action::Reveal(id) => return self.reveal_dev(id),
+            Action::QuestRoll { quest, target } => return self.quest_roll_dev(quest, target),
             Action::LevelUpAuto => return self.level_up_auto(),
             Action::GrantXp(xp) => return self.grant_xp_dev(*xp),
         };
@@ -1345,6 +1347,8 @@ mod overworld_tests;
 mod parts_tests;
 #[cfg(test)]
 mod protection_tests;
+#[cfg(test)]
+mod quest_roll_tests;
 #[cfg(test)]
 mod quest_tests;
 #[cfg(test)]

@@ -87,8 +87,8 @@ to open, read keys for, or draw one:
   read so close it may catch the player (`input::burst_dialog`, spec §8 "Scrolls"), and the shop (`input.rs`: `leaving_dialog`, `sale_dialog`; spec §7 "Shops"). **A new
   question is a `Dialog` value at its call site**, e.g. `Dialog::yes_no("Quest", text,
   "Accept", Action::.., "Not now")` returned as `ScreenAction::Dialog`, with no screen, prompt,
-  `InputMode`, or key handling of its own (quests are offered and accepted through dialogue
-  topics, which are no question).
+  `InputMode`, or key handling of its own (quests are given through dialogue topics, which
+  are no question).
   `--screen dialog` shows the quit dialog. On wasm, quit saves then reloads the page
   (`storage::web::reload`; `AppExit` also reloads), and the main menu has no Quit.
 - **Info pages** (`ui/info_tabs.rs`): the screens about the player (Character, Inventory,

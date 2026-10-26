@@ -95,8 +95,8 @@ pub enum Action {
     /// time) when the player sees no one there.
     Chat(Dir),
     /// Ask the creature in a direction about one of its topics, by id. Takes no time. Quests
-    /// (spec §8 "Quests") are asked about with topics of their own: `quest-ID` (hear the offer,
-    /// be reminded, or hand it in), `accept-ID`, and `decline-ID`.
+    /// (spec §8 "Quests") are asked about with topics of their own: `quest-ID` (be given it,
+    /// be reminded, or hand it in).
     Ask {
         dir: Dir,
         topic: String,
@@ -237,6 +237,14 @@ pub enum Action {
     /// its id, as a quest would: it is marked on the player's map. For tests and captures. Takes
     /// no game time; recorded in replays.
     Reveal(String),
+    /// Dev command: active rolled quest `quest`, with no progress yet, draws `target` instead
+    /// (spec §8 "Quests": a target its pool may hold, or a variant's id), its kills counted
+    /// from now and a variant's reveal made. For replays, tests, and captures. Takes no game
+    /// time; recorded in replays.
+    QuestRoll {
+        quest: String,
+        target: String,
+    },
     /// Dev command: spend every choice a level still asks for with the first the player may
     /// take (spec §8 "Talents"), for tests and benchmarks. Takes no game time; recorded in
     /// replays.
@@ -747,6 +755,7 @@ impl fmt::Display for Action {
             Action::Resource(id) => write!(f, "resource:{id}"),
             Action::Infect(id) => write!(f, "infect:{id}"),
             Action::Reveal(id) => write!(f, "reveal:{id}"),
+            Action::QuestRoll { quest, target } => write!(f, "quest_roll:{quest}:{target}"),
             Action::Freeze { at, radius } => write!(f, "freeze:{},{},{radius}", at.x, at.y),
             Action::Thaw { at, radius } => write!(f, "thaw:{},{},{radius}", at.x, at.y),
         }
@@ -1050,6 +1059,22 @@ impl FromStr for Action {
                 }
                 _ => Err("`reveal` needs a hidden location id, e.g. `reveal:fennmynster`".into()),
             },
+            // A tag's target keeps its own colon (`quest_roll:hunt:tag:goblin`).
+            "quest_roll" => match arg.and_then(|a| a.split_once(':')) {
+                Some((quest, target))
+                    if !quest.is_empty()
+                        && !target.is_empty()
+                        && (!target.contains(':') || target.starts_with("tag:")) =>
+                {
+                    Ok(Action::QuestRoll {
+                        quest: quest.to_string(),
+                        target: target.to_string(),
+                    })
+                }
+                _ => Err(
+                    "`quest_roll` needs a quest and a target, e.g. `quest_roll:ballad:rat`".into(),
+                ),
+            },
             "freeze" | "thaw" => {
                 let usage = || format!("`{verb}` needs a cell and a radius, e.g. `{verb}:12,5,3`");
                 let (cell, radius) = arg.and_then(|a| a.rsplit_once(',')).ok_or_else(usage)?;
@@ -1073,7 +1098,8 @@ impl FromStr for Action {
                  read:LETTER[:X,Y|:LETTER], chat:DIR, \
                  ask:DIR:TOPIC, steal:DIR, throw_voice:X,Y, stance:NAME, vision:ID, skip:DURATION, \
                  weather:clear|overcast|rain|heavy, effect:ID@X,Y[>X,Y], identify[:LETTERS], \
-                 afflict:STATUS, drain:N, infect:DISEASE, reveal:ID, freeze:X,Y,R, thaw:X,Y,R)"
+                 afflict:STATUS, drain:N, infect:DISEASE, reveal:ID, quest_roll:ID:TARGET, \
+                 freeze:X,Y,R, thaw:X,Y,R)"
             )),
         }
     }
@@ -1283,7 +1309,7 @@ mod tests {
             },
             Action::Ask {
                 dir: Dir::S,
-                topic: "accept-rats".into(),
+                topic: "quest-rats".into(),
             },
             Action::Search(1),
             Action::Search(10),

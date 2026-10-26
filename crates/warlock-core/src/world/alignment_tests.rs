@@ -599,22 +599,19 @@ fn quests_ask_for_an_alignment_and_the_good_offer_no_good_to_the_evil() {
 #[test]
 fn a_quest_moves_the_score_as_it_is_completed() {
     let mut w = yard("#####\n#P@V#\n#####\n");
-    run(&mut w, "ask:W:quest-alms ask:W:accept-alms");
+    run(&mut w, "ask:W:quest-alms");
     assert_eq!(score(&w), 0, "nothing until it is done");
     run(&mut w, "ask:W:quest-alms");
     assert!(said(&w, "Quest complete: Alms."));
     assert_eq!(score(&w), 40);
     // A dark errand, the other way (from Callous, where the warlock offers it).
     set_score(&mut w, -200);
-    run(
-        &mut w,
-        "ask:E:quest-dark ask:E:accept-dark ask:E:quest-dark",
-    );
+    run(&mut w, "ask:E:quest-dark ask:E:quest-dark");
     assert!(said(&w, "Quest complete: A dark errand."));
     assert_eq!(score(&w), -200 - 60 * 800 / 1000);
     // Accepted, a quest is done whatever the player became meanwhile.
     let mut w = yard("#####\n#P@V#\n#####\n");
-    run(&mut w, "ask:W:quest-alms ask:W:accept-alms");
+    run(&mut w, "ask:W:quest-alms");
     set_score(&mut w, -800);
     run(&mut w, "ask:W:quest-alms");
     assert!(said(&w, "Quest complete: Alms."));

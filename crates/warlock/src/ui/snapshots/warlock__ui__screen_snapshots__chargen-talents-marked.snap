@@ -17,24 +17,24 @@ expression: "render(case, content.clone())"
               │   g  Opportunist      A foe that turns from you pays for it: one th… │
               │ Weaponcraft                                                          │
               │   h  Far shot         Your shots fly 2 cells farther, and what you … │
-              │   i  Weapon focus     You have drilled with one kind of weapon unti… │
+              │   i  Sworn foe        You have sworn yourself against one kind of c… │
+              │   j  Weapon focus     You have drilled with one kind of weapon unti… │
               │ Guard                                                                │
-              │   j  Armour training  You move freely in armour: it hampers your De… │
+              │   k  Armour training  You move freely in armour: it hampers your De… │
               │ Shadow                                                               │
-              │   k  Keen ears        You hear fainter sounds, fainter still at the… │
-              │   l  Lamplighter      You tend your lantern well: it burns brighter… │
-              │   m  Night eyes       Your eyes grow used to the dark: you see by h… │
-              │   n  Silent feet      Your footsteps are a fifth quieter for each r… │
+              │   l  Keen ears        You hear fainter sounds, fainter still at the… │
+              │   m  Lamplighter      You tend your lantern well: it burns brighter… │
+              │   n  Night eyes       Your eyes grow used to the dark: you see by h… │
+              │   o  Silent feet      Your footsteps are a fifth quieter for each r… │
               │ Wayfarer                                                             │
-              │   o  Long strider     Your journeys across the overworld go quicker. │
-              │   p  Pilgrim          You have knelt in many temples: their cures a… │
-              │   q  Sense of place   You read a place at a glance: a special room'… │
-              │   r  Sun-blessed      The sun mends you: under the open sun your wo… │
+              │   p  Long strider     Your journeys across the overworld go quicker. │
+              │   q  Pilgrim          You have knelt in many temples: their cures a… │
+              │   r  Sense of place   You read a place at a glance: a special room'… │
+              │   s  Sun-blessed      The sun mends you: under the open sun your wo… │
               │ Scholar                                                              │
-              │   s  Apprentice       You take up a skill you lack, or get better a… │
-              │   t  Deep well        Your power runs deep: more mana for each rank… │
-              │   u  Good learner     You gain 5 % more experience for each rank.    │
-              │   v  Lore             A magic item you have carried for a day gives… │
+              │   t  Apprentice       You take up a skill you lack, or get better a… │
+              │   u  Deep well        Your power runs deep: more mana for each rank… │
+              │   v  Good learner     You gain 5 % more experience for each rank.    │
               │                                                                      │
               │ Your hit points come back a quarter faster.                          │
               │                                                                      │

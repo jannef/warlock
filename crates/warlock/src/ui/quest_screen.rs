@@ -175,7 +175,7 @@ mod tests {
         let content = Arc::new(Content::builtin().expect("content"));
         let mut world = World::new(content, "showcase", None).expect("run");
         let walk = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*4 move:SE*3 \
-                    ask:SE:quest-rats ask:SE:accept-rats";
+                    ask:SE:quest-rats";
         for action in parse_actions(walk).expect("actions") {
             world.apply(&action);
         }
@@ -216,7 +216,7 @@ mod tests {
             " Quests ",
             "Active",
             "> Rats in the arena",
-            "Kill 3 giant rats in the Arena.",
+            "The old hermit wants you to kill 3 giant rats in the Arena.",
             "0 / 3 killed.",
             "The old hermit: \"Here we don't fight.",
             "↑↓ choose   q or Esc close",

@@ -58,6 +58,7 @@ pub(crate) mod part;
 mod particles;
 mod plural;
 mod quest;
+mod quest_roll;
 mod race;
 mod resource;
 #[cfg(test)]
@@ -163,9 +164,11 @@ pub use part::{MAX_OBJECT_PARTS, MAX_PARTS, Part, PartDef, PartId, PartRole, and
 pub use particles::{ParticleEmitter, ParticleTrigger};
 pub use plural::{MAX_WORD, Plurals};
 pub use quest::{
-    DEFAULT_DECLINE, GOLD, Goal, KillTarget, MAX_COUNT, MAX_NAME, MAX_QUEST_XP, MAX_TAG_COUNT,
-    QuestDef, QuestId, QuestKind, QuestTexts, Reveal, RevealWhen, Reward,
+    GOLD, Goal, KillTarget, MAX_COUNT, MAX_NAME, MAX_QUEST_XP, MAX_TAG_COUNT, QuestDef, QuestId,
+    QuestKind, QuestTexts, Reveal, RevealWhen, Reward,
 };
+pub(crate) use quest_roll::roll_known;
+pub use quest_roll::{Candidate, MAX_VARIANTS, MAX_WEIGHT, Pick, Roll, Rolled, Variant, one_of};
 pub use race::{HUNGER, LightBlind, RaceDef, Races};
 pub use resource::{Build, MAX_EVERY, MAX_RESOURCE, MAX_SHORT, OverTime, ResourceDef, ResourceId};
 pub use room_effect::{Here, RoomEffectDef, RoomEffectId, RoomEffects, SpecialRoom};

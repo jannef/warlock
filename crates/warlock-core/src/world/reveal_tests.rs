@@ -43,12 +43,7 @@ fn files(when: Option<RevealWhen>) -> ContentFiles {
         "campaigns/showcase/levels/overworld.toml",
         &overworld_with(LEGEND),
     );
-    let when = match when {
-        None => None,
-        Some(RevealWhen::Offered) => Some("offered"),
-        Some(RevealWhen::Accepted) => Some("accepted"),
-        Some(RevealWhen::Done) => Some("done"),
-    };
+    let when = when.map(RevealWhen::id);
     if let Some(when) = when {
         let reveals = format!(
             "target = \"depths:3\"\nreveals = {{ location = \"old_barrow\", when = \"{when}\" }}\n\
@@ -73,7 +68,7 @@ fn run_of(scenario: &str, when: Option<RevealWhen>) -> World {
 
 /// A run on the overworld, standing in sight of the barrow.
 fn beside_the_barrow() -> World {
-    let mut w = run_of("world", Some(RevealWhen::Accepted));
+    let mut w = run_of("world", Some(RevealWhen::Given));
     put_player(&mut w, NEARBY);
     assert!(
         w.perception().is_visible(BARROW),
@@ -161,7 +156,7 @@ fn a_hidden_location_never_reaches_perception_or_the_dumps() {
 
 #[test]
 fn the_dev_reveal_marks_it_and_it_leads_on() {
-    let mut w = run_of("world", Some(RevealWhen::Accepted));
+    let mut w = run_of("world", Some(RevealWhen::Given));
     let before = w.state_hash();
     // Far away: the overworld's memory gets the entrance though it is not in sight.
     assert!(!w.perception().is_visible(BARROW));
@@ -215,7 +210,7 @@ fn the_dev_reveal_marks_it_and_it_leads_on() {
 #[test]
 fn a_reveal_before_the_overworld_is_made_waits_for_it() {
     // The showcase starts in the hall: the overworld is not made yet.
-    let mut w = run_of("showcase", Some(RevealWhen::Accepted));
+    let mut w = run_of("showcase", Some(RevealWhen::Given));
     assert!(!w.state.levels.contains_key("overworld"));
     w.apply(&Action::Reveal("old_barrow".into()));
     assert!(w.state.revealed.contains("old_barrow"));
@@ -267,17 +262,11 @@ const MARKS: &str = "The old hermit marks the Old Barrow on your map.";
 
 #[test]
 fn a_quest_reveals_its_location_at_its_stage() {
-    for when in [RevealWhen::Offered, RevealWhen::Accepted, RevealWhen::Done] {
+    for when in [RevealWhen::Given, RevealWhen::Done] {
         let (mut w, toward) = at_the_hermit(when);
         let revealed = |w: &World| w.state.revealed.contains("old_barrow");
         ask(&mut w, toward, "quest-depths");
-        assert_eq!(
-            revealed(&w),
-            when == RevealWhen::Offered,
-            "{when:?} offered"
-        );
-        ask(&mut w, toward, "accept-depths");
-        assert_eq!(revealed(&w), when != RevealWhen::Done, "{when:?} accepted");
+        assert_eq!(revealed(&w), when == RevealWhen::Given, "{when:?} given");
         w.travel("depths:3", None).expect("depths:3");
         w.travel("hub", None).expect("hub");
         let (mut w, toward) = {
@@ -307,25 +296,29 @@ fn a_quest_reveals_its_location_at_its_stage() {
 
 #[test]
 fn the_quest_log_says_where() {
-    let (mut w, toward) = at_the_hermit(RevealWhen::Accepted);
+    let (mut w, toward) = at_the_hermit(RevealWhen::Given);
     ask(&mut w, toward, "quest-depths");
-    ask(&mut w, toward, "accept-depths");
     let log = w.perception().quests();
-    assert_eq!(log[0].objective, format!("Reach the Depths 3. {WHERE}"));
     assert_eq!(
-        said(&w)[said(&w).len() - 2..],
-        [
-            "The old hermit says: \"The old way in opens in the Barrowdowns, out past the \
-             courtyard. Take your lantern.\""
-                .to_string(),
-            MARKS.to_string(),
-        ]
+        log[0].objective,
+        format!("The old hermit wants you to reach the Depths 3. {WHERE}")
     );
+    // The offer and its `accept` line, then the mark.
+    let said = said(&w);
+    let n = said.len();
+    assert!(
+        said[n - 2].ends_with(
+            "The old way in opens in the Barrowdowns, out past the courtyard. Take your \
+             lantern.\""
+        ),
+        "{said:?}"
+    );
+    assert_eq!(said[n - 1], MARKS);
 }
 
 #[test]
 fn reveals_survive_a_save_and_replay_exactly() {
-    let mut w = run_of("world", Some(RevealWhen::Accepted));
+    let mut w = run_of("world", Some(RevealWhen::Given));
     let mut replay = Replay::new(&w);
     for action in parse_actions("wait reveal:old_barrow wait").expect("actions") {
         w.apply(&action);
