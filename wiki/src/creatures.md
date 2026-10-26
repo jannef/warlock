@@ -91,6 +91,22 @@ Creatures of factions at war fight each other on sight, wherever they meet: a ko
 and a pack of giant rats fight to the death, and turn on you when they see you. Light your
 lantern near them and a war band's archer will find you.
 
+## Incorporeal creatures
+
+Some restless dead have no body to stop them: **incorporeal** creatures (the stone haunt is one)
+drift through walls, solid rock, trees, and closed doors (which stay shut behind them), and may
+stop inside the stone. They cannot leave the level that way, and lava stops them as it stops
+anyone. Nothing of them presses down: they set off no traps and never break ice.
+
+One inside a wall is still there to fight. You see it when you see that piece of wall: lit, or
+close enough for darkvision. Move into the wall where you see it and you strike at it; it strikes
+out of the wall at whoever stands beside it; an arrow that reaches it is lost in the stone if it
+hits, and falls before the wall if it misses. The stone shelters it, though: inside a wall it is
+harder to hit (its **Wall** Defence, in the Defence table on
+[Creatures in numbers](creature-numbers.md)), and some misses just strike stone ("Your sword
+strikes stone where the stone haunt hides in the wall."). If you cannot see it there, the wall is
+only a wall. What one carried falls out of the wall when it dies, onto the nearest floor.
+
 ## Pace and levels
 
 - Creatures move at their **own pace**. Some are quicker than you and may act more than once

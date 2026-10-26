@@ -41,7 +41,9 @@ does a throw; see [Turns and movement](turns.md) for the times.
 ## Where a missile goes
 
 A missile flies along a straight line from you through the cell you aimed at, as far as its range,
-and stops before anything solid: walls, closed doors, trees.
+and stops before anything solid: walls, closed doors, trees. A ghostly creature standing inside
+the wall it reaches is attacked there ([Creatures](creatures.md#incorporeal-creatures)): a missile
+that hits it is lost in the stone, one that misses falls before the wall.
 
 - **Whoever stands in its way** is attacked, the nearest first. If it misses, the missile flies
   on, and may hit someone behind. So mind who stands between you and your target.

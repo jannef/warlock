@@ -59,6 +59,8 @@ protects you, in kinds:
 - **Dodge**: training and magic. The [tumble](skills.md#what-skills-give) skill adds to it, more
   the higher it is, and so do magic items that make you nimble.
 - **Deflection**: magic items that turn blows aside.
+- **Wall**: the stone around an incorporeal creature standing inside a wall
+  ([Creatures](creatures.md#incorporeal-creatures)).
 
 Within each kind only the best counts: two pieces of armour do not add up. Dodge is the one kind
 that does.

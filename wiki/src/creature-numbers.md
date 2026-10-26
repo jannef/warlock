@@ -19,7 +19,9 @@ skill ranks on that of [Weapon skills](weapon-skills.md).
 
 A creature's hit points are its Toughness plus what its kind adds, as yours are your Toughness
 plus what your race and class add. The Defence here is a creature's with nothing worn or
-wielded: 10, plus its Dexterity modifier, its natural armour, and the Dodge its skills give.
+wielded: 10, plus its Dexterity modifier, its natural armour, and the Dodge its skills give;
+an incorporeal creature adds its **Wall** bonus while it stands inside a wall
+([Creatures](creatures.md#incorporeal-creatures)).
 A creature placed with a weapon, armour, or a shield adds what those give, by the same rules as
 yours (see [Combat](combat.md#defence)). The Protection is its natural armour's: what it wears
 adds to it. Resistances take their share off each kind of damage after Protection (see

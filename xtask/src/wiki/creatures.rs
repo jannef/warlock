@@ -263,11 +263,15 @@ pub(super) fn creature_defences(content: &Content) -> String {
             .filter(|&&k| defence.bonus(k) != 0)
             .map(|&k| format!("{} {}", k.name(), signed(defence.bonus(k))))
             .collect();
-        let defence = if parts.is_empty() {
+        let mut defence = if parts.is_empty() {
             defence.total().to_string()
         } else {
             format!("{} ({})", defence.total(), parts.join(", "))
         };
+        // An incorporeal creature inside a wall (spec §8 "Incorporeal creatures").
+        if let Some(i) = c.incorporeal.filter(|i| i.wall_defence != 0) {
+            defence.push_str(&format!("; Wall {} inside walls", signed(i.wall_defence)));
+        }
         let protection = match &c.natural {
             Some(hide) if hide.protection > 0 => format!("{} ({})", hide.protection, hide.name),
             _ => "-".into(),

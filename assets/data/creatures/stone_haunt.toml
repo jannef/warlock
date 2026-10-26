@@ -1,0 +1,25 @@
+# Incorporeal creatures (#381; spec §8 "Incorporeal creatures"). A shade bound to the masonry of
+# old barrows and crypts: it drifts through walls and closed doors and strikes from inside the
+# stone, where blows hardly find it. Silent, bloodless, and it leaves nothing behind. No level
+# places it yet: the undead roster decides where it haunts.
+[[creature]]
+id = "stone_haunt"
+level = 3
+xp = 25
+rarity = "uncommon"
+name = "stone haunt"
+glyph = "G"
+fg = "#a8a49c"
+faction = "undead"
+alignment = "evil"
+vision = "darkvision"
+sight = 8
+hearing = 15
+weight = 500
+stats = { strength = 8, dexterity = 13, toughness = 10, intelligence = 6, willpower = 16, presence = 12 }
+base_hp = 6
+attack = { damage = "1d4", damage_type = "cold", name = "touch", verb = "touches" }
+incorporeal = { wall_defence = 4 }
+resist = { cold = 50, poison = 100 }
+corpse = false
+blood = "none"
