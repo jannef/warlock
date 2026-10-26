@@ -6,8 +6,11 @@
 //! It is built from the last conversation the rules report ([`Event::Talked`]), so it never
 //! shows more than the player was told. Asking closes it and hands the question to the
 //! simulation ([`ScreenAction::Act`]); the answer reopens it (`screens::converse`) with the
-//! reply, on the topic just asked.
+//! reply, on the topic just asked. A service paid per thing (an identification, #432) asks
+//! first, in the one dialog, with the total it would cost now; with nothing to pay for it asks
+//! straight away (the speaker says there is nothing to do).
 
+use super::dialog_screen::Dialog;
 use super::menu::{Hints, Nav, Panel, Press, wrap};
 use super::screens::ScreenAction;
 use super::{ACCENT, TEXT};
@@ -30,6 +33,10 @@ pub struct DialogueScreen {
     line: String,
     /// Topic ids and names, in order.
     topics: Vec<(String, String)>,
+    /// Per topic, for a service paid per thing: its price per thing and how many things now.
+    per_item: Vec<Option<(u32, u32)>>,
+    /// The gold the player carries.
+    gold: u32,
     /// The selected topic.
     selected: usize,
 }
@@ -43,6 +50,8 @@ impl DialogueScreen {
             toward: None,
             line: "There is no one to talk to.".into(),
             topics: Vec::new(),
+            per_item: Vec::new(),
+            gold: 0,
             selected: 0,
         };
         let (Some(talk), Some(view)) = (talk, view) else {
@@ -60,12 +69,14 @@ impl DialogueScreen {
             None => format!("the {}", content.creature(actor.creature).name),
         };
         let topics: Vec<(String, String)> = (talk.topics.iter())
-            .map(|t| match t.price {
-                // A service (`world/service.rs`) with its price.
-                Some(price) => (t.id.clone(), format!("{} ({price} gold)", t.name)),
-                None => (t.id.clone(), t.name.clone()),
+            .map(|t| match (t.price, t.items) {
+                // A service (`world/service.rs`) with its price, per thing or once.
+                (Some(price), Some(_)) => (t.id.clone(), format!("{} ({price} gold each)", t.name)),
+                (Some(price), None) => (t.id.clone(), format!("{} ({price} gold)", t.name)),
+                (None, _) => (t.id.clone(), t.name.clone()),
             })
             .collect();
+        let per_item = (talk.topics.iter()).map(|t| t.price.zip(t.items)).collect();
         let selected = (talk.asked.as_ref())
             .and_then(|asked| topics.iter().position(|(id, _)| id == asked))
             .unwrap_or(0);
@@ -74,6 +85,8 @@ impl DialogueScreen {
             toward,
             line: talk.line.clone(),
             topics,
+            per_item,
+            gold: view.own_gold(),
             selected,
         }
     }
@@ -108,15 +121,48 @@ impl DialogueScreen {
         }
     }
 
-    /// Asks about topic `i`: the screen closes, the rules answer, and the answer reopens it.
+    /// Asks about topic `i`: the screen closes, the rules answer, and the answer reopens it. A
+    /// service paid per thing, with things to pay for, asks first ([`Self::pay_dialog`]).
     fn ask(&mut self, i: usize) -> ScreenAction {
         self.selected = i;
-        match self.toward {
-            Some(dir) => ScreenAction::Act(Action::Ask {
-                dir,
-                topic: self.topics[i].0.clone(),
-            }),
-            None => ScreenAction::Close,
+        let Some(dir) = self.toward else {
+            return ScreenAction::Close;
+        };
+        let ask = Action::Ask {
+            dir,
+            topic: self.topics[i].0.clone(),
+        };
+        match self.per_item.get(i).copied().flatten() {
+            Some((price, items)) if items > 0 => {
+                ScreenAction::Dialog(Box::new(self.pay_dialog(price, items, ask)))
+            }
+            _ => ScreenAction::Act(ask),
+        }
+    }
+
+    /// The dialog a service paid per thing opens: what it costs in all for the `items` things at
+    /// `price` each, and pay (`ask`) or not; without the gold, only going back.
+    fn pay_dialog(&self, price: u32, items: u32, ask: Action) -> Dialog {
+        let total = price.saturating_mul(items);
+        let things = match items {
+            1 => "the one thing".to_string(),
+            n => format!("the {n} things"),
+        };
+        let text = format!(
+            "{price} gold for each of {things} you carry and do not know: {total} gold in all."
+        );
+        let title = &self.name;
+        if self.gold >= total {
+            Dialog::new(title.clone(), text)
+                .accept(format!("Pay {total} gold"), ask)
+                .cancel("Not now", ScreenAction::Close)
+        } else {
+            let have = match self.gold {
+                0 => "no gold".to_string(),
+                n => format!("only {n}"),
+            };
+            Dialog::new(title.clone(), format!("{text} You have {have}."))
+                .cancel("Go back", ScreenAction::Close)
         }
     }
 
@@ -187,6 +233,7 @@ fn capitalized(text: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ui::dialog_screen::DialogScreen;
     use std::sync::Arc;
     use warlock_core::World;
     use warlock_core::action::parse_actions;
@@ -242,6 +289,7 @@ mod tests {
             id: "cure".into(),
             name: "A cure for what ails you".into(),
             price: Some(60),
+            items: None,
         });
         let screen = DialogueScreen::new(Some(&talk), Some(&view));
         let mut console = Console::default();
@@ -253,6 +301,52 @@ mod tests {
             shown.contains("  7  A cure for what ails you (60 gold)"),
             "{shown}"
         );
+    }
+
+    /// The dialog an appraisal of `items` things at 100 gold each opens, as text, for a player
+    /// with `gold`; or what asking does when it opens none.
+    fn appraisal(items: u32, gold: u32) -> Result<String, Box<ScreenAction>> {
+        let (world, outcome) = at_the_hermit();
+        let view = world.perception();
+        let mut talk = last_talk(&outcome).expect("talked").clone();
+        talk.topics.push(warlock_core::world::TopicView {
+            id: "identify".into(),
+            name: "An appraisal of your goods".into(),
+            price: Some(100),
+            items: Some(items),
+        });
+        let mut screen = DialogueScreen::new(Some(&talk), Some(&view));
+        screen.gold = gold;
+        let mut console = Console::default();
+        console.resize(80, 30);
+        let bindings = Bindings::default();
+        screen.draw(&mut console, &bindings);
+        let shown = text(&console);
+        assert!(
+            shown.contains("  7  An appraisal of your goods (100 gold each)"),
+            "{shown}"
+        );
+        match screen.handle(&Press::typed('7'), &bindings) {
+            ScreenAction::Dialog(dialog) => {
+                let mut console = Console::default();
+                console.resize(80, 30);
+                DialogScreen::new(*dialog).draw(&mut console, &bindings);
+                Ok(text(&console))
+            }
+            other => Err(Box::new(other)),
+        }
+    }
+
+    #[test]
+    fn an_appraisal_asks_first_with_the_total() {
+        insta::assert_snapshot!("appraisal-pay", appraisal(3, 500).expect("a dialog"));
+        insta::assert_snapshot!("appraisal-short", appraisal(3, 120).expect("a dialog"));
+        // With nothing to pay for, it asks straight away (and is told so, for nothing).
+        let ask = Action::Ask {
+            dir: Dir::SE,
+            topic: "identify".into(),
+        };
+        assert_eq!(appraisal(0, 500), Err(Box::new(ScreenAction::Act(ask))));
     }
 
     #[test]

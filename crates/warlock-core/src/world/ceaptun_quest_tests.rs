@@ -76,7 +76,13 @@ fn each_giver_offers_the_first_quest_of_their_chain() {
     assert_eq!(topics(&w, LEOFRIC), ["quest-barrow_rats", "town", "barrow"]);
     assert_eq!(
         topics(&w, WULFRUN),
-        ["quest-foremans_ledger", "diggings", "trade"]
+        [
+            "quest-foremans_ledger",
+            "diggings",
+            "trade",
+            "appraisal",
+            "identify"
+        ]
     );
     // Godgifu gives none: she takes the ledger in.
     assert_eq!(

@@ -1,0 +1,24 @@
+---
+source: crates/warlock/src/ui/dialogue_screen.rs
+expression: "appraisal(3, 120).expect(\"a dialog\")"
+---
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                  ┌─ The old hermit ────────────────────────┐                   
+                  │                                         │                   
+                  │  100 gold for each of the 3 things you  │                   
+                  │ carry and do not know: 300 gold in all. │                   
+                  │           You have only 120.            │                   
+                  │                                         │                   
+                  │           > Go back  (n, Esc)           │                   
+                  │                                         │                   
+                  │ Enter select                            │                   
+                  └─────────────────────────────────────────┘

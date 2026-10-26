@@ -6,7 +6,7 @@
 
 use super::*;
 use crate::action::parse_actions;
-use crate::content::{ContentFiles, Stance};
+use crate::content::{ContentFiles, DialogueId, ServiceKind, Stance};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use std::sync::LazyLock;
@@ -217,6 +217,40 @@ fn the_mynster_is_a_sanctuary_where_sister_hild_cures_and_mends() {
     assert_eq!(gold(&w), 0);
     assert!(w.state().player().diseases.iter().next().is_none(), "cured");
     assert!(said(&w).contains(&"You pay Sister Hild 60 gold.".to_string()));
+}
+
+#[test]
+fn factor_wulfrun_identifies_what_the_player_carries_for_gold() {
+    let mut w = town();
+    let wulfrun = who(&w, WULFRUN);
+    let service = (w.topics(wulfrun).into_iter())
+        .find(|t| t.id == "identify")
+        .expect("Wulfrun appraises");
+    assert_eq!((service.price, service.items), (Some(100), Some(0)));
+    put_player(&mut w, WULFRUN.step(Dir::W));
+    act(&mut w, "ask:E:identify");
+    assert!(
+        said(&w)
+            .last()
+            .unwrap()
+            .starts_with("Factor Wulfrun says: \"You know everything")
+    );
+    assert_eq!(gold(&w), 60);
+    // An unidentified scroll: 100 gold, more than the player has.
+    let scroll = CONTENT.object_id("scroll_of_fireball").expect("fireball");
+    w.player_mut()
+        .inventory
+        .push(crate::object::Stack::one(scroll));
+    act(&mut w, "ask:E:identify");
+    assert_eq!(said(&w).last().unwrap(), "You cannot pay.");
+    assert_eq!(w.unidentified().len(), 1);
+    // Nobody else in the campaigns offers it.
+    let appraisers: Vec<String> = (0..CONTENT.dialogues().len())
+        .map(|i| DialogueId(i as u16))
+        .filter(|&d| (CONTENT.dialogue(d).services.iter()).any(|s| s.does == ServiceKind::Identify))
+        .map(|d| CONTENT.speaker_name(d))
+        .collect();
+    assert_eq!(appraisers, ["Factor Wulfrun"]);
 }
 
 #[test]
