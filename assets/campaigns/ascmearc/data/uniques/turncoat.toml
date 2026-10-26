@@ -1,0 +1,10 @@
+# Sergeant Herrick's banded mail (docs/design/adventurers-guild.md §9.2; a deserter's coat, and
+# his crime): stand in the doorway and do not move. Heavy, hard to hurt, unshakable.
+[[unique]]
+id = "turncoat"
+name = "The Turncoat"
+object = "banded_mail"
+affixes = ["reinforced:3", "hardened:3", "hale:3", "of_the_ox:2"]
+level = 12
+power = { ward = "frightened", message = "Fear finds no hold on you.", phrase = "Its wearer knows no fear." }
+lore = "The regiment's colours were cut from it long ago; the stitching shows where."

@@ -154,7 +154,7 @@ fn a_failed_check_takes_points_for_good_and_a_made_one_nothing() {
         let mut expected = w.state.rng.clone();
         let resisted = check(&mut expected, crate::stats::modifier(1), 40);
         let mut events = Vec::new();
-        w.after_blow(drinker, player, AttackKind::Melee, &HIT, &mut events);
+        w.after_blow(drinker, player, AttackKind::Melee, (&HIT, &[]), &mut events);
         assert_eq!(w.state.rng, expected, "the check's two draws, at 100 %");
         let me = w.state.player();
         let stat = (!resisted).then_some(Stat::Strength);
@@ -282,7 +282,13 @@ fn a_random_drain_draws_its_stat_first() {
         let stat = Stat::ALL[expected.below(Stat::COUNT as u32) as usize];
         let resisted = check(&mut expected, crate::stats::modifier(1), 40);
         let before = w.state.player().stats.score(stat);
-        w.after_blow(leech, player, AttackKind::Melee, &HIT, &mut Vec::new());
+        w.after_blow(
+            leech,
+            player,
+            AttackKind::Melee,
+            (&HIT, &[]),
+            &mut Vec::new(),
+        );
         assert_eq!(w.state.rng, expected);
         let after = w.state.player().stats.score(stat);
         if !resisted && before > DRAIN_FLOOR {

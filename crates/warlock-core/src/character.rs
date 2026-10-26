@@ -1008,6 +1008,8 @@ mod tests {
     fn skill_free_content() -> Content {
         let mut files = ContentFiles::builtin();
         files.remove("data/skills.toml");
+        // Skill affixes go with the skills, and the uniques that have them.
+        files.remove("campaigns/ascmearc/data/uniques");
         let untrained = |text: &str| -> String {
             let kept: Vec<&str> = (text.lines())
                 .filter(|l| {

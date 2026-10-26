@@ -275,7 +275,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   a magic or rare item either "Unidentified: what its magic does is unknown, though it works all
   the same." or its item level and each affix, "Prefix  Sharp: +2 damage", "Suffix  of Celerity:
   attacks faster" (affix magnitudes are item properties and shown; speed only in words; global
-  attack effects say "with every attack"). Never the player's own to-hit or a modifier.
+  attack effects say "with every attack"); an identified unique item (§8 "Magic items") adds its
+  power in words, "Power  Its every cut poisons.", and its lore as the last line. Never the
+  player's own to-hit or a modifier.
   Read-only; Esc, Back, or Enter closes it.
 - **Equipment** (`i`, ADOM's; M16), as in ADOM: the slots, lettered `a` to `m` in this order — Head, Neck,
   Body, Cloak, Main hand, Off hand, Hands, Left ring, Right ring, Feet, Missile weapon, Missiles,

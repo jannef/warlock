@@ -716,6 +716,8 @@ impl World {
         // A talent may roll a fumble again (a birth sign's Winner's luck).
         let lucky = (self.state.actors.get(&attacker))
             .is_some_and(|a| !a.talents.is_empty() && a.talent_mods(&self.content).reroll_fumble);
+        // What a hit causes besides its damage (a unique weapon's Inflict power).
+        let made = profile.as_ref().map_or_else(Vec::new, |p| p.on_hit.clone());
         let rng = &mut self.state.rng;
         let blow = profile.map(|profile| combat::strike_with(&profile, &struck, rng, lucky));
         let blow = blow.map(|b| self.ambushed(attacker, unseen, b));
@@ -791,7 +793,7 @@ impl World {
                 self.gain_resource(attacker, Build::SneakKill);
             }
             if !died {
-                self.after_blow(attacker, target, kind, &blow, events);
+                self.after_blow(attacker, target, kind, (&blow, &made), events);
                 self.barbed(attacker, target, kind, events);
             }
         }
