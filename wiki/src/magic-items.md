@@ -21,21 +21,18 @@ How often loot is normal, magic, or rare, and how many affixes magic and rare it
 
 ## Finding them
 
-- **On the floor** of every level of [the Depths](overworld.md) lie a few items of loot (now and
+- **On the floor** of every level of a generated dungeon (see [Dungeons and danger](dungeons.md)) lie a few items of loot (now and
   then a [scroll](scrolls.md), which is never magic).
 - **Vaults** hold a reward: the guard post's store room something magic, the shrine and the
   roofless chapel something.
 - **Creatures** may drop something magic or rare where they die, besides what they carried: a
   kobold now and then, a kobold archer a little more often, a kobold shaman one time in two (see
   [Creatures](creatures.md)).
-- The showcase's storeroom has a rack of magic arms to try: a Sharp emerald-pommelled long sword
-  of the Bear and a rare helm, Dread Visage, both known, and a rare bow and a magic ring that are
-  not.
 - Loot is sometimes set with a gem, and now and then a find is a loose gem instead (see
   [Gems](gems.md#finding-gems)).
 
 The deeper you are, the better the loot: an item's **item level** is the depth it was found at
-(the Depths' first level is item level 1, the eighth 8; the arena's drops 2, elsewhere 1). It
+(a dungeon's first level is item level 1, the eighth 8). It
 decides which base items can turn up and which **tiers** of each affix: low tiers are found from
 the start, the strongest only deep down.
 

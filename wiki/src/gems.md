@@ -23,7 +23,7 @@ in your pack) always says both: "Gem: tiny garnet, uncut". A loose gem weighs wh
 
 Uncut gems are rough stones, drawn duller than cut ones. They are the most common find, and the
 deeper you go, the larger and finer the gems (the columns above and below are how often each
-size and cut is found on the Depths' first level and on its eighth).
+size and cut is found on a dungeon's first level and on its eighth).
 
 {{#include generated/gem-cuts.md}}
 
@@ -34,7 +34,7 @@ another stack.
 
 Gems are rare. Now and then a find is a loose gem instead of an item: one of the items of loot on
 a level's floor, a vault's reward (not one that is sure to be magic), or what a creature drops
-where it dies. The showcase's quarry hides a few rubies, and the hub's secret closet a gem or two.
+where it dies. Dungeons hide them in their vaults and secret rooms.
 
 ## Items set with a gem
 

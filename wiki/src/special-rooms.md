@@ -17,10 +17,10 @@ you see or remember ("A stone floor in an echoing hall.", "You remember a stone 
 sanctuary."). Before you have been inside, it is just a room, though you may notice something
 odd about it from the doorway: an unnatural darkness, a faint warm glow, water on the floor.
 
-Special rooms are not terribly common, but not rare either: about one level of the Depths in two
+Special rooms are not terribly common, but not rare either: about one level of a generated dungeon in two
 or three has one, and a level never has more than one. In the rooms-and-corridors levels it is a
 whole room, walls and doors included, but never the room you arrive in; in the caverns it is a
-patch of the cave, well away from where you arrive. The showcase hub's stairs nook is a
+patch of the cave, well away from where you arrive. Cēaptūn's Mynster is a
 sanctuary.
 
 ## By dungeon

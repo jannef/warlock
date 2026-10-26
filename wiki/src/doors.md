@@ -45,7 +45,7 @@ lock**: choose it, then a direction, and you try the lock of the closed door the
   gives (+8 at 100, see [Skills](skills.md)), against the lock's **difficulty**. Two ones always
   fail and two twelves always work.
 - **Locks** are of difficulty 14 unless the place says otherwise; a vault's or a level's lock may
-  be harder or easier. In the Depths, every level down makes a lock one harder: 15 on the second
+  be harder or easier. In a generated dungeon, every level down makes a lock one harder: 15 on the second
   level, 21 on the eighth.
 - **A try takes 12 seconds** at a normal pace, whatever comes of it. If it fails, `You fail to pick
   the lock.` and the door stays locked. You may try again as often as you like: only time is
@@ -110,10 +110,8 @@ the key to the room it guards will walk right through. No creature kicks doors o
 
 ## Where you find them
 
-- In the hub, the pantry off the door corridor has a locked west door; its iron key lies in the
-  storeroom across the corridor. (Its south door is not locked.)
-- In the Depths, a few rooms with a single door are locked. The level's rusty key always lies
-  somewhere you can reach without opening a locked door, and you never need one to find the
-  stairs.
-- A guard post in the Depths keeps its store room locked; the kobold on guard carries the brass
+- In a generated dungeon, a few rooms with a single door are locked. The level's rusty key
+  always lies somewhere you can reach without opening a locked door, and you never need one to
+  find the stairs.
+- A guard post in a dungeon keeps its store room locked; the kobold on guard carries the brass
   key. A skeleton key lies in the store room.

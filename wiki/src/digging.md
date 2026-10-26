@@ -8,7 +8,7 @@ walk on (a little slowly) and see across.
 
 1. **Get a digging tool.** A pick-axe or a mattock goes in the **Tool** slot of your
    [equipment](equipment.md): press `i`, then `m` (Tool), then the tool's letter. The hub's
-   storeroom has a pick-axe, and the quarry has both.
+   Cyneburg's Provisions in Cēaptūn sells a pick-axe.
 2. **Dig.** Press `u` (use a tool), then a direction: "Dig in which direction?". You start digging into
    the wall next to you ("You dig into the stone wall.").
 3. **Keep at it.** Digging goes on by itself, turn after turn, as [resting](resting.md) does, until
@@ -72,11 +72,8 @@ The wall becomes rubble, and everything follows at once: light from beyond the g
 you see into what was behind it, and you remember it as you remember everything you have seen
 ([Sight and memory](sight.md)). Dust rises where it fell.
 
-## The quarry
+## Where to dig
 
-The stairs nook in the hub has a staircase down (`>`) to **the quarry**, an old stone quarry and
-the place to try digging: a pick-axe and a mattock lie by the stairs, the pit is walled by a
-granite face and a bank of packed earth, and a sealed chamber with a lamp and a little treasure
-lies behind its east wall, with no door in. The **Quarry** scenario starts there. In the
-[trap hall](traps.md), a hidden fireball blows apart the earth and stone pillars beside it, and
-the granite one holds.
+**Fyrdelf**, the fire diggings under the hills of Ascdūn ([The Ascmearc](ascmearc.md)), is a
+mine, and the place to try digging: its foreman's cabin keeps a spare pick-axe behind a plank
+wall.

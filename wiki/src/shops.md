@@ -2,7 +2,7 @@
 
 As in ADOM, some rooms are shops: a room full of goods, and a shopkeeper standing by the door. A
 **general store** sells a bit of everything; **specialty shops** sell one kind of thing. Every
-shopkeeper has a name, and every shop a sign: "Grimbold's General Store".
+shopkeeper has a name, and every shop a sign: "Ælfric's General Store".
 
 Cēaptūn, the market town of the Ascmearc, has four on its square: Ælfric's General Store,
 Eadric's Forge (weapons and missiles), Beornwyn's Armoury, and Cyneburg's Provisions (food for
@@ -21,7 +21,7 @@ worth (see [Gems](gems.md)); junk such as rocks is worth nothing, and nobody buy
 Step into a shop and its keeper greets you:
 
 ```
-Welcome to Grimbold's General Store!
+Welcome to Ælfric's General Store!
 ```
 
 Everything lying on a shop's floor is for sale while its keeper trades with you.
@@ -36,7 +36,7 @@ What you use up, you have bought. Eat food you have not paid for and you still o
 food lying on a shop's floor and its price goes on what you owe:
 
 ```
-Grimbold says: "You eat it, you buy it: 47 gold for the angelica root."
+Ælfric says: "You eat it, you buy it: 47 gold for the angelica root."
 ```
 
 You cannot put back what you have eaten: pay for it, or sell the shopkeeper something first.
@@ -46,9 +46,9 @@ You cannot put back what you have eaten: pay for it, or sell the shopkeeper some
 A shopkeeper does not let you out of the door owing money. Step toward the door while you owe
 anything and a small window asks first:
 
-- If you have the gold: `You owe Grimbold 47 gold.` Choose **Pay 47 gold and leave** (`y`) to
-  pay and step out at once, in one move. Choose **Don't pay** (`n`, or `Esc`) and Grimbold steps
-  into your way: "Grimbold steps into your way: you haven't paid." You are pushed back one step
+- If you have the gold: `You owe Ælfric 47 gold.` Choose **Pay 47 gold and leave** (`y`) to
+  pay and step out at once, in one move. Choose **Don't pay** (`n`, or `Esc`) and Ælfric steps
+  into your way: "Ælfric steps into your way: you haven't paid." You are pushed back one step
   into the shop.
 - If you do not: it says what you owe and how much you have, and **Go back** is the only answer:
   you are pushed back the same way. Put something back, or bring more gold.
@@ -63,7 +63,7 @@ A merchant's **Credit** (and an aristocrat's **Commanding**, see
 ## Selling
 
 Drop something in a shop, and if the shop buys that kind of thing, its keeper makes an offer:
-`Grimbold offers 15 gold for a scroll of light.` Choose **Sell for 15 gold** (`y`) and you are
+`Ælfric offers 15 gold for a scroll of light.` Choose **Sell for 15 gold** (`y`) and you are
 paid from the keeper's purse; the thing stays on the shop floor, for sale. Choose **Keep it**
 (`n` or `Esc`) and you keep it. A shop
 has no use for what it does not buy, and you cannot leave it lying there. A shop pays only part
@@ -93,7 +93,7 @@ Walking out of the door can never steal, but leaving a shop owing anything any o
 theft: through a wall you have dug open, say. You are asked first (pay and leave, leave without
 paying, or stay). Leave without paying and the shopkeeper shouts "Stop, thief!", turns hostile,
 and comes after you, and the goods you took are yours, stolen. A shopkeeper you attack turns on you
-the same way, and so does one who catches you picking their pocket with the Steal skill ("Grimbold
+the same way, and so does one who catches you picking their pocket with the Steal skill ("Ælfric
 catches you stealing. \"Stop, thief!\""; see [Stealing](skills.md#stealing)). A purse lifted
 unnoticed leaves the shop open, though the shopkeeper cannot pay for what you sell until they
 have gold again. Shopkeepers are tough, quick, and well armed: stealing is always your choice,

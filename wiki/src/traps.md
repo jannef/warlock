@@ -101,13 +101,7 @@ trapped. A door's trap can be disarmed like any other (see [Disarming traps](#di
 
 ## Where traps are
 
-- **The Depths** hide a few traps on every level, never on or next to the stairs, and never where
-  a creature walks its rounds. Some rooms hide their own: an offering before an altar may not be
-  unguarded.
-- **The Trap hall**, reached by the third staircase down in the showcase hub's stairs nook (and
-  its own scenario), is the place to learn them: a row of known traps to try, one of each kind,
-  and creatures going their rounds across hidden ones, so you can watch fireballs and lightning
-  catch them. In its north-west corner, three closets have trapped doors: one shows its trap, one
-  hides its trap for you to search for, and one stands open on a kobold's rounds; shut it and
-  watch. Its creatures leave you alone.
-- **The showcase** (the hub, the vast cavern, the courtyard) and the overworld have no traps.
+- **Generated dungeons** hide a few traps on every level, never on or next to the stairs, and
+  never where a creature walks its rounds. Some rooms hide their own: an offering before an altar
+  may not be unguarded.
+- **Cēaptūn** and the overworld have no traps.
