@@ -5,7 +5,7 @@ General conventions: `docs/dev/creatures.md`.
 The demon roster (#449): ten shared types, one file each in `assets/data/creatures/` (the
 dretch 8, quasit 12, balgura 24, chasme 28, hezrou 30, vrock 34, marilith 40, glabrezu 44,
 nalfeshnee 50, balor 62), faction `demon` (hostile to the player, kobolds, goblins, duergar, and
-marsh things; inserted after `fire`, and in the four test fixtures' factions files), tags
+marsh things, and the devils (hostile both ways, from the demons' side); inserted after `fire`, and in the four test fixtures' factions files), tags
 `["demon", "fiend"]`. They use the undead roster's formulas and roles:
 `content/demon_roster_tests.rs` (`DEMONS`: id, level, role) imports `Role`, `max_hp`,
 `dice_average`, and `within` from `undead_roster_tests` and checks the XP guideline, ±35 % of

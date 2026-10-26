@@ -1,0 +1,33 @@
+# The devil roster (#448). A towering, insect-like devil of the frozen hells: its claws carry a
+# cold that kills and slows. Immune to cold as to fire. Not yet in any dungeon's population.
+[[creature]]
+id = "ice_devil"
+level = 55
+xp = 285
+rarity = "very_rare"
+name = "ice devil"
+glyph = "U"
+fg = "#a8d0f0"
+speed = 1100
+faction = "devil"
+tags = ["devil", "fiend"]
+alignment = "evil"
+vision = "darkvision"
+sight = 16
+opens_doors = true
+footsteps = 90
+hearing = 10
+weight = 350000
+stats = { strength = 38, dexterity = 22, toughness = 39, intelligence = 32, willpower = 35, presence = 32 }
+base_hp = 220
+natural = { defence = 4, protection = 3, name = "chitin" }
+resist = { fire = 100, poison = 50, cold = 100 }
+corpse = false
+blood = "#1a2a3a"
+[creature.attack]
+damage = "4d12"
+damage_type = "cold"
+name = "frost claws"
+verb = "rends"
+to_hit = 5
+on_hit = [{ status = "sluggish", chance = 20, severity = 1 }]

@@ -1,0 +1,29 @@
+# The orc tribe (#455; content::orc_roster_tests checks the numbers). The least of a war band,
+# half-grown or stunted, kicked to the front with a knife (its racial weapon, spec §8 "Creature
+# gear") and whatever cap it could steal.
+[[creature]]
+id = "orc_runt"
+level = 3
+xp = 25
+rarity = "common"
+loot = 10
+name = "orc runt"
+glyph = "o"
+fg = "#8a9a6a"
+faction = "orcs"
+tags = ["orc"]
+alignment = "evil"
+vision = "darkvision"
+opens_doors = true
+footsteps = 110
+hearing = 12
+weight = 40000
+size = "small"
+stats = { strength = 9, dexterity = 15, toughness = 9, intelligence = 8, willpower = 10, presence = 7 }
+base_hp = 4
+on_eat = { message = "This orc meat is rank!", vomit = 30 }
+weapon_skills = { daggers = 1 }
+racial_weapon = "dagger"
+[[creature.gear]]
+chance = 20
+one_of = ["leather_cap"]

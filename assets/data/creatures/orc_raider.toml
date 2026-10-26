@@ -1,0 +1,31 @@
+# The orc tribe (#455; content::orc_roster_tests checks the numbers). The quick ones a war band
+# sends ahead to raid: a battle axe (its racial weapon), studded leather now and then.
+[[creature]]
+id = "orc_raider"
+level = 9
+xp = 55
+rarity = "common"
+loot = 25
+name = "orc raider"
+glyph = "o"
+fg = "#a07040"
+speed = 1100
+faction = "orcs"
+tags = ["orc"]
+alignment = "evil"
+vision = "darkvision"
+opens_doors = true
+footsteps = 120
+hearing = 13
+weight = 80000
+stats = { strength = 16, dexterity = 17, toughness = 15, intelligence = 9, willpower = 12, presence = 8 }
+base_hp = 20
+on_eat = { message = "This orc meat is rank!", vomit = 30 }
+weapon_skills = { axes = 2 }
+racial_weapon = "battle_axe"
+[[creature.gear]]
+chance = 40
+one_of = ["studded_leather"]
+[[creature.gear]]
+chance = 50
+one_of = ["leather_cap"]

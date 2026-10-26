@@ -964,7 +964,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     skilled with long blades." No numbers.
   - **What the player perceives**: their own ranks and marks
     (`PerceptionView::own_weapon_skills`), shown as ranks and a bar on the weapon skills screen
-    (§6) and in the `weapon_skills` dump layer; never a benefit or a creature's ranks (the
+    (§6) and in the `weapon_skills` dump layer; never a benefit as such (the character
+    screen's attacks show the to-hit and damage the ranks add up to, §6) or a creature's ranks (the
     `actors` dev layer shows every actor's). Ranks and marks are part of the world state
     (saved, hashed).
 - **Fighting styles** (#135; `content/weapon_skill.rs`: `Role::Style`, `Grip`, `Style`,

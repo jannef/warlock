@@ -68,6 +68,7 @@ fn the_demons_hunt_the_living_and_leave_the_dead_be() {
         ("goblin", Hostile),
         ("duergar_warrior", Hostile),
         ("marsh_troll", Hostile),
+        ("imp", Hostile),
         ("skeleton", Neutral),
         ("ember_beetle", Neutral),
         ("rat", Neutral),

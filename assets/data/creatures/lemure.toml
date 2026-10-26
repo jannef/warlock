@@ -1,0 +1,25 @@
+# The devil roster (#448). The lowest of the damned: a shapeless mass of flesh that crawls where
+# it is driven, mindless and slow, in herds. Its body burns away to brimstone when it dies. Not
+# yet in any dungeon's population.
+[[creature]]
+id = "lemure"
+level = 5
+xp = 35
+name = "lemure"
+glyph = "u"
+fg = "#a0525a"
+speed = 600
+faction = "devil"
+tags = ["devil", "fiend"]
+alignment = "evil"
+vision = "darkvision"
+sight = 8
+footsteps = 50
+hearing = 15
+weight = 60000
+stats = { strength = 15, dexterity = 5, toughness = 19, intelligence = 2, willpower = 18, presence = 2 }
+base_hp = 19
+attack = { damage = "1d8", damage_type = "slashing", name = "claws", verb = "claws" }
+resist = { fire = 100, poison = 50 }
+corpse = false
+blood = "#4a1010"
