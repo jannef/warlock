@@ -50,6 +50,7 @@ mod skill;
 mod sky;
 mod slot;
 mod spell;
+mod spell_def;
 mod stance;
 mod stat_training;
 mod status;
@@ -73,7 +74,7 @@ pub use calendar::Calendar;
 pub use campaign::{CAMPAIGNS, CampaignDef, CampaignKind};
 #[cfg(test)]
 pub(crate) use class::strip_tables as strip_class_tables;
-pub use class::{BonusTalents, ClassActive, ClassDef};
+pub use class::{BonusTalents, CASTING, ClassActive, ClassDef};
 pub use class_spell::{ClassSpell, Does, MAX_HEX_RANGE, SpellDef, SpellKind};
 pub use creature::{
     Budge, Combat, CreatureDef, CreatureId, DEFAULT_SIGHT, Hide, Incorporeal, NORMAL_SPEED,
@@ -145,6 +146,10 @@ pub use skill::{SkillBook, SkillDef};
 pub use sky::{MAX_MOONS, MAX_SIZE, MoonDef, PHASE_ONE, STANDARD_SIZE};
 pub use slot::{MAX_SLOTS, SlotDef, SlotId};
 pub use spell::{BOLT_LENGTHS, BURST_RADII, Bolt, Burst, BurstIce};
+pub use spell_def::{
+    MAX_CONE, MAX_DICE, MAX_PER_LEVELS, MAX_REACH, Ratio, Resolution, School, Shape, SpellData,
+    SpellDice, SpellEffect, SpellId, SpellPurpose, SpellRules, TIERS,
+};
 pub use stance::{CombatStance, StanceDef, Stances, percent_of};
 pub use stat_training::{StatRule, StatTraining, StatUse};
 pub use status::{
@@ -507,6 +512,10 @@ pub struct Content {
     /// The corpse object of each creature type, by creature id (`None`: it leaves none).
     corpses: Vec<Option<ObjectId>>,
     weapon_skills: WeaponSkillTable,
+    /// The spells' tier table (`data/spells.toml`, spec §8 "Spells"); none without the file.
+    spell_rules: Option<SpellRules>,
+    /// Spells (`data/spells/`, spec §8 "Spells"), in path order; none without the files.
+    spells: Vec<SpellData>,
     /// Talents (`data/talents.toml` and `data/talents/`, spec §8 "Talents"); none without the
     /// files.
     talents: TalentBook,
@@ -592,6 +601,8 @@ impl Content {
             corpses: Vec::new(),
             weapon_skills: WeaponSkillTable::default(),
             room_effects: RoomEffects::default(),
+            spell_rules: None,
+            spells: Vec::new(),
             talents: TalentBook::default(),
             affixes: Affixes::default(),
             stances: Stances::default(),
@@ -704,6 +715,11 @@ impl Content {
             content.resources = resource::parse(path, text, status)?;
         }
         content.check_follows_end()?;
+        // Spells (spec §8 "Spells") after damage types and statuses, which they name.
+        let path = "data/spells.toml";
+        let rules = files.get_optional(path).map(|text| (path, text));
+        let table = files.table("spells").filter(|(p, _)| *p != path);
+        (content.spell_rules, content.spells) = spell_def::parse(rules, table, &content)?;
         // The talent table (spec §8 "Talents"): optional, so no level asks for a pick without it.
         if files.table("talents").next().is_some() {
             content.talents = talent::parse(files.table("talents"), &content)?;
@@ -2002,8 +2018,8 @@ impl Content {
     /// (whose types come last) and a developer build with it.
     ///
     /// `TerrainId`, `CreatureId`, `LightId`, `ObjectId`, `SlotId`, `SkillId`, `RoomEffectId`,
-    /// `WeaponSkillId`, `StatusId`, `DiseaseId`, `TrapId`, `DamageTypeId`, `ResourceId`, and
-    /// `ShopId` are
+    /// `WeaponSkillId`, `StatusId`, `DiseaseId`, `TrapId`, `DamageTypeId`, `ResourceId`,
+    /// `SpellId`, and `ShopId` are
     /// indices, so a save
     /// is only meaningful for content with the same ids in the same order; saves record this
     /// fingerprint to detect a mismatch.
@@ -2057,6 +2073,7 @@ impl Content {
             self.traps.iter().map(|t| t.id.as_str()).collect(),
             self.damage_types.iter().map(|t| t.id.as_str()).collect(),
             self.resources.iter().map(|r| r.id.as_str()).collect(),
+            self.spells.iter().map(|s| s.id.as_str()).collect(),
             (self.shops.iter().flat_map(|s| s.defs()))
                 .map(|d| d.id.as_str())
                 .collect(),
@@ -2714,6 +2731,25 @@ impl Content {
         (0u8..).zip(&self.skills.list).map(|(i, s)| (SkillId(i), s))
     }
 
+    /// The spells' tier table (`data/spells.toml`, spec §8 "Spells"): none without the file.
+    pub fn spell_rules(&self) -> Option<&SpellRules> {
+        self.spell_rules.as_ref()
+    }
+
+    /// The spells (`data/spells/`, spec §8 "Spells"), in path order: a [`SpellId`] is an index.
+    pub fn spells(&self) -> &[SpellData] {
+        &self.spells
+    }
+
+    pub fn spell(&self, id: SpellId) -> &SpellData {
+        &self.spells[usize::from(id.0)]
+    }
+
+    pub fn spell_id(&self, name: &str) -> Option<SpellId> {
+        let i = self.spells.iter().position(|s| s.id == name)?;
+        Some(SpellId(u16::try_from(i).ok()?))
+    }
+
     /// The talents (`data/talents.toml` and `data/talents/`, spec §8 "Talents"): none without
     /// the files.
     pub fn talents(&self) -> &TalentBook {
@@ -3129,6 +3165,17 @@ mod tests {
         files.insert("campaigns/showcase/levels/hub_copy.toml", &hub);
         let other = Content::load(&files).expect("loads");
         assert_ne!(a, other.fingerprint_for("showcase"));
+        // Spells enter it: saves will name them by index (spec §8 "Spells").
+        let mut files = ContentFiles::builtin();
+        files.insert(
+            "data/spells/spark.toml",
+            "[[spell]]\nid = \"spark\"\nname = \"Spark\"\ndescription = \"x\"\ntier = 0\n\
+             school = \"evocation\"\nkind = \"damage\"\nshape = \"bolt\"\nresolution = \"auto\"\n\
+             damage_type = \"electricity\"\nmax_range = 5\ndamage = { dice = \"1d4\" }\n",
+        );
+        let with_spell = Content::load(&files).expect("loads");
+        assert_eq!(with_spell.spell_id("spark"), Some(SpellId(0)));
+        assert_ne!(a, with_spell.fingerprint_for("showcase"));
     }
 
     fn minimal_files(level_map: &str, extra_legend: &str) -> ContentFiles {

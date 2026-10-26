@@ -5,6 +5,7 @@ description = "Born to wealth and command and never asked to lift anything heavi
 stats = { strength = -2, toughness = "-1d2", intelligence = 1, willpower = -1, presence = "1d3+1" }
 hp = 1
 mana = 7
+casting = 75
 experience = 90
 skills = { knowledge = "2d6+10", bluff = "2d4+4", intimidate = "2d4+4" }
 known_for = ["knowledge"]

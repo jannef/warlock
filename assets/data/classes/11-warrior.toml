@@ -4,6 +4,7 @@ name = "Warrior"
 description = "A trained fighter of the shield wall and the dueling ground: strong, steady, and well drilled."
 stats = { strength = "1d3+1", dexterity = 1, toughness = "1d3", intelligence = -1 }
 hp = 7
+casting = 25
 experience = 100
 skills = { athletics = "2d6+10", balance = "2d4+4", intimidate = "2d4+4", swim = "2d4+4" }
 known_for = ["athletics"]
