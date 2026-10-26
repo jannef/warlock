@@ -5,6 +5,7 @@
 [[dungeon]]
 id = "cealdhlaw"
 name = "Cealdhlāw"
+arrival = "Cold air breathes up from the mound."
 generator = "rooms"
 depth = 6
 size = [80, 21]
@@ -28,6 +29,12 @@ population = [
 # 30 a thousand walkable cells: the least, 25, on the barrow's passages (about 350 cells), about
 # 70 in the hollows (about 2 300), as the design's population table has them.
 population_count = { per_1000 = 30, least = 25, most = 80 }
+
+# The barrow's heart: the barrow chamber, with the silver chalice on its plinth (Sister Hild's
+# "Grave goods"), on the second floor for certain.
+[[dungeon.levels]]
+from = 2
+vaults = ["barrow_chamber"]
 
 # The hill's hollows: caverns below the barrow.
 [[dungeon.levels]]

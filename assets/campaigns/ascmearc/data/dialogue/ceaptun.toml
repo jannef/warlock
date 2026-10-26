@@ -3,7 +3,7 @@
 # each placed by the town's legend with `npc = "..."` and known by a proper `name`: Sister Hild of
 # the Mynster (who cures and mends for gold, §6.1), Godgifu of the Gæsthūs (rumours of the march,
 # never a reveal: decision 2026-10-25, question 9), Reeve Leofric, and Factor Wulfrun. Their
-# quests come later (§6.2).
+# quests are in data/quests/ (§6.2).
 
 # The townsfolk: one-liners and mutters, no topics.
 [[dialogue]]
@@ -61,7 +61,7 @@ reply = "The Mynster is older than the town wall. Sisters have kept it since the
 
 [[dialogue.topic]]
 id = "fen"
-name = "The fen minster"
+name = "The mother house"
 reply = "Fennmynster stood in Micelfenn, the great fen, long ago. The water came up its steps a little more each year, until no one could keep it. What is left of it lies somewhere under the reeds. I would not go looking for it alone."
 
 [[dialogue.service]]

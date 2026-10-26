@@ -6,7 +6,8 @@ rules it implements are in spec/08b-creatures.md. Keep it current with the code,
 Quests (spec §8 "Quests", #148): `content/quest.rs` loads the `quests` table (`data/quests.toml`, the field reference, and each
 campaign's `data/quests/`; the showcase's four in `campaigns/showcase/data/quests/showcase.toml`) after levels and
 dungeons (`QuestDef`: `giver` a `DialogueId`, `Goal::{Kill, Bring, Reach, Deliver}`, `Reward`,
-`QuestTexts`, `requires`, `requires_alignment`, `alignment`, `repeatable`, `reveals` (a hidden
+`QuestTexts`, `requires` (a list: every quest named must be done; the file takes one id or a
+list), `requires_alignment`, `alignment`, `repeatable`, `reveals` (a hidden
 location of the overworld and the `RevealWhen` stage it is revealed at, `docs/dev/overworld.md`),
 `where_` (`where`, appended to the log's objective); validation including everyone's topic budget of nine;
 `Content::speaker_name` names a giver without an actor). `world/quest.rs` is the rules: quest

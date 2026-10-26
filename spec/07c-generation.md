@@ -6,6 +6,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
 
 - **Dungeon branches** (`data/dungeons.toml`): stacks of generated levels, e.g.
   `{ id = "depths", generator = "rooms", depth = 8, size = [80, 21] }`, plus optional name,
+  an `arrival` line (said each time the player arrives on its first level by stairs, as a
+  hand-made level's is),
   patrolling creature kinds, the traps its levels hide (`traps`, trap ids; one named twice comes
   up twice as often) and how many a level gets (`traps_per_level = [least, most]`, default
   `[2, 4]`, at most 50), how many doors its rooms levels hide (`secret_doors = [least, most]`,
@@ -29,8 +31,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (`danger = 1`), its population the six old hostiles and the barrow wave (§7 "Data"),
   `population_count = { per_1000 = 30 }` (25 on a rooms floor, about 70 in the caves), the
   arrow, spear, pit, and alarm traps, secret doors, locks, and loot as the Depths', the rusty
-  key, 8 °C, and the shared special-room and shop odds. Its vault is the barrow chamber
-  (Cealdhlāw 1 and 2 only). Its dev scenario `cealdhlaw` starts on the first floor.
+  key, 8 °C, and the shared special-room and shop odds. Its vault is the barrow chamber, named
+  by its second floor (`[[dungeon.levels]] vaults`), so it is there for certain and nowhere else,
+  with the silver chalice of Sister Hild's quest on its plinth (§8 "Quests"). Its `arrival`:
+  "Cold air breathes up from the mound." Its dev scenario `cealdhlaw` starts on the first floor.
 - **Danger levels** (#326; `content/danger.rs`, `world/spawn.rs`; the design is
   `docs/design/campaign.md` §9): every level has a danger, computed when asked
   (`World::danger`), never stored. A branch's `danger = 4` (or `{ base, per_depth, player }`;
@@ -136,8 +140,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   generators use only dungeon vaults, local areas only outdoor ones. A shared vault
   (`assets/vaults/`) stamps in every branch; a campaign's (`campaigns/<id>/vaults/`) only in that
   campaign's branches; and a vault whose file gives `dungeons` (branch ids, or branch levels such
-  as `"cealdhlaw:2"`, of its own campaign) only there (the Ascmearc's barrow chamber: Cealdhlāw's
-  rooms levels, 1 and 2). A `[[dungeon.levels]]` range
+  as `"cealdhlaw:2"`, of its own campaign) only there. A `[[dungeon.levels]]` range
   may name vaults (`vaults = ["drakes_hoard"]`, #339): each is stamped on every level of the range
   for certain (a generation attempt that cannot fit one is made again), before any vault drawn at
   random, and a vault a branch level names is never drawn at random anywhere (a quest's target
@@ -153,8 +156,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   special with 25 % (at most two a level), flooded, hushed, or shadowed, so most levels have one
   and a third of them are flooded; no shops (`shops = { chance = 0 }`). Its vault
   (`campaigns/ascmearc/vaults/`): the **sunken crypt** on level 8 alone, a nave of shallow water
-  between tombs, two drowned on guard, and at its far end a dry dais with an altar and a magic
-  find on it. The `fennmynster` dev scenario starts on level 1.
+  between tombs, two drowned on guard, and at its far end a dry dais with an altar and the minster
+  reliquary of Sister Hild's last quest on it. Its `arrival`: "The water is up to the third step."
+  The `fennmynster` dev scenario starts on level 1.
 - **Fyrdelf** (#339; `campaigns/ascmearc/data/dungeons/fyrdelf.toml`; the design is
   `docs/design/campaign.md` §7): the Ascmearc's deepest first dungeon, the duergar's mine under
   Ascdūn, its way in a hidden location of the overworld (97, 21) leading to `fyrdelf:1`. Twelve
@@ -170,4 +174,5 @@ developer notes (CLAUDE.md, `docs/dev/`).
   the **foreman's cabin** on each gallery level (a duergar miner at his post, a pick-axe, a lamp,
   a brass key) and the **drake's hoard** on level 12 alone (the fire drake on its gold, a rare
   and a magic find, ringed with lava). The drake is not in the population, so it is met there
-  only. The `fyrdelf` dev scenario starts on level 1.
+  only (Factor Wulfrun's last quest). Its `arrival`: "The galleries smell of sulphur." The
+  `fyrdelf` dev scenario starts on level 1.

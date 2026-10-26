@@ -194,6 +194,7 @@ fn the_mynster_is_a_sanctuary_where_sister_hild_cures_and_mends() {
     assert_eq!(
         listed,
         [
+            ("quest-grave_goods".to_string(), None),
             ("mynster".to_string(), None),
             ("fen".to_string(), None),
             ("cure".to_string(), Some(60)),

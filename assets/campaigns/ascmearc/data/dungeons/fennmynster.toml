@@ -6,6 +6,7 @@
 [[dungeon]]
 id = "fennmynster"
 name = "Fennmynster"
+arrival = "The water is up to the third step."
 generator = "rooms"
 depth = 8
 size = [80, 21]

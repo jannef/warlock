@@ -669,8 +669,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   9999, which needs the `gold_coin` object; objects as levels place them; experience, at most
   1 000 000). Texts, one line each of at most 280 characters, neither empty nor padded: `offer`,
   `accept`, optional `decline` (default "Another time, then."), `reminder` (the giver's), and
-  `done` (said by whoever it is handed in to). Optional `requires` (a quest earlier in the file,
-  done before this one is offered), `requires_alignment` (the bands it is offered to, §8
+  `done` (said by whoever it is handed in to). Optional `requires` (a quest loaded before this
+  one, or a list of them, `["foremans_ledger", "barrow_heart"]`, all done before this one is
+  offered), `requires_alignment` (the bands it is offered to, §8
   "Alignment": `{ min = "kind" }` Kind or better, `{ max = "callous" }` Callous or worse, or
   both; never neither, nor a `min` above the `max`), `alignment` (how far completing it moves the
   player's alignment, −1000 to 1000, default 0), `repeatable` (default false), `reveals = {
@@ -684,7 +685,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   50 gold, a jade amulet, 100 XP), the gardener's "Three apples" (bring 3 apples; 10 gold, 15
   XP), and the wandering bard's "The bard's letter" (deliver a sealed letter, a new object, to the
   old hermit; 5 gold, 15 XP). All four help someone, and are a little good (`alignment` 20, 15,
-  10, and 10).
+  10, and 10). The Ascmearc's quests are §3b "Quests".
 - **The weather** (`data/weather.toml`, optional; without it the sky is always clear and every
   month a mild 10 °C with a swing of 8): `swing` at the top (a clear day's swing of temperature
   from the coldest hour to the warmest, °C, 0 to 30), exactly 12

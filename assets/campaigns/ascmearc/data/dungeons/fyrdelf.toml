@@ -7,6 +7,7 @@
 [[dungeon]]
 id = "fyrdelf"
 name = "Fyrdelf"
+arrival = "The galleries smell of sulphur."
 generator = "rooms"
 depth = 12
 size = [80, 21]

@@ -1,0 +1,49 @@
+# Reeve Leofric's quests (docs/design/campaign.md §6.2; the fields: data/quests.toml): the
+# Cealdhlāw chain. The road east, the first delve, the barrow's heart, and its wight.
+
+[[quest]]
+id = "barrow_rats"
+name = "Rats in the barrows"
+giver = "leofric"
+type = "kill"
+target = "rat"
+count = 5
+level = "cealdhlaw"
+reward = { gold = 25, xp = 30 }
+alignment = 15
+offer = "The rats are the first thing out of Cealdhlāw every spring, and the shepherds blame me for them. Go down into the barrow, east along the road in Hlāwdūn, and kill five. The town will pay for it."
+accept = "Good. East along the road, the big mound. Five rats, and mind what else is down there."
+decline = "Then the shepherds will keep shouting at me. I'll live."
+reminder = "Five rats from Cealdhlāw. The barrow is east along the road, in the downs."
+done = "Five fewer. The shepherds will find something else to shout about. The town's coin, as promised."
+
+[[quest]]
+id = "barrow_heart"
+name = "The barrow's heart"
+giver = "leofric"
+requires = "barrow_rats"
+type = "reach"
+target = "cealdhlaw:4"
+reward = { gold = 60, xp = 100 }
+alignment = 10
+offer = "The rats were the least of it. Something deeper in the barrow is stirring the rest up. Go down past the old passages, into the hollows under the hill: four levels down. Then come back and tell me what you saw."
+accept = "Four levels down. The deeper you go, the worse it gets: don't stay longer than you must."
+decline = "No shame in it. Few would go."
+reminder = "Four levels down into Cealdhlāw, under the hill. Then come back to me."
+done = "Dead things walking in the dark, and one of them giving the orders. I feared as much. Here: you've earned this."
+
+[[quest]]
+id = "wight"
+name = "The wight of the barrow"
+giver = "leofric"
+requires = "barrow_heart"
+type = "kill"
+target = "barrow_wight"
+level = "cealdhlaw"
+reward = { gold = 150, xp = 250, items = ["chain_mail"] }
+alignment = 30
+offer = "The thing you saw down there: the old folk call it the wight, the barrow's lord, cold as the mound. While it walks, the dead walk with it. Put it down for good, and Cēaptūn will owe you more than coin."
+accept = "Take a light and a good blade. It drinks the warmth out of you if you let it close."
+decline = "I won't send anyone down there who isn't ready. Come back when you are."
+reminder = "The wight of Cealdhlāw. It lies deep, in the hollows under the hill."
+done = "It's done, then? The shepherds say the lights on the downs have gone out. This mail was my father's; it will serve you better than it serves the wall."

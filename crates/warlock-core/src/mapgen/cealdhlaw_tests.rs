@@ -1,6 +1,7 @@
 //! Cealdhlāw, the Ascmearc's first dungeon (#337; docs/design/campaign.md §7): the branch's
 //! floors and danger, its population, its first level (a snapshot), the way in from Hlāwdūn,
-//! and the barrow chamber, a campaign vault that stamps on its rooms levels only.
+//! and the barrow chamber, a campaign vault stamped on its second floor for certain, with the
+//! silver chalice of Sister Hild's quest on its plinth.
 
 use super::tests::describe_in;
 use super::*;
@@ -96,21 +97,25 @@ fn the_floors_start_full_of_the_barrow_wave() {
         let floor = level(1, depth);
         let count = floor.creatures.len();
         assert!((least..=most).contains(&count), "depth {depth}: {count}");
-        // The chamber's guardian aside, everyone was drawn from those who live there.
+        // A shop's keeper aside, everyone was drawn from those who live there.
+        let keeper = CONTENT.creature_id("shopkeeper").expect("the keeper");
         for c in &floor.creatures {
-            assert!(spawning.population.contains(&c.creature), "depth {depth}");
+            let lives = spawning.population.contains(&c.creature);
+            assert!(lives || c.creature == keeper, "depth {depth}");
         }
     }
 }
 
 #[test]
-fn the_barrow_chamber_stamps_on_cealdhlaws_rooms_levels_only() {
+fn the_barrow_chamber_with_the_chalice_is_on_the_second_floor_for_certain() {
     let vault = chamber();
     assert_eq!(vault.campaign.as_deref(), Some("ascmearc"));
+    assert!(vault.pinned, "never drawn at random");
     let def = CONTENT.dungeon("cealdhlaw").expect("Cealdhlāw");
     let depths = CONTENT.dungeon("depths").expect("the Depths");
-    let on: Vec<u32> = (1..=6).filter(|d| vault.stamps_on(def, *d)).collect();
-    assert_eq!(on, [1, 2]);
+    let named: Vec<u32> = (1..=6).filter(|d| !def.vaults(*d).is_empty()).collect();
+    assert_eq!(named, [2]);
+    assert_eq!(def.vaults(2), ["barrow_chamber"]);
     assert!((1..=depths.depth).all(|d| !vault.stamps_on(depths, d)));
     // The shared vaults stamp here too.
     let guard = (CONTENT.vaults().iter())
@@ -118,9 +123,31 @@ fn the_barrow_chamber_stamps_on_cealdhlaws_rooms_levels_only() {
         .expect("the guard post");
     assert!((1..=6).all(|d| guard.stamps_on(def, d)));
 
-    let found: Vec<u64> = (1..=40).filter(|s| has_chamber(&level(*s, 1))).collect();
-    assert!(!found.is_empty(), "the chamber on some first level");
-    assert!((1..=10).all(|s| !has_chamber(&level(s, 3))));
+    let chalice = CONTENT.object_id("silver_chalice").expect("the chalice");
+    let altar = CONTENT.terrain_id("altar").expect("an altar");
+    let chalices = |level: &LevelTemplate| {
+        (level.objects.iter())
+            .flat_map(|(at, stacks)| stacks.iter().map(move |s| (*at, s)))
+            .filter(|(_, s)| s.object == chalice)
+            .map(|(at, _)| at)
+            .collect::<Vec<_>>()
+    };
+    for seed in 1..=8 {
+        let floor = level(seed, 2);
+        assert!(has_chamber(&floor), "seed {seed}");
+        let on = chalices(&floor);
+        assert_eq!(on.len(), 1, "seed {seed}: one chalice");
+        assert_eq!(
+            floor.terrain.get(on[0]),
+            Some(&altar),
+            "seed {seed}: on the plinth"
+        );
+        for depth in [1, 3] {
+            let other = level(seed, depth);
+            assert!(!has_chamber(&other), "seed {seed} depth {depth}");
+            assert!(chalices(&other).is_empty(), "seed {seed} depth {depth}");
+        }
+    }
 }
 
 /// The moves of a shortest walk on the overworld from `from` to `to` (8 directions).

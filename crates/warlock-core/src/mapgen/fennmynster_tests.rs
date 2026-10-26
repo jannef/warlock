@@ -140,12 +140,19 @@ fn the_sunken_crypt_lies_at_the_bottom_and_nowhere_else() {
     for seed in 1..=4 {
         let bottom = level(seed, 8);
         let on_altar = crypt_altar(&bottom).expect("the crypt");
-        // Its keepers stand in its water, and its altar holds the minster's treasure.
+        // Its keepers stand in its water, and its altar holds the minster's reliquary
+        // (Sister Hild's quest).
         let keepers = (bottom.creatures.iter())
             .filter(|c| c.creature == drowned && bottom.terrain.get(c.pos) == Some(&water))
             .count();
         assert!(keepers >= 2, "seed {seed}: {keepers}");
-        assert!(bottom.objects.contains_key(&on_altar), "seed {seed}");
+        let reliquary = CONTENT
+            .object_id("minster_reliquary")
+            .expect("the reliquary");
+        let held: Vec<_> = (bottom.objects.get(&on_altar).into_iter().flatten())
+            .map(|s| s.object)
+            .collect();
+        assert_eq!(held, [reliquary], "seed {seed}: the reliquary on the altar");
         for depth in [1, 7] {
             let floor = level(seed, depth);
             assert_eq!(crypt_altar(&floor), None, "seed {seed} depth {depth}");

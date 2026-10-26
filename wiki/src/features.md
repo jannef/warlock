@@ -87,8 +87,8 @@ dungeons under the barrows, the fen, and the hills.
 - **Quests** — simple, ADOM-like errands from the people you meet, offered through their topics:
   kill something, bring something, go somewhere, or carry something to someone else. Accept or
   decline, follow them in the quest log (`q`), and come back for gold, things, and experience.
-  Some quests tell you where a hidden place lies and mark it on your map. (Cēaptūn's quests are
-  still to come.)
+  Some quests tell you where a hidden place lies and mark it on your map: in Cēaptūn the reeve,
+  Sister Hild, and the mine-factor each have a chain of three.
 - **Ranged combat** — bows (drawn by Strength), a crossbow, a sling, and throwing weapons; aim
   ADOM-style with a cursor and a faint line of fire, watch the arrow fly, and pick it up where it
   fell. A flaming arrow flies burning and lights the dark where it lands until it burns out:
