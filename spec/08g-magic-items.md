@@ -144,4 +144,4 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Where**: loot (by `level` and `frequency`, never magic), general stores' stock (they sell
     and buy the scrolls class, §7 "Shops"), and the trap hall beside its arrival (two of each
     spell, a scroll of identify, and an unidentified dagger). The showcase has none. Later:
-    Spellcraft, Decipher Script, and Use Magic Device (§8 "Skills") may change reading.
+    Spellcraft and Decipher Script (§8 "Skills") may change reading.

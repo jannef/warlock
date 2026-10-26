@@ -744,7 +744,7 @@ mod tests {
             "{skills}"
         );
         assert!(skills.contains("| Swim | read by rules |"));
-        assert_eq!(skills.matches("\n| ").count(), 1 + 26, "{skills}");
+        assert_eq!(skills.matches("\n| ").count(), 1 + 25, "{skills}");
         let benefits = text("skill-benefits.md");
         assert!(
             benefits.contains(
