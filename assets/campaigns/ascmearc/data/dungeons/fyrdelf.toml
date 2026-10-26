@@ -28,12 +28,13 @@ temperature = 10
 # war chief, level 20, comes only out of depth) and the hobgoblins' (#454), who come down with the
 # goblins' ogres and trolls. The fire drake is not among them: it lives only on its hoard (the
 # vault at depth 12), so a run meets it there and nowhere else.
+# The hill trolls (#456) come down from the hills above to the troll's warm deep.
 danger = 8
 population = [
     "bat", "kobold", "kobold_archer", "kobold_shaman", "giant_centipede",
     "ember_beetle", "duergar_miner", "ogre_zombie", "lesser_fire_elemental", "grave_hound",
     "dretch", "duergar_warrior", "duergar_smith", "ogre", "burning_skull", "quasit", "troll",
-    "earth_elemental", "knocker", "hell_hound", "fire_salamander",
+    "earth_elemental", "knocker", "hell_hound", "hill_troll", "fire_salamander",
     "magma_crawler", "spectre", "charred_dead", "ash_wraith", "duergar_skeleton",
     "basilisk", "cinder_elemental", "rotting_troll",
     "hobgoblin", "hobgoblin_archer", "hobgoblin_legionnaire", "hobgoblin_warcaster",

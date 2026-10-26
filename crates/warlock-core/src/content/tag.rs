@@ -130,6 +130,10 @@ mod tests {
         assert!(members("fire-thing").contains(&"fire_drake".to_string()));
         assert!(members("caster").contains(&"kobold_shaman".to_string()));
         assert!(members("archer").contains(&"goblin_archer".to_string()));
+        // Every troll: the tribe's, the fen's, and the risen one.
+        for troll in ["troll", "marsh_troll", "rotting_troll", "elder_troll"] {
+            assert!(members("troll").contains(&troll.to_string()), "{troll}");
+        }
         assert!(content.tags().iter().all(|t| check(t).is_ok()));
     }
 

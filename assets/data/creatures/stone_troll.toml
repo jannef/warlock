@@ -1,0 +1,34 @@
+# The troll tribe (#456). A troll of the mountains' roots, grey and heavy as the rock it is half
+# made of: slow, its hide turns blades and points, though a hammer cracks it, and its fists stagger
+# whatever they hit. Its wounds close as you watch; fire hurts it more than steel, if less than
+# its kin.
+[[creature]]
+id = "stone_troll"
+level = 27
+xp = 145
+rarity = "uncommon"
+name = "stone troll"
+glyph = "T"
+fg = "#8a8a8a"
+speed = 900
+faction = "troll"
+tags = ["troll"]
+alignment = "evil"
+vision = "darkvision"
+sight = 8
+footsteps = 180
+hearing = 10
+weight = 600000
+stats = { strength = 24, dexterity = 15, toughness = 27, intelligence = 9, willpower = 15, presence = 7 }
+base_hp = 68
+natural = { defence = 1, protection = 5, name = "stony hide" }
+resist = { slashing = 25, piercing = 25, bludgeoning = -25, fire = -25 }
+on_eat = { message = "Gritty, like chewing gravel.", vomit = 50, stat = { toughness = 5 } }
+blood = "#3a3a3a"
+[creature.attack]
+damage = "4d6"
+damage_type = "bludgeoning"
+name = "fists"
+verb = "pounds"
+to_hit = 2
+on_hit = [{ status = "staggered", chance = 20, severity = 1 }]

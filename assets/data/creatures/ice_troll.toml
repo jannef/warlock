@@ -1,0 +1,33 @@
+# The troll tribe (#456). A troll of the glaciers, pale blue and rimed with frost: cold hardly
+# touches it, and its icy claws numb what they rake. Its wounds close as you watch, and fire
+# hurts it more than steel.
+[[creature]]
+id = "ice_troll"
+level = 24
+xp = 130
+rarity = "uncommon"
+name = "ice troll"
+glyph = "T"
+fg = "#a0c8e0"
+speed = 950
+faction = "troll"
+tags = ["troll"]
+alignment = "evil"
+vision = "darkvision"
+sight = 8
+footsteps = 160
+hearing = 10
+weight = 400000
+stats = { strength = 28, dexterity = 12, toughness = 31, intelligence = 9, willpower = 15, presence = 6 }
+base_hp = 96
+natural = { defence = 1, protection = 3, name = "frosted hide" }
+resist = { cold = 75, fire = -50 }
+on_eat = { message = "Cold as the ice it came from.", vomit = 50, stat = { toughness = 5 } }
+blood = "#2a4a5a"
+[creature.attack]
+damage = "3d10"
+damage_type = "slashing"
+name = "claws"
+verb = "rakes"
+to_hit = 2
+on_hit = [{ status = "sluggish", chance = 20, severity = 1 }]

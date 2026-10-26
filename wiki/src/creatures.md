@@ -102,6 +102,15 @@ Creatures of factions at war fight each other on sight, wherever they meet: a ko
 and a pack of giant rats fight to the death, and turn on you when they see you. Light your
 lantern near them and a war band's archer will find you.
 
+**Trolls** are a tribe of their own (the trolls faction) from about level 13 to 42: the troll and
+the hill troll of Fyrdelf, and the forest, ice, stone, two-headed, and fire trolls, the troll
+shaman, the troll chieftain, and the elder troll further on. Every creature's hit points come
+back by its Toughness, and a troll's Toughness is the greatest of anything its size, so its
+wounds close while you watch: hit it hard and keep hitting. Fire hurts every troll more than
+steel (half again as much; the stone troll a quarter more) but the fire troll, which shrugs it off and hates the cold instead.
+The marsh troll of the fen is a marsh thing and the rotting troll is undead, but a quest to kill
+trolls counts them too.
+
 ## Incorporeal creatures
 
 Some restless dead have no body to stop them: **incorporeal** creatures (the ghosts, shadows,

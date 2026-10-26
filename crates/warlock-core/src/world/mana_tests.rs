@@ -96,7 +96,7 @@ max = 1
 eases = 120
 penalty = { from = 1, strength = -2, dexterity = -2 }
 
-# Named by the elementals' on_hit (#453): kept as the built-in ones are, untouched by mana.
+# Named by the elementals' (#453) and trolls' (#456) on_hit: kept as the built-in ones are, untouched by mana.
 [[status]]
 id = "staggered"
 name = "Staggered"
