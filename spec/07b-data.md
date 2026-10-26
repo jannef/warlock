@@ -677,8 +677,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Quests** (`data/quests.toml`, optional; without it nobody gives quests; §8 "Quests"): each
   `[[quest]]` has a unique `id` (lower-case letters, digits, and underscores), a `name` (the log's
   title and the topic, at most 32 characters), a `giver` (a creature type with a dialogue, or an
-  npc id with one), a `type` and a `target`: `kill` (a creature type, not the player; `count` 1 to
-  99, default 1; optional `level`, a level id or a dungeon branch id for any of its levels),
+  npc id with one), a `type` and a `target`: `kill` (a creature type, not the player, `count` 1 to
+  99, default 1; or a tribe, `tribe:ID`, `count` 1 to 999; optional `level`, a level id or a dungeon branch id for any of its levels),
   `bring` (an object type; `count`; optional `to`, someone else with a dialogue who takes it),
   `reach` (a level id, a branch level such as `depths:3` included; never `repeatable`), or
   `deliver` (an object type the giver hands over; `to` required, not the giver); a field another
@@ -703,6 +703,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
   XP), and the wandering bard's "The bard's letter" (deliver a sealed letter, a new object, to the
   old hermit; 5 gold, 15 XP). All four help someone, and are a little good (`alignment` 20, 15,
   10, and 10). The Ascmearc's quests are §3b "Quests".
+- **Tribes** (`data/tribes/<id>.toml`, one file each, and a campaign's `data/tribes/`; optional;
+  §8 "Quests"): each `[[tribe]]` has a unique `id`, a `name` (one of them, "goblin") and a
+  `plural` ("goblins"), each 1 to 24 characters, and its members: every creature type of its
+  `factions`, less `except` (types of those factions; at least one member must be left), plus
+  `creatures` (types besides, none a member already). Optional `except_note` (one line of at most
+  280 characters, said after the members about those left out: "Not the ogres, mind, nor the
+  trolls.") and `count` (1 to 999: how many the guild asks for). A tribe with no member, an
+  unknown faction or creature type, or the player is a content error. A shared tribe's
+  `except` and `creatures` name shared types only, a campaign's its own or shared ones; a
+  campaign's types join a shared tribe through its `factions`. Built in: the seven of §8
+  "Quests".
 - **The weather** (`data/weather.toml`, optional; without it the sky is always clear and every
   month a mild 10 °C with a swing of 8): `swing` at the top (a clear day's swing of temperature
   from the coldest hour to the warmest, °C, 0 to 30), exactly 12

@@ -12,9 +12,10 @@
 //! owner's decision).
 //!
 //! **Goals**, and how far they have got ([`progress`]):
-//! - kill: the player's own kills of the creature type (on its level or branch, if it names
-//!   one), counted from a tally of the kills of every creature type (so kills
-//!   made before the quest was taken count; a repeat counts only those since);
+//! - kill: the player's own kills of the creature type, or of any member type of the tribe (on
+//!   its level or branch, if it names one; else on every level summed), counted from a tally of
+//!   the kills of every creature type (so kills made before the quest was taken count; a repeat
+//!   counts only those since);
 //! - bring: how many of the object the player carries;
 //! - reach: whether the player has been to the level (before taking the quest too);
 //! - deliver: whether the player carries the object the giver handed over. Dropping it blocks
@@ -27,7 +28,9 @@ use super::talk::capitalized;
 use super::{ActorId, Deed, Spent, TopicView, World};
 use crate::action::{Event, Positions};
 use crate::content::StatUse;
-use crate::content::{Content, DialogueId, Goal, QuestDef, QuestId, QuestKind, RevealWhen};
+use crate::content::{
+    Content, DialogueId, Goal, KillTarget, QuestDef, QuestId, QuestKind, RevealWhen,
+};
 use crate::object::{self, Stack};
 use crate::perception::PerceptionView;
 use crate::talent::TalentMods;
@@ -155,13 +158,12 @@ impl Quests {
 
     /// The player's kills that count toward kill quest `def`, all of them.
     fn kills_for(&self, content: &Content, def: &QuestDef) -> u32 {
-        let Goal::Kill { creature, .. } = def.goal else {
-            return 0;
-        };
-        let id = &content.creature(creature).id;
         (self.kills.iter())
-            .filter(|(level, _)| def.counts_kill(content, creature, level))
-            .filter_map(|(_, kills)| kills.get(id))
+            .flat_map(|(level, kills)| kills.iter().map(move |(c, n)| (level, c, *n)))
+            .filter(|(level, c, _)| {
+                (content.creature_id(c)).is_some_and(|c| def.counts_kill(content, c, level))
+            })
+            .map(|(_, _, n)| n)
             .sum()
     }
 
@@ -280,14 +282,24 @@ fn in_sentence(name: &str) -> String {
     }
 }
 
-/// `n` creatures of type `creature`: "a kobold shaman", "3 giant rats".
-fn creatures(content: &Content, creature: crate::content::CreatureId, n: u32) -> String {
-    let def = content.creature(creature);
+/// `n` of what a kill quest is after: "a kobold shaman", "3 giant rats", "100 goblins".
+fn creatures(content: &Content, target: KillTarget, n: u32) -> String {
     if n == 1 {
-        format!("{} {}", crate::content::article(&def.name), def.name)
+        let name = target.name(content, true);
+        format!("{} {name}", crate::content::article(name))
     } else {
-        format!("{n} {}", def.plural)
+        format!("{n} {}", target.name(content, false))
     }
+}
+
+/// The members of a tribe quest `def`'s run can meet, by their plurals: "goblins, goblin
+/// archers, and goblin chiefs".
+pub fn members(content: &Content, def: &QuestDef, tribe: crate::content::TribeId) -> String {
+    let plurals: Vec<&str> = (content.tribe(tribe))
+        .members_in(content, def.campaign.as_deref())
+        .map(|c| content.creature(c).plural.as_str())
+        .collect();
+    crate::content::and_list(&plurals)
 }
 
 /// What quest `def` asks, as the log says it: "Kill 3 giant rats in the Arena.", then where,
@@ -305,14 +317,18 @@ fn objective(content: &Content, def: &QuestDef) -> String {
 pub fn asks(content: &Content, def: &QuestDef) -> String {
     match &def.goal {
         Goal::Kill {
-            creature,
+            target,
             count,
             level,
         } => {
             let place = level.as_deref().map_or_else(String::new, |l| {
                 format!(" in {}", in_sentence(&content.place_name(l)))
             });
-            format!("Kill {}{place}.", creatures(content, *creature, *count))
+            let who = match *target {
+                KillTarget::Tribe(tribe) => format!(": {}", members(content, def, tribe)),
+                KillTarget::Creature(_) => String::new(),
+            };
+            format!("Kill {}{place}{who}.", creatures(content, *target, *count))
         }
         Goal::Bring { object, count, .. } => format!(
             "Bring {} to {}.",
@@ -360,9 +376,8 @@ fn next_step(content: &Content, def: &QuestDef) -> String {
 fn progress_news(content: &Content, def: &QuestDef, (have, need): (u32, u32)) -> String {
     let done = have >= need;
     let mut text = match def.goal {
-        Goal::Kill { creature, .. } => {
-            let what = content.creature(creature);
-            let name = if need == 1 { &what.name } else { &what.plural };
+        Goal::Kill { target, .. } => {
+            let name = target.name(content, need == 1);
             format!("Quest updated: {have} / {need} {name}.")
         }
         Goal::Bring { object, .. } => {

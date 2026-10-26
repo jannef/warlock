@@ -1330,6 +1330,8 @@ mod time_tests;
 #[cfg(test)]
 mod trap_tests;
 #[cfg(test)]
+mod tribe_tests;
+#[cfg(test)]
 mod variant_tests;
 #[cfg(test)]
 mod voice_tests;

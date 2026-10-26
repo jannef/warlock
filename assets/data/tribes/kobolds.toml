@@ -1,0 +1,6 @@
+# Kobolds (spec §8 "Quests", docs/design/adventurers-guild.md §6).
+[[tribe]]
+id = "kobolds"
+name = "kobold"
+plural = "kobolds"
+factions = ["kobolds"]

@@ -1,0 +1,7 @@
+# Fire things (spec §8 "Quests", docs/design/adventurers-guild.md §6): what burns in the deep
+# of Fyrdelf.
+[[tribe]]
+id = "fire"
+name = "fire thing"
+plural = "fire things"
+factions = ["fire"]
