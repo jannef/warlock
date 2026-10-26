@@ -48,9 +48,9 @@ pub enum Ability {
     /// gives it at their level; unavailable while its cooldown lasts (Rage: while raging and
     /// exhausted), and, for the paladin's gifts, while they have strayed from Good.
     Class(ClassActive),
-    /// A caster's spell (spec §8 "Class abilities"; the placeholders until the spell system):
-    /// [`Action::Cast`], had by whoever's class gives the ability that names it; unavailable
-    /// without the mana it costs.
+    /// A caster's spell (spec §8 "Class abilities", "Spells"): [`Action::Cast`], had by
+    /// whoever's class gives the ability that names it; unavailable without the mana it costs
+    /// (that check needs the caster level: [`spell_unavailable`]).
     Spell(ClassSpell),
     /// A skill used as an action (`kind = "action"` in `data/skills.toml`) that the actor is
     /// trained in, whose use is not in the game yet: listed, never available (spec §8
@@ -100,6 +100,8 @@ pub enum Source {
     /// The character's class (spec §8 "Class abilities"): its actives, and throwing one's voice
     /// (everyone's until the class tables give it to the bard alone).
     Class,
+    /// The spells the character casts (spec §8 "Spells"), paid in mana.
+    Spell,
     /// A talent the character took (spec §8 "Talents"): its active ones.
     Talent,
     /// A trained skill used as an action (spec §8 "Skills").
@@ -116,6 +118,7 @@ impl Source {
         Source::Race,
         Source::Sign,
         Source::Class,
+        Source::Spell,
         Source::Talent,
         Source::Skill,
         Source::WeaponSkill,
@@ -128,6 +131,7 @@ impl Source {
             Source::Race => "Racial",
             Source::Sign => "Birth sign",
             Source::Class => "Class",
+            Source::Spell => "Spells",
             Source::Talent => "Talents",
             Source::Skill => "Skills",
             Source::WeaponSkill => "Weapon skills",
@@ -141,6 +145,7 @@ impl Source {
             Source::Race => "race",
             Source::Sign => "sign",
             Source::Class => "class",
+            Source::Spell => "spell",
             Source::Talent => "talent",
             Source::Skill => "skill",
             Source::WeaponSkill => "weapon_skill",
@@ -343,9 +348,7 @@ impl Ability {
         match self {
             Ability::Sign(active) => content.sign_active(active).map_or("", |a| &a.name),
             Ability::Class(active) => content.class_active(active).map_or("", |a| &a.name),
-            Ability::Spell(spell) => content
-                .class_spell(spell)
-                .map_or("", |(t, s)| s.name.as_deref().unwrap_or(&t.name)),
+            Ability::Spell(spell) => content.class_spell(spell).map_or("", |s| &s.name),
             Ability::Skill(id) => &content.skill(id).name,
             Ability::ThrowVoice => "Throw your voice",
             Ability::Disarm => "Disarm a trap",
@@ -363,9 +366,7 @@ impl Ability {
         match self {
             Ability::Sign(active) => content.sign_active(active).map_or("", |a| &a.description),
             Ability::Class(active) => content.class_active(active).map_or("", |a| &a.description),
-            Ability::Spell(spell) => (content.class_spell(spell)).map_or("", |(t, s)| {
-                s.description.as_deref().unwrap_or(&t.description)
-            }),
+            Ability::Spell(spell) => content.class_spell(spell).map_or("", |s| &s.description),
             Ability::Skill(id) => &content.skill(id).description,
             Ability::ThrowVoice => {
                 "Make a voice sound at a place you see nearby: those who hear it go and look there."
@@ -398,7 +399,8 @@ impl Ability {
     pub const fn source(self) -> Source {
         match self {
             Ability::Sign(_) => Source::Sign,
-            Ability::Class(_) | Ability::Spell(_) => Source::Class,
+            Ability::Class(_) => Source::Class,
+            Ability::Spell(_) => Source::Spell,
             Ability::Skill(_) | Ability::Disarm | Ability::PickLock | Ability::Steal => {
                 Source::Skill
             }
@@ -472,11 +474,11 @@ impl Ability {
     }
 
     /// How far a cell it aims at may be, in cells, with what `content` says of it: a spell's
-    /// range is its data's (a hex's `range`, a burst's flight, a bolt's length); every other
-    /// ability's is [`Ability::range`].
+    /// is its data's before Willpower ([`crate::content::SpellData::base_reach`]; a caster's
+    /// own is [`Actor::spell_reach`]); every other ability's is [`Ability::range`].
     pub fn reach(self, content: &Content) -> Option<i32> {
         match self {
-            Ability::Spell(spell) => content.class_spell(spell).and_then(|(_, s)| s.range()),
+            Ability::Spell(spell) => content.class_spell(spell).and_then(|s| s.base_reach()),
             other => other.range(),
         }
     }
@@ -570,7 +572,8 @@ impl Ability {
                             .or((actor.mana < cost).then_some(Unavailable::NoMana))
                     })
             }
-            Ability::Spell(spell) => short_of_mana(actor, content, spell),
+            // Its mana is asked with the caster level ([`spell_unavailable`]).
+            Ability::Spell(_) => None,
             Ability::Sign(active) => (actor.talent_mods(content).sign_cooldown(active))
                 .filter(|&cooldown| actor.effects.has(cooldown))
                 .map(Unavailable::While),
@@ -621,11 +624,20 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
     cooldowns.into_iter().find(|&s| actor.effects.has(s))
 }
 
-/// [`Unavailable::NoMana`] when `actor` has less mana than spell `spell` costs them.
-fn short_of_mana(actor: &Actor, content: &Content, spell: ClassSpell) -> Option<Unavailable> {
-    let (_, def) = content.class_spell(spell)?;
-    let cost = actor.spell_cost(content, def.mana);
-    (actor.mana < cost).then_some(Unavailable::NoMana)
+/// Why `actor`, of caster level `caster_level`, cannot cast `spell` now: what
+/// [`Ability::unavailable`] says, else [`Unavailable::NoMana`] while it has less mana than the
+/// spell costs it ([`Actor::spell_cost`]).
+pub fn spell_unavailable(
+    actor: &Actor,
+    content: &Content,
+    spell: ClassSpell,
+    caster_level: i32,
+) -> Option<Unavailable> {
+    let ability = Ability::Spell(spell);
+    ability.unavailable(actor, content).or_else(|| {
+        let def = content.class_spell(spell)?;
+        (actor.mana < actor.spell_cost(content, def, caster_level)).then_some(Unavailable::NoMana)
+    })
 }
 
 /// Why `actor` cannot use an ability that costs `cost` (spec §8 "Resources"):
@@ -672,6 +684,7 @@ mod tests {
                 "Racial",
                 "Birth sign",
                 "Class",
+                "Spells",
                 "Talents",
                 "Skills",
                 "Weapon skills",

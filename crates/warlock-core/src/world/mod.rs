@@ -90,6 +90,7 @@ mod beast_friend;
 mod bleed;
 mod buff;
 mod carry;
+mod cast;
 mod caster;
 mod caster_level;
 mod class;
@@ -160,6 +161,7 @@ mod volley;
 
 pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
 pub use alignment::Deed;
+pub use cast::Reach;
 pub use caster_level::casting_percent;
 pub use creation::{chosen_with_talents, creation_count, parse_talents, pick_text};
 pub use dig::{MAX_DIG, WORK_SCALE, dig_work, digs_to_break};
@@ -176,6 +178,7 @@ pub use quest::{QuestRecord, QuestView, Quests, Stage, asks as quest_asks};
 use rest::Ended;
 pub use shop::{Shop, ShopStatus, count_of, favour, part_of, unpaid_parts};
 pub use sign_picks::BREATH_RANGE;
+pub use spell::cone_cells;
 pub(crate) use stars::{RISEN, RISEN_TWICE};
 pub use talent::Due;
 pub use talk::{Conversation, Talk, TopicView};
@@ -247,6 +250,10 @@ pub struct WorldState {
     pub(crate) messages: MessageLog,
     /// The player's vision profile (an id in `data/vision.toml`).
     pub(crate) vision: String,
+    /// Whether `vision` is the dev `vision:` override, which a unique item's Vision power never
+    /// betters (`world/eyes.rs`).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub(crate) vision_dev: bool,
     /// The player's character (spec §8 "Character creation"): race, gender, and class, the stat
     /// the gender raised, birth date, and birth sign; none when the scenario gives the player's
     /// eyes and stats itself.
@@ -631,6 +638,7 @@ impl World {
             next_actor_id: 1,
             messages: MessageLog::default(),
             vision,
+            vision_dev: false,
             character,
             kit: with_kit,
             lantern_lit: false,
@@ -1197,6 +1205,8 @@ mod buff_tests;
 #[cfg(test)]
 mod burden_tests;
 #[cfg(test)]
+mod cast_tests;
+#[cfg(test)]
 mod caster_level_tests;
 #[cfg(test)]
 mod caster_tests;
@@ -1364,6 +1374,8 @@ mod tests;
 mod time_tests;
 #[cfg(test)]
 mod trap_tests;
+#[cfg(test)]
+mod unique_tests;
 #[cfg(test)]
 mod variant_tests;
 #[cfg(test)]

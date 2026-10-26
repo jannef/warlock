@@ -44,6 +44,7 @@ fn content() -> Arc<Content> {
          [[faction]]\nid = \"duergar\"\nname = \"duergar\"\n\
          [[faction]]\nid = \"fire\"\nname = \"fire things\"\n\
          [[faction]]\nid = \"devil\"\nname = \"devils\"\n\
+         [[faction]]\nid = \"yugoloth\"\nname = \"yugoloths\"\n\
          [[faction]]\nid = \"wildlife\"\nname = \"wildlife\"\n\
          [[faction]]\nid = \"peaceful\"\nname = \"peaceful folk\"\n\
          [[faction]]\nid = \"merchants\"\nname = \"merchants\"\n\
@@ -85,6 +86,7 @@ fn magic(w: &World, object: &str, affixes: &[(&str, i32)], identified: bool) -> 
         name: rare.then(|| "Grim Bite".into()),
         identified,
         carried: 0,
+        unique: None,
     };
     let id = c.object_id(object).expect("object");
     Stack::with_magic(id, 1, magic)

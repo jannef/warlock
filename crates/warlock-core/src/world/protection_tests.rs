@@ -111,6 +111,7 @@ fn hardened(id: &str, value: i32) -> Stack {
         name: None,
         identified: false,
         carried: 0,
+        unique: None,
     };
     let object = CONTENT.object_id(id).expect(id);
     (magic.check(CONTENT.object(object), &CONTENT)).expect("a valid item");

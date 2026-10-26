@@ -287,8 +287,8 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
-    // A priest blessed and drained to their last mana: the spells in the Class
-    // group, those that cost more than is left greyed out ("you have too little mana").
+    // A priest blessed and drained to their last mana: the spells in their Spells group with
+    // tier and cost, those that cost more than is left greyed out ("you have too little mana").
     Case {
         name: "abilities-menu-spells",
         character: Some("human,female,priest"),
@@ -497,6 +497,22 @@ const CASES: &[Case] = &[
         name: "variant-description",
         actions: "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*3 move:N \
             pickup:b",
+        screen: Some("describe"),
+        ..BASE
+    },
+    // A unique item (the quarry's Stonebiter): unidentified, a rare dagger; identified, its
+    // name, affixes, power, and lore.
+    Case {
+        name: "unique-description-unidentified",
+        scenario: "quarry",
+        actions: "move:W pickup",
+        screen: Some("describe"),
+        ..BASE
+    },
+    Case {
+        name: "unique-description",
+        scenario: "quarry",
+        actions: "move:W pickup identify",
         screen: Some("describe"),
         ..BASE
     },
