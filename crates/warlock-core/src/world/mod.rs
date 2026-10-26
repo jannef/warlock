@@ -129,6 +129,7 @@ mod openings;
 mod path;
 mod perceive;
 mod quest;
+mod quick_leave;
 mod racial;
 mod rage;
 mod read;
@@ -1309,6 +1310,8 @@ mod parts_tests;
 mod protection_tests;
 #[cfg(test)]
 mod quest_tests;
+#[cfg(test)]
+mod quick_leave_tests;
 #[cfg(test)]
 mod race_tests;
 #[cfg(test)]

@@ -162,7 +162,7 @@ fn the_lost_shaft_waits_for_the_ledger_and_the_barrows_heart_and_reveals_fyrdelf
     // Out on the overworld, made after the reveal, the way in is marked and known.
     let id = w.state.player;
     w.state.actors.get_mut(&id).expect("player").pos = Pos::new(45, 17);
-    act(&mut w, "ascend");
+    act(&mut w, "ascend"); // the quick leave: nobody in town is hostile
     assert_eq!(w.perception().level_id(), "ascmearc");
     let known = dump::layer_rows(&w, Layer::Locations).join("\n");
     assert!(known.contains("(97, 21) Fyrdelf"), "{known}");
