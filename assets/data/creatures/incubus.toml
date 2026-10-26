@@ -1,0 +1,36 @@
+# The leftover fiends (#450). The fiend that comes to women in the night in the shape of their
+# desire and drinks their life with a kiss: what it takes is the body's vigour, Toughness, for
+# good unless the body holds on (a temple's mending gives it back). The succubus is the same fiend
+# under its other name, and the two share their numbers. Its shapes, its wings, and its charm
+# wait for mechanics of their own.
+[[creature]]
+id = "incubus"
+level = 27
+xp = 145
+rarity = "rare"
+name = "incubus"
+glyph = "n"
+fg = "#9a50c0"
+speed = 1050
+faction = "fiends"
+tags = ["fiend"]
+alignment = "evil"
+vision = "darkvision"
+sight = 10
+opens_doors = true
+footsteps = 20
+hearing = 15
+weight = 75000
+stats = { strength = 22, dexterity = 17, toughness = 23, intelligence = 21, willpower = 25, presence = 28 }
+base_hp = 68
+natural = { defence = 1, protection = 0, name = "skin" }
+resist = { fire = 50, cold = 50, poison = 50 }
+on_eat = { message = "It tastes of nothing you can name.", vomit = 60, harm = "1d3" }
+blood = "#4a1a4a"
+[creature.attack]
+damage = "3d8"
+damage_type = "necrotic"
+name = "kiss"
+verb = "kisses"
+to_hit = 2
+on_hit = [{ drain = "toughness", points = 1, chance = 15, check = "toughness", difficulty = 17 }]
