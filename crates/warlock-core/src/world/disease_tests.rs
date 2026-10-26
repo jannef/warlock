@@ -803,7 +803,7 @@ fn diseases_and_stat_damage_are_saved_hashed_and_replayed() {
 }
 
 #[test]
-fn the_built_in_diseases_are_the_seven_pathologies() {
+fn the_built_in_diseases_are_the_eight_pathologies() {
     let content = Content::builtin().expect("builtin content");
     let ids: Vec<&str> = (content.disease_defs().iter())
         .map(|d| d.id.as_str())
@@ -817,6 +817,7 @@ fn the_built_in_diseases_are_the_seven_pathologies() {
             "marsh_ague",
             "grave_rot",
             "mummy_rot",
+            "burrowing_worms",
             "brain_fever"
         ]
     );
@@ -855,12 +856,19 @@ fn the_built_in_diseases_are_the_seven_pathologies() {
     // Grave rot: from rotten food, never by itself, and it kills.
     let rot = def("grave_rot");
     assert!(rot.caught.contains(&"rotten_food".to_string()) && !rot.recovers() && rot.kills);
+    // Burrowing worms (the wormhost's, #386): quick, and they kill unless cured.
+    let worms = def("burrowing_worms");
+    assert!(worms.kills && worms.recovers() && worms.hp.is_some());
+    assert_eq!(
+        damaged("burrowing_worms"),
+        [Stat::Toughness, Stat::Intelligence]
+    );
     assert_eq!(def("brain_fever").check, Stat::Willpower);
     assert!(
         content
             .disease_defs()
             .iter()
-            .all(|d| !d.kills || d.id == "grave_rot")
+            .all(|d| !d.kills || ["grave_rot", "burrowing_worms"].contains(&d.id.as_str()))
     );
 }
 

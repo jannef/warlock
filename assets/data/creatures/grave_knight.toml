@@ -1,0 +1,39 @@
+# The undead roster (#383, batch 3). A knight who broke his oath and was buried in his armour,
+# risen still keeping the sword-and-shield drill he knew in life: heavy mail or plate, and a long
+# sword that is now and then enchanted. It opens doors. Not yet in any dungeon's population.
+[[creature]]
+id = "grave_knight"
+level = 22
+xp = 120
+rarity = "uncommon"
+name = "grave knight"
+glyph = "Z"
+fg = "#a8a8b8"
+faction = "undead"
+tags = ["undead"]
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+opens_doors = true
+footsteps = 90
+hearing = 12
+weight = 80000
+stats = { strength = 20, dexterity = 16, toughness = 21, intelligence = 19, willpower = 24, presence = 19 }
+base_hp = 55
+natural = { defence = 1, protection = 0, name = "dead flesh" }
+attack = { damage = "3d8", damage_type = "bludgeoning", name = "slam", verb = "slams", to_hit = 2 }
+resist = { poison = 100 }
+weapon_skills = { long_blades = 4, sword_and_board = 2 }
+on_eat = { message = "Old meat, kept too long in iron.", vomit = 80, harm = "1d4" }
+blood = "#3a3030"
+# Its gear (spec §8 "Creature gear"): the arms it was buried in.
+[[creature.gear]]
+chance = 90
+one_of = ["long_sword"]
+magic = 25
+[[creature.gear]]
+chance = 70
+one_of = ["small_shield"]
+[[creature.gear]]
+chance = 90
+one_of = ["chain_mail", "plate_armour"]
