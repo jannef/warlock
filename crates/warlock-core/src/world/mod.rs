@@ -124,6 +124,7 @@ mod hurl;
 mod ice;
 mod incorporeal;
 mod lantern;
+mod learn;
 mod level;
 mod lockpick;
 mod loot;
@@ -180,6 +181,7 @@ pub use free_blow::FreeBlows;
 pub use gifts::{STARE_RANGE, Streak};
 pub(crate) use hash::fnv1a;
 pub use lantern::Lantern;
+pub use learn::{Odds, study_odds, study_turns};
 pub use level::{Fire, LevelState};
 pub use loot::Identified;
 pub use quest::{QuestRecord, QuestView, Quests, Stage, asks as quest_asks};
@@ -350,9 +352,18 @@ impl WorldState {
 
     /// What `actor` carries against what it can (spec §8 "Burden"): the player by their race's
     /// size (and whether it ignores Burdened) when the run has a character, anyone else by its
-    /// creature type's size.
+    /// creature type's size; inside a special room that scales the limit (a heavy hall), by its
+    /// percent. The one place the rules ask for a load.
     pub(crate) fn load(&self, content: &Content, actor: &Actor) -> Load {
-        burden::load(actor, self.race_of(content, actor), content)
+        self.load_at(content, actor, actor.pos)
+    }
+
+    /// [`WorldState::load`] as it would be were `actor` at `pos` on its level (a step into a
+    /// heavy hall).
+    pub(crate) fn load_at(&self, content: &Content, actor: &Actor, pos: Pos) -> Load {
+        let room =
+            (self.levels.get(&actor.level)).map_or(100, |l| l.effects_at(content, pos).burden());
+        burden::load(actor, self.race_of(content, actor), content, room)
     }
 
     /// The size of `actor`, an index into [`Content::sizes`]: the player's race's when the run
@@ -480,6 +491,8 @@ enum Spent {
     Dig(Pos),
     /// Searching for up to this many turns (see [`World::search`]).
     Search(u8),
+    /// Studying a spell from a scroll (see [`World::study`]).
+    Study(learn::Lesson),
     /// Dev: the clock jumps ahead; nobody acts, then perception is recomputed.
     Skip(Duration),
 }
@@ -692,6 +705,7 @@ impl World {
             alignment_override: None,
             npc: None,
             talk: Talk::default(),
+            spells: Default::default(),
             streak: None,
             satiation: content.hunger().map(|h| Satiation::new(h.start)),
             stance: CombatStance::Neutral,
@@ -1035,6 +1049,7 @@ impl World {
             Spent::Meal(dish) => self.dine(dish, &mut events),
             Spent::Dig(at) => self.dig(at, &mut events),
             Spent::Search(turns) => self.search(turns, &mut events),
+            Spent::Study(lesson) => self.study(lesson, &mut events),
             Spent::Skip(duration) => {
                 // Nobody acts or gains energy.
                 self.state.time += duration;
@@ -1145,6 +1160,7 @@ impl World {
             Action::ThrowVoice(at) => return self.throw_voice(*at, events),
             Action::Eat(meal) => return self.eat(*meal),
             Action::Read { item, target } => return self.read(*item, *target, events),
+            Action::Study { item } => return self.start_study(*item),
             Action::Dig(dir) => return self.start_dig(*dir),
             Action::Search(turns) => return Spent::Search(*turns),
             Action::Disarm(dir) => return self.disarm(*dir, events),
@@ -1271,6 +1287,8 @@ mod experience_tests;
 #[cfg(test)]
 mod fight_tests;
 #[cfg(test)]
+mod fixture_factions;
+#[cfg(test)]
 mod flavour_tests;
 #[cfg(test)]
 mod focus_tests;
@@ -1284,6 +1302,8 @@ mod gem_tests;
 mod gifts_tests;
 #[cfg(test)]
 mod hearing_tests;
+#[cfg(test)]
+mod heavy_hall_tests;
 #[cfg(test)]
 mod hold_tests;
 #[cfg(test)]
@@ -1302,6 +1322,8 @@ mod ki_tests;
 mod land_talent_tests;
 #[cfg(test)]
 mod lantern_tests;
+#[cfg(test)]
+mod learn_tests;
 #[cfg(test)]
 mod light_tests;
 #[cfg(test)]

@@ -1,0 +1,6 @@
+[[mishap]]
+id = "hard_lesson"
+band = "lucky"
+weight = 4
+message = "The failure teaches you something all the same."
+effect = { kind = "mark", stat = "intelligence" }

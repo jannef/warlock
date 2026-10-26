@@ -38,11 +38,11 @@ expression: "render(case, content.clone())"
                               │   Rest                                 b                 │
                               │   Eat                                  e                 │
                               │   Read a scroll                        r                 │
+                              │   Study a scroll's spell               L                 │
                               │   Look around                          l                 │
                               │   Throw or shoot the missile weapon    t                 │
                               │   Throw from the pack                  T                 │
                               │   More aggressive stance               +                 │
                               │   More defensive stance                -                 │
-                              │   Abilities                            a                 │
                               │ ↑↓ scroll   ? or Esc close                             ↓ │
  The Hub  ·  HP 17/17  ·  MP 2└──────────────────────────────────────────────────────────┘10 °C  ·  Turn 1   ? controls

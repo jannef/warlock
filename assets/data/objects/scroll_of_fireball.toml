@@ -28,3 +28,5 @@ range = 10
 blast = 1000
 heat = true
 noise = { sound = "explosion", loudness = 150 }
+# Studying it (spec §8 "Spells", `study:b`) teaches the wizard's Fire burst.
+teaches = "fire_burst"

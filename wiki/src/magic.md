@@ -1,10 +1,10 @@
 # Magic
 
 A **spell** is cast from the abilities menu (`a`), under its own heading *Spells*, and paid in
-[mana](mana.md). Today the spells are the casters' (the priest's, the druid's, the wizard's, and
-the witch's, given by their [class tables](classes.md#levels)); learning spells from scrolls is
-coming. Every spell is measured by the same rules below: its tier, your caster level, its shape,
-and how it finds its target.
+[mana](mana.md). You know a spell for good once your class gives it (the priest's, the druid's,
+the wizard's, and the witch's spells come with their [class tables](classes.md#levels)) or once
+you have learned it from a scroll (below). Every spell is measured by the same rules below: its
+tier, your caster level, its shape, and how it finds its target.
 
 ## The spells
 
@@ -95,3 +95,44 @@ and **necrotic**, join the [damage types](damage-types.md).
 
 Spells you cast are yours: what they kill earns you its experience, and a spell of your own that
 catches you can kill you.
+
+## Learning spells from scrolls
+
+Some spell scrolls teach a spell: the scroll of fireball teaches *Fire burst*, the scroll of
+lightning *Call lightning*, the scroll of frost *Frost*. **Reading** a scroll casts its spell once
+and costs no mana ([Scrolls](scrolls.md)). **Studying** it (`L`, then the scroll) teaches you
+its spell for good, and uses the scroll up whatever comes of it.
+
+You can study a scroll once you know what it is (you have read one like it, or identified it)
+and only if you do not know its spell yet; an unknown scroll is refused ("You do not know what
+this says."), so identify your scrolls first. A scroll of a spell you know can still be read,
+sold, or given away. You need some mana to learn at all.
+
+A study takes time, by the spell's tier, at a normal pace:
+
+{{#include generated/study-times.md}}
+
+The world goes on around you. A creature coming into view, a blow, or anything else that would
+stop a rest stops the study: the time is lost, but you keep the scroll. Once you begin, you
+cannot stop of your own accord.
+
+A spell at or below your caster level's tier (see Tiers above) is learned for certain. Above it,
+every tier too high (the **overreach**) makes it harder: a roll of 2d12 plus your bonus must reach
+the difficulty, 12 + 4 per tier of overreach, a point more for every 10 tiers of the spells you
+already know (a cantrip counting 1). Your bonus is your Intelligence modifier, a tenth of your
+*Spellcraft* and of your *Decipher script* (each at most +20), your class's affinity with the
+spell's school, and *Quick study*'s +2. A natural 24 always succeeds and a natural 2 always fails.
+The game tells you the chance in words: *certain*, *easy*, *a struggle*, or *far beyond you*.
+
+{{#include generated/study-chances.md}}
+
+{{#include generated/study-affinities.md}}
+
+If you fail, the scroll crumbles to dust and a **mishap** befalls you, worse the farther the
+spell was beyond you: *slight* at one tier of overreach, *bad* at two or three, *terrible* at
+four or more. A few lucky mishaps can come with any of them. A failure costs only that scroll:
+the spell may come your way again.
+
+{{#include generated/mishaps.md}}
+
+Studying trains *Spellcraft*, *Decipher script*, and your Intelligence, whatever comes of it.

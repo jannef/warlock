@@ -28,6 +28,9 @@
 #                 character's caster level is this percent of their level, rounded down, before
 #                 talents and items. Full casters 100, the bard and the aristocrat 75, the
 #                 paladin, the ranger, and the monk 50, everyone else 25: nobody casts at 0
+#   affinity      the class's affinity with the schools of magic (spec §8 "Spells"): a table of
+#                 school = points (-10 to 10), taken off the difficulty of studying a spell of
+#                 that school (a malus when negative); schools left out are 0
 #   experience   how much experience a level needs, in percent (spec §8 "Experience"; 50 to 200,
 #                 default 100), multiplied with the race's onto every threshold in
 #                 experience.toml: the patient callings pay more, everyday folk less

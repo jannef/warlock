@@ -1,0 +1,6 @@
+[[mishap]]
+id = "warm_light"
+band = "lucky"
+weight = 4
+message = "A warm light spills from the dust: you feel blessed."
+effect = { kind = "status", status = "blessed", severity = 3 }

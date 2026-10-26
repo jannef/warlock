@@ -137,6 +137,9 @@ pub enum ScreenName {
     /// Choose a scroll to read (`r` in play): a spell scroll is aimed next, the scroll of
     /// identify asks what to read it on.
     Read,
+    /// Choose a scroll to study (`L` in play, spec §8 "Spells"): the scrolls whose type is
+    /// known and whose spell is not; choosing one asks first, with the chance in words.
+    Study,
     /// Choose what to read the scroll of identify on: the unidentified stacks carried. It takes
     /// the place of the read list where that scroll was chosen (as `--screen`, the first stack's
     /// scroll).
@@ -183,6 +186,7 @@ impl ScreenName {
                 | ScreenName::Throw
                 | ScreenName::Eat
                 | ScreenName::Read
+                | ScreenName::Study
                 | ScreenName::Identify
                 | ScreenName::Abilities
                 | ScreenName::Dialogue
@@ -389,6 +393,7 @@ impl Screen {
             ScreenName::Throw => objects(ObjectList::Throw),
             ScreenName::Eat => objects(ObjectList::Eat),
             ScreenName::Read => objects(ObjectList::Read),
+            ScreenName::Study => objects(ObjectList::Study),
             ScreenName::Identify => objects(ObjectList::Identify(beneath.item.unwrap_or(0))),
             ScreenName::Abilities => Screen::Abilities(AbilitiesScreen::new(run, beneath.ability)),
             ScreenName::Dialogue => Screen::Dialogue(DialogueScreen::new(talk, run)),
@@ -420,6 +425,7 @@ impl Screen {
                 ObjectList::Throw => ScreenName::Throw,
                 ObjectList::Eat => ScreenName::Eat,
                 ObjectList::Read => ScreenName::Read,
+                ObjectList::Study => ScreenName::Study,
                 ObjectList::Identify(_) => ScreenName::Identify,
             },
             Screen::Equipment(_) => ScreenName::Equipment,

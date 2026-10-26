@@ -1,0 +1,6 @@
+[[mishap]]
+id = "black_curse"
+band = "terrible"
+weight = 15
+message = "A black curse settles on you."
+effect = { kind = "status", status = "ill_wished", severity = 3 }

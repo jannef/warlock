@@ -84,8 +84,21 @@ gets where a dungeon favours or bans nothing. "Only" says where it can come at a
 - **Frigid hall.** Bitter cold: 25 °C colder than the level around it, with a faint blue glow.
   Its water freezes even on a mild level, so a pool in it is usually solid ice. The cold does
   nothing to you yet.
+- **Heavy hall.** The stones pull at whatever you carry: inside, your carrying limit is half
+  what it is anywhere else, so a load that was light makes you burdened, and armour that only
+  burdened you strains you (see [Burden](burden.md)). Creatures carry less inside too. If what
+  you carry would overload you inside, you cannot go in ("You carry too much to go in there."),
+  and if you overload yourself inside by picking something up, you can still step back out.
 - **Teeming den.** A room full of sleeping creatures and the things they have gathered. You may
   smell it before you see it, and you hear it when you step in. See below.
+
+The talent *Hallowed rest* (Grit) makes a room that quickens healing or mana quicken it half
+again more for you: a sanctuary's three times as fast becomes four times. The talent *Anchored
+mind* (Scholar) keeps your power moored: Ebbing never takes you.
+
+Only what happens inside counts: a sound made in an echoing hall is loud wherever it is heard,
+while one made outside and heard inside is not changed. Light outside a shadowed room is as
+bright as ever, even right at its door.
 
 ## Teeming dens
 
@@ -118,11 +131,3 @@ you on arrival when something sleeps on the level.
 
 Sleepers count among the level's creatures: while the den is full, fewer newcomers find their
 way to the level. Killing a sleeper is like killing any other foe.
-
-The talent *Hallowed rest* (Grit) makes a room that quickens healing or mana quicken it half
-again more for you: a sanctuary's three times as fast becomes four times. The talent *Anchored
-mind* (Scholar) keeps your power moored: Ebbing never takes you.
-
-Only what happens inside counts: a sound made in an echoing hall is loud wherever it is heard,
-while one made outside and heard inside is not changed. Light outside a shadowed room is as
-bright as ever, even right at its door.

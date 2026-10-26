@@ -767,6 +767,7 @@ fn search_the_last_seen_spot_then_go_back_and_patrol_on() {
             alignment_override: None,
             npc: None,
             talk: Default::default(),
+            spells: Default::default(),
             streak: None,
             satiation: None,
             stance: Default::default(),

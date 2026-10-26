@@ -1,0 +1,6 @@
+[[mishap]]
+id = "learned_anyway"
+band = "lucky"
+weight = 4
+message = "Yet somehow the words stay with you."
+effect = { kind = "learn" }

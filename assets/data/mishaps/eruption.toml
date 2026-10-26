@@ -1,0 +1,6 @@
+[[mishap]]
+id = "eruption"
+band = "terrible"
+weight = 30
+message = "The spell erupts from the scroll in your hands!"
+effect = { kind = "backfire" }

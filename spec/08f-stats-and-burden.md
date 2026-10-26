@@ -100,6 +100,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     and wielded things included; its own body weight does not. Magic items (§8 "Magic items")
     count by the scores they raise, their carrying affixes (+N kg to the limit, which is then
     rounded down to a multiple of 3 g), and their weight affixes (that much lighter each).
+    Inside a heavy hall (§7 "Special rooms", `burden`) the limit is half, again a multiple of
+    3 g; a step onto a cell where the player would be Overloaded is refused ("You carry too
+    much to go in there.").
   - **Levels**: Unburdened up to a third of the limit, Burdened up to two thirds, Strained up to
     the limit, Overloaded beyond it (`Burden`, `Load::burden`).
   - **Effects**: every action's price ×1.25 Burdened and ×1.5 Strained or Overloaded ("Costs" above;

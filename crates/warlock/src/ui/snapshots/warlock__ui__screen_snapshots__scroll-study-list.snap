@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ This is a Sharp dagger of the Lynx! This is 2 scrolls of fireball! This is 2 scrolls of lightning!
+ This is 2 scrolls of frost! This is 3 scrolls of identify!
+
+
+
+
+
+
+
+
+          ┌─ Study ──────────────────────────────────────────────────────────────────────┐
+          │                                                                              │
+          │ Scrolls                                                                      │
+          │ > a - ? 2 scrolls of fireball (Fire burst: far beyond you)            100 g  │
+          │   b - ? 2 scrolls of lightning (Call lightning: far beyond you)       100 g  │
+          │   c - ? 2 scrolls of frost (Frost: far beyond you)                    100 g  │
+          │                                                                              │
+          │ a-c or Enter study   Esc cancel                                              │
+          └──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+ The Trap Hall  ·  HP 22/22  ·  MP 1/1  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444    ? controls
