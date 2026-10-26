@@ -30,7 +30,9 @@ visible cell in the light property tests (and under each weather in `weather_tes
 the sky from `WorldState::sky` (the weather's clouds included) and overworld sight from
 `daylight::sight_under` (rain included). A creature's attack is `World::attack` (`docs/dev/combat.md`):
 `Event::Attacked` (kept only when the player sees both ends), a noise (`noise::Act::Attack`), and
-messages built in `World::perceive_events` (unseen ends are "something"). The app shows a lunge
+messages built in `World::perceive_events` (unseen ends are "something"). A creature's throw
+(`world/hurl.rs`: `World::hurls_at` in the AI's fight step, before the melee/ranged/caster
+choice; `World::creature_hurls`) is said by `hurl::throw_messages`. The app shows a lunge
 (`ui/motion.rs`, `motion` switch), a shot glyph, and a creature's `on = "attack"` particle burst
 (`ui/effects.rs`, `particles` switch); `Event::Died` has no effect of its own. No creature
 behavior may use randomness (combat rolls are the rules', from the gameplay stream); tie-breaks
@@ -171,8 +173,8 @@ tables name the bites that cause them, so `xtask/src/wiki/mod.rs`'s test rows mo
 The delf wave (danger 8–19): ember beetle, duergar miner, duergar warrior, ogre, fire
 salamander, troll, duergar smith, magma crawler, ash wraith, basilisk, cinder elemental, and the
 fire drake (the Ascmearc's own, `campaigns/ascmearc/data/creatures/`, `unique`); factions
-`duergar` (hostile to the goblins, whose kin the ogre and the troll are, and to the undead,
-which the ash wraith is) and `fire` (the burning things; hostile to the player only). No
+`duergar` (hostile to the goblins, whose kin the troll is, to the giants, whose least the ogre
+is, and to the undead, which the ash wraith is) and `fire` (the burning things; hostile to the player only). No
 `great_club` object exists, so the ogre's racial weapon is the maul; the pick-axe is a tool
 (`racial_weapon` must have damage), so the duergar miner carries it as a Tool-slot gear line and
 has the hand axe, the duergar's racial weapon, as a second, rarer line. The basilisk's slowing
@@ -199,3 +201,17 @@ vampire spawn, hand of glory, gallows dead, gibbering shade, bone wyvern, revena
 mummy priest ship in no population (deep undead wait for deep places, #383), and the ghost is
 incorporeal (wall Defence 2). The roster's holds (`held`, #431) are `{ status = "held", chance,
 difficulty }`: the ghast's and fen ghoul's claws 10 % at 15, the gallows dead's tongue 20 % at 17.
+The giant tribe (#457, levels 12 to 50): faction `giant` (hostile to the player, the vermin, and
+the kobolds, as the ogre was among the goblins, so Fyrdelf plays as before; the duergar and the
+undead list it; the goblins and their kin stay neutral), tags `giant` on every type and `ogre` on
+the ogre, ogre mauler, and ogre mage, `caster` on the ogre mage and giant shaman. The ogre moved
+there from `goblins`, and its fist went from 1d8 to 2d8 to sit on the formula. Shared types, one
+file each; `content/giant_roster_tests.rs` keeps them to #457's formulas (#383's for a living
+brute: `ROLES` gives each its role, giant, ogre, or caster; max HP and dice within ±35 %, the XP
+guideline, the tags, and every giant but the shaman throws a boulder at the level's dice from
+5 + L/10 cells, the stone giant two farther). The giants fight with a natural attack named for
+their giant-sized weapon (no loot to carry off) and throw (`[creature.throw]`, `world/hurl.rs`,
+`docs/dev/ranged-combat.md`); the ogres carry mauls and throw nothing. Fyrdelf's population adds
+the ogre mauler and ogre mage; the giants (`H`) ship in no population until a deep place takes
+them. Only small and medium sizes exist, so they are medium with huge weights (a large size is a
+follow-up).

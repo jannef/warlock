@@ -46,10 +46,11 @@
 # quests, comes from data/plurals.toml (default the word plus "s"): a tag or a creature name
 # with an irregular plural adds its line there. **Tag every new creature** that belongs to a
 # group or a role below (a new tag only when something could use it):
-#   groups   kobold, goblin (not the ogre or the troll, who only run with them), undead (every
+#   groups   kobold, goblin (not the ogres or the troll, who only run with them), undead (every
 #            creature of the "undead" faction: content::tag's test fails without it), vermin
 #            (not the basilisk), marsh-thing (the fens' living things and the bog hag),
-#            duergar (not their trader, a merchant), fire-thing (the delf's burning things)
+#            duergar (not their trader, a merchant), fire-thing (the delf's burning things),
+#            giant (every type of the "giant" faction, the ogres too), ogre (the ogres)
 #   roles    archer (shoots: the goblin, kobold, and skeleton archers), caster (every
 #            combat = "caster" type), cultist (the minster's cult), skeleton (walking bones),
 #            spirit (the incorporeal dead), troll (the troll and the marsh troll)
@@ -102,6 +103,14 @@
 #             the Natural category of Defence, protection the damage it soaks off every hit
 #             (adding up with what it wears; each 0 to 20, not both 0); "Your sword glances off
 #             the cave beetle's shell."
+#   throw     a natural ranged attack that needs no ammunition (spec §8 "Ranged combat":
+#             "Creatures' throws"; the giants' boulders): [creature.throw] with object (what
+#             flies, for its look: "boulder"; it never lands), damage, damage_type, range (cells,
+#             2 to 20), verb (what it does as it throws: "hurls"), and optionally name (what flies
+#             is called; default the object's name), cost (a throw's energy, 100 to 10000;
+#             default `throw` in actions.toml), and to_hit, threat, crit, and on_hit as for
+#             attack. Dexterity adds to hit, Strength to damage. Not next to its target, it throws
+#             whenever the target is in range with a clear line of fire
 #   incorporeal  it passes through solid terrain (walls, rock, closed doors; never the level's
 #             edge) and may stand inside it (spec §8 "Incorporeal creatures"):
 #             { wall_defence = 4 }: its Defence bonus while inside (the Wall category, 0 to 20)
@@ -165,3 +174,12 @@
 # dead, Z greater, G spirits, W wights and wraiths, M mummies, C hounds, V vampires, D drakes, T
 # the rotting troll; a colour distinct from every other type with the same glyph. Only a type in
 # a population strays (#375): deep undead ship in none until a deep place takes them.
+#
+# The giant tribe (#457; content::giant_roster_tests checks the numbers): faction "giant", tags
+# ["giant", ...] ("ogre" on the ogres, "caster" on the ogre mage and the giant shaman), levels 12
+# to 50, xp = 5 × level + 10. Stats, base_hp, and dice by #383's formulas for a living brute
+# (St 16 + 0.4L, To 17 + 0.4L, base_hp 4L; casters To 12 + 0.4L, base_hp 2L), within ±35 %. The
+# giants' natural attack is their giant-sized weapon (one dice step up) and they hurl boulders
+# ([creature.throw]: the level's dice, range 5 + L/10, the stone giant two farther; cost 2000,
+# the stone giant's 1500); the ogres carry mauls and throw nothing. Glyphs: O the ogres, H the
+# giants, each colour distinct. Medium with huge weights (no large size yet).

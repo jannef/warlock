@@ -1,0 +1,41 @@
+# The giant tribe (#457): the lord of a giants' hall (not one giant, but any hall's lord: not
+# unique), the strongest of the tribe, with the hall's gold on its belt.
+[[creature]]
+id = "giant_jarl"
+level = 50
+xp = 260
+rarity = "very_rare"
+loot = 60
+name = "giant jarl"
+glyph = "H"
+fg = "#e0c050"
+speed = 1050
+faction = "giant"
+tags = ["giant"]
+alignment = "evil"
+vision = "low_light"
+opens_doors = true
+footsteps = 220
+hearing = 10
+weight = 2000000
+stats = { strength = 36, dexterity = 20, toughness = 37, intelligence = 18, willpower = 20, presence = 20 }
+base_hp = 200
+natural = { defence = 4, protection = 4, name = "hide" }
+weapon_skills = { thrown = 2 }
+on_eat = { message = "Coarse, gamey meat, and a mountain of it.", vomit = 30, stat = { strength = 3 } }
+[creature.attack]
+damage = "4d10"
+damage_type = "slashing"
+name = "great axe"
+verb = "cleaves"
+to_hit = 5
+[creature.throw]
+object = "boulder"
+damage = "3d12"
+damage_type = "bludgeoning"
+range = 10
+cost = 2000
+verb = "hurls"
+[[creature.gear]]
+chance = 80
+one_of = ["gold_coin*20", "gold_coin*50"]

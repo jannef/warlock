@@ -1,0 +1,37 @@
+# The giant tribe (#457): the tribe's seer, who reads the stones and speaks for the jarl. It casts
+# from afar (spells are announced only, until creature magic is designed) and throws nothing.
+[[creature]]
+id = "giant_shaman"
+level = 36
+xp = 190
+rarity = "rare"
+loot = 50
+name = "giant shaman"
+glyph = "H"
+fg = "#8a6ac0"
+speed = 1000
+faction = "giant"
+tags = ["giant", "caster"]
+alignment = "evil"
+vision = "low_light"
+combat = "caster"
+range = 7
+opens_doors = true
+footsteps = 180
+hearing = 10
+weight = 600000
+stats = { strength = 27, dexterity = 17, toughness = 26, intelligence = 28, willpower = 19, presence = 17 }
+base_hp = 72
+natural = { defence = 2, protection = 3, name = "hide" }
+skills = { concentration = 118, spellcraft = 123 }
+on_eat = { message = "It tastes of smoke and bitter herbs.", vomit = 30, stat = { intelligence = 3 } }
+[creature.attack]
+damage = "4d6"
+damage_type = "bludgeoning"
+name = "staff"
+verb = "strikes"
+to_hit = 3
+[[creature.gear]]
+chance = 60
+one_of = ["bone_amulet"]
+magic = 30

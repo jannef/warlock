@@ -120,7 +120,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   ague). The delf wave (the duergar delf of Fyrdelf, danger 8 to 19): the ember beetle 8 (a
   burning bite, shell, resists fire 50, a faint glow), the duergar miner 9 (a pick-axe
   held as a tool, the racial hand axe half the time, a leather cap), the duergar warrior 11
-  (racial hand axe, small shield, chain mail, sometimes magic), the ogre 12 (slow, racial maul),
+  (racial hand axe, small shield, chain mail, sometimes magic), the ogre 12 (slow, racial maul;
+  the giant tribe's least, #457),
   the fire salamander 12 (immune to fire, cold double, lights its way), the troll 13 (so tough its
   wounds close fast, fire hurts it more), the duergar smith 13 (racial war hammer, sometimes magic,
   chain mail), the magma crawler 14 (slow, a searing touch, slag hide, cold hurts it, no corpse),
@@ -141,7 +142,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
   tongue that holds fast), the gibbering shade 18 (incorporeal, a cold touch that drains
   Intelligence), the bone wyvern 18 (a sting, bone with protection 2), the revenant 19 (very
   tough, a long sword half the time), the fetch 19 (incorporeal, a cold touch that frightens), and
-  the mummy priest 20 (a caster whose touch carries mummy rot, sometimes something worth taking). The duergar types are of the duergar race. For blood (§8 "Blood";
+  the mummy priest 20 (a caster whose touch carries mummy rot, sometimes something worth taking).
+  The giant tribe (#457; faction `giant`, tags `giant`, the ogres `ogre` too; levels 12 to 50):
+  in Fyrdelf's population beside the ogre, the ogre mauler 15 (slow, racial maul, hide) and the
+  ogre mage 18 (a caster, a bone charm sometimes magic); in no population yet, waiting for a deep
+  place, the giants, `H`, who hurl boulders from afar (§8 "Ranged combat": "Creatures' throws")
+  and club, cleave, or smash up close: the hill giant 20, the stone giant 24 (the surest,
+  farthest, quickest thrower), the frost giant 28 (blocks of ice, crushing or freezing; resists
+  cold, fire hurts it more), the fire giant 32 (burning boulders; immune to fire, cold hurts it
+  more), the giant shaman 36 (a caster, throws nothing), the cloud giant 40 (sees far), the storm
+  giant 45 (lightning in its sword and its boulders; immune to electricity), and the giant jarl
+  50 (very rare, a hall's gold on its belt). The duergar types are of the duergar race. For blood (§8 "Blood";
   presentation only):
   `blood`, the colour of its stains (`"#rrggbb"`; default dark red, `#6e0e0c`) or `"none"` for a
   bloodless creature; the cave beetle bleeds greenish-black ichor (`#38461a`). For hunger (§8
@@ -649,11 +660,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
   factions: `vermin` (giant rats; hostile to the player), `kobolds` (the war band; hostile to the
   player and the vermin), `goblins` (the barrows' goblin tribes; hostile to the player, the
   vermin, and the kobolds), `undead` (the barrows' and the fen's dead; hostile to the player,
-  the kobolds, and the goblins, and leaving the vermin alone), `marsh` ("marsh things", the
+  the kobolds, the goblins, and the giants, and leaving the vermin alone), `marsh` ("marsh things", the
   fen's living things and the bog hag; hostile to the player; not animals as a faction), `cult`
   ("cultists", the drowned minster's cult; hostile to the player and the marsh), `duergar` (the
-  delf's grey dwarves; hostile to the player, the goblins (the ogres and trolls among them), and
-  the undead), `fire` ("fire things", the delf's burning creatures and the fire drake; hostile to
+  delf's grey dwarves; hostile to the player, the goblins (the trolls among them), the undead, and
+  the giants), `giant` ("giants", the giant tribe of #457, its ogres too; hostile to the player,
+  the vermin, and the kobolds, and so to the duergar and the undead), `fire` ("fire things", the delf's burning creatures and the fire drake; hostile to
   the player only), `wildlife` (deer, cave bats, the cave beetle;
   neutral to everyone), and
   `peaceful` ("peaceful folk", hostile to no one: the showcase's people by type, and creatures

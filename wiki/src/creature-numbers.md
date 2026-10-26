@@ -42,6 +42,17 @@ rolled when the hit lands and the target lives; a disease is then resisted with 
 
 {{#include generated/creature-attacks.md}}
 
+### Throws
+
+Giants hurl boulders: a throw flies like any missile, along its line as far as its range,
+striking the first one in its way (see [Ranged combat](ranged.md)). A creature that throws does
+so whenever you are in range with nobody between you, until it is next to you; then it fights
+up close. Its throws never run out, but each takes it the time below, and what it throws breaks
+where it lands. A throw adds the thrower's Dexterity modifier to hit and its Strength modifier
+to the damage, as yours do; a boulder of two kinds does whichever hurts its target more.
+
+{{#include generated/creature-throws.md}}
+
 ## Pace, senses, and size
 
 A creature's **speed** says how much time its actions take: 1000 is yours, and twice that does

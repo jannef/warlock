@@ -12,7 +12,7 @@ use warlock_core::burden::{self, Burden};
 use warlock_core::combat::Category;
 use warlock_core::content::{
     ActionKind, Affliction, BASE_TURN, Benefit, Combat, Content, CreatureDef, CreatureId,
-    FactionId, NORMAL_COST, NaturalAttack, Stance, price, spoken,
+    FactionId, NORMAL_COST, NaturalAttack, Stance, article, price, spoken,
 };
 use warlock_core::geom::Pos;
 use warlock_core::object::format_weight;
@@ -63,6 +63,10 @@ fn creature_table(content: &Content, campaign: Option<&str>) -> String {
         .to_string();
         if let (true, Some(cost)) = (fights(content, c), c.attack_cost) {
             let _ = write!(attacks, " (cost {cost})");
+        }
+        if let (true, Some(throw)) = (fights(content, c), &c.throw) {
+            let noun = &throw.attack.name;
+            let _ = write!(attacks, ", throws {} {noun} from afar", article(noun));
         }
         // The chance it drops a magic or rare item where it dies.
         let drops = match c.loot {
@@ -390,6 +394,52 @@ pub(super) fn creature_attacks(content: &Content) -> String {
             profile.crit,
             at_speed(blow_price(content, &actor), c.speed),
             dash(&caused)
+        );
+    }
+    out
+}
+
+/// What each creature that throws (spec §8 "Ranged combat": "Creatures' throws") throws: what,
+/// the damage (its Strength modifier and its ranks counted), the to-hit (its Dexterity's), the
+/// critical, how far, how long a throw takes it, and what a hit may cause.
+pub(super) fn creature_throws(content: &Content) -> String {
+    let mut out = String::from(
+        "| Creature | Throws | Damage | To hit | Critical | Range | A throw takes | On a hit |\n\
+         |---|---|---|:---:|:---:|---:|---:|---|\n",
+    );
+    for (id, c) in listed(content) {
+        let Some(throw) = &c.throw else {
+            continue;
+        };
+        let actor = bare(content, id);
+        let Some(profile) = actor.hurled(content) else {
+            continue;
+        };
+        let kinds: Vec<String> = (profile.kinds.iter())
+            .map(|k| content.damage_type(k).name.clone())
+            .collect();
+        let damage = format!(
+            "{} {}",
+            damage_text(profile.damage, profile.bonus),
+            kinds.join(" or ")
+        );
+        let saving = actor
+            .attack_benefit(content, AttackKind::Thrown, None)
+            .speed;
+        let cost = content.action_cost(id, ActionKind::Throw);
+        let takes = price(Benefit::saving(cost, saving), BASE_TURN);
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} | {} | {} ×{} | {} cells | {} | {} |",
+            capital(&c.name),
+            throw.attack.name,
+            damage.trim_end(),
+            signed(profile.to_hit),
+            threat_range(profile.threat),
+            profile.crit,
+            throw.range,
+            at_speed(takes, c.speed),
+            dash(&on_hit(content, &throw.attack))
         );
     }
     out
