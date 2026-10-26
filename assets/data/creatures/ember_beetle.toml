@@ -10,6 +10,7 @@ name = "ember beetle"
 glyph = "a"
 fg = "#e0602a"
 faction = "fire"
+tags = ["fire-thing"]
 alignment = "neutral"
 vision = "darkvision"
 sight = 6

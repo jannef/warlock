@@ -1,7 +1,0 @@
-# Fen things (spec §8 "Quests", docs/design/adventurers-guild.md §6): what lives in the fens
-# of Fennmynster.
-[[tribe]]
-id = "marsh"
-name = "fen thing"
-plural = "fen things"
-factions = ["marsh"]

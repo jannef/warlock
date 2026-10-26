@@ -12,6 +12,7 @@ glyph = "w"
 fg = "#ff5a1a"
 speed = 800
 faction = "fire"
+tags = ["fire-thing"]
 alignment = "neutral"
 vision = "darkvision"
 sight = 6

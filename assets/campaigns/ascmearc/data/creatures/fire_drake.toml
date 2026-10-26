@@ -17,6 +17,7 @@ name = "fire drake"
 glyph = "D"
 fg = "#e0402a"
 faction = "fire"
+tags = ["fire-thing", "caster"]
 alignment = "evil"
 vision = "darkvision"
 sight = 14

@@ -26,19 +26,25 @@ quests' `progress` before the player acts and says what rose after it, and again
 turn (`quest_progress`/`quest_news`), so pick-ups, kills, and arrivals all report through one
 place. `reveal_at` (beside the answer at the three places a stage is set: `ask_quest`'s offer,
 `accept`, `complete`) reveals a quest's location after the speaker's words. No abandoning and no cap on active quests (the owner's decision): don't add either.
-**Tribes** (#421, docs/design/adventurers-guild.md §6): `content/tribe.rs` loads the `tribes`
-table (`data/tribes/<id>.toml`, one file each, and each campaign's) after the creatures and
-before the quests (`TribeDef`: `name`, `plural`, `factions`, `members` (every type of those
-factions less `except`, plus `added`, in creature table order), `except`, `except_note`,
-`count`, `campaign`; refused: no member, an unknown faction or type, an `except` that is no
-faction member, an addition that is one already). A kill quest's `target = "tribe:ID"` makes
-`Goal::Kill`'s `target` a `KillTarget::Tribe` (`count` up to `MAX_TRIBE_COUNT`, 999, against a
-type's 99); `KillTarget::has` is the one membership read, by creature type only, so an actor's
-`faction_override` changes nothing; `Quests::kills_for` sums the tally of every member type over
-every level the quest counts on. The objective lists the members a run of the quest's campaign
-can meet (`world::quest::members`, "Kill 100 goblins: goblins, goblin archers, and goblin
-chiefs."). Tests: `content/tribe.rs` (membership, refusals, the seven), `world/tribe_tests.rs`
-(levels summed, a bled-out member counts, a trap's or another's kill does not, the override,
-load checks of tribe targets); the wiki table is `xtask/src/wiki/tribes.rs`.
+**Creature tags** (#421, #441): a creature file's `tags = ["goblin", "archer"]` (plain
+singular words, `content/tag.rs`: lower-case words joined by hyphens, 1 to `MAX_TAG` = 24
+characters, each once; nothing declares a tag, it exists because a creature carries it; one
+flat pool, no registry). A kill quest's `target = "tag:goblin"` makes `Goal::Kill`'s `target` a
+`KillTarget::Tag` (`count` up to `MAX_TAG_COUNT`, 999, against a type's 99); the quest is
+refused when no type a run of its campaign can meet carries the tag (`quest::check_tag`: a typo,
+or a tag only another campaign's types carry). `KillTarget::has` (`Content::has_tag`) is the one
+membership read, by creature type only, so an actor's `faction_override` changes nothing;
+`Quests::kills_for` sums the tally of every tagged type over every level the quest counts on.
+The noun is the tag's plural by the plural dictionary (`Content::plural`, hyphens said as
+spaces: `marsh-thing` is "marsh things"), or the quest's `what`; the objective then lists the
+tagged types a run of the quest's campaign can meet (`world::quest::members`,
+`Content::tagged_in`: "Kill 100 goblins: goblins, goblin archers, and goblin chiefs."), and
+progress says the same noun. **Tag new creatures**: a new creature of a group carries the
+group's tag (every creature of the `undead` faction carries `undead`; `content::tag`'s test
+checks it), and a role tag where one fits (the list is in `assets/data/creatures/README.toml`).
+Tests: `content/tag.rs` (the word rule, the built-in members, the undead check),
+`world/tag_tests.rs` (levels summed, a bled-out one counts, a trap's or another's kill does not,
+the override, `what`, load checks of tag targets and of creature tags); the wiki table is
+`creatures::creature_tags` (`creature-tags.md`).
 Presentation reads `PerceptionView::quests()` (`QuestView` strings, shared by the log and the
 `quests` dump layer). Creature types have a `plural` for the messages ("3 / 3 giant rats").

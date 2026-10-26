@@ -5,7 +5,8 @@
 #
 # Creature types. The player is the creature with id "player".
 # Fields: id, name (without an article: "giant rat"), plural (its name for more than one, for
-# quest messages; default the name plus "s"), glyph, fg, speed (how quickly it acts: 1000 is normal and the default, 2000
+# quest messages; default by the plural dictionary, data/plurals.toml: the name plus "s" unless
+# its last word is listed there), glyph, fg, speed (how quickly it acts: 1000 is normal and the default, 2000
 # twice as many actions in the same game time; 100 to 10000; never shown to the player), weight
 # (the creature's own weight in grams, required; what it carries adds to it), size (a size in
 # sizes.toml, default "medium": how much it can carry, 1.5 kg × (2 × Strength + Toughness) scaled
@@ -36,6 +37,23 @@
 #                going about its routine: a shopkeeper at its counter), or "never" (rooted)
 #   attack_cost  what its attacks cost in energy (100 to 10000), instead of the attack's cost in
 #                actions.toml (melee, shoot, or cast; 1000 is a normal action)
+#
+# Tags (spec §8 "Quests", #441; never shown to the player; the wiki lists them): tags, plain
+# words a quest or a rule may ask for, `tags = ["goblin", "archer"]`. One flat pool: nothing
+# declares a tag, a creature carrying it is all there is, and a kill quest's `target =
+# "tag:goblin"` counts every type that carries it. A tag is the base word, singular (`goblin`,
+# never `goblins`), lower-case words joined by hyphens, 1 to 24 characters. Its plural, said in
+# quests, comes from data/plurals.toml (default the word plus "s"): a tag or a creature name
+# with an irregular plural adds its line there. **Tag every new creature** that belongs to a
+# group or a role below (a new tag only when something could use it):
+#   groups   kobold, goblin (not the ogre or the troll, who only run with them), undead (every
+#            creature of the "undead" faction: content::tag's test fails without it), vermin
+#            (not the basilisk), marsh-thing (the fens' living things and the bog hag),
+#            duergar (not their trader, a merchant), fire-thing (the delf's burning things)
+#   roles    archer (shoots: the goblin, kobold, and skeleton archers), caster (every
+#            combat = "caster" type), cultist (the minster's cult), skeleton (walking bones),
+#            spirit (the incorporeal dead), troll (the troll and the marsh troll)
+# A creature may carry several: the kobold shaman is ["kobold", "caster"].
 #
 # Alignment (spec §8 "Alignment"; never shown to the player): alignment, where it stands between
 # good and evil: "good", "neutral" (the default), or "evil" (a level legend entry may give one
@@ -135,7 +153,7 @@
 # Peaceful by type: they never fight, and you swap places with them when they are in your way.
 #
 # The undead (the roster, #383; content::undead_roster_tests checks the numbers): faction
-# "undead", alignment "evil", vision "darkvision", resist poison 100; they do not train and have
+# "undead", tags ["undead", ...] (with "skeleton" or "spirit" where they are one), alignment "evil", vision "darkvision", resist poison 100; they do not train and have
 # no on_eat stat gains. xp = 5 × level + 10. Stats, base_hp, dice, and speed come from the level
 # and a role (shambler, brute, standard, quick, spirit, caster, small; #383's tables), within
 # ±35 % of max HP and dice average. Bone types resist piercing 50 and bludgeoning −50; spirits

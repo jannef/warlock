@@ -1,7 +1,7 @@
-//! Kill quests after a tribe (spec §8 "Quests", #421): the player's kills of any member type
-//! count, on every level summed; a member bled to death of the player's wound counts, one
-//! killed by a trap or another creature does not; an actor's `faction_override` changes nothing;
-//! the objective names the members.
+//! Kill quests after a creature tag (spec §8 "Quests", #421, #441): the player's kills of any
+//! type carrying it count, on every level summed; one bled to death of the player's wound
+//! counts, one killed by a trap or another creature does not; an actor's `faction_override`
+//! changes nothing; the objective names the tag's types; `what` renames the noun.
 
 use super::fight::Harm;
 use super::*;
@@ -13,7 +13,7 @@ id = "cull"
 name = "Kobold cull"
 giver = "shopkeeper"
 type = "kill"
-target = "tribe:kobolds"
+target = "tag:kobold"
 count = 150
 offer = "Kobolds."
 accept = "Good."
@@ -25,7 +25,7 @@ id = "arena_cull"
 name = "Arena cull"
 giver = "shopkeeper"
 type = "kill"
-target = "tribe:kobolds"
+target = "tag:kobold"
 count = 3
 level = "arena"
 offer = "Kobolds in the arena."
@@ -37,7 +37,7 @@ done = "Thanks."
 /// The arena (kobolds, a kobold archer and shaman, giant rats), with both quests above active.
 fn arena() -> World {
     let mut files = ContentFiles::builtin();
-    files.insert("data/quests/tribe_test.toml", QUESTS);
+    files.insert("data/quests/tag_test.toml", QUESTS);
     let content = Arc::new(Content::load(&files).expect("test content is valid"));
     let mut w = World::new(content, "arena", None).expect("run");
     w.state.quests = serde_json::from_str(
@@ -89,7 +89,7 @@ fn every_member_counts_and_levels_sum() {
 }
 
 #[test]
-fn the_objective_names_the_tribe_and_its_members() {
+fn the_objective_names_the_tag_and_its_types() {
     let w = arena();
     let quests = w.perception().quests();
     let objective = |id: &str| {
@@ -151,7 +151,7 @@ fn a_member_killed_by_a_trap_or_another_does_not_count() {
 }
 
 #[test]
-fn a_faction_override_changes_no_membership() {
+fn a_faction_override_changes_no_tag() {
     let mut w = arena();
     let player = w.player_id();
     let factions = w.content().factions();
@@ -174,33 +174,95 @@ fn a_faction_override_changes_no_membership() {
 }
 
 #[test]
-fn tribe_targets_are_checked_at_load() {
+fn what_renames_the_noun() {
+    let mut files = ContentFiles::builtin();
+    let quests = QUESTS.replace("count = 150\n", "count = 150\nwhat = \"scalies\"\n");
+    files.insert("data/quests/tag_test.toml", &quests);
+    let content = Arc::new(Content::load(&files).expect("test content is valid"));
+    let mut w = World::new(content, "arena", None).expect("run");
+    w.state.quests =
+        serde_json::from_str(r#"{"records": {"cull": {"stage": "active"}}}"#).expect("records");
+    let quests = w.perception().quests();
+    let quest = quests.iter().find(|q| q.id == "cull").expect("logged");
+    assert_eq!(
+        quest.objective,
+        "Kill 150 scalies: kobolds, kobold archers, and kobold shamans."
+    );
+    // Bled to death of the player's wound, during an action: the progress is said.
+    let (player, kobold) = (w.player_id(), first(&w, "kobold"));
+    w.state.actors.get_mut(&kobold).expect("kobold").hp = 1;
+    let bleeding = w.content().status_id("bleeding").expect("bleeding");
+    w.afflict(kobold, bleeding, 5, Some(player), &mut Vec::new());
+    for _ in 0..10 {
+        if !w.state.actors.contains_key(&kobold) {
+            break;
+        }
+        w.apply(&Action::Wait);
+    }
+    let said: Vec<_> = w.messages().iter().map(|m| m.text.as_str()).collect();
+    assert!(
+        said.contains(&"Quest updated: 1 / 150 scalies."),
+        "{said:?}"
+    );
+}
+
+#[test]
+fn tag_targets_are_checked_at_load() {
     let load = |files: &ContentFiles| Content::load(files).map(|_| ()).map_err(|e| e.to_string());
-    let with_quest = |target: &str, count: u32| {
+    let first_quest = || {
         let first = QUESTS.split("\n[[quest]]").nth(1).expect("the first");
-        let quest = format!("[[quest]]{first}")
-            .replace("tribe:kobolds", target)
+        format!("[[quest]]{first}")
+    };
+    let with_quest = |target: &str, count: u32| {
+        let quest = first_quest()
+            .replace("tag:kobold", target)
             .replace("count = 150", &format!("count = {count}"));
         let mut files = ContentFiles::builtin();
-        files.insert("data/quests/tribe_test.toml", &quest);
+        files.insert("data/quests/tag_test.toml", &quest);
         load(&files)
     };
-    assert_eq!(with_quest("tribe:goblins", 999), Ok(()));
-    let error = with_quest("tribe:elves", 5).expect_err("refused");
-    assert!(error.contains("unknown tribe `elves`"), "{error}");
-    let error = with_quest("tribe:goblins", 1000).expect_err("refused");
+    assert_eq!(with_quest("tag:goblin", 999), Ok(()));
+    assert_eq!(with_quest("tag:marsh-thing", 5), Ok(()));
+    let error = with_quest("tag:elf", 5).expect_err("refused");
+    assert!(
+        error.contains("tag `elf`: no creature carries it"),
+        "{error}"
+    );
+    let error = with_quest("tag:Goblin", 5).expect_err("refused");
+    assert!(error.contains("lower-case words"), "{error}");
+    let error = with_quest("tag:goblin", 1000).expect_err("refused");
     assert!(error.contains("`count` is 1 to 999"), "{error}");
     let error = with_quest("goblin", 100).expect_err("refused");
     assert!(error.contains("`count` is 1 to 99"), "{error}");
-    // A shared tribe names shared creature types only.
+    // A tag only another campaign's creatures carry: the hermit is the showcase's, so an
+    // Ascmearc quest may not ask for it.
     let mut files = ContentFiles::builtin();
-    files.insert(
-        "data/tribes/hags.toml",
-        "[[tribe]]\nid = \"hags\"\nname = \"hag\"\nplural = \"hags\"\ncreatures = [\"bog_hag\"]\n",
-    );
+    files.edit_table("creatures", |text| {
+        text.replace(
+            "id = \"hermit\"\n",
+            "id = \"hermit\"\ntags = [\"hermit\"]\n",
+        )
+    });
+    let quest = first_quest().replace("tag:kobold", "tag:hermit");
+    files.insert("campaigns/ascmearc/data/quests/tag_test.toml", &quest);
     let error = load(&files).expect_err("refused");
     assert!(
-        error.contains("a creature of campaign `ascmearc`"),
+        error.contains("tag `hermit`: only creatures of campaign `showcase` carry it"),
         "{error}"
     );
+}
+
+#[test]
+fn bad_creature_tags_are_refused() {
+    for (tags, says) in [
+        ("[\"Goblin\"]", "lower-case words"),
+        ("[\"goblin\", \"goblin\"]", "tag `goblin` twice"),
+    ] {
+        let mut files = ContentFiles::builtin();
+        files.edit_table("creatures", |text| {
+            text.replace("tags = [\"goblin\"]\n", &format!("tags = {tags}\n"))
+        });
+        let error = Content::load(&files).map(|_| ()).expect_err("refused");
+        assert!(error.to_string().contains(says), "{tags}: {error}");
+    }
 }

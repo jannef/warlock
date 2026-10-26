@@ -9,6 +9,7 @@ name = "crocodile"
 glyph = "R"
 fg = "#6a7a3a"
 faction = "marsh"
+tags = ["marsh-thing"]
 alignment = "neutral"
 vision = "low_light"
 sight = 8
