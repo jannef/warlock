@@ -359,7 +359,7 @@ fn truth_rows(world: &World) -> Vec<String> {
 
 /// The level's special rooms (ground truth): the terrain with each special room's plain ground
 /// ([`crate::content::TerrainDef::is_plain_ground`]) drawn as its effect's mark, then one line
-/// per room.
+/// per room (glimpsed, entered); headed by `pervading <id>` when an effect covers the level.
 fn room_rows(world: &World) -> Vec<String> {
     let content = world.content();
     let (level, _) = world.ground_truth();
@@ -375,11 +375,15 @@ fn room_rows(world: &World) -> Vec<String> {
             _ => content.terrain(t).glyph,
         }
     });
+    if let Some(id) = level.pervading() {
+        out.insert(0, format!("pervading {}", content.room_effect(id).id));
+    }
     for room in level.rooms() {
         let effect = content.room_effect(room.effect);
+        let glimpsed = if room.glimpsed { ", glimpsed" } else { "" };
         let entered = if room.entered { ", entered" } else { "" };
         out.push(format!(
-            "{} {} at {}-{}{entered}",
+            "{} {} at {}-{}{glimpsed}{entered}",
             effect.mark, effect.name, room.min, room.max
         ));
     }
@@ -1223,6 +1227,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "level": view.level_id(),
         "viewer": view.viewer(),
         "room": view.room(view.viewer()).map(|e| e.id.as_str()),
+        "pervading": view.pervading().map(|e| e.id.as_str()),
         "shop": shop,
         "weather": view.weather(),
         // In °C, to a tenth of a degree.

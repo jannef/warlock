@@ -1,0 +1,40 @@
+# The hags (#451): the bog hag's kin, shared types on the undead roster's formulas (#383). The
+# winter hag, blue-white and gaunt, who walks before the blizzards and leaves the hungry behind
+# her: the grey staff she leans on strikes with the cold of deep winter, which numbs whoever it
+# touches, and no cold harms her. A caster (her spells announced until creature magic lands).
+# Her blizzards and the hunger she brings wait for mechanics of their own.
+[[creature]]
+id = "bheur_hag"
+level = 42
+xp = 220
+rarity = "rare"
+loot = 75
+name = "bheur hag"
+glyph = "h"
+fg = "#a8d0e8"
+speed = 1100
+faction = "hags"
+tags = ["hag", "caster"]
+alignment = "evil"
+vision = "darkvision"
+sight = 14
+combat = "caster"
+range = 7
+opens_doors = true
+footsteps = 30
+hearing = 18
+weight = 60000
+stats = { strength = 25, dexterity = 20, toughness = 29, intelligence = 31, willpower = 35, presence = 31 }
+base_hp = 84
+skills = { concentration = 136, spellcraft = 141 }
+natural = { defence = 3, protection = 0, name = "frost-hard skin" }
+resist = { cold = 100, fire = -25 }
+on_eat = { message = "Cold as a grave in winter.", vomit = 60, harm = "1d4", stat = { willpower = 5 } }
+blood = "#4a5a6a"
+[creature.attack]
+damage = "3d10"
+damage_type = "cold"
+name = "icy staff"
+verb = "strikes"
+to_hit = 4
+on_hit = [{ status = "sluggish", chance = 20, severity = 1 }]

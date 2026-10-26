@@ -683,7 +683,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the hearing system. The light, awareness, and factions systems stay `pending` until Hooded
     light and the class tables bring their second talent. The `danger` system (#326, §7 "Danger
     levels") came with its two: Quiet delver (`spawn_every_percent`) and Sixth sense
-    (`danger_sense`, 2 ranks, after Alert), both Delver.
+    (`danger_sense`, 2 ranks, after Alert), both Delver. The `special_rooms` system (#402, §7
+    "Special rooms") came with its two: Sense of place (Wayfarer, free, `sense_of_place`: a
+    special room is known from a glimpse, `PerceptionView::room`, and a whole level's `pervade`
+    line names its effect) and Hallowed rest (Grit, Willpower 11, `room_pace_percent` 50: where a
+    room quickens healing or mana, the quickening is half again more, `World::room_pace`: a
+    sanctuary's 300 % becomes 400 %).
     The Defence by attack kind of the design's B5 landed with Deflect missiles (#237,
     `World::target_against`).
   - **Racial talents** (#241; the design's §7.5 Racial): the `racial` tree (`no_free`), each

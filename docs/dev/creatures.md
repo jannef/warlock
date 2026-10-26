@@ -12,6 +12,7 @@ Per-tribe notes:
 - `docs/dev/creatures/undead.md`: the undead roster (#383; batches, population lines, holds, drains)
 - `docs/dev/creatures/campaign-waves.md`: the barrow, fen, and delf waves (the non-undead notes)
 - `docs/dev/creatures/yugoloth.md`: the yugoloths (#446; faction, tags, riders)
+- `docs/dev/creatures/hags.md`: the hags (#451; faction, tag, riders)
 
 ## Overview
 

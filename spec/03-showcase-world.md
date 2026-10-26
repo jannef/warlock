@@ -139,7 +139,7 @@ from north to south, foaming against a few boulders.
 (`depths:1` to `depths:8`; rooms and corridors at 80×21, caverns at 120×60 on depths 3–5) built
 from the run seed, with vaults stamped in, a few items of loot on every floor, at the depth's
 item level (§8 "Magic items"), and two to four hidden traps on each level (M18; the shrine
-vault's offering lies on a hidden spear trap); about one level in two or three has a special
+vault's offering lies on a hidden spear trap); about three levels in five have a special
 room (§7 "Special rooms"), and about one in six a shop (§7 "Shops"; with seed 2, a
 provisioner's on the first level). On its rooms levels a few rooms are locked, their rusty key lying
 where the player reaches it, and the guard post vault's store room is locked, its brass key

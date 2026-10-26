@@ -12,7 +12,7 @@ expression: "render(case, content.clone())"
               │     Stone hide  (birth sign)                                         │
               │     Stonewise  (birth sign)                                          │
               │   Vigour                                                             │
-              │     Healthy                                                          │
+              │     Iron stomach                                                     │
               │   Wayfarer                                                           │
               │     Swimmer                                                          │
               │   Class abilities                                                    │
@@ -32,8 +32,8 @@ expression: "render(case, content.clone())"
               │         Needs: Strong constitution, level 15                         │
               │     Hardy                                                            │
               │         Needs: Toughness 11                                          │
-              │     Iron stomach                                                     │
-              │         Needs: Toughness 12                                          │
+              │     Healthy                                                          │
+              │         Needs: nothing                                               │
               │     Poison resistance                                                │
               │                                                                    ↓ │
               │ A weapon in each hand hampers you less, and with sword and shield    │

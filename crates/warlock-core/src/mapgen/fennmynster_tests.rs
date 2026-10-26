@@ -112,30 +112,38 @@ fn the_fen_floods_its_rooms_and_no_one_keeps_a_shop() {
             .collect()
     };
     let flooded = CONTENT.room_effects().id("flooded").expect("flooded");
-    let allowed = effects(&["flooded", "hushed", "shadowed"]);
+    let own = effects(&["flooded", "hushed", "shadowed"]);
     for depth in 1..=8 {
         let odds = def.room_odds(depth).expect("room odds");
         assert_eq!((odds.chance, odds.per_level), (25, 2), "depth {depth}");
-        assert_eq!(odds.effects, allowed, "depth {depth}");
+        let favoured: Vec<_> = odds.favoured.iter().map(|&(e, _)| e).collect();
+        let mut sorted = own.clone();
+        sorted.sort();
+        assert_eq!(favoured, sorted, "depth {depth}");
+        assert_eq!(odds.share(flooded), Some(35));
         assert_eq!(def.shop_odds(depth).map(|o| o.chance), Some(0));
     }
-    let (mut special, mut floods) = (0, 0);
+    let (mut special, mut floods, mut its_own) = (0, 0, 0);
     for seed in 1..=12 {
         for depth in [1, 4, 7] {
             let floor = level(seed, depth);
             assert!(floor.shops.is_empty(), "seed {seed} depth {depth}");
             assert!(floor.rooms.len() <= 2, "seed {seed} depth {depth}");
             for room in &floor.rooms {
-                assert!(allowed.contains(&room.effect));
                 special += 1;
                 floods += usize::from(room.effect == flooded);
+                its_own += usize::from(own.contains(&room.effect));
             }
         }
     }
-    // The Depths' shared odds (7 %, one a level) give about one level in three a special room;
-    // the fen's give most levels one or two, and a third of them flooded.
+    // The shared odds (12 %, one a level) give about three levels in five a special room; the
+    // fen's give most levels one or two, a third of them flooded, most of them its own three.
     assert!(special >= 36, "{special} special rooms on 36 levels");
     assert!(floods >= 8, "{floods} flooded rooms");
+    assert!(
+        its_own * 100 >= special * 50,
+        "{its_own} of {special} its own"
+    );
 }
 
 #[test]

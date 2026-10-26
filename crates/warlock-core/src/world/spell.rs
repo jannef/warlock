@@ -206,8 +206,7 @@ impl World {
         let Some(sound) = noise else {
             return;
         };
-        let room = self.state.current().room_effect_at(&self.content, at);
-        let percent = room.map_or(100, |r| u32::from(r.noise));
+        let percent = self.state.current().effects_at(&self.content, at).noise();
         let loudness = u32::from(sound.loudness) * percent / 100;
         let noise = Noise {
             kind: sound.sound,

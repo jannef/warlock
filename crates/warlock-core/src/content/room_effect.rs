@@ -7,9 +7,14 @@
 //! inside louder or quieter ([`RoomEffectDef::noise`]: an echoing hall, a hushed chamber), speed
 //! up regeneration ([`RoomEffectDef::regen`]) and mana's ([`RoomEffectDef::mana_regen`]), keep
 //! creatures hostile to the player out ([`RoomEffectDef::shunned`]), and have generators lay a
-//! floor of its own ([`RoomEffectDef::floor`]: a flooded room's shallow water). The rules ask
-//! one question, [`crate::World::room_effect_at`] (inside the core, the level state's
-//! `room_effect_at`).
+//! floor of its own ([`RoomEffectDef::floor`]: a flooded room's shallow water). Rarely an effect
+//! covers a whole level instead of one room ([`RoomEffectDef::level_chance`], a level file's
+//! `effect`). The rules ask one question, [`crate::World::effects_at`] (inside the core, the level
+//! state's `effects_at`), and fold what it returns, a [`Here`]: the room's effect and the level's.
+//!
+//! Which effect a generated room gets is drawn by the effects' own `weight`s (a dungeon may
+//! favour some with fixed shares and ban others: `content/dungeon.rs`), among those the room is
+//! eligible for ([`RoomEffectDef::eligible`]).
 //!
 //! Where a special room lies is a [`SpecialRoom`]: a rectangle (a room of the rooms generator, an
 //! area of a level file) or a blob of cells (a cave's), kept in the level's state with whether
@@ -33,6 +38,8 @@ pub const NOISE: RangeInclusive<u16> = 1..=1000;
 pub const REGEN: RangeInclusive<u16> = 1..=1000;
 /// The most effects there can be.
 pub const MAX_EFFECTS: usize = 32;
+/// The weight an effect may have in the draw (spec §7 "Special rooms").
+pub const WEIGHT: RangeInclusive<u8> = 1..=100;
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -55,6 +62,10 @@ fn hundred() -> u16 {
     100
 }
 
+fn ten() -> u8 {
+    10
+}
+
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct RoomEffectSpec {
@@ -62,6 +73,19 @@ struct RoomEffectSpec {
     name: String,
     mark: char,
     enter: String,
+    #[serde(default = "ten")]
+    weight: u8,
+    near: Option<String>,
+    #[serde(default)]
+    level_chance: u8,
+    pervade: Option<String>,
+    #[serde(default)]
+    needs_danger: bool,
+    #[serde(default)]
+    needs_below: bool,
+    #[serde(default)]
+    min_cells: u16,
+    max_cells: Option<u16>,
     #[serde(default = "hundred")]
     light: u16,
     #[serde(default)]
@@ -87,6 +111,23 @@ pub struct RoomEffectDef {
     pub mark: char,
     /// Said the first time the player enters such a room.
     pub enter: String,
+    /// How often generated levels draw it against the others, where no dungeon says otherwise
+    /// (1 to 100).
+    pub weight: u8,
+    /// Said the first time a cell of such a room comes into the player's view from outside it.
+    pub near: Option<String>,
+    /// Percent of the levels that draw it for a room that it covers whole instead (0: never).
+    pub level_chance: u8,
+    /// Said each time the player arrives on a level it covers whole.
+    pub pervade: Option<String>,
+    /// Drawn only on a level with a danger (spec §7 "Danger levels").
+    pub needs_danger: bool,
+    /// Drawn only on a branch level with another below it.
+    pub needs_below: bool,
+    /// Drawn only for a room of at least this many floor cells.
+    pub min_cells: u16,
+    /// Drawn only for a room of at most this many floor cells.
+    pub max_cells: Option<u16>,
     /// Percent of all light kept inside (spec §5 "Special rooms"): 100 leaves it as it is.
     pub light: u16,
     /// Light added over the room, like ambient light (a sanctuary's warm glow).
@@ -112,6 +153,88 @@ impl RoomEffectDef {
     /// `light` as this room leaves it: all of it but in a room that keeps only part of it.
     pub fn shade(&self, light: Light) -> Light {
         light.percent(self.light)
+    }
+
+    /// Whether a room of `cells` floor cells may get it, on a level with a danger (`danger`) and
+    /// with another level below it (`below`).
+    pub fn eligible(&self, cells: usize, danger: bool, below: bool) -> bool {
+        (danger || !self.needs_danger)
+            && (below || !self.needs_below)
+            && cells >= usize::from(self.min_cells)
+            && self.max_cells.is_none_or(|most| cells <= usize::from(most))
+    }
+
+    /// Whether it may cover a whole level: neither creatures shun it (a level hostiles shun is
+    /// broken) nor does it lay a floor of its own, and it has its `pervade` line.
+    pub fn can_pervade(&self) -> bool {
+        !self.shunned && self.floor.is_none() && self.pervade.is_some()
+    }
+}
+
+/// What the special rooms at a cell do (spec §7 "Special rooms"): the effect of the room there,
+/// then the one that covers the level, folded the same way by every reader: percents multiply,
+/// light added adds up, flags hold if either holds.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Here<'c> {
+    /// The effect of the special room at the cell.
+    pub room: Option<&'c RoomEffectDef>,
+    /// The effect that covers the whole level.
+    pub level: Option<&'c RoomEffectDef>,
+}
+
+impl<'c> Here<'c> {
+    /// Each effect, the room's first.
+    pub fn each(&self) -> impl Iterator<Item = &'c RoomEffectDef> {
+        self.room.into_iter().chain(self.level)
+    }
+
+    /// Whether no effect holds here.
+    pub fn is_none(&self) -> bool {
+        self.room.is_none() && self.level.is_none()
+    }
+
+    /// The product of the effects' percents `of` (100: none).
+    fn percent(&self, of: impl Fn(&RoomEffectDef) -> u16) -> u32 {
+        self.each().fold(100, |p, e| p * u32::from(of(e)) / 100)
+    }
+
+    /// Percent of all light kept here (100 leaves it as it is).
+    pub fn light(&self) -> u16 {
+        u16::try_from(self.percent(|e| e.light)).unwrap_or(100)
+    }
+
+    /// `light` as the effects here leave it.
+    pub fn shade(&self, light: Light) -> Light {
+        match self.light() {
+            100 => light,
+            kept => light.percent(kept),
+        }
+    }
+
+    /// The light the effects add here, like ambient light.
+    pub fn glow(&self) -> Light {
+        self.each()
+            .fold(Light::DARK, |sum, e| sum.saturating_add(e.glow))
+    }
+
+    /// Percent of the loudness of a noise made here.
+    pub fn noise(&self) -> u32 {
+        self.percent(|e| e.noise)
+    }
+
+    /// Percent of the usual pace at which hit points come back here.
+    pub fn regen(&self) -> u32 {
+        self.percent(|e| e.regen)
+    }
+
+    /// Percent of the usual pace at which mana comes back here.
+    pub fn mana_regen(&self) -> u32 {
+        self.percent(|e| e.mana_regen)
+    }
+
+    /// Whether creatures hostile to the player keep out.
+    pub fn shunned(&self) -> bool {
+        self.each().any(|e| e.shunned)
     }
 }
 
@@ -183,6 +306,27 @@ impl RoomEffects {
                     spec.light
                 )));
             }
+            if !WEIGHT.contains(&spec.weight) {
+                return Err(bad(format!(
+                    "weight {} is out of range ({} to {})",
+                    spec.weight,
+                    WEIGHT.start(),
+                    WEIGHT.end()
+                )));
+            }
+            if spec.level_chance > 100 {
+                return Err(bad(format!(
+                    "level_chance {} is a percent: 0 to 100",
+                    spec.level_chance
+                )));
+            }
+            if spec.max_cells.is_some_and(|most| most < spec.min_cells) {
+                return Err(bad("max_cells is below min_cells".into()));
+            }
+            let blank = |line: &Option<String>| line.as_ref().is_some_and(|l| l.trim().is_empty());
+            if blank(&spec.near) || blank(&spec.pervade) {
+                return Err(bad("`near` and `pervade` must not be empty".into()));
+            }
             for (what, value, range) in [
                 ("noise", spec.noise, NOISE),
                 ("regen", spec.regen, REGEN),
@@ -216,11 +360,19 @@ impl RoomEffects {
                 }
                 None => None,
             };
-            defs.push(RoomEffectDef {
+            let def = RoomEffectDef {
                 id: spec.id,
                 name: spec.name,
                 mark: spec.mark,
                 enter: spec.enter,
+                weight: spec.weight,
+                near: spec.near,
+                level_chance: spec.level_chance,
+                pervade: spec.pervade,
+                needs_danger: spec.needs_danger,
+                needs_below: spec.needs_below,
+                min_cells: spec.min_cells,
+                max_cells: spec.max_cells,
                 light: spec.light,
                 glow: spec.glow,
                 noise: spec.noise,
@@ -228,7 +380,15 @@ impl RoomEffects {
                 mana_regen: spec.mana_regen,
                 shunned: spec.shunned,
                 floor,
-            });
+            };
+            if def.level_chance > 0 && !def.can_pervade() {
+                return Err(err(format!(
+                    "effect `{}`: a `level_chance` needs a `pervade` line, and no effect that \
+                     creatures shun or that lays a floor covers a whole level",
+                    def.id
+                )));
+            }
+            defs.push(def);
         }
         Ok(Self {
             chance: parsed.chance,
@@ -253,6 +413,9 @@ pub struct SpecialRoom {
     /// Whether the player has been inside it: they were told what it is, and look mode names it.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub entered: bool,
+    /// Whether the player has seen a cell of it (its `near` line was said, if it has one).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub glimpsed: bool,
 }
 
 impl SpecialRoom {
@@ -264,6 +427,7 @@ impl SpecialRoom {
             max,
             cells: Vec::new(),
             entered: false,
+            glimpsed: false,
         }
     }
 
@@ -286,6 +450,7 @@ impl SpecialRoom {
             max,
             cells,
             entered: false,
+            glimpsed: false,
         }
     }
 
@@ -393,6 +558,28 @@ mod tests {
                 "floor `wall` must be walkable",
             ),
             (format!("{SHADOWED}color = 3\n"), "unknown field `color`"),
+            (
+                format!("{SHADOWED}weight = 0\n"),
+                "weight 0 is out of range",
+            ),
+            (format!("{SHADOWED}weight = 101\n"), "weight 101"),
+            (
+                format!("{SHADOWED}level_chance = 101\n"),
+                "level_chance 101",
+            ),
+            (
+                format!("{SHADOWED}level_chance = 5\n"),
+                "needs a `pervade` line",
+            ),
+            (
+                format!("{SHADOWED}level_chance = 5\npervade = \"P.\"\nshunned = true\n"),
+                "no effect that creatures shun",
+            ),
+            (
+                format!("{SHADOWED}min_cells = 20\nmax_cells = 10\n"),
+                "max_cells is below min_cells",
+            ),
+            (format!("{SHADOWED}near = \" \"\n"), "must not be empty"),
         ] {
             let terrain = |name: &str| match name {
                 "floor" => Some((TerrainId(1), &def)),
@@ -405,6 +592,58 @@ mod tests {
         let twin = format!("{SHADOWED}{}", SHADOWED.replace("\"shadowed\"", "\"dark\""));
         let e = RoomEffects::parse("e.toml", &twin, |_| None).unwrap_err();
         assert!(e.message.contains("not another effect's"), "{}", e.message);
+    }
+
+    #[test]
+    fn the_draw_and_whole_level_fields_parse() {
+        let plain = RoomEffects::parse("e.toml", SHADOWED, |_| None).expect("valid");
+        let e = plain.get(RoomEffectId(0));
+        assert_eq!((e.weight, e.level_chance, e.min_cells), (10, 0, 0));
+        assert_eq!((&e.near, &e.pervade, e.max_cells), (&None, &None, None));
+        assert!(!e.needs_danger && !e.needs_below && !e.can_pervade());
+        assert!(e.eligible(1, false, false));
+        let text = format!(
+            "{SHADOWED}weight = 6\nnear = \"Near.\"\nlevel_chance = 5\npervade = \"All.\"\n\
+             needs_danger = true\nneeds_below = true\nmin_cells = 16\nmax_cells = 40\n"
+        );
+        let full = RoomEffects::parse("e.toml", &text, |_| None).expect("valid");
+        let e = full.get(RoomEffectId(0));
+        assert_eq!((e.weight, e.level_chance), (6, 5));
+        assert_eq!(e.near.as_deref(), Some("Near."));
+        assert_eq!(e.pervade.as_deref(), Some("All."));
+        assert!(e.can_pervade());
+        assert!(e.eligible(16, true, true) && e.eligible(40, true, true));
+        assert!(!e.eligible(15, true, true) && !e.eligible(41, true, true));
+        assert!(!e.eligible(20, false, true) && !e.eligible(20, true, false));
+    }
+
+    #[test]
+    fn here_folds_both_effects() {
+        let text = format!(
+            "{SHADOWED}noise = 200\nregen = 300\nglow = [10, 0, 0, 0]\n\
+             [[effect]]\nid = \"b\"\nname = \"b\"\nmark = \"b\"\nenter = \"B.\"\nlight = 50\n\
+             noise = 50\nmana_regen = 200\nglow = [5, 5, 0, 0]\nshunned = true\n"
+        );
+        let effects = RoomEffects::parse("e.toml", &text, |_| None).expect("valid");
+        let (a, b) = (effects.get(RoomEffectId(0)), effects.get(RoomEffectId(1)));
+        let none = Here::default();
+        assert!(none.is_none());
+        assert_eq!((none.light(), none.noise(), none.regen()), (100, 100, 100));
+        assert_eq!(none.shade(Light::new(9, 9, 9, 9)), Light::new(9, 9, 9, 9));
+        let both = Here {
+            room: Some(a),
+            level: Some(b),
+        };
+        assert_eq!(both.each().count(), 2);
+        assert_eq!((both.light(), both.noise()), (15, 100));
+        assert_eq!((both.regen(), both.mana_regen()), (300, 200));
+        assert_eq!(both.glow(), Light::new(15, 5, 0, 0));
+        assert!(both.shunned());
+        let level = Here {
+            room: None,
+            level: Some(a),
+        };
+        assert_eq!((level.light(), level.shunned()), (30, false));
     }
 
     #[test]
