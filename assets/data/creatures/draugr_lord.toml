@@ -1,0 +1,34 @@
+# The undead roster (#383, batch 4). A chieftain risen from the great mound he was laid in with
+# his hearth-troop: huge, grave-cold and all but untouched by cold, swinging the great axe he was
+# buried with, now and then an enchanted one. He opens doors. Not yet in any dungeon's
+# population.
+[[creature]]
+id = "draugr_lord"
+level = 34
+xp = 180
+rarity = "rare"
+name = "draugr lord"
+glyph = "Z"
+fg = "#4a6a98"
+faction = "undead"
+tags = ["undead"]
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+opens_doors = true
+footsteps = 120
+hearing = 12
+weight = 160000
+stats = { strength = 30, dexterity = 16, toughness = 31, intelligence = 24, willpower = 28, presence = 24 }
+base_hp = 136
+natural = { defence = 2, protection = 0, name = "dead flesh" }
+attack = { damage = "4d8", damage_type = "bludgeoning", name = "slam", verb = "slams", to_hit = 3 }
+resist = { cold = 75, poison = 100 }
+weapon_skills = { axes = 4 }
+on_eat = { message = "Grave-cold meat, older than the mound.", vomit = 80, harm = "1d4" }
+blood = "#202a38"
+# Its gear (spec §8 "Creature gear"): the axe he was laid in the mound with.
+[[creature.gear]]
+chance = 90
+one_of = ["great_axe"]
+magic = 25

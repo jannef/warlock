@@ -1026,14 +1026,16 @@ mod tests {
         let diseases = text("diseases.md");
         for row in [
             "| Filth fever | The charnel heap's slam (15%); the drowned's fist (20%); the ghast's \
-             claws (10%); the giant rat's bite (10%) | Toughness, 54% | 1d3 days | Every day | 1d3 Dexterity, 1d3 Toughness | Two \
-             checks won in a row | no | Half as fast |",
+             claws (10%); the ghoul lord's claws (15%); the giant rat's bite (10%); the \
+             nosferatu's bite (15%) | Toughness, 54% | 1d3 days | Every day | 1d3 Dexterity, 1d3 \
+             Toughness | Two checks won in a row | no | Half as fast |",
             "| Marsh ague | The bog body's fist (15%); the fen ghoul's claws (10%); crossing marsh \
              or swamp (4% an hour) |",
             "| Grave rot | The grave hound's bite (10%); the kobold zombie's fist (5%); the ogre \
              zombie's fist (10%); the rotting drake's bite (20%); the rotting troll's claws (15%); \
              the zombie's fist (15%); eating rotten food |",
-            "| Mummy rot | The mummy's fist (20%); the mummy priest's touch (15%) | Toughness, 31% \
+            "| Mummy rot | The mummy's fist (20%); the mummy lord's fist (25%); the mummy priest's \
+             touch (15%) | Toughness, 31% \
              | 1d3 days | Every 3 days | 1d4 Toughness | Never by itself | no |",
             "| Never by itself | yes |",
             "| Burrowing worms | The wormhost's fist (25%) | Toughness, 25% | 1 day | Every day | \

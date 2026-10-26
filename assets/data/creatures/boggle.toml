@@ -1,0 +1,24 @@
+# The fey roster (#452).
+# A boggle: a slippery little troublemaker whose skin sweats oil, so blows slide off it
+# (its "oily hide" is natural Defence). It slips through doors where it pleases.
+[[creature]]
+id = "boggle"
+level = 7
+xp = 45
+name = "boggle"
+glyph = "f"
+fg = "#8a7040"
+speed = 1150
+factions = { seelie = 50, unseelie = 50 }
+tags = ["fey"]
+vision = "darkvision"
+sight = 10
+opens_doors = true
+footsteps = 25
+hearing = 14
+weight = 6000
+size = "small"
+stats = { strength = 10, dexterity = 16, toughness = 11, intelligence = 13, willpower = 13, presence = 15 }
+base_hp = 9
+natural = { defence = 2, protection = 0, name = "oily hide" }
+attack = { damage = "1d8", damage_type = "slashing", name = "claw", verb = "claws" }

@@ -37,6 +37,10 @@ pub(super) struct FactionSpec {
     /// Animals (Beast-friend's, spec §8 "Talents").
     #[serde(default)]
     pub animal: bool,
+    /// The faction one of its creatures joins when the player attacks it (the Seelie court's
+    /// wrath, spec §7 "Factions"); none: it stays.
+    #[serde(default)]
+    pub provoked: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -52,6 +56,9 @@ pub struct FactionDef {
     pub name: String,
     /// Its creatures are animals: a Beast-friend's neutral friends (spec §8 "Talents").
     pub animal: bool,
+    /// The faction one of its creatures joins when the player attacks it
+    /// (`World::provoke_court`); none: it stays.
+    pub provoked: Option<FactionId>,
 }
 
 /// Every faction and the hostility between them.
@@ -97,14 +104,27 @@ impl Factions {
                 hostile[b * n + a] = true;
             }
         }
-        let defs = specs
-            .into_iter()
-            .map(|s| FactionDef {
+        let mut defs = Vec::with_capacity(n);
+        for s in specs {
+            let provoked = match &s.provoked {
+                None => None,
+                Some(other) if *other == s.id => {
+                    return Err(format!("faction `{}` cannot be provoked into itself", s.id));
+                }
+                Some(other) => Some(*ids.get(other).ok_or_else(|| {
+                    format!(
+                        "faction `{}` is provoked into unknown faction `{other}`",
+                        s.id
+                    )
+                })?),
+            };
+            defs.push(FactionDef {
                 id: s.id,
                 name: s.name,
                 animal: s.animal,
-            })
-            .collect();
+                provoked,
+            });
+        }
         Ok(Self { defs, ids, hostile })
     }
 
@@ -188,6 +208,18 @@ name = "wildlife"
             assert_eq!(f.stance(other, other), Stance::Neutral, "own faction");
         }
         assert_eq!(f.def(kobolds).name, "kobolds");
+        assert_eq!(f.def(kobolds).provoked, None);
+    }
+
+    #[test]
+    fn a_provoked_faction_names_another() {
+        let text = format!(
+            "{FILE}\n[[faction]]\nid = \"seelie\"\nname = \"s\"\nprovoked = \"wrathful\"\n\
+             [[faction]]\nid = \"wrathful\"\nname = \"w\"\nhostile = [\"player\"]\n"
+        );
+        let f = resolve(&text).unwrap();
+        let (seelie, wrathful) = (f.id("seelie").unwrap(), f.id("wrathful").unwrap());
+        assert_eq!(f.def(seelie).provoked, Some(wrathful));
     }
 
     #[test]
@@ -212,6 +244,14 @@ name = "wildlife"
             (
                 "[[faction]]\nid = \"player\"\nname = \"p\"\nfriendly = []\n",
                 "unknown field",
+            ),
+            (
+                "[[faction]]\nid = \"player\"\nname = \"p\"\nprovoked = \"wrath\"\n",
+                "provoked into unknown faction `wrath`",
+            ),
+            (
+                "[[faction]]\nid = \"player\"\nname = \"p\"\nprovoked = \"player\"\n",
+                "provoked into itself",
             ),
         ];
         for (text, expected) in cases {

@@ -1,0 +1,39 @@
+# The undead roster (#383, batch 4). A king of the old tombs, wrapped in gilded linen and laid
+# down with his treasure: a caster (its spells announced until magic is designed) whose fist
+# carries mummy rot. Its resin-hard wrappings turn blows, but they take fire all too well. It
+# opens doors. Not yet in any dungeon's population: it waits for a tomb.
+[[creature]]
+id = "mummy_lord"
+level = 36
+xp = 190
+rarity = "rare"
+loot = 75
+name = "mummy lord"
+glyph = "M"
+fg = "#e0b040"
+speed = 1050
+faction = "undead"
+tags = ["undead", "caster"]
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+combat = "caster"
+range = 7
+opens_doors = true
+footsteps = 60
+hearing = 12
+weight = 45000
+stats = { strength = 22, dexterity = 19, toughness = 26, intelligence = 28, willpower = 33, presence = 28 }
+base_hp = 72
+skills = { concentration = 118, spellcraft = 123 }
+natural = { defence = 2, protection = 3, name = "wrappings" }
+resist = { fire = -50, poison = 100 }
+on_eat = { message = "Dust, resin, and gold leaf.", vomit = 80, harm = "1d4" }
+blood = "#5a4a30"
+[creature.attack]
+damage = "4d6"
+damage_type = "bludgeoning"
+name = "fist"
+verb = "pummels"
+to_hit = 3
+on_hit = [{ disease = "mummy_rot", chance = 25 }]

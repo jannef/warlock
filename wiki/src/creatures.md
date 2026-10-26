@@ -17,9 +17,18 @@ leaves everyone alone, and everyone leaves it alone. A faction is neutral to its
 [talent](talents.md) alone, and are left alone by them, until that character attacks one: from
 then on creatures of that type (all giant rats, say) stand toward them as their faction does.
 
+**The fey courts.** Each fey creature (sprites, pixies, redcaps, dryads, and the rest) belongs to
+one of two courts, chosen at random when it comes into the world, and keeps it: the **Seelie
+court** leaves you alone, the **Unseelie court** hunts you, and the two courts fight each other
+on sight. Some kinds lean one way: nearly every redcap is Unseelie, nearly every dryad Seelie.
+The odds for each kind are in the "Faction" column of the table at the bottom of this page. A
+Seelie fey you attack turns on you for good: it becomes one of the **wrathful fey**, hostile to
+you and still at war with the Unseelie. Both courts leave every other faction alone.
+
 You can tell how a creature stands toward you from what it is: look at it
 ([look mode](controls.md#look-mode)) and a hostile one is marked, as in "A giant rat (hostile,
-unhurt), on stone floor."
+unhurt), on stone floor." A fey shows its court the same way: an Unseelie one is marked hostile,
+a Seelie one neutral.
 
 ## What they do
 
@@ -95,7 +104,7 @@ lantern near them and a war band's archer will find you.
 
 Some restless dead have no body to stop them: **incorporeal** creatures (the ghosts, shadows,
 poltergeists, corpse candles, and wraiths of Fennmynster, the knockers and spectres of Fyrdelf,
-and, far deeper, banshees and dread wraiths) drift through walls, solid rock, trees, and closed doors (which stay shut behind them), and may
+and, far deeper, banshees, dread wraiths, greater shadows, and white ladies) drift through walls, solid rock, trees, and closed doors (which stay shut behind them), and may
 stop inside the stone. They cannot leave the level that way, and lava stops them as it stops
 anyone. Nothing of them presses down: they set off no traps and never break ice.
 
@@ -148,6 +157,9 @@ what it carried (see [Magic items](magic-items.md)). Their numbers are on
 Some of the dead below are known to no dungeon yet, waiting in places deeper than any found so
 far: grave knights and headless knights in their armour, bodachs, banshees, wight lords, dread
 wraiths, and vampires that drink your life, the charnel heaps and wormhosts, the bones of drakes
-and drakes that rose with their flesh still on, and the lich, a sorcerer who would not die.
+and drakes that rose with their flesh still on, and the lich, a sorcerer who would not die. Deeper still wait the lords of their kinds: ghoul
+lords, draugr lords, and mummy lords, the plague-bearing nosferatu, greater shadows and white
+ladies, the black dogs of the churchyards and the shore lanes (black shucks and church grims),
+screaming skulls, and the bone colossus, a charnel house of bones stood up on its own.
 
 {{#include generated/creatures.md}}

@@ -828,7 +828,8 @@ fn actor_weapon_skills(
 
 /// Every actor on the level (ground truth): id, creature, position, hit points, Defence and
 /// Protection (`dv 11 pv 3`), its alignment (`alignment evil`; the player's score and band,
-/// `alignment 450 (good)`), weight, what it carries, its burden and carrying limit, its stats
+/// `alignment 450 (good)`), the court it joined for a type of several factions (`court
+/// unseelie`), weight, what it carries, its burden and carrying limit, its stats
 /// as score/potential
 /// (`St 12/15`), its trained skills with their marks and the die those set on the ladder
 /// (`stealth 17 (7 1d3)`), its status effects with their severities (`effects bleeding 2`), the
@@ -966,6 +967,13 @@ fn actor_rows(world: &World) -> Vec<String> {
                 Some(score) => format!("; alignment {} ({})", score.value(), a.band(content).id()),
                 None => format!("; alignment {}", a.nature(content).id()),
             };
+            // The court it joined, for a type of several factions (spec §7 "Factions": the fey).
+            let court = match a.faction(content) {
+                Some(f) if !content.creature(a.creature).factions.is_empty() => {
+                    format!("; court {}", content.factions().def(f).id)
+                }
+                _ => String::new(),
+            };
             let talk = if a.talk.is_new() {
                 String::new()
             } else {
@@ -983,7 +991,7 @@ fn actor_rows(world: &World) -> Vec<String> {
                 format!("; resists {}", resists.join(" "))
             };
             format!(
-                "{} {} at {}: hp {}/{} mp {}/{}{resources} dv {} pv {}{alignment}; weight {} (base {} + carried {}: \
+                "{} {} at {}: hp {}/{} mp {}/{}{resources} dv {} pv {}{alignment}{court}; weight {} (base {} + carried {}: \
                  {carried}){equipped}; {} (limit {}){weapons}; stats {}{skills}{effects}{diseases}\
                  {hunger}{npc}{talk}{resists}",
                 a.id,

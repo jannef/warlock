@@ -1,0 +1,34 @@
+# The undead roster (#383, batch 4). The guardian dog of an old churchyard, buried under its north
+# wall to keep the dead in their graves, and turned to keeping the living out: grey and huge,
+# quick, hardened to the cold of the grave, and the sight of it close sends the living running.
+# Not yet in any dungeon's population.
+[[creature]]
+id = "church_grim"
+level = 38
+xp = 200
+rarity = "uncommon"
+name = "church grim"
+glyph = "C"
+fg = "#9a9080"
+speed = 1400
+faction = "undead"
+tags = ["undead"]
+alignment = "evil"
+vision = "darkvision"
+sight = 14
+footsteps = 50
+hearing = 20
+weight = 75000
+stats = { strength = 26, dexterity = 25, toughness = 26, intelligence = 25, willpower = 29, presence = 25 }
+base_hp = 86
+natural = { defence = 2, protection = 0, name = "dead flesh" }
+resist = { cold = 50, poison = 100 }
+on_eat = { message = "Grave-cold meat, and grey.", vomit = 80, harm = "1d4" }
+blood = "#2a2a2a"
+[creature.attack]
+damage = "4d8"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
+to_hit = 3
+on_hit = [{ status = "frightened", chance = 20, severity = 2 }]

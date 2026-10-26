@@ -2,7 +2,7 @@
 
 General conventions: `docs/dev/creatures.md`.
 
-The undead roster (#383; batch 1 #384, levels 1–10; batch 2 #385, 11–20; batch 3 #386, 21–30): shared types, one file each in
+The undead roster (#383; batch 1 #384, levels 1–10; batch 2 #385, 11–20; batch 3 #386, 21–30; batch 4 #387, 31–40): shared types, one file each in
 `assets/data/creatures/`, on the conventions noted in that directory's `README.toml`. Each batch
 adds its types to `content/undead_roster_tests.rs` (`ROLES`, the type's role) and raises
 `ROSTER_TOP`: every `undead` type must be on the XP guideline (`OFF_GUIDELINE` lists the pale
@@ -13,6 +13,26 @@ Fennmynster the corpse candle, poltergeist, ghast, shadow, and bog body; Fyrdelf
 and grave hound. Batch 2's: Fennmynster the wraith and fen ghoul; Fyrdelf the burning skull,
 knocker, spectre, charred dead, duergar skeleton, and rotting troll. The mummy, barghest, draugr,
 vampire spawn, hand of glory, gallows dead, gibbering shade, bone wyvern, revenant, fetch, and
-mummy priest ship in no population, as does all of batch 3 (levels 21 and up) (deep undead wait for deep places, #383), and the ghost is
+mummy priest ship in no population, as do all of batches 3 and 4 (levels 21 and up) (deep undead wait for deep places, #383), and the ghost is
 incorporeal (wall Defence 2). The roster's holds (`held`, #431) are `{ status = "held", chance,
-difficulty }`: the ghast's and fen ghoul's claws 10 % at 15, the gallows dead's tongue 20 % at 17, the lich's touch 15 % at 18 (12 + level ÷ 5, as a drain's).
+difficulty }`: the ghast's and fen ghoul's claws 10 % at 15, the gallows dead's tongue 20 % at 17, the lich's touch and the ghoul lord's claws 15 % at 18 (12 + level ÷ 5, as a drain's).
+
+## Batch 4 (#387, levels 31–40)
+
+All ten ship in no population. Each is one file in `assets/data/creatures/`:
+
+| Level | Type | Notes |
+|---|---|---|
+| 31 | greater shadow | incorporeal, a cold touch that drains Strength |
+| 32 | ghoul lord | quick, opens doors, claws that hold and carry filth fever |
+| 33 | black shuck | a quick black dog that frightens |
+| 34 | draugr lord | huge, all but untouched by cold, a great axe, sometimes magic |
+| 35 | nosferatu | quick, opens doors, a bite that drains Toughness and carries filth fever, fire hurts it more |
+| 36 | mummy lord | a caster whose fist carries mummy rot, wrappings with protection 3, something worth taking |
+| 37 | screaming skull | small, its bite frightens |
+| 38 | church grim | a quick grey dog that frightens, hardened to cold |
+| 39 | white lady | incorporeal, a touch that transfixes and drains Presence |
+| 40 | bone colossus | bone with protection 5 |
+
+The greater shadow and white lady are spirits (`incorporeal`, wall Defence 5); the nosferatu's
+plural is itself (`plurals.toml` has `colossus` and `lady`).
