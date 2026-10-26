@@ -25,8 +25,6 @@ dungeons under the barrows, the fen, and the hills.
   and attack, keep their distance and shoot, or cast from afar, entirely deterministically; when
   they lose you, they search where they last saw you, follow noises, and return to their rounds.
 
-  ![Kobolds and giant rats fight around a fire pit while an archer shoots](images/m10-arena.png)
-
 - **Hearing** — footsteps, doors, and fights make noise that travels around corners, is muffled by
   closed doors, and is louder in water and rubble than on grass. You hear what you cannot see as
   faint marks on the map and short messages ("You hear footsteps to the north-east."), without
