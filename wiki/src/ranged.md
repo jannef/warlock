@@ -67,6 +67,5 @@ away. Its light is light like any other: you see by it, and so do the creatures.
 the dark to see what waits there, or to show the dark's watchers to your friends; but anything
 lit by it is seen, and you too, if you stand in its light. A burning arrow cannot be picked up.
 
-The showcase's storeroom has bows, a crossbow, a sling, flaming arrows, and rocks; the patrol
-gallery beyond the corridor is dark in the middle. In the arena, a bow and arrows lie beside
-you in your dark corner.
+Ælfric's General Store and Eadric's Forge in Cēaptūn ([Shops](shops.md)) sell slings, bows,
+and arrows.

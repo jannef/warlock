@@ -47,10 +47,8 @@ Sharp dagger of the Lynx!" With nothing unidentified, the list says so, and the 
 
 ## Where scrolls are
 
-- **Loot**: scrolls lie about as loot on the floors of [the Depths](overworld.md), from the item
+- **Loot**: scrolls lie about as loot on the floors of generated dungeon levels (see [Dungeons and danger](dungeons.md)), from the item
   level in the table above on. They are never magic, so vaults and creatures that leave only
   magic things never leave one.
 - **Shops**: a general store sells and buys scrolls (see [Shops](shops.md)).
-- **The Trap hall** keeps a few beside its arrival: two of each spell, and a scroll of identify
-  with a dagger nobody has identified. Try the spells on its pillars and creatures there. The
-  showcase has none.
+

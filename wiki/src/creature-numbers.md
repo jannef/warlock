@@ -32,7 +32,7 @@ adds to it. Resistances take their share off each kind of damage after Protectio
 What each creature does with nothing in its hands: its natural attack (a bite, a hoof) or its
 fists, with its Strength modifier and its ranks counted, and how long a blow takes it. A
 creature placed with a weapon fights with that instead, by the same rules as you
-([Combat](combat.md#hitting)): the arena's kobolds carry spears, and their archer shoots the bow
+([Combat](combat.md#hitting)): a kobold may carry a spear, and an archer shoots the bow
 it carries ([Ranged combat](ranged.md)). Creatures that never fight belong to factions with no
 enemies (see [Creatures](creatures.md#factions)). What a hit may cause is a chance for each,
 rolled when the hit lands and the target lives; a disease is then resisted with a check (see

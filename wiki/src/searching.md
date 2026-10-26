@@ -57,7 +57,7 @@ better.
 
 {{#include generated/search-features.md}}
 
-Deeper in a dungeon, everything hidden is harder to find. The Depths hide a door or two on each
+Deeper in a dungeon, everything hidden is harder to find. Generated dungeons hide a door or two on each
 level of rooms, and only doors you can do without: the stairs and the keys are always within
 reach without finding any of them. Behind a secret door there may be a room nobody has entered
 in a long time.

@@ -18,9 +18,8 @@ Eating when you are already full is risky: a meal that would fill you past the m
 holds may come back up ("You vomit!"), leaving you hungry and fed nothing; if it stays down,
 what does not fit is lost. See [Hunger](hunger.md).
 
-The [showcase](introduction.md)'s pantry, beside the storeroom of arms in the hub, keeps food
-rations, loaves of bread, dried meat, and apples. Some runs start with food in your pack: the
-Depths, the World, and the Forest.
+Cyneburg's Provisions in Cēaptūn ([The Ascmearc](ascmearc.md)) sells food for the road. Your
+starting kit may include some food too.
 
 ## Food spoils
 
