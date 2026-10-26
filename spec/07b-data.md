@@ -151,7 +151,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
   worms, a disease that may kill), the bone drake 27 (bone with protection 4), the dread wraith 28
   (quick, incorporeal, a touch that drains Toughness), the headless knight 29 (quick, a long
   sword or a glaive, frightens), the lich 30 (a caster whose touch holds and drains
-  Intelligence), and the rotting drake 30 (slow, grave rot). The duergar types are of the duergar race. For blood (§8 "Blood";
+  Intelligence), and the rotting drake 30 (slow, grave rot); and the fourth batch (#387), all of
+  it: the greater shadow 31 (incorporeal, a cold touch that drains Strength), the ghoul lord 32
+  (quick, opens doors, claws that hold and carry filth fever), the black shuck 33 (a quick black
+  dog that frightens), the draugr lord 34 (huge, all but untouched by cold, a great axe, sometimes
+  magic), the nosferatu 35 (quick, opens doors, a bite that drains Toughness and carries filth
+  fever, fire hurts it more), the mummy lord 36 (a caster whose fist carries mummy rot, wrappings
+  with protection 3, something worth taking), the screaming skull 37 (small, its bite frightens),
+  the church grim 38 (a quick grey dog that frightens, hardened to cold), the white lady 39
+  (incorporeal, a touch that transfixes and drains Presence), and the bone colossus 40 (bone with
+  protection 5). The duergar types are of the duergar race. For blood (§8 "Blood";
   presentation only):
   `blood`, the colour of its stains (`"#rrggbb"`; default dark red, `#6e0e0c`) or `"none"` for a
   bloodless creature; the cave beetle bleeds greenish-black ichor (`#38461a`). For hunger (§8

@@ -95,7 +95,7 @@ lantern near them and a war band's archer will find you.
 
 Some restless dead have no body to stop them: **incorporeal** creatures (the ghosts, shadows,
 poltergeists, corpse candles, and wraiths of Fennmynster, the knockers and spectres of Fyrdelf,
-and, far deeper, banshees and dread wraiths) drift through walls, solid rock, trees, and closed doors (which stay shut behind them), and may
+and, far deeper, banshees, dread wraiths, greater shadows, and white ladies) drift through walls, solid rock, trees, and closed doors (which stay shut behind them), and may
 stop inside the stone. They cannot leave the level that way, and lava stops them as it stops
 anyone. Nothing of them presses down: they set off no traps and never break ice.
 
@@ -148,6 +148,9 @@ what it carried (see [Magic items](magic-items.md)). Their numbers are on
 Some of the dead below are known to no dungeon yet, waiting in places deeper than any found so
 far: grave knights and headless knights in their armour, bodachs, banshees, wight lords, dread
 wraiths, and vampires that drink your life, the charnel heaps and wormhosts, the bones of drakes
-and drakes that rose with their flesh still on, and the lich, a sorcerer who would not die.
+and drakes that rose with their flesh still on, and the lich, a sorcerer who would not die. Deeper still wait the lords of their kinds: ghoul
+lords, draugr lords, and mummy lords, the plague-bearing nosferatu, greater shadows and white
+ladies, the black dogs of the churchyards and the shore lanes (black shucks and church grims),
+screaming skulls, and the bone colossus, a charnel house of bones stood up on its own.
 
 {{#include generated/creatures.md}}

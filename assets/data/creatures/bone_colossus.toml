@@ -1,0 +1,27 @@
+# The undead roster (#383, batch 4). The bones of a charnel house raised into one towering shape,
+# twice a man's height: slow to turn, and its blows fall like a ram. Its bones turn a blade's
+# point and shrug off arrows; a club shatters them, and it leaves no corpse. Not yet in any
+# dungeon's population.
+[[creature]]
+id = "bone_colossus"
+level = 40
+xp = 210
+rarity = "uncommon"
+name = "bone colossus"
+glyph = "Z"
+fg = "#e0dcc8"
+faction = "undead"
+tags = ["undead", "skeleton"]
+alignment = "evil"
+vision = "darkvision"
+sight = 10
+footsteps = 130
+hearing = 10
+weight = 500000
+stats = { strength = 32, dexterity = 18, toughness = 33, intelligence = 2, willpower = 30, presence = 2 }
+base_hp = 160
+natural = { defence = 3, protection = 5, name = "bones" }
+attack = { damage = "3d12", damage_type = "bludgeoning", name = "slam", verb = "slams", to_hit = 4 }
+resist = { piercing = 50, bludgeoning = -50, poison = 100 }
+corpse = false
+blood = "none"

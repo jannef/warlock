@@ -1,0 +1,34 @@
+# The undead roster (#383, batch 4). The skull that will not stay buried, from the old farmhouse
+# tales: it floats at head height, shrieking, and the sound of it sends the living running. Its
+# teeth are worse than its scream. Nothing is left of it but bone dust. Not yet in any dungeon's
+# population.
+[[creature]]
+id = "screaming_skull"
+level = 37
+xp = 195
+rarity = "uncommon"
+name = "screaming skull"
+glyph = "z"
+fg = "#e0c0b0"
+speed = 1250
+faction = "undead"
+tags = ["undead"]
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+hearing = 14
+weight = 1500
+size = "small"
+stats = { strength = 22, dexterity = 23, toughness = 23, intelligence = 25, willpower = 29, presence = 25 }
+base_hp = 46
+natural = { defence = 2, protection = 0, name = "bone" }
+resist = { poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "4d6"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
+to_hit = 3
+on_hit = [{ status = "frightened", chance = 30, severity = 2 }]
