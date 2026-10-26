@@ -4,21 +4,5 @@ name = "Fire burst"
 tree = "class"
 granted = true
 description = "A fireball of your own (a spell, paid in mana): it bursts where you aim it, breaks walls, and melts ice."
+effects = [{ kind = "spell", spell = "fire_burst" }]
 systems = ["mana", "digging"]
-
-[[talent.spell]]
-spell = "fire_burst"
-mana = 9
-[talent.spell.cast]
-kind = "burst"
-spell = "fireball"
-noun = "fireball"
-verb = "burns"
-message = "A fireball streaks from your hands and explodes!"
-radius = 2
-damage = "3d6"
-damage_type = "fire"
-range = 10
-blast = 1000
-heat = true
-noise = { sound = "explosion", loudness = 150 }

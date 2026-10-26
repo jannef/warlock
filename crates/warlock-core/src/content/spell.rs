@@ -52,6 +52,8 @@ pub struct Burst {
     pub blast: u16,
     /// What it does to the ice and water it reaches (spec §5 "Ice"), if anything.
     pub ice: Option<BurstIce>,
+    /// The most its roll may do (a spell's cap, spec §8 "Spells"); `None`: whatever it rolls.
+    pub cap: Option<i32>,
 }
 
 /// A line until a wall, at most `length` cells: `damage` to everyone on it.
@@ -63,6 +65,8 @@ pub struct Bolt {
     pub damage: Dice,
     /// The kind of damage it does (spec §8 "Damage types"); `None` without damage types.
     pub kind: Option<DamageTypeId>,
+    /// The most its roll may do (a spell's cap, spec §8 "Spells"); `None`: whatever it rolls.
+    pub cap: Option<i32>,
 }
 
 /// A spell's fields as data writes them, for [`Burst::new`] and [`Bolt::new`]: what a trap and a
@@ -126,6 +130,7 @@ impl Burst {
             kind: fields.kind,
             blast,
             ice,
+            cap: None,
         })
     }
 }
@@ -146,6 +151,7 @@ impl Bolt {
             length,
             damage: fields.damage()?,
             kind: fields.kind,
+            cap: None,
         })
     }
 }

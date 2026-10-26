@@ -287,8 +287,8 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
-    // A priest blessed and drained to their last mana: the spells in the Class
-    // group, those that cost more than is left greyed out ("you have too little mana").
+    // A priest blessed and drained to their last mana: the spells in their Spells group with
+    // tier and cost, those that cost more than is left greyed out ("you have too little mana").
     Case {
         name: "abilities-menu-spells",
         character: Some("human,female,priest"),

@@ -237,6 +237,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("spell-shapes.md", spells::shapes),
         ("spell-resolutions.md", spells::resolutions),
         ("spell-casting.md", spells::casting),
+        ("spell-list.md", spells::list),
+        ("spell-armour.md", spells::armour),
         ("resources.md", resources::resources),
         ("experience-levels.md", experience::experience_levels),
         ("experience-factors.md", experience::experience_factors),

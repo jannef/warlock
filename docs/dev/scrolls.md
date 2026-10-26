@@ -52,12 +52,13 @@ identify list (`ObjectList::Identify(scroll)`, the unidentified stacks) acts
 `Action::Read { item: scroll, target: Item(i) }`. Spell visuals are the traps' (`ui/spells.rs`
 draws `Event::Spell`; a burst's origin is the reader, so it flies there first).
 
-The casters' strikes (#245, `world/caster.rs`) are a scroll's spell without the scroll: a
-class ability's `[[talent.spell]]` names a `cast` table that `ReadSpec` reads, and `World::strike`
-casts it through `burst_center`, `bolt_line`, `cast_burst`/`cast_bolt`, and `say_spell`, as
-`read_spell` does (`Cause::Spell` for a caster killed by their own). Both apply the reader's
-`TalentMods::spell_damage` (Scroll adept, Empower, Archmage) to the dice first; `check_spells`
-checks the talents' spell effects too.
+Spells (the one cast path, `world/cast.rs`, docs/dev/spells.md) share this code: a burst spell
+goes through `burst_center` and `cast_burst`, a line through `bolt_line` and `cast_bolt`, and
+both are said with `say_spell`, as `read_spell` does (`Cause::Spell` for a caster killed by their
+own). Both apply the caster's `TalentMods::spell_damage` (Scroll adept, Empower, Archmage) to the
+dice first; a spell's roll is then held to its cap (`Burst::cap`, `Bolt::cap`), a scroll's is
+not (`None`). `spell_def::check_effects` checks spells' effects the way `check_spells` checks
+scrolls'.
 
 Content and places: the trap hall (`levels/trap_hall.toml`) has a pile of scrolls and an
 unidentified dagger beside the arrival; general stores stock and buy the `scrolls` class. The

@@ -1,0 +1,24 @@
+# The druid's Flame (Flame and frost, spec §8 "Class abilities"): a ball of flame.
+[[spell]]
+id = "flame"
+name = "Flame"
+description = "A ball of flame that bursts where you aim it: it breaks walls and melts ice."
+tier = 3
+school = "evocation"
+kind = "damage"
+shape = "burst"
+resolution = "area"
+damage_type = "fire"
+range = 10
+max_range = 12
+max_radius = 2
+damage = { dice = "3d6" }
+
+[spell.cast]
+effect = "fireball"
+noun = "flame"
+verb = "burns"
+message = "A ball of flame leaps from your hands!"
+blast = 1000
+heat = true
+noise = { sound = "explosion", loudness = 150 }
