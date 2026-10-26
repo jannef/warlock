@@ -462,7 +462,7 @@ impl World {
         let name = shop.name.as_str();
         // Eye for quality (spec §8 "Class abilities"): what is sold is known for what it was,
         // once it is sold.
-        let sold = object::phrase(&deal.sold, &content);
+        let sold = object::phrase(&deal.sold, self.lore());
         let mut learned = Vec::new();
         if self.state.player().talent_mods(&content).identify_trades {
             for stack in &mut deal.sold {
@@ -472,18 +472,18 @@ impl World {
             }
         }
         if !deal.refused.is_empty() {
-            let what = object::phrase(&deal.refused, &content);
+            let what = object::phrase(&deal.refused, self.lore());
             self.say(format!("{name} has no use for {what}."));
         }
         // Rotten food is worth nothing: the keeper's nose is the only hint of it the player gets.
         if !deal.spoilt.is_empty() {
-            let what = object::phrase(&deal.spoilt, &content);
+            let what = object::phrase(&deal.spoilt, self.lore());
             self.say(format!(
                 "{name} sniffs at {what} and says: \"Not at any price.\""
             ));
         }
         if !deal.offered.is_empty() {
-            let what = object::phrase(&deal.offered, &content);
+            let what = object::phrase(&deal.offered, self.lore());
             self.say(format!("{name} offers {} gold for {what}.", deal.offer));
         }
         if deal.back.is_empty() && deal.sold.is_empty() {
@@ -512,7 +512,7 @@ impl World {
             level.shops[i].put_back(stack);
         }
         if !deal.back.is_empty() {
-            let what = object::phrase(&deal.back, &content);
+            let what = object::phrase(&deal.back, self.lore());
             self.say(format!("You put back {what}."));
         }
         if !deal.sold.is_empty() {
@@ -572,7 +572,7 @@ impl World {
         let purse = (self.state.actors.get(&shop.keeper))
             .map_or(0, |k| count_of(&k.inventory, shops.currency));
         if purse < deal.payment {
-            let what = object::phrase(&deal.sold, &content);
+            let what = object::phrase(&deal.sold, self.lore());
             self.say(format!("{} cannot afford {what}.", shop.name));
             deal.sold.clear();
             deal.payment = 0;
@@ -595,7 +595,7 @@ impl World {
         if parts.get(item).copied().unwrap_or(0) == 0 {
             return true;
         }
-        let what = inventory[item].describe(&self.content);
+        let what = self.lore().describe(&inventory[item]);
         self.say(format!("You have not paid for {what}."));
         false
     }
