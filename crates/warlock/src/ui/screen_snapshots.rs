@@ -565,6 +565,29 @@ const CASES: &[Case] = &[
         keys: Some("r a k Enter"),
         ..BASE
     },
+    // Studying (spec §8 "Spells"): the scrolls whose type is known and whose spell is not, with
+    // the chance in words; an unknown scroll is not offered.
+    Case {
+        name: "scroll-study-list",
+        scenario: "traps",
+        actions: "move:E pickup identify",
+        keys: Some("L"),
+        ..BASE
+    },
+    Case {
+        name: "scroll-study-dialog",
+        scenario: "traps",
+        actions: "move:E pickup identify",
+        keys: Some("L a"),
+        ..BASE
+    },
+    Case {
+        name: "scroll-study-none",
+        scenario: "traps",
+        actions: "move:E pickup",
+        keys: Some("L"),
+        ..BASE
+    },
     // Talk, quests, messages.
     Case {
         name: "dialogue-screen",

@@ -22,7 +22,7 @@ expression: "render(case, content.clone())"
             │   j  Lamplighter                      You tend your lantern well: it bu… │
             │ Wayfarer                                                                 │
             │   k  Long strider                     Your journeys across the overworl… │
-            │   l  Sense of place                   You read a place at a glance: a s… │
+            │   l  Pilgrim                          You have knelt in many temples: t… │
             │   m  Sun-blessed                      The sun mends you: under the open… │
             │   n  Swimmer                          Water does not slow you: you wade… │
             │   o  Weather-wise                     You read the sky: under it you kn… │
@@ -30,15 +30,15 @@ expression: "render(case, content.clone())"
             │   p  Apprentice                  1/3  You take up a skill you lack, or … │
             │   q  Clear mind                       A mind at peace gathers its stren… │
             │   r  Deep well                   1/3  Your power runs deep: more mana f… │
+            │ Spellcraft                                                               │
+            │   s  Quick study                      Spells come easily to you: you le… │
             │ Grit                                                                     │
-            │   s  Hallowed rest                    Where a place lends you strength,… │
-            │   t  Lean                             You go hungry more slowly, and ex… │
-            │   u  Pack mule                   1/2  You can carry a tenth more for ea… │
-            │   v  Unbroken soul                    Your self holds fast: the touch o… │
+            │   t  Hallowed rest                    Where a place lends you strength,… │
+            │   u  Lean                             You go hungry more slowly, and ex… │
             │                                                                          │
             │ Tougher than most: more hit points for each rank, and more as you level. │
             │                                                                          │
             │                                                                          │
             │                                                                          │
-            │ a-v or Enter choose   > < page                                           │
+            │ a-u or Enter choose   > < page                                           │
  The Hub  · └──────────────────────────────────────────────────────────────────────────┘ ? controls
