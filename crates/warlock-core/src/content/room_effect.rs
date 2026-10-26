@@ -28,6 +28,7 @@
 use super::{ContentError, StatusDef, StatusId, TerrainDef, TerrainId};
 use crate::geom::Pos;
 use crate::light::Light;
+use crate::temperature::Temperature;
 use serde::{Deserialize, Serialize};
 use std::ops::RangeInclusive;
 
@@ -46,6 +47,8 @@ pub const WEIGHT: RangeInclusive<u8> = 1..=100;
 /// The fewest seconds a room's status may take to ease a degree: the longest single action, so
 /// it never lapses while one stays inside.
 pub const DWELL_EASES: u32 = 10;
+/// The degrees Celsius an effect may add to the level's temperature (spec §7 "Special rooms").
+pub const TEMPERATURE: RangeInclusive<i8> = -40..=40;
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -106,6 +109,8 @@ struct RoomEffectSpec {
     shunned: bool,
     floor: Option<String>,
     status: Option<String>,
+    #[serde(default)]
+    temperature: i8,
 }
 
 /// What a special room does while one is inside it.
@@ -152,6 +157,9 @@ pub struct RoomEffectDef {
     /// The status everyone inside holds, at least at one degree, while they stay (a draining
     /// room's Ebbing; `World::dwell`); it eases by its own `eases` once they leave.
     pub status: Option<StatusId>,
+    /// Degrees Celsius added to the level's temperature inside (a hot room's +25, a cold room's
+    /// -25); `WorldState::temperature_at` is the one place it is read.
+    pub temperature: i8,
 }
 
 impl RoomEffectDef {
@@ -245,6 +253,11 @@ impl<'c> Here<'c> {
     /// Whether creatures hostile to the player keep out.
     pub fn shunned(&self) -> bool {
         self.each().any(|e| e.shunned)
+    }
+
+    /// What the effects here add to the level's temperature: their degrees, added up.
+    pub fn warmth(&self) -> Temperature {
+        Temperature::degrees(self.each().map(|e| i32::from(e.temperature)).sum())
     }
 
     /// The statuses held here, the room's first: both apply.
@@ -368,6 +381,14 @@ impl RoomEffects {
                     )));
                 }
             }
+            if !TEMPERATURE.contains(&spec.temperature) {
+                return Err(bad(format!(
+                    "temperature {} is out of range ({} to {} °C)",
+                    spec.temperature,
+                    TEMPERATURE.start(),
+                    TEMPERATURE.end()
+                )));
+            }
             let floor = match &spec.floor {
                 Some(name) => {
                     let (id, def) =
@@ -423,6 +444,7 @@ impl RoomEffects {
                 shunned: spec.shunned,
                 floor,
                 status,
+                temperature: spec.temperature,
             };
             if def.level_chance > 0 && !def.can_pervade() {
                 return Err(err(format!(

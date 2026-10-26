@@ -82,6 +82,17 @@ pub(super) fn special_rooms(content: &Content) -> String {
         if let Some(status) = e.status {
             does.push(held(content, status));
         }
+        if e.temperature != 0 {
+            let way = if e.temperature > 0 {
+                "warmer"
+            } else {
+                "colder"
+            };
+            does.push(format!(
+                "It is {} °C {way} than the level around it, and nothing else.",
+                e.temperature.unsigned_abs()
+            ));
+        }
         let mut said = format!("\"{}\"", e.enter);
         if let Some(near) = &e.near {
             let _ = write!(said, " From outside: \"{near}\"");

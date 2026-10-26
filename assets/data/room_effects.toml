@@ -46,6 +46,9 @@
 #            stay, creatures too; it eases by its own `eases` once they leave (at least 10
 #            seconds a degree). One immune to its kind of damage never holds it; one with no mana
 #            never holds a status that only touches mana
+#   temperature  degrees Celsius added to the level's temperature inside, -40 to 40; default 0.
+#            The room sets its cells' temperature and nothing else: what the temperature does
+#            (ice today) is the environment's (spec §5 "Temperature"); the status bar shows it
 
 chance = 12
 per_level = 1
@@ -111,3 +114,21 @@ level_chance = 5
 pervade = "Something here drinks at your power."
 glow = [10, 6, 24, 8]
 status = "ebbing"
+
+[[effect]]
+id = "hot"
+name = "sweltering chamber"
+mark = "o"
+enter = "A wave of heat meets you."
+weight = 5
+glow = [30, 10, 0, 0]
+temperature = 25
+
+[[effect]]
+id = "cold"
+name = "frigid hall"
+mark = "c"
+enter = "Your breath mists in the bitter cold."
+weight = 5
+glow = [0, 8, 22, 0]
+temperature = -25

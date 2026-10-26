@@ -774,8 +774,9 @@ impl Perception {
             }
             None => Vec::new(),
         };
-        // The player feels the air: fixed underground, the weather's under the open sky.
-        let temperature = state.temperature_on(level, content, state.time);
+        // The player feels the air where they stand: fixed underground, the weather's under the
+        // open sky, and what a hot or a cold room adds.
+        let temperature = state.temperature_at(level, content, state.time, player.pos);
         // Weather-wise (spec §8 "Talents"): the weather coming, under the open sky.
         let forecast = (sky.is_some() && talents.forecast > 0)
             .then(|| {
@@ -1647,7 +1648,8 @@ impl<'a> PerceptionView<'a> {
     }
 
     /// The temperature of the air where the player is (spec §5 "Temperature"), which they feel,
-    /// in dungeons and under the open sky alike (the status bar shows it).
+    /// in dungeons and under the open sky alike, a hot or a cold room's included (the status bar
+    /// shows it).
     pub fn temperature(&self) -> Temperature {
         self.snapshot.temperature
     }

@@ -68,8 +68,9 @@ fn favoured_features_keep_their_shares_and_banned_ones_never_come() {
     assert!((33..=37).contains(&percent("flooded")), "{by:?}");
     assert!((13..=17).contains(&percent("hushed")), "{by:?}");
     assert_eq!(by[usize::from(id("sanctuary").0)], 0, "banned");
-    // The other half by weight: shadowed 10 of the 29 left (echoing 8, draining 6, black 5).
-    assert!((15..=19).contains(&percent("shadowed")), "{by:?}");
+    // The other half by weight: shadowed 10 of the 39 left (echoing 8, draining 6, black 5,
+    // hot 5, cold 5).
+    assert!((11..=15).contains(&percent("shadowed")), "{by:?}");
     // Every eligible feature favoured: by their shares alone.
     let all = RoomOdds {
         favoured: vec![(id("hushed"), 10), (id("flooded"), 30)],
@@ -135,7 +136,8 @@ fn a_feature_with_a_level_chance_sometimes_covers_the_whole_level() {
     for seed in 0..40 {
         let level =
             generate(&CONTENT, ("showcase", seed), "depths:2", Some("hub")).expect("generates");
-        assert_eq!(level.pervading, None);
+        let pervades = |e| CONTENT.room_effect(e).level_chance > 0;
+        assert!(level.pervading.is_none_or(pervades), "seed {seed}");
     }
 }
 
