@@ -18,7 +18,7 @@ expression: "render(case, content.clone())"
                               │   Move northwest                       Num7              │
                               │   Wait a turn                          . Num5            │
                               │   Search                               s                 │
-                              │   Search for a while                   f                 │
+                              │   Search for a while                   S                 │
                               │   Open a door                          o                 │
                               │   Close a door                         c                 │
                               │   Kick                                 k                 │

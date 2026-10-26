@@ -184,7 +184,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   file without a version (command ids at the top level, or a settings file's `[bindings]`) is
   read too, and a newer version as far as this one knows. The defaults ship as
   `keymaps/default.toml` beside the game.
-- First-phase commands: move, wait, search (`s`, a turn; `f`, for a while: up to 10 turns,
+- First-phase commands: move, wait, search (`s`, a turn; `S`, for a while: up to 10 turns,
   stopping when something is found or interrupts, like a rest; §8 "Searching"; basic commands,
   not abilities), open/close door, kick (`k`, then a direction; §8 "Doors"),
   ascend/descend, light/douse lantern (`*`),
@@ -198,7 +198,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   default; bound in Controls, it asks for a direction, like opening a door), next target
   (`Tab`, while aiming), use a tool (`u`, then a direction: dig), chat (`C`), pay (`p`, in a
   shop; §7 "Shops"), help, save and quit
-  (`S`, ADOM's). Every way to quit (the
+  (unbound by default: the pause menu quits). Every way to quit (the
   pause menu's Save and quit to menu and Quit, the main menu's Quit, a bound quick key) asks
   first, in the dialog (`Save the run and quit Warlock?`: `Save and quit`, `Stay`; closing the
   window or the tab does not ask). On the web Quit saves and reloads the page to a fresh main

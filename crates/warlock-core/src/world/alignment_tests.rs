@@ -324,26 +324,46 @@ fn characters_start_in_their_race_class_and_sign_band() {
     };
     // The race's and the class's parts; a race leans a little, never alone out of Neutral.
     for (spec, theirs) in [
-        ("human,male,paladin", 450),
+        ("human,male,paladin", 550),
         ("human,female,thief", -200),
         ("human,other,witch", -200),
         ("dwarf,female,warrior", 0),
         ("elf,female,wizard", 50),
-        ("half_orc,male,paladin", 400),
+        ("half_orc,male,paladin", 500),
         ("halfling,male,thief", -150),
     ] {
         let (before_the_stars, score, band) = start(spec);
         assert_eq!(before_the_stars, theirs, "{spec}");
         assert_eq!(band, rules.band(Score::new(score)), "{spec}");
     }
-    // The showcase's human paladin is Basilisk-born: the stars take them down to Kind.
-    assert_eq!(start("human,male,paladin"), (450, 350, Band::Kind));
+    // The showcase's human paladin is Basilisk-born: the stars take them down, still Good.
+    assert_eq!(start("human,male,paladin"), (550, 450, Band::Good));
     // The summary's start says the same, before the run.
     let spec: CharacterSpec = "human,male,paladin".parse().unwrap();
     let showcase = content.scenario("showcase").expect("showcase");
     let s = spec.start(&content, 1, showcase.start).expect("start");
     let w = World::with_character(content.clone(), "showcase", Some(1), Some(&spec)).expect("w");
     assert_eq!(s.alignment, Score::new(score(&w)));
+}
+
+#[test]
+fn a_paladin_of_a_race_not_evil_starts_good_under_any_star() {
+    // The paladin's gifts need Good (#317): no birth animal starts one strayed, whatever their
+    // race, unless the race itself starts on the evil side.
+    let content = builtin();
+    let rules = content.alignment().expect("alignment rules");
+    let paladin = content.class("paladin").expect("paladin").alignment;
+    let horoscope = content.horoscope().expect("a horoscope");
+    let worst = horoscope.animals.iter().map(|a| a.alignment).min();
+    let worst = worst.expect("animals");
+    for race in &content.races().list {
+        if rules.band(Score::new(race.alignment)) < Band::Neutral {
+            continue;
+        }
+        let start = Score::new(race.alignment + paladin + worst);
+        let band = rules.band(start);
+        assert!(band >= Band::Good, "{} paladin starts {band:?}", race.id);
+    }
 }
 
 #[test]
@@ -367,10 +387,10 @@ fn the_birth_animal_nudges_the_starting_score_and_the_element_not() {
     let horoscope = content.horoscope().expect("a horoscope");
     assert!(horoscope.elements.iter().all(|e| e.alignment == 0));
     let today = content.scenario("showcase").expect("showcase").start;
-    // A human warrior's own part is 0, so the start is the nudge alone; a paladin's 450 plus it.
+    // A human warrior's own part is 0, so the start is the nudge alone; a paladin's 550 plus it.
     let mut seen = std::collections::BTreeMap::new();
     for seed in 0..400 {
-        for (spec, theirs) in [("human,male,warrior", 0), ("human,female,paladin", 450)] {
+        for (spec, theirs) in [("human,male,warrior", 0), ("human,female,paladin", 550)] {
             let spec: CharacterSpec = spec.parse().unwrap();
             let s = spec.start(&content, seed, today).expect("start");
             let sign = s.character.sign.clone().expect("a sign");

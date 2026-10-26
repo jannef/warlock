@@ -150,7 +150,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   races, multiplied with the race's; §8 "Experience": wizard 125, monk 120, priest, druid, and
   witch 115, paladin 110, ranger 105, warrior and bard 100, thief 95, barbarian, aristocrat,
   craftsperson, and merchant 90, commoner 80), `alignment` (as for races, added to the race's:
-  paladin 450, Good; thief and witch −200, Callous; the rest 0), `skills` (as for races),
+  paladin 550, Good under any birth animal unless the race is evil (#317); thief and witch −200, Callous; the rest 0), `skills` (as for races),
   `known_for` (the skills of `skills` it is known for, its `2d6+10` ones: a level-up roll on one
   throws its die a step up the ladder), `rolls` (skill rolls each level gives, 0 to 10, default
   2: the thief and the ranger 3, the bard 4), `weapon_skills` (starting ranks as for races), `weapon_skill_choice` (two or more

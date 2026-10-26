@@ -67,7 +67,7 @@ Build the engine and framework, not the game. Everything built is production qua
   creatures walk onto them too; a few hidden on every generated Depths level, and a trap hall to
   try them (§8 "Traps"). No saving throws
 - Searching (#140): secret doors (level legends, vaults, a door or two on each Depths rooms level)
-  and hidden traps, found with one check: searching (`s`, `f` for a while; Intelligence and the
+  and hidden traps, found with one check: searching (`s`, `S` for a while; Intelligence and the
   Search skill) or in passing (Willpower and Spot; elves, dwarves on stone, anyone trained in
   Spot), rolled afresh every turn (§8 "Searching")
 - Magic items (M29, #149), after Path of Exile: base items (weapons, missile weapons,

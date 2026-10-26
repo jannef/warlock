@@ -461,7 +461,7 @@ impl Default for Bindings {
             (ch("."), Wait),
             (Code(KeyCode::Numpad5), Wait),
             (ch("s"), Search),
-            (ch("f"), SearchLong),
+            (ch("S"), SearchLong),
             (ch("o"), Open),
             (ch("c"), Close),
             (ch("k"), Kick),
@@ -489,7 +489,6 @@ impl Default for Bindings {
             (ch("a"), Abilities),
             (ch("X"), RepeatAbility),
             (ch("C"), Chat),
-            (ch("S"), Quit),
             (Code(KeyCode::Tab), NextTarget),
             (Code(KeyCode::Enter), Loose),
             (Code(KeyCode::NumpadEnter), Loose),
@@ -1428,14 +1427,14 @@ mod tests {
         assert_eq!(keys(&b, KeyCommand::Move(Dir::N)), ["Num8", "↑"]);
         assert_eq!(keys(&b, KeyCommand::Move(Dir::NE)), ["Num9"]);
         assert_eq!(keys(&b, KeyCommand::Descend), [">"]);
-        assert_eq!(keys(&b, KeyCommand::Quit), ["S"]);
+        assert!(keys(&b, KeyCommand::Quit).is_empty(), "the menu quits");
         assert_eq!(keys(&b, KeyCommand::Lantern), ["*"]);
         assert_eq!(keys(&b, KeyCommand::Kick), ["k"]);
         assert_eq!(keys(&b, KeyCommand::Help), ["?"]);
         assert_eq!(keys(&b, KeyCommand::Cancel), ["Esc"]);
         assert_eq!(keys(&b, KeyCommand::Rest), ["b"]);
         assert_eq!(keys(&b, KeyCommand::Search), ["s"]);
-        assert_eq!(keys(&b, KeyCommand::SearchLong), ["f"]);
+        assert_eq!(keys(&b, KeyCommand::SearchLong), ["S"]);
         assert_eq!(keys(&b, KeyCommand::PickUp), [",", ";"]);
         assert_eq!(keys(&b, KeyCommand::Drop), ["d"]);
         assert_eq!(keys(&b, KeyCommand::Inventory), ["I"]);

@@ -144,6 +144,7 @@ pub const UNBOUND: &[KeyCommand] = &[
     KeyCommand::HoodLantern,
     KeyCommand::Fire,
     KeyCommand::Talents,
+    KeyCommand::Quit,
     KeyCommand::PrevTarget,
     KeyCommand::MoreSkip,
     KeyCommand::PrevPage,
@@ -580,7 +581,7 @@ impl Bindings {
             }
         }
         // The file's keys win over the defaults of the commands it does not list (a command new
-        // since it was written, or one given a default key since, as Quit got `S`, #350): such a
+        // since it was written, or one given a default key since, as Search for a while got `S`): such a
         // command loses a default key a listed command of its context has. The file's own keys
         // are never rewritten.
         let listed = |c: &KeyCommand| c.id().is_some_and(|id| table.contains_key(id));
@@ -818,7 +819,7 @@ mod tests {
     #[test]
     fn an_old_files_keys_win_over_new_defaults() {
         // A file written before #350: the old keys, and no `quit` (unbound then). Its keys stay
-        // the player's own; Quit, unlisted, gives up its new default `S` to Skills.
+        // the player's own; Search for a while, unlisted, gives up its new default `S` to Skills.
         let table: toml::Table = toml::from_str(
             r#"
             move_n = ["k", "Numpad8", "ArrowUp"]
@@ -835,7 +836,7 @@ mod tests {
         assert_eq!(b.keys_of(KeyCommand::Kick), vec![&ch("K")]);
         assert_eq!(b.keys_of(KeyCommand::Look), vec![&ch("x")]);
         assert_eq!(b.keys_of(KeyCommand::Skills), vec![&ch("S")]);
-        assert!(b.keys_of(KeyCommand::Quit).is_empty());
+        assert!(b.keys_of(KeyCommand::SearchLong).is_empty());
         // Commands it does not list and nobody took a key from have the new defaults.
         assert_eq!(b.keys_of(KeyCommand::Equipment), vec![&ch("i")]);
         assert!(b.conflicts().is_empty());

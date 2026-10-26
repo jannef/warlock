@@ -130,7 +130,7 @@ dungeons under the barrows, the fen, and the hills.
   when someone opens or kicks it. One you saw go off is known from then on, shown as `^` and
   remembered, and stepping onto it asks first. The dungeons hide a few on every level.
 - **Searching** — secret doors look like the wall and hidden traps like the floor until you find
-  them: search (`s`, or `f` for a while) with your Intelligence and Search skill, or notice them in
+  them: search (`s`, or `S` for a while) with your Intelligence and Search skill, or notice them in
   passing with your Willpower, if you are an elf, a dwarf (in stone), or trained in Spot. Every
   turn is a fresh try. The dungeons hide a door or two on their levels of rooms, never one you
   need.
