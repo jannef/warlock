@@ -1,0 +1,32 @@
+# The undead roster (#383, batch 1). A ghoul grown old in the eating of the dead: quicker and
+# keener than a barrow ghoul, and its claws carry the filth of what it eats. It opens doors. (The
+# roster's hold, `held` 10 %, waits: Held has no timer and only a Drowning grip lets go, so a
+# held player would never step again.)
+[[creature]]
+id = "ghast"
+level = 7
+xp = 45
+rarity = "uncommon"
+name = "ghast"
+glyph = "z"
+fg = "#8a6a9a"
+speed = 1250
+faction = "undead"
+alignment = "evil"
+vision = "darkvision"
+sight = 10
+opens_doors = true
+footsteps = 40
+hearing = 15
+weight = 50000
+stats = { strength = 14, dexterity = 17, toughness = 14, intelligence = 13, willpower = 18, presence = 13 }
+base_hp = 16
+resist = { poison = 100 }
+on_eat = { message = "Carrion upon carrion.", vomit = 80, harm = "1d4" }
+blood = "#3a2a3a"
+[creature.attack]
+damage = "1d8"
+damage_type = "slashing"
+name = "claws"
+verb = "claws"
+on_hit = [{ disease = "filth_fever", chance = 10 }]

@@ -1,0 +1,31 @@
+# The undead roster (#383, batch 1). A dead lord wrapped in resin-soaked linen and laid in a
+# tomb, risen: slow, hard to put down, its blows carry mummy rot, and its dry wrappings take fire
+# all too well. Not yet in any dungeon's population: it waits for a tomb to haunt.
+[[creature]]
+id = "mummy"
+level = 10
+xp = 60
+rarity = "uncommon"
+name = "mummy"
+plural = "mummies"
+glyph = "M"
+fg = "#d8c8a0"
+speed = 800
+faction = "undead"
+alignment = "evil"
+vision = "darkvision"
+sight = 8
+footsteps = 70
+hearing = 8
+weight = 40000
+stats = { strength = 17, dexterity = 6, toughness = 21, intelligence = 2, willpower = 20, presence = 2 }
+base_hp = 38
+resist = { fire = -50, poison = 100 }
+on_eat = { message = "Dust and resin.", vomit = 80, harm = "1d4" }
+blood = "#5a4a30"
+[creature.attack]
+damage = "1d10"
+damage_type = "bludgeoning"
+name = "fist"
+verb = "pummels"
+on_hit = [{ disease = "mummy_rot", chance = 20 }]

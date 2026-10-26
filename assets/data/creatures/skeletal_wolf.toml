@@ -1,0 +1,26 @@
+# The undead roster (#383, batch 1). The bones of a wolf, hunting still: quick, tireless, and as
+# brittle as any skeleton, so a club breaks it where an arrow slips through. Bloodless, and it
+# leaves no corpse.
+[[creature]]
+id = "skeletal_wolf"
+level = 5
+xp = 35
+rarity = "common"
+name = "skeletal wolf"
+plural = "skeletal wolves"
+glyph = "C"
+fg = "#d8d4c0"
+speed = 1200
+faction = "undead"
+alignment = "evil"
+vision = "darkvision"
+sight = 10
+footsteps = 40
+hearing = 15
+weight = 15000
+stats = { strength = 13, dexterity = 16, toughness = 13, intelligence = 2, willpower = 18, presence = 2 }
+base_hp = 11
+attack = { damage = "1d8", damage_type = "piercing", name = "bite", verb = "bites" }
+resist = { piercing = 50, bludgeoning = -50, poison = 100 }
+corpse = false
+blood = "none"

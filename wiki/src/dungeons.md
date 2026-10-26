@@ -74,8 +74,9 @@ floor.
 **Cealdhlāw**, the cold barrow, is the Ascmearc's first dungeon, its way in on the downs of
 Hlāwdūn east of Cēaptūn. Its first two floors are the barrow's passages and chambers; the four
 below are the hollows of the hill, wide caves. It is cold (8 °C), its traps are arrows, spears,
-pits, and alarms, and its dead walk: grave worms, skeletons, zombies, ghouls, and the barrow
-wight, with goblins, kobolds, and vermin among them. On its second floor, always, lies the
+pits, and alarms, and its dead walk: crawling hands and the bones of rats and wolves, skeletons
+(some with bows, some armed and shielded warriors), zombies (kobolds among them), ghouls, and the
+barrow wight, with goblins, kobolds, and vermin among them. On its second floor, always, lies the
 **barrow chamber**: a skeleton paces a burial hall before a locked bronze door, and behind it
 the silver chalice Sister Hild wants back lies on a plinth. The skeleton carries the bronze key.
 On the first floor you feel cold air breathing up from the mound.
@@ -96,9 +97,10 @@ room in four is out of the ordinary (most floors have one or two), flooded ankle
 loud to wade), hushed, or shadowed. Its traps are pits, frost, alarms, and teleports, and the
 monks hid their stores well: more of its doors are secret than in the other dungeons. The
 marsh's leeches, frogs, crocodiles, wisps, mud golems, and trolls live here among the minster's
-drowned dead and its ghosts, and with them the cult that came to the ruin, cultists and their
-priests; somewhere in the dark is the bog hag, whom you meet once in your life. No one trades
-down there: Fennmynster has no shops.
+drowned dead, its peat-dark bog bodies, and its ghasts, and the restless spirits that pass through
+its walls: corpse candles, poltergeists, ghosts, and the shadows that drink your strength. With
+them is the cult that came to the ruin, cultists and their priests; somewhere in the dark is
+the bog hag, whom you meet once in your life. No one trades down there: Fennmynster has no shops.
 
 At the very bottom lies the **sunken crypt**: a nave of shallow water between the monks' tombs,
 where two of the drowned still stand guard, and at its far end a dry dais with an altar and the
@@ -115,7 +117,8 @@ below are the deep workings, wide caves that grow hotter toward the volcano's he
 then 20 °C, and 24 °C at the bottom). Its traps are arrows, spears, fireballs, lightning, and
 alarms, few of its doors are hidden, and its locks are the hardest to pick of the three
 dungeons. The duergar dig here, miners, warriors, and smiths, among ember beetles, salamanders,
-magma crawlers, cinder elementals, ash wraiths, basilisks, ogres, and trolls, with kobolds,
+magma crawlers, cinder elementals, ash wraiths, basilisks, ogres, and trolls, and the dead the
+delf's fires left: ogre zombies and grave hounds, with kobolds,
 centipedes, and bats in the upper galleries.
 
 Every gallery floor holds a **foreman's cabin**: a timber-floored lodging where a duergar miner

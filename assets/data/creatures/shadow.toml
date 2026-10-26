@@ -1,0 +1,32 @@
+# The undead roster (#383, batch 1). A shadow that walks without the one who cast it: it slips
+# through walls and doors without a sound, and its cold touch drinks the strength out of the
+# living, for good unless they hold firm in will (a temple's mending gives it back). Blades and
+# clubs pass half through it, and it leaves nothing behind.
+[[creature]]
+id = "shadow"
+level = 8
+xp = 50
+rarity = "rare"
+name = "shadow"
+glyph = "G"
+fg = "#70708a"
+speed = 1150
+faction = "undead"
+alignment = "evil"
+vision = "darkvision"
+sight = 10
+hearing = 15
+weight = 100
+stats = { strength = 12, dexterity = 15, toughness = 12, intelligence = 13, willpower = 19, presence = 13 }
+base_hp = 12
+natural = { defence = 2, protection = 0, name = "insubstantial form" }
+incorporeal = { wall_defence = 2 }
+resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "1d8"
+damage_type = "cold"
+name = "touch"
+verb = "touches"
+on_hit = [{ drain = "strength", points = 1, chance = 10, check = "willpower", difficulty = 13 }]
