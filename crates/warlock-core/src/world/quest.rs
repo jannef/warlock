@@ -12,7 +12,7 @@
 //! owner's decision).
 //!
 //! **Goals**, and how far they have got ([`progress`]):
-//! - kill: the player's own kills of the creature type, or of any member type of the tribe (on
+//! - kill: the player's own kills of the creature type, or of any type carrying the tag (on
 //!   its level or branch, if it names one; else on every level summed), counted from a tally of
 //!   the kills of every creature type (so kills made before the quest was taken count; a repeat
 //!   counts only those since);
@@ -282,21 +282,32 @@ fn in_sentence(name: &str) -> String {
     }
 }
 
-/// `n` of what a kill quest is after: "a kobold shaman", "3 giant rats", "100 goblins".
-fn creatures(content: &Content, target: KillTarget, n: u32) -> String {
-    if n == 1 {
-        let name = target.name(content, true);
-        format!("{} {name}", crate::content::article(name))
-    } else {
-        format!("{n} {}", target.name(content, false))
+/// What kill quest `def` is after, one (`one`) or several: its `what` if it says, else the
+/// type's or the tag's name ("goblin", "goblins").
+fn kill_noun(content: &Content, def: &QuestDef, one: bool) -> String {
+    match &def.goal {
+        Goal::Kill {
+            what: Some(what), ..
+        } => what.clone(),
+        Goal::Kill { target, .. } => target.name(content, one),
+        _ => String::new(),
     }
 }
 
-/// The members of a tribe quest `def`'s run can meet, by their plurals: "goblins, goblin
-/// archers, and goblin chiefs".
-pub fn members(content: &Content, def: &QuestDef, tribe: crate::content::TribeId) -> String {
-    let plurals: Vec<&str> = (content.tribe(tribe))
-        .members_in(content, def.campaign.as_deref())
+/// `n` of what kill quest `def` is after: "a kobold shaman", "3 giant rats", "100 goblins".
+fn creatures(content: &Content, def: &QuestDef, n: u32) -> String {
+    let name = kill_noun(content, def, n == 1);
+    if n == 1 {
+        format!("{} {name}", crate::content::article(&name))
+    } else {
+        format!("{n} {name}")
+    }
+}
+
+/// The types carrying tag `tag` that quest `def`'s run can meet, by their plurals: "goblins,
+/// goblin archers, and goblin chiefs".
+pub fn members(content: &Content, def: &QuestDef, tag: &str) -> String {
+    let plurals: Vec<&str> = (content.tagged_in(tag, def.campaign.as_deref()))
         .map(|c| content.creature(c).plural.as_str())
         .collect();
     crate::content::and_list(&plurals)
@@ -320,15 +331,16 @@ pub fn asks(content: &Content, def: &QuestDef) -> String {
             target,
             count,
             level,
+            ..
         } => {
             let place = level.as_deref().map_or_else(String::new, |l| {
                 format!(" in {}", in_sentence(&content.place_name(l)))
             });
-            let who = match *target {
-                KillTarget::Tribe(tribe) => format!(": {}", members(content, def, tribe)),
+            let who = match target {
+                KillTarget::Tag(tag) => format!(": {}", members(content, def, tag)),
                 KillTarget::Creature(_) => String::new(),
             };
-            format!("Kill {}{place}{who}.", creatures(content, *target, *count))
+            format!("Kill {}{place}{who}.", creatures(content, def, *count))
         }
         Goal::Bring { object, count, .. } => format!(
             "Bring {} to {}.",
@@ -376,8 +388,8 @@ fn next_step(content: &Content, def: &QuestDef) -> String {
 fn progress_news(content: &Content, def: &QuestDef, (have, need): (u32, u32)) -> String {
     let done = have >= need;
     let mut text = match def.goal {
-        Goal::Kill { target, .. } => {
-            let name = target.name(content, need == 1);
+        Goal::Kill { .. } => {
+            let name = kill_noun(content, def, need == 1);
             format!("Quest updated: {have} / {need} {name}.")
         }
         Goal::Bring { object, .. } => {

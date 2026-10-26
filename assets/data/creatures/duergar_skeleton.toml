@@ -1,0 +1,32 @@
+# The undead roster (#383, batch 2). The bones of a grey dwarf, raised still in its helm and
+# still swinging its hammer as it was drilled to: steady and hard to put down. Arrows slip
+# between its ribs, a club shatters it; bloodless, and it leaves no corpse.
+[[creature]]
+id = "duergar_skeleton"
+level = 15
+xp = 85
+rarity = "common"
+name = "duergar skeleton"
+glyph = "z"
+fg = "#a0a4a8"
+faction = "undead"
+alignment = "evil"
+vision = "darkvision"
+sight = 10
+footsteps = 70
+hearing = 10
+weight = 16000
+stats = { strength = 17, dexterity = 14, toughness = 18, intelligence = 2, willpower = 21, presence = 2 }
+base_hp = 38
+attack = { damage = "3d6", damage_type = "slashing", name = "claw", verb = "claws" }
+resist = { piercing = 50, bludgeoning = -50, poison = 100 }
+weapon_skills = { maces = 3 }
+corpse = false
+blood = "none"
+# Its gear (spec §8 "Creature gear"): the hammer and helm it died in.
+[[creature.gear]]
+chance = 80
+one_of = ["war_hammer"]
+[[creature.gear]]
+chance = 60
+one_of = ["iron_helm"]

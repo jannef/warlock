@@ -86,6 +86,8 @@ fn the_floors_start_full_of_the_fen_wave() {
             "cult_priest",
             "marsh_troll",
             "bog_body",
+            "wraith",
+            "fen_ghoul",
             "bog_hag",
         ])
     );

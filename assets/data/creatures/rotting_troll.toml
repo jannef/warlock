@@ -1,0 +1,30 @@
+# The undead roster (#383, batch 2). A troll that died and rose without healing: as slow as any
+# zombie but with a troll's claws, carrying grave rot, and its rotten hide takes fire all too
+# well.
+[[creature]]
+id = "rotting_troll"
+level = 17
+xp = 95
+rarity = "uncommon"
+name = "rotting troll"
+glyph = "T"
+fg = "#8a8a5a"
+speed = 800
+faction = "undead"
+alignment = "evil"
+vision = "darkvision"
+sight = 8
+footsteps = 120
+hearing = 8
+weight = 250000
+stats = { strength = 23, dexterity = 12, toughness = 24, intelligence = 2, willpower = 22, presence = 2 }
+base_hp = 68
+resist = { fire = -50, poison = 100 }
+on_eat = { message = "Troll, and rotten through.", vomit = 90, harm = "1d6" }
+blood = "#3a3a20"
+[creature.attack]
+damage = "3d8"
+damage_type = "slashing"
+name = "claws"
+verb = "claws"
+on_hit = [{ disease = "grave_rot", chance = 15 }]

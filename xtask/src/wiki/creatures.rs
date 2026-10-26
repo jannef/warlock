@@ -12,7 +12,7 @@ use warlock_core::burden::{self, Burden};
 use warlock_core::combat::Category;
 use warlock_core::content::{
     ActionKind, Affliction, BASE_TURN, Benefit, Combat, Content, CreatureDef, CreatureId,
-    FactionId, NORMAL_COST, NaturalAttack, Stance, price,
+    FactionId, NORMAL_COST, NaturalAttack, Stance, price, spoken,
 };
 use warlock_core::geom::Pos;
 use warlock_core::object::format_weight;
@@ -133,6 +133,27 @@ pub(super) fn factions(content: &Content) -> String {
             capital(&f.name),
             yes(f.animal)
         );
+    }
+    out
+}
+
+/// Every creature tag (spec §8 "Quests"), by tag: the word a kill quest names (`tag:goblin`),
+/// its plural as quests say it, and the creature types that carry it, by name (a tag carried
+/// by one type is listed too).
+pub(super) fn creature_tags(content: &Content) -> String {
+    let mut out = String::from("| Tag | Said | Creatures |\n|---|---|---|\n");
+    for tag in content.tags() {
+        let mut names: Vec<&str> = (content.tagged(tag))
+            .map(|c| content.creature(c))
+            .filter(|c| order::described(content, c.campaign.as_deref()))
+            .map(|c| c.name.as_str())
+            .collect();
+        if names.is_empty() {
+            continue;
+        }
+        names.sort_by_cached_key(|n| n.to_lowercase());
+        let said = content.plural(&spoken(tag));
+        let _ = writeln!(out, "| `{tag}` | {said} | {} |", names.join(", "));
     }
     out
 }
@@ -411,4 +432,24 @@ pub(super) fn creature_senses(content: &Content) -> String {
         );
     }
     out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_tags_name_their_creatures() {
+        let content = Content::builtin().expect("content");
+        let table = creature_tags(&content);
+        assert!(
+            table.contains("| `goblin` | goblins | goblin, goblin archer, goblin chief |"),
+            "{table}"
+        );
+        assert!(
+            table.contains("| `marsh-thing` | marsh things |"),
+            "{table}"
+        );
+        assert!(table.contains("| `undead` | undead |"), "{table}");
+    }
 }

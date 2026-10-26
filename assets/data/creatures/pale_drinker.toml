@@ -12,6 +12,7 @@ name = "pale drinker"
 glyph = "G"
 fg = "#8c8fa8"
 faction = "undead"
+tags = ["undead"]
 alignment = "evil"
 vision = "darkvision"
 sight = 10

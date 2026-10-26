@@ -1,0 +1,26 @@
+# The undead roster (#383, batch 2). The bones of a wyvern, raised: it beats its bare wings and
+# strikes with its tail's sting. Its bones turn a blade's point and shrug off arrows; a club
+# shatters them, and it leaves no corpse. Not yet in any dungeon's population.
+[[creature]]
+id = "bone_wyvern"
+level = 18
+xp = 100
+rarity = "uncommon"
+name = "bone wyvern"
+glyph = "D"
+fg = "#e0dcc0"
+speed = 1200
+faction = "undead"
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+footsteps = 60
+hearing = 10
+weight = 150000
+stats = { strength = 23, dexterity = 12, toughness = 24, intelligence = 2, willpower = 22, presence = 2 }
+base_hp = 72
+natural = { defence = 0, protection = 2, name = "bones" }
+attack = { damage = "3d8", damage_type = "piercing", name = "sting", verb = "stings" }
+resist = { piercing = 50, bludgeoning = -50, poison = 100 }
+corpse = false
+blood = "none"

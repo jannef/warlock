@@ -52,7 +52,6 @@ mod temperature;
 mod terrain;
 mod text;
 mod traps;
-mod tribes;
 mod vision;
 mod weapon_skills;
 mod weather;
@@ -142,7 +141,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("lights.md", vision::lights),
         ("creatures.md", creatures::creatures),
         ("factions.md", creatures::factions),
-        ("tribes.md", tribes::tribes),
+        ("creature-tags.md", creatures::creature_tags),
         ("creature-stats.md", creatures::creature_stats),
         ("creature-defences.md", creatures::creature_defences),
         ("creature-attacks.md", creatures::creature_attacks),
@@ -996,11 +995,13 @@ mod tests {
             "| Filth fever | The drowned's fist (20%); the ghast's claws (10%); the giant rat's bite \
              (10%) | Toughness, 54% | 1d3 days | Every day | 1d3 Dexterity, 1d3 Toughness | Two \
              checks won in a row | no | Half as fast |",
-            "| Marsh ague | The bog body's fist (15%); crossing marsh or swamp (4% an hour) |",
+            "| Marsh ague | The bog body's fist (15%); the fen ghoul's claws (10%); crossing marsh \
+             or swamp (4% an hour) |",
             "| Grave rot | The grave hound's bite (10%); the kobold zombie's fist (5%); the ogre \
-             zombie's fist (10%); the zombie's fist (15%); eating rotten food |",
-            "| Mummy rot | The mummy's fist (20%) | Toughness, 31% | 1d3 days | Every 3 days | 1d4 \
-             Toughness | Never by itself | no |",
+             zombie's fist (10%); the rotting troll's claws (15%); the zombie's fist (15%); eating \
+             rotten food |",
+            "| Mummy rot | The mummy's fist (20%); the mummy priest's touch (15%) | Toughness, 31% \
+             | 1d3 days | Every 3 days | 1d4 Toughness | Never by itself | no |",
             "| Never by itself | yes |",
             "| Brain fever | — | Willpower, 54% |",
         ] {
@@ -1125,7 +1126,7 @@ mod tests {
         // Lights go by what the player sees: the terrain, the carrier, the lantern, the crystal.
         for row in [
             "| Wall torch | 7 cells |",
-            "| Torch carried by a kobold | 6 cells |",
+            "| Torch carried by a burning skull or a kobold | 6 cells |",
             "| Your lantern | 5 cells |",
             "| Light crystal (red) | 7 cells |",
             "| Faint rune | 4 cells | UV only",

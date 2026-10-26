@@ -10,6 +10,7 @@ name = "skeleton"
 glyph = "z"
 fg = "#e8e4d0"
 faction = "undead"
+tags = ["undead", "skeleton"]
 alignment = "evil"
 vision = "darkvision"
 sight = 10

@@ -97,8 +97,9 @@ room in four is out of the ordinary (most floors have one or two), flooded ankle
 loud to wade), hushed, or shadowed. Its traps are pits, frost, alarms, and teleports, and the
 monks hid their stores well: more of its doors are secret than in the other dungeons. The
 marsh's leeches, frogs, crocodiles, wisps, mud golems, and trolls live here among the minster's
-drowned dead, its peat-dark bog bodies, and its ghasts, and the restless spirits that pass through
-its walls: corpse candles, poltergeists, ghosts, and the shadows that drink your strength. With
+drowned dead, its peat-dark bog bodies, and its ghasts and fen ghouls, whose claws hold fast,
+and the restless spirits that pass through its walls: corpse candles, poltergeists, ghosts, the
+shadows that drink your strength, and the wraiths that drink your life. With
 them is the cult that came to the ruin, cultists and their priests; somewhere in the dark is
 the bog hag, whom you meet once in your life. No one trades down there: Fennmynster has no shops.
 
@@ -118,7 +119,9 @@ then 20 °C, and 24 °C at the bottom). Its traps are arrows, spears, fireballs,
 alarms, few of its doors are hidden, and its locks are the hardest to pick of the three
 dungeons. The duergar dig here, miners, warriors, and smiths, among ember beetles, salamanders,
 magma crawlers, cinder elementals, ash wraiths, basilisks, ogres, and trolls, and the dead the
-delf's fires left: ogre zombies and grave hounds, with kobolds,
+delf's fires left: ogre zombies and grave hounds, burning skulls, the charred dead, duergar
+skeletons still in their helms, rotting trolls, and the spirits of the miners, knockers and
+spectres, that pass through the rock, with kobolds,
 centipedes, and bats in the upper galleries.
 
 Every gallery floor holds a **foreman's cabin**: a timber-floored lodging where a duergar miner

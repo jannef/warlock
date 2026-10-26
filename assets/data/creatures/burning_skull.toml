@@ -1,0 +1,27 @@
+# The undead roster (#383, batch 2). A skull wreathed in fire that will not go out, floating at
+# head height through the delf's galleries: it lights its own way, its bite burns, fire cannot
+# hurt it and cold does half again as much. Nothing is left of it but ash.
+[[creature]]
+id = "burning_skull"
+level = 12
+xp = 70
+rarity = "uncommon"
+name = "burning skull"
+glyph = "z"
+fg = "#ffb040"
+speed = 1150
+light = "torch"
+glow = 0.45
+faction = "undead"
+alignment = "evil"
+vision = "darkvision"
+sight = 10
+hearing = 12
+weight = 1500
+size = "small"
+stats = { strength = 12, dexterity = 17, toughness = 13, intelligence = 15, willpower = 20, presence = 15 }
+base_hp = 15
+attack = { damage = "2d6", damage_type = "fire", name = "bite", verb = "bites" }
+resist = { fire = 100, cold = -50, poison = 100 }
+corpse = false
+blood = "none"

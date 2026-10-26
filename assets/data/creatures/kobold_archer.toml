@@ -9,6 +9,7 @@ name = "kobold archer"
 glyph = "k"
 fg = "#c8b45a"
 faction = "kobolds"
+tags = ["kobold", "archer"]
 alignment = "evil"
 vision = "darkvision"
 sight = 12

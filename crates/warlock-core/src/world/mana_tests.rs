@@ -56,6 +56,30 @@ name = "Diseased"
 max = 1
 regen = 50
 mana_regen = 50
+
+# Named by the undead's on_hit (#383): kept as the built-in ones are, untouched by mana.
+[[status]]
+id = "frightened"
+name = "Frightened"
+max = 3
+eases = 6
+flees = true
+
+[[status]]
+id = "transfixed"
+name = "Transfixed"
+max = 4
+eases = 12
+cost = 200
+
+[[status]]
+id = "held"
+name = "Held"
+max = 12
+stacking = "highest"
+eases = 6
+blocks = ["step"]
+hold = { check = "strength", difficulty = 13, turns = "3d4" }
 "##;
 
 // A fog of the mind: it shows after a day and slows mana to a tenth; a progression (every
@@ -120,11 +144,6 @@ fn files(scenario: &str, extra: &[(&str, &str)]) -> ContentFiles {
     let fyrdelf = "campaigns/ascmearc/data/dungeons/fyrdelf.toml";
     let text = include_str!("../../../../assets/campaigns/ascmearc/data/dungeons/fyrdelf.toml");
     files.insert(fyrdelf, &text.replace("\"basilisk\", ", ""));
-    let vermin = include_str!("../../../../assets/data/tribes/vermin.toml");
-    files.insert(
-        "data/tribes/vermin.toml",
-        &vermin.replace("except = [\"basilisk\"]\n", ""),
-    );
     let diseases = include_str!("../../../../assets/data/diseases.toml");
     files.insert("data/diseases.toml", &format!("{diseases}\n{FOG}"));
     files.insert("data/experience.toml", EXPERIENCE);
