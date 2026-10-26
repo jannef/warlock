@@ -185,7 +185,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     comes with a hit point back, before the ticks), so it makes no difference how time is cut up;
     actors on other levels are frozen, and the dev time skip passes none.
   - **Draining**: a status with `mana_damage` drains that much mana a tick (§7), never below 0
-    and never a death. None of the built-in ones does.
+    and never a death. **Ebbing** does (#403): a draining room's status (§7 "Special rooms"),
+    held by everyone with mana inside the room, it drains a point every 20 seconds and stops
+    mana coming back (`mana_regen` 0); one degree, renewed while one stays, eased half a minute
+    after leaving ("Your power ebbs away.", "Your power stops ebbing."; on creatures "ebbing").
+    Anchored mind (§8 "Talents") spares the one who has it.
   - **Spending**: `World::spend_mana(actor, base)` is the one way to spend it, refused (nothing
     spent) when the actor has less than the cost: `base` as its talents make it
     (`Actor::mana_cost`, `TalentMods::mana_cost`: Frugal caster's −20 %, rounded to the nearest,

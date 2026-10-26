@@ -161,6 +161,7 @@ fn services(content: &Content, actor: &SeenActor) -> String {
     for service in &content.dialogue(dialogue).services {
         let verb = match service.does {
             ServiceKind::Cure => "cures",
+            ServiceKind::Identify => "identifies",
             ServiceKind::Mend => "mends",
         };
         if !verbs.contains(&verb) {

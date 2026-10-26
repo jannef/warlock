@@ -351,7 +351,7 @@ const CASES: &[Case] = &[
         name: "level-up-choice",
         character: Some("human,male,warrior"),
         actions: "xp:2431 advance:athletics*6",
-        keys: Some("p"),
+        keys: Some("q"),
         size: (100, 40),
         ..BASE
     },
@@ -577,6 +577,14 @@ const CASES: &[Case] = &[
         name: "dialogue-services",
         scenario: "ceaptun",
         actions: "move:SW*4 move:W*15 open:SW move:SW move:S*2 chat:SE",
+        screen: Some("dialogue"),
+        ..BASE
+    },
+    // Cēaptūn's Factor Wulfrun: an appraisal, priced per thing (#432).
+    Case {
+        name: "dialogue-appraisal",
+        scenario: "ceaptun",
+        actions: "move:E*26 move:S*4 open:S move:S*4 chat:S",
         screen: Some("dialogue"),
         ..BASE
     },

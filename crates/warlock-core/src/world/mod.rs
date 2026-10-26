@@ -1258,6 +1258,8 @@ mod door_trap_tests;
 #[cfg(test)]
 mod drain_tests;
 #[cfg(test)]
+mod dwell_tests;
+#[cfg(test)]
 mod element_gift_tests;
 #[cfg(test)]
 mod equip_tests;
@@ -1287,6 +1289,8 @@ mod hunger_tests;
 mod hurl_tests;
 #[cfg(test)]
 mod ice_tests;
+#[cfg(test)]
+mod identify_service_tests;
 #[cfg(test)]
 mod incorporeal_tests;
 #[cfg(test)]

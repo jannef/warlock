@@ -448,6 +448,7 @@ impl World {
                 id: format!("{prefix}{}", def.id),
                 name,
                 price: None,
+                items: None,
             };
             let stage = quests.stage(def);
             if def.giver == speaker {
