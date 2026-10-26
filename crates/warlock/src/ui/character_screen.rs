@@ -61,7 +61,7 @@ const BESIDE: i32 = 8;
 const BESIDE_NAME_W: i32 = 11;
 
 /// Width of the panel: the birth and the burden's thresholds fit on one line each.
-const WIDTH: i32 = 72;
+const WIDTH: i32 = super::info_tabs::panel_width(72);
 
 /// A score lowered by a status effect or stat damage, and the status effects and diseases
 /// themselves: a muted red.

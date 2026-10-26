@@ -22,8 +22,9 @@ key = "brass_key"
 temperature = 10
 # Danger 8 on the first floor to 19 on the twelfth (spec §7 "Danger levels"); nothing scales with
 # the player. The delf wave, and the bats, kobolds, and centipedes of the upper galleries that
-# the shallow floors draw on too, and the orc war bands (#455) that raid the duergar's mine (the
-# war chief, level 20, comes only out of depth). The fire drake is not among them: it lives only on its hoard
+# the shallow floors draw on too, and the war bands that raid the duergar's mine: the orcs' (#455;
+# the war chief, level 20, comes only out of depth) and the hobgoblins' (#454), who come down with
+# the goblins' ogres and trolls. The fire drake is not among them: it lives only on its hoard
 # (the vault at depth 12), so a run meets it there and nowhere else.
 danger = 8
 population = [
@@ -32,6 +33,8 @@ population = [
     "duergar_smith", "ogre", "burning_skull", "troll", "knocker", "fire_salamander",
     "magma_crawler", "spectre", "charred_dead", "ash_wraith", "duergar_skeleton",
     "basilisk", "cinder_elemental", "rotting_troll",
+    "hobgoblin", "hobgoblin_archer", "hobgoblin_legionnaire", "hobgoblin_warcaster",
+    "hobgoblin_sergeant", "hobgoblin_captain",
     "warg", "orc_raider", "orc_shaman", "orc_berserker", "orc_veteran", "orc_bowman",
     "orc_war_chief",
 ]

@@ -22,7 +22,8 @@
 //! `[[region]]` tables name areas of the level (`name`, `area = [x0, y0, x1, y1]`, inclusive; the
 //! first match wins), shown in the status bar. Optional `[[room]]` tables mark special rooms
 //! (spec §7 "Special rooms"): `effect` (an id in `data/room_effects.toml`) over `area = [x0, y0,
-//! x1, y1]` (inclusive, walls and doors included); rooms do not overlap. Optional `[[shop]]`
+//! x1, y1]` (inclusive, walls and doors included); rooms do not overlap; a top-level `effect`
+//! (one that can, never on the overworld) covers the whole level. Optional `[[shop]]`
 //! tables mark shops (spec §7 "Shops"): `kind` (an id in `data/shops.toml`), the `keeper`'s
 //! name, the shop floor's `area` (inclusive: everything lying there is for sale), and the
 //! keeper's `post` on it, where the keeper (`data/shops.toml`'s `[keeper]`) is spawned.
@@ -39,11 +40,12 @@ use super::faction::FactionId;
 use super::flow::{FLOW_SPEEDS, Flow};
 use super::light::LightId;
 use super::object::parse_stacks;
-use super::room_effect::SpecialRoom;
+use super::room_effect::{RoomEffectId, SpecialRoom};
 use super::search::{Secret, SecretSpec, secret_look};
 use super::shop::ShopPlan;
 use super::terrain::{StairsDir, TerrainDef, TerrainId};
 use super::trap::{Trap, TrapEffect};
+use super::unique::UNIQUE;
 use super::{
     ActionKind, Content, ContentError, Cutting, DIFFICULTIES, MAX_ITEM_LEVEL, Rarity, Speaker,
 };
@@ -110,6 +112,8 @@ struct LevelFile {
     /// Special rooms (spec §7 "Special rooms").
     #[serde(default)]
     room: Vec<RoomSpec>,
+    /// A special room's effect covering the whole level (spec §7 "Special rooms"); default none.
+    effect: Option<String>,
     /// Objects placed by position rather than by a legend character.
     #[serde(default)]
     pile: Vec<PileSpec>,
@@ -191,7 +195,7 @@ struct ItemSpec {
 /// and its size and cut (the plain ones if not given).
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
-struct ItemPartSpec {
+pub(super) struct ItemPartSpec {
     part: Option<String>,
     of: String,
     size: Option<String>,
@@ -230,7 +234,8 @@ impl Region {
     }
 }
 
-/// Where walking off the edge of a level leads: from a local area, back to its overworld cell.
+/// Where walking off the edge of a level leads: from a local area, or a hand-made outdoor level
+/// an overworld location leads into (`overworld::link_edge_exits`), back to that overworld cell.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EdgeExit {
     /// The level id (the overworld).
@@ -465,10 +470,13 @@ pub struct LevelTemplate {
     pub regions: Vec<Region>,
     /// Special rooms (spec §7 "Special rooms"), none overlapping another.
     pub rooms: Vec<SpecialRoom>,
+    /// The effect covering the whole level, if one does (spec §7 "Special rooms").
+    pub pervading: Option<RoomEffectId>,
     /// Shops (spec §7 "Shops"), none overlapping another; each keeper is among `creatures`, at
     /// the shop's post.
     pub shops: Vec<ShopPlan>,
-    /// Where walking off the edge leads (local areas); `None`: the edge cannot be crossed.
+    /// Where walking off the edge leads (local areas, and hand-made outdoor levels an overworld
+    /// location leads into); `None`: the edge cannot be crossed.
     pub exit: Option<EdgeExit>,
     /// The item level of loot here (spec §8 "Magic items"): a hand-made level's `item_level`
     /// (default 1), a branch level's depth.
@@ -787,6 +795,24 @@ pub(super) fn parse_level(
         rooms.push(room);
     }
 
+    let pervading = match &parsed.effect {
+        Some(_) if parsed.kind == LevelKind::Overworld => {
+            return Err(err("the overworld has no `effect`".into()));
+        }
+        Some(name) => {
+            let id = (content.room_effects().id(name))
+                .ok_or_else(|| err(format!("unknown effect `{name}` (room_effects.toml)")))?;
+            if !content.room_effect(id).can_pervade() {
+                return Err(err(format!(
+                    "effect `{name}` cannot cover a whole level: it needs a `pervade` line, and \
+                     none that creatures shun or that lays a floor can"
+                )));
+            }
+            Some(id)
+        }
+        None => None,
+    };
+
     let mut terrain = Grid::from_vec(width, height, cells);
     let secrets = hide_secret_doors(&mut terrain, &secret_doors, content).map_err(err)?;
     for spec in parsed.pile {
@@ -888,6 +914,7 @@ pub(super) fn parse_level(
         places,
         regions,
         rooms,
+        pervading,
         shops,
         exit: None,
         item_level,
@@ -1160,9 +1187,25 @@ fn parse_item(spec: &ItemSpec, content: &Content) -> Result<Stack, String> {
 /// What a magic or rare `[[item]]` rolled: rare with a `name`, else magic.
 fn parse_magic(spec: &ItemSpec, content: &Content) -> Result<Magic, String> {
     let def = content.object(content.object_id(&spec.object).expect("checked"));
+    let mut magic = magic_of(def, &spec.affixes, spec.name.clone(), spec.level, content)?;
+    magic.identified = spec.identified;
+    Ok(magic)
+}
+
+/// The magic of an item of `def` placed by hand with `written` affixes (each an id with an
+/// optional tier, default 1, whose value is the top of the tier's range): rare with a `name`,
+/// else magic; of item level `level`, or that of its highest tier; unidentified; checked against
+/// `def` ([`Magic::check`]). An `[[item]]` and a unique item (`super::unique`) are made so.
+pub(super) fn magic_of(
+    def: &super::ObjectDef,
+    written: &[String],
+    name: Option<String>,
+    level: Option<u8>,
+    content: &Content,
+) -> Result<Magic, String> {
     let mut affixes = Vec::new();
     let mut highest = 1;
-    for text in &spec.affixes {
+    for text in written {
         let (id, tier) = match text.split_once(':') {
             Some((id, tier)) => {
                 let tier = tier
@@ -1183,18 +1226,19 @@ fn parse_magic(spec: &ItemSpec, content: &Content) -> Result<Magic, String> {
             value: t.max,
         });
     }
-    let rarity = if spec.name.is_some() {
+    let rarity = if name.is_some() {
         Rarity::Rare
     } else {
         Rarity::Magic
     };
     let magic = Magic {
         rarity,
-        level: spec.level.unwrap_or(highest),
+        level: level.unwrap_or(highest),
         affixes,
-        name: spec.name.clone(),
-        identified: spec.identified,
+        name,
+        identified: false,
         carried: 0,
+        unique: None,
     };
     magic.check(def, content)?;
     Ok(magic)
@@ -1202,7 +1246,7 @@ fn parse_magic(spec: &ItemSpec, content: &Content) -> Result<Magic, String> {
 
 /// A part an `[[item]]` names: a gem, of the plain size and cut unless it says otherwise, or
 /// another material in place of one of its base item's parts (a variant, #193; no size or cut).
-fn item_part(spec: &ItemPartSpec, content: &Content) -> Result<ItemPart, String> {
+pub(super) fn item_part(spec: &ItemPartSpec, content: &Content) -> Result<ItemPart, String> {
     let gem = (content.material_id(&spec.of))
         .ok_or_else(|| format!("`of = \"{}\"`: no such material", spec.of))?;
     let part = match &spec.part {
@@ -1364,12 +1408,26 @@ pub(super) fn equip_ids(
     for (wields, list) in [(true, wield), (false, wear)] {
         let verb = if wields { "wield" } else { "wear" };
         for id in list {
-            let object = content
-                .object_id(id)
-                .ok_or_else(|| format!("{verb}: unknown object `{id}`"))?;
-            let item = (0..carry.len())
-                .find(|&i| carry[i].object == object && !equipment.holds(i))
-                .ok_or_else(|| format!("{verb}s `{id}`, which it does not carry"))?;
+            // A unique item (`unique:widowmaker`) is the one carried, not another placement.
+            let (object, item) = match id.strip_prefix(UNIQUE) {
+                Some(unique) => {
+                    let is =
+                        |s: &Stack| s.magic().and_then(|m| m.unique.as_deref()) == Some(unique);
+                    let item = (0..carry.len())
+                        .find(|&i| is(&carry[i]) && !equipment.holds(i))
+                        .ok_or_else(|| format!("{verb}s `{id}`, which it does not carry"))?;
+                    (carry[item].object, item)
+                }
+                None => {
+                    let object = content
+                        .object_id(id)
+                        .ok_or_else(|| format!("{verb}: unknown object `{id}`"))?;
+                    let item = (0..carry.len())
+                        .find(|&i| carry[i].object == object && !equipment.holds(i))
+                        .ok_or_else(|| format!("{verb}s `{id}`, which it does not carry"))?;
+                    (object, item)
+                }
+            };
             let slot = equipment::free_slot(content, &equipment, object)
                 .ok_or_else(|| format!("cannot {verb} `{id}`: no free slot fits it"))?;
             let held = matches!(

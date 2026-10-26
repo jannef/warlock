@@ -198,10 +198,10 @@ impl World {
         let radius = sight::sight_radius(state, content, def.sight);
         let level = state.current();
         let los = LineOfSight::compute(me.pos, radius, |p| level.is_opaque(content, p));
-        let eye = &content.vision_profiles()[def.vision];
+        let eye = me.eyes(content, &content.vision_profiles()[def.vision]);
         (heard.iter().rev())
             .map(|h| h.at)
-            .find(|&at| !sight::sees(state, content, lights, &los, eye, at))
+            .find(|&at| !sight::sees(state, content, lights, &los, &eye, at))
     }
 
     /// The nearest hostile actor creature `id` sees (ties: the lower id), and where it stands.
@@ -231,7 +231,7 @@ impl World {
         }
         hostiles.sort_unstable();
         let level = state.current();
-        let eye = &content.vision_profiles()[def.vision];
+        let eye = me.eyes(content, &content.vision_profiles()[def.vision]);
         let mut los: Option<LineOfSight> = None;
         for (d2, other, p) in hostiles {
             let reach = LineOfSight::radius_for(d2).min(radius);
@@ -241,7 +241,7 @@ impl World {
                     level.is_opaque(content, q)
                 })),
             };
-            if sight::sees(state, content, lights, los, eye, p) {
+            if sight::sees(state, content, lights, los, &eye, p) {
                 return Some((other, p));
             }
         }

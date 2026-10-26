@@ -394,6 +394,7 @@ fn a_variant_is_named_and_drawn_by_its_material() {
         name: None,
         identified: true,
         carried: 0,
+        unique: None,
     };
     let sword = Stack::with_magic(object(&content, "long_sword"), 1, magic)
         .with_parts(vec![bronze.clone(), pommel.clone()]);

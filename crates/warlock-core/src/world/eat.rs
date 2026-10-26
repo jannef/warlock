@@ -88,7 +88,10 @@ impl World {
         };
         let def = content.object(stack.object);
         let Some(food) = def.food else {
-            self.say(format!("You cannot eat {}.", def.describe(1)));
+            self.say(format!(
+                "You cannot eat {}.",
+                self.lore().describe_object(stack.object, 1)
+            ));
             return Spent::Nothing;
         };
         Spent::Meal(Dish {

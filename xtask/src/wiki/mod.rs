@@ -52,6 +52,7 @@ mod temperature;
 mod terrain;
 mod text;
 mod traps;
+mod uniques;
 mod vision;
 mod weapon_skills;
 mod weather;
@@ -236,6 +237,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("spell-shapes.md", spells::shapes),
         ("spell-resolutions.md", spells::resolutions),
         ("spell-casting.md", spells::casting),
+        ("spell-list.md", spells::list),
+        ("spell-armour.md", spells::armour),
         ("resources.md", resources::resources),
         ("experience-levels.md", experience::experience_levels),
         ("experience-factors.md", experience::experience_factors),
@@ -265,6 +268,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("magic-prefixes.md", magic::prefixes),
         ("magic-suffixes.md", magic::suffixes),
         ("magic-names.md", magic::rare_names),
+        ("uniques.md", uniques::uniques),
         ("scrolls.md", scrolls::scrolls),
         ("weapon-skills.md", weapon_skills::skills),
         ("weapon-defaults.md", weapon_skills::defaults),
@@ -277,6 +281,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("search-depths.md", searching::search_depths),
         ("search-races.md", searching::search_races),
         ("traps.md", traps::traps),
+        ("trap-avoid.md", traps::avoiding),
         ("trap-disarm.md", traps::disarming),
     ];
     let mut files: Vec<(String, String)> = tables
@@ -443,7 +448,7 @@ mod tests {
         );
         assert!(
             scrolls.contains(
-                "| 3d6 fire | 10 cells | Explosion, very loud (150) | item level 3 | 150 gold |"
+                "| 3d6 fire | 10 cells | Explosion, very loud (150) | item level 3, frequency 50 | 150 gold |"
             ),
             "{scrolls}"
         );
@@ -701,6 +706,26 @@ mod tests {
             "{abilities}"
         );
         assert!(!abilities.contains("| Disable device |"), "{abilities}");
+        // Stepping past a known trap: 55% at dodge 0, 10% a point, from 15% to 90%.
+        let avoid = text("trap-avoid.md");
+        assert!(
+            avoid.contains("| \u{2212}4 or less | 15% | Dexterity 3 or less |"),
+            "{avoid}"
+        );
+        assert!(
+            avoid.contains("| +0 | 55% | Dexterity 10 or 11 |"),
+            "{avoid}"
+        );
+        assert!(
+            avoid.contains("| +2 | 75% | Dexterity 14 or 15; Dexterity 10 with Tumble 40 |"),
+            "{avoid}"
+        );
+        assert!(
+            avoid.contains(
+                "| +4 or more | 90% | Dexterity 18 or more; Dexterity 10 with Tumble 80 |"
+            ),
+            "{avoid}"
+        );
         // Disarming: an arrow trap (14) at Dexterity 10 is 66 of 144 rolls, set off by 36 (a
         // natural 9 or less); at Dexterity 14 (+2) 89 and 21; with Disable device 100 (+8 more)
         // all but a natural 2 or 3, and never set off.
@@ -745,7 +770,7 @@ mod tests {
         assert!(
             skills.contains(
                 "| Tumble | passive | Rolling, diving, and twisting out of harm's way. | a Dodge \
-                 bonus to Defence | dodging an attack (40%) |"
+                 bonus to Defence | dodging an attack or a known trap (40%) |"
             ),
             "{skills}"
         );
@@ -902,6 +927,12 @@ mod tests {
         );
         assert!(text("magic-suffixes.md").contains("| of the Bear | Strength |"));
         assert!(text("magic-names.md").contains("| Weapons | Bite,"));
+        // Unique items: the campaigns', exactly, never the test world's.
+        let uniques = text("uniques.md");
+        assert!(uniques.contains("| Widowmaker | Stiletto | 12 | Venomous (2: adds 1d4 poison"));
+        assert!(uniques.contains("every hit that leaves its target alive: 1 degree of Poisoned"));
+        assert!(uniques.contains("| its wearer is never Frightened |"));
+        assert!(!uniques.contains("Stonebiter"));
         assert!(
             text("lights.md")
                 .contains("| Faintly glowing magic item (Radiant, of Light) | 2 cells |")
@@ -969,10 +1000,10 @@ mod tests {
         }
         let statuses = text("status-effects.md");
         for row in [
-            "| Bleeding | yes, \"bleeding\" | Big hits and confirmed criticals; the dire warg's \
-             bite (15%, 1 degree); the giant leech's sucker (40%, 1 degree); the warg's bite \
-             (10%, 1 degree) | A hit point every 40 seconds, faster the worse it is | A \
-             degree a minute | Not at all | — | Bandage |",
+            "| Bleeding | yes, \"bleeding\" | Big hits and confirmed criticals; ",
+            "; the giant leech's sucker (40%, 1 degree); ",
+            "| A hit point every 40 seconds, faster the worse it is | A degree a minute | Not at \
+             all | — | Bandage |",
             "| A degree every 2 minutes | Half as fast |",
             "the giant rat's bite (10%, 2 degrees); the grave worm's bite (20%, 1 degree); eating \
              rotten food |",
@@ -993,17 +1024,19 @@ mod tests {
         }
         let diseases = text("diseases.md");
         for row in [
-            "| Filth fever | The drowned's fist (20%); the ghast's claws (10%); the giant rat's bite \
-             (10%) | Toughness, 54% | 1d3 days | Every day | 1d3 Dexterity, 1d3 Toughness | Two \
+            "| Filth fever | The charnel heap's slam (15%); the drowned's fist (20%); the ghast's \
+             claws (10%); the giant rat's bite (10%) | Toughness, 54% | 1d3 days | Every day | 1d3 Dexterity, 1d3 Toughness | Two \
              checks won in a row | no | Half as fast |",
             "| Marsh ague | The bog body's fist (15%); the fen ghoul's claws (10%); crossing marsh \
              or swamp (4% an hour) |",
             "| Grave rot | The grave hound's bite (10%); the kobold zombie's fist (5%); the ogre \
-             zombie's fist (10%); the rotting troll's claws (15%); the zombie's fist (15%); eating \
-             rotten food |",
+             zombie's fist (10%); the rotting drake's bite (20%); the rotting troll's claws (15%); \
+             the zombie's fist (15%); eating rotten food |",
             "| Mummy rot | The mummy's fist (20%); the mummy priest's touch (15%) | Toughness, 31% \
              | 1d3 days | Every 3 days | 1d4 Toughness | Never by itself | no |",
             "| Never by itself | yes |",
+            "| Burrowing worms | The wormhost's fist (25%) | Toughness, 25% | 1 day | Every day | \
+             1d4 Toughness, 1d3 Intelligence, 2d6 hit points | Two checks won in a row | yes |",
             "| Brain fever | — | Willpower, 54% |",
         ] {
             assert!(diseases.contains(row), "{row} in {diseases}");

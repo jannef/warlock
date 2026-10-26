@@ -1,0 +1,37 @@
+# The yugoloths (#446): mercenary fiends of the lower planes. The canoloth is their watchdog: squat,
+# doglike, eyeless and armoured in hide, it hears what it cannot see and lashes its long barbed
+# tongue out to catch an intruder and drag it in, tearing as it goes. Not yet in any dungeon's
+# population: no danger window reaches it.
+[[creature]]
+id = "canoloth"
+level = 29
+xp = 155
+rarity = "uncommon"
+name = "canoloth"
+glyph = "&"
+fg = "#a0603a"
+speed = 1350
+tags = ["yugoloth", "fiend"]
+faction = "yugoloth"
+alignment = "evil"
+vision = "darkvision"
+sight = 14
+footsteps = 50
+hearing = 25
+weight = 120000
+stats = { strength = 23, dexterity = 22, toughness = 23, intelligence = 6, willpower = 26, presence = 12 }
+base_hp = 65
+natural = { defence = 1, protection = 2, name = "hide" }
+resist = { acid = 100, poison = 100, fire = 50, cold = 50, electricity = 50 }
+corpse = false
+blood = "#3a2418"
+[creature.attack]
+damage = "4d6"
+damage_type = "piercing"
+name = "barbed tongue"
+verb = "lashes"
+to_hit = 2
+on_hit = [
+    { status = "held", chance = 20, difficulty = 18 },
+    { status = "bleeding", chance = 20, severity = 1 },
+]

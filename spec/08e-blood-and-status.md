@@ -211,9 +211,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Mana is part of the world state (saved, covered by the state hash; an actor without any
     serializes as before).
 - **Spells** (the magic design, `docs/design/magic.md` §3, §5, §6; `content/spell_def.rs`,
-  `world/caster_level.rs`; #394): the data foundation of the spell system. Nothing casts these
-  spells yet (#395 brings the one cast path; the casters' placeholder spells, §8 "Class
-  abilities", keep working until it migrates them); `docs/dev/spells.md` has the details.
+  `world/caster_level.rs`, `world/cast.rs`; #394, #395): the spell data and the one cast path.
+  The casters' spells (§8 "Class abilities") are spells of `data/spells/` cast by it; learning
+  spells (#396) is to come. `docs/dev/spells.md` has the details.
   - **Tiers** (`data/spells.toml`): a spell has a tier, 0 (a *cantrip*) to 9. Each tier has a
     **comfortable caster level** (1, 3, 6, 12, 18, 25, 32, 40, 50, 60), a **base mana cost** (1,
     3, 6, 11, 16, 22, 29, 37, 46, 56), and a **damage ceiling** (6, 12, 18, 24, 32, 40, 50, 62,
@@ -234,12 +234,47 @@ developer notes (CLAUDE.md, `docs/dev/`).
     cone or a line: each shape exactly its own); `[spell.damage]` (`dice` at the comfortable
     level, one die more per `per_levels` caster levels above it, never more than `max_dice`, a
     rare static `bonus`); `[spell.effect]` for the other kinds (a heal's dice as damage's, a buff's
-    or hex's `status` and `severity`, a cleanse's `cures` and `diseases`); `[spell.scroll]` with
-    the caster level a read casts at (default the tier's comfortable level).
+    or hex's `status` and `severity`, a cleanse's `cures` and `diseases`, a damage spell's
+    `status` suffered by everyone it harms); its reach before Willpower (`range`, `radius`,
+    `length`, each at most its cap, default the cap); `casts` (its time in `cast` actions, 1 to
+    10); `open_sky`; `[spell.cast]` (the `effect` drawn, `noun`, `verb`, `message`, `noise`, and a
+    burst's `blast`, `heat`, `frost`, as a scroll's); `[spell.scroll]` with the caster level a
+    read casts at (default the tier's comfortable level).
   - **The cap** (checked when the content loads, a `ContentError`): a spell whose most in one
     cast (`max_dice` × the dice's sides + `bonus`), harm or healing, passes its tier's ceiling
     times its resolution's percent is refused, and so is a static bonus above a quarter of the
-    ceiling. Nothing in the rules lifts a spell over its cap.
+    ceiling. Nothing in the rules lifts a spell over its cap: every roll is held to it.
+  - **Casting** (`World::cast_spell`, `world/cast.rs`; `Action::Cast`, `use:arcane_bolt:12,5`):
+    - **Cost** (the one hook, `Actor::spell_cost`): `SpellRules::mana`: the tier's base cost ×
+      (1 + `overreach_cost` % per tier above the caster level's tier) × the shape's percent (a
+      burst's at its own `radius`) × the resolution's `cost` percent × (100 + the summed
+      `spell_cost_percent` of what is worn, `data/objects/`: chain mail 10, scale 20, banded 30,
+      plate 40, great helm and large shield 10, tower shield 20) %, rounded to the nearest once,
+      at least 1; then Archmage's `spell_mana_percent` (`Actor::spell_base`, what
+      `World::spend_mana` is given) and Frugal caster's cut there. Spent once the cast is sure
+      to go off; refused, with no time and no mana, without it ("You have too little mana.").
+    - **Reach**: Willpower adds a cell of range, a burst's radius, or a cone's or a line's
+      length per `reach_step` (2) points of its positive modifier, never past the spell's caps
+      (`Actor::spell_reach`); Presence adds a degree of a buff's or a hex's status per
+      `presence_step` (2) points (`SpellRules::lengthened`; the status's `max` holds it: Blessed,
+      Hexed, Weakened, and Sluggish go to 3, each degree its `eases` again).
+    - **Dice**: the spell's at the caster level (`SpellDice::at`), then the talents' (Scroll
+      adept's and Archmage's per die, Empower's die), and every roll held to the cap
+      (`SpellRules::cap_of`; a critical's too).
+    - **Resolution**: `area` (burst, cone, line) strikes everyone in it with one roll, in
+      ascending actor id order, no roll to hit, Evasion halving (`World::spell_hurts`),
+      resistances taking their share, no armour; `auto` (ray, bolt) strikes the first creature
+      on its line, never missing; `attack` rolls 2d12 + the caster's Dexterity modifier against
+      the target's Defence (Deflect missiles counts), threat 22 and critical ×2 as a blow's
+      (`combat::strike`); `touch` the same against a creature next to the caster. Only attack
+      and touch can critical. A hex falls on the hostile the caster sees at the cell aimed at.
+    - **Shapes**: a burst flies and goes off as a scroll's (`burst_center`, `cast_burst`); a line
+      runs through everyone as a scroll's bolt (`bolt_line`, `cast_bolt`); a **cone**
+      (`cone_cells`) fans from the caster toward the aim, a quarter turn wide (the angle's
+      cosine squared at least a half), as long as its length, in line of sight, drawn as a burst
+      around the caster over its cells; a ray or a bolt flies to the first creature on its line.
+    - **Determinism**: a cast draws only its own rolls (the attack roll, the dice, an area's one
+      roll for all); a spell without a roll draws nothing. Nothing new is saved.
   - **Caster level** (`World::caster_level`, `Actor::caster_level`; derived, never stored): the
     player's level times their class's `casting` percent (`data/classes/`, 1 to 100, default
     25: wizard, witch, priest, and druid 100, bard and aristocrat 75, paladin, ranger, and monk

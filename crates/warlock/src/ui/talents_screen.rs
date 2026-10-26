@@ -21,7 +21,7 @@ use warlock_core::content::TreeId;
 use warlock_core::perception::{NeedView, PerceptionView};
 
 /// Width of the panel: the character screen's.
-const WIDTH: i32 = 72;
+const WIDTH: i32 = super::info_tabs::panel_width(72);
 /// Rows besides the list: the frame, a margin, a gap, the description (three lines), a gap,
 /// the footer, the frame.
 const EXTRA: i32 = 9;
