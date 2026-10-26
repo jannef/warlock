@@ -151,7 +151,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   worms, a disease that may kill), the bone drake 27 (bone with protection 4), the dread wraith 28
   (quick, incorporeal, a touch that drains Toughness), the headless knight 29 (quick, a long
   sword or a glaive, frightens), the lich 30 (a caster whose touch holds and drains
-  Intelligence), and the rotting drake 30 (slow, grave rot). The hags (#451), the bog hag's kin, in no population
+  Intelligence), and the rotting drake 30 (slow, grave rot). The yugoloths (#446; faction `yugoloth`, mercenary fiends of the lower planes, immune to acid and poison, resisting fire, cold, and lightning 50, no corpse; in no population yet, no danger window reaches them): the mezzoloth 22 (an insectlike foot soldier, a trident most of the time, chitin), the canoloth 29 (a quick doglike guardian whose barbed tongue may hold fast and leave a bleeding wound), the nycaloth 36 (a winged killer with an enormous great axe, sometimes magic, and claws that leave bleeding wounds), the arcanaloth 46 (a jackal-headed caster whose claws poison, sometimes something worth taking), and the ultroloth 58 (the commander, whose enormous eyes may transfix or frighten whoever it strikes). The hags (#451), the bog hag's kin, in no population
   yet either (faction `hags`, tag `hag`; the bog hag carries the tag too): the green hag 18 (a
   caster whose claws may transfix or hex), the sea hag 26 (a hag of shores and fens, on land only:
   claws that frighten and a gaze that drains Toughness), the annis hag 34 (huge, iron-hard skin,
@@ -453,7 +453,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   and `shield` (while held), each 0 to 20; `protection` (damage soaked off every hit while worn,
   0 to 20, adding up across what is worn; only on armour worn, never in a hand or on a shield);
   `penetration` (how much of a target's Protection it ignores, 0 to 20; weapons and
-  ammunition); `bash` (a shield's damage dice when bashing with it,
+  ammunition); `spell_cost_percent` (while worn or held, a spell costs this percent more mana,
+  0 to 100, adding up across what is worn; only on things with a `slot`; §8 "Spells"); `bash` (a shield's damage dice when bashing with it,
   only with `shield`; §8 "Weapon skills"); and `category`, the weapon skill a weapon draws on and
   trains (an id in `data/weapon_skills.toml`; required for every weapon when there are weapon
   skills, refused on anything else): a `melee` skill for what goes in a hand, a `launcher` one
@@ -554,9 +555,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
   for `durability`, `weight`, `stealth`, 1 to 100 for `max_hp`, `max_mana`, `carry` (kg), and `skill`, 1 to
   300 for `regeneration` and `mana_regeneration`, 1 to 75 for `resistance`), or for `light` `{ level, light }` naming a
   light preset. The built-in
-  affixes: 25 prefixes and 29 suffixes in up to four tiers (item levels 1, 3, 5, 7 for most); the wiki
+  affixes: 26 prefixes and 29 suffixes in up to four tiers (item levels 1, 3, 5, 7 for most); the wiki
   lists them in generated tables. The light presets `item_glow_faint`, `item_glow`, and
   `item_glow_bright` (radius 2, 3, 4; steady, cool) are the glowing tiers'.
+- **Unique items** (`data/uniques/` and each campaign's `data/uniques/`, one item a file named
+  by its id, read in path order; optional; #423; §8 "Magic items"): `[[unique]]`s with `id`,
+  `name` (1 to 30 characters), `object` (a base item with a `kind` that does not stack),
+  `affixes` (as an `[[item]]`'s: `"venomous:2"`, the value the top of the tier's range; checked
+  as a rare item's), optional `parts` (as an `[[item]]`'s), `level` (default: its highest
+  tier's), optional `power`, one of `{ inflict = STATUS, chance = 1..100, severity = 1..max }`,
+  `{ vision = PROFILE }`, `{ ward = STATUS, message = "..." }`, each with a `phrase` (the power
+  in words, for the item description), and optional `lore` (the description's last line).
+  Placed as `unique:ID` (no count) wherever objects are named, once in all content; a legend's
+  `wield`/`wear` name it the same way to wear the one carried.
 - **Talents** (`data/talents.toml`, the settings; `data/talents/`, one talent a file, read in
   path order; optional, without them no level asks for a pick; M30, #229; §8 "Talents"):
   `max_ranks` (3), `[coverage]` (`min_talents`, `min_class`, `free_per_tree`), `[[tree]]`s
@@ -670,7 +681,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (the bog hag's kin, #451; hostile to the player only), `duergar` (the
   delf's grey dwarves; hostile to the player, the goblins (the ogres and trolls among them), and
   the undead), `fire` ("fire things", the delf's burning creatures and the fire drake; hostile to
-  the player only), `wildlife` (deer, cave bats, the cave beetle;
+  the player only), `yugoloth` ("yugoloths", mercenary fiends of the lower planes; hostile to the player only: hired by none, at war with none), `wildlife` (deer, cave bats, the cave beetle;
   neutral to everyone), and
   `peaceful` ("peaceful folk", hostile to no one: the showcase's people by type, and creatures
   levels place in it); `merchants` (shopkeepers; hostile to no one) and `outraged` ("outraged

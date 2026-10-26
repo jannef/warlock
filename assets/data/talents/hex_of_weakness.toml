@@ -4,10 +4,5 @@ name = "Hex of weakness"
 tree = "class"
 granted = true
 description = "Hex a foe you see nearby (a spell, paid in mana): weakened two minutes, weaker and clumsier."
+effects = [{ kind = "spell", spell = "hex_of_weakness" }]
 systems = ["mana", "status"]
-
-[[talent.spell]]
-spell = "hex_of_weakness"
-mana = 3
-status = "weakened"
-range = 6

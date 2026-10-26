@@ -1,6 +1,6 @@
 //! The casters' class tables in the world (spec §8 "Class abilities"; #245): the priest's,
-//! druid's, wizard's, and witch's level tables, their spells (paid in mana, cast through the
-//! shared spell code), and the passives with rules of their own.
+//! druid's, wizard's, and witch's level tables, their spells (migrated onto the one cast path,
+//! #395: paid in mana by the tier table), and the passives with rules of their own.
 
 use super::*;
 use crate::ability::{Ability, Unavailable};
@@ -19,6 +19,11 @@ static BUILTIN: LazyLock<Arc<Content>> =
 /// A human of `class` in the showcase (seed 7), with their kit, born under no sign, every score
 /// 14, and plenty of mana.
 fn world(class: &str) -> World {
+    world_with(BUILTIN.clone(), class)
+}
+
+/// [`world`] with `content`.
+pub(super) fn world_with(content: Arc<Content>, class: &str) -> World {
     let spec: CharacterSpec = format!("human,female,{class}")
         .parse()
         .expect("a character");
@@ -29,7 +34,7 @@ fn world(class: &str) -> World {
         "long_strider".into(),
     ]);
     let w = World::start_run(
-        BUILTIN.clone(),
+        content.clone(),
         "showcase",
         Some(7),
         Some(&spec),
@@ -39,7 +44,7 @@ fn world(class: &str) -> World {
     .expect("world");
     let mut state = w.state().clone();
     state.character.as_mut().expect("a character").sign = None;
-    let mut w = World::from_state(BUILTIN.clone(), state).expect("restores");
+    let mut w = World::from_state(content, state).expect("restores");
     w.player_mut().stats = Stats::new(PerStat::splat(14), PerStat::splat(40));
     let max = w.state.player().max_hp(w.content());
     w.player_mut().hp = max;
@@ -48,23 +53,23 @@ fn world(class: &str) -> World {
     w
 }
 
-fn run(world: &mut World, actions: &str) {
+pub(super) fn run(world: &mut World, actions: &str) {
     for action in parse_actions(actions).expect("actions") {
         world.apply(&action);
     }
 }
 
-fn said(world: &World) -> Vec<String> {
+pub(super) fn said(world: &World) -> Vec<String> {
     world.messages().iter().map(|m| m.display()).collect()
 }
 
-fn last(world: &World) -> String {
+pub(super) fn last(world: &World) -> String {
     said(world).last().cloned().unwrap_or_default()
 }
 
 /// Grants the XP that takes the player to `level` and spends every choice it brings, mana
 /// topped up again.
-fn reach(world: &mut World, level: u8) {
+pub(super) fn reach(world: &mut World, level: u8) {
     let spec = world.state.character.as_ref().map(|c| &c.spec);
     let factor = Factor::of(world.content(), spec);
     let need = world.content().experience().threshold_for(level, factor);
@@ -99,10 +104,15 @@ fn own(world: &World, spell: ClassSpell) -> Option<Option<Unavailable>> {
 }
 
 /// A kobold `dx` cells east of the player with `hp` hit points; its id.
-fn kobold(world: &mut World, dx: i32, hp: i32) -> ActorId {
+pub(super) fn kobold(world: &mut World, dx: i32, hp: i32) -> ActorId {
+    kobold_at(world, (dx, 0), hp)
+}
+
+/// A kobold `(dx, dy)` from the player with `hp` hit points; its id.
+pub(super) fn kobold_at(world: &mut World, (dx, dy): (i32, i32), hp: i32) -> ActorId {
     let content = world.content().clone();
     let here = world.player_pos();
-    let at = Pos::new(here.x + dx, here.y);
+    let at = Pos::new(here.x + dx, here.y + dy);
     let template = (world.state.actors.values())
         .find(|a| a.id != world.state.player)
         .cloned()
@@ -225,7 +235,7 @@ fn the_spells_are_class_abilities_in_menu_order() {
         ]
     );
     let bolt = Ability::Spell(ClassSpell::ArcaneBolt);
-    assert_eq!(bolt.source(), crate::ability::Source::Class);
+    assert_eq!(bolt.source(), crate::ability::Source::Spell);
     assert_eq!(bolt.aim(), crate::ability::Aim::Cell);
     assert_eq!(bolt.reach(&content), Some(6));
     assert_eq!(Ability::Spell(ClassSpell::EvilEye).reach(&content), Some(6));
@@ -251,7 +261,7 @@ fn blessing_costs_mana_and_wants_more_than_there_is() {
     assert_eq!(own(&w, ClassSpell::Blessing), Some(None));
     let time = w.time();
     run(&mut w, "use:blessing");
-    assert_eq!(w.state.player().mana, 38, "two mana");
+    assert_eq!(w.state.player().mana, 39, "a cantrip's one mana");
     assert!(suffers(&w, player, "blessed"));
     assert!(said(&w).contains(&"You feel blessed.".to_string()));
     assert!(w.time() > time, "it took time");
@@ -259,7 +269,7 @@ fn blessing_costs_mana_and_wants_more_than_there_is() {
     let me = w.state.player();
     assert_eq!(me.effective_stats(w.content()).score(Stat::Willpower), 15);
     // Without the mana: greyed out, and refused with no time.
-    w.player_mut().mana = 1;
+    w.player_mut().mana = 0;
     assert_eq!(
         own(&w, ClassSpell::Blessing),
         Some(Some(Unavailable::NoMana))
@@ -271,7 +281,7 @@ fn blessing_costs_mana_and_wants_more_than_there_is() {
     let turn = w.state.turn;
     run(&mut w, "use:blessing");
     assert_eq!(last(&w), "You have too little mana.");
-    assert_eq!((w.state.turn, w.state.player().mana), (turn, 1));
+    assert_eq!((w.state.turn, w.state.player().mana), (turn, 0));
     // A spell the class does not give.
     run(&mut w, "use:arcane_bolt:12,5");
     assert_eq!(last(&w), "You have no such ability.");
@@ -290,9 +300,9 @@ fn cure_wounds_heals_by_the_level_in_two_casts() {
     run(&mut w, "use:cure_wounds");
     assert_eq!(last(&w), "Your wounds close.");
     let back = w.state.player().hp - 1;
-    // 1d8 and one more per two levels: 4 to 11 at level 6.
-    assert!((4..=11).contains(&back), "{back}");
-    assert_eq!(w.state.player().mana, 36);
+    // 2d6 (tier 2, comfortable at level 6, for 6 mana).
+    assert!((2..=12).contains(&back), "{back}");
+    assert_eq!(w.state.player().mana, 34);
     let cure = w.time().seconds() - time.seconds();
     let time = w.time();
     run(&mut w, "use:blessing");
@@ -313,7 +323,7 @@ fn remove_disease_ends_diseases_and_poison() {
     let me = w.state.player();
     assert!(me.diseases.is_empty());
     assert!(!suffers(&w, w.state.player, "poisoned"));
-    assert_eq!(w.state.player().mana, 30);
+    assert_eq!(w.state.player().mana, 29, "tier 3's 11");
     assert!(said(&w).contains(&"A cleansing warmth runs through you.".to_string()));
 }
 
@@ -342,12 +352,21 @@ fn hexes_fall_on_a_foe_the_witch_sees_within_reach() {
     cast(&mut w, ClassSpell::EvilEye, cell(3));
     assert_eq!(last(&w), "The kobold is hexed.");
     assert!(suffers(&w, near, "ill_wished"));
-    assert_eq!(w.state.player().mana, 38);
+    assert_eq!(w.state.player().mana, 37, "tier 1's 3");
     cast(&mut w, ClassSpell::HexOfWeakness, cell(3));
     assert!(suffers(&w, near, "weakened"), "{:?}", said(&w));
     cast(&mut w, ClassSpell::CurseOfSloth, cell(3));
     assert!(suffers(&w, near, "sluggish"));
     assert_eq!(w.state.player().mana, 31);
+    // Presence 14 (+2): one degree more of each hex, so it lasts twice as long.
+    let sluggish = status(&w, "sluggish");
+    assert_eq!(
+        w.state.actors[&near]
+            .effects
+            .get(sluggish)
+            .map(|e| e.severity),
+        Some(2)
+    );
     let content = w.content().clone();
     let effects = &w.state.actors[&near].effects;
     assert_eq!(
@@ -367,7 +386,7 @@ fn bolts_and_bursts_strike_as_scrolls_do_and_cost_mana() {
     w.apply(&Action::Cast(ClassSpell::ArcaneBolt, Some(at)));
     let hurt = 500 - w.state.actors[&target].hp;
     assert!((2..=12).contains(&hurt), "2d6: {hurt}");
-    assert_eq!(w.state.player().mana, 37);
+    assert_eq!(w.state.player().mana, 29, "tier 2's 6 × 1.8 for a line");
     assert!(
         said(&w).iter().any(|m| m.contains("arcane bolt")),
         "{:?}",
@@ -379,8 +398,9 @@ fn bolts_and_bursts_strike_as_scrolls_do_and_cost_mana() {
     let before = w.state.actors[&target].hp;
     w.apply(&Action::Cast(ClassSpell::FireBurst, Some(far)));
     assert!(w.state.actors[&target].hp < before);
-    // Empower: one die more; mana spent.
-    assert_eq!(w.state.player().mana, 31);
+    // Tier 3's 11 × 2.4 for a burst of radius 2; Empower's die more, held to the cap (19).
+    assert_eq!(w.state.player().mana, 14);
+    assert!(before - w.state.actors[&target].hp <= 19);
 }
 
 #[test]
@@ -400,7 +420,7 @@ fn call_lightning_wants_the_open_sky() {
     w.apply(&Action::Cast(ClassSpell::CallLightning, Some(at)));
     let hurt = 500 - w.state.actors[&target].hp;
     assert!(hurt >= 1, "4d6, less what it resists: {hurt}");
-    assert_eq!(w.state.player().mana, 32);
+    assert_eq!(w.state.player().mana, 11, "tier 4's 16 × 1.8");
 }
 
 #[test]
@@ -414,7 +434,7 @@ fn blight_poisons_everyone_it_reaches() {
         Some(Pos::new(here.x + 3, here.y)),
     ));
     assert!(suffers(&w, target, "poisoned"));
-    assert_eq!(w.state.player().mana, 32);
+    assert_eq!(w.state.player().mana, 26, "tier 2's 6 × 2.4");
 }
 
 #[test]
@@ -447,12 +467,20 @@ fn a_spell_is_paid_through_the_talents_mana_cost() {
     reach(&mut w, 6);
     let content = w.content().clone();
     w.player_mut().talents.take("frugal_caster", None);
-    assert_eq!(w.state.player().spell_cost(&content, 4), 3, "a fifth less");
+    let cure = content
+        .class_spell(ClassSpell::CureWounds)
+        .expect("cure wounds");
+    let level = w.caster_level(w.state.player);
+    assert_eq!(
+        w.state.player().spell_cost(&content, cure, level),
+        5,
+        "6, a fifth less"
+    );
     w.player_mut().hp = 1;
     run(&mut w, "use:cure_wounds");
-    assert_eq!(w.state.player().mana, 37);
+    assert_eq!(w.state.player().mana, 35);
     // One mana short of the cut cost: greyed out.
-    w.player_mut().mana = 2;
+    w.player_mut().mana = 4;
     assert_eq!(
         own(&w, ClassSpell::CureWounds),
         Some(Some(Unavailable::NoMana))

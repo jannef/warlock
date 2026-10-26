@@ -285,6 +285,7 @@ fn roll_magic(
         name,
         identified: false,
         carried: 0,
+        unique: None,
     })
 }
 

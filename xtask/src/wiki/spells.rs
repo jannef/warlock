@@ -1,8 +1,11 @@
 //! Spells (spec §8 "Spells"): the tier table (comfortable caster level, base cost, damage
-//! ceiling), the shapes' and resolutions' multipliers, and the classes' casting percents.
+//! ceiling), the shapes' and resolutions' multipliers, the classes' casting percents, the spell
+//! list, and the armour that makes casting dearer.
 
 use std::fmt::Write as _;
-use warlock_core::content::{Content, Resolution, Shape, TIERS};
+use warlock_core::content::{
+    Content, Resolution, Shape, SpellData, SpellDice, SpellPurpose, TIERS,
+};
 
 /// Each tier's comfortable caster level, base mana cost, and damage ceiling, tier 0 first.
 pub(super) fn tiers(content: &Content) -> String {
@@ -86,6 +89,146 @@ pub(super) fn casting(content: &Content) -> String {
     let mut out = String::from("| Class | Casting |\n|---|:---:|\n");
     for (name, casting) in classes {
         let _ = writeln!(out, "| {name} | {casting} % |");
+    }
+    out
+}
+
+/// Every spell, by tier and then name: its school, shape and resolution, reach (as cast, and
+/// how far Willpower takes it), what it does, its mana at its tier's comfortable caster level,
+/// and its time in casts.
+pub(super) fn list(content: &Content) -> String {
+    let Some(rules) = content.spell_rules() else {
+        return String::new();
+    };
+    let mut spells: Vec<&SpellData> = content.spells().iter().collect();
+    spells.sort_by(|a, b| a.tier.cmp(&b.tier).then(a.name.cmp(&b.name)));
+    let mut out = String::from(
+        "| Spell | Tier | School | Shape | Resolves | Reach | What it does | Mana | Casts |\n\
+         |---|:---:|---|---|---|---|---|:---:|:---:|\n",
+    );
+    for spell in spells {
+        let at = i32::from(rules.comfortable[usize::from(spell.tier)]);
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} | {} | {} | {} | {} | {} | {} |",
+            spell.name,
+            spell.tier,
+            spell.school.id(),
+            spell.shape.id(),
+            spell.resolution.id(),
+            reach(spell),
+            does(content, spell),
+            rules.mana(spell, at, 0),
+            spell.casts,
+        );
+    }
+    out
+}
+
+/// How far `spell` reaches, and how far Willpower may take it: "6 (to 8)", a burst's "range 10,
+/// radius 2", "—" on oneself.
+fn reach(spell: &SpellData) -> String {
+    let grows = |base: Option<u8>, cap: Option<u8>| match (base, cap) {
+        (Some(b), Some(c)) if c > b => format!("{b} (to {c})"),
+        (Some(b), _) => b.to_string(),
+        _ => String::new(),
+    };
+    match spell.shape {
+        Shape::Myself => "—".into(),
+        Shape::Touch => "next to you".into(),
+        Shape::Burst => format!(
+            "range {}, radius {}",
+            grows(spell.range, spell.max_range),
+            grows(spell.radius, spell.max_radius)
+        ),
+        Shape::Cone | Shape::Line => grows(spell.length, spell.max_length),
+        Shape::Ray | Shape::Bolt => grows(spell.range, spell.max_range),
+    }
+}
+
+/// What `spell` does, as its data says: its dice at its tier's comfortable caster level (and
+/// what more caster levels bring), the status it leaves, what it does to ice and walls, its
+/// cap.
+pub(super) fn does(content: &Content, spell: &SpellData) -> String {
+    let status = |s| content.status(s).name.clone();
+    let Some(rules) = content.spell_rules() else {
+        return String::new();
+    };
+    let at = rules.comfortable[usize::from(spell.tier)];
+    let dice = |d: SpellDice| {
+        let now = d.at(i32::from(at), at);
+        if d.max_dice > d.count && d.per_levels > 0 {
+            format!(
+                "{now}, a die more per {} caster levels above {at}, to {}d{}",
+                d.per_levels, d.max_dice, d.sides
+            )
+        } else {
+            now.to_string()
+        }
+    };
+    let mut text = match spell.kind {
+        SpellPurpose::Damage => {
+            let rolled = spell.damage.map_or_else(String::new, dice);
+            let kind = (spell.damage_type)
+                .map_or_else(String::new, |k| format!(" {}", content.damage_type(k).name));
+            format!("{rolled}{kind} damage")
+        }
+        SpellPurpose::Heal => {
+            let healed = spell.effect.heal.map_or_else(String::new, dice);
+            format!("{healed} hit points back")
+        }
+        SpellPurpose::Buff | SpellPurpose::Hex => match spell.effect.status {
+            Some((s, n)) => {
+                let who = if spell.kind == SpellPurpose::Buff {
+                    "you are"
+                } else {
+                    "a hostile you see suffers"
+                };
+                format!(
+                    "{who} {} ({n}, a degree more per {} of Presence's modifier)",
+                    status(s),
+                    rules.presence_step
+                )
+            }
+            None => String::new(),
+        },
+        SpellPurpose::Cleanse => {
+            let mut ends: Vec<String> = spell.effect.cures.iter().map(|&s| status(s)).collect();
+            if spell.effect.diseases {
+                ends.push("every disease".into());
+            }
+            format!("ends {}", ends.join(" and "))
+        }
+        SpellPurpose::Utility => spell.description.clone(),
+    };
+    if spell.kind == SpellPurpose::Damage
+        && let Some((s, n)) = spell.effect.status
+    {
+        let _ = write!(text, "; everyone it harms suffers {} ({n})", status(s));
+    }
+    text.push_str(&super::traps::ice_text(spell.look.ice));
+    if spell.look.blast > 0 {
+        text.push_str("; it breaks walls");
+    }
+    if spell.open_sky {
+        text.push_str("; only under the open sky");
+    }
+    if matches!(spell.kind, SpellPurpose::Damage | SpellPurpose::Heal) {
+        let _ = write!(text, " (never more than {})", rules.cap_of(spell));
+    }
+    text
+}
+
+/// The armour and shields that make spells dearer while worn, most first, then by name.
+pub(super) fn armour(content: &Content) -> String {
+    let mut worn: Vec<(&str, u16)> = (content.object_defs().iter())
+        .filter(|o| o.spell_cost_percent > 0)
+        .map(|o| (o.name.as_str(), o.spell_cost_percent))
+        .collect();
+    worn.sort_by(|a, b| b.1.cmp(&a.1).then(a.0.cmp(b.0)));
+    let mut out = String::from("| Worn | Spells cost more |\n|---|:---:|\n");
+    for (name, percent) in worn {
+        let _ = writeln!(out, "| {name} | {percent} % |");
     }
     out
 }

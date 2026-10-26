@@ -219,6 +219,9 @@ pub(super) fn check_kept(
                 def.id
             ));
         }
+        if magic && stack.magic().is_some() {
+            return Err("`magic`: a unique item is made as it is".into());
+        }
         if keep == Keep::Carry {
             continue;
         }

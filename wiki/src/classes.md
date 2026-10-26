@@ -45,11 +45,12 @@ thief's sneak attacks build [openings](resources.md), which master thief's finis
 monk's flurry and quivering palm run on [ki](resources.md), and the bard's inspire spends
 [inspiration](resources.md) when the bard has enough.
 
-The priest's, druid's, wizard's, and witch's abilities used from the menu are **spells**: each
-costs the mana the table says, and is greyed out ("you have too little mana") while you have less; there
-is no other wait. They stand in for the spell system to come. A spell aimed at a place flies
-and bursts exactly as a [scroll](scrolls.md)'s does, its blows and kills yours; a hex falls on
-a hostile you see within its reach. Call lightning answers only under the open sky. A priest's
+The priest's, druid's, wizard's, and witch's abilities used from the menu are **spells**
+([Magic](magic.md)): each costs mana by its tier, your caster level, and your armour, and is
+greyed out ("too little") while you have less; there is no other wait. A burst flies and goes
+off as a [scroll](scrolls.md)'s does, a line runs through everyone on it, its blows and kills
+yours; a hex falls on a hostile you see within its reach. Call lightning answers only under the
+open sky. A priest's
 Smite is the paladin's, and answers only while the priest is Good or better.
 
 The ranger's **favoured prey** is the kind of creature you have killed most, counted over every

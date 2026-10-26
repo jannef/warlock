@@ -75,6 +75,14 @@ id = "fire"
 name = "fire things"
 hostile = ["player"]
 
+# The yugoloths (#446): mercenary fiends of the lower planes, who serve whoever pays. They come
+# for the player and leave everyone else alone, the demons and devils included: hired by none,
+# at war with none (there is no hire yet; relations are only symmetric hostile lists).
+[[faction]]
+id = "yugoloth"
+name = "yugoloths"
+hostile = ["player"]
+
 # Folk who mean the player no harm, whatever they are: the showcase's people (the gardener, the
 # bard, the hermit) by type, and others placed here by levels with `faction = "peaceful"` in a
 # legend entry (the showcase hub and caverns), overriding the faction of the creature's type.

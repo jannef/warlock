@@ -52,6 +52,7 @@ mod temperature;
 mod terrain;
 mod text;
 mod traps;
+mod uniques;
 mod vision;
 mod weapon_skills;
 mod weather;
@@ -236,6 +237,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("spell-shapes.md", spells::shapes),
         ("spell-resolutions.md", spells::resolutions),
         ("spell-casting.md", spells::casting),
+        ("spell-list.md", spells::list),
+        ("spell-armour.md", spells::armour),
         ("resources.md", resources::resources),
         ("experience-levels.md", experience::experience_levels),
         ("experience-factors.md", experience::experience_factors),
@@ -265,6 +268,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("magic-prefixes.md", magic::prefixes),
         ("magic-suffixes.md", magic::suffixes),
         ("magic-names.md", magic::rare_names),
+        ("uniques.md", uniques::uniques),
         ("scrolls.md", scrolls::scrolls),
         ("weapon-skills.md", weapon_skills::skills),
         ("weapon-defaults.md", weapon_skills::defaults),
@@ -902,6 +906,12 @@ mod tests {
         );
         assert!(text("magic-suffixes.md").contains("| of the Bear | Strength |"));
         assert!(text("magic-names.md").contains("| Weapons | Bite,"));
+        // Unique items: the campaigns', exactly, never the test world's.
+        let uniques = text("uniques.md");
+        assert!(uniques.contains("| Widowmaker | Stiletto | 12 | Venomous (2: adds 1d4 poison"));
+        assert!(uniques.contains("every hit that leaves its target alive: 1 degree of Poisoned"));
+        assert!(uniques.contains("| its wearer is never Frightened |"));
+        assert!(!uniques.contains("Stonebiter"));
         assert!(
             text("lights.md")
                 .contains("| Faintly glowing magic item (Radiant, of Light) | 2 cells |")
@@ -969,9 +979,10 @@ mod tests {
         }
         let statuses = text("status-effects.md");
         for row in [
-            "| Bleeding | yes, \"bleeding\" | Big hits and confirmed criticals; the giant leech's \
-             sucker (40%, 1 degree) | A hit point every 40 seconds, faster the worse it is | A \
-             degree a minute | Not at all | — | Bandage |",
+            "| Bleeding | yes, \"bleeding\" | Big hits and confirmed criticals; ",
+            "; the giant leech's sucker (40%, 1 degree); ",
+            "| A hit point every 40 seconds, faster the worse it is | A degree a minute | Not at \
+             all | — | Bandage |",
             "| A degree every 2 minutes | Half as fast |",
             "the giant rat's bite (10%, 2 degrees); the grave worm's bite (20%, 1 degree); eating \
              rotten food |",

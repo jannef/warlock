@@ -4,11 +4,5 @@ name = "Cure wounds"
 tree = "class"
 granted = true
 description = "A prayer that closes wounds (a spell, paid in mana): hit points back, more as you grow; it takes a while to say."
+effects = [{ kind = "spell", spell = "cure_wounds" }]
 systems = ["mana", "hit_points"]
-
-[[talent.spell]]
-spell = "cure_wounds"
-mana = 4
-casts = 2
-heal = "1d8"
-per_levels = 2

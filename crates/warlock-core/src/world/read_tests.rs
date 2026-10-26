@@ -19,6 +19,7 @@ const FACTIONS: &str = "[[faction]]\nid = \"player\"\nname = \"you\"\n\
      [[faction]]\nid = \"hags\"\nname = \"hags\"\n\
      [[faction]]\nid = \"duergar\"\nname = \"duergar\"\n\
      [[faction]]\nid = \"fire\"\nname = \"fire things\"\n\
+     [[faction]]\nid = \"yugoloth\"\nname = \"yugoloths\"\n\
      [[faction]]\nid = \"wildlife\"\nname = \"wildlife\"\n\
      [[faction]]\nid = \"peaceful\"\nname = \"peaceful folk\"\n\
      [[faction]]\nid = \"merchants\"\nname = \"merchants\"\n\
@@ -344,6 +345,7 @@ fn the_scroll_of_identify_identifies_an_item_and_is_used_up() {
             name: None,
             identified: false,
             carried: 0,
+            unique: None,
         };
         Stack::with_magic(id, 1, magic)
     };
