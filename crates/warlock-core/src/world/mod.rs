@@ -1340,6 +1340,8 @@ mod resource_tests;
 #[cfg(test)]
 mod reveal_tests;
 #[cfg(test)]
+mod room_temperature_tests;
+#[cfg(test)]
 mod room_tests;
 #[cfg(test)]
 mod rot_tests;
