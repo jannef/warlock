@@ -34,6 +34,9 @@ pub const SCORES: RangeInclusive<u8> = 1..=40;
 /// creation"): every result a rolled adjustment can have lies within.
 pub const ADJUSTMENTS: RangeInclusive<i8> = -10..=10;
 
+/// The lowest score a drain leaves (spec §8 "Stats": "Drain"; `World::drain`).
+pub const DRAIN_FLOOR: u8 = 3;
+
 /// Defines [`Stat`] from one entry per stat: the variant, its id in data files and saves, its
 /// two-letter abbreviation, and its name, in display order.
 macro_rules! stats {
@@ -339,6 +342,23 @@ impl Stats {
         self.potential[stat] = potential.max(score);
     }
 
+    /// Takes up to `points` off the score in `stat` for good (spec §8 "Stats": "Drain"), never
+    /// below `floor` (nor below 1); the potential stays where it was. Returns the points it
+    /// took: none when the score is at the floor already.
+    pub fn drain(&mut self, stat: Stat, points: u8, floor: u8) -> u8 {
+        let floor = floor.max(1);
+        let taken = points.min(self.score[stat].saturating_sub(floor));
+        self.score[stat] -= taken;
+        taken
+    }
+
+    /// Gives `points` back to the score in `stat` (drained points restored), within
+    /// [`SCORES`]; a potential below the score rises to it.
+    pub fn restore(&mut self, stat: Stat, points: u8) {
+        self.score[stat] = adjusted(self.score[stat], i32::from(points));
+        self.potential[stat] = self.potential[stat].max(self.score[stat]);
+    }
+
     /// These stats with every score adjusted by `by` (kept within [`SCORES`]; a potential below
     /// its score is raised to it): the scores the rules read while a status effect lowers some
     /// (spec §8 "Status effects").
@@ -467,6 +487,36 @@ mod tests {
         bad.take(Stat::Strength, 5, 20);
         let weak = Stats::new(PerStat::splat(5), PerStat::splat(5));
         assert!(!bad.is_valid_for(&weak) && bad.is_valid_for(&stats));
+    }
+
+    #[test]
+    fn a_drain_lowers_the_score_to_its_floor_and_leaves_the_potential() {
+        let mut stats = Stats::new(PerStat::splat(10), PerStat::splat(14));
+        assert_eq!(stats.drain(Stat::Strength, 2, 3), 2);
+        assert_eq!(
+            (stats.score(Stat::Strength), stats.potential(Stat::Strength)),
+            (8, 14)
+        );
+        assert_eq!(stats.drain(Stat::Strength, 5, 3), 5);
+        assert_eq!(stats.drain(Stat::Strength, 5, 3), 0, "at the floor");
+        assert_eq!(stats.score(Stat::Strength), 3);
+        assert_eq!(
+            stats.drain(Stat::Dexterity, 5, 0),
+            5,
+            "the floor is at least 1"
+        );
+        assert_eq!(stats.drain(Stat::Dexterity, 5, 0), 4);
+        assert_eq!(stats.score(Stat::Dexterity), 1);
+        stats.restore(Stat::Strength, 7);
+        assert_eq!(
+            (stats.score(Stat::Strength), stats.potential(Stat::Strength)),
+            (10, 14)
+        );
+        stats.restore(Stat::Strength, 7);
+        assert_eq!(
+            (stats.score(Stat::Strength), stats.potential(Stat::Strength)),
+            (17, 17)
+        );
     }
 
     #[test]

@@ -481,6 +481,14 @@ pub enum Event {
         disease: DiseaseId,
         news: DiseaseNews,
     },
+    /// A drain touched an actor (spec §8 "Stats": "Drain"): `stat` lost points for good, or
+    /// none when it held (or had nothing more to lose). Only the player's own, which they always
+    /// perceive: said in the message line in words, never the points.
+    Drained {
+        actor: ActorId,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        stat: Option<crate::stats::Stat>,
+    },
     /// A trap went off (spec §8 "Traps"): `victim` set off trap `trap` lying on `at`. Kept when
     /// the player perceived it: they set it off, saw its cell, or saw any of its blast.
     TrapSprung {

@@ -39,12 +39,12 @@ never stop a rest by coming into view (`World::disturbs_rest`).
 **Services** (#329, the campaign design §6.1; spec §8 "Dialogue"): `world/service.rs`.
 `World::ask` hands a topic id it is not a quest's to `World::ask_service` before the dialogue's
 topics; it checks there is something to do (`prayer_cures`: a status or disease, showing or not,
-whose `cured_by` lists `service::PRAYER`; or stat damage, with no disease showing for a mend),
+whose `cured_by` lists `service::PRAYER`; or stat damage or drained points, with no disease showing for a mend),
 then the gold (`service_price`: the data's price, halved rounded up with `TalentMods::services`,
 Pilgrim), pays through `shop.rs`'s `hand_over` (the purse code `pay` uses; the coins go to the
 speaker), and does it: `World::cure(player, "prayer")` (every disease in `data/diseases.toml`
 lists `prayer`; with Pilgrim a point of each damaged stat mends after, unless a disease still
-shows) or `World::mend` (`StatDamage::mend_all`). The reply goes through `World::answer`, so the
+shows) or `World::mend` (`StatDamage::mend_all`, then `World::restore_drained`: drained points back, `docs/dev/stats.md` "Drain"). The reply goes through `World::answer`, so the
 dialogue screen reopens on the service. Refusals take no time; a service done takes `chat`'s.
 Nothing is saved that was not before, and no stream is drawn. Tests: `world/service_tests.rs`
 (a fixture sister on the built-in content; prices, refusals, Pilgrim, the replay and the save),

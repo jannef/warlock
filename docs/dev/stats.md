@@ -42,3 +42,21 @@ Stats grow by use, checked at levels (spec §8 "Stats": "Training"; design §6):
 Nothing shows the marks but the dev `progress` dump layer (`stat marks St 3, To 1`); the wiki
 tables are `xtask/src/wiki/stats.rs` (`stat-training.md` with the chances, `stat-checks.md`).
 Tests: `world/stat_training_tests.rs`, `content/stat_training.rs`.
+
+## Drain (#382)
+
+Points off a stat **for good** (spec §8 "Stats": "Drain"), unlike stat damage, which mends:
+
+| Where | What |
+|---|---|
+| `content/status.rs` | `Affliction::Drain(Drain { stat, points, check, difficulty })` from an `on_hit` entry with `drain` (a stat id or `"random"`, `stat: None`), `points` (1 to `MAX_DRAIN_POINTS` 5, default 1), `check` (default Willpower), `difficulty` (required, 1 to 40); `OnHitSpec::drain` validates (no `status`/`disease`/`severity` beside it; `points`/`check`/`difficulty` without `drain` are refused). |
+| `stats.rs` | `Stats::drain(stat, points, floor)` (the score only, never below `floor` or 1; returns the points taken), `Stats::restore` (back up, the potential raised if passed), `DRAIN_FLOOR` (3). |
+| `world/drain.rs` | `World::drain` (one arm in `after_blow`'s `on_hit` loop, after the chance): a `random` stat draws `below(6)` first, then the check (`check::check`: effective modifier + `TalentMods::check(stat)` + `TalentMods::drain_checks`); made: `train_resisting`, `Event::Drained { stat: None }`; failed: the floor is `DRAIN_FLOOR` or the stat damage + 1 (saves require a score to carry its damage), `Actor::drained` counts what was taken, hit points and mana are cut to the new maxima (hit points never below 1: never a kill), `Event::Drained { stat }` (`None` when at the floor). `restore_drained` (from `World::mend`, the temple's `mend` service, `world/service.rs`; a mend is offered with only drained points too). `drained_message` is the player's line, said by `perceive_events` (stops a rest). |
+| `Actor::drained` | `PerStat<u8>`, saved and hashed, left out while all zero (`undrained`); the scores themselves are already lowered. The dev `actors` dump shows `; drained St 2`. |
+
+The potential stays, so drained points come back slowly by training and corpses too (those
+leave `drained` as it is: a mending later restores what drains took on top of the growth).
+Talents: the `drain` system (`data/talents.toml`): Unbroken soul (`drain_checks`), Iron will
+(Willpower checks), Divine grace (paladin, `drain_checks`). Not yet: life (level) drain, a
+scroll or potion of restoration, a sustaining affix. The wiki table is `drain-attacks.md`
+(`xtask/src/wiki/stats.rs`). Tests: `world/drain_tests.rs`, `content/status.rs`, `stats.rs`.

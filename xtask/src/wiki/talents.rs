@@ -1125,6 +1125,9 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::DiseaseChecks { value } => {
             format!("disease checks (catching, progressions) {}", signed(value))
         }
+        TalentEffect::DrainChecks { value } => {
+            format!("checks against a drain {}", signed(value))
+        }
         TalentEffect::Checks { stat, value } => {
             format!("every {} check {}", stat.name(), signed(value))
         }

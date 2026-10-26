@@ -147,8 +147,10 @@ impl Wound {
 }
 
 /// What an attack may cause when it hits and the target lives (`on_hit` on a creature's natural
-/// attack): a status, `{ status = "poisoned", chance = 10, severity = 2 }`, or exposure to a
-/// disease, `{ disease = "filth_fever", chance = 10 }` (spec §8 "Diseases").
+/// attack): a status, `{ status = "poisoned", chance = 10, severity = 2 }`, exposure to a
+/// disease, `{ disease = "filth_fever", chance = 10 }` (spec §8 "Diseases"), or a drain,
+/// `{ drain = "strength", points = 1, chance = 100, check = "willpower", difficulty = 14 }`
+/// (spec §8 "Stats": "Drain").
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct OnHit {
     pub what: Affliction,
@@ -164,16 +166,40 @@ pub enum Affliction {
     Status { status: StatusId, severity: u16 },
     /// Exposure to a disease: the target resists it with a check, or catches it.
     Disease(DiseaseId),
+    /// A drain: the target resists it with a check, or loses points of a stat for good.
+    Drain(Drain),
+}
+
+/// The most points one drain may take.
+pub const MAX_DRAIN_POINTS: u8 = 5;
+
+/// What a drain does (spec §8 "Stats": "Drain"): unless the target makes a check of `check`
+/// against `difficulty`, `points` come off its score in `stat` for good (`World::drain`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Drain {
+    /// The stat it drains; `None`: one of the six, drawn each time (`"random"` in data).
+    pub stat: Option<Stat>,
+    /// The points it takes (1 to [`MAX_DRAIN_POINTS`]).
+    pub points: u8,
+    /// The stat that resists it (Willpower unless data says otherwise).
+    pub check: Stat,
+    /// The check's difficulty.
+    pub difficulty: i32,
 }
 
 /// An `on_hit` entry as written in content files, before its status or disease is resolved.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Default, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct OnHitSpec {
     pub status: Option<String>,
     pub disease: Option<String>,
     pub chance: u8,
     pub severity: Option<u16>,
+    /// A drain's stat id, or `"random"`.
+    pub drain: Option<String>,
+    pub points: Option<u8>,
+    pub check: Option<Stat>,
+    pub difficulty: Option<i32>,
 }
 
 impl OnHitSpec {
@@ -184,11 +210,22 @@ impl OnHitSpec {
         status: impl Fn(&str) -> Option<(StatusId, u16)>,
         disease: impl Fn(&str) -> Option<DiseaseId>,
     ) -> Result<OnHit, String> {
-        let name = self.status.as_ref().or(self.disease.as_ref());
+        let name = (self.status.as_ref().or(self.disease.as_ref())).or(self.drain.as_ref());
         let name = name.map_or("", String::as_str);
         if !(1..=100).contains(&self.chance) {
             return Err(format!(
                 "on_hit `{name}`: chance must be 1 to 100 (percent)"
+            ));
+        }
+        if let Some(drain) = &self.drain {
+            return Ok(OnHit {
+                what: Affliction::Drain(self.drain(drain)?),
+                chance: self.chance,
+            });
+        }
+        if self.points.is_some() || self.check.is_some() || self.difficulty.is_some() {
+            return Err(format!(
+                "on_hit `{name}`: `points`, `check`, and `difficulty` belong to a `drain`"
             ));
         }
         let what = match (&self.status, &self.disease, self.severity) {
@@ -225,6 +262,40 @@ impl OnHitSpec {
         Ok(OnHit {
             what,
             chance: self.chance,
+        })
+    }
+
+    /// The drain of an entry with `drain = id`: no status, disease, or severity beside it,
+    /// `points` 1 to [`MAX_DRAIN_POINTS`] (default 1), `check` Willpower by default, and a
+    /// `difficulty` of 1 to 40.
+    fn drain(&self, id: &str) -> Result<Drain, String> {
+        if self.status.is_some() || self.disease.is_some() || self.severity.is_some() {
+            return Err(format!(
+                "on_hit drain `{id}`: a drain names no `status`, `disease`, or `severity`"
+            ));
+        }
+        let stat = match id {
+            "random" => None,
+            id => Some(Stat::from_id(id).ok_or_else(|| {
+                format!("on_hit drain: unknown stat `{id}` (a stat id or \"random\")")
+            })?),
+        };
+        let points = self.points.unwrap_or(1);
+        if !(1..=MAX_DRAIN_POINTS).contains(&points) {
+            return Err(format!(
+                "on_hit drain `{id}`: points must be 1 to {MAX_DRAIN_POINTS}"
+            ));
+        }
+        let difficulty = (self.difficulty)
+            .ok_or_else(|| format!("on_hit drain `{id}`: a drain needs a `difficulty`"))?;
+        if !(1..=40).contains(&difficulty) {
+            return Err(format!("on_hit drain `{id}`: difficulty must be 1 to 40"));
+        }
+        Ok(Drain {
+            stat,
+            points,
+            check: self.check.unwrap_or(Stat::Willpower),
+            difficulty,
         })
     }
 }
@@ -827,6 +898,7 @@ mod tests {
             disease: disease.map(String::from),
             chance,
             severity,
+            ..OnHitSpec::default()
         };
         assert_eq!(
             spec(Some("poisoned"), None, 10, Some(2)).resolve(known, disease),
@@ -870,6 +942,68 @@ mod tests {
                 spec(Some("poisoned"), Some("fever"), 10, Some(1)),
                 "name either",
             ),
+        ] {
+            let e = bad.resolve(known, disease).unwrap_err();
+            assert!(e.contains(why), "{why}: {e}");
+        }
+    }
+
+    #[test]
+    fn on_hit_drains_name_a_stat_or_random_with_points_and_a_difficulty() {
+        let known = |_: &str| None;
+        let disease = |_: &str| None;
+        let drain = |stat: &str, points, check, difficulty| OnHitSpec {
+            drain: Some(stat.to_string()),
+            chance: 100,
+            points,
+            check,
+            difficulty,
+            ..OnHitSpec::default()
+        };
+        assert_eq!(
+            drain("strength", None, None, Some(14)).resolve(known, disease),
+            Ok(OnHit {
+                what: Affliction::Drain(Drain {
+                    stat: Some(Stat::Strength),
+                    points: 1,
+                    check: Stat::Willpower,
+                    difficulty: 14,
+                }),
+                chance: 100,
+            })
+        );
+        let random = drain("random", Some(2), Some(Stat::Toughness), Some(12));
+        assert_eq!(
+            random.resolve(known, disease).map(|o| o.what),
+            Ok(Affliction::Drain(Drain {
+                stat: None,
+                points: 2,
+                check: Stat::Toughness,
+                difficulty: 12,
+            }))
+        );
+        let with_status = OnHitSpec {
+            status: Some("poisoned".into()),
+            ..drain("strength", None, None, Some(14))
+        };
+        let lone_points = OnHitSpec {
+            status: Some("poisoned".into()),
+            severity: Some(1),
+            chance: 10,
+            points: Some(1),
+            ..OnHitSpec::default()
+        };
+        for (bad, why) in [
+            (drain("luck", None, None, Some(14)), "unknown stat `luck`"),
+            (drain("strength", Some(0), None, Some(14)), "points must be"),
+            (drain("strength", Some(6), None, Some(14)), "points must be"),
+            (drain("strength", None, None, None), "needs a `difficulty`"),
+            (
+                drain("strength", None, None, Some(41)),
+                "difficulty must be",
+            ),
+            (with_status, "names no `status`"),
+            (lone_points, "belong to a `drain`"),
         ] {
             let e = bad.resolve(known, disease).unwrap_err();
             assert!(e.contains(why), "{why}: {e}");

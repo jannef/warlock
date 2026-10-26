@@ -760,6 +760,7 @@ fn search_the_last_seen_spot_then_go_back_and_patrol_on() {
             effects: Default::default(),
             diseases: Default::default(),
             damage: Default::default(),
+            drained: Default::default(),
             weapon_skills: Default::default(),
             faction_override: None,
             alignment: None,

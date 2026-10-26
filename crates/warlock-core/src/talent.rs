@@ -401,6 +401,8 @@ pub struct TalentMods {
     pub penalty_percent: i32,
     /// Added to its disease checks.
     pub disease_checks: i32,
+    /// Added to its checks against a drain (spec §8 "Stats": "Drain").
+    pub drain_checks: i32,
     /// Added to its checks, by the stat checked.
     pub checks: PerStat<i32>,
     /// Checks fewer won in a row that shake a disease off.
@@ -1197,6 +1199,7 @@ impl TalentMods {
             TalentEffect::WoundMore { value } => self.wound_more += value,
             TalentEffect::PenaltyPercent { value } => self.penalty_percent += value,
             TalentEffect::DiseaseChecks { value } => self.disease_checks += value,
+            TalentEffect::DrainChecks { value } => self.drain_checks += value,
             TalentEffect::Checks { stat, value } => self.checks[stat] += value,
             TalentEffect::DiseaseRecovery { value } => self.disease_recovery += value,
             TalentEffect::DiseaseIntervalPercent { value } => {

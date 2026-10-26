@@ -88,7 +88,8 @@ little, too. Shops that sell food sell it (a general store or a provisioner, fou
 dungeons), and Ælfric's General Store in Cēaptūn has one. Potions will come.
 
 A temple's **cure** does the same for gold, every disease included, and a **mending** gives back
-the stat damage at once (see [Services](npcs.md#services)).
+the stat damage at once, and the points the undead drained (see [Services](npcs.md#services) and
+[Drained stats](stats.md#drained-stats)).
 
 ## In the message line
 

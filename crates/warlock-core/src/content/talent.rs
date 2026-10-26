@@ -658,6 +658,8 @@ pub enum TalentEffect {
     PenaltyPercent { value: i32 },
     /// Added to its disease checks: catching one and every progression.
     DiseaseChecks { value: i32 },
+    /// Added to its checks against a drain (spec §8 "Stats": "Drain").
+    DrainChecks { value: i32 },
     /// Added to every check of stat `stat` it makes (spec §8 "Checks").
     Checks { stat: Stat, value: i32 },
     /// A disease's progressions come this percent further apart (negative: closer; Ageless).
@@ -944,6 +946,7 @@ impl TalentEffect {
             | TalentEffect::Deflection { value }
             | TalentEffect::Pain { value }
             | TalentEffect::DiseaseChecks { value }
+            | TalentEffect::DrainChecks { value }
             | TalentEffect::DiseaseRecovery { value }
             | TalentEffect::DoorKick { value }
             | TalentEffect::BurdenDex { value }

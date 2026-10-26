@@ -165,6 +165,11 @@ name = "Status effects"
 id = "diseases"
 name = "Diseases and checks"
 
+# Drains (#382): the touch of some undead takes points off a stat for good, unless a check holds.
+[[system]]
+id = "drain"
+name = "Drains: stats lost for good"
+
 [[system]]
 id = "hunger"
 name = "Hunger, food, corpses, rot"

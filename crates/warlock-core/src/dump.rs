@@ -90,9 +90,9 @@ pub enum Layer {
     Truth,
     /// Not a map: every actor on the level with its weight, what it carries (and of that wears
     /// and wields), its stats (scores and potentials), its trained skills with their marks, its
-    /// status effects with their severities, and its diseases and stat damage, the player's
-    /// nutrition, then every corpse on the level and in the player's pack with its age (ground
-    /// truth). **Dev-only.**
+    /// status effects with their severities, and its diseases, stat damage, and drained points,
+    /// the player's nutrition, then every corpse on the level and in the player's pack with its
+    /// age (ground truth). **Dev-only.**
     Actors,
     /// Not a map: the player's progression (spec §8 "Talents"): the choices a level still asks
     /// for (`due level 3: 3 skill rolls, 1 talent`), the talents they may take now by id with the choices
@@ -965,7 +965,8 @@ fn actor_rows(world: &World) -> Vec<String> {
     rows.into_iter().chain(foods).collect()
 }
 
-/// An actor's diseases and stat damage, as the `actors` dump shows them (ground truth):
+/// An actor's diseases, stat damage, and drained points, as the `actors` dump shows them
+/// (ground truth; `; drained St 2` after the rest):
 /// `; diseases filth_fever incubating 2d, red_ache 3 (1 won) 1d; damage St 2`, each infection
 /// with its progressions so far (and checks won in a row) and the time to its next turn, in
 /// days and hours; empty without any.
@@ -997,6 +998,13 @@ fn disease_text(a: &crate::world::Actor, content: &crate::content::Content) -> S
         .collect();
     if !damaged.is_empty() {
         let _ = write!(out, "; damage {}", damaged.join(" "));
+    }
+    let drained: Vec<String> = (Stat::ALL.iter())
+        .filter(|&&s| a.drained[s] > 0)
+        .map(|&s| format!("{} {}", s.abbrev(), a.drained[s]))
+        .collect();
+    if !drained.is_empty() {
+        let _ = write!(out, "; drained {}", drained.join(" "));
     }
     out
 }

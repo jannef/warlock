@@ -52,7 +52,8 @@ neither Presence nor Appraise moves it).
 - **A cure** ends every disease you have, even one that has not broken out yet (they can tell),
   and grave rot too. Damage a disease did to your stats stays and mends a point a day as usual,
   or all at once with a mending.
-- **A mending** gives back every point of stat damage at once. It is refused while a disease
+- **A mending** gives back every point of stat damage at once, and every point the undead
+  drained ([Drained stats](stats.md#drained-stats)). It is refused while a disease
   shows ("Be cured first."): the disease would only take them again.
 - With nothing to cure or mend they tell you so, and you keep your gold. Without enough gold you
   are told "You cannot pay." Neither takes any time.

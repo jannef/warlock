@@ -186,6 +186,11 @@ pub struct Actor {
     /// [`StatDamage`]).
     #[serde(default, skip_serializing_if = "StatDamage::is_none")]
     pub damage: StatDamage,
+    /// The points drains took off its scores for good, by stat (spec §8 "Stats": "Drain";
+    /// `World::drain`): already off [`Actor::stats`], counted so a temple's mending can give
+    /// them back.
+    #[serde(default, skip_serializing_if = "undrained")]
+    pub drained: PerStat<u8>,
     /// Its rank and marks in every weapon skill (spec §8 "Weapon skills";
     /// [`crate::weapon_skills`]): a creature's from its type, the player's from their race and
     /// class. Only the player trains. The player is shown their own ranks; what a rank gives
@@ -245,6 +250,11 @@ fn is_nought(n: &i32) -> bool {
 
 fn unmarked(marks: &PerStat<u16>) -> bool {
     marks.iter().all(|(_, n)| n == 0)
+}
+
+/// Whether no drain took anything ([`Actor::drained`]).
+pub(crate) fn undrained(drained: &PerStat<u8>) -> bool {
+    drained.iter().all(|(_, n)| n == 0)
 }
 
 impl Actor {

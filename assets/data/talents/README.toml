@@ -254,6 +254,7 @@
 #   penalty_percent { value }     what its statuses take off its scores, that percent more
 #                                 (negative: less; raises are untouched)
 #   disease_checks { value }      added to its disease checks
+#   drain_checks { value }        added to its checks against a drain (spec §8 "Stats")
 #   checks { stat, value }        added to every check of that stat it makes
 #   disease_recovery { value }    a disease needs that many fewer checks won in a row to go
 #   disease_interval_percent { value }   a disease's progressions come that percent further
