@@ -1,0 +1,35 @@
+# The demon roster (#449). A tiny, quick, sly demon with bat's ears and a barbed tail, the kind a
+# warlock keeps at his shoulder: its claws carry a venom that sickens and leaves the limbs weak.
+[[creature]]
+id = "quasit"
+level = 12
+xp = 70
+rarity = "rare"
+name = "quasit"
+glyph = "u"
+fg = "#5aa05a"
+speed = 1200
+faction = "demon"
+tags = ["demon", "fiend"]
+alignment = "evil"
+vision = "darkvision"
+sight = 14
+opens_doors = true
+footsteps = 10
+hearing = 18
+weight = 3000
+size = "small"
+stats = { strength = 11, dexterity = 17, toughness = 12, intelligence = 14, willpower = 20, presence = 14 }
+base_hp = 15
+resist = { fire = 50, poison = 100 }
+corpse = false
+blood = "#2a4a2a"
+[creature.attack]
+damage = "2d6"
+damage_type = "slashing"
+name = "claws"
+verb = "claws"
+on_hit = [
+    { status = "poisoned", chance = 20, severity = 3 },
+    { status = "weakened", chance = 10, severity = 1 },
+]

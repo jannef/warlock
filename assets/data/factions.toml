@@ -94,6 +94,15 @@ id = "fire"
 name = "fire things"
 hostile = ["player"]
 
+# The demons (the roster, #449): dretches and quasits up to the balor. They hunt every people
+# that would stand against them, the player, the kobolds, the goblins, the duergar, and the
+# marsh things; the dead, the fire things, and the beasts are beneath their notice, and the cult
+# that calls on them they let be. Not an animal faction.
+[[faction]]
+id = "demon"
+name = "demons"
+hostile = ["player", "kobolds", "goblins", "duergar", "marsh", "devil"]
+
 # The elementals (#453): fire, earth, air, water, ice, and lightning given shape, from motes to
 # the eldest. They are hostile to the player and leave everyone else alone, as the delf's fire
 # things do (the cinder elemental, an elemental too, is of that faction).

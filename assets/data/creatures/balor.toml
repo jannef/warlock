@@ -1,0 +1,46 @@
+# The demon roster (#449). The mightiest of the demons: a giant wrapped in flame, with a sword in
+# one hand and a many-thonged whip of fire in the other. One creature has one attack for now: it
+# fights with its sword (attack_cost 700 for sword and whip in turn), and the whip, which drags
+# its victim close, is its attack whenever it has no sword in hand.
+[[creature]]
+id = "balor"
+level = 62
+xp = 320
+rarity = "very_rare"
+name = "balor"
+glyph = "U"
+fg = "#ffb030"
+speed = 1100
+attack_cost = 700
+light = "torch"
+glow = 0.5
+faction = "demon"
+tags = ["demon", "fiend"]
+alignment = "evil"
+vision = "darkvision"
+sight = 14
+opens_doors = true
+footsteps = 90
+hearing = 16
+weight = 2000000
+stats = { strength = 40, dexterity = 23, toughness = 40, intelligence = 34, willpower = 37, presence = 34 }
+base_hp = 248
+loot = 100
+natural = { defence = 5, protection = 2, name = "hide" }
+resist = { fire = 100, cold = 25, electricity = 25, poison = 100 }
+weapon_skills = { great_blades = 8 }
+corpse = false
+blood = "#4a1a0a"
+[creature.attack]
+damage = "4d12"
+damage_type = "fire"
+name = "flaming whip"
+verb = "lashes"
+to_hit = 6
+on_hit = [{ status = "held", chance = 15, difficulty = 24 }]
+# Its gear (spec §8 "Creature gear"): the great sword it never puts down.
+[[creature.gear]]
+chance = 100
+one_of = ["great_sword"]
+keep = "wield"
+magic = 75

@@ -181,6 +181,13 @@
 # the rotting troll; a colour distinct from every other type with the same glyph. Only a type in
 # a population strays (#375): deep undead ship in none until a deep place takes them.
 #
+# The demons (the roster, #449; content::demon_roster_tests checks the numbers): faction
+# "demon", tags ["demon", "fiend"], alignment "evil", vision "darkvision", resist poison 100 and
+# fire (100 for the balor), and cold and electricity 25 from level 24. The undead's formulas and
+# roles (#383) give their xp, stats, base_hp, dice, to-hit, and natural Defence; a hold in on_hit
+# has difficulty 12 + level ÷ 5. No corpse (a demon's body comes apart), dark ichor for blood.
+# Glyphs: u the lesser demons, U the greater. The dretch and the quasit live in Fyrdelf; the rest
+# ship in no population until a deep place takes them.
 # The hags (#451; content::hag_roster_tests checks the numbers): the bog hag's kin, faction "hags"
 # (the bog hag stays the marsh's), tags ["hag", ...] ("caster" for the casters; the bog hag
 # carries "hag" too), alignment "evil", vision "darkvision", glyph h in a colour distinct from
