@@ -113,7 +113,7 @@ trolls counts them too.
 
 Some restless dead have no body to stop them: **incorporeal** creatures (the ghosts, shadows,
 poltergeists, corpse candles, and wraiths of Fennmynster, the knockers and spectres of Fyrdelf,
-and, far deeper, banshees, dread wraiths, greater shadows, and white ladies) drift through walls, solid rock, trees, and closed doors (which stay shut behind them), and may
+and, far deeper, banshees, dread wraiths, greater shadows, and white ladies), and the earth elementals, whose element is the stone, drift through walls, solid rock, trees, and closed doors (which stay shut behind them), and may
 stop inside the stone. They cannot leave the level that way, and lava stops them as it stops
 anyone. Nothing of them presses down: they set off no traps and never break ice.
 
@@ -125,6 +125,30 @@ harder to hit (its **Wall** Defence, in the Defence table on
 [Creatures in numbers](creature-numbers.md)), and some misses just strike stone ("Your sword
 strikes stone where the stone haunt hides in the wall."). If you cannot see it there, the wall is
 only a wall. What one carried falls out of the wall when it dies, onto the nearest floor.
+
+## Elementals
+
+**Elementals** are fire, earth, air, water, ice, and lightning given a shape and a will. Each
+element comes in sizes and ages, from a **mote** (small, `e`) through the lesser and the plain
+elemental to the greater and the elder (`E`), and the eldest of each has an old name: the
+**balefire**, the **hoarstone**, the **welkin wind**, the **brimwolf**, the **rimethurse**, and
+the **thunderhead**. All of them are hostile to you and leave everyone else alone, poison cannot
+hurt them, and nothing is left of one when it is destroyed (the oldest leave something they
+caught up now and then).
+
+- **Fire** burns what it touches, cannot be hurt by fire, is hurt more by cold, and lights its
+  way.
+- **Earth** is slow and heavy and hard to cut or pierce; electricity cannot hurt it. Its blows
+  may stagger you (the eldest also grip and hold), and from the earth elemental up it moves
+  through stone as an incorporeal creature does (above), though the stone shelters it less.
+- **Air** is very fast and hard to hit, arrows blow aside from it, and its blows may stagger you.
+- **Water** walks on the land; fire and arrows do it less harm, electricity more. Its blows may
+  leave you sluggish, and the greater ones may hold you.
+- **Ice** is slow, its cold blows may leave you sluggish, cold cannot hurt it, and fire hurts it
+  more.
+- **Lightning** is fast, lit blue, cannot be hurt by electricity, and its shocks may stagger you.
+
+The exact numbers are on [Creatures in numbers](creature-numbers.md).
 
 ## Pace and levels
 

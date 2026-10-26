@@ -88,12 +88,11 @@ eases = 6
 blocks = ["step"]
 hold = { check = "strength", difficulty = 13, turns = "3d4" }
 
-# Named by the trolls' on_hit (#456): kept as the built-in ones are, untouched by mana.
+# Named by the elementals' (#453) and trolls' (#456) on_hit: kept as the built-in ones are, untouched by mana.
 [[status]]
 id = "staggered"
 name = "Staggered"
 max = 1
-stacking = "refresh"
 eases = 6
 cost = 150
 
@@ -101,7 +100,6 @@ cost = 150
 id = "sluggish"
 name = "Sluggish"
 max = 1
-stacking = "refresh"
 eases = 60
 cost = 150
 "##;

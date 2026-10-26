@@ -1,0 +1,33 @@
+# The elemental roster (#453): the lightning line's mote rung. A crackling spark that darts
+# about: very quick, and its touch jolts.
+[[creature]]
+id = "spark_mote"
+level = 8
+xp = 50
+rarity = "common"
+name = "spark mote"
+glyph = "e"
+fg = "#f0f070"
+speed = 1350
+glow = 0.3
+faction = "elemental"
+tags = ["elemental", "lightning"]
+alignment = "neutral"
+vision = "darkvision"
+sight = 8
+footsteps = 20
+hearing = 8
+weight = 100
+size = "small"
+stats = { strength = 10, dexterity = 16, toughness = 11, intelligence = 2, willpower = 19, presence = 2 }
+base_hp = 10
+natural = { defence = 1, protection = 0, name = "crackling form" }
+resist = { electricity = 100, piercing = 25, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "1d10"
+damage_type = "electricity"
+name = "spark"
+verb = "jolts"
+on_hit = [{ status = "staggered", chance = 20, severity = 1 }]

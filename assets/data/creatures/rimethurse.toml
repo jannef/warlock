@@ -1,0 +1,32 @@
+# The elemental roster (#453): the ice line's eldest rung. The eldest of the ice (Old English
+# hrīmþyrs, the rime-giant): winter itself, standing up.
+[[creature]]
+id = "rimethurse"
+level = 66
+xp = 340
+rarity = "very_rare"
+loot = 20
+name = "rimethurse"
+glyph = "E"
+fg = "#e0ffff"
+faction = "elemental"
+tags = ["elemental", "ice"]
+alignment = "neutral"
+vision = "darkvision"
+sight = 12
+footsteps = 60
+hearing = 10
+weight = 6000000
+stats = { strength = 40, dexterity = 25, toughness = 40, intelligence = 36, willpower = 39, presence = 36 }
+base_hp = 264
+natural = { defence = 5, protection = 6, name = "ice" }
+resist = { piercing = 25, cold = 100, fire = -50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "5d10"
+damage_type = "cold"
+to_hit = 6
+name = "fist"
+verb = "freezes"
+on_hit = [{ status = "sluggish", chance = 25, severity = 1 }]

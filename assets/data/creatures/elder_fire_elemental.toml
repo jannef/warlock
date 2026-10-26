@@ -1,0 +1,34 @@
+# The elemental roster (#453): the fire line's elder rung. An old fire, older than the delf:
+# yellow-white at its heart, it has burned since the world was young.
+[[creature]]
+id = "elder_fire_elemental"
+level = 50
+xp = 260
+rarity = "very_rare"
+loot = 10
+name = "elder fire elemental"
+glyph = "E"
+fg = "#ffe88a"
+speed = 1100
+light = "brazier"
+glow = 0.45
+faction = "elemental"
+tags = ["elemental", "fire"]
+alignment = "neutral"
+vision = "normal"
+sight = 10
+footsteps = 40
+hearing = 10
+weight = 600000
+stats = { strength = 31, dexterity = 23, toughness = 32, intelligence = 30, willpower = 34, presence = 30 }
+base_hp = 125
+natural = { defence = 4, protection = 0, name = "flickering flame" }
+resist = { fire = 100, cold = -50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "3d12"
+damage_type = "fire"
+to_hit = 5
+name = "touch"
+verb = "burns"

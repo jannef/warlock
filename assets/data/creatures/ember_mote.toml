@@ -1,0 +1,33 @@
+# The elemental roster (#453): the fire line's mote rung. A coal-sized flame that drifts about
+# the hot places of the deep: it lights a little, singes what it touches, and goes out when struck
+# hard enough.
+[[creature]]
+id = "ember_mote"
+level = 2
+xp = 20
+rarity = "common"
+name = "ember mote"
+glyph = "e"
+fg = "#ff7a30"
+speed = 1100
+light = "ember_full"
+glow = 0.3
+faction = "elemental"
+tags = ["elemental", "fire"]
+alignment = "neutral"
+vision = "normal"
+sight = 8
+footsteps = 20
+hearing = 8
+weight = 300
+size = "small"
+stats = { strength = 8, dexterity = 15, toughness = 9, intelligence = 2, willpower = 17, presence = 2 }
+base_hp = 3
+resist = { fire = 100, cold = -50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "1d4"
+damage_type = "fire"
+name = "touch"
+verb = "singes"

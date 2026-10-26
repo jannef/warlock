@@ -1,0 +1,30 @@
+# The elemental roster (#453): the fire line's lesser rung. A flame the height of a child that
+# walks: its touch burns, fire is its body, and cold does it half again as much harm.
+[[creature]]
+id = "lesser_fire_elemental"
+level = 9
+xp = 55
+rarity = "common"
+name = "lesser fire elemental"
+glyph = "E"
+fg = "#ff8c2a"
+light = "lava"
+glow = 0.35
+faction = "elemental"
+tags = ["elemental", "fire"]
+alignment = "neutral"
+vision = "normal"
+sight = 10
+footsteps = 40
+hearing = 10
+weight = 30000
+stats = { strength = 15, dexterity = 12, toughness = 16, intelligence = 2, willpower = 19, presence = 2 }
+base_hp = 23
+resist = { fire = 100, cold = -50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "2d6"
+damage_type = "fire"
+name = "touch"
+verb = "burns"

@@ -1,6 +1,7 @@
 # The delf wave (Fyrdelf, docs/design/campaign.md §10.1). A walking pillar of coals and flame
 # from the volcano's heart: it burns bright, fire is its own body, and nothing of it remains when
-# it is put out.
+# it is put out. The fire line's L17 rung of the elemental roster (#453), kept as it was and in
+# the delf's `fire` faction.
 [[creature]]
 id = "cinder_elemental"
 level = 17
@@ -10,7 +11,7 @@ name = "cinder elemental"
 glyph = "E"
 fg = "#ffa040"
 faction = "fire"
-tags = ["fire-thing"]
+tags = ["fire-thing", "elemental", "fire"]
 alignment = "neutral"
 vision = "normal"
 light = "brazier"

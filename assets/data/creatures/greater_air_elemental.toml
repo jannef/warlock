@@ -1,0 +1,33 @@
+# The elemental roster (#453): the air line's greater rung. A storm wind that walks the deep
+# halls, tearing at everything in its way.
+[[creature]]
+id = "greater_air_elemental"
+level = 31
+xp = 165
+rarity = "rare"
+loot = 5
+name = "greater air elemental"
+glyph = "E"
+fg = "#d8ecf8"
+speed = 1700
+faction = "elemental"
+tags = ["elemental", "air"]
+alignment = "neutral"
+vision = "darkvision"
+sight = 10
+footsteps = 50
+hearing = 10
+weight = 100000
+stats = { strength = 23, dexterity = 23, toughness = 23, intelligence = 22, willpower = 27, presence = 22 }
+base_hp = 70
+natural = { defence = 5, protection = 0, name = "rushing wind" }
+resist = { piercing = 50, electricity = 50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "3d10"
+damage_type = "bludgeoning"
+to_hit = 3
+name = "buffet"
+verb = "buffets"
+on_hit = [{ status = "staggered", chance = 20, severity = 1 }]

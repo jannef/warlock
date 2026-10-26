@@ -94,6 +94,14 @@ id = "fire"
 name = "fire things"
 hostile = ["player"]
 
+# The elementals (#453): fire, earth, air, water, ice, and lightning given shape, from motes to
+# the eldest. They are hostile to the player and leave everyone else alone, as the delf's fire
+# things do (the cinder elemental, an elemental too, is of that faction).
+[[faction]]
+id = "elemental"
+name = "elementals"
+hostile = ["player"]
+
 # The fey courts (#452): each fey creature joins one when it is made, by its type's `factions`
 # weights (data/creatures/README.toml). The Seelie court leaves the player be, the Unseelie hunts
 # them, and the two are at war; both leave every other faction alone. A Seelie fey the player
