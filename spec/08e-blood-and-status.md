@@ -135,6 +135,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     poison lasts longer. It is damage of the kind poison (`damage_type`, §8 "Damage types"): a
     creature immune to poison is never poisoned, and a resistance takes its share off each dose
     as it is given (rounded to the nearest; 2 degrees at 50 % is 1), never off the ticks.
+  - **Asleep** (#405; `sleeps = true`): a teeming den's sleepers are placed with it (§7 "Special
+    rooms"). A creature suffering a status that `sleeps` takes no turn and is unaware of
+    everyone; it has no easing (time never wakes it), and ends as noise loud enough, a blow, or
+    a neighbour's cry wakes the sleeper. It shows on creatures ("asleep").
   - **Shown**: the player's own by name (status bar, character screen, the `stats` dump layer),
     those with a `seen` word on creatures the player sees (look mode); never a severity or a
     timer. Effects are part of the world state (saved, covered by the state hash).
