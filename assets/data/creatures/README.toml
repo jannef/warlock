@@ -47,7 +47,8 @@
 # with an irregular plural adds its line there. **Tag every new creature** that belongs to a
 # group or a role below (a new tag only when something could use it):
 #   groups   kobold, goblin (the hobgoblins too; not the ogre or the troll, who only run with
-#            them), hobgoblin (the goblins' second tier, #454), undead (every
+#            them), hobgoblin (the goblins' second tier, #454), orc (not the wargs, who only
+#            run with them), undead (every
 #            creature of the "undead" faction: content::tag's test fails without it), vermin
 #            (not the basilisk), marsh-thing (the fens' living things and the bog hag),
 #            hag (the bog hag and her kin, every creature of the "hags" faction),

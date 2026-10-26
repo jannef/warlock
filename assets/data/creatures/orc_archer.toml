@@ -1,0 +1,33 @@
+# The orc tribe (#455; content::orc_roster_tests checks the numbers). An orc with a short bow
+# (its racial weapon) and a quiver, and a scimitar half the time for when the arrows run out.
+[[creature]]
+id = "orc_archer"
+level = 6
+xp = 40
+rarity = "uncommon"
+loot = 20
+name = "orc archer"
+glyph = "o"
+fg = "#a8a040"
+faction = "orcs"
+tags = ["orc", "archer"]
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+combat = "ranged"
+range = 7
+opens_doors = true
+footsteps = 120
+hearing = 12
+weight = 75000
+stats = { strength = 14, dexterity = 14, toughness = 14, intelligence = 9, willpower = 11, presence = 7 }
+base_hp = 15
+on_eat = { message = "This orc meat is rank!", vomit = 30 }
+weapon_skills = { bows = 1, short_blades = 1 }
+racial_weapon = "short_bow"
+[[creature.gear]]
+chance = 95
+one_of = ["arrow*12", "arrow*20"]
+[[creature.gear]]
+chance = 50
+one_of = ["scimitar"]
