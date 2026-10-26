@@ -1,0 +1,37 @@
+# The undead roster (#383, batch 3). The keening woman of the Irish tales: a pale spirit whose
+# cold touch sends the living running and takes the bearing out of them, for good unless the will
+# holds (a temple's mending gives it back). It drifts through walls and doors; blades and clubs
+# pass half through it. Not yet in any dungeon's population.
+[[creature]]
+id = "banshee"
+level = 23
+xp = 125
+rarity = "rare"
+name = "banshee"
+glyph = "G"
+fg = "#c8e8d8"
+speed = 1200
+faction = "undead"
+tags = ["undead", "spirit"]
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+hearing = 15
+weight = 100
+stats = { strength = 18, dexterity = 19, toughness = 18, intelligence = 19, willpower = 24, presence = 19 }
+base_hp = 34
+natural = { defence = 4, protection = 0, name = "insubstantial form" }
+incorporeal = { wall_defence = 4 }
+resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "2d8"
+damage_type = "cold"
+name = "touch"
+verb = "touches"
+to_hit = 2
+on_hit = [
+    { status = "frightened", chance = 25, severity = 2 },
+    { drain = "presence", points = 1, chance = 10, difficulty = 16 },
+]
