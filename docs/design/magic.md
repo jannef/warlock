@@ -301,15 +301,15 @@ Waves are ordered; the first and second can start at once. Every PR names its ta
 
 | # | Issue | Depends on |
 |---|---|---|
-| 1 | **Unidentified scrolls**: labels per game, identified by reading or the scroll of identify; identify scrolls made common in loot and shops | none |
-| 2 | **Spell data and the tier tables**: `spells.toml`, the `[[spell]]` file format with the cap check, `casting` percent in class tables, `World::caster_level`, `mana_level` 60, the wiki's tier tables | none |
-| 3 | **The one cast path**: resolution (`auto`, `attack`, `area`, `touch`), the cost with overreach, shape and armour, the new shapes (`cone`, `line`), the new damage types, and the placeholder spells migrated onto it | 2 |
-| 4 | **Learned spells and study**: `Actor::spells`, `Action::Study`, the check, the time, the interruptions, the mishaps (data), the scroll objects' two uses, the abilities menu's Spells group | 1, 3 |
-| 5 | **Class spell lists**: the guaranteed spells per class, the first spell list (§7), the scroll objects, loot and shop weights by tier | 3, 4 |
-| 6 | **Wands**: the Missile-slot items, charges, the set caster level, the spell's resolution, identification of charges | 3 |
-| 7 | **Rods and staffs**: effects no spell has, the user's mana for rods, a first handful of effects | 6 |
-| 8 | **Talents**: the Spellcraft tree and the first set (§10), the `spells` system tag, the `caster_level` and school-choice effects, Empower and Archmage reworked | 3, 4 |
-| 9 | **Magic on the wiki and in the spec**: the "Magic" page, spec §8's section, the `docs/dev/` topic `spells.md` (folded into each PR's docs; this is the cross-checking pass) | 5 |
+| #393 | **Unidentified scrolls**: labels per game, identified by reading or the scroll of identify; identify scrolls made common in loot and shops | none |
+| #394 | **Spell data and the tier tables**: `spells.toml`, the `[[spell]]` file format with the cap check, `casting` percent in class tables, `World::caster_level`, `mana_level` 60, the wiki's tier tables | none |
+| #395 | **The one cast path**: resolution (`auto`, `attack`, `area`, `touch`), the cost with overreach, shape and armour, the new shapes (`cone`, `line`), the new damage types, and the placeholder spells migrated onto it | #394 |
+| #396 | **Learned spells and study**: `Actor::spells`, `Action::Study`, the check, the time, the interruptions, the mishaps (data), the scroll objects' two uses, the abilities menu's Spells group | #393, #395 |
+| #397 | **Class spell lists**: the guaranteed spells per class, the first spell list (§7), the scroll objects, loot and shop weights by tier | #395, #396 |
+| #398 | **Wands**: the Missile-slot items, charges, the set caster level, the spell's resolution, identification of charges | #395 |
+| #399 | **Rods and staffs**: effects no spell has, the user's mana for rods, a first handful of effects | #398 |
+| #400 | **Talents**: the Spellcraft tree and the first set (§10), the `spells` system tag, the `caster_level` and school-choice effects, Empower and Archmage reworked | #395, #396 |
+| #401 | **Magic on the wiki and in the spec**: the "Magic" page, spec §8's section, the `docs/dev/` topic `spells.md` (folded into each PR's docs; this is the cross-checking pass) | #397 |
 
 ## 14. Open questions
 
