@@ -43,7 +43,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `character/weapon-skills/<race>,<gender>,<class>` for the starting weapon skills,
   `character/styles/<race>,<gender>,<class>` for the starting fighting styles; New run's
   Random rows roll `new-run/<step>/<n>` streams, which never touch a run); training marks
-  (`training`, kept in the world state and saved; §8 "Skills"); the weather, which keeps no
+  (`training`, kept in the world state and saved; §8 "Skills"); the unidentified scrolls' labels
+  (`identification`, drawn whole when the world is made or loaded, never saved; §8 "Scrolls");
+  the weather, which keeps no
   stream at
   all: each weather block hashes the seed, a label, and its number (FNV-1a, then SplitMix64's
   finalizer; §5 "Weather"), nor the temperature and the ice, which follow from the weather, the

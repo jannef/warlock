@@ -36,7 +36,8 @@ const AUTOSAVE_TURNS: u64 = 50;
 pub enum Resume {
     /// Saving is disabled or there is no such save.
     NoSave,
-    Loaded(World),
+    /// Boxed: a world is large.
+    Loaded(Box<World>),
     /// The save could not be used; the message is for the player.
     Failed(String),
 }
@@ -161,7 +162,7 @@ impl SaveStore {
             Err(e) => return Resume::Failed(format!("Could not read the save: {e}.")),
         };
         match save::decode(&bytes, content.clone()) {
-            Ok(world) => Resume::Loaded(world),
+            Ok(world) => Resume::Loaded(Box::new(world)),
             Err(err) => {
                 let kept = match self.writable() {
                     Some(backend) => match backend.rename(&save_file(id), &bad_file(id)) {

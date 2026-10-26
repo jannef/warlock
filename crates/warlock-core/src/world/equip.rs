@@ -25,7 +25,7 @@ impl World {
             self.say("You carry no such thing.");
             return Spent::Nothing;
         };
-        let what = stack.describe(&content);
+        let what = self.lore().describe(&stack);
         if !content.fits(stack.object, slot) {
             let does = if stack.count > 1 { "do" } else { "does" };
             self.say(format!("{} {does} not go there.", capitalized(&what)));
@@ -57,7 +57,10 @@ impl World {
             .filter(|&&i| i != item)
             .map(|&i| {
                 let (_, take_off) = verbs(action(i));
-                format!("You {take_off} {}.", player.inventory[i].describe(&content))
+                format!(
+                    "You {take_off} {}.",
+                    self.lore().describe(&player.inventory[i])
+                )
             })
             .collect();
         let kind = content.slot(slot).action;
@@ -97,7 +100,7 @@ impl World {
         };
         let kind = self.first_action(item);
         let (_, take_off) = verbs(kind);
-        let what = player.inventory[item].describe(&content);
+        let what = self.lore().describe(&player.inventory[item]);
         self.player_mut().equipment.take_off(item);
         self.say(format!("You {take_off} {what}."));
         self.price_for(&[kind])
@@ -109,7 +112,6 @@ impl World {
         &mut self,
         items: impl Iterator<Item = usize>,
     ) -> Vec<ActionKind> {
-        let content = self.content.clone();
         let mut kinds = Vec::new();
         for item in items {
             if !self.state.player().equipment.holds(item) {
@@ -117,7 +119,7 @@ impl World {
             }
             let kind = self.first_action(item);
             let (_, take_off) = verbs(kind);
-            let what = self.state.player().inventory[item].describe(&content);
+            let what = self.lore().describe(&self.state.player().inventory[item]);
             self.player_mut().equipment.take_off(item);
             self.say(format!("You {take_off} {what}."));
             kinds.push(kind);

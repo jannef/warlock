@@ -155,7 +155,7 @@ objects = ["rope", "candle*4"]
 
 [[pile]]
 at = [29, 8]
-objects = ["scroll_of_light"]
+objects = ["scroll_of_light", "scroll_of_identify*3"]
 
 # The Forge: arms and missiles. The smith's fire burns in the corner.
 [[shop]]
