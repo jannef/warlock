@@ -298,6 +298,10 @@ pub struct TalentMods {
     pub spares_self: bool,
     /// Added to its searching, not to noticing in passing.
     pub searching: i32,
+    /// Points off the difficulty of its studies, and percent more time they take (negative:
+    /// less; Quick study, spec §8 "Spells").
+    pub study_bonus: i32,
+    pub study_percent: i32,
     /// Percent more damage traps do it (negative: less).
     pub trap_damage_percent: i32,
     /// Percent more experience from quests.
@@ -1054,6 +1058,10 @@ impl TalentMods {
             TalentEffect::TrainSkill { .. } => {}
             TalentEffect::LootMagicPercent { value } => self.loot_magic_percent += value,
             TalentEffect::ReadPercent { value } => self.read_percent += value,
+            TalentEffect::Study { bonus, percent } => {
+                self.study_bonus += bonus;
+                self.study_percent += percent;
+            }
             TalentEffect::ScrollKept { chance } => self.scroll_kept = self.scroll_kept.max(chance),
             TalentEffect::SparesSelf => self.spares_self = true,
             TalentEffect::Searching { value } => self.searching += value,

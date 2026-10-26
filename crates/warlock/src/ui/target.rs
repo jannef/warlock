@@ -347,7 +347,7 @@ fn aimed_spell<'v>(view: &PerceptionView<'v>, kind: AimKind) -> Option<&'v Scrol
 /// The spell `kind` casts when it is one of the player's spells (spec §8 "Spells").
 fn cast_spell<'v>(view: &PerceptionView<'v>, kind: AimKind) -> Option<&'v SpellData> {
     match kind {
-        AimKind::Ability(Ability::Spell(spell)) => view.content().class_spell(spell),
+        AimKind::Ability(Ability::Spell(spell)) => view.content().spell_of(spell),
         _ => None,
     }
 }

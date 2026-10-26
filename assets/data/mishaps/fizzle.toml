@@ -1,0 +1,6 @@
+[[mishap]]
+id = "fizzle"
+band = "slight"
+weight = 40
+message = "The words fade from the page before you can grasp them."
+effect = { kind = "nothing" }

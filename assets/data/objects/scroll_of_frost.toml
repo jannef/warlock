@@ -25,3 +25,5 @@ damage = "2d6"
 damage_type = "cold"
 range = 10
 frost = 100
+# Studying it (spec §8 "Spells") teaches Frost.
+teaches = "frost"

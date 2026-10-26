@@ -320,6 +320,9 @@ pub enum TalentEffect {
     LootMagicPercent { value: i32 },
     /// Reading a scroll takes this percent more time (negative: less; Scroll savant).
     ReadPercent { value: i32 },
+    /// Studying a spell (spec §8 "Spells"): `bonus` points off the check's difficulty, and it
+    /// takes `percent` more time (negative: less; Quick study).
+    Study { bonus: i32, percent: i32 },
     /// A scroll it reads is not used up, by this chance in percent (one gameplay draw a read;
     /// Spell recall).
     ScrollKept { chance: u8 },
@@ -1407,6 +1410,13 @@ impl TalentEffect {
                         .into());
                 }
                 Ok(())
+            }
+            TalentEffect::Study {
+                bonus: b,
+                percent: p,
+            } => {
+                bonus(*b)?;
+                percent(*p)
             }
             TalentEffect::LauncherRange { value, skill } => {
                 let table = content.weapon_skills();

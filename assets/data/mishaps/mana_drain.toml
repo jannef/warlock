@@ -1,0 +1,6 @@
+[[mishap]]
+id = "mana_drain"
+band = "bad"
+weight = 20
+message = "The spell drains your mana as it unravels."
+effect = { kind = "mana", percent = 75 }

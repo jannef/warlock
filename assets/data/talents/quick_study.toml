@@ -1,0 +1,7 @@
+[[talent]]
+id = "quick_study"
+name = "Quick study"
+tree = "spellcraft"
+description = "Spells come easily to you: you learn them from scrolls in half the time, and a spell beyond you is less of a gamble."
+effects = [{ kind = "study", bonus = 2, percent = -50 }]
+systems = ["spells", "scrolls"]

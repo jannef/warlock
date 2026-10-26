@@ -1,0 +1,6 @@
+[[mishap]]
+id = "mana_leak"
+band = "slight"
+weight = 15
+message = "The half-woven spell drinks at your mana."
+effect = { kind = "mana", percent = 25 }

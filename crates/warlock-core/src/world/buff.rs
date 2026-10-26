@@ -70,6 +70,7 @@ impl World {
             Action::ThrowVoice(_) => ActionKind::ThrowVoice,
             Action::Eat(_) => ActionKind::Eat,
             Action::Read { .. } => ActionKind::Read,
+            Action::Study { .. } => ActionKind::Study,
             Action::Dig(_) => ActionKind::Dig,
             Action::Search(_) => ActionKind::Search,
             Action::Disarm(_) => ActionKind::Disarm,

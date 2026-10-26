@@ -79,6 +79,11 @@ pub enum Layer {
     /// source and what it asks for, or why it cannot be used now (`Shield bash (weapon skill):
     /// a direction`, `Steal (skill): not usable yet`).
     Abilities,
+    /// Not a map: the spells the player knows (spec §8 "Spells"), one a line in menu order with
+    /// its tier and what it costs them now (`Frost: tier 2, 14 mana`), then the scrolls they
+    /// could study, by position, with the chance in words (`study c, scroll of fireball: Fire
+    /// burst, far beyond you`); never the number.
+    Spells,
     /// Not a map: the traps the player knows on the level, one a line by position (`(12, 5)
     /// fireball trap`, `(remembered)` when out of sight); never hidden ones.
     Traps,
@@ -133,6 +138,7 @@ impl Layer {
         Layer::Attacks,
         Layer::Talents,
         Layer::Abilities,
+        Layer::Spells,
         Layer::Traps,
         Layer::Locations,
         Layer::Quests,
@@ -160,6 +166,7 @@ impl Layer {
             Layer::Attacks => "attacks",
             Layer::Talents => "talents",
             Layer::Abilities => "abilities",
+            Layer::Spells => "spells",
             Layer::Traps => "traps",
             Layer::Locations => "locations",
             Layer::Quests => "quests",
@@ -219,6 +226,7 @@ pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
         Layer::Attacks => attack_rows(&world.perception()),
         Layer::Talents => talent_rows(&world.perception()),
         Layer::Abilities => ability_rows(&world.perception()),
+        Layer::Spells => spell_rows(&world.perception()),
         Layer::Traps => trap_rows(&world.perception()),
         Layer::Locations => location_rows(&world.perception()),
         Layer::Quests => quest_rows(&world.perception()),
@@ -273,6 +281,7 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
         | Layer::Attacks
         | Layer::Talents
         | Layer::Abilities
+        | Layer::Spells
         | Layer::Traps
         | Layer::Locations
         | Layer::Quests
@@ -745,7 +754,78 @@ fn progress_rows(world: &World) -> Vec<String> {
     if !marked.is_empty() {
         rows.push(format!("stat marks {}", marked.join(", ")));
     }
+    // The study check's exact odds (spec §8 "Spells"), for each scroll the player could study.
+    for study in view.studies() {
+        if let Some(odds) = world.player_study_odds(study.spell) {
+            let check = match odds.check {
+                None => "certain".to_string(),
+                Some((bonus, difficulty)) => {
+                    format!("{bonus:+} against {difficulty}, {}/144", odds.ways())
+                }
+            };
+            rows.push(format!(
+                "study {} {}: overreach {}, {check}",
+                position_text(study.item),
+                study.spell.id(),
+                odds.overreach
+            ));
+        }
+    }
     rows
+}
+
+/// The spells the player knows, one a line with its tier and cost, then the scrolls they could
+/// study with the chance in words.
+fn spell_rows(view: &PerceptionView<'_>) -> Vec<String> {
+    let content = view.content();
+    let known = (view.own_spells().into_iter()).filter_map(|spell| {
+        let def = content.spell_of(spell)?;
+        let cost = view.own_spell_cost(spell)?;
+        Some(format!("{}: tier {}, {cost} mana", def.name, def.tier))
+    });
+    let studies = (view.studies().into_iter()).filter_map(|s| {
+        let def = content.spell_of(s.spell)?;
+        let stack = view.inventory().get(s.item)?;
+        Some(format!(
+            "study {}, {}: {}, {}",
+            position_text(s.item),
+            view.lore().describe(&stack.single()),
+            def.name,
+            s.chance
+        ))
+    });
+    let rows: Vec<String> = known.chain(studies).collect();
+    if rows.is_empty() {
+        vec!["no spells".into()]
+    } else {
+        rows
+    }
+}
+
+/// The spells the player knows (`[{"id", "tier", "cost"}]`) and the scrolls they could study
+/// (`[{"letter", "spell", "chance"}]`).
+fn spells_json(view: &PerceptionView<'_>) -> (Value, Value) {
+    let content = view.content();
+    let known: Vec<Value> = (view.own_spells().into_iter())
+        .filter_map(|spell| {
+            let def = content.spell_of(spell)?;
+            Some(json!({
+                "id": spell.id(),
+                "tier": def.tier,
+                "cost": view.own_spell_cost(spell),
+            }))
+        })
+        .collect();
+    let studies: Vec<Value> = (view.studies().into_iter())
+        .map(|s| {
+            json!({
+                "letter": position_text(s.item),
+                "spell": s.spell.id(),
+                "chance": s.chance,
+            })
+        })
+        .collect();
+    (Value::Array(known), Value::Array(studies))
 }
 
 /// The player's abilities, one a line in menu order: its name, its source, and what it asks for
@@ -1315,6 +1395,8 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "talents": talents,
         "due": view.due(),
         "abilities": abilities_json(&view),
+        "spells": spells_json(&view).0,
+        "studies": spells_json(&view).1,
         "quests": quests_json(&view),
     });
     // A second `json!`: one macro call this long passes the recursion limit.

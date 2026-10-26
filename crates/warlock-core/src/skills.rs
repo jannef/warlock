@@ -57,6 +57,9 @@ pub const MAX_SEARCH_BONUS: i32 = 20;
 /// The most a skill adds to disarming a trap (spec §8 "Disarming traps").
 pub const MAX_DISARM_BONUS: i32 = 20;
 
+/// The most a skill takes off the difficulty of studying a spell (spec §8 "Spells").
+pub const MAX_STUDY_BONUS: i32 = 20;
+
 /// The most cells farther a search may reach than the cells around the searcher.
 pub const MAX_SEARCH_REACH: i32 = 2;
 
@@ -111,6 +114,9 @@ pub enum Effect {
     /// Points added to noticing hidden features in passing (spec §8 "Searching"); a skill with
     /// it, trained, lets the actor notice them at all.
     Spot,
+    /// Points taken off the difficulty of studying a spell (spec §8 "Spells";
+    /// `world/learn.rs`).
+    Study,
     /// Points added to disarming a trap (spec §8 "Disarming traps"; `world/disarm.rs`); a skill
     /// with it, trained, lets the actor disarm traps at all (the Disarm ability).
     Disarm,
@@ -141,6 +147,7 @@ impl Effect {
             Effect::Quiet | Effect::Burden | Effect::Travel | Effect::Bargain => 100,
             Effect::Kick => *crate::stats::SCORES.end() as i32,
             Effect::Search | Effect::Spot => MAX_SEARCH_BONUS,
+            Effect::Study => MAX_STUDY_BONUS,
             Effect::Steal => MAX_STEAL_BONUS,
             Effect::Disarm => MAX_DISARM_BONUS,
             Effect::Pick => MAX_PICK_BONUS,
@@ -161,6 +168,8 @@ pub enum Use {
     Search,
     /// Noticing something hidden in passing (spec §8 "Searching").
     Spot,
+    /// A spell studied (spec §8 "Spells"), whatever comes of it.
+    Study,
     /// An attempt to disarm a trap (spec §8 "Disarming traps"), whatever comes of it.
     Disarm,
     /// An attack that missed because the actor dodged it (the Dexterity or Dodge category), or a
@@ -186,6 +195,7 @@ impl Use {
             Use::Hear => "hearing something new",
             Use::Search => "a turn spent searching",
             Use::Spot => "noticing something hidden in passing",
+            Use::Study => "studying a spell from a scroll",
             Use::Disarm => "trying to disarm a trap",
             Use::Dodge => "dodging an attack or a known trap",
             Use::Burdened => "acting (not waiting) while your load slows you",
@@ -290,6 +300,7 @@ impl Use {
             Use::Hear => "hear",
             Use::Search => "search",
             Use::Spot => "spot",
+            Use::Study => "study",
             Use::Disarm => "disarm",
             Use::Dodge => "dodge",
             Use::Burdened => "burdened",
@@ -311,6 +322,7 @@ impl Effect {
             Effect::Search => "search",
             Effect::SearchReach => "search_reach",
             Effect::Spot => "spot",
+            Effect::Study => "study",
             Effect::Disarm => "disarm",
             Effect::Burden => "burden",
             Effect::Travel => "travel",

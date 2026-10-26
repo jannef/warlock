@@ -56,6 +56,7 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::Search => "finding hidden things when you search",
         Effect::SearchReach => "searching farther around you",
         Effect::Spot => "noticing hidden things in passing",
+        Effect::Study => "studying spells from scrolls",
         Effect::Disarm => "disarming traps",
         Effect::Burden => "less slowdown from your load",
         Effect::Travel => "quicker journeys on the overworld",
@@ -83,6 +84,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::Search => "searching",
             Effect::SearchReach => "search reaches",
             Effect::Spot => "noticing",
+            Effect::Study => "study check",
             Effect::Disarm => "disarming traps",
             Effect::Burden => "Burdened / Strained",
             Effect::Travel => "journeys",
@@ -105,6 +107,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 Effect::Dodge
                 | Effect::Search
                 | Effect::Spot
+                | Effect::Study
                 | Effect::Steal
                 | Effect::Disarm
                 | Effect::Pick => format!("+{n}"),
