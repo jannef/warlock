@@ -26,7 +26,7 @@ temperature = 6
 danger = 4
 population = [
     "corpse_candle", "giant_leech", "giant_frog", "drowned", "crocodile", "cultist",
-    "poltergeist", "will_o_wisp", "ghast", "ghost", "shadow", "mud_golem", "cult_priest",
+    "lesser_water_elemental", "poltergeist", "will_o_wisp", "ghast", "ghost", "shadow", "mud_golem", "cult_priest",
     "marsh_troll", "bog_body", "wraith", "fen_ghoul", "bog_hag",
 ]
 # How many: the default, 35 a thousand walkable cells, 25 to 80 (a cellar floor of about 350

@@ -77,6 +77,7 @@ fn the_floors_start_full_of_the_fen_wave() {
             "drowned",
             "crocodile",
             "cultist",
+            "lesser_water_elemental",
             "poltergeist",
             "will_o_wisp",
             "ghast",

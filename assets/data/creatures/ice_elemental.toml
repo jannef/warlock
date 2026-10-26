@@ -1,0 +1,32 @@
+# The elemental roster (#453): the ice line's middle rung. A walking glacier's shard: its blows
+# chill to the bone, and blades skate off it.
+[[creature]]
+id = "ice_elemental"
+level = 21
+xp = 115
+rarity = "uncommon"
+name = "ice elemental"
+glyph = "E"
+fg = "#60d8e8"
+speed = 850
+faction = "elemental"
+tags = ["elemental", "ice"]
+alignment = "neutral"
+vision = "darkvision"
+sight = 10
+footsteps = 60
+hearing = 10
+weight = 500000
+stats = { strength = 24, dexterity = 13, toughness = 25, intelligence = 2, willpower = 23, presence = 2 }
+base_hp = 84
+natural = { defence = 1, protection = 2, name = "ice" }
+resist = { piercing = 25, cold = 100, fire = -50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "4d6"
+damage_type = "cold"
+to_hit = 2
+name = "fist"
+verb = "freezes"
+on_hit = [{ status = "sluggish", chance = 25, severity = 1 }]

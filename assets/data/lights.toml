@@ -136,6 +136,14 @@ id = "wisp"
 color = [110, 190, 170, 0]
 radius = 3
 
+# The lightning elementals (#453): a cold blue-white light that lights a few cells about them;
+# lightning is never quite still, so it shivers a little.
+[[light]]
+id = "storm"
+color = [150, 170, 360, 0]
+radius = 4
+stability.intensity = { amount = 0.08, speed = 1.2 }
+
 # Darkness chamber: too faint for normal eyes (even in pairs, bounce included: brightness 37 < 40);
 # low-light eyes (12) see it and the floor glowing about two cells around it.
 [[light]]

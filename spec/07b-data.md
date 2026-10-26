@@ -141,7 +141,27 @@ developer notes (CLAUDE.md, `docs/dev/`).
   tongue that holds fast), the gibbering shade 18 (incorporeal, a cold touch that drains
   Intelligence), the bone wyvern 18 (a sting, bone with protection 2), the revenant 19 (very
   tough, a long sword half the time), the fetch 19 (incorporeal, a cold touch that frightens), and
-  the mummy priest 20 (a caster whose touch carries mummy rot, sometimes something worth taking). The duergar types are of the duergar race. For blood (§8 "Blood";
+  the mummy priest 20 (a caster whose touch carries mummy rot, sometimes something worth taking). The elemental roster (#453; faction `elemental`, hostile
+  to the player only; tags `elemental` and the element's word; no corpse, no blood, immune to
+  poison; motes `e` and small, the rest `E`): six ladders from a mote to an eldest with an Old
+  English name. Fire (immune to fire, cold hurts it more, lights its way): the ember mote 2, the
+  lesser fire elemental 9 (Fyrdelf), the cinder elemental 17 (above), the fire elemental 27, the
+  greater 38, the elder 50, and the balefire 64. Earth (slow, stone body with protection, resists
+  piercing and slashing, immune to electricity; blows that stagger, the eldest's also hold; from
+  the earth elemental up incorporeal with a small wall Defence: it moves through stone): the stone
+  mote 1, the lesser earth elemental 6, the earth elemental 13 (Fyrdelf), the greater 24, the
+  elder 40, and the hoarstone 60. Air (very fast, hard to hit, resists piercing and electricity,
+  blows that stagger): the dust devil 3, the lesser air elemental 10, the air elemental 19, the
+  greater 31, the elder 45, and the welkin wind 58. Water (walks on land; resists fire and
+  piercing, electricity hurts it more; blows that leave one Sluggish, from the greater up also
+  hold): the water mote 4, the lesser water elemental 7 (Fennmynster), the water elemental 14,
+  the greater 26, the elder 42, and the brimwolf 55. Ice (slow, a cold blow that leaves one
+  Sluggish, immune to cold, fire hurts it more): the frost mote 5, the lesser ice elemental 11,
+  the ice elemental 21, the greater 33, the elder 48, and the rimethurse 66. Lightning (fast, a
+  shock that staggers, immune to electricity, lit blue): the spark mote 8, the lesser lightning
+  elemental 15, the lightning elemental 23, the greater 36, the elder 52, and the thunderhead 70.
+  The greater, elder, and eldest rungs are of size medium with great weights (no larger size yet)
+  and drop loot now and then. The duergar types are of the duergar race. For blood (§8 "Blood";
   presentation only):
   `blood`, the colour of its stains (`"#rrggbb"`; default dark red, `#6e0e0c`) or `"none"` for a
   bloodless creature; the cave beetle bleeds greenish-black ichor (`#38461a`). For hunger (§8

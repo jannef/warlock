@@ -199,3 +199,23 @@ vampire spawn, hand of glory, gallows dead, gibbering shade, bone wyvern, revena
 mummy priest ship in no population (deep undead wait for deep places, #383), and the ghost is
 incorporeal (wall Defence 2). The roster's holds (`held`, #431) are `{ status = "held", chance,
 difficulty }`: the ghast's and fen ghoul's claws 10 % at 15, the gallows dead's tongue 20 % at 17.
+The elemental roster (#453): six elements (fire, earth, air, water, ice, lightning), each a ladder
+of six rungs (a mote, lesser, the plain name, greater, elder, and an eldest with an Old English
+name: balefire, hoarstone, welkin wind, brimwolf, rimethurse, thunderhead) from level 1 to 70,
+one file each in `assets/data/creatures/`, on the README's conventions (the undead roster's
+formulas, a role by element). Faction `elemental` (hostile to the player only); tags `elemental`
+and the element's word. The existing cinder elemental (L17) is the fire line's middle-low rung,
+unchanged but for its tags, in the delf's `fire` faction. `content/elemental_roster_tests.rs`
+holds every `elemental`-tagged type to the XP guideline and to ±35 % of the max HP and dice
+formulas for its role (`ELEMENTS`: the element's role, motes `Small`), checks one element tag,
+poison and the element's own immunity, no corpse, and that each element has at least six rungs
+from level 10 or lower to 50 or higher. Riders are existing statuses only: `staggered` (earth,
+air, lightning), `sluggish` (water, ice), `held` (elder and eldest earth, greater water and up).
+Earth from the earth elemental up is incorporeal (`wall_defence = 1 + level / 20`). Fire carries
+`ember_full`, `lava`, or `brazier`; lightning the `storm` light (`data/lights.toml`, added for
+it; the spark mote only a glow). Test content that lists its own factions (`world/{equip,magic,
+object,read}_tests.rs`) adds `elemental`, and `world/mana_tests.rs`'s own STATUS keeps
+`staggered` and `sluggish` for the elementals' riders. Population
+lines: Fyrdelf the lesser fire elemental and the earth elemental, Fennmynster the lesser water
+elemental; the rest ship in none. Deferred (#453 "Follow-ups"): large size, water-bound
+behaviour, knockback, whirlwind, engulf, burning, breath, elements at war, gem drops.

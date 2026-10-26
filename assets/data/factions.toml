@@ -67,6 +67,14 @@ id = "fire"
 name = "fire things"
 hostile = ["player"]
 
+# The elementals (#453): fire, earth, air, water, ice, and lightning given shape, from motes to
+# the eldest. They are hostile to the player and leave everyone else alone, as the delf's fire
+# things do (the cinder elemental, an elemental too, is of that faction).
+[[faction]]
+id = "elemental"
+name = "elementals"
+hostile = ["player"]
+
 # Folk who mean the player no harm, whatever they are: the showcase's people (the gardener, the
 # bard, the hermit) by type, and others placed here by levels with `faction = "peaceful"` in a
 # legend entry (the showcase hub and caverns), overriding the faction of the creature's type.

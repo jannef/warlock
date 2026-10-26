@@ -50,6 +50,8 @@
 #            creature of the "undead" faction: content::tag's test fails without it), vermin
 #            (not the basilisk), marsh-thing (the fens' living things and the bog hag),
 #            duergar (not their trader, a merchant), fire-thing (the delf's burning things)
+#            elemental (every elemental, #453, with its element's word: fire, earth, air, water,
+#            ice, or lightning; content::elemental_roster_tests checks them)
 #   roles    archer (shoots: the goblin, kobold, and skeleton archers), caster (every
 #            combat = "caster" type), cultist (the minster's cult), skeleton (walking bones),
 #            spirit (the incorporeal dead), troll (the troll and the marsh troll)
@@ -165,3 +167,12 @@
 # dead, Z greater, G spirits, W wights and wraiths, M mummies, C hounds, V vampires, D drakes, T
 # the rotting troll; a colour distinct from every other type with the same glyph. Only a type in
 # a population strays (#375): deep undead ship in none until a deep place takes them.
+#
+# The elementals (the roster, #453; content::elemental_roster_tests checks the numbers): faction
+# "elemental" (the cinder elemental keeps the delf's "fire"), tags ["elemental", ELEMENT],
+# alignment "neutral", resist poison 100, no corpse and no blood. The numbers are the undead
+# roster's formulas (xp, stats, base_hp, dice, to_hit, natural Defence from L20), with the role by
+# element (fire and water standard, earth and ice brute, air and lightning quick; motes small, `e`,
+# size "small"). Each element is immune to its own damage type where it has one and hurt more by
+# its opposite (fire and ice; water by electricity). Earth from the middle rung up is
+# incorporeal with wall_defence 1 + level ÷ 20 (it moves through stone). Glyph `E` but motes `e`.

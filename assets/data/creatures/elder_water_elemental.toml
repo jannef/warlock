@@ -1,0 +1,36 @@
+# The elemental roster (#453): the water line's elder rung. An old water, from the springs under
+# the world: heavy as a river in spate.
+[[creature]]
+id = "elder_water_elemental"
+level = 42
+xp = 220
+rarity = "very_rare"
+loot = 10
+name = "elder water elemental"
+glyph = "E"
+fg = "#4a4af0"
+speed = 1100
+faction = "elemental"
+tags = ["elemental", "water"]
+alignment = "neutral"
+vision = "darkvision"
+sight = 10
+footsteps = 30
+hearing = 10
+weight = 2500000
+stats = { strength = 28, dexterity = 21, toughness = 29, intelligence = 27, willpower = 31, presence = 27 }
+base_hp = 105
+natural = { defence = 3, protection = 0, name = "flowing body" }
+resist = { fire = 50, piercing = 50, electricity = -50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "4d8"
+damage_type = "bludgeoning"
+to_hit = 4
+name = "wave"
+verb = "slams"
+on_hit = [
+    { status = "sluggish", chance = 20, severity = 1 },
+    { status = "held", chance = 10, difficulty = 20 },
+]

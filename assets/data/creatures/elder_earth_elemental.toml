@@ -1,0 +1,37 @@
+# The elemental roster (#453): the earth line's elder rung. Old stone that remembers being a
+# mountain: it grips what it strikes and holds it fast.
+[[creature]]
+id = "elder_earth_elemental"
+level = 40
+xp = 210
+rarity = "very_rare"
+loot = 10
+name = "elder earth elemental"
+glyph = "E"
+fg = "#bca888"
+speed = 800
+faction = "elemental"
+tags = ["elemental", "earth"]
+alignment = "neutral"
+vision = "darkvision"
+sight = 10
+footsteps = 140
+hearing = 10
+weight = 3000000
+stats = { strength = 32, dexterity = 18, toughness = 33, intelligence = 26, willpower = 30, presence = 26 }
+base_hp = 160
+natural = { defence = 3, protection = 7, name = "stone body" }
+incorporeal = { wall_defence = 3 }
+resist = { slashing = 25, piercing = 50, electricity = 100, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "3d12"
+damage_type = "bludgeoning"
+to_hit = 4
+name = "fist"
+verb = "pounds"
+on_hit = [
+    { status = "staggered", chance = 15, severity = 1 },
+    { status = "held", chance = 10, difficulty = 20 },
+]

@@ -96,7 +96,8 @@ minster**, the one after she has her chalice back. The fen seeps into its rooms:
 room in four is out of the ordinary (most floors have one or two), flooded ankle-deep (slow and
 loud to wade), hushed, or shadowed. Its traps are pits, frost, alarms, and teleports, and the
 monks hid their stores well: more of its doors are secret than in the other dungeons. The
-marsh's leeches, frogs, crocodiles, wisps, mud golems, and trolls live here among the minster's
+marsh's leeches, frogs, crocodiles, wisps, mud golems, and trolls, and the lesser water
+elementals the rain and the fen water make, live here among the minster's
 drowned dead, its peat-dark bog bodies, and its ghasts and fen ghouls, whose claws hold fast,
 and the restless spirits that pass through its walls: corpse candles, poltergeists, ghosts, the
 shadows that drink your strength, and the wraiths that drink your life. With
@@ -118,7 +119,8 @@ below are the deep workings, wide caves that grow hotter toward the volcano's he
 then 20 °C, and 24 °C at the bottom). Its traps are arrows, spears, fireballs, lightning, and
 alarms, few of its doors are hidden, and its locks are the hardest to pick of the three
 dungeons. The duergar dig here, miners, warriors, and smiths, among ember beetles, salamanders,
-magma crawlers, cinder elementals, ash wraiths, basilisks, ogres, and trolls, and the dead the
+magma crawlers, lesser fire elementals, cinder elementals, earth elementals that move through
+the rock, ash wraiths, basilisks, ogres, and trolls, and the dead the
 delf's fires left: ogre zombies and grave hounds, burning skulls, the charred dead, duergar
 skeletons still in their helms, rotting trolls, and the spirits of the miners, knockers and
 spectres, that pass through the rock, with kobolds,

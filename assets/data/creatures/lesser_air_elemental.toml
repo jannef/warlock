@@ -1,0 +1,31 @@
+# The elemental roster (#453): the air line's lesser rung. A gust that keeps its shape: very
+# fast, hard to hit, and its blows buffet a man off balance.
+[[creature]]
+id = "lesser_air_elemental"
+level = 10
+xp = 60
+rarity = "common"
+name = "lesser air elemental"
+glyph = "E"
+fg = "#b8d0e0"
+speed = 1500
+faction = "elemental"
+tags = ["elemental", "air"]
+alignment = "neutral"
+vision = "darkvision"
+sight = 10
+footsteps = 50
+hearing = 10
+weight = 20000
+stats = { strength = 15, dexterity = 18, toughness = 15, intelligence = 2, willpower = 20, presence = 2 }
+base_hp = 23
+natural = { defence = 3, protection = 0, name = "rushing wind" }
+resist = { piercing = 50, electricity = 50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "2d6"
+damage_type = "bludgeoning"
+name = "buffet"
+verb = "buffets"
+on_hit = [{ status = "staggered", chance = 20, severity = 1 }]

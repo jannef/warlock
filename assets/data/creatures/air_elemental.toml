@@ -1,0 +1,31 @@
+# The elemental roster (#453): the air line's middle rung. A howling wind in the shape of a man:
+# it is on you before you see it, and arrows blow aside from it.
+[[creature]]
+id = "air_elemental"
+level = 19
+xp = 105
+rarity = "uncommon"
+name = "air elemental"
+glyph = "E"
+fg = "#c8e0f0"
+speed = 1600
+faction = "elemental"
+tags = ["elemental", "air"]
+alignment = "neutral"
+vision = "darkvision"
+sight = 10
+footsteps = 50
+hearing = 10
+weight = 50000
+stats = { strength = 19, dexterity = 20, toughness = 19, intelligence = 2, willpower = 23, presence = 2 }
+base_hp = 43
+natural = { defence = 3, protection = 0, name = "rushing wind" }
+resist = { piercing = 50, electricity = 50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "3d8"
+damage_type = "bludgeoning"
+name = "buffet"
+verb = "buffets"
+on_hit = [{ status = "staggered", chance = 20, severity = 1 }]

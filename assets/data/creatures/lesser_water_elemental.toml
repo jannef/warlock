@@ -1,0 +1,30 @@
+# The elemental roster (#453): the water line's lesser rung. Rain and fen water gathered into a
+# walking shape: its blows soak through and weigh a man down, fire hisses on it, and lightning
+# runs right through it.
+[[creature]]
+id = "lesser_water_elemental"
+level = 7
+xp = 45
+rarity = "common"
+name = "lesser water elemental"
+glyph = "E"
+fg = "#3a7ac8"
+faction = "elemental"
+tags = ["elemental", "water"]
+alignment = "neutral"
+vision = "darkvision"
+sight = 10
+footsteps = 30
+hearing = 10
+weight = 150000
+stats = { strength = 14, dexterity = 12, toughness = 15, intelligence = 2, willpower = 18, presence = 2 }
+base_hp = 18
+resist = { fire = 50, piercing = 50, electricity = -50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "1d10"
+damage_type = "bludgeoning"
+name = "wave"
+verb = "slams"
+on_hit = [{ status = "sluggish", chance = 20, severity = 1 }]

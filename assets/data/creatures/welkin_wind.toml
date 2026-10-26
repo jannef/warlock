@@ -1,0 +1,33 @@
+# The elemental roster (#453): the air line's eldest rung. The eldest of the winds (Old English
+# wolcen, the sky): the sky's own breath come down to the earth.
+[[creature]]
+id = "welkin_wind"
+level = 58
+xp = 300
+rarity = "very_rare"
+loot = 20
+name = "welkin wind"
+glyph = "E"
+fg = "#ffffff"
+speed = 2000
+faction = "elemental"
+tags = ["elemental", "air"]
+alignment = "neutral"
+vision = "darkvision"
+sight = 12
+footsteps = 50
+hearing = 10
+weight = 400000
+stats = { strength = 34, dexterity = 30, toughness = 34, intelligence = 33, willpower = 36, presence = 33 }
+base_hp = 131
+natural = { defence = 7, protection = 0, name = "rushing wind" }
+resist = { piercing = 50, electricity = 50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "4d10"
+damage_type = "bludgeoning"
+to_hit = 5
+name = "buffet"
+verb = "buffets"
+on_hit = [{ status = "staggered", chance = 20, severity = 1 }]

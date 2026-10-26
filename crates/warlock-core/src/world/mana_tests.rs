@@ -80,6 +80,21 @@ stacking = "highest"
 eases = 6
 blocks = ["step"]
 hold = { check = "strength", difficulty = 13, turns = "3d4" }
+
+# Named by the elementals' on_hit (#453): kept as the built-in ones are, untouched by mana.
+[[status]]
+id = "staggered"
+name = "Staggered"
+max = 1
+eases = 6
+cost = 150
+
+[[status]]
+id = "sluggish"
+name = "Sluggish"
+max = 1
+eases = 60
+cost = 150
 "##;
 
 // A fog of the mind: it shows after a day and slows mana to a tenth; a progression (every
