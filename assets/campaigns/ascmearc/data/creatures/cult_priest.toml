@@ -36,4 +36,7 @@ keep = "wield"
 magic = 20
 [[creature.gear]]
 chance = 40
-one_of = ["scroll_of_light", "scroll_of_identify", "scroll_of_frost", "scroll_of_fireball", "scroll_of_lightning"]
+one_of = [
+    "scroll_of_light", "scroll_of_identify", "scroll_of_frost", "scroll_of_fireball",
+    "scroll_of_lightning", "scroll_of_cause_wounds", "scroll_of_hex_of_weakness",
+]

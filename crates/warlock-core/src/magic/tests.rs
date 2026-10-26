@@ -470,3 +470,25 @@ fn descriptions_say_base_stats_and_known_affixes_in_words() {
     assert_eq!(arrows[0], "12 arrows · iron head, wood shaft · 360 g");
     assert!(arrows.contains(&"Ammunition, quivered; shot from bows".to_string()));
 }
+
+#[test]
+fn spell_scrolls_drop_by_tier() {
+    let c = content();
+    // The tier of the spell a stack's scroll teaches, if it is one.
+    let tier = |s: &Stack| {
+        let reading = c.object(s.object).read.as_ref()?;
+        Some(c.spell(reading.teaches()?).tier)
+    };
+    // Shallow: no tier-3 scroll (item level 6) yet, but cantrips.
+    let shallow: Vec<u8> = (roll_many(&c, 4000, 3, LootGrade::Any).iter())
+        .filter_map(tier)
+        .collect();
+    assert!(shallow.contains(&0) && !shallow.contains(&3), "{shallow:?}");
+    // Deep: every tier, the low ones commoner.
+    let deep: Vec<u8> = (roll_many(&c, 8000, 8, LootGrade::Any).iter())
+        .filter_map(tier)
+        .collect();
+    let of = |t: u8| deep.iter().filter(|&&d| d == t).count();
+    assert!(of(3) > 0, "{deep:?}");
+    assert!(of(0) > of(3) && of(1) > of(3), "{deep:?}");
+}

@@ -5,4 +5,4 @@ tree = "class"
 granted = true
 description = "A prayer that closes wounds (a spell, paid in mana): hit points back, more as you grow; it takes a while to say."
 effects = [{ kind = "spell", spell = "cure_wounds" }]
-systems = ["mana", "hit_points"]
+systems = ["spells", "mana", "hit_points"]

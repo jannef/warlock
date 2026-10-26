@@ -1,0 +1,12 @@
+# Mend (spec §8 "Spells", the first spell list): the priest's and the bard's cantrip, a touch that
+# closes a scratch.
+[[spell]]
+id = "mend"
+name = "Mend"
+description = "A touch that closes a scratch: a few hit points back, yours or another's beside you."
+tier = 0
+school = "restoration"
+kind = "heal"
+shape = "touch"
+resolution = "touch"
+effect = { heal = { dice = "1d3" } }

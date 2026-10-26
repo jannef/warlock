@@ -2,11 +2,11 @@
 //! armour and Willpower's reach, and the draws a cast makes. Spells the casters do not have are
 //! tried as the wizard's Arcane bolt, its file replaced (the ability's id is the spell's).
 
-use super::caster_tests::{kobold, kobold_at, last, reach, run, world_with};
+use super::caster_tests::{kobold, kobold_at, last, reach, run, sp, world_with};
 use super::*;
 use crate::action::Event;
 use crate::combat::Strike;
-use crate::content::{ClassSpell, ContentFiles};
+use crate::content::ContentFiles;
 use crate::stats::{PerStat, Stat, Stats};
 
 /// The built-in content with the wizard's Arcane bolt (tier 2) as `body` says: its shape,
@@ -45,7 +45,7 @@ fn cast_at(
     kobold.hp = 10_000;
     *w.perception = crate::perception::Perception::compute(&w.state, &w.content, &mut w.lights);
     let at = Pos::new(here.x + dx, here.y + dy);
-    let out = w.apply(&Action::Cast(ClassSpell::ArcaneBolt, Some(at)));
+    let out = w.apply(&Action::Cast("arcane_bolt".into(), Some(at)));
     let strikes = (out.events.iter())
         .filter_map(|e| match e {
             Event::Attacked {
@@ -184,7 +184,7 @@ fn a_line_strikes_everyone_on_it_and_a_bolt_the_first() {
         let near = kobold(&mut w, 2, 100);
         let far = kobold(&mut w, 4, 100);
         w.apply(&Action::Cast(
-            ClassSpell::ArcaneBolt,
+            "arcane_bolt".into(),
             Some(Pos::new(w.player_pos().x + 4, w.player_pos().y)),
         ));
         assert!(w.state.actors[&near].hp < 100, "{body}");
@@ -204,7 +204,7 @@ fn a_cone_fans_out_toward_its_aim() {
     let here = w.player_pos();
     let mana = w.state.player().mana;
     let out = w.apply(&Action::Cast(
-        ClassSpell::ArcaneBolt,
+        "arcane_bolt".into(),
         Some(Pos::new(here.x + 3, here.y)),
     ));
     assert!(w.state.actors[&ahead].hp < 100, "in the cone");
@@ -250,9 +250,7 @@ fn armour_makes_spells_dearer() {
     let mut w = world_with(Arc::new(Content::builtin().expect("content")), "wizard");
     reach(&mut w, 18);
     let content = w.content().clone();
-    let bolt = content
-        .class_spell(ClassSpell::ArcaneBolt)
-        .expect("the bolt");
+    let bolt = content.class_spell(sp("arcane_bolt")).expect("the bolt");
     let level = w.caster_level(w.state.player);
     assert_eq!(w.state.player().spell_cost(&content, bolt, level), 11);
     let plate = content.object_id("plate_armour").expect("plate");
@@ -263,10 +261,7 @@ fn armour_makes_spells_dearer() {
     assert_eq!(w.state.player().armour_spell_cost(&content), 40);
     // 6 × 1.8 × 1.4 = 15.12.
     assert_eq!(w.state.player().spell_cost(&content, bolt, level), 15);
-    assert_eq!(
-        w.perception().own_spell_cost(ClassSpell::ArcaneBolt),
-        Some(15)
-    );
+    assert_eq!(w.perception().own_spell_cost(sp("arcane_bolt")), Some(15));
 }
 
 #[test]
@@ -279,7 +274,7 @@ fn willpower_reaches_farther_up_to_the_spells_cap() {
         scores[Stat::Willpower] = score;
         w.player_mut().stats = Stats::new(scores, PerStat::splat(40));
         w.perception()
-            .own_spell_reach(ClassSpell::ArcaneBolt)
+            .own_spell_reach(sp("arcane_bolt"))
             .and_then(|r| r.range)
     };
     assert_eq!(
@@ -291,9 +286,10 @@ fn willpower_reaches_farther_up_to_the_spells_cap() {
 #[test]
 fn a_spell_without_a_roll_draws_nothing() {
     let mut w = world_with(Arc::new(Content::builtin().expect("content")), "priest");
+    reach(&mut w, 3);
     let rng = w.state.rng.clone();
     let mut events = Vec::new();
-    let spent = w.cast_spell(ClassSpell::Blessing, None, &mut events);
+    let spent = w.cast_spell("blessing", None, &mut events);
     assert!(matches!(spent, Spent::Turn(_)));
     assert!(w.state.player().effects.iter().next().is_some(), "blessed");
     assert_eq!(w.state.rng, rng, "the cast itself drew nothing");

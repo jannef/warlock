@@ -3,7 +3,7 @@
 id = "call_lightning"
 name = "Call lightning"
 description = "Call the sky's fire down: under the open sky, lightning through everyone on its line toward a place you aim at."
-tier = 4
+tier = 3
 school = "evocation"
 kind = "damage"
 shape = "line"
@@ -12,7 +12,7 @@ damage_type = "electricity"
 length = 8
 max_length = 10
 open_sky = true
-damage = { dice = "4d6" }
+damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
 
 [spell.cast]
 effect = "lightning_bolt"

@@ -240,6 +240,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("spell-resolutions.md", spells::resolutions),
         ("spell-casting.md", spells::casting),
         ("spell-list.md", spells::list),
+        ("class-spells.md", spells::class_spells),
         ("spell-armour.md", spells::armour),
         ("study-chances.md", learning::chances),
         ("study-times.md", learning::times),
@@ -454,7 +455,7 @@ mod tests {
         );
         assert!(
             scrolls.contains(
-                "| 3d6 fire | 10 cells | Explosion, very loud (150) | item level 3, frequency 50 | 150 gold |"
+                "| 3d6 fire | 10 cells | Explosion, very loud (150) | item level 6, frequency 20 | 150 gold |"
             ),
             "{scrolls}"
         );

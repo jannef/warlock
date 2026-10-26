@@ -37,8 +37,8 @@ use crate::action::{Event, Positions};
 use crate::character::Character;
 use crate::check;
 use crate::content::{
-    ActionKind, Band, Cast, ClassSpell, Content, CreatureSpawn, Drain, Mishap, MishapEffect,
-    ObjectId, Reading, StudyRules,
+    ActionKind, Band, Cast, Content, CreatureSpawn, Drain, Mishap, MishapEffect, ObjectId, Reading,
+    SpellId, StudyRules,
 };
 use crate::geom::Dir;
 use crate::skills::{Effect, Use};
@@ -51,7 +51,7 @@ use std::cell::Cell;
 pub(super) struct Lesson {
     pub(super) item: usize,
     pub(super) object: ObjectId,
-    pub(super) spell: ClassSpell,
+    pub(super) spell: SpellId,
     pub(super) turns: u32,
 }
 
@@ -77,14 +77,14 @@ impl Odds {
 
 impl Actor {
     /// Whether it knows `spell` (spec §8 "Spells"): learned, or its class abilities give it.
-    pub fn knows_spell(&self, content: &Content, spell: ClassSpell) -> bool {
+    pub fn knows_spell(&self, content: &Content, spell: SpellId) -> bool {
         self.spells.contains(&spell) || self.talent_mods(content).has_spell(spell)
     }
 
-    /// The spells it knows that the content has, in menu order.
-    pub fn known_spells(&self, content: &Content) -> Vec<ClassSpell> {
-        (ClassSpell::ALL.iter().copied())
-            .filter(|&s| content.spell_of(s).is_some() && self.knows_spell(content, s))
+    /// The spells it knows that the content has, in menu order (by tier, then path order).
+    pub fn known_spells(&self, content: &Content) -> Vec<SpellId> {
+        (content.spells_by_tier().into_iter())
+            .filter(|&s| self.knows_spell(content, s))
             .collect()
     }
 
@@ -100,7 +100,7 @@ impl Actor {
 
 /// The class's affinity with the school of `spell` (spec §8 "Spells"): study check points; 0
 /// without a class.
-fn affinity(content: &Content, character: Option<&Character>, spell: ClassSpell) -> i32 {
+fn affinity(content: &Content, character: Option<&Character>, spell: SpellId) -> i32 {
     let Some(def) = content.spell_of(spell) else {
         return 0;
     };
@@ -116,7 +116,7 @@ pub fn study_odds(
     content: &Content,
     character: Option<&Character>,
     caster_level: i32,
-    spell: ClassSpell,
+    spell: SpellId,
 ) -> Option<Odds> {
     let (study, rules, def) = (
         content.study_rules()?,
@@ -150,7 +150,7 @@ pub fn study_turns(rules: &StudyRules, tier: u8, percent: i32) -> u32 {
 
 impl World {
     /// The odds of the player studying `spell` now.
-    pub(crate) fn player_study_odds(&self, spell: ClassSpell) -> Option<Odds> {
+    pub(crate) fn player_study_odds(&self, spell: SpellId) -> Option<Odds> {
         let level = self.caster_level(self.state.player);
         let character = self.state.character.as_ref();
         study_odds(self.state.player(), &self.content, character, level, spell)
@@ -166,10 +166,7 @@ impl World {
         };
         let object = stack.object;
         let what = self.lore().describe(&stack.single());
-        let teaches = match &content.object(object).read {
-            Some(Reading::Spell(spell)) => spell.teaches,
-            _ => None,
-        };
+        let teaches = (content.object(object).read.as_ref()).and_then(Reading::teaches);
         let Some(spell) = teaches.filter(|&s| content.spell_of(s).is_some()) else {
             if self.lore().label(object).is_some() {
                 self.say("You do not know what this says.");
@@ -268,7 +265,7 @@ impl World {
     }
 
     /// The player learns `spell` for good.
-    fn learn_spell(&mut self, spell: ClassSpell) {
+    fn learn_spell(&mut self, spell: SpellId) {
         let name = (self.content.spell_of(spell)).map_or_else(String::new, |d| d.name.clone());
         self.player_mut().spells.insert(spell);
         self.say(format!(
@@ -363,8 +360,10 @@ impl World {
     fn backfire(&mut self, lesson: Lesson, events: &mut Vec<Event>) {
         let content = self.content.clone();
         let object = lesson.object;
-        let Some(Reading::Spell(spell)) = &content.object(object).read else {
-            return;
+        let spell = match &content.object(object).read {
+            Some(Reading::Spell(spell)) => spell,
+            Some(Reading::Cast(scroll)) => return self.backfire_spell(*scroll, object, events),
+            _ => return,
         };
         let cap = (content.spell_rules())
             .zip(content.spell_of(lesson.spell))
@@ -390,6 +389,44 @@ impl World {
             }
         }
         self.say_spell((&spell.noun, &spell.verb), made, events);
+        if let Some(death) = &mut self.state.death {
+            death.by = None;
+            death.cause = Some(Cause::Scroll(object));
+        }
+    }
+
+    /// A scroll of a spell of `data/spells/` backfires: a damage spell goes off as a burst
+    /// around the reader (its own radius, else 1) at the scroll's caster level, held to its
+    /// cap; a spell of any other kind only fizzles (the mishap's message is all).
+    fn backfire_spell(
+        &mut self,
+        scroll: crate::content::SpellScroll,
+        object: ObjectId,
+        events: &mut Vec<Event>,
+    ) {
+        let content = self.content.clone();
+        let (def, Some(rules)) = (content.spell(scroll.spell), content.spell_rules()) else {
+            return;
+        };
+        let Some(damage) = def.damage else {
+            return;
+        };
+        let comfortable = rules.comfortable[usize::from(def.tier)];
+        let burst = crate::content::Burst {
+            spell: def.look.effect.clone().unwrap_or_default(),
+            radius: def.radius.map_or(1, i32::from),
+            damage: damage.at(i32::from(scroll.level), comfortable),
+            kind: def.damage_type,
+            blast: 0,
+            ice: None,
+            cap: Some(rules.cap_of(def)),
+        };
+        let player = self.state.player;
+        let here = self.player_pos();
+        let mut made = Vec::new();
+        self.sound_at(def.look.noise, here);
+        self.cast_burst(Caster::Actor(player), (here, here), &burst, &mut made);
+        self.say_spell((&def.look.noun, &def.look.verb), made, events);
         if let Some(death) = &mut self.state.death {
             death.by = None;
             death.cause = Some(Cause::Scroll(object));

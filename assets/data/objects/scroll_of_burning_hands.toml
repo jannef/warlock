@@ -1,0 +1,20 @@
+# A scroll of burning hands (spec §8 "Scrolls", "Spells"): read it (`r`), and it casts Burning hands, a
+# tier-1 spell, at its own caster level, free of mana; study it (`L`), and you may learn the spell for
+# good. Level and frequency by its tier: the lower the tier, the commoner the scroll.
+[[object]]
+id = "scroll_of_burning_hands"
+name = "scroll of burning hands"
+plural = "scrolls of burning hands"
+glyph = "?"
+fg = "#ff8a4a"
+class = "scrolls"
+materials = ["paper"]
+weight = 50
+value = 80
+stackable = true
+level = 2
+frequency = 45
+
+[object.read]
+kind = "spell"
+spell = "burning_hands"

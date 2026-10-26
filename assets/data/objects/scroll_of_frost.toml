@@ -12,7 +12,8 @@ materials = ["paper"]
 weight = 50
 value = 100
 stackable = true
-frequency = 60
+level = 4
+frequency = 30
 
 [object.read]
 kind = "burst"

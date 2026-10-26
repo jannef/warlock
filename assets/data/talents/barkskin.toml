@@ -1,0 +1,8 @@
+[[talent]]
+id = "barkskin"
+name = "Barkskin"
+tree = "class"
+granted = true
+description = "Your skin hardens like bark a while (a spell, paid in mana): blows land on you less often."
+effects = [{ kind = "spell", spell = "barkskin" }]
+systems = ["spells", "mana", "defence"]

@@ -166,6 +166,24 @@ fn files(scenario: &str, extra: &[(&str, &str)]) -> ContentFiles {
     files.remove("data/talents.toml");
     // And the spells (Blessing's Blessed, the hexes').
     files.remove("data/spells/");
+    // And so the scrolls of them, and the cult priest's among them.
+    let scrolls: Vec<String> = (files.table("objects"))
+        .filter(|(_, text)| text.contains("kind = \"spell\""))
+        .map(|(path, _)| path.to_string())
+        .collect();
+    for path in scrolls {
+        files.remove(&path);
+    }
+    let priest = "campaigns/ascmearc/data/creatures/cult_priest.toml";
+    let text =
+        include_str!("../../../../assets/campaigns/ascmearc/data/creatures/cult_priest.toml");
+    files.insert(
+        priest,
+        &text.replace(
+            " \"scroll_of_cause_wounds\", \"scroll_of_hex_of_weakness\",",
+            "",
+        ),
+    );
     // And the mishaps of a failed study (Sluggish, Hexed, Blessed).
     files.remove("data/mishaps/");
     // So does the rage (its Raging).

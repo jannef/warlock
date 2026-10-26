@@ -21,8 +21,17 @@ pub(super) fn abilities(content: &Content) -> String {
             Ability::Sign(active) => sign_holders(content, active),
             Ability::Class(active) => class_holders(content, active),
             Ability::Spell(spell) => {
-                let who = table_holders(content, |e| *e == TalentEffect::Spell { spell });
-                let spell = content.class_spell(spell).zip(content.spell_rules());
+                let id = content.spell_of(spell).map_or("", |s| s.id.as_str());
+                let who = table_holders(
+                    content,
+                    |e| matches!(e, TalentEffect::Spell { spell } if spell == id),
+                );
+                let who = if who.is_empty() {
+                    "whoever learns it from a scroll".to_string()
+                } else {
+                    format!("{who}, or whoever learns it from a scroll")
+                };
+                let spell = content.spell_of(spell).zip(content.spell_rules());
                 let (tier, cost) = spell.map_or((0, 0), |(s, r)| {
                     let at = i32::from(r.comfortable[usize::from(s.tier)]);
                     (s.tier, r.mana(s, at, 0))
@@ -44,7 +53,7 @@ pub(super) fn abilities(content: &Content) -> String {
         let (asks, takes) = match a.cost() {
             Some(kind) => {
                 let cost = content.action_costs().cost(kind);
-                (aim(a.aim()), at_normal_pace(price(cost, BASE_TURN)))
+                (aim(a.aim(content)), at_normal_pace(price(cost, BASE_TURN)))
             }
             None => ("—", "not usable yet".to_string()),
         };

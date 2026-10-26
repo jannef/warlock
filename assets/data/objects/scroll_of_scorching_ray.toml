@@ -1,0 +1,20 @@
+# A scroll of scorching ray (spec §8 "Scrolls", "Spells"): read it (`r`), and it casts Scorching ray, a
+# tier-2 spell, at its own caster level, free of mana; study it (`L`), and you may learn the spell for
+# good. Level and frequency by its tier: the lower the tier, the commoner the scroll.
+[[object]]
+id = "scroll_of_scorching_ray"
+name = "scroll of scorching ray"
+plural = "scrolls of scorching ray"
+glyph = "?"
+fg = "#ff8a4a"
+class = "scrolls"
+materials = ["paper"]
+weight = 50
+value = 130
+stackable = true
+level = 4
+frequency = 30
+
+[object.read]
+kind = "spell"
+spell = "scorching_ray"

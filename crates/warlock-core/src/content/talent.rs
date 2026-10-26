@@ -748,7 +748,7 @@ pub enum TalentEffect {
     SpellDamagePercent { value: i32 },
     /// A caster's spell (design §4.1 B2, spec §8 "Spells"): its holder has the spell ability
     /// `spell`, the spell of that id in `data/spells/` (a class ability's; each given once).
-    Spell { spell: super::ClassSpell },
+    Spell { spell: String },
     /// Its spells and spell scrolls roll `dice` dice more and add `per_die` to every die
     /// (Scroll adept, Empower, Archmage).
     SpellPower {
@@ -1655,21 +1655,11 @@ impl TalentEffect {
             // A spell ability names a spell of data/spells/ of its id, aimed as the ability is
             // (content without spells has nothing to check it by).
             TalentEffect::Spell { spell } => {
-                if content.spells().is_empty() {
-                    return Ok(());
+                if content.spells().is_empty() || content.spell_id(spell).is_some() {
+                    Ok(())
+                } else {
+                    Err(format!("`spell`: no spell `{spell}` in data/spells/"))
                 }
-                let def = (content.spell_id(spell.id()))
-                    .map(|id| content.spell(id))
-                    .ok_or_else(|| format!("`spell`: no spell `{}` in data/spells/", spell.id()))?;
-                if def.aimed() != spell.aimed() {
-                    return Err(format!(
-                        "`spell`: `{}` is {} by its ability, but its shape is `{}`",
-                        spell.id(),
-                        if spell.aimed() { "aimed" } else { "not aimed" },
-                        def.shape.id()
-                    ));
-                }
-                Ok(())
             }
             TalentEffect::SpellPower { per_die, dice } => {
                 if !(0..=5).contains(per_die) || *dice > 5 || (*per_die == 0 && *dice == 0) {
@@ -2583,9 +2573,9 @@ pub(super) fn parse<'a>(
         let effects = spec.effects;
         for effect in &effects {
             if let TalentEffect::Spell { spell } = effect
-                && !spell_ids.insert(*spell)
+                && !spell_ids.insert(spell.clone())
             {
-                return Err(err(format!("spell `{}` is given twice", spell.id())));
+                return Err(err(format!("spell `{spell}` is given twice")));
             }
         }
         let mut rank_defs = Vec::new();

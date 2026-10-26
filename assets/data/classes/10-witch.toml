@@ -30,9 +30,10 @@ bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["scholar", "grit"] }
 # The hexes and Blight are spells paid in mana (the placeholders until the spell system).
 abilities = [
     { level = 1, talent = "herb_lore" },
-    { level = 6, talent = "evil_eye" },
+    { level = 1, talent = "evil_eye" },
+    { level = 3, talent = "hex_of_weakness" },
     { level = 12, talent = "poison_lore" },
-    { level = 18, talent = "hex_of_weakness" },
+    { level = 12, talent = "cause_wounds" },
     { level = 25, talent = "second_sight" },
     { level = 32, talent = "curse_of_sloth" },
     { level = 40, talent = "blight" },

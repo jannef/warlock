@@ -41,7 +41,7 @@ use crate::input::{Bindings, KeyCommand};
 use crate::render::console::Console;
 use warlock_core::burden::{Burden, Load};
 use warlock_core::color::Rgb;
-use warlock_core::content::Rarity;
+use warlock_core::content::{Rarity, Reading};
 use warlock_core::equipment;
 use warlock_core::object::{Stack, Weight, format_weight};
 use warlock_core::perception::PerceptionView;
@@ -154,6 +154,9 @@ struct Entry {
     rarity: Rarity,
     /// A scroll read at a cell (a spell): choosing it to read aims it.
     aimed: bool,
+    /// The scroll of identify: choosing it to read asks what to read it on (any other scroll
+    /// not aimed, a spell on oneself, is read at once).
+    identify: bool,
     /// A scroll to study: what it is ("scroll of frost"), the spell it teaches, and the chance
     /// in words, for the dialog.
     study: Option<(String, String, &'static str)>,
@@ -278,6 +281,7 @@ impl ObjectScreen {
                     weight: s.weight(content),
                     rarity: s.rarity(),
                     aimed: reading(s).is_some_and(|r| r.range().is_some()),
+                    identify: matches!(reading(s), Some(Reading::Identify)),
                     study,
                 };
                 (view.item_class(s), entry)
@@ -298,10 +302,15 @@ impl ObjectScreen {
     /// the scroll), or read that scroll on it.
     fn pick(&mut self, item: Item) -> ScreenAction {
         let aimed = self.entries.iter().any(|e| e.item == item && e.aimed);
+        let identify = self.entries.iter().any(|e| e.item == item && e.identify);
         match (self.list, item) {
             (ObjectList::Eat, Item::Floor(i)) => ScreenAction::Act(Action::Eat(Meal::Floor(i))),
             (ObjectList::Eat, Item::Pack(i)) => ScreenAction::Act(Action::Eat(Meal::Pack(i))),
             (ObjectList::Read, item) if aimed => ScreenAction::Aim(AimKind::Read(item.position())),
+            (ObjectList::Read, item) if !identify => ScreenAction::Act(Action::Read {
+                item: item.position(),
+                target: None,
+            }),
             (ObjectList::Read, item) => {
                 self.looked = Some(item.position());
                 ScreenAction::Replace(super::ScreenName::Identify)
@@ -735,6 +744,36 @@ mod tests {
         world.apply(&Action::Move(Dir::E));
         world.apply(&Action::PickUp(Positions::default()));
         world
+    }
+
+    #[test]
+    fn a_scroll_of_a_spell_on_oneself_is_read_at_once_and_an_aimed_one_aimed() {
+        let mut files = warlock_core::content::ContentFiles::builtin();
+        files.insert(
+            "levels/hall.toml",
+            "name = \"Hall\"\nmap = '''\n#####\n#.@.#\n#####\n'''\n[legend]\n\
+             \"@\" = { terrain = \"floor\", spawn = \"player\" }\n",
+        );
+        files.insert(
+            "scenarios/hall.toml",
+            "name = \"Hall\"\nstart_level = \"hall\"\n\
+             carry = [\"scroll_of_haste\", \"scroll_of_magic_missile\"]\n",
+        );
+        let content = Arc::new(Content::load(&files).expect("loads"));
+        let world = World::new(content, "hall", None).expect("world");
+        let b = Bindings::default();
+        let mut screen = ObjectScreen::new(ObjectList::Read, Some(&world.perception()));
+        assert_eq!(
+            screen.handle(&typed('a'), &b),
+            ScreenAction::Act(Action::Read {
+                item: 0,
+                target: None
+            })
+        );
+        assert_eq!(
+            screen.handle(&typed('b'), &b),
+            ScreenAction::Aim(AimKind::Read(1))
+        );
     }
 
     #[test]

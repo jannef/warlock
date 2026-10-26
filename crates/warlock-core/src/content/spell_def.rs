@@ -981,7 +981,16 @@ fn effect(
             if !(1..=MAX_SEVERITY).contains(&severity) {
                 return Err(format!("`severity` is 1 to {MAX_SEVERITY}"));
             }
-            Some((status(name)?, severity))
+            let id = status(name)?;
+            // Only the caster may be hastened (a buff): creatures' steps are never quicker
+            // than their type's (a rest's batching counts on it).
+            if kind != SpellPurpose::Buff && content.status(id).cost < 100 {
+                return Err(format!(
+                    "a `{}` spell's status `{name}` hastens: only a buff's may",
+                    kind.id()
+                ));
+            }
+            Some((id, severity))
         }
         None => None,
     };
@@ -1342,6 +1351,12 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
                 "`max_dice` is 2",
             ),
             ("tier = 3", "tier = 10", "tier is 0 to 9"),
+            // Only a buff on its caster may hasten (creatures never step quicker).
+            (
+                "damage = { dice = \"2d6\" }",
+                "damage = { dice = \"2d6\" }\neffect = { status = \"hasted\" }",
+                "status `hasted` hastens: only a buff's may",
+            ),
             (
                 "damage = { dice = \"2d6\" }",
                 "damage = { dice = \"2d6\" }\neffect = { diseases = true }",
@@ -1451,37 +1466,55 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
     }
 
     #[test]
-    fn the_shipped_spells_are_the_casters_placeholders_within_their_tiers() {
+    fn the_shipped_spells_are_the_first_list_within_their_tiers() {
         let content = Content::builtin().expect("content");
         let r = content.spell_rules().expect("the tier table");
-        // (spell, tier, the placeholder's dice kept, mana at its comfortable level; what it
-        // cost as a placeholder in the comment).
+        // (spell, tier, its dice at the tier's comfortable level, mana there, whether a class
+        // ability gives it; every other is learned from scrolls only).
         let table = [
-            ("blessing", 0, None, 1),               // 2
-            ("cure_wounds", 2, None, 6),            // 4 (1d8 and a point per 2 levels)
-            ("remove_disease", 3, None, 11),        // 10
-            ("call_lightning", 4, Some("4d6"), 29), // 8
-            ("flame", 3, Some("3d6"), 26),          // 10
-            ("frost", 2, Some("2d6"), 14),          // 10
-            ("arcane_bolt", 2, Some("2d6"), 11),    // 3
-            ("fire_burst", 3, Some("3d6"), 26),     // 9
-            ("evil_eye", 1, None, 3),               // 2
-            ("hex_of_weakness", 1, None, 3),        // 3
-            ("curse_of_sloth", 1, None, 3),         // 4
-            ("blight", 2, Some("2d6"), 14),         // 8
+            ("arcane_bolt", 2, Some("2d6"), 11, true),
+            ("barkskin", 1, None, 3, true),
+            ("blessing", 1, None, 3, true),
+            ("blight", 2, Some("2d6"), 14, true),
+            ("burning_hands", 1, Some("1d4"), 5, true),
+            ("call_lightning", 3, Some("2d6"), 20, true),
+            ("cause_wounds", 1, Some("1d6"), 2, true),
+            ("cure_wounds", 1, None, 2, true),
+            ("curse_of_sloth", 1, None, 3, true),
+            ("evil_eye", 0, None, 1, true),
+            ("fireball", 3, Some("2d6"), 26, false),
+            ("flame", 3, Some("3d6"), 26, true),
+            ("frost", 2, Some("2d6"), 14, true),
+            ("haste", 3, None, 11, false),
+            ("hex_of_weakness", 1, None, 3, true),
+            ("lightning_bolt", 3, Some("2d6"), 20, false),
+            ("magic_missile", 1, Some("1d4"), 3, true),
+            ("mend", 0, None, 1, true),
+            ("ray_of_frost", 0, Some("1d6"), 1, true),
+            ("remove_disease", 3, None, 11, true),
+            ("scorching_ray", 2, Some("1d6"), 6, false),
+            ("sleep", 2, None, 11, false),
+            ("spark", 0, Some("1d4"), 1, true),
+            ("web", 2, None, 11, false),
         ];
-        for (id, tier, dice, mana) in table {
-            let spell = content.spell(content.spell_id(id).expect("shipped"));
+        for (id, tier, dice, mana, given) in table {
+            let at = content.spell_id(id).expect("shipped");
+            let spell = content.spell(at);
             assert_eq!(spell.tier, tier, "{id}");
-            let at = r.comfortable[usize::from(tier)];
-            assert_eq!(r.mana(spell, i32::from(at), 0), mana, "{id}");
-            let rolled = spell.damage.map(|d| d.at(i32::from(at), at).to_string());
+            let level = r.comfortable[usize::from(tier)];
+            assert_eq!(r.mana(spell, i32::from(level), 0), mana, "{id}");
+            let rolled = spell
+                .damage
+                .map(|d| d.at(i32::from(level), level).to_string());
             assert_eq!(rolled.as_deref(), dice, "{id}");
             if let Some(d) = spell.damage.or(spell.effect.heal) {
                 assert!(d.max() <= r.cap_of(spell), "{id} under its cap");
             }
-            let ability = crate::content::ClassSpell::from_id(id).expect("an ability");
-            assert_eq!(content.class_spell(ability), Some(spell), "{id} is given");
+            assert_eq!(
+                content.class_spell(at).is_some(),
+                given,
+                "{id} given by a class"
+            );
         }
         assert_eq!(content.spells().len(), table.len());
     }

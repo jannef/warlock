@@ -2,8 +2,8 @@
 
 use crate::combat::Strike;
 use crate::content::{
-    ActionKind, ClassActive, ClassSpell, CombatStance, DamageTypeId, DiseaseId, ObjectId,
-    ResourceId, SignActive, StatusId, TrapId,
+    ActionKind, ClassActive, CombatStance, DamageTypeId, DiseaseId, ObjectId, ResourceId,
+    SignActive, StatusId, TrapId,
 };
 use crate::geom::{Dir, Pos};
 use crate::time::{DAY, Duration};
@@ -162,12 +162,12 @@ pub enum Action {
     /// refused (no time) without the ability, while its cooldown lasts, or without the
     /// direction it asks.
     Use(ClassActive, Option<Dir>),
-    /// Cast a caster's spell (spec §8 "Class abilities"; the abilities menu's Class group, the
-    /// casters' placeholders until the spell system): blessing, cure wounds, remove disease, and,
-    /// aimed at a cell, the hexes and the strikes (`use:blessing`, `use:arcane_bolt:12,5`). Takes
-    /// the time of its `cast`s and its mana; refused (no time) without the spell, without the
-    /// mana, or without the cell it asks.
-    Cast(ClassSpell, Option<Pos>),
+    /// Cast a spell the player knows (spec §8 "Spells"; the abilities menu's Spells group), by
+    /// its id in `data/spells/`: on oneself, or aimed at a cell (`use:blessing`,
+    /// `use:magic_missile:12,5`). Takes the time of its `cast`s and its mana; refused (no time)
+    /// for an unknown spell, without the spell, without the mana, or without the cell it asks.
+    /// Any `use:ID` that is no class or birth sign ability is read as this.
+    Cast(String, Option<Pos>),
     /// Use a class active aimed at a cell (spec §8 "Class abilities"): the ranger's Volley
     /// (`use:volley:12,5`). Takes the time of its cost's action; refused (no time) without the
     /// ability or while its cooldown lasts.
@@ -716,8 +716,8 @@ impl fmt::Display for Action {
             Action::BloodMagic => f.write_str("blood_magic"),
             Action::Use(active, None) => write!(f, "use:{}", active.id()),
             Action::Use(active, Some(d)) => write!(f, "use:{}:{d}", active.id()),
-            Action::Cast(spell, None) => write!(f, "use:{}", spell.id()),
-            Action::Cast(spell, Some(at)) => write!(f, "use:{}:{},{}", spell.id(), at.x, at.y),
+            Action::Cast(spell, None) => write!(f, "use:{spell}"),
+            Action::Cast(spell, Some(at)) => write!(f, "use:{spell}:{},{}", at.x, at.y),
             Action::UseAt(active, at) => write!(f, "use:{}:{},{}", active.id(), at.x, at.y),
             Action::Gift(active, None) => write!(f, "use:{}", active.id()),
             Action::Gift(active, Some(at)) => write!(f, "use:{}:{},{}", active.id(), at.x, at.y),
@@ -812,18 +812,20 @@ impl FromStr for Action {
                     Some((id, aim)) => (id, Some(aim)),
                     None => (arg.unwrap_or_default(), None),
                 };
-                // A caster's spell aims at a cell too, `use:arcane_bolt:12,5`.
-                if let Some(spell) = ClassSpell::from_id(id) {
-                    let at = aim.map(parse_cell).transpose()?;
-                    return Ok(Action::Cast(spell, at));
-                }
                 // A birth sign's gift aims at a cell, `use:transfixing_stare:12,5`.
                 if let Some(gift) = SignActive::from_id(id) {
                     let at = aim.map(parse_cell).transpose()?;
                     return Ok(Action::Gift(gift, at));
                 }
-                let active = ClassActive::from_id(id)
-                    .ok_or_else(|| format!("`{id}` is no class ability that is used"))?;
+                // Anything else that is no class active is a spell (its data's id), which may
+                // aim at a cell too, `use:magic_missile:12,5`; the rules refuse an unknown one.
+                let Some(active) = ClassActive::from_id(id) else {
+                    if id.is_empty() || !id.chars().all(|c| c.is_ascii_lowercase() || c == '_') {
+                        return Err(format!("`{id}` is no ability that is used"));
+                    }
+                    let at = aim.map(parse_cell).transpose()?;
+                    return Ok(Action::Cast(id.to_string(), at));
+                };
                 // A class active that aims at a cell, `use:volley:12,5`.
                 if active.aims_cell() {
                     let at = aim
@@ -1269,8 +1271,8 @@ mod tests {
             Action::Use(ClassActive::Smite, Some(Dir::SW)),
             Action::UseAt(ClassActive::Volley, Pos::new(12, 5)),
             Action::Gift(SignActive::Blaze, None),
-            Action::Cast(ClassSpell::Blessing, None),
-            Action::Cast(ClassSpell::ArcaneBolt, Some(Pos::new(12, 5))),
+            Action::Cast("blessing".into(), None),
+            Action::Cast("arcane_bolt".into(), Some(Pos::new(12, 5))),
             Action::LevelUpAuto,
             Action::GrantXp(2500),
             Action::Freeze {

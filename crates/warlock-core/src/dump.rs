@@ -767,7 +767,7 @@ fn progress_rows(world: &World) -> Vec<String> {
             rows.push(format!(
                 "study {} {}: overreach {}, {check}",
                 position_text(study.item),
-                study.spell.id(),
+                world.content().spell_of(study.spell).map_or("", |d| &d.id),
                 odds.overreach
             ));
         }
@@ -811,7 +811,7 @@ fn spells_json(view: &PerceptionView<'_>) -> (Value, Value) {
         .filter_map(|spell| {
             let def = content.spell_of(spell)?;
             Some(json!({
-                "id": spell.id(),
+                "id": def.id,
                 "tier": def.tier,
                 "cost": view.own_spell_cost(spell),
             }))
@@ -821,7 +821,7 @@ fn spells_json(view: &PerceptionView<'_>) -> (Value, Value) {
         .map(|s| {
             json!({
                 "letter": position_text(s.item),
-                "spell": s.spell.id(),
+                "spell": content.spell_of(s.spell).map(|d| d.id.clone()),
                 "chance": s.chance,
             })
         })
@@ -838,7 +838,7 @@ fn ability_rows(view: &PerceptionView<'_>) -> Vec<String> {
             let a = own.ability;
             let state = match own.unavailable {
                 Some(why) => why.reason(content),
-                None => aim_word(a.aim()).into(),
+                None => aim_word(a.aim(content)).into(),
             };
             let source = a.source().id().replace('_', " ");
             format!("{} ({source}): {state}", a.name(content))
@@ -865,7 +865,7 @@ fn abilities_json(view: &PerceptionView<'_>) -> Value {
             json!({
                 "id": a.id(content),
                 "source": a.source().id(),
-                "aim": aim_word(a.aim()),
+                "aim": aim_word(a.aim(content)),
                 "unavailable": own.unavailable.map(|why| why.id(content)),
             })
         })

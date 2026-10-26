@@ -138,6 +138,7 @@ fn the_three_tables_come_with_the_levels() {
         [
             "Favoured prey",
             "Tracker",
+            "Barkskin",
             "Rapid shot",
             "Woodland stride",
             "Swift tracker",
@@ -152,9 +153,16 @@ fn the_three_tables_come_with_the_levels() {
     reach(&mut t, 18);
     assert!(said(&t).contains(&"You gain Evasion.".to_string()));
     let mut b = world("bard");
-    assert_eq!(class_rows(&b), ["Lore"], "the Scholar's Lore, given");
+    assert_eq!(
+        class_rows(&b),
+        ["Lore", "Mend"],
+        "the Scholar's Lore, given"
+    );
     reach(&mut b, 6);
-    assert_eq!(class_rows(&b), ["Lore", "Wide learning"]);
+    assert_eq!(
+        class_rows(&b),
+        ["Lore", "Mend", "Wide learning", "Blessing"]
+    );
     let restored = World::from_state(b.content().clone(), b.state().clone()).expect("restored");
     assert_eq!(class_rows(&restored), class_rows(&b));
 }

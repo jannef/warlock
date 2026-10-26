@@ -6,7 +6,7 @@ use super::*;
 use crate::ability::{Ability, Unavailable};
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
-use crate::content::{ClassSpell, Factor, LevelKind, StatusId};
+use crate::content::{Factor, LevelKind, SpellId, StatusId};
 use crate::dice::Dice;
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
@@ -97,7 +97,12 @@ fn class_rows(world: &World) -> Vec<String> {
         .collect()
 }
 
-fn own(world: &World, spell: ClassSpell) -> Option<Option<Unavailable>> {
+/// The spell of id `name` in the shipped content.
+pub(super) fn sp(name: &str) -> SpellId {
+    BUILTIN.spell_id(name).expect("a spell")
+}
+
+fn own(world: &World, spell: SpellId) -> Option<Option<Unavailable>> {
     (world.perception().abilities().into_iter())
         .find(|a| a.ability == Ability::Spell(spell))
         .map(|a| a.unavailable)
@@ -148,10 +153,13 @@ pub(super) fn kobold_at(world: &mut World, (dx, dy): (i32, i32), hp: i32) -> Act
 
 #[test]
 fn every_caster_has_its_table_by_level_sixty() {
+    // (class, how many rows level 1 gives, every row by level 60.)
     let tables = [
         (
             "priest",
+            1,
             vec![
+                "Mend",
                 "Blessing",
                 "Cure wounds",
                 "Remove disease",
@@ -165,13 +173,16 @@ fn every_caster_has_its_table_by_level_sixty() {
         ),
         (
             "druid",
+            2,
             vec![
                 "Wild empathy",
+                "Spark",
+                "Barkskin",
                 "Woodland stride",
                 "Weather sense",
+                "Call lightning",
                 "Nature's ward",
                 "Winter's friend",
-                "Call lightning",
                 "Sun and moon",
                 "Flame and frost",
                 "Timeless body",
@@ -179,11 +190,13 @@ fn every_caster_has_its_table_by_level_sixty() {
         ),
         (
             "witch",
+            2,
             vec![
                 "Herb lore",
                 "Evil eye",
-                "Poison lore",
                 "Hex of weakness",
+                "Poison lore",
+                "Cause wounds",
                 "Second sight",
                 "Curse of sloth",
                 "Blight",
@@ -192,25 +205,32 @@ fn every_caster_has_its_table_by_level_sixty() {
             ],
         ),
     ];
-    for (class, rows) in tables {
+    for (class, first, rows) in tables {
         let mut w = world(class);
-        assert_eq!(class_rows(&w), rows[..1], "{class}'s signature");
+        assert_eq!(class_rows(&w), rows[..first], "{class} at level 1");
         reach(&mut w, 60);
         assert_eq!(class_rows(&w), rows, "{class} at 60");
     }
     // The wizard's Spell recall is the Scholar talent, handed out (not of the class tree).
     let mut w = world("wizard");
-    assert_eq!(class_rows(&w), ["Scroll adept"]);
+    assert_eq!(class_rows(&w), ["Scroll adept", "Ray of frost"]);
     reach(&mut w, 12);
     assert_eq!(
         class_rows(&w),
-        ["Scroll adept", "Arcane lore", "Spell recall"]
+        [
+            "Scroll adept",
+            "Ray of frost",
+            "Magic missile",
+            "Arcane lore",
+            "Spell recall",
+            "Burning hands"
+        ]
     );
     assert!(said(&w).contains(&"You gain Spell recall.".to_string()));
 }
 
 #[test]
-fn the_spells_are_class_abilities_in_menu_order() {
+fn the_spells_are_abilities_by_tier() {
     let content = BUILTIN.clone();
     let every = Ability::every(&content);
     let spells: Vec<&str> = (every.iter())
@@ -220,36 +240,52 @@ fn the_spells_are_class_abilities_in_menu_order() {
     assert_eq!(
         spells,
         [
-            "Blessing",
-            "Cure wounds",
-            "Remove disease",
-            "Call lightning",
-            "Flame",
-            "Frost",
-            "Arcane bolt",
-            "Fire burst",
+            // Tier 0.
             "Evil eye",
-            "Hex of weakness",
+            "Mend",
+            "Ray of frost",
+            "Spark",
+            // Tier 1.
+            "Barkskin",
+            "Blessing",
+            "Burning hands",
+            "Cause wounds",
+            "Cure wounds",
             "Curse of sloth",
-            "Blight"
+            "Hex of weakness",
+            "Magic missile",
+            // Tier 2.
+            "Arcane bolt",
+            "Blight",
+            "Frost",
+            "Scorching ray",
+            "Sleep",
+            "Web",
+            // Tier 3.
+            "Call lightning",
+            "Fireball",
+            "Flame",
+            "Haste",
+            "Lightning bolt",
+            "Remove disease"
         ]
     );
-    let bolt = Ability::Spell(ClassSpell::ArcaneBolt);
+    let bolt = Ability::Spell(sp("arcane_bolt"));
     assert_eq!(bolt.source(), crate::ability::Source::Spell);
-    assert_eq!(bolt.aim(), crate::ability::Aim::Cell);
+    assert_eq!(bolt.aim(&content), crate::ability::Aim::Cell);
     assert_eq!(bolt.reach(&content), Some(6));
-    assert_eq!(Ability::Spell(ClassSpell::EvilEye).reach(&content), Some(6));
-    assert_eq!(Ability::Spell(ClassSpell::Flame).reach(&content), Some(10));
+    assert_eq!(Ability::Spell(sp("evil_eye")).reach(&content), Some(6));
+    assert_eq!(Ability::Spell(sp("flame")).reach(&content), Some(10));
     let at = Pos::new(3, 4);
     assert_eq!(
-        bolt.action_at(at),
-        Some(Action::Cast(ClassSpell::ArcaneBolt, Some(at)))
+        bolt.action_at(&content, at),
+        Some(Action::Cast("arcane_bolt".into(), Some(at)))
     );
-    let bless = Ability::Spell(ClassSpell::Blessing);
-    assert_eq!(bless.aim(), crate::ability::Aim::Nothing);
+    let bless = Ability::Spell(sp("blessing"));
+    assert_eq!(bless.aim(&content), crate::ability::Aim::Nothing);
     assert_eq!(
-        bless.action(None),
-        Some(Action::Cast(ClassSpell::Blessing, None))
+        bless.action(&content, None),
+        Some(Action::Cast("blessing".into(), None))
     );
     assert_eq!(bless.cost(), Some(crate::content::ActionKind::Cast));
 }
@@ -257,11 +293,17 @@ fn the_spells_are_class_abilities_in_menu_order() {
 #[test]
 fn blessing_costs_mana_and_wants_more_than_there_is() {
     let mut w = world("priest");
+    assert_eq!(
+        own(&w, sp("blessing")),
+        None,
+        "a priest blesses from level 3"
+    );
+    reach(&mut w, 3);
     let player = w.state.player;
-    assert_eq!(own(&w, ClassSpell::Blessing), Some(None));
+    assert_eq!(own(&w, sp("blessing")), Some(None));
     let time = w.time();
     run(&mut w, "use:blessing");
-    assert_eq!(w.state.player().mana, 39, "a cantrip's one mana");
+    assert_eq!(w.state.player().mana, 37, "tier 1's 3");
     assert!(suffers(&w, player, "blessed"));
     assert!(said(&w).contains(&"You feel blessed.".to_string()));
     assert!(w.time() > time, "it took time");
@@ -270,10 +312,7 @@ fn blessing_costs_mana_and_wants_more_than_there_is() {
     assert_eq!(me.effective_stats(w.content()).score(Stat::Willpower), 15);
     // Without the mana: greyed out, and refused with no time.
     w.player_mut().mana = 0;
-    assert_eq!(
-        own(&w, ClassSpell::Blessing),
-        Some(Some(Unavailable::NoMana))
-    );
+    assert_eq!(own(&w, sp("blessing")), Some(Some(Unavailable::NoMana)));
     assert_eq!(
         Unavailable::NoMana.reason(w.content()),
         "you have too little mana"
@@ -288,21 +327,28 @@ fn blessing_costs_mana_and_wants_more_than_there_is() {
 }
 
 #[test]
-fn cure_wounds_heals_by_the_level_in_two_casts() {
+fn cure_wounds_heals_by_touch_in_two_casts() {
     let mut w = world("priest");
-    reach(&mut w, 6);
+    reach(&mut w, 3);
     let turn = w.state.turn;
     run(&mut w, "use:cure_wounds");
+    assert_eq!(
+        last(&w),
+        "Cast it where? Name a cell: `use:cure_wounds:12,5`."
+    );
+    let here = w.player_pos();
+    let on_me = format!("use:cure_wounds:{},{}", here.x, here.y);
+    run(&mut w, &on_me);
     assert_eq!(last(&w), "You are not hurt.");
     assert_eq!((w.state.turn, w.state.player().mana), (turn, 40));
     w.player_mut().hp = 1;
     let time = w.time();
-    run(&mut w, "use:cure_wounds");
+    run(&mut w, &on_me);
     assert_eq!(last(&w), "Your wounds close.");
     let back = w.state.player().hp - 1;
-    // 2d6 (tier 2, comfortable at level 6, for 6 mana).
+    // 2d6 (tier 1, a touch: 3 × 0.7 mana).
     assert!((2..=12).contains(&back), "{back}");
-    assert_eq!(w.state.player().mana, 34);
+    assert_eq!(w.state.player().mana, 38);
     let cure = w.time().seconds() - time.seconds();
     let time = w.time();
     run(&mut w, "use:blessing");
@@ -335,29 +381,29 @@ fn hexes_fall_on_a_foe_the_witch_sees_within_reach() {
     let here = w.player_pos();
     let cell = |dx: i32| Pos::new(here.x + dx, here.y);
     // The kobold is put back where it stood before each cast (it moves between turns).
-    let cast = |w: &mut World, spell: ClassSpell, at: Pos| {
+    let cast = |w: &mut World, spell: &str, at: Pos| {
         w.state.actors.get_mut(&near).expect("the kobold").pos = cell(3);
         *w.perception = crate::perception::Perception::compute(&w.state, &w.content, &mut w.lights);
-        w.apply(&Action::Cast(spell, Some(at)));
+        w.apply(&Action::Cast(spell.into(), Some(at)));
     };
     // No one there, or too far: refused with no time and no mana.
     let turn = w.state.turn;
-    cast(&mut w, ClassSpell::EvilEye, cell(2));
+    cast(&mut w, "evil_eye", cell(2));
     assert_eq!(last(&w), "You see no one there to hex.");
-    cast(&mut w, ClassSpell::EvilEye, cell(9));
+    cast(&mut w, "evil_eye", cell(9));
     assert_eq!(last(&w), "That is out of range.");
     run(&mut w, "use:evil_eye");
     assert_eq!(last(&w), "Cast it where? Name a cell: `use:evil_eye:12,5`.");
     assert_eq!((w.state.turn, w.state.player().mana), (turn, 40));
-    cast(&mut w, ClassSpell::EvilEye, cell(3));
+    cast(&mut w, "evil_eye", cell(3));
     assert_eq!(last(&w), "The kobold is hexed.");
     assert!(suffers(&w, near, "ill_wished"));
-    assert_eq!(w.state.player().mana, 37, "tier 1's 3");
-    cast(&mut w, ClassSpell::HexOfWeakness, cell(3));
+    assert_eq!(w.state.player().mana, 39, "tier 0's 1");
+    cast(&mut w, "hex_of_weakness", cell(3));
     assert!(suffers(&w, near, "weakened"), "{:?}", said(&w));
-    cast(&mut w, ClassSpell::CurseOfSloth, cell(3));
+    cast(&mut w, "curse_of_sloth", cell(3));
     assert!(suffers(&w, near, "sluggish"));
-    assert_eq!(w.state.player().mana, 31);
+    assert_eq!(w.state.player().mana, 33, "tier 1's 3 each");
     // Presence 14 (+2): one degree more of each hex, so it lasts twice as long.
     let sluggish = status(&w, "sluggish");
     assert_eq!(
@@ -383,7 +429,7 @@ fn bolts_and_bursts_strike_as_scrolls_do_and_cost_mana() {
     let target = kobold(&mut w, 2, 500);
     let here = w.player_pos();
     let at = Pos::new(here.x + 2, here.y);
-    w.apply(&Action::Cast(ClassSpell::ArcaneBolt, Some(at)));
+    w.apply(&Action::Cast("arcane_bolt".into(), Some(at)));
     let hurt = 500 - w.state.actors[&target].hp;
     assert!((2..=12).contains(&hurt), "2d6: {hurt}");
     assert_eq!(w.state.player().mana, 29, "tier 2's 6 × 1.8 for a line");
@@ -392,13 +438,15 @@ fn bolts_and_bursts_strike_as_scrolls_do_and_cost_mana() {
         "{:?}",
         said(&w)
     );
-    // Fire burst at 40: the fireball's burst.
+    // Fireball, learned, at 40: a burst.
     reach(&mut w, 40);
+    w.player_mut().spells.insert(sp("fireball"));
     let far = Pos::new(here.x + 2, here.y);
     let before = w.state.actors[&target].hp;
-    w.apply(&Action::Cast(ClassSpell::FireBurst, Some(far)));
+    w.apply(&Action::Cast("fireball".into(), Some(far)));
     assert!(w.state.actors[&target].hp < before);
-    // Tier 3's 11 × 2.4 for a burst of radius 2; Empower's die more, held to the cap (19).
+    // Tier 3's 11 × 2.4 for a burst of radius 2; its third die and Empower's one more, held to
+    // the cap (19).
     assert_eq!(w.state.player().mana, 14);
     assert!(before - w.state.actors[&target].hp <= 19);
 }
@@ -406,21 +454,21 @@ fn bolts_and_bursts_strike_as_scrolls_do_and_cost_mana() {
 #[test]
 fn call_lightning_wants_the_open_sky() {
     let mut w = world("druid");
-    reach(&mut w, 32);
+    reach(&mut w, 12);
     let target = kobold(&mut w, 2, 500);
     let here = w.player_pos();
     let at = Pos::new(here.x + 2, here.y);
     let turn = w.state.turn;
-    w.apply(&Action::Cast(ClassSpell::CallLightning, Some(at)));
+    w.apply(&Action::Cast("call_lightning".into(), Some(at)));
     assert_eq!(last(&w), "You need the open sky above you for that.");
     assert_eq!((w.state.turn, w.state.player().mana), (turn, 40));
     w.state.current_mut().kind = LevelKind::Outdoor;
     let floor = w.content().terrain_id("floor").expect("floor");
     w.state.current_mut().terrain.set(here, floor);
-    w.apply(&Action::Cast(ClassSpell::CallLightning, Some(at)));
+    w.apply(&Action::Cast("call_lightning".into(), Some(at)));
     let hurt = 500 - w.state.actors[&target].hp;
-    assert!(hurt >= 1, "4d6, less what it resists: {hurt}");
-    assert_eq!(w.state.player().mana, 11, "tier 4's 16 × 1.8");
+    assert!(hurt >= 1, "2d6, less what it resists: {hurt}");
+    assert_eq!(w.state.player().mana, 20, "tier 3's 11 × 1.8");
 }
 
 #[test]
@@ -430,7 +478,7 @@ fn blight_poisons_everyone_it_reaches() {
     let target = kobold(&mut w, 3, 500);
     let here = w.player_pos();
     w.apply(&Action::Cast(
-        ClassSpell::Blight,
+        "blight".into(),
         Some(Pos::new(here.x + 3, here.y)),
     ));
     assert!(suffers(&w, target, "poisoned"));
@@ -464,25 +512,24 @@ fn spell_power_and_archmage_mana() {
 #[test]
 fn a_spell_is_paid_through_the_talents_mana_cost() {
     let mut w = world("priest");
-    reach(&mut w, 6);
+    reach(&mut w, 12);
     let content = w.content().clone();
     w.player_mut().talents.take("frugal_caster", None);
-    let cure = content
-        .class_spell(ClassSpell::CureWounds)
-        .expect("cure wounds");
+    let cleanse = content
+        .class_spell(sp("remove_disease"))
+        .expect("remove disease");
     let level = w.caster_level(w.state.player);
     assert_eq!(
-        w.state.player().spell_cost(&content, cure, level),
-        5,
-        "6, a fifth less"
+        w.state.player().spell_cost(&content, cleanse, level),
+        9,
+        "11, a fifth less"
     );
-    w.player_mut().hp = 1;
-    run(&mut w, "use:cure_wounds");
-    assert_eq!(w.state.player().mana, 35);
+    run(&mut w, "afflict:poisoned use:remove_disease");
+    assert_eq!(w.state.player().mana, 31);
     // One mana short of the cut cost: greyed out.
-    w.player_mut().mana = 4;
+    w.player_mut().mana = 8;
     assert_eq!(
-        own(&w, ClassSpell::CureWounds),
+        own(&w, sp("remove_disease")),
         Some(Some(Unavailable::NoMana))
     );
 }
@@ -581,10 +628,10 @@ fn casts_replay_and_save_the_same() {
     let bytes = crate::save::encode(&w);
     let loaded = crate::save::decode(&bytes, BUILTIN.clone()).expect("loads");
     assert_eq!(loaded.state(), w.state());
-    let text = Action::Cast(ClassSpell::Frost, Some(Pos::new(4, 7))).to_string();
+    let text = Action::Cast("frost".into(), Some(Pos::new(4, 7))).to_string();
     assert_eq!(text, "use:frost:4,7");
     assert_eq!(
         text.parse::<Action>(),
-        Ok(Action::Cast(ClassSpell::Frost, Some(Pos::new(4, 7))))
+        Ok(Action::Cast("frost".into(), Some(Pos::new(4, 7))))
     );
 }

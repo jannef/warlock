@@ -1,0 +1,11 @@
+# Barkskin (spec §8 "Spells"): the druid's and the ranger's boon, skin hard as bark a while.
+[[spell]]
+id = "barkskin"
+name = "Barkskin"
+description = "Your skin hardens like bark a while: blows land on you less often."
+tier = 1
+school = "transmutation"
+kind = "buff"
+shape = "self"
+resolution = "auto"
+effect = { status = "barkskin" }

@@ -1,0 +1,22 @@
+# Lightning bolt (spec §8 "Spells", the first spell list): a line of lightning through everyone in
+# it, a die more every four caster levels, never more than three.
+[[spell]]
+id = "lightning_bolt"
+name = "Lightning bolt"
+description = "A bolt of lightning from you toward a place you aim at and on: everyone on its line is struck."
+tier = 3
+school = "evocation"
+kind = "damage"
+shape = "line"
+resolution = "area"
+damage_type = "electricity"
+length = 8
+max_length = 12
+damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
+
+[spell.cast]
+effect = "lightning_bolt"
+noun = "lightning bolt"
+verb = "strikes"
+message = "Lightning leaps from your hands!"
+noise = { sound = "thunder", loudness = 120 }

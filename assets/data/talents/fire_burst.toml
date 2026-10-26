@@ -1,8 +1,0 @@
-[[talent]]
-id = "fire_burst"
-name = "Fire burst"
-tree = "class"
-granted = true
-description = "A fireball of your own (a spell, paid in mana): it bursts where you aim it, breaks walls, and melts ice."
-effects = [{ kind = "spell", spell = "fire_burst" }]
-systems = ["mana", "digging"]

@@ -1,0 +1,20 @@
+# A scroll of spark (spec §8 "Scrolls", "Spells"): read it (`r`), and it casts Spark, a
+# cantrip, at its own caster level, free of mana; study it (`L`), and you may learn the spell for
+# good. Level and frequency by its tier: the lower the tier, the commoner the scroll.
+[[object]]
+id = "scroll_of_spark"
+name = "scroll of spark"
+plural = "scrolls of spark"
+glyph = "?"
+fg = "#a8c8ff"
+class = "scrolls"
+materials = ["paper"]
+weight = 50
+value = 40
+stackable = true
+level = 1
+frequency = 60
+
+[object.read]
+kind = "spell"
+spell = "spark"

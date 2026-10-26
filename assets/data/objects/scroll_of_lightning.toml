@@ -11,8 +11,8 @@ materials = ["paper"]
 weight = 50
 value = 150
 stackable = true
-level = 2
-frequency = 60
+level = 6
+frequency = 20
 
 [object.read]
 kind = "bolt"
@@ -24,5 +24,5 @@ length = 12
 damage = "4d6"
 damage_type = "electricity"
 noise = { sound = "thunder", loudness = 120 }
-# Studying it (spec §8 "Spells") teaches the druid's Call lightning.
-teaches = "call_lightning"
+# Studying it (spec §8 "Spells") teaches Lightning bolt.
+teaches = "lightning_bolt"
