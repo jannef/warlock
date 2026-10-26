@@ -1162,7 +1162,7 @@ mod tests {
         // Lights go by what the player sees: the terrain, the carrier, the lantern, the crystal.
         for row in [
             "| Wall torch | 7 cells |",
-            "| Torch carried by a burning skull or a kobold | 6 cells |",
+            "| Torch carried by a burning skull or a kobold or a nightmare | 6 cells |",
             "| Your lantern | 5 cells |",
             "| Light crystal (red) | 7 cells |",
             "| Faint rune | 4 cells | UV only",

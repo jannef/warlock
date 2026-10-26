@@ -1,0 +1,35 @@
+# The leftover fiends (#450). A coal-black steed with a mane and hooves of fire that carries
+# fiends and hags across the worlds: quick, and its burning mane lights the way. Its hooves strike
+# with fire, which cannot hurt it. Its smoke, its breath, and its stride between the worlds wait
+# for mechanics of their own.
+[[creature]]
+id = "nightmare"
+level = 21
+xp = 115
+rarity = "uncommon"
+name = "nightmare"
+glyph = "u"
+fg = "#d04a20"
+speed = 1300
+faction = "fiends"
+tags = ["fiend"]
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+light = "torch"
+glow = 0.3
+footsteps = 80
+hearing = 15
+weight = 500000
+stats = { strength = 19, dexterity = 20, toughness = 19, intelligence = 18, willpower = 23, presence = 18 }
+base_hp = 47
+natural = { defence = 1, protection = 0, name = "hide" }
+resist = { fire = 100 }
+on_eat = { message = "Ash and sulphur.", vomit = 60, harm = "1d3" }
+blood = "#5a1a10"
+[creature.attack]
+damage = "3d8"
+damage_type = "fire"
+name = "hooves"
+verb = "tramples"
+to_hit = 2

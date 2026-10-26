@@ -59,6 +59,7 @@ fn content() -> Arc<Content> {
          [[faction]]\nid = \"elemental\"\nname = \"elementals\"\n\
          [[faction]]\nid = \"seelie\"\nname = \"Seelie court\"\n\
          [[faction]]\nid = \"unseelie\"\nname = \"Unseelie court\"\n\
+         [[faction]]\nid = \"fiends\"\nname = \"fiends\"\n\
          [[faction]]\nid = \"devil\"\nname = \"devils\"\n\
          [[faction]]\nid = \"yugoloth\"\nname = \"yugoloths\"\n\
          [[faction]]\nid = \"wildlife\"\nname = \"wildlife\"\n\

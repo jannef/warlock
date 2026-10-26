@@ -1,0 +1,43 @@
+# The leftover fiends (#450). The hag who rides the sleeper's chest and trades in souls: a caster
+# (its spells announced until creature magic is designed) whose claws pin one as she pins the
+# sleeper, unable to stir (held), and bring nightmares on the mind (frightened). She carries what
+# her bargains bought. Her dream-walking and
+# her soul bag wait for mechanics of their own; the hags' other kin share her `hag` tag.
+[[creature]]
+id = "night_hag"
+level = 33
+xp = 175
+rarity = "rare"
+loot = 50
+name = "night hag"
+glyph = "h"
+fg = "#7a4a9a"
+speed = 1050
+faction = "fiends"
+tags = ["fiend", "hag", "caster"]
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+combat = "caster"
+range = 7
+opens_doors = true
+footsteps = 30
+hearing = 15
+weight = 60000
+stats = { strength = 21, dexterity = 18, toughness = 25, intelligence = 27, willpower = 32, presence = 27 }
+base_hp = 66
+skills = { concentration = 109, spellcraft = 114 }
+natural = { defence = 2, protection = 0, name = "hide" }
+resist = { fire = 50, cold = 50 }
+on_eat = { message = "Bitter as a bad dream.", vomit = 70, harm = "1d4" }
+blood = "#3a2a4a"
+[creature.attack]
+damage = "4d6"
+damage_type = "slashing"
+name = "claws"
+verb = "claws"
+to_hit = 3
+on_hit = [
+    { status = "held", chance = 15, difficulty = 18 },
+    { status = "frightened", chance = 10, severity = 2 },
+]

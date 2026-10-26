@@ -114,6 +114,15 @@ id = "wrathful_fey"
 name = "wrathful fey"
 hostile = ["player", "unseelie"]
 
+# The fiends that are neither demons, devils, nor yugoloths (#450): the hell hound, the
+# nightmare, the succubus and the incubus, the night hag, the cambion, the rakshasa. They hunt the
+# player and leave everyone else to their own schemes. Not animals: a Beast-friend calms neither
+# the hell hound nor the nightmare, which are fiends in a beast's shape.
+[[faction]]
+id = "fiends"
+name = "fiends"
+hostile = ["player"]
+
 # The devils of the hells (#448): lemures, imps, and the greater devils up to the pit fiend.
 # They come for the player and leave everyone else be: devils bargain, they do not brawl with
 # every passer-by.
