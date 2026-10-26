@@ -176,9 +176,10 @@ pub enum Action {
         id: String,
         choice: Option<String>,
     },
-    /// Spend one of a level's skill rolls on trained skill `skill` (spec §8 "Talents"). No
-    /// level brings rolls until the skill ladder lands (#230), so it is refused. Takes no game
-    /// time; recorded in replays.
+    /// Spend one of the current level's skill rolls on trained skill `skill` (spec §8
+    /// "Talents"; `World::advance_skill`, docs/dev/skills.md): throws the ladder die and adds
+    /// the result to the skill. Refused with the reason when no roll is due or the skill is not
+    /// trained. Takes no game time; recorded in replays.
     Advance(String),
     /// Dev command: switch the player's vision profile (an id in `data/vision.toml`). Takes no
     /// game time, but changes state and perception, so replays record it like any action.

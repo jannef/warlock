@@ -553,7 +553,7 @@ http://localhost:8080 in a WebGPU browser. CI builds it on pushes to `main` (art
 uploads `target/web` plus `LICENSE` as the Pages artifact, and the `pages` job (`environment:
 github-pages`) deploys it on every `v*` tag; a manual run deploys only with the `publish_pages`
 input ticked. The page is `web/index.html` (inline, no external requests, relative asset paths so
-it works under `/warlock/`): top bar with links, the canvas in `#stage` (Bevy's
+it works under `/warlock/`), and states the version it is for (header, tab title, loading message, footer); every `v*` tag redeploys it, so it always names the latest release: top bar with links, the canvas in `#stage` (Bevy's
 `fit_canvas_to_parent` sizes it to that container), fullscreen on `#stage`, a hint footer.
 `cargo xtask web` replaces `@VERSION@` in the page with the workspace version (as
 `release/Info.plist.in` does in the macOS bundle). Keep the canvas id `#warlock-canvas` (the window
