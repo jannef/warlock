@@ -70,6 +70,8 @@ mod vault;
 mod vision;
 mod weapon_skill;
 mod weather;
+#[cfg(test)]
+mod yugoloth_roster_tests;
 
 pub use action::{ActionCosts, ActionKind, BASE_TURN, COSTS, NORMAL_COST, price};
 pub use affix::{
@@ -83,7 +85,7 @@ pub use campaign::{CAMPAIGNS, CampaignDef, CampaignKind};
 #[cfg(test)]
 pub(crate) use class::strip_tables as strip_class_tables;
 pub use class::{BonusTalents, CASTING, ClassActive, ClassDef};
-pub use class_spell::{ClassSpell, Does, MAX_HEX_RANGE, SpellDef, SpellKind};
+pub use class_spell::ClassSpell;
 pub use creature::{
     Budge, Combat, CreatureDef, CreatureId, DEFAULT_SIGHT, Hide, Incorporeal, NORMAL_SPEED,
     NaturalAttack, OnEat, SPEEDS,
@@ -157,8 +159,8 @@ pub use sky::{MAX_MOONS, MAX_SIZE, MoonDef, PHASE_ONE, STANDARD_SIZE};
 pub use slot::{MAX_SLOTS, SlotDef, SlotId};
 pub use spell::{BOLT_LENGTHS, BURST_RADII, Bolt, Burst, BurstIce};
 pub use spell_def::{
-    MAX_CONE, MAX_DICE, MAX_PER_LEVELS, MAX_REACH, Ratio, Resolution, School, Shape, SpellData,
-    SpellDice, SpellEffect, SpellId, SpellPurpose, SpellRules, TIERS,
+    MAX_CASTS, MAX_CONE, MAX_DICE, MAX_PER_LEVELS, MAX_REACH, Ratio, Resolution, School, Shape,
+    SpellData, SpellDice, SpellEffect, SpellId, SpellLook, SpellPurpose, SpellRules, TIERS,
 };
 pub use stance::{CombatStance, StanceDef, Stances, percent_of};
 pub use stat_training::{StatRule, StatTraining, StatUse};
@@ -790,6 +792,7 @@ impl Content {
             content.effects = effect::parse(path, text)?;
         }
         scroll::check_spells(&content).map_err(|m| ContentError::new("data/objects", m))?;
+        spell_def::check_effects(&content).map_err(|m| ContentError::new("data/spells", m))?;
         let path = "data/traps.toml";
         if let Some(text) = files.get_optional(path) {
             let (traps, ids) = trap::parse(path, text, &content)?;
@@ -2742,14 +2745,20 @@ impl Content {
             .find(|def| def.effects.iter().any(|e| e.active() == Some(active)))
     }
 
-    /// The caster's spell `spell` (spec §8 "Class abilities"): the class ability whose
-    /// `[[talent.spell]]` names it, and its definition (the abilities menu's name and description
-    /// are the spell's own, else the talent's).
-    pub fn class_spell(&self, spell: ClassSpell) -> Option<(&TalentDef, &SpellDef)> {
-        (self.talents.iter()).find_map(|(_, def)| {
-            let found = def.spells.iter().find(|s| s.spell == spell)?;
-            Some((def, found))
-        })
+    /// The caster's spell `spell` (spec §8 "Class abilities", "Spells"): the spell of its id in
+    /// `data/spells/`, when a class ability gives it (its `spell` effect names it); `None`
+    /// otherwise.
+    pub fn class_spell(&self, spell: ClassSpell) -> Option<&SpellData> {
+        let given = (self.talents.iter()).any(|(_, def)| {
+            (def.effects
+                .iter()
+                .chain(def.ranks.iter().flat_map(|r| r.effects.iter())))
+            .any(|e| matches!(e, TalentEffect::Spell { spell: s } if *s == spell))
+        });
+        given
+            .then(|| self.spell_id(spell.id()))
+            .flatten()
+            .map(|id| self.spell(id))
     }
 
     /// Checks the classes' level tables against the talents (spec §8 "Class abilities"), then
@@ -3255,7 +3264,12 @@ mod tests {
              damage_type = \"electricity\"\nmax_range = 5\ndamage = { dice = \"1d4\" }\n",
         );
         let with_spell = Content::load(&files).expect("loads");
-        assert_eq!(with_spell.spell_id("spark"), Some(SpellId(0)));
+        let last = SpellId(u16::try_from(with_spell.spells().len() - 1).expect("few"));
+        assert_eq!(
+            with_spell.spell_id("spark"),
+            Some(last),
+            "last in path order"
+        );
         assert_ne!(a, with_spell.fingerprint_for("showcase"));
     }
 

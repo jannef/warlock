@@ -10,10 +10,10 @@ expression: "render(case, content.clone())"
                     │                                                          │
                     │ Birth sign                                               │
                     │ > a  Transfixing stare  at a place you see               │
-                    │ Class                                                    │
-                    │   b  Blessing                                            │
-                    │   c  Cure wounds        you have too little mana         │
-                    │   d  Remove disease     you have too little mana         │
+                    │ Spells                                                   │
+                    │   b  Blessing           tier 0, 1 mana                   │
+                    │   c  Cure wounds        tier 2, 6 mana: too little       │
+                    │   d  Remove disease     tier 3, 11 mana: too little      │
                     │ Skills                                                   │
                     │   e  Decipher script    not usable yet                   │
                     │   f  Heal               not usable yet                   │
@@ -31,4 +31,4 @@ expression: "render(case, content.clone())"
 
 
 
- The Hub  ·  HP 42/42  ·  MP 2/98  ·  Blessed  ·  Lv 13  ·  08:00  ·  11 Darkening       ? controls
+ The Hub  ·  HP 42/42  ·  MP 3/98  ·  Blessed  ·  Lv 13  ·  08:00  ·  11 Darkening       ? controls

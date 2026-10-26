@@ -175,7 +175,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     them); `hobgoblin` (the goblins' second tier, #454); `undead` (every
     creature of the `undead` faction, a test sees to it); `vermin` (not the basilisk);
     `marsh-thing` (the fens' living things and the bog hag); `duergar` (not their trader, a
-    merchant); `fire-thing`. Role and kind tags: `archer`, `caster` (every `combat = "caster"`
+    merchant); `fire-thing`; `yugoloth` (every creature of the `yugoloth` faction); `fiend` (the fiends
+    of the lower planes: every yugoloth, demon, and devil). Role and kind tags: `archer`, `caster` (every `combat = "caster"`
     type), `cultist`, `skeleton`, `spirit` (the incorporeal undead), `troll`. Tags are never
     shown in the game; the wiki lists them.
   - **Progress** the player's action made is said right after it: "Quest updated: 2 / 3 giant
