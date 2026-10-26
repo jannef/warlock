@@ -16,6 +16,8 @@ mod creature;
 mod creature_rarity;
 mod damage_type;
 pub mod danger;
+#[cfg(test)]
+mod devil_roster_tests;
 mod dialogue;
 mod disease;
 mod dungeon;

@@ -50,6 +50,8 @@
 #            creature of the "undead" faction: content::tag's test fails without it), vermin
 #            (not the basilisk), marsh-thing (the fens' living things and the bog hag),
 #            duergar (not their trader, a merchant), fire-thing (the delf's burning things)
+#            devil (every creature of the "devil" faction: content::devil_roster_tests checks it)
+#            fiend (every devil and demon: the infernal kinds together)
 #   roles    archer (shoots: the goblin, kobold, and skeleton archers), caster (every
 #            combat = "caster" type), cultist (the minster's cult), skeleton (walking bones),
 #            spirit (the incorporeal dead), troll (the troll and the marsh troll)
@@ -165,3 +167,12 @@
 # dead, Z greater, G spirits, W wights and wraiths, M mummies, C hounds, V vampires, D drakes, T
 # the rotting troll; a colour distinct from every other type with the same glyph. Only a type in
 # a population strays (#375): deep undead ship in none until a deep place takes them.
+#
+# The devils (the devil roster, #448; content::devil_roster_tests checks the numbers): faction
+# "devil", tags ["devil", "fiend"], alignment "evil", vision "darkvision", on the undead roster's
+# formulas (#383: xp, stats, base_hp, dice, to-hit, natural defence, speed by level and role).
+# Every devil resists fire 100 and poison 50; cold 50 from the bearded devil up (the ice devil
+# 100); the bone devil and the pit fiend poison 100. One natural attack each, its rider standing
+# for the rest. A devil's body burns away when it dies: no corpse, a dark ichor for blood (the
+# bone devil none). Glyphs: u the lemure, i the imp, U the greater devils, each in its own colour.
+# None is in a population yet.

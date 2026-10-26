@@ -141,7 +141,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   tongue that holds fast), the gibbering shade 18 (incorporeal, a cold touch that drains
   Intelligence), the bone wyvern 18 (a sting, bone with protection 2), the revenant 19 (very
   tough, a long sword half the time), the fetch 19 (incorporeal, a cold touch that frightens), and
-  the mummy priest 20 (a caster whose touch carries mummy rot, sometimes something worth taking). The duergar types are of the duergar race. For blood (§8 "Blood";
+  the mummy priest 20 (a caster whose touch carries mummy rot, sometimes something worth taking). The devil roster (#448; faction `devil`, tags `devil` and `fiend`, in no population yet), from the bottom of the hierarchy up: the lemure 5 (mindless, slow, in herds), the imp 9 (small, quick, a poisonous sting), the bearded devil 20 (a glaive half the time, a poisonous beard), the barbed devil 26 (claws that leave one bleeding), the bone devil 32 (a strongly poisonous sting, immune to poison), the erinyes 38 (a sword and mail, often magic), the chain devil 42 (chains that hold fast), the horned devil 48 (a fork, a tail whose wounds bleed), the ice devil 55 (frost claws that do cold damage and slow, immune to cold), and the pit fiend 66 (a venomous bite, immune to poison, something worth taking). Every devil is immune to fire and resists poison, and from the bearded devil up cold; none leaves a corpse. The duergar types are of the duergar race. For blood (§8 "Blood";
   presentation only):
   `blood`, the colour of its stains (`"#rrggbb"`; default dark red, `#6e0e0c`) or `"none"` for a
   bloodless creature; the cave beetle bleeds greenish-black ichor (`#38461a`). For hunger (§8
@@ -654,7 +654,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   ("cultists", the drowned minster's cult; hostile to the player and the marsh), `duergar` (the
   delf's grey dwarves; hostile to the player, the goblins (the ogres and trolls among them), and
   the undead), `fire` ("fire things", the delf's burning creatures and the fire drake; hostile to
-  the player only), `wildlife` (deer, cave bats, the cave beetle;
+  the player only), `devil` ("devils", #448; hostile to the player only), `wildlife` (deer, cave bats, the cave beetle;
   neutral to everyone), and
   `peaceful` ("peaceful folk", hostile to no one: the showcase's people by type, and creatures
   levels place in it); `merchants` (shopkeepers; hostile to no one) and `outraged` ("outraged

@@ -1,0 +1,34 @@
+# The devil roster (#448). The torturer, wrapped in chains it whips at its victims and binds
+# them with. Chains that move by themselves wait for a mechanic of their own; its lash holds
+# fast. Not yet in any dungeon's population.
+[[creature]]
+id = "chain_devil"
+level = 42
+xp = 220
+rarity = "rare"
+name = "chain devil"
+glyph = "U"
+fg = "#8a8a98"
+speed = 1100
+faction = "devil"
+tags = ["devil", "fiend"]
+alignment = "evil"
+vision = "darkvision"
+sight = 14
+opens_doors = true
+footsteps = 80
+hearing = 10
+weight = 100000
+stats = { strength = 28, dexterity = 20, toughness = 29, intelligence = 27, willpower = 31, presence = 27 }
+base_hp = 105
+natural = { defence = 3, protection = 0, name = "hide" }
+resist = { fire = 100, poison = 50, cold = 50 }
+corpse = false
+blood = "#4a1010"
+[creature.attack]
+damage = "4d8"
+damage_type = "slashing"
+name = "chains"
+verb = "lashes"
+to_hit = 4
+on_hit = [{ status = "held", chance = 25, difficulty = 20 }]
