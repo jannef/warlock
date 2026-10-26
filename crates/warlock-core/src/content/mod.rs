@@ -66,6 +66,8 @@ mod room_burden_tests;
 mod room_effect;
 #[cfg(test)]
 mod room_temperature_tests;
+#[cfg(test)]
+mod room_warp_tests;
 mod scenario;
 mod scroll;
 mod scroll_label;

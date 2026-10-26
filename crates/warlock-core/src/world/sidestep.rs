@@ -29,6 +29,7 @@ impl World {
     /// a pit's climb costs on top of the step.
     pub(super) fn step_willingly(&mut self, at: Pos, events: &mut Vec<Event>) -> i64 {
         if self.sidesteps(at) {
+            self.warp_step(at, self.state.player, events);
             return 0;
         }
         self.step_onto_trap(at, self.state.player, events)

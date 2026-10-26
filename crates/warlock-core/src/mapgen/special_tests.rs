@@ -68,9 +68,14 @@ fn favoured_features_keep_their_shares_and_banned_ones_never_come() {
     assert!((33..=37).contains(&percent("flooded")), "{by:?}");
     assert!((13..=17).contains(&percent("hushed")), "{by:?}");
     assert_eq!(by[usize::from(id("sanctuary").0)], 0, "banned");
-    // The other half by weight: shadowed 10 of the 39 left (echoing 8, draining 6, black 5,
-    // hot 5, cold 5).
-    assert!((11..=15).contains(&percent("shadowed")), "{by:?}");
+    // The other half by weight: shadowed 10 of the weights of every feature neither favoured
+    // nor banned (computed, so a feature added later keeps this test true).
+    let left: u32 = (effects.defs().iter())
+        .filter(|e| !["hushed", "flooded", "sanctuary"].contains(&e.id.as_str()))
+        .map(|e| u32::from(e.weight))
+        .sum();
+    let shadowed = 50 * u32::from(effects.get(id("shadowed")).weight) / left;
+    assert!(percent("shadowed").abs_diff(shadowed) <= 2, "{by:?}");
     // Every eligible feature favoured: by their shares alone.
     let all = RoomOdds {
         favoured: vec![(id("hushed"), 10), (id("flooded"), 30)],
