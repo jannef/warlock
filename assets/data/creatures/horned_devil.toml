@@ -1,0 +1,33 @@
+# The devil roster (#448). A winged brute of hell's legions with a great fork and a lashing
+# tail whose wounds bleed. Not yet in any dungeon's population.
+[[creature]]
+id = "horned_devil"
+level = 48
+xp = 250
+rarity = "uncommon"
+name = "horned devil"
+glyph = "U"
+fg = "#d06a20"
+speed = 1050
+faction = "devil"
+tags = ["devil", "fiend"]
+alignment = "evil"
+vision = "darkvision"
+sight = 16
+opens_doors = true
+footsteps = 90
+hearing = 10
+weight = 300000
+stats = { strength = 35, dexterity = 20, toughness = 36, intelligence = 29, willpower = 33, presence = 29 }
+base_hp = 192
+natural = { defence = 3, protection = 2, name = "hide" }
+resist = { fire = 100, poison = 50, cold = 50 }
+corpse = false
+blood = "#4a1010"
+[creature.attack]
+damage = "4d10"
+damage_type = "piercing"
+name = "fork"
+verb = "gores"
+to_hit = 4
+on_hit = [{ status = "bleeding", chance = 20, severity = 2 }]

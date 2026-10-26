@@ -1,0 +1,27 @@
+# The orc tribe (#455; content::orc_roster_tests checks the numbers). The great wolves the orcs
+# keep and run with (faction "orcs", but no orc: no tag): quick, keen-nosed, and its bite tears.
+[[creature]]
+id = "warg"
+level = 7
+xp = 45
+rarity = "uncommon"
+name = "warg"
+glyph = "C"
+fg = "#8a6a48"
+speed = 1250
+faction = "orcs"
+alignment = "evil"
+vision = "low_light"
+sight = 12
+footsteps = 50
+hearing = 18
+weight = 60000
+stats = { strength = 15, dexterity = 17, toughness = 14, intelligence = 4, willpower = 11, presence = 4 }
+base_hp = 16
+on_eat = { message = "Tough, gamy wolf meat.", vomit = 10 }
+[creature.attack]
+damage = "1d10"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
+on_hit = [{ status = "bleeding", chance = 10, severity = 1 }]

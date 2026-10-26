@@ -1,0 +1,34 @@
+# The devil roster (#448). A gaunt devil of hide stretched over bone, with a scorpion's tail
+# whose sting is a strong poison. Its body falls to dry ash. Not yet in any dungeon's
+# population.
+[[creature]]
+id = "bone_devil"
+level = 32
+xp = 170
+rarity = "uncommon"
+name = "bone devil"
+glyph = "U"
+fg = "#d8c8a8"
+speed = 1050
+faction = "devil"
+tags = ["devil", "fiend"]
+alignment = "evil"
+vision = "darkvision"
+sight = 14
+opens_doors = true
+footsteps = 50
+hearing = 10
+weight = 140000
+stats = { strength = 24, dexterity = 18, toughness = 25, intelligence = 23, willpower = 27, presence = 23 }
+base_hp = 80
+natural = { defence = 2, protection = 0, name = "bony hide" }
+resist = { fire = 100, poison = 100, cold = 50 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "3d10"
+damage_type = "piercing"
+name = "sting"
+verb = "stings"
+to_hit = 3
+on_hit = [{ status = "poisoned", chance = 25, severity = 3 }]

@@ -1,0 +1,34 @@
+# The orc tribe (#455; content::orc_roster_tests checks the numbers). The common orc of a war
+# band: a curved blade (the orcs' racial weapon, spec §8 "Creature gear"), a jerkin and a cap
+# half the time, and a shield now and then.
+[[creature]]
+id = "orc_warrior"
+level = 5
+xp = 35
+rarity = "common"
+loot = 20
+name = "orc warrior"
+glyph = "o"
+fg = "#6a8a3a"
+faction = "orcs"
+tags = ["orc"]
+alignment = "evil"
+vision = "darkvision"
+opens_doors = true
+footsteps = 130
+hearing = 12
+weight = 80000
+stats = { strength = 14, dexterity = 11, toughness = 14, intelligence = 8, willpower = 10, presence = 7 }
+base_hp = 12
+on_eat = { message = "This orc meat is rank!", vomit = 30 }
+weapon_skills = { short_blades = 1, shield_block = 1 }
+racial_weapon = "scimitar"
+[[creature.gear]]
+chance = 50
+one_of = ["leather_jerkin"]
+[[creature.gear]]
+chance = 40
+one_of = ["leather_cap"]
+[[creature.gear]]
+chance = 25
+one_of = ["small_shield"]

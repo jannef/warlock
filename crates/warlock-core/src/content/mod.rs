@@ -16,6 +16,8 @@ mod creature;
 mod creature_rarity;
 mod damage_type;
 pub mod danger;
+#[cfg(test)]
+mod devil_roster_tests;
 mod dialogue;
 mod disease;
 mod dungeon;
@@ -38,6 +40,8 @@ mod light;
 mod material;
 mod names;
 mod object;
+#[cfg(test)]
+mod orc_roster_tests;
 mod overworld;
 pub(crate) mod part;
 mod particles;

@@ -86,6 +86,7 @@ mod actor;
 mod ai;
 mod alignment;
 mod ambush;
+mod attacks;
 mod beast_friend;
 mod bleed;
 mod buff;
@@ -164,6 +165,7 @@ mod volley;
 
 pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
 pub use alignment::Deed;
+pub use attacks::{AttackSource, OwnAttack};
 pub use cast::Reach;
 pub use caster_level::casting_percent;
 pub use creation::{chosen_with_talents, creation_count, parse_talents, pick_text};
@@ -1199,6 +1201,8 @@ mod ai_tests;
 mod alignment_tests;
 #[cfg(test)]
 mod ascmearc_tests;
+#[cfg(test)]
+mod attacks_tests;
 #[cfg(test)]
 mod bestiary_tests;
 #[cfg(test)]

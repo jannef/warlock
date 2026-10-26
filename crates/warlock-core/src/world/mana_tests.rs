@@ -72,6 +72,13 @@ max = 4
 eases = 12
 cost = 200
 
+# Named by the wargs' bites (#455), untouched by mana.
+[[status]]
+id = "bleeding"
+name = "Bleeding"
+max = 5
+eases = 6
+
 [[status]]
 id = "held"
 name = "Held"
@@ -148,6 +155,10 @@ fn files(scenario: &str, extra: &[(&str, &str)]) -> ContentFiles {
     let fyrdelf = "campaigns/ascmearc/data/dungeons/fyrdelf.toml";
     let text = include_str!("../../../../assets/campaigns/ascmearc/data/dungeons/fyrdelf.toml");
     files.insert(fyrdelf, &text.replace("\"basilisk\", ", ""));
+    // And the devils whose riders are Bleeding and Sluggish (in no dungeon).
+    for devil in ["barbed_devil", "horned_devil", "ice_devil"] {
+        files.remove(&format!("data/creatures/{devil}.toml"));
+    }
     // And the green hag's claws (Hexed) and the bheur hag's staff (Sluggish), in no population.
     files.remove("data/creatures/green_hag.toml");
     files.remove("data/creatures/bheur_hag.toml");

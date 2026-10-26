@@ -1,0 +1,33 @@
+# The devil roster (#448). A tiny winged devil with a barbed tail, the familiar of those who
+# bargain with hell: quick, sly, and its sting is poisonous. Its shapes and its unseen flight
+# wait for mechanics of their own. Not yet in any dungeon's population.
+[[creature]]
+id = "imp"
+level = 9
+xp = 55
+rarity = "uncommon"
+name = "imp"
+glyph = "i"
+fg = "#d04020"
+speed = 1150
+size = "small"
+faction = "devil"
+tags = ["devil", "fiend"]
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+opens_doors = true
+footsteps = 10
+hearing = 10
+weight = 4000
+stats = { strength = 11, dexterity = 16, toughness = 12, intelligence = 14, willpower = 19, presence = 14 }
+base_hp = 11
+resist = { fire = 100, poison = 50 }
+corpse = false
+blood = "#4a1010"
+[creature.attack]
+damage = "1d10"
+damage_type = "piercing"
+name = "sting"
+verb = "stings"
+on_hit = [{ status = "poisoned", chance = 25, severity = 2 }]

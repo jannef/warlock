@@ -1,0 +1,29 @@
+# The orc tribe (#455; content::orc_roster_tests checks the numbers). The biggest of the orcs'
+# wolves, kept by their chieftains: as tall as a pony, quick, thick-hided, and its bite tears deep.
+[[creature]]
+id = "dire_warg"
+level = 22
+xp = 120
+rarity = "uncommon"
+name = "dire warg"
+glyph = "C"
+fg = "#a09080"
+speed = 1300
+faction = "orcs"
+alignment = "evil"
+vision = "low_light"
+sight = 12
+footsteps = 70
+hearing = 18
+weight = 150000
+stats = { strength = 21, dexterity = 20, toughness = 20, intelligence = 4, willpower = 16, presence = 4 }
+base_hp = 50
+natural = { defence = 1, protection = 0, name = "thick hide" }
+on_eat = { message = "Tough, gamy wolf meat.", vomit = 10, stat = { toughness = 2 } }
+[creature.attack]
+damage = "3d8"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
+to_hit = 2
+on_hit = [{ status = "bleeding", chance = 15, severity = 1 }]
