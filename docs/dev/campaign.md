@@ -9,8 +9,9 @@ spec/07f-scenarios-and-saves.md. Keep this current with the code, as CLAUDE.md s
 
 A campaign is a directory `assets/campaigns/<id>/` holding one world: `campaign.toml`,
 `levels/` (its overworld and every hand-made level), `scenarios/`, optional `vaults/`, and the
-tables `data/dungeons/`, `data/quests/`, `data/dialogue/`, and `data/creatures/` (its own,
-semi-unique creature types: its people and bosses). Everything else under `assets/` is shared
+tables `data/dungeons/`, `data/quests/`, `data/dialogue/`, `data/creatures/` (its own,
+semi-unique creature types: its people and bosses), and `data/uniques/` (its unique items,
+`docs/dev/magic-items.md`; the wiki leaves out the test world's). Everything else under `assets/` is shared
 engine data, `assets/data/` (the common creature types, the shopkeeper's dialogue in
 `data/dialogue.toml`, the field references `data/quests.toml` and `data/dungeons.toml`, which
 hold no entries) and `assets/vaults/`. There are two campaigns: the Ascmearc (`ascmearc`, kind

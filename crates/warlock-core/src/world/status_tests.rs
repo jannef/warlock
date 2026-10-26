@@ -362,7 +362,7 @@ fn big_hits_and_criticals_make_their_target_bleed() {
         player,
         rat,
         AttackKind::Melee,
-        &blow(false, 1),
+        (&blow(false, 1), &[]),
         &mut Vec::new(),
     );
     assert_eq!(effect(&w, rat, "bleeding"), None, "a scratch");
@@ -370,7 +370,7 @@ fn big_hits_and_criticals_make_their_target_bleed() {
         player,
         rat,
         AttackKind::Melee,
-        &blow(false, 2),
+        (&blow(false, 2), &[]),
         &mut Vec::new(),
     );
     assert_eq!(effect(&w, rat, "bleeding").map(|e| e.severity), Some(1));
@@ -378,7 +378,7 @@ fn big_hits_and_criticals_make_their_target_bleed() {
         player,
         rat,
         AttackKind::Thrown,
-        &blow(true, 1),
+        (&blow(true, 1), &[]),
         &mut Vec::new(),
     );
     let e = effect(&w, rat, "bleeding").expect("worse");
@@ -389,7 +389,7 @@ fn big_hits_and_criticals_make_their_target_bleed() {
             player,
             rat,
             AttackKind::Melee,
-            &blow(true, 3),
+            (&blow(true, 3), &[]),
             &mut Vec::new(),
         );
     }
@@ -412,12 +412,24 @@ fn bites_poison_by_their_chance_drawing_only_below_a_sure_thing() {
     let mut w = world_on("#####\n#@b.#\n#####\n", "hp = 1000");
     let (player, biter) = (w.player_id(), ActorId(1));
     let rng = w.state.rng.clone();
-    w.after_blow(biter, player, AttackKind::Melee, &blow, &mut Vec::new());
+    w.after_blow(
+        biter,
+        player,
+        AttackKind::Melee,
+        (&blow, &[]),
+        &mut Vec::new(),
+    );
     assert_eq!(w.state.rng, rng, "nothing drawn at 100 %");
     assert_eq!(effect(&w, player, "poisoned").map(|e| e.severity), Some(4));
     // Only its bite: a shot or a spell by it carries nothing.
     let mut w = world_on("#####\n#@b.#\n#####\n", "hp = 1000");
-    w.after_blow(biter, player, AttackKind::Ranged, &blow, &mut Vec::new());
+    w.after_blow(
+        biter,
+        player,
+        AttackKind::Ranged,
+        (&blow, &[]),
+        &mut Vec::new(),
+    );
     assert_eq!(effect(&w, player, "poisoned"), None);
     // The nipper poisons half the time: one draw per hit, the same for the same seed.
     let nips = |seed: u64| {
@@ -435,7 +447,7 @@ fn bites_poison_by_their_chance_drawing_only_below_a_sure_thing() {
                     ActorId(1),
                     player,
                     AttackKind::Melee,
-                    &blow,
+                    (&blow, &[]),
                     &mut Vec::new(),
                 );
                 assert_eq!(w.state.rng, expected, "one draw");

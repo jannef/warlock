@@ -72,6 +72,10 @@ fn make(
     magic: bool,
     (item_level, source): (u8, Source),
 ) -> Stack {
+    // A unique item (`unique:ID`) is made as it is.
+    if stack.magic().is_some() {
+        return stack.clone();
+    }
     if magic {
         let grade = (item_level, LootGrade::Magic);
         return loot::make_as(content, rng, stack.object, stack.count, grade, source);
