@@ -29,6 +29,8 @@ mod gear;
 mod gem;
 #[cfg(test)]
 mod hag_roster_tests;
+#[cfg(test)]
+mod hobgoblin_roster_tests;
 mod horoscope;
 mod hunger;
 mod item_class;
@@ -850,6 +852,7 @@ impl Content {
             content.level_campaigns.insert(id.to_string(), campaign);
             content.levels.insert(id.to_string(), level);
         }
+        overworld::link_edge_exits(&mut content.levels);
         content.load_kits()?;
         let mut seen: BTreeMap<String, &str> = BTreeMap::new();
         for (path, id, text) in files.in_dir("scenarios") {

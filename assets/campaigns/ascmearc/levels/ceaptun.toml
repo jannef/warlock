@@ -1,12 +1,14 @@
 # Cēaptūn, "the market town" (docs/design/campaign.md §6; spec §3): the trading town at the
 # crossroads below the pass, where the mountain road meets the river roads. A hand-made outdoor
 # level (sky, sun, weather; the pond and the well freeze in a hard winter), entered from its cell
-# on the Ascmearc's overworld; its `<` on the square leads back out there. Walled on the pass
-# side (west), open to the river (east, Beorhtburna's mill race). Everyone here is peaceful
-# (the townsfolk, the people, and the merchants), so the town is safe unless the player steals.
+# on the Ascmearc's overworld, arriving on the square (@). It has no stairs: like any outdoor area
+# it is left by walking off its edge (or with `<` when no enemy is about), back to its overworld
+# cell (spec §7 "Leaving an outdoor area"). Walled on the pass side (west), open to the river
+# (east, Beorhtburna's mill race). Everyone here is peaceful (the townsfolk, the people, and the
+# merchants), so the town is safe unless the player steals.
 #
-# The square: the stairs up (<) to the overworld, the well, two braziers, and the townsfolk
-# (villagers, 1-6) on their rounds of the square, the lanes, and the main street.
+# The square: the well, two braziers, and the townsfolk (villagers, 1-6) on their rounds of the
+# square, the lanes, and the main street.
 #
 # North of the square, four shops (spec §7 "Shops"), each a timber house with its door open on
 # the lane and its goods on the plank floor (the [[shop]] and [[pile]] tables at the end): the
@@ -44,7 +46,7 @@ TTTTTT#TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 ......#..........:.............*..:::::::::::::::::::::::..*..........................↓↓..
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::↓↓..
 :::::::::4::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::↓↓..
-......#..........:................:::::::::::<@::::::::::.............................↓↓..
+......#..........:................::::::::::::@::::::::::.............................↓↓..
 .bbb..#..........:...............T:::::B:::::::::::B:::::...T.............T...........↓↓..
 .bbb..#."""""""".:................:2:::::::::::::::::::::**...........................↓↓..
 ......#."""""""".:................:::::::::::::::::::::::.............................↓↓..
@@ -77,7 +79,6 @@ TTTTTT#TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 "t" = "sconce"
 "B" = "brazier"
 "↓" = { terrain = "running_water", flow = "S" }
-"<" = { terrain = "stairs_up", to = "ascmearc" }
 "@" = { terrain = "flagstones", spawn = "player" }
 # The townsfolk on their rounds.
 "1" = { terrain = "flagstones", creature = "villager", route = "E18 W18" }

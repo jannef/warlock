@@ -146,8 +146,9 @@ Test content never appears in a release. The cargo feature `showcase` holds it:
 ## Cēaptūn, the Ascmearc's market town (#336, design §6)
 
 `campaigns/ascmearc/levels/ceaptun.toml` (90×32, `kind = "outdoor"`, `item_level = 1`, no
-danger), entered from the overworld's `T` (`to = "ceaptun"`) and left by the `<` on its square
-(`to = "ascmearc"`). The map was drawn by a throwaway script and is edited by hand now. Its
+danger), entered from the overworld's `T` (`to = "ceaptun"`), arriving on the square (its `@`), and,
+with no stairs, left by its edge back to that cell (or `<` when no enemy is about;
+docs/dev/overworld.md, the edge exit of a hand-made outdoor level and the quick leave). The map was drawn by a throwaway script and is edited by hand now. Its
 `[[shop]]`s (general store, weaponsmith, armourer, provisioner; keepers named in Old English)
 lay out `[[pile]]`s of goods each kind buys; the Mynster is a `sanctuary` `[[room]]`. The people
 are campaign creature types (`data/creatures/{villager,sister,innkeeper,reeve,mine_factor}.toml`)

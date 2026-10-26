@@ -18,7 +18,7 @@ The in-game `?` screen is authoritative: it is generated from your current key b
 | Close a door | `c`, then a direction |
 | Kick (a door, to break it in, or a creature) | `k`, then a direction (see [Doors](doors.md)) |
 | Go down stairs, or enter a place on the overworld | `>` |
-| Go up stairs | `<` |
+| Go up stairs, or leave an outdoor area when no enemy is about | `<` |
 | Light or douse the lantern | `*` |
 | Pick up | `,` or `;` |
 | Drop | `d` |
@@ -98,7 +98,7 @@ and shows a page at a time: the letters name the rows of the page you see, start
 
 ## Rebinding keys
 
-You can rebind every key but `Esc` in the Controls screen (main menu or pause menu, then
+Keys of menus, lists, screens, and prompts are fixed; new ones are never rebindable. Where the Controls screen lists such keys, it is the current state, and a later update may fix them. You can rebind the keys of play in the Controls screen (main menu or pause menu, then
 Controls). It lists the commands in groups, by where they are used: in play, while aiming, in the
 rest prompt, at `--more--`, on menus and screens, in text fields, on the info pages, in the question windows, and (in builds
 that have them) the developer keys. Select a command, press `Enter`, then press the new key. It

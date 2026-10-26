@@ -22,7 +22,7 @@ giant_centipede at (35, 10) route E E W W E E W W
 bat at (33, 16) route W W N E E E S N W W W S E E
 bat at (46, 6) route E W E E E S S N N W W W E W
 ember_beetle at (4, 9) route S S S N N S S N N N
-kobold_archer at (6, 16) route N N E E W W S S carrying a horn short bow (readied), 12 horn arrows (quivered)
+kobold at (6, 16) route N N E E W W S S carrying a chitin spear (wielded), a fur cap (being worn)
 bat at (30, 9) route W W W N N S S E E E
 giant_centipede at (32, 17) route W E W N N E W S S E W E
 ember_beetle at (65, 8) route S S W W W E E E N N
