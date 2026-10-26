@@ -9,6 +9,7 @@ made_of = ["metal"]
 weight = 11000
 value = 250
 slot = "body"
+spell_cost_percent = 10
 armour = 2
 protection = 3
 # Mail turns a blade well and a point badly.

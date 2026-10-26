@@ -9,6 +9,7 @@ made_of = ["metal", "hide", "bone"]
 weight = 3000
 value = 120
 slot = "head"
+spell_cost_percent = 10
 protection = 2
 kind = "helmet"
 level = 4
