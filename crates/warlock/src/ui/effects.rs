@@ -215,6 +215,7 @@ pub(super) fn track(
             | Event::Status { .. }
             | Event::ResourceEnded { .. }
             | Event::Disease { .. }
+            | Event::Drained { .. }
             | Event::Talked(_)
             | Event::FellThroughIce { .. }
             | Event::TrapSprung { .. }

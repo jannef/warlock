@@ -1,0 +1,31 @@
+# The first drainer (#382, spec §8 "Stats": "Drain"): a thin grey shape of the restless dead that
+# drinks the strength out of the living. Its touch chills, and unless the touched holds firm in
+# will it takes a point of Strength for good (a temple's mending gives it back). Silent, it sees
+# in the dark, blades and clubs pass half through it, and it leaves nothing behind. Not yet in any
+# dungeon's population: the undead roster places it.
+[[creature]]
+id = "pale_drinker"
+level = 7
+xp = 60
+rarity = "rare"
+name = "pale drinker"
+glyph = "G"
+fg = "#8c8fa8"
+faction = "undead"
+alignment = "evil"
+vision = "darkvision"
+sight = 10
+hearing = 12
+weight = 1000
+stats = { strength = 10, dexterity = 15, toughness = 12, intelligence = 8, willpower = 16, presence = 12 }
+base_hp = 12
+resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50, poison = 100 }
+corpse = false
+blood = "none"
+
+[creature.attack]
+damage = "1d4"
+damage_type = "cold"
+name = "touch"
+verb = "touches"
+on_hit = [{ drain = "strength", points = 1, chance = 100, check = "willpower", difficulty = 14 }]

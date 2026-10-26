@@ -148,8 +148,8 @@ pub use spell::{BOLT_LENGTHS, BURST_RADII, Bolt, Burst, BurstIce};
 pub use stance::{CombatStance, StanceDef, Stances, percent_of};
 pub use stat_training::{StatRule, StatTraining, StatUse};
 pub use status::{
-    Affliction, COST_PERCENT, CombatBonus, Healing, MAX_REGEN, MAX_SEVERITY, OnHit, Penalty,
-    Stacking, StatusDef, StatusId, Wound,
+    Affliction, COST_PERCENT, CombatBonus, Drain, Healing, MAX_DRAIN_POINTS, MAX_REGEN,
+    MAX_SEVERITY, OnHit, Penalty, Stacking, StatusDef, StatusId, Wound,
 };
 pub use steal::StealRules;
 pub use talent::{

@@ -131,6 +131,7 @@ fn actor(content: &Content, creature: &str) -> Actor {
         effects: Default::default(),
         diseases: Default::default(),
         damage: Default::default(),
+        drained: Default::default(),
         weapon_skills: Default::default(),
         faction_override: None,
         alignment: None,

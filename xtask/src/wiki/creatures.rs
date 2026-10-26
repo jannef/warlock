@@ -311,6 +311,11 @@ fn on_hit(content: &Content, attack: &NaturalAttack) -> Vec<String> {
                 o.chance,
                 content.disease(d).name
             ),
+            Affliction::Drain(drain) => format!(
+                "{}% drains {} for good (unless resisted)",
+                o.chance,
+                super::stats::drained_stat(drain.stat)
+            ),
         })
         .collect()
 }

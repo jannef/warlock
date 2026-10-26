@@ -32,9 +32,9 @@ expression: "render(case, content.clone())"
             │ Grit                                                                     │
             │   r  Lean                             You go hungry more slowly, and ex… │
             │   s  Pack mule                   1/2  You can carry a tenth more for ea… │
+            │   t  Unbroken soul                    Your self holds fast: the touch o… │
             │ Delver                                                                   │
-            │   t  Alert                            You notice hidden things in passi… │
-            │   u  Lockbreaker                      Your door kicks are mightier, and… │
+            │   u  Alert                            You notice hidden things in passi… │
             │                                                                          │
             │ Tougher than most: more hit points for each rank, and more as you level. │
             │                                                                          │

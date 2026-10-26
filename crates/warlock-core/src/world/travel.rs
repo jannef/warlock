@@ -509,6 +509,7 @@ pub(super) fn make_creature(
         effects: Default::default(),
         diseases: Default::default(),
         damage: Default::default(),
+        drained: Default::default(),
         weapon_skills: def.weapon_skills.clone(),
         faction_override: spawn.faction,
         alignment: None,

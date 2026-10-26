@@ -176,6 +176,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("potentials.md", character::potentials),
         ("stat-training.md", stats::stat_training),
         ("stat-checks.md", stats::stat_checks),
+        ("drain-attacks.md", stats::drain_attacks),
         ("genders.md", character::genders),
         ("races.md", character::races),
         ("race-traits.md", character::race_traits),

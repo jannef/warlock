@@ -279,6 +279,12 @@ impl World {
                 }
                 actor == player
             }
+            Event::Drained { actor, stat } => {
+                if actor == player {
+                    reports.push((super::drain::drained_message(stat), true));
+                }
+                actor == player
+            }
             Event::Died {
                 actor,
                 at,

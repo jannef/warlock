@@ -3,9 +3,10 @@ id = "divine_grace"
 name = "Divine grace"
 tree = "class"
 granted = true
-description = "Grace guards you: you shake off disease more easily, and poison leaves you sooner."
+description = "Grace guards you: you shake off disease more easily, poison leaves you sooner, and the draining touch of the dead takes hold of you less often."
 effects = [
     { kind = "disease_checks", value = 2 },
     { kind = "status_eases", status = "poisoned", value = 100 },
+    { kind = "drain_checks", value = 2 },
 ]
-systems = ["diseases", "status"]
+systems = ["diseases", "drain", "status"]

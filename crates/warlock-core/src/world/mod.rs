@@ -99,6 +99,7 @@ mod dig;
 mod disarm;
 mod disease;
 mod door;
+mod drain;
 mod eat;
 mod element_gifts;
 mod equip;
@@ -650,6 +651,7 @@ impl World {
             effects: Default::default(),
             diseases: Default::default(),
             damage: Default::default(),
+            drained: Default::default(),
             weapon_skills,
             faction_override: None,
             alignment: content.alignment().map(|_| alignment),
@@ -1191,6 +1193,8 @@ mod disease_tests;
 mod door_tests;
 #[cfg(test)]
 mod door_trap_tests;
+#[cfg(test)]
+mod drain_tests;
 #[cfg(test)]
 mod element_gift_tests;
 #[cfg(test)]
