@@ -193,15 +193,15 @@ fn files(scenario: &str, extra: &[(&str, &str)]) -> ContentFiles {
     let diseases = include_str!("../../../../assets/data/diseases.toml");
     files.insert("data/diseases.toml", &format!("{diseases}\n{FOG}"));
     files.insert("data/experience.toml", EXPERIENCE);
-    // Without the draining room, whose Ebbing STATUS leaves out (the other effects stay).
+    // Without the rooms that give a status STATUS leaves out (the draining room's Ebbing, the
+    // silent vault's Silenced; the other effects stay).
     let rooms = include_str!("../../../../assets/data/room_effects.toml");
-    let rooms = match rooms.split_once("[[effect]]\nid = \"draining\"") {
-        Some((before, after)) => match after.split_once("[[effect]]") {
-            Some((_, rest)) => format!("{before}[[effect]]{rest}"),
-            None => before.to_string(),
-        },
-        None => rooms.to_string(),
-    };
+    let mut parts = rooms.split("[[effect]]");
+    let mut rooms = parts.next().unwrap_or_default().to_string();
+    for effect in parts.filter(|e| !e.contains("\nstatus = ")) {
+        rooms.push_str("[[effect]]");
+        rooms.push_str(effect);
+    }
     files.insert("data/room_effects.toml", &format!("{rooms}{WELL}"));
     files.insert("levels/hall.toml", LEVEL);
     files.insert(

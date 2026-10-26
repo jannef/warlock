@@ -377,6 +377,7 @@ impl World {
         if let Some(line) = super::rooms::pervade_line(&self.state, &self.content) {
             self.say(line);
         }
+        let _ = self.settle_in();
         Ok(())
     }
 
