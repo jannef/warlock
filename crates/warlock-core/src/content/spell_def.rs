@@ -1,8 +1,7 @@
 //! Spells as data (spec §8 "Spells", the magic design `docs/design/magic.md` §3, §5, §6): the
 //! tier table (`data/spells.toml`, [`SpellRules`]) and the spells (`data/spells/`, one
-//! `[[spell]]` file each, [`SpellData`]). Not the casters' placeholder spells
-//! ([`super::ClassSpell`]) nor the bursts and bolts scrolls and traps cast (`content/spell.rs`):
-//! nothing casts these yet (#395 brings the one cast path).
+//! `[[spell]]` file each, [`SpellData`]), cast by the one cast path (`world/cast.rs`). Not the
+//! bursts and bolts scrolls and traps cast (`content/spell.rs`), whose code the cast path shares.
 //!
 //! - **Tiers**: a spell has a tier, 0 (a cantrip) to 9; each tier has a comfortable caster level,
 //!   a base mana cost, and a damage ceiling, all ascending (checked).
@@ -13,8 +12,12 @@
 //!   above a quarter of the ceiling. A spell over it is refused when the content loads, so no
 //!   spell can be written past its cap; nothing in the rules lifts one.
 
+use super::effect::EffectShape;
+use super::spell::{Burst, BurstIce, SpellFields, check_effect, default_verb};
+use super::trap::TrapNoise;
 use super::{Content, ContentError, DamageTypeId, MAX_LEVEL, MAX_SEVERITY, StatusId, duplicate_id};
 use crate::dice::Dice;
+use crate::noise::MAX_LOUDNESS;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -28,6 +31,11 @@ pub const MAX_CONE: u8 = 5;
 pub const MAX_DICE: u8 = 20;
 /// The most caster levels a spell's `per_levels` may ask for one die more.
 pub const MAX_PER_LEVELS: u8 = 20;
+/// The most `casts` a spell may take.
+pub const MAX_CASTS: u8 = 10;
+/// A stat step's default and its largest (`reach_step`, `presence_step`).
+const DEFAULT_STEP: u8 = 2;
+const MAX_STEP: u8 = 10;
 /// The percents a shape's or a resolution's multiplier may be.
 const PERCENTS: std::ops::RangeInclusive<u16> = 1..=1000;
 
@@ -194,6 +202,8 @@ pub struct Ratio {
 #[serde(deny_unknown_fields)]
 struct RulesFile {
     overreach_cost: u16,
+    reach_step: Option<u8>,
+    presence_step: Option<u8>,
     tiers: TiersSpec,
     shapes: ShapesSpec,
     resolution: ResolutionSpec,
@@ -234,6 +244,11 @@ struct ResolutionSpec {
 pub struct SpellRules {
     /// Percent more mana per tier of overreach.
     pub overreach_cost: u16,
+    /// Willpower modifier points per cell a spell reaches farther, or its area grows (magic
+    /// design §3), never past the spell's own caps.
+    pub reach_step: u8,
+    /// Presence modifier points per degree more of a buff's or a hex's status.
+    pub presence_step: u8,
     /// Each tier's comfortable caster level, tier 0 first: ascending, the first 1.
     pub comfortable: [u8; TIERS],
     /// Each tier's base mana cost: ascending.
@@ -278,6 +293,15 @@ impl SpellRules {
         if !PERCENTS.contains(&file.overreach_cost) {
             return Err(err("overreach_cost is 1 to 1000 percent".into()));
         }
+        let (reach_step, presence_step) = (
+            file.reach_step.unwrap_or(DEFAULT_STEP),
+            file.presence_step.unwrap_or(DEFAULT_STEP),
+        );
+        if !(1..=MAX_STEP).contains(&reach_step) || !(1..=MAX_STEP).contains(&presence_step) {
+            return Err(err(format!(
+                "`reach_step` and `presence_step` are 1 to {MAX_STEP}"
+            )));
+        }
         let s = &file.shapes;
         let shapes = [s.ray, s.bolt, s.touch, s.myself, s.cone, s.line];
         let burst_ok = (1..=crate::content::BURST_RADII.end().unsigned_abs() as usize)
@@ -303,6 +327,8 @@ impl SpellRules {
         let array = |v: &[u16]| -> [u16; TIERS] { v.try_into().expect("checked length") };
         Ok(SpellRules {
             overreach_cost: file.overreach_cost,
+            reach_step,
+            presence_step,
             comfortable: t.comfortable.clone().try_into().expect("checked length"),
             cost: array(&t.cost),
             ceiling: array(&t.ceiling),
@@ -358,6 +384,48 @@ impl SpellRules {
     pub fn max_bonus(&self, tier: u8) -> i32 {
         i32::from(self.ceiling[usize::from(tier).min(TIERS - 1)]) / 4
     }
+
+    /// What `spell` costs a caster at `caster_level` wearing armour that adds `armour` percent
+    /// (magic design §5), before its talents: the tier's base cost × overreach (1 +
+    /// `overreach_cost` % per tier above the caster level's) × its shape's percent (a burst's
+    /// at its own `radius`) × its resolution's `cost` percent × (100 + `armour`) %, rounded to
+    /// the nearest once at the end, at least 1.
+    pub fn mana(&self, spell: &SpellData, caster_level: i32, armour: u32) -> i32 {
+        let tier = usize::from(spell.tier).min(TIERS - 1);
+        let over = u64::from(spell.tier.saturating_sub(self.tier_of(caster_level)));
+        let radius = spell.radius.unwrap_or(1);
+        let factors = [
+            100 + u64::from(self.overreach_cost) * over,
+            u64::from(self.shape_cost(spell.shape, radius)),
+            u64::from(self.ratio(spell.resolution).cost),
+            100 + u64::from(armour),
+        ];
+        let num = factors.iter().product::<u64>() * u64::from(self.cost[tier]);
+        let den = 100u64.pow(4);
+        i32::try_from((num + den / 2) / den)
+            .unwrap_or(i32::MAX)
+            .max(1)
+    }
+
+    /// A reach of `base` cells grown by a Willpower `modifier` (magic design §3): a cell per
+    /// `reach_step` points of a positive modifier, never past `cap`.
+    pub fn grown(&self, base: i32, cap: i32, modifier: i32) -> i32 {
+        (base + modifier.max(0) / i32::from(self.reach_step)).min(cap.max(base))
+    }
+
+    /// The degrees of a buff's or a hex's status, `severity` lengthened by a Presence
+    /// `modifier`: a degree per `presence_step` points of a positive modifier (the status's own
+    /// `max` holds it when it is given).
+    pub fn lengthened(&self, severity: u16, modifier: i32) -> u16 {
+        let more = u16::try_from(modifier.max(0) / i32::from(self.presence_step)).unwrap_or(0);
+        severity.saturating_add(more).min(MAX_SEVERITY)
+    }
+
+    /// The most `spell` may do to one target in one cast: its tier's cap for its resolution.
+    /// Whatever rolls it (caster level, talents, a critical), nothing does more.
+    pub fn cap_of(&self, spell: &SpellData) -> i32 {
+        self.cap(spell.tier, spell.resolution)
+    }
 }
 
 #[derive(Deserialize)]
@@ -382,9 +450,30 @@ struct SpellSpec {
     max_range: Option<u8>,
     max_radius: Option<u8>,
     max_length: Option<u8>,
+    range: Option<u8>,
+    radius: Option<u8>,
+    length: Option<u8>,
+    casts: Option<u8>,
+    #[serde(default)]
+    open_sky: bool,
     damage: Option<DiceSpec>,
     effect: Option<EffectSpec>,
+    cast: Option<CastSpec>,
     scroll: Option<ScrollSpec>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct CastSpec {
+    effect: Option<String>,
+    noun: Option<String>,
+    verb: Option<String>,
+    message: Option<String>,
+    noise: Option<TrapNoise>,
+    blast: Option<u16>,
+    #[serde(default)]
+    heat: bool,
+    frost: Option<u16>,
 }
 
 #[derive(Deserialize)]
@@ -463,6 +552,25 @@ pub struct SpellEffect {
     pub diseases: bool,
 }
 
+/// How a spell shows and sounds, and what its area does to walls and ice (`[spell.cast]`).
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct SpellLook {
+    /// The effect presentation shows (`data/effects.toml`): a burst's for a burst or a cone,
+    /// a bolt's for a ray, a bolt, or a line. None: nothing is drawn.
+    pub effect: Option<String>,
+    /// What hits ("fireball") and what it does ("burns"), for messages.
+    pub noun: String,
+    pub verb: String,
+    /// Said as it is cast.
+    pub message: Option<String>,
+    /// The noise it makes where it goes off (a burst's centre, else the caster).
+    pub noise: Option<TrapNoise>,
+    /// A burst's blast against walls (0: none).
+    pub blast: u16,
+    /// What a burst does to ice and water.
+    pub ice: Option<BurstIce>,
+}
+
 /// A spell (`data/spells/`), in path order.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SpellData {
@@ -484,15 +592,43 @@ pub struct SpellData {
     pub max_radius: Option<u8>,
     /// How far a cone or a line reaches from the caster.
     pub max_length: Option<u8>,
+    /// Its reach before Willpower (magic design §3): a ray's, bolt's, or burst's range, a
+    /// burst's radius, a cone's or a line's length; each at most its cap above (default it).
+    pub range: Option<u8>,
+    pub radius: Option<u8>,
+    pub length: Option<u8>,
+    /// Its time, in `cast` actions (1 to [`MAX_CASTS`]).
+    pub casts: u8,
+    /// It is cast only under the open sky (call lightning).
+    pub open_sky: bool,
+    /// How it shows and sounds.
+    pub look: SpellLook,
     /// A `damage` spell's damage.
     pub damage: Option<SpellDice>,
-    /// What a spell of another kind does.
+    /// What a spell of another kind does; a `damage` spell's `status` is suffered by everyone
+    /// it harms.
     pub effect: SpellEffect,
     /// The caster level a read of its scroll casts it at, if it comes on a scroll.
     pub scroll_level: Option<u8>,
 }
 
 impl SpellData {
+    /// Whether it asks for a cell when cast: anything but a spell on oneself.
+    pub fn aimed(&self) -> bool {
+        self.shape != Shape::Myself
+    }
+
+    /// How far a cell it is aimed at may be, before Willpower: a ray's, bolt's, or burst's
+    /// range, a cone's or a line's length, a touch's 1; `None` on oneself.
+    pub fn base_reach(&self) -> Option<i32> {
+        match self.shape {
+            Shape::Touch => Some(1),
+            Shape::Myself => None,
+            Shape::Cone | Shape::Line => self.length.map(i32::from),
+            Shape::Ray | Shape::Bolt | Shape::Burst => self.range.map(i32::from),
+        }
+    }
+
     /// Its tags (magic design §6): its school, kind, shape, and damage type, if any.
     pub fn tags<'c>(&self, content: &'c Content) -> Vec<&'c str> {
         let mut tags = vec![self.school.id(), self.kind.id(), self.shape.id()];
@@ -623,6 +759,20 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
         MAX_REACH
     };
     reach("max_length", spec.max_length, long, most)?;
+    // Its reach before Willpower: only where it has the cap, at most the cap, default it.
+    let base = |name: &str, value: Option<u8>, cap: Option<u8>| match (value, cap) {
+        (None, cap) => Ok(cap),
+        (Some(_), None) => Err(format!("a `{}` has no `{name}`", spec.shape.id())),
+        (Some(v), Some(cap)) if (1..=cap).contains(&v) => Ok(Some(v)),
+        (Some(_), Some(cap)) => Err(format!("`{name}` is 1 to its cap, {cap}")),
+    };
+    let range = base("range", spec.range, spec.max_range)?;
+    let radius = base("radius", spec.radius, spec.max_radius)?;
+    let length = base("length", spec.length, spec.max_length)?;
+    let casts = spec.casts.unwrap_or(1);
+    if !(1..=MAX_CASTS).contains(&casts) {
+        return Err(format!("`casts` is 1 to {MAX_CASTS}"));
+    }
     let damage_type = match &spec.damage_type {
         None => None,
         Some(name) => Some(
@@ -641,9 +791,6 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
         return Err("a `damage` spell needs a `damage_type`".into());
     }
     let effect = match spec.effect {
-        Some(_) if spec.kind == SpellPurpose::Damage => {
-            return Err("a `damage` spell has no [spell.effect]".into());
-        }
         Some(e) => effect(e, tier, (spec.kind, spec.resolution), rules, content)?,
         None => SpellEffect::default(),
     };
@@ -671,6 +818,11 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
             Some(level)
         }
     };
+    let look = look(spec.cast, shape, radius, damage_type, content)?;
+    let look = SpellLook {
+        noun: look.noun.unwrap_or_else(|| spec.name.to_lowercase()),
+        ..look.look
+    };
     Ok(SpellData {
         id: spec.id,
         name: spec.name,
@@ -684,10 +836,112 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
         max_range: spec.max_range,
         max_radius: spec.max_radius,
         max_length: spec.max_length,
+        range,
+        radius,
+        length,
+        casts,
+        open_sky: spec.open_sky,
+        look,
         damage,
         effect,
         scroll_level,
     })
+}
+
+/// A spell's `[spell.cast]` checked, but its noun when it gives none (the caller's default).
+struct Looked {
+    look: SpellLook,
+    noun: Option<String>,
+}
+
+/// A spell's `[spell.cast]`, checked: an `effect` of the shape that draws it (only for a spell
+/// cast at a distance: burst and cone a burst's, ray, bolt, and line a bolt's; none: nothing is
+/// drawn), blast
+/// and heat or frost for a burst, a noise as loud as a trap's may be, no empty words. Its
+/// effect is checked against `data/effects.toml` once effects are loaded
+/// ([`check_effects`]).
+fn look(
+    spec: Option<CastSpec>,
+    shape: Shape,
+    radius: Option<u8>,
+    damage_type: Option<DamageTypeId>,
+    content: &Content,
+) -> Result<Looked, String> {
+    let verb = |given: Option<String>| given.unwrap_or_else(|| default_verb(content, damage_type));
+    let Some(c) = spec else {
+        return Ok(Looked {
+            look: SpellLook {
+                verb: verb(None),
+                ..SpellLook::default()
+            },
+            noun: None,
+        });
+    };
+    let words = [&c.noun, &c.verb, &c.message];
+    if words
+        .iter()
+        .any(|w| w.as_ref().is_some_and(|w| w.trim().is_empty()))
+    {
+        return Err("cast: `noun`, `verb`, and `message` must not be empty".into());
+    }
+    if let Some(noise) = c.noise
+        && !(1..=MAX_LOUDNESS).contains(&noise.loudness)
+    {
+        return Err(format!("cast: `noise` loudness is 1 to {MAX_LOUDNESS}"));
+    }
+    let far = !matches!(shape, Shape::Touch | Shape::Myself);
+    if c.effect.is_some() && !far {
+        return Err(format!("cast: a `{}` has no `effect`", shape.id()));
+    }
+    let burst = shape == Shape::Burst;
+    if !burst && (c.blast.is_some() || c.heat || c.frost.is_some()) {
+        return Err("cast: `blast`, `heat`, and `frost` are a burst's".into());
+    }
+    let (blast, ice) = if burst {
+        // The scrolls' and traps' checks of the same fields.
+        let fields = SpellFields {
+            spell: Some(c.effect.clone().unwrap_or_else(|| "-".into())),
+            damage: Some(crate::dice::Dice::of(1, 6)),
+            kind: None,
+            radius: radius.map(i32::from),
+            blast: c.blast,
+            heat: c.heat,
+            frost: c.frost,
+            length: None,
+        };
+        let b = Burst::new(&fields).map_err(|m| format!("cast: {m}"))?;
+        (b.blast, b.ice)
+    } else {
+        (0, None)
+    };
+    Ok(Looked {
+        look: SpellLook {
+            effect: c.effect,
+            noun: String::new(),
+            verb: verb(c.verb),
+            message: c.message,
+            noise: c.noise,
+            blast,
+            ice,
+        },
+        noun: c.noun,
+    })
+}
+
+/// With spell effects in content, every spell's `effect` names an effect of its shape
+/// (checked once effects are loaded, after the objects).
+pub(super) fn check_effects(content: &Content) -> Result<(), String> {
+    for spell in content.spells() {
+        let Some(effect) = &spell.look.effect else {
+            continue;
+        };
+        let shape = match spell.shape {
+            Shape::Burst | Shape::Cone => EffectShape::Burst,
+            _ => EffectShape::Bolt,
+        };
+        check_effect(content, effect, shape).map_err(|m| format!("spell `{}`: {m}", spell.id))?;
+    }
+    Ok(())
 }
 
 /// A spell's `[spell.effect]`, checked: only what its kind uses, and a heal under the cap.
@@ -706,7 +960,8 @@ fn effect(
         }
     };
     only("heal", e.heal.is_some(), &[SpellPurpose::Heal])?;
-    let marks = [SpellPurpose::Buff, SpellPurpose::Hex];
+    // A damage spell's status falls on everyone it harms (blight's poison).
+    let marks = [SpellPurpose::Buff, SpellPurpose::Hex, SpellPurpose::Damage];
     only("status", e.status.is_some(), &marks)?;
     only("severity", e.severity.is_some(), &marks)?;
     only("cures", !e.cures.is_empty(), &[SpellPurpose::Cleanse])?;
@@ -1090,7 +1345,28 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
             (
                 "damage = { dice = \"2d6\" }",
                 "damage = { dice = \"2d6\" }\neffect = { diseases = true }",
-                "no [spell.effect]",
+                "a `damage` spell has no `diseases`",
+            ),
+            (
+                "max_range = 8",
+                "max_range = 8\nrange = 9",
+                "`range` is 1 to its cap, 8",
+            ),
+            (
+                "max_radius = 2",
+                "max_radius = 2\nlength = 2",
+                "a `burst` has no `length`",
+            ),
+            ("tier = 3", "tier = 3\ncasts = 0", "`casts` is 1 to 10"),
+            (
+                "damage = { dice = \"2d6\" }",
+                "damage = { dice = \"2d6\" }\ncast = { effect = \"fireball\", frost = 10, heat = true }",
+                "`heat` or `frost`, not both",
+            ),
+            (
+                "damage = { dice = \"2d6\" }",
+                "damage = { dice = \"2d6\" }\ncast = { effect = \"fireball\", noun = \" \" }",
+                "must not be empty",
             ),
         ] {
             let body = good.replace(from, to);
@@ -1126,5 +1402,87 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
         );
         let fixed = SpellDice { per_levels: 0, ..d };
         assert_eq!(fixed.at(60, 12).to_string(), "2d6");
+    }
+
+    #[test]
+    fn a_cast_costs_by_tier_overreach_shape_resolution_and_armour() {
+        let r = rules();
+        let list = spells(FIRST_LIST).expect("the first list");
+        let spell = |id: &str| list.iter().find(|s| s.id == id).expect("a spell").clone();
+        let at = |id: &str, level: i32, armour: u32| r.mana(&spell(id), level, armour);
+        // (spell, caster level, armour %, mana): the design's §5 and §7.
+        let table = [
+            ("spark", 1, 0, 1),            // tier 0, single target
+            ("magic_missile", 3, 0, 3),    // tier 1 at its comfortable level
+            ("magic_missile", 1, 0, 5),    // one tier over: 3 × 1.5 = 4.5, rounded up
+            ("scorching_ray", 1, 0, 12),   // two tiers over: 6 × 2
+            ("scorching_ray", 30, 0, 6),   // far above it: never cheaper than the base
+            ("burning_hands", 3, 0, 5),    // a cone: 3 × 1.6 = 4.8
+            ("cause_wounds", 3, 0, 2),     // touch: 3 × 0.7 = 2.1
+            ("fireball", 12, 0, 26),       // a burst of radius 2: 11 × 2.4 = 26.4
+            ("lightning_bolt", 12, 0, 20), // a line: 11 × 1.8 = 19.8
+            ("fireball", 6, 0, 40),        // one tier over, then the burst: 11 × 1.5 × 2.4
+            ("magic_missile", 3, 40, 4),   // plate: 3 × 1.4 = 4.2
+            ("fireball", 12, 30, 34),      // banded mail: 26.4 × 1.3 = 34.32
+        ];
+        for (id, level, armour, mana) in table {
+            assert_eq!(at(id, level, armour), mana, "{id} at {level} in {armour} %");
+        }
+        // Area is dearer than the tier's single target, and weaker per target (§12.5).
+        let (ball, ray) = (spell("fireball"), spell("magic_missile"));
+        assert!(r.mana(&ball, 12, 0) > i32::from(r.cost[3]));
+        assert!(r.cap(3, Resolution::Area) < r.cap(3, Resolution::Attack));
+        assert!(r.mana(&ray, 3, 0) == i32::from(r.cost[1]));
+    }
+
+    #[test]
+    fn willpower_grows_reach_to_the_cap_and_presence_adds_degrees() {
+        let r = rules();
+        assert_eq!(r.reach_step, 2);
+        // A range of 6 capped at 8: a cell per two points of a positive modifier.
+        let grown: Vec<i32> = [-3, 0, 1, 2, 4, 9]
+            .iter()
+            .map(|&m| r.grown(6, 8, m))
+            .collect();
+        assert_eq!(grown, [6, 6, 6, 7, 8, 8]);
+        assert_eq!(r.grown(3, 3, 9), 3, "no cap above the base: no growth");
+        let degrees: Vec<u16> = [-2, 1, 2, 5].iter().map(|&m| r.lengthened(1, m)).collect();
+        assert_eq!(degrees, [1, 1, 2, 3]);
+    }
+
+    #[test]
+    fn the_shipped_spells_are_the_casters_placeholders_within_their_tiers() {
+        let content = Content::builtin().expect("content");
+        let r = content.spell_rules().expect("the tier table");
+        // (spell, tier, the placeholder's dice kept, mana at its comfortable level; what it
+        // cost as a placeholder in the comment).
+        let table = [
+            ("blessing", 0, None, 1),               // 2
+            ("cure_wounds", 2, None, 6),            // 4 (1d8 and a point per 2 levels)
+            ("remove_disease", 3, None, 11),        // 10
+            ("call_lightning", 4, Some("4d6"), 29), // 8
+            ("flame", 3, Some("3d6"), 26),          // 10
+            ("frost", 2, Some("2d6"), 14),          // 10
+            ("arcane_bolt", 2, Some("2d6"), 11),    // 3
+            ("fire_burst", 3, Some("3d6"), 26),     // 9
+            ("evil_eye", 1, None, 3),               // 2
+            ("hex_of_weakness", 1, None, 3),        // 3
+            ("curse_of_sloth", 1, None, 3),         // 4
+            ("blight", 2, Some("2d6"), 14),         // 8
+        ];
+        for (id, tier, dice, mana) in table {
+            let spell = content.spell(content.spell_id(id).expect("shipped"));
+            assert_eq!(spell.tier, tier, "{id}");
+            let at = r.comfortable[usize::from(tier)];
+            assert_eq!(r.mana(spell, i32::from(at), 0), mana, "{id}");
+            let rolled = spell.damage.map(|d| d.at(i32::from(at), at).to_string());
+            assert_eq!(rolled.as_deref(), dice, "{id}");
+            if let Some(d) = spell.damage.or(spell.effect.heal) {
+                assert!(d.max() <= r.cap_of(spell), "{id} under its cap");
+            }
+            let ability = crate::content::ClassSpell::from_id(id).expect("an ability");
+            assert_eq!(content.class_spell(ability), Some(spell), "{id} is given");
+        }
+        assert_eq!(content.spells().len(), table.len());
     }
 }

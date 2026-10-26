@@ -134,6 +134,8 @@ fn files(scenario: &str, extra: &[(&str, &str)]) -> ContentFiles {
     // The talents name the built-in statuses, which STATUS replaces.
     files.remove("data/talents/");
     files.remove("data/talents.toml");
+    // And the spells (Blessing's Blessed, the hexes').
+    files.remove("data/spells/");
     // So does the rage (its Raging).
     files.remove("data/resources.toml");
     // And the giant leech's bite (its Bleeding), and so from Fennmynster, where it lives.

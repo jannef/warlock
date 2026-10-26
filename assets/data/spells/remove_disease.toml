@@ -1,0 +1,11 @@
+# The priest's Remove disease (spec §8 "Class abilities"): every disease and any poison gone.
+[[spell]]
+id = "remove_disease"
+name = "Remove disease"
+description = "A rite of cleansing: every disease you carry and any poison in you are gone."
+tier = 3
+school = "restoration"
+kind = "cleanse"
+shape = "self"
+resolution = "auto"
+effect = { cures = ["poisoned"], diseases = true }

@@ -1306,6 +1306,7 @@ impl TalentMods {
                         kind: content.damage_type_id(&damage_type),
                         blast: 0,
                         ice: Some(crate::content::BurstIce::Melts),
+                        cap: None,
                     };
                     self.rise = Some(Rise {
                         hp_percent,
@@ -1340,6 +1341,7 @@ impl TalentMods {
                         length,
                         damage,
                         kind: content.damage_type_id(&damage_type),
+                        cap: None,
                     };
                     self.fire_breath = Some(FireBreath {
                         bolt,
