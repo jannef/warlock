@@ -1,0 +1,33 @@
+# The demon roster (#449). A demon like a giant fly or mosquito with a man's face, whose wings
+# drone a sound that drags the mind toward sleep. With no sleep in the rules yet, its drone is
+# the transfixed status (every action twice as slow): a stupor the victim fights through.
+[[creature]]
+id = "chasme"
+level = 28
+xp = 150
+rarity = "uncommon"
+name = "chasme"
+glyph = "u"
+fg = "#606a80"
+speed = 1350
+faction = "demon"
+tags = ["demon", "fiend"]
+alignment = "evil"
+vision = "darkvision"
+sight = 14
+footsteps = 20
+hearing = 18
+weight = 90000
+stats = { strength = 22, dexterity = 22, toughness = 22, intelligence = 21, willpower = 25, presence = 21 }
+base_hp = 63
+natural = { defence = 1, name = "chitin" }
+resist = { fire = 50, cold = 25, electricity = 25, poison = 100 }
+corpse = false
+blood = "#2a2a3a"
+[creature.attack]
+damage = "4d6"
+damage_type = "piercing"
+name = "proboscis"
+verb = "stabs"
+to_hit = 2
+on_hit = [{ status = "transfixed", chance = 20, severity = 2 }]

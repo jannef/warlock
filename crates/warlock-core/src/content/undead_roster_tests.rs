@@ -16,7 +16,7 @@ const OFF_GUIDELINE: &[&str] = &["pale_drinker"];
 
 /// A role's adjustments (#383 "Conventions").
 #[derive(Clone, Copy, Debug)]
-enum Role {
+pub(super) enum Role {
     Shambler,
     Brute,
     Standard,
@@ -131,13 +131,13 @@ const LADDER: &[(&str, f64)] = &[
 ];
 
 /// The formula's max HP: Toughness (12 + 0.4 L, by role) plus base_hp (2.5 L, by role).
-fn max_hp(level: f64, role: Role) -> f64 {
+pub(super) fn max_hp(level: f64, role: Role) -> f64 {
     12.0 + 0.4 * level + role.toughness() + 2.5 * level * role.hp()
 }
 
 /// The formula's dice average: the ladder's nearest to `2 + 0.55 L` (flattening past L20),
 /// moved by the role's step and one step lower for a drain.
-fn dice_average(level: f64, role: Role, drains: bool) -> f64 {
+pub(super) fn dice_average(level: f64, role: Role, drains: bool) -> f64 {
     let target = if level <= 20.0 {
         2.0 + 0.55 * level
     } else {
@@ -154,7 +154,7 @@ fn dice_average(level: f64, role: Role, drains: bool) -> f64 {
     LADDER[index as usize].1
 }
 
-fn within(actual: f64, expected: f64) -> bool {
+pub(super) fn within(actual: f64, expected: f64) -> bool {
     ((actual - expected) / expected * 100.0).abs() <= TOLERANCE
 }
 

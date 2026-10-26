@@ -141,7 +141,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
   tongue that holds fast), the gibbering shade 18 (incorporeal, a cold touch that drains
   Intelligence), the bone wyvern 18 (a sting, bone with protection 2), the revenant 19 (very
   tough, a long sword half the time), the fetch 19 (incorporeal, a cold touch that frightens), and
-  the mummy priest 20 (a caster whose touch carries mummy rot, sometimes something worth taking). The duergar types are of the duergar race. For blood (§8 "Blood";
+  the mummy priest 20 (a caster whose touch carries mummy rot, sometimes something worth taking).
+  The demons (#449; faction `demon`, hostile to the player, the kobolds, the goblins, the duergar,
+  and the marsh things; tags `demon` and `fiend`; evil, darkvision, immune to poison, resisting
+  fire, and from level 24 cold and electricity a little; no corpse; the undead roster's formulas):
+  in Fyrdelf's population, the dretch 8 (small, slow, filthy claws that give filth fever) and the
+  quasit 12 (small, quick, claws that poison and weaken). In no population yet, waiting for deep
+  places: the balgura 24 (a savage ape, a brute on quick feet), the chasme 28 (a giant fly whose
+  drone transfixes), the hezrou 30 (a hulking toad whose stench sickens: claws that poison), the
+  vrock 34 (a vulture whose screech frightens), the marilith 40 (six blades, striking twice as
+  often), the glabrezu 44 (pincers that hold fast), the nalfeshnee 50 (a winged boar whose bite
+  fills with horror), and the balor 62 (wreathed in fire and lit by it, immune to fire, a great
+  sword, often magic, struck faster than one blow a turn, and a flaming whip that holds when it
+  has no sword). The duergar types are of the duergar race. For blood (§8 "Blood";
   presentation only):
   `blood`, the colour of its stains (`"#rrggbb"`; default dark red, `#6e0e0c`) or `"none"` for a
   bloodless creature; the cave beetle bleeds greenish-black ichor (`#38461a`). For hunger (§8
@@ -654,7 +666,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   ("cultists", the drowned minster's cult; hostile to the player and the marsh), `duergar` (the
   delf's grey dwarves; hostile to the player, the goblins (the ogres and trolls among them), and
   the undead), `fire` ("fire things", the delf's burning creatures and the fire drake; hostile to
-  the player only), `wildlife` (deer, cave bats, the cave beetle;
+  the player only), `demon` ("demons", the demon roster; hostile to the player, the kobolds, the
+  goblins, the duergar, and the marsh things; not animals), `wildlife` (deer, cave bats, the cave beetle;
   neutral to everyone), and
   `peaceful` ("peaceful folk", hostile to no one: the showcase's people by type, and creatures
   levels place in it); `merchants` (shopkeepers; hostile to no one) and `outraged` ("outraged

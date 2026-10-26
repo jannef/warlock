@@ -67,6 +67,15 @@ id = "fire"
 name = "fire things"
 hostile = ["player"]
 
+# The demons (the roster, #449): dretches and quasits up to the balor. They hunt every people
+# that would stand against them, the player, the kobolds, the goblins, the duergar, and the
+# marsh things; the dead, the fire things, and the beasts are beneath their notice, and the cult
+# that calls on them they let be. Not an animal faction.
+[[faction]]
+id = "demon"
+name = "demons"
+hostile = ["player", "kobolds", "goblins", "duergar", "marsh"]
+
 # Folk who mean the player no harm, whatever they are: the showcase's people (the gardener, the
 # bard, the hermit) by type, and others placed here by levels with `faction = "peaceful"` in a
 # legend entry (the showcase hub and caverns), overriding the faction of the creature's type.

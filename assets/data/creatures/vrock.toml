@@ -1,0 +1,34 @@
+# The demon roster (#449). A great vulture of a demon, man-shaped, feathered and beaked, whose
+# screech breaks the nerve of those it falls on. Until creatures cry out to an area, the screech
+# is the fear its talons bring.
+[[creature]]
+id = "vrock"
+level = 34
+xp = 180
+rarity = "uncommon"
+name = "vrock"
+glyph = "U"
+fg = "#7a5aa8"
+speed = 1100
+faction = "demon"
+tags = ["demon", "fiend"]
+alignment = "evil"
+vision = "darkvision"
+sight = 14
+opens_doors = true
+footsteps = 40
+hearing = 16
+weight = 200000
+stats = { strength = 24, dexterity = 18, toughness = 25, intelligence = 23, willpower = 27, presence = 23 }
+base_hp = 85
+natural = { defence = 2, name = "feathers" }
+resist = { fire = 50, cold = 25, electricity = 25, poison = 100 }
+corpse = false
+blood = "#3a1a2a"
+[creature.attack]
+damage = "3d10"
+damage_type = "slashing"
+name = "talons"
+verb = "rakes"
+to_hit = 3
+on_hit = [{ status = "frightened", chance = 25, severity = 2 }]

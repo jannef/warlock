@@ -629,7 +629,8 @@ fn costs_come_from_data_and_are_validated() {
     // The built-in content: every action a normal one but strapping on body armor (3000), a chat
     // (500), the lantern's hood (500), climbing out of the water onto ice (2000), trying to
     // disarm a trap (2000), and a try at picking a lock (2000), and no
-    // creature with an attack of its own cost (yet).
+    // creature with an attack of its own cost but the marilith's six blades (500) and the
+    // balor's sword and whip (700).
     let builtin = Content::builtin().expect("builtin content");
     for &kind in ActionKind::ALL {
         let expected = match kind {
@@ -640,12 +641,14 @@ fn costs_come_from_data_and_are_validated() {
         };
         assert_eq!(builtin.action_costs().cost(kind), expected, "{kind:?}");
     }
-    assert!(
-        builtin
-            .creature_defs()
-            .iter()
-            .all(|c| c.attack_cost.is_none())
-    );
+    for c in builtin.creature_defs() {
+        let want = match c.id.as_str() {
+            "marilith" => Some(500),
+            "balor" => Some(700),
+            _ => None,
+        };
+        assert_eq!(c.attack_cost, want, "{}", c.id);
+    }
 
     let load = |path: &str, text: &str| {
         let mut files = files(1000);

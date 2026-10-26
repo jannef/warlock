@@ -199,3 +199,19 @@ vampire spawn, hand of glory, gallows dead, gibbering shade, bone wyvern, revena
 mummy priest ship in no population (deep undead wait for deep places, #383), and the ghost is
 incorporeal (wall Defence 2). The roster's holds (`held`, #431) are `{ status = "held", chance,
 difficulty }`: the ghast's and fen ghoul's claws 10 % at 15, the gallows dead's tongue 20 % at 17.
+The demon roster (#449): ten shared types, one file each in `assets/data/creatures/` (the
+dretch 8, quasit 12, balgura 24, chasme 28, hezrou 30, vrock 34, marilith 40, glabrezu 44,
+nalfeshnee 50, balor 62), faction `demon` (hostile to the player, kobolds, goblins, duergar, and
+marsh things; inserted after `fire`, and in the four test fixtures' factions files), tags
+`["demon", "fiend"]`. They use the undead roster's formulas and roles:
+`content/demon_roster_tests.rs` (`DEMONS`: id, level, role) imports `Role`, `max_hp`,
+`dice_average`, and `within` from `undead_roster_tests` and checks the XP guideline, ±35 % of
+max HP and dice, both tags, and no corpse; it also pins the faction's stances. Riders are
+existing statuses only: the chasme's drone is `transfixed` (no sleep status exists), the
+hezrou's stench `poisoned`, the vrock's screech and the nalfeshnee's horror `frightened`, the
+glabrezu's pincers and the balor's whip `held` (difficulty 12 + level ÷ 5), the quasit's venom
+`poisoned` and `weakened`. Several attacks a turn do not exist: the marilith's six blades are
+`attack_cost = 500` and the balor's sword and whip `attack_cost = 700` (it wields a great sword
+from its gear, so its natural whip is a fallback); `world/cost_tests.rs` lists them as the only
+types with an attack cost. Only the dretch and the quasit are in a population (Fyrdelf's); the
+rest wait for deep places.

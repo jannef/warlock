@@ -144,4 +144,9 @@ only a wall. What one carried falls out of the wall when it dies, onto the neare
 what it carried (see [Magic items](magic-items.md)). Their numbers are on
 [Creatures in numbers](creature-numbers.md).
 
+**Demons** come up from below: the lesser ones (`u`) from the dretch to the chasme, the greater
+(`U`) from the hezrou to the balor. None of them leaves a body behind, poison does nothing to
+them, and fire does them less harm than it should (the balor none at all). Only the dretch and
+the quasit are met in the delf so far; the rest wait in deeper places.
+
 {{#include generated/creatures.md}}

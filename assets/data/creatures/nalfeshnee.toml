@@ -1,0 +1,35 @@
+# The demon roster (#449). A grotesque thing, boar and ape at once, on wings far too small for it:
+# a judge of the damned whose very nearness fills the heart with horror. Until creatures have
+# auras, the horror comes with its bite.
+[[creature]]
+id = "nalfeshnee"
+level = 50
+xp = 260
+rarity = "rare"
+name = "nalfeshnee"
+glyph = "U"
+fg = "#a08a6a"
+speed = 1050
+faction = "demon"
+tags = ["demon", "fiend"]
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+opens_doors = true
+footsteps = 80
+hearing = 16
+weight = 1200000
+stats = { strength = 36, dexterity = 20, toughness = 37, intelligence = 30, willpower = 33, presence = 30 }
+base_hp = 200
+loot = 75
+natural = { defence = 4, name = "hide" }
+resist = { fire = 75, cold = 25, electricity = 25, poison = 100 }
+corpse = false
+blood = "#2a0a1a"
+[creature.attack]
+damage = "4d10"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
+to_hit = 5
+on_hit = [{ status = "frightened", chance = 15, severity = 3 }]

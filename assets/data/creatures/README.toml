@@ -50,6 +50,7 @@
 #            creature of the "undead" faction: content::tag's test fails without it), vermin
 #            (not the basilisk), marsh-thing (the fens' living things and the bog hag),
 #            duergar (not their trader, a merchant), fire-thing (the delf's burning things)
+#            demon and fiend (every creature of the "demon" faction carries both, #449)
 #   roles    archer (shoots: the goblin, kobold, and skeleton archers), caster (every
 #            combat = "caster" type), cultist (the minster's cult), skeleton (walking bones),
 #            spirit (the incorporeal dead), troll (the troll and the marsh troll)
@@ -165,3 +166,11 @@
 # dead, Z greater, G spirits, W wights and wraiths, M mummies, C hounds, V vampires, D drakes, T
 # the rotting troll; a colour distinct from every other type with the same glyph. Only a type in
 # a population strays (#375): deep undead ship in none until a deep place takes them.
+#
+# The demons (the roster, #449; content::demon_roster_tests checks the numbers): faction
+# "demon", tags ["demon", "fiend"], alignment "evil", vision "darkvision", resist poison 100 and
+# fire (100 for the balor), and cold and electricity 25 from level 24. The undead's formulas and
+# roles (#383) give their xp, stats, base_hp, dice, to-hit, and natural Defence; a hold in on_hit
+# has difficulty 12 + level ÷ 5. No corpse (a demon's body comes apart), dark ichor for blood.
+# Glyphs: u the lesser demons, U the greater. The dretch and the quasit live in Fyrdelf; the rest
+# ship in no population until a deep place takes them.

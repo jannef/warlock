@@ -80,6 +80,14 @@ stacking = "highest"
 eases = 6
 blocks = ["step"]
 hold = { check = "strength", difficulty = 13, turns = "3d4" }
+
+# Named by the quasit's claws (#449): weak limbs, not the mind.
+[[status]]
+id = "weakened"
+name = "Weakened"
+max = 1
+eases = 120
+penalty = { from = 1, strength = -2, dexterity = -2 }
 "##;
 
 // A fog of the mind: it shows after a day and slows mana to a tenth; a progression (every

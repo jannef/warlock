@@ -973,8 +973,9 @@ mod tests {
              sucker (40%, 1 degree) | A hit point every 40 seconds, faster the worse it is | A \
              degree a minute | Not at all | — | Bandage |",
             "| A degree every 2 minutes | Half as fast |",
-            "the giant rat's bite (10%, 2 degrees); the grave worm's bite (20%, 1 degree); eating \
-             rotten food |",
+            "the giant rat's bite (10%, 2 degrees); the grave worm's bite (20%, 1 degree); the \
+             hezrou's claws (30%, 4 degrees); the quasit's claws (20%, 3 degrees); eating rotten \
+             food |",
             "Strength \u{2212}1, Dexterity \u{2212}1 when strong",
         ] {
             assert!(statuses.contains(row), "{row} in {statuses}");
@@ -992,8 +993,8 @@ mod tests {
         }
         let diseases = text("diseases.md");
         for row in [
-            "| Filth fever | The drowned's fist (20%); the ghast's claws (10%); the giant rat's bite \
-             (10%) | Toughness, 54% | 1d3 days | Every day | 1d3 Dexterity, 1d3 Toughness | Two \
+            "| Filth fever | The dretch's claws (10%); the drowned's fist (20%); the ghast's claws \
+             (10%); the giant rat's bite (10%) | Toughness, 54% | 1d3 days | Every day | 1d3 Dexterity, 1d3 Toughness | Two \
              checks won in a row | no | Half as fast |",
             "| Marsh ague | The bog body's fist (15%); the fen ghoul's claws (10%); crossing marsh \
              or swamp (4% an hour) |",
@@ -1108,7 +1109,7 @@ mod tests {
         );
         assert!(text("creatures.md").contains("| Deer | `d` | Wildlife | neutral | never |"));
         assert!(text("creatures.md").contains("shoots from afar"));
-        assert!(text("factions.md").contains("| Kobolds | you, vermin, goblins, undead |"));
+        assert!(text("factions.md").contains("| Kobolds | you, vermin, goblins, undead, demons |"));
         assert!(text("factions.md").contains("| Wildlife | nobody |"));
         assert!(text("factions.md").contains("| Cultists | you, marsh things | no |"));
         assert!(
@@ -1126,7 +1127,7 @@ mod tests {
         // Lights go by what the player sees: the terrain, the carrier, the lantern, the crystal.
         for row in [
             "| Wall torch | 7 cells |",
-            "| Torch carried by a burning skull or a kobold | 6 cells |",
+            "| Torch carried by a balor or a burning skull or a kobold | 6 cells |",
             "| Your lantern | 5 cells |",
             "| Light crystal (red) | 7 cells |",
             "| Faint rune | 4 cells | UV only",

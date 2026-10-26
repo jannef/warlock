@@ -1,0 +1,31 @@
+# The demon roster (#449). A demon general: a woman's body to the waist on a great serpent's
+# coils, with six arms, a sword in each. One creature has one attack for now, so her six blades
+# strike twice in the time of another's one (attack_cost 500), each a step lighter than the
+# formula's dice.
+[[creature]]
+id = "marilith"
+level = 40
+xp = 210
+rarity = "rare"
+name = "marilith"
+glyph = "U"
+fg = "#4a9a7a"
+speed = 1100
+attack_cost = 500
+faction = "demon"
+tags = ["demon", "fiend"]
+alignment = "evil"
+vision = "darkvision"
+sight = 14
+opens_doors = true
+footsteps = 30
+hearing = 16
+weight = 500000
+stats = { strength = 27, dexterity = 25, toughness = 28, intelligence = 26, willpower = 30, presence = 26 }
+base_hp = 100
+loot = 75
+natural = { defence = 3, name = "scales" }
+resist = { fire = 50, cold = 25, electricity = 25, poison = 100 }
+corpse = false
+blood = "#1a3a2a"
+attack = { damage = "3d10", damage_type = "slashing", name = "blades", verb = "slashes", to_hit = 4 }
