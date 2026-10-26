@@ -187,7 +187,7 @@ use crate::alignment::Score;
 use crate::burden::{self, Burden, Load};
 use crate::character::{Character, CharacterSpec};
 use crate::content::{
-    ActionKind, CombatStance, Content, RaceDef, RoomEffectDef, StairsDir, Stance,
+    ActionKind, CombatStance, Content, ObjectId, RaceDef, RoomEffectDef, StairsDir, Stance,
 };
 use crate::geom::{Dir, Pos};
 use crate::hunger::Satiation;
@@ -197,6 +197,7 @@ use crate::noise::Recent;
 use crate::object::{Stack, Weight};
 use crate::perception::{Perception, PerceptionView};
 use crate::rng::Rng;
+use crate::scroll_label::{Labels, Lore};
 use crate::skills::{Skills, Use};
 use crate::time::{Duration, GameTime};
 use crate::weapon_skills::WeaponSkills;
@@ -298,6 +299,10 @@ pub struct WorldState {
     /// overworld as it is made, if it was not yet when they were revealed.
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub(crate) revealed: BTreeSet<String>,
+    /// The scroll types the player has identified (spec §8 "Scrolls"; [`crate::scroll_label`]):
+    /// they show by their names, the rest by their labels.
+    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+    pub(crate) known_scrolls: BTreeSet<ObjectId>,
 }
 
 fn is_zero(n: &u32) -> bool {
@@ -406,6 +411,8 @@ pub struct World {
     perception: Box<Perception>,
     /// Cached light masks; derived, never saved.
     lights: LightCache,
+    /// The unidentified scrolls' labels of the run; derived from the seed, never saved.
+    labels: Labels,
     /// Messages logged since this world was created or loaded (not saved): resting stops when it
     /// changes.
     said: u64,
@@ -568,6 +575,12 @@ impl World {
         let kit = start.as_ref().filter(|_| kit).map(|s| &s.kit);
         let pack = crate::kit::starting_pack(&content, def, kit);
         let with_kit = kit.is_some();
+        // A character knows the scrolls of their own kit (spec §8 "Scrolls").
+        let known_scrolls: BTreeSet<ObjectId> = (kit.iter())
+            .flat_map(|k| &k.items)
+            .map(|s| s.object)
+            .filter(|&o| content.object(o).read.is_some())
+            .collect();
         let (stats, vision, (hp_base, mana_base), skills, character, weapon_skills, alignment) =
             match start {
                 Some(s) => {
@@ -635,6 +648,7 @@ impl World {
             progress: Progress::default(),
             quests: Quests::default(),
             revealed: BTreeSet::new(),
+            known_scrolls,
         };
         let mut player = Actor {
             id: ActorId(0),
@@ -800,11 +814,13 @@ impl World {
         let perception = Box::new(Perception::compute(&state, &content, &mut lights));
         perception.remember(state.current_mut());
         let time = state.time;
+        let labels = Labels::draw(&content, state.seed);
         Self {
             content,
             state: Box::new(state),
             perception,
             lights,
+            labels,
             said: 0,
             fallen: Vec::new(),
             news: Vec::new(),
@@ -912,7 +928,18 @@ impl World {
             progress: &self.state.progress,
             quests: &self.state.quests,
             messages: &self.state.messages,
+            lore: self.lore(),
             snapshot: &self.perception,
+        }
+    }
+
+    /// What the player knows of scroll types ([`crate::scroll_label`]): how they name what they
+    /// see.
+    pub fn lore(&self) -> Lore<'_> {
+        Lore {
+            content: &self.content,
+            labels: &self.labels,
+            known: &self.state.known_scrolls,
         }
     }
 
@@ -1288,6 +1315,8 @@ mod reveal_tests;
 mod room_tests;
 #[cfg(test)]
 mod rot_tests;
+#[cfg(test)]
+mod scroll_label_tests;
 #[cfg(test)]
 mod search_tests;
 #[cfg(test)]

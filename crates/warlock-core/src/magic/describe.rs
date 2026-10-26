@@ -12,6 +12,7 @@ use super::{AffixKind, Effect, Rolled};
 use crate::combat::SURE_HIT;
 use crate::content::{ActionKind, Content, ItemKind, ObjectDef, Rarity, weapon_noun};
 use crate::object::{Stack, format_weight};
+use crate::scroll_label::Lore;
 
 /// What a line of a description is, for how it is shown.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -58,8 +59,10 @@ pub struct Appraisal {
 /// [`lines`] for a player with an eye for worth: a line of what it is worth after what it is
 /// (`Worth 12 gold`; `Worth 3 gold each, 9 gold in all` for a stack), and each gem's worth after
 /// its line (`Pommel: small emerald, fine cut (worth 40 gold)`), as `appraisal` shows.
-pub fn appraised(stack: &Stack, content: &Content, appraisal: Appraisal) -> Vec<Line> {
-    let mut out = lines(stack, content);
+/// An unidentified scroll is called by its label (spec §8 "Scrolls"), as `lore` names it.
+pub fn appraised(stack: &Stack, lore: Lore<'_>, appraisal: Appraisal) -> Vec<Line> {
+    let content = lore.content;
+    let mut out = lines_named(stack, content, lore.names(stack));
     // The first line says what it is; a line for each gem in it follows.
     let gems_at = 1;
     let parts = stack.parts(content);
@@ -96,9 +99,13 @@ pub fn appraised(stack: &Stack, content: &Content, appraisal: Appraisal) -> Vec<
 /// garnet, uncut`), its base stats, and its affixes if identified (`Sharp: +2 damage`) or a note
 /// that its magic is unknown.
 pub fn lines(stack: &Stack, content: &Content) -> Vec<Line> {
+    lines_named(stack, content, stack.names(content))
+}
+
+/// [`lines`] with what it is called, singular and plural (a scroll's label).
+fn lines_named(stack: &Stack, content: &Content, (name, plural): (String, String)) -> Vec<Line> {
     let def = content.object(stack.object);
     let mut out = Vec::new();
-    let (name, plural) = stack.names(content);
     let base = if stack.count == 1 {
         name
     } else {

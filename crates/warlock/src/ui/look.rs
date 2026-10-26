@@ -93,7 +93,7 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
     let objects = view.objects(p);
     // Goods for sale in a shop say their price (spec §7 "Shops"): "a dagger (for sale, 45 gold)".
     let tag = |i: usize| (view.price_tag(p, &objects[i])).map(|g| format!("for sale, {g} gold"));
-    let things = (!objects.is_empty()).then(|| phrase_with(objects, content, tag));
+    let things = (!objects.is_empty()).then(|| phrase_with(objects, view.lore(), tag));
     let here = things
         .as_ref()
         .map_or(String::new(), |o| format!("; here: {o}"));
@@ -195,7 +195,7 @@ fn gear(view: &PerceptionView<'_>, actor: ActorId) -> String {
     groups
         .iter()
         .filter(|(_, _, stacks)| !stacks.is_empty())
-        .map(|(before, after, stacks)| format!(", {before}{}{after}", phrase(stacks, content)))
+        .map(|(before, after, stacks)| format!(", {before}{}{after}", phrase(stacks, view.lore())))
         .collect()
 }
 

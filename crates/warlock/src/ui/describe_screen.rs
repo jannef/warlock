@@ -62,11 +62,11 @@ impl DescribeScreen {
         let def = content.object(stack.object);
         Self {
             glyph: def.glyph,
-            fg: stack.fg(content),
-            title: capitalized(&stack.title(content)),
+            fg: view.lore().fg(stack),
+            title: capitalized(&view.lore().title(stack)),
             rarity: stack.rarity(),
             mark: equipment::mark(content, view.equipment(), item),
-            lines: describe::appraised(stack, content, view.appraisal()),
+            lines: describe::appraised(stack, view.lore(), view.appraisal()),
         }
     }
 
