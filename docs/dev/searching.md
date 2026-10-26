@@ -50,7 +50,7 @@ notice a door's trap in passing.
 **Invariants**: checks draw from the gameplay stream (`crate::check`, two draws each) only for
 hidden features in reach, so runs without any nearby keep their hashes; no memory of failed
 checks and no cooldown (the owner's rule: no anti-farming limits); presentation never sees a
-difficulty, a modifier, or a roll. The app binds `s` (`KeyCommand::Search`, `search`) and `f`
+difficulty, a modifier, or a roll. The app binds `s` (`KeyCommand::Search`, `search`) and `S`
 (`KeyCommand::SearchLong`, `search:N` with `SearchRules::turns`); basic commands, not
 abilities. `dump`'s `truth` layer and `warlock-cli gen` mark secret doors `S`.
 

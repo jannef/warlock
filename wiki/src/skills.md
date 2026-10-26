@@ -48,7 +48,7 @@ The passive skills help you more the higher they are:
 - **Survival** makes your journeys on the [overworld](overworld.md) quicker. It does nothing in a
   local area or a dungeon.
 - **Appraise** gets you better prices in [shops](shops.md): you pay less and are offered more.
-- **Search** helps you find secret doors and hidden traps when you search (`s`, `f`), and a
+- **Search** helps you find secret doors and hidden traps when you search (`s`, `S`), and a
   master's search reaches a cell farther (see [Searching](searching.md)).
 - **Spot** lets you notice hidden things in passing at all, and the higher it is, the more you
   notice.

@@ -241,8 +241,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `alignment` on an `[[animal]]` in `data/horoscope.toml`, elements none): Unicorn +100,
     Griffin, Phoenix, and Wyvern +50, Kraken −50, Basilisk and Manticore −100, the rest 0; added
     before the summary shows the band, and never shown as a number. Small against a band's width,
-    it still decides the band near an edge: a Manticore- or Basilisk-born human paladin starts
-    Kind (350), a Unicorn-born elf Kind (150). It draws nothing.
+    it still decides the band near an edge: a Unicorn-born elf starts Kind (150). The paladin's
+    550 is set so that no animal starts a paladin of a race that is not evil below the Good their
+    gifts need (#317): a Manticore- or Basilisk-born half-orc paladin starts at 400, Good's edge.
+    It draws nothing.
   - **Mana**: the race's and the class's `mana` add to the mental stats' modifiers for the
     maximum (§8 "Mana").
   - **Weapon skills** ("Weapon skills" below): the race's starting ranks plus the class's, plus

@@ -17,8 +17,10 @@ start on the evil side, goblins, kobolds, lizardfolk, and ratfolk Callous, drow 
 Then the stars nudge you: the animal of your birth year adds to the score (the
 [Horoscope](horoscope.md#what-a-sign-does) page's *Alignment* column): the Unicorn +100, the
 Griffin, Phoenix, and Wyvern +50, the Kraken −50, the Basilisk and Manticore −100, the others
-nothing. It is small, but near an edge it decides the band: a human paladin born under the
-Manticore or the Basilisk starts Kind (+350), an elf wizard born under the Unicorn Kind (+150).
+nothing. It is small, but near an edge it decides the band: an elf wizard born under the
+Unicorn starts Kind (+150). A paladin starts Good under any animal unless their race is one of
+the evil ones: a half-orc paladin born under the Manticore or the Basilisk starts at +400, just
+Good.
 The summary shows the band you start in. The table below is before the stars.
 
 {{#include generated/alignment-start.md}}

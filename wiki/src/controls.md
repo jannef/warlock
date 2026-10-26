@@ -13,7 +13,7 @@ The in-game `?` screen is authoritative: it is generated from your current key b
 | Chat with someone next to you | `C` (then a direction, if several are near) |
 | Wait a turn | `.` or numpad `5` |
 | Search the cells around you (a turn) | `s` (see [Searching](searching.md)) |
-| Search for a while (up to 10 turns, stops when something turns up) | `f` |
+| Search for a while (up to 10 turns, stops when something turns up) | `S` |
 | Open a door | `o`, then a direction (or walk into the door) |
 | Close a door | `c`, then a direction |
 | Kick (a door, to break it in, or a creature) | `k`, then a direction (see [Doors](doors.md)) |
@@ -52,15 +52,16 @@ The in-game `?` screen is authoritative: it is generated from your current key b
 | Show the next messages at `--more--` / skip the rest | `Space` or `Enter` / `Esc` |
 | Yes / no, when a question asks | `y` / `n` |
 | Pause menu | `Esc` |
-| Save and quit (asks first) | `S` |
 
 The default keys are [ADOM](https://www.adom.de/)'s wherever ADOM has the command, so ADOM
 players find them where their fingers expect them. Movement is the numpad and the arrows, as in
 ADOM (the arrows move in four directions only); if you prefer the vi keys (`hjklyubn`), bind them
 in Controls (`k`, `l`, and `u` are Kick, Look around, and Use a tool, as in ADOM: give those
 other keys first). Commands ADOM does not have, or has only behind a prefix or `Ctrl` (which the
-game does not bind), have keys ADOM leaves free: search for a while `f`, light the lantern `*`,
-the message history `v`, rest `b`, and the quick repeat of an ability `X`. Symbol keys such as
+game does not bind), have keys ADOM leaves free: light the lantern `*`,
+the message history `v`, rest `b`, and the quick repeat of an ability `X`. Search for a while is
+search's key in capitals, `S` (ADOM's save and quit): save and quit from the pause menu (`Esc`),
+or bind a quick key for it in Controls. Symbol keys such as
 `<`, `>`, and `?` are matched by the character they produce, so they work on other keyboard
 layouts.
 

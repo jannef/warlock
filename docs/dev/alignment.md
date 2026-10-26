@@ -66,7 +66,8 @@ Hardened heart, The middle way) hook into `attack_with` (the target's `nature`),
 
 **Tests.** `alignment.rs` (diminishing, bands, scorn, requirements, loading), `content/alignment.rs`
 (the built-in bands cover the scale, news, bad files), `ability.rs` (a test ability's
-requirement), `world/alignment_tests.rs` (starting bands, the birth animal's nudge, each deed, diminishing in play, notes
+requirement), `world/alignment_tests.rs` (starting bands, the birth animal's nudge, a paladin of a race not
+evil starting Good under the worst animal (#317: the class's 550 is set for it), each deed, diminishing in play, notes
 after the deed that do not count as said, cold greetings, quest gating and shifts, a good keeper's
 prices, eating kin, a paladin straying, save and replay). The wiki's tables are
 `xtask/src/wiki/alignment.rs`.

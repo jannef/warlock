@@ -248,8 +248,9 @@ const CASES: &[Case] = &[
         name: "alignment-strayed-character",
         scenario: "courtyard",
         character: Some("human,male,paladin"),
-        // Seed 3: a paladin whose birth animal nudges nothing (#272), so he starts Good.
-        seed: Some(3),
+        // Seed 1: a Basilisk-born paladin (#272) starts at 450, Good (#317), so the kick takes
+        // him below it.
+        seed: Some(1),
         actions: "move:E*36 move:S pickup move:NE move:NE pickup:b move:SE move:E*5 move:S*5 \
             move:E*5 kick:N",
         screen: Some("character"),

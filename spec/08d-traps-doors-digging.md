@@ -238,7 +238,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
       (+8 at 100, +12 at 200), plus the race's `search`, less `passive_penalty` (4).
     The player never sees a difficulty, a modifier, or a roll: an average searcher (Intelligence
     10, untrained) finds a secret door of 14 with 46 % of their turns of searching.
-  - **Searching** (`s`: `Action::Search(1)`, replay text `search`; `f`, searching for a while:
+  - **Searching** (`s`: `Action::Search(1)`, replay text `search`; `S`, searching for a while:
     `search:N`, N up to 100, the key sending `data/search.toml`'s `turns`, 10): each turn is the
     `search` action (1000, 6 s; slowed by burden like every price) and gives every hidden feature
     within reach the active check: the eight cells around the player (never their own: a trap
