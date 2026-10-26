@@ -1143,7 +1143,10 @@ mod tests {
         );
         assert!(text("creatures.md").contains("| Deer | `d` | Wildlife | neutral | never |"));
         assert!(text("creatures.md").contains("shoots from afar"));
-        assert!(text("factions.md").contains("| Kobolds | you, vermin, goblins, orcs, undead, giants |"));
+        assert!(
+            text("factions.md")
+                .contains("| Kobolds | you, vermin, goblins, orcs, undead, giants |")
+        );
         assert!(text("factions.md").contains("| Wildlife | nobody |"));
         assert!(text("factions.md").contains("| Cultists | you, marsh things | no |"));
         assert!(
