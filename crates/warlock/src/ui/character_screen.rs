@@ -64,7 +64,7 @@ const BESIDE_NAME_W: i32 = 11;
 
 /// Width of the panel: the birth and the burden's thresholds fit on one line each, and an
 /// attack's numbers beside the stats.
-const WIDTH: i32 = 80;
+const WIDTH: i32 = super::info_tabs::panel_width(80);
 
 /// Where the attacks begin, from the stats' column: past the score and a gap.
 const ATTACKS_X: i32 = 23;

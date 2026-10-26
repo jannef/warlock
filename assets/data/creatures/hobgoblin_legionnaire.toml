@@ -1,0 +1,33 @@
+# The goblin tribe's second tier (#454). The hobgoblins' line: a spear (its racial weapon), a
+# large shield, and mail, fighting as they drill, behind the shield.
+[[creature]]
+id = "hobgoblin_legionnaire"
+level = 12
+xp = 70
+rarity = "common"
+loot = 25
+name = "hobgoblin legionnaire"
+glyph = "g"
+fg = "#a0a8b8"
+faction = "goblins"
+tags = ["goblin", "hobgoblin"]
+alignment = "evil"
+vision = "darkvision"
+opens_doors = true
+footsteps = 140
+hearing = 12
+weight = 80000
+stats = { strength = 16, dexterity = 13, toughness = 17, intelligence = 11, willpower = 14, presence = 11 }
+base_hp = 30
+on_eat = { message = "This hobgoblin meat is rank!", vomit = 35 }
+weapon_skills = { spears = 2, sword_and_board = 2, shield_block = 1 }
+racial_weapon = "spear"
+[[creature.gear]]
+chance = 70
+one_of = ["large_shield"]
+[[creature.gear]]
+chance = 80
+one_of = ["chain_mail", "scale_mail"]
+[[creature.gear]]
+chance = 60
+one_of = ["iron_helm"]

@@ -15,7 +15,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   listed command of its context has (`Bindings::from_table`).
 - Symbol commands (`<`, `>`, `?`) are bound by **logical key**, so they work on non-US layouts.
 - Bindings live in the settings file. The `?` help (the controls list, read-only) is generated from
-  the binding table, so it is always accurate. Every key is rebindable (below).
+  the binding table, so it is always accurate. Only the play-context (gameplay) commands are rebindable (below); the keys of menus, menu lists, screens, info pages, prompts, dialogs, text fields, and the targeting mode are fixed (owner decision, 2026-10-26), and new ones are not added as bindable commands. Existing menu-context bindings stay as they are until a later cleanup.
 - **Screens**: the main menu, the saved characters, New run and its character creation steps, pause menu, Settings,
   Controls, help, the inventory, the equipment screen and its choice of what goes in a slot, an
   item's description, the character screen, the Skills screen, the weapon skills screen, the quest
@@ -161,7 +161,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   pause menu, and the letters and digits that name the rows of a list (stacks, slots, topics).
   Hints (screen footers, the prompts, the status bar's `? controls`, the welcome line's
   `Press ? for controls.`) name the keys as bound.
-- **Rebinding**: in Controls (the commands by context under headings, below notes on Esc and on
+- **Rebinding** (play commands only by the owner decision of 2026-10-26; menus, lists, screens, prompts, and targeting keys are fixed and no new ones are made rebindable; the existing menu-context bindings below stay for now): in Controls (the commands by context under headings, below notes on Esc and on
   list letters), select a command and press a key; it becomes the command's primary
   key (alternates such as the numpad stay). A key another command of the same context uses is taken
   from it and bound to the new command, and the screen says so ("K moved to Wait; Kick has no
@@ -188,7 +188,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - First-phase commands: move, wait, search (`s`, a turn; `S`, for a while: up to 10 turns,
   stopping when something is found or interrupts, like a rest; §8 "Searching"; basic commands,
   not abilities), open/close door, kick (`k`, then a direction; §8 "Doors"),
-  ascend/descend, light/douse lantern (`*`),
+  ascend/descend (ascend also leaves an outdoor area when no enemy is about, §7 "Leaving an
+  outdoor area"), light/douse lantern (`*`),
   pick up (`,` or `;`), drop (`d`), equipment (`i`), inventory (`I`), character (`@`), skills
   (`A`), weapon skills (`W`), quest log (`q`), rest (`b`), eat (`e`), read (`r`; a basic
   command, not an ability), look (`l`), shoot or throw what
@@ -438,10 +439,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   The character screen, the inventory, the equipment screen, the Skills screen, the weapon
   skills screen, the quest log, and the Talents page are the numbered info pages 1 to 7: on one of them, a digit,
   Tab, or Shift+Tab replaces it with another, and the tab line on its bottom
-  border names them, each after its key: by their names where the panel is wide enough
-  (`1 Character · 2 Inventory · …`), else the current page by its name and the others by short
-  names (`1 Char · 2 Inventory · 3 Equip · 4 Skills · 5 Weapons · 6 Quests · 7 Tal`), else all by
-  their short names, else the current page by its name and the others by their keys alone.
+  border names them, each after its key, the current one highlighted. The pages share one width,
+  wide enough for the line by their names (`1 Character · 2 Inventory · 3 Equipment · 4 Skills ·
+  5 Weapons · 6 Quests · 7 Talents`), so the frame and the line stay put as the pages turn; on a
+  console too narrow for it every page's line goes by short names (`1 Char · 2 Inv · 3 Equip ·
+  4 Skills · 5 Weapons · 6 Quests · 7 Tal`), else by keys alone.
 - **Talents** (page 7, its own command `talents`, unbound by default; #236; §8 "Talents"): the
   player's talents ("Your talents"), by tree in tree order, each with its rank when it has
   several (`Keen ears 1/2`) and, for those not picked, where it came from (`(class)`, `(birth

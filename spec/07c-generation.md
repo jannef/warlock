@@ -109,6 +109,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
   level change): on the road if one leaves the area there, else on dry ground if any, near the
   middle of the side (or the corner) but trading a few cells along it for open ground around
   it; with no such step, at the area's start in the middle.
+- **Leaving an outdoor area** (#474): a hand-made level of kind `outdoor` that an overworld
+  location leads into (its stairs down, or a hidden location's `to`; the first in the
+  overworld's order) records that location as its edge exit, like a local area: walking off its
+  edge returns to the location's cell (Cēaptūn has no stairs and is left only so, or as below).
+  An outdoor level no location leads into (the showcase's courtyard) has no edge exit and keeps
+  its stairs. **The quick leave**: `<` (`ascend`) on an outdoor level with an edge exit, when the
+  player is not on stairs up, leaves it exactly as walking off the edge does (the same arrival,
+  message, and the time of taking stairs) if and only if no creature hostile to the player
+  (by faction stance, awake or asleep) is on the level where the player sees it, at any distance,
+  or unseen within 10 cells of the player (Chebyshev distance: diagonal steps count one). The
+  check reads the true positions (a rule, like a creature noticing the player). Otherwise it is
+  refused with one line that names no creature and does not say whether it was seen ("You
+  cannot slip away with enemies about."), taking no time. Stairs up under the player are taken
+  as ever; on dungeon levels and on the overworld `<` needs stairs.
 - **Generators** (`warlock-core`, integer-only): *rooms* — walled rooms joined along a minimum
   spanning tree plus a few loops by corridors dug as cheapest paths (bends cost extra), with closed
   doors, open doors, or doorways where corridors enter, and wall torches in most rooms; with the

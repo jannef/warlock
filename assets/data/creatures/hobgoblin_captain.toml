@@ -1,0 +1,37 @@
+# The goblin tribe's second tier (#454). A war band's captain: the best mail of the band, now
+# and then of a better make than it looks, a long sword (its racial weapon), and the band's pay.
+[[creature]]
+id = "hobgoblin_captain"
+level = 19
+xp = 105
+rarity = "rare"
+loot = 60
+name = "hobgoblin captain"
+glyph = "g"
+fg = "#f0c040"
+faction = "goblins"
+tags = ["goblin", "hobgoblin"]
+alignment = "evil"
+vision = "darkvision"
+opens_doors = true
+footsteps = 140
+hearing = 12
+weight = 90000
+stats = { strength = 19, dexterity = 15, toughness = 20, intelligence = 13, willpower = 16, presence = 13 }
+base_hp = 52
+on_eat = { message = "This hobgoblin meat is rank!", vomit = 35 }
+weapon_skills = { long_blades = 4, sword_and_board = 3, shield_block = 2 }
+racial_weapon = "long_sword"
+[[creature.gear]]
+chance = 85
+one_of = ["small_shield", "large_shield"]
+[[creature.gear]]
+chance = 90
+one_of = ["scale_mail", "banded_mail"]
+magic = 15
+[[creature.gear]]
+chance = 80
+one_of = ["iron_helm", "great_helm"]
+[[creature.gear]]
+chance = 60
+one_of = ["gold_coin*3", "gold_coin*6"]

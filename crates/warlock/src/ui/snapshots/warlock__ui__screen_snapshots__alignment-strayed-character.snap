@@ -4,37 +4,37 @@ expression: "render(case, content.clone())"
 ---
  You kick the shopkeeper. "You will pay for that!" shouts Grimbold. You feel you have strayed from
  the path of good. The shopkeeper stabs you. You are bleeding.
-          ┌─ Character ──────────────────────────────────────────────────────────────────┐
-          │                                                                              │
-          │ Garrick                                                                      │
-          │                                                                              │
-          │ Race    Human                                                                │
-          │ Gender  Male                                                                 │
-          │ Class   Paladin                                                              │
-          │ Age 34 · born 29 Greenleaf 1410 · year of the Water Basilisk                 │
-          │ Stars   Unblinking, Transfixing stare, Trusted by none, Always a way, Tidal  │
-          │                                                                              │
-          │ St  Strength      14   Main hand  long sword                                 │
-          │ Dx  Dexterity      9              +3 to hit, 1d8+3 slashing or piercing      │
-          │ To  Toughness     10                                                         │
-          │ In  Intelligence  10                                                         │
-          │ Wi  Willpower     13                                                         │
-          │ Pr  Presence      12                                                         │
-          │                                                                              │
-          │ Lv  Level         1                                                          │
-          │ XP  Experience    0 / 844                                                    │
-          │     Talents       9                                                          │
-          │ HP  Hit points    13/20   MP  Mana       6/6                                 │
-          │ Dv  Defence       13      Pv  Protection  1                                  │
-          │     Stance        Neutral                                                    │
-          │     Alignment     Kind                                                       │
-          │     Status        Bleeding                                                   │
-          │     Resistant to  acid                                                       │
-          │                                                                              │
-          │ Weight 79.2 kg (you 70 kg, carrying 9.2 kg)                                  │
-          │ Burdened over 19 kg, strained over 38 kg, overloaded over 57 kg              │
-          │                                                                              │
-          │ @ or Esc close   A skills                                                    │
-          └─ 1 Character · 2 Inv · 3 Equip · 4 Skills · 5 Weapons · 6 Quests · 7 Tal ────┘
+    ┌─ Character ─────────────────────────────────────────────────────────────────────────────┐
+    │                                                                                         │
+    │ Garrick                                                                                 │
+    │                                                                                         │
+    │ Race    Human                                                                           │
+    │ Gender  Male                                                                            │
+    │ Class   Paladin                                                                         │
+    │ Age 34 · born 29 Greenleaf 1410 · year of the Water Basilisk                            │
+    │ Stars   Unblinking, Transfixing stare, Trusted by none, Always a way, Tidal             │
+    │                                                                                         │
+    │ St  Strength      14   Main hand  long sword                                            │
+    │ Dx  Dexterity      9              +3 to hit, 1d8+3 slashing or piercing                 │
+    │ To  Toughness     10                                                                    │
+    │ In  Intelligence  10                                                                    │
+    │ Wi  Willpower     13                                                                    │
+    │ Pr  Presence      12                                                                    │
+    │                                                                                         │
+    │ Lv  Level         1                                                                     │
+    │ XP  Experience    0 / 844                                                               │
+    │     Talents       9                                                                     │
+    │ HP  Hit points    13/20   MP  Mana       6/6                                            │
+    │ Dv  Defence       13      Pv  Protection  1                                             │
+    │     Stance        Neutral                                                               │
+    │     Alignment     Kind                                                                  │
+    │     Status        Bleeding                                                              │
+    │     Resistant to  acid                                                                  │
+    │                                                                                         │
+    │ Weight 79.2 kg (you 70 kg, carrying 9.2 kg)                                             │
+    │ Burdened over 19 kg, strained over 38 kg, overloaded over 57 kg                         │
+    │                                                                                         │
+    │ @ or Esc close   A skills                                                               │
+    └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘
 
  The Courtyard  ·  HP 13/20  ·  MP 6/6  ·  Bleeding  ·  Lv 1  ·  06:35                   ? controls

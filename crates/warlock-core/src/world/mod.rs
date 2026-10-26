@@ -130,6 +130,7 @@ mod openings;
 mod path;
 mod perceive;
 mod quest;
+mod quick_leave;
 mod racial;
 mod rage;
 mod read;
@@ -144,6 +145,7 @@ mod second_wind;
 mod service;
 mod shoot;
 mod shop;
+mod sidestep;
 mod sign_picks;
 mod skill_roll;
 mod spawn;
@@ -1314,6 +1316,8 @@ mod protection_tests;
 #[cfg(test)]
 mod quest_tests;
 #[cfg(test)]
+mod quick_leave_tests;
+#[cfg(test)]
 mod race_tests;
 #[cfg(test)]
 mod racial_tests;
@@ -1339,6 +1343,8 @@ mod service_tests;
 mod shoot_tests;
 #[cfg(test)]
 mod shop_tests;
+#[cfg(test)]
+mod sidestep_tests;
 #[cfg(test)]
 mod sign_pick_tests;
 #[cfg(test)]

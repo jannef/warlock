@@ -4,37 +4,37 @@ expression: "render(case, content.clone())"
 ---
  You feel sick.
  You are bleeding.
-          ┌─ Character ──────────────────────────────────────────────────────────────────┐
-          │                                                                              │
-          │ Tamsin                                                                       │
-          │                                                                              │
-          │ Race    Human                                                                │
-          │ Gender  Female                                                               │
-          │ Class   Thief                                                                │
-          │ Age 34 · born 29 Greenleaf 1410 · year of the Water Basilisk                 │
-          │ Stars   Unblinking, Transfixing stare, Trusted by none, Always a way, Tidal  │
-          │                                                                              │
-          │ St  Strength       8   Main hand  bare hands                                 │
-          │ Dx  Dexterity     12              -1 to hit, 1d3-1 bludgeoning               │
-          │ To  Toughness     10                                                         │
-          │ In  Intelligence  12                                                         │
-          │ Wi  Willpower     11                                                         │
-          │ Pr  Presence       9                                                         │
-          │                                                                              │
-          │ Lv  Level         1                                                          │
-          │ XP  Experience    0 / 729                                                    │
-          │     Talents       6                                                          │
-          │ HP  Hit points    17/17   MP  Mana       2/2                                 │
-          │ Dv  Defence       11      Pv  Protection  0                                  │
-          │     Stance        Neutral                                                    │
-          │     Alignment     Callous                                                    │
-          │     Status        Bleeding, Poisoned                                         │
-          │                                                                              │
-          │ Weight 70 kg, carrying nothing                                               │
-          │ Burdened over 13 kg, strained over 26 kg, overloaded over 39 kg              │
-          │                                                                              │
-          │ @ or Esc close   A skills                                                    │
-          └─ 1 Character · 2 Inv · 3 Equip · 4 Skills · 5 Weapons · 6 Quests · 7 Tal ────┘
+    ┌─ Character ─────────────────────────────────────────────────────────────────────────────┐
+    │                                                                                         │
+    │ Tamsin                                                                                  │
+    │                                                                                         │
+    │ Race    Human                                                                           │
+    │ Gender  Female                                                                          │
+    │ Class   Thief                                                                           │
+    │ Age 34 · born 29 Greenleaf 1410 · year of the Water Basilisk                            │
+    │ Stars   Unblinking, Transfixing stare, Trusted by none, Always a way, Tidal             │
+    │                                                                                         │
+    │ St  Strength       8   Main hand  bare hands                                            │
+    │ Dx  Dexterity     12              -1 to hit, 1d3-1 bludgeoning                          │
+    │ To  Toughness     10                                                                    │
+    │ In  Intelligence  12                                                                    │
+    │ Wi  Willpower     11                                                                    │
+    │ Pr  Presence       9                                                                    │
+    │                                                                                         │
+    │ Lv  Level         1                                                                     │
+    │ XP  Experience    0 / 729                                                               │
+    │     Talents       6                                                                     │
+    │ HP  Hit points    17/17   MP  Mana       2/2                                            │
+    │ Dv  Defence       11      Pv  Protection  0                                             │
+    │     Stance        Neutral                                                               │
+    │     Alignment     Callous                                                               │
+    │     Status        Bleeding, Poisoned                                                    │
+    │                                                                                         │
+    │ Weight 70 kg, carrying nothing                                                          │
+    │ Burdened over 13 kg, strained over 26 kg, overloaded over 39 kg                         │
+    │                                                                                         │
+    │ @ or Esc close   A skills                                                               │
+    └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘
 
 
  The Hub  ·  HP 17/17  ·  MP 2/2  ·  Bleeding  ·  Poisoned  ·  Lv 1  ·  08:00            ? controls
