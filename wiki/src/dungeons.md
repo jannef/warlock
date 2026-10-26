@@ -121,7 +121,8 @@ dungeons. The duergar dig here, miners, warriors, and smiths, among ember beetle
 magma crawlers, cinder elementals, ash wraiths, basilisks, ogres, and trolls, and the dead the
 delf's fires left: ogre zombies and grave hounds, burning skulls, the charred dead, duergar
 skeletons still in their helms, rotting trolls, and the spirits of the miners, knockers and
-spectres, that pass through the rock, with kobolds,
+spectres, that pass through the rock; hell hounds, fiends at home in the fires, run its
+deep workings, with kobolds,
 centipedes, and bats in the upper galleries.
 
 Every gallery floor holds a **foreman's cabin**: a timber-floored lodging where a duergar miner

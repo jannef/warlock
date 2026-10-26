@@ -22,6 +22,8 @@ mod dungeon;
 mod effect;
 mod experience;
 mod faction;
+#[cfg(test)]
+mod fiend_roster_tests;
 mod flow;
 mod gear;
 mod gem;

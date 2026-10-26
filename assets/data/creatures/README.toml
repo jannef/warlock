@@ -49,7 +49,9 @@
 #   groups   kobold, goblin (not the ogre or the troll, who only run with them), undead (every
 #            creature of the "undead" faction: content::tag's test fails without it), vermin
 #            (not the basilisk), marsh-thing (the fens' living things and the bog hag),
-#            duergar (not their trader, a merchant), fire-thing (the delf's burning things)
+#            duergar (not their trader, a merchant), fire-thing (the delf's burning things),
+#            fiend (every demon, devil, and yugoloth, and the fiends of no family, #450),
+#            hag (the hags, the night hag among them)
 #   roles    archer (shoots: the goblin, kobold, and skeleton archers), caster (every
 #            combat = "caster" type), cultist (the minster's cult), skeleton (walking bones),
 #            spirit (the incorporeal dead), troll (the troll and the marsh troll)
@@ -165,3 +167,14 @@
 # dead, Z greater, G spirits, W wights and wraiths, M mummies, C hounds, V vampires, D drakes, T
 # the rotting troll; a colour distinct from every other type with the same glyph. Only a type in
 # a population strays (#375): deep undead ship in none until a deep place takes them.
+#
+# The fiends of no family (#450; content::fiend_roster_tests checks the numbers): the hell
+# hound, the nightmare, the succubus and the incubus (one fiend under two names, sharing their
+# numbers), the night hag, the cambion, and the rakshasa. Faction "fiends" (not animals: a
+# Beast-friend calms no fiend), tags ["fiend", ...] (the night hag "hag" too, the casters
+# "caster"), alignment "evil", vision "darkvision", on the undead roster's formulas for their
+# level and role (xp, stats, base_hp, dice, to_hit, natural defence). Their riders are existing
+# ones only: fire attacks for the hound's and the steed's flames, a Toughness drain for the
+# succubus's kiss, held and frightened for the hag's sleep and nightmares, transfixed and
+# frightened for the rakshasa. Glyphs: C the hell hound (flame red), u the nightmare, n the
+# succubus and incubus, h the night hag, p the cambion, f the rakshasa.

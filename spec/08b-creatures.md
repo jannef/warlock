@@ -174,7 +174,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Group tags: `kobold`; `goblin` (not the ogre or the troll, who run with them); `undead` (every
     creature of the `undead` faction, a test sees to it); `vermin` (not the basilisk);
     `marsh-thing` (the fens' living things and the bog hag); `duergar` (not their trader, a
-    merchant); `fire-thing`. Role and kind tags: `archer`, `caster` (every `combat = "caster"`
+    merchant); `fire-thing`; `fiend` (every demon, devil, and yugoloth, and the fiends of no
+    family: the hell hound, the nightmare, the succubus, the incubus, the night hag, the cambion,
+    the rakshasa); `hag` (the hags, the night hag among them). Role and kind tags: `archer`, `caster` (every `combat = "caster"`
     type), `cultist`, `skeleton`, `spirit` (the incorporeal undead), `troll`. Tags are never
     shown in the game; the wiki lists them.
   - **Progress** the player's action made is said right after it: "Quest updated: 2 / 3 giant

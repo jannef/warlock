@@ -133,7 +133,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   miner's spirit, incorporeal), the spectre 14 (incorporeal, a cold touch that drains
   Willpower), the charred dead 14 (slow, resists fire, hurt more by cold), the duergar skeleton 15
   (a war hammer and an iron helm, bone that a club breaks), and the rotting troll 17 (slow, huge
-  claws, grave rot, fire hurts it more). In no population yet, waiting for deep places (#383): the
+  claws, grave rot, fire hurts it more). Its fiend (#450): the hell hound 13 (quick, a burning
+  bite, immune to fire, hurt more by cold). In no population yet, waiting for deep places (#383): the
   mummy 10 (slow, mummy rot on a hit, fire hurts it more), the draugr 12 (huge, resists cold, a
   great axe half the time), the barghest 13 (a quick black dog whose bite frightens), the vampire
   spawn 16 (quick, opens doors, a bite that drains Toughness, fire hurts it more), the hand of
@@ -141,7 +142,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
   tongue that holds fast), the gibbering shade 18 (incorporeal, a cold touch that drains
   Intelligence), the bone wyvern 18 (a sting, bone with protection 2), the revenant 19 (very
   tough, a long sword half the time), the fetch 19 (incorporeal, a cold touch that frightens), and
-  the mummy priest 20 (a caster whose touch carries mummy rot, sometimes something worth taking). The duergar types are of the duergar race. For blood (§8 "Blood";
+  the mummy priest 20 (a caster whose touch carries mummy rot, sometimes something worth taking).
+  The fiends of no family (#450; faction `fiends`, tag `fiend`, evil): the hell hound above; in
+  no population yet, the nightmare 21 (a quick steed whose burning mane lights its way and whose
+  hooves strike with fire, immune to fire), the succubus 27 and the incubus 27 (one fiend under
+  two names, sharing their numbers: a kiss that drains Toughness, resists fire, cold, and poison),
+  the night hag 33 (a caster whose claws may hold one fast or frighten, resists fire and cold,
+  something worth taking), the cambion 39 (a sword and often chain mail, sometimes magic, resists
+  fire and cold), and the rakshasa 52 (a caster whose claws transfix and frighten, resists
+  piercing, something worth taking). The duergar types are of the duergar race. For blood (§8 "Blood";
   presentation only):
   `blood`, the colour of its stains (`"#rrggbb"`; default dark red, `#6e0e0c`) or `"none"` for a
   bloodless creature; the cave beetle bleeds greenish-black ichor (`#38461a`). For hunger (§8
@@ -654,7 +663,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   ("cultists", the drowned minster's cult; hostile to the player and the marsh), `duergar` (the
   delf's grey dwarves; hostile to the player, the goblins (the ogres and trolls among them), and
   the undead), `fire` ("fire things", the delf's burning creatures and the fire drake; hostile to
-  the player only), `wildlife` (deer, cave bats, the cave beetle;
+  the player only), `fiends` (the fiends of no family: the hell hound, the nightmare, the
+  succubus and incubus, the night hag, the cambion, the rakshasa; hostile to the player only, and
+  not animals, so a Beast-friend calms none of them), `wildlife` (deer, cave bats, the cave beetle;
   neutral to everyone), and
   `peaceful` ("peaceful folk", hostile to no one: the showcase's people by type, and creatures
   levels place in it); `merchants` (shopkeepers; hostile to no one) and `outraged` ("outraged
