@@ -144,6 +144,9 @@ fn files(scenario: &str, extra: &[(&str, &str)]) -> ContentFiles {
     let fyrdelf = "campaigns/ascmearc/data/dungeons/fyrdelf.toml";
     let text = include_str!("../../../../assets/campaigns/ascmearc/data/dungeons/fyrdelf.toml");
     files.insert(fyrdelf, &text.replace("\"basilisk\", ", ""));
+    // And the green hag's claws (Hexed) and the bheur hag's staff (Sluggish), in no population.
+    files.remove("data/creatures/green_hag.toml");
+    files.remove("data/creatures/bheur_hag.toml");
     let diseases = include_str!("../../../../assets/data/diseases.toml");
     files.insert("data/diseases.toml", &format!("{diseases}\n{FOG}"));
     files.insert("data/experience.toml", EXPERIENCE);

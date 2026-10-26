@@ -49,6 +49,7 @@
 #   groups   kobold, goblin (not the ogre or the troll, who only run with them), undead (every
 #            creature of the "undead" faction: content::tag's test fails without it), vermin
 #            (not the basilisk), marsh-thing (the fens' living things and the bog hag),
+#            hag (the bog hag and her kin, every creature of the "hags" faction),
 #            duergar (not their trader, a merchant), fire-thing (the delf's burning things)
 #   roles    archer (shoots: the goblin, kobold, and skeleton archers), caster (every
 #            combat = "caster" type), cultist (the minster's cult), skeleton (walking bones),
@@ -165,3 +166,11 @@
 # dead, Z greater, G spirits, W wights and wraiths, M mummies, C hounds, V vampires, D drakes, T
 # the rotting troll; a colour distinct from every other type with the same glyph. Only a type in
 # a population strays (#375): deep undead ship in none until a deep place takes them.
+#
+# The hags (#451; content::hag_roster_tests checks the numbers): the bog hag's kin, faction "hags"
+# (the bog hag stays the marsh's), tags ["hag", ...] ("caster" for the casters; the bog hag
+# carries "hag" too), alignment "evil", vision "darkvision", glyph h in a colour distinct from
+# the bog hag's and the duergar's. Their numbers follow the undead roster's formulas above (#383:
+# xp, stats, base_hp, dice, to_hit, natural defence, speed), by role (green hag and bheur hag
+# casters, sea hag standard, annis hag brute); their riders are existing statuses and drains.
+# In no population until a place of theirs takes them.

@@ -141,7 +141,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
   tongue that holds fast), the gibbering shade 18 (incorporeal, a cold touch that drains
   Intelligence), the bone wyvern 18 (a sting, bone with protection 2), the revenant 19 (very
   tough, a long sword half the time), the fetch 19 (incorporeal, a cold touch that frightens), and
-  the mummy priest 20 (a caster whose touch carries mummy rot, sometimes something worth taking). The duergar types are of the duergar race. For blood (§8 "Blood";
+  the mummy priest 20 (a caster whose touch carries mummy rot, sometimes something worth taking). The hags (#451), the bog hag's kin, in no population
+  yet either (faction `hags`, tag `hag`; the bog hag carries the tag too): the green hag 18 (a
+  caster whose claws may transfix or hex), the sea hag 26 (a hag of shores and fens, on land only:
+  claws that frighten and a gaze that drains Toughness), the annis hag 34 (huge, iron-hard skin,
+  iron claws whose embrace holds fast), and the bheur hag 42 (a caster whose icy staff does cold
+  damage and leaves one Sluggish, immune to cold, fire hurts her more). The duergar types are of the duergar race. For blood (§8 "Blood";
   presentation only):
   `blood`, the colour of its stains (`"#rrggbb"`; default dark red, `#6e0e0c`) or `"none"` for a
   bloodless creature; the cave beetle bleeds greenish-black ichor (`#38461a`). For hunger (§8
@@ -651,7 +656,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   vermin, and the kobolds), `undead` (the barrows' and the fen's dead; hostile to the player,
   the kobolds, and the goblins, and leaving the vermin alone), `marsh` ("marsh things", the
   fen's living things and the bog hag; hostile to the player; not animals as a faction), `cult`
-  ("cultists", the drowned minster's cult; hostile to the player and the marsh), `duergar` (the
+  ("cultists", the drowned minster's cult; hostile to the player and the marsh), `hags`
+  (the bog hag's kin, #451; hostile to the player only), `duergar` (the
   delf's grey dwarves; hostile to the player, the goblins (the ogres and trolls among them), and
   the undead), `fire` ("fire things", the delf's burning creatures and the fire drake; hostile to
   the player only), `wildlife` (deer, cave bats, the cave beetle;

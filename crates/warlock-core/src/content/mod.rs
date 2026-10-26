@@ -25,6 +25,8 @@ mod faction;
 mod flow;
 mod gear;
 mod gem;
+#[cfg(test)]
+mod hag_roster_tests;
 mod horoscope;
 mod hunger;
 mod item_class;
