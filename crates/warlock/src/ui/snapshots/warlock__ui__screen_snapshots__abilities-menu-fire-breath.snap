@@ -2,7 +2,7 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You learn Brawn (1).
+ You learn Sworn foe (earth).
  Fire roars from your throat! You feel drained.
 
 

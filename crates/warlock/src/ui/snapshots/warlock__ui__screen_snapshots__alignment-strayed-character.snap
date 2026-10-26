@@ -19,12 +19,12 @@ expression: "render(case, content.clone())"
     │ To  Toughness     10                                                                    │
     │ In  Intelligence  10                                                                    │
     │ Wi  Willpower     13                                                                    │
-    │ Pr  Presence      11                                                                    │
+    │ Pr  Presence      12                                                                    │
     │                                                                                         │
     │ Lv  Level         1                                                                     │
     │ XP  Experience    0 / 844                                                               │
     │     Talents       9                                                                     │
-    │ HP  Hit points    13/20   MP  Mana       5/5                                            │
+    │ HP  Hit points    13/20   MP  Mana       6/6                                            │
     │ Dv  Defence       13      Pv  Protection  1                                             │
     │     Stance        Neutral                                                               │
     │     Alignment     Kind                                                                  │
@@ -37,4 +37,4 @@ expression: "render(case, content.clone())"
     │ @ or Esc close   A skills                                                               │
     └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘
 
- The Courtyard  ·  HP 13/20  ·  MP 5/5  ·  Bleeding  ·  Lv 1  ·  06:35                   ? controls
+ The Courtyard  ·  HP 13/20  ·  MP 6/6  ·  Bleeding  ·  Lv 1  ·  06:35  ·  Clear         ? controls
