@@ -1,0 +1,35 @@
+# The undead roster (#383, batch 5). A grown dragon that died and rose with its flesh still on
+# it, sloughing scales: slow as any zombie but with a dragon's jaws, and its bite carries grave
+# rot. Not yet in any dungeon's population.
+[[creature]]
+id = "rotting_dragon"
+level = 52
+xp = 270
+rarity = "rare"
+name = "rotting dragon"
+glyph = "D"
+fg = "#5a3a28"
+speed = 900
+faction = "undead"
+tags = ["undead"]
+alignment = "evil"
+vision = "darkvision"
+sight = 10
+footsteps = 140
+hearing = 10
+weight = 2500000
+stats = { strength = 37, dexterity = 21, toughness = 38, intelligence = 2, willpower = 34, presence = 2 }
+base_hp = 208
+natural = { defence = 4, protection = 0, name = "rotting scales" }
+resist = { poison = 100 }
+on_eat = { message = "Dragon, and rotten through.", vomit = 90, harm = "1d6" }
+blood = "#2e3418"
+[creature.attack]
+damage = "5d10"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
+to_hit = 5
+on_hit = [
+    { disease = "grave_rot", chance = 25 },
+]

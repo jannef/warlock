@@ -1032,16 +1032,18 @@ mod tests {
              (20%); the ghast's claws (10%); the ghoul lord's claws (15%); the giant rat's bite \
              (10%); the nosferatu's bite (15%) | Toughness, 54% | 1d3 days | Every day | 1d3 \
              Dexterity, 1d3 Toughness | Two checks won in a row | no | Half as fast |",
-            "| Marsh ague | The bog body's fist (15%); the fen ghoul's claws (10%); crossing marsh \
-             or swamp (4% an hour) |",
-            "| Grave rot | The charnel titan's slam (25%); the grave hound's bite (10%); the kobold zombie's fist (5%); the ogre \
-             zombie's fist (10%); the rotting drake's bite (20%); the rotting troll's claws (15%); \
-             the zombie's fist (15%); eating rotten food |",
-            "| Mummy rot | The mummy's fist (20%); the mummy king's fist (35%); the mummy lord's fist (25%); the mummy priest's \
+            "| Marsh ague | The bog body's fist (15%); the drowned king's slam (25%); the fen \
+             ghoul's claws (10%); crossing marsh or swamp (4% an hour) |",
+            "| Grave rot | The charnel titan's slam (25%); the ghoul king's claws (20%); the grave \
+             hound's bite (10%); the kobold zombie's fist (5%); the ogre zombie's fist (10%); the \
+             rotting dragon's bite (25%); the rotting drake's bite (20%); the rotting troll's claws \
+             (15%); the zombie's fist (15%); eating rotten food |",
+            "| Mummy rot | The mummy's fist (20%); the mummy king's fist (35%); the mummy lord's fist \
+             (25%); the mummy priest's \
              touch (15%) | Toughness, 31% \
              | 1d3 days | Every 3 days | 1d4 Toughness | Never by itself | no |",
             "| Never by itself | yes |",
-            "| Burrowing worms | The wormhost's fist (25%) | Toughness, 25% | 1 day | Every day | \
+            "| Burrowing worms | The wormhost's fist (25%); the wormlord's touch (35%) | Toughness, 25% | 1 day | Every day | \
              1d4 Toughness, 1d3 Intelligence, 2d6 hit points | Two checks won in a row | yes |",
             "| Brain fever | — | Willpower, 54% |",
         ] {
