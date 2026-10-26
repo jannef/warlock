@@ -23,8 +23,9 @@ temperature = 8
 danger = 1
 population = [
     "rat", "bat", "beetle", "kobold", "kobold_archer", "kobold_shaman",
-    "grave_worm", "barrow_spider", "goblin", "goblin_archer", "skeleton", "zombie",
-    "giant_centipede", "barrow_ghoul", "goblin_chief", "barrow_wight",
+    "grave_worm", "crawling_hand", "skeletal_rat", "barrow_spider", "kobold_zombie", "goblin",
+    "goblin_archer", "skeleton", "zombie", "giant_centipede", "barrow_ghoul", "skeleton_archer",
+    "goblin_chief", "skeletal_wolf", "barrow_wight", "skeleton_warrior",
 ]
 # 30 a thousand walkable cells: the least, 25, on the barrow's passages (about 350 cells), about
 # 70 in the hollows (about 2 300), as the design's population table has them.

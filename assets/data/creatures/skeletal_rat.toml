@@ -1,0 +1,26 @@
+# The undead roster (#383, batch 1). The bones of a rat, still scurrying through the barrow's
+# passages: quick, small, and as brittle as any skeleton, so a club breaks it where an arrow
+# slips through. Bloodless, and it leaves no corpse.
+[[creature]]
+id = "skeletal_rat"
+level = 1
+xp = 15
+rarity = "common"
+name = "skeletal rat"
+glyph = "r"
+fg = "#e0dcc8"
+speed = 1200
+faction = "undead"
+alignment = "evil"
+vision = "darkvision"
+sight = 8
+footsteps = 20
+hearing = 12
+weight = 300
+size = "small"
+stats = { strength = 7, dexterity = 14, toughness = 8, intelligence = 2, willpower = 16, presence = 2 }
+base_hp = 1
+attack = { damage = "1d3", damage_type = "piercing", name = "bite", verb = "bites" }
+resist = { piercing = 50, bludgeoning = -50, poison = 100 }
+corpse = false
+blood = "none"

@@ -71,16 +71,21 @@ fn the_floors_start_full_of_the_fen_wave() {
     assert_eq!(
         lives,
         BTreeSet::from([
+            "corpse_candle",
             "giant_leech",
             "giant_frog",
             "drowned",
             "crocodile",
             "cultist",
+            "poltergeist",
             "will_o_wisp",
+            "ghast",
             "ghost",
+            "shadow",
             "mud_golem",
             "cult_priest",
             "marsh_troll",
+            "bog_body",
             "bog_hag",
         ])
     );

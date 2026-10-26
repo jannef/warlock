@@ -57,6 +57,8 @@ mod steal;
 mod talent;
 mod terrain;
 mod trap;
+#[cfg(test)]
+mod undead_roster_tests;
 mod vault;
 mod vision;
 mod weapon_skill;

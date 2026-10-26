@@ -1,0 +1,32 @@
+# The undead roster (#383, batch 1). The bones of a barrow's bowman, still loosing arrows at the
+# living from the dark: it keeps its distance, and claws at those who close in. Arrows slip
+# between its ribs, a club shatters it; bloodless, and it leaves no corpse.
+[[creature]]
+id = "skeleton_archer"
+level = 4
+xp = 30
+rarity = "uncommon"
+name = "skeleton archer"
+glyph = "z"
+fg = "#b0a888"
+faction = "undead"
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+combat = "ranged"
+range = 8
+footsteps = 60
+hearing = 10
+weight = 12000
+stats = { strength = 13, dexterity = 11, toughness = 14, intelligence = 2, willpower = 17, presence = 2 }
+base_hp = 10
+attack = { damage = "1d8", damage_type = "slashing", name = "claw", verb = "claws" }
+resist = { piercing = 50, bludgeoning = -50, poison = 100 }
+weapon_skills = { bows = 1 }
+corpse = false
+blood = "none"
+# Its gear (spec §8 "Creature gear"): the short bow it was buried with, as a rule, and arrows.
+racial_weapon = "short_bow"
+[[creature.gear]]
+chance = 95
+one_of = ["arrow*12", "arrow*20"]

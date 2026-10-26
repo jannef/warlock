@@ -129,6 +129,25 @@ symptoms = [
 ]
 recovered = "The rot is gone from your flesh."
 
+# From the touch of mummies: a slow, dry rot that never goes by itself (only a cure ends it),
+# taking Toughness every few days. Unlike grave rot it does not kill.
+[[disease]]
+id = "mummy_rot"
+name = "mummy rot"
+difficulty = 16
+incubation = "1d3"
+interval = 3
+damage = { toughness = "1d4" }
+recovery = 0
+cured_by = ["remove_disease", "prayer"]
+onset = "Your skin turns dry and grey as old parchment."
+symptoms = [
+    "Your flesh withers.",
+    "Dust sifts from your cracking skin.",
+    "You feel yourself drying out from within.",
+]
+recovered = "The dryness leaves your flesh."
+
 # A fever of the mind: Willpower fights it, and mana gathers at a quarter of the pace.
 [[disease]]
 id = "brain_fever"

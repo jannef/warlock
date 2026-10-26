@@ -94,16 +94,24 @@ developer notes (CLAUDE.md, `docs/dev/`).
   claws whose criticals bleed), the goblin chief 5 (club, short sword, jerkin, coins), and the
   barrow wight 6 (a caster whose touch is cold, resists cold, no corpse; an ancient long sword,
   sometimes magic). The undead are immune to poison. The barrow wight is the Ascmearc's own type
-  (`docs/dev/campaign.md`). The fen wave (the drowned minster of Fennmynster, danger 4 to 11):
+  (`docs/dev/campaign.md`). The undead roster's first batch (#383, #384) joins it: the crawling
+  hand 1 and the skeletal rat 1 (small, quick, bone that a club breaks), the kobold zombie 2
+  (slow, grave rot now and then), the skeleton archer 4 (a short bow and arrows, keeps its
+  distance), the skeletal wolf 5 (quick bone), and the skeleton warrior 7 (a long sword or spear,
+  a small shield, chain mail now and then). The fen wave (the drowned minster of Fennmynster, danger 4 to 11):
   the giant leech 4 (its bite leaves a bleeding wound), the giant frog 4 (quick), the drowned 5
   (undead, slow, filth fever on a hit), the crocodile 6 (a strong bite, scales 2/3), the
   cultist 6 (racial dagger, a scroll now and then), the will-o'-wisp 7 (a caster that glows,
   silent, hard to hit, no corpse), the ghost 8 (undead, resists slashing, piercing, and
-  bludgeoning 50, a cold touch, no corpse), the mud golem 8 (slow, protection 5, no corpse), the
+  bludgeoning 50, a cold touch, no corpse; incorporeal, §8 "Incorporeal creatures"), the mud
+  golem 8 (slow, protection 5, no corpse), the
   cult priest 9 (a caster with the cult's dagger, sometimes magic, and often a scroll), the marsh
   troll 9 (huge, regenerating by its Toughness), and the bog hag 11 (a caster with a staff, often
   magic; unique: a population draws her once a run). The cultist, the cult priest, and the bog
-  hag are the Ascmearc's own types. The delf wave (the duergar delf of Fyrdelf, danger 8 to 19): the ember beetle 8 (a
+  hag are the Ascmearc's own types. Its undead (#384): the corpse candle 2 (small, incorporeal,
+  glows, a cold touch), the poltergeist 6 (quick, incorporeal), the ghast 7 (quick, opens doors,
+  filth fever on a hit), the shadow 8 (incorporeal, a cold touch that drains
+  Strength, §8 "Stats": "Drain"), and the bog body 9 (slow, resists cold, marsh ague on a hit). The delf wave (the duergar delf of Fyrdelf, danger 8 to 19): the ember beetle 8 (a
   burning bite, shell, resists fire 50, a faint glow), the duergar miner 9 (a pick-axe
   held as a tool, the racial hand axe half the time, a leather cap), the duergar warrior 11
   (racial hand axe, small shield, chain mail, sometimes magic), the ogre 12 (slow, racial maul),
@@ -113,7 +121,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   the ash wraith 15 (an undead caster with a cold touch, no corpse), the basilisk 16 (scales, a
   bite that leaves one Sluggish), the cinder elemental 17 (immune to fire, bright, no corpse), and
   the fire drake 19 (the Ascmearc's own, unique: a caster whose breath is announced, scales,
-  immune to fire). The duergar types are of the duergar race. For blood (§8 "Blood";
+  immune to fire). Its undead (#384): the ogre zombie 9 (slow, heavy fists, grave rot) and the
+  grave hound 10 (quick, grave rot). The mummy 10 (slow, mummy rot on a hit, fire hurts it more)
+  is in no population yet: the roster's undead above level 10 without a home wait for deep
+  places (#383). The duergar types are of the duergar race. For blood (§8 "Blood";
   presentation only):
   `blood`, the colour of its stains (`"#rrggbb"`; default dark red, `#6e0e0c`) or `"none"` for a
   bloodless creature; the cave beetle bleeds greenish-black ichor (`#38461a`). For hunger (§8

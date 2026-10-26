@@ -27,8 +27,8 @@ temperature = 10
 danger = 8
 population = [
     "bat", "kobold", "kobold_archer", "kobold_shaman", "giant_centipede",
-    "ember_beetle", "duergar_miner", "duergar_warrior", "duergar_smith", "ogre", "troll",
-    "fire_salamander", "magma_crawler", "ash_wraith", "basilisk", "cinder_elemental",
+    "ember_beetle", "duergar_miner", "ogre_zombie", "grave_hound", "duergar_warrior",
+    "duergar_smith", "ogre", "troll", "fire_salamander", "magma_crawler", "ash_wraith", "basilisk", "cinder_elemental",
 ]
 # How many: the default, 35 a thousand walkable cells, 25 to 80. A gallery floor (about 350 cells)
 # gets the least, 25, as Cealdhlāw's passages do; the deep workings (about 3 000) the ceiling, 80.
