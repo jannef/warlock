@@ -27,12 +27,14 @@
 //! name, the shop floor's `area` (inclusive: everything lying there is for sale), and the
 //! keeper's `post` on it, where the keeper (`data/shops.toml`'s `[keeper]`) is spawned.
 //! Optional `danger = N` (spec §7 "Danger levels"; 0 to 99, or `{ base, player }`) with
-//! `population` (creature ids), `population_count`, `out_of_depth`, and `spawn`, as a dungeon
-//! branch gives them (`super::danger`): creatures of about that danger keep coming while the
-//! player is there; none on the overworld.
+//! `population` (creature ids), `population_count`, `stray`, `out_of_depth`, `deeper`,
+//! `deeper_cap`, and `spawn`, as a dungeon branch gives them (`super::danger`): creatures of
+//! about that danger keep coming while the player is there; none on the overworld.
 
 use super::creature::CreatureId;
-use super::danger::{CountSpec, DangerRule, DangerSpec, SpawnSpec, Spawning, SpawningSpec};
+use super::danger::{
+    CountSpec, DangerRule, DangerSpec, OddsSpec, SpawnSpec, Spawning, SpawningSpec,
+};
 use super::faction::FactionId;
 use super::flow::{FLOW_SPEEDS, Flow};
 use super::light::LightId;
@@ -124,7 +126,10 @@ struct LevelFile {
     /// The creature types that live there (needed with a `danger`).
     population: Option<Vec<String>>,
     population_count: Option<CountSpec>,
+    stray: Option<u8>,
     out_of_depth: Option<u8>,
+    deeper: Option<u8>,
+    deeper_cap: Option<u8>,
     spawn: Option<SpawnSpec>,
     /// A vault's branches and branch levels (read by `vault::parse_dungeons`; refused on a
     /// level).
@@ -845,12 +850,20 @@ pub(super) fn parse_level(
         danger: parsed.danger,
         population: parsed.population,
         population_count: parsed.population_count,
-        out_of_depth: parsed.out_of_depth,
+        odds: OddsSpec {
+            stray: parsed.stray,
+            out_of_depth: parsed.out_of_depth,
+            deeper: parsed.deeper,
+            deeper_cap: parsed.deeper_cap,
+        },
         spawn: parsed.spawn,
     }
-    .resolve(false, &[], |name| {
-        (content.creature_id(name)).map(|c| (c, content.creature(c).level))
-    })
+    .resolve(
+        false,
+        &[],
+        |name| (content.creature_id(name)).map(|c| (c, content.creature(c).level)),
+        content.draw_odds,
+    )
     .map_err(err)?;
     if spawning.is_some() && parsed.kind == LevelKind::Overworld {
         return Err(err("the overworld has no `danger`".into()));

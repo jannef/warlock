@@ -100,7 +100,10 @@ fn the_floors_start_full_of_the_delf_wave() {
     for (depth, least) in [(1, 25), (5, 80)] {
         let floor = level(1, depth);
         let drawn = (floor.creatures.iter())
-            .filter(|c| spawning.population.contains(&c.creature))
+            .filter(|c| {
+                let drawn = [&spawning.population, &spawning.generic];
+                drawn.iter().any(|kinds| kinds.contains(&c.creature))
+            })
             .count();
         assert!(drawn >= least, "depth {depth}: {drawn}");
         assert!(!has_hoard(&floor), "depth {depth}");

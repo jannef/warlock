@@ -97,10 +97,13 @@ fn the_floors_start_full_of_the_barrow_wave() {
         let floor = level(1, depth);
         let count = floor.creatures.len();
         assert!((least..=most).contains(&count), "depth {depth}: {count}");
-        // A shop's keeper aside, everyone was drawn from those who live there.
+        // A shop's keeper aside, everyone was drawn from those who live there or the generic
+        // list strays come from.
         let keeper = CONTENT.creature_id("shopkeeper").expect("the keeper");
         for c in &floor.creatures {
-            let lives = spawning.population.contains(&c.creature);
+            let lives = [&spawning.population, &spawning.generic]
+                .iter()
+                .any(|kinds| kinds.contains(&c.creature));
             assert!(lives || c.creature == keeper, "depth {depth}");
         }
     }

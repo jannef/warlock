@@ -26,7 +26,10 @@
 //! danger = 4                    # optional (spec §7 "Danger levels"; `super::danger`): its
 //! population = ["rat"]          # floors' danger, who lives there, how many, and how they
 //! population_count = 40         # come back; none: danger 0, nothing comes
-//! out_of_depth = 5
+//! stray = 5                    # the draws' odds (`super::danger::Odds`); default
+//! out_of_depth = 5             # data/dungeons.toml's `[defaults]`
+//! deeper = 5
+//! deeper_cap = 10
 //! spawn = { every = "15m", chance = 60 }
 //!
 //! [[dungeon.levels]]            # optional per-depth overrides, first match wins
@@ -57,7 +60,9 @@
 
 use super::ContentError;
 use super::creature::CreatureId;
-use super::danger::{CountSpec, DangerRule, DangerSpec, SpawnSpec, Spawning, SpawningSpec};
+use super::danger::{
+    CountSpec, DangerRule, DangerSpec, Odds, OddsSpec, SpawnSpec, Spawning, SpawningSpec,
+};
 use super::dialogue::{MAX_REPLY, check_lines};
 use super::object::ObjectId;
 use super::room_effect::{RoomEffectId, RoomEffects};
@@ -95,6 +100,9 @@ impl Generator {
 pub(super) struct DungeonFile {
     #[serde(default)]
     dungeon: Vec<DungeonSpec>,
+    /// The default odds of a draw (spec §7 "Danger levels"): only `data/dungeons.toml` gives
+    /// them, read before the levels (`danger::DefaultsFile`).
+    pub(super) defaults: Option<Odds>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -132,7 +140,10 @@ struct DungeonSpec {
     /// The creature types that live there; default: `creatures`.
     population: Option<Vec<String>>,
     population_count: Option<CountSpec>,
+    stray: Option<u8>,
     out_of_depth: Option<u8>,
+    deeper: Option<u8>,
+    deeper_cap: Option<u8>,
     spawn: Option<SpawnSpec>,
     room_effects: Option<RoomOddsSpec>,
     shops: Option<ShopOddsSpec>,
@@ -506,6 +517,7 @@ impl DungeonFile {
         trap_id: impl Fn(&str) -> Option<TrapId>,
         rooms: &RoomEffects,
         shops: Option<&Shops>,
+        defaults: Option<Odds>,
     ) -> Result<Vec<DungeonDef>, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let mut defs: Vec<DungeonDef> = Vec::new();
@@ -547,10 +559,15 @@ impl DungeonFile {
                 danger: spec.danger,
                 population: spec.population,
                 population_count: spec.population_count,
-                out_of_depth: spec.out_of_depth,
+                odds: OddsSpec {
+                    stray: spec.stray,
+                    out_of_depth: spec.out_of_depth,
+                    deeper: spec.deeper,
+                    deeper_cap: spec.deeper_cap,
+                },
                 spawn: spec.spawn,
             }
-            .resolve(true, &creatures, &creature_id)
+            .resolve(true, &creatures, &creature_id, defaults)
             .map_err(|m| err(format!("dungeon `{id}`: {m}")))?;
             let branch_danger = spawning.as_ref().map(|(rule, _)| *rule);
             let mut plans = Vec::new();
@@ -723,6 +740,12 @@ mod tests {
             |t| (t == "pit").then_some(TrapId(0)),
             &rooms(),
             None,
+            Some(Odds {
+                stray: 5,
+                out_of_depth: 5,
+                deeper: 5,
+                deeper_cap: 10,
+            }),
         )
     }
 

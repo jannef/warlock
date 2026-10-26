@@ -3,7 +3,7 @@
 
 use std::collections::BTreeSet;
 use std::fmt::Write as _;
-use warlock_core::content::danger::{self, OUT_OF_DEPTH_STEPS, TOO_WEAK};
+use warlock_core::content::danger::{self, Odds, TOO_WEAK};
 use warlock_core::content::{Content, Count, DangerRule, Generator, Spawning};
 
 /// A danger rule in words: `4`, `2 + 1 a floor down`, with a player-scaled part.
@@ -48,14 +48,23 @@ fn population_text(content: &Content, s: &Spawning) -> String {
     names.join(", ")
 }
 
-fn spawn_text(s: &Spawning) -> String {
+fn spawn_text(content: &Content, s: &Spawning) -> String {
     let cap = match s.cap {
         Some(cap) => format!("up to {cap} hostile"),
         None => "up to its population".into(),
     };
+    let odds = if Some(s.odds) == content.draw_odds() {
+        "the usual strays and deeper draws".to_string()
+    } else {
+        let o = s.odds;
+        format!(
+            "{}% strays; {}% of draws deeper, each further step {}%, at most {} more",
+            o.stray, o.out_of_depth, o.deeper, o.deeper_cap
+        )
+    };
     format!(
-        "every {} of game time, {}% each time, {cap}; {}% of draws 1 to {OUT_OF_DEPTH_STEPS} deeper",
-        s.every, s.chance, s.out_of_depth
+        "every {} of game time, {}% each time, {cap}; {odds}",
+        s.every, s.chance
     )
 }
 
@@ -78,7 +87,7 @@ pub(super) fn dungeons(content: &Content) -> String {
             Some(s) => (
                 population_text(content, s),
                 count_text(s.count),
-                spawn_text(s),
+                spawn_text(content, s),
             ),
             None => (
                 "only the patrols the generator places".into(),
@@ -104,7 +113,7 @@ pub(super) fn dungeons(content: &Content) -> String {
             rule_text(*rule, false),
             population_text(content, s),
             count_text(s.count),
-            spawn_text(s)
+            spawn_text(content, s)
         );
     }
     out
@@ -206,6 +215,60 @@ pub(super) fn creature_rarities(content: &Content) -> String {
             names.join(", ")
         };
         let _ = writeln!(out, "| {} | {}% | {names} |", tier.name, tier.factor);
+    }
+    out
+}
+
+/// A chance in percent, to four decimals without trailing zeros: `5`, `0.2375`.
+fn percent(p: f64) -> String {
+    let text = format!("{p:.4}");
+    let text = text.trim_end_matches('0').trim_end_matches('.');
+    if text == "0" && p > 0.0 {
+        "under 0.0001".into()
+    } else {
+        text.into()
+    }
+}
+
+/// The default odds of a draw (`data/dungeons.toml`'s `[defaults]`): strays, out-of-depth
+/// draws, and how far deeper those go, each as a share of all draws.
+pub(super) fn draw_odds(content: &Content) -> String {
+    let Some(Odds {
+        stray,
+        out_of_depth,
+        deeper,
+        deeper_cap,
+    }) = content.draw_odds()
+    else {
+        return "(no defaults)\n".into();
+    };
+    let mut out = String::from("| A draw | Chance |\n|---|---:|\n");
+    let _ = writeln!(out, "| a stray, from the generic list | {stray}% |");
+    let _ = writeln!(out, "| out of depth, all told | {out_of_depth}% |");
+    let (ood, more) = (f64::from(out_of_depth) / 100.0, f64::from(deeper) / 100.0);
+    let shown = deeper_cap.min(3);
+    for step in 0..=shown {
+        // `step` further steps, then a miss (or the cap reached).
+        let mut chance = ood * more.powi(step.into());
+        if step < deeper_cap {
+            chance *= 1.0 - more;
+        }
+        let _ = writeln!(
+            out,
+            "| {} deeper than the danger | {}% |",
+            step + 1,
+            percent(chance * 100.0)
+        );
+    }
+    if deeper_cap > shown {
+        let rest = ood * more.powi((shown + 1).into());
+        let _ = writeln!(
+            out,
+            "| {} to {} deeper (the most) | {}% |",
+            shown + 2,
+            deeper_cap + 1,
+            percent(rest * 100.0)
+        );
     }
     out
 }

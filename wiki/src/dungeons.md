@@ -24,9 +24,24 @@ are never chosen this way.
 
 {{#include generated/creature-rarities.md}}
 
-One draw in twenty (unless a place says otherwise) is made one to three dangers deeper, so a
-careless step on a quiet floor can still meet something it should not. A creature marked "once a
-run" comes at most once in your life, however many floors it could come to.
+A dungeon is mostly its own folk, but now and then something wanders in from elsewhere: one
+draw in twenty (unless a place says otherwise) is a **stray**, chosen the same way but from the
+**generic list**, every kind that lives in any dungeon of the land (a creature marked "once a
+run" is never on it, nor are people, shopkeepers, and the guardians placed by hand). A stray may
+be one of the place's own kinds too.
+
+Another draw in twenty (again unless a place says otherwise) is made **out of depth**, as if the
+floor were one danger deeper; and then, again and again, one draw in twenty of those goes one
+deeper still (up to the limit the table shows), so a careless step on a quiet floor can still
+meet something it should not, and very rarely something far worse. If nothing that lives in the place is strong
+enough to be chosen that deep (every kind more than 8 below it), the deeper creature comes from
+the generic list instead. If nothing anywhere is, the draw is made at the floor's own danger.
+Each draw is a stray or not and out of depth or not by its own chance; as a share of all draws:
+
+{{#include generated/draw-odds.md}}
+
+A creature marked "once a run" comes at most once in your life, however many floors it could
+come to.
 
 ## A floor starts full
 
