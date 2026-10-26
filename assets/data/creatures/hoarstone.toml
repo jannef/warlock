@@ -1,0 +1,38 @@
+# The elemental roster (#453): the earth line's eldest rung. The eldest of the stones (Old
+# English hār stān, the grey boundary stone): a crag that walks through the earth at the world's
+# roots.
+[[creature]]
+id = "hoarstone"
+level = 60
+xp = 310
+rarity = "very_rare"
+loot = 20
+name = "hoarstone"
+glyph = "E"
+fg = "#d0ccc0"
+speed = 900
+faction = "elemental"
+tags = ["elemental", "earth"]
+alignment = "neutral"
+vision = "darkvision"
+sight = 12
+footsteps = 180
+hearing = 10
+weight = 8000000
+stats = { strength = 40, dexterity = 23, toughness = 40, intelligence = 34, willpower = 37, presence = 34 }
+base_hp = 240
+natural = { defence = 5, protection = 9, name = "stone body" }
+incorporeal = { wall_defence = 4 }
+resist = { slashing = 25, piercing = 50, electricity = 100, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "4d12"
+damage_type = "bludgeoning"
+to_hit = 6
+name = "fist"
+verb = "pounds"
+on_hit = [
+    { status = "staggered", chance = 15, severity = 1 },
+    { status = "held", chance = 10, difficulty = 24 },
+]

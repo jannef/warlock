@@ -1,0 +1,33 @@
+# The elemental roster (#453): the air line's elder rung. An old wind out of the world's first
+# weather: faster than any living thing.
+[[creature]]
+id = "elder_air_elemental"
+level = 45
+xp = 235
+rarity = "very_rare"
+loot = 10
+name = "elder air elemental"
+glyph = "E"
+fg = "#e8f4ff"
+speed = 1850
+faction = "elemental"
+tags = ["elemental", "air"]
+alignment = "neutral"
+vision = "darkvision"
+sight = 10
+footsteps = 50
+hearing = 10
+weight = 200000
+stats = { strength = 29, dexterity = 26, toughness = 29, intelligence = 28, willpower = 32, presence = 28 }
+base_hp = 101
+natural = { defence = 6, protection = 0, name = "rushing wind" }
+resist = { piercing = 50, electricity = 50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "3d12"
+damage_type = "bludgeoning"
+to_hit = 4
+name = "buffet"
+verb = "buffets"
+on_hit = [{ status = "staggered", chance = 20, severity = 1 }]

@@ -22,6 +22,8 @@ mod dialogue;
 mod disease;
 mod dungeon;
 mod effect;
+#[cfg(test)]
+mod elemental_roster_tests;
 mod experience;
 mod faction;
 #[cfg(test)]
@@ -4382,7 +4384,7 @@ mod tests {
         let content = Content::builtin().unwrap();
         let objects = content.object_defs();
         // With a corpse for every creature type but the player, and the magic base items.
-        assert!((15..=200).contains(&objects.len()), "{}", objects.len());
+        assert!((15..=300).contains(&objects.len()), "{}", objects.len());
         let glyphs = content.glyphs();
         for def in objects {
             assert!(def.weight > 0 && glyphs.contains(&def.glyph), "{}", def.id);

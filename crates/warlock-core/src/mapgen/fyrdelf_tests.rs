@@ -92,6 +92,8 @@ fn the_floors_start_full_of_the_delf_wave() {
         "duergar_smith",
         "troll",
         "cinder_elemental",
+        "lesser_fire_elemental",
+        "earth_elemental",
     ] {
         assert!(lives.contains(&id), "{id} lives in Fyrdelf");
     }

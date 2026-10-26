@@ -1,0 +1,34 @@
+# The elemental roster (#453): the fire line's eldest rung. The eldest of the fires (Old English
+# bǣlfȳr, the pyre's fire): a white-hot blaze that walks, and what it touches it burns to ash.
+[[creature]]
+id = "balefire"
+level = 64
+xp = 330
+rarity = "very_rare"
+loot = 20
+name = "balefire"
+glyph = "E"
+fg = "#fff4d0"
+speed = 1200
+light = "brazier"
+glow = 0.45
+faction = "elemental"
+tags = ["elemental", "fire"]
+alignment = "neutral"
+vision = "normal"
+sight = 12
+footsteps = 40
+hearing = 10
+weight = 1000000
+stats = { strength = 37, dexterity = 26, toughness = 38, intelligence = 36, willpower = 38, presence = 36 }
+base_hp = 160
+natural = { defence = 5, protection = 0, name = "flickering flame" }
+resist = { fire = 100, cold = -50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "4d10"
+damage_type = "fire"
+to_hit = 6
+name = "touch"
+verb = "burns"

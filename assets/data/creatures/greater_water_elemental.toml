@@ -1,0 +1,35 @@
+# The elemental roster (#453): the water line's greater rung. A flood in a body: its blows soak
+# and drag, and what it closes on it holds.
+[[creature]]
+id = "greater_water_elemental"
+level = 26
+xp = 140
+rarity = "rare"
+loot = 5
+name = "greater water elemental"
+glyph = "E"
+fg = "#3a5ae8"
+faction = "elemental"
+tags = ["elemental", "water"]
+alignment = "neutral"
+vision = "darkvision"
+sight = 10
+footsteps = 30
+hearing = 10
+weight = 1000000
+stats = { strength = 21, dexterity = 17, toughness = 22, intelligence = 20, willpower = 25, presence = 20 }
+base_hp = 65
+natural = { defence = 1, protection = 0, name = "flowing body" }
+resist = { fire = 50, piercing = 50, electricity = -50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "4d6"
+damage_type = "bludgeoning"
+to_hit = 2
+name = "wave"
+verb = "slams"
+on_hit = [
+    { status = "sluggish", chance = 20, severity = 1 },
+    { status = "held", chance = 10, difficulty = 17 },
+]

@@ -1,0 +1,32 @@
+# The elemental roster (#453): the earth line's middle rung. A walking hill of rock: slow, but
+# it moves through stone as a man through water, and comes out of the wall to strike.
+[[creature]]
+id = "earth_elemental"
+level = 13
+xp = 75
+rarity = "uncommon"
+name = "earth elemental"
+glyph = "E"
+fg = "#96805a"
+speed = 750
+faction = "elemental"
+tags = ["elemental", "earth"]
+alignment = "neutral"
+vision = "darkvision"
+sight = 10
+footsteps = 86
+hearing = 10
+weight = 400000
+stats = { strength = 21, dexterity = 11, toughness = 22, intelligence = 2, willpower = 21, presence = 2 }
+base_hp = 52
+natural = { defence = 0, protection = 3, name = "stone body" }
+incorporeal = { wall_defence = 1 }
+resist = { slashing = 25, piercing = 50, electricity = 100, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "3d6"
+damage_type = "bludgeoning"
+name = "fist"
+verb = "pounds"
+on_hit = [{ status = "staggered", chance = 15, severity = 1 }]

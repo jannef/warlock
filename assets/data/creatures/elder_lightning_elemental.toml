@@ -1,0 +1,35 @@
+# The elemental roster (#453): the lightning line's elder rung. An old storm's heart: thunder
+# goes with it.
+[[creature]]
+id = "elder_lightning_elemental"
+level = 52
+xp = 270
+rarity = "very_rare"
+loot = 10
+name = "elder lightning elemental"
+glyph = "E"
+fg = "#d0b0ff"
+speed = 1600
+light = "storm"
+glow = 0.45
+faction = "elemental"
+tags = ["elemental", "lightning"]
+alignment = "neutral"
+vision = "darkvision"
+sight = 10
+footsteps = 20
+hearing = 10
+weight = 40000
+stats = { strength = 32, dexterity = 28, toughness = 32, intelligence = 31, willpower = 34, presence = 31 }
+base_hp = 117
+natural = { defence = 6, protection = 0, name = "crackling form" }
+resist = { electricity = 100, piercing = 25, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "4d10"
+damage_type = "electricity"
+to_hit = 5
+name = "touch"
+verb = "shocks"
+on_hit = [{ status = "staggered", chance = 20, severity = 1 }]
