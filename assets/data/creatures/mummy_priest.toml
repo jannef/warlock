@@ -12,6 +12,7 @@ name = "mummy priest"
 glyph = "M"
 fg = "#c8a060"
 faction = "undead"
+tags = ["undead"]
 alignment = "evil"
 vision = "darkvision"
 sight = 12

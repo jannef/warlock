@@ -10,6 +10,7 @@ plural = "gallows dead"
 glyph = "Z"
 fg = "#9a7a68"
 faction = "undead"
+tags = ["undead"]
 alignment = "evil"
 vision = "darkvision"
 sight = 10
