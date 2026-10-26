@@ -1,0 +1,35 @@
+# The undead roster (#383, batch 1). The bones of a warrior laid in the barrow with sword or spear
+# and shield, still keeping the drill it knew: steadier and harder to put down than a common
+# skeleton. Arrows slip between its ribs, a club shatters it; bloodless, and it leaves no corpse.
+[[creature]]
+id = "skeleton_warrior"
+level = 7
+xp = 45
+rarity = "common"
+name = "skeleton warrior"
+glyph = "z"
+fg = "#c0c8d0"
+faction = "undead"
+alignment = "evil"
+vision = "darkvision"
+sight = 10
+footsteps = 70
+hearing = 10
+weight = 14000
+stats = { strength = 14, dexterity = 12, toughness = 15, intelligence = 2, willpower = 18, presence = 2 }
+base_hp = 18
+attack = { damage = "1d10", damage_type = "slashing", name = "claw", verb = "claws" }
+resist = { piercing = 50, bludgeoning = -50, poison = 100 }
+weapon_skills = { long_blades = 2 }
+corpse = false
+blood = "none"
+# Its gear (spec §8 "Creature gear"): the arms it was buried with.
+[[creature.gear]]
+chance = 80
+one_of = ["long_sword", "spear"]
+[[creature.gear]]
+chance = 50
+one_of = ["small_shield"]
+[[creature.gear]]
+chance = 30
+one_of = ["chain_mail"]

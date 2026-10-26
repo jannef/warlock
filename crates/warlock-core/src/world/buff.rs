@@ -44,7 +44,7 @@ impl World {
 
     /// The kind of action the player's `action` is, as a status's `blocks` names it; `None` for
     /// what is no action in the world (settings, trading, the dev actions).
-    fn kind_of(&self, action: &Action) -> Option<ActionKind> {
+    pub(super) fn kind_of(&self, action: &Action) -> Option<ActionKind> {
         Some(match action {
             Action::Move(dir) | Action::Pay(Some(dir)) => self.move_kind(*dir),
             Action::Wait | Action::Rest(_) | Action::SecondWind | Action::BloodMagic => {

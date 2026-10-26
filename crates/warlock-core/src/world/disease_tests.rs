@@ -803,7 +803,7 @@ fn diseases_and_stat_damage_are_saved_hashed_and_replayed() {
 }
 
 #[test]
-fn the_built_in_diseases_are_the_six_pathologies() {
+fn the_built_in_diseases_are_the_seven_pathologies() {
     let content = Content::builtin().expect("builtin content");
     let ids: Vec<&str> = (content.disease_defs().iter())
         .map(|d| d.id.as_str())
@@ -816,6 +816,7 @@ fn the_built_in_diseases_are_the_six_pathologies() {
             "the_shakes",
             "marsh_ague",
             "grave_rot",
+            "mummy_rot",
             "brain_fever"
         ]
     );

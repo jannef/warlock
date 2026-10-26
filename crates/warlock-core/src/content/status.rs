@@ -9,7 +9,8 @@
 //! fighting while it lasts ([`CombatBonus`]), how much slower it makes every action (`cost`),
 //! which actions it refuses (`blocks`), the status that follows it as it ends (`follows`), what
 //! causes it (big hits and criticals, [`Wound`]; a creature's attack, [`OnHit`]), what cures it
-//! (`cured_by`), and its messages. So a status may be a harm (bleeding), a buff (raging), a hex
+//! (`cured_by`), and its messages. A status with a `hold` table ([`Hold`]) is a hold: one actor
+//! holding another fast (Held). So a status may be a harm (bleeding), a buff (raging), a hex
 //! on a creature, or a cooldown (a status with `eases` and no tick, during which an ability
 //! cannot be used: Exhausted). The rules that apply them live in `crate::status`,
 //! `world/status.rs`, and `world/buff.rs`.
@@ -21,6 +22,7 @@ use super::action::ActionKind;
 use super::disease::DiseaseId;
 use super::stance::BONUS;
 use super::{ContentError, DamageTypeId};
+use crate::dice::Dice;
 use crate::stats::{ADJUSTMENTS, PerStat, Stat};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -36,6 +38,29 @@ pub const MAX_TICK_DAMAGE: u16 = 1000;
 /// much. Statuses slow and never hasten, so a creature's quickest step is what it always was (a
 /// rest's batching counts on it, `World::out_of_view_for`).
 pub const COST_PERCENT: RangeInclusive<u32> = 100..=1000;
+
+/// What makes a status a **hold** (`hold` in data; Held, spec §8 "Status effects"): the actor
+/// that caused it (its effect's `by`) holds the sufferer, and the hold ends when the holder dies,
+/// leaves its side, or is held or slowed itself (`world/hold.rs`); the player breaks free by a
+/// check of `check` against the holder's grip as they try to step.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Hold {
+    /// The stat the held player struggles with (Strength).
+    #[serde(default = "strength")]
+    pub check: Stat,
+    /// The grip's difficulty when the holder's attack names none (its `on_hit` entry's
+    /// `difficulty`): 1 to 40.
+    pub difficulty: i32,
+    /// The most turns a hold lasts: a dose's degrees are drawn from these dice (at least 1, at
+    /// most the status's `max`), and it eases a degree every `eases` seconds (a turn), so no hold
+    /// can last for ever. A new dose keeps the longer of the two (`stacking = "highest"`).
+    pub turns: Dice,
+}
+
+fn strength() -> Stat {
+    Stat::Strength
+}
 
 /// Index of a status definition in [`super::Content::status_defs`], in file order (which is
 /// also how important it is: the status bar shows the first first).
@@ -148,7 +173,9 @@ impl Wound {
 
 /// What an attack may cause when it hits and the target lives (`on_hit` on a creature's natural
 /// attack): a status, `{ status = "poisoned", chance = 10, severity = 2 }`, exposure to a
-/// disease, `{ disease = "filth_fever", chance = 10 }` (spec §8 "Diseases"), or a drain,
+/// disease, `{ disease = "filth_fever", chance = 10 }` (spec §8 "Diseases"), a hold,
+/// `{ status = "held", chance = 10, difficulty = 15 }` (a status with a [`Hold`]: no severity,
+/// its turns are drawn; `difficulty` the grip's, the status's own without one), or a drain,
 /// `{ drain = "strength", points = 1, chance = 100, check = "willpower", difficulty = 14 }`
 /// (spec §8 "Stats": "Drain").
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -164,6 +191,12 @@ pub struct OnHit {
 pub enum Affliction {
     /// So many degrees of a status.
     Status { status: StatusId, severity: u16 },
+    /// A hold (a status with a [`Hold`]): the attacker holds the target, with a grip of
+    /// `difficulty` (`None`: the status's own).
+    Hold {
+        status: StatusId,
+        difficulty: Option<i32>,
+    },
     /// Exposure to a disease: the target resists it with a check, or catches it.
     Disease(DiseaseId),
     /// A drain: the target resists it with a check, or loses points of a stat for good.
@@ -203,11 +236,12 @@ pub(super) struct OnHitSpec {
 }
 
 impl OnHitSpec {
-    /// Resolves its status by id (to the status and its `max`; `None`: unknown, or one only a
-    /// disease causes) or its disease, and checks the chance and the severity.
+    /// Resolves its status by id (to the status, its `max`, and whether it is a hold; `None`:
+    /// unknown, or one only a disease causes) or its disease, and checks the chance and the
+    /// severity (a hold has none; only a hold has a `difficulty`).
     pub(super) fn resolve(
         &self,
-        status: impl Fn(&str) -> Option<(StatusId, u16)>,
+        status: impl Fn(&str) -> Option<(StatusId, u16, bool)>,
         disease: impl Fn(&str) -> Option<DiseaseId>,
     ) -> Result<OnHit, String> {
         let name = (self.status.as_ref().or(self.disease.as_ref())).or(self.drain.as_ref());
@@ -223,14 +257,39 @@ impl OnHitSpec {
                 chance: self.chance,
             });
         }
-        if self.points.is_some() || self.check.is_some() || self.difficulty.is_some() {
+        if self.points.is_some() || self.check.is_some() {
             return Err(format!(
-                "on_hit `{name}`: `points`, `check`, and `difficulty` belong to a `drain`"
+                "on_hit `{name}`: `points` and `check` belong to a `drain`"
+            ));
+        }
+        let hold = (self.status.as_deref())
+            .and_then(&status)
+            .filter(|&(_, _, hold)| hold);
+        if let Some((found, _, _)) = hold {
+            if self.disease.is_some() || self.severity.is_some() {
+                return Err(format!(
+                    "on_hit `{name}`: a hold has no `severity` (its turns are drawn) and no `disease`"
+                ));
+            }
+            if self.difficulty.is_some_and(|d| !(1..=40).contains(&d)) {
+                return Err(format!("on_hit `{name}`: difficulty must be 1 to 40"));
+            }
+            return Ok(OnHit {
+                what: Affliction::Hold {
+                    status: found,
+                    difficulty: self.difficulty,
+                },
+                chance: self.chance,
+            });
+        }
+        if self.difficulty.is_some() {
+            return Err(format!(
+                "on_hit `{name}`: `difficulty` belongs to a `drain` or a hold"
             ));
         }
         let what = match (&self.status, &self.disease, self.severity) {
             (Some(id), None, Some(severity)) => {
-                let (found, max) =
+                let (found, max, _) =
                     status(id).ok_or_else(|| format!("on_hit: unknown status `{id}`"))?;
                 if !(1..=max).contains(&severity) {
                     return Err(format!(
@@ -373,6 +432,7 @@ struct StatusSpec {
     end: Option<String>,
     dies: Option<String>,
     death: Option<String>,
+    hold: Option<Hold>,
 }
 
 fn normal_regen() -> u16 {
@@ -451,6 +511,8 @@ pub struct StatusDef {
     pub dies: Option<String>,
     /// The death screen's line when it kills the player: "Bled to death".
     pub death: Option<String>,
+    /// What makes it a hold (Held), if it is one.
+    pub hold: Option<Hold>,
 }
 
 impl StatusDef {
@@ -609,6 +671,9 @@ fn resolve(
     if spec.cured_by.iter().any(|c| c.trim().is_empty()) {
         return Err("cured_by: a cure must have a name".into());
     }
+    if let Some(hold) = &spec.hold {
+        check_hold(hold, spec.max, spec.eases, spec.stacking, &blocks)?;
+    }
     Ok(StatusDef {
         id: spec.id,
         name: spec.name,
@@ -634,7 +699,34 @@ fn resolve(
         end: spec.end,
         dies: spec.dies,
         death: spec.death,
+        hold: spec.hold,
     })
+}
+
+/// Checks a hold: a grip of 1 to 40, at least one turn and no more than the status's `max`, and
+/// a status that eases, blocks steps, and keeps the longer of two doses.
+fn check_hold(
+    hold: &Hold,
+    max: u16,
+    eases: Option<u32>,
+    stacking: Stacking,
+    blocks: &[ActionKind],
+) -> Result<(), String> {
+    if !(1..=40).contains(&hold.difficulty) {
+        return Err("hold: difficulty must be 1 to 40".into());
+    }
+    if hold.turns.min() < 1 || hold.turns.max() > i32::from(max) {
+        return Err(format!(
+            "hold: turns must roll 1 to {max} (the status's max)"
+        ));
+    }
+    if eases.is_none() || stacking != Stacking::Highest {
+        return Err("hold: a hold needs `eases` (a turn) and `stacking = \"highest\"`".into());
+    }
+    if !blocks.contains(&ActionKind::Step) {
+        return Err("hold: a hold blocks `step`".into());
+    }
+    Ok(())
 }
 
 /// Checks what a status does to mana (spec §8 "Mana"): its pace and its drain.
@@ -891,7 +983,7 @@ mod tests {
 
     #[test]
     fn on_hit_entries_name_a_status_within_its_max_or_a_disease() {
-        let known = |id: &str| (id == "poisoned").then_some((StatusId(1), 10));
+        let known = |id: &str| (id == "poisoned").then_some((StatusId(1), 10, false));
         let disease = |id: &str| (id == "fever").then_some(DiseaseId(0));
         let spec = |status: Option<&str>, disease: Option<&str>, chance, severity| OnHitSpec {
             status: status.map(String::from),
@@ -945,6 +1037,84 @@ mod tests {
         ] {
             let e = bad.resolve(known, disease).unwrap_err();
             assert!(e.contains(why), "{why}: {e}");
+        }
+    }
+
+    #[test]
+    fn on_hit_holds_take_a_grip_and_no_severity() {
+        let known = |id: &str| match id {
+            "held" => Some((StatusId(2), 12, true)),
+            "poisoned" => Some((StatusId(1), 10, false)),
+            _ => None,
+        };
+        let disease = |_: &str| None;
+        let hold = |difficulty, severity| OnHitSpec {
+            status: Some("held".into()),
+            chance: 10,
+            difficulty,
+            severity,
+            ..OnHitSpec::default()
+        };
+        assert_eq!(
+            hold(Some(15), None).resolve(known, disease).map(|o| o.what),
+            Ok(Affliction::Hold {
+                status: StatusId(2),
+                difficulty: Some(15),
+            })
+        );
+        assert_eq!(
+            hold(None, None).resolve(known, disease).map(|o| o.what),
+            Ok(Affliction::Hold {
+                status: StatusId(2),
+                difficulty: None,
+            })
+        );
+        let gripping_poison = OnHitSpec {
+            status: Some("poisoned".into()),
+            severity: Some(1),
+            ..hold(Some(15), None)
+        };
+        for (bad, why) in [
+            (hold(None, Some(1)), "a hold has no `severity`"),
+            (hold(Some(41), None), "difficulty must be 1 to 40"),
+            (gripping_poison, "belongs to a `drain` or a hold"),
+        ] {
+            let e = bad.resolve(known, disease).unwrap_err();
+            assert!(e.contains(why), "{why}: {e}");
+        }
+    }
+
+    #[test]
+    fn a_hold_eases_blocks_steps_and_draws_its_turns_within_its_max() {
+        let held = |max: u16| {
+            format!(
+                "[[status]]\nid = \"held\"\nname = \"Held\"\nmax = {max}\n\
+                 stacking = \"highest\"\neases = 6\nblocks = [\"step\"]\n\
+                 hold = {{ difficulty = 13, turns = \"3d4\" }}\n"
+            )
+        };
+        let (_, list) = parse("status.toml", &held(12), |_| None).expect("valid");
+        let hold = list[0].hold.expect("a hold");
+        assert_eq!((hold.check, hold.difficulty), (Stat::Strength, 13));
+        assert_eq!((hold.turns.min(), hold.turns.max()), (3, 12));
+        for (text, why) in [
+            (held(11), "turns must roll 1 to 11"),
+            (
+                held(12).replace("\"highest\"", "\"refresh\""),
+                "a hold needs `eases`",
+            ),
+            (held(12).replace("eases = 6\n", ""), "a hold needs `eases`"),
+            (
+                held(12).replace("\"step\"", "\"read\""),
+                "a hold blocks `step`",
+            ),
+            (
+                held(12).replace("difficulty = 13", "difficulty = 0"),
+                "difficulty must be 1 to 40",
+            ),
+        ] {
+            let e = parse("status.toml", &text, |_| None).unwrap_err();
+            assert!(e.message.contains(why), "{why}: {}", e.message);
         }
     }
 

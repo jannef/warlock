@@ -57,6 +57,8 @@ mod steal;
 mod talent;
 mod terrain;
 mod trap;
+#[cfg(test)]
+mod undead_roster_tests;
 mod unique;
 mod vault;
 mod vision;
@@ -1179,7 +1181,8 @@ impl Content {
                 let found = self
                     .status_id(id)
                     .filter(|&s| Some(s) != self.disease_status)?;
-                Some((found, self.status(found).max))
+                let def = self.status(found);
+                Some((found, def.max, def.hold.is_some()))
             };
             let kinds = (spec.attack.as_ref())
                 .map(|a| self.resolve_kinds(a.damage_type.as_ref()))

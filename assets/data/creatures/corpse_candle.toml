@@ -1,0 +1,29 @@
+# The undead roster (#383, batch 1). The corpse candle of Welsh lore (canwyll corff): a small pale
+# flame that drifts ahead of the dead along the way they will be carried. It glows, makes no
+# sound, passes through walls and doors, and its touch is cold. Nothing of it remains when it
+# goes out.
+[[creature]]
+id = "corpse_candle"
+level = 2
+xp = 20
+rarity = "uncommon"
+name = "corpse candle"
+glyph = "y"
+fg = "#f0e0a0"
+speed = 1100
+light = "wisp"
+glow = 0.5
+faction = "undead"
+alignment = "evil"
+vision = "darkvision"
+sight = 10
+hearing = 12
+weight = 50
+size = "small"
+stats = { strength = 8, dexterity = 14, toughness = 9, intelligence = 11, willpower = 17, presence = 11 }
+base_hp = 2
+attack = { damage = "1d4", damage_type = "cold", name = "touch", verb = "touches" }
+incorporeal = { wall_defence = 2 }
+resist = { cold = 50, poison = 100 }
+corpse = false
+blood = "none"

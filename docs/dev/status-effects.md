@@ -66,7 +66,22 @@ tick; the class abilities (I1–I4) give theirs with `afflict(player, status, 1,
 `Unavailable::While(cooldown)` in `Ability::unavailable` while it lasts. Creature AI reads `blocks`
 for steps only: a creature a status of its blocks `step` (Held, Drowning grip's, #269) never
 steps or opens a door (`creature_steps`) and attacks its holder instead (`World::held_back`,
-`world/lucky.rs`). A status that `flees` (Frightened, Hound's bay's, #270) makes a creature step
+`world/lucky.rs`). **Holds** (#431, `world/hold.rs`): a status with `hold` (`content::Hold`:
+`check`, `difficulty`, `turns`; parse checks `eases`, `stacking = "highest"`, `blocks` step, and
+`turns` within 1..=`max`) is held by its effect's `by`. `World::afflict` draws a hold's degrees
+from `turns` (`World::hold_turns`; the passed severity is ignored, so Drowning grip's
+`afflict(.., 1, ..)` draws too), so it eases away within a few turns. `World::loosen_holds` ends
+(through `ended`) every hold on the current level whose holder is gone, elsewhere, not adjacent,
+blocked from stepping, or slowed by a status (`cost` > 100); `run_turn` calls it after the
+player's action, after each creature's turn, and after the loop. `World::struggle`, called in
+`player_acts` just before `refuse_blocked`, turns the held player's step (`kind_of` is `Step`)
+into a check against the grip: the holder's natural attack's `Affliction::Hold { difficulty }`,
+else `Hold::difficulty`; failed it returns `Spent::Turn(price_of(Step))`, made it removes the
+status silently (its own message instead) and lets the step go on. A creature's `on_hit` names a
+hold as `{ status = "held", chance = 10, difficulty = 15 }` (no `severity`; `difficulty` 1 to 40,
+optional; `OnHitSpec::resolve` gives `Affliction::Hold`, and `difficulty` on a non-hold status is
+refused). Draws: the turns' dice as a hold begins or is renewed, two for a struggle. Tests:
+`world/hold_tests.rs`, the parse tests in `content/status.rs`, `world/lucky_tests.rs`. A status that `flees` (Frightened, Hound's bay's, #270) makes a creature step
 away from its `by` instead while a step takes it farther (`World::frightened`,
 `world/sign_picks.rs`, before `held_back`). A status that blocks `cast` also refuses spending
 mana (`World::spend_mana`) and greys out a class active that costs mana (`Ability::unavailable`).

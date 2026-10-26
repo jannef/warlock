@@ -104,6 +104,9 @@ impl World {
                 }
             }
         };
+        // A hold lasts its turns, drawn (`hold.rs`).
+        let severity = self.hold_turns(status, severity);
+        let def = self.content.status(status);
         let Some(actor) = self.state.actors.get_mut(&id) else {
             return;
         };
@@ -182,6 +185,9 @@ impl World {
             match hit.what {
                 Affliction::Status { status, severity } => {
                     self.afflict(target, status, severity, Some(attacker), events);
+                }
+                Affliction::Hold { status, .. } => {
+                    self.afflict(target, status, 1, Some(attacker), events);
                 }
                 Affliction::Disease(disease) => {
                     self.expose(target, disease, Some(attacker));

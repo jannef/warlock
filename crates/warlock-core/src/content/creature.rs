@@ -351,7 +351,7 @@ impl NaturalAttackSpec {
     /// id to the status and its `max`, `disease` a disease id.
     pub(super) fn resolve(
         self,
-        status: impl Fn(&str) -> Option<(StatusId, u16)>,
+        status: impl Fn(&str) -> Option<(StatusId, u16, bool)>,
         disease: impl Fn(&str) -> Option<DiseaseId>,
         kinds: Kinds,
     ) -> Result<NaturalAttack, String> {
