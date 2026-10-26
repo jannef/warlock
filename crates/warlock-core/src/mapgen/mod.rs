@@ -42,7 +42,7 @@ mod vault;
 use crate::content::{
     Content, CreatureId, CreatureSpawn, Flow, Generator, LevelKind, LevelTemplate, LightId,
     ObjectId, RoomOdds, Secret, ShopOdds, ShopPlan, SpecialRoom, StairsDir, StairsLink, TerrainId,
-    Trap, secret_look,
+    Trap, Vault, secret_look,
 };
 use crate::door::Lock;
 use crate::geom::{Dir, Pos};
@@ -171,6 +171,8 @@ pub(crate) struct Canvas<'a> {
     pub room_odds: &'a RoomOdds,
     /// How often the level has a shop, and what kind (the branch's); `None`: no shops at all.
     pub shop_odds: Option<&'a ShopOdds>,
+    /// The vaults that may be stamped here ([`Vault::stamps_on`]), in the content's order.
+    pub vaults: Vec<&'a Vault>,
     pub terrain: Grid<TerrainId>,
     pub lights: BTreeMap<Pos, LightId>,
     /// Flow of running water stamped from vaults (generators make none of their own).
@@ -201,14 +203,15 @@ impl<'a> Canvas<'a> {
         content: &'a Content,
         pal: Palette,
         (room_odds, shop_odds): (&'a RoomOdds, Option<&'a ShopOdds>),
-        width: i32,
-        height: i32,
+        vaults: Vec<&'a Vault>,
+        (width, height): (i32, i32),
     ) -> Self {
         Self {
             content,
             pal,
             room_odds,
             shop_odds,
+            vaults,
             terrain: Grid::new(width, height, pal.void),
             lights: BTreeMap::new(),
             flow: BTreeMap::new(),
@@ -426,7 +429,11 @@ pub fn generate_for(
 
     for attempt in 0..MAX_ATTEMPTS {
         let mut rng = Rng::map(seed, id, attempt);
-        let mut canvas = Canvas::new(content, pal, odds, plan.width, plan.height);
+        let vaults = (content.vaults().iter())
+            .filter(|v| v.stamps_on(def, depth))
+            .collect();
+        let size = (plan.width, plan.height);
+        let mut canvas = Canvas::new(content, pal, odds, vaults, size);
         let built = match plan.generator {
             Generator::Rooms => rooms::build(&mut canvas, &mut rng, needs),
             Generator::Caves => caves::build(&mut canvas, &mut rng, needs),
@@ -757,6 +764,8 @@ pub(crate) fn out_and_back(
     Some(steps)
 }
 
+#[cfg(test)]
+mod cealdhlaw_tests;
 #[cfg(test)]
 mod fennmynster_tests;
 #[cfg(test)]

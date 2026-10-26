@@ -53,7 +53,12 @@ impl DialogueScreen {
         };
         let me = view.viewer();
         let toward = Dir::from_delta(actor.pos.x - me.x, actor.pos.y - me.y);
-        let name = &view.content().creature(actor.creature).name;
+        // A unique character by its proper name ("Sister Hild"), anyone else by its type.
+        let content = view.content();
+        let name = match (actor.dialogue).and_then(|d| content.dialogue(d).name.as_deref()) {
+            Some(proper) => proper.to_string(),
+            None => format!("the {}", content.creature(actor.creature).name),
+        };
         let topics: Vec<(String, String)> = (talk.topics.iter())
             .map(|t| match t.price {
                 // A service (`world/service.rs`) with its price.
@@ -65,7 +70,7 @@ impl DialogueScreen {
             .and_then(|asked| topics.iter().position(|(id, _)| id == asked))
             .unwrap_or(0);
         Self {
-            name: capitalized(&format!("the {name}")),
+            name: capitalized(&name),
             toward,
             line: talk.line.clone(),
             topics,

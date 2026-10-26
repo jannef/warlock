@@ -763,6 +763,12 @@ impl Content {
                 return Err(duplicate_id("level", id, path, first));
             }
             let level = level::parse_level(path, id, text, &content, &default_legend)?;
+            if !vault::parse_dungeons(path, text)?.is_empty() {
+                return Err(ContentError::new(
+                    path,
+                    "`dungeons`: only a vault names where it stamps",
+                ));
+            }
             if let Some((at, _)) = level.loot.first() {
                 return Err(ContentError::new(
                     path,
@@ -794,9 +800,14 @@ impl Content {
             let mut vault =
                 Vault::new(template, &content).map_err(|m| ContentError::new(path, m))?;
             vault.campaign = campaign::of_path(path).map(str::to_string);
+            vault.dungeons = vault::parse_dungeons(path, text)?;
             content.vaults.push(vault);
         }
         content.load_dungeons(files)?;
+        for v in &content.vaults {
+            v.check_dungeons(&content)
+                .map_err(|m| ContentError::new(&v.file(), m))?;
+        }
         // A scenario outside every campaign (a test fixture) plays in its start level's.
         let loose: Vec<(String, Option<String>)> = (content.scenarios.values())
             .filter(|s| s.campaign.is_none())
@@ -3802,6 +3813,8 @@ mod tests {
                 "ruined_tower",
                 "shrine",
                 "stone_circle",
+                // The campaigns' own, after the shared ones.
+                "barrow_chamber",
                 "drakes_hoard",
                 "foremans_cabin",
                 "sunken_crypt"

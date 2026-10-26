@@ -195,6 +195,9 @@ impl Content {
             for spawn in &level.creatures {
                 self.check_creature(&file, owner.as_deref(), spawn.creature)?;
             }
+            for &creature in level.spawning.iter().flat_map(|(_, s)| &s.population) {
+                self.check_creature(&file, owner.as_deref(), creature)?;
+            }
         }
         for scenario in self.scenarios.values() {
             if let Some(owner) = scenario.campaign.as_deref() {
@@ -204,17 +207,15 @@ impl Content {
         }
         for vault in &self.vaults {
             let owner = vault.campaign.as_deref();
-            let file = match owner {
-                Some(c) => format!("{CAMPAIGNS}/{c}/vaults/{}.toml", vault.template.id),
-                None => format!("vaults/{}.toml", vault.template.id),
-            };
+            let file = vault.file();
             for spawn in &vault.template.creatures {
                 self.check_creature(&file, owner, spawn.creature)?;
             }
         }
         for dungeon in self.dungeons.values() {
             let file = table_file(dungeon.campaign.as_deref(), "dungeons");
-            for &creature in &dungeon.creatures {
+            let lives = dungeon.spawning.iter().flat_map(|s| &s.population);
+            for &creature in dungeon.creatures.iter().chain(lives) {
                 self.check_creature(&file, dungeon.campaign.as_deref(), creature)?;
             }
         }
@@ -365,7 +366,9 @@ mod tests {
             ]
         );
         for scenario in content.scenarios() {
-            let owner = if ["ascmearc", "fennmynster", "fyrdelf"].contains(&scenario.id.as_str()) {
+            let owner = if ["ascmearc", "ceaptun", "cealdhlaw", "fennmynster", "fyrdelf"]
+                .contains(&scenario.id.as_str())
+            {
                 "ascmearc"
             } else {
                 "showcase"
@@ -373,6 +376,7 @@ mod tests {
             assert_eq!(scenario.campaign.as_deref(), Some(owner), "{}", scenario.id);
         }
         assert_eq!(content.level_campaign("ascmearc"), Some("ascmearc"));
+        assert_eq!(content.level_campaign("ceaptun"), Some("ascmearc"));
         for level in ["hub", "overworld", "vast", "depths:3", "depths"] {
             assert_eq!(content.level_campaign(level), Some("showcase"), "{level}");
         }

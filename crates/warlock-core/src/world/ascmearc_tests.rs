@@ -190,10 +190,9 @@ fn the_town_lies_five_road_cells_east_of_the_pass() {
     assert_eq!(w.player_pos(), TOWN);
     assert_eq!(said(&w).last().unwrap(), "The way into Cēaptūn is here.");
     assert_eq!(w.perception().leads_to(TOWN).as_deref(), Some("Cēaptūn"));
-    // Until the town is built, it leads nowhere yet.
+    // It leads into the town (#336; `ceaptun_tests`).
     act(&mut w, "descend");
-    assert_eq!(w.player_pos(), TOWN);
-    assert_eq!(said(&w).last().unwrap(), "These stairs lead nowhere yet.");
+    assert_eq!(w.state.current_level, "ceaptun");
 }
 
 #[test]

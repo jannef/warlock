@@ -1,0 +1,14 @@
+# The keeper of Cēaptūn's inn, the Gæsthūs (docs/design/campaign.md §6): Godgifu, who hears every
+# rumour in the march (her npc dialogue, campaigns/ascmearc/data/dialogue/ceaptun.toml).
+[[creature]]
+id = "innkeeper"
+name = "innkeeper"
+glyph = "@"
+fg = "#d8a868"
+faction = "peaceful"
+alignment = "good"
+race = "human"
+footsteps = 50
+hearing = 14
+weight = 78000
+stats = { strength = 12, toughness = 12, presence = 13 }

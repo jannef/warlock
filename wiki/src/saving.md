@@ -22,8 +22,7 @@ Choose **Continue** on the main menu to resume the character you played last (it
 appears only if a character is saved). **Characters** lists every saved character: name, race
 and class, level, and for the one selected where they are and when you last played them (in UTC).
 Press `Enter` to resume one, or `Delete` to delete one for good (the game asks first). **New run**
-lets you pick a [scenario](introduction.md#starting-a-run), then
-[create your character](character.md), and starts a fresh run with a save of its own: it never
+lets you [create your character](character.md) for [the Ascmearc](ascmearc.md), and starts a fresh run with a save of its own: it never
 touches your other characters.
 
 ## Where saves are kept

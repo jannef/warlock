@@ -1,0 +1,184 @@
+# The people of Cēaptūn, the market town (docs/design/campaign.md §6; the fields:
+# data/dialogue.toml): the townsfolk (the `villager` type), and the town's unique characters,
+# each placed by the town's legend with `npc = "..."` and known by a proper `name`: Sister Hild of
+# the Mynster (who cures and mends for gold, §6.1), Godgifu of the Gæsthūs (rumours of the march,
+# never a reveal: decision 2026-10-25, question 9), Reeve Leofric, and Factor Wulfrun. Their
+# quests come later (§6.2).
+
+# The townsfolk: one-liners and mutters, no topics.
+[[dialogue]]
+creature = "villager"
+greet = "Market day, stranger. Mind your purse in the crowd."
+greet_evil = [
+    "Keep walking. We know your sort here.",
+    "Go on, then. Nobody here wants trouble.",
+]
+lines = [
+    "Came down through the pass, did you? Nobody goes back that way.",
+    "Snow on Beorggeat already. Early, this year.",
+    "Fyrbeorg's smoking again. Ash on the washing by noon.",
+    "Sick? Sister Hild will see to you, at the Mynster. For a price.",
+    "Godgifu keeps a good fire at the Gæsthūs, and a better ale.",
+    "Don't go poking at the barrows. The dead keep what's theirs.",
+    "The reeve's a fair man. Tight with the town's coin, mind.",
+    "Bread's dear since the mines closed. Everything's dear.",
+]
+mutter = { chance = 2, lines = [
+    "Ash in the well again.",
+    "Who'd pay that for an onion?",
+    "My knees say snow.",
+    "Lights on the barrows last night. Saw them myself.",
+    "The cart's late. The cart's always late.",
+] }
+
+# Sister Hild of the Mynster, Cēaptūn's temple: she heals, for gold.
+[[dialogue]]
+npc = "hild"
+name = "Sister Hild"
+greet = "Peace on you. The Mynster's door is open to all who come in peace."
+greet_evil = [
+    "There is blood on you. Pray first, then come back to me.",
+    "Even you may be healed, in time. Not today.",
+]
+lines = [
+    "Rest here as long as you need. Nothing hostile crosses this floor.",
+    "The fen minster was our mother house, before the water took it.",
+    "Pray when you can. Eat when you must. Sleep when it is dark.",
+    "A fever caught in the fen is no shame. Leaving it be is.",
+    "The Mynster asks gold for its cures. The roof does not mend itself.",
+    "Bring me no dead man's silver unless it was given freely.",
+]
+mutter = { chance = 2, verb = "prays", lines = [
+    "...and keep us from the cold places...",
+    "...lighten our darkness...",
+    "...and the ash, and the fire under the hill...",
+] }
+
+[[dialogue.topic]]
+id = "mynster"
+name = "The Mynster"
+reply = "The Mynster is older than the town wall. Sisters have kept it since the fen minster sent us here, before the water rose over our mother house. We heal, we bury, and we pray for those who go under the hills. Rest on its floor: wounds close faster here."
+
+[[dialogue.topic]]
+id = "fen"
+name = "The fen minster"
+reply = "Fennmynster stood in Micelfenn, the great fen, long ago. The water came up its steps a little more each year, until no one could keep it. What is left of it lies somewhere under the reeds. I would not go looking for it alone."
+
+[[dialogue.service]]
+id = "cure"
+name = "A cure for what ails you"
+price = 60
+does = "cure"
+reply = "Go in health, child. And keep out of the fen."
+nothing = "Nothing ails you, child."
+
+[[dialogue.service]]
+id = "mend"
+name = "A mending of body"
+price = 40
+does = "mend"
+reply = "There. Whole again, as you were made."
+nothing = "You are whole, child. Go with my blessing."
+
+# Godgifu, the innkeeper of the Gæsthūs: rumours of the march. She knows what the quest-givers
+# know, in her own words, and marks nothing on anyone's map.
+[[dialogue]]
+npc = "godgifu"
+name = "Godgifu"
+greet = "Come in out of the cold! Sit by the fire. You'll want news, I expect."
+greet_evil = [
+    "I'll serve you, since I must. Drink up and go.",
+    "There's no room for your sort tonight. Nor any night.",
+]
+lines = [
+    "Everyone passes through the Gæsthūs sooner or later. Everyone talks.",
+    "Bread on the table's free to travellers. The ale isn't.",
+    "The carters say the river road's flooded past Fennhām again.",
+    "Keep your boots by the fire. Nobody steals boots here. Mostly.",
+    "The reeve drinks here on market days. Pays, too, more than some do.",
+    "Wulfrun has had no cart of ore in years, and still she keeps the books.",
+]
+mutter = { chance = 2, verb = "hums", lines = [
+    "Down by the water, under the hill...",
+    "The fire wants wood. The fire always wants wood.",
+    "Two loaves, three... who took the third?",
+] }
+
+[[dialogue.topic]]
+id = "barrows"
+name = "The barrows"
+reply = "East along the road, the downs are full of them: Hlāwdūn, the barrow downs. The big one, Cealdhlāw, you can see from the road. Shepherds won't graze near it. Lights at night, and cold air breathing out of the ground. The reeve worries about it more than he says."
+
+[[dialogue.topic]]
+id = "marsh"
+name = "The marsh"
+reply = "South and east the land goes soft: Micelfenn, the great fen, where Blæcwæter runs out to the sea. Fevers, mostly, and worse things in the reeds. There was a minster out there once. Sister Hild could tell you more, if she's a mind to."
+
+[[dialogue.topic]]
+id = "mines"
+name = "The mines"
+reply = "Cēaptūn grew rich on ore from the hills under Fyrbeorg, in my grandmother's day. Then the diggings went quiet, and the men who went to see why didn't come back. Wulfrun still keeps the ledgers. Ask her, but don't ask her when she's counting."
+
+[[dialogue.topic]]
+id = "volcano"
+name = "The volcano"
+reply = "Fyrbeorg, the fire mountain, smokes over the north-east of the march, and has since before anyone remembers. That's where the ash comes from: grey on the snow, grey in the river. The old folk say the things under the hills answer to it. I say shut the window."
+
+[[dialogue.topic]]
+id = "pass"
+name = "The pass"
+reply = "Beorggeat, the mountain gate. You came down it, I expect, like everyone. It closes with the first snow and doesn't open till the thaw, and this year the snow came early. You're one of us now, for the winter at least. Welcome."
+
+# Reeve Leofric: the town's peace and its coin.
+[[dialogue]]
+npc = "leofric"
+name = "Reeve Leofric"
+greet = "A newcomer. I'm the reeve here. Keep the peace and we'll get on."
+greet_evil = [
+    "I know trouble when I see it. Keep the peace, or leave.",
+    "One wrong step in my town and you'll hang on the hill.",
+]
+lines = [
+    "The town pays its way. The barrows take their toll.",
+    "Keep your blade sheathed in the square. That's the law here.",
+    "The pass is shut till spring. Whoever's here, stays here.",
+    "We'd more hands once. The barrows took some. The mines took more.",
+    "Market day's the only day the town feels like itself.",
+]
+
+[[dialogue.topic]]
+id = "town"
+name = "Cēaptūn"
+reply = "Cēaptūn, the market town. The pass road meets the river roads here, so we trade: wool, ore when there was any, whatever comes over the mountains. A store, a forge, an armourer, the provisioner, the Mynster, and Godgifu's inn. And a wall on the pass side."
+
+[[dialogue.topic]]
+id = "barrow"
+name = "Cealdhlāw"
+reply = "The cold barrow, east along the road in the downs. Old as the hills, and the dead in it don't lie quiet. Things come up out of it at night now, more each year. One day I'll need someone to go down there and see why."
+
+# Factor Wulfrun: the old mines and their trade.
+[[dialogue]]
+npc = "wulfrun"
+name = "Factor Wulfrun"
+greet = "Yes? I'm busy. Well, I'm not, but I like to look it."
+lines = [
+    "Ore by the cartload, once. Now I keep ledgers of carts that never came.",
+    "Every mine has its foreman, and every foreman his ledger.",
+    "Gold is gold, but iron builds towns.",
+    "The diggings didn't run dry. Something stopped the digging.",
+    "Don't trust a map you didn't pay for.",
+]
+mutter = { chance = 2, lines = [
+    "Twelve carts... no, eleven...",
+    "Where did I put that ledger?",
+] }
+
+[[dialogue.topic]]
+id = "diggings"
+name = "The old diggings"
+reply = "The mines lay in the hills under Fyrbeorg, east past the ford. Deep galleries, good iron, and silver now and then. Then the shafts went quiet. The men who went to see what happened never came back, and nobody has gone since."
+
+[[dialogue.topic]]
+id = "trade"
+name = "Trade"
+reply = "The town lives off the road: what comes over the pass, what comes up the river, what we dig. With the pass shut and the mines dead, there's just the river. Sell to the shops on the square. They pay poorly, but they pay."

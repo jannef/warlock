@@ -528,6 +528,14 @@ const CASES: &[Case] = &[
         screen: Some("dialogue"),
         ..BASE
     },
+    // Cēaptūn's Sister Hild: a proper name, topics, and two services with their prices (#336).
+    Case {
+        name: "dialogue-services",
+        scenario: "ceaptun",
+        actions: "move:SW*4 move:W*15 open:SW move:SW move:S*2 chat:SE",
+        screen: Some("dialogue"),
+        ..BASE
+    },
     Case {
         name: "quest-offer",
         actions: concat!(hermit!(), " chat:SE ask:SE:quest-rats"),

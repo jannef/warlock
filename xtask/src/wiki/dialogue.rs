@@ -15,9 +15,10 @@ pub(super) fn dialogue(content: &Content) -> String {
     let mut rows: Vec<_> = (content.dialogues().iter())
         .filter(|d| super::order::described(content, d.campaign.as_deref()))
         .map(|d| {
-            let who = match &d.speaker {
-                Speaker::Creature(c) => capital(&content.creature(*c).name),
-                Speaker::Npc(npc) => format!("`{npc}` (a unique character)"),
+            let who = match (&d.speaker, &d.name) {
+                (Speaker::Creature(c), _) => capital(&content.creature(*c).name),
+                (Speaker::Npc(_), Some(name)) => name.clone(),
+                (Speaker::Npc(npc), None) => format!("`{npc}` (a unique character)"),
             };
             (who, d)
         })

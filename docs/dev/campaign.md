@@ -1,7 +1,8 @@
 # Campaigns
 
 Developer notes for campaigns, the seam between worlds (#325, design `docs/design/campaign.md`
-§3). The rules are in spec/03-showcase-world.md ("The showcase is a test campaign") and
+§3). The rules are in spec/03b-campaign.md (the Ascmearc, New run, the Characters screen),
+spec/03-showcase-world.md ("The showcase is a test campaign"), and
 spec/07f-scenarios-and-saves.md. Keep this current with the code, as CLAUDE.md says.
 
 ## What is a campaign's
@@ -14,7 +15,7 @@ engine data, `assets/data/` (the common creature types, the shopkeeper's dialogu
 `data/dialogue.toml`, the field references `data/quests.toml` and `data/dungeons.toml`, which
 hold no entries) and `assets/vaults/`. There are two campaigns: the Ascmearc (`ascmearc`, kind
 `campaign`, #332), the first world to play, so far its overworld and its start scenario
-(`docs/dev/overworld.md`); and the showcase (`kind = "test"`): the test world, with all nine
+(`docs/dev/overworld.md`) and its market town Cēaptūn (#336, below); and the showcase (`kind = "test"`): the test world, with all nine
 scenarios, the hub and its levels, the Wildlands, the Depths, the four quests, and the hermit,
 gardener, and bard (dialogue and types). With a campaign of kind `campaign` loaded, release
 builds' New run lists only its start, and the player wiki describes only it.
@@ -51,7 +52,7 @@ starts, one of the campaign's own), and `kind`, `campaign` (default) or `test`.
 - A campaign's file names its own campaign's or shared levels and creature types, never
   another campaign's: stairs `to`, a scenario's `start_level`, a quest's `level`, `target`
   (reach), kill target, giver and recipient, a level or vault legend's `creature`, a branch's
-  `creatures`, and a dialogue's `creature` ("`campaigns/ashland/levels/town.toml`: names level
+  `creatures` and `population` (and a level's `population`), a vault's `dungeons`, and a dialogue's `creature` ("`campaigns/ashland/levels/town.toml`: names level
   `hub`, a level of campaign `showcase`").
 - Shared data names shared creature types only (`data/shops.toml`'s `[keeper]`, the shared
   `vaults/`).
@@ -83,8 +84,27 @@ campaign, `""` for a fixture outside every campaign. `World::campaign`, `World::
 A release build lists the start scenario of every campaign of kind `campaign` (while there is
 none, every campaign's start: the showcase's). A developer build (debug or `--dev`) lists every
 scenario of every campaign under its campaign's name, campaigns in content order, the start
-first and the rest by id; scenarios outside every campaign last, without a heading. Skipping the
-step when there is one row is #341's.
+first and the rest by id; scenarios outside every campaign last, without a heading.
+
+**One row skips the step** (#341, design §3.5): a release build lists one scenario, the
+Ascmearc's start, so `NewRunScreen::skips` (one scenario, and races and classes to create a
+character from) is true. `Screens::open_on` then opens the race step over it at once; the New
+run screen stays on the stack unseen, so `ScreenStack::draft` reads its pick (the scenario and
+the fresh seed) as before, and `ScreenStack::close` closes it too when the step above it closes,
+so Esc on the race goes back to the main menu. `--screen race` and the later steps open over it
+as usual (`open_startup_screens` skips a screen already on top); `--screen new-run` in a release
+build shows the race step. A developer build lists the test world too and shows the screen.
+Tests: `new_run_screen.rs` (`skips` in both builds), `screens.rs`
+(`a_release_new_run_is_skipped_both_ways`), and `release_content` (one row).
+
+## The Characters screen's campaign (#341, design §3.4)
+
+The save summary (`saves/<id>.toml`, `save::Summary`) keeps `campaign`, the run's campaign's
+name (`The Ascmearc`; left out when empty, `#[serde(default)]` for summaries written before).
+The Characters screen names it beside the place, `In Cēaptūn (The Ascmearc).`, only when more
+than one campaign is installed (a developer build, with the test world): a release build has
+one. The fixture summaries under `tests/golden/saved-characters/` (the `characters-screen` text
+snapshot) carry `The Showcase`.
 
 ## The test world in release builds (#331, design §4)
 
@@ -115,8 +135,26 @@ Test content never appears in a release. The cargo feature `showcase` holds it:
   `Release` workflow does the last on each platform's binary and checks the game binary holds
   no `campaigns/showcase/campaign.toml` (the key of the embedded file), and `cargo xtask web`
   checks `warlock_bg.wasm` the same way.
-- Until the Ascmearc lands (#332) a release build holds no campaign at all: New run says "No
-  scenarios are installed." Do not cut a release before it.
+- A release build holds one campaign, the Ascmearc (#332): New run goes straight to the race
+  ("New run" above). Without any campaign it would say "No scenarios are installed." 
+
+## Cēaptūn, the Ascmearc's market town (#336, design §6)
+
+`campaigns/ascmearc/levels/ceaptun.toml` (90×32, `kind = "outdoor"`, `item_level = 1`, no
+danger), entered from the overworld's `T` (`to = "ceaptun"`) and left by the `<` on its square
+(`to = "ascmearc"`). The map was drawn by a throwaway script and is edited by hand now. Its
+`[[shop]]`s (general store, weaponsmith, armourer, provisioner; keepers named in Old English)
+lay out `[[pile]]`s of goods each kind buys; the Mynster is a `sanctuary` `[[room]]`. The people
+are campaign creature types (`data/creatures/{villager,sister,innkeeper,reeve,mine_factor}.toml`)
+and their words are `data/dialogue/ceaptun.toml`: the `villager` type's one-liners and mutters,
+and the npcs `hild` (Sister Hild: two topics, the `cure` 60 and `mend` 40 services), `godgifu`
+(five rumour topics, never a reveal), `leofric`, and `wulfrun`, each with a proper `name`
+(`Dialogue::name`: `World::called`, `Content::speaker_name`/`speaker_called`, look mode and the
+dialogue screen through `SeenActor::dialogue`). No quests yet (the design's item H). The dev
+scenario `ceaptun` starts on the square (seed 2, a warrior, 60 gold). Tests:
+`world/ceaptun_tests.rs` (the way in and out, the shops' goods, everyone at peace, names, the
+sanctuary and the services, Godgifu's topics, the view snapshot `ceaptun_start`, a replay),
+`ui/look.rs` (Sister Hild's look line), the `dialogue-services` text snapshot.
 
 ## The wiki (`xtask/src/wiki/order.rs::campaigns`)
 
@@ -133,8 +171,16 @@ cross-campaign refusals, the id clashes, one overworld a campaign), `new_run_scr
 order in release and developer builds), the `new-run-screen` text snapshot, and
 `release_content` in both (compiled only in the release configuration).
 
-Not yet (the design's later items): campaign vaults kept to their campaign's branches (the vault
-picker reads every vault), the save summary's and the Characters screen's campaign (#341), and
-`dev = true` scenarios. A branch level's `vaults` (#339, docs/dev/mapgen.md) keeps the vaults it
-names to itself: those may be shared or of the branch's campaign, never another's (Fyrdelf's
-cabin and hoard, Fennmynster's sunken crypt, #338).
+Vaults (#337): `Vault::stamps_on(def, depth)` keeps a campaign's vaults to its own branches, and
+to the branches or branch levels its file's `dungeons` names (`vault::parse_dungeons`, checked by
+`Vault::check_dungeons` once the branches are loaded: they must exist and be the vault's own
+campaign's; a level file giving `dungeons` is refused). `generate_for` puts the level's list on
+the `Canvas` (`Canvas::vaults`), which `vault::shuffled` shuffles, so a branch that no campaign
+vault names draws exactly what it did. Tests: `mapgen/cealdhlaw_tests.rs`.
+
+A branch level's `vaults` (#339, docs/dev/mapgen.md) keeps the vaults it names to itself
+(`Vault::pinned`, left out of `vault::shuffled`): those may be shared or of the branch's campaign,
+never another's (Fyrdelf's cabin and hoard, Fennmynster's sunken crypt, #338).
+
+Not yet (the design's later items): `dev = true` scenarios (not needed while a release build lists
+only the campaigns' starts: the dev scenarios `ceaptun`, `fyrdelf`, ... are never listed there).

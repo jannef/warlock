@@ -3,8 +3,9 @@
 //!
 //! Each `[[dialogue]]` belongs to a creature type (`creature = "gardener"`) or to one unique
 //! character (`npc = "hermit"`, which a level gives a creature with `npc = "hermit"` in its legend
-//! entry; it wins over its type's). It has one-liners (`lines`) that rotate, an optional `greet`
-//! said the first time the player chats with it, optional cold greetings (`greet_evil`, said by a
+//! entry; it wins over its type's), which may have a proper `name` ("Sister Hild": what messages,
+//! look mode, and the dialogue screen call it, without an article). It has one-liners (`lines`)
+//! that rotate, an optional `greet` said the first time the player chats with it, optional cold greetings (`greet_evil`, said by a
 //! good speaker to an Evil or Wicked character in place of its greeting and lines, and
 //! `greet_good`, by an evil one to a Good or Saintly character; spec §8 "Alignment"), optional `[[dialogue.topic]]`s (`id`, `name`,
 //! `reply`) asked about on the dialogue screen, optional `[[dialogue.service]]`s (`id`, `name`,
@@ -23,6 +24,8 @@ use std::ops::RangeInclusive;
 pub const MAX_LINE: usize = 72;
 /// The longest reply to a topic, in characters: the dialogue screen wraps it.
 pub const MAX_REPLY: usize = 280;
+/// The longest proper name of an npc, in characters (it heads its lines on the message line).
+pub const MAX_NAME: usize = 24;
 /// The most topics a creature talks about: they are numbered 1 to 9 on the dialogue screen.
 pub const MAX_TOPICS: usize = 9;
 /// The chance, in percent per action, that a creature mutters.
@@ -44,6 +47,7 @@ struct DialogueFile {
 struct DialogueSpec {
     creature: Option<String>,
     npc: Option<String>,
+    name: Option<String>,
     greet: Option<String>,
     #[serde(default)]
     greet_evil: Vec<String>,
@@ -140,6 +144,9 @@ pub struct Mutter {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Dialogue {
     pub speaker: Speaker,
+    /// A unique character's proper name ("Sister Hild"), said without an article; `None`: the
+    /// speaker is called by its creature type ("the old hermit").
+    pub name: Option<String>,
     /// Said the first time the player chats with it, instead of a line.
     pub greet: Option<String>,
     /// What a good speaker says to an Evil or Wicked character instead of its greeting and
@@ -169,6 +176,17 @@ impl Dialogue {
     /// The service with id `id`.
     pub fn service(&self, id: &str) -> Option<&Service> {
         self.services.iter().find(|s| s.id == id)
+    }
+}
+
+impl Content {
+    /// What whoever speaks dialogue `id` is called inside a sentence: its proper name ("Sister
+    /// Hild"), else its type's with the article ("the old hermit").
+    pub fn speaker_called(&self, id: DialogueId) -> String {
+        match &self.dialogue(id).name {
+            Some(name) => name.clone(),
+            None => format!("the {}", self.speaker_name(id)),
+        }
     }
 }
 
@@ -239,6 +257,15 @@ fn parse_file<'a>(
         }
         if spec.lines.is_empty() {
             return Err(bad("`lines` needs at least one line".into()));
+        }
+        match (&spec.name, &speaker) {
+            (Some(_), Speaker::Creature(_)) => {
+                return Err(bad("only an npc has a `name` of its own".into()));
+            }
+            (Some(name), _) if name.trim().is_empty() || name.chars().count() > MAX_NAME => {
+                return Err(bad(format!("`name` is 1 to {MAX_NAME} characters")));
+            }
+            _ => {}
         }
         let said = (spec.greet.iter())
             .chain(&spec.lines)
@@ -313,6 +340,7 @@ fn parse_file<'a>(
         };
         dialogues.push(Dialogue {
             speaker,
+            name: spec.name,
             greet: spec.greet,
             greet_evil: spec.greet_evil,
             greet_good: spec.greet_good,

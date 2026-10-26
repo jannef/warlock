@@ -5,10 +5,10 @@ rules behind each.
 
 This is the engine and framework phase: creatures hunt you, fight, shoot, and die (spells are only
 announced so far), death is permanent, and you grow by experience levels and by skills that
-improve with use. You walk a hand-made
-**showcase world** where each room demonstrates one capability (its creatures are peaceful), an
-arena where kobolds and giant rats fight (and you can join in), an ADOM-like **overworld** with day and night and weather, outdoor areas generated
-from it, a vast lit cavern, and procedurally generated dungeon levels.
+improve with use. You come into **the Ascmearc** through a mountain pass that closes behind you
+(see [The Ascmearc](ascmearc.md)): an ADOM-like **overworld** with day and night and weather,
+outdoor areas generated from it, the market town of Cēaptūn, and procedurally generated
+dungeons under the barrows, the fen, and the hills.
 
 - **Light and vision** — every cell carries RGB + UV light from torches, lamps, crystals, braziers,
   and your lantern, with shadows from walls and pillars, soft shadows from creatures, and a weak
@@ -25,7 +25,7 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   and attack, keep their distance and shoot, or cast from afar, entirely deterministically; when
   they lose you, they search where they last saw you, follow noises, and return to their rounds.
 
-  ![The arena: kobolds and giant rats fight around a fire pit while an archer shoots](images/m10-arena.png)
+  ![Kobolds and giant rats fight around a fire pit while an archer shoots](images/m10-arena.png)
 
 - **Hearing** — footsteps, doors, and fights make noise that travels around corners, is muffled by
   closed doors, and is louder in water and rubble than on grass. You hear what you cannot see as
@@ -43,7 +43,7 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   turn, through packed earth in a minute, a stone wall in a few, granite in half an hour or so
   (Strength helps, a heavy load slows you), until a creature comes into view or the wall crumbles
   to rubble; light and sight spill through at once. Digging is loud. A fireball blows the softer
-  walls apart. An old quarry below the hub is the place to try it.
+  walls apart.
 - **Combat** — D&D-style with two twelve-sided dice: every blow and shot is rolled against
   Defence (Dexterity, armour, shield, parry, a beetle's shell), misses say why ("You block the
   kobold's spear with your shield."), criticals threaten and confirm ("The kobold hits you
@@ -61,7 +61,7 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   prefixes and suffixes from 47 affixes in tiers that deepen with the dungeon. A magic item has one
   or two ("Sharp long sword of the Bear", in blue); a rare one up to six and a name ("Grim Bite,
   long sword", in yellow). Found unidentified, they work all the same; each remembers what it
-  rolled. They lie in the Depths, in vaults, and fall from slain kobolds, and an item's
+  rolled. They lie in the dungeons, in vaults, and fall from slain creatures, and an item's
   description says what it does in plain words. A glowing helm lights your way.
 - **Gems** — ten gems from smokestone to diamond, each of a size and a cut (uncut included), are
   rare finds, larger and finer deeper down, and what rings, amulets, and now and then weapons,
@@ -75,19 +75,20 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   bone, flint, and bronze.
 - **Scrolls** — read with `r`: scrolls of fireball, lightning, and frost cast the traps' spells
   where you aim them (a fireball read too close asks first), and what they kill is yours; a
-  scroll of identify tells you what an unidentified item is. They lie in the Depths and sell in
+  scroll of identify tells you what an unidentified item is. They lie in the dungeons and sell in
   general stores.
-- **People and talk** — the showcase has folk to talk to: a gardener and a wandering bard in the
-  courtyard, an old hermit by the hub's stairs. Chat with `C`: most say a one-liner, a different
-  one each time; some have topics to ask about on a small dialogue screen (the hermit knows the
-  hall's rooms, the bard the moon, the year 1444, and the Great Race). They mutter to themselves
+- **People and talk** — Cēaptūn has folk to talk to: townsfolk on the square, Sister Hild in the
+  Mynster, Godgifu at the inn, the reeve and the mine-factor. Chat with `C`: most say a
+  one-liner, a different one each time; some have topics to ask about on a small dialogue
+  screen (Godgifu has news of the barrows, the marsh, the mines, the volcano, and the pass), and
+  Sister Hild sells a cure and a mending for gold. They mutter to themselves
   now and then, which you may overhear through a wall. Walking into anyone who is not hostile
   swaps places with them, so nobody blocks a corridor (a few will not budge).
 - **Quests** — simple, ADOM-like errands from the people you meet, offered through their topics:
   kill something, bring something, go somewhere, or carry something to someone else. Accept or
-  decline, follow them in the quest log (`q`), and come back for gold, things, and experience. In
-  the showcase the hermit wants the arena's rats thinned (and then more), the gardener wants
-  apples, and the bard has a letter for the hermit.
+  decline, follow them in the quest log (`q`), and come back for gold, things, and experience.
+  Some quests tell you where a hidden place lies and mark it on your map. (Cēaptūn's quests are
+  still to come.)
 - **Ranged combat** — bows (drawn by Strength), a crossbow, a sling, and throwing weapons; aim
   ADOM-style with a cursor and a faint line of fire, watch the arrow fly, and pick it up where it
   fell. A flaming arrow flies burning and lights the dark where it lands until it burns out:
@@ -129,13 +130,12 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
 - **Traps** — arrow and spear traps, fireballs, lightning bolts, pits, alarms, and teleports lie
   hidden until someone steps on them: you, or a creature you lure there; a trapped door goes off
   when someone opens or kicks it. One you saw go off is known from then on, shown as `^` and
-  remembered, and stepping onto it asks first. The Depths
-  hide a few on every level; a trap hall beside the arena lets you try them and watch them catch
-  creatures.
+  remembered, and stepping onto it asks first. The dungeons hide a few on every level.
 - **Searching** — secret doors look like the wall and hidden traps like the floor until you find
   them: search (`s`, or `f` for a while) with your Intelligence and Search skill, or notice them in
   passing with your Willpower, if you are an elf, a dwarf (in stone), or trained in Spot. Every
-  turn is a fresh try. The Depths hide a door or two on their levels of rooms, never one you need.
+  turn is a fresh try. The dungeons hide a door or two on their levels of rooms, never one you
+  need.
 - **Burden** — everything you carry weighs on you: past a third of what your Strength and
   Toughness can bear you are burdened, then strained, then overloaded. Every action takes longer,
   armour-like caps keep your Dexterity from helping your Defence, and your footsteps get louder.
@@ -149,7 +149,7 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   you are bloated and slow, or vomit. Eat rations, bread, and apples before they spoil, or the
   corpses creatures leave behind: they weigh what the creature did, rot within a day or two, and
   some do more than feed you (a kobold tastes terrible; a beetle might toughen you). Rotten food
-  makes you sick. The hub's pantry has food.
+  makes you sick. Cēaptūn's provisioner sells food.
 - **Stats** — Strength, Dexterity, Toughness, Intelligence, Willpower, and Presence, inspired by
   D&D, for you and every creature; a character screen shows your own. Strength, Dexterity, and
   Toughness count in a fight, and Strength kicks doors in; the rest do nothing yet.
@@ -182,7 +182,7 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   and dusk, white at noon, with a dim blue sky light in the shade and shadows from trees, walls,
   and stones that turn and stretch with it.
 
-  ![The courtyard at 07:00, 12:00, 17:30, and 22:00](images/m9-courtyard-day.png)
+  ![A walled garden at 07:00, 12:00, 17:30, and 22:00](images/m9-courtyard-day.png)
 
 - **Moonlight** — by night a faint, slightly purple moon lights the land, waxing and waning with
   the 30-day month and rising about 50 minutes later each day: under a full moon you dimly make out
@@ -190,14 +190,14 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   leaves you to your lantern. Moons cast shadows like the sun, widen your sight on the overworld,
   and are data: add more, bigger or faster ones. The status bar shows the date and the phase.
 
-  ![The courtyard at midnight and 04:30 under the full moon, by a first-quarter moon with low-light eyes, and at a new moon](images/m12-courtyard-moon.png)
+  ![A walled garden at midnight and 04:30 under the full moon, by a first-quarter moon with low-light eyes, and at a new moon](images/m12-courtyard-moon.png)
 
 - **Weather** — clear skies, overcast, rain, and heavy rain come and go with the season (Rainmoon is
   wet, Highsun dry). Clouds dim the sun and the moon and flatten shadows, for you and every
   creature alike; rain shortens your sight on the overworld, falls as faint drops, and rings the
   ponds. The status bar shows the weather when you are outside.
 
-  ![The courtyard in rain at noon](images/m12-courtyard-rain.png)
+  ![A walled garden in rain at noon](images/m12-courtyard-rain.png)
 
 - **Temperature and ice** — every place has a temperature, shown in the status bar (°C or °F):
   cool and steady underground, outdoors following the month, the hour, and the weather (clear
@@ -205,37 +205,38 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   away: thin ice with hairline cracks over dark water, then a grey-blue sheet, then thick white
   ice. Ice holds by its thickness against your weight and everything you carry; a laden dwarf
   breaks through where a light elf crosses, plunges into the freezing water, and climbs out in a
-  few turns, while what lay on the ice sinks to the bottom. The Frost Grotto, below the hub,
-  has a frozen pool to try.
+  few turns, while what lay on the ice sinks to the bottom.
 
-  ![The Frost Grotto: thick ice, ice, and thin ice with a fresh hole, at -2 °C](images/m26-frost-grotto.png)
+  ![A frozen pool: thick ice, ice, and thin ice with a fresh hole, at -2 °C](images/m26-frost-grotto.png)
 
 - **Overworld and time** — a 12-month, 30-day calendar and a clock that every action advances.
-  "The Wildlands" overworld takes real travel time per step (a road is quick, a swamp slow,
-  mountains impassable); how far you see follows the daylight and the moon. Its locations lead to the hub, the
-  cavern, and the dungeon, and any other cell opens a generated outdoor area — meadows, forests,
-  hills, swamps, riverbanks — that you leave by walking off its edge.
+  The Ascmearc's overworld takes real travel time per step (a road is quick, a swamp slow,
+  mountains impassable); how far you see follows the daylight and the moon. Its locations lead to
+  the town and the dungeons (two of them hidden until a quest tells you where), and any other
+  cell opens a generated outdoor area — meadows, forests, hills, swamps, riverbanks — that you
+  leave by walking off its edge.
 
-  ![The Wildlands at noon](images/m9-overworld-noon.png)
+  ![An overworld at noon](images/m9-overworld-noon.png)
 
-  ![A forest clearing in Thornwood at noon](images/m9-forest-clearing.png)
+  ![A forest clearing at noon](images/m9-forest-clearing.png)
 
-- **Levels** — the hub, a sunlit courtyard, the arena, the quarry, the Frost Grotto, the trap hall, a 420×300 cavern, and "The Depths": rooms-and-corridors
-  and cave levels generated for each run, with hand-made vaults stamped in.
-- **Special rooms** — ADOM-like, about one level of the Depths in three has a room that changes
+- **Levels** — the overworld and the market town, made by hand, and the dungeons:
+  rooms-and-corridors and cave levels generated for each run, with hand-made vaults stamped in,
+  where creatures of the floor's danger keep coming (see [Dungeons and danger](dungeons.md)).
+- **Special rooms** — ADOM-like, some dungeon levels have a room that changes
   the rules inside it, announced the first time you step in: a shadowed room that drains every
   light, an echoing hall that makes every sound loud, a hushed chamber for sneaking, a softly
-  glowing sanctuary where wounds heal fast and nothing hostile follows you in (the showcase's
-  stairs nook is one), and a flooded room of splashing shallow water.
+  glowing sanctuary where wounds heal fast and nothing hostile follows you in (Cēaptūn's
+  Mynster is one), and a flooded room of splashing shallow water.
 - **Shops** — ADOM-like general stores and specialty shops (a weaponsmith, an armourer, a
   provisioner, a fletcher), each kept by a named shopkeeper by the door: goods show their price
   in gold, what you pick up you owe until you pay (`p`, or when you leave), the keeper makes an
   offer for what you drop, and your Presence and the Appraise skill get you better prices.
   The keeper won't let you out of the door owing money; leave another way (dig through the wall)
-  and the shopkeeper, tough and well armed, comes after you. Grimbold's
-  General Store stands in the courtyard; about one level of the Depths in six has a shop.
+  and the shopkeeper, tough and well armed, comes after you. Cēaptūn has four shops on its
+  square, and now and then a dungeon level has one.
 
-  ![A generated level in The Depths](images/m6-depths-rooms.png)
+  ![A generated dungeon level](images/m6-depths-rooms.png)
 
 - **Saves** — one save per run, written when you quit and autosaved as you play (in the browser
   too); when you die, it is deleted.

@@ -1,0 +1,15 @@
+# The townsfolk of Cēaptūn (docs/design/campaign.md §6): farmers, carters, and market folk going
+# about the square and the lanes. Peaceful; they talk, and mutter to themselves now and then
+# (campaigns/ascmearc/data/dialogue/ceaptun.toml).
+[[creature]]
+id = "villager"
+name = "villager"
+glyph = "@"
+fg = "#b0946c"
+faction = "peaceful"
+alignment = "good"
+race = "human"
+footsteps = 50
+hearing = 10
+weight = 70000
+stats = { strength = 11, toughness = 11 }

@@ -1,0 +1,12 @@
+# The barrow chamber's inner door (campaigns/ascmearc/vaults/barrow_chamber.toml); its guardian
+# carries it.
+[[object]]
+id = "bronze_key"
+name = "bronze key"
+glyph = "("
+fg = "#c08850"
+class = "tools"
+materials = ["bronze"]
+weight = 40
+value = 0
+key = "barrow_chamber"

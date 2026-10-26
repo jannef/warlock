@@ -3,4 +3,5 @@ race = "Human"
 class = "Thief"
 level = 2
 place = "The Hub"
+campaign = "The Showcase"
 played = 1792443900

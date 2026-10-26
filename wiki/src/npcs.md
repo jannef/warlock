@@ -1,14 +1,18 @@
 # People and talk
 
 Not everyone you meet wants to fight. Some creatures are **people**: they go about their business,
-talk when you talk to them, and now and then mutter to themselves. In the showcase you meet three:
+talk when you talk to them, and now and then mutter to themselves. In Cēaptūn, the market town
+of the Ascmearc, you meet:
 
-- a **gardener**, pacing beside the flower bed by the ruined wall of the courtyard;
-- a **wandering bard**, walking his round of the meadow east of the courtyard's gazebo;
-- an **old hermit**, sitting in the lamplit corner of the hub's stairs nook. He knows the hall's
-  rooms, and tells you about them if you ask.
+- the **townsfolk**, going about the square and the lanes on market day;
+- **Sister Hild**, in the Mynster, the town's temple: she cures and mends for gold (see
+  "Services" below), and anyone may rest on the Mynster's floor, a sanctuary;
+- **Godgifu**, who keeps the Gæsthūs, the inn: she hears every rumour in the march, and the
+  bread on her table is free to travellers;
+- **Reeve Leofric**, who keeps the town's peace and its coin, at home south of the square;
+- **Factor Wulfrun**, who bought and sold the ore of mines that have gone quiet, in her office.
 
-They belong to the **peaceful folk** (see [Creatures](creatures.md#factions)): they never fight,
+The people of the town are known by their names: `Sister Hild says: "…"`. They belong to the **peaceful folk** (see [Creatures](creatures.md#factions)): they never fight,
 not even if you attack them.
 
 ## Chatting
@@ -18,8 +22,8 @@ talk to that one; otherwise the message line asks `Talk in which direction? (Esc
 Chatting takes a few words' time (half a normal action, 3 seconds; see
 [Turns and movement](turns.md#what-actions-cost)). You can only talk to someone you see.
 
-- Most people answer with a **one-liner** on the message line: `The gardener says: "Mind the
-  beds. Flowers bruise if you so much as look at them."` Chat again and you get another. Each
+- Most people answer with a **one-liner** on the message line: `The villager says: "Snow on
+  Beorggeat already. Early, this year."` Chat again and you get another. Each
   person goes through all of their lines before saying one again, in an order of their own, and
   never says the same line twice in a row.
 - Some greet you the first time you talk to them, with a line they say only then.
@@ -60,10 +64,9 @@ neither Presence nor Appraise moves it).
 ## Muttering
 
 Now and then, while they go about their business and you are within a few cells, people mutter
-to themselves: the gardener grumbles about his beds, the bard sings snatches of old songs, the
-hermit talks to nobody in particular. You hear it like any other sound (see
-[Hearing](hearing.md)): if you see them, with their name (`The gardener grumbles: "Weeds. Always
-the weeds."`); if you do not, as a voice from somewhere (`You hear a voice to the north: "…"`),
+to themselves: the townsfolk grumble about prices and the ash, Sister Hild prays, Godgifu hums
+over her work. You hear it like any other sound (see [Hearing](hearing.md)): if you see them,
+with their name (`The villager mutters: "Ash in the well again."`); if you do not, as a voice from somewhere (`You hear a voice to the north: "…"`),
 and if it was faint, without the words. Muttering never wakes you from a [rest](resting.md).
 
 ## Getting past
@@ -78,7 +81,7 @@ and carries on with whatever it was doing.
 A few will not make way, and then the move takes no time and the message says why:
 
 - some never budge, and some keep their post: a shopkeeper keeps to the door of their shop
-  ("Grimbold doesn't budge."; shops are still to come);
+  ("Eadric doesn't budge.");
 - someone who cannot move at all, under too heavy a load, does not budge either;
 - a creature two sizes or more larger than you is too big to squeeze past ("The giant is too big
   to squeeze past."). No creature in the game is that big yet.
