@@ -1,0 +1,29 @@
+# The elemental roster (#453): the water line's middle rung. A wave that walks on the land: it
+# crashes into what it hunts and leaves it soaked and slow.
+[[creature]]
+id = "water_elemental"
+level = 14
+xp = 80
+rarity = "uncommon"
+name = "water elemental"
+glyph = "E"
+fg = "#2a6ad8"
+faction = "elemental"
+tags = ["elemental", "water"]
+alignment = "neutral"
+vision = "darkvision"
+sight = 10
+footsteps = 30
+hearing = 10
+weight = 400000
+stats = { strength = 17, dexterity = 14, toughness = 18, intelligence = 2, willpower = 21, presence = 2 }
+base_hp = 35
+resist = { fire = 50, piercing = 50, electricity = -50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "2d8"
+damage_type = "bludgeoning"
+name = "wave"
+verb = "slams"
+on_hit = [{ status = "sluggish", chance = 20, severity = 1 }]

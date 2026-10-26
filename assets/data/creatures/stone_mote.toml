@@ -1,0 +1,32 @@
+# The elemental roster (#453): the earth line's mote rung. A lump of rock the size of a dog that
+# rolls and lurches after the living: slow, hard, and it hits like a thrown stone.
+[[creature]]
+id = "stone_mote"
+level = 1
+xp = 15
+rarity = "common"
+name = "stone mote"
+glyph = "e"
+fg = "#9a8a70"
+speed = 800
+faction = "elemental"
+tags = ["elemental", "earth"]
+alignment = "neutral"
+vision = "darkvision"
+sight = 8
+footsteps = 20
+hearing = 8
+weight = 20000
+size = "small"
+stats = { strength = 7, dexterity = 14, toughness = 8, intelligence = 2, willpower = 16, presence = 2 }
+base_hp = 1
+natural = { defence = 0, protection = 2, name = "stone body" }
+resist = { slashing = 25, piercing = 50, electricity = 100, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "1d3"
+damage_type = "bludgeoning"
+name = "bulk"
+verb = "strikes"
+on_hit = [{ status = "staggered", chance = 10, severity = 1 }]

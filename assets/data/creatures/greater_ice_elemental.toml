@@ -1,0 +1,33 @@
+# The elemental roster (#453): the ice line's greater rung. A great block of blue ice that
+# walks: the air freezes about it.
+[[creature]]
+id = "greater_ice_elemental"
+level = 33
+xp = 175
+rarity = "rare"
+loot = 5
+name = "greater ice elemental"
+glyph = "E"
+fg = "#40c8e0"
+speed = 900
+faction = "elemental"
+tags = ["elemental", "ice"]
+alignment = "neutral"
+vision = "darkvision"
+sight = 10
+footsteps = 60
+hearing = 10
+weight = 1500000
+stats = { strength = 29, dexterity = 16, toughness = 30, intelligence = 23, willpower = 28, presence = 23 }
+base_hp = 132
+natural = { defence = 2, protection = 3, name = "ice" }
+resist = { piercing = 25, cold = 100, fire = -50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "4d8"
+damage_type = "cold"
+to_hit = 3
+name = "fist"
+verb = "freezes"
+on_hit = [{ status = "sluggish", chance = 25, severity = 1 }]

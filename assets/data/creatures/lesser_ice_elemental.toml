@@ -1,0 +1,31 @@
+# The elemental roster (#453): the ice line's lesser rung. A shape of old ice that grinds along:
+# slow, cold enough to numb, and fire does it half again as much harm.
+[[creature]]
+id = "lesser_ice_elemental"
+level = 11
+xp = 65
+rarity = "common"
+name = "lesser ice elemental"
+glyph = "E"
+fg = "#80e8f0"
+speed = 850
+faction = "elemental"
+tags = ["elemental", "ice"]
+alignment = "neutral"
+vision = "darkvision"
+sight = 10
+footsteps = 60
+hearing = 10
+weight = 200000
+stats = { strength = 20, dexterity = 11, toughness = 21, intelligence = 2, willpower = 20, presence = 2 }
+base_hp = 44
+natural = { defence = 0, protection = 1, name = "ice" }
+resist = { piercing = 25, cold = 100, fire = -50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "3d6"
+damage_type = "cold"
+name = "fist"
+verb = "freezes"
+on_hit = [{ status = "sluggish", chance = 25, severity = 1 }]
