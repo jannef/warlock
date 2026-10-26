@@ -969,9 +969,10 @@ mod tests {
         }
         let statuses = text("status-effects.md");
         for row in [
-            "| Bleeding | yes, \"bleeding\" | Big hits and confirmed criticals; the giant leech's \
-             sucker (40%, 1 degree) | A hit point every 40 seconds, faster the worse it is | A \
-             degree a minute | Not at all | — | Bandage |",
+            "| Bleeding | yes, \"bleeding\" | Big hits and confirmed criticals; ",
+            "; the giant leech's sucker (40%, 1 degree); ",
+            "| A hit point every 40 seconds, faster the worse it is | A degree a minute | Not at \
+             all | — | Bandage |",
             "| A degree every 2 minutes | Half as fast |",
             "the giant rat's bite (10%, 2 degrees); the grave worm's bite (20%, 1 degree); eating \
              rotten food |",

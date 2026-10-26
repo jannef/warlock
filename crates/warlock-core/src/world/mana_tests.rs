@@ -144,6 +144,9 @@ fn files(scenario: &str, extra: &[(&str, &str)]) -> ContentFiles {
     let fyrdelf = "campaigns/ascmearc/data/dungeons/fyrdelf.toml";
     let text = include_str!("../../../../assets/campaigns/ascmearc/data/dungeons/fyrdelf.toml");
     files.insert(fyrdelf, &text.replace("\"basilisk\", ", ""));
+    // And the canoloth's tongue and the nycaloth's claws (their Bleeding; in no population).
+    files.remove("data/creatures/canoloth.toml");
+    files.remove("data/creatures/nycaloth.toml");
     let diseases = include_str!("../../../../assets/data/diseases.toml");
     files.insert("data/diseases.toml", &format!("{diseases}\n{FOG}"));
     files.insert("data/experience.toml", EXPERIENCE);

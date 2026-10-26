@@ -49,7 +49,9 @@
 #   groups   kobold, goblin (not the ogre or the troll, who only run with them), undead (every
 #            creature of the "undead" faction: content::tag's test fails without it), vermin
 #            (not the basilisk), marsh-thing (the fens' living things and the bog hag),
-#            duergar (not their trader, a merchant), fire-thing (the delf's burning things)
+#            duergar (not their trader, a merchant), fire-thing (the delf's burning things),
+#            yugoloth (every creature of the "yugoloth" faction), fiend (the fiends of the lower
+#            planes: every yugoloth, demon, and devil)
 #   roles    archer (shoots: the goblin, kobold, and skeleton archers), caster (every
 #            combat = "caster" type), cultist (the minster's cult), skeleton (walking bones),
 #            spirit (the incorporeal dead), troll (the troll and the marsh troll)
@@ -165,3 +167,10 @@
 # dead, Z greater, G spirits, W wights and wraiths, M mummies, C hounds, V vampires, D drakes, T
 # the rotting troll; a colour distinct from every other type with the same glyph. Only a type in
 # a population strays (#375): deep undead ship in none until a deep place takes them.
+#
+# The yugoloths (#446; content::yugoloth_roster_tests checks the numbers): mercenary fiends of the
+# lower planes, faction "yugoloth" (hostile to the player only), tags ["yugoloth", "fiend", ...],
+# alignment "evil", vision "darkvision", resist acid and poison 100, fire, cold, and electricity
+# 50; no corpse (the body falls to ash), a dark ichor for blood. Their numbers follow the undead
+# roster's formulas (#383) by level and role. Glyph "&", a colour each. In no population yet:
+# no danger window reaches them.

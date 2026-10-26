@@ -141,7 +141,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   tongue that holds fast), the gibbering shade 18 (incorporeal, a cold touch that drains
   Intelligence), the bone wyvern 18 (a sting, bone with protection 2), the revenant 19 (very
   tough, a long sword half the time), the fetch 19 (incorporeal, a cold touch that frightens), and
-  the mummy priest 20 (a caster whose touch carries mummy rot, sometimes something worth taking). The duergar types are of the duergar race. For blood (§8 "Blood";
+  the mummy priest 20 (a caster whose touch carries mummy rot, sometimes something worth taking). The yugoloths (#446; faction `yugoloth`, mercenary fiends of the lower planes, immune to acid and poison, resisting fire, cold, and lightning 50, no corpse; in no population yet, no danger window reaches them): the mezzoloth 22 (an insectlike foot soldier, a trident most of the time, chitin), the canoloth 29 (a quick doglike guardian whose barbed tongue may hold fast and leave a bleeding wound), the nycaloth 36 (a winged killer with an enormous great axe, sometimes magic, and claws that leave bleeding wounds), the arcanaloth 46 (a jackal-headed caster whose claws poison, sometimes something worth taking), and the ultroloth 58 (the commander, whose enormous eyes may transfix or frighten whoever it strikes). The duergar types are of the duergar race. For blood (§8 "Blood";
   presentation only):
   `blood`, the colour of its stains (`"#rrggbb"`; default dark red, `#6e0e0c`) or `"none"` for a
   bloodless creature; the cave beetle bleeds greenish-black ichor (`#38461a`). For hunger (§8
@@ -654,7 +654,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   ("cultists", the drowned minster's cult; hostile to the player and the marsh), `duergar` (the
   delf's grey dwarves; hostile to the player, the goblins (the ogres and trolls among them), and
   the undead), `fire` ("fire things", the delf's burning creatures and the fire drake; hostile to
-  the player only), `wildlife` (deer, cave bats, the cave beetle;
+  the player only), `yugoloth` ("yugoloths", mercenary fiends of the lower planes; hostile to the player only: hired by none, at war with none), `wildlife` (deer, cave bats, the cave beetle;
   neutral to everyone), and
   `peaceful` ("peaceful folk", hostile to no one: the showcase's people by type, and creatures
   levels place in it); `merchants` (shopkeepers; hostile to no one) and `outraged` ("outraged
