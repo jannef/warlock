@@ -46,13 +46,20 @@ fn creature_table(content: &Content, campaign: Option<&str>) -> String {
     let player = content.creature_id("player");
     let theirs = (listed(content).into_iter()).filter(|(_, c)| c.campaign.as_deref() == campaign);
     for (id, c) in theirs {
-        let faction = c.faction.map_or_else(
-            || "none".into(),
-            |f| capital(&content.factions().def(f).name),
-        );
-        let stance = match player.map(|p| content.stance(p, id)) {
-            Some(Stance::Hostile) => "hostile",
-            _ => "neutral",
+        let (faction, stance) = match player {
+            // A type of several factions: each creature joins one by these odds (the fey courts).
+            Some(p) if !c.factions.is_empty() => courts(content, p, c),
+            _ => {
+                let faction = c.faction.map_or_else(
+                    || "none".into(),
+                    |f| capital(&content.factions().def(f).name),
+                );
+                let stance = match player.map(|p| content.stance(p, id)) {
+                    Some(Stance::Hostile) => "hostile",
+                    _ => "neutral",
+                };
+                (faction, stance.to_string())
+            }
         };
         let mut attacks = match c.combat {
             _ if !fights(content, c) => "never",
@@ -80,6 +87,25 @@ fn creature_table(content: &Content, campaign: Option<&str>) -> String {
         );
     }
     out
+}
+
+/// The factions creatures of type `c` join, each with its odds ("Seelie court 90%, Unseelie
+/// court 10%"), and how each stands toward the player (`player`, the player's type), in the
+/// same order ("neutral or hostile").
+fn courts(content: &Content, player: CreatureId, c: &CreatureDef) -> (String, String) {
+    let theirs = content.creature(player).faction;
+    let total: u32 = c.factions.iter().map(|&(_, w)| w).sum();
+    let (names, stances): (Vec<String>, Vec<&str>) = (c.factions.iter())
+        .map(|&(f, w)| {
+            let name = capital(&content.factions().def(f).name);
+            let stance = match content.stance_of(theirs, Some(f)) {
+                Stance::Hostile => "hostile",
+                Stance::Neutral => "neutral",
+            };
+            (format!("{name} {}%", w * 100 / total), stance)
+        })
+        .unzip();
+    (names.join(", "), stances.join(" or "))
 }
 
 /// A creature type's gear table in words (spec §8 "Creature gear"): each line in the order it is
@@ -115,7 +141,9 @@ fn gear(content: &Content, c: &CreatureDef) -> String {
 /// Who fights whom: each faction and the factions hostile to it (relations are symmetric).
 pub(super) fn factions(content: &Content) -> String {
     let factions = content.factions();
-    let mut out = String::from("| Faction | Hostile to | Animals |\n|---|---|---|\n");
+    let mut out = String::from(
+        "| Faction | Hostile to | Animals | Attacked by you, joins |\n|---|---|---|---|\n",
+    );
     for (i, f) in factions.defs().iter().enumerate() {
         let id = FactionId(i as u16);
         let enemies: Vec<String> = (factions.defs().iter().enumerate())
@@ -127,9 +155,12 @@ pub(super) fn factions(content: &Content) -> String {
         } else {
             enemies.join(", ")
         };
+        let provoked = f
+            .provoked
+            .map_or_else(|| "-".to_string(), |p| capital(&factions.def(p).name));
         let _ = writeln!(
             out,
-            "| {} | {enemies} | {} |",
+            "| {} | {enemies} | {} | {provoked} |",
             capital(&f.name),
             yes(f.animal)
         );

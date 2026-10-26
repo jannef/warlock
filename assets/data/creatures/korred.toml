@@ -1,0 +1,30 @@
+# The fey roster (#452).
+# A korred: a wild, hairy little fey of the stones, strong as rock, whose long hair snares
+# whoever it strikes (its fists may hold). Its power over stone waits for a mechanic.
+[[creature]]
+id = "korred"
+level = 25
+xp = 135
+rarity = "rare"
+name = "korred"
+glyph = "F"
+fg = "#7a6038"
+factions = { seelie = 50, unseelie = 50 }
+tags = ["fey"]
+vision = "darkvision"
+sight = 10
+opens_doors = true
+footsteps = 60
+hearing = 18
+weight = 30000
+size = "small"
+stats = { strength = 26, dexterity = 14, toughness = 27, intelligence = 20, willpower = 20, presence = 22 }
+base_hp = 100
+natural = { defence = 1, protection = 0, name = "hairy hide" }
+[creature.attack]
+damage = "3d10"
+damage_type = "bludgeoning"
+name = "fist"
+verb = "pummels"
+to_hit = 2
+on_hit = [{ status = "held", chance = 15, difficulty = 17 }]

@@ -20,6 +20,8 @@ const FACTIONS: &str = "[[faction]]\nid = \"player\"\nname = \"you\"\n\
      [[faction]]\nid = \"hags\"\nname = \"hags\"\n\
      [[faction]]\nid = \"duergar\"\nname = \"duergar\"\n\
      [[faction]]\nid = \"fire\"\nname = \"fire things\"\n\
+     [[faction]]\nid = \"seelie\"\nname = \"Seelie court\"\n\
+     [[faction]]\nid = \"unseelie\"\nname = \"Unseelie court\"\n\
      [[faction]]\nid = \"fiends\"\nname = \"fiends\"\n\
      [[faction]]\nid = \"devil\"\nname = \"devils\"\n\
      [[faction]]\nid = \"yugoloth\"\nname = \"yugoloths\"\n\

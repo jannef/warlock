@@ -109,6 +109,13 @@ impl Rng {
         Self::stream(run_seed, &format!("gear/{key}"))
     }
 
+    /// The court stream of actor `key` (spec §7 "Factions"): the faction a creature of a type
+    /// with several draws when it is made, apart from every other stream, so a level is the
+    /// same whichever court its fey joined.
+    pub fn court(run_seed: u64, key: &str) -> Self {
+        Self::stream(run_seed, &format!("court/{key}"))
+    }
+
     pub fn next_u32(&mut self) -> u32 {
         self.0.next_u32()
     }

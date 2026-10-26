@@ -7,15 +7,18 @@
 # campaign's own words go in its data/plurals.toml); a word given two plurals is an error.
 
 child = "children"
+colossus = "colossi"
 deer = "deer"
 duergar = "duergar"
 dwarf = "dwarves"
 elf = "elves"
+fey = "fey"
 fish = "fish"
 foot = "feet"
 goose = "geese"
 incubus = "incubi"
 knife = "knives"
+lady = "ladies"
 leaf = "leaves"
 lich = "liches"
 louse = "lice"

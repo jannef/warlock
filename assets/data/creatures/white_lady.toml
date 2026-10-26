@@ -1,0 +1,37 @@
+# The undead roster (#383, batch 4). The pale lady of the old halls, who walks where she died: her
+# gaze holds the living still, and her cold touch takes the bearing out of them, for good unless
+# the will holds (a temple's mending gives it back). She drifts through walls and doors; blades
+# and clubs pass half through her. Not yet in any dungeon's population.
+[[creature]]
+id = "white_lady"
+level = 39
+xp = 205
+rarity = "rare"
+name = "white lady"
+glyph = "G"
+fg = "#f4f0e4"
+speed = 1250
+faction = "undead"
+tags = ["undead", "spirit"]
+alignment = "evil"
+vision = "darkvision"
+sight = 14
+hearing = 15
+weight = 100
+stats = { strength = 25, dexterity = 23, toughness = 25, intelligence = 26, willpower = 30, presence = 26 }
+base_hp = 58
+natural = { defence = 5, protection = 0, name = "insubstantial form" }
+incorporeal = { wall_defence = 5 }
+resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "4d6"
+damage_type = "cold"
+name = "touch"
+verb = "touches"
+to_hit = 3
+on_hit = [
+    { status = "transfixed", chance = 20, severity = 2 },
+    { drain = "presence", points = 1, chance = 10, difficulty = 19 },
+]

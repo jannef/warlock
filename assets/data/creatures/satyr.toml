@@ -1,0 +1,26 @@
+# The fey roster (#452).
+# A satyr: a goat-legged reveller of music and mischief, butting with its horns. It
+# carries a lute or a pipe now and then.
+[[creature]]
+id = "satyr"
+level = 10
+xp = 60
+name = "satyr"
+glyph = "F"
+fg = "#b88a5a"
+factions = { seelie = 50, unseelie = 50 }
+tags = ["fey"]
+vision = "low_light"
+sight = 10
+opens_doors = true
+footsteps = 60
+hearing = 16
+weight = 60000
+stats = { strength = 15, dexterity = 12, toughness = 16, intelligence = 14, willpower = 14, presence = 16 }
+base_hp = 25
+attack = { damage = "2d6", damage_type = "bludgeoning", name = "butt", verb = "butts" }
+on_eat = { message = "It tastes of goat and wine.", vomit = 20 }
+# Its gear (spec §8 "Creature gear"): its music.
+[[creature.gear]]
+chance = 25
+one_of = ["lute", "pipe"]

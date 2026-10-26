@@ -23,6 +23,10 @@
 # Behavior (spec §8 "Creature behavior"; nothing here is shown to the player but the faction's
 # stance toward them):
 #   faction      a faction id in factions.toml (required; the player's is "player")
+#   factions     instead of faction: the factions each creature of the type may join, by weight
+#                (1 to 1000), `{ seelie = 50, unseelie = 50 }`: each draws its own when it is made
+#                (a spawn, a floor's population, a level file's entry without a faction of its
+#                own), and keeps it (spec §7 "Factions"); the type counts as its heaviest
 #   vision       its eyes: a profile in vision.toml (default "normal"); it sees by the same rules
 #                as the player, under the same light
 #   sight        how far it sees, in cells (default 10, at most 40)
@@ -51,11 +55,12 @@
 #            run with them), undead (every
 #            creature of the "undead" faction: content::tag's test fails without it), vermin
 #            (not the basilisk), marsh-thing (the fens' living things and the bog hag),
-#            hag (the bog hag and her kin, every creature of the "hags" faction, the night hag
-#            among them), duergar (not their trader, a merchant), fire-thing (the delf's burning
-#            things), devil (every creature of the "devil" faction: content::devil_roster_tests
-#            checks it), yugoloth (every creature of the "yugoloth" faction), fiend (the fiends of
-#            the lower planes: every yugoloth, demon, and devil; and the fiends of no family, #450)
+#            hag (the bog hag and her kin, every creature of the "hags" faction, the night
+#            hag among them), duergar (not their trader, a merchant), fire-thing (the delf's
+#            burning things), fey (every creature of the fey courts, seelie or unseelie),
+#            devil (every creature of the "devil" faction: content::devil_roster_tests checks it),
+#            yugoloth (every creature of the "yugoloth" faction), fiend (the fiends of the lower
+#            planes: every yugoloth, demon, and devil; and the fiends of no family, #450)
 #   roles    archer (shoots: the goblin, kobold, and skeleton archers), caster (every
 #            combat = "caster" type), cultist (the minster's cult), skeleton (walking bones),
 #            spirit (the incorporeal dead), troll (the troll and the marsh troll)
@@ -204,6 +209,14 @@
 # caster 0.8, officer 1.1). They fight with gear (a racial weapon and mail), not a natural
 # attack. Glyph g in reds, steel, violet, and gold, apart from the goblins' green, ochre, and
 # orange.
+#
+# The fey (the roster, #452; content::fey_roster_tests checks the numbers): factions = { seelie,
+# unseelie } by weight, each creature joining a court when it is made; tags ["fey", ...]. Living:
+# they leave corpses and bleed. xp = 5 × level + 10; stats, base_hp, and dice by the undead
+# roster's formulas and roles (with the mind of the living: Intelligence and Willpower 10 + 0.4 ×
+# level, Presence 12 + 0.4 × level, casters 4 more), within ±35 %. Tiny fey are small. Glyphs: f
+# the small fey, F the man-sized (satyr) and the korred, n nymphs and dryads, C fey hounds; a
+# colour distinct from every other type with the same glyph.
 #
 # The fiends of no family (#450; content::fiend_roster_tests checks the numbers): the hell
 # hound, the nightmare, the succubus and the incubus (one fiend under two names, sharing their
