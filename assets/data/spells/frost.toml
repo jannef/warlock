@@ -1,0 +1,22 @@
+# The druid's Frost (Flame and frost, spec §8 "Class abilities"): a burst of bitter cold.
+[[spell]]
+id = "frost"
+name = "Frost"
+description = "A burst of bitter cold where you aim it: the water it reaches freezes."
+tier = 2
+school = "evocation"
+kind = "damage"
+shape = "burst"
+resolution = "area"
+damage_type = "cold"
+range = 10
+max_range = 12
+max_radius = 2
+damage = { dice = "2d6" }
+
+[spell.cast]
+effect = "frost_burst"
+noun = "frost"
+verb = "bites"
+message = "Bitter cold bursts from your hands!"
+frost = 100

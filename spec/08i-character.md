@@ -797,28 +797,28 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Resources**: Rage, Blood frenzy, Mighty rage, and Unstoppable run on the Rage resource
     (§8 "Resources", R1); Flurry and Quivering palm on the Ki resource (R4, #252).
   - **Coverage**: `min_class` stays 0 until every class has its table.
-- **The casters' class tables, and their spells** (`content/class_spell.rs`: `ClassSpell`,
-  `SpellDef`; `world/caster.rs`; M30, #245; design §4.9–4.12, §3.7): the priest, druid, wizard,
+- **The casters' class tables, and their spells** (`content/class_spell.rs`: `ClassSpell`;
+  `data/spells/`; `world/cast.rs`, `world/caster.rs`; M30, #245, #395; design §4.9–4.12, §3.7):
+  the priest, druid, wizard,
   and witch have level tables as the others do (bonus picks at 10, 20, 30, 45, 55: priest Vigour
   or Grit, druid Wayfarer or Vigour, wizard Scholar, witch Scholar or Grit).
-  - **Spells**: the casters' actives are **placeholders** for the spell system, written as a
-    class ability's `[[talent.spell]]` table (the loader gives the talent a `spell` effect for
-    each, so its holder has it): `spell` (its id), `mana`, `casts` (its time, in `cast`
-    actions), and what its kind asks: a **boon** on the caster (`status`), a **mend** (`heal`
-    dice, +1 per `per_levels` levels), a **cleanse** (`cures`, `diseases`), a **hex** on a
-    hostile the caster sees within `range` (`status`, `severity`), or a **strike** (`cast`: a
-    burst or a bolt, exactly a scroll's `read` table; `open_sky`; `status` on everyone it
-    reaches). `Ability::Spell` in the Class group, `Action::Cast` (`use:blessing`,
-    `use:arcane_bolt:12,5`). They **cost mana instead of a cooldown** (spec §8 "Mana"):
-    `World::spend_mana` after every check, `Unavailable::NoMana` ("you have too little mana") while the
-    caster has less than `Actor::spell_cost` (Archmage's cut, then Frugal caster's through `Actor::mana_cost`); refused, no time and no mana, without the spell,
-    without the cell, out of range, with no hostile seen there to hex, or (Call lightning)
-    under a roof or below ground. A strike is cast through the scrolls' shared code
-    (`burst_center`, `bolt_line`, `cast_burst`, `cast_bolt`, `say_spell`): its kills are the
-    caster's, and one that kills its caster is `Cause::Spell` ("Killed by their own
-    fireball"). Too close a burst asks first, as a scroll's does ("Cast it anyway?").
-  - **Priest**: Blessing (Blessed 10 min: +1 to hit, Willpower +1; 2 mana), Cure wounds (1d8,
-    +1 per 2 levels; 2 casts; 4 mana), Remove disease (every disease and Poisoned; 10 mana),
+  - **Spells**: the casters' actives are **spells** (§8 "Spells"; the placeholders of #245,
+    migrated by #395): a class ability's talent effect `{ kind = "spell", spell = "ID" }` gives
+    the spell ability `ID` (one of twelve, `ClassSpell`, each given once), the spell of that id
+    in `data/spells/` (its shape aimed exactly when the ability is, checked at load), cast by
+    the one cast path: tier, cost, reach, dice, and resolution are the spell's.
+    `Ability::Spell` in the menu's own **Spells** group (`Source::Spell`, after Class) with its
+    tier and what it costs the player now ("tier 2, 11 mana"; short of mana "tier 2, 11 mana:
+    too little", `ability::spell_unavailable`, which needs the caster level), `Action::Cast`
+    (`use:blessing`, `use:arcane_bolt:12,5`, the replay text unchanged). They **cost mana
+    instead of a cooldown** (spec §8 "Mana"); refused, no time and no mana, without the spell,
+    without the cell, out of range, with no hostile seen there to hex, nothing to cure, not
+    hurt, or (Call lightning) under a roof or below ground. Their kills are the caster's, and
+    one that kills its caster is `Cause::Spell` ("Killed by their own fireball"). Too close a
+    burst asks first, as a scroll's does ("Cast it anyway?").
+  - **Priest**: Blessing (tier 0: Blessed 10 min a degree: +1 to hit, Willpower +1; 1 mana),
+    Cure wounds (tier 2: 2d6, at most 13; 2 casts; 6 mana), Remove disease (tier 3: every
+    disease and Poisoned; 11 mana),
     Ward of faith (Deflection +1; the design's "Shield of faith", renamed: that id is the
     paladin's), Purify (rotten food never sickens nor exposes; no draw), Divine health and
     Smite (the paladin's own talents, so Smite answers only a Good priest), Miracle, Saint
@@ -826,25 +826,28 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Druid**: Wild empathy (`beast_friend`), Woodland stride (the ranger's: forest floor,
     bush, reeds, tall grass, marsh as grass), Weather sense (a 3-hour forecast), Nature's ward
     (wading never sickens; poison eases twice as fast), Winter's friend (ice holds the body's
-    weight alone, plunges never hurt, climbing out is free), Call lightning (a bolt of 8 cells,
-    4d6 electricity, a thunderclap; open sky only; 8 mana), Sun and moon (sun healing +50 %,
-    night sight +1), Flame and frost (two spells, Flame: the fireball's burst, 3d6 fire, radius
-    2, blast; Frost: 2d6 cold, freezes water; 10 mana each), Timeless body (hunger −50 %; a
+    weight alone, plunges never hurt, climbing out is free), Call lightning (tier 4: a line of
+    8 cells, to 10, 4d6 electricity, a thunderclap; open sky only; 29 mana), Sun and moon (sun
+    healing +50 %, night sight +1), Flame and frost (two spells, Flame: tier 3, the fireball's
+    burst, 3d6 fire, radius 2, blast, 26 mana; Frost: tier 2, 2d6 cold, freezes water, 14
+    mana), Timeless body (hunger −50 %; a
     failed disease check does nothing, so a disease never progresses).
   - **Wizard**: Scroll adept (reading −50 %; +1 on every die of spells and spell scrolls),
     Arcane lore (a magic item carried an hour is identified), Spell recall (the Scholar
-    talent, handed out), Arcane bolt (6 cells, 2d6 untyped; 3 mana), Mage armour (Deflection +2
-    in no body armour), Empower (spells and spell scrolls a die more), Fire burst (the
-    fireball's burst; 9 mana), Arcane mastery (mana +100 %), Archmage (+2 on every die; spells'
-    mana −50 %, at least 1). `spell_power` reads in `TalentMods::spell_damage` for the caster's
-    strikes and `read_spell` alike.
+    talent, handed out), Arcane bolt (tier 2: a line of 6 cells, to 8, 2d6 force; 11 mana),
+    Mage armour (Deflection +2 in no body armour), Empower (spells and spell scrolls a die
+    more), Fire burst (tier 3: the fireball's burst; 26 mana), Arcane mastery (mana +100 %),
+    Archmage (+2 on every die; spells' mana −50 %, at least 1). `spell_power` reads in
+    `TalentMods::spell_damage` for spells and `read_spell` alike; a spell's roll is then held to
+    its cap (Empower and Archmage bring it to the cap sooner, never past it).
   - **Witch**: Herb lore (rotten food −50 %, a corpse's `on_eat` harm and vomiting never, the
-    angelica root heals 1d6), Evil eye (Hexed 1 min: −2 to hit; 2 mana), Poison lore (poison
+    angelica root heals 1d6), Evil eye (tier 1: Hexed 1 min a degree: −2 to hit; 3 mana),
+    Poison lore (poison
     eases twice as fast; +2 damage on hits at a Poisoned creature, `World::lore_blow`), Hex of
-    weakness (Weakened 2 min: St −2, Dx −2; 3 mana), Second sight (noticing as Spot +2,
-    searching +2), Curse of sloth (Sluggish 1 min: every action costs 150 %; 4 mana), Blight
-    (a burst of 2d6 poison, radius 2, and two degrees of Poisoned on everyone it reaches; 8
-    mana), Cauldron (a corpse's harm never; its stat chances doubled; a fresh one heals 1d4),
+    weakness (tier 1: Weakened 2 min a degree: St −2, Dx −2; 3 mana), Second sight (noticing
+    as Spot +2, searching +2), Curse of sloth (tier 1: Sluggish 1 min a degree: every action
+    costs 150 %; 3 mana), Blight (tier 2: a burst of 2d6 poison, radius 2, and two degrees of
+    Poisoned on everyone it harms; 14 mana), Cauldron (a corpse's harm never; its stat chances doubled; a fresh one heals 1d4),
     Hag's bargain.
   - **Reprieves** (`reprieve`, `World::reprieve` from `hurt`, after Rise from the ashes): once
     in a life (`Progress::once`), what would kill the player (not starving or choking) leaves

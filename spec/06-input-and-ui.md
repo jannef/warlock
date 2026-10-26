@@ -383,7 +383,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **The menu** (a screen on the stack) lists them as the one paged list (§6 "Item lists"),
     grouped by source under a header each, lettered down each page from `a`: each row the
     ability's name and what it asks for ("in a direction"), or greyed out with why it cannot be
-    used now; the selected ability's description below. A letter, or Enter on the `>` row, uses
+    used now; a spell (under its own **Spells** header, after Class, §8 "Spells") first says its
+    tier and what it costs the player now ("tier 2, 11 mana, at a place you see"; "tier 2, 11
+    mana: too little" greyed out); the selected ability's description below. A letter, or Enter on the `>` row, uses
     it: the menu closes, the ability asks for what it needs (a direction in the message line,
     "In which direction? (Esc to cancel)"), and its action is applied; choosing one that cannot
     be used now says why on the menu instead ("Shield bash: you hold no shield."). Esc closes
@@ -610,7 +612,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
   An ability that asks for a cell (throwing one's voice, above) is aimed the same way, as far as
   it reaches (`Ability::range`), but draws no line: the cursor is muted red on a cell the player
   does not see or that is solid ("You do not see there.") or beyond its reach ("Out of
-  range."); `Enter`, or the ability's own key if bound, uses it (`throw_voice:X,Y`).
+  range."); `Enter`, or the ability's own key if bound, uses it (`throw_voice:X,Y`). A spell
+  (§8 "Spells") is aimed by its shape, as far as the player casts it (Willpower counted,
+  `PerceptionView::own_spell_reach`): a burst, a ray, or a bolt as a scroll's burst (a creature
+  in the way blocks it; a burst that may catch the caster asks first), a line as a scroll's
+  bolt, a cone with the fan of cells it would reach drawn as the dots (`cone_cells` over what
+  the player perceives), a touch and a hex as an ability (no line; a touch reaches 1).
 - **Look mode** describes what the player perceives at the cursor: a creature and its terrain,
   with how it stands toward the player and how hurt it looks ("A giant rat (hostile, unhurt), on
   stone floor."; its type tells the player its faction's stance toward them, the only faction

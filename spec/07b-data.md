@@ -151,7 +151,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   worms, a disease that may kill), the bone drake 27 (bone with protection 4), the dread wraith 28
   (quick, incorporeal, a touch that drains Toughness), the headless knight 29 (quick, a long
   sword or a glaive, frightens), the lich 30 (a caster whose touch holds and drains
-  Intelligence), and the rotting drake 30 (slow, grave rot). The duergar types are of the duergar race. For blood (§8 "Blood";
+  Intelligence), and the rotting drake 30 (slow, grave rot). The yugoloths (#446; faction `yugoloth`, mercenary fiends of the lower planes, immune to acid and poison, resisting fire, cold, and lightning 50, no corpse; in no population yet, no danger window reaches them): the mezzoloth 22 (an insectlike foot soldier, a trident most of the time, chitin), the canoloth 29 (a quick doglike guardian whose barbed tongue may hold fast and leave a bleeding wound), the nycaloth 36 (a winged killer with an enormous great axe, sometimes magic, and claws that leave bleeding wounds), the arcanaloth 46 (a jackal-headed caster whose claws poison, sometimes something worth taking), and the ultroloth 58 (the commander, whose enormous eyes may transfix or frighten whoever it strikes). The duergar types are of the duergar race. For blood (§8 "Blood";
   presentation only):
   `blood`, the colour of its stains (`"#rrggbb"`; default dark red, `#6e0e0c`) or `"none"` for a
   bloodless creature; the cave beetle bleeds greenish-black ichor (`#38461a`). For hunger (§8
@@ -448,7 +448,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   and `shield` (while held), each 0 to 20; `protection` (damage soaked off every hit while worn,
   0 to 20, adding up across what is worn; only on armour worn, never in a hand or on a shield);
   `penetration` (how much of a target's Protection it ignores, 0 to 20; weapons and
-  ammunition); `bash` (a shield's damage dice when bashing with it,
+  ammunition); `spell_cost_percent` (while worn or held, a spell costs this percent more mana,
+  0 to 100, adding up across what is worn; only on things with a `slot`; §8 "Spells"); `bash` (a shield's damage dice when bashing with it,
   only with `shield`; §8 "Weapon skills"); and `category`, the weapon skill a weapon draws on and
   trains (an id in `data/weapon_skills.toml`; required for every weapon when there are weapon
   skills, refused on anything else): a `melee` skill for what goes in a hand, a `launcher` one
@@ -674,7 +675,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   ("cultists", the drowned minster's cult; hostile to the player and the marsh), `duergar` (the
   delf's grey dwarves; hostile to the player, the goblins (the ogres and trolls among them), and
   the undead), `fire` ("fire things", the delf's burning creatures and the fire drake; hostile to
-  the player only), `wildlife` (deer, cave bats, the cave beetle;
+  the player only), `yugoloth` ("yugoloths", mercenary fiends of the lower planes; hostile to the player only: hired by none, at war with none), `wildlife` (deer, cave bats, the cave beetle;
   neutral to everyone), and
   `peaceful` ("peaceful folk", hostile to no one: the showcase's people by type, and creatures
   levels place in it); `merchants` (shopkeepers; hostile to no one) and `outraged` ("outraged

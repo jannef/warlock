@@ -66,6 +66,40 @@ pub(crate) fn burst_cells(center: Pos, radius: i32, opaque: impl Fn(Pos) -> bool
     cells
 }
 
+/// A roll held to `cap`, if there is one (a spell's, spec §8 "Spells").
+pub(super) fn capped(roll: i32, cap: Option<i32>) -> i32 {
+    cap.map_or(roll, |cap| roll.min(cap))
+}
+
+/// The cells a cone from `from` toward `toward` reaches, `length` cells long (spec §8
+/// "Spells"): within that distance (rounded, like every radius), in line of sight from `from`,
+/// not opaque, and within 45° either side of the way to `toward` (a quarter turn in all, by
+/// integers: the angle's cosine squared at least a half). Never `from` itself; none when
+/// `toward` is `from`. In row order.
+pub fn cone_cells(from: Pos, toward: Pos, length: i32, opaque: impl Fn(Pos) -> bool) -> Vec<Pos> {
+    let (dx, dy) = (i64::from(toward.x - from.x), i64::from(toward.y - from.y));
+    if (dx, dy) == (0, 0) {
+        return Vec::new();
+    }
+    let length = length.max(0);
+    let los = LineOfSight::compute(from, length, &opaque);
+    let r2 = radius2(length);
+    let way = dx * dx + dy * dy;
+    let mut cells = Vec::new();
+    for y in from.y - length..=from.y + length {
+        for x in from.x - length..=from.x + length {
+            let p = Pos::new(x, y);
+            let (vx, vy) = (i64::from(x - from.x), i64::from(y - from.y));
+            let dot = vx * dx + vy * dy;
+            let inside = dot > 0 && 2 * dot * dot >= (vx * vx + vy * vy) * way;
+            if p != from && inside && p.dist2(from) <= r2 && los.contains(p) && !opaque(p) {
+                cells.push(p);
+            }
+        }
+    }
+    cells
+}
+
 /// The cells a bolt from `from` toward `to` runs over: the straight line after `from` up to and
 /// including `to`, cut short before the first opaque cell.
 pub(crate) fn bolt_path(from: Pos, to: Pos, opaque: impl Fn(Pos) -> bool) -> Vec<Pos> {
@@ -205,13 +239,16 @@ impl World {
         // Its own cell never stops it: a trap's on a shut door bursts out on both sides.
         let opaque = |p: Pos| p != center && level.is_opaque(&self.content, p);
         let cells = burst_cells(center, radius, opaque);
-        events.push(Event::Spell {
-            effect: burst.spell.clone(),
-            origin,
-            shape: SpellShape::Burst { center, radius },
-            cells: cells.clone(),
-        });
-        let roll = burst.damage.roll(&mut self.state.rng);
+        // A spell that shows no effect (`data/spells/` without one) is drawn as nothing.
+        if !burst.spell.is_empty() {
+            events.push(Event::Spell {
+                effect: burst.spell.clone(),
+                origin,
+                shape: SpellShape::Burst { center, radius },
+                cells: cells.clone(),
+            });
+        }
+        let roll = capped(burst.damage.roll(&mut self.state.rng), burst.cap);
         let inner = radius2(radius - 1);
         let level = self.state.current_level.clone();
         let reached: BTreeSet<Pos> = cells.into_iter().collect();
@@ -257,7 +294,7 @@ impl World {
         events: &mut Vec<Event>,
     ) {
         let drawn: Vec<Pos> = path.iter().copied().filter(|&p| p != origin).collect();
-        if !drawn.is_empty() {
+        if !drawn.is_empty() && !bolt.spell.is_empty() {
             events.push(Event::Spell {
                 effect: bolt.spell.clone(),
                 origin,
@@ -265,7 +302,7 @@ impl World {
                 cells: path.to_vec(),
             });
         }
-        let roll = bolt.damage.roll(&mut self.state.rng);
+        let roll = capped(bolt.damage.roll(&mut self.state.rng), bolt.cap);
         let level = self.state.current_level.clone();
         let mut caught = Vec::new();
         for p in path {
@@ -306,21 +343,44 @@ impl World {
         damage: Damage,
         events: &mut Vec<Event>,
     ) {
-        let by = match caster {
-            Caster::Trap(trap) => {
-                let damage = self.evaded(target, damage);
-                return self.trap_hurts(trap, target, source, damage, events);
+        let damage = self.evaded(target, damage);
+        match caster {
+            Caster::Trap(trap) => self.trap_hurts(trap, target, source, damage, events),
+            Caster::Actor(by) => {
+                let hit = Strike::Hit { critical: false };
+                self.spell_strikes(by, target, source, (damage, hit), events);
             }
-            Caster::Actor(by) => by,
-        };
+        }
+    }
+
+    /// Actor `by`'s spell strikes `target` from `source` (a cell, and whether it flew along a
+    /// line from it) as `strike` says (a miss, or a hit, a critical one perhaps, of an attack
+    /// roll; a hit for a spell with no roll), doing `damage` less what the target resists of
+    /// its kind (spec §8 "Damage types"), dealt the way every blow is (spec §8 "Blood",
+    /// "Status effects"): the event, a big hit's blood, the damage, which may kill (a kill by
+    /// the player earns its experience), and if it lives the statuses its wound causes. A
+    /// shopkeeper the player's spell reaches turns on them, as one they strike does; a miss
+    /// provokes too. No Evasion here: [`World::spell_hurts`] takes it off an area's first.
+    pub(super) fn spell_strikes(
+        &mut self,
+        by: ActorId,
+        target: ActorId,
+        source: (Pos, bool),
+        (damage, strike): (Damage, Strike),
+        events: &mut Vec<Event>,
+    ) {
         let Some(to) = self.state.actors.get(&target).map(|a| a.pos) else {
             return;
         };
         let from = self.state.actors.get(&by).map_or(source.0, |a| a.pos);
-        let damage = self.evaded(target, damage);
-        let taken = self.resisted(target, damage);
+        let taken = if strike.is_hit() {
+            self.resisted(target, damage)
+        } else {
+            0
+        };
         let mut blow = Blow::plain(taken, damage.kind);
-        if damage.amount > 0 && taken <= 0 {
+        blow.strike = strike;
+        if strike.is_hit() && damage.amount > 0 && taken <= 0 {
             blow.strike = Strike::Resisted;
         }
         events.push(Event::Attacked {
@@ -414,6 +474,38 @@ mod tests {
             [Pos::new(1, 0), Pos::new(2, 0)]
         );
         assert!(bolt_path(Pos::new(2, 2), Pos::new(2, 2), open).is_empty());
+    }
+
+    #[test]
+    fn cones_fan_a_quarter_turn_toward_their_aim_and_stop_at_walls() {
+        let open = |_: Pos| false;
+        let o = Pos::new(0, 0);
+        let east = cone_cells(o, Pos::new(5, 0), 3, open);
+        for p in [
+            (1, 0),
+            (2, 0),
+            (3, 0),
+            (1, 1),
+            (1, -1),
+            (2, 2),
+            (2, -1),
+            (3, 1),
+        ] {
+            assert!(east.contains(&Pos::new(p.0, p.1)), "{p:?} in {east:?}");
+        }
+        for p in [(0, 0), (0, 1), (-1, 0), (1, 2), (4, 0), (3, 3)] {
+            assert!(!east.contains(&Pos::new(p.0, p.1)), "{p:?} not in {east:?}");
+        }
+        // Symmetric about its aim, and a diagonal one too.
+        assert!(east.iter().all(|p| east.contains(&Pos::new(p.x, -p.y))));
+        let diagonal = cone_cells(o, Pos::new(2, 2), 2, open);
+        assert!(diagonal.contains(&Pos::new(1, 1)) && diagonal.contains(&Pos::new(2, 0)));
+        assert!(!diagonal.contains(&Pos::new(-1, 1)));
+        assert!(cone_cells(o, o, 3, open).is_empty(), "no way to fan");
+        // A wall across x = 2: nothing at or beyond it.
+        let wall = |p: Pos| p.x == 2;
+        let cut = cone_cells(o, Pos::new(5, 0), 3, wall);
+        assert!(cut.iter().all(|p| p.x == 1), "{cut:?}");
     }
 
     #[test]

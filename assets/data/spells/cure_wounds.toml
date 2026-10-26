@@ -1,0 +1,12 @@
+# The priest's Cure wounds (spec §8 "Class abilities"): hit points back; it takes a while to say.
+[[spell]]
+id = "cure_wounds"
+name = "Cure wounds"
+description = "A prayer that closes wounds: hit points back; it takes a while to say."
+tier = 2
+school = "restoration"
+kind = "heal"
+shape = "self"
+resolution = "auto"
+casts = 2
+effect = { heal = { dice = "2d6" } }

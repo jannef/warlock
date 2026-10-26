@@ -21,9 +21,13 @@ pub(super) fn abilities(content: &Content) -> String {
             Ability::Sign(active) => sign_holders(content, active),
             Ability::Class(active) => class_holders(content, active),
             Ability::Spell(spell) => {
-                let cost = content.class_spell(spell).map_or(0, |(_, s)| s.mana);
                 let who = table_holders(content, |e| *e == TalentEffect::Spell { spell });
-                format!("{who} ({cost} mana a cast)")
+                let spell = content.class_spell(spell).zip(content.spell_rules());
+                let (tier, cost) = spell.map_or((0, 0), |(s, r)| {
+                    let at = i32::from(r.comfortable[usize::from(s.tier)]);
+                    (s.tier, r.mana(s, at, 0))
+                });
+                format!("{who} (a tier-{tier} spell, {cost} mana a cast)")
             }
             Ability::Skill(_) => "everyone trained in the skill".into(),
             Ability::Disarm => "everyone trained in Disable device".into(),

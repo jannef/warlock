@@ -740,9 +740,8 @@ pub enum TalentEffect {
     SmallTarget { value: i32 },
     /// The damage bursts and bolts (traps, scrolls) do it, this percent more (negative: less).
     SpellDamagePercent { value: i32 },
-    /// A caster's spell (design §4.1 B2): the class ability's `[[talent.spell]]` names it, and
-    /// the loader adds this effect for it, so its holder has the spell (never written in data).
-    #[serde(skip_deserializing)]
+    /// A caster's spell (design §4.1 B2, spec §8 "Spells"): its holder has the spell ability
+    /// `spell`, the spell of that id in `data/spells/` (a class ability's; each given once).
     Spell { spell: super::ClassSpell },
     /// Its spells and spell scrolls roll `dice` dice more and add `per_die` to every die
     /// (Scroll adept, Empower, Archmage).
@@ -1636,10 +1635,28 @@ impl TalentEffect {
             | TalentEffect::ThrowVoice
             | TalentEffect::Finisher
             | TalentEffect::Disarm
-            | TalentEffect::Spell { .. }
             | TalentEffect::Purify
             | TalentEffect::CorpseHarmless
             | TalentEffect::DiseaseStill => Ok(()),
+            // A spell ability names a spell of data/spells/ of its id, aimed as the ability is
+            // (content without spells has nothing to check it by).
+            TalentEffect::Spell { spell } => {
+                if content.spells().is_empty() {
+                    return Ok(());
+                }
+                let def = (content.spell_id(spell.id()))
+                    .map(|id| content.spell(id))
+                    .ok_or_else(|| format!("`spell`: no spell `{}` in data/spells/", spell.id()))?;
+                if def.aimed() != spell.aimed() {
+                    return Err(format!(
+                        "`spell`: `{}` is {} by its ability, but its shape is `{}`",
+                        spell.id(),
+                        if spell.aimed() { "aimed" } else { "not aimed" },
+                        def.shape.id()
+                    ));
+                }
+                Ok(())
+            }
             TalentEffect::SpellPower { per_die, dice } => {
                 if !(0..=5).contains(per_die) || *dice > 5 || (*per_die == 0 && *dice == 0) {
                     return Err("`spell_power`: per_die is 0 to 5, dice 0 to 5, not both 0".into());
@@ -1872,8 +1889,6 @@ pub struct TalentDef {
     pub granted: bool,
     /// A birth sign's flaw: granted, shown with "but" and dimmed, never a prerequisite.
     pub flaw: bool,
-    /// The caster's spells it gives (`[[talent.spell]]`; each has its [`TalentEffect::Spell`]).
-    pub spells: Vec<super::SpellDef>,
     /// What using its class active costs of an alternative resource (spec §8 "Resources"):
     /// `resource = { id = "focus", cost = 6 }` (0 asks only that it is held), if anything.
     pub resource: Option<ResourceCost>,
@@ -2127,9 +2142,6 @@ struct TalentSpec {
     needs: NeedsSpec,
     #[serde(default)]
     effects: Vec<TalentEffect>,
-    /// A caster's spells (`[[talent.spell]]`, `content/class_spell.rs`).
-    #[serde(default)]
-    spell: Vec<super::class_spell::SpellSpec>,
     #[serde(default)]
     rank: Vec<RankSpec>,
     #[serde(default)]
@@ -2554,15 +2566,13 @@ pub(super) fn parse<'a>(
         for effect in &spec.effects {
             effect.check(content, spec.choice).map_err(err)?;
         }
-        let mut effects = spec.effects;
-        let mut spells: Vec<super::SpellDef> = Vec::new();
-        for raw in spec.spell {
-            let spell = raw.spell();
-            if !spell_ids.insert(spell) {
+        let effects = spec.effects;
+        for effect in &effects {
+            if let TalentEffect::Spell { spell } = effect
+                && !spell_ids.insert(*spell)
+            {
                 return Err(err(format!("spell `{}` is given twice", spell.id())));
             }
-            spells.push(raw.resolve(content).map_err(err)?);
-            effects.push(TalentEffect::Spell { spell });
         }
         let mut rank_defs = Vec::new();
         for (n, rank) in spec.rank.into_iter().enumerate() {
@@ -2621,7 +2631,6 @@ pub(super) fn parse<'a>(
             systems,
             granted: spec.granted,
             flaw: spec.flaw,
-            spells,
             resource,
         });
     }

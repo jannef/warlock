@@ -1254,12 +1254,35 @@ impl<'a> PerceptionView<'a> {
     /// why it cannot be used now, if it cannot: what the abilities menu (#156) lists. They know
     /// what they can do and what they hold.
     pub fn abilities(&self) -> Vec<OwnAbility> {
+        let level = self.own_caster_level();
         (Ability::of(self.player, self.content).into_iter())
             .map(|ability| OwnAbility {
                 ability,
-                unavailable: ability.unavailable(self.player, self.content),
+                unavailable: match ability {
+                    Ability::Spell(spell) => {
+                        crate::ability::spell_unavailable(self.player, self.content, spell, level)
+                    }
+                    _ => ability.unavailable(self.player, self.content),
+                },
             })
             .collect()
+    }
+
+    /// What the player's spell `spell` costs them now, in mana (spec §8 "Spells": they know
+    /// what their own spells cost); `None` for a spell they cannot cast.
+    pub fn own_spell_cost(&self, spell: crate::content::ClassSpell) -> Option<i32> {
+        let def = self.content.class_spell(spell)?;
+        Some((self.player).spell_cost(self.content, def, self.own_caster_level()))
+    }
+
+    /// How far the player's spell `spell` reaches now, Willpower counted: the farthest cell it
+    /// may be aimed at, and a burst's radius. They know their own spells.
+    pub fn own_spell_reach(
+        &self,
+        spell: crate::content::ClassSpell,
+    ) -> Option<crate::world::Reach> {
+        let def = self.content.class_spell(spell)?;
+        Some(self.player.spell_reach(self.content, def))
     }
 
     /// The player's ranks and marks in weapon skills (spec §8 "Weapon skills"): they know their
