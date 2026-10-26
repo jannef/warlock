@@ -57,6 +57,7 @@ mod steal;
 mod talent;
 mod terrain;
 mod trap;
+mod tribe;
 mod vault;
 mod vision;
 mod weapon_skill;
@@ -123,11 +124,11 @@ pub use object::{
     MAX_BONUS, MAX_DIG, MAX_PLACED, MAX_VALUE, ObjectDef, ObjectId, article, counted, weapon_noun,
 };
 pub use overworld::{Landscape, LocalArea, local_area_id, parse_local_area};
-pub use part::{MAX_OBJECT_PARTS, MAX_PARTS, Part, PartDef, PartId, PartRole};
+pub use part::{MAX_OBJECT_PARTS, MAX_PARTS, Part, PartDef, PartId, PartRole, and_list};
 pub use particles::{ParticleEmitter, ParticleTrigger};
 pub use quest::{
-    DEFAULT_DECLINE, GOLD, Goal, MAX_COUNT, MAX_NAME, MAX_QUEST_XP, QuestDef, QuestId, QuestKind,
-    QuestTexts, Reveal, RevealWhen, Reward,
+    DEFAULT_DECLINE, GOLD, Goal, KillTarget, MAX_COUNT, MAX_NAME, MAX_QUEST_XP, QuestDef, QuestId,
+    QuestKind, QuestTexts, Reveal, RevealWhen, Reward, TRIBE_TARGET,
 };
 pub use race::{HUNGER, LightBlind, RaceDef, Races};
 pub use resource::{Build, MAX_EVERY, MAX_RESOURCE, MAX_SHORT, OverTime, ResourceDef, ResourceId};
@@ -161,6 +162,7 @@ pub use terrain::{
     Breakable, Freeze, FreezeSpec, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId,
 };
 pub use trap::{MAX_CHARGES, Trap, TrapDef, TrapEffect, TrapId, TrapNoise};
+pub use tribe::{MAX_TRIBE_COUNT, MAX_TRIBE_NAME, TribeDef, TribeId};
 pub use vault::Vault;
 pub use vision::VisionProfile;
 pub use weapon_skill::{
@@ -414,7 +416,7 @@ struct LegendFile {
 /// `data/horoscope.toml`,
 /// `data/effects.toml`, `data/room_effects.toml`, `data/weapon_skills.toml`, `data/stances.toml`,
 /// `data/status.toml`, `data/resources.toml`, `data/diseases.toml`, `data/dialogue.toml`,
-/// `data/quests.toml`,
+/// `data/tribes/`, `data/quests.toml`,
 /// `data/traps.toml`, and `data/shops.toml` are optional (without effects, spell effects are not
 /// drawn; without traps or shops there are none). Without vision
 /// profiles, a single `normal` profile that needs no light is used, so content without lighting
@@ -431,7 +433,7 @@ struct LegendFile {
 /// skills nobody is trained in anything; without a horoscope, characters are born under no sign;
 /// without room effects there are no special rooms; without weapon skills nobody has any, and
 /// weapons name no category; without statuses nothing ails anyone, and resting heals twice as
-/// fast; without diseases nobody falls ill; without dialogue, nobody talks; without quests,
+/// fast; without diseases nobody falls ill; without dialogue, nobody talks; without tribes, no quest asks for one; without quests,
 /// nobody asks anything of the player; without `data/hunger.toml` nobody hungers, nothing is
 /// eaten, food does not rot, and creatures leave no corpses.
 #[derive(Debug)]
@@ -529,6 +531,8 @@ pub struct Content {
     disease_status: Option<StatusId>,
     /// What creatures say (`data/dialogue.toml`), in file order.
     dialogues: Vec<Dialogue>,
+    /// Named groups of creature types (`data/tribes/`), in table order.
+    tribes: Vec<TribeDef>,
     /// What people ask of the player (`data/quests.toml`), in file order.
     quests: Vec<QuestDef>,
     /// Shops (`data/shops.toml`); none without the file.
@@ -603,6 +607,7 @@ impl Content {
             disease_ids: BTreeMap::new(),
             disease_status: None,
             dialogues: Vec::new(),
+            tribes: Vec::new(),
             quests: Vec::new(),
             shops: None,
         };
@@ -842,6 +847,7 @@ impl Content {
                 s.campaign = campaign;
             }
         }
+        content.tribes = tribe::parse(files.table("tribes"), &content)?;
         content.quests = quest::parse(files.table("quests"), &content)?;
         content.validate()?;
         content.check_campaigns()?;

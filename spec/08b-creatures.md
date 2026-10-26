@@ -154,13 +154,23 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Topics the speaker does not have now are refused ("… knows nothing about that.") and change
     nothing. Talk about quests takes no time.
   - **Goals**: *kill* counts the player's own kills (§8 "Experience": melee, shots, throws, and a
-    wound of theirs that bleeds it to death; never by others or traps) of the creature type, on its level or any level of its branch if it names
-    one. Kills are tallied per level and creature type, every type (saved;
+    wound of theirs that bleeds it to death; never by others or traps) of the creature type, or
+    of any member type of a **tribe** (below), on its level or any level of its branch if it names
+    one, else on every level summed. Kills are tallied per level and creature type, every type (saved;
     the ranger's Favoured prey reads the same tally, §8 "Class abilities"), so kills made before the quest was taken up count, and a repeat of a repeatable one
     counts only the kills since it was taken up again. *Bring* counts what the player carries of
     the object. *Reach* is met once the player has been on the level, before taking the quest
     up too. *Deliver* is met while the player carries the item: dropping it (or losing it) blocks
     the quest until they pick it up again (it cannot be handed in without it).
+  - **Tribes** (`content/tribe.rs`, `data/tribes/`, #421; docs/design/adventurers-guild.md §6): a
+    kill quest's target may be a tribe (`target = "tribe:goblins"`), a named group of creature
+    types drawn from factions with exceptions and additions. Membership is by type: an actor's
+    faction override (an outraged keeper) moves it neither in nor out. The objective names the
+    members a run of the quest's campaign can meet: "Kill 100 goblins: goblins, goblin archers,
+    and goblin chiefs."; progress says the tribe's plural ("Quest updated: 37 / 100 goblins.").
+    Seven are built in: kobolds; goblins (the ogre and the troll left out); the undead; vermin
+    (the basilisk left out); fen things (`marsh`); duergar (their trader is a merchant, not one);
+    fire things. The cult is none (two types: a grind of one floor), and neither are outlaws.
   - **Progress** the player's action made is said right after it: "Quest updated: 2 / 3 giant
     rats.", and once the goal is met "Quest updated: 3 / 3 giant rats. Return to the old hermit."
     (bring: "… apples. Return to the gardener." or "Take them to …"; reach: "Quest updated: you

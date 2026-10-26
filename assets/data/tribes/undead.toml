@@ -1,0 +1,7 @@
+# The undead (spec §8 "Quests", docs/design/adventurers-guild.md §6): the dead that walk, every
+# sort.
+[[tribe]]
+id = "undead"
+name = "undead"
+plural = "undead"
+factions = ["undead"]

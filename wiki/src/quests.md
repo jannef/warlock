@@ -18,8 +18,8 @@ Talking about quests takes no time.
 
 ## Kinds of quests
 
-- **Kill**: kill a number of creatures of one kind, sometimes in a particular place ("Kill 5
-  giant rats in Cealdhlāw."). Only creatures you kill yourself count, with a weapon, a shot, or a
+- **Kill**: kill a number of creatures of one kind, or of any kind of one [tribe](#tribes),
+  sometimes in a particular place ("Kill 5 giant rats in Cealdhlāw."). Only creatures you kill yourself count, with a weapon, a shot, or a
   throw, or by a wound you gave them that bleeds them to death; one killed by someone else, or by
   a trap, does not. Kills you made before you took the
   quest up count too, so the person is pleased to hear the job is done already.
@@ -30,6 +30,17 @@ Talking about quests takes no time.
 - **Deliver**: the person gives you something as you accept (you need room for it in your pack),
   to carry to someone else and hand in there. Without it in your pack you cannot hand it in: if
   you drop it, pick it up again.
+
+## Tribes
+
+Some kill quests ask for a whole **tribe**: "Kill 100 goblins: goblins, goblin archers, and
+goblin chiefs." Any creature of a kind that belongs to the tribe counts, wherever you kill it:
+every level, every dungeon, the overworld, all add up (unless the quest names a place). The
+quest says which kinds belong; the table below lists them all. A tribe is drawn from those who
+run together, less a few who run with them but are no kin: an ogre is no goblin, and a basilisk
+no vermin. A creature's tribe goes with its kind, whoever it sides with: a kobold is a kobold.
+
+{{#include generated/tribes.md}}
 
 Some quests lead to a place nobody has found on their own: the person marks a
 [hidden location](overworld.md#hidden-locations) on your map, and the quest log says where it
