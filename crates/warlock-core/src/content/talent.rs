@@ -384,6 +384,9 @@ pub enum TalentEffect {
     /// A special room's (or a whole level's) `status` never takes it (Anchored mind: Ebbing;
     /// `World::dwell`).
     RoomStatusImmune { status: String },
+    /// Sleepers need this percent more noise to wake from what it does (Hush-foot; the wake
+    /// check in `World::spread_noise`, `world/den.rs`).
+    WakePercent { value: i32 },
     /// Searching reaches this many cells farther.
     SearchReach { value: i32 },
     /// A skill counts this much higher wherever its value is read (an untrained one from 0).
@@ -1447,6 +1450,7 @@ impl TalentEffect {
             | TalentEffect::DigPercent { value }
             | TalentEffect::SpawnEveryPercent { value }
             | TalentEffect::RoomPacePercent { value }
+            | TalentEffect::WakePercent { value }
             | TalentEffect::TwoHandedPrice { value }
             | TalentEffect::SpeedPercent { value }
             | TalentEffect::SpellDamagePercent { value }

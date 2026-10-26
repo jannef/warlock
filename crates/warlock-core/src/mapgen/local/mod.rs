@@ -352,6 +352,7 @@ fn graze(land: &mut Land, rng: &mut Rng, count: i32, start: Pos) {
                 carry: Vec::new(),
                 equipment: Default::default(),
                 rolls_gear: true,
+                asleep: false,
             });
             break;
         }

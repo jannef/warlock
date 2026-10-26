@@ -101,6 +101,10 @@ impl World {
     /// the player perceive (events, noise) starts here too. What the creature heard since it
     /// last acted ([`super::Actor::heard`]) is read here and spent.
     pub(super) fn creature_turn(&mut self, id: ActorId, events: &mut Vec<Event>) -> i64 {
+        // Asleep (a teeming den's sleeper, `den.rs`), it takes no turn.
+        if let Some(price) = self.slumbers(id) {
+            return price;
+        }
         // Away from a resting player, it takes coarse turns (`stride.rs`).
         let slow = match self.coarse_turn(id, events) {
             Coarse::Strode(price) => return price,

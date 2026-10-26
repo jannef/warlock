@@ -24,7 +24,8 @@ const TO_FULL_MOON: u64 = (14 * 24 + 17) * 60 + 30;
 
 /// A cave branch of the campaign's deepest kind (spec §7 "Danger levels"): a 120×60 floor of
 /// danger 8 laid down at full population (80 creatures, the ceiling), every one awake to the
-/// player, who has hit points enough to walk among them; the turn budget is the vast level's.
+/// player, who has hit points enough to walk among them, and a teeming den (its sleepers on top);
+/// the turn budget is the vast level's.
 const DELF_BRANCH: &str = r#"
 [[dungeon]]
 id = "bench_delf"
@@ -34,6 +35,7 @@ depth = 1
 size = [120, 60]
 danger = 8
 population = ["bat", "beetle", "kobold", "kobold_archer", "kobold_shaman", "rat"]
+room_effects = { chance = 100, per_level = 1, favoured = { teeming = 100 } }
 "#;
 const DELF_SCENARIO: &str = "name = \"Bench delf\"\nstart_level = \"bench_delf:1\"\nseed = 1\n\
                              lantern = \"lantern\"\nhp = 900\n";

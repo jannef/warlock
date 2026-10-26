@@ -576,6 +576,12 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "a special room's (or a whole level's) {} never takes you",
             status(&id)
         ),
+        TalentEffect::WakePercent { value } => format!(
+            "the noise that wakes a sleeper, from what you do, {} (a den's 200% of its \
+             hearing threshold becomes {}%)",
+            percent(value),
+            200 * (100 + value) / 100
+        ),
         TalentEffect::StoneSense => "notices hidden things on stone in passing".into(),
         TalentEffect::StoneFind { value } => format!(
             "{} to every check to find what is hidden on stone, searching and in passing",
