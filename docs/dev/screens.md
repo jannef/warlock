@@ -102,7 +102,7 @@ to open, read keys for, or draw one:
   position is its number) and one `draw_tabs` call in its `draw`; never a separate way to switch.
   Sub-steps of a page (`EquipItem`, pick-up/drop/throw lists) are not pages and keep their
   number keys. The keys are the `Context::Pages` commands `Page(1..9)`, `NextPage` (Shift
-  reverses), `PrevPage`: rebindable like all commands (`KeyCommand::context`: keys are unique
+  reverses), `PrevPage`: existing commands, kept as they are (new screen keys are fixed, never `KeyCommand`s; `KeyCommand::context`: keys are unique
   per context, so Tab is `NextTarget` in play and `NextPage` here; `Bindings::owner_in` and
   `lookup` read one context). `Press::shift` carries Shift from the router. The dialogue screen
   is no page: its digits ask about topics.
