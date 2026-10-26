@@ -13,6 +13,7 @@ speed = 1150
 light = "torch"
 glow = 0.45
 faction = "undead"
+tags = ["undead", "fire-thing"]
 alignment = "evil"
 vision = "darkvision"
 sight = 10
