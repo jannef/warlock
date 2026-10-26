@@ -112,6 +112,17 @@ const WAVES: &[(&str, Option<&str>)] = &[
     ("headless_knight", None),
     ("lich", None),
     ("rotting_drake", None),
+    // The undead roster, batch 4 (#387): levels 31 to 40, all shared.
+    ("greater_shadow", None),
+    ("ghoul_lord", None),
+    ("black_shuck", None),
+    ("draugr_lord", None),
+    ("nosferatu", None),
+    ("mummy_lord", None),
+    ("screaming_skull", None),
+    ("church_grim", None),
+    ("white_lady", None),
+    ("bone_colossus", None),
 ];
 
 #[test]
@@ -187,6 +198,7 @@ fn the_barrow_humanoids_wield_their_weapons() {
         "grave_knight",
         "wight_lord",
         "headless_knight",
+        "draugr_lord",
     ] {
         let creature = CONTENT.creature_id(id).expect(id);
         let mut armed = 0;
@@ -243,6 +255,8 @@ fn the_roster_spirits_pass_through_walls_and_the_drainers_drain() {
         "fetch",
         "banshee",
         "dread_wraith",
+        "greater_shadow",
+        "white_lady",
     ] {
         let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
         let wall = def.incorporeal.as_ref().map(|i| i.wall_defence);
@@ -267,6 +281,9 @@ fn the_roster_spirits_pass_through_walls_and_the_drainers_drain() {
         ("vampire", Stat::Toughness, Stat::Toughness, 17, 15),
         ("dread_wraith", Stat::Toughness, Stat::Toughness, 17, 15),
         ("lich", Stat::Intelligence, Stat::Willpower, 18, 10),
+        ("greater_shadow", Stat::Strength, Stat::Willpower, 18, 15),
+        ("nosferatu", Stat::Toughness, Stat::Toughness, 19, 15),
+        ("white_lady", Stat::Presence, Stat::Willpower, 19, 10),
     ] {
         let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
         let touch = def.attack.as_ref().expect("an attack");
@@ -288,6 +305,7 @@ fn the_roster_spirits_pass_through_walls_and_the_drainers_drain() {
         ("fen_ghoul", 10, 15),
         ("gallows_dead", 20, 17),
         ("lich", 15, 18),
+        ("ghoul_lord", 15, 18),
     ] {
         let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
         let attack = def.attack.as_ref().expect("an attack");

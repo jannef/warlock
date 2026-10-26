@@ -1,0 +1,34 @@
+# The undead roster (#383, batch 4). Old Shuck of the eastern coasts: a black dog the size of a
+# pony with one burning eye, that pads the churchyards and the shore lanes by night. Its teeth
+# are worse than the barghest's, and the sight of it sends the bravest running. Not yet in any
+# dungeon's population.
+[[creature]]
+id = "black_shuck"
+level = 33
+xp = 175
+rarity = "uncommon"
+name = "black shuck"
+glyph = "C"
+fg = "#383848"
+speed = 1350
+faction = "undead"
+tags = ["undead"]
+alignment = "evil"
+vision = "darkvision"
+sight = 14
+footsteps = 50
+hearing = 20
+weight = 80000
+stats = { strength = 24, dexterity = 23, toughness = 24, intelligence = 23, willpower = 28, presence = 23 }
+base_hp = 74
+natural = { defence = 2, protection = 0, name = "dead flesh" }
+resist = { poison = 100 }
+on_eat = { message = "Black meat, and it reeks of the grave.", vomit = 80, harm = "1d4" }
+blood = "#201820"
+[creature.attack]
+damage = "3d10"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
+to_hit = 3
+on_hit = [{ status = "frightened", chance = 25, severity = 2 }]

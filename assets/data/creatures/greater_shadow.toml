@@ -1,0 +1,35 @@
+# The undead roster (#383, batch 4). A shadow grown old and deep on the strength it has drunk: a
+# darkness the shape of a man that drifts through walls and doors, whose cold touch drains the
+# strength out of the living, for good unless the will holds (a temple's mending gives it back).
+# Blades and clubs pass half through it, and it leaves nothing behind. Not yet in any dungeon's
+# population.
+[[creature]]
+id = "greater_shadow"
+level = 31
+xp = 165
+rarity = "rare"
+name = "greater shadow"
+glyph = "G"
+fg = "#4a4a60"
+speed = 1200
+faction = "undead"
+tags = ["undead", "spirit"]
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+hearing = 15
+weight = 100
+stats = { strength = 21, dexterity = 21, toughness = 21, intelligence = 22, willpower = 27, presence = 22 }
+base_hp = 46
+natural = { defence = 5, protection = 0, name = "insubstantial form" }
+incorporeal = { wall_defence = 5 }
+resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "3d8"
+damage_type = "cold"
+name = "touch"
+verb = "touches"
+to_hit = 3
+on_hit = [{ drain = "strength", points = 1, chance = 15, difficulty = 18 }]

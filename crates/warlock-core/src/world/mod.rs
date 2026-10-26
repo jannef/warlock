@@ -96,6 +96,7 @@ mod caster;
 mod caster_level;
 mod class;
 mod class_ability;
+mod court;
 mod creation;
 mod dev;
 mod dig;
@@ -1235,6 +1236,8 @@ mod class_rogue_tests;
 mod class_tests;
 #[cfg(test)]
 mod cost_tests;
+#[cfg(test)]
+mod court_tests;
 #[cfg(test)]
 mod creation_tests;
 #[cfg(test)]

@@ -22,12 +22,13 @@ key = "iron_key"
 temperature = 6
 # Danger 4 on the first floor to 11 on the eighth (spec §7 "Danger levels"); nothing scales with
 # the player. The fen wave: the marsh's beasts and things, the minster's drowned dead, and the
-# cult that came to them (the bog hag, unique, comes once a run).
+# cult that came to them (the bog hag, unique, comes once a run). Fey of damp and dark places
+# (#452) haunt its cellars too: the pixie, the boggle, and the darkling, each of either court.
 danger = 4
 population = [
-    "corpse_candle", "giant_leech", "giant_frog", "drowned", "crocodile", "cultist",
-    "poltergeist", "will_o_wisp", "ghast", "ghost", "shadow", "mud_golem", "cult_priest",
-    "marsh_troll", "bog_body", "wraith", "fen_ghoul", "bog_hag",
+    "corpse_candle", "giant_leech", "giant_frog", "pixie", "drowned", "crocodile", "cultist",
+    "poltergeist", "will_o_wisp", "boggle", "ghast", "ghost", "shadow", "mud_golem",
+    "cult_priest", "darkling", "marsh_troll", "bog_body", "wraith", "fen_ghoul", "bog_hag",
 ]
 # How many: the default, 35 a thousand walkable cells, 25 to 80 (a cellar floor of about 350
 # cells gets the least, 25).

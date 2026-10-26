@@ -1,0 +1,29 @@
+# The fey roster (#452).
+# A yeth hound: a sinister black hound that flies without a sound, whose bay fills the
+# hearer with terror (its bite frightens). Most hunt for the Unseelie court.
+[[creature]]
+id = "yeth_hound"
+level = 31
+xp = 165
+rarity = "rare"
+name = "yeth hound"
+glyph = "C"
+fg = "#6a3a7a"
+speed = 1350
+factions = { seelie = 25, unseelie = 75 }
+tags = ["fey"]
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+hearing = 22
+weight = 45000
+stats = { strength = 23, dexterity = 23, toughness = 23, intelligence = 22, willpower = 22, presence = 24 }
+base_hp = 70
+natural = { defence = 2, protection = 0, name = "dark hide" }
+[creature.attack]
+damage = "3d10"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
+to_hit = 3
+on_hit = [{ status = "frightened", chance = 25, severity = 2 }]
