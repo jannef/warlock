@@ -629,8 +629,8 @@ fn costs_come_from_data_and_are_validated() {
     // The built-in content: every action a normal one but strapping on body armor (3000), a chat
     // (500), the lantern's hood (500), climbing out of the water onto ice (2000), trying to
     // disarm a trap (2000), and a try at picking a lock (2000); of the creatures only the
-    // two-headed troll's attacks have a cost of their own (700: one head bites while the other
-    // looks, #456).
+    // marilith's six blades (500), the balor's sword and whip (700), and the two-headed troll's
+    // attacks (700: one head bites while the other looks, #456) have a cost of their own.
     let builtin = Content::builtin().expect("builtin content");
     for &kind in ActionKind::ALL {
         let expected = match kind {
@@ -642,7 +642,11 @@ fn costs_come_from_data_and_are_validated() {
         assert_eq!(builtin.action_costs().cost(kind), expected, "{kind:?}");
     }
     for def in builtin.creature_defs() {
-        let want = (def.id == "two_headed_troll").then_some(700);
+        let want = match def.id.as_str() {
+            "marilith" => Some(500),
+            "balor" | "two_headed_troll" => Some(700),
+            _ => None,
+        };
         assert_eq!(def.attack_cost, want, "{}", def.id);
     }
 

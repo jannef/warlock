@@ -1028,10 +1028,10 @@ mod tests {
         }
         let diseases = text("diseases.md");
         for row in [
-            "| Filth fever | The charnel heap's slam (15%); the drowned's fist (20%); the ghast's \
-             claws (10%); the ghoul lord's claws (15%); the giant rat's bite (10%); the \
-             nosferatu's bite (15%) | Toughness, 54% | 1d3 days | Every day | 1d3 Dexterity, 1d3 \
-             Toughness | Two checks won in a row | no | Half as fast |",
+            "| Filth fever | The charnel heap's slam (15%); the dretch's claws (10%); the drowned's fist \
+             (20%); the ghast's claws (10%); the ghoul lord's claws (15%); the giant rat's bite \
+             (10%); the nosferatu's bite (15%) | Toughness, 54% | 1d3 days | Every day | 1d3 \
+             Dexterity, 1d3 Toughness | Two checks won in a row | no | Half as fast |",
             "| Marsh ague | The bog body's fist (15%); the fen ghoul's claws (10%); crossing marsh \
              or swamp (4% an hour) |",
             "| Grave rot | The grave hound's bite (10%); the kobold zombie's fist (5%); the ogre \
@@ -1150,7 +1150,7 @@ mod tests {
         assert!(text("creatures.md").contains("shoots from afar"));
         assert!(
             text("factions.md")
-                .contains("| Kobolds | you, vermin, goblins, orcs, undead, giants, trolls |")
+                .contains("| Kobolds | you, vermin, goblins, orcs, undead, giants, trolls, demons |")
         );
         assert!(text("factions.md").contains("| Wildlife | nobody |"));
         assert!(text("factions.md").contains("| Cultists | you, marsh things | no |"));
@@ -1169,7 +1169,7 @@ mod tests {
         // Lights go by what the player sees: the terrain, the carrier, the lantern, the crystal.
         for row in [
             "| Wall torch | 7 cells |",
-            "| Torch carried by a burning skull or a kobold or a nightmare | 6 cells |",
+            "| Torch carried by a balor or a burning skull or a kobold or a nightmare | 6 cells |",
             "| Your lantern | 5 cells |",
             "| Light crystal (red) | 7 cells |",
             "| Faint rune | 4 cells | UV only",

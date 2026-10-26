@@ -197,4 +197,9 @@ lords, draugr lords, and mummy lords, the plague-bearing nosferatu, greater shad
 ladies, the black dogs of the churchyards and the shore lanes (black shucks and church grims),
 screaming skulls, and the bone colossus, a charnel house of bones stood up on its own.
 
+**Demons** come up from below: the lesser ones (`u`) from the dretch to the chasme, the greater
+(`U`) from the hezrou to the balor. None of them leaves a body behind, poison does nothing to
+them, and fire does them less harm than it should (the balor none at all). Only the dretch and
+the quasit are met in the delf so far; the rest wait in deeper places.
+
 {{#include generated/creatures.md}}

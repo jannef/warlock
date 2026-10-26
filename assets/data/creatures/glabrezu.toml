@@ -1,0 +1,34 @@
+# The demon roster (#449). A towering, dog-headed demon with two great pincers and two small
+# hands: it bargains, it lies, and when it is done talking it seizes and crushes.
+[[creature]]
+id = "glabrezu"
+level = 44
+xp = 230
+rarity = "rare"
+name = "glabrezu"
+glyph = "U"
+fg = "#d07a9a"
+speed = 1050
+faction = "demon"
+tags = ["demon", "fiend"]
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+opens_doors = true
+footsteps = 80
+hearing = 16
+weight = 1000000
+stats = { strength = 33, dexterity = 19, toughness = 34, intelligence = 27, willpower = 31, presence = 27 }
+base_hp = 176
+loot = 50
+natural = { defence = 3, protection = 3, name = "carapace" }
+resist = { fire = 50, cold = 25, electricity = 25, poison = 100 }
+corpse = false
+blood = "#3a0a0a"
+[creature.attack]
+damage = "4d10"
+damage_type = "bludgeoning"
+name = "pincers"
+verb = "crushes"
+to_hit = 4
+on_hit = [{ status = "held", chance = 20, difficulty = 20 }]

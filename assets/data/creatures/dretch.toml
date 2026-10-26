@@ -1,0 +1,32 @@
+# The demon roster (#449). The lowest of demons: a small, pot-bellied, foul-smelling thing that
+# shuffles along in packs and claws at whatever its betters send it at. Its filthy claws fester.
+[[creature]]
+id = "dretch"
+level = 8
+xp = 50
+rarity = "uncommon"
+name = "dretch"
+glyph = "u"
+fg = "#8a7a5a"
+speed = 900
+faction = "demon"
+tags = ["demon", "fiend"]
+alignment = "evil"
+vision = "darkvision"
+sight = 10
+opens_doors = true
+footsteps = 30
+hearing = 12
+weight = 25000
+size = "small"
+stats = { strength = 10, dexterity = 16, toughness = 11, intelligence = 7, willpower = 18, presence = 7 }
+base_hp = 10
+resist = { fire = 25, poison = 100 }
+corpse = false
+blood = "#4a3a1a"
+[creature.attack]
+damage = "1d10"
+damage_type = "slashing"
+name = "claws"
+verb = "claws"
+on_hit = [{ disease = "filth_fever", chance = 10 }]

@@ -1,0 +1,34 @@
+# The demon roster (#449). A hulking, toadlike demon whose stench turns the stomach of anything
+# that comes to grips with it. Until creatures have auras, the stench is a sickness its blows
+# carry.
+[[creature]]
+id = "hezrou"
+level = 30
+xp = 160
+rarity = "uncommon"
+name = "hezrou"
+glyph = "U"
+fg = "#7a8a4a"
+speed = 950
+faction = "demon"
+tags = ["demon", "fiend"]
+alignment = "evil"
+vision = "darkvision"
+sight = 10
+opens_doors = true
+footsteps = 70
+hearing = 14
+weight = 400000
+stats = { strength = 28, dexterity = 15, toughness = 29, intelligence = 22, willpower = 26, presence = 22 }
+base_hp = 120
+natural = { defence = 2, protection = 2, name = "warty hide" }
+resist = { fire = 50, cold = 25, electricity = 25, poison = 100 }
+corpse = false
+blood = "#3a4a1a"
+[creature.attack]
+damage = "4d8"
+damage_type = "slashing"
+name = "claws"
+verb = "claws"
+to_hit = 3
+on_hit = [{ status = "poisoned", chance = 30, severity = 4 }]
