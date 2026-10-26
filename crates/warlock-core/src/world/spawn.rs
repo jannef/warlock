@@ -207,7 +207,7 @@ impl World {
         let candidates: Vec<_> = (spawning.population.iter())
             .map(|&c| (c, content.creature(c)))
             .filter(|(_, def)| !(def.unique && once.contains(&def.id)))
-            .map(|(c, def)| (c, def.level))
+            .map(|(c, def)| (c, def.level, content.creature_rarity(def.rarity).factor))
             .collect();
         let creature = danger::draw(rng, &candidates, danger, spawning.out_of_depth)?;
         let seen = Perception::compute(&self.state, &self.content, &mut self.lights);

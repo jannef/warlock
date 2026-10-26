@@ -202,8 +202,8 @@ pub(super) fn creature_stats(content: &Content) -> String {
         .map(|s| format!(" {} |", s.abbrev()))
         .collect();
     let mut out = format!(
-        "| Creature | Level | XP |{stats} Potentials | Skills | Weapon skills |\n\
-         |---|:---:|---:|{}---|---|---|\n",
+        "| Creature | Level | XP | Rarity |{stats} Potentials | Skills | Weapon skills |\n\
+         |---|:---:|---:|---|{}---|---|---|\n",
         ":---:|".repeat(Stat::COUNT)
     );
     for (_, c) in listed(content) {
@@ -229,10 +229,11 @@ pub(super) fn creature_stats(content: &Content) -> String {
             .collect();
         let _ = writeln!(
             out,
-            "| {} | {} | {} |{scores} {potentials} | {} | {} |",
+            "| {} | {} | {} | {} |{scores} {potentials} | {} | {} |",
             capital(&c.name),
             c.level,
             c.xp,
+            content.creature_rarity(c.rarity).name,
             dash(&skills),
             dash(&weapon_skills)
         );

@@ -13,6 +13,7 @@ mod campaign;
 mod class;
 mod class_spell;
 mod creature;
+mod creature_rarity;
 mod damage_type;
 pub mod danger;
 mod dialogue;
@@ -78,6 +79,7 @@ pub use creature::{
     Budge, Combat, CreatureDef, CreatureId, DEFAULT_SIGHT, Hide, NORMAL_SPEED, NaturalAttack,
     OnEat, SPEEDS,
 };
+pub use creature_rarity::{COMMON, CreatureRarity, FACTOR};
 pub use damage_type::{DamageTypeDef, DamageTypeId, MAX_DAMAGE_TYPES};
 pub use danger::{Count, DangerRule, PlayerScale, Spawning};
 pub use dialogue::{
@@ -407,6 +409,7 @@ struct LegendFile {
 /// `data/lights.toml`, `data/vision.toml`, `data/factions.toml`, `data/dungeons.toml`,
 /// `data/calendar.toml`, `data/sky.toml`, `data/materials/`, `data/parts.toml`, `data/objects/`,
 /// `data/gems.toml`, `data/weather.toml`, `data/actions.toml`, `data/slots.toml`, `data/sizes.toml`,
+/// `data/creature_rarities.toml`,
 /// `data/races.toml`, `data/names.toml`, `data/classes/`, `data/skills.toml`,
 /// `data/horoscope.toml`,
 /// `data/effects.toml`, `data/room_effects.toml`, `data/weapon_skills.toml`, `data/stances.toml`,
@@ -415,7 +418,8 @@ struct LegendFile {
 /// `data/traps.toml`, and `data/shops.toml` are optional (without effects, spell effects are not
 /// drawn; without traps or shops there are none). Without vision
 /// profiles, a single `normal` profile that needs no light is used, so content without lighting
-/// stays fully visible; without sizes, everything is medium; without factions, everyone is neutral; without a calendar, months are numbered;
+/// stays fully visible; without sizes, everything is medium; without creature rarities, every
+/// type is common; without factions, everyone is neutral; without a calendar, months are numbered;
 /// without a sky file there are no moons; without part names every object is of one unnamed part
 /// (`materials = ["steel"]`); without `data/gems.toml` there are no gems to find or set; without
 /// an objects file there are no objects, and
@@ -469,6 +473,8 @@ pub struct Content {
     vision_ids: BTreeMap<String, usize>,
     /// In `data/sizes.toml` order.
     sizes: Vec<SizeDef>,
+    /// In `data/creature_rarities.toml` order.
+    creature_rarities: Vec<CreatureRarity>,
     /// The campaigns (spec §3), in [`ContentFiles::campaign_order`].
     campaigns: Vec<CampaignDef>,
     levels: BTreeMap<String, LevelTemplate>,
@@ -559,6 +565,7 @@ impl Content {
             visions: Vec::new(),
             vision_ids: BTreeMap::new(),
             sizes: vec![SizeDef::medium()],
+            creature_rarities: vec![CreatureRarity::common()],
             campaigns: Vec::new(),
             levels: BTreeMap::new(),
             level_campaigns: BTreeMap::new(),
@@ -621,6 +628,10 @@ impl Content {
         let path = "data/sizes.toml";
         if let Some(text) = files.get_optional(path) {
             content.sizes = size::parse(path, text)?;
+        }
+        let path = "data/creature_rarities.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.creature_rarities = creature_rarity::parse(path, text)?;
         }
         let path = "data/skills.toml";
         if let Some(text) = files.get_optional(path) {
@@ -1177,10 +1188,20 @@ impl Content {
             let size_id = spec.size.as_deref().unwrap_or(MEDIUM);
             let size = (self.size_index(size_id))
                 .ok_or_else(|| err(format!("creature `{}`: unknown size `{size_id}`", spec.id)))?;
+            let rarity_id = spec.rarity.as_deref().unwrap_or(COMMON);
+            let rarity = (self.creature_rarities.iter())
+                .position(|r| r.id == rarity_id)
+                .ok_or_else(|| {
+                    err(format!(
+                        "creature `{}`: unknown rarity `{rarity_id}`",
+                        spec.id
+                    ))
+                })?;
             let blood = creature::blood(spec.blood.as_deref())
                 .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             let resolved = creature::Resolved {
                 blood,
+                rarity,
                 light,
                 size,
                 stats,
@@ -2359,6 +2380,17 @@ impl Content {
         &self.sizes[index]
     }
 
+    /// The creature rarities of `data/creature_rarities.toml`, in file order (only common
+    /// without the file).
+    pub fn creature_rarities(&self) -> &[CreatureRarity] {
+        &self.creature_rarities
+    }
+
+    /// The rarity at `index` in [`Content::creature_rarities`] (a creature type's `rarity`).
+    pub fn creature_rarity(&self, index: usize) -> &CreatureRarity {
+        &self.creature_rarities[index]
+    }
+
     /// The index of size `id` in [`Content::sizes`].
     pub fn size_index(&self, id: &str) -> Option<usize> {
         self.sizes.iter().position(|s| s.id == id)
@@ -3458,6 +3490,43 @@ mod tests {
     }
 
     #[test]
+    fn every_drawn_creature_has_a_rarity() {
+        // Spec §7 "Danger levels": the shipped tiers, commonest first, and every type that a
+        // population draws names one; the more dangerous and rewarding, the rarer.
+        let content = Content::builtin().expect("content");
+        let tiers: Vec<(&str, u16)> = (content.creature_rarities().iter())
+            .map(|r| (r.id.as_str(), r.factor))
+            .collect();
+        assert_eq!(
+            tiers,
+            [
+                ("common", 100),
+                ("uncommon", 50),
+                ("rare", 25),
+                ("very_rare", 10)
+            ]
+        );
+        let factor = |id: &str| {
+            let def = content.creature(content.creature_id(id).expect(id));
+            content.creature_rarity(def.rarity).factor
+        };
+        assert!(factor("kobold_shaman") < factor("kobold_archer"));
+        assert!(factor("kobold_archer") < factor("kobold"));
+        assert!(factor("goblin_chief") < factor("goblin"));
+        assert_eq!((factor("rat"), factor("bog_hag")), (100, 10));
+        let branches = content.dungeons().filter_map(|d| d.spawning.as_ref());
+        let levels = content
+            .levels()
+            .filter_map(|l| Some(&l.spawning.as_ref()?.1));
+        for s in branches.chain(levels) {
+            for &c in &s.population {
+                let def = content.creature(c);
+                assert!(def.rarity < content.creature_rarities().len(), "{}", def.id);
+            }
+        }
+    }
+
+    #[test]
     fn builtin_races_and_classes_load_in_the_order_offered() {
         let content = Content::builtin().expect("content");
         let races: Vec<&str> = (content.races().list.iter())
@@ -4375,6 +4444,12 @@ mod tests {
                 "rat",
                 "size = \"small\"",
                 "creature `rat`: unknown size `small`",
+            ),
+            // Without data/creature_rarities.toml every type is common.
+            (
+                "rat",
+                "rarity = \"rare\"",
+                "creature `rat`: unknown rarity `rare`",
             ),
         ];
         for (creature, fields, expected) in cases {

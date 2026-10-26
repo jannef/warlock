@@ -4,6 +4,7 @@
 id = "giant_leech"
 level = 4
 xp = 30
+rarity = "common"
 name = "giant leech"
 glyph = "w"
 fg = "#7a2a38"

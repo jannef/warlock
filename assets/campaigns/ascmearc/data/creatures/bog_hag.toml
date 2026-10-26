@@ -9,6 +9,7 @@
 id = "bog_hag"
 level = 11
 xp = 65
+rarity = "very_rare"
 loot = 75
 unique = true
 name = "bog hag"

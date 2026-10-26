@@ -4,6 +4,7 @@
 id = "mud_golem"
 level = 8
 xp = 50
+rarity = "uncommon"
 name = "mud golem"
 glyph = "X"
 fg = "#7a6448"

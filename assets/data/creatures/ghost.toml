@@ -5,6 +5,7 @@
 id = "ghost"
 level = 8
 xp = 50
+rarity = "uncommon"
 name = "ghost"
 glyph = "G"
 fg = "#d8e0f0"

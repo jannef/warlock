@@ -2,6 +2,7 @@
 id = "rat"
 level = 1
 xp = 5
+rarity = "common"
 name = "giant rat"
 glyph = "r"
 fg = "#b08458"

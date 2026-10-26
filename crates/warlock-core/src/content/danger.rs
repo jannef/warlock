@@ -138,10 +138,10 @@ impl Spawning {
     }
 }
 
-/// The weight of a type of `level` in a draw at `danger` (spec §7 "Danger levels"): 4 at the
+/// The weight a type's level gives it in a draw at `danger` (spec §7 "Danger levels"): 4 at the
 /// danger or one below, 2 two or three below, 1 down to [`TOO_WEAK`] below, else 0 (above the
 /// danger too; out-of-depth draws are made at a higher danger instead).
-pub fn weight(level: u8, danger: u8) -> u32 {
+pub fn level_weight(level: u8, danger: u8) -> u32 {
     if level > danger {
         return 0;
     }
@@ -153,13 +153,23 @@ pub fn weight(level: u8, danger: u8) -> u32 {
     }
 }
 
-/// Draws a type among `candidates` (`(type, level)`, sorted by type) at `danger`: by
-/// [`weight`], uniform among types of one weight. With `out_of_depth` percent the draw is made 1
+/// The weight of a type of `level` and rarity `factor` (percent of a common type's,
+/// [`super::CreatureRarity::factor`]) in a draw at `danger`: its [`level_weight`] times the
+/// factor.
+pub fn weight(level: u8, factor: u16, danger: u8) -> u32 {
+    level_weight(level, danger) * u32::from(factor)
+}
+
+/// A type that may be drawn: its id, its level, and its rarity's factor.
+pub type Candidate = (CreatureId, u8, u16);
+
+/// Draws a type among `candidates` (sorted by type) at `danger`: by [`weight`], uniform among
+/// types of one weight. With `out_of_depth` percent the draw is made 1
 /// to [`OUT_OF_DEPTH_STEPS`] deeper (and at the danger itself if nothing lives that deep).
 /// `None` if nothing may be drawn.
 pub fn draw(
     rng: &mut crate::rng::Rng,
-    candidates: &[(CreatureId, u8)],
+    candidates: &[Candidate],
     danger: u8,
     out_of_depth: u8,
 ) -> Option<CreatureId> {
@@ -168,13 +178,13 @@ pub fn draw(
         danger.saturating_add(u8::try_from(steps).unwrap_or(1))
     });
     let pick = |rng: &mut crate::rng::Rng, at: u8| {
-        let total: u32 = candidates.iter().map(|&(_, l)| weight(l, at)).sum();
+        let total: u32 = candidates.iter().map(|&(_, l, f)| weight(l, f, at)).sum();
         if total == 0 {
             return None;
         }
         let mut r = rng.below(total);
-        candidates.iter().find_map(|&(c, l)| {
-            let w = weight(l, at);
+        candidates.iter().find_map(|&(c, l, f)| {
+            let w = weight(l, f, at);
             if r < w {
                 Some(c)
             } else {
@@ -480,7 +490,7 @@ mod tests {
 
     #[test]
     fn weights_favour_the_danger_and_drop_the_weak_and_the_deep() {
-        let at = |l| weight(l, 10);
+        let at = |l| level_weight(l, 10);
         assert_eq!(
             [at(11), at(10), at(9), at(8), at(7), at(6), at(2), at(1)],
             [0, 4, 4, 2, 2, 1, 1, 0]
@@ -489,7 +499,7 @@ mod tests {
 
     #[test]
     fn draws_stay_within_reach_of_the_danger() {
-        let kinds: Vec<(CreatureId, u8)> = (1..=20).map(|l| (CreatureId(l.into()), l)).collect();
+        let kinds: Vec<Candidate> = (1..=20).map(|l| (CreatureId(l.into()), l, 100)).collect();
         let mut rng = Rng::stream(7, "test");
         let mut deeper = 0;
         for _ in 0..2000 {
@@ -501,6 +511,54 @@ mod tests {
         // About 5 %, never a crowd.
         assert!((40..=160).contains(&deeper), "{deeper}");
         // Nothing within reach: nothing drawn.
-        assert_eq!(draw(&mut rng, &[(CreatureId(0), 30)], 3, 0), None);
+        assert_eq!(draw(&mut rng, &[(CreatureId(0), 30, 100)], 3, 0), None);
+    }
+
+    #[test]
+    fn a_rarity_multiplies_the_level_weight() {
+        assert_eq!(weight(10, 100, 10), 400);
+        assert_eq!(weight(10, 10, 10), 40);
+        assert_eq!(weight(5, 25, 10), 25);
+        assert_eq!(weight(11, 100, 10), 0);
+    }
+
+    #[test]
+    fn a_rare_type_is_drawn_far_less_often() {
+        // Two types of one level: a common one and a rare one (a quarter of the weight).
+        let kinds = [(CreatureId(1), 4, 100), (CreatureId(2), 4, 25)];
+        let mut rng = Rng::stream(11, "test");
+        let mut rare = 0;
+        for _ in 0..4000 {
+            rare += usize::from(draw(&mut rng, &kinds, 4, 0) == Some(CreatureId(2)));
+        }
+        // A fifth of the draws (800), within chance; the seeded count is fixed.
+        assert!((680..=920).contains(&rare), "{rare}");
+        let mut again = Rng::stream(11, "test");
+        let count = (0..4000)
+            .filter(|_| draw(&mut again, &kinds, 4, 0) == Some(CreatureId(2)))
+            .count();
+        assert_eq!(count, rare);
+    }
+
+    #[test]
+    fn out_of_depth_draws_weigh_rarity_too() {
+        // Nothing at the danger but a common type; deeper, a common and a very rare one.
+        let kinds = [
+            (CreatureId(1), 3, 100),
+            (CreatureId(2), 5, 100),
+            (CreatureId(3), 5, 10),
+        ];
+        let mut rng = Rng::stream(5, "test");
+        let (mut deep, mut very_rare) = (0, 0);
+        for _ in 0..4000 {
+            let c = draw(&mut rng, &kinds, 3, 100).expect("a draw");
+            deep += usize::from(c != CreatureId(1));
+            very_rare += usize::from(c == CreatureId(3));
+        }
+        // Every draw is made 1 to 3 deeper: at 4 the level-5 types are out of reach, at 5 and
+        // 6 they are drawn, the very rare one a tenth as often as the common one.
+        assert!(deep > 1200, "{deep}");
+        assert!(very_rare * 6 < deep, "{very_rare} of {deep}");
+        assert!(very_rare > 0);
     }
 }

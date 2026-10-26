@@ -5,6 +5,7 @@
 id = "ember_beetle"
 level = 8
 xp = 50
+rarity = "common"
 name = "ember beetle"
 glyph = "a"
 fg = "#e0602a"

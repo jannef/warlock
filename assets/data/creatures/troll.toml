@@ -5,6 +5,7 @@
 id = "troll"
 level = 13
 xp = 75
+rarity = "uncommon"
 loot = 20
 name = "troll"
 glyph = "T"

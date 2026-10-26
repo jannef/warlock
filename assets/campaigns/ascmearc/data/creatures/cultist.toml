@@ -8,6 +8,7 @@
 id = "cultist"
 level = 6
 xp = 40
+rarity = "common"
 loot = 25
 name = "cultist"
 glyph = "@"

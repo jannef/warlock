@@ -4,6 +4,7 @@
 id = "giant_centipede"
 level = 3
 xp = 25
+rarity = "common"
 name = "giant centipede"
 glyph = "c"
 fg = "#b06a30"

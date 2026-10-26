@@ -3,6 +3,7 @@
 id = "bat"
 level = 1
 xp = 3
+rarity = "common"
 name = "cave bat"
 glyph = "b"
 fg = "#9a7ab8"

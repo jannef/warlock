@@ -5,6 +5,7 @@
 id = "marsh_troll"
 level = 9
 xp = 55
+rarity = "uncommon"
 loot = 30
 name = "marsh troll"
 glyph = "T"

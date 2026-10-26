@@ -6,6 +6,7 @@
 id = "duergar_miner"
 level = 9
 xp = 55
+rarity = "common"
 loot = 20
 name = "duergar miner"
 glyph = "h"

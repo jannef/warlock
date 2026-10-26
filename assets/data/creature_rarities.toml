@@ -1,0 +1,33 @@
+# Creature rarities (spec §7 "Danger levels"): how often a level's population or a spawn draws a
+# creature type, beside its level. A type's weight in a draw (4 near the danger, 2 a little
+# below, 1 further down) is multiplied by its rarity's factor: the dangerous and rewarding types
+# (casters, chieftains, the strongest of a place) are fewer than the plain ones. Never shown in
+# the game; the wiki states it.
+#
+# Fields:
+#   id      the rarity's id, named by creature types (`rarity = "rare"`)
+#   name    its name, as the wiki shows it
+#   factor  what the weight is multiplied by, in percent of a common type's (1 to 1000)
+#
+# `common` is required: it is the rarity of every creature type that names none (people and
+# shopkeepers too, whom levels place by hand and no draw makes).
+
+[[rarity]]
+id = "common"
+name = "Common"
+factor = 100
+
+[[rarity]]
+id = "uncommon"
+name = "Uncommon"
+factor = 50
+
+[[rarity]]
+id = "rare"
+name = "Rare"
+factor = 25
+
+[[rarity]]
+id = "very_rare"
+name = "Very rare"
+factor = 10

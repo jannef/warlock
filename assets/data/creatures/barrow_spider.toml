@@ -4,6 +4,7 @@
 id = "barrow_spider"
 level = 2
 xp = 20
+rarity = "common"
 name = "barrow spider"
 glyph = "s"
 fg = "#8a8a9a"

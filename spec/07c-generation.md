@@ -51,7 +51,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `level` is its danger; a draw at danger *D* weighs a type of level *L* 4 at `D` and `D − 1`, 2
   at `D − 2` and `D − 3`, 1 down to `D − 8`, else 0 (above *D* too), uniform among equal weights
   over the types sorted by id; with `out_of_depth` % the draw is made at `D + 1` to `D + 3`
-  instead. A type with `unique = true` is drawn once a run (`Progress::uniques`). **Spawning**:
+  instead (falling back to `D` if nothing lives that deep; both spawns and initial populations).
+  **Rarity** (#373): a creature type's `rarity` is a tier of `data/creature_rarities.toml`
+  (`common` 100, `uncommon` 50, `rare` 25, `very_rare` 10, in percent; default `common`), and its
+  weight in every draw, out-of-depth ones too, is the level weight above times that factor: the
+  more dangerous and rewarding a type (casters, chieftains, the strongest of a place), the rarer.
+  Hand-placed creatures are never drawn and so unaffected. Hidden in the game; the wiki's
+  dungeons page gives the tiers and every drawn type's. A type with `unique = true` is drawn once
+  a run (`Progress::uniques`). **Spawning**:
   a level with a danger keeps a spawner in its state (`LevelState::spawner`: the next attempt's
   time and the stream `spawn/<level id>`; none elsewhere, so other levels' states are as they
   were). At the end of every turn (`run_turn` → `spawn_tick`) each attempt due on the current

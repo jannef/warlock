@@ -4,6 +4,7 @@
 id = "grave_worm"
 level = 1
 xp = 15
+rarity = "common"
 name = "grave worm"
 glyph = "w"
 fg = "#c8a8a0"

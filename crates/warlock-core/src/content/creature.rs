@@ -152,6 +152,9 @@ pub(super) struct CreatureSpec {
     /// population draws it once, never again.
     #[serde(default)]
     pub unique: bool,
+    /// How often a population or a spawn draws it (`data/creature_rarities.toml`, spec §7
+    /// "Danger levels"); none: common.
+    pub rarity: Option<String>,
     /// Its trained skills by skill id, with their values (spec §8 "Skills"); the rest untrained.
     #[serde(default)]
     pub skills: BTreeMap<String, u16>,
@@ -367,6 +370,7 @@ impl NaturalAttackSpec {
 /// What a creature type's names resolve to when content loads.
 pub(super) struct Resolved {
     pub blood: Option<Rgb>,
+    pub rarity: usize,
     pub light: Option<LightId>,
     pub faction: Option<FactionId>,
     pub vision: usize,
@@ -409,6 +413,7 @@ impl CreatureSpec {
             level: self.level,
             xp: self.xp,
             unique: self.unique,
+            rarity: r.rarity,
             loot: self.loot,
             attack: r.attack,
             natural: self.natural,
@@ -505,6 +510,9 @@ pub struct CreatureDef {
     /// Gameplay: whether at most one of it is drawn in a run by a population (spec §7 "Danger
     /// levels"; [`crate::world::Progress`] remembers those drawn).
     pub unique: bool,
+    /// Gameplay: how often a population or a spawn draws it, an index into
+    /// [`super::Content::creature_rarities`] (spec §7 "Danger levels"). Never shown.
+    pub rarity: usize,
     /// Gameplay: the chance in percent that it drops a magic or rare item where it dies.
     pub loot: u8,
     /// Gameplay: its natural attack, used when it wields no weapon; `None`: bare hands (1d3).

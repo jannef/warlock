@@ -5,6 +5,7 @@
 id = "skeleton"
 level = 3
 xp = 25
+rarity = "common"
 name = "skeleton"
 glyph = "z"
 fg = "#e8e4d0"

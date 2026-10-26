@@ -5,6 +5,7 @@
 id = "barrow_ghoul"
 level = 4
 xp = 30
+rarity = "uncommon"
 name = "barrow ghoul"
 glyph = "z"
 fg = "#b8a0c8"

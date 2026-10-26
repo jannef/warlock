@@ -3,6 +3,7 @@
 id = "beetle"
 level = 2
 xp = 8
+rarity = "common"
 name = "cave beetle"
 glyph = "a"
 fg = "#6a9aa8"
