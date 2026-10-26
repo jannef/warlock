@@ -351,6 +351,8 @@ pub struct TalentMods {
     pub sense_of_place: bool,
     /// Percent more a special room's quickening of healing and mana (Hallowed rest).
     pub room_pace_percent: i32,
+    /// The statuses of special rooms that never take it (Anchored mind).
+    pub room_status_immune: Vec<StatusId>,
     /// Cells more its searching reaches.
     pub search_reach: i32,
     /// How much higher some skills count, by skill.
@@ -1092,6 +1094,11 @@ impl TalentMods {
             TalentEffect::SpawnEveryPercent { value } => self.spawn_every_percent += value,
             TalentEffect::SenseOfPlace => self.sense_of_place = true,
             TalentEffect::RoomPacePercent { value } => self.room_pace_percent += value,
+            TalentEffect::RoomStatusImmune { status } => {
+                if let Some(status) = content.status_id(&status) {
+                    self.room_status_immune.push(status);
+                }
+            }
             TalentEffect::SearchReach { value } => self.search_reach += value,
             TalentEffect::Skill { skill, value } => {
                 if let Some(id) = content.skill_id(&skill) {

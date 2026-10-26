@@ -1271,6 +1271,20 @@ impl Actor {
         Some(self.stanced(content, profile))
     }
 
+    /// What its throw does (spec §8 "Ranged combat": "Creatures' throws"; `None` if its type
+    /// throws nothing): Dexterity to hit and Strength to damage as for any throw, what its skill
+    /// at throwing and its fighting style give, the affixes of everything it wears and wields,
+    /// and its combat stance.
+    pub fn hurled(&self, content: &Content) -> Option<Profile> {
+        let throw = content.creature(self.creature).throw.as_ref()?;
+        let mods = self.mods(content);
+        let benefit = self.attack_benefit(content, AttackKind::Thrown, Some(throw.object));
+        let stats = self.stats_with(content, &mods);
+        let mut profile = Profile::thrown(&throw.attack.attack, &stats).with(&benefit);
+        mods.sharpen(&mut profile);
+        Some(self.stanced(content, profile))
+    }
+
     /// What a bash with the shield it holds does (`None` without one it can bash with): the
     /// shield's `bash` dice, Strength to hit and to damage as for any blow, what its skill at
     /// shield bashing and its fighting style give, the affixes of everything it wears and

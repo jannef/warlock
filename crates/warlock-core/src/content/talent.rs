@@ -384,6 +384,9 @@ pub enum TalentEffect {
     /// Where a special room quickens healing or mana, the quickening is this percent more
     /// (Hallowed rest; the room's pace in `World::healing_rate` and `World::mana_rate`).
     RoomPacePercent { value: i32 },
+    /// A special room's (or a whole level's) `status` never takes it (Anchored mind: Ebbing;
+    /// `World::dwell`).
+    RoomStatusImmune { status: String },
     /// Searching reaches this many cells farther.
     SearchReach { value: i32 },
     /// A skill counts this much higher wherever its value is read (an untrained one from 0).
@@ -1039,6 +1042,7 @@ impl TalentEffect {
                 resource_cost("flurry_cost", id, *cost)
             }
             TalentEffect::Virtuoso { status: id } => status(id),
+            TalentEffect::RoomStatusImmune { status: id } => status(id),
             TalentEffect::Stat { value, .. } => {
                 if *value == 0 || !(-5..=5).contains(value) {
                     return Err("`stat`: value is -5 to 5, not 0".into());

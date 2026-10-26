@@ -115,6 +115,22 @@ mana_regen = 50
 dies = "succumbs to disease"
 death = "Died of disease"
 
+# Places' statuses (special rooms, room_effects.toml `status`): held while one stays inside, then
+# eased away. Ebbing, a draining room's: a point of mana drained every 20 seconds and none coming
+# back, half a minute after leaving.
+[[status]]
+id = "ebbing"
+name = "Ebbing"
+seen = "ebbing"
+max = 1
+stacking = "refresh"
+tick = 20
+mana_damage = 1
+mana_regen = 0
+eases = 30
+start = "Your power ebbs away."
+end = "Your power stops ebbing."
+
 # Buffs and cooldowns (a class's abilities give them; the dev action `afflict:raging` too).
 # A barbarian's rage: stronger and tougher, too wild to read or to cast; it lasts while their
 # Rage lasts (resources.toml: the status of the rage resource, so it never eases by itself);

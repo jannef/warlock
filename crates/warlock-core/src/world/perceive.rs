@@ -2,7 +2,7 @@
 //! the turn's events they saw (and the messages for them), the news they heard, and the weather
 //! they see change. `world/mod.rs` has only the call from the turn pipeline.
 
-use super::{ActorId, ActorKind, World, enter_room, fight, spell};
+use super::{ActorId, ActorKind, World, enter_room, fight, hurl, spell};
 use crate::action::{AttackKind, Breach, DiseaseNews, Event, MissileEnd};
 use crate::content::{CreatureId, TrapEffect};
 use crate::geom::Pos;
@@ -225,11 +225,18 @@ impl World {
                     return true;
                 }
                 if let Some(me) = self.actor_or_fallen(attacker) {
-                    let words = Words::of(me, kind, with, damage, &content);
                     let guard = Guard::of(self.actor_or_fallen(target), &content, &self.state);
                     let (a, t) = (end(attacker, sees_attacker), end(target, sees_target));
-                    let said = attack_message(a, t, &words, kind, strike, guard);
-                    reports.extend(said.map(|text| (text, true)));
+                    // A creature's throw is said by what flies (`hurl.rs`).
+                    if let Some(throw) = hurl::thrown_by(&content, me, kind, with) {
+                        let said =
+                            hurl::throw_messages(&content, throw, (a, t), strike, damage, guard);
+                        reports.extend(said.into_iter().map(|text| (text, true)));
+                    } else {
+                        let words = Words::of(me, kind, with, damage, &content);
+                        let said = attack_message(a, t, &words, kind, strike, guard);
+                        reports.extend(said.map(|text| (text, true)));
+                    }
                 }
                 sees_attacker && sees_target
             }

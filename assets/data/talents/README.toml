@@ -178,6 +178,8 @@
 #                                 when a creature comes to its level (ranks add up)
 #   spawn_every_percent { value } the time between attempts to bring creatures to its level
 #                                 that percent longer
+#   room_status_immune { status } a special room's (or a whole level's) status never takes it
+#                                 (Anchored mind: Ebbing)
 #   stone_sense                   notices hidden things on stone in passing, as a dwarf does
 #   stone_find { value }          added to its checks to find what is hidden on stone,
 #                                 searching and in passing

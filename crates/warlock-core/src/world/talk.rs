@@ -67,9 +67,14 @@ pub struct TopicView {
     pub id: String,
     /// What the player picks: "The rooms".
     pub name: String,
-    /// What it costs, in gold, for a service (`service.rs`); none for a topic.
+    /// What it costs, in gold, for a service (`service.rs`); none for a topic. Per thing for a
+    /// service paid per thing (`items`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub price: Option<u32>,
+    /// For a service paid per thing (an identification, per unidentified stack carried): how
+    /// many things it would be paid for now; none for anything else.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub items: Option<u32>,
 }
 
 /// A creature's answer to the player (an [`Event::Talked`]).
@@ -198,11 +203,13 @@ impl World {
             id: t.id.clone(),
             name: t.name.clone(),
             price: None,
+            items: None,
         }));
         topics.extend(dialogue.services.iter().map(|s| TopicView {
             id: s.id.clone(),
             name: s.name.clone(),
-            price: Some(self.service_price(s.price)),
+            price: Some(self.service_price(s)),
+            items: self.service_items(s),
         }));
         topics
     }

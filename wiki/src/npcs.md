@@ -43,8 +43,8 @@ Some people have work for you: their quests are topics too, listed first. See
 
 ## Services
 
-A few people sell a **service**: a cure, or a mending, for gold. Services are listed on their
-screen after their topics, with the price: `A cure for what ails you (60 gold)`. Pick one as you
+A few people sell a **service**: a cure, a mending, or an identification, for gold. Services are
+listed on their screen after their topics, with the price: `A cure for what ails you (60 gold)`. Pick one as you
 would a topic. If there is something to do and you carry the gold, you pay (the coins go into
 their purse), they do it, and it takes the time of a chat; their price is fixed (no haggling:
 neither Presence nor Appraise moves it).
@@ -55,10 +55,18 @@ neither Presence nor Appraise moves it).
 - **A mending** gives back every point of stat damage at once, and every point the undead
   drained ([Drained stats](stats.md#drained-stats)). It is refused while a disease
   shows ("Be cured first."): the disease would only take them again.
-- With nothing to cure or mend they tell you so, and you keep your gold. Without enough gold you
+- **An identification** (Factor Wulfrun in Cēaptūn) identifies everything you carry that you
+  do not know yet, all at once: the magic of every unidentified item, and the type of every
+  scroll you have not identified. It costs **100 gold per unidentified stack** (a stack of
+  several like things counts once, however many are in it), so three unknown things cost 300
+  gold. The list shows the price per thing; before you pay, a dialog tells you the total. You
+  pay for all or nothing: with too little gold for the whole lot, nothing is identified.
+  Each thing's true name is told as it is learned.
+- With nothing to cure, mend, or identify they tell you so, and you keep your gold. Without enough gold you
   are told "You cannot pay." Neither takes any time.
-- The **Pilgrim** talent (Wayfarer) halves the price (rounded up), and its cures also mend a
-  point of each damaged stat (see [Talents](talents.md)).
+- The **Pilgrim** talent (Wayfarer) halves a temple's price, a cure's or a mending's (rounded
+  up), and its cures also mend a point of each damaged stat (see [Talents](talents.md)). Nothing
+  moves the price of an identification, Lore and Connoisseur included.
 
 {{#include generated/services.md}}
 

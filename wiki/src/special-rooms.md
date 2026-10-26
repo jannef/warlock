@@ -44,8 +44,7 @@ Very rarely, a room's effect does not stay in a room: when a level draws a room 
 is a small chance (its "Whole level" chance below) that the effect covers the **whole level**
 instead, and the room is plain. You are told each time you arrive on such a level, and the
 effect holds everywhere on it. Where a room's effect and a whole level's meet, both apply: a
-shadowed room on a gloomy level is darker still. No room can do this yet; cursed and draining
-rooms will.
+shadowed room on a gloomy level is darker still. Today only the draining room can do this.
 
 ## The rooms
 
@@ -73,9 +72,16 @@ gets where a dungeon favours or bans nothing. "Only" says where it can come at a
 - **Black chamber.** A dark that swallows every light, your lantern included: nothing is lit
   inside at all. Only darkvision sees in it, so creatures inside are hidden from normal eyes, and
   you from theirs.
+- **Draining room.** Something in it drinks at magic: everyone inside who has mana, you and
+  creatures alike, is *Ebbing* (see [Status effects](status-effects.md)) for as long as they stay
+  and half a minute after they leave. Ebbing drains a point of mana every 20 seconds and none
+  comes back meanwhile, so a fight between casters in a draining room soon becomes a brawl. It
+  glows a faint cold violet. One floor in twenty that draws a draining room is drained
+  throughout instead.
 
 The talent *Hallowed rest* (Grit) makes a room that quickens healing or mana quicken it half
-again more for you: a sanctuary's three times as fast becomes four times.
+again more for you: a sanctuary's three times as fast becomes four times. The talent *Anchored
+mind* (Scholar) keeps your power moored: Ebbing never takes you.
 
 Only what happens inside counts: a sound made in an echoing hall is loud wherever it is heard,
 while one made outside and heard inside is not changed. Light outside a shadowed room is as

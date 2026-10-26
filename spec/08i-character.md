@@ -688,7 +688,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     special room is known from a glimpse, `PerceptionView::room`, and a whole level's `pervade`
     line names its effect) and Hallowed rest (Grit, Willpower 11, `room_pace_percent` 50: where a
     room quickens healing or mana, the quickening is half again more, `World::room_pace`: a
-    sanctuary's 300 % becomes 400 %).
+    sanctuary's 300 % becomes 400 %); its third, Anchored mind (Scholar, Willpower 12,
+    `room_status_immune` `ebbing`, systems `special_rooms` and `mana`, #403): a draining room's
+    (or level's) Ebbing never takes them, `World::dwell`.
     The Defence by attack kind of the design's B5 landed with Deflect missiles (#237,
     `World::target_against`).
   - **Racial talents** (#241; the design's §7.5 Racial): the `racial` tree (`no_free`), each

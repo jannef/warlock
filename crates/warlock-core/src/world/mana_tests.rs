@@ -193,7 +193,12 @@ fn files(scenario: &str, extra: &[(&str, &str)]) -> ContentFiles {
     let diseases = include_str!("../../../../assets/data/diseases.toml");
     files.insert("data/diseases.toml", &format!("{diseases}\n{FOG}"));
     files.insert("data/experience.toml", EXPERIENCE);
+    // Without the draining room, whose Ebbing STATUS leaves out (the effects before it stay).
     let rooms = include_str!("../../../../assets/data/room_effects.toml");
+    let rooms = rooms
+        .split("[[effect]]\nid = \"draining\"")
+        .next()
+        .unwrap_or(rooms);
     files.insert("data/room_effects.toml", &format!("{rooms}{WELL}"));
     files.insert("levels/hall.toml", LEVEL);
     files.insert(

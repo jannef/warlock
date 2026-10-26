@@ -240,11 +240,15 @@ impl World {
         let Some(me) = self.actor_or_fallen(attacker) else {
             return Vec::new();
         };
-        let natural = self.content.creature(me.creature).attack.as_ref();
-        match (kind, natural) {
+        let def = self.content.creature(me.creature);
+        match (kind, def.attack.as_ref()) {
             (AttackKind::Melee, Some(natural)) if me.weapon(&self.content).is_none() => {
                 natural.on_hit.clone()
             }
+            // A creature's throw (`hurl.rs`); the player's throws are their objects'.
+            (AttackKind::Thrown, _) if attacker != self.state.player => (def.throw.as_ref())
+                .map(|t| t.attack.on_hit.clone())
+                .unwrap_or_default(),
             _ => Vec::new(),
         }
     }
@@ -316,7 +320,8 @@ impl World {
     }
 
     /// `seconds` of game time from `start` pass for actors `ids` (on the current level, in
-    /// schedule order): each lives through them ([`World::live`]). Some may die.
+    /// schedule order): each takes what the special room it stands in gives
+    /// ([`World::dwell`]), then lives through them ([`World::live`]). Some may die.
     pub(super) fn pass_time(
         &mut self,
         ids: impl Iterator<Item = ActorId>,
@@ -324,7 +329,11 @@ impl World {
         seconds: u64,
         events: &mut Vec<Event>,
     ) {
+        let dwelling = self.dwelling_here();
         for id in ids {
+            if dwelling {
+                self.dwell(id, events);
+            }
             self.live(id, start, seconds, events);
         }
     }

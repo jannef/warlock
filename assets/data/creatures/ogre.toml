@@ -1,6 +1,6 @@
-# The delf wave (Fyrdelf, docs/design/campaign.md §10.1). A brute twice a man's height that
-# runs with the goblin tribes and their kin: slow, but its maul (its racial weapon, spec §8
-# "Creature gear") lands like a falling rock.
+# The delf wave (Fyrdelf, docs/design/campaign.md §10.1), the least of the giant tribe (#457). A
+# brute twice a man's height that runs with the goblin tribes and their kin: slow, but its maul
+# (its racial weapon, spec §8 "Creature gear") lands like a falling rock. It throws nothing.
 [[creature]]
 id = "ogre"
 level = 12
@@ -11,7 +11,8 @@ name = "ogre"
 glyph = "O"
 fg = "#a08a5a"
 speed = 800
-faction = "goblins"
+faction = "giant"
+tags = ["giant", "ogre"]
 alignment = "evil"
 vision = "low_light"
 opens_doors = true
@@ -22,7 +23,7 @@ stats = { strength = 24, dexterity = 8, toughness = 21, intelligence = 6, willpo
 base_hp = 40
 natural = { defence = 0, protection = 1, name = "hide" }
 weapon_skills = { maces = 2 }
-attack = { damage = "1d8", damage_type = "bludgeoning", name = "fist", verb = "pounds" }
+attack = { damage = "2d8", damage_type = "bludgeoning", name = "fist", verb = "pounds" }
 on_eat = { message = "Stringy, and it smells of the ogre.", vomit = 30, stat = { strength = 3 } }
 racial_weapon = "maul"
 [[creature.gear]]

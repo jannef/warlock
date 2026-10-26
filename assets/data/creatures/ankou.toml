@@ -1,0 +1,38 @@
+# The undead roster (#383, batch 6). The reaper of Breton tales, the last dead of the year, who
+# drives his creaking cart by night and gathers the dying with his scythe: it sends the living
+# running and takes the life out of them, for good unless the body holds on (a temple's mending
+# gives it back). It drifts through walls and doors; blades and clubs pass half through it. Not yet
+# in any dungeon's population.
+[[creature]]
+id = "ankou"
+level = 65
+xp = 335
+rarity = "very_rare"
+name = "ankou"
+glyph = "G"
+fg = "#6a7080"
+speed = 1350
+faction = "undead"
+tags = ["undead", "spirit"]
+alignment = "evil"
+vision = "darkvision"
+sight = 14
+hearing = 16
+weight = 100
+stats = { strength = 35, dexterity = 29, toughness = 35, intelligence = 39, willpower = 36, presence = 36 }
+base_hp = 98
+natural = { defence = 8, protection = 0, name = "insubstantial form" }
+incorporeal = { wall_defence = 8 }
+resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "3d12"
+damage_type = "slashing"
+name = "scythe"
+verb = "reaps"
+to_hit = 6
+on_hit = [
+    { drain = "toughness", points = 2, chance = 15, check = "toughness", difficulty = 25 },
+    { status = "frightened", chance = 30, severity = 3 },
+]

@@ -27,18 +27,18 @@ expression: "render(case, content.clone())"
             │   n  Swimmer                          Water does not slow you: you wade… │
             │   o  Weather-wise                     You read the sky: under it you kn… │
             │ Scholar                                                                  │
-            │   p  Apprentice                  1/3  You take up a skill you lack, or … │
-            │   q  Clear mind                       A mind at peace gathers its stren… │
-            │   r  Deep well                   1/3  Your power runs deep: more mana f… │
-            │ Spellcraft                                                               │
-            │   s  Quick study                      Spells come easily to you: you le… │
+            │   p  Anchored mind                    Your power is moored fast: no pla… │
+            │   q  Apprentice                  1/3  You take up a skill you lack, or … │
+            │   r  Clear mind                       A mind at peace gathers its stren… │
+            │   s  Deep well                   1/3  Your power runs deep: more mana f… │
             │ Grit                                                                     │
             │   t  Hallowed rest                    Where a place lends you strength,… │
             │   u  Lean                             You go hungry more slowly, and ex… │
+            │   v  Pack mule                   1/2  You can carry a tenth more for ea… │
             │                                                                          │
             │ Tougher than most: more hit points for each rank, and more as you level. │
             │                                                                          │
             │                                                                          │
             │                                                                          │
-            │ a-u or Enter choose   > < page                                           │
+            │ a-v or Enter choose   > < page                                           │
  The Hub  · └──────────────────────────────────────────────────────────────────────────┘ ? controls

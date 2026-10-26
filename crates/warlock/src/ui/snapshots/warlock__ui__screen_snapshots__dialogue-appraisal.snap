@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ You open the door.
+ Factor Wulfrun says: "Yes? I'm busy. Well, I'm not, but I like to look it."
+
+
+
+
+
+
+
+                  ┌─ Factor Wulfrun ─────────────────────────────────────────────┐
+                  │                                                              │
+                  │ "Yes? I'm busy. Well, I'm not, but I like to look it."       │
+                  │                                                              │
+                  │ > 1  The foreman's ledger                                    │
+                  │   2  The old diggings                                        │
+                  │   3  Trade                                                   │
+                  │   4  Appraisals                                              │
+                  │   5  An appraisal of your goods (100 gold each)              │
+                  │                                                              │
+                  │ 1-5 or Enter  ask    Esc  leave                              │
+                  └──────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+ Cēaptūn  ·  HP 22/22  ·  MP 0/0  ·  Lv 1  ·  08:03  ·  11 Darkening  ·  Overcast        ? controls

@@ -1,0 +1,40 @@
+# The giant tribe (#457): a smith-giant of the forges under the mountains, dark-skinned and
+# fire-haired. Fire cannot hurt it; the boulders it hurls come glowing from the coals.
+[[creature]]
+id = "fire_giant"
+level = 32
+xp = 170
+rarity = "uncommon"
+loot = 20
+name = "fire giant"
+glyph = "H"
+fg = "#d0602a"
+speed = 1000
+faction = "giant"
+tags = ["giant"]
+alignment = "evil"
+vision = "low_light"
+opens_doors = true
+footsteps = 210
+hearing = 10
+weight = 800000
+stats = { strength = 29, dexterity = 16, toughness = 30, intelligence = 14, willpower = 14, presence = 12 }
+base_hp = 128
+natural = { defence = 2, protection = 3, name = "hide" }
+weapon_skills = { thrown = 1 }
+resist = { fire = 100, cold = -50 }
+on_eat = { message = "It is still warm, and tastes of soot.", vomit = 30, stat = { strength = 3 } }
+[creature.attack]
+damage = "4d8"
+damage_type = "slashing"
+name = "great sword"
+verb = "slashes"
+to_hit = 3
+[creature.throw]
+object = "boulder"
+name = "burning boulder"
+damage = "3d10"
+damage_type = ["bludgeoning", "fire"]
+range = 8
+cost = 2000
+verb = "hurls"

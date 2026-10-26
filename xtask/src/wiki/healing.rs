@@ -136,6 +136,12 @@ fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
     }
     let mut causes: Vec<String> = causes.into_iter().map(String::from).collect();
     causes.extend(brought);
+    // The special rooms that give it to everyone inside (the Special rooms page).
+    causes.extend(
+        (content.room_effects().defs().iter())
+            .filter(|e| e.status.is_some_and(|s| usize::from(s.0) == status))
+            .map(|e| format!("standing in {}", e.with_article())),
+    );
     let ending = (content.status_defs().iter())
         .filter(|s| s.follows.is_some_and(|f| usize::from(f.0) == status))
         .map(|s| format!("the end of {}", s.name));
@@ -229,6 +235,14 @@ pub(super) fn status_effects(content: &Content) -> String {
                     ""
                 };
                 format!("{hp} {}{faster}", every(tick))
+            }
+            Some(tick) if def.mana_damage > 0 => {
+                let none = if def.mana_regen == 0 {
+                    ", and none comes back"
+                } else {
+                    ""
+                };
+                format!("{} mana {}{none}", def.mana_damage, every(tick))
             }
             _ => "nothing".into(),
         };

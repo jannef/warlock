@@ -97,15 +97,18 @@ pub struct Topic {
 pub enum ServiceKind {
     /// Ends every status and disease that prayer cures (`cured_by` lists `prayer`).
     Cure,
+    /// Identifies everything the player carries that is not yet identified, paid per stack.
+    Identify,
     /// Mends every point of stat damage at once.
     Mend,
 }
 
 impl ServiceKind {
-    /// Its id in the data: `cure`, `mend`.
+    /// Its id in the data: `cure`, `identify`, `mend`.
     pub fn id(self) -> &'static str {
         match self {
             Self::Cure => "cure",
+            Self::Identify => "identify",
             Self::Mend => "mend",
         }
     }
@@ -120,7 +123,8 @@ pub struct Service {
     pub id: String,
     /// What the player picks: "A cure for what ails you" (the screen adds the price).
     pub name: String,
-    /// What it costs, in the shops' currency, before talents.
+    /// What it costs, in the shops' currency, before talents; for `identify`, per unidentified
+    /// stack carried.
     pub price: u32,
     /// What it does.
     pub does: ServiceKind,

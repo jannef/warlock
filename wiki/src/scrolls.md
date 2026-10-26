@@ -14,13 +14,15 @@ label, made up anew for each character and kept for their whole life (two scroll
 ZUNBAR are always the same kind). The label shows everywhere: in your pack, on the floor, in a
 shop, in look mode, and in what you are told.
 
-You learn what a kind of scroll is, for good, in one of three ways:
+You learn what a kind of scroll is, for good, in one of four ways:
 
 - **Read one.** "You read the scroll labelled ZUNBAR." "It is a scroll of fireball." From then
   on every scroll of fireball shows by its name. Reading an unknown scroll is a gamble: a spell
   scroll is aimed first, and a fireball aimed near you may catch you too.
 - **The scroll of identify**, read on it (below): the scroll of identify is known once you read
   your first one.
+- **An appraisal**: Factor Wulfrun in Cēaptūn identifies everything you carry for 100 gold per
+  unidentified stack (see [Services](npcs.md#services)).
 - **Your starting kit**: you know the scrolls you start with.
 
 Knowing what a scroll is does not teach you its spell: a scroll you know by name is still only a
