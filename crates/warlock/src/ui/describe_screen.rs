@@ -85,7 +85,8 @@ impl DescribeScreen {
         let section = |k: LineKind| match k {
             LineKind::Base => 0,
             LineKind::Stat => 1,
-            LineKind::Note | LineKind::Affix(_) => 2,
+            LineKind::Note | LineKind::Affix(_) | LineKind::Power => 2,
+            LineKind::Lore => 3,
         };
         let mut rows = Vec::new();
         let mut last: Option<LineKind> = None;
@@ -96,8 +97,9 @@ impl DescribeScreen {
             last = Some(line.kind);
             let (label, dx, color) = match line.kind {
                 LineKind::Affix(kind) => (Some(kind.name()), LABEL_W, MAGIC),
+                LineKind::Power => (Some("Power"), LABEL_W, MAGIC),
                 LineKind::Stat => (None, 0, TEXT),
-                LineKind::Base | LineKind::Note => (None, 0, TEXT_DIM),
+                LineKind::Base | LineKind::Note | LineKind::Lore => (None, 0, TEXT_DIM),
             };
             for (i, text) in wrap(&line.text, width - dx).into_iter().enumerate() {
                 rows.push(Row {
