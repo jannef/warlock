@@ -511,9 +511,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
   for `durability`, `weight`, `stealth`, 1 to 100 for `max_hp`, `max_mana`, `carry` (kg), and `skill`, 1 to
   300 for `regeneration` and `mana_regeneration`, 1 to 75 for `resistance`), or for `light` `{ level, light }` naming a
   light preset. The built-in
-  affixes: 25 prefixes and 29 suffixes in up to four tiers (item levels 1, 3, 5, 7 for most); the wiki
+  affixes: 26 prefixes and 29 suffixes in up to four tiers (item levels 1, 3, 5, 7 for most); the wiki
   lists them in generated tables. The light presets `item_glow_faint`, `item_glow`, and
   `item_glow_bright` (radius 2, 3, 4; steady, cool) are the glowing tiers'.
+- **Unique items** (`data/uniques/` and each campaign's `data/uniques/`, one item a file named
+  by its id, read in path order; optional; #423; §8 "Magic items"): `[[unique]]`s with `id`,
+  `name` (1 to 30 characters), `object` (a base item with a `kind` that does not stack),
+  `affixes` (as an `[[item]]`'s: `"venomous:2"`, the value the top of the tier's range; checked
+  as a rare item's), optional `parts` (as an `[[item]]`'s), `level` (default: its highest
+  tier's), optional `power`, one of `{ inflict = STATUS, chance = 1..100, severity = 1..max }`,
+  `{ vision = PROFILE }`, `{ ward = STATUS, message = "..." }`, each with a `phrase` (the power
+  in words, for the item description), and optional `lore` (the description's last line).
+  Placed as `unique:ID` (no count) wherever objects are named, once in all content; a legend's
+  `wield`/`wear` name it the same way to wear the one carried.
 - **Talents** (`data/talents.toml`, the settings; `data/talents/`, one talent a file, read in
   path order; optional, without them no level asks for a pick; M30, #229; §8 "Talents"):
   `max_ranks` (3), `[coverage]` (`min_talents`, `min_class`, `free_per_tree`), `[[tree]]`s

@@ -126,7 +126,9 @@ when worse in a fight than the base material (to hit or damage lower on what str
 lower on armour with Protection) and dearer, never for jewellery; one draw, none for a single
 material; `magic/loot.rs` step 8 and `World::loot_of` (`docs/dev/magic-items.md`). Placements
 name a material, `"great_sword:bronze"` (`parse_stacks` / `placement`, checked by
-`item_parts::check`), and `[[item]]` `parts = [{ of = "bronze" }]` (no size or cut). Tests:
+`item_parts::check`), and `[[item]]` `parts = [{ of = "bronze" }]` (no size or cut); a unique item
+is placed by its id, `"unique:widowmaker"`, once in all content (`docs/dev/magic-items.md`, "Unique
+items"). Tests:
 `world/variant_tests.rs` (material checks, construction lists and their refusals, the math,
 names and colours, the description, placements and refusals, combat, saves and replays, the
 weights and the cap, loot determinism, the built-in tables, a property test over thousands of
