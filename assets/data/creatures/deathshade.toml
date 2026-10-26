@@ -1,0 +1,38 @@
+# The undead roster (#383, batch 6). The death-shadow of the oldest English verse (Old English
+# dēaþscūa): a darkness that walks where the dying lay, whose cold touch sends the living running
+# and takes the strength out of them, for good unless the will holds (a temple's mending gives it
+# back). It drifts through walls and doors; blades and clubs pass half through it. Not yet in any
+# dungeon's population.
+[[creature]]
+id = "deathshade"
+level = 60
+xp = 310
+rarity = "very_rare"
+name = "deathshade"
+glyph = "G"
+fg = "#1c1c34"
+speed = 1350
+faction = "undead"
+tags = ["undead", "spirit"]
+alignment = "evil"
+vision = "darkvision"
+sight = 14
+hearing = 15
+weight = 100
+stats = { strength = 33, dexterity = 28, toughness = 33, intelligence = 37, willpower = 34, presence = 34 }
+base_hp = 90
+natural = { defence = 8, protection = 0, name = "insubstantial form" }
+incorporeal = { wall_defence = 8 }
+resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "4d8"
+damage_type = "cold"
+name = "touch"
+verb = "touches"
+to_hit = 6
+on_hit = [
+    { drain = "strength", points = 2, chance = 15, difficulty = 24 },
+    { status = "frightened", chance = 25, severity = 3 },
+]

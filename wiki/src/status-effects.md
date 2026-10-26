@@ -79,6 +79,15 @@ A hold also ends by itself, "You are free to move.":
 A creature in your own Drowning grip (a [lucky day](horoscope.md#lucky-days)'s gift) is held
 the same way, and lets go the same way; it does not struggle, it fights you instead.
 
+## Ebbing
+
+A [draining room](special-rooms.md) drinks at magic. While you stand in one, and half a minute
+after you leave, you are **Ebbing** ("Your power ebbs away."): a point of mana drains away every
+20 seconds, and none comes back. It never takes you below nothing and never harms you otherwise.
+Out of the room it passes: "Your power stops ebbing." Creatures with mana ebb in the room just as
+you do, and you can see it on them ("ebbing"); those without mana are left alone. The talent
+*Anchored mind* keeps it from ever taking you.
+
 ## Buffs and cooldowns
 
 A status effect can also help, or hinder, in other ways while it lasts (the table's last

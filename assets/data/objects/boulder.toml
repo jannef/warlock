@@ -1,0 +1,12 @@
+# What a giant hurls (creatures.toml `[creature.throw]`, spec §8 "Ranged combat"): it flies as
+# this, and breaks or rolls away where it stops, so none ever lies about. No loot, no shop, and no
+# level places it; a stone the player could lift is a rock.
+[[object]]
+id = "boulder"
+name = "boulder"
+glyph = "*"
+fg = "#8e887c"
+class = "miscellaneous"
+materials = ["stone"]
+weight = 40000
+value = 0

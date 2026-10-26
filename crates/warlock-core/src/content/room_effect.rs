@@ -16,13 +16,16 @@
 //! favour some with fixed shares and ban others: `content/dungeon.rs`), among those the room is
 //! eligible for ([`RoomEffectDef::eligible`]).
 //!
+//! An effect may give everyone inside a status while they stay ([`RoomEffectDef::status`]: a
+//! draining room's Ebbing; `World::dwell`), which eases by its own pace once they leave.
+//!
 //! Where a special room lies is a [`SpecialRoom`]: a rectangle (a room of the rooms generator, an
 //! area of a level file) or a blob of cells (a cave's), kept in the level's state with whether
 //! the player has been inside yet.
 //!
 //! Without the file there are no special rooms.
 
-use super::{ContentError, TerrainDef, TerrainId};
+use super::{ContentError, StatusDef, StatusId, TerrainDef, TerrainId};
 use crate::geom::Pos;
 use crate::light::Light;
 use serde::{Deserialize, Serialize};
@@ -40,6 +43,9 @@ pub const REGEN: RangeInclusive<u16> = 1..=1000;
 pub const MAX_EFFECTS: usize = 32;
 /// The weight an effect may have in the draw (spec §7 "Special rooms").
 pub const WEIGHT: RangeInclusive<u8> = 1..=100;
+/// The fewest seconds a room's status may take to ease a degree: the longest single action, so
+/// it never lapses while one stays inside.
+pub const DWELL_EASES: u32 = 10;
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -99,6 +105,7 @@ struct RoomEffectSpec {
     #[serde(default)]
     shunned: bool,
     floor: Option<String>,
+    status: Option<String>,
 }
 
 /// What a special room does while one is inside it.
@@ -142,6 +149,9 @@ pub struct RoomEffectDef {
     pub shunned: bool,
     /// The floor generators lay over the room's floor (a flooded room's shallow water).
     pub floor: Option<TerrainId>,
+    /// The status everyone inside holds, at least at one degree, while they stay (a draining
+    /// room's Ebbing; `World::dwell`); it eases by its own `eases` once they leave.
+    pub status: Option<StatusId>,
 }
 
 impl RoomEffectDef {
@@ -236,6 +246,11 @@ impl<'c> Here<'c> {
     pub fn shunned(&self) -> bool {
         self.each().any(|e| e.shunned)
     }
+
+    /// The statuses held here, the room's first: both apply.
+    pub fn statuses(self) -> impl Iterator<Item = StatusId> + 'c {
+        (self.room.into_iter().chain(self.level)).filter_map(|e| e.status)
+    }
 }
 
 /// The effects of `data/room_effects.toml` and how often generated levels get them.
@@ -268,11 +283,24 @@ impl RoomEffects {
         self.chance > 0 && self.per_level > 0 && !self.defs.is_empty()
     }
 
-    /// Parses `data/room_effects.toml`; `terrain` resolves a floor's terrain id and definition.
+    /// Parses `data/room_effects.toml` with no statuses known; `terrain` resolves a floor's
+    /// terrain id and definition.
+    #[cfg(test)]
     pub(super) fn parse<'t>(
         file: &str,
         text: &str,
         terrain: impl Fn(&str) -> Option<(TerrainId, &'t TerrainDef)>,
+    ) -> Result<Self, ContentError> {
+        Self::parse_with(file, text, terrain, |_| None)
+    }
+
+    /// Parses `data/room_effects.toml`; `terrain` resolves a floor's terrain id and definition,
+    /// `status` a status's id and definition.
+    pub(super) fn parse_with<'t, 's>(
+        file: &str,
+        text: &str,
+        terrain: impl Fn(&str) -> Option<(TerrainId, &'t TerrainDef)>,
+        status: impl Fn(&str) -> Option<(StatusId, &'s StatusDef)>,
     ) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: RoomEffectFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
@@ -360,6 +388,20 @@ impl RoomEffects {
                 }
                 None => None,
             };
+            let status = match &spec.status {
+                Some(name) => {
+                    let (id, def) =
+                        status(name).ok_or_else(|| bad(format!("unknown status `{name}`")))?;
+                    if def.eases.is_none_or(|every| every < DWELL_EASES) {
+                        return Err(bad(format!(
+                            "status `{name}` must ease, and take at least {DWELL_EASES} seconds a \
+                             degree, so it never lapses while one stays inside"
+                        )));
+                    }
+                    Some(id)
+                }
+                None => None,
+            };
             let def = RoomEffectDef {
                 id: spec.id,
                 name: spec.name,
@@ -380,6 +422,7 @@ impl RoomEffects {
                 mana_regen: spec.mana_regen,
                 shunned: spec.shunned,
                 floor,
+                status,
             };
             if def.level_chance > 0 && !def.can_pervade() {
                 return Err(err(format!(
@@ -644,6 +687,36 @@ mod tests {
             level: Some(a),
         };
         assert_eq!((level.light(), level.shunned()), (30, false));
+    }
+
+    #[test]
+    fn a_status_parses_and_must_ease_slowly_enough() {
+        let content = crate::content::Content::builtin().expect("content");
+        let lookup = |name: &str| {
+            let id = content.status_id(name)?;
+            Some((id, content.status(id)))
+        };
+        let parse = |text: &str| RoomEffects::parse_with("e.toml", text, |_| None, lookup);
+        let plain = parse(SHADOWED).expect("valid");
+        assert_eq!(plain.get(RoomEffectId(0)).status, None, "none by default");
+        let ebbing = parse(&format!("{SHADOWED}status = \"ebbing\"\n")).expect("valid");
+        let e = ebbing.get(RoomEffectId(0));
+        assert_eq!(e.status, content.status_id("ebbing"));
+        let here = Here {
+            room: Some(e),
+            level: Some(e),
+        };
+        assert_eq!(here.statuses().count(), 2, "both apply");
+        for (status, why) in [
+            ("nothing", "unknown status `nothing`"),
+            // Held eases a degree a turn (6 s): it would lapse between two actions.
+            ("held", "at least 10 seconds"),
+            // Diseased never eases by itself.
+            ("diseased", "must ease"),
+        ] {
+            let e = parse(&format!("{SHADOWED}status = \"{status}\"\n")).unwrap_err();
+            assert!(e.message.contains(why), "{why}: {}", e.message);
+        }
     }
 
     #[test]

@@ -5,10 +5,11 @@
 //! 1. **Look**: the hostile actors it sees, by the player's rules of sight with its own eyes and
 //!    radius (`sight.rs`); the nearest is its target (ties: the lower actor id).
 //! 2. **Fight**: a melee creature attacks a target next to it, else steps along a shortest path
-//!    toward it. A ranged creature or caster shoots or casts when the target is within its range
-//!    with a clear line of fire (no opaque cell and nobody in between), else steps toward the
-//!    nearest cell that gives it one (failing that, toward the target). Leaving its routine, it
-//!    remembers where it was (its post).
+//!    toward it; one that throws (a giant's boulders, `hurl.rs`) throws on the way whenever the
+//!    target is in range with a clear line of fire. A ranged creature or caster shoots or casts
+//!    when the target is within its range with a clear line of fire (no opaque cell and nobody
+//!    in between), else steps toward the nearest cell that gives it one (failing that, toward
+//!    the target). Leaving its routine, it remembers where it was (its post).
 //! 3. **Search**: with no hostile in sight, it goes to where it last saw one.
 //! 4. **Listen**: failing that, to where it last heard a noise whose source it could not see
 //!    ([`crate::noise`]; what it heard since it last acted, the newest first). Only creatures
@@ -119,6 +120,10 @@ impl World {
                 target,
                 kind: AttackKind::Ranged,
             } => self.creature_shoots(id, target, events),
+            Plan::Attack {
+                target,
+                kind: AttackKind::Thrown,
+            } => self.creature_hurls(id, target, events),
             Plan::Attack { target, kind } => {
                 let skills = self.skills_of(id, kind, None);
                 let with = self.state.actors[&id].weapon_item(&self.content);
@@ -255,6 +260,10 @@ impl World {
         let me = &self.state.actors[&id];
         let def = self.content.creature(me.creature);
         let attack = |kind| Plan::Attack { target, kind };
+        // A creature that throws (`hurl.rs`) throws whenever it can from where it stands.
+        if self.hurls_at(id, target, at) {
+            return attack(AttackKind::Thrown);
+        }
         let close_in = || match self.route(id, at, 1, |q| q.chebyshev(at) <= 1) {
             Route::Step(dir) => Plan::Step(dir),
             Route::There | Route::Wait | Route::Unreachable => Plan::Wait,
@@ -320,7 +329,7 @@ impl World {
 
     /// Whether a shot from `from` at `target` on `to` would fly clear: no opaque cell and no
     /// actor (but the shooter `shooter` itself, who would have moved) on the line between.
-    fn clear_shot(&self, from: Pos, to: Pos, shooter: ActorId, target: ActorId) -> bool {
+    pub(super) fn clear_shot(&self, from: Pos, to: Pos, shooter: ActorId, target: ActorId) -> bool {
         let level = self.state.current();
         let occupied = |p: Pos| {
             (self.state.actors.values())

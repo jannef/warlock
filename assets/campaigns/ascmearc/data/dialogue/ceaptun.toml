@@ -2,7 +2,8 @@
 # data/dialogue.toml): the townsfolk (the `villager` type), and the town's unique characters,
 # each placed by the town's legend with `npc = "..."` and known by a proper `name`: Sister Hild of
 # the Mynster (who cures and mends for gold, §6.1), Godgifu of the Gæsthūs (rumours of the march,
-# never a reveal: decision 2026-10-25, question 9), Reeve Leofric, and Factor Wulfrun. Their
+# never a reveal: decision 2026-10-25, question 9), Reeve Leofric, and Factor Wulfrun (who
+# identifies what the player carries for gold, #432). Their
 # quests are in data/quests/ (§6.2).
 
 # The townsfolk: one-liners and mutters, no topics.
@@ -18,6 +19,7 @@ lines = [
     "Snow on Beorggeat already. Early, this year.",
     "Fyrbeorg's smoking again. Ash on the washing by noon.",
     "Sick? Sister Hild will see to you, at the Mynster. For a price.",
+    "Found summat odd? Wulfrun'll tell you what it is. For a fee, mind.",
     "Godgifu keeps a good fire at the Gæsthūs, and a better ale.",
     "Don't go poking at the barrows. The dead keep what's theirs.",
     "The reeve's a fair man. Tight with the town's coin, mind.",
@@ -167,6 +169,7 @@ lines = [
     "Gold is gold, but iron builds towns.",
     "The diggings didn't run dry. Something stopped the digging.",
     "Don't trust a map you didn't pay for.",
+    "I can value anything, given a moment and a fee. Mostly the fee.",
 ]
 mutter = { chance = 2, lines = [
     "Twelve carts... no, eleven...",
@@ -182,3 +185,16 @@ reply = "The mines lay in the hills under Fyrbeorg, east past the ford. Deep gal
 id = "trade"
 name = "Trade"
 reply = "The town lives off the road: what comes over the pass, what comes up the river, what we dig. With the pass shut and the mines dead, there's just the river. Sell to the shops on the square. They pay poorly, but they pay."
+
+[[dialogue.topic]]
+id = "appraisal"
+name = "Appraisals"
+reply = "I can tell a charmed blade from a plain one, and read the scrawl on a scroll. A hundred gold for each article you don't know; a bundle of the same thing counts as one, however many are in it. And I look at everything you carry, or nothing. I don't do halves."
+
+[[dialogue.service]]
+id = "identify"
+name = "An appraisal of your goods"
+price = 100
+does = "identify"
+reply = "There. Entered and accounted for. Now you know what you're carrying, which is more than most."
+nothing = "You know everything you carry already. I shan't charge you for telling you so."

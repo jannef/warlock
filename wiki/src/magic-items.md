@@ -43,7 +43,9 @@ Magic and rare items are **unidentified** when you find them. You see their rari
 the same while you wear or wield them, as in ADOM and Path of Exile: an unknown ring of Strength
 makes you stronger, and one that glows lights your way. Wearing it for a while does not tell you
 what it is. A [scroll of identify](scrolls.md#the-scroll-of-identify) will, and so does carrying
-it for a day if you have the [talent](talents.md) Lore; once identified, an item stays known
+it for a day if you have the [talent](talents.md) Lore, and so does Factor Wulfrun in Cēaptūn,
+for 100 gold per unidentified stack you carry ([Services](npcs.md#services)); once identified, an
+item stays known
 wherever it goes: "This is a Sharp long sword of the Bear!"
 
 ## What their magic does

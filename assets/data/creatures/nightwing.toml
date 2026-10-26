@@ -1,0 +1,34 @@
+# The undead roster (#383, batch 6). A great bat-winged thing of the deepest dark, a dead flier no
+# daylight has touched: it is faster than anything that lives, and its bite drinks the life out of
+# the living, for good unless the body holds on (a temple's mending gives it back). Not yet in any
+# dungeon's population.
+[[creature]]
+id = "nightwing"
+level = 61
+xp = 315
+rarity = "rare"
+name = "nightwing"
+glyph = "D"
+fg = "#3a2a58"
+speed = 1600
+faction = "undead"
+tags = ["undead"]
+alignment = "evil"
+vision = "darkvision"
+sight = 16
+footsteps = 40
+hearing = 18
+weight = 60000
+stats = { strength = 35, dexterity = 30, toughness = 35, intelligence = 37, willpower = 34, presence = 34 }
+base_hp = 137
+natural = { defence = 5, protection = 0, name = "dead flesh" }
+resist = { fire = -25, poison = 100 }
+on_eat = { message = "Cold and leathery, and it stinks of the cave.", vomit = 80, harm = "1d4" }
+blood = "#241a30"
+[creature.attack]
+damage = "3d12"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
+to_hit = 6
+on_hit = [{ drain = "toughness", points = 2, chance = 10, check = "toughness", difficulty = 24 }]

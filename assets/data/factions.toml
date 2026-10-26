@@ -41,11 +41,11 @@ name = "orcs"
 hostile = ["player", "vermin", "kobolds", "undead", "duergar"]
 
 # The restless dead of the barrows: skeletons, zombies, ghouls, wights. They hate the living,
-# the player, the kobolds, and the goblins alike.
+# the player, the kobolds, the goblins, and the giants alike.
 [[faction]]
 id = "undead"
 name = "undead"
-hostile = ["player", "kobolds", "goblins"]
+hostile = ["player", "kobolds", "goblins", "giant"]
 
 # The living things of the great fen (Fennmynster): leeches, frogs, crocodiles, wisps, mud
 # golems, marsh trolls, and the bog hag they serve. Not animals as a faction (the trolls, the
@@ -71,12 +71,20 @@ name = "hags"
 hostile = ["player"]
 
 # The grey dwarves of the deep delf (Fyrdelf): miners, warriors, smiths. They hate the living who
-# come down their shafts, the goblins' kin (the ogres and trolls of the deep among them), and
-# the dead the fires made; the fire things they leave be.
+# come down their shafts, the goblins' kin (the trolls of the deep among them), the giants and
+# their ogres, and the dead the fires made; the fire things they leave be.
 [[faction]]
 id = "duergar"
 name = "duergar"
-hostile = ["player", "goblins", "undead"]
+hostile = ["player", "goblins", "undead", "giant"]
+
+# The giant tribe (#457): ogres and giants, hill, stone, frost, fire, cloud, and storm. They
+# crush the player, the vermin, and the kobolds; the goblins and their kin they leave be (the
+# ogres run with them), and they and the duergar are old enemies.
+[[faction]]
+id = "giant"
+name = "giants"
+hostile = ["player", "vermin", "kobolds"]
 
 # The troll tribe (#456): the trolls of hill, forest, ice, stone, and fire, their shamans and
 # chieftains. They eat the vermin and the kobolds, the duergar hunt them, and they hate the dead

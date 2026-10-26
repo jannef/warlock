@@ -37,7 +37,8 @@ about (§7 "Leaving an outdoor area"): walled on the pass side and open to the r
 square (a general store, the Forge, the Armourer's, the Provisioner's, their goods on their
 floors), the Mynster (the temple, a sanctuary) where Sister Hild cures and mends for gold (§8
 "Dialogue", Services), the Gæsthūs (the inn) where Godgifu tells rumours of the march (never a
-reveal), the houses of Reeve Leofric and Factor Wulfrun, and townsfolk (the campaign's
+reveal), the houses of Reeve Leofric and Factor Wulfrun (who identifies everything the player
+carries for 100 gold per unidentified stack, §8 "Dialogue", Services), and townsfolk (the campaign's
 `villager` type) on their rounds; everyone in it is peaceful. The people are the campaign's own
 creature types (`sister`, `innkeeper`, `reeve`, `mine_factor`) placed as unique npcs with proper
 names. The dev scenario `ceaptun` starts on the square with 60 gold.

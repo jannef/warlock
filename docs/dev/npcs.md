@@ -44,8 +44,15 @@ then the gold (`service_price`: the data's price, halved rounded up with `Talent
 Pilgrim), pays through `shop.rs`'s `hand_over` (the purse code `pay` uses; the coins go to the
 speaker), and does it: `World::cure(player, "prayer")` (every disease in `data/diseases.toml`
 lists `prayer`; with Pilgrim a point of each damaged stat mends after, unless a disease still
-shows) or `World::mend` (`StatDamage::mend_all`, then `World::restore_drained`: drained points back, `docs/dev/stats.md` "Drain"). The reply goes through `World::answer`, so the
+shows) or `World::mend` (`StatDamage::mend_all`, then `World::restore_drained`: drained points back, `docs/dev/stats.md` "Drain"),
+or, for `identify` (#432), `World::identify` on each of `World::unidentified` (the stacks
+`Lore::knows` does not), priced per stack: `service_price` (Pilgrim only for `cure`/`mend`) times
+`service_items`, which `World::topics` also puts in `TopicView::items`; the dialogue screen
+lists such a service "(N gold each)" and, with things to pay for, asks first in the one dialog
+with the total (`DialogueScreen::pay_dialog`). The reply goes through `World::answer`, so the
 dialogue screen reopens on the service. Refusals take no time; a service done takes `chat`'s.
 Nothing is saved that was not before, and no stream is drawn. Tests: `world/service_tests.rs`
 (a fixture sister on the built-in content; prices, refusals, Pilgrim, the replay and the save),
+`world/identify_service_tests.rs` (a fixture appraiser: the count, the refusals, magic and
+scroll types identified, the replay and the save), Wulfrun's in `world/ceaptun_tests.rs`,
 the screen's row in `ui/dialogue_screen.rs`; the wiki's table is `xtask/src/wiki/services.rs`.

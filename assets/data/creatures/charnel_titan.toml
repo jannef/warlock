@@ -1,0 +1,34 @@
+# The undead roster (#383, batch 6). A whole graveyard's bones stood up as one giant, thrice a man's
+# height: its blows fall like a falling house and carry the grave's rot. Its bones turn a blade's
+# point and shrug off arrows; a club shatters them, and it leaves no corpse. Not yet in any
+# dungeon's population.
+[[creature]]
+id = "charnel_titan"
+level = 67
+xp = 345
+rarity = "very_rare"
+name = "charnel titan"
+glyph = "Z"
+fg = "#c8c0a0"
+speed = 1100
+faction = "undead"
+tags = ["undead", "skeleton"]
+alignment = "evil"
+vision = "darkvision"
+sight = 10
+footsteps = 200
+hearing = 10
+weight = 1500000
+stats = { strength = 40, dexterity = 25, toughness = 40, intelligence = 39, willpower = 2, presence = 2 }
+base_hp = 268
+natural = { defence = 5, protection = 10, name = "bones" }
+resist = { piercing = 50, bludgeoning = -50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "5d12"
+damage_type = "bludgeoning"
+name = "slam"
+verb = "slams"
+to_hit = 6
+on_hit = [{ disease = "grave_rot", chance = 25 }]

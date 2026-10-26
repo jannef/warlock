@@ -1,0 +1,38 @@
+# The giant tribe (#457): grey, quiet giants of the deep halls, who throw stones for sport. Their
+# throws are the tribe's signature: farther, surer, and quicker than any other giant's.
+[[creature]]
+id = "stone_giant"
+level = 24
+xp = 130
+rarity = "common"
+loot = 15
+name = "stone giant"
+glyph = "H"
+fg = "#9a9a92"
+speed = 950
+faction = "giant"
+tags = ["giant"]
+alignment = "neutral"
+vision = "darkvision"
+opens_doors = true
+footsteps = 180
+hearing = 10
+weight = 600000
+stats = { strength = 26, dexterity = 16, toughness = 27, intelligence = 12, willpower = 13, presence = 9 }
+base_hp = 96
+natural = { defence = 1, protection = 3, name = "stony hide" }
+weapon_skills = { thrown = 3 }
+on_eat = { message = "It is like chewing gravel.", vomit = 30, stat = { strength = 3 } }
+[creature.attack]
+damage = "3d10"
+damage_type = "bludgeoning"
+name = "stone club"
+verb = "clubs"
+to_hit = 2
+[creature.throw]
+object = "boulder"
+damage = "4d6"
+damage_type = "bludgeoning"
+range = 9
+cost = 1500
+verb = "hurls"

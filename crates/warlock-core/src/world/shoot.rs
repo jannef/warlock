@@ -51,6 +51,23 @@ pub(super) struct Loose {
     pub(super) range: i32,
 }
 
+/// A missile in flight ([`World::fly`]): a shot's, a throw's, or a creature's throw's.
+#[derive(Clone, Debug)]
+pub(super) struct Flight {
+    pub(super) kind: AttackKind,
+    /// What its attacks are made with (an arrow, a dagger, a giant's boulder).
+    pub(super) with: ObjectId,
+    /// What flies, as it flies (a flaming arrow flies burning).
+    pub(super) flies: ObjectId,
+    pub(super) profile: Profile,
+    /// How far it flies, in cells.
+    pub(super) range: i32,
+    /// What comes down where it stops, unless it broke; `None`: nothing (a creature's throw).
+    pub(super) lands: Option<Stack>,
+    /// The chance in percent that it breaks on a hit.
+    pub(super) breaks: u32,
+}
+
 /// What ammunition of the kind missile weapon `launcher` shoots is called, in the plural:
 /// "arrows", "bolts".
 fn ammunition_name(content: &Content, launcher: ObjectId) -> String {
@@ -283,14 +300,12 @@ impl World {
 
     /// Actor `shooter` looses one missile of `loose` at cell `at` (module docs): it leaves the
     /// stack, makes its noise, flies and attacks whoever stands in its way until it hits, and
-    /// comes down. Pushes the [`Event::Missile`] (the whole flight; perception cuts it to what
-    /// the player saw), then the attacks it made and the deaths they caused.
+    /// comes down ([`World::fly`]).
     fn loose(&mut self, shooter: ActorId, at: Pos, loose: Loose, events: &mut Vec<Event>) {
         let content = self.content.clone();
         let Some(me) = self.state.actors.get_mut(&shooter) else {
             return;
         };
-        let from = me.pos;
         // Fletching (spec §8 "Class abilities"): the shooter's missiles break less often.
         let more = me.talent_mods(&content).missile_breaks;
         let Some(stack) = me.inventory.get_mut(loose.item) else {
@@ -304,7 +319,6 @@ impl World {
             me.equipment.after_removal(&Positions::of([loose.item]));
         }
         let def = content.object(ammo);
-        let flies = def.lit.unwrap_or(ammo);
         // What is lit flies as another object (a burning arrow), its magic gone; anything else
         // keeps its magic as it flies and lands (spec §8 "Magic items"), and a durable one breaks
         // less often.
@@ -317,8 +331,35 @@ impl World {
             None => missile,
         };
         self.make_noise(shooter, Act::Attack(loose.kind));
+        let flight = Flight {
+            kind: loose.kind,
+            with: ammo,
+            flies: def.lit.unwrap_or(ammo),
+            profile: loose.profile,
+            range: loose.range,
+            lands: Some(lands),
+            breaks,
+        };
+        self.fly(shooter, at, flight, events);
+    }
 
-        let reach = radius2(loose.range);
+    /// `flight`, loosed by actor `shooter` at cell `at`, flies (module docs) and attacks
+    /// whoever stands in its way until it hits, and what lands comes down, unless it broke.
+    /// Pushes the [`Event::Missile`] (the whole flight; perception cuts it to what the player
+    /// saw), then the attacks it made and the deaths they caused.
+    pub(super) fn fly(
+        &mut self,
+        shooter: ActorId,
+        at: Pos,
+        flight: Flight,
+        events: &mut Vec<Event>,
+    ) {
+        let content = self.content.clone();
+        let Some(from) = self.state.actors.get(&shooter).map(|a| a.pos) else {
+            return;
+        };
+        let reach = radius2(flight.range);
+        let with = (flight.kind, flight.with);
         let mut path = Vec::new();
         let mut attacks = Vec::new();
         let mut struck = false;
@@ -334,8 +375,7 @@ impl World {
                     .filter(|a| a.id != shooter)
                     .map(|a| a.id);
                 if let Some(target) = inside {
-                    let with = (loose.kind, ammo);
-                    let profile = loose.profile.clone();
+                    let profile = flight.profile.clone();
                     let blow = self.missile_hits(shooter, target, with, profile, &mut attacks);
                     if blow.is_some_and(|b| b.strike.is_hit()) {
                         path.push(cell);
@@ -350,8 +390,7 @@ impl World {
                 .map(|a| a.id);
             match target {
                 Some(target) => {
-                    let with = (loose.kind, ammo);
-                    let profile = loose.profile.clone();
+                    let profile = flight.profile.clone();
                     let blow = self.missile_hits(shooter, target, with, profile, &mut attacks);
                     if blow.is_some_and(|b| b.strike.is_hit()) {
                         struck = true;
@@ -363,12 +402,15 @@ impl World {
             }
         }
         let end = path.last().copied().unwrap_or(from);
-        let broke = struck && breaks > 0 && self.state.rng.chance(breaks);
-        if !broke && self.state.current().is_walkable(&content, end) {
+        let broke = struck && flight.breaks > 0 && self.state.rng.chance(flight.breaks);
+        if let Some(lands) = flight.lands
+            && !broke
+            && self.state.current().is_walkable(&content, end)
+        {
             self.come_down(end, lands);
         }
         events.push(Event::Missile {
-            object: flies,
+            object: flight.flies,
             from: Some(from),
             path,
             end: if struck {

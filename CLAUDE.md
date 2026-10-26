@@ -452,11 +452,13 @@ A successful compile does not verify anything visual. Before opening a PR:
 - **Merging** (`docs/dev/merging.md` has the details): agents don't chase `main`. A PR merges
   or rebases onto `origin/main` once, when the integrator says it is next in line. The cloud
   finisher doing it also updates the golden references in the same pass ("Golden screenshots"),
-  merges `origin/main` again before pushing only if it moved into a conflict, re-verifies the
-  PR's replays, and runs clippy and `cargo test --workspace` only after conflicts or a fix of its
-  own (CI, required on every push, is the check; `main` does not require branches to be up to
-  date). The goal is the shortest total handling time. The full check list ("Verification") runs
-  once, before the PR opens.
+  and pushes as soon as the conflicts are potentially fixed (a quick compile, no clippy, tests,
+  replays, or goldens first, and no re-merge of `origin/main` before pushing): if CI fails, it
+  fails; it then keeps verifying in the session (the PR's replays; clippy and
+  `cargo test --workspace` after conflicts or a fix of its own), pushes follow-up fixes, and
+  stops the checks once CI is green. CI, required on every push, is the check; `main` does not
+  require branches to be up to date. The goal is the shortest total handling time. The full check
+  list ("Verification") runs once, before the PR opens.
   Agents stop when their PR is open; a finisher agent handles CI and the merge (`docs/dev/merging.md`,
   "Agents, finishers, and context").
 - **Keep PRs small**: one feature per PR, rules first (core, tests, dumps), then the UI, then
