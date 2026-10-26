@@ -238,7 +238,8 @@ fn power(p: &PowerSpec, content: &Content) -> Result<Power, String> {
         // The status diseases show as comes of a disease, never of a blow.
         let known = |id: &str| {
             let found = (content.status_id(id)).filter(|&s| Some(s) != content.disease_status)?;
-            Some((found, content.status(found).max))
+            let def = content.status(found);
+            Some((found, def.max, def.hold.is_some()))
         };
         let hit = spec
             .resolve(known, |_| None)
