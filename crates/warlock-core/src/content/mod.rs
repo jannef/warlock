@@ -3463,7 +3463,6 @@ mod tests {
                 "survival",
                 "swim",
                 "tumble",
-                "use_magic_device",
                 "woodcraft"
             ]
         );
@@ -3511,8 +3510,7 @@ mod tests {
                 "concentration",
                 "decipher_script",
                 "knowledge",
-                "spellcraft",
-                "use_magic_device"
+                "spellcraft"
             ]
         );
         assert_eq!(class("commoner"), ["athletics", "handle_animal"]);

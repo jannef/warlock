@@ -31,14 +31,14 @@ expression: "render(case, content.clone())"
             │   v  Survival                                                            │
             │   w  Swim                                                                │
             │   x  Tumble                                                              │
-            │   y  Use magic device                                                    │
-            │   z  Woodcraft                                                           │
+            │   y  Woodcraft                                                           │
             │                                                                          │
             │ You take up a skill you lack, or get better at one you have; each rank,  │
             │ better still.                                                            │
             │                                                                          │
             │                                                                          │
-            │ a-z or Enter choose   Esc back                                           │
+            │ a-y or Enter choose   Esc back                                           │
             └──────────────────────────────────────────────────────────────────────────┘
+
 
  The Hub  ·  HP 28/28  ·  MP 3/3  ·  Lv 3  ·  08:00  ·  11 Darkening, Year 1444          ? controls

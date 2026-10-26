@@ -256,7 +256,7 @@ Both are objects with a `use` table, in the **Missile weapon slot** (so a wand a
 
 - **A wand's resolution is its spell's**: a wand of ray of frost rolls to hit (with the wielder's Missile skill), a wand of magic missile does not. An empty wand stays an item (sold, or kept for a later recharge); using it says "nothing happens" and costs no time.
 - **Wands let a martial class cast**: a warrior with no caster level fires fireball wands at the wand's level. That is the point; finite charges keep it scarce.
-- **Identification** is the scroll of identify's (charges and spell: unidentified items show neither) and Lore's. **Use magic device**, a trained skill that exists (`assets/data/skills.toml`, "Making wands, staves, and scrolls work, even without the gift"), adds to a wand's effective caster level and to a rod's cost cut; the exact is left to the implementer (§14).
+- **Identification** is the scroll of identify's (charges and spell: unidentified items show neither) and Lore's. There is no Use magic device skill (owner, 2026-10-26: "get rid of the use magic device skill"): a wand fires at its own level and a rod costs its own mana, whoever holds it.
 - **No magic staffs** (owner, 2026-10-26: "get rid of magic staffs if it's an issue"; it was one: "staff" is also the quarterstaff's weapon skill and a class's wielded item). Effects no spell has belong to rods; the idea is deferred (#196).
 
 ## 10. Talents and class abilities (the coverage bar)
@@ -316,12 +316,11 @@ Owner, 2026-10-26: "open questions left for the implementer to decide." Each que
 
 1. **Interrupted study**: lose the time and keep the scroll (the default), or ruin the scroll?
 2. **The attack roll's skill**: Missile for rays and Spellcraft for touch (the default), or one Spellcraft-based skill for every spell attack?
-3. **Use magic device**: what it does (caster level for wands, rod cost, scroll misfires, or all of them)?
-4. **Spell cap lifts**: the default is that nothing lifts a cap; does the owner want a rare, named exception (a unique item)?
-5. **Casting percents** (§3's table) and the guaranteed lists (§8): the first guess is mine.
-6. **New damage types** `force` and `necrotic`: or untyped force, and necrotic as the existing poison?
-7. **The mishap table's tone**: how nasty may *Terrible* be (a stat damaged for a long time, a hostile summoned)?
-8. **Spell recall's old meaning**: one scroll in four kept when read; does it also apply to study (a failed study that keeps the scroll)?
+3. **Spell cap lifts**: the default is that nothing lifts a cap; does the owner want a rare, named exception (a unique item)?
+4. **Casting percents** (§3's table) and the guaranteed lists (§8): the first guess is mine.
+5. **New damage types** `force` and `necrotic`: or untyped force, and necrotic as the existing poison?
+6. **The mishap table's tone**: how nasty may *Terrible* be (a stat damaged for a long time, a hostile summoned)?
+7. **Spell recall's old meaning**: one scroll in four kept when read; does it also apply to study (a failed study that keeps the scroll)?
 
 ## 15. Decisions (the owner's, from the design conversation, 2026-10-26)
 

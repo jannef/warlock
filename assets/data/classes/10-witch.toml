@@ -7,7 +7,7 @@ hp = 1
 mana = 10
 experience = 115
 alignment = -200
-skills = { heal = "2d6+10", spellcraft = "2d6+10", concentration = "2d4+4", intimidate = "2d4+4", use_magic_device = "2d4+4" }
+skills = { heal = "2d6+10", spellcraft = "2d6+10", concentration = "2d4+4", intimidate = "2d4+4" }
 known_for = ["heal", "spellcraft"]
 rolls = 2
 weapon_skills = { daggers = 1, staves = 1 }
