@@ -19,7 +19,8 @@ pub(super) fn scrolls(content: &Content) -> String {
     for (o, reading) in scrolls {
         let (what, damage, reach, sound) = match reading {
             Reading::Identify => (
-                "Identifies one unidentified item you carry: you know its magic from then on"
+                "Identifies one unidentified item you carry: you know its magic from then on, or \
+                 what kind of scroll an unknown one is"
                     .to_string(),
                 "—".to_string(),
                 "—".to_string(),
@@ -61,7 +62,7 @@ pub(super) fn scrolls(content: &Content) -> String {
         };
         let found = match o.frequency {
             0 => "not as loot".to_string(),
-            _ => format!("item level {}", o.level),
+            f => format!("item level {}, frequency {f}", o.level),
         };
         let _ = writeln!(
             out,

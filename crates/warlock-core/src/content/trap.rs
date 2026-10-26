@@ -73,7 +73,57 @@ fn trap_sign() -> String {
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct TrapFile {
+    #[serde(default)]
+    pub avoid: TrapAvoid,
     pub trap: Vec<TrapSpec>,
+}
+
+/// The chance of stepping onto a known trap without setting it off (spec §8 "Traps",
+/// `[avoid]` in `data/traps.toml`): `base` percent plus `per_point` for each point of the
+/// stepper's dodge (the Dexterity and Dodge parts of their Defence), kept within `min` and `max`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct TrapAvoid {
+    /// The chance, in percent, at a dodge of 0.
+    pub base: i32,
+    /// Percent more for each point of dodge (less for each point below 0).
+    pub per_point: i32,
+    /// The least chance, in percent: never hopeless.
+    pub min: u8,
+    /// The most chance, in percent: never certain.
+    pub max: u8,
+}
+
+impl Default for TrapAvoid {
+    fn default() -> Self {
+        Self {
+            base: 55,
+            per_point: 10,
+            min: 15,
+            max: 90,
+        }
+    }
+}
+
+impl TrapAvoid {
+    /// The chance, in percent, of avoiding a known trap with `dodge`.
+    pub fn chance(&self, dodge: i32) -> u32 {
+        let percent = self.base + self.per_point * dodge;
+        percent.clamp(i32::from(self.min), i32::from(self.max)) as u32
+    }
+
+    fn check(&self) -> Result<(), String> {
+        if self.min > self.max || self.max > 100 {
+            return Err(format!(
+                "[avoid]: min ({}) and max ({}) must be within 0 to 100, min first",
+                self.min, self.max
+            ));
+        }
+        if !(0..=100).contains(&self.base) || !(0..=50).contains(&self.per_point) {
+            return Err("[avoid]: base must be 0 to 100 and per_point 0 to 50".into());
+        }
+        Ok(())
+    }
 }
 
 /// What kind of thing a trap does, as data names it.
@@ -421,14 +471,18 @@ impl TrapSpec {
     }
 }
 
+/// What `data/traps.toml` holds: the trap types by id, and the chance of avoiding a known one.
+pub(super) type ParsedTraps = (Vec<TrapDef>, BTreeMap<String, TrapId>, TrapAvoid);
+
 /// Parses `data/traps.toml` against `content`'s objects.
 pub(super) fn parse(
     path: &str,
     text: &str,
     content: &Content,
-) -> Result<(Vec<TrapDef>, BTreeMap<String, TrapId>), ContentError> {
+) -> Result<ParsedTraps, ContentError> {
     let err = |m: String| ContentError::new(path, m);
     let parsed: TrapFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
+    parsed.avoid.check().map_err(err)?;
     let mut defs = Vec::with_capacity(parsed.trap.len());
     let mut ids = BTreeMap::new();
     for (i, spec) in parsed.trap.into_iter().enumerate() {
@@ -438,7 +492,7 @@ pub(super) fn parse(
         }
         defs.push(spec.resolve(content).map_err(err)?);
     }
-    Ok((defs, ids))
+    Ok((defs, ids, parsed.avoid))
 }
 
 /// A trap lying on a level's cell (spec §8 "Traps"): ground truth, kept in the level state.

@@ -72,24 +72,27 @@ fn the_room_effect_is_asked_of_any_visited_level() {
     let w = hall("hushed");
     let inside = Pos::new(18, 3);
     assert_eq!(
-        w.room_effect_at("test_room", inside).map(|e| e.id.as_str()),
+        w.effects_at("test_room", inside)
+            .room
+            .map(|e| e.id.as_str()),
         Some("hushed")
     );
     assert_eq!(
-        w.room_effect_at("test_room", Pos::new(14, 0))
+        w.effects_at("test_room", Pos::new(14, 0))
+            .room
             .map(|e| e.id.as_str()),
         Some("hushed"),
         "walls too"
     );
-    assert!(w.room_effect_at("test_room", Pos::new(13, 3)).is_none());
+    assert!(w.effects_at("test_room", Pos::new(13, 3)).room.is_none());
     assert!(
-        w.room_effect_at("hub", inside).is_none(),
+        w.effects_at("hub", inside).room.is_none(),
         "a level not visited"
     );
     // The showcase's stairs nook is a sanctuary.
     let content = Arc::new(Content::builtin().expect("content"));
     let showcase = World::new(content, "showcase", None).expect("showcase");
-    let nook = showcase.room_effect_at("hub", Pos::new(75, 16));
+    let nook = showcase.effects_at("hub", Pos::new(75, 16)).room;
     assert_eq!(nook.map(|e| e.id.as_str()), Some("sanctuary"));
 }
 
@@ -110,7 +113,7 @@ fn shadowed_rooms_keep_under_a_third_of_all_light() {
                 continue;
             };
             let (full, kept) = (full.light(), kept.light());
-            if dark.room_effect_at("test_room", p).is_some() {
+            if dark.effects_at("test_room", p).room.is_some() {
                 // Every part of the light (ambient, bounce, the lantern) keeps 30 %, each
                 // rounded down.
                 for c in 0..3 {
@@ -261,7 +264,7 @@ fn hostile_creatures_do_not_step_into_a_sanctuary() {
             .values()
             .filter(|a| a.kind == ActorKind::Creature)
         {
-            let inside = w.room_effect_at("test_room", a.pos).is_some();
+            let inside = w.effects_at("test_room", a.pos).room.is_some();
             match w.content.creature(a.creature).id.as_str() {
                 "rat" => assert!(!inside, "the rat stays out, at {}", a.pos),
                 _ => kobold_inside |= inside,
@@ -406,11 +409,228 @@ fn the_light_of_a_room_stays_in_it() {
         let (pv, wv) = (plain.perception(), w.perception());
         let level = w.state.current();
         for (p, t) in level.terrain.iter() {
-            if w.content.terrain(*t).transparent && w.room_effect_at("test_room", p).is_none() {
+            if w.content.terrain(*t).transparent && w.effects_at("test_room", p).room.is_none() {
                 let light =
                     |v: &crate::perception::PerceptionView<'_>| v.light(p).map(|l| l.light());
                 assert_eq!(light(&wv), light(&pv), "{effect} at {p}");
             }
         }
     }
+}
+
+/// More effects for the tests below: `gloom`, which keeps half the light, makes noise half again
+/// as loud, and may cover a whole level; `glade`, a quickening whose `near` line is said from
+/// outside.
+const MORE_EFFECTS: &str = "\n[[effect]]\nid = \"gloom\"\nname = \"gloomy room\"\nmark = \"G\"\n\
+    enter = \"Gloom.\"\nlevel_chance = 5\npervade = \"A gloom lies over this level.\"\n\
+    light = 50\nnoise = 150\n\
+    [[effect]]\nid = \"glade\"\nname = \"glade\"\nmark = \"L\"\nenter = \"A glade.\"\n\
+    near = \"You glimpse green light ahead.\"\nregen = 200\n";
+
+/// [`world_in`]'s hall with [`MORE_EFFECTS`] in the content, the special room `effect` (none if
+/// empty), and `header` (a level file's top-level lines, e.g. `effect = "gloom"`) on the level;
+/// a second level `other` (the same hall, plain) to travel to.
+fn hall_with(effect: &str, header: &str) -> World {
+    let mut files = ContentFiles::builtin();
+    files.edit_table("room_effects", |text| format!("{text}{MORE_EFFECTS}"));
+    let room = |effect: &str| {
+        if effect.is_empty() {
+            return String::new();
+        }
+        let [x0, y0, x1, y1] = ROOM;
+        format!("[[room]]\neffect = \"{effect}\"\narea = [{x0}, {y0}, {x1}, {y1}]\n")
+    };
+    let level = |name: &str, extra: &str, effect: &str| {
+        format!(
+            "name = \"{name}\"\nambient = [120, 120, 120, 0]\n{extra}map = '''\n{HALL}'''\n{}\
+             [legend]\n\"@\" = {{ terrain = \"floor\", spawn = \"player\" }}\n",
+            room(effect)
+        )
+    };
+    files.insert("levels/test_room.toml", &level("Test", header, effect));
+    files.insert("levels/other.toml", &level("Other", "", ""));
+    files.insert(
+        "scenarios/test_room.toml",
+        "name = \"T\"\nstart_level = \"test_room\"\n",
+    );
+    let content = Arc::new(Content::load(&files).expect("fixture content is valid"));
+    World::new(content, "test_room", None).expect("world")
+}
+
+#[test]
+fn effects_at_folds_the_room_and_the_level() {
+    let w = hall_with("shadowed", "effect = \"gloom\"\n");
+    let (outside, inside) = (Pos::new(5, 3), Pos::new(18, 3));
+    let here = w.effects_at("test_room", inside);
+    assert_eq!(here.room.map(|e| e.id.as_str()), Some("shadowed"));
+    assert_eq!(here.level.map(|e| e.id.as_str()), Some("gloom"));
+    // Percents multiply: 30 % of 50 % of the light, 150 % of the noise.
+    assert_eq!((here.light(), here.noise()), (15, 150));
+    let there = w.effects_at("test_room", outside);
+    assert_eq!((there.room, there.light()), (None, 50), "the level's alone");
+    assert!(!here.shunned() && !here.is_none());
+    // Noise made anywhere on the level is louder: the player's steps, 60, are 90.
+    let state = &w.state;
+    let mut actor = state.player().clone();
+    actor.pos = outside;
+    let burden = state.load(&w.content, &actor).penalty();
+    let step = noise::noise(
+        &w.content,
+        state.current(),
+        &actor,
+        burden,
+        Act::Step(outside),
+    );
+    assert_eq!(step.map(|n| n.loudness), Some(90));
+    super::light_tests::check_invariants(&w).expect("light invariants");
+    // A level without one: the room alone.
+    let plain = hall_with("shadowed", "");
+    assert_eq!(plain.effects_at("test_room", inside).light(), 30);
+    assert_eq!(plain.effects_at("test_room", outside), Here::default());
+}
+
+#[test]
+fn a_pervaded_level_is_told_on_every_arrival_and_saved() {
+    let mut w = hall_with("", "effect = \"gloom\"\n");
+    let told = |w: &World| -> u32 {
+        (w.messages().iter())
+            .filter(|m| m.text.starts_with("A gloom lies over this level."))
+            .map(|m| m.count)
+            .sum()
+    };
+    assert_eq!(told(&w), 1, "at the start");
+    assert_eq!(
+        w.perception().pervading().map(|e| e.id.as_str()),
+        Some("gloom")
+    );
+    assert!(
+        w.perception().room(Pos::new(5, 3)).is_none(),
+        "look mode never names it"
+    );
+    w.travel("other", None).expect("travels");
+    assert!(w.state.current().pervading.is_none());
+    w.travel("test_room", None).expect("travels back");
+    assert_eq!(told(&w), 2, "each time the player arrives");
+    // With Sense of place the line says what it is.
+    w.player_mut().talents.take("sense_of_place", None);
+    w.travel("other", None).expect("travels");
+    w.travel("test_room", None).expect("travels back");
+    assert_eq!(
+        last_message(&w),
+        "A gloom lies over this level. The whole level is like a gloomy room."
+    );
+    let bytes = crate::save::encode(&w);
+    let back = crate::save::decode(&bytes, w.content().clone()).expect("loads");
+    assert_eq!(back.state(), w.state());
+    assert_eq!(back.state_hash(), w.state_hash());
+    assert!(back.state.current().pervading.is_some());
+}
+
+#[test]
+fn level_files_name_only_effects_that_can_cover_a_level() {
+    let attempt = |header: &str| {
+        let mut files = ContentFiles::builtin();
+        files.edit_table("room_effects", |text| format!("{text}{MORE_EFFECTS}"));
+        files.insert(
+            "levels/test_room.toml",
+            &format!("name = \"T\"\n{header}map = '''\n#####\n#...#\n#####\n'''\n"),
+        );
+        Content::load(&files).map(|_| ()).map_err(|e| e.to_string())
+    };
+    assert!(attempt("effect = \"gloom\"\n").is_ok());
+    for (header, says) in [
+        ("effect = \"lava\"\n", "unknown effect `lava`"),
+        ("effect = \"sanctuary\"\n", "cannot cover a whole level"),
+        ("effect = \"flooded\"\n", "cannot cover a whole level"),
+        ("effect = \"glade\"\n", "cannot cover a whole level"),
+        (
+            "kind = \"overworld\"\neffect = \"gloom\"\n",
+            "the overworld has no `effect`",
+        ),
+    ] {
+        let err = attempt(header).unwrap_err();
+        assert!(err.contains(says), "{header}: {err}");
+    }
+}
+
+#[test]
+fn a_room_seen_from_outside_says_its_near_line_once() {
+    let near = "You glimpse green light ahead.";
+    let told = |w: &World| -> u32 {
+        (w.messages().iter())
+            .filter(|m| m.text == near)
+            .map(|m| m.count)
+            .sum()
+    };
+    // The player starts in the plain part of the hall with the room in view.
+    let mut w = hall_with("glade", "");
+    w.apply(&Action::Wait);
+    assert_eq!(told(&w), 1);
+    assert!(w.state.current().rooms[0].glimpsed);
+    assert!(
+        w.perception().room(Pos::new(18, 3)).is_none(),
+        "glimpsed, not known"
+    );
+    apply(&mut w, "wait move:E*10");
+    assert_eq!(told(&w), 1, "once per room");
+    assert_eq!(
+        w.perception().room(Pos::new(18, 3)).map(|e| e.id.as_str()),
+        Some("glade")
+    );
+    // A player first seeing it from inside hears only its `enter` line.
+    let mut inside = teleport(&hall_with("glade", ""), Pos::new(18, 3));
+    inside.state.current_mut().rooms[0].glimpsed = false;
+    inside.apply(&Action::Wait);
+    assert_eq!(told(&inside), 0);
+    assert!(inside.state.current().rooms[0].glimpsed);
+}
+
+#[test]
+fn sense_of_place_names_a_glimpsed_room() {
+    let mut w = hall_with("echoing", "");
+    w.player_mut().talents.take("sense_of_place", None);
+    w.apply(&Action::Wait);
+    assert_eq!(
+        w.perception().room(Pos::new(18, 3)).map(|e| e.id.as_str()),
+        Some("echoing"),
+        "known from a glimpse"
+    );
+    assert!(!w.state.current().rooms[0].entered);
+}
+
+#[test]
+fn hallowed_rest_quickens_a_room_s_quickening_half_again() {
+    let mut w = hall("sanctuary");
+    let player = w.state.player().clone();
+    assert_eq!(w.room_pace(&player, 300), 300);
+    w.player_mut().talents.take("hallowed_rest", None);
+    let player = w.state.player().clone();
+    assert_eq!(
+        w.room_pace(&player, 300),
+        400,
+        "half again of the quickening"
+    );
+    assert_eq!(w.room_pace(&player, 200), 250);
+    assert_eq!(
+        w.room_pace(&player, 100),
+        100,
+        "no quickening, nothing more"
+    );
+    assert_eq!(w.room_pace(&player, 40), 40, "a slowing is not quickened");
+}
+
+#[test]
+fn a_black_chamber_keeps_no_light_at_all() {
+    let mut w = teleport(&world_in(HALL, 255, "black", ""), Pos::new(13, 3));
+    w.apply(&Action::ToggleLantern);
+    let view = w.perception();
+    for x in 15..24 {
+        assert!(
+            !view.is_visible(Pos::new(x, 3)),
+            "normal eyes see nothing inside at {x}"
+        );
+    }
+    assert!(view.is_visible(Pos::new(10, 3)), "the hall outside is lit");
+    assert_eq!(view.light_kept(Pos::new(10, 3)), Some(100));
+    super::light_tests::check_invariants(&w).expect("light invariants");
 }

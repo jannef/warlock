@@ -83,7 +83,8 @@ balance, earn marks rarely, so they do not race ahead.
 
 - **Stealth**: a step that a creature nearby could have heard, if you had not stepped softly.
 - **Listen**: hearing something new.
-- **Tumble**: dodging an attack ("You dodge the kobold's spear.").
+- **Tumble**: dodging an attack ("You dodge the kobold's spear.") or stepping past a trap you
+  know of ("You deftly avoid the arrow trap.").
 - **Balance**: doing anything but waiting while your load slows you down.
 - **Survival**: a journey on the overworld.
 - **Steal**: every attempt to steal, whatever comes of it.

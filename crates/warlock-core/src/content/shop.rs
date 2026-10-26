@@ -77,6 +77,8 @@ struct ShopSpec {
     title: String,
     stock: Vec<String>,
     #[serde(default)]
+    always: Vec<String>,
+    #[serde(default)]
     buys: Vec<String>,
     items: [u8; 2],
     markup: u16,
@@ -93,6 +95,9 @@ pub struct ShopDef {
     pub title: String,
     /// The item classes of what generated shops of this kind lay out.
     pub stock: Vec<ItemClassId>,
+    /// What a generated shop of this kind always lays out, one stack of each (a bundle of a
+    /// stackable one) before the rest of its goods: the general store's scrolls of identify.
+    pub always: Vec<ObjectId>,
     /// The item classes of what it buys.
     pub buys: Vec<ItemClassId>,
     /// How many stacks of goods a generated shop lays out, least and most.
@@ -349,11 +354,21 @@ impl Shops {
                     .collect()
             };
             let (stock, buys) = (classes(&spec.stock)?, classes(&spec.buys)?);
+            let always = (spec.always.iter())
+                .map(|o| {
+                    (content.object_id(o))
+                        .ok_or_else(|| bad(format!("unknown object `{o}` in `always`")))
+                })
+                .collect::<Result<Vec<_>, _>>()?;
+            if always.len() > usize::from(least) {
+                return Err(bad("`always` may name at most `items`' least".into()));
+            }
             defs.push(ShopDef {
                 id: spec.id,
                 name: spec.name,
                 title: spec.title,
                 stock,
+                always,
                 buys,
                 items: (least, most),
                 markup: spec.markup,

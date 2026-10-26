@@ -49,7 +49,7 @@
 //! until they burn out.
 //!
 //! Special rooms (spec §7 "Special rooms", [`crate::content::RoomEffectDef`]): a level's special
-//! rooms change the rules inside them, through one question, [`World::room_effect_at`]: the
+//! rooms change the rules inside them, through one question, [`World::effects_at`]: the
 //! light (and so what the player and creatures see), the noise made there, regeneration, and
 //! whether creatures hostile to the player step in. The first time the player is inside one they
 //! are told what it is.
@@ -90,6 +90,7 @@ mod beast_friend;
 mod bleed;
 mod buff;
 mod carry;
+mod cast;
 mod caster;
 mod caster_level;
 mod class;
@@ -128,12 +129,14 @@ mod openings;
 mod path;
 mod perceive;
 mod quest;
+mod quick_leave;
 mod racial;
 mod rage;
 mod read;
 mod resource;
 mod rest;
 mod reveal;
+mod rooms;
 mod rot;
 mod schedule;
 mod search;
@@ -141,6 +144,7 @@ mod second_wind;
 mod service;
 mod shoot;
 mod shop;
+mod sidestep;
 mod sign_picks;
 mod skill_roll;
 mod spawn;
@@ -160,6 +164,7 @@ mod volley;
 
 pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
 pub use alignment::Deed;
+pub use cast::Reach;
 pub use caster_level::casting_percent;
 pub use creation::{chosen_with_talents, creation_count, parse_talents, pick_text};
 pub use dig::{MAX_DIG, WORK_SCALE, dig_work, digs_to_break};
@@ -176,6 +181,7 @@ pub use quest::{QuestRecord, QuestView, Quests, Stage, asks as quest_asks};
 use rest::Ended;
 pub use shop::{Shop, ShopStatus, count_of, favour, part_of, unpaid_parts};
 pub use sign_picks::BREATH_RANGE;
+pub use spell::cone_cells;
 pub(crate) use stars::{RISEN, RISEN_TWICE};
 pub use talent::Due;
 pub use talk::{Conversation, Talk, TopicView};
@@ -187,7 +193,7 @@ use crate::alignment::Score;
 use crate::burden::{self, Burden, Load};
 use crate::character::{Character, CharacterSpec};
 use crate::content::{
-    ActionKind, CombatStance, Content, RaceDef, RoomEffectDef, StairsDir, Stance,
+    ActionKind, CombatStance, Content, Here, ObjectId, RaceDef, StairsDir, Stance,
 };
 use crate::geom::{Dir, Pos};
 use crate::hunger::Satiation;
@@ -197,6 +203,7 @@ use crate::noise::Recent;
 use crate::object::{Stack, Weight};
 use crate::perception::{Perception, PerceptionView};
 use crate::rng::Rng;
+use crate::scroll_label::{Labels, Lore};
 use crate::skills::{Skills, Use};
 use crate::time::{Duration, GameTime};
 use crate::weapon_skills::WeaponSkills;
@@ -246,6 +253,10 @@ pub struct WorldState {
     pub(crate) messages: MessageLog,
     /// The player's vision profile (an id in `data/vision.toml`).
     pub(crate) vision: String,
+    /// Whether `vision` is the dev `vision:` override, which a unique item's Vision power never
+    /// betters (`world/eyes.rs`).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub(crate) vision_dev: bool,
     /// The player's character (spec §8 "Character creation"): race, gender, and class, the stat
     /// the gender raised, birth date, and birth sign; none when the scenario gives the player's
     /// eyes and stats itself.
@@ -294,6 +305,10 @@ pub struct WorldState {
     /// overworld as it is made, if it was not yet when they were revealed.
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub(crate) revealed: BTreeSet<String>,
+    /// The scroll types the player has identified (spec §8 "Scrolls"; [`crate::scroll_label`]):
+    /// they show by their names, the rest by their labels.
+    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+    pub(crate) known_scrolls: BTreeSet<ObjectId>,
 }
 
 fn is_zero(n: &u32) -> bool {
@@ -402,6 +417,8 @@ pub struct World {
     perception: Box<Perception>,
     /// Cached light masks; derived, never saved.
     lights: LightCache,
+    /// The unidentified scrolls' labels of the run; derived from the seed, never saved.
+    labels: Labels,
     /// Messages logged since this world was created or loaded (not saved): resting stops when it
     /// changes.
     said: u64,
@@ -564,6 +581,12 @@ impl World {
         let kit = start.as_ref().filter(|_| kit).map(|s| &s.kit);
         let pack = crate::kit::starting_pack(&content, def, kit);
         let with_kit = kit.is_some();
+        // A character knows the scrolls of their own kit (spec §8 "Scrolls").
+        let known_scrolls: BTreeSet<ObjectId> = (kit.iter())
+            .flat_map(|k| &k.items)
+            .map(|s| s.object)
+            .filter(|&o| content.object(o).read.is_some())
+            .collect();
         let (stats, vision, (hp_base, mana_base), skills, character, weapon_skills, alignment) =
             match start {
                 Some(s) => {
@@ -618,6 +641,7 @@ impl World {
             next_actor_id: 1,
             messages: MessageLog::default(),
             vision,
+            vision_dev: false,
             character,
             kit: with_kit,
             lantern_lit: false,
@@ -630,6 +654,7 @@ impl World {
             progress: Progress::default(),
             quests: Quests::default(),
             revealed: BTreeSet::new(),
+            known_scrolls,
         };
         let mut player = Actor {
             id: ActorId(0),
@@ -684,6 +709,9 @@ impl World {
         state.messages.push(0, welcome);
         if let Some(line) = &def.arrival {
             state.messages.push(0, line.clone());
+        }
+        if let Some(text) = rooms::pervade_line(&state, &content) {
+            state.messages.push(0, text);
         }
         if let Some(text) = enter_room(&mut state, &content) {
             state.messages.push(0, text);
@@ -795,11 +823,13 @@ impl World {
         let perception = Box::new(Perception::compute(&state, &content, &mut lights));
         perception.remember(state.current_mut());
         let time = state.time;
+        let labels = Labels::draw(&content, state.seed);
         Self {
             content,
             state: Box::new(state),
             perception,
             lights,
+            labels,
             said: 0,
             fallen: Vec::new(),
             news: Vec::new(),
@@ -907,7 +937,18 @@ impl World {
             progress: &self.state.progress,
             quests: &self.state.quests,
             messages: &self.state.messages,
+            lore: self.lore(),
             snapshot: &self.perception,
+        }
+    }
+
+    /// What the player knows of scroll types ([`crate::scroll_label`]): how they name what they
+    /// see.
+    pub fn lore(&self) -> Lore<'_> {
+        Lore {
+            content: &self.content,
+            labels: &self.labels,
+            known: &self.state.known_scrolls,
         }
     }
 
@@ -941,13 +982,14 @@ impl World {
         (level, actors)
     }
 
-    /// The effect of the special room at `pos` on level `level`, if that level has been visited
-    /// and a special room lies there (spec §7 "Special rooms"). This is the one question the rules
-    /// ask of special rooms (through the level's state inside the core); ground truth, **for the
-    /// rules, tests, and developer tools**: the player knows only the rooms they have been in
-    /// ([`PerceptionView::room`]).
-    pub fn room_effect_at(&self, level: &str, pos: Pos) -> Option<&RoomEffectDef> {
-        (self.state.levels.get(level)?).room_effect_at(&self.content, pos)
+    /// What the special rooms do at `pos` on level `level` (spec §7 "Special rooms"): the effect
+    /// of the room there and the one covering the level, none for a level not visited. This is
+    /// the one question the rules ask of special rooms (through the level's state inside the
+    /// core); ground truth, **for the rules, tests, and developer tools**: the player knows only
+    /// the rooms they have been in ([`PerceptionView::room`]).
+    pub fn effects_at(&self, level: &str, pos: Pos) -> Here<'_> {
+        (self.state.levels.get(level))
+            .map_or_else(Here::default, |l| l.effects_at(&self.content, pos))
     }
 
     /// Applies one player action and runs the rest of the turn if it took time. Once the player
@@ -1170,6 +1212,8 @@ mod buff_tests;
 #[cfg(test)]
 mod burden_tests;
 #[cfg(test)]
+mod cast_tests;
+#[cfg(test)]
 mod caster_level_tests;
 #[cfg(test)]
 mod caster_tests;
@@ -1268,6 +1312,8 @@ mod protection_tests;
 #[cfg(test)]
 mod quest_tests;
 #[cfg(test)]
+mod quick_leave_tests;
+#[cfg(test)]
 mod race_tests;
 #[cfg(test)]
 mod racial_tests;
@@ -1284,6 +1330,8 @@ mod room_tests;
 #[cfg(test)]
 mod rot_tests;
 #[cfg(test)]
+mod scroll_label_tests;
+#[cfg(test)]
 mod search_tests;
 #[cfg(test)]
 mod service_tests;
@@ -1291,6 +1339,8 @@ mod service_tests;
 mod shoot_tests;
 #[cfg(test)]
 mod shop_tests;
+#[cfg(test)]
+mod sidestep_tests;
 #[cfg(test)]
 mod sign_pick_tests;
 #[cfg(test)]
@@ -1335,6 +1385,8 @@ mod tests;
 mod time_tests;
 #[cfg(test)]
 mod trap_tests;
+#[cfg(test)]
+mod unique_tests;
 #[cfg(test)]
 mod variant_tests;
 #[cfg(test)]

@@ -24,7 +24,12 @@
 //! explodes!"), then what it did to whom ("The fireball burns the kobold.", "The kobold dies.").
 //!
 //! **The scroll of identify** identifies one unidentified stack the player carries
-//! ([`World::identify`]): "This is a Sharp long sword of the Bear!"
+//! ([`World::identify`]): "This is a Sharp long sword of the Bear!", or the type of a scroll
+//! still under its label.
+//!
+//! **Unknown scrolls** ([`crate::scroll_label`]) read just as known ones do; the read names the
+//! scroll by its label ("You read the scroll labelled ZUNBAR.") and identifies its type ("It is a
+//! scroll of fireball."), the scroll of identify's own too.
 
 use super::fight::{End, Guard, Words, attack_message, death_message};
 use super::spell::Caster;
@@ -53,10 +58,8 @@ impl World {
         };
         let def = content.object(stack.object);
         let Some(reading) = &def.read else {
-            self.say(format!(
-                "You cannot read {}.",
-                stack.single().describe(&content)
-            ));
+            let what = self.lore().describe(&stack.single());
+            self.say(format!("You cannot read {what}."));
             return Spent::Nothing;
         };
         match (reading, target) {
@@ -77,22 +80,18 @@ impl World {
 
     /// Reads the scroll of identify in inventory stack `item` on inventory stack `on`.
     fn read_identify(&mut self, item: usize, on: usize) -> Spent {
-        let content = self.content.clone();
         let Some(stack) = self.state.player().inventory.get(on) else {
             self.say("You carry no such thing.");
             return Spent::Nothing;
         };
-        if stack.is_identified() {
-            let what = stack.single().describe(&content);
+        if self.lore().knows(stack) {
+            let what = self.lore().describe(&stack.single());
             self.say(format!("You already know what {what} is."));
             return Spent::Nothing;
         }
         let price = self.read_price();
         let scroll = self.state.player().inventory[item].single();
-        self.say(format!(
-            "You read the {}.",
-            content.object(scroll.object).name
-        ));
+        self.say_read(&scroll);
         // Identified first: using the scroll up may move the stack it was read on.
         if matches!(self.identify(on), super::Identified::Now(_)) {
             self.train_stat(StatUse::Identified);
@@ -120,10 +119,7 @@ impl World {
         // Priced as the reading begins, with the scroll still in the pack.
         let price = self.read_price();
         let (scroll, kept) = self.use_up(item).expect("the scroll is there");
-        self.say(format!(
-            "You read the {}.",
-            content.object(scroll.object).name
-        ));
+        self.say_read(&scroll);
         if let Some(text) = &spell.message {
             self.say(text.clone());
         }
@@ -158,6 +154,18 @@ impl World {
             death.cause = Some(Cause::Scroll(scroll.object));
         }
         Spent::Turn(price)
+    }
+
+    /// Says that the player reads `scroll`, by what they knew it as ("You read the scroll
+    /// labelled ZUNBAR."), and, if they did not know its type, what it turned out to be ("It is
+    /// a scroll of fireball."): reading a scroll identifies its type (spec §8 "Scrolls").
+    fn say_read(&mut self, scroll: &Stack) {
+        let title = self.lore().title(scroll);
+        self.say(format!("You read the {title}."));
+        if self.learn_scroll(scroll.object) {
+            let what = self.content.object(scroll.object).describe(1);
+            self.say(format!("It is {what}."));
+        }
     }
 
     /// Where a burst read from `from` at `at` goes off (module docs): the first cell on the

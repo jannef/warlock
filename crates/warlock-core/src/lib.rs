@@ -46,6 +46,7 @@ pub mod resource;
 pub mod rng;
 pub mod rot;
 pub mod save;
+pub mod scroll_label;
 mod sight;
 pub mod skills;
 pub mod stats;

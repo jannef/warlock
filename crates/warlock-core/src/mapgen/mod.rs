@@ -41,8 +41,8 @@ mod vault;
 
 use crate::content::{
     Content, CreatureId, CreatureSpawn, Flow, Generator, LevelKind, LevelTemplate, LightId,
-    ObjectId, RoomOdds, Secret, ShopOdds, ShopPlan, SpecialRoom, StairsDir, StairsLink, TerrainId,
-    Trap, Vault, secret_look,
+    ObjectId, RoomEffectId, RoomOdds, Secret, ShopOdds, ShopPlan, SpecialRoom, StairsDir,
+    StairsLink, TerrainId, Trap, Vault, secret_look,
 };
 use crate::door::Lock;
 use crate::geom::{Dir, Pos};
@@ -190,6 +190,11 @@ pub(crate) struct Canvas<'a> {
     pub creatures: Vec<CreatureSpawn>,
     /// Special rooms (spec §7 "Special rooms"; `special.rs`).
     pub rooms: Vec<SpecialRoom>,
+    /// The effect covering the whole level, if one drawn for a room does (`special.rs`).
+    pub pervading: Option<RoomEffectId>,
+    /// Whether the level has a danger (some effects need one) and another level below it.
+    pub danger: bool,
+    pub below: bool,
     /// Shops (spec §7 "Shops"; `shop.rs`), their keepers among `creatures`.
     pub shops: Vec<ShopPlan>,
     /// Cells stamped from vaults; later passes leave them alone.
@@ -222,6 +227,9 @@ impl<'a> Canvas<'a> {
             secrets: BTreeMap::new(),
             creatures: Vec::new(),
             rooms: Vec::new(),
+            pervading: None,
+            danger: false,
+            below: false,
             shops: Vec::new(),
             stamped: Grid::new(width, height, false),
             up: None,
@@ -434,6 +442,8 @@ pub fn generate_for(
             .collect();
         let size = (plan.width, plan.height);
         let mut canvas = Canvas::new(content, pal, odds, vaults, size);
+        canvas.danger = content.spawning(id).is_some();
+        canvas.below = needs.down;
         let built = match plan.generator {
             Generator::Rooms => rooms::build(&mut canvas, &mut rng, needs),
             Generator::Caves => caves::build(&mut canvas, &mut rng, needs),
@@ -483,6 +493,7 @@ pub fn generate_for(
             places: BTreeMap::new(),
             regions: Vec::new(),
             rooms: canvas.rooms,
+            pervading: canvas.pervading,
             shops: canvas.shops,
             exit: None,
             item_level,
@@ -770,5 +781,7 @@ mod cealdhlaw_tests;
 mod fennmynster_tests;
 #[cfg(test)]
 mod fyrdelf_tests;
+#[cfg(test)]
+mod special_tests;
 #[cfg(test)]
 mod tests;

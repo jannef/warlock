@@ -87,73 +87,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   wandering bard, and the old hermit (speed 800), glyph `@`, of the peaceful folk by type, level
   1 and worth no experience. The campaign's creatures come in waves, one per dungeon
   (docs/design/campaign.md §10.1), each type on the `5 × level + 10` guideline and on the fields
-  above, with a gear table where it is a humanoid (§8 "Creature gear"); the wiki's creature
-  tables give every number. The barrow wave (the barrows of Cealdhlāw, danger 1 to 6): the grave
-  worm 1 (slow, a mildly poisonous bite), the barrow spider 2 (quick, silent, poisonous), the
-  goblin 2 (racial club, loud, opens doors), the goblin archer 3 (racial short bow and arrows, a
-  club in reserve), the skeleton 3 (resists piercing 50, takes bludgeoning double, no corpse, no
-  blood; an old sword or spear now and then), the zombie 3 (slow, many hit points, grave rot on
-  a hit), the giant centipede 3 (plates, poisonous), the barrow ghoul 4 (quick, keen slashing
-  claws whose criticals bleed), the goblin chief 5 (club, short sword, jerkin, coins), and the
-  barrow wight 6 (a caster whose touch is cold, resists cold, no corpse; an ancient long sword,
-  sometimes magic). The undead are immune to poison. The barrow wight is the Ascmearc's own type
-  (`docs/dev/campaign.md`). The undead roster's first batch (#383, #384) joins it: the crawling
-  hand 1 and the skeletal rat 1 (small, quick, bone that a club breaks), the kobold zombie 2
-  (slow, grave rot now and then), the skeleton archer 4 (a short bow and arrows, keeps its
-  distance), the skeletal wolf 5 (quick bone), and the skeleton warrior 7 (a long sword or spear,
-  a small shield, chain mail now and then). The fen wave (the drowned minster of Fennmynster, danger 4 to 11):
-  the giant leech 4 (its bite leaves a bleeding wound), the giant frog 4 (quick), the drowned 5
-  (undead, slow, filth fever on a hit), the crocodile 6 (a strong bite, scales 2/3), the
-  cultist 6 (racial dagger, a scroll now and then), the will-o'-wisp 7 (a caster that glows,
-  silent, hard to hit, no corpse), the ghost 8 (undead, resists slashing, piercing, and
-  bludgeoning 50, a cold touch, no corpse; incorporeal, §8 "Incorporeal creatures"), the mud
-  golem 8 (slow, protection 5, no corpse), the
-  cult priest 9 (a caster with the cult's dagger, sometimes magic, and often a scroll), the marsh
-  troll 9 (huge, regenerating by its Toughness), and the bog hag 11 (a caster with a staff, often
-  magic; unique: a population draws her once a run). The cultist, the cult priest, and the bog
-  hag are the Ascmearc's own types. Its undead (#384): the corpse candle 2 (small, incorporeal,
-  glows, a cold touch), the poltergeist 6 (quick, incorporeal), the ghast 7 (quick, opens doors,
-  filth fever on a hit; its claws may hold), the shadow 8 (incorporeal, a cold touch that drains
-  Strength, §8 "Stats": "Drain"), and the bog body 9 (slow, resists cold, marsh ague on a hit);
-  and from the roster's second batch (#385) the wraith 11 (incorporeal, a cold touch that drains
-  Toughness) and the fen ghoul 11 (quick, opens doors, claws that may hold and carry marsh
-  ague). The delf wave (the duergar delf of Fyrdelf, danger 8 to 19): the ember beetle 8 (a
-  burning bite, shell, resists fire 50, a faint glow), the duergar miner 9 (a pick-axe
-  held as a tool, the racial hand axe half the time, a leather cap), the duergar warrior 11
-  (racial hand axe, small shield, chain mail, sometimes magic), the ogre 12 (slow, racial maul),
-  the fire salamander 12 (immune to fire, cold double, lights its way), the troll 13 (so tough its
-  wounds close fast, fire hurts it more), the duergar smith 13 (racial war hammer, sometimes magic,
-  chain mail), the magma crawler 14 (slow, a searing touch, slag hide, cold hurts it, no corpse),
-  the ash wraith 15 (an undead caster with a cold touch, no corpse), the basilisk 16 (scales, a
-  bite that leaves one Sluggish), the cinder elemental 17 (immune to fire, bright, no corpse), and
-  the fire drake 19 (the Ascmearc's own, unique: a caster whose breath is announced, scales,
-  immune to fire). Its undead (#384): the ogre zombie 9 (slow, heavy fists, grave rot) and the
-  grave hound 10 (quick, grave rot), and from the second batch (#385) the burning skull 12 (small,
-  lit by its own fire, a burning bite, immune to fire, hurt more by cold), the knocker 13 (a
-  miner's spirit, incorporeal), the spectre 14 (incorporeal, a cold touch that drains
-  Willpower), the charred dead 14 (slow, resists fire, hurt more by cold), the duergar skeleton 15
-  (a war hammer and an iron helm, bone that a club breaks), and the rotting troll 17 (slow, huge
-  claws, grave rot, fire hurts it more). In no population yet, waiting for deep places (#383): the
-  mummy 10 (slow, mummy rot on a hit, fire hurts it more), the draugr 12 (huge, resists cold, a
-  great axe half the time), the barghest 13 (a quick black dog whose bite frightens), the vampire
-  spawn 16 (quick, opens doors, a bite that drains Toughness, fire hurts it more), the hand of
-  glory 16 (small, lit by its fingers, a cold touch that transfixes), the gallows dead 17 (a
-  tongue that holds fast), the gibbering shade 18 (incorporeal, a cold touch that drains
-  Intelligence), the bone wyvern 18 (a sting, bone with protection 2), the revenant 19 (very
-  tough, a long sword half the time), the fetch 19 (incorporeal, a cold touch that frightens), and
-  the mummy priest 20 (a caster whose touch carries mummy rot, sometimes something worth taking).
-  The demons (#449; faction `demon`, hostile to the player, the kobolds, the goblins, the duergar,
-  and the marsh things; tags `demon` and `fiend`; evil, darkvision, immune to poison, resisting
-  fire, and from level 24 cold and electricity a little; no corpse; the undead roster's formulas):
-  in Fyrdelf's population, the dretch 8 (small, slow, filthy claws that give filth fever) and the
-  quasit 12 (small, quick, claws that poison and weaken). In no population yet, waiting for deep
-  places: the balgura 24 (a savage ape, a brute on quick feet), the chasme 28 (a giant fly whose
-  drone transfixes), the hezrou 30 (a hulking toad whose stench sickens: claws that poison), the
-  vrock 34 (a vulture whose screech frightens), the marilith 40 (six blades, striking twice as
-  often), the glabrezu 44 (pincers that hold fast), the nalfeshnee 50 (a winged boar whose bite
-  fills with horror), and the balor 62 (wreathed in fire and lit by it, immune to fire, a great
-  sword, often magic, struck faster than one blow a turn, and a flaming whip that holds when it
-  has no sword). The duergar types are of the duergar race. For blood (§8 "Blood";
+  above, with a gear table where it is a humanoid (§8 "Creature gear"). The creature types are
+  the files in `assets/data/creatures/` (a campaign's own in its `data/creatures/`); the wiki's
+  generated tables (`cargo xtask wiki`) list them with their numbers, so adding a creature never
+  edits this spec. For blood (§8 "Blood";
   presentation only):
   `blood`, the colour of its stains (`"#rrggbb"`; default dark red, `#6e0e0c`) or `"none"` for a
   bloodless creature; the cave beetle bleeds greenish-black ichor (`#38461a`). For hunger (§8
@@ -450,7 +387,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   and `shield` (while held), each 0 to 20; `protection` (damage soaked off every hit while worn,
   0 to 20, adding up across what is worn; only on armour worn, never in a hand or on a shield);
   `penetration` (how much of a target's Protection it ignores, 0 to 20; weapons and
-  ammunition); `bash` (a shield's damage dice when bashing with it,
+  ammunition); `spell_cost_percent` (while worn or held, a spell costs this percent more mana,
+  0 to 100, adding up across what is worn; only on things with a `slot`; §8 "Spells"); `bash` (a shield's damage dice when bashing with it,
   only with `shield`; §8 "Weapon skills"); and `category`, the weapon skill a weapon draws on and
   trains (an id in `data/weapon_skills.toml`; required for every weapon when there are weapon
   skills, refused on anything else): a `melee` skill for what goes in a hand, a `launcher` one
@@ -551,9 +489,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
   for `durability`, `weight`, `stealth`, 1 to 100 for `max_hp`, `max_mana`, `carry` (kg), and `skill`, 1 to
   300 for `regeneration` and `mana_regeneration`, 1 to 75 for `resistance`), or for `light` `{ level, light }` naming a
   light preset. The built-in
-  affixes: 25 prefixes and 29 suffixes in up to four tiers (item levels 1, 3, 5, 7 for most); the wiki
+  affixes: 26 prefixes and 29 suffixes in up to four tiers (item levels 1, 3, 5, 7 for most); the wiki
   lists them in generated tables. The light presets `item_glow_faint`, `item_glow`, and
   `item_glow_bright` (radius 2, 3, 4; steady, cool) are the glowing tiers'.
+- **Unique items** (`data/uniques/` and each campaign's `data/uniques/`, one item a file named
+  by its id, read in path order; optional; #423; §8 "Magic items"): `[[unique]]`s with `id`,
+  `name` (1 to 30 characters), `object` (a base item with a `kind` that does not stack),
+  `affixes` (as an `[[item]]`'s: `"venomous:2"`, the value the top of the tier's range; checked
+  as a rare item's), optional `parts` (as an `[[item]]`'s), `level` (default: its highest
+  tier's), optional `power`, one of `{ inflict = STATUS, chance = 1..100, severity = 1..max }`,
+  `{ vision = PROFILE }`, `{ ward = STATUS, message = "..." }`, each with a `phrase` (the power
+  in words, for the item description), and optional `lore` (the description's last line).
+  Placed as `unique:ID` (no count) wherever objects are named, once in all content; a legend's
+  `wield`/`wear` name it the same way to wear the one carried.
 - **Talents** (`data/talents.toml`, the settings; `data/talents/`, one talent a file, read in
   path order; optional, without them no level asks for a pick; M30, #229; §8 "Talents"):
   `max_ranks` (3), `[coverage]` (`min_talents`, `min_class`, `free_per_tree`), `[[tree]]`s
@@ -657,20 +605,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   symmetric: if A lists B, A and B are hostile to each other; every pair not listed (a faction
   and itself too) is neutral. Validation: unique ids, known ids, no faction hostile to itself, a `player` faction
   (the player's), and every creature type but the player naming a known faction. The core API
-  gives the stance (`Hostile` or `Neutral`) of two factions, creature types, or actors. Test
-  factions: `vermin` (giant rats; hostile to the player), `kobolds` (the war band; hostile to the
-  player and the vermin), `goblins` (the barrows' goblin tribes; hostile to the player, the
-  vermin, and the kobolds), `undead` (the barrows' and the fen's dead; hostile to the player,
-  the kobolds, and the goblins, and leaving the vermin alone), `marsh` ("marsh things", the
-  fen's living things and the bog hag; hostile to the player; not animals as a faction), `cult`
-  ("cultists", the drowned minster's cult; hostile to the player and the marsh), `duergar` (the
-  delf's grey dwarves; hostile to the player, the goblins (the ogres and trolls among them), and
-  the undead), `fire` ("fire things", the delf's burning creatures and the fire drake; hostile to
-  the player only), `demon` ("demons", the demon roster; hostile to the player, the kobolds, the
-  goblins, the duergar, and the marsh things; not animals), `wildlife` (deer, cave bats, the cave beetle;
-  neutral to everyone), and
-  `peaceful` ("peaceful folk", hostile to no one: the showcase's people by type, and creatures
-  levels place in it); `merchants` (shopkeepers; hostile to no one) and `outraged` ("outraged
+  gives the stance (`Hostile` or `Neutral`) of two factions, creature types, or actors. The
+  factions are the entries of `assets/data/factions.toml`; the wiki's generated tables list them
+  and who is hostile to whom, so adding a faction never edits this spec. Two are rules: `merchants` (shopkeepers; hostile to no one) and `outraged` ("outraged
   shopkeepers", hostile to the player), which a robbed or attacked shopkeeper joins (§7
   "Shops"). A level
   legend entry with a `creature` may name a `faction` (a known faction id; an unknown one is a

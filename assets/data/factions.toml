@@ -52,6 +52,14 @@ id = "cult"
 name = "cultists"
 hostile = ["player", "marsh"]
 
+# The hags (#451): the green hag, the sea hag, the annis hag, and the bheur hag, who keep to
+# themselves and run with no one's band. The bog hag is not among them: the fen's things serve her,
+# and she stays theirs (`marsh`). Hostile to the player only.
+[[faction]]
+id = "hags"
+name = "hags"
+hostile = ["player"]
+
 # The grey dwarves of the deep delf (Fyrdelf): miners, warriors, smiths. They hate the living who
 # come down their shafts, the goblins' kin (the ogres and trolls of the deep among them), and
 # the dead the fires made; the fire things they leave be.
@@ -75,6 +83,14 @@ hostile = ["player"]
 id = "demon"
 name = "demons"
 hostile = ["player", "kobolds", "goblins", "duergar", "marsh"]
+
+# The yugoloths (#446): mercenary fiends of the lower planes, who serve whoever pays. They come
+# for the player and leave everyone else alone, the demons and devils included: hired by none,
+# at war with none (there is no hire yet; relations are only symmetric hostile lists).
+[[faction]]
+id = "yugoloth"
+name = "yugoloths"
+hostile = ["player"]
 
 # Folk who mean the player no harm, whatever they are: the showcase's people (the gardener, the
 # bard, the hermit) by type, and others placed here by levels with `faction = "peaceful"` in a

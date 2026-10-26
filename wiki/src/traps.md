@@ -24,6 +24,28 @@ Stepping onto a trap you know asks first, in a small window: `Really step onto t
 trap?` Choose **Step onto it** (`y`) to step on, or **Stay back** (`n` or `Esc`, chosen at first)
 to stay where you are. Holding a movement key stops you short of the trap instead of asking.
 
+## Stepping past a known trap
+
+When you step onto a trap you know of, on purpose, you have a good chance to **avoid** it: you
+step lightly over the pit, or deftly past the pressure plate before the arrow flies ("You deftly
+avoid the arrow trap.", "You step lightly over the pit."). The trap stays where it is, still
+armed, and the step takes its usual time. Otherwise it goes off as usual.
+
+The chance depends on your **dodge**: your Dexterity modifier as your armour and burden leave it
+(heavy armour and a heavy load cap it, as in [combat](combat.md)), plus every **Dodge** bonus you
+have (the Tumble skill, talents, magic, your stance, and your state). It is 55% at a dodge of 0,
+10% more for each point above that and 10% less for each point below, never less than **15%**
+and never more than **90%**: it is always a gamble.
+
+{{#include generated/trap-avoid.md}}
+
+A trap you have not found gets no such chance: you do not know to step lightly. Nor does a
+step you did not choose, such as being turned back at a shop's door, and creatures never try.
+Avoiding a trap counts as dodging for training Tumble and Dexterity. A door's trap is not stepped
+on; it goes off when the door opens (see [Trapped doors](#trapped-doors)). The **Light step**
+talent's chance comes on top: if you fail to avoid a trap, it may still save you, and it works
+on hidden traps too (see [Talents](talents.md)).
+
 ## What traps do
 
 {{#include generated/traps.md}}

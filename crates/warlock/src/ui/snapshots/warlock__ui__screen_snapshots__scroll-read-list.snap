@@ -3,7 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  There are several objects here.
- You pick up 8 objects.
+ You pick up 10 objects.
 
 
 
@@ -15,10 +15,10 @@ expression: "render(case, content.clone())"
                     ┌─ Read ───────────────────────────────────────────────────┐
                     │                                                          │
                     │ Scrolls                                                  │
-                    │ > a - ? 2 scrolls of fireball                     100 g  │
-                    │   b - ? 2 scrolls of lightning                    100 g  │
-                    │   c - ? 2 scrolls of frost                        100 g  │
-                    │   d - ? a scroll of identify                       50 g  │
+                    │ > a - ? 2 scrolls labelled ALPRAAL                100 g  │
+                    │   b - ? 2 scrolls labelled KABEKNIH               100 g  │
+                    │   c - ? 2 scrolls labelled QUASANRO               100 g  │
+                    │   d - ? 3 scrolls labelled BARQUAA                150 g  │
                     │                                                          │
                     │ a-d or Enter read   Esc cancel                           │
                     └──────────────────────────────────────────────────────────┘

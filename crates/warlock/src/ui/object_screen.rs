@@ -90,7 +90,7 @@ impl ObjectList {
     /// may carry on one line each.
     fn width(self) -> i32 {
         match self {
-            ObjectList::Inventory => 72,
+            ObjectList::Inventory => super::info_tabs::panel_width(72),
             ObjectList::PickUp
             | ObjectList::Drop
             | ObjectList::Throw
@@ -197,8 +197,9 @@ impl ObjectScreen {
                 .filter(|&i| reading(&pack[i]).is_some())
                 .map(Item::Pack)
                 .collect(),
-            ObjectList::Identify(_) => (0..pack.len())
-                .filter(|&i| !pack[i].is_identified())
+            // The scroll read is not among them: reading it names its own kind anyway.
+            ObjectList::Identify(scroll) => (0..pack.len())
+                .filter(|&i| i != scroll && !view.lore().knows(&pack[i]))
                 .map(Item::Pack)
                 .collect(),
         };
@@ -235,8 +236,8 @@ impl ObjectScreen {
                 let entry = Entry {
                     item,
                     glyph: def.glyph,
-                    fg: s.fg(content),
-                    name: s.describe(content),
+                    fg: view.lore().fg(s),
+                    name: view.lore().describe(s),
                     mark: (!marks.is_empty()).then(|| marks.join(") (")),
                     weight: s.weight(content),
                     rarity: s.rarity(),
@@ -668,7 +669,7 @@ mod tests {
     }
 
     /// The trap hall's scrolls and unknown dagger picked up: a dagger (magic, unidentified), b
-    /// fireball, c lightning, d frost, e identify.
+    /// fireball, c lightning, d frost, e identify (the scrolls all unknown, under labels).
     fn with_scrolls() -> World {
         let content = Arc::new(Content::builtin().expect("content"));
         let mut world = World::new(content, "traps", None).expect("world");
@@ -682,17 +683,13 @@ mod tests {
         let world = with_scrolls();
         let b = Bindings::default();
         let mut screen = ObjectScreen::new(ObjectList::Read, Some(&world.perception()));
+        // Unknown scrolls by their labels (spec §8 "Scrolls").
+        let lore = world.perception().lore();
+        let pack = world.perception().inventory();
+        let labelled: Vec<String> = pack[1..].iter().map(|s| lore.describe(s)).collect();
         let names: Vec<&str> = screen.entries.iter().map(|e| e.name.as_str()).collect();
-        assert_eq!(
-            names,
-            [
-                "2 scrolls of fireball",
-                "2 scrolls of lightning",
-                "2 scrolls of frost",
-                "a scroll of identify"
-            ],
-            "no dagger"
-        );
+        assert_eq!(names, labelled, "no dagger");
+        assert!(labelled.iter().all(|n| n.contains("scrolls labelled")));
         let mut console = Console::default();
         console.resize(80, 24);
         screen.draw(&mut console, &b);
@@ -701,7 +698,7 @@ mod tests {
         assert!(
             shown
                 .iter()
-                .any(|l| l.contains("a - ? 2 scrolls of fireball"))
+                .any(|l| l.contains(&format!("a - ? {}", labelled[0])))
         );
         assert!(
             shown
@@ -718,10 +715,13 @@ mod tests {
             ScreenAction::Replace(super::super::ScreenName::Identify)
         );
         assert_eq!(screen.looked(), Some(4));
-        // What it is read on: the unidentified stacks only.
+        // What it is read on: the unidentified stacks only, the labelled scrolls among them, not
+        // the scroll read.
         let mut screen = ObjectScreen::new(ObjectList::Identify(4), Some(&world.perception()));
         let names: Vec<&str> = screen.entries.iter().map(|e| e.name.as_str()).collect();
-        assert_eq!(names, ["a dagger (magic)"]);
+        let mut unknown = vec!["a dagger (magic)"];
+        unknown.extend(labelled[..3].iter().map(String::as_str));
+        assert_eq!(names, unknown);
         assert_eq!(
             screen.handle(&typed('a'), &b),
             ScreenAction::Act(Action::Read {

@@ -9,8 +9,9 @@ spec/07f-scenarios-and-saves.md. Keep this current with the code, as CLAUDE.md s
 
 A campaign is a directory `assets/campaigns/<id>/` holding one world: `campaign.toml`,
 `levels/` (its overworld and every hand-made level), `scenarios/`, optional `vaults/`, and the
-tables `data/dungeons/`, `data/quests/`, `data/dialogue/`, and `data/creatures/` (its own,
-semi-unique creature types: its people and bosses). Everything else under `assets/` is shared
+tables `data/dungeons/`, `data/quests/`, `data/dialogue/`, `data/creatures/` (its own,
+semi-unique creature types: its people and bosses), and `data/uniques/` (its unique items,
+`docs/dev/magic-items.md`; the wiki leaves out the test world's). Everything else under `assets/` is shared
 engine data, `assets/data/` (the common creature types, the shopkeeper's dialogue in
 `data/dialogue.toml`, the field references `data/quests.toml` and `data/dungeons.toml`, which
 hold no entries) and `assets/vaults/`. There are two campaigns: the Ascmearc (`ascmearc`, kind
@@ -145,8 +146,9 @@ Test content never appears in a release. The cargo feature `showcase` holds it:
 ## Cēaptūn, the Ascmearc's market town (#336, design §6)
 
 `campaigns/ascmearc/levels/ceaptun.toml` (90×32, `kind = "outdoor"`, `item_level = 1`, no
-danger), entered from the overworld's `T` (`to = "ceaptun"`) and left by the `<` on its square
-(`to = "ascmearc"`). The map was drawn by a throwaway script and is edited by hand now. Its
+danger), entered from the overworld's `T` (`to = "ceaptun"`), arriving on the square (its `@`), and,
+with no stairs, left by its edge back to that cell (or `<` when no enemy is about;
+docs/dev/overworld.md, the edge exit of a hand-made outdoor level and the quick leave). The map was drawn by a throwaway script and is edited by hand now. Its
 `[[shop]]`s (general store, weaponsmith, armourer, provisioner; keepers named in Old English)
 lay out `[[pile]]`s of goods each kind buys; the Mynster is a `sanctuary` `[[room]]`. The people
 are campaign creature types (`data/creatures/{villager,sister,innkeeper,reeve,mine_factor}.toml`)

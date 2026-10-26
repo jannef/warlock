@@ -57,6 +57,11 @@ objects = ["pick_axe"]
 at = [9, 10]
 objects = ["mattock"]
 
+# A unique dagger an old stonecutter left (spec §8 "Magic items"), west of the start.
+[[pile]]
+at = [7, 8]
+objects = ["unique:stonebiter"]
+
 # Stones from the old digging, to throw.
 [[pile]]
 at = [23, 4]

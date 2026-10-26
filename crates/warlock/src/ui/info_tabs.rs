@@ -4,7 +4,9 @@
 //! returns to wherever the first one was opened from. Each page keeps its own opening key in play.
 //!
 //! A new info screen joins the group by adding one entry to [`PAGES`] (in the order its number
-//! should have) and calling [`draw_tabs`] after its panel is drawn. Sub-steps of a page (choosing
+//! should have), sizing its panel with [`panel_width`] (one width for every page, so the frame
+//! and the tab line stay put as the pages turn), and calling [`draw_tabs`] after its panel is
+//! drawn. Sub-steps of a page (choosing
 //! what goes in a slot) are not pages and keep their digits.
 
 use super::menu::{Panel, Press};
@@ -13,17 +15,27 @@ use super::{ACCENT, TEXT_DIM};
 use crate::input::{Bindings, Context, KeyCommand};
 use crate::render::console::Console;
 
-/// The pages, in number order, with their tab labels: the screen's name, and a short one for a
-/// panel too narrow for every name. Only screens that exist are listed.
+/// The pages, in number order, with their tab labels: a name, and a short one for a console too
+/// narrow for every name. Only screens that exist are listed.
 const PAGES: &[(ScreenName, &str, &str)] = &[
     (ScreenName::Character, "Character", "Char"),
     (ScreenName::Inventory, "Inventory", "Inv"),
     (ScreenName::Equipment, "Equipment", "Equip"),
     (ScreenName::Skills, "Skills", "Skills"),
-    (ScreenName::WeaponSkills, "Weapon skills", "Weapons"),
+    (ScreenName::WeaponSkills, "Weapons", "Weapons"),
     (ScreenName::Quests, "Quests", "Quests"),
     (ScreenName::Talents, "Talents", "Tal"),
 ];
+
+/// The width every page's panel has at least, so that the pages share one frame and one tab
+/// line: the whole line by name, ` 1 Character · … · 7 Talents `, in the frame and its margins.
+/// A console narrower than this shortens every page's tab line the same way ([`tabs`]).
+const WIDTH: i32 = 91;
+
+/// The width of the panel of a page that would be `own` wide alone: at least [`WIDTH`].
+pub const fn panel_width(own: i32) -> i32 {
+    if own > WIDTH { own } else { WIDTH }
+}
 
 /// How a page is named on the tab line.
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -66,12 +78,13 @@ pub fn switch(current: ScreenName, press: &Press, bindings: &Bindings) -> Option
     (*name != current).then_some(ScreenAction::Replace(*name))
 }
 
-/// The tab line that fits in `width` cells, the first of: every page by its name; the current
-/// page by its name and the others by their short names; every page by its short name; the
-/// current page by its name and the others by their keys alone; bare keys; nothing. Each page
-/// named has its key before its name. Pairs of (text, is the current page).
+/// The tab line that fits in `width` cells, the first of: every page by its name; every page by
+/// its short name; bare keys; nothing. Every page is labelled the same way whichever is the
+/// current one (and every page's panel is as wide, [`panel_width`]), so the line stays put as
+/// the pages turn and only its highlight moves. Each page named has its key before its name.
+/// Pairs of (text, is the current page).
 fn tabs(current: ScreenName, bindings: &Bindings, width: usize) -> Vec<(String, bool)> {
-    let make = |label: &dyn Fn(bool) -> Label| -> Vec<(String, bool)> {
+    let make = |label: Label| -> Vec<(String, bool)> {
         let mut parts = Vec::new();
         for (i, (name, full, short)) in PAGES.iter().enumerate() {
             let key = u8::try_from(i + 1)
@@ -79,7 +92,7 @@ fn tabs(current: ScreenName, bindings: &Bindings, width: usize) -> Vec<(String, 
                 .and_then(|n| (bindings.keys_of(KeyCommand::Page(n)).first()).map(|k| k.display()))
                 .unwrap_or_default();
             let here = *name == current;
-            let named = match label(here) {
+            let named = match label {
                 Label::Name => *full,
                 Label::Short => *short,
                 Label::Key => "",
@@ -96,17 +109,11 @@ fn tabs(current: ScreenName, bindings: &Bindings, width: usize) -> Vec<(String, 
     let len = |parts: &[(String, bool)]| {
         parts.iter().map(|(t, _)| t.chars().count()).sum::<usize>() + 3 * (parts.len() - 1)
     };
-    let others = |other: Label| move |here: bool| if here { Label::Name } else { other };
-    [
-        make(&|_| Label::Name),
-        make(&others(Label::Short)),
-        make(&|_| Label::Short),
-        make(&others(Label::Key)),
-        make(&|_| Label::Key),
-    ]
-    .into_iter()
-    .find(|parts| len(parts) <= width)
-    .unwrap_or_default()
+    [Label::Name, Label::Short, Label::Key]
+        .into_iter()
+        .map(make)
+        .find(|parts| len(parts) <= width)
+        .unwrap_or_default()
 }
 
 /// Draws the tab line on the panel's bottom border, as the title sits on the top one:
@@ -209,34 +216,44 @@ mod tests {
     }
 
     #[test]
-    fn the_tab_line_shortens_to_fit() {
+    fn the_tab_line_is_the_same_on_every_page_and_shortens_to_fit() {
         let b = Bindings::default();
         let line = |current, w| {
             let parts = tabs(current, &b, w);
             (parts.iter().map(|(t, _)| t.as_str()).collect::<Vec<_>>()).join(" · ")
         };
-        let inventory = |w| line(ScreenName::Inventory, w);
+        let full = "1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · \
+                    7 Talents";
+        // The common width's line (the frame, a margin, and a space each side) names them all,
+        // on every page, and the current page is the one highlighted.
+        let room = (WIDTH - 6) as usize;
         assert_eq!(
-            inventory(91),
-            "1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapon skills · 6 Quests · \
-             7 Talents"
+            full.chars().count(),
+            room,
+            "the common width fits the names exactly"
         );
-        // The current page by its name, the others by their short names.
-        let short = "1 Char · 2 Inventory · 3 Equip · 4 Skills · 5 Weapons · 6 Quests · 7 Tal";
-        assert_eq!((inventory(90), inventory(72)), (short.into(), short.into()));
+        for (page, _, _) in PAGES {
+            assert_eq!(line(*page, room), full);
+            let tabs = tabs(*page, &b, room);
+            let here: Vec<usize> = (0..tabs.len()).filter(|i| tabs[*i].1).collect();
+            assert_eq!(here.len(), 1);
+            assert_eq!(PAGES[here[0]].0, *page);
+        }
+        // A narrower console shortens every page's line alike.
+        let short = "1 Char · 2 Inv · 3 Equip · 4 Skills · 5 Weapons · 6 Quests · 7 Tal";
+        let n = short.chars().count();
+        assert_eq!(line(ScreenName::Inventory, room - 1), short);
+        assert_eq!(line(ScreenName::Talents, n), short);
         assert_eq!(
-            line(ScreenName::WeaponSkills, 76),
-            "1 Char · 2 Inv · 3 Equip · 4 Skills · 5 Weapon skills · 6 Quests · 7 Tal"
+            line(ScreenName::Talents, n - 1),
+            "1 · 2 · 3 · 4 · 5 · 6 · 7"
         );
-        // The 72-wide panels (68 cells for tabs): every page by its short name.
-        let shortest = "1 Char · 2 Inv · 3 Equip · 4 Skills · 5 Weapons · 6 Quests · 7 Tal";
-        assert_eq!(
-            (inventory(71), inventory(66)),
-            (shortest.into(), shortest.into())
-        );
-        assert_eq!(inventory(65), "1 · 2 Inventory · 3 · 4 · 5 · 6 · 7");
-        assert_eq!(inventory(35), "1 · 2 Inventory · 3 · 4 · 5 · 6 · 7");
-        assert_eq!(inventory(34), "1 · 2 · 3 · 4 · 5 · 6 · 7");
-        assert_eq!(inventory(20), "");
+        assert_eq!(line(ScreenName::Talents, 24), "");
+    }
+
+    #[test]
+    fn every_page_is_at_least_the_common_width() {
+        assert_eq!(panel_width(52), WIDTH);
+        assert_eq!(panel_width(120), 120);
     }
 }
