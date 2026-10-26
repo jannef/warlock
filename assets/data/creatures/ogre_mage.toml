@@ -1,0 +1,47 @@
+# The giant tribe (#457): the clever ogre, blue-skinned and quick, that the others fear. It casts
+# from a few cells away (spells are announced only, until creature magic is designed) and wears a
+# bone charm that is sometimes more than it seems.
+[[creature]]
+id = "ogre_mage"
+level = 18
+xp = 100
+rarity = "rare"
+loot = 50
+name = "ogre mage"
+glyph = "O"
+fg = "#5a7ac8"
+faction = "giant"
+tags = ["giant", "ogre", "caster"]
+alignment = "evil"
+vision = "low_light"
+combat = "caster"
+range = 6
+opens_doors = true
+footsteps = 150
+hearing = 12
+weight = 260000
+stats = { strength = 20, dexterity = 12, toughness = 19, intelligence = 17, willpower = 16, presence = 14 }
+base_hp = 36
+skills = { concentration = 64, spellcraft = 69 }
+resist = { cold = 25 }
+attack = { damage = "2d8", damage_type = "bludgeoning", name = "fist", verb = "pounds" }
+on_eat = { message = "It tastes of the ogre, and of something bitter.", vomit = 30, stat = { intelligence = 3 } }
+[[creature.gear]]
+chance = 50
+one_of = ["bone_amulet"]
+magic = 20
+[[creature.gear]]
+chance = 40
+one_of = ["gold_coin*3", "gold_coin*8"]
+
+[[creature.particles]]
+on = "attack"
+glyphs = "·*+"
+colors = ["#c8d8ff", "#7090e0", "#304890"]
+count = 5
+life = 0.4
+spread = [0.9, 0.9]
+area = [0.15, 0.15]
+scale = 0.5
+fade = 0.6
+glow = 0.5

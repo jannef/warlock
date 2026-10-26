@@ -27,7 +27,8 @@ temperature = 10
 # fiend at home in the fires, and the war bands that raid the duergar's mine: the orcs' (#455; the
 # war chief, level 20, comes only out of depth) and the hobgoblins' (#454), who come down with the
 # goblins' ogres and trolls. The fire drake is not among them: it lives only on its hoard (the
-# vault at depth 12), so a run meets it there and nowhere else.
+# vault at depth 12), so a run meets it there and nowhere else. Its ogres (the ogre, the mauler,
+# and the mage) are the giant tribe's least (#457); the giants live deeper than this.
 # The hill trolls (#456) come down from the hills above to the troll's warm deep.
 danger = 8
 population = [
@@ -36,7 +37,7 @@ population = [
     "dretch", "duergar_warrior", "duergar_smith", "ogre", "burning_skull", "quasit", "troll",
     "earth_elemental", "knocker", "hell_hound", "hill_troll", "fire_salamander",
     "magma_crawler", "spectre", "charred_dead", "ash_wraith", "duergar_skeleton",
-    "basilisk", "cinder_elemental", "rotting_troll",
+    "ogre_mauler", "basilisk", "cinder_elemental", "ogre_mage", "rotting_troll",
     "hobgoblin", "hobgoblin_archer", "hobgoblin_legionnaire", "hobgoblin_warcaster",
     "hobgoblin_sergeant", "hobgoblin_captain",
     "warg", "orc_raider", "orc_shaman", "orc_berserker", "orc_veteran", "orc_bowman",

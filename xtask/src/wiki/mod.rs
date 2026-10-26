@@ -146,6 +146,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("creature-stats.md", creatures::creature_stats),
         ("creature-defences.md", creatures::creature_defences),
         ("creature-attacks.md", creatures::creature_attacks),
+        ("creature-throws.md", creatures::creature_throws),
         ("creature-senses.md", creatures::creature_senses),
         ("dungeons.md", dungeons::dungeons),
         ("dungeon-floors.md", dungeons::dungeon_floors),
@@ -1140,7 +1141,7 @@ mod tests {
         );
         let at = |row: &str| classes.find(row).unwrap_or_else(|| panic!("{row}"));
         assert!(at("| Melee weapons |") < at("| Gems | Gems |"));
-        assert!(at("| Gems | Gems |") < at("| Miscellaneous | Foreman's ledgers, long-stemmed"));
+        assert!(at("| Gems | Gems |") < at("| Miscellaneous | Boulders, foreman's ledgers"));
         assert!(
             text("creatures.md")
                 .contains("| Giant rat | `r` | Vermin | hostile | up close | no | no |")
@@ -1148,8 +1149,9 @@ mod tests {
         assert!(text("creatures.md").contains("| Deer | `d` | Wildlife | neutral | never |"));
         assert!(text("creatures.md").contains("shoots from afar"));
         assert!(
-            text("factions.md")
-                .contains("| Kobolds | you, vermin, goblins, orcs, undead, trolls, demons |")
+            text("factions.md").contains(
+                "| Kobolds | you, vermin, goblins, orcs, undead, giants, trolls, demons |"
+            )
         );
         assert!(text("factions.md").contains("| Wildlife | nobody |"));
         assert!(text("factions.md").contains("| Cultists | you, marsh things | no |"));

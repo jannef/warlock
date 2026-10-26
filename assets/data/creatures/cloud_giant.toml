@@ -1,0 +1,39 @@
+# The giant tribe (#457): a proud giant of the high peaks, pale as mist, who sees far and hurls
+# its boulders from a long way off.
+[[creature]]
+id = "cloud_giant"
+level = 40
+xp = 210
+rarity = "uncommon"
+loot = 25
+name = "cloud giant"
+glyph = "H"
+fg = "#d8dce8"
+speed = 1000
+faction = "giant"
+tags = ["giant"]
+alignment = "neutral"
+vision = "low_light"
+sight = 14
+opens_doors = true
+footsteps = 210
+hearing = 10
+weight = 1200000
+stats = { strength = 32, dexterity = 18, toughness = 33, intelligence = 16, willpower = 16, presence = 14 }
+base_hp = 160
+natural = { defence = 3, protection = 3, name = "hide" }
+weapon_skills = { thrown = 1 }
+on_eat = { message = "Pale, and oddly light.", vomit = 30, stat = { strength = 3 } }
+[creature.attack]
+damage = "3d12"
+damage_type = ["bludgeoning", "piercing"]
+name = "morning star"
+verb = "smashes"
+to_hit = 4
+[creature.throw]
+object = "boulder"
+damage = "4d8"
+damage_type = "bludgeoning"
+range = 9
+cost = 2000
+verb = "hurls"

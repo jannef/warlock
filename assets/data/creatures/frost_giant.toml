@@ -1,0 +1,40 @@
+# The giant tribe (#457): a giant of the ice, axe in hand, who hurls blocks of ice (crushing, or
+# freezing, whichever hurts more). The cold hardly touches it; fire does.
+[[creature]]
+id = "frost_giant"
+level = 28
+xp = 150
+rarity = "common"
+loot = 20
+name = "frost giant"
+glyph = "H"
+fg = "#a8c8e8"
+speed = 1000
+faction = "giant"
+tags = ["giant"]
+alignment = "evil"
+vision = "low_light"
+opens_doors = true
+footsteps = 200
+hearing = 10
+weight = 750000
+stats = { strength = 27, dexterity = 15, toughness = 28, intelligence = 12, willpower = 14, presence = 12 }
+base_hp = 112
+natural = { defence = 1, protection = 2, name = "hide" }
+weapon_skills = { thrown = 1 }
+resist = { cold = 75, fire = -50 }
+on_eat = { message = "It is cold to the core.", vomit = 30, stat = { strength = 3 } }
+[creature.attack]
+damage = "3d10"
+damage_type = "slashing"
+name = "great axe"
+verb = "cleaves"
+to_hit = 2
+[creature.throw]
+object = "boulder"
+name = "block of ice"
+damage = "4d6"
+damage_type = ["bludgeoning", "cold"]
+range = 7
+cost = 2000
+verb = "hurls"
