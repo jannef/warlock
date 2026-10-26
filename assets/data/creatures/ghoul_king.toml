@@ -1,0 +1,37 @@
+# The undead roster (#383, batch 5). The first of a ghoul warren and the last to be fed: quick
+# and cunning, it opens doors, and its claws hold fast what they catch and carry the rot of the
+# graves. Not yet in any dungeon's population.
+[[creature]]
+id = "ghoul_king"
+level = 44
+xp = 230
+rarity = "rare"
+name = "ghoul king"
+glyph = "z"
+fg = "#d08a40"
+speed = 1400
+faction = "undead"
+tags = ["undead"]
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+opens_doors = true
+footsteps = 40
+hearing = 16
+weight = 65000
+stats = { strength = 29, dexterity = 26, toughness = 29, intelligence = 28, willpower = 31, presence = 28 }
+base_hp = 99
+natural = { defence = 3, protection = 0, name = "dead flesh" }
+resist = { poison = 100 }
+on_eat = { message = "Carrion fed on carrion fed on carrion.", vomit = 90, harm = "1d6" }
+blood = "#3a2020"
+[creature.attack]
+damage = "4d8"
+damage_type = "slashing"
+name = "claws"
+verb = "claws"
+to_hit = 4
+on_hit = [
+    { status = "held", chance = 20, difficulty = 20 },
+    { disease = "grave_rot", chance = 20 },
+]

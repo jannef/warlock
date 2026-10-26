@@ -1,0 +1,36 @@
+# The undead roster (#383, batch 5). The lord of a drowned town, crowned in weed and risen from
+# the black water with his dead: slow, swollen, and grave-cold, his blows carry the ague of the
+# fens. Not yet in any dungeon's population.
+[[creature]]
+id = "drowned_king"
+level = 51
+xp = 265
+rarity = "rare"
+name = "drowned king"
+glyph = "Z"
+fg = "#3a8a70"
+speed = 800
+faction = "undead"
+tags = ["undead"]
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+opens_doors = true
+footsteps = 130
+hearing = 10
+weight = 250000
+stats = { strength = 36, dexterity = 21, toughness = 37, intelligence = 30, willpower = 34, presence = 30 }
+base_hp = 204
+natural = { defence = 4, protection = 0, name = "dead flesh" }
+resist = { cold = 50, poison = 100 }
+on_eat = { message = "Waterlogged, and older than the town.", vomit = 90, harm = "1d6" }
+blood = "#2a3a3a"
+[creature.attack]
+damage = "4d10"
+damage_type = "bludgeoning"
+name = "slam"
+verb = "slams"
+to_hit = 5
+on_hit = [
+    { disease = "marsh_ague", chance = 25 },
+]

@@ -1,0 +1,36 @@
+# The undead roster (#383, batch 5). A hound of the Wild Hunt that rides the winter sky behind
+# its huntsman, white-eared and burning-eyed, swifter than any living thing: the sound of it
+# close sends the living running. Not yet in any dungeon's population.
+[[creature]]
+id = "hound_of_the_hunt"
+level = 55
+xp = 285
+rarity = "uncommon"
+name = "hound of the hunt"
+plural = "hounds of the hunt"
+glyph = "C"
+fg = "#c0c8e8"
+speed = 1700
+faction = "undead"
+tags = ["undead"]
+alignment = "evil"
+vision = "darkvision"
+sight = 16
+footsteps = 50
+hearing = 22
+weight = 80000
+stats = { strength = 33, dexterity = 29, toughness = 33, intelligence = 32, willpower = 35, presence = 32 }
+base_hp = 124
+natural = { defence = 4, protection = 0, name = "dead flesh" }
+resist = { poison = 100 }
+on_eat = { message = "Grave-cold meat, and wild.", vomit = 80, harm = "1d4" }
+blood = "#2a2a38"
+[creature.attack]
+damage = "4d10"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
+to_hit = 5
+on_hit = [
+    { status = "frightened", chance = 25, severity = 2 },
+]
