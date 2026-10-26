@@ -15,6 +15,7 @@
 
 use super::{Actor, ActorId, Spent, World};
 use crate::action::Positions;
+use crate::content::ObjectId;
 use crate::gem;
 use crate::magic::{LootGrade, loot};
 use crate::object::Stack;
@@ -33,21 +34,31 @@ pub enum Identified {
 }
 
 impl World {
-    /// Identifies the player's inventory stack `item` (spec §8 "Magic items"): its affixes are
-    /// known from now on, wherever it goes. Says "This is a Sharp long sword of the Bear!" when
-    /// there was something to learn. Takes no time of its own: the action that calls it (reading
-    /// the scroll of identify, #150) is what takes time.
+    /// Identifies the player's inventory stack `item` (spec §8 "Magic items", "Scrolls"): its
+    /// affixes are known from now on, wherever it goes, and so is its type if it is an
+    /// unidentified scroll's (every scroll of that type shows by its name from now on). Says
+    /// "This is a Sharp long sword of the Bear!" when there was something to learn. Takes no
+    /// time of its own: the action that calls it (reading the scroll of identify, #150) is what
+    /// takes time.
     pub(crate) fn identify(&mut self, item: usize) -> Identified {
-        let content = self.content.clone();
-        let Some(stack) = self.player_mut().inventory.get_mut(item) else {
+        let Some(object) = self.state.player().inventory.get(item).map(|s| s.object) else {
             return Identified::NoSuchItem;
         };
-        if !stack.identify() {
+        let typed = self.learn_scroll(object);
+        let stack = &mut self.player_mut().inventory[item];
+        if !stack.identify() && !typed {
             return Identified::Known;
         }
-        let name = stack.describe(&content);
+        let name = self.lore().describe(&self.state.player().inventory[item]);
         self.say(format!("This is {name}!"));
         Identified::Now(name)
+    }
+
+    /// The player identifies scroll type `object` (spec §8 "Scrolls"): from now on every scroll
+    /// of it shows by its name. Whether there was anything to learn (false for a type already
+    /// known, or one without a label). Says nothing.
+    pub(crate) fn learn_scroll(&mut self, object: ObjectId) -> bool {
+        self.lore().label(object).is_some() && self.state.known_scrolls.insert(object)
     }
 
     /// Dev: identifies the inventory stacks `positions` names (everything with none).

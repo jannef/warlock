@@ -166,12 +166,20 @@ pub(super) fn shops(content: &Content) -> String {
         }
     };
     for def in shops.defs() {
+        // What a generated one always has, first: "scrolls of identify always".
+        let always: Vec<String> = (def.always.iter())
+            .map(|&o| content.object(o).plural.clone())
+            .collect();
+        let stock = match always.as_slice() {
+            [] => classes(&def.stock),
+            _ => format!("{} ({} always)", classes(&def.stock), always.join(", ")),
+        };
         let _ = writeln!(
             out,
             "| {} | {} | {} | {} | {}% of the worth | {}% of the worth |",
             capital(&def.name),
             def.sign("Grimbold"),
-            classes(&def.stock),
+            stock,
             classes(&def.buys),
             def.markup,
             def.pays

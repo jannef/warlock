@@ -199,9 +199,9 @@ impl World {
             [one] => Some(match self.asking_price(to, one) {
                 Some(price) => format!(
                     "You see here {} (for sale, {price} gold).",
-                    one.describe(&self.content)
+                    self.lore().describe(one)
                 ),
-                None => format!("You see here {}.", one.describe(&self.content)),
+                None => format!("You see here {}.", self.lore().describe(one)),
             }),
             _ => Some("There are several objects here.".to_string()),
         };
