@@ -12,17 +12,17 @@ Design document for the owner's review (2026-10-26). Written against `origin/mai
 6. Tags: schools, damage types, shapes
 7. The first spell list
 8. Classes: what is guaranteed, who casts
-9. Items: wands, rods, staffs
+9. Items: wands and rods
 10. Talents and class abilities (the coverage bar)
 11. Data and code sketch
 12. Balance checks
 13. Implementation plan
-14. Open questions
+14. Decisions left to the implementer
 15. Decisions (the owner's, from the design conversation)
 
 ## 1. Summary
 
-**What the owner asked for** (2026-10-26, in conversation): a magic system for a roguelike that limits resources without ADOM's spellbooks: "the lottery in ADOM was fine, it's just depleting very common spells (that you need to spend time refarming with no real danger), and keeping the books in bags was busywork." Spells are **learned from scrolls, like D&D**, so there is no separate book resource. Schools are tags. Classes get a very small guaranteed list (a cantrip, about four spells in all), so a caster who loses the lottery struggles but is never crippled, and does not shine without finding more spells. Spells have **levels** (cantrip and 1 to 9, as in D&D): learning above your level is hard and can ruin the scroll; casting above it costs far more mana. Wands, staffs, and rods are the item forms. And the limits the owner set: damage is rolled (never 5e-style fixed), static bonuses are rare, **damage is strictly capped**, **area spells are expensive**, and the game goes to level 60, not 20.
+**What the owner asked for** (2026-10-26, in conversation): a magic system for a roguelike that limits resources without ADOM's spellbooks: "the lottery in ADOM was fine, it's just depleting very common spells (that you need to spend time refarming with no real danger), and keeping the books in bags was busywork." Spells are **learned from scrolls, like D&D**, so there is no separate book resource. Schools are tags. Classes get a very small guaranteed list (a cantrip, about four spells in all), so a caster who loses the lottery struggles but is never crippled, and does not shine without finding more spells. Spells have **levels** (cantrip and 1 to 9, as in D&D): learning above your level is hard and can ruin the scroll; casting above it costs far more mana. Wands and rods are the item forms. And the limits the owner set: damage is rolled (never 5e-style fixed), static bonuses are rare, **damage is strictly capped**, **area spells are expensive**, and the game goes to level 60, not 20.
 
 **The proposal in one table:**
 
@@ -31,13 +31,13 @@ Design document for the owner's review (2026-10-26). Written against `origin/mai
 | What a spell is | a data entry: id, tier (0 to 9), tags (school, damage type, shape, kind), a mana cost, a resolution (`auto`, `attack`, `area`, `touch`), its effect and a strict cap. The casters' placeholder actives (`[[talent.spell]]`) are replaced by it. §3, §11 |
 | How spells are had | **learned**, never prepared or memorised: a character knows a set of spells for good (saved); no slots, no forgetting, no spellbooks. The class gives a few; scrolls give the rest. §4, §8 |
 | Scrolls | **two uses**, both existing code's neighbours: **read** casts it once, free of mana, aimed as today (no cancelling once the target is known); **study** (`Action::Study`) commits to learning it, takes time, cannot be cancelled, and uses the scroll up. §4 |
-| Learning risk | at or below your level in tiers: certain. Above it: a check that gets harder per tier of overreach and per tier-sum of the spells already known; a failure **ruins the scroll and causes a mishap** scaled to the overreach, some of them very good. Unidentified scrolls need identifying first (the scroll of identify becomes a common drop). §4 |
+| Learning risk | at or below your level in tiers: certain. Above it: a check that gets harder per tier of overreach and per tier-sum of the spells already known; a failure **ruins the scroll and causes a mishap** scaled to the overreach, some of them very good. Study needs an identified scroll (identified by reading any copy or by a scroll of identify; the scroll of identify becomes a common drop), and any identified scroll whose spell is not yet learned can be studied: identification and learning are separate. §4 |
 | Casting | costs mana by tier, **much more above your level** (×1.5 per tier of overreach), **area costs a multiple** (cone ×1.6 up to a radius-3 burst ×3). Cantrips cost 1. §5 |
 | Resolution | **per spell**: `auto` (always hits, less damage), `attack` (rolls to hit like a missile, full damage, can critical), `area` (everyone in the shape, Evasion halves, no roll, dearer), `touch` (adjacent, cheap, stronger). §5 |
 | Damage | **rolled dice**; a static `+n` is allowed but rare and small; **every spell has a hard cap** on dice and on the maximum possible damage, and nothing (level, talents, items, stats) pushes a spell over it. §5 |
 | Power | **caster level**: a class's casting fraction of its level, plus talents, racials, items, and wands' set level; it sets learning, cost, and dice. Stats do not add damage; they widen reach, area, and duration, one stat per dimension. §3, §5 |
 | Schools | **tags**, not trees: talents, class abilities, and items interact with spells through tags, which share themes with the damage types. §6 |
-| Items | **wands** (a spell, finite charges, a set caster level, in the Missile weapon slot, no recharge), **staffs** (wands of effects no spell has), **rods** (the user's mana and level, effects no spell has). §9 |
+| Items | **wands** (a spell, finite charges, a set caster level, in the Missile weapon slot, no recharge), **rods** (the user's mana and level, effects no spell has). §9 |
 | Everyone has mana | no class or race multiplier is 0 by default; the class table's casting fraction makes warriors poor casters, not non-casters. §3, §8 |
 | Talents | a new `spells` system with a Spellcraft tree, class abilities for casters, and wand and rod talents: the coverage bar is met in the first PR that ships the system. §10 |
 
@@ -104,10 +104,10 @@ Damage dice come from caster level and nothing else; stats never lift damage ove
 **Scrolls.** A spell scroll (an object whose `read` table names a spell) has two uses:
 
 - **Read** (`r`, `Action::Read`, as today): casts the spell once, costs no mana (the scroll *is* the cost), at the scroll's own caster level (its tier's comfortable level by default, a data field). It is aimed first: once the player has seen that it is targetable, they cannot cancel (the owner's rule), so reading an unidentified scroll is a gamble too.
-- **Study** (a new action, `study:b`, a rebindable key command next to Read): the player commits to learning the spell. It takes time (§4 "Time"), cannot be cancelled once begun, and uses the scroll up. At the end: a check (below). A scroll that is **not identified** cannot be studied ("You do not know what this says."): identify it first. **Scroll of identify becomes a common drop** and a regular shop item (the owner's rule: "better ID those scrolls before if you do not want to get fucked").
+- **Study** (a new action, `study:b`, a rebindable key command next to Read): the player commits to learning the spell. It takes time (§4 "Time"), cannot be cancelled once begun, and uses the scroll up. At the end: a check (below). Identification and learning are separate states. **Any scroll whose type is identified** (by reading any copy of it, or by a scroll of identify) **can be studied by a character who has not learned that spell**, whether or not they have read this very scroll; study is refused only for an **unidentified** scroll ("You do not know what this says.": identify it first) and for a spell already learned (below). **Scroll of identify becomes a common drop** and a regular shop item (the owner's rule: "better ID those scrolls before if you do not want to get fucked").
 - A scroll of a spell the player already knows can still be **read** (a one-shot), or sold, or given. Studying it is refused with no time ("You know this spell already.").
 
-**Unidentified scrolls** need ADOM-style labels (the scrolls spec has said "may come later"): a scroll type is unknown until read or identified, shown as "a scroll labelled XYZZY" (one label per spell per game, from the seed's identification stream). This is its own issue (§13) and a prerequisite of study.
+**Unidentified scrolls** need ADOM-style labels (the scrolls spec has said "may come later"): a scroll type is unknown until read or identified, shown as "a scroll labelled XYZZY" (one label per spell per game, from the seed's identification stream). This is its own issue (§13) and a prerequisite of study (the scroll types are known on sight today; #393 changes that). Once a type is identified, it stays identified for the whole game, and every scroll of it can be studied by anyone who has not learned the spell.
 
 **Overreach.** `overreach = tier(spell) − tier of the caster's level`, where a caster level's tier is the highest tier whose comfortable level it has reached (a level-2 character is at tier 0). At overreach 0 or less: learning is certain, no check, no risk. At 1 or more: a **check** (the game's 2d12, as skills use) against a difficulty:
 
@@ -115,7 +115,7 @@ Damage dice come from caster level and nothing else; stats never lift damage ove
 
 where `known` is the sum of the tiers (cantrip counts 1) of the spells the player knows (the owner's small cumulative penalty: ten tier-3 spells known make the next one about 3 points harder), and the bonuses are Intelligence's modifier, Spellcraft and Decipher script (each its value ÷ 10), a class's affinity with the school (§6), and the Quick study talent. All first guesses. The wiki shows the exact chance; the game says "this will be easy / a struggle / far beyond you".
 
-**Time.** Study takes `10 minutes × (tier + 1)` of game time as one action, with the world acting around the player (a danger of its own); it is **interrupted**, as rest is, when a hostile comes into view or the player is hurt, and an interrupted study loses the time but keeps the scroll (an open question, §14: the owner may want it ruined instead).
+**Time.** Study takes `10 minutes × (tier + 1)` of game time as one action, with the world acting around the player (a danger of its own); it is **interrupted**, as rest is, when a hostile comes into view or the player is hurt, and an interrupted study loses the time but keeps the scroll (a decision left to the implementer, §14: the alternative is to ruin it).
 
 **Failure.** The scroll is destroyed and a **mishap** happens, drawn from `data/mishaps/` (one file per entry, like traps) by the overreach's band; the table is data so content can grow it:
 
@@ -167,7 +167,7 @@ and an area spell's damage is also lower per target than the single-target spell
 | `area` | none; everyone in the shape; **Evasion** halves (as `cast_burst` already does) and Protection and resistances soak (the one `World::resisted`) | 75 to 80 % per target | cone, line, burst |
 | `touch` | an attack roll against Defence at adjacency only | 120 % at ×0.7 cost | touch |
 
-The attack roll's skill, for a first version, is the wielder's **Missile** skill for rays and **Spellcraft** for touch (open question §14). Spell attack rolls can **critical**; `auto` and `area` never do, which is part of their price.
+The attack roll's skill, for a first version, is the wielder's **Missile** skill for rays and **Spellcraft** for touch (left to the implementer, §14). Spell attack rolls can **critical**; `auto` and `area` never do, which is part of their price.
 
 **Damage is rolled.** A spell's damage is its `dice` (rolled one draw per die, in actor-id order for areas, as the casts do today), plus a **static** `+n` that is allowed and rare: at most a quarter of the spell's ceiling (below), none on most spells. The dice grow with caster level and **stop at the spell's cap**:
 
@@ -245,20 +245,19 @@ The shared placeholders (`blessing`, `cure_wounds`, `remove_disease`, `call_ligh
 
 Hybrids' (paladin, ranger) are low-tier boons and self buffs. A class with no story for magic has none, by the owner's rule: "if the class sounds like a meme, do not give them spells to save them."
 
-## 9. Items: wands, rods, staffs
+## 9. Items: wands and rods
 
-All three are objects with a `use` table, in the **Missile weapon slot** (so a wand and a crossbow compete for it), used through the same targeting key (`t`, sent as `fire`/`throw` today) with the targeting rules of the spell or effect they hold; none are cast in the abilities menu.
+Both are objects with a `use` table, in the **Missile weapon slot** (so a wand and a crossbow compete for it), used through the same targeting key (`t`, sent as `fire`/`throw` today) with the targeting rules of the spell or effect they hold; none are cast in the abilities menu.
 
 | Item | What it holds | Resource | Caster level | Recharge |
 |---|---|---|---|---|
 | **Wand** | a *spell* (any in the list) | charges (a data count by tier, for example tier 1: 12, tier 3: 7, tier 6: 3) | **set** in the item (its tier's comfortable level by default; magic wands carry more) | **none** (the owner; "we might get such ability introduced later") |
-| **Staff** | an *effect no spell has* (dig, summon, a sleeping cloud...) | charges | set in the item | none |
-| **Rod** | an *effect no spell has* | **the user's mana** (a cost in the item) | **the user's** | none needed |
+| **Rod** | an *effect no spell has* (dig, summon, a sleeping cloud...) | **the user's mana** (a cost in the item) | **the user's** | none needed |
 
 - **A wand's resolution is its spell's**: a wand of ray of frost rolls to hit (with the wielder's Missile skill), a wand of magic missile does not. An empty wand stays an item (sold, or kept for a later recharge); using it says "nothing happens" and costs no time.
 - **Wands let a martial class cast**: a warrior with no caster level fires fireball wands at the wand's level. That is the point; finite charges keep it scarce.
-- **Identification** is the scroll of identify's (charges and spell: unidentified items show neither) and Lore's. **Use magic device**, a trained skill that exists (`assets/data/skills.toml`, "Making wands, staves, and scrolls work, even without the gift"), adds to a wand's effective caster level and to a rod's cost cut; the exact is open (§14).
-- **A name clash**: "staff" is also the quarterstaff's weapon skill (`staves`) and a class's wielded item. Open question §14; this document says *staff* until the owner picks (the candidate for the effect wand is *sceptre*).
+- **Identification** is the scroll of identify's (charges and spell: unidentified items show neither) and Lore's. **Use magic device**, a trained skill that exists (`assets/data/skills.toml`, "Making wands, staves, and scrolls work, even without the gift"), adds to a wand's effective caster level and to a rod's cost cut; the exact is left to the implementer (§14).
+- **No magic staffs** (owner, 2026-10-26: "get rid of magic staffs if it's an issue"; it was one: "staff" is also the quarterstaff's weapon skill and a class's wielded item). Effects no spell has belong to rods; the idea is deferred (#196).
 
 ## 10. Talents and class abilities (the coverage bar)
 
@@ -280,7 +279,7 @@ Class abilities for the casters come with the migration (§13) as a level-1 cant
 
 ## 11. Data and code sketch
 
-- **Data**: `assets/data/spells.toml` (the tier table: comfortable levels, base costs, ceilings, area multipliers; `[mana_level]` raised in `experience.toml`) and `assets/data/spells/` one file per spell (`[[spell]]`: id, name, tier, tags, resolution, shape, `[spell.damage]`, `[spell.effect]` for non-damage kinds, range, a `scroll` block for the object it comes on, noise); `assets/data/mishaps/` one file per mishap; a class table's `casting` and `spells`; objects' `use` for wands, staffs, and rods; the Armour data's `spell_cost_percent`.
+- **Data**: `assets/data/spells.toml` (the tier table: comfortable levels, base costs, ceilings, area multipliers; `[mana_level]` raised in `experience.toml`) and `assets/data/spells/` one file per spell (`[[spell]]`: id, name, tier, tags, resolution, shape, `[spell.damage]`, `[spell.effect]` for non-damage kinds, range, a `scroll` block for the object it comes on, noise); `assets/data/mishaps/` one file per mishap; a class table's `casting` and `spells`; objects' `use` for wands and rods; the Armour data's `spell_cost_percent`.
 - **Core**: `content/spell_def.rs` (not the existing `spell.rs`, which holds the bursts and bolts the scrolls and traps share), `world/learn.rs` (study, the check, the mishaps), `world/cast.rs` (the one cast path: cost, resolution, dice with the cap, then the existing `cast_burst`, `cast_bolt`, and new `cast_cone` and `cast_line`), `Actor::spells` (the learned set, saved), `World::caster_level`, `Action::Study` and `Action::Cast` generalised from the placeholders, `ActionKind::Study`.
 - **Saves change** (a spell set on the actor and, for wands, charges on item instances), so the integrator bumps `FORMAT_VERSION` once per release as usual; the `spells` list is left out of the JSON while empty, so an actor without spells hashes as before.
 - **UI**: a study command (`KeyCommand::Study`, bound next to Read like the other basic commands, rebindable), spells in the abilities menu (a group *Spells* with a column for tier and cost), the existing aiming mode with the spell's shape (a cone's and a line's lines), the unidentified scroll labels' item names, and text snapshots for each screen (CLAUDE.md "Golden screenshots": no golden entries).
@@ -304,24 +303,25 @@ Waves are ordered; the first and second can start at once. Every PR names its ta
 | #393 | **Unidentified scrolls**: labels per game, identified by reading or the scroll of identify; identify scrolls made common in loot and shops | none |
 | #394 | **Spell data and the tier tables**: `spells.toml`, the `[[spell]]` file format with the cap check, `casting` percent in class tables, `World::caster_level`, `mana_level` 60, the wiki's tier tables | none |
 | #395 | **The one cast path**: resolution (`auto`, `attack`, `area`, `touch`), the cost with overreach, shape and armour, the new shapes (`cone`, `line`), the new damage types, and the placeholder spells migrated onto it | #394 |
-| #396 | **Learned spells and study**: `Actor::spells`, `Action::Study`, the check, the time, the interruptions, the mishaps (data), the scroll objects' two uses, the abilities menu's Spells group | #393, #395 |
+| #396 | **Learned spells and study** (the study list is the identified scrolls whose spell is not learned; unidentified refused with "You do not know what this says.", a known spell with no time): `Actor::spells`, `Action::Study`, the check, the time, the interruptions, the mishaps (data), the scroll objects' two uses, the abilities menu's Spells group | #393, #395 |
 | #397 | **Class spell lists**: the guaranteed spells per class, the first spell list (§7), the scroll objects, loot and shop weights by tier | #395, #396 |
 | #398 | **Wands**: the Missile-slot items, charges, the set caster level, the spell's resolution, identification of charges | #395 |
-| #399 | **Rods and staffs**: effects no spell has, the user's mana for rods, a first handful of effects | #398 |
+| #399 | **Rods**: effects no spell has, the user's mana, a first handful of effects | #398 |
 | #400 | **Talents**: the Spellcraft tree and the first set (§10), the `spells` system tag, the `caster_level` and school-choice effects, Empower and Archmage reworked | #395, #396 |
 | #401 | **Magic on the wiki and in the spec**: the "Magic" page, spec §8's section, the `docs/dev/` topic `spells.md` (folded into each PR's docs; this is the cross-checking pass) | #397 |
 
-## 14. Open questions
+## 14. Decisions left to the implementer
 
-1. **Interrupted study**: lose the time and keep the scroll (this draft), or ruin the scroll?
-2. **The attack roll's skill**: Missile for rays and Spellcraft for touch (this draft), or one Spellcraft-based skill for every spell attack?
-3. **The effect wand's name**: staff (the owner's word) or *sceptre* to avoid the quarterstaff?
-4. **Use magic device**: what it does (caster level for wands, rod cost, scroll misfires, or all of them)?
-5. **Spell cap lifts**: this draft says nothing lifts a cap; does the owner want a rare, named exception (a unique item)?
-6. **Casting percents** (§3's table) and the guaranteed lists (§8): the first guess is mine.
-7. **New damage types** `force` and `necrotic`: or untyped force, and necrotic as the existing poison?
-8. **The mishap table's tone**: how nasty may *Terrible* be (a stat damaged for a long time, a hostile summoned)?
-9. **Spell recall's old meaning**: one scroll in four kept when read; does it also apply to study (a failed study that keeps the scroll)?
+Owner, 2026-10-26: "open questions left for the implementer to decide." Each question below stays listed with the design's recommendation as the **default**; the PR that implements the issue concerned decides, and **states what it chose** in its description (and in its `docs/dev/` topic). Nothing here blocks the design's approval.
+
+1. **Interrupted study**: lose the time and keep the scroll (the default), or ruin the scroll?
+2. **The attack roll's skill**: Missile for rays and Spellcraft for touch (the default), or one Spellcraft-based skill for every spell attack?
+3. **Use magic device**: what it does (caster level for wands, rod cost, scroll misfires, or all of them)?
+4. **Spell cap lifts**: the default is that nothing lifts a cap; does the owner want a rare, named exception (a unique item)?
+5. **Casting percents** (§3's table) and the guaranteed lists (§8): the first guess is mine.
+6. **New damage types** `force` and `necrotic`: or untyped force, and necrotic as the existing poison?
+7. **The mishap table's tone**: how nasty may *Terrible* be (a stat damaged for a long time, a hostile summoned)?
+8. **Spell recall's old meaning**: one scroll in four kept when read; does it also apply to study (a failed study that keeps the scroll)?
 
 ## 15. Decisions (the owner's, from the design conversation, 2026-10-26)
 
@@ -330,6 +330,8 @@ Waves are ordered; the first and second can start at once. Every PR names its ta
 - Mana cost grows a lot for spells above the caster's level.
 - A small learning penalty by the cumulative level of the spells already known.
 - Reading casts it and cannot be cancelled once the target is known; studying commits and cannot be cancelled; identify scrolls are common.
+- Owner correction (2026-10-26): "Unidentified scrolls are a prerequisite for study. The spec says scroll types are known on sight today, so #393 changes that. Identified scrolls not yet learned should also be able to be studied." Identification and learning are separate: any identified scroll whose spell is not learned can be studied; only unidentified scrolls and already-learned spells are refused.
+- Owner (2026-10-26): no magic staffs (rods and wands stay); the open questions of §14 are left for the implementer of each issue to decide, the design's recommendation being the default.
 - A failed study loses the scroll and causes a mishap by overreach; some mishaps are very good.
 - Every living thing has some mana; no class's multiplier is 0.
 - Caster level combines the class's levels, talents, racials, items, skill; ability stats modify range, area, and similar per spell, consistently.
@@ -337,6 +339,6 @@ Waves are ordered; the first and second can start at once. Every PR names its ta
 - Classes have a tiny guaranteed list, a cantrip and about four spells; no spells for classes that would be a meme.
 - Resolution is per spell, 3.5-inspired, balanced against each other.
 - Cantrips cost mana. Reading a scroll costs none.
-- Wands: Missile slot, charges, a set caster level, the spell's own targeting, **no recharge**. Staffs: wands for effects no spell has. Rods: the user's mana and level, effects no spell has.
+- Wands: Missile slot, charges, a set caster level, the spell's own targeting, **no recharge**. Rods: the user's mana and level, effects no spell has.
 - Spell damage is **rolled**, not 5e's deterministic; a static `+n` is allowed, sparingly.
 - **Strict damage caps**; the game runs to level 60; **area spells are expensive**.
