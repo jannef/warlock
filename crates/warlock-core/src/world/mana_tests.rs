@@ -9,7 +9,8 @@ use crate::replay::Replay;
 
 // Round numbers: resting brings mana back three times as fast; dazed halves the pace; a hex
 // drains 2 mana a tick (every 30 s a degree) and stops it, easing a degree a minute; befuddled
-// takes 4 Intelligence for a minute; Diseased halves it.
+// takes 4 Intelligence for a minute; Diseased halves it. The rest of the shipped statuses stay
+// (see `status_text`).
 const STATUS: &str = r##"
 [healing]
 resting = 200
@@ -56,60 +57,6 @@ name = "Diseased"
 max = 1
 regen = 50
 mana_regen = 50
-
-# Named by the undead's on_hit (#383): kept as the built-in ones are, untouched by mana.
-[[status]]
-id = "frightened"
-name = "Frightened"
-max = 3
-eases = 6
-flees = true
-
-[[status]]
-id = "transfixed"
-name = "Transfixed"
-max = 4
-eases = 12
-cost = 200
-
-# Named by the wargs' bites (#455), untouched by mana.
-[[status]]
-id = "bleeding"
-name = "Bleeding"
-max = 5
-eases = 6
-
-[[status]]
-id = "held"
-name = "Held"
-max = 12
-stacking = "highest"
-eases = 6
-blocks = ["step"]
-hold = { check = "strength", difficulty = 13, turns = "3d4" }
-
-# Named by the quasit's claws (#449): weak limbs, not the mind.
-[[status]]
-id = "weakened"
-name = "Weakened"
-max = 1
-eases = 120
-penalty = { from = 1, strength = -2, dexterity = -2 }
-
-# Named by the elementals' (#453) and trolls' (#456) on_hit: kept as the built-in ones are, untouched by mana.
-[[status]]
-id = "staggered"
-name = "Staggered"
-max = 1
-eases = 6
-cost = 150
-
-[[status]]
-id = "sluggish"
-name = "Sluggish"
-max = 1
-eases = 60
-cost = 150
 "##;
 
 // A fog of the mind: it shows after a day and slows mana to a tenth; a progression (every
@@ -154,54 +101,32 @@ area = [5, 0, 8, 2]
 const WELL: &str = "\n[[effect]]\nid = \"well\"\nname = \"mana well\"\nmark = \"w\"\n\
                     enter = \"The air hums.\"\nmana_regen = 300\n";
 
+/// The shipped statuses with `STATUS` in place of the ones it redefines (and its healing paces).
+fn status_text() -> String {
+    let real = include_str!("../../../../assets/data/status.toml");
+    let mut out = STATUS.to_string();
+    for block in real.split("\n[[status]]\n").skip(1) {
+        let redefined = STATUS
+            .lines()
+            .filter(|line| line.starts_with("id = "))
+            .any(|line| block.starts_with(line));
+        if !redefined {
+            out.push_str("\n[[status]]\n");
+            out.push_str(block);
+        }
+    }
+    out
+}
+
 /// The built-in content with the statuses, disease, experience, and room above, and a scenario
 /// "hall" without a character with `scenario`'s lines; `extra` files added or replaced.
 fn files(scenario: &str, extra: &[(&str, &str)]) -> ContentFiles {
     let mut files = ContentFiles::builtin();
-    files.insert("data/status.toml", STATUS);
-    // Its own statuses: the uniques' powers name statuses it leaves out.
-    files.remove("campaigns/ascmearc/data/uniques");
-    // The talents name the built-in statuses, which STATUS replaces.
-    files.remove("data/talents/");
-    files.remove("data/talents.toml");
-    // And the spells (Blessing's Blessed, the hexes').
-    files.remove("data/spells/");
-    // And the mishaps of a failed study (Sluggish, Hexed, Blessed).
-    files.remove("data/mishaps/");
-    // So does the rage (its Raging).
-    files.remove("data/resources.toml");
-    // And the giant leech's bite (its Bleeding), and so from Fennmynster, where it lives.
-    files.remove("data/creatures/giant_leech.toml");
-    let fennmynster = "campaigns/ascmearc/data/dungeons/fennmynster.toml";
-    let text = include_str!("../../../../assets/campaigns/ascmearc/data/dungeons/fennmynster.toml");
-    files.insert(fennmynster, &text.replace("\"giant_leech\", ", ""));
-    // And the basilisk's bite (its Sluggish), and so from Fyrdelf, where it lives.
-    files.remove("data/creatures/basilisk.toml");
-    let fyrdelf = "campaigns/ascmearc/data/dungeons/fyrdelf.toml";
-    let text = include_str!("../../../../assets/campaigns/ascmearc/data/dungeons/fyrdelf.toml");
-    files.insert(fyrdelf, &text.replace("\"basilisk\", ", ""));
-    // And the devils whose riders are Bleeding and Sluggish (in no dungeon).
-    for devil in ["barbed_devil", "horned_devil", "ice_devil"] {
-        files.remove(&format!("data/creatures/{devil}.toml"));
-    }
-    // And the green hag's claws (Hexed) and the bheur hag's staff (Sluggish), in no population.
-    files.remove("data/creatures/green_hag.toml");
-    files.remove("data/creatures/bheur_hag.toml");
-    // And the canoloth's tongue and the nycaloth's claws (their Bleeding; in no population).
-    files.remove("data/creatures/canoloth.toml");
-    files.remove("data/creatures/nycaloth.toml");
+    files.insert("data/status.toml", &status_text());
     let diseases = include_str!("../../../../assets/data/diseases.toml");
     files.insert("data/diseases.toml", &format!("{diseases}\n{FOG}"));
     files.insert("data/experience.toml", EXPERIENCE);
-    // Without the draining room, whose Ebbing STATUS leaves out (the other effects stay).
     let rooms = include_str!("../../../../assets/data/room_effects.toml");
-    let rooms = match rooms.split_once("[[effect]]\nid = \"draining\"") {
-        Some((before, after)) => match after.split_once("[[effect]]") {
-            Some((_, rest)) => format!("{before}[[effect]]{rest}"),
-            None => before.to_string(),
-        },
-        None => rooms.to_string(),
-    };
     files.insert("data/room_effects.toml", &format!("{rooms}{WELL}"));
     files.insert("levels/hall.toml", LEVEL);
     files.insert(
