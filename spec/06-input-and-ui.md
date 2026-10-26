@@ -427,10 +427,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
   first (one column fits the default 1280×720 window), and a list still too long scrolls with
   ↑↓ (`↑`/`↓` on the frame where rows are hidden, `↑↓ scroll` in the footer). Without weapon
   skills in content it says "You know no weapon skills."
-- **Quest log** (`q`; §8 "Quests"): the quests the player has taken up ("Active"), then those
-  they have done ("Done"), by name, each in the order of `data/quests.toml`; offers not yet
-  answered are not there ("You have taken up no quests." when there are none). ↑↓ choose one;
-  below the list it shows what it asks ("Kill 3 giant rats in the Arena."), how far it has got
+- **Quest log** (`q`; §8 "Quests"): the quests the player was given ("Active"), then those
+  they have done ("Done"), by name, each in the order of `data/quests.toml` ("You have taken
+  up no quests." when there are none). ↑↓ choose one; below the list it shows what it asks, as
+  its first breadcrumb in the giver's name ("The old hermit wants you to kill 3 giant rats in
+  the Arena."; a rolled quest's with what was drawn, "The gardener wants you to bring a scroll
+  of lightning."), how far it has got
   ("2 / 3 killed.", "You carry 1 / 3.", "Not reached yet.", "You no longer carry the sealed
   letter.", or once its goal is met "Return to the old hermit." / "Take the sealed letter to the
   old hermit."; "Done." for a done one), and who gave it, in their words (the offer, wrapped, at
@@ -497,7 +499,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   selected one (the arrows move it), asks about it, which takes no time: the screen closes, the
   answer is said, and the screen opens again with it, on the topic asked (also when nothing is
   left to ask: a quest handed in to someone without other topics). Esc (or `C`) leaves. Quest
-  topics (§8 "Quests") come first.
+  topics (§8 "Quests") come first, one per quest: asking gives it (no accept or decline
+  topic), and the screen reopens on it, now its reminder.
   Chatting takes the time of `chat` (§7 "Action costs"); with no creature the player sees there,
   it is refused ("You see no one there to talk to.") and takes none.
 - **Rest** (`b`) asks in the message line: `Rest: (h)our, until (d)awn, until (n)ightfall? (Esc to

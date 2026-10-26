@@ -16,6 +16,9 @@
 //! favour some with fixed shares and ban others: `content/dungeon.rs`), among those the room is
 //! eligible for ([`RoomEffectDef::eligible`]).
 //!
+//! An effect may scale everyone's carrying limit inside ([`RoomEffectDef::burden`]: a heavy hall
+//! halves it; `WorldState::load`, the one burden hook).
+//!
 //! An effect may give everyone inside a status while they stay ([`RoomEffectDef::status`]: a
 //! draining room's Ebbing; `World::dwell`), which eases by its own pace once they leave.
 //!
@@ -47,6 +50,8 @@ pub const WEIGHT: RangeInclusive<u8> = 1..=100;
 /// The fewest seconds a room's status may take to ease a degree: the longest single action, so
 /// it never lapses while one stays inside.
 pub const DWELL_EASES: u32 = 10;
+/// The percent of the carrying limit an effect may leave (spec §8 "Burden").
+pub const BURDEN: RangeInclusive<u16> = 10..=1000;
 /// The degrees Celsius an effect may add to the level's temperature (spec §7 "Special rooms").
 pub const TEMPERATURE: RangeInclusive<i8> = -40..=40;
 
@@ -111,6 +116,8 @@ struct RoomEffectSpec {
     status: Option<String>,
     #[serde(default)]
     temperature: i8,
+    #[serde(default = "hundred")]
+    burden: u16,
 }
 
 /// What a special room does while one is inside it.
@@ -160,6 +167,9 @@ pub struct RoomEffectDef {
     /// Degrees Celsius added to the level's temperature inside (a hot room's +25, a cold room's
     /// -25); `WorldState::temperature_at` is the one place it is read.
     pub temperature: i8,
+    /// Percent of everyone's carrying limit inside (a heavy hall's 50 halves it; spec §8
+    /// "Burden"); `WorldState::load` is the one place it is read.
+    pub burden: u16,
 }
 
 impl RoomEffectDef {
@@ -258,6 +268,11 @@ impl<'c> Here<'c> {
     /// What the effects here add to the level's temperature: their degrees, added up.
     pub fn warmth(&self) -> Temperature {
         Temperature::degrees(self.each().map(|e| i32::from(e.temperature)).sum())
+    }
+
+    /// Percent of the carrying limit left here (100: as it is).
+    pub fn burden(&self) -> u32 {
+        self.percent(|e| e.burden)
     }
 
     /// The statuses held here, the room's first: both apply.
@@ -372,6 +387,7 @@ impl RoomEffects {
                 ("noise", spec.noise, NOISE),
                 ("regen", spec.regen, REGEN),
                 ("mana_regen", spec.mana_regen, REGEN),
+                ("burden", spec.burden, BURDEN),
             ] {
                 if !range.contains(&value) {
                     return Err(bad(format!(
@@ -445,6 +461,7 @@ impl RoomEffects {
                 floor,
                 status,
                 temperature: spec.temperature,
+                burden: spec.burden,
             };
             if def.level_chance > 0 && !def.can_pervade() {
                 return Err(err(format!(

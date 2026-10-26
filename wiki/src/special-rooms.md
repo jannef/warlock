@@ -89,6 +89,11 @@ gets where a dungeon favours or bans nothing. "Only" says where it can come at a
   creatures alike, is *Silenced* (see [Status effects](status-effects.md)) for as long as they
   stay and ten seconds after they leave: no spell can be cast, no scroll read, and no voice
   thrown. A wizard and a kobold shaman fight with sticks in it; a thief walks through unheard.
+- **Heavy hall.** The stones pull at whatever you carry: inside, your carrying limit is half
+  what it is anywhere else, so a load that was light makes you burdened, and armour that only
+  burdened you strains you (see [Burden](burden.md)). Creatures carry less inside too. If what
+  you carry would overload you inside, you cannot go in ("You carry too much to go in there."),
+  and if you overload yourself inside by picking something up, you can still step back out.
 
 The talent *Hallowed rest* (Grit) makes a room that quickens healing or mana quicken it half
 again more for you: a sanctuary's three times as fast becomes four times. The talent *Anchored

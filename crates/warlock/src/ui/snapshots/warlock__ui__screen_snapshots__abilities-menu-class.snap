@@ -17,17 +17,17 @@ expression: "render(case, content.clone())"
                     │   d  Handle animal      not usable yet                   │
                     │   e  Heal               not usable yet                   │
                     │   f  Intimidate         not usable yet                   │
-                    │   g  Knowledge          not usable yet                   │
                     │ Weapon skills                                            │
-                    │   h  Shield bash        in a direction                   │
+                    │   g  Shield bash        in a direction                   │
                     │ Items                                                    │
-                    │   i  Hood your lantern                                   │
+                    │   h  Hood your lantern                                   │
                     │                                                          │
                     │ The unicorn's grace: your bleeding and poison end, and a │
                     │ disease is shaken off; then it rests a day.              │
                     │                                                          │
-                    │ a-i or Enter use   Esc close                             │
+                    │ a-h or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
+
 
 
 

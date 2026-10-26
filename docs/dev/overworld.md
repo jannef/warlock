@@ -61,7 +61,10 @@ the plain terrain, so the view, memory, look mode, local areas (`Content::local_
 template), and every perception-built dump show it with no filter; only `world/reveal.rs` and the
 dev views (`dump.rs::truth_rows`, the F2 overlay in `ui/dev.rs`) read `hidden`.
 `World::reveal_location(id)` (the one reveal, called by `world/quest.rs` at a quest's
-`reveals.when` and by the dev action `reveal:ID`) records the id in `WorldState::revealed`; if the
+`reveals.when` (`given` or `done`; a rolled quest's variant reveals its own, #422), by the dev
+`quest_roll` choosing a variant, and by the dev action `reveal:ID`) records the id in
+`WorldState::revealed` (which also opens the branch behind it to rolled quests' picks,
+`World::branch_open`); if the
 overworld is instantiated, `reveal_on` takes the entry out of `hidden`, sets the terrain and the
 player's memory of the cell (the map is marked wherever they are), and pushes a `StairsLink`
 with the location's `name` (`StairsLink::name`, preferred by `PerceptionView::leads_to` and the
