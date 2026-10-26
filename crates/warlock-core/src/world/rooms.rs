@@ -53,6 +53,26 @@ impl World {
         level.pervading.is_some_and(gives) || level.rooms.iter().any(|r| gives(r.effect))
     }
 
+    /// The player has just arrived on the current level (or a run starts on it): everyone on
+    /// it takes what the special room it stands in gives ([`World::dwell`]) at once, so one
+    /// standing in a silent vault is silenced before its first action, not after it. Returns
+    /// whether the level gives any status at all (then perception may have changed).
+    pub(super) fn settle_in(&mut self) -> bool {
+        if !self.dwelling_here() {
+            return false;
+        }
+        let level = self.state.current_level.clone();
+        let ids: Vec<ActorId> = (self.state.actors.values())
+            .filter(|a| a.level == level)
+            .map(|a| a.id)
+            .collect();
+        let mut events = Vec::new();
+        for id in ids {
+            self.dwell(id, &mut events);
+        }
+        true
+    }
+
     /// Actor `id` stays where it is as time passes: every status the special rooms at its cell
     /// give (`status`, and the whole level's) it holds at least at one degree, its easing begun
     /// anew (`stacking = "refresh"`), so it lasts while the actor stays and eases by its own pace
