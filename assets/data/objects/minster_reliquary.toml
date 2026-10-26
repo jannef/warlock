@@ -1,0 +1,12 @@
+# The minster reliquary (Sister Hild's "What the water keeps", in the Ascmearc): a quest object
+# on the altar of the sunken crypt at the bottom of Fennmynster, never traded.
+[[object]]
+id = "minster_reliquary"
+name = "minster reliquary"
+plural = "minster reliquaries"
+glyph = "("
+fg = "#c9a227"
+class = "miscellaneous"
+materials = ["bronze"]
+weight = 1800
+value = 0

@@ -52,9 +52,10 @@ floor.
 Hlāwdūn east of Cēaptūn. Its first two floors are the barrow's passages and chambers; the four
 below are the hollows of the hill, wide caves. It is cold (8 °C), its traps are arrows, spears,
 pits, and alarms, and its dead walk: grave worms, skeletons, zombies, ghouls, and the barrow
-wight, with goblins, kobolds, and vermin among them. On either of its first two floors you may
-find the **barrow chamber**: a skeleton paces a burial hall before a locked bronze door, and
-behind it something of worth lies on a plinth. The skeleton carries the bronze key.
+wight, with goblins, kobolds, and vermin among them. On its second floor, always, lies the
+**barrow chamber**: a skeleton paces a burial hall before a locked bronze door, and behind it
+the silver chalice Sister Hild wants back lies on a plinth. The skeleton carries the bronze key.
+On the first floor you feel cold air breathing up from the mound.
 
 {{#include generated/dungeons.md}}
 
@@ -66,7 +67,8 @@ behind it something of worth lies on a plinth. The skeleton carries the bronze k
 
 **Fennmynster**, the fen minster, is what is left of a minster that sank into the marsh of
 Micelfenn: eight floors of its cellars and crypts at 6 °C. No road leads there and its way in
-cannot be found by looking: a quest must show you where it is. The fen seeps into its rooms: one
+cannot be found by looking: Sister Hild marks it on your map as you take up her quest **The fen
+minster**, the one after she has her chalice back. The fen seeps into its rooms: one
 room in four is out of the ordinary (most floors have one or two), flooded ankle-deep (slow and
 loud to wade), hushed, or shadowed. Its traps are pits, frost, alarms, and teleports, and the
 monks hid their stores well: more of its doors are secret than in the other dungeons. The
@@ -76,14 +78,16 @@ priests; somewhere in the dark is the bog hag, whom you meet once in your life. 
 down there: Fennmynster has no shops.
 
 At the very bottom lies the **sunken crypt**: a nave of shallow water between the monks' tombs,
-where two of the drowned still stand guard, and at its far end a dry dais with an altar and a
-magic treasure on it. The crypt is on the eighth floor and nowhere else.
+where two of the drowned still stand guard, and at its far end a dry dais with an altar and the
+minster reliquary on it, which Sister Hild's last quest asks for. The crypt is on the eighth
+floor and nowhere else.
 
 ### Fyrdelf
 
 **Fyrdelf**, the fire delving, is the duergar's mine under the hills of Ascdūn, below the
-volcano. No road leads there and its way in cannot be found by looking: a quest must show you
-where it is. Its first four floors are the galleries, rooms and passages at 10 °C; the eight
+volcano. No road leads there and its way in cannot be found by looking: Factor Wulfrun marks it
+on your map as you take up her quest **The lost shaft**, which she offers once you have carried
+her ledger to Godgifu and been four floors down into Cealdhlāw for the reeve. Its first four floors are the galleries, rooms and passages at 10 °C; the eight
 below are the deep workings, wide caves that grow hotter toward the volcano's heart (16 °C,
 then 20 °C, and 24 °C at the bottom). Its traps are arrows, spears, fireballs, lightning, and
 alarms, few of its doors are hidden, and its locks are the hardest to pick of the three

@@ -10,18 +10,18 @@ expression: "render(case, content.clone())"
 
 
 
-
                   ┌─ Sister Hild ────────────────────────────────────────────────┐
                   │                                                              │
                   │ "Peace on you. The Mynster's door is open to all who come in │
                   │ peace."                                                      │
                   │                                                              │
-                  │ > 1  The Mynster                                             │
-                  │   2  The fen minster                                         │
-                  │   3  A cure for what ails you (60 gold)                      │
-                  │   4  A mending of body (40 gold)                             │
+                  │ > 1  Grave goods                                             │
+                  │   2  The Mynster                                             │
+                  │   3  The mother house                                        │
+                  │   4  A cure for what ails you (60 gold)                      │
+                  │   5  A mending of body (40 gold)                             │
                   │                                                              │
-                  │ 1-4 or Enter  ask    Esc  leave                              │
+                  │ 1-5 or Enter  ask    Esc  leave                              │
                   └──────────────────────────────────────────────────────────────┘
 
 

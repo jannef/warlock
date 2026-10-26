@@ -1,0 +1,11 @@
+# The silver chalice (Sister Hild's "Grave goods", in the Ascmearc): a quest object on the plinth
+# of the barrow chamber in Cealdhlāw, never traded.
+[[object]]
+id = "silver_chalice"
+name = "silver chalice"
+glyph = "("
+fg = "#d4dce4"
+class = "miscellaneous"
+materials = ["silver"]
+weight = 450
+value = 0

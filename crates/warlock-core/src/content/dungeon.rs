@@ -58,6 +58,7 @@
 use super::ContentError;
 use super::creature::CreatureId;
 use super::danger::{CountSpec, DangerRule, DangerSpec, SpawnSpec, Spawning, SpawningSpec};
+use super::dialogue::{MAX_REPLY, check_lines};
 use super::object::ObjectId;
 use super::room_effect::{RoomEffectId, RoomEffects};
 use super::shop::{ShopId, Shops};
@@ -101,6 +102,8 @@ pub(super) struct DungeonFile {
 struct DungeonSpec {
     id: String,
     name: Option<String>,
+    /// A line said each time the player arrives on its first level; default none.
+    arrival: Option<String>,
     generator: Generator,
     depth: u32,
     size: [i32; 2],
@@ -378,6 +381,8 @@ pub struct LevelPlan {
 pub struct DungeonDef {
     pub id: String,
     pub name: String,
+    /// A line said each time the player arrives on its first level (`id:1`).
+    pub arrival: Option<String>,
     /// Number of levels: `id:1` to `id:depth`.
     pub depth: u32,
     pub ambient: Light,
@@ -674,8 +679,13 @@ impl DungeonFile {
                 })?),
                 None => None,
             };
+            if let Some(line) = &spec.arrival {
+                check_lines([line], MAX_REPLY)
+                    .map_err(|m| err(format!("dungeon `{id}`: `arrival`: {m}")))?;
+            }
             defs.push(DungeonDef {
                 name: spec.name.unwrap_or_else(|| id.clone()),
+                arrival: spec.arrival,
                 id,
                 depth: spec.depth,
                 ambient: spec.ambient,

@@ -167,7 +167,7 @@ pub(crate) use hash::fnv1a;
 pub use lantern::Lantern;
 pub use level::{Fire, LevelState};
 pub use loot::Identified;
-pub use quest::{QuestRecord, QuestView, Quests, Stage};
+pub use quest::{QuestRecord, QuestView, Quests, Stage, asks as quest_asks};
 use rest::Ended;
 pub use shop::{Shop, ShopStatus, count_of, favour, part_of, unpaid_parts};
 pub use sign_picks::BREATH_RANGE;
@@ -1161,6 +1161,8 @@ mod buff_tests;
 mod burden_tests;
 #[cfg(test)]
 mod caster_tests;
+#[cfg(test)]
+mod ceaptun_quest_tests;
 #[cfg(test)]
 mod ceaptun_tests;
 #[cfg(test)]

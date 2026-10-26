@@ -1,10 +1,10 @@
-# Vault: the barrow chamber (docs/design/campaign.md §7.2), stamped on Cealdhlāw's rooms levels
-# only (`dungeons`; a campaign's vault stamps in that campaign's branches alone, spec §7). A
-# skeleton walks the old burial hall; behind a locked bronze door the grave goods lie on a plinth
-# (the altar), lit by its faint glow. The guardian carries the key (spec §8 "Doors"): take it from
-# its bones, or kick the door in.
+# Vault: the barrow chamber (docs/design/campaign.md §7.2). Cealdhlāw names it for its second
+# floor (`vaults` in its `[[dungeon.levels]]`), so it is stamped there for certain and nowhere
+# else: the silver chalice of Sister Hild's "Grave goods" lies on its plinth. A skeleton walks the
+# old burial hall; behind a locked bronze door the grave goods lie on a plinth (the altar), lit by
+# its faint glow. The guardian carries the key (spec §8 "Doors"): take it from its bones, or kick
+# the door in.
 name = "Barrow chamber"
-dungeons = ["cealdhlaw:1", "cealdhlaw:2"]
 map = '''
 #############
 #...#####...#
@@ -17,9 +17,8 @@ map = '''
 
 [legend]
 "z" = { terrain = "floor", creature = "skeleton", route = "E8 W8", carry = ["short_sword", "bronze_key"], wield = "short_sword" }
-# A reward (spec §8 "Magic items"): something magic or rare on the plinth, rolled when the level
-# is generated.
-"_" = { terrain = "altar", loot = "magic" }
+# The silver chalice the barrow's dead were given (Sister Hild's "Grave goods").
+"_" = { terrain = "altar", objects = ["silver_chalice"] }
 "L" = { terrain = "door_closed", lock = "barrow_chamber" }
 
 # Grave goods: the coins the dead were buried with, before the plinth.

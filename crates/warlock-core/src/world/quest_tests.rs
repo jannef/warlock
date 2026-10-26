@@ -900,6 +900,20 @@ fn quest_files_are_validated() {
         "no quest `later` before this one",
     );
     bad(
+        &format!(
+            "{QUESTS}{}",
+            quest("type = \"bring\"\ntarget = \"apple\"\nrequires = [\"pups\", \"later\"]")
+        ),
+        "no quest `later` before this one",
+    );
+    bad(
+        &format!(
+            "{QUESTS}{}",
+            quest("type = \"bring\"\ntarget = \"apple\"\nrequires = [\"pups\", \"pups\"]")
+        ),
+        "`requires` names `pups` twice",
+    );
+    bad(
         &quest("type = \"bring\"\ntarget = \"apple\"\nreward = { items = [\"pie\"] }"),
         "reward: unknown object `pie`",
     );
@@ -992,6 +1006,7 @@ fn the_showcase_people_give_four_quests() {
     let w = showcase();
     let content = w.content();
     let kinds: Vec<(&str, &str, String)> = (content.quests().iter())
+        .filter(|q| q.campaign.as_deref() == Some("showcase"))
         .map(|q| (q.id.as_str(), q.kind().id(), content.speaker_name(q.giver)))
         .collect();
     assert_eq!(
@@ -1003,7 +1018,7 @@ fn the_showcase_people_give_four_quests() {
             ("letter", "deliver", "wandering bard".to_string()),
         ]
     );
-    let letter = &content.quests()[3];
+    let letter = content.quest(content.quest_id("letter").expect("the letter"));
     assert_eq!(content.speaker_name(letter.turn_in()), "old hermit");
 }
 

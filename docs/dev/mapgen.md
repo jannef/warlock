@@ -72,7 +72,7 @@ depth)` holds (a dungeon vault, shared or of the branch's campaign, on a branch 
 The Ascmearc's branches (campaign design §7): Cealdhlāw (`cealdhlaw`, #337;
 `campaigns/ascmearc/data/dungeons/cealdhlaw.toml`), six floors of danger 1 to 6, rooms 80×21 on
 1–2 and caves 100×40 on 3–6, 30 creatures a thousand walkable cells (25 on the rooms floors,
-about 70 in the caves), and its vault the barrow chamber (`campaigns/ascmearc/vaults/`,
-`dungeons = ["cealdhlaw:1", "cealdhlaw:2"]`: a skeleton guardian with the bronze key, a locked
-inner room, loot on an altar). Its tests and first-level snapshot: `mapgen/cealdhlaw_tests.rs`
+about 70 in the caves), and its vault the barrow chamber (`campaigns/ascmearc/vaults/`, named by
+floor 2's `vaults`: a skeleton guardian with the bronze key, a locked inner room, the silver
+chalice of Sister Hild's quest on an altar). Its tests and first-level snapshot: `mapgen/cealdhlaw_tests.rs`
 (`describe_in` from `mapgen/tests.rs`).

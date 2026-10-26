@@ -16,8 +16,8 @@
 //! The giver's words are `offer`, `accept`, `decline` (optional), and `reminder`; `done` is
 //! said by whoever the quest is handed in to (the recipient of a bring with `to` or a delivery,
 //! else the giver). The `reward` is `gold` (gold coins), `items` (placement strings, `"apple*2"`),
-//! and `xp`, each optional. `requires` names a quest (earlier in the file) that must be done
-//! before this one is offered, and `requires_alignment` the bands the player must be in for it
+//! and `xp`, each optional. `requires` names a quest, or a list of them (loaded before this
+//! one), that must all be done before this one is offered, and `requires_alignment` the bands the player must be in for it
 //! to be offered (spec §8 "Alignment"); `alignment` moves their score as it is completed;
 //! `repeatable` quests are offered again once done (never a reach). `reveals` names a hidden
 //! location of the overworld revealed as the quest is offered, accepted (the default), or done
@@ -94,7 +94,7 @@ struct QuestSpec {
     decline: Option<String>,
     reminder: String,
     done: String,
-    requires: Option<String>,
+    requires: Option<Requires>,
     requires_alignment: Option<Requirement>,
     #[serde(default)]
     alignment: i32,
@@ -103,6 +103,23 @@ struct QuestSpec {
     reveals: Option<RevealSpec>,
     #[serde(rename = "where")]
     where_: Option<String>,
+}
+
+/// A quest's `requires`: one quest id, or a list of them (`["ledger", "barrow_heart"]`).
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum Requires {
+    One(String),
+    Many(Vec<String>),
+}
+
+impl Requires {
+    fn ids(&self) -> &[String] {
+        match self {
+            Requires::One(id) => std::slice::from_ref(id),
+            Requires::Many(ids) => ids,
+        }
+    }
 }
 
 /// A quest's `reveals = { location = "ID", when = "accepted" }`.
@@ -213,8 +230,8 @@ pub struct QuestDef {
     pub goal: Goal,
     pub reward: Reward,
     pub texts: QuestTexts,
-    /// A quest that must be done before this one is offered.
-    pub requires: Option<QuestId>,
+    /// The quests that must all be done before this one is offered.
+    pub requires: Vec<QuestId>,
     /// The alignment the player must be of for it to be offered (spec §8 "Alignment").
     pub requires_alignment: Option<Requirement>,
     /// How far completing it moves the player's alignment score (spec §8 "Alignment"):
@@ -508,14 +525,16 @@ fn resolve(
             "`alignment` is -{ALIGNMENT_MAX} to {ALIGNMENT_MAX}"
         ));
     }
-    let requires = match &spec.requires {
-        Some(id) => Some(
-            (before.iter().position(|q| q.id == *id))
-                .map(|i| QuestId(i as u16))
-                .ok_or_else(|| format!("`requires`: no quest `{id}` before this one"))?,
-        ),
-        None => None,
-    };
+    let mut requires = Vec::new();
+    for id in spec.requires.as_ref().map_or(&[][..], Requires::ids) {
+        let quest = (before.iter().position(|q| q.id == *id))
+            .map(|i| QuestId(i as u16))
+            .ok_or_else(|| format!("`requires`: no quest `{id}` before this one"))?;
+        if requires.contains(&quest) {
+            return Err(format!("`requires` names `{id}` twice"));
+        }
+        requires.push(quest);
+    }
     let reveals = match spec.reveals {
         Some(r) if content.hidden_location(campaign, &r.location).is_none() => {
             return Err(format!(

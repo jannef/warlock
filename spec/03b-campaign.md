@@ -42,6 +42,25 @@ every new run starts in it.
   diggings, hidden in Ascdūn, §7 "Fyrdelf"). A hidden one is its plain terrain until a quest
   reveals it (§7 "Hidden locations"). The rest of the design's forty sites are reserved: plain
   cells today, spaced so a later level drops in without moving anything.
+- **Quests** (#340, design §6.2; `campaigns/ascmearc/data/quests/`): three people in Cēaptūn
+  give a chain of three each, every quest offered once the one before it is done:
+  - **Reeve Leofric**: "Rats in the barrows" (kill 5 giant rats in Cealdhlāw; 25 gold, 30 XP),
+    "The barrow's heart" (reach Cealdhlāw 4; 60 gold, 100 XP), "The wight of the barrow" (kill
+    the barrow wight in Cealdhlāw; 150 gold, a chain mail shirt, 250 XP).
+  - **Sister Hild**: "Grave goods" (bring the silver chalice from the barrow chamber, Cealdhlāw
+    2; 40 gold, 60 XP), "The fen minster" (reach Fennmynster 3; it **reveals Fennmynster** as it
+    is accepted; 80 gold, 2 angelica roots, 160 XP), "What the water keeps" (bring the minster
+    reliquary from the sunken crypt, Fennmynster 8; 250 gold, 450 XP).
+  - **Factor Wulfrun**: "The foreman's ledger" (deliver her ledger to Godgifu at the Gæsthūs; 10
+    gold, 20 XP), "The lost shaft" (reach Fyrdelf 2; offered once the ledger and "The barrow's
+    heart" are both done, since Fyrdelf starts at danger 8; it **reveals Fyrdelf** as it is
+    accepted; 100 gold, 220 XP), "Fire in the deep" (kill the fire drake in Fyrdelf; 500 gold,
+    900 XP).
+  Every quest helps someone and is a little good (`alignment` 5 to 30). Each reach and bring
+  quest and the delivery say in the log where their goal lies (`where`). The chalice, the
+  reliquary, and the ledger are objects of their own, worth nothing to a shop. The three
+  branches' first levels each have an `arrival` line: "Cold air breathes up from the mound.",
+  "The water is up to the third step.", "The galleries smell of sulphur."
 - **The player wiki** describes the Ascmearc and never the test world: a page "The Ascmearc"
   with the names and their meanings, the regions, and the overworld map drawn from the level
   file with the hidden locations on it (the wiki tells the truth, design §11.4), plus the places

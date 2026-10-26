@@ -3,55 +3,58 @@ source: crates/warlock-core/src/mapgen/cealdhlaw_tests.rs
 expression: "describe_in(&CONTENT, &level(1, 1))"
 ---
 Cealdhlāw 1 (cealdhlaw:1) 80x21
-stairs Up at (57, 6) -> ascmearc
-stairs Down at (15, 16) -> cealdhlaw:2
-grave_worm at (46, 11) route E E W W W S S N N E E E W W
-rat at (46, 4) route E E W E W S N E W E W W
-kobold_archer at (4, 4) route E E E E W W W W carrying a short bow (readied), 12 bone arrows (quivered), a bronze cap (being worn)
-bat at (22, 7) route E E E S N W W W
-rat at (57, 15) route E E S S S N N N W W
-grave_worm at (65, 9) route E E E W E W W W
-bat at (48, 16) route S W W W W W W N N S N S S E E E E E E N
-rat at (59, 16) route W W W W E E E E
-rat at (17, 5) route E E E S N S N W W W
-grave_worm at (15, 5) route S W W W N N N S S S E E E N
-grave_worm at (24, 10) route S W W N N N N S S S N N N S S S S E E N
-bat at (58, 17) route E S W N N N S S S E N W
-bat at (47, 4) route E W W W E E W W E E E W
-rat at (45, 13) route N W W N E E W W S E E S
-skeleton at (53, 16) route E E W W W W E E E W W W E E E E W W
-bat at (4, 6) route N N N N E W S S S S
-barrow_spider at (42, 5) route N E E W W E W E E W W S
-grave_worm at (42, 17) route N N N N N S S S S S
-rat at (4, 5) route E S W W W E E E N W
-bat at (25, 7) route S S S W W W N N S S E E E N N N
-rat at (42, 15) route N N N N E W S S S S
-rat at (42, 12) route W N E E E W W W S E
-grave_worm at (68, 11) route W W W N N N N S S S S E E E
-rat at (67, 7) route W W W E E E W W W E E E
-rat at (69, 8) route W W W W W E E W W E E E E E
-pit trap at (3, 2)
-pit trap at (25, 6)
-arrow trap at (48, 5)
-pit trap at (58, 12)
-1 placed lights
-
- ################                                      ######
- #.^............#                                      #....#
- #..............#                        ##########    #.(..#
- #..k...........######                   #....rb.¡######....#
- #..r..........w+r...######              #s.....^......+....#  ########
- #..b...........####.#¡..^#              #¡.......######.<.¡#  #¡.....#
- ##########+#####  #.+b..b#  #########   ###+######    ###+#####...r..#
-          #.#      ###....#  #"~~~~~"#     #.#           #.....&.....r#
-          #.#      ###..).#  #~~~*~~~#     #.#           #.#####.w....#
-          #.#      #.'..w.#  #~~.*.~~#  ####+######      #.#   #......#
-          #.#      #.#.".¡#  #"~~.~~"#  #.....w..¡#      #.#   #....w¡#
-         ##.########.###+########+#######.r.....).#      #^#   ########
-         #.......¡##.# #................+....r....#      #.#
-         #........S..# ##################..[......#     ##.##
-         #........####                  #.r.......#######r..#
-         #¡....>..#                     #.......b.S..z.....r#
-         ##########                     #¡w.......#######.b.#
-                                        ###########     #¡..#
-                                                        #####
+stairs Up at (36, 4) -> ascmearc
+stairs Down at (6, 4) -> cealdhlaw:2
+shopkeeper at (35, 13) route  carrying a spear (wielded), a small shield (in off hand), a chain mail shirt (being worn), an iron helm (being worn), 300 gold coins
+grave_worm at (12, 15) route E E W W W S S N N E E E W W
+rat at (22, 4) route E E E N E S N W S W W W
+kobold_archer at (28, 3) route E E S S N N W W carrying a short bow (readied), 12 bone arrows (quivered), a bronze cap (being worn)
+bat at (16, 7) route N N N E W S S S
+rat at (8, 17) route E E S W W E E N W W
+grave_worm at (71, 12) route S N S N S N S N
+bat at (52, 17) route W W W W N N W N E S N W S E S S E E E E
+rat at (71, 17) route W W W W E E E E
+rat at (19, 5) route S N N E N S W S S N
+grave_worm at (17, 5) route E E S S N N N S S S N N W W
+grave_worm at (14, 14) route S S S S W W W W W W E E E E E E N N N N
+bat at (18, 7) route E E E E E E W W W W W W
+bat at (25, 4) route E E E E E S N W W W W W
+rat at (47, 16) route N N E E E E W W W W S S
+skeleton at (66, 17) route E E W W W W N E E W W S E E E E W W
+bat at (55, 5) route N N N E E W W S S S
+barrow_spider at (26, 5) route W W E W W W E E E W E E
+grave_worm at (75, 17) route W N N E E W W S S E
+rat at (49, 4) route E S S S W E N N N W
+bat at (24, 7) route W W W W W W W W E E E E E E E E
+rat at (73, 16) route N E E E S N W W W S
+rat at (47, 15) route N E E E E W W W W S
+grave_worm at (44, 15) route W W W E E E E W W W W E E E
+rat at (49, 7) route N N N N N E W S S S S S
+rat at (53, 11) route N N S S S N N S S N N N S S
+pit trap at (13, 1)
+pit trap at (46, 5)
+pit trap at (56, 14)
+arrow trap at (58, 4)
+2 placed lights
+special room echoing at (46, 13)-(58, 18)
+shop general_store kept by Orvald at (27, 13)-(35, 15), post (35, 13)
+          ########################
+     ######..^...................#             ################
+     #...¡#.####################.#             #.............¡#
+     #....+.###¡............k..#.# ######      #..............#
+     #>...#...'.......r..b.....#.###<...########.r........^...#
+     ###+######..w.r......s........+..........^+.......b......#
+       #.#    #................#####....########..............#    #########
+       #.#    #.b.b.....b.....¡#   #....#      #¡r............#    #"~~~~~"#
+       #.#    ##################   #...¡#      ######'#########    #~~~*~~~#
+       #"#                         ##+###           #.#            #~~.*.~~#
+       #.#                          #.#             #.#            #"~~.~~"#
+       #.#                          #.#             #r#            ####+####
+       #.#                ###########.#             #.#               #w#
+      ##+############     #¡?[[..(.@#.#       #######+#####           #.#
+      #.......w....¡#     #/..[*..}.+.#########ee)eeeeee^¡#    ########S######
+      #.....w.......#     #[...).).¡#.......w.Sreeeeeeeeee######¡............#
+      #........[....#     #####################reeeeeeeeeee....'.........r...#
+      #.r...........#                         #¡eeeebeeeee######..z....r...w¡#
+      #¡............#                         #############    ###############
+      ###############

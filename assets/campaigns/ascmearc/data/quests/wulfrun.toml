@@ -1,0 +1,55 @@
+# Factor Wulfrun's quests (docs/design/campaign.md §6.2; the fields: data/quests.toml): the
+# Fyrdelf chain. A ledger carried across the town, then the lost shaft under Fyrbeorg, which she
+# marks on the player's map as they take the errand up (the reveal, §8), offered only to someone
+# who has been four levels down into Cealdhlāw (Fyrdelf starts deeper than that), and what woke in
+# its deep workings.
+
+[[quest]]
+id = "foremans_ledger"
+name = "The foreman's ledger"
+giver = "wulfrun"
+type = "deliver"
+target = "ledger"
+to = "godgifu"
+reward = { gold = 10, xp = 20 }
+alignment = 5
+offer = "This is the last foreman's ledger from the diggings. His widow wants it, and she lives over the hills. Take it to Godgifu at the Gæsthūs: she sends it on with the next cart. I would go myself, but the books won't keep themselves."
+accept = "Here. Mind it: it's the only copy. Godgifu, at the inn, south of the square."
+decline = "It will keep. Ledgers always do."
+reminder = "The ledger goes to Godgifu, at the Gæsthūs. She sends it on with the cart."
+done = "The foreman's ledger, from Wulfrun? I'll see it goes with the next cart. Here, a little something from the house, for the walk."
+where = "The Gæsthūs is south of the square."
+
+[[quest]]
+id = "lost_shaft"
+name = "The lost shaft"
+giver = "wulfrun"
+requires = ["foremans_ledger", "barrow_heart"]
+type = "reach"
+target = "fyrdelf:2"
+reward = { gold = 100, xp = 220 }
+alignment = 10
+reveals = { location = "fyrdelf" }
+offer = "You've been down in the barrow and come back. That's more than most. The old diggings are called Fyrdelf, and the shaft is on the ledgers if you know how to read them. Go down two levels and tell me whether the galleries still stand."
+accept = "I'll mark it on your map. No road goes there: follow the river north past the ford and climb into the ash hills."
+decline = "Sensible. The last ones who went didn't come back."
+reminder = "Fyrdelf, two levels down. It lies in Ascdūn, in the hills under Fyrbeorg."
+done = "They stand, then, and something walks them. That explains the men who never came back. Here, as agreed."
+where = "The shaft lies in Ascdūn, in the hills under Fyrbeorg, north of the ford."
+
+[[quest]]
+id = "fire_deep"
+name = "Fire in the deep"
+giver = "wulfrun"
+requires = "lost_shaft"
+type = "kill"
+target = "fire_drake"
+level = "fyrdelf"
+reward = { gold = 500, xp = 900 }
+alignment = 25
+offer = "The last foreman wrote it down before the ledger ends: fire in the deepest working, and something in it that moved. A drake, I'd say, under the mountain. Kill it, and the town might dig again. Kill it, and I'll pay you what the mines owe me."
+accept = "It lies at the bottom of the workings, twelve levels down. Take water. Take more than you think."
+decline = "No one would blame you."
+reminder = "The fire drake, at the bottom of Fyrdelf."
+done = "Dead? Truly? Then I'll write a new page in the ledger, the first in years. Here. The mines owe me more, but this is what I have."
+where = "It lies on Fyrdelf's twelfth and lowest level."

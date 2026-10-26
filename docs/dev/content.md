@@ -14,8 +14,9 @@ legend; see `assets/campaigns/showcase/levels/hub.toml` and spec §7. A legend e
 to override its type's alignment the same way (`Actor::alignment_override`, read with
 `Actor::nature`; `docs/dev/alignment.md`). The showcase (hub, vast, courtyard) is safe
 this way: `xtask/src/vast.rs` emits it for its rats and kobolds; fighting is the arena's and the Depths'. A level
-file's optional `arrival = "..."` line is said when the player arrives by stairs (a scenario's
-`arrival` once, as a run of it starts). A legend entry's `name` (and `note`) names the place on
+file's optional `arrival = "..."` line is said when the player arrives by stairs (a dungeon
+branch's on its first level, `Content::arrival`; a scenario's `arrival` once, as a run of it
+starts). A legend entry's `name` (and `note`) names the place on
 its cell (`docs/dev/overworld.md`, "Named places"). `secret =
 true` (or a difficulty) on a closed door makes it a secret door: the cell shows the wall around
 it until found (`docs/dev/searching.md`). Water: `~` is still water; running water (terrain with a

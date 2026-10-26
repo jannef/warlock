@@ -340,8 +340,8 @@ impl World {
         self.sense_danger(to);
         // Sounds remembered on the level left say nothing about this one.
         self.state.recent_sounds.clear();
-        if let Some(line) = self.content.level(to).and_then(|t| t.arrival.clone()) {
-            self.say(line);
+        if let Some(line) = self.content.arrival(to) {
+            self.say(line.to_string());
         }
         Ok(())
     }

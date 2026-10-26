@@ -514,7 +514,7 @@ mod tests {
         // Materials (#193, #194): their properties on steel's scale, how often they are found,
         // what each item may be made of, and a long sword and chain mail in each metal.
         assert!(text("materials.md").contains(
-            "| Bronze | metal | `#cd7f32` | 112% | +0 / −1 | 80% | ×0.8 | no | bronze keys |"
+            "| Bronze | metal | `#cd7f32` | 112% | +0 / −1 | 80% | ×0.8 | no | bronze keys, minster reliquaries |"
         ));
         assert!(
             text("material-finds.md")
@@ -1074,7 +1074,7 @@ mod tests {
         );
         let at = |row: &str| classes.find(row).unwrap_or_else(|| panic!("{row}"));
         assert!(at("| Melee weapons |") < at("| Gems | Gems |"));
-        assert!(at("| Gems | Gems |") < at("| Miscellaneous | Long-stemmed pipes, lutes, rocks |"));
+        assert!(at("| Gems | Gems |") < at("| Miscellaneous | Foreman's ledgers, long-stemmed"));
         assert!(
             text("creatures.md")
                 .contains("| Giant rat | `r` | Vermin | hostile | up close | no | no |")

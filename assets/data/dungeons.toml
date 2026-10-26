@@ -9,6 +9,7 @@
 # Fields:
 #   id         branch id; its levels are "<id>:1" to "<id>:<depth>"
 #   name       level names are "<name> <depth>" (default: the id)
+#   arrival    a line said each time the player arrives on the first level by stairs (optional)
 #   generator  "rooms" (rooms and corridors, ADOM-like) or "caves" (cellular automata)
 #   depth      number of levels
 #   size       [width, height]

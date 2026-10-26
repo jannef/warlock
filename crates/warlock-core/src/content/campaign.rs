@@ -410,7 +410,7 @@ mod tests {
             content
                 .quests()
                 .iter()
-                .all(|q| q.campaign.as_deref() == Some("showcase"))
+                .all(|q| matches!(q.campaign.as_deref(), Some("showcase" | "ascmearc")))
         );
         let speakers: Vec<_> = (content.dialogues().iter().enumerate())
             .map(|(i, d)| {

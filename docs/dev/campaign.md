@@ -150,11 +150,34 @@ and their words are `data/dialogue/ceaptun.toml`: the `villager` type's one-line
 and the npcs `hild` (Sister Hild: two topics, the `cure` 60 and `mend` 40 services), `godgifu`
 (five rumour topics, never a reveal), `leofric`, and `wulfrun`, each with a proper `name`
 (`Dialogue::name`: `World::called`, `Content::speaker_name`/`speaker_called`, look mode and the
-dialogue screen through `SeenActor::dialogue`). No quests yet (the design's item H). The dev
+dialogue screen through `SeenActor::dialogue`). Their quests are below ("Cēaptūn's quests"). The dev
 scenario `ceaptun` starts on the square (seed 2, a warrior, 60 gold). Tests:
 `world/ceaptun_tests.rs` (the way in and out, the shops' goods, everyone at peace, names, the
 sanctuary and the services, Godgifu's topics, the view snapshot `ceaptun_start`, a replay),
 `ui/look.rs` (Sister Hild's look line), the `dialogue-services` text snapshot.
+
+## Cēaptūn's quests (#340; the design's §6.2)
+
+`campaigns/ascmearc/data/quests/{hild,leofric,wulfrun}.toml`, one file a giver, three chains of
+three, each quest offered once the one before it is done (so a giver shows one quest topic at a
+time): Reeve Leofric's Cealdhlāw chain (`barrow_rats`: kill 5 rats anywhere in Cealdhlāw;
+`barrow_heart`: reach `cealdhlaw:4`; `wight`: kill the barrow wight), Sister Hild's Fennmynster
+chain (`grave_goods`: bring the `silver_chalice`; `fen_minster`: reach `fennmynster:3`, which
+reveals `fennmynster` as it is accepted; `water_keeps`: bring the `minster_reliquary`), and
+Factor Wulfrun's Fyrdelf chain (`foremans_ledger`: deliver the `ledger` to Godgifu; `lost_shaft`:
+reach `fyrdelf:2`, which `requires` both the ledger and `barrow_heart` (a list: Fyrdelf starts at
+danger 8, so nobody is sent there before danger 4) and reveals `fyrdelf` as it is accepted;
+`fire_deep`: kill the fire drake). Each reach and bring quest has a `where` for the log. The
+quest objects are shared objects (`data/objects/{silver_chalice,minster_reliquary,ledger}.toml`,
+worth 0: never traded). The chalice lies on the barrow chamber's plinth, which Cealdhlāw names
+for its second floor (`[[dungeon.levels]] vaults`: certain, once, and never drawn at random); the
+reliquary on the sunken crypt's altar, Fennmynster 8; the drake in its hoard, Fyrdelf 12. The
+three branches' first levels say their `arrival` lines (`DungeonDef::arrival`, read through
+`Content::arrival` in `travel` with the hand-made levels'). Tests: `world/ceaptun_quest_tests.rs`
+(one quest a giver at a time, the ledger to Godgifu, the lost shaft's two prerequisites and its
+reveal and log, the fen minster's reveal, kills on any Cealdhlāw level, the arrival lines, a
+replay), `mapgen/cealdhlaw_tests.rs` (the chamber and its chalice on floor 2 for certain),
+`mapgen/fennmynster_tests.rs` (the reliquary on the crypt's altar).
 
 ## The wiki (`xtask/src/wiki/order.rs::campaigns`)
 

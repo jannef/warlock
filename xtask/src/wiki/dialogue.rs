@@ -2,7 +2,8 @@
 
 use super::text::{capital, yes};
 use std::fmt::Write as _;
-use warlock_core::content::{Content, Speaker};
+use warlock_core::content::{Content, RevealWhen, Reward, Speaker};
+use warlock_core::world::quest_asks;
 
 /// Who talks (`data/dialogue.toml` and the campaigns' `data/dialogue/`, those the wiki
 /// describes, by name): each speaker, whether they greet you, how many one-liners
@@ -50,24 +51,68 @@ pub(super) fn dialogue(content: &Content) -> String {
     out
 }
 
-/// Who gives quests (`data/quests.toml`): each quest's name, its giver, its kind, and what must
-/// be done first. What it asks exactly and what it pays are left to the game.
+/// Who gives quests (`data/quests.toml` and the campaigns' `data/quests/`, those the wiki
+/// describes, in load order: each chain in its order): each quest's name, its giver, its kind,
+/// what it asks, what it pays, what must be done first, and the hidden location it reveals.
 pub(super) fn quests(content: &Content) -> String {
     let mut out = String::from(
-        "| Quest | Given by | Kind | Offered after | Repeatable |\n|---|---|---|---|:---:|\n",
+        "| Quest | Given by | Kind | Goal | Reward | Offered after | Reveals | Repeatable |\n\
+         |---|---|---|---|---|---|---|:---:|\n",
     );
-    for q in content.quests() {
-        let after = q
-            .requires
-            .map_or_else(|| "—".to_string(), |r| content.quest(r).name.clone());
+    let quests = (content.quests().iter())
+        .filter(|q| super::order::described(content, q.campaign.as_deref()));
+    for q in quests {
+        let after: Vec<&str> = (q.requires.iter())
+            .map(|&r| content.quest(r).name.as_str())
+            .collect();
+        let after = if after.is_empty() {
+            "—".to_string()
+        } else {
+            after.join(", ")
+        };
+        let reveals = q.reveals.as_ref().map_or_else(
+            || "—".to_string(),
+            |r| {
+                let campaign = q.campaign.as_deref().unwrap_or_default();
+                let name = (content.hidden_location(campaign, &r.location))
+                    .map_or(r.location.as_str(), |(_, h)| h.name.as_str());
+                let when = match r.when {
+                    RevealWhen::Offered => "offered",
+                    RevealWhen::Accepted => "accepted",
+                    RevealWhen::Done => "done",
+                };
+                format!("{name} (when {when})")
+            },
+        );
         let _ = writeln!(
             out,
-            "| {} | {} | {} | {after} | {} |",
+            "| {} | {} | {} | {} | {} | {after} | {reveals} | {} |",
             q.name,
             capital(&content.speaker_name(q.giver)),
             q.kind().id(),
+            quest_asks(content, q).trim_end_matches('.'),
+            reward(content, &q.reward),
             yes(q.repeatable)
         );
     }
     out
+}
+
+/// A quest's reward in words: "20 gold, 30 XP, jade amulet".
+fn reward(content: &Content, reward: &Reward) -> String {
+    let mut parts = Vec::new();
+    if reward.gold > 0 {
+        parts.push(format!("{} gold", reward.gold));
+    }
+    if reward.xp > 0 {
+        parts.push(format!("{} XP", reward.xp));
+    }
+    for stack in &reward.items {
+        parts.push(content.object(stack.object).describe(stack.count));
+    }
+    if parts.is_empty() {
+        "—".to_string()
+    } else {
+        parts.join(", ")
+    }
 }
