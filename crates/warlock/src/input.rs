@@ -98,8 +98,6 @@ pub enum KeyCommand {
     /// Shoot or throw what is in the missile weapon slot (a cursor on the map): a launcher
     /// shoots its ammunition, anything else is thrown.
     Missile,
-    /// Aim the readied missile weapon, then shoot (no default key; `Missile` does this too).
-    Fire,
     /// Choose something to throw from the pack, aim it, then throw.
     Throw,
     /// Open the abilities menu: racial, class, skill, weapon skill, and item abilities, to
@@ -333,7 +331,6 @@ impl KeyCommand {
             KeyCommand::Read => "Read a scroll",
             KeyCommand::Look => "Look around",
             KeyCommand::Missile => "Throw or shoot the missile weapon",
-            KeyCommand::Fire => "Fire missile weapon",
             KeyCommand::Throw => "Throw from the pack",
             KeyCommand::MoreAggressive => "More aggressive stance",
             KeyCommand::MoreDefensive => "More defensive stance",
@@ -827,14 +824,11 @@ impl Gameplay<'_> {
                 let forward = (command == KeyCommand::NextTarget) != self.shift();
                 InputMode::Aim(aim.cycle(&game.world.perception(), forward))
             }
-            (
-                InputMode::Aim(aim),
-                KeyCommand::Missile | KeyCommand::Fire | KeyCommand::Throw | KeyCommand::Read,
-            ) => {
+            (InputMode::Aim(aim), KeyCommand::Missile | KeyCommand::Throw | KeyCommand::Read) => {
                 // The key that started the aim confirms it, and so does `t`, which starts a shot
                 // and a throw.
                 let (confirm, missile) = match aim.kind {
-                    AimKind::Fire => (KeyCommand::Fire, true),
+                    AimKind::Fire => (KeyCommand::Missile, true),
                     AimKind::Throw(_) => (KeyCommand::Throw, true),
                     AimKind::Read(_) => (KeyCommand::Read, false),
                     // None of these uses an ability: its own key does (below), and Enter.
@@ -852,17 +846,6 @@ impl Gameplay<'_> {
             }
             (InputMode::Aim(_), KeyCommand::Cancel | KeyCommand::Look) => InputMode::Normal,
             (InputMode::Aim(aim), _) => InputMode::Aim(aim),
-            (InputMode::Normal, KeyCommand::Fire) => {
-                let view = game.world.perception();
-                if view.ready_to_fire().is_some() {
-                    InputMode::Aim(Aim::start(AimKind::Fire, &view, &self.last))
-                } else {
-                    // Nothing to shoot: the rules say why.
-                    let here = view.viewer();
-                    self.actions.write(PlayerAction(Action::Fire(here)));
-                    InputMode::Normal
-                }
-            }
             (InputMode::Normal, KeyCommand::Missile) => {
                 let view = game.world.perception();
                 if view.ready_to_fire().is_some() {
@@ -1444,10 +1427,6 @@ mod tests {
         assert_eq!(keys(&b, KeyCommand::Messages), ["v"]);
         assert_eq!(keys(&b, KeyCommand::Character), ["@"]);
         assert_eq!(keys(&b, KeyCommand::Missile), ["t"]);
-        assert!(
-            keys(&b, KeyCommand::Fire).is_empty(),
-            "no default key: t (Missile) shoots"
-        );
         assert_eq!(keys(&b, KeyCommand::Throw), ["T"]);
         assert_eq!(keys(&b, KeyCommand::WeaponSkills), ["W"]);
         assert!(keys(&b, KeyCommand::Bash).is_empty(), "an ability: unbound");
