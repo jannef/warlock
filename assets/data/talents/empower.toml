@@ -3,6 +3,6 @@ id = "empower"
 name = "Empower"
 tree = "class"
 granted = true
-description = "Your spells and your spell scrolls roll one die more."
+description = "Your spells and your spell scrolls roll one die more: your spells reach their most sooner, never past it."
 effects = [{ kind = "spell_power", dice = 1 }]
 systems = ["scrolls", "mana"]

@@ -1,0 +1,14 @@
+# Mother Sallow's stiletto (docs/design/adventurers-guild.md §9.2): many quick, light strikes,
+# then step back and let the poison work. Weak against the poison-immune, which is its price.
+#
+# A unique item (spec §8 "Magic items"): a rare with a set name, set affixes (`[[item]]`
+# syntax: an id with its tier, the value the top of the tier's range), an item level, a power,
+# and a line of lore. Placed once in all content as `unique:widowmaker`.
+[[unique]]
+id = "widowmaker"
+name = "Widowmaker"
+object = "stiletto"
+affixes = ["venomous:2", "of_celerity:3", "of_the_lynx:2"]
+level = 12
+power = { inflict = "poisoned", chance = 100, severity = 1, phrase = "Its every cut poisons." }
+lore = "Thin as a hatpin, and never quite clean."

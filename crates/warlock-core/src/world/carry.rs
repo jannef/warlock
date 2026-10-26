@@ -52,7 +52,7 @@ impl World {
             chosen.remove(i);
         }
         if chosen.is_empty() {
-            let what = burning.first().map(|&i| pile[i].describe(&content));
+            let what = burning.first().map(|&i| self.lore().describe(&pile[i]));
             self.say(format!(
                 "You cannot pick up {} while it burns.",
                 what.unwrap_or_default()
@@ -68,7 +68,10 @@ impl World {
         // In a shop, goods for sale are now owed for (spec §7 "Shops").
         let prices = self.picked_up_goods(&got);
         let tag = |i: usize| prices[i].map(|p| format!("unpaid, {p} gold"));
-        let mut text = format!("You pick up {}.", object::phrase_with(&got, &content, tag));
+        let mut text = format!(
+            "You pick up {}.",
+            object::phrase_with(&got, self.lore(), tag)
+        );
         let shown: u32 = prices.iter().flatten().sum();
         let priced = prices.iter().flatten().count();
         if let Some((name, owed)) = self.owing()
@@ -111,7 +114,10 @@ impl World {
         let mut pile = level.objects_at(here).to_vec();
         object::add_to_pile(&mut pile, &dropped, &content);
         level.set_pile(here, pile);
-        self.say(format!("You drop {}.", object::phrase(&dropped, &content)));
+        self.say(format!(
+            "You drop {}.",
+            object::phrase(&dropped, self.lore())
+        ));
         spent
     }
 

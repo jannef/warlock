@@ -16,7 +16,7 @@
 
 use super::{Effect, Magic};
 use crate::combat::{CRITS, Profile, THREATS};
-use crate::content::{COSTS, Content, DamageTypeId, Group, LightId, MAX_SPEED};
+use crate::content::{COSTS, Content, DamageTypeId, Group, LightId, MAX_SPEED, OnHit, Power};
 use crate::damage::Rider;
 use crate::dice::Dice;
 use crate::equipment::Equipment;
@@ -37,6 +37,8 @@ pub struct Mods {
     elemental: Vec<(DamageTypeId, i32)>,
     /// What resistance affixes add, by damage type, in percent.
     resistances: Vec<(DamageTypeId, i32)>,
+    /// What its hits cause, from a unique item's Inflict power (local: the weapon that hits).
+    on_hit: Vec<OnHit>,
 }
 
 impl Default for Mods {
@@ -47,6 +49,7 @@ impl Default for Mods {
             skills: Vec::new(),
             elemental: Vec::new(),
             resistances: Vec::new(),
+            on_hit: Vec::new(),
         }
     }
 }
@@ -158,6 +161,11 @@ impl Mods {
         let mut mods = Mods::default();
         if let Some(magic) = stack.magic() {
             mods.add_magic(magic, true, stack, content);
+            // A unique weapon's Inflict power rides on the attacks made with it.
+            let unique = (magic.unique.as_deref()).and_then(|id| content.unique(id));
+            if let Some(Power::Inflict(hit)) = unique.and_then(|u| u.power.as_ref()) {
+                mods.on_hit.push(*hit);
+            }
         }
         if stack.own_parts().is_some() {
             let def = content.object(stack.object);
@@ -184,7 +192,8 @@ impl Mods {
 
     /// Changes an attack by these effects: to-hit, damage (added to every roll), extra damage
     /// dice, a wider critical threat range, a larger critical multiplier, and the damage of
-    /// other kinds elemental affixes add (one rider per kind, after those the attack has).
+    /// other kinds elemental affixes add (one rider per kind, after those the attack has); and
+    /// what a unique weapon's Inflict power makes its hits cause (`Profile::on_hit`).
     pub fn sharpen(&self, profile: &mut Profile) {
         profile.to_hit += self.get(Effect::ToHit);
         profile.bonus += self.get(Effect::Damage);
@@ -203,6 +212,7 @@ impl Mods {
         for rider in self.elemental() {
             profile.add_rider(rider);
         }
+        profile.on_hit.extend_from_slice(&self.on_hit);
     }
 
     /// Every effect with a value, in [`Effect::all`] order, and the light.

@@ -1,0 +1,42 @@
+# The undead roster (#383, batch 3). The lord of a barrow's wights, the greater of their kind:
+# its cold touch drinks the living's Toughness, for good unless the body holds on (a temple's
+# mending gives it back), and it bears the enchanted sword it was buried with, among other things
+# worth taking. It opens doors, bleeds nothing, and leaves no corpse. Not yet in any dungeon's
+# population.
+[[creature]]
+id = "wight_lord"
+level = 24
+xp = 130
+rarity = "rare"
+loot = 60
+name = "wight lord"
+glyph = "W"
+fg = "#7090d0"
+faction = "undead"
+tags = ["undead"]
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+opens_doors = true
+footsteps = 40
+hearing = 15
+weight = 55000
+stats = { strength = 18, dexterity = 16, toughness = 22, intelligence = 24, willpower = 28, presence = 24 }
+base_hp = 48
+natural = { defence = 1, protection = 0, name = "dead flesh" }
+resist = { poison = 100 }
+weapon_skills = { long_blades = 4 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "3d6"
+damage_type = "cold"
+name = "touch"
+verb = "touches"
+to_hit = 2
+on_hit = [{ drain = "toughness", points = 1, chance = 10, check = "toughness", difficulty = 16 }]
+# Its gear (spec §8 "Creature gear"): the sword it was buried with.
+[[creature.gear]]
+chance = 80
+one_of = ["long_sword"]
+magic = 40

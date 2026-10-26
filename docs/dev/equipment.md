@@ -23,4 +23,6 @@ Digging reads it too: `Actor::dig_tool` (the first equipped thing with `dig` pow
 pick-axe). Combat reads equipment (`docs/dev/combat.md`): `Actor::weapon` (the first hand holding a weapon),
 `launcher` and `ammunition` (the `ready` slots), and `defence(content, burden)` (armour, shield,
 parry, Dexterity capped by worn `max_dex` and the burden's `max_dex`, the lower winning; the rules
-ask `World::defence_of(id)`, which passes the actor's `Load::penalty`).
+ask `World::defence_of(id)`, which passes the actor's `Load::penalty`). Spells read it too:
+`Actor::armour_spell_cost` (the summed `spell_cost_percent` of everything worn or held; the
+cost's armour factor, `docs/dev/spells.md`).

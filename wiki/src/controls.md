@@ -18,7 +18,7 @@ The in-game `?` screen is authoritative: it is generated from your current key b
 | Close a door | `c`, then a direction |
 | Kick (a door, to break it in, or a creature) | `k`, then a direction (see [Doors](doors.md)) |
 | Go down stairs, or enter a place on the overworld | `>` |
-| Go up stairs | `<` |
+| Go up stairs, or leave an outdoor area when no enemy is about | `<` |
 | Light or douse the lantern | `*` |
 | Pick up | `,` or `;` |
 | Drop | `d` |
@@ -98,7 +98,7 @@ and shows a page at a time: the letters name the rows of the page you see, start
 
 ## Rebinding keys
 
-You can rebind every key but `Esc` in the Controls screen (main menu or pause menu, then
+Keys of menus, lists, screens, and prompts are fixed; new ones are never rebindable. Where the Controls screen lists such keys, it is the current state, and a later update may fix them. You can rebind the keys of play in the Controls screen (main menu or pause menu, then
 Controls). It lists the commands in groups, by where they are used: in play, while aiming, in the
 rest prompt, at `--more--`, on menus and screens, in text fields, on the info pages, in the question windows, and (in builds
 that have them) the developer keys. Select a command, press `Enter`, then press the new key. It
@@ -308,11 +308,13 @@ time; press `A` or `Esc` to close it.
 ## Info pages
 
 The character screen, the inventory, the equipment screen, the skills screen, the weapon skills
-screen, and the quest log are numbered pages of one set, shown on the bottom edge of each as
-`1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapon skills · 6 Quests`, the one you
-are on highlighted. Where that does not fit, the others go by short names
-(`1 Char · 2 Inventory · 3 Equip · 4 Skills · 5 Weapons · 6 Quests`), and on the narrowest
-screens by their numbers alone. While one of them is open, `1` to `9` switch to the page with that number (the row
+screen, the quest log, and the talents page are numbered pages of one set, shown on the bottom
+edge of each as
+`1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents`, the one
+you are on highlighted. All pages are the same width, so the frame stays put as you turn them.
+On a window too small for that, every page goes by short names
+(`1 Char · 2 Inv · 3 Equip · 4 Skills · 5 Weapons · 6 Quests · 7 Tal`), and on the narrowest
+by their numbers alone. While one of them is open, `1` to `9` switch to the page with that number (the row
 of number keys above the letters; the numpad still moves), and `Tab` / `Shift`+`Tab` go to the
 next or previous page, wrapping around. The page replaces the one you were on, so `Esc` closes it
 and takes you back to where you opened the first one, as if you had only ever opened that one.

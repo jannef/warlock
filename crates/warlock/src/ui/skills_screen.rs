@@ -79,7 +79,7 @@ impl SkillsScreen {
     pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
         // Rows: margin, the skills (or a line saying there are none), a gap, the description
         // (up to two lines), a gap, the footer, frame.
-        let width = WIDTH.min(console.cols() as i32);
+        let width = super::info_tabs::panel_width(WIDTH).min(console.cols() as i32);
         let inner = width - 4;
         let list = self.rows.len().max(1) as i32;
         let h = list + 8;

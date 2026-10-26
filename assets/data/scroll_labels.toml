@@ -1,0 +1,20 @@
+# Unidentified scrolls (spec §8 "Scrolls"), ADOM-like: a scroll type the player has not yet read
+# or identified shows as "a scroll labelled ZUNBAR" (and in one plain colour) until they do. Every
+# readable scroll type (an object with `read`) gets its own label at the start of a run, one label
+# per type for the whole run, made of `syllables` (least, most) of `parts`. Changing this file
+# changes which label a scroll shows, never a run's rolls (labels draw from their own stream).
+#
+#   name, plural  what an unknown scroll is called, `{label}` its label
+#   fg            the colour every unknown scroll shows in
+#   syllables     [least, most] parts a label is made of (1 to 6)
+#   parts         the syllables (at least 8, distinct)
+
+name = "scroll labelled {label}"
+plural = "scrolls labelled {label}"
+fg = "#ece4cc"
+syllables = [2, 3]
+parts = [
+    "A", "AB", "AL", "AN", "BAR", "BEK", "DU", "EL", "FOO", "GAR", "HU", "IX", "KA", "KLAA",
+    "LOR", "MAR", "NIH", "OM", "PRA", "QUA", "RO", "SAN", "THU", "UL", "VEN", "WOK", "XAM",
+    "YO", "ZIM", "ZUN",
+]

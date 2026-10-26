@@ -4,7 +4,7 @@
 use super::text::signed;
 use std::fmt::Write as _;
 use warlock_core::content::{
-    Cast, Content, Need, OverTime, Role, SignActive, SpellDef, TalentDef, TalentEffect, TreeId,
+    Content, Need, OverTime, Role, SignActive, SpellData, TalentDef, TalentEffect, TreeId,
 };
 
 /// Every tree in display order: a heading, its description, and its talents (name, ranks, what
@@ -562,6 +562,15 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::SpawnEveryPercent { value } => format!(
             "the time between attempts to bring a creature to your level {}",
             percent(value)
+        ),
+        TalentEffect::SenseOfPlace => "knows a special room's nature from a glimpse of it, \
+            and the effect covering a whole level by name on arrival"
+            .into(),
+        TalentEffect::RoomPacePercent { value } => format!(
+            "where a special room quickens healing or mana, the quickening {} (a room's 300% \
+             pace becomes {}%)",
+            percent(value),
+            100 + 200 * (100 + value) / 100
         ),
         TalentEffect::StoneSense => "notices hidden things on stone in passing".into(),
         TalentEffect::StoneFind { value } => format!(
@@ -1200,10 +1209,9 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "damage from bursts and bolts (traps, scrolls) {} (rounded down)",
             percent(value)
         ),
-        TalentEffect::Spell { spell } => content.class_spell(spell).map_or_else(
-            || spell.id().to_string(),
-            |(_, def)| spell_text(content, def),
-        ),
+        TalentEffect::Spell { spell } => content
+            .class_spell(spell)
+            .map_or_else(|| spell.id().to_string(), |def| spell_text(content, def)),
         TalentEffect::SpellPower { per_die, dice } => {
             let mut parts = Vec::new();
             if dice > 0 {
@@ -1343,75 +1351,20 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
     }
 }
 
-/// A caster's spell, as the class tables say it: what it does, its mana, and its time.
-fn spell_text(content: &Content, def: &SpellDef) -> String {
-    use warlock_core::content::Does;
-    let status = |s| content.status(s).name.clone();
-    let does = match &def.does {
-        Does::Boon {
-            status: s,
-            severity,
-        } => format!("you are {} ({severity})", status(*s)),
-        Does::Mend { heal, per_levels } => match per_levels {
-            0 => format!("{heal} hit points back"),
-            n => format!("{heal} hit points back, plus 1 per {n} levels"),
-        },
-        Does::Cleanse { cures, diseases } => {
-            let mut ends: Vec<String> = cures.iter().map(|&s| status(s)).collect();
-            if *diseases {
-                ends.push("every disease".into());
-            }
-            format!("ends {}", ends.join(" and "))
-        }
-        Does::Hex {
-            status: s,
-            severity,
-            range,
-        } => format!(
-            "a hostile you see within {range} cells suffers {} ({severity})",
-            status(*s)
-        ),
-        Does::Strike {
-            spell,
-            open_sky,
-            afflict,
-        } => {
-            let shape = match &spell.cast {
-                Cast::Burst(b) => format!(
-                    "a burst of radius {} at a cell within {} ({}){}",
-                    b.radius,
-                    spell.range,
-                    super::damage::typed_dice(content, b.damage, b.kind),
-                    super::traps::ice_text(b.ice)
-                ),
-                Cast::Bolt(b) => format!(
-                    "a bolt of {} cells ({})",
-                    b.length,
-                    super::damage::typed_dice(content, b.damage, b.kind)
-                ),
-            };
-            let sky = if *open_sky {
-                ", only under the open sky"
-            } else {
-                ""
-            };
-            let afflict = afflict.map_or_else(String::new, |(s, n)| {
-                format!("; everyone reached suffers {} ({n})", status(s))
-            });
-            format!("{shape}{afflict}{sky}")
-        }
-    };
-    let name = def
-        .name
-        .as_deref()
-        .map_or_else(String::new, |n| format!("{n}: "));
+/// A caster's spell, as the class tables say it: what it does, its tier and mana, and its time.
+fn spell_text(content: &Content, def: &SpellData) -> String {
     let casts = match def.casts {
         1 => "a cast".to_string(),
         n => format!("{n} casts"),
     };
+    let mana = content.spell_rules().map_or(0, |r| {
+        r.mana(def, i32::from(r.comfortable[usize::from(def.tier)]), 0)
+    });
     format!(
-        "spell `use:{}` ({casts}, {} mana): {name}{does}",
-        def.spell.id(),
-        def.mana
+        "spell `use:{}` (tier {}, {casts}, {mana} mana): {}: {}",
+        def.id,
+        def.tier,
+        def.name,
+        super::spells::does(content, def)
     )
 }

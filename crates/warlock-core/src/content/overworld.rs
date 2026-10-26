@@ -8,9 +8,10 @@
 //! level, it then persists with the run. What the area looks like follows the [`Landscape`] of
 //! its cell and of the cells around it (a river or a lake beside it, a road through it).
 
-use super::{Content, HiddenLocation, LevelTemplate, TerrainId};
+use super::{Content, EdgeExit, HiddenLocation, LevelKind, LevelTemplate, StairsDir, TerrainId};
 use crate::geom::{Dir, Pos};
 use serde::Deserialize;
+use std::collections::BTreeMap;
 
 const LOCAL_PREFIX: &str = "local:";
 
@@ -84,6 +85,38 @@ impl LocalArea<'_> {
     /// The overworld terrain next to the area's cell in direction `dir`, if on the map.
     pub fn neighbor(&self, dir: Dir) -> Option<TerrainId> {
         self.overworld.terrain.get(self.pos.step(dir)).copied()
+    }
+}
+
+/// Gives every hand-made outdoor level that an overworld location leads into (its stairs down,
+/// or a hidden location's `to`) that location as its edge exit (spec §7 "Leaving an outdoor
+/// area"): walking off its edge, or the quick leave, returns to the location's cell, as from a
+/// local area. The first location in the overworld's order wins; a level with stairs of its own
+/// keeps them as well.
+pub(super) fn link_edge_exits(levels: &mut BTreeMap<String, LevelTemplate>) {
+    let mut exits: Vec<(String, EdgeExit)> = Vec::new();
+    for overworld in (levels.values()).filter(|l| l.kind == LevelKind::Overworld) {
+        let stairs = (overworld.stairs.iter())
+            .filter(|s| s.dir == StairsDir::Down)
+            .filter_map(|s| Some((s.to.clone()?, s.pos)));
+        let hidden = (overworld.hidden.iter()).filter_map(|(p, h)| Some((h.to.clone()?, *p)));
+        for (to, pos) in stairs.chain(hidden) {
+            exits.push((
+                to,
+                EdgeExit {
+                    to: overworld.id.clone(),
+                    pos,
+                },
+            ));
+        }
+    }
+    for (to, exit) in exits {
+        if let Some(level) = levels.get_mut(&to)
+            && level.kind == LevelKind::Outdoor
+            && level.exit.is_none()
+        {
+            level.exit = Some(exit);
+        }
     }
 }
 

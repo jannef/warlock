@@ -40,6 +40,18 @@
 #   noun, verb   what hits and what it does, for messages ("The fireball burns you."; verb
 #                default: the damage type's); a shot uses its object's name
 
+# Stepping onto a known trap on purpose (a move onto it, after the question), you may avoid it:
+# it stays where it is, untouched. The chance in percent is `base` plus `per_point` for each point
+# of your dodge (your Dexterity modifier, capped by your armour and burden as in combat, plus your
+# Dodge: the Dodge skill, talents, magic, stance, statuses), never below `min` nor above `max`.
+# Hidden traps and steps you did not choose get no chance. Every trap but a door's: those go off
+# as the door opens.
+[avoid]
+base = 55
+per_point = 10
+min = 15
+max = 90
+
 [[trap]]
 id = "arrow"
 name = "arrow trap"

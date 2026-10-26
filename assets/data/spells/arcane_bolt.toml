@@ -1,0 +1,20 @@
+# The wizard's Arcane bolt (spec §8 "Class abilities"): raw force through everyone on its line.
+[[spell]]
+id = "arcane_bolt"
+name = "Arcane bolt"
+description = "A bolt of raw force from your hand toward a place you aim at, through everyone on its line."
+tier = 2
+school = "evocation"
+kind = "damage"
+shape = "line"
+resolution = "area"
+damage_type = "force"
+length = 6
+max_length = 8
+damage = { dice = "2d6" }
+
+[spell.cast]
+effect = "arcane_bolt"
+noun = "arcane bolt"
+verb = "strikes"
+noise = { sound = "explosion", loudness = 40 }

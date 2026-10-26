@@ -94,12 +94,12 @@ fn caves_snapshot() {
 /// rooms"), their plain ground drawn as the effect's mark.
 #[test]
 fn special_room_snapshots() {
-    let flooded = level(4, 2);
+    let flooded = level(11, 2);
     assert_eq!(flooded.rooms.len(), 1);
-    insta::assert_snapshot!("rooms_seed_4_depth_2_flooded", describe(&flooded));
-    let shadowed = level(6, 4);
+    insta::assert_snapshot!("rooms_seed_11_depth_2_flooded", describe(&flooded));
+    let shadowed = level(8, 4);
     assert_eq!(shadowed.rooms.len(), 1);
-    insta::assert_snapshot!("caves_seed_6_depth_4_shadowed", describe(&shadowed));
+    insta::assert_snapshot!("caves_seed_8_depth_4_shadowed", describe(&shadowed));
     // Without the marks, the flooded room shows its water.
     let map = ascii(&flooded, &CONTENT);
     let water = CONTENT
@@ -419,10 +419,10 @@ proptest! {
     }
 }
 
-/// "Not terribly common, but not too uncommon either": about one generated level in two or three
-/// has a special room, every effect turns up, and rooms levels and caves levels both get them.
+/// "Not terribly common, but not too uncommon either": about three generated levels in five
+/// have a special room, every effect turns up, and rooms levels and caves levels both get them.
 #[test]
-fn special_rooms_come_about_one_level_in_three() {
+fn special_rooms_come_about_three_levels_in_five() {
     let seeds = 0..150;
     let mut levels = 0;
     let mut special = 0;
@@ -441,7 +441,7 @@ fn special_rooms_come_about_one_level_in_three() {
     }
     let percent = special * 100 / levels;
     assert!(
-        (33..=50).contains(&percent),
+        (50..=70).contains(&percent),
         "{special} of {levels} levels ({percent} %) have a special room"
     );
     assert!(by_effect.iter().all(|n| *n > 10), "{by_effect:?}");
@@ -488,7 +488,7 @@ static FIXTURE: LazyLock<Content> = LazyLock::new(|| {
     let fixture = "\n\
          [[dungeon]]\nid = \"fixture_flooded\"\ngenerator = \"rooms\"\ndepth = 2\n\
          size = [80, 21]\n\
-         room_effects = { chance = 60, per_level = 3, effects = [\"flooded\"] }\n\
+         room_effects = { chance = 60, per_level = 3, favoured = { flooded = 100 } }\n\
          shops = { chance = 0 }\n\
          [[dungeon.levels]]\nfrom = 2\ngenerator = \"caves\"\nsize = [100, 40]\n\
          [[dungeon]]\nid = \"fixture_traders\"\ngenerator = \"rooms\"\ndepth = 1\n\
@@ -503,7 +503,8 @@ static FIXTURE: LazyLock<Content> = LazyLock::new(|| {
     Content::load(&files).expect("fixture content")
 });
 
-/// A branch's own `room_effects` replace the shared odds: only its effects, as many a level as
+/// A branch's own `room_effects` replace the shared odds: a feature favoured with every share is
+/// the only one drawn, as many a level as
 /// its `per_level`; and `shops = { chance = 0 }` means never a shop.
 #[test]
 fn a_branch_with_flooded_rooms_only_makes_flooded_rooms_and_no_shops() {
