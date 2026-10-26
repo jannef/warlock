@@ -1,0 +1,51 @@
+# The goblin tribe's second tier (#454). The war band's caster, who calls its curses from behind
+# the line (announced only, as every creature's spells until creature magic is designed) and
+# keeps a quarterstaff (its racial weapon) for whoever gets past it. A dull red flicker where its
+# spells land.
+[[creature]]
+id = "hobgoblin_warcaster"
+level = 14
+xp = 80
+rarity = "rare"
+loot = 50
+name = "hobgoblin warcaster"
+glyph = "g"
+fg = "#a860d0"
+faction = "goblins"
+tags = ["goblin", "hobgoblin", "caster"]
+alignment = "evil"
+vision = "darkvision"
+combat = "caster"
+range = 5
+opens_doors = true
+footsteps = 110
+hearing = 12
+weight = 70000
+stats = { strength = 14, dexterity = 14, toughness = 18, intelligence = 16, willpower = 18, presence = 12 }
+base_hp = 28
+skills = { concentration = 52, spellcraft = 57 }
+on_eat = { message = "This hobgoblin meat is rank, and bitter.", vomit = 35, stat = { willpower = 3 } }
+weapon_skills = { staves = 1 }
+racial_weapon = "quarterstaff"
+[[creature.gear]]
+chance = 60
+one_of = ["bone_amulet"]
+magic = 20
+[[creature.gear]]
+chance = 50
+one_of = ["studded_leather"]
+[[creature.gear]]
+chance = 40
+one_of = ["copper_coin*10", "copper_coin*20"]
+
+[[creature.particles]]
+on = "attack"
+glyphs = "·*+"
+colors = ["#ffb0a0", "#d05040", "#702020"]
+count = 5
+life = 0.4
+spread = [0.9, 0.9]
+area = [0.15, 0.15]
+scale = 0.5
+fade = 0.6
+glow = 0.5

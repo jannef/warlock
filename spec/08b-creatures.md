@@ -171,7 +171,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     spaces, `marsh-thing` "marsh things"), or the quest's `what`; the objective names the tagged
     types a run of the quest's campaign can meet: "Kill 100 goblins: goblins, goblin archers,
     and goblin chiefs."; progress says the same noun ("Quest updated: 37 / 100 goblins.").
-    Group tags: `kobold`; `goblin` (not the ogre or the troll, who run with them); `undead` (every
+    Group tags: `kobold`; `goblin` (the hobgoblins too; not the ogre or the troll, who run with
+    them); `hobgoblin` (the goblins' second tier, #454); `undead` (every
     creature of the `undead` faction, a test sees to it); `vermin` (not the basilisk);
     `marsh-thing` (the fens' living things and the bog hag); `hag` (the bog hag and her kin of
     the `hags` faction, #451); `duergar` (not their trader, a merchant); `fire-thing`; `yugoloth`

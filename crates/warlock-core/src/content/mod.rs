@@ -27,6 +27,8 @@ mod gear;
 mod gem;
 #[cfg(test)]
 mod hag_roster_tests;
+#[cfg(test)]
+mod hobgoblin_roster_tests;
 mod horoscope;
 mod hunger;
 mod item_class;

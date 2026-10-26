@@ -105,8 +105,19 @@ mod tests {
         };
         assert_eq!(
             members("goblin"),
-            ["goblin", "goblin_archer", "goblin_chief"],
-            "the ogre and the troll left out"
+            [
+                "goblin",
+                "goblin_archer",
+                "goblin_chief",
+                "hobgoblin",
+                "hobgoblin_archer",
+                "hobgoblin_captain",
+                "hobgoblin_legionnaire",
+                "hobgoblin_sergeant",
+                "hobgoblin_warcaster",
+                "hobgoblin_warlord",
+            ],
+            "the hobgoblins in, the ogre and the troll left out"
         );
         assert_eq!(
             members("kobold"),
