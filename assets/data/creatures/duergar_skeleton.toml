@@ -10,6 +10,7 @@ name = "duergar skeleton"
 glyph = "z"
 fg = "#a0a4a8"
 faction = "undead"
+tags = ["undead"]
 alignment = "evil"
 vision = "darkvision"
 sight = 10

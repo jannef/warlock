@@ -97,6 +97,7 @@ fn talents_and_magic_items_add_to_caster_level() {
         name: None,
         identified: true,
         carried: 0,
+        unique: None,
     };
     let ring = content.object_id("gold_ring").expect("a ring");
     let at = w.state().player().inventory.len();
