@@ -105,6 +105,13 @@ fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
             let degrees = if severity == 1 { "degree" } else { "degrees" };
             Some(format!(", {severity} {degrees}"))
         }
+        Affliction::Hold {
+            status: s,
+            difficulty,
+        } if usize::from(s.0) == status => {
+            let grip = difficulty.or(def.hold.map(|h| h.difficulty)).unwrap_or(0);
+            Some(format!(", grip {grip}"))
+        }
         _ => None,
     });
     let mut causes = Vec::new();
@@ -176,6 +183,14 @@ fn also(content: &Content, def: &StatusDef) -> String {
     if let Some(next) = def.follows {
         parts.push(format!("{} follows it", content.status(next).name));
     }
+    if let Some(hold) = def.hold {
+        parts.push(format!(
+            "a step is a struggle to break free: a {} check against the holder's grip ({} \
+             unless its attack says otherwise); made, you step, failed, the turn is lost",
+            hold.check.name(),
+            hold.difficulty
+        ));
+    }
     if parts.is_empty() {
         "—".into()
     } else {
@@ -215,6 +230,14 @@ pub(super) fn status_effects(content: &Content) -> String {
             .disease_status()
             .is_some_and(|s| usize::from(s.0) == i);
         let eases = match def.eases {
+            Some(e) if def.hold.is_some() => {
+                let turns = def.hold.map(|h| h.turns.to_string()).unwrap_or_default();
+                format!(
+                    "after {turns} turns ({} each) at most; at once when the holder dies, leaves \
+                     your side, or is held or slowed",
+                    Duration::seconds(u64::from(e)).spoken()
+                )
+            }
             Some(e) if def.max == 1 => {
                 format!("after {}", Duration::seconds(u64::from(e)).spoken())
             }

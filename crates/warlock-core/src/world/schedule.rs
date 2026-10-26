@@ -316,6 +316,9 @@ impl World {
             .map(scheduled)
             .collect();
         schedule[0].energy = schedule[0].energy.saturating_sub(price.max(1));
+        // Holds whose holder no longer holds end (`hold.rs`): after the player's action, after
+        // every creature's turn, and as the turn ends.
+        self.loosen_holds(events);
         // The player's death ends the turn, and the run, at once.
         while self.state.death.is_none() {
             let (seconds, next) = schedule
@@ -348,6 +351,7 @@ impl World {
             let fallen = self.fallen.len();
             let price = self.creature_turn(schedule[next].id, events);
             schedule[next].energy = schedule[next].energy.saturating_sub(price.max(1));
+            self.loosen_holds(events);
             // Those who died are gone from the schedule (the player stays, first).
             if self.fallen.len() > fallen {
                 schedule.retain(|s| self.state.actors.contains_key(&s.id));
