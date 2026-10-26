@@ -173,7 +173,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   room's plain floor: walkable, transparent, not stairs, a door, or running water), and `status`
   (a status everyone inside holds while they stay, below; it must ease, at least 10 seconds a
   degree, the longest single action, so it never lapses while one stays), and `temperature`
-  (degrees Celsius added to the level's inside, −40 to 40, default 0; below), and `mirrors`
+  (degrees Celsius added to the level's inside, −40 to 40, default 0; below), `burden`
+  (percent of everyone's carrying limit inside, 10 to 1000, default 100; below), and `mirrors`
   (`{ images = N }`, 1 to 8: a hall of mirrors' reflections, below). An effect with a
   `level_chance` needs its `pervade` line and is neither `shunned` nor lays a `floor` nor
   holds `mirrors`.
@@ -191,9 +192,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     feel your power seeping out of you."; over a level: "Something here drinks at your
     power."); a *sweltering chamber* (5, #404) is 25 °C warmer than the level and glows a faint
     red (`[30, 10, 0]`; "A wave of heat meets you."); a *frigid hall* (5) is 25 °C colder and
-    glows a faint blue (`[0, 8, 22]`; "Your breath mists in the bitter cold."); a *hall of
-    mirrors* (3, #419; only in a room of 80 floor cells or fewer) shows everyone inside with two
-    reflections ("Your reflection stares back at you from every side."; below). Blood washing
+    glows a faint blue (`[0, 8, 22]`; "Your breath mists in the bitter cold."); a *heavy hall*
+    (4, #412) halves everyone's carrying limit ("Your pack drags at you, as if the stones pulled
+    it down."); a *hall of mirrors* (3, #419; only in a room of 80 floor cells or fewer) shows
+    everyone inside with two reflections ("Your reflection stares back at you from every side.";
+    below). Blood washing
     away in a flooded room waits for blood (#127).
   - **Hot and cold rooms** (`temperature`, #404): a room sets its cells' temperature and
     nothing else: no status, no damage, nothing done to items or food. The temperature at a cell
@@ -206,6 +209,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
     weather as a level under the open sky when it is first made, so a cold room's pool is
     frozen when one first comes upon it. Neither covers a whole level (a hot level is its
     `temperature`). Fennmynster bans the sweltering chamber.
+  - **A heavy hall** (`burden`, #412): inside, every actor's carrying limit (§8 "Burden") is
+    `burden` percent of what it is elsewhere, kept a multiple of 3 grams; the player, creatures
+    alike. It is read in one place, the load (`WorldState::load`, from the effects at the actor's
+    cell, the room's and the whole level's multiplied), so every penalty of a burden follows:
+    slower actions, louder steps, Dexterity capped in Defence, the status bar. Stepping in, the
+    player is told the change of their burden ("You are burdened.", right after the step) and,
+    the first time, the room's line;
+    stepping out, that it is gone. A step is refused when the player would be Overloaded on the
+    cell they step onto ("You carry too much to go in there.", no time), so one cannot walk in
+    and be stuck, and one overloaded inside (who picked something up there) can still step out
+    to where they are not. It is saved as nothing new: the burden follows from where one stands.
+    It never covers a whole level.
   - **Halls of mirrors** (`mirrors`, #419; `world/mirrors.rs`): every actor inside the room has
     `images` (2) **images**, reflections on free floor of the room (walkable, no door, no one on
     it, no other image). Where they stand is no draw: a hash (FNV-1a) of the level, the turn, the

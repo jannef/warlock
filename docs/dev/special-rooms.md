@@ -14,16 +14,17 @@ indices (in the save fingerprint; new effects go at the end). Fields: `id`, `nam
 `needs_below`, `min_cells`, `max_cells` ([`RoomEffectDef::eligible`]), and what it does: `light`,
 `glow`, `noise`, `regen`, `mana_regen`, `shunned`, `floor`, `status` (a status id, resolved and
 checked at load: it must ease, at least `DWELL_EASES`, 10 s a degree; `RoomEffects::parse_with`
-takes the statuses' lookup, `parse` in tests none), and `temperature` (degrees Celsius added to
-the level's, -40 to 40, default 0), and `mirrors` (`{ images = N }`, 1 to 8, `content::Mirrors`).
-An effect with `level_chance` must have a `pervade` line and be neither `shunned` nor lay a
-`floor` nor hold `mirrors` (`RoomEffectDef::can_pervade`); a level file's `effect` is held to the
-same.
+takes the statuses' lookup, `parse` in tests none), `temperature` (degrees Celsius added to
+the level's, -40 to 40, default 0), `burden` (percent of the carrying limit, `BURDEN` 10 to
+1000, default 100), and `mirrors` (`{ images = N }`, 1 to 8, `content::Mirrors`). An effect with
+`level_chance` must have a `pervade` line and be neither `shunned` nor lay a `floor` nor hold
+`mirrors` (`RoomEffectDef::can_pervade`); a level file's `effect` is held to the same.
 
 Features today: shadowed (10), echoing (8), hushed (8), sanctuary (6), flooded (8), black chamber
 (5, `light = 0`), draining (6, `status = "ebbing"`, `level_chance` 5, #403), hot (5, "sweltering
-chamber", `temperature = 25`, #404), cold (5, "frigid hall", `temperature = -25`), mirrors (3,
-"hall of mirrors", `max_cells = 80`, `mirrors = { images = 2 }`, #419). Draining is the
+chamber", `temperature = 25`, #404), cold (5, "frigid hall", `temperature = -25`), heavy (4,
+"heavy hall", `burden = 50`, #412), mirrors (3, "hall of mirrors", `max_cells = 80`,
+`mirrors = { images = 2 }`, #419). Draining is the
 first with a `level_chance` (cursed rooms bring theirs).
 
 A dungeon's `room_effects` (on a branch or a `[[dungeon.levels]]` range; `content/dungeon.rs`,
@@ -110,6 +111,23 @@ under the open sky does, so a cold room's pool is frozen when first seen; other 
 levels do not, as before. Neither may pervade (no `level_chance`: a hot level is its
 `temperature`).
 
+## Heavy halls
+
+A room's `burden` scales every actor's carrying limit inside (design §9.9). `Here::burden`
+multiplies the effects' percents; `WorldState::load` (the one place the rules ask for a load,
+`docs/dev/burden.md`) passes it to `burden::load` for the actor's cell, and `burden::in_room`
+scales the finished limit (after talents and magic items), rounding down to a multiple of 3 g so
+the thirds stay exact. `PerceptionView::own_load` asks the player's cell the same way, so the
+status bar and the inventory agree with the rules. Every penalty follows from the load, and
+`burden_news` says the change after the step in or out (in `World::apply`, so before the
+room's `enter` line, which `perceive` says). Nothing
+is saved. `WorldState::load_at` is the load as it would be on another cell:
+`World::can_step_to` (`world/travel.rs`, the player's ordinary step) refuses a step onto a cell
+where the player would be Overloaded ("You carry too much to go in there.", or the usual line
+when they are Overloaded where they stand too), so a step in is refused rather than leaving them
+stuck, and a step out of a hall they overloaded themselves in is allowed. Edge exits, stairs, and
+creatures keep the load where they stand (`can_move`, `ai.rs`).
+
 ## Halls of mirrors
 
 `world/mirrors.rs` (#419). `WorldState::images(content, level)` is the one place images are
@@ -178,7 +196,10 @@ Anchored mind, saving), `content/room_temperature_tests.rs` (the field, its rang
 `world/room_temperature_tests.rs` (hot and cold rooms: the cells' temperature, the player's and
 the status bar's, no status, a cold room's pool frozen on a mild level and not beside it, ice
 melting in a hot room in a frost, the pre-roll only with such a room, alike however time passes,
-a year's catch-up), `content/room_mirrors_tests.rs` (`mirrors` parses, its range, never over a
+a year's catch-up), `content/room_burden_tests.rs` (the `burden` field, its range,
+`Here::burden`), `world/heavy_hall_tests.rs` (the heavy hall: the limit halved inside for the
+player and creatures, the messages in and out, perception agreeing, the step refused into
+Overloaded but always allowed out), `content/room_mirrors_tests.rs` (`mirrors` parses, its range, never over a
 whole level), `world/mirrors_tests.rs` (images on free floor, the same however asked and moving
 with the turns, none outside, the player's own, the glass, a missile flying on, the creatures'
 aim, Mirror-wise, the dumps, a rest among reflections).
