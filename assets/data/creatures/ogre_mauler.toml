@@ -1,0 +1,34 @@
+# The giant tribe (#457): an ogre grown bigger and meaner than the rest, the one that walks in
+# front. It swings its maul (its racial weapon) and throws nothing: stones are the giants' trade.
+[[creature]]
+id = "ogre_mauler"
+level = 15
+xp = 85
+rarity = "uncommon"
+loot = 25
+name = "ogre mauler"
+glyph = "O"
+fg = "#7a5a3a"
+speed = 850
+faction = "giant"
+tags = ["giant", "ogre"]
+alignment = "evil"
+vision = "low_light"
+opens_doors = true
+footsteps = 190
+hearing = 10
+weight = 300000
+stats = { strength = 25, dexterity = 11, toughness = 23, intelligence = 6, willpower = 11, presence = 7 }
+base_hp = 60
+natural = { defence = 0, protection = 2, name = "hide" }
+weapon_skills = { maces = 3 }
+attack = { damage = "3d6", damage_type = "bludgeoning", name = "fist", verb = "pounds" }
+on_eat = { message = "Stringy, and it smells of the ogre.", vomit = 30, stat = { strength = 3 } }
+racial_weapon = "maul"
+[[creature.gear]]
+chance = 90
+one_of = ["maul"]
+keep = "wield"
+[[creature.gear]]
+chance = 40
+one_of = ["copper_coin*10", "copper_coin*25"]

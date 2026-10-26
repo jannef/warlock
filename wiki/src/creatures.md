@@ -197,6 +197,14 @@ lords, draugr lords, and mummy lords, the plague-bearing nosferatu, greater shad
 ladies, the black dogs of the churchyards and the shore lanes (black shucks and church grims),
 screaming skulls, and the bone colossus, a charnel house of bones stood up on its own. Deepest of all wait the kings of the dead: barrow kings, ghoul kings, vampire lords, death knights and nightgangers, wormlords, the drowned king, the bone and rotting dragons, the archlich, and the hounds of the Wild Hunt.
 
+At the very bottom of the roster wait the last of the dead, in places deeper than any found so
+far: the mummy king and the wild huntsman of the old tales, elder and eldest vampires, the dread
+lord of the death knights, the deathshade (Old English *dēaþscūa*), the ankou of Breton tales, and
+the ghost of a dragon, the nightwing and the nightworm, the dread wyrm, the lich-drake, and the
+charnel titan, the deathless king, and last the demilich, of which a world holds no more than one.
+Their touch and bite take two points of a stat for good (three for the eldest vampire and the
+demilich) unless the check holds; a temple's mending gives them back.
+
 **Demons** come up from below: the lesser ones (`u`) from the dretch to the chasme, the greater
 (`U`) from the hezrou to the balor. None of them leaves a body behind, poison does nothing to
 them, and fire does them less harm than it should (the balor none at all). Only the dretch and

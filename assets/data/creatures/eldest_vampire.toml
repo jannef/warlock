@@ -1,0 +1,39 @@
+# The undead roster (#383, batch 6). The first of its kind, who has outlived every age the others
+# know: quick and cunning, it opens doors, its gaze holds the living still, and its bite drinks the
+# life out of them, for good unless the body holds on (a temple's mending gives it back). Fire is
+# its bane, and it keeps things worth taking. Not yet in any dungeon's population.
+[[creature]]
+id = "eldest_vampire"
+level = 69
+xp = 355
+rarity = "very_rare"
+loot = 100
+name = "eldest vampire"
+glyph = "V"
+fg = "#800030"
+speed = 1550
+faction = "undead"
+tags = ["undead"]
+alignment = "evil"
+vision = "darkvision"
+sight = 18
+opens_doors = true
+footsteps = 15
+hearing = 22
+weight = 70000
+stats = { strength = 39, dexterity = 32, toughness = 39, intelligence = 40, willpower = 38, presence = 38 }
+base_hp = 155
+natural = { defence = 5, protection = 0, name = "dead flesh" }
+resist = { fire = -25, poison = 100 }
+on_eat = { message = "Cold as the first night, and thick with every blood that ever fed it.", vomit = 80, harm = "1d4" }
+blood = "#3a0618"
+[creature.attack]
+damage = "4d10"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
+to_hit = 6
+on_hit = [
+    { drain = "toughness", points = 3, chance = 15, check = "toughness", difficulty = 25 },
+    { status = "transfixed", chance = 25, severity = 3 },
+]

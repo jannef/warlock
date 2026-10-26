@@ -140,6 +140,22 @@ const WAVES: &[(&str, Option<&str>)] = &[
     ("ghost_lord", None),
     ("archlich", None),
     ("hound_of_the_hunt", None),
+    // The undead roster, batch 6 (#389): levels 56 to 70, all shared.
+    ("mummy_king", None),
+    ("wild_huntsman", None),
+    ("elder_vampire", None),
+    ("dread_lord", None),
+    ("deathshade", None),
+    ("nightwing", None),
+    ("dread_wyrm", None),
+    ("nightworm", None),
+    ("lich_drake", None),
+    ("ankou", None),
+    ("deathless_king", None),
+    ("charnel_titan", None),
+    ("ghost_dragon", None),
+    ("eldest_vampire", None),
+    ("demilich", None),
 ];
 
 #[test]
@@ -279,6 +295,9 @@ fn the_roster_spirits_pass_through_walls_and_the_drainers_drain() {
         "washer_at_the_ford",
         "night_mare",
         "ghost_lord",
+        "deathshade",
+        "ankou",
+        "ghost_dragon",
     ] {
         let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
         let wall = def.incorporeal.as_ref().map(|i| i.wall_defence);
@@ -321,22 +340,47 @@ fn the_roster_spirits_pass_through_walls_and_the_drainers_drain() {
             "{id}"
         );
     }
-    // Two-point drains from level 40 (#383): difficulty 12 + level / 5.
-    for (id, stat, check, difficulty, want) in [
-        ("wraith_lord", Stat::Toughness, Stat::Toughness, 20, 10),
-        ("barrow_king", Stat::Toughness, Stat::Toughness, 20, 10),
-        ("vampire_lord", Stat::Toughness, Stat::Toughness, 21, 15),
-        ("nightganger", Stat::Toughness, Stat::Toughness, 21, 10),
+    // Batches 5 (#388) and 6 (#389): 2 points (3 for the apexes), difficulty 12 + level / 5.
+    for (id, stat, check, points, difficulty, want) in [
+        ("wraith_lord", Stat::Toughness, Stat::Toughness, 2, 20, 10),
+        ("barrow_king", Stat::Toughness, Stat::Toughness, 2, 20, 10),
+        ("vampire_lord", Stat::Toughness, Stat::Toughness, 2, 21, 15),
+        ("nightganger", Stat::Toughness, Stat::Toughness, 2, 21, 10),
         (
             "washer_at_the_ford",
             Stat::Presence,
             Stat::Willpower,
+            2,
             21,
             10,
         ),
-        ("night_mare", Stat::Willpower, Stat::Willpower, 21, 10),
-        ("ghost_lord", Stat::Willpower, Stat::Willpower, 22, 10),
-        ("archlich", Stat::Intelligence, Stat::Willpower, 22, 10),
+        ("night_mare", Stat::Willpower, Stat::Willpower, 2, 21, 10),
+        ("ghost_lord", Stat::Willpower, Stat::Willpower, 2, 22, 10),
+        ("archlich", Stat::Intelligence, Stat::Willpower, 2, 22, 10),
+        ("elder_vampire", Stat::Toughness, Stat::Toughness, 2, 23, 15),
+        ("deathshade", Stat::Strength, Stat::Willpower, 2, 24, 15),
+        ("nightwing", Stat::Toughness, Stat::Toughness, 2, 24, 10),
+        ("nightworm", Stat::Toughness, Stat::Toughness, 2, 24, 15),
+        ("lich_drake", Stat::Intelligence, Stat::Willpower, 2, 24, 10),
+        ("ankou", Stat::Toughness, Stat::Toughness, 2, 25, 15),
+        (
+            "deathless_king",
+            Stat::Willpower,
+            Stat::Willpower,
+            2,
+            25,
+            15,
+        ),
+        ("ghost_dragon", Stat::Toughness, Stat::Toughness, 2, 25, 15),
+        (
+            "eldest_vampire",
+            Stat::Toughness,
+            Stat::Toughness,
+            3,
+            25,
+            15,
+        ),
+        ("demilich", Stat::Intelligence, Stat::Willpower, 3, 26, 15),
     ] {
         let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
         let touch = def.attack.as_ref().expect("an attack");
@@ -348,7 +392,7 @@ fn the_roster_spirits_pass_through_walls_and_the_drainers_drain() {
         assert_eq!(drain.stat, Some(stat), "{id}");
         assert_eq!(
             (drain.points, drain.check, drain.difficulty, chance),
-            (2, check, difficulty, want),
+            (points, check, difficulty, want),
             "{id}"
         );
     }
@@ -361,6 +405,7 @@ fn the_roster_spirits_pass_through_walls_and_the_drainers_drain() {
         ("ghoul_lord", 15, 18),
         ("ghoul_king", 20, 20),
         ("archlich", 20, 22),
+        ("nightworm", 15, 24),
     ] {
         let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
         let attack = def.attack.as_ref().expect("an attack");

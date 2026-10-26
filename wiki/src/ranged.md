@@ -61,6 +61,12 @@ arrows lie where they fell. Once it has shot its last arrow it closes in and fig
 fists. You see a missile fly where you see the cells it flies over; a burning one you see
 wherever it flies in your line of sight, even in the dark.
 
+Giants throw too, with nothing to run out of: a hill giant hurls boulders at you whenever you
+are in range with nobody between you, and fights up close once it is next to you ("The hill
+giant hurls a boulder." "The boulder strikes you."). A throw takes a giant longer than a blow,
+and the boulder breaks where it lands. What each giant throws, how hard, and how far is under
+[Creature numbers](creature-numbers.md#throws).
+
 ## Flaming arrows
 
 A flaming arrow is lit as it is loosed. It flies burning, lighting its way, and comes down as a

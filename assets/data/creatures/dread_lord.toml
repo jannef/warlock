@@ -1,0 +1,44 @@
+# The undead roster (#383, batch 6). The lord of the death knights, a knight sworn to the dark and
+# risen in his black plate: his look sends the living running, and he swings the great sword he was
+# buried with, often an enchanted one. He opens doors. Not yet in any dungeon's population.
+[[creature]]
+id = "dread_lord"
+level = 59
+xp = 305
+rarity = "very_rare"
+name = "dread lord"
+glyph = "Z"
+fg = "#282c3c"
+speed = 1150
+faction = "undead"
+tags = ["undead"]
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+opens_doors = true
+footsteps = 140
+hearing = 12
+weight = 170000
+stats = { strength = 35, dexterity = 25, toughness = 36, intelligence = 37, willpower = 34, presence = 34 }
+base_hp = 148
+natural = { defence = 4, protection = 0, name = "dead flesh" }
+resist = { cold = 50, poison = 100 }
+weapon_skills = { long_blades = 8, great_blades = 8 }
+on_eat = { message = "Cold meat in a rusted shell.", vomit = 80, harm = "1d4" }
+blood = "#1a1c28"
+[creature.attack]
+damage = "4d10"
+damage_type = "bludgeoning"
+name = "slam"
+verb = "slams"
+to_hit = 5
+on_hit = [{ status = "frightened", chance = 20, severity = 2 }]
+# Its gear (spec §8 "Creature gear"): the black plate and great sword of a knight sworn to the dark.
+[[creature.gear]]
+chance = 95
+one_of = ["great_sword"]
+magic = 75
+[[creature.gear]]
+chance = 95
+one_of = ["plate_armour"]
+magic = 50

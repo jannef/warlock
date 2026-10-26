@@ -1,0 +1,39 @@
+# The giant tribe (#457): the greatest of the giant kinds, sea-blue and storm-eyed. Lightning runs
+# along its sword and its boulders (whichever hurts more), and cannot touch it.
+[[creature]]
+id = "storm_giant"
+level = 45
+xp = 235
+rarity = "rare"
+loot = 30
+name = "storm giant"
+glyph = "H"
+fg = "#5a6ab8"
+speed = 1050
+faction = "giant"
+tags = ["giant"]
+alignment = "neutral"
+vision = "low_light"
+opens_doors = true
+footsteps = 220
+hearing = 10
+weight = 1500000
+stats = { strength = 34, dexterity = 19, toughness = 35, intelligence = 17, willpower = 17, presence = 15 }
+base_hp = 180
+natural = { defence = 3, protection = 4, name = "hide" }
+weapon_skills = { thrown = 1 }
+resist = { electricity = 100, cold = 25 }
+on_eat = { message = "It prickles on the tongue.", vomit = 30, stat = { strength = 3 } }
+[creature.attack]
+damage = "4d10"
+damage_type = ["slashing", "electricity"]
+name = "great sword"
+verb = "strikes"
+to_hit = 4
+[creature.throw]
+object = "boulder"
+damage = "3d12"
+damage_type = ["bludgeoning", "electricity"]
+range = 9
+cost = 2000
+verb = "hurls"

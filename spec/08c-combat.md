@@ -362,6 +362,21 @@ developer notes (CLAUDE.md, `docs/dev/`).
     reaches nobody says itself ("You shoot a flaming arrow.", "You throw a dagger."). A creature's
     shots are said like its blows ("The kobold archer shoots you.", "You dodge the kobold
     archer's arrow.").
+  - **Creatures' throws** (`warlock-core/src/world/hurl.rs`, #457): a creature type's natural
+    ranged attack, `[creature.throw]` (`object`, `damage`, `damage_type`, `range` 2 to 20,
+    `verb`; optional `name`, `cost`, `to_hit`, `threat`, `crit`, `on_hit`; `content::Throw`),
+    needing no ammunition: the giants' boulders. A creature with one that is not next to its
+    target throws whenever the target is within `range` with a clear line of fire (the archers'
+    `clear_shot`), before any other plan; otherwise it closes in, and next to the target fights in
+    melee. A throw is a thrown attack (`Actor::hurled`: Dexterity to hit, Strength to damage, its
+    `thrown` rank, its affixes and stance; its `on_hit` riders as a natural attack's), priced as
+    it begins at the throw's `cost` (`Content::action_cost`; else `throw`), makes a throw's noise
+    once, and flies as the throw's `object` by the flight rules above (`World::fly`, shared with
+    shots and the player's throws) but never comes down: no ammunition, no breaking draw, nothing
+    left on the floor, no new state. Nothing in deciding it is random. Said by what flies
+    (`hurl::throw_messages`): "The hill giant hurls a boulder." when the player sees the thrower,
+    then the blow as a trap's missile's ("The boulder strikes you.", "You dodge the boulder.",
+    "The block of ice chills the kobold hard!"); an unseen thrower is not named.
   - **What the player perceives**: `Event::Missile { object, from, path, end }`, the whole flight
     cut to the stretch between the first and the last cell of its path the player sees (a burning
     one: in their line of sight, light itself); `from` only if they saw it leave; `end` `Struck`,

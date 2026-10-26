@@ -64,3 +64,30 @@ Drains are two points from level 40 (difficulty 12 + level ÷ 5, Toughness's che
 toughness); the spirits' wall Defence is 2 + level ÷ 10 (6 to 7). The ghoul king's hold is 20 % at
 20, the archlich's 20 % at 22. Plurals: `archlich` and `sluagh` in `plurals.toml`; the washer's
 and the hound's are written in their files.
+
+## Batch 6 (#389, levels 56–70)
+
+All fifteen ship in no population. Each is one file in `assets/data/creatures/`; the table is
+#389's, with its numbers unmoved:
+
+| Level | Type | Notes |
+|---|---|---|
+| 56 | mummy king | caster, fist with mummy rot (35 %), wrappings with protection 5, fire hurts it more |
+| 57 | wild huntsman | quick on foot (speed 1500), spear or glaive, sometimes magic |
+| 58 | elder vampire | drains Toughness 2, transfixes |
+| 59 | dread lord | plate and a great sword (magic 75), frightens |
+| 60 | deathshade | incorporeal, drains Strength 2, frightens |
+| 61 | nightwing | very quick, drains Toughness 2 |
+| 62 | dread wyrm | bone, protection 9 |
+| 63 | nightworm | brute, drains Toughness 2, holds |
+| 64 | lich-drake | bone with protection 8, cold 75, drains Intelligence 2 |
+| 65 | ankou | incorporeal, scythe, drains Toughness 2, frightens |
+| 66 | deathless king | caster, drains Willpower 2, magic regalia |
+| 67 | charnel titan | bone with protection 10, grave rot |
+| 68 | ghost dragon | incorporeal, drains Toughness 2, frightens |
+| 69 | eldest vampire | drains Toughness 3, transfixes |
+| 70 | demilich | the roster's only `unique`, caster (range 12), drains Intelligence 3, physical 50 |
+
+Drains are 2 points (3 for the two apexes) at difficulty 12 + level ÷ 5; wall Defence is 8 for the
+three spirits. The nightworm's hold is 15 % at 24. Plurals: `huntsman`, `demilich`.
+`ROSTER_TOP` in `undead_roster_tests.rs` is 70, the top of both batches.

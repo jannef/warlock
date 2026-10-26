@@ -1,0 +1,37 @@
+# The undead roster (#383, batch 6). A worm the length of a road, dead and no less hungry: it
+# burrows the deepest rock, its bite drinks the life out of the living, for good unless the body
+# holds on (a temple's mending gives it back), and it holds them fast to be eaten. Not yet in any
+# dungeon's population.
+[[creature]]
+id = "nightworm"
+level = 63
+xp = 325
+rarity = "very_rare"
+name = "nightworm"
+glyph = "w"
+fg = "#383c50"
+speed = 1100
+faction = "undead"
+tags = ["undead"]
+alignment = "evil"
+vision = "darkvision"
+sight = 6
+footsteps = 200
+hearing = 10
+weight = 900000
+stats = { strength = 40, dexterity = 24, toughness = 40, intelligence = 38, willpower = 35, presence = 35 }
+base_hp = 252
+natural = { defence = 5, protection = 0, name = "dead flesh" }
+resist = { poison = 100 }
+on_eat = { message = "A mile of cold, black meat.", vomit = 90, harm = "1d6" }
+blood = "#14141c"
+[creature.attack]
+damage = "5d10"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
+to_hit = 6
+on_hit = [
+    { drain = "toughness", points = 2, chance = 15, check = "toughness", difficulty = 24 },
+    { status = "held", chance = 15, difficulty = 24 },
+]

@@ -1,0 +1,39 @@
+# The giant tribe (#457): the least of the giants, twice an ogre's height and half its wits. It
+# clubs what is near and hurls boulders at what is not (spec §8 "Ranged combat": "Creatures'
+# throws").
+[[creature]]
+id = "hill_giant"
+level = 20
+xp = 110
+rarity = "common"
+loot = 15
+name = "hill giant"
+glyph = "H"
+fg = "#a8865a"
+speed = 950
+faction = "giant"
+tags = ["giant"]
+alignment = "evil"
+vision = "low_light"
+opens_doors = true
+footsteps = 200
+hearing = 10
+weight = 500000
+stats = { strength = 24, dexterity = 13, toughness = 25, intelligence = 8, willpower = 12, presence = 8 }
+base_hp = 80
+natural = { defence = 1, protection = 2, name = "hide" }
+weapon_skills = { thrown = 1 }
+on_eat = { message = "Coarse, gamey meat, and a mountain of it.", vomit = 30, stat = { strength = 3 } }
+[creature.attack]
+damage = "4d6"
+damage_type = "bludgeoning"
+name = "great club"
+verb = "clubs"
+to_hit = 2
+[creature.throw]
+object = "boulder"
+damage = "3d8"
+damage_type = "bludgeoning"
+range = 7
+cost = 2000
+verb = "hurls"

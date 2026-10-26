@@ -5,7 +5,7 @@ use super::{Affliction, Content};
 use crate::stats::Stat;
 
 /// The highest level the roster has filled so far: every level from 1 to it has an undead type.
-const ROSTER_TOP: u8 = 55;
+const ROSTER_TOP: u8 = 70;
 
 /// How far a type's max HP and dice average may lie from the formulas, in percent.
 const TOLERANCE: f64 = 35.0;
@@ -148,6 +148,22 @@ const ROLES: &[(&str, Role)] = &[
     ("ghost_lord", Role::Caster),
     ("archlich", Role::Caster),
     ("hound_of_the_hunt", Role::Quick),
+    // Batch 6 (#389): levels 56 to 70.
+    ("mummy_king", Role::Caster),
+    ("wild_huntsman", Role::Standard),
+    ("elder_vampire", Role::Quick),
+    ("dread_lord", Role::Standard),
+    ("deathshade", Role::Spirit),
+    ("nightwing", Role::Quick),
+    ("dread_wyrm", Role::Brute),
+    ("nightworm", Role::Brute),
+    ("lich_drake", Role::Brute),
+    ("ankou", Role::Spirit),
+    ("deathless_king", Role::Caster),
+    ("charnel_titan", Role::Brute),
+    ("ghost_dragon", Role::Spirit),
+    ("eldest_vampire", Role::Quick),
+    ("demilich", Role::Caster),
 ];
 
 /// The dice the roster picks from, by average (#383 "Damage dice": 1d3 to 5d12).

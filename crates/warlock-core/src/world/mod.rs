@@ -119,6 +119,7 @@ mod hash;
 mod hearing;
 mod hold;
 mod hunger;
+mod hurl;
 mod ice;
 mod incorporeal;
 mod lantern;
@@ -1282,6 +1283,8 @@ mod hearing_tests;
 mod hold_tests;
 #[cfg(test)]
 mod hunger_tests;
+#[cfg(test)]
+mod hurl_tests;
 #[cfg(test)]
 mod ice_tests;
 #[cfg(test)]
