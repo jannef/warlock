@@ -3,6 +3,7 @@
 id = "deer"
 level = 1
 xp = 2
+rarity = "common"
 name = "deer"
 plural = "deer"
 glyph = "d"

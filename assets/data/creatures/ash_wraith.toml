@@ -6,6 +6,7 @@
 id = "ash_wraith"
 level = 15
 xp = 85
+rarity = "rare"
 loot = 40
 name = "ash wraith"
 glyph = "W"

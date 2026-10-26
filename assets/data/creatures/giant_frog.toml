@@ -4,6 +4,7 @@
 id = "giant_frog"
 level = 4
 xp = 30
+rarity = "common"
 name = "giant frog"
 glyph = "R"
 fg = "#5a9a3a"

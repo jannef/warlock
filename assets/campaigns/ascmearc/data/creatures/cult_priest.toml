@@ -8,6 +8,7 @@
 id = "cult_priest"
 level = 9
 xp = 55
+rarity = "rare"
 loot = 50
 name = "cult priest"
 glyph = "@"

@@ -5,6 +5,7 @@
 id = "duergar_warrior"
 level = 11
 xp = 65
+rarity = "uncommon"
 loot = 30
 name = "duergar warrior"
 glyph = "h"

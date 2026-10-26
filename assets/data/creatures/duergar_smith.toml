@@ -6,6 +6,7 @@
 id = "duergar_smith"
 level = 13
 xp = 75
+rarity = "rare"
 loot = 75
 name = "duergar smith"
 glyph = "h"

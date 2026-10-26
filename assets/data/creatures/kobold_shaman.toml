@@ -4,6 +4,7 @@
 id = "kobold_shaman"
 level = 4
 xp = 40
+rarity = "rare"
 loot = 50
 name = "kobold shaman"
 glyph = "k"

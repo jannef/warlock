@@ -5,6 +5,7 @@
 id = "drowned"
 level = 5
 xp = 35
+rarity = "common"
 name = "drowned"
 plural = "drowned"
 glyph = "z"

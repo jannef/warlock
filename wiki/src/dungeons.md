@@ -16,6 +16,14 @@ choice goes by weight (kinds of the same weight are equally likely):
 
 {{#include generated/danger-weights.md}}
 
+Some kinds are rarer than others: the more dangerous and the more rewarding (casters,
+chieftains, the strongest of a place), the fewer. A kind's weight above is multiplied by its
+rarity's share, so a rare kind at the floor's danger is chosen a quarter as often as a common
+one of the same level. Creatures placed by hand (people, shopkeepers, a place's own guardians)
+are never chosen this way.
+
+{{#include generated/creature-rarities.md}}
+
 One draw in twenty (unless a place says otherwise) is made one to three dangers deeper, so a
 careless step on a quiet floor can still meet something it should not. A creature marked "once a
 run" comes at most once in your life, however many floors it could come to.

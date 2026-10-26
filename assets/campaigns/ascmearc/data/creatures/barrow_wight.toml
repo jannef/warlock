@@ -10,6 +10,7 @@
 id = "barrow_wight"
 level = 6
 xp = 40
+rarity = "rare"
 loot = 40
 name = "barrow wight"
 glyph = "W"

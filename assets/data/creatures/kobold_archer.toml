@@ -3,6 +3,7 @@
 id = "kobold_archer"
 level = 3
 xp = 25
+rarity = "uncommon"
 loot = 30
 name = "kobold archer"
 glyph = "k"

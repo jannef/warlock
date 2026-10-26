@@ -5,6 +5,7 @@
 id = "fire_salamander"
 level = 12
 xp = 70
+rarity = "uncommon"
 name = "fire salamander"
 glyph = "S"
 fg = "#ff8a30"

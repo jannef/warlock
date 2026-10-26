@@ -4,6 +4,7 @@
 id = "crocodile"
 level = 6
 xp = 40
+rarity = "uncommon"
 name = "crocodile"
 glyph = "R"
 fg = "#6a7a3a"

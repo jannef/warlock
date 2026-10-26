@@ -5,6 +5,7 @@
 id = "ogre"
 level = 12
 xp = 70
+rarity = "uncommon"
 loot = 25
 name = "ogre"
 glyph = "O"

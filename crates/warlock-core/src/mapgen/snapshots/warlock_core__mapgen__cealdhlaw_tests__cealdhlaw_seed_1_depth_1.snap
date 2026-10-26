@@ -8,7 +8,7 @@ stairs Down at (6, 4) -> cealdhlaw:2
 shopkeeper at (35, 13) route  carrying a spear (wielded), a small shield (in off hand), a chain mail shirt (being worn), an iron helm (being worn), 300 gold coins
 grave_worm at (12, 15) route E E W W W S S N N E E E W W
 rat at (22, 4) route E E E N E S N W S W W W
-kobold_archer at (28, 3) route E E S S N N W W carrying a short bow (readied), 12 bone arrows (quivered), a bronze cap (being worn)
+rat at (28, 3) route E E S S N N W W
 bat at (16, 7) route N N N E W S S S
 rat at (8, 17) route E E S W W E E N W W
 grave_worm at (71, 12) route S N S N S N S N
@@ -20,7 +20,7 @@ grave_worm at (14, 14) route S S S S W W W W W W E E E E E E N N N N
 bat at (18, 7) route E E E E E E W W W W W W
 bat at (25, 4) route E E E E E S N W W W W W
 rat at (47, 16) route N N E E E E W W W W S S
-skeleton at (66, 17) route E E W W W W N E E W W S E E E E W W
+skeleton at (66, 17) route E E W W W W N E E W W S E E E E W W carrying an obsidian spear (wielded)
 bat at (55, 5) route N N N E E W W S S S
 barrow_spider at (26, 5) route W W E W W W E E E W E E
 grave_worm at (75, 17) route W N N E E W W S S E
@@ -41,7 +41,7 @@ shop general_store kept by Orvald at (27, 13)-(35, 15), post (35, 13)
           ########################
      ######..^...................#             ################
      #...¡#.####################.#             #.............¡#
-     #....+.###¡............k..#.# ######      #..............#
+     #....+.###¡............r..#.# ######      #..............#
      #>...#...'.......r..b.....#.###<...########.r........^...#
      ###+######..w.r......s........+..........^+.......b......#
        #.#    #................#####....########..............#    #########

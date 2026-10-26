@@ -5,6 +5,7 @@
 id = "goblin_archer"
 level = 3
 xp = 25
+rarity = "uncommon"
 loot = 25
 name = "goblin archer"
 glyph = "g"

@@ -5,6 +5,7 @@
 id = "cinder_elemental"
 level = 17
 xp = 95
+rarity = "very_rare"
 name = "cinder elemental"
 glyph = "E"
 fg = "#ffa040"

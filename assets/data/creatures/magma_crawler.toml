@@ -6,6 +6,7 @@
 id = "magma_crawler"
 level = 14
 xp = 80
+rarity = "uncommon"
 name = "magma crawler"
 glyph = "w"
 fg = "#ff5a1a"

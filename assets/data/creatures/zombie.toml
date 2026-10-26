@@ -4,6 +4,7 @@
 id = "zombie"
 level = 3
 xp = 25
+rarity = "common"
 name = "zombie"
 glyph = "z"
 fg = "#7a8a5a"

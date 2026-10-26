@@ -10,6 +10,7 @@
 id = "fire_drake"
 level = 19
 xp = 105
+rarity = "very_rare"
 loot = 100
 unique = true
 name = "fire drake"
