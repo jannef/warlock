@@ -1,0 +1,40 @@
+# The yugoloths (#446): mercenary fiends of the lower planes. The nycaloth is their killer: a
+# muscular green-black fiend on great leathery wings, its claws leaving wounds that do not stop
+# bleeding, and an enormous axe in its hands. Not yet in any dungeon's population: no danger
+# window reaches it.
+[[creature]]
+id = "nycaloth"
+level = 36
+xp = 190
+rarity = "uncommon"
+name = "nycaloth"
+glyph = "&"
+fg = "#4a7a68"
+tags = ["yugoloth", "fiend"]
+faction = "yugoloth"
+alignment = "evil"
+vision = "darkvision"
+sight = 14
+opens_doors = true
+footsteps = 70
+hearing = 16
+weight = 160000
+stats = { strength = 30, dexterity = 17, toughness = 31, intelligence = 24, willpower = 29, presence = 24 }
+base_hp = 144
+natural = { defence = 2, protection = 2, name = "hide" }
+resist = { acid = 100, poison = 100, fire = 50, cold = 50, electricity = 50 }
+weapon_skills = { axes = 5, great_weapon = 3 }
+corpse = false
+blood = "#1e3028"
+[creature.attack]
+damage = "4d8"
+damage_type = "slashing"
+name = "claws"
+verb = "claws"
+to_hit = 3
+on_hit = [{ status = "bleeding", chance = 25, severity = 2 }]
+# Its gear (spec §8 "Creature gear"): the enormous axe it is never without.
+[[creature.gear]]
+chance = 100
+one_of = ["great_axe"]
+magic = 15

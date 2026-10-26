@@ -68,6 +68,8 @@ mod vault;
 mod vision;
 mod weapon_skill;
 mod weather;
+#[cfg(test)]
+mod yugoloth_roster_tests;
 
 pub use action::{ActionCosts, ActionKind, BASE_TURN, COSTS, NORMAL_COST, price};
 pub use affix::{

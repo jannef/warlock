@@ -1,0 +1,39 @@
+# The yugoloths (#446): mercenary fiends of the lower planes. The arcanaloth is their schemer and
+# dealmaker: a jackal-headed fiend in fine robes, learned in every spell and every contract, which
+# casts (its spells announced until creature magic is designed) and claws with poisoned nails.
+# Not yet in any dungeon's population: no danger window reaches it.
+[[creature]]
+id = "arcanaloth"
+level = 46
+xp = 240
+rarity = "rare"
+loot = 60
+name = "arcanaloth"
+glyph = "&"
+fg = "#c8a040"
+speed = 1100
+tags = ["yugoloth", "fiend", "caster"]
+faction = "yugoloth"
+alignment = "evil"
+vision = "darkvision"
+sight = 14
+combat = "caster"
+range = 8
+opens_doors = true
+footsteps = 40
+hearing = 16
+weight = 70000
+stats = { strength = 26, dexterity = 22, toughness = 30, intelligence = 32, willpower = 36, presence = 32 }
+base_hp = 92
+skills = { concentration = 148, spellcraft = 153 }
+natural = { defence = 3, protection = 0, name = "fur" }
+resist = { acid = 100, poison = 100, fire = 50, cold = 50, electricity = 50 }
+corpse = false
+blood = "#3a2a10"
+[creature.attack]
+damage = "4d8"
+damage_type = "slashing"
+name = "claws"
+verb = "claws"
+to_hit = 4
+on_hit = [{ status = "poisoned", chance = 20, severity = 2 }]
