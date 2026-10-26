@@ -151,7 +151,7 @@ area = [5, 0, 8, 2]
 "@" = { terrain = "floor", spawn = "player" }
 "##;
 
-const WELL: &str = "\n[[effect]]\nid = \"well\"\nname = \"mana well\"\nmark = \"w\"\n\
+const WELL: &str = "\n[[effect]]\nid = \"well\"\nname = \"mana well\"\nmark = \"M\"\n\
                     enter = \"The air hums.\"\nmana_regen = 300\n";
 
 /// The built-in content with the statuses, disease, experience, and room above, and a scenario
