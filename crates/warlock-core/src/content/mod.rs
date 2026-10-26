@@ -30,6 +30,8 @@ mod experience;
 mod faction;
 #[cfg(test)]
 mod fey_roster_tests;
+#[cfg(test)]
+mod fiend_roster_tests;
 mod flow;
 mod gear;
 mod gem;

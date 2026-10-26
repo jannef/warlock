@@ -1,0 +1,30 @@
+# The leftover fiends (#450): fiends that are neither demons, devils, nor yugoloths. A black hound
+# of the infernal kennels, bred to run down souls: quick, keen of nose, and its bite burns like a
+# coal. Fire cannot hurt it, and cold bites it deep. Its breath of fire waits for creature spells.
+[[creature]]
+id = "hell_hound"
+level = 13
+xp = 75
+rarity = "uncommon"
+name = "hell hound"
+glyph = "C"
+fg = "#e0502a"
+speed = 1250
+faction = "fiends"
+tags = ["fiend"]
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+footsteps = 40
+hearing = 20
+weight = 70000
+stats = { strength = 16, dexterity = 18, toughness = 16, intelligence = 6, willpower = 21, presence = 15 }
+base_hp = 29
+resist = { fire = 100, cold = -50 }
+on_eat = { message = "It smoulders all the way down.", vomit = 60, harm = "1d3" }
+blood = "#8a2a10"
+[creature.attack]
+damage = "2d8"
+damage_type = "fire"
+name = "bite"
+verb = "bites"

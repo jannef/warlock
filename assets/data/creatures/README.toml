@@ -55,14 +55,15 @@
 #            run with them), undead (every
 #            creature of the "undead" faction: content::tag's test fails without it), vermin
 #            (not the basilisk), marsh-thing (the fens' living things and the bog hag),
-#            hag (the bog hag and her kin, every creature of the "hags" faction),
-#            duergar (not their trader, a merchant), fire-thing (the delf's burning things),
+#            hag (the bog hag and her kin, every creature of the "hags" faction, the night
+#            hag among them), duergar (not their trader, a merchant), fire-thing (the delf's
+#            burning things),
 #            elemental (every elemental, #453, with its element's word: fire, earth, air, water,
 #            ice, or lightning; content::elemental_roster_tests checks them),
 #            fey (every creature of the fey courts, seelie or unseelie),
 #            devil (every creature of the "devil" faction: content::devil_roster_tests checks it),
 #            yugoloth (every creature of the "yugoloth" faction), fiend (the fiends of the lower
-#            planes: every yugoloth, demon, and devil)
+#            planes: every yugoloth, demon, and devil; and the fiends of no family, #450)
 #   roles    archer (shoots: the goblin, kobold, and skeleton archers), caster (every
 #            combat = "caster" type), cultist (the minster's cult), skeleton (walking bones),
 #            spirit (the incorporeal dead), troll (the troll and the marsh troll)
@@ -235,3 +236,14 @@
 # level, Presence 12 + 0.4 × level, casters 4 more), within ±35 %. Tiny fey are small. Glyphs: f
 # the small fey, F the man-sized (satyr) and the korred, n nymphs and dryads, C fey hounds; a
 # colour distinct from every other type with the same glyph.
+#
+# The fiends of no family (#450; content::fiend_roster_tests checks the numbers): the hell
+# hound, the nightmare, the succubus and the incubus (one fiend under two names, sharing their
+# numbers), the night hag, the cambion, and the rakshasa. Faction "fiends" (not animals: a
+# Beast-friend calms no fiend), tags ["fiend", ...] (the night hag "hag" too, the casters
+# "caster"), alignment "evil", vision "darkvision", on the undead roster's formulas for their
+# level and role (xp, stats, base_hp, dice, to_hit, natural defence). Their riders are existing
+# ones only: fire attacks for the hound's and the steed's flames, a Toughness drain for the
+# succubus's kiss, held and frightened for the hag's sleep and nightmares, transfixed and
+# frightened for the rakshasa. Glyphs: C the hell hound (flame red), u the nightmare, n the
+# succubus and incubus, h the night hag, p the cambion, f the rakshasa.
