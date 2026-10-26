@@ -58,6 +58,20 @@ impl World {
         self.lights.terrain_changed(level, &self.content, p);
     }
 
+    /// The player strikes at `target`, which they `seen` or not, in melee, moving against it.
+    fn strike_at(&mut self, target: ActorId, seen: bool, events: &mut Vec<Event>) -> Spent {
+        let player = self.state.player;
+        let me = self.state.player();
+        let melee = me.attack_skills(&self.content, AttackKind::Melee, None);
+        let with = me.weapon_item(&self.content);
+        // Priced as the attack begins (every attack is), before the blows and the exertion,
+        // which may burn enough to leave the player hungrier.
+        let price = self.attack_price(player, ActionKind::Melee, with, melee);
+        self.player_attacks(target, seen, events);
+        self.exert(ActionKind::Melee);
+        Spent::Turn(price)
+    }
+
     pub(super) fn player_moves(&mut self, dir: Dir, events: &mut Vec<Event>) -> Spent {
         let from = self.player_pos();
         let mut to = from.step(dir);
@@ -73,6 +87,15 @@ impl World {
             return Spent::Nothing;
         };
         let def = self.content.terrain(terrain);
+        // A hostile incorporeal creature the player sees inside solid terrain there
+        // (`incorporeal.rs`): they strike at it. Unseen, the terrain is in the way as ever.
+        if !def.walkable
+            && let Some(other) = self.state.actor_at(&level.id, to)
+            && self.perception.sees_actors_at(to)
+            && self.stance(self.state.player, other.id) == Stance::Hostile
+        {
+            return self.strike_at(other.id, true, events);
+        }
         if def.is_closed_door() {
             return self.open_door(to, events);
         }
@@ -90,15 +113,7 @@ impl World {
             let seen = self.perception.sees_actors_at(to);
             let player = self.state.player;
             if self.stance(player, target) == Stance::Hostile {
-                let me = self.state.player();
-                let melee = me.attack_skills(&self.content, AttackKind::Melee, None);
-                let with = me.weapon_item(&self.content);
-                // Priced as the attack begins (every attack is), before the blows and the
-                // exertion, which may burn enough to leave the player hungrier.
-                let price = self.attack_price(player, ActionKind::Melee, with, melee);
-                self.player_attacks(target, seen, events);
-                self.exert(ActionKind::Melee);
-                return Spent::Turn(price);
+                return self.strike_at(target, seen, events);
             }
             if let Some(why) = self.refusal(target) {
                 self.refused(target, why, seen);

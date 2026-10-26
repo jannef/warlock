@@ -155,6 +155,8 @@ categories! {
     Dodge = "dodge", "Dodge", true;
     /// Magic (none yet).
     Deflection = "deflection", "Deflection", false;
+    /// Solid terrain an incorporeal creature stands inside (spec §8 "Incorporeal creatures").
+    Wall = "wall", "Wall", false;
 }
 
 impl Category {
@@ -767,8 +769,8 @@ mod tests {
         ]);
         assert_eq!(
             Category::ALL.map(|c| dv.bonus(c)),
-            [3, 5, 1, 0, 1, 3, 0],
-            "Dexterity, Armour, Shield, Parry, Natural, Dodge, Deflection"
+            [3, 5, 1, 0, 1, 3, 0, 0],
+            "Dexterity, Armour, Shield, Parry, Natural, Dodge, Deflection, Wall"
         );
         assert_eq!(dv.total(), 10 + 3 + 5 + 1 + 1 + 3);
         assert_eq!(Defence::default().total(), BASE_DEFENCE);

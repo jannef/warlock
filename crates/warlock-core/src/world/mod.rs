@@ -115,6 +115,7 @@ mod hash;
 mod hearing;
 mod hunger;
 mod ice;
+mod incorporeal;
 mod lantern;
 mod level;
 mod lockpick;
@@ -1221,6 +1222,8 @@ mod hearing_tests;
 mod hunger_tests;
 #[cfg(test)]
 mod ice_tests;
+#[cfg(test)]
+mod incorporeal_tests;
 #[cfg(test)]
 mod ki_tests;
 #[cfg(test)]

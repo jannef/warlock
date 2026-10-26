@@ -76,8 +76,8 @@ pub(crate) use class::strip_tables as strip_class_tables;
 pub use class::{BonusTalents, ClassActive, ClassDef};
 pub use class_spell::{ClassSpell, Does, MAX_HEX_RANGE, SpellDef, SpellKind};
 pub use creature::{
-    Budge, Combat, CreatureDef, CreatureId, DEFAULT_SIGHT, Hide, NORMAL_SPEED, NaturalAttack,
-    OnEat, SPEEDS,
+    Budge, Combat, CreatureDef, CreatureId, DEFAULT_SIGHT, Hide, Incorporeal, NORMAL_SPEED,
+    NaturalAttack, OnEat, SPEEDS,
 };
 pub use creature_rarity::{COMMON, CreatureRarity, FACTOR};
 pub use damage_type::{DamageTypeDef, DamageTypeId, MAX_DAMAGE_TYPES};
@@ -1163,6 +1163,9 @@ impl Content {
             if let Some(hide) = &spec.natural {
                 hide.check()
                     .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
+            }
+            if let Some(incorporeal) = &spec.incorporeal {
+                (incorporeal.check()).map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             }
             // The status diseases show as comes of a disease, never of a blow.
             let status = |id: &str| {

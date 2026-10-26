@@ -440,6 +440,12 @@ pub(super) fn attack_message(
                 "{} turns aside before it reaches {t}.",
                 capitalized(&weapon)
             ),
+            Some(Category::Wall) => format!(
+                "{} strikes stone where {} {} in the wall.",
+                capitalized(&weapon),
+                target.object(),
+                target.verb("hide", "hides")
+            ),
         },
     };
     Some(text)
@@ -566,14 +572,17 @@ impl World {
         (hit && chance > 0 && self.state.rng.chance(u32::from(chance))).then_some((shield, profile))
     }
 
-    /// The Defence of actor `id`, its burden capping its Dexterity (spec §8 "Burden").
+    /// The Defence of actor `id`, its burden capping its Dexterity (spec §8 "Burden"), and the
+    /// wall around an incorporeal creature inside one adding its Wall bonus
+    /// (`incorporeal.rs`).
     pub(crate) fn defence_of(&self, id: ActorId) -> combat::Defence {
         let actor = &self.state.actors[&id];
-        actor.defence(
+        let defence = actor.defence(
             &self.content,
             self.state.load(&self.content, actor).penalty(),
             self.state.race_of(&self.content, actor),
-        )
+        );
+        self.wall_defence(id, defence)
     }
 
     /// The Protection of actor `id` (spec §8 "Combat"): what it wears and its hide soak off
@@ -946,6 +955,9 @@ impl World {
         if by_player && self.state.player().talent_mods(&self.content).scavenger {
             dropped.iter_mut().for_each(|stack| _ = stack.identify());
         }
+        // An incorporeal creature dies inside a wall: what it carried falls out of it.
+        let mut actor = actor;
+        actor.pos = self.landing(&actor.level, actor.pos);
         if !dropped.is_empty()
             && let Some(level) = self.state.levels.get_mut(&actor.level)
         {

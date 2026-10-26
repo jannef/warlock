@@ -84,6 +84,9 @@
 #             the Natural category of Defence, protection the damage it soaks off every hit
 #             (adding up with what it wears; each 0 to 20, not both 0); "Your sword glances off
 #             the cave beetle's shell."
+#   incorporeal  it passes through solid terrain (walls, rock, closed doors; never the level's
+#             edge) and may stand inside it (spec §8 "Incorporeal creatures"):
+#             { wall_defence = 4 }: its Defence bonus while inside (the Wall category, 0 to 20)
 #   resist    what it resists, in percent per damage type (spec §8 "Damage types"):
 #             { acid = 50 }; -100 (it takes double) to 100 (immune: nothing of the kind hurts
 #             it, whatever it wears). What it wears adds up with this, capped at 75 short of

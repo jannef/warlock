@@ -229,6 +229,32 @@ fn what_comes_comes_out_of_sight_near_the_danger_and_within_the_cap() {
 }
 
 #[test]
+fn an_incorporeal_creature_is_never_placed_inside_a_wall() {
+    // The hall with a wall pillar in every other cell, haunted by stone haunts only.
+    let hall = HAUNT
+        .replace(
+            r#"population = ["kobold", "kobold_archer", "kobold_shaman", "chief"]"#,
+            r#"population = ["stone_haunt"]"#,
+        )
+        .replace("......", ".#.#.#");
+    for seed in 0..6 {
+        let mut w = World::new(content_with(&hall), "haunt", Some(seed)).expect("world");
+        for _ in 0..20 {
+            w.attempt(true);
+        }
+        let level = w.state.current();
+        assert!(!others(&w).is_empty(), "seed {seed}: haunts came");
+        for id in others(&w) {
+            let at = w.state.actors[&id].pos;
+            assert!(
+                level.is_walkable(&w.content, at),
+                "seed {seed}: in a wall at {at}"
+            );
+        }
+    }
+}
+
+#[test]
 fn creatures_come_with_the_clock_and_the_same_actions_bring_the_same_ones() {
     let mut a = haunt(9);
     let mut b = haunt(9);

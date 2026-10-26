@@ -17,7 +17,8 @@
 //!    carries on with its patrol route (or waits). A creature the player swapped places with
 //!    (`talk.rs`) has its old cell as its post, so it steps back onto its route.
 //!
-//! Paths (`path.rs`) go over walkable cells and, for creatures that open doors, closed doors (it
+//! Paths (`path.rs`) go over walkable cells, for an incorporeal creature solid ones too
+//! (`incorporeal.rs`, at a step's extra cost), and, for creatures that open doors, closed doors (it
 //! opens the door, then steps in); a locked door only for one carrying a key that fits it (it
 //! unlocks the door as it opens it; spec §8 "Doors"), else it is a wall to it. Other actors
 //! block: a path may lead through one only when the way around is much longer, and then the
@@ -336,6 +337,9 @@ impl World {
         let level = self.state.current();
         let me = &self.state.actors[&id];
         let opens_doors = self.content.creature(me.creature).opens_doors;
+        // An incorporeal creature goes through solid terrain too (`incorporeal.rs`).
+        let phases = self.content.incorporeal(me.creature).is_some();
+        let phaseable = |p: Pos| phases && level.phaseable(&self.content, p);
         let others: Vec<Pos> = (self.state.actors.values())
             .filter(|a| a.level == level.id && a.id != id)
             .map(|a| a.pos)
@@ -354,6 +358,8 @@ impl World {
             }
             let enter = if def.walkable {
                 1
+            } else if phaseable(p) {
+                1 + super::incorporeal::WALL
             } else if opens_doors && def.is_closed_door() {
                 match level.locks.get(&p) {
                     None => 1 + DOOR,
@@ -371,7 +377,9 @@ impl World {
             reach,
             bound: (me.pos.chebyshev(target) + SEARCH_MARGIN).min(SEARCH_LIMIT),
         };
-        let free_goal = |p: Pos| goal(p) && !occupied(p) && level.is_walkable(&self.content, p);
+        let free_goal = |p: Pos| {
+            goal(p) && !occupied(p) && (level.is_walkable(&self.content, p) || phaseable(p))
+        };
         match search.first_step(cost, free_goal) {
             Some(dir) if occupied(me.pos.step(dir)) => Route::Wait,
             Some(dir) => Route::Step(dir),
@@ -417,7 +425,10 @@ impl World {
         if self.shuns(id)(to) || held.is_some() {
             return Stepped::Blocked;
         }
-        if def.is_closed_door() && self.content.creature(actor.creature).opens_doors {
+        // An incorporeal creature slips through solid terrain, a closed door too, left shut.
+        let phases = self.content.incorporeal(actor.creature).is_some();
+        let through = phases && level.phaseable(&self.content, to);
+        if !through && def.is_closed_door() && self.content.creature(actor.creature).opens_doors {
             let open = self.price_of(id, ActionKind::OpenDoor);
             let stepped = match level.locks.get(&to) {
                 None => Stepped::Opened(open),
@@ -432,7 +443,8 @@ impl World {
         }
         // An overloaded creature cannot move (spec §8 "Burden"): it waits.
         let overloaded = !self.load_of(id).penalty().can_move();
-        if !def.walkable || overloaded || self.state.actor_at(&level.id, to).is_some() {
+        if !(def.walkable || through) || overloaded || self.state.actor_at(&level.id, to).is_some()
+        {
             return Stepped::Blocked;
         }
         let fleeing = self.flees(id, to);
@@ -441,8 +453,12 @@ impl World {
         if !self.step_away(id, to, events) {
             return Stepped::Blocked;
         }
-        // Ice there may give way under it (spec §5 "Ice").
-        let footing = self.tread(id, from, to);
+        // Ice there may give way under it (spec §5 "Ice"); never under an incorporeal one.
+        let footing = if phases {
+            super::ice::Footing::Plain
+        } else {
+            self.tread(id, from, to)
+        };
         let onto = self.content.terrain(self.state.current().terrain[to]);
         let price = self.step_price(id, onto, fleeing) + self.tread_price(id, footing);
         if let Some(actor) = self.state.actors.get_mut(&id) {
@@ -456,8 +472,12 @@ impl World {
         self.after_tread(id, to, footing, events);
         self.make_step_noise(id, to, fleeing);
         // It knows nothing of traps (spec §8 "Traps"): one there goes off; a pit costs it its
-        // next action.
-        let climb = self.step_onto_trap(to, id, events);
+        // next action. Nothing of an incorporeal one presses down.
+        let climb = if phases {
+            0
+        } else {
+            self.step_onto_trap(to, id, events)
+        };
         // Stepping up beside a hostile gatekeeper, it is struck as it comes (`free_blow.rs`).
         self.step_up(id, from, events);
         Stepped::Moved(price + climb)

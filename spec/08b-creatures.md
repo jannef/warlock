@@ -51,6 +51,28 @@ developer notes (CLAUDE.md, `docs/dev/`).
   ("Displacement" below). Creatures neither flee nor
   fight differently when hurt. What a creature has in mind (last seen, noise to look into, post)
   is part of the world state.
+- **Incorporeal creatures** (`warlock-core/src/world/incorporeal.rs`; #381): a creature type
+  with `incorporeal = { wall_defence = N }` (N 0 to 20) passes through **solid** terrain (neither
+  walkable nor transparent: walls, rock, trees, closed doors, locked or not) and may stand inside
+  it, never on a level's edge; it slips through a closed door without opening it. Transparent
+  obstacles (lava, deep water it cannot walk) stop it as they stop anyone. Its paths
+  (`ai.rs::route`) count a solid cell as a step plus one, so it keeps to open ground unless the
+  stone is the shorter way, and a goal cell may be a solid one. Inside solid terrain its Defence
+  gains its `wall_defence` in the **Wall** category (§8 "Combat"). It attacks out of the wall
+  like any creature; the player moving into a solid cell strikes at a hostile one they **see**
+  there (else the terrain is in the way as ever, so nothing unseen leaks), and never swaps places
+  into a wall; a missile reaching that cell attacks it there, lost in the stone if it hits,
+  falling before the wall if it misses (§8 "Ranged combat"). Sight has no rule of its own: the
+  player sees it when they see its cell, as they see any wall (its face lit along an open line,
+  or within darkvision); creatures see one inside a wall within their darkvision only, their
+  rule for opaque cells. Nothing of it presses down: it sets off no trap and breaks no ice.
+  Noise is unchanged (its `footsteps` by the terrain's `step_noise`). When it dies inside a
+  wall, what it carried falls on the nearest walkable cell (Chebyshev rings, row order).
+  Populations and spawns place creatures on walkable cells only, so one never comes inside a
+  wall; a level legend may place one there. No new state: its position is a plain cell.
+  Not yet: immunity to weapons that are not magical (the hook is `World::resolve` in
+  `fight.rs`); bolts and bursts stop at walls, so spells do not reach one inside. The example is
+  the stone haunt (`stone_haunt`), which no level places yet.
 - **Creature gear** (`warlock-core/src/gear.rs`, the rolls; `content/gear.rs`, the data; #328,
   campaign design §10.3): a creature type may have a `racial_weapon` (a weapon it must have a
   rank in: the affinity is the rank, which combat applies) and `[[creature.gear]]` lines
