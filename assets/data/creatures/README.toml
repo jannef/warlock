@@ -52,6 +52,11 @@
 # Uniques (spec §7 "Danger levels"): unique = true (default false) for a type a population draws
 # at most once in a run (a boss); a level legend may still place it by hand.
 #
+# Rarity (spec §7 "Danger levels"; never shown to the player): rarity, a tier in
+# creature_rarities.toml (default "common") whose factor multiplies the type's weight when a
+# population or a spawn draws it: the more dangerous and rewarding (casters, chieftains, the
+# strongest of a place), the rarer. A level legend's hand-placed creatures are not drawn.
+#
 # Skills (spec §8 "Skills"; never shown to the player): skills, the skills it is trained in, by
 # skill id (skills.toml), with fixed values (0 to 999); every other skill is untrained. The player's
 # come from their race and class, not from here. Creatures do not train (yet).

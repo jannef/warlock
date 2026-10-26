@@ -1,6 +1,7 @@
 //! Dungeons and danger levels (spec §7 "Dungeon branches", "Danger levels"): every branch's
 //! floors with their danger, who lives there, and how they come back.
 
+use std::collections::BTreeSet;
 use std::fmt::Write as _;
 use warlock_core::content::danger::{self, OUT_OF_DEPTH_STEPS, TOO_WEAK};
 use warlock_core::content::{Content, Count, DangerRule, Generator, Spawning};
@@ -131,7 +132,10 @@ pub(super) fn dungeon_floors(content: &Content) -> String {
             };
             let mut kinds: Vec<_> = (s.population.iter())
                 .map(|&c| content.creature(c))
-                .map(|def| (danger::weight(def.level, danger), def))
+                .map(|def| {
+                    let factor = content.creature_rarity(def.rarity).factor;
+                    (danger::weight(def.level, factor, danger), def)
+                })
                 .filter(|(w, _)| *w > 0)
                 .collect();
             kinds.sort_by(|a, b| (b.0, &a.1.name).cmp(&(a.0, &b.1.name)));
@@ -173,7 +177,35 @@ pub(super) fn danger_weights(_: &Content) -> String {
         (format!("{} or more below", TOO_WEAK + 1), d - TOO_WEAK - 1),
     ];
     for (name, level) in rows {
-        let _ = writeln!(out, "| {name} | {} |", danger::weight(level, d));
+        let _ = writeln!(out, "| {name} | {} |", danger::level_weight(level, d));
+    }
+    out
+}
+
+/// The creature rarities and their factors, in file order (commonest first), with the types of
+/// each that some population draws, by name.
+pub(super) fn creature_rarities(content: &Content) -> String {
+    let mut out = String::from("| Rarity | Weight | Drawn among |\n|---|---:|---|\n");
+    let branches = content.dungeons().filter_map(|d| d.spawning.as_ref());
+    let levels = content
+        .levels()
+        .filter_map(|l| Some(&l.spawning.as_ref()?.1));
+    let drawn: BTreeSet<_> = (branches.chain(levels))
+        .flat_map(|s| s.population.iter().copied())
+        .collect();
+    for (i, tier) in content.creature_rarities().iter().enumerate() {
+        let mut names: Vec<&str> = (drawn.iter())
+            .map(|&c| content.creature(c))
+            .filter(|def| def.rarity == i)
+            .map(|def| def.name.as_str())
+            .collect();
+        names.sort_unstable();
+        let names = if names.is_empty() {
+            "-".to_string()
+        } else {
+            names.join(", ")
+        };
+        let _ = writeln!(out, "| {} | {}% | {names} |", tier.name, tier.factor);
     }
     out
 }

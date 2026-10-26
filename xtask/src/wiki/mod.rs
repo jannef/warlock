@@ -147,6 +147,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("dungeons.md", dungeons::dungeons),
         ("dungeon-floors.md", dungeons::dungeon_floors),
         ("danger-weights.md", dungeons::danger_weights),
+        ("creature-rarities.md", dungeons::creature_rarities),
         ("dialogue.md", dialogue::dialogue),
         ("quests.md", dialogue::quests),
         ("services.md", services::services),
@@ -305,10 +306,13 @@ mod tests {
         // skill lowers its hearing from 5), and carrying limits.
         has(
             "creature-stats.md",
-            "| Giant rat | 1 | 5 | 10 (+0) | 17 (+3) | 12 (+1) | 1 (\u{2212}5) | 12 (+1) | \
+            "| Giant rat | 1 | 5 | Common | 10 (+0) | 17 (+3) | 12 (+1) | 1 (\u{2212}5) | 12 (+1) | \
              4 (\u{2212}3) | as its scores | - | - |",
         );
         has("creature-stats.md", "| Deer | 1 | 2 |");
+        // Rarity (#373): each type's tier, and the tiers' factors.
+        has("creature-stats.md", "| Kobold shaman | 4 | 40 | Rare |");
+        has("creature-rarities.md", "| Very rare | 10% | bog hag, cinder elemental |");
         has("creature-stats.md", "| Listen 30 | - |");
         has(
             "creature-defences.md",

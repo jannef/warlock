@@ -34,8 +34,8 @@ behavior may use randomness (combat rolls are the rules', from the gameplay stre
 are by distance, direction order, and actor id.
 
 Danger levels and spawning (spec §7 "Danger levels", #326): the data is `content/danger.rs`
-(`DangerRule`, `Spawning`, `weight` and `draw`, the field parsing shared by `data/dungeons.toml`
-and level files), reached through `Content::spawning(level id)` (a hand-made level's own, else
+(`DangerRule`, `Spawning`, `level_weight`, `weight` and `draw`, the field parsing shared by
+`data/dungeons.toml` and level files), reached through `Content::spawning(level id)` (a hand-made level's own, else
 its branch's at the depth; `None`: danger 0). The rules are `world/spawn.rs`: `World::danger`
 (computed, never stored), `LevelState::spawner` (the next attempt's time and the stream
 `spawn/<level id>`, `Rng::spawn`; made with a level that has a danger rule, else absent so other
@@ -54,6 +54,16 @@ count by walkable cells, the draw by `danger::draw`, a cell from the free plain-
 row order (`swap_remove` of a drawn index), a route by `out_and_back`. Whom a level is made for
 is `mapgen::Visit` (the luck, the player's level for a scaled danger, the uniques met;
 `travel::level_template` builds it; `generate_with` is `generate_for` with only the luck).
+Rarity (#373): `content/creature_rarity.rs` parses `data/creature_rarities.toml` (tiers in file
+order, each a `factor` in percent of a common type's weight, 1 to 1000; `common` required, the
+only tier without the file); `CreatureDef::rarity` is an index into `Content::creature_rarities`
+(a type's `rarity`, default `common`; an unknown tier is a load error). A draw's candidates are
+`danger::Candidate`s `(type, level, factor)`, built in exactly two places, `World::draw_spawn`
+and `mapgen::population::populate`, and `danger::weight(level, factor, danger)` is
+`level_weight × factor`; the stream calls are the same as before (one `below(total)` a pick), so
+only the picks move. Both pass the area's `out_of_depth` (default `danger::OUT_OF_DEPTH`, 5 %) to
+`draw`, whose deeper pick weighs rarity too. Hand-placed creatures (level legends, vaults,
+scenario people, shopkeepers) are never drawn, whatever their tier.
 `cargo xtask bench-turns` has a `delf` row: a fixture 120×60 cave branch of danger 8 at full
 population (`xtask/src/bench.rs`); its night's rest is held to the 500 ms budget thanks to coarse
 turns.
@@ -76,7 +86,9 @@ perception's); the rest-versus-waiting tests in `time_tests`, `cost_tests`, `hea
 `speed_tests::resting_accounts_for_fast_creatures` compares a rest with resting turn by turn. Tests: `world/spawn_tests.rs` (the property test of the
 design's §9.6, the population of a generated floor and that nothing else moves, uniques in a
 population, a spawn's gear stream, frozen floors, the talents, determinism),
-`content/danger.rs` (rules, counts, weights, draws).
+`content/danger.rs` (rules, counts, weights, draws, a rare type drawn less often, out-of-depth
+draws by rarity), `content/creature_rarity.rs` (the tier file and its refusals), and
+`content::tests::every_drawn_creature_has_a_rarity` (shipped content).
 
 Creature gear (spec §8 "Creature gear", #328): the data is `content/gear.rs` (`GearLineSpec`
 as written, kept on `CreatureDef::gear_spec` until objects load, then `Content::load_gear`

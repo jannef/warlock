@@ -70,7 +70,7 @@ pub(super) fn populate(
         let candidates: Vec<_> = (spawning.population.iter())
             .map(|&c| (c, content.creature(c)))
             .filter(|(_, def)| !(def.unique && met.contains(&def.id)))
-            .map(|(c, def)| (c, def.level))
+            .map(|(c, def)| (c, def.level, content.creature_rarity(def.rarity).factor))
             .collect();
         let Some(creature) = danger::draw(&mut rng, &candidates, danger, spawning.out_of_depth)
         else {

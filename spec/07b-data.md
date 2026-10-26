@@ -71,7 +71,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   spears 1, the kobold archer bows 1. For burden (§8
   "Burden"): `size`, a size in `data/sizes.toml` (default `medium`); the kobolds, the giant rat,
   the cave bat, and the cave beetle are small, the deer and the player creature medium (the
-  player's size comes from their race when the run has a character). Skills (§8 "Skills"; never
+  player's size comes from their race when the run has a character). Its `rarity` (§7 "Danger
+  levels"; never shown), a tier in `data/creature_rarities.toml` (`common`, the default,
+  `uncommon`, `rare`, `very_rare`): how often a population or a spawn draws it. Skills (§8 "Skills"; never
   shown): `skills`, the skills it is trained in by skill id with fixed values (0 to 999); the
   rest untrained; the player creature lists none. The deer listens (30), the kobold shaman knows
   concentration (20) and spellcraft (25). The showcase's people (M28): the gardener, the
