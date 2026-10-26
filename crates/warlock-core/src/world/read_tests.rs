@@ -13,6 +13,7 @@ const FACTIONS: &str = "[[faction]]\nid = \"player\"\nname = \"you\"\n\
      [[faction]]\nid = \"vermin\"\nname = \"vermin\"\n\
      [[faction]]\nid = \"kobolds\"\nname = \"kobolds\"\n\
      [[faction]]\nid = \"goblins\"\nname = \"goblins\"\n\
+     [[faction]]\nid = \"orcs\"\nname = \"orcs\"\n\
      [[faction]]\nid = \"undead\"\nname = \"undead\"\n\
      [[faction]]\nid = \"marsh\"\nname = \"marsh things\"\n\
      [[faction]]\nid = \"cult\"\nname = \"cultists\"\n\
@@ -20,6 +21,7 @@ const FACTIONS: &str = "[[faction]]\nid = \"player\"\nname = \"you\"\n\
      [[faction]]\nid = \"duergar\"\nname = \"duergar\"\n\
      [[faction]]\nid = \"fire\"\nname = \"fire things\"\n\
      [[faction]]\nid = \"fiends\"\nname = \"fiends\"\n\
+     [[faction]]\nid = \"devil\"\nname = \"devils\"\n\
      [[faction]]\nid = \"yugoloth\"\nname = \"yugoloths\"\n\
      [[faction]]\nid = \"wildlife\"\nname = \"wildlife\"\n\
      [[faction]]\nid = \"peaceful\"\nname = \"peaceful folk\"\n\

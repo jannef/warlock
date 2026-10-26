@@ -22,10 +22,11 @@ key = "brass_key"
 temperature = 10
 # Danger 8 on the first floor to 19 on the twelfth (spec §7 "Danger levels"); nothing scales with
 # the player. The delf wave, and the bats, kobolds, and centipedes of the upper galleries that
-# the shallow floors draw on too, the hell hound (#450), a fiend at home in the fires, and the
-# hobgoblin war bands (#454) that come down with the goblins' ogres and trolls to raid the duergar.
-# The fire drake is not among them: it lives only on its hoard (the vault at depth 12), so a run
-# meets it there and nowhere else.
+# the shallow floors draw on too, the hell hound (#450), a fiend at home in the fires, and the war
+# bands that raid the duergar's mine: the orcs' (#455; the war chief, level 20, comes only out of
+# depth) and the hobgoblins' (#454), who come down with the goblins' ogres and trolls. The fire
+# drake is not among them: it lives only on its hoard (the vault at depth 12), so a run meets it
+# there and nowhere else.
 danger = 8
 population = [
     "bat", "kobold", "kobold_archer", "kobold_shaman", "giant_centipede",
@@ -35,6 +36,8 @@ population = [
     "basilisk", "cinder_elemental", "rotting_troll",
     "hobgoblin", "hobgoblin_archer", "hobgoblin_legionnaire", "hobgoblin_warcaster",
     "hobgoblin_sergeant", "hobgoblin_captain",
+    "warg", "orc_raider", "orc_shaman", "orc_berserker", "orc_veteran", "orc_bowman",
+    "orc_war_chief",
 ]
 # How many: the default, 35 a thousand walkable cells, 25 to 80. A gallery floor (about 350 cells)
 # gets the least, 25, as Cealdhlāw's passages do; the deep workings (about 3 000) the ceiling, 80.

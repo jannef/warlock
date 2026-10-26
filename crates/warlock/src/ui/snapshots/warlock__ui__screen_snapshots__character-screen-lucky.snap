@@ -14,8 +14,8 @@ expression: "render(case, content.clone())"
     │ Age 29 · born 11 Rainmoon 1415 · year of the Water Kraken                               │
     │ Stars   Grasping arms, Of the deep, Ungainly ashore, Always a way, Tidal, Drowning grip │
     │                                                                                         │
-    │ St  Strength      10                                                                    │
-    │ Dx  Dexterity     13                                                                    │
+    │ St  Strength      10   Main hand  bare hands                                            │
+    │ Dx  Dexterity     13              +0 to hit, 1d3 bludgeoning                            │
     │ To  Toughness     10                                                                    │
     │ In  Intelligence  11                                                                    │
     │ Wi  Willpower     10                                                                    │

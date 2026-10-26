@@ -222,6 +222,32 @@ const CASES: &[Case] = &[
         size: (100, 36),
         ..BASE
     },
+    // The attacks beside the stats (the showcase's own character has bare hands): a sword and
+    // shield, a bow with a sword, and two weapons with a bow.
+    Case {
+        name: "character-attacks-sword-and-shield",
+        character: Some("human,male,warrior"),
+        run: true,
+        screen: Some("character"),
+        size: (100, 36),
+        ..BASE
+    },
+    Case {
+        name: "character-attacks-bow",
+        character: Some("human,male,ranger"),
+        run: true,
+        screen: Some("character"),
+        size: (100, 36),
+        ..BASE
+    },
+    Case {
+        name: "character-attacks-two-weapons",
+        character: Some("human,male,ranger"),
+        actions: "move:SW*2 pickup equip:off_hand:j",
+        screen: Some("character"),
+        size: (100, 36),
+        ..BASE
+    },
     Case {
         name: "status-effects",
         actions: "afflict:poisoned*4 afflict:bleeding wait",

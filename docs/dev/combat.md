@@ -37,7 +37,16 @@ scenario without a character `hp`. Hit points live on `Actor` (`hp`, `hp_base`, 
 `max_hp(content)`, `health(content)`: the effective Toughness), saved and hashed. Presentation reads only
 `PerceptionView::own_hp`, `own_defence` (the total: its Dexterity part would give a modifier
 away), `SeenActor::health`, and `death`: **never a creature's hit points, a to-hit, a roll, or a
-modifier**. Spells stay intents (`strike: None`). Tests: `combat.rs` (exhaustive 2d12
+modifier**, with one exception the owner asked for (spec §6 "Character"): the player's own
+ready attacks, `PerceptionView::own_attacks` → `Actor::known_attacks` (`world/attacks.rs`,
+`OwnAttack`: source, kind, name, to-hit, damage with the bonus folded in, extra dice, kinds,
+riders, range; `summary`/`damage_text` are the one text form, for the character screen and the
+`attacks` dump layer). It reads the profiles the strikes use (`Actor::melee`, `off_hand_blow`,
+`ranged` with `launcher_range`, `thrown` with `throw_range`), built on a copy of the player
+whose unidentified stacks have no magic (`Stack::as_known`), so they cannot drift from the
+rules and unknown affixes stay hidden; situational changes made after the profile (ambush,
+glare, class abilities' blows, free blows' flurry) are not part of it. Tests:
+`world/attacks_tests.rs`. Spells stay intents (`strike: None`). Tests: `combat.rs` (exhaustive 2d12
 enumeration for hit chances, criticals, miss attribution), `world/fight_tests.rs`.
 
 Protection (spec §8 "Combat", #192; ADOM's PV): `combat::strike(profile, &Target, rng)` takes

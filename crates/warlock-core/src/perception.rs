@@ -1298,6 +1298,15 @@ impl<'a> PerceptionView<'a> {
         self.player.styles_in_use(self.content)
     }
 
+    /// The attacks the player has ready (spec §6 "Character screen"): the main hand's blow, the
+    /// off hand's with two weapons, and the missile weapon's shot or throw, each with its to-hit,
+    /// damage, and range, from the profile a strike would roll now in the fighting style in use.
+    /// The one place the game shows a to-hit (the owner's exception to hidden numbers: the
+    /// player's own attacks only); unidentified magic counts for nothing here.
+    pub fn own_attacks(&self) -> Vec<crate::world::OwnAttack> {
+        self.player.known_attacks(self.content)
+    }
+
     /// The player's hit points: what they have left (at most their maximum, never below 0) and
     /// their maximum (spec §8 "Combat").
     pub fn own_hp(&self) -> (i32, i32) {

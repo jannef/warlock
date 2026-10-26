@@ -109,7 +109,9 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   Diseased`, then the diseases they know they have, `Diseases filth fever`), `skills` (the player's trained skills in skill order, `Stealth 17`),
   `weapon_skills` (the player's weapon skills and fighting styles in file order with their rank
   and how far their marks are toward the next, `Long blades 2 (40%)`; at rank 10 the rank alone;
-  the styles they fight in now marked, `Duelist 1 (0%), in use`), `talents` (the player's
+  the styles they fight in now marked, `Duelist 1 (0%), in use`), `attacks` (the player's ready
+  attacks as the character screen shows them, §6: `Main hand long sword: +4 to hit, 1d8+2
+  slashing`, `Missile short bow: +3 to hit, 1d6 piercing, range 10`), `talents` (the player's
   talents in the order taken, each for its choice with its rank of how many, `Hardy 2/3`,
   `Weapon focus (long blades)`; never what a rank gives), and `quests`
   (the quest log, active first: `Rats in the arena (active, from the old hermit): Kill 3 giant
@@ -159,7 +161,8 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   alignment rules), trained skills (`skills`, by skill id with their values),
   status effects (`effects`, by id), the diseases they know they have (`diseases`, by id),
   weapon skills and fighting styles (`weapon_skills`, by skill id: `{rank, progress}`, the
-  progress a percent or null at rank 10), the styles in use (`styles_in_use`, style ids), the
+  progress a percent or null at rank 10), the styles in use (`styles_in_use`, style ids), the ready attacks (`attacks`: `{source, kind,
+  name, to_hit, damage, range}`), the
   talents (`talents`, in the order taken: `{id, name, rank, ranks, choice}`) and the level-up
   choices due (`due`: `{level, talents}`, or null), the
   quest log (`quests`: `[{id, name,
