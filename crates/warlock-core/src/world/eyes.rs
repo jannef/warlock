@@ -1,19 +1,28 @@
 //! Effective eyes (spec §5 "Vision"; the design's B4): the player's vision profile as their
 //! talents change it. `WorldState::vision` stays the base profile (the race's, or the dev
-//! `vision:` override); [`WorldState::eyes`] applies the talents (Night eyes' threshold, Dark
-//! adaptation's and Owl eyes' darkvision, Rune sight's UV) and is what perception reads.
-//! Creatures keep their types' profiles.
+//! `vision:` override); [`WorldState::eyes`] betters it by a unique item's Vision power they
+//! wear (`Actor::eyes`; not the dev override), then applies the talents (Night eyes' threshold,
+//! Dark adaptation's and Owl eyes' darkvision, Rune sight's UV) and is what perception reads.
+//! Creatures see with their types' profiles, bettered the same way by a unique item they wear.
 
 use super::{World, WorldState};
 use crate::content::{Content, VisionProfile};
 use crate::talent::TalentMods;
 
 impl WorldState {
-    /// The player's eyes: the base profile with what their talents change.
+    /// The player's eyes: the base profile, bettered by a unique item's Vision power they wear
+    /// (spec §8 "Magic items"; never the dev override, which shows a profile as it is), with
+    /// what their talents change.
     pub(crate) fn eyes(&self, content: &Content) -> VisionProfile {
         let base = content.vision_index(&self.vision).unwrap_or(0);
         let base = &content.vision_profiles()[base];
-        eyes_with(base, &self.player().talent_mods(content))
+        let player = self.player();
+        let base = if self.vision_dev {
+            std::borrow::Cow::Borrowed(base)
+        } else {
+            player.eyes(content, base)
+        };
+        eyes_with(&base, &player.talent_mods(content))
     }
 }
 

@@ -4,9 +4,5 @@ name = "Blessing"
 tree = "class"
 granted = true
 description = "Ask your god's favour (a spell, paid in mana): blessed a while, your blows land truer and your will is firmer."
+effects = [{ kind = "spell", spell = "blessing" }]
 systems = ["mana", "status"]
-
-[[talent.spell]]
-spell = "blessing"
-mana = 2
-status = "blessed"

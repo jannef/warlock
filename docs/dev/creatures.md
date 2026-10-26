@@ -1,4 +1,22 @@
-# Factions and creature behavior
+# Creature subsystem
+
+**Rule: a roster PR adds or edits ONLY its own `docs/dev/creatures/<tribe>.md`; it never edits
+this file.** This file is the stable overview of the creature subsystem (factions, the AI,
+sight, spawning, gear, incorporeal creatures, coarse turns); every tribe's or wave's roster
+notes, per-creature facts, and test-row lists live in the per-tribe files below. The spec's
+creature and faction lists are likewise not edited by a roster (`spec/07b-data.md` points at
+`assets/data/creatures/` and `assets/data/factions.toml`). A new tribe adds a new file and one
+line here only if it truly is a new family, in the same PR as nothing else shares.
+
+Per-tribe notes:
+- `docs/dev/creatures/undead.md`: the undead roster (#383; batches, population lines, holds, drains)
+- `docs/dev/creatures/campaign-waves.md`: the barrow, fen, and delf waves (the non-undead notes)
+- `docs/dev/creatures/yugoloth.md`: the yugoloths (#446; faction, tags, riders)
+- `docs/dev/creatures/hags.md`: the hags (#451; faction, tag, riders)
+- `docs/dev/creatures/hobgoblins.md`: the hobgoblins (#454; the goblin tribe's second tier)
+- `docs/dev/creatures/fey.md`: the fey (#452; the courts, `provoked`, the roster)
+
+## Overview
 
 Developer notes for working on this part of Warlock (moved from CLAUDE.md, #185); the
 rules it implements are in spec/08b-creatures.md. Keep it current with the code, as CLAUDE.md says.
@@ -16,19 +34,7 @@ one file per creature named by its id (`kobold.toml`; the field documentation is
 `README.toml`), a table directory read in path order: see "Content directories" in
 `docs/dev/content.md`. Stance comes from types:
 `Content::stance(creature, creature)`, `World::stance(actor, actor)`, and for presentation only
-`PerceptionView::stance(seen actor)` (look mode's "(hostile)"). Courts (#452): a type may give
-`factions = { seelie = 50, unseelie = 50 }` (weights) instead of `faction`
-(`CreatureDef::factions`, checked in `Content::creature_factions`; `CreatureDef::faction` is then
-the heaviest, ties the first by id, for type-level answers: the wiki, `Content::stance`). Each
-creature of it joins one when it is made: `world/court.rs::join`, one call in
-`travel::make_creature` (so spawns, populations, level files, and vaults alike), unless the spawn
-names a `faction`; stream `court/<actor id>` (`Rng::court`), drawn only for such a type, so no
-other stream moves. The pick is `Actor::faction_override` (saved and hashed when set; no new
-save field). A faction's `provoked` (`FactionDef::provoked`) is the faction one of its creatures
-joins when the player attacks it: `World::provoke_court`, one line beside the shopkeeper's
-`provoke` in `fight.rs` and `spell.rs`; the Seelie court's is `wrathful_fey`. Tests:
-`world/court_tests.rs` (weights over many draws, per-seed determinism, save and load, a level's
-faction winning, look mode's stance, a struck Seelie fey), `content/fey_roster_tests.rs`. Between the player and a creature,
+`PerceptionView::stance(seen actor)` (look mode's "(hostile)"). Between the player and a creature,
 the Beast-friend talent makes `animal` factions neutral until the player attacks one of the type
 (`world/beast_friend.rs::befriended`, read by `World::stance`, the AI's `nearest_hostile_in_sight`,
 and `PerceptionView::stance`; `docs/dev/progression.md`). The AI is `world/ai.rs`
@@ -154,6 +160,8 @@ generated floor (rolled by `gear::arm` after it) and a spawn in play (rolled by
 (`TalentMods::scavenger`, the kill the player's). Tests: `world/gear_tests.rs`; the mapgen
 snapshots print each spawn's gear.
 
+## Creature waves
+
 The campaign's creature waves (docs/design/campaign.md §10.1; #333 the barrow wave, #334 the fen
 wave, #335 the delf wave): content only, on the fields above. A wave adds
 - one file per type: the common ones in `data/creatures/` (shared), the campaign's own people and
@@ -168,56 +176,3 @@ wave, #335 the delf wave): content only, on the fields above. A wave adds
   too, or the shipped types naming it fail to load;
 - its rows in `world/bestiary_tests.rs`'s `WAVES` (the type and its owning campaign), and its
   stances in that file's faction test.
-The barrow wave (danger 1–6): grave worm, barrow spider, goblin, goblin archer, skeleton, zombie,
-giant centipede, barrow ghoul, goblin chief, barrow wight; factions `goblins` and `undead` (the
-undead are immune to poison by `resist`, and leave the vermin alone); the barrow wight is the
-Ascmearc's. The fen wave (danger 4–11): giant leech, giant frog, drowned, crocodile, cultist,
-will-o'-wisp, ghost, mud golem, cult priest, marsh troll, bog hag; factions `marsh` (the fen's
-living things, not an animal faction) and `cult` (hostile to the marsh); the drowned and the
-ghost are `undead`. The cultist, the cult priest, and the bog hag (`unique`) are the Ascmearc's.
-The design's marsh eel (`habitat = "water"`) is left out: placing and keeping a creature in water
-is a rule of its own, not content. The wisp carries the `wisp` light (`data/lights.toml`). The wiki's creature tables
-(`xtask/src/wiki/creatures.rs`) pick new types up by themselves; the status-effect and disease
-tables name the bites that cause them, so `xtask/src/wiki/mod.rs`'s test rows move when a wave's
-`on_hit` names a status or disease. A drain in `on_hit` (`docs/dev/stats.md` "Drain", #382) is shown in the creature attack table (`on_hit` text) and in `drain-attacks.md`; the pale drinker, the first drainer, is in no population yet.
-The delf wave (danger 8–19): ember beetle, duergar miner, duergar warrior, ogre, fire
-salamander, troll, duergar smith, magma crawler, ash wraith, basilisk, cinder elemental, and the
-fire drake (the Ascmearc's own, `campaigns/ascmearc/data/creatures/`, `unique`); factions
-`duergar` (hostile to the goblins, whose kin the ogre and the troll are, and to the undead,
-which the ash wraith is) and `fire` (the burning things; hostile to the player only). No
-`great_club` object exists, so the ogre's racial weapon is the maul; the pick-axe is a tool
-(`racial_weapon` must have damage), so the duergar miner carries it as a Tool-slot gear line and
-has the hand axe, the duergar's racial weapon, as a second, rarer line. The basilisk's slowing
-bite is the existing `sluggish` status.
-Fyrdelf (#339) is where the wave lives: its branch's `population` (with the bats, kobolds, and
-giant centipedes the shallow floors draw on), leaving out the drake, which only the drake's
-hoard places (a vault its twelfth level names, so a run meets it once, there). Its stores are
-kept by the `duergar_trader` (the Ascmearc's own type, `merchants`, the shopkeeper's level and
-XP, an outlier of the XP guideline like the shopkeeper).
-Fennmynster (#338) is where the fen wave lives: all eleven are its branch's `population`, the bog
-hag too (unique, so the population and spawns bring her once a run); the sunken crypt at its
-bottom adds two drowned standing guard in its water.
-The undead roster (#383; batch 1 #384, levels 1–10; batch 2 #385, 11–20): shared types, one file each in
-`assets/data/creatures/`, on the conventions noted in that directory's `README.toml`. Each batch
-adds its types to `content/undead_roster_tests.rs` (`ROLES`, the type's role) and raises
-`ROSTER_TOP`: every `undead` type must be on the XP guideline (`OFF_GUIDELINE` lists the pale
-drinker), lie within ±35 % of #383's max HP and dice formulas for its level and role, and every
-level from 1 to `ROSTER_TOP` must have one. Batch 1's population lines: Cealdhlāw the crawling
-hand, skeletal rat, kobold zombie, skeleton archer, skeletal wolf, and skeleton warrior;
-Fennmynster the corpse candle, poltergeist, ghast, shadow, and bog body; Fyrdelf the ogre zombie
-and grave hound. Batch 2's: Fennmynster the wraith and fen ghoul; Fyrdelf the burning skull,
-knocker, spectre, charred dead, duergar skeleton, and rotting troll. The mummy, barghest, draugr,
-vampire spawn, hand of glory, gallows dead, gibbering shade, bone wyvern, revenant, fetch, and
-mummy priest ship in no population (deep undead wait for deep places, #383), and the ghost is
-incorporeal (wall Defence 2). The roster's holds (`held`, #431) are `{ status = "held", chance,
-difficulty }`: the ghast's and fen ghoul's claws 10 % at 15, the gallows dead's tongue 20 % at 17.
-
-The fey roster (#452): thirteen shared types, one file each in `assets/data/creatures/`, tagged
-`fey`, each of the Seelie or the Unseelie court by its weights (the README's notes): sprite 2,
-pixie 4, quickling 6, boggle 7, darkling 9, satyr 10, redcap 12, blink dog 14, meenlock 16, dryad
-19, nymph 22, korred 25, yeth hound 31. `content/fey_roster_tests.rs` holds their levels, roles,
-and court weights against #383's formulas (XP guideline; max HP and dice within ±35 %). Their
-riders are existing statuses only (poisoned, transfixed, frightened, held, bleeding); teleport,
-illusions, flight, charm, tree-binding, a death burst, and poisoned missiles are follow-ups.
-Fennmynster's population takes the pixie, the boggle, and the darkling; the rest wait for a
-woodland place.

@@ -401,14 +401,9 @@ fn a_hidden_trap_goes_off_underfoot_and_is_known_from_then_on() {
     let hit = i.and_then(|i| said.get(i + 1)).cloned().unwrap_or_default();
     assert!(hit.starts_with("The spear hits you"), "{said:?}");
     assert!(lost(&w, w.player_id()) > before);
-    // Unlimited: it goes off again.
-    let again = run(&mut w, "move:W move:E");
-    assert!(
-        again[1]
-            .events
-            .iter()
-            .any(|e| matches!(e, Event::TrapSprung { .. }))
-    );
+    // Unlimited: it goes off again (known now, a step onto it may avoid it: `sidestep.rs`).
+    let again = run(&mut w, &"move:W move:E ".repeat(10));
+    assert!((again.iter().flat_map(|o| &o.events)).any(|e| matches!(e, Event::TrapSprung { .. })));
 }
 
 #[test]

@@ -112,7 +112,7 @@ impl World {
     /// consequences beyond the goods**: anything else a successful theft should touch hooks in
     /// beside them.
     fn got_away_with(&mut self, victim: ActorId, stack: &Stack) {
-        let what = object::phrase(std::slice::from_ref(stack), &self.content);
+        let what = object::phrase(std::slice::from_ref(stack), self.lore());
         let name = self.called(&self.state.actors[&victim]);
         self.say(format!("You steal {what} from {name}."));
         self.player_did(Deed::Theft);

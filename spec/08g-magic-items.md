@@ -11,8 +11,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     magic; they and scrolls (§8 "Scrolls", never magic) are loot.
   - **Rarity**: *normal* (no affixes), *magic* (a prefix, a suffix, or one of each; most have
     one), *rare* (up to three prefixes and three suffixes, usually three or four affixes in all,
-    and a two-word name: a first word and a second for its kind, "Grim Bite"). Unique items
-    later. An item never has two affixes of the same effect.
+    and a two-word name: a first word and a second for its kind, "Grim Bite"); a *unique*
+    item is a rare one with a set name and a power (below). An item never has two affixes of the same effect.
   - **Instances**: a magic or rare stack records what it rolled (`magic::Magic` on
     `object::Stack`): its rarity, its **item level**, each affix by id with its tier (1 first)
     and rolled value, a rare item's name, and whether the player has identified it, for an
@@ -48,7 +48,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (gloves, rings, amulets, helmets) they are **global**: every attack. Effects on the item itself
     (Armour, Protection, Shield, Parry, `max_dex`, weight) are local (the Hardened prefix adds
     to an armour's Protection, which adds up with every other piece's). An `elemental` affix
-    (Flaming, Freezing; §8 "Damage types") is an attack effect too: its die of its kind rides on
+    (Flaming, Freezing, Venomous; §8 "Damage types") is an attack effect too: its die of its kind rides on
     every roll of the damage, after the weapon's own added damage, one die per kind (the sides
     add up); a `resistance` affix (of the Salamander, of Warmth) is global: its percentage adds
     to the wearer's, capped with the rest at 75. The rest are global: the six stats,
@@ -69,7 +69,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Affixes** (`data/affixes.toml`, §7): 23 prefixes (mostly offensive, flat Defence, and
     life: Sharp, Heavy, Glinting, Keen, Brutal, Guarding, Reinforced, Sturdy, Supple,
     Featherweight, Nimble, Shimmering, Oaken, Hale, Vicious, Accurate, Fleet, Hunter's, Steady,
-    Radiant, Burly, Hardened, Mystic (maximum mana)) and 27 suffixes (stats, speed, criticals,
+    Radiant, Burly, Hardened, Mystic (maximum mana), Venomous (poison)) and 27 suffixes (stats, speed, criticals,
     utility, skills: of the Bear, Lynx, Ox, Owl, Sage, Lion; of Celerity, Precision, Slaying,
     Ruin, Mending, Clarity (mana regeneration), Stealth, Light, the
     Mule, Evasion, Warding, the Wind, Reach, Durability, the Tortoise, Vitality; of Shadows
@@ -104,6 +104,41 @@ developer notes (CLAUDE.md, `docs/dev/`).
     besides what they carried, by their chance, from the stream `drop/<actor id>`, at their
     level's item level, made of a material by the creature's level (its gear: `roll_from` with
     `Source::Gear`); by the gems' `chance` (one draw first) the drop is a loose gem instead.
+  - **Unique items** (`content/unique.rs`, data `data/uniques/` and each campaign's
+    `data/uniques/`, §7; #423, docs/design/adventurers-guild.md §9): one of a kind, like ADOM's
+    artifacts: a **rare** item with a set name, set affixes and parts, an item level, a
+    **power**, and a line of **lore**; no new rarity or color. Its `Magic` adds `unique` (its id,
+    saved like the affixes), by which its power and lore are found. Content places one as
+    `unique:ID` wherever it names objects (a pile, a legend's `objects` and `carry`, and `wield`
+    or `wear` by the same name, a gear line, a kit, a shop's or a scenario's `carry`, a quest
+    reward's `items`); each is named by **one placement in all content** (a load error
+    otherwise), so with pinned vaults and unique creatures a run holds it at most once, with no
+    save state. Loot never makes one; a gear line's `magic` never rerolls one. Identification is
+    as for any magic item: unidentified it is "a stiletto (rare)"; identified its name, affixes,
+    power in words, and lore (the item description's last line), all through
+    `Stack::known_magic`. A power works while the item is worn or wielded, identified or not,
+    and is read in one place each:
+    - **Inflict** (`{ inflict = STATUS, chance, severity }`): a hit with it that leaves its
+      target alive causes `severity` degrees of the status by `chance` percent (one draw of the
+      gameplay stream below 100, none at 100), read where a natural attack's `on_hit` is
+      (`World::after_blow`), through the attack's profile (`Profile::on_hit`, from
+      `Mods::local` of the weapon that hit: the main hand's, the off hand's for its blows, a
+      launcher's for its shots, a thrown weapon's; never a kick or a shield bash). The target's
+      resistance to the status's kind applies, as to any `on_hit`.
+    - **Vision** (`{ vision = PROFILE }`): its wearer sees with that profile where it is better
+      than their own eyes, part by part (the lower threshold, the farther darkvision, ultraviolet
+      if either sees it), the name staying their own: read where eyes are chosen
+      (`WorldState::eyes` for the player, before talents; `Actor::eyes` for creatures' sight).
+      The dev `vision:` override is shown as it is.
+    - **Ward** (`{ ward = STATUS, message }`): its wearer never suffers the status, read in
+      `World::afflict`, which refuses it and tells the player `message` ("Fear finds no hold on
+      you.").
+    The four of the Ascmearc (the Weyfarers' Gilde's criminals carry them): Widowmaker
+    (stiletto: Venomous, of Celerity, of the Lynx; every hit poisons), High Toby (long bow:
+    Hunter's, Steady, of Precision; a hit frightens at 25 %), the Unhalwed Bedes (bone amulet:
+    Mystic, of Clarity, of the Owl, of Shadows; darkvision), and the Turncoat (banded mail:
+    Reinforced, Hardened, Hale, of the Ox; never frightened), each at item level 12; the test
+    world's Stonebiter lies in the quarry.
   - **Dev**: replay text `identify` / `identify:LETTERS` (`Action::Identify`, `F8` in dev
     builds: everything carried) identifies without time passing, recorded in replays.
 
@@ -115,8 +150,27 @@ developer notes (CLAUDE.md, `docs/dev/`).
   keeps the scroll: nothing to read on it ("You cannot read a dagger."), no target or the wrong
   kind ("Read it at what?", "Read it on what?"), the player's own cell ("You cannot aim at
   yourself."), out of reach ("That is out of range."), a spell on the overworld, or a stack
-  there is nothing to learn about ("You already know what a dagger is."). Scroll types are
-  known on sight; ADOM-style unknown labels ("a scroll labelled XYZZY") may come later.
+  there is nothing to learn about ("You already know what a dagger is.").
+  - **Unidentified scrolls** (`scroll_label.rs`, data `data/scroll_labels.toml`; #393): a
+    readable scroll type (an object with `read`) is unknown until the player identifies it,
+    and meanwhile shows by a **label**, "a scroll labelled ZUNBAR" (`name`/`plural` with
+    `{label}`), in one plain colour for every unknown scroll (`fg`), everywhere the player is
+    shown it: inventory, piles, shops, look, the item description, messages, and player-facing
+    dumps (all through `Lore::describe`). One label per type for the whole run, all different,
+    made of 2 to 3 of the file's syllables, drawn when the world is made or loaded from the
+    run's `identification` stream (§8 "Determinism"), types in object id order: derived, never
+    saved, never drawn per read. What the player knows is the set of **identified scroll
+    types** (`WorldState::known_scrolls`), saved and hashed. A type is identified when a scroll
+    of it is read ("You read the scroll labelled ZUNBAR." then "It is a scroll of fireball."),
+    when the scroll of identify is read on a stack of it ("This is 2 scrolls of lightning!"), the
+    scroll of identify's own type by its first read, when it is in the character's starting kit
+    (a chosen character knows their kit's scrolls), or by the dev `identify` (and F8). Reading an
+    unknown scroll works as reading a known one does (a gamble: what it does is not known until
+    it is done); a label changes no outcome, only names. A scroll that cannot be read (the
+    scroll of light) has no label and is known on sight. **Identified is not learned**: a spell
+    scroll whose type is identified shows by its name and can be studied (#396) by anyone who
+    has not learned its spell; study is refused only for a scroll still under its label and for
+    a spell already learned. `Lore::is_identified(object)` is what the study list asks.
   - **Spell scrolls** cast a trap's spell (§8 "Traps") with the same rules, data, and code
     (`World::cast_burst`, `World::cast_bolt`), aimed by the reader (§6 "Targeting"): the scroll
     of **fireball** and of **frost** a burst (the fireball and frost traps': 3d6 and 2d6 in
@@ -138,10 +192,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     "You read the scroll of fireball.", its `message` ("A fireball streaks from the scroll and
     explodes!"), then its blows in its `noun` and `verb` and combat's words ("The fireball burns
     the kobold.") and deaths ("The kobold dies.").
-  - **The scroll of identify** identifies one unidentified stack the player carries
-    (`World::identify`: "This is a Sharp dagger of the Lynx!"); a stronger "identify all" can
-    come later.
+  - **The scroll of identify** identifies one unidentified stack the player carries: a magic
+    item's affixes, or a labelled scroll's type (`World::identify`: "This is a Sharp dagger of
+    the Lynx!"); a stronger "identify all" can come later. It is the commonest scroll in loot
+    (`frequency` 300 against the spell scrolls' 50 to 60) and a regular general-store item.
   - **Where**: loot (by `level` and `frequency`, never magic), general stores' stock (they sell
-    and buy the scrolls class, §7 "Shops"), and the trap hall beside its arrival (two of each
-    spell, a scroll of identify, and an unidentified dagger). The showcase has none. Later:
+    and buy the scrolls class, and a generated one always lays out scrolls of identify, §7
+    "Shops"; Cēaptūn's has three), and the trap hall beside its arrival (two of each spell, three
+    scrolls of identify, and an unidentified dagger). The showcase has none. Later:
     Spellcraft and Decipher Script (§8 "Skills") may change reading.

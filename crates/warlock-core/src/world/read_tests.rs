@@ -16,10 +16,12 @@ const FACTIONS: &str = "[[faction]]\nid = \"player\"\nname = \"you\"\n\
      [[faction]]\nid = \"undead\"\nname = \"undead\"\n\
      [[faction]]\nid = \"marsh\"\nname = \"marsh things\"\n\
      [[faction]]\nid = \"cult\"\nname = \"cultists\"\n\
+     [[faction]]\nid = \"hags\"\nname = \"hags\"\n\
      [[faction]]\nid = \"duergar\"\nname = \"duergar\"\n\
      [[faction]]\nid = \"fire\"\nname = \"fire things\"\n\
      [[faction]]\nid = \"seelie\"\nname = \"Seelie court\"\n\
      [[faction]]\nid = \"unseelie\"\nname = \"Unseelie court\"\n\
+     [[faction]]\nid = \"yugoloth\"\nname = \"yugoloths\"\n\
      [[faction]]\nid = \"wildlife\"\nname = \"wildlife\"\n\
      [[faction]]\nid = \"peaceful\"\nname = \"peaceful folk\"\n\
      [[faction]]\nid = \"merchants\"\nname = \"merchants\"\n\
@@ -196,8 +198,8 @@ fn a_fireball_flies_to_the_cell_aimed_at_and_bursts_like_the_trap() {
     assert_eq!(count(&w, "scroll_of_fireball"), 2, "used up");
     let said = texts(&w);
     assert!(
-        said.contains(&"You read the scroll of fireball.".to_string()),
-        "{said:?}"
+        said.contains(&"It is a scroll of fireball.".to_string()),
+        "read unknown, then named: {said:?}"
     );
     // Both dummies: the same words, said once with a count.
     let burns = "The fireball burns the training dummy. (×2)";
@@ -297,6 +299,9 @@ fn frost_freezes_water_and_bites() {
 #[test]
 fn refused_readings_take_no_time_and_keep_the_scroll() {
     let mut w = world("##########\n#@.......#\n##########\n");
+    // Fireballs known (spec §8 "Scrolls"): identify has nothing to learn about them.
+    let fire = w.content.object_id("scroll_of_fireball").expect("fireball");
+    w.state.known_scrolls.insert(fire);
     let refusals = [
         ("read:a", "Read it at what?"),
         ("read:a:1,1", "You cannot aim at yourself."),
@@ -326,6 +331,9 @@ fn refused_readings_take_no_time_and_keep_the_scroll() {
 #[test]
 fn the_scroll_of_identify_identifies_an_item_and_is_used_up() {
     let mut w = world("######\n#@...#\n######\n");
+    // Known by sight here (unknown scrolls: scroll_label_tests.rs).
+    let identify = w.content.object_id("scroll_of_identify").expect("identify");
+    w.state.known_scrolls.insert(identify);
     let ring = || {
         let id = w.content.object_id("silver_ring").expect("ring");
         let magic = Magic {
@@ -339,6 +347,7 @@ fn the_scroll_of_identify_identifies_an_item_and_is_used_up() {
             name: None,
             identified: false,
             carried: 0,
+            unique: None,
         };
         Stack::with_magic(id, 1, magic)
     };

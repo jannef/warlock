@@ -1,0 +1,33 @@
+# The yugoloths (#446): mercenary fiends of the lower planes, who fight for whoever pays. The
+# mezzoloth is their foot soldier: a man-sized insect in a hard chitin shell, four-armed, that
+# fights with a trident in two of its hands and claws with the others. Not yet in any dungeon's
+# population: no danger window reaches it.
+[[creature]]
+id = "mezzoloth"
+level = 22
+xp = 120
+name = "mezzoloth"
+glyph = "&"
+fg = "#7a8a48"
+tags = ["yugoloth", "fiend"]
+faction = "yugoloth"
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+opens_doors = true
+footsteps = 60
+hearing = 14
+weight = 90000
+stats = { strength = 20, dexterity = 16, toughness = 21, intelligence = 19, willpower = 24, presence = 19 }
+base_hp = 55
+natural = { defence = 1, protection = 2, name = "chitin" }
+attack = { damage = "3d8", damage_type = "slashing", name = "claws", verb = "claws", to_hit = 2 }
+resist = { acid = 100, poison = 100, fire = 50, cold = 50, electricity = 50 }
+weapon_skills = { spears = 3 }
+corpse = false
+blood = "#3a4020"
+# Its gear (spec §8 "Creature gear"): the trident it is paid to carry.
+[[creature.gear]]
+chance = 80
+one_of = ["trident"]
+magic = 5

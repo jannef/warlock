@@ -100,7 +100,10 @@ impl StatUse {
             StatUse::Blow => "a blow of yours that hits up close (a kick or a shield bash too)",
             StatUse::Dig => "a turn of digging",
             StatUse::Kick => "kicking at a closed door",
-            StatUse::Dodge => "an attack on you that your Dexterity or Dodge made miss",
+            StatUse::Dodge => {
+                "an attack on you that your Dexterity or Dodge made miss, or a known trap you \
+                 stepped past"
+            }
             StatUse::Shot => "a shot or a throw of yours that hits",
             StatUse::Sneak => "a step within earshot of a creature that could hear it",
             StatUse::Climb => "climbing out of the water onto ice, or out of a pit",

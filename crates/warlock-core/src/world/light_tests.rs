@@ -176,6 +176,16 @@ enter = "You feel at peace here."
 glow = [60, 44, 22, 8]
 regen = 300
 shunned = true
+
+[[effect]]
+id = "gloom"
+name = "gloomy room"
+mark = "g"
+enter = "Gloom."
+level_chance = 5
+pervade = "A gloom lies over this level."
+light = 60
+glow = [10, 0, 20, 4]
 "##;
 
 /// A world on a single level with `map`, `ambient` light, and the fixture definitions above. The
@@ -273,9 +283,8 @@ pub(super) fn check_invariants(world: &World) -> Result<(), TestCaseError> {
         let kept = view.light_kept(p).expect("visible");
         let ambient = view.ambient().percent(kept);
         let base = view.base_light(p).expect("visible");
-        let glow = (world.room_effect_at(view.level_id(), p)).map_or(Light::DARK, |e| {
-            view.vision().perceive(e.glow.percent(kept))
-        });
+        let glow = world.effects_at(view.level_id(), p).glow();
+        let glow = view.vision().perceive(glow.percent(kept));
         if matches!(view.cell(p), CellView::Visible(t) if world.content().terrain(t).transparent) {
             prop_assert_eq!(
                 base.uv,
@@ -1198,8 +1207,9 @@ proptest! {
         check_invariants(&w)?;
     }
 
-    /// Random caves with a shadowed room and a sanctuary (spec §7 "Special rooms"), torches, and
-    /// a light-bearing kobold, any profile and ambient level, the player walking about: every
+    /// Random caves with a shadowed room and a sanctuary (spec §7 "Special rooms"), the level
+    /// gloomy throughout or not, torches, and a light-bearing kobold, any profile and ambient
+    /// level, the player walking about: every
     /// light invariant holds (contributions and base light add up, wall faces), and a creature
     /// with the player's eyes finds the light the player perceives on every cell in sight.
     #[test]
@@ -1208,6 +1218,7 @@ proptest! {
         vision in prop::sample::select(vec!["normal", "low_light", "darkvision", "uv_sight"]),
         ambient in prop::sample::select(vec![0u16, 20, 255]),
         steps in prop::collection::vec(0usize..9, 0..12),
+        pervaded in any::<bool>(),
     ) {
         let mut map = format!("{}\n", "#".repeat(24));
         for y in 0..9 {
@@ -1228,10 +1239,13 @@ proptest! {
         }
         map.push_str(&"#".repeat(24));
         map.push('\n');
-        let rooms = "[[room]]\neffect = \"shadowed\"\narea = [0, 0, 9, 10]\n\
-                     [[room]]\neffect = \"sanctuary\"\narea = [14, 0, 23, 10]\n";
+        let gloom = if pervaded { "effect = \"gloom\"\n" } else { "" };
+        let rooms = format!(
+            "{gloom}[[room]]\neffect = \"shadowed\"\narea = [0, 0, 9, 10]\n\
+             [[room]]\neffect = \"sanctuary\"\narea = [14, 0, 23, 10]\n"
+        );
         let light = [ambient, ambient, ambient, 0];
-        let mut w = load_rooms(&map, light, vision, "lantern = \"lantern\"\n", rooms);
+        let mut w = load_rooms(&map, light, vision, "lantern = \"lantern\"\n", &rooms);
         for step in steps {
             let action = match step {
                 0..=7 => Action::Move(Dir::ALL[step]),

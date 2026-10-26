@@ -62,6 +62,10 @@ pub struct Magic {
     /// "Class abilities": Connoisseur), up to what that asks.
     #[serde(default, skip_serializing_if = "is_zero")]
     pub carried: u32,
+    /// The unique item it is (an id in `data/uniques/`; spec §8 "Magic items"), by which its
+    /// power and lore are found: a rare item with its set name and affixes.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unique: Option<String>,
 }
 
 fn is_zero(n: &u32) -> bool {
@@ -112,6 +116,14 @@ impl Magic {
             (Rarity::Magic, Some(_)) => return Err("only rare items have names".into()),
             _ => {}
         }
+        if let Some(id) = &self.unique {
+            let unique =
+                (content.unique(id)).ok_or_else(|| format!("unknown unique item `{id}`"))?;
+            let base = &content.object(unique.object).id;
+            if self.rarity != Rarity::Rare || *base != def.id {
+                return Err(format!("unique item `{id}` is a rare `{base}`"));
+            }
+        }
         if self.affixes.is_empty() {
             return Err("a magic or rare item has an affix at least".into());
         }
@@ -152,6 +164,19 @@ impl Magic {
         }
         Ok(())
     }
+}
+
+/// The powers of the unique items among the things in `inventory` that `equipment` holds (spec
+/// §8 "Magic items": a power works while its item is worn or wielded), in equipment order.
+pub fn worn_powers<'c>(
+    inventory: &'c [crate::object::Stack],
+    equipment: &'c crate::equipment::Equipment,
+    content: &'c Content,
+) -> impl Iterator<Item = &'c crate::content::Power> + 'c {
+    (equipment.items().into_iter()).filter_map(move |(_, item)| {
+        let id = inventory.get(item)?.magic()?.unique.as_deref()?;
+        content.unique(id)?.power.as_ref()
+    })
 }
 
 /// Whether affix `a` may roll on `def`, an item of `kind`: its bases name the kind, and the item

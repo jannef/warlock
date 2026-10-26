@@ -148,6 +148,25 @@ symptoms = [
 ]
 recovered = "The dryness leaves your flesh."
 
+# From the fists of wormhosts (#383): green worms that burrow inward. Quick, hard to shake off,
+# and it kills, unless cured.
+[[disease]]
+id = "burrowing_worms"
+name = "burrowing worms"
+difficulty = 17
+incubation = 1
+damage = { toughness = "1d4", intelligence = "1d3" }
+hp = "2d6"
+kills = true
+cured_by = ["remove_disease", "prayer"]
+onset = "Something wriggles under your skin."
+symptoms = [
+    "Worms burrow deeper into your flesh.",
+    "You feel them moving behind your eyes.",
+    "Green worms writhe in your wounds.",
+]
+recovered = "The last of the worms is gone from you."
+
 # A fever of the mind: Willpower fights it, and mana gathers at a quarter of the pace.
 [[disease]]
 id = "brain_fever"

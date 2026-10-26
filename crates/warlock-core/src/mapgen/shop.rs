@@ -10,7 +10,9 @@
 //! Its kind and keeper's name are drawn uniformly; the keeper stands beside the cell inside the
 //! door, so the way in stays free; a lamp hangs in the middle of the room; and its floor
 //! is laid with stock: between the kind's least and most stacks (as many as there are free
-//! cells), one a cell, each drawn uniformly from what it stocks, a stackable one in a bundle.
+//! cells), one a cell, first what its kind always lays out (`always`: the general store's
+//! scrolls of identify), then each drawn uniformly from what it stocks, a stackable one in a
+//! bundle.
 
 use super::Canvas;
 use crate::content::{ObjectId, ShopPlan};
@@ -86,9 +88,15 @@ pub(super) fn place(canvas: &mut Canvas, rng: &mut Rng, candidates: &[Candidate]
     rng.shuffle(&mut cells);
     let (least, most) = shops.get(kind).items;
     let count = rng.range(i32::from(least), i32::from(most)) as usize;
-    for &p in cells.iter().take(count) {
-        let Some(&object) = rng.pick(&goods) else {
-            break;
+    // What it always has first (the general store's scrolls of identify), then its goods drawn.
+    let always = &shops.get(kind).always;
+    for (i, &p) in cells.iter().take(count).enumerate() {
+        let object = match always.get(i) {
+            Some(&object) => object,
+            None => match rng.pick(&goods) {
+                Some(&object) => object,
+                None => break,
+            },
         };
         let count = if content.object(object).stackable {
             let (lo, hi) = shops.bundle;

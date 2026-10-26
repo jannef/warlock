@@ -1,0 +1,39 @@
+# The undead roster (#383, batch 3). A vampire in its own strength: quick and cunning, it opens
+# doors, its gaze holds the living still, and its bite drinks the life out of them, for good
+# unless the body holds on (a temple's mending gives it back). Fire is its bane, and it keeps
+# things worth taking. Not yet in any dungeon's population.
+[[creature]]
+id = "vampire"
+level = 25
+xp = 135
+rarity = "rare"
+loot = 50
+name = "vampire"
+glyph = "V"
+fg = "#a01060"
+speed = 1300
+faction = "undead"
+tags = ["undead"]
+alignment = "evil"
+vision = "darkvision"
+sight = 14
+opens_doors = true
+footsteps = 25
+hearing = 18
+weight = 70000
+stats = { strength = 21, dexterity = 21, toughness = 21, intelligence = 20, willpower = 25, presence = 20 }
+base_hp = 56
+natural = { defence = 1, protection = 0, name = "dead flesh" }
+resist = { fire = -25, poison = 100 }
+on_eat = { message = "Cold, and full of other folk's blood.", vomit = 80, harm = "1d4" }
+blood = "#4a0a20"
+[creature.attack]
+damage = "3d8"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
+to_hit = 2
+on_hit = [
+    { drain = "toughness", points = 1, chance = 15, check = "toughness", difficulty = 17 },
+    { status = "transfixed", chance = 10, severity = 1 },
+]

@@ -19,7 +19,12 @@ in the UI (`Clock::format`: status bar, death screen); dumps stay 24-hour. Palet
 in `ui/glyphs.rs`, never to content colors.
 
 Key bindings (spec §6 "Rebinding", #159) are the `Bindings` resource (`input.rs`; text forms,
-ids, and the rules in `settings/keys.rs`). **Every key the game reads is a `KeyCommand` in its
+ids, and the rules in `settings/keys.rs`). **Only play-context commands are rebindable by
+design; the keys of menus, menu lists, screens, info pages, prompts, dialogs, text fields, and the
+targeting mode are fixed, and new ones are plain fixed keys in their screen or input-mode code,
+listed in its hint line, with no `KeyCommand` or `Context` entry (owner, 2026-10-26). The
+contexts below are the existing menu-context bindings, which stay as they are (not widened, not
+removed; a cleanup is a later owner call). Every key read so far is a `KeyCommand` in its
 `input::Context`**: `Play` (the map, direction prompts, look mode), `Aim` (`NextTarget`,
 `PrevTarget`, `Loose`), `Prompt` (the rest choices), `More` (at `--more--`: `MoreNext`, Space and
 Enter; `MoreSkip`, unbound, as Esc always skips; `ui/more.rs`), `Menu` (`MenuUp`/`Down`/`Left`/`Right`,

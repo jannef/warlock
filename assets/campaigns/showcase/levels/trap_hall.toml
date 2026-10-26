@@ -87,11 +87,12 @@ map = '''
 "G" = "granite"
 "A" = { terrain = "floor", trap = "arrow" }
 
-# The scrolls and the unknown dagger, east of the arrival.
+# The scrolls and the unknown dagger, east of the arrival: the spell scrolls show by their labels
+# until read or identified, and there are scrolls of identify for the dagger and two of them.
 [[pile]]
 at = [38, 19]
 objects = [
-    "scroll_of_fireball*2", "scroll_of_lightning*2", "scroll_of_frost*2", "scroll_of_identify",
+    "scroll_of_fireball*2", "scroll_of_lightning*2", "scroll_of_frost*2", "scroll_of_identify*3",
 ]
 
 [[item]]

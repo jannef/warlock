@@ -16,13 +16,29 @@ fn times(percent: u16) -> String {
     }
 }
 
+/// A share of the draws in percent, to a tenth.
+fn share(part: u32, of: u32) -> String {
+    let tenths = (part * 1000 + of / 2) / of.max(1);
+    format!("{}.{}%", tenths / 10, tenths % 10)
+}
+
 /// The special rooms (spec §7 "Special rooms"): what each is called, what it says the first time
-/// you enter it, and what it does inside, in words.
+/// you enter it (and, for some, from outside, and on a level it covers whole), what it does
+/// inside, in words, and how often it is drawn: its weight, its share of the draws where no
+/// dungeon says otherwise, the chance it covers the whole level instead, and what it needs.
 pub(super) fn special_rooms(content: &Content) -> String {
-    let mut out = String::from("| Room | The first time you enter | Inside |\n|---|---|---|\n");
+    let mut out = String::from(
+        "| Room | The first time you enter | Inside | Weight | Share | Whole level | Only |\n\
+         |---|---|---|:---:|:---:|:---:|---|\n",
+    );
+    let total: u32 = (content.room_effects().defs().iter())
+        .map(|e| u32::from(e.weight))
+        .sum();
     for e in content.room_effects().defs() {
         let mut does: Vec<String> = Vec::new();
-        if e.light < 100 {
+        if e.light == 0 {
+            does.push("No light at all is kept in it, carried light too.".into());
+        } else if e.light < 100 {
             does.push(format!(
                 "All light is drained to {}% of what it would be.",
                 e.light
@@ -63,12 +79,43 @@ pub(super) fn special_rooms(content: &Content) -> String {
                 content.terrain(floor).name.to_lowercase()
             ));
         }
+        let mut said = format!("\"{}\"", e.enter);
+        if let Some(near) = &e.near {
+            let _ = write!(said, " From outside: \"{near}\"");
+        }
+        if let Some(pervade) = &e.pervade {
+            let _ = write!(said, " Over a whole level: \"{pervade}\"");
+        }
+        let whole = if e.level_chance > 0 {
+            format!("{}%", e.level_chance)
+        } else {
+            "never".into()
+        };
+        let mut only: Vec<String> = Vec::new();
+        if e.needs_danger {
+            only.push("on a level with a danger".into());
+        }
+        if e.needs_below {
+            only.push("with a level below".into());
+        }
+        if e.min_cells > 0 {
+            only.push(format!("in a room of {} floor cells or more", e.min_cells));
+        }
+        if let Some(most) = e.max_cells {
+            only.push(format!("in a room of {most} floor cells or fewer"));
+        }
+        let only = if only.is_empty() {
+            "—".to_string()
+        } else {
+            capital(&only.join(", "))
+        };
         let _ = writeln!(
             out,
-            "| {} | \"{}\" | {} |",
+            "| {} | {said} | {} | {} | {} | {whole} | {only} |",
             capital(&e.name),
-            e.enter,
-            does.join(" ")
+            does.join(" "),
+            e.weight,
+            share(u32::from(e.weight), total),
         );
     }
     out
@@ -103,13 +150,26 @@ pub(super) fn branch_odds(content: &Content) -> String {
                 continue;
             };
             let (chance, most, effects) = if rooms.generated() {
-                let effects: Vec<String> = (rooms.effects.iter())
-                    .map(|e| capital(&content.room_effect(*e).name))
+                let mut effects: Vec<String> = (rooms.favoured.iter())
+                    .map(|&(e, share)| {
+                        format!("{} {share}%", capital(&content.room_effect(e).name))
+                    })
                     .collect();
+                effects.push(if rooms.favoured.is_empty() {
+                    "Any, by weight".into()
+                } else {
+                    "the rest any, by weight".into()
+                });
+                if !rooms.banned.is_empty() {
+                    let banned: Vec<String> = (rooms.banned.iter())
+                        .map(|e| content.room_effect(*e).name.clone())
+                        .collect();
+                    effects.push(format!("never {}", banned.join(", ")));
+                }
                 (
                     format!("{}%", rooms.chance),
                     rooms.per_level.to_string(),
-                    effects.join(", "),
+                    effects.join("; "),
                 )
             } else {
                 none()
