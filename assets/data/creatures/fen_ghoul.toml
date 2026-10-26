@@ -10,6 +10,7 @@ glyph = "z"
 fg = "#5a8a7a"
 speed = 1250
 faction = "undead"
+tags = ["undead", "marsh-thing"]
 alignment = "evil"
 vision = "darkvision"
 sight = 10

@@ -14,6 +14,7 @@ speed = 1150
 light = "ember"
 glow = 0.4
 faction = "undead"
+tags = ["undead"]
 alignment = "evil"
 vision = "darkvision"
 sight = 10
