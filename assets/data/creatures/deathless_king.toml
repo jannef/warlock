@@ -1,0 +1,44 @@
+# The undead roster (#383, batch 6). An undying lord of a forgotten realm, a lich with a crown: a
+# caster (its spells announced until magic is designed) whose cold touch breaks the will of the
+# living for good unless it holds (a temple's mending gives it back). He keeps things worth taking,
+# opens doors, bleeds nothing, and leaves only dust. Not yet in any dungeon's population.
+[[creature]]
+id = "deathless_king"
+level = 66
+xp = 340
+rarity = "very_rare"
+loot = 100
+name = "deathless king"
+glyph = "L"
+fg = "#40e0a0"
+speed = 1200
+faction = "undead"
+tags = ["undead", "caster"]
+alignment = "evil"
+vision = "darkvision"
+sight = 14
+combat = "caster"
+range = 9
+opens_doors = true
+footsteps = 30
+hearing = 15
+weight = 30000
+stats = { strength = 34, dexterity = 26, toughness = 38, intelligence = 40, willpower = 40, presence = 40 }
+base_hp = 132
+skills = { concentration = 208, spellcraft = 213 }
+natural = { defence = 5, protection = 0, name = "dry bones" }
+resist = { poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "3d12"
+damage_type = "cold"
+name = "touch"
+verb = "touches"
+to_hit = 6
+on_hit = [{ drain = "willpower", points = 2, chance = 15, difficulty = 25 }]
+# Its gear (spec §8 "Creature gear"): the regalia he was crowned in.
+[[creature.gear]]
+chance = 100
+one_of = ["long_sword", "iron_helm"]
+magic = 100

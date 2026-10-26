@@ -1,0 +1,39 @@
+# The undead roster (#383, batch 6). What a lich becomes when the ages have taken everything but the
+# skull: a gem-eyed skull floating in a drift of dust, a caster (its spells announced until magic is
+# designed) whose cold touch dims the wits of the living for good unless the will holds (a temple's
+# mending gives it back). Blades and clubs glance off its warded bone, it keeps things worth taking,
+# and a world has no more than one. Not yet in any dungeon's population.
+[[creature]]
+id = "demilich"
+level = 70
+xp = 360
+rarity = "very_rare"
+loot = 100
+unique = true
+name = "demilich"
+glyph = "L"
+fg = "#e8fff0"
+speed = 1200
+faction = "undead"
+tags = ["undead", "caster"]
+alignment = "evil"
+vision = "darkvision"
+sight = 16
+combat = "caster"
+range = 12
+hearing = 15
+weight = 2000
+stats = { strength = 36, dexterity = 28, toughness = 40, intelligence = 40, willpower = 40, presence = 40 }
+base_hp = 140
+skills = { concentration = 220, spellcraft = 225 }
+natural = { defence = 6, protection = 0, name = "skull" }
+resist = { slashing = 50, piercing = 50, bludgeoning = 50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "3d12"
+damage_type = "cold"
+name = "touch"
+verb = "touches"
+to_hit = 7
+on_hit = [{ drain = "intelligence", points = 3, chance = 15, difficulty = 26 }]
