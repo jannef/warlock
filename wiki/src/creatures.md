@@ -94,7 +94,7 @@ lantern near them and a war band's archer will find you.
 ## Incorporeal creatures
 
 Some restless dead have no body to stop them: **incorporeal** creatures (the ghosts, shadows,
-poltergeists, and corpse candles of Fennmynster) drift through walls, solid rock, trees, and closed doors (which stay shut behind them), and may
+poltergeists, corpse candles, and wraiths of Fennmynster, the knockers and spectres of Fyrdelf) drift through walls, solid rock, trees, and closed doors (which stay shut behind them), and may
 stop inside the stone. They cannot leave the level that way, and lava stops them as it stops
 anyone. Nothing of them presses down: they set off no traps and never break ice.
 

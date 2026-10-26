@@ -1,0 +1,32 @@
+# The undead roster (#383, batch 2). The dead who would not let go of life and hate it in others:
+# a dark shape that drifts through walls and doors, and its cold touch drinks the living's
+# Toughness, for good unless the body holds on (a temple's mending gives it back). Blades and
+# clubs pass half through it, and it leaves nothing behind.
+[[creature]]
+id = "wraith"
+level = 11
+xp = 65
+rarity = "rare"
+name = "wraith"
+glyph = "W"
+fg = "#6a7a90"
+speed = 1150
+faction = "undead"
+alignment = "evil"
+vision = "darkvision"
+sight = 10
+hearing = 15
+weight = 100
+stats = { strength = 13, dexterity = 16, toughness = 13, intelligence = 14, willpower = 20, presence = 14 }
+base_hp = 16
+natural = { defence = 3, protection = 0, name = "insubstantial form" }
+incorporeal = { wall_defence = 3 }
+resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "1d10"
+damage_type = "cold"
+name = "touch"
+verb = "touches"
+on_hit = [{ drain = "toughness", points = 1, chance = 10, check = "toughness", difficulty = 14 }]

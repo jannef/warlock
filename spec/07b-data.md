@@ -110,8 +110,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   magic; unique: a population draws her once a run). The cultist, the cult priest, and the bog
   hag are the Ascmearc's own types. Its undead (#384): the corpse candle 2 (small, incorporeal,
   glows, a cold touch), the poltergeist 6 (quick, incorporeal), the ghast 7 (quick, opens doors,
-  filth fever on a hit), the shadow 8 (incorporeal, a cold touch that drains
-  Strength, §8 "Stats": "Drain"), and the bog body 9 (slow, resists cold, marsh ague on a hit). The delf wave (the duergar delf of Fyrdelf, danger 8 to 19): the ember beetle 8 (a
+  filth fever on a hit; its claws may hold), the shadow 8 (incorporeal, a cold touch that drains
+  Strength, §8 "Stats": "Drain"), and the bog body 9 (slow, resists cold, marsh ague on a hit);
+  and from the roster's second batch (#385) the wraith 11 (incorporeal, a cold touch that drains
+  Toughness) and the fen ghoul 11 (quick, opens doors, claws that may hold and carry marsh
+  ague). The delf wave (the duergar delf of Fyrdelf, danger 8 to 19): the ember beetle 8 (a
   burning bite, shell, resists fire 50, a faint glow), the duergar miner 9 (a pick-axe
   held as a tool, the racial hand axe half the time, a leather cap), the duergar warrior 11
   (racial hand axe, small shield, chain mail, sometimes magic), the ogre 12 (slow, racial maul),
@@ -122,9 +125,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
   bite that leaves one Sluggish), the cinder elemental 17 (immune to fire, bright, no corpse), and
   the fire drake 19 (the Ascmearc's own, unique: a caster whose breath is announced, scales,
   immune to fire). Its undead (#384): the ogre zombie 9 (slow, heavy fists, grave rot) and the
-  grave hound 10 (quick, grave rot). The mummy 10 (slow, mummy rot on a hit, fire hurts it more)
-  is in no population yet: the roster's undead above level 10 without a home wait for deep
-  places (#383). The duergar types are of the duergar race. For blood (§8 "Blood";
+  grave hound 10 (quick, grave rot), and from the second batch (#385) the burning skull 12 (small,
+  lit by its own fire, a burning bite, immune to fire, hurt more by cold), the knocker 13 (a
+  miner's spirit, incorporeal), the spectre 14 (incorporeal, a cold touch that drains
+  Willpower), the charred dead 14 (slow, resists fire, hurt more by cold), the duergar skeleton 15
+  (a war hammer and an iron helm, bone that a club breaks), and the rotting troll 17 (slow, huge
+  claws, grave rot, fire hurts it more). In no population yet, waiting for deep places (#383): the
+  mummy 10 (slow, mummy rot on a hit, fire hurts it more), the draugr 12 (huge, resists cold, a
+  great axe half the time), the barghest 13 (a quick black dog whose bite frightens), the vampire
+  spawn 16 (quick, opens doors, a bite that drains Toughness, fire hurts it more), the hand of
+  glory 16 (small, lit by its fingers, a cold touch that transfixes), the gallows dead 17 (a
+  tongue that holds fast), the gibbering shade 18 (incorporeal, a cold touch that drains
+  Intelligence), the bone wyvern 18 (a sting, bone with protection 2), the revenant 19 (very
+  tough, a long sword half the time), the fetch 19 (incorporeal, a cold touch that frightens), and
+  the mummy priest 20 (a caster whose touch carries mummy rot, sometimes something worth taking). The duergar types are of the duergar race. For blood (§8 "Blood";
   presentation only):
   `blood`, the colour of its stains (`"#rrggbb"`; default dark red, `#6e0e0c`) or `"none"` for a
   bloodless creature; the cave beetle bleeds greenish-black ichor (`#38461a`). For hunger (§8

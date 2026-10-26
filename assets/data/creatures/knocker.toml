@@ -1,0 +1,26 @@
+# The undead roster (#383, batch 2). The spirit of a miner who died in the delf, still knocking at
+# the rock: it passes through the galleries' walls, and its blows are a hammer's. Blades and clubs
+# pass half through it, and it leaves nothing behind.
+[[creature]]
+id = "knocker"
+level = 13
+xp = 75
+rarity = "uncommon"
+name = "knocker"
+glyph = "G"
+fg = "#a09070"
+speed = 1150
+faction = "undead"
+alignment = "evil"
+vision = "darkvision"
+sight = 10
+hearing = 15
+weight = 100
+stats = { strength = 14, dexterity = 16, toughness = 14, intelligence = 15, willpower = 21, presence = 15 }
+base_hp = 20
+natural = { defence = 3, protection = 0, name = "insubstantial form" }
+attack = { damage = "2d6", damage_type = "bludgeoning", name = "blow", verb = "hammers" }
+incorporeal = { wall_defence = 3 }
+resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50, poison = 100 }
+corpse = false
+blood = "none"

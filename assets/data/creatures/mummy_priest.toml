@@ -1,0 +1,37 @@
+# The undead roster (#383, batch 2). A priest wrapped and laid in the tomb with the rites it once
+# spoke, risen still speaking them: a caster (its spells announced until magic is designed) whose
+# touch is cold and carries mummy rot. Its dry wrappings take fire all too well, and it was laid
+# down with things worth taking. Not yet in any dungeon's population: it waits for a tomb.
+[[creature]]
+id = "mummy_priest"
+level = 20
+xp = 110
+rarity = "rare"
+loot = 50
+name = "mummy priest"
+glyph = "M"
+fg = "#c8a060"
+faction = "undead"
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+combat = "caster"
+range = 6
+opens_doors = true
+footsteps = 60
+hearing = 12
+weight = 40000
+stats = { strength = 16, dexterity = 15, toughness = 20, intelligence = 22, willpower = 27, presence = 22 }
+base_hp = 40
+skills = { concentration = 70, spellcraft = 75 }
+natural = { defence = 1, protection = 0, name = "wrappings" }
+resist = { fire = -50, poison = 100 }
+on_eat = { message = "Dust and resin.", vomit = 80, harm = "1d4" }
+blood = "#5a4a30"
+[creature.attack]
+damage = "3d6"
+damage_type = "cold"
+name = "touch"
+verb = "touches"
+to_hit = 2
+on_hit = [{ disease = "mummy_rot", chance = 15 }]
