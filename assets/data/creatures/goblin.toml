@@ -11,6 +11,7 @@ name = "goblin"
 glyph = "g"
 fg = "#8aa04a"
 faction = "goblins"
+tags = ["goblin"]
 alignment = "evil"
 vision = "darkvision"
 opens_doors = true

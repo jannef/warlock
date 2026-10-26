@@ -11,6 +11,7 @@ glyph = "S"
 fg = "#ff8a30"
 speed = 1100
 faction = "fire"
+tags = ["fire-thing"]
 alignment = "neutral"
 vision = "normal"
 light = "lava"

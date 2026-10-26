@@ -10,6 +10,7 @@ glyph = "X"
 fg = "#7a6448"
 speed = 600
 faction = "marsh"
+tags = ["marsh-thing"]
 alignment = "neutral"
 sight = 6
 footsteps = 80

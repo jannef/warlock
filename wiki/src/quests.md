@@ -18,7 +18,7 @@ Talking about quests takes no time.
 
 ## Kinds of quests
 
-- **Kill**: kill a number of creatures of one kind, or of any kind of one [tribe](#tribes),
+- **Kill**: kill a number of creatures of one kind, or of any kind of one [sort](#sorts-of-creatures),
   sometimes in a particular place ("Kill 5 giant rats in Cealdhlāw."). Only creatures you kill yourself count, with a weapon, a shot, or a
   throw, or by a wound you gave them that bleeds them to death; one killed by someone else, or by
   a trap, does not. Kills you made before you took the
@@ -31,16 +31,18 @@ Talking about quests takes no time.
   to carry to someone else and hand in there. Without it in your pack you cannot hand it in: if
   you drop it, pick it up again.
 
-## Tribes
+## Sorts of creatures
 
-Some kill quests ask for a whole **tribe**: "Kill 100 goblins: goblins, goblin archers, and
-goblin chiefs." Any creature of a kind that belongs to the tribe counts, wherever you kill it:
-every level, every dungeon, the overworld, all add up (unless the quest names a place). The
-quest says which kinds belong; the table below lists them all. A tribe is drawn from those who
-run together, less a few who run with them but are no kin: an ogre is no goblin, and a basilisk
-no vermin. A creature's tribe goes with its kind, whoever it sides with: a kobold is a kobold.
+Some kill quests ask for a whole **sort** of creature: "Kill 100 goblins: goblins, goblin
+archers, and goblin chiefs." Any creature of a kind that is of that sort counts, wherever you
+kill it: every level, every dungeon, the overworld, all add up (unless the quest names a
+place). The quest says which kinds count; the table below lists every sort (its tag, as the
+game's data calls it) and the kinds of it. A kind may be of several sorts (a goblin archer is a
+goblin and an archer). Some who run together are not of one sort: an ogre is no goblin, and a
+basilisk no vermin. A creature's sort goes with its kind, whoever it sides with: a kobold is a
+kobold.
 
-{{#include generated/tribes.md}}
+{{#include generated/creature-tags.md}}
 
 Some quests lead to a place nobody has found on their own: the person marks a
 [hidden location](overworld.md#hidden-locations) on your map, and the quest log says where it

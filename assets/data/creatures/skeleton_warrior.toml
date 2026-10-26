@@ -10,6 +10,7 @@ name = "skeleton warrior"
 glyph = "z"
 fg = "#c0c8d0"
 faction = "undead"
+tags = ["undead", "skeleton"]
 alignment = "evil"
 vision = "darkvision"
 sight = 10

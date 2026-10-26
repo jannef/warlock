@@ -10,6 +10,7 @@ name = "goblin chief"
 glyph = "g"
 fg = "#e07a3a"
 faction = "goblins"
+tags = ["goblin"]
 alignment = "evil"
 vision = "darkvision"
 opens_doors = true

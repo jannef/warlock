@@ -1,0 +1,31 @@
+# The undead roster (#383, batch 2). A hanged murderer risen from the gallows, its long black
+# tongue lashing out to hold fast whoever it reaches, a firmer grip than a ghoul's.
+[[creature]]
+id = "gallows_dead"
+level = 17
+xp = 95
+rarity = "uncommon"
+name = "gallows dead"
+plural = "gallows dead"
+glyph = "Z"
+fg = "#9a7a68"
+faction = "undead"
+tags = ["undead"]
+alignment = "evil"
+vision = "darkvision"
+sight = 10
+opens_doors = true
+footsteps = 70
+hearing = 12
+weight = 50000
+stats = { strength = 18, dexterity = 14, toughness = 19, intelligence = 17, willpower = 22, presence = 17 }
+base_hp = 42
+resist = { poison = 100 }
+on_eat = { message = "Gallows meat.", vomit = 80, harm = "1d4" }
+blood = "#3a2420"
+[creature.attack]
+damage = "2d8"
+damage_type = "bludgeoning"
+name = "tongue"
+verb = "lashes"
+on_hit = [{ status = "held", chance = 20, difficulty = 17 }]

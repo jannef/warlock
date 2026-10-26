@@ -1,0 +1,32 @@
+# The undead roster (#383, batch 2). A pale shape of the dead that hates the living: it drifts
+# through walls and doors, and its cold touch drains the will, for good unless the mind holds
+# firm (a temple's mending gives it back). Blades and clubs pass half through it.
+[[creature]]
+id = "spectre"
+level = 14
+xp = 80
+rarity = "rare"
+name = "spectre"
+glyph = "G"
+fg = "#90a8d0"
+speed = 1150
+faction = "undead"
+tags = ["undead", "spirit"]
+alignment = "evil"
+vision = "darkvision"
+sight = 10
+hearing = 15
+weight = 100
+stats = { strength = 15, dexterity = 17, toughness = 15, intelligence = 16, willpower = 21, presence = 16 }
+base_hp = 21
+natural = { defence = 3, protection = 0, name = "insubstantial form" }
+incorporeal = { wall_defence = 3 }
+resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "1d10"
+damage_type = "cold"
+name = "touch"
+verb = "touches"
+on_hit = [{ drain = "willpower", points = 1, chance = 10, check = "willpower", difficulty = 14 }]

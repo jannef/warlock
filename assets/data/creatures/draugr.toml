@@ -1,0 +1,33 @@
+# The undead roster (#383, batch 2). A dead warrior risen from its mound to guard what was buried
+# with it: huge and heavy, blue-grey with the cold of the grave and hardened to it, often still
+# swinging the great axe it was laid down with.
+[[creature]]
+id = "draugr"
+level = 12
+xp = 70
+rarity = "uncommon"
+name = "draugr"
+plural = "draugar"
+glyph = "Z"
+fg = "#6a8aa0"
+speed = 950
+faction = "undead"
+tags = ["undead"]
+alignment = "evil"
+vision = "darkvision"
+sight = 10
+opens_doors = true
+footsteps = 110
+hearing = 10
+weight = 120000
+stats = { strength = 21, dexterity = 11, toughness = 22, intelligence = 15, willpower = 20, presence = 15 }
+base_hp = 48
+attack = { damage = "3d6", damage_type = "bludgeoning", name = "slam", verb = "slams" }
+resist = { cold = 50, poison = 100 }
+weapon_skills = { axes = 2 }
+on_eat = { message = "Grave-cold meat, long gone bad.", vomit = 80, harm = "1d4" }
+blood = "#2a3440"
+# Its gear (spec §8 "Creature gear"): the axe it was laid in the mound with.
+[[creature.gear]]
+chance = 50
+one_of = ["great_axe"]

@@ -1,0 +1,34 @@
+# The undead roster (#383, batch 2). The double of one about to die, seen once before the end: it
+# wears a face the onlooker knows, passes through walls and doors, and the sight of it at close
+# quarters sends the bravest running. Blades and clubs pass half through it. Not yet in any
+# dungeon's population.
+[[creature]]
+id = "fetch"
+level = 19
+xp = 105
+rarity = "uncommon"
+name = "fetch"
+plural = "fetches"
+glyph = "G"
+fg = "#c8d0d8"
+speed = 1200
+faction = "undead"
+tags = ["undead", "spirit"]
+alignment = "evil"
+vision = "darkvision"
+sight = 10
+hearing = 15
+weight = 100
+stats = { strength = 17, dexterity = 18, toughness = 17, intelligence = 18, willpower = 23, presence = 18 }
+base_hp = 28
+natural = { defence = 3, protection = 0, name = "insubstantial form" }
+incorporeal = { wall_defence = 3 }
+resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "3d6"
+damage_type = "cold"
+name = "touch"
+verb = "touches"
+on_hit = [{ status = "frightened", chance = 20, severity = 1 }]

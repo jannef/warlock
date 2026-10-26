@@ -826,7 +826,7 @@ impl ObjectSpec {
                 "`read` is for scrolls: not worn, wielded, eaten, shot, or thrown".into(),
             ));
         }
-        let plural = self.plural.unwrap_or_else(|| format!("{}s", self.name));
+        let plural = self.plural.unwrap_or_else(|| content.plural(&self.name));
         let loot = self.kind.is_some() || read.is_some();
         let def = ObjectDef {
             id: self.id,

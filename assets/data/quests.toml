@@ -15,11 +15,14 @@
 #   giver      who gives it: a creature type with a dialogue (data/dialogue.toml), or the npc id
 #              of one
 #   type       and target:
-#     "kill"     target a creature type, or a tribe as `tribe:ID` (data/tribes/: any of its
-#                member types): kill `count` of them (default 1; at most 99 of a type, 999 of a
-#                tribe), optionally on one `level` (a level id, or a dungeon branch id for any
-#                of its levels), else on every level. Only your own kills count, those before
-#                you took the quest up too
+#     "kill"     target a creature type, or a creature tag as `tag:WORD` (`tag:goblin`: any
+#                type whose `tags` carry it, creatures/README.toml): kill `count` of them
+#                (default 1; at most 99 of a type, 999 of a tag), optionally on one `level` (a
+#                level id, or a dungeon branch id for any of its levels), else on every level.
+#                Only your own kills count, those before you took the quest up too. A tag no
+#                creature the quest's campaign can meet carries is an error. `what` (optional,
+#                1 to 24 characters) is what the quest calls them instead of the type's name or
+#                the tag's plural (plurals.toml): "greenskins"
 #     "bring"    target an object type: hand in `count` of them (default 1) from your pack, to
 #                the giver or to `to` (someone else who talks)
 #     "reach"    target a level id (`depths:3` for a level of a branch): get there (having been

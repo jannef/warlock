@@ -1,0 +1,33 @@
+# The undead roster (#383, batch 2). One a vampire fed on and left to rise: quick and hungry, it
+# opens doors, its bite drinks the life out of the living, for good unless the body holds on (a
+# temple's mending gives it back), and fire is its bane.
+[[creature]]
+id = "vampire_spawn"
+level = 16
+xp = 90
+rarity = "uncommon"
+name = "vampire spawn"
+plural = "vampire spawn"
+glyph = "V"
+fg = "#b03040"
+speed = 1300
+faction = "undead"
+tags = ["undead"]
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+opens_doors = true
+footsteps = 30
+hearing = 18
+weight = 60000
+stats = { strength = 17, dexterity = 19, toughness = 17, intelligence = 16, willpower = 22, presence = 16 }
+base_hp = 36
+resist = { fire = -25, poison = 100 }
+on_eat = { message = "Cold, and full of someone else's blood.", vomit = 80, harm = "1d4" }
+blood = "#4a0a14"
+[creature.attack]
+damage = "2d8"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
+on_hit = [{ drain = "toughness", points = 1, chance = 10, check = "toughness", difficulty = 15 }]
