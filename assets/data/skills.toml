@@ -25,7 +25,8 @@
 #                 stepped past), "burdened"
 #                 (an action, not waiting, while your load slows you), "travel" (a journey: a step
 #                 on the overworld), "steal" (an attempt to steal from someone, whatever comes of
-#                 it), "kick" (a kick at a closed door), "pick" (a try at picking a
+#                 it), "kick" (a kick at a closed door), "study" (a spell studied from a scroll,
+#                 whatever comes of it), "pick" (a try at picking a
 #                 lock). Marks gather until a level-up roll on the skill spends them ([ladder]
 #                 below). Only the player trains, for now.
 #   benefit       what it gives, by its value: a list of { effect = EFFECT, ... } growing either
@@ -47,7 +48,8 @@
 #                 40), "steal" (points added to stealing from someone, at most 20; trained, a
 #                 skill with it lets you steal at all: steal.toml), "pick" (points added to
 #                 picking a lock, at most 20; trained, a skill with it
-#                 lets you pick locks at all: the Pick lock ability). The percent effects stay
+#                 lets you pick locks at all: the Pick lock ability), "study" (points off the
+#                 difficulty of studying a spell, spec §8 "Spells", at most 20). The percent effects stay
 #                 within 0 to 100.
 #
 # The player sees their own trained skills and their values, never a benefit's number, a mark, or
@@ -125,6 +127,9 @@ id = "decipher_script"
 name = "Decipher script"
 description = "Making sense of old writing, strange alphabets, and codes."
 kind = "action"
+mark = [{ on = "study", chance = 50 }]
+# A spell's scroll is old writing too: its value / 10 off the study check's difficulty.
+benefit = [{ effect = "study", curve = [[0, 0], [200, 20]] }]
 
 [[skill]]
 id = "disable_device"
@@ -219,6 +224,10 @@ id = "spellcraft"
 name = "Spellcraft"
 description = "Understanding spells: how they are woven and what they do."
 kind = "rules"
+mark = [{ on = "study", chance = 100 }]
+# Studying a spell from a scroll (spec §8 "Spells"): its value / 10 off the study check's
+# difficulty, +10 at 100, +20 at 200.
+benefit = [{ effect = "study", curve = [[0, 0], [200, 20]] }]
 
 [[skill]]
 id = "spot"

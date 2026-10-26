@@ -11,7 +11,7 @@
 #   score. A rise uses up all the stat's marks; a failed check keeps them.
 #
 # The uses (`on`): burdened, blow, dig, kick, dodge, shot, sneak, climb, hurt, big_hit, resisted,
-# plunge, found, read, identified, discovered, spot, endured, resisted_will, hungry_fight, chat,
+# plunge, found, read, identified, study, discovered, spot, endured, resisted_will, hungry_fight, chat,
 # trade, quest, swapped (the wiki's Stats page says each in words).
 
 [training]
@@ -96,6 +96,11 @@ chance = 30
 [[training.use]]
 stat = "intelligence"
 on = "identified"
+chance = 100
+
+[[training.use]]
+stat = "intelligence"
+on = "study"
 chance = 100
 
 [[training.use]]

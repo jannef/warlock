@@ -1,0 +1,6 @@
+[[mishap]]
+id = "twisted_space"
+band = "bad"
+weight = 15
+message = "The spell twists space around you!"
+effect = { kind = "teleport" }

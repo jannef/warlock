@@ -24,3 +24,5 @@ length = 12
 damage = "4d6"
 damage_type = "electricity"
 noise = { sound = "thunder", loudness = 120 }
+# Studying it (spec §8 "Spells") teaches the druid's Call lightning.
+teaches = "call_lightning"

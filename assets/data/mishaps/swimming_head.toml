@@ -1,0 +1,6 @@
+[[mishap]]
+id = "swimming_head"
+band = "slight"
+weight = 30
+message = "Your head swims with half-understood words."
+effect = { kind = "status", status = "sluggish", severity = 2 }

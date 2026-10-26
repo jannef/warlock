@@ -123,6 +123,15 @@ pub enum Action {
         item: usize,
         target: Option<ReadTarget>,
     },
+    /// Study one of inventory stack `item`, a scroll whose type the player knows, to learn the
+    /// spell it teaches for good (spec §8 "Spells"): turn after turn of the `study` action (by
+    /// the spell's tier), stopping early like a rest (the scroll kept); at the end the scroll is
+    /// used up, and above the player's tier a check decides whether they learn it or a mishap
+    /// befalls them. Refused (no time) for a scroll that is not known or teaches nothing, or a
+    /// spell already known.
+    Study {
+        item: usize,
+    },
     /// Take a combat stance (spec §8 "Stances"). Takes no game time, but changes state, so
     /// replays record it.
     SetStance(CombatStance),
@@ -698,6 +707,7 @@ impl fmt::Display for Action {
                     Some(ReadTarget::Item(i)) => write!(f, ":{}", position_text(*i)),
                 }
             }
+            Action::Study { item } => write!(f, "study:{}", position_text(*item)),
             Action::Rest(Rest::For(d)) => write!(f, "rest:{d}"),
             Action::Rest(Rest::Dawn) => f.write_str("rest:dawn"),
             Action::Rest(Rest::Dusk) => f.write_str("rest:dusk"),
@@ -938,6 +948,11 @@ impl FromStr for Action {
                     item: parse_position(item).ok_or_else(usage)?,
                     target,
                 })
+            }
+            "study" => {
+                let usage = || "`study` needs a letter, e.g. `study:b`".to_string();
+                let item = arg.and_then(parse_position).ok_or_else(usage)?;
+                Ok(Action::Study { item })
             }
             "throw" => {
                 let usage = || "`throw` needs a letter and a cell, e.g. `throw:c:12,5`".to_string();
@@ -1240,6 +1255,8 @@ mod tests {
                 item: 27,
                 target: Some(ReadTarget::Item(30)),
             },
+            Action::Study { item: 1 },
+            Action::Study { item: 30 },
             Action::Throw {
                 item: 40,
                 at: Pos::new(1, 2),
@@ -1557,6 +1574,9 @@ mod tests {
             "read:a:bc",
             "read:a:1,b",
             "read:a:1,2,3",
+            "study",
+            "study:",
+            "study:ab",
             "fire",
             "fire:",
             "fire:3",

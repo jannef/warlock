@@ -123,6 +123,7 @@ mod hurl;
 mod ice;
 mod incorporeal;
 mod lantern;
+mod learn;
 mod level;
 mod lockpick;
 mod loot;
@@ -180,6 +181,7 @@ pub use free_blow::FreeBlows;
 pub use gifts::{STARE_RANGE, Streak};
 pub(crate) use hash::fnv1a;
 pub use lantern::Lantern;
+pub use learn::{Odds, study_odds, study_turns};
 pub use level::{Fire, LevelState};
 pub use loot::Identified;
 pub use quest::{QuestRecord, QuestView, Quests, Stage, asks as quest_asks, wants as quest_wants};
@@ -480,6 +482,8 @@ enum Spent {
     Dig(Pos),
     /// Searching for up to this many turns (see [`World::search`]).
     Search(u8),
+    /// Studying a spell from a scroll (see [`World::study`]).
+    Study(learn::Lesson),
     /// Dev: the clock jumps ahead; nobody acts, then perception is recomputed.
     Skip(Duration),
 }
@@ -692,6 +696,7 @@ impl World {
             alignment_override: None,
             npc: None,
             talk: Talk::default(),
+            spells: Default::default(),
             streak: None,
             satiation: content.hunger().map(|h| Satiation::new(h.start)),
             stance: CombatStance::Neutral,
@@ -1035,6 +1040,7 @@ impl World {
             Spent::Meal(dish) => self.dine(dish, &mut events),
             Spent::Dig(at) => self.dig(at, &mut events),
             Spent::Search(turns) => self.search(turns, &mut events),
+            Spent::Study(lesson) => self.study(lesson, &mut events),
             Spent::Skip(duration) => {
                 // Nobody acts or gains energy.
                 self.state.time += duration;
@@ -1145,6 +1151,7 @@ impl World {
             Action::ThrowVoice(at) => return self.throw_voice(*at, events),
             Action::Eat(meal) => return self.eat(*meal),
             Action::Read { item, target } => return self.read(*item, *target, events),
+            Action::Study { item } => return self.start_study(*item),
             Action::Dig(dir) => return self.start_dig(*dir),
             Action::Search(turns) => return Spent::Search(*turns),
             Action::Disarm(dir) => return self.disarm(*dir, events),
@@ -1302,6 +1309,8 @@ mod land_talent_tests;
 #[cfg(test)]
 mod lantern_tests;
 #[cfg(test)]
+mod learn_tests;
+#[cfg(test)]
 mod light_tests;
 #[cfg(test)]
 mod lockpick_tests;
@@ -1343,6 +1352,8 @@ mod resource_talent_tests;
 mod resource_tests;
 #[cfg(test)]
 mod reveal_tests;
+#[cfg(test)]
+mod room_temperature_tests;
 #[cfg(test)]
 mod room_tests;
 #[cfg(test)]

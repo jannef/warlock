@@ -79,6 +79,9 @@ pub enum ActionKind {
     Eat,
     /// Reading a scroll (spec §8 "Scrolls"): casting its spell, or identifying an item.
     Read,
+    /// A turn of studying a spell from a scroll (spec §8 "Spells"): a study takes many of them,
+    /// by the spell's tier (`data/study.toml`).
+    Study,
     /// A turn of digging into a wall with a digging tool (spec §8 "Digging"): a dig takes many
     /// of them.
     Dig,
@@ -123,6 +126,7 @@ impl ActionKind {
         ActionKind::Ready,
         ActionKind::Eat,
         ActionKind::Read,
+        ActionKind::Study,
         ActionKind::Dig,
         ActionKind::Search,
         ActionKind::Disarm,
@@ -158,6 +162,7 @@ impl ActionKind {
             ActionKind::Ready => "ready",
             ActionKind::Eat => "eat",
             ActionKind::Read => "read",
+            ActionKind::Study => "study",
             ActionKind::Dig => "dig",
             ActionKind::Search => "search",
             ActionKind::Disarm => "disarm",
@@ -212,6 +217,7 @@ impl ActionKind {
             ActionKind::Ready => "change what you have ready",
             ActionKind::Eat => "eat",
             ActionKind::Read => "read",
+            ActionKind::Study => "study",
             ActionKind::Dig => "dig",
             ActionKind::Search => "search",
             ActionKind::Disarm => "disarm traps",

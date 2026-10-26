@@ -1,0 +1,41 @@
+# The undead roster (#383, batch 5). The greatest of the ghosts, a lord of the unquiet dead who
+# keeps a hall of them: a caster (its spells announced until magic is designed) whose touch holds
+# the living still and wears the will out of them, for good unless it holds (a temple's mending
+# gives it back). It drifts through walls and doors; blades and clubs pass half through it. Not
+# yet in any dungeon's population.
+[[creature]]
+id = "ghost_lord"
+level = 53
+xp = 275
+rarity = "rare"
+name = "ghost lord"
+glyph = "G"
+fg = "#f0e8f8"
+speed = 1150
+faction = "undead"
+tags = ["undead", "spirit", "caster"]
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+combat = "caster"
+range = 8
+hearing = 15
+weight = 100
+stats = { strength = 29, dexterity = 23, toughness = 33, intelligence = 35, willpower = 39, presence = 35 }
+base_hp = 106
+skills = { concentration = 169, spellcraft = 174 }
+natural = { defence = 7, protection = 0, name = "insubstantial form" }
+incorporeal = { wall_defence = 7 }
+resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "4d8"
+damage_type = "cold"
+name = "touch"
+verb = "touches"
+to_hit = 5
+on_hit = [
+    { status = "transfixed", chance = 20, severity = 2 },
+    { drain = "willpower", points = 2, chance = 10, difficulty = 22 },
+]

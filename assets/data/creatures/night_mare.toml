@@ -1,0 +1,37 @@
+# The undead roster (#383, batch 5). Old English mære, the rider of sleepers: a spirit that
+# crouches on the chest of the dreaming. Its touch holds the living still and wears the will out
+# of them, for good unless it holds (a temple's mending gives it back). It drifts through walls
+# and doors. Not yet in any dungeon's population.
+[[creature]]
+id = "night_mare"
+level = 49
+xp = 255
+rarity = "rare"
+name = "night mare"
+glyph = "G"
+fg = "#585078"
+speed = 1300
+faction = "undead"
+tags = ["undead", "spirit"]
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+hearing = 15
+weight = 100
+stats = { strength = 29, dexterity = 25, toughness = 29, intelligence = 30, willpower = 33, presence = 30 }
+base_hp = 74
+natural = { defence = 6, protection = 0, name = "insubstantial form" }
+incorporeal = { wall_defence = 6 }
+resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "3d10"
+damage_type = "cold"
+name = "touch"
+verb = "touches"
+to_hit = 4
+on_hit = [
+    { status = "transfixed", chance = 20, severity = 2 },
+    { drain = "willpower", points = 2, chance = 10, difficulty = 21 },
+]

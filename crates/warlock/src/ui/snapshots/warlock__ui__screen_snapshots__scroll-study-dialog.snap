@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ This is a Sharp dagger of the Lynx! This is 2 scrolls of fireball! This is 2 scrolls of lightning!
+ This is 2 scrolls of frost! This is 3 scrolls of identify!
+
+
+
+
+
+
+                             ┌─ Study ────────────────────────────────┐
+                             │                                        │
+                             │ Study the scroll of fireball? Learning │
+                             │ Fire burst will be far beyond you. The │
+                             │  scroll will be used up, and once you  │
+                             │   begin you cannot stop of your own    │
+                             │                accord.                 │
+                             │                                        │
+                             │         Study it  (y)                  │
+                             │       > Don't study it  (n, Esc)       │
+                             │                                        │
+                             │ ↑/↓ choose  Enter select               │
+                             └────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+ The Trap Hall  ·  HP 22/22  ·  MP 1/1  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444    ? controls

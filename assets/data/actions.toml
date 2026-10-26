@@ -54,6 +54,9 @@ eat = 1000
 # Reading a scroll (`r`; spec §8 "Scrolls"): casting the spell written on it, or identifying an
 # item. The scroll is used up.
 read = 1000
+# A turn of studying a spell from a scroll (spec §8 "Spells"): a study takes study.toml's
+# turns_per_tier of them for each tier of the spell and one more (100: 10 minutes at tier 0).
+study = 1000
 # A turn of digging into a wall with a digging tool ready (spec §8 "Digging"): digging goes on
 # turn after turn until the wall gives way or something interrupts it.
 dig = 1000

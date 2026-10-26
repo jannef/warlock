@@ -123,6 +123,23 @@ const WAVES: &[(&str, Option<&str>)] = &[
     ("church_grim", None),
     ("white_lady", None),
     ("bone_colossus", None),
+    // The undead roster, batch 5 (#388): levels 41 to 55, all shared.
+    ("wraith_lord", None),
+    ("barrow_king", None),
+    ("sluagh", None),
+    ("ghoul_king", None),
+    ("death_knight", None),
+    ("vampire_lord", None),
+    ("nightganger", None),
+    ("wormlord", None),
+    ("washer_at_the_ford", None),
+    ("night_mare", None),
+    ("bone_dragon", None),
+    ("drowned_king", None),
+    ("rotting_dragon", None),
+    ("ghost_lord", None),
+    ("archlich", None),
+    ("hound_of_the_hunt", None),
     // The undead roster, batch 6 (#389): levels 56 to 70, all shared.
     ("mummy_king", None),
     ("wild_huntsman", None),
@@ -273,6 +290,11 @@ fn the_roster_spirits_pass_through_walls_and_the_drainers_drain() {
         "dread_wraith",
         "greater_shadow",
         "white_lady",
+        "wraith_lord",
+        "sluagh",
+        "washer_at_the_ford",
+        "night_mare",
+        "ghost_lord",
         "deathshade",
         "ankou",
         "ghost_dragon",
@@ -318,8 +340,23 @@ fn the_roster_spirits_pass_through_walls_and_the_drainers_drain() {
             "{id}"
         );
     }
-    // Batch 6 (#389): 2 points (3 for the apexes), difficulty 12 + level / 5.
+    // Batches 5 (#388) and 6 (#389): 2 points (3 for the apexes), difficulty 12 + level / 5.
     for (id, stat, check, points, difficulty, want) in [
+        ("wraith_lord", Stat::Toughness, Stat::Toughness, 2, 20, 10),
+        ("barrow_king", Stat::Toughness, Stat::Toughness, 2, 20, 10),
+        ("vampire_lord", Stat::Toughness, Stat::Toughness, 2, 21, 15),
+        ("nightganger", Stat::Toughness, Stat::Toughness, 2, 21, 10),
+        (
+            "washer_at_the_ford",
+            Stat::Presence,
+            Stat::Willpower,
+            2,
+            21,
+            10,
+        ),
+        ("night_mare", Stat::Willpower, Stat::Willpower, 2, 21, 10),
+        ("ghost_lord", Stat::Willpower, Stat::Willpower, 2, 22, 10),
+        ("archlich", Stat::Intelligence, Stat::Willpower, 2, 22, 10),
         ("elder_vampire", Stat::Toughness, Stat::Toughness, 2, 23, 15),
         ("deathshade", Stat::Strength, Stat::Willpower, 2, 24, 15),
         ("nightwing", Stat::Toughness, Stat::Toughness, 2, 24, 10),
@@ -366,6 +403,8 @@ fn the_roster_spirits_pass_through_walls_and_the_drainers_drain() {
         ("gallows_dead", 20, 17),
         ("lich", 15, 18),
         ("ghoul_lord", 15, 18),
+        ("ghoul_king", 20, 20),
+        ("archlich", 20, 22),
         ("nightworm", 15, 24),
     ] {
         let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));

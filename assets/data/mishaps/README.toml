@@ -1,0 +1,23 @@
+# Mishaps (spec §8 "Spells", the magic design §4): what may befall a reader whose study of a
+# spell fails (study.toml). One `[[mishap]]` per file; a campaign's data/mishaps/ may add more.
+#
+# Fields:
+#   id        the mishap's id
+#   band      slight (a failure at overreach 1), bad (2 and 3), terrible (4 and more; study.toml's
+#             bad_from and terrible_from), or lucky: drawn beside any band
+#   weight    its share of the draw among its band's and the lucky ones, 1 to 1000
+#   message   said as it happens, after "The words twist away from you, and the scroll crumbles
+#             to dust."
+#   effect    what it does, by `kind`:
+#             nothing
+#             status     `status` (an id of status.toml) at `severity` (1 to its max)
+#             backfire   the scroll's own spell goes off on the reader: its burst around them, its
+#                        bolt through them (its damage at the scroll's own power)
+#             mana       `percent` (1 to 100) of the mana left is lost
+#             teleport   to a free cell of the level, as a teleport trap does
+#             lose_mark  one stat training mark is lost, of a stat that has any
+#             drain      `stat` (or "random") loses `points` (1 to 3) for good unless the reader
+#                        makes a Willpower check against `difficulty` (spec §8 "Stats": "Drain")
+#             summon     a hostile `creature` (an id of creatures/) comes next to the reader
+#             learn      the spell is learned anyway (lucky only)
+#             mark       a training mark of `stat` more (lucky only)

@@ -1,0 +1,6 @@
+[[mishap]]
+id = "ill_omen"
+band = "bad"
+weight = 15
+message = "The broken words leave a curse on you."
+effect = { kind = "status", status = "ill_wished", severity = 2 }
