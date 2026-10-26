@@ -52,6 +52,7 @@
 #            (not the basilisk), marsh-thing (the fens' living things and the bog hag),
 #            hag (the bog hag and her kin, every creature of the "hags" faction),
 #            duergar (not their trader, a merchant), fire-thing (the delf's burning things),
+#            devil (every creature of the "devil" faction: content::devil_roster_tests checks it),
 #            yugoloth (every creature of the "yugoloth" faction), fiend (the fiends of the lower
 #            planes: every yugoloth, demon, and devil)
 #   roles    archer (shoots: the goblin, kobold, and skeleton archers), caster (every
@@ -177,6 +178,15 @@
 # xp, stats, base_hp, dice, to_hit, natural defence, speed), by role (green hag and bheur hag
 # casters, sea hag standard, annis hag brute); their riders are existing statuses and drains.
 # In no population until a place of theirs takes them.
+#
+# The devils (the devil roster, #448; content::devil_roster_tests checks the numbers): faction
+# "devil", tags ["devil", "fiend"], alignment "evil", vision "darkvision", on the undead roster's
+# formulas (#383: xp, stats, base_hp, dice, to-hit, natural defence, speed by level and role).
+# Every devil resists fire 100 and poison 50; cold 50 from the bearded devil up (the ice devil
+# 100); the bone devil and the pit fiend poison 100. One natural attack each, its rider standing
+# for the rest. A devil's body burns away when it dies: no corpse, a dark ichor for blood (the
+# bone devil none). Glyphs: u the lemure, i the imp, U the greater devils, each in its own colour.
+# None is in a population yet.
 #
 # The yugoloths (#446; content::yugoloth_roster_tests checks the numbers): mercenary fiends of the
 # lower planes, faction "yugoloth" (hostile to the player only), tags ["yugoloth", "fiend", ...],
