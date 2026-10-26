@@ -9,25 +9,25 @@ duergar_miner at (24, 6) route  carrying a copper pick-axe (in use)
 kobold at (32, 16) route E E W W carrying a brass key
 ember_beetle at (39, 17) route W W W N N E W E W E W S S E E E
 ember_beetle at (47, 8) route N S N N E W W E E E W W W E E W S S N S
-giant_centipede at (46, 8) route N N E E E S N W W W S S
+kobold at (46, 8) route N N E E E S N W W W S S carrying a flint spear (wielded), a steel cap (being worn), 9 copper coins
 ember_beetle at (68, 10) route W N N N W W W W E E E E S S S E
 ember_beetle at (48, 12) route W N N N N S S S S N S N N N N S S S S E
 ember_beetle at (33, 19) route W W W W W W W E E E E E E E
-giant_centipede at (5, 15) route N E E E W W W S
-ember_beetle at (72, 10) route S W W W W N N N S S S E E E E N
+kobold at (5, 15) route N E E E W W W S carrying a chitin spear (wielded), a fur cap (being worn)
+giant_centipede at (72, 10) route S W W W W N N N S S S E E E E N
 ember_beetle at (2, 14) route S N E E S S S W N S E N N N W W S N
 ember_beetle at (64, 8) route N E W W W E E E W W W E E E W S
-kobold at (8, 15) route S S W W W W W N N S S E E E E E N N carrying a flint spear (wielded), a steel cap (being worn), 9 copper coins
-giant_centipede at (35, 10) route E E W W E E W W
+kobold_shaman at (8, 15) route S S W W W W W N N S S E E E E E N N carrying 12 copper coins
+kobold at (35, 10) route E E W W E E W W carrying a tin spear (wielded), a horn cap (being worn), 4 copper coins
 bat at (33, 16) route W W N E E E S N W W W S E E
 bat at (46, 6) route E W E E E S S N N W W W E W
 ember_beetle at (4, 9) route S S S N N S S N N N
-kobold at (6, 16) route N N E E W W S S carrying a chitin spear (wielded), a fur cap (being worn)
+orc_raider at (6, 16) route N N E E W W S S carrying a battle axe (wielded), a studded leather jerkin (being worn), a hardened leather cap (being worn)
 bat at (30, 9) route W W W N N S S E E E
-giant_centipede at (32, 17) route W E W N N E W S S E W E
+kobold at (32, 17) route W E W N N E W S S E W E carrying a steel cap (being worn)
 ember_beetle at (65, 8) route S S W W W E E E N N
 ember_beetle at (50, 7) route S S S S S W E N N N N N
-kobold at (50, 12) route W W W N N N S S S E E E carrying a bone spear (wielded)
+kobold_shaman at (50, 12) route W W W N N N S S S E E E
 ember_beetle at (6, 17) route E E N N N E S S S N N N W S S S W W
 barrow_spider at (37, 10) route W W W N S E E E
 ember_beetle at (36, 7) route S S S W W W N S E E E N N N
@@ -45,16 +45,16 @@ special room flooded at (2, 1)-(6, 8)
   #fff#         #(..#.....###                #######
   #fff#         #...+...h.+.#   #######      #b...¡#        #################
   #¡ff#         #..(#.....#.#   #...a¡#      #....a#        #¡.............[#
-  ##+##         ###########.#####....?########ca...#        #...aa..........#
+  ##+##         ###########.#####....?########ka...#        #...aa..........#
    #a#                    #...b.......'......+.....##########......b........#
-   #.#                    #.#####..c.s########..........^...+.......a...a...#
+   #.#                    #.#####..k.s########..........^...+.......a...c...#
    #.#                    #.#   #######      #.....#######.##......^.......¡#
    #.#           #######  #.#                #¡.a.k#     #.####'#############
  ###S#######     #...<¡####.#                #######     #.#  #.#
  #a.......¡#     #.....+....# ###########                #.#  #.#
- #...c..k..#######.....####.# #....#.)..#               ##+####+###
- #....k....+..)..S.....#  #^# #.kb.&..*.#               #..>....)¡#
- #¡...a....#####.#¡....#  #.# #.c..#()%a#               #.........#
+ #...k..k..#######.....####.# #....#.)..#               ##+####+###
+ #....o....+..)..S.....#  #^# #.kb.&..*.#               #..>....)¡#
+ #¡...a....#####.#¡....#  #.# #.k..#()%a#               #.........#
  ###########   #.####+#####.#####+#######               #¡........#
                #.................a#                     ###########
                ####################

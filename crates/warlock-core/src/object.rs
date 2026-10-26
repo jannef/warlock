@@ -107,6 +107,16 @@ impl Stack {
         }
     }
 
+    /// It as the player knows it: without its magic while that is unidentified (what the
+    /// character screen's attacks are figured for, `world/attacks.rs`).
+    pub(crate) fn as_known(&self) -> Self {
+        let mut known = self.clone();
+        if !known.is_identified() {
+            known.magic = None;
+        }
+        known
+    }
+
     /// What it rolled, identified or not: ground truth, for the rules and dev tools.
     pub(crate) fn magic(&self) -> Option<&Magic> {
         self.magic.as_deref()

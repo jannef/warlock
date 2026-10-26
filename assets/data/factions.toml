@@ -32,6 +32,14 @@ id = "goblins"
 name = "goblins"
 hostile = ["player", "vermin", "kobolds"]
 
+# The orc tribe (#455): war bands of orcs and the wargs they keep. They raid the kobolds' warrens,
+# eat the vermin, and fight the dead and the duergar (whose mine they raid: listed on this side);
+# the goblins they bully but march beside, so the two tribes leave each other be.
+[[faction]]
+id = "orcs"
+name = "orcs"
+hostile = ["player", "vermin", "kobolds", "undead", "duergar"]
+
 # The restless dead of the barrows: skeletons, zombies, ghouls, wights. They hate the living,
 # the player, the kobolds, and the goblins alike.
 [[faction]]
@@ -97,6 +105,14 @@ hostile = ["player"]
 id = "wrathful_fey"
 name = "wrathful fey"
 hostile = ["player", "unseelie"]
+
+# The devils of the hells (#448): lemures, imps, and the greater devils up to the pit fiend.
+# They come for the player and leave everyone else be: devils bargain, they do not brawl with
+# every passer-by.
+[[faction]]
+id = "devil"
+name = "devils"
+hostile = ["player"]
 
 # The yugoloths (#446): mercenary fiends of the lower planes, who serve whoever pays. They come
 # for the player and leave everyone else alone, the demons and devils included: hired by none,

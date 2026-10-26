@@ -1,0 +1,35 @@
+# The devil roster (#448). The towering winged lord of hell's legions: its bite carries a venom
+# that burns in the blood, and neither fire nor poison touches it. Its spells, its aura of dread,
+# and its wings wait for mechanics of their own. Not yet in any dungeon's population.
+[[creature]]
+id = "pit_fiend"
+level = 66
+xp = 340
+rarity = "very_rare"
+name = "pit fiend"
+glyph = "U"
+fg = "#e02a2a"
+speed = 1100
+faction = "devil"
+tags = ["devil", "fiend"]
+alignment = "evil"
+vision = "darkvision"
+sight = 18
+opens_doors = true
+footsteps = 100
+hearing = 8
+weight = 400000
+stats = { strength = 40, dexterity = 24, toughness = 40, intelligence = 36, willpower = 39, presence = 36 }
+base_hp = 264
+natural = { defence = 5, protection = 4, name = "scales" }
+resist = { fire = 100, poison = 100, cold = 50 }
+loot = 50
+corpse = false
+blood = "#4a1010"
+[creature.attack]
+damage = "5d10"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
+to_hit = 6
+on_hit = [{ status = "poisoned", chance = 30, severity = 4 }]

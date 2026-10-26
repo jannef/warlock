@@ -1,0 +1,40 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ Welcome to Showcase. Press ? for controls.
+
+    ┌─ Character ─────────────────────────────────────────────────────────────────────────────┐
+    │                                                                                         │
+    │ Garrick                                                                                 │
+    │                                                                                         │
+    │ Race    Human                                                                           │
+    │ Gender  Male                                                                            │
+    │ Class   Warrior                                                                         │
+    │ Age 34 · born 29 Greenleaf 1410 · year of the Water Basilisk                            │
+    │ Stars   Unblinking, Transfixing stare, Trusted by none, Always a way, Tidal             │
+    │                                                                                         │
+    │ St  Strength      14   Main hand  long sword                                            │
+    │ Dx  Dexterity     11              +3 to hit, 1d8+4 slashing or piercing                 │
+    │ To  Toughness     11                                                                    │
+    │ In  Intelligence  10                                                                    │
+    │ Wi  Willpower     12                                                                    │
+    │ Pr  Presence       9                                                                    │
+    │                                                                                         │
+    │ Lv  Level         1                                                                     │
+    │ XP  Experience    0 / 767                                                               │
+    │     Talents       9                                                                     │
+    │ HP  Hit points    22/22   MP  Mana       1/1                                            │
+    │ Dv  Defence       14      Pv  Protection  1                                             │
+    │     Stance        Neutral                                                               │
+    │     Alignment     Neutral                                                               │
+    │     Resistant to  acid                                                                  │
+    │                                                                                         │
+    │ Weight 79.5 kg (you 70 kg, carrying 9.5 kg)                                             │
+    │ Burdened over 19.5 kg, strained over 39 kg, overloaded over 58.5 kg                     │
+    │                                                                                         │
+    │ @ or Esc close   A skills                                                               │
+    └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘
+
+
+ The Hub  ·  HP 22/22  ·  MP 1/1  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444          ? controls

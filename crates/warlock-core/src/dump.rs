@@ -68,6 +68,10 @@ pub enum Layer {
     /// how far its marks are toward the next (`Long blades 2 (40%)`), the styles they fight in
     /// now marked (`Duelist 1 (0%), in use`); never what a rank gives.
     WeaponSkills,
+    /// Not a map: the player's attacks as the character screen shows them, one a line: where it
+    /// comes from, what it is made with, its to-hit, damage, and range (`Main hand long sword: +4
+    /// to hit, 1d8+2 slashing`, `Missile short bow: +3 to hit, 1d6 piercing, range 10`).
+    Attacks,
     /// Not a map: the player's talents in the order taken, one a line with its rank of how many
     /// and its choice (`Hardy 2/3`, `Weapon focus (long blades)`); never what a rank gives.
     Talents,
@@ -126,6 +130,7 @@ impl Layer {
         Layer::Stats,
         Layer::Skills,
         Layer::WeaponSkills,
+        Layer::Attacks,
         Layer::Talents,
         Layer::Abilities,
         Layer::Traps,
@@ -152,6 +157,7 @@ impl Layer {
             Layer::Stats => "stats",
             Layer::Skills => "skills",
             Layer::WeaponSkills => "weapon_skills",
+            Layer::Attacks => "attacks",
             Layer::Talents => "talents",
             Layer::Abilities => "abilities",
             Layer::Traps => "traps",
@@ -185,8 +191,8 @@ impl FromStr for Layer {
             .ok_or_else(|| {
                 format!(
                     "unknown layer `{s}` (expected view, fov, memory, light, sound, blood, \
-                     inventory, equipment, stats, skills, weapon_skills, talents, abilities, \
-                     traps, locations, quests, truth, actors, progress, rooms, ice)"
+                     inventory, equipment, stats, skills, weapon_skills, attacks, talents, \
+                     abilities, traps, locations, quests, truth, actors, progress, rooms, ice)"
                 )
             })
     }
@@ -210,6 +216,7 @@ pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
         Layer::Stats => stat_rows(&world.perception()),
         Layer::Skills => skill_rows(&world.perception()),
         Layer::WeaponSkills => weapon_skill_rows(&world.perception()),
+        Layer::Attacks => attack_rows(&world.perception()),
         Layer::Talents => talent_rows(&world.perception()),
         Layer::Abilities => ability_rows(&world.perception()),
         Layer::Traps => trap_rows(&world.perception()),
@@ -263,6 +270,7 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
         | Layer::Stats
         | Layer::Skills
         | Layer::WeaponSkills
+        | Layer::Attacks
         | Layer::Talents
         | Layer::Abilities
         | Layer::Traps
@@ -619,6 +627,34 @@ fn weapon_skill_rows(view: &PerceptionView<'_>) -> Vec<String> {
             } else {
                 row
             }
+        })
+        .collect()
+}
+
+/// The player's attacks, one a line (`Main hand long sword: +4 to hit, 1d8+2 slashing`; see
+/// [`Layer::Attacks`]).
+fn attack_rows(view: &PerceptionView<'_>) -> Vec<String> {
+    (view.own_attacks().iter())
+        .map(|a| {
+            let line = a.summary(view.content());
+            format!("{} {}: {line}", a.source.label(), a.name)
+        })
+        .collect()
+}
+
+/// The player's attacks for JSON: `source`, `kind`, `name`, `to_hit`, `damage` (the text the
+/// screen shows), and `range` (null for a blow).
+fn attacks_json(view: &PerceptionView<'_>) -> Value {
+    (view.own_attacks().iter())
+        .map(|a| {
+            json!({
+                "source": a.source.id(),
+                "kind": a.kind,
+                "name": a.name,
+                "to_hit": a.to_hit,
+                "damage": a.damage_text(view.content()),
+                "range": a.range,
+            })
         })
         .collect()
 }
@@ -1275,6 +1311,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "styles_in_use": (view.own_styles_in_use().into_iter())
             .map(|id| content.weapon_skills().skill(id).id.clone())
             .collect::<Vec<_>>(),
+        "attacks": attacks_json(&view),
         "talents": talents,
         "due": view.due(),
         "abilities": abilities_json(&view),
