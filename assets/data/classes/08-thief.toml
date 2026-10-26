@@ -5,6 +5,7 @@ description = "A cutpurse, burglar, and picker of locks who lives by nimble fing
 stats = { strength = -1, dexterity = "1d3+1", intelligence = "1d2-1", willpower = -1 }
 hp = 3
 mana = 1
+casting = 25
 experience = 95
 alignment = -200
 skills = { open_lock = "2d6+10", steal = "2d6+10", stealth = "2d6+10", tumble = "2d6+10", appraise = "2d4+4", disable_device = "2d4+4", escape_artist = "2d4+4", search = "2d4+4", spot = "2d4+4" }

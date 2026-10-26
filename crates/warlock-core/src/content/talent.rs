@@ -222,6 +222,10 @@ pub enum TalentEffect {
     /// What abilities cost in mana, this percent more (negative: less; never below 1; Frugal
     /// caster), in [`crate::world::World::spend_mana`].
     ManaCostPercent { value: i32 },
+    /// Caster level, this much higher (negative: lower; spec §8 "Spells"), in
+    /// [`crate::world::World::caster_level`]. Nothing grants it yet (the Spellcraft talents,
+    /// #400).
+    CasterLevel { value: i32 },
     /// The active Blood magic: give `hp` hit points (never the last) for `mana` mana.
     BloodMagic { hp: i32, mana: i32 },
     /// Footsteps this percent louder (negative: quieter).
@@ -935,6 +939,7 @@ impl TalentEffect {
             | TalentEffect::NaturalUnarmoured { value }
             | TalentEffect::Hardened { bonus: value }
             | TalentEffect::MeleeDamage { value }
+            | TalentEffect::CasterLevel { value }
             | TalentEffect::Hearing { value }
             | TalentEffect::Notice { value }
             | TalentEffect::DangerSense { value }

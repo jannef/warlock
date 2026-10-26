@@ -10,6 +10,7 @@ glyph = "w"
 fg = "#c8a8a0"
 speed = 600
 faction = "vermin"
+tags = ["vermin"]
 alignment = "neutral"
 vision = "low_light"
 sight = 5

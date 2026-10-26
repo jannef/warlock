@@ -38,6 +38,13 @@ fn two_rolls() -> u8 {
     2
 }
 
+fn least_casting() -> u8 {
+    25
+}
+
+/// The casting percents a class may have (spec §8 "Spells"): everyone casts a little.
+pub const CASTING: std::ops::RangeInclusive<u8> = 1..=100;
+
 /// The most skill rolls a class may give a level.
 pub const MAX_ROLLS: u8 = 10;
 
@@ -64,6 +71,8 @@ struct ClassSpec {
     alignment: i32,
     #[serde(default)]
     mana: u16,
+    #[serde(default = "least_casting")]
+    casting: u8,
     #[serde(default)]
     skills: BTreeMap<String, Dice>,
     #[serde(default)]
@@ -127,6 +136,9 @@ pub struct ClassDef {
     pub hp: i32,
     /// What the class adds to the mana (spec §8 "Mana"); half of it comes with each level.
     pub mana: i32,
+    /// Its casting percent (spec §8 "Spells"): a character's caster level is this percent of
+    /// their level (a wizard 100, a warrior 25), before talents and items.
+    pub casting: u8,
     /// How much experience a level needs, in percent (spec §8 "Experience"): multiplied with
     /// the race's onto every threshold. Patient classes pay more (a wizard, 125).
     pub experience: u16,
@@ -233,6 +245,14 @@ impl ClassDef {
                 spec.mana
             )));
         }
+        if !CASTING.contains(&spec.casting) {
+            return Err(err(format!(
+                "class `{id}`: casting {} is out of range ({} to {} percent)",
+                spec.casting,
+                CASTING.start(),
+                CASTING.end()
+            )));
+        }
         if !FACTORS.contains(&spec.experience) {
             return Err(err(format!(
                 "class `{id}`: experience {} is out of range ({} to {} percent)",
@@ -333,6 +353,7 @@ impl ClassDef {
             stats,
             hp: i32::from(spec.hp),
             mana: i32::from(spec.mana),
+            casting: spec.casting,
             experience: spec.experience,
             alignment,
             skills,
@@ -686,6 +707,22 @@ mod tests {
             "{}",
             e.message
         );
+    }
+
+    #[test]
+    fn classes_cast_a_percent_of_their_level() {
+        assert_eq!(parse(ONE).expect("valid")[0].casting, 25, "unless named");
+        let wizard = parse(&format!("{ONE}casting = 100\n")).expect("valid");
+        assert_eq!(wizard[0].casting, 100);
+        for bad in [0, 101] {
+            let e = parse(&format!("{ONE}casting = {bad}\n")).unwrap_err();
+            assert!(
+                e.message
+                    .contains(&format!("casting {bad} is out of range (1 to 100")),
+                "{}",
+                e.message
+            );
+        }
     }
 
     /// The built-in content with the aristocrat's file changed by `edit`, loaded.

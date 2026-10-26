@@ -10,6 +10,7 @@ name = "ghost"
 glyph = "G"
 fg = "#d8e0f0"
 faction = "undead"
+tags = ["undead", "spirit"]
 alignment = "evil"
 vision = "darkvision"
 sight = 10

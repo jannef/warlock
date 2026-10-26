@@ -42,7 +42,9 @@ whole table in one file is still accepted, so test fixtures that insert it keep 
 `data/<name>/**/*.toml` in path order, then each campaign's `data/<name>/**/*.toml`
 (`ContentFiles::campaign_order`: playable campaigns, then test ones). `quests`, `dialogue`, and
 `dungeons` are tables too: their single files hold the field reference and the shared entries
-(the shopkeeper's dialogue), the campaigns their own. Ids (`CreatureId`, `ObjectId`, `MaterialId`, an affix's
+(the shopkeeper's dialogue), the campaigns their own. `data/plurals.toml` (the plural dictionary, `content/plural.rs`) is
+no table: the shared file, then each campaign's `data/plurals.toml`, merged into one, read
+first so creature, object, and gem names without a `plural` take theirs from it. Ids (`CreatureId`, `ObjectId`, `MaterialId`, an affix's
 index) are indices in that order and feed the content fingerprint, so moving entries between
 files changes ids and invalidates saves (the release bump covers it). Each file is parsed on its
 own, so an error names the file the bad entry is in; **a duplicate id across files is a

@@ -210,6 +210,8 @@ pub struct TalentMods {
     pub mana_resting_percent: i32,
     /// Percent more abilities cost in mana (negative: less; [`TalentMods::mana_cost`]).
     pub mana_cost_percent: i32,
+    /// Added to its caster level (spec §8 "Spells").
+    pub caster_level: i32,
     /// The active Blood magic, if it has it.
     pub blood_magic: Option<BloodMagic>,
     /// Percent louder footsteps (negative: quieter).
@@ -988,6 +990,7 @@ impl TalentMods {
             } => self.mana_per_levels.push((per_levels, at_least)),
             TalentEffect::ManaRestingPercent { value } => self.mana_resting_percent += value,
             TalentEffect::ManaCostPercent { value } => self.mana_cost_percent += value,
+            TalentEffect::CasterLevel { value } => self.caster_level += value,
             TalentEffect::BloodMagic { hp, mana } => {
                 self.blood_magic = Some(BloodMagic { hp, mana });
             }

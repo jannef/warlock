@@ -273,12 +273,6 @@ mark = [{ on = "dodge", chance = 40 }]
 benefit = [{ effect = "dodge", steps = [20, 40, 60, 80, 100], every = 25 }]
 
 [[skill]]
-id = "use_magic_device"
-name = "Use magic device"
-description = "Making wands, staves, and scrolls work, even without the gift."
-kind = "action"
-
-[[skill]]
 id = "woodcraft"
 name = "Woodcraft"
 description = "Working wood: carving, carpentry, and the making of bows."

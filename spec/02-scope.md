@@ -101,7 +101,7 @@ Build the engine and framework, not the game. Everything built is production qua
   elements) adjusts the stats too (§8 "Character creation"); race and class also give hit points
   (§8 "Combat"), trained skills (§8 "Skills"), and starting ranks in weapon skills and fighting
   styles
-- Skills (M20): 26 skills in data, ADOM-like; race and class train the player in some (dice),
+- Skills (M20): 25 skills in data, ADOM-like; race and class train the player in some (dice),
   creatures may list theirs, and every other skill is untrained (never shown, gives nothing).
   Values grow without a hard cap (slowly past 100) by skill rolls at each level-up, whose dice
   are set by the training marks meaningful use earns (ADOM's ladder), and the passive ones help: tumble (Dodge in Defence),

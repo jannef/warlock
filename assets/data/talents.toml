@@ -151,6 +151,13 @@ name = "Hit points, healing, regeneration"
 id = "mana"
 name = "Mana"
 
+# Spells (the magic design, docs/design/magic.md): tiers, caster level, learning, casting. Its
+# talents (the Spellcraft tree) come with #400, which removes the flag.
+[[system]]
+id = "spells"
+name = "Spells and caster level"
+pending = true
+
 # Alternative resources (#225): pools beside hit points and mana (Rage, Focus, Openings, Ki,
 # Inspiration); their talents are Battle trance, Inner calm, Steady hand, and Patient blade.
 [[system]]

@@ -11,6 +11,7 @@ name = "troll"
 glyph = "T"
 fg = "#5a8a4a"
 faction = "goblins"
+tags = ["troll"]
 alignment = "evil"
 vision = "darkvision"
 footsteps = 150

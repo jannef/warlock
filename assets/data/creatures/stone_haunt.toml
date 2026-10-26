@@ -11,6 +11,7 @@ name = "stone haunt"
 glyph = "G"
 fg = "#a8a49c"
 faction = "undead"
+tags = ["undead", "spirit"]
 alignment = "evil"
 vision = "darkvision"
 sight = 8

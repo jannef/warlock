@@ -16,6 +16,7 @@ name = "barrow wight"
 glyph = "W"
 fg = "#a8c8e0"
 faction = "undead"
+tags = ["undead", "caster"]
 alignment = "evil"
 vision = "darkvision"
 sight = 12

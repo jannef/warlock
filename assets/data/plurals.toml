@@ -1,0 +1,31 @@
+# The plural dictionary (spec §7 "Data", content/plural.rs): words whose plural is not the word
+# and an "s", one line each, `singular = "plural"`, kept in alphabetical order. A word is looked
+# up whole, then by its last word ("skeletal wolf" is "skeletal wolves", "marsh-thing" "marsh
+# things"), else it takes an "s". It makes the plurals content does not write out: a creature
+# tag's in quests ("Kill 100 goblins."), and a creature's, an object's, or a gem's name without a
+# `plural` of its own. A new tag or name with an irregular plural adds its line here (a
+# campaign's own words go in its data/plurals.toml); a word given two plurals is an error.
+
+child = "children"
+deer = "deer"
+duergar = "duergar"
+dwarf = "dwarves"
+elf = "elves"
+fish = "fish"
+foot = "feet"
+goose = "geese"
+knife = "knives"
+leaf = "leaves"
+louse = "lice"
+man = "men"
+mouse = "mice"
+mummy = "mummies"
+ox = "oxen"
+sheep = "sheep"
+staff = "staves"
+thief = "thieves"
+tooth = "teeth"
+undead = "undead"
+vermin = "vermin"
+wolf = "wolves"
+woman = "women"

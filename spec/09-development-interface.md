@@ -103,7 +103,8 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   `equipment` (the player's slots by letter, `c Body: a leather jerkin (b)`, `-` when empty),
   `stats` (the player's name, race, gender, and class, `Name Brakka`, `Race Dwarf`, their age, birthday, and
   sign, `Age 27`, `Born 3 Seedtide 1417`, `Sign Fire Manticore`, then their own scores as
-  the rules read them, `Strength 12`, then their alignment band, `Alignment Kind` (never the
+  the rules read them, `Strength 12`, then their caster level, `Caster level 3` (§8 "Spells"),
+  then their alignment band, `Alignment Kind` (never the
   score), then their status effects by name, `Effects Bleeding,
   Diseased`, then the diseases they know they have, `Diseases filth fever`), `skills` (the player's trained skills in skill order, `Stealth 17`),
   `weapon_skills` (the player's weapon skills and fighting styles in file order with their rank
@@ -163,7 +164,7 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   choices due (`due`: `{level, talents}`, or null), the
   quest log (`quests`: `[{id, name,
   kind, active, completed, giver, objective, status}]`), hit points (`hp: {current, max}`),
-  mana (`mana: {current, max}`), the alternative resources held (`resources: [{id, current,
+  mana (`mana: {current, max}`), their caster level (`caster_level`, §8 "Spells"), the alternative resources held (`resources: [{id, current,
   max}]`, in resource order),
   Defence (`defence`, the total), hunger (`hunger`: `bloated` … `starving`, or null when nobody
   hungers), how the run ended (`death: {turn, time, place, by, of, cause, trap}` or null;

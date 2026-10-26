@@ -11,6 +11,7 @@ name = "marsh troll"
 glyph = "T"
 fg = "#4a7a4a"
 faction = "marsh"
+tags = ["marsh-thing", "troll"]
 alignment = "evil"
 vision = "darkvision"
 sight = 8

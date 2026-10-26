@@ -259,7 +259,8 @@ Tests: `world/caster_tests.rs`.
 `min_class = 0` until every class has its table, `free_per_tree = 1`); class abilities are
 counted by `Content::check_class_tables`. A `[[system]]` may set its own `min_talents` in place
 of the bar's (`SystemDef::min_talents`): `creature_gear` ships with one, Scavenger (#328), and
-`services` one, Pilgrim (#329). A talent must name systems from
+`services` one, Pilgrim (#329). `spells` (#394, docs/dev/spells.md) joined pending, with the
+`caster_level` talent effect and nothing taking it; #400 ships its talents. A talent must name systems from
 the list; a system or tree marked `pending = true` is counted and shown in the wiki but not yet
 held to the bar. **A wave that brings a system's talents removes its `pending`** (and a tree's
 once it has a talent without prerequisites); `min_class` becomes 1 with the class tables. A new

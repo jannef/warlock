@@ -19,7 +19,7 @@ race's.
 
 {{#include generated/mana.md}}
 
-Each level up to 30 raises it (and the mana you have now) by half your class's mana plus what the
+Each level up to 60 raises it (and the mana you have now) by half your class's mana plus what the
 better of your Intelligence and Willpower adds (see
 [Experience](experience.md#what-a-level-gives)): a wizard keeps growing it after hit points stop
 at level 20; a warrior with ordinary wits gains none. [Magic items](magic-items.md) that add to it

@@ -11,6 +11,7 @@ glyph = "k"
 fg = "#b080d8"
 speed = 800
 faction = "kobolds"
+tags = ["kobold", "caster"]
 alignment = "evil"
 vision = "darkvision"
 combat = "caster"

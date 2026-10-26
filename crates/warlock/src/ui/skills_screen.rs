@@ -20,7 +20,7 @@ use warlock_core::skills::PROGRESS_STEPS;
 
 /// Width of the panel.
 const WIDTH: i32 = 52;
-/// Width of a skill's name column: the longest built-in name ("Use magic device") and a space.
+/// Width of a skill's name column: room for the longest built-in name ("Decipher script") and more.
 const NAME_W: i32 = 18;
 
 /// A trained skill as shown.

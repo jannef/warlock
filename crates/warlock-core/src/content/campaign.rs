@@ -231,7 +231,8 @@ impl Content {
             for place in quest.places() {
                 self.check_level(&file, owner, place)?;
             }
-            if let Some(creature) = quest.kill_target() {
+            // A tag is checked as the quest is read (`quest::check_tag`).
+            if let Some(&super::KillTarget::Creature(creature)) = quest.kill_target() {
                 self.check_creature(&file, Some(owner), creature)?;
             }
             for speaker in quest.speakers() {

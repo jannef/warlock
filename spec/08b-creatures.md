@@ -154,13 +154,29 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Topics the speaker does not have now are refused ("… knows nothing about that.") and change
     nothing. Talk about quests takes no time.
   - **Goals**: *kill* counts the player's own kills (§8 "Experience": melee, shots, throws, and a
-    wound of theirs that bleeds it to death; never by others or traps) of the creature type, on its level or any level of its branch if it names
-    one. Kills are tallied per level and creature type, every type (saved;
+    wound of theirs that bleeds it to death; never by others or traps) of the creature type, or
+    of any type carrying a **creature tag** (below), on its level or any level of its branch if it names
+    one, else on every level summed. Kills are tallied per level and creature type, every type (saved;
     the ranger's Favoured prey reads the same tally, §8 "Class abilities"), so kills made before the quest was taken up count, and a repeat of a repeatable one
     counts only the kills since it was taken up again. *Bring* counts what the player carries of
     the object. *Reach* is met once the player has been on the level, before taking the quest
     up too. *Deliver* is met while the player carries the item: dropping it (or losing it) blocks
     the quest until they pick it up again (it cannot be handed in without it).
+  - **Creature tags** (`content/tag.rs`, #421, #441): a creature type carries plain singular
+    words, chosen by hand as a card game gives creatures types (`tags = ["goblin", "archer"]`);
+    there is one flat pool and no registry: a tag exists because a creature carries it. A kill
+    quest's target may be a tag (`target = "tag:goblin"`): any type that carries it counts.
+    Membership is by type: an actor's faction override (an outraged keeper) moves it neither in
+    nor out. The noun is the tag's plural by the plural dictionary (§7 "Plurals"; hyphens said as
+    spaces, `marsh-thing` "marsh things"), or the quest's `what`; the objective names the tagged
+    types a run of the quest's campaign can meet: "Kill 100 goblins: goblins, goblin archers,
+    and goblin chiefs."; progress says the same noun ("Quest updated: 37 / 100 goblins.").
+    Group tags: `kobold`; `goblin` (not the ogre or the troll, who run with them); `undead` (every
+    creature of the `undead` faction, a test sees to it); `vermin` (not the basilisk);
+    `marsh-thing` (the fens' living things and the bog hag); `duergar` (not their trader, a
+    merchant); `fire-thing`. Role and kind tags: `archer`, `caster` (every `combat = "caster"`
+    type), `cultist`, `skeleton`, `spirit` (the incorporeal undead), `troll`. Tags are never
+    shown in the game; the wiki lists them.
   - **Progress** the player's action made is said right after it: "Quest updated: 2 / 3 giant
     rats.", and once the goal is met "Quest updated: 3 / 3 giant rats. Return to the old hermit."
     (bring: "… apples. Return to the gardener." or "Take them to …"; reach: "Quest updated: you
