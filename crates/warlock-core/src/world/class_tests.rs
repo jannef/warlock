@@ -509,7 +509,7 @@ fn worth_shows_only_to_an_eye_for_it() {
     let appraisal = w.perception().appraisal();
     assert!(appraisal.worth && appraisal.gems);
     let dagger = Stack::new(w.content().object_id("dagger").expect("dagger"), 3);
-    let lines = crate::magic::describe::appraised(&dagger, w.content(), appraisal);
+    let lines = crate::magic::describe::appraised(&dagger, w.lore(), appraisal);
     let worth = dagger.value(w.content());
     let text = format!("Worth {} gold each, {worth} gold in all", worth / 3);
     assert!(lines.iter().any(|l| l.text == text), "{lines:?}");

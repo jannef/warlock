@@ -31,7 +31,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     missiles; 130 %, 40 %), an armourer ("{keeper}'s Armoury": shields, body armour, helmets,
     cloaks, gloves, and boots), a provisioner ("{keeper}'s Provisions": light sources, tools,
     and food; 120 %, 30 %), and a fletcher ("{keeper}'s Fletchery": missile weapons and missiles;
-    125 %, 40 %). General stores stock and buy scrolls (§8 "Scrolls"); alchemists wait for potions that do
+    125 %, 40 %). General stores stock and buy scrolls (§8 "Scrolls"), and a generated one always lays out a
+    stack of scrolls of identify first (the kind's `always`, at most its least `items`); alchemists wait for potions that do
     something, scribes for more scrolls.
   - **Prices** (`Shops::price`, `Shops::offer`; integers): a stack's value (each one's times the
     count) times the markup, less the player's **favour**, rounded up and at least 1; an offer is

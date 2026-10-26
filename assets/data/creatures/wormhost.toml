@@ -1,0 +1,33 @@
+# The undead roster (#383, batch 3). A corpse that green worms live in and move: they wriggle
+# from its flesh into the wounds its fists make, and burrow inward. Caught, burrowing worms are
+# quick and may kill; a temple's cure, or a root that cures disease, ends them. Not yet in any
+# dungeon's population.
+[[creature]]
+id = "wormhost"
+level = 26
+xp = 140
+rarity = "uncommon"
+name = "wormhost"
+glyph = "z"
+fg = "#a8b050"
+faction = "undead"
+tags = ["undead"]
+alignment = "evil"
+vision = "darkvision"
+sight = 8
+footsteps = 70
+hearing = 10
+weight = 65000
+stats = { strength = 21, dexterity = 16, toughness = 22, intelligence = 2, willpower = 25, presence = 2 }
+base_hp = 65
+natural = { defence = 1, protection = 0, name = "dead flesh" }
+resist = { poison = 100 }
+on_eat = { message = "It is still moving inside.", vomit = 90, harm = "1d6" }
+blood = "#3a4020"
+[creature.attack]
+damage = "3d8"
+damage_type = "bludgeoning"
+name = "fist"
+verb = "pummels"
+to_hit = 2
+on_hit = [{ disease = "burrowing_worms", chance = 25 }]
