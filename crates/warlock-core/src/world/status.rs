@@ -282,9 +282,10 @@ impl World {
             let resting = resting * u32::try_from((100 + faster).max(0)).unwrap_or(0) / 100;
             rate = rate * resting / 100;
         }
-        let room = (self.state.levels.get(&actor.level))
-            .and_then(|level| level.room_effect_at(&self.content, actor.pos));
-        let rate = room.map_or(rate, |effect| rate * u32::from(effect.regen) / 100);
+        let room = (self.state.levels.get(&actor.level)).map_or(100, |level| {
+            level.effects_at(&self.content, actor.pos).regen()
+        });
+        let rate = rate * self.room_pace(actor, room) / 100;
         // Then the regeneration of what it wears and wields, and its talents' (Healthy;
         // Sun-blessed's under the open sun).
         let talents = actor.talent_mods(&self.content);

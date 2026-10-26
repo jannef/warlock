@@ -221,14 +221,21 @@ fn special_rooms(canvas: &mut Canvas, rng: &mut Rng, rooms: &[Room], up_room: us
         if room.vault || i == up_room {
             continue;
         }
-        let Some(effect) = special::roll(canvas, rng) else {
+        if !special::roll(canvas, rng) {
             continue;
-        };
+        }
         let (min, max) = (
             Pos::new(room.x, room.y),
             Pos::new(room.x + room.w - 1, room.y + room.h - 1),
         );
-        special::make(canvas, SpecialRoom::rect(effect, min, max));
+        let floor = (min.x..=max.x)
+            .flat_map(|x| (min.y..=max.y).map(move |y| Pos::new(x, y)))
+            .filter(|p| canvas.is_walkable(*p))
+            .count();
+        let Some((effect, whole)) = special::pick(canvas, rng, floor) else {
+            continue;
+        };
+        special::place(canvas, SpecialRoom::rect(effect, min, max), whole);
     }
 }
 

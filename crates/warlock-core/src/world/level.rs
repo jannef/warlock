@@ -8,7 +8,7 @@ use super::spawn::Spawner;
 use crate::blood::{Spatter, Stain};
 use crate::color::Rgb;
 use crate::content::{
-    Content, EdgeExit, Flow, HiddenLocation, LevelKind, LevelTemplate, LightId, RoomEffectDef,
+    Content, EdgeExit, Flow, Here, HiddenLocation, LevelKind, LevelTemplate, LightId, RoomEffectId,
     Secret, SpecialRoom, StairsLink, TerrainDef, TerrainId, Trap, TrapId,
 };
 use crate::door::Lock;
@@ -95,6 +95,10 @@ pub struct LevelState {
     /// player has been inside it.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub(crate) rooms: Vec<SpecialRoom>,
+    /// The effect that covers the whole level, if one does (spec §7 "Special rooms": a level
+    /// file's `effect`, or a generated level's rare draw).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) pervading: Option<RoomEffectId>,
     /// Traps, by position (spec §8 "Traps"), hidden or known; a spent one is gone.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
     pub(crate) traps: BTreeMap<Pos, Trap>,
@@ -158,6 +162,7 @@ impl LevelState {
             blood_memory: BTreeMap::new(),
             dug: BTreeMap::new(),
             rooms: template.rooms.clone(),
+            pervading: template.pervading,
             shops: Vec::new(),
             traps: template.traps.clone(),
             trap_memory: BTreeMap::new(),
@@ -289,34 +294,35 @@ impl LevelState {
         self.rooms.iter().find(|r| r.contains(p))
     }
 
-    /// The effect of the special room at `p`, if any (spec §7 "Special rooms"): the one question
-    /// the rules ask of special rooms (light, creature sight, noise, regeneration, creatures that
-    /// shun a sanctuary). [`crate::World::room_effect_at`] asks it of any level.
-    pub(crate) fn room_effect_at<'c>(
-        &self,
-        content: &'c Content,
-        p: Pos,
-    ) -> Option<&'c RoomEffectDef> {
-        if self.rooms.is_empty() {
-            return None;
-        }
-        self.room_at(p).map(|r| content.room_effect(r.effect))
+    /// The effect that covers the whole level, if one does (ground truth; the player is told of
+    /// it on arrival).
+    pub fn pervading(&self) -> Option<RoomEffectId> {
+        self.pervading
     }
 
-    /// `light` at `p` as a special room there leaves it: a shadowed room keeps only part of it
+    /// What the special rooms do at `p` (spec §7 "Special rooms"): the effect of the room there,
+    /// then the level's. The one question the rules ask of special rooms (light, creature sight,
+    /// noise, regeneration, creatures that shun a sanctuary). [`crate::World::effects_at`] asks
+    /// it of any level.
+    pub(crate) fn effects_at<'c>(&self, content: &'c Content, p: Pos) -> Here<'c> {
+        let level = self.pervading.map(|id| content.room_effect(id));
+        if self.rooms.is_empty() {
+            return Here { room: None, level };
+        }
+        let room = self.room_at(p).map(|r| content.room_effect(r.effect));
+        Here { room, level }
+    }
+
+    /// `light` at `p` as the special rooms there leave it: a shadowed room keeps only part of it
     /// (spec §5 "Special rooms"). Every part of a cell's light goes through this: its base light
     /// and each source's contribution, so they still add up to the whole.
     pub(crate) fn room_shade(&self, content: &Content, p: Pos, light: Light) -> Light {
-        match self.room_effect_at(content, p) {
-            Some(effect) => effect.shade(light),
-            None => light,
-        }
+        self.effects_at(content, p).shade(light)
     }
 
-    /// The glow a special room adds at `p` (a sanctuary's), lighting it like ambient light.
+    /// The glow the special rooms add at `p` (a sanctuary's), lighting it like ambient light.
     pub(crate) fn room_glow(&self, content: &Content, p: Pos) -> Light {
-        self.room_effect_at(content, p)
-            .map_or(Light::DARK, |effect| effect.glow)
+        self.effects_at(content, p).glow()
     }
 
     /// Opaque cells block sight. Out-of-bounds counts as opaque.
@@ -351,7 +357,7 @@ impl LevelState {
             usize::from(r.effect.0) < effects
                 && r.is_valid_within(self.width(), self.height())
                 && self.rooms[..i].iter().all(|o| !o.overlaps(r))
-        });
+        }) && self.pervading.is_none_or(|e| usize::from(e.0) < effects);
         let terrain = content.terrain_defs().len();
         let lights = content.light_presets().len();
         let traps = content.trap_defs().len();

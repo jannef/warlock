@@ -375,6 +375,12 @@ pub enum TalentEffect {
     /// The creatures that come to a level the actor is on come this percent less often (the
     /// time between attempts this percent longer; Quiet delver).
     SpawnEveryPercent { value: i32 },
+    /// A special room's nature is known from a glimpse of it, and a whole level's effect is
+    /// named on arrival (Sense of place; [`crate::perception::PerceptionView::room`]).
+    SenseOfPlace,
+    /// Where a special room quickens healing or mana, the quickening is this percent more
+    /// (Hallowed rest; the room's pace in `World::healing_rate` and `World::mana_rate`).
+    RoomPacePercent { value: i32 },
     /// Searching reaches this many cells farther.
     SearchReach { value: i32 },
     /// A skill counts this much higher wherever its value is read (an untrained one from 0).
@@ -1436,6 +1442,7 @@ impl TalentEffect {
             | TalentEffect::PenaltyPercent { value }
             | TalentEffect::DigPercent { value }
             | TalentEffect::SpawnEveryPercent { value }
+            | TalentEffect::RoomPacePercent { value }
             | TalentEffect::TwoHandedPrice { value }
             | TalentEffect::SpeedPercent { value }
             | TalentEffect::SpellDamagePercent { value }
@@ -1599,6 +1606,7 @@ impl TalentEffect {
             | TalentEffect::NoBloating
             | TalentEffect::SparesSelf
             | TalentEffect::SeesUv
+            | TalentEffect::SenseOfPlace
             | TalentEffect::ExactFootsteps
             | TalentEffect::SmellRot
             | TalentEffect::StanceCosts
