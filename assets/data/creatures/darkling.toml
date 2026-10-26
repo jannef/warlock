@@ -1,0 +1,24 @@
+# The fey roster (#452).
+# A darkling: a hooded little fey of the shadows, quiet in the dark and quick with a knife.
+# Legend says it bursts into light when it dies; nothing makes that happen yet.
+[[creature]]
+id = "darkling"
+level = 9
+xp = 55
+rarity = "uncommon"
+name = "darkling"
+glyph = "f"
+fg = "#5a5a6a"
+speed = 1150
+factions = { seelie = 50, unseelie = 50 }
+tags = ["fey"]
+vision = "darkvision"
+sight = 10
+opens_doors = true
+footsteps = 15
+hearing = 16
+weight = 10000
+size = "small"
+stats = { strength = 11, dexterity = 16, toughness = 12, intelligence = 14, willpower = 14, presence = 16 }
+base_hp = 11
+attack = { damage = "1d10", damage_type = "piercing", name = "knife", verb = "stabs" }
