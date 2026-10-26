@@ -24,7 +24,11 @@
 #                 Intelligence, Willpower, and Presence, and each level up to experience.toml's
 #                 mana_level adds half the class's mana plus the better of the Intelligence and
 #                 Willpower modifiers
-#   experience    how much experience a level needs, in percent (spec §8 "Experience"; 50 to 200,
+#   casting       the class's casting percent (spec §8 "Spells"; 1 to 100, default 25): a
+#                 character's caster level is this percent of their level, rounded down, before
+#                 talents and items. Full casters 100, the bard and the aristocrat 75, the
+#                 paladin, the ranger, and the monk 50, everyone else 25: nobody casts at 0
+#   experience   how much experience a level needs, in percent (spec §8 "Experience"; 50 to 200,
 #                 default 100), multiplied with the race's onto every threshold in
 #                 experience.toml: the patient callings pay more, everyday folk less
 #   alignment     the class's part of a new character's hidden alignment score (spec §8

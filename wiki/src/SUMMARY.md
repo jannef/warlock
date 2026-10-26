@@ -52,6 +52,7 @@
   - [Diseases](diseases.md)
   - [Healing](healing.md)
   - [Mana](mana.md)
+  - [Magic](magic.md)
   - [Resources](resources.md)
 - [Creatures](creatures.md)
   - [Creatures in numbers](creature-numbers.md)

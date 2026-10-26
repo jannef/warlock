@@ -182,7 +182,7 @@ XP, an outlier of the XP guideline like the shopkeeper).
 Fennmynster (#338) is where the fen wave lives: all eleven are its branch's `population`, the bog
 hag too (unique, so the population and spawns bring her once a run); the sunken crypt at its
 bottom adds two drowned standing guard in its water.
-The undead roster (#383; batch 1 #384, levels 1–10): shared types, one file each in
+The undead roster (#383; batch 1 #384, levels 1–10; batch 2 #385, 11–20): shared types, one file each in
 `assets/data/creatures/`, on the conventions noted in that directory's `README.toml`. Each batch
 adds its types to `content/undead_roster_tests.rs` (`ROLES`, the type's role) and raises
 `ROSTER_TOP`: every `undead` type must be on the XP guideline (`OFF_GUIDELINE` lists the pale
@@ -190,7 +190,9 @@ drinker), lie within ±35 % of #383's max HP and dice formulas for its level and
 level from 1 to `ROSTER_TOP` must have one. Batch 1's population lines: Cealdhlāw the crawling
 hand, skeletal rat, kobold zombie, skeleton archer, skeletal wolf, and skeleton warrior;
 Fennmynster the corpse candle, poltergeist, ghast, shadow, and bog body; Fyrdelf the ogre zombie
-and grave hound. The mummy ships in no population (deep undead wait for deep places, #383), and
-the ghost is incorporeal (wall Defence 2). The roster's `held` riders (the ghast's, later the
-ghouls' and liches') wait: Held has no timer and only a Drowning grip lets go of it, so a held
-player would never step again.
+and grave hound. Batch 2's: Fennmynster the wraith and fen ghoul; Fyrdelf the burning skull,
+knocker, spectre, charred dead, duergar skeleton, and rotting troll. The mummy, barghest, draugr,
+vampire spawn, hand of glory, gallows dead, gibbering shade, bone wyvern, revenant, fetch, and
+mummy priest ship in no population (deep undead wait for deep places, #383), and the ghost is
+incorporeal (wall Defence 2). The roster's holds (`held`, #431) are `{ status = "held", chance,
+difficulty }`: the ghast's and fen ghoul's claws 10 % at 15, the gallows dead's tongue 20 % at 17.

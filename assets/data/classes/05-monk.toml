@@ -5,6 +5,7 @@ description = "A disciple of a cloister's discipline, body and mind trained as o
 stats = { dexterity = "1d3", toughness = 1, willpower = "1d3", presence = -1 }
 hp = 5
 mana = 4
+casting = 50
 experience = 120
 skills = { balance = "2d6+10", tumble = "2d6+10", athletics = "2d4+4", concentration = "2d4+4", escape_artist = "2d4+4", listen = "2d4+4" }
 known_for = ["balance", "tumble"]

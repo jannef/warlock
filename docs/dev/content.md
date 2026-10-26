@@ -41,7 +41,7 @@ table loader reads `ContentFiles::table(name)`: `data/<name>.toml` first, if the
 whole table in one file is still accepted, so test fixtures that insert it keep working), then
 `data/<name>/**/*.toml` in path order, then each campaign's `data/<name>/**/*.toml`
 (`ContentFiles::campaign_order`: playable campaigns, then test ones). `quests`, `dialogue`, and
-`dungeons` are tables too: their single files hold the field reference and the shared entries
+`dungeons` are tables too (and `tribes`, a directory only): their single files hold the field reference and the shared entries
 (the shopkeeper's dialogue), the campaigns their own. Ids (`CreatureId`, `ObjectId`, `MaterialId`, an affix's
 index) are indices in that order and feed the content fingerprint, so moving entries between
 files changes ids and invalidates saves (the release bump covers it). Each file is parsed on its

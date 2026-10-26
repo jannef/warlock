@@ -1,0 +1,30 @@
+# The undead roster (#383, batch 2). The black dog of the northern dales, as big as a calf with
+# eyes like coals, that runs the lanes by night: quick, and the sight of its teeth sends the
+# bravest running.
+[[creature]]
+id = "barghest"
+level = 13
+xp = 75
+rarity = "uncommon"
+name = "barghest"
+glyph = "C"
+fg = "#585060"
+speed = 1250
+faction = "undead"
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+footsteps = 50
+hearing = 18
+weight = 60000
+stats = { strength = 16, dexterity = 18, toughness = 16, intelligence = 15, willpower = 21, presence = 15 }
+base_hp = 29
+resist = { poison = 100 }
+on_eat = { message = "It was rotten long before it died.", vomit = 80, harm = "1d4" }
+blood = "#2a2228"
+[creature.attack]
+damage = "2d8"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
+on_hit = [{ status = "frightened", chance = 15, severity = 1 }]

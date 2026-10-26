@@ -91,6 +91,7 @@ mod bleed;
 mod buff;
 mod carry;
 mod caster;
+mod caster_level;
 mod class;
 mod class_ability;
 mod creation;
@@ -113,6 +114,7 @@ mod gifts;
 mod glare;
 mod hash;
 mod hearing;
+mod hold;
 mod hunger;
 mod ice;
 mod incorporeal;
@@ -158,6 +160,7 @@ mod volley;
 
 pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
 pub use alignment::Deed;
+pub use caster_level::casting_percent;
 pub use creation::{chosen_with_talents, creation_count, parse_talents, pick_text};
 pub use dig::{MAX_DIG, WORK_SCALE, dig_work, digs_to_break};
 pub use disarm::SPRINGS_SHORT_BY;
@@ -1074,6 +1077,10 @@ impl World {
         if let Some(refused) = self.refuse_due(action) {
             return refused;
         }
+        // A step while held is a struggle to break free (`hold.rs`).
+        if let Some(spent) = self.struggle(action) {
+            return spent;
+        }
         if let Some(refused) = self.refuse_blocked(action) {
             return refused;
         }
@@ -1190,6 +1197,8 @@ mod buff_tests;
 #[cfg(test)]
 mod burden_tests;
 #[cfg(test)]
+mod caster_level_tests;
+#[cfg(test)]
 mod caster_tests;
 #[cfg(test)]
 mod ceaptun_quest_tests;
@@ -1245,6 +1254,8 @@ mod gem_tests;
 mod gifts_tests;
 #[cfg(test)]
 mod hearing_tests;
+#[cfg(test)]
+mod hold_tests;
 #[cfg(test)]
 mod hunger_tests;
 #[cfg(test)]
@@ -1351,6 +1362,8 @@ mod tests;
 mod time_tests;
 #[cfg(test)]
 mod trap_tests;
+#[cfg(test)]
+mod tribe_tests;
 #[cfg(test)]
 mod variant_tests;
 #[cfg(test)]

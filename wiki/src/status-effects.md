@@ -58,6 +58,27 @@ wears off by itself: "The poison wears off."
 
 You cannot tell whether a creature is poisoned by looking at it.
 
+## Held
+
+Some creatures grab: a bite or a clutch that lands may hold you fast ("You are held fast."), and the
+attack table on the [creature numbers](creature-numbers.md) page says which do, how often, and how
+hard they grip. While **held** you cannot step away; you can still fight, and the one holding you is
+the obvious target.
+
+Each step you try is a **struggle** to break free: a check of your Strength (2d12 plus its
+modifier, as an attack roll; see [Stats](stats.md)) against the holder's **grip**, 13 unless the
+creature's attack says otherwise. Made: "You break free of the ghast." and you take the step.
+Failed: "You struggle, but the ghast holds you fast." and the turn is gone.
+
+A hold also ends by itself, "You are free to move.":
+
+- when the holder dies, is knocked away, or ends up anywhere but beside you;
+- when the holder is held or slowed itself (staggered, transfixed, sluggish);
+- after **3d4 turns** at most. Another hit draws the turns again and keeps the longer of the two.
+
+A creature in your own Drowning grip (a [lucky day](horoscope.md#lucky-days)'s gift) is held
+the same way, and lets go the same way; it does not struggle, it fights you instead.
+
 ## Buffs and cooldowns
 
 A status effect can also help, or hinder, in other ways while it lasts (the table's last

@@ -165,4 +165,4 @@ developer notes (CLAUDE.md, `docs/dev/`).
     and buy the scrolls class, and a generated one always lays out scrolls of identify, §7
     "Shops"; Cēaptūn's has three), and the trap hall beside its arrival (two of each spell, three
     scrolls of identify, and an unidentified dagger). The showcase has none. Later:
-    Spellcraft, Decipher Script, and Use Magic Device (§8 "Skills") may change reading.
+    Spellcraft and Decipher Script (§8 "Skills") may change reading.

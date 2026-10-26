@@ -110,8 +110,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   magic; unique: a population draws her once a run). The cultist, the cult priest, and the bog
   hag are the Ascmearc's own types. Its undead (#384): the corpse candle 2 (small, incorporeal,
   glows, a cold touch), the poltergeist 6 (quick, incorporeal), the ghast 7 (quick, opens doors,
-  filth fever on a hit), the shadow 8 (incorporeal, a cold touch that drains
-  Strength, §8 "Stats": "Drain"), and the bog body 9 (slow, resists cold, marsh ague on a hit). The delf wave (the duergar delf of Fyrdelf, danger 8 to 19): the ember beetle 8 (a
+  filth fever on a hit; its claws may hold), the shadow 8 (incorporeal, a cold touch that drains
+  Strength, §8 "Stats": "Drain"), and the bog body 9 (slow, resists cold, marsh ague on a hit);
+  and from the roster's second batch (#385) the wraith 11 (incorporeal, a cold touch that drains
+  Toughness) and the fen ghoul 11 (quick, opens doors, claws that may hold and carry marsh
+  ague). The delf wave (the duergar delf of Fyrdelf, danger 8 to 19): the ember beetle 8 (a
   burning bite, shell, resists fire 50, a faint glow), the duergar miner 9 (a pick-axe
   held as a tool, the racial hand axe half the time, a leather cap), the duergar warrior 11
   (racial hand axe, small shield, chain mail, sometimes magic), the ogre 12 (slow, racial maul),
@@ -122,9 +125,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
   bite that leaves one Sluggish), the cinder elemental 17 (immune to fire, bright, no corpse), and
   the fire drake 19 (the Ascmearc's own, unique: a caster whose breath is announced, scales,
   immune to fire). Its undead (#384): the ogre zombie 9 (slow, heavy fists, grave rot) and the
-  grave hound 10 (quick, grave rot). The mummy 10 (slow, mummy rot on a hit, fire hurts it more)
-  is in no population yet: the roster's undead above level 10 without a home wait for deep
-  places (#383). The duergar types are of the duergar race. For blood (§8 "Blood";
+  grave hound 10 (quick, grave rot), and from the second batch (#385) the burning skull 12 (small,
+  lit by its own fire, a burning bite, immune to fire, hurt more by cold), the knocker 13 (a
+  miner's spirit, incorporeal), the spectre 14 (incorporeal, a cold touch that drains
+  Willpower), the charred dead 14 (slow, resists fire, hurt more by cold), the duergar skeleton 15
+  (a war hammer and an iron helm, bone that a club breaks), and the rotting troll 17 (slow, huge
+  claws, grave rot, fire hurts it more). In no population yet, waiting for deep places (#383): the
+  mummy 10 (slow, mummy rot on a hit, fire hurts it more), the draugr 12 (huge, resists cold, a
+  great axe half the time), the barghest 13 (a quick black dog whose bite frightens), the vampire
+  spawn 16 (quick, opens doors, a bite that drains Toughness, fire hurts it more), the hand of
+  glory 16 (small, lit by its fingers, a cold touch that transfixes), the gallows dead 17 (a
+  tongue that holds fast), the gibbering shade 18 (incorporeal, a cold touch that drains
+  Intelligence), the bone wyvern 18 (a sting, bone with protection 2), the revenant 19 (very
+  tough, a long sword half the time), the fetch 19 (incorporeal, a cold touch that frightens), and
+  the mummy priest 20 (a caster whose touch carries mummy rot, sometimes something worth taking). The duergar types are of the duergar race. For blood (§8 "Blood";
   presentation only):
   `blood`, the colour of its stains (`"#rrggbb"`; default dark red, `#6e0e0c`) or `"none"` for a
   bloodless creature; the cave beetle bleeds greenish-black ichor (`#38461a`). For hunger (§8
@@ -548,7 +562,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   and `unarmed` (bare hands, kicks, and shield bashes do this kind; one at most). Ids are
   indices (in the content fingerprint), so a new type is a new entry at the end of the list, at
   most 32. Built in: slashing, piercing, bludgeoning (`physical`, `unarmed`), fire, cold,
-  electricity, acid, poison. The status effects (`data/status.toml`, §8 "Status effects") name
+  electricity, acid, poison, force, necrotic (the last two the spells', §8 "Spells"). The status effects (`data/status.toml`, §8 "Status effects") name
   the kinds that wound (`wound.from = ["slashing", "piercing"]`: bleeding; none named: any) and
   the kind a status is (`damage_type = "poison"`: poisoned).
 - **Resources** (`data/resources.toml`, optional; without it there are none; #225, §8
@@ -677,8 +691,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Quests** (`data/quests.toml`, optional; without it nobody gives quests; §8 "Quests"): each
   `[[quest]]` has a unique `id` (lower-case letters, digits, and underscores), a `name` (the log's
   title and the topic, at most 32 characters), a `giver` (a creature type with a dialogue, or an
-  npc id with one), a `type` and a `target`: `kill` (a creature type, not the player; `count` 1 to
-  99, default 1; optional `level`, a level id or a dungeon branch id for any of its levels),
+  npc id with one), a `type` and a `target`: `kill` (a creature type, not the player, `count` 1 to
+  99, default 1; or a tribe, `tribe:ID`, `count` 1 to 999; optional `level`, a level id or a dungeon branch id for any of its levels),
   `bring` (an object type; `count`; optional `to`, someone else with a dialogue who takes it),
   `reach` (a level id, a branch level such as `depths:3` included; never `repeatable`), or
   `deliver` (an object type the giver hands over; `to` required, not the giver); a field another
@@ -703,6 +717,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
   XP), and the wandering bard's "The bard's letter" (deliver a sealed letter, a new object, to the
   old hermit; 5 gold, 15 XP). All four help someone, and are a little good (`alignment` 20, 15,
   10, and 10). The Ascmearc's quests are §3b "Quests".
+- **Tribes** (`data/tribes/<id>.toml`, one file each, and a campaign's `data/tribes/`; optional;
+  §8 "Quests"): each `[[tribe]]` has a unique `id`, a `name` (one of them, "goblin") and a
+  `plural` ("goblins"), each 1 to 24 characters, and its members: every creature type of its
+  `factions`, less `except` (types of those factions; at least one member must be left), plus
+  `creatures` (types besides, none a member already). Optional `except_note` (one line of at most
+  280 characters, said after the members about those left out: "Not the ogres, mind, nor the
+  trolls.") and `count` (1 to 999: how many the guild asks for). A tribe with no member, an
+  unknown faction or creature type, or the player is a content error. A shared tribe's
+  `except` and `creatures` name shared types only, a campaign's its own or shared ones; a
+  campaign's types join a shared tribe through its `factions`. Built in: the seven of §8
+  "Quests".
 - **The weather** (`data/weather.toml`, optional; without it the sky is always clear and every
   month a mild 10 °C with a swing of 8): `swing` at the top (a clear day's swing of temperature
   from the coldest hour to the warmest, °C, 0 to 30), exactly 12

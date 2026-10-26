@@ -72,9 +72,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `data/damage_types.toml`; #151): every amount of damage is of a kind (`Damage { amount,
     kind }`; `DamageTypeId` an index into the ordered file, in the content fingerprint) or
     untyped. Built in, in this order: the physical kinds slashing, piercing, bludgeoning, and the
-    elements fire, cold, electricity, acid, poison; each with the verb its blows are said with
-    ("slashes"/"slash", "stabs"/"stab", "strikes"/"strike", "burns", "chills", "shocks",
-    "corrodes", "poisons") and `physical`; one type is `unarmed` (bludgeoning: bare hands, kicks,
+    elements fire, cold, electricity, acid, poison, and the spells' force and necrotic (§8
+    "Spells"); each with the verb its blows are said with ("slashes"/"slash", "stabs"/"stab",
+    "strikes"/"strike", "burns", "chills", "shocks", "corrodes", "poisons", "batters",
+    "withers") and `physical`; one type is `unarmed` (bludgeoning: bare hands, kicks,
     shield bashes). **Sources**: a weapon names its `damage_type`, one kind or two (a sword
     `["slashing", "piercing"]`, a morning star bludgeoning or piercing; daggers, spears, and
     arrows piercing; axes slashing with their own `verb` "cleaves"; maces and staves
@@ -242,7 +243,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   bled to death), and each level gained up to `hp_level` (20)
   raises the player's maximum and current hit points (`Actor::hp_base`, `hp`) by `max(1, class
   hp ÷ 2 + the Toughness modifier)`; without a character the scenario's `hp` stands in for the
-  class's. Each level gained up to `mana_level` (30) raises their mana by `max(0, class mana ÷ 2
+  class's. Each level gained up to `mana_level` (60) raises their mana by `max(0, class mana ÷ 2
   + the better of the Intelligence and Willpower modifiers)` (§8 "Mana"). Every `talent_every`th level (`[levels]` in `data/experience.toml`, 3) brings a
   talent pick, made on the spot (§8 "Talents", `World::level_up`), and every level checks
   each stat for a rise by its training marks (§8 "Stats": "Training"); every gain is scaled by the

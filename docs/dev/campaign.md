@@ -51,11 +51,13 @@ starts, one of the campaign's own), and `kind`, `campaign` (default) or `test`.
 
 - A campaign's file names its own campaign's or shared levels and creature types, never
   another campaign's: stairs `to`, a scenario's `start_level`, a quest's `level`, `target`
-  (reach), kill target, giver and recipient, a level or vault legend's `creature`, a branch's
+  (reach), kill target (a creature type, or a tribe: shared or the campaign's), giver and recipient, a level or vault legend's `creature`, a branch's
   `creatures` and `population` (and a level's `population`), a vault's `dungeons`, and a dialogue's `creature` ("`campaigns/ashland/levels/town.toml`: names level
   `hub`, a level of campaign `showcase`").
 - Shared data names shared creature types only (`data/shops.toml`'s `[keeper]`, the shared
-  `vaults/`).
+  `vaults/`, a shared tribe's `except` and `creatures`). A tribe's `factions` take in every
+  campaign's types of those factions; the quest text lists only those a run of the quest's
+  campaign can meet (`TribeDef::members_in`).
 - Files outside `campaigns/` that campaigns would own (a top-level `levels/`, `scenarios/`, or
   a single `data/quests.toml`) belong to no campaign and are not checked: test fixtures insert
   them on top of the built-in content. A scenario there plays in its start level's campaign.

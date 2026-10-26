@@ -5,8 +5,9 @@
 //! about), a `giver` (a speaker in `data/dialogue.toml`: a creature type with a dialogue, or an
 //! npc id), a `type` and a `target`:
 //!
-//! - `kill`: `target` a creature type; `count` of them (default 1), optionally on one `level` (a
-//!   level id, or a dungeon branch id for any of its levels). The player's own kills count.
+//! - `kill`: `target` a creature type, or a tribe (`tribe:goblins`, `data/tribes/`: any of its
+//!   member types); `count` of them (default 1), optionally on one `level` (a level id, or a
+//!   dungeon branch id for any of its levels). The player's own kills count, on every level.
 //! - `bring`: `target` an object type; `count` of them (default 1), handed in from the pack to
 //!   the giver, or to the speaker `to`.
 //! - `reach`: `target` a level id (`depths:3` for a level of a branch): the player gets there.
@@ -26,6 +27,7 @@
 use super::creature::CreatureId;
 use super::dialogue::{DialogueId, MAX_LINE, MAX_REPLY, MAX_TOPICS, Speaker, check_lines, is_id};
 use super::object::{MAX_PLACED, ObjectId, parse_stacks};
+use super::tribe::{MAX_TRIBE_COUNT, TribeId};
 use super::{Content, ContentError};
 use crate::alignment::{MAX as ALIGNMENT_MAX, Requirement};
 use crate::object::Stack;
@@ -33,8 +35,11 @@ use serde::Deserialize;
 
 /// The longest quest name, in characters: it is a topic ("Accept: …") and a log title.
 pub const MAX_NAME: usize = 32;
-/// The most creatures a kill quest, or objects a bring quest, asks for.
+/// The most creatures of a type a kill quest, or objects a bring quest, asks for (a tribe's
+/// kill quest may ask for up to [`MAX_TRIBE_COUNT`]).
 pub const MAX_COUNT: u32 = 99;
+/// The prefix of a kill quest's `target` that names a tribe (`tribe:goblins`).
+pub const TRIBE_TARGET: &str = "tribe:";
 /// The most experience a quest gives.
 pub const MAX_QUEST_XP: u32 = 1_000_000;
 /// The object a reward's `gold` is paid in.
@@ -163,12 +168,42 @@ struct RewardSpec {
     items: Vec<String>,
 }
 
+/// What a kill quest is after.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum KillTarget {
+    /// A creature type.
+    Creature(CreatureId),
+    /// Any member type of a tribe.
+    Tribe(TribeId),
+}
+
+impl KillTarget {
+    /// Whether a kill of a `creature` is one of these.
+    pub fn has(self, content: &Content, creature: CreatureId) -> bool {
+        match self {
+            KillTarget::Creature(c) => c == creature,
+            KillTarget::Tribe(t) => content.tribe(t).has(creature),
+        }
+    }
+
+    /// One of them ("goblin chief", "goblin") or several ("goblin chiefs", "goblins").
+    pub fn name(self, content: &Content, one: bool) -> &str {
+        match (self, one) {
+            (KillTarget::Creature(c), true) => &content.creature(c).name,
+            (KillTarget::Creature(c), false) => &content.creature(c).plural,
+            (KillTarget::Tribe(t), true) => &content.tribe(t).name,
+            (KillTarget::Tribe(t), false) => &content.tribe(t).plural,
+        }
+    }
+}
+
 /// What a quest asks of the player.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Goal {
-    /// Kill `count` creatures of a type, on `level` (a level id or a branch id) if given.
+    /// Kill `count` creatures of a type or a tribe, on `level` (a level id or a branch id) if
+    /// given.
     Kill {
-        creature: CreatureId,
+        target: KillTarget,
         count: u32,
         level: Option<String>,
     },
@@ -280,10 +315,13 @@ impl QuestDef {
     pub fn counts_kill(&self, content: &Content, creature: CreatureId, level: &str) -> bool {
         match &self.goal {
             Goal::Kill {
-                creature: target,
+                target,
                 level: place,
                 ..
-            } => *target == creature && place.as_deref().is_none_or(|p| content.is_in(level, p)),
+            } => {
+                target.has(content, creature)
+                    && place.as_deref().is_none_or(|p| content.is_in(level, p))
+            }
             _ => false,
         }
     }
@@ -298,10 +336,10 @@ impl QuestDef {
         place.into_iter()
     }
 
-    /// The creature type a kill quest is after.
-    pub fn kill_target(&self) -> Option<CreatureId> {
+    /// What a kill quest is after.
+    pub fn kill_target(&self) -> Option<KillTarget> {
         match self.goal {
-            Goal::Kill { creature, .. } => Some(creature),
+            Goal::Kill { target, .. } => Some(target),
             _ => None,
         }
     }
@@ -446,9 +484,24 @@ fn resolve(
     let goal = match kind {
         QuestKind::Kill => {
             unused("to", spec.to.is_some())?;
-            let creature = (content.creature_id(&spec.target))
-                .filter(|_| spec.target != "player")
-                .ok_or_else(|| format!("unknown creature `{}`", spec.target))?;
+            let target = match spec.target.strip_prefix(TRIBE_TARGET) {
+                Some(tribe) => KillTarget::Tribe(
+                    (content.tribe_id(tribe)).ok_or_else(|| format!("unknown tribe `{tribe}`"))?,
+                ),
+                None => KillTarget::Creature(
+                    (content.creature_id(&spec.target))
+                        .filter(|_| spec.target != "player")
+                        .ok_or_else(|| format!("unknown creature `{}`", spec.target))?,
+                ),
+            };
+            let most = match target {
+                KillTarget::Creature(_) => MAX_COUNT,
+                KillTarget::Tribe(_) => MAX_TRIBE_COUNT,
+            };
+            let count = match spec.count.unwrap_or(1) {
+                n @ 1.. if n <= most => n,
+                _ => return Err(format!("`count` is 1 to {most}")),
+            };
             if let Some(level) = &spec.level
                 && !content.has_level(campaign, level)
                 && content.dungeon(level).is_none()
@@ -456,8 +509,8 @@ fn resolve(
                 return Err(format!("unknown level or dungeon branch `{level}`"));
             }
             Goal::Kill {
-                creature,
-                count: count(spec.count)?,
+                target,
+                count,
                 level: spec.level,
             }
         }
