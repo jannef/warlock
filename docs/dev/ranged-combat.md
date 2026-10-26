@@ -20,3 +20,17 @@ knows it, `LastTarget`; `AimKind::Read` aims a spell scroll too, `docs/dev/scrol
 with `FreeGlyph::turn`, trail, embers via `particles::trail`, impact puff) and writes this frame's
 `render::lighting::Transients` (the moving light of a burning missile, and landed lights held back
 until it arrives; `draw_map`, object glow, and object particles hold back what is `arriving` too).
+
+Creatures' throws (spec §8 "Ranged combat": "Creatures' throws", #457) live in
+`warlock-core/src/world/hurl.rs`: a creature type's `[creature.throw]` (`content/throw.rs`:
+`ThrowSpec` resolved like a natural attack, its `object` once objects are known,
+`Content::load_throws`; `Throw` on `CreatureDef::throw`). `World::hurls_at` is the AI's check (not
+next to the target, in range, `clear_shot`), `World::creature_hurls` prices the throw
+(`attack_price` of `throw`, which `Content::action_cost` gives the throw's `cost`), makes the
+noise, and flies a `shoot::Flight` with `lands: None` and `breaks: 0` through `World::fly`, the
+flight `loose` uses (so no gameplay draw beyond the attacks' and nothing comes down).
+`Actor::hurled` is its profile (`Profile::thrown`, the `thrown` rank, affixes, stance);
+`status.rs::on_hit_of` gives a creature's thrown attacks its throw's `on_hit`. The flight is an
+`Event::Missile` of the throw's object (the `boulder`, which nothing else places), shown like an
+arrow; `perceive_events` says the throw through `hurl::throw_messages` (the thrower's announcement,
+then the blow with `End::Trap(noun)` as subject). Tests: `world/hurl_tests.rs`.

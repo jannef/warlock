@@ -25,6 +25,8 @@ mod faction;
 mod flow;
 mod gear;
 mod gem;
+#[cfg(test)]
+mod giant_roster_tests;
 mod horoscope;
 mod hunger;
 mod item_class;
@@ -59,6 +61,7 @@ mod steal;
 mod tag;
 mod talent;
 mod terrain;
+mod throw;
 mod trap;
 #[cfg(test)]
 mod undead_roster_tests;
@@ -171,6 +174,7 @@ pub use talent::{
 pub use terrain::{
     Breakable, Freeze, FreezeSpec, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId,
 };
+pub use throw::{THROW_RANGES, Throw};
 pub use trap::{MAX_CHARGES, Trap, TrapDef, TrapEffect, TrapId, TrapNoise};
 pub use vault::Vault;
 pub use vision::VisionProfile;
@@ -762,6 +766,7 @@ impl Content {
         content.load_objects(files)?;
         content.load_gems(files)?;
         content.load_gear()?;
+        content.load_throws()?;
         let path = "data/shops.toml";
         if let Some(text) = files.get_optional(path) {
             content.shops = Some(Shops::parse(path, text, &content)?);
@@ -1240,6 +1245,13 @@ impl Content {
                 .map(|(a, kinds)| a.resolve(status, |id| self.disease_id(id), kinds))
                 .transpose()
                 .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
+            let throw = (spec.throw.clone())
+                .map(|t| {
+                    let kinds = self.resolve_kinds(t.damage_type.as_ref())?;
+                    t.resolve(status, |id| self.disease_id(id), kinds)
+                })
+                .transpose()
+                .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             let percent = crate::damage::MIN_RESISTANCE..=crate::damage::IMMUNE;
             let resist = (self.resolve_per_kind("resist", &spec.resist, percent, false))
                 .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
@@ -1277,6 +1289,7 @@ impl Content {
                 stats,
                 skills,
                 attack,
+                throw,
                 weapon_skills,
                 resist,
                 faction: self.creature_faction(&spec).map_err(err)?,
@@ -1483,6 +1496,32 @@ impl Content {
                 ));
             }
             creature.gear = gear;
+        }
+        Ok(())
+    }
+
+    /// Resolves what the creature types' throws fly as (spec §8 "Ranged combat": "Creatures'
+    /// throws") once objects are known, and names a throw by its object unless it has a name.
+    fn load_throws(&mut self) -> Result<(), ContentError> {
+        for i in 0..self.creatures.len() {
+            let Some(throw) = &self.creatures[i].throw else {
+                continue;
+            };
+            let object = (self.object_id(&throw.object_id)).ok_or_else(|| {
+                ContentError::new(
+                    "data/creatures/",
+                    format!(
+                        "creature `{}`: throw: unknown object `{}`",
+                        self.creatures[i].id, throw.object_id
+                    ),
+                )
+            })?;
+            let name = self.object(object).name.clone();
+            let throw = self.creatures[i].throw.as_mut().expect("a throw");
+            throw.object = object;
+            if !throw.named {
+                throw.attack.name = name;
+            }
         }
         Ok(())
     }
@@ -2935,6 +2974,11 @@ impl Content {
     /// What action `kind` costs a creature of type `creature`: its type's own attack cost for an
     /// attack, if it has one, else the action's cost (spec §8 "Time").
     pub fn action_cost(&self, creature: CreatureId, kind: ActionKind) -> u32 {
+        // A throw of its own (spec §8 "Ranged combat": "Creatures' throws") costs its own.
+        let throw = self.creature(creature).throw.as_ref().and_then(|t| t.cost);
+        if let Some(cost) = throw.filter(|_| kind == ActionKind::Throw) {
+            return cost;
+        }
         match self.creature(creature).attack_cost {
             Some(cost) if kind.is_attack() => cost,
             _ => self.actions.cost(kind),

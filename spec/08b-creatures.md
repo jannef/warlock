@@ -15,7 +15,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
      actor on the cells between (an integer Bresenham line, the one missiles fly); else it steps
      toward the nearest cell that gives it one, failing that toward the target. A `ranged`
      creature with nothing to shoot (no missile weapon ready, or no ammunition for it left) fights
-     as a `melee` one.
+     as a `melee` one. A creature with a throw (§8 "Ranged combat": "Creatures' throws", the
+     giants' boulders) that is not next to its target throws first whenever the target is within
+     the throw's range with a clear line of fire.
      Leaving its routine it remembers where it was (its post) and where it saw the target.
   3. **Search**: with no hostile in sight, it goes to where it last saw one (next to the spot if
      someone it cannot see stands there, or no one can stand there: a door shut or kicked at).

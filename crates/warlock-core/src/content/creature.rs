@@ -10,6 +10,7 @@ use super::light::LightId;
 use super::object::MAX_BONUS;
 use super::particles::ParticleEmitter;
 use super::status::{OnHit, OnHitSpec, StatusId};
+use super::throw::{Throw, ThrowSpec};
 use crate::alignment::Alignment;
 use crate::color::Rgb;
 use crate::combat::{Attack, CRITS, DEFAULT_CRIT, DEFAULT_THREAT, THREATS};
@@ -168,6 +169,8 @@ pub(super) struct CreatureSpec {
     pub loot: u8,
     /// Its natural attack, used when it wields no weapon.
     pub attack: Option<NaturalAttackSpec>,
+    /// Its throw (spec §8 "Ranged combat": "Creatures' throws"): a giant's boulders.
+    pub throw: Option<ThrowSpec>,
     /// Its natural armour: hide, shell, or scales.
     pub natural: Option<Hide>,
     /// Whether it passes through solid terrain, and its Defence inside it (spec §8
@@ -409,6 +412,7 @@ pub(super) struct Resolved {
     pub stats: Stats,
     pub skills: Skills,
     pub attack: Option<NaturalAttack>,
+    pub throw: Option<Throw>,
     pub weapon_skills: WeaponSkills,
     pub resist: Vec<(DamageTypeId, i32)>,
 }
@@ -449,6 +453,7 @@ impl CreatureSpec {
             rarity: r.rarity,
             loot: self.loot,
             attack: r.attack,
+            throw: r.throw,
             natural: self.natural,
             incorporeal: self.incorporeal,
             resist: r.resist,
@@ -554,6 +559,9 @@ pub struct CreatureDef {
     pub loot: u8,
     /// Gameplay: its natural attack, used when it wields no weapon; `None`: bare hands (1d3).
     pub attack: Option<NaturalAttack>,
+    /// Gameplay: its throw, a natural ranged attack with no ammunition (spec §8 "Ranged combat":
+    /// "Creatures' throws"); `None`: it throws nothing. Rules only (the wiki states it).
+    pub throw: Option<Throw>,
     /// Gameplay: its natural armour, if any.
     pub natural: Option<Hide>,
     /// Gameplay: whether it passes through solid terrain and stands inside it, and its Defence

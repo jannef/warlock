@@ -226,11 +226,15 @@ impl World {
         let Some(me) = self.actor_or_fallen(attacker) else {
             return Vec::new();
         };
-        let natural = self.content.creature(me.creature).attack.as_ref();
-        match (kind, natural) {
+        let def = self.content.creature(me.creature);
+        match (kind, def.attack.as_ref()) {
             (AttackKind::Melee, Some(natural)) if me.weapon(&self.content).is_none() => {
                 natural.on_hit.clone()
             }
+            // A creature's throw (`hurl.rs`); the player's throws are their objects'.
+            (AttackKind::Thrown, _) if attacker != self.state.player => (def.throw.as_ref())
+                .map(|t| t.attack.on_hit.clone())
+                .unwrap_or_default(),
             _ => Vec::new(),
         }
     }
