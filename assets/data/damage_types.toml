@@ -68,3 +68,17 @@ id = "poison"
 name = "poison"
 verb = "poisons"
 you = "poison"
+
+# Force (the magic design §6): raw magical force, a spell's (magic missile).
+[[type]]
+id = "force"
+name = "force"
+verb = "batters"
+you = "batter"
+
+# Necrotic (the magic design §6): the withering of life, a spell's (cause wounds).
+[[type]]
+id = "necrotic"
+name = "necrotic"
+verb = "withers"
+you = "wither"

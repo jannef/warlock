@@ -197,6 +197,8 @@ pub enum Effect {
     MaxMana,
     /// Percent faster mana regeneration.
     ManaRegeneration,
+    /// Caster level (spec §8 "Spells").
+    CasterLevel,
     /// Percent resistance to the affix's damage type (`damage_type`; spec §8 "Damage types").
     Resistance,
     /// A stat's score.
@@ -240,6 +242,7 @@ impl Effect {
             Effect::Regeneration,
             Effect::MaxMana,
             Effect::ManaRegeneration,
+            Effect::CasterLevel,
             Effect::Resistance,
         ];
         all.extend(Stat::ALL.map(Effect::Stat));
@@ -279,6 +282,7 @@ impl Effect {
             Effect::Regeneration => "regeneration",
             Effect::MaxMana => "max_mana",
             Effect::ManaRegeneration => "mana_regeneration",
+            Effect::CasterLevel => "caster_level",
             Effect::Resistance => "resistance",
             Effect::Stat(stat) => stat.id(),
             Effect::MoveSpeed => "move_speed",
@@ -294,7 +298,7 @@ impl Effect {
     }
 
     /// How many effects there are.
-    pub const COUNT: usize = 29 + Stat::COUNT;
+    pub const COUNT: usize = 30 + Stat::COUNT;
 
     /// Its place in [`Effect::all`].
     pub const fn index(self) -> usize {
@@ -322,13 +326,14 @@ impl Effect {
             Effect::Regeneration => 20,
             Effect::MaxMana => 21,
             Effect::ManaRegeneration => 22,
-            Effect::Resistance => 23,
-            Effect::Stat(stat) => 24 + stat as usize,
-            Effect::MoveSpeed => 24 + Stat::COUNT,
-            Effect::Carry => 25 + Stat::COUNT,
-            Effect::Stealth => 26 + Stat::COUNT,
-            Effect::Light => 27 + Stat::COUNT,
-            Effect::Skill => 28 + Stat::COUNT,
+            Effect::CasterLevel => 23,
+            Effect::Resistance => 24,
+            Effect::Stat(stat) => 25 + stat as usize,
+            Effect::MoveSpeed => 25 + Stat::COUNT,
+            Effect::Carry => 26 + Stat::COUNT,
+            Effect::Stealth => 27 + Stat::COUNT,
+            Effect::Light => 28 + Stat::COUNT,
+            Effect::Skill => 29 + Stat::COUNT,
         }
     }
 

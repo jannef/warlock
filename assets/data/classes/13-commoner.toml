@@ -5,6 +5,7 @@ description = "A farmhand, laborer, or servant with no training to speak of: use
 stats = { toughness = "1d3-1", intelligence = -1, presence = -1 }
 hp = 3
 mana = 1
+casting = 25
 experience = 80
 skills = { athletics = "2d4+4", handle_animal = "2d4+4" }
 rolls = 2

@@ -146,7 +146,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Classes** (`data/classes/`, one file per class named `NN-id.toml` so path order is the order
   offered; optional): `id`, `name`, a one-line
   `description`, `stats` (adjustments as for races), `hp` and `mana` (as for races; half the
-  class's mana comes with each level up to `mana_level`), `experience` (as for
+  class's mana comes with each level up to `mana_level`), `casting` (the casting percent, 1 to
+  100, default 25: a character's caster level is this percent of their level, §8 "Spells";
+  wizard, witch, priest, and druid 100, bard and aristocrat 75, paladin, ranger, and monk 50,
+  the rest 25), `experience` (as for
   races, multiplied with the race's; §8 "Experience": wizard 125, monk 120, priest, druid, and
   witch 115, paladin 110, ranger 105, warrior and bard 100, thief 95, barbarian, aristocrat,
   craftsperson, and merchant 90, commoner 80), `alignment` (as for races, added to the race's:

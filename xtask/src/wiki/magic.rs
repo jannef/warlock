@@ -165,6 +165,7 @@ fn effect_words(effect: ItemEffect) -> String {
         ItemEffect::Regeneration => "hit points come back faster".into(),
         ItemEffect::MaxMana => "maximum mana".into(),
         ItemEffect::ManaRegeneration => "mana comes back faster".into(),
+        ItemEffect::CasterLevel => "caster level".into(),
         ItemEffect::Resistance => "resistance to a kind of damage, in percent".into(),
         ItemEffect::Stat(stat) => stat.name().into(),
         ItemEffect::MoveSpeed => "you move faster".into(),

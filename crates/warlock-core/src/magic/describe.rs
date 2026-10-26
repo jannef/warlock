@@ -185,6 +185,7 @@ pub fn phrase(rolled: &Rolled<'_>, kind: ItemKind, content: &Content) -> String 
         Effect::Regeneration => format!("hit points come back {v}% faster"),
         Effect::MaxMana => format!("+{v} to maximum mana"),
         Effect::ManaRegeneration => format!("mana comes back {v}% faster"),
+        Effect::CasterLevel => format!("+{v} to caster level"),
         Effect::Stat(stat) => format!("+{v} to {}", stat.name()),
         Effect::MoveSpeed => format!("you move {}", faster(v)),
         Effect::Carry => format!("+{v} kg carrying capacity"),

@@ -38,7 +38,7 @@
 
 max_level = 60
 hp_level = 20
-mana_level = 30
+mana_level = 60
 bonus_percent = 5
 bonus_levels = 4
 

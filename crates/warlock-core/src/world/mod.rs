@@ -91,6 +91,7 @@ mod bleed;
 mod buff;
 mod carry;
 mod caster;
+mod caster_level;
 mod class;
 mod class_ability;
 mod creation;
@@ -159,6 +160,7 @@ mod volley;
 
 pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
 pub use alignment::Deed;
+pub use caster_level::casting_percent;
 pub use creation::{chosen_with_talents, creation_count, parse_talents, pick_text};
 pub use dig::{MAX_DIG, WORK_SCALE, dig_work, digs_to_break};
 pub use disarm::SPRINGS_SHORT_BY;
@@ -1167,6 +1169,8 @@ mod branch_tests;
 mod buff_tests;
 #[cfg(test)]
 mod burden_tests;
+#[cfg(test)]
+mod caster_level_tests;
 #[cfg(test)]
 mod caster_tests;
 #[cfg(test)]

@@ -3,7 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  You learn Light step (1).
- You spend 94 mana (dev).
+ You spend 118 mana (dev).
 
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
@@ -31,4 +31,4 @@ expression: "render(case, content.clone())"
 
 
 
- The Hub  ·  HP 34/34  ·  MP 2/96  ·  Inspiration 0/5  ·  Lv 38  ·  08:00                ? controls
+ The Hub  ·  HP 34/34  ·  MP 2/120  ·  Inspiration 0/5  ·  Lv 38  ·  08:00               ? controls

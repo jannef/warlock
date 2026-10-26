@@ -380,6 +380,7 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "abilities' mana costs {} (rounded to the nearest, at least 1)",
             percent(value)
         ),
+        TalentEffect::CasterLevel { value } => format!("caster level {}", signed(value)),
         TalentEffect::BloodMagic { hp, mana } => format!(
             "active (the time of a wait): give {hp} hit points (never your last) for {mana} \
              mana, up to your maximum; not while your mana is full"

@@ -4,6 +4,7 @@ name = "Barbarian"
 description = "A warrior of the wild lands, fueled by fury: mighty and hardy, with no patience for books or manners."
 stats = { strength = "1d3+1", dexterity = 1, toughness = "1d3", intelligence = "-1d2", presence = -1 }
 hp = 8
+casting = 25
 experience = 90
 skills = { athletics = "2d6+10", survival = "2d6+10", intimidate = "2d4+4", listen = "2d4+4", swim = "2d4+4" }
 known_for = ["athletics", "survival"]

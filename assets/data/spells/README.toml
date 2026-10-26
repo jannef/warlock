@@ -1,0 +1,42 @@
+# Spells (spec §8 "Spells", the magic design docs/design/magic.md §3, §5, §6): one file per
+# spell holding one `[[spell]]`, measured by the tier table in ../spells.toml. Spells are numbered
+# in path order (saves will name them by index), so a new spell is a new file. This file holds
+# only the notes below: a file of comments defines nothing. Nothing casts a spell yet (#395).
+#
+# Fields:
+#   id, name      the spell's id and its name
+#   description   one line
+#   tier          0 (a cantrip) to 9 (../spells.toml)
+#   The tags (talents, abilities, items, and the wiki key on them; magic design §6):
+#   school        evocation, necromancy, abjuration, restoration, transmutation, enchantment,
+#                 or divination
+#   kind          damage, heal, buff, hex, cleanse, or utility
+#   shape         ray, bolt, touch, self (single targets), cone, line, or burst (areas)
+#   damage_type   a damage type of ../damage_types.toml (needed by a `damage` spell, its tag)
+#   resolution    how it finds its targets (../spells.toml [resolution]): `area` for the area
+#                 shapes and only them; `touch` only with the touch shape; `attack` with a ray
+#                 or a bolt; `auto` with any single target
+#   The caps of its reach (Willpower grows a spell's reach and area only up to these):
+#   max_range     ray, bolt, burst: the farthest cell it reaches or is centred on (1 to 20)
+#   max_radius    burst: its largest radius (1 to the length of ../spells.toml's `burst`)
+#   max_length    cone (1 to 5) and line (1 to 20): how far it reaches from the caster
+#                 (touch and self have none of these)
+#   [spell.damage]  a `damage` spell's damage, rolled:
+#     dice        what it rolls at the tier's comfortable caster level: dice only, `1d6`
+#     per_levels  one die more per this many caster levels above that (0: never more;
+#                 default 0)
+#     max_dice    the cap: never more dice than this (at least dice's own; default dice's)
+#     bonus       a static `+n`, rare (default 0)
+#   [spell.effect]  what a spell of another kind does:
+#     heal        a `heal` spell's hit points: a table as [spell.damage]
+#     status, severity  a `buff`'s status on the caster, a `hex`'s on its target (a status of
+#                 ../status.toml; severity 1 to 10, default 1)
+#     cures, diseases   a `cleanse` ends these statuses, and with `diseases = true` every
+#                 disease
+#   [spell.scroll]  how it comes on a scroll: `level`, the caster level a read casts it at
+#                 (default the tier's comfortable level)
+#
+# The cap, checked when the content loads: no spell may roll more than its tier's ceiling times
+# its resolution's `damage` percent (../spells.toml) in one cast, harm or healing: max_dice times
+# the dice's sides plus the bonus. A bonus is at most a quarter of the tier's ceiling. Nothing in
+# the game pushes a spell past its cap, so a spell over it is refused rather than clamped.
