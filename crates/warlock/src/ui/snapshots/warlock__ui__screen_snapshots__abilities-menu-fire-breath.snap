@@ -2,7 +2,7 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You learn Healthy.
+ You learn Hardy (1).
  Fire roars from your throat! You feel drained.
 
 
