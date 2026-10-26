@@ -1,0 +1,37 @@
+# The troll tribe (#456). A troll grown old beyond counting, mossed and scarred and huge: its
+# claws tear deep and knock you reeling, and there is so much of it that its wounds close
+# faster than most can make them. Fire hurts it more than steel.
+[[creature]]
+id = "elder_troll"
+level = 42
+xp = 220
+rarity = "very_rare"
+loot = 50
+name = "elder troll"
+glyph = "T"
+fg = "#507a6a"
+speed = 1050
+faction = "troll"
+tags = ["troll"]
+alignment = "evil"
+vision = "darkvision"
+sight = 10
+footsteps = 190
+hearing = 12
+weight = 700000
+stats = { strength = 35, dexterity = 16, toughness = 38, intelligence = 11, willpower = 18, presence = 8 }
+base_hp = 168
+natural = { defence = 3, protection = 4, name = "ancient hide" }
+resist = { fire = -50 }
+on_eat = { message = "Older than you, and tougher.", vomit = 50, stat = { toughness = 5 } }
+blood = "#203a2a"
+[creature.attack]
+damage = "3d12"
+damage_type = "slashing"
+name = "claws"
+verb = "rakes"
+to_hit = 4
+on_hit = [
+    { status = "bleeding", chance = 20, severity = 2 },
+    { status = "staggered", chance = 15, severity = 1 },
+]

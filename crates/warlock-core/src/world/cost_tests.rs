@@ -628,8 +628,9 @@ fn costs_and_speeds_are_deterministic_saved_and_replayed() {
 fn costs_come_from_data_and_are_validated() {
     // The built-in content: every action a normal one but strapping on body armor (3000), a chat
     // (500), the lantern's hood (500), climbing out of the water onto ice (2000), trying to
-    // disarm a trap (2000), and a try at picking a lock (2000), and no
-    // creature with an attack of its own cost (yet).
+    // disarm a trap (2000), and a try at picking a lock (2000); of the creatures only the
+    // two-headed troll's attacks have a cost of their own (700: one head bites while the other
+    // looks, #456).
     let builtin = Content::builtin().expect("builtin content");
     for &kind in ActionKind::ALL {
         let expected = match kind {
@@ -640,12 +641,10 @@ fn costs_come_from_data_and_are_validated() {
         };
         assert_eq!(builtin.action_costs().cost(kind), expected, "{kind:?}");
     }
-    assert!(
-        builtin
-            .creature_defs()
-            .iter()
-            .all(|c| c.attack_cost.is_none())
-    );
+    for def in builtin.creature_defs() {
+        let want = (def.id == "two_headed_troll").then_some(700);
+        assert_eq!(def.attack_cost, want, "{}", def.id);
+    }
 
     let load = |path: &str, text: &str| {
         let mut files = files(1000);

@@ -28,13 +28,13 @@ temperature = 10
 # come down with the goblins' ogres and trolls. The fire drake is not among them: it lives only
 # on its hoard (the vault at depth 12), so a run meets it there and nowhere else. Its ogres (the
 # ogre, the mauler, and the mage) are the giant tribe's least (#457); the giants live deeper than
-# this.
+# this. The hill trolls (#456) come down from the hills above to the troll's warm deep.
 danger = 8
 population = [
     "bat", "kobold", "kobold_archer", "kobold_shaman", "giant_centipede",
     "ember_beetle", "duergar_miner", "ogre_zombie", "lesser_fire_elemental", "grave_hound",
     "duergar_warrior", "duergar_smith", "ogre", "burning_skull", "troll", "earth_elemental",
-    "knocker", "hell_hound", "fire_salamander",
+    "knocker", "hell_hound", "hill_troll", "fire_salamander",
     "magma_crawler", "spectre", "charred_dead", "ash_wraith", "duergar_skeleton",
     "ogre_mauler", "basilisk", "cinder_elemental", "ogre_mage", "rotting_troll",
     "hobgoblin", "hobgoblin_archer", "hobgoblin_legionnaire", "hobgoblin_warcaster",

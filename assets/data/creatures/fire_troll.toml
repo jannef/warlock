@@ -1,0 +1,34 @@
+# The troll tribe (#456). A troll of the burning deep, its hide cracked like cooling lava and
+# glowing in the cracks: the one troll fire does not stop, and the cold it hates. Its claws
+# sear, and its wounds close as you watch.
+[[creature]]
+id = "fire_troll"
+level = 33
+xp = 175
+rarity = "uncommon"
+name = "fire troll"
+glyph = "T"
+fg = "#d0602a"
+speed = 1050
+light = "ember"
+glow = 0.3
+faction = "troll"
+tags = ["troll", "fire-thing"]
+alignment = "evil"
+vision = "darkvision"
+sight = 10
+footsteps = 150
+hearing = 10
+weight = 450000
+stats = { strength = 26, dexterity = 16, toughness = 29, intelligence = 10, willpower = 17, presence = 7 }
+base_hp = 82
+natural = { defence = 2, protection = 2, name = "cinder hide" }
+resist = { fire = 75, cold = -50 }
+on_eat = { message = "Still warm, and it tastes of ash.", vomit = 50, stat = { toughness = 5 } }
+blood = "#6a2a10"
+[creature.attack]
+damage = "3d10"
+damage_type = "fire"
+name = "claws"
+verb = "sears"
+to_hit = 3

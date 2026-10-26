@@ -1,0 +1,49 @@
+# The troll tribe (#456). The biggest, meanest troll of a clan, wearing the mail of those it ate
+# and swinging a great axe: a blow from it can send you running, and it keeps the clan's
+# takings. Its wounds close as you watch, and fire hurts it more than steel.
+[[creature]]
+id = "troll_chieftain"
+level = 37
+xp = 195
+rarity = "rare"
+loot = 75
+name = "troll chieftain"
+glyph = "T"
+fg = "#c0a040"
+speed = 1050
+faction = "troll"
+tags = ["troll"]
+alignment = "evil"
+vision = "darkvision"
+sight = 10
+opens_doors = true
+footsteps = 160
+hearing = 12
+weight = 450000
+stats = { strength = 30, dexterity = 17, toughness = 31, intelligence = 11, willpower = 17, presence = 12 }
+base_hp = 92
+natural = { defence = 2, protection = 2, name = "hide" }
+weapon_skills = { axes = 4 }
+resist = { fire = -50 }
+on_eat = { message = "Old, tough, and full of scars.", vomit = 50, stat = { toughness = 5 } }
+blood = "#2a4a2a"
+[creature.attack]
+damage = "4d8"
+damage_type = "slashing"
+name = "claws"
+verb = "rakes"
+to_hit = 3
+on_hit = [{ status = "frightened", chance = 15, severity = 1 }]
+# Its gear (spec §8 "Creature gear"): a great axe, mail, and a helm, the best of them magic.
+[[creature.gear]]
+chance = 80
+one_of = ["great_axe"]
+keep = "wield"
+magic = 40
+[[creature.gear]]
+chance = 60
+one_of = ["scale_mail"]
+magic = 25
+[[creature.gear]]
+chance = 60
+one_of = ["iron_helm"]

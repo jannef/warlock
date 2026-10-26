@@ -1002,7 +1002,10 @@ mod tests {
         let statuses = text("status-effects.md");
         for row in [
             "| Bleeding | yes, \"bleeding\" | Big hits and confirmed criticals; ",
+            "the elder troll's claws (20%, 2 degrees); ",
+            "the forest troll's claws (20%, 1 degree); ",
             "; the giant leech's sucker (40%, 1 degree); ",
+            "the two-headed troll's bites (20%, 1 degree)",
             "| A hit point every 40 seconds, faster the worse it is | A degree a minute | Not at \
              all | — | Bandage |",
             "| A degree every 2 minutes | Half as fast |",
@@ -1147,7 +1150,7 @@ mod tests {
         assert!(text("creatures.md").contains("shoots from afar"));
         assert!(
             text("factions.md")
-                .contains("| Kobolds | you, vermin, goblins, orcs, undead, giants |")
+                .contains("| Kobolds | you, vermin, goblins, orcs, undead, giants, trolls |")
         );
         assert!(text("factions.md").contains("| Wildlife | nobody |"));
         assert!(text("factions.md").contains("| Cultists | you, marsh things | no |"));
