@@ -563,6 +563,15 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "the time between attempts to bring a creature to your level {}",
             percent(value)
         ),
+        TalentEffect::SenseOfPlace => "knows a special room's nature from a glimpse of it, \
+            and the effect covering a whole level by name on arrival"
+            .into(),
+        TalentEffect::RoomPacePercent { value } => format!(
+            "where a special room quickens healing or mana, the quickening {} (a room's 300% \
+             pace becomes {}%)",
+            percent(value),
+            100 + 200 * (100 + value) / 100
+        ),
         TalentEffect::StoneSense => "notices hidden things on stone in passing".into(),
         TalentEffect::StoneFind { value } => format!(
             "{} to every check to find what is hidden on stone, searching and in passing",

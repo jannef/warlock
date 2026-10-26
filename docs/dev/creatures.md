@@ -210,6 +210,18 @@ tags (faction and `yugoloth` tag go together). Their riders map onto what exists
 barbed tongue holds (20 % at 18) and bleeds, the nycaloth's claws bleed, the arcanaloth's poison,
 the ultroloth's blows carry its gaze (transfixed, frightened). They ship in no population (no
 danger window reaches level 22 yet).
+The hags (#451): the green hag 18 (caster), sea hag 26 (standard), annis hag 34 (brute), and
+bheur hag 42 (caster), shared types in `assets/data/creatures/` on the undead roster's formulas;
+`content/hag_roster_tests.rs` holds every type of the `hags` faction to them (its own `ROLES`,
+±35 %) and checks the `hag` tag, which the bog hag (faction `marsh`, the fen's) carries too.
+Faction `hags` (hostile to the player only), so the fixtures that write their own factions file
+list it. Their riders are existing mechanics only: the green hag's `transfixed` and `ill_wished`
+(illusions and misery), the sea hag's `frightened` and a Toughness drain (her death gaze), the
+annis hag's `held` (her embrace, grip 18), the bheur hag's cold damage and `sluggish` (no hunger
+rider exists); `world/mana_tests.rs` drops the green and bheur hags with its own status file.
+Illusions, death gazes, blizzards, shapeshifting, covens, and water-dwelling (the sea hag walks
+the land only, #196) are follow-ups. They ship in no population: only Fyrdelf's window (8–19)
+reaches the green hag's level, and a volcano is no place for her.
 The hobgoblins (#454), the goblin tribe's second tier: seven shared types from level 9 to 24
 (`hobgoblin`, `_archer`, `_legionnaire`, `_warcaster`, `_sergeant`, `_captain`, `_warlord`),
 faction `goblins`, tags `goblin` and `hobgoblin` (plus `archer`, `caster`), glyph `g` in
@@ -221,3 +233,4 @@ quarterstaff, great sword), so no natural attack and no `on_hit` rider.
 the faction and tags, levels above every other goblin's, and a racial weapon. Fyrdelf's
 population has all but the warlord, which no place is deep enough for yet; they and the duergar
 fight on sight (`bestiary_tests`' stances).
+

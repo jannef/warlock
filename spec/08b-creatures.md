@@ -174,8 +174,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Group tags: `kobold`; `goblin` (the hobgoblins too; not the ogre or the troll, who run with
     them); `hobgoblin` (the goblins' second tier, #454); `undead` (every
     creature of the `undead` faction, a test sees to it); `vermin` (not the basilisk);
-    `marsh-thing` (the fens' living things and the bog hag); `duergar` (not their trader, a
-    merchant); `fire-thing`; `yugoloth` (every creature of the `yugoloth` faction); `fiend` (the fiends
+    `marsh-thing` (the fens' living things and the bog hag); `hag` (the bog hag and her kin of
+    the `hags` faction, #451); `duergar` (not their trader, a merchant); `fire-thing`; `yugoloth`
+    (every creature of the `yugoloth` faction); `fiend` (the fiends
     of the lower planes: every yugoloth, demon, and devil). Role and kind tags: `archer`, `caster` (every `combat = "caster"`
     type), `cultist`, `skeleton`, `spirit` (the incorporeal undead), `troll`. Tags are never
     shown in the game; the wiki lists them.

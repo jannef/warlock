@@ -368,10 +368,7 @@ pub fn plain_noise(
     };
     // A special room scales every noise made inside it (spec §7 "Special rooms"): an echoing
     // hall makes it louder, so it carries farther; a hushed chamber quieter.
-    let loudness = match level.room_effect_at(content, at) {
-        Some(room) => loudness * u32::from(room.noise) / 100,
-        None => loudness,
-    };
+    let loudness = loudness * level.effects_at(content, at).noise() / 100;
     let loudness = loudness.min(u32::from(MAX_LOUDNESS)) as u16;
     (loudness > 0).then_some(Noise {
         kind,
