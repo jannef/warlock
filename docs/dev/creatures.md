@@ -16,7 +16,19 @@ one file per creature named by its id (`kobold.toml`; the field documentation is
 `README.toml`), a table directory read in path order: see "Content directories" in
 `docs/dev/content.md`. Stance comes from types:
 `Content::stance(creature, creature)`, `World::stance(actor, actor)`, and for presentation only
-`PerceptionView::stance(seen actor)` (look mode's "(hostile)"). Between the player and a creature,
+`PerceptionView::stance(seen actor)` (look mode's "(hostile)"). Courts (#452): a type may give
+`factions = { seelie = 50, unseelie = 50 }` (weights) instead of `faction`
+(`CreatureDef::factions`, checked in `Content::creature_factions`; `CreatureDef::faction` is then
+the heaviest, ties the first by id, for type-level answers: the wiki, `Content::stance`). Each
+creature of it joins one when it is made: `world/court.rs::join`, one call in
+`travel::make_creature` (so spawns, populations, level files, and vaults alike), unless the spawn
+names a `faction`; stream `court/<actor id>` (`Rng::court`), drawn only for such a type, so no
+other stream moves. The pick is `Actor::faction_override` (saved and hashed when set; no new
+save field). A faction's `provoked` (`FactionDef::provoked`) is the faction one of its creatures
+joins when the player attacks it: `World::provoke_court`, one line beside the shopkeeper's
+`provoke` in `fight.rs` and `spell.rs`; the Seelie court's is `wrathful_fey`. Tests:
+`world/court_tests.rs` (weights over many draws, per-seed determinism, save and load, a level's
+faction winning, look mode's stance, a struck Seelie fey), `content/fey_roster_tests.rs`. Between the player and a creature,
 the Beast-friend talent makes `animal` factions neutral until the player attacks one of the type
 (`world/beast_friend.rs::befriended`, read by `World::stance`, the AI's `nearest_hostile_in_sight`,
 and `PerceptionView::stance`; `docs/dev/progression.md`). The AI is `world/ai.rs`
@@ -199,3 +211,13 @@ vampire spawn, hand of glory, gallows dead, gibbering shade, bone wyvern, revena
 mummy priest ship in no population (deep undead wait for deep places, #383), and the ghost is
 incorporeal (wall Defence 2). The roster's holds (`held`, #431) are `{ status = "held", chance,
 difficulty }`: the ghast's and fen ghoul's claws 10 % at 15, the gallows dead's tongue 20 % at 17.
+
+The fey roster (#452): thirteen shared types, one file each in `assets/data/creatures/`, tagged
+`fey`, each of the Seelie or the Unseelie court by its weights (the README's notes): sprite 2,
+pixie 4, quickling 6, boggle 7, darkling 9, satyr 10, redcap 12, blink dog 14, meenlock 16, dryad
+19, nymph 22, korred 25, yeth hound 31. `content/fey_roster_tests.rs` holds their levels, roles,
+and court weights against #383's formulas (XP guideline; max HP and dice within ±35 %). Their
+riders are existing statuses only (poisoned, transfixed, frightened, held, bleeding); teleport,
+illusions, flight, charm, tree-binding, a death burst, and poisoned missiles are follow-ups.
+Fennmynster's population takes the pixie, the boggle, and the darkling; the rest wait for a
+woodland place.

@@ -7,28 +7,28 @@ stairs Up at (42, 4) -> ascmearc
 stairs Down at (68, 12) -> fennmynster:2
 giant_frog at (38, 14) route W W W E E W W W E E W W E E E W W E E E
 corpse_candle at (58, 13) route N N W E E E E E W W W W W E S S
-giant_leech at (31, 11) route N N S S S N N N S S
+pixie at (31, 11) route N N S S S N N N S S
 giant_leech at (9, 16) route E S S W W W N S E E E N N W
-giant_leech at (25, 17) route N N E E E E W W W W S S
+pixie at (25, 17) route N N E E E E W W W W S S
 giant_frog at (28, 5) route E S S S S N N N N W
 giant_frog at (27, 10) route N N N N E E S S S N N N W W S S S S
 zombie at (44, 12) route E W E W E E W W E W E E W W E W E W
-giant_leech at (8, 17) route E E S W W E E N W W
+pixie at (8, 17) route E E S W W E E N W W
 giant_frog at (56, 12) route W W W W W W W W W W E E E E E E E E E E
 giant_leech at (28, 16) route W W S W E N E E
 giant_leech at (27, 15) route S S W W E E N N
 barrow_ghoul at (57, 12) route S N N E W S S N
 giant_leech at (7, 12) route S S S S S E E E S W E N W W W N N N N N
 giant_leech at (28, 9) route N E S W N E S N W S E N W S
-giant_leech at (15, 16) route W W W E E W W E E E
+pixie at (15, 16) route W W W E E W W E E E
 giant_leech at (51, 12) route E W E E W W E E W W E W
-corpse_candle at (31, 14) route S S N N N N N S S S N N N S S S S S N N
+giant_frog at (31, 14) route S S N N N N N S S S N N N S S S S S N N
 giant_frog at (40, 15) route W N N E E E S S W W E E N N W W W S S E
 giant_frog at (58, 7) route N S S N N S S N N S
 giant_leech at (53, 3) route E E S W E E E E W W W W E N W W
 giant_frog at (29, 15) route S S W W W W E E E E N N
-giant_leech at (21, 16) route W W W W W E W E E E E E
-grave_worm at (23, 16) route W W E E W W E E W W E E W W E E W W E E
+pixie at (21, 16) route W W W W W E W E E E E E
+kobold at (23, 16) route W W E E W W E E W W E E W W E E W W E E carrying a bone spear (wielded), a bone cap (being worn), a leather jerkin (being worn), 4 copper coins
 giant_frog at (57, 13) route N S N N E E E E E N S W W W W W S S N S
 alarm trap at (28, 7)
 teleport trap at (38, 4)
@@ -46,12 +46,12 @@ pit trap at (60, 12)
                 ###########...###     #.#                #.#
                           #.w.'.#     #.#               ##'#############
                           #R..#.#     #.#               #¡...........).#
-     #######              ##.##w#     #.#  ##############.............(#
+     #######              ##.##f#     #.#  ##############.............(#
      #.w..¡#               #.##.#    ##S####z......w....Rz..^.......>..#
      #.....#               #.##.######.....#.############Ry...........¡#
-     #.....#            ####.##y......R....S.#          ################
+     #.....#            ####.##R......R....S.#          ################
      #.....##############..w.R#.######¡.R..###
-     #...w.&...w.....w.wS.?.w.'.#    #######
-     #..w..##############w....###
+     #...w.&...f.....f.kS.?.w.'.#    #######
+     #..f..##############f....###
      #¡....#            #######
      #######

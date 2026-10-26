@@ -1,0 +1,33 @@
+# The fey roster (#452).
+# A meenlock: an insect-like horror of the dark that fills its prey with dread, and holds it
+# with paralysing claws to carry it off (what it makes of its captives waits for a mechanic).
+# Nearly all serve the Unseelie court.
+[[creature]]
+id = "meenlock"
+level = 16
+xp = 90
+rarity = "uncommon"
+name = "meenlock"
+glyph = "f"
+fg = "#7a8a40"
+factions = { seelie = 10, unseelie = 90 }
+tags = ["fey"]
+alignment = "evil"
+vision = "darkvision"
+sight = 10
+footsteps = 20
+hearing = 18
+weight = 15000
+size = "small"
+stats = { strength = 17, dexterity = 14, toughness = 18, intelligence = 16, willpower = 16, presence = 18 }
+base_hp = 40
+blood = "#3a4a1a"
+[creature.attack]
+damage = "3d6"
+damage_type = "slashing"
+name = "claw"
+verb = "claws"
+on_hit = [
+    { status = "frightened", chance = 20, severity = 1 },
+    { status = "held", chance = 10, difficulty = 15 },
+]

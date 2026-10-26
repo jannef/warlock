@@ -141,7 +141,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
   tongue that holds fast), the gibbering shade 18 (incorporeal, a cold touch that drains
   Intelligence), the bone wyvern 18 (a sting, bone with protection 2), the revenant 19 (very
   tough, a long sword half the time), the fetch 19 (incorporeal, a cold touch that frightens), and
-  the mummy priest 20 (a caster whose touch carries mummy rot, sometimes something worth taking). The duergar types are of the duergar race. For blood (§8 "Blood";
+  the mummy priest 20 (a caster whose touch carries mummy rot, sometimes something worth taking).
+  The fey roster (#452), shared types each of which joins the Seelie or the Unseelie court when
+  it is made ("Factions" below), on the undead roster's formulas: the sprite 2 (small, shoots a
+  short bow, a poisoned stab), the pixie 4 (small, a caster whose touch transfixes), the
+  quickling 6 (twice as fast as a man), the boggle 7 (small, an oily hide that is hard to hit,
+  opens doors), the darkling 9 (small, darkvision), the satyr 10 (butts; a lute or a pipe now and
+  then), the redcap 12 (small, quick for its strength, iron-shod boots, a heavy stamp),
+  the blink dog 14 (quick), the meenlock 16 (small, claws that frighten and may hold), the dryad
+  19 and the nymph 22 (casters whose touch transfixes), the korred 25 (small and very tough,
+  fists that may hold), and the yeth hound 31 (quick, silent, a bite that frightens). Fennmynster
+  takes the pixie, the boggle, and the darkling; the rest are in no population yet. The duergar types are of the duergar race. For blood (§8 "Blood";
   presentation only):
   `blood`, the colour of its stains (`"#rrggbb"`; default dark red, `#6e0e0c`) or `"none"` for a
   bloodless creature; the cave beetle bleeds greenish-black ichor (`#38461a`). For hunger (§8
@@ -659,7 +669,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `peaceful` ("peaceful folk", hostile to no one: the showcase's people by type, and creatures
   levels place in it); `merchants` (shopkeepers; hostile to no one) and `outraged` ("outraged
   shopkeepers", hostile to the player), which a robbed or attacked shopkeeper joins (§7
-  "Shops"). A level
+  "Shops"); the fey courts (#452): `seelie` ("Seelie court", hostile to the Unseelie only, so
+  neutral to the player), `unseelie` ("Unseelie court", hostile to the player and the Seelie), and
+  `wrathful_fey` ("wrathful fey", hostile to the player and the Unseelie), every other faction
+  neutral to all three. A faction may name `provoked`, a faction one of its creatures joins when
+  the player attacks it (in melee, with a missile, or with a spell): the Seelie court's is the
+  wrathful fey, so a Seelie fey the player strikes turns on them for good. A creature type may
+  give `factions` (faction ids with weights, 1 to 1000; never with `faction`) instead of
+  `faction`: each creature of it joins one when it is made (a spawn, a generated floor's
+  population, a level file or vault entry without a `faction` of its own), drawn by weight from
+  its own stream (`court/<actor id>`, so no other draw moves), and keeps it as its
+  `faction_override`; the type counts as its heaviest (ties: the first by id) wherever a type's
+  stance is asked. A level
   legend entry with a `creature` may name a `faction` (a known faction id; an unknown one is a
   content error) that replaces its type's for that creature: it is stored on the actor
   (`faction_override`, saved and hashed only when set), used wherever stance is computed (AI

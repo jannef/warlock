@@ -1,0 +1,34 @@
+# The fey roster (#452).
+# A sprite: a fey warrior no bigger than a hand, on dragonfly wings. It shoots from afar
+# with a little bow, and its tiny blade is poisoned. It flies, so its steps make no sound.
+[[creature]]
+id = "sprite"
+level = 2
+xp = 20
+name = "sprite"
+glyph = "f"
+fg = "#8ad070"
+speed = 1100
+factions = { seelie = 50, unseelie = 50 }
+tags = ["fey", "archer"]
+vision = "low_light"
+sight = 12
+combat = "ranged"
+range = 8
+hearing = 14
+weight = 1500
+size = "small"
+stats = { strength = 8, dexterity = 14, toughness = 9, intelligence = 11, willpower = 11, presence = 13 }
+base_hp = 2
+weapon_skills = { bows = 1 }
+# Its gear (spec §8 "Creature gear"): a short bow, as a rule, and arrows.
+racial_weapon = "short_bow"
+[creature.attack]
+damage = "1d4"
+damage_type = "piercing"
+name = "stab"
+verb = "stabs"
+on_hit = [{ status = "poisoned", chance = 25, severity = 1 }]
+[[creature.gear]]
+chance = 95
+one_of = ["arrow*8", "arrow*15"]
