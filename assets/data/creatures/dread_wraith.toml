@@ -1,0 +1,34 @@
+# The undead roster (#383, batch 3). The darkest of the wraiths: a shadow quicker than the living,
+# drifting through walls and doors, whose cold touch drinks their Toughness, for good unless the
+# body holds on (a temple's mending gives it back). Blades and clubs pass half through it, and it
+# leaves nothing behind. Not yet in any dungeon's population.
+[[creature]]
+id = "dread_wraith"
+level = 28
+xp = 150
+rarity = "rare"
+name = "dread wraith"
+glyph = "W"
+fg = "#40405a"
+speed = 1400
+faction = "undead"
+tags = ["undead", "spirit"]
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+hearing = 15
+weight = 100
+stats = { strength = 20, dexterity = 20, toughness = 20, intelligence = 21, willpower = 26, presence = 21 }
+base_hp = 42
+natural = { defence = 4, protection = 0, name = "insubstantial form" }
+incorporeal = { wall_defence = 4 }
+resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "3d6"
+damage_type = "cold"
+name = "touch"
+verb = "touches"
+to_hit = 2
+on_hit = [{ drain = "toughness", points = 1, chance = 15, check = "toughness", difficulty = 17 }]

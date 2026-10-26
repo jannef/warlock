@@ -150,7 +150,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
   tongue that holds fast), the gibbering shade 18 (incorporeal, a cold touch that drains
   Intelligence), the bone wyvern 18 (a sting, bone with protection 2), the revenant 19 (very
   tough, a long sword half the time), the fetch 19 (incorporeal, a cold touch that frightens), and
-  the mummy priest 20 (a caster whose touch carries mummy rot, sometimes something worth taking). The duergar types are of the duergar race. For blood (§8 "Blood";
+  the mummy priest 20 (a caster whose touch carries mummy rot, sometimes something worth taking);
+  and the third batch (#386), all of it: the bodach 21 (a cold touch that frightens and now and
+  then drains Toughness), the grave knight 22 (a long sword, sometimes magic, a small shield,
+  chain or plate), the charnel heap 22 (slow, huge, filth fever), the banshee 23 (incorporeal, a
+  touch that frightens and drains Presence), the wight lord 24 (a touch that drains Toughness, a
+  magic long sword now and then, something worth taking), the vampire 25 (quick, opens doors, a
+  bite that drains Toughness and may transfix, fire hurts it more), the wormhost 26 (burrowing
+  worms, a disease that may kill), the bone drake 27 (bone with protection 4), the dread wraith 28
+  (quick, incorporeal, a touch that drains Toughness), the headless knight 29 (quick, a long
+  sword or a glaive, frightens), the lich 30 (a caster whose touch holds and drains
+  Intelligence), and the rotting drake 30 (slow, grave rot). The duergar types are of the duergar race. For blood (§8 "Blood";
   presentation only):
   `blood`, the colour of its stains (`"#rrggbb"`; default dark red, `#6e0e0c`) or `"none"` for a
   bloodless creature; the cave beetle bleeds greenish-black ichor (`#38461a`). For hunger (§8

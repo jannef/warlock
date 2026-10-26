@@ -1,0 +1,41 @@
+# The undead roster (#383, batch 3). The dullahan of the Irish tales: a rider-knight with no head
+# on its shoulders, quick as a horseman, and the sight of it close sends the living running. It
+# bears a long sword or a glaive, now and then an enchanted one, and opens doors. Not yet in any
+# dungeon's population.
+[[creature]]
+id = "headless_knight"
+level = 29
+xp = 155
+rarity = "uncommon"
+name = "headless knight"
+glyph = "Z"
+fg = "#40485a"
+speed = 1300
+faction = "undead"
+tags = ["undead"]
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+opens_doors = true
+footsteps = 90
+hearing = 12
+weight = 85000
+stats = { strength = 23, dexterity = 17, toughness = 24, intelligence = 22, willpower = 26, presence = 22 }
+base_hp = 72
+natural = { defence = 1, protection = 0, name = "dead flesh" }
+resist = { poison = 100 }
+weapon_skills = { long_blades = 4, polearms = 4 }
+on_eat = { message = "Cold meat, and no head to it.", vomit = 80, harm = "1d4" }
+blood = "#2a2428"
+[creature.attack]
+damage = "4d6"
+damage_type = "bludgeoning"
+name = "slam"
+verb = "slams"
+to_hit = 2
+on_hit = [{ status = "frightened", chance = 20, severity = 2 }]
+# Its gear (spec §8 "Creature gear"): the blade it rides with.
+[[creature.gear]]
+chance = 90
+one_of = ["long_sword", "glaive"]
+magic = 30

@@ -408,7 +408,7 @@ fn draw_map(
             };
             let top = pile
                 .first()
-                .map(|s| (content.object(s.object).glyph, s.fg(content)));
+                .map(|s| (content.object(s.object).glyph, view.lore().fg(s)));
             let trap = view.trap(p).map(|t| content.trap(t));
             let stain = view.blood(p).filter(|_| show_blood);
             let glyph = |t| {
@@ -539,7 +539,7 @@ fn draw_messages(
         let ready = match aim.kind {
             AimKind::Ability(ability) => ability.name(content).to_string(),
             _ => (missile.and_then(|i| view.inventory().get(i)))
-                .map_or_else(String::new, |s| content.object(s.object).describe(1)),
+                .map_or_else(String::new, |s| view.lore().describe_object(s.object, 1)),
         };
         let next = key(KeyCommand::NextTarget);
         let prompt = aim.prompt(&ready, (&key(KeyCommand::Loose), &key(confirm), &next));

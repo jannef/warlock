@@ -1,0 +1,43 @@
+# The undead roster (#383, batch 3). A sorcerer who would not die, its name from Old English līc,
+# a corpse: dry bones in rotting robes, a caster (its spells announced until magic is designed)
+# whose cold touch holds the living fast and dims their wits for good unless the will holds (a
+# temple's mending gives it back). It keeps things worth taking, opens doors, bleeds nothing, and
+# leaves only dust. Not yet in any dungeon's population.
+[[creature]]
+id = "lich"
+level = 30
+xp = 160
+rarity = "rare"
+loot = 75
+name = "lich"
+glyph = "L"
+fg = "#a0e0c0"
+speed = 1050
+faction = "undead"
+tags = ["undead", "caster"]
+alignment = "evil"
+vision = "darkvision"
+sight = 14
+combat = "caster"
+range = 8
+opens_doors = true
+footsteps = 30
+hearing = 15
+weight = 30000
+stats = { strength = 20, dexterity = 18, toughness = 24, intelligence = 26, willpower = 30, presence = 26 }
+base_hp = 60
+skills = { concentration = 100, spellcraft = 105 }
+natural = { defence = 2, protection = 0, name = "dry bones" }
+resist = { poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "3d8"
+damage_type = "cold"
+name = "touch"
+verb = "touches"
+to_hit = 3
+on_hit = [
+    { status = "held", chance = 15, difficulty = 18 },
+    { drain = "intelligence", points = 1, chance = 10, difficulty = 18 },
+]

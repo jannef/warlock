@@ -89,6 +89,19 @@ const WAVES: &[(&str, Option<&str>)] = &[
     ("revenant", None),
     ("fetch", None),
     ("mummy_priest", None),
+    // The undead roster, batch 3 (#386): levels 21 to 30, all shared.
+    ("bodach", None),
+    ("grave_knight", None),
+    ("charnel_heap", None),
+    ("banshee", None),
+    ("wight_lord", None),
+    ("vampire", None),
+    ("wormhost", None),
+    ("bone_drake", None),
+    ("dread_wraith", None),
+    ("headless_knight", None),
+    ("lich", None),
+    ("rotting_drake", None),
 ];
 
 #[test]
@@ -161,6 +174,9 @@ fn the_barrow_humanoids_wield_their_weapons() {
         "skeleton_archer",
         "skeleton_warrior",
         "duergar_skeleton",
+        "grave_knight",
+        "wight_lord",
+        "headless_knight",
     ] {
         let creature = CONTENT.creature_id(id).expect(id);
         let mut armed = 0;
@@ -190,7 +206,7 @@ fn the_barrow_humanoids_wield_their_weapons() {
         let least = match id {
             "skeleton" => 40,
             "barrow_wight" => 90,
-            "skeleton_warrior" | "duergar_skeleton" => 140,
+            "skeleton_warrior" | "duergar_skeleton" | "wight_lord" => 140,
             _ => 160,
         };
         assert!(armed >= least, "{id}: {armed} of 200 armed");
@@ -215,18 +231,32 @@ fn the_roster_spirits_pass_through_walls_and_the_drainers_drain() {
         "spectre",
         "gibbering_shade",
         "fetch",
+        "banshee",
+        "dread_wraith",
     ] {
         let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
         let wall = def.incorporeal.as_ref().map(|i| i.wall_defence);
         assert_eq!(wall, Some(2 + i32::from(def.level) / 10), "{id}");
     }
     // Drains: difficulty 12 + level ÷ 5, checked by willpower but Toughness's by toughness.
-    for (id, stat, check, difficulty) in [
-        ("shadow", Stat::Strength, Stat::Willpower, 13),
-        ("wraith", Stat::Toughness, Stat::Toughness, 14),
-        ("spectre", Stat::Willpower, Stat::Willpower, 14),
-        ("vampire_spawn", Stat::Toughness, Stat::Toughness, 15),
-        ("gibbering_shade", Stat::Intelligence, Stat::Willpower, 15),
+    for (id, stat, check, difficulty, want) in [
+        ("shadow", Stat::Strength, Stat::Willpower, 13, 10),
+        ("wraith", Stat::Toughness, Stat::Toughness, 14, 10),
+        ("spectre", Stat::Willpower, Stat::Willpower, 14, 10),
+        ("vampire_spawn", Stat::Toughness, Stat::Toughness, 15, 10),
+        (
+            "gibbering_shade",
+            Stat::Intelligence,
+            Stat::Willpower,
+            15,
+            10,
+        ),
+        ("bodach", Stat::Toughness, Stat::Toughness, 16, 5),
+        ("banshee", Stat::Presence, Stat::Willpower, 16, 10),
+        ("wight_lord", Stat::Toughness, Stat::Toughness, 16, 10),
+        ("vampire", Stat::Toughness, Stat::Toughness, 17, 15),
+        ("dread_wraith", Stat::Toughness, Stat::Toughness, 17, 15),
+        ("lich", Stat::Intelligence, Stat::Willpower, 18, 10),
     ] {
         let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
         let touch = def.attack.as_ref().expect("an attack");
@@ -238,15 +268,16 @@ fn the_roster_spirits_pass_through_walls_and_the_drainers_drain() {
         assert_eq!(drain.stat, Some(stat), "{id}");
         assert_eq!(
             (drain.points, drain.check, drain.difficulty, chance),
-            (1, check, difficulty, 10),
+            (1, check, difficulty, want),
             "{id}"
         );
     }
-    // Holds (#431): the ghouls' claws and the gallows dead's tongue.
+    // Holds (#431): the ghouls' claws, the gallows dead's tongue, and the lich's touch.
     for (id, chance, difficulty) in [
         ("ghast", 10, 15),
         ("fen_ghoul", 10, 15),
         ("gallows_dead", 20, 17),
+        ("lich", 15, 18),
     ] {
         let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
         let attack = def.attack.as_ref().expect("an attack");
