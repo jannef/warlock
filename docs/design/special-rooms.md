@@ -31,7 +31,7 @@ Design document for the owner's review (2026-10-26). Written against `origin/mai
 | Teeming den (swarm) | a room filled with **sleeping** hostile creatures of the floor's danger, and their hoard. Sleepers always come from the branch population's own draw (no den is hand-made per monster); some dens are themed, a warren of one type or a tribe of one faction. They wake to noise, a blow, or a sleeper's cry, and never on their own, so one loud step can wake the whole room. Stealth and sneak attacks matter here. §4 |
 | Cursed room | a non-undead creature killed inside rises from its corpse two minutes later, as a random undead of its level or the nearest level. Taking or eating the corpse first stops it. Whole level at 5 %. §5 |
 | Draining room | the status *Ebbing* drains mana from everyone inside, creatures too. Whole level at 5 %. §6 |
-| Forgotten altar | ADOM's pool mechanic with its own flavour (no gods, no sacrifices, no conversion). **Pray** (abilities menu, *Here*; no key of its own) takes **one minute** and draws a boon, nothing, or a bane. The odds lean on the altar's hidden side against the player's alignment, and the side shows in the altar's light colour. The great boons and banes can make or ruin a character: a level gained or lost, a stat raised or lowered by up to three for good, a talent or a flaw for life, a relic, a horde. No limit on prayers. No wish. §7 |
+| Forgotten altar | ADOM's pool mechanic with its own flavour (no gods, no sacrifices, no conversion). **Pray** (abilities menu, *Here*; no key of its own) takes **one minute** and draws a boon, nothing, or a bane. The odds lean on the altar's hidden side against the player's alignment, and the side shows in the altar's light colour. Forty outcomes, most of them small (a few coins, a little healing, a brief hex, a pang of hunger, a wandering creature) and six "nothing happens" lines: about 30 % of prayers do nothing, 44 % something minor, 22 % something moderate, 4 % something great (a level gained or lost, a stat raised or lowered for good, a talent or a flaw for life, a relic, a horde). Each prayer has a **50 % chance to exhaust** the altar (a spent altar stays on the map), so an altar answers about twice on average and rarely swings a game. One rare outcome makes the **altar explode**: a fireball on its cell, and the altar is gone. No wish. §7 |
 | Hot and cold rooms | the room sets its cells' **temperature** (+25 °C, −25 °C) and nothing else. What the temperature does (ice today; creatures, items, and food later) is the environment simulation's job. §8 |
 | More rooms | all thirteen are built: silent vault, tempting hoard, haunted room, shrine of a side, black chamber, scriptorium, beast den, unstable room, heavy hall, healing spring, forge, hall of mirrors, collapsed floor. §9 |
 | Talents | a new system `special_rooms` with eight talents, and a new system `prayer` with two. One class ability, *Consecrate* (priest, paladin). §11 |
@@ -161,9 +161,9 @@ The draw runs over the eligible features only (§3.2 step 1).
 |---|---|
 | Source | a new abilities-menu source **Here** (`Source::Place`): abilities a place offers, listed while the player stands on or next to the feature cell of a room that offers them, absent (not greyed) elsewhere. No key of their own (`KeyCommand` unbound by default), bindable like every ability. Pray (§7), Drink (§9.10), Temper (§9.12). |
 | Only here | these abilities exist **only** in these rooms (decision 14). The showcase's water-garden altar and the temple of Cēaptūn are scenery and services; a hand-made level that wants an altar room marks it (`[[room]] effect = "altar"`). |
-| Outcome tables | `data/outcomes/<id>.toml`, one table a file (churning content is a directory): `kinds` with base weights (`boon`, `nothing`, `bane`; the forge's `improved`, `nothing`, `flawed`, `ruined`), a `lean` that moves weight between the best and the worst kind, and `[[outcome]]` entries (`kind`, `id`, `weight`, `effect`, `message`, `great`). Each `effect` is one of a closed set of kinds, each calling one hook. Drawn from the gameplay stream. `content/outcome.rs` parses and validates; `world/outcome.rs` applies. |
+| Outcome tables | `data/outcomes/<id>.toml`, one table a file (churning content is a directory): `kinds` with base weights (`boon`, `nothing`, `bane`; the forge's `improved`, `nothing`, `flawed`, `ruined`), a `lean` that moves weight between the best and the worst kind, `exhaust` (below), and `[[outcome]]` entries (`kind`, `id`, `weight`, `tier` = `minor`, `moderate`, or `great`, `effect`, and `message` or `messages`, a list one line of which is drawn). Each `effect` is one of a closed set of kinds, each calling one hook; `effect` may be empty (a "nothing happens" line). Drawn from the gameplay stream. `content/outcome.rs` parses and validates; `world/outcome.rs` applies. |
 | Time | each ability is a long action through `World::keep_at`, the rest's machinery: anything that disturbs a rest interrupts it (a creature comes into view, a hit), and an interrupted one gives **nothing**, but the time is spent |
-| Repeats | no limit: the owner's no-anti-farming rule. The risk of the bad outcomes is the price. |
+| Repeats and exhaustion | `exhaust` (percent, 0 to 100, **default 50**) on a table: after each completed use, one more gameplay draw decides whether the place is **spent** (its feature cell becomes its spent terrain, `spent = "spent_altar"` on the table, and the ability is no longer offered there). The forgotten altar keeps the default, 50 (the owner's rule, decision 19, §7.3). The spring and the forge set `exhaust = 0`: no limit, the owner's no-anti-farming rule, and the risk of their bad outcomes is the price. An interrupted use draws nothing and never exhausts. |
 
 ## 4. Teeming dens (the owner's "swarms")
 
@@ -243,7 +243,9 @@ swarm = { per_cells = 4, min = 4, max = 16, wake = 200, cry = 60, loot_level = 1
 
 ## 7. Forgotten altars and prayer
 
-**What this is, and is not.** A forgotten altar is ADOM's **pool** mechanic with a different flavour: a place where the player may gamble, as often as they like, on a draw of boons and banes. It is **not** ADOM's altar and god system: there are no gods to name or serve, no sacrifices, no conversion of altars, and no relationship that builds over time. The altar's hidden side (§7.2) only tilts the gamble's odds; it is flavour on the pool, not a pantheon.
+**What this is, and is not.** A forgotten altar is ADOM's **pool** mechanic with a different flavour: a place where the player may gamble on a draw of boons and banes until the altar is spent. It is **not** ADOM's altar and god system: there are no gods to name or serve, no sacrifices, no conversion of altars, and no relationship that builds over time. The altar's hidden side (§7.2) only tilts the gamble's odds; it is flavour on the pool, not a pantheon.
+
+**The shape of the gamble** (decision 18). Most prayers do little: a few coins, a little healing, a brief hex, a pang of hunger, a wandering creature, or nothing at all with a line of flavour. The outcomes that make or ruin a character are rare, and an altar is usually spent after one or two prayers (§7.3), so **no single altar swings a game for sure**. The range is wide on purpose: kneeling should be a small story every time, and only now and then a large one.
 
 **Messages**: `near` *"A faint glow rises from an altar ahead."* `enter` *"An old altar stands here, its god long forgotten."*
 
@@ -253,20 +255,22 @@ swarm = { per_cells = 4, min = 4, max = 16, wake = 200, cry = 60, loot_level = 1
 |---|---|
 | Room | `feature = "forgotten_altar"`, offers Pray with the outcome table `forgotten_altar` (§3.8, §7.4), `weight = 8`, `min_cells = 9` |
 | Its terrain | a **new terrain**, `forgotten_altar` (glyph `_`, stone, not walkable), with its own name and description (decision 14), so it never reads as the showcase's or a temple's altar. Look mode: "a forgotten altar". Description: *"An altar of worn stone. Its carvings have been rubbed smooth by hands or by time, and whatever god it served has no name left. Something here still listens."* |
+| Spent | a second **new terrain**, `spent_altar` (glyph `_`, dark grey, stone, not walkable, no light, no glow). Look mode: "a spent altar". Description: *"An altar of worn stone, cold and dark. Whatever listened here has stopped."* Pray is not offered beside it. §7.3 |
+| Destroyed | the explosion (§7.5) turns the altar's cell into `rubble` (today's terrain: walkable, loose stones that clatter) |
 | Its side | drawn at generation from the map stream (§7.2), kept in the room's state (`Room::side: Option<Alignment>`, saved and hashed only when set). A hand-made level gives it: `[[room]] effect = "altar" side = "evil"`. |
-| Its light | by side: `altar_good` (warm gold, today's `altar_glow`), `altar_neutral` (pale grey), `altar_evil` (dull red). The terrain is the same; its light is chosen per cell (a terrain light override in `LevelState`, the same mechanism a placed light uses). |
+| Its light | by side: `altar_good` (warm gold, today's `altar_glow`), `altar_neutral` (pale grey), `altar_evil` (dull red). The terrain is the same; its light is chosen per cell (a terrain light override in `LevelState`, the same mechanism a placed light uses). The override is dropped when the altar is spent or destroyed. |
 
 ### 7.2 The altar's hidden side, plainly (decision 8)
 
 Every forgotten altar is **good, neutral, or evil** in nature (the flavour says a god once owned it; the rules know only the side). The game decides which when it makes the level (one good to two neutral to one evil) and never says it in words.
 
-The side matters because it tilts the prayer's odds against the player's own alignment (their band: good, neutral, or evil):
+The side matters because it tilts the prayer's odds against the player's own alignment (their band: good, neutral, or evil). The base weights are boon 35, nothing 30, bane 35 (§7.4); the lean moves 15 points:
 
 | The altar is | The player is | Effect on the odds |
 |---|---|---|
-| good or evil | on the **same** side | **agreement**: 15 points move from bane to boon (boon 55, nothing 25, bane 20) |
-| good or evil | on the **other** side (good at an evil altar, evil at a good one) | **opposition**: 15 points move from boon to bane (boon 25, nothing 25, bane 50) |
-| good or evil | neutral | no lean (boon 40, nothing 25, bane 35) |
+| good or evil | on the **same** side | **agreement**: 15 points move from bane to boon (boon 50, nothing 30, bane 20) |
+| good or evil | on the **other** side (good at an evil altar, evil at a good one) | **opposition**: 15 points move from boon to bane (boon 20, nothing 30, bane 50) |
+| good or evil | neutral | no lean (boon 35, nothing 30, bane 35) |
 | neutral | anyone | no lean |
 
 Praying also moves the player's alignment a little: +5 at a good altar, −10 at an evil one, nothing at a neutral one (`Deed::Prayed(side)`, `[shift] prayed_good`, `prayed_evil` in `data/alignment.toml`). A paladin who prays at red altars strays.
@@ -277,10 +281,13 @@ Praying also moves the player's alignment a little: +5 at a good altar, −10 at
 
 | | |
 |---|---|
-| How | **Pray** under *Here* (§3.8), listed while the player stands on or next to a forgotten altar |
-| Action | `Action::Pray` (`pray` in action text). A long action of **one minute** (decision 6; six 10-second steps through `World::keep_at`); an interrupted prayer gives nothing (*"Your prayer is broken."*). |
+| How | **Pray** under *Here* (§3.8), listed while the player stands next to a forgotten altar (never a spent one) |
+| Action | `Action::Pray` (`pray` in action text). A long action of **one minute** (decision 6; six 10-second steps through `World::keep_at`); an interrupted prayer gives nothing (*"Your prayer is broken."*), draws nothing, and never exhausts the altar. |
 | Outcome | at the end, one draw from the gameplay stream on the table's weights, leaned by side (§7.2), then the outcome's hook and its message |
-| Repeats | **no limit**: pray again at once. A minute costs almost nothing, so the price of praying is the bad outcomes, and they are meant to hurt: a prayer can kill the player outright, ruin a stat for good, cost a level, or bring a horde. The tension is the chance of being royally undone by a bad roll (decision 6). The altar never crumbles, never grows angry, and never refuses (the owner's no-anti-farming rule). |
+| Exhaustion | then, unless the altar exploded, one more gameplay draw: with `exhaust` (**50 %**) the altar is **spent**: its cell becomes `spent_altar` through `World::set_terrain` (which drops the cell's light masks, as digging does) and its light override is removed. Seen: *"The altar's glow gutters and dies."* Pray is offered at it no more. The chance does not depend on the outcome: a great boon spends the altar no more often than nothing does. |
+| How many prayers | one always; a second with 50 %, a third with 25 %, and so on: **about two on average** (1.97 with the explosion's chance), five or more at one altar in sixteen |
+| Saved state | **none new**: the level's terrain grid is already saved and hashed (digging's rubble is), so the swap to `spent_altar` or `rubble` is the whole record. *Here* asks the terrain, so a spent or destroyed altar offers nothing. `Room::side` stays (dumps show it); the `rooms` dump marks the room `spent` or `destroyed` from its feature cell's terrain. The two new terrains change the content fingerprint as any new terrain does. |
+| Versus the no-limits rule | the first draft had no limit on prayers (the owner's no-anti-farming rule: time and risk are the price, never a lockout by one failed roll). The owner now sets exhaustion for altars (decision 19). It is not a lockout by a failed roll: the chance is the same whatever the prayer gave, a prayer still costs only a minute and its risk, and the player may seek out every other altar in the game (one in about 28 generated floors has one, §3.2). It replaces farming one altar without end, so what one altar can do to a game stays bounded. The spring and the forge keep no limit (§3.8). |
 | No wish | no outcome grants a wish; wishes stay on #196 |
 
 ### 7.4 The table: `data/outcomes/forgotten_altar.toml`
@@ -288,49 +295,125 @@ Praying also moves the player's alignment a little: +5 at a good altar, −10 at
 ```toml
 seconds = 60
 # Weights of the kinds, before the side's lean.
-kinds = { boon = 40, nothing = 25, bane = 35 }
+kinds = { boon = 35, nothing = 30, bane = 35 }
 # Moved between boon and bane on agreement or opposition (§7.2).
 lean = 15
+# Percent: the altar is spent after a completed prayer (the owner's rule; default 50).
+exhaust = 50
+spent = "spent_altar"
 
 [[outcome]]
 kind = "boon"
-id = "mended"
-weight = 10
-effect = { heal = "full", cure = ["bleeding", "poisoned"] }
-message = "Warmth runs through you, and your wounds close."
+tier = "minor"
+id = "soothed"
+weight = 13
+effect = { heal = "2d6", cure = ["bleeding"] }
+message = "A little warmth runs through you."
+
+[[outcome]]
+kind = "nothing"
+tier = "minor"
+id = "omen"
+weight = 20
+messages = ["The smoke of your breath bends toward the stairs.", "For a moment you smell rain.", "Somewhere far below, a bell rings once.", "The carvings seem to shift under your eyes, and are still."]
+
+[[outcome]]
+kind = "bane"
+tier = "moderate"
+id = "burst"
+weight = 5
+effect = { explode = { spell = "fireball", radius = 2, damage = "3d6", damage_type = "fire", heat = true, noise = { sound = "explosion", loudness = 150 } }, becomes = "rubble" }
+message = "The altar bursts apart in fire!"
 ```
 
-The bane weights and the great outcomes are deliberately strong (decisions 6 and 7): the banes can seriously hurt or doom a character, as ADOM's pools do, and the great boons are what a player kneels a twentieth time for. Weights are within each kind.
+Weights are **within each kind** (each kind's weights sum to 100, so a weight is also its percent of that kind). Items left "at the altar's foot" go on the free cell beside the altar nearest the player (the altar is not walkable, so nothing lies on it).
 
-| Kind | Outcome | Weight | Hook | Message (vague) |
-|---|---|---|---|---|
-| boon | Mended: full hit points, bleeding and poison cured | 10 | `heal`, status cure | "Warmth runs through you, and your wounds close." |
-| boon | Replenished: mana to full | 6 | mana | "Your mind feels clear and full." |
-| boon | Cleansed: every disease cured (cure id `prayer`) | 6 | `Diseases::cure` | "A sickness leaves you." (else "You feel clean.") |
-| boon | Restored: all stat damage mended | 6 | the temple's mending service code | "You feel whole again." |
-| boon | Blessed: the `blessed` status, 3 degrees | 8 | statuses | "You feel watched over." |
-| boon | Offering: an item at item level + 3 on the altar | 6 | `loot::make` | "Something lies on the altar that was not there before." |
-| boon | Insight: everything carried identified | 4 | identify | "You understand what you carry." |
-| boon | Favour: a fifth of the XP to the next level | 3 | `earn` | "You feel wiser." |
-| boon, **great** | **Gift of the forgotten**: +1d3 to a random stat's score and potential, for good | 1 | `Stats::train` (potential first) | "You feel changed." |
-| boon, **great** | **Exalted**: a whole experience level at once (XP to the next level's threshold, with its picks due) | 1 | `earn` | "Power floods into you." |
-| boon, **great** | **Chosen**: a talent the player qualifies for, given free and kept for life (never counted against picks) | 1 | `Actor::boons` (new, saved), read by `Talents::regrant` beside race and sign | "You have been chosen." |
-| boon, **great** | **Relic**: an item at item level + 10, of the top rarity its base allows, on the altar | 1 | `loot::make` with a rarity floor | "Something gleams on the altar." |
-| nothing | | (one line) | | "Silence answers you." |
-| bane | Sickened: a random disease, the deadly ones included (grave rot) | 8 | `infect` | "A chill settles in your bones." |
-| bane | Withered: 1d3 stat damage to a random stat | 8 | stat damage | "Something is taken from you." |
-| bane | Smitten: a bolt from above, 4d10 lightning through `hurt` (resistances count); **it can kill** | 6 | the lightning trap's spell code | "The altar answers with fire from above!" |
-| bane | Answered: a hostile creature of danger + 4, awake, beside the altar (danger 0: the deepest type of the branch's population) | 6 | `make_creature` | "Something answers your prayer." |
-| bane | Hexed: `ill_wished`, 3 degrees | 6 | statuses | "You feel watched with malice." |
-| bane | Tithe: the most valuable stack carried, worn and wielded things included, vanishes | 4 | inventory | "Something precious is gone." |
-| bane | Emptied: mana to 0 | 4 | mana | "Your mind goes dark." |
-| bane | Famished: nutrition to the last stage before Starving | 4 | hunger | "A gnawing hunger takes you." |
-| bane, **great** | **Wrath of the forgotten**: −1d3 to a random stat's potential and score, for good (never below 3) | 1 | `Stats` | "You feel lessened, forever." |
-| bane, **great** | **Unmade**: one experience level lost (XP to the start of the level below; its hit points and picks taken back) | 1 | new level-loss rule (`World::lose_level`) | "Your past slips away from you." |
-| bane, **great** | **Forsaken**: a random flaw talent (Frail, Thin-skinned, …) the player lacks, kept for life | 1 | `Actor::boons` | "You have been marked." |
-| bane, **great** | **Damned**: a horde, 2d4 hostiles of danger + 3, awake around the altar | 1 | `make_creature` | "The dark fills with answering voices." |
+**Nothing happens** (kind `nothing`, 30 of the base weights; no hook, flavour only, never a hint of anything true):
 
-Per prayer with no lean: about 3 % a great boon and about 3 % a great bane; Smitten, Answered, and Damned can each end a run. The wiki lists the table exactly, with the lean and the colours. The table is data: the owner tunes it in review. Making the great outcomes still bigger (ADOM's crowning, artifacts, wishes) stays a deferred follow-up on #196 (the "Jackpots at ADOM level" line).
+| Outcome | Weight | Message |
+|---|---|---|
+| Silence | 25 | "Silence answers you." |
+| Echo | 15 | "Your words echo, and fade." |
+| Dust | 15 | "Dust sifts down from the ceiling." |
+| Flicker | 15 | "The altar's glow flickers, then steadies." |
+| Breath | 10 | "A cold breath brushes your neck, and is gone." |
+| Omen | 20 | one of four lines (above): the smoke, the rain, the bell, the carvings |
+
+**Boons** (kind `boon`; within it: minor 65, moderate 29, great 6):
+
+| Tier | Outcome | Weight | What it does | Hook | Message (vague) |
+|---|---|---|---|---|---|
+| minor | Soothed | 13 | 2d6 hit points back, bleeding stopped | `heal`, status cure | "A little warmth runs through you." |
+| minor | Coins | 10 | 2d10 copper coins at the altar's foot; one time in four 1d6 gold coins instead | object placement (`copper_coin`, `gold_coin`) | "Coins lie at the foot of the altar." |
+| minor | Sated | 8 | nutrition one stage better (never past Satiated) | hunger | "You feel fed." |
+| minor | Trinket | 7 | an item at the floor's item level at the altar's foot | `loot::make` | "Something lies at the foot of the altar." |
+| minor | Trickle | 9 | 2d4 mana back | mana | "Your mind stirs." |
+| minor | Uplifted | 7 | the `inspired` status (five minutes) | statuses | "Your heart lifts." |
+| minor | Wary | 5 | every trap within 10 cells becomes known | `World::know_trap` | "You sense where the floor lies." |
+| minor | Glimpse | 6 | one random unidentified carried item identified (none: "You feel you understand a little.", nothing) | `loot::identify` | "Something you carry becomes clear to you." |
+| moderate | Mended | 6 | full hit points, bleeding and poison cured | `heal`, status cure | "Warmth runs through you, and your wounds close." |
+| moderate | Replenished | 5 | mana to full | mana | "Your mind feels clear and full." |
+| moderate | Cleansed | 4 | every disease cured (cure id `prayer`) | `Diseases::cure` | "A sickness leaves you." (else "You feel clean.") |
+| moderate | Restored | 4 | all stat damage mended | the temple's mending service code | "You feel whole again." |
+| moderate | Blessed | 5 | the `blessed` status, 3 degrees | statuses | "You feel watched over." |
+| moderate | Offering | 3 | an item at item level + 3 at the altar's foot | `loot::make` | "Something lies at the foot of the altar that was not there before." |
+| moderate | Favour | 2 | a fifth of the XP to the next level | `earn` | "You feel wiser." |
+| **great** | **Gift of the forgotten** | 2 | +1d3 to a random stat's score and potential, for good | `Stats::train` (potential first) | "You feel changed." |
+| **great** | **Exalted** | 1 | a whole experience level at once (XP to the next level's threshold, with its picks due) | `earn` | "Power floods into you." |
+| **great** | **Chosen** | 1 | a talent the player qualifies for, given free and kept for life (never counted against picks) | `Actor::boons` (new, saved), read by `Talents::regrant` beside race and sign | "You have been chosen." |
+| **great** | **Relic** | 2 | an item at item level + 10, of the top rarity its base allows, at the altar's foot | `loot::make` with a rarity floor | "Something gleams at the foot of the altar." |
+
+**Banes** (kind `bane`; within it: minor 60, moderate 34 with the explosion, great 6):
+
+| Tier | Outcome | Weight | What it does | Hook | Message (vague) |
+|---|---|---|---|---|---|
+| minor | Scorched | 11 | 2d6 fire damage through `hurt` with `Harm::Spared` (never the last hit point; fire resistance counts) | `hurt` | "The altar's glow flares and burns you." |
+| minor | Sapped | 7 | 2d4 mana lost (never below 0) | `mana::drain` | "Your mind dims a little." |
+| minor | Lightened | 7 | a third of the coins carried vanish (none: nothing lost) | inventory | "Your purse feels lighter." |
+| minor | Hungry | 8 | nutrition one stage worse (never into Starving) | hunger | "Your stomach growls." |
+| minor | Sluggish | 8 | the `sluggish` status, 1 degree | statuses | "You feel sluggish." |
+| minor | Ill-wished | 6 | `ill_wished`, 1 degree | statuses | "You feel a stranger's ill will." |
+| minor | Snuffed | 5 | the player's lantern goes out, if lit (none lit: only the line) | `World::toggle_lantern` | "A cold wind blows past you." |
+| minor | Drawn | 4 | one hostile of the floor's danger (the normal draw, `content/danger.rs::draw`), awake, at the room's edge, out of view if it can be (danger 0: nothing) | `make_creature`, the spawner's placement | "You hear something stir." |
+| minor | Muddled | 4 | one identified magic item carried becomes unidentified again (none: nothing) | **the one new hook**: `loot::forget` clears the item's `identified` flag | "Something you carry seems strange to you." |
+| moderate | Sickened | 5 | a random disease, the deadly ones included (grave rot) | `infect` | "A chill settles in your bones." |
+| moderate | Withered | 5 | 1d3 stat damage to a random stat (mended as any stat damage is) | stat damage | "Something is taken from you." |
+| moderate | Smitten | 3 | a bolt from above, 4d10 lightning through `hurt` (resistances count); **it can kill** | the lightning trap's spell code | "The altar answers with fire from above!" |
+| moderate | Answered | 4 | a hostile creature of danger + 4, awake, beside the altar (danger 0: the deepest type of the branch's population) | `make_creature` | "Something answers your prayer." |
+| moderate | Hexed | 4 | `ill_wished`, 3 degrees | statuses | "You feel watched with malice." |
+| moderate | Tithe | 3 | the most valuable stack carried, worn and wielded things included, vanishes | inventory | "Something precious is gone." |
+| moderate | Displaced | 5 | teleported as the teleport trap does, to a random free cell of the level | the trap's teleport (`world/trap.rs`) | "The world lurches around you." |
+| moderate | **The altar explodes** | 5 | a fireball on the altar's cell, and the altar is gone (§7.5) | the burst spell code (`World::cast_burst`), `World::set_terrain` | "The altar bursts apart in fire!" |
+| **great** | **Wrath of the forgotten** | 1 | −1d3 to a random stat's potential and score, for good (never below 3) | `Stats` | "You feel lessened, forever." |
+| **great** | **Unmade** | 1 | one experience level lost (XP to the start of the level below; its hit points and picks taken back) | new level-loss rule (`World::lose_level`) | "Your past slips away from you." |
+| **great** | **Forsaken** | 2 | a random flaw talent (Frail, Thin-skinned, …) the player lacks, kept for life | `Actor::boons` | "You have been marked." |
+| **great** | **Damned** | 2 | a horde, 2d4 hostiles of danger + 3, awake around the altar | `make_creature` | "The dark fills with answering voices." |
+
+That is **40 outcomes** (19 boons, 21 banes) and **6 "nothing happens"** lines. All but Muddled run on existing systems; the great ones need R6's `Actor::boons`, `World::lose_level`, and the rarity floor.
+
+**Shares per prayer** (percent of prayers: the kind's weight × the tier's share within it):
+
+| | Nothing | Minor | Moderate | Great | Great boon / great bane | The altar explodes |
+|---|---|---|---|---|---|---|
+| No lean (boon 35, nothing 30, bane 35) | **30.0** | **43.75** (boon 22.75, bane 21.0) | **22.05** (boon 10.15, bane 11.9) | **4.2** | 2.1 / 2.1 | 1.75 |
+| Agreement (50 / 30 / 20) | 30.0 | 44.5 (boon 32.5, bane 12.0) | 21.3 (boon 14.5, bane 6.8) | 4.2 | 3.0 / 1.2 | 1.0 |
+| Opposition (20 / 30 / 50) | 30.0 | 43.0 (boon 13.0, bane 30.0) | 22.8 (boon 5.8, bane 17.0) | 4.2 | 1.2 / 3.0 | 2.5 |
+
+**Per altar** (about two prayers, §7.3): with no lean, a great boon comes at about **4 %** of altars and a great bane at about 4 %, so some great outcome at about 8 %; the explosion at about 3.4 %. At an agreeing altar a great boon is about 6 %; at an opposed one a great bane is about 6 % and the explosion about 5 %. A player who finds one altar in a game most often takes away a few coins, a heal, or a hex; about one altar in twelve marks the character for good.
+
+Smitten, Answered, the explosion, and Damned can each end a weak character's run; the minor banes never kill (Scorched is spared). The wiki lists the table exactly, with the lean, the tiers, the exhaustion chance, and the colours. The table is data: the owner tunes it in review. Making the great outcomes still bigger (ADOM's crowning, artifacts, wishes) stays a deferred follow-up on #196 (the "Jackpots at ADOM level" line).
+
+### 7.5 The altar explodes (decision 20)
+
+| | |
+|---|---|
+| What | a **fireball** centred on the altar's cell, through the spell code the fireball trap and the scroll of fireball share (`World::cast_burst`, `world/spell.rs`): the burst's cells by `burst_cells` (radius 2, stopped by walls), then everyone in them hurt |
+| Damage | 3d6 fire (the fireball trap's numbers) to **everyone in the burst, the player included**: the player prays from beside the altar, so they are always in it, and so is anything Drawn or Answered that stands close. Fire resistance and immunity count, and Evasion's dodge (`World::evaded`) applies as to any burst. **It can kill** (no `Harm::Spared`). It is cast as a trap's spell is: its kills are no one's and earn no experience, and its lines name it "the altar's fire". |
+| Light, sound, heat | all from the existing effect code: the `fireball` spell effect is shown (its flash and particles; a still flash under reduced effects; never read by the rules), the noise is the trap's explosion (`sound_at`, `explosion`, loudness 150: much of the level hears it), and `heat = true` melts ice in the burst as the trap's does. No `blast`: the walls around stand. |
+| The altar | gone: its cell becomes `rubble` (`World::set_terrain`; walkable, it clatters underfoot), its light override is removed, and *Here* no longer lists Pray. No exhaustion draw follows (nothing is left to spend). |
+| Weight | 5 within the banes, moderate tier: **1.75 %** of prayers with no lean (1.0 % agreeing, 2.5 % opposed), about 3.4 % of altars |
+| Order | the line *"The altar bursts apart in fire!"*, then the burst (its hurt lines and any deaths), then the terrain change, all in the prayer's last step |
+| Penitent | does not stop it (it is moderate, not great) |
 
 ## 8. Hot and cold rooms
 
@@ -460,7 +543,7 @@ All thirteen are built (decision 16), each as its own issue (§12). They are lis
 | | |
 |---|---|
 | id, name, mark | `spring`, "spring", `~` |
-| Rule | `feature = "spring"` (a new terrain, a stone basin of water, not walkable). **Drink** (*Here*, §3.8; `Action::Drink`, `drink` in action text) takes 10 s and draws from `data/outcomes/spring.toml`: Refreshed (2d8 hit points, weight 55), nothing (25), Fouled (a disease caught, one `prayer` cures: marsh ague, 15), Clear-headed (half the mana back, 5). No limit. |
+| Rule | `feature = "spring"` (a new terrain, a stone basin of water, not walkable). **Drink** (*Here*, §3.8; `Action::Drink`, `drink` in action text) takes 10 s and draws from `data/outcomes/spring.toml`: Refreshed (2d8 hit points, weight 55), nothing (25), Fouled (a disease caught, one `prayer` cures: marsh ague, 15), Clear-headed (half the mana back, 5). No limit (`exhaust = 0`). |
 | Messages | `enter` "Clear water wells up in an old stone basin."; outcomes "The water is cold and good." / "It tastes of stone." / "The water tastes foul." / "Your head clears." |
 | Fields | `feature = "spring"`, `outcomes = "spring"`, `weight = 4`, `min_cells = 9` |
 | Cost | S on R5's outcome tables and *Here*. |
@@ -481,7 +564,7 @@ All thirteen are built (decision 16), each as its own issue (§12). They are lis
 | | |
 |---|---|
 | id, name, mark | `forge`, "forge", `f` |
-| Rule | `feature = "anvil"` (a new terrain, "an old anvil, its hammer chained beside it"). **Temper** (*Here*, §3.8; `Action::Temper { item }`, `temper:LETTER` in action text) works one carried weapon or armour for 10 minutes, then draws from `data/outcomes/forge.toml`: `improved` (an affix of the item's class added, up to its rarity's count, else its strongest affix a step up), `nothing`, `flawed` (one affix lost), `ruined` (the item breaks and is gone). Base weights 35 / 30 / 25 / 10; a **Metalcraft** check leans them (its margin moves up to 20 points from `ruined` and `flawed` to `improved`, or the other way). Tempering identifies the item and trains Metalcraft. No limit: the rarity's affix count is the natural cap. |
+| Rule | `feature = "anvil"` (a new terrain, "an old anvil, its hammer chained beside it"). **Temper** (*Here*, §3.8; `Action::Temper { item }`, `temper:LETTER` in action text) works one carried weapon or armour for 10 minutes, then draws from `data/outcomes/forge.toml`: `improved` (an affix of the item's class added, up to its rarity's count, else its strongest affix a step up), `nothing`, `flawed` (one affix lost), `ruined` (the item breaks and is gone). Base weights 35 / 30 / 25 / 10; a **Metalcraft** check leans them (its margin moves up to 20 points from `ruined` and `flawed` to `improved`, or the other way). Tempering identifies the item and trains Metalcraft. No limit (`exhaust = 0`): the rarity's affix count is the natural cap. |
 | Messages | `enter` "A cold forge, and an anvil waiting."; outcomes "The metal rings true." / "Nothing changes." / "Something in the metal is lost." / "It shatters under the hammer!" |
 | Fields | `feature = "anvil"`, `outcomes = "forge"`, `weight = 3`, `min_cells = 9` |
 | Cost | M on R5: the item list (the identify list's), affix add/raise/remove (`magic-items.md`). |
@@ -502,12 +585,12 @@ All thirteen are built (decision 16), each as its own issue (§12). They are lis
 |---|---|
 | Messages | `near` once per room when first seen; `enter` once per room when first entered; `pervade` on every arrival on a pervaded level; the rooms' own lines in §4 to §9; the statuses' start and end |
 | Status bar | the statuses (*Ebbing*, *Silenced*, *Unwelcome*) and the temperature of the player's cell |
-| Look mode | "in a teeming den" (once entered); "a goblin (hostile, asleep)"; "a forgotten altar", "a spring", "an anvil", "shelves", "cracked floor", each with its own description |
+| Look mode | "in a teeming den" (once entered); "a goblin (hostile, asleep)"; "a forgotten altar", "a spent altar", "a spring", "an anvil", "shelves", "cracked floor", each with its own description |
 | The abilities menu | *Here*: Pray at a forgotten altar, Drink at a spring, Temper at an anvil, listed only there |
-| Never shown | weights, chances, wake thresholds, the altar's side in words, rise timers, which undead will rise, which image is real |
+| Never shown | weights, chances, wake thresholds, the altar's side in words, an altar's exhaustion chance (only that it went dark), rise timers, which undead will rise, which image is real |
 | Dumps | `rooms` (dev): each room's effect, its side, `glimpsed`/`entered`/`sealed`, and `pervading <id>` in the header; `actors` (dev): `asleep`, the pending risings with their times, mirror images; `abilities` lists the *Here* abilities; JSON: `room` as today, `pervading` (only once arrived, as the player knows it) |
 | Action text | `pray`, `drink`, `temper:LETTER` |
-| Wiki | a **Special rooms** page (`wiki/src/`, by topic beside traps) with generated tables (`xtask/src/wiki/rooms.rs`): every feature with what it does in exact numbers, its default weight, its share, its whole-level chance, and the per-floor odds; each dungeon's favoured and banned features; the outcome tables (altar, spring, forge) with weights, the lean, and the side colours; the den numbers; the risings table (which undead each level becomes) |
+| Wiki | a **Special rooms** page (`wiki/src/`, by topic beside traps) with generated tables (`xtask/src/wiki/rooms.rs`): every feature with what it does in exact numbers, its default weight, its share, its whole-level chance, and the per-floor odds; each dungeon's favoured and banned features; the outcome tables (altar, spring, forge) with weights, tiers, the lean, the side colours, the exhaustion chance, and the shares per prayer and per altar (nothing, minor, moderate, great, the explosion), computed from the data; the den numbers; the risings table (which undead each level becomes) |
 
 ## 11. Talents and class abilities
 
@@ -541,7 +624,7 @@ Each item is one issue, one branch, one PR, updating the spec (§7 "Special room
 | **R2** | Special rooms: statuses while inside (`status`, `World::dwell`); the draining room and Anchored mind | §3.3, §6 | — | R1 | S |
 | **R3** | Hot and cold rooms: per-cell temperature (`temperature_at`), ice by temperature | §8 | — | R1 | S–M |
 | **R4** | Teeming dens: the `asleep` status and `sleeps`, waking by noise, blow, and cry, the den filler and hoard (`Rng::swarm`), Hush-foot | §4 | — | R1 | M |
-| **R5** | Forgotten altars and prayer: `feature`, the `forgotten_altar` terrain, the side and its light, `Source::Place` (*Here*), outcome tables (`data/outcomes/`), `Action::Pray`, the ordinary boons and banes, `Deed::Prayed`; the `prayer` system with Devout | §3.4, §3.8, §7 | save, act | R1 | M |
+| **R5** | Forgotten altars and prayer: `feature`, the `forgotten_altar` and `spent_altar` terrains, the side and its light, `Source::Place` (*Here*), outcome tables (`data/outcomes/`: tiers, `messages`, `exhaust`, `spent`), `Action::Pray`, exhaustion, the "nothing happens" lines, the minor and moderate boons and banes (`loot::forget` for Muddled), the altar's explosion, `Deed::Prayed`; the `prayer` system with Devout | §3.4, §3.8, §7 | save, act | R1 | M–L |
 | **R6** | Prayer's great boons and banes: Gift, Exalted, Chosen, Relic, Wrath, Unmade, Forsaken, Damned (`Actor::boons`, `World::lose_level`, the rarity floor); Penitent | §7.4, §11 | save | R5 | M |
 | **R7** | Cursed rooms: risings (`LevelState::risings`, `rise_tick`), Grave warden; Consecrate | §5, §11 | save, act | R1; class tables for Consecrate | M |
 | **R8** | Silent vault (the `silenced` status) | §9.1 | — | R2 | S |
@@ -566,7 +649,7 @@ Each item is one issue, one branch, one PR, updating the spec (§7 "Special room
 5. **R15, R17** (act).
 6. **R18, R19** (save), the two large ones, last.
 
-**Tests each item carries**: `content/room_effect.rs` (new fields parse and validate); `content/dungeon.rs` (`favoured` and `banned` resolve and layer; `effects` is refused; the share sum and the all-banned dungeon are errors); `mapgen/special_tests.rs` (the shares over 1 200 levels within bounds, with and without favoured; a new feature added in a test table is drawn in a dungeon that never names it; `level_chance` near 5 % over many draws; eligibility; a den's count and hoard; an altar's feature placed and the level still connected); `world/rooms_tests.rs` (`effects_at` folding; `dwell` gives and eases; Ebbing drains a creature; Silenced refuses a cast; ice freezes in a cold room and not beside it; temperature on the status bar); `world/den_tests.rs` (a sneaking step wakes nobody, a kicked door wakes the near ones and the cascade the rest, sleepers never wake by time, sneak attacks land on sleepers, sleepers count toward the spawn cap); `world/curse_tests.rs` (rises after two minutes, not if the corpse is eaten or carried, the level pick and its nearest-level fallback, Grave warden, a pervaded level, frozen floors catch up, Consecrate lifts it); `world/outcome_tests.rs` (*Here* lists Pray, Drink, Temper only at their features; an interrupted prayer gives nothing; the lean by side and band; each outcome's hook, the great ones included; the alignment deed; a hundred prayers in a row are allowed); one test file per §9 room; screen snapshots for the abilities menu's *Here* group and look mode's "asleep"; a replay per action (`replay --create`, `--verify`); `cargo xtask wiki`. No golden: the glows are light, and the light tests and a `--capture` checked by eye cover them; mirror images are checked through perception and dumps.
+**Tests each item carries**: `content/room_effect.rs` (new fields parse and validate); `content/dungeon.rs` (`favoured` and `banned` resolve and layer; `effects` is refused; the share sum and the all-banned dungeon are errors); `mapgen/special_tests.rs` (the shares over 1 200 levels within bounds, with and without favoured; a new feature added in a test table is drawn in a dungeon that never names it; `level_chance` near 5 % over many draws; eligibility; a den's count and hoard; an altar's feature placed and the level still connected); `world/rooms_tests.rs` (`effects_at` folding; `dwell` gives and eases; Ebbing drains a creature; Silenced refuses a cast; ice freezes in a cold room and not beside it; temperature on the status bar); `world/den_tests.rs` (a sneaking step wakes nobody, a kicked door wakes the near ones and the cascade the rest, sleepers never wake by time, sneak attacks land on sleepers, sleepers count toward the spawn cap); `world/curse_tests.rs` (rises after two minutes, not if the corpse is eaten or carried, the level pick and its nearest-level fallback, Grave warden, a pervaded level, frozen floors catch up, Consecrate lifts it); `world/outcome_tests.rs` (*Here* lists Pray, Drink, Temper only at their features; an interrupted prayer gives nothing and never exhausts; the lean by side and band; each outcome's hook, the great ones included, and each "nothing happens" line changes nothing but the message log; the tier shares over many draws within bounds of §7.4's table; exhaustion near 50 % over many prayers, the spent altar offers no Pray and survives a save and load as terrain alone; the explosion hurts everyone in radius 2, the player too, can kill, makes the explosion noise, melts ice, leaves rubble, and skips the exhaustion draw; Penitent turns a great bane into nothing but not the explosion; the alignment deed; the spring and the forge, `exhaust = 0`, are never spent); one test file per §9 room; screen snapshots for the abilities menu's *Here* group and look mode's "asleep"; a replay per action (`replay --create`, `--verify`); `cargo xtask wiki`. No golden: the glows are light, and the light tests and a `--capture` checked by eye cover them; mirror images are checked through perception and dumps.
 
 ## 13. Decisions (owner, 2026-10-26)
 
@@ -589,3 +672,6 @@ Each item is one issue, one branch, one PR, updating the spec (§7 "Special room
 | 15 | The weight table | No global table every dungeon restates: each feature has a default weight in its own data; a dungeon may name `favoured` features with fixed shares and a `banned` list; a new feature appears everywhere automatically. Fennmynster's `effects` mapped to it. | §1, §3.2, §3.6, §12 (R1) |
 | 16 | Which §9 rooms to build | All of them, each fully specified and planned. | §1, §9, §11, §12 |
 | 17 | A curse with no undead of the dead's level | The nearest level. | §5 |
+| 18 | The range of prayer outcomes (2026-10-26, later) | Many "whatever" level boons and banes, some "nothing happens" outcomes; a big range of things that can happen, but no altar swings the game for sure. The table becomes 40 outcomes in three tiers (minor, moderate, great) plus six "nothing happens" lines: per prayer 30 % nothing, about 44 % minor, 22 % moderate, 4 % great. | §1, §3.8, §7, §7.4, §10, §12 (R5) |
+| 19 | Limits on praying (2026-10-26, later) | Each prayer has a chance, 50 %, to exhaust the altar (`exhaust`, data, default 50). The spent altar stays on the map as its own terrain; Pray is no longer offered. This replaces the "no limit on prayers" of decision 6's draft for altars only; the spring and the forge keep no limit (`exhaust = 0`). Saved state: the terrain swap alone. | §1, §3.8, §7.1, §7.3, §10, §12 |
+| 20 | A special outcome (2026-10-26, later) | The altar explodes: a fireball at its cell (the existing burst code: 3d6 fire, radius 2, everyone in it including the player, can kill, the explosion noise, melts ice), and the altar is removed from the map (it becomes rubble). A moderate bane, 1.75 % of prayers with no lean. | §7.4, §7.5, §12 (R5) |
