@@ -15,19 +15,24 @@
 //! - `deliver`: `target` an object type the giver hands over on accepting; carried to the
 //!   speaker `to` and handed in there.
 //!
-//! The giver's words are `offer`, `accept`, `decline` (optional), and `reminder`; `done` is
-//! said by whoever the quest is handed in to (the recipient of a bring with `to` or a delivery,
+//! Asking the giver about a quest **gives** it (there is no accepting or declining, #422): the
+//! giver says `offer`, then `accept` (optional) in the same reply, and it is active at once.
+//! `reminder` is what they say asked again; `done` is said by whoever the quest is handed in to (the recipient of a bring with `to` or a delivery,
 //! else the giver). The `reward` is `gold` (gold coins), `items` (placement strings, `"apple*2"`),
 //! and `xp`, each optional. `requires` names a quest, or a list of them (loaded before this
 //! one), that must all be done before this one is offered, and `requires_alignment` the bands the player must be in for it
 //! to be offered (spec §8 "Alignment"); `alignment` moves their score as it is completed;
 //! `repeatable` quests are offered again once done (never a reach). `reveals` names a hidden
-//! location of the overworld revealed as the quest is offered, accepted (the default), or done
-//! (spec §7 "Hidden locations"), and `where` says where its goal lies after the objective.
+//! location of the overworld revealed as the quest is given (the default) or done (spec §7
+//! "Hidden locations"), and `where` says where its goal lies after the objective.
+//!
+//! A kill or bring quest may draw its target as it is given instead of naming it: a `pick` or
+//! `[[quest.variant]]`s ([`super::quest_roll`]), its texts naming the roll through placeholders.
 
 use super::creature::CreatureId;
 use super::dialogue::{DialogueId, MAX_LINE, MAX_REPLY, MAX_TOPICS, Speaker, check_lines, is_id};
 use super::object::{MAX_PLACED, ObjectId, parse_stacks};
+use super::quest_roll::{self, PickSpec, Rolled, Variant, VariantSpec};
 use super::tag::{MAX_TAG, TAG_TARGET, spoken};
 use super::{Content, ContentError};
 use crate::alignment::{MAX as ALIGNMENT_MAX, Requirement};
@@ -45,8 +50,6 @@ pub const MAX_TAG_COUNT: u32 = 999;
 pub const MAX_QUEST_XP: u32 = 1_000_000;
 /// The object a reward's `gold` is paid in.
 pub const GOLD: &str = "gold_coin";
-/// What a giver says when the player declines, unless the quest says otherwise.
-pub const DEFAULT_DECLINE: &str = "Another time, then.";
 
 /// Index of a quest in [`Content::quests`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -89,18 +92,20 @@ struct QuestSpec {
     giver: String,
     #[serde(rename = "type")]
     kind: QuestKind,
-    target: String,
+    target: Option<String>,
+    pick: Option<PickSpec>,
+    #[serde(default)]
+    variant: Vec<VariantSpec>,
     count: Option<u32>,
     level: Option<String>,
     to: Option<String>,
     what: Option<String>,
     #[serde(default)]
     reward: RewardSpec,
-    offer: String,
-    accept: String,
-    decline: Option<String>,
-    reminder: String,
-    done: String,
+    offer: Option<String>,
+    accept: Option<String>,
+    reminder: Option<String>,
+    done: Option<String>,
     requires: Option<Requires>,
     requires_alignment: Option<Requirement>,
     #[serde(default)]
@@ -129,10 +134,10 @@ impl Requires {
     }
 }
 
-/// A quest's `reveals = { location = "ID", when = "accepted" }`.
+/// A quest's `reveals = { location = "ID", when = "given" }`.
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
-struct RevealSpec {
+pub(super) struct RevealSpec {
     location: String,
     #[serde(default)]
     when: RevealWhen,
@@ -142,13 +147,21 @@ struct RevealSpec {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum RevealWhen {
-    /// As the giver offers it: where it is, as a tip.
-    Offered,
-    /// As the player accepts it.
+    /// As the giver gives it.
     #[default]
-    Accepted,
+    Given,
     /// As it is done.
     Done,
+}
+
+impl RevealWhen {
+    /// Its `when` in the file.
+    pub fn id(self) -> &'static str {
+        match self {
+            RevealWhen::Given => "given",
+            RevealWhen::Done => "done",
+        }
+    }
 }
 
 /// The hidden location a quest reveals, and when (spec §7 "Hidden locations").
@@ -245,12 +258,10 @@ impl Reward {
 /// What the people of a quest say.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct QuestTexts {
-    /// The giver, asked about the quest: what they want.
+    /// The giver, asked about the quest: what they want, as they give it.
     pub offer: String,
-    /// The giver, as the player accepts.
-    pub accept: String,
-    /// The giver, as the player declines.
-    pub decline: String,
+    /// The giver, after the offer in the same reply, if they say more.
+    pub accept: Option<String>,
     /// The giver, asked about it before it is done.
     pub reminder: String,
     /// Whoever it is handed in to, as it is.
@@ -285,6 +296,10 @@ pub struct QuestDef {
     /// Where its goal lies, in words, after the objective in the quest log ("The minster lies
     /// in Micelfenn, east of Fennhām.").
     pub where_: Option<String>,
+    /// How its target is drawn as it is given ([`super::quest_roll`]); `None`: it names it.
+    /// For a rolled quest `goal` is a template: its target is the pool's first, and only the
+    /// goal of the quest as given ([`QuestDef::rolled`]) is read.
+    pub roll: Option<Rolled>,
 }
 
 impl QuestDef {
@@ -346,6 +361,23 @@ impl QuestDef {
             Goal::Kill { target, .. } => Some(target),
             _ => None,
         }
+    }
+
+    /// How many it asks for: a kill's or a bring's `count`, else 1.
+    pub fn count(&self) -> u32 {
+        match self.goal {
+            Goal::Kill { count, .. } | Goal::Bring { count, .. } => count,
+            _ => 1,
+        }
+    }
+
+    /// The types carrying tag `tag` that its run can meet, by their plurals: "goblins, goblin
+    /// archers, and goblin chiefs".
+    pub fn members(&self, content: &Content, tag: &str) -> String {
+        let plurals: Vec<&str> = (content.tagged_in(tag, self.campaign.as_deref()))
+            .map(|c| content.creature(c).plural.as_str())
+            .collect();
+        super::and_list(&plurals)
     }
 
     /// Everyone it names: the giver, and whoever it is handed in to.
@@ -443,6 +475,9 @@ pub(super) fn parse<'a>(
             let campaign = super::campaign::of_path(file);
             let mut quest = resolve(spec, &quests, (content, campaign)).map_err(bad)?;
             quest.campaign = campaign.map(str::to_string);
+            if quest.is_rolled() {
+                super::quest_roll::check(content, &quest).map_err(bad)?;
+            }
             quests.push(quest);
         }
     }
@@ -457,7 +492,7 @@ pub(super) fn parse<'a>(
 /// One quest as written, checked against `content` and the quests before it.
 /// `campaign` is the one whose table it is in (its local areas are the ones a quest may name).
 fn resolve(
-    spec: QuestSpec,
+    mut spec: QuestSpec,
     before: &[QuestDef],
     (content, campaign): (&Content, Option<&str>),
 ) -> Result<QuestDef, String> {
@@ -486,15 +521,37 @@ fn resolve(
             Ok(())
         }
     };
+    let variants = std::mem::take(&mut spec.variant);
+    let roll = match (&spec.target, spec.pick.take(), variants.is_empty()) {
+        (Some(_), None, true) => None,
+        (None, Some(pick), true) => Some(Rolled::Pick(quest_roll::parse_pick(
+            pick, kind, content, owner,
+        )?)),
+        (None, None, false) => Some(Rolled::Variants(quest_roll::parse_variants(
+            variants, kind, content, owner,
+        )?)),
+        _ => return Err("a quest has exactly one of `target`, `pick`, and variants".into()),
+    };
+    // A rolled quest's goal is a template: its target is the pool's first.
+    let target = match &roll {
+        None => spec.target.clone().unwrap_or_default(),
+        Some(roll) => (roll
+            .candidates(content, owner, &|_| true)
+            .into_iter()
+            .next())
+        .map(|c| c.target)
+        .ok_or("`pick`: the pool is empty")?,
+    };
+    let texts = texts(&spec, roll.as_ref())?;
     let goal = match kind {
         QuestKind::Kill => {
             unused("to", spec.to.is_some())?;
-            let target = match spec.target.strip_prefix(TAG_TARGET) {
+            let target = match target.strip_prefix(TAG_TARGET) {
                 Some(tag) => KillTarget::Tag(check_tag(content, owner, tag)?),
                 None => KillTarget::Creature(
-                    (content.creature_id(&spec.target))
-                        .filter(|_| spec.target != "player")
-                        .ok_or_else(|| format!("unknown creature `{}`", spec.target))?,
+                    (content.creature_id(&target))
+                        .filter(|_| target != "player")
+                        .ok_or_else(|| format!("unknown creature `{target}`"))?,
                 ),
             };
             let most = match target {
@@ -512,6 +569,12 @@ fn resolve(
                 n @ 1.. if n <= most => n,
                 _ => return Err(format!("`count` is 1 to {most}")),
             };
+            if let KillTarget::Creature(c) = target
+                && content.creature(c).unique
+                && count != 1
+            {
+                return Err("a unique is killed once: `count` is 1".into());
+            }
             if let Some(level) = &spec.level
                 && !content.has_level(campaign, level)
                 && content.dungeon(level).is_none()
@@ -530,7 +593,7 @@ fn resolve(
             unused("level", spec.level.is_some())?;
             let to = spec.to.as_deref().map(speaker).transpose()?;
             Goal::Bring {
-                object: object(&spec.target)?,
+                object: object(&target)?,
                 count: count(spec.count)?,
                 to: to.filter(|&to| to != giver),
             }
@@ -540,26 +603,32 @@ fn resolve(
             unused("level", spec.level.is_some())?;
             unused("to", spec.to.is_some())?;
             unused("count", spec.count.is_some())?;
-            if !content.has_level(campaign, &spec.target) {
-                return Err(format!("unknown level `{}`", spec.target));
+            if roll.is_some() {
+                return Err("a reach quest is not rolled".into());
+            }
+            if !content.has_level(campaign, &target) {
+                return Err(format!("unknown level `{target}`"));
             }
             if spec.repeatable {
                 return Err(
                     "a reach quest is not repeatable: a place once reached stays so".into(),
                 );
             }
-            Goal::Reach { level: spec.target }
+            Goal::Reach { level: target }
         }
         QuestKind::Deliver => {
             unused("what", spec.what.is_some())?;
             unused("level", spec.level.is_some())?;
             unused("count", spec.count.is_some())?;
+            if roll.is_some() {
+                return Err("a deliver quest is not rolled".into());
+            }
             let to = speaker(spec.to.as_deref().ok_or("a deliver quest needs `to`")?)?;
             if to == giver {
                 return Err("a delivery goes to someone other than the giver".into());
             }
             Goal::Deliver {
-                object: object(&spec.target)?,
+                object: object(&target)?,
                 to,
             }
         }
@@ -575,15 +644,17 @@ fn resolve(
         return Err(format!("reward: `xp` is at most {MAX_QUEST_XP}"));
     }
     let items = parse_stacks(&reward.items, content).map_err(|e| format!("reward: {e}"))?;
-    let decline = spec.decline.unwrap_or_else(|| DEFAULT_DECLINE.into());
-    let said = [
-        &spec.offer,
-        &spec.accept,
-        &decline,
-        &spec.reminder,
-        &spec.done,
-    ];
-    check_lines(said, MAX_REPLY)?;
+    if roll.is_none() {
+        let mut said = vec![&texts.offer, &texts.reminder, &texts.done];
+        said.extend(texts.accept.iter());
+        said.extend(spec.where_.iter());
+        if said.iter().any(|t| quest_roll::has_placeholder(t)) {
+            return Err(
+                "placeholders (`{target}`) are for a quest with a `pick` or variants".into(),
+            );
+        }
+        check_lines(said, MAX_REPLY)?;
+    }
     if let Some(r) = spec.requires_alignment {
         r.check()?;
     }
@@ -602,22 +673,10 @@ fn resolve(
         }
         requires.push(quest);
     }
-    let reveals = match spec.reveals {
-        Some(r) if content.hidden_location(campaign, &r.location).is_none() => {
-            return Err(format!(
-                "`reveals`: the overworld has no hidden location `{}`",
-                r.location
-            ));
-        }
-        Some(r) => Some(Reveal {
-            location: r.location,
-            when: r.when,
-        }),
-        None => None,
-    };
-    if let Some(text) = &spec.where_ {
-        check_lines([text], MAX_REPLY)?;
-    }
+    let reveals = spec
+        .reveals
+        .map(|r| reveal(content, owner, r))
+        .transpose()?;
     Ok(QuestDef {
         id: spec.id,
         name: spec.name,
@@ -628,13 +687,7 @@ fn resolve(
             xp: spec.reward.xp,
             items,
         },
-        texts: QuestTexts {
-            offer: spec.offer,
-            accept: spec.accept,
-            decline,
-            reminder: spec.reminder,
-            done: spec.done,
-        },
+        texts,
         requires,
         requires_alignment: spec.requires_alignment,
         alignment: spec.alignment,
@@ -642,13 +695,63 @@ fn resolve(
         campaign: None,
         reveals,
         where_: spec.where_,
+        roll,
+    })
+}
+
+/// The texts of quest `spec`: each of `offer`, `reminder`, and `done` it must have, unless it is
+/// rolled from variants that each say their own.
+fn texts(spec: &QuestSpec, roll: Option<&Rolled>) -> Result<QuestTexts, String> {
+    let variants = match roll {
+        Some(Rolled::Variants(v)) => &v[..],
+        _ => &[],
+    };
+    let text =
+        |own: &Option<String>, field: &str, theirs: fn(&Variant) -> &Option<String>| match own {
+            Some(text) => Ok(text.clone()),
+            None if !variants.is_empty() && variants.iter().all(|v| theirs(v).is_some()) => {
+                Ok(String::new())
+            }
+            None => Err(format!("a quest needs `{field}`")),
+        };
+    Ok(QuestTexts {
+        offer: text(&spec.offer, "offer", |v| &v.offer)?,
+        accept: spec.accept.clone(),
+        reminder: text(&spec.reminder, "reminder", |v| &v.reminder)?,
+        done: text(&spec.done, "done", |v| &v.done)?,
+    })
+}
+
+/// A `reveals` of a quest of campaign `campaign`, checked: it names a hidden location of the
+/// campaign's overworld.
+pub(super) fn reveal(
+    content: &Content,
+    campaign: Option<&str>,
+    r: RevealSpec,
+) -> Result<Reveal, String> {
+    if content
+        .hidden_location(campaign.unwrap_or_default(), &r.location)
+        .is_none()
+    {
+        return Err(format!(
+            "`reveals`: the overworld has no hidden location `{}`",
+            r.location
+        ));
+    }
+    Ok(Reveal {
+        location: r.location,
+        when: r.when,
     })
 }
 
 /// The tag a kill quest of campaign `owner` (`None`: outside every campaign) names, checked:
 /// written as a tag, and carried by a creature type a run of the campaign can meet (a typo is
 /// carried by none; another campaign's types do not count).
-fn check_tag(content: &Content, owner: Option<&str>, tag: &str) -> Result<String, String> {
+pub(super) fn check_tag(
+    content: &Content,
+    owner: Option<&str>,
+    tag: &str,
+) -> Result<String, String> {
     super::tag::check(tag)?;
     if content.tagged_in(tag, owner).next().is_some() {
         return Ok(tag.to_string());
@@ -662,16 +765,15 @@ fn check_tag(content: &Content, owner: Option<&str>, tag: &str) -> Result<String
     }
 }
 
-/// Everyone's topics fit the dialogue screen: their dialogue's own, one per quest they give or
-/// take, and one more while an offer of theirs waits for an answer (accept and decline).
+/// Everyone's topics fit the dialogue screen: their dialogue's own, and one per quest they give
+/// or take.
 fn check_topics(quests: &[QuestDef], content: &Content) -> Result<(), String> {
     for (i, dialogue) in content.dialogues().iter().enumerate() {
         let id = DialogueId(i as u16);
         let theirs = (quests.iter())
             .filter(|q| q.giver == id || q.turn_in() == id)
             .count();
-        let gives = quests.iter().any(|q| q.giver == id);
-        let topics = dialogue.topics.len() + theirs + usize::from(gives);
+        let topics = dialogue.topics.len() + theirs;
         if topics > MAX_TOPICS {
             return Err(format!(
                 "`{}` has {topics} topics with its quests; at most {MAX_TOPICS} fit",

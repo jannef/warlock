@@ -229,13 +229,18 @@ fn a_pick_nothing_can_be_spent_on_is_dropped() {
     run(&mut w, "wait");
     assert_eq!(w.turn(), turn + 1);
     // With every talent the character qualifies for held, the pick is dropped too. Apprentice
-    // (any skill, three ranks each) would keep a pick open to the last level: here it is an
-    // elf's, and its tree waits for a free talent.
+    // (any skill, three ranks each) would keep a pick open to the last level, and so would Sworn
+    // foe (any creature tag): here they are an elf's, and Apprentice's tree waits for a free
+    // talent.
     let mut files = ContentFiles::builtin();
     files.edit_table("talents", |text| {
         text.replace(
             "ranks = 3\ndescription = \"You take up",
             "ranks = 3\nneeds = { race = \"elf\" }\ndescription = \"You take up",
+        )
+        .replace(
+            "choice = \"tag\"\n",
+            "choice = \"tag\"\nneeds = { race = \"elf\" }\n",
         )
         .replace(
             "description = \"Items, scrolls, gems, and learning.\"",

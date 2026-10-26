@@ -257,6 +257,12 @@ name = "Shops and favour"
 id = "talk"
 name = "Quests, talk, people"
 
+# Bounties (#422, the guild design §11): rolled quests and the creature tags kill quests count.
+# Its talents are Quarry sense and Sworn foe.
+[[system]]
+id = "bounties"
+name = "Bounties: rolled quests and kinds of creature"
+
 # Services (campaign design §6.1): cures and mendings for gold, asked for like dialogue topics.
 [[system]]
 id = "services"
