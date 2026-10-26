@@ -1,9 +1,0 @@
-# Goblins (spec §8 "Quests", docs/design/adventurers-guild.md §6): the ogre and the troll run
-# with them but are no goblins.
-[[tribe]]
-id = "goblins"
-name = "goblin"
-plural = "goblins"
-factions = ["goblins"]
-except = ["ogre", "troll"]
-except_note = "Not the ogres, mind, nor the trolls."

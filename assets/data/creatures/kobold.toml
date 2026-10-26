@@ -12,6 +12,7 @@ weight = 25000
 size = "small"
 light = "torch"
 faction = "kobolds"
+tags = ["kobold"]
 alignment = "evil"
 vision = "darkvision"
 opens_doors = true

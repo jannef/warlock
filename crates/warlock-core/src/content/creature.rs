@@ -100,6 +100,10 @@ pub(super) struct CreatureSpec {
     pub size: Option<String>,
     /// The faction it belongs to (`data/factions.toml`).
     pub faction: Option<String>,
+    /// Its tags (spec §8 "Quests"): plain singular words a quest or a rule may ask for
+    /// (`["goblin", "archer"]`); nothing declares them.
+    #[serde(default)]
+    pub tags: Vec<String>,
     /// Where it stands between good and evil (spec §8 "Alignment"); neutral by default.
     #[serde(default)]
     pub alignment: Alignment,
@@ -412,6 +416,7 @@ pub(super) struct Resolved {
 impl CreatureSpec {
     pub(super) fn resolve(self, r: Resolved) -> CreatureDef {
         CreatureDef {
+            // The loader fills it from the plural dictionary when content gives none.
             plural: self.plural.unwrap_or_else(|| format!("{}s", self.name)),
             id: self.id,
             name: self.name,
@@ -421,6 +426,7 @@ impl CreatureSpec {
             weight: self.weight,
             size: r.size,
             faction: r.faction,
+            tags: self.tags,
             alignment: self.alignment,
             race: self.race,
             vision: r.vision,
@@ -485,6 +491,9 @@ pub struct CreatureDef {
     /// The faction it belongs to; `None` when the content defines no factions. The player's
     /// creature belongs to [`super::PLAYER_FACTION`].
     pub faction: Option<FactionId>,
+    /// Its tags, as written (spec §8 "Quests"): a kill quest's `tag:goblin` counts every type
+    /// that carries `goblin`. Rules only; the player never sees them.
+    pub tags: Vec<String>,
     /// Gameplay: where it stands between good and evil (spec §8 "Alignment"), unless a level
     /// placed it elsewhere ([`crate::world::Actor::nature`]). Never shown to the player.
     pub alignment: Alignment,

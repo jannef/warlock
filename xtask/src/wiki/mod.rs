@@ -51,7 +51,6 @@ mod temperature;
 mod terrain;
 mod text;
 mod traps;
-mod tribes;
 mod vision;
 mod weapon_skills;
 mod weather;
@@ -141,7 +140,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("lights.md", vision::lights),
         ("creatures.md", creatures::creatures),
         ("factions.md", creatures::factions),
-        ("tribes.md", tribes::tribes),
+        ("creature-tags.md", creatures::creature_tags),
         ("creature-stats.md", creatures::creature_stats),
         ("creature-defences.md", creatures::creature_defences),
         ("creature-attacks.md", creatures::creature_attacks),

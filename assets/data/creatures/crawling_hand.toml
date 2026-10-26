@@ -11,6 +11,7 @@ glyph = "z"
 fg = "#d09888"
 speed = 1100
 faction = "undead"
+tags = ["undead"]
 alignment = "evil"
 vision = "darkvision"
 sight = 6

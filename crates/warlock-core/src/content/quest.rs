@@ -5,9 +5,10 @@
 //! about), a `giver` (a speaker in `data/dialogue.toml`: a creature type with a dialogue, or an
 //! npc id), a `type` and a `target`:
 //!
-//! - `kill`: `target` a creature type, or a tribe (`tribe:goblins`, `data/tribes/`: any of its
-//!   member types); `count` of them (default 1), optionally on one `level` (a level id, or a
+//! - `kill`: `target` a creature type, or a tag (`tag:goblin`, [`super::tag`]: any type that
+//!   carries it); `count` of them (default 1), optionally on one `level` (a level id, or a
 //!   dungeon branch id for any of its levels). The player's own kills count, on every level.
+//!   `what` says what they are called instead of the type's or the tag's name ("greenskins").
 //! - `bring`: `target` an object type; `count` of them (default 1), handed in from the pack to
 //!   the giver, or to the speaker `to`.
 //! - `reach`: `target` a level id (`depths:3` for a level of a branch): the player gets there.
@@ -27,7 +28,7 @@
 use super::creature::CreatureId;
 use super::dialogue::{DialogueId, MAX_LINE, MAX_REPLY, MAX_TOPICS, Speaker, check_lines, is_id};
 use super::object::{MAX_PLACED, ObjectId, parse_stacks};
-use super::tribe::{MAX_TRIBE_COUNT, TribeId};
+use super::tag::{MAX_TAG, TAG_TARGET, spoken};
 use super::{Content, ContentError};
 use crate::alignment::{MAX as ALIGNMENT_MAX, Requirement};
 use crate::object::Stack;
@@ -35,11 +36,11 @@ use serde::Deserialize;
 
 /// The longest quest name, in characters: it is a topic ("Accept: …") and a log title.
 pub const MAX_NAME: usize = 32;
-/// The most creatures of a type a kill quest, or objects a bring quest, asks for (a tribe's
-/// kill quest may ask for up to [`MAX_TRIBE_COUNT`]).
+/// The most creatures of a type a kill quest, or objects a bring quest, asks for (a tag's
+/// kill quest may ask for up to [`MAX_TAG_COUNT`]).
 pub const MAX_COUNT: u32 = 99;
-/// The prefix of a kill quest's `target` that names a tribe (`tribe:goblins`).
-pub const TRIBE_TARGET: &str = "tribe:";
+/// The most kills a tag's kill quest asks for.
+pub const MAX_TAG_COUNT: u32 = 999;
 /// The most experience a quest gives.
 pub const MAX_QUEST_XP: u32 = 1_000_000;
 /// The object a reward's `gold` is paid in.
@@ -92,6 +93,7 @@ struct QuestSpec {
     count: Option<u32>,
     level: Option<String>,
     to: Option<String>,
+    what: Option<String>,
     #[serde(default)]
     reward: RewardSpec,
     offer: String,
@@ -169,30 +171,31 @@ struct RewardSpec {
 }
 
 /// What a kill quest is after.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum KillTarget {
     /// A creature type.
     Creature(CreatureId),
-    /// Any member type of a tribe.
-    Tribe(TribeId),
+    /// Any creature type that carries a tag (`goblin`).
+    Tag(String),
 }
 
 impl KillTarget {
     /// Whether a kill of a `creature` is one of these.
-    pub fn has(self, content: &Content, creature: CreatureId) -> bool {
+    pub fn has(&self, content: &Content, creature: CreatureId) -> bool {
         match self {
-            KillTarget::Creature(c) => c == creature,
-            KillTarget::Tribe(t) => content.tribe(t).has(creature),
+            KillTarget::Creature(c) => *c == creature,
+            KillTarget::Tag(tag) => content.has_tag(creature, tag),
         }
     }
 
-    /// One of them ("goblin chief", "goblin") or several ("goblin chiefs", "goblins").
-    pub fn name(self, content: &Content, one: bool) -> &str {
+    /// One of them ("goblin chief", "marsh thing") or several ("goblin chiefs", "marsh
+    /// things": a tag's plural from the plural dictionary).
+    pub fn name(&self, content: &Content, one: bool) -> String {
         match (self, one) {
-            (KillTarget::Creature(c), true) => &content.creature(c).name,
-            (KillTarget::Creature(c), false) => &content.creature(c).plural,
-            (KillTarget::Tribe(t), true) => &content.tribe(t).name,
-            (KillTarget::Tribe(t), false) => &content.tribe(t).plural,
+            (KillTarget::Creature(c), true) => content.creature(*c).name.clone(),
+            (KillTarget::Creature(c), false) => content.creature(*c).plural.clone(),
+            (KillTarget::Tag(tag), true) => spoken(tag),
+            (KillTarget::Tag(tag), false) => content.plural(&spoken(tag)),
         }
     }
 }
@@ -200,12 +203,13 @@ impl KillTarget {
 /// What a quest asks of the player.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Goal {
-    /// Kill `count` creatures of a type or a tribe, on `level` (a level id or a branch id) if
-    /// given.
+    /// Kill `count` creatures of a type or a tag, on `level` (a level id or a branch id) if
+    /// given; `what` is what they are called, if not the type's or the tag's name.
     Kill {
         target: KillTarget,
         count: u32,
         level: Option<String>,
+        what: Option<String>,
     },
     /// Hand in `count` objects of a type to the giver, or to `to`.
     Bring {
@@ -337,8 +341,8 @@ impl QuestDef {
     }
 
     /// What a kill quest is after.
-    pub fn kill_target(&self) -> Option<KillTarget> {
-        match self.goal {
+    pub fn kill_target(&self) -> Option<&KillTarget> {
+        match &self.goal {
             Goal::Kill { target, .. } => Some(target),
             _ => None,
         }
@@ -457,6 +461,7 @@ fn resolve(
     before: &[QuestDef],
     (content, campaign): (&Content, Option<&str>),
 ) -> Result<QuestDef, String> {
+    let owner = campaign;
     let campaign = campaign.unwrap_or_default();
     if spec.name.chars().count() > MAX_NAME {
         return Err(format!("`name` is at most {MAX_NAME} characters"));
@@ -484,10 +489,8 @@ fn resolve(
     let goal = match kind {
         QuestKind::Kill => {
             unused("to", spec.to.is_some())?;
-            let target = match spec.target.strip_prefix(TRIBE_TARGET) {
-                Some(tribe) => KillTarget::Tribe(
-                    (content.tribe_id(tribe)).ok_or_else(|| format!("unknown tribe `{tribe}`"))?,
-                ),
+            let target = match spec.target.strip_prefix(TAG_TARGET) {
+                Some(tag) => KillTarget::Tag(check_tag(content, owner, tag)?),
                 None => KillTarget::Creature(
                     (content.creature_id(&spec.target))
                         .filter(|_| spec.target != "player")
@@ -496,8 +499,15 @@ fn resolve(
             };
             let most = match target {
                 KillTarget::Creature(_) => MAX_COUNT,
-                KillTarget::Tribe(_) => MAX_TRIBE_COUNT,
+                KillTarget::Tag(_) => MAX_TAG_COUNT,
             };
+            if let Some(what) = &spec.what {
+                let n = what.chars().count();
+                if n == 0 || n > MAX_TAG {
+                    return Err(format!("`what` is 1 to {MAX_TAG} characters"));
+                }
+                check_lines([what], MAX_LINE)?;
+            }
             let count = match spec.count.unwrap_or(1) {
                 n @ 1.. if n <= most => n,
                 _ => return Err(format!("`count` is 1 to {most}")),
@@ -512,9 +522,11 @@ fn resolve(
                 target,
                 count,
                 level: spec.level,
+                what: spec.what,
             }
         }
         QuestKind::Bring => {
+            unused("what", spec.what.is_some())?;
             unused("level", spec.level.is_some())?;
             let to = spec.to.as_deref().map(speaker).transpose()?;
             Goal::Bring {
@@ -524,6 +536,7 @@ fn resolve(
             }
         }
         QuestKind::Reach => {
+            unused("what", spec.what.is_some())?;
             unused("level", spec.level.is_some())?;
             unused("to", spec.to.is_some())?;
             unused("count", spec.count.is_some())?;
@@ -538,6 +551,7 @@ fn resolve(
             Goal::Reach { level: spec.target }
         }
         QuestKind::Deliver => {
+            unused("what", spec.what.is_some())?;
             unused("level", spec.level.is_some())?;
             unused("count", spec.count.is_some())?;
             let to = speaker(spec.to.as_deref().ok_or("a deliver quest needs `to`")?)?;
@@ -629,6 +643,23 @@ fn resolve(
         reveals,
         where_: spec.where_,
     })
+}
+
+/// The tag a kill quest of campaign `owner` (`None`: outside every campaign) names, checked:
+/// written as a tag, and carried by a creature type a run of the campaign can meet (a typo is
+/// carried by none; another campaign's types do not count).
+fn check_tag(content: &Content, owner: Option<&str>, tag: &str) -> Result<String, String> {
+    super::tag::check(tag)?;
+    if content.tagged_in(tag, owner).next().is_some() {
+        return Ok(tag.to_string());
+    }
+    match content.tagged(tag).next() {
+        Some(c) => Err(format!(
+            "tag `{tag}`: only creatures of campaign `{}` carry it",
+            content.creature(c).campaign.as_deref().unwrap_or_default()
+        )),
+        None => Err(format!("tag `{tag}`: no creature carries it")),
+    }
 }
 
 /// Everyone's topics fit the dialogue screen: their dialogue's own, one per quest they give or

@@ -231,17 +231,9 @@ impl Content {
             for place in quest.places() {
                 self.check_level(&file, owner, place)?;
             }
-            match quest.kill_target() {
-                Some(super::KillTarget::Creature(creature)) => {
-                    self.check_creature(&file, Some(owner), creature)?;
-                }
-                Some(super::KillTarget::Tribe(tribe)) => {
-                    let tribe = self.tribe(tribe);
-                    if let Some(theirs) = tribe.campaign.as_deref().filter(|&c| c != owner) {
-                        return Err(misplaced(&file, "tribe", &tribe.id, theirs));
-                    }
-                }
-                None => {}
+            // A tag is checked as the quest is read (`quest::check_tag`).
+            if let Some(&super::KillTarget::Creature(creature)) = quest.kill_target() {
+                self.check_creature(&file, Some(owner), creature)?;
             }
             for speaker in quest.speakers() {
                 let theirs = self.dialogue(speaker).campaign.as_deref();
@@ -249,13 +241,6 @@ impl Content {
                     let name = self.speaker_name(speaker);
                     return Err(misplaced(&file, "speaker", &name, theirs));
                 }
-            }
-        }
-        // A tribe's own lists (its faction members may be any campaign's).
-        for tribe in &self.tribes {
-            let file = table_file(tribe.campaign.as_deref(), "tribes");
-            for &creature in tribe.except.iter().chain(&tribe.added) {
-                self.check_creature(&file, tribe.campaign.as_deref(), creature)?;
             }
         }
         if let Some(shops) = &self.shops {
@@ -306,7 +291,7 @@ impl Content {
 /// Whether `file` is shared engine data (`data/...`, `vaults/...`) rather than a campaign's or a
 /// test fixture's level, scenario, or table outside every campaign.
 fn is_shared(file: &str) -> bool {
-    file.starts_with("vaults/") || file == "data/shops.toml" || file == "data/tribes"
+    file.starts_with("vaults/") || file == "data/shops.toml"
 }
 
 /// The table directory of campaign `campaign` (`data/<name>` outside every campaign), for an

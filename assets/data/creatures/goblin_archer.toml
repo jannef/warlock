@@ -11,6 +11,7 @@ name = "goblin archer"
 glyph = "g"
 fg = "#c8b050"
 faction = "goblins"
+tags = ["goblin", "archer"]
 alignment = "evil"
 vision = "darkvision"
 sight = 12

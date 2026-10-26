@@ -30,7 +30,7 @@ pub fn names(content: &Content, gem: MaterialId, cutting: Cutting) -> (String, S
     let material = content.material(gem);
     let plural = (material.gem.as_ref())
         .and_then(|g| g.plural.clone())
-        .unwrap_or_else(|| format!("{}s", material.name));
+        .unwrap_or_else(|| content.plural(&material.name));
     let words = |noun: &str| {
         let Some(gems) = content.gems() else {
             return noun.to_string();

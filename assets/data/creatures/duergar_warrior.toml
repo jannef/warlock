@@ -11,6 +11,7 @@ name = "duergar warrior"
 glyph = "h"
 fg = "#7c8894"
 faction = "duergar"
+tags = ["duergar"]
 alignment = "evil"
 race = "duergar"
 vision = "darkvision"

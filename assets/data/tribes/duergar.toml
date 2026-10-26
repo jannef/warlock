@@ -1,8 +1,0 @@
-# The duergar (spec §8 "Quests", docs/design/adventurers-guild.md §6): the grey dwarves of
-# Fyrdelf. Their trader is of the merchants, not of the duergar, so he is no member.
-[[tribe]]
-id = "duergar"
-name = "duergar"
-plural = "duergar"
-factions = ["duergar"]
-except_note = "Not the traders, mind."

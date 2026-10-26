@@ -10,6 +10,7 @@ glyph = "w"
 fg = "#7a2a38"
 speed = 800
 faction = "marsh"
+tags = ["marsh-thing"]
 alignment = "neutral"
 vision = "low_light"
 sight = 5
