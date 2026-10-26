@@ -1,0 +1,34 @@
+# The undead roster (#383, batch 2). The pickled hand of a hanged man, its fingers burning like
+# candles, that crawls on by itself: its faint light holds those who look at it still, and its
+# touch is cold as the gallows. Nothing is left of it but wax and bone.
+[[creature]]
+id = "hand_of_glory"
+level = 16
+xp = 90
+rarity = "rare"
+name = "hand of glory"
+plural = "hands of glory"
+glyph = "z"
+fg = "#e8c890"
+speed = 1150
+light = "ember"
+glow = 0.4
+faction = "undead"
+alignment = "evil"
+vision = "darkvision"
+sight = 10
+footsteps = 15
+hearing = 12
+weight = 600
+size = "small"
+stats = { strength = 13, dexterity = 18, toughness = 14, intelligence = 16, willpower = 22, presence = 16 }
+base_hp = 20
+resist = { poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "2d8"
+damage_type = "cold"
+name = "touch"
+verb = "touches"
+on_hit = [{ status = "transfixed", chance = 20, severity = 1 }]

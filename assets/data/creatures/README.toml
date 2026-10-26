@@ -144,6 +144,6 @@
 # in on_hit has difficulty 12 + level ÷ 5, checked by willpower (toughness for Toughness drains),
 # and its attack is one dice step lower. Bone and spirit types leave no corpse and no blood;
 # flesh types leave a rotten corpse (on_eat vomit 70 or more, harm). Glyphs: z lesser corporeal
-# dead, Z greater, G spirits, W wights and wraiths, M mummies, C hounds; a colour distinct from
-# every other type with the same glyph. Only a type in a population strays (#375): deep undead
-# ship in none until a deep place takes them.
+# dead, Z greater, G spirits, W wights and wraiths, M mummies, C hounds, V vampires, D drakes, T
+# the rotting troll; a colour distinct from every other type with the same glyph. Only a type in
+# a population strays (#375): deep undead ship in none until a deep place takes them.

@@ -62,6 +62,25 @@ const WAVES: &[(&str, Option<&str>)] = &[
     ("ogre_zombie", None),
     ("mummy", None),
     ("grave_hound", None),
+    // The undead roster, batch 2 (#385): levels 11 to 20, all shared.
+    ("wraith", None),
+    ("fen_ghoul", None),
+    ("draugr", None),
+    ("burning_skull", None),
+    ("barghest", None),
+    ("knocker", None),
+    ("spectre", None),
+    ("charred_dead", None),
+    ("duergar_skeleton", None),
+    ("vampire_spawn", None),
+    ("hand_of_glory", None),
+    ("gallows_dead", None),
+    ("rotting_troll", None),
+    ("gibbering_shade", None),
+    ("bone_wyvern", None),
+    ("revenant", None),
+    ("fetch", None),
+    ("mummy_priest", None),
 ];
 
 #[test]
@@ -128,6 +147,7 @@ fn the_barrow_humanoids_wield_their_weapons() {
         "barrow_wight",
         "skeleton_archer",
         "skeleton_warrior",
+        "duergar_skeleton",
     ] {
         let creature = CONTENT.creature_id(id).expect(id);
         let mut armed = 0;
@@ -157,7 +177,7 @@ fn the_barrow_humanoids_wield_their_weapons() {
         let least = match id {
             "skeleton" => 40,
             "barrow_wight" => 90,
-            "skeleton_warrior" => 140,
+            "skeleton_warrior" | "duergar_skeleton" => 140,
             _ => 160,
         };
         assert!(armed >= least, "{id}: {armed} of 200 armed");
@@ -168,25 +188,61 @@ fn the_barrow_humanoids_wield_their_weapons() {
 }
 
 #[test]
-fn the_roster_spirits_pass_through_walls_and_the_shadow_drains() {
+fn the_roster_spirits_pass_through_walls_and_the_drainers_drain() {
+    use crate::content::Affliction;
+    use crate::stats::Stat;
     // #383 "Mechanics values": wall Defence 2 + level ÷ 10, and the ghost 2.
-    for id in ["ghost", "corpse_candle", "poltergeist", "shadow"] {
+    for id in [
+        "ghost",
+        "corpse_candle",
+        "poltergeist",
+        "shadow",
+        "wraith",
+        "knocker",
+        "spectre",
+        "gibbering_shade",
+        "fetch",
+    ] {
         let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
         let wall = def.incorporeal.as_ref().map(|i| i.wall_defence);
         assert_eq!(wall, Some(2 + i32::from(def.level) / 10), "{id}");
     }
-    let shadow = CONTENT.creature(CONTENT.creature_id("shadow").expect("shadow"));
-    let touch = shadow.attack.as_ref().expect("a touch");
-    let drain = (touch.on_hit.iter()).find_map(|h| match h.what {
-        crate::content::Affliction::Drain(d) => Some((d, h.chance)),
-        _ => None,
-    });
-    let (drain, chance) = drain.expect("a drain");
-    assert_eq!(drain.stat, Some(crate::stats::Stat::Strength));
-    assert_eq!(
-        (drain.points, drain.check, drain.difficulty, chance),
-        (1, crate::stats::Stat::Willpower, 13, 10)
-    );
+    // Drains: difficulty 12 + level ÷ 5, checked by willpower but Toughness's by toughness.
+    for (id, stat, check, difficulty) in [
+        ("shadow", Stat::Strength, Stat::Willpower, 13),
+        ("wraith", Stat::Toughness, Stat::Toughness, 14),
+        ("spectre", Stat::Willpower, Stat::Willpower, 14),
+        ("vampire_spawn", Stat::Toughness, Stat::Toughness, 15),
+        ("gibbering_shade", Stat::Intelligence, Stat::Willpower, 15),
+    ] {
+        let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
+        let touch = def.attack.as_ref().expect("an attack");
+        let drain = (touch.on_hit.iter()).find_map(|h| match h.what {
+            Affliction::Drain(d) => Some((d, h.chance)),
+            _ => None,
+        });
+        let (drain, chance) = drain.unwrap_or_else(|| panic!("{id}: a drain"));
+        assert_eq!(drain.stat, Some(stat), "{id}");
+        assert_eq!(
+            (drain.points, drain.check, drain.difficulty, chance),
+            (1, check, difficulty, 10),
+            "{id}"
+        );
+    }
+    // Holds (#431): the ghouls' claws and the gallows dead's tongue.
+    for (id, chance, difficulty) in [
+        ("ghast", 10, 15),
+        ("fen_ghoul", 10, 15),
+        ("gallows_dead", 20, 17),
+    ] {
+        let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
+        let attack = def.attack.as_ref().expect("an attack");
+        let hold = (attack.on_hit.iter()).find_map(|h| match h.what {
+            Affliction::Hold { difficulty, .. } => Some((h.chance, difficulty)),
+            _ => None,
+        });
+        assert_eq!(hold, Some((chance, Some(difficulty))), "{id}");
+    }
 }
 
 #[test]

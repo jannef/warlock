@@ -1,0 +1,30 @@
+# The undead roster (#383, batch 2). One murdered who came back for the one who did it, and will
+# not lie down again until it is done: tougher than any dead thing its size, and often still
+# carrying its sword. Not yet in any dungeon's population.
+[[creature]]
+id = "revenant"
+level = 19
+xp = 105
+rarity = "uncommon"
+name = "revenant"
+glyph = "Z"
+fg = "#c0b0a0"
+faction = "undead"
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+opens_doors = true
+footsteps = 70
+hearing = 12
+weight = 70000
+stats = { strength = 19, dexterity = 15, toughness = 25, intelligence = 18, willpower = 23, presence = 18 }
+base_hp = 48
+attack = { damage = "3d8", damage_type = "bludgeoning", name = "slam", verb = "slams" }
+resist = { poison = 100 }
+weapon_skills = { long_blades = 3 }
+on_eat = { message = "Grave meat.", vomit = 80, harm = "1d4" }
+blood = "#3a2a2a"
+# Its gear (spec §8 "Creature gear"): the sword it was buried with.
+[[creature.gear]]
+chance = 50
+one_of = ["long_sword"]

@@ -1,7 +1,6 @@
 # The undead roster (#383, batch 1). A ghoul grown old in the eating of the dead: quicker and
-# keener than a barrow ghoul, and its claws carry the filth of what it eats. It opens doors. (The
-# roster's hold, `held` 10 %, waits: Held has no timer and only a Drowning grip lets go, so a
-# held player would never step again.)
+# keener than a barrow ghoul, and its claws hold fast what they catch and carry the filth of what
+# it eats. It opens doors.
 [[creature]]
 id = "ghast"
 level = 7
@@ -29,4 +28,7 @@ damage = "1d8"
 damage_type = "slashing"
 name = "claws"
 verb = "claws"
-on_hit = [{ disease = "filth_fever", chance = 10 }]
+on_hit = [
+    { status = "held", chance = 10, difficulty = 15 },
+    { disease = "filth_fever", chance = 10 },
+]

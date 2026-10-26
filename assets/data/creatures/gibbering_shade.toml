@@ -1,0 +1,31 @@
+# The undead roster (#383, batch 2). The shade of one who died mad, babbling without end: it
+# drifts through walls and doors, and its cold touch unravels the mind, for good unless the will
+# holds firm (a temple's mending gives it back). Blades and clubs pass half through it.
+[[creature]]
+id = "gibbering_shade"
+level = 18
+xp = 100
+rarity = "rare"
+name = "gibbering shade"
+glyph = "G"
+fg = "#a090c0"
+speed = 1150
+faction = "undead"
+alignment = "evil"
+vision = "darkvision"
+sight = 10
+hearing = 15
+weight = 100
+stats = { strength = 16, dexterity = 17, toughness = 16, intelligence = 17, willpower = 22, presence = 17 }
+base_hp = 27
+natural = { defence = 3, protection = 0, name = "insubstantial form" }
+incorporeal = { wall_defence = 3 }
+resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "2d6"
+damage_type = "cold"
+name = "touch"
+verb = "touches"
+on_hit = [{ drain = "intelligence", points = 1, chance = 10, check = "willpower", difficulty = 15 }]
