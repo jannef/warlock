@@ -16,6 +16,8 @@ mod creature;
 mod creature_rarity;
 mod damage_type;
 pub mod danger;
+#[cfg(test)]
+mod devil_roster_tests;
 mod dialogue;
 mod disease;
 mod dungeon;
@@ -24,6 +26,8 @@ mod effect;
 mod elemental_roster_tests;
 mod experience;
 mod faction;
+#[cfg(test)]
+mod fey_roster_tests;
 mod flow;
 mod gear;
 mod gem;
@@ -40,6 +44,8 @@ mod light;
 mod material;
 mod names;
 mod object;
+#[cfg(test)]
+mod orc_roster_tests;
 mod overworld;
 pub(crate) mod part;
 mod particles;
@@ -1310,6 +1316,7 @@ impl Content {
                 weapon_skills,
                 resist,
                 faction: self.creature_faction(&spec).map_err(err)?,
+                factions: self.creature_factions(&spec).map_err(err)?,
                 vision: self.vision_index(&spec.vision).ok_or_else(|| {
                     err(format!(
                         "creature `{}`: unknown vision profile `{}`",
@@ -1372,6 +1379,20 @@ impl Content {
             };
         }
         let is_player = spec.id == "player";
+        if !spec.factions.is_empty() {
+            if spec.faction.is_some() || is_player {
+                return Err(format!(
+                    "creature `{}`: `factions` replaces `faction`, never with it",
+                    spec.id
+                ));
+            }
+            // The heaviest; of equal weights the first by id.
+            let (_, top) = (self.creature_factions(spec)?.into_iter())
+                .map(|(f, w)| (std::cmp::Reverse(w), f))
+                .min_by_key(|&(w, f)| (w, f))
+                .expect("factions given");
+            return Ok(Some(top));
+        }
         let name = match &spec.faction {
             Some(name) => name.as_str(),
             None if is_player => PLAYER_FACTION,
@@ -1391,6 +1412,27 @@ impl Content {
             .id(name)
             .map(Some)
             .ok_or_else(|| format!("creature `{}`: unknown faction `{name}`", spec.id))
+    }
+
+    /// The factions a creature type's creatures each draw one of (`factions = { seelie = 50,
+    /// unseelie = 50 }`), in id order: known ids, weights 1 to 1000; empty when it gives none.
+    fn creature_factions(
+        &self,
+        spec: &creature::CreatureSpec,
+    ) -> Result<Vec<(FactionId, u32)>, String> {
+        (spec.factions.iter())
+            .map(|(name, &weight)| {
+                let id = (self.factions.id(name))
+                    .ok_or_else(|| format!("creature `{}`: unknown faction `{name}`", spec.id))?;
+                if !(1..=1000).contains(&weight) {
+                    return Err(format!(
+                        "creature `{}`: faction `{name}` weighs {weight}, not 1 to 1000",
+                        spec.id
+                    ));
+                }
+                Ok((id, weight))
+            })
+            .collect()
     }
 
     /// Status effects and the healing rules (optional: none, and the default healing).

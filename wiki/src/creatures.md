@@ -17,9 +17,18 @@ leaves everyone alone, and everyone leaves it alone. A faction is neutral to its
 [talent](talents.md) alone, and are left alone by them, until that character attacks one: from
 then on creatures of that type (all giant rats, say) stand toward them as their faction does.
 
+**The fey courts.** Each fey creature (sprites, pixies, redcaps, dryads, and the rest) belongs to
+one of two courts, chosen at random when it comes into the world, and keeps it: the **Seelie
+court** leaves you alone, the **Unseelie court** hunts you, and the two courts fight each other
+on sight. Some kinds lean one way: nearly every redcap is Unseelie, nearly every dryad Seelie.
+The odds for each kind are in the "Faction" column of the table at the bottom of this page. A
+Seelie fey you attack turns on you for good: it becomes one of the **wrathful fey**, hostile to
+you and still at war with the Unseelie. Both courts leave every other faction alone.
+
 You can tell how a creature stands toward you from what it is: look at it
 ([look mode](controls.md#look-mode)) and a hostile one is marked, as in "A giant rat (hostile,
-unhurt), on stone floor."
+unhurt), on stone floor." A fey shows its court the same way: an Unseelie one is marked hostile,
+a Seelie one neutral.
 
 ## What they do
 

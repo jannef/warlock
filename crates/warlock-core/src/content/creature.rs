@@ -100,6 +100,11 @@ pub(super) struct CreatureSpec {
     pub size: Option<String>,
     /// The faction it belongs to (`data/factions.toml`).
     pub faction: Option<String>,
+    /// Instead of `faction`: the factions one of its creatures may join, by weight
+    /// (`{ seelie = 50, unseelie = 50 }`), each creature drawing its own when it is made (spec
+    /// §7 "Factions": the fey courts).
+    #[serde(default)]
+    pub factions: BTreeMap<String, u32>,
     /// Its tags (spec §8 "Quests"): plain singular words a quest or a rule may ask for
     /// (`["goblin", "archer"]`); nothing declares them.
     #[serde(default)]
@@ -404,6 +409,7 @@ pub(super) struct Resolved {
     pub rarity: usize,
     pub light: Option<LightId>,
     pub faction: Option<FactionId>,
+    pub factions: Vec<(FactionId, u32)>,
     pub vision: usize,
     pub size: usize,
     pub stats: Stats,
@@ -426,6 +432,7 @@ impl CreatureSpec {
             weight: self.weight,
             size: r.size,
             faction: r.faction,
+            factions: r.factions,
             tags: self.tags,
             alignment: self.alignment,
             race: self.race,
@@ -489,8 +496,13 @@ pub struct CreatureDef {
     /// character.
     pub size: usize,
     /// The faction it belongs to; `None` when the content defines no factions. The player's
-    /// creature belongs to [`super::PLAYER_FACTION`].
+    /// creature belongs to [`super::PLAYER_FACTION`]. For a type with [`CreatureDef::factions`],
+    /// the heaviest of them (ties: the first by id), which type-level answers read (the wiki,
+    /// [`super::Content::stance`]); its creatures each carry their own.
     pub faction: Option<FactionId>,
+    /// The factions each of its creatures draws one of when it is made, by weight, in id order
+    /// (spec §7 "Factions"; `world/court.rs`); empty for a type of one faction.
+    pub factions: Vec<(FactionId, u32)>,
     /// Its tags, as written (spec §8 "Quests"): a kill quest's `tag:goblin` counts every type
     /// that carries `goblin`. Rules only; the player never sees them.
     pub tags: Vec<String>,

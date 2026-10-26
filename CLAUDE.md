@@ -193,7 +193,9 @@ their caster level, `Caster level 3`, then their alignment band, `Alignment Kind
 know they have, then what they resist in words, `Resistant to cold`, `Vulnerable to fire`,
 `Immune to poison`), `weapon_skills` (the player's
 ranks and progress toward the next, `Long blades 2 (40%)`, fighting styles too, those in use
-marked `Duelist 1 (0%), in use`), `talents` (the player's talents in the order taken, `Hardy
+marked `Duelist 1 (0%), in use`), `attacks` (the player's ready attacks as the character
+screen shows them: `Main hand long sword: +4 to hit, 1d8+2 slashing`, `Off hand dagger: ...`,
+`Missile short bow: +3 to hit, 1d6 piercing, range 10`; unidentified magic left out), `talents` (the player's talents in the order taken, `Hardy
 2/3`, `Weapon focus (long blades)`, a birth sign's gifts first, `Fleet-footed (sign)`, `Slight (sign, flaw)`, those their class gives marked `Well dressed (class)`), `abilities` (the player's abilities in the abilities menu's
 order, each with its source and what it asks for or why it cannot be used now: `Shield bash
 (weapon skill): a direction`, `Open lock (skill): not usable yet`), `traps` (the traps the player knows,
@@ -204,7 +206,7 @@ first: name, stage, giver, objective, and status), `truth`
 glyph, **dev-only**; on a level with a danger
 it and `actors` start with `danger 3 population 2/6 spawn next 08:15:00`), `actors` (every actor on the level with its hit points, mana, its resources (`resources rage
 11/20 (0)`, with progress), and
-Defence and Protection, its alignment (`alignment evil`; the player's score and band), its weight, what it carries and of that wears and wields (magic items as they truly
+Defence and Protection, its alignment (`alignment evil`; the player's score and band), its court (`court seelie`, a fey's), its weight, what it carries and of that wears and wields (magic items as they truly
 are, "(unidentified)" marked), what its magic items do to it (`magic strength +1`), its burden
 and carrying limit, its weapon skills with marks, its stats as score/potential, its status
 effects with severities, its diseases (progressions, checks won in a row, time to their next
@@ -227,7 +229,8 @@ word: `{"cold": "resistant"}`), `burden` (`level`, `limit`), `alignment` (the ba
 (status ids), `diseases` (the known ones' ids), `death` (with `of`, the status that killed,
 `cause`, starving, choking, or a trap, and `trap`, the id of the trap that killed),
 `known_traps`, `known_locations` (`pos`, `name`), `temperature` (°C to a tenth), `weapon_skills` (by skill id:
-`rank`, `progress`), `styles_in_use` (style ids), `talents` (in the order taken: `id`, `name`,
+`rank`, `progress`), `styles_in_use` (style ids), `attacks` (`source`, `kind`, `name`, `to_hit`, `damage` (the text),
+`range`), `talents` (in the order taken: `id`, `name`,
 `rank`, `ranks`, `choice`, `class`, `granted`, `flaw`), `character` (`name`, `race`, `gender`, `class`,
 `raised`, `age`, `born`, `sign`, and `lucky`, a lucky day's title, only for one born on it), `due` (the level-up choices due: `level`, `talents`,
 `rolls`, `bonus`, or null), `abilities` (in menu order: `id`, `source`,

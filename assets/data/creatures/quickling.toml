@@ -1,0 +1,24 @@
+# The fey roster (#452).
+# A quickling: a tiny, malicious fey so fast the eye loses it, cutting with a little knife
+# before it is seen. Most of them serve the Unseelie court.
+[[creature]]
+id = "quickling"
+level = 6
+xp = 40
+rarity = "uncommon"
+name = "quickling"
+glyph = "f"
+fg = "#c8d0e0"
+speed = 2000
+factions = { seelie = 25, unseelie = 75 }
+tags = ["fey"]
+alignment = "evil"
+vision = "low_light"
+sight = 12
+footsteps = 10
+hearing = 16
+weight = 3000
+size = "small"
+stats = { strength = 13, dexterity = 16, toughness = 13, intelligence = 12, willpower = 12, presence = 14 }
+base_hp = 14
+attack = { damage = "1d10", damage_type = "slashing", name = "knife", verb = "cuts" }

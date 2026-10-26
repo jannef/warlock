@@ -1,0 +1,34 @@
+# The fey roster (#452).
+# A nymph: a spirit of a forest pool or a spring, so beautiful that those she touches
+# stand spellbound. Most keep to the Seelie court.
+[[creature]]
+id = "nymph"
+level = 22
+xp = 120
+rarity = "rare"
+loot = 30
+name = "nymph"
+glyph = "n"
+fg = "#80c0e0"
+factions = { seelie = 90, unseelie = 10 }
+tags = ["fey", "caster"]
+alignment = "good"
+vision = "low_light"
+sight = 10
+combat = "caster"
+range = 6
+opens_doors = true
+footsteps = 15
+hearing = 18
+weight = 50000
+stats = { strength = 17, dexterity = 16, toughness = 21, intelligence = 23, willpower = 23, presence = 25 }
+base_hp = 44
+skills = { concentration = 76, spellcraft = 81 }
+natural = { defence = 1, protection = 0, name = "fey grace" }
+[creature.attack]
+damage = "3d6"
+damage_type = "bludgeoning"
+name = "touch"
+verb = "touches"
+to_hit = 2
+on_hit = [{ status = "transfixed", chance = 25, severity = 2 }]

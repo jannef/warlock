@@ -737,6 +737,7 @@ impl World {
         // A shopkeeper the player attacks turns on them (spec §7 "Shops").
         if attacker == self.state.player {
             self.provoke(target);
+            self.provoke_court(target);
             self.break_empathy(target);
         }
         // An attack the player dodged (Dexterity or Dodge made it miss) trains tumbling.

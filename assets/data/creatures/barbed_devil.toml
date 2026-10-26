@@ -1,0 +1,32 @@
+# The devil roster (#448). Hell's watchman, covered in spines: its claws and barbs tear wounds
+# that bleed. Spines that hurt whoever strikes it wait for a mechanic of their own. Not yet in
+# any dungeon's population.
+[[creature]]
+id = "barbed_devil"
+level = 26
+xp = 140
+name = "barbed devil"
+glyph = "U"
+fg = "#c03030"
+faction = "devil"
+tags = ["devil", "fiend"]
+alignment = "evil"
+vision = "darkvision"
+sight = 14
+opens_doors = true
+footsteps = 60
+hearing = 8
+weight = 110000
+stats = { strength = 21, dexterity = 16, toughness = 22, intelligence = 20, willpower = 25, presence = 20 }
+base_hp = 65
+natural = { defence = 1, protection = 0, name = "barbed hide" }
+resist = { fire = 100, poison = 50, cold = 50 }
+corpse = false
+blood = "#4a1010"
+[creature.attack]
+damage = "4d6"
+damage_type = "slashing"
+name = "claws"
+verb = "rakes"
+to_hit = 2
+on_hit = [{ status = "bleeding", chance = 25, severity = 1 }]

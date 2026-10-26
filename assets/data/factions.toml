@@ -2,7 +2,9 @@
 # the player belongs to the faction "player".
 #
 # Fields: id, name, hostile (faction ids), animal (default false: its creatures are animals, which
-# a Beast-friend's talent makes neutral to them; spec §8 "Talents"). Relations are symmetric: if A
+# a Beast-friend's talent makes neutral to them; spec §8 "Talents"), provoked (a faction id: one
+# of its creatures the player attacks joins that one, as the Seelie turn wrathful; default none:
+# it stays). Relations are symmetric: if A
 # lists B as hostile, A and B are hostile to each other. Every pair not listed is neutral (a faction and itself too).
 # Hostile creatures attack each other on sight; neutral ones leave each other alone. The player
 # learns a creature's stance toward them from its type (look mode: "a giant rat (hostile)").
@@ -29,6 +31,14 @@ hostile = ["player", "vermin"]
 id = "goblins"
 name = "goblins"
 hostile = ["player", "vermin", "kobolds"]
+
+# The orc tribe (#455): war bands of orcs and the wargs they keep. They raid the kobolds' warrens,
+# eat the vermin, and fight the dead and the duergar (whose mine they raid: listed on this side);
+# the goblins they bully but march beside, so the two tribes leave each other be.
+[[faction]]
+id = "orcs"
+name = "orcs"
+hostile = ["player", "vermin", "kobolds", "undead", "duergar"]
 
 # The restless dead of the barrows: skeletons, zombies, ghouls, wights. They hate the living,
 # the player, the kobolds, and the goblins alike.
@@ -81,6 +91,35 @@ hostile = ["player"]
 [[faction]]
 id = "elemental"
 name = "elementals"
+hostile = ["player"]
+
+# The fey courts (#452): each fey creature joins one when it is made, by its type's `factions`
+# weights (data/creatures/README.toml). The Seelie court leaves the player be, the Unseelie hunts
+# them, and the two are at war; both leave every other faction alone. A Seelie fey the player
+# attacks turns wrathful (`provoked`): hostile to the player from then on, still at peace with
+# its court and at war with the Unseelie.
+[[faction]]
+id = "seelie"
+name = "Seelie court"
+hostile = ["unseelie"]
+provoked = "wrathful_fey"
+
+[[faction]]
+id = "unseelie"
+name = "Unseelie court"
+hostile = ["player"]
+
+[[faction]]
+id = "wrathful_fey"
+name = "wrathful fey"
+hostile = ["player", "unseelie"]
+
+# The devils of the hells (#448): lemures, imps, and the greater devils up to the pit fiend.
+# They come for the player and leave everyone else be: devils bargain, they do not brawl with
+# every passer-by.
+[[faction]]
+id = "devil"
+name = "devils"
 hostile = ["player"]
 
 # The yugoloths (#446): mercenary fiends of the lower planes, who serve whoever pays. They come

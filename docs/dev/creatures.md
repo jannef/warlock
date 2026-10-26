@@ -14,6 +14,8 @@ Per-tribe notes:
 - `docs/dev/creatures/yugoloth.md`: the yugoloths (#446; faction, tags, riders)
 - `docs/dev/creatures/hags.md`: the hags (#451; faction, tag, riders)
 - `docs/dev/creatures/hobgoblins.md`: the hobgoblins (#454; the goblin tribe's second tier)
+- `docs/dev/creatures/fey.md`: the fey (#452; the courts, `provoked`, the roster)
+- `docs/dev/creatures/orcs.md`: the orc tribe and its wargs (#455; faction, tags, formulas, populations)
 
 ## Overview
 

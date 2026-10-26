@@ -1,0 +1,45 @@
+# The devil roster (#448). A winged warrior in armour, like an angel fallen: she hunts the
+# oath-breakers of the world with a sword. Her wings wait for flight. Not yet in any dungeon's
+# population.
+[[creature]]
+id = "erinyes"
+level = 38
+xp = 200
+rarity = "uncommon"
+name = "erinyes"
+plural = "erinyes"
+glyph = "U"
+fg = "#6a2a4a"
+speed = 1050
+faction = "devil"
+tags = ["devil", "fiend"]
+alignment = "evil"
+vision = "darkvision"
+sight = 16
+opens_doors = true
+footsteps = 40
+hearing = 10
+weight = 70000
+stats = { strength = 26, dexterity = 22, toughness = 27, intelligence = 25, willpower = 29, presence = 25 }
+base_hp = 95
+natural = { defence = 2, protection = 0, name = "hide" }
+resist = { fire = 100, poison = 50, cold = 50 }
+weapon_skills = { long_blades = 5 }
+loot = 25
+corpse = false
+blood = "#4a1010"
+[creature.attack]
+damage = "4d8"
+damage_type = "slashing"
+name = "blade"
+verb = "cuts"
+to_hit = 3
+# Her gear (spec §8 "Creature gear"): a sword and mail, often magic.
+[[creature.gear]]
+chance = 90
+one_of = ["long_sword"]
+magic = 25
+[[creature.gear]]
+chance = 60
+one_of = ["chain_mail"]
+magic = 15

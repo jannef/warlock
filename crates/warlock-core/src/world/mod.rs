@@ -86,6 +86,7 @@ mod actor;
 mod ai;
 mod alignment;
 mod ambush;
+mod attacks;
 mod beast_friend;
 mod bleed;
 mod buff;
@@ -95,6 +96,7 @@ mod caster;
 mod caster_level;
 mod class;
 mod class_ability;
+mod court;
 mod creation;
 mod dev;
 mod dig;
@@ -164,6 +166,7 @@ mod volley;
 
 pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
 pub use alignment::Deed;
+pub use attacks::{AttackSource, OwnAttack};
 pub use cast::Reach;
 pub use caster_level::casting_percent;
 pub use creation::{chosen_with_talents, creation_count, parse_talents, pick_text};
@@ -1200,6 +1203,8 @@ mod alignment_tests;
 #[cfg(test)]
 mod ascmearc_tests;
 #[cfg(test)]
+mod attacks_tests;
+#[cfg(test)]
 mod bestiary_tests;
 #[cfg(test)]
 mod blood_tests;
@@ -1231,6 +1236,8 @@ mod class_rogue_tests;
 mod class_tests;
 #[cfg(test)]
 mod cost_tests;
+#[cfg(test)]
+mod court_tests;
 #[cfg(test)]
 mod creation_tests;
 #[cfg(test)]

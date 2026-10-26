@@ -395,6 +395,7 @@ impl World {
         });
         if by == self.state.player && target != by {
             self.provoke(target);
+            self.provoke_court(target);
         }
         if taken <= 0 {
             return;
