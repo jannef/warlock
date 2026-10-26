@@ -8,23 +8,23 @@ expression: "render(case, content.clone())"
 
 
 
-                        ┌─ Skills ─────────────────────────────────────────┐
-                        │                                                  │
-                        │ > Appraise           11  ────                    │
-                        │   Disable device     16  ────                    │
-                        │   Escape artist       7  ────                    │
-                        │   Open lock          18  ────                    │
-                        │   Search              9  ────                    │
-                        │   Spot               10  ────                    │
-                        │   Steal              17  ────                    │
-                        │   Stealth            16  ────                    │
-                        │   Tumble             16  ────                    │
-                        │                                                  │
-                        │ Judging what a thing is worth and what it is     │
-                        │ made of.                                         │
-                        │                                                  │
-                        │ ↑↓ choose   A or Esc close                       │
-                        └─ 1 · 2 · 3 · 4 Skills · 5 · 6 · 7 ───────────────┘
+    ┌─ Skills ────────────────────────────────────────────────────────────────────────────────┐
+    │                                                                                         │
+    │ > Appraise           11  ────                                                           │
+    │   Disable device     16  ────                                                           │
+    │   Escape artist       7  ────                                                           │
+    │   Open lock          18  ────                                                           │
+    │   Search              9  ────                                                           │
+    │   Spot               10  ────                                                           │
+    │   Steal              17  ────                                                           │
+    │   Stealth            16  ────                                                           │
+    │   Tumble             16  ────                                                           │
+    │                                                                                         │
+    │ Judging what a thing is worth and what it is made of.                                   │
+    │                                                                                         │
+    │                                                                                         │
+    │ ↑↓ choose   A or Esc close                                                              │
+    └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘
 
 
 

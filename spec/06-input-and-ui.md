@@ -428,10 +428,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   The character screen, the inventory, the equipment screen, the Skills screen, the weapon
   skills screen, the quest log, and the Talents page are the numbered info pages 1 to 7: on one of them, a digit,
   Tab, or Shift+Tab replaces it with another, and the tab line on its bottom
-  border names them, each after its key: by their names where the panel is wide enough
-  (`1 Character · 2 Inventory · …`), else the current page by its name and the others by short
-  names (`1 Char · 2 Inventory · 3 Equip · 4 Skills · 5 Weapons · 6 Quests · 7 Tal`), else all by
-  their short names, else the current page by its name and the others by their keys alone.
+  border names them, each after its key, the current one highlighted. The pages share one width,
+  wide enough for the line by their names (`1 Character · 2 Inventory · 3 Equipment · 4 Skills ·
+  5 Weapons · 6 Quests · 7 Talents`), so the frame and the line stay put as the pages turn; on a
+  console too narrow for it every page's line goes by short names (`1 Char · 2 Inv · 3 Equip ·
+  4 Skills · 5 Weapons · 6 Quests · 7 Tal`), else by keys alone.
 - **Talents** (page 7, its own command `talents`, unbound by default; #236; §8 "Talents"): the
   player's talents ("Your talents"), by tree in tree order, each with its rank when it has
   several (`Keen ears 1/2`) and, for those not picked, where it came from (`(class)`, `(birth

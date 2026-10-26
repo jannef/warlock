@@ -90,7 +90,7 @@ impl ObjectList {
     /// may carry on one line each.
     fn width(self) -> i32 {
         match self {
-            ObjectList::Inventory => 72,
+            ObjectList::Inventory => super::info_tabs::panel_width(72),
             ObjectList::PickUp
             | ObjectList::Drop
             | ObjectList::Throw

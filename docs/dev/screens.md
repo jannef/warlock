@@ -93,13 +93,17 @@ to open, read keys for, or draw one:
   (`storage::web::reload`; `AppExit` also reloads), and the main menu has no Quit.
 - **Info pages** (`ui/info_tabs.rs`): the screens about the player (Character, Inventory,
   Equipment, Skills, Weapon skills, Quests, Talents) are an ordered group, `PAGES`, each with its name and
-  a short name for the tab line ("Inv"). The tab line takes the first of these that fits the
-  panel: every name; the current page's name and the others' short names; every short name; the
-  current page's name and the others' keys; bare keys. While one is the top screen, the page keys replace
+  a short name for the tab line ("Inv"). Every page's panel is at least `info_tabs::panel_width`
+  wide (91 cells, sized to the tab line by every name, `1 Character · … · 7 Talents`; clamped
+  to the console like any panel), so the pages share one frame and the tab line stays put as
+  they turn: only its highlight moves. The tab line takes the first of these that fits, the same
+  form on every page: every name; every short name; bare keys. The keys shown are the page keys
+  as they are bound. While one is the top screen, the page keys replace
   it (`ScreenAction::Replace` -> `Screens::replace`: the stack depth is unchanged, so Esc still
   returns to where the first was opened) and each draws its tab line on the bottom border with
   `info_tabs::draw_tabs`. **A new info screen joins the group**: one entry in `PAGES` (its
-  position is its number) and one `draw_tabs` call in its `draw`; never a separate way to switch.
+  position is its number), its panel sized with `panel_width`, and one `draw_tabs` call in its
+  `draw`; never a separate way to switch.
   Sub-steps of a page (`EquipItem`, pick-up/drop/throw lists) are not pages and keep their
   number keys. The keys are the `Context::Pages` commands `Page(1..9)`, `NextPage` (Shift
   reverses), `PrevPage`: rebindable like all commands (`KeyCommand::context`: keys are unique
