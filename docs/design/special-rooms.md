@@ -1,6 +1,6 @@
-# Warlock — Special rooms, second wave: teeming dens, cursed rooms, draining rooms, forgotten altars, hot and cold rooms, and more
+# Warlock — Special rooms, second wave: teeming dens, cursed rooms, draining rooms, forgotten altars, hot and cold rooms, and thirteen more
 
-Design document for the owner's review (2026-10-26). Written against `origin/main` at 1c0ce120. Nothing here is implemented; §12 cuts it into issues and §13 lists the open questions. Everything builds on the existing room-effect system (`assets/data/room_effects.toml`, spec §7 "Special rooms", `docs/dev/mapgen.md`): an effect is data, a room carries it, and the rules ask one question about a cell.
+Design document for the owner's review (2026-10-26). Written against `origin/main` at 1c0ce120 and revised with the owner's decisions (§13). Nothing here is implemented; §12 cuts it into issues. Everything builds on the existing room-effect system (`assets/data/room_effects.toml`, spec §7 "Special rooms"): an effect is data, a room carries it, and the rules ask one question about a cell. The developer notes move to a new topic file, `docs/dev/special-rooms.md` (R1, §12).
 
 ## Contents
 
@@ -12,29 +12,30 @@ Design document for the owner's review (2026-10-26). Written against `origin/mai
 6. Draining rooms
 7. Forgotten altars and prayer
 8. Hot and cold rooms
-9. More rooms, ranked
+9. More rooms
 10. What the player sees, and the wiki
 11. Talents and class abilities
 12. Implementation plan
-13. Open questions
+13. Decisions (owner, 2026-10-26)
 
 ## 1. Summary
 
 | Piece | Proposal |
 |---|---|
-| Rare whole-level versions | one field, `level_chance` (percent): when a generated level draws an effect that has one, it applies to the **whole level** instead of the room with that chance (5 for every effect that uses it). Hand-made levels may name one: `[level] effect = "cursed"`. §3.1 |
-| Which effect is drawn | a `weight` per effect (default 1). With every weight 1 the draw is today's uniform pick, draw for draw. The new rooms are weighted so altars and dens are not vanishingly rare. §3.2 |
-| A status while inside | `status = "chilled"`: everyone inside holds that status at least at one degree; it eases once they leave. Statuses already carry pace, ticks, mana drain, damage types, and resistances, so draining, hot, and cold rooms need no new rule of their own. §3.3 |
-| Terrain in the room | `feature = "altar"`: a generator places one cell of that terrain at the room's middle. §3.4 |
-| A hint from outside | `near` (a message) said once when a cell of the room first comes into the player's view. §3.5 |
-| Teeming den (swarm) | a room filled with **sleeping** hostile creatures of the floor's danger, and their hoard. They wake to noise, a blow, or a sleeper's cry, so one loud step can wake the whole room. Stealth and sneak attacks matter here. §4 |
-| Cursed room | a non-undead creature killed inside rises from its corpse a little later, as a random undead of its level. Taking or eating the corpse first stops it. Whole level at 5 %. §5 |
-| Draining room | the status *Ebbing* drains mana while one is inside, from creatures too. Whole level at 5 %. §6 |
-| Forgotten altar | **Pray** (abilities menu, a new source, *Here*; no key of its own) takes half an hour and draws a boon, nothing, or a bane from a data table. The odds lean on the altar's hidden side against the player's alignment. No limit on prayers: time is the penalty. No wish. §7 |
-| Hot and cold rooms | `temperature` (degrees added to the level's) plus a status (*Sweltering*, *Chilled*): slower healing, cold makes the player hungrier, resistances to fire and cold shield one, and ice on water grows or melts by the room's temperature. §8 |
-| More rooms | twelve proposals, ranked: recommended are the silent vault, tempting hoard, haunted room, shrine of a side, black chamber, scriptorium, beast den, and unstable room. Skipped for now: heavy hall, healing spring, hall of mirrors, forge, collapsed floor. §9 |
-| Talents | a new system `special_rooms` with seven talents, and a new system `prayer` with two. One class ability, *Consecrate* (priest, paladin). §11 |
-| Slices | seven issues in three waves, never more than three at once that add actions or save state. §12 |
+| Which room is drawn | every kind of special room (a **feature**) carries its own default `weight` in its own data. A dungeon (a branch, or a range of its depths) may name `favoured` features, each with a fixed share of the draws, and a `banned` list. Everything else is drawn from all the features that are not banned. A new feature therefore appears in every dungeon without touching any dungeon file. The old `effects` list is retired. §3.2 |
+| Rare whole-level versions | one field, `level_chance` (percent): when a generated level draws an effect that has one, the effect covers the **whole level** instead of the room, with that chance (5 for every effect that uses it). Hand-made levels may name one: `[level] effect = "cursed"`. §3.1 |
+| A status while inside | `status = "ebbing"`: everyone inside holds that status at least at one degree, and it eases once they leave. Statuses already carry pace, ticks, mana drain, damage types, and resistances, so the draining room and the silent vault need no new rule of their own. §3.3 |
+| Terrain in the room | `feature = "forgotten_altar"`: a generator places one cell of that terrain at the room's middle. §3.4 |
+| A hint from outside | `near` (a message), said once when a cell of the room first comes into the player's view. §3.5 |
+| Abilities a place offers | a new abilities-menu source, *Here*, and outcome tables in data (`data/outcomes/`), shared by the altar's Pray, the spring's Drink, and the forge's Temper. §3.8 |
+| Teeming den (swarm) | a room filled with **sleeping** hostile creatures of the floor's danger, and their hoard. Sleepers always come from the branch population's own draw (no den is hand-made per monster); some dens are themed, a warren of one type or a tribe of one faction. They wake to noise, a blow, or a sleeper's cry, and never on their own, so one loud step can wake the whole room. Stealth and sneak attacks matter here. §4 |
+| Cursed room | a non-undead creature killed inside rises from its corpse two minutes later, as a random undead of its level or the nearest level. Taking or eating the corpse first stops it. Whole level at 5 %. §5 |
+| Draining room | the status *Ebbing* drains mana from everyone inside, creatures too. Whole level at 5 %. §6 |
+| Forgotten altar | ADOM's pool mechanic with its own flavour (no gods, no sacrifices, no conversion). **Pray** (abilities menu, *Here*; no key of its own) takes **one minute** and draws a boon, nothing, or a bane. The odds lean on the altar's hidden side against the player's alignment, and the side shows in the altar's light colour. The great boons and banes can make or ruin a character: a level gained or lost, a stat raised or lowered by up to three for good, a talent or a flaw for life, a relic, a horde. No limit on prayers. No wish. §7 |
+| Hot and cold rooms | the room sets its cells' **temperature** (+25 °C, −25 °C) and nothing else. What the temperature does (ice today; creatures, items, and food later) is the environment simulation's job. §8 |
+| More rooms | all thirteen are built: silent vault, tempting hoard, haunted room, shrine of a side, black chamber, scriptorium, beast den, unstable room, heavy hall, healing spring, forge, hall of mirrors, collapsed floor. §9 |
+| Talents | a new system `special_rooms` with eight talents, and a new system `prayer` with two. One class ability, *Consecrate* (priest, paladin). §11 |
+| Slices | nineteen issues in six waves, never more than three at once that add actions or save state. §12 |
 
 ## 2. What exists today
 
@@ -42,12 +43,12 @@ Design document for the owner's review (2026-10-26). Written against `origin/mai
 |---|---|
 | Fields | `id`, `name`, `mark`, `enter`, `light`, `glow`, `noise`, `regen`, `mana_regen`, `shunned`, `floor`; at most 32 effects; ids are indices (in the save fingerprint) |
 | Effects | shadowed room, echoing hall, hushed chamber, sanctuary, flooded room |
-| Generation | `mapgen/special.rs`, last, from the level's map stream: each room except the arrival room and vaults (each of eight cave chambers) is special with `chance` 7 % until `per_level` 1; the effect is a **uniform** pick; about 40 % of generated levels have one. Branches override `chance`, `per_level`, `effects` (`RoomOdds`) |
+| Generation | `mapgen/special.rs`, last, from the level's map stream: each room except the arrival room and vaults (each of eight cave chambers) is special with `chance` 7 % until `per_level` 1; the effect is a **uniform** pick; about 40 % of generated levels have one. Branches override `chance`, `per_level`, and `effects`, an exclusive list (`RoomOdds`, `content/dungeon.rs`); only Fennmynster does: `{ chance = 25, per_level = 2, effects = ["flooded", "hushed", "shadowed"] }` |
 | State | `LevelState::rooms` (effect, box, a cave blob's cells, entered), saved and hashed |
 | The one question | `LevelState::room_effect_at(pos)` / `World::room_effect_at`, read by perception light and creature sight (together), noise, `World::healing_rate`, `World::mana_rate`, and `World::shuns` |
 | Player | the `enter` line once per room; look mode names a room the player has been in; numbers never shown |
-| Nearby systems this design reuses | statuses (`data/status.toml`: `tick`, `damage`, `damage_type`, `mana_damage`, `regen`, `mana_regen`, `cost`, `blocks`, `seen`); temperature per level (`WorldState::temperature_on`) and ice (`LevelState::advance_ice`, 10-minute ticks); spawning (`world/spawn.rs`: `make_creature`, the danger draw `content/danger.rs`); `World::unaware` (sneak attacks); alignment `Deed`s and `shift_alignment`; the `altar` terrain (`_`, steady glow); the cure id `prayer` already on every disease; the teleport trap |
-| What nothing does yet | nothing feels the cold (`docs/dev/temperature.md`); creatures never sleep; there is no "rise from a corpse" |
+| Nearby systems this design reuses | statuses (`data/status.toml`: `tick`, `damage`, `damage_type`, `mana_damage`, `regen`, `mana_regen`, `cost`, `blocks`, `seen`); temperature per level (`WorldState::temperature_on`) and ice (`LevelState::advance_ice`, 10-minute ticks); spawning (`world/spawn.rs`: `make_creature`, the danger draw `content/danger.rs`); `World::unaware` (sneak attacks); alignment `Deed`s and `shift_alignment`; the `altar` terrain (`_`, steady glow); the cure id `prayer` already on every disease; the teleport and lightning traps (`world/trap.rs`); flaw talents (`flaw = true`: Frail, Thin-skinned, Slight, …); affixes and rarities (`data/affixes.toml`); the Metalcraft and Decipher script skills |
+| What nothing does yet | nothing feels the cold or heat (`docs/dev/temperature.md`); creatures never sleep; there is no "rise from a corpse"; nobody falls between levels |
 
 ## 3. Shared mechanisms (each specified once)
 
@@ -58,25 +59,61 @@ Design document for the owner's review (2026-10-26). Written against `origin/mai
 | Field | `level_chance` (percent, 0 to 100, default 0) on an `[[effect]]` |
 | Rule | when the generator has drawn this effect for a room, it draws once more from the **map stream**: with `level_chance` the effect **pervades the level** and the room stays plain. The extra draw happens only for effects that have a `level_chance` above 0. |
 | State | `LevelState::pervading: Option<RoomEffectId>` (saved and hashed, left out while `None`, so other levels hash as before) |
-| The one question | `room_effect_at` becomes `effects_at(pos) -> Here` (the room's effect, then the pervading one). Every reader folds both the same way: percents multiply, flags OR, statuses both apply. Inside the core a level has at most two effects at a cell, so the cost stays the same. The light invariant test (`special_rooms_keep_the_light_invariants`) gains a pervading case. |
+| The one question | `room_effect_at` becomes `effects_at(pos) -> Here` (the room's effect, then the pervading one). Every reader folds both the same way: percents multiply, flags OR, statuses both apply. A level has at most two effects at a cell, so the cost stays the same. The light invariant test (`special_rooms_keep_the_light_invariants`) gains a pervading case. |
 | Hand-made levels | `effect = "cursed"` in a level file's header (refused on the overworld and in local areas) |
-| Player | the effect's `pervade` message on arrival, said each time the player arrives (as a level feeling, not once per run); look mode does not name the whole level, since the status line and the arrival line already say it |
-| Uses it (5 %) | cursed (§5), draining (§6). Possible, not proposed: shadowed, hushed, echoing (open question 2). Never: sanctuary (a level hostiles shun is broken), flooded and every `floor`/`feature` effect, teeming dens, altars, hot and cold (a hot level is just its `temperature`) |
-| Odds | with §3.2's weights about 0.15 % of generated floors are cursed throughout and as many drained: a story a player tells, not a regular feature. The wiki states it. |
+| Player | the effect's `pervade` message on arrival, said each time the player arrives (as a level feeling, not once per run); look mode does not name the whole level, since the arrival line already says it |
+| Uses it (5 %) | cursed (§5), draining (§6). Not now (decision 2): shadowed, hushed, echoing; cheap to add later as data. Never: sanctuary (a level hostiles shun is broken), flooded and every `floor`/`feature` effect, teeming dens, altars, hot and cold (a hot level is just its `temperature`), and every §9 room |
+| Odds | 5 % of the floors that drew the effect: about 0.15 % of generated floors are cursed throughout and about as many drained (§3.2's shares). A story a player tells, not a regular feature. 5 % stays; we adjust later if need be (decision 1). The wiki states it. |
 
-### 3.2 `weight`: which effect is drawn
+### 3.2 The draw: features, default weights, favoured and banned
 
-`weight` (1 to 100, default 1) on an effect. The pick becomes `range(0, total)` over the branch's `effects`. **With every weight 1 that is exactly today's `index(len)`**, so a table without weights draws as before. Adding effects to the shared table changes which effect existing seeds draw, and the Depths' snapshots change once, in R1 (reviewed, accepted). Proposed weights:
+Each kind of special room is a **feature**. Adding a feature means adding one effect file entry with its own weight; no dungeon file has to change, and the new feature turns up in every dungeon that has special rooms and has not banned it.
 
-| Effect | Weight | Share | Floors with one (at ~40 % special) |
+**Data.**
+
+| Where | Field | Meaning |
+|---|---|---|
+| each `[[effect]]` in `room_effects.toml` | `weight` (1 to 100, default 10) | the feature's default weight: how often it is drawn relative to the others where no dungeon says otherwise |
+| `room_effects.toml`, top | `chance`, `per_level` | as today (shared `chance` rises from 7 to 12, below) |
+| a dungeon's `room_effects` (the branch's, or a `[[dungeon.levels]]` range's) | `chance`, `per_level` | as today |
+| the same | `favoured = { flooded = 40, cursed = 15 }` | features with a **fixed share** of this dungeon's draws, in percent (1 to 100 each, together at most 100). A favoured feature keeps its share however many features are added later. |
+| the same | `banned = ["hot"]` | features this dungeon never draws |
+| the same | `effects` | **retired**: refused at load with a message pointing to `favoured` and `banned` |
+
+Fields left out fall back as today: a range's table, then the branch's, then the shared one (which has no `favoured` or `banned`). Validation at load: unknown ids, an id both favoured and banned, shares summing over 100, and a dungeon that bans every feature while its `chance` is above 0 are content errors.
+
+**The draw** (for one room, from the level's map stream):
+
+1. **Eligible** = every feature, less the dungeon's `banned`, less those this room or level does not qualify for (§3.6).
+2. If any eligible feature is favoured: draw `range(0, 100)`. Walking the favoured eligible features in effect-file order and adding up their shares, the first whose running sum is above the draw is chosen.
+3. Otherwise (no favoured feature, or the draw landed past the favoured shares): a weighted pick, `range(0, total)`, over the eligible features that are **not** favoured, by their default `weight`. If that set is empty, the pick runs over the eligible favoured ones by their shares.
+
+A favoured feature that this room is not eligible for gives its share to the rest (step 3). With no `favoured` the first draw is skipped, so the shared table costs one draw per room as today. Adding features changes which effect existing seeds draw: the Depths' snapshots change once, in R1 (reviewed, accepted).
+
+**Code.** `RoomOdds { chance, per_level, effects: Vec<RoomEffectId> }` becomes `RoomOdds { chance, per_level, favoured: Vec<(RoomEffectId, u8)>, banned: Vec<RoomEffectId> }`; `RoomOdds::shared` has both empty; the weights are read from `RoomEffects` at the draw. `RoomOddsSpec::layer` and `resolve` (`content/dungeon.rs`) change field for field. The same shape could later serve shops' `kinds`; not in this design.
+
+**Default weights**, each in its effect's own entry:
+
+| Feature | Weight | Share of draws | Floors with one |
 |---|---|---|---|
-| shadowed | 10 | 13 % | 5 % |
-| echoing, hushed, flooded, teeming, altar | 8 each | 10 % each | 4 % each |
-| sanctuary, cursed, draining | 6 each | 8 % each | 3 % each |
-| hot, cold | 5 each | 6 % each | 2.5 % each |
-| *(total 78)* | | | |
+| shadowed | 10 | 7.5 % | 4.5 % |
+| echoing, hushed, flooded, teeming den, forgotten altar | 8 each | 6.0 % each | 3.6 % each |
+| sanctuary, cursed, draining | 6 each | 4.5 % each | 2.7 % each |
+| hot, cold, silent vault, tempting hoard, haunted, black chamber, scriptorium, beast den | 5 each | 3.8 % each | 2.3 % each |
+| shrine of a side, unstable, heavy hall, healing spring | 4 each | 3.0 % each | 1.8 % each |
+| forge, hall of mirrors, collapsed floor | 3 each | 2.3 % each | 1.4 % each |
+| *(total 133)* | | | |
 
-The Ascmearc's 26 floors would then hold about one altar and one den per game. A branch may still list its own `effects` (Fennmynster: cursed and draining are natural there).
+"Floors with one" assumes the shared `chance` rises from 7 % to **12 %** in R1, so about 60 % of generated floors have a special room (about 40 % today). With twenty-four kinds instead of five, keeping 7 % would make each one rarer than the owner accepted for altars and dens (about 4 % of floors). The Ascmearc's 26 floors would hold about one altar and one den per game. Eligibility (§3.6) moves the shares a little: dens and cursed rooms are not drawn on a level without a danger. All numbers are data, tuned after a play-through.
+
+**Existing dungeons.** Only Fennmynster names `effects` today. It becomes:
+
+```toml
+# The fen seeps in: water, hush, and shadow most of the time, the dead often, never heat.
+room_effects = { chance = 25, per_level = 2, favoured = { flooded = 35, cursed = 15, hushed = 15, shadowed = 15 }, banned = ["hot", "forge"] }
+```
+
+80 % of its special rooms are its own four; the other 20 % come from every feature not banned, including those added later. The shared table and every other branch need no change.
 
 ### 3.3 `status`: a status while inside
 
@@ -84,36 +121,49 @@ The Ascmearc's 26 floors would then hold about one altar and one den per game. A
 |---|---|
 | Field | `status` (a status id) on an effect |
 | Rule | after every action of an actor whose cell has the effect (the player's in `World::apply`, a creature's at the end of `creature_turn`, and each step of a rest or a long action), `World::dwell(id)` gives it the status at one degree with `refresh` stacking. Once the actor leaves, the status eases by its own `eases`. Its `eases` must be at least the longest single action (10 s) so it never lapses mid-rest; validated. |
-| Resistance | a status with a `damage_type` is never given to one immune, and is shrunk for one resistant (existing rule). So *Chilled* is `cold`, *Sweltering* is `fire`, and the existing resistances, talents (Flame-hardened, Winter-born's line), and affixes (of Warmth) count without new code. |
-| Who | every actor inside: creatures too (a kobold shaman's mana ebbs, a troll heals slowly) |
-| One new status field | `hunger` (percent of the burn pace, 50 to 300, default 100; several multiply), read once in `World::digest`. Used by *Chilled*. |
+| Resistance | a status with a `damage_type` is never given to one immune, and is shrunk for one resistant (existing rule) |
+| Who | **everyone inside**, creatures too (decision 11): a kobold shaman's mana ebbs as the wizard's does |
+| Used by | draining room (*Ebbing*), silent vault (*Silenced*), shrine of a side (*Unwelcome*). Never for temperature (§8). |
 
 ### 3.4 `feature`: one cell of terrain
 
-`feature` (a terrain id; stone, not walkable) is placed by the generator at the free floor cell nearest the room's centre (a cave: the blob's seed cell), and never in a doorway or on a path between two doors (the generators' connectivity check runs after). A hand-made level draws its own. Used by the altar (§7), later the scriptorium's shelves and the haunted room's bones (§9).
+`feature` (a terrain id; not walkable) is placed by the generator at the free floor cell nearest the room's centre (a cave: the blob's seed cell), and never in a doorway or on a path between two doors (the generators' connectivity check runs after). A hand-made level draws its own. Each special room's feature is its **own terrain** with its own name and description, so look mode tells it from scenery: `forgotten_altar` (§7), `shelves` (scriptorium), `spring` (healing spring), `anvil` (forge).
 
 ### 3.5 `near`: a hint from outside
 
-`near` (a message) is said once per room, the first time any of its cells comes into the player's view, before they set foot in it. `LevelState::rooms` gains `glimpsed: bool` beside `entered` (saved, hashed). Perception then knows the room as "glimpsed" but does not name it; look mode names it only once entered, as today (Sense of place changes that, §11). Optional on every effect. Proposed for dens, cursed rooms, and altars; the five existing effects get none.
+`near` (a message) is said once per room, the first time any of its cells comes into the player's view, before they set foot in it. `LevelState::rooms` gains `glimpsed: bool` beside `entered` (saved, hashed). Perception then knows the room as "glimpsed" but does not name it; look mode names it only once entered, as today (Sense of place changes that, §11). Optional on every effect. The five existing effects get none.
 
 ### 3.6 Eligibility
 
 | Field | Meaning |
 |---|---|
-| `needs_danger` (bool) | drawn only on a level with a danger (`World::danger` > 0); hand-made levels without one never get it. Teeming dens, cursed rooms, haunted rooms |
+| `needs_danger` (bool) | drawn only on a level with a danger (`World::danger` > 0); hand-made levels without one never get it. Teeming den, beast den, cursed, haunted, tempting hoard |
 | `min_cells` (default 0) | eligible only for a room (blob) of at least this many floor cells |
+| `max_cells` (default none) | eligible only for a room of at most this many floor cells. Unstable room, hall of mirrors |
+| `needs_below` (bool) | drawn only on a branch level with another level below it. Collapsed floor |
 
-The pick runs over the eligible effects only, so on a level where none are excluded the draw is unchanged.
+The draw runs over the eligible features only (§3.2 step 1).
 
 ### 3.7 Determinism
 
 | Draw | Stream |
 |---|---|
-| room chance, effect pick, `level_chance`, the altar's side, `feature` placement | the level's **map** stream (as today, at the end) |
-| a den's sleepers and hoard | new `swarm/<level id>` (`Rng::swarm`), so the population, loot, and gear streams do not move |
+| room chance, the feature draw, `level_chance`, a room's side, `feature` placement | the level's **map** stream (as today, at the end) |
+| a den's sleepers and hoard, a tempting hoard's items, a scriptorium's scrolls | new `swarm/<level id>` (`Rng::swarm`), so the population, loot, and gear streams do not move |
 | a sleeper's gear | `gear/<level id>`, after the population's, as `make_creature` does |
-| what a corpse rises as, a prayer's outcome | the gameplay stream (they happen in play) |
+| what a corpse rises as, an outcome (prayer, spring, forge), a warp, a collapse, a guardian or a haunting | the gameplay stream (they happen in play) |
+| a hall of mirrors' reflections | none: a hash of the level, the turn, and the actor (§9.11), so perception draws nothing |
 | waking, dwelling, rising times | none: thresholds and game time |
+
+### 3.8 Abilities a place offers, and outcome tables
+
+| | |
+|---|---|
+| Source | a new abilities-menu source **Here** (`Source::Place`): abilities a place offers, listed while the player stands on or next to the feature cell of a room that offers them, absent (not greyed) elsewhere. No key of their own (`KeyCommand` unbound by default), bindable like every ability. Pray (§7), Drink (§9.10), Temper (§9.12). |
+| Only here | these abilities exist **only** in these rooms (decision 14). The showcase's water-garden altar and the temple of Cēaptūn are scenery and services; a hand-made level that wants an altar room marks it (`[[room]] effect = "altar"`). |
+| Outcome tables | `data/outcomes/<id>.toml`, one table a file (churning content is a directory): `kinds` with base weights (`boon`, `nothing`, `bane`; the forge's `improved`, `nothing`, `flawed`, `ruined`), a `lean` that moves weight between the best and the worst kind, and `[[outcome]]` entries (`kind`, `id`, `weight`, `effect`, `message`, `great`). Each `effect` is one of a closed set of kinds, each calling one hook. Drawn from the gameplay stream. `content/outcome.rs` parses and validates; `world/outcome.rs` applies. |
+| Time | each ability is a long action through `World::keep_at`, the rest's machinery: anything that disturbs a rest interrupts it (a creature comes into view, a hit), and an interrupted one gives **nothing**, but the time is spent |
+| Repeats | no limit: the owner's no-anti-farming rule. The risk of the bad outcomes is the price. |
 
 ## 4. Teeming dens (the owner's "swarms")
 
@@ -121,17 +171,33 @@ The pick runs over the eligible effects only, so on a level where none are exclu
 
 **Messages** (no ADOM wording, and no sense of dread before the room is seen): `near` *"A warm, rank smell drifts out of the dark ahead."* `enter` *"You hear slow breathing all around you."* The room is often dark, so the player may hear it before seeing it. Sixth sense (an existing talent) adds *"Something sleeps on this level."* on arrival.
 
+**What is data and what is procedural** (decision 3). A den is **not** a hand-drawn vault. The data defines what a den *is*: its effect entry in `room_effects.toml` with the fields below (its weight, its messages, how many sleepers per cell and the least and most, how loud a noise must be to wake them, how loud a waking sleeper cries, how good the hoard is). The **generator** decides everything about a particular den when it makes the level: which room becomes the den (any eligible room, by the draw of §3.2), how many sleepers it holds (from the room's size), which creatures they are (drawn from the floor's danger and the branch's population), where each lies, what gear each carries, and what the hoard holds. Two dens are never the same, and no level file has to mention one.
+
+**The principle: no hand-made den definitions per monster.** A den's sleepers are always drawn from the branch's population by the same draw that lays down a floor's creatures (`content/danger.rs::draw`): the floor's danger, each type's level weight, its rarity tier (`data/creature_rarities.toml`: common 100, uncommon 50, rare 25, very rare 10), the strays (weaker types the draw still allows, weight 1 down to eight levels below the danger), and the out-of-depth chance (5 % of draws made 1 to 3 dangers deeper), and later tribes data when it exists. So adding a monster type to a branch's population puts it in that branch's dens at once, and den data never names a monster. The only filter a den kind may give is by faction (§9.5's beast den), which is also data about the den, not about any monster.
+
+**Themed dens** (optional, procedural; **recommended**). With `swarm.themes = { kind = 10, faction = 20 }`, a den is themed with that chance: first one creature type (a *warren*, 10 %) or one faction (a *tribe*, 20 %) is drawn, by the same weighted draw, and then every sleeper is drawn from the population restricted to it. Nothing is hand-picked: a warren of a common type is far likelier than one of a rare type, and out-of-depth and stray draws still apply within the theme. Themed dens make a few dens read as a place (a rat warren, a goblin camp) at the cost of one extra draw. When tribes data exists, the faction theme becomes a tribe theme with no change to den data.
+
+**Examples** (illustrative draws from today's creatures; the numbers are what the rules give):
+
+| Den | How it comes out |
+|---|---|
+| Floor 3 of a branch whose population holds kobolds, goblins, and vermin; a room of 36 floor cells | 36 / 4 = **9 sleepers**, mixed: 3 kobolds and 2 goblins (level 2, weight 4, common), a goblin archer and a giant centipede (level 3, weight 4, uncommon and common), a rat and a grave worm (level 1, weight 2: the strays), and the hoard, 2 items at item level + 1 |
+| A **warren** on floor 2; a cave chamber of 22 cells | the theme draws one type, the rat (common, so warrens of rats are frequent); **5 sleepers**, all rats; a hoard of 1 item. A warren of goblin chiefs could happen in principle, but the chief's rarity (rare, 25) and level (5) make it a very unlikely draw at danger 2 |
+| A **tribe** den on floor 5; a hall of 64 cells | the theme draws the faction `goblins`; **16 sleepers** (the most), all goblins: plain goblins and goblin archers mostly, a goblin chief now and then (level 5, rare), and an ogre only by an out-of-depth draw. A goblin camp, and a loud one if it wakes |
+| Floor 3 again, a room of 32 cells, no theme | **8 sleepers**; each draw has the 5 % out-of-depth chance, so about one den in three like this holds **an out-of-depth sleeper** (1 − 0.95⁸ ≈ 34 %): here a kobold shaman (level 4) drawn at danger 4 to 6, among kobolds and rats. Waking the shaman first is the mistake |
+
 | Rule | Proposal |
 |---|---|
 | Sleepers | a new status **`asleep`** (`max = 1`, no `eases`, `seen = "asleep"`, `sleeps = true`): an actor with a `sleeps` status takes no turn (one check at the top of `creature_turn`, beside the coarse-turn check) and is `World::unaware` of everyone. Look mode says "a goblin (hostile, asleep)". A status keeps it saved, hashed, and shown with no new state, and later sleep spells can use the same status. |
-| How many | one sleeper per 4 floor cells of the room, 4 to 16 (`swarm.per_cells`, `swarm.min`, `swarm.max`), drawn by the floor's danger from the branch's `population` (`content/danger.rs::draw`, the out-of-depth chance included), hostile types only, never uniques, from `swarm/<level id>`; placed on free floor in the room, made by `make_creature` with gear rolled, asleep |
-| Waking | **noise**: in `World::hear` (where a creature's `Heard` is pushed), a sleeper wakes when the loudness at its cell is at least its hearing threshold × `swarm.wake` (200 %): a sneaking step does not wake it, a fight or a door kicked open beside it does. **A blow** of any kind wakes the one struck. **A cry**: a sleeper that wakes makes an `Act::Voice` noise of `swarm.cry` (60) at once, which may wake the next: a cascade, deterministic, through the existing propagation. **Light and sight do not wake** (a lantern carried in is fine). No timer: they sleep until disturbed. |
-| The hoard | one item per 4 sleepers (at least 1) at the floor's item level + 1, `loot::make`, on the room's floor, from `swarm/<level id>` after the sleepers |
+| How many | one sleeper per 4 floor cells of the room, 4 to 16 (`swarm.per_cells`, `swarm.min`, `swarm.max`), drawn by the floor's danger from the branch's `population` (`content/danger.rs::draw`: level weights, rarity tiers, strays, and the out-of-depth chance), hostile types only (or `swarm.factions`), within a theme if one was drawn (`swarm.themes`), never uniques, from `swarm/<level id>`; placed on free floor in the room, made by `make_creature` with gear rolled, asleep |
+| Waking | **noise**: in `World::hear` (where a creature's `Heard` is pushed), a sleeper wakes when the loudness at its cell is at least its hearing threshold × `swarm.wake` (200 %): a sneaking step does not wake it, a fight or a door kicked open beside it does. **A blow** of any kind wakes the one struck. **A cry**: a sleeper that wakes makes an `Act::Voice` noise of `swarm.cry` (60) at once, which may wake the next: a cascade, deterministic, through the existing propagation. **Light and sight do not wake** (a lantern carried in is fine). |
+| Never on their own | no timer and no spawn tick wakes them (decision 5): the player chooses when the den wakes |
+| The hoard | one item per 4 sleepers (at least 1) at the floor's item level + `swarm.loot_level`, `loot::make`, on the room's floor, from `swarm/<level id>` after the sleepers |
 | Versus the normal population | sleepers come on top of the 35 per 1 000 cells. They **count** toward the spawning cap (`attempt` counts hostiles on the level), so a floor with a den spawns nothing until enough of it is dead. Nothing else changes. |
 | Stealth | step noise already falls with Stealth (`noise.rs`), so a stealthy player crosses a den that a clanking one wakes. Sleepers are `unaware`, so **sneak attacks** land on each (Sneak attack, Ambusher). A kill is a noise too (`Act::Attack`): killing quietly in a den is the thief's game. |
-| Alignment | none. Killing a sleeping hostile is a hostile kill (`kill_hostile`), as now. A good character murdering sleepers is a story, not a rule (open question 4). |
-| Shunned, patrols | a den is never where a creature patrols (as for a shunned room); sleepers have no post to return to until woken, after which the normal AI applies |
-| Fields | `swarm = { per_cells = 4, min = 4, max = 16, wake = 200, cry = 60, loot_level = 1 }`, `needs_danger = true`, `min_cells = 16` |
+| Alignment | **none** (decision 4). Killing a sleeping hostile is a hostile kill (`kill_hostile`), as now. |
+| Patrols | a den is never where a creature patrols (as for a shunned room); sleepers have no post to return to until woken, after which the normal AI applies |
+| Fields | `swarm = { per_cells = 4, min = 4, max = 16, wake = 200, cry = 60, loot_level = 1, themes = { kind = 10, faction = 20 } }`, `needs_danger = true`, `min_cells = 16` |
 | Cost | M. New: the `sleeps` status field and its one check, the wake hook in `hear`, the den filler in `mapgen/special.rs`, `Rng::swarm`. The risk is a den of 16 at danger 8 on a 120×60 cave: `bench-turns`' `delf` row gets a fixture den, and sleepers cost nothing per turn. |
 
 ```toml
@@ -144,7 +210,7 @@ enter = "You hear slow breathing all around you."
 weight = 8
 needs_danger = true
 min_cells = 16
-swarm = { per_cells = 4, min = 4, max = 16, wake = 200, cry = 60, loot_level = 1 }
+swarm = { per_cells = 4, min = 4, max = 16, wake = 200, cry = 60, loot_level = 1, themes = { kind = 10, faction = 20 } }
 ```
 
 ## 5. Cursed rooms
@@ -154,13 +220,13 @@ swarm = { per_cells = 4, min = 4, max = 16, wake = 200, cry = 60, loot_level = 1
 | Rule | Proposal |
 |---|---|
 | Who rises | a creature that dies on a cursed cell, whose faction is not `rise.faction` (`undead`), and that leaves a corpse (`corpse = true`). Anyone's kill counts, a creature's included. Never the player. |
-| As what | an undead type (faction `undead`, not unique, no npc) of the **same level** as the dead, drawn uniformly from the gameplay stream at death; if none has that level, the **nearest** level (a tie goes to the lower). Today's undead are skeleton and zombie (3), barrow ghoul (4), drowned (5), ghost (8), and ash wraith (15), so a rat (1) rises as a skeleton or a zombie and a troll as a ghost; more undead make the match closer (open question 17). |
+| As what | an undead type (faction `undead`, not unique, no npc) of the **same level** as the dead, drawn uniformly from the gameplay stream at death; if none has that level, the **nearest** level (a tie goes to the lower; decision 17). Today's undead are skeleton and zombie (3), barrow ghoul (4), drowned (5), ghost (8), and ash wraith (15), so a rat (1) rises as a skeleton or a zombie and a troll as a ghost; more undead make the match closer. |
 | When | `rise.after` (2 minutes of game time, 20 normal turns) later. `LevelState::risings: Vec<Rising { at, pos, from: CreatureId, into: CreatureId }>` (saved, hashed, left out while empty); `rise_tick` runs once at the end of `run_turn`, beside `spawn_tick`. A frozen level (the player away) rises when the player returns, as spawning catches up. |
 | From its corpse | at `at`, if a pile at `pos` still holds a corpse of `from`, one is taken and the undead stands on `pos` (or the nearest free cell, the spawner's helper). **A corpse picked up, eaten, or destroyed does not rise**: that is the counterplay. A corpse carried out of the room and dropped is not cursed again. |
 | Warnings | at death, if seen: *"The goblin's corpse twitches."* At rising: *"The goblin's corpse rises as a zombie!"*, or a noise (`Act::Voice`, a groan) if unseen |
 | XP, loot | a risen undead gives its own kill XP (no anti-farming limit) and carries nothing; what the dead carried already lay on the floor |
 | Whole level (5 %) | every cell is cursed: a whole floor of risings. With a teeming den elsewhere on the level, that is the floor players remember. |
-| Fields | `rise = { faction = "undead", after = "2m" }`, `needs_danger = true`, `level_chance = 5` |
+| Fields | `rise = { faction = "undead", after = "2m" }`, `needs_danger = true`, `level_chance = 5`, `weight = 6` |
 | Cost | M. New: `rise` parse, `risings` state, one line in `fight.rs::dies`, `rise_tick`. Risk: a rising during a rest, since it is a creature arriving in view and the rest stops as usual. |
 
 ## 6. Draining rooms
@@ -172,46 +238,61 @@ swarm = { per_cells = 4, min = 4, max = 16, wake = 200, cry = 60, loot_level = 1
 | Status | **`ebbing`** (name *Ebbing*, `seen = "ebbing"`, `max = 1`, `stacking = "refresh"`, `tick = 20`, `mana_damage = 1`, `mana_regen = 0`, `eases = 30`, start *"Your power ebbs away."*, end *"Your power stops ebbing."*), given while inside (§3.3). It drains 1 mana per 20 s (180 an hour) and stops regeneration, never below 0 and never a death (existing `mana::drain`). |
 | Who | everyone with mana: a wizard and a kobold shaman alike. A casters' fight in a draining room is a melee. |
 | Whole level (5 %) | `level_chance = 5`: a floor where casters must ration and leave quickly |
-| Fields | `status = "ebbing"`, `level_chance = 5`, `glow` |
+| Fields | `status = "ebbing"`, `level_chance = 5`, `glow`, `weight = 6` |
 | Cost | S once §3.3 exists (no new rule: the status framework already drains). |
 
 ## 7. Forgotten altars and prayer
 
-**Messages**: `near` *"A faint glow rises from an altar ahead."* `enter` *"An old altar stands here, its god long forgotten."* Look mode on the altar cell: "a forgotten altar".
+**What this is, and is not.** A forgotten altar is ADOM's **pool** mechanic with a different flavour: a place where the player may gamble, as often as they like, on a draw of boons and banes. It is **not** ADOM's altar and god system: there are no gods to name or serve, no sacrifices, no conversion of altars, and no relationship that builds over time. The altar's hidden side (§7.2) only tilts the gamble's odds; it is flavour on the pool, not a pantheon.
+
+**Messages**: `near` *"A faint glow rises from an altar ahead."* `enter` *"An old altar stands here, its god long forgotten."*
 
 ### 7.1 The altar
 
 | | |
 |---|---|
-| Room | `feature = "altar"` (the existing terrain), `prayer = "forgotten"` (the prayer table, §7.3), `weight = 8`, `min_cells = 9` |
-| Its side | drawn at generation from the map stream: good, neutral, or evil (1 : 2 : 1), kept in the room's state (`Room::side: Option<Alignment>`, saved and hashed only when set). A hand-made level gives it: `[[room]] effect = "altar" side = "evil"`. |
-| What shows | the altar's **light** by side: `altar_good` (warm gold, today's `altar_glow`), `altar_neutral` (pale grey), `altar_evil` (dull red). The terrain is the same `altar` with its light chosen per cell (a terrain light override in `LevelState`, the same mechanism a placed light uses). A player who learns the colours reads the side; the game never names it. |
+| Room | `feature = "forgotten_altar"`, offers Pray with the outcome table `forgotten_altar` (§3.8, §7.4), `weight = 8`, `min_cells = 9` |
+| Its terrain | a **new terrain**, `forgotten_altar` (glyph `_`, stone, not walkable), with its own name and description (decision 14), so it never reads as the showcase's or a temple's altar. Look mode: "a forgotten altar". Description: *"An altar of worn stone. Its carvings have been rubbed smooth by hands or by time, and whatever god it served has no name left. Something here still listens."* |
+| Its side | drawn at generation from the map stream (§7.2), kept in the room's state (`Room::side: Option<Alignment>`, saved and hashed only when set). A hand-made level gives it: `[[room]] effect = "altar" side = "evil"`. |
+| Its light | by side: `altar_good` (warm gold, today's `altar_glow`), `altar_neutral` (pale grey), `altar_evil` (dull red). The terrain is the same; its light is chosen per cell (a terrain light override in `LevelState`, the same mechanism a placed light uses). |
 
-### 7.2 Praying
+### 7.2 The altar's hidden side, plainly (decision 8)
+
+Every forgotten altar is **good, neutral, or evil** in nature (the flavour says a god once owned it; the rules know only the side). The game decides which when it makes the level (one good to two neutral to one evil) and never says it in words.
+
+The side matters because it tilts the prayer's odds against the player's own alignment (their band: good, neutral, or evil):
+
+| The altar is | The player is | Effect on the odds |
+|---|---|---|
+| good or evil | on the **same** side | **agreement**: 15 points move from bane to boon (boon 55, nothing 25, bane 20) |
+| good or evil | on the **other** side (good at an evil altar, evil at a good one) | **opposition**: 15 points move from boon to bane (boon 25, nothing 25, bane 50) |
+| good or evil | neutral | no lean (boon 40, nothing 25, bane 35) |
+| neutral | anyone | no lean |
+
+Praying also moves the player's alignment a little: +5 at a good altar, −10 at an evil one, nothing at a neutral one (`Deed::Prayed(side)`, `[shift] prayed_good`, `prayed_evil` in `data/alignment.toml`). A paladin who prays at red altars strays.
+
+**How the player learns the side**: by the colour of the altar's glow. Gold is good, grey is neutral, red is evil. The game never explains the colours; a player learns them by praying and noticing what happens, or by reading the wiki, which states them. Recommendation kept: the light colour shows the side, the words never do.
+
+### 7.3 Praying
 
 | | |
 |---|---|
-| How | **Pray** is an ability in the one abilities menu, under a new source **Here** (`Source::Place`: abilities a place offers, listed while they apply). No key of its own (`KeyCommand` unbound by default); bindable like every ability. It is listed while the player stands on or next to an altar cell of a room with `prayer`. Otherwise it is absent, not greyed out. |
-| Action | `Action::Pray` (`pray` in action text). A long action of `prayer.minutes` (30) through `World::keep_at`, the rest's machinery: anything that disturbs a rest interrupts it (a creature comes into view, a hit), and an interrupted prayer gives **nothing** (*"Your prayer is broken."*) but the time is spent. Each minute is a `pray` action (`data/actions.toml`, 10000). |
-| Outcome | at the end, one draw from the gameplay stream on the table's weights, adjusted by side (§7.3), then the outcome's effect through its existing hook, and its message |
-| Alignment | `Deed::Prayed(side)`: praying at a good altar `+5`, at an evil one `−10`, at a neutral one nothing (`[shift] prayed_good`, `prayed_evil` in `data/alignment.toml`). A paladin who prays at red altars strays. |
-| Repeats | **no limit**: pray again at once. The penalty is time: half an hour of hunger, and on a floor with a danger about one new creature an hour. A player who prays forty times spends a day and fights what came. The altar never crumbles, never grows angry, and never refuses (the owner's no-anti-farming rule). |
+| How | **Pray** under *Here* (§3.8), listed while the player stands on or next to a forgotten altar |
+| Action | `Action::Pray` (`pray` in action text). A long action of **one minute** (decision 6; six 10-second steps through `World::keep_at`); an interrupted prayer gives nothing (*"Your prayer is broken."*). |
+| Outcome | at the end, one draw from the gameplay stream on the table's weights, leaned by side (§7.2), then the outcome's hook and its message |
+| Repeats | **no limit**: pray again at once. A minute costs almost nothing, so the price of praying is the bad outcomes, and they are meant to hurt: a prayer can kill the player outright, ruin a stat for good, cost a level, or bring a horde. The tension is the chance of being royally undone by a bad roll (decision 6). The altar never crumbles, never grows angry, and never refuses (the owner's no-anti-farming rule). |
 | No wish | no outcome grants a wish; wishes stay on #196 |
 
-### 7.3 The table: `data/prayers.toml`
+### 7.4 The table: `data/outcomes/forgotten_altar.toml`
 
 ```toml
-[forgotten]
-minutes = 30
-# Weights of the three kinds, before the side's lean.
-boon = 40
-nothing = 25
-bane = 35
-# Moved between boon and bane when the altar's side and the player's band agree or oppose
-# (a neutral altar, or a player without alignment rules: no lean).
+seconds = 60
+# Weights of the kinds, before the side's lean.
+kinds = { boon = 40, nothing = 25, bane = 35 }
+# Moved between boon and bane on agreement or opposition (§7.2).
 lean = 15
 
-[[forgotten.outcome]]
+[[outcome]]
 kind = "boon"
 id = "mended"
 weight = 10
@@ -219,9 +300,9 @@ effect = { heal = "full", cure = ["bleeding", "poisoned"] }
 message = "Warmth runs through you, and your wounds close."
 ```
 
-Agreement means the band's side (good, neutral, evil) equals the altar's. With agreement boon is 55 and bane 20; with opposition boon is 25 and bane 50. Each outcome's `effect` is one of a closed set of kinds, each calling an existing hook:
+The bane weights and the great outcomes are deliberately strong (decisions 6 and 7): the banes can seriously hurt or doom a character, as ADOM's pools do, and the great boons are what a player kneels a twentieth time for. Weights are within each kind.
 
-| Kind | Outcome | Weight in its kind | Hook (existing) | Message (vague) |
+| Kind | Outcome | Weight | Hook | Message (vague) |
 |---|---|---|---|---|
 | boon | Mended: full hit points, bleeding and poison cured | 10 | `heal`, status cure | "Warmth runs through you, and your wounds close." |
 | boon | Replenished: mana to full | 6 | mana | "Your mind feels clear and full." |
@@ -231,24 +312,29 @@ Agreement means the band's side (good, neutral, evil) equals the altar's. With a
 | boon | Offering: an item at item level + 3 on the altar | 6 | `loot::make` | "Something lies on the altar that was not there before." |
 | boon | Insight: everything carried identified | 4 | identify | "You understand what you carry." |
 | boon | Favour: a fifth of the XP to the next level | 3 | `earn` | "You feel wiser." |
-| boon | **Gift of the forgotten** (great boon): +1 to a random stat's score, lifting its potential | 1 | `Stats::train` | "You feel changed." |
+| boon, **great** | **Gift of the forgotten**: +1d3 to a random stat's score and potential, for good | 1 | `Stats::train` (potential first) | "You feel changed." |
+| boon, **great** | **Exalted**: a whole experience level at once (XP to the next level's threshold, with its picks due) | 1 | `earn` | "Power floods into you." |
+| boon, **great** | **Chosen**: a talent the player qualifies for, given free and kept for life (never counted against picks) | 1 | `Actor::boons` (new, saved), read by `Talents::regrant` beside race and sign | "You have been chosen." |
+| boon, **great** | **Relic**: an item at item level + 10, of the top rarity its base allows, on the altar | 1 | `loot::make` with a rarity floor | "Something gleams on the altar." |
 | nothing | | (one line) | | "Silence answers you." |
-| bane | Sickened: a random disease (one cured by `prayer`) | 8 | `infect` | "A chill settles in your bones." |
-| bane | Withered: 1d2 stat damage to a random stat | 8 | stat damage | "Something is taken from you." |
-| bane | Hexed: `ill_wished`, 3 degrees | 8 | statuses | "You feel watched with malice." |
-| bane | Emptied: mana to 0 | 5 | mana | "Your mind goes dark." |
-| bane | Famished: nutrition to Hungry (no lower) | 5 | hunger | "A gnawing hunger takes you." |
-| bane | Answered: a hostile creature of danger + 2 beside the altar (danger 0: the level's deepest population type, else none) | 6 | `make_creature` | "Something answers your prayer." |
-| bane | Tithe: one unequipped stack carried vanishes | 4 | inventory | "Your pack feels lighter." |
-| bane | **Wrath of the forgotten** (great bane): −1 to a random stat's potential (never below 3) | 1 | `Stats` | "You feel lessened, forever." |
+| bane | Sickened: a random disease, the deadly ones included (grave rot) | 8 | `infect` | "A chill settles in your bones." |
+| bane | Withered: 1d3 stat damage to a random stat | 8 | stat damage | "Something is taken from you." |
+| bane | Smitten: a bolt from above, 4d10 lightning through `hurt` (resistances count); **it can kill** | 6 | the lightning trap's spell code | "The altar answers with fire from above!" |
+| bane | Answered: a hostile creature of danger + 4, awake, beside the altar (danger 0: the deepest type of the branch's population) | 6 | `make_creature` | "Something answers your prayer." |
+| bane | Hexed: `ill_wished`, 3 degrees | 6 | statuses | "You feel watched with malice." |
+| bane | Tithe: the most valuable stack carried, worn and wielded things included, vanishes | 4 | inventory | "Something precious is gone." |
+| bane | Emptied: mana to 0 | 4 | mana | "Your mind goes dark." |
+| bane | Famished: nutrition to the last stage before Starving | 4 | hunger | "A gnawing hunger takes you." |
+| bane, **great** | **Wrath of the forgotten**: −1d3 to a random stat's potential and score, for good (never below 3) | 1 | `Stats` | "You feel lessened, forever." |
+| bane, **great** | **Unmade**: one experience level lost (XP to the start of the level below; its hit points and picks taken back) | 1 | new level-loss rule (`World::lose_level`) | "Your past slips away from you." |
+| bane, **great** | **Forsaken**: a random flaw talent (Frail, Thin-skinned, …) the player lacks, kept for life | 1 | `Actor::boons` | "You have been marked." |
+| bane, **great** | **Damned**: a horde, 2d4 hostiles of danger + 3, awake around the altar | 1 | `make_creature` | "The dark fills with answering voices." |
 
-The table is data: the owner can tune every weight in review. The wiki lists it exactly, with the lean (open question 7 on the jackpots).
-
-### 7.4 Also prayable?
-
-The temple of Cēaptūn sells services and is not an altar room. The showcase's water-garden altar is scenery. **Only rooms with `prayer` take prayers**; a hand-made level makes one by marking the room (`[[room]] effect = "altar"`).
+Per prayer with no lean: about 3 % a great boon and about 3 % a great bane; Smitten, Answered, and Damned can each end a run. The wiki lists the table exactly, with the lean and the colours. The table is data: the owner tunes it in review. Making the great outcomes still bigger (ADOM's crowning, artifacts, wishes) stays a deferred follow-up on #196 (the "Jackpots at ADOM level" line).
 
 ## 8. Hot and cold rooms
+
+A hot or cold room changes **the temperature of its cells and nothing else** (decisions 9 and 10). It gives no status, deals no damage, and touches no items or food. Whatever the temperature does is the **environment simulation's** job, so a hot room feels exactly like any other hot place, and every improvement to the environment reaches these rooms with no room-side code.
 
 | | Hot room | Cold room |
 |---|---|---|
@@ -256,110 +342,250 @@ The temple of Cēaptūn sells services and is not an altar room. The showcase's 
 | enter | "A wave of heat meets you." | "Your breath mists in the bitter cold." |
 | glow | faint red `[30, 10, 0, 0]` | faint blue `[0, 8, 22, 0]` |
 | `temperature` | +25 °C over the level's | −25 °C under the level's |
-| `status` | **Sweltering** (`damage_type = "fire"`, `regen = 50`, `mana_regen = 75`, `eases = 120`) | **Chilled** (`damage_type = "cold"`, `regen = 50`, `hunger = 150`, `eases = 120`) |
-| Resisted by | fire resistance (Flame-hardened, a fire salamander's nature) | cold resistance (of Warmth, Winter-born's line where it resists) |
+| weight | 5 | 5 |
 
 | Rule | Proposal |
 |---|---|
-| The temperature | new field `temperature` (−40 to 40 °C, default 0) added to the level's. `WorldState::temperature_on(level)` gains `temperature_at(level, pos)` (the level's plus `effects_at(pos)`'s), the one place a cell's temperature is decided. Readers: **perception** (the status bar shows the player's cell, so stepping in shows the change, the effect's only number, which the game already shows), and **ice**: `advance_ice` groups cells by (water, thickness, room), so a cold room's water freezes on a 10 °C level and a hot room's ice melts. A generated cold room in a cave with water is a frozen pool; Winter-born's footing applies. |
-| What feels it | the status, not the degrees: §3.3. Healing is slowed (rests take twice as long), mana slowed in heat, hunger faster in cold. Nothing deals damage (open question 9: a *furnace* and an *ice tomb* that hurt with a tick). |
-| Resting | allowed. Resting inside heals at the slowed pace, so a cold room is a bad camp, which is the point. |
-| Food | rot does not read temperature (`crate::rot` is pure in age); not proposed here (open question 10). |
-| Creatures | everyone inside gets the status; a cold-blooded type has no rule yet |
-| Not whole-level | a hot or cold level is a `temperature` in its file, and needs no `level_chance` |
-| Cost | S once §3.3 exists, plus the per-cell temperature and the ice grouping (S–M). Risk: the ice tick's per-group cost; a test checks a year's catch-up still runs in its budget. |
+| The field | `temperature` (−40 to 40 °C, default 0) on an effect, added to the level's |
+| The one place | `WorldState::temperature_on(level)` gains `temperature_at(level, pos)` (the level's plus `effects_at(pos)`'s), the one place a cell's temperature is decided. Every reader that wants the temperature at a place asks it. |
+| What reads it today | **perception**: the status bar shows the temperature of the player's cell, so stepping in shows the change (the effect's only number, which the game already shows). **Ice**: `advance_ice` groups cells by (water, thickness, temperature), so a cold room's water freezes on a 10 °C level and a hot room's ice melts. A generated cold room in a cave with water is a frozen pool; Winter-born's footing applies. |
+| Not whole-level | a hot or cold level is a `temperature` in its file and needs no `level_chance` |
+| Cost | S–M: the per-cell temperature and the ice grouping. Risk: the ice tick's per-group cost; a test checks a year's catch-up still runs in its budget. |
 
-## 9. More rooms, ranked
+**What the environment does today, and what is missing.** Today temperature is shown and freezes or melts water; nothing else feels it (`docs/dev/temperature.md`: "Nothing feels the cold yet"). Missing, as **separate future work outside this design** (its own design and issues, under the temperature topic), each of which hot and cold rooms would then get for free through `temperature_at`:
 
-Ranked by fun per cost. "Recommend" means build it after §4–§8; "skip" means not now, with the reason.
+| Missing | What it would do |
+|---|---|
+| Creatures and the player feel heat and cold | statuses by temperature band (chilled, sweltering, and worse at the extremes, with damage), resisted by fire and cold resistance and by clothing; slower healing, hunger in the cold; a talent like the dropped *Hardy traveller* belongs there |
+| Items | potions and water freezing, scrolls and cloth scorching at furnace heat |
+| Food | rot by temperature (a cold larder, a hot rot-room); `crate::rot` is pure in age today |
 
-| Rank | Room | Rules | Why it is fun | Cost, risks | Verdict |
-|---|---|---|---|---|---|
-| 1 | **Silent vault** | `noise = 1`, `status = "silenced"` (`blocks = ["cast", "read", "throw_voice"]`; casters' spells and scrolls refused inside, creatures' too) | turns a fight upside down: the wizard and the kobold shaman fight with sticks; a thief's paradise (nothing is heard) | S (§3.3). Risk: a caster cornered inside; they can walk out. | **recommend** |
-| 2 | **Tempting hoard** | `hoard = { items = 3, loot_level = 3 }` on the floor; the first item lifted **seals the room**: every door locks (`lock` of the floor's level, pickable, kickable), and `guardians` (2 to 4 hostiles of danger + 1) appear at the room's edges, out of view if they can be | the classic greed check; doors, locks, kicking, and Pick lock all come into play | M: a trigger in `pick_up` (one line), door locking through `doors.rs`, spawn through `make_creature`. Risk: a cave blob has no doors (caves then get only the guardians). | **recommend** |
-| 3 | **Haunted room** | `needs_danger`; while the player **rests** inside, every hour of rest (or once at dusk) an undead of the floor's danger appears inside, out of view if it can be; `near` "You hear a whisper, and then nothing." | a fine camp spot that is not; a reason the cursed system's undead appear without kills | S–M (spawn machinery). Risk: overlaps the cursed room's theme; distinct in rule. | **recommend** |
-| 4 | **Shrine of a side** | `requires_alignment = { min = "good" }` (or evil): for one whose band qualifies it is a sanctuary (`regen = 200`); for one opposed, the status *Unwelcome* (`regen = 50`, `combat = { to_hit = -1 }`); a light by side as altars | alignment gets a place on the map; cheap reward for playing a side | S: `requires_alignment` exists (`Requirement`); one fold in `effects_at`. | **recommend** |
-| 5 | **Black chamber** | `light = 0` (carried light too), no glow | pure data on today's fields; terror with darkvision as the counter | none (data only). Risk: none. | **recommend** (with R1) |
-| 6 | **Scriptorium** | `feature = "shelves"` (a new stone terrain), floor loot of 2 to 4 **scrolls** (`loot = { class = "scroll", count = [2, 4] }`); reading inside trains Decipher script twice as often | a reason to explore for casters and readers; ties into scrolls | S: loot class override in the special-room step (`loot/<level>` stream after the room's other loot). | **recommend** |
-| 7 | **Beast den** | a teeming den whose sleepers are `animal` faction only (`swarm.factions = ["animal"]`), hoard of bones and fresh corpses (food) | the ranger's and Beast-friend's room; food in the deep | S on top of §4 (data and a faction filter). | **recommend** |
-| 8 | **Unstable room** | every step inside has `warp` (10 %) of the teleport trap's effect (`world/trap.rs`'s teleport, a gameplay draw); `enter` "The floor shimmers under your feet." | chaos; fleeing through it is a gamble | S: reuse the teleport. Risk: frustrating if large; `max_cells`. | **recommend (low)** |
-| 9 | Heavy hall | `burden` percent (50: limits halved inside, the one burden hook) | heavy armour suddenly Burdened | S. Fun is thin: a slower walk. | skip |
-| 10 | Healing spring | a fountain: Drink (Here source) heals, with a chance of a disease | overlaps the sanctuary and the altar's Mended | S | skip (fold into the altar's table) |
-| 11 | Hall of mirrors | reflections: missiles may strike a reflection | needs illusion rules | L | skip |
-| 12 | Forge, collapsed floor | an anvil to improve gear; a floor that drops one a level | need crafting, and falling between levels (neither exists) | L each | skip (deferred list #196) |
+## 9. More rooms
+
+All thirteen are built (decision 16), each as its own issue (§12). They are listed in the order they are planned, by fun per cost.
+
+### 9.1 Silent vault
+
+| | |
+|---|---|
+| id, name, mark | `silent`, "silent vault", `v` |
+| Rule | `noise = 1` (every noise inside at 1 %) and `status = "silenced"`: a new status (*Silenced*, `seen = "silenced"`, `max = 1`, `eases = 10`, `blocks = ["cast", "read", "throw_voice"]`). Casters' spells, scrolls, and the bard's voice are refused inside, creatures' too. |
+| Messages | `enter` "Your footsteps make no sound at all." Status start "The silence closes around you.", end "Sound returns." |
+| Why | turns a fight upside down: the wizard and the kobold shaman fight with sticks; a thief's paradise |
+| Fields | `noise = 1`, `status = "silenced"`, `weight = 5` |
+| Cost | S on §3.3. Risk: a caster cornered inside; they can walk out. |
+
+### 9.2 Black chamber
+
+| | |
+|---|---|
+| id, name, mark | `black`, "black chamber", `b` |
+| Rule | `light = 0`: every light inside is kept at 0 %, carried ones too; no glow. Only darkvision sees here. |
+| Messages | `enter` "The dark here swallows your light." |
+| Fields | `light = 0`, `weight = 5` (data only, today's fields) |
+| Cost | none. Ships with R1. |
+
+### 9.3 Shrine of a side
+
+| | |
+|---|---|
+| id, name, mark | `shrine`, "shrine", `h` |
+| Rule | a side drawn at generation, good or evil (1 : 1), as an altar's (§7.1, `Room::side`), with the same light by side. For one whose band agrees: healing quickened (`regen = 200`). For one opposed: the status *Unwelcome* (`regen = 50`, `combat = { to_hit = -1 }`, `eases = 30`). For the neutral: nothing. Everyone inside, creatures by their own alignment. |
+| Messages | `enter` (agreeing) "You feel welcome here."; (opposed) "Something here wants you gone."; (neutral) "An old shrine. It ignores you." |
+| Fields | `shrine = true`, `weight = 4` |
+| Cost | S: one fold in `effects_at` by the dweller's band (`alignment::Requirement`). Depends on R5 for the side and its light. |
+
+### 9.4 Scriptorium
+
+| | |
+|---|---|
+| id, name, mark | `scriptorium`, "scriptorium", `r` |
+| Rule | `feature = "shelves"` (a new terrain, stone, "shelves of rotting scrolls"); 2 to 4 **scrolls** on the floor (`loot = { class = "scroll", count = [2, 4] }`, from `swarm/<level id>`); reading inside trains Decipher script twice as often (one factor at the training hook) |
+| Messages | `near` "You smell dust and old vellum."; `enter` "Shelves of rotting scrolls line the walls." |
+| Fields | `feature`, `loot`, `train = { decipher_script = 200 }`, `weight = 5`, `min_cells = 9` |
+| Cost | S on R5's `feature`. |
+
+### 9.5 Beast den
+
+| | |
+|---|---|
+| id, name, mark | `beast_den`, "beast den", `d` |
+| Rule | a teeming den (§4) whose sleepers are beasts only: the factions `wildlife`, `vermin`, and `marsh` (`swarm.factions`; still drawn from the branch's population, so a branch without beasts never gets one: the den kind is then not eligible); its hoard is bones and fresh corpses (food) instead of items (`swarm.hoard = "corpses"`) |
+| Messages | `near` "You smell musk and old blood."; `enter` "Heavy shapes breathe in the dark around you." |
+| Fields | `swarm = { …, factions = ["wildlife", "vermin", "marsh"], hoard = "corpses" }`, `needs_danger`, `min_cells = 16`, `weight = 5` |
+| Cost | S on §4. The ranger's and Beast friend's room. |
+
+### 9.6 Unstable room
+
+| | |
+|---|---|
+| id, name, mark | `unstable`, "unstable room", `u` |
+| Rule | every step inside, the stepper's (player or creature) has `warp` (10 %) to be teleported as the teleport trap does (`world/trap.rs`, a gameplay draw) |
+| Messages | `enter` "The floor shimmers under your feet."; on a warp, the trap's own line |
+| Fields | `warp = 10`, `max_cells = 60`, `weight = 4` |
+| Cost | S: the trap's teleport reused. Fleeing through it is a gamble. |
+
+### 9.7 Tempting hoard
+
+| | |
+|---|---|
+| id, name, mark | `hoard`, "treasure room", `$` |
+| Rule | `hoard.items` (3) items at item level + `hoard.loot_level` (3) on the floor, from `swarm/<level id>`. The first item lifted (`pick_up`, one line) **seals the room**: every door of it locks (a lock of the floor's level, pickable and kickable, `doors.rs`) and `hoard.guardians` (2 to 4) hostiles of danger + 1 appear at the room's edges, out of view if they can be. `Room::sealed` (saved, hashed). A cave blob has no doors: only the guardians. |
+| Messages | `near` "Something glitters ahead."; `enter` "Treasure lies here, unguarded."; sealing "The doors slam shut!" |
+| Fields | `hoard = { items = 3, loot_level = 3, guardians = [2, 4], danger = 1 }`, `needs_danger`, `weight = 5` |
+| Cost | M. The classic greed check; doors, locks, kicking, and Pick lock all come into play. Hoard-wise (§11). |
+
+### 9.8 Haunted room
+
+| | |
+|---|---|
+| id, name, mark | `haunted`, "haunted room", `g` |
+| Rule | while the player **rests** inside, at every full hour of rest an undead of the floor's danger (the cursed room's undead pick, §5) appears inside, out of view if it can be; the rest stops as for any arrival |
+| Messages | `near` "You hear a whisper, and then nothing."; `enter` "It is very quiet here. Too quiet to sleep." |
+| Fields | `haunt = { every = "1h" }`, `needs_danger`, `weight = 5` |
+| Cost | S–M on R7's undead pick. A fine camp spot that is not. |
+
+### 9.9 Heavy hall
+
+| | |
+|---|---|
+| id, name, mark | `heavy`, "heavy hall", `w` |
+| Rule | `burden = 50`: carrying limits are halved inside, for everyone, through the one burden hook (`docs/dev/burden.md`); heavy armour turns Burdened |
+| Messages | `enter` "Your pack drags at you, as if the stones pulled it down." |
+| Fields | `burden = 50`, `weight = 4` |
+| Cost | S. |
+
+### 9.10 Healing spring
+
+| | |
+|---|---|
+| id, name, mark | `spring`, "spring", `~` |
+| Rule | `feature = "spring"` (a new terrain, a stone basin of water, not walkable). **Drink** (*Here*, §3.8; `Action::Drink`, `drink` in action text) takes 10 s and draws from `data/outcomes/spring.toml`: Refreshed (2d8 hit points, weight 55), nothing (25), Fouled (a disease caught, one `prayer` cures: marsh ague, 15), Clear-headed (half the mana back, 5). No limit. |
+| Messages | `enter` "Clear water wells up in an old stone basin."; outcomes "The water is cold and good." / "It tastes of stone." / "The water tastes foul." / "Your head clears." |
+| Fields | `feature = "spring"`, `outcomes = "spring"`, `weight = 4`, `min_cells = 9` |
+| Cost | S on R5's outcome tables and *Here*. |
+
+### 9.11 Hall of mirrors
+
+| | |
+|---|---|
+| id, name, mark | `mirrors`, "hall of mirrors", `m` |
+| Rule | every actor inside that the player sees is shown with `mirrors.images` (2) **reflections** on free floor of the room. Their cells come from a hash of (level, turn, actor), not a stream, so the rules and perception compute the same images without drawing (`World::images`). Perception shows a reflection as the creature it reflects, under a synthetic id: nothing tells it from the real one. A melee blow or a step into a reflection's cell: "Your blow meets only glass." (the blow's time). A missile or bolt aimed at a reflection flies on through its cell. Creatures shooting at the player from outside the room pick the player or one of their images (a gameplay draw); creatures inside know the hall and are not fooled. The images vanish once the actor leaves. |
+| Messages | `enter` "Your reflection stares back at you from every side." |
+| Fields | `mirrors = { images = 2 }`, `max_cells = 80`, `weight = 3` |
+| Dumps | `actors` (dev) marks images; `view` shows them as the player does |
+| Cost | L: the images in perception without leaking which is real, targeting and bumping images, creatures' ranged pick. Mirror-wise (§11). |
+
+### 9.12 Forge
+
+| | |
+|---|---|
+| id, name, mark | `forge`, "forge", `f` |
+| Rule | `feature = "anvil"` (a new terrain, "an old anvil, its hammer chained beside it"). **Temper** (*Here*, §3.8; `Action::Temper { item }`, `temper:LETTER` in action text) works one carried weapon or armour for 10 minutes, then draws from `data/outcomes/forge.toml`: `improved` (an affix of the item's class added, up to its rarity's count, else its strongest affix a step up), `nothing`, `flawed` (one affix lost), `ruined` (the item breaks and is gone). Base weights 35 / 30 / 25 / 10; a **Metalcraft** check leans them (its margin moves up to 20 points from `ruined` and `flawed` to `improved`, or the other way). Tempering identifies the item and trains Metalcraft. No limit: the rarity's affix count is the natural cap. |
+| Messages | `enter` "A cold forge, and an anvil waiting."; outcomes "The metal rings true." / "Nothing changes." / "Something in the metal is lost." / "It shatters under the hammer!" |
+| Fields | `feature = "anvil"`, `outcomes = "forge"`, `weight = 3`, `min_cells = 9` |
+| Cost | M on R5: the item list (the identify list's), affix add/raise/remove (`magic-items.md`). |
+
+### 9.13 Collapsed floor
+
+| | |
+|---|---|
+| id, name, mark | `collapsed`, "collapsed floor", `c` |
+| Rule | `floor = "cracked_floor"` (a new walkable terrain, "cracked floor", shown as such). Each step of the **player** onto a cracked cell has `collapse.chance` (15 %, doubled when Burdened or worse; a gameplay draw) to give way: the player falls to the next level of the branch, landing on a random free floor cell (never a vault or a shop), takes `collapse.damage` (2d6, `hurt` with `Harm::Spared`, never the last hit point), and is Staggered. The level below is generated as usual; the fall is a new arrival kind beside the stairs (`Arrival::Fell`). Creatures do not fall. |
+| Messages | `near` "The floor ahead is cracked and sagging."; `enter` "The floor creaks under your weight."; falling "The floor gives way beneath you!" |
+| Fields | `floor = "cracked_floor"`, `collapse = { chance = 15, damage = "2d6" }`, `needs_below = true`, `weight = 3` |
+| Cost | L: falling between levels (a new arrival, the level travel code). Light tread (§11). |
 
 ## 10. What the player sees, and the wiki
 
 | Where | What |
 |---|---|
-| Messages | `near` once per room when first seen; `enter` once per room when first entered; `pervade` on every arrival on a pervaded level; the dens', curses', and altars' lines in §4–§7; the statuses' start and end |
-| Status bar | the statuses (*Ebbing*, *Chilled*, *Sweltering*, *Silenced*, *Unwelcome*) and the temperature of the player's cell |
-| Look mode | "in a teeming den" (once entered); "a goblin (hostile, asleep)"; "a forgotten altar" |
-| The abilities menu | *Here*: Pray, listed only at an altar |
-| Never shown | weights, chances, wake thresholds, the altar's side in words, rise timers, which undead will rise |
-| Dumps | `rooms` (dev): each room's effect, its side for an altar, `glimpsed`/`entered`, and `pervading <id>` in the header; `actors` (dev): `asleep`, the pending risings with their times; `abilities` lists Pray; JSON: `room` as today, `pervading` (only once arrived, as the player knows it) |
-| Action text | `pray` |
-| Wiki | a **Special rooms** page (`wiki/src/`, by topic beside traps) with a generated table (`xtask/src/wiki/rooms.rs`): every effect with what it does in exact numbers, its weight, its share, its whole-level chance, and the per-floor odds; the prayer table with weights, the lean, and the side colours; the den numbers; the risings table (which undead each level becomes) |
+| Messages | `near` once per room when first seen; `enter` once per room when first entered; `pervade` on every arrival on a pervaded level; the rooms' own lines in §4 to §9; the statuses' start and end |
+| Status bar | the statuses (*Ebbing*, *Silenced*, *Unwelcome*) and the temperature of the player's cell |
+| Look mode | "in a teeming den" (once entered); "a goblin (hostile, asleep)"; "a forgotten altar", "a spring", "an anvil", "shelves", "cracked floor", each with its own description |
+| The abilities menu | *Here*: Pray at a forgotten altar, Drink at a spring, Temper at an anvil, listed only there |
+| Never shown | weights, chances, wake thresholds, the altar's side in words, rise timers, which undead will rise, which image is real |
+| Dumps | `rooms` (dev): each room's effect, its side, `glimpsed`/`entered`/`sealed`, and `pervading <id>` in the header; `actors` (dev): `asleep`, the pending risings with their times, mirror images; `abilities` lists the *Here* abilities; JSON: `room` as today, `pervading` (only once arrived, as the player knows it) |
+| Action text | `pray`, `drink`, `temper:LETTER` |
+| Wiki | a **Special rooms** page (`wiki/src/`, by topic beside traps) with generated tables (`xtask/src/wiki/rooms.rs`): every feature with what it does in exact numbers, its default weight, its share, its whole-level chance, and the per-floor odds; each dungeon's favoured and banned features; the outcome tables (altar, spring, forge) with weights, the lean, and the side colours; the den numbers; the risings table (which undead each level becomes) |
 
 ## 11. Talents and class abilities
 
 Two new systems join `data/talents.toml`, placed by topic (after `danger`, before `traps`).
 
-| System | Talent (tree) | Effect | Hook (one read) |
-|---|---|---|---|
-| `special_rooms` | **Sense of place** (wayfarer, free) | a room's nature is known when glimpsed (look names it before entering); a pervading effect's line says what it is | `PerceptionView::room` (glimpsed counts as entered) |
-| `special_rooms` | **Hallowed rest** (grit) | where a room quickens healing or mana, it quickens them half again more for you | `World::healing_rate`, `World::mana_rate`: the room factor |
-| `special_rooms`, `mana` | **Anchored mind** (scholar) | Ebbing never takes you | `World::dwell` (immune to that status) |
-| `special_rooms`, `stealth` | **Hush-foot** (shadow) | sleepers need twice the noise to wake from what you do | `World::hear`'s wake check (`swarm.wake` × 2 for the player's noises) |
-| `special_rooms` | **Grave warden** (guard) | what you kill never rises | `fight.rs::dies`' rise line |
-| `special_rooms` | **Hardy traveller** (grit) | heat and cold never take hold of you: Sweltering and Chilled are not given to you | `World::dwell` (immune to the statuses of rooms with a `temperature`) |
-| `special_rooms` | **Hoard-wise** (delver) | a tempting hoard seals only after the second item lifted | the hoard trigger (with §9 rank 2) |
-| `prayer` | **Devout** (wayfarer) | the lean counts double at agreeing altars, and an opposed one leans as neutral | the prayer draw's lean |
-| `prayer` | **Penitent** (grit) | a great bane becomes nothing | the prayer draw's outcome |
-| class ability (`special_rooms`) | **Consecrate** (priest 9, paladin 12; `requires_alignment = { min = "good" }`; mana 15) | inside a cursed, draining, or haunted room, ends its effect for good (the room becomes plain); on a pervaded level, ends the pervading effect | `LevelState::rooms`/`pervading`; `Deed::Consecrated` +20 |
+| System | Talent (tree) | Effect | Hook (one read) | Issue |
+|---|---|---|---|---|
+| `special_rooms` | **Sense of place** (wayfarer, free) | a room's nature is known when glimpsed (look names it before entering); a pervading effect's line says what it is | `PerceptionView::room` (glimpsed counts as entered) | R1 |
+| `special_rooms` | **Hallowed rest** (grit) | where a room quickens healing or mana, it quickens them half again more for you | `World::healing_rate`, `World::mana_rate`: the room factor | R1 |
+| `special_rooms`, `mana` | **Anchored mind** (scholar) | Ebbing never takes you | `World::dwell` (immune to that status) | R2 |
+| `special_rooms`, `stealth` | **Hush-foot** (shadow) | sleepers need twice the noise to wake from what you do | `World::hear`'s wake check (`swarm.wake` × 2 for the player's noises) | R4 |
+| `special_rooms` | **Grave warden** (guard) | what you kill never rises | `fight.rs::dies`' rise line | R7 |
+| `special_rooms` | **Hoard-wise** (delver) | a tempting hoard seals only after the second item lifted | the hoard trigger | R14 |
+| `special_rooms` | **Mirror-wise** (scholar) | reflections within 2 cells are seen for what they are | `World::images` for the player's perception | R18 |
+| `special_rooms` | **Light tread** (delver) | cracked floors never give way under you | the collapse draw | R19 |
+| `prayer` | **Devout** (wayfarer) | the lean counts double at agreeing altars, and an opposed one leans as neutral | the prayer draw's lean | R5 |
+| `prayer` | **Penitent** (grit) | a great bane becomes nothing | the prayer draw's outcome | R6 |
+| class ability (`special_rooms`) | **Consecrate** (priest 9, paladin 12; `requires_alignment = { min = "good" }`; 15 mana; one minute) | see below | `LevelState::rooms`/`pervading`; `Deed::Consecrated` +20 | R7 |
 
-`special_rooms` ships in R1 with its first two (Sense of place, Hallowed rest: both on today's hooks), so the bar holds from the start. The rest come with their slices. `prayer` ships with R5 and its two. `min_class` is 0, so Consecrate is not required by the bar; it is proposed because the priest needs place-bound power (open question 12).
+**Consecrate, plainly** (decision 12). A good priest or paladin spends 15 mana and a minute of prayer standing inside a cursed, draining, or haunted room. The room's curse is lifted **for good**: it becomes a plain room, so corpses no longer rise there, mana no longer drains, and nothing comes while one rests. On a level that a curse or a drain covers entirely, it lifts the whole level's effect instead. Doing it moves the character's alignment toward good (+20). Anywhere else it is refused with no time spent ("There is nothing here to consecrate."). It gives the priest a power tied to places that no other class has.
+
+`special_rooms` ships in R1 with its first two (Sense of place, Hallowed rest: both on today's hooks), so the coverage bar holds from the start; the rest come with their issues. `prayer` ships with R5 and Devout; Penitent comes with R6's great banes. `min_class` is 0, so Consecrate is not required by the bar. *Hardy traveller* (immunity to room heat and cold) is dropped: rooms no longer give temperature statuses (§8), and such a talent belongs to the future environment work.
 
 ## 12. Implementation plan
 
-Each item is one issue, one branch, one PR, updating the spec (§7 "Special rooms", the statuses), `docs/dev/mapgen.md` (or a new `docs/dev/special-rooms.md`, open question 13), and the wiki in the same PR. "Save" means it adds saved state; "act" means it adds an action. Sizes: S about a day, M two to three.
+Each item is one issue, one branch, one PR, updating the spec (§7 "Special rooms", the statuses), **`docs/dev/special-rooms.md`** (decision 13: a new topic file created in R1 and listed in CLAUDE.md's topic index there; every later issue edits only it, not `docs/dev/mapgen.md`, so special-room PRs do not conflict with generator PRs), and the wiki in the same PR. "Save" means it adds saved state; "act" means it adds an action. Sizes: S about a day, M two to three, L a week.
 
 | # | Issue title | Sections | Adds | Depends on | Size |
 |---|---|---|---|---|---|
-| **R1** | Special rooms: effect weights, the whole-level version (`level_chance`, `pervading`, `effect` in level files), `effects_at`, `near` hints, eligibility; the `special_rooms` system with Sense of place and Hallowed rest; the black chamber | §3.1, §3.2, §3.5, §3.6, §9 rank 5, §11 | save | — | M |
-| **R2** | Special rooms: statuses while inside (`status`, `World::dwell`, the status `hunger` field); the draining room and Anchored mind | §3.3, §6 | — | R1 | S |
-| **R3** | Hot and cold rooms: per-cell temperature, ice by room, Sweltering and Chilled, Hardy traveller | §8 | — | R2 | M |
-| **R4** | Teeming dens: the `asleep` status and `sleeps`, waking by noise, blow, and cry, the den filler and hoard (`Rng::swarm`), Hush-foot; the beast den | §4, §9 rank 7 | — | R1 | M |
-| **R5** | Forgotten altars and prayer: `feature`, the altar's side and light, `Source::Place`, `Action::Pray`, `data/prayers.toml`, `Deed::Prayed`; the `prayer` system with Devout and Penitent | §3.4, §7 | save, act | R1 | M |
-| **R6** | Cursed rooms: risings (`LevelState::risings`, `rise_tick`), Grave warden; Consecrate | §5, §11 | save, act (Consecrate) | R1; class tables for Consecrate | M |
-| **R7** | More rooms (each its own small issue once approved): silent vault (R2), shrine of a side (R1), scriptorium (R5's `feature`), haunted room (R6's undead pick), unstable room, tempting hoard with Hoard-wise | §9 | per room | as listed | S–M each |
+| **R1** | Special rooms: features with default weights, `favoured`/`banned` per dungeon (retire `effects`, move Fennmynster), shared chance 12 %, the whole-level version (`level_chance`, `pervading`, `effect` in level files), `effects_at`, `near` hints, eligibility; `docs/dev/special-rooms.md`; the `special_rooms` system with Sense of place and Hallowed rest; the black chamber | §3.1, §3.2, §3.5, §3.6, §9.2, §11 | save | — | M |
+| **R2** | Special rooms: statuses while inside (`status`, `World::dwell`); the draining room and Anchored mind | §3.3, §6 | — | R1 | S |
+| **R3** | Hot and cold rooms: per-cell temperature (`temperature_at`), ice by temperature | §8 | — | R1 | S–M |
+| **R4** | Teeming dens: the `asleep` status and `sleeps`, waking by noise, blow, and cry, the den filler and hoard (`Rng::swarm`), Hush-foot | §4 | — | R1 | M |
+| **R5** | Forgotten altars and prayer: `feature`, the `forgotten_altar` terrain, the side and its light, `Source::Place` (*Here*), outcome tables (`data/outcomes/`), `Action::Pray`, the ordinary boons and banes, `Deed::Prayed`; the `prayer` system with Devout | §3.4, §3.8, §7 | save, act | R1 | M |
+| **R6** | Prayer's great boons and banes: Gift, Exalted, Chosen, Relic, Wrath, Unmade, Forsaken, Damned (`Actor::boons`, `World::lose_level`, the rarity floor); Penitent | §7.4, §11 | save | R5 | M |
+| **R7** | Cursed rooms: risings (`LevelState::risings`, `rise_tick`), Grave warden; Consecrate | §5, §11 | save, act | R1; class tables for Consecrate | M |
+| **R8** | Silent vault (the `silenced` status) | §9.1 | — | R2 | S |
+| **R9** | Shrine of a side (*Unwelcome*) | §9.3 | — | R2, R5 | S |
+| **R10** | Scriptorium (`shelves`, scroll loot, Decipher script training) | §9.4 | — | R5 | S |
+| **R11** | Beast den (faction filter, corpse hoard) | §9.5 | — | R4 | S |
+| **R12** | Unstable room (`warp`, `max_cells`) | §9.6 | — | R1 | S |
+| **R13** | Heavy hall (`burden`) | §9.9 | — | R1 | S |
+| **R14** | Tempting hoard (sealing, guardians), Hoard-wise | §9.7 | save | R1 | M |
+| **R15** | Haunted room (hourly haunting during rest) | §9.8 | — | R7 | S–M |
+| **R16** | Healing spring (`spring`, Drink) | §9.10 | act | R5 | S |
+| **R17** | Forge (`anvil`, Temper, Metalcraft lean) | §9.12 | act | R5 | M |
+| **R18** | Hall of mirrors (images, Mirror-wise) | §9.11 | — | R1 | L |
+| **R19** | Collapsed floor (`cracked_floor`, falling to the level below, Light tread) | §9.13 | save | R1 | L |
 
 **Waves** (at most about three PRs at once that add actions or save state):
 
-1. **R1** alone (it changes the special-room pick and the Depths' snapshots; nothing should race it).
-2. **R2, R4, R5** together. R5 is the only one with save state and an action; R2 and R4 touch statuses (`data/status.toml` is a hot file: each adds its entries by group).
-3. **R3, R6**, then the R7 rooms in pairs.
+1. **R1** alone (it changes the special-room draw and the Depths' snapshots; nothing should race it).
+2. **R2, R3, R4, R5** together. R5 is the only one with save state and an action; R2 and R4 add statuses (`data/status.toml` is a hot file: each adds its entries by group).
+3. **R6, R7** (save, act) with **R8, R11, R12, R13** (data and small rules, no save state).
+4. **R9, R10, R14** (save), **R16** (act).
+5. **R15, R17** (act).
+6. **R18, R19** (save), the two large ones, last.
 
-**Tests each item carries**: `content/room_effect.rs` (new fields parse and validate; a weight-1 table picks exactly as `index` did, checked against a fixed seed list); `mapgen/special_tests.rs` (the shares over 1 200 levels within bounds; `level_chance` near 5 % over many draws; eligibility; a den's count and hoard; an altar's feature placed and the level still connected); `world/rooms_tests.rs` (`effects_at` folding; `dwell` gives and eases; resistances shield; Ebbing drains a creature; ice freezes in a cold room and not beside it; temperature on the status bar); `world/den_tests.rs` (a sneaking step wakes nobody, a kicked door wakes the near ones and the cascade the rest, sneak attacks land on sleepers, sleepers count toward the spawn cap); `world/curse_tests.rs` (rises after two minutes, not if the corpse is eaten or carried, the level pick and its fallback, Grave warden, a pervaded level, frozen floors catch up); `world/prayer_tests.rs` (Pray listed only at an altar, an interrupted prayer gives nothing, the lean by side and band, each outcome's hook, the alignment deed, a hundred prayers in a row are allowed); screen snapshots for the abilities menu's *Here* group and look mode's "asleep"; a replay per action (`replay --create`, `--verify`); `cargo xtask wiki`. No golden: the glows are light, and the light tests and a `--capture` checked by eye cover them.
+**Tests each item carries**: `content/room_effect.rs` (new fields parse and validate); `content/dungeon.rs` (`favoured` and `banned` resolve and layer; `effects` is refused; the share sum and the all-banned dungeon are errors); `mapgen/special_tests.rs` (the shares over 1 200 levels within bounds, with and without favoured; a new feature added in a test table is drawn in a dungeon that never names it; `level_chance` near 5 % over many draws; eligibility; a den's count and hoard; an altar's feature placed and the level still connected); `world/rooms_tests.rs` (`effects_at` folding; `dwell` gives and eases; Ebbing drains a creature; Silenced refuses a cast; ice freezes in a cold room and not beside it; temperature on the status bar); `world/den_tests.rs` (a sneaking step wakes nobody, a kicked door wakes the near ones and the cascade the rest, sleepers never wake by time, sneak attacks land on sleepers, sleepers count toward the spawn cap); `world/curse_tests.rs` (rises after two minutes, not if the corpse is eaten or carried, the level pick and its nearest-level fallback, Grave warden, a pervaded level, frozen floors catch up, Consecrate lifts it); `world/outcome_tests.rs` (*Here* lists Pray, Drink, Temper only at their features; an interrupted prayer gives nothing; the lean by side and band; each outcome's hook, the great ones included; the alignment deed; a hundred prayers in a row are allowed); one test file per §9 room; screen snapshots for the abilities menu's *Here* group and look mode's "asleep"; a replay per action (`replay --create`, `--verify`); `cargo xtask wiki`. No golden: the glows are light, and the light tests and a `--capture` checked by eye cover them; mirror images are checked through perception and dumps.
 
-## 13. Open questions
+## 13. Decisions (owner, 2026-10-26)
 
-| # | Question | Recommendation |
-|---|---|---|
-| 1 | Is 5 % the right `level_chance`, given it is 5 % *of the floors that drew the effect* (about 0.15 % of floors)? | Keep 5 % as the owner said; the rarity is the point. Raise it per branch later if a cursed dungeon is wanted (Fennmynster could list `level_chance` overrides). |
-| 2 | Should shadowed, hushed, and echoing also get a whole-level version? | **No for now**: a whole dark or loud floor is a level feeling, not a room; cheap to add later as data. |
-| 3 | The den's name and lines ("teeming den", "A warm, rank smell…", "You hear slow breathing all around you.") | Use them; the owner may rename freely (data). |
-| 4 | Should killing a sleeping creature move alignment (a good character murdering sleepers)? | **No**: hostiles are hostiles, and it would punish the thief's whole style. |
-| 5 | Should sleepers ever wake on their own (a timer, or at the floor's spawn ticks)? | **No**: the tension is that the player chooses when. |
-| 6 | Prayer length: 30 minutes? | **30 minutes**: long enough that farming costs food and spawns, short enough to try twice. |
-| 7 | Keep the two jackpots (a permanent +1 stat, a permanent −1 potential) at 1 in ~45 prayers each? | **Keep**: the owner asked for degenerate gambling, and the jackpots are why players kneel a twentieth time. |
-| 8 | Should the altar's side show through its light colour, or stay hidden until a prayer's outcome? | **Light colour**: readable for players who learn it, never named; the wiki says it. |
-| 9 | Should hot and cold rooms ever deal damage (a furnace, an ice tomb, as rarer variants)? | **Later, as separate effects** using a status `tick`/`damage`; not in R3. |
-| 10 | Should a cold room slow rot (a larder) and a hot room speed it? | **No**: rot is pure in age today and food moves; per-place rot is costly for little play. |
-| 11 | Do creatures suffer room statuses (Ebbing, Chilled), or only the player? | **Everyone**: one rule, and a draining room that also silences the shaman is fair and fun. |
-| 12 | Consecrate as the first place-bound class ability (priest 9, paladin 12)? | **Yes**, in R6; it gives the priest something no other class has. |
-| 13 | Keep the special-room notes in `docs/dev/mapgen.md`, or move them to a new `docs/dev/special-rooms.md`? | **New topic file** in R1: dens, curses, and prayer are rules, not generation. |
-| 14 | Should **Pray** also work at hand-made altars outside special rooms (the showcase garden, a future temple)? | **No**: only rooms with `prayer`; a level marks one if it wants it. |
-| 15 | Weights in §3.2 (altars and dens at ~4 % of floors each) | Accept; tune after a play-through of the Ascmearc. |
-| 16 | Which §9 rooms to build, and in which order | Ranks 1 to 7 in that order; 8 if the owner likes chaos; skip 9 to 12. |
-| 17 | A cursed room's kill with no undead of its level: the nearest level, or nothing? | **Nearest**, so low floors' curses are not empty; add low-level undead (a rat skeleton) with the campaign's barrow wave if the jump from 1 to 3 feels wrong. |
+| # | Question | Decision | Sections changed |
+|---|---|---|---|
+| 1 | Is 5 % the right `level_chance`? | Fine; adjust later if need be. | §3.1 |
+| 2 | Whole-level versions of shadowed, hushed, echoing? | Not now. | §3.1 |
+| 3 | The den: data or procedural? | Keep the design: the effect is defined in data, the rooms are placed and filled by the generator. A plain explanation of which is which added; the principle stated (no hand-made den definitions per monster: sleepers always come from the branch population's draw, rarity, strays, out-of-depth, danger, later tribes); four example dens; optional themed dens (a warren of one type, a tribe of one faction) recommended. | §4, §9.5 |
+| 4 | Alignment for killing sleepers? | None. | §4 |
+| 5 | Sleepers waking on their own? | Never. | §4 |
+| 6 | Prayer length (was 30 minutes)? | Short: one minute. The tension is the chance of a very bad outcome, so the banes are made genuinely nasty (lightning that can kill, an out-of-depth creature, deadly disease, the most valuable item lost). | §3.8, §7.3, §7.4 |
+| 7 | The jackpots (+1 stat, −1 potential)? | Keep, but far stronger now, toward ADOM's significance: four great boons (up to +3 to a stat, a level, a free talent for life, a relic) and four great banes (up to −3, a level lost, a flaw for life, a horde). Making them bigger still stays deferred on #196. | §7.4, §11, §12 (R6) |
+| 8 | The altar's side by light colour? | Explained plainly (what the side is, how it leans the odds, how the colour shows it); recommendation kept. Framing: the altar is ADOM's pool mechanic with a different flavour, not its altar and god system: no gods, no sacrifices, no conversion. | §7, §7.2 |
+| 9 | Should hot and cold rooms deal damage? | No room-side damage or statuses: the room sets its cells' temperature only; effects come from the environment simulation. What it does today and what is missing listed as separate future work. | §1, §3.3, §8, §10, §11 |
+| 10 | Rot in cold and hot rooms? | Up to the environment simulation, not the room. | §8 |
+| 11 | Who suffers room statuses? | Everyone. | §3.3 |
+| 12 | Consecrate? | Yes, accepted as written; what it does explained plainly. | §11 |
+| 13 | Where the developer notes go | A new topic file, `docs/dev/special-rooms.md`, listed in CLAUDE.md's index in R1, to reduce merge conflicts. | header, §12 |
+| 14 | Pray outside these rooms? | No. The feature's altars get their own terrain and description. | §3.4, §3.8, §7.1 |
+| 15 | The weight table | No global table every dungeon restates: each feature has a default weight in its own data; a dungeon may name `favoured` features with fixed shares and a `banned` list; a new feature appears everywhere automatically. Fennmynster's `effects` mapped to it. | §1, §3.2, §3.6, §12 (R1) |
+| 16 | Which §9 rooms to build | All of them, each fully specified and planned. | §1, §9, §11, §12 |
+| 17 | A curse with no undead of the dead's level | The nearest level. | §5 |
