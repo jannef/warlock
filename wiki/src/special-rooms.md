@@ -84,10 +84,21 @@ gets where a dungeon favours or bans nothing. "Only" says where it can come at a
 - **Frigid hall.** Bitter cold: 25 °C colder than the level around it, with a faint blue glow.
   Its water freezes even on a mild level, so a pool in it is usually solid ice. The cold does
   nothing to you yet.
+- **Hall of mirrors.** Glass on every side: everyone in it, you too, is shown with two
+  reflections that look exactly like them, standing elsewhere in the room and shifting every
+  turn. Nothing on the screen tells a reflection from the real thing (look mode only knows your
+  own: "Your reflection"). Swing at or walk into a reflection and your blow meets only glass,
+  which costs you the blow's time; an arrow or a thrown dagger aimed at one flies on through it.
+  An archer outside the hall shooting at you while you are inside aims at you or at one of your
+  reflections, each as likely; creatures inside the hall know it and are never fooled. Spells
+  that fly to the first creature in their way pass the reflections by. Only rooms of 80 floor
+  cells or fewer can be one.
 
 The talent *Hallowed rest* (Grit) makes a room that quickens healing or mana quicken it half
 again more for you: a sanctuary's three times as fast becomes four times. The talent *Anchored
-mind* (Scholar) keeps your power moored: Ebbing never takes you.
+mind* (Scholar) keeps your power moored: Ebbing never takes you. The talent *Mirror-wise*
+(Scholar) sees through reflections within 2 cells of you: they are not shown, and nothing stops
+your step there.
 
 Only what happens inside counts: a sound made in an echoing hall is loud wherever it is heard,
 while one made outside and heard inside is not changed. Light outside a shadowed room is as

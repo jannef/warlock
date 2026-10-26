@@ -173,8 +173,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   room's plain floor: walkable, transparent, not stairs, a door, or running water), and `status`
   (a status everyone inside holds while they stay, below; it must ease, at least 10 seconds a
   degree, the longest single action, so it never lapses while one stays), and `temperature`
-  (degrees Celsius added to the level's inside, −40 to 40, default 0; below). An effect
-  with a `level_chance` needs its `pervade` line and is neither `shunned` nor lays a `floor`.
+  (degrees Celsius added to the level's inside, −40 to 40, default 0; below), and `mirrors`
+  (`{ images = N }`, 1 to 8: a hall of mirrors' reflections, below). An effect with a
+  `level_chance` needs its `pervade` line and is neither `shunned` nor lays a `floor` nor
+  holds `mirrors`.
   - **The effects** (weights in brackets): a *shadowed room* (10) keeps 30 % of the light ("The
     light seems to drain away here."); an *echoing hall* (8) doubles noise ("Your footsteps echo
     loudly."); a *hushed chamber* (8) leaves two fifths of it ("A deep hush fills this room."); a
@@ -189,7 +191,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     feel your power seeping out of you."; over a level: "Something here drinks at your
     power."); a *sweltering chamber* (5, #404) is 25 °C warmer than the level and glows a faint
     red (`[30, 10, 0]`; "A wave of heat meets you."); a *frigid hall* (5) is 25 °C colder and
-    glows a faint blue (`[0, 8, 22]`; "Your breath mists in the bitter cold."). Blood washing
+    glows a faint blue (`[0, 8, 22]`; "Your breath mists in the bitter cold."); a *hall of
+    mirrors* (3, #419; only in a room of 80 floor cells or fewer) shows everyone inside with two
+    reflections ("Your reflection stares back at you from every side."; below). Blood washing
     away in a flooded room waits for blood (#127).
   - **Hot and cold rooms** (`temperature`, #404): a room sets its cells' temperature and
     nothing else: no status, no damage, nothing done to items or food. The temperature at a cell
@@ -202,6 +206,25 @@ developer notes (CLAUDE.md, `docs/dev/`).
     weather as a level under the open sky when it is first made, so a cold room's pool is
     frozen when one first comes upon it. Neither covers a whole level (a hot level is its
     `temperature`). Fennmynster bans the sweltering chamber.
+  - **Halls of mirrors** (`mirrors`, #419; `world/mirrors.rs`): every actor inside the room has
+    `images` (2) **images**, reflections on free floor of the room (walkable, no door, no one on
+    it, no other image). Where they stand is no draw: a hash (FNV-1a) of the level, the turn, the
+    actor, and the image's index picks among the free cells, hall by hall and actor by actor in
+    id order (`WorldState::images`), so the rules and perception compute the same images and no
+    random stream moves; they move every turn, and vanish once the actor leaves. Perception
+    shows the images of the actors the player sees, on cells the player sees, as those actors
+    (kind, type, faction, how hurt, what they wear and wield, the statuses that show) under ids
+    of their own, above every real actor's: nothing on the screen tells them from the real one,
+    the player's own reflections too (look mode calls those "Your reflection"). Mirror-wise
+    (§8 "Talents") sees those within 2 cells of the player for what they are: they are not
+    shown. A step or a blow into an image the player sees meets only glass ("Your blow meets
+    only glass.", a melee blow's time, no step); a missile the player aims at an image they see
+    (a creature at any image) flies on through its cell instead of coming down there; bolts
+    always fly to the first real creature. A creature outside the hall shooting or throwing at
+    the player inside aims at the player or one of their images, each alike (a gameplay draw);
+    creatures inside know the hall and aim true, and creatures never see images at all (their
+    sight and AI read ground truth). Never over a whole level. The `actors` dev layer lists each
+    actor's images (`; images (x, y) (x, y)`); `view` shows them as the player does.
   - **A status while inside** (`status`, #403): as time passes, at the start of each stretch of
     it (`World::pass_time`: so after every action, the player's and each creature's, at every
     turn of a rest or another long action, and through a creature's coarse turns while the
@@ -265,5 +288,6 @@ developer notes (CLAUDE.md, `docs/dev/`).
     The light it changes is seen like any light, before and after.
   - **Talents** (system `special_rooms`, §8 "Talents"): Sense of place (a room known from a
     glimpse; a whole level's effect named on arrival), Hallowed rest (a room's quickening of
-    healing and mana half again more), and Anchored mind (a room's or a level's Ebbing
-    never takes them; #403).
+    healing and mana half again more), Anchored mind (a room's or a level's Ebbing
+    never takes them; #403), and Mirror-wise (a hall of mirrors' images within 2 cells seen for
+    what they are; #419).
