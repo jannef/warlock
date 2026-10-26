@@ -46,7 +46,8 @@
 # quests, comes from data/plurals.toml (default the word plus "s"): a tag or a creature name
 # with an irregular plural adds its line there. **Tag every new creature** that belongs to a
 # group or a role below (a new tag only when something could use it):
-#   groups   kobold, goblin (not the ogre or the troll, who only run with them), undead (every
+#   groups   kobold, goblin (the hobgoblins too; not the ogre or the troll, who only run with
+#            them), hobgoblin (the goblins' second tier, #454), undead (every
 #            creature of the "undead" faction: content::tag's test fails without it), vermin
 #            (not the basilisk), marsh-thing (the fens' living things and the bog hag),
 #            duergar (not their trader, a merchant), fire-thing (the delf's burning things)
@@ -165,3 +166,12 @@
 # dead, Z greater, G spirits, W wights and wraiths, M mummies, C hounds, V vampires, D drakes, T
 # the rotting troll; a colour distinct from every other type with the same glyph. Only a type in
 # a population strays (#375): deep undead ship in none until a deep place takes them.
+#
+# The hobgoblins (#454; content::hobgoblin_roster_tests checks the numbers): the goblin tribe's
+# second tier, above the goblin chief. Faction "goblins", tags ["goblin", "hobgoblin", ...]
+# (with "archer" or "caster" for those roles), alignment "evil", vision "darkvision", medium,
+# opens doors. xp = 5 × level + 10; stats from the undead's base for aware creatures (In 9 +
+# 0.2L, Wp 10 + 0.3L, Pr 8 + 0.25L), base_hp = 2.5 × level × role (soldier 1.0, archer 0.9,
+# caster 0.8, officer 1.1). They fight with gear (a racial weapon and mail), not a natural
+# attack. Glyph g in reds, steel, violet, and gold, apart from the goblins' green, ochre, and
+# orange.

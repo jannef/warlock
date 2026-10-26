@@ -133,7 +133,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
   miner's spirit, incorporeal), the spectre 14 (incorporeal, a cold touch that drains
   Willpower), the charred dead 14 (slow, resists fire, hurt more by cold), the duergar skeleton 15
   (a war hammer and an iron helm, bone that a club breaks), and the rotting troll 17 (slow, huge
-  claws, grave rot, fire hurts it more). In no population yet, waiting for deep places (#383): the
+  claws, grave rot, fire hurts it more). The hobgoblins (#454), the goblin tribe's second tier,
+  of the goblins' faction and carrying the `goblin` and `hobgoblin` tags, come down to raid the
+  delf with the ogres and trolls: the hobgoblin 9 (racial long sword, a small shield half the
+  time, studded leather or chain mail), the hobgoblin archer 10 (racial long bow and arrows, a
+  short sword, keeps its distance), the hobgoblin legionnaire 12 (racial spear, a large shield,
+  chain or scale mail), the hobgoblin warcaster 14 (a caster with a quarterstaff and a bone
+  amulet, sometimes magic), the hobgoblin sergeant 16 (long sword, shield, good mail, coins),
+  and the hobgoblin captain 19 (long sword, shield, scale or banded mail, sometimes magic, gold);
+  the hobgoblin warlord 24 (a great sword, banded mail or plate, often magic, a war chest) is in
+  no population yet. None is unique. In no population yet, waiting for deep places (#383): the
   mummy 10 (slow, mummy rot on a hit, fire hurts it more), the draugr 12 (huge, resists cold, a
   great axe half the time), the barghest 13 (a quick black dog whose bite frightens), the vampire
   spawn 16 (quick, opens doors, a bite that drains Toughness, fire hurts it more), the hand of
@@ -647,8 +656,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (the player's), and every creature type but the player naming a known faction. The core API
   gives the stance (`Hostile` or `Neutral`) of two factions, creature types, or actors. Test
   factions: `vermin` (giant rats; hostile to the player), `kobolds` (the war band; hostile to the
-  player and the vermin), `goblins` (the barrows' goblin tribes; hostile to the player, the
-  vermin, and the kobolds), `undead` (the barrows' and the fen's dead; hostile to the player,
+  player and the vermin), `goblins` (the barrows' goblin tribes and their hobgoblins, #454;
+  hostile to the player, the vermin, and the kobolds), `undead` (the barrows' and the fen's dead; hostile to the player,
   the kobolds, and the goblins, and leaving the vermin alone), `marsh` ("marsh things", the
   fen's living things and the bog hag; hostile to the player; not animals as a faction), `cult`
   ("cultists", the drowned minster's cult; hostile to the player and the marsh), `duergar` (the
