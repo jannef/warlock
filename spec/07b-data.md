@@ -141,7 +141,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
   tongue that holds fast), the gibbering shade 18 (incorporeal, a cold touch that drains
   Intelligence), the bone wyvern 18 (a sting, bone with protection 2), the revenant 19 (very
   tough, a long sword half the time), the fetch 19 (incorporeal, a cold touch that frightens), and
-  the mummy priest 20 (a caster whose touch carries mummy rot, sometimes something worth taking). The devil roster (#448; faction `devil`, tags `devil` and `fiend`, in no population yet), from the bottom of the hierarchy up: the lemure 5 (mindless, slow, in herds), the imp 9 (small, quick, a poisonous sting), the bearded devil 20 (a glaive half the time, a poisonous beard), the barbed devil 26 (claws that leave one bleeding), the bone devil 32 (a strongly poisonous sting, immune to poison), the erinyes 38 (a sword and mail, often magic), the chain devil 42 (chains that hold fast), the horned devil 48 (a fork, a tail whose wounds bleed), the ice devil 55 (frost claws that do cold damage and slow, immune to cold), and the pit fiend 66 (a venomous bite, immune to poison, something worth taking). Every devil is immune to fire and resists poison, and from the bearded devil up cold; none leaves a corpse. The duergar types are of the duergar race. For blood (§8 "Blood";
+  the mummy priest 20 (a caster whose touch carries mummy rot, sometimes something worth taking);
+  and the third batch (#386), all of it: the bodach 21 (a cold touch that frightens and now and
+  then drains Toughness), the grave knight 22 (a long sword, sometimes magic, a small shield,
+  chain or plate), the charnel heap 22 (slow, huge, filth fever), the banshee 23 (incorporeal, a
+  touch that frightens and drains Presence), the wight lord 24 (a touch that drains Toughness, a
+  magic long sword now and then, something worth taking), the vampire 25 (quick, opens doors, a
+  bite that drains Toughness and may transfix, fire hurts it more), the wormhost 26 (burrowing
+  worms, a disease that may kill), the bone drake 27 (bone with protection 4), the dread wraith 28
+  (quick, incorporeal, a touch that drains Toughness), the headless knight 29 (quick, a long
+  sword or a glaive, frightens), the lich 30 (a caster whose touch holds and drains
+  Intelligence), and the rotting drake 30 (slow, grave rot). The devil roster (#448; faction `devil`, tags `devil` and `fiend`, in no population yet), from the bottom of the hierarchy up: the lemure 5 (mindless, slow, in herds), the imp 9 (small, quick, a poisonous sting), the bearded devil 20 (a glaive half the time, a poisonous beard), the barbed devil 26 (claws that leave one bleeding), the bone devil 32 (a strongly poisonous sting, immune to poison), the erinyes 38 (a sword and mail, often magic), the chain devil 42 (chains that hold fast), the horned devil 48 (a fork, a tail whose wounds bleed), the ice devil 55 (frost claws that do cold damage and slow, immune to cold), and the pit fiend 66 (a venomous bite, immune to poison, something worth taking). Every devil is immune to fire and resists poison, and from the bearded devil up cold; none leaves a corpse. The duergar types are of the duergar race. For blood (§8 "Blood";
   presentation only):
   `blood`, the colour of its stains (`"#rrggbb"`; default dark red, `#6e0e0c`) or `"none"` for a
   bloodless creature; the cave beetle bleeds greenish-black ichor (`#38461a`). For hunger (§8

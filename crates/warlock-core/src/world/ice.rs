@@ -286,7 +286,7 @@ impl World {
                 } else {
                     "sink"
                 };
-                let what = capitalized(&object::phrase(&sank, &content));
+                let what = capitalized(&object::phrase(&sank, self.lore()));
                 self.say(format!("{what} {sink} into the water."));
             }
         }

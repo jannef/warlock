@@ -3,9 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  There are several objects here.
- You pick up 8 objects.
-
-
+ You pick up 10 objects.
 
 
 
@@ -17,11 +15,13 @@ expression: "render(case, content.clone())"
                     │                                                          │
                     │ Melee weapons                                            │
                     │ > a - ) a dagger (magic)                          450 g  │
+                    │ Scrolls                                                  │
+                    │   b - ? 2 scrolls labelled ALPRAAL                100 g  │
+                    │   c - ? 2 scrolls labelled KABEKNIH               100 g  │
+                    │   d - ? 2 scrolls labelled QUASANRO               100 g  │
                     │                                                          │
-                    │ a or Enter identify   Esc cancel                         │
+                    │ a-d or Enter identify   Esc cancel                       │
                     └──────────────────────────────────────────────────────────┘
-
-
 
 
 

@@ -115,8 +115,27 @@ developer notes (CLAUDE.md, `docs/dev/`).
   keeps the scroll: nothing to read on it ("You cannot read a dagger."), no target or the wrong
   kind ("Read it at what?", "Read it on what?"), the player's own cell ("You cannot aim at
   yourself."), out of reach ("That is out of range."), a spell on the overworld, or a stack
-  there is nothing to learn about ("You already know what a dagger is."). Scroll types are
-  known on sight; ADOM-style unknown labels ("a scroll labelled XYZZY") may come later.
+  there is nothing to learn about ("You already know what a dagger is.").
+  - **Unidentified scrolls** (`scroll_label.rs`, data `data/scroll_labels.toml`; #393): a
+    readable scroll type (an object with `read`) is unknown until the player identifies it,
+    and meanwhile shows by a **label**, "a scroll labelled ZUNBAR" (`name`/`plural` with
+    `{label}`), in one plain colour for every unknown scroll (`fg`), everywhere the player is
+    shown it: inventory, piles, shops, look, the item description, messages, and player-facing
+    dumps (all through `Lore::describe`). One label per type for the whole run, all different,
+    made of 2 to 3 of the file's syllables, drawn when the world is made or loaded from the
+    run's `identification` stream (§8 "Determinism"), types in object id order: derived, never
+    saved, never drawn per read. What the player knows is the set of **identified scroll
+    types** (`WorldState::known_scrolls`), saved and hashed. A type is identified when a scroll
+    of it is read ("You read the scroll labelled ZUNBAR." then "It is a scroll of fireball."),
+    when the scroll of identify is read on a stack of it ("This is 2 scrolls of lightning!"), the
+    scroll of identify's own type by its first read, when it is in the character's starting kit
+    (a chosen character knows their kit's scrolls), or by the dev `identify` (and F8). Reading an
+    unknown scroll works as reading a known one does (a gamble: what it does is not known until
+    it is done); a label changes no outcome, only names. A scroll that cannot be read (the
+    scroll of light) has no label and is known on sight. **Identified is not learned**: a spell
+    scroll whose type is identified shows by its name and can be studied (#396) by anyone who
+    has not learned its spell; study is refused only for a scroll still under its label and for
+    a spell already learned. `Lore::is_identified(object)` is what the study list asks.
   - **Spell scrolls** cast a trap's spell (§8 "Traps") with the same rules, data, and code
     (`World::cast_burst`, `World::cast_bolt`), aimed by the reader (§6 "Targeting"): the scroll
     of **fireball** and of **frost** a burst (the fireball and frost traps': 3d6 and 2d6 in
@@ -138,10 +157,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     "You read the scroll of fireball.", its `message` ("A fireball streaks from the scroll and
     explodes!"), then its blows in its `noun` and `verb` and combat's words ("The fireball burns
     the kobold.") and deaths ("The kobold dies.").
-  - **The scroll of identify** identifies one unidentified stack the player carries
-    (`World::identify`: "This is a Sharp dagger of the Lynx!"); a stronger "identify all" can
-    come later.
+  - **The scroll of identify** identifies one unidentified stack the player carries: a magic
+    item's affixes, or a labelled scroll's type (`World::identify`: "This is a Sharp dagger of
+    the Lynx!"); a stronger "identify all" can come later. It is the commonest scroll in loot
+    (`frequency` 300 against the spell scrolls' 50 to 60) and a regular general-store item.
   - **Where**: loot (by `level` and `frequency`, never magic), general stores' stock (they sell
-    and buy the scrolls class, §7 "Shops"), and the trap hall beside its arrival (two of each
-    spell, a scroll of identify, and an unidentified dagger). The showcase has none. Later:
+    and buy the scrolls class, and a generated one always lays out scrolls of identify, §7
+    "Shops"; Cēaptūn's has three), and the trap hall beside its arrival (two of each spell, three
+    scrolls of identify, and an unidentified dagger). The showcase has none. Later:
     Spellcraft and Decipher Script (§8 "Skills") may change reading.

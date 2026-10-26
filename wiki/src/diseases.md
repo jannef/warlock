@@ -86,6 +86,12 @@ The touch of a mummy may give you mummy rot. Like grave rot it never goes by its
 slower: every few days it dries a little more Toughness out of you. It does not kill, yet the
 Toughness it takes stays gone until a cure ends it.
 
+## Burrowing worms
+
+The fist of a wormhost may leave its green worms in you. They are quick: a day after, they are
+burrowing, and every day they take Toughness, wits, and blood. Win two checks in a row and you
+are rid of them, but they can kill, as grave rot can, so a cure is the safer road.
+
 ## Cures
 
 An **angelica root** (`%`) cures every disease you have the moment you eat it (`e`), grave rot

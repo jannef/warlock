@@ -1,0 +1,33 @@
+# The undead roster (#383, batch 3). A drake that died and rose with its flesh still on it,
+# sloughing scales: as slow as any zombie but with a drake's jaws, and its bite carries grave
+# rot. Not yet in any dungeon's population.
+[[creature]]
+id = "rotting_drake"
+level = 30
+xp = 160
+rarity = "uncommon"
+name = "rotting drake"
+glyph = "D"
+fg = "#6a7a40"
+speed = 800
+faction = "undead"
+tags = ["undead"]
+alignment = "evil"
+vision = "darkvision"
+sight = 10
+footsteps = 130
+hearing = 10
+weight = 1500000
+stats = { strength = 28, dexterity = 16, toughness = 29, intelligence = 2, willpower = 26, presence = 2 }
+base_hp = 120
+natural = { defence = 2, protection = 0, name = "rotting scales" }
+resist = { poison = 100 }
+on_eat = { message = "Drake, and rotten through.", vomit = 90, harm = "1d6" }
+blood = "#2e3418"
+[creature.attack]
+damage = "4d8"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
+to_hit = 3
+on_hit = [{ disease = "grave_rot", chance = 20 }]
