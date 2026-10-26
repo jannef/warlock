@@ -89,6 +89,10 @@ fn the_floors_start_full_of_the_fen_wave() {
             "wraith",
             "fen_ghoul",
             "bog_hag",
+            // The fey of damp and dark places (#452).
+            "pixie",
+            "boggle",
+            "darkling",
         ])
     );
     for depth in [1, 5] {

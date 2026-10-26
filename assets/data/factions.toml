@@ -2,7 +2,9 @@
 # the player belongs to the faction "player".
 #
 # Fields: id, name, hostile (faction ids), animal (default false: its creatures are animals, which
-# a Beast-friend's talent makes neutral to them; spec §8 "Talents"). Relations are symmetric: if A
+# a Beast-friend's talent makes neutral to them; spec §8 "Talents"), provoked (a faction id: one
+# of its creatures the player attacks joins that one, as the Seelie turn wrathful; default none:
+# it stays). Relations are symmetric: if A
 # lists B as hostile, A and B are hostile to each other. Every pair not listed is neutral (a faction and itself too).
 # Hostile creatures attack each other on sight; neutral ones leave each other alone. The player
 # learns a creature's stance toward them from its type (look mode: "a giant rat (hostile)").
@@ -82,6 +84,27 @@ hostile = ["player", "goblins", "undead"]
 id = "fire"
 name = "fire things"
 hostile = ["player"]
+
+# The fey courts (#452): each fey creature joins one when it is made, by its type's `factions`
+# weights (data/creatures/README.toml). The Seelie court leaves the player be, the Unseelie hunts
+# them, and the two are at war; both leave every other faction alone. A Seelie fey the player
+# attacks turns wrathful (`provoked`): hostile to the player from then on, still at peace with
+# its court and at war with the Unseelie.
+[[faction]]
+id = "seelie"
+name = "Seelie court"
+hostile = ["unseelie"]
+provoked = "wrathful_fey"
+
+[[faction]]
+id = "unseelie"
+name = "Unseelie court"
+hostile = ["player"]
+
+[[faction]]
+id = "wrathful_fey"
+name = "wrathful fey"
+hostile = ["player", "unseelie"]
 
 # The devils of the hells (#448): lemures, imps, and the greater devils up to the pit fiend.
 # They come for the player and leave everyone else be: devils bargain, they do not brawl with

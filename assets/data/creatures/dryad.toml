@@ -1,0 +1,34 @@
+# The fey roster (#452).
+# A dryad: the spirit of a tree, who guards her woodland and charms intruders (her lash
+# transfixes). Bound to her tree in the tales; that waits for a mechanic. Most keep to the Seelie
+# court.
+[[creature]]
+id = "dryad"
+level = 19
+xp = 105
+rarity = "rare"
+loot = 25
+name = "dryad"
+glyph = "n"
+fg = "#6aa04a"
+factions = { seelie = 90, unseelie = 10 }
+tags = ["fey", "caster"]
+alignment = "good"
+vision = "low_light"
+sight = 10
+combat = "caster"
+range = 6
+opens_doors = true
+footsteps = 20
+hearing = 18
+weight = 50000
+stats = { strength = 16, dexterity = 15, toughness = 20, intelligence = 22, willpower = 22, presence = 24 }
+base_hp = 38
+skills = { concentration = 67, spellcraft = 72 }
+blood = "#6a8a2a"
+[creature.attack]
+damage = "3d6"
+damage_type = "bludgeoning"
+name = "lash"
+verb = "lashes"
+on_hit = [{ status = "transfixed", chance = 20, severity = 1 }]

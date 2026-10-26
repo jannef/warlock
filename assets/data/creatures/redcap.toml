@@ -1,0 +1,29 @@
+# The fey roster (#452).
+# A redcap: a murderous little fey in iron-shod boots, its cap dyed in its victims' blood.
+# Quick for a brute, and its iron-shod stamping hits hard. Nearly all serve the Unseelie court.
+[[creature]]
+id = "redcap"
+level = 12
+xp = 70
+rarity = "uncommon"
+name = "redcap"
+glyph = "f"
+fg = "#d03a30"
+speed = 1200
+factions = { seelie = 10, unseelie = 90 }
+tags = ["fey"]
+alignment = "evil"
+vision = "darkvision"
+sight = 10
+opens_doors = true
+footsteps = 70
+hearing = 16
+weight = 20000
+size = "small"
+stats = { strength = 21, dexterity = 11, toughness = 22, intelligence = 15, willpower = 15, presence = 17 }
+base_hp = 48
+attack = { damage = "3d6", damage_type = "bludgeoning", name = "stamp", verb = "stamps on" }
+# Its gear (spec §8 "Creature gear"): the iron-shod boots it is named for.
+[[creature.gear]]
+chance = 90
+one_of = ["iron_shod_boots"]
