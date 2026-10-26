@@ -58,11 +58,24 @@ Rarity (#373): `content/creature_rarity.rs` parses `data/creature_rarities.toml`
 order, each a `factor` in percent of a common type's weight, 1 to 1000; `common` required, the
 only tier without the file); `CreatureDef::rarity` is an index into `Content::creature_rarities`
 (a type's `rarity`, default `common`; an unknown tier is a load error). A draw's candidates are
-`danger::Candidate`s `(type, level, factor)`, built in exactly two places, `World::draw_spawn`
-and `mapgen::population::populate`, and `danger::weight(level, factor, danger)` is
-`level_weight × factor`; the stream calls are the same as before (one `below(total)` a pick), so
-only the picks move. Both pass the area's `out_of_depth` (default `danger::OUT_OF_DEPTH`, 5 %) to
-`draw`, whose deeper pick weighs rarity too. Hand-placed creatures (level legends, vaults,
+`danger::Candidate`s `(type, level, factor)`, built by `Content::candidates` (the run's met
+uniques left out) for `World::draw_spawn` and `mapgen::population::populate`, and
+`danger::weight(level, factor, danger)` is `level_weight × factor`.
+Strays and exploding out-of-depth draws (#375): `danger::draw(rng, own, generic, danger, odds)`
+rolls, in order, the stray chance (`odds.stray`: the pick goes to `generic`), the out-of-depth
+chance, and each further step (`danger::deeper`: `D + 1`, then `odds.deeper` % again and again
+one more, at most `odds.deeper_cap`), then one `below(total)` per pick that finds something
+(`danger::pick`): at the deeper danger the chosen pool, else the generic list (the own folk all
+too weak), then at `D` the chosen pool, else the own folk. `danger::Odds` is
+`Spawning::odds`: each of `stray`, `out_of_depth`, `deeper`, `deeper_cap` as a branch or level
+gives it, else `data/dungeons.toml`'s `[defaults]` (`danger::DefaultsFile`, read into
+`Content::draw_odds` before the levels; a `danger` without it is a load error, and `[defaults]`
+in any other dungeons file is refused). The generic creature list is derived, not flagged:
+`Content::fill_generic` (after `load_dungeons`) gives every `Spawning::generic` the union of
+the populations of the areas with a danger of its campaign and of no campaign, uniques left out
+(so people, keepers, hand-placed guardians, quest creatures, and test fixtures' types never
+stray); `populate` builds the generic candidates once a floor, the own ones per creature (a
+unique leaves them). Hand-placed creatures (level legends, vaults,
 scenario people, shopkeepers) are never drawn, whatever their tier.
 `cargo xtask bench-turns` has a `delf` row: a fixture 120×60 cave branch of danger 8 at full
 population (`xtask/src/bench.rs`); its night's rest is held to the 500 ms budget thanks to coarse

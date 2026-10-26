@@ -46,21 +46,35 @@ developer notes (CLAUDE.md, `docs/dev/`).
   player (ADOM's puppy cave): `+ max(0, level − from) × percent / 100`, at most `max`; no area
   uses it yet. With a danger come `population` (creature ids; a branch's default its
   `creatures`), `population_count` (a number, or `{ per_1000, least, most }`, default 35 per
-  1000 walkable cells, 25 to 80; at most 200), `out_of_depth` (percent, default 5), and
+  1000 walkable cells, 25 to 80; at most 200), the draw's odds `stray`, `out_of_depth`,
+  `deeper` (percents) and `deeper_cap` (0 to 50), each defaulting to `data/dungeons.toml`'s
+  `[defaults]` (5, 5, 5, 10; required once any area has a danger), and
   `spawn = { every, chance, cap }` (default `15m`, 60 %, cap the population). A creature type's
   `level` is its danger; a draw at danger *D* weighs a type of level *L* 4 at `D` and `D − 1`, 2
   at `D − 2` and `D − 3`, 1 down to `D − 8`, else 0 (above *D* too), uniform among equal weights
-  over the types sorted by id; with `out_of_depth` % the draw is made at `D + 1` to `D + 3`
-  instead (falling back to `D` if nothing lives that deep; both spawns and initial populations).
+  over the types sorted by id. **Strays and out-of-depth draws** (#375; both spawns and initial
+  populations): with `stray` % a draw is made from the area's **generic creature list** instead
+  of its population: every type that lives in some area with a danger (a branch's or a
+  hand-made level's `population`) of the area's campaign or of none, uniques left out
+  (`Spawning::generic`, derived at load, `Content::fill_generic`; hand-placed people,
+  shopkeepers, guardians, quest creatures, and test types live in no campaign population, so
+  none strays; the list may hold the area's own types); `stray = 0` keeps an area to its own.
+  With `out_of_depth` % the draw is made at `D + 1`, then with `deeper` % again and again one
+  deeper still, at most `deeper_cap` times (an exploding tail: at the defaults `D + 1` 4.75 % of
+  all draws, `D + 2` 0.24 %, `D + 3` 0.012 %); where the drawn pool weighs nothing that deep (its
+  types all more than 8 below) the generic list is drawn there instead, and where nothing
+  weighs anything there the draw is made at `D` (a stray finding nothing at `D` takes the
+  population). The rolls come in a fixed order from the same streams: stray, out of depth, each
+  step deeper, the pick.
   **Rarity** (#373): a creature type's `rarity` is a tier of `data/creature_rarities.toml`
   (`common` 100, `uncommon` 50, `rare` 25, `very_rare` 10, in percent; default `common`), and its
-  weight in every draw, out-of-depth ones too, is the level weight above times that factor: the
-  more dangerous and rewarding a type (casters, chieftains, the strongest of a place), the rarer.
-  Hand-placed creatures are never drawn and so unaffected. Hidden in the game; the wiki's
-  dungeons page gives the tiers and every drawn type's. A type with `unique = true` is drawn once
-  a run (`Progress::uniques`). **Spawning**:
-  a level with a danger keeps a spawner in its state (`LevelState::spawner`: the next attempt's
-  time and the stream `spawn/<level id>`; none elsewhere, so other levels' states are as they
+  weight in every draw, strays and out-of-depth ones too, is the level weight above
+  times that factor: the more dangerous and rewarding a type (casters, chieftains, the
+  strongest of a place), the rarer. Hand-placed creatures are never drawn and so unaffected.
+  Hidden in the game; the wiki's dungeons page gives the tiers and every drawn type's, and the
+  draws' odds exactly. A type with `unique = true` is drawn once a run (`Progress::uniques`).
+  **Spawning**: a level with a danger keeps a spawner in its state (`LevelState::spawner`: the next
+  attempt's time and the stream `spawn/<level id>`; none elsewhere, so other levels' states are as they
   were). At the end of every turn (`run_turn` → `spawn_tick`) each attempt due on the current
   level is made: skipped while the level holds as many creatures hostile to the player as its
   cap, else with its chance a type is drawn and placed on a cell out of the player's view by the

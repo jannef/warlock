@@ -9,8 +9,9 @@
 //! level are made, several if a rest passed hours; levels the player is not on stay frozen (the
 //! next attempt is put off to `every` after the player's arrival, `travel.rs`). An attempt is
 //! skipped while the level holds as many creatures hostile to the player as its cap; else, with
-//! its chance, it draws a type of the level's population by the danger
-//! ([`crate::content::danger::draw`]: a unique type once a run), a cell out of the player's view
+//! its chance, it draws a type of the level's population by the danger, now and then a stray
+//! of the generic creature list or one from deeper ([`crate::content::danger::draw`]: a unique
+//! type once a run), a cell out of the player's view
 //! by the perception rules and at least [`AWAY`] cells from them (walkable, free, no stairs,
 //! door, shop floor, or sanctuary; up to [`TRIES`] draws, else nothing comes), and a short route
 //! where one fits, else a post. The newcomer is an ordinary creature from then on.
@@ -202,14 +203,10 @@ impl World {
         if !forced && !rng.chance(spawning.chance.into()) {
             return None;
         }
-        let content = &self.content;
         let once = &self.state.progress.uniques;
-        let candidates: Vec<_> = (spawning.population.iter())
-            .map(|&c| (c, content.creature(c)))
-            .filter(|(_, def)| !(def.unique && once.contains(&def.id)))
-            .map(|(c, def)| (c, def.level, content.creature_rarity(def.rarity).factor))
-            .collect();
-        let creature = danger::draw(rng, &candidates, danger, spawning.out_of_depth)?;
+        let own = self.content.candidates(&spawning.population, once);
+        let generic = self.content.candidates(&spawning.generic, once);
+        let creature = danger::draw(rng, &own, &generic, danger, &spawning.odds)?;
         let seen = Perception::compute(&self.state, &self.content, &mut self.lights);
         let level = self.state.current();
         let (content, player) = (&self.content, self.state.player().pos);

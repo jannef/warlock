@@ -482,6 +482,9 @@ pub struct Content {
     level_campaigns: BTreeMap<String, Option<String>>,
     scenarios: BTreeMap<String, ScenarioDef>,
     dungeons: BTreeMap<String, DungeonDef>,
+    /// The default odds of a draw (spec §7 "Danger levels"), `data/dungeons.toml`'s
+    /// `[defaults]`; `None` without them (then no area may give a danger).
+    draw_odds: Option<danger::Odds>,
     /// Sorted by id.
     vaults: Vec<Vault>,
     calendar: Calendar,
@@ -571,6 +574,7 @@ impl Content {
             level_campaigns: BTreeMap::new(),
             scenarios: BTreeMap::new(),
             dungeons: BTreeMap::new(),
+            draw_odds: None,
             vaults: Vec::new(),
             calendar: Calendar::default(),
             moons: Vec::new(),
@@ -768,6 +772,11 @@ impl Content {
             default_legend.insert(legend_char(path, &key)?, entry);
         }
 
+        let path = "data/dungeons.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.draw_odds =
+                danger::DefaultsFile::parse(text).map_err(|m| ContentError::new(path, m))?;
+        }
         let mut seen: BTreeMap<String, &str> = BTreeMap::new();
         for (path, id, text) in files.in_dir("levels") {
             if let Some(first) = seen.insert(id.to_string(), path) {
@@ -815,6 +824,7 @@ impl Content {
             content.vaults.push(vault);
         }
         content.load_dungeons(files)?;
+        content.fill_generic();
         for v in &content.vaults {
             v.check_dungeons(&content)
                 .map_err(|m| ContentError::new(&v.file(), m))?;
@@ -1753,6 +1763,12 @@ impl Content {
         for (path, text) in files.table("dungeons") {
             let parsed: dungeon::DungeonFile =
                 toml::from_str(text).map_err(|e| ContentError::new(path, e.to_string()))?;
+            if parsed.defaults.is_some() && path != "data/dungeons.toml" {
+                return Err(ContentError::new(
+                    path,
+                    "`[defaults]` belongs in data/dungeons.toml only",
+                ));
+            }
             let key_id = |name: &str| {
                 self.object_id(name)
                     .filter(|o| self.object(*o).key.is_some())
@@ -1764,6 +1780,7 @@ impl Content {
                 |name| self.trap_id(name),
                 &self.room_effects,
                 self.shops.as_ref(),
+                self.draw_odds,
             )?;
             for mut def in resolved {
                 if let Some(first) = seen.insert(def.id.clone(), path) {
@@ -1786,6 +1803,44 @@ impl Content {
                 .map_err(|m| ContentError::new("data/dungeons.toml", m))?;
         }
         Ok(())
+    }
+
+    /// Fills every area's generic creature list (spec §7 "Danger levels",
+    /// [`danger::Spawning::generic`]): the types that live in some area with a danger (a
+    /// branch's or a hand-made level's `population`) of the area's campaign or of no campaign,
+    /// uniques left out. Hand-placed types (people, shopkeepers, guardians, quest creatures)
+    /// live in no population, and test types only in their own fixtures', so none of them
+    /// strays.
+    fn fill_generic(&mut self) {
+        let mut lives: BTreeMap<Option<String>, BTreeSet<CreatureId>> = BTreeMap::new();
+        let branches = (self.dungeons.values())
+            .filter_map(|d| Some((d.campaign.clone(), d.spawning.as_ref()?)));
+        let levels = (self.levels.iter()).filter_map(|(id, l)| {
+            let campaign = self.level_campaigns.get(id).cloned().flatten();
+            Some((campaign, &l.spawning.as_ref()?.1))
+        });
+        for (campaign, s) in branches.chain(levels) {
+            let kinds = (s.population.iter()).filter(|&&c| !self.creature(c).unique);
+            lives.entry(campaign).or_default().extend(kinds);
+        }
+        let shared = lives.get(&None).cloned().unwrap_or_default();
+        let generic = |campaign: &Option<String>| -> Vec<CreatureId> {
+            let own = lives.get(campaign).into_iter().flatten();
+            let all: BTreeSet<CreatureId> = own.chain(&shared).copied().collect();
+            all.into_iter().collect()
+        };
+        for d in self.dungeons.values_mut() {
+            let list = generic(&d.campaign);
+            if let Some(s) = d.spawning.as_mut() {
+                s.generic = list;
+            }
+        }
+        for (id, l) in &mut self.levels {
+            let campaign = self.level_campaigns.get(id).cloned().flatten();
+            if let Some((_, s)) = l.spawning.as_mut() {
+                s.generic = generic(&campaign);
+            }
+        }
     }
 
     /// Checks the vaults branch `def`'s levels name (dungeon vaults, shared or of its campaign,
@@ -2389,6 +2444,26 @@ impl Content {
     /// The rarity at `index` in [`Content::creature_rarities`] (a creature type's `rarity`).
     pub fn creature_rarity(&self, index: usize) -> &CreatureRarity {
         &self.creature_rarities[index]
+    }
+
+    /// The default odds of a draw (`data/dungeons.toml`'s `[defaults]`; spec §7 "Danger
+    /// levels"), if given.
+    pub fn draw_odds(&self) -> Option<danger::Odds> {
+        self.draw_odds
+    }
+
+    /// The candidates of a draw ([`danger::draw`]) among `kinds`: each type with its level and
+    /// its rarity's factor, those `met` (uniques the run has had, by id) left out.
+    pub fn candidates(
+        &self,
+        kinds: &[CreatureId],
+        met: &BTreeSet<String>,
+    ) -> Vec<danger::Candidate> {
+        (kinds.iter())
+            .map(|&c| (c, self.creature(c)))
+            .filter(|(_, def)| !(def.unique && met.contains(&def.id)))
+            .map(|(c, def)| (c, def.level, self.creature_rarity(def.rarity).factor))
+            .collect()
     }
 
     /// The index of size `id` in [`Content::sizes`].
@@ -3524,6 +3599,53 @@ mod tests {
                 assert!(def.rarity < content.creature_rarities().len(), "{}", def.id);
             }
         }
+    }
+
+    /// The generic creature list strays come from (spec §7 "Danger levels"): what lives in the
+    /// campaign's dungeons, never a unique, a person, a keeper, or a hand-placed guardian.
+    #[test]
+    fn the_generic_list_is_the_campaigns_folk_without_uniques_or_people() {
+        let content = Content::builtin().expect("content");
+        let generic = |branch: &str| -> BTreeSet<&str> {
+            let s = content.dungeon(branch).and_then(|d| d.spawning.as_ref());
+            (s.expect(branch).generic.iter())
+                .map(|&c| content.creature(c).id.as_str())
+                .collect()
+        };
+        let barrow = generic("cealdhlaw");
+        // One list for the whole campaign, its three dungeons' folk together.
+        assert_eq!(barrow, generic("fennmynster"));
+        assert_eq!(barrow, generic("fyrdelf"));
+        for id in [
+            "rat",
+            "skeleton",
+            "giant_leech",
+            "cult_priest",
+            "ogre",
+            "cinder_elemental",
+        ] {
+            assert!(barrow.contains(id), "{id} strays");
+        }
+        for id in [
+            "player",
+            "bog_hag",
+            "fire_drake",
+            "shopkeeper",
+            "duergar_trader",
+            "villager",
+            "innkeeper",
+            "reeve",
+            "sister",
+            "mine_factor",
+            "hermit",
+            "bard",
+            "gardener",
+        ] {
+            assert!(!barrow.contains(id), "{id} never strays");
+        }
+        // Sorted by type, as the draws need.
+        let s = content.dungeon("fyrdelf").and_then(|d| d.spawning.as_ref());
+        assert!(s.expect("fyrdelf").generic.is_sorted());
     }
 
     #[test]

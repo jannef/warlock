@@ -87,7 +87,10 @@ fn the_floors_start_full_of_the_fen_wave() {
     for depth in [1, 5] {
         let floor = level(1, depth);
         let drawn = (floor.creatures.iter())
-            .filter(|c| spawning.population.contains(&c.creature))
+            .filter(|c| {
+                let drawn = [&spawning.population, &spawning.generic];
+                drawn.iter().any(|kinds| kinds.contains(&c.creature))
+            })
             .count();
         assert!(drawn >= 25, "depth {depth}: {drawn}");
     }

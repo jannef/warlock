@@ -1,6 +1,7 @@
 //! The initial population of a generated floor (spec §7 "Danger levels"): a floor whose branch
 //! gives a danger is laid down full, its creatures drawn by the danger from the branch's
-//! population ([`danger::draw`]).
+//! population, now and then a stray from the generic creature list or one from deeper
+//! ([`danger::draw`]).
 //!
 //! How many: the branch's `population_count` for the floor's walkable cells
 //! ([`crate::content::danger::Count::for_cells`]: by default 35 per 1000, 25 to 80), on top of
@@ -66,14 +67,12 @@ pub(super) fn populate(
     };
     let mut met = visit.uniques.cloned().unwrap_or_default();
     let mut placed = Vec::new();
+    // The generic list holds no uniques: its candidates stay the same all the floor long.
+    let generic = content.candidates(&spawning.generic, &met);
     for _ in 0..count {
-        let candidates: Vec<_> = (spawning.population.iter())
-            .map(|&c| (c, content.creature(c)))
-            .filter(|(_, def)| !(def.unique && met.contains(&def.id)))
-            .map(|(c, def)| (c, def.level, content.creature_rarity(def.rarity).factor))
-            .collect();
-        let Some(creature) = danger::draw(&mut rng, &candidates, danger, spawning.out_of_depth)
-        else {
+        let own = content.candidates(&spawning.population, &met);
+        let odds = &spawning.odds;
+        let Some(creature) = danger::draw(&mut rng, &own, &generic, danger, odds) else {
             break;
         };
         if cells.is_empty() {

@@ -5,31 +5,31 @@ expression: "describe(&level(1, 1))"
 Fennmynster 1 (fennmynster:1) 80x21
 stairs Up at (42, 4) -> ascmearc
 stairs Down at (68, 12) -> fennmynster:2
-giant_frog at (25, 7) route W W W W E E W W E E W W E E E E
-giant_frog at (29, 10) route N N N N N S W E N S S S S S
-giant_frog at (40, 14) route E E W W W W W E E E E E W W
-giant_frog at (29, 8) route W W N N E E S S S N N N W W S S E E
-giant_leech at (20, 7) route W W W E E E E E E E W W W W W W W E E E
+giant_frog at (38, 14) route W W W E E W W W E E W W E E E W W E E E
+giant_frog at (58, 13) route N N W E E E E E W W W W W E S S
+giant_leech at (31, 11) route N N S S S N N N S S
+giant_leech at (9, 16) route E S S W W W N S E E E N N W
+giant_leech at (25, 17) route N N E E E E W W W W S S
 giant_frog at (28, 5) route E S S S S N N N N W
-giant_leech at (29, 17) route W W W W N N S S E E E E
-giant_leech at (49, 12) route E E E E E E W W W E W E E E W W W W W W
-giant_frog at (28, 16) route E S W W E E W W W E E E W W E E N W
-giant_leech at (19, 7) route W W E W E E E W W W E W E E
-giant_leech at (29, 7) route N N S S N N S S S S N N N N S S N N S S
-giant_frog at (28, 13) route N N N S S S S S N N N N N S S S
-giant_leech at (60, 11) route E E E E E E E E W W W W W W W W
-giant_frog at (58, 11) route W E E E W W W E
-cultist at (28, 14) route N N N N S S S S carrying a bronze dagger (wielded), a scroll of light
+giant_frog at (27, 10) route N N N N E E S S S N N N W W S S S S
+zombie at (44, 12) route E W E W E E W W E W E E W W E W E W
+giant_leech at (8, 17) route E E S W W E E N W W
+giant_frog at (56, 12) route W W W W W W W W W W E E E E E E E E E E
+giant_leech at (28, 16) route W W S W E N E E
+giant_leech at (27, 15) route S S W W E E N N
+barrow_ghoul at (57, 12) route S N N E W S S N
+giant_leech at (7, 12) route S S S S S E E E S W E N W W W N N N N N
+giant_leech at (28, 9) route N E S W N E S N W S E N W S
 giant_leech at (15, 16) route W W W E E W W E E E
-giant_leech at (36, 14) route E E W E E S N S N W W E W W
-giant_leech at (16, 4) route E E S W W N E E W W S E E N W W
-giant_leech at (42, 13) route S S W W W N N E W S S E E E N N
-giant_leech at (40, 13) route W E E E S N S S N N S N W W W E
-giant_frog at (56, 2) route W S S W N S N E W S N S E N N E
-giant_leech at (26, 16) route S W N N E E E W W W S S E N
-giant_leech at (57, 12) route S N N E W S S N
-giant_leech at (39, 13) route E S S W N N W E W E S S E N N W
-giant_frog at (28, 12) route S N N N S S S N
+giant_leech at (51, 12) route E W E E W W E E W W E W
+giant_frog at (31, 14) route S S N N N N N S S S N N N S S S S S N N
+giant_frog at (40, 15) route W N N E E E S S W W E E N N W W W S S E
+giant_frog at (58, 7) route N S S N N S S N N S
+giant_leech at (53, 3) route E E S W E E E E W W W W E N W W
+giant_frog at (29, 15) route S S W W W W E E E E N N
+giant_leech at (21, 16) route W W W W W E W E E E E E
+goblin_archer at (23, 16) route W W E E W W E E W W E E W W E E W W E E carrying a hardwood short bow (readied), 12 bone arrows (quivered)
+giant_frog at (57, 13) route N S N N E E E E E N S W W W W W S S N S
 alarm trap at (28, 7)
 teleport trap at (38, 4)
 alarm trap at (42, 6)
@@ -37,21 +37,21 @@ pit trap at (60, 12)
 0 placed lights
 
                                      ############    ########
-               #####                 #.........¡######..R..¡#
-               #¡..#                 #..........'...........#
-               #w..#      #####      #^...<.....######......#
+               #####                 #.........¡######.....¡#
+               #¡..#                 #..........'....w......#
+               #...#      #####      #^...<.....######......#
                #...#      #¡R.#      #..........#    #####'##
                ##'#########...#      #¡...^.....#        #.#
-                #..ww....R'.^w#      ##.#########        #.#
-                ###########..R###     #.#                #.#
-                          #...'.#     #.#               ##'#############
-                          #..R#.#     #.#               #¡...........).#
-     #######              ##.##.#     #.#  ##############.R.w.........(#
-     #....¡#               #R##.#    ##S####.....w.......w..^.......>..#
-     #.....#               #R##.######.ww.w#.############.............¡#
-     #.....#            ####@##.....w...R..S.#          ################
-     #.....##############.....#.######¡....###
-     #.....&...w........S.w.R.'.#    #######
-     #.....##############....w###
+                #.........'.^.#      ##.#########        #R#
+                ###########...###     #.#                #.#
+                          #.w.'.#     #.#               ##'#############
+                          #R..#.#     #.#               #¡...........).#
+     #######              ##.##w#     #.#  ##############.............(#
+     #.w..¡#               #.##.#    ##S####z......w....Rz..^.......>..#
+     #.....#               #.##.######.....#.############RR...........¡#
+     #.....#            ####.##R......R....S.#          ################
+     #.....##############..w.R#.######¡.R..###
+     #...w.&...w.....w.gS.?.w.'.#    #######
+     #..w..##############w....###
      #¡....#            #######
      #######

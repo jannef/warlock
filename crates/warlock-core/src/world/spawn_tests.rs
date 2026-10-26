@@ -392,8 +392,10 @@ fn a_generated_floor_is_laid_down_full_and_nothing_else_moves() {
         let mut cells: BTreeSet<_> = own.iter().map(|s| s.pos).collect();
         for spawn in population {
             let def = content.creature(spawn.creature);
-            assert!(def.level <= danger + 3, "seed {seed}: {}", def.id);
-            assert!(spawning.population.contains(&spawn.creature));
+            let deepest = danger + 1 + spawning.odds.deeper_cap;
+            assert!(def.level <= deepest, "seed {seed}: {}", def.id);
+            let kinds = [&spawning.population, &spawning.generic];
+            assert!(kinds.iter().any(|k| k.contains(&spawn.creature)));
             assert_eq!(with.terrain.get(spawn.pos), Some(&floor), "seed {seed}");
             assert!(
                 (with.stairs.iter()).all(|s| s.pos.chebyshev(spawn.pos) >= 8),

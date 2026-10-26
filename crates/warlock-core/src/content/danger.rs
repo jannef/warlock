@@ -6,13 +6,21 @@
 //! danger = 4                            # or { base = 4, per_depth = 1, player = { percent = 100, from = 1, max = 20 } }
 //! population = ["rat", "kobold"]        # the types that live there (a branch's default: `creatures`)
 //! population_count = { per_1000 = 35, least = 25, most = 80 }   # or a number: 40
-//! out_of_depth = 5                      # percent of draws made 1 to 3 deeper
+//! stray = 5                             # percent of draws from the generic creature list
+//! out_of_depth = 5                      # percent of draws made 1 deeper, then perhaps more
+//! deeper = 5                            # percent, again and again, of 1 deeper still
+//! deeper_cap = 10                       # the most dangers past the first one deeper
 //! spawn = { every = "15m", chance = 60, cap = 40 }
 //! ```
 //!
 //! The danger is never stored: [`DangerRule::at`] computes it from the depth and, for a
 //! player-scaled area, the player's level. A level without these fields has danger 0 and nothing
 //! comes there. The rules that use it are `world/spawn.rs`.
+//!
+//! The four odds of a draw ([`Odds`]) default to `data/dungeons.toml`'s `[defaults]` table
+//! (required once any area has a danger); a branch or a level may give each of its own. The
+//! generic creature list strays come from is [`Spawning::generic`], filled once everything is
+//! loaded (`Content::fill_generic`).
 
 use super::creature::CreatureId;
 use crate::time::Duration;
@@ -32,10 +40,8 @@ pub const POPULATION: Count = Count::PerCells {
     least: 25,
     most: 80,
 };
-/// The default percent of draws made out of depth.
-pub const OUT_OF_DEPTH: u8 = 5;
-/// How much deeper an out-of-depth draw is made, at most.
-pub const OUT_OF_DEPTH_STEPS: u8 = 3;
+/// The most dangers an out-of-depth draw may go past its first one deeper (`deeper_cap`).
+pub const MAX_DEEPER_CAP: u8 = 50;
 /// The default time between two attempts to bring a creature.
 pub const EVERY: Duration = Duration::minutes(15);
 /// The default chance in percent that an attempt brings one.
@@ -112,16 +118,54 @@ impl Count {
     }
 }
 
+/// The odds of a draw's two departures from an area's own folk at its danger (spec §7 "Danger
+/// levels"): `data/dungeons.toml`'s `[defaults]`, each overridable by a branch or a level.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Odds {
+    /// Percent of draws made from the generic creature list instead of the population.
+    pub stray: u8,
+    /// Percent of draws made out of depth: one danger deeper, then perhaps more.
+    pub out_of_depth: u8,
+    /// Percent, again and again, that an out-of-depth draw goes one danger deeper still.
+    pub deeper: u8,
+    /// The most dangers an out-of-depth draw goes past its first one deeper.
+    pub deeper_cap: u8,
+}
+
+impl Odds {
+    /// Checks the bounds: percents 0 to 100, `deeper_cap` at most [`MAX_DEEPER_CAP`].
+    pub(super) fn check(&self) -> Result<(), String> {
+        for (name, p) in [
+            ("stray", self.stray),
+            ("out_of_depth", self.out_of_depth),
+            ("deeper", self.deeper),
+        ] {
+            if p > 100 {
+                return Err(format!("`{name}` is a percent, 0 to 100"));
+            }
+        }
+        if self.deeper_cap > MAX_DEEPER_CAP {
+            return Err(format!("`deeper_cap` is at most {MAX_DEEPER_CAP}"));
+        }
+        Ok(())
+    }
+}
+
 /// What lives on the levels of an area and how it comes back (spec §7 "Danger levels").
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Spawning {
     /// The creature types that live there, sorted by id (each draw goes by
     /// [`weight`]).
     pub population: Vec<CreatureId>,
+    /// The generic creature list strays come from, sorted by id: every type that lives in some
+    /// area with a danger of the area's campaign or of none, uniques left out (filled once
+    /// everything is loaded, `Content::fill_generic`).
+    pub generic: Vec<CreatureId>,
     /// How many creatures a level holds: the cap the spawns refill toward, unless `cap` says.
     pub count: Count,
-    /// Percent of the draws made 1 to [`OUT_OF_DEPTH_STEPS`] deeper.
-    pub out_of_depth: u8,
+    /// The odds of strays and out-of-depth draws.
+    pub odds: Odds,
     /// Game time between two attempts while the player is on the level.
     pub every: Duration,
     /// Percent that an attempt brings a creature.
@@ -163,45 +207,68 @@ pub fn weight(level: u8, factor: u16, danger: u8) -> u32 {
 /// A type that may be drawn: its id, its level, and its rarity's factor.
 pub type Candidate = (CreatureId, u8, u16);
 
-/// Draws a type among `candidates` (sorted by type) at `danger`: by [`weight`], uniform among
-/// types of one weight. With `out_of_depth` percent the draw is made 1
-/// to [`OUT_OF_DEPTH_STEPS`] deeper (and at the danger itself if nothing lives that deep).
-/// `None` if nothing may be drawn.
+/// Picks a type among `candidates` at `danger` by [`weight`], uniform among types of one
+/// weight (one `below(total)` of `rng`); `None` if none weighs anything there.
+fn pick(rng: &mut crate::rng::Rng, candidates: &[Candidate], danger: u8) -> Option<CreatureId> {
+    let total: u32 = candidates
+        .iter()
+        .map(|&(_, l, f)| weight(l, f, danger))
+        .sum();
+    if total == 0 {
+        return None;
+    }
+    let mut r = rng.below(total);
+    candidates.iter().find_map(|&(c, l, f)| {
+        let w = weight(l, f, danger);
+        if r < w {
+            Some(c)
+        } else {
+            r -= w;
+            None
+        }
+    })
+}
+
+/// The danger an out-of-depth draw at `danger` is made at: one deeper, then with `deeper` %
+/// one deeper still, again and again until the chance misses or `deeper_cap` steps are made.
+fn deeper(rng: &mut crate::rng::Rng, danger: u8, odds: &Odds) -> u8 {
+    let mut at = danger.saturating_add(1);
+    for _ in 0..odds.deeper_cap {
+        if !rng.chance(odds.deeper.into()) {
+            break;
+        }
+        at = at.saturating_add(1);
+    }
+    at
+}
+
+/// Draws a type at `danger` (spec §7 "Danger levels"): from `own` (the population), or with
+/// `odds.stray` % from `generic` (the generic creature list), both sorted by type, by
+/// [`weight`]. With `odds.out_of_depth` % the draw is made deeper ([`deeper`]); where the own
+/// folk weigh nothing at that depth (all too weak for it), the generic list is drawn there
+/// instead. A draw that finds nothing that deep is made at the danger itself, and a stray that
+/// finds nothing there comes from the own folk. The rolls, in order: stray, out of depth, each
+/// step deeper, then one `below` per pick that finds something. `None` at danger 0 or if nothing
+/// may be drawn.
 pub fn draw(
     rng: &mut crate::rng::Rng,
-    candidates: &[Candidate],
+    own: &[Candidate],
+    generic: &[Candidate],
     danger: u8,
-    out_of_depth: u8,
+    odds: &Odds,
 ) -> Option<CreatureId> {
-    let deeper = rng.chance(out_of_depth.into()).then(|| {
-        let steps = rng.range(1, OUT_OF_DEPTH_STEPS.into());
-        danger.saturating_add(u8::try_from(steps).unwrap_or(1))
-    });
-    let pick = |rng: &mut crate::rng::Rng, at: u8| {
-        let total: u32 = candidates.iter().map(|&(_, l, f)| weight(l, f, at)).sum();
-        if total == 0 {
-            return None;
-        }
-        let mut r = rng.below(total);
-        candidates.iter().find_map(|&(c, l, f)| {
-            let w = weight(l, f, at);
-            if r < w {
-                Some(c)
-            } else {
-                r -= w;
-                None
-            }
-        })
-    };
-    if let Some(at) = deeper
-        && let Some(found) = pick(rng, at)
-    {
-        return Some(found);
-    }
     if danger == 0 {
         return None;
     }
-    pick(rng, danger)
+    let stray = rng.chance(odds.stray.into());
+    let at = (rng.chance(odds.out_of_depth.into())).then(|| deeper(rng, danger, odds));
+    let first = if stray { generic } else { own };
+    if let Some(at) = at
+        && let Some(found) = pick(rng, first, at).or_else(|| pick(rng, generic, at))
+    {
+        return Some(found);
+    }
+    pick(rng, first, danger).or_else(|| pick(rng, own, danger))
 }
 
 /// `danger = 4` or `danger = { base = 4, per_depth = 1, player = { ... } }`.
@@ -252,8 +319,58 @@ pub(super) struct SpawningSpec {
     pub(super) danger: Option<DangerSpec>,
     pub(super) population: Option<Vec<String>>,
     pub(super) population_count: Option<CountSpec>,
-    pub(super) out_of_depth: Option<u8>,
+    #[serde(flatten)]
+    pub(super) odds: OddsSpec,
     pub(super) spawn: Option<SpawnSpec>,
+}
+
+/// A branch's or a level's own odds ([`Odds`]), each as written; `None`: the default's.
+#[derive(Clone, Copy, Debug, Default, Deserialize)]
+pub(super) struct OddsSpec {
+    pub(super) stray: Option<u8>,
+    pub(super) out_of_depth: Option<u8>,
+    pub(super) deeper: Option<u8>,
+    pub(super) deeper_cap: Option<u8>,
+}
+
+impl OddsSpec {
+    fn given(&self) -> bool {
+        self.stray.is_some()
+            || self.out_of_depth.is_some()
+            || self.deeper.is_some()
+            || self.deeper_cap.is_some()
+    }
+
+    /// The odds: each given field, else `defaults`'.
+    fn resolve(self, defaults: Odds) -> Result<Odds, String> {
+        let odds = Odds {
+            stray: self.stray.unwrap_or(defaults.stray),
+            out_of_depth: self.out_of_depth.unwrap_or(defaults.out_of_depth),
+            deeper: self.deeper.unwrap_or(defaults.deeper),
+            deeper_cap: self.deeper_cap.unwrap_or(defaults.deeper_cap),
+        };
+        odds.check()?;
+        Ok(odds)
+    }
+}
+
+/// `data/dungeons.toml`'s `[defaults]`: the odds every area with a danger has unless it gives
+/// its own. Any other key of a dungeons file is ignored here (the branches read it).
+#[derive(Debug, Default, Deserialize)]
+pub(super) struct DefaultsFile {
+    defaults: Option<Odds>,
+}
+
+impl DefaultsFile {
+    /// The default odds of `text` (`data/dungeons.toml`), checked; `None` without `[defaults]`.
+    pub(super) fn parse(text: &str) -> Result<Option<Odds>, String> {
+        let file: DefaultsFile = toml::from_str(text).map_err(|e| e.to_string())?;
+        let Some(odds) = file.defaults else {
+            return Ok(None);
+        };
+        odds.check().map_err(|m| format!("[defaults]: {m}"))?;
+        Ok(Some(odds))
+    }
 }
 
 impl DangerSpec {
@@ -297,26 +414,31 @@ impl DangerSpec {
 impl SpawningSpec {
     /// The danger rule and what lives there, or `None` without a `danger` (then no other field
     /// may be given). `default_population` is what lives there without a `population` (a
-    /// branch's patrols); `creature` resolves a type to its id and level.
+    /// branch's patrols); `creature` resolves a type to its id and level; `defaults` are the
+    /// odds of `data/dungeons.toml`'s `[defaults]`, required with a `danger`.
     pub(super) fn resolve(
         self,
         branch: bool,
         default_population: &[CreatureId],
         creature: impl Fn(&str) -> Option<(CreatureId, u8)>,
+        defaults: Option<Odds>,
     ) -> Result<Option<(DangerRule, Spawning)>, String> {
         let Some(danger) = self.danger else {
             let given = self.population.is_some()
                 || self.population_count.is_some()
-                || self.out_of_depth.is_some()
+                || self.odds.given()
                 || self.spawn.is_some();
             if given {
                 return Err(
-                    "`population`, `population_count`, `out_of_depth`, and `spawn` \
-                            need a `danger`"
+                    "`population`, `population_count`, `stray`, `out_of_depth`, \
+                            `deeper`, `deeper_cap`, and `spawn` need a `danger`"
                         .into(),
                 );
             }
             return Ok(None);
+        };
+        let Some(defaults) = defaults else {
+            return Err("a `danger` needs the `[defaults]` odds of data/dungeons.toml".into());
         };
         let rule = danger.resolve(u8::from(branch), branch)?;
         let mut population = match &self.population {
@@ -364,10 +486,7 @@ impl SpawningSpec {
         if most > MAX_POPULATION {
             return Err(format!("`population_count` is at most {MAX_POPULATION}"));
         }
-        let out_of_depth = self.out_of_depth.unwrap_or(OUT_OF_DEPTH);
-        if out_of_depth > 100 {
-            return Err("`out_of_depth` is a percent, 0 to 100".into());
-        }
+        let odds = self.odds.resolve(defaults)?;
         let spawn = self.spawn.unwrap_or_default();
         let every = match &spawn.every {
             Some(text) => text.parse::<Duration>()?,
@@ -390,8 +509,9 @@ impl SpawningSpec {
             rule,
             Spawning {
                 population,
+                generic: Vec::new(),
                 count,
-                out_of_depth,
+                odds,
                 every,
                 chance,
                 cap: spawn.cap,
@@ -405,6 +525,30 @@ mod tests {
     use super::*;
     use crate::rng::Rng;
 
+    /// The defaults of `data/dungeons.toml`.
+    const ODDS: Odds = Odds {
+        stray: 5,
+        out_of_depth: 5,
+        deeper: 5,
+        deeper_cap: 10,
+    };
+
+    /// Every draw two deeper.
+    const TWO_DEEPER: Odds = Odds {
+        stray: 0,
+        out_of_depth: 100,
+        deeper: 100,
+        deeper_cap: 1,
+    };
+
+    /// No strays and no out-of-depth draws.
+    const PLAIN: Odds = Odds {
+        stray: 0,
+        out_of_depth: 0,
+        deeper: 0,
+        deeper_cap: 0,
+    };
+
     fn rule(text: &str) -> Result<Option<(DangerRule, Spawning)>, String> {
         let spec: SpawningSpec = toml::from_str(text).map_err(|e| e.to_string())?;
         let known = |n: &str| match n {
@@ -412,7 +556,35 @@ mod tests {
             "kobold" => Some((CreatureId(1), 2)),
             _ => None,
         };
-        spec.resolve(true, &[], known)
+        spec.resolve(true, &[], known, Some(ODDS))
+    }
+
+    #[test]
+    fn the_shipped_defaults_are_the_issues_odds() {
+        let text = include_str!("../../../../assets/data/dungeons.toml");
+        assert_eq!(DefaultsFile::parse(text).unwrap(), Some(ODDS));
+        assert_eq!(DefaultsFile::parse("").unwrap(), None);
+        let bad = "[defaults]\nstray = 5\nout_of_depth = 5\ndeeper = 5\ndeeper_cap = 51\n";
+        assert!(DefaultsFile::parse(bad).is_err());
+    }
+
+    #[test]
+    fn an_area_may_give_its_own_odds() {
+        let (_, s) = rule("danger = 2\npopulation = [\"rat\"]\nstray = 0\ndeeper_cap = 3\n")
+            .unwrap()
+            .unwrap();
+        assert_eq!(
+            s.odds,
+            Odds {
+                stray: 0,
+                deeper_cap: 3,
+                ..ODDS
+            }
+        );
+        // Without the defaults a danger is refused.
+        let spec: SpawningSpec = toml::from_str("danger = 2\npopulation = [\"rat\"]\n").unwrap();
+        let known = |_: &str| Some((CreatureId(3), 1));
+        assert!(spec.resolve(true, &[], known, None).is_err());
     }
 
     #[test]
@@ -423,10 +595,7 @@ mod tests {
         assert_eq!((r.at(1, 1), r.at(3, 30)), (4, 6));
         // Sorted by id, once each; the defaults.
         assert_eq!(s.population, vec![CreatureId(1), CreatureId(3)]);
-        assert_eq!(
-            (s.every, s.chance, s.out_of_depth, s.cap),
-            (EVERY, 60, 5, None)
-        );
+        assert_eq!((s.every, s.chance, s.odds, s.cap), (EVERY, 60, ODDS, None));
         let (r, _) = rule("danger = { base = 2, per_depth = 3 }\npopulation = [\"rat\"]\n")
             .unwrap()
             .unwrap();
@@ -476,6 +645,9 @@ mod tests {
             "danger = 1\n",
             "danger = 1\npopulation = [\"dragon\"]\n",
             "danger = 1\npopulation = [\"rat\"]\nout_of_depth = 101\n",
+            "danger = 1\npopulation = [\"rat\"]\nstray = 101\n",
+            "danger = 1\npopulation = [\"rat\"]\ndeeper_cap = 51\n",
+            "stray = 5\n",
             "danger = 1\npopulation = [\"rat\"]\nspawn = { every = \"30s\" }\n",
             "danger = 1\npopulation = [\"rat\"]\nspawn = { chance = 101 }\n",
             "danger = 1\npopulation = [\"rat\"]\npopulation_count = 201\n",
@@ -499,19 +671,119 @@ mod tests {
 
     #[test]
     fn draws_stay_within_reach_of_the_danger() {
-        let kinds: Vec<Candidate> = (1..=20).map(|l| (CreatureId(l.into()), l, 100)).collect();
+        let kinds: Vec<Candidate> = (1..=40).map(|l| (CreatureId(l.into()), l, 100)).collect();
         let mut rng = Rng::stream(7, "test");
         let mut deeper = 0;
-        for _ in 0..2000 {
-            let c = draw(&mut rng, &kinds, 10, 5).expect("a draw");
+        for _ in 0..4000 {
+            let c = draw(&mut rng, &kinds, &[], 10, &ODDS).expect("a draw");
             let level = kinds[usize::from(c.0) - 1].1;
-            assert!((2..=13).contains(&level), "{level}");
+            // At most one deeper and ten more; nothing more than eight below the danger.
+            assert!((2..=21).contains(&level), "{level}");
             deeper += usize::from(level > 10);
         }
-        // About 5 %, never a crowd.
-        assert!((40..=160).contains(&deeper), "{deeper}");
-        // Nothing within reach: nothing drawn.
-        assert_eq!(draw(&mut rng, &[(CreatureId(0), 30, 100)], 3, 0), None);
+        // Out of depth 5 % of the time, then at D + 1 its own level or the one above it (4 of
+        // 17 by weight): about 1 % of the draws, never a crowd.
+        assert!((20..=80).contains(&deeper), "{deeper}");
+        // Nothing within reach: nothing drawn; nothing at danger 0.
+        assert_eq!(
+            draw(&mut rng, &[(CreatureId(0), 30, 100)], &[], 3, &PLAIN),
+            None
+        );
+        assert_eq!(draw(&mut rng, &kinds, &kinds, 0, &ODDS), None);
+    }
+
+    #[test]
+    fn about_one_draw_in_twenty_is_a_stray() {
+        // The own folk and the generic list share nothing here, so every stray shows.
+        let (own, generic) = ([(CreatureId(1), 5, 100)], [(CreatureId(2), 5, 100)]);
+        let odds = Odds {
+            out_of_depth: 0,
+            ..ODDS
+        };
+        let mut rng = Rng::stream(3, "test");
+        let strays = (0..20_000)
+            .filter(|_| draw(&mut rng, &own, &generic, 5, &odds) == Some(CreatureId(2)))
+            .count();
+        // 5 % is 1000; the seeded count is fixed, the bounds allow for chance.
+        assert!((880..=1120).contains(&strays), "{strays}");
+        // A place with `stray = 0` never has one.
+        let mut rng = Rng::stream(3, "test");
+        assert!(
+            (0..2000).all(|_| draw(&mut rng, &own, &generic, 5, &PLAIN) == Some(CreatureId(1)))
+        );
+        // A stray that finds nothing of the danger comes from the own folk.
+        let far = [(CreatureId(2), 30, 100)];
+        let always = Odds { stray: 100, ..odds };
+        assert_eq!(draw(&mut rng, &own, &far, 5, &always), Some(CreatureId(1)));
+    }
+
+    #[test]
+    fn out_of_depth_draws_explode_geometrically() {
+        let mut rng = Rng::stream(9, "test");
+        let mut steps = [0u32; 12];
+        for _ in 0..100_000 {
+            steps[usize::from(deeper(&mut rng, 10, &ODDS) - 11)] += 1;
+        }
+        // One deeper 95 % of the time, two 4.75 %, three 0.24 %, each further 5 % of the last.
+        assert!((94_600..=95_400).contains(&steps[0]), "{steps:?}");
+        assert!((4_450..=5_050).contains(&steps[1]), "{steps:?}");
+        assert!((170..=310).contains(&steps[2]), "{steps:?}");
+        assert!(steps[3..].iter().sum::<u32>() < 40, "{steps:?}");
+        // The cap holds: a sure explosion stops after `deeper_cap` steps.
+        let sure = Odds {
+            deeper: 100,
+            deeper_cap: 10,
+            ..ODDS
+        };
+        assert_eq!(deeper(&mut rng, 10, &sure), 21);
+        assert_eq!(deeper(&mut rng, 250, &sure), 255);
+    }
+
+    #[test]
+    fn a_population_too_weak_for_the_depth_falls_back_to_the_generic_list() {
+        let own = [(CreatureId(1), 5, 100)];
+        let generic = [(CreatureId(2), 14, 100), (CreatureId(3), 30, 100)];
+        let mut rng = Rng::stream(4, "test");
+        // One deeper: the own type of level 5 still weighs at 6, so it is drawn.
+        let one = Odds {
+            stray: 0,
+            out_of_depth: 100,
+            deeper: 0,
+            deeper_cap: 0,
+        };
+        assert!((0..500).all(|_| draw(&mut rng, &own, &generic, 5, &one) == Some(CreatureId(1))));
+        // Nine deeper, at 14: level 5 is too weak to weigh, so the generic list is drawn.
+        let nine = Odds {
+            deeper: 100,
+            deeper_cap: 8,
+            ..one
+        };
+        assert!((0..500).all(|_| draw(&mut rng, &own, &generic, 5, &nine) == Some(CreatureId(2))));
+        // Nothing anywhere that deep: the draw is made at the danger.
+        let bare = [(CreatureId(3), 30, 100)];
+        assert_eq!(draw(&mut rng, &own, &bare, 5, &nine), Some(CreatureId(1)));
+    }
+
+    #[test]
+    fn spawns_from_the_shipped_odds_are_mostly_own_folk_at_the_danger() {
+        // Seeded statistics with the shipped odds: the own folk at the danger, a generic list
+        // of other kinds at every level.
+        let own: Vec<Candidate> = (3..=6).map(|l| (CreatureId(l.into()), l, 100)).collect();
+        let generic: Vec<Candidate> = (1..=30)
+            .map(|l| (CreatureId(100 + u16::from(l)), l, 100))
+            .collect();
+        let mut rng = Rng::stream(21, "test");
+        let (mut strays, mut deep) = (0, 0);
+        for _ in 0..20_000 {
+            let c = draw(&mut rng, &own, &generic, 6, &ODDS).expect("a draw");
+            strays += usize::from(c.0 > 100);
+            deep += usize::from(c.0 > 106);
+        }
+        // About 5 % strays (and the generic list's draws out of depth: 0.25 % more).
+        assert!((900..=1200).contains(&strays), "{strays}");
+        // Deeper than the danger only from the generic list: a stray made out of depth, or an
+        // out-of-depth draw the own folk cannot answer (none here, they weigh at 7).
+        assert!(deep < 40, "{deep}");
     }
 
     #[test]
@@ -529,13 +801,13 @@ mod tests {
         let mut rng = Rng::stream(11, "test");
         let mut rare = 0;
         for _ in 0..4000 {
-            rare += usize::from(draw(&mut rng, &kinds, 4, 0) == Some(CreatureId(2)));
+            rare += usize::from(draw(&mut rng, &kinds, &[], 4, &PLAIN) == Some(CreatureId(2)));
         }
         // A fifth of the draws (800), within chance; the seeded count is fixed.
         assert!((680..=920).contains(&rare), "{rare}");
         let mut again = Rng::stream(11, "test");
         let count = (0..4000)
-            .filter(|_| draw(&mut again, &kinds, 4, 0) == Some(CreatureId(2)))
+            .filter(|_| draw(&mut again, &kinds, &[], 4, &PLAIN) == Some(CreatureId(2)))
             .count();
         assert_eq!(count, rare);
     }
@@ -551,13 +823,13 @@ mod tests {
         let mut rng = Rng::stream(5, "test");
         let (mut deep, mut very_rare) = (0, 0);
         for _ in 0..4000 {
-            let c = draw(&mut rng, &kinds, 3, 100).expect("a draw");
+            let c = draw(&mut rng, &kinds, &[], 3, &TWO_DEEPER).expect("a draw");
             deep += usize::from(c != CreatureId(1));
             very_rare += usize::from(c == CreatureId(3));
         }
-        // Every draw is made 1 to 3 deeper: at 4 the level-5 types are out of reach, at 5 and
-        // 6 they are drawn, the very rare one a tenth as often as the common one.
-        assert!(deep > 1200, "{deep}");
+        // Every draw is made two deeper, at 5: the very rare type a tenth as often as the common
+        // one of its level.
+        assert!(deep > 2400, "{deep}");
         assert!(very_rare * 6 < deep, "{very_rare} of {deep}");
         assert!(very_rare > 0);
     }
