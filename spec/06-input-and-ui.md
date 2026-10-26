@@ -15,7 +15,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   listed command of its context has (`Bindings::from_table`).
 - Symbol commands (`<`, `>`, `?`) are bound by **logical key**, so they work on non-US layouts.
 - Bindings live in the settings file. The `?` help (the controls list, read-only) is generated from
-  the binding table, so it is always accurate. Every key is rebindable (below).
+  the binding table, so it is always accurate. Only the play-context (gameplay) commands are rebindable (below); the keys of menus, menu lists, screens, info pages, prompts, dialogs, text fields, and the targeting mode are fixed (owner decision, 2026-10-26), and new ones are not added as bindable commands. Existing menu-context bindings stay as they are until a later cleanup.
 - **Screens**: the main menu, the saved characters, New run and its character creation steps, pause menu, Settings,
   Controls, help, the inventory, the equipment screen and its choice of what goes in a slot, an
   item's description, the character screen, the Skills screen, the weapon skills screen, the quest
@@ -161,7 +161,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   pause menu, and the letters and digits that name the rows of a list (stacks, slots, topics).
   Hints (screen footers, the prompts, the status bar's `? controls`, the welcome line's
   `Press ? for controls.`) name the keys as bound.
-- **Rebinding**: in Controls (the commands by context under headings, below notes on Esc and on
+- **Rebinding** (play commands only by the owner decision of 2026-10-26; menus, lists, screens, prompts, and targeting keys are fixed and no new ones are made rebindable; the existing menu-context bindings below stay for now): in Controls (the commands by context under headings, below notes on Esc and on
   list letters), select a command and press a key; it becomes the command's primary
   key (alternates such as the numpad stay). A key another command of the same context uses is taken
   from it and bound to the new command, and the screen says so ("K moved to Wait; Kick has no

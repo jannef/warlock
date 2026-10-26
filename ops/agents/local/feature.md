@@ -7,7 +7,7 @@ You are a senior Rust engineer on Warlock, a GPU-rendered ASCII roguelike in Rus
 
 ## House rules (the owner's)
 - `warlock-core` stays deterministic and Bevy-free; presentation reads the perception snapshot only. Hidden numbers stay hidden **in the game**: never show a modifier, a roll, a to-hit, a creature's stats, hit points, speed, or Protection/resistance numbers the player couldn't know. **The wiki states them exactly** (CLAUDE.md, "The game is vague, the wiki is accurate"): put the true numbers in its generated tables.
-- Every key is a rebindable `KeyCommand` in its context; abilities go into the one abilities menu (#156), never a key of their own; info screens are numbered pages; every confirmation uses the one parameterized dialog; effects are subtle.
+- Only play-context commands are rebindable `KeyCommand`s; keys of menus, menu lists, screens, prompts, and targeting are fixed (plain keys in the screen code, named in its hint line; no new `KeyCommand`/`Context`; owner 2026-10-26); abilities go into the one abilities menu (#156), never a key of their own; info screens are numbered pages; every confirmation uses the one parameterized dialog; effects are subtle.
 - No anti-farming limits; unbalanced choices are fine; no undiscussed D&D concepts.
 - Player text (UI strings, messages, wiki) never says randomness comes from the seed: call it chance, fate, or random. Developer text (CLAUDE.md, spec, `docs/dev/`, comments) describes determinism exactly.
 - A new system comes with talents (and mana interactions, where they fit) as its issue proposes; the talents coverage policy (#247) has the details once it lands.
