@@ -111,7 +111,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the topic's reply; an unknown topic is "The sage knows nothing about that." `World::topics`
     is the one place topics come from: quests ("Quests" below) add theirs there, first.
   - **Services** (`world/service.rs`; the campaign design §6.1, #329): a dialogue's
-    `[[dialogue.service]]`s (`id`, `name`, `price` in gold, `does` = `cure` or `mend`, `reply`,
+    `[[dialogue.service]]`s (`id`, `name`, `price` in gold, `does` = `cure`, `mend`, or `identify`, `reply`,
     `nothing`) are sold for gold and asked for like topics (`ask:E:cure`): `World::topics` lists
     them after the topics with their price now (`TopicView::price`; the dialogue screen shows
     "A cure for what ails you (60 gold)"). Refused, taking no time and nothing taken, with the
@@ -125,6 +125,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
     moved by favour; the Pilgrim talent halves it (rounded up) and has a cure also mend a point
     of each damaged stat (`TalentMods::services`). No alignment shift, no stream drawn, no new
     state.
+  - **Identification** (`does = "identify"`, #432; Factor Wulfrun in Cēaptūn, nobody in the
+    showcase): identifies, in one go, every inventory stack the player does not fully know
+    (`World::unidentified`: magic not yet identified, or a scroll of a type not yet identified),
+    through `World::identify`, each saying "This is …!". Its `price` is **per such stack**, not
+    per piece (100 gold at Wulfrun's: three unknown stacks cost 300), the count in
+    `TopicView::items`; the dialogue screen lists "(100 gold each)" and, with something to
+    identify, asks first in the one dialog with the total (`Pay 300 gold` or `Not now`; without
+    the gold only `Go back`). All or nothing: refused with the `nothing` line when everything is
+    known and with "You cannot pay." short of the total, neither taking time. Pilgrim does not
+    halve it (a temple's talent), nor do Lore or Connoisseur.
   - **Muttering**: after each of its actions, a creature whose dialogue has a `mutter`, that goes
     about its routine (its mind calm) within 5 cells of the player (as far as a voice carries), mutters
     with its `chance` (a hash of the run seed, the actor, and the moment: the gameplay stream is
