@@ -1275,6 +1275,8 @@ mod experience_tests;
 #[cfg(test)]
 mod fight_tests;
 #[cfg(test)]
+mod fixture_factions;
+#[cfg(test)]
 mod flavour_tests;
 #[cfg(test)]
 mod focus_tests;

@@ -105,14 +105,15 @@ Creature roster PRs edit only their own `docs/dev/creatures/<tribe>.md`; never
 tag list is the one in `assets/data/creatures/README.toml`). Other hot spots seen in the
 roster wave, and what to do in each:
 - `assets/data/factions.toml`: insert by group, never at the end.
-- the four test fixtures that hard-code the factions list (`world/{equip,magic,object,read}_tests.rs`):
-  a new faction must be added to all four. Follow-up (not done yet): build each fixture's
-  factions from the shipped `factions.toml` minus what it removes, in one shared test helper, so
-  a faction touches none of them.
+- test fixtures and the factions list: `world/{equip,magic,object,read}_tests.rs` take their
+  at-peace factions from `world/fixture_factions.rs::peaceful_factions()` (the shipped
+  `factions.toml` without its grudges), so a new faction edits none of them. `world/mana_tests.rs`
+  keeps the shipped `status.toml` and replaces only the few statuses it needs
+  (`status_text()`), so a creature's rider status needs no fixture edit.
 - the creatures README tag list: add a tag's line by group, only when something uses the tag.
 - `assets/data/plurals.toml`: insert alphabetically.
-- `xtask/src/wiki/mod.rs` test rows and the wiki's test rows: follow-up, make them
-  fragment-based (as one agent did) so a creature adds a row of its own, not a line in a shared one.
+- `xtask/src/wiki/mod.rs` test rows that list creatures use `row_has(page, start, fragments)`:
+  assert the stable parts of a row, never the whole list, so a creature edits no assertion.
 
 ## The save format: one bump per release
 
