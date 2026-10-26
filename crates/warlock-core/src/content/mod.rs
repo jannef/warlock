@@ -178,7 +178,7 @@ pub use talent::{
 pub use terrain::{
     Breakable, Freeze, FreezeSpec, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId,
 };
-pub use trap::{MAX_CHARGES, Trap, TrapDef, TrapEffect, TrapId, TrapNoise};
+pub use trap::{MAX_CHARGES, Trap, TrapAvoid, TrapDef, TrapEffect, TrapId, TrapNoise};
 pub use unique::{Power, UNIQUE, UniqueDef, Uniques};
 pub use vault::Vault;
 pub use vision::VisionProfile;
@@ -481,6 +481,8 @@ pub struct Content {
     /// Trap types, in file order.
     traps: Vec<TrapDef>,
     trap_ids: BTreeMap<String, TrapId>,
+    /// The chance of stepping onto a known trap unharmed (`[avoid]` in `data/traps.toml`).
+    trap_avoid: TrapAvoid,
     /// The numbers of searching for hidden features (`data/search.toml`, spec §8 "Searching").
     search: SearchRules,
     /// What becomes of a creature that catches the player stealing (`data/steal.toml`, spec §8
@@ -591,6 +593,7 @@ impl Content {
             slots: Vec::new(),
             traps: Vec::new(),
             trap_ids: BTreeMap::new(),
+            trap_avoid: TrapAvoid::default(),
             search: SearchRules::default(),
             steal: None,
             stat_training: StatTraining::default(),
@@ -795,8 +798,8 @@ impl Content {
         spell_def::check_effects(&content).map_err(|m| ContentError::new("data/spells", m))?;
         let path = "data/traps.toml";
         if let Some(text) = files.get_optional(path) {
-            let (traps, ids) = trap::parse(path, text, &content)?;
-            (content.traps, content.trap_ids) = (traps, ids);
+            let (traps, ids, avoid) = trap::parse(path, text, &content)?;
+            (content.traps, content.trap_ids, content.trap_avoid) = (traps, ids, avoid);
         }
         let path = "data/search.toml";
         if let Some(text) = files.get_optional(path) {
@@ -2393,6 +2396,12 @@ impl Content {
     /// Every trap type, in file order (by [`TrapId`]; none without `data/traps.toml`).
     pub fn trap_defs(&self) -> &[TrapDef] {
         &self.traps
+    }
+
+    /// The chance of stepping onto a known trap without setting it off (spec §8 "Traps";
+    /// `[avoid]` in `data/traps.toml`, else [`TrapAvoid::default`]).
+    pub fn trap_avoid(&self) -> &TrapAvoid {
+        &self.trap_avoid
     }
 
     /// The numbers of searching for hidden features (spec §8 "Searching"; `data/search.toml`,
