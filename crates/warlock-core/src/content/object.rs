@@ -25,7 +25,9 @@
 //! `armour` bonus and the most Dexterity bonus it allows (`max_dex`), and its `protection` (the
 //! damage it soaks off every hit, which adds up across what is worn); a shield its `shield` bonus,
 //! and the `bash` dice of a blow with it (spec §8 "Weapon skills": the shield bash). A weapon or
-//! a missile may have `penetration`: that much of a target's Protection it ignores.
+//! a missile may have `penetration`: that much of a target's Protection it ignores. Armour and
+//! shields may have `spell_cost_percent`: worn, a spell costs that much more mana (spec §8
+//! "Spells"; what is worn adds up).
 //!
 //! Damage types (spec §8 "Damage types"): every weapon (and a shield that bashes) names the
 //! kind of damage it does (`damage_type`, an id in `data/damage_types.toml`, or two: a sword's
@@ -216,6 +218,9 @@ pub(super) struct ObjectSpec {
     /// Damage it soaks off every hit while worn (Protection; armour, never a shield).
     #[serde(default)]
     pub protection: i32,
+    /// Percent more mana a spell costs while it is worn (heavy armour, a big shield).
+    #[serde(default)]
+    pub spell_cost_percent: u16,
     /// Defence while held (the Shield category).
     #[serde(default)]
     pub shield: i32,
@@ -352,6 +357,8 @@ pub struct ObjectDef {
     /// While worn, the damage it soaks off every hit: its Protection, which adds up with the
     /// rest of what is worn (spec §8 "Combat").
     pub protection: i32,
+    /// While worn, percent more mana a spell costs (spec §8 "Spells"); what is worn adds up.
+    pub spell_cost_percent: u16,
     /// Defence while held: its Shield bonus.
     pub shield: i32,
     /// What a bash with it does, if it is a shield one can bash with.
@@ -492,6 +499,7 @@ impl ObjectDef {
             armour: 0,
             max_dex: None,
             protection: 0,
+            spell_cost_percent: 0,
             shield: 0,
             bash: None,
             penetration: 0,
@@ -847,6 +855,7 @@ impl ObjectSpec {
             armour: self.armour,
             max_dex: self.max_dex,
             protection: self.protection,
+            spell_cost_percent: self.spell_cost_percent,
             shield: self.shield,
             bash,
             penetration: self.penetration,
@@ -1137,6 +1146,13 @@ impl ObjectSpec {
                     .into(),
             );
         }
+        if self.spell_cost_percent > MAX_SPELL_COST
+            || (self.spell_cost_percent > 0 && self.slot.is_none())
+        {
+            return Err(format!(
+                "`spell_cost_percent` is 0 to {MAX_SPELL_COST}, for things worn (`slot`)"
+            ));
+        }
         if self.penetration > 0 && self.damage.is_none() && self.ammo.is_none() {
             return Err("`penetration` is for weapons (`damage`) and ammunition (`ammo`)".into());
         }
@@ -1144,11 +1160,16 @@ impl ObjectSpec {
     }
 }
 
+/// The most `spell_cost_percent` a worn thing may add.
+pub const MAX_SPELL_COST: u16 = 100;
+
 /// Parses objects as level files place them: ids, each optionally with a count (`"arrow*12"`),
 /// first on top; a loose gem names its gem (`"gem:ruby*3"`: the gems' object made of that gem,
 /// of the plain size and cut; spec §7 "Gems"), and anything else may name another material its
-/// base item may be made of (`"dagger:bronze"`, a variant, #193). A stackable object becomes one
-/// stack (the same placement twice joins it); any other object becomes a stack of one per count.
+/// base item may be made of (`"dagger:bronze"`, a variant, #193), and a unique item is named by
+/// its id (`"unique:widowmaker"`, spec §8 "Magic items": once in all content). A stackable
+/// object becomes one stack (the same placement twice joins it); any other object becomes a
+/// stack of one per count.
 pub(super) fn parse_stacks(specs: &[String], content: &Content) -> Result<Vec<Stack>, String> {
     let mut stacks: Vec<Stack> = Vec::new();
     for spec in specs {
@@ -1166,6 +1187,14 @@ pub(super) fn parse_stacks(specs: &[String], content: &Content) -> Result<Vec<St
             }
             None => (spec.trim(), 1),
         };
+        // A unique item (`unique:widowmaker`), one and once (`super::unique`).
+        if let Some(unique) = placed.strip_prefix(super::UNIQUE) {
+            if count != 1 {
+                return Err(format!("`{spec}`: a unique item is placed one at a time"));
+            }
+            stacks.push(content.place_unique(unique.trim())?);
+            continue;
+        }
         let (id, made) = match placed.split_once(':') {
             Some((id, made)) => (id.trim(), Some(made.trim())),
             None => (placed, None),
@@ -1265,6 +1294,7 @@ mod tests {
             armour: 0,
             max_dex: None,
             protection: 0,
+            spell_cost_percent: 0,
             shield: 0,
             bash: None,
             penetration: 0,

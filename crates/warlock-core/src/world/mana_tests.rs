@@ -129,9 +129,13 @@ const WELL: &str = "\n[[effect]]\nid = \"well\"\nname = \"mana well\"\nmark = \"
 fn files(scenario: &str, extra: &[(&str, &str)]) -> ContentFiles {
     let mut files = ContentFiles::builtin();
     files.insert("data/status.toml", STATUS);
+    // Its own statuses: the uniques' powers name statuses it leaves out.
+    files.remove("campaigns/ascmearc/data/uniques");
     // The talents name the built-in statuses, which STATUS replaces.
     files.remove("data/talents/");
     files.remove("data/talents.toml");
+    // And the spells (Blessing's Blessed, the hexes').
+    files.remove("data/spells/");
     // So does the rage (its Raging).
     files.remove("data/resources.toml");
     // And the giant leech's bite (its Bleeding), and so from Fennmynster, where it lives.
@@ -144,6 +148,12 @@ fn files(scenario: &str, extra: &[(&str, &str)]) -> ContentFiles {
     let fyrdelf = "campaigns/ascmearc/data/dungeons/fyrdelf.toml";
     let text = include_str!("../../../../assets/campaigns/ascmearc/data/dungeons/fyrdelf.toml");
     files.insert(fyrdelf, &text.replace("\"basilisk\", ", ""));
+    // And the green hag's claws (Hexed) and the bheur hag's staff (Sluggish), in no population.
+    files.remove("data/creatures/green_hag.toml");
+    files.remove("data/creatures/bheur_hag.toml");
+    // And the canoloth's tongue and the nycaloth's claws (their Bleeding; in no population).
+    files.remove("data/creatures/canoloth.toml");
+    files.remove("data/creatures/nycaloth.toml");
     let diseases = include_str!("../../../../assets/data/diseases.toml");
     files.insert("data/diseases.toml", &format!("{diseases}\n{FOG}"));
     files.insert("data/experience.toml", EXPERIENCE);
@@ -518,6 +528,7 @@ fn magic(w: &World, object: &str, id: &str, value: i32) -> Stack {
         name: None,
         identified: true,
         carried: 0,
+        unique: None,
     };
     let object = w.content().object_id(object).expect("object");
     Stack::with_magic(object, 1, magic)

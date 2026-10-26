@@ -127,9 +127,13 @@ impl World {
         // Out of a shop's door owing anything: the keeper turns the player back (spec §7
         // "Shops"), a step the other way, or none at all if the shop floor is full; whoever
         // stood in the door stays there.
+        // Turned back, the player did not choose the cell they step onto: no sidestepping a
+        // trap there (`sidestep.rs`).
+        let mut willing = true;
         if let Some(back) = self.turned_back(from, to) {
             to = back;
             swap = None;
+            willing = false;
         }
         let player = self.state.player;
         let fleeing = self.flees(player, to);
@@ -208,8 +212,13 @@ impl World {
         if let Some(text) = text {
             self.say(text);
         }
-        // A trap there goes off (spec §8 "Traps"); a pit costs the next action too.
-        let climb = self.step_onto_trap(to, player, events);
+        // A trap there goes off (spec §8 "Traps"), unless the player knew of it and stepped
+        // past it of their own will (`sidestep.rs`); a pit costs the next action too.
+        let climb = if willing {
+            self.step_willingly(to, events)
+        } else {
+            self.step_onto_trap(to, player, events)
+        };
         Spent::Turn(step + climb)
     }
 
@@ -226,7 +235,9 @@ impl World {
             .map_or_else(|| id.to_string(), |t| t.name.clone())
     }
 
-    /// Walks off the edge of a local area, back to its overworld cell: like taking stairs.
+    /// Walks off the edge of an outdoor area (a local area, or a hand-made one an overworld
+    /// location leads into), back to its overworld cell: like taking stairs. The quick leave
+    /// (`quick_leave.rs`) goes the same way.
     pub(super) fn leave_by_edge(&mut self, exit: EdgeExit, events: &mut Vec<Event>) -> Spent {
         let from = self.state.current_level.clone();
         if let Err(err) = self.travel(&exit.to, Some(exit.pos)) {
@@ -287,6 +298,11 @@ impl World {
         let Some(link) = link else {
             if kind == LevelKind::Overworld && dir == StairsDir::Down {
                 return self.enter_local_area(events);
+            }
+            if dir == StairsDir::Up
+                && let Some(done) = self.quick_leave(events)
+            {
+                return done;
             }
             self.say(format!("You see no way {way} here."));
             return false;
@@ -358,6 +374,9 @@ impl World {
         if let Some(line) = self.content.arrival(to) {
             self.say(line.to_string());
         }
+        if let Some(line) = super::rooms::pervade_line(&self.state, &self.content) {
+            self.say(line);
+        }
         Ok(())
     }
 
@@ -416,6 +435,7 @@ pub(super) fn enter_room(state: &mut WorldState, content: &Content) -> Option<St
         return None;
     }
     room.entered = true;
+    room.glimpsed = true;
     Some(content.room_effect(room.effect).enter.clone())
 }
 

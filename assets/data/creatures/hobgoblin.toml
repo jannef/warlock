@@ -1,0 +1,34 @@
+# The goblin tribe's second tier (#454). The goblins' big kin: taller than a man, drilled, and
+# well armed. A hobgoblin soldier fights in mail with a long sword (its racial weapon, spec §8
+# "Creature gear") and, as often as not, a shield.
+[[creature]]
+id = "hobgoblin"
+level = 9
+xp = 55
+rarity = "common"
+loot = 20
+name = "hobgoblin"
+glyph = "g"
+fg = "#b8402e"
+faction = "goblins"
+tags = ["goblin", "hobgoblin"]
+alignment = "evil"
+vision = "darkvision"
+opens_doors = true
+footsteps = 130
+hearing = 12
+weight = 75000
+stats = { strength = 15, dexterity = 12, toughness = 16, intelligence = 11, willpower = 13, presence = 10 }
+base_hp = 23
+on_eat = { message = "This hobgoblin meat is rank!", vomit = 35 }
+weapon_skills = { long_blades = 2, shield_block = 1 }
+racial_weapon = "long_sword"
+[[creature.gear]]
+chance = 50
+one_of = ["small_shield"]
+[[creature.gear]]
+chance = 70
+one_of = ["studded_leather", "chain_mail"]
+[[creature.gear]]
+chance = 40
+one_of = ["iron_helm"]

@@ -193,6 +193,7 @@ pub(super) fn generate(
             places: Default::default(),
             regions: Vec::new(),
             rooms: Vec::new(),
+            pervading: None,
             shops: Vec::new(),
             exit: Some(EdgeExit {
                 to: area.overworld.id.clone(),

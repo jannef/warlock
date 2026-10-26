@@ -1,0 +1,22 @@
+# The druid's Call lightning (spec §8 "Class abilities"): a line of lightning, under the open sky.
+[[spell]]
+id = "call_lightning"
+name = "Call lightning"
+description = "Call the sky's fire down: under the open sky, lightning through everyone on its line toward a place you aim at."
+tier = 4
+school = "evocation"
+kind = "damage"
+shape = "line"
+resolution = "area"
+damage_type = "electricity"
+length = 8
+max_length = 10
+open_sky = true
+damage = { dice = "4d6" }
+
+[spell.cast]
+effect = "lightning_bolt"
+noun = "lightning"
+verb = "strikes"
+message = "Lightning answers your call!"
+noise = { sound = "thunder", loudness = 140 }

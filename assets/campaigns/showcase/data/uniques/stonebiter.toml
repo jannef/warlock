@@ -1,0 +1,12 @@
+# The test world's unique item (spec §8 "Magic items"): a dagger left in the quarry beside the
+# pick-axe, so the item description of a unique (its power and lore) has a case to show
+# (`crates/warlock/src/ui/screen_snapshots.rs`). The campaigns' own uniques are placed on their
+# owners.
+[[unique]]
+id = "stonebiter"
+name = "Stonebiter"
+object = "dagger"
+affixes = ["sharp:2", "of_the_ox:2"]
+level = 6
+power = { vision = "low_light", phrase = "Its bearer sees in the gloom." }
+lore = "Notched from a hundred quarry walls, and none of them won."

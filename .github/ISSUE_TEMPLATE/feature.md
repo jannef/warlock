@@ -19,7 +19,7 @@ stay hidden in the game (the wiki states them). -->
 
 ## What the player sees
 
-<!-- Messages, screens, keys (every key a rebindable KeyCommand; abilities only in the one
+<!-- Messages, screens, keys (only play-context commands are rebindable KeyCommands, menu/screen/prompt/targeting keys are fixed; abilities only in the one
 abilities menu), dumps. -->
 
 ## Talents and class abilities

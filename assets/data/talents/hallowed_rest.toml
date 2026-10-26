@@ -1,0 +1,8 @@
+[[talent]]
+id = "hallowed_rest"
+name = "Hallowed rest"
+tree = "grit"
+description = "Where a place lends you strength, you take it gladly: a room that quickens healing or mana quickens it half again more for you."
+needs = { stats = { willpower = 11 } }
+effects = [{ kind = "room_pace_percent", value = 50 }]
+systems = ["special_rooms"]

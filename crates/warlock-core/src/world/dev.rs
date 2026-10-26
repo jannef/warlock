@@ -35,6 +35,7 @@ impl World {
         };
         let name = profile.name.clone();
         self.state.vision = id.to_string();
+        self.state.vision_dev = true;
         self.say(format!("Vision: {name}."));
         Spent::NoTime
     }

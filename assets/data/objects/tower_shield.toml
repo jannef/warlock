@@ -10,6 +10,7 @@ made_of = ["wood", "metal", "hide", "chitin", "dragonscale"]
 weight = 12000
 value = 120
 slot = "off_hand"
+spell_cost_percent = 20
 shield = 3
 bash = "1d6"
 max_dex = 2

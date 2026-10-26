@@ -932,14 +932,25 @@ impl<'a> PerceptionView<'a> {
         self.content.level(level)?.region_at(at)
     }
 
+    /// The effect covering the whole level (spec §7 "Special rooms"), which the player was told
+    /// of on arrival.
+    pub fn pervading(&self) -> Option<&'a RoomEffectDef> {
+        (self.level.pervading).map(|id| self.content.room_effect(id))
+    }
+
     /// The special room at `p` (spec §7 "Special rooms"), if the player knows it: they have been
-    /// inside it, and `p` is a cell they see or remember.
+    /// inside it (or, with Sense of place, seen a cell of it), and `p` is a cell they see or
+    /// remember.
     pub fn room(&self, p: Pos) -> Option<&'a RoomEffectDef> {
         if matches!(self.cell(p), CellView::Unknown) {
             return None;
         }
-        let room = self.level.room_at(p).filter(|r| r.entered)?;
-        Some(self.content.room_effect(room.effect))
+        let room = self.level.room_at(p)?;
+        // Sense of place knows a room's nature from a glimpse (spec §8 "Talents").
+        let senses = || {
+            !self.player.talents.is_empty() && self.player.talent_mods(self.content).sense_of_place
+        };
+        (room.entered || (room.glimpsed && senses())).then(|| self.content.room_effect(room.effect))
     }
 
     /// The percent of all light a special room keeps at a visible cell (a shadowed room's
@@ -949,8 +960,7 @@ impl<'a> PerceptionView<'a> {
         if !self.snapshot.is_visible(p) {
             return None;
         }
-        let room = self.level.room_effect_at(self.content, p);
-        Some(room.map_or(100, |effect| effect.light))
+        Some(self.level.effects_at(self.content, p).light())
     }
 
     /// Where the stairs or location at `p` lead, by name — only for cells the player sees or
@@ -1244,12 +1254,35 @@ impl<'a> PerceptionView<'a> {
     /// why it cannot be used now, if it cannot: what the abilities menu (#156) lists. They know
     /// what they can do and what they hold.
     pub fn abilities(&self) -> Vec<OwnAbility> {
+        let level = self.own_caster_level();
         (Ability::of(self.player, self.content).into_iter())
             .map(|ability| OwnAbility {
                 ability,
-                unavailable: ability.unavailable(self.player, self.content),
+                unavailable: match ability {
+                    Ability::Spell(spell) => {
+                        crate::ability::spell_unavailable(self.player, self.content, spell, level)
+                    }
+                    _ => ability.unavailable(self.player, self.content),
+                },
             })
             .collect()
+    }
+
+    /// What the player's spell `spell` costs them now, in mana (spec §8 "Spells": they know
+    /// what their own spells cost); `None` for a spell they cannot cast.
+    pub fn own_spell_cost(&self, spell: crate::content::ClassSpell) -> Option<i32> {
+        let def = self.content.class_spell(spell)?;
+        Some((self.player).spell_cost(self.content, def, self.own_caster_level()))
+    }
+
+    /// How far the player's spell `spell` reaches now, Willpower counted: the farthest cell it
+    /// may be aimed at, and a burst's radius. They know their own spells.
+    pub fn own_spell_reach(
+        &self,
+        spell: crate::content::ClassSpell,
+    ) -> Option<crate::world::Reach> {
+        let def = self.content.class_spell(spell)?;
+        Some(self.player.spell_reach(self.content, def))
     }
 
     /// The player's ranks and marks in weapon skills (spec §8 "Weapon skills"): they know their
