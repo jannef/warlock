@@ -131,6 +131,22 @@ const ROLES: &[(&str, Role)] = &[
     ("church_grim", Role::Quick),
     ("white_lady", Role::Spirit),
     ("bone_colossus", Role::Brute),
+    // Batch 6 (#389): levels 56 to 70.
+    ("mummy_king", Role::Caster),
+    ("wild_huntsman", Role::Standard),
+    ("elder_vampire", Role::Quick),
+    ("dread_lord", Role::Standard),
+    ("deathshade", Role::Spirit),
+    ("nightwing", Role::Quick),
+    ("dread_wyrm", Role::Brute),
+    ("nightworm", Role::Brute),
+    ("lich_drake", Role::Brute),
+    ("ankou", Role::Spirit),
+    ("deathless_king", Role::Caster),
+    ("charnel_titan", Role::Brute),
+    ("ghost_dragon", Role::Spirit),
+    ("eldest_vampire", Role::Quick),
+    ("demilich", Role::Caster),
 ];
 
 /// The dice the roster picks from, by average (#383 "Damage dice": 1d3 to 5d12).

@@ -1,0 +1,35 @@
+# The undead roster (#383, batch 6). A dragon that made itself a lich: bare bones lit green from
+# within, whose bite dims the wits of the living for good unless the will holds (a temple's mending
+# gives it back). Cold does it little harm, and it keeps things worth taking; its spells are as yet
+# unspoken, and it fights in melee. Not yet in any dungeon's population.
+[[creature]]
+id = "lich_drake"
+level = 64
+xp = 330
+rarity = "very_rare"
+loot = 100
+name = "lich-drake"
+glyph = "D"
+fg = "#80e0c8"
+speed = 1100
+faction = "undead"
+tags = ["undead", "skeleton"]
+alignment = "evil"
+vision = "darkvision"
+sight = 14
+footsteps = 170
+hearing = 12
+weight = 1000000
+stats = { strength = 40, dexterity = 24, toughness = 40, intelligence = 38, willpower = 36, presence = 36 }
+base_hp = 256
+natural = { defence = 5, protection = 8, name = "dry bones" }
+resist = { cold = 75, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "4d10"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
+to_hit = 6
+on_hit = [{ drain = "intelligence", points = 2, chance = 10, difficulty = 24 }]

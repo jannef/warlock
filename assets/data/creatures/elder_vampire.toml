@@ -1,0 +1,39 @@
+# The undead roster (#383, batch 6). A vampire of a few centuries' standing: quick and cunning, it
+# opens doors, its gaze holds the living still, and its bite drinks the life out of them, for good
+# unless the body holds on (a temple's mending gives it back). Fire is its bane, and it keeps things
+# worth taking. Not yet in any dungeon's population.
+[[creature]]
+id = "elder_vampire"
+level = 58
+xp = 300
+rarity = "very_rare"
+loot = 100
+name = "elder vampire"
+glyph = "V"
+fg = "#d03070"
+speed = 1500
+faction = "undead"
+tags = ["undead"]
+alignment = "evil"
+vision = "darkvision"
+sight = 16
+opens_doors = true
+footsteps = 20
+hearing = 20
+weight = 70000
+stats = { strength = 34, dexterity = 29, toughness = 34, intelligence = 36, willpower = 33, presence = 33 }
+base_hp = 130
+natural = { defence = 4, protection = 0, name = "dead flesh" }
+resist = { fire = -25, poison = 100 }
+on_eat = { message = "Cold, and full of centuries of other folk's blood.", vomit = 80, harm = "1d4" }
+blood = "#4a0a20"
+[creature.attack]
+damage = "3d12"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
+to_hit = 5
+on_hit = [
+    { drain = "toughness", points = 2, chance = 15, check = "toughness", difficulty = 23 },
+    { status = "transfixed", chance = 20, severity = 3 },
+]
