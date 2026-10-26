@@ -270,7 +270,7 @@ fn a_staggering_blow_staggers_on_a_confirmed_critical_in_melee() {
         player,
         foe,
         AttackKind::Ranged,
-        &blow(true),
+        (&blow(true), &[]),
         &mut Vec::new(),
     );
     assert!(!suffers(&w, foe, "staggered"), "a shot does not");
@@ -278,11 +278,17 @@ fn a_staggering_blow_staggers_on_a_confirmed_critical_in_melee() {
         player,
         foe,
         AttackKind::Melee,
-        &blow(false),
+        (&blow(false), &[]),
         &mut Vec::new(),
     );
     assert!(!suffers(&w, foe, "staggered"), "a plain hit does not");
-    w.after_blow(player, foe, AttackKind::Melee, &blow(true), &mut Vec::new());
+    w.after_blow(
+        player,
+        foe,
+        AttackKind::Melee,
+        (&blow(true), &[]),
+        &mut Vec::new(),
+    );
     assert!(suffers(&w, foe, "staggered"));
     // Staggered, its next action costs half again as much.
     let wait = w.price_of(foe, ActionKind::Wait);

@@ -22,7 +22,9 @@ across, three to four days by road. Rivers can be crossed only at the bridge and
 **Cēaptūn** is the first place to go: a walled market town, safe, with four shops on its
 square, the Mynster (the temple, where you may rest and Sister Hild cures and mends for gold),
 and the Gæsthūs, the inn, where Godgifu has news of the march (see [Shops](shops.md) and
-[People and talk](npcs.md)). Its stairs up lead back out to its cell.
+[People and talk](npcs.md)). You arrive on the square. The town has no stairs: like any outdoor
+area, walk off its edge to return to its cell on the overworld, or press `<` when no enemy is
+about ([Leaving an area](overworld.md#leaving-an-area)).
 
 Three dungeons lie nearest the town, deeper and more dangerous one after another (see
 [Dungeons and danger](dungeons.md)): **Cealdhlāw**, the cold barrow in the downs, which you can

@@ -1,0 +1,11 @@
+# The priest's Blessing (spec §8 "Class abilities"): a god's favour on the caster.
+[[spell]]
+id = "blessing"
+name = "Blessing"
+description = "Ask your god's favour: blessed a while, your blows land truer and your will is firmer."
+tier = 0
+school = "abjuration"
+kind = "buff"
+shape = "self"
+resolution = "auto"
+effect = { status = "blessed" }

@@ -15,7 +15,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   listed command of its context has (`Bindings::from_table`).
 - Symbol commands (`<`, `>`, `?`) are bound by **logical key**, so they work on non-US layouts.
 - Bindings live in the settings file. The `?` help (the controls list, read-only) is generated from
-  the binding table, so it is always accurate. Every key is rebindable (below).
+  the binding table, so it is always accurate. Only the play-context (gameplay) commands are rebindable (below); the keys of menus, menu lists, screens, info pages, prompts, dialogs, text fields, and the targeting mode are fixed (owner decision, 2026-10-26), and new ones are not added as bindable commands. Existing menu-context bindings stay as they are until a later cleanup.
 - **Screens**: the main menu, the saved characters, New run and its character creation steps, pause menu, Settings,
   Controls, help, the inventory, the equipment screen and its choice of what goes in a slot, an
   item's description, the character screen, the Skills screen, the weapon skills screen, the quest
@@ -51,7 +51,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   know is solid, or the cursor) asks first, in the dialog: `The fireball may catch you too. Read
   the scroll of fireball anyway?` with `Read it` (accept: the read as usual, replay text
   `read:LETTER:X,Y`), `Aim again` (decline: back to aiming, on the same target), and `Don't read
-  it` (cancel, selected first). The rules never ask.
+  it` (cancel, selected first). The rules never ask. A scroll still under its label (§8
+  "Scrolls") never asks: reading it is a gamble.
 - **Main menu** (drawn in glyphs; the game opens on it unless `--scenario`, `--new`, `--replay`,
   `--record`, or `--capture` name what to run): Continue (only if a character is saved: it
   resumes the one played last, and names them), Characters (likewise), New run (scenario list
@@ -160,7 +161,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   pause menu, and the letters and digits that name the rows of a list (stacks, slots, topics).
   Hints (screen footers, the prompts, the status bar's `? controls`, the welcome line's
   `Press ? for controls.`) name the keys as bound.
-- **Rebinding**: in Controls (the commands by context under headings, below notes on Esc and on
+- **Rebinding** (play commands only by the owner decision of 2026-10-26; menus, lists, screens, prompts, and targeting keys are fixed and no new ones are made rebindable; the existing menu-context bindings below stay for now): in Controls (the commands by context under headings, below notes on Esc and on
   list letters), select a command and press a key; it becomes the command's primary
   key (alternates such as the numpad stay). A key another command of the same context uses is taken
   from it and bound to the new command, and the screen says so ("K moved to Wait; Kick has no
@@ -187,7 +188,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - First-phase commands: move, wait, search (`s`, a turn; `S`, for a while: up to 10 turns,
   stopping when something is found or interrupts, like a rest; §8 "Searching"; basic commands,
   not abilities), open/close door, kick (`k`, then a direction; §8 "Doors"),
-  ascend/descend, light/douse lantern (`*`),
+  ascend/descend (ascend also leaves an outdoor area when no enemy is about, §7 "Leaving an
+  outdoor area"), light/douse lantern (`*`),
   pick up (`,` or `;`), drop (`d`), equipment (`i`), inventory (`I`), character (`@`), skills
   (`A`), weapon skills (`W`), quest log (`q`), rest (`b`), eat (`e`), read (`r`; a basic
   command, not an ability), look (`l`), shoot or throw what
@@ -274,7 +276,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   a magic or rare item either "Unidentified: what its magic does is unknown, though it works all
   the same." or its item level and each affix, "Prefix  Sharp: +2 damage", "Suffix  of Celerity:
   attacks faster" (affix magnitudes are item properties and shown; speed only in words; global
-  attack effects say "with every attack"). Never the player's own to-hit or a modifier.
+  attack effects say "with every attack"); an identified unique item (§8 "Magic items") adds its
+  power in words, "Power  Its every cut poisons.", and its lore as the last line. Never the
+  player's own to-hit or a modifier.
   Read-only; Esc, Back, or Enter closes it.
 - **Equipment** (`i`, ADOM's; M16), as in ADOM: the slots, lettered `a` to `m` in this order — Head, Neck,
   Body, Cloak, Main hand, Off hand, Hands, Left ring, Right ring, Feet, Missile weapon, Missiles,
@@ -380,7 +384,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **The menu** (a screen on the stack) lists them as the one paged list (§6 "Item lists"),
     grouped by source under a header each, lettered down each page from `a`: each row the
     ability's name and what it asks for ("in a direction"), or greyed out with why it cannot be
-    used now; the selected ability's description below. A letter, or Enter on the `>` row, uses
+    used now; a spell (under its own **Spells** header, after Class, §8 "Spells") first says its
+    tier and what it costs the player now ("tier 2, 11 mana, at a place you see"; "tier 2, 11
+    mana: too little" greyed out); the selected ability's description below. A letter, or Enter on the `>` row, uses
     it: the menu closes, the ability asks for what it needs (a direction in the message line,
     "In which direction? (Esc to cancel)"), and its action is applied; choosing one that cannot
     be used now says why on the menu instead ("Shield bash: you hold no shield."). Esc closes
@@ -423,10 +429,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   The character screen, the inventory, the equipment screen, the Skills screen, the weapon
   skills screen, the quest log, and the Talents page are the numbered info pages 1 to 7: on one of them, a digit,
   Tab, or Shift+Tab replaces it with another, and the tab line on its bottom
-  border names them, each after its key: by their names where the panel is wide enough
-  (`1 Character · 2 Inventory · …`), else the current page by its name and the others by short
-  names (`1 Char · 2 Inventory · 3 Equip · 4 Skills · 5 Weapons · 6 Quests · 7 Tal`), else all by
-  their short names, else the current page by its name and the others by their keys alone.
+  border names them, each after its key, the current one highlighted. The pages share one width,
+  wide enough for the line by their names (`1 Character · 2 Inventory · 3 Equipment · 4 Skills ·
+  5 Weapons · 6 Quests · 7 Talents`), so the frame and the line stay put as the pages turn; on a
+  console too narrow for it every page's line goes by short names (`1 Char · 2 Inv · 3 Equip ·
+  4 Skills · 5 Weapons · 6 Quests · 7 Tal`), else by keys alone.
 - **Talents** (page 7, its own command `talents`, unbound by default; #236; §8 "Talents"): the
   player's talents ("Your talents"), by tree in tree order, each with its rank when it has
   several (`Keen ears 1/2`) and, for those not picked, where it came from (`(class)`, `(birth
@@ -511,10 +518,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
   eating.") when not, the food left as it was. What is no food is refused and takes no time
   ("You cannot eat a dagger.").
 - **Read** (`r`; §8 "Scrolls") opens the choice of what to read: the scrolls in the inventory
-  (what has something to read on it), in the item list; with nothing, "You have nothing to
+  (what has something to read on it; an unidentified one by its label, §8 "Scrolls"), in the
+  item list; with nothing, "You have nothing to
   read." A letter, or Enter on the `>` row, chooses: a spell scroll is then aimed (Targeting,
   below), and the scroll of identify replaces the list with the unidentified stacks the player
-  carries ("You carry nothing unidentified."), where a letter or Enter reads it on that stack
+  carries (magic items not identified, and scrolls still under their labels; "You carry nothing
+  unidentified."), where a letter or Enter reads it on that stack
   (replay text `read:LETTER:LETTER`, the scroll then the stack). Esc cancels either list.
 - **Dig** (`u`, "use a tool", ADOM's use-tool key, an item's use rather than an ability; §8
   "Digging") asks in the message line `Dig in which direction? (Esc to cancel)`; a direction
@@ -605,7 +614,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
   An ability that asks for a cell (throwing one's voice, above) is aimed the same way, as far as
   it reaches (`Ability::range`), but draws no line: the cursor is muted red on a cell the player
   does not see or that is solid ("You do not see there.") or beyond its reach ("Out of
-  range."); `Enter`, or the ability's own key if bound, uses it (`throw_voice:X,Y`).
+  range."); `Enter`, or the ability's own key if bound, uses it (`throw_voice:X,Y`). A spell
+  (§8 "Spells") is aimed by its shape, as far as the player casts it (Willpower counted,
+  `PerceptionView::own_spell_reach`): a burst, a ray, or a bolt as a scroll's burst (a creature
+  in the way blocks it; a burst that may catch the caster asks first), a line as a scroll's
+  bolt, a cone with the fan of cells it would reach drawn as the dots (`cone_cells` over what
+  the player perceives), a touch and a hex as an ability (no line; a touch reaches 1).
 - **Look mode** describes what the player perceives at the cursor: a creature and its terrain,
   with how it stands toward the player and how hurt it looks ("A giant rat (hostile, unhurt), on
   stone floor."; its type tells the player its faction's stance toward them, the only faction
@@ -621,7 +635,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   floor", "A blood-smeared stone wall."; §8 "Blood"; not with the blood switch off), where
   stairs lead, a known trap as part of the ground ("A fireball trap, on stone floor.", "A kobold
   (hostile, unhurt), on a pit on stone floor.", "You remember a pit here, on stone floor."; §8
-  "Traps"), the special room walkable ground lies in once the player has been inside it ("A
+  "Traps"), the special room walkable ground lies in once the player has been inside it (or, with Sense
+  of place, has seen it; never a whole level's effect) ("A
   stone floor in an echoing hall.", "You remember a stone floor here, in a sanctuary."; §7
   "Special rooms"), the price of goods for sale in a shop on a cell in sight ("A dagger (for
   sale, 45 gold), on plank floor."; §7 "Shops"), and a sound heard there ("You hear footsteps

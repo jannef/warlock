@@ -268,6 +268,10 @@ pub struct Profile {
     /// Damage of other kinds added to every roll (a flaming arrow's fire, a magic weapon's
     /// "adds 1d4 fire damage"), rolled after the extra die, in this order; never soaked.
     pub riders: Vec<Rider>,
+    /// What a hit that leaves its target alive causes besides its damage, by its chance: the
+    /// power of the unique weapon it is made with (spec §8 "Magic items": Inflict; a natural
+    /// attack's `on_hit` is read from its creature).
+    pub on_hit: Vec<crate::content::OnHit>,
 }
 
 /// What an attack is made with, as data gives it: a weapon (`data/objects.toml`) or a creature's
@@ -380,6 +384,7 @@ impl Profile {
             penetration: 0,
             kinds: attack.kinds,
             riders: Vec::new(),
+            on_hit: Vec::new(),
         }
     }
 
@@ -672,6 +677,7 @@ mod tests {
             penetration: 0,
             kinds: Kinds::NONE,
             riders: Vec::new(),
+            on_hit: Vec::new(),
         }
     }
 

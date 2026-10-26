@@ -646,7 +646,7 @@ fn leaving_dialog(view: &PerceptionView<'_>, dir: Dir) -> Option<Dialog> {
 fn sale_dialog(view: &PerceptionView<'_>, letters: &Positions) -> Option<Dialog> {
     let sale = view.sale(letters)?;
     let shop = view.shop_here()?;
-    let what = warlock_core::object::phrase(&sale.stacks, view.content());
+    let what = warlock_core::object::phrase(&sale.stacks, view.lore());
     let text = format!("{} offers {} gold for {what}.", shop.keeper(), sale.offer);
     let sell = format!("Sell for {} gold", sale.offer);
     Some(
@@ -1349,6 +1349,10 @@ fn burst_dialog(view: &PerceptionView<'_>, aim: Aim) -> Option<Dialog> {
         );
     };
     let stack = view.inventory().get(item)?;
+    // An unknown scroll is a gamble (spec §8 "Scrolls"): nothing warns of what it may do.
+    if view.lore().label(stack.object).is_some() {
+        return None;
+    }
     let name = &view.content().object(stack.object).name;
     Some(
         Dialog::new(

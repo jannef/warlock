@@ -46,12 +46,16 @@
 # quests, comes from data/plurals.toml (default the word plus "s"): a tag or a creature name
 # with an irregular plural adds its line there. **Tag every new creature** that belongs to a
 # group or a role below (a new tag only when something could use it):
-#   groups   kobold, goblin (not the ogre or the troll, who only run with them), undead (every
+#   groups   kobold, goblin (the hobgoblins too; not the ogre or the troll, who only run with
+#            them), hobgoblin (the goblins' second tier, #454), undead (every
 #            creature of the "undead" faction: content::tag's test fails without it), vermin
 #            (not the basilisk), marsh-thing (the fens' living things and the bog hag),
-#            duergar (not their trader, a merchant), fire-thing (the delf's burning things)
+#            hag (the bog hag and her kin, every creature of the "hags" faction),
+#            duergar (not their trader, a merchant), fire-thing (the delf's burning things),
 #            elemental (every elemental, #453, with its element's word: fire, earth, air, water,
-#            ice, or lightning; content::elemental_roster_tests checks them)
+#            ice, or lightning; content::elemental_roster_tests checks them),
+#            yugoloth (every creature of the "yugoloth" faction), fiend (the fiends of the lower
+#            planes: every yugoloth, demon, and devil)
 #   roles    archer (shoots: the goblin, kobold, and skeleton archers), caster (every
 #            combat = "caster" type), cultist (the minster's cult), skeleton (walking bones),
 #            spirit (the incorporeal dead), troll (the troll and the marsh troll)
@@ -164,9 +168,33 @@
 # in on_hit has difficulty 12 + level ÷ 5, checked by willpower (toughness for Toughness drains),
 # and its attack is one dice step lower. Bone and spirit types leave no corpse and no blood;
 # flesh types leave a rotten corpse (on_eat vomit 70 or more, harm). Glyphs: z lesser corporeal
-# dead, Z greater, G spirits, W wights and wraiths, M mummies, C hounds, V vampires, D drakes, T
+# dead, Z greater, G spirits, W wights and wraiths, M mummies, C hounds, V vampires, D drakes, L liches, T
 # the rotting troll; a colour distinct from every other type with the same glyph. Only a type in
 # a population strays (#375): deep undead ship in none until a deep place takes them.
+#
+# The hags (#451; content::hag_roster_tests checks the numbers): the bog hag's kin, faction "hags"
+# (the bog hag stays the marsh's), tags ["hag", ...] ("caster" for the casters; the bog hag
+# carries "hag" too), alignment "evil", vision "darkvision", glyph h in a colour distinct from
+# the bog hag's and the duergar's. Their numbers follow the undead roster's formulas above (#383:
+# xp, stats, base_hp, dice, to_hit, natural defence, speed), by role (green hag and bheur hag
+# casters, sea hag standard, annis hag brute); their riders are existing statuses and drains.
+# In no population until a place of theirs takes them.
+#
+# The yugoloths (#446; content::yugoloth_roster_tests checks the numbers): mercenary fiends of the
+# lower planes, faction "yugoloth" (hostile to the player only), tags ["yugoloth", "fiend", ...],
+# alignment "evil", vision "darkvision", resist acid and poison 100, fire, cold, and electricity
+# 50; no corpse (the body falls to ash), a dark ichor for blood. Their numbers follow the undead
+# roster's formulas (#383) by level and role. Glyph "&", a colour each. In no population yet:
+# no danger window reaches them.
+#
+# The hobgoblins (#454; content::hobgoblin_roster_tests checks the numbers): the goblin tribe's
+# second tier, above the goblin chief. Faction "goblins", tags ["goblin", "hobgoblin", ...]
+# (with "archer" or "caster" for those roles), alignment "evil", vision "darkvision", medium,
+# opens doors. xp = 5 × level + 10; stats from the undead's base for aware creatures (In 9 +
+# 0.2L, Wp 10 + 0.3L, Pr 8 + 0.25L), base_hp = 2.5 × level × role (soldier 1.0, archer 0.9,
+# caster 0.8, officer 1.1). They fight with gear (a racial weapon and mail), not a natural
+# attack. Glyph g in reds, steel, violet, and gold, apart from the goblins' green, ochre, and
+# orange.
 #
 # The elementals (the roster, #453; content::elemental_roster_tests checks the numbers): faction
 # "elemental" (the cinder elemental keeps the delf's "fire"), tags ["elemental", ELEMENT],

@@ -1,0 +1,13 @@
+# The witch's Evil eye (spec §8 "Class abilities"): a hex on a foe she sees.
+[[spell]]
+id = "evil_eye"
+name = "Evil eye"
+description = "Cast the evil eye on a foe you see nearby: hexed a while, its blows land worse."
+tier = 1
+school = "enchantment"
+kind = "hex"
+shape = "ray"
+resolution = "auto"
+range = 6
+max_range = 8
+effect = { status = "ill_wished" }

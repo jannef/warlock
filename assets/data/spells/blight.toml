@@ -1,0 +1,23 @@
+# The witch's Blight (spec §8 "Class abilities"): a burst that withers and poisons.
+[[spell]]
+id = "blight"
+name = "Blight"
+description = "A burst of blight where you aim it: it withers flesh and poisons everyone it reaches."
+tier = 2
+school = "necromancy"
+kind = "damage"
+shape = "burst"
+resolution = "area"
+damage_type = "poison"
+range = 8
+max_range = 10
+max_radius = 2
+damage = { dice = "2d6" }
+effect = { status = "poisoned", severity = 2 }
+
+[spell.cast]
+effect = "blight"
+noun = "blight"
+verb = "withers"
+message = "A sickly cloud bursts from your hands!"
+noise = { sound = "explosion", loudness = 60 }

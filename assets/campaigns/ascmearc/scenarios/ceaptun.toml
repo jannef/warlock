@@ -1,5 +1,5 @@
 # A developer's start in Cēaptūn, the Ascmearc's market town (docs/design/campaign.md §6, §11.3):
-# on the market square beside the stairs up to the overworld, on the start's November morning.
+# on the market square, on the start's November morning.
 # Listed on New run in developer builds only (a release lists the campaign's start).
 name = "Cēaptūn"
 description = "The market town of the Ascmearc: its shops, the Mynster and Sister Hild, the Gæsthūs, and the townsfolk."

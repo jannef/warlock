@@ -61,7 +61,8 @@ rate or animation.
   its effect's `light` percent of every part of a cell's light: the base light (ambient, sky,
   bounce) and each source's contribution (placed lights, carried ones and the lantern, fires, the
   sun and the moons; a wall's face light too), each rounded down on its own, so contributions plus
-  base light still add up. A sanctuary's `glow` adds to the base light of its transparent cells,
+  base light still add up (a black chamber keeps none: only darkvision sees there); where an
+  effect also covers the whole level, the two percents multiply and the glows add. A sanctuary's `glow` adds to the base light of its transparent cells,
   like ambient light, as the eye perceives it (its UV only for UV sight); walls take it by the
   wall-face rule (the brightest of their seen transparent neighbors'), so it never shows through
   a wall. Light outside a special room is never changed (bounce is computed from the unchanged
