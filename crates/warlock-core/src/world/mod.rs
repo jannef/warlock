@@ -1257,6 +1257,8 @@ mod door_trap_tests;
 #[cfg(test)]
 mod drain_tests;
 #[cfg(test)]
+mod dwell_tests;
+#[cfg(test)]
 mod element_gift_tests;
 #[cfg(test)]
 mod equip_tests;

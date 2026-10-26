@@ -169,8 +169,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   light), `noise` (percent of the loudness of every noise made inside, 1 to 1000, default 100; §5
   "Hearing"), `regen` (percent of the usual pace of regeneration inside, 1 to 1000, default 100;
   §8 "Combat"), `mana_regen` (the same for mana, §8 "Mana"), `shunned` (creatures hostile to the
-  player do not step in; §8 "Creature behavior"), and `floor` (terrain generators lay over the
-  room's plain floor: walkable, transparent, not stairs, a door, or running water). An effect
+  player do not step in; §8 "Creature behavior"), `floor` (terrain generators lay over the
+  room's plain floor: walkable, transparent, not stairs, a door, or running water), and `status`
+  (a status everyone inside holds while they stay, below; it must ease, at least 10 seconds a
+  degree, the longest single action, so it never lapses while one stays). An effect
   with a `level_chance` needs its `pervade` line and is neither `shunned` nor lays a `floor`.
   - **The effects** (weights in brackets): a *shadowed room* (10) keeps 30 % of the light ("The
     light seems to drain away here."); an *echoing hall* (8) doubles noise ("Your footsteps echo
@@ -180,8 +182,24 @@ developer notes (CLAUDE.md, `docs/dev/`).
     creatures out ("You feel at peace here."); a *flooded room* (8) has a floor of shallow water,
     slower (150) and loud (200) to wade ("The floor here is flooded."); a *black chamber* (5)
     keeps no light at all, carried light too, so only darkvision sees in it ("The dark here
-    swallows your light."). None covers a whole level yet. Blood washing away in a flooded room
-    waits for blood (#127).
+    swallows your light."); a *draining room* (6, #403) gives everyone inside **Ebbing** (§8
+    "Status effects": a point of mana drained every 20 seconds and none coming back), glows a
+    faint cold violet (`[10, 6, 24, 8]`), and covers a whole level with `level_chance` 5 ("You
+    feel your power seeping out of you."; over a level: "Something here drinks at your
+    power."). Blood washing away in a flooded room waits for blood (#127).
+  - **A status while inside** (`status`, #403): as time passes, at the start of each stretch of
+    it (`World::pass_time`: so after every action, the player's and each creature's, at every
+    turn of a rest or another long action, and through a creature's coarse turns while the
+    player rests), every actor on the current level whose cell has an effect with a `status`
+    (the room's, the whole level's, or both) holds it at one degree, its easing begun anew
+    (`World::dwell`; `stacking = "refresh"`), so it lasts while they stay and eases by its own
+    `eases` once they leave. Everyone inside, creatures too: a kobold shaman's mana ebbs as the
+    wizard's does. Not one immune to the status's kind of damage (the usual rule of
+    `World::afflict`), not one with no mana when the status only touches mana (drains it or
+    slows its return, `StatusDef::touches_only_mana`), and not one whose talents spare them
+    (Anchored mind). The player is told as it begins and ends (the status's `start` and
+    `end`), and it shows on the status bar; look mode shows it on creatures by its `seen`
+    word.
   - **Generation** (`mapgen/special.rs`): last of all, from the level's map stream, each room of
     a rooms level but the arrival room and vaults, and each of eight chambers a caves level
     tries, is special with `chance` until the level has `per_level`. A rooms level's special room
@@ -230,5 +248,6 @@ developer notes (CLAUDE.md, `docs/dev/`).
     never names the whole level's effect (`PerceptionView::pervading`, JSON dumps' `pervading`).
     The light it changes is seen like any light, before and after.
   - **Talents** (system `special_rooms`, §8 "Talents"): Sense of place (a room known from a
-    glimpse; a whole level's effect named on arrival) and Hallowed rest (a room's quickening of
-    healing and mana half again more).
+    glimpse; a whole level's effect named on arrival), Hallowed rest (a room's quickening of
+    healing and mana half again more), and Anchored mind (a room's or a level's Ebbing
+    never takes them; #403).

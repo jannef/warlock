@@ -42,6 +42,10 @@
 #            with a blow from its edge, or shoot into it); default false
 #   floor    terrain generators lay over the room's floor (walkable, not stairs, doors, or
 #            running water); a hand-made level draws its own
+#   status   a status (status.toml) everyone inside holds, at least at one degree, while they
+#            stay, creatures too; it eases by its own `eases` once they leave (at least 10
+#            seconds a degree). One immune to its kind of damage never holds it; one with no mana
+#            never holds a status that only touches mana
 
 chance = 12
 per_level = 1
@@ -96,3 +100,14 @@ mark = "b"
 enter = "The dark here swallows your light."
 weight = 5
 light = 0
+
+[[effect]]
+id = "draining"
+name = "draining room"
+mark = "d"
+enter = "You feel your power seeping out of you."
+weight = 6
+level_chance = 5
+pervade = "Something here drinks at your power."
+glow = [10, 6, 24, 8]
+status = "ebbing"

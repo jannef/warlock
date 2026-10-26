@@ -12,12 +12,15 @@ indices (in the save fingerprint; new effects go at the end). Fields: `id`, `nam
 `rooms` dev layer), `enter`, `weight` (1 to 100, default 10), `near` (optional), `level_chance`
 (percent, default 0) and `pervade` (needed with it), the eligibility fields `needs_danger`,
 `needs_below`, `min_cells`, `max_cells` ([`RoomEffectDef::eligible`]), and what it does: `light`,
-`glow`, `noise`, `regen`, `mana_regen`, `shunned`, `floor`. An effect with `level_chance` must have
+`glow`, `noise`, `regen`, `mana_regen`, `shunned`, `floor`, `status` (a status id, resolved and
+checked at load: it must ease, at least `DWELL_EASES`, 10 s a degree; `RoomEffects::parse_with`
+takes the statuses' lookup, `parse` in tests none). An effect with `level_chance` must have
 a `pervade` line and be neither `shunned` nor lay a `floor` (`RoomEffectDef::can_pervade`); a level
 file's `effect` is held to the same.
 
 Features today: shadowed (10), echoing (8), hushed (8), sanctuary (6), flooded (8), black chamber
-(5, `light = 0`). None has a `level_chance` yet (cursed and draining rooms bring theirs).
+(5, `light = 0`), draining (6, `status = "ebbing"`, `level_chance` 5, #403). Draining is the
+first with a `level_chance` (cursed rooms bring theirs).
 
 A dungeon's `room_effects` (on a branch or a `[[dungeon.levels]]` range; `content/dungeon.rs`,
 `RoomOddsSpec::layer`/`resolve`, field by field: the range's, the branch's, the shared file's)
@@ -69,6 +72,22 @@ and `World::shuns` (`ai.rs`, by the room only: no pervading effect is shunned). 
 slower, louder steps come from its floor terrain. `PerceptionView::light_kept` lets the renderer
 dim its own transient light.
 
+## Statuses while inside
+
+`World::dwell(id)` (`world/rooms.rs`): every status `Here::statuses` gives at the actor's cell (the
+room's, then the level's) is given at one degree through `World::afflict` (so `refresh` stacking
+renews its easing; immunity to its `damage_type` refuses it). Skipped for an actor whose
+`TalentMods::room_status_immune` lists it (Anchored mind) and, for a status that only touches mana
+(`StatusDef::touches_only_mana`), for one whose `max_mana` is 0 (no rat shows "ebbing", and a
+quiet creature stays quiet in `untouched_by`). The one call is in `World::pass_time`, before each
+actor lives through a stretch of time, when `World::dwelling_here` says the current level has an
+effect with a status: so it holds at every stretch, whatever cuts the time (the player's action, a
+rest's turns, a creature's coarse turn while the player rests, `stride.rs`, which may cost far
+more than `eases`). The design (§3.3) put it after each action; at the start of each stretch is
+the same for the player and holds through the coarse turns too. Leaving, the status eases by its
+own `eases` (Ebbing: 30 s). A creature holding a status is not idle, so it does not stride
+(`stride.rs`): creatures in a draining room take turn-by-turn (busy, slowed) turns in a rest.
+
 ## What the player is told
 
 `world/rooms.rs`: `glimpse_rooms` (in `perceive`, before `enter_room`) marks each room of which
@@ -84,8 +103,9 @@ not name it. The `rooms` dev layer marks each room's plain ground, lists each ro
 ## Talents
 
 System `special_rooms` (`data/talents.toml`): Sense of place (wayfarer, `sense_of_place`; hook
-`PerceptionView::room` and `pervade_line`) and Hallowed rest (grit, `room_pace_percent` 50; hook
-`World::room_pace`).
+`PerceptionView::room` and `pervade_line`), Hallowed rest (grit, `room_pace_percent` 50; hook
+`World::room_pace`), and Anchored mind (scholar, `room_status_immune` `ebbing`, also system
+`mana`; hook `World::dwell`).
 
 ## Tests
 
@@ -93,4 +113,6 @@ System `special_rooms` (`data/talents.toml`): Sense of place (wayfarer, `sense_o
 (`favoured`/`banned` resolve and layer, the refusals), `mapgen/special_tests.rs` (the draw),
 `mapgen/tests.rs` (how often levels get one, the fixture branches, the snapshots),
 `mapgen/fennmynster_tests.rs`, `world/room_tests.rs` (each effect in play, messages, pervading
-levels, the talents, saving).
+levels, the talents, saving), `world/dwell_tests.rs` (a room's status: Ebbing on the player and on
+creatures, not on one without mana, through a rest, over a drained level, eased after leaving,
+Anchored mind, saving).

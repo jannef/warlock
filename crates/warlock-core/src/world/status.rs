@@ -316,7 +316,8 @@ impl World {
     }
 
     /// `seconds` of game time from `start` pass for actors `ids` (on the current level, in
-    /// schedule order): each lives through them ([`World::live`]). Some may die.
+    /// schedule order): each takes what the special room it stands in gives
+    /// ([`World::dwell`]), then lives through them ([`World::live`]). Some may die.
     pub(super) fn pass_time(
         &mut self,
         ids: impl Iterator<Item = ActorId>,
@@ -324,7 +325,11 @@ impl World {
         seconds: u64,
         events: &mut Vec<Event>,
     ) {
+        let dwelling = self.dwelling_here();
         for id in ids {
+            if dwelling {
+                self.dwell(id, events);
+            }
             self.live(id, start, seconds, events);
         }
     }

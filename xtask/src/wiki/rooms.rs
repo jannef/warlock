@@ -2,7 +2,7 @@
 
 use super::text::capital;
 use std::fmt::Write as _;
-use warlock_core::content::Content;
+use warlock_core::content::{Content, StatusId};
 
 /// How many times as much `percent` is, in words: "twice", "two fifths", "30% of".
 fn times(percent: u16) -> String {
@@ -79,6 +79,9 @@ pub(super) fn special_rooms(content: &Content) -> String {
                 content.terrain(floor).name.to_lowercase()
             ));
         }
+        if let Some(status) = e.status {
+            does.push(held(content, status));
+        }
         let mut said = format!("\"{}\"", e.enter);
         if let Some(near) = &e.near {
             let _ = write!(said, " From outside: \"{near}\"");
@@ -119,6 +122,39 @@ pub(super) fn special_rooms(content: &Content) -> String {
         );
     }
     out
+}
+
+/// What a room's status does to everyone inside, exactly: "Everyone inside with mana is Ebbing:
+/// 1 mana drained every 20 s, none coming back; it eases 30 s after leaving."
+fn held(content: &Content, status: StatusId) -> String {
+    let def = content.status(status);
+    let mut what: Vec<String> = Vec::new();
+    if let Some(tick) = def.tick {
+        if def.damage > 0 {
+            what.push(format!("{} hit points lost every {tick} s", def.damage));
+        }
+        if def.mana_damage > 0 {
+            what.push(format!("{} mana drained every {tick} s", def.mana_damage));
+        }
+    }
+    match def.mana_regen {
+        100 => {}
+        0 => what.push("none coming back".into()),
+        p => what.push(format!("mana back at {p}% of the pace")),
+    }
+    let who = if def.touches_only_mana() {
+        "Everyone inside with mana"
+    } else {
+        "Everyone inside"
+    };
+    let eases = def
+        .eases
+        .map_or(String::new(), |s| format!("; it eases {s} s after leaving"));
+    format!(
+        "{who}, creatures too, is {}: {}{eases}.",
+        def.name,
+        what.join(", ")
+    )
 }
 
 /// Each branch's special-room and shop odds (spec §7 "Special rooms", "Shops"), its depths with
