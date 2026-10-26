@@ -304,7 +304,7 @@ file). Topics:
 - `docs/dev/spells.md` — the spell data: the tier table, the `[[spell]]` files and their load-time cap check, tags, caster level
 - `docs/dev/resources.md` — alternative resources: the data, `Actor::resources`, grant, gain, spend, and end, time in the status loop, ability costs, the dev grant
 - `docs/dev/blood.md` — wounds and stains, bleeding, how blood is drawn
-- `docs/dev/creatures.md` — factions and stance, the AI, paths, creature sight
+- `docs/dev/creatures.md` — factions and stance, the AI, paths, creature sight, spawning, gear (a stable index: roster PRs edit only their own `docs/dev/creatures/<tribe>.md`, e.g. `undead.md`, never this file)
 - `docs/dev/npcs.md` — unique characters, chat and ask, rotation lines and mutters, displacement
 - `docs/dev/quests.md` — quest data and stages, hooks in kills, travel, and talk, the quest log
 - `docs/dev/shops.md` — shop data, keepers, prices, buying, selling, theft, the shop dialogs

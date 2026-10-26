@@ -87,71 +87,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   wandering bard, and the old hermit (speed 800), glyph `@`, of the peaceful folk by type, level
   1 and worth no experience. The campaign's creatures come in waves, one per dungeon
   (docs/design/campaign.md §10.1), each type on the `5 × level + 10` guideline and on the fields
-  above, with a gear table where it is a humanoid (§8 "Creature gear"); the wiki's creature
-  tables give every number. The barrow wave (the barrows of Cealdhlāw, danger 1 to 6): the grave
-  worm 1 (slow, a mildly poisonous bite), the barrow spider 2 (quick, silent, poisonous), the
-  goblin 2 (racial club, loud, opens doors), the goblin archer 3 (racial short bow and arrows, a
-  club in reserve), the skeleton 3 (resists piercing 50, takes bludgeoning double, no corpse, no
-  blood; an old sword or spear now and then), the zombie 3 (slow, many hit points, grave rot on
-  a hit), the giant centipede 3 (plates, poisonous), the barrow ghoul 4 (quick, keen slashing
-  claws whose criticals bleed), the goblin chief 5 (club, short sword, jerkin, coins), and the
-  barrow wight 6 (a caster whose touch is cold, resists cold, no corpse; an ancient long sword,
-  sometimes magic). The undead are immune to poison. The barrow wight is the Ascmearc's own type
-  (`docs/dev/campaign.md`). The undead roster's first batch (#383, #384) joins it: the crawling
-  hand 1 and the skeletal rat 1 (small, quick, bone that a club breaks), the kobold zombie 2
-  (slow, grave rot now and then), the skeleton archer 4 (a short bow and arrows, keeps its
-  distance), the skeletal wolf 5 (quick bone), and the skeleton warrior 7 (a long sword or spear,
-  a small shield, chain mail now and then). The fen wave (the drowned minster of Fennmynster, danger 4 to 11):
-  the giant leech 4 (its bite leaves a bleeding wound), the giant frog 4 (quick), the drowned 5
-  (undead, slow, filth fever on a hit), the crocodile 6 (a strong bite, scales 2/3), the
-  cultist 6 (racial dagger, a scroll now and then), the will-o'-wisp 7 (a caster that glows,
-  silent, hard to hit, no corpse), the ghost 8 (undead, resists slashing, piercing, and
-  bludgeoning 50, a cold touch, no corpse; incorporeal, §8 "Incorporeal creatures"), the mud
-  golem 8 (slow, protection 5, no corpse), the
-  cult priest 9 (a caster with the cult's dagger, sometimes magic, and often a scroll), the marsh
-  troll 9 (huge, regenerating by its Toughness), and the bog hag 11 (a caster with a staff, often
-  magic; unique: a population draws her once a run). The cultist, the cult priest, and the bog
-  hag are the Ascmearc's own types. Its undead (#384): the corpse candle 2 (small, incorporeal,
-  glows, a cold touch), the poltergeist 6 (quick, incorporeal), the ghast 7 (quick, opens doors,
-  filth fever on a hit; its claws may hold), the shadow 8 (incorporeal, a cold touch that drains
-  Strength, §8 "Stats": "Drain"), and the bog body 9 (slow, resists cold, marsh ague on a hit);
-  and from the roster's second batch (#385) the wraith 11 (incorporeal, a cold touch that drains
-  Toughness) and the fen ghoul 11 (quick, opens doors, claws that may hold and carry marsh
-  ague). The delf wave (the duergar delf of Fyrdelf, danger 8 to 19): the ember beetle 8 (a
-  burning bite, shell, resists fire 50, a faint glow), the duergar miner 9 (a pick-axe
-  held as a tool, the racial hand axe half the time, a leather cap), the duergar warrior 11
-  (racial hand axe, small shield, chain mail, sometimes magic), the ogre 12 (slow, racial maul),
-  the fire salamander 12 (immune to fire, cold double, lights its way), the troll 13 (so tough its
-  wounds close fast, fire hurts it more), the duergar smith 13 (racial war hammer, sometimes magic,
-  chain mail), the magma crawler 14 (slow, a searing touch, slag hide, cold hurts it, no corpse),
-  the ash wraith 15 (an undead caster with a cold touch, no corpse), the basilisk 16 (scales, a
-  bite that leaves one Sluggish), the cinder elemental 17 (immune to fire, bright, no corpse), and
-  the fire drake 19 (the Ascmearc's own, unique: a caster whose breath is announced, scales,
-  immune to fire). Its undead (#384): the ogre zombie 9 (slow, heavy fists, grave rot) and the
-  grave hound 10 (quick, grave rot), and from the second batch (#385) the burning skull 12 (small,
-  lit by its own fire, a burning bite, immune to fire, hurt more by cold), the knocker 13 (a
-  miner's spirit, incorporeal), the spectre 14 (incorporeal, a cold touch that drains
-  Willpower), the charred dead 14 (slow, resists fire, hurt more by cold), the duergar skeleton 15
-  (a war hammer and an iron helm, bone that a club breaks), and the rotting troll 17 (slow, huge
-  claws, grave rot, fire hurts it more). In no population yet, waiting for deep places (#383): the
-  mummy 10 (slow, mummy rot on a hit, fire hurts it more), the draugr 12 (huge, resists cold, a
-  great axe half the time), the barghest 13 (a quick black dog whose bite frightens), the vampire
-  spawn 16 (quick, opens doors, a bite that drains Toughness, fire hurts it more), the hand of
-  glory 16 (small, lit by its fingers, a cold touch that transfixes), the gallows dead 17 (a
-  tongue that holds fast), the gibbering shade 18 (incorporeal, a cold touch that drains
-  Intelligence), the bone wyvern 18 (a sting, bone with protection 2), the revenant 19 (very
-  tough, a long sword half the time), the fetch 19 (incorporeal, a cold touch that frightens), and
-  the mummy priest 20 (a caster whose touch carries mummy rot, sometimes something worth taking);
-  and the third batch (#386), all of it: the bodach 21 (a cold touch that frightens and now and
-  then drains Toughness), the grave knight 22 (a long sword, sometimes magic, a small shield,
-  chain or plate), the charnel heap 22 (slow, huge, filth fever), the banshee 23 (incorporeal, a
-  touch that frightens and drains Presence), the wight lord 24 (a touch that drains Toughness, a
-  magic long sword now and then, something worth taking), the vampire 25 (quick, opens doors, a
-  bite that drains Toughness and may transfix, fire hurts it more), the wormhost 26 (burrowing
-  worms, a disease that may kill), the bone drake 27 (bone with protection 4), the dread wraith 28
-  (quick, incorporeal, a touch that drains Toughness), the headless knight 29 (quick, a long
-  sword or a glaive, frightens), the lich 30 (a caster whose touch holds and drains
-  Intelligence), and the rotting drake 30 (slow, grave rot). The duergar types are of the duergar race. For blood (§8 "Blood";
+  above, with a gear table where it is a humanoid (§8 "Creature gear"). The creature types are
+  the files in `assets/data/creatures/` (a campaign's own in its `data/creatures/`); the wiki's
+  generated tables (`cargo xtask wiki`) list them with their numbers, so adding a creature never
+  edits this spec. For blood (§8 "Blood";
   presentation only):
   `blood`, the colour of its stains (`"#rrggbb"`; default dark red, `#6e0e0c`) or `"none"` for a
   bloodless creature; the cave beetle bleeds greenish-black ichor (`#38461a`). For hunger (§8
@@ -665,19 +604,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   symmetric: if A lists B, A and B are hostile to each other; every pair not listed (a faction
   and itself too) is neutral. Validation: unique ids, known ids, no faction hostile to itself, a `player` faction
   (the player's), and every creature type but the player naming a known faction. The core API
-  gives the stance (`Hostile` or `Neutral`) of two factions, creature types, or actors. Test
-  factions: `vermin` (giant rats; hostile to the player), `kobolds` (the war band; hostile to the
-  player and the vermin), `goblins` (the barrows' goblin tribes; hostile to the player, the
-  vermin, and the kobolds), `undead` (the barrows' and the fen's dead; hostile to the player,
-  the kobolds, and the goblins, and leaving the vermin alone), `marsh` ("marsh things", the
-  fen's living things and the bog hag; hostile to the player; not animals as a faction), `cult`
-  ("cultists", the drowned minster's cult; hostile to the player and the marsh), `duergar` (the
-  delf's grey dwarves; hostile to the player, the goblins (the ogres and trolls among them), and
-  the undead), `fire` ("fire things", the delf's burning creatures and the fire drake; hostile to
-  the player only), `wildlife` (deer, cave bats, the cave beetle;
-  neutral to everyone), and
-  `peaceful` ("peaceful folk", hostile to no one: the showcase's people by type, and creatures
-  levels place in it); `merchants` (shopkeepers; hostile to no one) and `outraged` ("outraged
+  gives the stance (`Hostile` or `Neutral`) of two factions, creature types, or actors. The
+  factions are the entries of `assets/data/factions.toml`; the wiki's generated tables list them
+  and who is hostile to whom, so adding a faction never edits this spec. Two are rules: `merchants` (shopkeepers; hostile to no one) and `outraged` ("outraged
   shopkeepers", hostile to the player), which a robbed or attacked shopkeeper joins (§7
   "Shops"). A level
   legend entry with a `creature` may name a `faction` (a known faction id; an unknown one is a
