@@ -887,12 +887,21 @@ pub struct PerceptionView<'a> {
     pub(crate) quests: &'a crate::world::Quests,
     /// Everything the player was told, which they know.
     pub(crate) messages: &'a crate::messages::MessageLog,
+    /// What the player knows of scroll types: how they name what they see.
+    pub(crate) lore: crate::scroll_label::Lore<'a>,
     pub(crate) snapshot: &'a Perception,
 }
 
 impl<'a> PerceptionView<'a> {
     pub fn content(&self) -> &'a Content {
         self.content
+    }
+
+    /// What the player knows of scroll types (spec §8 "Scrolls"): every name presentation shows
+    /// of a stack goes through it ([`crate::scroll_label::Lore::describe`]), so an unidentified
+    /// scroll shows by its label.
+    pub fn lore(&self) -> crate::scroll_label::Lore<'a> {
+        self.lore
     }
 
     /// The message log: what the player was told, oldest first, at most

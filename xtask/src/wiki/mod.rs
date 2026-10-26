@@ -445,7 +445,7 @@ mod tests {
         );
         assert!(
             scrolls.contains(
-                "| 3d6 fire | 10 cells | Explosion, very loud (150) | item level 3 | 150 gold |"
+                "| 3d6 fire | 10 cells | Explosion, very loud (150) | item level 3, frequency 50 | 150 gold |"
             ),
             "{scrolls}"
         );
@@ -994,17 +994,19 @@ mod tests {
         }
         let diseases = text("diseases.md");
         for row in [
-            "| Filth fever | The drowned's fist (20%); the ghast's claws (10%); the giant rat's bite \
-             (10%) | Toughness, 54% | 1d3 days | Every day | 1d3 Dexterity, 1d3 Toughness | Two \
+            "| Filth fever | The charnel heap's slam (15%); the drowned's fist (20%); the ghast's \
+             claws (10%); the giant rat's bite (10%) | Toughness, 54% | 1d3 days | Every day | 1d3 Dexterity, 1d3 Toughness | Two \
              checks won in a row | no | Half as fast |",
             "| Marsh ague | The bog body's fist (15%); the fen ghoul's claws (10%); crossing marsh \
              or swamp (4% an hour) |",
             "| Grave rot | The grave hound's bite (10%); the kobold zombie's fist (5%); the ogre \
-             zombie's fist (10%); the rotting troll's claws (15%); the zombie's fist (15%); eating \
-             rotten food |",
+             zombie's fist (10%); the rotting drake's bite (20%); the rotting troll's claws (15%); \
+             the zombie's fist (15%); eating rotten food |",
             "| Mummy rot | The mummy's fist (20%); the mummy priest's touch (15%) | Toughness, 31% \
              | 1d3 days | Every 3 days | 1d4 Toughness | Never by itself | no |",
             "| Never by itself | yes |",
+            "| Burrowing worms | The wormhost's fist (25%) | Toughness, 25% | 1 day | Every day | \
+             1d4 Toughness, 1d3 Intelligence, 2d6 hit points | Two checks won in a row | yes |",
             "| Brain fever | — | Willpower, 54% |",
         ] {
             assert!(diseases.contains(row), "{row} in {diseases}");

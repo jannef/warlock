@@ -518,7 +518,8 @@ const CASES: &[Case] = &[
     Case {
         name: "scroll-too-close",
         scenario: "traps",
-        actions: "move:E pickup",
+        // The fireballs identified first: an unknown scroll is read without a warning.
+        actions: "move:E pickup read:e:b",
         keys: Some("r a k Enter"),
         ..BASE
     },

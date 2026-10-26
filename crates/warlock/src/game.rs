@@ -111,7 +111,7 @@ impl Game {
             && let Some(last) = store.last_played()
         {
             match Self::resumed(&store, &last.id, &content) {
-                Resume::Loaded(world) => return Ok(Self::from_world(world, last.id)),
+                Resume::Loaded(world) => return Ok(Self::from_world(*world, last.id)),
                 Resume::Failed(message) => failure = Some(message),
                 Resume::NoSave => {}
             }
