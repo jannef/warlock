@@ -23,7 +23,9 @@ items by the branch's `loot`, vault `loot` cells) is rolled once a map is valid,
 stream `loot/<level id>`, so adding loot never changes the terrain of a generated level. On a
 branch with a danger the initial population follows (`mapgen/population.rs`, stream
 `population/<level id>`; `docs/dev/creatures.md`), then every creature's gear (`gear::arm`,
-stream `gear/<level id>`).
+stream `gear/<level id>`). Outside generation, a rolled quest draws its target from the keyed
+stream `quest/<quest id>` (`Rng::quest`), once, as it is given, never kept (#422,
+`docs/dev/quests.md`).
 
 Named vaults (#339): a `[[dungeon.levels]]` range's `vaults` (`DungeonDef::vaults(depth)`,
 checked and marked `Vault::pinned` by `Content::pin_vaults` once the branch's campaign is known:
