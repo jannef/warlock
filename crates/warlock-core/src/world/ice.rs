@@ -27,7 +27,7 @@ use super::fight::Harm;
 use super::{ActorId, LevelState, Spent, World, WorldState};
 use crate::action::{Event, SpellShape};
 use crate::content::StatUse;
-use crate::content::{ActionKind, Content, TerrainId};
+use crate::content::{ActionKind, Content, Here, TerrainId};
 use crate::fov::compute_fov;
 use crate::geom::Pos;
 use crate::ice::{self, Ice, Shock};
@@ -103,9 +103,34 @@ impl LevelState {
         (self.terrain.get(p)).is_some_and(|t| content.terrain(*t).freeze.is_some())
     }
 
+    /// What the special rooms at `p` add to the level's temperature (a hot room's warmth, a cold
+    /// room's chill; spec §7 "Special rooms").
+    pub(crate) fn warmth_at(&self, content: &Content, p: Pos) -> Temperature {
+        self.effects_at(content, p).warmth()
+    }
+
+    /// Every warmth the special rooms give somewhere on the level, in tenths of a degree: the
+    /// level's own (outside every room) and each room's.
+    fn warmths(&self, content: &Content) -> BTreeSet<i32> {
+        let level = self.pervading.map(|id| content.room_effect(id));
+        let outside = Here { room: None, level }.warmth().tenths();
+        let rooms = self.rooms.iter().map(|r| {
+            let room = Some(content.room_effect(r.effect));
+            Here { room, level }.warmth().tenths()
+        });
+        std::iter::once(outside).chain(rooms).collect()
+    }
+
+    /// Whether some cell of the level is warmer or colder than the level (a hot or a cold room).
+    pub(crate) fn has_warmth(&self, content: &Content) -> bool {
+        self.warmths(content).iter().any(|&w| w != 0)
+    }
+
     /// Brings the ice up to `to`, tick by tick from where it was left ([`crate::ice`]), at the
-    /// temperature `air` gives for each tick's moment. Cells that start alike stay alike, so it
-    /// works through the thicknesses there are (and each kind of open water), not the cells.
+    /// temperature `air` gives for each tick's moment, and at each cell what its special room
+    /// adds to it ([`LevelState::warmth_at`]). Cells that start alike (the same water, thickness,
+    /// and warmth) stay alike, so it works through the groups there are (and each kind of open
+    /// water at each warmth), not the cells.
     pub(crate) fn advance_ice(
         &mut self,
         content: &Content,
@@ -118,19 +143,28 @@ impl LevelState {
         }
         self.ice_until = ice::tick_floor(to);
         let freeze = |water: TerrainId| content.terrain(water).freeze;
-        // Each thickness there is on each water, open water of every kind that freezes at 0.
-        let mut groups: BTreeMap<(TerrainId, u32), u32> = (content.terrain_defs().iter())
-            .enumerate()
-            .filter(|(_, t)| t.freeze.is_some())
-            .map(|(i, _)| ((TerrainId(i as u16), 0), 0))
-            .collect();
-        for ice in self.ice.values() {
-            groups.insert((ice.water, ice.um), ice.um);
+        // Groups by (water, thickness, warmth in tenths): open water of every kind that freezes
+        // at every warmth there is, and each thickness there is on each water at its warmth.
+        let warmths = self.warmths(content);
+        let mut groups: BTreeMap<(TerrainId, u32, i32), u32> = BTreeMap::new();
+        for (i, t) in content.terrain_defs().iter().enumerate() {
+            if t.freeze.is_some() {
+                for &w in &warmths {
+                    groups.insert((TerrainId(i as u16), 0, w), 0);
+                }
+            }
         }
+        let iced: Vec<(Pos, Ice, i32)> = (self.ice.iter())
+            .map(|(p, i)| (*p, *i, self.warmth_at(content, *p).tenths()))
+            .collect();
+        for &(_, ice, w) in &iced {
+            groups.insert((ice.water, ice.um, w), ice.um);
+        }
+        let warmed = |t: Temperature, w: i32| Temperature::from_tenths(t.tenths() + w);
         // Underground the air keeps one temperature: nothing to do if no ice would change in it.
         if let Some(t) = self.temperature {
-            let still = |(&(water, um), _): (&(TerrainId, u32), &u32)| {
-                freeze(water).is_none_or(|f| ice::tick(um, t, &f) == um)
+            let still = |(&(water, um, w), _): (&(TerrainId, u32, i32), &u32)| {
+                freeze(water).is_none_or(|f| ice::tick(um, warmed(t, w), &f) == um)
             };
             if groups.iter().all(still) {
                 return;
@@ -138,39 +172,56 @@ impl LevelState {
         }
         for k in ticks {
             let t = air(GameTime::from_seconds(ice::tick_moment(k)));
-            for (&(water, _), um) in groups.iter_mut() {
+            for (&(water, _, w), um) in groups.iter_mut() {
                 if let Some(f) = freeze(water) {
-                    *um = ice::tick(*um, t, &f);
+                    *um = ice::tick(*um, warmed(t, w), &f);
                 }
             }
         }
-        // Open water that froze: every cell of it without ice when this began.
-        let froze: BTreeSet<TerrainId> = (groups.iter())
-            .filter(|&(&(_, from), &um)| from == 0 && um > 0)
-            .map(|(&(water, _), _)| water)
+        // Open water that froze: every cell of it, at that warmth, without ice when this began.
+        let froze: BTreeSet<(TerrainId, i32)> = (groups.iter())
+            .filter(|&(&(_, from, _), &um)| from == 0 && um > 0)
+            .map(|(&(water, _, w), _)| (water, w))
             .collect();
-        let open: Vec<(Pos, TerrainId)> = if froze.is_empty() {
+        let open: Vec<(Pos, TerrainId, i32)> = if froze.is_empty() {
             Vec::new()
         } else {
             (self.terrain.iter())
-                .filter(|(p, t)| froze.contains(t) && !self.ice.contains_key(p))
-                .map(|(p, t)| (p, *t))
+                .filter(|(p, t)| {
+                    froze.iter().any(|(water, _)| water == *t) && !self.ice.contains_key(p)
+                })
+                .map(|(p, t)| (p, *t, self.warmth_at(content, p).tenths()))
+                .filter(|(_, t, w)| froze.contains(&(*t, *w)))
                 .collect()
         };
-        let iced: Vec<(Pos, Ice)> = self.ice.iter().map(|(p, i)| (*p, *i)).collect();
-        for (p, ice) in iced {
-            let um = groups[&(ice.water, ice.um)];
+        for (p, ice, w) in iced {
+            let um = groups[&(ice.water, ice.um, w)];
             self.set_ice(content, p, ice.water, um);
         }
-        for (p, water) in open {
-            self.set_ice(content, p, water, groups[&(water, 0)]);
+        for (p, water, w) in open {
+            self.set_ice(content, p, water, groups[&(water, 0, w)]);
         }
     }
 }
 
 impl WorldState {
-    /// The temperature on `level` at `time`: fixed underground, else the weather's under the
-    /// open sky (the dev override included while it lasts).
+    /// The temperature at `p` on `level` at `time`: the level's ([`WorldState::temperature_on`])
+    /// and what the special rooms there add (a hot room's warmth, a cold room's chill; spec §7
+    /// "Special rooms"). The one place a cell's temperature is decided: every reader that wants
+    /// the temperature at a place asks it.
+    pub(crate) fn temperature_at(
+        &self,
+        level: &LevelState,
+        content: &Content,
+        time: GameTime,
+        p: Pos,
+    ) -> Temperature {
+        let air = self.temperature_on(level, content, time);
+        Temperature::from_tenths(air.tenths() + level.warmth_at(content, p).tenths())
+    }
+
+    /// The temperature on `level` at `time`, outside any special room: fixed underground, else
+    /// the weather's under the open sky (the dev override included while it lasts).
     pub(crate) fn temperature_on(
         &self,
         level: &LevelState,
@@ -192,13 +243,14 @@ impl WorldState {
     }
 
     /// A level under the open sky seen for the first time has had [`ice::PRE_ROLL`] of weather:
-    /// its water froze and thawed with it.
+    /// its water froze and thawed with it. So has one with a hot or a cold room (a cold room's
+    /// pool is frozen when one first comes upon it).
     pub(crate) fn pre_roll_ice(&mut self, content: &Content, id: &str) {
         let (seed, over, now) = (self.seed, self.weather_override, self.time);
         let Some(level) = self.levels.get_mut(id) else {
             return;
         };
-        if level.temperature.is_some() {
+        if level.temperature.is_some() && !level.has_warmth(content) {
             return;
         }
         let since = now.seconds().saturating_sub(ice::PRE_ROLL.as_seconds());
@@ -223,11 +275,17 @@ fn advance(
 }
 
 impl World {
-    /// The temperature on the player's level now: ground truth, for the rules and dev tools (the
-    /// player is told only how it feels, under the open sky: [`crate::PerceptionView`]).
+    /// The temperature where the player stands now (a hot or a cold room's included): ground
+    /// truth, for the rules and dev tools (the player feels it: [`crate::PerceptionView`]).
     pub fn temperature(&self) -> Temperature {
+        self.temperature_at(self.state.actors[&self.state.player].pos)
+    }
+
+    /// The temperature at `p` on the player's level now: ground truth, for the rules and dev
+    /// tools ([`WorldState::temperature_at`]).
+    pub fn temperature_at(&self, p: Pos) -> Temperature {
         let state = &self.state;
-        state.temperature_on(state.current(), &self.content, state.time)
+        state.temperature_at(state.current(), &self.content, state.time, p)
     }
 
     /// Brings the ice on the player's level up to the clock: as the clock moves, so the rules

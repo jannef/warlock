@@ -60,6 +60,8 @@ mod quest;
 mod race;
 mod resource;
 mod room_effect;
+#[cfg(test)]
+mod room_temperature_tests;
 mod scenario;
 mod scroll;
 mod scroll_label;

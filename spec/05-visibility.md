@@ -183,7 +183,10 @@ rate or animation.
     outdoors alike, in whole degrees (`4 °C`; °F with the setting, §6), with a subtle cool tint
     below freezing and a warm one from 30 °C. The number is the one exception to numbers being
     hidden: the player feels the air. Nothing else feels it yet: no hypothermia, warmth, or
-    clothing; it freezes water ("Ice" below). Special rooms and ice do not change the air.
+    clothing; it freezes water ("Ice" below). Ice does not change the air; a hot or a cold
+    special room does, on its cells (§7 "Special rooms": 25 °C warmer or colder than the level,
+    `WorldState::temperature_at`, the one place a cell's temperature is decided), and the
+    status bar shows the temperature of the player's cell.
 - **Ice** (`warlock-core/src/ice.rs`, rules in `world/ice.rs`; M26):
   - **Freezing**: every cell of water that freezes (terrain with a `freeze` table, §7: still
     water below 0 °C at full pace; running water only below −6 °C, at 40 %) has an ice
@@ -198,12 +201,14 @@ rate or animation.
     the rules may meet it (as the clock moves on the player's level, during rests too, and when
     the player arrives), tick by tick from where it was left (`LevelState::ice_until`). Ticks fall
     on fixed moments of the clock (every 10 minutes since the epoch), each at the temperature of
-    its middle, so the ice at a moment is the same however the time passed: by turns, rests,
-    overworld journeys, or the dev skip. Cells that start alike stay alike, so catching up works
-    through the thicknesses there are (and each kind of open water), not the cells: a year away is
-    52 000 ticks of a few groups. A level under the open sky seen for the first time has had 30
-    days of its weather already (a pond is frozen when first come upon in deep winter);
-    underground levels start with the ice their file lays.
+    its middle (plus what a hot or a cold room adds at the cell), so the ice at a moment is the
+    same however the time passed: by turns, rests, overworld journeys, or the dev skip. Cells
+    that start alike (the same water, thickness, and room warmth) stay alike, so catching up
+    works through the thicknesses there are (and each kind of open water at each warmth), not
+    the cells: a year away is 52 000 ticks of a few groups. A level under the open sky seen for
+    the first time has had 30 days of its weather already (a pond is frozen when first come upon
+    in deep winter), and so has a level with a hot or a cold room (a cold room's pool is frozen);
+    other underground levels start with the ice their file lays.
   - **Looks**: a cell shows the thickest ice terrain its ice reaches (`ice` in
     `data/terrain.toml`: thin ice from 1 cm, ice from 5 cm, thick ice from 15 cm), else the water
     beneath; the terrain grid holds that, so memory, sight, and look mode follow ("thin ice",
