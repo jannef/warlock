@@ -1,0 +1,44 @@
+# The leftover fiends (#450). The horned and winged child of a fiend and a mortal, raised to
+# command: a warrior with a sword of its own, often armoured, and its claws are no worse. It
+# carries the spoils of its command. Its wings wait for a mechanic of their own.
+[[creature]]
+id = "cambion"
+level = 39
+xp = 205
+rarity = "rare"
+loot = 30
+name = "cambion"
+glyph = "p"
+fg = "#c03a3a"
+speed = 1100
+faction = "fiends"
+tags = ["fiend"]
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+opens_doors = true
+footsteps = 60
+hearing = 12
+weight = 90000
+stats = { strength = 27, dexterity = 20, toughness = 28, intelligence = 26, willpower = 30, presence = 26 }
+base_hp = 98
+natural = { defence = 2, protection = 0, name = "skin" }
+resist = { fire = 50, cold = 50 }
+weapon_skills = { long_blades = 4, great_blades = 4 }
+on_eat = { message = "Half of it was almost a man.", vomit = 70, harm = "1d4" }
+blood = "#5a0a0a"
+[creature.attack]
+damage = "4d8"
+damage_type = "slashing"
+name = "claws"
+verb = "claws"
+to_hit = 3
+# Its gear (spec §8 "Creature gear"): a sword and the mail of its command.
+[[creature.gear]]
+chance = 80
+one_of = ["long_sword", "great_sword"]
+magic = 20
+[[creature.gear]]
+chance = 50
+one_of = ["chain_mail"]
+magic = 20

@@ -1,0 +1,43 @@
+# The leftover fiends (#450). A tiger-headed fiend in fine clothes, its hands turned backward,
+# that lives among men by deceit: a caster (its spells announced until creature magic is
+# designed) whose gaze transfixes and whose claws terrify. Arrows and spears turn half aside on
+# it. It hoards what it took by its lies. Its shapes and its illusions wait for mechanics of
+# their own.
+[[creature]]
+id = "rakshasa"
+level = 52
+xp = 270
+rarity = "very_rare"
+loot = 60
+name = "rakshasa"
+glyph = "f"
+fg = "#e0a040"
+speed = 1150
+faction = "fiends"
+tags = ["fiend", "caster"]
+alignment = "evil"
+vision = "darkvision"
+sight = 14
+combat = "caster"
+range = 8
+opens_doors = true
+footsteps = 30
+hearing = 18
+weight = 80000
+stats = { strength = 29, dexterity = 23, toughness = 33, intelligence = 35, willpower = 38, presence = 35 }
+base_hp = 104
+skills = { concentration = 166, spellcraft = 171 }
+natural = { defence = 4, protection = 0, name = "hide" }
+resist = { piercing = 50 }
+on_eat = { message = "It tastes of lies.", vomit = 70, harm = "1d4" }
+blood = "#6a2a10"
+[creature.attack]
+damage = "3d12"
+damage_type = "slashing"
+name = "claws"
+verb = "claws"
+to_hit = 5
+on_hit = [
+    { status = "transfixed", chance = 15, severity = 2 },
+    { status = "frightened", chance = 10, severity = 1 },
+]
