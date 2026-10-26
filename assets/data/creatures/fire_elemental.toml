@@ -1,0 +1,34 @@
+# The elemental roster (#453): the fire line's middle rung. A pillar of flame in a man's shape
+# and more, bright enough to light a hall: fire cannot hurt it, and nothing of it remains when it
+# is put out.
+[[creature]]
+id = "fire_elemental"
+level = 27
+xp = 145
+rarity = "uncommon"
+name = "fire elemental"
+glyph = "E"
+fg = "#ffb84a"
+speed = 1050
+light = "brazier"
+glow = 0.45
+faction = "elemental"
+tags = ["elemental", "fire"]
+alignment = "neutral"
+vision = "normal"
+sight = 10
+footsteps = 40
+hearing = 10
+weight = 150000
+stats = { strength = 22, dexterity = 17, toughness = 23, intelligence = 2, willpower = 25, presence = 2 }
+base_hp = 68
+natural = { defence = 1, protection = 0, name = "flickering flame" }
+resist = { fire = 100, cold = -50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "4d6"
+damage_type = "fire"
+to_hit = 2
+name = "touch"
+verb = "burns"

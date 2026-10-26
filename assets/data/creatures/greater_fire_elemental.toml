@@ -1,0 +1,34 @@
+# The elemental roster (#453): the fire line's greater rung. A roaring column of fire that fills
+# a passage: it burns hotter than any forge, and the air shimmers about it.
+[[creature]]
+id = "greater_fire_elemental"
+level = 38
+xp = 200
+rarity = "rare"
+loot = 5
+name = "greater fire elemental"
+glyph = "E"
+fg = "#ffd060"
+speed = 1050
+light = "brazier"
+glow = 0.45
+faction = "elemental"
+tags = ["elemental", "fire"]
+alignment = "neutral"
+vision = "normal"
+sight = 10
+footsteps = 40
+hearing = 10
+weight = 300000
+stats = { strength = 26, dexterity = 20, toughness = 27, intelligence = 25, willpower = 29, presence = 25 }
+base_hp = 95
+natural = { defence = 2, protection = 0, name = "flickering flame" }
+resist = { fire = 100, cold = -50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "4d8"
+damage_type = "fire"
+to_hit = 3
+name = "touch"
+verb = "burns"

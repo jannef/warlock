@@ -1,0 +1,35 @@
+# The elemental roster (#453): the lightning line's greater rung. A great fork of lightning that
+# walks and does not fade.
+[[creature]]
+id = "greater_lightning_elemental"
+level = 36
+xp = 190
+rarity = "rare"
+loot = 5
+name = "greater lightning elemental"
+glyph = "E"
+fg = "#c0a0ff"
+speed = 1500
+light = "storm"
+glow = 0.45
+faction = "elemental"
+tags = ["elemental", "lightning"]
+alignment = "neutral"
+vision = "darkvision"
+sight = 10
+footsteps = 20
+hearing = 10
+weight = 20000
+stats = { strength = 25, dexterity = 24, toughness = 25, intelligence = 24, willpower = 29, presence = 24 }
+base_hp = 81
+natural = { defence = 4, protection = 0, name = "crackling form" }
+resist = { electricity = 100, piercing = 25, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "3d10"
+damage_type = "electricity"
+to_hit = 3
+name = "touch"
+verb = "shocks"
+on_hit = [{ status = "staggered", chance = 20, severity = 1 }]

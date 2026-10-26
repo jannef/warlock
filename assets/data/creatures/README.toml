@@ -57,6 +57,8 @@
 #            (not the basilisk), marsh-thing (the fens' living things and the bog hag),
 #            hag (the bog hag and her kin, every creature of the "hags" faction),
 #            duergar (not their trader, a merchant), fire-thing (the delf's burning things),
+#            elemental (every elemental, #453, with its element's word: fire, earth, air, water,
+#            ice, or lightning; content::elemental_roster_tests checks them),
 #            fey (every creature of the fey courts, seelie or unseelie),
 #            devil (every creature of the "devil" faction: content::devil_roster_tests checks it),
 #            yugoloth (every creature of the "yugoloth" faction), fiend (the fiends of the lower
@@ -227,6 +229,15 @@
 # ([creature.throw]: the level's dice, range 5 + L/10, the stone giant two farther; cost 2000,
 # the stone giant's 1500); the ogres carry mauls and throw nothing. Glyphs: O the ogres, H the
 # giants, each colour distinct. Medium with huge weights (no large size yet).
+#
+# The elementals (the roster, #453; content::elemental_roster_tests checks the numbers): faction
+# "elemental" (the cinder elemental keeps the delf's "fire"), tags ["elemental", ELEMENT],
+# alignment "neutral", resist poison 100, no corpse and no blood. The numbers are the undead
+# roster's formulas (xp, stats, base_hp, dice, to_hit, natural Defence from L20), with the role by
+# element (fire and water standard, earth and ice brute, air and lightning quick; motes small, `e`,
+# size "small"). Each element is immune to its own damage type where it has one and hurt more by
+# its opposite (fire and ice; water by electricity). Earth from the middle rung up is
+# incorporeal with wall_defence 1 + level ÷ 20 (it moves through stone). Glyph `E` but motes `e`.
 #
 # The fey (the roster, #452; content::fey_roster_tests checks the numbers): factions = { seelie,
 # unseelie } by weight, each creature joining a court when it is made; tags ["fey", ...]. Living:

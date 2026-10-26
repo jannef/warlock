@@ -1,0 +1,35 @@
+# The elemental roster (#453): the lightning line's eldest rung. The eldest of the storms (Old
+# English þunor, thunder): a storm cloud come down to walk, all lightning inside.
+[[creature]]
+id = "thunderhead"
+level = 70
+xp = 360
+rarity = "very_rare"
+loot = 20
+name = "thunderhead"
+glyph = "E"
+fg = "#a080e0"
+speed = 1700
+light = "storm"
+glow = 0.45
+faction = "elemental"
+tags = ["elemental", "lightning"]
+alignment = "neutral"
+vision = "darkvision"
+sight = 12
+footsteps = 20
+hearing = 10
+weight = 80000
+stats = { strength = 39, dexterity = 33, toughness = 39, intelligence = 38, willpower = 40, presence = 38 }
+base_hp = 158
+natural = { defence = 8, protection = 0, name = "crackling form" }
+resist = { electricity = 100, piercing = 25, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "4d12"
+damage_type = "electricity"
+to_hit = 7
+name = "touch"
+verb = "shocks"
+on_hit = [{ status = "staggered", chance = 20, severity = 1 }]

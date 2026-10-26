@@ -1,0 +1,31 @@
+# The elemental roster (#453): the air line's mote rung. A little whirl of grit and wind that
+# dances along the passages: very fast, and its sand scours the skin.
+[[creature]]
+id = "dust_devil"
+level = 3
+xp = 25
+rarity = "common"
+name = "dust devil"
+glyph = "e"
+fg = "#c8b890"
+speed = 1450
+faction = "elemental"
+tags = ["elemental", "air"]
+alignment = "neutral"
+vision = "darkvision"
+sight = 8
+footsteps = 20
+hearing = 8
+weight = 2000
+size = "small"
+stats = { strength = 8, dexterity = 15, toughness = 9, intelligence = 2, willpower = 17, presence = 2 }
+base_hp = 4
+natural = { defence = 2, protection = 0, name = "rushing wind" }
+resist = { piercing = 50, electricity = 50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "1d4"
+damage_type = "slashing"
+name = "grit"
+verb = "scours"
