@@ -1,7 +1,8 @@
 # Damage types
 
 Every blow, shot, trap, and spell does damage of a **kind**: the three physical kinds a weapon
-does (slashing, piercing, bludgeoning) and the elements (fire, cold, electricity, acid, poison).
+does (slashing, piercing, bludgeoning) and the elements (fire, cold, electricity, acid, poison,
+and the two kinds only [magic](magic.md) does, force and necrotic).
 The kind decides what armour does against it, what resists it, whether it bleeds, and how the
 message reads: "The kobold stabs you.", "You cleave the giant rat.", "The fireball burns the
 kobold."
@@ -38,7 +39,7 @@ not.
 {{#include generated/damage-armour.md}}
 
 Two [talents](talents.md) work on damage types. **Elemental ward**, taken for one element
-(fire, cold, electricity, acid, or poison), resists it 25 % a rank, two ranks at most; it counts
+(fire, cold, electricity, acid, poison, force, or necrotic), resists it 25 % a rank, two ranks at most; it counts
 as gear does, under the same cap, and a ward against poison shrinks each dose of poison too.
 **Crusher** lets your blows and kicks that can strike (a mace, a club, a staff, bare hands, a
 shield bash) ignore 2 points of the target's Protection; shots and throws are not blows.

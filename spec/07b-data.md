@@ -537,7 +537,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   and `unarmed` (bare hands, kicks, and shield bashes do this kind; one at most). Ids are
   indices (in the content fingerprint), so a new type is a new entry at the end of the list, at
   most 32. Built in: slashing, piercing, bludgeoning (`physical`, `unarmed`), fire, cold,
-  electricity, acid, poison. The status effects (`data/status.toml`, §8 "Status effects") name
+  electricity, acid, poison, force, necrotic (the last two the spells', §8 "Spells"). The status effects (`data/status.toml`, §8 "Status effects") name
   the kinds that wound (`wound.from = ["slashing", "piercing"]`: bleeding; none named: any) and
   the kind a status is (`damage_type = "poison"`: poisoned).
 - **Resources** (`data/resources.toml`, optional; without it there are none; #225, §8

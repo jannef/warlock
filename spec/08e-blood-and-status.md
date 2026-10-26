@@ -1,4 +1,4 @@
-# Warlock specification — 8. Architecture (continued): blood, status effects, healing, mana, resources, checks, diseases
+# Warlock specification — 8. Architecture (continued): blood, status effects, healing, mana, spells, resources, checks, diseases
 
 Part of the specification, the source of truth for what to build; the index is
 [`specification.md`](../specification.md). Update it together with the code and the
@@ -144,7 +144,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     creature type's `mana`, default 0; a scenario without a character gives the player's) plus
     what magic items add (`max_mana` affixes, §8 "Magic items") plus the modifiers of the three
     mental stats, Intelligence, Willpower, and Presence, the effective scores', at least 0. Every
-    actor starts with all of it. Each level gained up to the experience file's `mana_level` (30,
+    actor starts with all of it. Each level gained up to the experience file's `mana_level` (60,
     past `hp_level`, so casters keep growing after hit points stop) adds `max(0, class mana ÷ 2 +
     the better of the Intelligence and Willpower modifiers)` (`docs/design/progression.md` §3.7;
     the race and class values are its table; the stats as worn magic raises
@@ -196,6 +196,45 @@ developer notes (CLAUDE.md, `docs/dev/`).
     never the pace (hidden like `regen_seconds`); the dev `actors` layer shows every actor's.
     Mana is part of the world state (saved, covered by the state hash; an actor without any
     serializes as before).
+- **Spells** (the magic design, `docs/design/magic.md` §3, §5, §6; `content/spell_def.rs`,
+  `world/caster_level.rs`; #394): the data foundation of the spell system. Nothing casts these
+  spells yet (#395 brings the one cast path; the casters' placeholder spells, §8 "Class
+  abilities", keep working until it migrates them); `docs/dev/spells.md` has the details.
+  - **Tiers** (`data/spells.toml`): a spell has a tier, 0 (a *cantrip*) to 9. Each tier has a
+    **comfortable caster level** (1, 3, 6, 12, 18, 25, 32, 40, 50, 60), a **base mana cost** (1,
+    3, 6, 11, 16, 22, 29, 37, 46, 56), and a **damage ceiling** (6, 12, 18, 24, 32, 40, 50, 62,
+    76, 90: the most a single-target spell of the tier may do in one cast at its highest roll),
+    each ascending (checked at load). A caster level's tier is the highest whose comfortable
+    level it has reached; a spell above it is **overreach**, `overreach_cost` (50) percent more
+    mana per tier. The **shapes** multiply the base cost (ray, bolt, touch, self ×1; cone ×1.6;
+    line ×1.8; a burst ×1.8, ×2.4, ×3 by radius 1 to 3, its largest), and each **resolution**
+    caps damage at a percent of the ceiling and multiplies the cost (`attack` 100 %, `auto` 75 %,
+    `area` 80 % at its shape's cost, `touch` 120 % at ×0.7). First guesses, in data.
+  - **Spells** (`data/spells/`, one `[[spell]]` file each, numbered in path order: `SpellId` an
+    index, in the content fingerprint): id, name, description, tier, the **tags** school
+    (evocation, necromancy, abjuration, restoration, transmutation, enchantment, divination),
+    kind (damage, heal, buff, hex, cleanse, utility), shape, and damage type (a `damage` spell's,
+    needed); a resolution that fits the shape (`area` exactly for cone, line, and burst, `touch`
+    only for touch, `attack` for a ray or a bolt, `auto` for any single target); the caps of its
+    reach (`max_range` for a ray, bolt, or burst, `max_radius` for a burst, `max_length` for a
+    cone or a line: each shape exactly its own); `[spell.damage]` (`dice` at the comfortable
+    level, one die more per `per_levels` caster levels above it, never more than `max_dice`, a
+    rare static `bonus`); `[spell.effect]` for the other kinds (a heal's dice as damage's, a buff's
+    or hex's `status` and `severity`, a cleanse's `cures` and `diseases`); `[spell.scroll]` with
+    the caster level a read casts at (default the tier's comfortable level).
+  - **The cap** (checked when the content loads, a `ContentError`): a spell whose most in one
+    cast (`max_dice` × the dice's sides + `bonus`), harm or healing, passes its tier's ceiling
+    times its resolution's percent is refused, and so is a static bonus above a quarter of the
+    ceiling. Nothing in the rules lifts a spell over its cap.
+  - **Caster level** (`World::caster_level`, `Actor::caster_level`; derived, never stored): the
+    player's level times their class's `casting` percent (`data/classes/`, 1 to 100, default
+    25: wizard, witch, priest, and druid 100, bard and aristocrat 75, paladin, ranger, and monk
+    50, everyone else 25; 100 without a class), a creature's its type's level, rounded down; plus
+    the `caster_level` talent effect (racial and birth-sign gifts are talents) and affix effect
+    (nothing grants either yet); never below 0, and at least 1 for anyone whose maximum mana is
+    above 0. It will set learning, the cost of overreach, and a spell's dice. The player knows
+    it: the dump `stats` layer's `Caster level N` (after the scores), JSON dumps' `caster_level`
+    (`PerceptionView::own_caster_level`).
 - **Resources** (`warlock-core/src/resource.rs`, the pools and time's rules;
   `content/resource.rs`, the data; `world/resource.rs`, applying them; #225): alternative
   resources, integer pools beside hit points and mana (which everyone has) that a character holds
