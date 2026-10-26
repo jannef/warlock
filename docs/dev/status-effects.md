@@ -45,8 +45,9 @@ action `afflict:ID` (`Action::Afflict`) gives the player a degree, for tests and
 Buffs, hexes, and cooldowns (spec §8 "Status effects"; #227, design
 `docs/design/progression.md` §4.1 B1) are statuses too, with four more optional fields
 (`StatusDef`): `combat` (`CombatBonus { to_hit, damage, dodge, parry }`, the stances' numbers
-and ranges), `cost` (percent of every price, `COST_PERCENT` 100 to 1000: slows only, so
-`World::out_of_view_for` stays exact), `blocks` (`Vec<ActionKind>`, ids from `data/actions.toml`),
+and ranges), `cost` (percent of every price, `COST_PERCENT` 50 to 1000: below 100 only a spell's buff on
+its caster may be, `spell_def` refusing a hex's or a damage spell's, so creatures are never
+hastened and `World::out_of_view_for` stays exact), `blocks` (`Vec<ActionKind>`, ids from `data/actions.toml`),
 and `follows` (`Option<StatusId>`, resolved after the whole file, `resolve_follows`: no chain back
 to itself; a status with it must end; nothing follows into or out of the disease status,
 checked in `Content::load_diseases`). `penalty` takes positive numbers too (a raise). Each field

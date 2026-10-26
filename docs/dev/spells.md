@@ -7,8 +7,9 @@ Keep it current with the code, as CLAUDE.md says.
 The spell system is built in waves (design §13). This file covers what is built: the **data
 foundation** (#394: the tier table, the spell files with their load-time cap check, the tags,
 caster level), the **one cast path** (#395: cost, reach, dice, resolution, the shapes, and
-the casters' placeholder spells migrated onto it), and **learning** (#396: the learned set,
-study, the check, mishaps; "Learning" below). Not to be confused
+the casters' placeholder spells migrated onto it), **learning** (#396: the learned set,
+study, the check, mishaps; "Learning" below), and the **first spell list** (#397: the spells,
+their scrolls, the classes' guaranteed spells; "The first list" below). Not to be confused
 with `content/spell.rs`, the bursts and bolts scrolls and traps cast, whose code the cast path
 shares.
 
@@ -86,7 +87,7 @@ shares.
     hex (the hostile the player sees at the cell, `hex_target`), utility (nothing yet), damage
     (by shape: `Shape::Burst` → `burst_center` + `cast_burst`; `Line` → `bolt_line` +
     `cast_bolt`; `Cone` → `cast_cone`; `Ray`/`Bolt`/`Touch` → `cast_single`). A damage spell's
-    `effect.status` falls on everyone it hit who lives. `Cause::Spell(ClassSpell)` for a death
+    `effect.status` falls on everyone it hit who lives. `Cause::Spell(SpellId)` for a death
     by one's own spell.
   - **Resolution**: area through `World::spell_hurts` (Evasion via `World::evaded`, then
     `World::spell_strikes`); auto through `spell_strikes` with a plain hit; attack and touch roll
@@ -105,8 +106,8 @@ shares.
   - **Determinism**: draws, only when they arise: the attack roll (two dice, a why-missed draw,
     a confirmation) and the damage dice for a single target; one roll for an area, its targets
     in ascending actor id. A buff, hex, or cleanse draws nothing.
-  - **Saves**: nothing new (the twelve abilities are `ClassSpell` as before; costs and
-    reaches are derived). Old replays that cast verify only if the spell's cost is the same as
+  - **Saves**: nothing new in #395 (costs and reaches are derived); a spell is a `SpellId`
+    (an index, in the content fingerprint) since #397. Old replays that cast verify only if the spell's cost is the same as
     the placeholder's; the regenerated costs change the state hash of any that cast.
 - **Choices** (design §14 and the issue's open points, decided here):
   - The attack roll's skill: there is no Missile skill (weapon skills are per weapon), so rays,
@@ -128,7 +129,51 @@ shares.
     disease 3 (11; 10), Call lightning 4 (29; 8, a line), Flame 3 (26; 10), Frost 2 (14; 10),
     Arcane bolt 2 (11; 3, a line of force), Fire burst 3 (26; 9), Evil eye 1 (3; 2), Hex of
     weakness 1 (3; 3), Curse of sloth 1 (3; 4), Blight 2 (14; 8). Armour: chain 10, scale 20,
-    banded 30, plate 40, great helm 10, large shield 10, tower shield 20.
+    banded 30, plate 40, great helm 10, large shield 10, tower shield 20. #397 retiered some
+    of them for the first list (below): Blessing 1, Cure wounds 1 (a touch), Evil eye 0, Call
+    lightning 3 (2d6 to 3d6), and Fire burst folded into Fireball.
+- **The first list** (#397; design §7, §8; tests `world/spell_list_tests.rs`):
+  - **Spells are data**: `SpellId` (an index in path order) is the one spell type; the
+    twelve-variant `ClassSpell` of #395 is gone. `Action::Cast(String, _)` names the spell by its
+    data id (`use:ID[:X,Y]`: any `use:ID` that is no birth sign or class active, parsed without
+    content; an unknown one is refused by the rules, "You have no such ability."). The
+    `Ability` methods that need a spell's shape or id take the content (`aim`, `action`,
+    `action_at`), as does the aiming mode's `Aim::action`. `TalentEffect::Spell { spell }` holds
+    the id string (checked against `data/spells/` at load, resolved in `TalentMods::spells`).
+    `Content::spells_by_tier` is the menu's order (tier, then path), `Ability::every`'s too.
+  - **The list** (24 spells): tier 0 Evil eye, Mend (touch heal), Ray of frost (ray,
+    attack), Spark (bolt, auto); tier 1 Barkskin (buff), Blessing, Burning hands (cone 3),
+    Cause wounds (touch, necrotic), Cure wounds (touch heal 2d6), Curse of sloth, Hex of
+    weakness, Magic missile (bolt, auto, force, 1d4 to 2d4); tier 2 Arcane bolt, Blight, Frost,
+    Scorching ray (ray, attack, 1d6 to 3d6, the design's "one to three rays" as dice), Sleep and
+    Web (area hexes, burst radius 1); tier 3 Call lightning, Fireball (2d6 to 3d6), Flame, Haste
+    (buff), Lightning bolt (line), Remove disease. New statuses: `drowsy` (cost 300), `webbed`
+    (blocks `step`), `hasted` (cost 75: `COST_PERCENT` is now 50 to 1000, and `spell_def`
+    refuses a status below 100 on anything but a buff, so only the caster is hastened and the
+    rest batching stays exact), `barkskin` (Dodge +2). New effects: `frost_ray`, `spark` (bolts).
+  - **Area hexes** (`World::cast_area_hex`): a hex of shape burst flies as a burst
+    (`burst_center`), and its status, lengthened by Presence, falls on every actor in
+    `burst_cells` but the caster, friend or foe; each seen is said ("The rat is drowsy."). It
+    goes off whether or not anyone is there. No draws.
+  - **Scrolls of spells**: one object per spell (`scroll_of_ID`, `read` kind `spell`;
+    docs/dev/scrolls.md), except the three older scrolls whose burst and bolt readings stay
+    (fireball teaches Fireball, frost Frost, lightning Lightning bolt). Read: `World::read_cast`,
+    the cast path with `Pay::Scroll(item)` (the `Cast` struct's `pay`; `World::pay_cast` is the
+    one place a cast pays, mana or scroll, once it is sure to go off) at the scroll's level.
+    Level, frequency, and value by tier: 0 (1, 60, 40 gold), 1 (2, 45, 80), 2 (4, 30, 130), 3
+    (6, 20, 200). Shops draw their goods by loot frequency (`mapgen/shop.rs`, `pick_weighted`).
+  - **Guaranteed spells**: class abilities in the class tables, one talent file per spell
+    (`assets/data/talents/`, `tree = "class"`, `granted`, systems `spells` first), shared by
+    the classes that give it. The content test holds every given spell within the tier the
+    class's caster level has reached at that level, a full caster to a cantrip at 1 and four to
+    six spells, and the others to at most two boons of tier 1 or less. Every class has `mana`
+    at least 1 (the barbarian and the warrior gained theirs); races keep their own.
+  - **Choices** (design §14, the defaults): q1, q2, q3, q5, q7 as above (interrupted study
+    keeps the scroll; Dexterity aims; no cap lifts; `force` and `necrotic` stay; Spell recall
+    never keeps a studied scroll); q4: the casting percents as §3 and the guaranteed lists as
+    §8, the paladin's and ranger's boons Blessing and Barkskin at 6, the bard's Mend and
+    Blessing; q6: the mishap table unchanged. Sleep has no level limit (the design's "creatures
+    of low level"): it slows rather than stops, so any creature may be caught.
 - **Caster level** (`world/caster_level.rs`): `Actor::caster_level(content, level, casting)`
   (`level × casting ÷ 100` rounded down, plus `TalentMods::caster_level` and the worn
   `Effect::CasterLevel`, at least 0, at least 1 while `max_mana` is above 0),
@@ -144,20 +189,20 @@ shares.
   (`ui/target.rs`: `cast_spell`, `Aim::spell_line`; a cone's dots are its cells).
 - **Learning** (#396; `world/learn.rs`, `content/learning.rs`, tests `world/learn_tests.rs`
   and `content/learning.rs`):
-  - **Known spells**: `Actor::spells` (`BTreeSet<ClassSpell>`, saved by id, left out while
+  - **Known spells**: `Actor::spells` (`BTreeSet<SpellId>`, saved by index, left out while
     empty, so actors without hash as before; saves change) holds the learned ones;
     `Actor::knows_spell` is that or a class ability's `spell` effect (`TalentMods::has_spell`);
     `Actor::known_spells` lists both in menu order; `Ability::Spell(s).had_by` asks
-    `knows_spell`. `Content::spell_of(ClassSpell)` is a spell's data whoever has it;
-    `Content::class_spell` stays "a class ability gives it". The spells stay the twelve
-    `ClassSpell`s (#397 brings more and may generalise the enum to `SpellId`).
+    `knows_spell`. `Content::spell_of(SpellId)` is a spell's data whoever has it;
+    `Content::class_spell` stays "a class ability gives it".
   - **Data**: `data/study.toml` (`StudyRules`: `base`, `per_overreach`, `known_per_point`,
     `turns_per_tier`, `bad_from`, `terrible_from`, and the words' thresholds `easy`,
     `struggle` in ways of 144); `data/mishaps/` (`Mishap`, one `[[mishap]]` a file, its
     `README.toml` the format: `band` slight/bad/terrible/lucky, `weight`, `message`, `effect`
     by `kind`: nothing, status, backfire, mana, teleport, lose_mark, drain, summon, learn, mark;
     only its kind's fields; `learn` and `mark` only lucky); `teaches` in a spell scroll's `read`
-    table (`ScrollSpell::teaches`, a `ClassSpell` with a spell file, checked as objects load);
+    table (`ScrollSpell::teaches`, a `SpellId`, checked as objects load; `Reading::teaches`
+    is what every caller asks, a `spell` reading teaching its own);
     a class's `affinity` (`ClassDef::affinity`, school → −10 to 10 study points); the skills'
     `study` benefit (`skills::Effect::Study`, Spellcraft and Decipher script, a curve to 20 at
     200) and `study` mark (`Use::Study`, which is also `StatUse::Study`: Intelligence 100 %);
@@ -213,5 +258,8 @@ shares.
   `world/cast_tests.rs` (an attack can miss and critical under the cap, auto and area never,
   Empower to the cap, Evasion halving an area only, line against bolt, the cone, touch, armour,
   Willpower's reach, no draws without a roll; test spells replace Arcane bolt's file),
-  `world/caster_tests.rs` (the twelve migrated spells), `world/spell.rs` (cone geometry),
+  `world/caster_tests.rs` (the casters' tables and spells), `world/spell_list_tests.rs` (#397:
+  scrolls of spells read, the area hexes, Haste, one scroll a spell, the classes' guaranteed
+  spells within their tier, mana for every class), `magic/tests.rs` (`spell_scrolls_drop_by_tier`),
+  `world/spell.rs` (cone geometry),
   `ui/target.rs` (aiming by shape).
