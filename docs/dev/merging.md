@@ -100,6 +100,23 @@ conflict every time; two that insert at different places merge cleanly. So:
   files of the sections it touches (bullets next to the related ones); CLAUDE.md only for a new
   command or flag; the wiki gets its page and tables; `README.md` is not touched by feature work.
 
+## Roster and content PRs and hot docs
+
+Creature roster PRs edit only their own `docs/dev/creatures/<tribe>.md`; never
+`docs/dev/creatures.md` (the stable index) or the spec's creature and faction lists
+(`spec/07b-data.md` points at `assets/data/creatures/` and `assets/data/factions.toml`; the
+tag list is the one in `assets/data/creatures/README.toml`). Other hot spots seen in the
+roster wave, and what to do in each:
+- `assets/data/factions.toml`: insert by group, never at the end.
+- the four test fixtures that hard-code the factions list (`world/{equip,magic,object,read}_tests.rs`):
+  a new faction must be added to all four. Follow-up (not done yet): build each fixture's
+  factions from the shipped `factions.toml` minus what it removes, in one shared test helper, so
+  a faction touches none of them.
+- the creatures README tag list: add a tag's line by group, only when something uses the tag.
+- `assets/data/plurals.toml`: insert alphabetically.
+- `xtask/src/wiki/mod.rs` test rows and the wiki's test rows: follow-up, make them
+  fragment-based (as one agent did) so a creature adds a row of its own, not a line in a shared one.
+
 ## The save format: one bump per release
 
 `FORMAT_VERSION` (`warlock-core/src/save.rs`) is bumped by the integrator once per release, never
