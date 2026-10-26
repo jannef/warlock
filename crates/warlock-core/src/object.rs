@@ -31,6 +31,7 @@ use crate::color::Rgb;
 use crate::content::{Content, Cutting, DamageTypeId, MaterialId, ObjectId, Part, Rarity, part};
 use crate::item_parts::{self, ItemPart};
 use crate::magic::{Effect, Magic, Mods, name};
+use crate::scroll_label::Lore;
 use crate::time::GameTime;
 use crate::variant;
 use serde::{Deserialize, Serialize};
@@ -392,8 +393,8 @@ pub fn format_weight(grams: u64) -> String {
 
 /// Stacks in a sentence: "a dagger", "a dagger and 12 arrows", "a dagger, 12 arrows, and a
 /// ruby"; more than three stacks are counted ("17 objects").
-pub fn phrase(stacks: &[Stack], content: &Content) -> String {
-    phrase_with(stacks, content, |_| None)
+pub fn phrase(stacks: &[Stack], lore: Lore<'_>) -> String {
+    phrase_with(stacks, lore, |_| None)
 }
 
 /// [`phrase`] with what `tag` says of the stack at each position after its name, in
@@ -401,13 +402,13 @@ pub fn phrase(stacks: &[Stack], content: &Content) -> String {
 /// three stacks are counted, untagged.
 pub fn phrase_with(
     stacks: &[Stack],
-    content: &Content,
+    lore: Lore<'_>,
     tag: impl Fn(usize) -> Option<String>,
 ) -> String {
     let names: Vec<String> = (stacks.iter().enumerate())
         .map(|(i, s)| match tag(i) {
-            Some(tag) => format!("{} ({tag})", s.describe(content)),
-            None => s.describe(content),
+            Some(tag) => format!("{} ({tag})", lore.describe(s)),
+            None => lore.describe(s),
         })
         .collect();
     match names.as_slice() {
@@ -568,14 +569,20 @@ mod tests {
         assert_eq!(arrows.weight(&c), 12 * each);
         let (d, a) = (|| dagger.clone(), || arrows.clone());
         assert_eq!(weight_of(&[d(), a()], &c), dagger.weight(&c) + 12 * each);
-        assert_eq!(phrase(&[d()], &c), "a dagger");
-        assert_eq!(phrase(&[d(), a()], &c), "a dagger and 12 arrows");
+        assert_eq!(phrase(&[d()], Lore::plain(&c)), "a dagger");
+        assert_eq!(
+            phrase(&[d(), a()], Lore::plain(&c)),
+            "a dagger and 12 arrows"
+        );
         let ruby = gem(&c, "ruby");
         assert_eq!(
-            phrase(&[d(), a(), ruby.clone()], &c),
+            phrase(&[d(), a(), ruby.clone()], Lore::plain(&c)),
             "a dagger, 12 arrows, and a ruby"
         );
-        assert_eq!(phrase(&[d(), a(), ruby, d()], &c), "15 objects");
+        assert_eq!(
+            phrase(&[d(), a(), ruby, d()], Lore::plain(&c)),
+            "15 objects"
+        );
         let w = Weight {
             base: 70_000,
             carried: 1_500,

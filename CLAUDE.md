@@ -159,7 +159,7 @@ levels"); `weather` is the dev weather override, `KIND` =
 effect, `ID` an id in `assets/data/effects.toml`: `effect:fireball@30,14` (a burst there),
 `effect:fireball@20,10>30,14` (flying there first), `effect:lightning_bolt@21,17>58,17` (a bolt
 toward the second cell), no time and no rules effect, for captures; `identify` is the dev
-identify (magic items, no time; without letters everything carried); `afflict` is the dev status
+identify (magic items and labelled scrolls' types, no time; without letters everything carried); `afflict` is the dev status
 effect: one degree more of `STATUS`, an id in `assets/data/status.toml`, e.g.
 `afflict:poisoned*4 afflict:bleeding`, no game time (not `diseased`: that comes of a disease; nor
 `raging`: that comes of `resource:rage`);

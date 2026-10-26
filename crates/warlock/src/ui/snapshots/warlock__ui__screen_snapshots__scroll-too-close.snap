@@ -2,8 +2,8 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- There are several objects here.
- You pick up 8 objects.
+ You pick up 10 objects.
+ You read the scroll labelled BARQUAA. It is a scroll of identify. This is 2 scrolls of fireball!
 
 
 

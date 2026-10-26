@@ -2,9 +2,30 @@
 
 A scroll (`?`) holds one spell or charm. Press `r` to **read** one: a list of the scrolls you
 carry opens; choose one with its letter (or the arrows and `Enter`). Reading takes a turn and
-uses the scroll up. What each scroll is shows on sight: there are no unknown labels to learn (yet).
+uses the scroll up.
 
 {{#include generated/scrolls.md}}
+
+## Unknown scrolls
+
+A scroll you have never read shows by a **label** instead of its name: "a scroll labelled
+ZUNBAR", in the same plain colour as every other unknown scroll. Each kind of scroll has its own
+label, made up anew for each character and kept for their whole life (two scrolls labelled
+ZUNBAR are always the same kind). The label shows everywhere: in your pack, on the floor, in a
+shop, in look mode, and in what you are told.
+
+You learn what a kind of scroll is, for good, in one of three ways:
+
+- **Read one.** "You read the scroll labelled ZUNBAR." "It is a scroll of fireball." From then
+  on every scroll of fireball shows by its name. Reading an unknown scroll is a gamble: a spell
+  scroll is aimed first, and a fireball aimed near you may catch you too.
+- **The scroll of identify**, read on it (below): the scroll of identify is known once you read
+  your first one.
+- **Your starting kit**: you know the scrolls you start with.
+
+Knowing what a scroll is does not teach you its spell: a scroll you know by name is still only a
+scroll (studying spells will come with magic). The scroll of light cannot be read, and is known
+on sight. A shop's price for an unknown scroll is its true price.
 
 ## Spell scrolls
 
@@ -42,13 +63,19 @@ writing does not fade from the scroll.").
 ## The scroll of identify
 
 Choose the scroll of identify and a second list opens: the unidentified items you carry (see
-[Magic items](magic-items.md)). Choose one, and you know what it is from then on: "This is a
-Sharp dagger of the Lynx!" With nothing unidentified, the list says so, and the scroll is kept.
+[Magic items](magic-items.md)) and the scrolls you carry that show only their label. Choose one,
+and you know what it is from then on: "This is a Sharp dagger of the Lynx!", "This is 2 scrolls
+of lightning!" (and every scroll of lightning shows by its name). With nothing unidentified, the
+list says so, and the scroll is kept.
+
+The scroll of identify is the commonest scroll: it turns up more often than any other in loot,
+and every general store in the dungeons has a stack of them.
 
 ## Where scrolls are
 
 - **Loot**: scrolls lie about as loot on the floors of generated dungeon levels (see [Dungeons and danger](dungeons.md)), from the item
   level in the table above on. They are never magic, so vaults and creatures that leave only
   magic things never leave one.
-- **Shops**: a general store sells and buys scrolls (see [Shops](shops.md)).
+- **Shops**: a general store sells and buys scrolls (see [Shops](shops.md)); one in the
+  dungeons always has scrolls of identify among its goods, and so does Ælfric's in Cēaptūn.
 

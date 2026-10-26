@@ -44,6 +44,7 @@ mod resource;
 mod room_effect;
 mod scenario;
 mod scroll;
+mod scroll_label;
 mod search;
 mod shop;
 mod size;
@@ -140,6 +141,7 @@ pub use resource::{Build, MAX_EVERY, MAX_RESOURCE, MAX_SHORT, OverTime, Resource
 pub use room_effect::{Here, RoomEffectDef, RoomEffectId, RoomEffects, SpecialRoom};
 pub use scenario::ScenarioDef;
 pub use scroll::{Cast, Reading, ScrollSpell};
+pub use scroll_label::ScrollLabelDef;
 pub use search::{
     PASSIVE_PENALTIES, PassiveSearch, SEARCH_TURNS, SearchRules, Secret, secret_look,
 };
@@ -531,6 +533,9 @@ pub struct Content {
     /// Prefixes, suffixes, and how loot rolls them (`data/affixes.toml`).
     affixes: Affixes,
     stances: Stances,
+    /// Unidentified scrolls' labels (`data/scroll_labels.toml`): none, every scroll known on
+    /// sight, without it.
+    scroll_labels: Option<ScrollLabelDef>,
     /// In `data/status.toml` order: most important first.
     statuses: Vec<StatusDef>,
     /// Alternative resources (`data/resources.toml`, spec §8 "Resources"), in file order; none
@@ -615,6 +620,7 @@ impl Content {
             talents: TalentBook::default(),
             affixes: Affixes::default(),
             stances: Stances::default(),
+            scroll_labels: None,
             statuses: Vec::new(),
             resources: Vec::new(),
             status_ids: BTreeMap::new(),
@@ -677,6 +683,10 @@ impl Content {
             let table = files.table("affixes");
             let typed = (damage, has_types);
             content.affixes = affix::parse(table, light, (skill, has_skills), typed)?;
+        }
+        let path = "data/scroll_labels.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.scroll_labels = Some(ScrollLabelDef::parse(path, text)?);
         }
         let path = "data/stances.toml";
         if let Some(text) = files.get_optional(path) {
@@ -2474,6 +2484,11 @@ impl Content {
     /// Every vision profile in file order; never empty.
     pub fn vision_profiles(&self) -> &[VisionProfile] {
         &self.visions
+    }
+
+    /// Unidentified scrolls' labels (`data/scroll_labels.toml`), if scrolls have them.
+    pub fn scroll_labels(&self) -> Option<&ScrollLabelDef> {
+        self.scroll_labels.as_ref()
     }
 
     /// The combat stances of `data/stances.toml` (all plain without the file).

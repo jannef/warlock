@@ -51,7 +51,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   know is solid, or the cursor) asks first, in the dialog: `The fireball may catch you too. Read
   the scroll of fireball anyway?` with `Read it` (accept: the read as usual, replay text
   `read:LETTER:X,Y`), `Aim again` (decline: back to aiming, on the same target), and `Don't read
-  it` (cancel, selected first). The rules never ask.
+  it` (cancel, selected first). The rules never ask. A scroll still under its label (§8
+  "Scrolls") never asks: reading it is a gamble.
 - **Main menu** (drawn in glyphs; the game opens on it unless `--scenario`, `--new`, `--replay`,
   `--record`, or `--capture` name what to run): Continue (only if a character is saved: it
   resumes the one played last, and names them), Characters (likewise), New run (scenario list
@@ -511,10 +512,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
   eating.") when not, the food left as it was. What is no food is refused and takes no time
   ("You cannot eat a dagger.").
 - **Read** (`r`; §8 "Scrolls") opens the choice of what to read: the scrolls in the inventory
-  (what has something to read on it), in the item list; with nothing, "You have nothing to
+  (what has something to read on it; an unidentified one by its label, §8 "Scrolls"), in the
+  item list; with nothing, "You have nothing to
   read." A letter, or Enter on the `>` row, chooses: a spell scroll is then aimed (Targeting,
   below), and the scroll of identify replaces the list with the unidentified stacks the player
-  carries ("You carry nothing unidentified."), where a letter or Enter reads it on that stack
+  carries (magic items not identified, and scrolls still under their labels; "You carry nothing
+  unidentified."), where a letter or Enter reads it on that stack
   (replay text `read:LETTER:LETTER`, the scroll then the stack). Esc cancels either list.
 - **Dig** (`u`, "use a tool", ADOM's use-tool key, an item's use rather than an ability; §8
   "Digging") asks in the message line `Dig in which direction? (Esc to cancel)`; a direction

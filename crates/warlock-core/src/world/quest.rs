@@ -607,7 +607,7 @@ impl World {
         let def = content.quest(q);
         if let Some((object, count)) = def.hand_in() {
             let handed = self.take_from_pack(object, count);
-            let what = object::phrase(&handed, &content);
+            let what = object::phrase(&handed, self.lore());
             let who = self.called(&self.state.actors[&id]);
             self.say(format!("You give {who} {what}."));
         }
@@ -637,7 +637,7 @@ impl World {
         if !stacks.is_empty() {
             self.say(format!(
                 "{who} gives you {}.",
-                object::phrase(&stacks, &content)
+                object::phrase(&stacks, self.lore())
             ));
             self.give_player(&stacks);
         }

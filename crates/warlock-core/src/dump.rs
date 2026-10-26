@@ -473,7 +473,7 @@ fn inventory_rows(view: &PerceptionView<'_>) -> Vec<String> {
             class = Some(here);
             rows.push(format!("{}:", content.item_class(here).name));
         }
-        let name = s.describe(content);
+        let name = view.lore().describe(s);
         let weight = format_weight(s.weight(content));
         let mark = equipment::mark(content, view.equipment(), i)
             .map_or(String::new(), |m| format!(" ({m})"));
@@ -506,7 +506,7 @@ fn equipment_rows(view: &PerceptionView<'_>) -> Vec<String> {
         .map(|(i, (slot, def))| {
             let what = match worn.get(slot) {
                 Some(item) => view.inventory().get(item).map_or("?".into(), |s| {
-                    format!("{} ({})", s.describe(content), position_text(item))
+                    format!("{} ({})", view.lore().describe(s), position_text(item))
                 }),
                 None => "-".into(),
             };
@@ -1133,9 +1133,9 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
                 "class": content.item_class(view.item_class(s)).id,
                 "count": s.count,
                 "weight": s.weight(content),
-                "name": s.describe(content),
+                "name": view.lore().describe(s),
                 "rarity": s.rarity(),
-                "identified": s.is_identified(),
+                "identified": view.lore().knows(s),
                 "magic": magic,
             });
             if let Some(price) = unpaid.get(i).copied().flatten() {
