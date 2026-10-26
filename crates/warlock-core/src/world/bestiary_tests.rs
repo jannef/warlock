@@ -123,6 +123,23 @@ const WAVES: &[(&str, Option<&str>)] = &[
     ("church_grim", None),
     ("white_lady", None),
     ("bone_colossus", None),
+    // The undead roster, batch 5 (#388): levels 41 to 55, all shared.
+    ("wraith_lord", None),
+    ("barrow_king", None),
+    ("sluagh", None),
+    ("ghoul_king", None),
+    ("death_knight", None),
+    ("vampire_lord", None),
+    ("nightganger", None),
+    ("wormlord", None),
+    ("washer_at_the_ford", None),
+    ("night_mare", None),
+    ("bone_dragon", None),
+    ("drowned_king", None),
+    ("rotting_dragon", None),
+    ("ghost_lord", None),
+    ("archlich", None),
+    ("hound_of_the_hunt", None),
 ];
 
 #[test]
@@ -257,6 +274,11 @@ fn the_roster_spirits_pass_through_walls_and_the_drainers_drain() {
         "dread_wraith",
         "greater_shadow",
         "white_lady",
+        "wraith_lord",
+        "sluagh",
+        "washer_at_the_ford",
+        "night_mare",
+        "ghost_lord",
     ] {
         let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
         let wall = def.incorporeal.as_ref().map(|i| i.wall_defence);
@@ -299,6 +321,37 @@ fn the_roster_spirits_pass_through_walls_and_the_drainers_drain() {
             "{id}"
         );
     }
+    // Two-point drains from level 40 (#383): difficulty 12 + level / 5.
+    for (id, stat, check, difficulty, want) in [
+        ("wraith_lord", Stat::Toughness, Stat::Toughness, 20, 10),
+        ("barrow_king", Stat::Toughness, Stat::Toughness, 20, 10),
+        ("vampire_lord", Stat::Toughness, Stat::Toughness, 21, 15),
+        ("nightganger", Stat::Toughness, Stat::Toughness, 21, 10),
+        (
+            "washer_at_the_ford",
+            Stat::Presence,
+            Stat::Willpower,
+            21,
+            10,
+        ),
+        ("night_mare", Stat::Willpower, Stat::Willpower, 21, 10),
+        ("ghost_lord", Stat::Willpower, Stat::Willpower, 22, 10),
+        ("archlich", Stat::Intelligence, Stat::Willpower, 22, 10),
+    ] {
+        let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
+        let touch = def.attack.as_ref().expect("an attack");
+        let drain = (touch.on_hit.iter()).find_map(|h| match h.what {
+            Affliction::Drain(d) => Some((d, h.chance)),
+            _ => None,
+        });
+        let (drain, chance) = drain.unwrap_or_else(|| panic!("{id}: a drain"));
+        assert_eq!(drain.stat, Some(stat), "{id}");
+        assert_eq!(
+            (drain.points, drain.check, drain.difficulty, chance),
+            (2, check, difficulty, want),
+            "{id}"
+        );
+    }
     // Holds (#431): the ghouls' claws, the gallows dead's tongue, and the lich's touch.
     for (id, chance, difficulty) in [
         ("ghast", 10, 15),
@@ -306,6 +359,8 @@ fn the_roster_spirits_pass_through_walls_and_the_drainers_drain() {
         ("gallows_dead", 20, 17),
         ("lich", 15, 18),
         ("ghoul_lord", 15, 18),
+        ("ghoul_king", 20, 20),
+        ("archlich", 20, 22),
     ] {
         let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
         let attack = def.attack.as_ref().expect("an attack");

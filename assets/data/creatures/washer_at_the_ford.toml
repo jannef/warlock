@@ -1,0 +1,39 @@
+# The undead roster (#383, batch 5). The bean nighe of the Highland tales, a spirit that scrubs
+# the shrouds of those about to die at the water's edge: the sight of her sends the living
+# running, and her touch takes the bearing out of them, for good unless the will holds (a temple's
+# mending gives it back). She drifts through walls and doors. Not yet in any dungeon's
+# population.
+[[creature]]
+id = "washer_at_the_ford"
+level = 48
+xp = 250
+rarity = "rare"
+name = "washer at the ford"
+plural = "washers at the ford"
+glyph = "G"
+fg = "#7aa0b0"
+speed = 1300
+faction = "undead"
+tags = ["undead", "spirit"]
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+hearing = 15
+weight = 100
+stats = { strength = 28, dexterity = 25, toughness = 28, intelligence = 29, willpower = 33, presence = 29 }
+base_hp = 72
+natural = { defence = 6, protection = 0, name = "insubstantial form" }
+incorporeal = { wall_defence = 6 }
+resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "3d10"
+damage_type = "cold"
+name = "touch"
+verb = "touches"
+to_hit = 4
+on_hit = [
+    { status = "frightened", chance = 30, severity = 3 },
+    { drain = "presence", points = 2, chance = 10, difficulty = 21 },
+]

@@ -6,6 +6,7 @@
 # `plural` of its own. A new tag or name with an irregular plural adds its line here (a
 # campaign's own words go in its data/plurals.toml); a word given two plurals is an error.
 
+archlich = "archliches"
 child = "children"
 colossus = "colossi"
 deer = "deer"
@@ -29,6 +30,7 @@ mummy = "mummies"
 ox = "oxen"
 rakshasa = "rakshasa"
 sheep = "sheep"
+sluagh = "sluagh"
 staff = "staves"
 succubus = "succubi"
 thief = "thieves"

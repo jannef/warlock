@@ -1,0 +1,36 @@
+# The undead roster (#383, batch 5). The wraith that drank until it ruled: a cold shape over a
+# barrow's dead, its touch drinking the living's Toughness two points at a time, for good unless
+# the body holds on (a temple's mending gives it back). It drifts through walls and doors; blades
+# and clubs pass half through it. Not yet in any dungeon's population.
+[[creature]]
+id = "wraith_lord"
+level = 41
+xp = 215
+rarity = "rare"
+name = "wraith lord"
+glyph = "W"
+fg = "#9a7ab0"
+speed = 1250
+faction = "undead"
+tags = ["undead", "spirit"]
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+hearing = 15
+weight = 100
+stats = { strength = 25, dexterity = 23, toughness = 25, intelligence = 26, willpower = 30, presence = 26 }
+base_hp = 62
+natural = { defence = 6, protection = 0, name = "insubstantial form" }
+incorporeal = { wall_defence = 6 }
+resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "4d6"
+damage_type = "cold"
+name = "touch"
+verb = "touches"
+to_hit = 4
+on_hit = [
+    { drain = "toughness", points = 2, chance = 10, check = "toughness", difficulty = 20 },
+]

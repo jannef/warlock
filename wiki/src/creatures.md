@@ -115,7 +115,7 @@ trolls counts them too.
 
 Some restless dead have no body to stop them: **incorporeal** creatures (the ghosts, shadows,
 poltergeists, corpse candles, and wraiths of Fennmynster, the knockers and spectres of Fyrdelf,
-and, far deeper, banshees, dread wraiths, greater shadows, and white ladies), and the earth elementals, whose element is the stone, drift through walls, solid rock, trees, and closed doors (which stay shut behind them), and may
+and, far deeper, banshees, dread wraiths, greater shadows, white ladies, wraith lords, the sluagh, washers at the ford, night mares, and ghost lords), and the earth elementals, whose element is the stone, drift through walls, solid rock, trees, and closed doors (which stay shut behind them), and may
 stop inside the stone. They cannot leave the level that way, and lava stops them as it stops
 anyone. Nothing of them presses down: they set off no traps and never break ice.
 
@@ -195,7 +195,7 @@ wraiths, and vampires that drink your life, the charnel heaps and wormhosts, the
 and drakes that rose with their flesh still on, and the lich, a sorcerer who would not die. Deeper still wait the lords of their kinds: ghoul
 lords, draugr lords, and mummy lords, the plague-bearing nosferatu, greater shadows and white
 ladies, the black dogs of the churchyards and the shore lanes (black shucks and church grims),
-screaming skulls, and the bone colossus, a charnel house of bones stood up on its own.
+screaming skulls, and the bone colossus, a charnel house of bones stood up on its own. Deepest of all wait the kings of the dead: barrow kings, ghoul kings, vampire lords, death knights and nightgangers, wormlords, the drowned king, the bone and rotting dragons, the archlich, and the hounds of the Wild Hunt.
 
 **Demons** come up from below: the lesser ones (`u`) from the dretch to the chasme, the greater
 (`U`) from the hezrou to the balor. None of them leaves a body behind, poison does nothing to
