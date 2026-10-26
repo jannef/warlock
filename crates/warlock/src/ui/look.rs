@@ -7,7 +7,7 @@ use warlock_core::color::Rgb;
 use warlock_core::content::{ActionKind, Content, ServiceKind, Stance};
 use warlock_core::object::{Stack, phrase, phrase_with};
 use warlock_core::perception::{CellView, PerceptionView, SeenActor};
-use warlock_core::world::ActorId;
+use warlock_core::world::{ActorId, ActorKind};
 
 /// Cursor colors: dark glyph on a warm highlight, so it reads on any terrain and under any light.
 pub const CURSOR_FG: Rgb = Rgb::new(0x14, 0x12, 0x10);
@@ -105,6 +105,10 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
     match (view.cell(p), heard) {
         (CellView::Visible(t), _) => match (view.actor_at(p), &things) {
             (Some(_), _) if p == view.viewer() => format!("You, on {}{here}.", terrain(t)),
+            // The player's own image in a hall of mirrors.
+            (Some(actor), _) if actor.kind == ActorKind::Player => {
+                format!("Your reflection, on {}{here}.", terrain(t))
+            }
             (Some(actor), _) => {
                 let name = &content.creature(actor.creature).name;
                 // Its type tells the player how it stands toward them (its faction), and they

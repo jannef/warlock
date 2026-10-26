@@ -49,6 +49,9 @@ pub const WEIGHT: RangeInclusive<u8> = 1..=100;
 pub const DWELL_EASES: u32 = 10;
 /// The degrees Celsius an effect may add to the level's temperature (spec §7 "Special rooms").
 pub const TEMPERATURE: RangeInclusive<i8> = -40..=40;
+/// How many reflections a hall of mirrors may show of each actor inside (spec §7 "Special
+/// rooms").
+pub const IMAGES: RangeInclusive<u8> = 1..=8;
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -111,6 +114,21 @@ struct RoomEffectSpec {
     status: Option<String>,
     #[serde(default)]
     temperature: i8,
+    mirrors: Option<MirrorsSpec>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct MirrorsSpec {
+    images: u8,
+}
+
+/// A hall of mirrors' reflections (spec §7 "Special rooms"; `world/mirrors.rs`): every actor
+/// inside is shown to the player with this many images of it on free floor of the room.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Mirrors {
+    /// Reflections of each actor inside.
+    pub images: u8,
 }
 
 /// What a special room does while one is inside it.
@@ -160,6 +178,8 @@ pub struct RoomEffectDef {
     /// Degrees Celsius added to the level's temperature inside (a hot room's +25, a cold room's
     /// -25); `WorldState::temperature_at` is the one place it is read.
     pub temperature: i8,
+    /// The reflections a hall of mirrors shows of everyone inside (`World::images`).
+    pub mirrors: Option<Mirrors>,
 }
 
 impl RoomEffectDef {
@@ -185,7 +205,7 @@ impl RoomEffectDef {
     /// Whether it may cover a whole level: neither creatures shun it (a level hostiles shun is
     /// broken) nor does it lay a floor of its own, and it has its `pervade` line.
     pub fn can_pervade(&self) -> bool {
-        !self.shunned && self.floor.is_none() && self.pervade.is_some()
+        !self.shunned && self.floor.is_none() && self.mirrors.is_none() && self.pervade.is_some()
     }
 }
 
@@ -423,6 +443,17 @@ impl RoomEffects {
                 }
                 None => None,
             };
+            if let Some(m) = &spec.mirrors
+                && !IMAGES.contains(&m.images)
+            {
+                return Err(bad(format!(
+                    "mirrors.images {} is out of range ({} to {})",
+                    m.images,
+                    IMAGES.start(),
+                    IMAGES.end()
+                )));
+            }
+            let mirrors = spec.mirrors.as_ref().map(|m| Mirrors { images: m.images });
             let def = RoomEffectDef {
                 id: spec.id,
                 name: spec.name,
@@ -445,11 +476,12 @@ impl RoomEffects {
                 floor,
                 status,
                 temperature: spec.temperature,
+                mirrors,
             };
             if def.level_chance > 0 && !def.can_pervade() {
                 return Err(err(format!(
                     "effect `{}`: a `level_chance` needs a `pervade` line, and no effect that \
-                     creatures shun or that lays a floor covers a whole level",
+                     creatures shun, that lays a floor, or that holds mirrors covers a whole level",
                     def.id
                 )));
             }

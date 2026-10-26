@@ -805,7 +805,7 @@ pub(super) fn parse_level(
             if !content.room_effect(id).can_pervade() {
                 return Err(err(format!(
                     "effect `{name}` cannot cover a whole level: it needs a `pervade` line, and \
-                     none that creatures shun or that lays a floor can"
+                     none that creatures shun, that lays a floor, or that holds mirrors can"
                 )));
             }
             Some(id)

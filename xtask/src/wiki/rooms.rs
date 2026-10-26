@@ -93,6 +93,17 @@ pub(super) fn special_rooms(content: &Content) -> String {
                 e.temperature.unsigned_abs()
             ));
         }
+        if let Some(m) = e.mirrors {
+            does.push(format!(
+                "Everyone inside you see is shown with {} reflections of them on free floor of \
+                 the room, moving every turn and looking just like them (Mirror-wise: none \
+                 within 2 cells of you). A blow or a step into one meets only glass and takes a \
+                 blow's time; a missile aimed at one flies on through it. A creature outside \
+                 shooting or throwing at you inside aims at you or one of your reflections, \
+                 each alike; creatures inside are not fooled.",
+                m.images
+            ));
+        }
         let mut said = format!("\"{}\"", e.enter);
         if let Some(near) = &e.near {
             let _ = write!(said, " From outside: \"{near}\"");

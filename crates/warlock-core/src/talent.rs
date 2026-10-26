@@ -353,6 +353,9 @@ pub struct TalentMods {
     pub room_pace_percent: i32,
     /// The statuses of special rooms that never take it (Anchored mind).
     pub room_status_immune: Vec<StatusId>,
+    /// Within this many cells it sees a hall of mirrors' reflections for what they are
+    /// (Mirror-wise; 0: none).
+    pub sees_reflections: i32,
     /// Cells more its searching reaches.
     pub search_reach: i32,
     /// How much higher some skills count, by skill.
@@ -1099,6 +1102,7 @@ impl TalentMods {
                     self.room_status_immune.push(status);
                 }
             }
+            TalentEffect::SeesReflections { value } => self.sees_reflections += value,
             TalentEffect::SearchReach { value } => self.search_reach += value,
             TalentEffect::Skill { skill, value } => {
                 if let Some(id) = content.skill_id(&skill) {

@@ -387,6 +387,9 @@ pub enum TalentEffect {
     /// A special room's (or a whole level's) `status` never takes it (Anchored mind: Ebbing;
     /// `World::dwell`).
     RoomStatusImmune { status: String },
+    /// A hall of mirrors' reflections within this many cells are seen for what they are, and not
+    /// shown (Mirror-wise; `world/mirrors.rs`).
+    SeesReflections { value: i32 },
     /// Searching reaches this many cells farther.
     SearchReach { value: i32 },
     /// A skill counts this much higher wherever its value is read (an untrained one from 0).
@@ -957,6 +960,7 @@ impl TalentEffect {
             | TalentEffect::Threat { value }
             | TalentEffect::Search { value }
             | TalentEffect::SearchReach { value }
+            | TalentEffect::SeesReflections { value }
             | TalentEffect::ThrowRange { value }
             | TalentEffect::MaxDex { value }
             | TalentEffect::Deflection { value }

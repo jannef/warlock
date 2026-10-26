@@ -949,6 +949,7 @@ fn actor_rows(world: &World) -> Vec<String> {
         .filter_map(|(id, s)| food(format!("carried by {}", id.0), s))
         .collect::<Vec<_>>();
     let foods: Vec<String> = on_level.chain(carried).collect();
+    let images = world.images();
     let rows: Vec<String> = actors
         .map(|a| {
             let w = a.weight(content);
@@ -1070,6 +1071,16 @@ fn actor_rows(world: &World) -> Vec<String> {
                 String::new()
             } else {
                 format!("; resists {}", resists.join(" "))
+            };
+            // Its reflections in a hall of mirrors (`world/mirrors.rs`), wherever the player is.
+            let mirrored: Vec<String> = (images.iter())
+                .filter(|i| i.of == a.id)
+                .map(|i| i.pos.to_string())
+                .collect();
+            let resists = if mirrored.is_empty() {
+                resists
+            } else {
+                format!("{resists}; images {}", mirrored.join(" "))
             };
             format!(
                 "{} {} at {}: hp {}/{} mp {}/{}{resources} dv {} pv {}{alignment}{court}; weight {} (base {} + carried {}: \

@@ -49,6 +49,10 @@
 #   temperature  degrees Celsius added to the level's temperature inside, -40 to 40; default 0.
 #            The room sets its cells' temperature and nothing else: what the temperature does
 #            (ice today) is the environment's (spec §5 "Temperature"); the status bar shows it
+#   mirrors  a hall of mirrors: `{ images = N }` (1 to 8) reflections of everyone inside the player
+#            sees, on free floor of the room, moving each turn; they look just like what they
+#            reflect. A blow or a step into one meets only glass; a missile aimed at one flies on;
+#            creatures outside shooting at the player inside may aim at one. Never the whole level
 
 chance = 12
 per_level = 1
@@ -132,3 +136,12 @@ enter = "Your breath mists in the bitter cold."
 weight = 5
 glow = [0, 8, 22, 0]
 temperature = -25
+
+[[effect]]
+id = "mirrors"
+name = "hall of mirrors"
+mark = "m"
+enter = "Your reflection stares back at you from every side."
+weight = 3
+max_cells = 80
+mirrors = { images = 2 }
