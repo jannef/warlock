@@ -6,6 +6,7 @@ stats = { toughness = "1d2", willpower = "2d2", presence = -1 }
 hp = 4
 mana = 9
 casting = 100
+affinity = { restoration = 2, transmutation = 2, evocation = 1 }
 experience = 115
 skills = { handle_animal = "2d6+10", survival = "2d6+10", concentration = "2d4+4", heal = "2d4+4", listen = "2d4+4" }
 known_for = ["handle_animal", "survival"]

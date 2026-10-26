@@ -166,6 +166,8 @@ fn files(scenario: &str, extra: &[(&str, &str)]) -> ContentFiles {
     files.remove("data/talents.toml");
     // And the spells (Blessing's Blessed, the hexes').
     files.remove("data/spells/");
+    // And the mishaps of a failed study (Sluggish, Hexed, Blessed).
+    files.remove("data/mishaps/");
     // So does the rage (its Raging).
     files.remove("data/resources.toml");
     // And the giant leech's bite (its Bleeding), and so from Fennmynster, where it lives.

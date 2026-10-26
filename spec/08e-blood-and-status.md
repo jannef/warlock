@@ -214,10 +214,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     never the pace (hidden like `regen_seconds`); the dev `actors` layer shows every actor's.
     Mana is part of the world state (saved, covered by the state hash; an actor without any
     serializes as before).
-- **Spells** (the magic design, `docs/design/magic.md` §3, §5, §6; `content/spell_def.rs`,
-  `world/caster_level.rs`, `world/cast.rs`; #394, #395): the spell data and the one cast path.
-  The casters' spells (§8 "Class abilities") are spells of `data/spells/` cast by it; learning
-  spells (#396) is to come. `docs/dev/spells.md` has the details.
+- **Spells** (the magic design, `docs/design/magic.md` §3 to §6; `content/spell_def.rs`,
+  `world/caster_level.rs`, `world/cast.rs`, `world/learn.rs`; #394, #395, #396): the spell
+  data, the one cast path, and learning. The casters' spells (§8 "Class abilities") are spells
+  of `data/spells/` cast by it, and so are the spells learned from scrolls.
+  `docs/dev/spells.md` has the details.
   - **Tiers** (`data/spells.toml`): a spell has a tier, 0 (a *cantrip*) to 9. Each tier has a
     **comfortable caster level** (1, 3, 6, 12, 18, 25, 32, 40, 50, 60), a **base mana cost** (1,
     3, 6, 11, 16, 22, 29, 37, 46, 56), and a **damage ceiling** (6, 12, 18, 24, 32, 40, 50, 62,
@@ -288,6 +289,52 @@ developer notes (CLAUDE.md, `docs/dev/`).
     above 0. It will set learning, the cost of overreach, and a spell's dice. The player knows
     it: the dump `stats` layer's `Caster level N` (after the scores), JSON dumps' `caster_level`
     (`PerceptionView::own_caster_level`).
+  - **Learning** (`world/learn.rs`, `content/learning.rs`; #396): a character knows a set of
+    spells for good: those their class abilities give and those they learned
+    (`Actor::spells`, saved by id, left out of the JSON while empty). Either kind is cast from
+    the abilities menu's *Spells* group. A spell scroll may **teach** a spell (`teaches` in its
+    `read` table: fireball Fire burst, lightning Call lightning, frost Frost).
+    - **Study** (`Action::Study`, `study:b`; the `Study` key command, `L`, next to Read):
+      refused with no time, the scroll kept, for no such stack, a thing that teaches nothing
+      ("There is no spell in a dagger to learn."), a scroll still under its label ("You do not
+      know what this says."), a spell known ("You know this spell already."), a character with
+      no mana at all ("You have no gift for magic."), and what a status blocks (Raging blocks
+      `study`). Identification and learning are separate: any identified scroll whose spell the
+      player does not know may be studied, read or not. A scroll of a known spell still reads,
+      sells, and gives as any other.
+    - **Time**: `(tier + 1) × turns_per_tier` (100: ten minutes at tier 0) turns of the `study`
+      action (`data/actions.toml`, 1000), passed like a meal (`World::keep_at`); Quick study takes
+      half. It stops as a rest does (a creature that disturbs a rest comes into view, a message
+      is said: a blow lands, a status begins); an interrupted study loses the time and keeps the
+      scroll (design §14 q1). Once begun, the player cannot stop it themselves.
+    - **The check**, as the last turn ends, on the scroll used up (Spell recall never keeps a
+      studied scroll, design §14 q7): overreach is the spell's tier less the tier the caster
+      level has reached. At 0 or less the spell is learned, no draw. Above, a 2d12 check with
+      the Intelligence modifier + the skills' `study` benefit (Spellcraft and Decipher script,
+      each value ÷ 10, at most 20) + the class's `affinity` with the spell's school
+      (`data/classes/`, −10 to 10) + Quick study's bonus (2), against `base` (12) +
+      `per_overreach` (4) × overreach + the tiers known (a cantrip counting 1) ÷
+      `known_per_point` (10) (`data/study.toml`). Made: "…you have learned Frost."
+    - **Failure**: "The words twist away from you, and the scroll crumbles to dust.", then a
+      **mishap** (`data/mishaps/`, one file each): one draw by weight among those of the band
+      (slight at overreach 1, bad from `bad_from` (2), terrible from `terrible_from` (4)) and
+      the lucky ones, its message, then its effect: nothing; a status (Sluggish, Weakened,
+      Hexed; Blessed for a lucky one); the scroll's own spell going off on the reader (its
+      burst around them, its bolt through their cell, held to the taught spell's cap; a death by
+      it is the scroll's); a share of
+      the mana lost; a teleport on the level (the teleport trap's); a stat training mark lost;
+      a drain (`World::drain`: a Willpower check or points off a stat for good); a hostile
+      summoned next to the reader (a dretch); or, lucky, a training mark of Intelligence or the
+      spell learned anyway. A failure loses only that scroll: the spell can come again.
+    - **Training**: the `study` use (Spellcraft's and Decipher script's marks; an Intelligence
+      mark), whatever comes of it.
+    - **Determinism**: the check's two gameplay draws only when there is a check, the mishap's
+      one only on a failure, then its effect's own.
+    - **Shown**: the chance in words only (`StudyRules::words`: "certain", "easy" from 96 of 144
+      ways, "a struggle" from 36, "far beyond you"); the study list
+      (`PerceptionView::studies`) and its dialog; the dump `spells` layer (known spells with
+      tier and cost, then the scrolls one could study with the chance in words) and JSON's
+      `spells` and `studies`; the exact odds only in the dev `progress` layer.
 - **Resources** (`warlock-core/src/resource.rs`, the pools and time's rules;
   `content/resource.rs`, the data; `world/resource.rs`, applying them; #225): alternative
   resources, integer pools beside hit points and mana (which everyone has) that a character holds

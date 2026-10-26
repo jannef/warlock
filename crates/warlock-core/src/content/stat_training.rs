@@ -55,6 +55,8 @@ pub enum StatUse {
     Read,
     /// An item identified by reading.
     Identified,
+    /// A spell studied from a scroll, whatever comes of it (Spellcraft's use too).
+    Study,
     /// The first kill of a creature type.
     Discovered,
     /// Noticing something hidden in passing (Spot's use).
@@ -89,6 +91,7 @@ impl StatUse {
             Use::Dodge => Some(StatUse::Dodge),
             Use::Sneak => Some(StatUse::Sneak),
             Use::Spot => Some(StatUse::Spot),
+            Use::Study => Some(StatUse::Study),
             _ => None,
         }
     }
@@ -114,6 +117,7 @@ impl StatUse {
             StatUse::Found => "finding something hidden by searching",
             StatUse::Read => "reading a scroll",
             StatUse::Identified => "identifying an item",
+            StatUse::Study => "studying a spell from a scroll",
             StatUse::Discovered => "your first kill of a kind of creature",
             StatUse::Spot => "noticing something hidden in passing",
             StatUse::Endured => {

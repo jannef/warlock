@@ -6,8 +6,9 @@ Keep it current with the code, as CLAUDE.md says.
 
 The spell system is built in waves (design §13). This file covers what is built: the **data
 foundation** (#394: the tier table, the spell files with their load-time cap check, the tags,
-caster level) and the **one cast path** (#395: cost, reach, dice, resolution, the shapes, and
-the casters' placeholder spells migrated onto it). Learning spells is #396. Not to be confused
+caster level), the **one cast path** (#395: cost, reach, dice, resolution, the shapes, and
+the casters' placeholder spells migrated onto it), and **learning** (#396: the learned set,
+study, the check, mishaps; "Learning" below). Not to be confused
 with `content/spell.rs`, the bursts and bolts scrolls and traps cast, whose code the cast path
 shares.
 
@@ -141,8 +142,64 @@ shares.
 - **UI**: the abilities menu's **Spells** group (`Source::Spell`) with tier and cost
   (`ui/abilities_screen.rs`, snapshot `abilities-menu-spells`); the aiming mode by shape
   (`ui/target.rs`: `cast_spell`, `Aim::spell_line`; a cone's dots are its cells).
+- **Learning** (#396; `world/learn.rs`, `content/learning.rs`, tests `world/learn_tests.rs`
+  and `content/learning.rs`):
+  - **Known spells**: `Actor::spells` (`BTreeSet<ClassSpell>`, saved by id, left out while
+    empty, so actors without hash as before; saves change) holds the learned ones;
+    `Actor::knows_spell` is that or a class ability's `spell` effect (`TalentMods::has_spell`);
+    `Actor::known_spells` lists both in menu order; `Ability::Spell(s).had_by` asks
+    `knows_spell`. `Content::spell_of(ClassSpell)` is a spell's data whoever has it;
+    `Content::class_spell` stays "a class ability gives it". The spells stay the twelve
+    `ClassSpell`s (#397 brings more and may generalise the enum to `SpellId`).
+  - **Data**: `data/study.toml` (`StudyRules`: `base`, `per_overreach`, `known_per_point`,
+    `turns_per_tier`, `bad_from`, `terrible_from`, and the words' thresholds `easy`,
+    `struggle` in ways of 144); `data/mishaps/` (`Mishap`, one `[[mishap]]` a file, its
+    `README.toml` the format: `band` slight/bad/terrible/lucky, `weight`, `message`, `effect`
+    by `kind`: nothing, status, backfire, mana, teleport, lose_mark, drain, summon, learn, mark;
+    only its kind's fields; `learn` and `mark` only lucky); `teaches` in a spell scroll's `read`
+    table (`ScrollSpell::teaches`, a `ClassSpell` with a spell file, checked as objects load);
+    a class's `affinity` (`ClassDef::affinity`, school → −10 to 10 study points); the skills'
+    `study` benefit (`skills::Effect::Study`, Spellcraft and Decipher script, a curve to 20 at
+    200) and `study` mark (`Use::Study`, which is also `StatUse::Study`: Intelligence 100 %);
+    `ActionKind::Study` (`study` in `data/actions.toml`, a turn); Raging blocks `study`.
+  - **The action** (`Action::Study { item }`, `study:b`; `World::start_study` →
+    `Spent::Study(Lesson)` → `World::study`, through `keep_at` like a meal): refusals as the
+    spec lists them; `study_turns(rules, tier, percent)` turns (Quick study's
+    `TalentMods::study_percent`); interrupted (`Ended::Came`/`Said`): "…you stop studying.",
+    time lost, scroll kept (design §14 q1, the default). Done: the scroll is found again by
+    object (positions may shift), the `study` use is trained, the odds are taken now, the
+    scroll used up (`use_scroll`, never Spell recall: §14 q7, decided no), then the check.
+  - **Odds** (`study_odds(actor, content, character, caster_level, spell) -> Odds`, pure;
+    `World::player_study_odds`): overreach = tier − `SpellRules::tier_of(caster level)`; at 0
+    or less `check: None` (certain, no draw); else `(bonus, difficulty)`: Intelligence
+    modifier + `skill_effect(Effect::Study)` + the class's affinity with the school +
+    `TalentMods::study_bonus`, against `StudyRules::difficulty(overreach, known tiers)`;
+    `Odds::ways()` of 144 (`check::ways`). `StudyRules::words` turns ways into "certain",
+    "easy", "a struggle", "far beyond you".
+  - **Mishaps** (`World::draw_mishap`, `World::mishap`): one `rng.below(total weight)` among
+    `drawn_among(mishaps, band)` (the band's and the lucky ones, in path order); the message,
+    then the effect through existing code: `afflict`; backfire (the scroll's own `Cast`:
+    `cast_burst` centred on the reader, or `cast_bolt` on a path of their own cell, the roll held
+    to the taught spell's `cap_of`; `say_spell`;
+    a death is `Cause::Scroll`); mana cut directly (no Frugal caster, no training); the teleport
+    trap's `teleport` (made `pub(super)`); a stat mark off one drawn among the marked stats; a
+    `Drain` (Willpower check); `travel::make_creature` at the first free cell around the reader
+    (faction its type's, `spawned` bumped); `learn_spell`; a stat mark. Choices: the design's
+    "learned anyway, one tier lower in power" is learned as is (no per-spell power yet);
+    "a wild surge casts another spell" is not a mishap yet.
+  - **Presentation**: `PerceptionView::own_spells`, `studies()` (`OwnStudy { item, spell,
+    chance }`: identified scrolls teaching an unknown spell, pack order); the dump `spells`
+    layer and JSON `spells`/`studies`; the dev `progress` layer's `study c frost: overreach 2,
+    +0 against 20, 15/144`. The study list (`ui/object_screen.rs`, `ObjectList::Study`, the
+    `Study` key command `L`) and its dialog; snapshots `scroll-study-list`,
+    `scroll-study-dialog`, `scroll-study-none`.
+  - **Wiki**: `xtask/src/wiki/learning.rs` (`study-chances.md`, `study-times.md`,
+    `study-affinities.md`, `mishaps.md`) on `wiki/src/magic.md`'s "Learning spells from
+    scrolls".
+  - **Talents**: Quick study (`quick_study`, the new Spellcraft tree's first talent:
+    `TalentEffect::Study { bonus, percent }`, +2 and −50 %), systems `spells` and `scrolls`.
 - **Talents**: the `spells` system in `data/talents.toml`, `pending = true` until #400 ships
-  the Spellcraft tree. The cast path extends `mana` and `scrolls`: Frugal caster, Archmage,
+  the rest of the Spellcraft tree (Quick study, #396, is its first). The cast path extends `mana` and `scrolls`: Frugal caster, Archmage,
   Empower, Scroll adept act on it as above.
 - **Wiki**: `xtask/src/wiki/spells.rs` (`spell-tiers.md`, `spell-shapes.md`,
   `spell-resolutions.md`, `spell-casting.md`, `spell-list.md`, `spell-armour.md`; `does` is

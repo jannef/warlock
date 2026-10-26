@@ -1,0 +1,6 @@
+[[mishap]]
+id = "backwash"
+band = "slight"
+weight = 15
+message = "The backwash of the broken spell leaves you weak."
+effect = { kind = "status", status = "weakened", severity = 1 }

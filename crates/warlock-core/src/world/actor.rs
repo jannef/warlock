@@ -7,8 +7,9 @@ use crate::burden::Burden;
 use crate::combat::{self, Attack, Category, Defence, Health, Profile, Target};
 use crate::content::Effect as ItemEffect;
 use crate::content::{
-    ActionKind, Benefit, CombatStance, Content, CreatureId, DamageTypeId, FactionId, Grip, Hide,
-    ObjectDef, ObjectId, RaceDef, Role, StatusId, TwoWeapons, VisionProfile, WeaponSkillId,
+    ActionKind, Benefit, ClassSpell, CombatStance, Content, CreatureId, DamageTypeId, FactionId,
+    Grip, Hide, ObjectDef, ObjectId, RaceDef, Role, StatusId, TwoWeapons, VisionProfile,
+    WeaponSkillId,
 };
 use crate::damage::{Protection, Resistances};
 use crate::disease::Diseases;
@@ -27,6 +28,7 @@ use crate::talent::{TalentMods, Talents};
 use crate::weapon_skills::WeaponSkills;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
+use std::collections::BTreeSet;
 use std::fmt;
 use std::sync::LazyLock;
 
@@ -226,6 +228,11 @@ pub struct Actor {
     /// [`Actor::talent_mods`].
     #[serde(default, skip_serializing_if = "Talents::is_empty")]
     pub talents: Talents,
+    /// The spells it has learned for good (spec §8 "Spells"; `world/learn.rs`): studied from
+    /// scrolls. A class ability's spells are not here (its talents give them); both are what
+    /// [`Actor::knows_spell`] asks.
+    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+    pub spells: BTreeSet<ClassSpell>,
     /// Its streak of melee blows at one creature (Relentless, spec §8 "Birth sign"): `None`
     /// for an actor without the talent, or before its first blow.
     #[serde(default, skip_serializing_if = "Option::is_none")]

@@ -84,6 +84,12 @@ identify list (`ObjectList::Identify(scroll)`, the unidentified stacks) acts
 `Action::Read { item: scroll, target: Item(i) }`. Spell visuals are the traps' (`ui/spells.rs`
 draws `Event::Spell`; a burst's origin is the reader, so it flies there first).
 
+**Study** (#396, docs/dev/spells.md "Learning"): a spell scroll's `read` table may name the
+spell studying it `teaches` (`ScrollSpell::teaches`: fireball Fire burst, lightning Call
+lightning, frost Frost; the scroll of identify teaches nothing). `Action::Study` uses the scroll
+up its own way (`World::use_scroll` in `world/learn.rs`: no Spell recall, no Read training), and
+a mishap's backfire casts the scroll's own `Cast` on its reader with `say_spell`.
+
 Spells (the one cast path, `world/cast.rs`, docs/dev/spells.md) share this code: a burst spell
 goes through `burst_center` and `cast_burst`, a line through `bolt_line` and `cast_bolt`, and
 both are said with `say_spell`, as `read_spell` does (`Cause::Spell` for a caster killed by their

@@ -128,6 +128,17 @@ pub struct OwnResource {
     pub max: u16,
 }
 
+/// A scroll the player could study (spec §8 "Spells"): one whose type they know, teaching a
+/// spell they do not know, with the chance in words ("easy", "a struggle", "far beyond you",
+/// or "certain"). Never the number.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct OwnStudy {
+    /// The inventory stack, by position.
+    pub item: usize,
+    pub spell: crate::content::ClassSpell,
+    pub chance: &'static str,
+}
+
 /// One of the player's own talents (spec §8 "Talents"), as the Talents page and the character
 /// screen list it: its name for its choice, its rank of how many, and what it does in the
 /// game's words. Never a rule's number.
@@ -1269,10 +1280,49 @@ impl<'a> PerceptionView<'a> {
             .collect()
     }
 
+    /// The spells the player knows (spec §8 "Spells": learned, or their class gives them), in
+    /// menu order.
+    pub fn own_spells(&self) -> Vec<crate::content::ClassSpell> {
+        self.player.known_spells(self.content)
+    }
+
+    /// The scrolls the player could study now (spec §8 "Spells"), in pack order: those whose
+    /// type they know that teach a spell they do not know, each with its chance in words. What
+    /// the study list offers.
+    pub fn studies(&self) -> Vec<OwnStudy> {
+        let Some(rules) = self.content.study_rules() else {
+            return Vec::new();
+        };
+        let level = self.own_caster_level();
+        (self.player.inventory.iter().enumerate())
+            .filter_map(|(item, stack)| {
+                let reading = self.content.object(stack.object).read.as_ref()?;
+                let spell = reading.spell()?.teaches?;
+                if !self.lore.is_identified(stack.object)
+                    || self.player.knows_spell(self.content, spell)
+                {
+                    return None;
+                }
+                let odds = crate::world::study_odds(
+                    self.player,
+                    self.content,
+                    self.character,
+                    level,
+                    spell,
+                )?;
+                Some(OwnStudy {
+                    item,
+                    spell,
+                    chance: rules.words(odds.ways()),
+                })
+            })
+            .collect()
+    }
+
     /// What the player's spell `spell` costs them now, in mana (spec §8 "Spells": they know
     /// what their own spells cost); `None` for a spell they cannot cast.
     pub fn own_spell_cost(&self, spell: crate::content::ClassSpell) -> Option<i32> {
-        let def = self.content.class_spell(spell)?;
+        let def = self.content.spell_of(spell)?;
         Some((self.player).spell_cost(self.content, def, self.own_caster_level()))
     }
 
@@ -1282,7 +1332,7 @@ impl<'a> PerceptionView<'a> {
         &self,
         spell: crate::content::ClassSpell,
     ) -> Option<crate::world::Reach> {
-        let def = self.content.class_spell(spell)?;
+        let def = self.content.spell_of(spell)?;
         Some(self.player.spell_reach(self.content, def))
     }
 

@@ -1,0 +1,6 @@
+[[mishap]]
+id = "mind_burn"
+band = "terrible"
+weight = 20
+message = "The spell burns through your mind and body!"
+effect = { kind = "drain", stat = "random", points = 2, difficulty = 18 }

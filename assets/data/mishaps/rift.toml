@@ -1,0 +1,6 @@
+[[mishap]]
+id = "rift"
+band = "terrible"
+weight = 15
+message = "The words tear open a rift, and something crawls through!"
+effect = { kind = "summon", creature = "dretch" }

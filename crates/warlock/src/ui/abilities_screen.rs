@@ -68,7 +68,7 @@ impl AbilitiesScreen {
                     // mana, that it is too little.
                     let state = match a {
                         Ability::Spell(spell) => {
-                            let tier = content.class_spell(spell).map_or(0, |s| s.tier);
+                            let tier = content.spell_of(spell).map_or(0, |s| s.tier);
                             let cost = view.own_spell_cost(spell).unwrap_or(0);
                             let head = format!("tier {tier}, {cost} mana");
                             match own.unavailable {

@@ -143,7 +143,7 @@ impl World {
         let ability = Ability::Spell(spell);
         let player = self.state.player;
         let me = self.state.player();
-        let (Some(def), Some(rules)) = (content.class_spell(spell), content.spell_rules()) else {
+        let (Some(def), Some(rules)) = (content.spell_of(spell), content.spell_rules()) else {
             self.say("You have no such ability.");
             return Spent::Nothing;
         };
