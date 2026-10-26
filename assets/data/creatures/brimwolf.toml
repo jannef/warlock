@@ -1,0 +1,38 @@
+# The elemental roster (#453): the water line's eldest rung. The eldest of the waters (Old
+# English brimwylf, the sea-wolf): a breaker that walks up out of the deep and drags down what it
+# catches.
+[[creature]]
+id = "brimwolf"
+level = 55
+xp = 285
+rarity = "very_rare"
+loot = 20
+name = "brimwolf"
+plural = "brimwolves"
+glyph = "E"
+fg = "#2a3ab0"
+speed = 1150
+faction = "elemental"
+tags = ["elemental", "water"]
+alignment = "neutral"
+vision = "darkvision"
+sight = 12
+footsteps = 30
+hearing = 10
+weight = 5000000
+stats = { strength = 33, dexterity = 24, toughness = 34, intelligence = 32, willpower = 35, presence = 32 }
+base_hp = 138
+natural = { defence = 4, protection = 0, name = "flowing body" }
+resist = { fire = 50, piercing = 50, electricity = -50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "4d10"
+damage_type = "bludgeoning"
+to_hit = 5
+name = "wave"
+verb = "slams"
+on_hit = [
+    { status = "sluggish", chance = 20, severity = 1 },
+    { status = "held", chance = 10, difficulty = 23 },
+]

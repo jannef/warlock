@@ -24,6 +24,8 @@ mod dialogue;
 mod disease;
 mod dungeon;
 mod effect;
+#[cfg(test)]
+mod elemental_roster_tests;
 mod experience;
 mod faction;
 #[cfg(test)]

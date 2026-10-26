@@ -1,0 +1,31 @@
+# The elemental roster (#453): the earth line's lesser rung. A heap of stone and clay in a rough
+# shape: slow and heavy, its fists can knock a man off his feet, and blades turn on it.
+[[creature]]
+id = "lesser_earth_elemental"
+level = 6
+xp = 40
+rarity = "common"
+name = "lesser earth elemental"
+glyph = "E"
+fg = "#7a6a50"
+speed = 700
+faction = "elemental"
+tags = ["elemental", "earth"]
+alignment = "neutral"
+vision = "darkvision"
+sight = 10
+footsteps = 72
+hearing = 10
+weight = 150000
+stats = { strength = 18, dexterity = 10, toughness = 19, intelligence = 2, willpower = 18, presence = 2 }
+base_hp = 24
+natural = { defence = 0, protection = 2, name = "stone body" }
+resist = { slashing = 25, piercing = 50, electricity = 100, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "2d6"
+damage_type = "bludgeoning"
+name = "fist"
+verb = "pounds"
+on_hit = [{ status = "staggered", chance = 15, severity = 1 }]

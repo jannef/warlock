@@ -1,0 +1,32 @@
+# The elemental roster (#453): the ice line's mote rung. A drifting knot of hoarfrost: its touch
+# numbs, and a numbed man moves slowly.
+[[creature]]
+id = "frost_mote"
+level = 5
+xp = 35
+rarity = "common"
+name = "frost mote"
+glyph = "e"
+fg = "#c0f0ff"
+speed = 900
+faction = "elemental"
+tags = ["elemental", "ice"]
+alignment = "neutral"
+vision = "darkvision"
+sight = 8
+footsteps = 20
+hearing = 8
+weight = 10000
+size = "small"
+stats = { strength = 9, dexterity = 15, toughness = 10, intelligence = 2, willpower = 18, presence = 2 }
+base_hp = 6
+natural = { defence = 0, protection = 1, name = "ice" }
+resist = { piercing = 25, cold = 100, fire = -50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "1d6"
+damage_type = "cold"
+name = "touch"
+verb = "numbs"
+on_hit = [{ status = "sluggish", chance = 25, severity = 1 }]

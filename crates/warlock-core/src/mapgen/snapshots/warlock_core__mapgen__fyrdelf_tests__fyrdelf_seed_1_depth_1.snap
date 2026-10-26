@@ -22,12 +22,12 @@ giant_centipede at (35, 10) route E E W W E E W W
 bat at (33, 16) route W W N E E E S N W W W S E E
 dretch at (46, 6) route E W E E E S S N N W W W E W
 ember_beetle at (4, 9) route S S S N N S S N N N
-orc_raider at (6, 16) route N N E E W W S S carrying a flint battle axe (wielded)
+ogre_zombie at (6, 16) route N N E E W W S S
 bat at (30, 9) route W W W N N S S E E E
-kobold at (32, 17) route W E W N N E W S S E W E carrying a spear (wielded), a hardened leather cap (being worn)
+kobold at (32, 17) route W E W N N E W S S E W E carrying a bone spear (wielded)
 ember_beetle at (65, 8) route S S W W W E E E N N
 ember_beetle at (50, 7) route S S S S S W E N N N N N
-kobold_archer at (50, 12) route W W W N N N S S S E E E carrying a short bow (readied), a copper cap (being worn)
+kobold_archer at (50, 12) route W W W N N N S S S E E E carrying a hardwood short bow (readied), 12 tin arrows (quivered)
 ember_beetle at (6, 17) route E E N N N E S S S N N N W S S S W W
 barrow_spider at (37, 10) route W W W N S E E E
 dretch at (36, 7) route S S S W W W N S E E E N N N
@@ -53,7 +53,7 @@ special room flooded at (2, 1)-(6, 8)
  ###S#######     #...<¡####.#                #######     #.#  #.#
  #a.......¡#     #.....+....# ###########                #.#  #.#
  #...c..k..#######.....####.# #....#.)..#               ##+####+###
- #....o....+..)..S.....#  #^# #.kb.&..*.#               #..>....)¡#
+ #....Z....+..)..S.....#  #^# #.kb.&..*.#               #..>....)¡#
  #¡...a....#####.#¡....#  #.# #.k..#()%a#               #.........#
  ###########   #.####+#####.#####+#######               #¡........#
                #.................u#                     ###########

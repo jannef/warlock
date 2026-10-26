@@ -1,0 +1,33 @@
+# The elemental roster (#453): the ice line's elder rung. Ice from the world's first winter,
+# that has never thawed.
+[[creature]]
+id = "elder_ice_elemental"
+level = 48
+xp = 250
+rarity = "very_rare"
+loot = 10
+name = "elder ice elemental"
+glyph = "E"
+fg = "#a0f8ff"
+speed = 950
+faction = "elemental"
+tags = ["elemental", "ice"]
+alignment = "neutral"
+vision = "darkvision"
+sight = 10
+footsteps = 60
+hearing = 10
+weight = 3000000
+stats = { strength = 35, dexterity = 20, toughness = 36, intelligence = 29, willpower = 33, presence = 29 }
+base_hp = 192
+natural = { defence = 3, protection = 5, name = "ice" }
+resist = { piercing = 25, cold = 100, fire = -50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "4d10"
+damage_type = "cold"
+to_hit = 4
+name = "fist"
+verb = "freezes"
+on_hit = [{ status = "sluggish", chance = 25, severity = 1 }]
