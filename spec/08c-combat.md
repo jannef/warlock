@@ -187,10 +187,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     there, every later action is refused, and presentation shows the death screen and deletes
     the save (§6, §7 "Saves").
   - **What the player perceives**: their own hit points, Defence total, and Protection total
-    (`PerceptionView::own_hp`, `own_defence`, `own_protection`); an armour's Protection, and
+    (`PerceptionView::own_hp`, `own_defence`, `own_protection`); their own ready attacks'
+    to-hit, damage, and range on the character screen (`PerceptionView::own_attacks`, the
+    owner's exception, §6: from the profiles `Actor::melee`, `off_hand_blow`, `ranged`, and
+    `thrown` build, with unidentified magic left out); an armour's Protection, and
     that a weapon pierces armour, in its description (§6); how hurt each seen creature looks, in words (`SeenActor::health`:
     unhurt, lightly wounded, wounded, badly wounded, nearly dead); and the messages. Never a
-    creature's hit points, a to-hit, a roll, a modifier, the Defence breakdown (its Dexterity
+    creature's hit points, a creature's to-hit, a roll, a modifier, the Defence breakdown (its Dexterity
     part would give a modifier away), a creature's Protection, a soak, or a penetration: a blow
     soaked to nothing glances off, and only the message hints. Ground-truth dev dumps (`actors`)
     show every actor's hit points, Defence, and Protection. The status effects the player suffers, by name
