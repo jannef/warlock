@@ -162,7 +162,8 @@ to open, read keys for, or draw one:
   own key `i` closes it only when it names none (with 13 slots `i` always names one); `ItemScreen`: the stacks that fit one slot), `ui/character_screen.rs` (name, race, gender, class, age, birthday,
   and sign (`birth_parts`/`fit_parts`, shared with the summary), the player's scores, hit points
   and Defence total, the alignment band (`PerceptionView::own_alignment`), weight and burden
-  thresholds; 72 wide like the summary),
+  thresholds; the attacks beside the stats (`draw_attacks`, from `PerceptionView::own_attacks`:
+  two rows each, label and name, then `OwnAttack::summary` under the name); 80 wide),
   `ui/weapon_skills_screen.rs` (an info page: sections, ranks, and a faint ten-cell marks bar,
   the fighting styles in use marked `•`; two columns from 88 wide, else one that drops its gaps
   and margins and then scrolls with ↑↓; never a benefit), `ui/chargen_screen.rs` (character creation: `ChoiceScreen` per

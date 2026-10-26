@@ -315,7 +315,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
   reveal and in the wiki), their score in each stat (§8 "Stats") in display order with its abbreviation and
   full name (`St  Strength  12`; as it is now, with what magic items they wear add; a score a
   status effect or stat damage lowers shows lowered, in a muted red; §8 "Status effects",
-  "Diseases"), their level and experience (`Lv  Level  3`, `XP  Experience
+  "Diseases"); beside the stats, their **attacks**, two rows each: the main hand's blow (the
+  wielded weapon's, else bare hands'), the off hand's while they fight with two weapons, and the
+  Missile weapon slot's shot or throw, each named by what it is made with as they know it
+  (`Main hand  long sword`) and, under the name, its to-hit, damage, and range
+  (`+4 to hit, 1d8+2 slashing`, `+3 to hit, 1d6 piercing, range 10`): the dice with every flat
+  bonus folded in, the kinds (`slashing or piercing`), and added damage (`+1d6 fire`), from the
+  very profile a strike would roll now, in the fighting style in use (§8 "Combat", "Fighting
+  styles"; `PerceptionView::own_attacks`). The owner's exception to hidden numbers (2026-10-26):
+  the player's own standing attacks only; an unidentified item's magic counts for nothing there
+  until it is identified, and what depends on the moment (an ambush, a dazzled eye, a class
+  ability's blow) is not part of them. Their level and experience (`Lv  Level  3`, `XP  Experience
   85 / 120`, the total alone at the highest level; §8 "Experience"), how many talents they have
   (`Talents  7`: picked, and the sign's; not the class's abilities; §8 "Talents"), their hit points (`HP  Hit
   points  18/24`) with their mana beside them on the same row (`MP  Mana  5/12`; §8 "Mana"), Defence
@@ -331,9 +341,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Filth fever, red ache`; one that has not progressed yet is only "Diseased"; never a timer or a
   check; §8 "Diseases"), their weight (their own plus what they carry, and their burden when they have one:
   `Weight 98.4 kg (you 70 kg, carrying 28.4 kg, burdened)`), and, dimmer, the weights at which
-  their burden changes, as in the inventory (§8 "Burden"). The panel is 72 wide, so the birth and
-  the thresholds take a line each. Never a modifier, a potential, or a to-hit, which the player
-  does not know. Read-only; `@`, Enter, or Esc closes it, and the Skills key (`A`) opens the
+  their burden changes, as in the inventory (§8 "Burden"). The panel is 80 wide, so the birth and
+  the thresholds take a line each and an attack's numbers fit beside the stats. Never a
+  modifier, a potential, or a creature's to-hit, which the player does not know. Read-only; `@`, Enter, or Esc closes it, and the Skills key (`A`) opens the
   Skills screen over it. The status bar does not show stats: it is full at common window sizes.
 - **Skills** (`A`, ADOM's skills key; §8 "Skills"): the player's trained skills, in skill order (data order), each
   with its name, its value, and, dimmer, a four-cell meter of how near its next point is in
