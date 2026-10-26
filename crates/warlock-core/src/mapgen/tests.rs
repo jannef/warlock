@@ -31,6 +31,11 @@ fn level(seed: u64, depth: u32) -> LevelTemplate {
 
 /// Header (name, stairs, creatures, traps) plus the map, for snapshots.
 pub(super) fn describe(level: &LevelTemplate) -> String {
+    describe_in(&CONTENT, level)
+}
+
+/// [`describe`] with `content` (another branch's tests: `cealdhlaw_tests.rs`).
+pub(super) fn describe_in(content: &Content, level: &LevelTemplate) -> String {
     let (w, h) = (level.terrain.width(), level.terrain.height());
     let mut out = format!("{} ({}) {w}x{h}\n", level.name, level.id);
     for s in &level.stairs {
@@ -39,25 +44,25 @@ pub(super) fn describe(level: &LevelTemplate) -> String {
     }
     for c in &level.creatures {
         let route: Vec<&str> = c.route.iter().map(|d| d.name()).collect();
-        let name = &CONTENT.creature(c.creature).id;
+        let name = &content.creature(c.creature).id;
         let _ = write!(out, "{name} at {} route {}", c.pos, route.join(" "));
         // Its gear (spec §8 "Creature gear"), with what of it is worn and wielded.
         let pack = crate::kit::Pack {
             items: c.carry.clone(),
             equipment: c.equipment.clone(),
         };
-        let gear = pack.names(&CONTENT);
+        let gear = pack.names(content);
         if !gear.is_empty() {
             let _ = write!(out, " carrying {}", gear.join(", "));
         }
         let _ = writeln!(out);
     }
     for (p, trap) in &level.traps {
-        let _ = writeln!(out, "{} trap at {p}", CONTENT.trap(trap.kind).id);
+        let _ = writeln!(out, "{} trap at {p}", content.trap(trap.kind).id);
     }
     let _ = writeln!(out, "{} placed lights", level.lights.len());
     for room in &level.rooms {
-        let effect = CONTENT.room_effect(room.effect);
+        let effect = content.room_effect(room.effect);
         let _ = writeln!(
             out,
             "special room {} at {}-{}",
@@ -65,14 +70,14 @@ pub(super) fn describe(level: &LevelTemplate) -> String {
         );
     }
     for shop in &level.shops {
-        let def = CONTENT.shops().expect("shops").get(shop.kind);
+        let def = content.shops().expect("shops").get(shop.kind);
         let _ = writeln!(
             out,
             "shop {} kept by {} at {}-{}, post {}",
             def.id, shop.keeper, shop.min, shop.max, shop.post
         );
     }
-    out + &ascii_with_rooms(level, &CONTENT)
+    out + &ascii_with_rooms(level, content)
 }
 
 #[test]
@@ -691,7 +696,10 @@ fn stamped_at(level: &LevelTemplate, vault: &Vault) -> Vec<Pos> {
 
 #[test]
 fn vaults_are_stamped_verbatim_with_their_lights_and_creatures() {
-    let vaults: Vec<&Vault> = CONTENT.vaults().iter().collect();
+    // The shared ones (a campaign's stamp in its own branches: `cealdhlaw_tests.rs`).
+    let vaults: Vec<&Vault> = (CONTENT.vaults().iter())
+        .filter(|v| v.campaign.is_none())
+        .collect();
     let mut seen = vec![0; vaults.len()];
     for seed in 0..10 {
         for depth in 1..=8 {

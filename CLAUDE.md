@@ -46,7 +46,8 @@ Game flags (`cargo run -p warlock -- --help`):
   the sunlit courtyard at 06:30, `world` on the overworld beside the Hall, `forest` in the glade
   of a generated forest area of the overworld at 06:30, `arena` in the dark corner of the arena
   where kobolds and giant rats fight, `quarry` in the quarry beside a pick-axe, `traps` in the
-  trap hall, `fyrdelf` on the first floor of Fyrdelf, the Ascmearc's deepest dungeon), `--seed S`
+  trap hall, `cealdhlaw` on the first floor of Cealdhlāw, the Ascmearc's first dungeon, `fyrdelf` on the
+  first floor of Fyrdelf, its deepest), `--seed S`
   (default: the scenario's seed; a number, or a word hashed with FNV-1a, e.g. `--seed warlock`),
   `--character RACE,GENDER,CLASS` (e.g. `dwarf,female,warrior`; default: the scenario's
   character; like `--seed` it shapes the run other flags start and alone does not skip the menu),

@@ -15,13 +15,18 @@
 //! every walkable cell must be reachable from its edge. Dungeon generators use only dungeon
 //! vaults, local areas only outdoor ones.
 //!
+//! Where a dungeon vault stamps ([`Vault::stamps_on`]): a shared one (`assets/vaults/`) in every
+//! branch, a campaign's (`campaigns/<id>/vaults/`) only in that campaign's branches, and one whose
+//! file names `dungeons` (branch ids, or branch levels such as `"cealdhlaw:2"`) only there.
 //! A branch level may name vaults (`vaults` in `[[dungeon.levels]]`): each is stamped on that
 //! level for certain, and a vault so named ([`Vault::pinned`]) is never drawn at random.
 
+use super::dungeon::{DungeonDef, parse_branch_level};
 use super::level::{LevelKind, LevelTemplate};
-use super::{Content, TerrainId};
+use super::{Content, ContentError, TerrainId};
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
+use serde::Deserialize;
 
 /// A validated vault.
 #[derive(Clone, Debug)]
@@ -32,11 +37,28 @@ pub struct Vault {
     pub entrances: Vec<(Pos, Dir)>,
     /// The campaign whose `vaults/` it is in (spec §3); `None` for a shared one.
     pub campaign: Option<String>,
+    /// The branches (`"cealdhlaw"`) and branch levels (`"cealdhlaw:2"`) it stamps in; empty:
+    /// every branch it may (its campaign's, or all of them for a shared vault).
+    pub dungeons: Vec<String>,
     /// Named by a branch level's `vaults` ([`DungeonDef::vaults`]): stamped there for certain
     /// and never drawn at random.
     ///
     /// [`DungeonDef::vaults`]: super::DungeonDef::vaults
     pub pinned: bool,
+}
+
+/// The vault-only field of a vault file (the level-file parser reads the rest and ignores it).
+#[derive(Deserialize)]
+struct VaultPlaces {
+    #[serde(default)]
+    dungeons: Vec<String>,
+}
+
+/// The `dungeons` a vault file (or a level file, which may not give it) names.
+pub(super) fn parse_dungeons(path: &str, text: &str) -> Result<Vec<String>, ContentError> {
+    let places: VaultPlaces =
+        toml::from_str(text).map_err(|e| ContentError::new(path, e.to_string()))?;
+    Ok(places.dungeons)
 }
 
 impl Vault {
@@ -125,12 +147,59 @@ impl Vault {
             template,
             entrances,
             campaign: None,
+            dungeons: Vec::new(),
             pinned: false,
         })
     }
 
+    /// Whether the vault may be stamped on branch `def`'s level at `depth`: a dungeon vault,
+    /// shared or of the branch's campaign, and on a branch or level its `dungeons` name, if any.
+    pub fn stamps_on(&self, def: &DungeonDef, depth: u32) -> bool {
+        if self.is_outdoor() || (self.campaign.is_some() && self.campaign != def.campaign) {
+            return false;
+        }
+        self.dungeons.is_empty()
+            || (self.dungeons.iter()).any(|d| *d == def.id || *d == def.level_id(depth))
+    }
+
+    /// Checks its `dungeons` once the branches are loaded: each a branch or one of its levels,
+    /// of the vault's own campaign, and never on an outdoor vault.
+    pub(super) fn check_dungeons(&self, content: &Content) -> Result<(), String> {
+        if self.is_outdoor() && !self.dungeons.is_empty() {
+            return Err(
+                "an outdoor vault stamps in no dungeon: `dungeons` is for dungeon vaults".into(),
+            );
+        }
+        for name in &self.dungeons {
+            let def = match parse_branch_level(name) {
+                Some(_) => content.branch_level(name).map(|(def, _)| def),
+                None => content.dungeon(name),
+            }
+            .ok_or_else(|| format!("`dungeons`: unknown branch or branch level `{name}`"))?;
+            if def.campaign != self.campaign {
+                let theirs = def.campaign.as_deref().unwrap_or("no campaign");
+                return Err(format!(
+                    "`dungeons`: `{name}` is {theirs}'s; a vault stamps only in its own campaign's branches"
+                ));
+            }
+        }
+        Ok(())
+    }
+
     pub fn id(&self) -> &str {
         &self.template.id
+    }
+
+    /// The file it was read from, for an error.
+    pub(super) fn file(&self) -> String {
+        match &self.campaign {
+            Some(c) => format!(
+                "{}/{c}/vaults/{}.toml",
+                super::campaign::CAMPAIGNS,
+                self.id()
+            ),
+            None => format!("vaults/{}.toml", self.id()),
+        }
     }
 
     pub fn width(&self) -> i32 {

@@ -62,3 +62,15 @@ what it did before (the Depths' snapshots and `branches_without_tables_read_the_
 A branch's `keeper` replaces only the keeper's creature type; the kit is the shared `[keeper]`'s.
 Fixture branches in `mapgen/tests.rs` (`FIXTURE`) check that flooded-only odds make only flooded
 rooms and `shops = { chance = 0 }` no shop.
+
+Which vaults a level may get (#337): `generate_for` keeps those whose `Vault::stamps_on(def,
+depth)` holds (a dungeon vault, shared or of the branch's campaign, on a branch or level its
+`dungeons` names, if any) on the `Canvas` (`Canvas::vaults`, content order), and
+`vault::shuffled` shuffles that list. A branch no campaign vault names draws what it did before.
+The Ascmearc's branches (campaign design §7): Cealdhlāw (`cealdhlaw`, #337;
+`campaigns/ascmearc/data/dungeons/cealdhlaw.toml`), six floors of danger 1 to 6, rooms 80×21 on
+1–2 and caves 100×40 on 3–6, 30 creatures a thousand walkable cells (25 on the rooms floors,
+about 70 in the caves), and its vault the barrow chamber (`campaigns/ascmearc/vaults/`,
+`dungeons = ["cealdhlaw:1", "cealdhlaw:2"]`: a skeleton guardian with the bronze key, a locked
+inner room, loot on an altar). Its tests and first-level snapshot: `mapgen/cealdhlaw_tests.rs`
+(`describe_in` from `mapgen/tests.rs`).
