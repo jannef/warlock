@@ -1,0 +1,38 @@
+# The troll tribe (#456). A lean, long-armed troll of the deep woods, mossy green and quicker
+# than any troll has a right to be: it runs its prey down, its claws leave wounds that bleed, and
+# it often carries a spear. Its wounds close as you watch, and fire hurts it more than steel.
+[[creature]]
+id = "forest_troll"
+level = 18
+xp = 100
+name = "forest troll"
+glyph = "T"
+fg = "#6a9a3a"
+speed = 1300
+faction = "troll"
+tags = ["troll"]
+alignment = "evil"
+vision = "darkvision"
+sight = 10
+opens_doors = true
+footsteps = 100
+hearing = 12
+weight = 200000
+stats = { strength = 20, dexterity = 17, toughness = 22, intelligence = 8, willpower = 14, presence = 6 }
+base_hp = 40
+natural = { defence = 1, protection = 1, name = "hide" }
+weapon_skills = { spears = 2 }
+resist = { fire = -50 }
+on_eat = { message = "Stringy, and green to the bone.", vomit = 50, stat = { toughness = 5 } }
+blood = "#2a5a20"
+[creature.attack]
+damage = "3d6"
+damage_type = "slashing"
+name = "claws"
+verb = "rakes"
+on_hit = [{ status = "bleeding", chance = 20, severity = 1 }]
+# Its gear (spec §8 "Creature gear"): a spear half the time.
+[[creature.gear]]
+chance = 50
+one_of = ["spear"]
+keep = "wield"

@@ -23,13 +23,14 @@ temperature = 10
 # Danger 8 on the first floor to 19 on the twelfth (spec §7 "Danger levels"); nothing scales with
 # the player. The delf wave, and the bats, kobolds, and centipedes of the upper galleries that
 # the shallow floors draw on too. The fire drake is not among them: it lives only on its hoard
-# (the vault at depth 12), so a run meets it there and nowhere else.
+# (the vault at depth 12), so a run meets it there and nowhere else. The hill trolls (#456) come
+# down from the hills above to the troll's warm deep.
 danger = 8
 population = [
     "bat", "kobold", "kobold_archer", "kobold_shaman", "giant_centipede",
     "ember_beetle", "duergar_miner", "ogre_zombie", "grave_hound", "duergar_warrior",
-    "duergar_smith", "ogre", "burning_skull", "troll", "knocker", "fire_salamander",
-    "magma_crawler", "spectre", "charred_dead", "ash_wraith", "duergar_skeleton",
+    "duergar_smith", "ogre", "burning_skull", "troll", "knocker", "hill_troll",
+    "fire_salamander", "magma_crawler", "spectre", "charred_dead", "ash_wraith", "duergar_skeleton",
     "basilisk", "cinder_elemental", "rotting_troll",
 ]
 # How many: the default, 35 a thousand walkable cells, 25 to 80. A gallery floor (about 350 cells)

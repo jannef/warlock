@@ -61,6 +61,8 @@ mod talent;
 mod terrain;
 mod trap;
 #[cfg(test)]
+mod troll_roster_tests;
+#[cfg(test)]
 mod undead_roster_tests;
 mod vault;
 mod vision;

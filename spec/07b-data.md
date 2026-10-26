@@ -141,7 +141,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
   tongue that holds fast), the gibbering shade 18 (incorporeal, a cold touch that drains
   Intelligence), the bone wyvern 18 (a sting, bone with protection 2), the revenant 19 (very
   tough, a long sword half the time), the fetch 19 (incorporeal, a cold touch that frightens), and
-  the mummy priest 20 (a caster whose touch carries mummy rot, sometimes something worth taking). The duergar types are of the duergar race. For blood (§8 "Blood";
+  the mummy priest 20 (a caster whose touch carries mummy rot, sometimes something worth taking).
+  The troll tribe (#456, levels 13 to 42, faction `troll`; every troll heals fast by its great
+  Toughness, and fire hurts all but the fire troll more): the troll 13 (above), the hill troll 15
+  (slow, claws that stagger, a maul half the time; Fyrdelf's), and in no population yet, waiting
+  for places of the middle levels: the forest troll 18 (quick, opens doors, claws that leave
+  bleeding wounds, a spear half the time), the troll shaman 21 (a caster with a staff half the
+  time, sometimes something worth taking), the ice troll 24 (resists cold, claws that leave one
+  Sluggish), the stone troll 27 (slow, a stony hide of protection 5 that resists slashing and
+  piercing but cracks under blunt blows, fists that stagger), the two-headed troll 30 (sees and
+  hears more, and its bites, which bleed, come quicker: an attack of its own cost), the fire troll
+  33 (lit by its own embers, a searing touch, resists fire, hurt more by cold), the troll
+  chieftain 37 (a great axe, scale mail, and a helm, often magic; claws that frighten), and the
+  elder troll 42 (very rare, huge, claws that bleed and stagger). The marsh troll stays a marsh
+  thing and the rotting troll undead; both carry the `troll` tag. The duergar types are of the duergar race. For blood (§8 "Blood";
   presentation only):
   `blood`, the colour of its stains (`"#rrggbb"`; default dark red, `#6e0e0c`) or `"none"` for a
   bloodless creature; the cave beetle bleeds greenish-black ichor (`#38461a`). For hunger (§8
@@ -652,8 +665,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   the kobolds, and the goblins, and leaving the vermin alone), `marsh` ("marsh things", the
   fen's living things and the bog hag; hostile to the player; not animals as a faction), `cult`
   ("cultists", the drowned minster's cult; hostile to the player and the marsh), `duergar` (the
-  delf's grey dwarves; hostile to the player, the goblins (the ogres and trolls among them), and
-  the undead), `fire` ("fire things", the delf's burning creatures and the fire drake; hostile to
+  delf's grey dwarves; hostile to the player, the goblins (the ogres among them), and
+  the undead), `troll` ("trolls", the troll tribe; hostile to the player, the vermin, the
+  kobolds, the undead, and the duergar; neutral to the goblins and the ogres they once ran with),
+  `fire` ("fire things", the delf's burning creatures and the fire drake; hostile to
   the player only), `wildlife` (deer, cave bats, the cave beetle;
   neutral to everyone), and
   `peaceful` ("peaceful folk", hostile to no one: the showcase's people by type, and creatures

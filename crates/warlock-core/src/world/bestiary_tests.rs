@@ -47,6 +47,16 @@ const WAVES: &[(&str, Option<&str>)] = &[
     ("basilisk", None),
     ("cinder_elemental", None),
     ("fire_drake", Some("ascmearc")),
+    // The troll tribe (#456): levels 15 to 42, all shared.
+    ("hill_troll", None),
+    ("forest_troll", None),
+    ("troll_shaman", None),
+    ("ice_troll", None),
+    ("stone_troll", None),
+    ("two_headed_troll", None),
+    ("fire_troll", None),
+    ("troll_chieftain", None),
+    ("elder_troll", None),
     // The undead roster, batch 1 (#384): levels 1 to 10, all shared.
     ("crawling_hand", None),
     ("skeletal_rat", None),
@@ -290,6 +300,35 @@ fn the_duergar_fight_the_goblins_kin_and_leave_the_fire_be() {
         ("magma_crawler", "goblin", Stance::Neutral),
         ("ogre", "player", Stance::Hostile),
         ("basilisk", "player", Stance::Hostile),
+    ] {
+        assert_eq!(stance(a, b), want, "{a} and {b}");
+    }
+}
+
+#[test]
+fn the_trolls_keep_the_stances_they_had_with_the_goblins() {
+    let stance = |a: &str, b: &str| {
+        let id = |n: &str| CONTENT.creature_id(n).expect(n);
+        CONTENT.stance(id(a), id(b))
+    };
+    let troll = CONTENT.factions().id("troll");
+    for id in ["troll", "hill_troll", "troll_shaman", "elder_troll"] {
+        let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
+        assert_eq!(def.faction, troll, "{id} is of the troll tribe");
+    }
+    for (a, b, want) in [
+        ("troll", "player", Stance::Hostile),
+        ("hill_troll", "kobold", Stance::Hostile),
+        ("forest_troll", "rat", Stance::Hostile),
+        ("troll", "duergar_smith", Stance::Hostile),
+        ("ice_troll", "skeleton", Stance::Hostile),
+        ("troll", "rotting_troll", Stance::Hostile),
+        // The goblins' kin, whom they ran with, they leave be; so the fen and the fire.
+        ("troll", "goblin", Stance::Neutral),
+        ("hill_troll", "ogre", Stance::Neutral),
+        ("troll", "marsh_troll", Stance::Neutral),
+        ("fire_troll", "cinder_elemental", Stance::Neutral),
+        ("troll_chieftain", "troll_shaman", Stance::Neutral),
     ] {
         assert_eq!(stance(a, b), want, "{a} and {b}");
     }

@@ -118,7 +118,8 @@ below are the deep workings, wide caves that grow hotter toward the volcano's he
 then 20 °C, and 24 °C at the bottom). Its traps are arrows, spears, fireballs, lightning, and
 alarms, few of its doors are hidden, and its locks are the hardest to pick of the three
 dungeons. The duergar dig here, miners, warriors, and smiths, among ember beetles, salamanders,
-magma crawlers, cinder elementals, ash wraiths, basilisks, ogres, and trolls, and the dead the
+magma crawlers, cinder elementals, ash wraiths, basilisks, ogres, trolls, and hill trolls down
+from the hills above, and the dead the
 delf's fires left: ogre zombies and grave hounds, burning skulls, the charred dead, duergar
 skeletons still in their helms, rotting trolls, and the spirits of the miners, knockers and
 spectres, that pass through the rock, with kobolds,

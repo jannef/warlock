@@ -52,7 +52,8 @@
 #            duergar (not their trader, a merchant), fire-thing (the delf's burning things)
 #   roles    archer (shoots: the goblin, kobold, and skeleton archers), caster (every
 #            combat = "caster" type), cultist (the minster's cult), skeleton (walking bones),
-#            spirit (the incorporeal dead), troll (the troll and the marsh troll)
+#            spirit (the incorporeal dead), troll (every troll: the tribe, the marsh troll, and
+#            the rotting troll)
 # A creature may carry several: the kobold shaman is ["kobold", "caster"].
 #
 # Alignment (spec §8 "Alignment"; never shown to the player): alignment, where it stands between
@@ -165,3 +166,14 @@
 # dead, Z greater, G spirits, W wights and wraiths, M mummies, C hounds, V vampires, D drakes, T
 # the rotting troll; a colour distinct from every other type with the same glyph. Only a type in
 # a population strays (#375): deep undead ship in none until a deep place takes them.
+#
+# The troll tribe (#456; content::troll_roster_tests checks the numbers): levels 13 to 42, faction
+# "troll" (the marsh troll stays a marsh thing, the rotting troll undead; both carry the tag),
+# tags ["troll", ...], alignment "evil", vision "darkvision", xp = 5 × level + 10. Numbers are
+# the undead roster's formulas and roles (brute, standard, quick, caster) on the troll's own
+# base: St 13 + 0.4 L, Dx 8 + 0.25 L, To 16 + 0.4 L (4 over the undead's: a troll heals by its
+# Toughness, so it heals fast), within ±35 % of max HP and dice average. Fire hurts every troll
+# (resist fire −50, the stone troll −25) but the fire troll. A hide of Defence 1 and Protection 2
+# or more; a corpse with on_eat vomit 50 and a 5 % chance of Toughness. Glyph T, each in a colour
+# of its own. Only the troll and the hill troll live in a population (Fyrdelf); the rest wait for
+# middle-level places.

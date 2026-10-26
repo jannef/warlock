@@ -1,6 +1,7 @@
 # The delf wave (Fyrdelf, docs/design/campaign.md §10.1). The marsh troll's big brother, from
 # the warm deep: huge, strong, and so tough that its wounds close as you watch (hit points come
-# back by Toughness). Fire hurts it more than steel. It runs with the goblins' kin.
+# back by Toughness). Fire hurts it more than steel. The first of the troll tribe (#456), whose
+# faction it is now; it once ran with the goblins' kin and still leaves them be.
 [[creature]]
 id = "troll"
 level = 13
@@ -10,7 +11,7 @@ loot = 20
 name = "troll"
 glyph = "T"
 fg = "#5a8a4a"
-faction = "goblins"
+faction = "troll"
 tags = ["troll"]
 alignment = "evil"
 vision = "darkvision"

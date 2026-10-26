@@ -199,3 +199,18 @@ vampire spawn, hand of glory, gallows dead, gibbering shade, bone wyvern, revena
 mummy priest ship in no population (deep undead wait for deep places, #383), and the ghost is
 incorporeal (wall Defence 2). The roster's holds (`held`, #431) are `{ status = "held", chance,
 difficulty }`: the ghast's and fen ghoul's claws 10 % at 15, the gallows dead's tongue 20 % at 17.
+The troll tribe (#456, levels 13 to 42; not every tribe spans 1 to 70): shared types, one file
+each in `assets/data/creatures/`, on the conventions in that directory's `README.toml`: faction
+`troll` (hostile to the player, the vermin, the kobolds, the undead, and the duergar, the stances
+the troll had as one of the goblins, so moving it there changed no fight; neutral to the goblins
+and the ogre), tag `troll` on every troll (the marsh troll stays `marsh`, the rotting troll
+`undead`; both carry the tag, so a `tag:troll` kill quest counts them). A troll's regeneration is
+its Toughness: there is no per-creature healing rate, so the tribe's formulas are the undead
+roster's (#383) with Toughness 4 higher, and fire hurts all but the fire troll (`resist fire`
+negative). `content/troll_roster_tests.rs` checks every living troll (`ROLES`: brute, standard,
+quick, caster) against the formulas (XP guideline, ±35 % of max HP and dice average) and the
+span's ends. The two-headed troll is the first type with an `attack_cost` (700;
+`world/cost_tests.rs` names it). Only the hill troll joined a population (Fyrdelf, beside the
+troll); the forest troll, troll shaman, ice troll, stone troll, two-headed troll, fire troll,
+troll chieftain, and elder troll wait for places of the middle levels. Follow-ups: fire or acid
+stopping a troll's healing, the stone troll and sunlight, a `large` size.

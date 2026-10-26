@@ -1,0 +1,42 @@
+# The troll tribe (#456). The troll who listens to the bones: hung with charms, leaning on a
+# staff, and wiser than its kin (which is not saying much). A caster (its spells announced until
+# creature magic is designed); its wounds close as you watch, and fire hurts it more than steel.
+[[creature]]
+id = "troll_shaman"
+level = 21
+xp = 115
+rarity = "rare"
+loot = 50
+name = "troll shaman"
+glyph = "T"
+fg = "#9a6aaa"
+faction = "troll"
+tags = ["troll", "caster"]
+alignment = "evil"
+vision = "darkvision"
+sight = 10
+combat = "caster"
+range = 6
+opens_doors = true
+footsteps = 110
+hearing = 12
+weight = 260000
+stats = { strength = 18, dexterity = 13, toughness = 24, intelligence = 14, willpower = 20, presence = 10 }
+base_hp = 42
+skills = { concentration = 73, spellcraft = 78 }
+natural = { defence = 1, protection = 2, name = "hide" }
+weapon_skills = { staves = 2 }
+resist = { fire = -50 }
+on_eat = { message = "It tastes of smoke and bitter herbs.", vomit = 50, stat = { toughness = 5 } }
+blood = "#2a4a2a"
+[creature.attack]
+damage = "3d6"
+damage_type = "slashing"
+name = "claws"
+verb = "rakes"
+to_hit = 2
+# Its gear (spec §8 "Creature gear"): a staff half the time.
+[[creature.gear]]
+chance = 50
+one_of = ["ironwood_staff"]
+keep = "wield"

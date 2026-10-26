@@ -60,6 +60,15 @@ id = "duergar"
 name = "duergar"
 hostile = ["player", "goblins", "undead"]
 
+# The troll tribe (#456): the trolls of hill, forest, ice, stone, and fire, their shamans and
+# chieftains. They eat the vermin and the kobolds, the duergar hunt them, and they hate the dead
+# (their own rotting kin among them); the goblins and the ogres, whom they once ran with, they
+# leave be, and the orcs and hobgoblins too. The marsh troll is a marsh thing, not of the tribe.
+[[faction]]
+id = "troll"
+name = "trolls"
+hostile = ["player", "vermin", "kobolds", "undead", "duergar"]
+
 # The fire things of the volcano's deep (Fyrdelf): ember beetles, salamanders, magma crawlers,
 # cinder elementals, the fire drake. They burn the player and leave everyone else alone.
 [[faction]]
