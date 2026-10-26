@@ -1,0 +1,39 @@
+# The undead roster (#383, batch 4). The plague-bearing vampire of the old tales: bald and
+# rat-toothed, with long nails, quick and soundless, opening doors. Its bite drinks the life out
+# of the living, for good unless the body holds on (a temple's mending gives it back), and leaves
+# filth fever behind. Fire is its bane. Not yet in any dungeon's population.
+[[creature]]
+id = "nosferatu"
+level = 35
+xp = 185
+rarity = "rare"
+name = "nosferatu"
+plural = "nosferatu"
+glyph = "V"
+fg = "#a0a890"
+speed = 1400
+faction = "undead"
+tags = ["undead"]
+alignment = "evil"
+vision = "darkvision"
+sight = 14
+opens_doors = true
+footsteps = 15
+hearing = 20
+weight = 55000
+stats = { strength = 25, dexterity = 24, toughness = 25, intelligence = 24, willpower = 28, presence = 24 }
+base_hp = 79
+natural = { defence = 2, protection = 0, name = "dead flesh" }
+resist = { fire = -25, poison = 100 }
+on_eat = { message = "Cold, and crawling with plague.", vomit = 90, harm = "1d6" }
+blood = "#3a1a20"
+[creature.attack]
+damage = "4d6"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
+to_hit = 3
+on_hit = [
+    { drain = "toughness", points = 1, chance = 15, check = "toughness", difficulty = 19 },
+    { disease = "filth_fever", chance = 15 },
+]
