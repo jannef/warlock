@@ -1,0 +1,26 @@
+# The undead roster (#383, batch 1). A noisy spirit that cannot rest: it bangs and batters, darts
+# through walls and doors, and is gone before a blow lands. Blades and clubs pass half through
+# it, cold hardly touches it, and it leaves nothing behind.
+[[creature]]
+id = "poltergeist"
+level = 6
+xp = 40
+rarity = "uncommon"
+name = "poltergeist"
+glyph = "G"
+fg = "#b0c0e8"
+speed = 1300
+faction = "undead"
+alignment = "evil"
+vision = "darkvision"
+sight = 10
+hearing = 15
+weight = 1000
+stats = { strength = 11, dexterity = 15, toughness = 11, intelligence = 12, willpower = 18, presence = 12 }
+base_hp = 9
+natural = { defence = 2, protection = 0, name = "insubstantial form" }
+attack = { damage = "1d8", damage_type = "bludgeoning", name = "blow", verb = "buffets" }
+incorporeal = { wall_defence = 2 }
+resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50, poison = 100 }
+corpse = false
+blood = "none"

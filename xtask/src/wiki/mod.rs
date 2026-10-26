@@ -980,10 +980,14 @@ mod tests {
         }
         let diseases = text("diseases.md");
         for row in [
-            "| Filth fever | The drowned's fist (20%); the giant rat's bite (10%) | Toughness, 54% | 1d3 days | Every day | \
-             1d3 Dexterity, 1d3 Toughness | Two checks won in a row | no | Half as fast |",
-            "| Marsh ague | Crossing marsh or swamp (4% an hour) |",
-            "| Grave rot | The zombie's fist (15%); eating rotten food |",
+            "| Filth fever | The drowned's fist (20%); the ghast's claws (10%); the giant rat's bite \
+             (10%) | Toughness, 54% | 1d3 days | Every day | 1d3 Dexterity, 1d3 Toughness | Two \
+             checks won in a row | no | Half as fast |",
+            "| Marsh ague | The bog body's fist (15%); crossing marsh or swamp (4% an hour) |",
+            "| Grave rot | The grave hound's bite (10%); the kobold zombie's fist (5%); the ogre \
+             zombie's fist (10%); the zombie's fist (15%); eating rotten food |",
+            "| Mummy rot | The mummy's fist (20%) | Toughness, 31% | 1d3 days | Every 3 days | 1d4 \
+             Toughness | Never by itself | no |",
             "| Never by itself | yes |",
             "| Brain fever | — | Willpower, 54% |",
         ] {
