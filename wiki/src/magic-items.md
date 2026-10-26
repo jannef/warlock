@@ -102,8 +102,8 @@ words: "Prefix Sharp: +2 damage", "Suffix of Celerity: attacks faster". `Esc` go
 
 ## Prefixes
 
-Prefixes are mostly offensive, or flat Defence and life. *Flaming* and *Freezing* add a die of
-fire or cold to every hit, which no armour soaks (see [Damage types](damage-types.md)).
+Prefixes are mostly offensive, or flat Defence and life. *Flaming*, *Freezing*, and *Venomous*
+add a die of fire, cold, or poison to every hit, which no armour soaks (see [Damage types](damage-types.md)).
 
 {{#include generated/magic-prefixes.md}}
 
@@ -129,3 +129,20 @@ item of another material than its usual one (see [Objects](objects.md#items-of-o
 names it after the gem: "Sharp emerald-pommelled bronze long sword of the Bear".
 
 {{#include generated/magic-names.md}}
+
+## Unique items
+
+A unique item is one of a kind: a rare item with a name, affixes, and an item level set by hand,
+and a **power**, a rule of its own that no affix gives. It is found unidentified like any rare
+item ("a stiletto (rare)"); identified, it shows its name, its affixes, its power in words, and a
+line of lore. Each lies in one place in the world (most are carried by those who own them), so a
+character finds each at most once; loot never makes one. Its power works while it is worn or
+wielded, identified or not:
+
+- **Inflict**: a hit with it that leaves its target alive causes a status, every time or by a
+  chance (the status's resistance applies, as to a poisonous bite). A bow's power rides its
+  arrows; a kick or the other hand's weapon has none of it.
+- **Vision**: its wearer sees with a vision profile where it is better than their own eyes.
+- **Ward**: its wearer never suffers a status.
+
+{{#include generated/uniques.md}}

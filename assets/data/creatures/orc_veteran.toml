@@ -1,0 +1,35 @@
+# The orc tribe (#455; content::orc_roster_tests checks the numbers). An orc of many raids, drilled
+# with blade and shield: a scimitar (its racial weapon), scale mail now and then of a better make
+# than it looks, a helm, and a shield.
+[[creature]]
+id = "orc_veteran"
+level = 15
+xp = 85
+rarity = "uncommon"
+loot = 30
+name = "orc veteran"
+glyph = "o"
+fg = "#708068"
+faction = "orcs"
+tags = ["orc"]
+alignment = "evil"
+vision = "darkvision"
+opens_doors = true
+footsteps = 140
+hearing = 12
+weight = 85000
+stats = { strength = 18, dexterity = 14, toughness = 18, intelligence = 10, willpower = 14, presence = 9 }
+base_hp = 38
+on_eat = { message = "This orc meat is rank!", vomit = 30 }
+weapon_skills = { short_blades = 3, shield_block = 2, sword_and_board = 1 }
+racial_weapon = "scimitar"
+[[creature.gear]]
+chance = 60
+one_of = ["scale_mail"]
+magic = 5
+[[creature.gear]]
+chance = 50
+one_of = ["iron_helm"]
+[[creature.gear]]
+chance = 60
+one_of = ["small_shield"]

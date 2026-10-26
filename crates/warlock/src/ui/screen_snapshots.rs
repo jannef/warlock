@@ -222,6 +222,32 @@ const CASES: &[Case] = &[
         size: (100, 36),
         ..BASE
     },
+    // The attacks beside the stats (the showcase's own character has bare hands): a sword and
+    // shield, a bow with a sword, and two weapons with a bow.
+    Case {
+        name: "character-attacks-sword-and-shield",
+        character: Some("human,male,warrior"),
+        run: true,
+        screen: Some("character"),
+        size: (100, 36),
+        ..BASE
+    },
+    Case {
+        name: "character-attacks-bow",
+        character: Some("human,male,ranger"),
+        run: true,
+        screen: Some("character"),
+        size: (100, 36),
+        ..BASE
+    },
+    Case {
+        name: "character-attacks-two-weapons",
+        character: Some("human,male,ranger"),
+        actions: "move:SW*2 pickup equip:off_hand:j",
+        screen: Some("character"),
+        size: (100, 36),
+        ..BASE
+    },
     Case {
         name: "status-effects",
         actions: "afflict:poisoned*4 afflict:bleeding wait",
@@ -287,8 +313,8 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
-    // A priest blessed and drained to their last mana: the spells in the Class
-    // group, those that cost more than is left greyed out ("you have too little mana").
+    // A priest blessed and drained to their last mana: the spells in their Spells group with
+    // tier and cost, those that cost more than is left greyed out ("you have too little mana").
     Case {
         name: "abilities-menu-spells",
         character: Some("human,female,priest"),
@@ -325,7 +351,7 @@ const CASES: &[Case] = &[
         name: "level-up-choice",
         character: Some("human,male,warrior"),
         actions: "xp:2431 advance:athletics*6",
-        keys: Some("o"),
+        keys: Some("p"),
         size: (100, 40),
         ..BASE
     },
@@ -500,6 +526,22 @@ const CASES: &[Case] = &[
         screen: Some("describe"),
         ..BASE
     },
+    // A unique item (the quarry's Stonebiter): unidentified, a rare dagger; identified, its
+    // name, affixes, power, and lore.
+    Case {
+        name: "unique-description-unidentified",
+        scenario: "quarry",
+        actions: "move:W pickup",
+        screen: Some("describe"),
+        ..BASE
+    },
+    Case {
+        name: "unique-description",
+        scenario: "quarry",
+        actions: "move:W pickup identify",
+        screen: Some("describe"),
+        ..BASE
+    },
     // Scrolls.
     Case {
         name: "scroll-read-list",
@@ -518,7 +560,8 @@ const CASES: &[Case] = &[
     Case {
         name: "scroll-too-close",
         scenario: "traps",
-        actions: "move:E pickup",
+        // The fireballs identified first: an unknown scroll is read without a warning.
+        actions: "move:E pickup read:e:b",
         keys: Some("r a k Enter"),
         ..BASE
     },

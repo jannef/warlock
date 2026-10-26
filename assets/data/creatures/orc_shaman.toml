@@ -1,0 +1,49 @@
+# The orc tribe (#455; content::orc_roster_tests checks the numbers). A war band's shaman, who
+# howls its curses from a few cells off (announced only, as every creature caster's) and leans on
+# a staff (its racial weapon). A dull red spark where its spells land.
+[[creature]]
+id = "orc_shaman"
+level = 10
+xp = 60
+rarity = "rare"
+loot = 50
+name = "orc shaman"
+glyph = "o"
+fg = "#c060a0"
+faction = "orcs"
+tags = ["orc", "caster"]
+alignment = "evil"
+vision = "darkvision"
+combat = "caster"
+range = 5
+opens_doors = true
+footsteps = 110
+hearing = 12
+weight = 70000
+stats = { strength = 13, dexterity = 12, toughness = 16, intelligence = 15, willpower = 17, presence = 8 }
+base_hp = 20
+skills = { concentration = 40, spellcraft = 45 }
+on_eat = { message = "It tastes rank, and of smoke and bitter herbs.", vomit = 30, stat = { willpower = 3 } }
+weapon_skills = { staves = 2 }
+racial_weapon = "quarterstaff"
+
+[[creature.gear]]
+chance = 60
+one_of = ["bone_amulet"]
+magic = 15
+
+[[creature.gear]]
+chance = 40
+one_of = ["copper_coin*10", "copper_coin*20"]
+
+[[creature.particles]]
+on = "attack"
+glyphs = "·*+"
+colors = ["#ffc8b0", "#e06040", "#802020"]
+count = 5
+life = 0.4
+spread = [0.9, 0.9]
+area = [0.15, 0.15]
+scale = 0.5
+fade = 0.6
+glow = 0.5

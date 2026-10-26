@@ -1,0 +1,38 @@
+# The orc tribe (#455; content::orc_roster_tests checks the numbers). A war band's best shot,
+# with a composite bow (its racial weapon) of horn and sinew, a full quiver, studded leather, and
+# a scimitar for close work.
+[[creature]]
+id = "orc_bowman"
+level = 17
+xp = 95
+rarity = "uncommon"
+loot = 30
+name = "orc bowman"
+plural = "orc bowmen"
+glyph = "o"
+fg = "#c8c070"
+faction = "orcs"
+tags = ["orc", "archer"]
+alignment = "evil"
+vision = "darkvision"
+sight = 13
+combat = "ranged"
+range = 8
+opens_doors = true
+footsteps = 120
+hearing = 13
+weight = 80000
+stats = { strength = 19, dexterity = 17, toughness = 19, intelligence = 10, willpower = 14, presence = 9 }
+base_hp = 42
+on_eat = { message = "This orc meat is rank!", vomit = 30 }
+weapon_skills = { bows = 3, short_blades = 2 }
+racial_weapon = "composite_bow"
+[[creature.gear]]
+chance = 95
+one_of = ["arrow*20", "arrow*30"]
+[[creature.gear]]
+chance = 60
+one_of = ["studded_leather"]
+[[creature.gear]]
+chance = 60
+one_of = ["scimitar"]

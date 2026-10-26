@@ -171,12 +171,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     spaces, `marsh-thing` "marsh things"), or the quest's `what`; the objective names the tagged
     types a run of the quest's campaign can meet: "Kill 100 goblins: goblins, goblin archers,
     and goblin chiefs."; progress says the same noun ("Quest updated: 37 / 100 goblins.").
-    Group tags: `kobold`; `goblin` (not the ogre or the troll, who run with them); `undead` (every
-    creature of the `undead` faction, a test sees to it); `vermin` (not the basilisk);
-    `marsh-thing` (the fens' living things and the bog hag); `duergar` (not their trader, a
-    merchant); `fire-thing`. Role and kind tags: `archer`, `caster` (every `combat = "caster"`
-    type), `cultist`, `skeleton`, `spirit` (the incorporeal undead), `troll` (every troll: the tribe's, the
-    marsh troll, and the rotting troll). Tags are never
+    Group tags name a tribe or family (`goblin`, `undead`, ...), role and kind tags a role
+    (`archer`, `caster`, `skeleton`, `spirit`, ...); the list and what each covers is the tag
+    list in `assets/data/creatures/README.toml`, and the wiki lists the tags with their
+    creatures. Every creature of the `undead` faction carries `undead` (a test sees to it), and
+    every `combat = "caster"` type `caster`. Tags are never
     shown in the game; the wiki lists them.
   - **Progress** the player's action made is said right after it: "Quest updated: 2 / 3 giant
     rats.", and once the goal is met "Quest updated: 3 / 3 giant rats. Return to the old hermit."

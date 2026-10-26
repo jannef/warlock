@@ -10,6 +10,7 @@ made_of = ["metal", "chitin", "dragonbone"]
 weight = 22000
 value = 900
 slot = "body"
+spell_cost_percent = 40
 armour = 1
 protection = 6
 max_dex = 1

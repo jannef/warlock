@@ -103,7 +103,8 @@ trolls counts them too.
 ## Incorporeal creatures
 
 Some restless dead have no body to stop them: **incorporeal** creatures (the ghosts, shadows,
-poltergeists, corpse candles, and wraiths of Fennmynster, the knockers and spectres of Fyrdelf) drift through walls, solid rock, trees, and closed doors (which stay shut behind them), and may
+poltergeists, corpse candles, and wraiths of Fennmynster, the knockers and spectres of Fyrdelf,
+and, far deeper, banshees and dread wraiths) drift through walls, solid rock, trees, and closed doors (which stay shut behind them), and may
 stop inside the stone. They cannot leave the level that way, and lava stops them as it stops
 anyone. Nothing of them presses down: they set off no traps and never break ice.
 
@@ -152,5 +153,10 @@ only a wall. What one carried falls out of the wall when it dies, onto the neare
 "Drops magic" is the chance that a creature drops a magic or rare item where it dies, besides
 what it carried (see [Magic items](magic-items.md)). Their numbers are on
 [Creatures in numbers](creature-numbers.md).
+
+Some of the dead below are known to no dungeon yet, waiting in places deeper than any found so
+far: grave knights and headless knights in their armour, bodachs, banshees, wight lords, dread
+wraiths, and vampires that drink your life, the charnel heaps and wormhosts, the bones of drakes
+and drakes that rose with their flesh still on, and the lich, a sorcerer who would not die.
 
 {{#include generated/creatures.md}}

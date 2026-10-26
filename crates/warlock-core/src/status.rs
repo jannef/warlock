@@ -441,6 +441,7 @@ mod tests {
             penetration: 0,
             kinds: Default::default(),
             riders: Vec::new(),
+            on_hit: Vec::new(),
         };
         let sharp = effects.sharpen(&content, profile);
         assert_eq!((sharp.to_hit, sharp.bonus), (5, 0));

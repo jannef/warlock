@@ -29,7 +29,14 @@ that roll, plus the attacker's bonus to hit, reaches the target's **Defence**.
 "The roll needs" is the target's Defence less the attacker's bonus. Against an unarmoured,
 unremarkable target (Defence 10) an attacker with no bonus hits three times in four.
 
-The game never shows you your bonus to hit, the dice, or the rolls: you see what happens.
+The game never shows you the rolls, but the [character screen](character.md) (`@`) shows your
+own attacks beside your stats: the blow of your main hand (or bare hands), your off hand's when
+you fight with two weapons, and the shot or throw of your missile weapon, each with its bonus to
+hit, its damage (`+4 to hit, 1d8+2 slashing`), and for a shot or throw its range in steps. They
+count everything that goes into the attack as you stand: your stats, your ranks in its weapon
+skill and in the fighting style you hold it in, two-weapon penalties, your stance, your talents,
+and the magic you know of; a magic item's unknown powers count only once it is identified, and
+what depends on the moment (striking from hiding, being dazzled) is left out.
 Exactly, this is how an attack is rolled, and what adds up to its bonus to hit and its damage:
 
 {{#include generated/to-hit.md}}

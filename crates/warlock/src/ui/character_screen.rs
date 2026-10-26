@@ -7,8 +7,10 @@
 //! the score), the status effects they suffer, by name (spec §8 "Status
 //! effects"), the diseases they know they have, by name (spec §8 "Diseases": `Diseased  Filth
 //! fever`), what they weigh and carry, their burden, and the weights at which it changes (spec §8 "Burden": they follow from
-//! scores the player knows). Never a modifier, a potential, a to-hit, or how severe an effect
-//! is: perception has none of them.
+//! scores the player knows). Beside the stats, the attacks they have ready (main hand, off hand,
+//! missile weapon), each with its to-hit, damage, and range as a strike would roll them now
+//! (`PerceptionView::own_attacks`): the owner's one exception to hidden numbers. Never a
+//! modifier, a potential, a creature's to-hit, or how severe an effect is.
 //!
 //! Read-only: Esc, Enter, or its own key closes it; the Skills key opens the Skills screen over
 //! it (spec §8 "Skills"; Esc there comes back here). It is read from the perception snapshot when
@@ -60,8 +62,15 @@ const BESIDE: i32 = 8;
 /// Width of a neighbour's name column: the longest name ("Protection") and a space.
 const BESIDE_NAME_W: i32 = 11;
 
-/// Width of the panel: the birth and the burden's thresholds fit on one line each.
-const WIDTH: i32 = 72;
+/// Width of the panel: the birth and the burden's thresholds fit on one line each, and an
+/// attack's numbers beside the stats.
+const WIDTH: i32 = super::info_tabs::panel_width(80);
+
+/// Where the attacks begin, from the stats' column: past the score and a gap.
+const ATTACKS_X: i32 = 23;
+
+/// Width of an attack's label column ("Main hand") and a space; its numbers go under the name.
+const ATTACK_LABEL_W: i32 = 11;
 
 /// A score lowered by a status effect or stat damage, and the status effects and diseases
 /// themselves: a muted red.
@@ -112,6 +121,9 @@ pub struct CharacterScreen {
     /// Their alignment band's name (spec §8 "Alignment"), never the score; `None` without
     /// alignment rules.
     alignment: Option<&'static str>,
+    /// The attacks they have ready: where each comes from, what it is made with, and its
+    /// numbers (`+4 to hit, 1d8+2 slashing`), beside the stats.
+    attacks: Vec<(&'static str, String, String)>,
 }
 
 impl CharacterScreen {
@@ -144,6 +156,7 @@ impl CharacterScreen {
                 resources: Vec::new(),
                 talents: 0,
                 alignment: None,
+                attacks: Vec::new(),
             };
         };
         let content = view.content();
@@ -209,6 +222,9 @@ impl CharacterScreen {
                 .collect(),
             talents: view.own_talents().iter().filter(|t| !t.class).count(),
             alignment: view.own_alignment().map(|b| b.name()),
+            attacks: (view.own_attacks().iter())
+                .map(|a| (a.source.label(), a.name.clone(), a.summary(content)))
+                .collect(),
         }
     }
 
@@ -221,6 +237,32 @@ impl CharacterScreen {
             Some(KeyCommand::Skills) => ScreenAction::Open(ScreenName::Skills),
             _ if matches!(press.nav, Nav::Back | Nav::Enter) => ScreenAction::Close,
             _ => ScreenAction::Stay,
+        }
+    }
+
+    /// The attacks beside the stats, from (`x`, `y`) and at most `width` wide: two rows each,
+    /// `Main hand  long sword` and its numbers under the name; three attacks fill the stats'
+    /// six rows.
+    fn draw_attacks(
+        &self,
+        console: &mut Console,
+        x: i32,
+        mut y: i32,
+        width: i32,
+        fits: impl Fn(i32) -> bool,
+    ) {
+        let clip =
+            |text: &str, w: i32| -> String { text.chars().take(w.max(0) as usize).collect() };
+        for (label, name, numbers) in &self.attacks {
+            let value_w = width - ATTACK_LABEL_W;
+            if fits(y) {
+                console.print(x, y, label, TEXT_DIM);
+                console.print(x + ATTACK_LABEL_W, y, &clip(name, value_w), TEXT);
+            }
+            if fits(y + 1) {
+                console.print(x + ATTACK_LABEL_W, y + 1, &clip(numbers, value_w), TEXT);
+            }
+            y += 2;
         }
     }
 
@@ -278,6 +320,7 @@ impl CharacterScreen {
             y += 1;
         }
         y += i32::from(!self.identity.is_empty());
+        self.draw_attacks(console, x + ATTACKS_X, y, width - ATTACKS_X, fits);
         for (stat, score) in self.scores.iter() {
             // `St  Strength      12`: the abbreviation, the name, the score right-aligned.
             if fits(y) {
@@ -687,9 +730,17 @@ mod tests {
 
     #[test]
     fn never_shows_potentials_or_modifiers() {
-        let text = drawn(&showcase(), 80, 30).join("\n");
+        let world = showcase();
+        let mut text = drawn(&world, 80, 30).join("\n");
+        // The attacks' numbers are the one exception (the owner's): take them out first.
+        let view = world.perception();
+        for attack in view.own_attacks() {
+            let numbers = attack.summary(view.content());
+            assert!(text.contains(&numbers), "{numbers:?} in\n{text}");
+            text = text.replace(&numbers, "");
+        }
         // The showcase player's potentials (16 each), and their modifiers (+2, -1), appear
-        // nowhere; neither do signs or the words.
+        // nowhere else; neither do signs or the words.
         for hidden in ["16", "+", "-", "otential", "odifier"] {
             assert!(!text.contains(hidden), "{hidden:?} in\n{text}");
         }

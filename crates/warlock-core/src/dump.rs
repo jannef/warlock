@@ -68,6 +68,10 @@ pub enum Layer {
     /// how far its marks are toward the next (`Long blades 2 (40%)`), the styles they fight in
     /// now marked (`Duelist 1 (0%), in use`); never what a rank gives.
     WeaponSkills,
+    /// Not a map: the player's attacks as the character screen shows them, one a line: where it
+    /// comes from, what it is made with, its to-hit, damage, and range (`Main hand long sword: +4
+    /// to hit, 1d8+2 slashing`, `Missile short bow: +3 to hit, 1d6 piercing, range 10`).
+    Attacks,
     /// Not a map: the player's talents in the order taken, one a line with its rank of how many
     /// and its choice (`Hardy 2/3`, `Weapon focus (long blades)`); never what a rank gives.
     Talents,
@@ -126,6 +130,7 @@ impl Layer {
         Layer::Stats,
         Layer::Skills,
         Layer::WeaponSkills,
+        Layer::Attacks,
         Layer::Talents,
         Layer::Abilities,
         Layer::Traps,
@@ -152,6 +157,7 @@ impl Layer {
             Layer::Stats => "stats",
             Layer::Skills => "skills",
             Layer::WeaponSkills => "weapon_skills",
+            Layer::Attacks => "attacks",
             Layer::Talents => "talents",
             Layer::Abilities => "abilities",
             Layer::Traps => "traps",
@@ -185,8 +191,8 @@ impl FromStr for Layer {
             .ok_or_else(|| {
                 format!(
                     "unknown layer `{s}` (expected view, fov, memory, light, sound, blood, \
-                     inventory, equipment, stats, skills, weapon_skills, talents, abilities, \
-                     traps, locations, quests, truth, actors, progress, rooms, ice)"
+                     inventory, equipment, stats, skills, weapon_skills, attacks, talents, \
+                     abilities, traps, locations, quests, truth, actors, progress, rooms, ice)"
                 )
             })
     }
@@ -210,6 +216,7 @@ pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
         Layer::Stats => stat_rows(&world.perception()),
         Layer::Skills => skill_rows(&world.perception()),
         Layer::WeaponSkills => weapon_skill_rows(&world.perception()),
+        Layer::Attacks => attack_rows(&world.perception()),
         Layer::Talents => talent_rows(&world.perception()),
         Layer::Abilities => ability_rows(&world.perception()),
         Layer::Traps => trap_rows(&world.perception()),
@@ -263,6 +270,7 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
         | Layer::Stats
         | Layer::Skills
         | Layer::WeaponSkills
+        | Layer::Attacks
         | Layer::Talents
         | Layer::Abilities
         | Layer::Traps
@@ -359,7 +367,7 @@ fn truth_rows(world: &World) -> Vec<String> {
 
 /// The level's special rooms (ground truth): the terrain with each special room's plain ground
 /// ([`crate::content::TerrainDef::is_plain_ground`]) drawn as its effect's mark, then one line
-/// per room.
+/// per room (glimpsed, entered); headed by `pervading <id>` when an effect covers the level.
 fn room_rows(world: &World) -> Vec<String> {
     let content = world.content();
     let (level, _) = world.ground_truth();
@@ -375,11 +383,15 @@ fn room_rows(world: &World) -> Vec<String> {
             _ => content.terrain(t).glyph,
         }
     });
+    if let Some(id) = level.pervading() {
+        out.insert(0, format!("pervading {}", content.room_effect(id).id));
+    }
     for room in level.rooms() {
         let effect = content.room_effect(room.effect);
+        let glimpsed = if room.glimpsed { ", glimpsed" } else { "" };
         let entered = if room.entered { ", entered" } else { "" };
         out.push(format!(
-            "{} {} at {}-{}{entered}",
+            "{} {} at {}-{}{glimpsed}{entered}",
             effect.mark, effect.name, room.min, room.max
         ));
     }
@@ -469,7 +481,7 @@ fn inventory_rows(view: &PerceptionView<'_>) -> Vec<String> {
             class = Some(here);
             rows.push(format!("{}:", content.item_class(here).name));
         }
-        let name = s.describe(content);
+        let name = view.lore().describe(s);
         let weight = format_weight(s.weight(content));
         let mark = equipment::mark(content, view.equipment(), i)
             .map_or(String::new(), |m| format!(" ({m})"));
@@ -502,7 +514,7 @@ fn equipment_rows(view: &PerceptionView<'_>) -> Vec<String> {
         .map(|(i, (slot, def))| {
             let what = match worn.get(slot) {
                 Some(item) => view.inventory().get(item).map_or("?".into(), |s| {
-                    format!("{} ({})", s.describe(content), position_text(item))
+                    format!("{} ({})", view.lore().describe(s), position_text(item))
                 }),
                 None => "-".into(),
             };
@@ -615,6 +627,34 @@ fn weapon_skill_rows(view: &PerceptionView<'_>) -> Vec<String> {
             } else {
                 row
             }
+        })
+        .collect()
+}
+
+/// The player's attacks, one a line (`Main hand long sword: +4 to hit, 1d8+2 slashing`; see
+/// [`Layer::Attacks`]).
+fn attack_rows(view: &PerceptionView<'_>) -> Vec<String> {
+    (view.own_attacks().iter())
+        .map(|a| {
+            let line = a.summary(view.content());
+            format!("{} {}: {line}", a.source.label(), a.name)
+        })
+        .collect()
+}
+
+/// The player's attacks for JSON: `source`, `kind`, `name`, `to_hit`, `damage` (the text the
+/// screen shows), and `range` (null for a blow).
+fn attacks_json(view: &PerceptionView<'_>) -> Value {
+    (view.own_attacks().iter())
+        .map(|a| {
+            json!({
+                "source": a.source.id(),
+                "kind": a.kind,
+                "name": a.name,
+                "to_hit": a.to_hit,
+                "damage": a.damage_text(view.content()),
+                "range": a.range,
+            })
         })
         .collect()
 }
@@ -1129,9 +1169,9 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
                 "class": content.item_class(view.item_class(s)).id,
                 "count": s.count,
                 "weight": s.weight(content),
-                "name": s.describe(content),
+                "name": view.lore().describe(s),
                 "rarity": s.rarity(),
-                "identified": s.is_identified(),
+                "identified": view.lore().knows(s),
                 "magic": magic,
             });
             if let Some(price) = unpaid.get(i).copied().flatten() {
@@ -1223,6 +1263,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "level": view.level_id(),
         "viewer": view.viewer(),
         "room": view.room(view.viewer()).map(|e| e.id.as_str()),
+        "pervading": view.pervading().map(|e| e.id.as_str()),
         "shop": shop,
         "weather": view.weather(),
         // In °C, to a tenth of a degree.
@@ -1262,6 +1303,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "styles_in_use": (view.own_styles_in_use().into_iter())
             .map(|id| content.weapon_skills().skill(id).id.clone())
             .collect::<Vec<_>>(),
+        "attacks": attacks_json(&view),
         "talents": talents,
         "due": view.due(),
         "abilities": abilities_json(&view),

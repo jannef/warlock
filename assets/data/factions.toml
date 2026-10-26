@@ -30,6 +30,14 @@ id = "goblins"
 name = "goblins"
 hostile = ["player", "vermin", "kobolds"]
 
+# The orc tribe (#455): war bands of orcs and the wargs they keep. They raid the kobolds' warrens,
+# eat the vermin, and fight the dead and the duergar (whose mine they raid: listed on this side);
+# the goblins they bully but march beside, so the two tribes leave each other be.
+[[faction]]
+id = "orcs"
+name = "orcs"
+hostile = ["player", "vermin", "kobolds", "undead", "duergar"]
+
 # The restless dead of the barrows: skeletons, zombies, ghouls, wights. They hate the living,
 # the player, the kobolds, and the goblins alike.
 [[faction]]
@@ -51,6 +59,14 @@ hostile = ["player"]
 id = "cult"
 name = "cultists"
 hostile = ["player", "marsh"]
+
+# The hags (#451): the green hag, the sea hag, the annis hag, and the bheur hag, who keep to
+# themselves and run with no one's band. The bog hag is not among them: the fen's things serve her,
+# and she stays theirs (`marsh`). Hostile to the player only.
+[[faction]]
+id = "hags"
+name = "hags"
+hostile = ["player"]
 
 # The grey dwarves of the deep delf (Fyrdelf): miners, warriors, smiths. They hate the living who
 # come down their shafts, the goblins' kin (the ogres and trolls of the deep among them), and
@@ -74,6 +90,22 @@ hostile = ["player", "vermin", "kobolds", "undead", "duergar"]
 [[faction]]
 id = "fire"
 name = "fire things"
+hostile = ["player"]
+
+# The devils of the hells (#448): lemures, imps, and the greater devils up to the pit fiend.
+# They come for the player and leave everyone else be: devils bargain, they do not brawl with
+# every passer-by.
+[[faction]]
+id = "devil"
+name = "devils"
+hostile = ["player"]
+
+# The yugoloths (#446): mercenary fiends of the lower planes, who serve whoever pays. They come
+# for the player and leave everyone else alone, the demons and devils included: hired by none,
+# at war with none (there is no hire yet; relations are only symmetric hostile lists).
+[[faction]]
+id = "yugoloth"
+name = "yugoloths"
 hostile = ["player"]
 
 # Folk who mean the player no harm, whatever they are: the showcase's people (the gardener, the

@@ -1009,7 +1009,7 @@ pub(super) fn apply_choice(
 fn resume(commands: &mut Commands, screens: &mut Screens, id: &str) {
     match Game::resumed(&screens.store, id, &screens.content.0) {
         Resume::Loaded(world) => {
-            commands.insert_resource(Game::from_world(world, id.to_string()));
+            commands.insert_resource(Game::from_world(*world, id.to_string()));
             screens.stack.clear();
         }
         Resume::Failed(message) => screens.back_to_main(Some(message), false),

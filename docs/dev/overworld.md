@@ -16,7 +16,19 @@ the outdoor generator (`mapgen/local/`, below); the edge exit (`exit` in `LevelS
 walking off any edge return to the cell. `>` arrives on the side the player walked onto the cell
 from: `WorldState::overworld_step` (the last overworld step, cleared by any level change) picks
 the side and `mapgen::local::arrival` the edge cell (road first, then dry, open ground near the
-middle of the side); without a step, at the level's start (the middle). Sight on the overworld is line
+middle of the side); without a step, at the level's start (the middle).
+A hand-made `outdoor` level an overworld location leads into (stairs down or a hidden location's
+`to`, first in the overworld's order) gets the location as its `exit` when content loads
+(`content/overworld.rs::link_edge_exits`, called once after the levels are parsed; no level-file
+field), so it is left by its edge like a local area (Cēaptūn has no stairs). The quick leave
+(#474, spec §7 "Leaving an outdoor area"; `world/quick_leave.rs`): `Action::Ascend` with no
+stairs up underfoot on an `Outdoor` level with an `exit` goes through `leave_by_edge` (priced as
+`Stairs` by the dispatch) unless `enemies_about`: an actor on the level with
+`Stance::Hostile` toward the player that `Perception::sees_actors_at`, or any within
+`QUICK_LEAVE_REACH` (10, Chebyshev) unseen; ground truth, read as a rule. Refused, it says
+`QUICK_LEAVE_REFUSED` and spends nothing. `take_stairs` calls it in its "no way" branch, so stairs
+underfoot win and dungeons and the overworld are untouched. Tests: `world/quick_leave_tests.rs`.
+Sight on the overworld is line
 of sight within `daylight::overworld_sight` (day 9, twilight 5, night 2 plus one per
 `MOONLIGHT_PER_CELL` of `Sky::moonlight`, at most `SIGHT_MOONLIT` 4), ignoring light. The
 overworld is sky-exposed (sun, moons, and sky, like outdoor levels); `daylight::overworld_night`

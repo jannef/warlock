@@ -1,7 +1,7 @@
 # Mana
 
 Mana is your second pool beside your [hit points](combat.md#hit-points), and it works the same way:
-you have some, it has a most, and it comes back by itself with time. The casters' spells spend it
+you have some, it has a most, and it comes back by itself with time. [Spells](magic.md) spend it
 (the priest's, the druid's, the wizard's, and the witch's, see [Classes](classes.md#levels)):
 each costs its mana, and with too little you cannot cast it until enough has come back.
 

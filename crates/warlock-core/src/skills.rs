@@ -163,7 +163,8 @@ pub enum Use {
     Spot,
     /// An attempt to disarm a trap (spec §8 "Disarming traps"), whatever comes of it.
     Disarm,
-    /// An attack that missed because the actor dodged it (the Dexterity or Dodge category).
+    /// An attack that missed because the actor dodged it (the Dexterity or Dodge category), or a
+    /// known trap the player stepped past (spec §8 "Traps").
     Dodge,
     /// An action taken (not waiting) while the burden slows the actor.
     Burdened,
@@ -186,7 +187,7 @@ impl Use {
             Use::Search => "a turn spent searching",
             Use::Spot => "noticing something hidden in passing",
             Use::Disarm => "trying to disarm a trap",
-            Use::Dodge => "dodging an attack",
+            Use::Dodge => "dodging an attack or a known trap",
             Use::Burdened => "acting (not waiting) while your load slows you",
             Use::Travel => "a journey on the overworld",
             Use::Steal => "trying to steal from someone",

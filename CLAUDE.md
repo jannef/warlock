@@ -159,7 +159,7 @@ levels"); `weather` is the dev weather override, `KIND` =
 effect, `ID` an id in `assets/data/effects.toml`: `effect:fireball@30,14` (a burst there),
 `effect:fireball@20,10>30,14` (flying there first), `effect:lightning_bolt@21,17>58,17` (a bolt
 toward the second cell), no time and no rules effect, for captures; `identify` is the dev
-identify (magic items, no time; without letters everything carried); `afflict` is the dev status
+identify (magic items and labelled scrolls' types, no time; without letters everything carried); `afflict` is the dev status
 effect: one degree more of `STATUS`, an id in `assets/data/status.toml`, e.g.
 `afflict:poisoned*4 afflict:bleeding`, no game time (not `diseased`: that comes of a disease; nor
 `raging`: that comes of `resource:rage`);
@@ -193,7 +193,9 @@ their caster level, `Caster level 3`, then their alignment band, `Alignment Kind
 know they have, then what they resist in words, `Resistant to cold`, `Vulnerable to fire`,
 `Immune to poison`), `weapon_skills` (the player's
 ranks and progress toward the next, `Long blades 2 (40%)`, fighting styles too, those in use
-marked `Duelist 1 (0%), in use`), `talents` (the player's talents in the order taken, `Hardy
+marked `Duelist 1 (0%), in use`), `attacks` (the player's ready attacks as the character
+screen shows them: `Main hand long sword: +4 to hit, 1d8+2 slashing`, `Off hand dagger: ...`,
+`Missile short bow: +3 to hit, 1d6 piercing, range 10`; unidentified magic left out), `talents` (the player's talents in the order taken, `Hardy
 2/3`, `Weapon focus (long blades)`, a birth sign's gifts first, `Fleet-footed (sign)`, `Slight (sign, flaw)`, those their class gives marked `Well dressed (class)`), `abilities` (the player's abilities in the abilities menu's
 order, each with its source and what it asks for or why it cannot be used now: `Shield bash
 (weapon skill): a direction`, `Open lock (skill): not usable yet`), `traps` (the traps the player knows,
@@ -227,7 +229,8 @@ word: `{"cold": "resistant"}`), `burden` (`level`, `limit`), `alignment` (the ba
 (status ids), `diseases` (the known ones' ids), `death` (with `of`, the status that killed,
 `cause`, starving, choking, or a trap, and `trap`, the id of the trap that killed),
 `known_traps`, `known_locations` (`pos`, `name`), `temperature` (°C to a tenth), `weapon_skills` (by skill id:
-`rank`, `progress`), `styles_in_use` (style ids), `talents` (in the order taken: `id`, `name`,
+`rank`, `progress`), `styles_in_use` (style ids), `attacks` (`source`, `kind`, `name`, `to_hit`, `damage` (the text),
+`range`), `talents` (in the order taken: `id`, `name`,
 `rank`, `ranks`, `choice`, `class`, `granted`, `flaw`), `character` (`name`, `race`, `gender`, `class`,
 `raised`, `age`, `born`, `sign`, and `lucky`, a lucky day's title, only for one born on it), `due` (the level-up choices due: `level`, `talents`,
 `rolls`, `bonus`, or null), `abilities` (in menu order: `id`, `source`,
@@ -304,7 +307,7 @@ file). Topics:
 - `docs/dev/spells.md` — the spell data: the tier table, the `[[spell]]` files and their load-time cap check, tags, caster level
 - `docs/dev/resources.md` — alternative resources: the data, `Actor::resources`, grant, gain, spend, and end, time in the status loop, ability costs, the dev grant
 - `docs/dev/blood.md` — wounds and stains, bleeding, how blood is drawn
-- `docs/dev/creatures.md` — factions and stance, the AI, paths, creature sight
+- `docs/dev/creatures.md` — factions and stance, the AI, paths, creature sight, spawning, gear (a stable index: roster PRs edit only their own `docs/dev/creatures/<tribe>.md`, e.g. `undead.md`, never this file)
 - `docs/dev/npcs.md` — unique characters, chat and ask, rotation lines and mutters, displacement
 - `docs/dev/quests.md` — quest data and stages, hooks in kills, travel, and talk, the quest log
 - `docs/dev/shops.md` — shop data, keepers, prices, buying, selling, theft, the shop dialogs
@@ -316,7 +319,8 @@ file). Topics:
 - `docs/dev/magic-items.md` — affixes, rarities, base items, loot, identification, the item description
 - `docs/dev/scrolls.md` — reading, spell scrolls on the traps' shared spell code, the scroll of identify, the read and identify lists
 - `docs/dev/overworld.md` — the overworld level, locations, sight at map scale, generated local areas
-- `docs/dev/mapgen.md` — RNG streams, dungeon branches, generators, vaults, snapshots, special rooms
+- `docs/dev/mapgen.md` — RNG streams, dungeon branches, generators, vaults, snapshots
+- `docs/dev/special-rooms.md` — room effects as data, the draw (weights, favoured and banned, eligibility), whole-level effects, `effects_at`, what the player is told
 - `docs/dev/rendering.md` — the three layers, the console shader, visual lighting and creature shadows, light stability, particles, glow, post, rain, spell effects, the `ui/` modules
 - `docs/dev/sky.md` — the sun's path, the moons, the sky, weather blocks and clouds
 - `docs/dev/temperature.md` — air temperature, freezing water, ice thickness, falling in
@@ -330,10 +334,15 @@ Hard rules:
 - Rendering, UI, and dumps read the per-turn **perception snapshot** only — never ground truth —
   so hidden information cannot leak. The only exception is an explicit dev "reveal" mode.
 - Gameplay outcomes never depend on frame rate, animation, or visual randomness.
-- Every key the game reads goes through the binding system: a `KeyCommand` in its
-  `input::Context`, rebindable in Controls and listed by `?`. Never match a `KeyCode` or a typed
-  character in a screen or an input mode (only Esc and the letters and digits naming list rows
-  are fixed); hints name keys as bound (`docs/dev/settings.md`).
+- Only play-context (gameplay) commands are rebindable: a `KeyCommand` in `input::Context::Play`,
+  rebindable in Controls and listed by `?`. The keys of menus, menu lists (rows named by letters
+  and digits, paging, confirm and cancel inside lists), screens, info pages, prompts, dialogs,
+  text fields, and the targeting mode are FIXED, never rebindable (owner, 2026-10-26: "do not
+  fucking make menus rebindable. that just gets too messy"; "at least menu lists like that. it
+  just won't work"). New ones are plain fixed keys in their screen or input-mode code, named in
+  the screen's hint line; add no `KeyCommand` or `Context` entry for them. Existing menu-context
+  bindings stay as they are for now (not widened, not removed; a cleanup is a later owner call)
+  (`docs/dev/settings.md`).
 - Abilities (racial, class, skill, weapon skill and style, item; #156) register in
   `warlock_core::ability`, the one registry, and are used from the one abilities menu (`a`):
   never a default key of their own (an ability's own `KeyCommand` stays unbound by default,

@@ -40,7 +40,8 @@ the whole map are on [The Ascmearc](ascmearc.md).
 
 Some cells are **locations**: ways into other levels such as a hall, a cave, or a dungeon. Walking
 onto one tells you where it leads, and `>` enters it. You arrive on the stairs that lead back, and
-`<` there takes you out to the overworld at the location.
+`<` there takes you out to the overworld at the location. A town has no stairs: you arrive in
+it, and leave it as you leave a local area ([Leaving an area](#leaving-an-area)).
 
 ### Hidden locations
 
@@ -66,8 +67,29 @@ explore that cell on foot. You enter an outdoor area, 80 by 40 cells, made for t
 - You arrive on the side you walked onto the cell from (on the road if you came along one), or in a
   clearing in the middle if you did not walk there.
 - Walk off any edge to return to the overworld cell. This takes 6 seconds, like taking stairs.
+  See [Leaving an area](#leaving-an-area) for the quicker way.
 - Inside, a step is a pace again, not a journey (6 seconds on open ground), and the sun and sky
   light the area by day, under the same
   [weather](weather.md) as the overworld. At night only the moon lights it: under a bright moon
   and a clear sky you dimly make out the open ground, otherwise it is dark, so bring your
   [lantern](lantern.md).
+
+## Leaving an area
+
+Every outdoor place you reach from the overworld is left the same way: a local area, and a town
+such as Cēaptūn, which has no stairs. **Walk off any edge** and you are back on its cell of the
+overworld, 6 seconds, like taking stairs.
+
+There is a quicker way: press `<` anywhere in the area (not on stairs up, which you take as
+usual). You leave at once, exactly as if you had walked off the edge, **unless an enemy is
+about**:
+
+- any creature hostile to you that you can see, however far away, or
+- any hostile creature you cannot see within **10 cells** of you, counting a diagonal step as
+  one cell (so a square 21 cells across with you in the middle), awake or asleep, behind walls
+  or not.
+
+Creatures that are not hostile (townsfolk, merchants, deer) never stop you. If an enemy is
+about you are told "You cannot slip away with enemies about." and no time passes; walk off the
+edge instead. Underground and on the overworld itself, `<` still needs stairs, and an outdoor
+place no overworld cell leads into (the showcase's walled courtyard) is left by its stairs.

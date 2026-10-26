@@ -38,8 +38,8 @@ archers, and goblin chiefs." Any creature of a kind that is of that sort counts,
 kill it: every level, every dungeon, the overworld, all add up (unless the quest names a
 place). The quest says which kinds count; the table below lists every sort (its tag, as the
 game's data calls it) and the kinds of it. A kind may be of several sorts (a goblin archer is a
-goblin and an archer). Some who run together are not of one sort: an ogre is no goblin, and a
-basilisk no vermin. A creature's sort goes with its kind, whoever it sides with: a kobold is a
+goblin and an archer). Some who run together are not of one sort: an ogre is no goblin, a warg
+no orc, and a basilisk no vermin. A creature's sort goes with its kind, whoever it sides with: a kobold is a
 kobold.
 
 {{#include generated/creature-tags.md}}

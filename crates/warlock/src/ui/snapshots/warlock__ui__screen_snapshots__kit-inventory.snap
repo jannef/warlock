@@ -5,29 +5,29 @@ expression: "render(case, content.clone())"
  Welcome to World. Press ? for controls.
 
 
-              ┌─ Inventory ──────────────────────────────────────────────────────────┐
-              │                                                                      │
-              │ Melee weapons                                                        │
-              │   a - ) a short sword (wielded)                              1.1 kg  │
-              │ Missile weapons                                                      │
-              │   b - } a short bow (readied)                                 700 g  │
-              │ Missiles                                                             │
-              │   c - / 24 arrows (quivered)                                  720 g  │
-              │ Body armour                                                          │
-              │   d - [ a leather jerkin (being worn)                        3.5 kg  │
-              │ Boots                                                                │
-              │   e - [ a pair of leather boots (being worn)                   1 kg  │
-              │ Food                                                                 │
-              │   f - % 3 strips of dried meat                                450 g  │
-              │   g - % a loaf of bread                                       400 g  │
-              │ Coins                                                                │
-              │   h - $ 8 gold coins                                           80 g  │
-              │                                                                      │
-              │ Carrying 8 kg   ·   Your weight 78 kg (you 70 kg)                    │
-              │ Burdened over 16.5 kg, strained over 33 kg, overloaded over 49.5 kg  │
-              │                                                                      │
-              │ a-h look   I or Esc close                                            │
-              └─ 1 Char · 2 Inv · 3 Equip · 4 Skills · 5 Weapons · 6 Quests · 7 Tal ─┘
+    ┌─ Inventory ─────────────────────────────────────────────────────────────────────────────┐
+    │                                                                                         │
+    │ Melee weapons                                                                           │
+    │   a - ) a short sword (wielded)                                                 1.1 kg  │
+    │ Missile weapons                                                                         │
+    │   b - } a short bow (readied)                                                    700 g  │
+    │ Missiles                                                                                │
+    │   c - / 24 arrows (quivered)                                                     720 g  │
+    │ Body armour                                                                             │
+    │   d - [ a leather jerkin (being worn)                                           3.5 kg  │
+    │ Boots                                                                                   │
+    │   e - [ a pair of leather boots (being worn)                                      1 kg  │
+    │ Food                                                                                    │
+    │   f - % 3 strips of dried meat                                                   450 g  │
+    │   g - % a loaf of bread                                                          400 g  │
+    │ Coins                                                                                   │
+    │   h - $ 8 gold coins                                                              80 g  │
+    │                                                                                         │
+    │ Carrying 8 kg   ·   Your weight 78 kg (you 70 kg)                                       │
+    │ Burdened over 16.5 kg, strained over 33 kg, overloaded over 49.5 kg                     │
+    │                                                                                         │
+    │ a-h look   I or Esc close                                                               │
+    └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘
 
 
 

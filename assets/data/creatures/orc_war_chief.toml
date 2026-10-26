@@ -1,0 +1,39 @@
+# The orc tribe (#455; content::orc_roster_tests checks the numbers). The orc who leads a war
+# band: a scimitar (its racial weapon), mail and helm often of a better make than they look, a
+# shield, and the band's takings.
+[[creature]]
+id = "orc_war_chief"
+level = 20
+xp = 110
+rarity = "rare"
+loot = 50
+name = "orc war chief"
+glyph = "o"
+fg = "#e0a030"
+faction = "orcs"
+tags = ["orc"]
+alignment = "evil"
+vision = "darkvision"
+opens_doors = true
+footsteps = 140
+hearing = 12
+weight = 95000
+stats = { strength = 20, dexterity = 15, toughness = 20, intelligence = 10, willpower = 15, presence = 14 }
+base_hp = 50
+on_eat = { message = "This orc meat is rank!", vomit = 30 }
+weapon_skills = { short_blades = 3, shield_block = 2, sword_and_board = 2 }
+racial_weapon = "scimitar"
+[[creature.gear]]
+chance = 80
+one_of = ["chain_mail"]
+magic = 10
+[[creature.gear]]
+chance = 70
+one_of = ["iron_helm"]
+magic = 5
+[[creature.gear]]
+chance = 50
+one_of = ["small_shield"]
+[[creature.gear]]
+chance = 80
+one_of = ["copper_coin*30", "gold_coin*3"]

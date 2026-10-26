@@ -23,7 +23,7 @@ hit points a level gives) is `docs/dev/experience.md`.
 | `rng.rs` | `Rng::levels(seed)`, the `levels` stream, kept in `WorldState::levels_rng: Option<Rng>` **from the first draw** (the stat checks of each level, `world/stat_training.rs`; skill rolls, `world/skill_roll.rs`), so runs that never drew hash as before. |
 | `xtask/src/wiki/talents.rs` | `talents.md` (trees with the rules), `talents-by-system.md` (the coverage matrix, class abilities beside the talents); `effect_text`, the rule of one effect, shared with the class tables. |
 | `content/class.rs` (#243) | `ClassActive`, the actives (id = the ability's id, aim, cost); `strip_tables` (tests that load talents of their own). |
-| `content/class_spell.rs` (#245) | `ClassSpell` (the casters' spells: id, kind, `aimed`), `SpellSpec` (`[[talent.spell]]`, read with the talent; a strike's `cast` is a scroll's `ReadSpec`), `SpellDef`/`Does` (boon, mend, cleanse, hex, strike), resolved into `TalentDef::spells`; `Content::class_spell`. |
+| `content/class_spell.rs` (#245, #395) | `ClassSpell` (the casters' twelve spell abilities: id, `aimed`); each is the spell of its id in `data/spells/` (`Content::class_spell`, docs/dev/spells.md). |
 | `world/caster.rs` | `cast_spell` (`Action::Cast`, `use:blessing`, `use:arcane_bolt:12,5`), `Actor::spell_cost`, the strike on the scrolls' shared code, `reprieve` (Miracle, Hag's bargain, from `hurt`), `lore_blow` (Poison lore, from `resolve`). |
 | `world/racial.rs` | The racial talents (#241): `grants` (a race's `talents`, `data/races.toml`, put in by `stars::grant` before the sign's gifts, through `Talents::regrant`, which now replaces every granted talent outside a class tree), `World::small_target` (Small target's Dodge, from `resolve` after `target_against`, when the attacker's `size_of` is larger). `content/race.rs::check_talents` (at load): a race grants only `granted` talents of the `racial` tree. |
 | `world/class_ability.rs` | `use_class` (`Action::Use`, `use:rage`, `use:smite:E`), `may_use_class`, and the actives but Volley and Rage (Inspire, #244, among them); Hardened's hit points are `level_up`'s. |
@@ -125,7 +125,7 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `radiance` | `LightCache::sources` (a carried source, `RADIANCE` tag, while its status lasts) |
 | `inner_light` | `LightCache::sources` (a carried source, `INNER` tag, always: the player and the creatures see by it alike) |
 | the actives (`rage`, `veterans_wind`, `whirlwind`, `lay_on_hands`, `avatar`, `smite`, `quivering_palm`) | `world/class_ability.rs` (Rage: `world/rage.rs`; `rage { resource }`, `TalentMods::rage_status`); `Ability::Class` in `ability.rs` (`class_cooldown`: Rage's status and what it `follows`) |
-| `spell` (from `[[talent.spell]]`) | `TalentMods::spells` → `Ability::Spell`'s `had_by`; `world/caster.rs` |
+| `spell` (`{ kind = "spell", spell = "ID" }`, checked against `data/spells/`) | `TalentMods::spells` → `Ability::Spell`'s `had_by`; `world/cast.rs` |
 | `spell_power`, `spell_mana_percent` | `TalentMods::spell_damage` in `World::strike` and `read_spell`; `Actor::spell_cost` (the cast and `Unavailable::NoMana`) |
 | `deflection_unarmoured` | `Actor::defence` (Deflection, no body armour: Mage armour) |
 | `purify`, `corpse_harmless`, `meal_heals` | `eat.rs`: `eat_rotten` (no sickness, no exposure, no draw), `eat_fresh` (no `on_eat` harm or vomiting, no draw), `meal_heals` from `finish` (an object, or a fresh corpse) |
@@ -240,10 +240,12 @@ and its repeat key use them).
 ## Caster spells
 
 The priest, druid, wizard, and witch (#245) have their tables as the others do; their actives
-are **spells** (`ClassSpell`, `Ability::Spell`, `Action::Cast`), placeholders for the spell
-system, defined by a class ability's `[[talent.spell]]` (the loader adds a `spell` effect for
-each, so `TalentMods::spells` says who has it; a spell id is given once in all the talents).
-They cost mana (`Actor::spell_cost`, `World::spend_mana`) and never a cooldown;
+are **spells** (`ClassSpell`, `Ability::Spell`, `Action::Cast`). The placeholders of #245 were
+migrated onto the spell system by #395: a class ability's talent effect `{ kind = "spell",
+spell = "ID" }` gives the ability (`TalentMods::spells` says who has it; an id is given once in
+all the talents), and the spell itself is `data/spells/ID.toml`, cast by the one cast path
+(docs/dev/spells.md: its tier, cost, reach, dice, resolution; the migrated tiers and costs are
+listed there). They cost mana (`Actor::spell_cost`, `World::spend_mana`) and never a cooldown;
 `Unavailable::NoMana` greys them out. A refusal (no cell, out of range, no hostile seen to
 hex, no sky, nothing to cure, not hurt) spends neither time nor mana. Shared entries: the
 priest names the paladin's `smite` (so it asks Good) and `divine_health`, the druid the

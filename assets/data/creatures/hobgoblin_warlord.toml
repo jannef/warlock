@@ -1,0 +1,39 @@
+# The goblin tribe's second tier (#454). The head of a hobgoblin host: a great sword (its racial
+# weapon) in both hands, heavy armour, and a war chest. Not unique: a host may have more than
+# one, and no quest waits for one. No place is deep enough for it yet, so it is in no population.
+[[creature]]
+id = "hobgoblin_warlord"
+level = 24
+xp = 130
+rarity = "very_rare"
+loot = 80
+name = "hobgoblin warlord"
+glyph = "g"
+fg = "#ff4040"
+speed = 1050
+faction = "goblins"
+tags = ["goblin", "hobgoblin"]
+alignment = "evil"
+vision = "darkvision"
+opens_doors = true
+footsteps = 140
+hearing = 12
+weight = 95000
+stats = { strength = 21, dexterity = 16, toughness = 22, intelligence = 14, willpower = 17, presence = 14 }
+base_hp = 66
+on_eat = { message = "This hobgoblin meat is rank!", vomit = 35 }
+weapon_skills = { great_blades = 5, great_weapon = 3 }
+racial_weapon = "great_sword"
+[[creature.gear]]
+chance = 95
+one_of = ["banded_mail", "plate_armour"]
+magic = 30
+[[creature.gear]]
+chance = 85
+one_of = ["great_helm"]
+[[creature.gear]]
+chance = 50
+one_of = ["gauntlets"]
+[[creature.gear]]
+chance = 80
+one_of = ["gold_coin*8", "gold_coin*15"]

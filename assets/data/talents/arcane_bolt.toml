@@ -4,16 +4,5 @@ name = "Arcane bolt"
 tree = "class"
 granted = true
 description = "A bolt of raw force from your hand toward a place you aim at (a spell, paid in mana), through everyone on its line."
+effects = [{ kind = "spell", spell = "arcane_bolt" }]
 systems = ["mana", "combat"]
-
-[[talent.spell]]
-spell = "arcane_bolt"
-mana = 3
-[talent.spell.cast]
-kind = "bolt"
-spell = "arcane_bolt"
-noun = "arcane bolt"
-verb = "strikes"
-length = 6
-damage = "2d6"
-noise = { sound = "explosion", loudness = 40 }

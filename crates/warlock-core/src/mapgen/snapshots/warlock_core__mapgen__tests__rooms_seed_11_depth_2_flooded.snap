@@ -1,0 +1,37 @@
+---
+source: crates/warlock-core/src/mapgen/tests.rs
+expression: describe(&flooded)
+---
+The Depths 2 (depths:2) 80x21
+stairs Up at (67, 16) -> depths:1
+stairs Down at (23, 16) -> depths:3
+bat at (34, 6) route E E E E E E S S W W W W W W N N
+kobold at (3, 14) route E E E E E E E S S W W W W W W W N N carrying a horn spear (wielded), a horn cap (being worn), 4 copper coins
+bat at (50, 7) route E E E E E E E E E S S W W W W W W W W W N N
+shopkeeper at (74, 11) route  carrying a spear (wielded), a small shield (in off hand), a chain mail shirt (being worn), an iron helm (being worn), 300 gold coins
+arrow trap at (22, 18)
+arrow trap at (37, 13)
+alarm trap at (56, 16)
+1 placed lights
+special room flooded at (32, 4)-(42, 10)
+shop fletcher kept by Isolde at (74, 8)-(76, 13), post (74, 11)
+
+                         #####
+                         #...#
+                         #...#
+                         #...#  ###########
+                         #...####¡ffffffff#     ##############
+                         #...&..+fbfffffff#     #...........¡#
+                         #...####fffffffff#######.b..........#           #####
+                         #..¡#  #fffffffff+.....S............#           #}.}#
+                         #####  #ffffffff¡#######.....)......#           #.}/#
+                                ##S##'#####     #¡...........#           #}*.#
+                                #..##.#         ########'#####         ###@..#
+ ############                   #.###.#                #.#        ######.+.}.#
+ #.........¡#                   #.# #^#                #.#        #......#.}/#
+ #.k........#                   #}###'###            ###+##########+##########
+ #..........###   ###############.#[....##############¡..............#
+ #..........&.#####....>..#.......+.....+............+..^..........<.#
+ #¡.........#.....'.......+.#######¡....##############...............#
+ ##################¡(.^...###     #######            #..............¡#
+                  #########                          #################
