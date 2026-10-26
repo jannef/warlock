@@ -31,7 +31,8 @@
 #              again before it is done; decline what they say when you decline (optional)
 #   done       what whoever you hand it in to says: the recipient of a bring with `to` or a
 #              delivery, else the giver
-#   requires   a quest earlier in the table that must be done first (optional)
+#   requires   a quest loaded before this one (earlier in the table), or a list of them
+#              (`["ledger", "barrow_heart"]`), that must all be done first (optional)
 #   requires_alignment  the alignment bands you must be in for it to be offered (spec §8
 #              "Alignment"; optional): { min = "kind" } is Kind or better, { max = "callous" }
 #              Callous or worse, or both; a quest taken up is done whatever you become

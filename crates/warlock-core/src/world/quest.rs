@@ -7,8 +7,8 @@
 //! (the reminder) and, once its goal is met, of whoever it is handed in to; asking that one
 //! completes it: what it asks for leaves the pack, they say their thanks, and the reward
 //! follows (gold coins and items into the pack, or at the player's feet if it is full; XP).
-//! A repeatable quest is offered again once done; a quest that `requires` another is offered
-//! once that one is done. There is no abandoning a quest and no cap on how many are active (the
+//! A repeatable quest is offered again once done; a quest that `requires` others is offered
+//! once they are all done. There is no abandoning a quest and no cap on how many are active (the
 //! owner's decision).
 //!
 //! **Goals**, and how far they have got ([`progress`]):
@@ -142,7 +142,7 @@ impl Quests {
     /// Whether `def` may be offered: what it requires is done, and it is new to the player (or
     /// done and repeatable).
     fn available(&self, content: &Content, def: &QuestDef) -> bool {
-        let required = (def.requires).is_none_or(|r| {
+        let required = def.requires.iter().all(|&r| {
             let id = &content.quest(r).id;
             self.records.get(id).is_some_and(|r| r.completed > 0)
         });
@@ -300,8 +300,9 @@ fn objective(content: &Content, def: &QuestDef) -> String {
     }
 }
 
-/// What quest `def` asks, without where.
-fn asks(content: &Content, def: &QuestDef) -> String {
+/// What quest `def` asks, without where ("Kill 5 giant rats in Cealdhlāw."): the log's
+/// objective, and the wiki's goal.
+pub fn asks(content: &Content, def: &QuestDef) -> String {
     match &def.goal {
         Goal::Kill {
             creature,

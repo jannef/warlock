@@ -2416,6 +2416,18 @@ impl Content {
         self.levels.get(id)
     }
 
+    /// The line said as the player arrives on level `id` by stairs: a hand-made level's
+    /// `arrival`, or its branch's on a branch's first level.
+    pub fn arrival(&self, id: &str) -> Option<&str> {
+        if let Some(template) = self.levels.get(id) {
+            return template.arrival.as_deref();
+        }
+        match self.branch_level(id)? {
+            (def, 1) => def.arrival.as_deref(),
+            _ => None,
+        }
+    }
+
     /// Whether `id` names a hand-made level, a level of a dungeon branch, or a local area of
     /// campaign `campaign`'s overworld (`""`: of the one outside every campaign).
     pub fn has_level(&self, campaign: &str, id: &str) -> bool {
