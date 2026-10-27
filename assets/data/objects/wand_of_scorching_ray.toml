@@ -1,0 +1,20 @@
+# A wand of scorching ray (spec §8 "Magic items": "Wands"): ready it in the missile weapon slot and
+# use it as a missile weapon (`t`), and it casts Scorching ray, a tier-2 spell, at its own caster
+# level, a charge a cast instead of mana. Its charges are its tier's (data/spells.toml); it is
+# never recharged. Level and frequency by its tier: the lower the tier, the commoner the wand.
+[[object]]
+id = "wand_of_scorching_ray"
+name = "wand of scorching ray"
+plural = "wands of scorching ray"
+glyph = "-"
+fg = "#c8a8ff"
+class = "wands"
+materials = ["wood"]
+weight = 200
+value = 400
+slot = "missile_weapon"
+level = 5
+frequency = 7
+
+[object.wand]
+spell = "scorching_ray"

@@ -2,8 +2,9 @@
 # data/dialogue.toml): the townsfolk (the `villager` type), and the town's unique characters,
 # each placed by the town's legend with `npc = "..."` and known by a proper `name`: Sister Hild of
 # the Mynster (who cures and mends for gold, §6.1), Godgifu of the Gæsthūs (rumours of the march,
-# never a reveal: decision 2026-10-25, question 9), Reeve Leofric, and Factor Wulfrun (who
-# identifies what the player carries for gold, #432). Their
+# never a reveal: decision 2026-10-25, question 9), Reeve Leofric, Factor Wulfrun (who
+# identifies what the player carries for gold, #432), and Wat One-Eye of the Gildhalle, the
+# guildmaster of the Weyfarers' Gilde (docs/design/adventurers-guild.md §4). Their
 # quests are in data/quests/ (§6.2).
 
 # The townsfolk: one-liners and mutters, no topics.
@@ -198,3 +199,29 @@ price = 100
 does = "identify"
 reply = "There. Entered and accounted for. Now you know what you're carrying, which is more than most."
 nothing = "You know everything you carry already. I shan't charge you for telling you so."
+
+# Wat One-Eye, guildmaster of the Weyfarers' Gilde, in the Gildhalle (docs/design/adventurers-
+# guild.md §4.2): a commoner, in Cockney. His chain's quests are his topics, one at a time
+# (data/quests/wat.toml). He is neutral (creatures/guildmaster.toml), so he scorns no one and
+# gives the chain to anyone, good or wicked: "the board don't care whose 'ands are dirty".
+[[dialogue]]
+npc = "wat"
+name = "Wat One-Eye"
+greet = "'Nother one off the pass? Sit if you like. Standin' costs the same."
+lines = [
+    "Forty year I went down 'oles for coin. Knees went first, then the nerve.",
+    "Lost this eye in the barrow. Don't go lookin', it's 'ad a long day.",
+    "Half them bills is for beasts long dead. I keep 'em up for the company.",
+    "Town calls us when summat eats the sheep, an' crosses the road after.",
+    "Cealdhlāw's woke again. Lights on the downs, same as when I was a lad.",
+]
+
+[[dialogue.topic]]
+id = "guild"
+name = "The Gilde"
+reply = "We does the work the reeve can't pay for an' the sisters won't touch. Do a job, come back, get paid. Everyone starts Tin. Do enough an' you're Pewter, then Iron, an' folk stop callin' you 'oi, you'."
+
+[[dialogue.topic]]
+id = "board"
+name = "The board"
+reply = "Bills three deep, an' most of 'em older than you. There's always a job on it, mind. Ask me an' I'll tell you the next."

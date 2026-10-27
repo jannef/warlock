@@ -833,7 +833,7 @@ impl Gameplay<'_> {
                 // The key that started the aim confirms it, and so does `t`, which starts a shot
                 // and a throw.
                 let (confirm, missile) = match aim.kind {
-                    AimKind::Fire => (KeyCommand::Missile, true),
+                    AimKind::Fire | AimKind::Zap(_) => (KeyCommand::Missile, true),
                     AimKind::Throw(_) => (KeyCommand::Throw, true),
                     AimKind::Read(_) => (KeyCommand::Read, false),
                     // None of these uses an ability: its own key does (below), and Enter.
@@ -853,7 +853,9 @@ impl Gameplay<'_> {
             (InputMode::Aim(aim), _) => InputMode::Aim(aim),
             (InputMode::Normal, KeyCommand::Missile) => {
                 let view = game.world.perception();
-                if view.ready_to_fire().is_some() {
+                if let Some(item) = view.ready_wand() {
+                    InputMode::Aim(Aim::start(AimKind::Zap(item), &view, &self.last))
+                } else if view.ready_to_fire().is_some() {
                     InputMode::Aim(Aim::start(AimKind::Fire, &view, &self.last))
                 } else if let Some(item) = view.ready_to_throw() {
                     InputMode::Aim(Aim::start(AimKind::Throw(item), &view, &self.last))

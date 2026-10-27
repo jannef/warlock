@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ You pick up a willow wand and a holly wand.
+ This is a wand of magic missile (12 charges)! This is a wand of fireball (7 charges)!
+
+
+
+
+
+
+                  ┌─ Item ───────────────────────────────────────────────────────┐
+                  │                                                              │
+                  │ - Wand of magic missile                                      │
+                  │                                                              │
+                  │ Wand of magic missile · wood · 200 g                         │
+                  │                                                              │
+                  │ Readied: missile weapon                                      │
+                  │ Holds Magic missile (tier 1): A dart of force toward a place │
+                  │ you aim at: it never misses the first creature in its way.   │
+                  │ 12 charges left                                              │
+                  │                                                              │
+                  │ Esc close                                                    │
+                  └──────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+ The Trap Hall  ·  HP 22/22  ·  MP 2/2  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444    ? controls

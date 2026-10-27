@@ -26,6 +26,7 @@ mod doors;
 mod dungeons;
 mod experience;
 mod gems;
+mod guild;
 mod healing;
 mod hearing;
 mod horoscope;
@@ -162,6 +163,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("draw-odds.md", dungeons::draw_odds),
         ("dialogue.md", dialogue::dialogue),
         ("quests.md", dialogue::quests),
+        ("guild-ranks.md", guild::guild_ranks),
+        ("guild-draws.md", guild::guild_draws),
         ("services.md", services::services),
         ("footsteps.md", terrain::footsteps),
         ("noises.md", hearing::noises),
@@ -249,6 +252,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("spell-list.md", spells::list),
         ("class-spells.md", spells::class_spells),
         ("spell-armour.md", spells::armour),
+        ("wands.md", spells::wands),
+        ("wand-charges.md", spells::wand_charges),
         ("study-chances.md", learning::chances),
         ("study-times.md", learning::times),
         ("study-affinities.md", learning::affinities),
@@ -646,8 +651,9 @@ mod tests {
         assert!(equipment.contains(
             "| `k` | Missile weapon | Short bow (shoots arrows), long war bow (shoots arrows), \
              composite bow (shoots arrows), crossbow (shoots crossbow bolts), heavy crossbow \
-             (shoots crossbow bolts), sling (shoots sling stones), any other weapon, and anything \
-             made for throwing |"
+             (shoots crossbow bolts), sling (shoots sling stones), wand of burning hands, wand of \
+             magic missile, wand of scorching ray, wand of sleep, wand of web, wand of fireball, \
+             wand of lightning bolt, any other weapon, and anything made for throwing |"
         ));
         assert!(equipment.contains(
             "| `l` | Missiles | Sling stone, arrow, crossbow bolt, flaming arrow | 6 seconds |"

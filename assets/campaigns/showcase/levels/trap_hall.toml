@@ -95,6 +95,12 @@ objects = [
     "scroll_of_fireball*2", "scroll_of_lightning*2", "scroll_of_frost*2", "scroll_of_identify*3",
 ]
 
+# Two wands one cell further east (spec §8 "Magic items": "Wands"), unknown until used or
+# identified: ready one in the missile weapon slot and `t` uses it.
+[[pile]]
+at = [39, 19]
+objects = ["wand_of_magic_missile", "wand_of_fireball"]
+
 [[item]]
 at = [38, 19]
 object = "dagger"
