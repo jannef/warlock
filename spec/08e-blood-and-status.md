@@ -228,7 +228,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Shown**: the player's own mana and maximum (`PerceptionView::own_mana`): the status bar's
     `MP 5/12` right after the hit points, giving way like them (§6), the character screen beside
     the hit points, the dump header's `mp`, and JSON dumps' `mana`. Never a creature's mana, and
-    never the pace (hidden like `regen_seconds`); the dev `actors` layer shows every actor's.
+    never the pace (hidden like `regen_seconds`); the dev `actors` layer shows every actor's
+    (and, with any mana, its caster level, `cl N`).
+  - **Creatures** (#525): a creature's maximum, pace, and caster level read what it wears and
+    wields exactly as the player's do (`max_mana`, `mana_regeneration`, and `caster_level`
+    affixes through `Mods::worn`); it is made with all of its larger pool, and a summoner pays
+    for its summons from it. A creature without such things is as its type makes it.
     Mana is part of the world state (saved, covered by the state hash; an actor without any
     serializes as before).
 - **Spells** (the magic design, `docs/design/magic.md` §3 to §8; `content/spell_def.rs`,
