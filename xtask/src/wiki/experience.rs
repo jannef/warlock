@@ -2,6 +2,7 @@
 //! factors, the zero difference, kill XP scaling, an example, discovery, and the creatures'
 //! levels.
 
+use super::creatures::xp_cell;
 use super::text::{capital, thousands};
 use std::fmt::Write as _;
 use warlock_core::content::{Content, CreatureId, Factor, pace_words};
@@ -186,10 +187,12 @@ pub(super) fn experience_example(content: &Content) -> String {
     let shaman = content.creature(id);
     let mut out = format!(
         "| Your level | XP for a {} (level {}, worth {}) |\n|:---:|---:|\n",
-        shaman.name, shaman.level, shaman.xp
+        shaman.name,
+        shaman.level,
+        shaman.kill_xp()
     );
     for level in 1..=10 {
-        let xp = rules.kill_xp(shaman.xp, shaman.level, level);
+        let xp = rules.kill_xp(shaman.kill_xp(), shaman.level, level);
         let _ = writeln!(out, "| {level} | {xp} |");
     }
     out
@@ -213,7 +216,7 @@ pub(super) fn experience_creatures(content: &Content) -> String {
             "| {} | {} | {} | {} |",
             capital(&c.name),
             c.level,
-            c.xp,
+            xp_cell(c),
             guideline.xp(c.level)
         );
     }
