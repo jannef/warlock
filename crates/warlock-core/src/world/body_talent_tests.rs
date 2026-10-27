@@ -453,5 +453,5 @@ fn every_talent_of_the_three_trees_loads_with_its_effects() {
     // The design's 28, Battle trance and Inner calm (the class resources, R5) among them,
     // stamina's Deep lungs and Second breath (#560), protection's Armour-breaker (#563), stat
     // training's Hard training (#562), and Second blade's rend (#561).
-    assert_eq!(count("vigour") + count("might") + count("finesse"), 32);
+    assert_eq!(count("vigour") + count("might") + count("finesse"), 33);
 }
