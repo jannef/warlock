@@ -3,8 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  You open the door.
- Factor Wulfrun says: "Yes? I'm busy. Well, I'm not, but I like to look it."
-
+ Factor Wulfrun says: "Yes? I am frightfully busy. Well, no, but I like to look it."
 
 
 
@@ -13,7 +12,8 @@ expression: "render(case, content.clone())"
 
                   ┌─ Factor Wulfrun ─────────────────────────────────────────────┐
                   │                                                              │
-                  │ "Yes? I'm busy. Well, I'm not, but I like to look it."       │
+                  │ "Yes? I am frightfully busy. Well, no, but I like to look    │
+                  │ it."                                                         │
                   │                                                              │
                   │ > 1  The foreman's ledger                                    │
                   │   2  The old diggings                                        │
