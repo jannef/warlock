@@ -76,6 +76,17 @@ pub(super) fn reach(world: &mut World, level: u8) {
     world.player_mut().talents.forget("battle_trance");
 }
 
+/// The player untrained in athletics: `levelup:auto` spends the skill rolls on the first trained
+/// skill, athletics, whose speed (#548) would quicken them, and these tests time actions at
+/// normal speed.
+pub(super) fn at_normal_speed(world: &mut World) {
+    let athletics = world.content().skill_id("athletics").expect("athletics");
+    let player = world.player_mut();
+    player.skills = (player.skills.iter())
+        .filter(|(id, _)| *id != athletics)
+        .collect();
+}
+
 fn status(world: &World, id: &str) -> StatusId {
     world.content().status_id(id).expect("a status")
 }
@@ -396,6 +407,7 @@ fn blood_frenzy_and_unstoppable_keep_the_rage() {
     // With it, five rage a kill (up to Mighty rage's thirty).
     let mut w = world("barbarian");
     reach(&mut w, 60);
+    at_normal_speed(&mut w);
     run(&mut w, "use:rage");
     w.gain_resource(player, Build::Kill);
     assert_eq!(rage(&w), Some(16));
@@ -428,6 +440,7 @@ fn blood_frenzy_and_unstoppable_keep_the_rage() {
     // Spending the last of it ends the rage: exhaustion follows.
     let mut w = world("barbarian");
     reach(&mut w, 60);
+    at_normal_speed(&mut w);
     run(&mut w, "use:rage");
     set_rage(&mut w, 10);
     let kobold = beside(&mut w, "kobold", 5);
