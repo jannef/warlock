@@ -1014,7 +1014,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     weapon's own while it is wielded, Shield (shield blocking) added to a held shield's own
     (`Actor::defence`). Benefits of several skills add up (`Benefit::plus`), so a later kind of
     skill (fighting styles, #135) can stack on a weapon's: another role, with the same ranks,
-    marks, curve, and benefits.
+    marks, curve, and benefits. Ranks 1 to 5 grow slowly, ranks 6 to 10 much faster: bigger
+    damage, a wider threat, more speed and Parry, and moderate to-hit (#554; a long-blade
+    fighter's rank 10 is +7 to hit and +8 damage, a great blade's +5 and +12; the wiki's
+    tables have every number). Styles grow the same way.
   - **Shield bash** (`Action::Bash(dir)`, replay text `bash:DIR`; an ability, §6 "Abilities":
     chosen from the abilities menu, or a key once bound, then a direction): a melee blow at whoever stands that way with
     the held shield's `bash` dice (§7; the small shield 1d3) plus the Strength modifier to hit
@@ -1053,9 +1056,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     takes every other weapon (`WeaponSkillTable::style_for`), so one configuration is always at
     most one style. A spell has none.
   - **The eight** (data): **Duelist** (`one_weapon`: to-hit, Parry), **Twin Blades**
-    (`two_weapons`: eases both two-weapon penalties, none left at rank 10), **Great Weapon**
+    (`two_weapons`: eases both two-weapon penalties, none left from rank 9; from rank 7 to-hit too), **Great Weapon**
     (`two_handed`, any weapon but a staff: damage, from rank 8 a critical rolls its damage once
-    more, cheaper blows), **Sword and Board** (`weapon_and_shield`: Shield, from rank 3 a chance
+    more, at rank 10 twice more (×4), cheaper blows), **Sword and Board** (`weapon_and_shield`: Shield, from rank 3 a chance
     of a shield bash after a blow that hits), **Marksman** (`launcher`, bows, crossbows, and
     slings: to-hit, cheaper shots and reloading), **Skirmisher** (`thrown`, anything thrown:
     to-hit, damage, cheaper throws; decided as throwing only: "a light weapon and light armour"

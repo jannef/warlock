@@ -611,9 +611,12 @@ mod tests {
         );
         let benefits = text("style-benefits.md");
         assert!(benefits.contains("main hand strikes at **−4** to hit and the off hand at **−8**"));
-        assert!(benefits.contains("| 1 | −3 | −7 |") && benefits.contains("| 10 | none | none |"));
         assert!(
-            benefits.contains("| 8 | +4 | +1 roll | 10% less |"),
+            benefits.contains("| 1 | - | −3 | −7 |")
+                && benefits.contains("| 9 | +2 | none | none |")
+        );
+        assert!(
+            benefits.contains("| 8 | +6 | +1 roll | 15% less |"),
             "{benefits}"
         );
         assert!(text("classes.md").contains("| Twin Blades 1 or Duelist 1 |"));
