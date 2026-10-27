@@ -132,6 +132,9 @@ gets where a dungeon favours or bans nothing. "Only" says where it can come at a
 - **Altar room.** An old altar stands in the middle of the room, its god long forgotten, and a
   faint glow rises from it: you notice it from the doorway. Stand beside it and you may pray
   (see Forgotten altars below). Only rooms of 9 floor cells or more can be one.
+- **Forge.** A cold forge with an old anvil in the middle of the room; you smell soot and cold
+  iron from the doorway. Stand beside the anvil and you may temper a weapon or armour you carry
+  (see Forges below). Only rooms of 9 floor cells or more can be one.
 
 The talent *Hallowed rest* (Grit) makes a room that quickens healing or mana quicken it half
 again more for you: a sanctuary's three times as fast becomes four times. The talent *Anchored
@@ -245,3 +248,25 @@ The outcomes, by kind and tier ("Of its kind" is its share of its kind's draws; 
 outcomes are still to come, so for now each kind is drawn among its minor and moderate ones):
 
 {{#include generated/altar-outcomes.md}}
+
+## Forges
+
+A forge is a cold smithy: soot on the walls and an **anvil**, its hammer chained beside it. Stand
+beside the anvil and choose **Temper** from the abilities menu (listed under *Here* only there),
+then pick a weapon or a piece of armour you carry (a weapon, a bow or crossbow, body armour, a
+helmet, a cloak, gloves, boots, or a shield; never ammunition, rings, or amulets). Tempering is
+ten minutes of work; anything that would stop a rest stops it, and then the item is untouched
+but the time is gone. Anyone may temper; *Metalcraft* only makes it go better. Every finished
+tempering may train Metalcraft.
+
+At the end the metal comes out one of four ways: **improved** (it gains a new affix, if its
+rarity has room for one: a plain item becomes magic; a full one has its strongest affix made a
+tier stronger), **nothing**, **flawed** (it loses one of its affixes; a plain item has nothing to
+lose), or **ruined** (it shatters and is gone, even from your hand). Whatever survives is
+identified. A Strength check, helped by Metalcraft, leans the odds toward improved, or, when it
+goes badly, toward flawed and ruined. The anvil never wears out: temper as often as you like, as
+long as you are willing to risk the item.
+
+{{#include generated/forge-shares.md}}
+
+{{#include generated/forge-outcomes.md}}
