@@ -20,7 +20,7 @@ hearing = 10
 weight = 2000000
 stats = { strength = 36, dexterity = 20, toughness = 37, intelligence = 18, willpower = 20, presence = 20 }
 base_hp = 200
-natural = { defence = 4, protection = 4, name = "hide" }
+natural = { defence = 4, protection = 5, name = "hide" }
 weapon_skills = { thrown = 2 }
 on_eat = { message = "Coarse, gamey meat, and a mountain of it.", vomit = 30, stat = { strength = 3 } }
 [creature.attack]

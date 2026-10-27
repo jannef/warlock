@@ -1,0 +1,8 @@
+[[talent]]
+id = "armour_breaker"
+name = "Armour-breaker"
+tree = "might"
+description = "Your best blows find the gaps: a critical of yours drives through hide, shell, and plate better."
+needs = { any_weapon_skill = { of = ["axes", "maces", "polearms"], rank = 7 } }
+effects = [{ kind = "critical_penetration", value = 2 }]
+systems = ["protection", "combat"]

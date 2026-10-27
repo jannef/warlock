@@ -364,19 +364,28 @@ fn light_step_keeps_traps_from_going_off_under_the_player() {
 }
 
 #[test]
-fn quick_makes_every_action_a_little_cheaper() {
+fn quick_makes_the_player_quicker_once() {
+    // The talent's percent is read in `Actor::speed` only (#581): the energy gained per second
+    // rises by exactly the stated percent, and prices stay what they were.
     let mut w = world();
     let id = w.state.player;
+    let speed = |w: &World| w.state.player().speed(&w.content);
     let wait = w.price_of(id, ActionKind::Wait);
+    let base = speed(&w);
     give(&mut w, "quick");
-    assert_eq!(
-        w.price_of(id, ActionKind::Wait),
-        (wait * 100).div_euclid(105) + 1
-    );
+    assert_eq!(speed(&w), base * 105 / 100);
+    assert_eq!(w.price_of(id, ActionKind::Wait), wait);
     give(&mut w, "quick");
+    assert_eq!(speed(&w), base * 110 / 100);
+    assert_eq!(w.price_of(id, ActionKind::Wait), wait);
+    // Creatures have no talents: unchanged.
+    let rat = (w.state.actors.iter())
+        .find(|(a, _)| **a != id)
+        .map(|(_, a)| a.clone())
+        .expect("a creature");
     assert_eq!(
-        w.price_of(id, ActionKind::Wait),
-        (wait * 100).div_euclid(110) + 1
+        rat.speed(&w.content),
+        w.content.creature(rat.creature).speed
     );
 }
 
@@ -442,6 +451,7 @@ fn every_talent_of_the_three_trees_loads_with_its_effects() {
     }
     let count = |tree: &str| book.of_tree(book.tree_id(tree).expect("tree")).count();
     // The design's 28, Battle trance and Inner calm (the class resources, R5) among them,
-    // stamina's Deep lungs and Second breath (#560), and Second blade's rend (#561).
-    assert_eq!(count("vigour") + count("might") + count("finesse"), 31);
+    // stamina's Deep lungs and Second breath (#560), protection's Armour-breaker (#563), and
+    // Second blade's rend (#561).
+    assert_eq!(count("vigour") + count("might") + count("finesse"), 32);
 }

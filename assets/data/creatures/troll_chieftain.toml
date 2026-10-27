@@ -22,7 +22,7 @@ hearing = 12
 weight = 450000
 stats = { strength = 30, dexterity = 17, toughness = 31, intelligence = 11, willpower = 17, presence = 12 }
 base_hp = 92
-natural = { defence = 2, protection = 2, name = "hide" }
+natural = { defence = 2, name = "hide" }
 weapon_skills = { axes = 4 }
 resist = { fire = -50 }
 on_eat = { message = "Old, tough, and full of scars.", vomit = 50, stat = { toughness = 5 } }

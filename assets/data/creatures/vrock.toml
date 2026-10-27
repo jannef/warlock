@@ -21,7 +21,7 @@ hearing = 16
 weight = 200000
 stats = { strength = 24, dexterity = 18, toughness = 25, intelligence = 23, willpower = 27, presence = 23 }
 base_hp = 85
-natural = { defence = 2, name = "feathers" }
+natural = { defence = 2, protection = 3, name = "feathers" }
 resist = { fire = 50, cold = 25, electricity = 25, poison = 100 }
 corpse = false
 blood = "#3a1a2a"

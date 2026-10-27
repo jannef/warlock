@@ -21,7 +21,7 @@ hearing = 16
 weight = 60000
 stats = { strength = 24, dexterity = 23, toughness = 24, intelligence = 23, willpower = 27, presence = 23 }
 base_hp = 72
-natural = { defence = 2, protection = 0, name = "dead flesh" }
+natural = { defence = 2, protection = 2, name = "dead flesh" }
 resist = { poison = 100 }
 on_eat = { message = "Carrion fed on carrion fed on carrion.", vomit = 90, harm = "1d6" }
 blood = "#3a2020"

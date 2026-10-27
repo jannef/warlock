@@ -21,7 +21,7 @@ hearing = 20
 weight = 80000
 stats = { strength = 24, dexterity = 23, toughness = 24, intelligence = 23, willpower = 28, presence = 23 }
 base_hp = 74
-natural = { defence = 2, protection = 0, name = "dead flesh" }
+natural = { defence = 2, protection = 2, name = "dead flesh" }
 resist = { poison = 100 }
 on_eat = { message = "Black meat, and it reeks of the grave.", vomit = 80, harm = "1d4" }
 blood = "#201820"

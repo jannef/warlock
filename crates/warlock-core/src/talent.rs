@@ -482,6 +482,8 @@ pub struct TalentMods {
     pub rend_off_hand: bool,
     /// What its Brace's blow gains (Brace of steel): to-hit, and a status on a foe it hits.
     pub brace: Option<(i32, StatusId)>,
+    /// The Protection its confirmed criticals ignore, on top of the attack's penetration.
+    pub critical_penetration: i32,
     /// More penetration for blows that can do damage of a kind: `(kind, value)`.
     pub penetration: Vec<(DamageTypeId, i32)>,
     /// How much higher the burden's cap on its Dexterity in Defence is.
@@ -1362,6 +1364,7 @@ impl TalentMods {
                     self.brace = Some((had + to_hit, status));
                 }
             }
+            TalentEffect::CriticalPenetration { value } => self.critical_penetration += value,
             TalentEffect::Penetration {
                 damage: kind,
                 value,

@@ -23,7 +23,7 @@ hearing = 22
 weight = 70000
 stats = { strength = 39, dexterity = 32, toughness = 39, intelligence = 40, willpower = 38, presence = 38 }
 base_hp = 155
-natural = { defence = 5, protection = 0, name = "dead flesh" }
+natural = { defence = 5, protection = 7, name = "dead flesh" }
 resist = { fire = -25, poison = 100 }
 on_eat = { message = "Cold as the first night, and thick with every blood that ever fed it.", vomit = 80, harm = "1d4" }
 blood = "#3a0618"

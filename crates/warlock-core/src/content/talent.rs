@@ -766,6 +766,8 @@ pub enum TalentEffect {
     /// Its Brace's blow is at `to_hit` more, and a foe it hits suffers `status` (one degree;
     /// Brace of steel).
     Brace { to_hit: i32, status: String },
+    /// Its confirmed criticals ignore this much more Protection (every attack; Armour-breaker).
+    CriticalPenetration { value: i32 },
     /// Its blows that can do damage of kind `damage` (an id in `data/damage_types.toml`) ignore this
     /// much more Protection.
     Penetration { damage: String, value: i32 },
@@ -1075,6 +1077,7 @@ impl TalentEffect {
             | TalentEffect::Checks { value, .. }
             | TalentEffect::CriticalConfirm { value }
             | TalentEffect::AbilityRanks { value }
+            | TalentEffect::CriticalPenetration { value }
             | TalentEffect::OffHandDamage { value }
             | TalentEffect::BestSkillThreat { value }
             | TalentEffect::TrapEase { value }

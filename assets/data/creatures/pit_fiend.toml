@@ -21,7 +21,7 @@ hearing = 8
 weight = 400000
 stats = { strength = 40, dexterity = 24, toughness = 40, intelligence = 36, willpower = 39, presence = 36 }
 base_hp = 264
-natural = { defence = 5, protection = 4, name = "scales" }
+natural = { defence = 5, protection = 10, name = "scales" }
 resist = { fire = 100, poison = 100, cold = 50 }
 loot = 50
 corpse = false
