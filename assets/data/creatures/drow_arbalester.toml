@@ -1,0 +1,56 @@
+# The drow (#519; content::drow_roster_tests checks the numbers).
+# A drow sharpshooter, whose heavy hand crossbow reaches far down the deep roads with
+# bolts that send the hit to sleep; a long sword for close work.
+[[creature]]
+id = "drow_arbalester"
+level = 34
+xp = 180
+rarity = "uncommon"
+loot = 30
+name = "drow arbalester"
+glyph = "e"
+fg = "#70a8a0"
+speed = 1050
+faction = "drow"
+tags = ["drow", "archer"]
+alignment = "evil"
+race = "drow"
+vision = "darkvision"
+sight = 14
+opens_doors = true
+footsteps = 60
+hearing = 15
+weight = 60000
+stats = { strength = 25, dexterity = 24, toughness = 25, intelligence = 24, willpower = 24, presence = 24 }
+base_hp = 76
+weapon_skills = { thrown = 5 }
+resist = { poison = 25 }
+on_eat = { message = "Lean and bitter, with an aftertaste of old poisons.", vomit = 40 }
+[creature.attack]
+damage = "3d10"
+damage_type = "slashing"
+name = "long sword"
+verb = "cuts"
+to_hit = 3
+on_hit = [{ status = "poisoned", chance = 20, severity = 3 }]
+[creature.throw]
+object = "bolt"
+name = "poisoned bolt"
+damage = "3d10"
+damage_type = "piercing"
+range = 10
+verb = "shoots"
+to_hit = 3
+on_hit = [{ status = "drowsy", chance = 25, severity = 2 }, { status = "poisoned", chance = 20, severity = 3 }]
+# Its gear (spec §8 "Creature gear"): armour and coins, never a weapon (its venom rides on
+# its natural attack, which a wielded weapon would replace).
+[[creature.gear]]
+chance = 60
+one_of = ["chain_mail"]
+magic = 15
+[[creature.gear]]
+chance = 60
+one_of = ["wool_cloak"]
+[[creature.gear]]
+chance = 50
+one_of = ["leather_boots"]

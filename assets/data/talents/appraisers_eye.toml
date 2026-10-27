@@ -1,0 +1,7 @@
+[[talent]]
+id = "appraisers_eye"
+name = "Appraiser's eye"
+tree = "scholar"
+description = "You can tell a bound thing's worth at a glance: when anything an animated thing wears or wields is magic, you see it hum with power."
+effects = [{ kind = "appraise_animated" }]
+systems = ["animated"]

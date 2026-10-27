@@ -1238,6 +1238,8 @@ mod alignment_tests;
 #[cfg(test)]
 mod animated_blade_tests;
 #[cfg(test)]
+mod animated_panoply_tests;
+#[cfg(test)]
 mod animated_tests;
 #[cfg(test)]
 mod ascmearc_tests;

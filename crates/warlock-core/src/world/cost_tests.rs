@@ -645,6 +645,7 @@ fn costs_come_from_data_and_are_validated() {
         let want = match def.id.as_str() {
             "marilith" => Some(500),
             "balor" | "two_headed_troll" => Some(700),
+            "drow_blademaster" => Some(600),
             _ => None,
         };
         assert_eq!(def.attack_cost, want, "{}", def.id);

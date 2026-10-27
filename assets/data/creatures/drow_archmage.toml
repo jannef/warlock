@@ -1,0 +1,64 @@
+# The drow (#519; content::drow_roster_tests checks the numbers).
+# The eldest wizard of a drow house, who has outlived rivals by the score: spells from
+# farther off (announced only), a poisoned dagger, and charms that are seldom what they seem.
+[[creature]]
+id = "drow_archmage"
+level = 40
+xp = 210
+rarity = "rare"
+loot = 75
+name = "drow archmage"
+glyph = "e"
+fg = "#e080ff"
+speed = 1100
+faction = "drow"
+tags = ["drow", "caster"]
+alignment = "evil"
+race = "drow"
+vision = "darkvision"
+combat = "caster"
+range = 7
+opens_doors = true
+footsteps = 60
+hearing = 14
+weight = 55000
+stats = { strength = 24, dexterity = 22, toughness = 27, intelligence = 30, willpower = 30, presence = 30 }
+base_hp = 80
+skills = { concentration = 110, spellcraft = 115 }
+resist = { poison = 25 }
+on_eat = { message = "Lean and bitter, with an aftertaste of old poisons.", vomit = 40 }
+[creature.attack]
+damage = "3d10"
+damage_type = "piercing"
+name = "poisoned dagger"
+verb = "stabs"
+to_hit = 4
+on_hit = [{ status = "poisoned", chance = 20, severity = 3 }]
+# Its gear (spec §8 "Creature gear"): armour and coins, never a weapon (its venom rides on
+# its natural attack, which a wielded weapon would replace).
+[[creature.gear]]
+chance = 90
+one_of = ["wool_cloak"]
+magic = 50
+[[creature.gear]]
+chance = 70
+one_of = ["gold_amulet"]
+magic = 60
+[[creature.gear]]
+chance = 40
+one_of = ["silver_ring"]
+magic = 60
+[[creature.gear]]
+chance = 80
+one_of = ["gold_coin*8"]
+[[creature.particles]]
+on = "attack"
+glyphs = "·*+"
+colors = ["#fbe0ff", "#e080ff", "#5a2080"]
+count = 6
+life = 0.45
+spread = [1.0, 1.0]
+area = [0.15, 0.15]
+scale = 0.5
+fade = 0.6
+glow = 0.5
