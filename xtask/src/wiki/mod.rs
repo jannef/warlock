@@ -41,6 +41,7 @@ mod objects;
 mod order;
 mod outcomes;
 mod overworld;
+mod potions;
 mod resources;
 mod rooms;
 mod scenarios;
@@ -305,6 +306,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("magic-names.md", magic::rare_names),
         ("uniques.md", uniques::uniques),
         ("scrolls.md", scrolls::scrolls),
+        ("potions.md", potions::potions),
         ("weapon-skills.md", weapon_skills::skills),
         ("weapon-defaults.md", weapon_skills::defaults),
         ("weapon-marks.md", weapon_skills::marks),
@@ -508,6 +510,18 @@ mod tests {
         assert!(
             scrolls.contains("| Scroll of light `?` | Casts Light at caster level 1"),
             "{scrolls}"
+        );
+        let potions = text("potions.md");
+        assert!(
+            potions.contains(
+                "| Potion of healing `!` | heal | 2d8 hit points back at once, never past your \
+                 maximum | red (`#c83c3c`) | 5 Toughness | item level 1, frequency 60 | 40 gold |"
+            ),
+            "{potions}"
+        );
+        assert!(
+            potions.contains("| Murky draught `!` | harm | 2 degrees of Poisoned"),
+            "{potions}"
         );
         assert!(text("lights.md").contains("| You, while Lit | 6 cells | visible |"));
         assert!(text("status-effects.md").contains("You shed light 6 cells around you"));

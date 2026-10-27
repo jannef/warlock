@@ -2,7 +2,8 @@
 
 Food (`%`) keeps [hunger](hunger.md) at bay. Press `e` to consume (the Eat command): a list titled "Consume what?" shows what you can eat,
 first what lies where you stand ("lying here"), then the food you carry (see [Lists of
-objects](objects.md#lists-of-objects)). A letter, or `Enter` on the marked row, eats it.
+objects](objects.md#lists-of-objects)). A letter, or `Enter` on the marked row, eats it. The same list
+holds your potions, drunk the same way (see [Potions](potions.md)).
 
 ## Eating
 

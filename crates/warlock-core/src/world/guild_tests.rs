@@ -180,7 +180,7 @@ fn the_hundred_done_makes_the_player_a_pewter() {
         promotions(&w),
         ["Wat One-Eye names you a Pewter of the Weyfarers' Gilde."]
     );
-    assert!(carried(&w, "red_potion") >= 2);
+    assert!(carried(&w, "potion_of_healing") >= 2);
     let stats = dump::layer_rows(&w, Layer::Stats);
     assert!(stats.contains(&"Guild Weyfarers' Gilde, Pewter".to_string()));
 }

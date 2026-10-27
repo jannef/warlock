@@ -24,6 +24,7 @@ tick = 60
 damage = 1
 eases = 60
 regen = 50
+cured_by = ["antidote"]
 start = "You feel sick."
 end = "The poison wears off."
 

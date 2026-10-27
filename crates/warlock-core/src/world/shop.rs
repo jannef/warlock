@@ -338,6 +338,18 @@ impl World {
     /// nothing that uses goods up takes them off it. The keeper says so. (Rotten food lying
     /// there was worth nothing; unpaid food from the pack is priced as the bill prices it.)
     pub(super) fn ate_goods(&mut self, meal: Meal, food: &Stack) {
+        self.consumed_goods(meal, food, false);
+    }
+
+    /// [`World::ate_goods`] for a potion drunk (spec §8 "Potions"): bought as food eaten is, and
+    /// named as the player knows it ("You drink it, you buy it: 40 gold for the fizzy red
+    /// potion.").
+    pub(super) fn drank_goods(&mut self, meal: Meal, potion: &Stack) {
+        self.consumed_goods(meal, potion, true);
+    }
+
+    /// What [`World::ate_goods`] and [`World::drank_goods`] share: `drank` for a potion.
+    fn consumed_goods(&mut self, meal: Meal, food: &Stack, drank: bool) {
         let Some(i) = self.shop_here() else {
             return;
         };
@@ -353,18 +365,26 @@ impl World {
         let Some(price) = price else {
             return;
         };
-        let what = &self.content.object(food.object).name;
+        let what = match drank {
+            true => self.lore().title(food),
+            false => self.content.object(food.object).name.clone(),
+        };
+        let (verb, done) = if drank {
+            ("drink", "Drunk")
+        } else {
+            ("eat", "Eaten")
+        };
         let line = match meal {
             Meal::Floor(_) => {
                 self.state.current_mut().shops[i].owe(food);
-                format!("You eat it, you buy it: {price} gold for the {what}.")
+                format!("You {verb} it, you buy it: {price} gold for the {what}.")
             }
             Meal::Pack(_) => {
                 let unpaid = count_of(&self.state.current().shops[i].unpaid, food.object);
                 if count_of(&self.state.player().inventory, food.object) >= unpaid {
                     return;
                 }
-                format!("Eaten or not, the {what} is still {price} gold.")
+                format!("{done} or not, the {what} is still {price} gold.")
             }
         };
         let (name, owed) = self.owing().expect("eaten goods are owed for");

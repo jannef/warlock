@@ -617,6 +617,29 @@ const CASES: &[Case] = &[
         screen: Some("eat"),
         ..BASE
     },
+    // Potions (spec §8 "Potions"): the Consume list with food (the bread carried) and potions
+    // (the hub's pile underfoot) together, unknown ones by their word and colour.
+    Case {
+        name: "consume-list",
+        actions: "move:N*3 open:N move:N*2 move:E*16 open:S move:S*3 open:S move:S*4 move:E*4 \
+            open:N move:N*2 move:NE move:E pickup move:SW",
+        screen: Some("eat"),
+        ..BASE
+    },
+    Case {
+        name: "potion-description-unidentified",
+        actions: "move:N*3 open:N move:N*2 move:E*16 open:S move:S*3 open:S move:S*4 move:E*4 \
+            open:N move:N*2 move:E pickup",
+        screen: Some("describe"),
+        ..BASE
+    },
+    Case {
+        name: "potion-description",
+        actions: "move:N*3 open:N move:N*2 move:E*16 open:S move:S*3 open:S move:S*4 move:E*4 \
+            open:N move:N*2 move:E pickup eat:a",
+        screen: Some("describe"),
+        ..BASE
+    },
     Case {
         name: "item-description",
         actions: "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*4 pickup \

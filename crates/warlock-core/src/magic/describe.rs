@@ -10,7 +10,7 @@
 
 use super::{AffixKind, Effect, Rolled};
 use crate::combat::SURE_HIT;
-use crate::content::{ActionKind, Content, ItemKind, ObjectDef, Rarity, weapon_noun};
+use crate::content::{ActionKind, Content, Draught, ItemKind, ObjectDef, Rarity, weapon_noun};
 use crate::object::{Stack, format_weight};
 use crate::scroll_label::Lore;
 
@@ -65,6 +65,7 @@ pub fn appraised(stack: &Stack, lore: Lore<'_>, appraisal: Appraisal) -> Vec<Lin
     let mut out = lines_named(stack, content, lore.names(stack));
     out.extend(wand_lines(stack, lore));
     out.extend(rod_lines(stack, lore));
+    out.extend(potion_lines(stack, lore));
     // The first line says what it is; a line for each gem in it follows.
     let gems_at = 1;
     let parts = stack.parts(content);
@@ -160,6 +161,42 @@ fn rod_lines(stack: &Stack, lore: Lore<'_>) -> Vec<Line> {
             ),
         ),
     ]
+}
+
+/// What a potion does, as the player knows it (spec §8 "Potions"): in words once its type is
+/// known ("Heals wounds at once"), never its dice; else that it is unknown. Nothing for anything
+/// else.
+fn potion_lines(stack: &Stack, lore: Lore<'_>) -> Vec<Line> {
+    let content = lore.content;
+    let Some(drink) = &content.object(stack.object).drink else {
+        return Vec::new();
+    };
+    if !lore.is_identified(stack.object) {
+        return vec![line(
+            LineKind::Note,
+            "You do not know what this potion does.",
+        )];
+    }
+    // What its cures end, by the statuses' names ("Bleeding").
+    let cured: Vec<String> = (content.status_ids())
+        .filter(|(_, s)| drink.does.cures().iter().any(|c| s.cured_by.contains(c)))
+        .map(|(_, s)| s.name.to_lowercase())
+        .collect();
+    let cures = crate::content::and_list(&cured.iter().map(String::as_str).collect::<Vec<_>>());
+    let text = match &drink.does {
+        Draught::Heal { .. } if cured.is_empty() => "Heals wounds at once".to_string(),
+        Draught::Heal { .. } => format!("Heals wounds at once, and cures {cures}"),
+        Draught::Cure { diseases: true, .. } if cured.is_empty() => {
+            "Cures every disease at once".to_string()
+        }
+        Draught::Cure { diseases: true, .. } => {
+            format!("Cures every disease and {cures} at once")
+        }
+        Draught::Cure { .. } => format!("Cures {cures} at once"),
+        Draught::Mana { .. } => "Restores mana at once".to_string(),
+        Draught::Harm { .. } => "Sickens whoever drinks it".to_string(),
+    };
+    vec![line(LineKind::Stat, text)]
 }
 
 /// The description of `stack`, as the player knows it: what it is (`Magic long sword · steel

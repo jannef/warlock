@@ -5,7 +5,10 @@
 //! type is unknown until one is used or identified, and shows as "an oak wand"
 //! (`data/wand_labels.toml`, the same format); their labels are drawn after the scrolls', from
 //! the same stream, so adding wands changes no scroll's label. Rods too (spec §8 "Magic items":
-//! "Rods"; `data/rod_labels.toml`, "a bone rod"), drawn after the wands'.
+//! "Rods"; `data/rod_labels.toml`, "a bone rod"), drawn after the wands'. Potions last (spec §8
+//! "Potions"; `data/potion_labels.toml`, "a fizzy red potion"), drawn after the rods': a word
+//! drawn per type and the type's own colour, which is its effect family's hue, so an unknown
+//! potion shows in its type's colour, not the file's.
 //!
 //! - **Labels** ([`Labels`]) are derived, never saved: one per readable scroll type, all
 //!   different, drawn at once when the world is made or loaded from the run's `identification`
@@ -50,6 +53,11 @@ impl Labels {
         if let Some(def) = content.rod_labels() {
             let rods = |o: &crate::content::ObjectDef| o.rod.is_some();
             draw_into(&mut labels, &mut rng, content, def, rods);
+        }
+        // Potions after rods, from the same stream: every earlier label stays as it was.
+        if let Some(def) = content.potion_labels() {
+            let potions = |o: &crate::content::ObjectDef| o.drink.is_some();
+            draw_into(&mut labels, &mut rng, content, def, potions);
         }
         Self(labels)
     }
@@ -191,11 +199,12 @@ impl<'a> Lore<'a> {
         (self.labelled_names(stack.object)).unwrap_or_else(|| stack.names(self.content))
     }
 
-    /// The colour `stack` shows in: the labels' one while it is a labelled scroll, else
-    /// [`Stack::fg`].
+    /// The colour `stack` shows in: the labels' one while it is a labelled scroll (a potion
+    /// keeps its type's own, the hint its colour gives), else [`Stack::fg`].
     pub fn fg(&self, stack: &Stack) -> Rgb {
+        let potion = self.content.object(stack.object).drink.is_some();
         match (self.label(stack.object), self.label_def(stack.object)) {
-            (Some(_), Some(def)) => def.fg,
+            (Some(_), Some(def)) if !potion => def.fg,
             _ => stack.fg(self.content),
         }
     }
@@ -204,7 +213,15 @@ impl<'a> Lore<'a> {
     /// unknown.
     fn labelled_names(&self, object: ObjectId) -> Option<(String, String)> {
         let label = self.label(object)?;
-        Some(self.label_def(object)?.names(label))
+        let (name, plural) = self.label_def(object)?.names(label);
+        // A potion's colour is its type's ("a fizzy red potion").
+        match &self.content.object(object).drink {
+            Some(drink) => Some((
+                name.replace("{colour}", &drink.colour),
+                plural.replace("{colour}", &drink.colour),
+            )),
+            None => Some((name, plural)),
+        }
     }
 
     /// How labels of type `object` are made and shown: a wand's, or a scroll's.
@@ -214,6 +231,8 @@ impl<'a> Lore<'a> {
             self.content.wand_labels()
         } else if def.rod.is_some() {
             self.content.rod_labels()
+        } else if def.drink.is_some() {
+            self.content.potion_labels()
         } else {
             self.content.scroll_labels()
         }

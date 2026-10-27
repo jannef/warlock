@@ -64,14 +64,11 @@ fn rise_news(stat: Stat) -> &'static str {
 }
 
 impl World {
-    /// The player sets out to eat `meal`. Refused, taking no time, when nobody hungers, or there
-    /// is no such stack, or it is not food.
-    pub(super) fn eat(&mut self, meal: Meal) -> Spent {
+    /// The player sets out to consume `meal`: a potion is drunk at once ([`World::drink_potion`],
+    /// spec §8 "Potions"), food is a meal. Refused, taking no time, when there is no such stack,
+    /// or it is neither food nor a potion, or it is food and nobody hungers.
+    pub(super) fn eat(&mut self, meal: Meal, events: &mut Vec<Event>) -> Spent {
         let content = self.content.clone();
-        if content.hunger().is_none() || self.state.player().satiation.is_none() {
-            self.say("You feel no need to eat.");
-            return Spent::Nothing;
-        }
         let stack = match meal {
             Meal::Pack(i) => self.state.player().inventory.get(i).cloned(),
             Meal::Floor(i) => {
@@ -87,13 +84,20 @@ impl World {
             return Spent::Nothing;
         };
         let def = content.object(stack.object);
+        if def.drink.is_some() {
+            return self.drink_potion(meal, &stack, events);
+        }
         let Some(food) = def.food else {
             self.say(format!(
-                "You cannot eat {}.",
+                "You cannot consume {}.",
                 self.lore().describe_object(stack.object, 1)
             ));
             return Spent::Nothing;
         };
+        if content.hunger().is_none() || self.state.player().satiation.is_none() {
+            self.say("You feel no need to eat.");
+            return Spent::Nothing;
+        }
         Spent::Meal(Dish {
             meal,
             object: stack.object,

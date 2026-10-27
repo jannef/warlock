@@ -1,0 +1,21 @@
+# A murky draught (spec §8 "Potions"): a bad potion, it makes its drinker sick as rotten food
+# does, so an unknown potion is a gamble. Harm is brown; it gives no marks.
+[[object]]
+id = "murky_draught"
+name = "murky draught"
+plural = "murky draughts"
+glyph = "!"
+fg = "#5a4030"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 10
+stackable = true
+level = 1
+frequency = 20
+
+[object.drink]
+kind = "harm"
+dice = "2"
+status = "poisoned"
+colour = "brown"

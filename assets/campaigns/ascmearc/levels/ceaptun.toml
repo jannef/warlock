@@ -149,7 +149,7 @@ objects = ["wool_cloak"]
 
 [[pile]]
 at = [21, 8]
-objects = ["red_potion"]
+objects = ["potion_of_healing"]
 
 [[pile]]
 at = [23, 8]

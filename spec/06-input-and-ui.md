@@ -558,16 +558,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
   feel satiated."), and someone muttering (§8 "Dialogue"), which are logged all the same. Hit points come back twice as fast while resting
   (§8 "Healing").
   It is a gameplay input mode like the open/close/kick direction prompt, not a menu screen.
-- **Consume** (`e`, id `eat`: the Eat command, renamed; §8 "Hunger") opens the choice of what to consume (food for now, drinks later): the food lying on the player's
+- **Consume** (`e`, id `eat`: the Eat command, renamed; §8 "Hunger") opens the choice of what to consume, food and potions (§8 "Potions"): what lies on the player's
   cell first (marked "lying here"; the `>` cursor starts on it, as ADOM asks about the floor
-  first), then the food in the inventory, in the item list (above); with nothing, "You have
+  first), then what is in the inventory, in the item list (above), grouped by class (Food, then
+  Potions; an unknown potion by its word and colour, "a fizzy red potion"); with nothing, "You have
   nothing to consume." A letter, or Enter on the `>` row, eats it (replay text by position: `eat:b`
   for inventory stack `b`, `eat:floor:a` for the top stack of the pile underfoot); Esc
   cancels. A
   meal is one action of several turns, stopped early like a rest; "You eat the food ration. You
   feel satiated." when it is done, "You stop eating." (or "A kobold comes into view; you stop
-  eating.") when not, the food left as it was. What is no food is refused and takes no time
-  ("You cannot eat a dagger.").
+  eating.") when not, the food left as it was. A potion is drunk at once, in a turn, and says
+  what it does ("You drink the fizzy red potion. It is a potion of healing. You feel your wounds
+  close."). What is neither is refused and takes no time ("You cannot consume a dagger.").
 - **Read** (`r`; §8 "Scrolls") opens the choice of what to read: the scrolls in the inventory
   (what has something to read on it; an unidentified one by its label, §8 "Scrolls"), in the
   item list; with nothing, "You have nothing to

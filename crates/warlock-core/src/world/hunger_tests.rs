@@ -399,7 +399,7 @@ fn a_meal_takes_its_turns_then_feeds() {
         .position(|s| s.object == object(&w, "dagger"));
     let out = w.apply(&Action::Eat(Meal::Floor(dagger.unwrap())));
     assert!(!out.took_turn);
-    assert_eq!(texts(&w).last().unwrap(), "You cannot eat a dagger.");
+    assert_eq!(texts(&w).last().unwrap(), "You cannot consume a dagger.");
     let out = w.apply(&Action::Eat(Meal::Pack(5)));
     assert!(!out.took_turn);
     assert_eq!(texts(&w).last().unwrap(), "You carry no such thing.");

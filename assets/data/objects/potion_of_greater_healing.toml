@@ -1,0 +1,22 @@
+# A potion of greater healing (spec §8 "Potions"): more wounds closed, and bleeding stopped.
+# Healing and a cure mix their hues, red and green: russet.
+[[object]]
+id = "potion_of_greater_healing"
+name = "potion of greater healing"
+plural = "potions of greater healing"
+glyph = "!"
+fg = "#a8503a"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 120
+stackable = true
+level = 4
+frequency = 30
+
+[object.drink]
+kind = "heal"
+dice = "4d8"
+cures = ["bandage"]
+colour = "russet"
+marks = { toughness = 10 }

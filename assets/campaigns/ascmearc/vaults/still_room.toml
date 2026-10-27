@@ -21,6 +21,6 @@ map = '''
 # Her stills.
 "k" = { terrain = "floor", objects = ["cooking_pot"] }
 # Her jars: the cures she sells the living ...
-"p" = { terrain = "floor", objects = ["red_potion"] }
+"p" = { terrain = "floor", objects = ["potion_of_healing"] }
 # ... and the roots she cuts them with.
 "a" = { terrain = "floor", objects = ["angelica_root*2"] }

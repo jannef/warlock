@@ -39,9 +39,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     feel satiated.", "You feel bloated." Getting hungrier into Hungry or worse is a message that
     stops a rest (§6 "Rest"); the rest are only logged.
   - **Meals** (`Action::Eat(Meal)`: one of an inventory stack, `Meal::Pack`, or of a stack of
-    the pile on the player's cell, `Meal::Floor`; §6 "Eat"): refused, taking no time, without
-    `data/hunger.toml` ("You feel no need to eat."), for a stack that is not there ("You carry
-    no f.", "There is no c here."), or for what has no `food` ("You cannot eat a dagger."). A
+    the pile on the player's cell, `Meal::Floor`; §6 "Consume"): a potion is drunk instead (§8
+    "Potions", `World::drink_potion`, hunger or none); refused, taking no time, for a stack that
+    is not there ("You carry no f.", "There is no c here."), for what is neither food nor a
+    potion ("You cannot consume a dagger."), or for food without `data/hunger.toml` ("You feel
+    no need to eat."). A
     meal passes the food's `turns` turns through the normal pipeline like a rest (`World::dine`
     through `World::keep_at`; each the `eat` action's price, so speed, burden, and Bloated
     count), and stops early after a turn in which a creature came into view or a message was logged that

@@ -289,3 +289,46 @@ developer notes (CLAUDE.md, `docs/dev/`).
     sleep).
   - **Talents**: Channeler (Spellcraft, from level 5, systems `spells` and `mana`): rods cost a
     quarter less mana, before Frugal caster.
+- **Potions** (`warlock-core/src/world/potion.rs`, data `drink` in `data/objects/` §7,
+  `content/potion.rs`; the combat progression design §10; #565): objects (`!`, the potions
+  class, stackable) whose `[object.drink]` says what drinking one does by its `kind`, each
+  through the one path that does it: `heal` (`dice` hit points back at once, never past the
+  maximum, and what its `cures` names cured), `cure` (`cures`, means of the statuses' and
+  diseases' `cured_by`: `bandage` stops bleeding, `antidote` ends poison; `diseases = true` ends
+  every disease), `mana` (`dice` mana back, never past the maximum), `harm` (`dice` degrees of
+  its `status`, Poisoned: sickness, as rotten food gives). Every potion names its training
+  `marks` by stat (5 for a common one, 10 for a greater; none for a harm), given as sure marks
+  through the `drank` use (§8 "Stats").
+  - **Drinking: Consume** (§6 "Consume"): no action of its own. `Action::Eat` (`eat:b`,
+    `eat:floor:a`) hands a stack with a `drink` table to `World::drink_potion` instead of
+    starting a meal; it needs no hunger. It takes the `drink` action's time (one turn) and one of
+    the stack, from the pack or the floor (in a shop, a potion drunk is bought: "You drink it,
+    you buy it: 60 gold for the fizzy red potion."), says "You drink the fizzy red potion." and,
+    for an unknown type, "It is a potion of healing.", does what it does ("You feel your wounds
+    close.", "Your mind clears, and power wells up in you.", "It tastes foul!"), and gives its
+    marks. Drinking while Raging is allowed. Creatures do not drink.
+  - **Unknown potions**: a potion type is unknown on sight, "a fizzy red potion": a word drawn
+    per type for the run (`data/potion_labels.toml`, the scroll labels' format with `{colour}`,
+    drawn after the rods' from the same stream, so no scroll's, wand's, or rod's label changes;
+    a word a type, at least as many words as types, checked as content loads) and the type's own
+    **colour**, fixed in data (`colour`, its `fg` the object's; potions of one colour share
+    one `fg`, checked). The colour follows one rule: each effect family has a hue, and a potion
+    of several effects mixes theirs: healing red, cures green, healing and cures russet, mana
+    blue, harm brown. The colour hints at the family, never the type. The `!` shows in it,
+    known or not. A type is known (`WorldState::known_scrolls`) once one is drunk, identified
+    (the scroll of identify, an appraisal), or in the character's starting kit (the witch's
+    potion). The item description says what a known one does in words ("Heals wounds at once,
+    and cures bleeding"), never dice; an unknown one "You do not know what this potion does."
+    Prices are true.
+  - **The potions**: potion of healing (heal 2d8; item level 1, frequency 60; 40 gold; red),
+    greater healing (4d8, cures bleeding; 4, 30; 120; russet), full healing (8d8, cures bleeding
+    and poison; 10, 10; 300; deep russet), antidote (cure poison; 2, 40; 60; green), cure
+    disease (every disease; 4, 25; 150; pale green), mana (3d8; 3, 30; 100; blue), and the
+    murky draught (harm, Poisoned 2; 1, 20; 10; brown). **Where**: loot (by `level` and
+    `frequency`, never magic), general stores and provisioners (they stock and buy potions), the
+    alchemist (§7 "Shops": potions only, healing always first), quest rewards, and the hub's
+    pile.
+  - **Talents** (system `potions`): Thrifty drinker (Delver, from level 6): a potion is not used
+    up one time in four (one gameplay draw a drink, none without the talent); Nose for draughts
+    (Scholar, Intelligence 12): an unknown potion picked up tells its kind by its smell, never
+    its type ("The fizzy red potion smells of herbs: a cure of some kind.").

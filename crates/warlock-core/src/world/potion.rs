@@ -1,0 +1,191 @@
+//! Drinking potions (spec §8 "Potions"): the Consume command's action, [`Action::Eat`], hands a
+//! stack with a `drink` table here instead of starting a meal ([`World::eat`]).
+//!
+//! - **A drink** takes the `drink` action's time (one turn) and one of the stack, from the pack
+//!   or the floor (in a shop, a potion drunk is bought, as food eaten is). With Thrifty drinker
+//!   the potion is kept by the talent's chance: one draw of the gameplay stream a drink, none
+//!   without the talent.
+//! - **What it was**: "You drink the fizzy red potion." and, for a type the player did not know,
+//!   "It is a potion of healing." Drinking identifies its type, as reading does a scroll's
+//!   ([`World::learn_scroll`]).
+//! - **What it does**, by its kind ([`Draught`]), each through the one path that does it: hit
+//!   points back (never past the maximum) and what it cures; cures ([`World::cure`], and every
+//!   disease for `diseases`); mana back; sickness ([`World::afflict`]). Dice are gameplay draws.
+//!   What begins and ends of statuses and diseases is told from the action's events, as
+//!   perception reports them ("You feel sick.", "The poison wears off.").
+//! - **Marks**: each stat its `marks` name gets that many sure training marks (the `drank` use,
+//!   [`World::train_stat_times`]).
+//!
+//! Creatures do not drink. Nose for draughts tells an unknown potion's kind by its smell when it
+//! is picked up ([`World::smell_potions`]).
+//!
+//! [`Action::Eat`]: crate::action::Action::Eat
+//! [`Draught`]: crate::content::Draught
+
+use super::{Spent, World};
+use crate::action::{Event, Meal, Positions};
+use crate::content::{ActionKind, Draught, StatUse};
+use crate::object::Stack;
+
+/// What the player is told when Thrifty drinker keeps a potion they drank.
+pub(super) const KEPT: &str = "There is enough left in the flask for another draught.";
+
+/// What an unknown potion of a kind smells of, with Nose for draughts: the kind, never the type.
+fn smell(does: &Draught) -> &'static str {
+    match does {
+        Draught::Heal { .. } => "of honey and iron: healing of some kind",
+        Draught::Cure { .. } => "of herbs: a cure of some kind",
+        Draught::Mana { .. } => "sharp, like the air before a storm: something for the mind",
+        Draught::Harm { .. } => "foul: nothing good",
+    }
+}
+
+impl World {
+    /// The player drinks one of `stack`, lying where `meal` says (module docs). Returns what it
+    /// cost: always a turn.
+    pub(super) fn drink_potion(
+        &mut self,
+        meal: Meal,
+        stack: &Stack,
+        events: &mut Vec<Event>,
+    ) -> Spent {
+        let content = self.content.clone();
+        let Some(drink) = content.object(stack.object).drink.clone() else {
+            return Spent::Nothing;
+        };
+        let price = self.price_of(self.state.player, ActionKind::Drink);
+        let title = self.lore().title(stack);
+        let (one, kept) = self.take_draught(meal);
+        self.say(format!("You drink the {title}."));
+        if self.learn_scroll(stack.object) {
+            let what = content.object(stack.object).describe(1);
+            self.say(format!("It is {what}."));
+        }
+        if !kept {
+            self.drank_goods(meal, &one);
+        }
+        match &drink.does {
+            Draught::Heal { dice, cures } => {
+                let points = dice.roll(&mut self.state.rng).max(0);
+                let max = self.state.player().max_hp(&content);
+                let me = self.player_mut();
+                let before = me.hp;
+                me.hp = me.hp.saturating_add(points).min(max).max(me.hp);
+                let healed = me.hp > before;
+                self.say(if healed {
+                    "You feel your wounds close."
+                } else {
+                    "You feel healthy."
+                });
+                let player = self.state.player;
+                for cure in cures {
+                    self.cure(player, cure, events);
+                }
+            }
+            Draught::Cure { cures, diseases } => {
+                let from = events.len();
+                let player = self.state.player;
+                for cure in cures {
+                    self.cure(player, cure, events);
+                }
+                if *diseases {
+                    let all: Vec<_> = (self.state.player().diseases.iter())
+                        .map(|i| i.disease)
+                        .collect();
+                    for disease in all {
+                        self.end_disease(player, disease, events);
+                    }
+                }
+                if events.len() == from {
+                    self.say("You feel cleansed.");
+                }
+            }
+            Draught::Mana { dice } => {
+                let points = dice.roll(&mut self.state.rng).max(0);
+                let max = self.state.player().max_mana(&content);
+                let me = self.player_mut();
+                let before = me.mana;
+                me.mana = me.mana.saturating_add(points).min(max).max(me.mana);
+                let gained = me.mana > before;
+                self.say(if gained {
+                    "Your mind clears, and power wells up in you."
+                } else {
+                    "Your mind feels clear."
+                });
+            }
+            Draught::Harm { dice, status } => {
+                let degrees = dice.roll(&mut self.state.rng);
+                self.say("It tastes foul!");
+                if let Ok(degrees @ 1..) = u16::try_from(degrees) {
+                    let player = self.state.player;
+                    self.afflict(player, *status, degrees, None, events);
+                }
+            }
+        }
+        for &(stat, marks) in &drink.marks {
+            self.train_stat_times(StatUse::Drank, Some(stat), marks);
+        }
+        if kept {
+            self.say(KEPT);
+        }
+        Spent::Turn(price)
+    }
+
+    /// Takes one potion from where `meal` says: from the pack (the last empties its stack, and
+    /// what was worn follows its letters) or the pile underfoot. Returns it, and whether Thrifty
+    /// drinker kept it instead (a draw of the gameplay stream only with the talent).
+    fn take_draught(&mut self, meal: Meal) -> (Stack, bool) {
+        let keep = self.state.player().talent_mods(&self.content).potion_kept;
+        let kept = keep > 0 && self.state.rng.chance(u32::from(keep));
+        match meal {
+            Meal::Pack(i) => {
+                let player = self.player_mut();
+                let one = player.inventory[i].single();
+                if !kept {
+                    player.inventory[i].count -= 1;
+                    if player.inventory[i].count == 0 {
+                        player.inventory.remove(i);
+                        player.equipment.after_removal(&Positions::of([i]));
+                    }
+                }
+                (one, kept)
+            }
+            Meal::Floor(i) => {
+                let here = self.player_pos();
+                let level = self.state.current_mut();
+                let mut pile = level.objects_at(here).to_vec();
+                let one = pile[i].single();
+                if !kept {
+                    pile[i].count -= 1;
+                    if pile[i].count == 0 {
+                        pile.remove(i);
+                    }
+                    level.set_pile(here, pile);
+                }
+                (one, kept)
+            }
+        }
+    }
+
+    /// With Nose for draughts (spec §8 "Talents"), each unknown potion type among `got` (just
+    /// picked up) tells its kind by its smell: "The fizzy red potion smells of herbs: a cure of
+    /// some kind." Never its type, and nothing without the talent.
+    pub(super) fn smell_potions(&mut self, got: &[Stack]) {
+        if !self.state.player().talent_mods(&self.content).potion_smell {
+            return;
+        }
+        let content = self.content.clone();
+        let mut told = Vec::new();
+        for stack in got {
+            let Some(drink) = &content.object(stack.object).drink else {
+                continue;
+            };
+            if self.lore().label(stack.object).is_none() || told.contains(&stack.object) {
+                continue;
+            }
+            told.push(stack.object);
+            let title = self.lore().title(stack);
+            self.say(format!("The {title} smells {}.", smell(&drink.does)));
+        }
+    }
+}

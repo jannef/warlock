@@ -1,0 +1,20 @@
+# A potion of antidote (spec §8 "Potions"): poison is gone at once. Cures are green.
+[[object]]
+id = "potion_of_antidote"
+name = "potion of antidote"
+plural = "potions of antidote"
+glyph = "!"
+fg = "#3ca050"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 60
+stackable = true
+level = 2
+frequency = 40
+
+[object.drink]
+kind = "cure"
+cures = ["antidote"]
+colour = "green"
+marks = { toughness = 5 }

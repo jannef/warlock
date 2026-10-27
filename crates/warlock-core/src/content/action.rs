@@ -91,7 +91,7 @@ pub enum ActionKind {
     /// A turn of praying at a forgotten altar (spec §7 "Special rooms"): a prayer takes several.
     Pray,
     /// A turn of drinking at a healing spring (spec §7 "Special rooms"): a drink takes one or
-    /// two.
+    /// two. Drinking a potion (spec §8 "Potions") takes one.
     Drink,
     /// A turn of foraging in the wild (spec §8 "Foraging"): a forage takes several.
     Forage,

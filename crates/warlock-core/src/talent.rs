@@ -317,6 +317,10 @@ pub struct TalentMods {
     pub read_percent: i32,
     /// The chance in percent a scroll it reads is not used up (the most counts).
     pub scroll_kept: u8,
+    /// The chance in percent a potion it drinks is not used up (the most counts).
+    pub potion_kept: u8,
+    /// An unknown potion it picks up tells its kind by its smell.
+    pub potion_smell: bool,
     /// Its own bursts never catch it.
     pub spares_self: bool,
     /// Added to its searching, not to noticing in passing.
@@ -1171,6 +1175,8 @@ impl TalentMods {
                 self.study_percent += percent;
             }
             TalentEffect::ScrollKept { chance } => self.scroll_kept = self.scroll_kept.max(chance),
+            TalentEffect::PotionKept { chance } => self.potion_kept = self.potion_kept.max(chance),
+            TalentEffect::PotionSmell => self.potion_smell = true,
             TalentEffect::SparesSelf => self.spares_self = true,
             TalentEffect::Searching { value } => self.searching += value,
             TalentEffect::TrapDamagePercent { value } => self.trap_damage_percent += value,

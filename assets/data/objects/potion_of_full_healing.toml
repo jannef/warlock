@@ -1,0 +1,22 @@
+# A potion of full healing (spec §8 "Potions"): most wounds closed, bleeding stopped, and poison
+# drawn out. Healing and cures mixed: a deep russet.
+[[object]]
+id = "potion_of_full_healing"
+name = "potion of full healing"
+plural = "potions of full healing"
+glyph = "!"
+fg = "#985038"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 300
+stackable = true
+level = 10
+frequency = 10
+
+[object.drink]
+kind = "heal"
+dice = "8d8"
+cures = ["bandage", "antidote"]
+colour = "deep russet"
+marks = { toughness = 10 }

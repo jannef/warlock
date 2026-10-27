@@ -1,0 +1,21 @@
+# A potion of cure disease (spec §8 "Potions"): every disease is gone at once, grave rot too.
+# Cures are green; this one a pale green.
+[[object]]
+id = "potion_of_cure_disease"
+name = "potion of cure disease"
+plural = "potions of cure disease"
+glyph = "!"
+fg = "#78c080"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 150
+stackable = true
+level = 4
+frequency = 25
+
+[object.drink]
+kind = "cure"
+diseases = true
+colour = "pale green"
+marks = { toughness = 5 }
