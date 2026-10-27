@@ -162,8 +162,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `1 + L/10` ranks in its weapon's skill and, beside a shield, `L/15` in the style of weapon and
   shield (Sword and Board, the tier's `shield_rank`). Pieces are at least magic by 10 + L % (at
   most 40, armour) and 20 + L % (at most 80, panoply), rare from L20. Everything they wear and
-  wield works for them as for anyone (`Mods::worn`: stats, riders, resistances, light, ...); max
-  mana, mana regeneration, and caster level are held but unread until creatures cast. Fyrdelf
+  wield works for them as for anyone (`Mods::worn`: stats, riders, resistances, light, ...),
+  max mana, mana regeneration, and caster level too (#525, §8 "Mana": a pool and a caster
+  level for a creature that casts or summons; a panoply does neither yet). Fyrdelf
   lists `animated_armour`; no branch population lists `animated_panoply` yet (none reaches
   danger 20): it stands in armouries (§7 "Special rooms", #487), whose sleepers are drawn four
   dangers deeper, so on Fyrdelf's bottom floor, and comes by a legend or the dev `spawn`. Talent **Appraiser's eye** (scholar): look mode adds "It hums with power." when

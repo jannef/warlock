@@ -249,7 +249,7 @@ fn the_pack_holds_any_number_of_stacks_named_by_position() {
     let rows = layer_rows(&w, Layer::Inventory);
     assert!(
         rows.iter()
-            .any(|r| r.starts_with("27 - a dagger (wielded)")),
+            .any(|r| r.starts_with("27 - a dagger (+0 hit, 1d4, range 5) (wielded)")),
         "{rows:?}"
     );
 }

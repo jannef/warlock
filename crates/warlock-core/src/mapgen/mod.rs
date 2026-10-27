@@ -808,6 +808,8 @@ mod homes_tests;
 #[cfg(test)]
 mod lairs_tests;
 #[cfg(test)]
+mod shrine_tests;
+#[cfg(test)]
 mod special_tests;
 #[cfg(test)]
 mod tests;

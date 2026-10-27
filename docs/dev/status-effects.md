@@ -133,3 +133,22 @@ batch). Presentation: Diseased via `own_effects`, `PerceptionView::own_diseases`
 the character screen's `Diseased` row, the `stats` dump layer). Saved and hashed.
 Tests: `check.rs`, `disease.rs`, `content/disease.rs`,
 `world/disease_tests.rs` (custom content with extreme stats, mirrored draws).
+
+Treating oneself (spec §8 "Treating oneself", #549): the Heal skill's use. `crate::heal` holds
+what may be treated (`Ailment::{Status, Disease}`, `treatable` in status then disease order,
+`may_treat`, `own` for `PerceptionView::own_ailments`, `noun`: a disease's name once known, else
+"sickness"); `world/heal.rs` the try (`World::heal`, dispatched from `player_acts`; `kind_of`
+maps it to `ActionKind::Heal`, so a status may block it). A status is treatable by its `treat`
+table (`content::Treat`: `difficulty`, `per_degree`, `stops`, `made`, `failed`; parse checks 0
+to 40, 0 to 10, non-empty words): `stops` (bleeding) ends it through `ended` on a made check and
+lets a failure be retried; without it (poison) a made check lowers the severity a degree (ending
+it through `ended` at none) and the effect's `treated` is set whatever comes of it. A shown
+disease is treated against its own `difficulty`: made, `streak + 1` while that stays below
+`world/disease.rs::recovery_of` (Fever-proof's adjusted recovery; the one helper
+`disease_turn` uses too), else `left` raised to the disease's interval (within
+`longest_wait`, so `is_valid_for` holds); the infection's `treated` is set either way.
+**`Effect::treated` and `Infection::treated` are saved state** (serde-skipped while false, so
+older saves and hashes are unchanged; no `FORMAT_VERSION` bump). The ability is
+`Ability::Heal` (`Aim::Ailment`, `Unavailable::NothingToTreat`); the game's choice of what to
+treat is the one dialog (`input.rs::treat_dialog`). Tests: `world/heal_tests.rs`, the parse
+cases in `content/status.rs`.

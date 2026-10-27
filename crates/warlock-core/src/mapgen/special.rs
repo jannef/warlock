@@ -104,8 +104,9 @@ pub(super) fn pick(canvas: &Canvas, rng: &mut Rng, cells: usize) -> Option<(Room
 
 /// Makes `room` special as [`pick`] decided: it covers the level when `whole`, else it is
 /// [`make`], with its hidden side drawn first if its effect has `sides` (one good to two neutral
-/// to one evil; one more draw, only for such an effect), and its dressing stood along its walls
-/// after if it has `dressing` (`dress.rs`; more draws, only for such an effect).
+/// to one evil; one more draw, only for such an effect; a shrine's good or evil, one to one), and
+/// its dressing stood along its walls after if it has `dressing` (`dress.rs`; more draws, only for
+/// such an effect).
 pub(super) fn place(
     canvas: &mut Canvas,
     rng: &mut Rng,
@@ -116,7 +117,14 @@ pub(super) fn place(
         canvas.pervading = Some(room.effect);
         return true;
     }
-    if canvas.content.room_effect(room.effect).sides.is_some() {
+    let effect = canvas.content.room_effect(room.effect);
+    if effect.shrine.is_some() {
+        // A shrine of a side is good or evil, one to one.
+        room.side = Some(match rng.below(2) {
+            0 => Alignment::Good,
+            _ => Alignment::Evil,
+        });
+    } else if effect.sides.is_some() {
         room.side = Some(match rng.below(4) {
             0 => Alignment::Good,
             3 => Alignment::Evil,

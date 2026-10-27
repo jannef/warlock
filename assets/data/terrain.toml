@@ -380,6 +380,19 @@ fg = "#9a7048"
 bg = "#0d0d10"
 walkable = false
 
+# A shrine of a side's stone (room_effects.toml `shrine`): its light shows the shrine's hidden
+# side (gold good, red evil), placed on its cell as a forgotten altar's is.
+[[terrain]]
+id = "shrine_stone"
+name = "shrine stone"
+description = "A squat stone shrine, its niche empty and its carvings worn past reading. It does not welcome everyone alike."
+stone = true
+walkable = false
+glyph = "∩"
+fg = "#c8c0b0"
+bg = "#0d0d10"
+glow = 0.2
+
 # Light sources (spec §5). Emitting terrain must be transparent so light cannot leak through it.
 
 [[terrain]]

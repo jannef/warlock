@@ -38,7 +38,8 @@ fireball's does not (see [Damage types](damage-types.md)).
 
 While you bleed, you lose a hit point every so often, faster the worse you bleed, and your hit
 points do not come back at all. The bleeding eases by itself and stops after a while: "The
-bleeding stops." Later, a **bandage** (with the Heal skill) will stop it at once.
+bleeding stops." If you are trained in **Heal**, you can bind the wound and stop it sooner, trying
+again as often as it takes (see [Treating yourself](skills.md#treating-yourself)).
 
 Creatures bleed the same way, and you can see it: [look mode](controls.md#look-mode) says "A giant
 rat (hostile, wounded, bleeding)". A creature can bleed to death after a fight: "The giant rat
@@ -54,7 +55,8 @@ Poison works slowly: a hit point every couple of minutes, faster the stronger it
 points come back only half as fast. **Strong poison** (a few doses at once) also makes you
 weaker and clumsier: your Strength and Dexterity count one less, in everything they do, from
 hitting and Defence to how much you can carry. The character screen shows them lowered. Poison
-wears off by itself: "The poison wears off."
+wears off by itself: "The poison wears off." Trained in **Heal**, you may try once to draw out
+some of a dose (see [Treating yourself](skills.md#treating-yourself)).
 
 You cannot tell whether a creature is poisoned by looking at it.
 
@@ -102,6 +104,14 @@ spell (nor spend mana on anything), read a scroll, or throw your voice; trying t
 Out of the vault sound comes back: "Sound returns." Creatures inside are silenced just as you
 are, and you can see it on them ("silenced"): a caster that cannot cast closes in to fight
 hand to hand.
+
+## Unwelcome
+
+A [shrine](special-rooms.md) of the other side from yours does not want you. While you stand in
+one, and half a minute after you leave, you are **Unwelcome** ("You feel unwelcome."): your
+wounds heal at half the pace and you are a little less likely to hit (−1 to hit). Creatures of
+the other side are unwelcome in it too, and you can see it on them ("unwelcome"). "You no
+longer feel unwelcome." once it passes.
 
 ## Buffs and cooldowns
 

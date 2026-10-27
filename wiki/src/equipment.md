@@ -37,6 +37,36 @@ What you choose is done at once, and the equipment screen stays open, showing wh
 you can carry on dressing. Each change takes its time, and the game goes on around you while you
 do it: creatures act meanwhile, just as when you wait. Looking at the screens takes no time.
 
+## Numbers
+
+Every list of things you carry or could pick up (the inventory, the equipment screen and its
+choice, picking up, dropping, selling, throwing) writes after each item's name what it gives, and
+looking at a pile says it too:
+
+- **Weapons**: their to-hit and damage, "a long sword (+0 hit, 1d8)". The to-hit is added to
+  your 2d12 attack roll and the damage is rolled on every hit, before what your Strength, weapon
+  skill, fighting style, and stance add (the [character screen](character.md) shows your attacks
+  with all of that counted). Extra dice and elemental damage follow, "(+0 hit, 1d8+1d4 +1d6
+  fire)". Missile weapons and throwing weapons add their range in cells, "a short bow (+0 hit,
+  1d6, range 10)"; a shot does the bow's damage, not the arrow's.
+- **Missiles**: what they add to a shot, only when they add something: "12 flaming arrows (+1d4
+  fire)", "12 Glinting arrows (+1 hit)", "12 Sharp arrows (+2 damage)".
+- **Other things you wear** that add to every attack once identified (an *Accurate* helm, a
+  *Vicious* ring): "an Accurate iron helm (+1 hit, Dv +0, Pv 1)".
+- **Armour**: the Defence (Dv) and Protection (Pv) it gives, "a chain mail shirt (Dv +2, Pv 3)",
+  even when both are 0. A **shield** gives Defence only, "a small shield (Dv +1)", and so does a
+  weapon that parries, "a quarterstaff (+0 hit, 1d6, Dv +1)", or a ring or amulet of Dodge or
+  Deflection once identified.
+
+The numbers are the item's own: its base item, what it is made of, and its affixes once it is
+identified. An unidentified magic item shows its base item's numbers only, though its magic
+works all the same (see [Magic items](magic-items.md#unidentified-items)).
+
+Defence bonuses of the same kind do not add up: of your armour pieces only the best Armour
+counts, of shields the best, and so on (see [Combat](combat.md)); Protection does add up. The
+equipment screen shows your totals under the slots, "Defence (Dv) 14 · Protection (Pv) 4", the
+same numbers as the character screen; they count everything you wear, unidentified magic too.
+
 ## What fits where
 
 - **Rings** fit either ring slot. Choosing a ring for the right hand while it is on your left

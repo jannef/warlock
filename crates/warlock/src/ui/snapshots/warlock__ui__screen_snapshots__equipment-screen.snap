@@ -6,23 +6,23 @@ expression: "render(case, content.clone())"
  You put on a pair of leather boots.
 
 
-
     ┌─ Equipment ─────────────────────────────────────────────────────────────────────────────┐
     │                                                                                         │
-    │ > a  Head           [ an iron helm                                              1.5 kg  │
+    │ > a  Head           [ an iron helm (Dv +0, Pv 1)                                1.5 kg  │
     │   b  Neck             —                                                                 │
-    │   c  Body           [ a chain mail shirt                                         11 kg  │
+    │   c  Body           [ a chain mail shirt (Dv +2, Pv 3)                           11 kg  │
     │   d  Cloak            —                                                                 │
-    │   e  Main hand      ) a quarterstaff (both hands)                                 2 kg  │
-    │   f  Off hand       ) a quarterstaff (both hands)                                       │
+    │   e  Main hand      ) a quarterstaff (+0 hit, 1d6, Dv +1) (both hands)            2 kg  │
+    │   f  Off hand       ) a quarterstaff (+0 hit, 1d6, Dv +1) (both hands)                  │
     │   g  Hands            —                                                                 │
     │   h  Left ring        —                                                                 │
     │   i  Right ring       —                                                                 │
-    │   j  Feet           [ a pair of leather boots                                     1 kg  │
-    │   k  Missile weapon } a short bow                                                700 g  │
+    │   j  Feet           [ a pair of leather boots (Dv +0, Pv 0)                       1 kg  │
+    │   k  Missile weapon } a short bow (+0 hit, 1d6, range 10)                        700 g  │
     │   l  Missiles       / 24 arrows                                                  720 g  │
     │   m  Tool             —                                                                 │
     │                                                                                         │
+    │ Defence (Dv) 14   ·   Protection (Pv) 4                                                 │
     │ Carrying 20.9 kg   ·   Your weight 90.9 kg (you 70 kg)                                  │
     │                                                                                         │
     │ a-m choose a slot   A-M look   Esc close                                                │

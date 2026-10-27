@@ -115,7 +115,9 @@ to open, read keys for, or draw one:
   equip choice;
   sell is a drop in a shop, identify a dev action): never a list or scrolling of its own. The
   abilities menu is one too, grouped by `Source` instead of item class
-  (`PagedList::grouped(items, name)`; `PagedList::new` groups by item class). Items
+  (`PagedList::grouped(items, name)`; `PagedList::new` groups by item class). A stack's row
+  names it with `Lore::listed` (its name and its numbers, `(+0 hit, 1d8)`, `(Dv +1, Pv 1)`;
+  `magic::numbers`, #552), so the item lists' panels are 78 wide (the equip choice's too). Items
   group by item class in class order (`PerceptionView::item_class`), a header row per class
   (`Row::Header`, no letter), each class in the items' own order. A page holds as many rows as
   the console has for it (the screen's `fit`/`layout`, which sets `PagedList::set_room`;

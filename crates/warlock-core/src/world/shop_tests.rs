@@ -154,7 +154,7 @@ fn picking_up_adds_to_the_debt_and_paying_settles_it_at_no_time() {
     assert_eq!(w.perception().shop_here().map(|s| s.owed()), Some(asked));
     // Dumps say it too.
     let rows = crate::dump::layer_rows(&w, crate::dump::Layer::Inventory);
-    let unpaid = format!("a dagger (unpaid, {asked} gold)");
+    let unpaid = format!("a dagger (+0 hit, 1d4, range 5) (unpaid, {asked} gold)");
     assert!(rows.iter().any(|r| r.contains(&unpaid)), "{rows:?}");
     let json = crate::dump::json(&w, &[], false);
     assert_eq!(json["shop"]["keeper"], "Grimbold");

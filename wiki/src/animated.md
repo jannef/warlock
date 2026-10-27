@@ -86,7 +86,7 @@ glow (you see it coming). The gaps are few:
 | Light | Yes: it glows |
 | Skills | Yes, where a rule reads a creature's skill |
 | Weight | Its things weigh less, which changes nothing: it carries itself |
-| More mana, mana regeneration, caster level | No: it casts no spells (yet) |
+| More mana, mana regeneration, caster level | Yes, as for any creature (see [Mana](mana.md)), though it casts no spells (yet) |
 | Carrying | No, and it needs none |
 | Range, draw, durability (missile weapons) | No: it wields melee weapons only |
 
