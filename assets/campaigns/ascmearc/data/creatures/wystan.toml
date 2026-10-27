@@ -1,0 +1,47 @@
+# Campaign-owned (docs/design/campaign.md §3.6): the Ascmearc's own type, which only its files
+# may name.
+#
+# The wanted (docs/design/adventurers-guild.md §8.2, #424): Black Wystan, the Gentleman of the
+# Road, highwayman of the Fennhām road, famous for his manners, who killed a carter for his
+# boots. A commoner who apes the gentry. Once a run (`unique`), in no population: only his
+# lair's pinned vault on Wulfeshol's fourth floor places him. He shoots from afar with High Toby,
+# whose arrows put fear in what they strike, and keeps a short sword for close work.
+[[creature]]
+id = "wystan"
+level = 12
+xp = 70
+rarity = "very_rare"
+loot = 50
+unique = true
+name = "Black Wystan"
+glyph = "@"
+fg = "#b0603a"
+faction = "outlaws"
+tags = ["outlaw", "archer"]
+alignment = "evil"
+race = "human"
+sight = 14
+combat = "ranged"
+range = 8
+opens_doors = true
+footsteps = 60
+hearing = 14
+weight = 75000
+stats = { strength = 15, dexterity = 18, toughness = 15, intelligence = 11, willpower = 12, presence = 14 }
+base_hp = 30
+skills = { stealth = 40, spot = 50 }
+weapon_skills = { bows = 3, marksman = 1, short_blades = 2 }
+[[creature.gear]]
+chance = 100
+one_of = ["unique:high_toby"]
+keep = "wield"
+[[creature.gear]]
+chance = 100
+one_of = ["arrow*40"]
+[[creature.gear]]
+chance = 100
+one_of = ["short_sword"]
+keep = "wield"
+[[creature.gear]]
+chance = 100
+one_of = ["leather_jerkin"]
