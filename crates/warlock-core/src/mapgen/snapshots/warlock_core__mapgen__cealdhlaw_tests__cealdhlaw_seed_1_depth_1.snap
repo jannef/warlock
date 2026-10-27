@@ -6,55 +6,55 @@ Cealdhlāw 1 (cealdhlaw:1) 80x21
 stairs Up at (36, 4) -> ascmearc
 stairs Down at (6, 4) -> cealdhlaw:2
 shopkeeper at (35, 13) route  carrying a spear (wielded), a small shield (in off hand), a chain mail shirt (being worn), an iron helm (being worn), 300 gold coins
-rat at (15, 14) route E E W W W S S S S E W N N N N E E E W W
-beetle at (7, 15) route N S S S N S N N N S
-grave_worm at (18, 16) route E N S S S W W W W E W E E E E N N N S W
-crawling_hand at (37, 15) route N N N N S S S N N N S S S S
-goblin at (55, 2) route W W W W W W W E E E W W W E E E E E E E carrying a club (wielded)
-skeletal_rat at (67, 15) route E E E E E E E E S S N N W W W W W W W W
-crawling_hand at (19, 3) route E E E E E E E W W W W W W W
-rat at (60, 3) route E S S S N N N W
-skeletal_rat at (52, 16) route E E E S W W E E N W W W
-grave_worm at (28, 6) route N N N E E S N W W S S S
-crawling_hand at (57, 5) route N N N E E E S N W W W S S S
-crawling_hand at (9, 16) route W N N E E W W S S E
-rat at (27, 5) route S W W W W W W W W E E E E E E E E N
-crawling_hand at (65, 16) route E E E E E E E E W W W W W W W W
-bat at (16, 17) route E E N N N S S S S N N N N S S S W W
-crawling_hand at (18, 5) route S S W W W E W E E E N N
-rat at (20, 4) route E E E E E E E W W W W W W W
-bat at (15, 15) route S S S W W W W E E E E N N N
-crawling_hand at (15, 5) route S S N N N E W S S S N N
-grave_worm at (47, 15) route N E E E W W W S
+rat at (59, 7) route N N W W W S S W W E W E E N N E E E S S
+beetle at (53, 12) route N S N N N S S S N S
+grave_worm at (75, 15) route E S W W W E E E W E W E W W W E E E N W
+crawling_hand at (15, 14) route E E E S S E S N W N N W W W
+goblin at (52, 2) route W W W W E E E W W W E E E W W W E E E E carrying a club (wielded)
+skeletal_rat at (38, 15) route E E E E E E E W W W E E E W W W W W W W
+crawling_hand at (60, 2) route S S S S S W W E E N N N N N
+rat at (53, 3) route E E E E W W W W
+skeletal_rat at (11, 16) route E E E S S W E N N W W W
+grave_worm at (59, 5) route N N N E S S N N W S S S
+crawling_hand at (26, 5) route N N E E E E S N W W W W S S
+crawling_hand at (66, 15) route W E E E E W W W W E
+rat at (15, 5) route S N N E E E E E E W W W W W W S S N
+crawling_hand at (60, 16) route E E W E W W W E W E E E W E W W
+bat at (9, 17) route E E N N N E E E E W W W W S S S W W
+crawling_hand at (53, 4) route S S S W W E W E E N N N
+rat at (59, 3) route E E S S S S W E N N N N W W
+bat at (9, 14) route S S S S W N N S S E N N N N
+crawling_hand at (50, 4) route S S S W N W E S E N N N
+grave_worm at (8, 15) route N E E E W W W S
 rat at (68, 17) route E E E E E E E W W W W W W W
-skeletal_rat at (37, 13) route S N N N S S S N
-bat at (68, 15) route S S E E E E E W W W W W N N
-grave_worm at (16, 15) route E E W W W W W W E E E E E E W W
-grave_worm at (54, 7) route W W W W W E E E E E
+skeletal_rat at (49, 7) route E N N N S S S W
+bat at (37, 15) route N N S S N N N S S S N N S S
+grave_worm at (10, 14) route E E W W W W W E W E E E E E W W
+grave_worm at (59, 6) route S W W W W E E E E N
 pit trap at (13, 1)
 pit trap at (46, 5)
 pit trap at (56, 14)
 arrow trap at (58, 4)
 2 placed lights
-special room hushed at (46, 13)-(58, 18)
+special room sanctuary at (46, 13)-(58, 18)
 shop general_store kept by Orvald at (27, 13)-(35, 15), post (35, 13)
           ########################
      ######..^...................#             ################
-     #...¡#.####################.#             #.......g.....¡#
-     #....+.###¡...z...........#.# ######      #............r.#
-     #>...#...'.....r..........#.###<...########..........^...#
-     ###+######z..z........r.......+..........^+.........z....#
-       #.#    #.............w..#####....########..............#    #########
-       #.#    #.).............¡#   #....#      #¡.....w.......#    #"~~~~~"#
+     #...¡#.####################.#             #....g.......z¡#
+     #....+.###¡...............#.# ######      #.....r.....r..#
+     #>...#...'................#.###<...########..z..z....^...#
+     ###+######r..........z........+..........^+...........w..#
+       #.#    #................#####....########...........w..#    #########
+       #.#    #.).............¡#   #....#      #¡r.........r..#    #"~~~~~"#
        #.#    ##################   #...¡#      ######'#########    #~~~*~~~#
        #)#                         ##+###           #.#            #~~.*.~~#
        #.#                          #.#             #.#            #"~~.~~"#
        #.#                          #.#             #.#            ####+####
-       #.#                ###########.#             #.#               #.#
-      ##+############     #¡?[[..(.@#r#       #######+#####           #.#
-      #........r...¡#     #/..[*..}.+.#########hh)hhhhhh^¡#    ########S######
-      #a.......bw...#     #[...).?.¡#z........Swhhhhhhhhhh######¡..rb........#
-      #..z.....[..w.#     #####################hhhhhrhhhhhh....'.z...........#
-      #.........b...#                         #¡hhhhhhhhhh######....r.......¡#
+       #.#                ###########.#             #a#               #.#
+      ##+############     #¡?[[..(.@#.#       #######+#####           #.#
+      #..bw....z...¡#     #/..[*..}.+.#########pp)pppppp^¡#    ########S######
+      #.w...........#     #[...).?.¡#br.......Sppppppppppp######¡.z........w.#
+      #....r...[....#     #####################pppppppppppp.z..'.............#
+      #..b..........#                         #¡pppppppppp######....r.......¡#
       #¡............#                         #############    ###############
       ###############
