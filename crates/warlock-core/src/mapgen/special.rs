@@ -125,9 +125,8 @@ pub(super) fn place(
 }
 
 /// Makes `room` special, laying its effect's floor over the plain floor in it: unless it
-/// overlaps another special room, or creatures shun it (or it is a teeming den) and one patrols
-/// through it. Returns
-/// whether it did.
+/// overlaps another special room, or creatures shun it (or it is a teeming den or a tempting hoard)
+/// and one patrols through it. Returns whether it did.
 pub(super) fn make(canvas: &mut Canvas, room: SpecialRoom) -> bool {
     let effect = canvas.content.room_effect(room.effect);
     let patrolled = || {
@@ -141,7 +140,7 @@ pub(super) fn make(canvas: &mut Canvas, room: SpecialRoom) -> bool {
         })
     };
     if canvas.rooms.iter().any(|r| r.overlaps(&room))
-        || ((effect.shunned || effect.swarm.is_some()) && patrolled())
+        || ((effect.shunned || effect.swarm.is_some() || effect.hoard.is_some()) && patrolled())
     {
         return false;
     }

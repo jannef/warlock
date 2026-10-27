@@ -377,6 +377,8 @@ pub struct TalentMods {
     /// Within this many cells it sees a hall of mirrors' reflections for what they are
     /// (Mirror-wise; 0: none).
     pub sees_reflections: i32,
+    /// How many stacks more it may lift in a tempting hoard before it seals (Hoard-wise).
+    pub hoard_grace: i32,
     /// Percent more noise sleepers need to wake from what it does (Hush-foot).
     pub wake_percent: i32,
     /// What it kills never rises in a cursed room (Grave warden).
@@ -1178,6 +1180,7 @@ impl TalentMods {
                 }
             }
             TalentEffect::SeesReflections { value } => self.sees_reflections += value,
+            TalentEffect::HoardGrace { value } => self.hoard_grace += value,
             TalentEffect::CollapseProof => self.collapse_proof = true,
             TalentEffect::WakePercent { value } => self.wake_percent += value,
             TalentEffect::GraveWarden => self.grave_warden = true,

@@ -698,7 +698,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     within 2 cells are seen for what they are and not shown, so no glass stops a step there
     (`world/mirrors.rs`, perception); Light tread (Delver, Dexterity 12, `collapse_proof`, #420):
     a collapsed floor never gives way under them (`World::collapse_step`, which then draws
-    nothing).
+    nothing);
+    Hoard-wise (Delver, Intelligence 11, `hoard_grace` 1, #415): a tempting
+    hoard seals only after the second stack lifted inside it, `World::lift_in_hoard`.
     The `spells` system (the magic design §10, #400) came with the **Spellcraft** tree: Quick
     study (free, #396: study +2, study time −50 %), Overreach (level 6,
     `overreach_cost_percent` −33: the surcharge per tier above the caster level's tier a third
