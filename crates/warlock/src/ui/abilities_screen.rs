@@ -25,8 +25,12 @@ use crate::render::console::Console;
 use warlock_core::ability::{Ability, Aim, Source, Unavailable};
 use warlock_core::perception::PerceptionView;
 
-/// Width of the panel.
+/// Width of the panel, at least: wider while a row needs it (a weapon ability's name after its
+/// skill's, "Sword and Board: Staggering block"), as the console allows.
 const WIDTH: i32 = 60;
+/// Columns of a row besides its name and its state: the frame, the margins, the cursor, the
+/// letter, and the gaps.
+const ROW_EXTRA: i32 = 11;
 /// Rows besides the list: the frame, a margin, a gap, the description (two lines), a gap, the
 /// footer, the frame.
 const EXTRA: i32 = 8;
@@ -162,7 +166,15 @@ impl AbilitiesScreen {
     pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
         self.fit(console.cols(), console.rows());
         let count = self.entries.tallest().max(1) as i32;
-        let panel = Panel::new(console, " Abilities ", WIDTH, count + EXTRA);
+        let longest = |f: fn(&Entry) -> &str| {
+            (self.entries.iter())
+                .map(|e| f(e).chars().count())
+                .max()
+                .unwrap_or(0) as i32
+        };
+        let wide = longest(|e| &e.name) + longest(|e| &e.state) + ROW_EXTRA;
+        let width = wide.clamp(WIDTH, (console.cols() as i32).max(WIDTH));
+        let panel = Panel::new(console, " Abilities ", width, count + EXTRA);
         self.entries.draw_label(console, &panel);
         let (x, top) = (panel.inner_x(), panel.y + 2);
         let fits = |y: i32| y < panel.y + panel.h - 2;
