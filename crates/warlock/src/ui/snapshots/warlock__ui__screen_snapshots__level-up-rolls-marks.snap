@@ -1,0 +1,29 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ You search for 10 minutes and find nothing. (×2)
+ Y┌─ Level 2 · Skill rolls 4 ────────────────────────────────────────────────┐
+  │                                                                          │
+  │ Skills                                                                   │
+  │ > a  Appraise         11  ────  +2                                       │
+  │   b  Disable device   16  ────  +2                                       │
+  │   c  Escape artist     7  ────  +2                                       │
+  │   d  Open lock        18  ────  1d3                                      │
+  │   e  Search            9  ━───  1d5+1                                    │
+  │   f  Spot             10  ────  +2                                       │
+  │   g  Steal            17  ────  1d3                                      │
+  │   h  Stealth          16  ────  1d3                                      │
+  │   i  Tumble           16  ────  1d3                                      │
+  │                                                                          │
+  │ 4 skill rolls a level: class 3, race 1                                   │
+  │                                                                          │
+  │ Rolls +2: practice (no marks) gives +1, +1 as your class trains it.      │
+  │ Judging what a thing is worth and what it is made of.                    │
+  │                                                                          │
+  │                                                                          │
+  │                                                                          │
+  │ a-i or Enter roll   Level 3 next                                         │
+  └──────────────────────────────────────────────────────────────────────────┘
+
+ The Hub  ·  HP 19/19  ·  MP 4/4  ·  Lv 3  ·  08:20                  ? controls

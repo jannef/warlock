@@ -18,9 +18,13 @@ reservoir: `World::level_up` (`world/talent.rs`) puts `World::level_rolls()` rol
 player is trained in nothing) into each level's `Due::rolls`; `refuse_due` refuses everything
 else ("You have skill rolls to spend."); `advance:SKILL` (`World::advance_skill`) throws
 `Ladder::die(step(marks) + known_for)` from `levels_rng` (made on the first draw), adds +1 for a
-class's other or a race's skill (`World::affinity`: `ClassDef::is_known_for`/`trains`,
-`RaceDef::skills`), and `Skills::roll` adds it (halved from `soft_cap`) and spends
-`RollRules::spent` of the marks. `levelup:auto` spends rolls on the first trained skill
+class's other or a race's skill (`ClassDef::is_known_for`/`trains`, `RaceDef::skills`), and `Skills::roll` adds it (halved from `soft_cap`) and spends
+`RollRules::spent` of the marks. The dice and the count are each computed in one public
+function the rule and the level-up screen share (#543): `world::skill_roll` (a `SkillRoll`: the
+marks, the practice die, the known-for step, the die, the `RollBonus` and why, `halved`) and
+`world::roll_count` (a `RollCount`: class, race, Intelligence, talents), read by the screen
+through `PerceptionView::skill_roll`/`roll_count` and by the dev `progress` dump (`rolls a
+level ...`, `roll dice athletics 1d3, ...`). `levelup:auto` spends rolls on the first trained skill
 (`advance_auto`). The Skills screen's meter (`skills::progress`) is the ladder step in quarters.
 Tests: `skills.rs` (ladder, rolls, meter), `content/skill.rs`, `content/class.rs`
 (`known_for`, `rolls`), `world/skill_roll_tests.rs` (counts, refusals, dice and affinities,

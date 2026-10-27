@@ -197,7 +197,10 @@ to open, read keys for, or draw one:
   `ui/level_up_screen.rs` (`LevelUpScreen`: the first `Due`'s step, rolls, then a bonus pick of
   `PerceptionView::bonus_trees`, then the talent, each a `PagedList` whose letters are `Act`s; a
   talent with several openings lists them in its place; Esc only says what is left, in the panel;
-  the stack calls its `fit` before a press), `ui/talents_screen.rs` (`TalentsScreen`, the Talents
+  the stack calls its `fit` before a press; the roll step, #543, shows each skill's dice from
+  `PerceptionView::skill_roll` and a line of `roll_count`'s parts, three rows taller,
+  `ROLLS_EXTRA`; snapshots `level-up-rolls`, `level-up-rolls-marks` at 80×25,
+  `level-up-rolls-halved`), `ui/talents_screen.rs` (`TalentsScreen`, the Talents
   page: own talents, then the others with `NeedView`s, scrolling), `ui/chargen_talents_screen.rs`
   (`ChargenTalentsScreen`, the creation step: a `World::draft` held for the screen's life, marks
   checked with `creation_offers`, Random and Done under Chance; its marks are

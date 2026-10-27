@@ -466,15 +466,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
   says what is left ("You have 3 skill rolls to spend.", "You must choose a talent first.") in
   the panel. Its frame names the level and what is left (`Level 3 · Skill rolls 3 · Talent 1`);
   several levels in one turn are one sequence, the lowest first, the footer naming the next
-  (`Level 3 next`). The steps, each the one paged list, skipping those with nothing to choose:
-  the **skill rolls** (the trained skills with their values and meters, as on the Skills
-  screen), a **bonus talent** of the class's trees, then the level's **talent**, listing only
+  (`Level 3 next`; `Levels 25 to 37 next` beyond three). The steps, each the one paged list,
+  skipping those with nothing to choose: the **skill rolls** (the trained skills with their
+  values and meters, as on the Skills screen, and the dice a roll on each adds: `1d3`, `+2`,
+  `1d5+1`, `(1d3)/2` past the soft cap; below the list a line naming where a level's rolls come
+  from, `4 skill rolls a level: class 3, race 1`, and the selected skill's dice explained before
+  its description, `Rolls 1d5+1: practice (20 marks) gives 1d5, +1 as your class trains it.`;
+  the owner's call, #543: numbers on this step, the dice the rule throws, never a pre-rolled
+  result), a **bonus talent** of the class's trees, then the level's **talent**, listing only
   the talents that may be taken now, by tree, each with its next rank (`1/3`) and the start of
   its description, the selected one's whole description below. A talent with several choices
   (Apprentice, Weapon focus) lists them in its place (Esc back). A letter, or Enter on the `>`
   row, is that choice's action (`advance:athletics`, `talent:hardy`, `talent:apprentice:stealth`):
   the screen closes, the action is applied and recorded like any other, and the screen opens
-  again on what is left. No new keys: the list commands. Never a die, a mark, or a chance.
+  again on what is left. No new keys: the list commands. Outside the skill-roll step, never a die, a mark, or a chance.
 - **Death screen** (§8 "Combat"): when the player dies, the death screen opens over the run as it
   ended, in place of any other screen, and the character's save is deleted, and no other's
   (permadeath): `Y O U   D I E D`, then who lies here ("Here lies Brakka,", with a character; the
