@@ -86,6 +86,15 @@ id = "duergar"
 name = "duergar"
 hostile = ["player", "goblins", "undead", "giant"]
 
+# The drow (#519): the dark elves of the deep, from the house's warriors to its matron. They
+# hunt the player, the kobolds, the goblins and their kin, the orcs, and their rivals of the
+# deep roads, the duergar; the demons their priestesses call on, the spiders sacred to their
+# goddess (the vermin), and everyone else they leave be. Not an animal faction.
+[[faction]]
+id = "drow"
+name = "drow"
+hostile = ["player", "kobolds", "goblins", "orcs", "duergar"]
+
 # The giant tribe (#457): ogres and giants, hill, stone, frost, fire, cloud, and storm. They
 # crush the player, the vermin, and the kobolds; the goblins and their kin they leave be (the
 # ogres run with them), and they and the duergar are old enemies.

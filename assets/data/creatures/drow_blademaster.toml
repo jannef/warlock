@@ -1,0 +1,46 @@
+# The drow (#519; content::drow_roster_tests checks the numbers).
+# A drow sword-dancer with a scimitar in each hand, striking twice in the time another
+# strikes once, both edges dark with venom.
+[[creature]]
+id = "drow_blademaster"
+level = 28
+xp = 150
+rarity = "uncommon"
+loot = 30
+name = "drow blademaster"
+glyph = "e"
+fg = "#a8a8d0"
+speed = 1350
+faction = "drow"
+tags = ["drow"]
+alignment = "evil"
+race = "drow"
+vision = "darkvision"
+opens_doors = true
+footsteps = 60
+hearing = 15
+weight = 60000
+attack_cost = 600
+stats = { strength = 22, dexterity = 24, toughness = 21, intelligence = 21, willpower = 21, presence = 21 }
+base_hp = 63
+resist = { poison = 25 }
+on_eat = { message = "Lean and bitter, with an aftertaste of old poisons.", vomit = 40 }
+[creature.attack]
+damage = "3d8"
+damage_type = "slashing"
+name = "twin scimitars"
+verb = "slashes"
+to_hit = 2
+on_hit = [{ status = "poisoned", chance = 20, severity = 3 }]
+# Its gear (spec §8 "Creature gear"): armour and coins, never a weapon (its venom rides on
+# its natural attack, which a wielded weapon would replace).
+[[creature.gear]]
+chance = 70
+one_of = ["chain_mail"]
+magic = 20
+[[creature.gear]]
+chance = 50
+one_of = ["wool_cloak"]
+[[creature.gear]]
+chance = 50
+one_of = ["leather_boots"]
