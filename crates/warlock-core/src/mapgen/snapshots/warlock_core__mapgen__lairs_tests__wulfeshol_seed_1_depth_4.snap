@@ -26,21 +26,21 @@ bat at (9, 35) route E W W E E E E E E E W W W W W W W E E W
 giant_centipede at (17, 26) route S E E W E W W N
 footpad at (50, 25) route N E E E E E W W W W W S carrying a bronze short sword (wielded), a leather jerkin (being worn)
 footpad at (18, 37) route N N N N N E W S S S S S carrying an iron short sword (wielded), a leather jerkin (being worn)
-dretch at (55, 12) route N N N S W W W S S N N E E E N S S S
-footpad at (13, 4) route S S S S W W W W E E E E N N N N carrying a copper short sword (wielded), a leather jerkin (being worn)
-goblin_archer at (34, 7) route S E E E E W W W W N carrying a hardwood short bow (readied), 20 bone arrows (quivered), a club (wielded)
+duergar_miner at (55, 12) route N N N S W W W S S N N E E E N S S S carrying a flint pick-axe (in use)
+footpad at (13, 4) route S S S S W W W W E E E E N N N N carrying a bronze short sword (wielded), a leather jerkin (being worn)
+goblin_archer at (34, 7) route S E E E E W W W W N carrying a hardwood short bow (readied), 12 tin arrows (quivered), a club (wielded)
 barrow_spider at (4, 27) route S S S S W E N N N N
 barrow_spider at (50, 12) route S S S S N N N N
-footpad at (49, 24) route N N N N S S S W W E W E E N N N S S S S carrying a tin short sword (wielded), a leather jerkin (being worn)
-goblin_archer at (44, 33) route W E S S S W W W E E E N N N W E carrying a short bow (readied), 20 bone arrows (quivered)
-footpad at (26, 4) route S S N N N N W E S S S S N N carrying a bronze short sword (wielded), a hardened leather jerkin (being worn)
+footpad at (49, 24) route N N N N S S S W W E W E E N N N S S S S carrying a copper short sword (wielded)
+goblin_archer at (44, 33) route W E S S S W W W E E E N N N W E carrying a hardwood short bow (readied), 12 bone arrows (quivered), a bone club (wielded)
+footpad at (26, 4) route S S N N N N W E S S S S N N carrying a leather jerkin (being worn)
 giant_centipede at (23, 14) route S S S S W W W W N S E E E E N N N N
 bat at (55, 10) route W W W N N N N S S S S E E E
-orc_raider at (44, 9) route S S W W W E E E N N carrying a studded leather jerkin (being worn)
-footpad at (38, 13) route N N N N N N N N S S S S S S S S carrying an iron short sword (wielded)
-footpad_archer at (26, 9) route W E E E E E N S W W W W W E carrying a short bow (readied), 25 steel arrows (quivered), a chitin dagger (wielded), a leather jerkin (being worn)
-footpad at (60, 19) route N N N S W W N S E E N S S S carrying a leather jerkin (being worn)
-footpad_archer at (54, 11) route E E E E E W W W W W carrying 15 tin arrows (quivered), a leather jerkin (being worn)
+orc_runt at (44, 9) route S S W W W E E E N N carrying a bone dagger (wielded)
+footpad at (38, 13) route N N N N N N N N S S S S S S S S carrying a leather jerkin (being worn)
+footpad_archer at (26, 9) route W E E E E E N S W W W W W E carrying a short bow (readied), 15 flint arrows (quivered), a tin dagger (wielded)
+footpad at (60, 19) route N N N S W W N S E E N S S S carrying a copper short sword (wielded)
+footpad_archer at (54, 11) route E E E E E W W W W W carrying a hardwood short bow (readied), a leather jerkin (being worn)
 footpad at (4, 4) route N E E E E W W W W S carrying a gold short sword (wielded), a hardened leather jerkin (being worn)
 footpad at (57, 34) route S S W W N N N N S S S S E E N N carrying a hardened leather jerkin (being worn)
 bat at (62, 27) route W W W W W E E E E E
@@ -79,7 +79,7 @@ arrow trap at (43, 13)
   #####......##     ##....@.................o..# #............#
  ##.##......##      ##.........c..............## #.....b.....##
  #..b......##     ###........................##  #....@.....##
- #........##    ###.........................##  ##s....u....#
+ #........##    ###.........................##  ##s....h....#
  ##.....*.#    ##.............".....##@....^#   #...###.....#
   #.......##   #.......c.*..."##....###.....## ##...####....#
  ##........##  #...@.........####....##......###.....####?..##                    #########

@@ -35,7 +35,11 @@ fixture lacks Bleeding). Tests of the mechanism: `world/court_tests.rs` (weights
 per-seed determinism, save and load, a level's faction winning, look mode's stance, a struck
 Seelie fey).
 
-Fennmynster's population takes the pixie, the boggle, and the darkling; the rest are in no
-population yet. Teleport, illusions, flight, charm, tree-binding, a death burst, poisoned
+Fennmynster's population takes the pixie, the boggle, and the darkling, and since #531 the
+sprite, the quickling, the satyr, and the redcap (level 12, met only out of depth on its eighth
+floor, or as a stray deeper); Fyrdelf's the meenlock (the unseelie dread of its dark galleries).
+The blink dog and the dryad, woodland fey, are in no population (the Ascmearc has no woodland
+branch), nor are the nymph, the korred, and the yeth hound (levels 22 to 31: no window reaches
+them). Teleport, illusions, flight, charm, tree-binding, a death burst, poisoned
 missiles, oil, stone shaping, captive transformation, and a woodland place for the rest are
 follow-ups.

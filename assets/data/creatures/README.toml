@@ -216,7 +216,7 @@
 # flesh types leave a rotten corpse (on_eat vomit 70 or more, harm). Glyphs: z lesser corporeal
 # dead, Z greater, G spirits, W wights and wraiths, M mummies, C hounds, V vampires, D drakes, L liches, T
 # the rotting troll; a colour distinct from every other type with the same glyph. Only a type in
-# a population strays (#375): deep undead ship in none until a deep place takes them.
+# a population strays (#375): those of level 21 and up ship in none until a deep place takes them.
 #
 # The demons (the roster, #449; content::demon_roster_tests checks the numbers): faction
 # "demon", tags ["demon", "fiend"], alignment "evil", vision "darkvision", resist poison 100 and
@@ -240,7 +240,7 @@
 # 100); the bone devil and the pit fiend poison 100. One natural attack each, its rider standing
 # for the rest. A devil's body burns away when it dies: no corpse, a dark ichor for blood (the
 # bone devil none). Glyphs: u the lemure, i the imp, U the greater devils, each in its own colour.
-# None is in a population yet.
+# Fyrdelf's population has the lemure, the imp, and the bearded devil (#531); the rest wait.
 #
 # The yugoloths (#446; content::yugoloth_roster_tests checks the numbers): mercenary fiends of the
 # lower planes, faction "yugoloth" (hostile to the player only), tags ["yugoloth", "fiend", ...],
@@ -303,5 +303,5 @@
 # Toughness, so it heals fast), within ±35 % of max HP and dice average. Fire hurts every troll
 # (resist fire −50, the stone troll −25) but the fire troll. A hide of Defence 1 and Protection 2
 # or more; a corpse with on_eat vomit 50 and a 5 % chance of Toughness. Glyph T, each in a colour
-# of its own. Only the troll and the hill troll live in a population (Fyrdelf); the rest wait for
-# middle-level places.
+# of its own. Only the troll, the hill troll, and the forest troll (#531) live in a population
+# (Fyrdelf); the rest wait for deeper places.

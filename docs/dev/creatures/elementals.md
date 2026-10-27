@@ -31,5 +31,9 @@ at least six rungs from level 10 or lower to 50 or higher. Test content that lis
 STATUS keeps `staggered` and `sluggish` for the elementals' riders.
 
 Population lines: Fyrdelf the lesser fire elemental and the earth elemental, Fennmynster the
-lesser water elemental; the rest ship in none. Deferred (#453 "Follow-ups"): large size,
+lesser water elemental. #531 placed the rest up to level 19: Fennmynster the water mote, frost
+mote, and lesser ice elemental (its cold water); Fyrdelf the stone mote, ember mote, and dust
+devil (the shallow galleries' filler, as the bats are), the spark mote, the lesser earth, air,
+and lightning elementals, the water elemental, and the air elemental. Those of level 21 and up
+(the ice elemental and every greater and elder one) ship in none: no danger window reaches them. Deferred (#453 "Follow-ups"): large size,
 water-bound behaviour, knockback, whirlwind, engulf, burning, breath, elements at war, gem drops.

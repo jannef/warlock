@@ -104,7 +104,10 @@ drowned dead, its peat-dark bog bodies, and its ghasts and fen ghouls, whose cla
 and the restless spirits that pass through its walls: corpse candles, poltergeists, ghosts, the
 shadows that drink your strength, and the wraiths that drink your life. With
 them is the cult that came to the ruin, cultists and their priests; somewhere in the dark is
-the bog hag, whom you meet once in your life. No one trades down there: Fennmynster has no shops.
+the bog hag, whom you meet once in your life. Fey of the damp haunt the cellars, pixies,
+sprites, boggles, quicklings, satyrs, and darklings, and now and then a redcap from deeper down;
+water and frost motes and lesser ice elementals stir in the cold water, stone haunts drift
+through the minster's walls, and pale drinkers and mummies keep its crypts. No one trades down there: Fennmynster has no shops.
 
 At the very bottom lies the **sunken crypt**: a nave of shallow water between the monks' tombs,
 where two of the drowned still stand guard, and at its far end a dry dais with an altar and the
@@ -129,7 +132,15 @@ spectres, that pass through the rock; hell hounds, fiends at home in the fires, 
 deep workings, with kobolds, centipedes, and bats in the upper galleries. Hobgoblin war bands come
 down to raid the duergar: soldiers, archers, legionnaires with spear and shield, warcasters,
 sergeants, and captains. Orc war bands raid the mine too: raiders, shamans, berserkers, veterans,
-bowmen, and their wargs, and now and then a war chief.
+bowmen, and their wargs, and now and then a war chief, and goblin wizards who call up more of
+their kin. The motes of stone, fire, and air drift through the upper galleries, and spark motes,
+lesser earth, air, and lightning elementals, water elementals, and air elementals through the
+workings. The demons' fires draw up devils, lemures and imps, and on the deepest floor now and
+then a bearded devil; forest trolls hunt beside the hill trolls, meenlocks lurk in the dark, and
+on the bottom floor a hill giant may come down after the ogres. The deep workings' dead are many:
+draugr, barghests, hands of glory, vampire spawn, the gallows dead, bone wyverns, gibbering
+shades, fetches, and revenants, now and then a mummy priest at the bottom, and the necromancers
+who raise them.
 
 Every gallery floor holds a **foreman's cabin**: a timber-floored lodging where a duergar miner
 keeps watch, with a spare pick-axe, his lamp, and a brass key to the delf's locked rooms behind a

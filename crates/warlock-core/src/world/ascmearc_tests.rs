@@ -370,3 +370,38 @@ fn the_legend_names_places_and_refuses_what_would_give_a_hidden_one_away() {
         assert!(error.contains(says), "{line}: {error}");
     }
 }
+
+/// The Ascmearc's deepest floor is danger 19 (Fyrdelf 12): every roster type up to one level
+/// past it (met out of depth) lives in some population of the campaign, so the generic list,
+/// the union of them, holds it too (#531). Left out on purpose: people, keepers, and wildlife
+/// no draw makes, uniques the design places, animated objects (their own series places them),
+/// and the woodland fey and the green hag, who have no home here yet.
+#[test]
+fn every_roster_type_within_the_ascmearcs_depth_lives_in_a_population() {
+    const DEEPEST: u8 = 19;
+    const UNPLACED: [&str; 4] = ["blink_dog", "dryad", "green_hag", "deer"];
+    let (_, _, spawning) = CONTENT.spawning("fyrdelf:1").expect("a danger");
+    let generic: BTreeSet<&str> = (spawning.generic.iter())
+        .map(|c| CONTENT.creature(*c).id.as_str())
+        .collect();
+    let mut missing = Vec::new();
+    for (i, def) in CONTENT.creature_defs().iter().enumerate() {
+        let id = crate::content::CreatureId(i as u16);
+        let shared_or_ours = matches!(def.campaign.as_deref(), None | Some("ascmearc"));
+        let drawable = def.id != "player"
+            && !def.unique
+            && !CONTENT.has_tag(id, "animated")
+            && !["peaceful", "merchants"]
+                .iter()
+                .any(|f| def.faction == CONTENT.factions().id(f))
+            && !UNPLACED.contains(&def.id.as_str());
+        if shared_or_ours
+            && drawable
+            && def.level <= DEEPEST + 1
+            && !generic.contains(def.id.as_str())
+        {
+            missing.push(def.id.clone());
+        }
+    }
+    assert!(missing.is_empty(), "in no population: {missing:?}");
+}

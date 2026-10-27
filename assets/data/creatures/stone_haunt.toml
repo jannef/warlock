@@ -1,7 +1,7 @@
 # Incorporeal creatures (#381; spec §8 "Incorporeal creatures"). A shade bound to the masonry of
 # old barrows and crypts: it drifts through walls and closed doors and strikes from inside the
-# stone, where blows hardly find it. Silent, bloodless, and it leaves nothing behind. No level
-# places it yet: the undead roster decides where it haunts.
+# stone, where blows hardly find it. Silent, bloodless, and it leaves nothing behind. It haunts
+# Fennmynster's stones (#531).
 [[creature]]
 id = "stone_haunt"
 level = 3

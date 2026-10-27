@@ -32,6 +32,12 @@ population = [
     "mud_golem", "cult_priest", "darkling", "marsh_troll", "bog_body", "wraith", "fen_ghoul",
     "bog_hag",
     "animated_candlestick", "animated_book", "animated_lantern", "animated_rug",
+    # The rosters placed (#531): more fey of the damp (the redcap, level 12, only out of depth),
+    # the motes and the lesser ice elemental of the cold water, and the minster's dead in their
+    # stones and crypts: the stone haunt, the pale drinker, and the mummy.
+    "sprite", "quickling", "satyr", "redcap",
+    "water_mote", "frost_mote", "lesser_ice_elemental",
+    "stone_haunt", "pale_drinker", "mummy",
 ]
 # How many: the default, 35 a thousand walkable cells, 25 to 80 (a cellar floor of about 350
 # cells gets the least, 25).
