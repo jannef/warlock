@@ -3,7 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  Your athletics improves. (×6)
- You learn Sun-blessed.
+ You learn Long strider.
 
 
 
@@ -41,4 +41,4 @@ expression: "render(case, content.clone())"
 
 
 
- The Hub  ·  HP 28/28  ·  MP 4/4  ·  Lv 3  ·  08:00  ·  11 Darkening, Year 1444          ? controls
+ The Hub  ·  HP 28/28  ·  MP 4/4  ·  Sta 10/10  ·  Lv 3  ·  08:00  ·  11 Darkening       ? controls

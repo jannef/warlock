@@ -172,6 +172,13 @@ name = "Spells and caster level"
 id = "resources"
 name = "Resources"
 
+# Stamina (#560, the combat progression design §4.5): the pool weapon actives pay from; the
+# fighting classes' Trained wind grants it, and Deep lungs, Steady breathing, and Second breath
+# change it.
+[[system]]
+id = "stamina"
+name = "Stamina"
+
 [[system]]
 id = "status"
 name = "Status effects"

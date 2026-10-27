@@ -211,7 +211,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   advance time.
 - **Objects** (M11) lie in piles on cells, the top first: the map shows the top object's glyph
   (§4.2), and dropped objects go on top. Stepping onto a pile says what lies there: `You see here
-  a dagger.` for one stack, `There are several objects here.` for more. Look mode names what lies
+  a dagger.` for one stack, `There are several objects here.` for more. A special feature of the
+  ground (terrain with `announce`: an altar, a faint rune) is named first, once each time the
+  player arrives on it, however they came (a step, stairs, a fall, a teleport, the start of a
+  run): `There is an altar here.`, with the terrain's look-mode description after if it has one;
+  waiting, resting, or searching there says nothing more. Look mode names what lies
   on a cell, seen or remembered: `a dagger`, `a dagger and 12 arrows`, up to three stacks, then a
   count (`17 objects`). A stack is some number of one object: stackable objects (coins, arrows,
   potions) join a stack of the same object wherever they go; any other object is a stack of one.
