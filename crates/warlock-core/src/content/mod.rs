@@ -75,11 +75,11 @@ mod room_burden_tests;
 #[cfg(test)]
 mod room_collapse_tests;
 mod room_effect;
+#[cfg(test)]
+mod room_homes_tests;
 mod room_lore;
 #[cfg(test)]
 mod room_lore_tests;
-#[cfg(test)]
-mod room_homes_tests;
 #[cfg(test)]
 mod room_mirrors_tests;
 mod room_shrine;
