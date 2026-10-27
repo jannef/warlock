@@ -168,6 +168,7 @@ mod sign_picks;
 mod skill_roll;
 mod spawn;
 mod spell;
+mod spell_scale;
 mod stars;
 mod stat_training;
 mod status;

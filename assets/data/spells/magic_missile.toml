@@ -19,3 +19,6 @@ effect = "arcane_bolt"
 noun = "magic missile"
 verb = "strikes"
 noise = { sound = "chanting", loudness = 30 }
+
+[spell.scales]
+damage = { intelligence = 10, willpower = 5 }

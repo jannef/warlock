@@ -95,6 +95,7 @@ mod sky;
 mod slot;
 mod spell;
 mod spell_def;
+mod spell_scales;
 mod stance;
 mod stat_training;
 mod status;
@@ -224,6 +225,7 @@ pub use spell_def::{
     MAX_CASTS, MAX_CONE, MAX_DICE, MAX_PER_LEVELS, MAX_REACH, Ratio, Resolution, School, Shape,
     SpellData, SpellDice, SpellEffect, SpellId, SpellLook, SpellPurpose, SpellRules, TIERS,
 };
+pub use spell_scales::{MAX_SCALE_WEIGHT, SpellScales, Weights};
 pub use stance::{CombatStance, StanceDef, Stances, percent_of};
 pub use stat_training::{StatRule, StatTraining, StatUse};
 pub use status::{

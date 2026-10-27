@@ -10,3 +10,6 @@ shape = "touch"
 resolution = "touch"
 casts = 2
 effect = { heal = { dice = "2d6" } }
+
+[spell.scales]
+damage = { willpower = 15 }
