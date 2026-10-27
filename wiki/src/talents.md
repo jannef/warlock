@@ -32,7 +32,7 @@ Should there be nothing you can take (a run with no talents, or every talent you
 already learned), the pick is simply lost, so a level never waits for the impossible.
 
 The **level-up screen** opens by itself when a level comes. It walks the level's choices in
-order: the [skill rolls](skills.md) first, then a bonus talent, then the level's talent, listing
+order: the [skill rolls](skills.md) first (each skill with the dice a roll on it adds), then a bonus talent, then the level's talent, listing
 only the talents you may take now, by tree. A talent with a choice (Weapon focus, Apprentice)
 asks for it next. The screen can't be closed until everything is chosen. Two levels at once are
 one sequence, the lower level's choices first.

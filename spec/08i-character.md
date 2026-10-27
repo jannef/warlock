@@ -402,7 +402,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     from the soft cap (`soft_cap`, 100) on, and **spends** `spend` (50) percent of the skill's
     marks rounded up (50 → 25 → 12 → 6 → 3), so the next roll on it is smaller. Rolls draw from
     the run's **levels stream** (`WorldState::levels_rng`), never the gameplay or training
-    stream. Said: "Your stealth improves." (never the die or the marks). The dev `levelup:auto`
+    stream. Said: "Your stealth improves." (never the number rolled). The level-up screen shows
+    each skill's dice before the choice, with the marks and what set them, and where a level's
+    rolls come from (the owner, 2026-10-27, #543; §6 "Level-up"); one function computes each for
+    the rule and the screen (`world::skill_roll`, `world::roll_count`). The dev `levelup:auto`
     spends every roll on the first trained skill.
   - **Active uses**: skills get no keys of their own. Racial, class, skill, and style abilities
     are chosen from one abilities menu (§6 "Abilities", #156), unlike ADOM: each trained skill

@@ -101,8 +101,8 @@ use crate::weapon_skills::WeaponSkills;
 use crate::weather::{self, Weather};
 use crate::world::mirrors::image_id;
 use crate::world::{
-    Actor, ActorId, ActorKind, Death, Due, LevelState, Shop, WorldState, count_of, favour, part_of,
-    unpaid_parts,
+    self, Actor, ActorId, ActorKind, Death, Due, LevelState, RollCount, Shop, SkillRoll,
+    WorldState, count_of, favour, part_of, unpaid_parts,
 };
 use serde::Serialize;
 
@@ -1528,6 +1528,24 @@ impl<'a> PerceptionView<'a> {
     /// how many talent picks are left. Nothing else may be done until they are made.
     pub fn due(&self) -> Option<Due> {
         self.progress.due.first().copied()
+    }
+
+    /// Where a level's skill rolls come from now (spec §8 "Skills"): the level-up screen names
+    /// it (the owner's call: numbers on that screen).
+    pub fn roll_count(&self) -> RollCount {
+        world::roll_count(self.content, self.player, self.character)
+    }
+
+    /// What a level-up roll on trained skill `skill` would be: the dice and what set them (the
+    /// level-up screen shows them); `None` for a skill the player is not trained in.
+    pub fn skill_roll(&self, skill: SkillId) -> Option<SkillRoll> {
+        let trained = self.player.skills.get(skill)?;
+        Some(world::skill_roll(
+            self.content,
+            self.character,
+            skill,
+            trained,
+        ))
     }
 
     /// Every level's choices still due, the lowest level's first (several levels gained in one

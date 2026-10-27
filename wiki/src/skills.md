@@ -107,6 +107,12 @@ gains 1. Past 100 a roll adds half its result, rounded up. The game says "Your s
 - Any **other skill your class trains**, or a skill **your race trains**, adds 1 to the roll.
   Both stack: a halfling thief's stealth is known for and racial, one step up and +1.
 
+The level-up screen shows these numbers before you choose: beside each skill the dice a roll on
+it adds (`1d3`, `+2`, `1d5+1`; `(1d3)/2` past 100), and for the selected skill how they came
+about (`Rolls 1d5+1: practice (20 marks) gives 1d5, +1 as your class trains it.`), with a line
+saying where your rolls come from (`4 skill rolls a level: class 3, race 1`). The roll itself
+is thrown only when you choose.
+
 {{#include generated/skill-ladder.md}}
 
 How many rolls a level gives: your class's, plus your race's, plus your Intelligence's.

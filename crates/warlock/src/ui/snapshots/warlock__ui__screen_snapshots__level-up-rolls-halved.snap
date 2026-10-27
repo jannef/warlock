@@ -1,0 +1,29 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ You gain 600000 experience (dev). You feel more experienced. Welcome to level
+ 37. You gain Armour drill. You gain Weapon mastery.
+
+
+  ┌─ Level 24 · Skill rolls 3 · Talent 1 ────────────────────────────────────┐
+  │                                                                          │
+  │ Skills                                                                   │
+  │ > a  Athletics   139  ────  (1d3)/2                                      │
+  │   b  Balance       9  ────  +2                                           │
+  │   c  Intimidate    8  ────  +2                                           │
+  │   d  Swim         18  ────  +2                                           │
+  │                                                                          │
+  │ 3 skill rolls a level: class 2, race 1                                   │
+  │                                                                          │
+  │ Rolls 1d3: practice (no marks) gives +1, one die up to 1d3 as your       │
+  │ class's own skill; from 100 on the skill rises by half, rounded up.      │
+  │ Running, jumping, climbing, and kicking: strength put to use.            │
+  │                                                                          │
+  │                                                                          │
+  │ a-d or Enter roll   Levels 25 to 37 next                                 │
+  └──────────────────────────────────────────────────────────────────────────┘
+
+
+
+ The Hub  ·  HP 79/79  ·  MP 38/38  ·  Lv 37  ·  08:00               ? controls

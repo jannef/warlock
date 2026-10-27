@@ -357,6 +357,23 @@ const CASES: &[Case] = &[
         size: (100, 40),
         ..BASE
     },
+    // The skill-roll step at the smallest console (#543): a thief's search marks set a
+    // bigger die, and each skill shows the dice a roll on it adds.
+    Case {
+        name: "level-up-rolls-marks",
+        character: Some("human,female,thief"),
+        actions: "search:100*2 xp:691",
+        size: (80, 25),
+        ..BASE
+    },
+    // A skill past the soft cap rises by half its roll: `(dice)/2`.
+    Case {
+        name: "level-up-rolls-halved",
+        character: Some("human,male,warrior"),
+        actions: "xp:300000 levelup:auto xp:600000",
+        size: (80, 25),
+        ..BASE
+    },
     Case {
         name: "level-up-talent",
         character: Some("human,male,warrior"),

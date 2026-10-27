@@ -105,7 +105,10 @@ pub enum Layer {
     /// age (ground truth). **Dev-only.**
     Actors,
     /// Not a map: the player's progression (spec §8 "Talents"): the choices a level still asks
-    /// for (`due level 3: 3 skill rolls, 1 talent`), the talents they may take now by id with the choices
+    /// for (`due level 3: 3 skill rolls, 1 talent`), where a level's skill rolls come from
+    /// (`rolls a level 3 (class 2, race 1, intelligence 0, talents 0)`) and the dice a roll on
+    /// each trained skill adds (`roll dice athletics 1d3, balance +2`; `/2` past the soft cap),
+    /// the talents they may take now by id with the choices
     /// each may be taken for (`takeable healthy, weapon_focus:{bows,slings}`), and the creature
     /// types whose first kill has paid (`discovered kobold, rat`), the animal types a
     /// Beast-friend attacked (`empathy broken rat`), and the stat training marks the player holds
@@ -774,6 +777,30 @@ fn progress_rows(world: &World) -> Vec<String> {
             format!("due level {}: {}", due.level, parts.join(", "))
         })
         .collect();
+    // What the level-up screen shows of skill rolls (#543): where a level's come from, and
+    // the dice a roll on each trained skill adds (`/2`: halved past the soft cap).
+    let count = view.roll_count();
+    if count.total() > 0 {
+        rows.push(format!(
+            "rolls a level {} (class {}, race {}, intelligence {}, talents {})",
+            count.total(),
+            count.class,
+            count.race,
+            count.intelligence,
+            count.talents
+        ));
+    }
+    let dice: Vec<String> = (view.own_skills().iter())
+        .filter_map(|s| {
+            let roll = view.skill_roll(s.skill)?;
+            let half = if roll.halved { "/2" } else { "" };
+            let id = &content.skill(s.skill).id;
+            Some(format!("{id} {}{half}", roll.dice()))
+        })
+        .collect();
+    if !dice.is_empty() {
+        rows.push(format!("roll dice {}", dice.join(", ")));
+    }
     let takeable: Vec<String> = (view.talents().iter())
         .filter(|t| !t.openings.is_empty())
         .map(|t| {

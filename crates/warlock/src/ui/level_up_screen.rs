@@ -12,7 +12,13 @@
 //! **Nothing is banked**: while a choice is due the screen cannot be left. Esc only says what is
 //! left to choose; when the last choice is made it is gone. Several levels gained in one turn
 //! are one sequence: the frame names the level whose choices are shown, and the levels after it.
-//! Words only: never a die, a mark, or a chance. It reads the perception snapshot.
+//!
+//! **Numbers on the skill-roll step** (the owner, 2026-10-27; #543): each skill shows the dice a
+//! roll on it adds (`2d4+1`; `(1d5+1)/2` from the soft cap on), the description below explains
+//! them (the marks, the die they give, the class's step, the +1 and why), and a line names where
+//! the level's rolls come from (class, race, Intelligence, talents). The dice are the rule's own
+//! (`warlock_core::world::skill_roll`), never pre-rolled: the roll is drawn when the skill is
+//! chosen. The talent steps stay words. It reads the perception snapshot.
 
 use super::character_screen::fit_joined;
 use super::menu::{Hints, Nav, Panel, Press};
@@ -25,12 +31,16 @@ use crate::render::console::Console;
 use warlock_core::Action;
 use warlock_core::content::TreeId;
 use warlock_core::perception::PerceptionView;
+use warlock_core::world::{RollBonus, RollCount, SkillRoll};
 
 /// Width of the panel.
 const WIDTH: i32 = 76;
 /// Rows besides the list: the frame, a margin, a gap, the description (three lines), a gap, the
 /// footer, the frame.
 const EXTRA: i32 = 9;
+/// What the skill-roll step adds: the line naming where the rolls came from and its gap, and a
+/// fourth line of description (the dice explained before the skill's own text).
+const ROLLS_EXTRA: i32 = 3;
 
 /// What a step chooses.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -72,6 +82,9 @@ pub struct LevelUpScreen {
     step: Step,
     /// What is left to choose, in the words Esc says.
     left: String,
+    /// On the skill-roll step: where a level's rolls come from ("Each level gives you 3 skill
+    /// rolls: 2 from your class, 1 from Intelligence.").
+    sources: Option<String>,
     entries: PagedList<Entry, Group>,
     /// A talent's choices, listed in the talents' place: its name and the list.
     choosing: Option<(String, PagedList<Entry, Group>)>,
@@ -88,6 +101,7 @@ impl LevelUpScreen {
             after: None,
             step: Step::Talent,
             left: String::new(),
+            sources: None,
             entries: PagedList::empty(),
             choosing: None,
             notice: None,
@@ -122,6 +136,8 @@ impl LevelUpScreen {
         screen.after = match later.len() {
             0 => None,
             1 => Some(format!("Level {} next", later[0])),
+            // Many levels at once: the first and the last, so the footer fits.
+            n if n > 3 => Some(format!("Levels {} to {} next", later[0], later[n - 1])),
             _ => Some(format!("Levels {} next", later.join(", "))),
         };
         screen.left = match screen.step {
@@ -129,15 +145,25 @@ impl LevelUpScreen {
             Step::Rolls => format!("You have {} skill rolls to spend.", due.rolls),
             Step::Bonus | Step::Talent => "You must choose a talent first.".into(),
         };
+        if screen.step == Step::Rolls {
+            screen.sources = roll_sources(view.roll_count());
+        }
         let book = content.talents();
         let items: Vec<(Group, Entry)> = match screen.step {
             Step::Rolls => (view.own_skills().iter())
                 .map(|s| {
                     let def = content.skill(s.skill);
+                    let roll = view.skill_roll(s.skill);
+                    let dice = roll.map_or_else(String::new, |r| roll_dice(&r));
+                    let explained = roll.map_or_else(String::new, |r| {
+                        explain_roll(&r, content.skill_rolls().soft_cap)
+                    });
                     let entry = Entry {
                         name: def.name.clone(),
-                        detail: format!("{:>3}  {}", s.value, meter(s.progress)),
-                        description: def.description.clone(),
+                        detail: format!("{:>3}  {}  {dice}", s.value, meter(s.progress)),
+                        description: format!("{explained} {}", def.description)
+                            .trim()
+                            .to_string(),
                         action: Some(Action::Advance(def.id.clone())),
                         choices: Vec::new(),
                     };
@@ -272,10 +298,18 @@ impl LevelUpScreen {
         ScreenAction::Stay
     }
 
+    /// Rows besides the list ([`EXTRA`], and [`ROLLS_EXTRA`] on the skill-roll step).
+    fn extra(&self) -> i32 {
+        match self.step {
+            Step::Rolls => EXTRA + ROLLS_EXTRA,
+            _ => EXTRA,
+        }
+    }
+
     /// Lays the list out for a console of `cols` by `rows` (drawing calls it, and the stack
     /// before a press, so a letter names what is drawn).
     pub fn fit(&self, _cols: u32, rows: u32) {
-        let room = (rows as i32 - EXTRA).max(1) as usize;
+        let room = (rows as i32 - self.extra()).max(1) as usize;
         self.entries.set_room(room);
         if let Some((_, list)) = &self.choosing {
             list.set_room(room);
@@ -286,7 +320,8 @@ impl LevelUpScreen {
         self.fit(console.cols(), console.rows());
         let list = self.list();
         let count = list.tallest().max(1) as i32;
-        let panel = Panel::new(console, &self.title, WIDTH, count + EXTRA);
+        let extra = self.extra();
+        let panel = Panel::new(console, &self.title, WIDTH, count + extra);
         list.draw_label(console, &panel);
         let (x, top) = (panel.inner_x(), panel.y + 2);
         let fits = |y: i32| y < panel.y + panel.h - 2;
@@ -295,7 +330,7 @@ impl LevelUpScreen {
         }
         let name_w = (list.iter().map(|e| e.name.chars().count()).max()).unwrap_or(0) as i32;
         let cursor = list.cursor();
-        let visible = (panel.h - EXTRA).max(1) as usize;
+        let visible = (panel.h - extra).max(1) as usize;
         for (row, y) in list.rows().into_iter().take(visible).zip(top..) {
             if !fits(y) {
                 break;
@@ -338,7 +373,18 @@ impl LevelUpScreen {
         };
         let words: Vec<String> = text.split(' ').map(String::from).collect();
         let lines = fit_joined(&words, " ", panel.inner_w());
-        for (line, y) in lines.iter().take(3).zip(panel.y + panel.h - 6..) {
+        // The skill-roll step: where the rolls came from, and a fourth line of description.
+        let (shown, first) = match self.step {
+            Step::Rolls => (4, panel.y + panel.h - 7),
+            _ => (3, panel.y + panel.h - 6),
+        };
+        if let Some(sources) = &self.sources {
+            let y = first - 2;
+            if fits(y) && y >= top + count {
+                console.print(x, y, sources, TEXT);
+            }
+        }
+        for (line, y) in lines.iter().take(shown).zip(first..) {
             if fits(y) && y >= top + count {
                 console.print(x, y, line, color);
             }
@@ -373,6 +419,67 @@ impl LevelUpScreen {
         parts.retain(|p| !p.is_empty());
         parts.join("   ")
     }
+}
+
+/// The line naming where a level's skill rolls come from: "3 skill rolls a level: class 2,
+/// Intelligence 1"; `None` when a level gives none.
+fn roll_sources(count: RollCount) -> Option<String> {
+    let total = count.total();
+    if total == 0 {
+        return None;
+    }
+    let parts: Vec<String> = [
+        ("class", count.class),
+        ("race", count.race),
+        ("Intelligence", count.intelligence),
+        ("talents", count.talents),
+    ]
+    .into_iter()
+    .filter(|&(_, n)| n > 0)
+    .map(|(from, n)| format!("{from} {n}"))
+    .collect();
+    let rolls = if total == 1 {
+        "skill roll"
+    } else {
+        "skill rolls"
+    };
+    Some(format!("{total} {rolls} a level: {}", parts.join(", ")))
+}
+
+/// What a roll adds to the skill, as dice: `2d4+1`, or `(1d5+1)/2` from the soft cap on.
+fn roll_dice(roll: &SkillRoll) -> String {
+    let dice = roll.dice();
+    match roll.halved {
+        true => format!("({dice})/2"),
+        false => dice.to_string(),
+    }
+}
+
+/// The dice explained, before the skill's own description: "Rolls 2d4+1: practice (25 marks)
+/// gives 1d5, one die up to 2d4 as your class's own skill, +1 as your race trains it."
+fn explain_roll(roll: &SkillRoll, soft_cap: u16) -> String {
+    let marks = match roll.marks {
+        0 => "no marks".to_string(),
+        1 => "1 mark".to_string(),
+        n => format!("{n} marks"),
+    };
+    let mut text = format!(
+        "Rolls {}: practice ({marks}) gives {}",
+        roll.dice(),
+        roll.practice
+    );
+    if roll.known {
+        text += &format!(", one die up to {} as your class's own skill", roll.die);
+    }
+    match roll.bonus {
+        Some(RollBonus::Class) => text += ", +1 as your class trains it",
+        Some(RollBonus::Race) => text += ", +1 as your race trains it",
+        None => {}
+    }
+    if roll.halved {
+        text += &format!("; from {soft_cap} on the skill rises by half, rounded up");
+    }
+    text + "."
 }
 
 #[cfg(test)]
