@@ -3,6 +3,7 @@
 //! level's special rooms (spec §7 "Special rooms") and whether the player has been inside each;
 //! its shops (spec §7 "Shops").
 
+use super::curse::Rising;
 use super::shop::Shop;
 use super::spawn::Spawner;
 use crate::blood::{Spatter, Stain};
@@ -99,6 +100,10 @@ pub struct LevelState {
     /// file's `effect`, or a generated level's rare draw).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) pervading: Option<RoomEffectId>,
+    /// The dead due to rise from their corpses (spec §7 "Special rooms": a cursed room;
+    /// `world/curse.rs`), in the order they died.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub(crate) risings: Vec<Rising>,
     /// Traps, by position (spec §8 "Traps"), hidden or known; a spent one is gone.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
     pub(crate) traps: BTreeMap<Pos, Trap>,
@@ -163,6 +168,7 @@ impl LevelState {
             dug: BTreeMap::new(),
             rooms: template.rooms.clone(),
             pervading: template.pervading,
+            risings: Vec::new(),
             shops: Vec::new(),
             traps: template.traps.clone(),
             trap_memory: BTreeMap::new(),
@@ -376,6 +382,7 @@ impl LevelState {
             && (self.ice.iter()).all(|(p, i)| water(&i.water) && self.terrain.in_bounds(*p))
             && (self.shops.iter()).all(|s| s.is_valid_for(content, self.width(), self.height()))
             && (self.hidden.iter()).all(|(p, h)| known(&h.terrain) && self.terrain.in_bounds(*p))
+            && (self.risings.iter()).all(|r| r.is_valid_for(content))
     }
 }
 

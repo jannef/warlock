@@ -192,7 +192,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   said when the score rises into the band, every band but wicked; `fall`, said when it falls into
   it, every band but saintly), `[shift]` (what each deed is worth before it diminishes, −1000 to
   1000: `kill_peaceful` and `kill_hostile` by the victim's alignment, `{ good, neutral, evil }`;
-  `kill_beast`, `attack_shopkeeper`, `theft`, `pay_debt`, `eat_kin`), and `[shops] favour` (how
+  `kill_beast`, `attack_shopkeeper`, `theft`, `pay_debt`, `eat_kin`, `consecrate` (20: the
+  class ability Consecrate done, §7 "Special rooms"; default 0)), and `[shops] favour` (how
   much better a good shopkeeper's prices are for each band, in percent, −50 to 50; a band not
   listed 0).
 - **Skills** (`data/skills.toml`, optional; without it nobody is trained in anything, and any

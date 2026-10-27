@@ -179,8 +179,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   to the level's inside, −40 to 40, default 0; below), `burden` (percent of everyone's
   carrying limit inside, 10 to 1000, default 100; below), `mirrors` (`{ images = N }`, 1
   to 8: a hall of mirrors' reflections, below), `warp` (percent chance a step inside moves
-  the stepper elsewhere, 0 to 100, default 0; below), and `collapse` (`{ chance, damage }`: a
-  collapsed floor, below; needs `needs_below`). An effect with a `level_chance` needs its
+  the stepper elsewhere, 0 to 100, default 0; below), `collapse` (`{ chance, damage }`: a
+  collapsed floor, below; needs `needs_below`), `rise` (`{ faction, after }`: a cursed
+  room's risings, below; needs `needs_danger`), and `unholy` (Consecrate lifts it, below). An
+  effect with a `level_chance` needs its
   `pervade` line and is neither `shunned`, nor lays a `floor`, nor is a den, nor holds
   `mirrors`, nor collapses.
   - **The effects** (weights in brackets): a *shadowed room* (10) keeps 30 % of the light ("The
@@ -214,7 +216,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     entering); a *collapsed floor* (3, #420; only
     on a level with another below it) has a floor of cracked stone that may give way under the
     player ("The floor ahead is cracked and sagging." when glimpsed, "The floor creaks under your
-    weight." on entering; below). Blood washing
+    weight." on entering; below); a *cursed room* (6, #408; only on a level with a danger; unholy, as is the
+    draining room) raises the dead killed inside (below; "A cold draught smells of the grave."
+    when glimpsed, "The air is cold and the dead are near." on entering) and covers a whole
+    level with `level_chance` 5 ("The dead do not rest on this level."). Fennmynster favours it
+    at 15. Blood washing
     away in a flooded room waits for blood (#127).
   - **Hot and cold rooms** (`temperature`, #404): a room sets its cells' temperature and
     nothing else: no status, no damage, nothing done to items or food. The temperature at a cell
@@ -288,6 +294,37 @@ developer notes (CLAUDE.md, `docs/dev/`).
     stays as it was. Creatures never fall (no draw for them). Nothing new is saved: the fall
     is a level change like the stairs'. Light tread (§8 "Talents") never falls. It never
     covers a whole level.
+  - **Cursed rooms** (`rise = { faction = "undead", after = "2m" }`, #408; `world/curse.rs`):
+    a creature that dies on a cell whose effects raise the dead (the room's, else the whole
+    level's), is not of the rise's `faction`, and leaves a corpse is marked to rise, whoever
+    killed it (a creature's kill too; never the player, who leaves no corpse to rise): at the
+    death one gameplay draw picks what it rises as, alike among the types of the faction that
+    are not unique and are shared or the run's campaign's own, of the dead's level, else of the
+    nearest level that has one (the lower on a tie; with a single candidate nothing is drawn).
+    The rising (`LevelState::risings`: when, where, what died, what it rises as; saved, hashed,
+    left out while empty) is due `after` the death. At the end of every turn, after the
+    spawns, the risings due on the **current** level rise in the order they died
+    (`World::rise_tick`): if a corpse of the dead's type still lies where it died, one is taken
+    and the risen creature stands there, or on the nearest free cell, carrying nothing (what
+    the dead carried lies there already) and giving its own kill experience; else nothing
+    happens. So a corpse picked up, eaten, or destroyed meanwhile never rises, and one carried
+    out and dropped is not cursed again. A level the player is not on stays frozen: what fell
+    due while they were away rises on their first turn back. The player is told "The goblin's
+    corpse twitches." at a death they see and "The goblin's corpse rises as a zombie!" at a
+    rising they see (it stops a rest, as any newcomer does); unseen, the risen groans (a voice
+    at its cell). Grave warden (§8 "Talents"): what the player kills never rises. The `actors`
+    dev layer lists the pending risings (`rising rat at (11, 2) as skeleton at 08:15:00`).
+  - **Consecrate** (`unholy`, #408; `world/consecrate.rs`; the priest's at 9 and the paladin's
+    at 12, §8 "Class abilities"): standing inside a special room whose effect is unholy (cursed,
+    draining), or anywhere on a level an unholy effect covers whole, the player spends 15 mana
+    and prays for a minute, turn after turn as a rest goes (anything that stops a rest stops it;
+    an interrupted prayer lifts nothing, its mana and time spent). Done, the room leaves the
+    level's special rooms for good, a plain room (look mode no longer names it), or the level's
+    effect is gone ("A stillness settles over the room: it is consecrated.", "... over the whole
+    level ..."); the room's first, when the player stands in one and the level is covered too.
+    Risings no longer under a curse are dropped, and it is a good deed (`consecrate` in
+    `data/alignment.toml`, 20). Elsewhere it is refused with no time ("There is nothing here
+    to consecrate.").
   - **A status while inside** (`status`, #403): as time passes, at the start of each stretch of
     it (`World::pass_time`: so after every action, the player's and each creature's, at every
     turn of a rest or another long action, and through a creature's coarse turns while the
@@ -399,5 +436,5 @@ developer notes (CLAUDE.md, `docs/dev/`).
     healing and mana half again more), Anchored mind (a room's or a level's Ebbing
     never takes them; #403), Hush-foot (shadow; sleepers need twice the noise to wake from
     anything the player does; #405), Mirror-wise (a hall of mirrors' images within 2 cells
-    seen for what they are; #419), and Light tread (a collapsed floor never gives way under
-    them; #420).
+    seen for what they are; #419), Light tread (a collapsed floor never gives way under
+    them; #420), and Grave warden (guard; nothing the player kills rises; #408). The class ability Consecrate (above) lifts an unholy room or level.
