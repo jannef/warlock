@@ -184,7 +184,11 @@ fn services(content: &Content, actor: &SeenActor) -> String {
 /// read after its name and after how hurt it looks: (" of silver", ", rocking"); nothing for any
 /// other creature.
 fn made_of(content: &Content, actor: &SeenActor) -> (String, String) {
-    let Some(shape) = actor.shape else {
+    // A household thing's body; a blade's weapon is told by the gear line instead.
+    let Some(shape) = actor
+        .shape
+        .filter(|_| content.animated_body(actor.creature).is_some())
+    else {
         return Default::default();
     };
     let moves = (content.animated_body(actor.creature))
@@ -681,6 +685,35 @@ map = '''
             describe(&view, Pos::new(4, 1), true),
             "An animated rug of wool (hostile, unhurt), rippling, on stone floor."
         );
+    }
+
+    #[test]
+    fn a_blade_is_seen_by_the_weapon_it_wields() {
+        let hall = r##"
+name = "Hall"
+ambient = [255, 255, 255, 0]
+map = '''
+#######
+#.b@c.#
+#######
+'''
+[legend]
+"@" = { terrain = "floor", spawn = "player" }
+"b" = { terrain = "floor", creature = "animated_blade_8" }
+"c" = { terrain = "floor", creature = "animated_blade_19" }
+"##;
+        let mut files = warlock_core::content::ContentFiles::builtin();
+        files.insert("levels/hall.toml", hall);
+        files.insert(
+            "scenarios/hall.toml",
+            "name = \"Hall\"\nstart_level = \"hall\"\n",
+        );
+        let content = Arc::new(Content::load(&files).expect("content"));
+        let w = World::new(content, "hall", None).expect("hall");
+        let view = w.perception();
+        // No material word: the gear line names the weapon as anyone's, unidentified.
+        let said = [Pos::new(2, 1), Pos::new(4, 1)].map(|p| describe(&view, p, true));
+        insta::assert_snapshot!(said.join("\n"));
     }
 
     #[test]
