@@ -479,7 +479,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   they did not see it), the status effect that did (its `death` line: "Bled to death"; a
   disease kills by Diseased: "Died of disease"), or what, when neither did (§8 "Hunger":
   "Starved to death", "Choked to death on a food ration"; §8 "Traps": "Killed by a fireball
-  trap"), where
+  trap"; §7 "Special rooms": "Fell through a collapsed floor"), where
   (the level's name), when (the date and time), and after how many turns, and the level they
   had reached ("You had reached level 3."). It takes every key press; Enter or Esc returns to
   the main menu (Continue only for another saved character: nothing of this one is left to
