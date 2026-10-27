@@ -7,34 +7,34 @@ expression: "render(case, content.clone())"
               │ Chance                                                               │
               │   a  Random                                                          │
               │ Vigour                                                               │
-              │ > b *Deep lungs       Your stamina holds a good deal more.           │
-              │   c  Healthy          Your hit points come back a quarter faster.    │
+              │ > b *Deep lungs               Your stamina holds a good deal more.   │
+              │   c  Hard training            You drill every day: your stats grow … │
+              │   d  Healthy                  Your hit points come back a quarter f… │
               │ Might                                                                │
-              │   d  Mighty kick      Your kicks land like hammers: they hurt creat… │
-              │   e  Second breath    Every kill of yours gives you back a little s… │
+              │   e  Mighty kick              Your kicks land like hammers: they hu… │
+              │   f  Second breath            Every kill of yours gives you back a … │
               │ Finesse                                                              │
-              │   f  Dodge            You slip aside from blows: Dodge +1 to your D… │
-              │   g  Light step       You tread lightly: a trap you step onto may n… │
-              │   h  Nimble           A load slows your feet less than most: your b… │
-              │   i  Opportunist      A foe that turns from you pays for it: one th… │
+              │   g  Dodge                    You slip aside from blows: Dodge +1 t… │
+              │   h  Light step               You tread lightly: a trap you step on… │
+              │   i  Nimble                   A load slows your feet less than most… │
+              │   j  Opportunist              A foe that turns from you pays for it… │
               │ Weaponcraft                                                          │
-              │   j  Far shot         Your shots fly 2 cells farther, and what you … │
-              │   k  Sworn foe        You have sworn yourself against one kind of c… │
-              │   l  Unbinder         You strike at the binding, not the thing: you… │
-              │   m  Wand mastery     You draw more from a wand than its maker put … │
-              │   n  Weapon focus     You have drilled with one kind of weapon unti… │
+              │   k  Far shot                 Your shots fly 2 cells farther, and w… │
+              │   l  Sworn foe                You have sworn yourself against one k… │
+              │   m  Unbinder                 You strike at the binding, not the th… │
+              │   n  Wand mastery             You draw more from a wand than its ma… │
+              │   o  Weapon focus             You have drilled with one kind of wea… │
               │ Guard                                                                │
-              │   o  Armour training  You move freely in armour: it hampers your De… │
+              │   p  Armour training          You move freely in armour: it hampers… │
               │ Shadow                                                               │
-              │   p  Hush-foot        You move among sleepers as a breath of air: i… │
-              │   q  Keen ears        You hear fainter sounds, fainter still at the… │
-              │   r  Lamplighter      You tend your lantern well: it burns brighter… │
-              │   s  Night eyes       Your eyes grow used to the dark: you see by h… │
-              │   t  Silent feet      Your footsteps are a fifth quieter for each r… │
+              │   q  Hush-foot                You move among sleepers as a breath o… │
+              │   r  Keen ears                You hear fainter sounds, fainter stil… │
+              │   s  Lamplighter              You tend your lantern well: it burns … │
+              │   t  Night eyes               Your eyes grow used to the dark: you … │
+              │   u  Silent feet              Your footsteps are a fifth quieter fo… │
               │ Wayfarer                                                             │
-              │   u  Devout           You pray as one who means it: an altar of you… │
-              │   v  Long strider     Your journeys across the overworld go quicker. │
-              │   w  Pilgrim          You have knelt in many temples: their cures a… │
+              │   v  Devout                   You pray as one who means it: an alta… │
+              │   w  Long strider             Your journeys across the overworld go… │
               │                                                                      │
               │ Your stamina holds a good deal more.                                 │
               │                                                                      │

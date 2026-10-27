@@ -504,6 +504,13 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "a fresh corpse's chance to raise each stat {} (at most 100 %)",
             percent(value)
         ),
+        TalentEffect::DailyFactor { value } => format!(
+            "the daily stat check (06:00) needs {value} × a level's need (when that is less than the usual)"
+        ),
+        TalentEffect::PotionMarksPercent { value } => format!(
+            "the training marks a potion or an elixir gives {}",
+            percent(value)
+        ),
         TalentEffect::XpPercent { value } => format!("experience gained {}", percent(value)),
         TalentEffect::SkillRolls { value } => format!("skill rolls every level {}", signed(value)),
         TalentEffect::ExtraPick { level: 1 } => "one more talent at creation".to_string(),

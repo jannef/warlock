@@ -451,6 +451,7 @@ fn every_talent_of_the_three_trees_loads_with_its_effects() {
     }
     let count = |tree: &str| book.of_tree(book.tree_id(tree).expect("tree")).count();
     // The design's 28, Battle trance and Inner calm (the class resources, R5) among them, and
-    // stamina's Deep lungs and Second breath (#560), and protection's Armour-breaker (#563).
-    assert_eq!(count("vigour") + count("might") + count("finesse"), 31);
+    // stamina's Deep lungs and Second breath (#560), protection's Armour-breaker (#563), and
+    // stat training's Hard training (#562).
+    assert_eq!(count("vigour") + count("might") + count("finesse"), 32);
 }
