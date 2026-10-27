@@ -1561,6 +1561,7 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
             ("frost", 2, Some("2d6"), 14, true),
             ("haste", 3, None, 11, false),
             ("hex_of_weakness", 1, None, 3, true),
+            ("light", 0, None, 1, false),
             ("lightning_bolt", 3, Some("2d6"), 20, false),
             ("magic_missile", 1, Some("1d4"), 3, true),
             ("mend", 0, None, 1, true),

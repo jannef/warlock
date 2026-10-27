@@ -27,8 +27,8 @@ You learn what a kind of scroll is, for good, in one of four ways:
 
 Knowing what a scroll is does not teach you its spell: a scroll you know by name is still only a
 scroll, but once you know it you may study it to learn its spell for good (see
-[Magic](magic.md#learning-spells-from-scrolls)). The scroll of light cannot be read, and is known
-on sight. A shop's price for an unknown scroll is its true price.
+[Magic](magic.md#learning-spells-from-scrolls)). A scroll that cannot be read (a sealed letter) has
+no label and is known on sight. A shop's price for an unknown scroll is its true price.
 
 ## Spell scrolls
 

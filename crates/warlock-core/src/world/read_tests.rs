@@ -5,7 +5,7 @@
 use super::fixture_factions::peaceful_factions;
 use super::*;
 use crate::action::{ReadTarget, SpellShape, parse_actions};
-use crate::content::{Cast, ContentFiles, Reading, TrapEffect};
+use crate::content::{Cast, ContentFiles, Reading, SpellPurpose, TrapEffect};
 use crate::magic::{Affix, LootGrade, Magic, Rarity};
 use crate::replay::Replay;
 
@@ -21,13 +21,18 @@ const PACK: &str = "carry = [\"scroll_of_fireball*3\", \"scroll_of_lightning*2\"
 /// A lit hall of `map` (`@` the player, `D` a dummy, `r` a giant rat), the player with `hp`
 /// hit points beyond their Toughness.
 fn world_with(map: &str, hp: u16) -> World {
+    hall(map, hp, 255)
+}
+
+/// [`world_with`] under white `ambient` light (0: dark).
+fn hall(map: &str, hp: u16, ambient: u16) -> World {
     let mut files = ContentFiles::builtin();
     files.insert("data/factions.toml", &peaceful_factions());
     files.insert("data/creatures/dummy.toml", DUMMY);
     files.insert(
         "levels/hall.toml",
         &format!(
-            "name = \"Hall\"\nambient = [255, 255, 255, 0]\nmap = '''\n{map}'''\n[legend]\n\
+            "name = \"Hall\"\nambient = [{ambient}, {ambient}, {ambient}, 0]\nmap = '''\n{map}'''\n[legend]\n\
              \"@\" = {{ terrain = \"floor\", spawn = \"player\" }}\n\
              \"D\" = {{ terrain = \"floor\", creature = \"dummy\" }}\n\
              \"r\" = {{ terrain = \"floor\", creature = \"rat\" }}\n"
@@ -117,11 +122,115 @@ fn builtin_scrolls_cast_what_the_traps_do() {
         other => panic!("{other:?}"),
     }
     assert_eq!(reading("scroll_of_identify"), Reading::Identify);
-    let light = content.object_id("scroll_of_light").expect("scroll");
+    // The scroll of light casts the Light spell (#589: it had no reading at all).
+    match reading("scroll_of_light") {
+        Reading::Cast(scroll) => assert_eq!(content.spell(scroll.spell).id, "light"),
+        other => panic!("{other:?}"),
+    }
+}
+
+/// Every scroll of the content (#589): an object of the scrolls class named `scroll_of_*` has a
+/// reading, and a reader who aims it (at a creature's cell, or on another stack) reads it: a
+/// turn spent and one scroll used up. Read without the target it needs, it says why.
+#[test]
+fn every_builtin_scroll_can_be_read() {
+    let mut checked = 0;
+    // The dummy beside the reader: within every scroll's reach, touch spells' too.
+    let mut base = world("############\n#@D........#\n#..........#\n############\n");
+    let content = base.content.clone();
+    // Wounded, so a healing scroll has something to heal.
+    let dummy = at(&base, Pos::new(2, 1));
+    base.state.actors.get_mut(&dummy).expect("dummy").hp -= 10;
+    for object in (0..content.object_defs().len()).map(|i| ObjectId(i as u16)) {
+        let def = content.object(object);
+        if content.item_class(def.class).id != "scrolls" || !def.id.starts_with("scroll_of_") {
+            continue;
+        }
+        let reading = (def.read.as_ref()).unwrap_or_else(|| panic!("{} has no reading", def.id));
+        // The fixture's refusals, each with its reason: under a roof, a spell that needs the
+        // open sky; at the peaceful dummy, a hex; on a hale reader, a cure.
+        let refusal = match reading {
+            Reading::Cast(scroll) => {
+                let spell = content.spell(scroll.spell);
+                match spell.kind {
+                    _ if spell.open_sky => Some("open sky"),
+                    SpellPurpose::Hex => Some("means you no harm"),
+                    SpellPurpose::Cleanse => Some("nothing to cure"),
+                    _ => None,
+                }
+            }
+            _ => None,
+        };
+        let mut w = base.clone();
+        let item = w.state.player().inventory.len();
+        w.player_mut().inventory.push(Stack::new(object, 2));
+        let letter = |i: usize| crate::action::position_text(i);
+        // Without a target: read at once (a spell on the reader), or refused with a reason.
+        let bare = w.clone().apply(&Action::Read { item, target: None });
+        if !bare.took_turn {
+            let mut refused = w.clone();
+            refused.apply(&Action::Read { item, target: None });
+            assert!(
+                texts(&refused).len() > texts(&w).len(),
+                "{}: refused without a word",
+                def.id
+            );
+        }
+        let target = match reading {
+            Reading::Identify => format!(":{}", letter(0)),
+            _ if reading.range().is_some() => ":2,1".to_string(),
+            _ => String::new(),
+        };
+        let action = format!("read:{}{target}", letter(item));
+        let had = count(&w, &def.id);
+        let out = run(&mut w, &action);
+        let said = texts(&w).join(" | ");
+        if !out[0].took_turn
+            && let Some(why) = refusal
+        {
+            assert!(said.contains(why), "{action}: {said}");
+            checked += 1;
+            continue;
+        }
+        assert!(out[0].took_turn, "{action} ({}): not read: {said}", def.id);
+        assert_eq!(count(&w, &def.id), had - 1, "{}: one used up", def.id);
+        checked += 1;
+    }
+    assert!(checked > 20, "only {checked} scrolls");
+}
+
+/// The scroll of light (#589): read in the dark, its reader is Lit and sheds a light that goes
+/// where they go, until the status wears off.
+#[test]
+fn the_scroll_of_light_lights_its_reader() {
+    let mut w = hall("##########\n#@.......#\n##########\n", 1000, 0);
+    let light = w.content.object_id("scroll_of_light").expect("scroll");
+    w.player_mut().inventory.push(Stack::one(light));
+    let lit = w.content.status_id("lit").expect("lit");
+    let seen = |w: &World, x: i32| w.perception().light(Pos::new(x, 1));
+    assert_eq!(seen(&w, 3), None, "dark beyond the reader's cell");
+    let out = run(&mut w, "read:e");
+    assert!(out[0].took_turn);
+    assert_eq!(count(&w, "scroll_of_light"), 0);
+    assert!(w.state.player().effects.has(lit));
     assert!(
-        content.object(light).read.is_none(),
-        "nothing to read on it yet"
+        texts(&w)
+            .iter()
+            .any(|t| t == "A pale light gathers about you.")
     );
+    assert!(
+        seen(&w, 3).is_some_and(|l| l.brightness() > 0),
+        "lit around"
+    );
+    run(&mut w, "move:E*3");
+    assert!(
+        seen(&w, 7).is_some_and(|l| l.brightness() > 0),
+        "it goes along"
+    );
+    // Half an hour a degree, three at most: by two hours it is gone, and so is the light.
+    run(&mut w, "rest:2h");
+    assert!(!w.state.player().effects.has(lit));
+    assert_eq!(seen(&w, 8), None, "dark again");
 }
 
 #[test]

@@ -152,7 +152,8 @@ shares.
     `action_at`), as does the aiming mode's `Aim::action`. `TalentEffect::Spell { spell }` holds
     the id string (checked against `data/spells/` at load, resolved in `TalentMods::spells`).
     `Content::spells_by_tier` is the menu's order (tier, then path), `Ability::every`'s too.
-  - **The list** (24 spells): tier 0 Evil eye, Mend (touch heal), Ray of frost (ray,
+  - **The list** (25 spells): tier 0 Evil eye, Light (self buff: Lit, whose `light` the
+    light cache sheds about the caster; #589, the scroll of light's), Mend (touch heal), Ray of frost (ray,
     attack), Spark (bolt, auto); tier 1 Barkskin (buff), Blessing, Burning hands (cone 3),
     Cause wounds (touch, necrotic), Cure wounds (touch heal 2d6), Curse of sloth, Hex of
     weakness, Magic missile (bolt, auto, force, 1d4 to 2d4); tier 2 Arcane bolt, Blight, Frost,

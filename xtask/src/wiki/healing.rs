@@ -205,6 +205,10 @@ fn also(content: &Content, def: &StatusDef) -> String {
             hold.difficulty
         ));
     }
+    if let Some(light) = def.light {
+        let radius = content.light(light).radius;
+        parts.push(format!("you shed light {radius} cells around you"));
+    }
     if parts.is_empty() {
         "—".into()
     } else {

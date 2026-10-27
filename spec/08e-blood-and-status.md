@@ -247,7 +247,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   abilities") are spells of `data/spells/` cast by it, and so are the spells learned from
   scrolls and the spells scrolls cast. `docs/dev/spells.md` has the details.
   - **The first list** (#397, design §7; names left for the world-language review, #378):
-    tier 0 Evil eye, Mend, Ray of frost, Spark; tier 1 Barkskin, Blessing, Burning hands, Cause
+    tier 0 Evil eye, Light (#589: the scroll of light's; Lit, its status, sheds a light about the
+    caster, `light` on a status), Mend, Ray of frost, Spark; tier 1 Barkskin, Blessing, Burning hands, Cause
     wounds, Cure wounds, Curse of sloth, Hex of weakness, Magic missile; tier 2 Arcane bolt,
     Blight, Frost, Scorching ray, Sleep, Web; tier 3 Call lightning, Fireball (the wizard's Fire
     burst folded into it), Flame, Haste, Lightning bolt, Remove disease. A spell is cast by its

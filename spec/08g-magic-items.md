@@ -169,8 +169,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     scroll of identify's own type by its first read, when it is in the character's starting kit
     (a chosen character knows their kit's scrolls), or by the dev `identify` (and F8). Reading an
     unknown scroll works as reading a known one does (a gamble: what it does is not known until
-    it is done); a label changes no outcome, only names. A scroll that cannot be read (the
-    scroll of light) has no label and is known on sight. **Identified is not learned**: a spell
+    it is done); a label changes no outcome, only names. A scroll that cannot be read (a
+    sealed letter) has no label and is known on sight. **Identified is not learned**: a spell
     scroll whose type is identified shows by its name and can be studied (§8 "Spells":
     "Learning") by anyone who has not learned its spell; study is refused only for a scroll still under its label and for
     a spell already learned. `Lore::is_identified(object)` is what the study list asks.

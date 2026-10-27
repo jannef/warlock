@@ -103,6 +103,13 @@ fn light_name(content: &Content, id: LightId) -> String {
     if !tended.is_empty() {
         return format!("Your lantern ({})", tended.join(", "));
     }
+    let statuses: Vec<&str> = (content.status_defs().iter())
+        .filter(|s| s.light == Some(id))
+        .map(|s| s.name.as_str())
+        .collect();
+    if !statuses.is_empty() {
+        return format!("You, while {}", statuses.join(" or "));
+    }
     let affixes: Vec<&str> = (order::affixes(content, AffixKind::Prefix).into_iter())
         .chain(order::affixes(content, AffixKind::Suffix))
         .filter(|a| a.tiers.iter().any(|t| t.light == Some(id)))

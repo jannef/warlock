@@ -1648,12 +1648,15 @@ mod tests {
         assert!(leaving_dialog(&view, Dir::E).is_none(), "a step inside");
         // Selling the scroll asks; putting back the dagger does not.
         let offer = view.sale(&Positions::of([1])).expect("an offer").offer;
+        // Unread, the scroll goes by its label.
+        let scroll = view.lore().describe(&view.inventory()[1]);
+        assert!(scroll.starts_with("a scroll labelled "), "{scroll}");
         assert_eq!(
             sale_dialog(&view, &Positions::of([1])),
             Some(
                 Dialog::new(
                     "Grimbold's General Store",
-                    format!("Grimbold offers {offer} gold for a scroll of light.")
+                    format!("Grimbold offers {offer} gold for {scroll}.")
                 )
                 .accept(
                     format!("Sell for {offer} gold"),

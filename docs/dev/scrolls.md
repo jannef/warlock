@@ -10,7 +10,12 @@ Cast::{Burst, Bolt}, range, noun, verb, message, noise, teaches }`), one file ea
 `data/objects/`: a scroll of every spell of `data/spells/` (`scroll_of_ID`, kind `spell`,
 `Reading::Cast`, "Scrolls of spells" below), the three older ones whose readings are the traps'
 bursts and bolts (`scroll_of_fireball`, `scroll_of_lightning`, `scroll_of_frost`,
-`Reading::Spell`), and `scroll_of_identify`; `scroll_of_light` has no `read` yet. The older
+`Reading::Spell`), and `scroll_of_identify`. `scroll_of_light` casts the cantrip Light (#589:
+until then it had no `read` and could not be read at all): a buff whose status, Lit, has a
+`light` (`StatusDef::light`), which the light cache sheds about its bearer while it lasts
+(`light/cache.rs`, the brightest of several, as Holy radiance's). `read_tests.rs`
+`every_builtin_scroll_can_be_read` reads every `scroll_of_*` in the content, so a scroll left
+without a reading fails it. The older
 three's spells are the traps' own data types (`content/spell.rs`: `Burst`, `Bolt`,
 `BurstIce`, `SpellFields`, with `Burst::new`/`Bolt::new` the one place their fields are
 checked, and `check_effect`, the effect-shape check, run for scrolls once `data/effects.toml`
