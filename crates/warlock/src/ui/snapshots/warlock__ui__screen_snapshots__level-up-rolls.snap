@@ -3,7 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  Welcome to Showcase. Press ? for controls.
- You gain 2431 experience (dev). You feel more experienced. Welcome to level 3.
+ You gain 691 experience (dev). You feel more experienced. Welcome to level 3.
 
 
 

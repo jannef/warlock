@@ -183,7 +183,8 @@ so there is no `Mods::worn` cache.
 The household objects are `data/objects/<body>.toml`, class `household` (the general store buys
 them). Populations: Cealdhlāw (candlestick, cutlery, teapot, cooking pot), Fennmynster
 (candlestick, book, lantern, rug), `animated_blade` in Cealdhlāw and Fyrdelf, and
-`animated_armour` in Fyrdelf; the stray list follows. `animated_panoply` is in no population
+`animated_armour` in Fyrdelf; the stray list follows (animated objects stray only through the populations that name them,
+`Content::may_stray`). `animated_panoply` is in no population
 (legends and the dev `spawn` only) until a deeper branch lists it (#487). Talents: system
 `animated` with Salvager (delver), Unbinder (weaponcraft), and Appraiser's eye (scholar).
 

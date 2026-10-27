@@ -20,6 +20,9 @@ danger = 6
 population = [
     "bat", "giant_centipede", "footpad", "goblin_archer", "barrow_spider", "footpad_archer",
 ]
+# Its strays come only from what lives in the campaign's populations (spec §7 "Danger
+# levels"): its folk are the guild design's table (docs/design/adventurers-guild.md §8.2).
+stray_pool = "populations"
 # Robbers keep no shop (spec §7 "Shops").
 shops = { chance = 0 }
 

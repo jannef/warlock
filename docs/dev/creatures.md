@@ -115,11 +115,22 @@ too weak), then at `D` the chosen pool, else the own folk. `danger::Odds` is
 `Spawning::odds`: each of `stray`, `out_of_depth`, `deeper`, `deeper_cap` as a branch or level
 gives it, else `data/dungeons.toml`'s `[defaults]` (`danger::DefaultsFile`, read into
 `Content::draw_odds` before the levels; a `danger` without it is a load error, and `[defaults]`
-in any other dungeons file is refused). The generic creature list is derived, not flagged:
-`Content::fill_generic` (after `load_dungeons`) gives every `Spawning::generic` the union of
-the populations of the areas with a danger of its campaign and of no campaign, uniques left out
-(so people, keepers, hand-placed guardians, quest creatures, and test fixtures' types never
-stray); `populate` builds the generic candidates once a floor, the own ones per creature (a
+in any other dungeons file is refused). The generic creature list is derived
+(the owner, 2026-10-27: anything the campaign knows may come, the exploding out-of-depth draw
+bringing even the deepest to a first floor at astronomical odds): `Content::fill_generic`
+(after `load_dungeons`) gives every `Spawning::generic` the union of the populations of the
+areas with a danger of its campaign and of no campaign, uniques left out, and, unless the area's
+`Spawning::pool` is `danger::StrayPool::Populations` (`stray_pool = "populations"`: the guild's
+four lairs, whose folk are the design's table), every type of its campaign or of none that
+`Content::may_stray`: hostile to the player (`Content::stance` with `player`), no unique, no
+animated object (`CreatureDef::animated`: those come by family through the populations that
+name them), and not marked `stray = false` (`CreatureDef::stray`, default true, for a type only
+placed by hand or by its own rules; no shipped type uses it yet). So a roster type in no
+population is met as a stray, and people, keepers, hand-placed guardians, and quest creatures
+(neutral or unique) never stray. Tests: `content::tests::the_generic_list_is_every_hostile_type_without_uniques_or_people`,
+`a_lair_draws_its_strays_from_the_populations_only`,
+`a_first_floor_draw_gone_far_out_of_depth_brings_a_type_of_no_population`, and
+`world::spawn_tests::strays_come_from_every_hostile_type_but_those_kept_out`; `populate` builds the generic candidates once a floor, the own ones per creature (a
 unique leaves them). Hand-placed creatures (level legends, vaults,
 scenario people, shopkeepers) are never drawn, whatever their tier.
 Where the rosters are met (#531): the showcase's Depths has no danger (its patrol of rats, bats,

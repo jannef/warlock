@@ -136,6 +136,30 @@ fn others(world: &World) -> BTreeSet<ActorId> {
         .collect()
 }
 
+/// Strays come from every hostile type that may stray, named by a population or not (spec §7
+/// "Danger levels"); a type marked `stray = false` comes only where a population names it, and
+/// one neutral to the player never strays.
+#[test]
+fn strays_come_from_every_hostile_type_but_those_kept_out() {
+    let warden = "[[creature]]\nid = \"warden\"\nname = \"barrow warden\"\nglyph = \"W\"\n\
+                  fg = \"#808080\"\nfaction = \"undead\"\nlevel = 3\nstray = false\n\
+                  weight = 60000\n";
+    let mut files = files_with(HAUNT);
+    files.insert("data/creatures/zz_warden.toml", warden);
+    let content = Content::load(&files).expect("content");
+    let (_, _, spawning) = content.spawning("haunt").expect("rules");
+    let id = |name| content.creature_id(name).expect(name);
+    assert!(!spawning.population.contains(&id("lich")));
+    assert!(
+        spawning.generic.contains(&id("lich")),
+        "in no population, yet a stray"
+    );
+    assert!(!spawning.generic.contains(&id("warden")), "kept out");
+    assert!(!spawning.generic.contains(&id("deer")), "neutral");
+    // The unique chief lives in the haunt, but never strays.
+    assert!(!spawning.generic.contains(&id("chief")));
+}
+
 #[test]
 fn the_danger_is_the_rule_at_the_depth() {
     let w = haunt(1);
@@ -164,7 +188,7 @@ fn a_player_scaled_level_follows_the_character() {
     let content = content_with(&scaled);
     let mut w = World::new(content, "haunt", Some(1)).expect("world");
     assert_eq!(w.danger("haunt"), 2);
-    run(&mut w, "xp:2431");
+    run(&mut w, "xp:691");
     assert_eq!((w.player_level(), w.danger("haunt")), (3, 4));
     run(&mut w, "levelup:auto xp:100000");
     assert_eq!(w.danger("haunt"), 5);

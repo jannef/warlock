@@ -61,6 +61,10 @@ fn normal_speed() -> u32 {
     NORMAL_SPEED
 }
 
+fn full_percent() -> u32 {
+    100
+}
+
 fn first_level() -> u8 {
     1
 }
@@ -185,10 +189,18 @@ pub(super) struct CreatureSpec {
     /// The experience a kill of it is worth at its own level; none: nothing.
     #[serde(default)]
     pub xp: u32,
+    /// A hand-set modifier of `xp`, in percent (owner 2026-10-27): any whole number from 0 up;
+    /// none: 100.
+    #[serde(default = "full_percent")]
+    pub xp_percent: u32,
     /// Whether at most one of it comes in a run (spec §7 "Danger levels"): a branch's
     /// population draws it once, never again.
     #[serde(default)]
     pub unique: bool,
+    /// Whether it may come as a stray to a branch whose population does not name it (spec §7
+    /// "Danger levels"); `false` for a type only ever placed by hand or by its own rules.
+    #[serde(default = "yes")]
+    pub stray: bool,
     /// How often a population or a spawn draws it (`data/creature_rarities.toml`, spec §7
     /// "Danger levels"); none: common.
     pub rarity: Option<String>,
@@ -495,7 +507,9 @@ impl CreatureSpec {
             base_mana: i32::from(self.mana),
             level: self.level,
             xp: self.xp,
+            xp_percent: self.xp_percent,
             unique: self.unique,
+            stray: self.stray,
             rarity: r.rarity,
             loot: self.loot,
             attack: r.attack,
@@ -529,6 +543,14 @@ impl CreatureDef {
     /// The verb of its death line: its type's `dies`, else "dies".
     pub fn death_verb(&self) -> &str {
         self.dies.as_deref().unwrap_or("dies")
+    }
+
+    /// The experience a kill of it is worth at its own level: `xp` times its hand-set
+    /// `xp_percent`, rounded (halves up). The one place the modifier is read: the level scaling
+    /// and the first-kill bonus start from it.
+    pub fn kill_xp(&self) -> u32 {
+        let scaled = (u64::from(self.xp) * u64::from(self.xp_percent) + 50) / 100;
+        u32::try_from(scaled).unwrap_or(u32::MAX)
     }
 }
 
@@ -610,11 +632,18 @@ pub struct CreatureDef {
     pub base_mana: i32,
     /// Gameplay: its level (spec §8 "Experience"); the player's own is their experience's.
     pub level: u8,
-    /// Gameplay: the experience a kill of it is worth at its own level.
+    /// Gameplay: the experience a kill of it is worth at its own level, before `xp_percent`.
     pub xp: u32,
+    /// Gameplay: the hand-set modifier of `xp` in percent (100: none); [`Self::kill_xp`] applies
+    /// it.
+    pub xp_percent: u32,
     /// Gameplay: whether at most one of it is drawn in a run by a population (spec §7 "Danger
     /// levels"; [`crate::world::Progress`] remembers those drawn).
     pub unique: bool,
+    /// Gameplay: whether a branch may draw it as a stray without naming it in its population
+    /// (spec §7 "Danger levels"; `Content::fill_generic`); `stray = false` in its file for a
+    /// type only ever placed by hand or by its own rules.
+    pub stray: bool,
     /// Gameplay: how often a population or a spawn draws it, an index into
     /// [`super::Content::creature_rarities`] (spec §7 "Danger levels"). Never shown.
     pub rarity: usize,

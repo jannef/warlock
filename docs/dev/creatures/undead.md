@@ -16,13 +16,13 @@ rest up to level 20: Fennmynster the stone haunt (in its stones), the pale drink
 mummy (its crypts); Fyrdelf the draugr, barghest, hand of glory, vampire spawn, gallows dead,
 bone wyvern, gibbering shade, fetch, revenant, and mummy priest (level 20, only out of depth on
 its twelfth floor), the dead of its deep workings. All of batches 3 to 6 (levels 21 and up) ship
-in no population (deep undead wait for deep places, #383), and the ghost is
+in no population (deep undead wait for deep places, #383; until then they come only as strays, docs/dev/creatures.md), and the ghost is
 incorporeal (wall Defence 2). The roster's holds (`held`, #431) are `{ status = "held", chance,
 difficulty }`: the ghast's and fen ghoul's claws 10 % at 15, the gallows dead's tongue 20 % at 17, the lich's touch and the ghoul lord's claws 15 % at 18 (12 + level ÷ 5, as a drain's).
 
 ## Batch 4 (#387, levels 31–40)
 
-All ten ship in no population. Each is one file in `assets/data/creatures/`:
+All ten ship in no population (strays only). Each is one file in `assets/data/creatures/`:
 
 | Level | Type | Notes |
 |---|---|---|
@@ -42,7 +42,7 @@ plural is itself (`plurals.toml` has `colossus` and `lady`).
 
 ## Batch 5 (#388, levels 41–55)
 
-All sixteen ship in no population. Each is one file in `assets/data/creatures/`:
+All sixteen ship in no population (strays only). Each is one file in `assets/data/creatures/`:
 
 | Level | Type | Notes |
 |---|---|---|
@@ -70,7 +70,7 @@ and the hound's are written in their files.
 
 ## Batch 6 (#389, levels 56–70)
 
-All fifteen ship in no population. Each is one file in `assets/data/creatures/`; the table is
+All fifteen ship in no population (strays only). Each is one file in `assets/data/creatures/`; the table is
 #389's, with its numbers unmoved:
 
 | Level | Type | Notes |

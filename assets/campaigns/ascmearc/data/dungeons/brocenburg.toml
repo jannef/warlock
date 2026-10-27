@@ -24,6 +24,9 @@ danger = 6
 population = [
     "bat", "goblin", "goblin_archer", "footpad", "goblin_chief", "footpad_archer", "ogre",
 ]
+# Its strays come only from what lives in the campaign's populations (spec §7 "Danger
+# levels"): its folk are the guild design's table (docs/design/adventurers-guild.md §8.2).
+stray_pool = "populations"
 # No one trades in the broken fort (spec §7 "Shops").
 shops = { chance = 0 }
 

@@ -296,13 +296,23 @@ pub(super) fn creature_stats(content: &Content) -> String {
             "| {} | {} | {} | {} |{scores} {potentials} | {} | {} |",
             capital(&c.name),
             c.level,
-            c.xp,
+            xp_cell(c),
             content.creature_rarity(c.rarity).name,
             dash(&skills),
             dash(&weapon_skills)
         );
     }
     out
+}
+
+/// A creature's XP for a table cell: what a kill pays at its own level, and for one with a
+/// hand-set `xp_percent` how that comes of its `xp`, `45 (30 × 150 %)`.
+pub(super) fn xp_cell(c: &CreatureDef) -> String {
+    if c.xp_percent == 100 {
+        c.xp.to_string()
+    } else {
+        format!("{} ({} × {} %)", c.kill_xp(), c.xp, c.xp_percent)
+    }
 }
 
 /// A list for a table cell, `-` when empty.

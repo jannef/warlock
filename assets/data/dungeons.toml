@@ -44,10 +44,15 @@
 #   population_count  how many a floor holds: a number, or `{ per_1000, least, most }` by its
 #              walkable cells (default { per_1000 = 35, least = 25, most = 80 }; at most 200)
 #   stray      percent of draws made from the generic creature list instead of `population`
-#              (0 to 100, default `[defaults]`'s): every type that lives in some branch or level
-#              with a danger of this campaign or of none, uniques left out (hand-placed people,
-#              shopkeepers, guardians, and quest creatures live in no population, so they never
-#              stray); 0: only its own folk come
+#              (0 to 100, default `[defaults]`'s): every type of this campaign or of none that
+#              is hostile to the player, no unique, no animated object, and not marked
+#              `stray = false`, whether a population names it or not, and every type that lives
+#              in some branch or level with a danger of this campaign or of none, uniques left
+#              out (people, shopkeepers, and guardians are not hostile or are unique, so they
+#              never stray); 0: only its own folk come
+#   stray_pool  where the strays come from: "all" (the default, as above) or "populations"
+#              (only the types living in some branch or level with a danger of this campaign
+#              or of none, uniques left out: a branch whose folk are a design's table)
 #   out_of_depth  percent of draws made out of depth (0 to 100, default `[defaults]`'s): one
 #              danger deeper, then `deeper` % again and again one deeper still, at most
 #              `deeper_cap` times; where `population` weighs nothing that deep (all too weak),

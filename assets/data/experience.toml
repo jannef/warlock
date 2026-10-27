@@ -4,11 +4,14 @@
 # Thresholds, in kills (the [kills] table): with m = n − 1, a level n costs
 # k(n) = plateau × m ÷ (m + ramp) + slope_per_100 ÷ 100 × m kills of the player's own level, each
 # worth the creature XP guideline, per_level × n + base. That level's XP is k(n) × guideline(n),
-# rounded, and the XP total needed to reach level n is the sum of those for levels 2 to n. With
-# 213, 5, and 285: 38 kills for level 2 (767 XP), 163 for level 10 (45 052 XP in all), 365 for
-# level 60 (2 861 748 XP in all); about 3 000 kills of your own level to reach level 20 and
-# 15 000 to reach level 60. The first term ramps quickly toward a plateau, the second keeps every
-# level costlier than the last. A character's thresholds are these times their race's and their
+# times the level's early discount (the [early] table: percent[0] for level 2, percent[1] for
+# level 3, ...; 100 % after the list; values 1 to 100, never decreasing), rounded once, and the
+# XP total needed to reach level n is the sum of those for levels 2 to n. With 213, 5, and 285
+# and the discount below: 10 kills for level 2 (192 XP; 38 and 767 undiscounted), 146 for level
+# 10 (29 715 XP in all), 365 for level 60 (2 845 856 XP in all); about 2 600 kills of your own
+# level to reach level 20 and 14 600 to reach level 60. From level 12 on every level costs what
+# it would without the discount, so later totals are 15 892 XP lower. The first term ramps
+# quickly toward a plateau, the second keeps every level costlier than the last. A character's thresholds are these times their race's and their
 # class's `experience` percents (races.toml, classes/), rounded: an elf wizard needs 175 %,
 # a half-orc commoner 72 %. max_level is the cap; XP beyond it still counts but buys nothing.
 #
@@ -49,6 +52,11 @@ plateau = 213
 ramp = 5
 slope_per_100 = 285
 guideline = { per_level = 5, base = 10 }
+
+# The early levels go faster (owner 2026-10-27): the percent of its curve XP each level from 2 on
+# costs, here levels 2 to 11; level 12 and later pay 100 %.
+[early]
+percent = [25, 30, 35, 40, 50, 60, 70, 80, 90, 95]
 
 [discovery]
 first_kill = 100

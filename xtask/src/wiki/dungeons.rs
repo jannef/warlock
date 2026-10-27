@@ -3,7 +3,7 @@
 
 use std::collections::BTreeSet;
 use std::fmt::Write as _;
-use warlock_core::content::danger::{self, Odds, TOO_WEAK};
+use warlock_core::content::danger::{self, Odds, StrayPool, TOO_WEAK};
 use warlock_core::content::{Content, Count, DangerRule, Generator, Spawning};
 
 /// A danger rule in words: `4`, `2 + 1 a floor down`, with a player-scaled part.
@@ -52,6 +52,15 @@ fn population_text(content: &Content, s: &Spawning) -> String {
     names.join(", ")
 }
 
+/// Where an area's strays come from, in words.
+fn strays_text(s: &Spawning) -> &'static str {
+    match (s.odds.stray, s.pool) {
+        (0, _) => "none",
+        (_, StrayPool::All) => "any hostile kind of the land",
+        (_, StrayPool::Populations) => "only kinds that live in its dungeons",
+    }
+}
+
 fn spawn_text(content: &Content, s: &Spawning) -> String {
     let cap = match s.cap {
         Some(cap) => format!("up to {cap} hostile"),
@@ -77,8 +86,8 @@ fn spawn_text(content: &Content, s: &Spawning) -> String {
 /// levels by id.
 pub(super) fn dungeons(content: &Content) -> String {
     let mut out = String::from(
-        "| Place | Floors | Danger | Lives there | Population | Coming back |\n\
-         |---|---|---|---|---|---|\n",
+        "| Place | Floors | Danger | Lives there | Strays | Population | Coming back |\n\
+         |---|---|---|---|---|---|---|\n",
     );
     let mut branches: Vec<_> = content.dungeons().collect();
     branches.sort_by(|a, b| a.id.cmp(&b.id));
@@ -87,21 +96,23 @@ pub(super) fn dungeons(content: &Content) -> String {
             (Some(rule), Some(_)) => rule_text(rule, true),
             _ => "0".into(),
         };
-        let (lives, count, back) = match &d.spawning {
+        let (lives, strays, count, back) = match &d.spawning {
             Some(s) => (
                 population_text(content, s),
+                strays_text(s),
                 count_text(s.count),
                 spawn_text(content, s),
             ),
             None => (
                 "only the patrols the generator places".into(),
+                "—",
                 "—".into(),
                 "nothing comes".into(),
             ),
         };
         let _ = writeln!(
             out,
-            "| {} | {} | {danger} | {lives} | {count} | {back} |",
+            "| {} | {} | {danger} | {lives} | {strays} | {count} | {back} |",
             d.name, d.depth
         );
     }
@@ -112,10 +123,11 @@ pub(super) fn dungeons(content: &Content) -> String {
     for (l, (rule, s)) in levels {
         let _ = writeln!(
             out,
-            "| {} | 1 | {} | {} | {} | {} |",
+            "| {} | 1 | {} | {} | {} | {} | {} |",
             l.name,
             rule_text(*rule, false),
             population_text(content, s),
+            strays_text(s),
             count_text(s.count),
             spawn_text(content, s)
         );
@@ -199,7 +211,7 @@ pub(super) fn danger_weights(_: &Content) -> String {
 }
 
 /// The creature rarities and their factors, in file order (commonest first), with the types of
-/// each that some population draws, by name.
+/// each that some population or stray draw may bring, by name.
 pub(super) fn creature_rarities(content: &Content) -> String {
     let mut out = String::from("| Rarity | Weight | Drawn among |\n|---|---:|---|\n");
     let branches = content.dungeons().filter_map(|d| d.spawning.as_ref());
@@ -207,7 +219,7 @@ pub(super) fn creature_rarities(content: &Content) -> String {
         .levels()
         .filter_map(|l| Some(&l.spawning.as_ref()?.1));
     let drawn: BTreeSet<_> = (branches.chain(levels))
-        .flat_map(|s| s.population.iter().copied())
+        .flat_map(|s| s.population.iter().chain(&s.generic).copied())
         .collect();
     for (i, tier) in content.creature_rarities().iter().enumerate() {
         let mut names: Vec<&str> = (drawn.iter())

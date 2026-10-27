@@ -6,7 +6,7 @@ devil 48, ice devil 55, pit fiend 66), faction `devil` ("devils", hostile to the
 demons' `demon` faction's list (#449), to the demons), tags `devil` and
 `fiend`. Since #531 Fyrdelf's population has the lemure, the imp, and the bearded devil (level 20,
 met only out of depth on its twelfth floor), drawn up by the demons' fires; the rest lie deeper
-than any dungeon.
+than any dungeon. All come as strays too (docs/dev/creatures.md), the deep ones only far out of depth.
 
 They follow #383's formulas by level and role (shambler: the lemure; small: the imp; brute: the
 horned devil, ice devil, and pit fiend; standard: the rest). `content/devil_roster_tests.rs`

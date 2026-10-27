@@ -84,12 +84,20 @@
 #
 # Experience (spec §8 "Experience"; the player sees only the XP and level they earn): level (1 to 99,
 # default 1) and xp (what a kill by the player is worth when the player is at that level, default 0;
-# the player's own entry has neither). Kills of lower-level monsters give less and less
-# (data/experience.toml). The level is also its danger (spec §7 "Danger levels"): a dungeon
+# the player's own entry has neither). xp_percent (optional, any whole number from 0 up, default
+# 100) is a hand-set modifier of xp in percent, no formula: a kill and the first-kill bonus start
+# from xp × xp_percent ÷ 100, so xp itself can stay on the guideline. Kills of lower-level
+# monsters give less and less (data/experience.toml). The level is also its danger (spec §7 "Danger levels"): a dungeon
 # branch's or a level's `population` draws it on floors of about that danger.
 #
 # Uniques (spec §7 "Danger levels"): unique = true (default false) for a type a population draws
 # at most once in a run (a boss); a level legend may still place it by hand.
+#
+# Strays (spec §7 "Danger levels"): every type hostile to the player that is no unique and no
+# animated object may come to any branch of its campaign (a shared type to every campaign's) as a
+# stray, its population or not, the out-of-depth draws bringing the deep ones now and then; a
+# type in no population is met only so. stray = false (default true) keeps a type out of the
+# strays (one only placed by hand or by its own rules); a population naming it still draws it.
 #
 # Rarity (spec §7 "Danger levels"; never shown to the player): rarity, a tier in
 # creature_rarities.toml (default "common") whose factor multiplies the type's weight when a
@@ -216,7 +224,8 @@
 # flesh types leave a rotten corpse (on_eat vomit 70 or more, harm). Glyphs: z lesser corporeal
 # dead, Z greater, G spirits, W wights and wraiths, M mummies, C hounds, V vampires, D drakes, L liches, T
 # the rotting troll; a colour distinct from every other type with the same glyph. Only a type in
-# a population strays (#375): those of level 21 and up ship in none until a deep place takes them.
+# a population is met in its place: those of level 21 and up ship in none until a deep place takes
+# them, and until then come only as strays (Strays, above).
 #
 # The demons (the roster, #449; content::demon_roster_tests checks the numbers): faction
 # "demon", tags ["demon", "fiend"], alignment "evil", vision "darkvision", resist poison 100 and
