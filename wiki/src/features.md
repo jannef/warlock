@@ -52,7 +52,7 @@ dungeons under the barrows, the fen, and the hills.
 - **Experience** — every creature has a level and an XP value; kills you make yourself (melee,
   shots, throws) earn XP, less and less the further the monster is below your level, as in World
   of Warcraft (nothing from grey ones, a little extra from tougher ones). Levels run to 50 and, up
-  to level 20, make you hardier. Your level and XP show on the status bar, the character screen,
+  to level 50, make you hardier. Your level and XP show on the status bar, the character screen,
   and the death screen.
 - **Magic items** — after Path of Exile: sixty base items (daggers to great axes, bows and
   crossbows, padded coats to plate, helms, cloaks, gloves, boots, shields, rings, amulets) roll

@@ -18,7 +18,7 @@ expression: "render(case, content.clone())"
                         │       killed by something you did not see,       │
                         │                  in The Arena,                   │
                         │      on 11 Darkening, Year 1444, at 08:01,       │
-                        │                 after 11 turns.                  │
+                        │                 after 12 turns.                  │
                         │             You had reached level 1.             │
                         │                                                  │
                         │       Your run is over; its save is gone.        │
@@ -31,4 +31,4 @@ expression: "render(case, content.clone())"
 
 
 
- The Arena  ·  HP 0/16  ·  MP 1/1  ·  Lv 1  ·  08:01  ·  11 Darkening, Year 1444         ? controls
+ The Arena  ·  HP 0/17  ·  MP 1/1  ·  Lv 1  ·  08:01  ·  11 Darkening, Year 1444         ? controls
