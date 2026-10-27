@@ -44,8 +44,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   across the threshold or shoot in.
 
   **Attacks** are resolved by the rules of combat ("Combat" below): melee blows and shots hurt
-  and kill (a shot is a missile, "Ranged combat" below); spells stay intents until magic is
-  designed. An attack is an event (`Event::Attacked { attacker, target, kind: Melee | Ranged |
+  and kill (a shot is a missile, "Ranged combat" below); a creature's spells stay intents (the
+  player's go through the one cast path, §8 "Spells"; creatures do not cast through it yet). An attack is an event (`Event::Attacked { attacker, target, kind: Melee | Ranged |
   Thrown | Spell, from, to, strike, with }`, `strike` what came of it, `None` for an intent,
   `with` the missile of a shot or throw), a noise (§5), and a message when the player perceives
   it (§6). The event reaches presentation only

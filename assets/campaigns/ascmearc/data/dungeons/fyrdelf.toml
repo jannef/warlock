@@ -31,6 +31,8 @@ temperature = 10
 # and the mage) are the giant tribe's least (#457); the giants live deeper than this.
 # The hill trolls (#456) come down from the hills above to the troll's warm deep. The duergar
 # smiths' work wakes: blades that dance alone (#485, the family `animated_blade`).
+# The rest of the duergar (#518) up to danger 19 hold their own mine: the slinger, the
+# crossbowman, the veteran, and the priest; the hulk and those above wait for deeper places.
 danger = 8
 population = [
     "bat", "kobold", "kobold_archer", "kobold_shaman", "giant_centipede",
@@ -38,6 +40,7 @@ population = [
     "dretch", "duergar_warrior", "duergar_smith", "ogre", "burning_skull", "quasit", "troll",
     "earth_elemental", "knocker", "hell_hound", "hill_troll", "fire_salamander",
     "magma_crawler", "spectre", "charred_dead", "ash_wraith", "duergar_skeleton",
+    "duergar_slinger", "duergar_crossbowman", "duergar_veteran", "duergar_priest",
     "ogre_mauler", "basilisk", "cinder_elemental", "ogre_mage", "rotting_troll",
     "hobgoblin", "hobgoblin_archer", "hobgoblin_legionnaire", "hobgoblin_warcaster",
     "hobgoblin_sergeant", "hobgoblin_captain",

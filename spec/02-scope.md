@@ -78,6 +78,12 @@ Build the engine and framework, not the game. Everything built is production qua
   hit points, regeneration, stats, attack and moving speed, carrying, stealth, light). Loot on
   generated levels' floors, in vaults, and dropped by creatures; found unidentified (rarity
   known, affixes not, effects applying); an item description screen (§8 "Magic items")
+- Magic (the magic design, `docs/design/magic.md`, #393–#401): spells of tiers 0 (cantrips) to
+  9, cast for mana at a caster level from the class's casting share, by a few kinds of shape
+  and resolution under strict damage caps; a few guaranteed by the casting classes, the rest
+  learned by studying identified scrolls, at a risk of mishaps above one's tier; unidentified
+  scrolls, wands (charges, a set caster level), and rods (effects no spell has, the user's mana);
+  Spellcraft talents (§8 "Spells", "Scrolls", "Wands", "Rods")
 - Damage types (#151): every blow, burst, bolt, fall, and plunge is slashing, piercing,
   bludgeoning, fire, cold, electricity, acid, or poison (a data list); Protection soaks the
   physical kinds only, by kind; creatures and gear resist kinds in percent; a flaming arrow and
@@ -134,12 +140,12 @@ Build the engine and framework, not the game. Everything built is production qua
 - Shops (M27), ADOM-like: a general store and specialty shops with named shopkeepers, buying,
   paying, selling, and theft; one in the courtyard, now and then one in the Depths (§7 "Shops")
 
-**Out of scope for now**: magic (spells are announced, nothing is damaged; only traps burst into
-fireballs and lightning, and scrolls cast them), rules that use stats beyond combat, burden, and kicking doors in (ability checks,
+**Out of scope for now**: creatures casting through the magic system (a creature's spells are
+announced, nothing is damaged, save a summoner's summons), rules that use stats beyond combat, burden, and kicking doors in (ability checks,
 saving throws, training stats), levels and experience, digging down or up, creatures that dig,
 what a class gives beyond starting stats, hit points, skills, weapon skills, and fighting
-styles (equipment, spells), active uses of skills (picking locks, healing, and the like), item effects
-beyond magic items' affixes, food's, and scrolls' (§8 "Hunger", "Scrolls"; no potions to use
+styles (equipment), active uses of skills (picking locks, healing, and the like), item effects
+beyond magic items' affixes, food's, scrolls', wands', and rods' (§8 "Hunger", "Scrolls"; no potions to use
 yet, no unique items, no enchanting), audio, mouse input, infravision, localization.
 
 Vision types are in scope even though there are no other mechanics yet: they are part of perception,

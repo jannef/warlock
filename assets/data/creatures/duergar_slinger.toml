@@ -1,0 +1,39 @@
+# The duergar (#518; content::duergar_roster_tests checks the numbers). The youngest of the
+# delf's fighters, who keep to the back of the galleries with a sling (its racial weapon) and a
+# pouch of stones, and a hand axe half the time for whoever comes close.
+[[creature]]
+id = "duergar_slinger"
+level = 8
+xp = 50
+rarity = "uncommon"
+loot = 15
+name = "duergar slinger"
+glyph = "h"
+fg = "#d8c890"
+faction = "duergar"
+tags = ["duergar", "archer"]
+alignment = "evil"
+race = "duergar"
+vision = "darkvision"
+sight = 12
+combat = "ranged"
+range = 8
+opens_doors = true
+footsteps = 90
+hearing = 12
+weight = 60000
+stats = { strength = 15, dexterity = 15, toughness = 15, intelligence = 11, willpower = 14, presence = 8 }
+base_hp = 20
+resist = { poison = 25, cold = 10 }
+on_eat = { message = "Tough and sour, like old leather.", vomit = 25 }
+weapon_skills = { slings = 2, axes = 1 }
+racial_weapon = "sling"
+[[creature.gear]]
+chance = 95
+one_of = ["sling_stone*12", "sling_stone*20"]
+[[creature.gear]]
+chance = 50
+one_of = ["hand_axe"]
+[[creature.gear]]
+chance = 40
+one_of = ["leather_cap"]
