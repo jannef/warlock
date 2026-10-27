@@ -189,7 +189,8 @@ explosion, `t` a thunderclap, upper case when loud), `blood` (blood the
 player sees or remembers as a digit over the view, `1` a few drops to `9` soaked), `inventory`
 (what the player
 carries, grouped by item class under `Class:` header lines as the screens group it, each stack by
-its position as action text names it, and weighs, worn and wielded things marked, their burden
+its position as action text names it with its numbers as the lists show them, `a long sword (+0
+hit, 1d8)`, and weighs, worn and wielded things marked, their burden
 and its thresholds),
 `equipment` (the player's slots), `stats`
 (the player's name, race, gender, and class, age, birth date, and sign with a lucky day's title,
@@ -250,7 +251,9 @@ word: `{"cold": "resistant"}`), `burden` (`level`, `limit`), `alignment` (the ba
 `objective`, `status`), each seen actor's `health` and `effects` (those that show) and a composite animated thing's `bands` (its colours, top first), `room` (the
 special room the player stands in, if they know it), and per inventory stack (in position
 order) its `letter` (the position as action text), `class` (item class id), `name`, `rarity`,
-`identified`, and `magic` (affixes only once identified). Replay
+`identified`, `magic` (affixes only once identified), and `numbers` (what it gives as the
+player knows it: `to_hit`, `damage`, `range`, `dv`, `pv`, each null where it has none; null for
+nothing). Replay
 files are JSON
 `{game_version, scenario, seed, character, name, kit, steps:[{action, hash}]}` (`character` =
 `{race, gender, class, talents}`, `talents` the creation picks (left out while none), left out for a run without one; a replay without it starts as the

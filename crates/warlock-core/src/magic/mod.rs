@@ -25,10 +25,12 @@ pub mod describe;
 pub mod loot;
 pub mod mods;
 pub(crate) mod name;
+pub mod numbers;
 
 pub use crate::content::{AffixKind, Effect, ItemKind, Rarity};
 pub use loot::LootGrade;
 pub use mods::Mods;
+pub use numbers::Numbers;
 
 use crate::content::{AffixDef, Content, ObjectDef};
 use serde::{Deserialize, Serialize};
