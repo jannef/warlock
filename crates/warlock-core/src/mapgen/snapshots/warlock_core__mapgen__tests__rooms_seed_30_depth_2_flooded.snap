@@ -1,0 +1,36 @@
+---
+source: crates/warlock-core/src/mapgen/tests.rs
+expression: describe(&flooded)
+---
+The Depths 2 (depths:2) 80x21
+stairs Up at (18, 5) -> depths:1
+stairs Down at (6, 15) -> depths:3
+kobold at (58, 13) route E E E E E E E E E E E E S S S W W W W W W W W W W W W N N N carrying a copper cap (being worn)
+rat at (41, 5) route E E E E E E W W W W W W
+kobold at (61, 6) route E E E E E E E E E E E W W W W W W W W W W W carrying a tin cap (being worn)
+spear trap at (7, 11)
+spear trap at (13, 5)
+fireball trap at (29, 7)
+arrow trap at (48, 16)
+1 placed lights
+special room flooded at (56, 11)-(72, 18)
+
+    #######
+    #¡....#
+    #.....###   ###############         #########
+    #.....+.#####¡............#         #...*...#           ##############
+    #.....#..^..+.<...........#         #r......#           #...........¡#
+    ####+########.............#         #......¡#           #k......)....#
+       #.#      #............^#         ##&######           #¡...........#
+       #.#      #.......)....¡#         #..#                ##+###########
+       #.#      ##S############         #.##                 #.#
+     ###+###     #.#                    #.#########          #.#
+     #.^..¡#######.#                    #.#"~~~~~"#     ######+##########
+     #.....'.......#                    #.#~~~*~~~#     #¡ffffffffffffff#
+     #.....#######.#                    #.#~~.*.~~#     #fkfffffffffffff#
+     #.....#######S####                 #.#"~~.~~"#     #fffffffffffffff#
+     #>....+..#¡......#      ############.####+##########fffffffffffffff#
+     #¡....##.+.......########.......#..........^.......+fffffffffffffff#
+     ##########.......'......+.......+.##################ffffffffffffff¡#
+              #......¡########.....(.###                #################
+              #########      #########
