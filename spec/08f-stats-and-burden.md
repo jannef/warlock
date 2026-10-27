@@ -30,20 +30,28 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (`Actor::stat_marks`, per stat, saved and hashed, left out of the JSON while none; creatures
     earn none). Each `[[training.use]]` rule (`stat`, `on`, `chance` 1 to 100) gives its stat
     a mark on its use, one draw of the **training** stream per rule below 100, never gameplay;
-    marks never decay and have no cap. The uses (`StatUse`), each reported where it happens:
-    Strength burdened (an action but waiting under a slowing load), blow (a melee blow of the
-    player's that hits, kicks and bashes too), dig (a turn), kick (a door); Dexterity dodge, shot
-    (a shot or throw that hits), sneak (a step within earshot), climb (onto ice, out of a pit);
-    Toughness hurt (a blow that costs hit points), big_hit (a big hit or a critical on the
-    player), resisted (a disease check won, not a Willpower one), plunge (through the ice);
-    Intelligence found (a search that finds something), read (a scroll), identified (by reading),
-    discovered (a first kill of a type); Willpower spot, endured (a long action of more than one
-    turn done to its end: a rest, a dig, a search for a while, a meal), resisted_will (a
-    Willpower disease check won), hungry_fight (a blow landed while Hungry or worse), cast (mana
-    spent, `World::spend_mana`; 20 %); Presence
-    chat (a chat; asking a topic takes no time and trains nothing), trade (a purchase paid or a
-    sale), quest (completed), swapped (a creature making way). The uses skills share (burdened,
-    kick, dodge, sneak, spot) are one report, `World::train`; the rest `World::train_stat`.
+    marks never decay and have no cap (a `u16`, saturating). A use may give several marks at
+    once (`World::train_stat_times`, a potion's `marks`): one draw per mark below 100, none at
+    100. A use that names its own stat (`drank`, `elixir`: the potion's) has rules without a
+    `stat`; every other use's rules have one. The chances are plentiful (combat progression
+    design §9.1: 8 to 15 marks a game day in a trained stat). The uses (`StatUse`), each
+    reported where it happens: Strength burdened (an action but waiting under a slowing load),
+    blow (a melee blow of the player's that hits, kicks and bashes too), critical (a confirmed
+    critical of theirs in melee), block (a blow on them their shield blocked), dig (a turn),
+    kick (a door); Dexterity dodge, parry (a blow on them their Parry turned), shot (a shot or
+    throw that hits), sneak (a step within earshot), climb (onto ice, out of a pit); Toughness
+    hurt (a blow that costs hit points), big_hit (a big hit or a critical on the player), killed
+    (a kill of theirs in melee of a creature of their level or above), resisted (a disease check
+    won, not a Willpower one), plunge (through the ice); Intelligence found (a search that finds
+    something), read (a scroll), identified (by reading), discovered (a first kill of a type);
+    Willpower spot, endured (a long action of more than one turn done to its end: a rest, a
+    dig, a search for a while, a meal), resisted_will (a Willpower disease check won),
+    hungry_fight (a blow landed while Hungry or worse), cast (mana spent, `World::spend_mana`);
+    Presence chat (a chat; asking a topic takes no time and trains nothing), trade (a purchase
+    paid or a sale), quest (completed), swapped (a creature making way); any stat drank and
+    elixir (a potion or an elixir drunk, sure marks as many as it gives; defined, reached once
+    potions land). The uses skills share (burdened, kick, dodge, sneak, spot) are one report,
+    `World::train`; the rest `World::train_stat`.
     **At every level gained** (`World::level_up`, level by level), each stat in display order
     gets one check on the **levels** stream (six draws a level, always; none without the
     data): it rises by 1 with chance `marks / (marks + need)`, `need = need_base (20) +

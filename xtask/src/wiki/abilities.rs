@@ -43,6 +43,11 @@ pub(super) fn abilities(content: &Content) -> String {
             Ability::PickLock => "everyone trained in Open lock".into(),
             Ability::Steal => "everyone trained in Steal".into(),
             Ability::Heal => "everyone trained in Heal (with something to treat)".into(),
+            Ability::Forage => {
+                "everyone trained in Survival (usable in the wild: the overworld's land and its \
+                 local areas)"
+                    .into()
+            }
             Ability::SecondWind => "everyone with the Second wind talent (not while winded)".into(),
             Ability::BloodMagic => "everyone with the Blood magic talent".into(),
             Ability::ShieldBash => "everyone (usable with a shield in hand)".into(),
@@ -69,6 +74,11 @@ pub(super) fn abilities(content: &Content) -> String {
                     })
                     .unwrap_or_default();
                 (aim(a.aim(content)), format!("{time} (a prayer)"))
+            }
+            // A long action too: the forage's time.
+            Some(_) if a == Ability::Forage => {
+                let minutes = content.forage().map_or(0, |r| r.seconds / 60);
+                (aim(a.aim(content)), format!("{minutes} minutes (a forage)"))
             }
             Some(kind) => {
                 let cost = content.action_costs().cost(kind);

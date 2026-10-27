@@ -159,6 +159,11 @@ pub enum Action {
     /// outcome drawn from the altar's table, and perhaps the altar spent. Interrupted, it gives
     /// nothing. Refused (no time) with no altar next to the player.
     Pray,
+    /// Forage for food in the wild (spec §8 "Foraging"; the Forage ability, Survival's use): turns
+    /// of the `forage` action for `data/forage.toml`'s time, then a chance of food by the
+    /// landscape and Survival. Interrupted, it finds nothing. Refused (no time) untrained, or
+    /// anywhere but on land of the overworld or a local area of it.
+    Forage,
     /// Temper the carried stack at this position at the anvil next to the player (spec §7
     /// "Special rooms"; the Temper ability, the abilities menu's Here group): ten minutes of turns
     /// of the `temper` action, then a Strength check plus Metalcraft that leans the forge's table,
@@ -743,6 +748,7 @@ impl fmt::Display for Action {
             Action::Heal(None) => f.write_str("heal"),
             Action::Heal(Some(id)) => write!(f, "heal:{id}"),
             Action::Pray => f.write_str("pray"),
+            Action::Forage => f.write_str("forage"),
             Action::Temper { item } => write!(f, "temper:{}", position_text(*item)),
             Action::SecondWind => f.write_str("second_wind"),
             Action::BloodMagic => f.write_str("blood_magic"),
@@ -845,6 +851,7 @@ impl FromStr for Action {
             },
             "wait" => bare(Action::Wait),
             "pray" => bare(Action::Pray),
+            "forage" => bare(Action::Forage),
             "temper" => {
                 let usage = || "`temper` needs a letter, e.g. `temper:b`".to_string();
                 let item = arg.and_then(parse_position).ok_or_else(usage)?;
@@ -1332,6 +1339,7 @@ mod tests {
             },
             Action::Advance("stealth".into()),
             Action::Pray,
+            Action::Forage,
             Action::Temper { item: 0 },
             Action::Temper { item: 27 },
             Action::Heal(None),

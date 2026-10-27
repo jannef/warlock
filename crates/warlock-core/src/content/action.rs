@@ -90,6 +90,8 @@ pub enum ActionKind {
     Search,
     /// A turn of praying at a forgotten altar (spec §7 "Special rooms"): a prayer takes several.
     Pray,
+    /// A turn of foraging in the wild (spec §8 "Foraging"): a forage takes several.
+    Forage,
     /// A turn of tempering an item at a forge's anvil (spec §7 "Special rooms"): a tempering
     /// takes many.
     Temper,
@@ -138,6 +140,7 @@ impl ActionKind {
         ActionKind::Dig,
         ActionKind::Search,
         ActionKind::Pray,
+        ActionKind::Forage,
         ActionKind::Temper,
         ActionKind::Disarm,
         ActionKind::Heal,
@@ -177,6 +180,7 @@ impl ActionKind {
             ActionKind::Dig => "dig",
             ActionKind::Search => "search",
             ActionKind::Pray => "pray",
+            ActionKind::Forage => "forage",
             ActionKind::Temper => "temper",
             ActionKind::Disarm => "disarm",
             ActionKind::Heal => "heal",
@@ -235,6 +239,7 @@ impl ActionKind {
             ActionKind::Dig => "dig",
             ActionKind::Search => "search",
             ActionKind::Pray => "pray",
+            ActionKind::Forage => "forage",
             ActionKind::Temper => "temper",
             ActionKind::Disarm => "disarm traps",
             ActionKind::Heal => "tend your hurts",

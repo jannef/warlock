@@ -25,7 +25,7 @@ it was made; a corpse, when its creature died; crate-private: presentation canno
 food's age), and `Stack::is_valid_for` checks food knows it and nothing else does. Food that
 comes into the world from content is made then (`rot::made_at`: in `instantiate_level` for
 piles and creatures' packs, in `World::with_character` for the starting pack, and for quest
-gifts); a test stack made with `Stack::new` knows no age and never rots. The stage is pure
+gifts, and for foraged food, `world/forage.rs`); a test stack made with `Stack::new` knows no age and never rots. The stage is pure
 (`crate::rot`: `Stage` Fresh/Old/Rotten/Gone, `Food::stage(age)`, `rot::stage`, `gone_at`; all
 `None` without hunger.toml) and is shown only in dev dumps (`actors`: food on the level and in
 the packs of those on it, with its stage; `--state`: the raw `died`); food never shows its stage

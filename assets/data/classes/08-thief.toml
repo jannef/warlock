@@ -3,7 +3,7 @@ id = "thief"
 name = "Thief"
 description = "A cutpurse, burglar, and picker of locks who lives by nimble fingers and a quick wit."
 stats = { strength = -1, dexterity = "1d3+1", intelligence = "1d2-1", willpower = -1 }
-hp = 3
+hp = 4
 mana = 1
 casting = 25
 experience = 95

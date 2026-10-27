@@ -118,6 +118,7 @@ mod eyes;
 mod fight;
 mod flavour;
 mod focus;
+mod forage;
 mod free_blow;
 mod gifts;
 mod glare;
@@ -197,6 +198,7 @@ pub use dig::{MAX_DIG, WORK_SCALE, dig_work, digs_to_break};
 pub use disarm::SPRINGS_SHORT_BY;
 pub use experience::{Discovered, Progress};
 pub use fight::{Cause, Death};
+pub(crate) use forage::forage_ground;
 pub use free_blow::FreeBlows;
 pub use gifts::{STARE_RANGE, Streak};
 pub use guild::GuildRank;
@@ -521,6 +523,8 @@ enum Spent {
     Consecrate(GameTime),
     /// Praying at a forgotten altar (see [`World::pray`]).
     Pray(pray::Prayer),
+    /// Foraging in the wild for this many seconds (see [`World::forage`]).
+    Forage(u32),
     /// Tempering an item at a forge's anvil (see [`World::temper`]).
     Temper(temper::Tempering),
     /// Dev: the clock jumps ahead; nobody acts, then perception is recomputed.
@@ -1095,6 +1099,7 @@ impl World {
             Spent::Study(lesson) => self.study(lesson, &mut events),
             Spent::Consecrate(until) => self.consecrate(until, &mut events),
             Spent::Pray(prayer) => self.pray(prayer, &mut events),
+            Spent::Forage(seconds) => self.forage(seconds, &mut events),
             Spent::Temper(work) => self.temper(work, &mut events),
             Spent::Skip(duration) => {
                 // Nobody acts or gains energy.
@@ -1212,6 +1217,7 @@ impl World {
             Action::Disarm(dir) => return self.disarm(*dir, events),
             Action::Heal(what) => return self.heal(what.as_deref(), events),
             Action::Pray => return self.start_prayer(),
+            Action::Forage => return self.start_forage(),
             Action::Temper { item } => return self.start_temper(*item),
             Action::SecondWind => return self.second_wind(events),
             Action::BloodMagic => return self.blood_magic(),
@@ -1356,6 +1362,8 @@ mod fixture_factions;
 mod flavour_tests;
 #[cfg(test)]
 mod focus_tests;
+#[cfg(test)]
+mod forage_tests;
 #[cfg(test)]
 mod free_blow_tests;
 #[cfg(test)]
