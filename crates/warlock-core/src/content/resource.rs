@@ -10,6 +10,7 @@
 //! a reordering. Without the file there are none.
 
 use super::{ContentError, StatusId};
+use crate::stats::Stat;
 use serde::{Deserialize, Serialize};
 
 /// Index of a resource in [`super::Content::resources`], in file order (in the content
@@ -129,6 +130,16 @@ struct ResourceSpec {
     status: Option<String>,
     #[serde(default)]
     builds: Vec<BuildSpec>,
+    max_from: Option<MaxFromSpec>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct MaxFromSpec {
+    stat: String,
+    per_levels: u8,
+    #[serde(default)]
+    least: u16,
 }
 
 #[derive(Deserialize)]
@@ -140,6 +151,29 @@ struct BuildSpec {
 
 fn yes() -> bool {
     true
+}
+
+/// What else a resource's maximum grows with (`max_from = { stat = "toughness", per_levels =
+/// 10, least = 5 }`): the holder's modifier in `stat` and a point per `per_levels` character
+/// levels, added to its `max`, the sum at least `least` (before what talents add). Read in one
+/// place, `Actor::resource_max`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct MaxFrom {
+    pub stat: Stat,
+    /// A point more per this many character levels (1 or more).
+    pub per_levels: u8,
+    /// The least the maximum may come to by the stat and the level.
+    pub least: u16,
+}
+
+impl MaxFrom {
+    /// The maximum `max` comes to for a holder with modifier `modifier` in the stat at character
+    /// `level`: at least [`MaxFrom::least`], at most [`MAX_RESOURCE`].
+    pub fn max(self, max: u16, modifier: i32, level: u8) -> u16 {
+        let more = modifier + i32::from(level / self.per_levels);
+        let sum = (i32::from(max) + more).max(i32::from(self.least));
+        u16::try_from(sum.clamp(0, i32::from(MAX_RESOURCE))).unwrap_or(MAX_RESOURCE)
+    }
 }
 
 /// A resource, in file order.
@@ -154,6 +188,11 @@ pub struct ResourceDef {
     pub max: u16,
     /// What it starts at when granted.
     pub start: u16,
+    /// Whether it starts full when granted (no `start` in data): at its maximum by data, what
+    /// `max_from` adds included (not its talents'; [`ResourceDef::start`] is then `max`).
+    pub starts_full: bool,
+    /// What else its maximum grows with, if anything (stamina: Toughness and level).
+    pub max_from: Option<MaxFrom>,
     /// Whether the status bar shows the maximum too (`Rage 7/20`) or the value alone (`Rage 7`).
     pub show_max: bool,
     /// How it changes by itself as time passes, if it does.
@@ -258,12 +297,36 @@ pub(super) fn parse(
             }
             builds.push((b.on, b.amount));
         }
+        let max_from = match spec.max_from {
+            None => None,
+            Some(m) => {
+                let Some(stat) = Stat::from_id(&m.stat) else {
+                    return Err(err(&format!(
+                        "`max_from` names an unknown stat `{}`",
+                        m.stat
+                    )));
+                };
+                if m.per_levels == 0 {
+                    return Err(err("`max_from`'s `per_levels` must be 1 or more"));
+                }
+                if m.least > spec.max {
+                    return Err(err("`max_from`'s `least` must not be above `max`"));
+                }
+                Some(MaxFrom {
+                    stat,
+                    per_levels: m.per_levels,
+                    least: m.least,
+                })
+            }
+        };
         list.push(ResourceDef {
             id: spec.id,
             name: spec.name,
             short: spec.short,
             max: spec.max,
             start,
+            starts_full: spec.start.is_none(),
+            max_from,
             show_max: spec.show_max,
             over_time,
             resting: spec.resting,
@@ -347,6 +410,32 @@ mod tests {
         assert_eq!(focus.start, 10, "it starts full without a `start`");
         assert!(focus.show_max && !focus.resting && !focus.ends_at_zero);
         assert_eq!(focus.over_time, Some(OverTime::Regenerates { every: 6 }));
+    }
+
+    #[test]
+    fn a_maximum_may_grow_with_a_stat_and_the_level() {
+        let text = "[[resource]]\nid = \"stamina\"\nname = \"Stamina\"\nshort = \"Sta\"\n\
+                    max = 10\nmax_from = { stat = \"toughness\", per_levels = 10, least = 5 }\n";
+        let list = parse("r.toml", text, none).expect("parses");
+        let from = list[0].max_from.expect("max_from");
+        assert_eq!(
+            (from.stat, from.per_levels, from.least),
+            (Stat::Toughness, 10, 5)
+        );
+        assert!(list[0].starts_full);
+        assert_eq!(from.max(10, 2, 1), 12, "Toughness 14 at level 1");
+        assert_eq!(from.max(10, 4, 60), 20, "Toughness 18 at level 60");
+        assert_eq!(from.max(10, -5, 9), 5, "never below `least`");
+        let head = "[[resource]]\nid = \"x\"\nname = \"X\"\nshort = \"X\"\nmax = 10\n";
+        let bad = |rest: &str| {
+            let text = format!("{head}{rest}");
+            parse("r.toml", &text, none).expect_err(rest).to_string()
+        };
+        assert!(bad("max_from = { stat = \"luck\", per_levels = 10 }").contains("unknown stat"));
+        assert!(bad("max_from = { stat = \"toughness\", per_levels = 0 }").contains("per_levels"));
+        let least = "max_from = { stat = \"toughness\", per_levels = 10, least = 11 }";
+        assert!(bad(least).contains("least"));
+        assert!(bad("max_from = { stat = \"toughness\" }").contains("per_levels"));
     }
 
     #[test]

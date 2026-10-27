@@ -149,18 +149,26 @@ fn a_level_brings_its_abilities_and_says_so() {
     let mut w = world("warrior");
     assert_eq!(
         class_rows(&w),
-        ["Weapon drill"],
+        ["Weapon drill", "Trained wind"],
         "the signature from the start"
     );
     reach(&mut w, 5);
-    assert_eq!(class_rows(&w), ["Weapon drill"]);
+    assert_eq!(class_rows(&w), ["Weapon drill", "Trained wind"]);
     reach(&mut w, 6);
     assert!(said(&w).contains(&"You gain Shield line.".to_string()));
-    assert_eq!(class_rows(&w), ["Weapon drill", "Shield line"]);
+    assert_eq!(
+        class_rows(&w),
+        ["Weapon drill", "Trained wind", "Shield line"]
+    );
     reach(&mut w, 12);
     assert_eq!(
         class_rows(&w),
-        ["Weapon drill", "Shield line", "Veteran's wind"]
+        [
+            "Weapon drill",
+            "Trained wind",
+            "Shield line",
+            "Veteran's wind"
+        ]
     );
     // A restored world has them too.
     let restored = World::from_state(w.content().clone(), w.state().clone()).expect("restored");
@@ -168,7 +176,7 @@ fn a_level_brings_its_abilities_and_says_so() {
     assert_eq!(restored.state_hash(), w.state_hash());
     // A run on the scenario's own character has its class's too (the showcase's thief).
     let plain = World::new(BUILTIN.clone(), "showcase", Some(7)).expect("world");
-    assert_eq!(class_rows(&plain), ["Sneak attack"]);
+    assert_eq!(class_rows(&plain), ["Sneak attack", "Trained wind"]);
 }
 
 #[test]
@@ -310,9 +318,9 @@ fn rage_raises_strength_blocks_reading_and_exhausts() {
     // Mighty rage: twice the Strength, and room for ten more rage.
     let mut w = world("barbarian");
     let rage_id = content.resource_id("rage").expect("rage");
-    assert_eq!(w.state.player().resource_max(&content, rage_id), 20);
+    assert_eq!(w.state.player().resource_max(&content, rage_id, 1), 20);
     reach(&mut w, 50);
-    assert_eq!(w.state.player().resource_max(&content, rage_id), 30);
+    assert_eq!(w.state.player().resource_max(&content, rage_id, 1), 30);
     let calm = strength(&w);
     run(&mut w, "use:rage");
     assert_eq!(strength(&w), calm + 4);
@@ -640,7 +648,7 @@ fn class_actives_replay_and_dump_the_same() {
     let bytes = crate::save::encode(&w);
     let loaded = crate::save::decode(&bytes, BUILTIN.clone()).expect("loads");
     assert_eq!(loaded.state(), w.state());
-    assert_eq!(class_rows(&loaded), ["Rage"]);
+    assert_eq!(class_rows(&loaded), ["Rage", "Trained wind"]);
     let abilities = (Action::Use(ClassActive::Smite, Some(Dir::E))).to_string();
     assert_eq!(abilities, "use:smite:E");
 }
