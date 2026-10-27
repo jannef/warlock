@@ -117,7 +117,7 @@ log, active first) from perception;
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:DIR pick:DIR ascend descend lantern hood
 pickup[:LETTERS] drop[:LETTERS] sell[:LETTERS] pay[:DIR] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
 eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] study:LETTER dig:DIR search search:N disarm:DIR heal[:ID] pray drink second_wind blood_magic use:ID[:DIR] chat:DIR ask:DIR:TOPIC steal:DIR throw_voice:X,Y rest:GOAL stance:NAME vision:PROFILE
-talent:ID[:CHOICE] advance:SKILL levelup:auto xp:N
+talent:ID[:CHOICE] advance:SKILL levelup:auto xp:N rank:SKILL:N
 skip:DURATION weather:KIND spawn effect:ID@X,Y[>X,Y] identify[:LETTERS] afflict:STATUS drain:N resource:ID infect:DISEASE reveal:ID quest_roll:ID:TARGET`
 (`DIR` = N
 NE E SE S SW W NW; `NAME` = aggressive, neutral, defensive, or coward (a stance, no time; `assets/data/stances.toml`); `LETTERS` = stacks by position, as letters
@@ -156,7 +156,9 @@ throws the player's voice to level cell (X, Y) (one they see, within 6; the bard
 with its choice) when a level's pick is due (every third level; until it is made every other
 action is refused), `advance:stealth` spends a level's skill roll (none yet, #230), `levelup:auto`
 is the dev action that spends every choice due with the first the player may take, and `xp:2500`
-the dev experience grant (no time; `xp:691` brings a 100 % character to level 3);
+the dev experience grant (no time; `xp:691` brings a 100 % character to level 3); `rank:long_blades:5`
+the dev weapon rank (a weapon skill or style at that rank, 0 to 10, raising its defaults and
+saying what it teaches, as a rank risen would; no time; docs/dev/weapon-abilities.md);
 
 `PROFILE` = an id in
 `assets/data/vision.toml`; `GOAL` = `dawn`, `dusk`, or a duration up to `24h`; durations are
@@ -314,6 +316,7 @@ file). Topics:
 - `docs/dev/combat.md` — the 2d12 rules, Defence categories, strikes, hit points and death, messages
 - `docs/dev/ranged-combat.md` — firing and throwing, missiles in flight, fires, the aiming mode
 - `docs/dev/weapon-skills.md` — ranks, marks, benefits, training hooks, the styles' grips and rows
+- `docs/dev/weapon-abilities.md` — what ranks teach: the data, who has one, the switches, `Trigger` and `weapon_trigger`, `WeaponDoes`, statuses that ease by actions, the menu rows
 - `docs/dev/stats.md` — the six stats, modifiers, scores and potentials, what may be shown, stat training (marks by use, the level-up checks)
 - `docs/dev/burden.md` — load, limits, sizes, every penalty's one hook
 - `docs/dev/hunger.md` — satiation, eating, corpses and rot, starving

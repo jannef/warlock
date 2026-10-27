@@ -76,10 +76,28 @@ Each skill has its own benefits per rank, applied while you fight with it:
 
 Rank 0 gives nothing. The first five ranks grow slowly; ranks 6 to 10 grow much faster, in
 damage above all, with a wider critical range, quicker attacks, and more Parry, while to hit
-rises only a little more. Rank 10 is mastery; later, the masters of a weapon will learn feats of
-their own.
+rises only a little more. Rank 10 is mastery.
 
 {{#include generated/weapon-benefits.md}}
+
+## What a rank teaches
+
+Abilities come with ranks too. A rank may **teach an ability**: you are told so with the rank
+("You feel more skilled with long blades. You have learned the deep cut."), and the
+[abilities menu](abilities.md) (`a`) lists it under *Weapon skills*, after the skill that taught
+it ("Long blades: Deep cut"). The ones below **fire by themselves**: they cost nothing, take no
+time, and work whenever you fight with a weapon of the skill, so the menu shows them greyed with
+"fires by itself". An ability names its skills: Deep cut is any blade's, at rank 5 in that
+blade's skill. Creatures with the rank have them too, by the same rules: a spearman of rank 5
+braces against you as you come.
+
+{{#include generated/weapon-abilities.md}}
+
+The [Early mastery](talents.md) talent teaches every one of them a rank sooner, and so do the
+talents that make you fight as one more practised than you are (Stylist, Fencing). A status they
+leave (Bleeding, Staggered) is a [status effect](status-effects.md) like any other: a staggered
+foe's next action takes half again as long. A brace and a point-blank shot are
+[free blows](combat.md#free-blows): they bring none of their own.
 
 ## Where your skills come from
 

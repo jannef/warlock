@@ -57,7 +57,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     it (`World::pass_time`, in schedule order): a status with a `tick` ticks once every `tick`
     seconds at one degree and `n` times as often at `n` degrees (each second banks its severity
     in degree-seconds; every `tick` of them is a tick), each tick costing `damage` hit points; a
-    status with `eases` loses a degree every `eases` seconds, and at none it is gone. Hit points
+    status with `eases` loses a degree every `eases` seconds, and at none it is gone; a status
+    with `per_action` (Staggered, Pinned, Light-footed) eases by its sufferer's actions instead:
+    a degree as each action is taken (its price paid, `World::spend_actions`), but not one given
+    during that very action, so at one degree it is the next action's, priced with it. Hit points
     come back meanwhile ("Healing" below). Everything happens at its own moment, so it makes no
     difference how time is cut up (many waits or one long journey); at one moment a hit point
     back (and a point of mana back, "Mana" below) comes first, then the ticks, then the easing, then the player's hunger (§8 "Hunger": its
@@ -79,8 +82,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
       highest counts), creatures' as well as the player's (a hex is a status on a creature);
     - **slow** (`cost`, 50 to 1000 percent): every action's price is multiplied by it, after the
       burden and Bloated (`World::burdened`, the one place every price passes); several multiply.
-      Only a spell's buff on its caster may hasten (Haste's Hasted, 75; #397), so a creature's
-      quickest step stays what a rest's batching counts on;
+      Only a spell's buff on its caster may hasten (Haste's Hasted, 75; #397), and Light-footed
+      (50, the skirmisher's Hit and run, a weapon ability: one action), so a creature's quickest
+      step stays what a rest's batching counts on;
     - **block** actions (`blocks = ["read"]`, ids in `data/actions.toml`): the rules refuse the
       player's action of that kind before it is tried, with no time taken ("You cannot read while
       raging."; a step into a hostile creature is `melee`, into a closed door `open_door`, off a

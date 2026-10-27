@@ -71,9 +71,22 @@ rules, exactly. A style's benefits add to those of the weapon skill you fight wi
 
 The first five ranks grow slowly; ranks 6 to 10 grow much faster.
 
-Rank 0 gives nothing. Rank 10 is mastery: later, masters of a style will learn feats of their
-own (a duelist's riposte, a staff fighter's trip), which will be chosen from the one abilities
-menu like every other ability.
+Rank 0 gives nothing. Rank 10 is mastery.
+
+## What a rank teaches
+
+A style's rank teaches abilities as a weapon skill's does (see
+[What a rank teaches](weapon-skills.md#what-a-rank-teaches)): told with the rank, listed in the
+[abilities menu](abilities.md) after the style's name, and firing by themselves, free and
+instant, but only while you fight in the style: a duelist's riposte needs one weapon and an empty
+hand, Staggering block a weapon and a shield.
+
+{{#include generated/style-abilities.md}}
+
+Two that do the same never add up: a riposte from Duelist and one from a talent are one riposte.
+Staggered is never more than one slowed action, however many blows staggered the foe. A new pin
+keeps the longer of the two and never adds. Rend comes once an attack, when both blades hit and
+the foe lives; a shield bash is no second blade. Light-footed lasts for your next action only.
 
 ## Related styles
 

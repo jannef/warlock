@@ -615,8 +615,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     kick and Breaker, +4 each to a door kick's Strength); `dig_percent` (Breaker: a quarter more
     work a turn); `two_handed_price` (Iron grip: blows with a two-handed weapon 10 % cheaper,
     `World::attack_price`); `critical_status` (Staggering blow: a critical confirmed in melee
-    leaves the target Staggered, `cost = 150` for 6 seconds: its next action half again as
-    dear; `World::after_blow`, no draw of its own); `penetration` (Crusher: +2 on blows and kicks
+    leaves the target Staggered, `cost = 150` until its next action: that action half again
+    as dear; `World::after_blow`, no draw of its own); `penetration` (Crusher: +2 on blows and kicks
     that can do bludgeoning damage); `burden_dex` (Nimble: the burden's Dexterity cap +1);
     `sure_step` and `pit_proof` (Light step: a trap stepped onto gets a Dexterity check against
     its difficulty first, two draws only with the talent; made, it does not go off and is found;
@@ -1124,10 +1124,57 @@ developer notes (CLAUDE.md, `docs/dev/`).
     still stands is followed, by the style's `bash` chance (one gameplay draw, only when the
     chance is above 0), by a shield bash at it, free and silent, drawing on and training shield
     bashing and the style.
-  - **Rank 10** is where a style's later active or triggered abilities will hang (a duelist's
-    riposte, a staff fighter's trip); they will go into the one abilities menu (§6 "Abilities"),
-    with no key of their own.
+  - **Abilities**: a style's ranks teach abilities as weapon skills' do ("Weapon abilities"
+    below), working only in the style's grip.
   - **What the player perceives**: their own ranks and marks (as weapon skills), and which
     styles they fight in now (`PerceptionView::own_styles_in_use`), on the weapon skills screen
     (§6) and in the `weapon_skills` dump layer (`Duelist 1 (0%), in use`; JSON `styles_in_use`).
     Never a benefit, a penalty, a chance, or a creature's ranks.
+- **Weapon abilities** (#561; the combat progression design §4, §6;
+  `content/weapon_ability.rs`, `world/weapon_ability.rs`, docs/dev/weapon-abilities.md): what a
+  rank in a weapon skill or a style teaches, one `[[weapon_ability]]` a file in
+  `data/weapon_abilities/` (§7; a campaign's may add more), naming its skills (weapon skills or
+  styles, never both) and the rank (1 to 10, per file, so each group and style sets its own).
+  - **Who has one**: an actor whose rank in one of its skills, as abilities read it
+    (`Actor::ability_rank`: a weapon talent's ranks, Stylist and Fencing, count, and Early
+    mastery's one more), reaches it: the player and every creature with the rank alike
+    (creatures' ranks come from their types). It works only through what the actor fights with:
+    a triggered ability fires for the skill and style of the attack concerned (the attack's for
+    the attacker, what it holds for the one attacked); a style's only in the style's grip.
+  - **Triggered** (this slice; actives, paid in stamina and time, come with W3 and are refused
+    in data until then): free and instant, with no stamina, time, or cooldown (refused in data),
+    each on one combat event, raised at one line that already marks it (`World::weapon_trigger`,
+    the one place they fire): `hit` and `critical` (a blow, shot, or throw of the actor's that
+    lands or is a confirmed critical), `big_hit` (a third of the target's hit points, the target
+    alive), `kill`, `struck`; a melee attack on the actor missed by its Parry (`parried`, at
+    the attack's end), its Shield (`blocked`), or its Dexterity or Dodge (`dodged`);
+    `both_hands_hit` (both blows of a two-weapon attack hit one living target, once an attack;
+    a shield bash is no second hand); `approaches` (a hostile steps up beside the actor, the
+    player's step too). Deciding never draws: a fight with no qualifying rank keeps its draws.
+  - **Effects** (closed): `free_blow` (switches a free blow on while the actor wields a weapon
+    of the skill or fights in the style: Brace's gatekeeper, Riposte, Cleaving sweep, Great
+    cleave; `World::free_blows_of` folds them in, so a riposte from the style and one from a
+    talent are one riposte), `status` (on the other end or the actor; degrees fixed or drawn
+    once), `extra_damage` (Rend: the main hand's dice once more, no bonus, resisted, never
+    soaked, after the blows), `free_shot` (Point-blank: a free shot with the missile weapon and
+    the ammunition ready, else a throw of what is ready to throw; nothing without, no draw),
+    `parry_missiles` (Measure: Parry counts against shots and throws, which it otherwise never
+    does, "Combat" §8c).
+  - **The catalogue** (data; ranks first guesses): Deep cut (blades 5: a big hit bleeds a
+    degree more), Crushing blow (axes, maces, polearms 5: a big hit staggers), Brace (spears,
+    staves 5), Point-blank (bows, crossbows, slings, thrown 5), Stunning bash (shield bashing 5:
+    a bash that hits staggers), Riposte (Duelist 4), Measure (Duelist 10), Rend (Twin Blades 4),
+    Cleaving sweep (Great Weapon 4) and Great cleave (10), Staggering block (Sword and Board 4: a
+    parried or blocked melee attack staggers its striker), Pinning shot (Marksman 4: a critical
+    shot pins 1d3 actions), Stunning fist (Brawler 4: a critical staggers), Hit and run
+    (Skirmisher 4: a throw that hits makes the thrower Light-footed), Trip (Staff Fighter 4: a
+    critical pins an action). Staggered, Pinned, and Light-footed ease by the sufferer's actions
+    (§8 "Status effects": `per_action`), so a staggered foe's next action is the slowed one,
+    however many blows staggered it.
+  - **What the player perceives**: a rank that teaches one says so with its own line ("You feel
+    more skilled with long blades. You have learned the deep cut."); the abilities menu (§6)
+    lists each under *Weapon skills* after the skill it is listed under ("Long blades: Deep
+    cut"), greyed "fires by itself", never usable (`Ability::Weapon`,
+    `Unavailable::FiresByItself`); Rend says "Your blades rend the orc.", Staggering block "The
+    orc staggers from your shield.", a free blow or shot as one is. Never a rank threshold, a
+    chance, or a creature's abilities. The dev action `rank:SKILL:N` sets a rank (§6, replays).

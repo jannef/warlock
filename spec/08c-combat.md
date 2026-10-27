@@ -35,7 +35,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Defence** = 10 + one bonus per category: **Dexterity** (the Dexterity modifier, capped
     by the lowest `max_dex` of what the actor wears and by its burden, +3 Burdened, +1 Strained,
     0 Overloaded ("Burden" below), the lowest cap winning; a penalty counts in full), **Armour** (worn
-    `armour`), **Shield** (held `shield`), **Parry** (a wielded weapon's `parry`), **Natural** (the
+    `armour`), **Shield** (held `shield`), **Parry** (a wielded weapon's `parry`; against blows
+    only: a shot, a throw, a trap's missile, or a bolt is not parried, but by an actor with
+    Measure, a weapon ability, §8i "Weapon abilities"; `World::target_against`), **Natural** (the
     creature type's `natural` armour, or a magic item's), **Dodge** (the tumble skill's bonus,
     "Skills" below, and magic items), **Deflection** (magic items), and **Wall** (an
     incorporeal creature's `wall_defence` while it stands inside solid terrain, §8 "Incorporeal

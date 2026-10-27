@@ -619,6 +619,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Fighter (staves)), with the defaults duelist ↔ sword and board −3, duelist ↔ twin blades −3,
   great weapon ↔ staff fighter −3, marksman ↔ skirmisher −4. The wiki shows the skills, the
   styles, the defaults, the marks and curves, and the benefits per rank in generated tables.
+- **Weapon abilities** (`data/weapon_abilities/`, one `[[weapon_ability]]` a file named by its id,
+  each campaign's too, read in path order; optional; #561, §8 "Weapon abilities"): `id`, `name`,
+  `description`, `skills` (weapon skills or styles, never both), `rank` (1 to 10), `kind`
+  (`triggered`; `active` refused until it is in the game), `trigger` (one or a list: `hit`,
+  `critical`, `big_hit`, `kill`, `struck`, `parried`, `blocked`, `dodged`, `both_hands_hit`,
+  `approaches`; none for a switch), `systems` (the talent table's system ids), and
+  `[weapon_ability.effect]` with only its kind's fields: `free_blow` (`trigger`: riposte, cleave,
+  great_cleave, opportunist, gatekeeper), `status` (`status`, `severity` or `turns` dice, `on`
+  target or self), `extra_damage` (`dice`: main_hand, off_hand, or dice; optional `damage`
+  type), `free_shot` (on `approaches`), `parry_missiles`. A triggered ability has no `aim`,
+  `stamina`, `energy`, or `cooldown`. `data/weapon_abilities/README.toml` has the format.
 - **Equipment slots** (`data/slots.toml`, optional; without it nothing can be worn or wielded;
   M16): up to 26 `[[slot]]`s in the order the equipment screen lists them (lettered `a` on):
   `id` (objects name it in `slot`, replays in `equip:SLOT:LETTER`), `name`, `fits` (what objects

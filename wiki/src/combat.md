@@ -59,7 +59,8 @@ protects you, in kinds:
   Sword and Board, with a weapon in the other hand).
 - **Parry**: a weapon that turns blows aside, such as the quarterstaff, and your rank with the
   weapon you wield (blades, spears, and staves), and in Duelist or Staff Fighter while you fight
-  that way.
+  that way. It counts against blows only: an arrow, a bolt, or a thrown thing is not parried, but
+  by a duelist of rank 10 (Measure, see [Fighting styles](fighting-styles.md#what-a-rank-teaches)).
 - **Natural**: a creature's hide, shell, or scales. You have none, unless your race gives you
   some (lizardfolk's scales soak blows but do not turn them: see
   [Races](races.md#the-evil-races)) or a magic item does.
@@ -192,8 +193,9 @@ weapon already gives. Creatures do not take stances yet.
 
 ## Free blows
 
-Some fighters get a blow in for free, at no cost in time. Talents and class abilities will
-teach them (they are coming with character levels); no one fights this way yet.
+Some fighters get a blow in for free, at no cost in time. Talents, class abilities, and the
+ranks of weapon skills and fighting styles teach them (see
+[What a rank teaches](weapon-skills.md#what-a-rank-teaches)).
 
 - **Cleave**: when your attack kills, you strike another hostile creature next to you: the next
   one round from where your victim stood, going clockwise. Once per attack, or, with great cleave,
