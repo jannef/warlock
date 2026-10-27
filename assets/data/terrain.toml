@@ -363,6 +363,18 @@ glyph = "_"
 fg = "#5a5a5e"
 bg = "#0d0d10"
 
+# An anvil (spec §7 "Special rooms"): the feature of a forge, where the player may temper a
+# weapon or armour they carry (the Temper ability). Cold: the forge's fire is long out.
+[[terrain]]
+id = "anvil"
+name = "anvil"
+description = "An old anvil, its face pitted and dark, its hammer chained beside it. The forge behind it has been cold for years, but the iron still rings when struck."
+stone = true
+walkable = false
+glyph = "π"
+fg = "#8c8f96"
+bg = "#0d0d10"
+
 # A healing spring's basin (spec §7 "Special rooms"): the feature of the spring room, where Drink
 # (the abilities menu's Here group) is offered beside it. It never runs dry.
 [[terrain]]

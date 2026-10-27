@@ -308,7 +308,7 @@ fn roll_magic(
 }
 
 /// One affix of `kind` for `def` at `level` that does nothing `rolled` already does.
-fn roll_affix(
+pub(crate) fn roll_affix(
     content: &Content,
     rng: &mut Rng,
     def: &ObjectDef,

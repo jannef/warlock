@@ -60,6 +60,9 @@ pub(super) fn abilities(content: &Content) -> String {
             Ability::Pray => {
                 "everyone beside a forgotten altar not yet spent (a prayer takes a minute)".into()
             }
+            Ability::Temper => {
+                "everyone beside a forge's anvil (tempering takes ten minutes)".into()
+            }
             Ability::Drink => "everyone beside a healing spring (a drink takes ten seconds)".into(),
             // Weapon abilities have a table of their own (`weapon_abilities.rs`).
             Ability::Weapon(..) => continue,

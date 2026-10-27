@@ -1,6 +1,6 @@
 //! Special rooms (spec §7 "Special rooms").
 
-use super::text::capital;
+use super::text::{article, capital};
 use std::fmt::Write as _;
 use warlock_core::content::{Content, Hoard, Offer, StatusId};
 use warlock_core::world::rise_candidates;
@@ -137,6 +137,7 @@ pub(super) fn special_rooms(content: &Content) -> String {
         if let Some(feature) = e.feature {
             let offers = match &e.offers {
                 Some((Offer::Pray, _)) => ": pray beside it (see Forgotten altars)",
+                Some((Offer::Temper, _)) => ": temper a weapon or armour beside it (see Forges)",
                 Some((Offer::Drink, _)) => ": drink beside it (see Healing springs)",
                 None => "",
             };
@@ -145,7 +146,7 @@ pub(super) fn special_rooms(content: &Content) -> String {
             let line = if name.ends_with('s') {
                 format!("{} stand in it{offers}.", capital(&name))
             } else {
-                format!("A {name} stands in it{offers}.")
+                format!("{} {name} stands in it{offers}.", capital(article(&name)))
             };
             does.push(line);
         }

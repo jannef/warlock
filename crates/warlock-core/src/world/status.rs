@@ -379,8 +379,8 @@ impl World {
     }
 
     /// `seconds` of game time from `start` pass for actor `id`: its effects tick and ease, it
-    /// heals and gets mana back, (the player) hungers, its stat damage mends, its diseases take their turns, and
-    /// the food in its pack rots away, each at the moment it happens, until the time is up or it
+    /// heals and gets mana back, (the player) hungers, its stat damage mends, its diseases take their turns,
+    /// (the player) its stats get their daily check, and the food in its pack rots away, each at the moment it happens, until the time is up or it
     /// dies.
     fn live(&mut self, id: ActorId, start: GameTime, seconds: u64, events: &mut Vec<Event>) {
         // Nothing to live through (and nothing in its pack that rots).
@@ -401,6 +401,7 @@ impl World {
             let mana_rate = self.mana_rate(id);
             let hungrier = self.until_hungrier(id);
             let paces = self.resource_paces(id);
+            let stat_check = self.until_stat_check(id, now);
             let Some(actor) = self.state.actors.get_mut(&id) else {
                 return;
             };
@@ -421,6 +422,7 @@ impl World {
                 && crate::resource::until_next(&actor.resources, &content, &paces)
                     .is_none_or(|r| r > left)
                 && birthday.is_none_or(|b| b >= left)
+                && stat_check.is_none_or(|c| c > left)
             {
                 heal(actor, &content, left, rate);
                 mana::regain(actor, &content, left, mana_rate);
@@ -437,6 +439,10 @@ impl World {
             }
             if let Some(next) = disease::until_next(actor) {
                 step = step.min(next);
+            }
+            // The daily stat check at 06:00 (`stat_training.rs`).
+            if let Some(c) = stat_check {
+                step = step.min(c.max(1));
             }
             if let Some(r) = rots {
                 step = step.min(r.max(1));
@@ -530,6 +536,7 @@ impl World {
                 }
             }
             self.rot_pack(id, when);
+            self.daily_stat_check(id, when);
         }
     }
 

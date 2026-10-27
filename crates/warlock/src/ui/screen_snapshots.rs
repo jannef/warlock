@@ -100,6 +100,7 @@ const CASES: &[Case] = &[
     Case {
         name: "new-run-screen",
         screen: Some("new-run"),
+        size: (100, 34),
         ..BASE
     },
     Case {
@@ -326,6 +327,22 @@ const CASES: &[Case] = &[
         scenario: "shrine",
         actions: "move:N open:N move:N*3",
         screen: Some("abilities"),
+        ..BASE
+    },
+    // Beside a forge's anvil with arms and armour picked up: Temper in the Here group, asking
+    // for something carried; then its list, the weapons and armour only (not the lantern).
+    Case {
+        name: "abilities-menu-forge",
+        scenario: "forge",
+        actions: "move:SW move:S pickup move:W pickup move:E*2 pickup move:E pickup move:N*2",
+        screen: Some("abilities"),
+        ..BASE
+    },
+    Case {
+        name: "temper-list",
+        scenario: "forge",
+        actions: "move:SW move:S pickup move:W pickup move:E*2 pickup move:E pickup move:N*2",
+        screen: Some("temper"),
         ..BASE
     },
     // A ranger in the Thornwood after a forage (spec §8 "Foraging"): Survival listed as its

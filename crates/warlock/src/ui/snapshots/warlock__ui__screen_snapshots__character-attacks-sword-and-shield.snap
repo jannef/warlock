@@ -15,7 +15,7 @@ expression: "render(case, content.clone())"
     │ Stars   Unblinking, Transfixing stare, Trusted by none, Always a way, Tidal             │
     │                                                                                         │
     │ St  Strength      14   Main hand  long sword                                            │
-    │ Dx  Dexterity     11              +3 to hit, 1d8+3 slashing or piercing                 │
+    │ Dx  Dexterity     11              +3 to hit, 1d8+4 slashing or piercing                 │
     │ To  Toughness     11                                                                    │
     │ In  Intelligence  10                                                                    │
     │ Wi  Willpower     12                                                                    │

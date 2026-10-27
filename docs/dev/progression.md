@@ -297,7 +297,9 @@ left with nothing that cares about it:
    passes, so the reviewer checks the template's answer.
 3. **What counts as a system**: a rule a talent could change (a check, a price, a pace, a
    limit, a new action). Not one: presentation state no rule reads (blood stains), and channels
-   of existing systems (stat training is what the level-up reads, not a row). Extending a
+   of existing systems. (Stat training was such a channel, what the level-up reads, until its
+   daily check made it a rule a talent can change: `stat_training` since #562, with Hard
+   training and Quick study of the body.) Extending a
    system already in the list (a new trap kind) needs no new tag, only its talents' `systems`
    kept honest.
 4. **Resources** (mana, the mana PR; the pools of #225: Rage, Focus, Openings, Ki,
@@ -421,7 +423,8 @@ would see nothing darkvision does not). The design's B5 (Defence by attack kind)
 ## Later waves
 
 Skill rolls (#230) add `Due::rolls` and draw from `levels_rng`; stat training (#231, done:
-`docs/dev/stats.md` "Training") checks every stat on it once a level, from `level_up`; the level-up screen, the Talents page, creation picks, and `--talents` (#236, done) read
+`docs/dev/stats.md` "Training") checks every stat on it once a level, from `level_up` (the
+daily check at 06:00, #562, draws the training stream instead); the level-up screen, the Talents page, creation picks, and `--talents` (#236, done) read
 `PerceptionView::due`/`talents`; the talent waves add files under `data/talents/` and one read
 each; `granted` talents (races' `versatile`, the birth signs') are computed into `Actor::talents`
 by whoever grants them and never offered (`may_take` refuses them); a race's and the sign's

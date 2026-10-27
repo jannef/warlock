@@ -198,6 +198,12 @@ name = "Diseases and checks"
 id = "drain"
 name = "Drains: stats lost for good"
 
+# Stat training (#562, the combat progression design §9.2): the marks uses earn, the checks at a
+# level and once a day at 06:00. A system since the daily check (a rule a talent can change).
+[[system]]
+id = "stat_training"
+name = "Stat training: marks and checks"
+
 [[system]]
 id = "hunger"
 name = "Hunger, food, corpses, rot"

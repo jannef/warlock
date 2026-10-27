@@ -33,6 +33,16 @@ pub(super) fn stat_training(content: &Content) -> String {
 /// The chance a level-up raises a stat, by its score and the marks it holds, below its
 /// potential (at or above it the chance is divided by `over_potential_divisor`).
 pub(super) fn stat_checks(content: &Content) -> String {
+    checks_table(content, 1)
+}
+
+/// [`stat_checks`] for the daily check at 06:00: the need times `daily_factor`.
+pub(super) fn stat_daily_checks(content: &Content) -> String {
+    checks_table(content, content.stat_training().daily_factor)
+}
+
+/// The chance a check with the need times `factor` raises a stat below its potential.
+fn checks_table(content: &Content, factor: u16) -> String {
     let rules = content.stat_training();
     let marks = [5u16, 10, 20, 40, 60, 100, 200];
     let mut out = String::from("| Score | Need |");
@@ -43,9 +53,10 @@ pub(super) fn stat_checks(content: &Content) -> String {
     out.push_str(&"---:|".repeat(marks.len()));
     out.push('\n');
     for score in [8u8, 10, 12, 14, 16, 18, 20, 25, 30] {
-        let _ = write!(out, "| {score} | {} |", rules.need(score));
+        let need = rules.need(score) * u32::from(factor);
+        let _ = write!(out, "| {score} | {need} |");
         for m in marks {
-            let (n, d) = rules.odds(m, score, u8::MAX);
+            let (n, d) = rules.odds_by(m, score, u8::MAX, factor);
             let _ = write!(out, " {:.0} % |", 100.0 * f64::from(n) / f64::from(d));
         }
         out.push('\n');

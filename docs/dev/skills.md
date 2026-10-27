@@ -49,8 +49,11 @@ the Forage ability) in `world/forage.rs`, study (Spellcraft and Decipher script:
 when a study ends, is also `StatUse::Study`); each use
 is reported where it happens (`make_noise`, `hear`, `fight.rs::resolve`, `apply`, `player_moves`,
 `kick_door`, `search_turn` for `search`, `notice_hidden` for `spot`, `World::disarm` for
-`disarm`, `pick_lock` for `pick`, `World::steal` for `steal`, `World::heal` for `heal`, `World::forage_done` for `forage` (a forage that ran its time), and `World::sidesteps` for a
-known trap avoided, `dodge`, besides `fight.rs::resolve`). A new
+`disarm`, `pick_lock` for `pick`, `World::steal` for `steal`, `World::heal` for `heal`, `World::forage_done` for `forage` (a forage that ran its time), `world/temper.rs::tempered` for `temper`, and `World::sidesteps` for a known trap avoided,
+`dodge`, besides `fight.rs::resolve`). Metalcraft's `temper` benefit is read in
+`world/temper.rs::tempered` (the forge's Strength check, docs/dev/special-rooms.md); Metalcraft
+stays a skill "not usable yet" in the abilities menu, since Temper is offered by the anvil to
+anyone. A new
 effect or use is a variant there plus its one hook. The player sees values only
 (`PerceptionView::own_skills`, the Skills screen `ui/skills_screen.rs`, `A`); never marks or
 benefit numbers. Skills get no keys of their own: active uses are chosen from the one abilities

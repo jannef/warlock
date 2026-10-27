@@ -35,9 +35,9 @@ transparent and not walkable, not stairs or a door), `sides` (`{ good = LIGHT, e
 room draws a hidden side, its feature a light per side; the lights are resolved after they load,
 `RoomEffects::resolve_places`), `dressing` (`{ terrain, per_cells, most }`, `content::Dressing`:
 a terrain as a feature's, `per_cells` at least 1, `most` 1 to `MAX_DRESSING` 16; never pervades),
-`offers` (`{ pray = TABLE }`, `Offer::Pray` and an outcome
-table id, checked in `resolve_places` once `data/outcomes/` is loaded; `offers` and `sides` need
-a `feature`), `shrine` (`{ regen, status, welcome, unwelcome }`, `content::Shrine`,
+`offers` (`{ pray = TABLE }` or `{ temper = TABLE }`, exactly one: `Offer::Pray`/`Offer::Temper`
+and an outcome table id, checked in `resolve_places` once `data/outcomes/` is loaded; `offers` and
+`sides` need a `feature`), `shrine` (`{ regen, status, welcome, unwelcome }`, `content::Shrine`,
 `content/room_shrine.rs`: a shrine of a side; needs `sides`; `status` resolved and held to a
 room status's easing), `hoard` (a tempting hoard, `content::Treasure`: `items` 1 to 16, `loot_level`,
 `guardians = [least, most]` at most 16, `danger`; it needs `needs_danger` and can never pervade),
@@ -65,7 +65,8 @@ guardians = [2, 4], danger = 1 }`, #415), cursed (6, mark
 `g`, `needs_danger`, `level_chance` 5, `rise = { faction = "undead", after = "2m" }`, `unholy`,
 #408), altar (8, "altar room",
 `min_cells = 9`, `feature = "forgotten_altar"`, `sides`, `offers = { pray = "forgotten_altar" }`,
-#406), shrine (4, mark `i`, `min_cells = 9`, `feature = "shrine_stone"`, `sides` with the
+#406), forge (3, mark `F`, `min_cells = 9`, `feature = "anvil"`, `offers = { temper = "forge" }`,
+#418), shrine (4, mark `i`, `min_cells = 9`, `feature = "shrine_stone"`, `sides` with the
 altar's lights, `shrine = { regen = 200, status = "unwelcome", ... }`, #413), haunted (5, mark
 `q`, `needs_danger`, `haunt = { faction = "undead", every = "1h" }`, `unholy`, #417), scriptorium (5, mark
 `r`, `min_cells = 9`, `feature = "shelves"`, `loot = { class = "scrolls", count = [2, 4] }`,
@@ -82,7 +83,7 @@ together at most 100) and `banned = [ids]`, resolved into `RoomOdds { chance, pe
 favoured, banned }` (`RoomOdds::shared` has neither list). Content errors: unknown ids, an id both
 favoured and banned, shares over 100, every feature banned while `chance` is above 0, and the
 retired `effects` list (refused, pointing to `favoured` and `banned`). Fennmynster favours flooded
-35, cursed 15, hushed 15, shadowed 15, and bans hot (its ban on forges comes with them).
+35, cursed 15, hushed 15, shadowed 15, and bans forges and hot rooms.
 
 ## Generation
 
@@ -339,6 +340,43 @@ a room's `status`; `World::dwelling_here` counts a level with a shrine, so `pass
 `enter` for a neutral one). Nothing new is saved: the side is `SpecialRoom::side`, and the
 status is saved with the actor. The showcase's `shrine` scenario has a good and an evil shrine
 south of its altars.
+
+## Forges and tempering
+
+#418, the design's §9.12. Data: the `forge` effect, the terrain `anvil` (`π`, no light, a
+`description`), the `temper` action cost (1000 a turn), the outcome table
+`data/outcomes/forge.toml` (`seconds = 600`, kinds boon 35 / nothing 30 / bane 35, `lean = 20`,
+`exhaust = 0`, so no `spent`), and Metalcraft's `temper` benefit and mark (`data/skills.toml`;
+`skills::Effect::Temper`, `Use::Temper`). The table's outcomes use the `work` hook
+(`content::Work`: `improve`, `flaw`, `ruin`): improved is the boon, flawed (25) and ruined (10)
+share the bane, so the lean moves weight from both in proportion.
+
+`Ability::Temper` (`Source::Place`, had by no one, listed by `Ability::here` beside an anvil) is
+an ability with `Aim::Item` (as the Identify spell is): the abilities menu (`input.rs::use_ability`) opens
+`ScreenName::Temper` (`ObjectList::Temper`, the stacks `world::temperable` accepts: an item kind
+of weapon, launcher, shield, or armour), and choosing one applies `Ability::action_on(content, item)`,
+`Action::Temper { item }`. The dump's aim word is `an item you carry`.
+
+`world/temper.rs`: `start_temper` (refused with no time: no anvil beside, no such stack, not
+temperable), `Spent::Temper(Tempering)`, `World::temper` (`keep_at` for `seconds`, as a prayer),
+then `tempered`: the Strength check's natural roll (`combat::roll_natural`, gameplay stream) plus
+the Strength modifier, `skill_effect(Effect::Temper)`, and `TalentMods::check(Strength)`, less
+`DIFFICULTY` (13), times `POINTS_PER_MARGIN` (2), clamped to the table's `lean` (`lean_for`);
+`OutcomeTable::leaned`; `set_apart` (one of a stack of several moved to the pack's end);
+`draw_outcome`; `befall_on(outcome, anvil, Some(item))`; then, unless ruined, `identify` (and
+"This is ...!" when the work changed an already known item) and `rejoin` (a set-apart one joins
+its like again); last the Metalcraft mark. `exhaust = 0`: no exhaustion draw.
+
+The `work` hook (`world/outcome.rs::work_on`, the last in `hooks`, only with an item, so a
+prayer's table could not use it): `magic::temper::improve` (a free kind of the rarity first, by
+one `chance(50)` when both are free, `loot::roll_affix` at the item's level, or for a plain item
+the floor's item level, making it magic; else `raise`, the highest tier with a next tier, the
+first of equal ones, its value `range` in the new tier and the item level raised to that tier's)
+or `flaw` (one `index` draw; a unique keeps its last) set through `Stack::set_magic`; `ruin`
+takes the stack out with `remove_stacks` (equipment shifted). Each then
+`keep_hp_within_max` (a lost Toughness affix). `otherwise` lines cover improved with nothing to
+add or raise and flawed with nothing to lose. Nothing new is saved. The showcase's `forge`
+scenario (a dwarf craftsperson; arms and armour on the floor) is the place to try it.
 
 ## Healing springs
 
@@ -599,7 +637,8 @@ System `special_rooms` (`data/talents.toml`): Sense of place (wayfarer, `sense_o
 Intelligence 11, `hoard_grace` 1; hook `World::lift_in_hoard`), and Grave warden (guard, Willpower 12,
 `grave_warden`; hook `World::curse_corpse`). The class ability Consecrate (above) carries the
 system too. System `prayer`: Devout (wayfarer, `devout`; hook `world/outcome.rs::leaned_kinds`) and Penitent
-(grit, Willpower 12, `penitent`; hook `world/pray.rs::prayer_answered`).
+(grit, Willpower 12, `penitent`; hook `world/pray.rs::prayer_answered`). The forge
+adds no talent (the issue's "None new"): Metalcraft is its lean.
 
 ## Tests
 
@@ -638,7 +677,10 @@ refusals), `mapgen/altar_tests.rs` (one altar a room, never by a door, its side'
 level still joined, the sides one to two to one), `world/outcome_tests.rs` (Pray only beside an
 altar not spent, a minute, a broken prayer, the lean and Devout, the draw's shares, the nothing
 lines, each hook, the explosion, the deed, exhaustion near half and a spent altar after a save
-and load), `content/room_lore_tests.rs` (`loot` and `train`: parsed, checked, resolved, unknown names
+and load), `world/temper_tests.rs` (Temper only beside an anvil, refusals with no time, ten
+minutes, identifying and the Metalcraft mark, an interrupted one changing nothing, the lean,
+the draw's shares, improve on plain, full magic, and rare items, flaw and ruin (a wielded item
+too), one of a stack set apart, the anvil never spent), `content/room_lore_tests.rs` (`loot` and `train`: parsed, checked, resolved, unknown names
 refused, never over a whole level, `Here::train` folding, the built-in scriptorium),
 `mapgen/scriptorium_tests.rs` (one shelf a room, two to four scrolls, the rest of the level
 unchanged), `world/scriptorium_tests.rs` (Decipher script's marks certain inside and about half

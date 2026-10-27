@@ -42,6 +42,8 @@ mod fey_roster_tests;
 mod fiend_roster_tests;
 mod flow;
 mod forage;
+#[cfg(test)]
+mod forge_tests;
 mod gear;
 mod gem;
 #[cfg(test)]
@@ -198,7 +200,7 @@ pub use object::{
 };
 pub use outcome::{
     Amount, Explosion, Harmful, Near, OutcomeDef, OutcomeEffect, OutcomeKind, OutcomeSummon,
-    OutcomeTable, OutcomeTables, OutcomeTier,
+    OutcomeTable, OutcomeTables, OutcomeTier, Work,
 };
 pub use overworld::{Landscape, LocalArea, local_area_id, parse_local_area};
 pub use part::{MAX_OBJECT_PARTS, MAX_PARTS, Part, PartDef, PartId, PartRole, and_list};
