@@ -77,6 +77,9 @@ mod room_collapse_tests;
 mod room_effect;
 #[cfg(test)]
 mod room_mirrors_tests;
+mod room_shrine;
+#[cfg(test)]
+mod room_shrine_tests;
 #[cfg(test)]
 mod room_temperature_tests;
 #[cfg(test)]
@@ -202,6 +205,7 @@ pub use room_effect::{
     Collapse, Here, Hoard, Mirrors, Offer, RoomEffectDef, RoomEffectId, RoomEffects, SpecialRoom,
     Swarm, Themes, Treasure,
 };
+pub use room_shrine::{Regard, Shrine};
 pub use scenario::ScenarioDef;
 pub use scroll::{Cast, Reading, ScrollSpell, SpellScroll};
 pub use scroll_label::ScrollLabelDef;

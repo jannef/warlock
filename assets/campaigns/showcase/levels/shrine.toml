@@ -2,7 +2,8 @@
 # abilities menu's Here group, beside one). West the good altar (its glow gold), in the middle a
 # neutral one (grey), east an evil one (red); their sides are hidden, as everywhere, and only the
 # glow tells them. Each prayer takes a minute and may spend its altar; data/outcomes/ has what a
-# prayer draws.
+# prayer draws. South two shrines of a side (no prayer; they treat whoever stands in them by
+# their side): west a good one (gold), east an evil one (red).
 arrival = "Three old altars stand in a row of shrines, their gods long forgotten."
 name = "The Shrine"
 ambient = [6, 6, 8, 0]
@@ -16,12 +17,17 @@ map = '''
 ####+########+########+####
 #.........................#
 #t...........@...........t#
+####+#################+####
+#.......###########.......#
+#...S...###########...S...#
+#.......###########.......#
 ###########################
 '''
 
 [legend]
 "@" = { terrain = "floor", spawn = "player" }
 "A" = "forgotten_altar"
+"S" = "shrine_stone"
 "t" = "sconce"
 
 [[room]]
@@ -36,4 +42,14 @@ area = [9, 0, 17, 6]
 [[room]]
 effect = "altar"
 area = [18, 0, 26, 6]
+side = "evil"
+
+[[room]]
+effect = "shrine"
+area = [0, 9, 8, 13]
+side = "good"
+
+[[room]]
+effect = "shrine"
+area = [18, 9, 26, 13]
 side = "evil"

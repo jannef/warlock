@@ -219,7 +219,8 @@ struct RoomSpec {
     effect: String,
     /// `[x0, y0, x1, y1]`, inclusive: the room with its walls.
     area: [i32; 4],
-    /// Its hidden side, for an effect with `sides` (a forgotten altar's); default neutral.
+    /// Its hidden side, for an effect with `sides` (a forgotten altar's); default neutral (a
+    /// shrine's must be good or evil).
     side: Option<crate::alignment::Alignment>,
 }
 
@@ -817,6 +818,16 @@ pub(super) fn parse_level(
             }
             (side, true) => room.side = Some(side.unwrap_or_default()),
             (None, false) => {}
+        }
+        if def.shrine.is_some()
+            && room
+                .side
+                .is_none_or(|s| s == crate::alignment::Alignment::Neutral)
+        {
+            return Err(err(format!(
+                "room `{}` is a shrine: its `side` is good or evil",
+                spec.effect
+            )));
         }
         if !room.is_valid_within(width, height) {
             return Err(err(format!(

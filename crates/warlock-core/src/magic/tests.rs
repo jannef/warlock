@@ -376,6 +376,7 @@ fn descriptions_say_base_stats_and_known_affixes_in_words() {
             "Long blade, for the main hand",
             "Damage 1d8; criticals on 20–24, ×2 damage",
             "Slashing or piercing damage",
+            "To hit +0, damage 1d8",
         ]
     );
     let mut sword = item(
@@ -399,8 +400,11 @@ fn descriptions_say_base_stats_and_known_affixes_in_words() {
             .iter()
             .any(|l| l.contains("Sharp") || l.contains("Celerity"))
     );
+    // Its numbers are its base ones until it is identified, then its affixes count.
+    assert!(unknown.iter().any(|l| l == "To hit +0, damage 1d8"));
     sword.identify();
     let known = lines(&sword, &c);
+    assert!(known.iter().any(|l| l.text == "To hit +0, damage 1d8+2"));
     let affixes: Vec<(LineKind, &str)> = (known.iter())
         .filter(|l| matches!(l.kind, LineKind::Affix(_)))
         .map(|l| (l.kind, l.text.as_str()))
@@ -445,6 +449,7 @@ fn descriptions_say_base_stats_and_known_affixes_in_words() {
             "Piercing damage",
             "Needs Strength 14 to draw",
             "Shoots up to 15 cells",
+            "To hit +0, damage 1d8+2, range 15",
         ]
     );
     let mail = text(&Stack::one(object(&c, "chain_mail")));
@@ -455,6 +460,7 @@ fn descriptions_say_base_stats_and_known_affixes_in_words() {
             "Armour +2",
             "Protection 3 (+1 against slashing, −1 against piercing)",
             "Dexterity adds at most +4 to Defence while worn",
+            "Dv +2, Pv 3",
         ]
     );
     // Penetration is a fact, never a number.

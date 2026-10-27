@@ -30,7 +30,9 @@ transparent and not walkable, not stairs or a door), `sides` (`{ good = LIGHT, e
 room draws a hidden side, its feature a light per side; the lights are resolved after they load,
 `RoomEffects::resolve_places`), `offers` (`{ pray = TABLE }`, `Offer::Pray` and an outcome
 table id, checked in `resolve_places` once `data/outcomes/` is loaded; `offers` and `sides` need
-a `feature`), and `hoard` (a tempting hoard, `content::Treasure`: `items` 1 to 16, `loot_level`,
+a `feature`), `shrine` (`{ regen, status, welcome, unwelcome }`, `content::Shrine`,
+`content/room_shrine.rs`: a shrine of a side; needs `sides`; `status` resolved and held to a
+room status's easing), and `hoard` (a tempting hoard, `content::Treasure`: `items` 1 to 16, `loot_level`,
 `guardians = [least, most]` at most 16, `danger`; it needs `needs_danger` and can never pervade).
 An effect with `level_chance` must have a
 `pervade` line and be neither `shunned` nor lay a `floor` nor hold `mirrors` nor `collapse`
@@ -51,7 +53,9 @@ guardians = [2, 4], danger = 1 }`, #415), cursed (6, mark
 `g`, `needs_danger`, `level_chance` 5, `rise = { faction = "undead", after = "2m" }`, `unholy`,
 #408), altar (8, "altar room",
 `min_cells = 9`, `feature = "forgotten_altar"`, `sides`, `offers = { pray = "forgotten_altar" }`,
-#406). Draining (also `unholy`) and cursed are the ones with a `level_chance`.
+#406), shrine (4, mark `i`, `min_cells = 9`, `feature = "shrine_stone"`, `sides` with the
+altar's lights, `shrine = { regen = 200, status = "unwelcome", ... }`, #413). Draining (also
+`unholy`) and cursed are the ones with a `level_chance`.
 
 A dungeon's `room_effects` (on a branch or a `[[dungeon.levels]]` range; `content/dungeon.rs`,
 `RoomOddsSpec::layer`/`resolve`, field by field: the range's, the branch's, the shared file's)
@@ -230,6 +234,27 @@ of a spent or blown altar. The `rooms` dev layer adds `, side good` and `, spent
 altar side by side. Talent: Devout (system `prayer`, `TalentMods::devout`; hook
 `leaned_kinds`). The great outcomes (`Actor::boons`, `World::lose_level`, the rarity floor) and
 Penitent come with #407.
+
+## Shrines of a side
+
+#413, the design's §9.3. Data: the `shrine` effect, the terrain `shrine_stone` (`∩`, no light of
+its own: a shrine is never neutral, so its side's light is always placed), the status
+`unwelcome` (`status.toml`, beside Silenced: `regen = 50`, `combat = { to_hit = -1 }`, `eases =
+30`). Generation (`mapgen/special.rs::place`): an effect with `shrine` draws its side with one
+`below(2)` (0 good, else evil) instead of the altar's `below(4)`; the feature and its light are
+the altar's code. Level files (`content/level.rs`) refuse a shrine room without `side = "good"`
+or `"evil"`.
+
+Rules (`world/shrine.rs`): `LevelState::shrine_at(content, pos)` (the room's `Shrine` and its
+side) and `Shrine::regard(side, Actor::nature)` (`Welcome`, `Unwelcome`, `Ignored`). Three
+hooks, one line each: `World::dwell` ends with `dwell_shrine` (the status through `afflict`, as
+a room's `status`; `World::dwelling_here` counts a level with a shrine, so `pass_time` and
+`settle_in` call it); `World::healing_rate_at` multiplies the room's pace by `shrine_pace`
+(`regen` for one welcomed, else 100) before `room_pace`, so Hallowed rest adds to it; and
+`travel.rs::enter_room` says `shrine::enter_line` (`welcome`, `unwelcome`, or the effect's
+`enter` for a neutral one). Nothing new is saved: the side is `SpecialRoom::side`, and the
+status is saved with the actor. The showcase's `shrine` scenario has a good and an evil shrine
+south of its altars.
 
 ## State and the one question
 
@@ -464,7 +489,12 @@ hoard refused, a generated one's sleepers all beasts with bones and corpses for 
 branch without beasts that never draws one),
 `world/silent_tests.rs` (the silent vault: its data, the player's
 refusals and the easing, the hundredth of noise, creatures silenced and a shaman fighting in
-melee, silenced from the start, saving), `content/room_temperature_tests.rs` (the field, its range, `Here::warmth`),
+melee, silenced from the start, saving), `content/room_shrine_tests.rs` (the `shrine` field
+parsed with its status, and its refusals), `world/shrine_tests.rs` (the shrine: its data and
+the regard table, the side's light, Unwelcome on the other side and its easing, twice the
+healing for its side, nothing for a neutral one, creatures by their own side, a level file's
+side refused unless good or evil, saving), `mapgen/shrine_tests.rs` (generated shrines: one
+stone, good or evil one to one, the side's light), `content/room_temperature_tests.rs` (the field, its range, `Here::warmth`),
 `world/room_temperature_tests.rs` (hot and cold rooms: the cells' temperature, the player's and
 the status bar's, no status, a cold room's pool frozen on a mild level and not beside it, ice
 melting in a hot room in a frost, the pre-roll only with such a room, alike however time passes,

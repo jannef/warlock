@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ You are bleeding.
+ You feel sick.
+
+
+
+
+
+
+
+
+                                    ┌─ Heal ───────────────────┐
+                                    │                          │
+                                    │   What do you tend to?   │
+                                    │                          │
+                                    │    Bleeding              │
+                                    │    Poisoned              │
+                                    │  > Never mind  (n, Esc)  │
+                                    │                          │
+                                    │ ↑/↓ choose  Enter select │
+                                    └──────────────────────────┘
+
+
+
+
+
+
+
+
+
+ The Hub  ·  HP 18/18  ·  MP 14/14  ·  Bleeding  ·  Poisoned  ·  Lv 1  ·  08:00          ? controls

@@ -295,6 +295,7 @@ impl World {
         let room = (self.state.levels.get(&actor.level)).map_or(100, |level| {
             level.effects_at(&self.content, actor.pos).regen()
         });
+        let room = room * self.shrine_pace(actor) / 100;
         let rate = rate * self.room_pace(actor, room) / 100;
         // Then the regeneration of what it wears and wields, and its talents' (Healthy;
         // Sun-blessed's under the open sun).

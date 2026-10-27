@@ -206,6 +206,10 @@ fn lines_named(stack: &Stack, content: &Content, (name, plural): (String, String
             .into_iter()
             .map(|t| line(LineKind::Stat, t)),
     );
+    // Then what it gives in all, in numbers, as the player knows it (`numbers`): to hit and
+    // damage with its material and known affixes, Dv and Pv.
+    let numbers = super::Numbers::of(stack, content).lines(content);
+    out.extend(numbers.into_iter().map(|t| line(LineKind::Stat, t)));
     if stack.rarity() == Rarity::Normal {
         return out;
     }

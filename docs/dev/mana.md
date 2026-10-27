@@ -73,12 +73,24 @@ issue how it interacts with mana**, and hooks in at the one place below.
   right after HP, so it gives way after everything else of that priority, before the HP), the
   character screen's `MP  Mana  5/12` beside the hit points (`BESIDE`, as Protection beside
   Defence), the dump header's `mp`, the JSON dump's `mana: {current, max}`. The dev `actors`
-  layer shows every actor's `mp`. Never a creature's mana or any pace in the game.
+  layer shows every actor's `mp` (and, for one with mana, its caster level, `cl 8`). Never a
+  creature's mana or any pace in the game.
+- **Creatures** (#525): nothing above is the player's alone. A creature's maximum, pace, and
+  caster level read what it wears and wields through the same hooks (`Actor::max_mana`,
+  `World::mana_rate`, `World::caster_level`, each on `Mods::worn`), so a goblin wizard's Mystic
+  bone amulet or an animated panoply's rings give it a larger pool, filled as it is made
+  (`travel::make_creature` sets `mana` after its gear), a faster pace, and a higher caster
+  level; a summoner spends from that pool (`World::summons_at`, `spend_mana`). Creature spells
+  are still announced only, so its caster level is read by nothing in play yet; the dev
+  `actors` layer shows it. Creature gear never changes after it is made (stealing takes no worn
+  thing), so no creature's mana needs `keep_mana_within_max`.
 - **Wiki**: `xtask/src/wiki/mana.rs` (race and class mana, regeneration by Willpower, what
   changes the pace) for `wiki/src/mana.md`; the special rooms table says the room's pace.
 - **Tests**: `mana.rs` (the formulas), `world/mana_talent_tests.rs` (the five talents, the
   `cast` training), `world/mana_tests.rs` (maximum from data and stats,
   creature mana and serialization, regeneration by Willpower and resting, time cut differently,
   drains, statuses, diseases, starving, rooms, burden and stances doing nothing, the penalty that
-  passes, disease damage, spending and `drain:N`, levels, magic items, saves, replays), and the
+  passes, disease damage, spending and `drain:N`, levels, magic items, saves, replays),
+  `world/creature_magic_tests.rs` (a creature's pool, pace, and caster level with mana affixes
+  worn and without; a summoner one short of its cost summons with a Mystic ring), and the
   content parsers' own tests.

@@ -12,16 +12,16 @@ expression: "render(case, content.clone())"
 
 
 
-                    ┌─ Read ───────────────────────────────────────────────────┐
-                    │                                                          │
-                    │ Scrolls                                                  │
-                    │ > a - ? 2 scrolls labelled ZUNSANRO               100 g  │
-                    │   b - ? 2 scrolls labelled ULVENZIM               100 g  │
-                    │   c - ? 2 scrolls labelled ELGAR                  100 g  │
-                    │   d - ? 3 scrolls labelled PRAZIMPRA              150 g  │
-                    │                                                          │
-                    │ a-d or Enter read   Esc cancel                           │
-                    └──────────────────────────────────────────────────────────┘
+           ┌─ Read ─────────────────────────────────────────────────────────────────────┐
+           │                                                                            │
+           │ Scrolls                                                                    │
+           │ > a - ? 2 scrolls labelled ZUNSANRO                                 100 g  │
+           │   b - ? 2 scrolls labelled ULVENZIM                                 100 g  │
+           │   c - ? 2 scrolls labelled ELGAR                                    100 g  │
+           │   d - ? 3 scrolls labelled PRAZIMPRA                                150 g  │
+           │                                                                            │
+           │ a-d or Enter read   Esc cancel                                             │
+           └────────────────────────────────────────────────────────────────────────────┘
 
 
 
