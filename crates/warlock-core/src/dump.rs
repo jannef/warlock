@@ -752,7 +752,8 @@ fn attacks_json(view: &PerceptionView<'_>) -> Value {
 
 /// The player's talents in the order taken, one a line: its name for its choice and, for a
 /// ranked talent, the rank held of how many (`Hardy 2/3`); a race's and a birth sign's gifts
-/// first, marked `(race)` and `(sign)`, the sign's flaw `(sign, flaw)`.
+/// first, marked `(race)` and `(sign)`, the sign's flaw `(sign, flaw)`; a forgotten altar's
+/// `(altar)` and `(altar, flaw)`.
 fn talent_rows(view: &PerceptionView<'_>) -> Vec<String> {
     (view.own_talents().iter())
         .map(|t| {
@@ -762,6 +763,8 @@ fn talent_rows(view: &PerceptionView<'_>) -> Vec<String> {
                 t.name.clone()
             };
             match (t.granted, t.flaw, t.class) {
+                _ if t.boon && t.flaw => format!("{name} (altar, flaw)"),
+                _ if t.boon => format!("{name} (altar)"),
                 (_, true, _) => format!("{name} (sign, flaw)"),
                 (true, false, _) if t.race => format!("{name} (race)"),
                 (true, false, _) if t.spent => format!("{name} (sign, spent)"),
@@ -1205,8 +1208,16 @@ fn actor_rows(world: &World) -> Vec<String> {
             } else {
                 format!("{resists}; images {}", mirrored.join(" "))
             };
+            // Its caster level (spec §8 "Spells"), for an actor with mana: its magic items'
+            // `caster_level` included, as for the player.
+            let max_mana = a.max_mana(content);
+            let caster = if max_mana > 0 {
+                format!(" cl {}", world.caster_level(a.id))
+            } else {
+                String::new()
+            };
             format!(
-                "{} {} at {}: hp {}/{} mp {}/{}{resources} dv {} pv {}{alignment}{court}; weight {} (base {} + carried {}: \
+                "{} {} at {}: hp {}/{} mp {}/{}{caster}{resources} dv {} pv {}{alignment}{court}; weight {} (base {} + carried {}: \
                  {carried}){equipped}; {} (limit {}){weapons}; stats {}{skills}{effects}{diseases}\
                  {hunger}{npc}{talk}{resists}",
                 a.id,
@@ -1215,7 +1226,7 @@ fn actor_rows(world: &World) -> Vec<String> {
                 a.hp,
                 a.max_hp(content),
                 a.mana,
-                a.max_mana(content),
+                max_mana,
                 world.defence_of(a.id).total(),
                 world.protection_of(a.id).base,
                 format_weight(w.total()),

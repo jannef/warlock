@@ -600,6 +600,11 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                                   double (30 points from bane to boon), and an opposed one leans \
                                   as a neutral one"
             .into(),
+        TalentEffect::Penitent => "at a forgotten altar a great bane (Wrath of the forgotten, \
+                                    Unmade, Forsaken, Damned) becomes one of the nothing \
+                                    outcomes instead; the altar's explosion is not great and \
+                                    still happens"
+            .into(),
         TalentEffect::SenseOfPlace => "knows a special room's nature from a glimpse of it, \
             and the effect covering a whole level by name on arrival"
             .into(),

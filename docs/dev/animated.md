@@ -167,9 +167,10 @@ hums with power.".
 
 Nothing is built for them: what a composite wears and wields works through `Mods::worn` and the
 gear paths as for any actor (riders in `Actor::melee`, stats in `effective_stats`, resistances,
-Protection, `max_hp` set after equipping, light in `light/cache.rs`). Held but unread for a
-creature: max mana, mana regeneration, caster level (until creatures cast), carry (no burden),
-missile-only effects (they wield melee weapons). The wiki's page lists them.
+Protection, `max_hp` set after equipping, `mana` likewise, light in `light/cache.rs`; max
+mana, mana regeneration, and caster level through the mana hooks, #525, docs/dev/mana.md
+"Creatures", though a composite neither casts nor summons). Held but unread for a creature:
+carry (no burden), missile-only effects (they wield melee weapons). The wiki's page lists them.
 
 ## Performance
 

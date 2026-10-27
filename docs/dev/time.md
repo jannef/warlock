@@ -54,7 +54,10 @@ load it lightens (a throw), or a kill changes the next attack's price, never its
 (`weapon_skill_tests::an_attack_is_priced_as_it_begins...`).
 `creature_turn` is one creature's action and returns its price: the one place creature behavior
 lives (AI decisions, the noise and events an action makes; the AI is `world/ai.rs`, `docs/dev/creatures.md`).
-Speed (`speed` in `data/creatures.toml`, default 1000 = the player's; any player speed works)
+Speed (`speed` in `data/creatures.toml`, default 1000 = the player's; any player speed works;
+`Actor::speed` scales it by the talents' `speed_percent` plus the skills' `speed`, Athletics, the
+skills capped so the sum stays within `MAX_SPEED`; the burden, Bloated, and statuses are applied
+to prices afterwards in `World::slowed`, independent of speed)
 is rules-only: never put it in perception, the UI, or messages; energy is per actor in
 `WorldState` (saved, hashed); creatures on other levels and the dev skip gain none.
 Levels carry `kind` (no turn length of their own); terrain carries `move_cost` (percent); scenarios

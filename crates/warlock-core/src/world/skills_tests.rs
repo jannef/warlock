@@ -70,16 +70,23 @@ fn files(eager: bool) -> ContentFiles {
     }
     if eager {
         let text = include_str!("../../../../assets/data/skills.toml");
-        let eager: Vec<String> = text
-            .lines()
-            .map(|line| match line.split_once("chance = ") {
-                Some((before, _)) => format!("{before}chance = 100 }}]"),
-                None => line.to_string(),
-            })
-            .collect();
-        files.insert("data/skills.toml", &eager.join("\n"));
+        files.insert("data/skills.toml", &every_chance_certain(text));
     }
     files
+}
+
+/// `text` with every `chance = N` made `chance = 100`.
+fn every_chance_certain(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    let mut rest = text;
+    while let Some(at) = rest.find("chance = ") {
+        let (before, after) = rest.split_at(at + "chance = ".len());
+        out.push_str(before);
+        out.push_str("100");
+        rest = after.trim_start_matches(|c: char| c.is_ascii_digit());
+    }
+    out.push_str(rest);
+    out
 }
 
 fn content(eager: bool) -> Arc<Content> {
@@ -545,4 +552,140 @@ fn skills_and_marks_survive_a_save_and_replays_reproduce_training() {
     (odd.actors.get_mut(&player).expect("player").skills).add(unknown, 5);
     let err = World::from_state(content, odd).unwrap_err();
     assert!(err.to_string().contains("knows skills"), "{err}");
+}
+
+/// The player's speed (hidden in the game).
+fn speed(w: &World) -> u32 {
+    w.state.player().speed(&w.content)
+}
+
+#[test]
+fn athletics_makes_the_player_quicker_by_its_curve() {
+    let mut w = world("yard");
+    // +5 % at 100, +10 % at 200, straight between, rounded down, level after.
+    for (athletics, quick) in [
+        (None, 1000),
+        (Some(0), 1000),
+        (Some(50), 1020),
+        (Some(100), 1050),
+        (Some(150), 1070),
+        (Some(200), 1100),
+        (Some(MAX_VALUE), 1100),
+    ] {
+        set(&mut w, "athletics", athletics);
+        assert_eq!(speed(&w), quick, "athletics {athletics:?}");
+    }
+    // Creatures train no athletics: the rat keeps its type's speed.
+    let rat = (w.state.actors.iter())
+        .find(|(id, _)| **id != w.state.player)
+        .map(|(_, a)| a.clone())
+        .expect("the rat");
+    assert_eq!(
+        rat.speed(&w.content),
+        w.content.creature(rat.creature).speed
+    );
+}
+
+#[test]
+fn athletics_adds_to_talents_and_leaves_prices_to_burden_and_haste() {
+    let mut w = world("yard");
+    let player = w.state.player;
+    set(&mut w, "athletics", Some(100));
+    // Speed only: an action costs the same energy, gained quicker.
+    assert_eq!(w.price_of(player, ActionKind::Wait), 6000);
+    // Fleet-footed's +5 % and athletics' +5 % add up; Ponderous's −5 % takes it back.
+    w.player_mut().talents.take("fleet_footed", None);
+    assert_eq!(speed(&w), 1100);
+    w.player_mut().talents.take("ponderous", None);
+    assert_eq!(speed(&w), 1050);
+    // Hasted makes prices cheaper, athletics or not, and leaves the speed alone.
+    let hasted = w.content.status_id("hasted").expect("hasted");
+    let plain = w.price_of(player, ActionKind::Wait);
+    w.afflict(player, hasted, 1, None, &mut Vec::new());
+    assert_eq!(speed(&w), 1050);
+    let quickened = w.price_of(player, ActionKind::Wait);
+    assert!(quickened < plain, "{quickened} < {plain}");
+    set(&mut w, "athletics", None);
+    assert_eq!(w.price_of(player, ActionKind::Wait), quickened);
+    // The burden slows prices on its own, athletics or not.
+    let mut w = world("yard");
+    let mail = w.content.object_id("chain_mail").expect("chain mail");
+    w.player_mut().inventory = vec![Stack::one(mail); 2];
+    assert_eq!(w.load_of(player).burden(), Burden::Burdened);
+    for athletics in [None, Some(200)] {
+        set(&mut w, "athletics", athletics);
+        assert_eq!(w.price_of(player, ActionKind::Wait), 7500);
+    }
+    assert_eq!(speed(&w), 1100);
+}
+
+#[test]
+fn athletics_never_takes_speed_past_the_cap() {
+    let mut files = files(false);
+    let text = include_str!("../../../../assets/data/skills.toml");
+    let strong = text.replace(
+        "{ effect = \"speed\", curve = [[0, 0], [100, 5], [200, 10]] }",
+        "{ effect = \"speed\", curve = [[0, 0], [100, 50]] }",
+    );
+    assert_ne!(strong, text, "athletics gives speed");
+    files.insert("data/skills.toml", &strong);
+    let content = Arc::new(Content::load(&files).expect("test content is valid"));
+    let mut w = World::new(content.clone(), "yard", None).expect("world");
+    set(&mut w, "athletics", Some(100));
+    assert_eq!(speed(&w), 1500);
+    // Fleet-footed's +5 % would take it to 55 %: the cap, 50 %, holds.
+    w.player_mut().talents.take("fleet_footed", None);
+    assert_eq!(
+        i64::from(speed(&w)),
+        1000 + 10 * i64::from(crate::content::MAX_SPEED)
+    );
+    // Below the cap with Ponderous: 50 − 5.
+    let mut w = World::new(content, "yard", None).expect("world");
+    set(&mut w, "athletics", Some(100));
+    w.player_mut().talents.take("ponderous", None);
+    assert_eq!(speed(&w), 1450);
+}
+
+#[test]
+fn the_same_walk_takes_less_time_with_athletics() {
+    let walk = |athletics: Option<u16>| {
+        let mut w = world("yard");
+        set(&mut w, "athletics", athletics);
+        let start = w.state.time;
+        for _ in 0..12 {
+            w.apply(&Action::Move(Dir::E));
+        }
+        assert_eq!(w.player_pos().x, 13, "the walk is done");
+        w.state.time.since(start).as_seconds()
+    };
+    // Twelve steps of 6 s; at speed 1100, 12 × 6000 / 1100 = 65.5 s, up to the next second.
+    assert_eq!(walk(None), 72);
+    assert_eq!(walk(Some(200)), 66);
+}
+
+#[test]
+fn burdened_acts_and_journeys_train_athletics() {
+    let mut w = eager("yard");
+    set(&mut w, "athletics", Some(0));
+    let mail = w.content.object_id("chain_mail").expect("chain mail");
+    w.player_mut().inventory = vec![Stack::one(mail); 2];
+    w.apply(&Action::Move(Dir::E));
+    assert_eq!(marks(&w, "athletics"), Some(1));
+    w.player_mut().inventory.clear();
+    w.apply(&Action::Move(Dir::E));
+    assert_eq!(
+        marks(&w, "athletics"),
+        Some(1),
+        "an easy step trains nothing"
+    );
+    let mut w = World::new(content(true), "world", None).expect("world");
+    set(&mut w, "athletics", Some(0));
+    let mut moved = 0;
+    for dir in [Dir::E, Dir::W, Dir::N, Dir::S] {
+        let before = w.player_pos();
+        w.apply(&Action::Move(dir));
+        moved += u32::from(w.player_pos() != before);
+    }
+    assert!(moved > 0);
+    assert_eq!(marks(&w, "athletics"), Some(moved));
 }

@@ -170,6 +170,8 @@ pub struct OwnTalent {
     /// What it gives once in a life has been given (spec §8 "Birth sign": Rise from the ashes,
     /// risen): "(spent)".
     pub spent: bool,
+    /// A forgotten altar gave it (spec §7 "Special rooms": Chosen, Forsaken).
+    pub boon: bool,
 }
 
 /// How fresh food smells to those who can tell (spec §8 "Birth sign": Hound's nose): a word,
@@ -1617,6 +1619,8 @@ impl<'a> PerceptionView<'a> {
                     flaw: def.flaw,
                     class: class.contains(&id),
                     spent: (def.effects_at(taken.rank)).any(|e| spent(&e)),
+                    boon: (self.player.boons.iter())
+                        .any(|b| b.id == taken.id && b.choice == taken.choice),
                 })
             })
             .collect()
