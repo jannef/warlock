@@ -50,7 +50,9 @@ impl World {
     pub(super) fn dwelling_here(&self) -> bool {
         let level = self.state.current();
         let gives = |e| self.content.room_effect(e).status.is_some();
-        level.pervading.is_some_and(gives) || level.rooms.iter().any(|r| gives(r.effect))
+        level.pervading.is_some_and(gives)
+            || level.rooms.iter().any(|r| gives(r.effect))
+            || level.has_shrine(&self.content)
     }
 
     /// The player has just arrived on the current level (or a run starts on it): everyone on
@@ -99,6 +101,7 @@ impl World {
             }
             self.afflict(id, status, 1, None, events);
         }
+        self.dwell_shrine(id, events);
     }
 }
 

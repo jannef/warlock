@@ -27,6 +27,7 @@ use super::spell::{Burst, SpellFields, check_effect, one_kind};
 use super::trap::TrapNoise;
 use super::{Content, ContentError, DamageTypeId, EffectShape, ObjectId, StatusId, TerrainId};
 use crate::dice::Dice;
+use crate::magic::loot::LootGrade;
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
@@ -38,6 +39,8 @@ pub const MAX_SECONDS: u32 = 3600;
 pub const TURN_SECONDS: u32 = 10;
 /// The farthest the `know_traps` hook reaches, in cells.
 pub const MAX_REACH: i32 = 30;
+/// The most experience levels an outcome gives or takes.
+pub const MAX_LEVELS: i8 = 5;
 
 /// What kind of outcome it is: the kinds' weights are drawn first, leaned by the side.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Deserialize)]
@@ -210,6 +213,20 @@ pub struct OutcomeEffect {
     pub becomes: Option<TerrainId>,
     /// What happens to the item worked (a forge's Temper).
     pub work: Option<Work>,
+    /// The least rarity `loot` makes (`rarity = "rare"`: the top a base allows; a relic).
+    pub rarity: LootGrade,
+    /// A random stat's score and potential this much higher, for good (Gift of the forgotten).
+    pub gift: Option<Dice>,
+    /// A random stat's potential and score this much lower, for good, never below
+    /// [`crate::stats::DRAIN_FLOOR`] (Wrath of the forgotten).
+    pub wrath: Option<Dice>,
+    /// Experience levels gained (positive: to the next level's threshold, Exalted) or lost
+    /// (negative: to the start of the level below, `World::lose_level`, Unmade).
+    pub levels: i8,
+    /// A talent the player may take, given free and kept for life (Chosen; `Actor::boons`).
+    pub talent: bool,
+    /// A flaw talent the player lacks, kept for life (Forsaken; `Actor::boons`).
+    pub flaw: bool,
 }
 
 /// One outcome of a table.
@@ -367,6 +384,15 @@ struct EffectSpec {
     explode: Option<ExplodeSpec>,
     becomes: Option<String>,
     work: Option<Work>,
+    rarity: Option<String>,
+    gift: Option<Dice>,
+    wrath: Option<Dice>,
+    #[serde(default)]
+    levels: i8,
+    #[serde(default)]
+    talent: bool,
+    #[serde(default)]
+    flaw: bool,
 }
 
 #[derive(Deserialize)]
@@ -642,6 +668,21 @@ fn resolve_effect(e: EffectSpec, content: &Content) -> Result<OutcomeEffect, Str
         ),
         None => None,
     };
+    let rarity = match e.rarity.as_deref() {
+        None => LootGrade::Any,
+        Some(_) if e.loot.is_none() => return Err("`rarity` is for `loot`".into()),
+        Some("magic") => LootGrade::Magic,
+        Some("rare") => LootGrade::Rare,
+        Some(other) => return Err(format!("`rarity` is `magic` or `rare`, not `{other}`")),
+    };
+    for (name, dice) in [("gift", e.gift), ("wrath", e.wrath)] {
+        if dice.is_some_and(|d| d.min() < 1) {
+            return Err(format!("`{name}` dice give at least 1"));
+        }
+    }
+    if !(-MAX_LEVELS..=MAX_LEVELS).contains(&e.levels) {
+        return Err(format!("`levels` is -{MAX_LEVELS} to {MAX_LEVELS}"));
+    }
     Ok(OutcomeEffect {
         heal: e.heal.as_deref().map(amount).transpose()?,
         cure,
@@ -669,6 +710,12 @@ fn resolve_effect(e: EffectSpec, content: &Content) -> Result<OutcomeEffect, Str
         explode,
         becomes,
         work: e.work,
+        rarity,
+        gift: e.gift,
+        wrath: e.wrath,
+        levels: e.levels,
+        talent: e.talent,
+        flaw: e.flaw,
     })
 }
 

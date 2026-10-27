@@ -112,8 +112,10 @@ impl ObjectList {
             | ObjectList::Throw
             | ObjectList::Eat
             | ObjectList::Read
+            // Room for a name with its numbers and its marks (`a chain mail shirt (Dv +2,
+            // Pv 3) (being worn)`).
             | ObjectList::Identify(_)
-            | ObjectList::Temper => 60,
+            | ObjectList::Temper => 78,
             // Room for the spell each teaches and the chance.
             ObjectList::Study => 80,
         }
@@ -289,7 +291,7 @@ impl ObjectScreen {
                     item,
                     glyph: def.glyph,
                     fg: view.lore().fg(s),
-                    name: view.lore().describe(s),
+                    name: view.lore().listed(s),
                     mark: (!marks.is_empty()).then(|| marks.join(") (")),
                     weight: s.weight(content),
                     rarity: s.rarity(),
@@ -835,7 +837,7 @@ mod tests {
         // the scroll read.
         let mut screen = ObjectScreen::new(ObjectList::Identify(4), Some(&world.perception()));
         let names: Vec<&str> = screen.entries.iter().map(|e| e.name.as_str()).collect();
-        let mut unknown = vec!["a dagger (magic)"];
+        let mut unknown = vec!["a dagger (magic) (+0 hit, 1d4, range 5)"];
         unknown.extend(labelled[..3].iter().map(String::as_str));
         assert_eq!(names, unknown);
         assert_eq!(
@@ -866,7 +868,7 @@ mod tests {
         assert_eq!(screen.entries.len(), 1);
         assert_eq!(
             screen.entries.get(0).map(|e| e.name.as_str()),
-            Some("a dagger")
+            Some("a dagger (+0 hit, 1d4, range 5)")
         );
         let mut console = Console::default();
         console.resize(80, 24);
@@ -904,7 +906,15 @@ mod tests {
         // By class: the dagger (melee weapons), the jerkin (body armour), the candles (light
         // sources), lettered so; the pile's positions are jerkin 0, dagger 1, candles 2.
         let names: Vec<&str> = screen.entries.iter().map(|e| e.name.as_str()).collect();
-        assert_eq!(names, ["a dagger", "a leather jerkin", "2 wax candles"]);
+        // Each with what it gives in numbers (`Lore::listed`).
+        assert_eq!(
+            names,
+            [
+                "a dagger (+0 hit, 1d4, range 5)",
+                "a leather jerkin (Dv +1, Pv 1)",
+                "2 wax candles"
+            ]
+        );
         assert_eq!(screen.handle(&typed('c'), &b), ScreenAction::Stay);
         assert_eq!(screen.handle(&typed('a'), &b), ScreenAction::Stay);
         // `z` names nothing here; `j` is a letter, not a cursor move.
@@ -1085,8 +1095,8 @@ mod tests {
                     .find(|l| l.contains(needle))
                     .unwrap_or_else(|| panic!("{needle} in {text:#?}"))
             };
-            assert!(row("a leather jerkin (being worn)").contains("3.5 kg"));
-            row("a dagger (wielded)");
+            assert!(row("a leather jerkin (Dv +1, Pv 1) (being worn)").contains("3.5 kg"));
+            row("a dagger (+0 hit, 1d4, range 5) (wielded)");
             assert!(!row("2 wax candles").contains("candles ("), "not worn");
         }
         // Worn things still weigh what they weigh.

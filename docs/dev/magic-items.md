@@ -16,7 +16,17 @@ and wields, global), the one aggregation every rule reads; `loot.rs`: `roll`, it
 `name.rs`: the names around `Stack::names`, the item as it is made (its gems, #191, and its
 material, #193), so the order is [prefix] [ornament] [material] base [suffix] and a rare item's
 base shows its gem; `describe.rs`: base
-stats, gems with their size and cut, and affixes in words for the item description screen).
+stats, gems with their size and cut, and affixes in words for the item description screen;
+`numbers.rs`: `Numbers::of(stack)`, what an item gives in numbers (#552: a weapon's to-hit and
+damage with its material and local affixes through the very `Mods::sharpen` a strike uses and
+`Profile::bare`, a launcher's or thrower's range, ammunition's additions, a worn thing's global
+to-hit and damage (`Mods::global`, one stack's global effects), Dv as armour + shield + parry +
+the local Armour/Shield/Parry + the global Dodge/Deflection/Natural, Pv as `Stack::protection`),
+figured on `Stack::as_known` so an unidentified affix moves no number; `text` is the item lists'
+form (`Lore::listed` = `Lore::describe` + ` (numbers)`, which the object screens, the equipment
+screen and its choice, look mode's piles, and the `inventory` dump layer use; messages keep
+`describe`), `lines` the description's (`describe::lines` adds them after the base stats);
+`dice_text` is the one damage-dice form, which `OwnAttack::damage_text` uses too).
 `loot::roll` first lets a find of grade `any` be a loose gem (`gem::find`), then sets an item
 of a class with an `[[ornament]]` with a gem (`gem::ornament`), and last draws its material
 (`variant::draw`, step 8: by the materials' `rarity` at the item level; `loot::roll_from` takes
@@ -46,8 +56,11 @@ rider per kind, `sharpen` adds them to the profile) and `Effect::Resistance` (gl
 each with the affix's `damage_type` (`AffixDef::damage_type`, part of its `Group`, so an item
 may hold one of each kind). Hard
 rule: presentation reads an item's affixes only through `Stack::known_magic` (none until
-identified; `Stack::magic` is crate-private), and names only through `Stack::describe` /
-`title`, so unidentified affixes cannot leak; dev dumps use `describe_truth`. A new effect is a
+identified; `Stack::magic` is crate-private), names only through `Stack::describe` /
+`title`, and numbers only through `magic::Numbers` (on the known stack), so unidentified affixes
+cannot leak; dev dumps use `describe_truth`. Tests: `world/numbers_tests.rs` (a +1 sword, an
+unidentified armour's base numbers and its affixes once identified, a shield, a launcher's
+range, ammunition, a worn thing's to-hit). A new effect is a
 variant of `Effect` (id, value range, local/global, `allowed_on`), its reader in one rule, a
 phrase in `describe.rs`, and a wiki word in `xtask/src/wiki/magic.rs`. Affixes are saved by id, so
 adding affixes keeps saves; their values and tiers are checked on load.

@@ -9,6 +9,7 @@ use warlock_core::alignment::Alignment;
 use warlock_core::content::{
     Amount, Content, Near, OutcomeDef, OutcomeEffect, OutcomeKind, OutcomeTable, OutcomeTier, Work,
 };
+use warlock_core::magic::loot::LootGrade;
 use warlock_core::world::{POINTS_PER_MARGIN, TEMPER_DIFFICULTY, lean_for};
 
 /// The forgotten altar's table, if the content has it.
@@ -89,7 +90,14 @@ fn does(content: &Content, effect: &OutcomeEffect) -> String {
         } else {
             format!("the floor's item level + {bonus}")
         };
-        out.push(format!("an item of loot at {level} at the altar's foot"));
+        let floor = match effect.rarity {
+            LootGrade::Any => "",
+            LootGrade::Magic => ", magic at least",
+            LootGrade::Rare => ", rare (the top rarity its base allows)",
+        };
+        out.push(format!(
+            "an item of loot at {level}{floor} at the altar's foot"
+        ));
     }
     if let Some(reach) = effect.know_traps {
         out.push(format!("every trap within {reach} cells known"));
@@ -182,6 +190,38 @@ fn does(content: &Content, effect: &OutcomeEffect) -> String {
         ),
         Some(Work::Ruin) => out.push("the item breaks and is gone".into()),
         None => {}
+    }
+    if let Some(gift) = effect.gift {
+        out.push(format!(
+            "+{gift} to a random stat's score and potential, for good"
+        ));
+    }
+    if let Some(wrath) = effect.wrath {
+        out.push(format!(
+            "−{wrath} to a random stat's potential and score, for good, never below 3"
+        ));
+    }
+    match effect.levels {
+        0 => {}
+        1 => out.push("experience to the next level's threshold: a whole level".into()),
+        -1 => out.push(
+            "one experience level lost: experience to the threshold of the level below, its \
+             hit points and mana taken back (never the last hit point); its choices, once \
+             made, are kept, and the level gained again gives none"
+                .into(),
+        ),
+        n if n > 0 => out.push(format!("{n} experience levels gained")),
+        n => out.push(format!("{} experience levels lost", -n)),
+    }
+    if effect.talent {
+        out.push(
+            "a talent you may take and do not hold, drawn, given free and kept for life (never \
+             one of your picks)"
+                .into(),
+        );
+    }
+    if effect.flaw {
+        out.push("a flaw talent of the birth signs you lack, drawn, kept for life".into());
     }
     if out.is_empty() {
         return "nothing".into();

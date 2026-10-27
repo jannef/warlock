@@ -30,7 +30,9 @@ transparent and not walkable, not stairs or a door), `sides` (`{ good = LIGHT, e
 room draws a hidden side, its feature a light per side; the lights are resolved after they load,
 `RoomEffects::resolve_places`), `offers` (`{ pray = TABLE }` or `{ temper = TABLE }`, exactly
 one: `Offer::Pray`/`Offer::Temper` and an outcome table id, checked in `resolve_places` once
-`data/outcomes/` is loaded; `offers` and `sides` need a `feature`), and `hoard` (a tempting hoard, `content::Treasure`: `items` 1 to 16, `loot_level`,
+`data/outcomes/` is loaded; `offers` and `sides` need a `feature`), `shrine` (`{ regen, status,
+welcome, unwelcome }`, `content::Shrine`, `content/room_shrine.rs`: a shrine of a side; needs
+`sides`; `status` resolved and held to a room status's easing), and `hoard` (a tempting hoard, `content::Treasure`: `items` 1 to 16, `loot_level`,
 `guardians = [least, most]` at most 16, `danger`; it needs `needs_danger` and can never pervade).
 An effect with `level_chance` must have a
 `pervade` line and be neither `shunned` nor lay a `floor` nor hold `mirrors` nor `collapse`
@@ -52,7 +54,9 @@ guardians = [2, 4], danger = 1 }`, #415), cursed (6, mark
 #408), altar (8, "altar room",
 `min_cells = 9`, `feature = "forgotten_altar"`, `sides`, `offers = { pray = "forgotten_altar" }`,
 #406), forge (3, mark `F`, `min_cells = 9`, `feature = "anvil"`, `offers = { temper = "forge" }`,
-#418). Draining (also `unholy`) and cursed are the ones with a `level_chance`.
+#418), shrine (4, mark `i`, `min_cells = 9`, `feature = "shrine_stone"`, `sides` with the
+altar's lights, `shrine = { regen = 200, status = "unwelcome", ... }`, #413). Draining (also
+`unholy`) and cursed are the ones with a `level_chance`.
 
 A dungeon's `room_effects` (on a branch or a `[[dungeon.levels]]` range; `content/dungeon.rs`,
 `RoomOddsSpec::layer`/`resolve`, field by field: the range's, the branch's, the shared file's)
@@ -229,8 +233,49 @@ Nothing new is saved but `SpecialRoom::side` (left out while `None`): the terrai
 of a spent or blown altar. The `rooms` dev layer adds `, side good` and `, spent`/`, destroyed`
 (`dump.rs::feature_state`). The showcase's `shrine` scenario has a good, a neutral, and an evil
 altar side by side. Talent: Devout (system `prayer`, `TalentMods::devout`; hook
-`leaned_kinds`). The great outcomes (`Actor::boons`, `World::lose_level`, the rarity floor) and
-Penitent come with #407.
+`leaned_kinds`).
+
+The great outcomes (#407, `world/boons.rs`; tests `world/boons_tests.rs`) are five more hooks,
+applied after `becomes`: `gift` (`Stats::gift` on a random stat), `wrath` (`Stats::lessen`,
+floor `DRAIN_FLOOR`, then stat damage clamped and `keep_hp_within_max`), `levels` (positive:
+`gain_level`, `add_xp` to the next threshold exactly, unscaled by Good learner; negative:
+`World::lose_level`), `talent` (Chosen: `talent::offers` flattened to the ways not held, one
+drawn, `bestow`: `Talents::take`, `class::hand_out`, `train_chosen`, and pushed to
+`Actor::boons`), and `flaw` (Forsaken: the `flaw` talents not held, by id, one drawn, given
+likewise); `rarity` (`magic`/`rare`, only with `loot`) is the relic's floor, the `LootGrade`
+`loot::roll_with` takes. `Actor::boons` (saved, left out while empty) is read by
+`stars::grant`, which passes its ids to `Talents::regrant` beside the race's and the sign's
+(the flaws, being granted, are dropped and put back there) and `Talents::hold`s the rest.
+`World::lose_level` takes the experience to `threshold_for(level - 1)`, the level's
+`level_hp` (up to `hp_level`), the talents' `hp_at`/`mana_at` growth, Hardened's, and
+`level_mana` (up to `mana_level`) off the bases (hit points never below 1), drops `Due`s of
+that level and above, and raises `Progress::peak` (saved, left out at 0): `level_up` gives a
+level up to `peak` its hit points and mana again but no `Due`, no stat checks, and no class
+news. Penitent (`TalentMods::penitent`) is read in `prayer_answered`: a drawn outcome of kind
+bane and tier great is replaced by `draw_in(table, nothing)`. Perception's `OwnTalent::boon`
+marks them: `(altar)`/`(altar, flaw)` in the talents dump, "altar" on the Talents page, left
+out of the character screen's sign gifts; JSON adds `boon: true` only then.
+
+## Shrines of a side
+
+#413, the design's §9.3. Data: the `shrine` effect, the terrain `shrine_stone` (`∩`, no light of
+its own: a shrine is never neutral, so its side's light is always placed), the status
+`unwelcome` (`status.toml`, beside Silenced: `regen = 50`, `combat = { to_hit = -1 }`, `eases =
+30`). Generation (`mapgen/special.rs::place`): an effect with `shrine` draws its side with one
+`below(2)` (0 good, else evil) instead of the altar's `below(4)`; the feature and its light are
+the altar's code. Level files (`content/level.rs`) refuse a shrine room without `side = "good"`
+or `"evil"`.
+
+Rules (`world/shrine.rs`): `LevelState::shrine_at(content, pos)` (the room's `Shrine` and its
+side) and `Shrine::regard(side, Actor::nature)` (`Welcome`, `Unwelcome`, `Ignored`). Three
+hooks, one line each: `World::dwell` ends with `dwell_shrine` (the status through `afflict`, as
+a room's `status`; `World::dwelling_here` counts a level with a shrine, so `pass_time` and
+`settle_in` call it); `World::healing_rate_at` multiplies the room's pace by `shrine_pace`
+(`regen` for one welcomed, else 100) before `room_pace`, so Hallowed rest adds to it; and
+`travel.rs::enter_room` says `shrine::enter_line` (`welcome`, `unwelcome`, or the effect's
+`enter` for a neutral one). Nothing new is saved: the side is `SpecialRoom::side`, and the
+status is saved with the actor. The showcase's `shrine` scenario has a good and an evil shrine
+south of its altars.
 
 ## Forges and tempering
 
@@ -483,7 +528,8 @@ System `special_rooms` (`data/talents.toml`): Sense of place (wayfarer, `sense_o
 `collapse_proof`; hook `World::collapse_step`, which then draws nothing), Hoard-wise (delver,
 Intelligence 11, `hoard_grace` 1; hook `World::lift_in_hoard`), and Grave warden (guard, Willpower 12,
 `grave_warden`; hook `World::curse_corpse`). The class ability Consecrate (above) carries the
-system too. System `prayer`: Devout (wayfarer, `devout`; hook `world/outcome.rs::leaned_kinds`). The forge
+system too. System `prayer`: Devout (wayfarer, `devout`; hook `world/outcome.rs::leaned_kinds`) and Penitent
+(grit, Willpower 12, `penitent`; hook `world/pray.rs::prayer_answered`). The forge
 adds no talent (the issue's "None new"): Metalcraft is its lean.
 
 ## Tests
@@ -503,7 +549,12 @@ hoard refused, a generated one's sleepers all beasts with bones and corpses for 
 branch without beasts that never draws one),
 `world/silent_tests.rs` (the silent vault: its data, the player's
 refusals and the easing, the hundredth of noise, creatures silenced and a shaman fighting in
-melee, silenced from the start, saving), `content/room_temperature_tests.rs` (the field, its range, `Here::warmth`),
+melee, silenced from the start, saving), `content/room_shrine_tests.rs` (the `shrine` field
+parsed with its status, and its refusals), `world/shrine_tests.rs` (the shrine: its data and
+the regard table, the side's light, Unwelcome on the other side and its easing, twice the
+healing for its side, nothing for a neutral one, creatures by their own side, a level file's
+side refused unless good or evil, saving), `mapgen/shrine_tests.rs` (generated shrines: one
+stone, good or evil one to one, the side's light), `content/room_temperature_tests.rs` (the field, its range, `Here::warmth`),
 `world/room_temperature_tests.rs` (hot and cold rooms: the cells' temperature, the player's and
 the status bar's, no status, a cold room's pool frozen on a mild level and not beside it, ice
 melting in a hot room in a frost, the pre-roll only with such a room, alike however time passes,

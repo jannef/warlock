@@ -88,7 +88,9 @@ impl World {
                 .extra_picks_at(level);
             let talents = u8::from(every > 0 && level % every == 0).saturating_add(more);
             let bonus = class.map_or(0, |c| c.bonus_at(level));
-            if talents > 0 || rolls > 0 || bonus > 0 {
+            // A level lost and gained again brings no choices: they were made the first time.
+            let again = level <= self.state.progress.peak;
+            if !again && (talents > 0 || rolls > 0 || bonus > 0) {
                 (self.state.progress.due).push(Due {
                     level,
                     talents,
@@ -105,7 +107,7 @@ impl World {
             player.hp += hp;
             player.mana_base += mana;
             player.mana += mana;
-            self.grant_class(level, true);
+            self.grant_class(level, !again);
             // Hardened: every level past the hit point levels adds a level's hit points again.
             let hardened = self.state.player().talent_mods(&content).hardened;
             if let Some(bonus) = hardened.filter(|_| level > content.experience().hp_level()) {
@@ -114,7 +116,9 @@ impl World {
                 player.hp_base += hp;
                 player.hp += hp;
             }
-            self.check_stats();
+            if !again {
+                self.check_stats();
+            }
         }
         self.settle_due();
     }
@@ -261,7 +265,11 @@ impl World {
     /// Apprentice (spec §8 "Talents"): every `train_skill` of `effects`, a rank just taken for
     /// skill `choice`, trains it at its dice or adds them to it, rolled from the `levels`
     /// stream (never the gameplay stream: a pick moves no fight).
-    fn train_chosen(&mut self, effects: impl Iterator<Item = TalentEffect>, choice: Option<&str>) {
+    pub(super) fn train_chosen(
+        &mut self,
+        effects: impl Iterator<Item = TalentEffect>,
+        choice: Option<&str>,
+    ) {
         let Some(skill) = choice.and_then(|c| self.content.skill_id(c)) else {
             return;
         };

@@ -7,23 +7,23 @@ expression: "render(case, content.clone())"
     ┌─ Inventory ─────────────────────────────────────────────────────────────────────────────┐
     │                                                                                         │
     │ Melee weapons                                                                           │
-    │   a - ) a quarterstaff                                                            2 kg  │
+    │   a - ) a quarterstaff (+0 hit, 1d6, Dv +1)                                       2 kg  │
     │ Missile weapons                                                                         │
-    │   b - } a short bow                                                              700 g  │
+    │   b - } a short bow (+0 hit, 1d6, range 10)                                      700 g  │
     │ Missiles                                                                                │
     │   c - / 24 arrows                                                                720 g  │
     │ Shields                                                                                 │
-    │   d - [ a small shield                                                          2.5 kg  │
+    │   d - [ a small shield (Dv +1)                                                  2.5 kg  │
     │ Body armour                                                                             │
-    │   e - [ a chain mail shirt                                                       11 kg  │
+    │   e - [ a chain mail shirt (Dv +2, Pv 3)                                         11 kg  │
     │ Helmets                                                                                 │
-    │   f - [ an iron helm                                                            1.5 kg  │
+    │   f - [ an iron helm (Dv +0, Pv 1)                                              1.5 kg  │
     │ Cloaks                                                                                  │
-    │   g - [ a wool cloak                                                            1.2 kg  │
+    │   g - [ a wool cloak (Dv +0, Pv 0)                                              1.2 kg  │
     │ Gloves                                                                                  │
-    │   h - [ a pair of leather gloves                                                 250 g  │
+    │   h - [ a pair of leather gloves (Dv +0, Pv 0)                                   250 g  │
     │ Boots                                                                                   │
-    │   i - [ a pair of leather boots                                                   1 kg  │
+    │   i - [ a pair of leather boots (Dv +0, Pv 0)                                     1 kg  │
     │                                                                                         │
     │ Carrying 20.9 kg (burdened)   ·   Your weight 90.9 kg (you 70 kg)                       │
     │ Burdened over 14 kg, strained over 28 kg, overloaded over 42 kg                         │

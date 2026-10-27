@@ -747,8 +747,10 @@ pub fn route_keys(
                 // From the abilities menu, or from play (its key, the quick repeat).
                 screens.stack.close();
                 screens.stack.remember_ability(ability);
-                if let Some(list) = play.use_ability(ability) {
-                    screens.open(list);
+                match play.use_ability(ability) {
+                    Some(ScreenAction::Open(name)) => screens.open(name),
+                    Some(ScreenAction::Dialog(dialog)) => screens.ask(*dialog),
+                    _ => {}
                 }
             }
             ScreenAction::Open(name) => screens.open(name),
@@ -1191,9 +1193,10 @@ impl Gameplay<'_> {
     /// Uses `ability`: asks for what it needs (a direction in the message line, a cell in the
     /// aiming mode, an item from the list returned to open), then applies its action. One the
     /// player cannot use now is applied at once all the same, so the rules say why, taking no
-    /// time (a shield bash without a shield).
-    fn use_ability(&mut self, ability: Ability) -> Option<ScreenName> {
-        let Some(game) = &self.game else { return None };
+    /// time (a shield bash without a shield). One that treats an ailment (Heal) asks which in
+    /// the dialog, returned to open, when there are several.
+    fn use_ability(&mut self, ability: Ability) -> Option<ScreenAction> {
+        let game = self.game.as_ref()?;
         let usable = (game.world.perception().abilities().iter())
             .any(|own| own.ability == ability && own.unavailable.is_none());
         let content = game.world.content().clone();
@@ -1201,9 +1204,19 @@ impl Gameplay<'_> {
             (true, ability::Aim::Direction) => *self.mode = InputMode::Ability(ability),
             (true, ability::Aim::Cell) => self.aim(AimKind::Ability(ability)),
             // The one that asks for an item: Temper's list.
-            (true, ability::Aim::Item) => return Some(ScreenName::Temper),
+            (true, ability::Aim::Item) => return Some(ScreenAction::Open(ScreenName::Temper)),
             (true, ability::Aim::Nothing) => {
                 if let Some(action) = ability.action(&content, None) {
+                    self.actions.write(PlayerAction(action));
+                }
+            }
+            (true, ability::Aim::Ailment) => {
+                let ailments = game.world.perception().own_ailments();
+                if ailments.len() > 1 {
+                    return Some(treat_dialog(&ailments).into());
+                }
+                let one = ailments.into_iter().next().map(|a| a.action);
+                if let Some(action) = one.or_else(|| ability.action(&content, None)) {
                     self.actions.write(PlayerAction(action));
                 }
             }
@@ -1348,6 +1361,15 @@ fn command_in(
             let dev = dev && mode == InputMode::Normal;
             dev.then(|| bindings.lookup_in(Context::Dev, key)).flatten()
         })
+}
+
+/// The Heal ability's choice when the player may treat several things (spec §8 "Skills"): one
+/// option for each, in the order the rules list them, and a way out.
+pub(crate) fn treat_dialog(ailments: &[warlock_core::heal::OwnAilment]) -> Dialog {
+    let dialog = Dialog::new("Heal", "What do you tend to?");
+    (ailments.iter())
+        .fold(dialog, |d, a| d.plain(a.name.clone(), a.action.clone()))
+        .cancel("Never mind", ScreenAction::Close)
 }
 
 /// The question before reading a scroll (or casting a spell, spec §8 "Class abilities") whose

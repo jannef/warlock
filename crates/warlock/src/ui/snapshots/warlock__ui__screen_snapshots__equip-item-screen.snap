@@ -6,27 +6,27 @@ expression: "render(case, content.clone())"
  You put on a pair of leather boots.
 
 
-
-                    ┌─ Equipment: Head ────────────────────────────────────────┐
-                    │                                                          │
-                    │ Helmets                                                  │
-                    │ > a - [ an iron helm (being worn)                1.5 kg  │
-                    │                                                          │
-                    │                                                          │
-                    │                                                          │
-                    │                                                          │
-                    │                                                          │
-                    │                                                          │
-                    │                                                          │
-                    │                                                          │
-                    │                                                          │
-                    │                                                          │
-                    │                                                          │
-                    │                                                          │
-                    │ Choose what is there to take it off.                     │
-                    │                                                          │
-                    │ a or Enter put on   Esc back                             │
-                    └──────────────────────────────────────────────────────────┘
+           ┌─ Equipment: Head ──────────────────────────────────────────────────────────┐
+           │                                                                            │
+           │ Helmets                                                                    │
+           │ > a - [ an iron helm (Dv +0, Pv 1) (being worn)                    1.5 kg  │
+           │                                                                            │
+           │                                                                            │
+           │                                                                            │
+           │                                                                            │
+           │                                                                            │
+           │                                                                            │
+           │                                                                            │
+           │                                                                            │
+           │                                                                            │
+           │                                                                            │
+           │                                                                            │
+           │                                                                            │
+           │                                                                            │
+           │ Choose what is there to take it off.                                       │
+           │                                                                            │
+           │ a or Enter put on   Esc back                                               │
+           └────────────────────────────────────────────────────────────────────────────┘
 
 
 

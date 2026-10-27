@@ -167,10 +167,10 @@ fn the_draw_gives_the_kinds_and_tiers_their_shares() {
     for (got, want) in kinds.iter().zip([350, 300, 350]) {
         assert!(percent(*got).abs_diff(want) <= 20, "{kinds:?}");
     }
-    // The explosion: 5 of the bane's 94 until the great ones come, 1.9 %.
-    assert!(percent(burst).abs_diff(19) <= 5, "{burst}");
-    // Moderate: boon 29/94 and bane 34/94 of their kinds, about 23.5 %.
-    assert!(percent(moderate).abs_diff(235) <= 20, "{moderate}");
+    // The explosion: 5 of the bane's 100, 1.75 %.
+    assert!(percent(burst).abs_diff(17) <= 5, "{burst}");
+    // Moderate: boon 29 and bane 34 of their kinds' 100, about 22 %.
+    assert!(percent(moderate).abs_diff(220) <= 20, "{moderate}");
     // Leaned: agreement draws boons half the time.
     let leaned = leaned_kinds(&table, Alignment::Good, Alignment::Good, false);
     let boons = (0..n)

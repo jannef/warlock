@@ -185,7 +185,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   terrain, transparent and not walkable, generators place in the room; below), `sides` (the room
   has a hidden side, and its feature a light per side: `{ good = LIGHT, evil = LIGHT }`), and
   `offers` (what the player may do beside the feature: `{ pray = TABLE }`, an outcome table in
-  `data/outcomes/`). An effect with a `level_chance` needs its `pervade` line and is neither
+  `data/outcomes/`), and `shrine` (a shrine of a side, below: `{ regen, status, welcome,
+  unwelcome }`; needs `sides`). An effect with a `level_chance` needs its `pervade` line and is neither
   `shunned`, nor lays a `floor`, nor is a den, nor holds `mirrors`, nor collapses, nor has a
   `feature`.
   - **The effects** (weights in brackets): a *shadowed room* (10) keeps 30 % of the light ("The
@@ -230,7 +231,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     altar stands here, its god long forgotten." on entering; below); a *forge* (3, #418; only in
     a room of at least 9 floor cells; Fennmynster bans it) holds an anvil to temper at ("You
     smell old soot and cold iron." when glimpsed, "A cold forge, and an anvil waiting." on
-    entering; below). Blood washing away in a flooded room waits for blood (#127).
+    entering; below); a *shrine* (4, #413; only in a room of at least 9 floor cells) is a shrine
+    of a side (below: "You feel welcome here.", "Something here wants you gone.", or "An old
+    shrine. It ignores you." on entering). Blood washing away in a flooded room waits for blood
+    (#127).
   - **Hot and cold rooms** (`temperature`, #404): a room sets its cells' temperature and
     nothing else: no status, no damage, nothing done to items or food. The temperature at a cell
     is decided in one place, `WorldState::temperature_at` (the level's, §5 "Temperature", plus
@@ -325,6 +329,21 @@ developer notes (CLAUDE.md, `docs/dev/`).
     nothing was lifted, so other rooms save and hash as before), and the `rooms` dev layer
     lists them (`, lifted 1, sealed`). Hoard-wise (§8 "Talents") lets one stack go first.
     Never over a whole level.
+  - **Shrines of a side** (`shrine = { regen = 200, status = "unwelcome", welcome, unwelcome
+    }`, #413; `world/shrine.rs`, design §9.3): the room has a hidden side, drawn at generation
+    from the map stream as **good or evil, one to one** (one `below(2)`, in place of an altar's
+    one-to-two-to-one draw; a level file's `[[room]]` must give `side = "good"` or `"evil"`), kept
+    in `SpecialRoom::side` and shown only by its feature's light (the `shrine_stone`, `∩`, "shrine
+    stone": `altar_good`'s gold or `altar_evil`'s red, as a forgotten altar's). It treats
+    everyone inside, the player and creatures alike, by their own side (`Actor::nature`: the
+    player's band's side, a creature's type's or its level's): one of its side heals at `regen`
+    percent of the pace (200: twice as fast; one fold in `World::healing_rate`, before the room's
+    pace, so Hallowed rest quickens it too); one of the other side holds `status`, **Unwelcome**
+    (§8 "Status effects": half the healing, −1 to hit), given as a room's `status` is (at the start
+    of every stretch of time, and on arrival; it eases half a minute after leaving); a neutral one
+    neither. The first entry's line says which: `welcome`, `unwelcome`, or the effect's `enter`.
+    Nothing is said of the side in words, and nothing new is saved (the side is the altar's
+    field). Never over a whole level (it has a feature).
   - **Cursed rooms** (`rise = { faction = "undead", after = "2m" }`, #408; `world/curse.rs`):
     a creature that dies on a cell whose effects raise the dead (the room's, else the whole
     level's), is not of the rise's `faction`, and leaves a corpse is marked to rise, whoever
@@ -397,7 +416,24 @@ developer notes (CLAUDE.md, `docs/dev/`).
       A hook that finds nothing to do says the outcome's `otherwise` line instead (Glimpse with
       nothing unidentified: "You feel you understand a little."). The table
       (`data/outcomes/forgotten_altar.toml`, the wiki's "Forgotten altars") has six "nothing
-      happens" lines and the minor and moderate boons and banes; the great ones come with #407.
+      happens" lines and 40 boons and banes in three tiers (minor, moderate, great; weights
+      within each kind sum to 100, the great tier 6 of each).
+    - **The great boons and banes** (#407; `world/boons.rs`): *Gift of the forgotten* (+1d3 to a
+      random stat's score and potential, for good), *Exalted* (experience to the next level's
+      threshold, the level and its choices with it), *Chosen* (a talent the player may take and
+      does not hold, drawn, given free at rank 1 and kept for life: `Actor::boons`, put back with
+      the race's and the sign's gifts on every load, never a level's pick), *Relic* (an item at
+      item level + 10, at least rare, at the altar's foot: `loot` with `rarity = "rare"`); and
+      *Wrath of the forgotten* (−1d3 to a random stat's potential and score, for good, never
+      below 3), *Unmade* (one level lost: experience to the threshold of the level below, the
+      level's hit points and mana taken back, never the last hit point, its choices still due
+      dropped; choices already made stay, so the level gained again gives back its hit points
+      and mana but no choices and no stat checks, `Progress::peak`; at level 1 the experience
+      toward level 2 is lost), *Forsaken* (a flaw talent of the birth signs the player lacks,
+      kept for life in `Actor::boons`), *Damned* (2d4 hostiles of the floor's danger + 3, awake,
+      around the altar). Talents an altar gave are shown "(altar)" (a flaw "(altar, flaw)").
+      Penitent (§8 "Talents") turns a great bane drawn into one of the nothing outcomes, drawn
+      in its place; the explosion is moderate and still comes. No outcome grants a wish.
     - **The altar explodes** (the bane `burst`, 5 of the banes): "The altar bursts apart in
       fire!", then a fireball (3d6 fire, radius 2, `Caster::Place`) centred on the altar through
       the burst spell code: everyone in it is hurt, the player too, and it can kill ("The altar's
@@ -548,4 +584,5 @@ developer notes (CLAUDE.md, `docs/dev/`).
     anything the player does; #405), Mirror-wise (a hall of mirrors' images within 2 cells
     seen for what they are; #419), Light tread (a collapsed floor never gives way under
     them; #420), and Grave warden (guard; nothing the player kills rises; #408). The class ability Consecrate (above) lifts an unholy room or level. System `prayer`: Devout (wayfarer; an altar of the player's
-    side leans twice as far, an opposed one not at all; #406).
+    side leans twice as far, an opposed one not at all; #406) and Penitent (grit, Willpower 12;
+    a great bane becomes nothing; #407).

@@ -170,6 +170,8 @@ pub struct OwnTalent {
     /// What it gives once in a life has been given (spec §8 "Birth sign": Rise from the ashes,
     /// risen): "(spent)".
     pub spent: bool,
+    /// A forgotten altar gave it (spec §7 "Special rooms": Chosen, Forsaken).
+    pub boon: bool,
 }
 
 /// How fresh food smells to those who can tell (spec §8 "Birth sign": Hound's nose): a word,
@@ -1370,6 +1372,13 @@ impl<'a> PerceptionView<'a> {
         self.player.diseases.known()
     }
 
+    /// What the player may treat now with the Heal skill (spec §8 "Skills"), each by how they
+    /// know it ("Sickness" for a disease they cannot name yet) and the action that treats it:
+    /// the Heal ability's choice.
+    pub fn own_ailments(&self) -> Vec<crate::heal::OwnAilment> {
+        crate::heal::own(self.player, self.content)
+    }
+
     /// The status effects that show on seen creature `actor` (`seen` in `data/status.toml`:
     /// bleeding), the most important first; none for creatures not in view and the player.
     pub fn effects_of(&self, actor: ActorId) -> impl Iterator<Item = StatusId> + 'a {
@@ -1610,6 +1619,8 @@ impl<'a> PerceptionView<'a> {
                     flaw: def.flaw,
                     class: class.contains(&id),
                     spent: (def.effects_at(taken.rank)).any(|e| spent(&e)),
+                    boon: (self.player.boons.iter())
+                        .any(|b| b.id == taken.id && b.choice == taken.choice),
                 })
             })
             .collect()

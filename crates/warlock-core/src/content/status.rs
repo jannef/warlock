@@ -63,6 +63,35 @@ fn strength() -> Stat {
     Stat::Strength
 }
 
+/// How the Heal skill treats a status (`treat` in data; spec §8 "Skills": the Heal ability,
+/// `world/heal.rs`): an Intelligence check plus Heal against `difficulty` and `per_degree` for
+/// each of its degrees. A status that `stops` (bleeding) ends when the check is made, and a
+/// failed try may be made again at once; any other (poison) eases a degree when it is made, and
+/// may be tried once only, whatever comes of it, until it ends.
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Treat {
+    /// The check's difficulty before the degrees: 0 to 40.
+    pub difficulty: i32,
+    /// What each degree adds to it: 0 to 10.
+    #[serde(default)]
+    pub per_degree: i32,
+    /// Whether a made check ends it, and a failed one may be tried again.
+    #[serde(default)]
+    pub stops: bool,
+    /// What the player is told when the check is made: "You bind the wound."
+    pub made: String,
+    /// What the player is told when it fails: "The blood still runs."
+    pub failed: String,
+}
+
+impl Treat {
+    /// The difficulty of treating it at `severity` degrees.
+    pub fn difficulty_at(&self, severity: u16) -> i32 {
+        self.difficulty + self.per_degree * i32::from(severity)
+    }
+}
+
 /// Index of a status definition in [`super::Content::status_defs`], in file order (which is
 /// also how important it is: the status bar shows the first first).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
@@ -436,6 +465,7 @@ struct StatusSpec {
     dies: Option<String>,
     death: Option<String>,
     hold: Option<Hold>,
+    treat: Option<Treat>,
 }
 
 fn normal_regen() -> u16 {
@@ -520,6 +550,8 @@ pub struct StatusDef {
     pub death: Option<String>,
     /// What makes it a hold (Held), if it is one.
     pub hold: Option<Hold>,
+    /// How the Heal skill treats it, if it can (bleeding, poison).
+    pub treat: Option<Treat>,
 }
 
 impl StatusDef {
@@ -698,6 +730,18 @@ fn resolve(
     if let Some(hold) = &spec.hold {
         check_hold(hold, spec.max, spec.eases, spec.stacking, &blocks)?;
     }
+    if let Some(t) = &spec.treat
+        && (!(0..=40).contains(&t.difficulty)
+            || !(0..=10).contains(&t.per_degree)
+            || t.made.trim().is_empty()
+            || t.failed.trim().is_empty())
+    {
+        return Err(
+            "treat: difficulty must be 0 to 40, per_degree 0 to 10, and `made` and `failed` \
+             must not be empty"
+                .into(),
+        );
+    }
     Ok(StatusDef {
         id: spec.id,
         name: spec.name,
@@ -725,6 +769,7 @@ fn resolve(
         dies: spec.dies,
         death: spec.death,
         hold: spec.hold,
+        treat: spec.treat,
     })
 }
 
@@ -902,6 +947,16 @@ mod tests {
             (
                 format!("{BLEEDING}cured_by = [\"\"]\n"),
                 "a cure must have a name",
+            ),
+            (
+                format!(
+                    "{BLEEDING}treat = {{ difficulty = 41, made = \"Bound.\", failed = \"No.\" }}\n"
+                ),
+                "treat: difficulty must be 0 to 40",
+            ),
+            (
+                format!("{BLEEDING}treat = {{ difficulty = 6, made = \"\", failed = \"No.\" }}\n"),
+                "`made` and `failed` must not be empty",
             ),
             (
                 format!("{BLEEDING}seen = \" \"\n"),

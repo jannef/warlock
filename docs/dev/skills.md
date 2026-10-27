@@ -34,22 +34,26 @@ other roll, so they never move a score. Rules read a benefit through `Actor::ski
 `Skills::effect` directly. Each effect is read in one place: Dodge in
 `Actor::defence`, quiet in `noise::noise`, hearing in `Actor::hearing`, burden in
 `World::burdened` (`Burden::slow_eased`), travel in `World::step_price`, bargain in
-`world/shop.rs`, kick (athletics: Strength for kicking a door in) in `World::kick_door`, pick
+`world/shop.rs`, kick (athletics: Strength for kicking a door in) in `World::kick_door`, speed
+(athletics, #548: percent quicker, added to the talents' `speed_percent`, the skills never
+taking the sum past `MAX_SPEED`) in `Actor::speed`, pick
 (Open lock: picking a lock, and trained at all, the Pick lock ability) in `World::pick_lock`,
 search, search reach, and spot in `world/search.rs` (`search_modifier`, `search_turn`; Spot
 trained at all lets the player notice in passing, `Skills::trains_effect`), disarm in
 `world/disarm.rs` (`disarm_modifier`; trained at all, Disable device gives the Disarm ability,
 `Ability::had_by`), steal in `world/steal.rs` (trained at all lets the player steal,
-`docs/dev/stealing.md`), study (Spellcraft and Decipher script: points off the study check) in
+`docs/dev/stealing.md`), heal in `world/heal.rs` (trained at all gives the Heal ability;
+`docs/dev/status-effects.md` "Treating oneself"), study (Spellcraft and Decipher script: points off the study check) in
 `world/learn.rs::study_odds` (docs/dev/spells.md "Learning"; its use `Use::Study`, reported
 when a study ends, is also `StatUse::Study`); each use
 is reported where it happens (`make_noise`, `hear`, `fight.rs::resolve`, `apply`, `player_moves`,
 `kick_door`, `search_turn` for `search`, `notice_hidden` for `spot`, `World::disarm` for
-`disarm`, `pick_lock` for `pick`, `World::steal` for `steal`, `world/temper.rs::tempered` for
-`temper`, and `World::sidesteps` for a known trap avoided, `dodge`, besides `fight.rs::resolve`).
-Metalcraft's `temper` benefit is read in `world/temper.rs::tempered` (the forge's Strength check,
-docs/dev/special-rooms.md); Metalcraft stays a skill "not usable yet" in the abilities menu, since
-Temper is offered by the anvil to anyone. A new
+`disarm`, `pick_lock` for `pick`, `World::steal` for `steal`, `World::heal` for `heal`,
+`world/temper.rs::tempered` for `temper`, and `World::sidesteps` for a known trap avoided,
+`dodge`, besides `fight.rs::resolve`). Metalcraft's `temper` benefit is read in
+`world/temper.rs::tempered` (the forge's Strength check, docs/dev/special-rooms.md); Metalcraft
+stays a skill "not usable yet" in the abilities menu, since Temper is offered by the anvil to
+anyone. A new
 effect or use is a variant there plus its one hook. The player sees values only
 (`PerceptionView::own_skills`, the Skills screen `ui/skills_screen.rs`, `A`); never marks or
 benefit numbers. Skills get no keys of their own: active uses are chosen from the one abilities
@@ -57,6 +61,6 @@ menu (#156, `docs/dev/screens.md`): each trained skill of kind `action` is an `A
 there (`warlock_core::ability`), unavailable ("not usable yet") until its use exists, when it
 becomes an ability of its own in the skill's place (`Ability::use_of`): Disable device is
 `Ability::Disarm` (`docs/dev/traps.md`), Open lock `Ability::PickLock` (`docs/dev/doors.md`),
-Steal `Ability::Steal` (`docs/dev/stealing.md`).
+Steal `Ability::Steal` (`docs/dev/stealing.md`), Heal `Ability::Heal` (`docs/dev/status-effects.md`).
 Pending hooks:
 athletics (climbing out of pits, #128) and escape artist (pits, #128).

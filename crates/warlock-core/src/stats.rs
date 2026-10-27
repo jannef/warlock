@@ -352,6 +352,18 @@ impl Stats {
         taken
     }
 
+    /// Takes up to `points` off the potential in `stat` and as many off its score, for good
+    /// (spec §7 "Special rooms": Wrath of the forgotten), neither below `floor` (nor below 1).
+    /// Returns whether either fell.
+    pub fn lessen(&mut self, stat: Stat, points: u8, floor: u8) -> bool {
+        let floor = floor.max(1);
+        let (score, potential) = (self.score[stat], self.potential[stat]);
+        self.score[stat] = score.saturating_sub(points).max(floor.min(score));
+        self.potential[stat] =
+            (potential.saturating_sub(points).max(floor.min(potential))).max(self.score[stat]);
+        (self.score[stat], self.potential[stat]) != (score, potential)
+    }
+
     /// Gives `points` back to the score in `stat` (drained points restored), within
     /// [`SCORES`]; a potential below the score rises to it.
     pub fn restore(&mut self, stat: Stat, points: u8) {

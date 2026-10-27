@@ -30,9 +30,10 @@
 //! (#128). Each becomes one more [`Effect`] (and a [`Use`] for its marks: a climb) read in that
 //! one place, with its numbers in `data/skills.toml`; until then escape artist is trained and
 //! shown but gives nothing. Athletics already adds to the Strength a kick at a door is rolled
-//! against ([`Effect::Kick`], [`Use::Kick`]), Open lock to picking a lock ([`Effect::Pick`],
-//! [`Use::Pick`]), and Metalcraft to tempering at a forge's anvil ([`Effect::Temper`],
-//! [`Use::Temper`]).
+//! against ([`Effect::Kick`], [`Use::Kick`]) and makes the actor quicker ([`Effect::Speed`],
+//! marked by [`Use::Burdened`] and [`Use::Travel`] too), Open lock to picking a lock
+//! ([`Effect::Pick`], [`Use::Pick`]), and Metalcraft to tempering at a forge's anvil
+//! ([`Effect::Temper`], [`Use::Temper`]).
 
 use crate::content::Content;
 use crate::dice::Dice;
@@ -66,6 +67,8 @@ pub const MAX_SEARCH_REACH: i32 = 2;
 
 /// The most a skill adds to stealing from someone (spec §8 "Stealing").
 pub const MAX_STEAL_BONUS: i32 = 20;
+/// The most a skill adds to treating bleeding, poison, or a disease (spec §8 "Skills": Heal).
+pub const MAX_HEAL_BONUS: i32 = 20;
 /// The most a skill adds to picking a lock (spec §8 "Doors").
 pub const MAX_PICK_BONUS: i32 = 20;
 /// The most a skill adds to tempering an item at an anvil (spec §7 "Special rooms": the forge).
@@ -134,6 +137,10 @@ pub enum Effect {
     /// Points added to stealing from someone (spec §8 "Stealing"; `world/steal.rs`); a skill
     /// with it, trained, lets the actor steal at all (the abilities menu's Steal).
     Steal,
+    /// Points added to treating oneself (spec §8 "Skills": Heal; `world/heal.rs`): bleeding,
+    /// poison, a disease; a skill with it, trained, lets the actor treat at all (the Heal
+    /// ability).
+    Heal,
     /// Points added to the Strength score a kick at a closed door is rolled against (spec §8
     /// "Doors"; `world/door.rs`).
     Kick,
@@ -143,6 +150,10 @@ pub enum Effect {
     /// Points added to the check that leans a forge's outcome (spec §7 "Special rooms": Temper
     /// at an anvil; `world/temper.rs`). Anyone may temper; the skill only leans it.
     Temper,
+    /// Percent quicker the actor is in everything (spec §8 "Speed";
+    /// [`crate::world::Actor::speed`]): its speed, added to its talents' percent, the two
+    /// together at most [`crate::content::MAX_SPEED`].
+    Speed,
 }
 
 impl Effect {
@@ -155,10 +166,12 @@ impl Effect {
             Effect::Search | Effect::Spot => MAX_SEARCH_BONUS,
             Effect::Study => MAX_STUDY_BONUS,
             Effect::Steal => MAX_STEAL_BONUS,
+            Effect::Heal => MAX_HEAL_BONUS,
             Effect::Disarm => MAX_DISARM_BONUS,
             Effect::Pick => MAX_PICK_BONUS,
             Effect::Temper => MAX_TEMPER_BONUS,
             Effect::SearchReach => MAX_SEARCH_REACH,
+            Effect::Speed => crate::content::MAX_SPEED,
         }
     }
 }
@@ -188,6 +201,8 @@ pub enum Use {
     Travel,
     /// An attempt to steal from someone (spec §8 "Stealing"), whatever comes of it.
     Steal,
+    /// A try at treating oneself (spec §8 "Skills": Heal), whatever comes of it.
+    Heal,
     /// A kick at a closed door (spec §8 "Doors").
     Kick,
     /// A try at picking a lock (spec §8 "Doors"), whatever comes of it.
@@ -211,6 +226,7 @@ impl Use {
             Use::Burdened => "acting (not waiting) while your load slows you",
             Use::Travel => "a journey on the overworld",
             Use::Steal => "trying to steal from someone",
+            Use::Heal => "trying to treat bleeding, poison, or a disease",
             Use::Kick => "kicking at a closed door",
             Use::Pick => "a try at picking a lock",
             Use::Temper => "tempering an item at an anvil",
@@ -317,6 +333,7 @@ impl Use {
             Use::Burdened => "burdened",
             Use::Travel => "travel",
             Use::Steal => "steal",
+            Use::Heal => "heal",
             Use::Kick => "kick",
             Use::Pick => "pick",
             Use::Temper => "temper",
@@ -340,9 +357,11 @@ impl Effect {
             Effect::Travel => "travel",
             Effect::Bargain => "bargain",
             Effect::Steal => "steal",
+            Effect::Heal => "heal",
             Effect::Kick => "kick",
             Effect::Pick => "pick",
             Effect::Temper => "temper",
+            Effect::Speed => "speed",
         }
     }
 }

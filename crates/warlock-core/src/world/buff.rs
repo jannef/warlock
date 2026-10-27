@@ -76,6 +76,7 @@ impl World {
             Action::Pray => ActionKind::Pray,
             Action::Temper { .. } => ActionKind::Temper,
             Action::Disarm(_) => ActionKind::Disarm,
+            Action::Heal(_) => ActionKind::Heal,
             Action::Use(active, _) | Action::UseAt(active, _) => active.cost(),
             Action::Gift(active, _) => active.cost(),
             Action::Cast(..) => ActionKind::Cast,

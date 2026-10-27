@@ -73,6 +73,15 @@ impl World {
             }
             at -= w;
         }
+        self.draw_in(table, kind)
+    }
+
+    /// One of `table`'s outcomes of `kind`, by weight. `None` when the kind has none.
+    pub(super) fn draw_in<'t>(
+        &mut self,
+        table: &'t OutcomeTable,
+        kind: OutcomeKind,
+    ) -> Option<&'t OutcomeDef> {
         let sum = table.total(kind);
         if sum == 0 {
             return None;
@@ -185,7 +194,7 @@ impl World {
             done = true;
         }
         if let Some(bonus) = effect.loot {
-            self.leave_loot(bonus, feature);
+            self.leave_loot(bonus, effect.rarity, feature);
             done = true;
         }
         if let Some(reach) = effect.know_traps {
@@ -270,6 +279,37 @@ impl World {
         }
         if let (Some(work), Some(item)) = (effect.work, item) {
             done |= self.work_on(work, item, found_once(&mut found));
+        }
+        // The great boons and banes (`boons.rs`).
+        if let Some(gift) = effect.gift {
+            self.gift_stat(gift);
+            done = true;
+        }
+        if let Some(wrath) = effect.wrath
+            && self.wrath_stat(wrath)
+        {
+            found(self);
+            done = true;
+        }
+        for _ in 0..effect.levels.unsigned_abs() {
+            let changed = match effect.levels > 0 {
+                true => self.gain_level(),
+                false => self.lose_level(),
+            };
+            if changed {
+                found(self);
+            }
+            done |= changed;
+        }
+        if effect.levels != 0 {
+            // The level's lines, after the outcome's.
+            self.say_news();
+        }
+        if effect.talent {
+            done |= self.bestow_talent(found_once(&mut found));
+        }
+        if effect.flaw {
+            done |= self.bestow_flaw(found_once(&mut found));
         }
         done
     }
@@ -422,15 +462,16 @@ impl World {
         self.lay(at, Stack::new(object, n));
     }
 
-    /// An item of loot at the floor's item level plus `bonus`, at the feature's foot.
-    fn leave_loot(&mut self, bonus: u8, feature: Pos) {
+    /// An item of loot at the floor's item level plus `bonus`, at least of `grade` (a relic's
+    /// `rare`: the top rarity its base allows), at the feature's foot.
+    fn leave_loot(&mut self, bonus: u8, grade: LootGrade, feature: Pos) {
         let content = self.content.clone();
         let level = content
             .item_level(&self.state.current_level)
             .saturating_add(bonus);
         let luck = loot::Luck::of(&self.state.player().talent_mods(&content));
         let rng = &mut self.state.rng;
-        let item = loot::roll_with(&content, rng, level, LootGrade::Any, Source::Loot, luck);
+        let item = loot::roll_with(&content, rng, level, grade, Source::Loot, luck);
         if let Some(stack) = item {
             let at = self.foot_of(feature);
             self.lay(at, stack);

@@ -95,6 +95,9 @@ pub enum ActionKind {
     Temper,
     /// Trying to disarm a trap (spec §8 "Disarming traps"), whatever comes of it.
     Disarm,
+    /// Treating oneself (spec §8 "Skills": the Heal ability): binding a wound, easing a poison
+    /// or a disease, whatever comes of it.
+    Heal,
     /// Chatting with a creature (spec §8 "Dialogue"): a short action.
     Chat,
     /// Trying to steal from a creature (spec §8 "Stealing"), whatever comes of it.
@@ -137,6 +140,7 @@ impl ActionKind {
         ActionKind::Pray,
         ActionKind::Temper,
         ActionKind::Disarm,
+        ActionKind::Heal,
         ActionKind::Chat,
         ActionKind::Steal,
         ActionKind::ThrowVoice,
@@ -175,6 +179,7 @@ impl ActionKind {
             ActionKind::Pray => "pray",
             ActionKind::Temper => "temper",
             ActionKind::Disarm => "disarm",
+            ActionKind::Heal => "heal",
             ActionKind::Chat => "chat",
             ActionKind::Steal => "steal",
             ActionKind::ThrowVoice => "throw_voice",
@@ -232,6 +237,7 @@ impl ActionKind {
             ActionKind::Pray => "pray",
             ActionKind::Temper => "temper",
             ActionKind::Disarm => "disarm traps",
+            ActionKind::Heal => "tend your hurts",
             ActionKind::Chat => "talk",
             ActionKind::Steal => "steal",
             ActionKind::ThrowVoice => "throw your voice",

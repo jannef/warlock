@@ -138,6 +138,9 @@ pub(super) fn special_rooms(content: &Content) -> String {
                 capital(article(&name))
             ));
         }
+        if let Some(shrine) = &e.shrine {
+            does.push(shrine_does(content, shrine));
+        }
         if let Some(c) = e.collapse {
             does.push(format!(
                 "Every step of yours onto its cracked floor has a {}% chance ({}% while you are \
@@ -180,7 +183,13 @@ pub(super) fn special_rooms(content: &Content) -> String {
         if e.unholy {
             does.push("Consecrate lifts it for good.".into());
         }
-        let mut said = format!("\"{}\"", e.enter);
+        let mut said = match &e.shrine {
+            Some(s) => format!(
+                "Of its side: \"{}\" Of the other: \"{}\" Neutral: \"{}\"",
+                s.welcome, s.unwelcome, e.enter
+            ),
+            None => format!("\"{}\"", e.enter),
+        };
         if let Some(near) = &e.near {
             let _ = write!(said, " From outside: \"{near}\"");
         }
@@ -230,6 +239,27 @@ pub(super) fn special_rooms(content: &Content) -> String {
         );
     }
     out
+}
+
+/// What a shrine of a side does, exactly: "It is good or evil, one to one, ..."
+fn shrine_does(content: &Content, shrine: &warlock_core::content::Shrine) -> String {
+    let def = content.status(shrine.status);
+    let c = def.combat;
+    let mut hinders = vec![format!("wounds heal at {}% of the pace", def.regen)];
+    if c.to_hit != 0 {
+        hinders.push(format!("{:+} to hit", c.to_hit));
+    }
+    let eases = def
+        .eases
+        .map_or(String::new(), |s| format!("; it eases {s} s after leaving"));
+    format!(
+        "It is good or evil, one to one, and only its stone's light tells which (gold good, red \
+         evil). Everyone inside, creatures too, is treated by their own side: one of its side \
+         heals {} as fast; one of the other side is {}: {}{eases}; a neutral one, nothing.",
+        times(shrine.regen),
+        def.name,
+        hinders.join(", ")
+    )
 }
 
 /// What a room's status does to everyone inside, exactly: "Everyone inside with mana is Ebbing:

@@ -46,7 +46,13 @@
 #              listed: any
 #   damage_type the kind of damage the status is (poison): a target immune to it never suffers
 #              it, and a resistance shrinks each dose it is given (spec §8 "Damage types")
-#   cured_by   what cures it at once (a bandage: the Heal skill, later)
+#   cured_by   what cures it at once (a bandage)
+#   treat      how the Heal skill treats it (the Heal ability, spec §8 "Skills"): an Intelligence
+#              check plus Heal against { difficulty = 6, per_degree = 2 } (difficulty 0 to 40,
+#              plus 0 to 10 for each degree); `stops = true`: made, it ends, and a failed try may
+#              be made again at once; else, made, it eases a degree, and it may be tried once
+#              only, whatever comes of it, until it ends. `made` and `failed` are what you are
+#              told. None: Heal cannot treat it
 #   start, end what the player is told as it begins and ends ("end" lets a rest go on)
 #   dies       what a creature you see does when it kills it ("The giant rat bleeds to death.")
 #   death      the death screen's line when it kills you
@@ -80,6 +86,9 @@ eases = 60
 regen = 0
 wound = { big_hit = 1, critical = 2, from = ["slashing", "piercing"] }
 cured_by = ["bandage"]
+# Bound with the Heal skill: easy for a scratch, hard for a deep wound; try again as often as you
+# like, a quarter of a minute each.
+treat = { difficulty = 6, per_degree = 2, stops = true, made = "You bind the wound.", failed = "The blood still runs." }
 start = "You are bleeding."
 end = "The bleeding stops."
 dies = "bleeds to death"
@@ -100,6 +109,8 @@ eases = 120
 regen = 50
 mana_regen = 50
 penalty = { from = 4, strength = -1, dexterity = -1 }
+# Eased a degree with the Heal skill, once; a failed try cannot be made again for this dose.
+treat = { difficulty = 8, per_degree = 1, made = "You draw out some of the poison.", failed = "You can do no more for the poison." }
 start = "You feel sick."
 end = "The poison wears off."
 dies = "succumbs to poison"
@@ -157,6 +168,20 @@ eases = 10
 blocks = ["cast", "read", "throw_voice"]
 start = "The silence closes around you."
 end = "Sound returns."
+
+# Unwelcome, a shrine's (room_effects.toml `shrine`) on everyone of the other side inside it:
+# wounds heal at half the pace and blows go a little astray; half a minute after leaving.
+[[status]]
+id = "unwelcome"
+name = "Unwelcome"
+seen = "unwelcome"
+max = 1
+stacking = "refresh"
+eases = 30
+regen = 50
+combat = { to_hit = -1 }
+start = "You feel unwelcome."
+end = "You no longer feel unwelcome."
 
 # Buffs and cooldowns (a class's abilities give them; the dev action `afflict:raging` too).
 # A barbarian's rage: stronger and tougher, too wild to read or to cast; it lasts while their

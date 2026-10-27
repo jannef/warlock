@@ -25,7 +25,8 @@
 #                 stepped past), "burdened"
 #                 (an action, not waiting, while your load slows you), "travel" (a journey: a step
 #                 on the overworld), "steal" (an attempt to steal from someone, whatever comes of
-#                 it), "kick" (a kick at a closed door), "study" (a spell studied from a scroll,
+#                 it), "heal" (a try at treating yourself, whatever comes of it), "kick" (a kick
+#                 at a closed door), "study" (a spell studied from a scroll,
 #                 whatever comes of it), "pick" (a try at picking a
 #                 lock). Marks gather until a level-up roll on the skill spends them ([ladder]
 #                 below). Only the player trains, for now.
@@ -46,7 +47,9 @@
 #                 prices in shops, together with Presence at most half; shops.toml), "kick"
 #                 (points added to the Strength a kick at a closed door is rolled against, at most
 #                 40), "steal" (points added to stealing from someone, at most 20; trained, a
-#                 skill with it lets you steal at all: steal.toml), "pick" (points added to
+#                 skill with it lets you steal at all: steal.toml), "heal" (points added to
+#                 treating your bleeding, poison, or a disease, at most 20; trained, a skill with
+#                 it lets you treat them at all: the Heal ability), "pick" (points added to
 #                 picking a lock, at most 20; trained, a skill with it
 #                 lets you pick locks at all: the Pick lock ability), "study" (points off the
 #                 difficulty of studying a spell, spec §8 "Spells", at most 20). The percent effects stay
@@ -95,11 +98,22 @@ id = "athletics"
 name = "Athletics"
 description = "Running, jumping, climbing, and kicking: strength put to use."
 kind = "rules"
-mark = [{ on = "kick", chance = 20 }]
+# Marked by kicks, and (#548) now and then by acting under a load that slows and by journeys on the
+# overworld, so the speed below grows with plain play.
+mark = [
+    { on = "kick", chance = 20 },
+    { on = "burdened", chance = 5 },
+    { on = "travel", chance = 5 },
+]
 # Kicking a door in (spec §8 "Doors"): added to the Strength the kick is rolled against, +8 at 100
 # (a closed door: 33 % at Strength 10 becomes 60 %), +12 at 200. Pending: climbing out of pits
-# (#128) will read it too.
-benefit = [{ effect = "kick", curve = [[0, 0], [100, 8], [200, 12]] }]
+# (#128) will read it too. Speed (spec §8 "Speed", #548): percent quicker in everything, +5 at
+# 100, +10 at 200, added to the talents' percent (Fleet-footed, Quick); the burden's slowdown is
+# applied to prices after, independently.
+benefit = [
+    { effect = "kick", curve = [[0, 0], [100, 8], [200, 12]] },
+    { effect = "speed", curve = [[0, 0], [100, 5], [200, 10]] },
+]
 
 [[skill]]
 id = "balance"
@@ -160,6 +174,11 @@ id = "heal"
 name = "Heal"
 description = "Binding wounds and tending the sick."
 kind = "action"
+mark = [{ on = "heal", chance = 30 }]
+# Treating yourself (spec §8 "Skills"; the Heal ability): trained at all, you can bind your
+# bleeding and try to ease a poison or a disease; added to the Intelligence check against what it
+# treats (status.toml `treat`, a disease's `difficulty`), +8 at 100, +12 at 200.
+benefit = [{ effect = "heal", curve = [[0, 0], [100, 8], [200, 12]] }]
 
 [[skill]]
 id = "intimidate"

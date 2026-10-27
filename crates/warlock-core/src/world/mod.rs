@@ -90,6 +90,7 @@ mod animated;
 mod attacks;
 mod beast_friend;
 mod bleed;
+mod boons;
 mod buff;
 mod carry;
 mod cast;
@@ -122,6 +123,7 @@ mod gifts;
 mod glare;
 mod guild;
 mod hash;
+mod heal;
 mod hearing;
 mod hoard;
 mod hold;
@@ -161,6 +163,7 @@ mod second_wind;
 mod service;
 mod shoot;
 mod shop;
+mod shrine;
 mod sidestep;
 mod sign_picks;
 mod skill_roll;
@@ -739,9 +742,10 @@ impl World {
             stance: CombatStance::Neutral,
             free_blows: FreeBlows::default(),
             talents: Default::default(),
+            boons: Vec::new(),
             stat_marks: Default::default(),
         };
-        stars::grant(&content, state.character.as_ref(), &mut player.talents);
+        stars::grant(&content, state.character.as_ref(), &[], &mut player.talents);
         // The class abilities of level 1 (spec §8 "Class abilities").
         let class = (state.character.as_ref()).map(|c| c.spec.class.clone());
         class::grant(&content, class.as_deref(), &mut player, 1);
@@ -862,7 +866,14 @@ impl World {
         // What the class gives up to the player's level, if its table grew since (spec §8
         // "Class abilities"); a birth sign's gifts first (spec §8 "Birth sign").
         if let Some(player) = state.actors.get_mut(&state.player) {
-            stars::grant(&content, state.character.as_ref(), &mut player.talents);
+            let boons = std::mem::take(&mut player.boons);
+            stars::grant(
+                &content,
+                state.character.as_ref(),
+                &boons,
+                &mut player.talents,
+            );
+            player.boons = boons;
         }
         let mut world = Self::assemble(content, state);
         world.grant_class(world.player_level(), false);
@@ -1199,6 +1210,7 @@ impl World {
             Action::Dig(dir) => return self.start_dig(*dir),
             Action::Search(turns) => return Spent::Search(*turns),
             Action::Disarm(dir) => return self.disarm(*dir, events),
+            Action::Heal(what) => return self.heal(what.as_deref(), events),
             Action::Pray => return self.start_prayer(),
             Action::Temper { item } => return self.start_temper(*item),
             Action::SecondWind => return self.second_wind(events),
@@ -1307,6 +1319,8 @@ mod court_tests;
 #[cfg(test)]
 mod creation_tests;
 #[cfg(test)]
+mod creature_magic_tests;
+#[cfg(test)]
 mod curse_tests;
 #[cfg(test)]
 mod damage_talent_tests;
@@ -1355,6 +1369,8 @@ mod guild_tests;
 #[cfg(test)]
 mod guild_wanted_tests;
 #[cfg(test)]
+mod heal_tests;
+#[cfg(test)]
 mod hearing_tests;
 #[cfg(test)]
 mod heavy_hall_tests;
@@ -1396,6 +1412,8 @@ mod mana_tests;
 mod mirrors_tests;
 #[cfg(test)]
 mod moon_tests;
+#[cfg(test)]
+mod numbers_tests;
 #[cfg(test)]
 mod object_tests;
 #[cfg(test)]
@@ -1448,6 +1466,8 @@ mod service_tests;
 mod shoot_tests;
 #[cfg(test)]
 mod shop_tests;
+#[cfg(test)]
+mod shrine_tests;
 #[cfg(test)]
 mod sidestep_tests;
 #[cfg(test)]

@@ -135,6 +135,16 @@ gets where a dungeon favours or bans nothing. "Only" says where it can come at a
 - **Forge.** A cold forge with an old anvil in the middle of the room; you smell soot and cold
   iron from the doorway. Stand beside the anvil and you may temper a weapon or armour you carry
   (see Forges below). Only rooms of 9 floor cells or more can be one.
+- **Shrine.** A squat stone shrine stands in the middle of the room. Like a forgotten altar it
+  has a hidden side, here only **good or evil** (as likely either way), and its stone's light
+  tells which: gold for good, red for evil. It cares only whether you are on its side (see
+  [Alignment](alignment.md)): of its side, you heal twice as fast inside ("You feel welcome
+  here."); of the other side, you are *Unwelcome* (see [Status effects](status-effects.md)) for
+  as long as you stay and half a minute after you leave: wounds heal at half the pace and your
+  blows go a little astray ("Something here wants you gone."). A neutral character is ignored
+  ("An old shrine. It ignores you."). Creatures are treated the same way by their own side, so
+  a good shrine is a poor place for an orc to fight you. There is nothing to pray to. Only rooms
+  of 9 floor cells or more can be one.
 
 The talent *Hallowed rest* (Grit) makes a room that quickens healing or mana quicken it half
 again more for you: a sanctuary's three times as fast becomes four times. The talent *Anchored
@@ -244,8 +254,15 @@ two prayers. Seek out the next one: about one generated floor in twenty has one.
 
 {{#include generated/altar-shares.md}}
 
-The outcomes, by kind and tier ("Of its kind" is its share of its kind's draws; the great
-outcomes are still to come, so for now each kind is drawn among its minor and moderate ones):
+Rarely, an altar marks you for good. The great boons raise a stat for good, give a whole
+level at once, grant a talent for life (never one of your level's picks), or leave a relic at
+the altar's foot. The great banes lower a stat for good, take a level away (what you chose at
+that level you keep, but gaining it again gives no new choices), mark you with a flaw for life,
+or call a horde around the altar. Talents an altar gave you are marked "altar" on the Talents
+page. The talent *Penitent* (Grit) turns a great bane into nothing at all; the altar bursting
+is not great, and still happens.
+
+The outcomes, by kind and tier ("Of its kind" is its share of its kind's draws):
 
 {{#include generated/altar-outcomes.md}}
 
