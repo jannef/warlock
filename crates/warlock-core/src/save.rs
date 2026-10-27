@@ -74,7 +74,9 @@ const MAGIC: &str = "WARLOCK-SAVE";
 /// 31: the first campaign (0.6.0): campaigns as directories, danger and spawning, hidden
 ///     locations and reveals, creature gear, temple services, quests and proper names; new
 ///     content ids change the fingerprint.
-pub const FORMAT_VERSION: u32 = 31;
+/// 32: 0.7.0: creature ids, factions, terrain, statuses, objects and talents changed widely,
+///     so the content fingerprints differ; saves of 0.6.0 do not load.
+pub const FORMAT_VERSION: u32 = 32;
 /// Upper bound on the decompressed size, so a hostile file cannot exhaust memory.
 const MAX_JSON_BYTES: u64 = 256 * 1024 * 1024;
 
