@@ -154,6 +154,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("animated-tiers.md", animated::animated_tiers),
         ("animated-numbers.md", animated::animated_numbers),
         ("animated-bodies.md", animated::animated_bodies),
+        ("animated-families.md", animated::animated_families),
         ("animated-groups.md", animated::animated_groups),
         ("animated-parts.md", animated::animated_parts),
         ("dungeons.md", dungeons::dungeons),

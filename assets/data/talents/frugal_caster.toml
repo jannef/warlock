@@ -5,4 +5,4 @@ tree = "scholar"
 description = "You waste nothing of your power: abilities cost you a fifth less mana."
 needs = { stats = { intelligence = 14 }, level = 9 }
 effects = [{ kind = "mana_cost_percent", value = -20 }]
-systems = ["mana"]
+systems = ["mana", "spells"]

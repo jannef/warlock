@@ -104,12 +104,12 @@ fn def<'a>(world: &'a World, id: &str) -> &'a crate::content::QuestDef {
     content.quest(content.quest_id(id).expect("a quest"))
 }
 
-/// The creature types of branch `branch`'s population.
+/// The creature types of branch `branch`'s population (a family by its own id).
 fn population(world: &World, branch: &str) -> Vec<String> {
     let content = world.content();
     let spawning = (content.dungeon(branch).and_then(|d| d.spawning.as_ref())).expect("lives");
     (spawning.population.iter())
-        .map(|&c| content.creature(c).id.clone())
+        .map(|&c| content.family_key(c).to_string())
         .collect()
 }
 

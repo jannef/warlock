@@ -142,22 +142,35 @@ impl World {
             self.say(text.clone());
         }
         let mut made = Vec::new();
-        // Scroll adept, Empower (spec §8 "Class abilities"): the reader's talents on its dice.
+        // Scroll adept, Empower, Archmage (spec §8 "Class abilities"): the reader's talents on
+        // its dice, which lift its roll toward the cap of the spell it teaches, never past it
+        // (nor below what the scroll rolls of itself).
         let mods = self.state.player().talent_mods(&content);
+        let taught = (spell.teaches)
+            .zip(content.spell_rules())
+            .map(|(s, rules)| rules.cap_of(content.spell(s)));
+        let held = |own: crate::dice::Dice, cap: Option<i32>| {
+            let dice = mods.spell_damage(own);
+            let cap = match (dice == own, taught) {
+                (false, Some(most)) => Some(cap.unwrap_or(i32::MAX).min(most.max(own.max()))),
+                _ => cap,
+            };
+            (dice, cap)
+        };
         match &spell.cast {
             Cast::Burst(burst) => {
                 let center = self.burst_center(here, at, spell.range);
                 self.sound_at(spell.noise, center);
                 let caster = Caster::Actor(player);
                 let mut burst = burst.clone();
-                burst.damage = mods.spell_damage(burst.damage);
+                (burst.damage, burst.cap) = held(burst.damage, burst.cap);
                 self.cast_burst(caster, (here, center), &burst, &mut made);
             }
             Cast::Bolt(bolt) => {
                 let path = self.bolt_line(here, at, bolt.length);
                 self.sound_at(spell.noise, here);
                 let mut bolt = bolt.clone();
-                bolt.damage = mods.spell_damage(bolt.damage);
+                (bolt.damage, bolt.cap) = held(bolt.damage, bolt.cap);
                 self.cast_bolt(Caster::Actor(player), here, &path, &bolt, &mut made);
             }
         }

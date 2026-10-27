@@ -113,7 +113,7 @@ pub use affix::{
 };
 pub use alignment::{AlignmentRules, BandDef, ByAlignment, Shifts};
 pub use anim::GlyphAnim;
-pub use animated::{Animated, AnimatedDef, Body, ID_PREFIX, Numbers};
+pub use animated::{Animated, AnimatedDef, Body, ID_PREFIX, Line, Numbers, Ramp, SlotLine};
 pub use calendar::Calendar;
 pub use campaign::{CAMPAIGNS, CampaignDef, CampaignKind};
 #[cfg(test)]
@@ -1400,7 +1400,7 @@ impl Content {
                 )));
             }
             if let Some(animated) = &mut spec.animated {
-                animated.family = id;
+                animated.family = CreatureId(id.0 - u16::from(animated.member));
             }
             let resolved = creature::Resolved {
                 blood,
@@ -1445,7 +1445,7 @@ impl Content {
                 "a creature with id `player` is required",
             ));
         }
-        Ok(())
+        self.name_families()
     }
 
     /// A creature type's skills as data lists them (`skills = { listen = 30 }`): fixed values,
@@ -2753,8 +2753,9 @@ impl Content {
         self.draw_odds
     }
 
-    /// The candidates of a draw ([`danger::draw`]) among `kinds`: each type with its level and
-    /// its rarity's factor, those `met` (uniques the run has had, by id) left out.
+    /// The candidates of a draw ([`danger::draw`]) among `kinds`: each type with its levels (a
+    /// family's range, `animated_blade`'s 5 to 20; else its own level) and its rarity's factor,
+    /// those `met` (uniques the run has had, by id) left out.
     pub fn candidates(
         &self,
         kinds: &[CreatureId],
@@ -2763,7 +2764,14 @@ impl Content {
         (kinds.iter())
             .map(|&c| (c, self.creature(c)))
             .filter(|(_, def)| !(def.unique && met.contains(&def.id)))
-            .map(|(c, def)| (c, def.level, self.creature_rarity(def.rarity).factor))
+            .map(|(c, def)| {
+                let factor = self.creature_rarity(def.rarity).factor;
+                match self.family_levels(c) {
+                    // A member names its whole family.
+                    Some(levels) => (self.family(c), levels, factor),
+                    None => (c, (def.level, def.level), factor),
+                }
+            })
             .collect()
     }
 
