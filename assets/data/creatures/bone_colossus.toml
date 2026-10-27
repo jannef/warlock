@@ -20,7 +20,7 @@ hearing = 10
 weight = 500000
 stats = { strength = 32, dexterity = 18, toughness = 33, intelligence = 2, willpower = 30, presence = 2 }
 base_hp = 160
-natural = { defence = 3, protection = 5, name = "bones" }
+natural = { defence = 3, protection = 6, name = "bones" }
 attack = { damage = "3d12", damage_type = "bludgeoning", name = "slam", verb = "slams", to_hit = 4 }
 resist = { piercing = 50, bludgeoning = -50, poison = 100 }
 corpse = false

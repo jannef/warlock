@@ -22,6 +22,7 @@ hearing = 12
 weight = 260000
 stats = { strength = 20, dexterity = 12, toughness = 19, intelligence = 17, willpower = 16, presence = 14 }
 base_hp = 36
+natural = { protection = 1, name = "hide" }
 skills = { concentration = 64, spellcraft = 69 }
 resist = { cold = 25 }
 attack = { damage = "2d8", damage_type = "bludgeoning", name = "fist", verb = "pounds" }

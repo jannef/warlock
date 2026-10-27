@@ -21,7 +21,7 @@ hearing = 10
 weight = 140000
 stats = { strength = 24, dexterity = 18, toughness = 25, intelligence = 23, willpower = 27, presence = 23 }
 base_hp = 80
-natural = { defence = 2, protection = 0, name = "bony hide" }
+natural = { defence = 2, protection = 2, name = "bony hide" }
 resist = { fire = 100, poison = 100, cold = 50 }
 corpse = false
 blood = "none"

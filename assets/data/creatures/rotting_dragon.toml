@@ -20,7 +20,7 @@ hearing = 10
 weight = 2500000
 stats = { strength = 37, dexterity = 21, toughness = 38, intelligence = 2, willpower = 34, presence = 2 }
 base_hp = 208
-natural = { defence = 4, protection = 0, name = "rotting scales" }
+natural = { defence = 4, protection = 5, name = "rotting scales" }
 resist = { poison = 100 }
 on_eat = { message = "Dragon, and rotten through.", vomit = 90, harm = "1d6" }
 blood = "#2e3418"

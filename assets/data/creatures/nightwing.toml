@@ -21,7 +21,7 @@ hearing = 18
 weight = 60000
 stats = { strength = 35, dexterity = 30, toughness = 35, intelligence = 37, willpower = 34, presence = 34 }
 base_hp = 137
-natural = { defence = 5, protection = 0, name = "dead flesh" }
+natural = { defence = 5, protection = 6, name = "dead flesh" }
 resist = { fire = -25, poison = 100 }
 on_eat = { message = "Cold and leathery, and it stinks of the cave.", vomit = 80, harm = "1d4" }
 blood = "#241a30"

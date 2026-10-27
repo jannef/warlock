@@ -21,7 +21,6 @@ hearing = 10
 weight = 250000
 stats = { strength = 24, dexterity = 8, toughness = 21, intelligence = 6, willpower = 9, presence = 5 }
 base_hp = 40
-natural = { defence = 0, protection = 1, name = "hide" }
 weapon_skills = { maces = 2 }
 attack = { damage = "2d8", damage_type = "bludgeoning", name = "fist", verb = "pounds" }
 on_eat = { message = "Stringy, and it smells of the ogre.", vomit = 30, stat = { strength = 3 } }

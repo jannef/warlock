@@ -20,7 +20,7 @@ weight = 30000
 size = "small"
 stats = { strength = 26, dexterity = 14, toughness = 27, intelligence = 20, willpower = 20, presence = 22 }
 base_hp = 100
-natural = { defence = 1, protection = 0, name = "hairy hide" }
+natural = { defence = 1, protection = 1, name = "hairy hide" }
 [creature.attack]
 damage = "3d10"
 damage_type = "bludgeoning"

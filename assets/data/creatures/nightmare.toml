@@ -23,7 +23,7 @@ hearing = 15
 weight = 500000
 stats = { strength = 19, dexterity = 20, toughness = 19, intelligence = 18, willpower = 23, presence = 18 }
 base_hp = 47
-natural = { defence = 1, protection = 0, name = "hide" }
+natural = { defence = 1, protection = 1, name = "hide" }
 resist = { fire = 100 }
 on_eat = { message = "Ash and sulphur.", vomit = 60, harm = "1d3" }
 blood = "#5a1a10"
