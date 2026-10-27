@@ -49,6 +49,9 @@ pub(super) fn abilities(content: &Content) -> String {
                 table_holders(content, |e| matches!(e, TalentEffect::ThrowVoice))
             }
             Ability::HoodLantern => "everyone (it needs a lantern with a hood)".into(),
+            Ability::Pray => {
+                "everyone beside a forgotten altar not yet spent (a prayer takes a minute)".into()
+            }
         };
         let (asks, takes) = match a.cost() {
             Some(kind) => {

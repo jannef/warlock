@@ -41,6 +41,9 @@ pub enum Deed {
     AteKin,
     /// Completed a quest that moves the score.
     Quest,
+    /// Prayed at a forgotten altar of this side (spec §7 "Special rooms"): a good altar's
+    /// prayer is a little good, an evil one's evil, a neutral one's nothing.
+    Prayed(Alignment),
 }
 
 impl Deed {
@@ -52,6 +55,9 @@ impl Deed {
             Deed::Theft => Some(shift.theft),
             Deed::PaidDebt => Some(shift.pay_debt),
             Deed::AteKin => Some(shift.eat_kin),
+            Deed::Prayed(Alignment::Good) => Some(shift.prayed_good),
+            Deed::Prayed(Alignment::Evil) => Some(shift.prayed_evil),
+            Deed::Prayed(Alignment::Neutral) => Some(0),
             Deed::KilledPeaceful | Deed::Hunted | Deed::KilledHostile | Deed::Quest => None,
         }
     }

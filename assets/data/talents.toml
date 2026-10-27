@@ -225,6 +225,12 @@ name = "Danger levels and creatures that come"
 id = "special_rooms"
 name = "Special rooms"
 
+# Prayer (#406): praying at forgotten altars, the gamble of their outcome tables.
+[[system]]
+id = "prayer"
+name = "Prayer at forgotten altars"
+min_talents = 1
+
 [[system]]
 id = "traps"
 name = "Traps"

@@ -73,6 +73,7 @@ impl World {
             Action::Study { .. } => ActionKind::Study,
             Action::Dig(_) => ActionKind::Dig,
             Action::Search(_) => ActionKind::Search,
+            Action::Pray => ActionKind::Pray,
             Action::Disarm(_) => ActionKind::Disarm,
             Action::Use(active, _) | Action::UseAt(active, _) => active.cost(),
             Action::Gift(active, _) => active.cost(),

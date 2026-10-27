@@ -105,6 +105,8 @@ pub enum Cause {
     Scroll(ObjectId),
     /// A spell of their own caught them (spec §8 "Class abilities").
     Spell(crate::content::SpellId),
+    /// A forgotten altar they prayed at struck them down (spec §7 "Special rooms").
+    Altar,
 }
 
 impl Cause {
@@ -125,6 +127,7 @@ impl Cause {
                     .map_or_else(|| "spell".into(), |s| s.look.noun.clone());
                 format!("Killed by their own {noun}")
             }
+            Cause::Altar => "Struck down at a forgotten altar".into(),
         }
     }
 
@@ -135,7 +138,9 @@ impl Cause {
         match self {
             Cause::Starvation => "You starve to death...".into(),
             Cause::Choked(o) => format!("You choke to death on the {}...", name(o)),
-            Cause::Trap(_) | Cause::Scroll(_) | Cause::Spell(_) => "You die...".into(),
+            Cause::Trap(_) | Cause::Scroll(_) | Cause::Spell(_) | Cause::Altar => {
+                "You die...".into()
+            }
         }
     }
 }
@@ -162,6 +167,9 @@ pub(super) enum Harm {
     },
     /// Starving at the moment `when` (spec §8 "Hunger").
     Starving(GameTime),
+    /// A place (spec §7 "Special rooms": a forgotten altar's fire, its bolt from above): no one
+    /// killed, and no one earns anything.
+    Place,
     /// What never kills: it leaves the last hit point (the plunge into freezing water, spec §5
     /// "Ice"; a disease that does not kill).
     Spared,
@@ -850,7 +858,7 @@ impl World {
         // Talents (spec §8 "Talents": Immune to pain): a hit does less after the soak, never
         // below 1; what is not a hit (a status, starving) is not eased.
         let damage = match harm {
-            Harm::Actor(_) | Harm::Trap(_) if damage > 1 => {
+            Harm::Actor(_) | Harm::Trap(_) | Harm::Place if damage > 1 => {
                 let pain =
                     (self.state.actors.get(&id)).map_or(0, |a| a.talent_mods(&self.content).pain);
                 (damage - pain).max(1)
@@ -890,6 +898,14 @@ impl World {
             }
             Harm::Starving(when) => self.dies(id, None, None, when, events),
             Harm::Barbs => self.dies(id, None, None, self.state.time, events),
+            Harm::Place => {
+                self.dies(id, None, None, self.state.time, events);
+                if id == self.state.player
+                    && let Some(death) = &mut self.state.death
+                {
+                    death.cause = Some(Cause::Altar);
+                }
+            }
             Harm::Trap(trap) => {
                 // No creature and no status: the trap is what killed them (spec §8 "Traps"),
                 // and a trap's kill earns no one anything.

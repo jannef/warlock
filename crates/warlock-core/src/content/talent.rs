@@ -389,6 +389,9 @@ pub enum TalentEffect {
     /// A special room's nature is known from a glimpse of it, and a whole level's effect is
     /// named on arrival (Sense of place; [`crate::perception::PerceptionView::room`]).
     SenseOfPlace,
+    /// At a forgotten altar of the actor's own side the side's lean counts double, and an
+    /// opposed one leans as a neutral one (Devout; the prayer draw, `World::lean`).
+    Devout,
     /// Where a special room quickens healing or mana, the quickening is this percent more
     /// (Hallowed rest; the room's pace in `World::healing_rate` and `World::mana_rate`).
     RoomPacePercent { value: i32 },
@@ -1666,6 +1669,7 @@ impl TalentEffect {
             | TalentEffect::SparesSelf
             | TalentEffect::SeesUv
             | TalentEffect::SenseOfPlace
+            | TalentEffect::Devout
             | TalentEffect::ExactFootsteps
             | TalentEffect::SmellRot
             | TalentEffect::StanceCosts

@@ -781,6 +781,8 @@ pub(crate) fn out_and_back(
 }
 
 #[cfg(test)]
+mod altar_tests;
+#[cfg(test)]
 mod cealdhlaw_tests;
 #[cfg(test)]
 mod fennmynster_tests;

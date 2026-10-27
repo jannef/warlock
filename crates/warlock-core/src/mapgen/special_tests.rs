@@ -40,7 +40,7 @@ fn tally(content: &Content, odds: &RoomOdds, n: u32) -> Vec<u32> {
 fn features_are_drawn_by_their_weights() {
     let effects = CONTENT.room_effects();
     let total: u32 = effects.defs().iter().map(|e| u32::from(e.weight)).sum();
-    let n = 20_000;
+    let n = 40_000;
     let by = tally(&CONTENT, &RoomOdds::shared(effects), n);
     for (e, got) in effects.defs().iter().zip(&by) {
         let want = n * u32::from(e.weight) / total;
@@ -159,7 +159,7 @@ fn features_are_drawn_only_where_they_are_eligible() {
     let only = |extra: &str, campaign: &str, id: &str| {
         let content = with_feature(&format!("weight = 100\n{extra}"), 100);
         let glittering = content.room_effects().id("glittering").expect("glittering");
-        (0..30)
+        (0..60)
             .filter(|seed| {
                 let level = generate(&content, (campaign, *seed), id, None).expect("generates");
                 level.rooms.iter().any(|r| r.effect == glittering)

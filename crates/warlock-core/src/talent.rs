@@ -351,6 +351,9 @@ pub struct TalentMods {
     pub spawn_every_percent: i32,
     /// It knows a special room's nature from a glimpse (Sense of place).
     pub sense_of_place: bool,
+    /// A forgotten altar's lean counts double when it agrees, and not at all when it opposes
+    /// (Devout).
+    pub devout: bool,
     /// Percent more a special room's quickening of healing and mana (Hallowed rest).
     pub room_pace_percent: i32,
     /// The statuses of special rooms that never take it (Anchored mind).
@@ -1107,6 +1110,7 @@ impl TalentMods {
             TalentEffect::DangerSense { value } => self.danger_sense += value,
             TalentEffect::SpawnEveryPercent { value } => self.spawn_every_percent += value,
             TalentEffect::SenseOfPlace => self.sense_of_place = true,
+            TalentEffect::Devout => self.devout = true,
             TalentEffect::RoomPacePercent { value } => self.room_pace_percent += value,
             TalentEffect::RoomStatusImmune { status } => {
                 if let Some(status) = content.status_id(&status) {
