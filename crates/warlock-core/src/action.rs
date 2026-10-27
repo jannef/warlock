@@ -286,6 +286,14 @@ pub enum Action {
     /// Dev command: the player gains this much experience, and any levels it brings (spec §8
     /// "Experience"), for tests and captures. Takes no game time; recorded in replays.
     GrantXp(u32),
+    /// Dev command: the player's rank in weapon skill or fighting style `skill` (an id in
+    /// `data/weapon_skills.toml`) becomes `rank` (0 to 10), its marks starting from 0, as a
+    /// rank risen would (the skills it raises by default rise too, and what the ranks teach is
+    /// said). For tests and captures. Takes no game time; recorded in replays.
+    SetRank {
+        skill: String,
+        rank: u8,
+    },
     /// Dev command: an instant frost (spec §5 "Ice"): the water within `radius` of cell `at`, in
     /// its line of sight, freezes at once to ice that holds a laden person
     /// ([`crate::ice::FROST`]). Takes no game time; recorded in replays.
@@ -778,6 +786,7 @@ impl fmt::Display for Action {
             Action::Advance(skill) => write!(f, "advance:{skill}"),
             Action::LevelUpAuto => f.write_str("levelup:auto"),
             Action::GrantXp(xp) => write!(f, "xp:{xp}"),
+            Action::SetRank { skill, rank } => write!(f, "rank:{skill}:{rank}"),
             Action::SetVision(id) => write!(f, "vision:{id}"),
             Action::SkipTime(d) => write!(f, "skip:{d}"),
             Action::SetWeather(w) => write!(f, "weather:{}", w.id()),
@@ -1068,6 +1077,21 @@ impl FromStr for Action {
                 Some("auto") => Ok(Action::LevelUpAuto),
                 _ => Err("`levelup` takes `auto`: `levelup:auto`".into()),
             },
+            "rank" => {
+                let rest = s.split_once(':').map_or("", |(_, rest)| rest);
+                match rest.split_once(':') {
+                    Some((skill, rank)) if !skill.is_empty() => match rank.parse::<u8>() {
+                        Ok(rank) if rank <= crate::content::MAX_RANK => Ok(Action::SetRank {
+                            skill: skill.to_string(),
+                            rank,
+                        }),
+                        _ => Err("`rank` is 0 to 10, e.g. `rank:long_blades:5`".into()),
+                    },
+                    _ => Err(
+                        "`rank` needs a weapon skill and a rank, e.g. `rank:long_blades:5`".into(),
+                    ),
+                }
+            }
             "xp" => match arg.and_then(|a| a.parse::<u32>().ok()) {
                 Some(xp) if xp > 0 => Ok(Action::GrantXp(xp)),
                 _ => Err("`xp` needs a number of experience points, e.g. `xp:2500`".into()),
@@ -1168,7 +1192,7 @@ impl FromStr for Action {
                  ask:DIR:TOPIC, steal:DIR, throw_voice:X,Y, pray, stance:NAME, vision:ID, skip:DURATION, \
                  weather:clear|overcast|rain|heavy, effect:ID@X,Y[>X,Y], identify[:LETTERS], \
                  afflict:STATUS, drain:N, infect:DISEASE, reveal:ID, quest_roll:ID:TARGET, \
-                 freeze:X,Y,R, thaw:X,Y,R)"
+                 rank:SKILL:N, freeze:X,Y,R, thaw:X,Y,R)"
             )),
         }
     }
@@ -1377,6 +1401,10 @@ mod tests {
             Action::CastOn("identify".into(), 30),
             Action::LevelUpAuto,
             Action::GrantXp(2500),
+            Action::SetRank {
+                skill: "twin_blades".into(),
+                rank: 4,
+            },
             Action::Freeze {
                 at: Pos::new(40, 12),
                 radius: 3,

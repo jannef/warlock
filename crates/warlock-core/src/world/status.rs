@@ -117,6 +117,10 @@ impl World {
             return;
         };
         let added = actor.effects.add(status, def, severity, by);
+        // One given during the sufferer's own action is not eased by it (`weapon_ability.rs`).
+        if def.per_action && self.acting == Some(id) {
+            self.fresh.push((id, status));
+        }
         if added == Added::Began && id == self.state.player {
             events.push(Event::Status {
                 actor: id,

@@ -237,9 +237,9 @@ fn every_caster_has_its_table_by_level_sixty() {
 fn the_spells_are_abilities_by_tier() {
     let content = BUILTIN.clone();
     let every = Ability::every(&content);
-    let spells: Vec<&str> = (every.iter())
+    let spells: Vec<String> = (every.iter())
         .filter(|a| matches!(a, Ability::Spell(_)))
-        .map(|a| a.name(&content))
+        .map(|a| a.name(&content).into_owned())
         .collect();
     assert_eq!(
         spells,

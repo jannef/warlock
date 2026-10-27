@@ -33,6 +33,12 @@ menu).
 
 {{#include generated/abilities.md}}
 
+What the ranks of weapon skills and fighting styles teach is listed in the menu too, under
+*Weapon skills* after the skill's name ("Long blades: Deep cut"), greyed with `fires by itself`:
+those abilities are never chosen, they work by themselves as you fight. They have tables of their
+own: [Weapon skills](weapon-skills.md#what-a-rank-teaches) and
+[Fighting styles](fighting-styles.md#what-a-rank-teaches).
+
 - **Throw your voice**: a voice sounds at a place you choose that you see, not solid, within 6
   cells (the aiming cursor, as for a shot). It is as loud there as someone talking, and it is
   made there, not where you stand, so creatures that hear it and cannot see that spot go to have

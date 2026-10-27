@@ -1,0 +1,11 @@
+[[weapon_ability]]
+id = "brace"
+name = "Brace"
+description = "With a spear or a staff you meet a foe that steps up beside you with a blow as it comes."
+skills = ["spears", "staves"]
+rank = 5
+kind = "triggered"
+systems = ["weapon_abilities", "weapon_skills", "free_blows"]
+[weapon_ability.effect]
+kind = "free_blow"
+trigger = "gatekeeper"

@@ -144,6 +144,15 @@ fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
             .filter(|e| e.status.is_some_and(|s| usize::from(s.0) == status))
             .map(|e| format!("standing in {}", e.with_article())),
     );
+    // The weapon abilities that leave it (the Weapon skills and Fighting styles pages).
+    causes.extend(
+        (content.weapon_abilities().iter())
+            .filter(|a| {
+                matches!(a.effect, warlock_core::content::WeaponDoes::Status { status: s, .. }
+                    if usize::from(s.0) == status)
+            })
+            .map(|a| format!("{} (a weapon ability)", a.name)),
+    );
     let ending = (content.status_defs().iter())
         .filter(|s| s.follows.is_some_and(|f| usize::from(f.0) == status))
         .map(|s| format!("the end of {}", s.name));
@@ -268,6 +277,13 @@ pub(super) fn status_effects(content: &Content) -> String {
                 format!("after {}", Duration::seconds(u64::from(e)).spoken())
             }
             Some(e) => format!("a degree {}", every(e)),
+            None if def.per_action && def.max == 1 => {
+                "after your next action (one given during an action outlasts it)".to_string()
+            }
+            None if def.per_action => {
+                "a degree with each action you take (one given during an action outlasts it)"
+                    .to_string()
+            }
             None if diseased => "when the diseases are gone".to_string(),
             None if brought_by(content, i).is_some() => {
                 let r = brought_by(content, i).unwrap_or_default();

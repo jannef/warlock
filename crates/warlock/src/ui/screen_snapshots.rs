@@ -313,6 +313,14 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // What weapon skill and style ranks teach (the combat progression design §4): greyed
+    // under the Weapon skills group as firing by themselves, each after its skill's name.
+    Case {
+        name: "abilities-menu-weapon-skills",
+        actions: "rank:long_blades:5 rank:sword_and_board:4 rank:shield_bash:5",
+        screen: Some("abilities"),
+        ..BASE
+    },
     // Beside a forgotten altar (spec §7 "Special rooms"): Pray in the Here group, last.
     Case {
         name: "abilities-menu-here",

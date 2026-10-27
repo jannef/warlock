@@ -376,8 +376,8 @@ restores, replays, and every hook; `content::class::tests` the table checks.
 
 Vigour, Might, and Finesse (#237) ship whole; Battle trance and Inner calm (the class
 resources) came with R5 (#253); `body_talent_tests.rs` covers each one's rule, `hunger_tests.rs` Iron stomach.
-The statuses Winded (Second wind's cooldown) and Staggered (`cost = 150`, 6 s) are in
-`data/status.toml`.
+The statuses Winded (Second wind's cooldown) and Staggered (`cost = 150`, until the next action:
+`per_action`, docs/dev/weapon-abilities.md) are in `data/status.toml`.
 
 Scholar, Grit, and Delver (#240) ship whole; their five mana talents (Deep well, Clear mind,
 Meditation, Frugal caster, Blood magic) came with #242 (H6; `docs/dev/mana.md`,

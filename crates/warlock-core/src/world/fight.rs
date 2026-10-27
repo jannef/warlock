@@ -290,7 +290,7 @@ impl End<'_> {
     }
 
     /// As the object: "you", "the kobold", "something".
-    fn object(self) -> String {
+    pub(super) fn object(self) -> String {
         match self {
             End::You => "you".into(),
             End::Seen(name) | End::Trap(name) => crate::content::the(name),
@@ -515,7 +515,10 @@ impl World {
         if kind == AttackKind::Melee {
             let mut parried = free_blow::parried(blow);
             if let Some(second) = self.second_blow(attacker, target, Cue::First(blow), events) {
-                parried |= free_blow::parried(self.strike_free(second, events));
+                let with = second.with;
+                let struck = self.strike_free(second, events);
+                parried |= free_blow::parried(struck);
+                self.both_hands(attacker, target, (blow, struck), with, events);
             }
             self.after_attack(attacker, target, parried, events);
         }
@@ -550,8 +553,23 @@ impl World {
                     profile,
                 })
                 .or_else(|| self.flurry(striker, target, events)),
-            Cue::Attacked { parried } => (self.cleave(striker, target, false))
-                .or_else(|| self.riposte(striker, target, parried)),
+            Cue::Attacked { parried } => {
+                // A parry fires the target's weapon abilities (Staggering block) as the attack
+                // ends, before the free blows it may bring.
+                let stand =
+                    |w: &Self, id| w.state.death.is_none() && w.state.actors.contains_key(&id);
+                if parried && stand(self, striker) && stand(self, target) {
+                    let fired = super::weapon_ability::Fired {
+                        other: striker,
+                        kind: AttackKind::Melee,
+                        skills: self.held_skills(target),
+                        blow: None,
+                    };
+                    self.weapon_trigger(target, crate::content::Trigger::Parried, fired, events);
+                }
+                (self.cleave(striker, target, false))
+                    .or_else(|| self.riposte(striker, target, parried))
+            }
             Cue::Cleaved => self.cleave(striker, target, true),
             Cue::Leaves => self.opportunist(striker, target),
             Cue::Approaches => self.gatekeeper(striker, target),
@@ -627,13 +645,22 @@ impl World {
     }
 
     /// The side of actor `id` an attack strikes, a `missile` (a shot, a throw, a trap's) or
-    /// not: Deflect missiles (spec §8 "Talents") adds its Dodge against missiles.
+    /// not: Deflect missiles (spec §8 "Talents") adds its Dodge against missiles, and Parry
+    /// counts against blows only, but for one with Measure (a weapon ability).
     pub(crate) fn target_against(&self, id: ActorId, missile: bool) -> Target {
         let mut target = self.target_of(id);
         let deflects =
             (self.state.actors.get(&id)).map_or(0, |a| a.talent_mods(&self.content).missile_dodge);
         if missile && deflects != 0 {
             target.defence = target.defence.plus(Category::Dodge, deflects);
+        }
+        // A blade parries blows, not missiles, but for one that has learned the distance
+        // (Measure, a weapon ability: `weapon_ability.rs`).
+        let parry = target.defence.bonus(Category::Parry);
+        let measured = (self.state.actors.get(&id))
+            .is_some_and(|a| parry > 0 && self.ability_switches(a).parry_missiles);
+        if missile && parry > 0 && !measured {
+            target.defence = target.defence.plus(Category::Parry, -parry);
         }
         target
     }
@@ -800,6 +827,9 @@ impl World {
             }
             self.gain_resource(target, Build::Struck);
         }
+        // Weapon abilities (`weapon_ability.rs`) fire on the same events, and on a melee
+        // attack's miss by the target's Shield, Dexterity, or Dodge.
+        self.resolve_triggers((attacker, target), (kind, skills), blow, events);
         if let Some(blow) = blow
             && blow.damage > 0
         {
@@ -807,12 +837,20 @@ impl World {
             let died = self.hurt(target, blow.damage, Harm::Actor(attacker), events);
             if died {
                 self.train_kill((attacker, target), kind);
+                let fired = super::weapon_ability::Fired {
+                    other: target,
+                    kind,
+                    skills,
+                    blow: Some(blow),
+                };
+                self.weapon_trigger(attacker, crate::content::Trigger::Kill, fired, events);
             }
             // A sneak attack that kills builds more (Patient blade's openings).
             if died && unseen {
                 self.gain_resource(attacker, Build::SneakKill);
             }
             if !died {
+                self.big_hit_trigger((attacker, target), (kind, skills), blow, events);
                 self.after_blow(attacker, target, kind, (&blow, &made), events);
                 self.barbed(attacker, target, kind, events);
             }
@@ -847,11 +885,40 @@ impl World {
         // Weapon drill (spec §8 "Class abilities"): more marks in a role's skills.
         let marks = (me.talent_mods(&content)).marks(table.skill(skill).role, marks);
         if marks > 0 {
-            for id in me.weapon_skills.train(table, skill, marks) {
-                let phrase = &table.skill(id).phrase;
-                self.news.push(format!("You feel more skilled {phrase}."));
+            let old = me.weapon_skills.clone();
+            let risen = me.weapon_skills.train(table, skill, marks);
+            if !risen.is_empty() {
+                // What the ranks taught before they rose, for the news of what they teach now.
+                let new = std::mem::replace(&mut self.player_mut().weapon_skills, old);
+                let before = self.state.player().weapon_abilities(&content);
+                self.player_mut().weapon_skills = new;
+                self.ranks_news(&risen, &before);
             }
         }
+    }
+
+    /// The news of the player's weapon skills `risen` (a rank gained, with the skills it raised
+    /// by default), and of the weapon abilities they teach that the player did not know
+    /// `before`: "You feel more skilled with long blades. You have learned the deep cut."
+    pub(super) fn ranks_news(
+        &mut self,
+        risen: &[WeaponSkillId],
+        before: &[(WeaponSkillId, crate::content::WeaponAbilityId)],
+    ) {
+        let content = self.content.clone();
+        let table = content.weapon_skills();
+        let mut lines: Vec<String> = (risen.iter())
+            .map(|&id| format!("You feel more skilled {}.", table.skill(id).phrase))
+            .collect();
+        // Each with the rank's line of the skill it is listed under (else the last line).
+        for (skill, line) in self.learned(before) {
+            let at = (risen.iter().position(|&s| s == skill)).or(lines.len().checked_sub(1));
+            if let Some(text) = at.and_then(|i| lines.get_mut(i)) {
+                text.push(' ');
+                text.push_str(&line);
+            }
+        }
+        self.news.extend(lines);
     }
 
     /// Actor `id` loses `damage` hit points to `harm`, the one way hit points go down (blows,
@@ -1032,7 +1099,10 @@ impl World {
         let first = self.player_blow(target, seen, None, events);
         let mut parried = free_blow::parried(first);
         if let Some(second) = self.second_blow(player, target, Cue::First(first), events) {
-            parried |= free_blow::parried(self.player_blow(target, seen, Some(second), events));
+            let with = second.with;
+            let struck = self.player_blow(target, seen, Some(second), events);
+            parried |= free_blow::parried(struck);
+            self.both_hands(player, target, (first, struck), with, events);
         }
         self.after_attack(player, target, parried, events);
     }

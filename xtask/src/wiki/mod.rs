@@ -59,6 +59,7 @@ mod text;
 mod traps;
 mod uniques;
 mod vision;
+mod weapon_abilities;
 mod weapon_skills;
 mod weather;
 
@@ -311,9 +312,11 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("weapon-defaults.md", weapon_skills::defaults),
         ("weapon-marks.md", weapon_skills::marks),
         ("weapon-benefits.md", weapon_skills::benefits),
+        ("weapon-abilities.md", weapon_abilities::weapon_abilities),
         ("styles.md", weapon_skills::styles),
         ("style-defaults.md", weapon_skills::style_defaults),
         ("style-benefits.md", weapon_skills::style_benefits),
+        ("style-abilities.md", weapon_abilities::style_abilities),
         ("search-features.md", searching::search_features),
         ("search-depths.md", searching::search_depths),
         ("search-races.md", searching::search_races),
@@ -645,6 +648,22 @@ mod tests {
             "{benefits}"
         );
         assert!(text("classes.md").contains("| Twin Blades 1 or Duelist 1 |"));
+        // Weapon abilities: the weapon skills' and the styles' apart, exactly.
+        let weapon = text("weapon-abilities.md");
+        assert!(
+            weapon.contains(
+                "| Deep cut | Daggers and knives, Short blades, Long blades, Great blades | 5 |"
+            ),
+            "{weapon}"
+        );
+        assert!(!weapon.contains("| Rend |"));
+        let style = text("style-abilities.md");
+        assert!(
+            style.contains("| Rend | Twin Blades | 4 | triggered |"),
+            "{style}"
+        );
+        assert!(style.contains("| Pinned on the one you struck, 1d3 degrees (one roll) |"));
+        assert!(style.contains("Staggered on your attacker, 1 degree"));
         assert!(
             !text("weapon-skills.md").contains("Duelist"),
             "styles have their own tables"

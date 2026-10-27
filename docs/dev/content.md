@@ -29,7 +29,7 @@ renderer through `PerceptionView::flow` (visible cells only); no rule reads it.
 
 The tables that grow entry by entry are directories, so two PRs adding an entity never touch
 the same file: `assets/data/creatures/`, `objects/` (base items included), `materials/`,
-`affixes/`, `talents/`, `classes/`, and `uniques/` (each campaign's too), **one file per entity, named by its id** (classes as
+`affixes/`, `talents/`, `classes/`, `uniques/`, and `weapon_abilities/` (each campaign's too), **one file per entity, named by its id** (classes as
 `NN-id.toml`: their order is the order New run offers them, so the number keeps it) (`creatures/kobold.toml`,
 `affixes/of_the_bear.toml`). A family file holds several entries only for a tight set of
 variants always edited together, named after the family (`objects/arrows.toml`: the arrow, the

@@ -770,6 +770,14 @@ pub enum TalentEffect {
     Grip { status: String },
     /// Added to the roll that confirms its criticals (every attack).
     CriticalConfirm { value: i32 },
+    /// Its weapon abilities come this many ranks sooner (Early mastery; the combat progression
+    /// design §11): their thresholds read its ranks that much higher.
+    AbilityRanks { value: i32 },
+    /// Its Rend rolls the off hand's damage dice too (Second blade's rend).
+    RendOffHand,
+    /// Its Brace's blow is at `to_hit` more, and a foe it hits suffers `status` (one degree;
+    /// Brace of steel).
+    Brace { to_hit: i32, status: String },
     /// Its confirmed criticals ignore this much more Protection (every attack; Armour-breaker).
     CriticalPenetration { value: i32 },
     /// Its blows that can do damage of kind `damage` (an id in `data/damage_types.toml`) ignore this
@@ -1080,6 +1088,7 @@ impl TalentEffect {
             | TalentEffect::CarryKg { value }
             | TalentEffect::Checks { value, .. }
             | TalentEffect::CriticalConfirm { value }
+            | TalentEffect::AbilityRanks { value }
             | TalentEffect::CriticalPenetration { value }
             | TalentEffect::OffHandDamage { value }
             | TalentEffect::BestSkillThreat { value }
@@ -1721,6 +1730,10 @@ impl TalentEffect {
                 status(id)?;
                 percent(*value)
             }
+            TalentEffect::Brace { to_hit, status: id } => {
+                status(id)?;
+                bonus(*to_hit)
+            }
             TalentEffect::NoPenalty { status: id }
             | TalentEffect::CriticalStatus { status: id }
             | TalentEffect::Grip { status: id } => status(id),
@@ -1780,6 +1793,7 @@ impl TalentEffect {
             TalentEffect::SilentDoors
             | TalentEffect::NoExertion
             | TalentEffect::RerollFumble
+            | TalentEffect::RendOffHand
             | TalentEffect::RebornWhole
             | TalentEffect::SecondRising
             | TalentEffect::StarvingHeals

@@ -1,0 +1,13 @@
+[[weapon_ability]]
+id = "hit_and_run"
+name = "Hit and run"
+description = "A throw of yours that hits leaves you light on your feet: whatever you do next is quick."
+skills = ["skirmisher"]
+rank = 4
+kind = "triggered"
+trigger = "hit"
+systems = ["weapon_abilities", "styles", "speed"]
+[weapon_ability.effect]
+kind = "status"
+status = "light_footed"
+on = "self"

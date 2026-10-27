@@ -1,0 +1,10 @@
+[[weapon_ability]]
+id = "measure"
+name = "Measure"
+description = "Your blade has learned the distance: you parry arrows and thrown things as you parry blows."
+skills = ["duelist"]
+rank = 10
+kind = "triggered"
+systems = ["weapon_abilities", "styles", "defence"]
+[weapon_ability.effect]
+kind = "parry_missiles"

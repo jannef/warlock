@@ -37,7 +37,8 @@ and every array to never less at a higher rank. `MAX_SAVING` is 60 (crossbows' `
 10); a saving past 100 % in all (crossbows 10 with Marksman 10) prices the reload at the floor,
 `Benefit::saving`'s 1. Tests:
 `content/weapon_skill.rs`, `weapon_skills.rs`, `world/weapon_skill_tests.rs`; the wiki's tables
-are `xtask/src/wiki/weapon_skills.rs`.
+are `xtask/src/wiki/weapon_skills.rs`. What ranks teach (weapon abilities, #561) is
+`docs/dev/weapon-abilities.md`: a rank risen says it (`World::ranks_news`, called by `practise`).
 
 Fighting styles (spec §8 "Fighting styles"; M22, #135) are weapon skills of `Role::Style`: rows
 after the weapon skills in `data/weapon_skills.toml` with a `grip` (`content/weapon_skill.rs`:

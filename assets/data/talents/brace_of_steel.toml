@@ -1,0 +1,8 @@
+[[talent]]
+id = "brace_of_steel"
+name = "Brace of steel"
+tree = "guard"
+description = "Your brace meets a foe surer, and the blow leaves it staggered, slow to act next."
+needs = { any_weapon_skill = { of = ["spears", "staves"], rank = 5 } }
+effects = [{ kind = "brace", to_hit = 2, status = "staggered" }]
+systems = ["weapon_abilities", "free_blows"]

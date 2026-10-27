@@ -1,0 +1,8 @@
+[[talent]]
+id = "second_blades_rend"
+name = "Second blade's rend"
+tree = "finesse"
+description = "When you rend a foe with both blades, the off hand's blade tears it too."
+needs = { weapon_skills = { twin_blades = 6 } }
+effects = [{ kind = "rend_off_hand" }]
+systems = ["weapon_abilities", "styles"]

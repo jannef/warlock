@@ -151,9 +151,11 @@ Riposte`, `Opportunist`, `Gatekeeper`) run with `World::held` set, so `World::sa
 join `World::news` after what was pending and are said at the end of `perceive`, after that
 turn's reports. The switches are `FreeBlows` (`cleave`, `great_cleave`, `riposte`, `opportunist`)
 on `Actor::free_blows` (saved and hashed, skipped while none is on, so hashes stand), read only
-through `World::free_blows_of(actor)`: **talents and class abilities (the progression design's
-items D, H1, I1, I4) switch them on there**, by folding their aggregation in or by setting the
-field; nothing does yet. A free blow is an ordinary blow: its kinds, riders, resistances, and
+through `World::free_blows_of(actor)`: **talents, class abilities, and weapon abilities switch
+them on there** (the talents' aggregation and `World::ability_switches` folded in, the class
+abilities by setting the field; weapon abilities, Brace, Riposte, Cleaving sweep, Great cleave:
+`docs/dev/weapon-abilities.md`). `World::step_up` runs after the player's step too
+(`travel.rs`, #561), and then fires the `approaches` weapon abilities (Point-blank). A free blow is an ordinary blow: its kinds, riders, resistances, and
 verbs come with its `Profile` and `Words::of` like any other's. Rules: deciding never draws (cleave's target is the next hostile clockwise from where
 the target fell); a free blow draws only as the blow it is; free blows give none of their own
 but cleave after cleave; noise only for the opportunist's and the gatekeeper's. Tests: `world/free_blow_tests.rs`

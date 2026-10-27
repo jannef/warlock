@@ -1,0 +1,13 @@
+[[weapon_ability]]
+id = "deep_cut"
+name = "Deep cut"
+description = "A heavy blow of your blade opens a wound that bleeds more."
+skills = ["daggers", "short_blades", "long_blades", "great_blades"]
+rank = 5
+kind = "triggered"
+trigger = "big_hit"
+systems = ["weapon_abilities", "weapon_skills", "status"]
+[weapon_ability.effect]
+kind = "status"
+status = "bleeding"
+severity = 1

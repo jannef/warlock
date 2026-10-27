@@ -1,0 +1,12 @@
+[[weapon_ability]]
+id = "crushing_blow"
+name = "Crushing blow"
+description = "A heavy blow of your axe, mace, or polearm leaves the foe staggered, slow to act next."
+skills = ["axes", "maces", "polearms"]
+rank = 5
+kind = "triggered"
+trigger = "big_hit"
+systems = ["weapon_abilities", "weapon_skills", "status"]
+[weapon_ability.effect]
+kind = "status"
+status = "staggered"

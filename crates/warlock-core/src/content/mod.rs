@@ -130,6 +130,7 @@ mod unique;
 mod vault;
 mod vision;
 mod wand;
+mod weapon_ability;
 mod weapon_skill;
 mod weather;
 #[cfg(test)]
@@ -269,6 +270,10 @@ pub use unique::{Power, UNIQUE, UniqueDef, Uniques};
 pub use vault::Vault;
 pub use vision::VisionProfile;
 pub use wand::{MAX_WAND_CHARGES, Wand};
+pub use weapon_ability::{
+    ExtraDice, FreeBlowKind, MAX_ABILITY_RANK, On, Trigger, WeaponAbility, WeaponAbilityId,
+    WeaponDoes,
+};
 pub use weapon_skill::{
     Benefit, Grip, MAX_RANK, MarkRules, RANKS, Role, Section, Style, TwoWeapons, WeaponSkillDef,
     WeaponSkillId, WeaponSkillTable,
@@ -624,6 +629,9 @@ pub struct Content {
     /// The corpse object of each creature type, by creature id (`None`: it leaves none).
     corpses: Vec<Option<ObjectId>>,
     weapon_skills: WeaponSkillTable,
+    /// What weapon skill and style ranks teach (`data/weapon_abilities/`, the combat
+    /// progression design §4), in path order.
+    weapon_abilities: Vec<WeaponAbility>,
     /// The spells' tier table (`data/spells.toml`, spec §8 "Spells"); none without the file.
     spell_rules: Option<SpellRules>,
     /// The study check and its time (`data/study.toml`, spec §8 "Spells"); none without it.
@@ -746,6 +754,7 @@ impl Content {
             study: None,
             mishaps: Vec::new(),
             rod_effects: Vec::new(),
+            weapon_abilities: Vec::new(),
             spells: Vec::new(),
             talents: TalentBook::default(),
             affixes: Affixes::default(),
@@ -896,6 +905,10 @@ impl Content {
             content.talents = talent::parse(files.table("talents"), &content)?;
         }
         content.check_class_tables()?;
+        // Weapon abilities (the combat progression design §4) name weapon skills, statuses,
+        // damage types, and the talent table's systems.
+        content.weapon_abilities =
+            weapon_ability::parse(files.table("weapon_abilities"), &content)?;
         // The races' granted talents (Versatile) are talents of the racial tree.
         race::check_talents(&content.races, &content.talents)?;
         let path = "data/horoscope.toml";
@@ -2442,7 +2455,8 @@ impl Content {
     /// (whose types come last) and a developer build with it.
     ///
     /// `TerrainId`, `CreatureId`, `LightId`, `ObjectId`, `SlotId`, `SkillId`, `RoomEffectId`,
-    /// `WeaponSkillId`, `StatusId`, `DiseaseId`, `TrapId`, `DamageTypeId`, `ResourceId`,
+    /// `WeaponSkillId`, `WeaponAbilityId` (never saved, but the menu's and the tests'),
+    /// `StatusId`, `DiseaseId`, `TrapId`, `DamageTypeId`, `ResourceId`,
     /// `SpellId`, and `ShopId` are
     /// indices, so a save
     /// is only meaningful for content with the same ids in the same order; saves record this
@@ -2491,6 +2505,9 @@ impl Content {
                 .collect(),
             (self.weapon_skills.skills().iter())
                 .map(|s| s.id.as_str())
+                .collect(),
+            (self.weapon_abilities.iter())
+                .map(|a| a.id.as_str())
                 .collect(),
             self.statuses.iter().map(|s| s.id.as_str()).collect(),
             self.diseases.iter().map(|d| d.id.as_str()).collect(),
@@ -3290,6 +3307,32 @@ impl Content {
     /// The index of rod effect `id`, if there is one.
     pub fn rod_effect_index(&self, id: &str) -> Option<usize> {
         self.rod_effects.iter().position(|e| e.id == id)
+    }
+
+    /// What weapon skill and style ranks teach (`data/weapon_abilities/`), in path order: a
+    /// [`WeaponAbilityId`] is an index.
+    pub fn weapon_abilities(&self) -> &[WeaponAbility] {
+        &self.weapon_abilities
+    }
+
+    pub fn weapon_ability(&self, id: WeaponAbilityId) -> &WeaponAbility {
+        &self.weapon_abilities[usize::from(id.0)]
+    }
+
+    pub fn weapon_ability_id(&self, name: &str) -> Option<WeaponAbilityId> {
+        (self.weapon_abilities.iter().position(|a| a.id == name)).map(|i| WeaponAbilityId(i as u16))
+    }
+
+    /// The weapon abilities a rank of `rank` in weapon skill or style `skill` teaches, in path
+    /// order: a lookup, no draw.
+    pub fn weapon_abilities_for(
+        &self,
+        skill: WeaponSkillId,
+        rank: u8,
+    ) -> impl Iterator<Item = (WeaponAbilityId, &WeaponAbility)> {
+        (self.weapon_abilities.iter().enumerate())
+            .filter(move |(_, a)| rank >= a.rank && a.skills.contains(&skill))
+            .map(|(i, a)| (WeaponAbilityId(i as u16), a))
     }
 
     /// The outcome tables (`data/outcomes/`, spec §7 "Special rooms"): what a place's ability

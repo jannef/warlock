@@ -310,7 +310,13 @@ impl World {
     /// Actor `shooter` looses one missile of `loose` at cell `at` (module docs): it leaves the
     /// stack, makes its noise, flies and attacks whoever stands in its way until it hits, and
     /// comes down ([`World::fly`]).
-    fn loose(&mut self, shooter: ActorId, at: Pos, loose: Loose, events: &mut Vec<Event>) {
+    pub(super) fn loose(
+        &mut self,
+        shooter: ActorId,
+        at: Pos,
+        loose: Loose,
+        events: &mut Vec<Event>,
+    ) {
         let content = self.content.clone();
         let Some(me) = self.state.actors.get_mut(&shooter) else {
             return;

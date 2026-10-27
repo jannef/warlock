@@ -1,0 +1,11 @@
+[[weapon_ability]]
+id = "riposte"
+name = "Riposte"
+description = "A blow you parry earns a blow back once the attack is over."
+skills = ["duelist"]
+rank = 4
+kind = "triggered"
+systems = ["weapon_abilities", "styles", "free_blows"]
+[weapon_ability.effect]
+kind = "free_blow"
+trigger = "riposte"

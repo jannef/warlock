@@ -8,7 +8,9 @@ build on this**): statuses are data, `data/status.toml` (`content/status.rs`: `S
 `seen`, `max`, `stacking`, `tick`/`damage`, `eases`, `regen`, `penalty`, `wound`, `cured_by`,
 and the words `start`/`end`/`dies`/`death`; `Healing { resting }`; `OnHit` on a creature's
 natural attack, `NaturalAttack::on_hit`; `Content::status`/`status_id`/`status_ids`/`healing`;
-optional file; `StatusId` is an index, in the fingerprint). `crate::status` holds one actor's
+optional file; `StatusId` is an index, in the fingerprint; `per_action` statuses, Staggered,
+Pinned, and Light-footed, ease by their sufferer's actions instead of time,
+`World::spend_actions`, docs/dev/weapon-abilities.md). `crate::status` holds one actor's
 effects (`Actor::effects: Effects`, at most one `Effect { status, severity, tick, wear, by }` per
 status in status order; `Effects::add` applies the stacking rule, `penalty`, `regen`,
 `is_valid_for`; `Effect::until_tick`/`until_eases`/`advance` are the timer math: ticks bank
