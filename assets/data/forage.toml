@@ -1,0 +1,86 @@
+# Foraging (spec §8 "Foraging"; #547): living off the land, the Survival skill's use, chosen
+# from the abilities menu (`a`, Forage). Whoever is trained in Survival (skills.toml: the skill
+# with the `forage` benefit) can forage in the wild: on the overworld, or in a local area of it,
+# wherever the land has a row below, and never standing in water (or on ice).
+#
+# A forage takes `seconds` of game time, in turns of the `forage` action (actions.toml); a
+# creature coming into view, a message, or a blow stops it, and a forage cut short finds nothing.
+# One that runs its time finds food with the ground's `chance` percent, plus what Survival gives
+# (its `forage` benefit, at most 30 more), at most 100: one draw. Found, one of `finds` is picked
+# by weight (one draw) and `count` of it rolled (a draw per die); the food is fresh, and goes into
+# the pack. Either way the try may earn Survival a training mark. Try again as often as you like:
+# the time is the price.
+#
+# Fields:
+#   seconds        how long a forage takes, in seconds (60 to 3600)
+#   [[ground]]     one row per landscape (terrain.toml's `landscape`: what the land of an
+#                  overworld cell is like; a local area's is its overworld cell's). Roads,
+#                  rivers, and lakes have none: there is nothing to forage there.
+#     landscape    plains, grassland, forest, dense_forest, hills, or swamp
+#     chance       percent of finding something (1 to 100), before Survival
+#     count        dice: how many of the find (at least 1, at most 10; a die result below 1 is 1)
+#     finds        what may be found: { object = ID, weight = N }, food objects (objects/), each
+#                  as likely as its weight among the row's
+
+seconds = 600
+
+[[ground]]
+landscape = "plains"
+chance = 25
+count = "1d2"
+finds = [
+    { object = "berries", weight = 3 },
+    { object = "hazelnuts", weight = 1 },
+]
+
+[[ground]]
+landscape = "grassland"
+chance = 35
+count = "1d3"
+finds = [
+    { object = "berries", weight = 4 },
+    { object = "mushroom", weight = 2 },
+    { object = "angelica_root", weight = 1 },
+]
+
+[[ground]]
+landscape = "forest"
+chance = 40
+count = "1d3"
+finds = [
+    { object = "berries", weight = 3 },
+    { object = "mushroom", weight = 3 },
+    { object = "hazelnuts", weight = 3 },
+    { object = "apple", weight = 1 },
+    { object = "angelica_root", weight = 1 },
+]
+
+[[ground]]
+landscape = "dense_forest"
+chance = 35
+count = "1d3"
+finds = [
+    { object = "mushroom", weight = 4 },
+    { object = "hazelnuts", weight = 2 },
+    { object = "berries", weight = 2 },
+    { object = "angelica_root", weight = 1 },
+]
+
+[[ground]]
+landscape = "hills"
+chance = 20
+count = "1d2"
+finds = [
+    { object = "berries", weight = 3 },
+    { object = "hazelnuts", weight = 1 },
+]
+
+[[ground]]
+landscape = "swamp"
+chance = 25
+count = "1d2"
+finds = [
+    { object = "mushroom", weight = 2 },
+    { object = "angelica_root", weight = 2 },
+    { object = "berries", weight = 1 },
+]

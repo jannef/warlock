@@ -78,9 +78,10 @@ for good.
 
 ## Training
 
-You never pick a stat to raise. Instead your stats grow with what you do: fighting trains
-Strength, dodging and shooting Dexterity, being hurt Toughness, reading and searching
-Intelligence, enduring and noticing Willpower, talking and trading Presence. Each such use may
+You never pick a stat to raise. Instead your stats grow with what you do: fighting up close,
+landing criticals, and blocking with a shield train Strength, dodging, parrying, and shooting
+Dexterity, being hurt and felling worthy foes Toughness, reading and searching Intelligence,
+enduring, noticing, and casting Willpower, talking and trading Presence. Each such use may
 earn the stat a **training mark** (marks never fade and have no limit), and every time you gain
 an [experience level](experience.md), each stat in turn gets one chance to rise by a point. The
 more marks it holds, the likelier; a rise uses up all its marks, a stat that did not rise keeps

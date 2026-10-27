@@ -39,6 +39,7 @@ mod fey_roster_tests;
 #[cfg(test)]
 mod fiend_roster_tests;
 mod flow;
+mod forage;
 mod gear;
 mod gem;
 #[cfg(test)]
@@ -158,6 +159,7 @@ pub use experience::{
 };
 pub use faction::{FactionDef, FactionId, Factions, PLAYER_FACTION, Stance};
 pub use flow::{FLOW_SPEEDS, Flow};
+pub use forage::{ForageGround, ForageRules};
 pub use gear::{Gear, GearLine, RACIAL_CHANCE};
 pub use gem::{
     Cut, CutId, Cutting, GemDef, GemSize, GemSizeId, Gems, MAX_GEM_VALUE, MAX_GEM_WEIGHT,
@@ -562,6 +564,9 @@ pub struct Content {
     /// What becomes of a creature that catches the player stealing (`data/steal.toml`, spec §8
     /// "Stealing"); none without the file.
     steal: Option<StealRules>,
+    /// What foraging in the wild gives (`data/forage.toml`, spec §8 "Foraging"); none without
+    /// the file.
+    forage: Option<ForageRules>,
     /// The rules of stat training (`data/stats.toml`, spec §8 "Stats").
     stat_training: StatTraining,
     factions: Factions,
@@ -687,6 +692,7 @@ impl Content {
             trap_avoid: TrapAvoid::default(),
             search: SearchRules::default(),
             steal: None,
+            forage: None,
             stat_training: StatTraining::default(),
             factions: Factions::default(),
             lights: Vec::new(),
@@ -931,6 +937,10 @@ impl Content {
         let path = "data/steal.toml";
         if let Some(text) = files.get_optional(path) {
             content.steal = Some(StealRules::parse(path, text, &content.factions)?);
+        }
+        let path = "data/forage.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.forage = Some(ForageRules::parse(path, text, &content)?);
         }
         let path = "data/stats.toml";
         if let Some(text) = files.get_optional(path) {
@@ -2715,6 +2725,12 @@ impl Content {
     /// without the file, when nobody steals.
     pub fn steal(&self) -> Option<&StealRules> {
         self.steal.as_ref()
+    }
+
+    /// What foraging in the wild gives (spec §8 "Foraging"; `data/forage.toml`); `None` without
+    /// the file, when nobody forages.
+    pub fn forage(&self) -> Option<&ForageRules> {
+        self.forage.as_ref()
     }
 
     /// The rules of stat training (spec §8 "Stats"; `data/stats.toml`, else

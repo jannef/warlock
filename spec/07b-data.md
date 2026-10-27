@@ -588,8 +588,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `curve` (a key of `curves`), and its benefits as eleven numbers, ranks 0 to 10 (0 at rank 0,
   never less at a higher rank; a list left out is all 0): `to_hit` and `damage` (0 to 20),
   `threat` (0 to 10), `crit` (added to a confirmed critical's multiplier, 0 to 3, never past ×5),
-  and `speed` (percent off the attack's cost, 0 to 50) for the roles that attack; `parry` (0 to
-  20) for `melee`, `reload` (0 to 50) for `launcher`, `shield` (0 to 20) for `shield_block` (a
+  and `speed` (percent off the attack's cost, 0 to 60) for the roles that attack; `parry` (0 to
+  20) for `melee`, `reload` (0 to 60) for `launcher`, `shield` (0 to 20) for `shield_block` (a
   benefit the role does not use is an error). A fighting style (`role = "style"`, §8 "Fighting
   styles") also has its `grip` (`one_weapon`, `two_weapons`, `two_handed`, `weapon_and_shield`,
   `unarmed`, `launcher`, `thrown`) and may name `weapons` (weapon skill ids of the roles its
