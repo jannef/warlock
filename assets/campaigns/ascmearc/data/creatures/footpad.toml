@@ -1,0 +1,31 @@
+# Campaign-owned (docs/design/campaign.md §3.6): the Ascmearc's own type, which only its files
+# may name.
+#
+# The outlaws (docs/design/adventurers-guild.md §8, #424): a footpad, the Victorian word for a
+# robber on foot, as the commons say it. Hired blades who run with the four wanted criminals in
+# their lairs: a short sword and a leather jerkin, and a light step for the road at night.
+[[creature]]
+id = "footpad"
+level = 6
+xp = 40
+rarity = "common"
+loot = 25
+name = "footpad"
+glyph = "@"
+fg = "#8a7a5a"
+faction = "outlaws"
+tags = ["outlaw"]
+alignment = "evil"
+race = "human"
+opens_doors = true
+footsteps = 70
+hearing = 13
+weight = 70000
+stats = { strength = 13, dexterity = 15, toughness = 13, intelligence = 10, willpower = 10, presence = 9 }
+base_hp = 12
+skills = { stealth = 25 }
+weapon_skills = { short_blades = 2 }
+racial_weapon = "short_sword"
+[[creature.gear]]
+chance = 75
+one_of = ["leather_jerkin"]

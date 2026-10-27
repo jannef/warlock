@@ -1243,6 +1243,12 @@ impl<'a> PerceptionView<'a> {
         self.player.ready_to_throw(self.content)
     }
 
+    /// Where in their inventory the wand the player has ready is (spec §8 "Magic items":
+    /// "Wands"), if any.
+    pub fn ready_wand(&self) -> Option<usize> {
+        self.player.wand_item(self.content)
+    }
+
     /// The digging tool the player has ready (spec §8 "Digging"), if any.
     pub fn ready_to_dig(&self) -> Option<ObjectId> {
         self.player.dig_tool(self.content).map(|(tool, _)| tool)

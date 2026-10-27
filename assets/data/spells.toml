@@ -11,6 +11,9 @@
 #   ceiling      the greatest damage a single-target spell of the tier may do in one cast at its
 #                highest roll; ascending. The load-time check (spells/README.toml) holds every
 #                spell under its tier's ceiling times its resolution's `damage` percent
+#   wand_charges the charges a wand of a spell of the tier is made with (spec §8 "Magic items":
+#                "Wands"; a wand's own `charges` may say otherwise): 1 to 99, never more than
+#                the tier below's. Wands are never recharged
 #
 # overreach_cost  percent more mana per tier a spell is above the caster's level's tier (50: one
 #                 tier over costs half again, two tiers double)
@@ -47,6 +50,7 @@ presence_step = 2
 comfortable = [1, 3, 6, 12, 18, 25, 32, 40, 50, 60]
 cost = [1, 3, 6, 11, 16, 22, 29, 37, 46, 56]
 ceiling = [6, 12, 18, 24, 32, 40, 50, 62, 76, 90]
+wand_charges = [15, 12, 9, 7, 5, 4, 3, 3, 2, 2]
 
 [shapes]
 ray = 100

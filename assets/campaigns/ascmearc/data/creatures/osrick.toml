@@ -1,0 +1,43 @@
+# TODO(creature spells): Brother Osrick is a necromancer who fights with a mace only because
+# creatures cannot cast yet. Once creature spellcasters exist, give him spells (raising the dead,
+# a curse, cold): docs/design/adventurers-guild.md §15.
+#
+# Campaign-owned (docs/design/campaign.md §3.6): the Ascmearc's own type, which only its files
+# may name.
+#
+# The wanted (docs/design/adventurers-guild.md §8.2, #424): Brother Osrick, the Resurrection
+# Man, a brother of the Mynster cast out for robbing graves and selling the dead to anatomists,
+# then for raising them. Once a run (`unique`), in no population: only his lair's pinned vault
+# on Bānfeld's fourth floor places him. He wears the Unhalwed Bedes, through which he sees in the
+# dark, and fights with a mace.
+[[creature]]
+id = "osrick"
+level = 12
+xp = 70
+rarity = "very_rare"
+loot = 50
+unique = true
+name = "Brother Osrick"
+glyph = "@"
+fg = "#e8e0c8"
+faction = "outlaws"
+tags = ["outlaw"]
+alignment = "evil"
+race = "human"
+opens_doors = true
+footsteps = 80
+hearing = 13
+weight = 68000
+stats = { strength = 13, dexterity = 11, toughness = 15, intelligence = 17, willpower = 19, presence = 15 }
+base_hp = 32
+skills = { concentration = 50, spellcraft = 50 }
+resist = { cold = 50, poison = 50 }
+weapon_skills = { maces = 2 }
+[[creature.gear]]
+chance = 100
+one_of = ["mace"]
+keep = "wield"
+[[creature.gear]]
+chance = 100
+one_of = ["unique:unhalwed_bedes"]
+keep = "wear"

@@ -137,7 +137,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (stiletto: Venomous, of Celerity, of the Lynx; every hit poisons), High Toby (long bow:
     Hunter's, Steady, of Precision; a hit frightens at 25 %), the Unhalwed Bedes (bone amulet:
     Mystic, of Clarity, of the Owl, of Shadows; darkvision), and the Turncoat (banded mail:
-    Reinforced, Hardened, Hale, of the Ox; never frightened), each at item level 12; the test
+    Reinforced, Hardened, Hale, of the Ox; never frightened), each at item level 12, placed by
+    its owner's gear line (Mother Sallow, Black Wystan, Brother Osrick, Sergeant Herrick); the test
     world's Stonebiter lies in the quarry.
   - **Dev**: replay text `identify` / `identify:LETTERS` (`Action::Identify`, `F8` in dev
     builds: everything carried) identifies without time passing, recorded in replays.
@@ -206,3 +207,39 @@ developer notes (CLAUDE.md, `docs/dev/`).
     "Shops"; Cēaptūn's has three), and the trap hall beside its arrival (two of each spell, three
     scrolls of identify, and an unidentified dagger). The showcase has none. Later:
     Spellcraft and Decipher Script (§8 "Skills") may change reading.
+
+- **Wands** (`warlock-core/src/world/zap.rs`, data `wand` in `data/objects/` §7, `content/wand.rs`;
+  the magic design §9; #398): objects (`-`, the wands class, one at a time) whose `[object.wand]`
+  holds a spell of `data/spells/` (an aimed one), its `charges` (default its tier's
+  `wand_charges` in `data/spells.toml`: 15, 12, 9, 7, 5, 4, 3, 3, 2, 2 for tiers 0 to 9), and the
+  `caster_level` it casts at (default its tier's comfortable level). A wand goes in the
+  **missile weapon slot** (`slot = "missile_weapon"`), so a wand and a launcher compete for it
+  (the swap is the `ready` action, as for any missile weapon), and is used as a missile weapon
+  is: `t` aims it (`AimKind::Zap`, the spell's own aiming by its shape and the player's reach
+  once the wand's type is known, a plain line before), `fire:X,Y` in replay text.
+  - **Casting**: through the one cast path (§8 "Spells", `World::wand_cast`), with the spell's
+    own resolution (an `attack` spell rolls to hit with the user's Dexterity, as every spell
+    attack does; `auto` and `area` ones do not), reach (the user's Willpower), dice at the
+    **wand's caster level**, never the user's (plus Wand mastery's +2), held to the spell's cap.
+    A charge pays instead of mana; a cast refused (at oneself, out of reach, no one to touch)
+    uses none and takes no time; one that goes off takes the `cast` action's time (times the
+    spell's `casts`). Its kills are the user's; one that kills its user is the spell's
+    (`Cause::Spell`). "You zap the oak wand.", then the spell's own words.
+  - **Empty**: a wand with no charges left does nothing ("Nothing happens.", no time) and stays
+    an item (to sell, or keep); the player then knows it is empty. Wands are **never
+    recharged** (the owner); there is no Use magic device skill and there are no magic staffs.
+  - **Identification**: a wand type is unknown on sight, as a scroll's is: "an oak wand" in one
+    plain colour (`data/wand_labels.toml`, the scroll labels' format; one label per type per
+    run, drawn after the scrolls' from the `identification` stream, so no scroll's label
+    changes). It is identified when one is used ("It is a wand of fireball.") or identified;
+    every wand of it then shows by its name. Its **charges** (`Stack`'s `charges`: the charges
+    used, saved, left out of the save while the wand is as made) stay unknown until the wand
+    itself is identified, by the scroll of identify or by Connoisseur's carrying ("a wand of
+    fireball (7 charges)", "(empty)"). The item description says the spell in words ("Holds
+    Fireball (tier 3): ...") once the type is known, and the charges left once identified.
+  - **The wands**: magic missile and burning hands (tier 1, item level 3, frequency 10, 250
+    gold), scorching ray, sleep, and web (tier 2, level 5, frequency 7, 400 gold), fireball and
+    lightning bolt (tier 3, level 8, frequency 5, 600 gold). **Where**: loot (by `level` and
+    `frequency`, never magic), general stores (they sell and buy the wands class), and the trap
+    hall's pile beside its arrival (a wand of magic missile and one of fireball).
+  - **Talents**: Wand mastery (Weaponcraft, system `spells`): wands cast at caster level +2.

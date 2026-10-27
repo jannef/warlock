@@ -231,6 +231,9 @@ pub enum TalentEffect {
     /// [`crate::world::World::caster_level`]. Nothing grants it yet (the Spellcraft talents,
     /// #400).
     CasterLevel { value: i32 },
+    /// The caster level a wand casts at, this much higher (spec §8 "Magic items": "Wands"; Wand
+    /// mastery), in [`crate::world::World`]'s zap.
+    WandLevel { value: i32 },
     /// The active Blood magic: give `hp` hit points (never the last) for `mana` mana.
     BloodMagic { hp: i32, mana: i32 },
     /// Footsteps this percent louder (negative: quieter).
@@ -980,6 +983,7 @@ impl TalentEffect {
             | TalentEffect::Hardened { bonus: value }
             | TalentEffect::MeleeDamage { value }
             | TalentEffect::CasterLevel { value }
+            | TalentEffect::WandLevel { value }
             | TalentEffect::Hearing { value }
             | TalentEffect::Notice { value }
             | TalentEffect::DangerSense { value }
