@@ -74,6 +74,7 @@ impl World {
             Action::Dig(_) => ActionKind::Dig,
             Action::Search(_) => ActionKind::Search,
             Action::Pray => ActionKind::Pray,
+            Action::Temper { .. } => ActionKind::Temper,
             Action::Disarm(_) => ActionKind::Disarm,
             Action::Use(active, _) | Action::UseAt(active, _) => active.cost(),
             Action::Gift(active, _) => active.cost(),

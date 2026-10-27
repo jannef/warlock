@@ -121,6 +121,32 @@ pub struct OutcomeSummon {
     pub count: Dice,
 }
 
+/// What working an item at the place does to it (a forge's Temper): the item is the one the
+/// player chose, so only an ability that works an item ([`crate::content::Offer::Temper`]) has
+/// one; elsewhere the hook finds nothing to do.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Work {
+    /// An affix of its kind added, while its rarity has room (a plain item becomes magic), else
+    /// its strongest affix a tier up.
+    Improve,
+    /// One of its affixes lost.
+    Flaw,
+    /// It breaks and is gone.
+    Ruin,
+}
+
+impl Work {
+    /// Its id in data and the wiki: `improve`.
+    pub const fn id(self) -> &'static str {
+        match self {
+            Work::Improve => "improve",
+            Work::Flaw => "flaw",
+            Work::Ruin => "ruin",
+        }
+    }
+}
+
 /// The feature blows apart: a burst on its cell, with its noise.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Explosion {
@@ -182,6 +208,8 @@ pub struct OutcomeEffect {
     pub explode: Option<Explosion>,
     /// What the feature becomes.
     pub becomes: Option<TerrainId>,
+    /// What happens to the item worked (a forge's Temper).
+    pub work: Option<Work>,
 }
 
 /// One outcome of a table.
@@ -338,6 +366,7 @@ struct EffectSpec {
     teleport: bool,
     explode: Option<ExplodeSpec>,
     becomes: Option<String>,
+    work: Option<Work>,
 }
 
 #[derive(Deserialize)]
@@ -639,6 +668,7 @@ fn resolve_effect(e: EffectSpec, content: &Content) -> Result<OutcomeEffect, Str
         teleport: e.teleport,
         explode,
         becomes,
+        work: e.work,
     })
 }
 

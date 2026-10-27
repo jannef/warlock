@@ -174,6 +174,7 @@ mod stride;
 mod summon;
 mod talent;
 mod talk;
+mod temper;
 mod train;
 mod trap;
 mod travel;
@@ -211,6 +212,7 @@ pub use spell::cone_cells;
 pub(crate) use stars::{RISEN, RISEN_TWICE};
 pub use talent::Due;
 pub use talk::{Conversation, Talk, TopicView};
+pub use temper::{DIFFICULTY as TEMPER_DIFFICULTY, POINTS_PER_MARGIN, lean_for, temperable};
 use travel::{enter_room, instantiate_level, level_template};
 pub use voice::VOICE_RANGE;
 
@@ -516,6 +518,8 @@ enum Spent {
     Consecrate(GameTime),
     /// Praying at a forgotten altar (see [`World::pray`]).
     Pray(pray::Prayer),
+    /// Tempering an item at a forge's anvil (see [`World::temper`]).
+    Temper(temper::Tempering),
     /// Dev: the clock jumps ahead; nobody acts, then perception is recomputed.
     Skip(Duration),
 }
@@ -1080,6 +1084,7 @@ impl World {
             Spent::Study(lesson) => self.study(lesson, &mut events),
             Spent::Consecrate(until) => self.consecrate(until, &mut events),
             Spent::Pray(prayer) => self.pray(prayer, &mut events),
+            Spent::Temper(work) => self.temper(work, &mut events),
             Spent::Skip(duration) => {
                 // Nobody acts or gains energy.
                 self.state.time += duration;
@@ -1195,6 +1200,7 @@ impl World {
             Action::Search(turns) => return Spent::Search(*turns),
             Action::Disarm(dir) => return self.disarm(*dir, events),
             Action::Pray => return self.start_prayer(),
+            Action::Temper { item } => return self.start_temper(*item),
             Action::SecondWind => return self.second_wind(events),
             Action::BloodMagic => return self.blood_magic(),
             Action::Use(active, dir) => return self.use_class(*active, *dir, events),
@@ -1490,6 +1496,8 @@ mod talent_tests;
 mod talent_wits_tests;
 #[cfg(test)]
 mod talk_tests;
+#[cfg(test)]
+mod temper_tests;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]

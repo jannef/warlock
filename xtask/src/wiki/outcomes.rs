@@ -1,12 +1,15 @@
 //! Outcome tables (spec §7 "Special rooms"): what a forgotten altar's prayer may bring, exactly,
-//! and how often, per prayer and per altar, computed from `data/outcomes/forgotten_altar.toml`.
+//! and how often, per prayer and per altar, computed from `data/outcomes/forgotten_altar.toml`;
+//! and what a forge's tempering may do to an item, by the Metalcraft check's margin, from
+//! `data/outcomes/forge.toml`.
 
 use super::text::capital;
 use std::fmt::Write as _;
 use warlock_core::alignment::Alignment;
 use warlock_core::content::{
-    Amount, Content, Near, OutcomeDef, OutcomeEffect, OutcomeKind, OutcomeTable, OutcomeTier,
+    Amount, Content, Near, OutcomeDef, OutcomeEffect, OutcomeKind, OutcomeTable, OutcomeTier, Work,
 };
+use warlock_core::world::{POINTS_PER_MARGIN, TEMPER_DIFFICULTY, lean_for};
 
 /// The forgotten altar's table, if the content has it.
 fn altar(content: &Content) -> Option<&OutcomeTable> {
@@ -166,6 +169,20 @@ fn does(content: &Content, effect: &OutcomeEffect) -> String {
     if let Some(t) = effect.becomes {
         out.push(format!("the altar becomes {}", content.terrain(t).name));
     }
+    match effect.work {
+        Some(Work::Improve) => out.push(
+            "the item gains an affix of a kind its rarity has room for (a plain item becomes \
+             magic), else its strongest affix goes a tier up"
+                .into(),
+        ),
+        Some(Work::Flaw) => out.push(
+            "the item loses one of its affixes (its last: it becomes plain; a unique item keeps \
+             its last)"
+                .into(),
+        ),
+        Some(Work::Ruin) => out.push("the item breaks and is gone".into()),
+        None => {}
+    }
     if out.is_empty() {
         return "nothing".into();
     }
@@ -294,6 +311,96 @@ pub(super) fn altar_shares(content: &Content) -> String {
         sides.join(", "),
         shift.map_or(0, |s| s.prayed_good),
         shift.map_or(0, |s| s.prayed_evil),
+    );
+    out
+}
+
+/// The forge's table, if the content has it.
+fn forge(content: &Content) -> Option<&OutcomeTable> {
+    content.outcomes().get("forge")
+}
+
+/// Every outcome of the forge's table: its kind, weight within its kind, share of its kind, what
+/// it does exactly, and what it says.
+pub(super) fn forge_outcomes(content: &Content) -> String {
+    let Some(table) = forge(content) else {
+        return String::new();
+    };
+    let mut out = String::from(
+        "| Kind | Outcome | Weight | Of its kind | What it does | Message |\n\
+         |---|---|:---:|:---:|---|---|\n",
+    );
+    for kind in OutcomeKind::ALL {
+        let total = table.total(kind);
+        let mut rows: Vec<&OutcomeDef> = table.of(kind).collect();
+        rows.sort_by_key(|o| std::cmp::Reverse(o.weight));
+        for o in rows {
+            let _ = writeln!(
+                out,
+                "| {} | {} | {} | {} | {} | {} |",
+                capital(kind.id()),
+                capital(&o.id.replace('_', " ")),
+                o.weight,
+                percent(f64::from(o.weight) / f64::from(total.max(1))),
+                does(content, &o.effect),
+                lines(o),
+            );
+        }
+    }
+    out
+}
+
+/// How often a tempering comes out each way, by the Metalcraft check's margin: a row per margin
+/// from well below to well above, with its lean and each outcome's share. Then the check itself.
+pub(super) fn forge_shares(content: &Content) -> String {
+    let Some(table) = forge(content) else {
+        return String::new();
+    };
+    let ids: Vec<&OutcomeDef> = OutcomeKind::ALL
+        .into_iter()
+        .flat_map(|k| {
+            let mut rows: Vec<&OutcomeDef> = table.of(k).collect();
+            rows.sort_by_key(|o| std::cmp::Reverse(o.weight));
+            rows
+        })
+        .collect();
+    let mut out = String::from("| Margin | Lean | Boon / nothing / bane |");
+    for o in &ids {
+        let _ = write!(out, " {} |", capital(&o.id.replace('_', " ")));
+    }
+    out.push_str("\n|:---:|:---:|:---:|");
+    out.push_str(&":---:|".repeat(ids.len()));
+    out.push('\n');
+    let most = i32::try_from(table.lean).unwrap_or(0);
+    let reach = (most + POINTS_PER_MARGIN - 1) / POINTS_PER_MARGIN.max(1);
+    for margin in (-reach..=reach).step_by(usize::try_from(reach / 2).unwrap_or(1).max(1)) {
+        let lean = lean_for(margin, table.lean);
+        let kinds = table.leaned(lean);
+        let sum = f64::from(kinds.iter().sum::<u32>().max(1));
+        let _ = write!(
+            out,
+            "| {margin:+} | {lean:+} | {} / {} / {} |",
+            kinds[0], kinds[1], kinds[2]
+        );
+        for o in &ids {
+            let w = kinds[o.kind as usize];
+            let total = f64::from(table.total(o.kind).max(1));
+            let p = f64::from(w) / sum * f64::from(o.weight) / total;
+            let _ = write!(out, " {} |", percent(p));
+        }
+        out.push('\n');
+    }
+    let _ = write!(
+        out,
+        "\nTempering takes {} seconds ({} minutes). At its end one Strength check is rolled: \
+         2d12 plus your Strength modifier, plus what Metalcraft gives (see Skills), less \
+         {TEMPER_DIFFICULTY}. Each point of that margin moves {POINTS_PER_MARGIN} points from \
+         the bane to the boon (below 0, the other way), at most {}. The anvil is never spent \
+         ({}% a use).\n",
+        table.seconds,
+        table.seconds / 60,
+        table.lean,
+        table.exhaust,
     );
     out
 }

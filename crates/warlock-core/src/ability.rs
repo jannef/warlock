@@ -92,6 +92,10 @@ pub enum Ability {
     /// it ([`Ability::here`]): listed only while the player stands next to such an altar (never
     /// a spent one), absent elsewhere.
     Pray,
+    /// Temper a carried weapon or armour at a forge's anvil (spec §7 "Special rooms"):
+    /// [`Action::Temper`]. A place offers it ([`Ability::here`]): listed only while the player
+    /// stands next to an anvil; it asks which item ([`Aim::Item`]).
+    Temper,
 }
 
 /// Where an ability comes from: the abilities menu's groups, in this order.
@@ -174,6 +178,9 @@ pub enum Aim {
     Direction,
     /// A cell, in the aiming mode, as a shot does ([`Ability::action_at`]).
     Cell,
+    /// A stack the player carries, from a list of those it may work on (Temper: a weapon or
+    /// armour, [`crate::world::temperable`]; [`Ability::action_on`]).
+    Item,
 }
 
 /// Why an ability cannot be used now: the abilities menu shows it beside the greyed-out row.
@@ -272,7 +279,9 @@ impl Ability {
             (content.room_effects().defs().iter())
                 .any(|e| e.offers.as_ref().is_some_and(|(o, _)| *o == offer))
         };
-        let here = offers(Offer::Pray).then_some(Ability::Pray);
+        let here = (offers(Offer::Pray).then_some(Ability::Pray))
+            .into_iter()
+            .chain(offers(Offer::Temper).then_some(Ability::Temper));
         let mut all: Vec<Ability> = (signs.chain(class))
             .chain(classes)
             .chain(spells)
@@ -308,6 +317,7 @@ impl Ability {
             .filter_map(|t| content.offer_at(t))
             .map(|(offer, _)| match offer {
                 Offer::Pray => Ability::Pray,
+                Offer::Temper => Ability::Temper,
             })
             .collect();
         found.sort();
@@ -354,7 +364,7 @@ impl Ability {
             Ability::ThrowVoice => actor.talent_mods(content).throw_voice,
             Ability::ShieldBash | Ability::HoodLantern => true,
             // A place offers it, not who one is ([`Ability::here`]).
-            Ability::Pray => false,
+            Ability::Pray | Ability::Temper => false,
         }
     }
 
@@ -374,6 +384,7 @@ impl Ability {
             Ability::ShieldBash => "shield_bash",
             Ability::HoodLantern => "hood_lantern",
             Ability::Pray => "pray",
+            Ability::Temper => "temper",
         }
     }
 
@@ -393,6 +404,7 @@ impl Ability {
             Ability::ShieldBash => "Shield bash",
             Ability::HoodLantern => "Hood your lantern",
             Ability::Pray => "Pray",
+            Ability::Temper => "Temper",
         }
     }
 
@@ -431,6 +443,10 @@ impl Ability {
                 "Kneel at the forgotten altar beside you and pray for a minute. Something may \
                  answer, for good or ill."
             }
+            Ability::Temper => {
+                "Work a weapon or a piece of armour you carry at the anvil beside you for ten \
+                 minutes. The metal may come out better, or worse, or break."
+            }
         }
     }
 
@@ -447,7 +463,7 @@ impl Ability {
             Ability::SecondWind | Ability::BloodMagic => Source::Talent,
             Ability::ShieldBash => Source::WeaponSkill,
             Ability::HoodLantern => Source::Item,
-            Ability::Pray => Source::Place,
+            Ability::Pray | Ability::Temper => Source::Place,
         }
     }
 
@@ -466,6 +482,7 @@ impl Ability {
             | Ability::BloodMagic
             | Ability::HoodLantern
             | Ability::Pray => Aim::Nothing,
+            Ability::Temper => Aim::Item,
             Ability::ThrowVoice => Aim::Cell,
             Ability::Disarm | Ability::PickLock | Ability::Steal | Ability::ShieldBash => {
                 Aim::Direction
@@ -489,6 +506,7 @@ impl Ability {
             Ability::ShieldBash => Some(ActionKind::Melee),
             Ability::HoodLantern => Some(ActionKind::Hood),
             Ability::Pray => Some(ActionKind::Pray),
+            Ability::Temper => Some(ActionKind::Temper),
         }
     }
 
@@ -512,7 +530,8 @@ impl Ability {
             | Ability::BloodMagic
             | Ability::ShieldBash
             | Ability::HoodLantern
-            | Ability::Pray => None,
+            | Ability::Pray
+            | Ability::Temper => None,
         }
     }
 
@@ -562,6 +581,17 @@ impl Ability {
             }
             (Ability::HoodLantern, _) => Some(Action::HoodLantern),
             (Ability::Pray, _) => Some(Action::Pray),
+            // It asks for an item ([`Ability::action_on`]).
+            (Ability::Temper, _) => None,
+        }
+    }
+
+    /// The action it is, worked on the carried stack at position `item`, for one that asks for
+    /// an item; `None` for any other.
+    pub fn action_on(self, item: usize) -> Option<Action> {
+        match self {
+            Ability::Temper => Some(Action::Temper { item }),
+            _ => None,
         }
     }
 
@@ -586,7 +616,8 @@ impl Ability {
             | Ability::BloodMagic
             | Ability::ShieldBash
             | Ability::HoodLantern
-            | Ability::Pray => None,
+            | Ability::Pray
+            | Ability::Temper => None,
         }
     }
 
@@ -635,7 +666,8 @@ impl Ability {
             | Ability::PickLock
             | Ability::Steal
             | Ability::BloodMagic
-            | Ability::Pray => None,
+            | Ability::Pray
+            | Ability::Temper => None,
             Ability::SecondWind => (actor.talent_mods(content).second_wind)
                 .map(|w| w.cooldown)
                 .filter(|&cooldown| actor.effects.has(cooldown))
@@ -793,10 +825,15 @@ mod tests {
                 "woodcraft",
             ]
         );
-        let last: Vec<Ability> = every.iter().rev().take(3).rev().copied().collect();
+        let last: Vec<Ability> = every.iter().rev().take(4).rev().copied().collect();
         assert_eq!(
             last,
-            [Ability::ShieldBash, Ability::HoodLantern, Ability::Pray],
+            [
+                Ability::ShieldBash,
+                Ability::HoodLantern,
+                Ability::Pray,
+                Ability::Temper
+            ],
             "then what a place offers"
         );
         // Stealing is in the game: the Steal skill is listed as its use.

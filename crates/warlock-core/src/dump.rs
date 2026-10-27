@@ -949,6 +949,7 @@ fn aim_word(aim: Aim) -> &'static str {
         Aim::Nothing => "nothing",
         Aim::Direction => "a direction",
         Aim::Cell => "a cell",
+        Aim::Item => "an item",
     }
 }
 

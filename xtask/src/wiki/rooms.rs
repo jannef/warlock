@@ -1,8 +1,8 @@
 //! Special rooms (spec §7 "Special rooms").
 
-use super::text::capital;
+use super::text::{article, capital};
 use std::fmt::Write as _;
-use warlock_core::content::{Content, Hoard, StatusId};
+use warlock_core::content::{Content, Hoard, Offer, StatusId};
 use warlock_core::world::rise_candidates;
 
 /// How many times as much `percent` is, in words: "twice", "two fifths", "30% of".
@@ -128,12 +128,14 @@ pub(super) fn special_rooms(content: &Content) -> String {
         }
         if let Some(feature) = e.feature {
             let offers = match &e.offers {
-                Some((_, _)) => ": pray beside it (see Forgotten altars)",
+                Some((Offer::Pray, _)) => ": pray beside it (see Forgotten altars)",
+                Some((Offer::Temper, _)) => ": temper a weapon or armour beside it (see Forges)",
                 None => "",
             };
+            let name = content.terrain(feature).name.to_lowercase();
             does.push(format!(
-                "A {} stands in it{offers}.",
-                content.terrain(feature).name.to_lowercase()
+                "{} {name} stands in it{offers}.",
+                capital(article(&name))
             ));
         }
         if let Some(c) = e.collapse {

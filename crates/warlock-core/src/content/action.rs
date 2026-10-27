@@ -90,6 +90,9 @@ pub enum ActionKind {
     Search,
     /// A turn of praying at a forgotten altar (spec §7 "Special rooms"): a prayer takes several.
     Pray,
+    /// A turn of tempering an item at a forge's anvil (spec §7 "Special rooms"): a tempering
+    /// takes many.
+    Temper,
     /// Trying to disarm a trap (spec §8 "Disarming traps"), whatever comes of it.
     Disarm,
     /// Chatting with a creature (spec §8 "Dialogue"): a short action.
@@ -132,6 +135,7 @@ impl ActionKind {
         ActionKind::Dig,
         ActionKind::Search,
         ActionKind::Pray,
+        ActionKind::Temper,
         ActionKind::Disarm,
         ActionKind::Chat,
         ActionKind::Steal,
@@ -169,6 +173,7 @@ impl ActionKind {
             ActionKind::Dig => "dig",
             ActionKind::Search => "search",
             ActionKind::Pray => "pray",
+            ActionKind::Temper => "temper",
             ActionKind::Disarm => "disarm",
             ActionKind::Chat => "chat",
             ActionKind::Steal => "steal",
@@ -225,6 +230,7 @@ impl ActionKind {
             ActionKind::Dig => "dig",
             ActionKind::Search => "search",
             ActionKind::Pray => "pray",
+            ActionKind::Temper => "temper",
             ActionKind::Disarm => "disarm traps",
             ActionKind::Chat => "talk",
             ActionKind::Steal => "steal",

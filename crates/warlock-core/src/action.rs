@@ -153,6 +153,15 @@ pub enum Action {
     /// outcome drawn from the altar's table, and perhaps the altar spent. Interrupted, it gives
     /// nothing. Refused (no time) with no altar next to the player.
     Pray,
+    /// Temper the carried stack at this position at the anvil next to the player (spec §7
+    /// "Special rooms"; the Temper ability, the abilities menu's Here group): ten minutes of turns
+    /// of the `temper` action, then a Strength check plus Metalcraft that leans the forge's table,
+    /// and one outcome drawn from it (improved, nothing, flawed, or ruined). Interrupted, it gives
+    /// nothing. Refused (no time) with no anvil next to the player or a stack that is not a
+    /// weapon or armour.
+    Temper {
+        item: usize,
+    },
     /// Catch a second wind (spec §8 "Talents"; the Second wind ability): hit points back at
     /// once, then Winded for a while. Takes the time of `wait`; refused (no time) without the
     /// talent or while winded.
@@ -726,6 +735,7 @@ impl fmt::Display for Action {
             Action::Search(turns) => write!(f, "search:{turns}"),
             Action::Disarm(d) => write!(f, "disarm:{d}"),
             Action::Pray => f.write_str("pray"),
+            Action::Temper { item } => write!(f, "temper:{}", position_text(*item)),
             Action::SecondWind => f.write_str("second_wind"),
             Action::BloodMagic => f.write_str("blood_magic"),
             Action::Use(active, None) => write!(f, "use:{}", active.id()),
@@ -817,6 +827,11 @@ impl FromStr for Action {
             },
             "wait" => bare(Action::Wait),
             "pray" => bare(Action::Pray),
+            "temper" => {
+                let usage = || "`temper` needs a letter, e.g. `temper:b`".to_string();
+                let item = arg.and_then(parse_position).ok_or_else(usage)?;
+                Ok(Action::Temper { item })
+            }
             "second_wind" => bare(Action::SecondWind),
             "blood_magic" => bare(Action::BloodMagic),
             "use" => {
@@ -1299,6 +1314,8 @@ mod tests {
             },
             Action::Advance("stealth".into()),
             Action::Pray,
+            Action::Temper { item: 0 },
+            Action::Temper { item: 27 },
             Action::SecondWind,
             Action::BloodMagic,
             Action::Use(ClassActive::Rage, None),

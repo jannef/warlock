@@ -25,6 +25,7 @@ pub mod describe;
 pub mod loot;
 pub mod mods;
 pub(crate) mod name;
+pub mod temper;
 
 pub use crate::content::{AffixKind, Effect, ItemKind, Rarity};
 pub use loot::LootGrade;

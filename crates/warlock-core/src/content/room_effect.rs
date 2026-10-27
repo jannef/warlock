@@ -157,6 +157,7 @@ struct RoomEffectSpec {
 #[serde(deny_unknown_fields)]
 struct OffersSpec {
     pray: Option<String>,
+    temper: Option<String>,
 }
 
 /// An ability a place offers beside its feature (spec §7 "Special rooms": the abilities menu's
@@ -165,6 +166,8 @@ struct OffersSpec {
 pub enum Offer {
     /// Pray at a forgotten altar.
     Pray,
+    /// Temper a carried weapon or armour at a forge's anvil.
+    Temper,
 }
 
 impl Offer {
@@ -172,6 +175,7 @@ impl Offer {
     pub const fn id(self) -> &'static str {
         match self {
             Offer::Pray => "pray",
+            Offer::Temper => "temper",
         }
     }
 }
@@ -868,9 +872,19 @@ impl RoomEffects {
                 None => None,
             };
             let offers = match &spec.offers {
-                Some(OffersSpec { pray: Some(table) }) => Some((Offer::Pray, table.clone())),
-                Some(OffersSpec { pray: None }) => {
-                    return Err(bad("`offers` names nothing".into()));
+                Some(OffersSpec { pray, temper }) => {
+                    let named: Vec<(Offer, String)> =
+                        [(Offer::Pray, pray), (Offer::Temper, temper)]
+                            .into_iter()
+                            .filter_map(|(offer, table)| Some((offer, table.clone()?)))
+                            .collect();
+                    match <[_; 1]>::try_from(named) {
+                        Ok([one]) => Some(one),
+                        Err(named) if named.is_empty() => {
+                            return Err(bad("`offers` names nothing".into()));
+                        }
+                        Err(_) => return Err(bad("`offers` names one ability".into())),
+                    }
                 }
                 None => None,
             };

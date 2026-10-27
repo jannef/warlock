@@ -293,3 +293,17 @@ min_cells = 9
 feature = "forgotten_altar"
 sides = { good = "altar_good", evil = "altar_evil" }
 offers = { pray = "forgotten_altar" }
+
+# A forge (spec §7 "Special rooms"): a cold forge with an anvil. Temper beside it: ten minutes'
+# work on a weapon or armour you carry, which may improve it, flaw it, or break it; Metalcraft
+# leans the odds. data/outcomes/forge.toml has what tempering draws. Never spent.
+[[effect]]
+id = "forge"
+name = "forge"
+mark = "F"
+enter = "A cold forge, and an anvil waiting."
+near = "You smell old soot and cold iron."
+weight = 3
+min_cells = 9
+feature = "anvil"
+offers = { temper = "forge" }

@@ -52,6 +52,9 @@ pub(super) fn abilities(content: &Content) -> String {
             Ability::Pray => {
                 "everyone beside a forgotten altar not yet spent (a prayer takes a minute)".into()
             }
+            Ability::Temper => {
+                "everyone beside a forge's anvil (tempering takes ten minutes)".into()
+            }
         };
         let (asks, takes) = match a.cost() {
             // A long action: its prayer's time, whatever the pace.
@@ -135,5 +138,6 @@ fn aim(aim: Aim) -> &'static str {
         Aim::Nothing => "nothing",
         Aim::Direction => "a direction",
         Aim::Cell => "a place you see",
+        Aim::Item => "a weapon or armour you carry",
     }
 }

@@ -187,6 +187,10 @@ id = "metalcraft"
 name = "Metalcraft"
 description = "Working metal: smithing, mending arms and armour."
 kind = "action"
+mark = [{ on = "temper", chance = 100 }]
+# Tempering an item at a forge's anvil (spec §7 "Special rooms"; the Temper ability, offered there
+# to anyone): added to the Strength check whose margin leans the outcome, +8 at 100, +12 at 200.
+benefit = [{ effect = "temper", curve = [[0, 0], [100, 8], [200, 12]] }]
 
 [[skill]]
 id = "music"
