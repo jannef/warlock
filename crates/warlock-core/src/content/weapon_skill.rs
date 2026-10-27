@@ -36,7 +36,7 @@ pub const MAX_NEED: u32 = 1_000_000;
 /// The most a rank may widen a threat range by, in natural rolls.
 pub const MAX_THREAT_WIDENING: u8 = 10;
 /// The most a rank may take off an action's cost, in percent.
-pub const MAX_SAVING: u8 = 50;
+pub const MAX_SAVING: u8 = 60;
 /// The most a rank may add to a critical's damage multiplier: from the least (×2) to the most
 /// (×5).
 pub const MAX_CRIT_BONUS: u8 = *CRITS.end() - *CRITS.start();
@@ -929,6 +929,103 @@ mod tests {
         let twin = table.benefit(id("twin_blades"), MAX_RANK);
         assert_eq!(TwoWeapons::eased(-4, twin.ease_main), 0);
         assert_eq!(TwoWeapons::eased(-8, twin.ease_off), 0);
+    }
+
+    /// Rank 10 of every weapon skill holds its family's values (docs/design/combat-progression.md
+    /// §3: light blades, precise, heavy, middling, launchers and thrown, shield blocking), every
+    /// style's §5's, and every benefit of every skill never falls as the rank rises.
+    #[test]
+    fn rank_ten_holds_the_family_tables() {
+        let text = include_str!("../../../../assets/data/weapon_skills.toml");
+        let table = parse(text).expect("valid");
+        // (id, to_hit, damage, threat, speed, parry, shield, reload)
+        #[rustfmt::skip]
+        let skills: [(&str, i32, i32, u8, u8, i32, i32, u8); 16] = [
+            // Light blades
+            ("daggers", 7, 5, 3, 30, 4, 0, 0),
+            ("short_blades", 7, 5, 3, 25, 5, 0, 0),
+            // Precise
+            ("long_blades", 7, 8, 2, 0, 6, 0, 0),
+            ("spears", 7, 8, 2, 0, 4, 0, 0),
+            ("unarmed", 7, 8, 2, 30, 0, 0, 0),
+            // Heavy
+            ("great_blades", 5, 12, 2, 0, 4, 0, 0),
+            ("axes", 5, 12, 2, 0, 0, 0, 0),
+            ("polearms", 5, 12, 2, 0, 0, 0, 0),
+            // Middling
+            ("maces", 6, 8, 1, 0, 0, 0, 0),
+            ("staves", 6, 5, 1, 0, 6, 0, 0),
+            ("shield_bash", 6, 5, 1, 0, 0, 0, 0),
+            // Launchers and thrown
+            ("bows", 7, 5, 2, 25, 0, 0, 0),
+            ("crossbows", 6, 5, 1, 0, 0, 0, 60),
+            ("slings", 7, 5, 1, 25, 0, 0, 0),
+            ("thrown", 7, 5, 2, 30, 0, 0, 0),
+            // Shield blocking
+            ("shield_block", 0, 0, 0, 0, 0, 6, 0),
+        ];
+        for (name, to_hit, damage, threat, speed, parry, shield, reload) in skills {
+            let id = table.id(name).expect(name);
+            let b = table.benefit(id, MAX_RANK);
+            assert_eq!(
+                (
+                    b.to_hit, b.damage, b.threat, b.speed, b.parry, b.shield, b.reload
+                ),
+                (to_hit, damage, threat, speed, parry, shield, reload),
+                "{name}"
+            );
+        }
+        let style = |name: &str| table.benefit(table.id(name).expect(name), MAX_RANK);
+        assert_eq!((style("duelist").to_hit, style("duelist").parry), (5, 7));
+        let twin = style("twin_blades");
+        assert_eq!((twin.to_hit, twin.ease_main, twin.ease_off), (2, 4, 8));
+        // Twin Blades is penalty-free a rank early, at 9.
+        let twin9 = table.benefit(table.id("twin_blades").unwrap(), MAX_RANK - 1);
+        assert_eq!(TwoWeapons::eased(-4, twin9.ease_main), 0);
+        assert_eq!(TwoWeapons::eased(-8, twin9.ease_off), 0);
+        let great = style("great_weapon");
+        assert_eq!((great.damage, great.speed), (10, 20));
+        // ×4 criticals at Great Weapon 10: the least multiplier and two more.
+        assert_eq!(*CRITS.start() + great.crit, 4);
+        let board = style("sword_and_board");
+        assert_eq!((board.shield, board.bash), (6, 35));
+        let marksman = style("marksman");
+        assert_eq!(
+            (marksman.to_hit, marksman.speed, marksman.reload),
+            (6, 25, 40)
+        );
+        let skirmisher = style("skirmisher");
+        assert_eq!(
+            (skirmisher.to_hit, skirmisher.damage, skirmisher.speed),
+            (4, 5, 30)
+        );
+        assert_eq!((style("brawler").to_hit, style("brawler").damage), (5, 10));
+        let staff = style("staff_fighter");
+        assert_eq!((staff.to_hit, staff.parry), (5, 7));
+        // Never less at a higher rank, any benefit, any skill.
+        for (id, def) in table.ids() {
+            for rank in 1..=MAX_RANK {
+                let (lo, hi) = (table.benefit(id, rank - 1), table.benefit(id, rank));
+                let all = |b: Benefit| {
+                    [
+                        b.to_hit,
+                        b.damage,
+                        b.parry,
+                        b.shield,
+                        b.threat.into(),
+                        b.crit.into(),
+                        b.speed.into(),
+                        b.reload.into(),
+                        b.ease_main.into(),
+                        b.ease_off.into(),
+                        b.bash.into(),
+                    ]
+                };
+                for (a, b) in all(lo).into_iter().zip(all(hi)) {
+                    assert!(a <= b, "{} rank {rank}", def.id);
+                }
+            }
+        }
     }
 
     #[test]

@@ -68,11 +68,11 @@ name = "Daggers and knives"
 phrase = "with daggers"
 role = "melee"
 curve = "melee"
-to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5]
-damage = [0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 3]
-threat = [0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 2]
-speed = [0, 0, 0, 0, 0, 5, 5, 10, 10, 15, 20]
-parry = [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2]
+to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 5, 6, 7]
+damage = [0, 0, 0, 1, 1, 1, 2, 2, 3, 4, 5]
+threat = [0, 0, 0, 0, 0, 0, 1, 1, 2, 2, 3]
+speed = [0, 0, 0, 0, 0, 5, 5, 10, 15, 20, 30]
+parry = [0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4]
 
 [[skill]]
 id = "short_blades"
@@ -80,11 +80,11 @@ name = "Short blades"
 phrase = "with short blades"
 role = "melee"
 curve = "melee"
-to_hit = [0, 1, 1, 2, 2, 3, 3, 3, 4, 4, 5]
-damage = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3]
-threat = [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1]
-speed = [0, 0, 0, 0, 0, 0, 0, 5, 5, 10, 10]
-parry = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3]
+to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 5, 6, 7]
+damage = [0, 0, 1, 1, 1, 2, 2, 3, 3, 4, 5]
+threat = [0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 3]
+speed = [0, 0, 0, 0, 0, 0, 5, 10, 15, 20, 25]
+parry = [0, 0, 1, 1, 1, 2, 2, 3, 4, 4, 5]
 
 [[skill]]
 id = "long_blades"
@@ -92,10 +92,10 @@ name = "Long blades"
 phrase = "with long blades"
 role = "melee"
 curve = "melee"
-to_hit = [0, 1, 1, 2, 2, 2, 3, 3, 4, 4, 5]
-damage = [0, 0, 1, 1, 2, 2, 2, 3, 3, 4, 4]
-threat = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]
-parry = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 4]
+to_hit = [0, 1, 1, 2, 2, 2, 3, 4, 5, 6, 7]
+damage = [0, 0, 1, 1, 2, 2, 3, 4, 5, 6, 8]
+threat = [0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2]
+parry = [0, 0, 1, 1, 1, 2, 2, 3, 4, 5, 6]
 
 [[skill]]
 id = "great_blades"
@@ -103,10 +103,10 @@ name = "Great blades"
 phrase = "with great blades"
 role = "melee"
 curve = "melee"
-to_hit = [0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4]
-damage = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 6]
-threat = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1]
-parry = [0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2]
+to_hit = [0, 1, 1, 1, 2, 2, 2, 3, 4, 4, 5]
+damage = [0, 1, 1, 2, 2, 3, 4, 5, 7, 9, 12]
+threat = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2]
+parry = [0, 0, 0, 1, 1, 1, 2, 2, 3, 3, 4]
 
 [[skill]]
 id = "axes"
@@ -114,8 +114,9 @@ name = "Axes"
 phrase = "with axes"
 role = "melee"
 curve = "melee"
-to_hit = [0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4]
-damage = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5]
+to_hit = [0, 1, 1, 1, 2, 2, 2, 3, 4, 4, 5]
+damage = [0, 1, 1, 2, 2, 3, 4, 5, 7, 9, 12]
+threat = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2]
 
 [[skill]]
 id = "maces"
@@ -123,8 +124,9 @@ name = "Maces and clubs"
 phrase = "with maces and clubs"
 role = "melee"
 curve = "melee"
-to_hit = [0, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4]
-damage = [0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5]
+to_hit = [0, 1, 1, 2, 2, 2, 3, 4, 5, 5, 6]
+damage = [0, 0, 1, 1, 2, 2, 3, 4, 5, 6, 8]
+threat = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]
 
 [[skill]]
 id = "spears"
@@ -132,9 +134,10 @@ name = "Spears"
 phrase = "with spears"
 role = "melee"
 curve = "melee"
-to_hit = [0, 1, 1, 2, 2, 3, 3, 3, 4, 4, 5]
-damage = [0, 0, 1, 1, 1, 2, 2, 3, 3, 3, 4]
-parry = [0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2]
+to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 5, 6, 7]
+damage = [0, 0, 1, 1, 1, 2, 3, 4, 5, 6, 8]
+threat = [0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2]
+parry = [0, 0, 0, 1, 1, 1, 2, 2, 3, 3, 4]
 
 [[skill]]
 id = "polearms"
@@ -142,8 +145,9 @@ name = "Polearms"
 phrase = "with polearms"
 role = "melee"
 curve = "melee"
-to_hit = [0, 1, 1, 1, 2, 2, 2, 3, 3, 4, 4]
-damage = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5]
+to_hit = [0, 1, 1, 1, 2, 2, 2, 3, 4, 4, 5]
+damage = [0, 1, 1, 2, 2, 3, 4, 5, 7, 9, 12]
+threat = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2]
 
 [[skill]]
 id = "staves"
@@ -151,9 +155,10 @@ name = "Staves"
 phrase = "with staves"
 role = "melee"
 curve = "melee"
-to_hit = [0, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4]
-damage = [0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3]
-parry = [0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4]
+to_hit = [0, 1, 1, 2, 2, 2, 3, 3, 4, 5, 6]
+damage = [0, 0, 0, 1, 1, 1, 2, 3, 3, 4, 5]
+threat = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]
+parry = [0, 1, 1, 1, 2, 2, 3, 4, 4, 5, 6]
 
 [[skill]]
 id = "unarmed"
@@ -161,9 +166,10 @@ name = "Unarmed"
 phrase = "at fighting unarmed"
 role = "unarmed"
 curve = "melee"
-to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5]
-damage = [0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5]
-speed = [0, 0, 0, 0, 0, 5, 5, 10, 10, 15, 15]
+to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 5, 6, 7]
+damage = [0, 0, 1, 1, 2, 2, 3, 4, 5, 6, 8]
+threat = [0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2]
+speed = [0, 0, 0, 0, 0, 5, 10, 15, 20, 25, 30]
 
 # Missile and thrown
 [[skill]]
@@ -172,10 +178,10 @@ name = "Bows"
 phrase = "with bows"
 role = "launcher"
 curve = "missile"
-to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5]
-damage = [0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3]
-threat = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]
-speed = [0, 0, 0, 0, 0, 0, 5, 5, 10, 10, 15]
+to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 5, 6, 7]
+damage = [0, 0, 0, 1, 1, 1, 2, 2, 3, 4, 5]
+threat = [0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2]
+speed = [0, 0, 0, 0, 0, 0, 5, 10, 15, 20, 25]
 
 [[skill]]
 id = "crossbows"
@@ -183,9 +189,10 @@ name = "Crossbows"
 phrase = "with crossbows"
 role = "launcher"
 curve = "missile"
-to_hit = [0, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4]
-damage = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3]
-reload = [0, 0, 10, 10, 20, 20, 30, 30, 40, 40, 50]
+to_hit = [0, 1, 1, 2, 2, 2, 3, 4, 4, 5, 6]
+damage = [0, 0, 1, 1, 1, 2, 2, 3, 4, 4, 5]
+threat = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]
+reload = [0, 0, 10, 10, 20, 20, 30, 40, 50, 50, 60]
 
 [[skill]]
 id = "slings"
@@ -193,9 +200,10 @@ name = "Slings"
 phrase = "with slings"
 role = "launcher"
 curve = "missile"
-to_hit = [0, 1, 1, 2, 2, 3, 3, 3, 4, 4, 5]
-damage = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 4]
-speed = [0, 0, 0, 0, 0, 5, 5, 5, 10, 10, 10]
+to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 5, 6, 7]
+damage = [0, 0, 1, 1, 1, 2, 2, 3, 3, 4, 5]
+threat = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]
+speed = [0, 0, 0, 0, 0, 5, 5, 10, 15, 20, 25]
 
 [[skill]]
 id = "thrown"
@@ -203,9 +211,10 @@ name = "Thrown weapons"
 phrase = "at throwing"
 role = "thrown"
 curve = "missile"
-to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5]
-damage = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3]
-speed = [0, 0, 0, 0, 0, 0, 5, 5, 10, 10, 15]
+to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 5, 6, 7]
+damage = [0, 0, 1, 1, 1, 2, 2, 3, 3, 4, 5]
+threat = [0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2]
+speed = [0, 0, 0, 0, 0, 0, 5, 10, 15, 20, 30]
 
 # Shields
 [[skill]]
@@ -214,7 +223,7 @@ name = "Shield blocking"
 phrase = "at blocking with a shield"
 role = "shield_block"
 curve = "melee"
-shield = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 4]
+shield = [0, 0, 1, 1, 1, 2, 2, 3, 4, 5, 6]
 
 [[skill]]
 id = "shield_bash"
@@ -222,8 +231,9 @@ name = "Shield bashing"
 phrase = "at bashing with a shield"
 role = "shield_bash"
 curve = "melee"
-to_hit = [0, 1, 1, 2, 2, 2, 3, 3, 4, 4, 5]
-damage = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 4]
+to_hit = [0, 1, 1, 2, 2, 2, 3, 4, 4, 5, 6]
+damage = [0, 0, 1, 1, 1, 2, 2, 3, 3, 4, 5]
+threat = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]
 
 # Fighting styles (spec §8 "Fighting styles"), after AD&D 2e's Complete Fighter's Handbook: skills
 # of how weapons are held and used, with the same ranks, marks, curves, and benefits as weapon
@@ -258,8 +268,8 @@ phrase = "at dueling"
 role = "style"
 grip = "one_weapon"
 curve = "melee"
-to_hit = [0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4]
-parry = [0, 1, 1, 2, 2, 3, 3, 3, 4, 4, 5]
+to_hit = [0, 1, 1, 1, 2, 2, 2, 3, 3, 4, 5]
+parry = [0, 1, 1, 2, 2, 3, 3, 4, 5, 6, 7]
 
 [[skill]]
 id = "twin_blades"
@@ -268,9 +278,10 @@ phrase = "at fighting with two weapons"
 role = "style"
 grip = "two_weapons"
 curve = "melee"
-# At rank 10 neither hand has a penalty: a full attack with each.
-ease_main = [0, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4]
-ease_off = [0, 1, 2, 2, 3, 4, 4, 5, 6, 7, 8]
+# At rank 9 neither hand has a penalty: a full attack with each.
+to_hit = [0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2]
+ease_main = [0, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4]
+ease_off = [0, 1, 2, 2, 3, 4, 5, 6, 7, 8, 8]
 
 [[skill]]
 id = "great_weapon"
@@ -279,9 +290,9 @@ phrase = "at fighting with great weapons"
 role = "style"
 grip = "two_handed"
 curve = "melee"
-damage = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 6]
-crit = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]
-speed = [0, 0, 0, 0, 5, 5, 5, 10, 10, 10, 15]
+damage = [0, 1, 1, 2, 2, 3, 4, 5, 6, 8, 10]
+crit = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2]
+speed = [0, 0, 0, 0, 5, 5, 5, 10, 15, 15, 20]
 
 [[skill]]
 id = "sword_and_board"
@@ -290,8 +301,8 @@ phrase = "at fighting with weapon and shield"
 role = "style"
 grip = "weapon_and_shield"
 curve = "melee"
-shield = [0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4]
-bash = [0, 0, 0, 5, 5, 10, 10, 15, 15, 20, 25]
+shield = [0, 1, 1, 1, 2, 2, 2, 3, 4, 5, 6]
+bash = [0, 0, 0, 5, 5, 10, 10, 15, 20, 25, 35]
 
 [[skill]]
 id = "marksman"
@@ -301,9 +312,9 @@ role = "style"
 grip = "launcher"
 weapons = ["bows", "crossbows", "slings"]
 curve = "missile"
-to_hit = [0, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4]
-speed = [0, 0, 0, 5, 5, 5, 10, 10, 10, 15, 15]
-reload = [0, 0, 10, 10, 10, 20, 20, 20, 30, 30, 30]
+to_hit = [0, 1, 1, 2, 2, 2, 3, 3, 4, 5, 6]
+speed = [0, 0, 0, 5, 5, 5, 10, 10, 15, 20, 25]
+reload = [0, 0, 10, 10, 10, 20, 20, 30, 30, 40, 40]
 
 [[skill]]
 id = "skirmisher"
@@ -312,9 +323,9 @@ phrase = "at skirmishing"
 role = "style"
 grip = "thrown"
 curve = "missile"
-to_hit = [0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3]
-damage = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3]
-speed = [0, 0, 0, 5, 5, 10, 10, 10, 15, 15, 20]
+to_hit = [0, 1, 1, 1, 1, 2, 2, 2, 3, 3, 4]
+damage = [0, 0, 1, 1, 1, 2, 2, 3, 3, 4, 5]
+speed = [0, 0, 0, 5, 5, 10, 10, 15, 15, 20, 30]
 
 [[skill]]
 id = "brawler"
@@ -323,8 +334,8 @@ phrase = "at brawling"
 role = "style"
 grip = "unarmed"
 curve = "melee"
-to_hit = [0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4]
-damage = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 6]
+to_hit = [0, 1, 1, 1, 2, 2, 2, 3, 3, 4, 5]
+damage = [0, 1, 1, 2, 2, 3, 4, 5, 6, 8, 10]
 
 [[skill]]
 id = "staff_fighter"
@@ -334,8 +345,8 @@ role = "style"
 grip = "two_handed"
 weapons = ["staves"]
 curve = "melee"
-to_hit = [0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4]
-parry = [0, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4]
+to_hit = [0, 1, 1, 1, 2, 2, 2, 3, 3, 4, 5]
+parry = [0, 1, 1, 2, 2, 2, 3, 4, 5, 6, 7]
 
 # Defaults (The Riddle of Steel): skill with one weapon carries over to related ones, less a
 # penalty, both ways. When a rank is gained in A, every B with rank(A) - penalty > rank(B) rises to

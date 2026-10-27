@@ -6,7 +6,7 @@
 use super::*;
 use crate::action::{AttackKind, parse_actions};
 use crate::character::CharacterSpec;
-use crate::combat::{Blow, Strike};
+use crate::combat::{Blow, Category, Strike};
 use crate::content::{ContentFiles, Factor, StatUse};
 use crate::dump::{self, Layer};
 use crate::skills::Use;
@@ -106,7 +106,7 @@ fn marks_draw_from_the_training_stream_and_never_from_gameplay() {
     assert_eq!(w.state.rng, rng, "the gameplay stream is untouched");
     assert_ne!(w.state.training, training);
     let n = marks(&w)[Stat::Strength];
-    assert!((1..40).contains(&n), "about 5 % of 200 blows: {n}");
+    assert!((10..60).contains(&n), "about 15 % of 200 blows: {n}");
     // A sure rule draws nothing.
     let training = w.state.training.clone();
     w.train_stat(StatUse::Identified);
@@ -317,4 +317,151 @@ fn a_replay_with_marks_and_a_rise_verifies() {
     let mut again = world_with(BUILTIN.clone());
     run(&mut again, actions);
     assert_eq!(w.state_hash(), again.state_hash());
+}
+
+#[test]
+fn the_raised_chances_and_the_new_uses_are_read_from_data() {
+    let rules = BUILTIN.stat_training();
+    let chance = |used| {
+        (rules.rules(used))
+            .map(|r| (r.stat, r.chance))
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(chance(StatUse::Blow), [(Some(Stat::Strength), 15)]);
+    assert_eq!(chance(StatUse::Critical), [(Some(Stat::Strength), 40)]);
+    assert_eq!(chance(StatUse::Block), [(Some(Stat::Strength), 20)]);
+    assert_eq!(chance(StatUse::Dodge), [(Some(Stat::Dexterity), 30)]);
+    assert_eq!(chance(StatUse::Parry), [(Some(Stat::Dexterity), 25)]);
+    assert_eq!(chance(StatUse::Hurt), [(Some(Stat::Toughness), 20)]);
+    assert_eq!(chance(StatUse::Killed), [(Some(Stat::Toughness), 30)]);
+    assert_eq!(chance(StatUse::Cast), [(Some(Stat::Willpower), 30)]);
+    // A potion's and an elixir's name their stat where they are drunk: sure marks.
+    assert_eq!(chance(StatUse::Drank), [(None, 100)]);
+    assert_eq!(chance(StatUse::Elixir), [(None, 100)]);
+}
+
+#[test]
+fn a_critical_up_close_a_shield_block_and_a_parry_train_their_stats() {
+    let mut w = world_with(SURE.clone());
+    let player = w.state.player;
+    let other = ActorId(999);
+    let blow = |strike| Blow {
+        strike,
+        damage: 0,
+        kind: None,
+    };
+    let critical = Blow {
+        damage: 4,
+        ..blow(Strike::Hit { critical: true })
+    };
+    w.train_fight((player, other), AttackKind::Melee, &critical);
+    assert_eq!(marks(&w)[Stat::Strength], 2, "the blow and its critical");
+    // A critical shot is a shot, not a blow up close.
+    w.train_fight((player, other), AttackKind::Ranged, &critical);
+    assert_eq!(marks(&w)[Stat::Strength], 2);
+    let shield = blow(Strike::Missed {
+        by: Some(Category::Shield),
+    });
+    w.train_fight((other, player), AttackKind::Melee, &shield);
+    assert_eq!(marks(&w)[Stat::Strength], 3, "the shield's block");
+    let parry = blow(Strike::Missed {
+        by: Some(Category::Parry),
+    });
+    w.train_fight((other, player), AttackKind::Melee, &parry);
+    assert_eq!(marks(&w)[Stat::Dexterity], 2, "the shot and the parry");
+    // The player's own blow blocked or parried trains nothing of theirs.
+    let before = marks(&w);
+    w.train_fight((player, other), AttackKind::Melee, &shield);
+    w.train_fight((player, other), AttackKind::Melee, &parry);
+    assert_eq!(marks(&w), before);
+}
+
+/// The built-in content with one training rule: a kill up close of a foe of the player's level
+/// or above, a sure Toughness mark.
+static KILLS: LazyLock<Arc<Content>> = LazyLock::new(|| {
+    let text = "[training]\nneed_base = 20\nneed_per_point = 3\nover_potential_divisor = 4\n\n\
+                [[training.use]]\nstat = \"toughness\"\non = \"killed\"\nchance = 100\n";
+    let mut files = ContentFiles::builtin();
+    files.insert("data/stats.toml", text);
+    Arc::new(Content::load(&files).expect("content"))
+});
+
+/// The showcase's kobold (level 2).
+fn kobold(w: &World) -> ActorId {
+    let kobold = (w.state.actors.values())
+        .find(|a| w.content.creature(a.creature).id == "kobold")
+        .map(|a| a.id)
+        .expect("the kobold");
+    assert_eq!(
+        w.content.creature(w.state.actors[&kobold].creature).level,
+        2
+    );
+    kobold
+}
+
+/// Brings the kobold east of the player with one hit point (again after each kick: it may
+/// step away), and kicks it until it dies.
+fn kick_the_kobold_to_death(w: &mut World) {
+    let kobold = kobold(w);
+    for _ in 0..40 {
+        let at = w.player_pos().step(Dir::E);
+        let Some(actor) = w.state.actors.get_mut(&kobold) else {
+            return;
+        };
+        actor.pos = at;
+        actor.hp = 1;
+        *w.perception = crate::perception::Perception::compute(&w.state, &w.content, &mut w.lights);
+        w.apply(&Action::Kick(Dir::E));
+    }
+    panic!("the kobold did not die: {:?}", said(w));
+}
+
+#[test]
+fn a_kill_up_close_of_a_foe_of_the_players_level_or_above_trains_toughness() {
+    let mut w = world_with(KILLS.clone());
+    assert_eq!(w.player_level(), 1);
+    kick_the_kobold_to_death(&mut w);
+    assert_eq!(marks(&w)[Stat::Toughness], 1, "{:?}", said(&w));
+    // At level 3 the kobold is beneath the player: its death trains nothing.
+    let mut w = world_with(KILLS.clone());
+    reach(&mut w, 3);
+    kick_the_kobold_to_death(&mut w);
+    assert_eq!(marks(&w)[Stat::Toughness], 0);
+    // Nor does a kill at range.
+    let mut w = world_with(KILLS.clone());
+    let (player, kobold) = (w.state.player, kobold(&w));
+    w.train_kill((player, kobold), AttackKind::Ranged);
+    assert_eq!(marks(&w)[Stat::Toughness], 0);
+    w.train_kill((player, kobold), AttackKind::Melee);
+    assert_eq!(marks(&w)[Stat::Toughness], 1);
+}
+
+#[test]
+fn a_potion_gives_its_marks_at_once_in_the_stat_it_names_without_a_draw() {
+    let mut w = world_with(BUILTIN.clone());
+    let training = w.state.training.clone();
+    w.train_stat_times(StatUse::Drank, Some(Stat::Strength), 5);
+    w.train_stat_times(StatUse::Elixir, Some(Stat::Presence), 20);
+    let m = marks(&w);
+    assert_eq!((m[Stat::Strength], m[Stat::Presence]), (5, 20));
+    assert_eq!(m[Stat::Toughness], 0, "only the stat named");
+    assert_eq!(w.state.training, training, "sure marks draw nothing");
+    // Without a stat named, a potion's use marks nothing.
+    w.train_stat_times(StatUse::Drank, None, 5);
+    assert_eq!(marks(&w), m);
+    // Marks saturate.
+    set_marks(&mut w, Stat::Strength, u16::MAX - 2);
+    w.train_stat_times(StatUse::Drank, Some(Stat::Strength), 20);
+    assert_eq!(marks(&w)[Stat::Strength], u16::MAX);
+}
+
+#[test]
+fn a_count_below_a_sure_chance_draws_once_a_mark() {
+    let mut w = world_with(BUILTIN.clone());
+    let mut expected = w.state.training.clone();
+    w.train_stat_times(StatUse::Blow, None, 200);
+    let won = (0..200).filter(|_| expected.chance(15)).count() as u16;
+    assert_eq!(w.state.training, expected, "a draw a mark");
+    assert_eq!(marks(&w)[Stat::Strength], won);
+    assert!((10..60).contains(&won), "about 15 % of 200: {won}");
 }

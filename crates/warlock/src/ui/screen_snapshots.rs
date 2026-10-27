@@ -320,6 +320,23 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // A ranger in the Thornwood after a forage (spec §8 "Foraging"): Survival listed as its
+    // use, Forage, usable; the message line says what came of it.
+    Case {
+        name: "abilities-menu-forage",
+        scenario: "forest",
+        actions: "forage",
+        screen: Some("abilities"),
+        ..BASE
+    },
+    // A ranger in the showcase's hall, no wilderness: Forage greyed out, "not usable here".
+    Case {
+        name: "abilities-menu-forage-not-here",
+        character: Some("human,male,ranger"),
+        run: true,
+        screen: Some("abilities"),
+        ..BASE
+    },
     // A paladin of some level: the Class group, Lay on hands drained, Smite ready.
     Case {
         name: "abilities-menu-class",
@@ -567,6 +584,14 @@ const CASES: &[Case] = &[
         screen: Some("eat"),
         ..BASE
     },
+    // Nothing to consume (the arena's pack holds no food).
+    Case {
+        name: "consume-list-none",
+        scenario: "arena",
+        run: true,
+        screen: Some("eat"),
+        ..BASE
+    },
     Case {
         name: "item-description",
         actions: "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*4 pickup \
@@ -787,7 +812,7 @@ const CASES: &[Case] = &[
         scenario: "arena",
         // Pip's birth sign has gifts (#265): seed 4 is one where the fight still ends in his death.
         seed: Some(4),
-        actions: "lantern wait*14",
+        actions: "lantern wait*20",
         ..BASE
     },
     Case {

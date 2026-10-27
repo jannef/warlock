@@ -383,19 +383,19 @@ fn several_levels_come_at_once_and_hit_points_grow_up_to_the_cap() {
         ["You feel more experienced.", "Welcome to level 4."]
     );
 
-    // To level 19, and over the last growing level: level 20 grows, level 21 does not.
-    w.state.experience = rules.threshold(19);
-    let max19 = w.state().player().max_hp(w.content());
-    w.grant_xp(rules.threshold(20) - rules.threshold(19));
-    assert_eq!(w.player_level(), 20);
-    assert_eq!(w.state().player().max_hp(w.content()), max19 + step);
-    let max20 = w.state().player().max_hp(w.content());
-    w.grant_xp(rules.threshold(21) - rules.threshold(20));
-    assert_eq!(w.player_level(), 21);
+    // To level 49, and over the last growing level: level 50 grows, level 51 does not.
+    w.state.experience = rules.threshold(49);
+    let max49 = w.state().player().max_hp(w.content());
+    w.grant_xp(rules.threshold(50) - rules.threshold(49));
+    assert_eq!(w.player_level(), 50);
+    assert_eq!(w.state().player().max_hp(w.content()), max49 + step);
+    let max50 = w.state().player().max_hp(w.content());
+    w.grant_xp(rules.threshold(51) - rules.threshold(50));
+    assert_eq!(w.player_level(), 51);
     assert_eq!(
         w.state().player().max_hp(w.content()),
-        max20,
-        "no more hit points past level 20"
+        max50,
+        "no more hit points past level 50"
     );
     // The top: 60, and no further.
     w.grant_xp(u32::MAX);

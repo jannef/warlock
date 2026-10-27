@@ -392,7 +392,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
       summoned next to the reader (a dretch); or, lucky, a training mark of Intelligence or the
       spell learned anyway. A failure loses only that scroll: the spell can come again.
     - **Training**: the `study` use (Spellcraft's and Decipher script's marks; an Intelligence
-      mark), whatever comes of it.
+      mark), whatever comes of it; in a scriptorium (§7 "Special rooms") Decipher script's
+      mark is twice as likely.
     - **Determinism**: the check's two gameplay draws only when there is a check, the mishap's
       one only on a failure, then its effect's own.
     - **Shown**: the chance in words only (`StudyRules::words`: "certain", "easy" from 96 of 144

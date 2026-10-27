@@ -191,7 +191,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   ascend/descend (ascend also leaves an outdoor area when no enemy is about, §7 "Leaving an
   outdoor area"), light/douse lantern (`*`),
   pick up (`,` or `;`), drop (`d`), equipment (`i`), inventory (`I`), character (`@`), skills
-  (`A`), weapon skills (`W`), quest log (`q`), rest (`b`), eat (`e`), read (`r`; a basic
+  (`A`), weapon skills (`W`), quest log (`q`), rest (`b`), consume (`e`, food; the command that was Eat), read (`r`; a basic
   command, not an ability), study (`L`, next to read; a basic command), look (`l`), shoot or throw what
   is in the missile weapon slot
   (`t`), throw from the pack (`T`), fire (unbound by default: `t` does it), more aggressive / more
@@ -399,7 +399,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     direction ("Disarm in which direction? (Esc to cancel)"); **Pick lock** (`Ability::PickLock`,
     §8 "Doors", #233), Open lock's use, which whoever is trained in it has (thieves), in a
     direction; **Steal** (`Ability::Steal`, §8 "Stealing"), the Steal skill's use, which whoever
-    is trained in Steal has, in a direction, in that skill's place; and each other skill used as
+    is trained in Steal has, in a direction, in that skill's place; **Forage** (`Ability::Forage`,
+    §8 "Foraging"), Survival's use, which whoever is trained in it has, asking for nothing, in
+    that skill's place, greyed out "not usable here" (`Unavailable::NotHere`) outside the wild;
+    and each other skill used as
     an action (`kind = "action"`, §8 "Skills") the player
     is trained in, listed but never available until its use comes (it then becomes an ability of
     its own with its action, listed in the skill's place: `Ability::use_of`); **Second wind**
@@ -550,10 +553,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   feel satiated."), and someone muttering (§8 "Dialogue"), which are logged all the same. Hit points come back twice as fast while resting
   (§8 "Healing").
   It is a gameplay input mode like the open/close/kick direction prompt, not a menu screen.
-- **Eat** (`e`; §8 "Hunger") opens the choice of what to eat: the food lying on the player's
+- **Consume** (`e`, id `eat`: the Eat command, renamed; §8 "Hunger") opens the choice of what to consume (food for now, drinks later): the food lying on the player's
   cell first (marked "lying here"; the `>` cursor starts on it, as ADOM asks about the floor
   first), then the food in the inventory, in the item list (above); with nothing, "You have
-  nothing to eat." A letter, or Enter on the `>` row, eats it (replay text by position: `eat:b`
+  nothing to consume." A letter, or Enter on the `>` row, eats it (replay text by position: `eat:b`
   for inventory stack `b`, `eat:floor:a` for the top stack of the pile underfoot); Esc
   cancels. A
   meal is one action of several turns, stopped early like a rest; "You eat the food ration. You
