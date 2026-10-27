@@ -386,7 +386,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (`Ability::SecondWind`, under Talents, §8 "Talents"), which the Second wind talent gives,
     asking for nothing, greyed out while Winded; the **class actives** (`Ability::Class`,
     under Class, §8 "Class abilities": Rage, Veteran's wind, Whirlwind, Lay on hands, Smite,
-    Holy radiance, Quivering palm, Inspire; Volley at a cell, aimed as a shot is), each from the level its class's table gives it, Smite and
+    Holy radiance, Quivering palm, Inspire, Consecrate; Volley at a cell, aimed as a shot is), each from the level its class's table gives it, Smite and
     Quivering palm in a direction, greyed out during their cooldowns (Rage while raging and
     exhausted) and the paladin's while strayed; throwing one's voice (Class; #235,
     `throw_voice:X,Y`, the `throw_voice` action, a cell, §5 "Hearing"), the bard's (Throw

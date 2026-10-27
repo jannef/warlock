@@ -44,7 +44,8 @@ Very rarely, a room's effect does not stay in a room: when a level draws a room 
 is a small chance (its "Whole level" chance below) that the effect covers the **whole level**
 instead, and the room is plain. You are told each time you arrive on such a level, and the
 effect holds everywhere on it. Where a room's effect and a whole level's meet, both apply: a
-shadowed room on a gloomy level is darker still. Today only the draining room can do this.
+shadowed room on a gloomy level is darker still. Today the draining room and the cursed room
+can do this.
 
 ## The rooms
 
@@ -117,13 +118,16 @@ gets where a dungeon favours or bans nothing. "Only" says where it can come at a
   beneath you!"). You fall to the level below, land somewhere open on it (never behind a locked
   door or in a shop), take 2d6 damage, which can kill you, and are Staggered. A
   quick way down, if you can take the bruises; creatures never fall through.
+- **Cursed room.** The dead do not rest in it: see below. Only on a level with a danger. One
+  floor in twenty that draws a cursed room is cursed throughout instead.
 
 The talent *Hallowed rest* (Grit) makes a room that quickens healing or mana quicken it half
 again more for you: a sanctuary's three times as fast becomes four times. The talent *Anchored
 mind* (Scholar) keeps your power moored: Ebbing never takes you. The talent *Mirror-wise*
 (Scholar) sees through reflections within 2 cells of you: they are not shown, and nothing stops
 your step there. The talent *Light tread* (Delver) carries you over a collapsed floor as if it
-were sound rock: it never gives way under you.
+were sound rock: it never gives way under you. The talent *Grave warden* (Guard) keeps what you
+kill down: nothing you kill ever rises in a cursed room.
 
 Only what happens inside counts: a sound made in an echoing hall is loud wherever it is heard,
 while one made outside and heard inside is not changed. Light outside a shadowed room is as
@@ -166,3 +170,31 @@ you on arrival when something sleeps on the level.
 
 Sleepers count among the level's creatures: while the den is full, fewer newcomers find their
 way to the level. Killing a sleeper is like killing any other foe.
+
+## Cursed rooms
+
+A creature that dies in a cursed room (or anywhere on a cursed level), whoever killed it,
+rises from its corpse two minutes later as one of the undead ("The giant rat's corpse rises as
+a skeleton!"). You see its corpse twitch as it dies, if you see it; a rising you do not see you
+may hear, as a groan. The undead never rise again, and creatures that leave no corpse never
+rise at all.
+
+What it rises as is drawn at its death, each alike, among the undead of the dead creature's own
+level, or, when there are none of that level, of the nearest level that has some (the lower one
+on a tie). A risen creature carries nothing (what the dead carried still lies there) and is
+worth its own experience when you kill it.
+
+{{#include generated/risings.md}}
+
+The corpse is what rises: **take it, eat it, or destroy it** within the two minutes, and nothing
+rises. A corpse carried out of the room and dropped elsewhere is not cursed again. A level you
+leave stays as it was until you come back, and whatever was due to rise meanwhile rises as you
+return.
+
+**Consecrate.** A Good priest (from level 9) or paladin (from level 12) can lift the curse:
+standing inside a cursed or a draining room, they spend 15 mana and pray for a minute (from the
+abilities menu). If nothing disturbs the prayer (anything that would stop a rest stops it, and
+then the mana and the time are lost), the room becomes a plain room for good: the dead no longer
+rise there, nor does mana drain. On a level a curse or a drain covers whole, it lifts the whole
+level's instead. It is a good deed (see [Alignment](alignment.md)). Anywhere else it is refused
+("There is nothing here to consecrate."), costing nothing.

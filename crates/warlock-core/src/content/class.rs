@@ -483,6 +483,9 @@ pub enum ClassActive {
     MasterThief,
     /// A song that lifts the player's fighting a while, for mana (the bard's Inspire).
     Inspire,
+    /// A minute's prayer that lifts an unholy room's effect for good, for mana (the priest's and
+    /// the paladin's Consecrate).
+    Consecrate,
 }
 
 impl ClassActive {
@@ -498,6 +501,7 @@ impl ClassActive {
         ClassActive::Volley,
         ClassActive::MasterThief,
         ClassActive::Inspire,
+        ClassActive::Consecrate,
     ];
 
     /// Its id: the id of the class ability that has it, and its replay text (`use:rage`).
@@ -513,6 +517,7 @@ impl ClassActive {
             ClassActive::Volley => "volley",
             ClassActive::MasterThief => "master_thief",
             ClassActive::Inspire => "inspire",
+            ClassActive::Consecrate => "consecrate",
         }
     }
 
@@ -542,7 +547,9 @@ impl ClassActive {
             | ClassActive::Smite
             | ClassActive::QuiveringPalm
             | ClassActive::MasterThief => ActionKind::Melee,
-            ClassActive::LayOnHands | ClassActive::HolyRadiance => ActionKind::Cast,
+            ClassActive::LayOnHands | ClassActive::HolyRadiance | ClassActive::Consecrate => {
+                ActionKind::Cast
+            }
             ClassActive::Volley => ActionKind::Shoot,
             ClassActive::Inspire => ActionKind::Chat,
         }

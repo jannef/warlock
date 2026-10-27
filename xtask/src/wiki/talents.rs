@@ -609,6 +609,9 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "a special room's (or a whole level's) {} never takes you",
             status(&id)
         ),
+        TalentEffect::GraveWarden => {
+            "nothing you kill ever rises in a cursed room (see Special rooms)".into()
+        }
         TalentEffect::WakePercent { value } => format!(
             "the noise that wakes a sleeper, from what you do, {} (a den's 200% of its \
              hearing threshold becomes {}%)",
@@ -1427,6 +1430,12 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::Virtuoso { status: id } => {
             format!("Inspire gives {} instead, for nothing", buff(content, &id))
         }
+        TalentEffect::Consecrate { mana, time } => format!(
+            "active ({time} of prayer, for {mana} mana; interrupted as a rest is, it lifts \
+             nothing): standing in a cursed or draining room, it becomes a plain room for good; \
+             on a level a curse or a drain covers whole, the whole level's is lifted instead. \
+             A good deed (see Alignment). Anywhere else it is refused, with no time spent"
+        ),
     }
 }
 

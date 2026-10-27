@@ -32,6 +32,7 @@ abilities = [
     { level = 6, talent = "divine_grace" },
     { level = 6, talent = "blessing" },
     { level = 12, talent = "smite" },
+    { level = 12, talent = "consecrate" },
     { level = 18, talent = "divine_health" },
     { level = 25, talent = "shield_of_faith" },
     { level = 32, talent = "steadfast" },

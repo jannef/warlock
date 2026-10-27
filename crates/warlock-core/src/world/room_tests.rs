@@ -378,8 +378,8 @@ fn level_files_mark_rooms_with_known_effects_inside_the_map() {
     let room =
         |effect: &str, area: &str| format!("[[room]]\neffect = \"{effect}\"\narea = {area}\n");
     assert!(attempt(&room("hushed", "[0, 0, 4, 2]")).is_ok());
-    let err = attempt(&room("cursed", "[0, 0, 4, 2]")).unwrap_err();
-    assert!(err.contains("unknown effect `cursed`"), "{err}");
+    let err = attempt(&room("nonesuch", "[0, 0, 4, 2]")).unwrap_err();
+    assert!(err.contains("unknown effect `nonesuch`"), "{err}");
     let err = attempt(&room("hushed", "[0, 0, 5, 2]")).unwrap_err();
     assert!(err.contains("not a rectangle inside the 5x3 map"), "{err}");
     let err = attempt(&format!(

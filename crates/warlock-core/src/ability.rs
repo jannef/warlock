@@ -563,6 +563,11 @@ impl Ability {
                         let inspired = (inspire.and_then(|i| i.instead))
                             .is_some_and(|c| short_of(actor, c).is_none());
                         let mana = inspire.filter(|_| !inspired).map_or(0, |i| i.mana);
+                        // Consecrate costs its mana.
+                        let consecrate = (active == ClassActive::Consecrate)
+                            .then(|| actor.talent_mods(content).consecrate)
+                            .flatten();
+                        let mana = mana + consecrate.map_or(0, |c| c.mana);
                         let cost = actor.mana_cost(content, mana);
                         let blocked = (cost > 0)
                             .then(|| actor.effects.blocking(content, ActionKind::Cast))
@@ -618,6 +623,7 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
         | ClassActive::QuiveringPalm
         | ClassActive::MasterThief
         | ClassActive::Inspire
+        | ClassActive::Consecrate
         | ClassActive::Volley => Vec::new(),
     };
     cooldowns.into_iter().find(|&s| actor.effects.has(s))

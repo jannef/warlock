@@ -17,7 +17,7 @@ fn with_feature(extra: &str, chance: u8) -> Content {
     files.edit_table("room_effects", |text| {
         let text = text.replace("chance = 12\n", &format!("chance = {chance}\n"));
         format!(
-            "{text}\n[[effect]]\nid = \"glittering\"\nname = \"glittering hall\"\nmark = \"g\"\n\
+            "{text}\n[[effect]]\nid = \"glittering\"\nname = \"glittering hall\"\nmark = \"z\"\n\
              enter = \"It glitters.\"\n{extra}"
         )
     });
@@ -168,8 +168,8 @@ fn features_are_drawn_only_where_they_are_eligible() {
     };
     // The Depths have no danger; Fennmynster does.
     assert_eq!(only("needs_danger = true\n", "showcase", "depths:1"), 0);
-    // (The fen keeps 65 % of its draws for its own and a room special one time in four.)
-    assert!(only("needs_danger = true\n", "ascmearc", "fennmynster:1") > 3);
+    // (The fen keeps 80 % of its draws for its own and a room special one time in four.)
+    assert!(only("needs_danger = true\n", "ascmearc", "fennmynster:1") > 0);
     // The Depths' bottom, 8, has no level below.
     assert_eq!(only("needs_below = true\n", "showcase", "depths:8"), 0);
     assert!(only("needs_below = true\n", "showcase", "depths:7") > 10);

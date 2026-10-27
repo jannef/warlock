@@ -708,6 +708,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     its cap, `TalentMods::focus`); the casters' Empower, Archmage, Scroll adept, Frugal caster,
     the wizard's Arcane training, and every class spell name it too. Wand mastery comes with
     wands (#398) and Channeler with rods (#399), whose hooks they need.
+    Grave warden (Guard, Willpower 12, `grave_warden`, #408): nothing the player kills rises in
+    a cursed room (`World::curse_corpse`, the rise line of `fight.rs::creature_dies`).
     The Defence by attack kind of the design's B5 landed with Deflect missiles (#237,
     `World::target_against`).
   - **Racial talents** (#241; the design's §7.5 Racial): the `racial` tree (`no_free`), each
@@ -787,7 +789,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     own, sheds the faint item glow, reaching 3 cells, from the player, a light source like a
     glowing item's; a cast; Good or better), Quivering palm (a bare-handed blow in a direction,
     refused with a weapon in hand before anything is spent; a hit that does damage leaves three
-    degrees of Bleeding; for 5 Ki, §8 "Resources", and no cooldown).
+    degrees of Bleeding; for 5 Ki, §8 "Resources", and no cooldown), Consecrate (the priest's at
+    9, the paladin's at 12: a minute's prayer, for 15 mana, that lifts an unholy special room's
+    effect, or a whole level's, for good, §7 "Special rooms"; refused, no time, elsewhere; Good
+    or better).
   - **Passives**, each one read: Weapon drill (melee weapon skill marks +25 %, `practise`),
     Shield line and Shield of faith (Shield +1; Shield of faith also +10 to Sword and Board's
     bash chance), Cleaving strike (the cleave free blow; with the Cleave talent too, great
