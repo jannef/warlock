@@ -28,13 +28,13 @@
 //! name, the shop floor's `area` (inclusive: everything lying there is for sale), and the
 //! keeper's `post` on it, where the keeper (`data/shops.toml`'s `[keeper]`) is spawned.
 //! Optional `danger = N` (spec §7 "Danger levels"; 0 to 99, or `{ base, player }`) with
-//! `population` (creature ids), `population_count`, `stray`, `out_of_depth`, `deeper`,
+//! `population` (creature ids), `population_count`, `stray`, `stray_pool`, `out_of_depth`, `deeper`,
 //! `deeper_cap`, and `spawn`, as a dungeon branch gives them (`super::danger`): creatures of
 //! about that danger keep coming while the player is there; none on the overworld.
 
 use super::creature::CreatureId;
 use super::danger::{
-    CountSpec, DangerRule, DangerSpec, OddsSpec, SpawnSpec, Spawning, SpawningSpec,
+    CountSpec, DangerRule, DangerSpec, OddsSpec, SpawnSpec, Spawning, SpawningSpec, StrayPool,
 };
 use super::faction::FactionId;
 use super::flow::{FLOW_SPEEDS, Flow};
@@ -131,6 +131,8 @@ struct LevelFile {
     population: Option<Vec<String>>,
     population_count: Option<CountSpec>,
     stray: Option<u8>,
+    /// Where its strays come from; default: every type that may stray.
+    stray_pool: Option<StrayPool>,
     out_of_depth: Option<u8>,
     deeper: Option<u8>,
     deeper_cap: Option<u8>,
@@ -928,6 +930,7 @@ pub(super) fn parse_level(
             deeper: parsed.deeper,
             deeper_cap: parsed.deeper_cap,
         },
+        stray_pool: parsed.stray_pool,
         spawn: parsed.spawn,
     }
     .resolve(

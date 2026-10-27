@@ -28,7 +28,7 @@ giant_frog at (58, 7) route N S S N N S S N N S
 animated_book at (53, 3) route E E S W E E E E W W W W E N W W carrying a book
 giant_leech at (29, 15) route S S W W W W E E E E N N
 animated_candlestick at (21, 16) route W W W W W E W E E E E E carrying an iron candlestick
-kobold_zombie at (23, 16) route W W E E W W E E W W E E W W E E W W E E
+orc_runt at (23, 16) route W W E E W W E E W W E E W W E E W W E E carrying a brass dagger (wielded), a bone cap (being worn)
 giant_leech at (57, 13) route N S N N E E E E E N S W W W W W S S N S
 alarm trap at (28, 7)
 teleport trap at (38, 4)
@@ -51,7 +51,7 @@ pit trap at (60, 12)
      #.....#               #.##.######.....#.############wy...........¡#
      #.....#            ####.##R......R....S.#          ################
      #.....##############..f.w#.######¡.w..###
-     #...(.&...(.....(.zS.?.(.'.#    #######
+     #...(.&...(.....(.oS.?.(.'.#    #######
      #..(..##############(....###
      #¡....#            #######
      #######

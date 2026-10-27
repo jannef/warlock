@@ -189,6 +189,10 @@ pub(super) struct CreatureSpec {
     /// population draws it once, never again.
     #[serde(default)]
     pub unique: bool,
+    /// Whether it may come as a stray to a branch whose population does not name it (spec §7
+    /// "Danger levels"); `false` for a type only ever placed by hand or by its own rules.
+    #[serde(default = "yes")]
+    pub stray: bool,
     /// How often a population or a spawn draws it (`data/creature_rarities.toml`, spec §7
     /// "Danger levels"); none: common.
     pub rarity: Option<String>,
@@ -496,6 +500,7 @@ impl CreatureSpec {
             level: self.level,
             xp: self.xp,
             unique: self.unique,
+            stray: self.stray,
             rarity: r.rarity,
             loot: self.loot,
             attack: r.attack,
@@ -615,6 +620,10 @@ pub struct CreatureDef {
     /// Gameplay: whether at most one of it is drawn in a run by a population (spec §7 "Danger
     /// levels"; [`crate::world::Progress`] remembers those drawn).
     pub unique: bool,
+    /// Gameplay: whether a branch may draw it as a stray without naming it in its population
+    /// (spec §7 "Danger levels"; `Content::fill_generic`); `stray = false` in its file for a
+    /// type only ever placed by hand or by its own rules.
+    pub stray: bool,
     /// Gameplay: how often a population or a spawn draws it, an index into
     /// [`super::Content::creature_rarities`] (spec §7 "Danger levels"). Never shown.
     pub rarity: usize,
