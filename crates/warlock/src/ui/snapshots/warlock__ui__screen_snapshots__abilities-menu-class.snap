@@ -12,23 +12,23 @@ expression: "render(case, content.clone())"
                     │ Class                                                    │
                     │   b  Lay on hands       you are drained                  │
                     │   c  Smite              in a direction                   │
+                    │   d  Consecrate                                          │
                     │ Spells                                                   │
-                    │   d  Blessing           tier 1, 3 mana                   │
+                    │   e  Blessing           tier 1, 3 mana                   │
                     │ Skills                                                   │
-                    │   e  Handle animal      not usable yet                   │
-                    │   f  Heal               not usable yet                   │
-                    │   g  Intimidate         not usable yet                   │
+                    │   f  Handle animal      not usable yet                   │
+                    │   g  Heal               not usable yet                   │
+                    │   h  Intimidate         not usable yet                   │
                     │ Weapon skills                                            │
-                    │   h  Shield bash        in a direction                   │
+                    │   i  Shield bash        in a direction                   │
                     │ Items                                                    │
-                    │   i  Hood your lantern                                   │
+                    │   j  Hood your lantern                                   │
                     │                                                          │
                     │ The unicorn's grace: your bleeding and poison end, and a │
                     │ disease is shaken off; then it rests a day.              │
                     │                                                          │
-                    │ a-i or Enter use   Esc close                             │
+                    │ a-j or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
-
 
 
  The Hub  ·  HP 43/43  ·  MP 18/18  ·  Drained  ·  Lv 13  ·  08:00  ·  11 Darkening      ? controls
