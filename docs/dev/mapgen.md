@@ -34,7 +34,12 @@ checked and marked `Vault::pinned` by `Content::pin_vaults` once the branch's ca
 a dungeon vault, shared or of the branch's campaign, once a level) reaches the generators as
 `Needs::vaults`. Both stamp them first, each on a random spot among every one where it fits
 (`vault::spots`; caves also need its tunnels), and fail the attempt if one fits nowhere, so the
-next attempt's stream tries again; then the random vault as before. `vault::shuffled` leaves
+next attempt's stream tries again; then the random vault as before. Caves first make room when no
+rock is left big enough (#582: `caves::make_room` fills the spot, vault and ring, that takes the
+least of the cave with rock, a random one of those, then keeps the largest cave again); without it
+Fyrdelf 12, Wulfeshol 4, and Wyrtholm 4 failed all 16 attempts for a few seeds in a hundred.
+`mapgen/seeds_tests.rs` generates every branch's bottom floor for 300 seeds and every floor for
+100, and requires each to succeed. `vault::shuffled` leaves
 pinned vaults out, so a branch without named vaults draws exactly what it did (no extra draws;
 the Depths' snapshots are unchanged). Fyrdelf names the foreman's cabin on 1 to 4 and the
 drake's hoard on 12 (`mapgen/fyrdelf_tests.rs`, with the branch's first-level snapshot);

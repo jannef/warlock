@@ -56,7 +56,7 @@ load it lightens (a throw), or a kill changes the next attack's price, never its
 lives (AI decisions, the noise and events an action makes; the AI is `world/ai.rs`, `docs/dev/creatures.md`).
 Speed (`speed` in `data/creatures.toml`, default 1000 = the player's; any player speed works;
 `Actor::speed` scales it by the talents' `speed_percent` plus the skills' `speed`, Athletics, the
-skills capped so the sum stays within `MAX_SPEED`; the burden, Bloated, and statuses are applied
+skills capped so the sum stays within `MAX_SPEED`, and nowhere else: `World::slowed` does not read it again, #581; the burden, Bloated, and statuses are applied
 to prices afterwards in `World::slowed`, independent of speed)
 is rules-only: never put it in perception, the UI, or messages; energy is per actor in
 `WorldState` (saved, hashed); creatures on other levels and the dev skip gain none.

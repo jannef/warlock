@@ -4,9 +4,10 @@
 //!    at least five rock neighbors and stays rock with at least four.
 //! 2. Keep the largest 4-connected cave; everything else is rock. Too small a cave is a failed
 //!    attempt.
-//! 3. Stamp the vaults the branch level names (each for certain, else the attempt fails), then
-//!    one or two others, into solid rock (a random spot among all that fit) and tunnel from each
-//!    entrance to the cave.
+//! 3. Stamp the vaults the branch level names (each for certain: where no rock is left big
+//!    enough, the spot that takes the least of the cave is filled with rock first; else the
+//!    attempt fails), then one or two others, into solid rock (a random spot among all that fit)
+//!    and tunnel from each entrance to the cave.
 //! 4. A few pools of shallow water.
 //! 5. The up staircase in a roomy spot; the down staircase in a roomy spot far from it (by walking
 //!    distance).
@@ -38,9 +39,13 @@ pub(super) fn build(canvas: &mut Canvas, rng: &mut Rng, needs: Needs) -> Option<
         smooth(canvas);
     }
     keep_largest_cave(canvas)?;
-    let named = vault::named(canvas, needs.vaults);
-    if place_vaults(canvas, rng, &named, named.len()) < named.len() {
-        return None;
+    for v in vault::named(canvas, needs.vaults) {
+        if vault::spots(canvas, v).is_empty() {
+            make_room(canvas, rng, v)?;
+        }
+        if place_vaults(canvas, rng, &[v], 1) < 1 {
+            return None;
+        }
     }
     let vaults = 1 + usize::from(rng.chance(30));
     let shuffled = vault::shuffled(canvas, rng);
@@ -114,6 +119,41 @@ fn keep_largest_cave(canvas: &mut Canvas) -> Option<()> {
         }
     }
     Some(())
+}
+
+/// Makes room for a vault the level names when no rock is left big enough to hold it (#582): fills
+/// the spot that takes the least of the cave (a random one of those) with rock, the vault and its
+/// ring, then keeps the largest cave again, as the fill may cut a corner of it off. `None` if
+/// every spot touches a stamped cell, or the cave left is too small.
+fn make_room(canvas: &mut Canvas, rng: &mut Rng, v: &Vault) -> Option<()> {
+    let (w, h) = (v.width(), v.height());
+    let ring = |at: Pos| {
+        (at.y - 1..=at.y + h).flat_map(move |y| (at.x - 1..=at.x + w).map(move |x| Pos::new(x, y)))
+    };
+    let mut best = Vec::new();
+    let mut least = usize::MAX;
+    for y in 2..=canvas.height() - 2 - h {
+        for x in 2..=canvas.width() - 2 - w {
+            let at = Pos::new(x, y);
+            if ring(at).any(|p| canvas.is_stamped(p)) {
+                continue;
+            }
+            let open = ring(at)
+                .filter(|p| canvas.get(*p) != canvas.pal.void)
+                .count();
+            if open < least {
+                (least, best) = (open, Vec::new());
+            }
+            if open == least {
+                best.push(at);
+            }
+        }
+    }
+    let at = *rng.pick(&best)?;
+    for p in ring(at).collect::<Vec<_>>() {
+        canvas.set(p, canvas.pal.void);
+    }
+    keep_largest_cave(canvas)
 }
 
 /// Stamps up to `count` of `vaults`, in order, into solid rock, each joined to the cave by a
