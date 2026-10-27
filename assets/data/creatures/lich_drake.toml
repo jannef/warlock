@@ -22,7 +22,7 @@ hearing = 12
 weight = 1000000
 stats = { strength = 40, dexterity = 24, toughness = 40, intelligence = 38, willpower = 36, presence = 36 }
 base_hp = 256
-natural = { defence = 5, protection = 8, name = "dry bones" }
+natural = { defence = 5, protection = 10, name = "dry bones" }
 resist = { cold = 75, poison = 100 }
 corpse = false
 blood = "none"

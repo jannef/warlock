@@ -19,7 +19,7 @@ hearing = 22
 weight = 45000
 stats = { strength = 23, dexterity = 23, toughness = 23, intelligence = 22, willpower = 22, presence = 24 }
 base_hp = 70
-natural = { defence = 2, protection = 0, name = "dark hide" }
+natural = { defence = 2, protection = 2, name = "dark hide" }
 [creature.attack]
 damage = "3d10"
 damage_type = "piercing"

@@ -49,6 +49,12 @@ glare, class abilities' blows, free blows' flurry) are not part of it. Tests:
 `world/attacks_tests.rs`. Spells stay intents (`strike: None`). Tests: `combat.rs` (exhaustive 2d12
 enumeration for hit chances, criticals, miss attribution), `world/fight_tests.rs`.
 
+Creatures' natural Protection follows a rule by body and level (spec §8 "Natural Protection by
+body and level", #563): data only, checked by `content/creature_body_tests.rs` (the body table by
+hide name, the peoples and armed types at 0, the exceptions list); `docs/dev/creatures.md`.
+A confirmed critical adds `Profile::critical_penetration` (Armour-breaker's
+`critical_penetration`, set in `Actor::stanced`) to the penetration in `combat::strike`.
+
 Protection (spec §8 "Combat", #192; ADOM's PV): `combat::strike(profile, &Target, rng)` takes
 the target's Defence, Protection, and resistances (`combat::Target`, `World::target_of(id)`)
 and soaks a hit with `combat::soak` (one draw from

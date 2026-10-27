@@ -22,6 +22,7 @@ weight = 1500
 size = "small"
 stats = { strength = 12, dexterity = 17, toughness = 13, intelligence = 15, willpower = 20, presence = 15 }
 base_hp = 15
+natural = { protection = 2, name = "skull" }
 attack = { damage = "2d6", damage_type = "fire", name = "bite", verb = "bites" }
 resist = { fire = 100, cold = -50, poison = 100 }
 corpse = false

@@ -18,7 +18,7 @@ hearing = 18
 weight = 150000
 stats = { strength = 21, dexterity = 20, toughness = 20, intelligence = 4, willpower = 16, presence = 4 }
 base_hp = 50
-natural = { defence = 1, protection = 0, name = "thick hide" }
+natural = { defence = 1, protection = 1, name = "thick hide" }
 on_eat = { message = "Tough, gamy wolf meat.", vomit = 10, stat = { toughness = 2 } }
 [creature.attack]
 damage = "3d8"

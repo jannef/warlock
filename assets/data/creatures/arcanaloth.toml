@@ -26,7 +26,7 @@ weight = 70000
 stats = { strength = 26, dexterity = 22, toughness = 30, intelligence = 32, willpower = 36, presence = 32 }
 base_hp = 92
 skills = { concentration = 148, spellcraft = 153 }
-natural = { defence = 3, protection = 0, name = "fur" }
+natural = { defence = 3, protection = 4, name = "fur" }
 resist = { acid = 100, poison = 100, fire = 50, cold = 50, electricity = 50 }
 corpse = false
 blood = "#3a2a10"

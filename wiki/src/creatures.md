@@ -111,6 +111,34 @@ steel (half again as much; the stone troll a quarter more) but the fire troll, w
 The marsh troll of the fen is a marsh thing and the rotting troll is undead, but a quest to kill
 trolls counts them too.
 
+## Hides and bodies
+
+What a creature is made of decides how much of each blow it shrugs off (its
+[Protection](combat.md#protection)), and the older and stronger the kind, the more. Soft things
+(skin, fur, feathers, dead flesh) give little until they grow huge; bony things (bones, scales,
+chitin, shell) turn blades; the hard-skinned (stone, ice, iron-hard skin) turn most blows. Spirits,
+flame, wind, and water have nothing to cut through, and none at all. A blow that does nothing
+"glances off" the hide. People who fight in armour (kobolds, goblins, orcs, the drow, the duergar,
+outlaws) have no hide of their own: what they wear is their Protection. Hard bodies are what
+penetration is for: the war hammer, the stiletto, crossbow bolts, and criticals, which are soaked
+only once after they multiply the damage (the **Armour-breaker** talent's criticals drive through
+2 more).
+
+Protection by body and level (rounded down; each kind's own is in
+[Creatures in numbers](creature-numbers.md)):
+
+| Body | Protection at level L | L 10 | L 20 | L 30 | L 40 | L 50 | L 60 | L 70 |
+|---|---|---|---|---|---|---|---|---|
+| None (spirits, flame, wind, water) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| Hide (skin, fur, feathers, dead flesh, wrappings) | (L − 10) ÷ 8 | 0 | 1 | 2 | 3 | 5 | 6 | 7 |
+| Bony (bones, scales, chitin, shell, plates) | L ÷ 6 | 1 | 3 | 5 | 6 | 8 | 10 | 11 |
+| Armoured (stone, ice, iron-hard skin, slag, cinders) | L ÷ 4 + 1 | 3 | 6 | 8 | 11 | 13 | 16 | 18 |
+
+The exceptions: the cave beetle's and the ember beetle's shells (3), the stone troll's stony hide
+(5), the mud golem (5: a blow sinks into it), the balor and the pit fiend (10, held to the bony
+line), the hags who cast (half a hide's), and every living troll (a hide of at least 2). The
+[animated objects](animated.md) have their own table.
+
 ## Incorporeal creatures
 
 Some restless dead have no body to stop them: **incorporeal** creatures (the ghosts, shadows,

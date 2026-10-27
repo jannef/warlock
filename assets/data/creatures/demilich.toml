@@ -26,7 +26,7 @@ weight = 2000
 stats = { strength = 36, dexterity = 28, toughness = 40, intelligence = 40, willpower = 40, presence = 40 }
 base_hp = 140
 skills = { concentration = 220, spellcraft = 225 }
-natural = { defence = 6, protection = 0, name = "skull" }
+natural = { defence = 6, protection = 11, name = "skull" }
 resist = { slashing = 50, piercing = 50, bludgeoning = 50, poison = 100 }
 corpse = false
 blood = "none"

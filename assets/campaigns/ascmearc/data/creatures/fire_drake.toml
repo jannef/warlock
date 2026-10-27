@@ -31,7 +31,7 @@ weight = 2000000
 stats = { strength = 26, dexterity = 12, toughness = 26, intelligence = 16, willpower = 20, presence = 20 }
 base_hp = 90
 skills = { concentration = 50, spellcraft = 50 }
-natural = { defence = 3, protection = 5, name = "scales" }
+natural = { defence = 3, protection = 3, name = "scales" }
 resist = { fire = 100, cold = -25 }
 on_eat = { message = "The drake's flesh burns going down, and leaves you stronger.", vomit = 20, stat = { strength = 25, toughness = 25 } }
 blood = "#a0200a"

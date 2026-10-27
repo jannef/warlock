@@ -27,7 +27,7 @@ weight = 60000
 stats = { strength = 25, dexterity = 20, toughness = 29, intelligence = 31, willpower = 35, presence = 31 }
 base_hp = 84
 skills = { concentration = 136, spellcraft = 141 }
-natural = { defence = 3, protection = 0, name = "frost-hard skin" }
+natural = { defence = 3, protection = 2, name = "frost-hard skin" }
 resist = { cold = 100, fire = -25 }
 on_eat = { message = "Cold as a grave in winter.", vomit = 60, harm = "1d4", stat = { willpower = 5 } }
 blood = "#4a5a6a"

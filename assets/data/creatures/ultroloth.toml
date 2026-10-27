@@ -23,7 +23,7 @@ hearing = 18
 weight = 75000
 stats = { strength = 34, dexterity = 24, toughness = 35, intelligence = 34, willpower = 36, presence = 34 }
 base_hp = 145
-natural = { defence = 4, protection = 0, name = "grey hide" }
+natural = { defence = 4, protection = 6, name = "grey hide" }
 resist = { acid = 100, poison = 100, fire = 50, cold = 50, electricity = 50 }
 corpse = false
 blood = "#2a2a34"

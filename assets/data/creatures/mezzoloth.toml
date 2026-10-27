@@ -20,7 +20,7 @@ hearing = 14
 weight = 90000
 stats = { strength = 20, dexterity = 16, toughness = 21, intelligence = 19, willpower = 24, presence = 19 }
 base_hp = 55
-natural = { defence = 1, protection = 2, name = "chitin" }
+natural = { defence = 1, protection = 3, name = "chitin" }
 attack = { damage = "3d8", damage_type = "slashing", name = "claws", verb = "claws", to_hit = 2 }
 resist = { acid = 100, poison = 100, fire = 50, cold = 50, electricity = 50 }
 weapon_skills = { spears = 3 }

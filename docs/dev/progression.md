@@ -181,6 +181,7 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `missile_breaks` | `World::loose` (the break chance scaled) |
 | `checks` | the stat checks: `disease.rs` (both), `search_modifier`, `lockpick.rs`, `disarm_modifier`, `steps_lightly` |
 | `critical_confirm` | `Actor::stanced` → `Profile::confirm`, added to the confirmation roll in `combat::strike` |
+| `critical_penetration` | `Actor::stanced` → `Profile::critical_penetration`, added to the penetration of a confirmed critical in `combat::strike` |
 | `burden_ease` | `World::burdened` (added to Balance's ease) |
 | `disarm` | `Ability::Disarm`'s `had_by` |
 | `weapon { skill }`, `protection { per_piece }` | `TalentMods::weapon_benefit` (a fixed skill or style: Fencing's Duelist, Big hands' maces and unarmed); `talent_protection` counts the pieces worn with Protection |
