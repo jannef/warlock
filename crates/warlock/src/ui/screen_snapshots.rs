@@ -589,6 +589,29 @@ const CASES: &[Case] = &[
         keys: Some("L"),
         ..BASE
     },
+    // Wands (spec §8 "Magic items": "Wands"): the trap hall's two, unknown, then identified;
+    // aiming one from the missile weapon slot.
+    Case {
+        name: "wand-description-unidentified",
+        scenario: "traps",
+        actions: "move:E move:E pickup",
+        screen: Some("describe"),
+        ..BASE
+    },
+    Case {
+        name: "wand-description",
+        scenario: "traps",
+        actions: "move:E move:E pickup identify",
+        screen: Some("describe"),
+        ..BASE
+    },
+    Case {
+        name: "wand-aim",
+        scenario: "traps",
+        actions: "move:E move:E pickup identify equip:missile_weapon:a",
+        keys: Some("t"),
+        ..BASE
+    },
     // Talk, quests, messages.
     Case {
         name: "dialogue-screen",

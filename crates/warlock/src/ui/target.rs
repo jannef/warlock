@@ -61,6 +61,9 @@ pub enum AimKind {
     Throw(usize),
     /// Reading the spell scroll of inventory stack `usize` at a cell (`r`).
     Read(usize),
+    /// Using the wand of inventory stack `usize`, ready in the missile weapon slot (`t`; spec §8
+    /// "Magic items": "Wands").
+    Zap(usize),
     /// Using an ability that asks for a cell (from the abilities menu, or its key).
     Ability(Ability),
 }
@@ -173,6 +176,10 @@ impl Aim {
             },
             // A volley flies as far as a shot.
             AimKind::Ability(VOLLEY) => view.ready_to_fire().map(|(_, _, range)| range),
+            // A wand's spell reaches as far as the player casts it, once they know what it is.
+            AimKind::Zap(_) => {
+                spell_of(view, self.kind).and_then(|s| view.own_spell_reach(s)?.range)
+            }
             // A spell reaches as far as the player casts it, Willpower counted.
             AimKind::Ability(Ability::Spell(spell)) => {
                 view.own_spell_reach(spell).and_then(|r| r.range)
@@ -184,7 +191,7 @@ impl Aim {
     /// The action that looses it at the cursor (`None`: an ability that aims at no cell).
     pub fn action(&self, content: &warlock_core::content::Content) -> Option<Action> {
         Some(match self.kind {
-            AimKind::Fire => Action::Fire(self.at),
+            AimKind::Fire | AimKind::Zap(_) => Action::Fire(self.at),
             AimKind::Throw(item) => Action::Throw { item, at: self.at },
             AimKind::Read(item) => Action::Read {
                 item,
@@ -258,7 +265,7 @@ impl Aim {
                 };
                 (burst.radius, spell.range, spell.noun.clone())
             }
-            (None, AimKind::Ability(_) | AimKind::Read(_)) => {
+            (None, AimKind::Ability(_) | AimKind::Read(_) | AimKind::Zap(_)) => {
                 let id = spell_of(view, self.kind)?;
                 let spell = cast_spell(view, self.kind).filter(|s| s.shape == Shape::Burst)?;
                 let reach = view.own_spell_reach(id)?;
@@ -293,6 +300,7 @@ impl Aim {
             AimKind::Fire => ("Fire", "fires"),
             AimKind::Throw(_) => ("Throw", "throws"),
             AimKind::Read(_) => ("Read", "reads"),
+            AimKind::Zap(_) => ("Zap", "zaps"),
             // `ready` names the ability ("Throw your voice"), and only Enter uses it.
             AimKind::Ability(_) => {
                 return format!(
@@ -349,11 +357,17 @@ fn aimed_spell<'v>(view: &PerceptionView<'v>, kind: AimKind) -> Option<&'v Scrol
     }
 }
 
-/// The spell of `data/spells/` `kind` casts: one of the player's spells, or a scroll of one
-/// read (spec §8 "Spells").
+/// The spell of `data/spells/` `kind` casts: one of the player's spells, a scroll of one read
+/// (spec §8 "Spells"), or a wand of one used, if the player knows what the wand is.
 fn spell_of(view: &PerceptionView<'_>, kind: AimKind) -> Option<SpellId> {
     match kind {
         AimKind::Ability(Ability::Spell(spell)) => Some(spell),
+        AimKind::Zap(item) => {
+            let stack = view.inventory().get(item)?;
+            (view.lore().is_identified(stack.object))
+                .then(|| view.content().object(stack.object).wand.map(|w| w.spell))
+                .flatten()
+        }
         AimKind::Read(item) => {
             let stack = view.inventory().get(item)?;
             match view.content().object(stack.object).read.as_ref()? {

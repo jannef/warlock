@@ -170,6 +170,7 @@ mod travel;
 mod voice;
 mod volley;
 mod warp;
+mod zap;
 
 pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
 pub use alignment::Deed;
@@ -1464,3 +1465,5 @@ mod voice_tests;
 mod weapon_skill_tests;
 #[cfg(test)]
 mod weather_tests;
+#[cfg(test)]
+mod zap_tests;

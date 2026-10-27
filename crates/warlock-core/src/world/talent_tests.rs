@@ -231,7 +231,8 @@ fn a_pick_nothing_can_be_spent_on_is_dropped() {
     // With every talent the character qualifies for held, the pick is dropped too. Apprentice
     // (any skill, three ranks each) would keep a pick open to the last level, and so would Sworn
     // foe (any creature tag): here they are an elf's, and Apprentice's tree waits for a free
-    // talent; Salvager and Unbinder are held back the same way so the picks fit in the levels there are.
+    // talent; Salvager, Unbinder, and Wand mastery are held back the same way so the picks fit in
+    // the levels there are.
     let mut files = ContentFiles::builtin();
     files.edit_table("talents", |text| {
         text.replace(
@@ -245,6 +246,10 @@ fn a_pick_nothing_can_be_spent_on_is_dropped() {
         .replace(
             "tree = \"weaponcraft\"\ndescription = \"You strike at the binding",
             "tree = \"weaponcraft\"\nneeds = { race = \"elf\" }\ndescription = \"You strike at the binding",
+        )
+        .replace(
+            "tree = \"weaponcraft\"\ndescription = \"You draw more from a wand",
+            "tree = \"weaponcraft\"\nneeds = { race = \"elf\" }\ndescription = \"You draw more from a wand",
         )
         .replace(
             "choice = \"tag\"\n",

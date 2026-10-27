@@ -1,0 +1,20 @@
+# Unidentified wands (spec §8 "Magic items": "Wands"), as unidentified scrolls are (the format
+# of scroll_labels.toml): a wand type the player has not yet used or identified shows as "an oak
+# wand" (and in one plain colour) until they do. Every wand type gets its own label at the start
+# of a run, drawn after the scrolls' labels from the same stream, so this file never changes a
+# scroll's label nor a run's rolls.
+#
+#   name, plural  what an unknown wand is called, `{label}` its label
+#   fg            the colour every unknown wand shows in
+#   syllables     [least, most] parts a label is made of (1 to 6): one word here
+#   parts         the words (at least 8, distinct; at least as many as there are wand types)
+
+name = "{label} wand"
+plural = "{label} wands"
+fg = "#b8a888"
+syllables = [1, 1]
+parts = [
+    "alder", "ash", "birch", "bone", "brass", "cedar", "copper", "crooked", "ebony", "elm",
+    "glass", "hazel", "holly", "iron", "ivory", "oak", "pine", "rowan", "silver", "willow",
+    "yew",
+]
