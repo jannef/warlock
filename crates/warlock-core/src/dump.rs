@@ -1184,8 +1184,16 @@ fn actor_rows(world: &World) -> Vec<String> {
             } else {
                 format!("{resists}; images {}", mirrored.join(" "))
             };
+            // Its caster level (spec §8 "Spells"), for an actor with mana: its magic items'
+            // `caster_level` included, as for the player.
+            let max_mana = a.max_mana(content);
+            let caster = if max_mana > 0 {
+                format!(" cl {}", world.caster_level(a.id))
+            } else {
+                String::new()
+            };
             format!(
-                "{} {} at {}: hp {}/{} mp {}/{}{resources} dv {} pv {}{alignment}{court}; weight {} (base {} + carried {}: \
+                "{} {} at {}: hp {}/{} mp {}/{}{caster}{resources} dv {} pv {}{alignment}{court}; weight {} (base {} + carried {}: \
                  {carried}){equipped}; {} (limit {}){weapons}; stats {}{skills}{effects}{diseases}\
                  {hunger}{npc}{talk}{resists}",
                 a.id,
@@ -1194,7 +1202,7 @@ fn actor_rows(world: &World) -> Vec<String> {
                 a.hp,
                 a.max_hp(content),
                 a.mana,
-                a.max_mana(content),
+                max_mana,
                 world.defence_of(a.id).total(),
                 world.protection_of(a.id).base,
                 format_weight(w.total()),

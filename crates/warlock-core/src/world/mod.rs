@@ -1301,6 +1301,8 @@ mod court_tests;
 #[cfg(test)]
 mod creation_tests;
 #[cfg(test)]
+mod creature_magic_tests;
+#[cfg(test)]
 mod curse_tests;
 #[cfg(test)]
 mod damage_talent_tests;
