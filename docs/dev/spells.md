@@ -56,14 +56,31 @@ shares.
   type's) not empty, a `noise` loudness 1 to `MAX_LOUDNESS`, `blast`/`heat`/`frost` only for a
   burst and checked by `Burst::new`; its effect against `data/effects.toml` once effects load
   (`spell_def::check_effects`: burst and cone a burst's, ray, bolt, line a bolt's);
-  `[spell.scroll] level` 1 to `MAX_LEVEL`, default the tier's comfortable level.
+  `[spell.scroll] level` 1 to `MAX_LEVEL`, default the tier's comfortable level;
+  `[spell.scales]` (`content/spell_scales.rs`, `SpellScales`; #556): `damage`, `to_hit`,
+  `reach`, `duration`, each `{ stat = weight }` with known stats and weights 1 to
+  `MAX_SCALE_WEIGHT` (200), only the dimensions the spell has (`damage`: a damage or heal roll;
+  `to_hit`: `attack` or `touch`; `reach`: not touch or self; `duration`: buff or hex), the
+  defaults where it is silent (`SpellScales::default`: reach Willpower 50, duration Presence 50,
+  to-hit Dexterity 100, no damage). `[tiers] max_lift` (one per tier, 0 to `MAX_LIFT`, ascending
+  or flat) replaces the retired `reach_step` and `presence_step`.
 - **Pure helpers**: `SpellRules::tier_of(caster_level)` (the highest tier reached; 0 below the
   first), `shape_cost(shape, radius)`, `ratio`, `cap`, `cap_of(spell)`, `max_bonus`,
-  `mana(spell, caster_level, armour)` (the cost, below), `grown(base, cap, modifier)` (Willpower,
-  `reach_step`), `lengthened(severity, modifier)` (Presence, `presence_step`);
+  `mana(spell, caster_level, armour)` (the cost, below), `grown(base, cap, more)` and
+  `lengthened(severity, more)` (cells and degrees the scales give), `lift(tier, raised, more)`
+  (the damage scales' sum clamped to 0 and the tier's `max_lift` plus Keen mind's),
+  `lifted_cap(spell, lift)` (`cap_of × (100 + lift) / 100`, rounded down);
   `SpellDice::at(caster_level, comfortable)` (the dice at a caster level: one more per
-  `per_levels` above the comfortable level, never more than `max_dice`); `SpellData::tags`,
-  `aimed`, `base_reach`.
+  `per_levels` above the comfortable level, never more than `max_dice`) and
+  `SpellDice::lifted(caster_level, comfortable, (cap, lifted))` (as many dice more as
+  `(lifted − bonus) / sides − (cap − bonus) / sides`; equal caps change nothing);
+  `Weights::sum` (Σ weight × modifier), `steps` (never below 0, over 100, a half down: the old
+  floor for the 50 % defaults), `signed` (over 100, a half toward zero: a to-hit);
+  `SpellData::tags`, `aimed`, `base_reach`.
+- **The caster's stats** (`world/spell_scale.rs`, derived at cast time from
+  `Actor::effective_stats`, nothing saved): `Actor::spell_lift` (0 without `damage` scales;
+  `TalentMods::focus_lift`, Keen mind, adds to the tier's most), `spell_cap`, `spell_to_hit`,
+  `spell_reach_more`, `spell_degrees_more`.
 - **The one cast path** (`world/cast.rs`, `World::cast_spell` from `Action::Cast`; decisions the
   design left open are under "Choices" below):
   - **Cost**, the one hook `Actor::spell_cost(content, spell, caster_level)`:
@@ -79,17 +96,18 @@ shares.
     `Unavailable::NoMana` against it; `Ability::unavailable` alone cannot know the caster level,
     so `PerceptionView::abilities` and the cast ask the former. Mana is spent only once the cast
     is sure to go off.
-  - **Reach**: `Actor::spell_reach` → `Reach { range, radius }`: base grown by the effective
-    Willpower modifier (`SpellRules::grown`), then School focus's reach on the range (a cone's or
+  - **Reach**: `Actor::spell_reach` → `Reach { range, radius }`: base grown by the spell's
+    `reach` scales (`Actor::spell_reach_more`, `SpellRules::grown`), then School focus's reach on the range (a cone's or
     a line's length too, never the radius), up to the caps; a touch's range 1. A burst still
-    costs by its own `radius`. Presence lengthens a buff's and a hex's severity
-    (`SpellRules::lengthened`; the status's `max` clamps it in `Effects::add`; Blessed, Hexed
+    costs by its own `radius`. The `duration` scales lengthen a buff's and a hex's severity
+    (`Actor::spell_degrees_more`, `SpellRules::lengthened`; the status's `max` clamps it in `Effects::add`; Blessed, Hexed
     `ill_wished`, Weakened, and Sluggish have `max = 3` for it).
-  - **Dice**: `SpellDice::at(caster_level, comfortable)` then `TalentMods::spell_damage` (Scroll
-    adept's and Archmage's `per_die`, Empower's `dice`); the roll is held to
-    `SpellRules::cap_of` (`Burst::cap`/`Bolt::cap`, `spell::capped`; `None` for scrolls, traps,
-    and gifts, which keep rolling as before). A heal rolls its dice with no talents, held the
-    same way.
+  - **Dice**: `SpellDice::lifted(caster_level, comfortable, Cast::cap)` then
+    `TalentMods::spell_damage` (Scroll adept's and Archmage's `per_die`, Empower's `dice`); the
+    roll is held to the lifted cap, `Cast::cap.1` (`Actor::spell_cap` for a cast paid in mana;
+    a scroll read or a wand used: `SpellRules::cap_of`, unlifted; `Burst::cap`/`Bolt::cap`,
+    `spell::capped`; `None` for the old scrolls, traps, and gifts, which keep rolling as
+    before). A heal rolls its dice with no talents, held the same way.
   - **Kinds**: buff (its status on the caster), heal (self: the caster, refused when whole;
     touch: the creature at the adjacent cell, or the caster), cleanse (as the placeholder's),
     hex (the hostile the player sees at the cell, `hex_target`), utility (nothing yet), damage
@@ -99,7 +117,8 @@ shares.
     by one's own spell.
   - **Resolution**: area through `World::spell_hurts` (Evasion via `World::evaded`, then
     `World::spell_strikes`); auto through `spell_strikes` with a plain hit; attack and touch roll
-    `combat::strike` with `Profile::bare(Attack { damage: dice, to_hit: Dexterity modifier,
+    `combat::strike` with `Profile::bare(Attack { damage: dice, to_hit: the spell's `to_hit`
+    scales for an own cast (`Actor::spell_to_hit`), the Dexterity modifier for a scroll or a wand,
     threat 22, crit ×2 })` against `combat::Target::bare(target_against(target, missile).defence)`
     (no Protection; the strike's damage, crit included, is then held to the cap and resisted in
     `spell_strikes`). `spell_strikes` is the one place a spell's blow lands: the event (a miss
@@ -129,8 +148,17 @@ shares.
     its dice (`read_spell`) is held to `max(cap of the spell it teaches, the scroll's own most)`:
     the talents lift it no farther, and a scroll that rolls more of itself (lightning's 4d6
     against Lightning bolt's 19) keeps its own roll.
-  - Willpower: a cell per 2 points of a positive modifier (`reach_step`); Presence: a degree
-    per 2 (`presence_step`), on statuses whose degrees are their duration.
+  - Willpower: a cell per 2 points of a positive modifier; Presence: a degree per 2, on
+    statuses whose degrees are their duration: since #556 the defaults of `[spell.scales]`.
+  - The lift (#556, combat progression design §7): the dice the lift adds are its room
+    (`lifted / sides − cap / sides`), not `floor(lifted cap / sides)` outright, so a spell
+    written under its cap and every lift of 0 roll as before; the design's worked numbers hold
+    (Scorching ray 3d6 → 4d6 at 50 %, Fireball 3d6 → 5d6 at 70 %). The lift and the to-hit
+    scales are the caster's own spells' (paid in mana); a scroll read and a wand used keep the
+    unlifted cap and Dexterity (reach and duration stay the reader's, as before). To-hit may be
+    negative, as Dexterity's was. The first authoring pass: evocation damage spells but the
+    cantrips Intelligence 10 and Willpower 5; the hexes Presence 50 and Willpower 25; Cure
+    wounds Willpower 15; Mend, a cantrip, and the necromancy spells none yet.
   - A ray/bolt flies to the first creature on its line; a hex (`ray`, `auto`) keeps the
     placeholder's rule, the creature seen at the cell aimed at.
   - The migrated tiers: the lowest tier whose cap holds the placeholder's dice (damage
@@ -382,13 +410,17 @@ shares.
   shared with the talents' table) for `wiki/src/magic.md`.
 - **Tests**: `content/spell_def.rs` (the shipped table, `tier_of`, the refused tables, the
   design's first spell list passing the cap, a spell over its cap, a bonus too large, malformed
-  spells, the dice's growth, the cost table, Willpower and Presence, the shipped spells against
-  the placeholders), `content/class.rs` (`casting`), `content/mod.rs` (spells in the
+  spells, the dice's growth, the cost table, reach and degrees, the shipped spells against
+  the placeholders; #556: the lift's dice, the lift's bounds, `max_lift` refused unless
+  ascending or flat, the scales' defaults equal to the old steps, unknown stats and missing
+  dimensions refused, the unlifted cap check), `content/class.rs` (`casting`), `content/mod.rs` (spells in the
   fingerprint), `content/experience.rs` (`mana_level` 60), `world/caster_level_tests.rs` (by
   class and level, no mana, talents and a ring, a creature, the dumps, mana to level 60),
   `world/cast_tests.rs` (an attack can miss and critical under the cap, auto and area never,
   Empower to the cap, Evasion halving an area only, line against bolt, the cone, touch, armour,
-  Willpower's reach, no draws without a roll; test spells replace Arcane bolt's file),
+  Willpower's reach, no draws without a roll; #556: the lift by stat, `max_lift` and Keen mind,
+  the lifted dice and criticals held to the lifted cap, a cantrip and the defaults unchanged,
+  to-hit by Intelligence; test spells replace Arcane bolt's file),
   `world/caster_tests.rs` (the casters' tables and spells), `world/spell_talent_tests.rs`
   (#400: Overreach, School focus by tag, Arcane training, the cap with every combination of
   the spell talents, an empowered scroll at its taught cap), `world/spell_list_tests.rs` (#397:

@@ -126,6 +126,14 @@ pub(super) fn special_rooms(content: &Content) -> String {
                 m.images
             ));
         }
+        if let Some(d) = e.dressing {
+            does.push(format!(
+                "{} stand along its walls, one per {} floor cells (1 to {}).",
+                capital(&content.plural(&content.terrain(d.terrain).name)),
+                d.per_cells,
+                d.most
+            ));
+        }
         if let Some(feature) = e.feature {
             let offers = match &e.offers {
                 Some((_, _)) => ": pray beside it (see Forgotten altars)",
@@ -224,6 +232,9 @@ pub(super) fn special_rooms(content: &Content) -> String {
         }
         if e.needs_below {
             only.push("with a level below".into());
+        }
+        if e.swarm.as_ref().is_some_and(|s| !s.kinds.is_empty()) {
+            only.push("where one of its own creatures can be met at the level's danger".into());
         }
         if let Some(s) = e.swarm.as_ref().filter(|s| !s.factions.is_empty()) {
             let names: Vec<_> = (s.factions.iter())
@@ -332,7 +343,13 @@ pub(super) fn teeming_dens(content: &Content) -> String {
         .collect();
     dens.sort_by(|a, b| a.0.name.cmp(&b.0.name));
     for (e, s) in dens {
-        let of = if s.factions.is_empty() {
+        let of = if !s.kinds.is_empty() {
+            let mut names: Vec<String> = (s.kinds.iter())
+                .map(|&c| content.creature(c).name.clone())
+                .collect();
+            names.sort();
+            format!("its own: {}", names.join(", "))
+        } else if s.factions.is_empty() {
             "any type hostile to you".to_string()
         } else {
             let names: Vec<_> = (s.factions.iter())
@@ -340,6 +357,11 @@ pub(super) fn teeming_dens(content: &Content) -> String {
                 .map(|f| content.factions().def(f).name.clone())
                 .collect();
             format!("{}, hostile or not", names.join(", "))
+        };
+        let of = if s.danger > 0 {
+            format!("{of}; drawn {} dangers deeper than the level", s.danger)
+        } else {
+            of
         };
         let hoard = match s.hoard {
             Hoard::Items => format!(

@@ -226,9 +226,9 @@ pub struct TalentMods {
     pub caster_per_levels: Vec<(u8, i32)>,
     /// Percent more the overreach of its spells costs (negative: less; Overreach).
     pub overreach_cost_percent: i32,
-    /// School focus: `(tag, cost percent, reach)` per choice and rank held
-    /// ([`TalentMods::focus`]).
-    pub school_focus: Vec<(String, i32, i32)>,
+    /// School focus and Keen mind: `(tag, cost percent, reach, lift)` per choice and rank held
+    /// ([`TalentMods::focus`], [`TalentMods::focus_lift`]).
+    pub school_focus: Vec<(String, i32, i32, i32)>,
     /// Added to the caster level of the wands it uses (spec §8 "Magic items": "Wands").
     pub wand_level: i32,
     /// The active Blood magic, if it has it.
@@ -910,7 +910,17 @@ impl TalentMods {
     pub fn focus(&self, tags: &[&str]) -> (i32, i32) {
         (self.school_focus.iter())
             .filter(|(tag, ..)| tags.contains(&tag.as_str()))
-            .fold((0, 0), |(c, r), (_, cost, reach)| (c + cost, r + reach))
+            .fold((0, 0), |(c, r), (_, cost, reach, _)| (c + cost, r + reach))
+    }
+
+    /// The points more a spell with `tags` may have its cap lifted by, past its tier's
+    /// `max_lift` (Keen mind; the combat progression design §7): summed over every focus whose
+    /// tag it carries.
+    pub fn focus_lift(&self, tags: &[&str]) -> i32 {
+        (self.school_focus.iter())
+            .filter(|(tag, ..)| tags.contains(&tag.as_str()))
+            .map(|(.., lift)| lift)
+            .sum()
     }
 
     /// The mana one of its spells that costs `mana` costs it: scaled by `spell_mana_percent`,
@@ -1368,9 +1378,9 @@ impl TalentMods {
             }
             TalentEffect::SpellManaPercent { value } => self.spell_mana_percent += value,
             TalentEffect::OverreachCostPercent { value } => self.overreach_cost_percent += value,
-            TalentEffect::SchoolFocus { cost, reach } => {
+            TalentEffect::SchoolFocus { cost, reach, lift } => {
                 let tag = choice.unwrap_or_default().to_string();
-                self.school_focus.push((tag, cost, reach));
+                self.school_focus.push((tag, cost, reach, lift));
             }
             TalentEffect::DeflectionUnarmoured { value } => self.deflection_unarmoured += value,
             TalentEffect::Purify => self.purify = true,

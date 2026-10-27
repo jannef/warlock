@@ -363,6 +363,26 @@ glyph = "_"
 fg = "#5a5a5e"
 bg = "#0d0d10"
 
+# An armoury's and a workshop's dressing (spec §7 "Special rooms", #487): stood along their walls,
+# seen over, not walked through.
+[[terrain]]
+id = "weapon_rack"
+name = "weapon rack"
+description = "A wooden rack for spears and blades. Most of its pegs are empty."
+glyph = "‡"
+fg = "#a07850"
+bg = "#0d0d10"
+walkable = false
+
+[[terrain]]
+id = "workbench"
+name = "workbench"
+description = "A heavy bench scarred by tools, its vices rusted shut."
+glyph = "π"
+fg = "#9a7048"
+bg = "#0d0d10"
+walkable = false
+
 # A shrine of a side's stone (room_effects.toml `shrine`): its light shows the shrine's hidden
 # side (gold good, red evil), placed on its cell as a forgotten altar's is.
 [[terrain]]
