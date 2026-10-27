@@ -41,8 +41,7 @@ fn the_forgotten_altars_table_loads_with_its_minor_and_moderate_outcomes() {
         .find(|o| o.id == "omen")
         .expect("omen");
     assert_eq!(omen.messages.len(), 4);
-    // Within each kind: the minor and moderate tiers as the design gives them (the great ones
-    // come with #407).
+    // Within each kind: the tiers as the design gives them (the great ones 6 in each, #407).
     let tier = |kind, tier| -> u32 {
         (table.of(kind).filter(|o| o.tier == tier))
             .map(|o| o.weight)
@@ -52,7 +51,8 @@ fn the_forgotten_altars_table_loads_with_its_minor_and_moderate_outcomes() {
     assert_eq!(tier(OutcomeKind::Boon, OutcomeTier::Moderate), 29);
     assert_eq!(tier(OutcomeKind::Bane, OutcomeTier::Minor), 60);
     assert_eq!(tier(OutcomeKind::Bane, OutcomeTier::Moderate), 34);
-    assert_eq!(tier(OutcomeKind::Boon, OutcomeTier::Great), 0);
+    assert_eq!(tier(OutcomeKind::Boon, OutcomeTier::Great), 6);
+    assert_eq!(tier(OutcomeKind::Bane, OutcomeTier::Great), 6);
     // The explosion: a fireball of radius 2, and rubble.
     let burst = table
         .outcomes

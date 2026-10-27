@@ -3,9 +3,8 @@
 # the altar's hidden side against the player's band: agreement moves `lean` points from bane to
 # boon, opposition from boon to bane), then one by weight among that kind's outcomes. After a
 # completed prayer the altar is spent with `exhaust` percent, unless it blew apart. Weights are
-# within each kind. The great tier (Gift of the forgotten, Exalted, Chosen, Relic; Wrath,
-# Unmade, Forsaken, Damned) comes with #407: until then each kind is drawn among its minor and
-# moderate outcomes. Messages stay vague: never a number, never the side.
+# within each kind (each kind's sum to 100). The great tier (#407) is rare: 6 in each of the
+# boon and the bane. Messages stay vague: never a number, never the side.
 seconds = 60
 kinds = { boon = 35, nothing = 30, bane = 35 }
 lean = 15
@@ -61,7 +60,7 @@ messages = [
     "The carvings seem to shift under your eyes, and are still.",
 ]
 
-# Boons: minor 65, moderate 29 (great 6 to come).
+# Boons: minor 65, moderate 29, great 6.
 
 [[outcome]]
 kind = "boon"
@@ -185,7 +184,41 @@ weight = 2
 effect = { xp = 20 }
 message = "You feel wiser."
 
-# Banes: minor 60, moderate 34 with the explosion (great 6 to come).
+[[outcome]]
+kind = "boon"
+tier = "great"
+id = "gift"
+weight = 2
+effect = { gift = "1d3" }
+message = "You feel changed."
+
+[[outcome]]
+kind = "boon"
+tier = "great"
+id = "exalted"
+weight = 1
+effect = { levels = 1 }
+message = "Power floods into you."
+otherwise = "Power washes over you, and finds nowhere left to go."
+
+[[outcome]]
+kind = "boon"
+tier = "great"
+id = "chosen"
+weight = 1
+effect = { talent = true }
+message = "You have been chosen."
+otherwise = "Something looks you over, and finds nothing more to give."
+
+[[outcome]]
+kind = "boon"
+tier = "great"
+id = "relic"
+weight = 2
+effect = { loot = 10, rarity = "rare" }
+message = "Something gleams at the foot of the altar."
+
+# Banes: minor 60, moderate 34 with the explosion, great 6.
 
 [[outcome]]
 kind = "bane"
@@ -324,3 +357,38 @@ id = "burst"
 weight = 5
 effect = { explode = { spell = "fireball", radius = 2, damage = "3d6", damage_type = "fire", heat = true, noise = { sound = "explosion", loudness = 150 } }, becomes = "rubble" }
 message = "The altar bursts apart in fire!"
+
+[[outcome]]
+kind = "bane"
+tier = "great"
+id = "wrath"
+weight = 1
+effect = { wrath = "1d3" }
+message = "You feel lessened, forever."
+otherwise = "Something reaches for you, and finds too little to take."
+
+[[outcome]]
+kind = "bane"
+tier = "great"
+id = "unmade"
+weight = 1
+effect = { levels = -1 }
+message = "Your past slips away from you."
+otherwise = "Something gropes at your past, and finds none."
+
+[[outcome]]
+kind = "bane"
+tier = "great"
+id = "forsaken"
+weight = 2
+effect = { flaw = true }
+message = "You have been marked."
+otherwise = "Something marks you, and finds the mark already made."
+
+[[outcome]]
+kind = "bane"
+tier = "great"
+id = "damned"
+weight = 2
+effect = { summon = { near = "feature", danger = 3, count = "2d4" } }
+message = "The dark fills with answering voices."

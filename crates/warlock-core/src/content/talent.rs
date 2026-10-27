@@ -416,6 +416,9 @@ pub enum TalentEffect {
     /// At a forgotten altar of the actor's own side the side's lean counts double, and an
     /// opposed one leans as a neutral one (Devout; the prayer draw, `World::lean`).
     Devout,
+    /// At a forgotten altar a great bane drawn becomes nothing (Penitent; the prayer draw,
+    /// `world/pray.rs`).
+    Penitent,
     /// Where a special room quickens healing or mana, the quickening is this percent more
     /// (Hallowed rest; the room's pace in `World::healing_rate` and `World::mana_rate`).
     RoomPacePercent { value: i32 },
@@ -1762,6 +1765,7 @@ impl TalentEffect {
             | TalentEffect::SeesUv
             | TalentEffect::SenseOfPlace
             | TalentEffect::Devout
+            | TalentEffect::Penitent
             | TalentEffect::CollapseProof
             | TalentEffect::ExactFootsteps
             | TalentEffect::SmellRot

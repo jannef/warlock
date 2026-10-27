@@ -30,7 +30,8 @@
 //! (#128). Each becomes one more [`Effect`] (and a [`Use`] for its marks: a climb) read in that
 //! one place, with its numbers in `data/skills.toml`; until then escape artist is trained and
 //! shown but gives nothing. Athletics already adds to the Strength a kick at a door is rolled
-//! against ([`Effect::Kick`], [`Use::Kick`]), and Open lock to picking a lock ([`Effect::Pick`],
+//! against ([`Effect::Kick`], [`Use::Kick`]) and makes the actor quicker ([`Effect::Speed`],
+//! marked by [`Use::Burdened`] and [`Use::Travel`] too), and Open lock to picking a lock ([`Effect::Pick`],
 //! [`Use::Pick`]).
 
 use crate::content::Content;
@@ -143,6 +144,10 @@ pub enum Effect {
     /// Points added to picking a lock (spec §8 "Doors"; `world/lockpick.rs`); a skill with it,
     /// trained, lets the actor pick locks at all (the Pick lock ability).
     Pick,
+    /// Percent quicker the actor is in everything (spec §8 "Speed";
+    /// [`crate::world::Actor::speed`]): its speed, added to its talents' percent, the two
+    /// together at most [`crate::content::MAX_SPEED`].
+    Speed,
 }
 
 impl Effect {
@@ -159,6 +164,7 @@ impl Effect {
             Effect::Disarm => MAX_DISARM_BONUS,
             Effect::Pick => MAX_PICK_BONUS,
             Effect::SearchReach => MAX_SEARCH_REACH,
+            Effect::Speed => crate::content::MAX_SPEED,
         }
     }
 }
@@ -342,6 +348,7 @@ impl Effect {
             Effect::Heal => "heal",
             Effect::Kick => "kick",
             Effect::Pick => "pick",
+            Effect::Speed => "speed",
         }
     }
 }
