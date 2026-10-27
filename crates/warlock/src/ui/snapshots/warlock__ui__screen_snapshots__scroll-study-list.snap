@@ -18,9 +18,8 @@ expression: "render(case, content.clone())"
           │ > a - ? 2 scrolls of fireball (Fireball: far beyond you)              100 g  │
           │   b - ? 2 scrolls of lightning (Lightning bolt: far beyond you)       100 g  │
           │   c - ? 2 scrolls of frost (Frost: far beyond you)                    100 g  │
-          │   d - ? 3 scrolls of identify (Identify: far beyond you)              150 g  │
           │                                                                              │
-          │ a-d or Enter study   Esc cancel                                              │
+          │ a-c or Enter study   Esc cancel                                              │
           └──────────────────────────────────────────────────────────────────────────────┘
 
 
@@ -31,4 +30,5 @@ expression: "render(case, content.clone())"
 
 
 
- The Trap Hall  ·  HP 22/22  ·  MP 2/2  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444    ? controls
+
+ The Trap Hall  ·  HP 22/22  ·  MP 2/2  ·  Sta 10/10  ·  Lv 1  ·  08:00                  ? controls

@@ -11,7 +11,11 @@
 #   id, name      the resource's id and how the player reads it ("Rage")
 #   short         its status bar label, at most 12 characters (`Rage 7`)
 #   max           the most it holds, 1 to 1000
-#   start         what it holds when granted (default: max; above 0 for one that ends at zero)
+#   start         what it holds when granted (default: full, its maximum with what max_from
+#                 adds, not talents; above 0 for one that ends at zero)
+#   max_from      what else the maximum grows with: { stat = "toughness", per_levels = 10,
+#                 least = 5 } adds the holder's modifier in that stat and a point per that many
+#                 character levels to `max`, the sum at least `least` (then talents add theirs)
 #   show_max      the status bar shows the maximum too, `Focus 7/10` (default true), or the
 #                 value alone, `Rage 7`
 #   regenerates   one point back every this many seconds of game time, up to max (6 s is a
@@ -83,3 +87,16 @@ max = 5
 start = 0
 decays = 180
 builds = [{ on = "kill", amount = 1 }]
+
+# Stamina (the combat progression design §4.5, #560): the pool weapon actives are paid from.
+# Every character of a fighting class holds it from level 1 (the granted talent Trained wind).
+# It comes back a point every two base turns, resting too, and sits at 0 when spent; it is
+# granted full. Its maximum is 10, plus the Toughness modifier, plus a point per 10 levels, at
+# least 5; talents add on top (Deep lungs).
+[[resource]]
+id = "stamina"
+name = "Stamina"
+short = "Sta"
+max = 10
+max_from = { stat = "toughness", per_levels = 10, least = 5 }
+regenerates = 12

@@ -1521,7 +1521,8 @@ impl<'a> PerceptionView<'a> {
     pub fn own_resources(&self) -> Vec<OwnResource> {
         (self.player.resources.iter())
             .map(|pool| {
-                let max = self.player.resource_max(self.content, pool.resource);
+                let level = self.own_experience().level;
+                let max = self.player.resource_max(self.content, pool.resource, level);
                 OwnResource {
                     resource: pool.resource,
                     value: pool.value.min(max),

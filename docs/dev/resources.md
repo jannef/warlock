@@ -12,7 +12,10 @@ Openings (R3), Ki and Inspiration (R4), and the four resource talents (R5). Rage
 - **Granted by talents**: the talent effect `grants_resource { resource }` collects into
   `TalentMods::grants`; `world/focus.rs::hold` gives the actor each it lacks at its start (one
   held keeps its value). Called from `class::hand_out` (a talent taken or given) and
-  `World::grant_class` (so a restored run gets one its talents grant), the only two places.
+  `World::grant_class` (so a restored run gets one its talents grant), the only two places so
+  far. `hold` takes the character level (the maximum a pool starts at may depend on it). The
+  third, `World::rank_up` granting stamina on the first weapon rank that unlocks an active,
+  comes with W3 (#560 left it there: no rank unlocks an active before W3's data).
 - **Focus** (R2, #250; `world/focus.rs`): Rapid shot grants it. `TalentEffect::RapidShot {
   resource, cost, saving }` (`TalentMods::rapid_shot`) is read in one place,
   `World::rapid_shot`, which `shoot.rs::fire` calls on the shot's price: with `cost` held it
@@ -23,7 +26,10 @@ Openings (R3), Ki and Inspiration (R4), and the four resource talents (R5). Rage
   Creatures never shoot through `fire`, so never use either. Tests: `world/focus_tests.rs`.
 
 - **Data**: `content/resource.rs` parses `data/resources.toml` into `ResourceDef`s (`id`,
-  `name`, `short`, `max`, `start`, `show_max`, `over_time: Option<OverTime>` (`Regenerates {
+  `name`, `short`, `max`, `start`, `starts_full` (no `start` in data: granted at its maximum by
+  data, `max_from` included, talents not), `max_from: Option<MaxFrom>` (`{ stat, per_levels,
+  least }`, checked: a known stat, `per_levels` at least 1, `least` at most `max`;
+  `MaxFrom::max` is the sum), `show_max`, `over_time: Option<OverTime>` (`Regenerates {
   every }` or `Decays { every }`, seconds a point), `resting`, `ends_at_zero`, `ended`,
   `builds: Vec<(Build, u16)>`, `status: Option<StatusId>`, the status it brings: parsed after the
 statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerprint` (its own
@@ -61,10 +67,13 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
     `resource::pass` for the step (in the fast path too, when no point is due within it); the
     resources `pass` returns as ended are ended at that moment. Progress is dropped when there
     is nowhere to go (full, or empty) and kept at a standstill (a rest that stops it).
-- **Hooks for R1–R5**: `Actor::resource_max(content, resource)` (the maximum plus the talents'
-  `resource_max`: Mighty rage's 30, Inner calm's +2), `Actor::resource_start(content, resource)`
-  (the data's start plus the talents' `resource_start`, at most the maximum: Battle trance's 18
-  rage; read by `World::grant_resource` and `focus::hold`), and `World::resource_rate(id,
+- **Hooks for R1–R5**: `Actor::resource_max(content, resource, level)` (the data's maximum, with
+  what `max_from` adds from the effective stats and the character level, plus the talents'
+  `resource_max`: Mighty rage's 30, Inner calm's +2, Deep lungs' +4; `World::holder_level` gives
+  the level, the player's own or a creature's type's), `Actor::resource_start(content, resource,
+  level)` (the data's start, or the maximum by data for one that `starts_full`, plus the talents'
+  `resource_start`, at most the maximum: Battle trance's 18 rage; read by
+  `World::grant_resource` and `focus::hold`), and `World::resource_rate(id,
   resource)` (the pace in percent: 0 while resting for `resting = false`, else 100 plus the
   talents' `resource_rate`, never below 0: Battle trance's −33, Inner calm's and Steady hand's
   +50, Patient blade's −50). A talent's `resource_build { resource, on, amount }` is a build only
@@ -98,6 +107,16 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   hit a critical, no confirmation draw; `combat::strike_with`). `use_class` refuses an aimed
   active with nobody hostile that way before it spends anything. Tests:
   `world/openings_tests.rs`, and `combat.rs`'s sure-critical test.
+- **Stamina** (SP1, #560; the combat progression design §4.5): the last entry of
+  `resources.toml` (file order is save order), `short = "Sta"`, `max = 10`, `max_from = { stat =
+  "toughness", per_levels = 10, least = 5 }`, `regenerates = 12`, resting too, starting full.
+  The granted talent `trained_wind` (`grants_resource`) is in the level-1 row of the warrior's,
+  barbarian's, paladin's, ranger's, monk's, thief's, and bard's tables (`data/classes/`), so
+  `class::grant` holds it at creation and `World::grant_class` on load. Nothing spends it yet
+  (W3's weapon actives will, through `spend_resource`). Its talents (`[[system]] id =
+  "stamina"`): Trained wind, Deep lungs (`resource_max` +4), Steady breathing (`resource_rate`
+  +50, a weapon skill at 5), Second breath (`resource_build` on `kill`, 1). Tests:
+  `world/stamina_tests.rs`; the parse and `MaxFrom::max` in `content/resource.rs`.
 - **Abilities**: `Unavailable::Short(ResourceId)` ("not enough focus", `short:focus`), checked
   last in the Class arm of `Ability::unavailable` (`ability.rs::short_of`).
 - **Presentation**: `PerceptionView::own_resources() -> Vec<OwnResource>` (value clamped to the
