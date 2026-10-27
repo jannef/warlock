@@ -347,9 +347,12 @@
 #                                 per_levels (1 to 20), value per that many character levels
 #   overreach_cost_percent { value }   what a spell above its caster level's tier costs over its
 #                                 price, that percent more (negative: less)
-#   school_focus { cost, reach }  (choice school) its spells of the chosen school or element cost
-#                                 that percent more mana (negative: less) and reach that many
-#                                 cells farther (0 to 5), never past the spell's own caps
+#   school_focus { cost, reach, lift }   (choice school) its spells of the chosen school or
+#                                 element cost that percent more mana (negative: less), reach
+#                                 that many cells farther (0 to 5), never past the spell's own
+#                                 caps, and may have their damage cap lifted that many points
+#                                 past their tier's `max_lift` (0 to 100; Keen mind); each
+#                                 default 0, not all 0
 #   study { bonus, percent }      studying a spell: bonus points off the check's difficulty, and
 #                                 that percent more time (negative: less)
 #   deflection_unarmoured { value }   Deflection, only while nothing is worn in a body armour slot

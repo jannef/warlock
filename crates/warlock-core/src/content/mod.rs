@@ -76,6 +76,8 @@ mod room_burden_tests;
 #[cfg(test)]
 mod room_collapse_tests;
 mod room_effect;
+#[cfg(test)]
+mod room_homes_tests;
 mod room_lore;
 #[cfg(test)]
 mod room_lore_tests;
@@ -99,6 +101,7 @@ mod sky;
 mod slot;
 mod spell;
 mod spell_def;
+mod spell_scales;
 mod stance;
 mod stat_training;
 mod status;
@@ -209,8 +212,8 @@ pub use rod::{
     MAX_ROD_MANA, MAX_ROD_POWER, MAX_ROD_RADIUS, MAX_ROD_REACH, Rod, RodDoes, RodEffect, RodShape,
 };
 pub use room_effect::{
-    Collapse, Here, Hoard, Mirrors, Offer, RoomEffectDef, RoomEffectId, RoomEffects, SpecialRoom,
-    Swarm, Themes, Treasure,
+    Collapse, Dressing, Here, Hoard, Mirrors, Offer, RoomEffectDef, RoomEffectId, RoomEffects,
+    SpecialRoom, Swarm, Themes, Treasure,
 };
 pub use room_lore::RoomLoot;
 pub use room_shrine::{Regard, Shrine};
@@ -232,6 +235,7 @@ pub use spell_def::{
     MAX_CASTS, MAX_CONE, MAX_DICE, MAX_PER_LEVELS, MAX_REACH, Ratio, Resolution, School, Shape,
     SpellData, SpellDice, SpellEffect, SpellId, SpellLook, SpellPurpose, SpellRules, TIERS,
 };
+pub use spell_scales::{MAX_SCALE_WEIGHT, SpellScales, Weights};
 pub use stance::{CombatStance, StanceDef, Stances, percent_of};
 pub use stat_training::{StatRule, StatTraining, StatUse};
 pub use status::{
@@ -903,6 +907,12 @@ impl Content {
         content.load_objects(files)?;
         content.animated = Animated::parse(files, &content)?;
         content.load_creatures(files)?;
+        // A den's own population (an armoury's) names creatures.
+        let mut room_effects = std::mem::take(&mut content.room_effects);
+        let creature =
+            |name: &str| (content.creature_id(name)).map(|c| (c, content.creature(c).unique));
+        room_effects.resolve_populations(creature)?;
+        content.room_effects = room_effects;
         content.load_gems(files)?;
         // Unique items before everything that may place one (gear, shops, levels, kits, quests).
         content.uniques = unique::parse(files.table("uniques"), &content)?;

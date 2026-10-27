@@ -5,17 +5,18 @@
 use std::fmt::Write as _;
 use warlock_core::content::{
     Content, Resolution, RodDoes, RodShape, Shape, SpellData, SpellDice, SpellPurpose, TIERS,
-    TalentEffect,
+    TalentEffect, Weights,
 };
 
-/// Each tier's comfortable caster level, base mana cost, and damage ceiling, tier 0 first.
+/// Each tier's comfortable caster level, base mana cost, damage ceiling, and the most a caster's
+/// stats may lift a spell's cap, tier 0 first.
 pub(super) fn tiers(content: &Content) -> String {
     let Some(rules) = content.spell_rules() else {
         return String::new();
     };
     let mut out = String::from(
-        "| Tier | Comfortable caster level | Base mana cost | Damage ceiling |\n\
-         |:---:|:---:|:---:|:---:|\n",
+        "| Tier | Comfortable caster level | Base mana cost | Damage ceiling | Most lift |\n\
+         |:---:|:---:|:---:|:---:|:---:|\n",
     );
     for tier in 0..TIERS {
         let name = if tier == 0 {
@@ -25,8 +26,8 @@ pub(super) fn tiers(content: &Content) -> String {
         };
         let _ = writeln!(
             out,
-            "| {name} | {} | {} | {} |",
-            rules.comfortable[tier], rules.cost[tier], rules.ceiling[tier]
+            "| {name} | {} | {} | {} | {} % |",
+            rules.comfortable[tier], rules.cost[tier], rules.ceiling[tier], rules.max_lift[tier]
         );
     }
     let _ = writeln!(
@@ -95,8 +96,8 @@ pub(super) fn casting(content: &Content) -> String {
 }
 
 /// Every spell, by tier and then name: its school, shape and resolution, reach (as cast, and
-/// how far Willpower takes it), what it does, its mana at its tier's comfortable caster level,
-/// and its time in casts.
+/// how far its stats take it), what it does, what it grows with, its mana at its tier's
+/// comfortable caster level, and its time in casts.
 pub(super) fn list(content: &Content) -> String {
     let Some(rules) = content.spell_rules() else {
         return String::new();
@@ -104,14 +105,14 @@ pub(super) fn list(content: &Content) -> String {
     let mut spells: Vec<&SpellData> = content.spells().iter().collect();
     spells.sort_by(|a, b| a.tier.cmp(&b.tier).then(a.name.cmp(&b.name)));
     let mut out = String::from(
-        "| Spell | Tier | School | Shape | Resolves | Reach | What it does | Mana | Casts |\n\
-         |---|:---:|---|---|---|---|---|:---:|:---:|\n",
+        "| Spell | Tier | School | Shape | Resolves | Reach | What it does | Grows with | Mana | Casts \
+         |\n|---|:---:|---|---|---|---|---|---|:---:|:---:|\n",
     );
     for spell in spells {
         let at = i32::from(rules.comfortable[usize::from(spell.tier)]);
         let _ = writeln!(
             out,
-            "| {} | {} | {} | {} | {} | {} | {} | {} | {} |",
+            "| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |",
             spell.name,
             spell.tier,
             spell.school.id(),
@@ -119,6 +120,7 @@ pub(super) fn list(content: &Content) -> String {
             spell.resolution.id(),
             reach(spell),
             does(content, spell),
+            grows_with(spell),
             rules.mana(spell, at, 0),
             spell.casts,
         );
@@ -164,7 +166,46 @@ pub(super) fn class_spells(content: &Content) -> String {
     out
 }
 
-/// How far `spell` reaches, and how far Willpower may take it: "6 (to 8)", a burst's "range 10,
+/// What `spell` grows with, from its `[spell.scales]`: each dimension the stats change, its
+/// stats with their weights in percent of the modifier ("damage cap: Intelligence 10 %,
+/// Willpower 5 % a point"), the dimensions it cannot have left out.
+fn grows_with(spell: &SpellData) -> String {
+    let named = |w: &Weights, unit: &str| {
+        if w.is_empty() {
+            return None;
+        }
+        let stats: Vec<String> = (w.iter())
+            .map(|(stat, weight)| format!("{} {weight} %", stat.name()))
+            .collect();
+        Some(format!("{} {unit}", stats.join(", ")))
+    };
+    let sc = &spell.scales;
+    let rolls = spell.damage.is_some() || spell.effect.heal.is_some();
+    let attack = spell.kind == SpellPurpose::Damage
+        && matches!(spell.resolution, Resolution::Attack | Resolution::Touch);
+    let reaches = !matches!(spell.shape, Shape::Touch | Shape::Myself);
+    let lasts = matches!(spell.kind, SpellPurpose::Buff | SpellPurpose::Hex);
+    let parts = [
+        (rolls, "cap", named(&sc.damage, "of the cap a point")),
+        (attack, "to-hit", named(&sc.to_hit, "of the modifier")),
+        (reaches, "reach", named(&sc.reach, "of a cell a point")),
+        (lasts, "degrees", named(&sc.duration, "of a degree a point")),
+    ];
+    let text: Vec<String> = (parts.into_iter())
+        .filter_map(|(has, what, by)| {
+            has.then_some(by)
+                .flatten()
+                .map(|by| format!("{what}: {by}"))
+        })
+        .collect();
+    if text.is_empty() {
+        "—".into()
+    } else {
+        text.join("; ")
+    }
+}
+
+/// How far `spell` reaches, and how far its stats may take it: "6 (to 8)", a burst's "range 10,
 /// radius 2", "—" on oneself.
 fn reach(spell: &SpellData) -> String {
     let grows = |base: Option<u8>, cap: Option<u8>| match (base, cap) {
@@ -225,11 +266,7 @@ pub(super) fn does(content: &Content, spell: &SpellData) -> String {
                 } else {
                     "a hostile you see suffers"
                 };
-                format!(
-                    "{who} {} ({n}, a degree more per {} of Presence's modifier)",
-                    status(s),
-                    rules.presence_step
-                )
+                format!("{who} {} ({n})", status(s))
             }
             None => String::new(),
         },
@@ -255,7 +292,17 @@ pub(super) fn does(content: &Content, spell: &SpellData) -> String {
         text.push_str("; only under the open sky");
     }
     if matches!(spell.kind, SpellPurpose::Damage | SpellPurpose::Heal) {
-        let _ = write!(text, " (never more than {})", rules.cap_of(spell));
+        let cap = rules.cap_of(spell);
+        if spell.scales.damage.is_empty() {
+            let _ = write!(text, " (never more than {cap})");
+        } else {
+            let most = i32::from(rules.max_lift[usize::from(spell.tier)]);
+            let lifted = rules.lifted_cap(spell, most);
+            let _ = write!(
+                text,
+                " (never more than {cap}; your stats may lift it to {lifted}, more with Keen mind)"
+            );
+        }
     }
     text
 }

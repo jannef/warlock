@@ -18,3 +18,6 @@ damage = { dice = "1d6", per_levels = 6, max_dice = 3 }
 effect = "fire_breath"
 noun = "scorching ray"
 noise = { sound = "chanting", loudness = 30 }
+
+[spell.scales]
+damage = { intelligence = 10, willpower = 5 }
