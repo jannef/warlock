@@ -1,0 +1,10 @@
+# Arcane training (the magic design §10; #400): the wizard's class ability, the "ability that
+# grows caster level": one caster level more every five character levels.
+[[talent]]
+id = "arcane_training"
+name = "Arcane training"
+tree = "class"
+granted = true
+description = "Years of study tell: your mastery of spells grows faster than your years."
+effects = [{ kind = "caster_level", value = 1, per_levels = 5 }]
+systems = ["spells"]

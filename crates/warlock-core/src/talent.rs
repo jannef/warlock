@@ -210,8 +210,18 @@ pub struct TalentMods {
     pub mana_resting_percent: i32,
     /// Percent more abilities cost in mana (negative: less; [`TalentMods::mana_cost`]).
     pub mana_cost_percent: i32,
+    /// Percent more mana a rod costs (negative: less; Channeler).
+    pub rod_cost_percent: i32,
     /// Added to its caster level (spec §8 "Spells").
     pub caster_level: i32,
+    /// Caster level by character level, one entry per rank held: `(per_levels, value)`
+    /// ([`TalentMods::caster_level_at`]; Arcane training).
+    pub caster_per_levels: Vec<(u8, i32)>,
+    /// Percent more the overreach of its spells costs (negative: less; Overreach).
+    pub overreach_cost_percent: i32,
+    /// School focus: `(tag, cost percent, reach)` per choice and rank held
+    /// ([`TalentMods::focus`]).
+    pub school_focus: Vec<(String, i32, i32)>,
     /// Added to the caster level of the wands it uses (spec §8 "Magic items": "Wands").
     pub wand_level: i32,
     /// The active Blood magic, if it has it.
@@ -357,6 +367,8 @@ pub struct TalentMods {
     pub sense_of_place: bool,
     /// Percent more a special room's quickening of healing and mana (Hallowed rest).
     pub room_pace_percent: i32,
+    /// A collapsed floor never gives way under it (Light tread).
+    pub collapse_proof: bool,
     /// The statuses of special rooms that never take it (Anchored mind).
     pub room_status_immune: Vec<StatusId>,
     /// Within this many cells it sees a hall of mirrors' reflections for what they are
@@ -859,10 +871,33 @@ impl TalentMods {
         dice.empowered(self.spell_dice, self.spell_per_die)
     }
 
+    /// What its talents add to its caster level at character `level`: the flat `caster_level`,
+    /// and `value` per `per_levels` levels of each `caster_per_levels` (Arcane training).
+    pub fn caster_level_at(&self, level: u8) -> i32 {
+        let grown: i32 = (self.caster_per_levels.iter())
+            .map(|&(per, value)| i32::from(level / per.max(1)) * value)
+            .sum();
+        self.caster_level + grown
+    }
+
+    /// School focus on a spell with `tags` (magic design §6): the percent more it costs and the
+    /// cells farther it reaches, summed over every focus whose tag it carries.
+    pub fn focus(&self, tags: &[&str]) -> (i32, i32) {
+        (self.school_focus.iter())
+            .filter(|(tag, ..)| tags.contains(&tag.as_str()))
+            .fold((0, 0), |(c, r), (_, cost, reach)| (c + cost, r + reach))
+    }
+
     /// The mana one of its spells that costs `mana` costs it: scaled by `spell_mana_percent`,
     /// at least 1.
     pub fn spell_mana(&self, mana: u16) -> i32 {
-        let scaled = TalentMods::scaled(u64::from(mana), self.spell_mana_percent);
+        self.spell_mana_with(mana, 0)
+    }
+
+    /// [`TalentMods::spell_mana`] with `more` percent besides (School focus's, for a spell of
+    /// its tag), added to `spell_mana_percent`.
+    pub fn spell_mana_with(&self, mana: u16, more: i32) -> i32 {
+        let scaled = TalentMods::scaled(u64::from(mana), self.spell_mana_percent + more);
         i32::try_from(scaled).unwrap_or(i32::MAX).max(1)
     }
 
@@ -1017,7 +1052,14 @@ impl TalentMods {
             } => self.mana_per_levels.push((per_levels, at_least)),
             TalentEffect::ManaRestingPercent { value } => self.mana_resting_percent += value,
             TalentEffect::ManaCostPercent { value } => self.mana_cost_percent += value,
-            TalentEffect::CasterLevel { value } => self.caster_level += value,
+            TalentEffect::RodCostPercent { value } => self.rod_cost_percent += value,
+            TalentEffect::CasterLevel {
+                value,
+                per_levels: 0,
+            } => self.caster_level += value,
+            TalentEffect::CasterLevel { value, per_levels } => {
+                self.caster_per_levels.push((per_levels, value));
+            }
             TalentEffect::WandLevel { value } => self.wand_level += value,
             TalentEffect::BloodMagic { hp, mana } => {
                 self.blood_magic = Some(BloodMagic { hp, mana });
@@ -1120,6 +1162,7 @@ impl TalentMods {
                 }
             }
             TalentEffect::SeesReflections { value } => self.sees_reflections += value,
+            TalentEffect::CollapseProof => self.collapse_proof = true,
             TalentEffect::WakePercent { value } => self.wake_percent += value,
             TalentEffect::SearchReach { value } => self.search_reach += value,
             TalentEffect::Skill { skill, value } => {
@@ -1294,6 +1337,11 @@ impl TalentMods {
                 self.spell_dice += dice;
             }
             TalentEffect::SpellManaPercent { value } => self.spell_mana_percent += value,
+            TalentEffect::OverreachCostPercent { value } => self.overreach_cost_percent += value,
+            TalentEffect::SchoolFocus { cost, reach } => {
+                let tag = choice.unwrap_or_default().to_string();
+                self.school_focus.push((tag, cost, reach));
+            }
             TalentEffect::DeflectionUnarmoured { value } => self.deflection_unarmoured += value,
             TalentEffect::Purify => self.purify = true,
             TalentEffect::CorpseHarmless => self.corpse_harmless = true,
@@ -1763,6 +1811,17 @@ impl TalentMods {
             return base;
         }
         let scaled = (base * (100 + self.mana_cost_percent).max(0) + 50) / 100;
+        scaled.max(1)
+    }
+
+    /// What a rod whose cost is `base` mana costs with these talents, before
+    /// [`TalentMods::mana_cost`]: `rod_cost_percent` more (Channeler's −25: a quarter less),
+    /// rounded to the nearest, never below 1.
+    pub fn rod_cost(&self, base: i32) -> i32 {
+        if base <= 0 || self.rod_cost_percent == 0 {
+            return base;
+        }
+        let scaled = (base * (100 + self.rod_cost_percent).max(0) + 50) / 100;
         scaled.max(1)
     }
 

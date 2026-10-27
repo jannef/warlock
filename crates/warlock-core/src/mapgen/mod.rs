@@ -792,6 +792,8 @@ mod fennmynster_tests;
 #[cfg(test)]
 mod fyrdelf_tests;
 #[cfg(test)]
+mod lairs_tests;
+#[cfg(test)]
 mod special_tests;
 #[cfg(test)]
 mod tests;

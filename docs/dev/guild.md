@@ -36,12 +36,26 @@ dump's `guilds` (`id`, `name`, `rank`; left out before joining one).
 
 The Ascmearc's guild: `campaigns/ascmearc/data/guilds/weyfarers.toml` (seven ranks named by
 allomantic metals of `data/materials/`, ordered by value: Tin, given `guild_quarry`; Pewter, done
-`guild_hundred`; Iron, Steel, Duralumin, Electrum, Gold reserved, Iron for link 4, #426), its
+`guild_hundred`; Iron, done `guild_wanted`; Steel, Duralumin, Electrum, Gold reserved), its
 master Wat One-Eye (`data/creatures/guildmaster.toml`, neutral, so he scorns no one; npc `wat` in
 `data/dialogue/ceaptun.toml`, Cockney, topics `guild` and `board` after the one quest topic), and
 his chain `data/quests/wat.toml`: `guild_quarry` (a creature pick of the three branches),
 `guild_hundred` (a tag pick of seven group tags, count 100), `guild_scroll` (a pick of the
-scrolls loot holds, a bring). The Gildhalle is in `levels/ceaptun.toml` (`docs/dev/campaign.md`).
+scrolls loot holds, a bring), `guild_wanted` (four `[[quest.variant]]`s, one per criminal, each
+with its own `reveals` of its lair, `when = "given"`, and its own offer, where, and done; the
+reminder is the quest's, `{Target}` filled). The Gildhalle is in `levels/ceaptun.toml`
+(`docs/dev/campaign.md`).
+
+The lairs (#426): `data/dungeons/{wyrtholm,wulfeshol,banfeld,brocenburg}.toml`, four floors at
+danger 6 to 9, no shops, each naming its criminal's pinned vault for floor 4
+(`vaults/{still_room,robbers_hoard,unhallowed_chapel,captains_hall}.toml`: the criminal is the
+vault's legend creature, so a lair holds them once and nowhere else does); their hidden ways in
+are legend entries `4` to `7` of `levels/ascmearc.toml` (`docs/dev/overworld.md`). Tests:
+`mapgen/lairs_tests.rs` (the branches, the vaults on every seed, a snapshot of each bottom floor,
+each way in found once revealed), `world/guild_wanted_tests.rs` (the draw reveals its own lair
+and no other, over 24 seeds every criminal comes up; the dev roll; a run given the wanted that
+walks to Wulfeshol, fights down its four floors, kills Black Wystan, finds High Toby where he
+fell, walks home, hands it in, is made an Iron, and replays to the same hash).
 
 ## Tests
 

@@ -1,0 +1,8 @@
+[[talent]]
+id = "channeler"
+name = "Channeler"
+tree = "spellcraft"
+description = "Power runs through you easily: a rod draws a quarter less of your mana each time you use it."
+needs = { level = 5 }
+effects = [{ kind = "rod_cost_percent", value = -25 }]
+systems = ["spells", "mana"]

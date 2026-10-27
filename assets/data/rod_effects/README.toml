@@ -1,0 +1,26 @@
+# Rod effects (spec §8 "Magic items": "Rods", the magic design §9): what a rod does, effects no
+# spell has. One `[[rod_effect]]` per file; a campaign's data/rod_effects/ may add more. A rod
+# (an object's `[object.rod]`, data/objects/) names one and the mana a use costs its user.
+#
+# Fields:
+#   id, name      the effect's id; what the player calls it once they know the rod ("Digging")
+#   description   what it does, in words (the item description)
+#   shape         line   every cell of a straight line toward the cell aimed at, to its reach
+#                 bolt   toward the cell aimed at, to its reach, stopping at the first creature
+#                        or wall
+#                 burst  `radius` (1 to 3) around the cell aimed at, which must be within reach
+#   range         its reach at caster level 0, in cells (1 to 20)
+#   max_range     the farthest it ever reaches (from `range` to 20; default `range`)
+#   per_levels    a cell more of reach per this many of the user's caster levels (0 to 20; 0,
+#                 the default: it never grows)
+#   noise         { sound, loudness }: the noise it makes (a burst's centre, else the user)
+#   kind          what it does, each on existing code, with only its own fields:
+#                 dig       (a line) every wall on it whose hardness (terrain.toml) is below
+#                           `power` gives way, as dug through; the first that does not, a door,
+#                           or the level's edge stops it
+#                 teleport  (a bolt) the creature it hits is moved to a free cell of the level,
+#                           as by a teleport trap; an attack on it, as a blow is
+#                 status    (a burst) everyone in it but the user suffers `status` (an id of
+#                           status.toml) at `severity` (1 to its max; default 1); with
+#                           `up_to_caster_level = true` only creatures whose level is at most the
+#                           user's caster level, the others shrug it off

@@ -1,0 +1,21 @@
+# A rod of digging (spec §8 "Magic items": "Rods"): ready it in the missile weapon slot and use
+# it as a missile weapon (`t`), and rock gives way in a line toward where you aim, as far as your
+# caster level carries it (data/rod_effects/digging.toml). Each use costs you mana; it never runs
+# out.
+[[object]]
+id = "rod_of_digging"
+name = "rod of digging"
+plural = "rods of digging"
+glyph = "-"
+fg = "#d8c070"
+class = "rods"
+materials = ["iron"]
+weight = 600
+value = 500
+slot = "missile_weapon"
+level = 4
+frequency = 6
+
+[object.rod]
+effect = "digging"
+mana = 6

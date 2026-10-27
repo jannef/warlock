@@ -230,9 +230,10 @@ fn a_pick_nothing_can_be_spent_on_is_dropped() {
     assert_eq!(w.turn(), turn + 1);
     // With every talent the character qualifies for held, the pick is dropped too. Apprentice
     // (any skill, three ranks each) would keep a pick open to the last level, and so would Sworn
-    // foe (any creature tag): here they are an elf's, and Apprentice's tree waits for a free
-    // talent; Salvager, Unbinder, Wand mastery, and Appraiser's eye are held back the same way so the picks fit in
-    // the levels there are.
+    // foe (any creature tag) and School focus (any school or element): here they are an
+    // elf's, and Apprentice's tree waits for a free talent; Salvager, Unbinder, Overreach, Wand
+    // mastery, Channeler, and Appraiser's eye are held back the same way so the picks fit in the
+    // levels there are.
     let mut files = ContentFiles::builtin();
     files.edit_table("talents", |text| {
         text.replace(
@@ -252,12 +253,24 @@ fn a_pick_nothing_can_be_spent_on_is_dropped() {
             "tree = \"weaponcraft\"\nneeds = { race = \"elf\" }\ndescription = \"You draw more from a wand",
         )
         .replace(
+            "needs = { level = 5 }\neffects = [{ kind = \"rod_cost_percent\"",
+            "needs = { level = 5, race = \"elf\" }\neffects = [{ kind = \"rod_cost_percent\"",
+        )
+        .replace(
             "tree = \"scholar\"\ndescription = \"You can tell a bound",
             "tree = \"scholar\"\nneeds = { race = \"elf\" }\ndescription = \"You can tell a bound",
         )
         .replace(
             "choice = \"tag\"\n",
             "choice = \"tag\"\nneeds = { race = \"elf\" }\n",
+        )
+        .replace(
+            "choice = \"school\"\n",
+            "choice = \"school\"\nneeds = { race = \"elf\" }\n",
+        )
+        .replace(
+            "needs = { level = 6 }\neffects = [{ kind = \"overreach_cost_percent\"",
+            "needs = { race = \"elf\" }\neffects = [{ kind = \"overreach_cost_percent\"",
         )
         .replace(
             "description = \"Items, scrolls, gems, and learning.\"",

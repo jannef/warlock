@@ -61,8 +61,8 @@ pub enum AimKind {
     Throw(usize),
     /// Reading the spell scroll of inventory stack `usize` at a cell (`r`).
     Read(usize),
-    /// Using the wand of inventory stack `usize`, ready in the missile weapon slot (`t`; spec §8
-    /// "Magic items": "Wands").
+    /// Using the wand or rod of inventory stack `usize`, ready in the missile weapon slot (`t`;
+    /// spec §8 "Magic items": "Wands", "Rods").
     Zap(usize),
     /// Using an ability that asks for a cell (from the abilities menu, or its key).
     Ability(Ability),
@@ -177,9 +177,12 @@ impl Aim {
             // A volley flies as far as a shot.
             AimKind::Ability(VOLLEY) => view.ready_to_fire().map(|(_, _, range)| range),
             // A wand's spell reaches as far as the player casts it, once they know what it is.
-            AimKind::Zap(_) => {
-                spell_of(view, self.kind).and_then(|s| view.own_spell_reach(s)?.range)
-            }
+            // A rod's effect reaches as far as the player's caster level carries it, once they
+            // know what it is.
+            AimKind::Zap(item) => match spell_of(view, self.kind) {
+                Some(s) => view.own_spell_reach(s)?.range,
+                None => view.own_rod(item).map(|(_, reach)| reach),
+            },
             // A spell reaches as far as the player casts it, Willpower counted.
             AimKind::Ability(Ability::Spell(spell)) => {
                 view.own_spell_reach(spell).and_then(|r| r.range)

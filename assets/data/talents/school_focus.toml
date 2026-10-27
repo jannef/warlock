@@ -1,0 +1,11 @@
+# School focus (the magic design §6, §10; #400): the Spellcraft tree, chosen for a school of
+# magic or an element (a spell tag). Those spells cost less and reach a step farther, never
+# past their own caps, and never do more damage.
+[[talent]]
+id = "school_focus"
+name = "School focus"
+tree = "spellcraft"
+choice = "school"
+description = "You have made one school of magic, or one element, your own: its spells cost you less and reach a little farther."
+effects = [{ kind = "school_focus", cost = -10, reach = 1 }]
+systems = ["spells", "mana"]

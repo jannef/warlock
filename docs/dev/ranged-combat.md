@@ -16,9 +16,9 @@ the missile leaving and the marks it earns change only the next) plus `reload_pr
 launcher that `reloads`, so the stance and burden change them too. `Event::Missile` carries the path; `perceive_events` cuts it to what the player
 saw (a burning missile: everything in their line of sight). A wand in the missile weapon slot is not
 loosed: `fire` hands it to `World::zap` (`world/zap.rs`, docs/dev/spells.md "Wands"), which
-casts its spell for a charge. In the app, `ui/target.rs` is the
+casts its spell for a charge; a rod there goes to `World::use_rod` (`world/rod.rs`, "Rods"), which does its effect for the user's mana. In the app, `ui/target.rs` is the
 aiming input mode (`InputMode::Aim`: cursor start, Tab cycling, the line of fire as the player
-knows it, `LastTarget`; `AimKind::Read` aims a spell scroll too, `docs/dev/scrolls.md`; `AimKind::Zap` a wand; a spell, `AimKind::Ability`
+knows it, `LastTarget`; `AimKind::Read` aims a spell scroll too, `docs/dev/scrolls.md`; `AimKind::Zap` a wand or a rod; a spell, `AimKind::Ability`
 of `Ability::Spell`, is aimed by its shape at the player's own reach, `docs/dev/spells.md`), `ui/missiles.rs` flies missiles on the free-glyph layer (glyphs turned
 with `FreeGlyph::turn`, trail, embers via `particles::trail`, impact puff) and writes this frame's
 `render::lighting::Transients` (the moving light of a burning missile, and landed lights held back

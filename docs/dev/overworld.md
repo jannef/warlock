@@ -97,4 +97,10 @@ closed way back, the town's distance, names and spacing, the rivers, the travel 
 of the hidden two, a replay, the legend's `name` and `note` checks). Fyrdelf's hidden entry
 leads to `fyrdelf:1` (#339; `mapgen/fyrdelf_tests.rs` reveals it with the dev `reveal:fyrdelf`,
 walks there, goes down and back up as a replay). Fennmynster's leads to `fennmynster:1` (#338;
-`mapgen/fennmynster_tests.rs` does the same from Micelfenn's cell, (70, 48)).
+`mapgen/fennmynster_tests.rs` does the same from Micelfenn's cell, (70, 48)). The four lairs of
+the wanted (#426, `docs/dev/guild.md`) are hidden on reserved sites, legend entries `4` to `7`:
+Wyrtholm (88, 46, swamp → `cave_mouth`), Wulfeshol (18, 49, dense forest → `cave_mouth`),
+Bānfeld (42, 31, hills → `barrow`), Brocenburg (66, 12, forest → `dungeon_entrance`), each at
+least six cells from every other location and with no road beside it (`ascmearc_tests`); each
+is revealed by its own variant of `guild_wanted` (`mapgen/lairs_tests.rs` walks to each and goes
+down once `reveal:ID` marks it).
