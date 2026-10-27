@@ -166,6 +166,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("creature-rarities.md", dungeons::creature_rarities),
         ("draw-odds.md", dungeons::draw_odds),
         ("dialogue.md", dialogue::dialogue),
+        ("rumoured-ways.md", dialogue::rumoured_ways),
         ("quests.md", dialogue::quests),
         ("guild-ranks.md", guild::guild_ranks),
         ("guild-draws.md", guild::guild_draws),

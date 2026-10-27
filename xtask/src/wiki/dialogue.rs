@@ -51,6 +51,48 @@ pub(super) fn dialogue(content: &Content) -> String {
     out
 }
 
+/// The rumoured ways (a topic's `route`, those the wiki describes): who tells each, about
+/// what, its waypoints on the overworld, and the region where it ends; sorted by who tells it,
+/// then by the topic's name.
+pub(super) fn rumoured_ways(content: &Content) -> String {
+    let mut rows: Vec<(String, String, String, String)> = Vec::new();
+    for d in (content.dialogues().iter())
+        .filter(|d| super::order::described(content, d.campaign.as_deref()))
+    {
+        let who = match (&d.speaker, &d.name) {
+            (Speaker::Creature(c), _) => capital(&content.creature(*c).name),
+            (Speaker::Npc(_), Some(name)) => name.clone(),
+            (Speaker::Npc(npc), None) => format!("`{npc}`"),
+        };
+        let overworld = d.campaign.as_deref().and_then(|c| content.overworld_of(c));
+        for t in d.topics.iter().filter(|t| !t.route.is_empty()) {
+            let way: Vec<String> = (t.route.iter())
+                .map(|[x, y]| format!("({x}, {y})"))
+                .collect();
+            let end = t.route_cells().last().copied();
+            let region = (overworld.zip(end))
+                .and_then(|(o, p)| o.region_at(p))
+                .unwrap_or("—");
+            rows.push((
+                who.clone(),
+                t.name.clone(),
+                way.join(" → "),
+                region.to_string(),
+            ));
+        }
+    }
+    if rows.is_empty() {
+        return "No one tells the way anywhere yet.\n".to_string();
+    }
+    rows.sort();
+    let mut out =
+        String::from("| Who | Topic | The way (waypoints) | Ends in |\n|---|---|---|---|\n");
+    for (who, topic, way, region) in rows {
+        let _ = writeln!(out, "| {who} | {topic} | {way} | {region} |");
+    }
+    out
+}
+
 /// Who gives quests (`data/quests.toml` and the campaigns' `data/quests/`, those the wiki
 /// describes, in load order: each chain in its order): each quest's name, its giver, its kind,
 /// what it asks, what it pays, what must be done first, the character level it is given from,

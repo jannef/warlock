@@ -267,7 +267,10 @@ impl World {
         }
         let reply = (self.content.dialogue(dialogue).topic(topic)).map(|t| t.reply.clone());
         match reply {
-            Some(reply) => self.answer(id, reply, Some(topic.to_string()), events),
+            Some(reply) => {
+                self.answer(id, reply, Some(topic.to_string()), events);
+                self.mark_rumoured_way(dialogue, topic);
+            }
             None => {
                 let who = capitalized(&self.called(&self.state.actors[&id]));
                 self.say(format!("{who} knows nothing about that."));
