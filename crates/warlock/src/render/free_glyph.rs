@@ -23,9 +23,16 @@ use bevy::sprite_render::{
 /// Draw order of the free-glyph layer: above the map grid (0), below the UI console.
 pub const LAYER_Z: f32 = 1.0;
 
-/// Atlas slot and flags of a glyph quad's vertices.
+/// Atlas slot, flags, band count, and band drift (`f32` bits) of a glyph quad's vertices.
 const ATTRIBUTE_GLYPH: MeshVertexAttribute =
-    MeshVertexAttribute::new("FreeGlyph", 0x5741_524c_0001, VertexFormat::Uint32x2);
+    MeshVertexAttribute::new("FreeGlyph", 0x5741_524c_0001, VertexFormat::Uint32x4);
+
+/// A banded glyph's second, third, and fourth colours (linear RGB; alpha unused).
+const ATTRIBUTE_BANDS: [MeshVertexAttribute; 3] = [
+    MeshVertexAttribute::new("FreeGlyphBand1", 0x5741_524c_0002, VertexFormat::Float32x4),
+    MeshVertexAttribute::new("FreeGlyphBand2", 0x5741_524c_0003, VertexFormat::Float32x4),
+    MeshVertexAttribute::new("FreeGlyphBand3", 0x5741_524c_0004, VertexFormat::Float32x4),
+];
 
 /// Glyph flag: read the 1:1 atlas (whole-pixel position, scale 1). Mirrors `CRISP` in the shader.
 const CRISP: u32 = 1;
@@ -70,17 +77,43 @@ impl FreeGlyph {
     }
 }
 
+/// A glyph drawn in horizontal colour bands, top first (a composite animated thing, spec §8
+/// "Animated objects"): the glyph's own colour is the first band, `more` the next `count - 1`.
+/// The bands lie over the rows a capital letter covers; `drift` (in band heights) moves the
+/// borders between them up or down, never past the glyph's top or bottom band.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Bands {
+    pub more: [LinearRgba; 3],
+    /// How many bands, the first included: fewer than 2 draws the glyph in one colour.
+    pub count: u8,
+    pub drift: f32,
+}
+
+impl Bands {
+    /// One colour: the glyph's.
+    pub const NONE: Bands = Bands {
+        more: [LinearRgba::NONE; 3],
+        count: 0,
+        drift: 0.0,
+    };
+}
+
 /// The glyphs to draw this frame, in order, and where they may appear.
 #[derive(Resource, Debug, Default)]
 pub struct FreeGlyphs {
-    glyphs: Vec<FreeGlyph>,
+    glyphs: Vec<(FreeGlyph, Bands)>,
     /// Framebuffer rectangle outside of which nothing is drawn.
     pub clip: Rect,
 }
 
 impl FreeGlyphs {
     pub fn push(&mut self, glyph: FreeGlyph) {
-        self.glyphs.push(glyph);
+        self.glyphs.push((glyph, Bands::NONE));
+    }
+
+    /// Pushes `glyph` drawn in `bands`.
+    pub fn push_banded(&mut self, glyph: FreeGlyph, bands: Bands) {
+        self.glyphs.push((glyph, bands));
     }
 }
 
@@ -91,6 +124,8 @@ pub struct FreeGlyphParams {
     pub cell_size: Vec2,
     pub atlas_columns: u32,
     pub supersample: u32,
+    /// The rows a capital letter covers, top and bottom: where colour bands lie.
+    pub ink: Vec2,
 }
 
 #[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
@@ -128,6 +163,9 @@ impl Material2d for FreeGlyphMaterial {
             Mesh::ATTRIBUTE_UV_0.at_shader_location(1),
             Mesh::ATTRIBUTE_COLOR.at_shader_location(2),
             ATTRIBUTE_GLYPH.at_shader_location(3),
+            ATTRIBUTE_BANDS[0].at_shader_location(4),
+            ATTRIBUTE_BANDS[1].at_shader_location(5),
+            ATTRIBUTE_BANDS[2].at_shader_location(6),
         ])?;
         descriptor.vertex.buffers = vec![vertex_layout];
         Ok(())
@@ -180,7 +218,7 @@ fn build_mesh(
     handles: Res<LayerHandles>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<FreeGlyphMaterial>>,
-    mut built: Local<Option<(Vec<FreeGlyph>, UVec2)>>,
+    mut built: Local<Option<(Vec<(FreeGlyph, Bands)>, UVec2)>>,
 ) {
     let params = FreeGlyphParams {
         clip_min: free.clip.min,
@@ -188,6 +226,7 @@ fn build_mesh(
         cell_size: atlas.cell.as_vec2(),
         atlas_columns: atlas.columns,
         supersample: atlas::SUPERSAMPLE,
+        ink: atlas.cap,
     };
     if let Some(material) = materials.get(&handles.material)
         && (material.params != params || material.atlas != atlas.image)
@@ -209,15 +248,18 @@ fn build_mesh(
 }
 
 /// One quad per glyph. An empty layer gets a single invisible quad, so the mesh is never empty.
-fn glyph_mesh(glyphs: &[FreeGlyph], cell: Vec2, slot: impl Fn(char) -> u16) -> Mesh {
-    const HIDDEN: FreeGlyph = FreeGlyph {
-        pos: Vec2::ZERO,
-        ch: ' ',
-        color: LinearRgba::NONE,
-        scale: 1.0,
-        slant: 0.0,
-        turn: 0.0,
-    };
+fn glyph_mesh(glyphs: &[(FreeGlyph, Bands)], cell: Vec2, slot: impl Fn(char) -> u16) -> Mesh {
+    const HIDDEN: (FreeGlyph, Bands) = (
+        FreeGlyph {
+            pos: Vec2::ZERO,
+            ch: ' ',
+            color: LinearRgba::NONE,
+            scale: 1.0,
+            slant: 0.0,
+            turn: 0.0,
+        },
+        Bands::NONE,
+    );
     let glyphs = if glyphs.is_empty() {
         &[HIDDEN][..]
     } else {
@@ -231,7 +273,8 @@ fn glyph_mesh(glyphs: &[FreeGlyph], cell: Vec2, slot: impl Fn(char) -> u16) -> M
         Vec::with_capacity(n * 4),
         Vec::with_capacity(n * 6),
     );
-    for (i, g) in glyphs.iter().enumerate() {
+    let mut bands: [Vec<[f32; 4]>; 3] = Default::default();
+    for (i, (g, b)) in glyphs.iter().enumerate() {
         let size = cell * g.scale;
         let min = g.pos + (cell - size) * 0.5;
         let max = min + size;
@@ -250,7 +293,11 @@ fn glyph_mesh(glyphs: &[FreeGlyph], cell: Vec2, slot: impl Fn(char) -> u16) -> M
             positions.push([at.x, at.y, 0.0]);
             locals.push(local.to_array());
             colors.push(g.color.to_f32_array());
-            data.push([u32::from(slot(g.ch)), flags]);
+            let count = u32::from(b.count.min(4));
+            data.push([u32::from(slot(g.ch)), flags, count, b.drift.to_bits()]);
+            for (band, color) in bands.iter_mut().zip(b.more) {
+                band.push(color.to_f32_array());
+            }
         }
         let base = (i * 4) as u32;
         indices.extend_from_slice(&[base, base + 1, base + 2, base, base + 2, base + 3]);
@@ -263,6 +310,9 @@ fn glyph_mesh(glyphs: &[FreeGlyph], cell: Vec2, slot: impl Fn(char) -> u16) -> M
     .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, locals)
     .with_inserted_attribute(Mesh::ATTRIBUTE_COLOR, colors)
     .with_inserted_attribute(ATTRIBUTE_GLYPH, data)
+    .with_inserted_attribute(ATTRIBUTE_BANDS[0], std::mem::take(&mut bands[0]))
+    .with_inserted_attribute(ATTRIBUTE_BANDS[1], std::mem::take(&mut bands[1]))
+    .with_inserted_attribute(ATTRIBUTE_BANDS[2], std::mem::take(&mut bands[2]))
     .with_inserted_indices(Indices::U32(indices))
 }
 
@@ -301,7 +351,7 @@ mod tests {
             turn: std::f32::consts::FRAC_PI_2,
             ..glyph(Vec2::new(100.0, 40.0), 1.0)
         };
-        let mesh = glyph_mesh(&[g], cell, |_| 3);
+        let mesh = glyph_mesh(&[(g, Bands::NONE)], cell, |_| 3);
         let Some(VertexAttributeValues::Float32x3(p)) = mesh.attribute(Mesh::ATTRIBUTE_POSITION)
         else {
             panic!("positions are Float32x3");
@@ -316,17 +366,21 @@ mod tests {
     #[test]
     fn scaled_quads_grow_about_the_cell_center() {
         let cell = Vec2::new(10.0, 20.0);
-        let mesh = glyph_mesh(&[glyph(Vec2::new(100.0, 40.0), 1.5)], cell, |_| 3);
+        let mesh = glyph_mesh(
+            &[(glyph(Vec2::new(100.0, 40.0), 1.5), Bands::NONE)],
+            cell,
+            |_| 3,
+        );
         let Some(VertexAttributeValues::Float32x3(p)) = mesh.attribute(Mesh::ATTRIBUTE_POSITION)
         else {
             panic!("positions are Float32x3");
         };
         assert_eq!(p[0], [97.5, 35.0, 0.0]);
         assert_eq!(p[2], [112.5, 65.0, 0.0]);
-        let Some(VertexAttributeValues::Uint32x2(d)) = mesh.attribute(ATTRIBUTE_GLYPH) else {
-            panic!("glyph data is Uint32x2");
+        let Some(VertexAttributeValues::Uint32x4(d)) = mesh.attribute(ATTRIBUTE_GLYPH) else {
+            panic!("glyph data is Uint32x4");
         };
-        assert_eq!(d[0], [3, 0]);
+        assert_eq!(d[0], [3, 0, 0, 0]);
         assert_eq!(mesh.indices().map(Indices::len), Some(6));
     }
 
@@ -338,7 +392,7 @@ mod tests {
             ..glyph(Vec2::new(100.0, 40.0), 1.0)
         };
         assert!(!g.is_crisp());
-        let mesh = glyph_mesh(&[g], cell, |_| 3);
+        let mesh = glyph_mesh(&[(g, Bands::NONE)], cell, |_| 3);
         let Some(VertexAttributeValues::Float32x3(p)) = mesh.attribute(Mesh::ATTRIBUTE_POSITION)
         else {
             panic!("positions are Float32x3");
@@ -359,5 +413,31 @@ mod tests {
             panic!("colors are Float32x4");
         };
         assert_eq!(c[0][3], 0.0);
+    }
+
+    #[test]
+    fn banded_glyphs_carry_their_colours_on_every_vertex() {
+        let red = LinearRgba::rgb(1.0, 0.0, 0.0);
+        let bands = Bands {
+            more: [red, LinearRgba::BLUE, LinearRgba::NONE],
+            count: 3,
+            drift: 0.25,
+        };
+        let plain = glyph(Vec2::ZERO, 1.0);
+        let mesh = glyph_mesh(
+            &[(plain, Bands::NONE), (plain, bands)],
+            Vec2::new(10.0, 20.0),
+            |_| 3,
+        );
+        let Some(VertexAttributeValues::Uint32x4(d)) = mesh.attribute(ATTRIBUTE_GLYPH) else {
+            panic!("glyph data is Uint32x4");
+        };
+        assert_eq!(d[0][2], 0, "one colour");
+        assert_eq!(d[7], [3, CRISP, 3, 0.25f32.to_bits()]);
+        let Some(VertexAttributeValues::Float32x4(b)) = mesh.attribute(ATTRIBUTE_BANDS[1]) else {
+            panic!("bands are Float32x4");
+        };
+        assert_eq!(b.len(), 8);
+        assert_eq!(b[4], LinearRgba::BLUE.to_f32_array());
     }
 }

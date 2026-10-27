@@ -83,6 +83,9 @@ pub struct GlyphAtlas {
     pub columns: u32,
     /// Font size in physical pixels the atlas was built for.
     pub px: f32,
+    /// The rows of a cell a capital letter covers, top and bottom (1:1 pixels): where a
+    /// composite's colour bands lie (`free_glyph.wesl`).
+    pub cap: Vec2,
     index: BTreeMap<char, u16>,
     fallback: u16,
 }
@@ -101,6 +104,7 @@ impl GlyphAtlas {
             cell,
             columns,
             px,
+            cap: cap_rows(font, px),
             index,
             fallback,
         }
@@ -138,6 +142,18 @@ pub fn draws(c: char) -> bool {
                 .collect()
         })
         .contains(&c)
+}
+
+/// The rows of a 1:1 cell that the capital `A` covers, top and bottom, at `px` (the baseline as
+/// [`rasterize`] places it).
+fn cap_rows(font: &fontdue::Font, px: f32) -> Vec2 {
+    let ascent = font
+        .horizontal_line_metrics(px)
+        .map_or(px * 0.8, |l| l.ascent);
+    let baseline = ascent.round();
+    let m = font.metrics('A', px);
+    let bottom = baseline - m.ymin as f32;
+    Vec2::new(bottom - m.height as f32, bottom)
 }
 
 /// Rasterizes `chars` at `px` physical pixels into cell-sized slots, `supersample` times larger
