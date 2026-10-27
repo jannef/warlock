@@ -24,6 +24,8 @@ mod demon_roster_tests;
 mod devil_roster_tests;
 mod dialogue;
 mod disease;
+#[cfg(test)]
+mod duergar_roster_tests;
 mod dungeon;
 mod effect;
 #[cfg(test)]
@@ -4643,7 +4645,7 @@ mod tests {
         let content = Content::builtin().unwrap();
         let objects = content.object_defs();
         // With a corpse for every creature type but the player, and the magic base items.
-        assert!((15..=400).contains(&objects.len()), "{}", objects.len());
+        assert!((15..=500).contains(&objects.len()), "{}", objects.len());
         let glyphs = content.glyphs();
         for def in objects {
             assert!(def.weight > 0 && glyphs.contains(&def.glyph), "{}", def.id);
