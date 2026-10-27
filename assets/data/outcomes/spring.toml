@@ -1,0 +1,39 @@
+# A healing spring's drink (spec §7 "Special rooms"; content/outcome.rs has the fields): ten
+# seconds of drinking from the basin, then one draw of the kinds and one by weight among that
+# kind's outcomes. A spring has no side, so nothing leans, and it never runs dry (`exhaust = 0`):
+# drink as often as you like; the foul water is the price. Messages stay vague: never a number.
+seconds = 10
+kinds = { boon = 60, nothing = 25, bane = 15 }
+exhaust = 0
+
+[[outcome]]
+kind = "nothing"
+tier = "minor"
+id = "stone"
+weight = 1
+message = "It tastes of stone."
+
+[[outcome]]
+kind = "boon"
+tier = "minor"
+id = "refreshed"
+weight = 55
+effect = { heal = "2d8" }
+message = "The water is cold and good."
+
+[[outcome]]
+kind = "boon"
+tier = "moderate"
+id = "clear_headed"
+weight = 5
+effect = { mana = "half" }
+message = "Your head clears."
+
+# A disease caught from the water: marsh ague, which a prayer (a temple's cure) or a remedy cures.
+[[outcome]]
+kind = "bane"
+tier = "moderate"
+id = "fouled"
+weight = 15
+effect = { catch = "marsh_ague" }
+message = "The water tastes foul."

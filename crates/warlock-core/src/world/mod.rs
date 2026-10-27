@@ -109,6 +109,7 @@ mod disarm;
 mod disease;
 mod door;
 mod drain;
+mod drink;
 mod eat;
 mod element_gifts;
 mod equip;
@@ -516,6 +517,8 @@ enum Spent {
     Consecrate(GameTime),
     /// Praying at a forgotten altar (see [`World::pray`]).
     Pray(pray::Prayer),
+    /// Drinking at a healing spring (see [`World::drink`]).
+    Drink(drink::Draught),
     /// Dev: the clock jumps ahead; nobody acts, then perception is recomputed.
     Skip(Duration),
 }
@@ -1080,6 +1083,7 @@ impl World {
             Spent::Study(lesson) => self.study(lesson, &mut events),
             Spent::Consecrate(until) => self.consecrate(until, &mut events),
             Spent::Pray(prayer) => self.pray(prayer, &mut events),
+            Spent::Drink(draught) => self.drink(draught, &mut events),
             Spent::Skip(duration) => {
                 // Nobody acts or gains energy.
                 self.state.time += duration;
@@ -1195,6 +1199,7 @@ impl World {
             Action::Search(turns) => return Spent::Search(*turns),
             Action::Disarm(dir) => return self.disarm(*dir, events),
             Action::Pray => return self.start_prayer(),
+            Action::Drink => return self.start_drink(),
             Action::SecondWind => return self.second_wind(events),
             Action::BloodMagic => return self.blood_magic(),
             Action::Use(active, dir) => return self.use_class(*active, *dir, events),
@@ -1460,6 +1465,8 @@ mod speed_tests;
 mod spell_list_tests;
 #[cfg(test)]
 mod spell_talent_tests;
+#[cfg(test)]
+mod spring_tests;
 #[cfg(test)]
 mod stars_roc_tests;
 #[cfg(test)]

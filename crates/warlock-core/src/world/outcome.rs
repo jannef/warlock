@@ -3,7 +3,8 @@
 //! [`OutcomeEffect`] is one hook into a system that already exists (healing, statuses, hunger,
 //! loot, traps, identification, harm, the lantern, spawning, diseases, stat damage, experience,
 //! the teleport trap's move, the burst spell code, terrain), applied in the order the struct
-//! lists them. Every draw is from the gameplay stream. The prayer that uses them is `pray.rs`.
+//! lists them. Every draw is from the gameplay stream. The prayer that uses them is `pray.rs`,
+//! the drink at a spring `drink.rs`.
 //!
 //! The outcome's line is said first (one of its `messages`, drawn when it has several), then its
 //! hooks run; a hook that finds nothing to do (no unidentified item to make clear) says the
@@ -224,6 +225,10 @@ impl World {
             }
             done = true;
         }
+        if let Some(disease) = effect.catch {
+            self.infect(me, disease, None);
+            done = true;
+        }
         if let Some(wither) = effect.wither {
             let stat = Stat::ALL[self.state.rng.index(Stat::ALL.len())];
             let points = wither.roll(&mut self.state.rng);
@@ -258,11 +263,12 @@ impl World {
         done
     }
 
-    /// Hit points back: `heal`'s roll, or all of them, never past the maximum.
+    /// Hit points back: `heal`'s roll, half the maximum, or all of them, never past it.
     fn restore_hp(&mut self, heal: Amount) {
         let content = self.content.clone();
         let roll = match heal {
             Amount::Dice(d) => d.roll(&mut self.state.rng),
+            Amount::Half => self.state.player().max_hp(&content) / 2,
             Amount::Full => i32::MAX,
         };
         let me = self.player_mut();
@@ -270,11 +276,12 @@ impl World {
         me.hp = me.hp.saturating_add(roll.max(0)).min(max).max(me.hp);
     }
 
-    /// Mana back: `mana`'s roll, or all of it, never past the maximum.
+    /// Mana back: `mana`'s roll, half the maximum, or all of it, never past it.
     fn restore_mana(&mut self, mana: Amount) {
         let content = self.content.clone();
         let roll = match mana {
             Amount::Dice(d) => d.roll(&mut self.state.rng),
+            Amount::Half => self.state.player().max_mana(&content) / 2,
             Amount::Full => i32::MAX,
         };
         let me = self.player_mut();

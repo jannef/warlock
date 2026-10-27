@@ -92,6 +92,9 @@ pub enum Ability {
     /// it ([`Ability::here`]): listed only while the player stands next to such an altar (never
     /// a spent one), absent elsewhere.
     Pray,
+    /// Drink at a healing spring (spec §7 "Special rooms"): [`Action::Drink`]. A place offers
+    /// it, as Pray: listed only while the player stands next to a spring.
+    Drink,
 }
 
 /// Where an ability comes from: the abilities menu's groups, in this order.
@@ -115,7 +118,7 @@ pub enum Source {
     /// Something worn or carried (the lantern's hood).
     Item,
     /// The place the character stands in (spec §7 "Special rooms"): what a special room's
-    /// feature offers next to it (Pray at a forgotten altar).
+    /// feature offers next to it (Pray at a forgotten altar, Drink at a spring).
     Place,
 }
 
@@ -272,7 +275,10 @@ impl Ability {
             (content.room_effects().defs().iter())
                 .any(|e| e.offers.as_ref().is_some_and(|(o, _)| *o == offer))
         };
-        let here = offers(Offer::Pray).then_some(Ability::Pray);
+        let here = [(Offer::Pray, Ability::Pray), (Offer::Drink, Ability::Drink)]
+            .into_iter()
+            .filter(|&(offer, _)| offers(offer))
+            .map(|(_, ability)| ability);
         let mut all: Vec<Ability> = (signs.chain(class))
             .chain(classes)
             .chain(spells)
@@ -300,7 +306,7 @@ impl Ability {
     }
 
     /// The abilities the place offers to whoever stands at `at` on `level` (spec §7 "Special
-    /// rooms"): what the feature on a cell next to it offers (Pray beside a forgotten altar), in
+    /// rooms"): what the feature on a cell next to it offers (Pray beside a forgotten altar, Drink beside a spring), in
     /// menu order. A spent altar is another terrain, which offers nothing.
     pub(crate) fn here(level: &LevelState, content: &Content, at: Pos) -> Vec<Ability> {
         let mut found: Vec<Ability> = (Dir::ALL.iter().map(|&d| at.step(d)))
@@ -308,6 +314,7 @@ impl Ability {
             .filter_map(|t| content.offer_at(t))
             .map(|(offer, _)| match offer {
                 Offer::Pray => Ability::Pray,
+                Offer::Drink => Ability::Drink,
             })
             .collect();
         found.sort();
@@ -354,7 +361,7 @@ impl Ability {
             Ability::ThrowVoice => actor.talent_mods(content).throw_voice,
             Ability::ShieldBash | Ability::HoodLantern => true,
             // A place offers it, not who one is ([`Ability::here`]).
-            Ability::Pray => false,
+            Ability::Pray | Ability::Drink => false,
         }
     }
 
@@ -374,6 +381,7 @@ impl Ability {
             Ability::ShieldBash => "shield_bash",
             Ability::HoodLantern => "hood_lantern",
             Ability::Pray => "pray",
+            Ability::Drink => "drink",
         }
     }
 
@@ -393,6 +401,7 @@ impl Ability {
             Ability::ShieldBash => "Shield bash",
             Ability::HoodLantern => "Hood your lantern",
             Ability::Pray => "Pray",
+            Ability::Drink => "Drink",
         }
     }
 
@@ -431,6 +440,10 @@ impl Ability {
                 "Kneel at the forgotten altar beside you and pray for a minute. Something may \
                  answer, for good or ill."
             }
+            Ability::Drink => {
+                "Drink from the spring beside you. Its water is mostly good, and now and then \
+                 foul."
+            }
         }
     }
 
@@ -447,7 +460,7 @@ impl Ability {
             Ability::SecondWind | Ability::BloodMagic => Source::Talent,
             Ability::ShieldBash => Source::WeaponSkill,
             Ability::HoodLantern => Source::Item,
-            Ability::Pray => Source::Place,
+            Ability::Pray | Ability::Drink => Source::Place,
         }
     }
 
@@ -465,7 +478,8 @@ impl Ability {
             | Ability::SecondWind
             | Ability::BloodMagic
             | Ability::HoodLantern
-            | Ability::Pray => Aim::Nothing,
+            | Ability::Pray
+            | Ability::Drink => Aim::Nothing,
             Ability::ThrowVoice => Aim::Cell,
             Ability::Disarm | Ability::PickLock | Ability::Steal | Ability::ShieldBash => {
                 Aim::Direction
@@ -489,6 +503,7 @@ impl Ability {
             Ability::ShieldBash => Some(ActionKind::Melee),
             Ability::HoodLantern => Some(ActionKind::Hood),
             Ability::Pray => Some(ActionKind::Pray),
+            Ability::Drink => Some(ActionKind::Drink),
         }
     }
 
@@ -512,7 +527,8 @@ impl Ability {
             | Ability::BloodMagic
             | Ability::ShieldBash
             | Ability::HoodLantern
-            | Ability::Pray => None,
+            | Ability::Pray
+            | Ability::Drink => None,
         }
     }
 
@@ -562,6 +578,7 @@ impl Ability {
             }
             (Ability::HoodLantern, _) => Some(Action::HoodLantern),
             (Ability::Pray, _) => Some(Action::Pray),
+            (Ability::Drink, _) => Some(Action::Drink),
         }
     }
 
@@ -586,7 +603,8 @@ impl Ability {
             | Ability::BloodMagic
             | Ability::ShieldBash
             | Ability::HoodLantern
-            | Ability::Pray => None,
+            | Ability::Pray
+            | Ability::Drink => None,
         }
     }
 
@@ -635,7 +653,8 @@ impl Ability {
             | Ability::PickLock
             | Ability::Steal
             | Ability::BloodMagic
-            | Ability::Pray => None,
+            | Ability::Pray
+            | Ability::Drink => None,
             Ability::SecondWind => (actor.talent_mods(content).second_wind)
                 .map(|w| w.cooldown)
                 .filter(|&cooldown| actor.effects.has(cooldown))
@@ -793,10 +812,15 @@ mod tests {
                 "woodcraft",
             ]
         );
-        let last: Vec<Ability> = every.iter().rev().take(3).rev().copied().collect();
+        let last: Vec<Ability> = every.iter().rev().take(4).rev().copied().collect();
         assert_eq!(
             last,
-            [Ability::ShieldBash, Ability::HoodLantern, Ability::Pray],
+            [
+                Ability::ShieldBash,
+                Ability::HoodLantern,
+                Ability::Pray,
+                Ability::Drink
+            ],
             "then what a place offers"
         );
         // Stealing is in the game: the Steal skill is listed as its use.
