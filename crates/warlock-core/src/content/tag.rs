@@ -131,7 +131,14 @@ mod tests {
         assert!(members("fire-thing").contains(&"fire_drake".to_string()));
         assert!(members("caster").contains(&"kobold_shaman".to_string()));
         assert!(members("archer").contains(&"goblin_archer".to_string()));
-        for summoner in ["goblin_wizard", "necromancer", "dark_wizard"] {
+        for summoner in [
+            "dark_wizard",
+            "drow_high_priestess",
+            "drow_matron",
+            "drow_priestess",
+            "goblin_wizard",
+            "necromancer",
+        ] {
             assert!(
                 members("summoner").contains(&summoner.to_string()),
                 "{summoner}"

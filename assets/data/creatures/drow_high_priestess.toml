@@ -12,7 +12,7 @@ glyph = "e"
 fg = "#e04a6a"
 speed = 1100
 faction = "drow"
-tags = ["drow", "caster", "priest"]
+tags = ["drow", "caster", "priest", "summoner"]
 alignment = "evil"
 race = "drow"
 vision = "darkvision"
@@ -24,6 +24,7 @@ hearing = 14
 weight = 56000
 stats = { strength = 26, dexterity = 23, toughness = 29, intelligence = 32, willpower = 32, presence = 32 }
 base_hp = 88
+mana = 48
 skills = { concentration = 118, spellcraft = 123 }
 resist = { poison = 50 }
 on_eat = { message = "Lean and bitter, with an aftertaste of old poisons.", vomit = 40 }
@@ -47,6 +48,17 @@ magic = 60
 [[creature.gear]]
 chance = 80
 one_of = ["gold_coin*10"]
+# The greater demons (every demon of level 24 to 44, uniques left out; the demons it calls
+# join the drow), 1d2 at a time, every 30 seconds while its mana lasts, 4 of them at most.
+[creature.summon]
+tag = "demon"
+levels = [24, 44]
+count = "1d2"
+cooldown = 30
+mana = 16
+most = 4
+verb = "calls forth"
+
 [[creature.particles]]
 on = "attack"
 glyphs = "·*+"
