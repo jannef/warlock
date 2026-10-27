@@ -293,3 +293,17 @@ min_cells = 9
 feature = "forgotten_altar"
 sides = { good = "altar_good", evil = "altar_evil" }
 offers = { pray = "forgotten_altar" }
+
+# A shrine of a side (design §9.3): good or evil, one to one, shown only by its stone's light.
+# One of its side heals twice as fast inside; one of the other is Unwelcome (status.toml); a
+# neutral one is ignored. Creatures too, by their own side.
+[[effect]]
+id = "shrine"
+name = "shrine"
+mark = "i"
+enter = "An old shrine. It ignores you."
+weight = 4
+min_cells = 9
+feature = "shrine_stone"
+sides = { good = "altar_good", evil = "altar_evil" }
+shrine = { regen = 200, status = "unwelcome", welcome = "You feel welcome here.", unwelcome = "Something here wants you gone." }

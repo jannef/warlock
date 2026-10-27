@@ -185,7 +185,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   terrain, transparent and not walkable, generators place in the room; below), `sides` (the room
   has a hidden side, and its feature a light per side: `{ good = LIGHT, evil = LIGHT }`), and
   `offers` (what the player may do beside the feature: `{ pray = TABLE }`, an outcome table in
-  `data/outcomes/`). An effect with a `level_chance` needs its `pervade` line and is neither
+  `data/outcomes/`), and `shrine` (a shrine of a side, below: `{ regen, status, welcome,
+  unwelcome }`; needs `sides`). An effect with a `level_chance` needs its `pervade` line and is neither
   `shunned`, nor lays a `floor`, nor is a den, nor holds `mirrors`, nor collapses, nor has a
   `feature`.
   - **The effects** (weights in brackets): a *shadowed room* (10) keeps 30 % of the light ("The
@@ -227,7 +228,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     level with `level_chance` 5 ("The dead do not rest on this level."). Fennmynster favours it
     at 15; an *altar room* (8, #406; only in a room of at least 9 floor cells) holds a
     forgotten altar to pray at ("A faint glow rises from an altar ahead." when glimpsed, "An old
-    altar stands here, its god long forgotten." on entering; below). Blood washing
+    altar stands here, its god long forgotten." on entering; below); a *shrine* (4, #413; only in
+    a room of at least 9 floor cells) is a shrine of a side (below: "You feel welcome here.",
+    "Something here wants you gone.", or "An old shrine. It ignores you." on entering). Blood washing
     away in a flooded room waits for blood (#127).
   - **Hot and cold rooms** (`temperature`, #404): a room sets its cells' temperature and
     nothing else: no status, no damage, nothing done to items or food. The temperature at a cell
@@ -323,6 +326,21 @@ developer notes (CLAUDE.md, `docs/dev/`).
     nothing was lifted, so other rooms save and hash as before), and the `rooms` dev layer
     lists them (`, lifted 1, sealed`). Hoard-wise (§8 "Talents") lets one stack go first.
     Never over a whole level.
+  - **Shrines of a side** (`shrine = { regen = 200, status = "unwelcome", welcome, unwelcome
+    }`, #413; `world/shrine.rs`, design §9.3): the room has a hidden side, drawn at generation
+    from the map stream as **good or evil, one to one** (one `below(2)`, in place of an altar's
+    one-to-two-to-one draw; a level file's `[[room]]` must give `side = "good"` or `"evil"`), kept
+    in `SpecialRoom::side` and shown only by its feature's light (the `shrine_stone`, `∩`, "shrine
+    stone": `altar_good`'s gold or `altar_evil`'s red, as a forgotten altar's). It treats
+    everyone inside, the player and creatures alike, by their own side (`Actor::nature`: the
+    player's band's side, a creature's type's or its level's): one of its side heals at `regen`
+    percent of the pace (200: twice as fast; one fold in `World::healing_rate`, before the room's
+    pace, so Hallowed rest quickens it too); one of the other side holds `status`, **Unwelcome**
+    (§8 "Status effects": half the healing, −1 to hit), given as a room's `status` is (at the start
+    of every stretch of time, and on arrival; it eases half a minute after leaving); a neutral one
+    neither. The first entry's line says which: `welcome`, `unwelcome`, or the effect's `enter`.
+    Nothing is said of the side in words, and nothing new is saved (the side is the altar's
+    field). Never over a whole level (it has a feature).
   - **Cursed rooms** (`rise = { faction = "undead", after = "2m" }`, #408; `world/curse.rs`):
     a creature that dies on a cell whose effects raise the dead (the room's, else the whole
     level's), is not of the rise's `faction`, and leaves a corpse is marked to rise, whoever
