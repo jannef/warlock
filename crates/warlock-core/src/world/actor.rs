@@ -8,7 +8,7 @@ use crate::combat::{self, Attack, Category, Defence, Health, Profile, Target};
 use crate::content::Effect as ItemEffect;
 use crate::content::{
     ActionKind, Benefit, CombatStance, Content, CreatureId, DamageTypeId, FactionId, Grip, Hide,
-    ObjectDef, ObjectId, RaceDef, Role, SpellId, StatusId, TwoWeapons, VisionProfile,
+    MAX_SPEED, ObjectDef, ObjectId, RaceDef, Role, SpellId, StatusId, TwoWeapons, VisionProfile,
     WeaponSkillId,
 };
 use crate::damage::{Protection, Resistances};
@@ -355,11 +355,17 @@ impl Actor {
         }
     }
 
-    /// Its speed (spec §8 "Speed"): its creature type's, scaled by its talents' (a birth sign's
-    /// Fleet, Ponderous), at least 1. Hidden from the player.
+    /// Its speed (spec §8 "Speed"): its creature type's, scaled by its talents' percent (a birth
+    /// sign's Fleet, Ponderous) plus its skills' (Athletics, [`Effect::Speed`]), the two added
+    /// together; the skills never take the sum past [`MAX_SPEED`] percent. At least 1. Hidden
+    /// from the player.
     pub fn speed(&self, content: &Content) -> u32 {
         let base = content.creature(self.creature).speed;
-        let percent = self.talent_mods(content).speed_percent;
+        let talents = self.talent_mods(content).speed_percent;
+        let percent = match self.skill_effect(content, Effect::Speed) {
+            0 => talents,
+            skills => (talents + skills).min(MAX_SPEED.max(talents)),
+        };
         if percent == 0 {
             return base;
         }

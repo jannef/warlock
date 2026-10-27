@@ -33,6 +33,7 @@ fn ranger(level: u8) -> World {
     assert_eq!(w.due(), None, "every choice spent");
     // The picks may have taken Steady hand: these tests are of focus's own pace.
     w.player_mut().talents.forget("steady_hand");
+    super::class_active_tests::at_normal_speed(&mut w);
     w
 }
 
