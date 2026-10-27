@@ -59,6 +59,35 @@ pub struct Stack {
     /// ([`crate::rot::made_at`]).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) died: Option<GameTime>,
+    /// A wand's charges used and what the player knows of them (spec §8 "Magic items":
+    /// "Wands"); `None` for everything else, and for a wand as it is made: full, its charges
+    /// unknown. Ground truth: presentation reads them only through [`Stack::known_charges`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    charges: Option<Charges>,
+}
+
+/// A wand's state ([`Stack`]'s `charges`): how many charges it has used, whether the player
+/// knows how many it has left, and how long they have carried it not knowing (Connoisseur).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+struct Charges {
+    #[serde(default, skip_serializing_if = "is_zero_u8")]
+    used: u8,
+    #[serde(default, skip_serializing_if = "is_false")]
+    known: bool,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    carried: u32,
+}
+
+fn is_zero_u8(n: &u8) -> bool {
+    *n == 0
+}
+
+fn is_zero_u32(n: &u32) -> bool {
+    *n == 0
+}
+
+fn is_false(b: &bool) -> bool {
+    !*b
 }
 
 impl Stack {
@@ -70,6 +99,7 @@ impl Stack {
             magic: None,
             parts: None,
             died: None,
+            charges: None,
         }
     }
 
@@ -141,17 +171,60 @@ impl Stack {
     }
 
     /// Counts `seconds` more of it carried by someone who learns magic items by carrying them
-    /// (spec §8 "Class abilities": Connoisseur), if it is magic and unidentified; returns whether
-    /// it has now been carried `needed` seconds.
-    pub(crate) fn carry_for(&mut self, seconds: u64, needed: u64) -> bool {
-        match self.magic.as_mut() {
-            Some(m) if !m.identified => {
-                let carried = u64::from(m.carried).saturating_add(seconds).min(needed);
-                m.carried = u32::try_from(carried).unwrap_or(u32::MAX);
-                carried >= needed
+    /// (spec §8 "Class abilities": Connoisseur), if it is magic and unidentified, or a wand
+    /// whose charges they do not know; returns whether it has now been carried `needed` seconds.
+    pub(crate) fn carry_for(&mut self, content: &Content, seconds: u64, needed: u64) -> bool {
+        let carried = match self.magic.as_mut() {
+            Some(m) if !m.identified => &mut m.carried,
+            _ if content.object(self.object).wand.is_some() => {
+                let charges = self.charges.get_or_insert_with(Charges::default);
+                if charges.known {
+                    return false;
+                }
+                &mut charges.carried
             }
-            _ => false,
+            _ => return false,
+        };
+        let total = u64::from(*carried).saturating_add(seconds).min(needed);
+        *carried = u32::try_from(total).unwrap_or(u32::MAX);
+        total >= needed
+    }
+
+    /// The charges it has left, if it is a wand: ground truth, for the rules and dev tools.
+    pub(crate) fn charges_left(&self, content: &Content) -> Option<u8> {
+        let wand = content.object(self.object).wand?;
+        let used = self.charges.map_or(0, |c| c.used);
+        Some(wand.charges.saturating_sub(used))
+    }
+
+    /// Whether the player knows how many charges it has left (a wand identified); true for
+    /// anything that is no wand.
+    pub fn charges_known(&self, content: &Content) -> bool {
+        content.object(self.object).wand.is_none() || self.charges.is_some_and(|c| c.known)
+    }
+
+    /// The charges it has left, if it is a wand whose charges the player knows: all
+    /// presentation may know of them.
+    pub fn known_charges(&self, content: &Content) -> Option<u8> {
+        (self.charges.is_some_and(|c| c.known))
+            .then(|| self.charges_left(content))
+            .flatten()
+    }
+
+    /// Uses up one of its charges (a wand with one left).
+    pub(crate) fn use_charge(&mut self) {
+        let charges = self.charges.get_or_insert_with(Charges::default);
+        charges.used = charges.used.saturating_add(1);
+    }
+
+    /// Lets the player know its charges, if it is a wand; returns whether there was anything to
+    /// learn.
+    pub(crate) fn identify_charges(&mut self, content: &Content) -> bool {
+        if self.charges_known(content) {
+            return false;
         }
+        self.charges.get_or_insert_with(Charges::default).known = true;
+        true
     }
 
     /// Identifies it; returns whether there was anything to learn.
@@ -323,9 +396,13 @@ impl Stack {
     /// As it truly is, identified or not: for dev tools only.
     pub(crate) fn describe_truth(&self, content: &Content) -> String {
         let names = self.names(content);
-        let text = name::describe(&names, self.count, self.magic(), true, content);
+        let mut text = name::describe(&names, self.count, self.magic(), true, content);
+        if let Some(left) = self.charges_left(content) {
+            text += &format!(" ({})", charges_text(left));
+        }
         match self.magic() {
             Some(m) if !m.identified => format!("{text} (unidentified)"),
+            _ if !self.charges_known(content) => format!("{text} (unidentified)"),
             _ => text,
         }
     }
@@ -347,6 +424,7 @@ impl Stack {
                 None => !loose,
             }
             && self.died.is_some() == def.food.is_some()
+            && (self.charges).is_none_or(|c| def.wand.is_some_and(|w| c.used <= w.charges))
     }
 
     /// The same goods as `other`: the same object made the same way (what a shop's bill counts
@@ -371,6 +449,15 @@ fn oldest(a: Option<GameTime>, b: Option<GameTime>) -> Option<GameTime> {
     match (a, b) {
         (Some(a), Some(b)) => Some(a.min(b)),
         (a, b) => a.or(b),
+    }
+}
+
+/// A wand's charges in words: "7 charges", "1 charge", "empty".
+pub fn charges_text(left: u8) -> String {
+    match left {
+        0 => "empty".into(),
+        1 => "1 charge".into(),
+        n => format!("{n} charges"),
     }
 }
 

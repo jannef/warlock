@@ -121,6 +121,9 @@ pub struct CharacterScreen {
     /// Their alignment band's name (spec §8 "Alignment"), never the score; `None` without
     /// alignment rules.
     alignment: Option<&'static str>,
+    /// The guilds they belong to (spec §8 "Quests": "Guilds"): the rank's title, in its metal's
+    /// colour, and the guild's name in a sentence ("the Weyfarers' Gilde").
+    guilds: Vec<(String, Rgb, String)>,
     /// The attacks they have ready: where each comes from, what it is made with, and its
     /// numbers (`+4 to hit, 1d8+2 slashing`), beside the stats.
     attacks: Vec<(&'static str, String, String)>,
@@ -156,6 +159,7 @@ impl CharacterScreen {
                 resources: Vec::new(),
                 talents: 0,
                 alignment: None,
+                guilds: Vec::new(),
                 attacks: Vec::new(),
             };
         };
@@ -222,6 +226,12 @@ impl CharacterScreen {
                 .collect(),
             talents: view.own_talents().iter().filter(|t| !t.class).count(),
             alignment: view.own_alignment().map(|b| b.name()),
+            guilds: (view.own_guilds().iter())
+                .map(|g| {
+                    let color = g.guild.color(content, g.rank, TEXT);
+                    (g.title().to_string(), color, g.guild.name.clone())
+                })
+                .collect(),
             attacks: (view.own_attacks().iter())
                 .map(|a| (a.source.label(), a.name.clone(), a.summary(content)))
                 .collect(),
@@ -281,6 +291,7 @@ impl CharacterScreen {
         let thresholds = (self.load.as_ref()).map_or(Vec::new(), |l| thresholds(l, width));
         let status_rows = self.resources.len() as i32
             + i32::from(self.alignment.is_some())
+            + self.guilds.len() as i32
             + i32::from(!self.effects.is_empty())
             + i32::from(!self.diseases.is_empty())
             + self.resistances.len() as i32;
@@ -382,6 +393,17 @@ impl CharacterScreen {
             if fits(y) {
                 console.print(x + 4, y, "Alignment", TEXT);
                 console.print(x + 4 + NAME_W, y, band, TEXT);
+            }
+            y += 1;
+        }
+        // `    Guild         Tin of the Weyfarers' Gilde`: the title in its metal's colour.
+        for (title, color, guild) in &self.guilds {
+            if fits(y) {
+                let at = x + 4 + NAME_W;
+                console.print(x + 4, y, "Guild", TEXT);
+                console.print(at, y, title, *color);
+                let rest = format!(" of {guild}");
+                console.print(at + title.chars().count() as i32, y, &rest, TEXT);
             }
             y += 1;
         }
@@ -633,6 +655,31 @@ mod tests {
             (empty_handed.iter()).any(|l| l.contains("Weight 70 kg, carrying nothing")),
             "{empty_handed:#?}"
         );
+    }
+
+    #[test]
+    fn names_the_guild_rank_in_its_metals_colour() {
+        let content = Arc::new(Content::builtin().expect("content"));
+        let mut world = World::new(content.clone(), "ceaptun", None).expect("Cēaptūn");
+        assert!(!drawn(&world, 80, 30).join("\n").contains("Guild"));
+        // To Wat One-Eye in the Gildhalle, and the first link of his chain.
+        let walk = "move:E*26 move:S*4 move:E*9 open:S move:S*5 ask:S:quest-guild_quarry";
+        for action in warlock_core::action::parse_actions(walk).expect("actions") {
+            world.apply(&action);
+        }
+        let screen = CharacterScreen::new(Some(&world.perception()));
+        let mut console = Console::default();
+        console.resize(80, 30);
+        screen.draw(&mut console, &Bindings::default());
+        let text = text(&console);
+        let y = (text.iter())
+            .position(|l| l.contains("    Guild         Tin of the Weyfarers' Gilde"))
+            .unwrap_or_else(|| panic!("{text:#?}"));
+        let x = text[y].find("Tin").expect("the title") as i32;
+        let x = text[y][..x as usize].chars().count() as i32;
+        let tin = content.material(content.material_id("tin").expect("tin"));
+        assert_eq!(console.get(x, y as i32).map(|c| c.fg), tin.color);
+        assert_eq!(console.get(x + 4, y as i32).map(|c| c.fg), Some(TEXT));
     }
 
     #[test]

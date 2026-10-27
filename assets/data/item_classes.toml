@@ -92,6 +92,12 @@ name = "Potions"
 id = "scrolls"
 name = "Scrolls"
 
+# Wands (spec §8 "Magic items": "Wands"): a spell and its charges, used from the missile weapon
+# slot.
+[[class]]
+id = "wands"
+name = "Wands"
+
 [[class]]
 id = "gems"
 name = "Gems"

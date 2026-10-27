@@ -34,7 +34,7 @@
 //! hidden).
 
 use super::{Affix, AffixKind, Magic, Rarity, may_roll};
-use crate::content::{Content, ItemKind, ObjectDef, ObjectId};
+use crate::content::{Content, ItemClassId, ItemKind, ObjectDef, ObjectId};
 use crate::gem;
 use crate::object::Stack;
 use crate::rng::Rng;
@@ -145,6 +145,24 @@ pub fn roll_with(
         (level, grade, luck.magic),
         Some(source),
     ))
+}
+
+/// A base item of one of `classes` that is loot at item level `level` (its `level` at most it,
+/// a `frequency`), by frequency, ordered by object id as [`roll`]'s are: one draw of `rng`.
+/// `None` when there is none. An animated blade's weapon is drawn so (spec §8 "Animated
+/// objects").
+pub fn base_in(
+    content: &Content,
+    rng: &mut Rng,
+    classes: &[ItemClassId],
+    level: u8,
+) -> Option<ObjectId> {
+    let mut bases: Vec<(ObjectId, u32)> = (content.object_defs().iter().enumerate())
+        .filter(|(_, o)| o.frequency > 0 && o.level <= level.max(1) && classes.contains(&o.class))
+        .map(|(i, o)| (ObjectId(i as u16), o.frequency))
+        .collect();
+    bases.sort_by(|a, b| content.object(a.0).id.cmp(&content.object(b.0).id));
+    pick_weighted(rng, &bases).copied()
 }
 
 /// `count` of `object` made as loot makes its base item at item level `level`, at least of

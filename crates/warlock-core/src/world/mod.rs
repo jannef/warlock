@@ -117,6 +117,7 @@ mod focus;
 mod free_blow;
 mod gifts;
 mod glare;
+mod guild;
 mod hash;
 mod hearing;
 mod hoard;
@@ -171,6 +172,7 @@ mod travel;
 mod voice;
 mod volley;
 mod warp;
+mod zap;
 
 pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
 pub use alignment::Deed;
@@ -184,6 +186,7 @@ pub use experience::{Discovered, Progress};
 pub use fight::{Cause, Death};
 pub use free_blow::FreeBlows;
 pub use gifts::{STARE_RANGE, Streak};
+pub use guild::GuildRank;
 pub(crate) use hash::fnv1a;
 pub use lantern::Lantern;
 pub use learn::{Odds, study_odds, study_turns};
@@ -1230,6 +1233,8 @@ mod ai_tests;
 #[cfg(test)]
 mod alignment_tests;
 #[cfg(test)]
+mod animated_blade_tests;
+#[cfg(test)]
 mod animated_tests;
 #[cfg(test)]
 mod ascmearc_tests;
@@ -1315,6 +1320,8 @@ mod gear_tests;
 mod gem_tests;
 #[cfg(test)]
 mod gifts_tests;
+#[cfg(test)]
+mod guild_tests;
 #[cfg(test)]
 mod hearing_tests;
 #[cfg(test)]
@@ -1465,3 +1472,5 @@ mod voice_tests;
 mod weapon_skill_tests;
 #[cfg(test)]
 mod weather_tests;
+#[cfg(test)]
+mod zap_tests;

@@ -9,52 +9,52 @@ duergar_miner at (24, 6) route  carrying a copper pick-axe (in use)
 kobold at (32, 16) route E E W W carrying a brass key
 ember_beetle at (39, 17) route W W W N N E W E W E W S S E E E
 ember_beetle at (68, 7) route E S N E E W W W W W E E E E E W W S N W
-giant_centipede at (67, 7) route W W W W W E W E E E E E
+kobold at (67, 7) route W W W W W E W E E E E E carrying a flint spear (wielded), a steel cap (being worn), 9 copper coins
 ember_beetle at (36, 10) route W N N N W W E E W W E E S S S E
 ember_beetle at (71, 11) route W W W W W W W W W W E E E E E E E E E E
-dretch at (33, 19) route W W W W W W W E E E E E E E
-giant_centipede at (9, 14) route S N S S N N S N
-ember_beetle at (50, 10) route W W W N N N N E W S S S S E E E
+ember_beetle at (33, 19) route W W W W W W W E E E E E E E
+kobold_archer at (9, 14) route S N S S N N S N carrying a horn short bow (readied), 12 horn arrows (quivered)
+giant_centipede at (50, 10) route W W W N N N N E W S S S S E E E
 ember_beetle at (4, 12) route N N N S S S N N N S S S N N N S S S
 ember_beetle at (75, 7) route S S W W W W W E W E E E E E N N
-kobold_archer at (5, 15) route S S W W N N N E E W W S S S E E N N carrying a short bow (readied), 20 horn arrows (quivered), an iron cap (being worn)
-giant_centipede at (70, 9) route E E W W E E W W
-bat at (31, 16) route N E E E S S W E N N W W W S
+warg at (5, 15) route S S W W N N N E E W W S S S E E N N
+kobold_archer at (70, 9) route E E W W E E W W carrying a hardwood short bow (readied), 12 tin arrows (quivered)
+dretch at (31, 16) route N E E E S S W E N N W W W S
 dretch at (3, 2) route E W E E S S S N N N W W E W
 ember_beetle at (63, 8) route E E E E E W W W W W
-ogre_zombie at (4, 16) route N N E E W W S S
+orc_raider at (4, 16) route N N E E W W S S carrying a zinc battle axe (wielded), a studded hardened leather jerkin (being worn), a fur cap (being worn)
 bat at (66, 8) route S S W W W E E E N N
-kobold at (32, 17) route W E W N N E W S S E W E carrying a bone spear (wielded)
+kobold_archer at (32, 17) route W E W N N E W S S E W E carrying a short bow (readied), 20 tin arrows (quivered), a copper cap (being worn)
 ember_beetle at (34, 8) route S S W N N S S E N N
 ember_beetle at (4, 6) route N N N N E S N W S S S S
-kobold_archer at (36, 17) route N N E E E S N W W W S S carrying a hardwood short bow (readied), 12 tin arrows (quivered)
+warg at (36, 17) route N N E E E S N W W W S S
 ember_beetle at (71, 9) route E E N N E E S S S N N N W W S S W W
 bat at (73, 9) route W W W N S E E E
-dretch at (5, 4) route S S S W N N N S S S E N N N
-bat at (40, 9) route W E E E E E W W W W W E
+ember_beetle at (5, 4) route S S S W N N N S S S E N N N
+dretch at (40, 9) route W E E E E E W W W W W E
 spear trap at (19, 16)
 alarm trap at (46, 10)
 arrow trap at (50, 11)
 2 placed lights
-special room heavy at (2, 1)-(6, 8)
+special room silent at (2, 1)-(6, 8)
 
   #####
-  #uww#
-  #www#
-  #wwu#         ###########
-  #www#         #(..#.....###                #######
-  #waw#         #...+...h.+.#   #######      #....¡#        #################
-  #¡ww#         #..(#.....#.#   #....¡#      #...[.#        #¡....?ca......a#
+  #uvv#
+  #vvv#
+  #vva#         ###########
+  #vvv#         #(..#.....###                #######
+  #vav#         #...+...h.+.#   #######      #....¡#        #################
+  #¡vv#         #..(#.....#.#   #....¡#      #...[.#        #¡....?ka......a#
   ##+##         ###########.#####.a...########.....#        #..a..b.........#
-   #.#                    #...........'.b....+.....##########.........ca.b..#
-   #.#                    #.#####...a.########^...a.........+...............#
+   #.#                    #...........'.u....+.....##########.........ka.b..#
+   #.#                    #.#####...a.########^...c.........+...............#
    #.#                    #.#   #######      #....^#######.##..........a...¡#
    #a#           #######  #.#                #¡....#     #.####'#############
  ###S#######     #...<¡####.#                #######     #.#  #.#
- #.......c¡#     #.....+....# ###########                #.#  #.#
- #...k.....#######.....####.# #....#.)..#               ##+####+###
- #..Z....).+.....S.^...#  #.# #bk..&..*.#               #..>)....¡#
- #¡........#####.#¡....#  #.# #.k..#k)%a#               #.........#
+ #.......k¡#     #.....+....# ###########                #.#  #.#
+ #...C.....#######.....####.# #....#.)..#               ##+####+###
+ #..o....).+.....S.^...#  #.# #uk..&..*.#               #..>)....¡#
+ #¡........#####.#¡....#  #.# #.k..#C)%a#               #.........#
  ###########   #.####+#####.#####+#######               #¡........#
-               #.................u#                     ###########
+               #.................a#                     ###########
                ####################

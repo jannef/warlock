@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ You open the door.
+ Wat One-Eye says: "'Nother one off the pass? Sit if you like. Standin' costs the same."
+
+
+
+
+
+
+
+                  ┌─ Wat One-Eye ────────────────────────────────────────────────┐
+                  │                                                              │
+                  │ "'Nother one off the pass? Sit if you like. Standin' costs   │
+                  │ the same."                                                   │
+                  │                                                              │
+                  │ > 1  A bounty                                                │
+                  │   2  The Gilde                                               │
+                  │   3  The board                                               │
+                  │                                                              │
+                  │ 1-3 or Enter  ask    Esc  leave                              │
+                  └──────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+ Cēaptūn  ·  HP 22/22  ·  MP 1/1  ·  Lv 1  ·  08:04  ·  11 Darkening  ·  Overcast        ? controls

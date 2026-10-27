@@ -111,7 +111,8 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   sign, `Age 27`, `Born 3 Seedtide 1417`, `Sign Fire Manticore`, then their own scores as
   the rules read them, `Strength 12`, then their caster level, `Caster level 3` (§8 "Spells"),
   then their alignment band, `Alignment Kind` (never the
-  score), then their status effects by name, `Effects Bleeding,
+  score), then each guild they belong to with their rank, `Guild Weyfarers' Gilde, Tin` (§8
+  "Quests", "Guilds"), then their status effects by name, `Effects Bleeding,
   Diseased`, then the diseases they know they have, `Diseases filth fever`), `skills` (the player's trained skills in skill order, `Stealth 17`),
   `weapon_skills` (the player's weapon skills and fighting styles in file order with their rank
   and how far their marks are toward the next, `Long blades 2 (40%)`; at rank 10 the rank alone;
@@ -164,7 +165,8 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   limit}`, the limit in grams), character
   (`{name, race, gender, class, raised, age, born: {year, month, day}, sign: {animal, element}}` or
   null), scores (`stats`, by stat id), the alignment band (`alignment`, its id, or null without
-  alignment rules), trained skills (`skills`, by skill id with their values),
+  alignment rules), the guilds they belong to (`guilds`: `{id, name, rank}`, left out before
+  joining one), trained skills (`skills`, by skill id with their values),
   status effects (`effects`, by id), the diseases they know they have (`diseases`, by id),
   weapon skills and fighting styles (`weapon_skills`, by skill id: `{rank, progress}`, the
   progress a percent or null at rank 10), the styles in use (`styles_in_use`, style ids), the ready attacks (`attacks`: `{source, kind,

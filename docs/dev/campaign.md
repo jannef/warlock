@@ -151,16 +151,19 @@ with no stairs, left by its edge back to that cell (or `<` when no enemy is abou
 docs/dev/overworld.md, the edge exit of a hand-made outdoor level and the quick leave). The map was drawn by a throwaway script and is edited by hand now. Its
 `[[shop]]`s (general store, weaponsmith, armourer, provisioner; keepers named in Old English)
 lay out `[[pile]]`s of goods each kind buys; the Mynster is a `sanctuary` `[[room]]`. The people
-are campaign creature types (`data/creatures/{villager,sister,innkeeper,reeve,mine_factor}.toml`)
+are campaign creature types (`data/creatures/{villager,sister,innkeeper,reeve,mine_factor,guildmaster}.toml`)
 and their words are `data/dialogue/ceaptun.toml`: the `villager` type's one-liners and mutters,
 and the npcs `hild` (Sister Hild: two topics, the `cure` 60 and `mend` 40 services), `godgifu`
-(five rumour topics, never a reveal), `leofric`, and `wulfrun`, each with a proper `name`
+(five rumour topics, never a reveal), `leofric`, `wulfrun`, and `wat` (Wat One-Eye, the
+guildmaster, in the Gildhalle of the south-east corner, `[77, 22, 85, 28]`, its door north on the
+lane and the bounty board, a named place on the wall beside it: `docs/dev/guild.md`), each with a proper `name`
 (`Dialogue::name`: `World::called`, `Content::speaker_name`/`speaker_called`, look mode and the
 dialogue screen through `SeenActor::dialogue`). Their quests are below ("Cēaptūn's quests"). The dev
 scenario `ceaptun` starts on the square (seed 2, a warrior, 60 gold). Tests:
 `world/ceaptun_tests.rs` (the way in and out, the shops' goods, everyone at peace, names, the
 sanctuary and the services, Godgifu's topics, the view snapshot `ceaptun_start`, a replay),
-`ui/look.rs` (Sister Hild's look line), the `dialogue-services` text snapshot.
+`ui/look.rs` (Sister Hild's look line), the `dialogue-services` and `dialogue-guild` text
+snapshots.
 
 ## Cēaptūn's quests (#340; the design's §6.2)
 

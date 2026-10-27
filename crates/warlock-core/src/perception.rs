@@ -1243,6 +1243,12 @@ impl<'a> PerceptionView<'a> {
         self.player.ready_to_throw(self.content)
     }
 
+    /// Where in their inventory the wand the player has ready is (spec §8 "Magic items":
+    /// "Wands"), if any.
+    pub fn ready_wand(&self) -> Option<usize> {
+        self.player.wand_item(self.content)
+    }
+
     /// The digging tool the player has ready (spec §8 "Digging"), if any.
     pub fn ready_to_dig(&self) -> Option<ObjectId> {
         self.player.dig_tool(self.content).map(|(tool, _)| tool)
@@ -1954,9 +1960,25 @@ impl<'a> PerceptionView<'a> {
     }
 }
 
-/// How actor `a` looks by what it is made of (spec §8 "Animated objects"): an animated thing by
-/// its body, its object's glyph in its material's colour; `None` for any other.
+/// How actor `a` looks by what it is made of (spec §8 "Animated objects"): a household thing by
+/// its body, its object's glyph in its material's colour; one of a family by the piece in its
+/// tier's `shown_by` slot, in that piece's colour (and by its glyph with `item_glyph`: a blade
+/// by its weapon's); `None` for any other, or one whose piece is gone.
 fn shape(a: &Actor, content: &Content) -> Option<Shape> {
+    let def = content.creature(a.creature);
+    if let Some(tier) = content.animated().family_tier(def.animated.as_ref()) {
+        let slot = content.slot_id(tier.shown_by.as_deref()?)?;
+        let stack = a.inventory.get(a.equipment.get(slot)?)?;
+        return Some(Shape {
+            glyph: if tier.item_glyph {
+                content.object(stack.object).glyph
+            } else {
+                def.glyph
+            },
+            fg: stack.fg(content),
+            material: stack.parts(content).first()?.material,
+        });
+    }
     let body = content.animated_body(a.creature)?;
     let stack = (a.inventory.iter()).find(|s| s.object == body.object)?;
     let material = stack.parts(content).first()?.material;

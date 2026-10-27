@@ -89,5 +89,7 @@ Tests: `content/tag.rs` (the word rule, the built-in members, the undead check),
 `world/tag_tests.rs` (levels summed, a bled-out one counts, a trap's or another's kill does not,
 the override, `what`, load checks of tag targets and of creature tags); the wiki table is
 `creatures::creature_tags` (`creature-tags.md`).
+**Guilds** and their ranks, derived from these records and named as a quest is given or done,
+are `docs/dev/guild.md`.
 Presentation reads `PerceptionView::quests()` (`QuestView` strings, shared by the log and the
 `quests` dump layer). Creature types have a `plural` for the messages ("3 / 3 giant rats").
