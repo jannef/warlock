@@ -11,3 +11,6 @@ resolution = "auto"
 range = 6
 max_range = 8
 effect = { status = "ill_wished" }
+
+[spell.scales]
+duration = { presence = 50, willpower = 25 }

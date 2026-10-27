@@ -23,8 +23,8 @@
 #   max_length    cone (1 to 5) and line (1 to 20): how far it reaches from the caster
 #                 (touch and self have none of these)
 #   range, radius, length   its reach before Willpower, each where its cap is, 1 to the cap
-#                 (default the cap); the caster's Willpower adds a cell per `reach_step`
-#                 modifier points (../spells.toml) up to the cap. A burst costs by its `radius`
+#                 (default the cap); the caster's `reach` scales add cells (below; Willpower's
+#                 a cell per two modifier points) up to the cap. A burst costs by its `radius`
 #   casts         its time, in `cast` actions (1 to 10; default 1)
 #   open_sky      true: it is cast only under the open sky (default false)
 #   mana          its base mana cost given outright (1 to 500), in place of the tier table's:
@@ -40,8 +40,8 @@
 #     heal        a `heal` spell's hit points: a table as [spell.damage]
 #     status, severity  a `buff`'s status on the caster, a `hex`'s on its target, a `damage`
 #                 spell's on everyone it harms (a status of ../status.toml; severity 1 to 10,
-#                 default 1; a buff's and a hex's grow a degree per `presence_step` of the
-#                 caster's Presence modifier, up to the status's `max`)
+#                 default 1; a buff's and a hex's grow by the caster's `duration` scales
+#                 (below; Presence's a degree per two modifier points), up to the status's `max`)
 #     cures, diseases   a `cleanse` ends these statuses, and with `diseases = true` every
 #                 disease
 #     identify    true: a `utility` spell on `self` that identifies one stack the caster carries
@@ -55,10 +55,24 @@
 #     noise       { sound, loudness } where it goes off (a burst's centre, else the caster)
 #     blast, heat, frost  a burst's, as a scroll's: walls it breaks, ice it melts, water it
 #                 freezes
+#   [spell.scales]  what it grows with (the combat progression design §7): each dimension a
+#                 table of stats (`intelligence`, `willpower`, ...) to weights, 1 to 200, each a
+#                 percent of the stat's modifier, summed. All optional; a dimension left out
+#                 keeps its default, `{}` names no stat:
+#     damage      percent its cap is lifted by, never below 0, at most its tier's `max_lift`
+#                 (../spells.toml); a damage or a heal spell's. Default {}: no lift
+#     to_hit      percent of each modifier added to a damage spell's `attack` or `touch` roll,
+#                 a half rounded toward zero. Default { dexterity = 100 }
+#     reach       percent of a cell of range, length, or a burst's radius per modifier point,
+#                 never below 0, a half rounded down. Default { willpower = 50 }
+#     duration    percent of a degree more of a buff's or a hex's status per modifier point,
+#                 as reach. Default { presence = 50 }
 #   [spell.scroll]  how it comes on a scroll: `level`, the caster level a read casts it at
 #                 (default the tier's comfortable level)
 #
 # The cap, checked when the content loads: no spell may roll more than its tier's ceiling times
 # its resolution's `damage` percent (../spells.toml) in one cast, harm or healing: max_dice times
-# the dice's sides plus the bonus. A bonus is at most a quarter of the tier's ceiling. Nothing in
-# the game pushes a spell past its cap, so a spell over it is refused rather than clamped.
+# the dice's sides plus the bonus. A bonus is at most a quarter of the tier's ceiling. A spell over
+# it is refused rather than clamped. Only a caster's stats lift the cap (`[spell.scales]`
+# `damage`, at most the tier's `max_lift`), and the dice follow: as many more as the lift's room
+# holds. Nothing passes the lifted cap.

@@ -10,10 +10,15 @@
 //! - **The cap** ([`SpellRules::cap`]): no spell may roll more in one cast than its tier's
 //!   ceiling times its resolution's `damage` percent, harm or healing, nor carry a static bonus
 //!   above a quarter of the ceiling. A spell over it is refused when the content loads, so no
-//!   spell can be written past its cap; nothing in the rules lifts one.
+//!   spell can be written past its cap.
+//! - **The lift** ([`SpellRules::lift`], [`SpellRules::lifted_cap`]; the combat progression
+//!   design §7): the stats a spell's `[spell.scales]` names for `damage` lift a caster's cap by
+//!   a percent, at most its tier's `max_lift`, and its dice follow ([`SpellDice::lifted`]); the
+//!   lifted cap is never passed.
 
 use super::effect::EffectShape;
 use super::spell::{Burst, BurstIce, SpellFields, check_effect, default_verb};
+use super::spell_scales::{self as scales, Has, ScalesSpec, SpellScales};
 use super::trap::TrapNoise;
 use super::{Content, ContentError, DamageTypeId, MAX_LEVEL, MAX_SEVERITY, StatusId, duplicate_id};
 use crate::dice::Dice;
@@ -35,9 +40,8 @@ pub const MAX_PER_LEVELS: u8 = 20;
 pub const MAX_CASTS: u8 = 10;
 /// The most mana a spell's explicit `mana` may ask.
 pub const MAX_SPELL_MANA: u16 = 500;
-/// A stat step's default and its largest (`reach_step`, `presence_step`).
-const DEFAULT_STEP: u8 = 2;
-const MAX_STEP: u8 = 10;
+/// The largest `max_lift` a tier may have, in percent of its cap.
+pub const MAX_LIFT: u16 = 200;
 /// The percents a shape's or a resolution's multiplier may be.
 const PERCENTS: std::ops::RangeInclusive<u16> = 1..=1000;
 
@@ -215,8 +219,6 @@ pub struct Ratio {
 #[serde(deny_unknown_fields)]
 struct RulesFile {
     overreach_cost: u16,
-    reach_step: Option<u8>,
-    presence_step: Option<u8>,
     tiers: TiersSpec,
     shapes: ShapesSpec,
     resolution: ResolutionSpec,
@@ -228,6 +230,7 @@ struct TiersSpec {
     comfortable: Vec<u8>,
     cost: Vec<u16>,
     ceiling: Vec<u16>,
+    max_lift: Vec<u16>,
     wand_charges: Vec<u8>,
 }
 
@@ -258,17 +261,15 @@ struct ResolutionSpec {
 pub struct SpellRules {
     /// Percent more mana per tier of overreach.
     pub overreach_cost: u16,
-    /// Willpower modifier points per cell a spell reaches farther, or its area grows (magic
-    /// design §3), never past the spell's own caps.
-    pub reach_step: u8,
-    /// Presence modifier points per degree more of a buff's or a hex's status.
-    pub presence_step: u8,
     /// Each tier's comfortable caster level, tier 0 first: ascending, the first 1.
     pub comfortable: [u8; TIERS],
     /// Each tier's base mana cost: ascending.
     pub cost: [u16; TIERS],
     /// Each tier's damage ceiling for a single-target spell at its highest roll: ascending.
     pub ceiling: [u16; TIERS],
+    /// The most each tier's cap may be lifted by a caster's stats, in percent of it (the combat
+    /// progression design §7): ascending or flat, 0 to [`MAX_LIFT`].
+    pub max_lift: [u16; TIERS],
     /// The charges a wand of each tier's spell is made with (spec §8 "Magic items": "Wands"):
     /// 1 to [`super::MAX_WAND_CHARGES`], never more than the tier below's.
     pub wand_charges: [u8; TIERS],
@@ -320,13 +321,10 @@ impl SpellRules {
         if !PERCENTS.contains(&file.overreach_cost) {
             return Err(err("overreach_cost is 1 to 1000 percent".into()));
         }
-        let (reach_step, presence_step) = (
-            file.reach_step.unwrap_or(DEFAULT_STEP),
-            file.presence_step.unwrap_or(DEFAULT_STEP),
-        );
-        if !(1..=MAX_STEP).contains(&reach_step) || !(1..=MAX_STEP).contains(&presence_step) {
+        ten("max_lift", t.max_lift.len())?;
+        if t.max_lift.iter().any(|l| *l > MAX_LIFT) || t.max_lift.windows(2).any(|w| w[0] > w[1]) {
             return Err(err(format!(
-                "`reach_step` and `presence_step` are 1 to {MAX_STEP}"
+                "tiers: `max_lift` is 0 to {MAX_LIFT} percent, ascending or flat"
             )));
         }
         let s = &file.shapes;
@@ -354,11 +352,10 @@ impl SpellRules {
         let array = |v: &[u16]| -> [u16; TIERS] { v.try_into().expect("checked length") };
         Ok(SpellRules {
             overreach_cost: file.overreach_cost,
-            reach_step,
-            presence_step,
             comfortable: t.comfortable.clone().try_into().expect("checked length"),
             cost: array(&t.cost),
             ceiling: array(&t.ceiling),
+            max_lift: array(&t.max_lift),
             wand_charges: t.wand_charges.clone().try_into().expect("checked length"),
             shapes,
             burst: s.burst.clone(),
@@ -455,18 +452,31 @@ impl SpellRules {
             .max(1)
     }
 
-    /// A reach of `base` cells grown by a Willpower `modifier` (magic design §3): a cell per
-    /// `reach_step` points of a positive modifier, never past `cap`.
-    pub fn grown(&self, base: i32, cap: i32, modifier: i32) -> i32 {
-        (base + modifier.max(0) / i32::from(self.reach_step)).min(cap.max(base))
+    /// A reach of `base` cells grown by `more` (its `reach` scales' cells; magic design §3),
+    /// never past `cap`.
+    pub fn grown(base: i32, cap: i32, more: i32) -> i32 {
+        (base + more.max(0)).min(cap.max(base))
     }
 
-    /// The degrees of a buff's or a hex's status, `severity` lengthened by a Presence
-    /// `modifier`: a degree per `presence_step` points of a positive modifier (the status's own
-    /// `max` holds it when it is given).
-    pub fn lengthened(&self, severity: u16, modifier: i32) -> u16 {
-        let more = u16::try_from(modifier.max(0) / i32::from(self.presence_step)).unwrap_or(0);
+    /// The degrees of a buff's or a hex's status, `severity` lengthened by `more` (its
+    /// `duration` scales' degrees; the status's own `max` holds it when it is given).
+    pub fn lengthened(severity: u16, more: i32) -> u16 {
+        let more = u16::try_from(more.max(0)).unwrap_or(u16::MAX);
         severity.saturating_add(more).min(MAX_SEVERITY)
+    }
+
+    /// The percent a caster's stats lift the cap of a spell of `tier` by: `raised` (its
+    /// `damage` scales' sum, [`super::Weights::sum`]) never below 0, never past the tier's
+    /// `max_lift` plus `more` (Keen mind's, for its school).
+    pub fn lift(&self, tier: u8, raised: i32, more: i32) -> i32 {
+        let most = i32::from(self.max_lift[usize::from(tier).min(TIERS - 1)]) + more.max(0);
+        raised.clamp(0, most)
+    }
+
+    /// `spell`'s cap lifted by `lift` percent ([`SpellRules::lift`]): `cap_of × (100 + lift) /
+    /// 100`, rounded down. The most a cast of it by that caster does to one target.
+    pub fn lifted_cap(&self, spell: &SpellData, lift: i32) -> i32 {
+        self.cap_of(spell) * (100 + lift.max(0)) / 100
     }
 
     /// The most `spell` may do to one target in one cast: its tier's cap for its resolution.
@@ -509,6 +519,7 @@ struct SpellSpec {
     effect: Option<EffectSpec>,
     cast: Option<CastSpec>,
     scroll: Option<ScrollSpec>,
+    scales: Option<ScalesSpec>,
 }
 
 #[derive(Deserialize)]
@@ -580,12 +591,33 @@ impl SpellDice {
     /// What it rolls at `caster_level` for a spell whose tier is comfortable at `comfortable`:
     /// its dice, one more per `per_levels` levels above that, never more than `max_dice`.
     pub fn at(&self, caster_level: i32, comfortable: u8) -> Dice {
+        self.of(self.count_at(caster_level, comfortable))
+    }
+
+    /// [`SpellDice::at`] for a caster whose stats lift the spell's `cap` to `lifted`
+    /// ([`SpellRules::lifted_cap`]): as many dice more as the lift's room holds, `(lifted −
+    /// bonus) / sides − (cap − bonus) / sides`, each rounded down. Its most never passes
+    /// `lifted` (the unlifted dice never pass `cap`, checked on load); no lift, no change.
+    pub fn lifted(&self, caster_level: i32, comfortable: u8, (cap, lifted): (i32, i32)) -> Dice {
+        let (bonus, sides) = (i32::from(self.bonus), i32::from(self.sides.max(1)));
+        let room = |c: i32| (c - bonus).max(0) / sides;
+        let more = (room(lifted) - room(cap)).max(0);
+        self.of(self.count_at(caster_level, comfortable) + more)
+    }
+
+    /// Its dice at `caster_level`: one more per `per_levels` above `comfortable`, never more
+    /// than `max_dice`.
+    fn count_at(&self, caster_level: i32, comfortable: u8) -> i32 {
         let above = (caster_level - i32::from(comfortable)).max(0);
         let more = match self.per_levels {
             0 => 0,
             n => above / i32::from(n),
         };
-        let count = (i32::from(self.count) + more).min(i32::from(self.max_dice));
+        (i32::from(self.count) + more).min(i32::from(self.max_dice))
+    }
+
+    /// `count` of its dice, with its bonus.
+    fn of(&self, count: i32) -> Dice {
         Dice::of(count.unsigned_abs(), u32::from(self.sides)).plus(i32::from(self.bonus))
     }
 }
@@ -666,6 +698,8 @@ pub struct SpellData {
     pub effect: SpellEffect,
     /// The caster level a read of its scroll casts it at, if it comes on a scroll.
     pub scroll_level: Option<u8>,
+    /// What it grows with (`[spell.scales]`; the defaults where it is silent).
+    pub scales: SpellScales,
 }
 
 impl SpellData {
@@ -891,6 +925,14 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
             Some(level)
         }
     };
+    let has = Has {
+        roll: damage.is_some() || effect.heal.is_some(),
+        attack: spec.kind == SpellPurpose::Damage
+            && matches!(spec.resolution, Resolution::Attack | Resolution::Touch),
+        reach: !matches!(shape, Shape::Touch | Shape::Myself),
+        status: matches!(spec.kind, SpellPurpose::Buff | SpellPurpose::Hex),
+    };
+    let scales = scales::resolve(spec.scales, &has)?;
     let look = look(spec.cast, shape, radius, damage_type, content)?;
     let look = SpellLook {
         noun: look.noun.unwrap_or_else(|| spec.name.to_lowercase()),
@@ -919,6 +961,7 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
         damage,
         effect,
         scroll_level,
+        scales,
     })
 }
 
@@ -1348,6 +1391,21 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
                 "touch = { damage = 120, cost = 0 }",
                 "resolution",
             ),
+            (
+                "max_lift = [40, 50, 60, 70, 80, 80, 80, 80, 80, 80]",
+                "max_lift = [40, 50, 60, 70, 80, 70, 80, 80, 80, 80]",
+                "`max_lift` is 0 to 200 percent, ascending or flat",
+            ),
+            (
+                "max_lift = [40, 50, 60, 70, 80, 80, 80, 80, 80, 80]",
+                "max_lift = [40, 50, 60, 70, 80, 80, 80, 80, 80, 201]",
+                "`max_lift` is 0 to 200 percent",
+            ),
+            (
+                "overreach_cost = 50",
+                "overreach_cost = 50\nreach_step = 2",
+                "unknown field `reach_step`",
+            ),
         ] {
             let text = SHIPPED.replace(from, to);
             assert_ne!(text, SHIPPED, "{from}");
@@ -1530,6 +1588,131 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
     }
 
     #[test]
+    fn a_lift_adds_the_dice_its_room_holds_and_no_lift_changes_nothing() {
+        let d = SpellDice {
+            count: 2,
+            sides: 6,
+            per_levels: 4,
+            max_dice: 3,
+            bonus: 0,
+        };
+        // Fireball (cap 19): lifted 50 % to 28 a die more, 70 % to 32 two (the design's §7.3).
+        let lifted = |level, to| d.lifted(level, 12, (19, to)).to_string();
+        assert_eq!(
+            [
+                lifted(12, 19),
+                lifted(12, 28),
+                lifted(16, 28),
+                lifted(60, 32)
+            ],
+            ["2d6", "3d6", "4d6", "5d6"]
+        );
+        for level in [1, 12, 16, 60] {
+            assert_eq!(d.lifted(level, 12, (19, 19)), d.at(level, 12), "no lift");
+            assert!(
+                d.lifted(level, 12, (19, 32)).max() <= 32,
+                "within the lifted cap"
+            );
+        }
+        // A bonus takes its room: 1d6+4 under a cap of 10 lifted to 15 holds no die more, to 16
+        // one.
+        let b = SpellDice {
+            count: 1,
+            sides: 6,
+            per_levels: 0,
+            max_dice: 1,
+            bonus: 4,
+        };
+        assert_eq!(b.lifted(1, 1, (10, 15)).to_string(), "1d6+4");
+        assert_eq!(b.lifted(1, 1, (10, 16)).to_string(), "2d6+4");
+    }
+
+    #[test]
+    fn the_lift_is_never_below_0_nor_past_the_tiers_most() {
+        let r = rules();
+        assert_eq!(r.max_lift, [40, 50, 60, 70, 80, 80, 80, 80, 80, 80]);
+        assert_eq!(
+            [r.lift(3, -20, 0), r.lift(3, 50, 0), r.lift(3, 110, 0)],
+            [0, 50, 70]
+        );
+        assert_eq!(r.lift(3, 110, 10), 80, "Keen mind's 10 points more");
+        let list = spells(FIRST_LIST).expect("valid");
+        let fireball = list.iter().find(|s| s.id == "fireball").expect("fireball");
+        assert_eq!(
+            [r.lifted_cap(fireball, 0), r.lifted_cap(fireball, 70)],
+            [19, 32]
+        );
+    }
+
+    #[test]
+    fn scales_default_to_the_old_steps_and_are_checked() {
+        let list = spells(FIRST_LIST).expect("valid");
+        assert_eq!(
+            list[0].scales,
+            SpellScales::default(),
+            "silent: the defaults"
+        );
+        // The defaults are the retired steps: a cell or a degree per two points of a positive
+        // modifier, to-hit by Dexterity, no lift.
+        let d = SpellScales::default();
+        for score in 1..=40u8 {
+            let mut scores = crate::stats::PerStat::splat(10);
+            scores[crate::stats::Stat::Willpower] = score;
+            scores[crate::stats::Stat::Presence] = score;
+            scores[crate::stats::Stat::Dexterity] = score;
+            let stats = crate::stats::Stats::new(scores, crate::stats::PerStat::splat(40));
+            let m = crate::stats::modifier(i32::from(score));
+            assert_eq!(d.reach.steps(&stats), m.max(0) / 2, "reach at {score}");
+            assert_eq!(d.duration.steps(&stats), m.max(0) / 2, "degrees at {score}");
+            assert_eq!(d.to_hit.signed(&stats), m, "to-hit at {score}");
+            assert_eq!(d.damage.sum(&stats), 0);
+        }
+        let ray = |scales: &str| {
+            format!(
+                "[[spell]]\nid = \"ray\"\nname = \"Ray\"\ndescription = \"x\"\ntier = 2\n\
+                 school = \"evocation\"\nkind = \"damage\"\nshape = \"ray\"\n\
+                 resolution = \"attack\"\ndamage_type = \"fire\"\nmax_range = 8\n\
+                 damage = {{ dice = \"3d6\" }}\n[spell.scales]\n{scales}\n"
+            )
+        };
+        let ok = spells(&ray(
+            "damage = { intelligence = 10, willpower = 5 }\nto_hit = {}",
+        ))
+        .expect("valid");
+        let stats: Vec<_> = ok[0].scales.damage.iter().collect();
+        use crate::stats::Stat;
+        assert_eq!(stats, [(Stat::Intelligence, 10), (Stat::Willpower, 5)]);
+        assert!(ok[0].scales.to_hit.is_empty(), "`{{}}`: no stat aims it");
+        assert_eq!(ok[0].scales.reach, SpellScales::default().reach, "left out");
+        for (scales, why) in [
+            ("damage = { wits = 10 }", "unknown stat `wits`"),
+            ("damage = { intelligence = 0 }", "weights are 1 to 200"),
+            ("reach = { willpower = 201 }", "weights are 1 to 200"),
+            ("duration = { presence = 50 }", "no `duration`"),
+            ("speed = { presence = 50 }", "unknown field `speed`"),
+        ] {
+            let e = spells(&ray(scales)).unwrap_err();
+            assert!(e.message.contains(why), "{scales}: {}", e.message);
+        }
+        // An auto spell has no attack roll to aim; a touch has no reach to grow.
+        let spark = FIRST_LIST.replace(
+            "damage = { dice = \"1d4\" }\n",
+            "damage = { dice = \"1d4\" }\nscales = { to_hit = { intelligence = 100 } }\n",
+        );
+        assert_ne!(spark, FIRST_LIST);
+        let e = spells(&spark).unwrap_err();
+        assert!(e.message.contains("no `to_hit`"), "{}", e.message);
+        // The cap check stays the unlifted one: a lift in the file lets nothing more be written.
+        let over = ray("damage = { intelligence = 10 }").replace("3d6", "4d6");
+        let e = spells(&over).unwrap_err();
+        assert!(
+            e.message.contains("over tier 2's cap of 18"),
+            "{}",
+            e.message
+        );
+    }
+
+    #[test]
     fn a_cast_costs_by_tier_overreach_shape_resolution_and_armour() {
         let r = rules();
         let list = spells(FIRST_LIST).expect("the first list");
@@ -1561,17 +1744,22 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
     }
 
     #[test]
-    fn willpower_grows_reach_to_the_cap_and_presence_adds_degrees() {
-        let r = rules();
-        assert_eq!(r.reach_step, 2);
-        // A range of 6 capped at 8: a cell per two points of a positive modifier.
-        let grown: Vec<i32> = [-3, 0, 1, 2, 4, 9]
+    fn reach_grows_to_the_cap_and_degrees_add_up() {
+        // A range of 6 capped at 8, grown by the cells the scales give.
+        let grown: Vec<i32> = [-1, 0, 1, 2, 4]
             .iter()
-            .map(|&m| r.grown(6, 8, m))
+            .map(|&more| SpellRules::grown(6, 8, more))
             .collect();
-        assert_eq!(grown, [6, 6, 6, 7, 8, 8]);
-        assert_eq!(r.grown(3, 3, 9), 3, "no cap above the base: no growth");
-        let degrees: Vec<u16> = [-2, 1, 2, 5].iter().map(|&m| r.lengthened(1, m)).collect();
+        assert_eq!(grown, [6, 6, 7, 8, 8]);
+        assert_eq!(
+            SpellRules::grown(3, 3, 4),
+            3,
+            "no cap above the base: no growth"
+        );
+        let degrees: Vec<u16> = [-1, 0, 1, 2]
+            .iter()
+            .map(|&more| SpellRules::lengthened(1, more))
+            .collect();
         assert_eq!(degrees, [1, 1, 2, 3]);
     }
 

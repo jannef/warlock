@@ -22,3 +22,6 @@ message = "A ball of flame leaps from your hands!"
 blast = 1000
 heat = true
 noise = { sound = "explosion", loudness = 150 }
+
+[spell.scales]
+damage = { intelligence = 10, willpower = 5 }

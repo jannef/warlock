@@ -11,6 +11,11 @@
 #   ceiling      the greatest damage a single-target spell of the tier may do in one cast at its
 #                highest roll; ascending. The load-time check (spells/README.toml) holds every
 #                spell under its tier's ceiling times its resolution's `damage` percent
+#   max_lift     the most a caster's stats may lift a spell's damage cap (the combat progression
+#                design §7): a percent of the cap, 0 to 200, ascending or flat. A spell's
+#                `[spell.scales]` `damage` weights (spells/README.toml) sum to the lift; the
+#                caster's cap is the spell's × (100 + lift) / 100, rounded down, and its dice
+#                follow it up. Keen mind lifts it 10 points higher for its school or element
 #   wand_charges the charges a wand of a spell of the tier is made with (spec §8 "Magic items":
 #                "Wands"; a wand's own `charges` may say otherwise): 1 to 99, never more than
 #                the tier below's. Wands are never recharged
@@ -18,10 +23,9 @@
 # overreach_cost  percent more mana per tier a spell is above the caster's level's tier (50: one
 #                 tier over costs half again, two tiers double)
 #
-# reach_step     Willpower modifier points per cell a spell reaches farther (range, a burst's
-#                radius, a cone's or a line's length), never past the spell's own caps
-# presence_step  Presence modifier points per degree more of a buff's or a hex's status (its
-#                `max` holds it)
+# What the stats do to reach, duration, and to-hit is each spell's own `[spell.scales]`
+# (spells/README.toml); without it, Willpower grows reach and Presence a status's degrees (a step
+# per two points of the modifier), and an attack aims with Dexterity.
 #
 # A cast's mana (the one cost, magic design §5): the tier's `cost`, × (1 + overreach_cost % per
 # tier above the caster level's tier), × its shape's percent (a burst's at its radius), × its
@@ -43,13 +47,12 @@
 # First guesses, to be tuned by play (the magic design §12).
 
 overreach_cost = 50
-reach_step = 2
-presence_step = 2
 
 [tiers]
 comfortable = [1, 3, 6, 12, 18, 25, 32, 40, 50, 60]
 cost = [1, 3, 6, 11, 16, 22, 29, 37, 46, 56]
 ceiling = [6, 12, 18, 24, 32, 40, 50, 62, 76, 90]
+max_lift = [40, 50, 60, 70, 80, 80, 80, 80, 80, 80]
 wand_charges = [15, 12, 9, 7, 5, 4, 3, 3, 2, 2]
 
 [shapes]

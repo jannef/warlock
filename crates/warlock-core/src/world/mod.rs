@@ -115,6 +115,7 @@ mod element_gifts;
 mod equip;
 mod experience;
 mod eyes;
+mod feature;
 mod fight;
 mod flavour;
 mod focus;
@@ -170,6 +171,7 @@ mod sign_picks;
 mod skill_roll;
 mod spawn;
 mod spell;
+mod spell_scale;
 mod stars;
 mod stat_training;
 mod status;
@@ -495,6 +497,9 @@ pub struct World {
     /// The game time of the last perception (not saved: a loaded world has just perceived its
     /// moment): the birthday's note looks for the dawn between it and now.
     perceived_at: GameTime,
+    /// Where the player stood at the last perception (`feature.rs`; not saved): arriving
+    /// elsewhere names a feature of the ground there.
+    stood_on: feature::StoodOn,
 }
 
 /// How much time an action took.
@@ -767,6 +772,9 @@ impl World {
         if let Some(text) = enter_room(&mut state, &content) {
             state.messages.push(0, text);
         }
+        if let Some(text) = feature::feature_line(&state, &content) {
+            state.messages.push(0, text);
+        }
         let mut world = Self::assemble(content, state);
         if world.settle_in() {
             *world.perception =
@@ -885,6 +893,7 @@ impl World {
         let perception = Box::new(Perception::compute(&state, &content, &mut lights));
         perception.remember(state.current_mut());
         let time = state.time;
+        let stood_on = feature::standing(&state);
         let labels = Labels::draw(&content, state.seed);
         Self {
             content,
@@ -904,6 +913,7 @@ impl World {
             mutters: Vec::new(),
             resting: false,
             perceived_at: time,
+            stood_on,
         }
     }
 
@@ -1355,6 +1365,8 @@ mod element_gift_tests;
 mod equip_tests;
 #[cfg(test)]
 mod experience_tests;
+#[cfg(test)]
+mod feature_tests;
 #[cfg(test)]
 mod fight_tests;
 #[cfg(test)]

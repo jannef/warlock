@@ -20,3 +20,6 @@ noun = "frost"
 verb = "bites"
 message = "Bitter cold bursts from your hands!"
 frost = 100
+
+[spell.scales]
+damage = { intelligence = 10, willpower = 5 }
