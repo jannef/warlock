@@ -47,7 +47,7 @@ or +1000.
 - **Corpses**: eating a corpse of your own race, or of someone who talks and meant you no harm,
   is very evil, fresh or rotten.
 - **Quests** that help someone are a little good; a dark errand would be evil.
-- **Consecrating** a cursed or draining place (the priest's and the paladin's Consecrate, see
+- **Consecrating** a cursed, draining, or haunted place (the priest's and the paladin's Consecrate, see
   [Special rooms](special-rooms.md)) is good.
 
 {{#include generated/alignment-quests.md}}
