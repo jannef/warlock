@@ -107,7 +107,8 @@ fn one_type_per_level_in_a_row_one_family() {
     let defs = content.creature_defs();
     let last = (content.animated().bodies.last()).map(|b| format!("animated_{}", b.spec.id));
     assert_eq!(Some(&defs[usize::from(first.0) - 1].id), last.as_ref());
-    assert!(defs[usize::from(first.0) + 16].campaign.is_some());
+    // The next tier's run follows (#486).
+    assert_eq!(defs[usize::from(first.0) + 16].id, "animated_armour_12");
 }
 
 #[test]

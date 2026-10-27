@@ -30,7 +30,8 @@ temperature = 10
 # vault at depth 12), so a run meets it there and nowhere else. Its ogres (the ogre, the mauler,
 # and the mage) are the giant tribe's least (#457); the giants live deeper than this.
 # The hill trolls (#456) come down from the hills above to the troll's warm deep. The duergar
-# smiths' work wakes: blades that dance alone (#485, the family `animated_blade`).
+# smiths' work wakes: blades that dance alone (#485, the family `animated_blade`) and suits of
+# armour with nobody inside (#486, `animated_armour`, level 12 and more: out of depth at first).
 # The rest of the duergar (#518) up to danger 19 hold their own mine: the slinger, the
 # crossbowman, the veteran, and the priest; the hulk and those above wait for deeper places.
 danger = 8
@@ -46,7 +47,7 @@ population = [
     "hobgoblin_sergeant", "hobgoblin_captain",
     "warg", "orc_raider", "orc_shaman", "orc_berserker", "orc_veteran", "orc_bowman",
     "orc_war_chief",
-    "animated_blade",
+    "animated_blade", "animated_armour",
 ]
 # How many: the default, 35 a thousand walkable cells, 25 to 80. A gallery floor (about 350 cells)
 # gets the least, 25, as Cealdhlāw's passages do; the deep workings (about 3 000) the ceiling, 80.

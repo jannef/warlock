@@ -1,0 +1,66 @@
+# The drow (#519; content::drow_roster_tests checks the numbers).
+# The matron mother of a drow house, its eldest priestess and its law, centuries old
+# and steeped in her goddess's favour: prayers from afar (announced only), a scourge of
+# serpents, and the house's treasure about her. A population draws her at most once a run.
+[[creature]]
+id = "drow_matron"
+level = 50
+xp = 260
+unique = true
+rarity = "very_rare"
+loot = 100
+name = "drow matron"
+glyph = "e"
+fg = "#f4b0e0"
+speed = 1100
+faction = "drow"
+tags = ["drow", "caster", "priest"]
+alignment = "evil"
+race = "drow"
+vision = "darkvision"
+combat = "caster"
+range = 8
+opens_doors = true
+footsteps = 70
+hearing = 14
+weight = 57000
+stats = { strength = 28, dexterity = 24, toughness = 31, intelligence = 34, willpower = 34, presence = 34 }
+base_hp = 100
+skills = { concentration = 130, spellcraft = 135 }
+resist = { poison = 50 }
+on_eat = { message = "Lean and bitter, with an aftertaste of old poisons.", vomit = 40 }
+[creature.attack]
+damage = "4d8"
+damage_type = "slashing"
+name = "scourge"
+verb = "lashes"
+to_hit = 5
+on_hit = [{ status = "poisoned", chance = 35, severity = 5 }, { status = "weakened", chance = 20, severity = 2 }]
+# Its gear (spec §8 "Creature gear"): armour and coins, never a weapon (its venom rides on
+# its natural attack, which a wielded weapon would replace).
+[[creature.gear]]
+chance = 100
+one_of = ["chain_mail"]
+magic = 75
+[[creature.gear]]
+chance = 100
+one_of = ["gold_amulet"]
+magic = 75
+[[creature.gear]]
+chance = 60
+one_of = ["gold_ring"]
+magic = 75
+[[creature.gear]]
+chance = 100
+one_of = ["gold_coin*20"]
+[[creature.particles]]
+on = "attack"
+glyphs = "·*+"
+colors = ["#fff0fa", "#f4b0e0", "#702050"]
+count = 6
+life = 0.45
+spread = [1.0, 1.0]
+area = [0.15, 0.15]
+scale = 0.5
+fade = 0.6
+glow = 0.5

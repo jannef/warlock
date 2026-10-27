@@ -380,6 +380,9 @@ pub enum TalentEffect {
     /// What an animated thing is made of falls whole this percent more often when it dies, whoever
     /// made the kill (Salvager; spec §8 "Animated objects").
     SalvagePercent { value: i32 },
+    /// Look mode tells when anything an animated thing is made of is magic: "It hums with
+    /// power." (Appraiser's eye; spec §8 "Animated objects").
+    AppraiseAnimated,
     /// Item descriptions show what its things are worth.
     ItemWorth,
     /// Item descriptions show what each gem in a thing is worth.
@@ -1759,6 +1762,7 @@ impl TalentEffect {
             | TalentEffect::Scavenger
             | TalentEffect::ItemWorth
             | TalentEffect::GemWorth
+            | TalentEffect::AppraiseAnimated
             | TalentEffect::MakeWay
             | TalentEffect::Distrusted
             | TalentEffect::ExactSounds

@@ -157,6 +157,15 @@ pub struct Tier {
     pub rare: Option<Ramp>,
     /// Its ranks by level in the weapon skill of what it wields.
     pub weapon_rank: Option<Ramp>,
+    /// Its ranks by level in the fighting style of a weapon and a shield (Sword and board),
+    /// while it holds both.
+    pub shield_rank: Option<Ramp>,
+    /// A family's own blow, its dice by the tier's formula (hollow armour's gauntlets); none:
+    /// it wields what it fights with.
+    pub attack: Option<BodyAttack>,
+    /// Whether its types open doors (gauntlets).
+    #[serde(default)]
+    pub opens_doors: bool,
     /// A family's id (`animated_blade`): what populations, kill quests, and first kills name.
     #[serde(skip)]
     pub family: String,
@@ -197,7 +206,9 @@ impl Ramp {
 }
 
 /// One line of what a family's creature is made of: a piece for `slot`, drawn among the base
-/// items of `classes`, by `chance` in percent.
+/// items of `classes`, by `chance` in percent; only for types of level `from` or more, and tried
+/// `count` times (a ring for each hand: each further piece goes to a free slot of the kind
+/// `slot` is, `fits`).
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SlotLine {
@@ -205,18 +216,32 @@ pub struct SlotLine {
     pub classes: Vec<String>,
     #[serde(default = "always")]
     pub chance: u8,
+    #[serde(default)]
+    pub from: u8,
+    #[serde(default = "one")]
+    pub count: u8,
 }
 
 fn always() -> u8 {
     100
 }
 
+fn one() -> u8 {
+    1
+}
+
 /// A [`SlotLine`] resolved.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Line {
+    /// The slot it fills first.
     pub slot: SlotId,
+    /// The slots its pieces may go to, `slot` first: those of the kind it is when it is tried
+    /// more than once (the ring slots), else `slot` alone.
+    pub slots: Vec<SlotId>,
     pub classes: Vec<ItemClassId>,
     pub chance: u8,
+    pub from: u8,
+    pub count: u8,
 }
 
 /// A household body's blow, as its file writes it: its dice come from the tier's formula.
@@ -322,9 +347,11 @@ impl Animated {
         let mut tiers = rules.tier;
         for tier in &mut tiers {
             let [from, to] = tier.levels;
-            if tier.bodies && (!tier.slots.is_empty() || tier.creature.is_some()) {
+            if tier.bodies
+                && (!tier.slots.is_empty() || tier.creature.is_some() || tier.attack.is_some())
+            {
                 return Err(err(format!(
-                    "tier `{}`: a tier of bodies has no `creature` or `slots`",
+                    "tier `{}`: a tier of bodies has no `creature`, `slots`, or `attack`",
                     tier.id
                 )));
             }
@@ -488,6 +515,17 @@ impl Animated {
             .collect();
         table.insert("resist".into(), toml::Value::Table(resist));
         table.insert("dies".into(), s(&tier.dies));
+        if tier.opens_doors {
+            table.insert("opens_doors".into(), toml::Value::Boolean(true));
+        }
+        if let Some(blow) = &tier.attack {
+            let mut attack = toml::Table::new();
+            attack.insert("damage".into(), s(numbers.dice));
+            attack.insert("damage_type".into(), s(&blow.damage_type));
+            attack.insert("name".into(), s(&blow.name));
+            attack.insert("verb".into(), s(&blow.verb));
+            table.insert("attack".into(), toml::Value::Table(attack));
+        }
         let mut spec: CreatureSpec = toml::Value::Table(table)
             .try_into()
             .map_err(|e: toml::de::Error| e.to_string())?;
@@ -643,16 +681,36 @@ fn family_lines(tier: &Tier, content: &Content) -> Result<Vec<Line>, String> {
                     .ok_or_else(|| format!("tier `{id}`: unknown class `{c}`"))
             })
             .collect::<Result<Vec<_>, _>>()?;
-        if line.chance > 100 || classes.is_empty() {
+        if line.chance > 100 || classes.is_empty() || !(1..=4).contains(&line.count) {
             return Err(format!(
-                "tier `{id}`: slot `{}`: `chance` is 0 to 100, and `classes` not empty",
+                "tier `{id}`: slot `{}`: `chance` is 0 to 100, `count` 1 to 4, and `classes` not \
+                 empty",
                 line.slot
             ));
         }
+        // Tried more than once, its pieces go to the slots of its slot's kind (`fits`).
+        let kind = content.slot(slot).fits.clone();
+        let mut slots = vec![slot];
+        if line.count > 1 {
+            slots.extend(
+                (content.slot_ids())
+                    .map(|(s, _)| s)
+                    .filter(|&s| s != slot && content.slot(s).fits == kind),
+            );
+            if slots.len() < usize::from(line.count) {
+                return Err(format!(
+                    "tier `{id}`: slot `{}`: `count` {} needs as many slots of its kind",
+                    line.slot, line.count
+                ));
+            }
+        }
         lines.push(Line {
             slot,
+            slots,
             classes,
             chance: line.chance,
+            from: line.from,
+            count: line.count,
         });
     }
     if let Some(shown) = &tier.shown_by

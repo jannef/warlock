@@ -1,0 +1,60 @@
+# The drow (#519; content::drow_roster_tests checks the numbers).
+# A high priestess of the spider goddess, second only to the matron of her house:
+# prayers from afar (announced only) and a scourge whose snakes sicken and weaken.
+[[creature]]
+id = "drow_high_priestess"
+level = 44
+xp = 230
+rarity = "very_rare"
+loot = 75
+name = "drow high priestess"
+glyph = "e"
+fg = "#e04a6a"
+speed = 1100
+faction = "drow"
+tags = ["drow", "caster", "priest"]
+alignment = "evil"
+race = "drow"
+vision = "darkvision"
+combat = "caster"
+range = 7
+opens_doors = true
+footsteps = 70
+hearing = 14
+weight = 56000
+stats = { strength = 26, dexterity = 23, toughness = 29, intelligence = 32, willpower = 32, presence = 32 }
+base_hp = 88
+skills = { concentration = 118, spellcraft = 123 }
+resist = { poison = 50 }
+on_eat = { message = "Lean and bitter, with an aftertaste of old poisons.", vomit = 40 }
+[creature.attack]
+damage = "4d8"
+damage_type = "slashing"
+name = "scourge"
+verb = "lashes"
+to_hit = 4
+on_hit = [{ status = "poisoned", chance = 30, severity = 4 }, { status = "weakened", chance = 15, severity = 2 }]
+# Its gear (spec §8 "Creature gear"): armour and coins, never a weapon (its venom rides on
+# its natural attack, which a wielded weapon would replace).
+[[creature.gear]]
+chance = 90
+one_of = ["chain_mail"]
+magic = 50
+[[creature.gear]]
+chance = 80
+one_of = ["gold_amulet"]
+magic = 60
+[[creature.gear]]
+chance = 80
+one_of = ["gold_coin*10"]
+[[creature.particles]]
+on = "attack"
+glyphs = "·*+"
+colors = ["#ffd8e0", "#e04a6a", "#601a2a"]
+count = 6
+life = 0.45
+spread = [1.0, 1.0]
+area = [0.15, 0.15]
+scale = 0.5
+fade = 0.6
+glow = 0.5
