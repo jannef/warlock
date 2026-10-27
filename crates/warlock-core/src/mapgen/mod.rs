@@ -34,6 +34,7 @@
 mod caves;
 mod connect;
 mod den;
+mod dress;
 mod hoard;
 pub mod local;
 mod population;
@@ -198,6 +199,9 @@ pub(crate) struct Canvas<'a> {
     /// Whether the level has a danger (some effects need one) and another level below it.
     pub danger: bool,
     pub below: bool,
+    /// The level's least danger (for a player of level 1; 0 without one): a den with its own
+    /// population needs a type of it that weighs something there (`den::peopled`).
+    pub least: u8,
     /// The branch's own population: a den kind that names factions needs one of them in it
     /// (`den::peopled`).
     pub population: &'a [CreatureId],
@@ -236,6 +240,7 @@ impl<'a> Canvas<'a> {
             pervading: None,
             danger: false,
             below: false,
+            least: 0,
             population: &[],
             shops: Vec::new(),
             stamped: Grid::new(width, height, false),
@@ -451,6 +456,9 @@ pub fn generate_for(
         let size = (plan.width, plan.height);
         let mut canvas = Canvas::new(content, pal, odds, vaults, size);
         canvas.danger = content.spawning(id).is_some();
+        canvas.least = content
+            .spawning(id)
+            .map_or(0, |(rule, depth, _)| rule.at(depth, 1));
         canvas.population = content.spawning(id).map_or(&[], |(_, _, s)| &s.population);
         canvas.below = needs.down;
         let built = match plan.generator {
@@ -795,6 +803,8 @@ mod cealdhlaw_tests;
 mod fennmynster_tests;
 #[cfg(test)]
 mod fyrdelf_tests;
+#[cfg(test)]
+mod homes_tests;
 #[cfg(test)]
 mod lairs_tests;
 #[cfg(test)]

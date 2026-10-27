@@ -91,7 +91,8 @@ pub(super) fn pick(canvas: &Canvas, rng: &mut Rng, cells: usize) -> Option<(Room
     let effects = canvas.content.room_effects();
     let (danger, below) = (canvas.danger, canvas.below);
     let peopled = |e: &RoomEffectDef| {
-        (e.swarm.as_ref()).is_none_or(|s| super::den::peopled(canvas.content, s, canvas.population))
+        (e.swarm.as_ref())
+            .is_none_or(|s| super::den::peopled(canvas.content, s, canvas.population, canvas.least))
     };
     let id = draw(effects, canvas.room_odds, rng, |e| {
         e.eligible(cells, danger, below) && peopled(e)
@@ -103,7 +104,8 @@ pub(super) fn pick(canvas: &Canvas, rng: &mut Rng, cells: usize) -> Option<(Room
 
 /// Makes `room` special as [`pick`] decided: it covers the level when `whole`, else it is
 /// [`make`], with its hidden side drawn first if its effect has `sides` (one good to two neutral
-/// to one evil; one more draw, only for such an effect).
+/// to one evil; one more draw, only for such an effect), and its dressing stood along its walls
+/// after if it has `dressing` (`dress.rs`; more draws, only for such an effect).
 pub(super) fn place(
     canvas: &mut Canvas,
     rng: &mut Rng,
@@ -121,7 +123,16 @@ pub(super) fn place(
             _ => Alignment::Neutral,
         });
     }
-    make(canvas, room)
+    let dressing = canvas.content.room_effect(room.effect).dressing;
+    if !make(canvas, room) {
+        return false;
+    }
+    if let Some(dressing) = dressing
+        && let Some(room) = canvas.rooms.last().cloned()
+    {
+        super::dress::dress(canvas, rng, &room, dressing);
+    }
+    true
 }
 
 /// Makes `room` special, laying its effect's floor over the plain floor in it: unless it
@@ -208,7 +219,7 @@ fn feature_cell(canvas: &Canvas, room: &SpecialRoom) -> Option<Pos> {
 }
 
 /// Whether `cells` less `without` are all joined to each other, 4-connected.
-fn joined(cells: &[Pos], without: Pos) -> bool {
+pub(super) fn joined(cells: &[Pos], without: Pos) -> bool {
     let open: Vec<Pos> = cells.iter().copied().filter(|&p| p != without).collect();
     let Some(&first) = open.first() else {
         return true;
