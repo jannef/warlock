@@ -74,19 +74,21 @@ fn every(seconds: u32) -> String {
     }
 }
 
-/// The creatures' natural attacks a hit with which may cause `what` (an `on_hit` entry it
-/// matches; `what` returns what to add after the chance), by creature name: "the giant rat's
-/// bite (10%, 2 degrees)".
+/// The creatures' natural attacks and throws a hit with which may cause `what` (an `on_hit`
+/// entry it matches; `what` returns what to add after the chance), by creature name: "the giant
+/// rat's bite (10%, 2 degrees)", "the drow crossbowman's poisoned bolt (20%, 1 degree)".
 fn attacks_causing(content: &Content, what: impl Fn(&Affliction) -> Option<String>) -> Vec<String> {
     let mut found = Vec::new();
     for (_, c) in order::creatures(content) {
-        let Some(attack) = &c.attack else { continue };
-        for o in &attack.on_hit {
-            if let Some(detail) = what(&o.what) {
-                found.push(format!(
-                    "the {}'s {} ({}%{detail})",
-                    c.name, attack.name, o.chance
-                ));
+        let thrown = c.throw.as_ref().map(|t| &t.attack);
+        for attack in c.attack.iter().chain(thrown) {
+            for o in &attack.on_hit {
+                if let Some(detail) = what(&o.what) {
+                    found.push(format!(
+                        "the {}'s {} ({}%{detail})",
+                        c.name, attack.name, o.chance
+                    ));
+                }
             }
         }
     }
