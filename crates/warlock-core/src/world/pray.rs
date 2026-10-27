@@ -11,7 +11,9 @@
 //!   spent.
 //! - **The answer**: the deed first ([`Deed::Prayed`], by the altar's side), then one outcome
 //!   drawn from the table, leaned by the altar's side against the player's band
-//!   ([`super::outcome::leaned_kinds`]; Devout), and its hooks (`outcome.rs`). Then, unless the
+//!   ([`super::outcome::leaned_kinds`]; Devout), and its hooks (`outcome.rs`; the great ones
+//!   `boons.rs`); for one with Penitent a great bane drawn becomes one of the table's nothing
+//!   outcomes, drawn in its place (the explosion is moderate: it stays). Then, unless the
 //!   altar is gone (it blew apart), one draw of the table's `exhaust`: the altar is spent, its
 //!   cell the table's `spent` terrain and its own light gone ("The altar's glow gutters and
 //!   dies."). Nothing else is saved: the terrain is the whole record.
@@ -26,7 +28,7 @@ use super::rest::Ended;
 use super::{Spent, World};
 use crate::action::Event;
 use crate::alignment::Alignment;
-use crate::content::{ActionKind, Offer};
+use crate::content::{ActionKind, Offer, OutcomeKind, OutcomeTier};
 use crate::geom::{Dir, Pos};
 use crate::time::Duration;
 
@@ -111,8 +113,16 @@ impl World {
         let me = self.state.player();
         let devout = me.talent_mods(&content).devout;
         let band = me.band(&content).side();
+        let penitent = me.talent_mods(&content).penitent;
         let kinds = leaned_kinds(table, side, band, devout);
-        if let Some(outcome) = self.draw_outcome(table, kinds) {
+        let mut drawn = self.draw_outcome(table, kinds);
+        // Penitent: a great bane becomes nothing, one of the table's nothing lines.
+        if penitent
+            && drawn.is_some_and(|o| o.kind == OutcomeKind::Bane && o.tier == OutcomeTier::Great)
+        {
+            drawn = self.draw_in(table, OutcomeKind::Nothing);
+        }
+        if let Some(outcome) = drawn {
             self.befall(outcome, altar, events);
         }
         // Blown apart (or otherwise changed), nothing is left to spend.

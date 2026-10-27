@@ -395,7 +395,24 @@ developer notes (CLAUDE.md, `docs/dev/`).
       A hook that finds nothing to do says the outcome's `otherwise` line instead (Glimpse with
       nothing unidentified: "You feel you understand a little."). The table
       (`data/outcomes/forgotten_altar.toml`, the wiki's "Forgotten altars") has six "nothing
-      happens" lines and the minor and moderate boons and banes; the great ones come with #407.
+      happens" lines and 40 boons and banes in three tiers (minor, moderate, great; weights
+      within each kind sum to 100, the great tier 6 of each).
+    - **The great boons and banes** (#407; `world/boons.rs`): *Gift of the forgotten* (+1d3 to a
+      random stat's score and potential, for good), *Exalted* (experience to the next level's
+      threshold, the level and its choices with it), *Chosen* (a talent the player may take and
+      does not hold, drawn, given free at rank 1 and kept for life: `Actor::boons`, put back with
+      the race's and the sign's gifts on every load, never a level's pick), *Relic* (an item at
+      item level + 10, at least rare, at the altar's foot: `loot` with `rarity = "rare"`); and
+      *Wrath of the forgotten* (−1d3 to a random stat's potential and score, for good, never
+      below 3), *Unmade* (one level lost: experience to the threshold of the level below, the
+      level's hit points and mana taken back, never the last hit point, its choices still due
+      dropped; choices already made stay, so the level gained again gives back its hit points
+      and mana but no choices and no stat checks, `Progress::peak`; at level 1 the experience
+      toward level 2 is lost), *Forsaken* (a flaw talent of the birth signs the player lacks,
+      kept for life in `Actor::boons`), *Damned* (2d4 hostiles of the floor's danger + 3, awake,
+      around the altar). Talents an altar gave are shown "(altar)" (a flaw "(altar, flaw)").
+      Penitent (§8 "Talents") turns a great bane drawn into one of the nothing outcomes, drawn
+      in its place; the explosion is moderate and still comes. No outcome grants a wish.
     - **The altar explodes** (the bane `burst`, 5 of the banes): "The altar bursts apart in
       fire!", then a fireball (3d6 fire, radius 2, `Caster::Place`) centred on the altar through
       the burst spell code: everyone in it is hurt, the player too, and it can kill ("The altar's
@@ -520,4 +537,5 @@ developer notes (CLAUDE.md, `docs/dev/`).
     anything the player does; #405), Mirror-wise (a hall of mirrors' images within 2 cells
     seen for what they are; #419), Light tread (a collapsed floor never gives way under
     them; #420), and Grave warden (guard; nothing the player kills rises; #408). The class ability Consecrate (above) lifts an unholy room or level. System `prayer`: Devout (wayfarer; an altar of the player's
-    side leans twice as far, an opposed one not at all; #406).
+    side leans twice as far, an opposed one not at all; #406) and Penitent (grit, Willpower 12;
+    a great bane becomes nothing; #407).
