@@ -11,6 +11,7 @@ line here only if it truly is a new family, in the same PR as nothing else share
 Per-tribe notes:
 - `docs/dev/creatures/undead.md`: the undead roster (#383; batches, population lines, holds, drains)
 - `docs/dev/creatures/campaign-waves.md`: the barrow, fen, and delf waves (the non-undead notes)
+- `docs/dev/creatures/duergar.md`: the duergar (#518; the delf wave's three and the roster to level 40, formulas, Fyrdelf)
 - `docs/dev/creatures/yugoloth.md`: the yugoloths (#446; faction, tags, riders)
 - `docs/dev/creatures/hags.md`: the hags (#451; faction, tag, riders)
 - `docs/dev/creatures/hobgoblins.md`: the hobgoblins (#454; the goblin tribe's second tier)
