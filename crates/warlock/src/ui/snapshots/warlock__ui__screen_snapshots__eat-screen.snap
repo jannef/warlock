@@ -13,13 +13,13 @@ expression: "render(case, content.clone())"
 
 
 
-           ┌─ Eat ──────────────────────────────────────────────────────────────────────┐
+           ┌─ Consume what? ────────────────────────────────────────────────────────────┐
            │                                                                            │
            │ Food                                                                       │
            │ > a - % 4 food rations (lying here)                                  2 kg  │
            │   b - % 6 strips of dried meat                                      900 g  │
            │                                                                            │
-           │ a-b or Enter eat   Esc cancel                                              │
+           │ a-b or Enter consume   Esc cancel                                          │
            └────────────────────────────────────────────────────────────────────────────┘
 
 

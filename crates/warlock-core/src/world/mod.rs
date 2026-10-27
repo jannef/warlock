@@ -1457,6 +1457,8 @@ mod rot_tests;
 #[cfg(test)]
 mod rumour_tests;
 #[cfg(test)]
+mod scriptorium_tests;
+#[cfg(test)]
 mod scroll_label_tests;
 #[cfg(test)]
 mod search_tests;

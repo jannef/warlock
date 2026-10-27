@@ -231,10 +231,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     altar stands here, its god long forgotten." on entering; below); a *forge* (3, #418; only in
     a room of at least 9 floor cells; Fennmynster bans it) holds an anvil to temper at ("You
     smell old soot and cold iron." when glimpsed, "A cold forge, and an anvil waiting." on
-    entering; below); a *shrine* (4, #413; only in a room of at least 9 floor cells) is a shrine
-    of a side (below: "You feel welcome here.", "Something here wants you gone.", or "An old
-    shrine. It ignores you." on entering). Blood washing away in a flooded room waits for blood
-    (#127).
+    entering; below); a *shrine* (4, #413; only in
+    a room of at least 9 floor cells) is a shrine of a side (below: "You feel welcome here.",
+    "Something here wants you gone.", or "An old shrine. It ignores you." on entering); a
+    *scriptorium* (5, #414; only in a room of at least 9 floor cells) holds shelves of rotting
+    scrolls and a few scrolls, and trains Decipher script faster ("You smell dust and old vellum."
+    when glimpsed, "Shelves of rotting scrolls line the walls." on entering; below). Blood washing
+    away in a flooded room waits for blood (#127).
   - **Hot and cold rooms** (`temperature`, #404): a room sets its cells' temperature and
     nothing else: no status, no damage, nothing done to items or food. The temperature at a cell
     is decided in one place, `WorldState::temperature_at` (the level's, §5 "Temperature", plus
@@ -471,6 +474,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
       and every finished tempering marks Metalcraft. `exhaust = 0`: the anvil is never spent
       (the owner's no-limit rule; the rarity's room is the natural cap). Every draw is from the
       gameplay stream; nothing new is saved.
+  - **A scriptorium** (`feature = "shelves"`, `loot = { class = "scrolls", count = [2, 4] }`,
+    `train = { decipher_script = 200 }`, #414; `mapgen/room_loot.rs`, `world/train.rs`). Its
+    feature is `shelves` (stone, not walkable, `≡`, "shelves", a description look mode adds),
+    placed as an altar is. A generated floor's scriptorium gets `count` items (least to most,
+    one draw), each a base item of item class `class` that is loot at the floor's item level (by
+    `frequency`, the base items of `roll`), made as loot (a scroll's label unknown until read or
+    identified), on a plain floor cell of the room drawn anew (no stairs, light, or trap), all
+    from the level's stream `swarm/<level id>`, so the rest of the level is the same; it needs
+    no danger. While the player stands inside, each training mark of a skill the effect names
+    in `train` comes with that percent of its usual chance (at most certain): Decipher script's
+    mark for studying a spell (§8 "Spells", 50 %) is certain. Effects at a cell multiply, as
+    other percents do. Nothing is saved. A room with `loot` never covers a whole level.
   - **A status while inside** (`status`, #403): as time passes, at the start of each stretch of
     it (`World::pass_time`: so after every action, the player's and each creature's, at every
     turn of a rest or another long action, and through a creature's coarse turns while the

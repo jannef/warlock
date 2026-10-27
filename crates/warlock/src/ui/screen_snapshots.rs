@@ -583,6 +583,14 @@ const CASES: &[Case] = &[
         screen: Some("eat"),
         ..BASE
     },
+    // Nothing to consume (the arena's pack holds no food).
+    Case {
+        name: "consume-list-none",
+        scenario: "arena",
+        run: true,
+        screen: Some("eat"),
+        ..BASE
+    },
     Case {
         name: "item-description",
         actions: "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*4 pickup \
