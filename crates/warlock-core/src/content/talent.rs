@@ -238,6 +238,9 @@ pub enum TalentEffect {
     /// What abilities cost in mana, this percent more (negative: less; never below 1; Frugal
     /// caster), in [`crate::world::World::spend_mana`].
     ManaCostPercent { value: i32 },
+    /// What rods cost in mana, this percent more (negative: less; never below 1; Channeler; spec
+    /// §8 "Magic items": "Rods"), before [`TalentEffect::ManaCostPercent`].
+    RodCostPercent { value: i32 },
     /// Caster level, this much higher (negative: lower; spec §8 "Spells"), in
     /// [`crate::world::World::caster_level`]; with `per_levels`, `value` per that many character
     /// levels (Arcane training: +1 per 5).
@@ -1541,6 +1544,7 @@ impl TalentEffect {
             | TalentEffect::ManaRegenPercent { value }
             | TalentEffect::ManaRestingPercent { value }
             | TalentEffect::ManaCostPercent { value }
+            | TalentEffect::RodCostPercent { value }
             | TalentEffect::FootstepsPercent { value }
             | TalentEffect::CarryPercent { value }
             | TalentEffect::TravelPercent { value }

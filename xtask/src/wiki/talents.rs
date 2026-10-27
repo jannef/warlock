@@ -380,6 +380,10 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "abilities' mana costs {} (rounded to the nearest, at least 1)",
             percent(value)
         ),
+        TalentEffect::RodCostPercent { value } => format!(
+            "rods' mana costs {} (rounded to the nearest, at least 1), before other cuts",
+            percent(value)
+        ),
         TalentEffect::CasterLevel {
             value,
             per_levels: 0,
