@@ -16,7 +16,8 @@
 # a half-orc commoner 72 %. max_level is the cap; XP beyond it still counts but buys nothing.
 #
 # Hit points: each level gained up to hp_level (inclusive) adds max(1, class hp ÷ 2 + the
-# Toughness modifier) to the maximum, and the same to the current hit points. No runaway pools.
+# Toughness modifier) to the maximum, and the same to the current hit points. No runaway pools:
+# 50, not the 60 of max_level, leaves the last ten levels to Hardened (the barbarian's talent).
 #
 # Mana: each level gained up to mana_level (inclusive; default 0, none) adds max(0, class mana ÷ 2
 # + the better of the Intelligence and Willpower modifiers) to the maximum, and the same to the
@@ -40,7 +41,7 @@
 # picks at creation (a class may add more: classes/), on the creation Talents step or at random.
 
 max_level = 60
-hp_level = 20
+hp_level = 50
 mana_level = 60
 bonus_percent = 5
 bonus_levels = 4

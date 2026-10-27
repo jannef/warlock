@@ -815,9 +815,18 @@ pub enum TalentEffect {
     /// ([`crate::content::SpellRules::mana_with`]).
     OverreachCostPercent { value: i32 },
     /// Its spells that carry the chosen tag (the talent takes a `school` choice: a school or an
-    /// element) cost `cost` percent more mana (negative: less) and reach `reach` cells farther,
-    /// never past the spell's own caps (School focus; magic design §6, §10).
-    SchoolFocus { cost: i32, reach: i32 },
+    /// element) cost `cost` percent more mana (negative: less), reach `reach` cells farther,
+    /// never past the spell's own caps (School focus; magic design §6, §10), and may have their
+    /// cap lifted `lift` points more than their tier's `max_lift` (Keen mind; the combat
+    /// progression design §7). Each defaults to 0.
+    SchoolFocus {
+        #[serde(default)]
+        cost: i32,
+        #[serde(default)]
+        reach: i32,
+        #[serde(default)]
+        lift: i32,
+    },
     /// Defence in the Deflection category, only while it wears no body armour (Mage armour).
     DeflectionUnarmoured { value: i32 },
     /// Rotten food neither sickens it nor exposes it to a disease (Purify).
@@ -1524,7 +1533,7 @@ impl TalentEffect {
                 }
                 bonus(*value)
             }
-            TalentEffect::SchoolFocus { cost, reach } => {
+            TalentEffect::SchoolFocus { cost, reach, lift } => {
                 if choice != Some(Choice::School) {
                     return Err(
                         "`school_focus` is for the chosen school or element: it needs \
@@ -1534,10 +1543,13 @@ impl TalentEffect {
                 }
                 if !(0..=5).contains(reach)
                     || !PERCENTS.contains(cost)
-                    || (*cost == 0 && *reach == 0)
+                    || !(0..=100).contains(lift)
+                    || (*cost == 0 && *reach == 0 && *lift == 0)
                 {
                     return Err(
-                        "`school_focus`: cost is a percent, reach 0 to 5, not both 0".into(),
+                        "`school_focus`: cost is a percent, reach 0 to 5, lift 0 to \
+                                100, not all 0"
+                            .into(),
                     );
                 }
                 Ok(())

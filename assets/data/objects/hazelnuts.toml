@@ -1,0 +1,14 @@
+# Hazelnuts, foraged in the woods and on the plains' hedges (data/forage.toml): little to them,
+# but they keep for months.
+[[object]]
+id = "hazelnuts"
+name = "handful of hazelnuts"
+plural = "handfuls of hazelnuts"
+glyph = "%"
+fg = "#a8784a"
+class = "food"
+materials = ["plant"]
+weight = 100
+value = 0
+stackable = true
+food = { nutrition = 100, turns = 1, keeps = "60d", lasts = "120d" }

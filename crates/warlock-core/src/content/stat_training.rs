@@ -29,12 +29,18 @@ pub enum StatUse {
     Burdened,
     /// A melee blow of the player's that hits (a kick, a bash too).
     Blow,
+    /// A confirmed critical of the player's in melee.
+    Critical,
+    /// A blow on the player that their shield blocked.
+    Block,
     /// A turn of digging.
     Dig,
     /// A kick at a closed door (Athletics' use).
     Kick,
     /// An attack on the player that missed because of their Dexterity or Dodge (Tumble's use).
     Dodge,
+    /// A blow on the player that their Parry turned.
+    Parry,
     /// A shot or a throw of the player's that hits.
     Shot,
     /// A step within earshot of a creature that could hear it (Stealth's use).
@@ -45,6 +51,8 @@ pub enum StatUse {
     Hurt,
     /// A big hit or a confirmed critical on the player.
     BigHit,
+    /// A kill of the player's in melee of a creature of their level or above.
+    Killed,
     /// A check against a disease won, catching it or as it progresses (not a Willpower one).
     Resisted,
     /// Falling through the ice.
@@ -78,6 +86,10 @@ pub enum StatUse {
     Quest,
     /// A creature making way for the player.
     Swapped,
+    /// A potion drunk: names its stat (the potion's), and gives the potion's marks at once.
+    Drank,
+    /// An elixir drunk: names its stat, and gives the elixir's marks at once.
+    Elixir,
 }
 
 impl StatUse {
@@ -96,22 +108,32 @@ impl StatUse {
         }
     }
 
+    /// Whether the use names the stat it trains where it happens (a potion's), so its rules
+    /// have no `stat` of their own; every other use's rules have one.
+    pub const fn names_stat(self) -> bool {
+        matches!(self, StatUse::Drank | StatUse::Elixir)
+    }
+
     /// How the wiki says it.
     pub const fn describe(self) -> &'static str {
         match self {
             StatUse::Burdened => "acting (not waiting) while your load slows you",
             StatUse::Blow => "a blow of yours that hits up close (a kick or a shield bash too)",
+            StatUse::Critical => "a critical of yours up close",
+            StatUse::Block => "a blow on you that your shield blocked",
             StatUse::Dig => "a turn of digging",
             StatUse::Kick => "kicking at a closed door",
             StatUse::Dodge => {
                 "an attack on you that your Dexterity or Dodge made miss, or a known trap you \
                  stepped past"
             }
+            StatUse::Parry => "a blow on you that your Parry turned",
             StatUse::Shot => "a shot or a throw of yours that hits",
             StatUse::Sneak => "a step within earshot of a creature that could hear it",
             StatUse::Climb => "climbing out of the water onto ice, or out of a pit",
             StatUse::Hurt => "a blow that costs you hit points",
             StatUse::BigHit => "a big hit or a critical on you",
+            StatUse::Killed => "a kill of yours up close, of a foe of your level or above",
             StatUse::Resisted => "fighting off a disease (a check won, other than a Willpower one)",
             StatUse::Plunge => "falling through the ice",
             StatUse::Found => "finding something hidden by searching",
@@ -131,15 +153,19 @@ impl StatUse {
             StatUse::Trade => "paying for goods, or selling",
             StatUse::Quest => "completing a quest",
             StatUse::Swapped => "a creature making way for you",
+            StatUse::Drank => "a potion drunk: each of its marks, in the stat it names",
+            StatUse::Elixir => "an elixir drunk: each of its marks, in the stat it names",
         }
     }
 }
 
-/// When a stat earns a training mark: on each `on`, with `chance` percent (1 to 100).
+/// When a stat earns a training mark: on each `on`, with `chance` percent (1 to 100). `stat` is
+/// `None` exactly for a use that names its own ([`StatUse::names_stat`]).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct StatRule {
-    pub stat: Stat,
+    #[serde(default)]
+    pub stat: Option<Stat>,
     pub on: StatUse,
     pub chance: u8,
 }
@@ -202,21 +228,29 @@ impl StatTraining {
         if training.need_base == 0 && training.need_per_point == 0 {
             return Err(err("need_base and need_per_point may not both be 0".into()));
         }
+        let id = |rule: &StatRule| rule.stat.map_or("any stat", Stat::id);
         for rule in &training.uses {
             if !(1..=100).contains(&rule.chance) {
                 return Err(err(format!(
                     "{} on {:?}: chance {} is out of range (1 to 100)",
-                    rule.stat.id(),
+                    id(rule),
                     rule.on,
                     rule.chance
                 )));
+            }
+            if rule.stat.is_some() == rule.on.names_stat() {
+                let want = match rule.on.names_stat() {
+                    true => "names its own stat: leave out `stat`",
+                    false => "needs a `stat`",
+                };
+                return Err(err(format!("{:?} {want}", rule.on)));
             }
         }
         for (i, rule) in training.uses.iter().enumerate() {
             if (training.uses[..i].iter()).any(|r| r.stat == rule.stat && r.on == rule.on) {
                 return Err(err(format!(
                     "{} on {:?} is listed twice",
-                    rule.stat.id(),
+                    id(rule),
                     rule.on
                 )));
             }
@@ -304,5 +338,21 @@ mod tests {
         let unknown =
             format!("{HEAD}[[training.use]]\nstat = \"luck\"\non = \"blow\"\nchance = 5\n");
         assert!(parse(&unknown).is_err());
+        let statless = format!("{HEAD}[[training.use]]\non = \"blow\"\nchance = 5\n");
+        assert!(
+            parse(&statless)
+                .unwrap_err()
+                .to_string()
+                .contains("needs a `stat`")
+        );
+    }
+
+    #[test]
+    fn a_potion_use_names_its_own_stat() {
+        let drank = format!("{HEAD}[[training.use]]\non = \"drank\"\nchance = 100\n");
+        let t = parse(&drank).unwrap();
+        assert_eq!(t.rules(StatUse::Drank).next().map(|r| r.stat), Some(None));
+        let named = drank.replace("on = ", "stat = \"strength\"\non = ");
+        assert!(parse(&named).unwrap_err().to_string().contains("leave out"));
     }
 }

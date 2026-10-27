@@ -39,6 +39,7 @@ mod fey_roster_tests;
 #[cfg(test)]
 mod fiend_roster_tests;
 mod flow;
+mod forage;
 mod gear;
 mod gem;
 #[cfg(test)]
@@ -75,6 +76,8 @@ mod room_burden_tests;
 #[cfg(test)]
 mod room_collapse_tests;
 mod room_effect;
+#[cfg(test)]
+mod room_homes_tests;
 mod room_lore;
 #[cfg(test)]
 mod room_lore_tests;
@@ -98,6 +101,7 @@ mod sky;
 mod slot;
 mod spell;
 mod spell_def;
+mod spell_scales;
 mod stance;
 mod stat_training;
 mod status;
@@ -158,6 +162,7 @@ pub use experience::{
 };
 pub use faction::{FactionDef, FactionId, Factions, PLAYER_FACTION, Stance};
 pub use flow::{FLOW_SPEEDS, Flow};
+pub use forage::{ForageGround, ForageRules};
 pub use gear::{Gear, GearLine, RACIAL_CHANCE};
 pub use gem::{
     Cut, CutId, Cutting, GemDef, GemSize, GemSizeId, Gems, MAX_GEM_VALUE, MAX_GEM_WEIGHT,
@@ -205,8 +210,8 @@ pub use rod::{
     MAX_ROD_MANA, MAX_ROD_POWER, MAX_ROD_RADIUS, MAX_ROD_REACH, Rod, RodDoes, RodEffect, RodShape,
 };
 pub use room_effect::{
-    Collapse, Here, Hoard, Mirrors, Offer, RoomEffectDef, RoomEffectId, RoomEffects, SpecialRoom,
-    Swarm, Themes, Treasure,
+    Collapse, Dressing, Here, Hoard, Mirrors, Offer, RoomEffectDef, RoomEffectId, RoomEffects,
+    SpecialRoom, Swarm, Themes, Treasure,
 };
 pub use room_lore::RoomLoot;
 pub use room_shrine::{Regard, Shrine};
@@ -228,6 +233,7 @@ pub use spell_def::{
     MAX_CASTS, MAX_CONE, MAX_DICE, MAX_PER_LEVELS, MAX_REACH, Ratio, Resolution, School, Shape,
     SpellData, SpellDice, SpellEffect, SpellId, SpellLook, SpellPurpose, SpellRules, TIERS,
 };
+pub use spell_scales::{MAX_SCALE_WEIGHT, SpellScales, Weights};
 pub use stance::{CombatStance, StanceDef, Stances, percent_of};
 pub use stat_training::{StatRule, StatTraining, StatUse};
 pub use status::{
@@ -560,6 +566,9 @@ pub struct Content {
     /// What becomes of a creature that catches the player stealing (`data/steal.toml`, spec §8
     /// "Stealing"); none without the file.
     steal: Option<StealRules>,
+    /// What foraging in the wild gives (`data/forage.toml`, spec §8 "Foraging"); none without
+    /// the file.
+    forage: Option<ForageRules>,
     /// The rules of stat training (`data/stats.toml`, spec §8 "Stats").
     stat_training: StatTraining,
     factions: Factions,
@@ -685,6 +694,7 @@ impl Content {
             trap_avoid: TrapAvoid::default(),
             search: SearchRules::default(),
             steal: None,
+            forage: None,
             stat_training: StatTraining::default(),
             factions: Factions::default(),
             lights: Vec::new(),
@@ -895,6 +905,12 @@ impl Content {
         content.load_objects(files)?;
         content.animated = Animated::parse(files, &content)?;
         content.load_creatures(files)?;
+        // A den's own population (an armoury's) names creatures.
+        let mut room_effects = std::mem::take(&mut content.room_effects);
+        let creature =
+            |name: &str| (content.creature_id(name)).map(|c| (c, content.creature(c).unique));
+        room_effects.resolve_populations(creature)?;
+        content.room_effects = room_effects;
         content.load_gems(files)?;
         // Unique items before everything that may place one (gear, shops, levels, kits, quests).
         content.uniques = unique::parse(files.table("uniques"), &content)?;
@@ -929,6 +945,10 @@ impl Content {
         let path = "data/steal.toml";
         if let Some(text) = files.get_optional(path) {
             content.steal = Some(StealRules::parse(path, text, &content.factions)?);
+        }
+        let path = "data/forage.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.forage = Some(ForageRules::parse(path, text, &content)?);
         }
         let path = "data/stats.toml";
         if let Some(text) = files.get_optional(path) {
@@ -2713,6 +2733,12 @@ impl Content {
     /// without the file, when nobody steals.
     pub fn steal(&self) -> Option<&StealRules> {
         self.steal.as_ref()
+    }
+
+    /// What foraging in the wild gives (spec §8 "Foraging"; `data/forage.toml`); `None` without
+    /// the file, when nobody forages.
+    pub fn forage(&self) -> Option<&ForageRules> {
+        self.forage.as_ref()
     }
 
     /// The rules of stat training (spec §8 "Stats"; `data/stats.toml`, else

@@ -1311,7 +1311,7 @@ mod tests {
         let line = fit_segments(&segments, 120);
         assert!(line.contains(time.as_str()), "{line}");
         // Narrow: the time gives way first, as in 24-hour form.
-        assert_eq!(fit_segments(&segments, 20), "The Hub  ·  HP 17/17");
+        assert_eq!(fit_segments(&segments, 20), "The Hub  ·  HP 18/18");
     }
 
     #[test]
@@ -1319,12 +1319,12 @@ mod tests {
         let content = Arc::new(Content::builtin().expect("content"));
         let world = World::new(content, "showcase", None).expect("starts");
         let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius);
-        assert_eq!(segments[1].text, "HP 17/17", "right after the level");
+        assert_eq!(segments[1].text, "HP 18/18", "right after the level");
         // Narrow: everything but the level gives way first, the time included.
         let line = fit_segments(&segments, 25);
-        assert!(line.starts_with("The Hub  ·  HP 17/17"), "{line}");
+        assert!(line.starts_with("The Hub  ·  HP 18/18"), "{line}");
         assert!(!line.contains(':'), "{line}");
-        assert_eq!(fit_segments(&segments, 20), "The Hub  ·  HP 17/17");
+        assert_eq!(fit_segments(&segments, 20), "The Hub  ·  HP 18/18");
     }
 
     #[test]

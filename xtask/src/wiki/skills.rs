@@ -1,5 +1,6 @@
 //! Skills (spec §8 "Skills"): what each does and trains on, what it gives by value, who trains
-//! it, the provisional increase curve, and the odds of stealing (spec §8 "Stealing").
+//! it, the provisional increase curve, the odds of stealing (spec §8 "Stealing"), and what
+//! foraging finds (spec §8 "Foraging").
 
 use super::burden::factor;
 use super::combat::percent;
@@ -60,6 +61,7 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::Disarm => "disarming traps",
         Effect::Burden => "less slowdown from your load",
         Effect::Travel => "quicker journeys on the overworld",
+        Effect::Forage => "foraging at all, and finding food more often",
         Effect::Bargain => "better prices in shops",
         Effect::Kick => "more Strength for kicking doors in",
         Effect::Steal => "stealing at all, and better",
@@ -92,6 +94,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::Disarm => "disarming traps",
             Effect::Burden => "Burdened / Strained",
             Effect::Travel => "journeys",
+            Effect::Forage => "foraging",
             Effect::Bargain => "prices",
             Effect::Kick => "kicking doors in",
             Effect::Steal => "stealing",
@@ -122,6 +125,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 Effect::Kick => format!("+{n} Strength"),
                 Effect::Quiet | Effect::Travel => format!("\u{2212}{n}%"),
                 Effect::Bargain => format!("{n}% better"),
+                Effect::Forage => format!("+{n}%"),
                 Effect::Speed => format!("+{n}%"),
                 Effect::Hearing => n.to_string(),
                 Effect::Burden => {
@@ -192,6 +196,39 @@ pub(super) fn stealing(_content: &Content) -> String {
             edge.abs(),
             percent(won, CONTEST_WAYS),
             percent(CONTEST_WAYS - won, CONTEST_WAYS)
+        );
+    }
+    out
+}
+
+/// What a forage finds on each land (spec §8 "Foraging"; `data/forage.toml`), by landscape:
+/// the chance before Survival, how many of a find, and each find's share, by name.
+pub(super) fn foraging(content: &Content) -> String {
+    let Some(rules) = content.forage() else {
+        return "Nobody forages.\n".into();
+    };
+    let mut out = format!(
+        "A forage takes {} minutes.\n\n| Land | Chance | How many | Finds |\n|---|:---:|:---:|---|\n",
+        rules.seconds / 60
+    );
+    let mut grounds: Vec<_> = rules.grounds.iter().collect();
+    grounds.sort_by_key(|g| g.landscape);
+    for g in grounds {
+        let total = g.total_weight();
+        let mut finds: Vec<(String, u32)> = (g.finds.iter())
+            .map(|&(o, w)| (content.object(o).name.clone(), w))
+            .collect();
+        finds.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
+        let finds: Vec<String> = (finds.iter())
+            .map(|(name, w)| format!("{name} {}", percent(*w, total)))
+            .collect();
+        let _ = writeln!(
+            out,
+            "| {} | {}% | `{}` | {} |",
+            g.landscape.id().replace('_', " "),
+            g.chance,
+            g.count,
+            finds.join(", ")
         );
     }
     out

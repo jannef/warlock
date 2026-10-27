@@ -74,7 +74,9 @@ Each skill has its own benefits per rank, applied while you fight with it:
 - **Parry** adds to the Parry part of your Defence while you wield a weapon of the skill.
 - **Shield** adds to the Shield part of your Defence while you hold a shield.
 
-Rank 0 gives nothing. Rank 10 is mastery; later, the masters of a weapon will learn feats of
+Rank 0 gives nothing. The first five ranks grow slowly; ranks 6 to 10 grow much faster, in
+damage above all, with a wider critical range, quicker attacks, and more Parry, while to hit
+rises only a little more. Rank 10 is mastery; later, the masters of a weapon will learn feats of
 their own.
 
 {{#include generated/weapon-benefits.md}}

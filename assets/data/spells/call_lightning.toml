@@ -20,3 +20,6 @@ noun = "lightning"
 verb = "strikes"
 message = "Lightning answers your call!"
 noise = { sound = "thunder", loudness = 140 }
+
+[spell.scales]
+damage = { intelligence = 10, willpower = 5 }
