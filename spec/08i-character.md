@@ -379,7 +379,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     because of their Dexterity or Dodge (`dodge`, the dodge messages), an action other than
     waiting (not a rest's turns) taken while the player's burden slows them, as it began
     (`burdened`; a dwarf's Burdened does not), a step on the overworld (`travel`), a kick at a
-    closed door (`kick`), a turn spent searching, whatever it finds (`search`), noticing
+    closed door (`kick`; Athletics is also marked by `burdened` and `travel`, 5 % each, #548, so
+    its speed grows with plain play), a turn spent searching, whatever it finds (`search`), noticing
     something hidden in passing (`spot`; §8 "Searching"), an attempt to steal, whatever comes of
     it (`steal`; "Stealing" below), a try at treating oneself, whatever comes of it (`heal`;
     "Treating oneself" below), a forage that ran its time, whatever it found (`forage`;

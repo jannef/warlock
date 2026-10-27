@@ -101,11 +101,22 @@ id = "athletics"
 name = "Athletics"
 description = "Running, jumping, climbing, and kicking: strength put to use."
 kind = "rules"
-mark = [{ on = "kick", chance = 20 }]
+# Marked by kicks, and (#548) now and then by acting under a load that slows and by journeys on the
+# overworld, so the speed below grows with plain play.
+mark = [
+    { on = "kick", chance = 20 },
+    { on = "burdened", chance = 5 },
+    { on = "travel", chance = 5 },
+]
 # Kicking a door in (spec §8 "Doors"): added to the Strength the kick is rolled against, +8 at 100
 # (a closed door: 33 % at Strength 10 becomes 60 %), +12 at 200. Pending: climbing out of pits
-# (#128) will read it too.
-benefit = [{ effect = "kick", curve = [[0, 0], [100, 8], [200, 12]] }]
+# (#128) will read it too. Speed (spec §8 "Speed", #548): percent quicker in everything, +5 at
+# 100, +10 at 200, added to the talents' percent (Fleet-footed, Quick); the burden's slowdown is
+# applied to prices after, independently.
+benefit = [
+    { effect = "kick", curve = [[0, 0], [100, 8], [200, 12]] },
+    { effect = "speed", curve = [[0, 0], [100, 5], [200, 10]] },
+]
 
 [[skill]]
 id = "balance"

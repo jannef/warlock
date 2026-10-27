@@ -69,6 +69,7 @@ fn effect_name(effect: Effect) -> &'static str {
             "treating your bleeding, poison, and diseases (trained at all: you can try)"
         }
         Effect::Pick => "picking locks (trained at all: you can try)",
+        Effect::Speed => "quicker in everything",
     }
 }
 
@@ -99,6 +100,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::Steal => "stealing",
             Effect::Heal => "treating",
             Effect::Pick => "picking locks",
+            Effect::Speed => "speed",
         };
         let _ = write!(out, " {name}: {what} |");
     }
@@ -124,6 +126,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 Effect::Quiet | Effect::Travel => format!("\u{2212}{n}%"),
                 Effect::Bargain => format!("{n}% better"),
                 Effect::Forage => format!("+{n}%"),
+                Effect::Speed => format!("+{n}%"),
                 Effect::Hearing => n.to_string(),
                 Effect::Burden => {
                     let slowed = |b: Burden| factor(b.slow_eased(100, n));
