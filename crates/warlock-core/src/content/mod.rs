@@ -1617,7 +1617,12 @@ impl Content {
         let Some(text) = files.get_optional(path) else {
             return Ok(());
         };
-        let (healing, list) = status::parse(path, text, |id| self.damage_type_id(id))?;
+        let (healing, list) = status::parse(
+            path,
+            text,
+            |id| self.damage_type_id(id),
+            |id| self.light_id(id),
+        )?;
         for (i, def) in list.iter().enumerate() {
             let id = u16::try_from(i).map_err(|_| ContentError::new(path, "too many statuses"))?;
             self.status_ids.insert(def.id.clone(), StatusId(id));
