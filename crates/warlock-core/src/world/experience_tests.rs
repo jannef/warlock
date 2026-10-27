@@ -147,6 +147,16 @@ const EXPERIENCE: &str = include_str!("../../../../assets/data/experience.toml")
 
 /// A world on `map`, fully lit, with the scenario's `hp` (the stand-in for class hit points) 8.
 fn world_on(map: &str) -> World {
+    World::new(
+        content_with(map, CREATURES).expect("test content is valid"),
+        "xp",
+        None,
+    )
+    .expect("world")
+}
+
+/// This file's content with `creatures` for its creatures, on `map`.
+fn content_with(map: &str, creatures: &str) -> Result<Arc<Content>, crate::content::ContentError> {
     let mut files = ContentFiles::default();
     files.insert(
         "data/item_classes.toml",
@@ -155,7 +165,7 @@ fn world_on(map: &str) -> World {
     for (path, text) in [
         ("data/terrain.toml", TERRAIN),
         ("data/factions.toml", FACTIONS),
-        ("data/creatures.toml", CREATURES),
+        ("data/creatures.toml", creatures),
         ("data/vision.toml", VISION),
         ("data/objects.toml", OBJECTS),
         ("data/slots.toml", SLOTS),
@@ -176,8 +186,7 @@ fn world_on(map: &str) -> World {
         "scenarios/xp.toml",
         "name = \"Xp\"\nstart_level = \"xp\"\nhp = 8\nstats = { strength = 30 }\n",
     );
-    let content = Arc::new(Content::load(&files).expect("test content is valid"));
-    World::new(content, "xp", None).expect("world")
+    Content::load(&files).map(Arc::new)
 }
 
 fn run(world: &mut World, actions: &str) {
@@ -222,32 +231,39 @@ fn melee_kills_are_worth_their_xp_and_levels_come_with_messages() {
         (p.hp, p.max_hp(w.content()))
     };
     assert_eq!((w.player_level(), w.player_xp()), (1, 0));
-    assert_eq!(w.perception().own_experience().next, Some(767));
-    // Each pup is level 1 and worth 300, the first one twice (a first kill): 600, then 900,
-    // past the 767 of level 2.
+    assert_eq!(w.perception().own_experience().next, Some(192));
+    // Each pup is level 1 and worth 300, the first one twice (a first kill): 600, past the 192
+    // of level 2.
     kill_pups(&mut w, 1);
-    assert_eq!((w.player_level(), w.player_xp()), (1, 600));
-    let log = said(&w);
-    assert_eq!(
-        &log[log.len() - 2..],
-        ["The pup dies.", "You learn something of pups."]
-    );
-    kill_pups(&mut w, 1);
-    assert_eq!((w.player_level(), w.player_xp()), (2, 900));
+    assert_eq!((w.player_level(), w.player_xp()), (2, 600));
     let log = said(&w);
     let i = log.iter().rposition(|m| m == "You feel more experienced.");
     let i = i.expect("level up said");
     assert_eq!(log[i + 1], "Welcome to level 2.");
-    assert_eq!(log[i - 1], "The pup dies.", "after the death: {log:?}");
-    let learned = log.iter().filter(|m| m.starts_with("You learn")).count();
-    assert_eq!(learned, 1, "the first kill only: {log:?}");
+    let dies = log
+        .iter()
+        .rposition(|m| m == "The pup dies.")
+        .expect("dies");
+    let learn = log
+        .iter()
+        .rposition(|m| m == "You learn something of pups.");
+    assert!(dies < i, "after the death: {log:?}");
+    assert_eq!(learn, Some(dies + 1), "{log:?}");
     let p = w.state().player();
     assert_eq!(p.max_hp(w.content()), max0 + per_level(&w));
     assert_eq!(p.hp, hp0 + per_level(&w), "the current hit points rose too");
-    // A level 1 pup is below a level 2 player: four fifths of its XP.
+    // A level 1 pup is below a level 2 player: four fifths of its XP, 840 in all, past the 691
+    // of level 3.
+    kill_pups(&mut w, 1);
+    assert_eq!((w.player_level(), w.player_xp()), (3, 840));
+    let log = said(&w);
+    assert!(log.iter().any(|m| m == "Welcome to level 3."), "{log:?}");
+    let learned = log.iter().filter(|m| m.starts_with("You learn")).count();
+    assert_eq!(learned, 1, "the first kill only: {log:?}");
+    // Two levels below a level 3 player: three fifths.
     kill_pups(&mut w, 2);
-    assert_eq!(w.player_xp(), 900 + 240 + 240);
-    assert_eq!(w.perception().own_experience().next, Some(2_431));
+    assert_eq!(w.player_xp(), 840 + 180 + 180);
+    assert_eq!(w.perception().own_experience().next, Some(1_619));
 }
 
 #[test]
@@ -284,6 +300,28 @@ fn kills_by_others_are_worth_nothing() {
         w.state.progress.is_empty(),
         "nothing learned of a kill watched"
     );
+}
+
+#[test]
+fn a_hand_set_xp_percent_scales_the_kill_and_the_first_kill_bonus() {
+    // The elder, worth 50, four levels above the player: +20 %, and as much again the first
+    // time; with xp_percent its 50 becomes 50 × percent first.
+    let gained = |percent: &str| {
+        let creatures = CREATURES.replace("xp = 50", &format!("xp = 50\nxp_percent = {percent}"));
+        let content = content_with("#####\n#@..#\n#####\n", &creatures).expect("valid");
+        let mut w = World::new(content, "xp", None).expect("world");
+        let elder = w.content().creature_id("elder").expect("elder");
+        assert_eq!(w.content().creature(elder).xp, 50, "the base stays");
+        w.earn_kill(elder);
+        w.player_xp()
+    };
+    assert_eq!(gained("100"), 60 + 50, "as without it");
+    assert_eq!(gained("150"), 90 + 75, "75: +20 %, and 75 for the first");
+    assert_eq!(gained("1000"), 600 + 500, "no ceiling");
+    assert_eq!(gained("0"), 0, "worth nothing, and nothing learned");
+    // A negative percent is refused at load.
+    let creatures = CREATURES.replace("xp = 50", "xp = 50\nxp_percent = -10");
+    assert!(content_with("#####\n#@..#\n#####\n", &creatures).is_err());
 }
 
 #[test]
@@ -377,22 +415,22 @@ fn showcase_as(character: &str) -> World {
 #[test]
 fn race_and_class_factors_scale_the_thresholds() {
     // An elf wizard needs 175 % of the XP (140 % × 125 %), a half-orc commoner 72 % (90 % ×
-    // 80 %): level 2 at 1 342 and at 552.
+    // 80 %): level 2 at 336 and at 138.
     let mut wizard = showcase_as("elf,male,wizard");
     let mut commoner = showcase_as("half_orc,female,commoner");
-    assert_eq!(wizard.perception().own_experience().next, Some(1_342));
-    assert_eq!(commoner.perception().own_experience().next, Some(552));
+    assert_eq!(wizard.perception().own_experience().next, Some(336));
+    assert_eq!(commoner.perception().own_experience().next, Some(138));
     for w in [&mut wizard, &mut commoner] {
-        w.grant_xp(1_000);
+        w.grant_xp(300);
     }
     assert_eq!(wizard.player_level(), 1);
     assert_eq!(commoner.player_level(), 2);
     let next = |w: &World| w.perception().own_experience().next;
-    assert_eq!(next(&commoner), Some(1_750), "2 431 × 72 %");
+    assert_eq!(next(&commoner), Some(498), "691 × 72 %");
     // The showcase's human thief: 95 %.
     assert_eq!(
         next(&World::new(BUILTIN.clone(), "showcase", None).expect("world")),
-        Some(729)
+        Some(182)
     );
 }
 

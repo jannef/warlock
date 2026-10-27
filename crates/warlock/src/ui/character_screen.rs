@@ -630,8 +630,8 @@ mod tests {
             "HP  Hit points    17/17   MP  Mana       2/2",
             "Dv  Defence       11      Pv  Protection  0",
             "Lv  Level         1",
-            // A human thief's level 2: 767 × 95 %.
-            "XP  Experience    0 / 729",
+            // A human thief's level 2: 192 × 95 %.
+            "XP  Experience    0 / 182",
             // A thief starts Callous: the band, never the score.
             "    Alignment     Callous",
         ] {

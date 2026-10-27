@@ -66,7 +66,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   "Experience"): `level` (1 to 99, default 1) and `xp` (0 to 100000, default 0; the player
   creature has neither): the kobold 2/15, the kobold archer 3/25, the kobold shaman 4/40, the
   giant rat 1/5, the cave bat 1/3, the cave beetle 2/8, the deer 1/2; new creatures follow the
-  guideline of `data/experience.toml`, about `5 × level + 10` (§8 "Experience"). For loot (§8 "Magic
+  guideline of `data/experience.toml`, about `5 × level + 10` (§8 "Experience"); `xp_percent`
+  (optional, any whole number from 0 up, default 100; owner 2026-10-27) is a hand-set modifier of
+  `xp` in percent, applied before the level scaling and the first-kill bonus (`CreatureDef::
+  kill_xp`), so a creature can be worth more or less than its guideline `xp` says without
+  leaving it (a negative value is refused at load; none sets it yet). For loot (§8 "Magic
   items"): `loot`, the chance in percent (0 to 100, default 0) that it drops a magic or rare item
   where it dies: the kobold 25, the kobold archer 30, the kobold shaman 50. The giant rat and the
   cave bat bite (1d4, 1d3; the rat's bite poisons one hit in ten, 2 degrees, and exposes to

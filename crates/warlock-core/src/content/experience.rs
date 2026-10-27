@@ -33,10 +33,21 @@ struct ExperienceFile {
     bonus_levels: u8,
     kills: Kills,
     #[serde(default)]
+    early: Early,
+    #[serde(default)]
     discovery: Discovery,
     #[serde(default)]
     levels: Levels,
     zero_difference: Vec<Band>,
+}
+
+/// The early levels' discount (`[early]`, owner 2026-10-27): level 2 costs `percent[0]` percent of
+/// its curve XP, level 3 `percent[1]`, and so on; the levels after the list cost 100 %.
+#[derive(Clone, Debug, Default, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+struct Early {
+    #[serde(default)]
+    percent: Vec<u8>,
 }
 
 /// What levels bring besides hit points (`[levels]`; spec §8 "Talents").
@@ -169,6 +180,8 @@ pub struct Experience {
     bonus_percent: u32,
     bonus_levels: u8,
     kills: Kills,
+    /// The early levels' discount in percent, from level 2 on; later levels pay 100 %.
+    early: Vec<u8>,
     discovery: Discovery,
     levels: Levels,
     /// `(from player level, zero difference)`, ascending, the first from level 1.
@@ -188,6 +201,7 @@ impl Default for Experience {
             bonus_percent: 5,
             bonus_levels: 4,
             kills: Kills::default(),
+            early: Vec::new(),
             discovery: Discovery::default(),
             levels: Levels::default(),
             zero_difference: vec![(1, 5)],
@@ -196,15 +210,24 @@ impl Default for Experience {
     }
 }
 
-/// Twice the kills of the player's own level that level `n` (2 or more) costs, as an exact
-/// fraction `(numerator, denominator)` in hundredths of a kill:
-/// `(plateau × 100 × m + slope × m × (m + ramp)) ÷ (m + ramp)` with m = n − 1.
-fn kills_fraction(kills: &Kills, n: u8) -> (u128, u128) {
+/// The percent of its curve level `n` costs: the `[early]` discount's, else 100.
+fn early_percent(early: &[u8], n: u8) -> u128 {
+    usize::from(n)
+        .checked_sub(2)
+        .and_then(|i| early.get(i))
+        .map_or(100, |&p| u128::from(p))
+}
+
+/// The kills of the player's own level that level `n` (2 or more) costs, as an exact fraction
+/// `(numerator, denominator)` in hundredths of a kill:
+/// `(plateau × 100 × m + slope × m × (m + ramp)) × percent ÷ ((m + ramp) × 100)` with m = n − 1
+/// and percent the level's early discount (100 past it).
+fn kills_fraction(kills: &Kills, early: &[u8], n: u8) -> (u128, u128) {
     let m = u128::from(n.saturating_sub(1));
     let over = m + u128::from(kills.ramp);
     let numerator =
         u128::from(kills.plateau) * 100 * m + u128::from(kills.slope_per_100) * m * over;
-    (numerator, over.max(1))
+    (numerator * early_percent(early, n), over.max(1) * 100)
 }
 
 /// Rounds `numerator ÷ denominator` to the nearest whole number, halves up.
@@ -213,9 +236,9 @@ fn rounded(numerator: u128, denominator: u128) -> u128 {
 }
 
 /// The XP level `n` (2 or more) costs at a factor of 100 %: its kills times the guideline at
-/// `n`, rounded once, from the exact fraction.
-fn level_xp(kills: &Kills, n: u8) -> u128 {
-    let (numerator, denominator) = kills_fraction(kills, n);
+/// `n`, rounded once, from the exact fraction (the early discount included).
+fn level_xp(kills: &Kills, early: &[u8], n: u8) -> u128 {
+    let (numerator, denominator) = kills_fraction(kills, early, n);
     let guideline = u128::from(kills.guideline.xp(n));
     rounded(numerator * guideline, denominator * 100)
 }
@@ -260,10 +283,23 @@ impl Experience {
         if p.zero_difference.iter().any(|b| b.zd == 0) {
             return Err(err("zero_difference `zd` must be at least 1".into()));
         }
+        let early = p.early.percent;
+        if early.len() >= usize::from(p.max_level) {
+            return Err(err(format!(
+                "[early] percent lists more levels than 2 to max_level ({})",
+                p.max_level
+            )));
+        }
+        if early.iter().any(|&v| !(1..=100).contains(&v)) {
+            return Err(err("[early] percent values must be 1 to 100".into()));
+        }
+        if early.windows(2).any(|pair| pair[1] < pair[0]) {
+            return Err(err("[early] percent values must not decrease".into()));
+        }
         let mut thresholds = vec![0u32];
         let mut total: u128 = 0;
         for n in 2..=p.max_level {
-            let xp = level_xp(&p.kills, n);
+            let xp = level_xp(&p.kills, &early, n);
             if xp == 0 {
                 return Err(err(format!("[kills] makes level {n} cost no XP")));
             }
@@ -282,6 +318,7 @@ impl Experience {
             bonus_percent: p.bonus_percent,
             bonus_levels: p.bonus_levels,
             kills: p.kills,
+            early,
             discovery: p.discovery,
             levels: p.levels,
             zero_difference: p.zero_difference.iter().map(|b| (b.from, b.zd)).collect(),
@@ -363,7 +400,7 @@ impl Experience {
         if level < 2 {
             return 0;
         }
-        let (numerator, denominator) = kills_fraction(&self.kills, level);
+        let (numerator, denominator) = kills_fraction(&self.kills, &self.early, level);
         u32::try_from(rounded(numerator, denominator * 100)).unwrap_or(u32::MAX)
     }
 
@@ -391,22 +428,27 @@ impl Experience {
         if xp == 0 {
             return 0;
         }
-        if monster >= player {
-            let over = u32::from((monster - player).min(self.bonus_levels));
-            return (xp * (100 + self.bonus_percent * over) + 50) / 100;
-        }
-        let below = u32::from(player - monster);
-        let zd = u32::from(self.zero_difference(player));
-        if below >= zd {
-            return 0;
-        }
-        ((xp * (zd - below) + zd / 2) / zd).max(1)
+        // In u64: a creature's hand-set `xp_percent` has no ceiling.
+        let wide = u64::from(xp);
+        let scaled = if monster >= player {
+            let over = u64::from((monster - player).min(self.bonus_levels));
+            (wide * (100 + u64::from(self.bonus_percent) * over) + 50) / 100
+        } else {
+            let below = u64::from(player - monster);
+            let zd = u64::from(self.zero_difference(player));
+            if below >= zd {
+                return 0;
+            }
+            ((wide * (zd - below) + zd / 2) / zd).max(1)
+        };
+        u32::try_from(scaled).unwrap_or(u32::MAX)
     }
 
     /// What the player's first kill of a creature type worth `xp` gives besides the kill's own
     /// XP: `first_kill` percent of it, rounded, unscaled by the levels.
     pub fn first_kill_xp(&self, xp: u32) -> u32 {
-        (xp * self.discovery.first_kill + 50) / 100
+        let scaled = (u64::from(xp) * u64::from(self.discovery.first_kill) + 50) / 100;
+        u32::try_from(scaled).unwrap_or(u32::MAX)
     }
 
     /// What the player's first arrival on a level of item level `item_level` gives.
@@ -433,30 +475,61 @@ mod tests {
     fn the_curve_is_written_in_kills() {
         let x = builtin();
         assert_eq!(x.max_level(), 60);
-        // Level 2: 213 × 1/6 + 2.85 = 38.35 kills of level-2 creatures worth 20: 767.
+        // Level 2: 213 × 1/6 + 2.85 = 38.35 kills of level-2 creatures worth 20 (767 XP), at
+        // the early discount's 25 %: 9.5875 kills, 191.75 XP.
         assert_eq!(
             (x.kills_for(2), x.xp_for(2), x.threshold(2)),
-            (38, 767, 767)
+            (10, 192, 192)
         );
         assert_eq!(
             (x.kills_for(3), x.xp_for(3), x.threshold(3)),
-            (67, 1664, 2431)
+            (20, 499, 691)
         );
-        assert_eq!((x.kills_for(10), x.threshold(10)), (163, 45_052));
-        assert_eq!((x.kills_for(20), x.threshold(20)), (223, 221_097));
+        assert_eq!((x.kills_for(10), x.threshold(10)), (146, 29_715));
+        assert_eq!((x.kills_for(20), x.threshold(20)), (223, 205_205));
         assert_eq!((x.kills_for(40), x.kills_for(60)), (300, 365));
-        assert_eq!(x.threshold(60), 2_861_748);
+        assert_eq!(x.threshold(60), 2_845_856);
         assert_eq!((x.threshold(1), x.threshold(0), x.xp_for(1)), (0, 0, 0));
-        assert_eq!(x.threshold(61), 2_861_748, "past the cap: the cap's");
-        // The owner's targets: about 3 000 even-level kills to level 20, 15 000 to 60.
+        assert_eq!(x.threshold(61), 2_845_856, "past the cap: the cap's");
+        // About 2 600 even-level kills to level 20, 14 600 to 60 (3 000 and 15 000 before the
+        // early discount).
         let kills = |to: u8| (2..=to).map(|l| x.kills_for(l)).sum::<u32>();
-        assert!((2_950..=3_050).contains(&kills(20)), "{}", kills(20));
-        assert!((14_900..=15_100).contains(&kills(60)), "{}", kills(60));
+        assert!((2_550..=2_650).contains(&kills(20)), "{}", kills(20));
+        assert!((14_500..=14_700).contains(&kills(60)), "{}", kills(60));
         // Every level costs more than the last, in XP and in kills.
         for l in 3..=60 {
             assert!(x.xp_for(l) > x.xp_for(l - 1), "level {l}");
             assert!(x.kills_for(l) >= x.kills_for(l - 1), "level {l}");
         }
+    }
+
+    #[test]
+    fn early_levels_are_discounted() {
+        // The owner's numbers (2026-10-27): the XP to reach levels 2 to 12.
+        let x = builtin();
+        let expected = [
+            192, 691, 1_619, 3_104, 5_519, 9_118, 14_165, 20_936, 29_715, 40_243, 52_688,
+        ];
+        let got: Vec<u32> = (2..=12).map(|l| x.threshold(l)).collect();
+        assert_eq!(got, expected);
+        // From level 12 on a level costs what it would without the discount.
+        let plain = Experience::parse(
+            "x",
+            &SHIPPED.replace(
+                "percent = [25, 30, 35, 40, 50, 60, 70, 80, 90, 95]",
+                "percent = []",
+            ),
+        )
+        .expect("parses");
+        assert_eq!((plain.threshold(2), plain.threshold(10)), (767, 45_052));
+        for l in 12..=60 {
+            assert_eq!(x.xp_for(l), plain.xp_for(l), "level {l}");
+            assert_eq!(x.kills_for(l), plain.kills_for(l), "level {l}");
+        }
+        for l in 2..=11 {
+            assert!(x.xp_for(l) < plain.xp_for(l), "level {l}");
+        }
+        assert_eq!(plain.threshold(60) - x.threshold(60), 15_892);
     }
 
     #[test]
@@ -471,7 +544,7 @@ mod tests {
             }
         }
         assert_eq!(
-            hash, 0xa1ea_406e_8b1a_4da5,
+            hash, 0xf8c7_abaa_9ae1_32e9,
             "experience table hash {hash:#018x}"
         );
     }
@@ -480,15 +553,11 @@ mod tests {
     fn factors_scale_the_thresholds() {
         let x = builtin();
         let at = |f: Factor| [2, 10, 60].map(|l| x.threshold_for(l, f));
-        assert_eq!(at(Factor::default()), [767, 45_052, 2_861_748]);
-        assert_eq!(
-            at(factor(140, 125)),
-            [1_342, 78_841, 5_008_059],
-            "elf wizard"
-        );
+        assert_eq!(at(Factor::default()), [192, 29_715, 2_845_856]);
+        assert_eq!(at(factor(140, 125)), [336, 52_001, 4_980_248], "elf wizard");
         assert_eq!(
             at(factor(90, 80)),
-            [552, 32_437, 2_060_459],
+            [138, 21_395, 2_049_016],
             "half-orc commoner"
         );
         assert_eq!(factor(140, 125).percent(), 175);
@@ -496,14 +565,14 @@ mod tests {
         assert_eq!(factor(115, 115).percent(), 132);
         // The level follows the character's own thresholds.
         let wizard = factor(140, 125);
-        assert_eq!(x.level_for(1_341, wizard), 1);
-        assert_eq!(x.level_for(1_342, wizard), 2);
-        assert_eq!(x.level_for(1_749, factor(90, 80)), 2, "2 431 × 72 %: 1 750");
-        assert_eq!(x.level_for(1_750, factor(90, 80)), 3);
+        assert_eq!(x.level_for(335, wizard), 1);
+        assert_eq!(x.level_for(336, wizard), 2);
+        assert_eq!(x.level_for(497, factor(90, 80)), 2, "691 × 72 %: 498");
+        assert_eq!(x.level_for(498, factor(90, 80)), 3);
         // The steepest factor still counts to the top.
         let steepest = factor(*FACTORS.end(), *FACTORS.end());
         assert_eq!(x.level_for(u32::MAX, steepest), 60);
-        assert_eq!(x.threshold_for(60, steepest), 4 * 2_861_748);
+        assert_eq!(x.threshold_for(60, steepest), 4 * 2_845_856);
     }
 
     #[test]
@@ -511,12 +580,12 @@ mod tests {
         let x = builtin();
         let normal = Factor::default();
         assert_eq!(x.level_for(0, normal), 1);
-        assert_eq!(x.level_for(766, normal), 1);
-        assert_eq!(x.level_for(767, normal), 2);
-        assert_eq!(x.level_for(2_430, normal), 2);
-        assert_eq!(x.level_for(2_431, normal), 3);
-        assert_eq!(x.level_for(2_861_747, normal), 59);
-        assert_eq!(x.level_for(2_861_748, normal), 60);
+        assert_eq!(x.level_for(191, normal), 1);
+        assert_eq!(x.level_for(192, normal), 2);
+        assert_eq!(x.level_for(690, normal), 2);
+        assert_eq!(x.level_for(691, normal), 3);
+        assert_eq!(x.level_for(2_845_855, normal), 59);
+        assert_eq!(x.level_for(2_845_856, normal), 60);
         assert_eq!(x.level_for(u32::MAX, normal), 60, "capped");
     }
 
@@ -662,11 +731,24 @@ mod tests {
             ),
             ("bonus_levels = 4", "bonus_levels = 4\nlinear = 10"),
             ("arrival = 5", "arrival = 5\nidentify = 10"),
+            ("[25, 30,", "[0, 30,"),
+            ("[25, 30,", "[101, 30,"),
+            ("[25, 30,", "[35, 30,"),
+            ("percent = [25,", "speed = 2\npercent = [25,"),
         ] {
             let text = SHIPPED.replace(from, to);
             assert_ne!(text, SHIPPED, "{from} is in the file");
             assert!(Experience::parse("x", &text).is_err(), "{to}");
         }
+        // The early discount may cover levels 2 to max_level, no more.
+        let capped = |max: u8| {
+            SHIPPED
+                .replace("max_level = 60", &format!("max_level = {max}"))
+                .replace("hp_level = 20", "hp_level = 1")
+                .replace("mana_level = 60", "mana_level = 1")
+        };
+        assert!(Experience::parse("x", &capped(11)).is_ok());
+        assert!(Experience::parse("x", &capped(10)).is_err());
         // A curve too steep to count at the top is refused, not wrapped.
         let steep = SHIPPED
             .replace("max_level = 60", "max_level = 99")

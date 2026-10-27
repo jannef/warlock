@@ -101,8 +101,9 @@ impl World {
         let content = self.content.clone();
         let def = content.creature(creature);
         let rules = content.experience();
-        let mut gain = rules.kill_xp(def.xp, def.level, self.player_level());
-        let first = rules.first_kill_xp(def.xp);
+        let xp = def.kill_xp();
+        let mut gain = rules.kill_xp(xp, def.level, self.player_level());
+        let first = rules.first_kill_xp(xp);
         // A family (animated blades) is learnt of once, whichever member fell.
         let key = content.family_key(creature);
         let discovered = &mut self.state.progress.discovered.kills;
@@ -110,7 +111,7 @@ impl World {
             discovered.insert(key.to_string());
             self.news
                 .push(format!("You learn something of {}.", def.plural));
-            gain += first;
+            gain = gain.saturating_add(first);
             self.train_stat(StatUse::Discovered);
         }
         self.grant_xp(gain);

@@ -163,7 +163,7 @@ fn a_player_scaled_level_follows_the_character() {
     let content = content_with(&scaled);
     let mut w = World::new(content, "haunt", Some(1)).expect("world");
     assert_eq!(w.danger("haunt"), 2);
-    run(&mut w, "xp:2431");
+    run(&mut w, "xp:691");
     assert_eq!((w.player_level(), w.danger("haunt")), (3, 4));
     run(&mut w, "levelup:auto xp:100000");
     assert_eq!(w.danger("haunt"), 5);
