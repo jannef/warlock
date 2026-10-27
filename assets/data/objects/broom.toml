@@ -1,0 +1,11 @@
+# A broom: a wooden handle and a head of twigs.
+# Household goods (#483): what an animated household thing (data/animated/) is made of.
+[[object]]
+id = "broom"
+name = "broom"
+glyph = "/"
+fg = "#9c6b3c"
+class = "household"
+materials = ["wood", { part = "head", of = "plant", share = 30 }]
+weight = 1200
+value = 1

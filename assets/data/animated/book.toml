@@ -1,0 +1,9 @@
+# A book that flaps its covers and slams shut on fingers: a scriptorium's.
+[[body]]
+id = "book"
+object = "book"
+level = 3
+rarity = "uncommon"
+speed = 1000
+attack = { damage_type = "bludgeoning", name = "covers", verb = "slams shut on" }
+moves = "flapping"

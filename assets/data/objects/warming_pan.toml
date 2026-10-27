@@ -1,0 +1,12 @@
+# A long-handled pan for embers, to warm a bed.
+# Household goods (#483): what an animated household thing (data/animated/) is made of.
+[[object]]
+id = "warming_pan"
+name = "warming pan"
+glyph = "("
+fg = "#d4b04c"
+class = "household"
+materials = ["brass", { part = "haft", of = "wood", share = 30 }]
+made_of = ["brass", "copper"]
+weight = 2000
+value = 8

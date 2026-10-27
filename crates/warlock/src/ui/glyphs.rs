@@ -55,7 +55,13 @@ pub(super) fn emit(
         };
         let at = motion.actor_pos(actor.id, actor.pos, time);
         let home = Vec2::new(actor.pos.x as f32, actor.pos.y as f32);
-        let mut g = glyph(&grid, at, def.glyph, palette(def.fg), frame);
+        let mut g = glyph(
+            &grid,
+            at,
+            actor.glyph(content),
+            palette(actor.fg(content)),
+            frame,
+        );
         g.color = lit(g.color, &light, at, home, ACTOR_FLOOR);
         free.push(glow(g, def.glow, &effects));
     }

@@ -1,0 +1,12 @@
+# A hanging lantern, long cold.
+# Household goods (#483): what an animated household thing (data/animated/) is made of.
+[[object]]
+id = "lantern"
+name = "lantern"
+glyph = "("
+fg = "#7a7d80"
+class = "household"
+materials = ["iron"]
+made_of = ["iron", "brass"]
+weight = 1200
+value = 6

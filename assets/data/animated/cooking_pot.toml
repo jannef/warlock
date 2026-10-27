@@ -1,0 +1,9 @@
+# A cooking pot: the heaviest and slowest.
+[[body]]
+id = "cooking_pot"
+object = "cooking_pot"
+level = 6
+rarity = "uncommon"
+speed = 800
+attack = { damage_type = "bludgeoning", name = "rim", verb = "bangs into" }
+moves = "rolling"

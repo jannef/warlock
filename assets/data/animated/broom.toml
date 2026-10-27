@@ -1,0 +1,9 @@
+# A scuttling broom: quick, and the weakest of them.
+[[body]]
+id = "broom"
+object = "broom"
+level = 1
+rarity = "common"
+speed = 1200
+attack = { damage_type = "bludgeoning", name = "handle", verb = "swats" }
+moves = "scuttling"

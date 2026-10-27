@@ -19,6 +19,9 @@
 //! An effect may scale everyone's carrying limit inside ([`RoomEffectDef::burden`]: a heavy hall
 //! halves it; `WorldState::load`, the one burden hook).
 //!
+//! An effect may move whoever steps inside elsewhere on the level now and then
+//! ([`RoomEffectDef::warp`]: an unstable room; `World::warp_step`, the teleport trap's move).
+//!
 //! An effect may give everyone inside a status while they stay ([`RoomEffectDef::status`]: a
 //! draining room's Ebbing; `World::dwell`), which eases by its own pace once they leave.
 //!
@@ -123,6 +126,8 @@ struct RoomEffectSpec {
     #[serde(default = "hundred")]
     burden: u16,
     mirrors: Option<MirrorsSpec>,
+    #[serde(default)]
+    warp: u8,
 }
 
 #[derive(Deserialize)]
@@ -279,6 +284,9 @@ pub struct RoomEffectDef {
     pub burden: u16,
     /// The reflections a hall of mirrors shows of everyone inside (`World::images`).
     pub mirrors: Option<Mirrors>,
+    /// Percent chance, every step onto a cell inside, that the stepper is moved to a free cell
+    /// of the level as a teleport trap moves its victim (an unstable room's 10; `World::warp_step`).
+    pub warp: u8,
 }
 
 impl RoomEffectDef {
@@ -393,6 +401,14 @@ impl<'c> Here<'c> {
         self.percent(|e| e.burden)
     }
 
+    /// Percent chance a step here moves the stepper elsewhere: either effect may (0: never).
+    pub fn warp(&self) -> u8 {
+        let stays = self
+            .each()
+            .fold(100, |p, e| p * (100 - u32::from(e.warp.min(100))) / 100);
+        u8::try_from(100 - stays).unwrap_or(100)
+    }
+
     /// The statuses held here, the room's first: both apply.
     pub fn statuses(self) -> impl Iterator<Item = StatusId> + 'c {
         (self.room.into_iter().chain(self.level)).filter_map(|e| e.status)
@@ -493,6 +509,9 @@ impl RoomEffects {
                     "level_chance {} is a percent: 0 to 100",
                     spec.level_chance
                 )));
+            }
+            if spec.warp > 100 {
+                return Err(bad(format!("warp {} is a percent: 0 to 100", spec.warp)));
             }
             if spec.max_cells.is_some_and(|most| most < spec.min_cells) {
                 return Err(bad("max_cells is below min_cells".into()));
@@ -599,6 +618,7 @@ impl RoomEffects {
                 temperature: spec.temperature,
                 burden: spec.burden,
                 mirrors,
+                warp: spec.warp,
             };
             if def.level_chance > 0 && !def.can_pervade() {
                 return Err(err(format!(

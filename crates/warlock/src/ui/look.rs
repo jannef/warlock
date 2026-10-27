@@ -123,7 +123,7 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
                     .filter_map(|s| content.status(s).seen.as_deref())
                     .map(|word| format!(", {word}"))
                     .collect();
-                let gear = gear(view, actor.id);
+                let gear = format!("{}{}", made_of(content, actor).1, gear(view, actor.id));
                 // A unique character the player knows by name: "Sister Hild (unhurt), who
                 // cures and mends for gold, on plank floor."
                 let proper = (actor.dialogue).and_then(|d| content.dialogue(d).name.as_deref());
@@ -134,8 +134,9 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
                         terrain(t)
                     ),
                     None => format!(
-                        "{} {name} ({stance}{health}{effects}){gear}, on {}{here}.",
+                        "{} {name}{} ({stance}{health}{effects}){gear}, on {}{here}.",
                         article(name),
+                        made_of(content, actor).0,
                         terrain(t)
                     ),
                 }
@@ -177,6 +178,22 @@ fn services(content: &Content, actor: &SeenActor) -> String {
         [one] => format!(", who {one} for gold"),
         [rest @ .., last] => format!(", who {} and {last} for gold", rest.join(", ")),
     }
+}
+
+/// What a seen animated thing is made of and how it moves (spec §8 "Animated objects"), as they
+/// read after its name and after how hurt it looks: (" of silver", ", rocking"); nothing for any
+/// other creature.
+fn made_of(content: &Content, actor: &SeenActor) -> (String, String) {
+    let Some(shape) = actor.shape else {
+        return Default::default();
+    };
+    let moves = (content.animated_body(actor.creature))
+        .and_then(|b| b.spec.moves.as_deref())
+        .map_or(String::new(), |m| format!(", {m}"));
+    (
+        format!(" of {}", content.material(shape.material).name),
+        moves,
+    )
 }
 
 /// What a seen creature wears and wields, as it reads after its name: ", wielding a spear,
@@ -240,7 +257,7 @@ pub fn draw_cursor_on(
     let top = view.objects(p).first();
     let trap = view.trap(p);
     let ch = match (view.cell(p), view.actor_at(p), top) {
-        (CellView::Visible(_), Some(actor), _) => content.creature(actor.creature).glyph,
+        (CellView::Visible(_), Some(actor), _) => actor.glyph(content),
         _ if view.sound_at(p).is_some() => super::sounds::MARKER,
         (CellView::Visible(_) | CellView::Remembered(_), None, _) if trap.is_some() => {
             trap.map_or(' ', |t| content.trap(t).glyph)
@@ -630,6 +647,40 @@ mod tests {
         let view = w.perception();
         let here = view.viewer();
         assert!(describe(&view, here, true).starts_with("You, on an arrow trap on stone floor"));
+    }
+
+    #[test]
+    fn animated_things_are_seen_by_what_they_are_made_of() {
+        let hall = r##"
+name = "Hall"
+ambient = [255, 255, 255, 0]
+map = '''
+#######
+#.c@r.#
+#######
+'''
+[legend]
+"@" = { terrain = "floor", spawn = "player" }
+"c" = { terrain = "floor", creature = "animated_candlestick", animated = { material = "silver" } }
+"r" = { terrain = "floor", creature = "animated_rug" }
+"##;
+        let mut files = warlock_core::content::ContentFiles::builtin();
+        files.insert("levels/hall.toml", hall);
+        files.insert(
+            "scenarios/hall.toml",
+            "name = \"Hall\"\nstart_level = \"hall\"\n",
+        );
+        let content = Arc::new(Content::load(&files).expect("content"));
+        let w = World::new(content, "hall", None).expect("hall");
+        let view = w.perception();
+        assert_eq!(
+            describe(&view, Pos::new(2, 1), true),
+            "An animated candlestick of silver (hostile, unhurt), rocking, on stone floor."
+        );
+        assert_eq!(
+            describe(&view, Pos::new(4, 1), true),
+            "An animated rug of wool (hostile, unhurt), rippling, on stone floor."
+        );
     }
 
     #[test]

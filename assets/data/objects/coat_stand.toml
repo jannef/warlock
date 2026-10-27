@@ -1,0 +1,11 @@
+# A tall wooden coat stand.
+# Household goods (#483): what an animated household thing (data/animated/) is made of.
+[[object]]
+id = "coat_stand"
+name = "coat stand"
+glyph = "/"
+fg = "#9c6b3c"
+class = "household"
+materials = ["wood"]
+weight = 6000
+value = 4

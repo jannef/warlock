@@ -64,6 +64,9 @@
 #            sees, on free floor of the room, moving each turn; they look just like what they
 #            reflect. A blow or a step into one meets only glass; a missile aimed at one flies on;
 #            creatures outside shooting at the player inside may aim at one. Never the whole level
+#   warp     percent chance, every step onto a cell inside (the player's or a creature's), that
+#            the stepper is moved to a free cell of the level as a teleport trap moves its victim;
+#            default 0
 
 chance = 12
 per_level = 1
@@ -186,3 +189,12 @@ enter = "Your reflection stares back at you from every side."
 weight = 3
 max_cells = 80
 mirrors = { images = 2 }
+
+[[effect]]
+id = "unstable"
+name = "unstable room"
+mark = "u"
+enter = "The floor shimmers under your feet."
+weight = 4
+max_cells = 60
+warp = 10

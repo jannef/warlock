@@ -1,0 +1,10 @@
+# A candlestick that rocks and clubs; a silver one is a low-level prize.
+[[body]]
+id = "candlestick"
+object = "candlestick"
+level = 4
+rarity = "uncommon"
+speed = 900
+attack = { damage_type = "bludgeoning", name = "base", verb = "clubs" }
+moves = "rocking"
+dies = "topples and lies still"

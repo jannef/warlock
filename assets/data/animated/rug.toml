@@ -1,0 +1,11 @@
+# The rug of smothering, the household tier's one trick: it may hold what it wraps.
+[[body]]
+id = "rug"
+object = "rug"
+level = 7
+rarity = "rare"
+speed = 1000
+attack = { damage_type = "bludgeoning", name = "folds", verb = "wraps" }
+on_hit = [{ status = "held", chance = 10 }]
+moves = "rippling"
+dies = "falls in a heap"

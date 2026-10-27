@@ -542,6 +542,11 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::Scavenger => {
             "what a creature you kill drops is identified as it lands".to_string()
         }
+        TalentEffect::SalvagePercent { value } => format!(
+            "what an animated thing is made of falls whole {} percentage points more often \
+             (whoever made the kill)",
+            signed(value)
+        ),
         TalentEffect::ItemWorth => "item descriptions show what things are worth".to_string(),
         TalentEffect::GemWorth => "item descriptions show what each gem is worth".to_string(),
         TalentEffect::IdentifyCarried { hours } => format!(
@@ -1295,6 +1300,15 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                 status(&id)
             )
         }
+        TalentEffect::Bane {
+            tag,
+            to_hit,
+            damage,
+        } => format!(
+            "against creatures tagged `{tag}`, to hit {} and damage {}",
+            signed(to_hit),
+            signed(damage)
+        ),
         TalentEffect::FavouredPrey { to_hit, damage } => format!(
             "against the creature type you have killed most (ties: the first to get there), \
              to hit {} and damage {}",

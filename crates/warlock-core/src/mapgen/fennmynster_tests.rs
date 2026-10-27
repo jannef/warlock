@@ -94,6 +94,11 @@ fn the_floors_start_full_of_the_fen_wave() {
             "pixie",
             "boggle",
             "darkling",
+            // The drowned church's household things (#483).
+            "animated_candlestick",
+            "animated_book",
+            "animated_lantern",
+            "animated_rug",
         ])
     );
     for depth in [1, 5] {

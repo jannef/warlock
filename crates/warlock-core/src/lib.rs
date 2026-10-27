@@ -10,6 +10,7 @@
 pub mod ability;
 pub mod action;
 pub mod alignment;
+pub mod animated;
 pub mod blood;
 pub mod burden;
 pub mod character;

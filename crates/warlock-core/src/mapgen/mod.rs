@@ -526,6 +526,7 @@ pub fn generate_for(
                 den::fill(&mut template, content, seed, (pal, danger, spawning), visit);
             }
             crate::gear::arm(&mut template, content, seed);
+            crate::animated::arm(&mut template, content, seed);
             return Ok(template);
         }
     }

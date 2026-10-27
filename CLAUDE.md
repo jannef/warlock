@@ -318,6 +318,7 @@ file). Topics:
 - `docs/dev/resources.md` — alternative resources: the data, `Actor::resources`, grant, gain, spend, and end, time in the status loop, ability costs, the dev grant
 - `docs/dev/blood.md` — wounds and stains, bleeding, how blood is drawn
 - `docs/dev/creatures.md` — factions and stance, the AI, paths, creature sight, spawning, gear (a stable index: roster PRs edit only their own `docs/dev/creatures/<tribe>.md`, e.g. `undead.md`, never this file)
+- `docs/dev/animated.md` — animated objects: creature types generated at load, their bodies and streams, drops, immunities, the look
 - `docs/dev/npcs.md` — unique characters, chat and ask, rotation lines and mutters, displacement
 - `docs/dev/quests.md` — quest data and stages, hooks in kills, travel, and talk, the quest log
 - `docs/dev/shops.md` — shop data, keepers, prices, buying, selling, theft, the shop dialogs

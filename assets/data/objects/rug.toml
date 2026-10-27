@@ -1,0 +1,12 @@
+# A woven rug; a silk one fetches a good price.
+# Household goods (#483): what an animated household thing (data/animated/) is made of.
+[[object]]
+id = "rug"
+name = "rug"
+glyph = "("
+fg = "#cfc4a8"
+class = "household"
+materials = ["wool"]
+made_of = ["wool", "silk"]
+weight = 4000
+value = 15

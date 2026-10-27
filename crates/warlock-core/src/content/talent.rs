@@ -356,6 +356,9 @@ pub enum TalentEffect {
     Pilgrim,
     /// What a creature it kills drops is identified as it lands (spec §8 "Creature gear").
     Scavenger,
+    /// What an animated thing is made of falls whole this percent more often when it dies, whoever
+    /// made the kill (Salvager; spec §8 "Animated objects").
+    SalvagePercent { value: i32 },
     /// Item descriptions show what its things are worth.
     ItemWorth,
     /// Item descriptions show what each gem in a thing is worth.
@@ -803,6 +806,13 @@ pub enum TalentEffect {
     /// Against the creature type it has killed most (ties: the first to get there), its attacks
     /// are this much likelier to hit and do this much more damage (Favoured prey).
     FavouredPrey { to_hit: i32, damage: i32 },
+    /// Against a creature whose type carries `tag`, its attacks are this much likelier to hit and
+    /// do this much more damage (Unbinder: `animated`).
+    Bane {
+        tag: String,
+        to_hit: i32,
+        damage: i32,
+    },
     /// Against creature types that carry the tag it was taken for (a `choice = "tag"`), its
     /// attacks are this much likelier to hit and do this much more damage (Sworn foe).
     SwornFoe { to_hit: i32, damage: i32 },
@@ -1011,6 +1021,19 @@ impl TalentEffect {
                         "`favoured_prey`, `sworn_foe`: to_hit and damage are -20 to 20, not both 0"
                             .into(),
                     );
+                }
+                Ok(())
+            }
+            TalentEffect::Bane {
+                tag,
+                to_hit,
+                damage,
+            } => {
+                super::tag::check(tag).map_err(|m| format!("`bane`: {m}"))?;
+                if [to_hit, damage].iter().all(|&&v| v == 0)
+                    || ![to_hit, damage].iter().all(|v| BONUSES.contains(v))
+                {
+                    return Err("`bane`: to_hit and damage are -20 to 20, not both 0".into());
                 }
                 Ok(())
             }
@@ -1487,6 +1510,7 @@ impl TalentEffect {
             | TalentEffect::StepSlowdownPercent { value }
             | TalentEffect::CorpseStatsPercent { value }
             | TalentEffect::LootMagicPercent { value }
+            | TalentEffect::SalvagePercent { value }
             | TalentEffect::GemFindPercent { value }
             | TalentEffect::MaxHpPercent { value }
             | TalentEffect::ReadPercent { value }

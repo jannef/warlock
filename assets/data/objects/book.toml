@@ -1,0 +1,11 @@
+# A book of no use to anyone: its pages are ruined, its binding leather.
+# Household goods (#483): what an animated household thing (data/animated/) is made of.
+[[object]]
+id = "book"
+name = "book"
+glyph = "("
+fg = "#e8e0c8"
+class = "household"
+materials = ["paper", { part = "trim", of = "leather", share = 30 }]
+weight = 800
+value = 5

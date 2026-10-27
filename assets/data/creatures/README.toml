@@ -65,10 +65,12 @@
 #            yugoloth (every creature of the "yugoloth" faction), fiend (the fiends of the lower
 #            planes: every yugoloth, demon, and devil; and the fiends of no family, #450),
 #            giant (every type of the "giant" faction, the ogres too), ogre (the ogres)
+#            animated (every animated object, #483: generated, never written here)
 #   roles    archer (shoots: the goblin, kobold, and skeleton archers), caster (every
 #            combat = "caster" type), cultist (the minster's cult), skeleton (walking bones),
 #            spirit (the incorporeal dead), troll (every troll: the tribe, the marsh troll, and
-#            the rotting troll)
+#            the rotting troll), construct (things made, not born: the mud golem and every
+#            animated object)
 # A creature may carry several: the kobold shaman is ["kobold", "caster"].
 #
 # Alignment (spec §8 "Alignment"; never shown to the player): alignment, where it stands between
@@ -168,6 +170,16 @@
 # Blood (spec §8 "Blood"; presentation only, no rule reads it): blood, the colour of the stains it
 # leaves when hurt badly or killed ("#rrggbb"; default dark red, "#6e0e0c"), or "none" for a
 # bloodless creature. How much it spills goes by its size's `blood` in sizes.toml.
+
+# Immunities and death (spec §8 "Status effects"; never shown to the player):
+#   immune    status ids it never suffers (`immune = ["poisoned", "bleeding"]`; `diseased` is
+#             every disease): refused where they are given, nothing rolled
+#   dies      the verb of its death line, "The animated chair splinters." (default "dies")
+#
+# Animated objects (spec §8 "Animated objects", #483) are not written here: their types are
+# generated when content loads from data/animated.toml and data/animated/ (`animated_<body>`),
+# numbered after these files and before every campaign's; an id here that one of them takes is
+# an error.
 
 # Notes on the groups, in the order they were kept in:
 #

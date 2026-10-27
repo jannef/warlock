@@ -255,7 +255,7 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
     };
     match layer {
         Layer::View => match view.actor_at(p) {
-            Some(actor) => content.creature(actor.creature).glyph,
+            Some(actor) => actor.glyph(content),
             None => known_glyph(cell),
         },
         Layer::Fov => {
@@ -1258,8 +1258,8 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
                 .map(|s| content.status(s).id.as_str())
                 .collect();
             json!({
-                "id": a.id, "kind": a.kind, "creature": def.id, "glyph": def.glyph.to_string(),
-                "pos": a.pos, "health": a.health, "effects": effects,
+                "id": a.id, "kind": a.kind, "creature": def.id, "glyph": a.glyph(content).to_string(),
+                "fg": a.fg(content).to_string(), "pos": a.pos, "health": a.health, "effects": effects,
             })
         })
         .collect();

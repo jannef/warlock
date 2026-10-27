@@ -308,6 +308,12 @@ id = "creature_gear"
 name = "The gear creatures carry and drop"
 min_talents = 1
 
+# Animated objects (#483): what they are made of and what they leave. It ships with Salvager and
+# Unbinder; Appraiser's eye comes with the composites (#486).
+[[system]]
+id = "animated"
+name = "Animated objects: what they are made of and what they leave"
+
 [[system]]
 id = "factions"
 name = "Factions and creatures' stance toward you"

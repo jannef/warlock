@@ -71,13 +71,14 @@ use crate::action::Positions;
 use crate::blood::Stain;
 use crate::burden::{self, Load};
 use crate::character::Character;
+use crate::color::Rgb;
 use crate::combat::Health;
 use crate::content::Shops;
 use crate::content::{Choice, DialogueId, ResourceId, TalentId, TreeId};
 use crate::content::{
     CombatStance, Content, CreatureId, DamageTypeId, DiseaseId, FactionId, Factor, Flow,
-    ItemClassId, LevelKind, LightId, ObjectId, Place, RaceDef, RoomEffectDef, SlotId, Stance,
-    StatusId, TerrainId, TrapId, VisionProfile, WeaponSkillId,
+    ItemClassId, LevelKind, LightId, MaterialId, ObjectId, Place, RaceDef, RoomEffectDef, SlotId,
+    Stance, StatusId, TerrainId, TrapId, VisionProfile, WeaponSkillId,
 };
 use crate::daylight::{self, DayPhase};
 use crate::equipment::Equipment;
@@ -250,6 +251,34 @@ pub struct SeenActor {
     pub pos: Pos,
     /// How hurt it looks: words, never hit points (spec §8 "Combat").
     pub health: Health,
+    /// How it looks when not as its type does: an animated thing by what it is made of (spec §8
+    /// "Animated objects"), which anyone sees.
+    #[serde(skip)]
+    pub shape: Option<Shape>,
+}
+
+/// How a creature looks by what it is made of (spec §8 "Animated objects"): an animated
+/// candlestick of silver is drawn in silver's colour.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Shape {
+    pub glyph: char,
+    pub fg: Rgb,
+    /// The material its main component is made of (look mode: "of silver").
+    pub material: MaterialId,
+}
+
+impl SeenActor {
+    /// The glyph it is drawn with: its shape's, else its type's.
+    pub fn glyph(&self, content: &Content) -> char {
+        self.shape
+            .map_or(content.creature(self.creature).glyph, |s| s.glyph)
+    }
+
+    /// The colour it is drawn in: its shape's, else its type's.
+    pub fn fg(&self, content: &Content) -> Rgb {
+        self.shape
+            .map_or(content.creature(self.creature).fg, |s| s.fg)
+    }
 }
 
 /// Something a creature the player sees wears or wields: what is seen of what it carries.
@@ -698,6 +727,7 @@ impl Perception {
                 faction: a.faction(content),
                 pos: a.pos,
                 health: a.health(content),
+                shape: shape(a, content),
             })
             .collect();
         // A hall of mirrors' images of those seen (`world/mirrors.rs`), where the player sees
@@ -1925,4 +1955,17 @@ impl<'a> PerceptionView<'a> {
     pub fn own_gold(&self) -> u32 {
         (self.content.shops()).map_or(0, |s| count_of(&self.player.inventory, s.currency))
     }
+}
+
+/// How actor `a` looks by what it is made of (spec §8 "Animated objects"): an animated thing by
+/// its body, its object's glyph in its material's colour; `None` for any other.
+fn shape(a: &Actor, content: &Content) -> Option<Shape> {
+    let body = content.animated_body(a.creature)?;
+    let stack = (a.inventory.iter()).find(|s| s.object == body.object)?;
+    let material = stack.parts(content).first()?.material;
+    Some(Shape {
+        glyph: content.object(stack.object).glyph,
+        fg: stack.fg(content),
+        material,
+    })
 }

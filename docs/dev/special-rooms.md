@@ -18,17 +18,18 @@ takes the statuses' lookup, `parse` in tests none), `swarm` (a teeming den's num
 [`Swarm`]: `per_cells`, `min`, `max` (1 to 64), `wake` (100 to 1000), `cry` (0 to
 `noise::MAX_LOUDNESS`), `loot_level`, `themes = { kind, faction }` (percents, at most 100
 together; it needs `needs_danger` and can never pervade), `temperature` (degrees Celsius added to
-the level's, -40 to 40, default 0), and `burden` (percent of the carrying limit, `BURDEN` 10 to
-1000, default 100), and `mirrors` (`{ images = N }`, 1 to 8, `content::Mirrors`). An effect with
-`level_chance` must have a `pervade` line and be neither `shunned` nor lay a `floor` nor hold
-`mirrors` (`RoomEffectDef::can_pervade`); a level file's `effect` is held to the same.
+the level's, -40 to 40, default 0), `burden` (percent of the carrying limit, `BURDEN` 10 to
+1000, default 100), `mirrors` (`{ images = N }`, 1 to 8, `content::Mirrors`), and `warp` (percent a
+step inside warps the stepper, 0 to 100, default 0). An effect with `level_chance` must have a
+`pervade` line and be neither `shunned` nor lay a `floor` nor hold `mirrors`
+(`RoomEffectDef::can_pervade`); a level file's `effect` is held to the same.
+
 Features today: shadowed (10), echoing (8), hushed (8), sanctuary (6), flooded (8), black chamber
 (5, `light = 0`), draining (6, `status = "ebbing"`, `level_chance` 5, #403), teeming den (8,
 `needs_danger`, `min_cells` 16, `swarm`, #405), hot (5, "sweltering chamber", `temperature = 25`,
 #404), cold (5, "frigid hall", `temperature = -25`), silent vault
 (5, `silent`, `noise = 1`, `status = "silenced"`, #409), heavy (4, "heavy hall", `burden = 50`,
-#412), mirrors (3, "hall of mirrors", `max_cells = 80`, `mirrors = { images = 2 }`, #419).
-Draining is the
+#412), mirrors (3, "hall of mirrors", `max_cells = 80`, `mirrors = { images = 2 }`, #419), unstable (4, "unstable room", `warp = 10`, `max_cells = 60`, #411). Draining is the
 first with a `level_chance` (cursed rooms bring theirs).
 
 A dungeon's `room_effects` (on a branch or a `[[dungeon.levels]]` range; `content/dungeon.rs`,
@@ -226,6 +227,21 @@ any other image reads as its creature does. The `actors` dev layer adds `; image
 to each actor's row; `view` and the JSON dump show images as the player does (their ids are
 large: a dev can tell, the game screen cannot).
 
+## Unstable rooms
+
+`world/warp.rs`: `World::warp_step(at, who)` runs after every step lands, last in
+`World::step_onto_trap` (the player's step, a creature's in `ai.rs`, a creature making way in
+`talk.rs::swap_places`) and in `World::step_willingly` when a known trap is sidestepped. When the
+effects at `at` warp (`Here::warp`: the chance either effect leaves, 1 - (1 - a)(1 - b)) and the
+stepper still stands there (a teleport trap may have moved it, a trap may have killed it), one
+gameplay draw decides; a warp is `World::teleport`, the teleport trap's own move (a free cell
+picked by a hash of the seed, level, turn, actor, and cell; `Event::ActorMoved`), said with the
+trap's lines through `World::say` ("You are wrenched elsewhere."; "The giant rat vanishes!" when
+the player sees the cell). No draw is made on any other cell, so levels without one replay as
+before. An incorporeal creature (`ai.rs`, `phases`) never calls `step_onto_trap`, so it is never
+warped. A creature's coarse strides in a rest (`stride.rs`) stop before a cell that warps, as
+before a trap, so it takes those steps turn by turn and may warp. Nothing is saved.
+
 ## What the player is told
 
 `world/rooms.rs`: `glimpse_rooms` (in `perceive`, before `enter_room`) marks each room of which
@@ -268,7 +284,9 @@ melting in a hot room in a frost, the pre-roll only with such a room, alike howe
 a year's catch-up), `content/room_burden_tests.rs` (the `burden` field, its range,
 `Here::burden`), `world/heavy_hall_tests.rs` (the heavy hall: the limit halved inside for the
 player and creatures, the messages in and out, perception agreeing, the step refused into
-Overloaded but always allowed out), `content/room_mirrors_tests.rs` (`mirrors` parses, its range, never over a
-whole level), `world/mirrors_tests.rs` (images on free floor, the same however asked and moving
-with the turns, none outside, the player's own, the glass, a missile flying on, the creatures'
-aim, Mirror-wise, the dumps, a rest among reflections).
+Overloaded but always allowed out), `content/room_mirrors_tests.rs` (`mirrors` parses, its range, never over a whole level), `world/mirrors_tests.rs` (images on free floor, the same however asked
+and moving with the turns, none outside, the player's own, the glass, a missile flying on, the
+creatures' aim, Mirror-wise, the dumps, a rest among reflections), `content/room_warp_tests.rs` (the `warp` field, its range,
+`Here::warp`), `world/unstable_room_tests.rs` (the unstable room: about one step in ten inside
+warps the player and a creature, never outside, no draw outside, the messages, a free landing
+cell, saving).

@@ -1,0 +1,8 @@
+# A kettle that scalds: trivial fire damage.
+[[body]]
+id = "kettle"
+object = "kettle"
+level = 5
+rarity = "uncommon"
+speed = 900
+attack = { damage_type = "fire", name = "spout", verb = "scalds" }
