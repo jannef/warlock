@@ -320,6 +320,23 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // A ranger in the Thornwood after a forage (spec §8 "Foraging"): Survival listed as its
+    // use, Forage, usable; the message line says what came of it.
+    Case {
+        name: "abilities-menu-forage",
+        scenario: "forest",
+        actions: "forage",
+        screen: Some("abilities"),
+        ..BASE
+    },
+    // A ranger in the showcase's hall, no wilderness: Forage greyed out, "not usable here".
+    Case {
+        name: "abilities-menu-forage-not-here",
+        character: Some("human,male,ranger"),
+        run: true,
+        screen: Some("abilities"),
+        ..BASE
+    },
     // A paladin of some level: the Class group, Lay on hands drained, Smite ready.
     Case {
         name: "abilities-menu-class",
