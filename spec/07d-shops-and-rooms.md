@@ -208,7 +208,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     it down."); a *hall of mirrors* (3, #419; only in a room of 80 floor cells or fewer) shows
     everyone inside with two reflections ("Your reflection stares back at you from every side.";
     below); an *unstable room* (4, #411, only in a room of at most 60 floor cells) warps
-    one step in ten ("The floor shimmers under your feet."); a *collapsed floor* (3, #420; only
+    one step in ten ("The floor shimmers under your feet."); a *beast den* (5, #410; as a
+    teeming den) is a den of beasts with a hoard of bones and fresh corpses (below; "You smell
+    musk and old blood." when glimpsed, "Heavy shapes breathe in the dark around you." on
+    entering); a *collapsed floor* (3, #420; only
     on a level with another below it) has a floor of cracked stone that may give way under the
     player ("The floor ahead is cracked and sagging." when glimpsed, "The floor creaks under your
     weight." on entering; below). Blood washing
@@ -313,6 +316,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
     patrols); the sleepers come on top of the population and **count** toward the spawning cap
     (§7 "Danger levels"), so a floor with a den brings nothing new until enough of it is dead.
     A hand-made level may mark a den (`[[room]] effect = "teeming"`) but fills it itself.
+    **Factions** (`swarm.factions`, faction ids): the sleepers are drawn the same way but only
+    among the types of those factions, hostile to the player or not, and the den kind is
+    eligible only on a branch whose own population holds a type of one of them (not unique);
+    elsewhere its favoured share passes to the rest. **A corpse hoard** (`swarm.hoard =
+    "corpses"`; default `items`, above): per four sleepers (at least one) a creature is drawn
+    from the branch's population and strays (any faction, no uniques) by the same draw, and its
+    corpse (if its type leaves one) and a pile of bones (junk) each lie on a plain floor cell of
+    the room drawn anew; both are made when the level is first entered, so the corpses are
+    fresh then. The **beast den** (`beast_den`, #410) is the one such kind: `factions =
+    ["wildlife", "vermin", "marsh"]`, `hoard = "corpses"`, otherwise a teeming den's numbers.
   - **Sleep** (the status *Asleep*, §8 "Status effects": `sleeps = true`, no easing): a sleeper
     takes no turn (its turn is a wait, a stride's waits at once while the player rests; what it
     heard is forgotten) and is unaware of everyone (§8 "Class abilities": a sneak attack lands

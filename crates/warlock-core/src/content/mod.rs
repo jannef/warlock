@@ -180,7 +180,8 @@ pub use quest_roll::{Candidate, MAX_VARIANTS, MAX_WEIGHT, Pick, Roll, Rolled, Va
 pub use race::{HUNGER, LightBlind, RaceDef, Races};
 pub use resource::{Build, MAX_EVERY, MAX_RESOURCE, MAX_SHORT, OverTime, ResourceDef, ResourceId};
 pub use room_effect::{
-    Collapse, Here, Mirrors, RoomEffectDef, RoomEffectId, RoomEffects, SpecialRoom, Swarm, Themes,
+    Collapse, Here, Hoard, Mirrors, RoomEffectDef, RoomEffectId, RoomEffects, SpecialRoom, Swarm,
+    Themes,
 };
 pub use scenario::ScenarioDef;
 pub use scroll::{Cast, Reading, ScrollSpell, SpellScroll};
@@ -833,6 +834,7 @@ impl Content {
             content.room_effects = RoomEffects::parse_with(path, text, terrain, status)?;
         }
         content.load_factions(files)?;
+        content.room_effects.check_factions(&content.factions)?;
         // Objects before creatures: an animated type is generated from its body's object.
         content.load_objects(files)?;
         content.animated = Animated::parse(files, &content)?;
