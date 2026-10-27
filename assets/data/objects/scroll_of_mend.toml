@@ -1,0 +1,20 @@
+# A scroll of mend (spec §8 "Scrolls", "Spells"): read it (`r`), and it casts Mend, a
+# cantrip, at its own caster level, free of mana; study it (`L`), and you may learn the spell for
+# good. Level and frequency by its tier: the lower the tier, the commoner the scroll.
+[[object]]
+id = "scroll_of_mend"
+name = "scroll of mend"
+plural = "scrolls of mend"
+glyph = "?"
+fg = "#f0ecc0"
+class = "scrolls"
+materials = ["paper"]
+weight = 50
+value = 40
+stackable = true
+level = 1
+frequency = 60
+
+[object.read]
+kind = "spell"
+spell = "mend"

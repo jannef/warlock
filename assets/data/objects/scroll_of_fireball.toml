@@ -11,8 +11,8 @@ materials = ["paper"]
 weight = 50
 value = 150
 stackable = true
-level = 3
-frequency = 50
+level = 6
+frequency = 20
 
 [object.read]
 kind = "burst"
@@ -28,5 +28,5 @@ range = 10
 blast = 1000
 heat = true
 noise = { sound = "explosion", loudness = 150 }
-# Studying it (spec §8 "Spells", `study:b`) teaches the wizard's Fire burst.
-teaches = "fire_burst"
+# Studying it (spec §8 "Spells", `study:b`) teaches Fireball.
+teaches = "fireball"

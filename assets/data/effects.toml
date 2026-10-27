@@ -221,6 +221,36 @@ glow = 0.7
 branches = 0.02
 light = { color = [520, 380, 820], radius = 3 }
 
+# The cantrips' rays (spec §8 "Spells"): Ray of frost's pale, quick line of cold, and Spark's
+# small crackle; dimmer and shorter than the bolts above, no shake.
+[[effect]]
+id = "frost_ray"
+shape = "bolt"
+speed = 400
+impact = 0.16
+flashes = 1
+linger = 0.25
+flicker = 0.05
+glyphs = "─"
+colors = ["#f4fbff", "#d4ecff", "#a8d0f4", "#7aa8d8", "#4a70a0", "#22344a"]
+glow = 0.5
+branches = 0.0
+light = { color = [380, 460, 620], radius = 2 }
+
+[[effect]]
+id = "spark"
+shape = "bolt"
+speed = 600
+impact = 0.14
+flashes = 2
+linger = 0.15
+flicker = 0.035
+glyphs = "─"
+colors = ["#ffffff", "#fff4c8", "#e8d880", "#b8a050", "#706030", "#302810"]
+glow = 0.6
+branches = 0.04
+light = { color = [620, 600, 420], radius = 2 }
+
 # A frost burst (spec §5 "Ice"): a quiet, cold flash of rime over the cells it reaches, which
 # freezes the water there (the dev action `freeze:X,Y,R` shows it with its own radius; frost
 # traps and spells will). No shake and no darkening: a breath of cold light and a few crystals.

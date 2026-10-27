@@ -30,8 +30,9 @@ bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["vigour", "grit"] }
 # The gifts that cost mana are spells (the placeholders until the spell system); Smite
 # and Divine health are the paladin's own, Smite answering only one who is Good.
 abilities = [
-    { level = 1, talent = "blessing" },
-    { level = 6, talent = "cure_wounds" },
+    { level = 1, talent = "mend" },
+    { level = 3, talent = "blessing" },
+    { level = 3, talent = "cure_wounds" },
     { level = 12, talent = "remove_disease" },
     { level = 18, talent = "ward_of_faith" },
     { level = 25, talent = "purify" },

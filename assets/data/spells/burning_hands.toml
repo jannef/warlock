@@ -1,0 +1,21 @@
+# Burning hands (spec §8 "Spells", the first spell list): a short fan of flame from the caster's
+# hands; an area, so dearer and weaker than a single target.
+[[spell]]
+id = "burning_hands"
+name = "Burning hands"
+description = "A fan of flame from your hands toward a place you aim at: everyone in it is burnt."
+tier = 1
+school = "evocation"
+kind = "damage"
+shape = "cone"
+resolution = "area"
+damage_type = "fire"
+length = 3
+max_length = 3
+damage = { dice = "1d4", per_levels = 3, max_dice = 2 }
+
+[spell.cast]
+effect = "blaze"
+noun = "flames"
+message = "Flames fan out from your hands!"
+noise = { sound = "explosion", loudness = 40 }

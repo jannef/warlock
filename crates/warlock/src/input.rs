@@ -880,7 +880,8 @@ impl Gameplay<'_> {
             (InputMode::Look(at), _) => InputMode::Look(at),
             (InputMode::Normal, KeyCommand::Look) => InputMode::Look(game.world.player_pos()),
             (InputMode::Ability(ability), KeyCommand::Move(dir)) => {
-                if let Some(action) = ability.action(Some(dir)) {
+                let content = game.world.content().clone();
+                if let Some(action) = ability.action(&content, Some(dir)) {
                     self.actions.write(PlayerAction(action));
                 }
                 InputMode::Normal
@@ -1190,17 +1191,19 @@ impl Gameplay<'_> {
         let Some(game) = &self.game else { return };
         let usable = (game.world.perception().abilities().iter())
             .any(|own| own.ability == ability && own.unavailable.is_none());
-        match (usable, ability.aim()) {
+        let content = game.world.content().clone();
+        match (usable, ability.aim(&content)) {
             (true, ability::Aim::Direction) => *self.mode = InputMode::Ability(ability),
             (true, ability::Aim::Cell) => self.aim(AimKind::Ability(ability)),
             (true, ability::Aim::Nothing) => {
-                if let Some(action) = ability.action(None) {
+                if let Some(action) = ability.action(&content, None) {
                     self.actions.write(PlayerAction(action));
                 }
             }
             (false, _) => {
                 let here = game.world.player_pos();
-                let action = (ability.action(Some(Dir::N))).or_else(|| ability.action_at(here));
+                let action = (ability.action(&content, Some(Dir::N)))
+                    .or_else(|| ability.action_at(&content, here));
                 if let Some(action) = action {
                     self.actions.write(PlayerAction(action));
                 }
@@ -1234,10 +1237,9 @@ impl Gameplay<'_> {
 
     /// Looses the missile `aim` aims, remembering its target for the next shot.
     fn loose(&mut self, aim: Aim) {
-        if let Some(game) = &self.game {
-            self.last.remember(&game.world.perception(), aim);
-        }
-        if let Some(action) = aim.action() {
+        let Some(game) = &self.game else { return };
+        self.last.remember(&game.world.perception(), aim);
+        if let Some(action) = aim.action(game.world.content()) {
             self.actions.write(PlayerAction(action));
         }
         *self.mode = InputMode::Normal;
@@ -1345,7 +1347,7 @@ fn command_in(
 /// target remembered), or not.
 fn burst_dialog(view: &PerceptionView<'_>, aim: Aim) -> Option<Dialog> {
     let noun = aim.catches_reader(view)?;
-    let read = aim.action()?;
+    let read = aim.action(view.content())?;
     let AimKind::Read(item) = aim.kind else {
         return Some(
             Dialog::new(

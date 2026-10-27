@@ -104,7 +104,7 @@ pub enum Cause {
     /// The spell of a scroll of this kind they read caught them (spec §8 "Scrolls").
     Scroll(ObjectId),
     /// A spell of their own caught them (spec §8 "Class abilities").
-    Spell(crate::content::ClassSpell),
+    Spell(crate::content::SpellId),
 }
 
 impl Cause {

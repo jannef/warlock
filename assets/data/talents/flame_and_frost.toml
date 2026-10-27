@@ -5,4 +5,4 @@ tree = "class"
 granted = true
 description = "Two spells, paid in mana: a ball of flame, or a burst of bitter frost, at a place you aim at."
 effects = [{ kind = "spell", spell = "flame" }, { kind = "spell", spell = "frost" }]
-systems = ["mana", "ice"]
+systems = ["spells", "mana", "ice"]

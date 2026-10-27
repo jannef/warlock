@@ -1,0 +1,20 @@
+# A scroll of remove disease (spec §8 "Scrolls", "Spells"): read it (`r`), and it casts Remove disease, a
+# tier-3 spell, at its own caster level, free of mana; study it (`L`), and you may learn the spell for
+# good. Level and frequency by its tier: the lower the tier, the commoner the scroll.
+[[object]]
+id = "scroll_of_remove_disease"
+name = "scroll of remove disease"
+plural = "scrolls of remove disease"
+glyph = "?"
+fg = "#f0ecc0"
+class = "scrolls"
+materials = ["paper"]
+weight = 50
+value = 200
+stackable = true
+level = 6
+frequency = 20
+
+[object.read]
+kind = "spell"
+spell = "remove_disease"

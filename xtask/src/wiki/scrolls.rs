@@ -26,6 +26,28 @@ pub(super) fn scrolls(content: &Content) -> String {
                 "—".to_string(),
                 "Silent".to_string(),
             ),
+            Reading::Cast(scroll) => {
+                let def = content.spell(scroll.spell);
+                let what = format!(
+                    "Casts {} at caster level {}, free of mana (see the spell list), and \
+                     teaches it if studied",
+                    def.name, scroll.level
+                );
+                let damage = (content.spell_rules()).zip(def.damage).map_or_else(
+                    || "—".to_string(),
+                    |(rules, dice)| {
+                        let comfortable = rules.comfortable[usize::from(def.tier)];
+                        let dice = dice.at(i32::from(scroll.level), comfortable);
+                        super::damage::typed_dice(content, dice, def.damage_type)
+                    },
+                );
+                let reach = match def.base_reach() {
+                    None => "yourself".to_string(),
+                    Some(1) => "next to you".to_string(),
+                    Some(r) => format!("{r} cells"),
+                };
+                (what, damage, reach, sound_text(def.look.noise))
+            }
             Reading::Spell(spell) => {
                 let what = match &spell.cast {
                     Cast::Burst(b) => {

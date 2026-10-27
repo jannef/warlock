@@ -5,4 +5,4 @@ tree = "class"
 granted = true
 description = "A burst of blight where you aim it (a spell, paid in mana): it withers flesh and poisons everyone it reaches."
 effects = [{ kind = "spell", spell = "blight" }]
-systems = ["mana", "damage_types", "status"]
+systems = ["spells", "mana", "damage_types", "status"]

@@ -293,7 +293,7 @@ fn the_abilities_menu_offers_steal_in_a_direction() {
         .expect("the thief can steal");
     assert_eq!(own.unavailable, None);
     assert_eq!(
-        Ability::Steal.action(Some(Dir::E)),
+        Ability::Steal.action(w.content(), Some(Dir::E)),
         Some(Action::Steal(Dir::E))
     );
 }

@@ -1,10 +1,19 @@
 # Magic
 
 A **spell** is cast from the abilities menu (`a`), under its own heading *Spells*, and paid in
-[mana](mana.md). You know a spell for good once your class gives it (the priest's, the druid's,
-the wizard's, and the witch's spells come with their [class tables](classes.md#levels)) or once
-you have learned it from a scroll (below). Every spell is measured by the same rules below: its
-tier, your caster level, its shape, and how it finds its target.
+[mana](mana.md). You know a spell for good once your class gives it or once you have learned it
+from a scroll (below). Every spell is measured by the same rules below: its tier, your caster
+level, its shape, and how it finds its target.
+
+## What your class gives
+
+Each casting class gives only a few spells, with its [class table](classes.md#levels): a full
+caster a cantrip at level 1 and about four in all, a bard, a paladin, or a ranger a cantrip or a
+boon, and the rest none. Every other spell is learned from scrolls, so a caster who finds few
+scrolls stays a modest one. No spell a class gives costs more when it comes than its tier's base
+(it never comes above your caster level's tier).
+
+{{#include generated/class-spells.md}}
 
 ## The spells
 
@@ -98,10 +107,11 @@ catches you can kill you.
 
 ## Learning spells from scrolls
 
-Some spell scrolls teach a spell: the scroll of fireball teaches *Fire burst*, the scroll of
-lightning *Call lightning*, the scroll of frost *Frost*. **Reading** a scroll casts its spell once
-and costs no mana ([Scrolls](scrolls.md)). **Studying** it (`L`, then the scroll) teaches you
-its spell for good, and uses the scroll up whatever comes of it.
+Every spell comes on a scroll of its own (the scroll of magic missile teaches *Magic missile*);
+the scroll of fireball teaches *Fireball*, the scroll of lightning *Lightning bolt*, the scroll of
+frost *Frost*. **Reading** a scroll casts its spell once at the scroll's caster level and costs no
+mana ([Scrolls](scrolls.md#spell-scrolls)). **Studying** it (`L`, then the scroll) teaches you its
+spell for good, and uses the scroll up whatever comes of it.
 
 You can study a scroll once you know what it is (you have read one like it, or identified it)
 and only if you do not know its spell yet; an unknown scroll is refused ("You do not know what

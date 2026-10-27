@@ -62,10 +62,11 @@ impl AbilitiesScreen {
                     let a = own.ability;
                     let state = match own.unavailable {
                         Some(why) => why.reason(content),
-                        None => needs(a.aim()).into(),
+                        None => needs(a.aim(content)).into(),
                     };
                     // A spell says its tier and what it costs the player now, first; short of
-                    // mana, that it is too little.
+                    // mana, that it is too little; one cast at a place, that it is aimed (the
+                    // row has no room for more).
                     let state = match a {
                         Ability::Spell(spell) => {
                             let tier = content.spell_of(spell).map_or(0, |s| s.tier);
@@ -73,8 +74,9 @@ impl AbilitiesScreen {
                             let head = format!("tier {tier}, {cost} mana");
                             match own.unavailable {
                                 Some(Unavailable::NoMana) => format!("{head}: too little").into(),
-                                _ if state.is_empty() => head.into(),
-                                _ => format!("{head}, {state}").into(),
+                                Some(_) => format!("{head}: {state}").into(),
+                                None if state.is_empty() => head.into(),
+                                None => format!("{head}, aimed").into(),
                             }
                         }
                         _ => state,

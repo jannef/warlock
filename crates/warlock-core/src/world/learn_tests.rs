@@ -1,14 +1,15 @@
 //! Learning spells (spec §8 "Spells"): refusals, the check by overreach and known tiers, the
 //! time, interruption, the scroll used up, mishaps by band, saves and replays.
 
+use super::caster_tests::sp;
 use super::learn::Lesson;
 use super::*;
 use crate::action::parse_actions;
-use crate::content::{Band, ClassSpell, ContentFiles, drawn_among};
+use crate::content::{Band, ContentFiles, drawn_among};
 use crate::replay::Replay;
 
-/// The pack: a, two scrolls of fireball (Fire burst, tier 3); b, one of lightning (Call
-/// lightning, tier 4); c, two of frost (Frost, tier 2); d, one of identify; e, a dagger.
+/// The pack: a, two scrolls of fireball (Fireball, tier 3); b, one of lightning (Lightning
+/// bolt, tier 3); c, two of frost (Frost, tier 2); d, one of identify; e, a dagger.
 const PACK: &str = "carry = [\"scroll_of_fireball*2\", \"scroll_of_lightning\", \
      \"scroll_of_frost*2\", \"scroll_of_identify\", \"dagger\"]";
 
@@ -93,7 +94,7 @@ fn refusals_take_no_time_and_keep_the_scroll() {
         "study:d",
         "There is no spell in a scroll of identify to learn.",
     );
-    w.player_mut().spells.insert(ClassSpell::Frost);
+    w.player_mut().spells.insert(sp("frost"));
     refused(&mut w, "study:c", "You know this spell already.");
     assert_eq!(count(&w, "scroll_of_frost"), 2, "kept");
     // No mana at all: no gift for magic.
@@ -114,14 +115,14 @@ fn the_check_grows_with_overreach_and_the_tiers_known() {
         .modifier(crate::stats::Stat::Intelligence);
     // (caster level, spell): overreach and difficulty, nothing known.
     let table = [
-        (1, ClassSpell::Blessing, 0, None),
-        (6, ClassSpell::Frost, 0, None),
-        (12, ClassSpell::Frost, -1, None),
-        (1, ClassSpell::EvilEye, 1, Some(16)),
-        (1, ClassSpell::Frost, 2, Some(20)),
-        (1, ClassSpell::FireBurst, 3, Some(24)),
-        (3, ClassSpell::CallLightning, 3, Some(24)),
-        (1, ClassSpell::CallLightning, 4, Some(28)),
+        (1, sp("evil_eye"), 0, None),
+        (6, sp("frost"), 0, None),
+        (12, sp("frost"), -1, None),
+        (1, sp("blessing"), 1, Some(16)),
+        (1, sp("frost"), 2, Some(20)),
+        (1, sp("fireball"), 3, Some(24)),
+        (3, sp("lightning_bolt"), 2, Some(20)),
+        (2, sp("haste"), 3, Some(24)),
     ];
     for (level, spell, overreach, difficulty) in table {
         let o = odds(&me, level, spell);
@@ -137,18 +138,16 @@ fn the_check_grows_with_overreach_and_the_tiers_known() {
     let mut learned = me.clone();
     learned
         .spells
-        .extend([ClassSpell::CallLightning, ClassSpell::FireBurst]);
-    learned
-        .spells
-        .extend([ClassSpell::Blessing, ClassSpell::Frost]);
+        .extend([sp("call_lightning"), sp("fireball"), sp("frost")]);
+    learned.spells.extend([sp("blessing"), sp("mend")]);
     let (before, after) = (
-        odds(&me, 1, ClassSpell::EvilEye),
-        odds(&learned, 1, ClassSpell::EvilEye),
+        odds(&me, 1, sp("hex_of_weakness")),
+        odds(&learned, 1, sp("hex_of_weakness")),
     );
     assert_eq!(
         after.check.map(|c| c.1),
         Some(17),
-        "4 + 3 + 1 + 2 = 10 tiers"
+        "3 + 3 + 2 + 1 + 1 (a cantrip) = 10 tiers"
     );
     assert!(after.ways() < before.ways());
     // Quick study's bonus and Spellcraft's tenth count.
@@ -156,7 +155,7 @@ fn the_check_grows_with_overreach_and_the_tiers_known() {
     studious.talents.take("quick_study", None);
     let spellcraft = content.skill_id("spellcraft").expect("skill");
     studious.skills.add(spellcraft, 100);
-    let o = odds(&studious, 1, ClassSpell::EvilEye);
+    let o = odds(&studious, 1, sp("hex_of_weakness"));
     assert_eq!(o.check.map(|c| c.0), Some(int + 2 + 10));
 }
 
@@ -170,7 +169,7 @@ fn a_spell_within_reach_is_learned_for_certain_in_its_time() {
     assert_ne!(w.state_hash(), hash);
     // Frost is tier 2: three hundred turns, half an hour.
     assert_eq!(out.elapsed, crate::time::Duration::minutes(30));
-    assert!(w.state.player().spells.contains(&ClassSpell::Frost));
+    assert!(w.state.player().spells.contains(&sp("frost")));
     assert_eq!(count(&w, "scroll_of_frost"), 1, "one used up");
     let said: Vec<String> = w.messages().iter().map(|m| m.display()).collect();
     assert!(
@@ -186,7 +185,7 @@ fn a_spell_within_reach_is_learned_for_certain_in_its_time() {
     assert!(
         abilities
             .iter()
-            .any(|a| a.ability == crate::ability::Ability::Spell(ClassSpell::Frost))
+            .any(|a| a.ability == crate::ability::Ability::Spell(sp("frost")))
     );
     assert!(!run(&mut w, "study:c")[0].took_turn);
     // A scroll of a known spell still reads.
@@ -212,12 +211,12 @@ fn a_blow_interrupts_the_study_which_keeps_the_scroll() {
     assert!(out.elapsed < crate::time::Duration::minutes(30));
     assert_eq!(last(&w), "You stop studying.");
     assert_eq!(count(&w, "scroll_of_frost"), 2, "kept");
-    assert!(!w.state.player().spells.contains(&ClassSpell::Frost));
+    assert!(!w.state.player().spells.contains(&sp("frost")));
 }
 
 #[test]
 fn far_beyond_the_reader_a_study_fails_into_a_mishap() {
-    // Call lightning at caster level 1 (overreach 4) against 28: a natural 24 alone makes it.
+    // Lightning bolt at caster level 1 (overreach 3) against 24: a natural 24 alone makes it.
     let mut failed = 0;
     for seed in 0..8 {
         let mut w = identified(seeded(HALL, 10, Some(seed)));
@@ -226,8 +225,8 @@ fn far_beyond_the_reader_a_study_fails_into_a_mishap() {
         let said: Vec<String> = w.messages().iter().map(|m| m.display()).collect();
         if said.iter().any(|m| m.contains("crumbles to dust")) {
             failed += 1;
-            // A terrible mishap, or a lucky one.
-            let messages: Vec<&str> = drawn_among(w.content.mishaps(), Band::Terrible)
+            // A bad mishap, or a lucky one.
+            let messages: Vec<&str> = drawn_among(w.content.mishaps(), Band::Bad)
                 .map(|m| m.message.as_str())
                 .collect();
             assert!(
@@ -286,7 +285,7 @@ fn each_mishap_does_what_it_says() {
     let mut w = identified(world());
     let mut events = Vec::new();
     let me = w.state.player;
-    let frost = lesson(&w, "scroll_of_frost", ClassSpell::Frost);
+    let frost = lesson(&w, "scroll_of_frost", sp("frost"));
     // A status.
     let m = mishap(&w, "swimming_head");
     w.mishap(&m, frost, &mut events);
@@ -308,7 +307,7 @@ fn each_mishap_does_what_it_says() {
     );
     // Learned anyway.
     w.mishap(&mishap(&w, "learned_anyway"), frost, &mut events);
-    assert!(w.state.player().spells.contains(&ClassSpell::Frost));
+    assert!(w.state.player().spells.contains(&sp("frost")));
     // A teleport moves the reader.
     let from = w.player_pos();
     w.mishap(&mishap(&w, "twisted_space"), frost, &mut events);
@@ -327,10 +326,10 @@ fn each_mishap_does_what_it_says() {
     assert_eq!(w.content.creature(summoned.creature).id, "dretch");
     // The scroll's own spell goes off on its reader.
     let hp = w.state.player().hp;
-    let fire = lesson(&w, "scroll_of_fireball", ClassSpell::FireBurst);
+    let fire = lesson(&w, "scroll_of_fireball", sp("fireball"));
     w.mishap(&mishap(&w, "eruption"), fire, &mut events);
     let lost = hp - w.state.player().hp;
-    let def = w.content.spell_of(ClassSpell::FireBurst).expect("spell");
+    let def = w.content.spell_of(sp("fireball")).expect("spell");
     let cap = w.content.spell_rules().expect("rules").cap_of(def);
     assert!(
         lost > 0 && lost <= cap,
@@ -346,7 +345,8 @@ fn learned_spells_survive_saves_and_replays() {
     assert!(!empty.contains("spells"), "left out while empty");
     run(&mut w, "study:c");
     let json = serde_json::to_string(w.state.player()).expect("json");
-    assert!(json.contains("\"spells\":[\"frost\"]"), "{json}");
+    let saved = format!("\"spells\":[{}]", sp("frost").0);
+    assert!(json.contains(&saved), "by index: {json}");
     let back: Actor = serde_json::from_str(&json).expect("loads");
     assert_eq!(back.spells, w.state.player().spells);
     let content = w.content.clone();
@@ -375,14 +375,14 @@ fn the_dumps_say_the_spells_known_and_the_chances_in_words() {
         "unknown scrolls are not offered"
     );
     w = identified(w);
-    w.player_mut().spells.insert(ClassSpell::Blessing);
+    w.player_mut().spells.insert(sp("blessing"));
     let rows = layer_rows(&w, spells);
-    assert!(rows[0].starts_with("Blessing: tier 0, "), "{rows:?}");
+    assert!(rows[0].starts_with("Blessing: tier 1, "), "{rows:?}");
     let frost = "study c, a scroll of frost: Frost, far beyond you".to_string();
     assert!(rows.contains(&frost), "{rows:?}");
     assert!(
         rows.iter()
-            .any(|r| r.starts_with("study a, a scroll of fireball: Fire burst, "))
+            .any(|r| r.starts_with("study a, a scroll of fireball: Fireball, "))
     );
     assert!(
         !rows.iter().any(|r| r.contains("identify")),

@@ -7,8 +7,8 @@ use crate::burden::Burden;
 use crate::combat::{self, Attack, Category, Defence, Health, Profile, Target};
 use crate::content::Effect as ItemEffect;
 use crate::content::{
-    ActionKind, Benefit, ClassSpell, CombatStance, Content, CreatureId, DamageTypeId, FactionId,
-    Grip, Hide, ObjectDef, ObjectId, RaceDef, Role, StatusId, TwoWeapons, VisionProfile,
+    ActionKind, Benefit, CombatStance, Content, CreatureId, DamageTypeId, FactionId, Grip, Hide,
+    ObjectDef, ObjectId, RaceDef, Role, SpellId, StatusId, TwoWeapons, VisionProfile,
     WeaponSkillId,
 };
 use crate::damage::{Protection, Resistances};
@@ -232,7 +232,7 @@ pub struct Actor {
     /// scrolls. A class ability's spells are not here (its talents give them); both are what
     /// [`Actor::knows_spell`] asks.
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-    pub spells: BTreeSet<ClassSpell>,
+    pub spells: BTreeSet<SpellId>,
     /// Its streak of melee blows at one creature (Relentless, spec §8 "Birth sign"): `None`
     /// for an actor without the talent, or before its first blow.
     #[serde(default, skip_serializing_if = "Option::is_none")]

@@ -1,0 +1,17 @@
+# Cause wounds (spec §8 "Spells", the first spell list): the witch's touch that opens wounds; a
+# touch, so cheap and strong, but the creature must be beside you and the blow must land.
+[[spell]]
+id = "cause_wounds"
+name = "Cause wounds"
+description = "A touch that opens wounds in a creature beside you, if it lands."
+tier = 1
+school = "necromancy"
+kind = "damage"
+shape = "touch"
+resolution = "touch"
+damage_type = "necrotic"
+damage = { dice = "1d6", per_levels = 4, max_dice = 2 }
+
+[spell.cast]
+noun = "touch"
+verb = "wounds"

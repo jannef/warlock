@@ -45,8 +45,9 @@ thief's sneak attacks build [openings](resources.md), which master thief's finis
 monk's flurry and quivering palm run on [ki](resources.md), and the bard's inspire spends
 [inspiration](resources.md) when the bard has enough.
 
-The priest's, druid's, wizard's, and witch's abilities used from the menu are **spells**
-([Magic](magic.md)): each costs mana by its tier, your caster level, and your armour, and is
+The spells a class gives (the priest's, druid's, wizard's, and witch's few, a bard's, a
+paladin's, or a ranger's one or two; see [What your class gives](magic.md#what-your-class-gives))
+are used from the menu as **spells** ([Magic](magic.md)): each costs mana by its tier, your caster level, and your armour, and is
 greyed out ("too little") while you have less; there is no other wait. A burst flies and goes
 off as a [scroll](scrolls.md)'s does, a line runs through everyone on it, its blows and kills
 yours; a hex falls on a hostile you see within its reach. Call lightning answers only under the

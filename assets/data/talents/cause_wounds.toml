@@ -1,0 +1,8 @@
+[[talent]]
+id = "cause_wounds"
+name = "Cause wounds"
+tree = "class"
+granted = true
+description = "A touch that opens wounds in a creature beside you (a spell, paid in mana), if it lands."
+effects = [{ kind = "spell", spell = "cause_wounds" }]
+systems = ["spells", "mana", "combat"]

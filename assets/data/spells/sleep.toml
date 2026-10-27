@@ -1,0 +1,19 @@
+# Sleep (spec §8 "Spells", the first spell list): a burst of drowsiness; everyone it reaches but
+# the caster, friend or foe, does everything three times as slowly a while.
+[[spell]]
+id = "sleep"
+name = "Sleep"
+description = "A breath of slumber where you aim it: everyone it reaches grows drowsy, slow in all they do, a while."
+tier = 2
+school = "enchantment"
+kind = "hex"
+shape = "burst"
+resolution = "area"
+range = 8
+max_range = 10
+radius = 1
+max_radius = 1
+effect = { status = "drowsy", severity = 2 }
+
+[spell.cast]
+noise = { sound = "chanting", loudness = 20 }

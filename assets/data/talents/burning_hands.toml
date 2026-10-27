@@ -1,0 +1,8 @@
+[[talent]]
+id = "burning_hands"
+name = "Burning hands"
+tree = "class"
+granted = true
+description = "A fan of flame from your hands (a spell, paid in mana): everyone in it is burnt."
+effects = [{ kind = "spell", spell = "burning_hands" }]
+systems = ["spells", "mana", "combat"]

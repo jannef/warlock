@@ -1,0 +1,8 @@
+[[talent]]
+id = "spark"
+name = "Spark"
+tree = "class"
+granted = true
+description = "A crackle of lightning from your fingers (a cantrip, paid in mana): it strikes the first creature in its way."
+effects = [{ kind = "spell", spell = "spark" }]
+systems = ["spells", "mana", "combat"]

@@ -29,8 +29,9 @@
 #   combat     what it adds to the fighting of whoever suffers it while it lasts, as a stance does
 #              (stances.toml): { to_hit = 1, damage = 2, dodge = 1, parry = 1 }, each -20 to 20,
 #              0 when left out; several add up (of Parry bonuses the highest counts)
-#   cost       what every action costs while it lasts, in percent of its price (100 to 1000;
-#              default 100): 150 is half again as slow. Several multiply
+#   cost       what every action costs while it lasts, in percent of its price (50 to 1000;
+#              default 100): 150 is half again as slow. Several multiply. Below 100 it hastens,
+#              which only a spell's buff on its caster may do (Haste)
 #   blocks     the actions refused while it lasts, by their ids in actions.toml: ["read"]; an
 #              ability that costs one cannot be used either; "cast" also refuses spending mana
 #   flees      true: a creature suffering it runs from the one who gave it (else the nearest foe
@@ -387,6 +388,52 @@ eases = 60
 cost = 150
 start = "You feel sluggish."
 end = "You feel quick again."
+
+# The spells' statuses (spec §8 "Spells"): Sleep's drowsiness, in which everything takes three
+# times as long; Web's strands, which hold whoever is caught where they stand (no step) a turn a
+# degree; Haste's quickness, the caster's own, everything a quarter quicker; and Barkskin's bark,
+# the druid's boon, harder to land a blow on. Up to three degrees (Presence lengthens them).
+[[status]]
+id = "drowsy"
+name = "Drowsy"
+seen = "drowsy"
+max = 3
+stacking = "refresh"
+eases = 12
+cost = 300
+start = "You feel terribly drowsy."
+end = "You shake off the drowsiness."
+
+[[status]]
+id = "webbed"
+name = "Webbed"
+seen = "caught in a web"
+max = 6
+stacking = "refresh"
+eases = 6
+blocks = ["step"]
+start = "Sticky strands hold you fast."
+end = "You tear free of the web."
+
+[[status]]
+id = "hasted"
+name = "Hasted"
+max = 3
+stacking = "refresh"
+eases = 60
+cost = 75
+start = "The world slows around you."
+end = "The world quickens again."
+
+[[status]]
+id = "barkskin"
+name = "Barkskin"
+max = 3
+stacking = "refresh"
+eases = 60
+combat = { dodge = 2 }
+start = "Your skin hardens like bark."
+end = "Your skin softens again."
 
 # Hound's bay's (a Barghest's birth sign pick): a creature that heard the howl and is of a lower
 # level runs from the howler, a degree for each turn, a turn's time apiece.

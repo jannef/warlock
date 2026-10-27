@@ -171,6 +171,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     scroll whose type is identified shows by its name and can be studied (§8 "Spells":
     "Learning") by anyone who has not learned its spell; study is refused only for a scroll still under its label and for
     a spell already learned. `Lore::is_identified(object)` is what the study list asks.
+  - **Scrolls of spells** (#397): every spell of `data/spells/` comes on a scroll of its own
+    (`read` of kind `spell`), which casts it through the one cast path (§8 "Spells") at its
+    scroll level, free of mana: aimed as the spell is (`read:b:12,5`), or at once for a spell on
+    oneself (`read:b`; refused, no time, for an aimed one without its cell). Its blows are the
+    reader's; one that kills them is the scroll's (`Cause::Scroll`); Spell recall may keep it.
   - **Spell scrolls** cast a trap's spell (§8 "Traps") with the same rules, data, and code
     (`World::cast_burst`, `World::cast_bolt`), aimed by the reader (§6 "Targeting"): the scroll
     of **fireball** and of **frost** a burst (the fireball and frost traps': 3d6 and 2d6 in

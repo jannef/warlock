@@ -30,6 +30,7 @@ bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["guard", "vigour"] }
 abilities = [
     { level = 1, talent = "lay_on_hands" },
     { level = 6, talent = "divine_grace" },
+    { level = 6, talent = "blessing" },
     { level = 12, talent = "smite" },
     { level = 18, talent = "divine_health" },
     { level = 25, talent = "shield_of_faith" },

@@ -1,0 +1,20 @@
+# Spark (spec §8 "Spells", the first spell list): the druid's cantrip, a crackle of lightning
+# that never misses and never does much.
+[[spell]]
+id = "spark"
+name = "Spark"
+description = "A crackle of lightning from your fingers toward a place you aim at: it strikes the first creature in its way."
+tier = 0
+school = "evocation"
+kind = "damage"
+shape = "bolt"
+resolution = "auto"
+damage_type = "electricity"
+range = 5
+max_range = 6
+damage = { dice = "1d4" }
+
+[spell.cast]
+effect = "spark"
+noun = "spark"
+noise = { sound = "chanting", loudness = 20 }

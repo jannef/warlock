@@ -1,0 +1,8 @@
+[[talent]]
+id = "ray_of_frost"
+name = "Ray of frost"
+tree = "class"
+granted = true
+description = "A thin ray of cold toward a place you aim at (a cantrip, paid in mana): it strikes the first creature in its way, if it hits."
+effects = [{ kind = "spell", spell = "ray_of_frost" }]
+systems = ["spells", "mana", "combat"]

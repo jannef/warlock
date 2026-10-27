@@ -1,10 +1,17 @@
 //! What reading does (`read` in an object's file, spec §8 "Scrolls"): a scroll casts a spell
-//! the reader aims, with the traps' rules ([`super::spell`]), or identifies an item the reader
-//! carries. Scroll types are known on sight: no labels to learn yet.
+//! of `data/spells/` through the one cast path at its own caster level (`spell`), casts a burst
+//! or a bolt the reader aims with the traps' rules ([`super::spell`]), or identifies an item the
+//! reader carries.
 //!
 //! ```toml
 //! [object.read]
-//! kind = "burst"        # burst, bolt, or identify
+//! kind = "spell"        # the spell of data/spells/ named by `spell`, which it also teaches
+//! spell = "magic_missile"
+//! ```
+//!
+//! ```toml
+//! [object.read]
+//! kind = "burst"        # burst, bolt, spell, or identify
 //! spell = "fireball"    # the effect presentation shows (data/effects.toml)
 //! noun = "fireball"     # what hits, for messages; verb what it does (default "hits")
 //! verb = "burns"
@@ -21,7 +28,7 @@ use super::effect::EffectShape;
 use super::object::MAX_RANGE;
 use super::spell::{Bolt, Burst, SpellFields, check_effect, default_verb, one_kind};
 use super::trap::TrapNoise;
-use super::{ClassSpell, Content};
+use super::{Content, SpellId};
 use crate::dice::Dice;
 use crate::noise::MAX_LOUDNESS;
 use serde::Deserialize;
@@ -32,6 +39,7 @@ use serde::Deserialize;
 enum Kind {
     Burst,
     Bolt,
+    Spell,
     Identify,
 }
 
@@ -40,7 +48,8 @@ enum Kind {
 #[serde(deny_unknown_fields)]
 pub(super) struct ReadSpec {
     kind: Kind,
-    /// `burst`, `bolt`: the effect presentation shows (`data/effects.toml`).
+    /// `burst`, `bolt`: the effect presentation shows (`data/effects.toml`); `spell`: the spell
+    /// of `data/spells/` it casts and teaches.
     spell: Option<String>,
     /// `burst`, `bolt`: what hits ("fireball") and what it does ("burns", default: its damage
     /// type's verb), for messages.
@@ -76,10 +85,25 @@ pub(super) struct ReadSpec {
 /// What reading a scroll does.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Reading {
-    /// It casts a spell at a cell the reader aims at.
+    /// It casts a burst or a bolt at a cell the reader aims at.
     Spell(ScrollSpell),
+    /// It casts a spell of `data/spells/` through the one cast path, and teaches it.
+    Cast(SpellScroll),
     /// It identifies one magic item the reader carries (spec §8 "Magic items").
     Identify,
+}
+
+/// A scroll of a spell of `data/spells/` (spec §8 "Scrolls", "Spells"): read, it casts the
+/// spell at `level`, free of mana; studied, it teaches it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct SpellScroll {
+    pub spell: SpellId,
+    /// The caster level a read casts it at: the spell's `[spell.scroll] level`, else its tier's
+    /// comfortable level.
+    pub level: u8,
+    /// How far the reader may aim it before Willpower (its data's reach); `None` for a spell on
+    /// oneself, read without aiming.
+    pub reach: Option<i32>,
 }
 
 /// A spell a scroll casts: what, how far it reaches, and its words and noise.
@@ -95,7 +119,7 @@ pub struct ScrollSpell {
     pub message: Option<String>,
     pub noise: Option<TrapNoise>,
     /// The spell studying it teaches (spec §8 "Spells"), if any.
-    pub teaches: Option<ClassSpell>,
+    pub teaches: Option<SpellId>,
 }
 
 /// The shape of a scroll's spell, with the traps' rules.
@@ -108,18 +132,29 @@ pub enum Cast {
 }
 
 impl Reading {
-    /// How far the reader may aim it; `None` for what is not aimed (identify).
+    /// How far the reader may aim it; `None` for what is not aimed (identify, a spell on
+    /// oneself).
     pub fn range(&self) -> Option<i32> {
         match self {
             Reading::Spell(spell) => Some(spell.range),
+            Reading::Cast(scroll) => scroll.reach,
             Reading::Identify => None,
         }
     }
 
-    /// The spell it casts, if it casts one.
+    /// The burst or bolt it casts, if it casts one.
     pub fn spell(&self) -> Option<&ScrollSpell> {
         match self {
             Reading::Spell(spell) => Some(spell),
+            Reading::Cast(_) | Reading::Identify => None,
+        }
+    }
+
+    /// The spell of `data/spells/` studying it teaches (spec §8 "Spells"), if any.
+    pub fn teaches(&self) -> Option<SpellId> {
+        match self {
+            Reading::Spell(spell) => spell.teaches,
+            Reading::Cast(scroll) => Some(scroll.spell),
             Reading::Identify => None,
         }
     }
@@ -129,6 +164,9 @@ impl ReadSpec {
     /// Checks the spec (its spell effect is checked once effects are loaded, [`check_spells`]).
     pub(super) fn resolve(self, content: &Content) -> Result<Reading, String> {
         let kind = self.kind;
+        if kind == Kind::Spell {
+            return self.spell_scroll(content);
+        }
         let spelled = matches!(kind, Kind::Burst | Kind::Bolt);
         let allowed = |field: &str, given: bool, ok: bool| {
             if given && !ok {
@@ -180,10 +218,14 @@ impl ReadSpec {
         let teaches = match &self.teaches {
             None => None,
             Some(id) => {
-                let spell = ClassSpell::from_id(id)
-                    .filter(|&s| content.spells().is_empty() || content.spell_of(s).is_some())
-                    .ok_or_else(|| format!("`read`: `teaches` names an unknown spell `{id}`"))?;
-                Some(spell)
+                if content.spells().is_empty() {
+                    None
+                } else {
+                    let spell = (content.spell_id(id)).ok_or_else(|| {
+                        format!("`read`: `teaches` names an unknown spell `{id}`")
+                    })?;
+                    Some(spell)
+                }
             }
         };
         let fields = SpellFields {
@@ -221,6 +263,40 @@ impl ReadSpec {
             message: self.message,
             noise: self.noise,
             teaches,
+        }))
+    }
+}
+
+impl ReadSpec {
+    /// A `spell` reading: only `spell`, a spell of `data/spells/` (spells load before objects).
+    fn spell_scroll(self, content: &Content) -> Result<Reading, String> {
+        let other = self.noun.is_some()
+            || self.verb.is_some()
+            || self.message.is_some()
+            || self.damage.is_some()
+            || self.damage_type.is_some()
+            || self.noise.is_some()
+            || self.teaches.is_some();
+        if other {
+            return Err(
+                "`read`: a `spell` reading names only its `spell`: the spell's own data says the \
+                 rest, and it teaches that spell"
+                    .into(),
+            );
+        }
+        let id = self
+            .spell
+            .ok_or("`read`: a `spell` reading needs its `spell`")?;
+        let spell = (content.spell_id(&id))
+            .ok_or_else(|| format!("`read`: no spell `{id}` in data/spells/"))?;
+        let def = content.spell(spell);
+        let comfortable = content
+            .spell_rules()
+            .map_or(1, |r| r.comfortable[usize::from(def.tier)]);
+        Ok(Reading::Cast(SpellScroll {
+            spell,
+            level: def.scroll_level.unwrap_or(comfortable),
+            reach: def.base_reach(),
         }))
     }
 }

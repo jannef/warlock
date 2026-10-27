@@ -3,7 +3,7 @@
 id = "blessing"
 name = "Blessing"
 description = "Ask your god's favour: blessed a while, your blows land truer and your will is firmer."
-tier = 0
+tier = 1
 school = "abjuration"
 kind = "buff"
 shape = "self"

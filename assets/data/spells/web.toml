@@ -1,0 +1,19 @@
+# Web (spec §8 "Spells", the first spell list): sticky strands burst where it is aimed; everyone
+# they reach but the caster is held where they stand a few turns.
+[[spell]]
+id = "web"
+name = "Web"
+description = "Sticky strands burst where you aim them: everyone they reach is held where they stand a few turns."
+tier = 2
+school = "transmutation"
+kind = "hex"
+shape = "burst"
+resolution = "area"
+range = 8
+max_range = 10
+radius = 1
+max_radius = 1
+effect = { status = "webbed", severity = 3 }
+
+[spell.cast]
+noise = { sound = "chanting", loudness = 20 }

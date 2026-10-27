@@ -77,9 +77,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
       combat stance's, §8 "Stances"): to-hit and damage join every attack profile with the
       stance's (`Actor::stanced`), Dodge and Parry the actor's Defence (Dodge stacks, of Parry the
       highest counts), creatures' as well as the player's (a hex is a status on a creature);
-    - **slow** (`cost`, 100 to 1000 percent): every action's price is multiplied by it, after the
+    - **slow** (`cost`, 50 to 1000 percent): every action's price is multiplied by it, after the
       burden and Bloated (`World::burdened`, the one place every price passes); several multiply.
-      Statuses never hasten, so a creature's quickest step stays what a rest's batching counts on;
+      Only a spell's buff on its caster may hasten (Haste's Hasted, 75; #397), so a creature's
+      quickest step stays what a rest's batching counts on;
     - **block** actions (`blocks = ["read"]`, ids in `data/actions.toml`): the rules refuse the
       player's action of that kind before it is tried, with no time taken ("You cannot read while
       raging."; a step into a hostile creature is `melee`, into a closed door `open_door`, off a
@@ -226,11 +227,40 @@ developer notes (CLAUDE.md, `docs/dev/`).
     never the pace (hidden like `regen_seconds`); the dev `actors` layer shows every actor's.
     Mana is part of the world state (saved, covered by the state hash; an actor without any
     serializes as before).
-- **Spells** (the magic design, `docs/design/magic.md` §3 to §6; `content/spell_def.rs`,
-  `world/caster_level.rs`, `world/cast.rs`, `world/learn.rs`; #394, #395, #396): the spell
-  data, the one cast path, and learning. The casters' spells (§8 "Class abilities") are spells
-  of `data/spells/` cast by it, and so are the spells learned from scrolls.
-  `docs/dev/spells.md` has the details.
+- **Spells** (the magic design, `docs/design/magic.md` §3 to §8; `content/spell_def.rs`,
+  `world/caster_level.rs`, `world/cast.rs`, `world/learn.rs`; #394, #395, #396, #397): the spell
+  data, the one cast path, learning, and the first spell list. The casters' spells (§8 "Class
+  abilities") are spells of `data/spells/` cast by it, and so are the spells learned from
+  scrolls and the spells scrolls cast. `docs/dev/spells.md` has the details.
+  - **The first list** (#397, design §7; names left for the world-language review, #378):
+    tier 0 Evil eye, Mend, Ray of frost, Spark; tier 1 Barkskin, Blessing, Burning hands, Cause
+    wounds, Cure wounds, Curse of sloth, Hex of weakness, Magic missile; tier 2 Arcane bolt,
+    Blight, Frost, Scorching ray, Sleep, Web; tier 3 Call lightning, Fireball (the wizard's Fire
+    burst folded into it), Flame, Haste, Lightning bolt, Remove disease. A spell is cast by its
+    data id (`use:magic_missile:12,5`, any `use:ID` that is no class or birth sign ability);
+    the abilities menu lists the spells known by tier, then path order. Sleep and Web are
+    **area hexes**: a burst whose status falls on everyone it reaches but the caster, friend or
+    foe (`World::cast_area_hex`). Haste is the one status that hastens (`cost` 75; statuses may
+    cost 50 to 1000 percent, and only a buff, on its caster, may hasten: a hex's or a damage
+    spell's status that would is refused when the content loads).
+  - **Guaranteed spells** (design §8): a class's level table (`abilities`, §8 "Class
+    abilities") gives its spells as class abilities with a `spell` effect, at the level each
+    comes at, never above the tier the class's caster level has then reached. Wizard: Ray of
+    frost (1), Magic missile (3), Burning hands (12), Arcane bolt (18). Priest: Mend (1),
+    Blessing (3), Cure wounds (3), Remove disease (12). Druid: Spark (1), Barkskin (3), Call
+    lightning (12), Flame and frost (50). Witch: Evil eye (1), Hex of weakness (3), Cause wounds
+    (12), Curse of sloth (32), Blight (40). Bard: Mend (1), Blessing (6). Paladin: Blessing
+    (6). Ranger: Barkskin (6). Every other class none. Every class has some mana (the
+    barbarian and the warrior 1); a race adds none unless its data says so.
+  - **Spell scrolls** (§8 "Scrolls"): every spell comes on one scroll (`scroll_of_ID`, a
+    `read` table of kind `spell`), which casts it through the cast path at the spell's
+    `[spell.scroll] level` (default its tier's comfortable level), free of mana and never
+    refused for what the reader knows (Spell recall may keep it; a death by it is the
+    scroll's), and teaches it to whoever studies it. The scrolls of fireball, frost, and
+    lightning keep their burst and bolt readings and teach Fireball, Frost, and Lightning bolt.
+    By tier (item `level`, loot `frequency`, value): tier 0 (1, 60, 40), 1 (2, 45, 80), 2 (4,
+    30, 130), 3 (6, 20, 200); a shop's goods are drawn by loot frequency (100 for what is never
+    loot), so a general store lays out low tiers more often (§7 "Shops").
   - **Tiers** (`data/spells.toml`): a spell has a tier, 0 (a *cantrip*) to 9. Each tier has a
     **comfortable caster level** (1, 3, 6, 12, 18, 25, 32, 40, 50, 60), a **base mana cost** (1,
     3, 6, 11, 16, 22, 29, 37, 46, 56), and a **damage ceiling** (6, 12, 18, 24, 32, 40, 50, 62,
@@ -304,8 +334,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Learning** (`world/learn.rs`, `content/learning.rs`; #396): a character knows a set of
     spells for good: those their class abilities give and those they learned
     (`Actor::spells`, saved by id, left out of the JSON while empty). Either kind is cast from
-    the abilities menu's *Spells* group. A spell scroll may **teach** a spell (`teaches` in its
-    `read` table: fireball Fire burst, lightning Call lightning, frost Frost).
+    the abilities menu's *Spells* group. A spell scroll **teaches** a spell (a `spell`
+    reading its own; `teaches` in a burst's or bolt's `read` table: fireball Fireball, lightning
+    Lightning bolt, frost Frost).
     - **Study** (`Action::Study`, `study:b`; the `Study` key command, `L`, next to Read):
       refused with no time, the scroll kept, for no such stack, a thing that teaches nothing
       ("There is no spell in a dagger to learn."), a scroll still under its label ("You do not
