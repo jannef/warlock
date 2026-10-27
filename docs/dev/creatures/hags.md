@@ -12,5 +12,5 @@ list it. Their riders are existing mechanics only: the green hag's `transfixed` 
 annis hag's `held` (her embrace, grip 18), the bheur hag's cold damage and `sluggish` (no hunger
 rider exists); `world/mana_tests.rs` drops the green and bheur hags with its own status file.
 Illusions, death gazes, blizzards, shapeshifting, covens, and water-dwelling (the sea hag walks
-the land only, #196) are follow-ups. They ship in no population: only Fyrdelf's window (5–16)
+the land only, #196) are follow-ups. They ship in no population (checked again in #531): only Fyrdelf's window (5–16)
 reaches the green hag's level, and a volcano is no place for her. They come only as strays (docs/dev/creatures.md).

@@ -94,6 +94,16 @@ fn the_floors_start_full_of_the_fen_wave() {
             "pixie",
             "boggle",
             "darkling",
+            // The rosters placed (#531).
+            "sprite",
+            "quickling",
+            "satyr",
+            "water_mote",
+            "frost_mote",
+            "lesser_ice_elemental",
+            "stone_haunt",
+            "pale_drinker",
+            "mummy",
             // The drowned church's household things (#483).
             "animated_candlestick",
             "animated_book",

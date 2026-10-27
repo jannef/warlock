@@ -50,6 +50,17 @@ population = [
     "hobgoblin_sergeant",
     "warg", "orc_raider", "orc_shaman", "orc_berserker", "orc_veteran", "orc_bowman",
     "animated_blade", "animated_armour",
+    # The rosters placed (#531), those of level 17 and less (the danger runs 5 to 16, #534): the
+    # elementals of stone, fire, air, water, and lightning the mine digs into (the motes are the
+    # shallow galleries' filler, as the bats are), the devils the demons' fires draw up, the
+    # goblin wizard with the war bands (a rare deep threat), the meenlock in the dark, and the dead
+    # that walk the deep workings. The types of level 18 and more (the necromancer, the forest
+    # troll, the hill giant, the bearded devil, the air elemental, the bone wyvern, the gibbering
+    # shade, the fetch, the revenant, the mummy priest) wait for deeper places.
+    "stone_mote", "ember_mote", "dust_devil", "lesser_earth_elemental", "spark_mote",
+    "lesser_air_elemental", "water_elemental", "lesser_lightning_elemental",
+    "lemure", "imp", "goblin_wizard", "meenlock",
+    "draugr", "barghest", "hand_of_glory", "vampire_spawn", "gallows_dead",
 ]
 # How many: the default, 35 a thousand walkable cells, 25 to 80. A gallery floor (about 350 cells)
 # gets the least, 25, as Cealdhlāw's passages do; the deep workings (about 3 000) the ceiling, 80.

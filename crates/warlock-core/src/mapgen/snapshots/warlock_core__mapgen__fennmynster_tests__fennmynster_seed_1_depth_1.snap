@@ -5,31 +5,31 @@ expression: "describe(&level(1, 1))"
 Fennmynster 1 (fennmynster:1) 80x21
 stairs Up at (42, 4) -> ascmearc
 stairs Down at (68, 12) -> fennmynster:2
-corpse_candle at (38, 14) route W W W E E W W W E E W W E E E W W E E E
+sprite at (38, 14) route W W W E E W W W E E W W E E E W W E E E carrying a hardwood short bow (readied), 8 bone arrows (quivered)
 corpse_candle at (58, 13) route N N W E E E E E W W W W W E S S
 animated_book at (31, 11) route N N S S S N N N S S carrying a book
-animated_book at (9, 16) route E S S W W W N S E E E N N W carrying a book
+stone_haunt at (9, 16) route E S S W W W N S E E E N N W
 animated_book at (25, 17) route N N E E E E W W W W S S carrying a book
-corpse_candle at (28, 5) route E S S S S N N N N W
-corpse_candle at (27, 10) route N N N N E E S S S N N N W W S S S S
+sprite at (28, 5) route E S S S S N N N N W carrying a short bow (readied), 8 bone arrows (quivered)
+sprite at (27, 10) route N N N N E E S S S N N N W W S S S S carrying a short bow (readied), 8 bone arrows (quivered)
 animated_book at (44, 12) route E W E W E E W W E W E E W W E W E W carrying a book
 animated_book at (8, 17) route E E S W W E E N W W carrying a book
-corpse_candle at (56, 12) route W W W W W W W W W W E E E E E E E E E E
-animated_book at (28, 16) route W W S W E N E E carrying a book
-animated_book at (27, 15) route S S W W E E N N carrying a book
+sprite at (56, 12) route W W W W W W W W W W E E E E E E E E E E carrying a hardwood short bow (readied), 15 obsidian arrows (quivered)
+stone_haunt at (28, 16) route W W S W E N E E
+stone_haunt at (27, 15) route S S W W E E N N
 barrow_spider at (57, 12) route S N N E W S S N
-animated_book at (7, 12) route S S S S S E E E S W E N W W W N N N N N carrying a book
-animated_book at (28, 9) route N E S W N E S N W S E N W S carrying a book
+sprite at (7, 12) route S S S S S E E E S W E N W W W N N N N N carrying a hardwood short bow (readied), 15 duralumin arrows (quivered)
+stone_haunt at (28, 9) route N E S W N E S N W S E N W S
 animated_book at (15, 16) route W W W E E W W E E E carrying a book
-animated_book at (51, 12) route E W E E W W E E W W E W carrying a book
+stone_haunt at (51, 12) route E W E E W W E E W W E W
 corpse_candle at (31, 14) route S S N N N N N S S S N N N S S S S S N N
-corpse_candle at (40, 15) route W N N E E E S S W W E E N N W W W S S E
-corpse_candle at (58, 7) route N S S N N S S N N S
-animated_book at (53, 3) route E E S W E E E E W W W W E N W W carrying a book
-corpse_candle at (29, 15) route S S W W W W E E E E N N
+sprite at (40, 15) route W N N E E E S S W W E E N N W W W S S E carrying a short bow (readied), 15 arrows (quivered)
+sprite at (58, 7) route N S S N N S S N N S carrying a short bow (readied), 8 bone arrows (quivered)
+stone_haunt at (53, 3) route E E S W E E E E W W W W E N W W
+sprite at (29, 15) route S S W W W W E E E E N N carrying a short bow (readied), 15 flint arrows (quivered)
 animated_book at (21, 16) route W W W W W E W E E E E E carrying a book
-kobold_archer at (23, 16) route W W E E W W E E W W E E W W E E W W E E carrying a hardwood short bow (readied), 12 bone arrows (quivered)
-corpse_candle at (57, 13) route N S N N E E E E E N S W W W W W S S N S
+kobold_zombie at (23, 16) route W W E E W W E E W W E E W W E E W W E E
+sprite at (57, 13) route N S N N E E E E E N S W W W W W S S N S carrying a short bow (readied), 15 arrows (quivered)
 alarm trap at (28, 7)
 teleport trap at (38, 4)
 alarm trap at (42, 6)
@@ -38,20 +38,20 @@ pit trap at (60, 12)
 
                                      ############    ########
                #####                 #.........¡######.....¡#
-               #¡..#                 #..........'....(......#
+               #¡..#                 #..........'....G......#
                #...#      #####      #^...<.....######......#
-               #...#      #¡y.#      #..........#    #####'##
+               #...#      #¡f.#      #..........#    #####'##
                ##'#########...#      #¡...^.....#        #.#
-                #.........'.^.#      ##.#########        #y#
+                #.........'.^.#      ##.#########        #f#
                 ###########...###     #.#                #.#
-                          #.(.'.#     #.#               ##'#############
-                          #y..#.#     #.#               #¡...........[.#
+                          #.G.'.#     #.#               ##'#############
+                          #f..#.#     #.#               #¡...........[.#
      #######              ##.##(#     #.#  ##############.............(#
-     #.(..¡#               #.##.#    ##S####(......(....ys..^.......>..#
-     #.....#               #.##.######.....#.############yy...........¡#
-     #.....#            ####.##y......y....S.#          ################
-     #.....##############..(.y#.######¡.y..###
-     #...(.&...(.....(.kS.?.(.'.#    #######
+     #.f..¡#               #.##.#    ##S####(......G....fs..^.......>..#
+     #.....#               #.##.######.....#.############fy...........¡#
+     #.....#            ####.##y......f....S.#          ################
+     #.....##############..G.f#.######¡.f..###
+     #...G.&...(.....(.zS.?.G.'.#    #######
      #..(..##############(....###
      #¡....#            #######
      #######

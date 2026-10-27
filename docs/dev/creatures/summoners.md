@@ -21,6 +21,11 @@ kobolds alone while the summoner lives in their ranks.
 
 `content/summoner_roster_tests.rs` checks every `summoner` against its table, another tribe's
 tag, and mana, and the three above against the XP guideline and the HP formula (±35 %);
-`content::tag`'s test lists them. None is in a population yet: the showcase's summoning hall
-(`summoners` scenario) places them. The three drow priestesses (#536) summon demons: their table is in
-`docs/dev/creatures/drow.md` (the drow roster's checks cover them, not this file's `ROSTER`).
+`content::tag`'s test lists them. The showcase's summoning hall (`summoners` scenario) places
+all three. Since #531 Fyrdelf's population has the goblin wizard (with the war bands; rare, so a
+floor holds one or two); the necromancer (18) and the dark wizard (24) are in none, no window
+reaching them (Fyrdelf's runs 5 to 16, #534). The goblin wizard stays out of
+Brocenburg: that lair's population is the guild design's (§8.2), and at its danger 6 to 9 a
+level-8 summoner would be the strongest thing drawn there, a third of its floors' draws. The three
+drow priestesses (#536) summon demons: their table is in `docs/dev/creatures/drow.md` (the drow
+roster's checks cover them, not this file's `ROSTER`).

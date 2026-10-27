@@ -11,9 +11,12 @@ level from 1 to `ROSTER_TOP` must have one. Batch 1's population lines: CealdhlÄ
 hand, skeletal rat, kobold zombie, skeleton archer, skeletal wolf, and skeleton warrior;
 Fennmynster the corpse candle, poltergeist, ghast, shadow, and bog body; Fyrdelf the ogre zombie
 and grave hound. Batch 2's: Fennmynster the wraith and fen ghoul; Fyrdelf the burning skull,
-knocker, spectre, charred dead, duergar skeleton, and rotting troll. The mummy, barghest, draugr,
-vampire spawn, hand of glory, gallows dead, gibbering shade, bone wyvern, revenant, fetch, and
-mummy priest ship in no population, as do all of batches 3 to 5 (levels 21 and up) (deep undead wait for deep places, #383; until then they come only as strays, docs/dev/creatures.md), and the ghost is
+knocker, spectre, charred dead, duergar skeleton, and rotting troll. #531 placed the
+rest up to level 17: Fennmynster the stone haunt (in its stones), the pale drinker, and the
+mummy (its crypts); Fyrdelf the draugr, barghest, hand of glory, vampire spawn, and gallows dead,
+the dead of its deep workings. The bone wyvern, gibbering shade, fetch, revenant, and mummy
+priest (levels 18 to 20) and all of batches 3 to 6 (levels 21 and up) ship
+in no population (deep undead wait for deep places, #383; until then they come only as strays, docs/dev/creatures.md), and the ghost is
 incorporeal (wall Defence 2). The roster's holds (`held`, #431) are `{ status = "held", chance,
 difficulty }`: the ghast's and fen ghoul's claws 10 % at 15, the gallows dead's tongue 20 % at 17, the lich's touch and the ghoul lord's claws 15 % at 18 (12 + level Ã· 5, as a drain's).
 

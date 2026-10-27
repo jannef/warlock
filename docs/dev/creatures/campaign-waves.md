@@ -13,7 +13,7 @@ The design's marsh eel (`habitat = "water"`) is left out: placing and keeping a 
 is a rule of its own, not content. The wisp carries the `wisp` light (`data/lights.toml`). The wiki's creature tables
 (`xtask/src/wiki/creatures.rs`) pick new types up by themselves; the status-effect and disease
 tables name the bites that cause them, so `xtask/src/wiki/mod.rs`'s test rows move when a wave's
-`on_hit` names a status or disease. A drain in `on_hit` (`docs/dev/stats.md` "Drain", #382) is shown in the creature attack table (`on_hit` text) and in `drain-attacks.md`; the pale drinker, the first drainer, is in no population yet.
+`on_hit` names a status or disease. A drain in `on_hit` (`docs/dev/stats.md` "Drain", #382) is shown in the creature attack table (`on_hit` text) and in `drain-attacks.md`; the pale drinker, the first drainer, is Fennmynster's since #531.
 The delf wave (danger 5–16; 8–19 until #534): ember beetle, duergar miner, duergar warrior, ogre, fire
 salamander, troll, duergar smith, magma crawler, ash wraith, basilisk, cinder elemental, and the
 fire drake (the Ascmearc's own, `campaigns/ascmearc/data/creatures/`, `unique`); factions

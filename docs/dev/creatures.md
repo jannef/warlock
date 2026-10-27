@@ -133,6 +133,11 @@ population is met as a stray, and people, keepers, hand-placed guardians, and qu
 `world::spawn_tests::strays_come_from_every_hostile_type_but_those_kept_out`; `populate` builds the generic candidates once a floor, the own ones per creature (a
 unique leaves them). Hand-placed creatures (level legends, vaults,
 scenario people, shopkeepers) are never drawn, whatever their tier.
+Where the rosters are met (#531): the showcase's Depths has no danger (its patrol of rats, bats,
+and kobolds only; there is no general candidate pool). In the Ascmearc a type of level 17 or less
+(level 11 or less in Fennmynster, whose danger runs 3 to 10) is placed in a population where it
+fits (Fennmynster 3–10, Fyrdelf 5–16, #534); every other hostile type comes only as a stray
+(Strays, above). Each tribe's placements are in its file below.
 `cargo xtask bench-turns` has a `delf` row: a fixture 120×60 cave branch of danger 8 at full
 population (`xtask/src/bench.rs`); its night's rest is held to the 500 ms budget thanks to coarse
 turns.

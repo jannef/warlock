@@ -108,7 +108,10 @@ drowned dead, its peat-dark bog bodies, and its ghasts and fen ghouls, whose cla
 and the restless spirits that pass through its walls: corpse candles, poltergeists, ghosts, the
 shadows that drink your strength, and the wraiths that drink your life. With
 them is the cult that came to the ruin, cultists and their priests; somewhere in the dark is
-the bog hag, whom you meet once in your life. No one trades down there: Fennmynster has no shops.
+the bog hag, whom you meet once in your life. Fey of the damp haunt the cellars, pixies,
+sprites, boggles, quicklings, satyrs, and darklings;
+water and frost motes and lesser ice elementals stir in the cold water, stone haunts drift
+through the minster's walls, and pale drinkers and mummies keep its crypts. No one trades down there: Fennmynster has no shops.
 
 At the very bottom lies the **sunken crypt**: a nave of shallow water between the monks' tombs,
 where two of the drowned still stand guard, and at its far end a dry dais with an altar and the
@@ -134,8 +137,12 @@ spectres, that pass through the rock; hell hounds, fiends at home in the fires, 
 deep workings, and the upper galleries belong mostly to kobolds, centipedes, and bats. Hobgoblin war bands come
 down to raid the duergar: soldiers, archers, legionnaires with spear and shield, warcasters,
 and sergeants. Orc war bands raid the mine too: raiders, shamans, berserkers, veterans, bowmen,
-and their wargs. Their captains and war chiefs, like the duergar's priests, stay deeper than the
-delf goes.
+and their wargs, with goblin wizards who call up more of their kin. Their captains and war chiefs,
+like the duergar's priests, stay deeper than the delf goes. The motes of stone, fire, and air
+drift through the upper galleries, and spark motes, lesser earth, air, and lightning elementals,
+and water elementals through the workings. The demons' fires draw up lemures and imps; meenlocks
+lurk in the dark. The deep workings' dead are many: draugr, barghests, hands of glory, vampire
+spawn, and the gallows dead.
 
 Every gallery floor holds a **foreman's cabin**: a timber-floored lodging where a duergar miner
 keeps watch, with a spare pick-axe, his lamp, and a brass key to the delf's locked rooms behind a
