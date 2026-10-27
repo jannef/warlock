@@ -9,9 +9,10 @@
 //! [`Rng::population`] (`population/<level id>`), drawn after its loot and before its gear, so
 //! the map, traps, secrets, and loot are the same with any population. Per creature: its type,
 //! its cell, and its route. The cell is plain floor (the palette's), free of creatures, lights,
-//! traps, and shops, outside a sanctuary, and at least [`AWAY`] cells (Chebyshev) from every
-//! staircase (the player arrives on one); the route is a short out-and-back walk over cells as
-//! free (no door, no trap), else the creature keeps a post. A unique type comes once a run: not
+//! traps, and shops, outside a sanctuary or a teeming den (its sleepers come on top,
+//! `den.rs`), and at least [`AWAY`] cells (Chebyshev) from every staircase (the player arrives
+//! on one); the route is a short out-and-back walk over cells as free (no door, no trap), else
+//! the creature keeps a post. A unique type comes once a run: not
 //! if the run has met it, and once on the floor. The creatures roll their gear afterwards with
 //! the rest ([`crate::gear::arm`]).
 
@@ -44,8 +45,12 @@ pub(super) fn populate(
     let count = spawning
         .count
         .for_cells(u32::try_from(walkable).unwrap_or(u32::MAX));
+    // Kept clear: a sanctuary (shunned), a teeming den (its sleepers come on top, `den.rs`).
     let shunned = |p: Pos| {
-        (template.rooms.iter()).any(|r| r.contains(p) && content.room_effect(r.effect).shunned)
+        (template.rooms.iter()).any(|r| {
+            let effect = content.room_effect(r.effect);
+            r.contains(p) && (effect.shunned || effect.swarm.is_some())
+        })
     };
     let free_of = |p: Pos| {
         !template.traps.contains_key(&p)
@@ -95,6 +100,7 @@ pub(super) fn populate(
             carry: Vec::new(),
             equipment: Default::default(),
             rolls_gear: true,
+            asleep: false,
         });
     }
     template.creatures.extend(placed);

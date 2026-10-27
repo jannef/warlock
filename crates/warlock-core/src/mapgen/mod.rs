@@ -24,7 +24,8 @@
 //!    ([`Rng::secrets`]), only where the stairs and every key are still reached without them,
 //!    then roll its loot from its loot stream ([`Rng::loot`]), then, on a branch with a danger,
 //!    lay its initial population down from its population stream ([`Rng::population`],
-//!    `population.rs`), then its creatures' gear from its gear stream ([`Rng::gear`],
+//!    `population.rs`), then its teeming dens' sleepers and hoards from its swarm stream
+//!    ([`Rng::swarm`], `den.rs`), then its creatures' gear from its gear stream ([`Rng::gear`],
 //!    [`crate::gear::arm`]).
 //!
 //! Generation is integer-only and never iterates a hash map. Seeds are stable within a game
@@ -32,6 +33,7 @@
 
 mod caves;
 mod connect;
+mod den;
 pub mod local;
 mod population;
 mod rooms;
@@ -339,6 +341,7 @@ impl<'a> Canvas<'a> {
             carry: Vec::new(),
             equipment: Default::default(),
             rolls_gear: true,
+            asleep: false,
         });
         true
     }
@@ -520,6 +523,7 @@ pub fn generate_for(
             if let Some((rule, depth, spawning)) = content.spawning(id) {
                 let danger = rule.at(depth, visit.player_level);
                 population::populate(&mut template, content, seed, (pal, danger, spawning), visit);
+                den::fill(&mut template, content, seed, (pal, danger, spawning), visit);
             }
             crate::gear::arm(&mut template, content, seed);
             return Ok(template);

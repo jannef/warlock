@@ -36,7 +36,8 @@
 //! actor on its level when the loudness at its cell is at least that. It keeps what it heard
 //! ([`Heard`]: kind, where, how loud) in [`crate::world::Actor::heard`] until it next acts: a
 //! creature as its turn starts (the input the creature AI reads, #77), the player when the next
-//! turn starts passing.
+//! turn starts passing. `World::spread_noise` (`world/den.rs`) keeps them, and wakes the sleepers a
+//! noise is loud enough for (spec §7 "Special rooms": teeming dens).
 //!
 //! **The player** perceives heard sounds whose source they do not see through
 //! [`crate::perception::PerceptionView::sounds`]: the kind, how loud ([`Volume`]), and roughly
@@ -468,20 +469,6 @@ pub fn propagate(
         }
     }
     field
-}
-
-/// Makes `noise` on the current level: every other actor there with hearing that it reaches
-/// loudly enough keeps it in its [`Actor::heard`] list. The overworld is silent.
-pub(crate) fn make(state: &mut WorldState, content: &Content, noise: Noise) {
-    for (id, loudness) in hearers(state, content, noise) {
-        if let Some(actor) = state.actors.get_mut(&id) {
-            actor.heard.push(Heard {
-                kind: noise.kind,
-                at: noise.at,
-                loudness,
-            });
-        }
-    }
 }
 
 /// Whether anyone but its maker on the current level would hear `noise`.

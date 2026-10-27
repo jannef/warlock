@@ -44,7 +44,7 @@ impl World {
             && noise::plain_noise(content, state.current(), a, burden, act)
                 .is_some_and(|plain| noise::heard_by_anyone(state, content, plain));
         if let Some(made) = made {
-            noise::make(&mut self.state, &self.content, made);
+            self.spread_noise(made);
         }
         if sneaking {
             self.train(Use::Sneak);
