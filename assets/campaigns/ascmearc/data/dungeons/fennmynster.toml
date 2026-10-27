@@ -37,10 +37,9 @@ population = [
 # cells gets the least, 25).
 
 # The fen seeps in (spec §7 "Special rooms"): a room is special one time in four, at most two a
-# level; water, hush, and shadow most of the time, and the rest whatever any dungeon may hold.
-# Never a sweltering chamber. (The design's cursed share, 15, and its ban on forges come with
-# those rooms.)
-room_effects = { chance = 25, per_level = 2, favoured = { flooded = 35, hushed = 15, shadowed = 15 }, banned = ["hot"] }
+# level; water, hush, and shadow most of the time, the dead often, and the rest whatever any
+# dungeon may hold. Never a sweltering chamber. (The design's ban on forges comes with them.)
+room_effects = { chance = 25, per_level = 2, favoured = { flooded = 35, cursed = 15, hushed = 15, shadowed = 15 }, banned = ["hot"] }
 # No one trades in the drowned minster (spec §7 "Shops").
 shops = { chance = 0 }
 

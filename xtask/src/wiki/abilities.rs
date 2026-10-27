@@ -54,6 +54,18 @@ pub(super) fn abilities(content: &Content) -> String {
             }
         };
         let (asks, takes) = match a.cost() {
+            // A long action: its prayer's time, whatever the pace.
+            Some(_) if a == Ability::Class(ClassActive::Consecrate) => {
+                let book = content.talents();
+                let time = (book.id("consecrate").into_iter())
+                    .flat_map(|t| book.get(t).effects.iter())
+                    .find_map(|e| match e {
+                        TalentEffect::Consecrate { time, .. } => Some(time.clone()),
+                        _ => None,
+                    })
+                    .unwrap_or_default();
+                (aim(a.aim(content)), format!("{time} (a prayer)"))
+            }
             Some(kind) => {
                 let cost = content.action_costs().cost(kind);
                 (aim(a.aim(content)), at_normal_pace(price(cost, BASE_TURN)))

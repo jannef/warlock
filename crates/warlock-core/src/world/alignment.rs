@@ -6,7 +6,7 @@
 //! the experience it earns: [`World::judge_kill`]), attacking a shopkeeper, theft, and paying
 //! what is owed (`shop.rs`: [`World::player_did`]), eating a corpse of one's own race or of a
 //! peaceful creature who talks (`eat.rs`: [`World::ate_corpse`]), and a quest's own shift on
-//! completion (`quest.rs`). Stealing (`steal.rs`: `World::got_away_with`, a theft that took something)
+//! completion (`quest.rs`), and consecrating an unholy place (`consecrate.rs`). Stealing (`steal.rs`: `World::got_away_with`, a theft that took something)
 //! is a [`Deed::Theft`] too.
 //!
 //! **Readers**: good folk turn cold toward an Evil or Wicked character, evil folk toward a Good
@@ -41,6 +41,8 @@ pub enum Deed {
     AteKin,
     /// Completed a quest that moves the score.
     Quest,
+    /// Consecrated an unholy place (Consecrate).
+    Consecrated,
     /// Prayed at a forgotten altar of this side (spec §7 "Special rooms"): a good altar's
     /// prayer is a little good, an evil one's evil, a neutral one's nothing.
     Prayed(Alignment),
@@ -55,6 +57,7 @@ impl Deed {
             Deed::Theft => Some(shift.theft),
             Deed::PaidDebt => Some(shift.pay_debt),
             Deed::AteKin => Some(shift.eat_kin),
+            Deed::Consecrated => Some(shift.consecrate),
             Deed::Prayed(Alignment::Good) => Some(shift.prayed_good),
             Deed::Prayed(Alignment::Evil) => Some(shift.prayed_evil),
             Deed::Prayed(Alignment::Neutral) => Some(0),

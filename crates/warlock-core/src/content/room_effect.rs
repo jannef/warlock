@@ -25,6 +25,9 @@
 //! An effect may give way under the player now and then ([`RoomEffectDef::collapse`]: a
 //! collapsed floor; `World::collapse_step`, a fall to the level below).
 //!
+//! An effect may raise the dead killed inside ([`RoomEffectDef::rise`]: a cursed room;
+//! `world/curse.rs`), and Consecrate may lift an unholy one for good ([`RoomEffectDef::unholy`]).
+//!
 //! An effect may give everyone inside a status while they stay ([`RoomEffectDef::status`]: a
 //! draining room's Ebbing; `World::dwell`), which eases by its own pace once they leave.
 //!
@@ -40,6 +43,7 @@ use crate::dice::Dice;
 use crate::geom::Pos;
 use crate::light::Light;
 use crate::temperature::Temperature;
+use crate::time::Duration;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::ops::RangeInclusive;
@@ -66,6 +70,9 @@ pub const TEMPERATURE: RangeInclusive<i8> = -40..=40;
 /// How many reflections a hall of mirrors may show of each actor inside (spec §7 "Special
 /// rooms").
 pub const IMAGES: RangeInclusive<u8> = 1..=8;
+/// How long after a death in a cursed room the dead may rise, in seconds (spec §7 "Special
+/// rooms").
+pub const RISE_AFTER: RangeInclusive<u64> = 1..=3600;
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -134,6 +141,9 @@ struct RoomEffectSpec {
     mirrors: Option<MirrorsSpec>,
     #[serde(default)]
     warp: u8,
+    rise: Option<RiseSpec>,
+    #[serde(default)]
+    unholy: bool,
     feature: Option<String>,
     sides: Option<BTreeMap<Alignment, String>>,
     offers: Option<OffersSpec>,
@@ -161,6 +171,25 @@ impl Offer {
             Offer::Pray => "pray",
         }
     }
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RiseSpec {
+    faction: String,
+    after: String,
+}
+
+/// A cursed room's risings (`rise = { faction = "undead", after = "2m" }`, spec §7 "Special
+/// rooms"; `world/curse.rs`): a creature not of `faction` that dies inside and leaves a corpse
+/// rises from it as a creature of `faction` `after` its death.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Rise {
+    /// The faction (an id in `data/factions.toml`) the dead rise as, and that never rises
+    /// (checked once the factions load, [`RoomEffects::check_factions`]).
+    pub faction: String,
+    /// How long after the death.
+    pub after: Duration,
 }
 
 /// A collapsed floor's numbers (`collapse = { chance = 15, damage = "2d6" }`, spec §7 "Special
@@ -365,6 +394,10 @@ pub struct RoomEffectDef {
     side_lights: BTreeMap<Alignment, String>,
     /// A collapsed floor's: a step of the player inside may give way (`World::collapse_step`).
     pub collapse: Option<Collapse>,
+    /// The dead killed inside rise (a cursed room's).
+    pub rise: Option<Rise>,
+    /// Consecrate lifts it for good (a cursed and a draining room).
+    pub unholy: bool,
 }
 
 impl RoomEffectDef {
@@ -501,6 +534,11 @@ impl<'c> Here<'c> {
         self.room.and_then(|e| e.collapse)
     }
 
+    /// The risings here, if the dead rise here: the room's, else the level's.
+    pub fn rise(&self) -> Option<&'c Rise> {
+        self.each().find_map(|e| e.rise.as_ref())
+    }
+
     /// The statuses held here, the room's first: both apply.
     pub fn statuses(self) -> impl Iterator<Item = StatusId> + 'c {
         (self.room.into_iter().chain(self.level)).filter_map(|e| e.status)
@@ -572,6 +610,17 @@ impl RoomEffects {
     /// one, named once.
     pub(super) fn check_factions(&self, factions: &super::Factions) -> Result<(), ContentError> {
         for def in &self.defs {
+            if let Some(rise) = &def.rise
+                && factions.id(&rise.faction).is_none()
+            {
+                return Err(ContentError::new(
+                    "data/room_effects.toml",
+                    format!(
+                        "effect `{}`: rise faction `{}` is unknown",
+                        def.id, rise.faction
+                    ),
+                ));
+            }
             let Some(swarm) = &def.swarm else { continue };
             for (i, name) in swarm.factions.iter().enumerate() {
                 let fault = if factions.id(name).is_none() {
@@ -743,6 +792,26 @@ impl RoomEffects {
                 )));
             }
             let mirrors = spec.mirrors.as_ref().map(|m| Mirrors { images: m.images });
+            let rise = match &spec.rise {
+                Some(r) => {
+                    let after: Duration = r.after.parse().map_err(|e: String| bad(e))?;
+                    if !RISE_AFTER.contains(&after.as_seconds()) {
+                        return Err(bad(format!(
+                            "rise.after is {} to {} seconds",
+                            RISE_AFTER.start(),
+                            RISE_AFTER.end()
+                        )));
+                    }
+                    if !spec.needs_danger {
+                        return Err(bad("a `rise` needs `needs_danger`".into()));
+                    }
+                    Some(Rise {
+                        faction: r.faction.clone(),
+                        after,
+                    })
+                }
+                None => None,
+            };
             let feature = match &spec.feature {
                 Some(name) => {
                     let (id, def) =
@@ -804,6 +873,8 @@ impl RoomEffects {
                 offers,
                 side_lights: spec.sides.unwrap_or_default(),
                 collapse: spec.collapse,
+                rise,
+                unholy: spec.unholy,
             };
             if def.level_chance > 0 && !def.can_pervade() {
                 return Err(err(format!(

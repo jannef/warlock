@@ -364,6 +364,8 @@ impl World {
         }
         // What comes to the level meanwhile (spec §7 "Danger levels").
         self.spawn_tick();
+        // The dead that rise meanwhile (spec §7 "Special rooms": a cursed room).
+        self.rise_tick();
     }
 
     /// How long from now no creature on the current level that disturbs a rest

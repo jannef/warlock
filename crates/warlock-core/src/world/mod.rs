@@ -98,8 +98,10 @@ mod caster_level;
 mod class;
 mod class_ability;
 mod collapse;
+mod consecrate;
 mod court;
 mod creation;
+mod curse;
 mod den;
 mod dev;
 mod dig;
@@ -184,6 +186,7 @@ pub use attacks::{AttackSource, OwnAttack};
 pub use cast::Reach;
 pub use caster_level::casting_percent;
 pub use creation::{chosen_with_talents, creation_count, parse_talents, pick_text};
+pub use curse::{Rising, rise_candidates, rises_as};
 pub use dig::{MAX_DIG, WORK_SCALE, dig_work, digs_to_break};
 pub use disarm::SPRINGS_SHORT_BY;
 pub use experience::{Discovered, Progress};
@@ -506,6 +509,8 @@ enum Spent {
     Search(u8),
     /// Studying a spell from a scroll (see [`World::study`]).
     Study(learn::Lesson),
+    /// Praying to consecrate a place until this moment (see [`World::consecrate`]).
+    Consecrate(GameTime),
     /// Praying at a forgotten altar (see [`World::pray`]).
     Pray(pray::Prayer),
     /// Dev: the clock jumps ahead; nobody acts, then perception is recomputed.
@@ -1070,6 +1075,7 @@ impl World {
             Spent::Dig(at) => self.dig(at, &mut events),
             Spent::Search(turns) => self.search(turns, &mut events),
             Spent::Study(lesson) => self.study(lesson, &mut events),
+            Spent::Consecrate(until) => self.consecrate(until, &mut events),
             Spent::Pray(prayer) => self.pray(prayer, &mut events),
             Spent::Skip(duration) => {
                 // Nobody acts or gains energy.
@@ -1291,6 +1297,8 @@ mod cost_tests;
 mod court_tests;
 #[cfg(test)]
 mod creation_tests;
+#[cfg(test)]
+mod curse_tests;
 #[cfg(test)]
 mod damage_talent_tests;
 #[cfg(test)]

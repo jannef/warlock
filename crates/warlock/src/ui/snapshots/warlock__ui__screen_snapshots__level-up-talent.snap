@@ -20,12 +20,12 @@ expression: "render(case, content.clone())"
             │   j  Weapon focus (long blades)       You have drilled with one kind of… │
             │ Guard                                                                    │
             │   k  Armour training             1/2  You move freely in armour: it ham… │
-            │   l  Unflinching                      Even as a coward you keep your he… │
+            │   l  Grave warden                     What you lay low stays down: noth… │
+            │   m  Unflinching                      Even as a coward you keep your he… │
             │ Shadow                                                                   │
-            │   m  Keen ears                   1/2  You hear fainter sounds, fainter … │
-            │   n  Lamplighter                      You tend your lantern well: it bu… │
+            │   n  Keen ears                   1/2  You hear fainter sounds, fainter … │
+            │   o  Night eyes                       Your eyes grow used to the dark: … │
             │ Wayfarer                                                                 │
-            │   o  Devout                           You pray as one who means it: an … │
             │   p  Long strider                     Your journeys across the overworl… │
             │   q  Pilgrim                          You have knelt in many temples: t… │
             │   r  Sun-blessed                      The sun mends you: under the open… │
