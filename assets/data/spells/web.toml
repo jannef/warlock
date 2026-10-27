@@ -17,3 +17,6 @@ effect = { status = "webbed", severity = 3 }
 
 [spell.cast]
 noise = { sound = "chanting", loudness = 20 }
+
+[spell.scales]
+duration = { presence = 50, willpower = 25 }

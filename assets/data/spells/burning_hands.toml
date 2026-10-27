@@ -19,3 +19,6 @@ effect = "blaze"
 noun = "flames"
 message = "Flames fan out from your hands!"
 noise = { sound = "explosion", loudness = 40 }
+
+[spell.scales]
+damage = { intelligence = 10, willpower = 5 }

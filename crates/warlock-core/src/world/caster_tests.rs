@@ -449,10 +449,16 @@ fn bolts_and_bursts_strike_as_scrolls_do_and_cost_mana() {
     let before = w.state.actors[&target].hp;
     w.apply(&Action::Cast("fireball".into(), Some(far)));
     assert!(w.state.actors[&target].hp < before);
-    // Tier 3's 11 × 2.4 for a burst of radius 2, less Empower's tenth (23); its third die and
-    // Empower's one more, held to the cap (19).
+    // Tier 3's 11 × 2.4 for a burst of radius 2, less Empower's tenth (23); its third die, the
+    // lift's (Intelligence and Willpower +2: 30 %, 19 → 24), and Empower's one more, held to
+    // the lifted cap.
     assert_eq!(w.state.player().mana, 17);
-    assert!(before - w.state.actors[&target].hp <= 19);
+    let cap = w
+        .state
+        .player()
+        .spell_cap(w.content(), BUILTIN.spell(sp("fireball")));
+    assert_eq!(cap, 24);
+    assert!(before - w.state.actors[&target].hp <= cap);
 }
 
 #[test]
