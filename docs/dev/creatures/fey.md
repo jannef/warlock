@@ -36,8 +36,7 @@ per-seed determinism, save and load, a level's faction winning, look mode's stan
 Seelie fey).
 
 Fennmynster's population takes the pixie, the boggle, and the darkling, and since #531 the
-sprite, the quickling, the satyr, and the redcap (level 12, met only out of depth on its eighth
-floor, or as a stray deeper); Fyrdelf's the meenlock (the unseelie dread of its dark galleries).
+sprite, the quickling, and the satyr (the redcap, level 12, waits for deeper places); Fyrdelf's the meenlock (the unseelie dread of its dark galleries).
 The blink dog and the dryad, woodland fey, are in no population (the Ascmearc has no woodland
 branch), nor are the nymph, the korred, and the yeth hound (levels 22 to 31: no window reaches
 them). Teleport, illusions, flight, charm, tree-binding, a death burst, poisoned

@@ -198,7 +198,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Fennmynster** (#338; `campaigns/ascmearc/data/dungeons/fennmynster.toml`; the design is
   `docs/design/campaign.md` §7): the cellars and crypts of the drowned minster in Micelfenn, its
   way in a hidden location of the overworld (70, 48) leading to `fennmynster:1`. Eight levels of
-  rooms, 80×21, at 6 °C. Danger 4 to 11, nothing scaled by the player; its population is the fen
+  rooms, 80×21, at 6 °C. Danger 3 to 10 (4 to 11 until #534), nothing scaled by the player; its population is the fen
   wave (§7b), the bog hag among them (unique: once a run), at the default count (25 a floor). Pit,
   frost, alarm, and teleport traps; one to three secret doors a level, hidden things one harder
   each level down, locks one; 2 to 4 items of loot; the iron key. Its own room odds: a room is
@@ -212,8 +212,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `docs/design/campaign.md` §7): the Ascmearc's deepest first dungeon, the duergar's mine under
   Ascdūn, its way in a hidden location of the overworld (97, 21) leading to `fyrdelf:1`. Twelve
   levels: galleries (rooms, 80×21) on 1 to 4, the deep workings (caves, 120×60) on 5 to 12;
-  10 °C on the galleries, 16 °C on 5 to 8, 20 °C on 9 to 11, 24 °C at the bottom. Danger 8 to
-  19, nothing scaled by the player; its population is the delf wave (§7b) with the bats,
+  10 °C on the galleries, 16 °C on 5 to 8, 20 °C on 9 to 11, 24 °C at the bottom. Danger 5 to
+  16 (8 to 19 until #534), nothing scaled by the player; its population is the delf wave (§7b) with the bats,
   kobolds, and giant centipedes of the upper galleries, at the default count (25 on a gallery
   floor, 80 in the workings). Arrow, spear, fireball, lightning, and alarm traps; no to two secret
   doors a gallery level, hidden things one harder each level down, locks two; 3 to 5 items of

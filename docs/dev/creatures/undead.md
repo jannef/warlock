@@ -12,10 +12,10 @@ hand, skeletal rat, kobold zombie, skeleton archer, skeletal wolf, and skeleton 
 Fennmynster the corpse candle, poltergeist, ghast, shadow, and bog body; Fyrdelf the ogre zombie
 and grave hound. Batch 2's: Fennmynster the wraith and fen ghoul; Fyrdelf the burning skull,
 knocker, spectre, charred dead, duergar skeleton, and rotting troll. #531 placed the
-rest up to level 20: Fennmynster the stone haunt (in its stones), the pale drinker, and the
-mummy (its crypts); Fyrdelf the draugr, barghest, hand of glory, vampire spawn, gallows dead,
-bone wyvern, gibbering shade, fetch, revenant, and mummy priest (level 20, only out of depth on
-its twelfth floor), the dead of its deep workings. All of batches 3 to 6 (levels 21 and up) ship
+rest up to level 17: Fennmynster the stone haunt (in its stones), the pale drinker, and the
+mummy (its crypts); Fyrdelf the draugr, barghest, hand of glory, vampire spawn, and gallows dead,
+the dead of its deep workings. The bone wyvern, gibbering shade, fetch, revenant, and mummy
+priest (levels 18 to 20) and all of batches 3 to 6 (levels 21 and up) ship
 in no population (deep undead wait for deep places, #383; until then they come only as strays, docs/dev/creatures.md), and the ghost is
 incorporeal (wall Defence 2). The roster's holds (`held`, #431) are `{ status = "held", chance,
 difficulty }`: the ghast's and fen ghoul's claws 10 % at 15, the gallows dead's tongue 20 % at 17, the lich's touch and the ghoul lord's claws 15 % at 18 (12 + level ÷ 5, as a drain's).

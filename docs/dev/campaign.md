@@ -174,7 +174,7 @@ giver shows one quest topic at a time): Reeve Leofric's Cealdhlāw chain (`barro
 chain (`grave_goods`: bring the `silver_chalice`; `fen_minster`: reach `fennmynster:3`, which
 reveals `fennmynster` as it is given; `water_keeps`: bring the `minster_reliquary`), and
 Factor Wulfrun's Fyrdelf chain (`lost_shaft`: reach `fyrdelf:2`, which `requires` `barrow_heart`
-(Fyrdelf starts at danger 8, so nobody is sent there before danger 4) and has `min_level = 5`
+(Fyrdelf starts at danger 5, so nobody is sent there before danger 4) and has `min_level = 5`
 (asked sooner, Wulfrun says her `early` line and gives nothing) and reveals `fyrdelf` as it is given;
 `fire_deep`: kill the fire drake, a named monster: its death counts however it came). Each reach and bring quest has a `where` for the log. The
 quest objects are shared objects (`data/objects/{silver_chalice,minster_reliquary}.toml`,

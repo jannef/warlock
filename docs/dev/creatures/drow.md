@@ -68,7 +68,7 @@ The weaker priestess waits 45 s between callings; nothing she calls is above her
 
 ## Populations
 
-None: their levels overlap only Fyrdelf's (danger 8–19) at the bottom, and a duergar delf is no
+None: their levels overlap only Fyrdelf's (danger 5–16) at the bottom, and a duergar delf is no
 drow place. They wait for a deep place of their own.
 
 ## Follow-ups

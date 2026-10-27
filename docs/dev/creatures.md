@@ -134,13 +134,10 @@ population is met as a stray, and people, keepers, hand-placed guardians, and qu
 unique leaves them). Hand-placed creatures (level legends, vaults,
 scenario people, shopkeepers) are never drawn, whatever their tier.
 Where the rosters are met (#531): the showcase's Depths has no danger (its patrol of rats, bats,
-and kobolds only; there is no general candidate pool), so a type is met in play only through an
-Ascmearc population, whose union is also its stray list. The Ascmearc's deepest floor is danger
-19 (Fyrdelf 12), so every shared or Ascmearc type up to level 20 lives in one of them, except
-people, keepers, wildlife, uniques, animated objects (their own series places them), and the
-blink dog, dryad, and green hag (no home of theirs yet), and the drow (a deep place of their own); `world/ascmearc_tests.rs::
-every_roster_type_within_the_ascmearcs_depth_lives_in_a_population` holds it. Each tribe's
-placements are in its file below.
+and kobolds only; there is no general candidate pool). In the Ascmearc a type of level 17 or less
+(level 11 or less in Fennmynster, whose danger runs 3 to 10) is placed in a population where it
+fits (Fennmynster 3–10, Fyrdelf 5–16, #534); every other hostile type comes only as a stray
+(Strays, above). Each tribe's placements are in its file below.
 `cargo xtask bench-turns` has a `delf` row: a fixture 120×60 cave branch of danger 8 at full
 population (`xtask/src/bench.rs`); its night's rest is held to the 500 ms budget thanks to coarse
 turns.

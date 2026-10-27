@@ -53,7 +53,7 @@ every new run starts in it.
     is given; 80 gold, 2 angelica roots, 160 XP), "What the water keeps" (bring the minster
     reliquary from the sunken crypt, Fennmynster 8; 250 gold, 450 XP).
   - **Factor Wulfrun**: "The lost shaft" (reach Fyrdelf 2; offered once "The barrow's heart" is
-    done, since Fyrdelf starts at danger 8, and given only from character level 5 (`min_level`:
+    done, since Fyrdelf starts at danger 5, and given only from character level 5 (`min_level`:
     asked sooner, she says she doesn't think the player ready, and gives and marks nothing); it
     **reveals Fyrdelf** as it is given; 100 gold, 220 XP), "Fire in the deep" (kill the fire drake in Fyrdelf, a named
     monster: its death counts however it came; 500 gold, 900 XP).

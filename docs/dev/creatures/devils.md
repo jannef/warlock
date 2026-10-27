@@ -4,9 +4,9 @@ The devil roster (#448): ten shared types, one file each in `assets/data/creatur
 5, imp 9, bearded devil 20, barbed devil 26, bone devil 32, erinyes 38, chain devil 42, horned
 devil 48, ice devil 55, pit fiend 66), faction `devil` ("devils", hostile to the player and, by the
 demons' `demon` faction's list (#449), to the demons), tags `devil` and
-`fiend`. Since #531 Fyrdelf's population has the lemure, the imp, and the bearded devil (level 20,
-met only out of depth on its twelfth floor), drawn up by the demons' fires; the rest lie deeper
-than any dungeon. All come as strays too (docs/dev/creatures.md), the deep ones only far out of depth.
+`fiend`. Since #531 Fyrdelf's population has the lemure and the imp, drawn up by the demons' fires; the
+rest (the bearded devil, level 20, and the deeper) wait for deeper places. All come as strays too
+(docs/dev/creatures.md), the deep ones only far out of depth.
 
 They follow #383's formulas by level and role (shambler: the lemure; small: the imp; brute: the
 horned devil, ice devil, and pit fiend; standard: the rest). `content/devil_roster_tests.rs`

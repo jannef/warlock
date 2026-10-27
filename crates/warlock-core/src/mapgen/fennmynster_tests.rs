@@ -44,7 +44,7 @@ fn first_level_snapshot() {
 }
 
 #[test]
-fn eight_cellar_floors_of_danger_four_to_eleven() {
+fn eight_cellar_floors_of_danger_three_to_ten() {
     let def = CONTENT.dungeon("fennmynster").expect("Fennmynster");
     assert_eq!((def.name.as_str(), def.depth), ("Fennmynster", 8));
     assert_eq!(def.campaign.as_deref(), Some("ascmearc"));
@@ -56,7 +56,7 @@ fn eight_cellar_floors_of_danger_four_to_eleven() {
         let (rule, at, _) = CONTENT.spawning(&def.level_id(depth)).expect("a danger");
         // Nothing here grows with the player (the design's decision 13).
         for player_level in [1, 10, 30] {
-            assert_eq!(rule.at(at, player_level), depth as u8 + 3, "depth {depth}");
+            assert_eq!(rule.at(at, player_level), depth as u8 + 2, "depth {depth}");
         }
     }
     assert_eq!(def.key, CONTENT.object_id("iron_key"));
@@ -98,7 +98,6 @@ fn the_floors_start_full_of_the_fen_wave() {
             "sprite",
             "quickling",
             "satyr",
-            "redcap",
             "water_mote",
             "frost_mote",
             "lesser_ice_elemental",
@@ -245,7 +244,7 @@ fn the_hidden_way_in_in_micelfenn_leads_down_once_revealed_and_back() {
     );
     assert_eq!(w.perception().level_id(), "fennmynster:1");
     assert_eq!(w.perception().level_name(), "Fennmynster 1");
-    assert_eq!(w.danger("fennmynster:1"), 4);
+    assert_eq!(w.danger("fennmynster:1"), 3);
     run(&mut w, "ascend");
     assert_eq!(w.perception().level_id(), "ascmearc");
     assert_eq!(w.player_pos(), MINSTER);
