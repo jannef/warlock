@@ -226,6 +226,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
     creatures. Every creature of the `undead` faction carries `undead` (a test sees to it), and
     every `combat = "caster"` type `caster`. Tags are never
     shown in the game; the wiki lists them.
+  - **Guilds** (`content/guild.rs`, the data; `world/guild.rs`, the ranks; #425, the guild
+    design §7.6): a guild (`data/guilds/`, a campaign's own) has a name, a master (who speaks
+    for it), and ranks, lowest first, each a title named by a material and reached as a quest
+    is *given* or *done*. The player's rank is the highest reached, **derived** from the quest
+    records (never saved), and a title only: no rule reads it. As a quest is given or handed in
+    and a rank rises, the master names the player to it, once ("Wat One-Eye names you a Tin of
+    the Weyfarers' Gilde."). The character screen shows it (§6), and the `stats` dump (`Guild
+    Weyfarers' Gilde, Tin`). The Ascmearc's is the Weyfarers' Gilde (§3b "Quests").
   - **Progress** the player's action made is said right after it: "Quest updated: 2 / 3 giant
     rats.", and once the goal is met "Quest updated: 3 / 3 giant rats. Return to the old hermit."
     (bring: "… apples. Return to the gardener." or "Take them to …"; reach: "Quest updated: you

@@ -436,7 +436,7 @@ impl Content {
 
     /// The dialogue spoken by the speaker named `name`: a creature type with a dialogue, else an
     /// npc with one.
-    fn speaker(&self, name: &str) -> Option<DialogueId> {
+    pub(super) fn speaker(&self, name: &str) -> Option<DialogueId> {
         let find = |s: &Speaker| self.dialogues.iter().position(|d| d.speaker == *s);
         let creature = self
             .creature_id(name)

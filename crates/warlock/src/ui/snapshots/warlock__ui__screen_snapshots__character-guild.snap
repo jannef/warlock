@@ -1,0 +1,40 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ Wat One-Eye says: "There's a price on a goblin archer, see. Bring the beast down, wherever you
+ find it, an' the Gilde pays. Counts from today, mind: what you done before's your own --more--
+    ┌─ Character ─────────────────────────────────────────────────────────────────────────────┐
+    │                                                                                         │
+    │ Wulfstan                                                                                │
+    │                                                                                         │
+    │ Race    Human                                                                           │
+    │ Gender  Male                                                                            │
+    │ Class   Warrior                                                                         │
+    │ Age 35 · born 5 Rainmoon 1409 · year of the Metal Wyvern                                │
+    │ Stars   Trailblazer, Flame-hardened, Heavy-footed, Keen edge, Forge-born                │
+    │                                                                                         │
+    │ St  Strength      16   Main hand  bare hands                                            │
+    │ Dx  Dexterity     10              +3 to hit, 1d3+3 bludgeoning                          │
+    │ To  Toughness     11                                                                    │
+    │ In  Intelligence   9                                                                    │
+    │ Wi  Willpower     10                                                                    │
+    │ Pr  Presence      11                                                                    │
+    │                                                                                         │
+    │ Lv  Level         1                                                                     │
+    │ XP  Experience    0 / 767                                                               │
+    │     Talents       6                                                                     │
+    │ HP  Hit points    22/22   MP  Mana       1/1                                            │
+    │ Dv  Defence       10      Pv  Protection  0                                             │
+    │     Stance        Neutral                                                               │
+    │     Alignment     Neutral                                                               │
+    │     Guild         Tin of the Weyfarers' Gilde                                           │
+    │     Resistant to  fire                                                                  │
+    │                                                                                         │
+    │ Weight 70 kg, carrying nothing                                                          │
+    │ Burdened over 21.5 kg, strained over 43 kg, overloaded over 64.5 kg                     │
+    │                                                                                         │
+    │ @ or Esc close   A skills                                                               │
+    └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘
+
+ Cēaptūn  ·  HP 22/22  ·  MP 1/1  ·  Lv 1  ·  08:04  ·  11 Darkening  ·  Overcast        ? controls

@@ -1,0 +1,24 @@
+# The Weyfarers' Gilde, Cēaptūn's adventurers' guild (docs/design/adventurers-guild.md §7.6; spec
+# §8 "Quests": "Guilds"). Its ranks are titles only, named by metals of data/materials/ ordered by
+# their value, each shown in its metal's colour. A rank is reached as its quest is `given` or
+# `done` (Wat's chain, data/quests/wat.toml); the player's rank is the highest reached, derived
+# from their quests and never saved. Ranks nothing reaches yet wait for the chain's later links
+# (each adds its `done` line), and come after those something does.
+#
+# Fields: id, name (in a sentence, with its article), master (who names the player to a rank:
+# an npc or creature with a dialogue), ranks (lowest first, 1 to 16: title, material, and
+# `given` or `done`, a quest of this campaign, or neither).
+[[guild]]
+id = "weyfarers"
+name = "the Weyfarers' Gilde"
+master = "wat"
+ranks = [
+    { title = "Tin", material = "tin", given = "guild_quarry" },
+    { title = "Pewter", material = "pewter", done = "guild_hundred" },
+    # Link 4, "Wanted", adds `done = "guild_wanted"` with the four lairs (#426).
+    { title = "Iron", material = "iron" },
+    { title = "Steel", material = "steel" },
+    { title = "Duralumin", material = "duralumin" },
+    { title = "Electrum", material = "electrum" },
+    { title = "Gold", material = "gold" },
+]
