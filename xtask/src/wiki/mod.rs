@@ -958,6 +958,10 @@ mod tests {
         assert!(uniques.contains("| Widowmaker | Stiletto | 12 | Venomous (2: adds 1d4 poison"));
         assert!(uniques.contains("every hit that leaves its target alive: 1 degree of Poisoned"));
         assert!(uniques.contains("| its wearer is never Frightened |"));
+        assert!(
+            uniques.contains("| Mother Sallow |"),
+            "who carries Widowmaker"
+        );
         assert!(!uniques.contains("Stonebiter"));
         assert!(
             text("lights.md")

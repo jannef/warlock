@@ -1359,6 +1359,8 @@ mod object_tests;
 #[cfg(test)]
 mod openings_tests;
 #[cfg(test)]
+mod outlaw_tests;
+#[cfg(test)]
 mod overworld_tests;
 #[cfg(test)]
 mod parts_tests;

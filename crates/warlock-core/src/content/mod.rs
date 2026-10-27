@@ -119,7 +119,7 @@ pub(crate) use class::strip_tables as strip_class_tables;
 pub use class::{BonusTalents, CASTING, ClassActive, ClassDef};
 pub use creature::{
     Budge, Combat, CreatureDef, CreatureId, DEFAULT_SIGHT, Hide, Incorporeal, NORMAL_SPEED,
-    NaturalAttack, OnEat, SPEEDS,
+    NaturalAttack, OnEat, SPEEDS, is_proper, the, the_start,
 };
 pub use creature_rarity::{COMMON, CreatureRarity, FACTOR};
 pub use damage_type::{DamageTypeDef, DamageTypeId, MAX_DAMAGE_TYPES};

@@ -137,7 +137,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (stiletto: Venomous, of Celerity, of the Lynx; every hit poisons), High Toby (long bow:
     Hunter's, Steady, of Precision; a hit frightens at 25 %), the Unhalwed Bedes (bone amulet:
     Mystic, of Clarity, of the Owl, of Shadows; darkvision), and the Turncoat (banded mail:
-    Reinforced, Hardened, Hale, of the Ox; never frightened), each at item level 12; the test
+    Reinforced, Hardened, Hale, of the Ox; never frightened), each at item level 12, placed by
+    its owner's gear line (Mother Sallow, Black Wystan, Brother Osrick, Sergeant Herrick); the test
     world's Stonebiter lies in the quarry.
   - **Dev**: replay text `identify` / `identify:LETTERS` (`Action::Identify`, `F8` in dev
     builds: everything carried) identifies without time passing, recorded in replays.

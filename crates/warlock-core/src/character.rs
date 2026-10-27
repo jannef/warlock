@@ -1023,6 +1023,21 @@ mod tests {
         files.edit_table("races", untrained);
         files.edit_table("classes", untrained);
         files.edit_table("creatures", untrained);
+        // The creatures that carry a unique carry its plain base item instead.
+        let full = content();
+        let bases: Vec<(String, String)> = (full.uniques())
+            .map(|u| {
+                (
+                    format!("\"unique:{}\"", u.id),
+                    format!("\"{}\"", full.object(u.object).id),
+                )
+            })
+            .collect();
+        files.edit_table("creatures", |text| {
+            (bases.iter()).fold(text.to_string(), |text, (unique, base)| {
+                text.replace(unique, base)
+            })
+        });
         Content::load(&files).expect("valid content")
     }
 
