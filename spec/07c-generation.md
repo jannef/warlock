@@ -215,7 +215,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   10 °C on the galleries, 16 °C on 5 to 8, 20 °C on 9 to 11, 24 °C at the bottom. Danger 5 to
   16 (8 to 19 until #534), nothing scaled by the player; its population is the delf wave (§7b) with the bats,
   kobolds, and giant centipedes of the upper galleries, at the default count (25 on a gallery
-  floor, 80 in the workings). Arrow, spear, fireball, lightning, and alarm traps; no to two secret
+  floor, 80 in the workings). A fifth of its special rooms are armouries (`room_effects =
+  { favoured = { armoury = 20 } }`, #487, §7 "Special rooms"): the smiths' old work, where on the
+  bottom floor panoplies stand. Arrow, spear, fireball, lightning, and alarm traps; no to two secret
   doors a gallery level, hidden things one harder each level down, locks two; 3 to 5 items of
   loot; the brass key. Every gallery level with a fitting room has a general store
   (`shops = { chance = 100 }`: about one gallery floor in four) kept by a **duergar trader** (the

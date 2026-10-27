@@ -6,18 +6,23 @@
 //!   `spell_cost_percent`, rounded once), then Archmage's `spell_mana_percent`
 //!   ([`Actor::spell_base`], what [`World::spend_mana`] is given), then the talents' cut there
 //!   (Frugal caster). Spent only once the cast is sure to go off.
-//! - **Reach**: Willpower grows a spell's range, a burst's radius, and a cone's or a line's
-//!   length up to the spell's own caps ([`Actor::spell_reach`]); Presence lengthens a buff's or
-//!   a hex's status ([`SpellRules::lengthened`]).
+//! - **Reach**: the stats its `reach` scales name (Willpower unless it says otherwise) grow a
+//!   spell's range, a burst's radius, and a cone's or a line's length up to the spell's own caps
+//!   ([`Actor::spell_reach`]); its `duration` scales (Presence unless it says otherwise)
+//!   lengthen a buff's or a hex's status ([`SpellRules::lengthened`]; `world/spell_scale.rs`).
 //! - **Dice**: the spell's at the caster's level (one die more per `per_levels` above the tier's
-//!   comfortable level, never past `max_dice`), then the talents' (Empower's die, Archmage's
-//!   per die), and the roll is held to the spell's cap ([`SpellRules::cap_of`]): nothing lifts
-//!   a spell past it.
+//!   comfortable level, never past `max_dice`), as many more as the lift of its cap holds
+//!   ([`crate::content::SpellDice::lifted`]), then the talents' (Empower's die, Archmage's per
+//!   die), and the roll is held to the caster's cap: the spell's cap ([`SpellRules::cap_of`])
+//!   lifted by the stats its `damage` scales name, at most its tier's `max_lift`
+//!   ([`Actor::spell_cap`]). Nothing passes the lifted cap. A scroll read or a wand used casts
+//!   with the unlifted cap.
 //! - **Resolution**: `area` (a burst, a cone, a line) strikes everyone in it with one roll, no
 //!   roll to hit, Evasion halving it ([`World::spell_hurts`]) and resistances taking their
 //!   share; `auto` (a ray or a bolt) strikes the first creature on its way, never missing;
-//!   `attack` makes the 2d12 attack roll against Defence (the caster's Dexterity to hit, as a
-//!   missile is aimed; Deflect missiles counts), threat and critical as a blow's (a critical
+//!   `attack` makes the 2d12 attack roll against Defence (the caster's `to_hit` scales to hit,
+//!   Dexterity unless the spell names other stats, as a missile is aimed; a scroll or a wand
+//!   always Dexterity; Deflect missiles counts), threat and critical as a blow's (a critical
 //!   rolls the damage again, still held to the cap); `touch` the same roll against one creature
 //!   next to the caster. `auto` and `area` never critical.
 //! - **Shapes**: a burst flies and goes off as a scroll's does ([`World::burst_center`],
@@ -103,19 +108,19 @@ impl Actor {
         self.mana_cost(content, self.spell_base(content, spell, caster_level))
     }
 
-    /// How far `spell` reaches as it casts it: the spell's own reach grown by its Willpower
-    /// (a cell per `reach_step` modifier points) up to the spell's caps.
+    /// How far `spell` reaches as it casts it: the spell's own reach grown by its `reach`
+    /// scales ([`Actor::spell_reach_more`]; a cell per two points of Willpower's modifier
+    /// unless the spell names other stats) up to the spell's caps.
     pub fn spell_reach(&self, content: &Content, spell: &SpellData) -> Reach {
-        let Some(rules) = content.spell_rules() else {
+        if content.spell_rules().is_none() {
             return Reach::default();
-        };
-        let will = self.effective_stats(content).modifier(Stat::Willpower);
+        }
+        let stats = self.spell_reach_more(content, spell);
         let grow = |base: Option<u8>, cap: Option<u8>, more: i32| {
             let base = i32::from(base?);
             let cap = cap.map_or(base, i32::from);
             Some(
-                rules
-                    .grown(base, cap, will)
+                SpellRules::grown(base, cap, stats)
                     .saturating_add(more)
                     .min(cap.max(base)),
             )
@@ -136,15 +141,17 @@ impl Actor {
 }
 
 /// A spell's damage dice as a caster at `caster_level` with talents `mods` rolls them: the
-/// spell's at that level, then Empower's and Archmage's. The roll is held to the cap after.
+/// spell's at that level with the dice its lifted cap holds (`cap`: the cap and the caster's
+/// lifted cap), then Empower's and Archmage's. The roll is held to the lifted cap after.
 fn damage_dice(
     rules: &SpellRules,
     spell: &SpellData,
     caster_level: i32,
+    cap: (i32, i32),
     mods: &crate::talent::TalentMods,
 ) -> Option<Dice> {
     let comfortable = rules.comfortable[usize::from(spell.tier)];
-    let dice = spell.damage?.at(caster_level, comfortable);
+    let dice = spell.damage?.lifted(caster_level, comfortable, cap);
     Some(mods.spell_damage(dice))
 }
 
@@ -198,6 +205,7 @@ impl World {
             level,
             pay: Pay::Mana(me.spell_base(&content, def, level)),
             reach: me.spell_reach(&content, def),
+            cap: (rules.cap_of(def), me.spell_cap(&content, def)),
             read: Cell::new(None),
         };
         let price = self.price_of(player, ActionKind::Cast) * i64::from(def.casts);
@@ -248,6 +256,7 @@ impl World {
             level: i32::from(level),
             pay: Pay::Scroll(item),
             reach: self.state.player().spell_reach(&content, def),
+            cap: (rules.cap_of(def), rules.cap_of(def)),
             read: Cell::new(None),
         };
         self.perform(&cast, at, events)
@@ -276,6 +285,7 @@ impl World {
             level,
             pay: Pay::Wand(item),
             reach: self.state.player().spell_reach(&content, def),
+            cap: (rules.cap_of(def), rules.cap_of(def)),
             read: Cell::new(None),
         };
         self.perform(&cast, Some(at), events)
@@ -325,12 +335,11 @@ impl World {
         }
     }
 
-    /// Presence's degrees of `status` for the player's buff or hex of `severity`.
-    fn lengthened(&self, rules: &SpellRules, severity: u16) -> u16 {
-        let presence = (self.state.player())
-            .effective_stats(&self.content)
-            .modifier(Stat::Presence);
-        rules.lengthened(severity, presence)
+    /// The degrees of the status of the player's buff or hex `def` of `severity`, lengthened
+    /// by its `duration` scales (Presence unless it names other stats).
+    fn lengthened(&self, def: &SpellData, severity: u16) -> u16 {
+        let more = (self.state.player()).spell_degrees_more(&self.content, def);
+        SpellRules::lengthened(severity, more)
     }
 
     /// A buff: its status on the caster, lengthened by Presence.
@@ -339,7 +348,7 @@ impl World {
             return false;
         };
         let player = self.state.player;
-        let severity = self.lengthened(cast.rules, severity);
+        let severity = self.lengthened(cast.def, severity);
         self.pay_cast(cast);
         self.afflict(player, status, severity, Some(player), events);
         true
@@ -384,10 +393,10 @@ impl World {
         let comfortable = cast.rules.comfortable[usize::from(cast.def.tier)];
         self.pay_cast(cast);
         let rolled = heal
-            .at(cast.level, comfortable)
+            .lifted(cast.level, comfortable, cast.cap)
             .roll(&mut self.state.rng)
             .max(0);
-        let back = rolled.min(cast.rules.cap_of(cast.def));
+        let back = rolled.min(cast.cap.1);
         if target == player {
             self.heal_player(back);
             self.say("Your wounds close.");
@@ -465,7 +474,7 @@ impl World {
             return false;
         };
         let player = self.state.player;
-        let severity = self.lengthened(cast.rules, severity);
+        let severity = self.lengthened(cast.def, severity);
         self.pay_cast(cast);
         self.afflict(target, status, severity, Some(player), events);
         let who = capitalized(&self.called(&self.state.actors[&target]));
@@ -492,7 +501,7 @@ impl World {
         }
         let player = self.state.player;
         let here = self.player_pos();
-        let severity = self.lengthened(cast.rules, severity);
+        let severity = self.lengthened(cast.def, severity);
         self.pay_cast(cast);
         if let Some(text) = &cast.def.look.message {
             self.say(text.clone());
@@ -591,8 +600,9 @@ impl World {
         let player = self.state.player;
         self.pay_cast(cast);
         let mods = self.state.player().talent_mods(&self.content).into_owned();
-        let dice = damage_dice(cast.rules, def, cast.level, &mods).unwrap_or(Dice::of(0, 1));
-        let cap = cast.rules.cap_of(def);
+        let dice =
+            damage_dice(cast.rules, def, cast.level, cast.cap, &mods).unwrap_or(Dice::of(0, 1));
+        let cap = cast.cap.1;
         if let Some(text) = &def.look.message {
             self.say(text.clone());
         }
@@ -632,7 +642,9 @@ impl World {
             }
             Shape::Ray | Shape::Bolt | Shape::Touch => {
                 self.sound_at(def.look.noise, here);
-                self.cast_single((here, at, range), (&effect, dice, cap), def, &mut made);
+                let own = matches!(cast.pay, Pay::Mana(_));
+                let aim = (here, at, range);
+                self.cast_single(aim, (&effect, dice, cap), (def, own), &mut made);
             }
             Shape::Myself => {}
         }
@@ -705,12 +717,14 @@ impl World {
     /// A ray, a bolt, or a touch from `here` toward `at` (`reach` cells at most): it flies to
     /// the first creature on its line (a touch: the one at `at`), its effect drawn along the
     /// way, and strikes it as its resolution says: `auto` always, `attack` and `touch` by the
-    /// attack roll against its Defence. One that finds no one strikes nothing.
+    /// attack roll against its Defence, aimed with its `to_hit` scales when it is the caster's
+    /// `own` spell, else (a scroll, a wand) with Dexterity. One that finds no one strikes
+    /// nothing.
     fn cast_single(
         &mut self,
         (here, at, reach): (Pos, Pos, i32),
         (effect, dice, cap): (&str, Dice, i32),
-        def: &SpellData,
+        (def, own): (&SpellData, bool),
         made: &mut Vec<Event>,
     ) {
         let level = self.state.current_level.clone();
@@ -743,12 +757,15 @@ impl World {
         let source = (here, def.shape != Shape::Touch);
         let (amount, strike) = match def.resolution {
             Resolution::Attack | Resolution::Touch => {
-                let dexterity = (self.state.player())
-                    .effective_stats(&self.content)
-                    .modifier(Stat::Dexterity);
+                let me = self.state.player();
+                let to_hit = if own {
+                    me.spell_to_hit(&self.content, def)
+                } else {
+                    me.effective_stats(&self.content).modifier(Stat::Dexterity)
+                };
                 let attack = Attack {
                     damage: dice,
-                    to_hit: dexterity,
+                    to_hit,
                     threat: combat::DEFAULT_THREAT,
                     crit: combat::DEFAULT_CRIT,
                     strength: None,
@@ -790,6 +807,9 @@ struct Cast<'c> {
     level: i32,
     pay: Pay,
     reach: Reach,
+    /// The spell's cap, and the caster's lifted cap ([`Actor::spell_cap`]; a scroll's or a
+    /// wand's is the spell's own): the most it does to one target.
+    cap: (i32, i32),
     /// A scroll read, once paid: its object, and whether Spell recall kept it.
     read: Cell<Option<(ObjectId, bool)>>,
 }

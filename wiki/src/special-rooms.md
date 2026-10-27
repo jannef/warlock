@@ -203,6 +203,18 @@ you on arrival when something sleeps on the level.
 Sleepers count among the level's creatures: while the den is full, fewer newcomers find their
 way to the level. Killing a sleeper is like killing any other foe.
 
+### Homes of animated things
+
+Two dens have creatures of their own, whatever the dungeon's: an **armoury** sleeps
+[animated](animated.md) blades, hollow armour, and panoplies, drawn as if the level were four
+dangers deeper, among weapon racks (`‡`) along its walls; a **workshop** sleeps the household
+things of a house's work (bellows, brooms, buckets, chairs, coat stands, cooking pots, kettles,
+ladles, stools, and warming pans) among workbenches (`π`). Racks and benches are seen over but not
+walked through, and never stand beside a door or bar the way across the room. Each comes only
+where its creatures can be met at the level's danger: an armoury from danger 1, a workshop no
+deeper than danger 16. Animated things never stray, so these rooms are where they are found
+outside the dungeons that keep them (see [Animated objects](animated.md#where-they-are-found)).
+
 ## Cursed rooms
 
 A creature that dies in a cursed room (or anywhere on a cursed level), whoever killed it,

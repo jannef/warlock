@@ -121,6 +121,8 @@ fn empower_reaches_the_cap_sooner_and_never_passes_it() {
     // The shipped Arcane bolt: a line of 2d6, tier 2's area cap 14; Empower makes it 3d6.
     let mut w = world_with(Arc::new(Content::builtin().expect("content")), "wizard");
     reach(&mut w, 32);
+    // No modifier, so no lift: the spell's own cap.
+    scores(&mut w, &[]);
     assert_eq!(
         w.state.player().talent_mods(w.content()).spell_dice,
         1,
@@ -293,4 +295,129 @@ fn a_spell_without_a_roll_draws_nothing() {
     assert!(matches!(spent, Spent::Turn(_)));
     assert!(w.state.player().effects.iter().next().is_some(), "blessed");
     assert_eq!(w.state.rng, rng, "the cast itself drew nothing");
+}
+
+/// Sets the player's scores in `scores` (every other 10, so its modifier is 0).
+fn scores(w: &mut World, scores: &[(Stat, u8)]) {
+    let mut all = PerStat::splat(10);
+    for &(stat, score) in scores {
+        all[stat] = score;
+    }
+    w.player_mut().stats = Stats::new(all, PerStat::splat(40));
+}
+
+/// An attack ray of tier 2 (cap 18), 3d6, its cap lifted by Intelligence 10 % and Willpower 5 %
+/// a point, aimed with Intelligence.
+const SCALED_RAY: &str = "shape = \"ray\"\nresolution = \"attack\"\nmax_range = 6\n\
+                          damage = { dice = \"3d6\" }\n[spell.scales]\n\
+                          damage = { intelligence = 10, willpower = 5 }\n\
+                          to_hit = { intelligence = 100 }";
+
+#[test]
+fn the_stats_a_spell_names_lift_its_cap_up_to_the_tiers_most() {
+    let mut w = wizard(content_with_bolt(SCALED_RAY));
+    let content = w.content().clone();
+    let bolt = content.spell(sp("arcane_bolt"));
+    let at = |w: &World| {
+        let me = w.state.player();
+        (me.spell_lift(&content, bolt), me.spell_cap(&content, bolt))
+    };
+    scores(&mut w, &[]);
+    assert_eq!(at(&w), (0, 18), "no modifier: no lift");
+    // The design's level-10 wizard: Intelligence +4, Willpower +2: 50 %, 18 → 27.
+    scores(&mut w, &[(Stat::Intelligence, 18), (Stat::Willpower, 14)]);
+    assert_eq!(at(&w), (50, 27));
+    // Low stats never lower the cap.
+    scores(&mut w, &[(Stat::Intelligence, 4), (Stat::Willpower, 4)]);
+    assert_eq!(at(&w), (0, 18));
+    // Intelligence +10, Willpower +10: 150 %, held to tier 2's most, 60 %: 18 → 28.
+    scores(&mut w, &[(Stat::Intelligence, 30), (Stat::Willpower, 30)]);
+    assert_eq!(at(&w), (60, 28));
+    // Keen mind for evocation: 10 points more of lift, only for its school.
+    let before = w.state.player().talents.clone();
+    w.player_mut().talents.take("keen_mind", Some("evocation"));
+    assert_eq!(at(&w), (70, 30));
+    w.player_mut().talents = before;
+    w.player_mut().talents.take("keen_mind", Some("necromancy"));
+    assert_eq!(at(&w), (60, 28), "another school's mind");
+}
+
+#[test]
+fn a_lifted_spell_rolls_more_and_its_criticals_stop_at_the_lifted_cap() {
+    let mut w = wizard(content_with_bolt(SCALED_RAY));
+    scores(&mut w, &[(Stat::Intelligence, 18), (Stat::Willpower, 14)]);
+    let target = kobold(&mut w, 1, 10_000);
+    let (mut critical, mut most) = (0, 0);
+    for _ in 0..400 {
+        let (strikes, hurt) = cast_at(&mut w, (3, 0), (target, (1, 0)));
+        if strikes == [Strike::Hit { critical: true }] {
+            critical += 1;
+        }
+        assert!(hurt <= 27, "{hurt}");
+        most = most.max(hurt);
+    }
+    // 4d6 now (a die more for the lift's room), a critical's roll held to 27, not 18.
+    assert!(critical > 0);
+    assert_eq!(most, 27);
+}
+
+#[test]
+fn a_spell_without_scales_keeps_the_old_rules() {
+    // The shipped Spark, a cantrip with no `damage` scales: no lift whatever the stats.
+    let mut w = world_with(Arc::new(Content::builtin().expect("content")), "wizard");
+    let content = w.content().clone();
+    let spark = content.spell(sp("spark"));
+    scores(&mut w, &[(Stat::Intelligence, 30), (Stat::Willpower, 30)]);
+    let me = w.state.player();
+    assert_eq!(me.spell_lift(&content, spark), 0);
+    assert_eq!(
+        me.spell_cap(&content, spark),
+        content.spell_rules().expect("rules").cap_of(spark)
+    );
+    // Its to-hit and reach are the old Dexterity's and Willpower's.
+    scores(&mut w, &[(Stat::Dexterity, 16), (Stat::Willpower, 15)]);
+    let me = w.state.player();
+    assert_eq!(me.spell_to_hit(&content, spark), 3);
+    assert_eq!(me.spell_reach_more(&content, spark), 1);
+    // Evil eye's degrees: Presence +2 at 50 %, Willpower +4 at 25 %: two more.
+    let evil_eye = content.spell(sp("evil_eye"));
+    scores(&mut w, &[(Stat::Presence, 14), (Stat::Willpower, 18)]);
+    let me = w.state.player();
+    assert_eq!(me.spell_degrees_more(&content, evil_eye), 2);
+    // Blessing names nothing: Presence alone, a degree per two points.
+    let blessing = content.spell(sp("blessing"));
+    assert_eq!(me.spell_degrees_more(&content, blessing), 1);
+}
+
+#[test]
+fn an_intelligent_caster_aims_a_spell_that_names_intelligence() {
+    let mut w = wizard(content_with_bolt(SCALED_RAY));
+    let content = w.content().clone();
+    let bolt = content.spell(sp("arcane_bolt"));
+    scores(&mut w, &[(Stat::Intelligence, 18), (Stat::Dexterity, 4)]);
+    assert_eq!(
+        w.state.player().spell_to_hit(&content, bolt),
+        4,
+        "Intelligence's"
+    );
+    let hits = |w: &mut World| {
+        let target = kobold(w, 1, 10_000);
+        (0..300)
+            .filter(|_| {
+                let (strikes, _) = cast_at(w, (3, 0), (target, (1, 0)));
+                strikes.iter().all(|s| s.is_hit())
+            })
+            .count()
+    };
+    let by_wits = hits(&mut w);
+    // The same ray aimed by Dexterity (-3).
+    let mut d = wizard(content_with_bolt(
+        "shape = \"ray\"\nresolution = \"attack\"\nmax_range = 6\ndamage = { dice = \"3d6\" }",
+    ));
+    scores(&mut d, &[(Stat::Intelligence, 18), (Stat::Dexterity, 4)]);
+    let by_hand = hits(&mut d);
+    assert!(
+        by_wits > by_hand + 30,
+        "{by_wits} by Intelligence, {by_hand} by Dexterity"
+    );
 }

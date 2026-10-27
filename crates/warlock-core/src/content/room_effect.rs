@@ -160,10 +160,41 @@ struct RoomEffectSpec {
     sides: Option<BTreeMap<Alignment, String>>,
     offers: Option<OffersSpec>,
     collapse: Option<Collapse>,
+    dressing: Option<DressingSpec>,
     shrine: Option<ShrineSpec>,
     loot: Option<LootSpec>,
     #[serde(default)]
     train: BTreeMap<String, u16>,
+}
+
+/// `dressing = { terrain = "weapon_rack", per_cells = 10, most = 4 }`.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct DressingSpec {
+    terrain: String,
+    per_cells: u16,
+    most: u8,
+}
+
+/// A room's dressing (spec §7 "Special rooms": an armoury's weapon racks, a workshop's
+/// benches): pieces of terrain generators stand along its walls (`mapgen/dress.rs`), one per
+/// `per_cells` floor cells, at least one and at most `most`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Dressing {
+    /// Transparent and not walkable, not stairs or a door (as a feature).
+    pub terrain: TerrainId,
+    pub per_cells: u16,
+    pub most: u8,
+}
+
+/// The most pieces of dressing a room may hold.
+pub const MAX_DRESSING: u8 = 16;
+
+impl Dressing {
+    /// How many pieces a room of `cells` floor cells gets.
+    pub fn pieces(&self, cells: usize) -> usize {
+        (cells / usize::from(self.per_cells)).clamp(1, usize::from(self.most))
+    }
 }
 
 #[derive(Deserialize)]
@@ -298,6 +329,19 @@ pub struct Swarm {
     /// What its hoard is: items (`items`, the default) or bones and fresh corpses (`corpses`).
     #[serde(default)]
     pub hoard: Hoard,
+    /// The den's own population (creature ids, families by their own id: an armoury's
+    /// `animated_blade`): its sleepers are drawn only among these, whatever the branch's
+    /// population, hostile or not, and no stray; empty: the branch's. Resolved once the
+    /// creatures load ([`RoomEffects::resolve_populations`]) into [`Swarm::kinds`].
+    #[serde(default)]
+    pub population: Vec<String>,
+    /// `population` resolved.
+    #[serde(skip)]
+    pub kinds: Vec<super::CreatureId>,
+    /// Its sleepers are drawn this many dangers deeper than the floor's (0 to
+    /// [`MAX_DEN_DANGER`]).
+    #[serde(default)]
+    pub danger: u8,
 }
 
 /// What a den's hoard holds (`swarm.hoard`).
@@ -325,6 +369,8 @@ pub struct Themes {
 
 /// The most sleepers a den may hold.
 pub const MAX_SLEEPERS: u16 = 64;
+/// The most dangers deeper than the floor's a den's sleepers may be drawn.
+pub const MAX_DEN_DANGER: u8 = 10;
 /// The percents of the hearing threshold a den's `wake` may be.
 pub const WAKE: RangeInclusive<u16> = 100..=1000;
 
@@ -355,6 +401,12 @@ impl Swarm {
         }
         if u16::from(self.themes.kind) + u16::from(self.themes.faction) > 100 {
             return Err("swarm: themes' percents add up to at most 100".into());
+        }
+        if self.danger > MAX_DEN_DANGER {
+            return Err(format!("swarm: danger is at most {MAX_DEN_DANGER}"));
+        }
+        if !self.population.is_empty() && !self.factions.is_empty() {
+            return Err("swarm: a `population` and `factions` do not go together".into());
         }
         Ok(())
     }
@@ -451,6 +503,8 @@ pub struct RoomEffectDef {
     pub rise: Option<Rise>,
     /// A rest inside is haunted (a haunted room's; `world/haunt.rs`).
     pub haunt: Option<super::room_haunt::Haunt>,
+    /// Terrain generators stand along its walls (an armoury's racks).
+    pub dressing: Option<Dressing>,
     /// Consecrate lifts it for good (a cursed and a draining room).
     pub unholy: bool,
     /// A shrine of a side: how it treats those inside by their side (`world/shrine.rs`); its
@@ -497,6 +551,7 @@ impl RoomEffectDef {
             && self.feature.is_none()
             && self.collapse.is_none()
             && self.haunt.is_none()
+            && self.dressing.is_none()
             && self.lore.loot.is_none()
             && self.pervade.is_some()
     }
@@ -754,6 +809,38 @@ impl RoomEffects {
         Ok(())
     }
 
+    /// Resolves the dens' own `swarm.population` once the creatures load: `creature` gives a
+    /// name's type (a family's by its own id) and whether it is unique. Each must be a type, not
+    /// unique, named once.
+    pub(super) fn resolve_populations(
+        &mut self,
+        creature: impl Fn(&str) -> Option<(super::CreatureId, bool)>,
+    ) -> Result<(), ContentError> {
+        for def in &mut self.defs {
+            let Some(swarm) = &mut def.swarm else {
+                continue;
+            };
+            let mut kinds = Vec::new();
+            for (i, name) in swarm.population.iter().enumerate() {
+                let fault = match creature(name) {
+                    None => "is unknown",
+                    Some((_, true)) => "is unique",
+                    Some(_) if swarm.population[..i].contains(name) => "is named twice",
+                    Some((id, false)) => {
+                        kinds.push(id);
+                        continue;
+                    }
+                };
+                return Err(ContentError::new(
+                    "data/room_effects.toml",
+                    format!("effect `{}`: swarm population `{name}` {fault}", def.id),
+                ));
+            }
+            swarm.kinds = kinds;
+        }
+        Ok(())
+    }
+
     /// Parses `data/room_effects.toml` with no statuses known; `terrain` resolves a floor's
     /// terrain id and definition.
     #[cfg(test)]
@@ -949,6 +1036,29 @@ impl RoomEffects {
                 }
                 None => None,
             };
+            let dressing = match &spec.dressing {
+                Some(d) => {
+                    let (id, def) = terrain(&d.terrain)
+                        .ok_or_else(|| bad(format!("unknown terrain `{}`", d.terrain)))?;
+                    if def.walkable || !def.transparent || def.stairs.is_some() || def.is_door() {
+                        return Err(bad(format!(
+                            "dressing `{}` must be transparent and not walkable, stairs, or a door",
+                            d.terrain
+                        )));
+                    }
+                    if d.per_cells == 0 || d.most == 0 || d.most > MAX_DRESSING {
+                        return Err(bad(format!(
+                            "dressing: per_cells at least 1, most 1 to {MAX_DRESSING}"
+                        )));
+                    }
+                    Some(Dressing {
+                        terrain: id,
+                        per_cells: d.per_cells,
+                        most: d.most,
+                    })
+                }
+                None => None,
+            };
             let offers = match &spec.offers {
                 Some(OffersSpec { pray: Some(table) }) => Some((Offer::Pray, table.clone())),
                 Some(OffersSpec { pray: None }) => {
@@ -1007,6 +1117,7 @@ impl RoomEffects {
                 rise,
                 haunt,
                 unholy: spec.unholy,
+                dressing,
                 shrine,
                 loot: None,
                 train: Vec::new(),
@@ -1016,7 +1127,7 @@ impl RoomEffects {
                 return Err(err(format!(
                     "effect `{}`: a `level_chance` needs a `pervade` line, and no effect that \
                      creatures shun, that lays a floor, that holds mirrors, a hoard, or loot, or that has a \
-                     feature covers a whole level",
+                     feature or dressing covers a whole level",
                     def.id
                 )));
             }
