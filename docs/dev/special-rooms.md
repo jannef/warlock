@@ -231,6 +231,24 @@ altar side by side. Talent: Devout (system `prayer`, `TalentMods::devout`; hook
 `leaned_kinds`). The great outcomes (`Actor::boons`, `World::lose_level`, the rarity floor) and
 Penitent come with #407.
 
+## Healing springs
+
+#416, the design's §9.10. Data: the `spring` effect (`feature = "spring"`, `offers = { drink =
+"spring" }`, `min_cells = 9`, weight 4), the terrain `spring` (glyph `{`, a `description`), the
+`drink` action cost (1000 a turn), and the outcome table `data/outcomes/spring.toml` (`seconds =
+10`, `exhaust = 0`: no `spent`, never runs dry). `offers` names one of `pray` or `drink`
+(`Offer::Drink`). Two outcome hooks came with it: `Amount::Half` (`heal`/`mana = "half"`: half
+the maximum, rounded down) and `catch` (`OutcomeEffect::catch`, a disease id: `World::infect`
+with that one; Fouled's marsh ague).
+
+Drinking (`world/drink.rs`): `Ability::Drink` (`Source::Place`, listed by `Ability::here` beside
+a feature that offers it), `Action::Drink` (`start_drink`: refused with no spring beside the
+player; `Spent::Drink`), `World::drink`: `keep_at` until the table's `seconds` have passed (each
+turn the `drink` price, the last cut to `price_until`), a broken drink says so ("You stop
+drinking.") and nothing else; done, `draw_outcome` with the table's own kinds (no side, no lean)
+and `befall`. No exhaustion draw and no deed. Nothing is saved. The showcase's `spring` scenario
+has one (`move:N*5 drink`). Tests: `world/spring_tests.rs`.
+
 ## State and the one question
 
 `LevelState::rooms` (`SpecialRoom`: effect, box, a blob's cells, `entered`, `glimpsed`) and

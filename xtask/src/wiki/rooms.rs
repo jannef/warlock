@@ -2,7 +2,7 @@
 
 use super::text::capital;
 use std::fmt::Write as _;
-use warlock_core::content::{Content, Hoard, StatusId};
+use warlock_core::content::{Content, Hoard, Offer, StatusId};
 use warlock_core::world::rise_candidates;
 
 /// How many times as much `percent` is, in words: "twice", "two fifths", "30% of".
@@ -128,7 +128,8 @@ pub(super) fn special_rooms(content: &Content) -> String {
         }
         if let Some(feature) = e.feature {
             let offers = match &e.offers {
-                Some((_, _)) => ": pray beside it (see Forgotten altars)",
+                Some((Offer::Pray, _)) => ": pray beside it (see Forgotten altars)",
+                Some((Offer::Drink, _)) => ": drink beside it (see Healing springs)",
                 None => "",
             };
             does.push(format!(

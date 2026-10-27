@@ -227,7 +227,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     level with `level_chance` 5 ("The dead do not rest on this level."). Fennmynster favours it
     at 15; an *altar room* (8, #406; only in a room of at least 9 floor cells) holds a
     forgotten altar to pray at ("A faint glow rises from an altar ahead." when glimpsed, "An old
-    altar stands here, its god long forgotten." on entering; below). Blood washing
+    altar stands here, its god long forgotten." on entering; below); a *spring* (4, #416; only
+    in a room of at least 9 floor cells) holds a healing spring to drink at ("Clear water wells up
+    in an old stone basin." on entering; below). Blood washing
     away in a flooded room waits for blood (#127).
   - **Hot and cold rooms** (`temperature`, #404): a room sets its cells' temperature and
     nothing else: no status, no damage, nothing done to items or food. The temperature at a cell
@@ -407,6 +409,26 @@ developer notes (CLAUDE.md, `docs/dev/`).
       gutters and dies."); Pray is offered there no more. Nothing new is saved: the terrain
       grid is the record, and the `rooms` dev layer marks such a room `spent` (or `destroyed`).
       No other place offers prayer (the design's decision 14).
+  - **Healing springs** (`feature = "spring"`, `offers = { drink = "spring" }`, #416;
+    `world/drink.rs`, the design's §9.10): the spring is its own terrain, `spring` ("spring", a
+    stone basin of water, `{`, not walkable; look mode adds its description), placed as an
+    altar is.
+    - **Drink** (`Action::Drink`, `drink` in action text) is offered in the abilities menu's
+      *Here* group while the player stands beside a spring, and nowhere else; refused there,
+      taking no time ("There is no spring here to drink from."). "You cup your hands and drink
+      from the spring.", then the table's `seconds` (10) in turns of the `drink` action
+      (`data/actions.toml`, 1000) through the rest's machinery: a creature coming into view, a
+      message, or a blow breaks it off ("You stop drinking.", or "A kobold comes into view; you
+      stop drinking."), which gives nothing; the time is spent.
+    - **The answer**: one gameplay draw by the table's kinds (a spring has no side: no lean),
+      then one by weight among that kind's outcomes (`data/outcomes/spring.toml`, the wiki's
+      "Healing springs"): Refreshed (55 %; 2d8 hit points back, "The water is cold and good."),
+      nothing (25 %; "It tastes of stone."), Fouled (15 %; marsh ague caught, which a prayer
+      cures, "The water tastes foul."), and Clear-headed (5 %; half the maximum mana back, "Your
+      head clears."). Two hooks join the outcome effects for it: `mana = "half"` (and `heal`:
+      half the maximum, `Amount::Half`) and `catch = DISEASE` (that disease caught).
+    - **No limit**: the table's `exhaust` is 0, so a spring never runs dry (the owner's
+      no-anti-farming rule; the foul water is the price). Nothing is saved.
   - **A status while inside** (`status`, #403): as time passes, at the start of each stretch of
     it (`World::pass_time`: so after every action, the player's and each creature's, at every
     turn of a rest or another long action, and through a creature's coarse turns while the
