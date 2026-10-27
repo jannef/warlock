@@ -530,6 +530,12 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             format!("a {chance} % chance a scroll you read is not used up")
         }
         TalentEffect::SparesSelf => "the bursts of scrolls you read never catch you".to_string(),
+        TalentEffect::PotionKept { chance } => {
+            format!("a {chance} % chance a potion you drink is not used up")
+        }
+        TalentEffect::PotionSmell => {
+            "an unknown potion you pick up tells its kind (not its type) by its smell".to_string()
+        }
         TalentEffect::QuestXpPercent { value } => {
             format!("experience from quests {}", percent(value))
         }

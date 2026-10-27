@@ -831,7 +831,7 @@ fn the_built_in_construction_lists_make_no_silly_items() {
     for only in [
         "rock",
         "ration",
-        "red_potion",
+        "potion_of_healing",
         "scroll_of_light",
         "gold_coin",
         "gem",

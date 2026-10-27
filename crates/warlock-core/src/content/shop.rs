@@ -442,6 +442,7 @@ mod tests {
                 "weaponsmith",
                 "armourer",
                 "provisioner",
+                "alchemist",
                 "fletcher"
             ]
         );

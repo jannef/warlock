@@ -102,15 +102,29 @@ items = [5, 9]
 markup = 130
 pays = 40
 
+# A provisioner's potions are few among its wares, the commoner the more often (healing,
+# antidote: spec §8 "Potions").
 [[shop]]
 id = "provisioner"
 name = "provisioner"
 title = "{keeper}'s Provisions"
-stock = ["light_sources", "tools", "food"]
-buys = ["light_sources", "tools", "food"]
+stock = ["light_sources", "tools", "food", "potions"]
+buys = ["light_sources", "tools", "food", "potions"]
 items = [6, 10]
 markup = 120
 pays = 30
+
+# The alchemist sells and buys potions only (spec §8 "Potions"), healing first.
+[[shop]]
+id = "alchemist"
+name = "alchemist"
+title = "{keeper}'s Apothecary"
+stock = ["potions"]
+always = ["potion_of_healing"]
+buys = ["potions"]
+items = [5, 8]
+markup = 140
+pays = 40
 
 [[shop]]
 id = "fletcher"

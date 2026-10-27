@@ -86,6 +86,7 @@ use super::light::LightId;
 use super::material::MaterialId;
 use super::part::{self, Part, PartEntry, PartId};
 use super::particles::ParticleEmitter;
+use super::potion::{Drink, DrinkSpec};
 use super::rod::{Rod, RodSpec};
 use super::scroll::{ReadSpec, Reading};
 use super::slot::SlotDef;
@@ -305,6 +306,8 @@ pub(super) struct ObjectSpec {
     pub wand: Option<WandSpec>,
     /// The effect it holds and its mana cost, if it is a rod (spec §8 "Magic items": "Rods").
     pub rod: Option<RodSpec>,
+    /// What drinking it does, if it is a potion (spec §8 "Potions").
+    pub drink: Option<DrinkSpec>,
 }
 
 /// A resolved object type.
@@ -434,6 +437,8 @@ pub struct ObjectDef {
     /// The effect it holds and what a use costs in mana, if it is a rod (spec §8 "Magic items":
     /// "Rods").
     pub rod: Option<Rod>,
+    /// What drinking it does, if it is a potion (spec §8 "Potions").
+    pub drink: Option<Drink>,
 }
 
 /// Damage of another kind an attack with the object adds, as data writes it: `added = { type =
@@ -536,6 +541,7 @@ impl ObjectDef {
             read: None,
             wand: None,
             rod: None,
+            drink: None,
             key: None,
             kind: None,
             attack_cost: None,
@@ -842,8 +848,13 @@ impl ObjectSpec {
         }
         let wand = self.wand_of(content).map_err(err)?;
         let rod = self.rod_of(content).map_err(err)?;
+        let drink = self.drink_of(content).map_err(err)?;
         let plural = self.plural.unwrap_or_else(|| content.plural(&self.name));
-        let loot = self.kind.is_some() || read.is_some() || wand.is_some() || rod.is_some();
+        let loot = self.kind.is_some()
+            || read.is_some()
+            || wand.is_some()
+            || rod.is_some()
+            || drink.is_some();
         let def = ObjectDef {
             id: self.id,
             written_name: self.name.clone(),
@@ -905,6 +916,7 @@ impl ObjectSpec {
             read,
             wand,
             rod,
+            drink,
         };
         Ok((def, self.lit))
     }
@@ -954,6 +966,32 @@ impl ObjectSpec {
             return Err(
                 "`rod`: a rod goes in a `slot`, one at a time (not `stackable`), and is no \
                  weapon, missile, food, scroll, wand, or magic item `kind`"
+                    .into(),
+            );
+        }
+        spec.resolve(content).map(Some)
+    }
+
+    /// Its potion, resolved (spec §8 "Potions"): stackable, and nothing else (no slot, weapon,
+    /// missile, food, scroll, wand, rod, or magic item kind).
+    fn drink_of(&self, content: &Content) -> Result<Option<Drink>, String> {
+        let Some(spec) = self.drink.clone() else {
+            return Ok(None);
+        };
+        let other = !self.stackable
+            || self.slot.is_some()
+            || self.damage.is_some()
+            || self.launches.is_some()
+            || self.flies()
+            || self.food.is_some()
+            || self.read.is_some()
+            || self.wand.is_some()
+            || self.rod.is_some()
+            || self.kind.is_some();
+        if other {
+            return Err(
+                "`drink`: a potion is `stackable` and nothing else: no slot, weapon, missile, \
+                 food, scroll, wand, rod, or magic item `kind`"
                     .into(),
             );
         }
@@ -1015,10 +1053,11 @@ impl ObjectSpec {
             && self.read.is_none()
             && self.wand.is_none()
             && self.rod.is_none()
+            && self.drink.is_none()
         {
             return Err(
                 "`level` and `frequency` are for loot: base items, which have a `kind`, scrolls \
-                 (`read`), wands (`wand`), and rods (`rod`)"
+                 (`read`), wands (`wand`), rods (`rod`), and potions (`drink`)"
                     .into(),
             );
         }
@@ -1398,6 +1437,7 @@ mod tests {
             read: None,
             wand: None,
             rod: None,
+            drink: None,
         };
         assert_eq!(def("dagger", "daggers").describe(1), "a dagger");
         assert_eq!(def("iron key", "iron keys").describe(1), "an iron key");

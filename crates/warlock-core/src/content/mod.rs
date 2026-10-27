@@ -66,6 +66,7 @@ mod overworld;
 pub(crate) mod part;
 mod particles;
 mod plural;
+mod potion;
 mod quest;
 mod quest_roll;
 mod race;
@@ -201,6 +202,7 @@ pub use overworld::{Landscape, LocalArea, local_area_id, parse_local_area};
 pub use part::{MAX_OBJECT_PARTS, MAX_PARTS, Part, PartDef, PartId, PartRole, and_list};
 pub use particles::{ParticleEmitter, ParticleTrigger};
 pub use plural::{MAX_WORD, Plurals};
+pub use potion::{Draught, Drink, MAX_POTION_MARKS};
 pub use quest::{
     GOLD, Goal, KillTarget, MAX_COUNT, MAX_NAME, MAX_QUEST_XP, MAX_TAG_COUNT, QuestDef, QuestId,
     QuestKind, QuestTexts, Reveal, RevealWhen, Reward,
@@ -647,6 +649,9 @@ pub struct Content {
     /// Unidentified rods' labels (`data/rod_labels.toml`, the scroll labels' format): none,
     /// every rod known on sight.
     rod_labels: Option<ScrollLabelDef>,
+    /// Unidentified potions' labels (`data/potion_labels.toml`, the scroll labels' format, a
+    /// word and the type's colour): none, every potion known on sight.
+    potion_labels: Option<ScrollLabelDef>,
     /// In `data/status.toml` order: most important first.
     statuses: Vec<StatusDef>,
     /// Alternative resources (`data/resources.toml`, spec §8 "Resources"), in file order; none
@@ -744,6 +749,7 @@ impl Content {
             scroll_labels: None,
             wand_labels: None,
             rod_labels: None,
+            potion_labels: None,
             statuses: Vec::new(),
             resources: Vec::new(),
             status_ids: BTreeMap::new(),
@@ -819,6 +825,12 @@ impl Content {
         let path = "data/rod_labels.toml";
         if let Some(text) = files.get_optional(path) {
             content.rod_labels = Some(ScrollLabelDef::parse(path, text)?);
+        }
+        let path = "data/potion_labels.toml";
+        if let Some(text) = files.get_optional(path) {
+            let def = ScrollLabelDef::parse(path, text)?;
+            content.check_potion_labels(path, &def)?;
+            content.potion_labels = Some(def);
         }
         let path = "data/stances.toml";
         if let Some(text) = files.get_optional(path) {
@@ -1991,13 +2003,29 @@ impl Content {
                 (self.statuses.iter().any(|s| s.cured_by.contains(cure)))
                     || (self.diseases.iter().any(|d| d.cured_by.contains(cure)))
             };
-            if let Some(cure) = o.cures.iter().find(|c| !named(c)) {
+            let drunk = o.drink.iter().flat_map(|d| d.does.cures());
+            if let Some(cure) = o.cures.iter().chain(drunk).find(|c| !named(c)) {
                 return Err(ContentError::new(
                     path,
                     format!(
                         "object `{}` cures `{cure}`, but no status or disease names it in \
                          `cured_by`",
                         o.id
+                    ),
+                ));
+            }
+        }
+        // Potions of one colour show in one colour (spec §8 "Potions": the colour is the hint).
+        for (o, path) in self.objects.iter().zip(&paths) {
+            let Some(drink) = &o.drink else { continue };
+            let other = (self.objects.iter())
+                .find(|p| p.drink.as_ref().is_some_and(|d| d.colour == drink.colour));
+            if let Some(other) = other.filter(|p| p.fg != o.fg) {
+                return Err(ContentError::new(
+                    path,
+                    format!(
+                        "potion `{}` is `{}` as `{}` is, but its `fg` differs: one colour, one fg",
+                        o.id, drink.colour, other.id
                     ),
                 ));
             }
@@ -2879,6 +2907,28 @@ impl Content {
     /// Unidentified rods' labels (`data/rod_labels.toml`), if rods have them.
     pub fn rod_labels(&self) -> Option<&ScrollLabelDef> {
         self.rod_labels.as_ref()
+    }
+
+    /// Unidentified potions' labels (`data/potion_labels.toml`), if potions have them.
+    pub fn potion_labels(&self) -> Option<&ScrollLabelDef> {
+        self.potion_labels.as_ref()
+    }
+
+    /// `data/potion_labels.toml` fits the potions (spec §8 "Potions"): its names say the
+    /// `{colour}`, and it has a word for every potion type, so no two share one.
+    fn check_potion_labels(&self, path: &str, def: &ScrollLabelDef) -> Result<(), ContentError> {
+        let err = |m: String| ContentError::new(path, m);
+        if !def.name.contains("{colour}") || !def.plural.contains("{colour}") {
+            return Err(err("`name` and `plural` say the potion's `{colour}`".into()));
+        }
+        let types = self.objects.iter().filter(|o| o.drink.is_some()).count();
+        let labels = def.parts.len().pow(u32::from(def.syllables[0]));
+        if labels < types {
+            return Err(err(format!(
+                "{types} potion types but only {labels} labels: add words to `parts`"
+            )));
+        }
+        Ok(())
     }
 
     /// The combat stances of `data/stances.toml` (all plain without the file).

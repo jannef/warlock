@@ -33,7 +33,7 @@
 #                your pack), to carry to `to` and hand in there. Without it in your pack you
 #                cannot hand it in
 #   reward     { gold, items, xp }, each optional: gold coins, objects as levels place them
-#              (`["red_potion*2"]`), and experience
+#              (`["potion_of_healing*2"]`), and experience
 #   offer, accept, reminder   what the giver says when you ask about it (giving it), after the
 #              offer in the same reply (accept, optional), and when you ask again before it is
 #              done

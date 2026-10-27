@@ -19,7 +19,7 @@ kit = [
     { wear = "wool_cloak" },
     { wear = "bone_amulet", magic = "any" },
     "angelica_root*2",
-    "red_potion|blue_potion",
+    "potion_of_healing|potion_of_mana",
     "candle*2",
     "apple*2",
     "gold_coin*6",

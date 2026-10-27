@@ -352,6 +352,12 @@ pub enum TalentEffect {
     /// A scroll it reads is not used up, by this chance in percent (one gameplay draw a read;
     /// Spell recall).
     ScrollKept { chance: u8 },
+    /// A potion it drinks is not used up, by this chance in percent (one gameplay draw a drink;
+    /// Thrifty drinker).
+    PotionKept { chance: u8 },
+    /// An unknown potion it picks up tells its kind (never its type) by its smell (Nose for
+    /// draughts).
+    PotionSmell,
     /// Its own bursts never catch it (Careful reader).
     SparesSelf,
     /// Added to its searching, not to noticing in passing (Keen searcher).
@@ -1192,6 +1198,12 @@ impl TalentEffect {
                 }
                 Ok(())
             }
+            TalentEffect::PotionKept { chance } => {
+                if !(1..=100).contains(chance) {
+                    return Err("`potion_kept`: chance is 1 to 100".into());
+                }
+                Ok(())
+            }
             TalentEffect::GemCut { value } => {
                 if !(1..=5).contains(value) {
                     return Err("`gem_cut`: value is 1 to 5".into());
@@ -1769,6 +1781,7 @@ impl TalentEffect {
             | TalentEffect::CollapseProof
             | TalentEffect::ExactFootsteps
             | TalentEffect::SmellRot
+            | TalentEffect::PotionSmell
             | TalentEffect::StanceCosts
             | TalentEffect::PlungeProof
             | TalentEffect::LightOnIce

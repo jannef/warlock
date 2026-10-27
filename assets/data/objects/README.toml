@@ -181,6 +181,16 @@
 #     identify identifies one unidentified item the reader carries
 #   `message` (burst, bolt) is said as it is read. A scroll may have `level` and `frequency`, as
 #   base items do: it is loot, never magic.
+# Potions (spec §8 "Potions"; drunk from the Consume list, `e`):
+#   [object.drink]  what drinking it does (stackable, and nothing else: no slot, weapon, food,
+#              scroll, wand, or rod); a drink takes the `drink` action and uses one up. `kind`
+#              and only its fields: `heal` (`dice` hit points back, optional `cures`), `cure`
+#              (`cures`, means of the statuses' and diseases' `cured_by`, and/or
+#              `diseases = true`: every disease), `mana` (`dice` mana back), `harm` (`dice`
+#              degrees of `status`). Every potion has `colour` (the name an unknown one is called
+#              by, "a fizzy red potion"; its hue is its family's, the object's `fg` its shade,
+#              one `fg` per colour name) and `marks = { toughness = 5 }` (sure training marks).
+#              A potion may have `level` and `frequency`: it is loot, never magic.
 #
 # Corpses are not listed here: every creature that leaves one has its own (`kobold_corpse`), made
 # from creatures.toml and hunger.toml, and only creatures that die leave them.

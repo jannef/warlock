@@ -1,0 +1,8 @@
+[[talent]]
+id = "thrifty_drinker"
+name = "Thrifty drinker"
+tree = "delver"
+description = "You sip what others gulp: now and then a potion you drink leaves enough in the flask for another draught."
+needs = { stats = { toughness = 12 }, level = 6 }
+effects = [{ kind = "potion_kept", chance = 25 }]
+systems = ["potions"]

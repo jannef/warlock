@@ -147,6 +147,7 @@ mod openings;
 mod outcome;
 mod path;
 mod perceive;
+mod potion;
 mod pray;
 mod quest;
 mod quest_roll;
@@ -638,11 +639,12 @@ impl World {
         let kit = start.as_ref().filter(|_| kit).map(|s| &s.kit);
         let pack = crate::kit::starting_pack(&content, def, kit);
         let with_kit = kit.is_some();
-        // A character knows the scrolls of their own kit (spec §8 "Scrolls").
+        // A character knows the scrolls and potions of their own kit (spec §8 "Scrolls",
+        // "Potions").
         let known_scrolls: BTreeSet<ObjectId> = (kit.iter())
             .flat_map(|k| &k.items)
             .map(|s| s.object)
-            .filter(|&o| content.object(o).read.is_some())
+            .filter(|&o| content.object(o).read.is_some() || content.object(o).drink.is_some())
             .collect();
         let (stats, vision, (hp_base, mana_base), skills, character, weapon_skills, alignment) =
             match start {
@@ -1219,7 +1221,7 @@ impl World {
             Action::Ask { dir, topic } => return self.ask(*dir, topic, events),
             Action::Steal(dir) => return self.steal(*dir),
             Action::ThrowVoice(at) => return self.throw_voice(*at, events),
-            Action::Eat(meal) => return self.eat(*meal),
+            Action::Eat(meal) => return self.eat(*meal, events),
             Action::Read { item, target } => return self.read(*item, *target, events),
             Action::Study { item } => return self.start_study(*item),
             Action::Dig(dir) => return self.start_dig(*dir),
@@ -1457,6 +1459,8 @@ mod outlaw_tests;
 mod overworld_tests;
 #[cfg(test)]
 mod parts_tests;
+#[cfg(test)]
+mod potion_tests;
 #[cfg(test)]
 mod protection_tests;
 #[cfg(test)]

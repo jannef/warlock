@@ -1,0 +1,21 @@
+# Unidentified potions (spec §8 "Potions"), as unidentified scrolls are (the format of
+# scroll_labels.toml): a potion type the player has not yet drunk or identified shows as "a fizzy
+# red potion" until they do. Every potion type gets its own word at the start of a run, drawn
+# after the rods' labels from the same stream, so this file never changes a scroll's, wand's, or
+# rod's label nor a run's rolls. The colour is the type's own (`colour` in its `[object.drink]`,
+# its `fg` the object's): each effect family has a hue, and the colour hints at the family, never
+# the type.
+#
+#   name, plural  what an unknown potion is called, `{label}` its word, `{colour}` its colour
+#   fg            unused by potions (they show in their type's colour); the format asks for it
+#   syllables     [least, most] parts a label is made of: one word here
+#   parts         the words (at least 8, distinct; at least as many as there are potion types)
+
+name = "{label} {colour} potion"
+plural = "{label} {colour} potions"
+fg = "#c0c0c0"
+syllables = [1, 1]
+parts = [
+    "bubbling", "cloudy", "fizzy", "foaming", "glittering", "milky", "misty", "oily", "pearly",
+    "shimmering", "smoky", "sparkling", "swirling", "syrupy", "thick", "thin", "viscous",
+]

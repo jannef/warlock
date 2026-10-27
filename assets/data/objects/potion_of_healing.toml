@@ -1,0 +1,21 @@
+# A potion of healing (spec §8 "Potions"): drunk from the Consume list, it closes wounds at once.
+# Its colour is healing's hue, red; unknown, it is "a {word} red potion".
+[[object]]
+id = "potion_of_healing"
+name = "potion of healing"
+plural = "potions of healing"
+glyph = "!"
+fg = "#c83c3c"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 40
+stackable = true
+level = 1
+frequency = 60
+
+[object.drink]
+kind = "heal"
+dice = "2d8"
+colour = "red"
+marks = { toughness = 5 }

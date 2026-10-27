@@ -26,7 +26,7 @@ requires = "guild_quarry"
 type = "kill"
 count = 100
 pick = { tags = ["kobold", "goblin", "undead", "vermin", "marsh-thing", "duergar", "fire-thing"] }
-reward = { gold = 250, xp = 500, items = ["red_potion*2"] }
+reward = { gold = 250, xp = 500, items = ["potion_of_healing*2"] }
 alignment = 5
 offer = "An 'undred {targets} for the Gilde. Every sort of 'em counts, an' I'll write you down which. Anywhere you like, so long as it's your 'and does it. Counts from today."
 accept = "Count 'em careful. I will."

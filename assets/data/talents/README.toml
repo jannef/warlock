@@ -146,6 +146,9 @@
 #                                 better than the least the find may be, that percent more
 #   read_percent { value }        reading a scroll takes that percent more time (negative: less)
 #   scroll_kept { chance }        a scroll it reads is not used up, by that chance in percent
+#   potion_kept { chance }        a potion it drinks is not used up, by that chance in percent
+#   potion_smell                  an unknown potion it picks up tells its kind (never its type)
+#                                 by its smell
 #   spares_self                   its own bursts never catch it
 #   find { value }                added to its checks to find what is hidden, searching and in
 #                                 passing

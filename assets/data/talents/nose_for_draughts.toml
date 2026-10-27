@@ -1,0 +1,8 @@
+[[talent]]
+id = "nose_for_draughts"
+name = "Nose for draughts"
+tree = "scholar"
+description = "A sniff at the stopper tells you what kind of draught an unknown potion is, though not which."
+needs = { stats = { intelligence = 12 } }
+effects = [{ kind = "potion_smell" }]
+systems = ["potions"]

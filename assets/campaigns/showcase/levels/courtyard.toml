@@ -100,7 +100,7 @@ objects = ["small_shield"]
 
 [[pile]]
 at = [56, 14]
-objects = ["red_potion"]
+objects = ["potion_of_healing"]
 
 [[pile]]
 at = [60, 14]

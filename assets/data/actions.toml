@@ -68,6 +68,7 @@ search = 1000
 pray = 1000
 # A turn of drinking at a healing spring (the Drink ability; spec §7 "Special rooms"): a drink
 # takes its outcome table's `seconds` (data/outcomes/spring.toml), a turn of this after another.
+# Drinking a potion (spec §8 "Potions", from the Consume list) takes one.
 drink = 1000
 
 # A turn of foraging in the wild (the Forage ability; spec §8 "Foraging"): a forage takes

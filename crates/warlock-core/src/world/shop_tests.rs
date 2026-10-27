@@ -639,11 +639,11 @@ fn level_files_mark_shops_with_known_kinds_and_posts() {
 
 #[test]
 fn generated_shops_are_kept_by_their_keepers() {
-    // The Depths of seed 2 have a provisioner's on their first level.
+    // The Depths of seed 2 have an alchemist's on their first level.
     let w = World::new(content(), "depths", Some(2)).expect("depths");
     let shop = shop(&w);
     let def = shops(&w).get(shop.kind);
-    assert_eq!(def.id, "provisioner");
+    assert_eq!(def.id, "alchemist");
     let keeper = &w.state.actors[&shop.keeper];
     assert_eq!((keeper.pos, keeper.level.as_str()), (shop.post, "depths:1"));
     assert_eq!(w.content().creature(keeper.creature).id, "shopkeeper");

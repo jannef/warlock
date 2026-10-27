@@ -46,7 +46,7 @@
 #              listed: any
 #   damage_type the kind of damage the status is (poison): a target immune to it never suffers
 #              it, and a resistance shrinks each dose it is given (spec §8 "Damage types")
-#   cured_by   what cures it at once (a bandage)
+#   cured_by   what cures it at once (a bandage, an antidote)
 #   treat      how the Heal skill treats it (the Heal ability, spec §8 "Skills"): an Intelligence
 #              check plus Heal against { difficulty = 6, per_degree = 2 } (difficulty 0 to 40,
 #              plus 0 to 10 for each degree); `stops = true`: made, it ends, and a failed try may
@@ -111,6 +111,8 @@ eases = 120
 regen = 50
 mana_regen = 50
 penalty = { from = 4, strength = -1, dexterity = -1 }
+# Cured at once by an antidote (the potion, spec §8 "Potions").
+cured_by = ["antidote"]
 # Eased a degree with the Heal skill, once; a failed try cannot be made again for this dose.
 treat = { difficulty = 8, per_degree = 1, made = "You draw out some of the poison.", failed = "You can do no more for the poison." }
 start = "You feel sick."
