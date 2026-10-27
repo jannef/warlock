@@ -1,0 +1,65 @@
+# The summoners (#520; content::summoner_roster_tests checks the numbers): a living man who has
+# given himself to the dead, of the cult's kind (faction "cult"), raising the dead about him
+# wherever he stands (a summoner: `[creature.summon]`). His other spells are announced only. He
+# keeps a dagger (his racial weapon).
+[[creature]]
+id = "necromancer"
+level = 18
+xp = 100
+rarity = "rare"
+loot = 50
+name = "necromancer"
+glyph = "@"
+fg = "#7ab05a"
+faction = "cult"
+tags = ["cultist", "caster", "summoner"]
+alignment = "evil"
+race = "human"
+combat = "caster"
+range = 6
+opens_doors = true
+footsteps = 80
+hearing = 14
+weight = 70000
+stats = { strength = 15, dexterity = 14, toughness = 19, intelligence = 17, willpower = 19, presence = 12 }
+base_hp = 36
+mana = 30
+skills = { concentration = 66, spellcraft = 73 }
+weapon_skills = { daggers = 2 }
+racial_weapon = "dagger"
+# The racial weapon's line written out, for its magic.
+[[creature.gear]]
+chance = 90
+one_of = ["dagger"]
+keep = "wield"
+magic = 25
+[[creature.gear]]
+chance = 50
+one_of = ["wool_cloak"]
+[[creature.gear]]
+chance = 60
+one_of = ["bone_amulet"]
+magic = 30
+
+# The lesser dead (every undead type of level 3 to 12), one to four at a time, every half a
+# minute while his mana lasts, eight of them at most.
+[creature.summon]
+tag = "undead"
+levels = [3, 12]
+count = "1d4"
+cooldown = 30
+mana = 10
+most = 8
+verb = "raises"
+
+[[creature.particles]]
+on = "attack"
+glyphs = "·*+"
+colors = ["#d8f0c0", "#7ab05a", "#304820"]
+count = 5
+life = 0.4
+spread = [0.9, 0.9]
+area = [0.15, 0.15]
+scale = 0.5
+fade = 0.6
+glow = 0.5

@@ -89,6 +89,8 @@ mod stat_training;
 mod status;
 mod steal;
 mod summon;
+#[cfg(test)]
+mod summoner_roster_tests;
 mod tag;
 mod talent;
 mod terrain;

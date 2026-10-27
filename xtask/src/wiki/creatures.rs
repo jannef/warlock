@@ -495,6 +495,51 @@ pub(super) fn creature_throws(content: &Content) -> String {
     out
 }
 
+/// Each summoner's summoning (spec §8 "Summoning"): what it calls forth, how many at once, how
+/// often and at what mana, from how far, and how many of its summoned may live at once.
+pub(super) fn creature_summons(content: &Content) -> String {
+    let mut out = String::from(
+        "| Creature | Calls forth | At once | Every | Mana | Within | Appear within | At most |\n\
+         |---|---|:---:|---:|---:|---:|---:|---:|\n",
+    );
+    for (_, c) in listed(content) {
+        let Some(summon) = &c.summon else {
+            continue;
+        };
+        // The pool by name, each with its share when some are likelier than others.
+        let mut names: Vec<(String, usize)> = Vec::new();
+        for &p in &summon.pool {
+            let name = content.creature(p).name.clone();
+            match names.iter_mut().find(|(n, _)| *n == name) {
+                Some((_, k)) => *k += 1,
+                None => names.push((name, 1)),
+            }
+        }
+        names.sort();
+        let total = summon.pool.len();
+        let even = names.iter().all(|(_, k)| *k == names[0].1);
+        let pool: Vec<String> = (names.iter())
+            .map(|(n, k)| match even {
+                true => n.clone(),
+                false => format!("{n} ({}%)", k * 100 / total),
+            })
+            .collect();
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} | {} s | {} | {} cells | {} cells | {} |",
+            capital(&c.name),
+            pool.join(", "),
+            summon.count,
+            summon.cooldown,
+            summon.mana,
+            summon.range,
+            summon.spread,
+            summon.most
+        );
+    }
+    out
+}
+
 /// Each creature's speed and how long a normal action takes it, how far and with which eyes it
 /// sees, how faint a sound it hears (its listen skill included), how loud its steps are, what it
 /// weighs, its size, and its carrying limit (spec §8 "Burden").
@@ -544,7 +589,7 @@ mod tests {
         let table = creature_tags(&content);
         assert!(
             table.contains(
-                "| `goblin` | goblins | goblin, goblin archer, goblin chief, hobgoblin, \
+                "| `goblin` | goblins | goblin, goblin archer, goblin chief, goblin wizard, hobgoblin, \
                  hobgoblin archer, hobgoblin captain, hobgoblin legionnaire, hobgoblin sergeant, \
                  hobgoblin warcaster, hobgoblin warlord |"
             ),

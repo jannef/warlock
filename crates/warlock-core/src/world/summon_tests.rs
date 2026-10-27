@@ -327,3 +327,38 @@ fn summoning_is_deterministic() {
     run(&mut b, "wait*20");
     assert_eq!(a.state_hash(), b.state_hash());
 }
+
+/// The shipped summoners, in the showcase's summoning hall: the goblin wizard calls forth its
+/// kind, and a kill of what it called pays experience.
+#[test]
+fn the_goblin_wizard_calls_forth_goblins_that_pay_when_killed() {
+    let content = Arc::new(Content::builtin().expect("content"));
+    let mut w = World::new(content, "summoners", None).expect("the summoning hall");
+    run(&mut w, "move:W*13 move:NW open:N wait");
+    let wizard = first_of(&w, "goblin_wizard").id;
+    let came = summoned_by(&w, wizard);
+    assert!(!came.is_empty(), "it summoned");
+    let goblins = w.content().factions().id("goblins");
+    assert!(came.iter().all(|a| a.faction(w.content()) == goblins));
+    // One of them, set down beside the player, frail: struck until it dies.
+    let victim = came[0].id;
+    let player = w.player_pos();
+    let beside = Pos::new(player.x + 1, player.y);
+    if let Some(a) = w.state.actors.get_mut(&victim) {
+        a.pos = beside;
+        a.hp = 1;
+    }
+    let xp = w.state.experience;
+    for _ in 0..50 {
+        if !w.state.actors.contains_key(&victim) {
+            break;
+        }
+        if let Some(a) = w.state.actors.get_mut(&victim) {
+            a.pos = beside;
+            a.hp = 1;
+        }
+        run(&mut w, "move:E");
+    }
+    assert!(!w.state.actors.contains_key(&victim), "it died");
+    assert!(w.state.experience > xp, "its kill paid");
+}
