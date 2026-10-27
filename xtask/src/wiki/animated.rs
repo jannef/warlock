@@ -75,11 +75,12 @@ pub(super) fn animated_tiers(content: &Content) -> String {
 }
 
 /// The numbers of every tier at each of its levels: stats, hit points beyond Toughness and in
-/// all, damage dice, and experience.
+/// all, damage dice (a family that wields: none of its own), a family's speed and natural
+/// Defence (a household thing's speed is its body's), and experience.
 pub(super) fn animated_numbers(content: &Content) -> String {
     let mut out = String::from(
-        "| Tier | Level | St | Dx | To | In | Wi | Pr | Hit points | Max | Dice | XP |\n\
-         |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|---:|\n",
+        "| Tier | Level | St | Dx | To | In | Wi | Pr | Hit points | Max | Dice | Speed | Defence \
+         | XP |\n|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|---:|---:|---:|\n",
     );
     let guideline = content.experience().guideline();
     for tier in &content.animated().tiers {
@@ -87,9 +88,22 @@ pub(super) fn animated_numbers(content: &Content) -> String {
             let n = Numbers::at(level, tier);
             let score = |s: Stat| n.stats.get(&s).copied().unwrap_or(0);
             let toughness = u16::from(score(Stat::Toughness));
+            let member = (tier.is_family())
+                .then(|| content.creature_id(&format!("{}_{level}", tier.family)))
+                .flatten()
+                .map(|c| content.creature(c));
+            let dice = match member {
+                Some(def) if def.attack.is_none() => "wields".to_string(),
+                _ => n.dice.to_string(),
+            };
+            let speed = member.map_or("body's".to_string(), |d| d.speed.to_string());
+            let defence = member
+                .and_then(|d| d.natural.as_ref())
+                .map_or("-".to_string(), |h| h.defence.to_string());
             let _ = writeln!(
                 out,
-                "| {} | {level} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |",
+                "| {} | {level} | {} | {} | {} | {} | {} | {} | {} | {} | {dice} | {speed} | \
+                 {defence} | {} |",
                 tier.name,
                 score(Stat::Strength),
                 score(Stat::Dexterity),
@@ -99,8 +113,85 @@ pub(super) fn animated_numbers(content: &Content) -> String {
                 score(Stat::Presence),
                 n.base_hp,
                 toughness + n.base_hp,
-                n.dice,
                 guideline.xp(level)
+            );
+        }
+    }
+    out
+}
+
+/// The families (blades): what each is made of, slot by slot, how it shows, what it resists,
+/// and by level the chances that a piece is magic or rare and its rank in its weapon's skill.
+pub(super) fn animated_families(content: &Content) -> String {
+    let mut out = String::from(
+        "| Family | Levels | Rarity | Made of | Shows as | Resists | Footsteps | Dies |\n\
+         |---|---|---|---|---|---|---:|---|\n",
+    );
+    let animated = content.animated();
+    let families: Vec<(usize, &warlock_core::content::animated::Tier)> = (animated.tiers.iter())
+        .enumerate()
+        .filter(|(_, t)| t.is_family())
+        .collect();
+    for &(t, tier) in &families {
+        let made: Vec<String> = (animated.lines[t].iter())
+            .map(|line| {
+                let classes: Vec<String> = (line.classes.iter())
+                    .map(|&c| content.item_class(c).name.to_lowercase())
+                    .collect();
+                format!(
+                    "{}: {} ({} %)",
+                    content.slot(line.slot).name,
+                    classes.join(" or "),
+                    line.chance
+                )
+            })
+            .collect();
+        let shows = match (&tier.shown_by, tier.item_glyph) {
+            (Some(slot), true) => {
+                format!("its {} piece's glyph and colour", slot.replace('_', " "))
+            }
+            (Some(slot), false) => format!(
+                "{} in its {} piece's colour",
+                glyph(tier.glyph.unwrap_or('?')),
+                slot.replace('_', " ")
+            ),
+            (None, _) => glyph(tier.glyph.unwrap_or('?')),
+        };
+        let resists: Vec<String> = (tier.resist.iter())
+            .map(|(k, v)| format!("{k} {}", signed(*v)))
+            .collect();
+        let rarity = tier.rarity.as_deref().unwrap_or("common");
+        let _ = writeln!(
+            out,
+            "| {} | {} to {} | {} | {} | {shows} | {} | {} | \"{}\" |",
+            capital(tier.creature.as_deref().unwrap_or_default()),
+            tier.levels[0],
+            tier.levels[1],
+            capital(&rarity.replace('_', " ")),
+            made.join("; "),
+            if resists.is_empty() {
+                "-".into()
+            } else {
+                resists.join(", ")
+            },
+            tier.footsteps,
+            tier.dies
+        );
+    }
+    out.push_str(
+        "\n| Family | Level | At least magic | Rare | Rank in its weapon's skill |\n\
+         |---|---:|---:|---:|---:|\n",
+    );
+    for (_, tier) in families {
+        let at = |ramp: Option<warlock_core::content::Ramp>, level| ramp.map_or(0, |r| r.at(level));
+        for level in tier.levels[0]..=tier.levels[1] {
+            let _ = writeln!(
+                out,
+                "| {} | {level} | {} % | {} % | {} |",
+                capital(tier.creature.as_deref().unwrap_or_default()),
+                at(tier.magic, level).max(at(tier.rare, level)),
+                at(tier.rare, level),
+                at(tier.weapon_rank, level)
             );
         }
     }

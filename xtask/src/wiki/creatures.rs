@@ -179,6 +179,7 @@ pub(super) fn creature_tags(content: &Content) -> String {
     let mut out = String::from("| Tag | Said | Creatures |\n|---|---|---|\n");
     for tag in content.tags() {
         let mut names: Vec<&str> = (content.tagged(tag))
+            .filter(|&c| content.family(c) == c)
             .map(|c| content.creature(c))
             .filter(|c| order::described(content, c.campaign.as_deref()))
             .map(|c| c.name.as_str())
@@ -401,6 +402,17 @@ pub(super) fn creature_attacks(content: &Content) -> String {
             Combat::Caster => format!("casts spells, up to {} cells", c.range),
         };
         let actor = bare(content, id);
+        // A family that wields what it is made of (animated blades): its weapon's blow.
+        if c.attack.is_none() && content.family_levels(id).is_some() {
+            let _ = writeln!(
+                out,
+                "| {} | {fight} | its weapon | its weapon's, with its Strength | its weapon's | \
+                 its weapon's | {} | its weapon's |",
+                capital(&c.name),
+                at_speed(blow_price(content, &actor), c.speed),
+            );
+            continue;
+        }
         let profile = actor.melee(content);
         let kinds: Vec<String> = (profile.kinds.iter())
             .map(|k| content.damage_type(k).name.clone())

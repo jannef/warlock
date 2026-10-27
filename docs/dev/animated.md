@@ -6,8 +6,9 @@ spec/08b-creatures.md ("Animated objects"), the approved design in
 the code, as CLAUDE.md says.
 
 A1 (#483) is the household tier: brooms, stools, candlesticks, teapots, the rug of smothering.
-Blades (A3, #485), hollow armour and panoplies (A4, #486), breaking into parts (A2, #484), their
-homes (A5, #487), and the chromatic look of composites (A6, #463) come after.
+A3 (#485) adds families and the first of them, blades. Hollow armour and panoplies (A4, #486),
+breaking into parts (A2, #484), their homes (A5, #487), and the chromatic look of composites
+(A6, #463) come after.
 
 ## Generated creature types (`content/animated.rs`)
 
@@ -40,9 +41,20 @@ reads it as it reads a kobold, and the guideline and roster tests cover it with 
   error. Generation draws nothing, so the ids and `Content::fingerprint_for` are the same on
   every load; adding a body shifts every later id, as adding a creature file does (saves change:
   the integrator's format bump).
+- **Families** (A3): a tier with `bodies = false` generates one type per level of its
+  `levels`, `animated_<tier>_<level>` (`Animated::member`), least first, after the bodies'
+  types (tiers in file order). Its name, glyph, colour, rarity, speed and Defence by level
+  (`Ramp`: nothing below `from`, else `base + per_level × (L − from)` floored, at most `most`;
+  a hair over before the floor so 0.1 × 30 is 3), resistances, and death verb are the tier's;
+  no attack (it wields). What every generated type shares is `Animated::common`. The tier's
+  slot lines are resolved at parse (`Animated::lines`, by tier; slot and classes must exist,
+  `shown_by` must be one of the lines' slots). `Tier::family` is its id, `animated_<tier>`;
+  `Content::name_families` registers it in `creature_ids` for the first member (a creature
+  file of that id is an error), so populations, quests, and legends can name it.
 - **`AnimatedDef`** on `CreatureDef::animated` (`#[serde(skip)]` on the spec): its tier, its
-  family (the first type of its run; a household type is its own, A3 adds runs), and its body
-  (`Content::animated_body(creature)`).
+  family (the first type of its run, set at numbering as `id − member`; a household type is its
+  own), `member` (its place in the run), and its body (`None` in a family;
+  `Content::animated_body(creature)`).
 
 Two creature fields came with it, for any creature: `immune` (status ids; `diseased` is every
 disease) and `dies` (the death line's verb, `CreatureDef::death_verb`).
@@ -63,7 +75,34 @@ places must not move), in no slot, unless the creature carries its body already.
   its body at the least count of that material (else its object's own), a fixed kit: nothing is
   drawn.
 
-No new save state: the body is an ordinary inventory stack.
+A family's creature: `animated::compose_slots` goes through its tier's lines in order: one
+draw for `chance`; one for the base item (`loot::base_in`: the loot objects of the line's
+classes with `level ≤ L` and a `frequency`, by frequency, ordered by object id); one `below(100)`
+for the grade (under `rare` rare, under `max(rare, magic)` at least magic, else plain); then
+`loot::make_as` at item level L with `Source::Gear(L)` (or, plain, one `variant::draw` for the
+material), put in the pack and in the line's slot. `animated::kit` is the one entry (household
+body or family pieces; a family creature that carries anything already is not rolled), called
+by `arm` and `travel::make_creature`. `animated::weapon_skills` (no draws) gives it the tier's
+`weapon_rank` at L in the skill of each wielded weapon (`WeaponSkills::from_ranks`), set as
+`Actor::weapon_skills` in `make_creature`.
+
+No new save state: the body and the pieces are ordinary inventory stacks, the ranks ordinary
+weapon skills.
+
+## Families: the four reads
+
+- **The danger draw**: `Content::candidates` gives a family one `danger::Candidate`, `(first id,
+  (from, to), factor)` (a member's id in a population stands for its family); `danger::pick`
+  weighs it at `clamp(D, from, to)` and returns `danger::member`: `first + clamp − from`.
+- **First kills**: `World::earn_kill` keys `discovered.kills` by `Content::family_key` (the
+  family's id, else the type's own).
+- **Kills and quests**: `World::tally_kill` tallies by `family_key` (so Favoured prey,
+  `ambush.rs`, compares `family_key` too); `KillTarget::has` compares `Content::family`;
+  `QuestDef::members` (a `tag:` objective) and a rolled pick of creatures list a family once
+  (`content.family(c) == c`), the pick's target the family's id; `Content::lives_in` asks for
+  the family.
+- **The wiki**: `order::creatures`, the experience table, and the tag table show a family once
+  (its first member's row); `animated.rs` prints its per-level numbers and odds.
 
 ## In play (`world/animated.rs`)
 
@@ -89,13 +128,18 @@ No new save state: the body is an ordinary inventory stack.
 else the type's; the map (`ui/glyphs.rs`), the look cursor, and the `view` dump use them, and a
 JSON dump's seen actors carry `glyph` and `fg`. Look mode (`ui/look.rs::made_of`) adds the
 material after the name and the body's `moves` after how hurt it looks: "An animated
-candlestick of silver (hostile, unhurt), rocking, on stone floor."
+candlestick of silver (hostile, unhurt), rocking, on stone floor." A family's creature is
+shaped by the piece in its tier's `shown_by` slot: its colour, and with `item_glyph` its glyph
+(a blade shows as its weapon, `)`); without that piece, the type's own. Look mode adds no
+material word for it: the gear line names what it wields ("An animated blade (hostile,
+unhurt), wielding an iron great sword, on stone floor.").
 
 ## Content
 
 The household objects are `data/objects/<body>.toml`, class `household` (the general store buys
 them). Populations: Cealdhlāw (candlestick, cutlery, teapot, cooking pot), Fennmynster
-(candlestick, book, lantern, rug); the stray list follows. Talents: system `animated` with
+(candlestick, book, lantern, rug), and `animated_blade` in Cealdhlāw and Fyrdelf; the stray list
+follows. Talents: system `animated` with
 Salvager (delver) and Unbinder (weaponcraft).
 
 ## Tests
@@ -103,5 +147,8 @@ Salvager (delver) and Unbinder (weaponcraft).
 `content/animated_tests.rs` (ids, order, numbers, group effects, identity, every load the same,
 collisions and bad bodies), `world/animated_tests.rs` (the legend's body, composition and its
 stream, material weights, the cutlery's count, immunities, stealing, the drop rule and
-Salvager, Unbinder, saves and a replay), `ui/look.rs` (the look line). The wiki's tables are
-`xtask/src/wiki/animated.rs`.
+Salvager, Unbinder, saves and a replay), `world/animated_blade_tests.rs` (the family's ids and
+numbers, a blade's weapon, rank, stream, odds, and fight, first kills, quests, and the tag
+objective counting the family once, saves), `content/danger.rs` (a family candidate's weight
+and member, out of depth too), `ui/look.rs` (the look lines, a blade's as an insta snapshot).
+The wiki's tables are `xtask/src/wiki/animated.rs`.
