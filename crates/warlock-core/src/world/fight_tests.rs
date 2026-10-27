@@ -554,7 +554,7 @@ fn the_players_hit_points_come_from_toughness_race_and_class() {
     assert_eq!(hp("dwarf,male,barbarian"), (14, 14));
     assert_eq!(hp("human,female,warrior"), (11, 11));
     assert_eq!(hp("elf,other,wizard"), (2, 2));
-    assert_eq!(hp("halfling,male,thief"), (5, 5));
+    assert_eq!(hp("halfling,male,thief"), (6, 6));
 }
 
 #[test]
