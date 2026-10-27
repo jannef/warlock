@@ -49,6 +49,9 @@ kobold.
 
 {{#include generated/creature-tags.md}}
 
+Cēaptūn's adventurers' guild gives a chain of drawn quests, and ranks for doing them: see
+[The Weyfarers' Gilde](guild.md).
+
 ## Drawn quests
 
 Some quests do not say what they want until they are given: the person picks it at random as

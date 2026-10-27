@@ -1,0 +1,46 @@
+# Wat One-Eye's quests (docs/design/adventurers-guild.md §7; the fields: data/quests.toml): the
+# Weyfarers' Gilde's chain, one link at a time, each requiring the one before and nothing else.
+# Every target is drawn as the quest is given and stands until it is done. Being given the first
+# makes the player a Tin of the Gilde, the second done a Pewter (data/guilds/weyfarers.toml).
+# Link 4, "Wanted", comes with the four lairs (#426). Wat speaks Cockney (decision 13).
+
+[[quest]]
+id = "guild_quarry"
+name = "A bounty"
+giver = "wat"
+type = "kill"
+pick = { creatures = ["cealdhlaw", "fennmynster", "fyrdelf"] }
+reward = { gold = 40, xp = 60 }
+offer = "There's a price on {a_target}, see. Bring the beast down, wherever you find it, an' the Gilde pays. Counts from today, mind: what you done before's your own business. {Where}"
+accept = "Put yer mark 'ere, then. That's you in the Gilde."
+reminder = "{A_target}, an' just the one. {Where}"
+done = "That's the one. 'Ere's the Gilde's coin, fair earned."
+where = "{Targets} are known in {branch}."
+
+[[quest]]
+id = "guild_hundred"
+name = "The hundred"
+giver = "wat"
+requires = "guild_quarry"
+type = "kill"
+count = 100
+pick = { tags = ["kobold", "goblin", "undead", "vermin", "marsh-thing", "duergar", "fire-thing"] }
+reward = { gold = 250, xp = 500, items = ["red_potion*2"] }
+alignment = 5
+offer = "An 'undred {targets} for the Gilde. Every sort of 'em counts, an' I'll write you down which. Anywhere you like, so long as it's your 'and does it. Counts from today."
+accept = "Count 'em careful. I will."
+reminder = "An 'undred {targets}, all told. {Where}"
+done = "An 'undred! I 'ad me doubts, I don't mind sayin'. Pewter suits you. Potions an' all."
+where = "{Targets} are known in {branch}."
+
+[[quest]]
+id = "guild_scroll"
+name = "A scroll for the Gilde"
+giver = "wat"
+requires = "guild_hundred"
+type = "bring"
+pick = { objects = { class = "scrolls", loot = true } }
+reward = { gold = 200, xp = 150 }
+offer = "The Gilde keeps a few scrolls by, for when a job goes wrong, an' we're short {a_target}. Find one or buy one, I don't ask which, an' bring it 'ere."
+reminder = "{A_target}, for the Gilde's shelf. Bring it 'ere."
+done = "Lovely. That goes on the shelf, an' this goes in yer purse."

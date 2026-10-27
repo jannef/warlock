@@ -39,6 +39,7 @@ mod gear;
 mod gem;
 #[cfg(test)]
 mod giant_roster_tests;
+mod guild;
 #[cfg(test)]
 mod hag_roster_tests;
 #[cfg(test)]
@@ -147,6 +148,7 @@ pub use gem::{
     Cut, CutId, Cutting, GemDef, GemSize, GemSizeId, Gems, MAX_GEM_VALUE, MAX_GEM_WEIGHT,
     MAX_MULTIPLIER, Ornament, ROUGH_SATURATION, dull,
 };
+pub use guild::{GuildDef, MAX_RANKS, MAX_TITLE, RankBy, RankDef};
 pub use horoscope::{FULL_MOON_WITHIN, Flavour, Horoscope, Lucky, Sign, SignActive, SignPart};
 pub use hunger::{
     Corpses, EXERTIONS, Faint, Food, HungerDef, MAX_MEAL, MAX_NUTRITION, MAX_SHELF_LIFE,
@@ -616,6 +618,8 @@ pub struct Content {
     plurals: Plurals,
     /// What people ask of the player (`data/quests.toml`), in file order.
     quests: Vec<QuestDef>,
+    /// Guilds and their ranks (`data/guilds/`, each campaign's too), in table order.
+    guilds: Vec<GuildDef>,
     /// Shops (`data/shops.toml`); none without the file.
     shops: Option<Shops>,
 }
@@ -699,6 +703,7 @@ impl Content {
             dialogues: Vec::new(),
             plurals: Plurals::default(),
             quests: Vec::new(),
+            guilds: Vec::new(),
             shops: None,
         };
         content.campaigns = campaign::parse(files)?;
@@ -970,6 +975,7 @@ impl Content {
             }
         }
         content.quests = quest::parse(files.table("quests"), &content)?;
+        content.guilds = guild::parse(files.table("guilds"), &content)?;
         content.validate()?;
         content.check_campaigns()?;
         Ok(content)

@@ -21,7 +21,8 @@ across, three to four days by road. Rivers can be crossed only at the bridge and
 
 **Cēaptūn** is the first place to go: a walled market town, safe, with four shops on its
 square, the Mynster (the temple, where you may rest and Sister Hild cures and mends for gold),
-and the Gæsthūs, the inn, where Godgifu has news of the march (see [Shops](shops.md) and
+the Gæsthūs, the inn, where Godgifu has news of the march, and the Gildhalle of the
+[Weyfarers' Gilde](guild.md), where Wat One-Eye gives out work (see [Shops](shops.md) and
 [People and talk](npcs.md)). You arrive on the square. The town has no stairs: like any outdoor
 area, walk off its edge to return to its cell on the overworld, or press `<` when no enemy is
 about ([Leaving an area](overworld.md#leaving-an-area)).
@@ -72,10 +73,16 @@ have names of the same kind. Creatures keep their plain English names.
 | Grægsæ | *grǣg* + *sǣ* "sea" | the grey sea | the sea |
 | the Mynster | *mynster* | the minster | Cēaptūn's temple |
 | the Gæsthūs | *gæst* "guest" + *hūs* "house" | the guest house | Cēaptūn's inn |
+| the Gildhalle | Middle English *gild* + *halle* | the guildhall | the guild's hall in Cēaptūn |
+| the Weyfarers' Gilde | Middle English *weyfarere* "traveller" + *gilde* | the Wayfarers' Guild | the adventurers' guild |
 | Leofric | *lēof* "dear" + *rīc* "ruler" | | the reeve of Cēaptūn |
 | Hild | *hild* "battle" | | the sister of the Mynster |
 | Wulfrun | *wulf* "wolf" + *rūn* "secret, counsel" | | the mine-factor |
 | Godgifu | *god* + *gifu* "gift" | | the innkeeper |
+
+The guild is younger than the town, so its names are Middle English, not Old; its master, Wat
+One-Eye, is a commoner, called by a short name and a byname. The guild's ranks (Tin to Gold)
+are plain English.
 
 The game writes *ǣ* as **æ** and *ȳ* as **y** (Græg-, Fyr-), as its font draws them.
 

@@ -222,6 +222,15 @@ const CASES: &[Case] = &[
         size: (100, 36),
         ..BASE
     },
+    // A Tin of the Weyfarers' Gilde (#425): the rank under the alignment.
+    Case {
+        name: "character-guild",
+        scenario: "ceaptun",
+        actions: "move:E*26 move:S*4 move:E*9 open:S move:S*5 ask:S:quest-guild_quarry",
+        screen: Some("character"),
+        size: (100, 36),
+        ..BASE
+    },
     // The attacks beside the stats (the showcase's own character has bare hands): a sword and
     // shield, a bow with a sword, and two weapons with a bow.
     Case {
@@ -632,6 +641,15 @@ const CASES: &[Case] = &[
         name: "dialogue-appraisal",
         scenario: "ceaptun",
         actions: "move:E*26 move:S*4 open:S move:S*4 chat:S",
+        screen: Some("dialogue"),
+        ..BASE
+    },
+    // Cēaptūn's Wat One-Eye (#425): the guild's chain, one quest topic at a time, before his
+    // own two.
+    Case {
+        name: "dialogue-guild",
+        scenario: "ceaptun",
+        actions: "move:E*26 move:S*4 move:E*9 open:S move:S*5 chat:S",
         screen: Some("dialogue"),
         ..BASE
     },
