@@ -106,6 +106,9 @@ pub enum Choice {
     Element,
     /// A creature tag (one some creature type carries, `goblin`).
     Tag,
+    /// A spell tag a talent may focus on (magic design §6): a school (`evocation`), or an
+    /// element as [`Choice::Element`] offers them (`fire`).
+    School,
 }
 
 impl Choice {
@@ -117,6 +120,7 @@ impl Choice {
             Choice::Skill => "a skill",
             Choice::Element => "an element",
             Choice::Tag => "a kind of creature",
+            Choice::School => "a school of magic or an element",
         }
     }
 
@@ -142,6 +146,9 @@ impl Choice {
                 .map(|t| t.id.clone())
                 .collect(),
             Choice::Tag => content.tags().into_iter().map(str::to_string).collect(),
+            Choice::School => (super::School::ALL.iter().map(|s| s.id().to_string()))
+                .chain(Choice::Element.options(content))
+                .collect(),
         }
     }
 
@@ -167,6 +174,10 @@ impl Choice {
                 (!def.physical).then_some(def.name.as_str())
             }
             Choice::Tag => content.tags().into_iter().find(|t| *t == id),
+            Choice::School => (super::School::ALL.iter())
+                .map(|s| s.id())
+                .find(|s| *s == id)
+                .or_else(|| Choice::Element.name(content, id)),
         }
     }
 }
@@ -228,9 +239,13 @@ pub enum TalentEffect {
     /// caster), in [`crate::world::World::spend_mana`].
     ManaCostPercent { value: i32 },
     /// Caster level, this much higher (negative: lower; spec §8 "Spells"), in
-    /// [`crate::world::World::caster_level`]. Nothing grants it yet (the Spellcraft talents,
-    /// #400).
-    CasterLevel { value: i32 },
+    /// [`crate::world::World::caster_level`]; with `per_levels`, `value` per that many character
+    /// levels (Arcane training: +1 per 5).
+    CasterLevel {
+        value: i32,
+        #[serde(default)]
+        per_levels: u8,
+    },
     /// The caster level a wand casts at, this much higher (spec §8 "Magic items": "Wands"; Wand
     /// mastery), in [`crate::world::World`]'s zap.
     WandLevel { value: i32 },
@@ -774,8 +789,16 @@ pub enum TalentEffect {
         #[serde(default)]
         dice: u32,
     },
-    /// Its spells cost this percent more mana (negative: less; Archmage), at least 1.
+    /// Its spells cost this percent more mana (negative: less; Archmage, Empower), at least 1.
     SpellManaPercent { value: i32 },
+    /// The mana a spell above its caster level's tier costs over its price, this percent more
+    /// (negative: less; Overreach), on the tier table's `overreach_cost`
+    /// ([`crate::content::SpellRules::mana_with`]).
+    OverreachCostPercent { value: i32 },
+    /// Its spells that carry the chosen tag (the talent takes a `school` choice: a school or an
+    /// element) cost `cost` percent more mana (negative: less) and reach `reach` cells farther,
+    /// never past the spell's own caps (School focus; magic design §6, §10).
+    SchoolFocus { cost: i32, reach: i32 },
     /// Defence in the Deflection category, only while it wears no body armour (Mage armour).
     DeflectionUnarmoured { value: i32 },
     /// Rotten food neither sickens it nor exposes it to a disease (Purify).
@@ -980,7 +1003,6 @@ impl TalentEffect {
             | TalentEffect::NaturalUnarmoured { value }
             | TalentEffect::Hardened { bonus: value }
             | TalentEffect::MeleeDamage { value }
-            | TalentEffect::CasterLevel { value }
             | TalentEffect::WandLevel { value }
             | TalentEffect::Hearing { value }
             | TalentEffect::Notice { value }
@@ -1462,6 +1484,30 @@ impl TalentEffect {
                 }
                 Ok(())
             }
+            TalentEffect::CasterLevel { value, per_levels } => {
+                if *per_levels > 20 {
+                    return Err("`caster_level`: per_levels is 0 to 20".into());
+                }
+                bonus(*value)
+            }
+            TalentEffect::SchoolFocus { cost, reach } => {
+                if choice != Some(Choice::School) {
+                    return Err(
+                        "`school_focus` is for the chosen school or element: it needs \
+                                `choice = \"school\"`"
+                            .into(),
+                    );
+                }
+                if !(0..=5).contains(reach)
+                    || !PERCENTS.contains(cost)
+                    || (*cost == 0 && *reach == 0)
+                {
+                    return Err(
+                        "`school_focus`: cost is a percent, reach 0 to 5, not both 0".into(),
+                    );
+                }
+                Ok(())
+            }
             TalentEffect::Study {
                 bonus: b,
                 percent: p,
@@ -1509,6 +1555,7 @@ impl TalentEffect {
             | TalentEffect::SpeedPercent { value }
             | TalentEffect::SpellDamagePercent { value }
             | TalentEffect::SpellManaPercent { value }
+            | TalentEffect::OverreachCostPercent { value }
             | TalentEffect::SkyFootstepsPercent { value }
             | TalentEffect::AttackNoisePercent { value }
             | TalentEffect::StepSlowdownPercent { value }
@@ -2394,7 +2441,7 @@ fn resolve_needs(
     if let Some(rank) = spec.chosen {
         match choice {
             None => return Err("`chosen` needs a `choice`".into()),
-            Some(Choice::Element | Choice::Skill) => {
+            Some(Choice::Element | Choice::Skill | Choice::School) => {
                 return Err("`chosen` asks a weapon skill's or style's rank".into());
             }
             Some(_) if rank == 0 || rank > MAX_RANK => {
@@ -2843,6 +2890,23 @@ needs = { stats = { toughness = 17 }, talents = { healthy = 1 } }
         };
         assert!(bad("effects = [{ kind = \"dodge\", value = 0 }]").contains("a bonus"));
         assert!(bad("effects = [{ kind = \"xp_percent\", value = 500 }]").contains("a percent"));
+        // The Spellcraft tree's (#400): School focus asks for its choice and a sane reach.
+        assert!(
+            bad("effects = [{ kind = \"school_focus\", cost = -10, reach = 1 }]")
+                .contains("is for the chosen school")
+        );
+        assert!(
+            bad("choice = \"school\"\neffects = [{ kind = \"school_focus\", cost = -10, reach = 9 }]")
+                .contains("reach 0 to 5")
+        );
+        assert!(
+            bad("effects = [{ kind = \"caster_level\", value = 1, per_levels = 50 }]")
+                .contains("per_levels is 0 to 20")
+        );
+        assert!(
+            bad("effects = [{ kind = \"overreach_cost_percent\", value = -200 }]")
+                .contains("a percent")
+        );
         assert!(bad("effects = [{ kind = \"dodge\", value = 1 }]\nneeds = { stats = { toughness = 50 } }").contains("scores are"));
         assert!(
             bad("effects = [{ kind = \"dodge\", value = 1 }]\nneeds = { talents = { hardy = 4 } }")

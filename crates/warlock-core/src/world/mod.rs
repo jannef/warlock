@@ -1424,6 +1424,8 @@ mod speed_tests;
 #[cfg(test)]
 mod spell_list_tests;
 #[cfg(test)]
+mod spell_talent_tests;
+#[cfg(test)]
 mod stars_roc_tests;
 #[cfg(test)]
 mod stars_tests;

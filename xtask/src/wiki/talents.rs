@@ -380,7 +380,16 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "abilities' mana costs {} (rounded to the nearest, at least 1)",
             percent(value)
         ),
-        TalentEffect::CasterLevel { value } => format!("caster level {}", signed(value)),
+        TalentEffect::CasterLevel {
+            value,
+            per_levels: 0,
+        } => format!("caster level {}", signed(value)),
+        TalentEffect::CasterLevel { value, per_levels } => {
+            format!(
+                "caster level {} per {per_levels} character levels",
+                signed(value)
+            )
+        }
         TalentEffect::WandLevel { value } => {
             format!("wands cast at caster level {}", signed(value))
         }
@@ -1252,13 +1261,24 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                 parts.push(format!("{} on every die", signed(per_die)));
             }
             format!(
-                "your spells' and spell scrolls' damage: {}",
+                "your spells' and spell scrolls' damage, toward their cap and never past it: {}",
                 parts.join(", and ")
             )
         }
         TalentEffect::SpellManaPercent { value } => {
             format!("your spells' mana {} (at least 1)", percent(value))
         }
+        TalentEffect::OverreachCostPercent { value } => format!(
+            "the overreach surcharge of a spell above your caster level's tier {} (the tier \
+             table's percent per tier over)",
+            percent(value)
+        ),
+        TalentEffect::SchoolFocus { cost, reach } => format!(
+            "spells of the chosen school or element: mana {}, reach (range or length) {} cells, \
+             never past the spell's own cap; no more damage",
+            percent(cost),
+            signed(reach)
+        ),
         TalentEffect::DeflectionUnarmoured { value } => {
             format!("Deflection {} while you wear no body armour", signed(value))
         }

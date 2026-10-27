@@ -57,6 +57,17 @@ pub enum School {
 }
 
 impl School {
+    /// Every school, in the design's order (§6).
+    pub const ALL: [School; 7] = [
+        School::Evocation,
+        School::Necromancy,
+        School::Abjuration,
+        School::Restoration,
+        School::Transmutation,
+        School::Enchantment,
+        School::Divination,
+    ];
+
     /// Its id in data files and as a tag.
     pub const fn id(self) -> &'static str {
         match self {
@@ -406,17 +417,31 @@ impl SpellRules {
     /// at its own `radius`) × its resolution's `cost` percent × (100 + `armour`) %, rounded to
     /// the nearest once at the end, at least 1.
     pub fn mana(&self, spell: &SpellData, caster_level: i32, armour: u32) -> i32 {
+        self.mana_with(spell, caster_level, armour, 0)
+    }
+
+    /// [`SpellRules::mana`] for a caster whose talents make overreach cost `overreach_percent`
+    /// percent more (negative: less; Overreach): the `overreach_cost` per tier scaled by it,
+    /// never below 0.
+    pub fn mana_with(
+        &self,
+        spell: &SpellData,
+        caster_level: i32,
+        armour: u32,
+        overreach_percent: i32,
+    ) -> i32 {
         let tier = usize::from(spell.tier).min(TIERS - 1);
         let over = u64::from(spell.tier.saturating_sub(self.tier_of(caster_level)));
         let radius = spell.radius.unwrap_or(1);
+        let per_tier = i64::from(self.overreach_cost) * i64::from(100 + overreach_percent).max(0);
         let factors = [
-            100 + u64::from(self.overreach_cost) * over,
+            10_000 + u64::try_from(per_tier).unwrap_or(0) * over,
             u64::from(self.shape_cost(spell.shape, radius)),
             u64::from(self.ratio(spell.resolution).cost),
             100 + u64::from(armour),
         ];
         let num = factors.iter().product::<u64>() * u64::from(self.cost[tier]);
-        let den = 100u64.pow(4);
+        let den = 100u64.pow(5);
         i32::try_from((num + den / 2) / den)
             .unwrap_or(i32::MAX)
             .max(1)
