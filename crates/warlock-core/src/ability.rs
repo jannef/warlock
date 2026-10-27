@@ -76,6 +76,11 @@ pub enum Ability {
     /// exists). Had by whoever is trained in it; unavailable ([`Unavailable::NotHere`]) anywhere
     /// but on land of the overworld or a local area of it.
     Forage,
+    /// Treat oneself (spec §8 "Skills": Heal): [`Action::Heal`], the Heal skill's use (the skill
+    /// with the `heal` effect, listed as this in its place). Had by whoever is trained in it;
+    /// unavailable while there is nothing to treat ([`crate::heal::treatable`]). It asks which
+    /// ailment when there are several ([`Aim::Ailment`]).
+    Heal,
     /// Catch a second wind (spec §8 "Talents"): [`Action::SecondWind`], the active of the
     /// Second wind talent (a talent with the `second_wind` effect). Had by whoever holds it;
     /// unavailable while its cooldown (Winded) lasts.
@@ -179,6 +184,9 @@ pub enum Aim {
     Direction,
     /// A cell, in the aiming mode, as a shot does ([`Ability::action_at`]).
     Cell,
+    /// What to treat, of what the player may treat now ([`crate::heal::treatable`]): asked
+    /// only when there is more than one (the Heal ability).
+    Ailment,
 }
 
 /// Why an ability cannot be used now: the abilities menu shows it beside the greyed-out row.
@@ -202,6 +210,9 @@ pub enum Unavailable {
     NoMana,
     /// One the place does not allow: foraging anywhere but in the wild (spec §8 "Foraging").
     NotHere,
+    /// The Heal ability with nothing to treat: no bleeding, and no poison or disease that may
+    /// still be tried.
+    NothingToTreat,
 }
 
 impl Unavailable {
@@ -213,6 +224,7 @@ impl Unavailable {
             Unavailable::Strayed => "you have strayed".into(),
             Unavailable::NoMana => "you have too little mana".into(),
             Unavailable::NotHere => "not usable here".into(),
+            Unavailable::NothingToTreat => "nothing to treat".into(),
             Unavailable::While(status) => {
                 format!("you are {}", content.status(status).name.to_lowercase()).into()
             }
@@ -231,6 +243,7 @@ impl Unavailable {
             Unavailable::Strayed => "strayed".into(),
             Unavailable::NoMana => "no_mana".into(),
             Unavailable::NotHere => "not_here".into(),
+            Unavailable::NothingToTreat => "nothing_to_treat".into(),
             Unavailable::While(status) => format!("while:{}", content.status(status).id).into(),
             Unavailable::Short(resource) => {
                 format!("short:{}", content.resource(resource).id).into()
@@ -300,12 +313,14 @@ impl Ability {
     /// The ability that is the use of skill `def`, once that use is in the game: Disable device's
     /// (the disarm effect's) is [`Ability::Disarm`], Open lock's (the pick effect's)
     /// [`Ability::PickLock`], the Steal skill's (the `steal` benefit, with `data/steal.toml`)
-    /// [`Ability::Steal`], Survival's (the `forage` benefit, with `data/forage.toml`)
-    /// [`Ability::Forage`]. `None` for a skill whose use is to come, or that has none.
+    /// [`Ability::Steal`], Heal's (the heal effect's) [`Ability::Heal`], Survival's (the
+    /// `forage` benefit, with `data/forage.toml`) [`Ability::Forage`]. `None` for a skill whose
+    /// use is to come, or that has none.
     fn use_of(def: &SkillDef, content: &Content) -> Option<Ability> {
         let gives = |effect| def.benefits.iter().any(|b| b.effect == effect);
         (gives(Effect::Disarm).then_some(Ability::Disarm))
             .or_else(|| gives(Effect::Pick).then_some(Ability::PickLock))
+            .or_else(|| gives(Effect::Heal).then_some(Ability::Heal))
             .or_else(|| {
                 (gives(Effect::Steal) && content.steal().is_some()).then_some(Ability::Steal)
             })
@@ -342,8 +357,9 @@ impl Ability {
     /// effect) or a talent lets them (the craftsperson's Tinker); picking locks, if they are
     /// trained in Open lock (the pick effect's) or a talent lets them (the thief's Pick lock);
     /// stealing, if they are trained in a skill with the `steal` benefit or a talent lets them
-    /// (the thief's Light fingers; it is listed only when stealing is in the game); foraging, if
-    /// they are trained in Survival (the forage benefit's); second wind,
+    /// (the thief's Light fingers; it is listed only when stealing is in the game); treating
+    /// oneself, if they are trained in a skill with the `heal` effect; foraging, if they are
+    /// trained in Survival (the forage benefit's); second wind,
     /// if they hold the talent; throwing one's voice, if a talent gives it (the bard's); the
     /// shield bash and the lantern's hood, everyone.
     pub(crate) fn had_by(self, actor: &Actor, content: &Content) -> bool {
@@ -366,6 +382,7 @@ impl Ability {
                     || actor.talent_mods(content).steal
             }
             Ability::Forage => actor.skills.trains_effect(content, Effect::Forage),
+            Ability::Heal => actor.skills.trains_effect(content, Effect::Heal),
             Ability::SecondWind => actor.talent_mods(content).second_wind.is_some(),
             Ability::BloodMagic => actor.talent_mods(content).blood_magic.is_some(),
             Ability::ThrowVoice => actor.talent_mods(content).throw_voice,
@@ -387,6 +404,7 @@ impl Ability {
             Ability::PickLock => "pick_lock",
             Ability::Steal => "steal",
             Ability::Forage => "forage",
+            Ability::Heal => "heal",
             Ability::SecondWind => "second_wind",
             Ability::BloodMagic => "blood_magic",
             Ability::ShieldBash => "shield_bash",
@@ -407,6 +425,7 @@ impl Ability {
             Ability::PickLock => "Pick lock",
             Ability::Steal => "Steal",
             Ability::Forage => "Forage",
+            Ability::Heal => "Heal",
             Ability::SecondWind => "Second wind",
             Ability::BloodMagic => "Blood magic",
             Ability::ShieldBash => "Shield bash",
@@ -436,6 +455,10 @@ impl Ability {
             Ability::Forage => {
                 "Spend a while searching the wild around you for something to eat: berries, \
                  nuts, mushrooms, roots."
+            }
+            Ability::Heal => {
+                "Tend your own hurts: bind a bleeding wound, or try to ease a poison or a \
+                 disease (once each)."
             }
             Ability::SecondWind => {
                 "Catch your breath in the thick of it: some of your hit points come back at \
@@ -468,6 +491,7 @@ impl Ability {
             | Ability::PickLock
             | Ability::Steal
             | Ability::Forage => Source::Skill,
+            | Ability::Heal => Source::Skill,
             Ability::ThrowVoice => Source::Class,
             Ability::SecondWind | Ability::BloodMagic => Source::Talent,
             Ability::ShieldBash => Source::WeaponSkill,
@@ -493,6 +517,7 @@ impl Ability {
             | Ability::Forage
             | Ability::Pray => Aim::Nothing,
             Ability::ThrowVoice => Aim::Cell,
+            Ability::Heal => Aim::Ailment,
             Ability::Disarm | Ability::PickLock | Ability::Steal | Ability::ShieldBash => {
                 Aim::Direction
             }
@@ -512,6 +537,7 @@ impl Ability {
             Ability::PickLock => Some(ActionKind::PickLock),
             Ability::Steal => Some(ActionKind::Steal),
             Ability::Forage => Some(ActionKind::Forage),
+            Ability::Heal => Some(ActionKind::Heal),
             Ability::SecondWind | Ability::BloodMagic => Some(ActionKind::Wait),
             Ability::ShieldBash => Some(ActionKind::Melee),
             Ability::HoodLantern => Some(ActionKind::Hood),
@@ -536,6 +562,7 @@ impl Ability {
             | Ability::PickLock
             | Ability::Steal
             | Ability::Forage
+            | Ability::Heal
             | Ability::SecondWind
             | Ability::BloodMagic
             | Ability::ShieldBash
@@ -579,6 +606,8 @@ impl Ability {
             (Ability::Spell(spell), _) if aimed(content, spell) => None,
             (Ability::Spell(spell), _) => Some(Action::Cast(spell_name(content, spell)?, None)),
             (Ability::Skill(_) | Ability::ThrowVoice, _) => None,
+            // The first thing there is to treat; the menu names one when there are several.
+            (Ability::Heal, _) => Some(Action::Heal(None)),
             (Ability::SecondWind, _) => Some(Action::SecondWind),
             (Ability::BloodMagic, _) => Some(Action::BloodMagic),
             (Ability::Disarm, Some(dir)) => Some(Action::Disarm(dir)),
@@ -612,6 +641,7 @@ impl Ability {
             | Ability::PickLock
             | Ability::Steal
             | Ability::Forage
+            | Ability::Heal
             | Ability::SecondWind
             | Ability::BloodMagic
             | Ability::ShieldBash
@@ -659,6 +689,8 @@ impl Ability {
                 .filter(|&cooldown| actor.effects.has(cooldown))
                 .map(Unavailable::While),
             Ability::Skill(_) => Some(Unavailable::NotYet),
+            Ability::Heal => (crate::heal::treatable(actor, content).is_empty())
+                .then_some(Unavailable::NothingToTreat),
             Ability::ThrowVoice
             | Ability::HoodLantern
             | Ability::Disarm

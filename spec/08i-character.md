@@ -381,7 +381,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (`burdened`; a dwarf's Burdened does not), a step on the overworld (`travel`), a kick at a
     closed door (`kick`), a turn spent searching, whatever it finds (`search`), noticing
     something hidden in passing (`spot`; §8 "Searching"), an attempt to steal, whatever comes of
-    it (`steal`; "Stealing" below), a forage that ran its time, whatever it found (`forage`;
+    it (`steal`; "Stealing" below), a try at treating oneself, whatever comes of it (`heal`;
+    "Treating oneself" below), a forage that ran its time, whatever it found (`forage`;
     "Foraging" below). Only the player trains for now; creatures keep their type's
     skills. Marks are a **reservoir**: they raise nothing by
     themselves and nothing is said; they gather until a level-up roll on the skill spends them.
@@ -414,13 +415,38 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `PerceptionView::abilities`), greyed out as "not usable yet": the uses come with their
     actions, and one whose use has come is that ability instead (Disable device's is "Disarm a
     trap", §8 "Disarming traps"; Open lock's "Pick lock", §8 "Doors"; Steal's "Steal",
-    "Stealing" below); a passive skill with a use is listed as it too (Survival's "Forage",
+    "Stealing" below; Heal's "Heal", "Treating oneself" below); a passive skill with a use is listed as it too (Survival's "Forage",
     "Foraging" below). Never a benefit's number,
     a mark, a
     chance, an untrained skill, or a creature's skills; ground-truth dev dumps (`actors`, the
     world state) show every actor's skills with their marks and the ladder's die for them. The
     Skills screen's meter shows a skill's ladder step in quarters (how practised it is). Skills
     and marks are part of the world state (saved, hashed).
+- **Treating oneself** (`heal.rs`, `world/heal.rs`; #549, the owner 2026-10-27): the Heal
+  skill's use, the abilities menu's **Heal** (`Ability::Heal`, in the skill's place among the
+  Skills; `Action::Heal`, replay text `heal` or `heal:ID`; cost `heal`, 2500: a quarter of a
+  minute; no key of its own). Anyone trained in a skill with the `heal` effect has it; it is
+  greyed out "nothing to treat" while there is nothing they may treat. For now the patient is
+  always the player. What may be treated (`heal::treatable`, in status order, then disease
+  order): a status with a `treat` table (`data/status.toml`: bleeding, poisoned), and a disease
+  that shows (one still incubating is unknown to its sufferer). With more than one, the menu
+  asks which in the dialog (§6), each by the name the player knows it by ("Sickness" for a
+  disease not yet known by name); a bare `heal` treats the first. A try is a check (§8 "Checks"):
+  2d12 plus the Intelligence modifier (effective score, and talents' Intelligence check bonus)
+  plus Heal's `heal` benefit (+8 at 100, +12 at 200, at most 20) against the status's
+  `treat.difficulty + treat.per_degree × severity` (bleeding 6 + 2 a degree, poisoned 8 + 1 a
+  degree) or the disease's own `difficulty`. Every try takes its time, may earn Heal a mark
+  (`heal`), and makes no noise. A status that `stops` (bleeding) ends when the check is made
+  ("You bind the wound." then its end line); failed ("The blood still runs.") it may be tried
+  again at once, any number of times. Any other status (poison) eases a degree when it is made
+  (ending at none); a disease made is eased: it counts as a progression check won toward its
+  `recovery`, unless that would shake it off or it never recovers by itself, when its next
+  progression is put off to a full interval from the try instead, so a try never cures. A poison
+  or a disease may be tried **once**, whatever comes of it ("You can do no more for the
+  poison." / "for the filth fever."): `Effect::treated` and `Infection::treated`, saved and
+  hashed, which go with the effect or the infection, so a new dose or a new infection may be
+  tried again. Refusals take no time and no draw: untrained ("You know nothing of healing."),
+  nothing to treat, or one already tried.
 - **Stealing** (`world/steal.rs`, data `data/steal.toml`, §7; #234, the progression design's
   B7): the Steal skill's use, the abilities menu's **Steal** (`Ability::Steal`, in the skill's
   place among the Skills; a direction; `Action::Steal`, replay text `steal:DIR`; cost `steal`;

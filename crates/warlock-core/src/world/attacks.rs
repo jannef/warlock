@@ -101,19 +101,7 @@ impl OwnAttack {
     /// kinds and every rider: `1d8+2 slashing`, `1d6+1d4+1 slashing or piercing`, `1d8 slashing
     /// +1d6 fire`.
     pub fn damage_text(&self, content: &Content) -> String {
-        let bonus = self.damage.bonus() + self.extra.map_or(0, |e| e.bonus());
-        let dice = |d: Dice| d.plus(-d.bonus());
-        let mut text = match (self.damage.is_fixed(), self.extra) {
-            (true, None) => self.damage.bonus().max(1).to_string(),
-            (_, None) => self.damage.to_string(),
-            (_, Some(extra)) => {
-                let mut text = format!("{}+{}", dice(self.damage), dice(extra));
-                if bonus != 0 {
-                    text.push_str(&format!("{bonus:+}"));
-                }
-                text
-            }
-        };
+        let mut text = crate::magic::numbers::dice_text(self.damage, self.extra);
         let kinds: Vec<&str> = (self.kinds.iter())
             .map(|k| content.damage_type(k).name.as_str())
             .collect();

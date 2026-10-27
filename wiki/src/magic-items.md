@@ -95,7 +95,8 @@ slot's letter in upper case (`A` to `L`). The description names the item, says w
 (rarity, base, every part it is made of, weight: "Magic long sword · steel blade, leather grip ·
 1.8 kg") and whether you wear or wield it, then its base stats in words (how it is held or worn,
 its damage and criticals, how far it shoots, what it needs, whether it pierces armour, its
-Defence and Protection), and, if it is identified, its item level and each affix in plain
+Defence and Protection), what it gives in numbers ("To hit +1, damage 1d8+2", "Dv +2, Pv 3"; see
+[Equipment](equipment.md#numbers)), and, if it is identified, its item level and each affix in plain
 words: "Prefix Sharp: +2 damage", "Suffix of Celerity: attacks faster". `Esc` goes back.
 
 ## Base items

@@ -123,6 +123,7 @@ mod gifts;
 mod glare;
 mod guild;
 mod hash;
+mod heal;
 mod hearing;
 mod hoard;
 mod hold;
@@ -1199,6 +1200,7 @@ impl World {
             Action::Dig(dir) => return self.start_dig(*dir),
             Action::Search(turns) => return Spent::Search(*turns),
             Action::Disarm(dir) => return self.disarm(*dir, events),
+            Action::Heal(what) => return self.heal(what.as_deref(), events),
             Action::Pray => return self.start_prayer(),
             Action::Forage => return self.start_forage(),
             Action::SecondWind => return self.second_wind(events),
@@ -1357,6 +1359,8 @@ mod guild_tests;
 #[cfg(test)]
 mod guild_wanted_tests;
 #[cfg(test)]
+mod heal_tests;
+#[cfg(test)]
 mod hearing_tests;
 #[cfg(test)]
 mod heavy_hall_tests;
@@ -1398,6 +1402,8 @@ mod mana_tests;
 mod mirrors_tests;
 #[cfg(test)]
 mod moon_tests;
+#[cfg(test)]
+mod numbers_tests;
 #[cfg(test)]
 mod object_tests;
 #[cfg(test)]

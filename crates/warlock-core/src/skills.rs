@@ -65,6 +65,8 @@ pub const MAX_SEARCH_REACH: i32 = 2;
 
 /// The most a skill adds to stealing from someone (spec §8 "Stealing").
 pub const MAX_STEAL_BONUS: i32 = 20;
+/// The most a skill adds to treating bleeding, poison, or a disease (spec §8 "Skills": Heal).
+pub const MAX_HEAL_BONUS: i32 = 20;
 /// The most a skill adds to picking a lock (spec §8 "Doors").
 pub const MAX_PICK_BONUS: i32 = 20;
 /// The most percent a skill adds to the chance of a forage finding food (spec §8 "Foraging").
@@ -137,6 +139,10 @@ pub enum Effect {
     /// Points added to stealing from someone (spec §8 "Stealing"; `world/steal.rs`); a skill
     /// with it, trained, lets the actor steal at all (the abilities menu's Steal).
     Steal,
+    /// Points added to treating oneself (spec §8 "Skills": Heal; `world/heal.rs`): bleeding,
+    /// poison, a disease; a skill with it, trained, lets the actor treat at all (the Heal
+    /// ability).
+    Heal,
     /// Points added to the Strength score a kick at a closed door is rolled against (spec §8
     /// "Doors"; `world/door.rs`).
     Kick,
@@ -155,6 +161,7 @@ impl Effect {
             Effect::Search | Effect::Spot => MAX_SEARCH_BONUS,
             Effect::Study => MAX_STUDY_BONUS,
             Effect::Steal => MAX_STEAL_BONUS,
+            Effect::Heal => MAX_HEAL_BONUS,
             Effect::Disarm => MAX_DISARM_BONUS,
             Effect::Pick => MAX_PICK_BONUS,
             Effect::Forage => MAX_FORAGE_BONUS,
@@ -190,6 +197,8 @@ pub enum Use {
     Forage,
     /// An attempt to steal from someone (spec §8 "Stealing"), whatever comes of it.
     Steal,
+    /// A try at treating oneself (spec §8 "Skills": Heal), whatever comes of it.
+    Heal,
     /// A kick at a closed door (spec §8 "Doors").
     Kick,
     /// A try at picking a lock (spec §8 "Doors"), whatever comes of it.
@@ -211,6 +220,7 @@ impl Use {
             Use::Travel => "a journey on the overworld",
             Use::Forage => "foraging in the wild",
             Use::Steal => "trying to steal from someone",
+            Use::Heal => "trying to treat bleeding, poison, or a disease",
             Use::Kick => "kicking at a closed door",
             Use::Pick => "a try at picking a lock",
         }
@@ -317,6 +327,7 @@ impl Use {
             Use::Travel => "travel",
             Use::Forage => "forage",
             Use::Steal => "steal",
+            Use::Heal => "heal",
             Use::Kick => "kick",
             Use::Pick => "pick",
         }
@@ -340,6 +351,7 @@ impl Effect {
             Effect::Forage => "forage",
             Effect::Bargain => "bargain",
             Effect::Steal => "steal",
+            Effect::Heal => "heal",
             Effect::Kick => "kick",
             Effect::Pick => "pick",
         }

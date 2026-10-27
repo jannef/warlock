@@ -25,13 +25,13 @@ Some skills work by themselves, all the time (**passive**); some will be used as
 them (athletics when you kick a door). For now only the passive skills, Appraise, Athletics
 (kicking doors in, see [Doors](doors.md)), Search (see [Searching](searching.md)), Disable
 device (disarming traps, see [Traps](traps.md#disarming-traps)), Open lock (picking locks,
-see [Doors](doors.md#picking-locks)), Steal (see [Stealing](#stealing) below), and Survival
-(foraging, see [Foraging](#foraging) below) do something:
-the others are there to be trained, and get
-their uses as the game grows. The skills used as actions are in the [abilities
+see [Doors](doors.md#picking-locks)), Steal (see [Stealing](#stealing) below), Heal (see
+[Treating yourself](#treating-yourself) below), and Survival (foraging, see
+[Foraging](#foraging) below) do something: the others are there to be trained, and get their uses
+as the game grows. The skills used as actions are in the [abilities
 menu](abilities.md) once you are trained in them, greyed out until their uses come; Disable
 device's use is there as **Disarm a trap**, Open lock's as **Pick lock**, Steal's as **Steal**,
-and Survival's, though it is a passive skill, as **Forage**.
+Heal's as **Heal**, and Survival's, though it is a passive skill, as **Forage**.
 
 {{#include generated/skills.md}}
 
@@ -59,6 +59,8 @@ The passive skills help you more the higher they are:
   more often a try works (see [Doors](doors.md#picking-locks)).
 - **Steal** lets you steal at all, and the higher it is, the likelier your hand goes unnoticed
   (see [Stealing](#stealing)).
+- **Heal** lets you bind your bleeding and tend your poisons and diseases at all, and the higher
+  it is, the more often a try works (see [Treating yourself](#treating-yourself)).
 
 {{#include generated/skill-benefits.md}}
 
@@ -92,6 +94,7 @@ balance, earn marks rarely, so they do not race ahead.
 - **Survival**: a journey on the overworld.
 - **Steal**: every attempt to steal, whatever comes of it.
 - **Open lock**: a try at picking a lock, whether it works or not.
+- **Heal**: a try at treating yourself, whether it works or not.
 
 Only skills you are trained in earn marks. Marks raise nothing by themselves: they gather until
 your next level. The Skills screen's meter shows how practised a skill is (the step its marks
@@ -154,6 +157,35 @@ is for sale, and taking it out without paying is theft by the shop's own rules. 
 whose purse you lifted unnoticed still trades with you, but cannot pay for what you sell.
 
 You may try as often as you like; someone who caught you stays angry, and that is the price.
+
+## Treating yourself
+
+If you are trained in **Heal** (priests, witches, druids, and paladins are), **Heal** is in your
+[abilities menu](abilities.md), under Skills. It treats you, never anyone else (for now): your
+**bleeding**, your **poison**, and a **disease** that shows (one you have caught but that has not
+shown yet is unknown to you, so you cannot treat it). With nothing to treat it is greyed out,
+"nothing to treat"; with more than one thing, it asks which ("Sickness" is a disease you cannot
+name yet). Every try takes about a quarter of a minute, whatever comes of it, and makes no noise.
+
+A try is a check (see [Diseases](diseases.md#checks)): 2d12 plus your Intelligence modifier plus
+what your Heal skill gives (the benefits table above) against the difficulty below; a roll of 2
+always fails and a roll of 24 always works.
+
+- **Bleeding**: made, you bind the wound and the bleeding stops ("You bind the wound."); failed,
+  "The blood still runs.", and you may try again at once, as often as you like. The worse the
+  bleeding, the harder it is: 6 plus 2 for each degree.
+- **Poison**: made, you draw out some of it: it is a degree weaker ("You draw out some of the
+  poison."). You get **one try** at a dose, whatever comes of it: afterwards "You can do no more
+  for the poison." until it wears off; poisoned again later, you may try again. 8 plus 1 for each
+  degree.
+- **A disease**: made, you ease it ("You ease the filth fever somewhat."): it counts as one of
+  the checks in a row that shake it off, though never the last one, so treating never cures it
+  by itself. A disease that never goes away by itself, or one a single won check from going,
+  instead takes a full interval from your try before it next gets worse. Again **one try** a
+  bout, whatever comes of it ("You can do no more for the filth fever."); caught again later,
+  you may try again. Its difficulty is the disease's own.
+
+{{#include generated/heal-targets.md}}
 
 ## Foraging
 
