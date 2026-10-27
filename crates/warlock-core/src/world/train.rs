@@ -7,7 +7,9 @@
 //! load that slows the player (`apply`), a journey on the overworld (`player_moves`). Each of the
 //! player's trained skills with a mark rule for that use then gets a mark with the rule's chance,
 //! drawn from the training stream ([`crate::rng::Rng::training`]); untrained skills get none.
-//! Nothing is said: the player senses the marks only as the Skills screen's meter.
+//! Nothing is said: the player senses the marks only as the Skills screen's meter. A special
+//! room may make a skill's marks come more often while the player is inside (a scriptorium's
+//! Decipher script, `train` in `data/room_effects.toml`).
 //!
 //! Only the player trains for now; creatures keep the skills their type gives them.
 
@@ -26,17 +28,22 @@ impl World {
     }
 
     /// The player made a meaningful use `used` of their skills: each trained skill with a mark
-    /// rule for it gets a mark with the rule's chance (one draw of the training stream per rule).
+    /// rule for it gets a mark with the rule's chance (one draw of the training stream per rule),
+    /// scaled by the special rooms where they stand (a scriptorium doubles Decipher script's;
+    /// `Here::train`), at most certain.
     pub(super) fn train(&mut self, used: Use) {
         let content = self.content.clone();
         let player = self.state.player;
+        let (level, at) = (self.state.player().level.clone(), self.state.player().pos);
         let trained: Vec<_> = (self.state.player().skills.iter())
             .map(|(id, _)| id)
             .collect();
         for id in trained {
             let def = content.skill(id);
+            let room = self.effects_at(&level, at).train(id);
             for rule in def.marks.iter().filter(|m| m.on == used) {
-                if !self.state.training.chance(u32::from(rule.chance)) {
+                let chance = (u32::from(rule.chance) * room / 100).min(100);
+                if !self.state.training.chance(chance) {
                     continue;
                 }
                 let actor = self.state.actors.get_mut(&player).expect("the player");
