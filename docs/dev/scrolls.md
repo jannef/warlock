@@ -69,7 +69,9 @@ identify: "You read the scroll labelled ZUNBAR." then "It is a scroll of firebal
 `identify` and F8 too), and `World::new` puts the kit's readable scrolls in the set (a chosen
 character knows their kit; a scenario's own pack is not a kit). Wand types (#398) are labelled
 the same way from `data/wand_labels.toml` ("an oak wand"), drawn after the scrolls from the
-same stream, and learned by `World::use_charge` (docs/dev/spells.md "Wands").
+same stream, and learned by `World::use_charge` (docs/dev/spells.md "Wands"). Potion types
+(#565) come last, from `data/potion_labels.toml`: a word and the type's own colour ("a fizzy red
+potion", docs/dev/potions.md), learned by drinking.
 
 `Lore` (`World::lore()`, `PerceptionView::lore()`) is how everything the player is shown names
 a stack: `describe`, `title`, `names`, `fg`, `describe_object(object, count)`, `knows(stack)`

@@ -30,10 +30,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     scrolls; buys gems too, §7 "Gems", and sells none; asks 150 %, pays 30 %), a weaponsmith ("{keeper}'s Forge": melee weapons and
     missiles; 130 %, 40 %), an armourer ("{keeper}'s Armoury": shields, body armour, helmets,
     cloaks, gloves, and boots), a provisioner ("{keeper}'s Provisions": light sources, tools,
-    and food; 120 %, 30 %), and a fletcher ("{keeper}'s Fletchery": missile weapons and missiles;
+    food, and a few potions, §8 "Potions"; 120 %, 30 %), an alchemist ("{keeper}'s Apothecary":
+    potions only, a stack of potions of healing always first; 140 %, 40 %), and a fletcher ("{keeper}'s Fletchery": missile weapons and missiles;
     125 %, 40 %). General stores stock and buy scrolls (§8 "Scrolls"), and a generated one always lays out a
-    stack of scrolls of identify first (the kind's `always`, at most its least `items`); alchemists wait for potions that do
-    something, scribes for more scrolls.
+    stack of scrolls of identify first (the kind's `always`, at most its least `items`); scribes wait for more scrolls.
   - **Prices** (`Shops::price`, `Shops::offer`; integers): a stack's value (each one's times the
     count) times the markup, less the player's **favour**, rounded up and at least 1; an offer is
     the value times `pays`, plus the favour, rounded down, never more than the shop asks for the
