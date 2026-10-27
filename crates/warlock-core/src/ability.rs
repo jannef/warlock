@@ -71,6 +71,11 @@ pub enum Ability {
     /// skill's use. Whoever is trained in a skill with the `steal` benefit has it, in that
     /// skill's place among the skills.
     Steal,
+    /// Forage for food in the wild (spec §8 "Foraging"): [`Action::Forage`], Survival's use (the
+    /// skill with the `forage` benefit, listed as this in its place, while `data/forage.toml`
+    /// exists). Had by whoever is trained in it; unavailable ([`Unavailable::NotHere`]) anywhere
+    /// but on land of the overworld or a local area of it.
+    Forage,
     /// Catch a second wind (spec §8 "Talents"): [`Action::SecondWind`], the active of the
     /// Second wind talent (a talent with the `second_wind` effect). Had by whoever holds it;
     /// unavailable while its cooldown (Winded) lasts.
@@ -195,6 +200,8 @@ pub enum Unavailable {
     Short(ResourceId),
     /// One that costs more mana than the actor has (spec §8 "Mana"): time brings it back.
     NoMana,
+    /// One the place does not allow: foraging anywhere but in the wild (spec §8 "Foraging").
+    NotHere,
 }
 
 impl Unavailable {
@@ -205,6 +212,7 @@ impl Unavailable {
             Unavailable::NotYet => "not usable yet".into(),
             Unavailable::Strayed => "you have strayed".into(),
             Unavailable::NoMana => "you have too little mana".into(),
+            Unavailable::NotHere => "not usable here".into(),
             Unavailable::While(status) => {
                 format!("you are {}", content.status(status).name.to_lowercase()).into()
             }
@@ -222,6 +230,7 @@ impl Unavailable {
             Unavailable::NotYet => "not_yet".into(),
             Unavailable::Strayed => "strayed".into(),
             Unavailable::NoMana => "no_mana".into(),
+            Unavailable::NotHere => "not_here".into(),
             Unavailable::While(status) => format!("while:{}", content.status(status).id).into(),
             Unavailable::Short(resource) => {
                 format!("short:{}", content.resource(resource).id).into()
@@ -234,13 +243,15 @@ impl Ability {
     /// Every ability there is, in menu order: by [`Source`], then as each source lists its own.
     /// The one place abilities are registered (the wiki's table lists these).
     pub fn every(content: &Content) -> Vec<Ability> {
-        // Skills: those used as actions, in skill order, each as its use once that is in the game.
-        let skills = (content.skills().iter().enumerate())
-            .filter(|(_, def)| def.is_active())
-            .filter_map(|(i, def)| {
-                let id = SkillId(u8::try_from(i).ok()?);
-                Some(Ability::use_of(def, content).unwrap_or(Ability::Skill(id)))
-            });
+        // Skills: those used as actions, in skill order, each as its use once that is in the game,
+        // and a passive skill with a use of its own (Survival's Forage) as that use.
+        let skills = (content.skills().iter().enumerate()).filter_map(|(i, def)| {
+            let id = SkillId(u8::try_from(i).ok()?);
+            match Ability::use_of(def, content) {
+                Some(ability) => Some(ability),
+                None => def.is_active().then_some(Ability::Skill(id)),
+            }
+        });
         // Birth sign: the active gifts some sign grants, in their order.
         let signs = (SignActive::ALL.iter())
             .filter(|&&a| content.sign_active(a).is_some())
@@ -289,13 +300,17 @@ impl Ability {
     /// The ability that is the use of skill `def`, once that use is in the game: Disable device's
     /// (the disarm effect's) is [`Ability::Disarm`], Open lock's (the pick effect's)
     /// [`Ability::PickLock`], the Steal skill's (the `steal` benefit, with `data/steal.toml`)
-    /// [`Ability::Steal`]. `None` for a skill whose use is to come.
+    /// [`Ability::Steal`], Survival's (the `forage` benefit, with `data/forage.toml`)
+    /// [`Ability::Forage`]. `None` for a skill whose use is to come, or that has none.
     fn use_of(def: &SkillDef, content: &Content) -> Option<Ability> {
         let gives = |effect| def.benefits.iter().any(|b| b.effect == effect);
         (gives(Effect::Disarm).then_some(Ability::Disarm))
             .or_else(|| gives(Effect::Pick).then_some(Ability::PickLock))
             .or_else(|| {
                 (gives(Effect::Steal) && content.steal().is_some()).then_some(Ability::Steal)
+            })
+            .or_else(|| {
+                (gives(Effect::Forage) && content.forage().is_some()).then_some(Ability::Forage)
             })
     }
 
@@ -327,7 +342,8 @@ impl Ability {
     /// effect) or a talent lets them (the craftsperson's Tinker); picking locks, if they are
     /// trained in Open lock (the pick effect's) or a talent lets them (the thief's Pick lock);
     /// stealing, if they are trained in a skill with the `steal` benefit or a talent lets them
-    /// (the thief's Light fingers; it is listed only when stealing is in the game); second wind,
+    /// (the thief's Light fingers; it is listed only when stealing is in the game); foraging, if
+    /// they are trained in Survival (the forage benefit's); second wind,
     /// if they hold the talent; throwing one's voice, if a talent gives it (the bard's); the
     /// shield bash and the lantern's hood, everyone.
     pub(crate) fn had_by(self, actor: &Actor, content: &Content) -> bool {
@@ -349,6 +365,7 @@ impl Ability {
                 actor.skills.trains_effect(content, Effect::Steal)
                     || actor.talent_mods(content).steal
             }
+            Ability::Forage => actor.skills.trains_effect(content, Effect::Forage),
             Ability::SecondWind => actor.talent_mods(content).second_wind.is_some(),
             Ability::BloodMagic => actor.talent_mods(content).blood_magic.is_some(),
             Ability::ThrowVoice => actor.talent_mods(content).throw_voice,
@@ -369,6 +386,7 @@ impl Ability {
             Ability::Disarm => "disarm",
             Ability::PickLock => "pick_lock",
             Ability::Steal => "steal",
+            Ability::Forage => "forage",
             Ability::SecondWind => "second_wind",
             Ability::BloodMagic => "blood_magic",
             Ability::ShieldBash => "shield_bash",
@@ -388,6 +406,7 @@ impl Ability {
             Ability::Disarm => "Disarm a trap",
             Ability::PickLock => "Pick lock",
             Ability::Steal => "Steal",
+            Ability::Forage => "Forage",
             Ability::SecondWind => "Second wind",
             Ability::BloodMagic => "Blood magic",
             Ability::ShieldBash => "Shield bash",
@@ -413,6 +432,10 @@ impl Ability {
             Ability::Steal => {
                 "Lift a purse or a trinket from someone next to you who is not hostile; caught, \
                  they turn on you."
+            }
+            Ability::Forage => {
+                "Spend a while searching the wild around you for something to eat: berries, \
+                 nuts, mushrooms, roots."
             }
             Ability::SecondWind => {
                 "Catch your breath in the thick of it: some of your hit points come back at \
@@ -440,9 +463,11 @@ impl Ability {
             Ability::Sign(_) => Source::Sign,
             Ability::Class(_) => Source::Class,
             Ability::Spell(_) => Source::Spell,
-            Ability::Skill(_) | Ability::Disarm | Ability::PickLock | Ability::Steal => {
-                Source::Skill
-            }
+            Ability::Skill(_)
+            | Ability::Disarm
+            | Ability::PickLock
+            | Ability::Steal
+            | Ability::Forage => Source::Skill,
             Ability::ThrowVoice => Source::Class,
             Ability::SecondWind | Ability::BloodMagic => Source::Talent,
             Ability::ShieldBash => Source::WeaponSkill,
@@ -465,6 +490,7 @@ impl Ability {
             | Ability::SecondWind
             | Ability::BloodMagic
             | Ability::HoodLantern
+            | Ability::Forage
             | Ability::Pray => Aim::Nothing,
             Ability::ThrowVoice => Aim::Cell,
             Ability::Disarm | Ability::PickLock | Ability::Steal | Ability::ShieldBash => {
@@ -485,6 +511,7 @@ impl Ability {
             Ability::Disarm => Some(ActionKind::Disarm),
             Ability::PickLock => Some(ActionKind::PickLock),
             Ability::Steal => Some(ActionKind::Steal),
+            Ability::Forage => Some(ActionKind::Forage),
             Ability::SecondWind | Ability::BloodMagic => Some(ActionKind::Wait),
             Ability::ShieldBash => Some(ActionKind::Melee),
             Ability::HoodLantern => Some(ActionKind::Hood),
@@ -508,6 +535,7 @@ impl Ability {
             | Ability::Disarm
             | Ability::PickLock
             | Ability::Steal
+            | Ability::Forage
             | Ability::SecondWind
             | Ability::BloodMagic
             | Ability::ShieldBash
@@ -562,6 +590,7 @@ impl Ability {
             }
             (Ability::HoodLantern, _) => Some(Action::HoodLantern),
             (Ability::Pray, _) => Some(Action::Pray),
+            (Ability::Forage, _) => Some(Action::Forage),
         }
     }
 
@@ -582,6 +611,7 @@ impl Ability {
             | Ability::Disarm
             | Ability::PickLock
             | Ability::Steal
+            | Ability::Forage
             | Ability::SecondWind
             | Ability::BloodMagic
             | Ability::ShieldBash
@@ -634,6 +664,7 @@ impl Ability {
             | Ability::Disarm
             | Ability::PickLock
             | Ability::Steal
+            | Ability::Forage
             | Ability::BloodMagic
             | Ability::Pray => None,
             Ability::SecondWind => (actor.talent_mods(content).second_wind)
@@ -770,7 +801,8 @@ mod tests {
         let class = every.iter().find(|a| a.source() == Source::Class);
         assert_eq!(class, Some(&Ability::ThrowVoice), "the class's first");
         // The skills used as actions, in skill order (Disable device and Open lock as their uses,
-        // disarming and picking locks), then the shield bash.
+        // disarming and picking locks; Survival, a passive skill, as its use, foraging), then the
+        // shield bash.
         let skills: Vec<&str> = (every.iter())
             .filter(|a| a.source() == Source::Skill)
             .map(|a| a.id(&content))
@@ -790,6 +822,7 @@ mod tests {
                 "music",
                 "pick_lock",
                 "steal",
+                "forage",
                 "woodcraft",
             ]
         );

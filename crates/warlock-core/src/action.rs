@@ -153,6 +153,11 @@ pub enum Action {
     /// outcome drawn from the altar's table, and perhaps the altar spent. Interrupted, it gives
     /// nothing. Refused (no time) with no altar next to the player.
     Pray,
+    /// Forage for food in the wild (spec §8 "Foraging"; the Forage ability, Survival's use): turns
+    /// of the `forage` action for `data/forage.toml`'s time, then a chance of food by the
+    /// landscape and Survival. Interrupted, it finds nothing. Refused (no time) untrained, or
+    /// anywhere but on land of the overworld or a local area of it.
+    Forage,
     /// Catch a second wind (spec §8 "Talents"; the Second wind ability): hit points back at
     /// once, then Winded for a while. Takes the time of `wait`; refused (no time) without the
     /// talent or while winded.
@@ -726,6 +731,7 @@ impl fmt::Display for Action {
             Action::Search(turns) => write!(f, "search:{turns}"),
             Action::Disarm(d) => write!(f, "disarm:{d}"),
             Action::Pray => f.write_str("pray"),
+            Action::Forage => f.write_str("forage"),
             Action::SecondWind => f.write_str("second_wind"),
             Action::BloodMagic => f.write_str("blood_magic"),
             Action::Use(active, None) => write!(f, "use:{}", active.id()),
@@ -817,6 +823,7 @@ impl FromStr for Action {
             },
             "wait" => bare(Action::Wait),
             "pray" => bare(Action::Pray),
+            "forage" => bare(Action::Forage),
             "second_wind" => bare(Action::SecondWind),
             "blood_magic" => bare(Action::BloodMagic),
             "use" => {
@@ -1299,6 +1306,7 @@ mod tests {
             },
             Action::Advance("stealth".into()),
             Action::Pray,
+            Action::Forage,
             Action::SecondWind,
             Action::BloodMagic,
             Action::Use(ClassActive::Rage, None),

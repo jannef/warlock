@@ -1,0 +1,12 @@
+# A field mushroom, foraged in the woods, the meadows, and the marshes (data/forage.toml).
+[[object]]
+id = "mushroom"
+name = "mushroom"
+glyph = "%"
+fg = "#d8ccb4"
+class = "food"
+materials = ["plant"]
+weight = 50
+value = 0
+stackable = true
+food = { nutrition = 50, turns = 1, keeps = "3d", lasts = "5d" }

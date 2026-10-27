@@ -219,6 +219,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("talents-racial.md", talents::racial),
         ("talents-by-system.md", talents::by_system),
         ("class-levels.md", talents::class_levels),
+        ("foraging.md", skills::foraging),
         ("skills.md", skills::skills),
         ("skill-benefits.md", skills::skill_benefits),
         ("skill-grants.md", skills::skill_grants),
@@ -827,17 +828,30 @@ mod tests {
                  Strained | Decipher script: study check | Disable device: disarming traps | \
                  Listen: hears fainter by | Open lock: picking locks | Search: searching | \
                  Search: search reaches | Spellcraft: study check | Spot: noticing | Steal: \
-                 stealing | Stealth: noise | Survival: journeys | Tumble: Dodge |"
+                 stealing | Stealth: noise | Survival: journeys | Survival: foraging | Tumble: \
+                 Dodge |"
             ),
             "{benefits}"
         );
+        let foraging = text("foraging.md");
+        assert!(
+            foraging.contains("A forage takes 10 minutes."),
+            "{foraging}"
+        );
+        assert!(
+            foraging.contains(
+                "| forest | 40% | `1d3` | handful of berries 27%, handful of hazelnuts 27%, \
+                 mushroom 27%, angelica root 9.1%, apple 9.1% |"
+            ),
+            "{foraging}"
+        );
         assert!(benefits.contains(
             "| 100 | 20% better | +8 Strength | ×1.1 / ×1.2 | +10 | +8 | 10 | +8 | +8 | +1 cell | +10 \
-             | +8 | +8 | \u{2212}60% | \u{2212}20% | +5 |"
+             | +8 | +8 | \u{2212}60% | \u{2212}20% | +15% | +5 |"
         ));
         assert!(benefits.contains(
             "| 150 | 25% better | +10 Strength | ×1.08 / ×1.15 | +15 | +10 | 15 | +10 | +10 | +1 cell \
-             | +15 | +10 | +10 | \u{2212}75% | \u{2212}20% | +7 |"
+             | +15 | +10 | +10 | \u{2212}75% | \u{2212}20% | +22% | +7 |"
         ));
         // Stealing: the odds by the thief's edge, a contest of even dice.
         let stealing = text("stealing.md");
@@ -1212,8 +1226,9 @@ mod tests {
         );
         assert!(
             classes.contains(
-                "| Food | Angelica roots, apples, food rations, loaves of bread, strips of dried \
-                 meat, turnips, wafers of waybread, corpses |"
+                "| Food | Angelica roots, apples, food rations, handfuls of berries, handfuls of \
+                 hazelnuts, loaves of bread, mushrooms, strips of dried meat, turnips, wafers of \
+                 waybread, corpses |"
             ),
             "{classes}"
         );
