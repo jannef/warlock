@@ -1,0 +1,26 @@
+# Vault of the Ascmearc (docs/design/adventurers-guild.md §8): the captain's hall at the bottom
+# of Brocenburg. The old fort's hall: its table broken up for firewood, the captain Sergeant
+# Herrick killed buried under the flags in the corner with his helm on the cairn, goblins at the
+# door, and Herrick in the captain's place. Brocenburg names it for its fourth floor (`vaults` in
+# its `[[dungeon.levels]]`), so it is stamped there and nowhere else, and he (unique) is met only
+# there.
+name = "Captain's hall"
+map = '''
+###############
+#.............#
+#.,,,,,....g..#
+#H,,,,,.......+
+#.,,,,,....g..#
+#c............#
+###############
+'''
+
+[legend]
+# The table, broken up: rubble across the floor.
+"," = "rubble"
+# Sergeant Herrick in the captain's chair: he wakes to what he sees or hears.
+"H" = { terrain = "floor", creature = "herrick" }
+# His hired goblins at the door.
+"g" = { terrain = "floor", creature = "goblin" }
+# The captain's grave: a cairn of the fort's stones, his bones, and his helm on top.
+"c" = { terrain = "rubble", objects = ["bones", "iron_helm"] }

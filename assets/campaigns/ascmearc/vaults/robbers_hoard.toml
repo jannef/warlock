@@ -1,0 +1,24 @@
+# Vault of the Ascmearc (docs/design/adventurers-guild.md §8): the robbers' hoard at the bottom of
+# Wulfeshol. A cave mouth heaped with what Black Wystan's band took on the Fennhām road, coin
+# and a rare thing among it, two of his footpads at the door, and him on his pile. Wulfeshol names
+# it for its fourth floor (`vaults` in its `[[dungeon.levels]]`), so it is stamped there and
+# nowhere else, and he (unique) is met only there.
+name = "Robbers' hoard"
+map = '''
+###############
+#$....$...$...#
+#..$.......f..#
+#.$..r.W......+
+#..$.......f..#
+#$....$...$...#
+###############
+'''
+
+[legend]
+# Black Wystan on his takings: he wakes to what he sees or hears.
+"W" = { terrain = "floor", creature = "wystan" }
+# His men at the way in.
+"f" = { terrain = "floor", creature = "footpad" }
+# The hoard (spec §8 "Magic items"): a rare thing, rolled when the level is made, and the coin.
+"r" = { terrain = "floor", loot = "rare" }
+"$" = { terrain = "floor", objects = ["gold_coin*20"] }
