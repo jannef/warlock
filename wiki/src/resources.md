@@ -44,6 +44,13 @@ gives one, up to 5, and one fades every 30 base turns (3 minutes); empty, it sta
 Inspire spends 3 inspiration instead of its 3 mana whenever you hold 3, so no mana is spent;
 with less it costs mana as before. A virtuoso's inspire spends neither.
 
+**Stamina** is the fighter's breath, the pool weapon feats will be paid from (see
+[Combat](combat.md#stamina)). Every warrior, barbarian, paladin, ranger, monk, thief, and bard
+holds it from level 1 (Trained wind), full. It holds 10, plus your Toughness modifier, plus a
+point per 10 levels, never less than 5 (Toughness 14 holds 12 at level 1); it comes back a point
+every 2 base turns (12 seconds), resting too, and sits at 0 when spent. A barbarian holds rage
+and stamina at once. Nothing spends it yet.
+
 A base turn is 6 seconds.
 
 {{#include generated/resources.md}}

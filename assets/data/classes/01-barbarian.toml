@@ -28,6 +28,7 @@ bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["might", "vigour"] }
 # a Rage pool with the alternative resources (#225).
 abilities = [
     { level = 1, talent = "rage" },
+    { level = 1, talent = "trained_wind" },
     { level = 6, talent = "thick_hide" },
     { level = 12, talent = "fast_movement" },
     { level = 18, talent = "brutal_critical" },

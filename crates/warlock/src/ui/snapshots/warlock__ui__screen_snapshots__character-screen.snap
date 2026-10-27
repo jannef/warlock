@@ -4,7 +4,6 @@ expression: "render(case, content.clone())"
 ---
  There are several objects here.
  You pick up a leather jerkin, a dagger, and 2 wax candles.
-
     ┌─ Character ─────────────────────────────────────────────────────────────────────────────┐
     │                                                                                         │
     │ Tamsin                                                                                  │
@@ -28,6 +27,7 @@ expression: "render(case, content.clone())"
     │ HP  Hit points    17/17   MP  Mana       2/2                                            │
     │ Dv  Defence       11      Pv  Protection  0                                             │
     │     Stance        Neutral                                                               │
+    │     Stamina       10/10                                                                 │
     │     Alignment     Callous                                                               │
     │                                                                                         │
     │ Weight 74.2 kg (you 70 kg, carrying 4.2 kg)                                             │
@@ -37,4 +37,4 @@ expression: "render(case, content.clone())"
     └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘
 
 
- The Hub  ·  HP 17/17  ·  MP 2/2  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444          ? controls
+ The Hub  ·  HP 17/17  ·  MP 2/2  ·  Sta 10/10  ·  Lv 1  ·  08:00  ·  11 Darkening       ? controls

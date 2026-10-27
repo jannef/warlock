@@ -943,9 +943,9 @@ mod tests {
                 .collect()
         };
         assert_eq!(
-            texts(&world_as("blind"))[3],
+            texts(&world_as("blind"))[4],
             "Dazzled",
-            "after the hit points and the mana"
+            "after the hit points, the mana, and a warrior's stamina"
         );
         assert!(!texts(&world_as("human")).contains(&"Dazzled".to_string()));
     }

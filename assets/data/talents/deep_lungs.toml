@@ -1,0 +1,7 @@
+[[talent]]
+id = "deep_lungs"
+name = "Deep lungs"
+tree = "vigour"
+description = "Your stamina holds a good deal more."
+effects = [{ kind = "resource_max", resource = "stamina", value = 4 }]
+systems = ["stamina"]
