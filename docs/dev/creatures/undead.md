@@ -13,13 +13,13 @@ Fennmynster the corpse candle, poltergeist, ghast, shadow, and bog body; Fyrdelf
 and grave hound. Batch 2's: Fennmynster the wraith and fen ghoul; Fyrdelf the burning skull,
 knocker, spectre, charred dead, duergar skeleton, and rotting troll. The mummy, barghest, draugr,
 vampire spawn, hand of glory, gallows dead, gibbering shade, bone wyvern, revenant, fetch, and
-mummy priest ship in no population, as do all of batches 3 to 5 (levels 21 and up) (deep undead wait for deep places, #383), and the ghost is
+mummy priest ship in no population, as do all of batches 3 to 5 (levels 21 and up) (deep undead wait for deep places, #383; until then they come only as strays, docs/dev/creatures.md), and the ghost is
 incorporeal (wall Defence 2). The roster's holds (`held`, #431) are `{ status = "held", chance,
 difficulty }`: the ghast's and fen ghoul's claws 10 % at 15, the gallows dead's tongue 20 % at 17, the lich's touch and the ghoul lord's claws 15 % at 18 (12 + level ÷ 5, as a drain's).
 
 ## Batch 4 (#387, levels 31–40)
 
-All ten ship in no population. Each is one file in `assets/data/creatures/`:
+All ten ship in no population (strays only). Each is one file in `assets/data/creatures/`:
 
 | Level | Type | Notes |
 |---|---|---|
@@ -39,7 +39,7 @@ plural is itself (`plurals.toml` has `colossus` and `lady`).
 
 ## Batch 5 (#388, levels 41–55)
 
-All sixteen ship in no population. Each is one file in `assets/data/creatures/`:
+All sixteen ship in no population (strays only). Each is one file in `assets/data/creatures/`:
 
 | Level | Type | Notes |
 |---|---|---|
@@ -67,7 +67,7 @@ and the hound's are written in their files.
 
 ## Batch 6 (#389, levels 56–70)
 
-All fifteen ship in no population. Each is one file in `assets/data/creatures/`; the table is
+All fifteen ship in no population (strays only). Each is one file in `assets/data/creatures/`; the table is
 #389's, with its numbers unmoved:
 
 | Level | Type | Notes |

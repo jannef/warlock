@@ -25,6 +25,9 @@ danger = 6
 population = [
     "grave_worm", "barrow_spider", "skeleton", "zombie", "barrow_ghoul", "drowned", "ghost",
 ]
+# Its strays come only from what lives in the campaign's populations (spec §7 "Danger
+# levels"): its folk are the guild design's table (docs/design/adventurers-guild.md §8.2).
+stray_pool = "populations"
 # The dark holds here (spec §7 "Special rooms"): a room is special one time in four, at most two
 # a level, shadowed or hushed most of the time.
 room_effects = { chance = 25, per_level = 2, favoured = { shadowed = 35, hushed = 35 } }

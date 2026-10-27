@@ -18,7 +18,7 @@ grave_worm at (56, 5) route E E E E E S S W W W E E E N N W W W W W
 rat at (73, 15) route E E E S W W W W E E E E N W W W
 crawling_hand at (17, 4) route E E E E E E W W W W W W
 skeletal_rat at (22, 6) route W W N N E W S S E E
-skeletal_rat at (69, 17) route E E W W W W W W W E E E E E E E W W
+stone_mote at (69, 17) route E E W W W W W W W E E E E E E E W W
 crawling_hand at (9, 18) route W N N E E W W S S E
 crawling_hand at (13, 17) route E W W W W W N N S S E E E E E W
 goblin at (18, 15) route E S S S W W E E N N N W carrying a club (wielded)
@@ -55,6 +55,6 @@ shop general_store kept by Osmund at (27, 13)-(35, 15), post (35, 13)
       #...w........¡#     #[..}*..%.+.#########ffffffffff¡#    ########S######
       #.w......r..g.#     #[...[.?.¡#b........Sfffffffffff######¡.......[r...#
       #.............#     #####################ffffffffffff....'.............#
-      #......z......#                         #¡ffffffffff######....rr.r....¡#
+      #......z......#                         #¡ffffffffff######....re.r....¡#
       #¡.z..........#                         #############    ###############
       ###############

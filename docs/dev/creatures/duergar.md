@@ -44,7 +44,8 @@ gold), and the duergar king 40 (very rare: war hammer, plate, great helm, large 
 Fyrdelf, the duergar's own mine (danger 5 to 16): the slinger, crossbowman, and veteran (17: only
 out of depth, at the bottom) join the miner, warrior, and smith. The priest (19) left it when its
 danger was squished (#534), so no bounty names what next to never comes there; it, the hulk, and
-everything above are in no population yet.
+everything above are in no population yet: met only as strays
+(docs/dev/creatures.md).
 
 Follow-ups: enlarging and invisibility as abilities used in a fight, creature spells for the
 priest and the mindbreaker, a mount as a creature of its own.

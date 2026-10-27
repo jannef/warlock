@@ -27,6 +27,7 @@
 //! population = ["rat"]          # floors' danger, who lives there, how many, and how they
 //! population_count = 40         # come back; none: danger 0, nothing comes
 //! stray = 5                    # the draws' odds (`super::danger::Odds`); default
+//! stray_pool = "populations"    # strays only from populations; default "all"
 //! out_of_depth = 5             # data/dungeons.toml's `[defaults]`
 //! deeper = 5
 //! deeper_cap = 10
@@ -62,7 +63,7 @@
 use super::ContentError;
 use super::creature::CreatureId;
 use super::danger::{
-    CountSpec, DangerRule, DangerSpec, Odds, OddsSpec, SpawnSpec, Spawning, SpawningSpec,
+    CountSpec, DangerRule, DangerSpec, Odds, OddsSpec, SpawnSpec, Spawning, SpawningSpec, StrayPool,
 };
 use super::dialogue::{MAX_REPLY, check_lines};
 use super::object::ObjectId;
@@ -143,6 +144,8 @@ struct DungeonSpec {
     population: Option<Vec<String>>,
     population_count: Option<CountSpec>,
     stray: Option<u8>,
+    /// Where its strays come from; default: every type that may stray.
+    stray_pool: Option<StrayPool>,
     out_of_depth: Option<u8>,
     deeper: Option<u8>,
     deeper_cap: Option<u8>,
@@ -611,6 +614,7 @@ impl DungeonFile {
                     deeper: spec.deeper,
                     deeper_cap: spec.deeper_cap,
                 },
+                stray_pool: spec.stray_pool,
                 spawn: spec.spawn,
             }
             .resolve(true, &creatures, &creature_id, defaults)

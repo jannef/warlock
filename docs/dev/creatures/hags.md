@@ -13,4 +13,4 @@ annis hag's `held` (her embrace, grip 18), the bheur hag's cold damage and `slug
 rider exists); `world/mana_tests.rs` drops the green and bheur hags with its own status file.
 Illusions, death gazes, blizzards, shapeshifting, covens, and water-dwelling (the sea hag walks
 the land only, #196) are follow-ups. They ship in no population: only Fyrdelf's window (5–16)
-reaches the green hag's level, and a volcano is no place for her.
+reaches the green hag's level, and a volcano is no place for her. They come only as strays (docs/dev/creatures.md).

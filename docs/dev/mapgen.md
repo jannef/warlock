@@ -22,7 +22,9 @@ review the maps in the diff, then accept them deliberately. Loot (`mapgen::place
 items by the branch's `loot`, vault `loot` cells) is rolled once a map is valid, from its own
 stream `loot/<level id>`, so adding loot never changes the terrain of a generated level. On a
 branch with a danger the initial population follows (`mapgen/population.rs`, stream
-`population/<level id>`; `docs/dev/creatures.md`), then every creature's gear (`gear::arm`,
+`population/<level id>`; `docs/dev/creatures.md`: its own folk, now and then a stray from every
+hostile type of the campaign, populations or none, unless the branch's `stray_pool` says
+`"populations"`), then every creature's gear (`gear::arm`,
 stream `gear/<level id>`). Outside generation, a rolled quest draws its target from the keyed
 stream `quest/<quest id>` (`Rng::quest`), once, as it is given, never kept (#422,
 `docs/dev/quests.md`).
