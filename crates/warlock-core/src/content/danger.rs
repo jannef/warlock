@@ -237,6 +237,11 @@ pub fn member((c, levels, _): Candidate, danger: u8) -> CreatureId {
     CreatureId(c.0 + u16::from(level_at(levels, danger) - levels.0))
 }
 
+/// Whether `candidate` weighs anything in a draw at `danger` (out-of-depth draws aside).
+pub fn weighs((_, levels, factor): Candidate, danger: u8) -> bool {
+    weight(level_at(levels, danger), factor, danger) > 0
+}
+
 /// Picks a type among `candidates` at `danger` by [`weight`] (a family's at the level it stands
 /// at there, [`member`] its pick), uniform among types of one weight (one `below(total)` of
 /// `rng`); `None` if none weighs anything there.
