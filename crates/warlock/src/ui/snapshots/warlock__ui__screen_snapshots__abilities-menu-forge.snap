@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ You pick up a dagger.
+ You are burdened.
+
+
+
+                    ┌─ Abilities ──────────────────────────────────────────────┐
+                    │                                                          │
+                    │ Birth sign                                               │
+                    │ > a  Transfixing stare  at a place you see               │
+                    │ Skills                                                   │
+                    │   b  Appraise           not usable yet                   │
+                    │   c  Metalcraft         not usable yet                   │
+                    │   d  Woodcraft          not usable yet                   │
+                    │ Weapon skills                                            │
+                    │   e  Shield bash        you hold no shield               │
+                    │ Items                                                    │
+                    │   f  Hood your lantern                                   │
+                    │ Here                                                     │
+                    │   g  Temper             on something you carry           │
+                    │                                                          │
+                    │ The basilisk's stare: a foe nearby that sees you slows   │
+                    │ to a crawl a moment; your eyes then rest two hours.      │
+                    │                                                          │
+                    │ a-g or Enter use   Esc close                             │
+                    └──────────────────────────────────────────────────────────┘
+
+
+
+
+ The Forge  ·  HP 17/17  ·  MP 2/2  ·  Burdened  ·  Lv 1  ·  08:01  ·  11 Darkening      ? controls

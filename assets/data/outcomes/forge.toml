@@ -1,0 +1,44 @@
+# A forge's tempering (spec §7 "Special rooms"; content/outcome.rs has the fields): ten minutes'
+# work on a weapon or armour at the anvil, then one draw of the kinds and one by weight among that
+# kind's outcomes. The boon is the item improved, the bane flawed or ruined. A Strength check plus
+# Metalcraft leans the kinds (world/temper.rs): two points a point of its margin over 13, at most
+# `lean`, from the bane to the boon (or the other way, below), so improved 35, nothing 30, flawed
+# 25, ruined 10 with no lean. The `work` hook does it (magic/temper.rs); tempering also identifies
+# what survives. No limit: `exhaust = 0`, the rarity's room for affixes is the natural cap.
+seconds = 600
+kinds = { boon = 35, nothing = 30, bane = 35 }
+lean = 20
+exhaust = 0
+
+[[outcome]]
+kind = "boon"
+tier = "moderate"
+id = "improved"
+weight = 35
+effect = { work = "improve" }
+message = "The metal rings true."
+otherwise = "The metal rings true, but it has nothing more to give."
+
+[[outcome]]
+kind = "nothing"
+tier = "minor"
+id = "nothing"
+weight = 30
+message = "Nothing changes."
+
+[[outcome]]
+kind = "bane"
+tier = "moderate"
+id = "flawed"
+weight = 25
+effect = { work = "flaw" }
+message = "Something in the metal is lost."
+otherwise = "The metal dulls, but there was nothing in it to lose."
+
+[[outcome]]
+kind = "bane"
+tier = "moderate"
+id = "ruined"
+weight = 10
+effect = { work = "ruin" }
+message = "It shatters under the hammer!"

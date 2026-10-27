@@ -169,6 +169,15 @@ pub enum Action {
     /// landscape and Survival. Interrupted, it finds nothing. Refused (no time) untrained, or
     /// anywhere but on land of the overworld or a local area of it.
     Forage,
+    /// Temper the carried stack at this position at the anvil next to the player (spec §7
+    /// "Special rooms"; the Temper ability, the abilities menu's Here group): ten minutes of turns
+    /// of the `temper` action, then a Strength check plus Metalcraft that leans the forge's table,
+    /// and one outcome drawn from it (improved, nothing, flawed, or ruined). Interrupted, it gives
+    /// nothing. Refused (no time) with no anvil next to the player or a stack that is not a
+    /// weapon or armour.
+    Temper {
+        item: usize,
+    },
     /// Catch a second wind (spec §8 "Talents"; the Second wind ability): hit points back at
     /// once, then Winded for a while. Takes the time of `wait`; refused (no time) without the
     /// talent or while winded.
@@ -750,6 +759,7 @@ impl fmt::Display for Action {
             Action::Pray => f.write_str("pray"),
             Action::Drink => f.write_str("drink"),
             Action::Forage => f.write_str("forage"),
+            Action::Temper { item } => write!(f, "temper:{}", position_text(*item)),
             Action::SecondWind => f.write_str("second_wind"),
             Action::BloodMagic => f.write_str("blood_magic"),
             Action::Use(active, None) => write!(f, "use:{}", active.id()),
@@ -854,6 +864,11 @@ impl FromStr for Action {
             "pray" => bare(Action::Pray),
             "drink" => bare(Action::Drink),
             "forage" => bare(Action::Forage),
+            "temper" => {
+                let usage = || "`temper` needs a letter, e.g. `temper:b`".to_string();
+                let item = arg.and_then(parse_position).ok_or_else(usage)?;
+                Ok(Action::Temper { item })
+            }
             "second_wind" => bare(Action::SecondWind),
             "blood_magic" => bare(Action::BloodMagic),
             "use" => {
@@ -1345,6 +1360,8 @@ mod tests {
             Action::Advance("stealth".into()),
             Action::Pray,
             Action::Forage,
+            Action::Temper { item: 0 },
+            Action::Temper { item: 27 },
             Action::Heal(None),
             Action::Heal(Some("bleeding".into())),
             Action::Drink,

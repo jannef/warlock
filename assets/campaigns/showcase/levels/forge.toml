@@ -1,0 +1,44 @@
+# The forge (spec §7 "Special rooms"): a cold smithy with an anvil to temper at (the Temper
+# ability, the abilities menu's Here group, beside it). Arms and armour lie on the bench to work
+# on: a long sword, a dagger, a coat of chain mail, an iron helm, and a small shield. Each
+# tempering takes ten minutes and may improve, flaw, or ruin the piece; data/outcomes/forge.toml
+# has the odds.
+arrival = "Soot blackens the walls of an old smithy. The anvil still stands."
+name = "The Forge"
+ambient = [6, 6, 8, 0]
+map = '''
+#############
+#t.........t#
+#...........#
+#.....A.....#
+#....@......#
+#...........#
+#...........#
+#...........#
+#############
+'''
+
+[legend]
+"@" = { terrain = "floor", spawn = "player" }
+"A" = "anvil"
+"t" = "sconce"
+
+[[room]]
+effect = "forge"
+area = [0, 0, 12, 8]
+
+[[pile]]
+at = [3, 6]
+objects = ["long_sword"]
+
+[[pile]]
+at = [4, 6]
+objects = ["chain_mail", "iron_helm"]
+
+[[pile]]
+at = [5, 6]
+objects = ["small_shield"]
+
+[[pile]]
+at = [6, 6]
+objects = ["dagger"]
