@@ -127,7 +127,7 @@ and kobolds only; there is no general candidate pool), so a type is met in play 
 Ascmearc population, whose union is also its stray list. The Ascmearc's deepest floor is danger
 19 (Fyrdelf 12), so every shared or Ascmearc type up to level 20 lives in one of them, except
 people, keepers, wildlife, uniques, animated objects (their own series places them), and the
-blink dog, dryad, and green hag (no home of theirs yet); `world/ascmearc_tests.rs::
+blink dog, dryad, and green hag (no home of theirs yet), and the drow (a deep place of their own); `world/ascmearc_tests.rs::
 every_roster_type_within_the_ascmearcs_depth_lives_in_a_population` holds it. Each tribe's
 placements are in its file below.
 `cargo xtask bench-turns` has a `delf` row: a fixture 120×60 cave branch of danger 8 at full

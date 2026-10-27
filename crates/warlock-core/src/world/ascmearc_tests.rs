@@ -375,11 +375,20 @@ fn the_legend_names_places_and_refuses_what_would_give_a_hidden_one_away() {
 /// past it (met out of depth) lives in some population of the campaign, so the generic list,
 /// the union of them, holds it too (#531). Left out on purpose: people, keepers, and wildlife
 /// no draw makes, uniques the design places, animated objects (their own series places them),
-/// and the woodland fey and the green hag, who have no home here yet.
+/// the woodland fey and the green hag, who have no home here yet, and the drow, who wait for a
+/// deep place of their own (`docs/dev/creatures/drow.md`).
 #[test]
 fn every_roster_type_within_the_ascmearcs_depth_lives_in_a_population() {
     const DEEPEST: u8 = 19;
-    const UNPLACED: [&str; 4] = ["blink_dog", "dryad", "green_hag", "deer"];
+    const UNPLACED: [&str; 7] = [
+        "blink_dog",
+        "dryad",
+        "green_hag",
+        "deer",
+        "drow_warrior",
+        "drow_crossbowman",
+        "drow_stalker",
+    ];
     let (_, _, spawning) = CONTENT.spawning("fyrdelf:1").expect("a danger");
     let generic: BTreeSet<&str> = (spawning.generic.iter())
         .map(|c| CONTENT.creature(*c).id.as_str())
