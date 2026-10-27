@@ -104,7 +104,8 @@ fn the_floors_start_full_of_the_delf_wave() {
         let drawn = (floor.creatures.iter())
             .filter(|c| {
                 let drawn = [&spawning.population, &spawning.generic];
-                drawn.iter().any(|kinds| kinds.contains(&c.creature))
+                let kind = CONTENT.family(c.creature);
+                drawn.iter().any(|kinds| kinds.contains(&kind))
             })
             .count();
         assert!(drawn >= least, "depth {depth}: {drawn}");
