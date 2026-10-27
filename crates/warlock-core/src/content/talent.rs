@@ -104,6 +104,8 @@ pub enum Choice {
     Skill,
     /// An element: a damage type (an id in `data/damage_types.toml`).
     Element,
+    /// A creature tag (one some creature type carries, `goblin`).
+    Tag,
 }
 
 impl Choice {
@@ -114,6 +116,7 @@ impl Choice {
             Choice::Style => "a fighting style",
             Choice::Skill => "a skill",
             Choice::Element => "an element",
+            Choice::Tag => "a kind of creature",
         }
     }
 
@@ -138,6 +141,7 @@ impl Choice {
                 .filter(|t| !t.physical)
                 .map(|t| t.id.clone())
                 .collect(),
+            Choice::Tag => content.tags().into_iter().map(str::to_string).collect(),
         }
     }
 
@@ -162,6 +166,7 @@ impl Choice {
                 let def = content.damage_type(kind);
                 (!def.physical).then_some(def.name.as_str())
             }
+            Choice::Tag => content.tags().into_iter().find(|t| *t == id),
         }
     }
 }
@@ -795,6 +800,12 @@ pub enum TalentEffect {
     /// Against the creature type it has killed most (ties: the first to get there), its attacks
     /// are this much likelier to hit and do this much more damage (Favoured prey).
     FavouredPrey { to_hit: i32, damage: i32 },
+    /// Against creature types that carry the tag it was taken for (a `choice = "tag"`), its
+    /// attacks are this much likelier to hit and do this much more damage (Sworn foe).
+    SwornFoe { to_hit: i32, damage: i32 },
+    /// Arriving on a level that holds a living creature an active kill quest of its still asks
+    /// for, it is told so (Quarry sense).
+    QuarrySense,
     /// It places every sound it hears where it was made (Tracker).
     ExactSounds,
     /// Its footsteps under the open sky (no roof over the cell stepped to) are this percent
@@ -988,12 +999,14 @@ impl TalentEffect {
             | TalentEffect::TrapEase { value }
             | TalentEffect::TrainedSkills { value }
             | TalentEffect::Barbs { damage: value } => bonus(*value),
-            TalentEffect::FavouredPrey { to_hit, damage } => {
+            TalentEffect::FavouredPrey { to_hit, damage }
+            | TalentEffect::SwornFoe { to_hit, damage } => {
                 if [to_hit, damage].iter().all(|&&v| v == 0)
                     || ![to_hit, damage].iter().all(|v| BONUSES.contains(v))
                 {
                     return Err(
-                        "`favoured_prey`: to_hit and damage are -20 to 20, not both 0".into(),
+                        "`favoured_prey`, `sworn_foe`: to_hit and damage are -20 to 20, not both 0"
+                            .into(),
                     );
                 }
                 Ok(())
@@ -1647,6 +1660,7 @@ impl TalentEffect {
             | TalentEffect::MakeWay
             | TalentEffect::Distrusted
             | TalentEffect::ExactSounds
+            | TalentEffect::QuarrySense
             | TalentEffect::SilentUnburdened
             | TalentEffect::PickLock
             | TalentEffect::Steal

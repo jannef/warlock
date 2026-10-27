@@ -1,4 +1,4 @@
-//! Quests (spec §8 "Quests", #148) in the turn pipeline: offers, accepting and declining, each
+//! Quests (spec §8 "Quests", #148) in the turn pipeline: giving (#422: asking gives), each
 //! kind of goal end to end (kill, bring, reach, deliver), prerequisites, rewards with XP,
 //! repeats, no cap on active quests, the quest log, saves, and replays; then the showcase's own
 //! quests.
@@ -213,7 +213,6 @@ target = "cellar"
 reward = { xp = 10 }
 offer = "Go down to the cellar."
 accept = "Off you go."
-decline = "Pity."
 reminder = "The cellar."
 done = "So it's still there."
 
@@ -398,10 +397,9 @@ fn put_player(world: &mut World, at: Pos) {
     world.perceive(&mut Vec::new());
 }
 
-/// Accepts quest `id` from the creature in `dir`: asks about it, then accepts.
+/// Is given quest `id` by the creature in `dir`: asks about it.
 fn take(world: &mut World, dir: Dir, id: &str) {
     ask(world, dir, &format!("quest-{id}"));
-    ask(world, dir, &format!("accept-{id}"));
     assert_eq!(
         stage(world, id),
         Some(Stage::Active),
@@ -423,7 +421,7 @@ fn kill_pups_east(world: &mut World, n: usize) {
 }
 
 #[test]
-fn an_offer_waits_for_accept_or_decline_and_takes_no_time() {
+fn asking_about_a_quest_gives_it_and_takes_no_time() {
     let mut w = world_on(YARD);
     // Quest topics come first; one the player may not take yet (the cellar) is not there.
     assert_eq!(
@@ -432,38 +430,50 @@ fn an_offer_waits_for_accept_or_decline_and_takes_no_time() {
     );
     let (turn, time) = (w.turn(), w.time());
     let outcome = ask(&mut w, Dir::W, "quest-pups");
-    assert_eq!(last(&w, 1), ["The elder says: \"Kill two pups.\""]);
+    // The offer, then the `accept` line, as one reply.
+    assert_eq!(last(&w, 1), ["The elder says: \"Kill two pups. Good.\""]);
+    assert!(!outcome.took_turn);
     let Some(Event::Talked(talk)) = outcome.events.last() else {
         panic!("no answer: {:?}", outcome.events);
     };
+    // No accept or decline topic: the quest is given, and its topic is now the reminder.
     let ids: Vec<&str> = talk.topics.iter().map(|t| t.id.as_str()).collect();
+    assert_eq!(ids, ["quest-pups", "quest-parcel", "weather"]);
+    assert_eq!(stage(&w, "pups"), Some(Stage::Active));
+    // On the log at once, with its first breadcrumb.
+    let log = w.perception().quests();
+    assert_eq!(log.len(), 1);
     assert_eq!(
-        ids,
-        ["accept-pups", "decline-pups", "quest-parcel", "weather"]
+        log[0].objective,
+        "The elder wants you to kill 2 pups in the Yard."
     );
-    let names: Vec<&str> = talk.topics.iter().map(|t| t.name.as_str()).collect();
-    assert_eq!(names[..2], ["Accept: Pups", "Decline: Pups"]);
-    assert_eq!(stage(&w, "pups"), Some(Stage::Offered));
-    // Declining forgets the offer; asking again offers it again.
-    ask(&mut w, Dir::W, "decline-pups");
-    assert_eq!(last(&w, 1), ["The elder says: \"Another time, then.\""]);
-    assert_eq!(stage(&w, "pups"), None);
-    assert_eq!(w.quests(), &Quests::default());
-    // One offer at a time: hearing another withdraws the first.
-    ask(&mut w, Dir::W, "quest-pups");
-    ask(&mut w, Dir::W, "quest-parcel");
-    assert_eq!(stage(&w, "pups"), None);
-    assert_eq!(stage(&w, "parcel"), Some(Stage::Offered));
-    // A topic the elder does not have now is refused, changing nothing.
+    assert_eq!(log[0].status, "0 / 2 killed.");
+    // The topics of older replays are no one's: refused, changing nothing.
     let before = quiet_state(&w);
-    ask(&mut w, Dir::W, "accept-pups");
-    assert_eq!(last(&w, 1), ["The elder knows nothing about that."]);
+    for topic in ["accept-pups", "decline-pups", "accept-parcel"] {
+        let outcome = ask(&mut w, Dir::W, topic);
+        assert!(!outcome.took_turn);
+        assert_eq!(last(&w, 1), ["The elder knows nothing about that."]);
+    }
     ask(&mut w, Dir::E, "quest-pups");
     assert_eq!(last(&w, 1), ["The crone knows nothing about that."]);
     assert!(quiet_state(&w) == before);
-    ask(&mut w, Dir::W, "accept-parcel");
+    // Asked again: the reminder.
+    ask(&mut w, Dir::W, "quest-pups");
+    assert_eq!(last(&w, 1), ["The elder says: \"The pups.\""]);
+    // Another quest of the same giver is given beside it.
+    ask(&mut w, Dir::W, "quest-parcel");
+    assert_eq!(stage(&w, "pups"), Some(Stage::Active));
     assert_eq!(stage(&w, "parcel"), Some(Stage::Active));
     assert_eq!((w.turn(), w.time()), (turn, time), "talk took no time");
+}
+
+#[test]
+fn an_offer_of_an_older_save_loads_as_given() {
+    let record: QuestRecord =
+        serde_json::from_str(r#"{"stage":"offered"}"#).expect("an old record loads");
+    assert_eq!(record.stage, Stage::Active);
+    assert_eq!(record.roll, None);
 }
 
 #[test]
@@ -557,7 +567,7 @@ fn kills_before_taking_it_count_but_not_others_kills_nor_other_levels() {
     assert_eq!(
         last(&w, 2),
         [
-            "The elder says: \"Good.\"",
+            "The elder says: \"Kill two pups. Good.\"",
             "Quest updated: 2 / 2 pups. Return to the elder.",
         ]
     );
@@ -666,7 +676,7 @@ fn a_bring_quest_takes_from_the_pack_and_repeats() {
     assert_eq!((log[0].name.as_str(), log[0].active), ("Apples", false));
     take(&mut w, Dir::E, "apples");
     assert_eq!(w.perception().quests()[0].status, "You carry 1 / 2.");
-    let record = w.quests().record("apples").copied().expect("record");
+    let record = w.quests().record("apples").cloned().expect("record");
     assert_eq!((record.stage, record.completed), (Stage::Active, 1));
 }
 
@@ -679,7 +689,7 @@ fn a_delivery_is_blocked_while_the_item_is_lost_and_handed_in_to_the_recipient()
     assert_eq!(
         last(&w, 2),
         [
-            "The elder says: \"Here it is.\"",
+            "The elder says: \"Take this to the crone. Here it is.\"",
             "The elder gives you a letter."
         ]
     );
@@ -725,7 +735,6 @@ fn a_pack_of_any_size_takes_a_delivery_and_a_reward() {
     run(&mut w, "move:SW pickup move:NE");
     assert_eq!(w.state.player().inventory.len(), 26);
     ask(&mut w, Dir::W, "quest-parcel");
-    ask(&mut w, Dir::W, "accept-parcel");
     assert_eq!(carried(&w, "letter"), 1);
     assert_eq!(w.state.player().inventory.len(), 27);
     // The pups' reward: gold, into the pack.
@@ -759,8 +768,6 @@ fn the_quest_log_lists_active_quests_then_done_ones() {
     assert!(w.perception().quests().is_empty());
     take(&mut w, Dir::E, "apples");
     take(&mut w, Dir::W, "parcel");
-    // An unanswered offer is not in the log.
-    ask(&mut w, Dir::W, "quest-pups");
     run(&mut w, "move:S pickup move:W pickup move:NE");
     ask(&mut w, Dir::E, "quest-apples");
     let log = w.perception().quests();
@@ -780,10 +787,15 @@ fn the_quest_log_lists_active_quests_then_done_ones() {
             (
                 "The parcel",
                 true,
-                "Deliver a letter to the crone.",
+                "The elder wants you to deliver a letter to the crone.",
                 "Take the letter to the crone."
             ),
-            ("Apples", false, "Bring 2 apples to the crone.", "Done."),
+            (
+                "Apples",
+                false,
+                "The crone wants you to bring 2 apples.",
+                "Done."
+            ),
         ]
     );
     assert_eq!(log[0].giver, "the elder");
@@ -793,8 +805,8 @@ fn the_quest_log_lists_active_quests_then_done_ones() {
 
 #[test]
 fn quests_survive_a_save_and_replay_exactly() {
-    let actions = "ask:W:quest-pups ask:W:accept-pups move:E*12 ask:W:quest-parcel \
-                   ask:W:accept-parcel drop wait pickup";
+    let actions = "ask:W:quest-pups move:E*12 ask:W:quest-parcel \
+                   drop wait pickup";
     let mut w = world_on("#########\n#E@pp...#\n#########\n");
     let mut replay = Replay::new(&w);
     for action in parse_actions(actions).expect("actions") {
@@ -957,15 +969,14 @@ fn quest_files_are_validated() {
         ),
         "at most 32 characters",
     );
-    // Nine topics fit the dialogue screen: the elder's own and eight quests' (with the offer's
-    // second) do not.
-    let many: String = (0..8)
+    // Nine topics fit the dialogue screen: the elder's own and nine quests' do not.
+    let many: String = (0..9)
         .map(|i| {
             quest("type = \"bring\"\ntarget = \"apple\"").replace("\"q\"", &format!("\"q{i}\""))
         })
         .collect();
     bad(&many, "at most 9 fit");
-    let fits: String = (0..7)
+    let fits: String = (0..8)
         .map(|i| {
             quest("type = \"bring\"\ntarget = \"apple\"").replace("\"q\"", &format!("\"q{i}\""))
         })
@@ -1002,7 +1013,7 @@ fn beside(world: &mut World, creature: &str) -> Dir {
 }
 
 #[test]
-fn the_showcase_people_give_four_quests() {
+fn the_showcase_people_give_five_quests() {
     let w = showcase();
     let content = w.content();
     let kinds: Vec<(&str, &str, String)> = (content.quests().iter())
@@ -1016,6 +1027,7 @@ fn the_showcase_people_give_four_quests() {
             ("depths", "reach", "old hermit".to_string()),
             ("apples", "bring", "gardener".to_string()),
             ("letter", "deliver", "wandering bard".to_string()),
+            ("slug_charm", "bring", "gardener".to_string()),
         ]
     );
     let letter = content.quest(content.quest_id("letter").expect("the letter"));
@@ -1085,7 +1097,10 @@ fn the_hermits_rats_then_the_depths() {
     take(&mut w, toward, "depths");
     w.travel("depths:3", None).expect("depths:3");
     let log = w.perception().quests();
-    assert_eq!(log[0].objective, "Reach the Depths 3.");
+    assert_eq!(
+        log[0].objective,
+        "The old hermit wants you to reach the Depths 3."
+    );
     assert_eq!(log[0].status, "Return to the old hermit.");
     w.travel("hub", None).expect("hub");
     let toward = beside(&mut w, "hermit");
@@ -1098,8 +1113,11 @@ fn the_hermits_rats_then_the_depths() {
 fn the_gardeners_apples_and_the_bards_letter() {
     let mut w = showcase();
     w.travel("courtyard", None).expect("courtyard");
-    // The gardener has no topics of his own: his quest opens the dialogue screen.
-    assert_eq!(topics_of(&w, "gardener"), ["quest-apples"]);
+    // The gardener has no topics of his own: his quests open the dialogue screen.
+    assert_eq!(
+        topics_of(&w, "gardener"),
+        ["quest-apples", "quest-slug_charm"]
+    );
     let toward = beside(&mut w, "gardener");
     take(&mut w, toward, "apples");
     let apple = w.content().object_id("apple").expect("apple");

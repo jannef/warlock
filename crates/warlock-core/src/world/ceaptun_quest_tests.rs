@@ -106,15 +106,13 @@ fn each_giver_offers_the_first_quest_of_their_chain() {
 fn the_ledger_is_carried_to_godgifu() {
     let mut w = town();
     beside(&mut w, WULFRUN);
-    act(
-        &mut w,
-        "ask:E:quest-foremans_ledger ask:E:accept-foremans_ledger",
-    );
+    act(&mut w, "ask:E:quest-foremans_ledger");
     assert_eq!(carried(&w, "ledger"), 1, "handed over as it is accepted");
     let log = &w.perception().quests()[0];
     assert!(
-        log.objective
-            .starts_with("Deliver a foreman's ledger to Godgifu. The Gæsthūs"),
+        log.objective.starts_with(
+            "Factor Wulfrun wants you to deliver a foreman's ledger to Godgifu. The Gæsthūs"
+        ),
         "{}",
         log.objective
     );
@@ -149,12 +147,11 @@ fn the_lost_shaft_waits_for_the_ledger_and_the_barrows_heart_and_reveals_fyrdelf
     assert_eq!(topics(&w, WULFRUN)[0], "quest-lost_shaft");
 
     beside(&mut w, WULFRUN);
-    act(&mut w, "ask:E:quest-lost_shaft");
     assert!(
         w.state.revealed.is_empty(),
-        "revealed as it is accepted, not offered"
+        "not revealed before it is given"
     );
-    act(&mut w, "ask:E:accept-lost_shaft");
+    act(&mut w, "ask:E:quest-lost_shaft");
     assert!(w.state.revealed.contains("fyrdelf"));
     assert_eq!(
         said(&w).last().unwrap(),
@@ -163,7 +160,7 @@ fn the_lost_shaft_waits_for_the_ledger_and_the_barrows_heart_and_reveals_fyrdelf
     let log = &w.perception().quests()[0];
     assert_eq!(
         log.objective,
-        "Reach Fyrdelf 2. The shaft lies in Ascdūn, in the hills under Fyrbeorg, north of the ford."
+        "Factor Wulfrun wants you to reach Fyrdelf 2. The shaft lies in Ascdūn, in the hills under Fyrbeorg, north of the ford."
     );
     // Out on the overworld, made after the reveal, the way in is marked and known.
     let id = w.state.player;
@@ -180,7 +177,7 @@ fn the_fen_minster_is_marked_as_sister_hild_sends_the_player() {
     let mut w = town();
     beside(&mut w, HILD);
     // The chalice first: brought from the barrow and handed in.
-    act(&mut w, "ask:E:quest-grave_goods ask:E:accept-grave_goods");
+    act(&mut w, "ask:E:quest-grave_goods");
     let chalice = CONTENT.object_id("silver_chalice").expect("the chalice");
     let id = w.state.player;
     (w.state.actors.get_mut(&id).expect("player").inventory).push(Stack::new(chalice, 1));
@@ -189,18 +186,18 @@ fn the_fen_minster_is_marked_as_sister_hild_sends_the_player() {
     assert_eq!(carried(&w, "gold_coin"), 40);
     assert!(w.state.revealed.is_empty());
 
-    act(&mut w, "ask:E:quest-fen_minster ask:E:accept-fen_minster");
+    act(&mut w, "ask:E:quest-fen_minster");
     assert!(w.state.revealed.contains("fennmynster"));
     let lines = said(&w);
     let n = lines.len();
-    assert!(lines[n - 2].starts_with("Sister Hild says: \"Here, let me show you"));
+    assert!(lines[n - 2].contains("Here, let me show you"));
     assert_eq!(lines[n - 1], "Sister Hild marks Fennmynster on your map.");
     let active = (w.perception().quests().into_iter())
         .find(|q| q.name == "The fen minster")
         .expect("in the log");
     assert_eq!(
         active.objective,
-        "Reach Fennmynster 3. The minster lies in Micelfenn, east of Fennhām."
+        "Sister Hild wants you to reach Fennmynster 3. The minster lies in Micelfenn, east of Fennhām."
     );
     // Asking again reminds, and marks nothing twice.
     act(&mut w, "ask:E:quest-fen_minster");
@@ -215,10 +212,7 @@ fn kills_in_cealdhlaw_count_for_the_reeve() {
     )
     .expect("quests");
     beside(&mut w, LEOFRIC);
-    act(
-        &mut w,
-        "ask:E:quest-barrow_rats ask:E:accept-barrow_rats ask:E:quest-barrow_rats",
-    );
+    act(&mut w, "ask:E:quest-barrow_rats ask:E:quest-barrow_rats");
     assert_eq!(
         carried(&w, "gold_coin"),
         25,
@@ -251,7 +245,7 @@ fn taking_up_the_chalice_replays_exactly() {
     let mut w = town();
     let mut replay = Replay::new(&w);
     let actions = "move:SW*4 move:W*15 open:SW move:SW move:S*2 chat:SE \
-                   ask:SE:quest-grave_goods ask:SE:accept-grave_goods";
+                   ask:SE:quest-grave_goods";
     for action in parse_actions(actions).expect("actions") {
         w.apply(&action);
         replay.push(&action, &w);

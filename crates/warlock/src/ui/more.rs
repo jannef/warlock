@@ -258,7 +258,10 @@ mod tests {
         assert!(first.iter().all(|l| l.chars().count() <= 80));
         // Once read (or skipped), the line keeps the end of what was said.
         let end = line(&game, InputMode::Normal, 80);
-        assert!(end[1].ends_with("pay you for the quiet.\""), "{end:?}");
+        assert!(
+            end[1].ends_with("I'll know if you count wrong.\""),
+            "{end:?}"
+        );
         assert!(!end.iter().any(|l| l.contains(MORE)));
         // A wider line takes fewer pages.
         assert!(page_count(&game, 400, &Bindings::default()) < pages);

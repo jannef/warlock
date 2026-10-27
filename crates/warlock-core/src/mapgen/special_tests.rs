@@ -68,9 +68,9 @@ fn favoured_features_keep_their_shares_and_banned_ones_never_come() {
     assert!((33..=37).contains(&percent("flooded")), "{by:?}");
     assert!((13..=17).contains(&percent("hushed")), "{by:?}");
     assert_eq!(by[usize::from(id("sanctuary").0)], 0, "banned");
-    // The other half by weight: shadowed 10 of the 46 left (echoing 8, draining 6, black 5,
-    // hot 5, cold 5, heavy 4, mirrors 3).
-    assert!((9..=13).contains(&percent("shadowed")), "{by:?}");
+    // The other half by weight: shadowed 10 of the 51 left (echoing 8, draining 6, black 5,
+    // hot 5, cold 5, silent 5, heavy 4, mirrors 3).
+    assert!((9..=12).contains(&percent("shadowed")), "{by:?}");
     // Every eligible feature favoured: by their shares alone.
     let all = RoomOdds {
         favoured: vec![(id("hushed"), 10), (id("flooded"), 30)],

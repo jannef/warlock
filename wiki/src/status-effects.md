@@ -88,6 +88,15 @@ Out of the room it passes: "Your power stops ebbing." Creatures with mana ebb in
 you do, and you can see it on them ("ebbing"); those without mana are left alone. The talent
 *Anchored mind* keeps it from ever taking you.
 
+## Silenced
+
+A [silent vault](special-rooms.md) swallows every sound. While you stand in one, and ten seconds
+after you leave, you are **Silenced** ("The silence closes around you."): you cannot cast a
+spell (nor spend mana on anything), read a scroll, or throw your voice; trying takes no time.
+Out of the vault sound comes back: "Sound returns." Creatures inside are silenced just as you
+are, and you can see it on them ("silenced"): a caster that cannot cast closes in to fight
+hand to hand.
+
 ## Buffs and cooldowns
 
 A status effect can also help, or hinder, in other ways while it lasts (the table's last

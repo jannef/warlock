@@ -109,7 +109,9 @@ pub enum Layer {
     /// each may be taken for (`takeable healthy, weapon_focus:{bows,slings}`), and the creature
     /// types whose first kill has paid (`discovered kobold, rat`), the animal types a
     /// Beast-friend attacked (`empathy broken rat`), and the stat training marks the player holds
-    /// (`stat marks St 3, To 1`). **Dev-only.**
+    /// (`stat marks St 3, To 1`), each rolled quest's draw with the size of the pool it could
+    /// draw from now (`roll verses scroll_of_frost x1 of 4`), and the named monsters dead
+    /// (`slain fire_drake`). **Dev-only.**
     Progress,
     /// The level's special rooms (spec §7 "Special rooms"; ground truth): the terrain, with the
     /// plain ground of each special room drawn as its effect's `mark`, then a line per room
@@ -746,6 +748,18 @@ fn progress_rows(world: &World) -> Vec<String> {
         .collect();
     if !broken.is_empty() {
         rows.push(format!("empathy broken {}", broken.join(", ")));
+    }
+    // Rolled quests: what each drew, of how many it could draw now; the named monsters dead.
+    for (id, roll, pool) in world.quest_rolls() {
+        let variant = roll.variant.map_or_else(String::new, |v| format!(" ({v})"));
+        rows.push(format!(
+            "roll {id} {}{variant} x{} of {pool}",
+            roll.target, roll.count
+        ));
+    }
+    let slain: Vec<&str> = world.quests().slain().collect();
+    if !slain.is_empty() {
+        rows.push(format!("slain {}", slain.join(", ")));
     }
     let marks = &world.state().player().stat_marks;
     let marked: Vec<String> = (marks.iter())
@@ -1460,7 +1474,8 @@ fn skills_json(view: &PerceptionView<'_>) -> Value {
 }
 
 /// The player's quest log: `[{"id", "name", "kind", "active", "completed", "giver",
-/// "objective", "status"}]`, active quests first.
+/// "objective", "target", "status"}]`, active quests first (`target`: what a rolled quest drew,
+/// else null).
 fn quests_json(view: &PerceptionView<'_>) -> Value {
     (view.quests().iter())
         .map(|q| {
@@ -1472,6 +1487,7 @@ fn quests_json(view: &PerceptionView<'_>) -> Value {
                 "completed": q.completed,
                 "giver": q.giver,
                 "objective": q.objective,
+                "target": q.target,
                 "status": q.status,
             })
         })

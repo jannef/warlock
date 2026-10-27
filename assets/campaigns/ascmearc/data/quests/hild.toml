@@ -12,7 +12,6 @@ reward = { gold = 40, xp = 60 }
 alignment = 20
 offer = "A silver chalice was taken from the Mynster in my mother's time and buried with a lord in Cealdhlāw, the cold barrow. It was ours, given to God, not to him. Bring it back to me. The barrow's chamber lies two levels down."
 accept = "Thank you. The chamber is locked, they say, and something keeps the key. Go carefully."
-decline = "It has waited long enough. A little longer will not hurt it."
 reminder = "The silver chalice, from the barrow's chamber in Cealdhlāw, two levels down."
 done = "Our chalice. It is cold even now. I will wash it and pray over it. Take this, for the road."
 where = "The barrow chamber lies on Cealdhlāw's second level."
@@ -29,7 +28,6 @@ alignment = 15
 reveals = { location = "fennmynster" }
 offer = "The chalice came to us from Fennmynster, our mother house, before the water rose over it. I know where it stood: our books still have the way. Go there for me. Go down into it, three levels, and tell me whether anything of it is left."
 accept = "Here, let me show you on your map. The roads stop at Fennhām; past it, keep to the high ground."
-decline = "It is a hard road. I would not ask it of anyone unready."
 reminder = "Fennmynster, three levels down. It lies in Micelfenn, east of Fennhām."
 done = "Then the crypt is there still, under the water. Here: roots for the fevers you will have caught. Keep them."
 where = "The minster lies in Micelfenn, east of Fennhām."
@@ -45,7 +43,6 @@ reward = { gold = 250, xp = 450 }
 alignment = 30
 offer = "Our books say the minster's reliquary was left on the crypt's altar when the sisters fled: the bones of the founder, in bronze. It belongs here now. It lies at the bottom of Fennmynster, where the water is deepest. Will you bring it home?"
 accept = "The drowned keep that crypt. They kept it in life, too. Do not let them keep you."
-decline = "The water has kept it this long. It will keep it a while yet."
 reminder = "The minster reliquary, on the crypt's altar at the very bottom of Fennmynster."
 done = "The founder, home at last. The Mynster cannot pay what this is worth, but it pays what it can, and prays for you besides."
 where = "The crypt lies on Fennmynster's eighth and lowest level."

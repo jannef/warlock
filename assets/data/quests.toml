@@ -1,25 +1,27 @@
 # Quests (spec §7 "Quests", §8 "Quests"): simple, ADOM-like errands people give you. This file is
 # the field reference: the quests are a campaign's, in its data/quests/ (the showcase's:
 # campaigns/showcase/data/quests/showcase.toml; spec §3). Chat with
-# the giver (`C`): each quest they have for you is a topic on the dialogue screen. Asking hears
-# the offer, which you accept or decline; the quest log (`q`) lists what you took up. Come back
-# once it is done, and they reward you.
+# the giver (`C`): each quest they have for you is a topic on the dialogue screen. Asking about it
+# gives it to you: there is no accepting and no declining (a roguelike, not an MMO). The quest
+# log (`q`) lists what you were given, first as "<giver> wants you to ...". Come back once it is
+# done, and they reward you.
 #
 # Each [[quest]] has:
-#   id         lower-case letters, digits, and underscores; replays ask about it as topics:
-#              `ask:E:quest-ID` (the offer, the reminder, or handing it in), `ask:E:accept-ID`,
-#              and `ask:E:decline-ID` (a quest taken up is never given up, and any number may be
-#              active at once)
+#   id         lower-case letters, digits, and underscores; replays ask about it as a topic:
+#              `ask:E:quest-ID` (being given it, the reminder, or handing it in; a quest given
+#              is never given up, and any number may be active at once)
 #   name       its title in the quest log, and the topic it is asked about (at most 32
 #              characters)
 #   giver      who gives it: a creature type with a dialogue (data/dialogue.toml), or the npc id
 #              of one
-#   type       and target:
+#   type       and target (or a `pick` or variants, below: a target drawn as it is given):
 #     "kill"     target a creature type, or a creature tag as `tag:WORD` (`tag:goblin`: any
 #                type whose `tags` carry it, creatures/README.toml): kill `count` of them
 #                (default 1; at most 99 of a type, 999 of a tag), optionally on one `level` (a
 #                level id, or a dungeon branch id for any of its levels), else on every level.
-#                Only your own kills count, those before you took the quest up too. A tag no
+#                Only your own kills count, those before you were given the quest too (not for
+#                a rolled quest: its kills count from the giving). A unique (a named monster)
+#                is met by its death, at any hand and whenever it died (`count` 1). A tag no
 #                creature the quest's campaign can meet carries is an error. `what` (optional,
 #                1 to 24 characters) is what the quest calls them instead of the type's name or
 #                the tag's plural (plurals.toml): "greenskins"
@@ -27,13 +29,14 @@
 #                the giver or to `to` (someone else who talks)
 #     "reach"    target a level id (`depths:3` for a level of a branch): get there (having been
 #                there before counts). Never repeatable
-#     "deliver"  target an object type: the giver hands you one as you accept (you need room in
+#     "deliver"  target an object type: the giver hands you one as they give it (you need room in
 #                your pack), to carry to `to` and hand in there. Without it in your pack you
 #                cannot hand it in
 #   reward     { gold, items, xp }, each optional: gold coins, objects as levels place them
 #              (`["red_potion*2"]`), and experience
-#   offer, accept, reminder   what the giver says when you ask about it, accept it, and ask
-#              again before it is done; decline what they say when you decline (optional)
+#   offer, accept, reminder   what the giver says when you ask about it (giving it), after the
+#              offer in the same reply (accept, optional), and when you ask again before it is
+#              done
 #   done       what whoever you hand it in to says: the recipient of a bring with `to` or a
 #              delivery, else the giver
 #   requires   a quest loaded before this one (earlier in the table), or a list of them
@@ -46,9 +49,26 @@
 #              to an Evil or Wicked character, an evil giver none to a Good or Saintly one
 #   repeatable offered again once done (default false)
 #   reveals    a hidden location of the overworld it reveals (a legend's `hidden`; optional):
-#              { location = "ID", when = "accepted" }, `when` one of "offered", "accepted"
-#              (the default), and "done". The speaker marks it on the player's map
+#              { location = "ID", when = "given" }, `when` "given" (the default) or "done". The
+#              speaker marks it on the player's map
 #   where      where the goal lies, in words, after the objective in the quest log (optional)
-# Texts are one line of at most 280 characters. Someone's topics (their dialogue's, one per
-# quest they give or take, and one more for an offer's accept and decline) must fit the dialogue
-# screen's nine.
+#
+# Rolled quests: instead of `target`, a kill or bring quest may draw its target as it is given
+# (and never again until it is done; the draw is saved):
+#   pick       { creatures = ["BRANCH", ...] }: any creature type that is no unique of those
+#              dungeon branches' populations, of the branches you can enter when it is given (a
+#              hidden one only once revealed); a kill quest
+#              { tags = ["goblin", ...] }: one of these creature tags, carried by a type of the
+#              population of a branch you can enter; a kill quest
+#              { objects = { class = "scrolls", loot = true } }: an object type of that item class
+#              (with loot = true only those loot can hold); a bring quest
+#   [[quest.variant]]  authored options instead: `id`, `target` (as the quest's), `weight`
+#              (default 1; 1 to 1000), and optionally `reveals`, `where`, `offer`, `accept`,
+#              `reminder`, `done`, each replacing the quest's own (which may then be left out)
+# Their texts (all but `name`) may name the roll: {target} and {targets} (the name and plural),
+# {a_target} (with its article; a unique's name alone), {count}, {members} (a tag's types,
+# plurals in a list), {branch} (the first branch, in the pick's order, it lives in), {where} (the
+# filled `where`), and each capitalised ({A_target}, {Where}). Only a rolled quest has them.
+# Texts are one line of at most 280 characters, filled for every target the pool can hold.
+# Someone's topics (their dialogue's, and one per quest they give or take) must fit the
+# dialogue screen's nine.

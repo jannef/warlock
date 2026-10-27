@@ -1295,6 +1295,16 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             signed(to_hit),
             signed(damage)
         ),
+        TalentEffect::SwornFoe { to_hit, damage } => format!(
+            "against creatures of the kind chosen (the creature tag; the tags and who carries \
+             them: [Sorts of creatures](quests.md#sorts-of-creatures)), to hit {} and damage {}",
+            signed(to_hit),
+            signed(damage)
+        ),
+        TalentEffect::QuarrySense => "arriving on a level that holds a living creature an active \
+             kill quest of yours still asks for (a type, a tag's member, a named monster), you \
+             are told \"Your quarry is here.\""
+            .to_string(),
         TalentEffect::ExactSounds => {
             "every sound you hear is placed at the cell it came from, not roughly".to_string()
         }

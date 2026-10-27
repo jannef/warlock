@@ -134,6 +134,7 @@ mod openings;
 mod path;
 mod perceive;
 mod quest;
+mod quest_roll;
 mod quick_leave;
 mod racial;
 mod rage;
@@ -185,7 +186,7 @@ pub use learn::{Odds, study_odds, study_turns};
 pub use level::{Fire, LevelState};
 pub use loot::Identified;
 pub use mirrors::Image;
-pub use quest::{QuestRecord, QuestView, Quests, Stage, asks as quest_asks};
+pub use quest::{QuestRecord, QuestView, Quests, Stage, asks as quest_asks, wants as quest_wants};
 use rest::Ended;
 pub use shop::{Shop, ShopStatus, count_of, favour, part_of, unpaid_parts};
 pub use sign_picks::BREATH_RANGE;
@@ -737,6 +738,10 @@ impl World {
             state.messages.push(0, text);
         }
         let mut world = Self::assemble(content, state);
+        if world.settle_in() {
+            *world.perception =
+                Perception::compute(&world.state, &world.content, &mut world.lights);
+        }
         if let Some(text) = world.birthday_welcome() {
             world.state.messages.push(0, text);
         }
@@ -1189,6 +1194,7 @@ impl World {
             Action::Resource(id) => return self.grant_resource_dev(id, events),
             Action::Infect(id) => return self.infect_dev(id),
             Action::Reveal(id) => return self.reveal_dev(id),
+            Action::QuestRoll { quest, target } => return self.quest_roll_dev(quest, target),
             Action::LevelUpAuto => return self.level_up_auto(),
             Action::GrantXp(xp) => return self.grant_xp_dev(*xp),
         };
@@ -1350,6 +1356,8 @@ mod parts_tests;
 #[cfg(test)]
 mod protection_tests;
 #[cfg(test)]
+mod quest_roll_tests;
+#[cfg(test)]
 mod quest_tests;
 #[cfg(test)]
 mod quick_leave_tests;
@@ -1385,6 +1393,8 @@ mod shop_tests;
 mod sidestep_tests;
 #[cfg(test)]
 mod sign_pick_tests;
+#[cfg(test)]
+mod silent_tests;
 #[cfg(test)]
 mod skill_roll_tests;
 #[cfg(test)]

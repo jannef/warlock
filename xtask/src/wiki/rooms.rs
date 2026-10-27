@@ -12,6 +12,7 @@ fn times(percent: u16) -> String {
         50 => "half".into(),
         40 => "two fifths".into(),
         25 => "a quarter".into(),
+        1 => "a hundredth".into(),
         p => format!("{p}% of"),
     }
 }
@@ -175,6 +176,14 @@ fn held(content: &Content, status: StatusId) -> String {
         100 => {}
         0 => what.push("none coming back".into()),
         p => what.push(format!("mana back at {p}% of the pace")),
+    }
+    if !def.blocks.is_empty() {
+        let doing: Vec<&str> = def.blocks.iter().map(|k| k.doing()).collect();
+        let list = match doing.split_last() {
+            Some((last, rest)) if !rest.is_empty() => format!("{}, or {last}", rest.join(", ")),
+            _ => doing.join(""),
+        };
+        what.push(format!("unable to {}", list.replace("your ", "their ")));
     }
     let who = if def.touches_only_mana() {
         "Everyone inside with mana"

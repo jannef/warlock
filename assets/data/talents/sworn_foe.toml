@@ -1,0 +1,8 @@
+[[talent]]
+id = "sworn_foe"
+name = "Sworn foe"
+tree = "weaponcraft"
+choice = "tag"
+description = "You have sworn yourself against one kind of creature: your attacks against them are surer and deadlier."
+effects = [{ kind = "sworn_foe", to_hit = 1, damage = 2 }]
+systems = ["bounties", "combat"]
