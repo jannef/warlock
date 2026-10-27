@@ -24,10 +24,9 @@ expression: "render(case, content.clone())"
     │ Lv  Level         1                                                                     │
     │ XP  Experience    0 / 182                                                               │
     │     Talents       7                                                                     │
-    │ HP  Hit points    17/17   MP  Mana       2/2                                            │
+    │ HP  Hit points    18/18   MP  Mana       2/2                                            │
     │ Dv  Defence       11      Pv  Protection  0                                             │
     │     Stance        Neutral                                                               │
-    │     Stamina       10/10                                                                 │
     │     Alignment     Callous                                                               │
     │     Resistant to  cold                                                                  │
     │                                                                                         │
@@ -37,4 +36,5 @@ expression: "render(case, content.clone())"
     │ @ or Esc close   A skills                                                               │
     └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘
 
- The Hub  ·  HP 17/17  ·  MP 2/2  ·  Sta 10/10  ·  Lv 1  ·  08:00  ·  11 Darkening       ? controls
+
+ The Hub  ·  HP 18/18  ·  MP 2/2  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444          ? controls

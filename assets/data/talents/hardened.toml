@@ -4,5 +4,5 @@ name = "Hardened"
 tree = "class"
 granted = true
 description = "From now on every level adds to your hit points again, and a little more."
-effects = [{ kind = "hardened", bonus = 1 }]
+effects = [{ kind = "hardened", bonus = 3 }]
 systems = ["hit_points"]

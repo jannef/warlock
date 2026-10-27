@@ -567,6 +567,14 @@ const CASES: &[Case] = &[
         screen: Some("eat"),
         ..BASE
     },
+    // Nothing to consume (the arena's pack holds no food).
+    Case {
+        name: "consume-list-none",
+        scenario: "arena",
+        run: true,
+        screen: Some("eat"),
+        ..BASE
+    },
     Case {
         name: "item-description",
         actions: "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*4 pickup \
@@ -787,7 +795,7 @@ const CASES: &[Case] = &[
         scenario: "arena",
         // Pip's birth sign has gifts (#265): seed 4 is one where the fight still ends in his death.
         seed: Some(4),
-        actions: "lantern wait*14",
+        actions: "lantern wait*20",
         ..BASE
     },
     Case {

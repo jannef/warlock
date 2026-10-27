@@ -88,7 +88,7 @@ pub enum KeyCommand {
     /// At `--more--`: skip the rest of this turn's messages (Esc always does it; no default key
     /// of its own).
     MoreSkip,
-    /// Choose something to eat, from the floor or the pack.
+    /// Choose something to consume (eat), from the floor or the pack.
     Eat,
     /// Choose a scroll to read: a spell is aimed next (a cursor on the map), the scroll of
     /// identify asks what to read it on.
@@ -330,7 +330,7 @@ impl KeyCommand {
             KeyCommand::RestDusk => "Rest until nightfall",
             KeyCommand::MoreNext => "Show the next messages",
             KeyCommand::MoreSkip => "Skip the rest (Esc always works)",
-            KeyCommand::Eat => "Eat",
+            KeyCommand::Eat => "Consume",
             KeyCommand::Read => "Read a scroll",
             KeyCommand::Study => "Study a scroll's spell",
             KeyCommand::Look => "Look around",
