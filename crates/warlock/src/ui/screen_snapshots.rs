@@ -100,6 +100,7 @@ const CASES: &[Case] = &[
     Case {
         name: "new-run-screen",
         screen: Some("new-run"),
+        size: (100, 34),
         ..BASE
     },
     Case {
