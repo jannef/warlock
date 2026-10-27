@@ -1,0 +1,46 @@
+# The drow (#519; content::drow_roster_tests checks the numbers).
+# A scout and cutpurse of the deep roads, quick and nearly soundless, who opens a
+# throat with a dagger steeped in venom.
+[[creature]]
+id = "drow_stalker"
+level = 19
+xp = 105
+rarity = "uncommon"
+loot = 20
+name = "drow stalker"
+glyph = "e"
+fg = "#5a4a80"
+speed = 1300
+faction = "drow"
+tags = ["drow"]
+alignment = "evil"
+race = "drow"
+vision = "darkvision"
+opens_doors = true
+footsteps = 30
+hearing = 16
+weight = 55000
+stats = { strength = 19, dexterity = 22, toughness = 18, intelligence = 18, willpower = 18, presence = 18 }
+base_hp = 43
+resist = { poison = 25 }
+on_eat = { message = "Lean and bitter, with an aftertaste of old poisons.", vomit = 40 }
+[creature.attack]
+damage = "3d8"
+damage_type = "piercing"
+name = "envenomed dagger"
+verb = "stabs"
+threat = 20
+on_hit = [{ status = "poisoned", chance = 30, severity = 3 }]
+# Its gear (spec §8 "Creature gear"): armour and coins, never a weapon (its venom rides on
+# its natural attack, which a wielded weapon would replace).
+[[creature.gear]]
+chance = 70
+one_of = ["leather_jerkin"]
+magic = 10
+[[creature.gear]]
+chance = 80
+one_of = ["wool_cloak"]
+magic = 10
+[[creature.gear]]
+chance = 60
+one_of = ["copper_coin*30", "copper_coin*50"]

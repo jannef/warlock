@@ -1,0 +1,43 @@
+# The drow (#519; content::drow_roster_tests checks the numbers).
+# The rank and file of a drow house: light mail, a dark cloak, and a short sword
+# whose edge is dark with venom.
+[[creature]]
+id = "drow_warrior"
+level = 14
+xp = 80
+rarity = "common"
+loot = 10
+name = "drow warrior"
+glyph = "e"
+fg = "#8a7ab8"
+faction = "drow"
+tags = ["drow"]
+alignment = "evil"
+race = "drow"
+vision = "darkvision"
+opens_doors = true
+footsteps = 70
+hearing = 14
+weight = 60000
+stats = { strength = 17, dexterity = 16, toughness = 17, intelligence = 16, willpower = 16, presence = 16 }
+base_hp = 35
+resist = { poison = 25 }
+on_eat = { message = "Lean and bitter, with an aftertaste of old poisons.", vomit = 40 }
+[creature.attack]
+damage = "2d8"
+damage_type = "slashing"
+name = "envenomed short sword"
+verb = "cuts"
+on_hit = [{ status = "poisoned", chance = 20, severity = 2 }]
+# Its gear (spec §8 "Creature gear"): armour and coins, never a weapon (its venom rides on
+# its natural attack, which a wielded weapon would replace).
+[[creature.gear]]
+chance = 70
+one_of = ["studded_leather"]
+magic = 5
+[[creature.gear]]
+chance = 50
+one_of = ["wool_cloak"]
+[[creature.gear]]
+chance = 50
+one_of = ["copper_coin*20", "copper_coin*30"]
