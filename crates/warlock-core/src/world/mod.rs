@@ -144,6 +144,7 @@ mod read;
 mod resource;
 mod rest;
 mod reveal;
+mod rod;
 mod rooms;
 mod rot;
 mod schedule;
@@ -1385,6 +1386,8 @@ mod resource_talent_tests;
 mod resource_tests;
 #[cfg(test)]
 mod reveal_tests;
+#[cfg(test)]
+mod rod_tests;
 #[cfg(test)]
 mod room_temperature_tests;
 #[cfg(test)]

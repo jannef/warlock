@@ -4,7 +4,8 @@
 //! [`crate::content::ScrollLabelDef`]). Wands the same (spec §8 "Magic items": "Wands"): a wand
 //! type is unknown until one is used or identified, and shows as "an oak wand"
 //! (`data/wand_labels.toml`, the same format); their labels are drawn after the scrolls', from
-//! the same stream, so adding wands changes no scroll's label.
+//! the same stream, so adding wands changes no scroll's label. Rods too (spec §8 "Magic items":
+//! "Rods"; `data/rod_labels.toml`, "a bone rod"), drawn after the wands'.
 //!
 //! - **Labels** ([`Labels`]) are derived, never saved: one per readable scroll type, all
 //!   different, drawn at once when the world is made or loaded from the run's `identification`
@@ -44,6 +45,11 @@ impl Labels {
         if let Some(def) = content.wand_labels() {
             let wands = |o: &crate::content::ObjectDef| o.wand.is_some();
             draw_into(&mut labels, &mut rng, content, def, wands);
+        }
+        // Rods after wands, from the same stream: the scrolls' and wands' labels stay too.
+        if let Some(def) = content.rod_labels() {
+            let rods = |o: &crate::content::ObjectDef| o.rod.is_some();
+            draw_into(&mut labels, &mut rng, content, def, rods);
         }
         Self(labels)
     }
@@ -192,8 +198,11 @@ impl<'a> Lore<'a> {
 
     /// How labels of type `object` are made and shown: a wand's, or a scroll's.
     fn label_def(&self, object: ObjectId) -> Option<&'a crate::content::ScrollLabelDef> {
-        if self.content.object(object).wand.is_some() {
+        let def = self.content.object(object);
+        if def.wand.is_some() {
             self.content.wand_labels()
+        } else if def.rod.is_some() {
+            self.content.rod_labels()
         } else {
             self.content.scroll_labels()
         }

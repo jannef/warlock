@@ -63,6 +63,7 @@ mod quest;
 mod quest_roll;
 mod race;
 mod resource;
+mod rod;
 #[cfg(test)]
 mod room_burden_tests;
 mod room_effect;
@@ -178,6 +179,9 @@ pub(crate) use quest_roll::roll_known;
 pub use quest_roll::{Candidate, MAX_VARIANTS, MAX_WEIGHT, Pick, Roll, Rolled, Variant, one_of};
 pub use race::{HUNGER, LightBlind, RaceDef, Races};
 pub use resource::{Build, MAX_EVERY, MAX_RESOURCE, MAX_SHORT, OverTime, ResourceDef, ResourceId};
+pub use rod::{
+    MAX_ROD_MANA, MAX_ROD_POWER, MAX_ROD_RADIUS, MAX_ROD_REACH, Rod, RodDoes, RodEffect, RodShape,
+};
 pub use room_effect::{
     Here, Hoard, Mirrors, RoomEffectDef, RoomEffectId, RoomEffects, SpecialRoom, Swarm, Themes,
 };
@@ -579,6 +583,8 @@ pub struct Content {
     study: Option<StudyRules>,
     /// What a failed study may bring (`data/mishaps/`), in path order.
     mishaps: Vec<Mishap>,
+    /// What rods do (`data/rod_effects/`, spec §8 "Magic items": "Rods"), in path order.
+    rod_effects: Vec<RodEffect>,
     /// Spells (`data/spells/`, spec §8 "Spells"), in path order; none without the files.
     spells: Vec<SpellData>,
     /// Talents (`data/talents.toml` and `data/talents/`, spec §8 "Talents"); none without the
@@ -595,6 +601,9 @@ pub struct Content {
     /// Unidentified wands' labels (`data/wand_labels.toml`, the scroll labels' format): none,
     /// every wand known on sight.
     wand_labels: Option<ScrollLabelDef>,
+    /// Unidentified rods' labels (`data/rod_labels.toml`, the scroll labels' format): none,
+    /// every rod known on sight.
+    rod_labels: Option<ScrollLabelDef>,
     /// In `data/status.toml` order: most important first.
     statuses: Vec<StatusDef>,
     /// Alternative resources (`data/resources.toml`, spec §8 "Resources"), in file order; none
@@ -680,12 +689,14 @@ impl Content {
             spell_rules: None,
             study: None,
             mishaps: Vec::new(),
+            rod_effects: Vec::new(),
             spells: Vec::new(),
             talents: TalentBook::default(),
             affixes: Affixes::default(),
             stances: Stances::default(),
             scroll_labels: None,
             wand_labels: None,
+            rod_labels: None,
             statuses: Vec::new(),
             resources: Vec::new(),
             status_ids: BTreeMap::new(),
@@ -757,6 +768,10 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             content.wand_labels = Some(ScrollLabelDef::parse(path, text)?);
         }
+        let path = "data/rod_labels.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.rod_labels = Some(ScrollLabelDef::parse(path, text)?);
+        }
         let path = "data/stances.toml";
         if let Some(text) = files.get_optional(path) {
             content.stances = Stances::parse(path, text)?;
@@ -810,6 +825,8 @@ impl Content {
         let rules = files.get_optional(path).map(|text| (path, text));
         let table = files.table("spells").filter(|(p, _)| *p != path);
         (content.spell_rules, content.spells) = spell_def::parse(rules, table, &content)?;
+        // Rod effects (spec §8 "Magic items": "Rods") name statuses; rods (objects) name them.
+        content.rod_effects = rod::parse(files.table("rod_effects"), &content)?;
         // The talent table (spec §8 "Talents"): optional, so no level asks for a pick without it.
         if files.table("talents").next().is_some() {
             content.talents = talent::parse(files.table("talents"), &content)?;
@@ -2710,6 +2727,11 @@ impl Content {
         self.wand_labels.as_ref()
     }
 
+    /// Unidentified rods' labels (`data/rod_labels.toml`), if rods have them.
+    pub fn rod_labels(&self) -> Option<&ScrollLabelDef> {
+        self.rod_labels.as_ref()
+    }
+
     /// The combat stances of `data/stances.toml` (all plain without the file).
     pub fn stances(&self) -> &Stances {
         &self.stances
@@ -3042,6 +3064,21 @@ impl Content {
     /// What a failed study may bring (`data/mishaps/`), in path order.
     pub fn mishaps(&self) -> &[Mishap] {
         &self.mishaps
+    }
+
+    /// What rods do (`data/rod_effects/`), in path order: a [`Rod`]'s `effect` is an index.
+    pub fn rod_effects(&self) -> &[RodEffect] {
+        &self.rod_effects
+    }
+
+    /// Rod effect `index` (a [`Rod`]'s `effect`).
+    pub fn rod_effect(&self, index: usize) -> &RodEffect {
+        &self.rod_effects[index]
+    }
+
+    /// The index of rod effect `id`, if there is one.
+    pub fn rod_effect_index(&self, id: &str) -> Option<usize> {
+        self.rod_effects.iter().position(|e| e.id == id)
     }
 
     /// The spells (`data/spells/`, spec §8 "Spells"), in path order: a [`SpellId`] is an index.

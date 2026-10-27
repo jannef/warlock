@@ -1249,6 +1249,26 @@ impl<'a> PerceptionView<'a> {
         self.player.wand_item(self.content)
     }
 
+    /// Where in their inventory the rod the player has ready is (spec §8 "Magic items":
+    /// "Rods"), if any.
+    pub fn ready_rod(&self) -> Option<usize> {
+        self.player.rod_item(self.content)
+    }
+
+    /// What a use of the rod in inventory stack `item` would cost the player in mana and how
+    /// far it would reach for them, if it is a rod whose type they know (spec §8 "Magic items":
+    /// "Rods").
+    pub fn own_rod(&self, item: usize) -> Option<(i32, i32)> {
+        let stack = self.player.inventory.get(item)?;
+        if !self.lore.is_identified(stack.object) {
+            return None;
+        }
+        let rod = self.content.object(stack.object).rod?;
+        let effect = self.content.rod_effect(rod.effect);
+        let cost = self.player.rod_cost(self.content, &rod);
+        Some((cost, effect.reach(self.own_caster_level())))
+    }
+
     /// The digging tool the player has ready (spec §8 "Digging"), if any.
     pub fn ready_to_dig(&self) -> Option<ObjectId> {
         self.player.dig_tool(self.content).map(|(tool, _)| tool)

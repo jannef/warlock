@@ -98,6 +98,12 @@ name = "Scrolls"
 id = "wands"
 name = "Wands"
 
+# Rods (spec §8 "Magic items": "Rods"): an effect no spell has, paid in the user's mana, used
+# from the missile weapon slot.
+[[class]]
+id = "rods"
+name = "Rods"
+
 [[class]]
 id = "gems"
 name = "Gems"

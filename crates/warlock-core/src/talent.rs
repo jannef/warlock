@@ -210,6 +210,8 @@ pub struct TalentMods {
     pub mana_resting_percent: i32,
     /// Percent more abilities cost in mana (negative: less; [`TalentMods::mana_cost`]).
     pub mana_cost_percent: i32,
+    /// Percent more mana a rod costs (negative: less; Channeler).
+    pub rod_cost_percent: i32,
     /// Added to its caster level (spec §8 "Spells").
     pub caster_level: i32,
     /// Added to the caster level of the wands it uses (spec §8 "Magic items": "Wands").
@@ -1015,6 +1017,7 @@ impl TalentMods {
             } => self.mana_per_levels.push((per_levels, at_least)),
             TalentEffect::ManaRestingPercent { value } => self.mana_resting_percent += value,
             TalentEffect::ManaCostPercent { value } => self.mana_cost_percent += value,
+            TalentEffect::RodCostPercent { value } => self.rod_cost_percent += value,
             TalentEffect::CasterLevel { value } => self.caster_level += value,
             TalentEffect::WandLevel { value } => self.wand_level += value,
             TalentEffect::BloodMagic { hp, mana } => {
@@ -1760,6 +1763,17 @@ impl TalentMods {
             return base;
         }
         let scaled = (base * (100 + self.mana_cost_percent).max(0) + 50) / 100;
+        scaled.max(1)
+    }
+
+    /// What a rod whose cost is `base` mana costs with these talents, before
+    /// [`TalentMods::mana_cost`]: `rod_cost_percent` more (Channeler's −25: a quarter less),
+    /// rounded to the nearest, never below 1.
+    pub fn rod_cost(&self, base: i32) -> i32 {
+        if base <= 0 || self.rod_cost_percent == 0 {
+            return base;
+        }
+        let scaled = (base * (100 + self.rod_cost_percent).max(0) + 50) / 100;
         scaled.max(1)
     }
 

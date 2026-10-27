@@ -227,6 +227,9 @@ pub enum TalentEffect {
     /// What abilities cost in mana, this percent more (negative: less; never below 1; Frugal
     /// caster), in [`crate::world::World::spend_mana`].
     ManaCostPercent { value: i32 },
+    /// What rods cost in mana, this percent more (negative: less; never below 1; Channeler; spec
+    /// §8 "Magic items": "Rods"), before [`TalentEffect::ManaCostPercent`].
+    RodCostPercent { value: i32 },
     /// Caster level, this much higher (negative: lower; spec §8 "Spells"), in
     /// [`crate::world::World::caster_level`]. Nothing grants it yet (the Spellcraft talents,
     /// #400).
@@ -1493,6 +1496,7 @@ impl TalentEffect {
             | TalentEffect::ManaRegenPercent { value }
             | TalentEffect::ManaRestingPercent { value }
             | TalentEffect::ManaCostPercent { value }
+            | TalentEffect::RodCostPercent { value }
             | TalentEffect::FootstepsPercent { value }
             | TalentEffect::CarryPercent { value }
             | TalentEffect::TravelPercent { value }
