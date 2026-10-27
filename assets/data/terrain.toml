@@ -360,6 +360,19 @@ glyph = "_"
 fg = "#5a5a5e"
 bg = "#0d0d10"
 
+# A shrine of a side's stone (room_effects.toml `shrine`): its light shows the shrine's hidden
+# side (gold good, red evil), placed on its cell as a forgotten altar's is.
+[[terrain]]
+id = "shrine_stone"
+name = "shrine stone"
+description = "A squat stone shrine, its niche empty and its carvings worn past reading. It does not welcome everyone alike."
+stone = true
+walkable = false
+glyph = "∩"
+fg = "#c8c0b0"
+bg = "#0d0d10"
+glow = 0.2
+
 # A scriptorium's shelves (spec §7 "Special rooms"): the feature of the room, scenery the player
 # cannot pass. Its own terrain, so look mode tells it from a wall.
 [[terrain]]

@@ -459,7 +459,8 @@ pub(super) fn enter_room(state: &mut WorldState, content: &Content) -> Option<St
     }
     room.entered = true;
     room.glimpsed = true;
-    Some(content.room_effect(room.effect).enter.clone())
+    let room = room.clone();
+    Some(super::shrine::enter_line(&room, state.player(), content))
 }
 
 /// The template of level `id`: a hand-made level, or one generated from the run seed: a level of

@@ -19,13 +19,13 @@ expression: "render(case, content.clone())"
                   │ Damage 1d4; criticals on 20–24, ×2 damage                    │
                   │ Piercing damage                                              │
                   │ Thrown up to 5 cells                                         │
+                  │ To hit +0, damage 1d4, range 5                               │
                   │                                                              │
                   │ Unidentified: what its magic does is unknown, though it      │
                   │ works all the same.                                          │
                   │                                                              │
                   │ Esc close                                                    │
                   └──────────────────────────────────────────────────────────────┘
-
 
 
 

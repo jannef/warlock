@@ -43,6 +43,7 @@
 //! Without the file there are no special rooms.
 
 use super::room_lore::{LootSpec, LoreNames, RoomLoot};
+use super::room_shrine::{Shrine, ShrineSpec};
 use super::{
     ContentError, ItemClassId, LightId, OutcomeTables, StatusDef, StatusId, TerrainDef, TerrainId,
 };
@@ -158,6 +159,7 @@ struct RoomEffectSpec {
     sides: Option<BTreeMap<Alignment, String>>,
     offers: Option<OffersSpec>,
     collapse: Option<Collapse>,
+    shrine: Option<ShrineSpec>,
     loot: Option<LootSpec>,
     #[serde(default)]
     train: BTreeMap<String, u16>,
@@ -448,6 +450,9 @@ pub struct RoomEffectDef {
     pub rise: Option<Rise>,
     /// Consecrate lifts it for good (a cursed and a draining room).
     pub unholy: bool,
+    /// A shrine of a side: how it treats those inside by their side (`world/shrine.rs`); its
+    /// side is drawn good or evil, one to one.
+    pub shrine: Option<Shrine>,
     /// The items generators lay on its floor (a scriptorium's scrolls; `mapgen/room_loot.rs`).
     /// Resolved after the objects ([`RoomEffects::resolve_lore`]).
     pub loot: Option<RoomLoot>,
@@ -857,6 +862,10 @@ impl RoomEffects {
                 }
                 None => None,
             };
+            let shrine = (spec.shrine.as_ref())
+                .map(|s| Shrine::parse(s, spec.sides.is_some(), &status))
+                .transpose()
+                .map_err(bad)?;
             let status = match &spec.status {
                 Some(name) => {
                     let (id, def) =
@@ -973,6 +982,7 @@ impl RoomEffects {
                 collapse: spec.collapse,
                 rise,
                 unholy: spec.unholy,
+                shrine,
                 loot: None,
                 train: Vec::new(),
                 lore,

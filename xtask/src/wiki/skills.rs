@@ -63,6 +63,9 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::Bargain => "better prices in shops",
         Effect::Kick => "more Strength for kicking doors in",
         Effect::Steal => "stealing at all, and better",
+        Effect::Heal => {
+            "treating your bleeding, poison, and diseases (trained at all: you can try)"
+        }
         Effect::Pick => "picking locks (trained at all: you can try)",
     }
 }
@@ -91,6 +94,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::Bargain => "prices",
             Effect::Kick => "kicking doors in",
             Effect::Steal => "stealing",
+            Effect::Heal => "treating",
             Effect::Pick => "picking locks",
         };
         let _ = write!(out, " {name}: {what} |");
@@ -109,6 +113,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 | Effect::Spot
                 | Effect::Study
                 | Effect::Steal
+                | Effect::Heal
                 | Effect::Disarm
                 | Effect::Pick => format!("+{n}"),
                 Effect::SearchReach => format!("+{n} cell{}", if n == 1 { "" } else { "s" }),
@@ -187,6 +192,68 @@ pub(super) fn stealing(_content: &Content) -> String {
         );
     }
     out
+}
+
+/// What the Heal skill treats (spec §8 "Treating oneself"): each status with a `treat` table at
+/// its least and most degrees, then each disease, with the check's difficulty, the chance of
+/// making it at a modifier of +0 and of +8 (Intelligence modifier plus Heal), and what comes of
+/// a made and a failed try. Statuses in file order, diseases by name.
+pub(super) fn heal_targets(content: &Content) -> String {
+    let mut out = String::from(
+        "| Ailment | Difficulty | Chance at +0 | Chance at +8 | Made | Failed |\n\
+         |---|---:|---:|---:|---|---|\n",
+    );
+    let odds = |difficulty: i32| {
+        let at = |m| percent(warlock_core::check::ways(m, difficulty), 144);
+        (at(0), at(8))
+    };
+    for (_, def) in content.status_ids() {
+        let Some(treat) = def.treat.as_ref() else {
+            continue;
+        };
+        let (made, failed) = if treat.stops {
+            ("it stops", "try again as often as you like")
+        } else {
+            ("it eases a degree", "no more tries at this dose")
+        };
+        let degrees = if def.max > 1 {
+            vec![1, def.max]
+        } else {
+            vec![1]
+        };
+        for severity in degrees {
+            let difficulty = treat.difficulty_at(severity);
+            let (zero, eight) = odds(difficulty);
+            let s = if severity == 1 { "" } else { "s" };
+            let _ = writeln!(
+                out,
+                "| {} ({severity} degree{s}) | {difficulty} | {zero} | {eight} | {made} | {failed} |",
+                def.name
+            );
+        }
+    }
+    let mut diseases: Vec<_> = content.disease_defs().iter().collect();
+    diseases.sort_by(|a, b| a.name.cmp(&b.name));
+    for def in diseases {
+        let (zero, eight) = odds(def.difficulty);
+        let made = if def.recovers() {
+            "counts as a check won toward recovery (never the last one needed)"
+        } else {
+            "its next turn for the worse comes a full interval later"
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {} | {zero} | {eight} | {made} | no more tries at this bout |",
+            capitalized(&def.name),
+            def.difficulty
+        );
+    }
+    out
+}
+
+fn capitalized(s: &str) -> String {
+    let mut chars = s.chars();
+    (chars.next()).map_or_else(String::new, |c| c.to_uppercase().chain(chars).collect())
 }
 
 /// The skill ladder: the die a level-up roll throws by the skill's marks, and the die a skill the

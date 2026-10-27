@@ -154,9 +154,7 @@ impl World {
             return false;
         };
         let talents = actor.talent_mods(&content);
-        // Fever-proof (spec §8 "Talents"): fewer checks won in a row shake it off, never under 1.
-        let recovery = i32::from(def.recovery) - talents.disease_recovery;
-        let recovery = u8::try_from(recovery.max(1)).unwrap_or(def.recovery);
+        let recovery = recovery_of(def, &talents);
         // Ageless (an elf's): the progressions come further apart.
         let interval = match talents.disease_interval_percent {
             0 => interval,
@@ -294,6 +292,13 @@ impl World {
         self.say(format!("You catch {name} (dev)."));
         Spent::NoTime
     }
+}
+
+/// How many checks won in a row shake `def` off a sufferer with `talents`: its `recovery`, less
+/// what Fever-proof takes off (spec §8 "Talents"), never under 1.
+pub(super) fn recovery_of(def: &crate::content::DiseaseDef, talents: &TalentMods) -> u8 {
+    let recovery = i32::from(def.recovery) - talents.disease_recovery;
+    u8::try_from(recovery.max(1)).unwrap_or(def.recovery)
 }
 
 /// Whether `actor`'s stat damage mends now: it has some, and no disease shows.

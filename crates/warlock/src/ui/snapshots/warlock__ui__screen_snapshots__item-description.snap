@@ -7,7 +7,6 @@ expression: "render(case, content.clone())"
 
 
 
-
                   ┌─ Item ───────────────────────────────────────────────────────┐
                   │                                                              │
                   │ [ Dread Visage (being worn)                                  │
@@ -16,6 +15,8 @@ expression: "render(case, content.clone())"
                   │                                                              │
                   │ Worn: head                                                   │
                   │ Protection 1                                                 │
+                  │ Adds to every attack: +1 to hit                              │
+                  │ Dv +0, Pv 1                                                  │
                   │                                                              │
                   │ Item level 4                                                 │
                   │ Prefix  Hale: +6 to maximum hit points                       │
@@ -25,7 +26,6 @@ expression: "render(case, content.clone())"
                   │                                                              │
                   │ Esc close                                                    │
                   └──────────────────────────────────────────────────────────────┘
-
 
 
 

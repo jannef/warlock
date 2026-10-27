@@ -19,6 +19,10 @@ taken off (`World::price_for`); dropping takes off first (`take_off_before_dropp
 (`wield`/`wear` in a level legend, resolved in `content/level.rs::equip`). Presentation reads
 `PerceptionView::equipment` (the player's own) and `PerceptionView::gear(actor)` (what a seen
 creature wears and wields, all of what it carries that is seen; look mode, `ui/look.rs::gear`).
+The equipment screen (`ui/equipment_screen.rs`) names each slot's stack with its numbers
+(`Lore::listed`, `magic::numbers`, docs/dev/magic-items.md; #552) and shows the player's totals
+under the slots from `PerceptionView::own_defence` / `own_protection` (the character screen's;
+the choice of what goes in a slot is a row taller to cover it).
 Digging reads it too: `Actor::dig_tool` (the first equipped thing with `dig` power: the Tool slot's
 pick-axe). Combat reads equipment (`docs/dev/combat.md`): `Actor::weapon` (the first hand holding a weapon),
 `launcher` and `ammunition` (the `ready` slots), and `defence(content, burden)` (armour, shield,

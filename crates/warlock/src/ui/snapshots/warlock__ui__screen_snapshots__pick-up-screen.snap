@@ -11,17 +11,17 @@ expression: "render(case, content.clone())"
 
 
 
-                    ┌─ Pick up ────────────────────────────────────────────────┐
-                    │                                                          │
-                    │ Melee weapons                                            │
-                    │ > a - ) a dagger                                  450 g  │
-                    │ Body armour                                              │
-                    │   b - [ a leather jerkin                         3.5 kg  │
-                    │ Light sources                                            │
-                    │   c - ( 2 wax candles                             200 g  │
-                    │                                                          │
-                    │ a-c mark   , all   Enter pick up   Esc cancel            │
-                    └──────────────────────────────────────────────────────────┘
+           ┌─ Pick up ──────────────────────────────────────────────────────────────────┐
+           │                                                                            │
+           │ Melee weapons                                                              │
+           │ > a - ) a dagger (+0 hit, 1d4, range 5)                             450 g  │
+           │ Body armour                                                                │
+           │   b - [ a leather jerkin (Dv +1, Pv 1)                             3.5 kg  │
+           │ Light sources                                                              │
+           │   c - ( 2 wax candles                                               200 g  │
+           │                                                                            │
+           │ a-c mark   , all   Enter pick up   Esc cancel                              │
+           └────────────────────────────────────────────────────────────────────────────┘
 
 
 

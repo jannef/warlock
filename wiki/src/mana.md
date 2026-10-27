@@ -8,7 +8,11 @@ enough has come back.
 
 The status bar shows it right after your hit points, as `MP 5/12`: what you have left of your
 most. The [character screen](character.md) (`@`) shows it beside your hit points. Creatures may
-have mana too, but you never see theirs.
+have mana too, but you never see theirs. Magic items work for a creature exactly as for you: one
+that wears or wields a "+5 to maximum mana" ring has 5 more mana (and starts with all of it), one
+whose amulet makes "mana come back 50% faster" regains it half again as fast, and one whose gear
+raises caster level has that higher caster level. A summoner pays for its summons from that larger
+pool.
 
 ## How much
 
