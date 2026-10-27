@@ -490,7 +490,7 @@ impl Ability {
             | Ability::Disarm
             | Ability::PickLock
             | Ability::Steal
-            | Ability::Forage => Source::Skill,
+            | Ability::Forage
             | Ability::Heal => Source::Skill,
             Ability::ThrowVoice => Source::Class,
             Ability::SecondWind | Ability::BloodMagic => Source::Talent,
