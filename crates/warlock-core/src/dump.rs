@@ -216,7 +216,7 @@ pub fn parse_layers(text: &str) -> Result<Vec<Layer>, String> {
 pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
     match layer {
         Layer::Truth => [spawn_header(world), truth_rows(world)].concat(),
-        Layer::Actors => [spawn_header(world), actor_rows(world)].concat(),
+        Layer::Actors => [spawn_header(world), actor_rows(world), rising_rows(world)].concat(),
         Layer::Progress => progress_rows(world),
         Layer::Rooms => room_rows(world),
         Layer::Ice => ice_rows(world),
@@ -352,6 +352,26 @@ fn spawn_header(world: &World) -> Vec<String> {
     vec![format!(
         "danger {danger} population {hostiles}/{cap} spawn next {next}"
     )]
+}
+
+/// Dev: the risings due on the current level (spec §7 "Special rooms": a cursed room), one a
+/// line in the order they died: `rising goblin at (12, 5) as zombie at 08:15:00`.
+fn rising_rows(world: &World) -> Vec<String> {
+    let content = world.content();
+    (world.risings().iter())
+        .map(|r| {
+            let at = r.at();
+            format!(
+                "rising {} at {} as {} at {:02}:{:02}:{:02}",
+                content.creature(r.dead()).id,
+                r.pos(),
+                content.creature(r.risen()).id,
+                at.hour(),
+                at.minute(),
+                at.second()
+            )
+        })
+        .collect()
 }
 
 fn truth_rows(world: &World) -> Vec<String> {

@@ -360,6 +360,8 @@ pub struct TalentMods {
     pub sees_reflections: i32,
     /// Percent more noise sleepers need to wake from what it does (Hush-foot).
     pub wake_percent: i32,
+    /// What it kills never rises in a cursed room (Grave warden).
+    pub grave_warden: bool,
     /// Cells more its searching reaches.
     pub search_reach: i32,
     /// How much higher some skills count, by skill.
@@ -611,6 +613,8 @@ pub struct TalentMods {
     pub inspire: Option<Inspire>,
     /// The status Inspire gives instead, for no mana (Virtuoso).
     pub virtuoso: Option<StatusId>,
+    /// The active Consecrate, if it has it.
+    pub consecrate: Option<Consecrate>,
 }
 
 /// A once-in-a-life reprieve from death (Miracle, Hag's bargain): what it is called in
@@ -654,6 +658,13 @@ pub struct HoundsBay {
     pub status: StatusId,
     pub severity: u16,
     pub cooldown: StatusId,
+}
+
+/// The active Consecrate (spec §8 "Class abilities"): its mana and how long the prayer takes.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Consecrate {
+    pub mana: i32,
+    pub time: crate::time::Duration,
 }
 
 /// The active Inspire (spec §8 "Class abilities"): the status it gives, its mana, and what it
@@ -876,6 +887,7 @@ impl TalentMods {
             A::Volley => self.volley.is_some(),
             A::MasterThief => self.finisher,
             A::Inspire => self.inspire.is_some(),
+            A::Consecrate => self.consecrate.is_some(),
         }
     }
 
@@ -1115,6 +1127,7 @@ impl TalentMods {
             }
             TalentEffect::SeesReflections { value } => self.sees_reflections += value,
             TalentEffect::WakePercent { value } => self.wake_percent += value,
+            TalentEffect::GraveWarden => self.grave_warden = true,
             TalentEffect::SearchReach { value } => self.search_reach += value,
             TalentEffect::Skill { skill, value } => {
                 if let Some(id) = content.skill_id(&skill) {
@@ -1656,6 +1669,11 @@ impl TalentMods {
                 }
             }
             TalentEffect::Virtuoso { status } => self.virtuoso = content.status_id(&status),
+            TalentEffect::Consecrate { mana, time } => {
+                if let Ok(time) = time.parse() {
+                    self.consecrate = Some(Consecrate { mana, time });
+                }
+            }
         }
     }
 

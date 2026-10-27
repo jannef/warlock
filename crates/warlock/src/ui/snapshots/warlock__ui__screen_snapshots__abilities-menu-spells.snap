@@ -4,31 +4,31 @@ expression: "render(case, content.clone())"
 ---
  You feel blessed.
  You spend 94 mana (dev).
-
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
                     │ > a  Transfixing stare  at a place you see               │
+                    │ Class                                                    │
+                    │   b  Consecrate         you have strayed                 │
                     │ Spells                                                   │
-                    │   b  Mend               tier 0, 1 mana, aimed            │
-                    │   c  Blessing           tier 1, 3 mana: too little       │
-                    │   d  Cure wounds        tier 1, 2 mana: too little       │
-                    │   e  Remove disease     tier 3, 11 mana: too little      │
+                    │   c  Mend               tier 0, 1 mana, aimed            │
+                    │   d  Blessing           tier 1, 3 mana: too little       │
+                    │   e  Cure wounds        tier 1, 2 mana: too little       │
+                    │   f  Remove disease     tier 3, 11 mana: too little      │
                     │ Skills                                                   │
-                    │   f  Decipher script    not usable yet                   │
-                    │   g  Heal               not usable yet                   │
-                    │   h  Knowledge          not usable yet                   │
+                    │   g  Decipher script    not usable yet                   │
+                    │   h  Heal               not usable yet                   │
+                    │   i  Knowledge          not usable yet                   │
                     │ Weapon skills                                            │
-                    │   i  Shield bash        in a direction                   │
+                    │   j  Shield bash        in a direction                   │
                     │ Items                                                    │
-                    │   j  Hood your lantern                                   │
+                    │   k  Hood your lantern                                   │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
-                    │ a-j or Enter use   Esc close                             │
+                    │ a-k or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
-
 
 
  The Hub  ·  HP 42/42  ·  MP 1/98  ·  Blessed  ·  Lv 13  ·  08:00  ·  11 Darkening       ? controls

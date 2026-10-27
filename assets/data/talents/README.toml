@@ -182,6 +182,7 @@
 #                                 (Anchored mind: Ebbing)
 #   wake_percent { value }        sleepers (a teeming den's) need that percent more noise to
 #                                 wake from what it does (Hush-foot: 100, twice the noise)
+#   grave_warden                  nothing it kills rises in a cursed room (a `rise` effect)
 #   stone_sense                   notices hidden things on stone in passing, as a dwarf does
 #   stone_find { value }          added to its checks to find what is hidden on stone,
 #                                 searching and in passing
@@ -389,6 +390,10 @@
 #                                 `cost` of the resource while it holds that much (optional),
 #                                 else for that mana (no cooldown: the cost is the price)
 #   virtuoso { status }           Inspire gives that status instead, and costs nothing
+#   consecrate { mana, time }     the active Consecrate: standing in an unholy special room (or
+#                                 on a level an unholy effect covers), it prays for `time` (1s
+#                                 to 1h) for that mana (0 to 100), and the room's effect (the
+#                                 level's) is lifted for good; refused, no time, elsewhere
 #   A birth sign's actives (spec §8 "Birth sign"; the abilities menu's Birth sign group, the
 #   talent's id the ability's id, `use:horns_grace`):
 #   horns_grace { cures, diseases, cooldown, degrees }   the active Horn's grace: the statuses

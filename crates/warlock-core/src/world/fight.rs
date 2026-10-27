@@ -969,7 +969,7 @@ impl World {
         }
         // An animated thing's body falls whole or not at all (spec §8 "Animated objects").
         let (mut dropped, broken) = self.remains(&actor);
-        let lines = self.break_lines(&actor.level, actor.pos, &broken);
+        let mut lines = self.break_lines(&actor.level, actor.pos, &broken);
         dropped.extend(self.loot_of(&actor));
         // Scavenger (spec §8 "Creature gear"): what the player's kill drops is known at once.
         if by_player && self.state.player().talent_mods(&self.content).scavenger {
@@ -986,6 +986,8 @@ impl World {
             level.set_pile(actor.pos, pile);
         }
         self.leave_corpse(&actor);
+        // In a cursed room the dead rise (spec §7 "Special rooms"; `curse.rs`).
+        lines.extend(self.curse_corpse(&actor, by_player));
         // A dead shopkeeper's goods are free to take (spec §7 "Shops").
         self.keeper_died(id, &actor.level);
         self.fallen.push(actor);
