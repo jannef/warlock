@@ -137,6 +137,12 @@ name = "Weapon skills and marks"
 id = "styles"
 name = "Fighting styles"
 
+# Weapon abilities (#561; the combat progression design §4): what weapon skill and style ranks
+# teach. It ships with Early mastery, Second blade's rend, and Brace of steel.
+[[system]]
+id = "weapon_abilities"
+name = "Weapon abilities: what ranks teach"
+
 [[system]]
 id = "stances"
 name = "Stances"

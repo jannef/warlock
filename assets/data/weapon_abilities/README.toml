@@ -1,0 +1,42 @@
+# Weapon abilities (spec §8 "Weapon skills", "Fighting styles"; the combat progression design
+# §4): what a rank in a weapon skill or a fighting style teaches. One `[[weapon_ability]]` per
+# file, named by its id; a campaign's data/weapon_abilities/ may add more. An ability names its
+# skills; a skill does not list its abilities. Every number is a first guess, kept here.
+#
+# Fields:
+#   id, name      its id and its name, as the abilities menu shows it ("Deep cut")
+#   description   what it does, in the game's words (no number the game hides)
+#   skills        the weapon skills, or the fighting styles (never both), whose rank teaches it
+#   rank          the rank in one of them that teaches it (1 to 10); a weapon talent's ranks
+#                 (Stylist, Fencing) and Early mastery bring it sooner. A style's ability works
+#                 only while its holder fights in that style's grip
+#   kind          "triggered": it fires by itself, instantly and for free, on its `trigger`.
+#                 ("active", used from the abilities menu for stamina and time, comes later:
+#                 refused until then.) A triggered ability has no `aim`, `stamina`, `energy`, or
+#                 `cooldown`
+#   trigger       what it fires on, one or a list: hit, critical, big_hit, kill (the actor's
+#                 blow, shot, or throw: the attack's skill and style count), struck, parried,
+#                 blocked, dodged (an attack on the actor: what it holds counts; parried,
+#                 blocked, and dodged are melee attacks), both_hands_hit (both blows of a
+#                 two-weapon attack hit one foe, which lives), approaches (a hostile steps up
+#                 beside the actor: its missile weapon or what it has ready to throw counts). A
+#                 switch effect (free_blow, parry_missiles) has none
+#   systems       the talent table's systems it touches (talents.toml's [[system]] ids)
+#   [weapon_ability.effect]   what it does, by `kind`, with only its own fields:
+#                 free_blow       `trigger`: riposte, cleave, great_cleave, opportunist, or
+#                                 gatekeeper: switches that free blow on (spec §8 "Free blows")
+#                                 while the holder wields a weapon of the skill (or fights in
+#                                 the style)
+#                 status          `status` (status.toml) on the other end (`on = "target"`, the
+#                                 default: the one struck, or the attacker of a parried,
+#                                 blocked, or dodged attack) or on the actor (`on = "self"`):
+#                                 `severity` degrees (default 1), or degrees drawn from
+#                                 `turns` (dice, one draw, 1 to the status's max)
+#                 extra_damage    `dice`: main_hand, off_hand (the weapons' damage dice), or
+#                                 dice ("1d6"): rolled once more on the target, no bonus, after
+#                                 the blow's own damage, of its kind (or `damage`, a damage
+#                                 type), resisted but never soaked
+#                 free_shot       (on approaches) a shot with what the actor has ready, else a
+#                                 throw of what it has ready to throw, at the one who stepped
+#                                 up; nothing without
+#                 parry_missiles  Parry counts against shots and throws too

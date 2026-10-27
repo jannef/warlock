@@ -1238,6 +1238,18 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::CriticalConfirm { value } => {
             format!("the roll confirming your criticals {}", signed(value))
         }
+        TalentEffect::AbilityRanks { value } => format!(
+            "weapon abilities come {value} rank{} sooner (their thresholds read your ranks {} \
+             higher)",
+            if value == 1 { "" } else { "s" },
+            signed(value)
+        ),
+        TalentEffect::RendOffHand => "Rend rolls the off hand's damage dice too".into(),
+        TalentEffect::Brace { to_hit, status: id } => format!(
+            "Brace's blow {} to hit, and a foe it hits is {} (one degree)",
+            signed(to_hit),
+            status(&id)
+        ),
         TalentEffect::Penetration { damage, value } => {
             let name = (content.damage_type_id(&damage)).map_or(damage.clone(), |d| {
                 content.damage_type(d).name.to_lowercase()

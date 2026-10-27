@@ -150,8 +150,11 @@ pub(super) fn parried(blow: Option<Blow>) -> bool {
 impl World {
     /// The free blows actor `actor` is given: the one place the switches are read.
     pub(super) fn free_blows_of(&self, actor: &Actor) -> FreeBlows {
-        // Its own switches (class abilities), and those its talents turn on.
-        (actor.free_blows).either(actor.talent_mods(&self.content).free_blows)
+        // Its own switches (class abilities), those its talents turn on, and those its weapon
+        // abilities do with what it holds (`weapon_ability.rs`).
+        (actor.free_blows)
+            .either(actor.talent_mods(&self.content).free_blows)
+            .either(self.ability_switches(actor).free_blows)
     }
 
     /// Whether actor `id` still stands to strike or be struck: alive, and the run not over.
@@ -216,9 +219,16 @@ impl World {
             .collect();
         for keeper in keepers {
             if let Some(blow) = self.second_blow(keeper, id, Cue::Approaches, events) {
-                self.strike_free(blow, events);
+                let struck = self.strike_free(blow, events);
+                // Brace of steel: a braced foe the blow hits staggers.
+                let hit = struck.is_some_and(|b| b.strike.is_hit());
+                if let Some((_, status)) = self.brace_of(keeper).filter(|_| hit) {
+                    self.afflict(id, status, 1, Some(keeper), events);
+                }
             }
         }
+        // Weapon abilities that fire on a hostile approaching (Point-blank).
+        self.approached(id, from, events);
     }
 
     /// Actor `striker`'s blow at `mover`, which stepped up beside it ([`World::step_up`]): a
@@ -228,12 +238,17 @@ impl World {
             return None;
         }
         let me = &self.state.actors[&striker];
-        self.free_blows_of(me).gatekeeper.then(|| FreeBlow {
+        let mut profile = me.melee(&self.content);
+        // Brace of steel: a Brace's blow is surer.
+        if let Some((to_hit, _)) = self.brace_of(striker) {
+            profile.to_hit += to_hit;
+        }
+        self.free_blows_of(me).gatekeeper.then_some(FreeBlow {
             by: striker,
             at: mover,
             kind: Free::Gatekeeper,
             with: None,
-            profile: me.melee(&self.content),
+            profile,
         })
     }
 

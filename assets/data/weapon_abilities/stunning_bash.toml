@@ -1,0 +1,12 @@
+[[weapon_ability]]
+id = "stunning_bash"
+name = "Stunning bash"
+description = "A shield bash that lands leaves the foe staggered, slow to act next."
+skills = ["shield_bash"]
+rank = 5
+kind = "triggered"
+trigger = "hit"
+systems = ["weapon_abilities", "weapon_skills", "status"]
+[weapon_ability.effect]
+kind = "status"
+status = "staggered"

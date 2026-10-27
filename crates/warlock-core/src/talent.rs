@@ -476,6 +476,12 @@ pub struct TalentMods {
     pub grip: Option<StatusId>,
     /// Added to the roll that confirms its criticals.
     pub critical_confirm: i32,
+    /// Ranks more its weapon abilities' thresholds read (Early mastery).
+    pub ability_ranks: i32,
+    /// Its Rend rolls the off hand's dice too (Second blade's rend).
+    pub rend_off_hand: bool,
+    /// What its Brace's blow gains (Brace of steel): to-hit, and a status on a foe it hits.
+    pub brace: Option<(i32, StatusId)>,
     /// More penetration for blows that can do damage of a kind: `(kind, value)`.
     pub penetration: Vec<(DamageTypeId, i32)>,
     /// How much higher the burden's cap on its Dexterity in Defence is.
@@ -1348,6 +1354,14 @@ impl TalentMods {
                 self.critical_status = content.status_id(&status).or(self.critical_status);
             }
             TalentEffect::CriticalConfirm { value } => self.critical_confirm += value,
+            TalentEffect::AbilityRanks { value } => self.ability_ranks += value,
+            TalentEffect::RendOffHand => self.rend_off_hand = true,
+            TalentEffect::Brace { to_hit, status } => {
+                if let Some(status) = content.status_id(&status) {
+                    let had = self.brace.map_or(0, |(t, _)| t);
+                    self.brace = Some((had + to_hit, status));
+                }
+            }
             TalentEffect::Penetration {
                 damage: kind,
                 value,

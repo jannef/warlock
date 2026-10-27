@@ -1,0 +1,12 @@
+[[weapon_ability]]
+id = "stunning_fist"
+name = "Stunning fist"
+description = "Your best blows with bare hands leave the foe staggered, slow to act next."
+skills = ["brawler"]
+rank = 4
+kind = "triggered"
+trigger = "critical"
+systems = ["weapon_abilities", "styles", "status"]
+[weapon_ability.effect]
+kind = "status"
+status = "staggered"

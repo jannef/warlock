@@ -276,6 +276,11 @@
 #                                 (one that `blocks` steps: held), until it misses that creature,
 #                                 strikes another, or moves
 #   critical_confirm { value }    added to the roll that confirms its criticals
+#   ability_ranks { value }       its weapon abilities (weapon_abilities/) come that many ranks
+#                                 sooner: their thresholds read its ranks that much higher
+#   rend_off_hand                 its Rend rolls the off hand's damage dice too
+#   brace { to_hit, status }      its Brace's blow is at that much more to hit, and a foe it
+#                                 hits suffers that status (one degree)
 #   penetration { damage, value } its blows that can do damage of that kind ignore that much
 #                                 more Protection
 #   burden_dex { value }          the burden's cap on its Dexterity in Defence, that much higher

@@ -242,6 +242,11 @@ impl World {
         };
         // A collapsed floor may give way under them (`collapse.rs`).
         self.collapse_step(to, events);
+        // Stepping up beside a hostile that braces or shoots point-blank (weapon abilities,
+        // `weapon_ability.rs`), they are met as they come, as a creature is (`free_blow.rs`).
+        if self.state.death.is_none() {
+            self.step_up(player, from, events);
+        }
         Spent::Turn(step + climb)
     }
 

@@ -1,0 +1,11 @@
+[[weapon_ability]]
+id = "point_blank"
+name = "Point-blank"
+description = "A foe that steps up beside you takes a shot or a throw as it comes, if you have one ready."
+skills = ["bows", "crossbows", "slings", "thrown"]
+rank = 5
+kind = "triggered"
+trigger = "approaches"
+systems = ["weapon_abilities", "weapon_skills", "free_blows"]
+[weapon_ability.effect]
+kind = "free_shot"

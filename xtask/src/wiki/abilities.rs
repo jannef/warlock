@@ -61,6 +61,8 @@ pub(super) fn abilities(content: &Content) -> String {
                 "everyone beside a forgotten altar not yet spent (a prayer takes a minute)".into()
             }
             Ability::Drink => "everyone beside a healing spring (a drink takes ten seconds)".into(),
+            // Weapon abilities have a table of their own (`weapon_abilities.rs`).
+            Ability::Weapon(..) => continue,
         };
         let (asks, takes) = match a.cost() {
             // A long action: its prayer's time, whatever the pace.

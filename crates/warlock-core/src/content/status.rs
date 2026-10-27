@@ -454,6 +454,8 @@ struct StatusSpec {
     flees: bool,
     #[serde(default)]
     sleeps: bool,
+    #[serde(default)]
+    per_action: bool,
     follows: Option<String>,
     wound: Option<WoundSpec>,
     /// The kind of damage it is (poison): a target immune to it never suffers it, and a
@@ -531,6 +533,11 @@ pub struct StatusDef {
     /// takes no turn and is unaware of everyone until noise, a blow, or a cry wakes it, which
     /// ends the status (`world/den.rs`).
     pub sleeps: bool,
+    /// It eases a degree with each action its sufferer takes, instead of with time (Staggered,
+    /// Pinned, Light-footed; the combat progression design §6): at one degree it is the next
+    /// action's, which is priced with it. One given during an action is not eased by that
+    /// action (`World::spend_actions`).
+    pub per_action: bool,
     /// The status that begins (at one degree) as this one ends, worn off or cured: Raging is
     /// followed by Exhausted. A chain never leads back to where it began.
     pub follows: Option<StatusId>,
@@ -579,6 +586,7 @@ impl StatusDef {
             && self.blocks.is_empty()
             && !self.flees
             && !self.sleeps
+            && !self.per_action
             && self.follows.is_none()
             && self.wound.is_none()
             && self.hold.is_none()
@@ -705,6 +713,9 @@ fn resolve(
             COST_PERCENT.end()
         ));
     }
+    if spec.per_action && (spec.eases.is_some() || spec.tick.is_some()) {
+        return Err("per_action: it eases by actions, so no `eases` and no `tick`".into());
+    }
     let blocks = blocks(&spec.blocks)?;
     if let Some(w) = &spec.wound
         && (w.big_hit > spec.max || w.critical > spec.max || w.big_hit + w.critical == 0)
@@ -773,6 +784,7 @@ fn resolve(
         blocks,
         flees: spec.flees,
         sleeps: spec.sleeps,
+        per_action: spec.per_action,
         follows: None,
         wound,
         damage_type,

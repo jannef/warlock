@@ -1,0 +1,12 @@
+[[weapon_ability]]
+id = "rend"
+name = "Rend"
+description = "When both your blades bite in one attack, the wound they open between them bleeds a third blow's worth."
+skills = ["twin_blades"]
+rank = 4
+kind = "triggered"
+trigger = "both_hands_hit"
+systems = ["weapon_abilities", "styles"]
+[weapon_ability.effect]
+kind = "extra_damage"
+dice = "main_hand"

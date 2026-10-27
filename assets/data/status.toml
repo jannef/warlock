@@ -59,7 +59,10 @@
 #   sleeps     true: a creature suffering it sleeps: it takes no turn and has seen no one (a
 #              sneak attack lands); noise at its hearing threshold times its den's `wake`, a
 #              blow, or a cry wakes it, which ends the status (spec §7 "Special rooms")
-#   hold       makes it a hold: whoever caused it holds the sufferer, and it ends when the holder
+#   per_action true: it eases a degree with each action its sufferer takes, instead of with
+#              time (no `eases`): at one degree it lasts until the next action, which is priced
+#              with it (its `cost`). One given during an action is not eased by that action
+#   hold      makes it a hold: whoever caused it holds the sufferer, and it ends when the holder
 #              dies, leaves the sufferer's side, or is held or slowed (a cost above 100) itself.
 #              { check = "strength", difficulty = 13, turns = "3d4" }: the held player's step is
 #              a check of `check` (default strength) against the holder's grip (its on_hit
@@ -376,15 +379,17 @@ combat = { to_hit = 2, dodge = 2 }
 start = "Your song soars, and your heart with it."
 end = "The song fades from your heart."
 
-# A staggering blow's (the Staggering blow talent): the next action, taken within a turn's time,
-# costs half again as much.
+# A staggering blow's (the Staggering blow talent, the weapon abilities' Crushing blow, Stunning
+# bash, Stunning fist, Staggering block; a fall through a collapsed floor): the next action costs
+# half again as much, and that action ends it. A new dose only keeps it (refresh): one slowed
+# action however many blows staggered.
 [[status]]
 id = "staggered"
 name = "Staggered"
 seen = "staggered"
 max = 1
 stacking = "refresh"
-eases = 6
+per_action = true
 cost = 150
 start = "You stagger."
 end = "You find your feet again."
@@ -525,3 +530,27 @@ blocks = ["step"]
 hold = { check = "strength", difficulty = 13, turns = "3d4" }
 start = "You are held fast."
 end = "You are free to move."
+
+# The weapon abilities' (the combat progression design §6): Pinned, a missile through the foot
+# (Pinning shot) or the legs taken by a staff (Trip): no step for an action a degree, a new pin
+# keeping the longer, never adding (at most 3 from any one); no struggle, as it is no grip.
+# Light-footed, the skirmisher's step away after a strike (Hit and run): the next action costs
+# half, and it ends as that action is taken.
+[[status]]
+id = "pinned"
+name = "Pinned"
+seen = "pinned"
+max = 3
+stacking = "highest"
+per_action = true
+blocks = ["step"]
+start = "You are pinned where you stand."
+end = "You can move again."
+
+[[status]]
+id = "light_footed"
+name = "Light-footed"
+max = 1
+stacking = "refresh"
+cost = 50
+per_action = true

@@ -1,0 +1,11 @@
+[[weapon_ability]]
+id = "cleaving_sweep"
+name = "Cleaving sweep"
+description = "A blow of your great weapon that kills carries on to the next foe beside you."
+skills = ["great_weapon"]
+rank = 4
+kind = "triggered"
+systems = ["weapon_abilities", "styles", "free_blows"]
+[weapon_ability.effect]
+kind = "free_blow"
+trigger = "cleave"

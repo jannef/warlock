@@ -27,7 +27,7 @@ use crate::action::Action;
 use crate::alignment::Requirement;
 use crate::content::{
     ActionKind, ClassActive, Content, Offer, ResourceCost, ResourceId, SignActive, SkillDef,
-    SpellId, StatusId, TalentEffect,
+    SpellId, StatusId, TalentEffect, WeaponAbilityId, WeaponSkillId,
 };
 use crate::geom::{Dir, Pos};
 use crate::skills::{Effect, SkillId};
@@ -94,6 +94,11 @@ pub enum Ability {
     /// with a shield (at shield bashing's rank 0 too), so everyone has it; it is available while
     /// a shield to bash with is held.
     ShieldBash,
+    /// A weapon ability (spec §8 "Weapon skills", "Fighting styles"; `data/weapon_abilities/`),
+    /// listed under the weapon skill or style named first whose rank teaches it ("Long blades:
+    /// Deep cut"). Had by whoever's ranks teach it ([`Actor::weapon_abilities`]); a triggered one
+    /// fires by itself and is never used ([`Unavailable::FiresByItself`]).
+    Weapon(WeaponSkillId, WeaponAbilityId),
     /// Lower or raise the lantern's hood (spec §5 "Light sources"; #235): [`Action::HoodLantern`].
     /// Listed with what the player carries, the lantern; the Hooded light talent (design §7.5)
     /// will give it, and until then everyone has it (without a lantern the rules say so).
@@ -219,6 +224,8 @@ pub enum Unavailable {
     /// The Heal ability with nothing to treat: no bleeding, and no poison or disease that may
     /// still be tried.
     NothingToTreat,
+    /// A triggered weapon ability: it fires by itself, never chosen.
+    FiresByItself,
 }
 
 impl Unavailable {
@@ -231,6 +238,7 @@ impl Unavailable {
             Unavailable::NoMana => "you have too little mana".into(),
             Unavailable::NotHere => "not usable here".into(),
             Unavailable::NothingToTreat => "nothing to treat".into(),
+            Unavailable::FiresByItself => "fires by itself".into(),
             Unavailable::While(status) => {
                 format!("you are {}", content.status(status).name.to_lowercase()).into()
             }
@@ -250,6 +258,7 @@ impl Unavailable {
             Unavailable::NoMana => "no_mana".into(),
             Unavailable::NotHere => "not_here".into(),
             Unavailable::NothingToTreat => "nothing_to_treat".into(),
+            Unavailable::FiresByItself => "fires_by_itself".into(),
             Unavailable::While(status) => format!("while:{}", content.status(status).id).into(),
             Unavailable::Short(resource) => {
                 format!("short:{}", content.resource(resource).id).into()
@@ -293,8 +302,19 @@ impl Ability {
             .map(|&a| Ability::Class(a));
         // Every spell, by tier, then in path order: any may be learned.
         let spells = content.spells_by_tier().into_iter().map(Ability::Spell);
-        // Weapon skills and fighting styles: the shield bash.
-        let weapon_skills = [Ability::ShieldBash];
+        // Weapon skills and fighting styles: the shield bash, then what their ranks teach, by
+        // skill in file order, then rank, then path order.
+        let mut taught: Vec<(WeaponSkillId, u8, WeaponAbilityId)> = (content.weapon_abilities())
+            .iter()
+            .enumerate()
+            .flat_map(|(i, a)| {
+                let id = WeaponAbilityId(i as u16);
+                a.skills.iter().map(move |&s| (s, a.rank, id))
+            })
+            .collect();
+        taught.sort();
+        let weapon_skills = std::iter::once(Ability::ShieldBash)
+            .chain(taught.into_iter().map(|(s, _, id)| Ability::Weapon(s, id)));
         // Items: the lantern's hood.
         let items = [Ability::HoodLantern];
         // Here: what some special room's feature offers.
@@ -397,6 +417,7 @@ impl Ability {
             Ability::BloodMagic => actor.talent_mods(content).blood_magic.is_some(),
             Ability::ThrowVoice => actor.talent_mods(content).throw_voice,
             Ability::ShieldBash | Ability::HoodLantern => true,
+            Ability::Weapon(skill, id) => actor.weapon_abilities(content).contains(&(skill, id)),
             // A place offers it, not who one is ([`Ability::here`]).
             Ability::Pray | Ability::Drink => false,
         }
@@ -418,15 +439,21 @@ impl Ability {
             Ability::SecondWind => "second_wind",
             Ability::BloodMagic => "blood_magic",
             Ability::ShieldBash => "shield_bash",
+            Ability::Weapon(_, id) => &content.weapon_ability(id).id,
             Ability::HoodLantern => "hood_lantern",
             Ability::Pray => "pray",
             Ability::Drink => "drink",
         }
     }
 
-    /// Its name in the menu.
-    pub fn name(self, content: &Content) -> &str {
-        match self {
+    /// Its name in the menu (a weapon ability's after its skill's: "Long blades: Deep cut").
+    pub fn name(self, content: &Content) -> Cow<'_, str> {
+        let name: &str = match self {
+            Ability::Weapon(skill, id) => {
+                let skill = &content.weapon_skills().skill(skill).name;
+                let name = &content.weapon_ability(id).name;
+                return format!("{skill}: {name}").into();
+            }
             Ability::Sign(active) => content.sign_active(active).map_or("", |a| &a.name),
             Ability::Class(active) => content.class_active(active).map_or("", |a| &a.name),
             Ability::Spell(spell) => content.spell_of(spell).map_or("", |s| &s.name),
@@ -443,7 +470,8 @@ impl Ability {
             Ability::HoodLantern => "Hood your lantern",
             Ability::Pray => "Pray",
             Ability::Drink => "Drink",
-        }
+        };
+        name.into()
     }
 
     /// What it does, in a line.
@@ -481,6 +509,7 @@ impl Ability {
                  once."
             }
             Ability::ShieldBash => "Strike someone next to you with the shield you hold.",
+            Ability::Weapon(_, id) => &content.weapon_ability(id).description,
             Ability::HoodLantern => {
                 "Lower your lantern's hood, or raise it: hooded, it dimly lights the ground around \
                  you but not you."
@@ -510,7 +539,7 @@ impl Ability {
             | Ability::Heal => Source::Skill,
             Ability::ThrowVoice => Source::Class,
             Ability::SecondWind | Ability::BloodMagic => Source::Talent,
-            Ability::ShieldBash => Source::WeaponSkill,
+            Ability::ShieldBash | Ability::Weapon(..) => Source::WeaponSkill,
             Ability::HoodLantern => Source::Item,
             Ability::Pray | Ability::Drink => Source::Place,
         }
@@ -533,7 +562,8 @@ impl Ability {
             | Ability::HoodLantern
             | Ability::Forage
             | Ability::Pray
-            | Ability::Drink => Aim::Nothing,
+            | Ability::Drink
+            | Ability::Weapon(..) => Aim::Nothing,
             Ability::ThrowVoice => Aim::Cell,
             Ability::Heal => Aim::Ailment,
             Ability::Disarm | Ability::PickLock | Ability::Steal | Ability::ShieldBash => {
@@ -549,7 +579,7 @@ impl Ability {
             Ability::Sign(active) => Some(active.cost()),
             Ability::Class(active) => Some(active.cost()),
             Ability::Spell(_) => Some(ActionKind::Cast),
-            Ability::Skill(_) => None,
+            Ability::Skill(_) | Ability::Weapon(..) => None,
             Ability::ThrowVoice => Some(ActionKind::ThrowVoice),
             Ability::Disarm => Some(ActionKind::Disarm),
             Ability::PickLock => Some(ActionKind::PickLock),
@@ -585,6 +615,7 @@ impl Ability {
             | Ability::SecondWind
             | Ability::BloodMagic
             | Ability::ShieldBash
+            | Ability::Weapon(..)
             | Ability::HoodLantern
             | Ability::Pray
             | Ability::Drink => None,
@@ -627,7 +658,7 @@ impl Ability {
                 None
             }
             (Ability::Spell(spell), _) => Some(Action::Cast(spell_name(content, spell)?, None)),
-            (Ability::Skill(_) | Ability::ThrowVoice, _) => None,
+            (Ability::Skill(_) | Ability::ThrowVoice | Ability::Weapon(..), _) => None,
             // The first thing there is to treat; the menu names one when there are several.
             (Ability::Heal, _) => Some(Action::Heal(None)),
             (Ability::SecondWind, _) => Some(Action::SecondWind),
@@ -679,6 +710,7 @@ impl Ability {
             | Ability::SecondWind
             | Ability::BloodMagic
             | Ability::ShieldBash
+            | Ability::Weapon(..)
             | Ability::HoodLantern
             | Ability::Pray
             | Ability::Drink => None,
@@ -724,6 +756,7 @@ impl Ability {
                 .filter(|&cooldown| actor.effects.has(cooldown))
                 .map(Unavailable::While),
             Ability::Skill(_) => Some(Unavailable::NotYet),
+            Ability::Weapon(..) => Some(Unavailable::FiresByItself),
             Ability::Heal => (crate::heal::treatable(actor, content).is_empty())
                 .then_some(Unavailable::NothingToTreat),
             Ability::ThrowVoice
@@ -899,17 +932,26 @@ mod tests {
                 "woodcraft",
             ]
         );
-        let last: Vec<Ability> = every.iter().rev().take(4).rev().copied().collect();
+        let last: Vec<Ability> = every.iter().rev().take(3).rev().copied().collect();
         assert_eq!(
             last,
-            [
-                Ability::ShieldBash,
-                Ability::HoodLantern,
-                Ability::Pray,
-                Ability::Drink
-            ],
+            [Ability::HoodLantern, Ability::Pray, Ability::Drink],
             "then what a place offers"
         );
+        // The weapon skills' group: the shield bash, then what the ranks teach, by skill in file
+        // order, then rank.
+        let weapon: Vec<Ability> = (every.iter())
+            .filter(|a| a.source() == Source::WeaponSkill)
+            .copied()
+            .collect();
+        assert_eq!(weapon.first(), Some(&Ability::ShieldBash));
+        let keys: Vec<(WeaponSkillId, u8)> = (weapon[1..].iter())
+            .map(|a| match a {
+                Ability::Weapon(skill, id) => (*skill, content.weapon_ability(*id).rank),
+                other => panic!("{other:?} among the weapon abilities"),
+            })
+            .collect();
+        assert!(keys.windows(2).all(|w| w[0] <= w[1]), "{keys:?}");
         // Stealing is in the game: the Steal skill is listed as its use.
         assert!(every.contains(&Ability::Steal));
         let steal = content.skill_id("steal").expect("steal");

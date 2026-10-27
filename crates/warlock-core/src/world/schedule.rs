@@ -317,6 +317,9 @@ impl World {
             .map(scheduled)
             .collect();
         schedule[0].energy = schedule[0].energy.saturating_sub(price.max(1));
+        // The player's action is taken: what eases by actions eases (`weapon_ability.rs`).
+        self.spend_actions(player);
+        self.acting = None;
         // Holds whose holder no longer holds end (`hold.rs`): after the player's action, after
         // every creature's turn, and as the turn ends.
         self.loosen_holds(events);
@@ -350,8 +353,12 @@ impl World {
                 break;
             }
             let fallen = self.fallen.len();
-            let price = self.creature_turn(schedule[next].id, events);
+            let id = schedule[next].id;
+            self.acting = Some(id);
+            let price = self.creature_turn(id, events);
             schedule[next].energy = schedule[next].energy.saturating_sub(price.max(1));
+            self.spend_actions(id);
+            self.acting = None;
             self.loosen_holds(events);
             // Those who died are gone from the schedule (the player stays, first).
             if self.fallen.len() > fallen {
@@ -363,6 +370,9 @@ impl World {
                 actor.energy = s.energy;
             }
         }
+        // The player's next action is under way from here.
+        self.acting = Some(player);
+        self.fresh.clear();
         // What comes to the level meanwhile (spec §7 "Danger levels").
         self.spawn_tick();
         // The dead that rise meanwhile (spec §7 "Special rooms": a cursed room).

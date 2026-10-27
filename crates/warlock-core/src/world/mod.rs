@@ -188,6 +188,7 @@ mod travel;
 mod voice;
 mod volley;
 mod warp;
+mod weapon_ability;
 mod zap;
 
 pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
@@ -228,7 +229,7 @@ use crate::alignment::Score;
 use crate::burden::{self, Burden, Load};
 use crate::character::{Character, CharacterSpec};
 use crate::content::{
-    ActionKind, CombatStance, Content, Here, ObjectId, RaceDef, StairsDir, Stance,
+    ActionKind, CombatStance, Content, Here, ObjectId, RaceDef, StairsDir, Stance, StatusId,
 };
 use crate::geom::{Dir, Pos};
 use crate::hunger::Satiation;
@@ -502,6 +503,12 @@ pub struct World {
     /// Where the player stood at the last perception (`feature.rs`; not saved): arriving
     /// elsewhere names a feature of the ground there.
     stood_on: feature::StoodOn,
+    /// Whose action is under way (not saved): the player's outside the turn's schedule, a
+    /// creature's during its turn, nobody's while time passes (`schedule.rs`).
+    acting: Option<ActorId>,
+    /// Statuses with `per_action` given to an actor during its own action (not saved): that
+    /// action does not ease them (`weapon_ability.rs`).
+    fresh: Vec<(ActorId, StatusId)>,
 }
 
 /// How much time an action took.
@@ -897,6 +904,7 @@ impl World {
         let perception = Box::new(Perception::compute(&state, &content, &mut lights));
         perception.remember(state.current_mut());
         let time = state.time;
+        let player = state.player;
         let stood_on = feature::standing(&state);
         let labels = Labels::draw(&content, state.seed);
         Self {
@@ -918,6 +926,8 @@ impl World {
             resting: false,
             perceived_at: time,
             stood_on,
+            acting: Some(player),
+            fresh: Vec::new(),
         }
     }
 
@@ -1263,6 +1273,7 @@ impl World {
             Action::QuestRoll { quest, target } => return self.quest_roll_dev(quest, target),
             Action::LevelUpAuto => return self.level_up_auto(),
             Action::GrantXp(xp) => return self.grant_xp_dev(*xp),
+            Action::SetRank { skill, rank } => return self.set_rank_dev(skill, *rank),
         };
         self.took(done, kind)
     }
@@ -1567,6 +1578,8 @@ mod unstable_room_tests;
 mod variant_tests;
 #[cfg(test)]
 mod voice_tests;
+#[cfg(test)]
+mod weapon_ability_tests;
 #[cfg(test)]
 mod weapon_skill_tests;
 #[cfg(test)]

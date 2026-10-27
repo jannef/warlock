@@ -1,0 +1,13 @@
+[[weapon_ability]]
+id = "trip"
+name = "Trip"
+description = "Your best blows with a staff take a foe's legs: it cannot step for a moment."
+skills = ["staff_fighter"]
+rank = 4
+kind = "triggered"
+trigger = "critical"
+systems = ["weapon_abilities", "styles", "status"]
+[weapon_ability.effect]
+kind = "status"
+status = "pinned"
+severity = 1

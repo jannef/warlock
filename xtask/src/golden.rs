@@ -208,6 +208,7 @@ fn make_replay(
                 | Action::Freeze { .. }
                 | Action::Thaw { .. }
                 | Action::GrantXp(_)
+                | Action::SetRank { .. }
                 | Action::LevelUpAuto
                 | Action::Talent { .. }
                 | Action::Advance(_)

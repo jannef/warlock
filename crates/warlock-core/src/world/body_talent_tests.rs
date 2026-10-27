@@ -441,7 +441,7 @@ fn every_talent_of_the_three_trees_loads_with_its_effects() {
         assert!(!book.tree(tree).pending, "the tree is held to the bar");
     }
     let count = |tree: &str| book.of_tree(book.tree_id(tree).expect("tree")).count();
-    // The design's 28, Battle trance and Inner calm (the class resources, R5) among them, and
-    // stamina's Deep lungs and Second breath (#560).
-    assert_eq!(count("vigour") + count("might") + count("finesse"), 30);
+    // The design's 28, Battle trance and Inner calm (the class resources, R5) among them,
+    // stamina's Deep lungs and Second breath (#560), and Second blade's rend (#561).
+    assert_eq!(count("vigour") + count("might") + count("finesse"), 31);
 }
