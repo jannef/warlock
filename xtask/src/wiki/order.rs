@@ -42,11 +42,14 @@ pub(super) fn objects(content: &Content) -> Vec<(ObjectId, &ObjectDef)> {
     all
 }
 
-/// Every creature type the wiki describes ([`described`]) with its id, by name.
+/// Every creature type the wiki describes ([`described`]) with its id, by name. A family of
+/// animated types (animated blades) is one row, its first member's: the animated objects page
+/// gives every level's numbers.
 pub(super) fn creatures(content: &Content) -> Vec<(CreatureId, &CreatureDef)> {
     let mut all: Vec<_> = (content.creature_defs().iter().enumerate())
         .filter(|(_, c)| described(content, c.campaign.as_deref()))
         .map(|(i, c)| (CreatureId(i as u16), c))
+        .filter(|&(id, _)| content.family(id) == id)
         .collect();
     all.sort_by_cached_key(|(_, c)| c.name.to_lowercase());
     all

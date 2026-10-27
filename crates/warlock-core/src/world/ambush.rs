@@ -93,7 +93,7 @@ impl World {
             return profile;
         }
         let prey = self.state.quests.prey();
-        if creature.is_some_and(|c| prey == Some(self.content.creature(c).id.as_str())) {
+        if creature.is_some_and(|c| prey == Some(self.content.family_key(c))) {
             profile.to_hit += to_hit;
             profile.bonus += damage;
         }

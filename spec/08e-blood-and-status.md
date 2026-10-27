@@ -292,22 +292,28 @@ developer notes (CLAUDE.md, `docs/dev/`).
     times its resolution's percent is refused, and so is a static bonus above a quarter of the
     ceiling. Nothing in the rules lifts a spell over its cap: every roll is held to it.
   - **Casting** (`World::cast_spell`, `world/cast.rs`; `Action::Cast`, `use:arcane_bolt:12,5`):
-    - **Cost** (the one hook, `Actor::spell_cost`): `SpellRules::mana`: the tier's base cost ×
-      (1 + `overreach_cost` % per tier above the caster level's tier) × the shape's percent (a
+    - **Cost** (the one hook, `Actor::spell_cost`): `SpellRules::mana_with`: the tier's base
+      cost × (1 + `overreach_cost` % per tier above the caster level's tier, that percent cut by
+      Overreach's −33 %) × the shape's percent (a
       burst's at its own `radius`) × the resolution's `cost` percent × (100 + the summed
       `spell_cost_percent` of what is worn, `data/objects/`: chain mail 10, scale 20, banded 30,
       plate 40, great helm and large shield 10, tower shield 20) %, rounded to the nearest once,
-      at least 1; then Archmage's `spell_mana_percent` (`Actor::spell_base`, what
-      `World::spend_mana` is given) and Frugal caster's cut there. Spent once the cast is sure
+      at least 1; then School focus's −10 % for a spell of its tag, Archmage's −50 %, and
+      Empower's −10 % (`spell_mana_percent`), summed, at least 1 (`Actor::spell_base`, what
+      `World::spend_mana` is given), and Frugal caster's cut there. Spent once the cast is sure
       to go off; refused, with no time and no mana, without it ("You have too little mana.").
     - **Reach**: Willpower adds a cell of range, a burst's radius, or a cone's or a line's
-      length per `reach_step` (2) points of its positive modifier, never past the spell's caps
-      (`Actor::spell_reach`); Presence adds a degree of a buff's or a hex's status per
+      length per `reach_step` (2) points of its positive modifier, and School focus a cell of
+      range or length per focus on one of the spell's tags (a radius never), never past the
+      spell's caps (`Actor::spell_reach`); Presence adds a degree of a buff's or a hex's status per
       `presence_step` (2) points (`SpellRules::lengthened`; the status's `max` holds it: Blessed,
       Hexed, Weakened, and Sluggish go to 3, each degree its `eases` again).
     - **Dice**: the spell's at the caster level (`SpellDice::at`), then the talents' (Scroll
       adept's and Archmage's per die, Empower's die), and every roll held to the cap
-      (`SpellRules::cap_of`; a critical's too).
+      (`SpellRules::cap_of`; a critical's too). A spell scroll read with those talents
+      (`read_spell`) is held the same way, to the cap of the spell it teaches, or to its own
+      most if the scroll rolls more of itself (the scroll of lightning's 4d6): the talents lift
+      a roll toward a cap, never past it.
     - **Resolution**: `area` (burst, cone, line) strikes everyone in it with one roll, in
       ascending actor id order, no roll to hit, Evasion halving (`World::spell_hurts`),
       resistances taking their share, no armour; `auto` (ray, bolt) strikes the first creature
@@ -326,9 +332,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     player's level times their class's `casting` percent (`data/classes/`, 1 to 100, default
     25: wizard, witch, priest, and druid 100, bard and aristocrat 75, paladin, ranger, and monk
     50, everyone else 25; 100 without a class), a creature's its type's level, rounded down; plus
-    the `caster_level` talent effect (racial and birth-sign gifts are talents) and affix effect
-    (nothing grants either yet); never below 0, and at least 1 for anyone whose maximum mana is
-    above 0. It will set learning, the cost of overreach, and a spell's dice. The player knows
+    the `caster_level` talent effect (racial and birth-sign gifts are talents; flat, or `value`
+    per `per_levels` character levels: the wizard's Arcane training, +1 per 5) and affix effect;
+    never below 0, and at least 1 for anyone whose maximum mana is
+    above 0. It sets learning, the cost of overreach, and a spell's dice. The player knows
     it: the dump `stats` layer's `Caster level N` (after the scores), JSON dumps' `caster_level`
     (`PerceptionView::own_caster_level`).
   - **Learning** (`world/learn.rs`, `content/learning.rs`; #396): a character knows a set of

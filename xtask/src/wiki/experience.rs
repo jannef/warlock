@@ -4,7 +4,7 @@
 
 use super::text::{capital, thousands};
 use std::fmt::Write as _;
-use warlock_core::content::{Content, Factor, pace_words};
+use warlock_core::content::{Content, CreatureId, Factor, pace_words};
 
 /// The slowest and the quickest race and class: the characters whose thresholds are the
 /// highest and the lowest, by name, with their factors.
@@ -201,8 +201,10 @@ pub(super) fn experience_creatures(content: &Content) -> String {
     let mut out = String::from(
         "| Creature | Level | XP | The guideline for its level |\n|---|:---:|---:|---:|\n",
     );
-    let mut list: Vec<_> = (content.creature_defs().iter())
-        .filter(|c| c.id != "player")
+    // A family (animated blades) once, its first member's.
+    let mut list: Vec<_> = (content.creature_defs().iter().enumerate())
+        .filter(|&(i, c)| c.id != "player" && content.family(CreatureId(i as u16)).0 == i as u16)
+        .map(|(_, c)| c)
         .collect();
     list.sort_by_key(|c| (c.level, c.xp, c.name.to_lowercase()));
     for c in list {

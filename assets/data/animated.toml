@@ -82,3 +82,35 @@ dice_steps = -2
 size = "small"
 footsteps = 20
 dies = "falls still"
+
+# Blades: a melee weapon that dances alone, one type per level (`animated_blade_5` …
+# `animated_blade_20`), the family `animated_blade` (what populations and quests name). Quick and
+# fragile, hard to hit; it wields its weapon (its damage, threat, and riders, with its Strength
+# and a rank in the weapon's skill), and that weapon is the prize. A number by level `{ from,
+# base, per_level, most }` is nothing below `from`, else base + per_level × (L − from), rounded
+# down, at most `most`.
+[[tier]]
+id = "blade"
+name = "Blades"
+creature = "animated blade"   # every member's name
+levels = [5, 20]
+stats = { dexterity = 5, toughness = -2 }
+hp_factor = 0.6
+size = "small"
+footsteps = 0                 # it floats
+dies = "falls in pieces"
+glyph = ")"                   # its own; it shows as its weapon does, in its material's colour
+fg = "#a8b0b8"
+shown_by = "main_hand"
+item_glyph = true
+rarity = "uncommon"
+speed = { base = 1200, per_level = 5, most = 1600 }
+defence = { base = 2, per_level = 0.1 }     # its thin edge: 2 + L/10
+hide = "thin edge"
+resist = { piercing = 50, bludgeoning = -25 }
+# What it is made of: a base item of the classes, of level at most L, by frequency, made at
+# item level L, at least magic by `magic` percent (rare among them by `rare`).
+slots = [{ slot = "main_hand", classes = ["melee_weapons"], chance = 100 }]
+magic = { base = 0, per_level = 2, most = 40 }
+rare = { from = 15, base = 1, per_level = 1, most = 5 }
+weapon_rank = { base = 1, per_level = 0.1, most = 8 }   # ranks in its weapon's skill: 1 + L/10

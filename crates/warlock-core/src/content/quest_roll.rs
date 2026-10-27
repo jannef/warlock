@@ -141,9 +141,10 @@ impl Rolled {
                 let open: Vec<&String> = branches.iter().filter(|b| open(b)).collect();
                 (0..content.creature_defs().len())
                     .map(|i| CreatureId(i as u16))
-                    .filter(|&c| !content.creature(c).unique)
+                    .filter(|&c| !content.creature(c).unique && content.family(c) == c)
                     .filter(|&c| open.iter().any(|b| content.lives_in(b, c)))
-                    .map(|c| one(content.creature(c).id.clone()))
+                    // A family by its own id (`animated_blade`).
+                    .map(|c| one(content.family_key(c).to_string()))
                     .collect()
             }
             Rolled::Pick(Pick::Tags(tags)) => {
@@ -190,7 +191,7 @@ impl Content {
     /// Whether branch `branch`'s population holds creature type `creature`.
     fn lives_in(&self, branch: &str, creature: CreatureId) -> bool {
         (self.dungeon(branch).and_then(|d| d.spawning.as_ref()))
-            .is_some_and(|s| s.population.contains(&creature))
+            .is_some_and(|s| s.population.contains(&self.family(creature)))
     }
 }
 

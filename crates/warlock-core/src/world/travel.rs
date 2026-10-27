@@ -540,10 +540,12 @@ pub(super) fn make_creature(
         state.progress.uniques.insert(def.id.clone());
     }
     let (carry, equipment) = placed_gear(content, state.seed, id, actor_id, spawn);
-    // An animated thing is made of its body (spec §8 "Animated objects").
+    // An animated thing is made of its body or its pieces (spec §8 "Animated objects").
     let mut rng = crate::animated::stream(state.seed, &actor_id.0.to_string());
     let (carry, equipment) =
-        crate::animated::with_body(content, &mut rng, spawn.creature, (carry, equipment));
+        crate::animated::kit(content, &mut rng, spawn.creature, (carry, equipment));
+    let weapon_skills = crate::animated::weapon_skills(content, spawn.creature, &carry, &equipment)
+        .unwrap_or_else(|| def.weapon_skills.clone());
     let mut actor = Actor {
         id: actor_id,
         kind: ActorKind::Creature,
@@ -572,7 +574,7 @@ pub(super) fn make_creature(
         diseases: Default::default(),
         damage: Default::default(),
         drained: Default::default(),
-        weapon_skills: def.weapon_skills.clone(),
+        weapon_skills,
         faction_override: (spawn.faction)
             .or_else(|| super::court::join(content, state.seed, actor_id, spawn.creature)),
         alignment: None,
