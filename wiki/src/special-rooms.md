@@ -132,6 +132,12 @@ gets where a dungeon favours or bans nothing. "Only" says where it can come at a
 - **Altar room.** An old altar stands in the middle of the room, its god long forgotten, and a
   faint glow rises from it: you notice it from the doorway. Stand beside it and you may pray
   (see Forgotten altars below). Only rooms of 9 floor cells or more can be one.
+- **Scriptorium.** Shelves of rotting scrolls stand in the middle of the room (shown as `≡`),
+  and you may smell the dust and old vellum before you see it. Two to four scrolls lie on its
+  floor, of the kinds the level would give anyway, unread. Studying a spell from a scroll while
+  you stand inside (see [Magic](magic.md#learning-spells-from-scrolls)) always earns Decipher script a training mark if you
+  are trained in it, where elsewhere it is one study in two. Only rooms of 9 floor cells or more
+  can be one.
 
 The talent *Hallowed rest* (Grit) makes a room that quickens healing or mana quicken it half
 again more for you: a sanctuary's three times as fast becomes four times. The talent *Anchored

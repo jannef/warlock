@@ -131,9 +131,28 @@ pub(super) fn special_rooms(content: &Content) -> String {
                 Some((_, _)) => ": pray beside it (see Forgotten altars)",
                 None => "",
             };
+            let name = content.terrain(feature).name.to_lowercase();
+            // "Shelves stand", "A forgotten altar stands".
+            let line = if name.ends_with('s') {
+                format!("{} stand in it{offers}.", capital(&name))
+            } else {
+                format!("A {name} stands in it{offers}.")
+            };
+            does.push(line);
+        }
+        if let Some(loot) = e.loot {
+            let [least, most] = loot.count;
             does.push(format!(
-                "A {} stands in it{offers}.",
-                content.terrain(feature).name.to_lowercase()
+                "{least} to {most} {} lie on its floor, found at the level's item level.",
+                content.item_class(loot.class).name.to_lowercase()
+            ));
+        }
+        for &(skill, percent) in &e.train {
+            does.push(format!(
+                "While you are inside, {}'s training marks come {} as often (at most every \
+                 time).",
+                content.skill(skill).name,
+                times(percent)
             ));
         }
         if let Some(c) = e.collapse {
