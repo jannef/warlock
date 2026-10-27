@@ -1,0 +1,17 @@
+# The guildmaster of the Weyfarers' Gilde, in Cēaptūn's Gildhalle (docs/design/adventurers-guild.md
+# §4): Wat One-Eye (his npc dialogue, campaigns/ascmearc/data/dialogue/ceaptun.toml), a one-eyed
+# old delver who has stopped going down. A retired fighter's Strength and Toughness; peaceful, he
+# never fights, and keeps his post by the far wall.
+[[creature]]
+id = "guildmaster"
+name = "guildmaster"
+glyph = "@"
+fg = "#a88a5c"
+faction = "peaceful"
+alignment = "neutral"
+race = "human"
+footsteps = 50
+hearing = 10
+weight = 88000
+budge = "off_post"
+stats = { strength = 14, toughness = 14, intelligence = 11, presence = 11 }

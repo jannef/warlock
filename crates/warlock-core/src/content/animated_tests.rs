@@ -20,7 +20,7 @@ fn one_type_per_body_after_the_shared_files_before_every_campaigns() {
     let content = builtin();
     let defs = content.creature_defs();
     let animated: Vec<usize> = (0..defs.len())
-        .filter(|&i| defs[i].animated.is_some())
+        .filter(|&i| defs[i].animated.is_some_and(|a| a.body.is_some()))
         .collect();
     let bodies = &content.animated().bodies;
     assert_eq!(animated.len(), bodies.len());
@@ -31,12 +31,19 @@ fn one_type_per_body_after_the_shared_files_before_every_campaigns() {
         let def = &defs[i];
         assert_eq!(def.id, format!("{ID_PREFIX}{}", bodies[n].spec.id));
         let a = def.animated.expect("animated");
-        assert_eq!((a.body, usize::from(a.family.0)), (n, i));
+        assert_eq!((a.body, usize::from(a.family.0)), (Some(n), i));
     }
     assert_eq!(defs[animated[0]].id, "animated_bellows");
-    // Every shared type before them, every campaign's after.
+    // Every shared type before them, the families after them, every campaign's after those.
     assert!(defs[..animated[0]].iter().all(|d| d.campaign.is_none()));
-    let after = &defs[animated[animated.len() - 1] + 1..];
+    let last = (0..defs.len())
+        .rfind(|&i| defs[i].animated.is_some())
+        .expect("one");
+    assert_eq!(
+        defs[animated[animated.len() - 1] + 1].id,
+        "animated_blade_5"
+    );
+    let after = &defs[last + 1..];
     assert!(!after.is_empty() && after.iter().all(|d| d.campaign.is_some()));
 }
 
@@ -139,11 +146,9 @@ fn every_animated_type_is_a_bloodless_construct_of_its_faction() {
             "{}: its body is its weight",
             def.id
         );
-        let body = content
-            .animated()
-            .body_of(def.animated.as_ref())
-            .expect("a body");
-        assert_eq!(def.glyph, content.object(body.object).glyph, "{}", def.id);
+        if let Some(body) = content.animated().body_of(def.animated.as_ref()) {
+            assert_eq!(def.glyph, content.object(body.object).glyph, "{}", def.id);
+        }
     }
     // The faction is hostile to the player only.
     let player = content.factions().id("player").expect("player");

@@ -3,9 +3,9 @@ id = "scroll_adept"
 name = "Scroll adept"
 tree = "class"
 granted = true
-description = "Scrolls are your craft: you read them in half the time, and your spells and spell scrolls strike harder."
+description = "Scrolls are your craft: you read them in half the time, and your spells and spell scrolls strike harder, a spell never past its most."
 effects = [
     { kind = "read_percent", value = -50 },
     { kind = "spell_power", per_die = 1 },
 ]
-systems = ["scrolls"]
+systems = ["scrolls", "spells"]

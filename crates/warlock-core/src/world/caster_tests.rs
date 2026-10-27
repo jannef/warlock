@@ -213,13 +213,15 @@ fn every_caster_has_its_table_by_level_sixty() {
     }
     // The wizard's Spell recall is the Scholar talent, handed out (not of the class tree).
     let mut w = world("wizard");
-    assert_eq!(class_rows(&w), ["Scroll adept", "Ray of frost"]);
+    let first = ["Scroll adept", "Ray of frost", "Arcane training"];
+    assert_eq!(class_rows(&w), first);
     reach(&mut w, 12);
     assert_eq!(
         class_rows(&w),
         [
             "Scroll adept",
             "Ray of frost",
+            "Arcane training",
             "Magic missile",
             "Arcane lore",
             "Spell recall",
@@ -445,9 +447,9 @@ fn bolts_and_bursts_strike_as_scrolls_do_and_cost_mana() {
     let before = w.state.actors[&target].hp;
     w.apply(&Action::Cast("fireball".into(), Some(far)));
     assert!(w.state.actors[&target].hp < before);
-    // Tier 3's 11 × 2.4 for a burst of radius 2; its third die and Empower's one more, held to
-    // the cap (19).
-    assert_eq!(w.state.player().mana, 14);
+    // Tier 3's 11 × 2.4 for a burst of radius 2, less Empower's tenth (23); its third die and
+    // Empower's one more, held to the cap (19).
+    assert_eq!(w.state.player().mana, 17);
     assert!(before - w.state.actors[&target].hp <= 19);
 }
 
@@ -505,7 +507,8 @@ fn spell_power_and_archmage_mana() {
     assert_eq!(mods(&["empower"]).spell_damage(three).to_string(), "4d6");
     let all = mods(&["scroll_adept", "empower", "archmage"]);
     assert_eq!(all.spell_damage(three).to_string(), "4d6+12");
-    assert_eq!((all.spell_mana(10), all.spell_mana(1)), (5, 1));
+    // Archmage's half and Empower's tenth off.
+    assert_eq!((all.spell_mana(10), all.spell_mana(1)), (4, 1));
     assert_eq!(mods(&[]).spell_mana(9), 9);
 }
 

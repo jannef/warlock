@@ -39,6 +39,7 @@ mod gear;
 mod gem;
 #[cfg(test)]
 mod giant_roster_tests;
+mod guild;
 #[cfg(test)]
 mod hag_roster_tests;
 #[cfg(test)]
@@ -113,7 +114,7 @@ pub use affix::{
 };
 pub use alignment::{AlignmentRules, BandDef, ByAlignment, Shifts};
 pub use anim::GlyphAnim;
-pub use animated::{Animated, AnimatedDef, Body, ID_PREFIX, Numbers};
+pub use animated::{Animated, AnimatedDef, Body, ID_PREFIX, Line, Numbers, Ramp, SlotLine};
 pub use calendar::Calendar;
 pub use campaign::{CAMPAIGNS, CampaignDef, CampaignKind};
 #[cfg(test)]
@@ -146,6 +147,7 @@ pub use gem::{
     Cut, CutId, Cutting, GemDef, GemSize, GemSizeId, Gems, MAX_GEM_VALUE, MAX_GEM_WEIGHT,
     MAX_MULTIPLIER, Ornament, ROUGH_SATURATION, dull,
 };
+pub use guild::{GuildDef, MAX_RANKS, MAX_TITLE, RankBy, RankDef};
 pub use horoscope::{FULL_MOON_WITHIN, Flavour, Horoscope, Lucky, Sign, SignActive, SignPart};
 pub use hunger::{
     Corpses, EXERTIONS, Faint, Food, HungerDef, MAX_MEAL, MAX_NUTRITION, MAX_SHELF_LIFE,
@@ -622,6 +624,8 @@ pub struct Content {
     plurals: Plurals,
     /// What people ask of the player (`data/quests.toml`), in file order.
     quests: Vec<QuestDef>,
+    /// Guilds and their ranks (`data/guilds/`, each campaign's too), in table order.
+    guilds: Vec<GuildDef>,
     /// Shops (`data/shops.toml`); none without the file.
     shops: Option<Shops>,
 }
@@ -707,6 +711,7 @@ impl Content {
             dialogues: Vec::new(),
             plurals: Plurals::default(),
             quests: Vec::new(),
+            guilds: Vec::new(),
             shops: None,
         };
         content.campaigns = campaign::parse(files)?;
@@ -984,6 +989,7 @@ impl Content {
             }
         }
         content.quests = quest::parse(files.table("quests"), &content)?;
+        content.guilds = guild::parse(files.table("guilds"), &content)?;
         content.validate()?;
         content.check_campaigns()?;
         Ok(content)
@@ -1411,7 +1417,7 @@ impl Content {
                 )));
             }
             if let Some(animated) = &mut spec.animated {
-                animated.family = id;
+                animated.family = CreatureId(id.0 - u16::from(animated.member));
             }
             let resolved = creature::Resolved {
                 blood,
@@ -1456,7 +1462,7 @@ impl Content {
                 "a creature with id `player` is required",
             ));
         }
-        Ok(())
+        self.name_families()
     }
 
     /// A creature type's skills as data lists them (`skills = { listen = 30 }`): fixed values,
@@ -2769,8 +2775,9 @@ impl Content {
         self.draw_odds
     }
 
-    /// The candidates of a draw ([`danger::draw`]) among `kinds`: each type with its level and
-    /// its rarity's factor, those `met` (uniques the run has had, by id) left out.
+    /// The candidates of a draw ([`danger::draw`]) among `kinds`: each type with its levels (a
+    /// family's range, `animated_blade`'s 5 to 20; else its own level) and its rarity's factor,
+    /// those `met` (uniques the run has had, by id) left out.
     pub fn candidates(
         &self,
         kinds: &[CreatureId],
@@ -2779,7 +2786,14 @@ impl Content {
         (kinds.iter())
             .map(|&c| (c, self.creature(c)))
             .filter(|(_, def)| !(def.unique && met.contains(&def.id)))
-            .map(|(c, def)| (c, def.level, self.creature_rarity(def.rarity).factor))
+            .map(|(c, def)| {
+                let factor = self.creature_rarity(def.rarity).factor;
+                match self.family_levels(c) {
+                    // A member names its whole family.
+                    Some(levels) => (self.family(c), levels, factor),
+                    None => (c, (def.level, def.level), factor),
+                }
+            })
             .collect()
     }
 
@@ -4593,7 +4607,7 @@ mod tests {
         let content = Content::builtin().unwrap();
         let objects = content.object_defs();
         // With a corpse for every creature type but the player, and the magic base items.
-        assert!((15..=300).contains(&objects.len()), "{}", objects.len());
+        assert!((15..=400).contains(&objects.len()), "{}", objects.len());
         let glyphs = content.glyphs();
         for def in objects {
             assert!(def.weight > 0 && glyphs.contains(&def.glyph), "{}", def.id);
