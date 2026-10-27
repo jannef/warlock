@@ -1,0 +1,8 @@
+---
+source: crates/warlock/src/ui/look.rs
+expression: "said.join(\"\\n\")"
+---
+An animated armour (hostile, unhurt), wearing a bronze cap and a padded coat, on stone floor.
+An animated panoply (hostile, unhurt), wielding an iron stiletto (rare) and a topaz-inlaid iron small shield (magic), wearing a nicrosil great helm and a hardened leather jerkin (rare), on stone floor.
+An animated armour (hostile, unhurt), wearing a bronze cap and a padded coat, on stone floor.
+An animated panoply (hostile, unhurt), wielding an iron stiletto (rare) and a topaz-inlaid iron small shield (magic), wearing a nicrosil great helm and a hardened leather jerkin (rare), on stone floor. It hums with power.

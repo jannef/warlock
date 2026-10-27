@@ -255,6 +255,10 @@ pub struct SeenActor {
     /// "Animated objects"), which anyone sees.
     #[serde(skip)]
     pub shape: Option<Shape>,
+    /// An animated thing that hums with power: something it is made of is magic, and the
+    /// player has Appraiser's eye to tell it (spec §8 "Animated objects").
+    #[serde(skip)]
+    pub hums: bool,
 }
 
 /// How a creature looks by what it is made of (spec §8 "Animated objects"): an animated
@@ -747,6 +751,7 @@ impl Perception {
                 pos: a.pos,
                 health: a.health(content),
                 shape: shape(a, content),
+                hums: talents.appraise_animated && hums(a, content),
             })
             .collect();
         // A hall of mirrors' images of those seen (`world/mirrors.rs`), where the player sees
@@ -1997,6 +2002,13 @@ impl<'a> PerceptionView<'a> {
     pub fn own_gold(&self) -> u32 {
         (self.content.shops()).map_or(0, |s| count_of(&self.player.inventory, s.currency))
     }
+}
+
+/// Whether actor `a` is an animated thing of which something it is made of is magic or rare
+/// (what Appraiser's eye tells).
+fn hums(a: &Actor, content: &Content) -> bool {
+    content.creature(a.creature).animated.is_some()
+        && (a.inventory.iter()).any(|s| s.rarity() != crate::magic::Rarity::Normal)
 }
 
 /// How actor `a` looks by what it is made of (spec §8 "Animated objects"): a household thing by

@@ -143,7 +143,31 @@ developer notes (CLAUDE.md, `docs/dev/`).
   levels"), one first kill ("You learn something of animated blades.", once), the kill tally
   and Favoured prey by the family's id, a kill quest naming `animated_blade` counts every
   member, a `tag:` objective and a rolled kill quest's pool name it once. Cealdhlāw and Fyrdelf
-  list it. Hollow armour and panoplies follow (#486, #487, #463).
+  list it.
+  **Hollow armour and panoplies** (#486) are the composites, two more families:
+  `animated_armour_12` … `_35` ("animated armour", the hollow role: Strength +5, Dexterity −2,
+  Toughness +5, hit points ×1.2, speed 900 + 3L (at most 1100), piercing 25, uncommon) and
+  `animated_panoply_20` … `_70` ("animated panoply", the standard role: Toughness +2, hit points
+  ×1.2, speed 1000, +4 a level past 20 (at most 1200), rare). Both are medium, step loudly
+  (footsteps 60), open doors, "collapse with a clang", and show as `A` in their body armour's
+  material colour (the tier's `shown_by = "body"`; one colour until #463). A slot line may name
+  `from` (the least level it is tried at) and `count` (how many times it is tried, each further
+  piece going to a free slot of the same kind, `fits`: a ring for each hand); the lines are
+  tried in order and a line whose slots are all taken is passed over with nothing drawn, so a
+  panoply's shield never comes beside a two-handed weapon. Hollow armour wears body armour, a
+  helm (70 %), a shield (40 %), gloves (30 %), and fights with its own blow (the tier's
+  `attack`: its gauntlets slam, bludgeoning, the curve's dice at L); a panoply wears body armour
+  and wields a melee weapon always, a shield (60 %) and a helm (75 %), from L30 gloves and boots
+  (50 % each), from L40 a cloak (50 %), from L50 an amulet and two rings (30 % each), and holds
+  `1 + L/10` ranks in its weapon's skill and, beside a shield, `L/15` in the style of weapon and
+  shield (Sword and Board, the tier's `shield_rank`). Pieces are at least magic by 10 + L % (at
+  most 40, armour) and 20 + L % (at most 80, panoply), rare from L20. Everything they wear and
+  wield works for them as for anyone (`Mods::worn`: stats, riders, resistances, light, ...); max
+  mana, mana regeneration, and caster level are held but unread until creatures cast. Fyrdelf
+  lists `animated_armour`; no population lists `animated_panoply` yet (legends and the dev
+  `spawn` only). Talent **Appraiser's eye** (scholar): look mode adds "It hums with power." when
+  anything an animated creature carries is magic or rare (perception's `SeenActor::hums`).
+  Their homes follow (#487), and the chromatic look of composites (#463).
 - **Creature gear** (`warlock-core/src/gear.rs`, the rolls; `content/gear.rs`, the data; #328,
   campaign design §10.3): a creature type may have a `racial_weapon` (a weapon it must have a
   rank in: the affinity is the rank, which combat applies) and `[[creature.gear]]` lines

@@ -5,7 +5,10 @@ scalds, a broom that scuttles, a rug that wraps around your legs. They set on th
 come near and leave everything else alone. The household ones are almost harmless, and worth
 killing for what they are made of: a silver candlestick is a prize at any level. Deeper, a
 sword, an axe, or a staff dances alone: an **animated blade**, quick and fragile, and its weapon
-the prize.
+the prize. Deeper still walk the composites: **animated armour**, a suit with nobody inside that
+fights with its gauntlets, and the **animated panoply**, the full kit of a knight with no knight,
+wielding and wearing real magic items whose powers are its own. A panoply is among the most
+dangerous things in the game, and among the most rewarding.
 
 ## What they are made of
 
@@ -25,10 +28,21 @@ steel long sword". Like any weapon a monster carries, it is unidentified until y
 blade is hard to hit (its thin edge), shrugs off thrusts (piercing), and breaks under heavy
 blows (bludgeoning); it floats without a sound.
 
+Animated armour and a panoply are made of several real things at once: body armour always, a
+helm, a shield, gauntlets, and for a panoply a melee weapon and, the deeper it is, boots, a cloak,
+an amulet, and a ring on each hand (from level 50). Each piece is drawn as a blade's weapon is
+and worn or wielded as anyone's: the armour's Protection, the shield's Defence, the weapon's
+blows. A panoply that wields a two-handed weapon carries no shield. Both show on the map as `A`,
+in the colour of their body armour's material; look mode names what they wear and wield: "an
+animated armour (hostile, unhurt), wearing a bronze cap and a padded coat". Animated armour has no
+weapon: it slams with its gauntlets. Both are slow and loud, open doors, and shrug off some of a
+thrust (the armour, whose blows pass through the hollow). A panoply holds a rank in its weapon's
+skill as a blade does, and beside a shield ranks in Sword and Board.
+
 All blades are one kind of creature in every way that counts: you learn of animated blades once,
 a quest to kill them counts every one, and they are drawn onto a floor as one kind, at the level
 of the floor's danger (a blade of level 12 on a floor of danger 12, never below level 5 or above
-20).
+20). So are all animated armours and all panoplies, each among themselves.
 
 When one is destroyed, what it was made of falls **whole** half the time, as the object it was
 (a silver candlestick you can sell). Otherwise it **breaks into the parts it was made of**: a
@@ -47,14 +61,43 @@ badly, and glass, stone, and bone shatter under heavy blows. Nothing can be stol
 what they carry is what they are.
 
 The **Unbinder** talent strikes at the binding, not the thing: your blows against animated
-things are surer and harder.
+things are surer and harder. **Appraiser's eye** tells a bound thing's worth at a glance: look
+mode adds "It hums with power." when anything it wears or wields is magic or rare.
+
+## What their magic does for them
+
+Whatever an animated thing wears and wields works for it exactly as it would for you, rings and
+amulets too: a Flaming sword burns, a ring of the Bear makes its blows harder, an amulet of the Ox
+gives it more life, armour of the Salamander takes the edge off fire, a ring of Light makes it
+glow (you see it coming). The gaps are few:
+
+| Affix effect | Works for an animated thing? |
+|---|---|
+| Stat raises (of the Bear, of the Lynx, of the Ox, ...) | Yes: hit points, to hit, damage, Defence |
+| To hit, damage, added damage, threat, criticals, parrying | Yes |
+| Elemental damage (Flaming, Freezing, ...) | Yes |
+| Attack speed, moving speed | Yes |
+| Armour, shields, Dodge, Deflection, natural armour | Yes |
+| Protection | Yes |
+| Resistances | Yes |
+| More hit points | Yes |
+| Regeneration | Yes |
+| Stealth (quieter steps) | Yes |
+| Light | Yes: it glows |
+| Skills | Yes, where a rule reads a creature's skill |
+| Weight | Its things weigh less, which changes nothing: it carries itself |
+| More mana, mana regeneration, caster level | No: it casts no spells (yet) |
+| Carrying | No, and it needs none |
+| Range, draw, durability (missile weapons) | No: it wields melee weapons only |
 
 ## Where they are found
 
 The barrow of Cealdhlāw keeps candlesticks, cutlery, teapots, and cooking pots among its grave
 goods; the drowned minster of Fennmynster its candlesticks, books, lanterns, and rugs. Blades
 dance in the barrow's lower floors and all through Fyrdelf, where the duergar smiths' work
-wakes. Now and then one strays elsewhere.
+wakes, and empty suits of armour walk Fyrdelf's deeper floors (they are of level 12 at least).
+Now and then one strays elsewhere. No panoply walks anywhere in the Ascmearc: it waits for deeper
+places.
 
 ## In numbers
 
@@ -82,7 +125,21 @@ any find may), or **rare** outright by the second chance, at an item level equal
 otherwise it is plain, of a material drawn as a monster's gear is. Its rank in the weapon's skill
 is 1 + level / 10, at most 8.
 
+Animated armour and a panoply draw each of their pieces the same way, slot by slot in the order
+below: each line is tried at its chance, from the level it names, as many times as it says (a
+ring for each hand); a slot already taken (the off hand beside a two-handed weapon) is passed
+over. Animated armour's gauntlets strike with the dice of its level; its Strength is the role's.
+A panoply's rank in Sword and Board beside a shield is level / 15.
+
 {{#include generated/animated-families.md}}
+
+### What they leave
+
+What a creature of each family is made of, expected (a household thing is its one body), what of
+it falls whole with the drop rule, and the chances that each piece is at least magic and rare.
+The rest falls as its parts.
+
+{{#include generated/animated-loot.md}}
 
 ### The household things
 
