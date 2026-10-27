@@ -444,7 +444,10 @@ fn special_rooms_come_about_three_levels_in_five() {
         (50..=70).contains(&percent),
         "{special} of {levels} levels ({percent} %) have a special room"
     );
-    assert!(by_effect.iter().all(|n| *n > 10), "{by_effect:?}");
+    // The Depths have no danger: a teeming den never comes there.
+    let defs = CONTENT.room_effects().defs();
+    let common = |(n, e): (&i32, &crate::content::RoomEffectDef)| e.needs_danger || *n > 10;
+    assert!(by_effect.iter().zip(defs).all(common), "{by_effect:?}");
     assert!(by_generator.iter().all(|n| *n > 30), "{by_generator:?}");
 }
 

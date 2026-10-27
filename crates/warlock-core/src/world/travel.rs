@@ -580,6 +580,10 @@ pub(super) fn make_creature(
     };
     actor.hp = actor.max_hp(content);
     actor.mana = actor.max_mana(content);
+    // A teeming den's sleeper (`den.rs`).
+    if let Some(asleep) = content.sleep_status().filter(|_| spawn.asleep) {
+        actor.effects.add(asleep, content.status(asleep), 1, None);
+    }
     crate::rot::made_at(&mut actor.inventory, content, state.time);
     state.actors.insert(actor_id, actor);
     actor_id

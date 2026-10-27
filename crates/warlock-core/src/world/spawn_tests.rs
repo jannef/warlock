@@ -68,6 +68,8 @@ depth = 3
 size = [80, 21]
 danger = 2
 population = ["kobold", "kobold_archer", "kobold_shaman"]
+# A teeming den needs a danger, so it would move the map against the floor without one.
+room_effects = { banned = ["teeming"] }
 
 [[dungeon.levels]]
 from = 3

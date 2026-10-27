@@ -9,9 +9,9 @@
 //! stays plain, and it counts toward `per_level`). A rooms level's special room is the room with
 //! its walls and doors; a cave's is a blob of its floor ([`chamber`]) with the rock around it.
 //! The effect's floor, if it has one (a flooded room's shallow water), is laid over the plain
-//! floor in it (doorways too). A room whose effect creatures shun (a sanctuary) is never one a
-//! creature patrols through. Both generators decide this last, from the same stream, so a level
-//! without a special room is exactly what it would be without them.
+//! floor in it (doorways too). A room whose effect creatures shun (a sanctuary), or a teeming
+//! den, is never one a creature patrols through. Both generators decide this last, from the same
+//! stream, so a level without a special room is exactly what it would be without them.
 
 use super::Canvas;
 use crate::content::{RoomEffectDef, RoomEffectId, RoomEffects, RoomOdds, SpecialRoom};
@@ -108,7 +108,8 @@ pub(super) fn place(canvas: &mut Canvas, room: SpecialRoom, whole: bool) -> bool
 }
 
 /// Makes `room` special, laying its effect's floor over the plain floor in it: unless it
-/// overlaps another special room, or creatures shun it and one patrols through it. Returns
+/// overlaps another special room, or creatures shun it (or it is a teeming den) and one patrols
+/// through it. Returns
 /// whether it did.
 pub(super) fn make(canvas: &mut Canvas, room: SpecialRoom) -> bool {
     let effect = canvas.content.room_effect(room.effect);
@@ -122,7 +123,9 @@ pub(super) fn make(canvas: &mut Canvas, room: SpecialRoom) -> bool {
                 })
         })
     };
-    if canvas.rooms.iter().any(|r| r.overlaps(&room)) || (effect.shunned && patrolled()) {
+    if canvas.rooms.iter().any(|r| r.overlaps(&room))
+        || ((effect.shunned || effect.swarm.is_some()) && patrolled())
+    {
         return false;
     }
     if let Some(floor) = effect.floor {

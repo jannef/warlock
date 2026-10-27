@@ -14,15 +14,19 @@ indices (in the save fingerprint; new effects go at the end). Fields: `id`, `nam
 `needs_below`, `min_cells`, `max_cells` ([`RoomEffectDef::eligible`]), and what it does: `light`,
 `glow`, `noise`, `regen`, `mana_regen`, `shunned`, `floor`, `status` (a status id, resolved and
 checked at load: it must ease, at least `DWELL_EASES`, 10 s a degree; `RoomEffects::parse_with`
-takes the statuses' lookup, `parse` in tests none), `temperature` (degrees Celsius added to
+takes the statuses' lookup, `parse` in tests none), `swarm` (a teeming den's numbers,
+[`Swarm`]: `per_cells`, `min`, `max` (1 to 64), `wake` (100 to 1000), `cry` (0 to
+`noise::MAX_LOUDNESS`), `loot_level`, `themes = { kind, faction }` (percents, at most 100
+together; it needs `needs_danger` and can never pervade), `temperature` (degrees Celsius added to
 the level's, -40 to 40, default 0), `burden` (percent of the carrying limit, `BURDEN` 10 to
 1000, default 100), and `warp` (percent a step inside warps the stepper, 0 to 100, default 0). An effect with `level_chance` must have
 a `pervade` line and be neither `shunned` nor lay a `floor` (`RoomEffectDef::can_pervade`); a level
 file's `effect` is held to the same.
 
 Features today: shadowed (10), echoing (8), hushed (8), sanctuary (6), flooded (8), black chamber
-(5, `light = 0`), draining (6, `status = "ebbing"`, `level_chance` 5, #403), hot (5, "sweltering
-chamber", `temperature = 25`, #404), cold (5, "frigid hall", `temperature = -25`), silent vault
+(5, `light = 0`), draining (6, `status = "ebbing"`, `level_chance` 5, #403), teeming den (8,
+`needs_danger`, `min_cells` 16, `swarm`, #405), hot (5, "sweltering chamber", `temperature = 25`,
+#404), cold (5, "frigid hall", `temperature = -25`), silent vault
 (5, `silent`, `noise = 1`, `status = "silenced"`, #409), heavy (4, "heavy hall", `burden = 50`,
 #412), unstable (4, "unstable room", `warp = 10`, `max_cells = 60`, #411). Draining is the
 first with a `level_chance` (cursed rooms bring theirs).
@@ -59,6 +63,50 @@ Fixture branches in `mapgen/tests.rs` (`FIXTURE`) check that a branch favouring 
 makes only flooded rooms; `mapgen/special_tests.rs` checks the shares over many draws, a feature
 added in a test table turning up in a dungeon that never names it, `level_chance`, and
 eligibility.
+
+## Teeming dens
+
+Filling (`mapgen/den.rs`, `den::fill`, called in `mapgen::generate_with` right after
+`population::populate`, only on a branch level with a danger): every special room whose effect has
+a `swarm` gets `Swarm::sleepers(free cells)` sleepers and `Swarm::hoard(placed)` items, from the
+level's own stream `Rng::swarm` (`swarm/<level id>`), so nothing else on the level moves. Free
+cells: the room's cells of plain floor (the palette's) with no stairs, light, trap, or creature.
+Candidates: `Content::candidates` of the branch's population and of the generic list, filtered to
+types hostile to the player (`Content::stance` against the `player` creature) and not unique. The
+theme (`Theme::roll`): no draw when both percents are 0; else one `below(100)`, then for a warren or
+a tribe one `danger::draw` for the first type. Per sleeper: `Theme::draw` (mixed: `danger::draw`;
+a warren: the type; a tribe: `danger::draw` over the faction's candidates, else the first type),
+then a cell (`swap_remove` of a drawn index). Each is a `CreatureSpawn` with `asleep: true`, no
+route, `rolls_gear: true` (so `gear::arm` rolls it after the population, in spawn order). The
+hoard: `loot::roll_with` at the item level + `loot_level` (`LootGrade::Any`, the visit's luck), each
+on a plain floor cell of the room (stairs and lights left out) drawn anew. `population.rs` keeps
+its creatures and their routes out of a den (as out of a sanctuary), and `special::make` refuses a
+den where a generator patrol walks. `travel.rs::make_creature` gives a spawn with `asleep` the
+first status that `sleeps` (`Content::sleep_status`) at one degree.
+
+Sleep (`world/den.rs`): a creature whose effects include a status with `sleeps` (Asleep:
+`data/status.toml`, `max = 1`, no `eases`, `seen = "asleep"`) — `World::asleep`:
+
+- `creature_turn` first asks `World::slumbers`: a sleeper's turn is a wait (× `stride::STRIDE`
+  while the player rests), its `heard` cleared; it never reaches `coarse_turn` or `decide`.
+- `World::unaware` (`ambush.rs`) is true for a sleeper whatever it sees: a sneak attack lands.
+- `World::spread_noise` is where every noise is heard (`make_noise_at` and `sound_at` call it;
+  `noise::hearers` decides who hears): each hearer keeps the `Heard`, then each sleeper among them
+  wakes when `loudness × 100 ≥ threshold × percent` (`wakes_to`): `percent` its den's `wake`
+  (`Here::swarm`, the room's only; 100 outside a den), × (100 + the player's
+  `TalentMods::wake_percent`) / 100 for a noise whose maker is the player (Hush-foot).
+- `World::hurt`: harm that leaves an actor alive (spared or not) wakes it.
+- `World::wake`: removes the sleep status (not through `ended`: it says nothing to the player
+  about themselves), says "The <creature> wakes up." if the player's last perception sees its
+  cell, and cries: `make_noise_at(id, Act::Mutter, cry × 100 / VOICE_NOISE)` (a voice of `cry`,
+  scaled by the room like any noise), which recurses into `spread_noise`. Each sleeper wakes once,
+  so the cascade ends; it is deterministic (hearers in actor order, no draws).
+- Sixth sense: `sense_danger` (`spawn.rs`) ends with `sense_sleepers`, "Something sleeps on this
+  level." when any actor on the level sleeps.
+
+Sleepers are ordinary hostile actors otherwise: `hostiles_here` counts them toward the spawn cap,
+a kill is `kill_hostile`, the status is saved and hashed with the actor. The `bench-turns` `delf`
+fixture branch favours teeming dens (`xtask/src/bench.rs`).
 
 ## State and the one question
 
@@ -174,7 +222,8 @@ not name it. The `rooms` dev layer marks each room's plain ground, lists each ro
 System `special_rooms` (`data/talents.toml`): Sense of place (wayfarer, `sense_of_place`; hook
 `PerceptionView::room` and `pervade_line`), Hallowed rest (grit, `room_pace_percent` 50; hook
 `World::room_pace`), and Anchored mind (scholar, `room_status_immune` `ebbing`, also system
-`mana`; hook `World::dwell`).
+`mana`; hook `World::dwell`), and Hush-foot (shadow, Stealth 10, `wake_percent` 100, also system
+`stealth`; hook `World::spread_noise`'s wake check).
 
 ## Tests
 
@@ -184,7 +233,11 @@ System `special_rooms` (`data/talents.toml`): Sense of place (wayfarer, `sense_o
 `mapgen/fennmynster_tests.rs`, `world/room_tests.rs` (each effect in play, messages, pervading
 levels, the talents, saving), `world/dwell_tests.rs` (a room's status: Ebbing on the player and on
 creatures, not on one without mana, through a rest, over a drained level, eased after leaving,
-Anchored mind, saving), `world/silent_tests.rs` (the silent vault: its data, the player's
+Anchored mind, saving), `world/den_tests.rs` (the den's data and refusals, sleepers take no
+turn and never wake by time, quiet and loud noises and the cry cascade, a kicked door, a step,
+Hush-foot, a blow, sneak attacks, the waking line and look mode's word, the spawn cap, Sixth
+sense, saving, and a generated den's sleepers and hoard over a fixture branch),
+`world/silent_tests.rs` (the silent vault: its data, the player's
 refusals and the easing, the hundredth of noise, creatures silenced and a shaman fighting in
 melee, silenced from the start, saving), `content/room_temperature_tests.rs` (the field, its range, `Here::warmth`),
 `world/room_temperature_tests.rs` (hot and cold rooms: the cells' temperature, the player's and

@@ -690,7 +690,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     room quickens healing or mana, the quickening is half again more, `World::room_pace`: a
     sanctuary's 300 % becomes 400 %); its third, Anchored mind (Scholar, Willpower 12,
     `room_status_immune` `ebbing`, systems `special_rooms` and `mana`, #403): a draining room's
-    (or level's) Ebbing never takes them, `World::dwell`.
+    (or level's) Ebbing never takes them, `World::dwell`; its fourth, Hush-foot (Shadow, Stealth
+    10, `wake_percent` 100, systems `special_rooms` and `stealth`, #405): a sleeper needs twice
+    the noise to wake from what they do (a den's 200 % of its hearing threshold becomes 400 %),
+    the wake check in `World::spread_noise`.
     The Defence by attack kind of the design's B5 landed with Deflect missiles (#237,
     `World::target_against`).
   - **Racial talents** (#241; the design's §7.5 Racial): the `racial` tree (`no_free`), each

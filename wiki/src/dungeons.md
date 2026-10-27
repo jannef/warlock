@@ -48,11 +48,12 @@ come to.
 A dungeon floor with a danger is full when you first come down to it: its population (the
 number in the tables below; by default 35 creatures for every 1000 cells you could walk on, at
 least 25 and at most 80) is chosen as above and spread over its plain floor, never within 8
-steps of a staircase, never in a shop or a sanctuary. Most walk a short beat, back and forth;
+steps of a staircase, never in a shop, a sanctuary, or a teeming den. Most walk a short beat, back and forth;
 where there is no room for one, they wait where they stand. They come armed as their kind is
 (see the creatures' gear), on top of the few the floor's own rooms and vaults hold. A creature
 marked "once a run" that you have met already is not among them. A hand-made place with a
-danger starts as it was made; only the arrivals below fill it up.
+danger starts as it was made; only the arrivals below fill it up. A [teeming den](special-rooms.md#teeming-dens)
+holds its sleepers on top of the population, and they count toward it below.
 
 ## They keep coming
 

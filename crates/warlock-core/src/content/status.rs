@@ -421,6 +421,8 @@ struct StatusSpec {
     blocks: Vec<String>,
     #[serde(default)]
     flees: bool,
+    #[serde(default)]
+    sleeps: bool,
     follows: Option<String>,
     wound: Option<WoundSpec>,
     /// The kind of damage it is (poison): a target immune to it never suffers it, and a
@@ -492,6 +494,10 @@ pub struct StatusDef {
     /// instead of fighting, while a step takes it farther away (Frightened; spec §8 "Birth
     /// sign": Hound's bay).
     pub flees: bool,
+    /// A creature suffering it sleeps (Asleep, a teeming den's; spec §7 "Special rooms"): it
+    /// takes no turn and is unaware of everyone until noise, a blow, or a cry wakes it, which
+    /// ends the status (`world/den.rs`).
+    pub sleeps: bool,
     /// The status that begins (at one degree) as this one ends, worn off or cured: Raging is
     /// followed by Exhausted. A chain never leads back to where it began.
     pub follows: Option<StatusId>,
@@ -535,6 +541,7 @@ impl StatusDef {
             && self.cost == 100
             && self.blocks.is_empty()
             && !self.flees
+            && !self.sleeps
             && self.follows.is_none()
             && self.wound.is_none()
             && self.hold.is_none()
@@ -707,6 +714,7 @@ fn resolve(
         cost: spec.cost,
         blocks,
         flees: spec.flees,
+        sleeps: spec.sleeps,
         follows: None,
         wound,
         damage_type,
