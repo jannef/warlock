@@ -923,7 +923,7 @@ mod tests {
                 "woodcraft",
             ]
         );
-        let last: Vec<Ability> = every.iter().rev().take(4).rev().copied().collect();
+        let last: Vec<Ability> = every.iter().rev().take(5).rev().copied().collect();
         assert_eq!(
             last,
             [

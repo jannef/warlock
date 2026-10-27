@@ -1086,7 +1086,7 @@ impl RoomEffects {
                         Err(named) if named.is_empty() => {
                             return Err(bad("`offers` names nothing".into()));
                         }
-                        Err(_) => return Err(bad("`offers` names one ability".into())),
+                        Err(_) => return Err(bad("`offers` names one thing".into())),
                     }
                 }
                 None => None,

@@ -72,7 +72,7 @@ fn an_effect_offers_exactly_one_ability() {
         Some((Offer::Temper, "forge".to_string()))
     );
     let both = parse(&room("{ pray = \"forgotten_altar\", temper = \"forge\" }"));
-    assert!(both.expect_err("two").to_string().contains("one ability"));
+    assert!(both.expect_err("two").to_string().contains("one thing"));
     let none = parse(&room("{ }"));
     assert!(
         none.expect_err("none")
