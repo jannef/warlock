@@ -107,8 +107,9 @@ impl World {
         };
         let needed = u64::from(hours) * crate::time::HOUR;
         let mut known = Vec::new();
+        let content = self.content.clone();
         for (i, stack) in self.player_mut().inventory.iter_mut().enumerate() {
-            if stack.carry_for(seconds, needed) {
+            if stack.carry_for(&content, seconds, needed) {
                 known.push(i);
             }
         }

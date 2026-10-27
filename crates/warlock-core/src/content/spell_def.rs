@@ -215,6 +215,7 @@ struct TiersSpec {
     comfortable: Vec<u8>,
     cost: Vec<u16>,
     ceiling: Vec<u16>,
+    wand_charges: Vec<u8>,
 }
 
 #[derive(Deserialize)]
@@ -255,6 +256,9 @@ pub struct SpellRules {
     pub cost: [u16; TIERS],
     /// Each tier's damage ceiling for a single-target spell at its highest roll: ascending.
     pub ceiling: [u16; TIERS],
+    /// The charges a wand of each tier's spell is made with (spec §8 "Magic items": "Wands"):
+    /// 1 to [`super::MAX_WAND_CHARGES`], never more than the tier below's.
+    pub wand_charges: [u8; TIERS],
     /// The single targets' and the areas' cost multipliers, in percent, by [`Shape::ALL`]
     /// order; a burst's is [`SpellRules::burst`]'s.
     shapes: [u16; 6],
@@ -289,6 +293,16 @@ impl SpellRules {
         }
         if t.ceiling[0] < 1 || !ascending(&t.ceiling) {
             return Err(err("tiers: `ceiling` ascends from at least 1".into()));
+        }
+        ten("wand_charges", t.wand_charges.len())?;
+        let charges = &t.wand_charges;
+        if !(charges.iter()).all(|c| (1..=super::MAX_WAND_CHARGES).contains(c))
+            || charges.windows(2).any(|w| w[0] < w[1])
+        {
+            return Err(err(format!(
+                "tiers: `wand_charges` are 1 to {}, never more than the tier below's",
+                super::MAX_WAND_CHARGES
+            )));
         }
         if !PERCENTS.contains(&file.overreach_cost) {
             return Err(err("overreach_cost is 1 to 1000 percent".into()));
@@ -332,6 +346,7 @@ impl SpellRules {
             comfortable: t.comfortable.clone().try_into().expect("checked length"),
             cost: array(&t.cost),
             ceiling: array(&t.ceiling),
+            wand_charges: t.wand_charges.clone().try_into().expect("checked length"),
             shapes,
             burst: s.burst.clone(),
             resolutions,
