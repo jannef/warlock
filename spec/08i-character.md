@@ -696,7 +696,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the wake check in `World::spread_noise`;
     Mirror-wise (Scholar, Intelligence 12, `sees_reflections` 2, #419): a hall of mirrors' images
     within 2 cells are seen for what they are and not shown, so no glass stops a step there
-    (`world/mirrors.rs`, perception).
+    (`world/mirrors.rs`, perception); Hoard-wise (Delver, Intelligence 11, `hoard_grace` 1, #415): a tempting
+    hoard seals only after the second stack lifted inside it, `World::lift_in_hoard`.
     The Defence by attack kind of the design's B5 landed with Deflect missiles (#237,
     `World::target_against`).
   - **Racial talents** (#241; the design's §7.5 Racial): the `racial` tree (`no_free`), each

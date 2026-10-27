@@ -21,8 +21,10 @@ together), `factions` (faction ids, checked once the factions load,
 `RoomEffects::check_factions`: known, none twice), `hoard` (`Hoard::Items`, the default, or
 `Hoard::Corpses`); it needs `needs_danger` and can never pervade), `temperature` (degrees Celsius added to
 the level's, -40 to 40, default 0), `burden` (percent of the carrying limit, `BURDEN` 10 to
-1000, default 100), `mirrors` (`{ images = N }`, 1 to 8, `content::Mirrors`), and `warp` (percent a
-step inside warps the stepper, 0 to 100, default 0). An effect with `level_chance` must have a
+1000, default 100), `mirrors` (`{ images = N }`, 1 to 8, `content::Mirrors`), `warp` (percent a
+step inside warps the stepper, 0 to 100, default 0), and `hoard` (a tempting hoard,
+`content::Treasure`: `items` 1 to 16, `loot_level`, `guardians = [least, most]` at most 16,
+`danger`; it needs `needs_danger` and can never pervade). An effect with `level_chance` must have a
 `pervade` line and be neither `shunned` nor lay a `floor` nor hold `mirrors`
 (`RoomEffectDef::can_pervade`); a level file's `effect` is held to the same.
 
@@ -32,7 +34,9 @@ Features today: shadowed (10), echoing (8), hushed (8), sanctuary (6), flooded (
 #404), cold (5, "frigid hall", `temperature = -25`), silent vault
 (5, `silent`, `noise = 1`, `status = "silenced"`, #409), heavy (4, "heavy hall", `burden = 50`,
 #412), mirrors (3, "hall of mirrors", `max_cells = 80`, `mirrors = { images = 2 }`, #419), unstable (4, "unstable room", `warp = 10`, `max_cells = 60`, #411), beast den (5, mark `n`, `needs_danger`, `min_cells` 16, `swarm` with
-`factions = ["wildlife", "vermin", "marsh"]` and `hoard = "corpses"`, #410). Draining is the
+`factions = ["wildlife", "vermin", "marsh"]` and `hoard = "corpses"`, #410), tempting hoard (5,
+`hoard`, "treasure room", mark `$`, `needs_danger`, `hoard = { items = 3, loot_level = 3,
+guardians = [2, 4], danger = 1 }`, #415). Draining is the
 first with a `level_chance` (cursed rooms bring theirs).
 
 A dungeon's `room_effects` (on a branch or a `[[dungeon.levels]]` range; `content/dungeon.rs`,
@@ -122,6 +126,38 @@ Sleep (`world/den.rs`): a creature whose effects include a status with `sleeps` 
 Sleepers are ordinary hostile actors otherwise: `hostiles_here` counts them toward the spawn cap,
 a kill is `kill_hostile`, the status is saved and hashed with the actor. The `bench-turns` `delf`
 fixture branch favours teeming dens (`xtask/src/bench.rs`).
+
+## Tempting hoards
+
+Items (`mapgen/hoard.rs`, `hoard::fill`, called in `mapgen::generate_with` right after
+`den::fill`, only on a branch level with a danger): every special room whose effect has a
+`hoard` gets `hoard.items` items, `loot::roll_with` at the item level + `loot_level`
+(`LootGrade::Any`, the visit's luck), each on a plain floor cell of the room (the palette's floor,
+no stairs, light, or trap) drawn anew, from `Rng::swarm` (`swarm/<level id>`; a level with a den
+and a hoard starts the stream afresh for each, which only happens with `per_level` above 1).
+`population.rs` keeps its creatures out of a hoard and `special::make` refuses one where a
+generator patrol walks, as for a den: it lies unguarded.
+
+Sealing (`world/hoard.rs`): `World::lift_in_hoard(at, stacks)` is the one line in
+`carry.rs::pick_up`, after the pick-up is said. Inside a room with a `hoard` that has not sealed,
+`SpecialRoom::lifted` grows by the stacks lifted; once it passes the player's
+`TalentMods::hoard_grace` (Hoard-wise: 1) the room is `sealed` and `seal` runs: every cell of the
+room (`cells()`: a rooms level's rectangle holds its walls and doors) that is an open door with
+nothing in the doorway is shut (`set_terrain` to its `closes_to`), every closed door there then
+gets `Lock::new(None)` unless it is locked already (only a skeleton key fits; `lock_difficulty`
+adds the branch's depth), and each makes a slam through `sound_at` (`Banging`, `KICK_NOISE`, no
+maker: sleepers and creatures hear it as a trap's noise); "The doors slam shut!" (`hoard::SLAM`)
+when any. No `Event::DoorClosed` is sent (the pick-up has no event list; the screen follows the
+terrain). Then `guard`: on a level with a danger rule (`Content::spawning`) and a danger,
+`rng.range(least, most)` guardians from the **gameplay** stream, each `danger::draw` at the
+danger + `hoard.danger` over the branch's population and generic list (`Content::candidates`,
+hostile to the player, not unique), placed by `travel::make_creature` (`rolls_gear: true`, awake,
+no route) on a cell from `guard_cells`: the room's walkable cells with no actor, door, or stairs,
+those on its edge (a neighbour outside the room or not walkable) first, among them first the
+cells the last perception does not see (`Perception::sees_actors_at`), then the seen ones, then
+the inner cells; each cell taken once. Saved: `lifted` and `sealed` on `SpecialRoom`, each left
+out while 0/false, so other rooms hash as before. The `rooms` dev layer adds `, lifted N` and
+`, sealed`.
 
 ## State and the one question
 
@@ -274,8 +310,9 @@ System `special_rooms` (`data/talents.toml`): Sense of place (wayfarer, `sense_o
 `PerceptionView::room` and `pervade_line`), Hallowed rest (grit, `room_pace_percent` 50; hook
 `World::room_pace`), Anchored mind (scholar, `room_status_immune` `ebbing`, also system
 `mana`; hook `World::dwell`), Hush-foot (shadow, Stealth 10, `wake_percent` 100, also system
-`stealth`; hook `World::spread_noise`'s wake check), and Mirror-wise (scholar, `sees_reflections` 2; hook
-`Perception::compute`'s images, which the glass reads too).
+`stealth`; hook `World::spread_noise`'s wake check), Mirror-wise (scholar, `sees_reflections` 2; hook
+`Perception::compute`'s images, which the glass reads too), and Hoard-wise (delver, Intelligence 11, `hoard_grace`
+1; hook `World::lift_in_hoard`).
 
 ## Tests
 
@@ -306,4 +343,8 @@ and moving with the turns, none outside, the player's own, the glass, a missile 
 creatures' aim, Mirror-wise, the dumps, a rest among reflections), `content/room_warp_tests.rs` (the `warp` field, its range,
 `Here::warp`), `world/unstable_room_tests.rs` (the unstable room: about one step in ten inside
 warps the player and a creature, never outside, no draw outside, the messages, a free landing
-cell, saving).
+cell, saving), `world/hoard_tests.rs` (the tempting hoard: its data and refusals, the first stack
+sealing it with both doors shut and locked and two to four hostile guardians, the guardians on
+the edge and out of view, nothing lifted outside counting, Hoard-wise, sealing once, an open door
+with something in it left open, a doorless room, no danger, the dump, saving, and a generated
+hoard's items with no one inside).

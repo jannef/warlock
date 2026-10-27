@@ -210,6 +210,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     one step in ten ("The floor shimmers under your feet."); a *beast den* (5, #410; as a
     teeming den) is a den of beasts with a hoard of bones and fresh corpses (below; "You smell
     musk and old blood." when glimpsed, "Heavy shapes breathe in the dark around you." on
+    entering); a *treasure room* (5, #415; only on a level with a danger) is a tempting hoard
+    (below; "Something glitters ahead." when glimpsed, "Treasure lies here, unguarded." on
     entering). Blood washing
     away in a flooded room waits for blood (#127).
   - **Hot and cold rooms** (`temperature`, #404): a room sets its cells' temperature and
@@ -263,6 +265,28 @@ developer notes (CLAUDE.md, `docs/dev/`).
     are wrenched elsewhere." for the player, "The giant rat vanishes!" for a creature they saw
     go. Where it lands is never a step, so it is never warped again on landing. Nothing is
     saved. Its `max_cells` keeps it to small rooms; it never covers a whole level.
+  - **A tempting hoard** (`hoard = { items = 3, loot_level = 3, guardians = [2, 4], danger = 1
+    }`, #415; `mapgen/hoard.rs`, `world/hoard.rs`). A generated floor's treasure room gets
+    `items` items (1 to 16), each rolled at the floor's item level + `loot_level` with the
+    finder's luck and laid on a plain floor cell of the room drawn anew (no stairs, light, or
+    trap), from the level's stream `swarm/<level id>` after its population; the floor's
+    population and the generator's patrols keep out of it, so it lies unguarded. The first
+    stack the player lifts inside it (`pick_up`; every stack of a pick-up counts) **seals** it:
+    every door of it shuts (an open one unless someone or something is in the doorway; a broken
+    one stays broken) and locks with a lock of the floor's level (no id: only a skeleton key
+    fits; picked against the usual difficulty plus the branch's per depth, or kicked, §8
+    "Doors"), each slamming as loud as a kick (banging, 100), and "The doors slam shut!" is
+    said when any did; then `guardians` creatures (least to most, one gameplay draw) come, each
+    drawn by the level's danger + `danger` from the branch's population and strays by the draw
+    of §7 "Danger levels" (hostile to the player, never unique), awake, with gear rolled as a
+    creature that comes, on a walkable free cell of the room on its **edge** (next to a cell
+    outside it or not walkable): first those the player does not see, then those they see,
+    then any free cell of the room. A level without a danger rule gets no guardians. A cave
+    chamber has no doors: only the guardians come. A room seals once; the stacks lifted and
+    whether it sealed are saved with the room (`SpecialRoom::lifted`, `sealed`; left out while
+    nothing was lifted, so other rooms save and hash as before), and the `rooms` dev layer
+    lists them (`, lifted 1, sealed`). Hoard-wise (§8 "Talents") lets one stack go first.
+    Never over a whole level.
   - **A status while inside** (`status`, #403): as time passes, at the start of each stretch of
     it (`World::pass_time`: so after every action, the player's and each creature's, at every
     turn of a rest or another long action, and through a creature's coarse turns while the
@@ -334,7 +358,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     favoured, over the favoured ones by their shares). For an effect with a `level_chance`, one
     more draw: with that chance it covers the **whole level** and the room stays plain (it
     counts toward `per_level`; at most one a level). The effect's `floor` replaces plain floor in
-    the room (doorways too). A shunned effect or a den never goes where a creature patrols. About 60 % of
+    the room (doorways too). A shunned effect, a den, or a hoard never goes where a creature patrols. About 60 % of
     generated levels get a special room (a test keeps it between half and seven tenths over 1200
     levels).
   - **A dungeon's own special rooms** (`room_effects` on a branch in a campaign's

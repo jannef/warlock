@@ -109,12 +109,21 @@ gets where a dungeon favours or bans nothing. "Only" says where it can come at a
   you take inside has a one in ten chance to fling you somewhere else on the level, as a
   teleport trap does ("You are wrenched elsewhere."). Creatures stepping in are flung just the
   same, so fleeing through one is a gamble, and so is chasing someone into it.
+- **Treasure room.** A tempting hoard, only on a level with a danger: three items lie on its
+  floor, better than the level's own (three item levels above it), and no one guards them. The
+  moment you pick anything up inside, the room seals: every door of it slams shut and locks
+  ("The doors slam shut!"; a door with something in the doorway stays open), and two to four
+  creatures hostile to you, a step more dangerous than the level's own, come at the room's
+  edges, where you cannot see them if there is such a place. The locks are of the level's
+  depth and no key but a skeleton key fits; pick them, kick the doors in, or fight. A cave
+  chamber has no doors, so there only the guardians come. A room seals once.
 
 The talent *Hallowed rest* (Grit) makes a room that quickens healing or mana quicken it half
 again more for you: a sanctuary's three times as fast becomes four times. The talent *Anchored
 mind* (Scholar) keeps your power moored: Ebbing never takes you. The talent *Mirror-wise*
 (Scholar) sees through reflections within 2 cells of you: they are not shown, and nothing stops
-your step there.
+your step there. The talent *Hoard-wise* (Delver) knows how a treasure room is baited: you
+can lift one thing from it before it seals; the second seals it.
 
 Only what happens inside counts: a sound made in an echoing hall is loud wherever it is heard,
 while one made outside and heard inside is not changed. Light outside a shadowed room is as
