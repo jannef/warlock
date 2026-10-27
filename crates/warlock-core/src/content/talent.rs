@@ -427,6 +427,8 @@ pub enum TalentEffect {
     /// Sleepers need this percent more noise to wake from what it does (Hush-foot; the wake
     /// check in `World::spread_noise`, `world/den.rs`).
     WakePercent { value: i32 },
+    /// What it kills never rises in a cursed room (Grave warden; `World::curse_corpse`).
+    GraveWarden,
     /// Searching reaches this many cells farther.
     SearchReach { value: i32 },
     /// A skill counts this much higher wherever its value is read (an untrained one from 0).
@@ -906,6 +908,9 @@ pub enum TalentEffect {
     },
     /// Inspire gives `status` instead, and costs no mana (Virtuoso).
     Virtuoso { status: String },
+    /// The class active Consecrate: `time` (a duration) of prayer, for `mana` mana, lifts an
+    /// unholy special room (or a whole level's unholy effect) for good (`world/consecrate.rs`).
+    Consecrate { mana: i32, time: String },
 }
 
 /// One degree: a cooldown's default.
@@ -955,6 +960,7 @@ impl TalentEffect {
             TalentEffect::Volley { .. } => A::Volley,
             TalentEffect::Finisher => A::MasterThief,
             TalentEffect::Inspire { .. } => A::Inspire,
+            TalentEffect::Consecrate { .. } => A::Consecrate,
             _ => return None,
         })
     }
@@ -1119,6 +1125,16 @@ impl TalentEffect {
                 resource_cost("flurry_cost", id, *cost)
             }
             TalentEffect::Virtuoso { status: id } => status(id),
+            TalentEffect::Consecrate { mana, time } => {
+                if !(0..=100).contains(mana) {
+                    return Err("`consecrate`: mana is 0 to 100".into());
+                }
+                let time: crate::time::Duration = time.parse()?;
+                if !(1..=3600).contains(&time.as_seconds()) {
+                    return Err("`consecrate`: time is 1s to 1h".into());
+                }
+                Ok(())
+            }
             TalentEffect::RoomStatusImmune { status: id } => status(id),
             TalentEffect::Stat { value, .. } => {
                 if *value == 0 || !(-5..=5).contains(value) {
@@ -1756,6 +1772,7 @@ impl TalentEffect {
             | TalentEffect::Steal
             | TalentEffect::ThrowVoice
             | TalentEffect::Finisher
+            | TalentEffect::GraveWarden
             | TalentEffect::Disarm
             | TalentEffect::Purify
             | TalentEffect::CorpseHarmless

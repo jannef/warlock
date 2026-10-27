@@ -98,6 +98,7 @@ pub(super) fn alignment_deeds(content: &Content) -> String {
             "Eating one of your own race, or a peaceful creature who talks",
             s.eat_kin,
         ),
+        ("Consecrating a cursed or draining place", s.consecrate),
     ];
     let mut out = String::from("| Deed | Moves you | Worth |\n|---|---|:---:|\n");
     for (deed, amount) in rows {

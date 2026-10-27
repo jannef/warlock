@@ -133,7 +133,7 @@ fn the_fen_floods_its_rooms_and_no_one_keeps_a_shop() {
             .collect()
     };
     let flooded = CONTENT.room_effects().id("flooded").expect("flooded");
-    let own = effects(&["flooded", "hushed", "shadowed"]);
+    let own = effects(&["cursed", "flooded", "hushed", "shadowed"]);
     for depth in 1..=8 {
         let odds = def.room_odds(depth).expect("room odds");
         assert_eq!((odds.chance, odds.per_level), (25, 2), "depth {depth}");
@@ -158,7 +158,7 @@ fn the_fen_floods_its_rooms_and_no_one_keeps_a_shop() {
         }
     }
     // The shared odds (12 %, one a level) give about three levels in five a special room; the
-    // fen's give most levels one or two, a third of them flooded, most of them its own three.
+    // fen's give most levels one or two, a third of them flooded, most of them its own four.
     assert!(special >= 36, "{special} special rooms on 36 levels");
     assert!(floods >= 8, "{floods} flooded rooms");
     assert!(
