@@ -20,7 +20,7 @@ hearing = 10
 weight = 65000
 stats = { strength = 21, dexterity = 16, toughness = 22, intelligence = 2, willpower = 25, presence = 2 }
 base_hp = 65
-natural = { defence = 1, protection = 0, name = "dead flesh" }
+natural = { defence = 1, protection = 2, name = "dead flesh" }
 resist = { poison = 100 }
 on_eat = { message = "It is still moving inside.", vomit = 90, harm = "1d6" }
 blood = "#3a4020"

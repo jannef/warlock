@@ -23,7 +23,7 @@ hearing = 15
 weight = 55000
 stats = { strength = 18, dexterity = 16, toughness = 22, intelligence = 24, willpower = 28, presence = 24 }
 base_hp = 48
-natural = { defence = 1, protection = 0, name = "dead flesh" }
+natural = { defence = 1, protection = 1, name = "dead flesh" }
 resist = { poison = 100 }
 weapon_skills = { long_blades = 4 }
 corpse = false

@@ -331,6 +331,12 @@ pub enum TalentEffect {
     NoBloating,
     /// A fresh corpse's chances to raise its stats, this percent more (Gourmand).
     CorpseStatsPercent { value: i32 },
+    /// The daily stat check (06:00) multiplies the need by this, when it is less than the
+    /// data's `daily_factor` (Hard training).
+    DailyFactor { value: u16 },
+    /// The training marks a potion or an elixir gives, this percent more (Quick study of the
+    /// body).
+    PotionMarksPercent { value: i32 },
     /// Experience gained, this percent more.
     XpPercent { value: i32 },
     /// Skill rolls every level, this many more (Quick learner).
@@ -764,6 +770,8 @@ pub enum TalentEffect {
     Grip { status: String },
     /// Added to the roll that confirms its criticals (every attack).
     CriticalConfirm { value: i32 },
+    /// Its confirmed criticals ignore this much more Protection (every attack; Armour-breaker).
+    CriticalPenetration { value: i32 },
     /// Its blows that can do damage of kind `damage` (an id in `data/damage_types.toml`) ignore this
     /// much more Protection.
     Penetration { damage: String, value: i32 },
@@ -1072,6 +1080,7 @@ impl TalentEffect {
             | TalentEffect::CarryKg { value }
             | TalentEffect::Checks { value, .. }
             | TalentEffect::CriticalConfirm { value }
+            | TalentEffect::CriticalPenetration { value }
             | TalentEffect::OffHandDamage { value }
             | TalentEffect::BestSkillThreat { value }
             | TalentEffect::TrapEase { value }
@@ -1192,6 +1201,17 @@ impl TalentEffect {
                     "`train_skill` is for the chosen skill: it needs `choice = \"skill\"`".into(),
                 ),
             },
+            TalentEffect::DailyFactor { value } => {
+                let factors = super::stat_training::DAILY_FACTORS;
+                if !factors.contains(value) {
+                    return Err(format!(
+                        "`daily_factor`: value is {} to {}",
+                        factors.start(),
+                        factors.end()
+                    ));
+                }
+                Ok(())
+            }
             TalentEffect::ScrollKept { chance } => {
                 if !(1..=100).contains(chance) {
                     return Err("`scroll_kept`: chance is 1 to 100".into());
@@ -1619,6 +1639,7 @@ impl TalentEffect {
             | TalentEffect::AttackNoisePercent { value }
             | TalentEffect::StepSlowdownPercent { value }
             | TalentEffect::CorpseStatsPercent { value }
+            | TalentEffect::PotionMarksPercent { value }
             | TalentEffect::LootMagicPercent { value }
             | TalentEffect::SalvagePercent { value }
             | TalentEffect::GemFindPercent { value }

@@ -301,6 +301,10 @@ pub struct TalentMods {
     pub no_bloating: bool,
     /// Percent more of a fresh corpse's chances to raise its stats.
     pub corpse_stats_percent: i32,
+    /// The daily stat check's need factor, if a talent lowers it (the least counts).
+    pub daily_factor: Option<u16>,
+    /// Percent more of the marks a potion or an elixir gives.
+    pub potion_marks_percent: i32,
     /// Percent more experience.
     pub xp_percent: i32,
     /// More skill rolls every level.
@@ -480,6 +484,8 @@ pub struct TalentMods {
     pub grip: Option<StatusId>,
     /// Added to the roll that confirms its criticals.
     pub critical_confirm: i32,
+    /// The Protection its confirmed criticals ignore, on top of the attack's penetration.
+    pub critical_penetration: i32,
     /// More penetration for blows that can do damage of a kind: `(kind, value)`.
     pub penetration: Vec<(DamageTypeId, i32)>,
     /// How much higher the burden's cap on its Dexterity in Defence is.
@@ -1153,6 +1159,10 @@ impl TalentMods {
             TalentEffect::NoExertion => self.no_exertion = true,
             TalentEffect::NoBloating => self.no_bloating = true,
             TalentEffect::CorpseStatsPercent { value } => self.corpse_stats_percent += value,
+            TalentEffect::DailyFactor { value } => {
+                self.daily_factor = Some(self.daily_factor.map_or(value, |f| f.min(value)));
+            }
+            TalentEffect::PotionMarksPercent { value } => self.potion_marks_percent += value,
             TalentEffect::XpPercent { value } => self.xp_percent += value,
             TalentEffect::SkillRolls { value } => self.skill_rolls += value,
             TalentEffect::ExtraPick { level } => self.extra_picks.push(level),
@@ -1354,6 +1364,7 @@ impl TalentMods {
                 self.critical_status = content.status_id(&status).or(self.critical_status);
             }
             TalentEffect::CriticalConfirm { value } => self.critical_confirm += value,
+            TalentEffect::CriticalPenetration { value } => self.critical_penetration += value,
             TalentEffect::Penetration {
                 damage: kind,
                 value,

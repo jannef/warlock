@@ -755,8 +755,12 @@ pub fn route_keys(
                 screens.stack.remember_ability(ability);
                 if let Some(spell) = play.item_spell(ability) {
                     screens.open_identify_spell(spell);
-                } else if let Some(dialog) = play.use_ability(ability) {
-                    screens.ask(dialog);
+                } else {
+                    match play.use_ability(ability) {
+                        Some(ScreenAction::Open(name)) => screens.open(name),
+                        Some(ScreenAction::Dialog(dialog)) => screens.ask(*dialog),
+                        _ => {}
+                    }
                 }
             }
             ScreenAction::Open(name) => screens.open(name),
@@ -1209,11 +1213,11 @@ impl Gameplay<'_> {
     }
 
     /// Uses `ability`: asks for what it needs (a direction in the message line, a cell in the
-    /// aiming mode), then applies its action. One the player cannot use now is applied at once
-    /// all the same, so the rules say why, taking no time (a shield bash without a shield).
-    /// One that treats an ailment (Heal) asks which in the dialog, returned to open, when there
-    /// are several.
-    fn use_ability(&mut self, ability: Ability) -> Option<Dialog> {
+    /// aiming mode, an item from the list returned to open), then applies its action. One the
+    /// player cannot use now is applied at once all the same, so the rules say why, taking no
+    /// time (a shield bash without a shield). One that treats an ailment (Heal) asks which in
+    /// the dialog, returned to open, when there are several.
+    fn use_ability(&mut self, ability: Ability) -> Option<ScreenAction> {
         let game = self.game.as_ref()?;
         let usable = (game.world.perception().abilities().iter())
             .any(|own| own.ability == ability && own.unavailable.is_none());
@@ -1221,8 +1225,12 @@ impl Gameplay<'_> {
         match (usable, ability.aim(&content)) {
             (true, ability::Aim::Direction) => *self.mode = InputMode::Ability(ability),
             (true, ability::Aim::Cell) => self.aim(AimKind::Ability(ability)),
-            // The identify list asks which stack (`item_spell`, before this).
-            (true, ability::Aim::Item) => {}
+            // Temper's list; the identify list asks which stack (`item_spell`, before this).
+            (true, ability::Aim::Item) => {
+                if ability == Ability::Temper {
+                    return Some(ScreenAction::Open(ScreenName::Temper));
+                }
+            }
             (true, ability::Aim::Nothing) => {
                 if let Some(action) = ability.action(&content, None) {
                     self.actions.write(PlayerAction(action));
@@ -1231,7 +1239,7 @@ impl Gameplay<'_> {
             (true, ability::Aim::Ailment) => {
                 let ailments = game.world.perception().own_ailments();
                 if ailments.len() > 1 {
-                    return Some(treat_dialog(&ailments));
+                    return Some(treat_dialog(&ailments).into());
                 }
                 let one = ailments.into_iter().next().map(|a| a.action);
                 if let Some(action) = one.or_else(|| ability.action(&content, None)) {

@@ -450,6 +450,7 @@ mod tests {
             sure_critical: false,
             extra: None,
             penetration: 0,
+            critical_penetration: 0,
             kinds: Default::default(),
             riders: Vec::new(),
             on_hit: Vec::new(),

@@ -6,7 +6,8 @@
 //! `World::train_stat` for the rest); each `[[training.use]]` rule for it gives its stat a mark
 //! with the rule's chance. At a level, a stat rises with chance `marks / (marks + need)`, `need
 //! = need_base + need_per_point × score`, divided by `over_potential_divisor` at or above the
-//! potential ([`StatTraining::odds`]).
+//! potential ([`StatTraining::odds`]). Once a game day at 06:00 each stat gets the same check
+//! with the need times `daily_factor` ([`StatTraining::odds_by`]).
 //!
 //! Without the file nothing trains and no level checks a stat ([`StatTraining::default`]).
 
@@ -19,6 +20,8 @@ use std::ops::RangeInclusive;
 pub const NEEDS: RangeInclusive<u16> = 0..=200;
 /// What `over_potential_divisor` may be.
 pub const DIVISORS: RangeInclusive<u16> = 1..=20;
+/// What `daily_factor` (and a talent's) may be.
+pub const DAILY_FACTORS: RangeInclusive<u16> = 1..=20;
 
 /// A use of the player's stats that may earn a training mark (spec §8 "Stats"), reported at
 /// the one place the thing happens.
@@ -180,6 +183,8 @@ pub struct StatTraining {
     pub need_per_point: u16,
     /// What the chance is divided by at or above the potential: 4.
     pub over_potential_divisor: u16,
+    /// What the need is multiplied by at the daily check (06:00), against a level's: 3.
+    pub daily_factor: u16,
     /// The mark rules, in file order (the order the training stream is drawn in).
     #[serde(default, rename = "use")]
     pub uses: Vec<StatRule>,
@@ -192,6 +197,7 @@ impl Default for StatTraining {
             need_base: 20,
             need_per_point: 3,
             over_potential_divisor: 4,
+            daily_factor: 3,
             uses: Vec::new(),
         }
     }
@@ -216,6 +222,7 @@ impl StatTraining {
                 training.over_potential_divisor,
                 DIVISORS,
             ),
+            ("daily_factor", training.daily_factor, DAILY_FACTORS),
         ] {
             if !range.contains(&value) {
                 return Err(err(format!(
@@ -277,7 +284,14 @@ impl StatTraining {
     /// `(numerator, denominator)`: `marks / (marks + need)`, the denominator multiplied by
     /// `over_potential_divisor` at or above the potential.
     pub fn odds(&self, marks: u16, score: u8, potential: u8) -> (u32, u32) {
-        let mut out = u32::from(marks) + self.need(score);
+        self.odds_by(marks, score, potential, 1)
+    }
+
+    /// [`StatTraining::odds`] with the need multiplied by `factor`: the daily check's, at
+    /// `daily_factor` (or a talent's).
+    pub fn odds_by(&self, marks: u16, score: u8, potential: u8, factor: u16) -> (u32, u32) {
+        let need = self.need(score) * u32::from(factor.max(1));
+        let mut out = u32::from(marks) + need;
         if score >= potential {
             out *= u32::from(self.over_potential_divisor);
         }
@@ -293,8 +307,8 @@ mod tests {
         StatTraining::parse("data/stats.toml", text)
     }
 
-    const HEAD: &str =
-        "[training]\nneed_base = 20\nneed_per_point = 3\nover_potential_divisor = 4\n";
+    const HEAD: &str = "[training]\nneed_base = 20\nneed_per_point = 3\nover_potential_divisor = \
+                        4\ndaily_factor = 3\n";
 
     #[test]
     fn the_odds_follow_the_marks_the_score_and_the_potential() {
@@ -305,6 +319,9 @@ mod tests {
         assert_eq!(t.odds(0, 14, 16), (0, 62));
         // At or above the potential, a quarter of the chance.
         assert_eq!(t.odds(20, 14, 14), (20, 328));
+        // The daily check: the need three times over.
+        assert_eq!(t.odds_by(20, 14, 16, t.daily_factor), (20, 206));
+        assert_eq!(t.odds_by(20, 14, 14, 3), (20, 824));
         assert!(!t.is_active());
     }
 
@@ -334,6 +351,13 @@ mod tests {
                 .unwrap_err()
                 .to_string()
                 .contains("over_potential_divisor")
+        );
+        let bad = HEAD.replace("daily_factor = 3", "daily_factor = 0");
+        assert!(
+            parse(&bad)
+                .unwrap_err()
+                .to_string()
+                .contains("daily_factor")
         );
         let unknown =
             format!("{HEAD}[[training.use]]\nstat = \"luck\"\non = \"blow\"\nchance = 5\n");

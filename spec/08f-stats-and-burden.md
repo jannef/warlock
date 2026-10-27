@@ -59,7 +59,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     or above the potential, where a rise lifts the potential with the score; at most 40. A rise
     uses up the stat's marks (a failed check keeps them) and says "You feel stronger."
     (quicker, tougher, sharper, more resolute, more confident) after "Welcome to level N."; a
-    Toughness rise brings its hit point at once. No choice, and nothing numeric is shown: no
+    Toughness rise brings its hit point at once. **Once a game day at 06:00** (#562) each stat
+    gets the same check again between levels, on the **training** stream (six draws a day,
+    always; none without the data), with the need times `daily_factor` (3; the Hard training
+    talent's 2); a rise says the same at once and stops a rest. It is a moment of the status
+    loop, so however a rest is cut up the checks come at their hours in order;
+    `WorldState::next_stat_check` is saved (left out without the data; scheduled on load for a
+    save without it). The dev skip passes no check. No choice, and nothing numeric is shown: no
     marks, chance, or potential (the dev `progress` dump layer lists the marks; the wiki states
     the rules exactly).
   - **Stat damage** (`StatDamage`, `Actor::damage`; saved, hashed): points a disease's failed

@@ -183,6 +183,7 @@ mod stride;
 mod summon;
 mod talent;
 mod talk;
+mod temper;
 mod train;
 mod trap;
 mod travel;
@@ -221,6 +222,7 @@ pub use spell::cone_cells;
 pub(crate) use stars::{RISEN, RISEN_TWICE};
 pub use talent::Due;
 pub use talk::{Conversation, Talk, TopicView};
+pub use temper::{DIFFICULTY as TEMPER_DIFFICULTY, POINTS_PER_MARGIN, lean_for, temperable};
 use travel::{enter_room, instantiate_level, level_template};
 pub use voice::VOICE_RANGE;
 
@@ -322,6 +324,11 @@ pub struct WorldState {
     /// draw ([`Rng::levels`]), so a run that never drew from it hashes as before.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) levels_rng: Option<Rng>,
+    /// When the daily stat check comes next (spec §8 "Stats": 06:00 game time;
+    /// `world/stat_training.rs`). `None` while the content has no training rules (so content
+    /// without them hashes as before) and in a save made before it: scheduled on load.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) next_stat_check: Option<GameTime>,
     /// Dev: the weather set by hand (`weather:rain`), until it runs out.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) weather_override: Option<weather::Override>,
@@ -533,6 +540,8 @@ enum Spent {
     Drink(drink::Draught),
     /// Foraging in the wild for this many seconds (see [`World::forage`]).
     Forage(u32),
+    /// Tempering an item at a forge's anvil (see [`World::temper`]).
+    Temper(temper::Tempering),
     /// Dev: the clock jumps ahead; nobody acts, then perception is recomputed.
     Skip(Duration),
 }
@@ -691,6 +700,7 @@ impl World {
             rng: Rng::gameplay(seed),
             training: Rng::training(seed),
             levels_rng: None,
+            next_stat_check: None,
             turn: 0,
             time: def.start,
             current_level: start.id.clone(),
@@ -895,6 +905,7 @@ impl World {
     }
 
     fn assemble(content: Arc<Content>, mut state: WorldState) -> Self {
+        stat_training::schedule(&mut state, &content);
         let mut lights = LightCache::default();
         let perception = Box::new(Perception::compute(&state, &content, &mut lights));
         perception.remember(state.current_mut());
@@ -1113,6 +1124,7 @@ impl World {
             Spent::Pray(prayer) => self.pray(prayer, &mut events),
             Spent::Drink(draught) => self.drink(draught, &mut events),
             Spent::Forage(seconds) => self.forage(seconds, &mut events),
+            Spent::Temper(work) => self.temper(work, &mut events),
             Spent::Skip(duration) => {
                 // Nobody acts or gains energy.
                 self.state.time += duration;
@@ -1231,6 +1243,7 @@ impl World {
             Action::Pray => return self.start_prayer(),
             Action::Drink => return self.start_drink(),
             Action::Forage => return self.start_forage(),
+            Action::Temper { item } => return self.start_temper(*item),
             Action::SecondWind => return self.second_wind(events),
             Action::BloodMagic => return self.blood_magic(),
             Action::Use(active, dir) => return self.use_class(*active, *dir, events),
@@ -1557,6 +1570,8 @@ mod talent_tests;
 mod talent_wits_tests;
 #[cfg(test)]
 mod talk_tests;
+#[cfg(test)]
+mod temper_tests;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]

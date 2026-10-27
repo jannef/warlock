@@ -137,6 +137,10 @@
 #   no_bloating                   a meal never leaves it Bloated: what does not fit is lost
 #   corpse_stats_percent { value }   a fresh corpse's chances to raise its stats, that percent
 #                                 more (never above certain)
+#   daily_factor { value }        the daily stat check (06:00) multiplies the need by this, if
+#                                 less than stats.toml's daily_factor (1 to 20)
+#   potion_marks_percent { value }   the training marks a potion or an elixir gives, that
+#                                 percent more
 #   xp_percent { value }          experience gained, that percent more
 #   skill_rolls { value }         skill rolls every level, that many more
 #   extra_pick { level }          one more talent pick at that character level (1: at creation)
@@ -279,6 +283,8 @@
 #                                 (one that `blocks` steps: held), until it misses that creature,
 #                                 strikes another, or moves
 #   critical_confirm { value }    added to the roll that confirms its criticals
+#   critical_penetration { value } its confirmed criticals (every attack) ignore that much more
+#                                 Protection, on top of the attack's penetration
 #   penetration { damage, value } its blows that can do damage of that kind ignore that much
 #                                 more Protection
 #   burden_dex { value }          the burden's cap on its Dexterity in Defence, that much higher

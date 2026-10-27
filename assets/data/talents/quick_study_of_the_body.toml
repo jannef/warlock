@@ -1,0 +1,7 @@
+[[talent]]
+id = "quick_study_of_the_body"
+name = "Quick study of the body"
+tree = "scholar"
+description = "What you drink teaches your body more: potions and elixirs train your stats further."
+effects = [{ kind = "potion_marks_percent", value = 100 }]
+systems = ["stat_training"]

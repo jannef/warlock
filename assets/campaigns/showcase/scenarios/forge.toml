@@ -1,0 +1,7 @@
+name = "Forge"
+description = "A cold forge with an anvil and some arms and armour to work on: pick them up, stand beside the anvil, and choose Temper from the abilities menu."
+start_level = "forge"
+seed = 1
+# A smith come to see what the old anvil can still do.
+character = { race = "human", gender = "male", class = "craftsperson", name = "Wulfhere" }
+lantern = "lantern"

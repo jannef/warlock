@@ -197,6 +197,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("potentials.md", character::potentials),
         ("stat-training.md", stats::stat_training),
         ("stat-checks.md", stats::stat_checks),
+        ("stat-daily-checks.md", stats::stat_daily_checks),
         ("drain-attacks.md", stats::drain_attacks),
         ("genders.md", character::genders),
         ("races.md", character::races),
@@ -294,6 +295,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("teeming-dens.md", rooms::teeming_dens),
         ("altar-outcomes.md", outcomes::altar_outcomes),
         ("altar-shares.md", outcomes::altar_shares),
+        ("forge-outcomes.md", outcomes::forge_outcomes),
+        ("forge-shares.md", outcomes::forge_shares),
         ("spring-outcomes.md", outcomes::spring_outcomes),
         ("risings.md", rooms::risings),
         ("magic-rarity.md", magic::magic_rarity),
@@ -851,7 +854,7 @@ mod tests {
             benefits.contains(
                 "| Value | Appraise: prices | Athletics: kicking doors in | Athletics: speed | \
                  Balance: Burdened / Strained | Decipher script: study check | Disable device: disarming traps | \
-                 Heal: treating | Listen: hears fainter by | Open lock: picking locks | Search: searching | \
+                 Heal: treating | Listen: hears fainter by | Metalcraft: tempering | Open lock: picking locks | Search: searching | \
                  Search: search reaches | Spellcraft: study check | Spot: noticing | Steal: \
                  stealing | Stealth: noise | Survival: journeys | Survival: foraging | Tumble: \
                  Dodge |"
@@ -871,12 +874,12 @@ mod tests {
             "{foraging}"
         );
         assert!(benefits.contains(
-            "| 100 | 20% better | +8 Strength | +5% | ×1.1 / ×1.2 | +10 | +8 | +8 | 10 | +8 | +8 | +1 cell | +10 \
-             | +8 | +8 | \u{2212}60% | \u{2212}20% | +15% | +5 |"
+            "| 100 | 20% better | +8 Strength | +5% | ×1.1 / ×1.2 | +10 | +8 | +8 | 10 | +8 | +8 | +8 | +1 cell \
+             | +10 | +8 | +8 | \u{2212}60% | \u{2212}20% | +15% | +5 |"
         ));
         assert!(benefits.contains(
-            "| 150 | 25% better | +10 Strength | +7% | ×1.08 / ×1.15 | +15 | +10 | +10 | 15 | +10 | +10 | +1 cell \
-             | +15 | +10 | +10 | \u{2212}75% | \u{2212}20% | +22% | +7 |"
+            "| 150 | 25% better | +10 Strength | +7% | ×1.08 / ×1.15 | +15 | +10 | +10 | 15 | +10 | +10 | +10 \
+             | +1 cell | +15 | +10 | +10 | \u{2212}75% | \u{2212}20% | +22% | +7 |"
         ));
         // Treating oneself: the difficulty and odds of each ailment.
         let heal = text("heal-targets.md");

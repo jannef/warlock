@@ -102,6 +102,10 @@ pub enum Ability {
     /// it ([`Ability::here`]): listed only while the player stands next to such an altar (never
     /// a spent one), absent elsewhere.
     Pray,
+    /// Temper a carried weapon or armour at a forge's anvil (spec §7 "Special rooms"):
+    /// [`Action::Temper`]. A place offers it ([`Ability::here`]): listed only while the player
+    /// stands next to an anvil; it asks which item ([`Aim::Item`]).
+    Temper,
     /// Drink at a healing spring (spec §7 "Special rooms"): [`Action::Drink`]. A place offers
     /// it, as Pray: listed only while the player stands next to a spring.
     Drink,
@@ -190,7 +194,8 @@ pub enum Aim {
     /// What to treat, of what the player may treat now ([`crate::heal::treatable`]): asked
     /// only when there is more than one (the Heal ability).
     Ailment,
-    /// A stack the player carries, on the identify list (the Identify spell,
+    /// A stack the player carries, from a list of those it may work on (the Identify spell on
+    /// the identify list; Temper: a weapon or armour, [`crate::world::temperable`];
     /// [`Ability::action_on`]).
     Item,
 }
@@ -302,10 +307,14 @@ impl Ability {
             (content.room_effects().defs().iter())
                 .any(|e| e.offers.as_ref().is_some_and(|(o, _)| *o == offer))
         };
-        let here = [(Offer::Pray, Ability::Pray), (Offer::Drink, Ability::Drink)]
-            .into_iter()
-            .filter(|&(offer, _)| offers(offer))
-            .map(|(_, ability)| ability);
+        let here = [
+            (Offer::Pray, Ability::Pray),
+            (Offer::Temper, Ability::Temper),
+            (Offer::Drink, Ability::Drink),
+        ]
+        .into_iter()
+        .filter(|&(offer, _)| offers(offer))
+        .map(|(_, ability)| ability);
         let mut all: Vec<Ability> = (signs.chain(class))
             .chain(classes)
             .chain(spells)
@@ -347,6 +356,7 @@ impl Ability {
             .filter_map(|t| content.offer_at(t))
             .map(|(offer, _)| match offer {
                 Offer::Pray => Ability::Pray,
+                Offer::Temper => Ability::Temper,
                 Offer::Drink => Ability::Drink,
             })
             .collect();
@@ -398,7 +408,7 @@ impl Ability {
             Ability::ThrowVoice => actor.talent_mods(content).throw_voice,
             Ability::ShieldBash | Ability::HoodLantern => true,
             // A place offers it, not who one is ([`Ability::here`]).
-            Ability::Pray | Ability::Drink => false,
+            Ability::Pray | Ability::Temper | Ability::Drink => false,
         }
     }
 
@@ -420,6 +430,7 @@ impl Ability {
             Ability::ShieldBash => "shield_bash",
             Ability::HoodLantern => "hood_lantern",
             Ability::Pray => "pray",
+            Ability::Temper => "temper",
             Ability::Drink => "drink",
         }
     }
@@ -442,6 +453,7 @@ impl Ability {
             Ability::ShieldBash => "Shield bash",
             Ability::HoodLantern => "Hood your lantern",
             Ability::Pray => "Pray",
+            Ability::Temper => "Temper",
             Ability::Drink => "Drink",
         }
     }
@@ -489,6 +501,10 @@ impl Ability {
                 "Kneel at the forgotten altar beside you and pray for a minute. Something may \
                  answer, for good or ill."
             }
+            Ability::Temper => {
+                "Work a weapon or a piece of armour you carry at the anvil beside you for ten \
+                 minutes. The metal may come out better, or worse, or break."
+            }
             Ability::Drink => {
                 "Drink from the spring beside you. Its water is mostly good, and now and then \
                  foul."
@@ -512,7 +528,7 @@ impl Ability {
             Ability::SecondWind | Ability::BloodMagic => Source::Talent,
             Ability::ShieldBash => Source::WeaponSkill,
             Ability::HoodLantern => Source::Item,
-            Ability::Pray | Ability::Drink => Source::Place,
+            Ability::Pray | Ability::Temper | Ability::Drink => Source::Place,
         }
     }
 
@@ -534,6 +550,7 @@ impl Ability {
             | Ability::Forage
             | Ability::Pray
             | Ability::Drink => Aim::Nothing,
+            Ability::Temper => Aim::Item,
             Ability::ThrowVoice => Aim::Cell,
             Ability::Heal => Aim::Ailment,
             Ability::Disarm | Ability::PickLock | Ability::Steal | Ability::ShieldBash => {
@@ -560,6 +577,7 @@ impl Ability {
             Ability::ShieldBash => Some(ActionKind::Melee),
             Ability::HoodLantern => Some(ActionKind::Hood),
             Ability::Pray => Some(ActionKind::Pray),
+            Ability::Temper => Some(ActionKind::Temper),
             Ability::Drink => Some(ActionKind::Drink),
         }
     }
@@ -587,6 +605,7 @@ impl Ability {
             | Ability::ShieldBash
             | Ability::HoodLantern
             | Ability::Pray
+            | Ability::Temper
             | Ability::Drink => None,
         }
     }
@@ -643,13 +662,16 @@ impl Ability {
             (Ability::Pray, _) => Some(Action::Pray),
             (Ability::Drink, _) => Some(Action::Drink),
             (Ability::Forage, _) => Some(Action::Forage),
+            // It asks for an item ([`Ability::action_on`]).
+            (Ability::Temper, _) => None,
         }
     }
 
-    /// The action it is, cast on inventory stack `item`, for one that asks for a stack the
-    /// player carries (Identify); `None` for any other.
+    /// The action it is, worked or cast on inventory stack `item`, for one that asks for a stack
+    /// the player carries (Identify, Temper); `None` for any other.
     pub fn action_on(self, content: &Content, item: usize) -> Option<Action> {
         match self {
+            Ability::Temper => Some(Action::Temper { item }),
             Ability::Spell(spell) if aims_item(content, spell) => {
                 Some(Action::CastOn(spell_name(content, spell)?, item))
             }
@@ -681,6 +703,7 @@ impl Ability {
             | Ability::ShieldBash
             | Ability::HoodLantern
             | Ability::Pray
+            | Ability::Temper
             | Ability::Drink => None,
         }
     }
@@ -734,6 +757,7 @@ impl Ability {
             | Ability::Forage
             | Ability::BloodMagic
             | Ability::Pray
+            | Ability::Temper
             | Ability::Drink => None,
             Ability::SecondWind => (actor.talent_mods(content).second_wind)
                 .map(|w| w.cooldown)
@@ -899,13 +923,14 @@ mod tests {
                 "woodcraft",
             ]
         );
-        let last: Vec<Ability> = every.iter().rev().take(4).rev().copied().collect();
+        let last: Vec<Ability> = every.iter().rev().take(5).rev().copied().collect();
         assert_eq!(
             last,
             [
                 Ability::ShieldBash,
                 Ability::HoodLantern,
                 Ability::Pray,
+                Ability::Temper,
                 Ability::Drink
             ],
             "then what a place offers"

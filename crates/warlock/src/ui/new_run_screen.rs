@@ -320,7 +320,7 @@ mod tests {
 
     fn drawn(screen: &NewRunScreen) -> String {
         let mut console = Console::default();
-        console.resize(80, 30);
+        console.resize(80, 34);
         screen.draw(&mut console, &Bindings::default());
         (0..console.rows() as i32)
             .map(|y| {

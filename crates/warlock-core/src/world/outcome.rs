@@ -21,12 +21,13 @@ use crate::alignment::Alignment;
 use crate::combat::Blow;
 use crate::content::{
     Amount, CreatureSpawn, Harmful, Near, OutcomeDef, OutcomeEffect, OutcomeKind, OutcomeSummon,
-    OutcomeTable, Stance, danger,
+    OutcomeTable, Stance, Work, danger,
 };
 use crate::damage::Damage;
 use crate::geom::{Dir, Pos};
 use crate::hunger::Hunger;
 use crate::magic::loot::{self, LootGrade};
+use crate::magic::temper;
 use crate::object::{Stack, add_to_pile};
 use crate::stats::Stat;
 use crate::variant::Source;
@@ -98,6 +99,18 @@ impl World {
 
     /// `outcome` befalls the player at the place whose feature is on `feature` (module docs).
     pub(super) fn befall(&mut self, outcome: &OutcomeDef, feature: Pos, events: &mut Vec<Event>) {
+        self.befall_on(outcome, feature, None, events);
+    }
+
+    /// [`World::befall`], with the carried stack at `item` the one worked (a forge's Temper): its
+    /// `work` hook changes it.
+    pub(super) fn befall_on(
+        &mut self,
+        outcome: &OutcomeDef,
+        feature: Pos,
+        item: Option<usize>,
+        events: &mut Vec<Event>,
+    ) {
         let line = match outcome.messages.len() {
             0 => None,
             1 => outcome.messages.first().cloned(),
@@ -113,7 +126,7 @@ impl World {
         {
             self.say(line.clone());
         }
-        let done = self.hooks(effect, feature, events, |w| {
+        let done = self.hooks(effect, (feature, item), events, |w| {
             if let (Some(line), Some(_)) = (&line, &outcome.otherwise) {
                 w.say(line.clone());
             }
@@ -128,7 +141,7 @@ impl World {
     fn hooks(
         &mut self,
         effect: &OutcomeEffect,
-        feature: Pos,
+        (feature, item): (Pos, Option<usize>),
         events: &mut Vec<Event>,
         before: impl FnOnce(&mut Self),
     ) -> bool {
@@ -269,6 +282,9 @@ impl World {
             self.set_terrain(feature, terrain);
             done = true;
         }
+        if let (Some(work), Some(item)) = (effect.work, item) {
+            done |= self.work_on(work, item, found_once(&mut found));
+        }
         // The great boons and banes (`boons.rs`).
         if let Some(gift) = effect.gift {
             self.gift_stat(gift);
@@ -301,6 +317,39 @@ impl World {
             done |= self.bestow_flaw(found_once(&mut found));
         }
         done
+    }
+
+    /// `work` done to the carried stack at `item` (a forge's Temper; `magic/temper.rs`): improved
+    /// or flawed in place, or broken and gone. Whether anything changed; `found` before.
+    fn work_on(&mut self, work: Work, item: usize, found: impl FnOnce(&mut Self)) -> bool {
+        let content = self.content.clone();
+        let Some(stack) = self.state.player().inventory.get(item).cloned() else {
+            return false;
+        };
+        let def = content.object(stack.object);
+        let level = content.item_level(&self.state.current_level);
+        let magic = match work {
+            Work::Improve => {
+                let rng = &mut self.state.rng;
+                temper::improve(&content, rng, def, stack.magic(), level).map(Some)
+            }
+            Work::Flaw => temper::flaw(&mut self.state.rng, stack.magic()),
+            Work::Ruin => {
+                found(self);
+                remove_stacks(self.player_mut(), &[item]);
+                self.keep_hp_within_max(self.state.player);
+                return true;
+            }
+        };
+        let Some(magic) = magic else {
+            return false;
+        };
+        found(self);
+        if let Some(stack) = self.player_mut().inventory.get_mut(item) {
+            stack.set_magic(magic);
+        }
+        self.keep_hp_within_max(self.state.player);
+        true
     }
 
     /// Hit points back: `heal`'s roll, half the maximum, or all of them, never past it.

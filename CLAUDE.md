@@ -48,8 +48,9 @@ Game flags (`cargo run -p warlock -- --help`):
   where kobolds and giant rats fight, `quarry` in the quarry beside a pick-axe, `traps` in the
   trap hall, `summoners` in the summoning hall's south hall (three summoners behind doors), `cealdhlaw` on the first floor of Cealdhlāw, the Ascmearc's first dungeon, `fennmynster` on
   the first floor of Fennmynster, the drowned minster's cellars, `fyrdelf` on the first floor of Fyrdelf,
-  its deepest, `shrine` before three forgotten altars, good, neutral, and evil, to pray at, `spring` below a
-  cave room with a healing spring to drink at), `--seed S`
+  its deepest, `shrine` before three forgotten altars, good, neutral, and evil, to pray at, `forge`
+  beside a forge's anvil with arms and armour to temper, `spring` below a cave room with a healing
+  spring to drink at), `--seed S`
   (default: the scenario's seed; a number, or a word hashed with FNV-1a, e.g. `--seed warlock`),
   `--character RACE,GENDER,CLASS` (e.g. `dwarf,female,warrior`; default: the scenario's
   character; like `--seed` it shapes the run other flags start and alone does not skip the menu),
@@ -79,7 +80,7 @@ Game flags (`cargo run -p warlock -- --help`):
   sign's reveal), `gender`, `class`, `chargen-talents` (the creation picks), `name`, and
   `summary` over New run and the steps before
   them (each on its preselection: the first scenario's character, the Ascmearc's, an empty name);
-  `pause`, `help`, `inventory`, `equipment`, `character`, `weapon-skills`, `quests`, `talents` (the Talents page), `messages` (the message history), `pick-up` (the pile on the player's cell), `drop`, `eat`, `read`, `study` (the scrolls one could study), `identify` (for the first stack's scroll), and `abilities` (the abilities menu) over a run
+  `pause`, `help`, `inventory`, `equipment`, `character`, `weapon-skills`, `quests`, `talents` (the Talents page), `messages` (the message history), `pick-up` (the pile on the player's cell), `drop`, `eat`, `read`, `study` (the scrolls one could study), `identify` (for the first stack's scroll), `temper` (the weapons and armour carried, as the Temper ability asks), and `abilities` (the abilities menu) over a run
   (e.g. after a `--replay` that walks onto a pile), `dialogue` over a run whose last action was
   talk with topics (a `--replay` ending in `chat:SE` or `ask:SE:rooms` next to the hub's hermit),
   `equip-item` (the choice for the first slot, Head) over the equipment screen; `settings`,
@@ -116,7 +117,7 @@ log, active first) from perception;
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:DIR pick:DIR ascend descend lantern hood
 pickup[:LETTERS] drop[:LETTERS] sell[:LETTERS] pay[:DIR] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
-eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] study:LETTER dig:DIR search search:N disarm:DIR heal[:ID] pray drink second_wind blood_magic use:ID[:DIR] chat:DIR ask:DIR:TOPIC steal:DIR throw_voice:X,Y rest:GOAL stance:NAME vision:PROFILE
+eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] study:LETTER dig:DIR search search:N disarm:DIR heal[:ID] pray temper:LETTER drink second_wind blood_magic use:ID[:DIR] chat:DIR ask:DIR:TOPIC steal:DIR throw_voice:X,Y rest:GOAL stance:NAME vision:PROFILE
 talent:ID[:CHOICE] advance:SKILL levelup:auto xp:N
 skip:DURATION weather:KIND spawn effect:ID@X,Y[>X,Y] identify[:LETTERS] afflict:STATUS drain:N resource:ID infect:DISEASE reveal:ID quest_roll:ID:TARGET`
 (`DIR` = N
@@ -138,7 +139,7 @@ identify); `study:c` studies scroll stack `c` to learn the spell it teaches
 (docs/dev/spells.md "Learning"); `dig:E` digs into the wall east with the tool in the Tool slot, turn
 after turn until it gives way or something interrupts; `search` searches the cells around the
 player for secret doors and hidden traps, `search:N` for up to N turns (1 to 100), stopping when
-something is found; `pray` prays at the forgotten altar beside the player (the Pray ability, the abilities menu's Here group: a minute, then an outcome from `data/outcomes/forgotten_altar.toml`, and perhaps the altar spent; refused, with no time, with no altar beside them; docs/dev/special-rooms.md); `drink` drinks at the healing spring beside the player (the Drink ability, Here too: ten seconds, then an outcome from `data/outcomes/spring.toml`; a spring never runs dry; refused, with no time, with no spring beside them); `second_wind` uses the Second wind talent (hit points back at once, then Winded); `blood_magic` the Blood magic talent (hit points for mana, never the last); `use:rage` uses a class ability (spec §8 "Class abilities"; `use:smite:E` one aimed in a direction: rage, veterans_wind, whirlwind, lay_on_hands, smite, holy_radiance, quivering_palm, master_thief, inspire; `use:volley:12,5` one aimed at a cell; a birth sign's active the same way, `use:horns_grace`, `use:blaze`, `use:hounds_bay`, or aimed at a cell, `use:transfixing_stare:12,5`, `use:fire_breath:12,5`; a spell the player knows too, by its id in `assets/data/spells/`, paid in mana, `use:haste`, or aimed at a cell, `use:magic_missile:12,5`, or cast on inventory stack `c`, `use:identify:c` (any `use:ID` that is no class or birth sign ability is a spell)); `disarm:E` tries to disarm the trap the player knows of east of them (the
+something is found; `pray` prays at the forgotten altar beside the player (the Pray ability, the abilities menu's Here group: a minute, then an outcome from `data/outcomes/forgotten_altar.toml`, and perhaps the altar spent; refused, with no time, with no altar beside them; docs/dev/special-rooms.md); `drink` drinks at the healing spring beside the player (the Drink ability, Here too: ten seconds, then an outcome from `data/outcomes/spring.toml`; a spring never runs dry; refused, with no time, with no spring beside them); `temper:c` tempers inventory stack `c` at the anvil beside the player (the Temper ability, the Here group: ten minutes, then a Strength check plus Metalcraft leans an outcome from `data/outcomes/forge.toml`: improved, nothing, flawed, or ruined; refused, with no time, with no anvil beside them or a stack that is not a weapon or armour); `second_wind` uses the Second wind talent (hit points back at once, then Winded); `blood_magic` the Blood magic talent (hit points for mana, never the last); `use:rage` uses a class ability (spec §8 "Class abilities"; `use:smite:E` one aimed in a direction: rage, veterans_wind, whirlwind, lay_on_hands, smite, holy_radiance, quivering_palm, master_thief, inspire; `use:volley:12,5` one aimed at a cell; a birth sign's active the same way, `use:horns_grace`, `use:blaze`, `use:hounds_bay`, or aimed at a cell, `use:transfixing_stare:12,5`, `use:fire_breath:12,5`; a spell the player knows too, by its id in `assets/data/spells/`, paid in mana, `use:haste`, or aimed at a cell, `use:magic_missile:12,5`, or cast on inventory stack `c`, `use:identify:c` (any `use:ID` that is no class or birth sign ability is a spell)); `disarm:E` tries to disarm the trap the player knows of east of them (the
 Disarm ability, for those trained in Disable device; refused, with no time, without the skill
 or a known trap there); `heal:bleeding` treats the player's own bleeding with the Heal skill (the
 Heal ability: a status id with a `treat` table, `heal:poisoned`, or a showing disease's id,

@@ -229,6 +229,8 @@ fn rests_of_any_length_lose_the_food_at_the_same_moment_without_being_stopped() 
     const LOST: &str = "Your 2 loaves of bread have rotted away.";
     let rested = |rests: &str| {
         let (mut w, _) = carrying();
+        // No daily stat check, whose rises would stop the rests where they fall.
+        w.state.next_stat_check = None;
         run(&mut w, rests);
         w
     };

@@ -154,6 +154,11 @@ impl Stack {
         self.magic.as_deref()
     }
 
+    /// Sets what it rolled (a forge's tempering, `magic/temper.rs`): `None` makes it plain.
+    pub(crate) fn set_magic(&mut self, magic: Option<Magic>) {
+        self.magic = magic.map(Box::new);
+    }
+
     /// Normal, magic, or rare: this the player sees at once.
     pub fn rarity(&self) -> Rarity {
         self.magic.as_ref().map_or(Rarity::Normal, |m| m.rarity)

@@ -145,6 +145,43 @@ fn crusher_drives_bludgeoning_blows_through_protection() {
 }
 
 #[test]
+fn armour_breakers_criticals_drive_through_protection() {
+    // Every attack of its holder carries it, weapon or none, kick and throw alike; a plain
+    // blow's penetration is untouched (combat's own test soaks a critical with it).
+    let mut w = world();
+    let content = w.content().clone();
+    wield(&mut w, "mace");
+    let before = w.state.player().melee(&content);
+    assert_eq!(before.critical_penetration, 0);
+    give(&mut w, "armour_breaker", None);
+    let after = w.state.player().melee(&content);
+    assert_eq!(after.critical_penetration, 2);
+    assert_eq!(after.penetration, before.penetration);
+    assert_eq!(w.state.player().kick(&content).critical_penetration, 2);
+}
+
+#[test]
+fn armour_breaker_asks_for_a_heavy_weapon_at_seven() {
+    let mut w = world();
+    let spec = w.state.character.as_ref().map(|c| &c.spec);
+    let factor = crate::content::Factor::of(w.content(), spec);
+    let need = w.content().experience().threshold_for(3, factor);
+    run(&mut w, &format!("xp:{need}"));
+    w.player_mut().weapon_skills = Default::default();
+    run(&mut w, "talent:armour_breaker");
+    assert!(
+        last(&w).starts_with("You cannot take Armour-breaker"),
+        "{}",
+        last(&w)
+    );
+    let table = w.content().weapon_skills().clone();
+    let polearms = table.id("polearms").expect("polearms");
+    w.player_mut().weapon_skills.raise(&table, polearms, 7);
+    run(&mut w, "talent:armour_breaker");
+    assert_eq!(last(&w), "You learn Armour-breaker.");
+}
+
+#[test]
 fn the_ward_is_chosen_for_an_element_only() {
     let mut w = world();
     let spec = w.state.character.as_ref().map(|c| &c.spec);

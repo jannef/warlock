@@ -12,7 +12,7 @@ expression: "render(case, content.clone())"
     │     Stone hide  (birth sign)                                                            │
     │     Stonewise  (birth sign)                                                             │
     │   Vigour                                                                                │
-    │     Iron stomach                                                                        │
+    │     Healthy                                                                             │
     │   Wayfarer                                                                              │
     │     Winter-born                                                                         │
     │   Class abilities                                                                       │
@@ -33,8 +33,8 @@ expression: "render(case, content.clone())"
     │         Needs: Healthy, Toughness 13                                                    │
     │     Fever-proof                                                                         │
     │         Needs: Strong constitution, level 15                                            │
-    │     Hardy                                                                               │
-    │         Needs: Toughness 11                                                             │
+    │     Hard training                                                                       │
+    │         Needs: nothing                                                                  │
     │                                                                                       ↓ │
     │ A weapon in each hand hampers you less, and with sword and shield your free bash comes  │
     │ more often.                                                                             │

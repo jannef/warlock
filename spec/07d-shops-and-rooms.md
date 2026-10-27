@@ -228,7 +228,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     level with `level_chance` 5 ("The dead do not rest on this level."). Fennmynster favours it
     at 15; an *altar room* (8, #406; only in a room of at least 9 floor cells) holds a
     forgotten altar to pray at ("A faint glow rises from an altar ahead." when glimpsed, "An old
-    altar stands here, its god long forgotten." on entering; below); a *shrine* (4, #413; only in
+    altar stands here, its god long forgotten." on entering; below); a *forge* (3, #418; only in
+    a room of at least 9 floor cells; Fennmynster bans it) holds an anvil to temper at ("You
+    smell old soot and cold iron." when glimpsed, "A cold forge, and an anvil waiting." on
+    entering; below); a *shrine* (4, #413; only in
     a room of at least 9 floor cells) is a shrine of a side (below: "You feel welcome here.",
     "Something here wants you gone.", or "An old shrine. It ignores you." on entering); a *spring*
     (4, #416; only in a room of at least 9 floor cells) holds a healing spring to drink at ("Clear
@@ -469,6 +472,33 @@ developer notes (CLAUDE.md, `docs/dev/`).
       gutters and dies."); Pray is offered there no more. Nothing new is saved: the terrain
       grid is the record, and the `rooms` dev layer marks such a room `spent` (or `destroyed`).
       No other place offers prayer (the design's decision 14).
+  - **Forges and tempering** (`offers = { temper = "forge" }`, #418; `world/temper.rs`,
+    `magic/temper.rs`): the forge's feature is an **anvil** (terrain `anvil`, `π`, cold, no
+    light; look mode adds its description). **Temper** (`Action::Temper { item }`,
+    `temper:LETTER` in action text) is offered in the abilities menu's *Here* group while the
+    player stands next to an anvil, to anyone; it asks for an item (`Aim::Item`: the Temper
+    list, the weapons, missile weapons, armour, and shields carried, never ammunition, rings, or
+    amulets). Refused, taking no time, with no anvil beside the player ("There is no anvil
+    here.") or a stack that cannot be tempered ("Only weapons and armour can be tempered.").
+    - **Time**: the table's `seconds` (600: ten minutes), in turns of the `temper` action (1000)
+      through `keep_at`; interrupted as a rest is ("You put down the hammer."), it does nothing
+      to the item, but the time is spent.
+    - **The check**: done, one Strength check (2d12 plus the Strength modifier, Metalcraft's
+      `temper` benefit, +8 at 100 and +12 at 200, and the talents' Strength checks): its margin
+      over 13, times 2, held to the table's `lean` (20), moves that many points from the bane to
+      the boon, or the other way below 13.
+    - **The outcome** (`data/outcomes/forge.toml`, kinds boon 35, nothing 30, bane 35; the
+      outcomes' `work` hook): **improved** (boon, 35: an affix the item may roll added, of a kind
+      its rarity has room for, a plain item becoming magic; with no room or nothing to add, its
+      strongest affix a tier up, its value rolled anew; "The metal rings true."), **nothing**
+      (30, "Nothing changes."), **flawed** (bane, 25: one affix drawn and lost, its last making
+      it plain, a unique keeping its last; "Something in the metal is lost."), **ruined** (bane,
+      10: the item breaks and is gone, from the hand too; "It shatters under the hammer!"). A
+      stack of several is worked one at a time. What survives is identified ("This is ...!"),
+      and every finished tempering marks Metalcraft. `exhaust = 0`: the anvil is never spent
+      (the owner's no-limit rule; the rarity's room is the natural cap). Every draw is from the
+      gameplay stream; nothing new is saved.
+
   - **Healing springs** (`feature = "spring"`, `offers = { drink = "spring" }`, #416;
     `world/drink.rs`, the design's §9.10): the spring is its own terrain, `spring` ("spring", a
     stone basin of water, `{`, not walkable; look mode adds its description), placed as an

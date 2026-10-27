@@ -25,7 +25,7 @@ weight = 40000
 stats = { strength = 16, dexterity = 15, toughness = 20, intelligence = 22, willpower = 27, presence = 22 }
 base_hp = 40
 skills = { concentration = 70, spellcraft = 75 }
-natural = { defence = 1, protection = 0, name = "wrappings" }
+natural = { defence = 1, protection = 1, name = "wrappings" }
 resist = { fire = -50, poison = 100 }
 on_eat = { message = "Dust and resin.", vomit = 80, harm = "1d4" }
 blood = "#5a4a30"

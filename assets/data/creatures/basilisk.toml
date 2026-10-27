@@ -18,7 +18,7 @@ hearing = 10
 weight = 150000
 stats = { strength = 20, dexterity = 10, toughness = 20, intelligence = 2, willpower = 16, presence = 8 }
 base_hp = 44
-natural = { defence = 2, protection = 4, name = "scales" }
+natural = { defence = 2, protection = 2, name = "scales" }
 resist = { poison = 50 }
 on_eat = { message = "Your tongue goes numb.", vomit = 40, harm = "1d4" }
 blood = "#4a6a1a"

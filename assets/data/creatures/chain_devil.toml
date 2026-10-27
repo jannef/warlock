@@ -21,7 +21,7 @@ hearing = 10
 weight = 100000
 stats = { strength = 28, dexterity = 20, toughness = 29, intelligence = 27, willpower = 31, presence = 27 }
 base_hp = 105
-natural = { defence = 3, protection = 0, name = "hide" }
+natural = { defence = 3, protection = 4, name = "hide" }
 resist = { fire = 100, poison = 50, cold = 50 }
 corpse = false
 blood = "#4a1010"

@@ -21,7 +21,7 @@ hearing = 16
 weight = 160000
 stats = { strength = 30, dexterity = 17, toughness = 31, intelligence = 24, willpower = 29, presence = 24 }
 base_hp = 144
-natural = { defence = 2, protection = 2, name = "hide" }
+natural = { defence = 2, protection = 3, name = "hide" }
 resist = { acid = 100, poison = 100, fire = 50, cold = 50, electricity = 50 }
 weapon_skills = { axes = 5, great_weapon = 3 }
 corpse = false

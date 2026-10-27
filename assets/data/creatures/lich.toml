@@ -27,7 +27,7 @@ weight = 30000
 stats = { strength = 20, dexterity = 18, toughness = 24, intelligence = 26, willpower = 30, presence = 26 }
 base_hp = 60
 skills = { concentration = 100, spellcraft = 105 }
-natural = { defence = 2, protection = 0, name = "dry bones" }
+natural = { defence = 2, protection = 5, name = "dry bones" }
 resist = { poison = 100 }
 corpse = false
 blood = "none"

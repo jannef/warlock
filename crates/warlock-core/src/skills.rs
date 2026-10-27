@@ -31,8 +31,9 @@
 //! one place, with its numbers in `data/skills.toml`; until then escape artist is trained and
 //! shown but gives nothing. Athletics already adds to the Strength a kick at a door is rolled
 //! against ([`Effect::Kick`], [`Use::Kick`]) and makes the actor quicker ([`Effect::Speed`],
-//! marked by [`Use::Burdened`] and [`Use::Travel`] too), and Open lock to picking a lock ([`Effect::Pick`],
-//! [`Use::Pick`]).
+//! marked by [`Use::Burdened`] and [`Use::Travel`] too), Open lock to picking a lock
+//! ([`Effect::Pick`], [`Use::Pick`]), and Metalcraft to tempering at a forge's anvil
+//! ([`Effect::Temper`], [`Use::Temper`]).
 
 use crate::content::Content;
 use crate::dice::Dice;
@@ -72,6 +73,8 @@ pub const MAX_HEAL_BONUS: i32 = 20;
 pub const MAX_PICK_BONUS: i32 = 20;
 /// The most percent a skill adds to the chance of a forage finding food (spec §8 "Foraging").
 pub const MAX_FORAGE_BONUS: i32 = 30;
+/// The most a skill adds to tempering an item at an anvil (spec §7 "Special rooms": the forge).
+pub const MAX_TEMPER_BONUS: i32 = 20;
 
 /// Index of a skill in [`Content::skills`]: in file order.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
@@ -150,6 +153,9 @@ pub enum Effect {
     /// Points added to picking a lock (spec §8 "Doors"; `world/lockpick.rs`); a skill with it,
     /// trained, lets the actor pick locks at all (the Pick lock ability).
     Pick,
+    /// Points added to the check that leans a forge's outcome (spec §7 "Special rooms": Temper
+    /// at an anvil; `world/temper.rs`). Anyone may temper; the skill only leans it.
+    Temper,
     /// Percent quicker the actor is in everything (spec §8 "Speed";
     /// [`crate::world::Actor::speed`]): its speed, added to its talents' percent, the two
     /// together at most [`crate::content::MAX_SPEED`].
@@ -170,6 +176,7 @@ impl Effect {
             Effect::Disarm => MAX_DISARM_BONUS,
             Effect::Pick => MAX_PICK_BONUS,
             Effect::Forage => MAX_FORAGE_BONUS,
+            Effect::Temper => MAX_TEMPER_BONUS,
             Effect::SearchReach => MAX_SEARCH_REACH,
             Effect::Speed => crate::content::MAX_SPEED,
         }
@@ -209,6 +216,9 @@ pub enum Use {
     Kick,
     /// A try at picking a lock (spec §8 "Doors"), whatever comes of it.
     Pick,
+    /// An item worked at a forge's anvil to the end (spec §7 "Special rooms"), whatever comes of
+    /// it.
+    Temper,
 }
 
 impl Use {
@@ -229,6 +239,7 @@ impl Use {
             Use::Heal => "trying to treat bleeding, poison, or a disease",
             Use::Kick => "kicking at a closed door",
             Use::Pick => "a try at picking a lock",
+            Use::Temper => "tempering an item at an anvil",
         }
     }
 }
@@ -336,6 +347,7 @@ impl Use {
             Use::Heal => "heal",
             Use::Kick => "kick",
             Use::Pick => "pick",
+            Use::Temper => "temper",
         }
     }
 }
@@ -360,6 +372,7 @@ impl Effect {
             Effect::Heal => "heal",
             Effect::Kick => "kick",
             Effect::Pick => "pick",
+            Effect::Temper => "temper",
             Effect::Speed => "speed",
         }
     }

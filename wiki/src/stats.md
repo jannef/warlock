@@ -83,11 +83,12 @@ landing criticals, and blocking with a shield train Strength, dodging, parrying,
 Dexterity, being hurt and felling worthy foes Toughness, reading and searching Intelligence,
 enduring, noticing, and casting Willpower, talking and trading Presence. Each such use may
 earn the stat a **training mark** (marks never fade and have no limit), and every time you gain
-an [experience level](experience.md), each stat in turn gets one chance to rise by a point. The
+an [experience level](experience.md), each stat in turn gets one chance to rise by a point; so
+it does once a day, at 06:00, between levels too (see [The daily check](#the-daily-check)). The
 more marks it holds, the likelier; a rise uses up all its marks, a stat that did not rise keeps
-them for the next level. A stat rises by at most one point a level. The game says only "You feel
-stronger." (quicker, tougher, sharper, more resolute, more confident); the new score shows on
-the character screen. A rise in Toughness brings its hit point at once.
+them for the next check. A stat rises by at most one point a level, and one a day. The game says
+only "You feel stronger." (quicker, tougher, sharper, more resolute, more confident); the new
+score shows on the character screen. A rise in Toughness brings its hit point at once.
 
 What earns a mark, and how likely:
 
@@ -102,6 +103,23 @@ lifts the potential with the score: a long career outgrows its nature slowly, ne
 Below the potential:
 
 {{#include generated/stat-checks.md}}
+
+### The daily check
+
+Every game day at **06:00** (the hour a rest until dawn ends), each stat gets the same check
+again, with a stiffer need: the chance is **marks / (marks + 3 × need)**, divided by 4 at or
+above the potential as at a level. Nothing else changes: a rise uses up the marks and says the
+same words, a failure keeps them, and the level's check still comes at every level. A rise at
+06:00 stops a rest. The check comes whether you are awake or resting, once a day, at that hour
+and no other; nothing decays and nothing is capped, so the only limit is the clock. The
+**Hard training** talent makes the need 2 × instead of 3 ×. Below the potential:
+
+{{#include generated/stat-daily-checks.md}}
+
+With 8 to 15 marks a day in a stat you use, Strength 14 against a potential of 17, and a level
+every two days, the daily check adds about 4 to 8 rises to the levels' over a career of 120
+game days, most of them before the potential; past it a stat rises between levels about once
+in 25 days.
 
 ## Drained stats
 
