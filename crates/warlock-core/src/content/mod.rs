@@ -99,6 +99,7 @@ mod undead_roster_tests;
 mod unique;
 mod vault;
 mod vision;
+mod wand;
 mod weapon_skill;
 mod weather;
 #[cfg(test)]
@@ -219,6 +220,7 @@ pub use trap::{MAX_CHARGES, Trap, TrapAvoid, TrapDef, TrapEffect, TrapId, TrapNo
 pub use unique::{Power, UNIQUE, UniqueDef, Uniques};
 pub use vault::Vault;
 pub use vision::VisionProfile;
+pub use wand::{MAX_WAND_CHARGES, Wand};
 pub use weapon_skill::{
     Benefit, Grip, MAX_RANK, MarkRules, RANKS, Role, Section, Style, TwoWeapons, WeaponSkillDef,
     WeaponSkillId, WeaponSkillTable,
@@ -590,6 +592,9 @@ pub struct Content {
     /// Unidentified scrolls' labels (`data/scroll_labels.toml`): none, every scroll known on
     /// sight, without it.
     scroll_labels: Option<ScrollLabelDef>,
+    /// Unidentified wands' labels (`data/wand_labels.toml`, the scroll labels' format): none,
+    /// every wand known on sight.
+    wand_labels: Option<ScrollLabelDef>,
     /// In `data/status.toml` order: most important first.
     statuses: Vec<StatusDef>,
     /// Alternative resources (`data/resources.toml`, spec §8 "Resources"), in file order; none
@@ -680,6 +685,7 @@ impl Content {
             affixes: Affixes::default(),
             stances: Stances::default(),
             scroll_labels: None,
+            wand_labels: None,
             statuses: Vec::new(),
             resources: Vec::new(),
             status_ids: BTreeMap::new(),
@@ -746,6 +752,10 @@ impl Content {
         let path = "data/scroll_labels.toml";
         if let Some(text) = files.get_optional(path) {
             content.scroll_labels = Some(ScrollLabelDef::parse(path, text)?);
+        }
+        let path = "data/wand_labels.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.wand_labels = Some(ScrollLabelDef::parse(path, text)?);
         }
         let path = "data/stances.toml";
         if let Some(text) = files.get_optional(path) {
@@ -2692,6 +2702,11 @@ impl Content {
     /// Unidentified scrolls' labels (`data/scroll_labels.toml`), if scrolls have them.
     pub fn scroll_labels(&self) -> Option<&ScrollLabelDef> {
         self.scroll_labels.as_ref()
+    }
+
+    /// Unidentified wands' labels (`data/wand_labels.toml`), if wands have them.
+    pub fn wand_labels(&self) -> Option<&ScrollLabelDef> {
+        self.wand_labels.as_ref()
     }
 
     /// The combat stances of `data/stances.toml` (all plain without the file).

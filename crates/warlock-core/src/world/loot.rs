@@ -36,7 +36,8 @@ pub enum Identified {
 impl World {
     /// Identifies the player's inventory stack `item` (spec §8 "Magic items", "Scrolls"): its
     /// affixes are known from now on, wherever it goes, and so is its type if it is an
-    /// unidentified scroll's (every scroll of that type shows by its name from now on). Says
+    /// unidentified scroll's or wand's (every one of that type shows by its name from now on),
+    /// and a wand's charges left (spec §8 "Magic items": "Wands"). Says
     /// "This is a Sharp long sword of the Bear!" when there was something to learn. Takes no
     /// time of its own: the action that calls it (reading the scroll of identify, #150) is what
     /// takes time.
@@ -45,8 +46,10 @@ impl World {
             return Identified::NoSuchItem;
         };
         let typed = self.learn_scroll(object);
+        let content = self.content.clone();
         let stack = &mut self.player_mut().inventory[item];
-        if !stack.identify() && !typed {
+        let charges = stack.identify_charges(&content);
+        if !stack.identify() && !typed && !charges {
             return Identified::Known;
         }
         let name = self.lore().describe(&self.state.player().inventory[item]);

@@ -92,6 +92,10 @@ impl World {
             return Spent::Nothing;
         }
         let me = self.state.player();
+        // A wand in the missile weapon slot casts its spell (spec §8 "Magic items": "Wands").
+        if let Some(item) = me.wand_item(&content) {
+            return self.zap(item, at, events);
+        }
         let (Some((launcher, _)), Some(profile)) = (me.launcher(&content), me.ranged(&content))
         else {
             self.say("You have nothing ready to throw or shoot.");

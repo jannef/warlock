@@ -63,6 +63,7 @@ pub struct Appraisal {
 pub fn appraised(stack: &Stack, lore: Lore<'_>, appraisal: Appraisal) -> Vec<Line> {
     let content = lore.content;
     let mut out = lines_named(stack, content, lore.names(stack));
+    out.extend(wand_lines(stack, lore));
     // The first line says what it is; a line for each gem in it follows.
     let gems_at = 1;
     let parts = stack.parts(content);
@@ -90,6 +91,43 @@ pub fn appraised(stack: &Stack, lore: Lore<'_>, appraisal: Appraisal) -> Vec<Lin
         let at = 1 + parts.iter().filter(|p| p.gem.is_some()).count();
         out.insert(at.min(out.len()), line(LineKind::Base, text));
     }
+    out
+}
+
+/// What a wand holds, as the player knows it (spec §8 "Magic items": "Wands"): its spell in
+/// words once its type is known (`Holds Fireball (tier 3): ...`), else that it is unknown; its
+/// charges once it is identified (`7 charges left`), else that they are unknown. Nothing for
+/// anything else.
+fn wand_lines(stack: &Stack, lore: Lore<'_>) -> Vec<Line> {
+    let content = lore.content;
+    let Some(wand) = content.object(stack.object).wand else {
+        return Vec::new();
+    };
+    let mut out = Vec::new();
+    if lore.is_identified(stack.object) {
+        let spell = content.spell(wand.spell);
+        out.push(line(
+            LineKind::Stat,
+            format!(
+                "Holds {} (tier {}): {}",
+                spell.name, spell.tier, spell.description
+            ),
+        ));
+    } else {
+        out.push(line(
+            LineKind::Note,
+            "Unidentified: the spell it holds is unknown until it is used or identified.",
+        ));
+    }
+    out.push(match stack.known_charges(content) {
+        Some(0) => line(LineKind::Stat, "Empty: it does nothing now."),
+        Some(1) => line(LineKind::Stat, "1 charge left"),
+        Some(n) => line(LineKind::Stat, format!("{n} charges left")),
+        None => line(
+            LineKind::Note,
+            "Its charges are unknown until it is identified.",
+        ),
+    });
     out
 }
 
