@@ -5,7 +5,8 @@ The devil roster (#448): ten shared types, one file each in `assets/data/creatur
 devil 48, ice devil 55, pit fiend 66), faction `devil` ("devils", hostile to the player and, by the
 demons' `demon` faction's list (#449), to the demons), tags `devil` and
 `fiend`. In no population yet: the lemure and imp fall inside the danger windows of Cealdhlāw,
-Fennmynster, and Fyrdelf, but none of them is infernal; the rest lie deeper than any dungeon.
+Fennmynster, and Fyrdelf, but none of them is infernal; the rest lie deeper than any dungeon. All come as strays (docs/dev/creatures.md), the deep
+ones only far out of depth.
 
 They follow #383's formulas by level and role (shambler: the lemure; small: the imp; brute: the
 horned devil, ice devil, and pit fiend; standard: the rest). `content/devil_roster_tests.rs`

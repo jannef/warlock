@@ -23,6 +23,9 @@ population = [
     "giant_leech", "giant_frog", "giant_centipede", "crocodile", "will_o_wisp", "footpad",
     "mud_golem", "marsh_troll",
 ]
+# Its strays come only from what lives in the campaign's populations (spec §7 "Danger
+# levels"): its folk are the guild design's table (docs/design/adventurers-guild.md §8.2).
+stray_pool = "populations"
 # No one trades on the islet (spec §7 "Shops").
 shops = { chance = 0 }
 

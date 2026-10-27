@@ -25,6 +25,6 @@ and throw (`[creature.throw]`, `world/hurl.rs`, `docs/dev/ranged-combat.md`); th
 mauls and throw nothing. A creature's throw is `World::hurls_at` in the AI's fight step, before
 the melee/ranged/caster choice, `World::creature_hurls`, said by `hurl::throw_messages`.
 Fyrdelf's population adds the ogre mauler and ogre mage; the giants ship in no population until a
-deep place takes them. Only small and medium sizes exist, so they are medium with huge weights (a
+deep place takes them (until then they come only as strays, docs/dev/creatures.md). Only small and medium sizes exist, so they are medium with huge weights (a
 large size is a follow-up). The `boulder` object (miscellaneous, no kind) is what flies; it is
 never loot, never in a shop, never placed.

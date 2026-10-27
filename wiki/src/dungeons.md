@@ -26,9 +26,13 @@ are never chosen this way.
 
 A dungeon is mostly its own folk, but now and then something wanders in from elsewhere: one
 draw in twenty (unless a place says otherwise) is a **stray**, chosen the same way but from the
-**generic list**, every kind that lives in any dungeon of the land (a creature marked "once a
-run" is never on it, nor are people, shopkeepers, and the guardians placed by hand). A stray may
-be one of the place's own kinds too.
+**generic list**: every kind of the land that is hostile to you, whether any dungeon is its home
+or not, and every kind that lives in some dungeon of the land (a creature marked "once a run" is
+never on it, nor are people, shopkeepers, and the guardians placed by hand, and animated objects
+come only where a place's folk include them). A stray may be one of the place's own kinds too.
+Some places, the outlaws' four lairs, take their strays only from the kinds that live in the
+land's dungeons (the "Strays" column of the table below). With the deeper draws below, anything the land knows
+can come to any floor, however rarely: a kind no dungeon is home to is met only as a stray.
 
 Another draw in twenty (again unless a place says otherwise) is made **out of depth**, as if the
 floor were one danger deeper; and then, again and again, one draw in twenty of those goes one

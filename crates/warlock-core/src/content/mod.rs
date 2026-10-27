@@ -2131,11 +2131,13 @@ impl Content {
     }
 
     /// Fills every area's generic creature list (spec §7 "Danger levels",
-    /// [`danger::Spawning::generic`]): the types that live in some area with a danger (a
-    /// branch's or a hand-made level's `population`) of the area's campaign or of no campaign,
-    /// uniques left out. Hand-placed types (people, shopkeepers, guardians, quest creatures)
-    /// live in no population, and test types only in their own fixtures', so none of them
-    /// strays.
+    /// [`danger::Spawning::generic`]). The populations' list of a campaign is every type that
+    /// lives in some area with a danger (a branch's or a hand-made level's `population`) of that
+    /// campaign or of no campaign, uniques left out. An area's list is that one
+    /// ([`danger::StrayPool::Populations`]), or by default ([`danger::StrayPool::All`]) that one
+    /// and every type of the campaign or of none that may stray ([`Content::may_stray`]):
+    /// hostile to the player, no unique, no animated object (those come by their own
+    /// populations), and not marked `stray = false` (people, keepers, guardians, test types).
     fn fill_generic(&mut self) {
         let mut lives: BTreeMap<Option<String>, BTreeSet<CreatureId>> = BTreeMap::new();
         let branches = (self.dungeons.values())
@@ -2149,23 +2151,52 @@ impl Content {
             lives.entry(campaign).or_default().extend(kinds);
         }
         let shared = lives.get(&None).cloned().unwrap_or_default();
-        let generic = |campaign: &Option<String>| -> Vec<CreatureId> {
+        let generic = |campaign: &Option<String>, pool: danger::StrayPool| -> Vec<CreatureId> {
             let own = lives.get(campaign).into_iter().flatten();
-            let all: BTreeSet<CreatureId> = own.chain(&shared).copied().collect();
+            let mut all: BTreeSet<CreatureId> = own.chain(&shared).copied().collect();
+            if pool == danger::StrayPool::All {
+                let strays = (0..self.creatures.len())
+                    .map(|i| CreatureId(i as u16))
+                    .filter(|&c| {
+                        let def = self.creature(c);
+                        def.campaign.is_none() || def.campaign == *campaign
+                    })
+                    .filter(|&c| self.may_stray(c));
+                all.extend(strays);
+            }
             all.into_iter().collect()
         };
-        for d in self.dungeons.values_mut() {
-            let list = generic(&d.campaign);
+        let lists: Vec<Vec<CreatureId>> = (self.dungeons.values())
+            .map(|d| (d.spawning.as_ref()).map_or_else(Vec::new, |s| generic(&d.campaign, s.pool)))
+            .collect();
+        let level_lists: Vec<Vec<CreatureId>> = (self.levels.iter())
+            .map(|(id, l)| {
+                let campaign = self.level_campaigns.get(id).cloned().flatten();
+                (l.spawning.as_ref()).map_or_else(Vec::new, |(_, s)| generic(&campaign, s.pool))
+            })
+            .collect();
+        for (d, list) in self.dungeons.values_mut().zip(lists) {
             if let Some(s) = d.spawning.as_mut() {
                 s.generic = list;
             }
         }
-        for (id, l) in &mut self.levels {
-            let campaign = self.level_campaigns.get(id).cloned().flatten();
+        for ((_, l), list) in self.levels.iter_mut().zip(level_lists) {
             if let Some((_, s)) = l.spawning.as_mut() {
-                s.generic = generic(&campaign);
+                s.generic = list;
             }
         }
+    }
+
+    /// Whether creature type `c` may come as a stray to an area whose population does not name
+    /// it (spec §7 "Danger levels"): hostile to the player, no unique, no animated object, and
+    /// not marked `stray = false`.
+    pub fn may_stray(&self, c: CreatureId) -> bool {
+        let def = self.creature(c);
+        let player = self.creature_id("player");
+        def.stray
+            && !def.unique
+            && def.animated.is_none()
+            && player.is_some_and(|p| p != c && self.stance(c, p) == faction::Stance::Hostile)
     }
 
     /// Checks the vaults branch `def`'s levels name (dungeon vaults, shared or of its campaign,
@@ -4092,10 +4123,12 @@ mod tests {
         }
     }
 
-    /// The generic creature list strays come from (spec §7 "Danger levels"): what lives in the
-    /// campaign's dungeons, never a unique, a person, a keeper, or a hand-placed guardian.
+    /// The generic creature list strays come from (spec §7 "Danger levels"): every type the
+    /// campaign knows that may stray, whether a population names it or not, and what lives in
+    /// its dungeons; never a unique, a person, a keeper, a hand-placed guardian, or an animated
+    /// object outside the populations.
     #[test]
-    fn the_generic_list_is_the_campaigns_folk_without_uniques_or_people() {
+    fn the_generic_list_is_every_hostile_type_without_uniques_or_people() {
         let content = Content::builtin().expect("content");
         let generic = |branch: &str| -> BTreeSet<&str> {
             let s = content.dungeon(branch).and_then(|d| d.spawning.as_ref());
@@ -4104,9 +4137,25 @@ mod tests {
                 .collect()
         };
         let barrow = generic("cealdhlaw");
-        // One list for the whole campaign, its three dungeons' folk together.
+        // One list for the whole campaign's open branches.
         assert_eq!(barrow, generic("fennmynster"));
         assert_eq!(barrow, generic("fyrdelf"));
+        // Every hostile type of no campaign or of the Ascmearc that is no unique and no
+        // animated object is in it, populations or none.
+        for def in content.creature_defs() {
+            let id = def.id.as_str();
+            let campaign = def.campaign.as_deref();
+            let player = content.creature_id("player").expect("player");
+            let c = content.creature_id(id).expect("id");
+            let hostile = content.stance(c, player) == Stance::Hostile;
+            if hostile && !def.unique && def.animated.is_none() && campaign != Some("showcase") {
+                assert!(
+                    def.stray,
+                    "{id}: no shipped type is marked `stray = false` yet"
+                );
+                assert!(barrow.contains(id), "{id} strays");
+            }
+        }
         for id in [
             "rat",
             "skeleton",
@@ -4114,6 +4163,10 @@ mod tests {
             "cult_priest",
             "ogre",
             "cinder_elemental",
+            // In no population: met only as strays.
+            "lich",
+            "hobgoblin_warlord",
+            "thunderhead",
         ] {
             assert!(barrow.contains(id), "{id} strays");
         }
@@ -4131,12 +4184,75 @@ mod tests {
             "hermit",
             "bard",
             "gardener",
+            // Neutral to the player.
+            "deer",
+            "sprite",
         ] {
             assert!(!barrow.contains(id), "{id} never strays");
         }
         // Sorted by type, as the draws need.
         let s = content.dungeon("fyrdelf").and_then(|d| d.spawning.as_ref());
         assert!(s.expect("fyrdelf").generic.is_sorted());
+    }
+
+    /// A branch with `stray_pool = "populations"` (the guild's four lairs) keeps the old list:
+    /// only what the campaign's populations name, uniques left out.
+    #[test]
+    fn a_lair_draws_its_strays_from_the_populations_only() {
+        let content = Content::builtin().expect("content");
+        let spawning = |branch: &str| {
+            (content.dungeon(branch).and_then(|d| d.spawning.as_ref())).expect(branch)
+        };
+        let mut lives = BTreeSet::new();
+        for d in content.dungeons.values() {
+            if d.campaign.as_deref() == Some("ascmearc")
+                && let Some(s) = &d.spawning
+            {
+                lives.extend((s.population.iter()).filter(|&&c| !content.creature(c).unique));
+            }
+        }
+        let lives: Vec<CreatureId> = lives.into_iter().collect();
+        for lair in ["wyrtholm", "wulfeshol", "banfeld", "brocenburg"] {
+            let s = spawning(lair);
+            assert_eq!(s.pool, danger::StrayPool::Populations, "{lair}");
+            assert_eq!(s.generic, lives, "{lair}");
+        }
+        let lich = content.creature_id("lich").expect("lich");
+        assert!(!spawning("wyrtholm").generic.contains(&lich));
+        assert!(spawning("cealdhlaw").generic.contains(&lich));
+        assert_eq!(spawning("cealdhlaw").pool, danger::StrayPool::All);
+    }
+
+    /// The owner's rule (2026-10-27): with the exploding out-of-depth draw, anything the
+    /// campaign knows may come to a level-1 floor, even a type no population names.
+    #[test]
+    fn a_first_floor_draw_gone_far_out_of_depth_brings_a_type_of_no_population() {
+        let content = Content::builtin().expect("content");
+        let barrow = (content
+            .dungeon("cealdhlaw")
+            .and_then(|d| d.spawning.as_ref()))
+        .expect("cealdhlaw");
+        let lives: BTreeSet<CreatureId> = (content.dungeons.values())
+            .filter_map(|d| d.spawning.as_ref())
+            .flat_map(|s| s.population.iter().copied())
+            .collect();
+        let once = BTreeSet::new();
+        let own = content.candidates(&barrow.population, &once);
+        let generic = content.candidates(&barrow.generic, &once);
+        // Every roll deeper hits, as the 5 % may again and again: 51 dangers past the first.
+        let odds = danger::Odds {
+            stray: 0,
+            out_of_depth: 100,
+            deeper: 100,
+            deeper_cap: danger::MAX_DEEPER_CAP,
+        };
+        let mut rng = crate::rng::Rng::stream(1, "test");
+        for _ in 0..50 {
+            let c = danger::draw(&mut rng, &own, &generic, 1, &odds).expect("a draw");
+            let def = content.creature(c);
+            assert!(def.level >= 40, "{} at level {}", def.id, def.level);
+            assert!(!lives.contains(&c), "{} lives in no population", def.id);
+        }
     }
 
     #[test]

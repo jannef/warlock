@@ -7,6 +7,7 @@
 //! population = ["rat", "kobold"]        # the types that live there (a branch's default: `creatures`)
 //! population_count = { per_1000 = 35, least = 25, most = 80 }   # or a number: 40
 //! stray = 5                             # percent of draws from the generic creature list
+//! stray_pool = "populations"            # strays only from the campaign's populations (default "all")
 //! out_of_depth = 5                      # percent of draws made 1 deeper, then perhaps more
 //! deeper = 5                            # percent, again and again, of 1 deeper still
 //! deeper_cap = 10                       # the most dangers past the first one deeper
@@ -20,7 +21,8 @@
 //! The four odds of a draw ([`Odds`]) default to `data/dungeons.toml`'s `[defaults]` table
 //! (required once any area has a danger); a branch or a level may give each of its own. The
 //! generic creature list strays come from is [`Spawning::generic`], filled once everything is
-//! loaded (`Content::fill_generic`).
+//! loaded (`Content::fill_generic`): by default every type of the campaign that may stray
+//! ([`StrayPool::All`]), or only what lives in its populations ([`StrayPool::Populations`]).
 
 use super::creature::CreatureId;
 use crate::time::Duration;
@@ -152,16 +154,31 @@ impl Odds {
     }
 }
 
+/// Where an area's strays come from (spec §7 "Danger levels"): `stray_pool` in its file.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum StrayPool {
+    /// Every type its campaign (or none) knows that may stray: hostile to the player, not
+    /// unique, no animated object, not marked `stray = false`; and everything the campaign's
+    /// populations name, uniques left out.
+    #[default]
+    All,
+    /// Only the types the campaign's populations name, uniques left out (the guild's lairs,
+    /// whose folk are a design's table).
+    Populations,
+}
+
 /// What lives on the levels of an area and how it comes back (spec §7 "Danger levels").
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Spawning {
     /// The creature types that live there, sorted by id (each draw goes by
     /// [`weight`]).
     pub population: Vec<CreatureId>,
-    /// The generic creature list strays come from, sorted by id: every type that lives in some
-    /// area with a danger of the area's campaign or of none, uniques left out (filled once
-    /// everything is loaded, `Content::fill_generic`).
+    /// The generic creature list strays come from, sorted by id, as [`Spawning::pool`] says
+    /// (filled once everything is loaded, `Content::fill_generic`).
     pub generic: Vec<CreatureId>,
+    /// Where its strays come from.
+    pub pool: StrayPool,
     /// How many creatures a level holds: the cap the spawns refill toward, unless `cap` says.
     pub count: Count,
     /// The odds of strays and out-of-depth draws.
@@ -333,6 +350,7 @@ pub(super) struct SpawningSpec {
     pub(super) population_count: Option<CountSpec>,
     #[serde(flatten)]
     pub(super) odds: OddsSpec,
+    pub(super) stray_pool: Option<StrayPool>,
     pub(super) spawn: Option<SpawnSpec>,
 }
 
@@ -439,10 +457,11 @@ impl SpawningSpec {
             let given = self.population.is_some()
                 || self.population_count.is_some()
                 || self.odds.given()
+                || self.stray_pool.is_some()
                 || self.spawn.is_some();
             if given {
                 return Err(
-                    "`population`, `population_count`, `stray`, `out_of_depth`, \
+                    "`population`, `population_count`, `stray`, `stray_pool`, `out_of_depth`, \
                             `deeper`, `deeper_cap`, and `spawn` need a `danger`"
                         .into(),
                 );
@@ -522,6 +541,7 @@ impl SpawningSpec {
             Spawning {
                 population,
                 generic: Vec::new(),
+                pool: self.stray_pool.unwrap_or_default(),
                 count,
                 odds,
                 every,
