@@ -568,6 +568,10 @@ fn stat_rows(view: &PerceptionView<'_>) -> Vec<String> {
     if let Some(band) = view.own_alignment() {
         rows.push(format!("Alignment {}", band.name()));
     }
+    // The guilds they belong to and their ranks (spec §8 "Quests": "Guilds"), a title only.
+    for g in view.own_guilds() {
+        rows.push(format!("Guild {}, {}", g.guild.bare_name(), g.title()));
+    }
     let effects: Vec<&str> = (view.own_effects())
         .map(|s| content.status(s).name.as_str())
         .collect();
@@ -1452,6 +1456,13 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         unreachable!("an object literal")
     };
     out.as_object_mut().expect("an object").extend(rest);
+    // The guilds they belong to and their ranks (left out before joining one).
+    let guilds = view.own_guilds();
+    if !guilds.is_empty() {
+        out["guilds"] = (guilds.iter())
+            .map(|g| json!({ "id": g.guild.id, "name": g.guild.name, "rank": g.title() }))
+            .collect();
+    }
     // The weather coming, which a Weather-wise player knows (left out otherwise).
     if let Some(coming) = view.forecast() {
         out["forecast"] = json!(coming);
