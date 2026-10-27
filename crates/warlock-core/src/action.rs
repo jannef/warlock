@@ -159,6 +159,11 @@ pub enum Action {
     /// outcome drawn from the altar's table, and perhaps the altar spent. Interrupted, it gives
     /// nothing. Refused (no time) with no altar next to the player.
     Pray,
+    /// Drink at the healing spring next to the player (spec §7 "Special rooms"; the Drink
+    /// ability, the abilities menu's Here group): ten seconds of turns of the `drink` action,
+    /// then one outcome drawn from the spring's table. A spring never runs dry. Interrupted, it
+    /// gives nothing. Refused (no time) with no spring next to the player.
+    Drink,
     /// Forage for food in the wild (spec §8 "Foraging"; the Forage ability, Survival's use): turns
     /// of the `forage` action for `data/forage.toml`'s time, then a chance of food by the
     /// landscape and Survival. Interrupted, it finds nothing. Refused (no time) untrained, or
@@ -752,6 +757,7 @@ impl fmt::Display for Action {
             Action::Heal(None) => f.write_str("heal"),
             Action::Heal(Some(id)) => write!(f, "heal:{id}"),
             Action::Pray => f.write_str("pray"),
+            Action::Drink => f.write_str("drink"),
             Action::Forage => f.write_str("forage"),
             Action::Temper { item } => write!(f, "temper:{}", position_text(*item)),
             Action::SecondWind => f.write_str("second_wind"),
@@ -856,6 +862,7 @@ impl FromStr for Action {
             },
             "wait" => bare(Action::Wait),
             "pray" => bare(Action::Pray),
+            "drink" => bare(Action::Drink),
             "forage" => bare(Action::Forage),
             "temper" => {
                 let usage = || "`temper` needs a letter, e.g. `temper:b`".to_string();
@@ -1357,6 +1364,7 @@ mod tests {
             Action::Temper { item: 27 },
             Action::Heal(None),
             Action::Heal(Some("bleeding".into())),
+            Action::Drink,
             Action::SecondWind,
             Action::BloodMagic,
             Action::Use(ClassActive::Rage, None),

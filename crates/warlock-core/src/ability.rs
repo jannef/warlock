@@ -106,6 +106,9 @@ pub enum Ability {
     /// [`Action::Temper`]. A place offers it ([`Ability::here`]): listed only while the player
     /// stands next to an anvil; it asks which item ([`Aim::Item`]).
     Temper,
+    /// Drink at a healing spring (spec §7 "Special rooms"): [`Action::Drink`]. A place offers
+    /// it, as Pray: listed only while the player stands next to a spring.
+    Drink,
 }
 
 /// Where an ability comes from: the abilities menu's groups, in this order.
@@ -129,7 +132,7 @@ pub enum Source {
     /// Something worn or carried (the lantern's hood).
     Item,
     /// The place the character stands in (spec §7 "Special rooms"): what a special room's
-    /// feature offers next to it (Pray at a forgotten altar).
+    /// feature offers next to it (Pray at a forgotten altar, Drink at a spring).
     Place,
 }
 
@@ -304,9 +307,14 @@ impl Ability {
             (content.room_effects().defs().iter())
                 .any(|e| e.offers.as_ref().is_some_and(|(o, _)| *o == offer))
         };
-        let here = (offers(Offer::Pray).then_some(Ability::Pray))
-            .into_iter()
-            .chain(offers(Offer::Temper).then_some(Ability::Temper));
+        let here = [
+            (Offer::Pray, Ability::Pray),
+            (Offer::Temper, Ability::Temper),
+            (Offer::Drink, Ability::Drink),
+        ]
+        .into_iter()
+        .filter(|&(offer, _)| offers(offer))
+        .map(|(_, ability)| ability);
         let mut all: Vec<Ability> = (signs.chain(class))
             .chain(classes)
             .chain(spells)
@@ -340,7 +348,7 @@ impl Ability {
     }
 
     /// The abilities the place offers to whoever stands at `at` on `level` (spec §7 "Special
-    /// rooms"): what the feature on a cell next to it offers (Pray beside a forgotten altar), in
+    /// rooms"): what the feature on a cell next to it offers (Pray beside a forgotten altar, Drink beside a spring), in
     /// menu order. A spent altar is another terrain, which offers nothing.
     pub(crate) fn here(level: &LevelState, content: &Content, at: Pos) -> Vec<Ability> {
         let mut found: Vec<Ability> = (Dir::ALL.iter().map(|&d| at.step(d)))
@@ -349,6 +357,7 @@ impl Ability {
             .map(|(offer, _)| match offer {
                 Offer::Pray => Ability::Pray,
                 Offer::Temper => Ability::Temper,
+                Offer::Drink => Ability::Drink,
             })
             .collect();
         found.sort();
@@ -399,7 +408,7 @@ impl Ability {
             Ability::ThrowVoice => actor.talent_mods(content).throw_voice,
             Ability::ShieldBash | Ability::HoodLantern => true,
             // A place offers it, not who one is ([`Ability::here`]).
-            Ability::Pray | Ability::Temper => false,
+            Ability::Pray | Ability::Temper | Ability::Drink => false,
         }
     }
 
@@ -422,6 +431,7 @@ impl Ability {
             Ability::HoodLantern => "hood_lantern",
             Ability::Pray => "pray",
             Ability::Temper => "temper",
+            Ability::Drink => "drink",
         }
     }
 
@@ -444,6 +454,7 @@ impl Ability {
             Ability::HoodLantern => "Hood your lantern",
             Ability::Pray => "Pray",
             Ability::Temper => "Temper",
+            Ability::Drink => "Drink",
         }
     }
 
@@ -494,6 +505,10 @@ impl Ability {
                 "Work a weapon or a piece of armour you carry at the anvil beside you for ten \
                  minutes. The metal may come out better, or worse, or break."
             }
+            Ability::Drink => {
+                "Drink from the spring beside you. Its water is mostly good, and now and then \
+                 foul."
+            }
         }
     }
 
@@ -513,7 +528,7 @@ impl Ability {
             Ability::SecondWind | Ability::BloodMagic => Source::Talent,
             Ability::ShieldBash => Source::WeaponSkill,
             Ability::HoodLantern => Source::Item,
-            Ability::Pray | Ability::Temper => Source::Place,
+            Ability::Pray | Ability::Temper | Ability::Drink => Source::Place,
         }
     }
 
@@ -533,7 +548,8 @@ impl Ability {
             | Ability::BloodMagic
             | Ability::HoodLantern
             | Ability::Forage
-            | Ability::Pray => Aim::Nothing,
+            | Ability::Pray
+            | Ability::Drink => Aim::Nothing,
             Ability::Temper => Aim::Item,
             Ability::ThrowVoice => Aim::Cell,
             Ability::Heal => Aim::Ailment,
@@ -562,6 +578,7 @@ impl Ability {
             Ability::HoodLantern => Some(ActionKind::Hood),
             Ability::Pray => Some(ActionKind::Pray),
             Ability::Temper => Some(ActionKind::Temper),
+            Ability::Drink => Some(ActionKind::Drink),
         }
     }
 
@@ -588,7 +605,8 @@ impl Ability {
             | Ability::ShieldBash
             | Ability::HoodLantern
             | Ability::Pray
-            | Ability::Temper => None,
+            | Ability::Temper
+            | Ability::Drink => None,
         }
     }
 
@@ -642,6 +660,7 @@ impl Ability {
             }
             (Ability::HoodLantern, _) => Some(Action::HoodLantern),
             (Ability::Pray, _) => Some(Action::Pray),
+            (Ability::Drink, _) => Some(Action::Drink),
             (Ability::Forage, _) => Some(Action::Forage),
             // It asks for an item ([`Ability::action_on`]).
             (Ability::Temper, _) => None,
@@ -684,7 +703,8 @@ impl Ability {
             | Ability::ShieldBash
             | Ability::HoodLantern
             | Ability::Pray
-            | Ability::Temper => None,
+            | Ability::Temper
+            | Ability::Drink => None,
         }
     }
 
@@ -737,7 +757,8 @@ impl Ability {
             | Ability::Forage
             | Ability::BloodMagic
             | Ability::Pray
-            | Ability::Temper => None,
+            | Ability::Temper
+            | Ability::Drink => None,
             Ability::SecondWind => (actor.talent_mods(content).second_wind)
                 .map(|w| w.cooldown)
                 .filter(|&cooldown| actor.effects.has(cooldown))
@@ -909,7 +930,8 @@ mod tests {
                 Ability::ShieldBash,
                 Ability::HoodLantern,
                 Ability::Pray,
-                Ability::Temper
+                Ability::Temper,
+                Ability::Drink
             ],
             "then what a place offers"
         );

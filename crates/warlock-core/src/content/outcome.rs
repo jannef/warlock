@@ -1,6 +1,7 @@
 //! Outcome tables (`data/outcomes/<id>.toml`, one table a file; spec §7 "Special rooms"): what
-//! using a place's ability draws, a forgotten altar's prayer first. The rules are
-//! `world/outcome.rs` (applying an outcome) and `world/pray.rs` (the prayer).
+//! using a place's ability draws: a forgotten altar's prayer, a healing spring's drink. The rules
+//! are `world/outcome.rs` (applying an outcome), `world/pray.rs` (the prayer), and
+//! `world/drink.rs` (the drink).
 //!
 //! ```toml
 //! # data/outcomes/forgotten_altar.toml
@@ -25,7 +26,9 @@
 
 use super::spell::{Burst, SpellFields, check_effect, one_kind};
 use super::trap::TrapNoise;
-use super::{Content, ContentError, DamageTypeId, EffectShape, ObjectId, StatusId, TerrainId};
+use super::{
+    Content, ContentError, DamageTypeId, DiseaseId, EffectShape, ObjectId, StatusId, TerrainId,
+};
 use crate::dice::Dice;
 use crate::magic::loot::LootGrade;
 use serde::Deserialize;
@@ -92,10 +95,12 @@ impl OutcomeTier {
     }
 }
 
-/// How much a heal or a mana gift gives: dice, or everything up to the maximum.
+/// How much a heal or a mana gift gives: dice, half the maximum, or everything up to it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Amount {
     Dice(Dice),
+    /// Half the maximum (rounded down), never past it.
+    Half,
     Full,
 }
 
@@ -199,6 +204,8 @@ pub struct OutcomeEffect {
     pub summon: Option<OutcomeSummon>,
     /// A random disease is caught.
     pub disease: bool,
+    /// This disease is caught.
+    pub catch: Option<DiseaseId>,
     /// Stat damage to a random stat.
     pub wither: Option<Dice>,
     /// Percent of the experience to the next level.
@@ -374,6 +381,7 @@ struct EffectSpec {
     summon: Option<SummonSpec>,
     #[serde(default)]
     disease: bool,
+    catch: Option<String>,
     wither: Option<Dice>,
     #[serde(default)]
     xp: u8,
@@ -555,8 +563,10 @@ fn resolve(id: &str, spec: TableSpec, content: &Content) -> Result<OutcomeTable,
 }
 
 fn amount(text: &str) -> Result<Amount, String> {
-    if text == "full" {
-        return Ok(Amount::Full);
+    match text {
+        "full" => return Ok(Amount::Full),
+        "half" => return Ok(Amount::Half),
+        _ => {}
     }
     let dice: Dice = text.parse()?;
     if dice.min() < 0 || dice.max() < 1 {
@@ -660,6 +670,14 @@ fn resolve_effect(e: EffectSpec, content: &Content) -> Result<OutcomeEffect, Str
         }
         None => None,
     };
+    let catch = match &e.catch {
+        Some(name) => Some(
+            content
+                .disease_id(name)
+                .ok_or_else(|| format!("unknown disease `{name}`"))?,
+        ),
+        None => None,
+    };
     let becomes = match &e.becomes {
         Some(name) => Some(
             content
@@ -703,6 +721,7 @@ fn resolve_effect(e: EffectSpec, content: &Content) -> Result<OutcomeEffect, Str
         snuff: e.snuff,
         summon,
         disease: e.disease,
+        catch,
         wither: e.wither,
         xp: e.xp,
         tithe: e.tithe,

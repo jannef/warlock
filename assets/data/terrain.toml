@@ -375,6 +375,20 @@ glyph = "π"
 fg = "#8c8f96"
 bg = "#0d0d10"
 
+# A healing spring's basin (spec §7 "Special rooms"): the feature of the spring room, where Drink
+# (the abilities menu's Here group) is offered beside it. It never runs dry.
+[[terrain]]
+id = "spring"
+name = "spring"
+description = "An old stone basin, worn smooth, where clear water wells up from below and spills away through a crack in its lip."
+stone = true
+walkable = false
+glyph = "{"
+fg = "#7ab8e0"
+bg = "#0a1a30"
+anim = { kind = "wave", speed = 0.1, amount = 0.03, glint = 0.3 }
+stains = false
+
 # An armoury's and a workshop's dressing (spec §7 "Special rooms", #487): stood along their walls,
 # seen over, not walked through.
 [[terrain]]

@@ -1,7 +1,8 @@
 //! Outcome tables (spec §7 "Special rooms"): what a forgotten altar's prayer may bring, exactly,
 //! and how often, per prayer and per altar, computed from `data/outcomes/forgotten_altar.toml`;
 //! and what a forge's tempering may do to an item, by the Metalcraft check's margin, from
-//! `data/outcomes/forge.toml`.
+//! `data/outcomes/forge.toml`;
+//! and what a healing spring's drink may bring, per drink (`data/outcomes/spring.toml`).
 
 use super::text::capital;
 use std::fmt::Write as _;
@@ -26,6 +27,7 @@ fn percent(p: f64) -> String {
 fn does(content: &Content, effect: &OutcomeEffect) -> String {
     let amount = |a: Amount| match a {
         Amount::Dice(d) => d.to_string(),
+        Amount::Half => "half the maximum of".to_string(),
         Amount::Full => "all".to_string(),
     };
     let damage = |kind: Option<warlock_core::content::DamageTypeId>| {
@@ -148,6 +150,9 @@ fn does(content: &Content, effect: &OutcomeEffect) -> String {
     }
     if effect.disease {
         out.push("a random disease, the deadly ones too".into());
+    }
+    if let Some(disease) = effect.catch {
+        out.push(format!("{} caught", content.disease(disease).name));
     }
     if let Some(wither) = effect.wither {
         out.push(format!("{wither} stat damage to a random stat"));
@@ -442,5 +447,45 @@ pub(super) fn forge_shares(content: &Content) -> String {
         table.lean,
         table.exhaust,
     );
+    out
+}
+
+/// Every outcome of the healing spring's table: its kind, tier, chance per drink, what it does
+/// exactly, and what it says; then how long a drink takes.
+pub(super) fn spring_outcomes(content: &Content) -> String {
+    let Some(table) = content.outcomes().get("spring") else {
+        return String::new();
+    };
+    let sum = f64::from(table.kinds.iter().sum::<u32>().max(1));
+    let mut out = String::from(
+        "| Kind | Tier | Outcome | Per drink | What it does | Message |\n\
+         |---|---|---|:---:|---|---|\n",
+    );
+    for (kind, w) in OutcomeKind::ALL.into_iter().zip(table.kinds) {
+        let total = f64::from(table.total(kind).max(1));
+        let mut rows: Vec<&OutcomeDef> = table.of(kind).collect();
+        rows.sort_by_key(|o| (o.tier, o.id.clone()));
+        for o in rows {
+            let _ = writeln!(
+                out,
+                "| {} | {} | {} | {} | {} | {} |",
+                capital(kind.id()),
+                o.tier.id(),
+                capital(&o.id.replace('_', " ")),
+                percent(f64::from(w) / sum * f64::from(o.weight) / total),
+                does(content, &o.effect),
+                lines(o),
+            );
+        }
+    }
+    let dry = if table.exhaust == 0 {
+        "A spring never runs dry: drink as often as you like.".to_string()
+    } else {
+        format!(
+            "After a drink the spring runs dry with {}% chance.",
+            table.exhaust
+        )
+    };
+    let _ = write!(out, "\nA drink takes {} seconds. {dry}\n", table.seconds);
     out
 }
