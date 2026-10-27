@@ -212,7 +212,11 @@ impl ObjectScreen {
         };
         let content = view.content();
         let (pile, pack) = (view.objects(view.viewer()), view.inventory());
-        let edible = |s: &Stack| content.object(s.object).food.is_some();
+        // What may be consumed: food, and potions (spec §8 "Potions": drunk from this list).
+        let edible = |s: &Stack| {
+            let def = content.object(s.object);
+            def.food.is_some() || def.drink.is_some()
+        };
         let reading = |s: &Stack| content.object(s.object).read.as_ref();
         let studies = view.studies();
         let items: Vec<Item> = match list {
