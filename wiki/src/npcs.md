@@ -8,7 +8,10 @@ of the Ascmearc, you meet:
 - **Sister Hild**, in the Mynster, the town's temple: she cures and mends for gold (see
   "Services" below), and anyone may rest on the Mynster's floor, a sanctuary;
 - **Godgifu**, who keeps the Gæsthūs, the inn: she hears every rumour in the march, and the
-  bread on her table is free to travellers;
+  bread on her table is free to travellers. Ask her about a place (the barrows, the marsh, the
+  mines, the volcano, the pass) and she tells you the way: you mark it on your map ("You mark
+  the way on your map."), as much of the country as you would have seen walking that way by day
+  (see [The overworld](overworld.md#rumoured-ways));
 - **Reeve Leofric**, who keeps the town's peace and its coin, at home south of the square;
 - **Factor Wulfrun**, who bought and sold the ore of mines that have gone quiet, in her office.
 

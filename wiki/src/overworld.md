@@ -54,6 +54,21 @@ from then on the overworld shows the way in at that cell, wherever you were when
 it, and it leads in like any other location. The quest log may say in words where the place
 lies. Hearing of it a second time changes nothing.
 
+### Rumoured ways
+
+Some people tell you the way to a place when you ask them about it: Godgifu at the inn in
+Cēaptūn knows the way to the barrows, the marsh, the mines, the volcano, and the pass. You mark
+it on your map at once, wherever you are, and it takes no time: every cell you would have seen
+walking that way from the town by day (within 9 cells of the way and in line of sight from it,
+so hills and mountains still hide what lies behind them) is on your map as you would remember
+it. Asking again adds nothing. Each way is a line through its waypoints, starting at the town's
+cell, (18, 28):
+
+{{#include generated/rumoured-ways.md}}
+
+A rumoured way shows only the land itself: a hidden location along it is a stretch of swamp or
+hills like any other, as if you had walked past it. Only a quest reveals one.
+
 ## Local areas
 
 On any other cell whose terrain has a local area (the "Local area" column above), press `>` to

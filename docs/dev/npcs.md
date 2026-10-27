@@ -56,3 +56,21 @@ Nothing is saved that was not before, and no stream is drawn. Tests: `world/serv
 `world/identify_service_tests.rs` (a fixture appraiser: the count, the refusals, magic and
 scroll types identified, the replay and the save), Wulfrun's in `world/ceaptun_tests.rs`,
 the screen's row in `ui/dialogue_screen.rs`; the wiki's table is `xtask/src/wiki/services.rs`.
+
+**Rumoured ways** (the owner's request of 2026-10-27; spec §8 "Dialogue"): `world/rumour.rs`.
+A topic's optional `route` (`Topic::route`, waypoints `[x, y]` on the campaign's overworld;
+`Topic::route_cells` joins them with `Pos::line_between`) is checked when content loads
+(`Content::check_topic_routes`, one line in `Content::load`: a campaign's dialogue only, two
+waypoints or more, every cell walkable on its overworld). `World::ask` calls
+`World::mark_rumoured_way` after a dialogue topic's reply: it makes the overworld if the run has
+none yet (`World::visit`), runs `fov::compute_fov` with `daylight::SIGHT_DAY` from every route
+cell over the overworld's opacity, and writes each cell seen into `LevelState::memory` from the
+terrain grid, saying `rumour::MARKED` if anything was new. The terrain grid holds a hidden
+location's plain terrain, so nothing hidden leaks (`docs/dev/overworld.md`); nothing else is
+read or written (no objects, traps, or stairs links; no time; no stream; no new saved state).
+Why waypoints and not a computed path: the way is the speaker's words, drawn by hand along the
+roads, and checking it is a load-time walk over its cells; a pathfinder would need its own costs
+and could drift off the road with any map edit. Godgifu's five topics carry routes from the town
+cell (18, 28). Tests: `world/rumour_tests.rs` (marks after the ask and not before, a corridor and
+not the map, idempotent, no time, hidden locations stay hidden while Cealdhlāw shows, the
+`memory` and `locations` layers back on the map, a replay, the validation).

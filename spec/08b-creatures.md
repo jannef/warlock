@@ -212,6 +212,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (§6). Asking (`Action::Ask { dir, topic }`, replay text `ask:E:rooms`) takes no time and gets
     the topic's reply; an unknown topic is "The sage knows nothing about that." `World::topics`
     is the one place topics come from: quests ("Quests" below) add theirs there, first.
+  - **Rumoured ways** (`world/rumour.rs`; the owner's request of 2026-10-27): a topic with a
+    `route` (§7 "Dialogue") tells the way to a place. Asking it, every time, marks on the
+    player's overworld map what walking the route by day would show: each cell in line of sight
+    within the day's sight radius (9) of a cell of the route goes into the overworld's memory as
+    the terrain its cell holds, so a corridor of country and the land about the route's end,
+    not a whole region. The overworld is made first if the run has not been on it yet. Only the
+    terrain grid is read, and a hidden location's cell holds its plain terrain (§7 "Hidden
+    locations"), so a rumour never marks, names, or reveals a hidden location (quests stay the
+    only key); a visible location along the way (Cealdhlāw) is remembered as seeing it would
+    show it. After the reply, "You mark the way on your map." if any cell was new to the map;
+    asking again marks nothing more. No time beyond the ask's (none), no stream drawn, no state
+    beyond the overworld's memory (saved as always). Built in: Godgifu's five topics in Cēaptūn
+    (the barrows, the marsh, the mines, the volcano, the pass), each from the town's cell.
   - **Services** (`world/service.rs`; the campaign design §6.1, #329): a dialogue's
     `[[dialogue.service]]`s (`id`, `name`, `price` in gold, `does` = `cure`, `mend`, or `identify`, `reply`,
     `nothing`) are sold for gold and asked for like topics (`ask:E:cure`): `World::topics` lists

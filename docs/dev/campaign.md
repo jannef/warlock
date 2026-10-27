@@ -154,7 +154,7 @@ lay out `[[pile]]`s of goods each kind buys; the Mynster is a `sanctuary` `[[roo
 are campaign creature types (`data/creatures/{villager,sister,innkeeper,reeve,mine_factor,guildmaster}.toml`)
 and their words are `data/dialogue/ceaptun.toml`: the `villager` type's one-liners and mutters,
 and the npcs `hild` (Sister Hild: two topics, the `cure` 60 and `mend` 40 services), `godgifu`
-(five rumour topics, never a reveal), `leofric`, `wulfrun`, and `wat` (Wat One-Eye, the
+(five rumour topics, each with a `route` from the town, `docs/dev/npcs.md` "Rumoured ways"; never a reveal), `leofric`, `wulfrun`, and `wat` (Wat One-Eye, the
 guildmaster, in the Gildhalle of the south-east corner, `[77, 22, 85, 28]`, its door north on the
 lane and the bounty board, a named place on the wall beside it: `docs/dev/guild.md`), each with a proper `name`
 (`Dialogue::name`: `World::called`, `Content::speaker_name`/`speaker_called`, look mode and the

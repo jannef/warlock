@@ -104,3 +104,8 @@ Bānfeld (42, 31, hills → `barrow`), Brocenburg (66, 12, forest → `dungeon_e
 least six cells from every other location and with no road beside it (`ascmearc_tests`); each
 is revealed by its own variant of `guild_wanted` (`mapgen/lairs_tests.rs` walks to each and goes
 down once `reveal:ID` marks it).
+
+Rumoured ways (spec §8 "Dialogue"; `docs/dev/npcs.md`): a dialogue topic's `route` marks the
+overworld's memory as day sight along it would (`world/rumour.rs`), reading only the terrain
+grid, so hidden locations stay their plain terrain and are never marked or named; a visible
+location (Cealdhlāw) is remembered and then listed by the `locations` layer as when seen.
