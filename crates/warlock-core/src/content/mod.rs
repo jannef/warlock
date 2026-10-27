@@ -78,6 +78,9 @@ mod room_effect;
 mod room_haunt;
 #[cfg(test)]
 mod room_haunt_tests;
+mod room_lore;
+#[cfg(test)]
+mod room_lore_tests;
 #[cfg(test)]
 mod room_mirrors_tests;
 mod room_shrine;
@@ -209,6 +212,7 @@ pub use room_effect::{
     Swarm, Themes, Treasure,
 };
 pub use room_haunt::{HAUNT_EVERY, Haunt};
+pub use room_lore::RoomLoot;
 pub use room_shrine::{Regard, Shrine};
 pub use scenario::ScenarioDef;
 pub use scroll::{Cast, Reading, ScrollSpell, SpellScroll};
@@ -942,6 +946,14 @@ impl Content {
         let lights = content.light_ids.clone();
         let outcomes = content.outcomes.clone();
         (content.room_effects).resolve_places(&outcomes, |name| lights.get(name).copied())?;
+        // A scriptorium's loot and training name item classes (loaded with the objects) and skills.
+        let mut rooms = std::mem::take(&mut content.room_effects);
+        let skills = !content.skills().is_empty();
+        rooms.resolve_lore(
+            |n| content.item_class_id(n),
+            (|n| content.skill_id(n), skills),
+        )?;
+        content.room_effects = rooms;
 
         let path = "data/legend.toml";
         let legend_file: LegendFile =

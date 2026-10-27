@@ -321,3 +321,17 @@ weight = 5
 needs_danger = true
 haunt = { faction = "undead", every = "1h" }
 unholy = true
+
+# A scriptorium (spec §7 "Special rooms"): shelves at its middle, a few scrolls on its floor, and
+# studying inside earns Decipher script's training marks twice as often.
+[[effect]]
+id = "scriptorium"
+name = "scriptorium"
+mark = "r"
+near = "You smell dust and old vellum."
+enter = "Shelves of rotting scrolls line the walls."
+weight = 5
+min_cells = 9
+feature = "shelves"
+loot = { class = "scrolls", count = [2, 4] }
+train = { decipher_script = 200 }

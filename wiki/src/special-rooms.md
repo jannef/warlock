@@ -144,6 +144,12 @@ gets where a dungeon favours or bans nothing. "Only" says where it can come at a
   ("An old shrine. It ignores you."). Creatures are treated the same way by their own side, so
   a good shrine is a poor place for an orc to fight you. There is nothing to pray to. Only rooms
   of 9 floor cells or more can be one.
+- **Scriptorium.** Shelves of rotting scrolls stand in the middle of the room (shown as `≡`),
+  and you may smell the dust and old vellum before you see it. Two to four scrolls lie on its
+  floor, of the kinds the level would give anyway, unread. Studying a spell from a scroll while
+  you stand inside (see [Magic](magic.md#learning-spells-from-scrolls)) always earns Decipher script a training mark if you
+  are trained in it, where elsewhere it is one study in two. Only rooms of 9 floor cells or more
+  can be one.
 
 The talent *Hallowed rest* (Grit) makes a room that quickens healing or mana quicken it half
 again more for you: a sanctuary's three times as fast becomes four times. The talent *Anchored
