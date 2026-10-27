@@ -16,7 +16,7 @@ undead's), and that the faction holds no type it does not list. Riders map onto 
 damage for the hound's bite and the steed's hooves, a Toughness drain (difficulty 17, checked by
 Toughness) for the kiss, `held` (15 % at 18: the hag on the sleeper's chest) and `frightened` for
 the night hag, `transfixed` and `frightened` for the rakshasa. The hell hound is in Fyrdelf's
-population (its 13 inside danger 8–19, at home in the fires); the rest ship in none. Breath,
+population (its 13 inside danger 5–16, at home in the fires); the rest ship in none. Breath,
 shapes, flight, charm, summoning, and dream-walking are #450's follow-ups.
 
 Fixtures that write their own factions file list `fiends` (`equip_tests`, `magic_tests`,

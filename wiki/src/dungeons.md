@@ -131,10 +131,11 @@ the rock, ash wraiths, basilisks, ogres, trolls, and hill trolls down from the h
 delf's fires left: ogre zombies and grave hounds, burning skulls, the charred dead, duergar
 skeletons still in their helms, rotting trolls, and the spirits of the miners, knockers and
 spectres, that pass through the rock; hell hounds, fiends at home in the fires, run its
-deep workings, with kobolds, centipedes, and bats in the upper galleries. Hobgoblin war bands come
+deep workings, and the upper galleries belong mostly to kobolds, centipedes, and bats. Hobgoblin war bands come
 down to raid the duergar: soldiers, archers, legionnaires with spear and shield, warcasters,
-sergeants, and captains. Orc war bands raid the mine too: raiders, shamans, berserkers, veterans,
-bowmen, and their wargs, and now and then a war chief.
+and sergeants. Orc war bands raid the mine too: raiders, shamans, berserkers, veterans, bowmen,
+and their wargs. Their captains and war chiefs, like the duergar's priests, stay deeper than the
+delf goes.
 
 Every gallery floor holds a **foreman's cabin**: a timber-floored lodging where a duergar miner
 keeps watch, with a spare pick-axe, his lamp, and a brass key to the delf's locked rooms behind a

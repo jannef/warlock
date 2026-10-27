@@ -32,6 +32,7 @@ with arrows).
 ## Populations
 
 Cealdhlāw: the runt, warrior, archer, and warg. Fyrdelf: the warg, raider, shaman, berserker,
-veteran, bowman, and war chief (level 20: only out of depth). The dire warg, high shaman, and
-warlord are in none. Riders on `on_hit` fire only on natural attacks, so the armed orcs have
+veteran, and bowman (level 17: only out of depth, at the bottom). The war chief (20) left Fyrdelf
+when its danger was squished to 5–16 (#534); it, the dire warg, high shaman, and warlord are in
+none. Riders on `on_hit` fire only on natural attacks, so the armed orcs have
 none; the wargs' bites carry `bleeding` (the mana tests' status fixture lists it for them).
