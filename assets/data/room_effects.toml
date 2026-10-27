@@ -293,3 +293,17 @@ min_cells = 9
 feature = "forgotten_altar"
 sides = { good = "altar_good", evil = "altar_evil" }
 offers = { pray = "forgotten_altar" }
+
+# A haunted room (spec §7 "Special rooms"): a fine camp spot that is not. While the player rests
+# inside, at every full hour something undead of the floor's danger comes inside, out of view where
+# it can. Consecrate lifts it.
+[[effect]]
+id = "haunted"
+name = "haunted room"
+mark = "q"
+near = "You hear a whisper, and then nothing."
+enter = "It is very quiet here. Too quiet to sleep."
+weight = 5
+needs_danger = true
+haunt = { faction = "undead", every = "1h" }
+unholy = true

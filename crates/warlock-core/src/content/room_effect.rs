@@ -145,6 +145,7 @@ struct RoomEffectSpec {
     warp: u8,
     hoard: Option<Treasure>,
     rise: Option<RiseSpec>,
+    haunt: Option<super::room_haunt::HauntSpec>,
     #[serde(default)]
     unholy: bool,
     feature: Option<String>,
@@ -436,6 +437,8 @@ pub struct RoomEffectDef {
     pub collapse: Option<Collapse>,
     /// The dead killed inside rise (a cursed room's).
     pub rise: Option<Rise>,
+    /// A rest inside is haunted (a haunted room's; `world/haunt.rs`).
+    pub haunt: Option<super::room_haunt::Haunt>,
     /// Consecrate lifts it for good (a cursed and a draining room).
     pub unholy: bool,
 }
@@ -470,6 +473,7 @@ impl RoomEffectDef {
             && self.hoard.is_none()
             && self.feature.is_none()
             && self.collapse.is_none()
+            && self.haunt.is_none()
             && self.pervade.is_some()
     }
 
@@ -580,6 +584,11 @@ impl<'c> Here<'c> {
         self.each().find_map(|e| e.rise.as_ref())
     }
 
+    /// A haunted room's hauntings here, if one is here (the room's, never a whole level's).
+    pub fn haunt(&self) -> Option<&'c super::room_haunt::Haunt> {
+        self.room.and_then(|e| e.haunt.as_ref())
+    }
+
     /// The statuses held here, the room's first: both apply.
     pub fn statuses(self) -> impl Iterator<Item = StatusId> + 'c {
         (self.room.into_iter().chain(self.level)).filter_map(|e| e.status)
@@ -651,6 +660,17 @@ impl RoomEffects {
     /// one, named once.
     pub(super) fn check_factions(&self, factions: &super::Factions) -> Result<(), ContentError> {
         for def in &self.defs {
+            if let Some(haunt) = &def.haunt
+                && factions.id(&haunt.faction).is_none()
+            {
+                return Err(ContentError::new(
+                    "data/room_effects.toml",
+                    format!(
+                        "effect `{}`: haunt faction `{}` is unknown",
+                        def.id, haunt.faction
+                    ),
+                ));
+            }
             if let Some(rise) = &def.rise
                 && factions.id(&rise.faction).is_none()
             {
@@ -853,6 +873,10 @@ impl RoomEffects {
                 }
                 None => None,
             };
+            let haunt = (spec.haunt.as_ref())
+                .map(|h| h.resolve(spec.needs_danger))
+                .transpose()
+                .map_err(bad)?;
             let feature = match &spec.feature {
                 Some(name) => {
                     let (id, def) =
@@ -922,6 +946,7 @@ impl RoomEffects {
                 side_lights: spec.sides.unwrap_or_default(),
                 collapse: spec.collapse,
                 rise,
+                haunt,
                 unholy: spec.unholy,
             };
             if def.level_chance > 0 && !def.can_pervade() {

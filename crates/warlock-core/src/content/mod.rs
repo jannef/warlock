@@ -75,6 +75,9 @@ mod room_burden_tests;
 #[cfg(test)]
 mod room_collapse_tests;
 mod room_effect;
+mod room_haunt;
+#[cfg(test)]
+mod room_haunt_tests;
 #[cfg(test)]
 mod room_mirrors_tests;
 #[cfg(test)]
@@ -202,6 +205,7 @@ pub use room_effect::{
     Collapse, Here, Hoard, Mirrors, Offer, RoomEffectDef, RoomEffectId, RoomEffects, SpecialRoom,
     Swarm, Themes, Treasure,
 };
+pub use room_haunt::{HAUNT_EVERY, Haunt};
 pub use scenario::ScenarioDef;
 pub use scroll::{Cast, Reading, ScrollSpell, SpellScroll};
 pub use scroll_label::ScrollLabelDef;

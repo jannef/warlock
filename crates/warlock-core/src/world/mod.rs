@@ -122,6 +122,7 @@ mod gifts;
 mod glare;
 mod guild;
 mod hash;
+mod haunt;
 mod hearing;
 mod hoard;
 mod hold;
@@ -1348,6 +1349,8 @@ mod gifts_tests;
 mod guild_tests;
 #[cfg(test)]
 mod guild_wanted_tests;
+#[cfg(test)]
+mod haunt_tests;
 #[cfg(test)]
 mod hearing_tests;
 #[cfg(test)]
