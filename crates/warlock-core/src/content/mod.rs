@@ -26,6 +26,8 @@ mod dialogue;
 mod disease;
 #[cfg(test)]
 mod drow_roster_tests;
+#[cfg(test)]
+mod duergar_roster_tests;
 mod dungeon;
 mod effect;
 #[cfg(test)]

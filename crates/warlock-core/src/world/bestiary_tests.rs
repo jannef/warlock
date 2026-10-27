@@ -85,6 +85,16 @@ const WAVES: &[(&str, Option<&str>)] = &[
     ("drow_archmage", None),
     ("drow_high_priestess", None),
     ("drow_matron", None),
+    // The duergar (#518): levels 8 to 40 beside the delf wave's three, all shared.
+    ("duergar_slinger", None),
+    ("duergar_crossbowman", None),
+    ("duergar_veteran", None),
+    ("duergar_priest", None),
+    ("duergar_hulk", None),
+    ("duergar_spider_rider", None),
+    ("duergar_mindbreaker", None),
+    ("duergar_thane", None),
+    ("duergar_king", None),
     // The undead roster, batch 1 (#384): levels 1 to 10, all shared.
     ("crawling_hand", None),
     ("skeletal_rat", None),

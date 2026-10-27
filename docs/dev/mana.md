@@ -4,9 +4,9 @@ Developer notes for working on this part of Warlock; the rules it implements are
 spec/08e-blood-and-status.md ("Mana"). Keep it current with the code, as CLAUDE.md says.
 
 Mana (spec §8 "Mana", #223) is a second pool beside hit points, built the same way, for magic to
-spend (the progression design, #220, gives classes mana values, per-level gains, and abilities
-and talents that cost or raise it; the values, the gains, and the talents (#242) are built,
-the abilities that cost it come with the caster class tables, I3). **Every new system says in its
+spend (the progression design, #220, gives classes mana values, per-level gains, and talents that
+cost or raise it, #242). Spells (`world/cast.rs`, docs/dev/spells.md), rods, the bard's inspire,
+and creatures' summons spend it, all through `World::spend_mana`. **Every new system says in its
 issue how it interacts with mana**, and hooks in at the one place below.
 
 - **Pure rules**: `warlock-core/src/mana.rs`: `max_mana(stats, base)` (base plus the mental
@@ -66,8 +66,8 @@ issue how it interacts with mana**, and hooks in at the one place below.
     of the raised Intelligence and Willpower modifiers)` (`mana::level_modifier`) per level up to
     `mana_level` (60; `World::level_mana`; the scenario's `mana` without a character). The race
     and class values and this formula are the progression design's (`docs/design/progression.md`
-    §3.7), which also plans what spends mana: caster abilities costing it
-    (`Unavailable::NoMana`, I3).
+    §3.7). An ability short of mana is `Unavailable::NoMana` (a spell's through
+    `ability::spell_unavailable`, which knows the caster level).
 - **Presentation**: `PerceptionView::own_mana()` (current clamped to the maximum, and the
   maximum) is all the UI gets: the status bar's `MP 5/12` (`ui::status_segments`, priority 1
   right after HP, so it gives way after everything else of that priority, before the HP), the
