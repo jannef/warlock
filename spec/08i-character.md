@@ -697,6 +697,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Mirror-wise (Scholar, Intelligence 12, `sees_reflections` 2, #419): a hall of mirrors' images
     within 2 cells are seen for what they are and not shown, so no glass stops a step there
     (`world/mirrors.rs`, perception).
+    The `spells` system (the magic design §10, #400) came with the **Spellcraft** tree: Quick
+    study (free, #396: study +2, study time −50 %), Overreach (level 6,
+    `overreach_cost_percent` −33: the surcharge per tier above the caster level's tier a third
+    smaller, `SpellRules::mana_with`), and School focus (free, `choice = "school"`: a school or
+    an element, the spell tags of §8 "Spells"; `school_focus` cost −10 %, reach +1: a spell
+    carrying the tag costs a tenth less and reaches a cell farther, range or length, never past
+    its cap, `TalentMods::focus`); the casters' Empower, Archmage, Scroll adept, Frugal caster,
+    the wizard's Arcane training, and every class spell name it too. Wand mastery comes with
+    wands (#398) and Channeler with rods (#399), whose hooks they need.
     Grave warden (Guard, Willpower 12, `grave_warden`, #408): nothing the player kills rises in
     a cursed room (`World::curse_corpse`, the rise line of `fight.rs::creature_dies`).
     The Defence by attack kind of the design's B5 landed with Deflect missiles (#237,
@@ -851,15 +860,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
     mana), Timeless body (hunger −50 %; a
     failed disease check does nothing, so a disease never progresses).
   - **Wizard**: Scroll adept (reading −50 %; +1 on every die of spells and spell scrolls),
-    Ray of frost (tier 0, at 1: a ray that rolls to hit, 1d6 cold; 1 mana), Magic missile
+    Ray of frost (tier 0, at 1: a ray that rolls to hit, 1d6 cold; 1 mana), Arcane training
+    (at 1: caster level +1 per 5 character levels, `caster_level` with `per_levels`), Magic missile
     (tier 1, at 3: never misses, 1d4 force, to 2d4; 3 mana), Arcane lore (a magic item carried
     an hour is identified), Spell recall (the Scholar talent, handed out), Burning hands (tier
     1, at 12: a cone of 3 cells, 1d4 fire, to 2d4; 5 mana), Arcane bolt (tier 2, at 18: a line
     of 6 cells, to 8, 2d6 force; 11 mana), Mage armour (Deflection +2 in no body armour),
-    Empower (spells and spell scrolls a die more), Arcane mastery (mana +100 %),
-    Archmage (+2 on every die; spells' mana −50 %, at least 1). `spell_power` reads in
+    Empower (spells and spell scrolls a die more; spells' mana −10 %), Arcane mastery (mana
+    +100 %), Archmage (+2 on every die; spells' mana −50 %, at least 1). `spell_power` reads in
     `TalentMods::spell_damage` for spells and `read_spell` alike; a spell's roll is then held to
-    its cap (Empower and Archmage bring it to the cap sooner, never past it).
+    its cap, and a scroll's to the cap of the spell it teaches (Empower and Archmage bring it to
+    the cap sooner and lower costs; they never lift a cap, #400). The wizard's bonus talents
+    come from the Scholar and Spellcraft trees.
   - **Witch**: Herb lore (rotten food −50 %, a corpse's `on_eat` harm and vomiting never, the
     angelica root heals 1d6), Evil eye (tier 0, at 1: Hexed 1 min a degree: −2 to hit; 1 mana),
     Hex of weakness (tier 1, at 3: Weakened 2 min a degree: St −2, Dx −2; 3 mana), Poison lore

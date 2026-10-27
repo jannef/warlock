@@ -204,24 +204,36 @@ pub fn weight(level: u8, factor: u16, danger: u8) -> u32 {
     level_weight(level, danger) * u32::from(factor)
 }
 
-/// A type that may be drawn: its id, its level, and its rarity's factor.
-pub type Candidate = (CreatureId, u8, u16);
+/// A type that may be drawn: its id, its levels, and its rarity's factor. An ordinary type's
+/// levels are its own level twice; a family's (spec §8 "Animated objects": `animated_blade`)
+/// are its range, its id its first member's, the others numbered after it in a row.
+pub type Candidate = (CreatureId, (u8, u8), u16);
 
-/// Picks a type among `candidates` at `danger` by [`weight`], uniform among types of one
-/// weight (one `below(total)` of `rng`); `None` if none weighs anything there.
+/// The level candidate levels `(from, to)` stand at in a draw at `danger`: the danger, kept
+/// within them.
+fn level_at((from, to): (u8, u8), danger: u8) -> u8 {
+    danger.clamp(from, to)
+}
+
+/// The type a candidate drawn at `danger` gives: a family's member of the level it stands at.
+pub fn member((c, levels, _): Candidate, danger: u8) -> CreatureId {
+    CreatureId(c.0 + u16::from(level_at(levels, danger) - levels.0))
+}
+
+/// Picks a type among `candidates` at `danger` by [`weight`] (a family's at the level it stands
+/// at there, [`member`] its pick), uniform among types of one weight (one `below(total)` of
+/// `rng`); `None` if none weighs anything there.
 fn pick(rng: &mut crate::rng::Rng, candidates: &[Candidate], danger: u8) -> Option<CreatureId> {
-    let total: u32 = candidates
-        .iter()
-        .map(|&(_, l, f)| weight(l, f, danger))
-        .sum();
+    let weigh = |&(_, l, f): &Candidate| weight(level_at(l, danger), f, danger);
+    let total: u32 = candidates.iter().map(weigh).sum();
     if total == 0 {
         return None;
     }
     let mut r = rng.below(total);
-    candidates.iter().find_map(|&(c, l, f)| {
-        let w = weight(l, f, danger);
+    candidates.iter().find_map(|c| {
+        let w = weigh(c);
         if r < w {
-            Some(c)
+            Some(member(*c, danger))
         } else {
             r -= w;
             None
@@ -671,12 +683,14 @@ mod tests {
 
     #[test]
     fn draws_stay_within_reach_of_the_danger() {
-        let kinds: Vec<Candidate> = (1..=40).map(|l| (CreatureId(l.into()), l, 100)).collect();
+        let kinds: Vec<Candidate> = (1..=40)
+            .map(|l| (CreatureId(l.into()), (l, l), 100))
+            .collect();
         let mut rng = Rng::stream(7, "test");
         let mut deeper = 0;
         for _ in 0..4000 {
             let c = draw(&mut rng, &kinds, &[], 10, &ODDS).expect("a draw");
-            let level = kinds[usize::from(c.0) - 1].1;
+            let level = kinds[usize::from(c.0) - 1].1.0;
             // At most one deeper and ten more; nothing more than eight below the danger.
             assert!((2..=21).contains(&level), "{level}");
             deeper += usize::from(level > 10);
@@ -686,7 +700,7 @@ mod tests {
         assert!((20..=80).contains(&deeper), "{deeper}");
         // Nothing within reach: nothing drawn; nothing at danger 0.
         assert_eq!(
-            draw(&mut rng, &[(CreatureId(0), 30, 100)], &[], 3, &PLAIN),
+            draw(&mut rng, &[(CreatureId(0), (30, 30), 100)], &[], 3, &PLAIN),
             None
         );
         assert_eq!(draw(&mut rng, &kinds, &kinds, 0, &ODDS), None);
@@ -695,7 +709,10 @@ mod tests {
     #[test]
     fn about_one_draw_in_twenty_is_a_stray() {
         // The own folk and the generic list share nothing here, so every stray shows.
-        let (own, generic) = ([(CreatureId(1), 5, 100)], [(CreatureId(2), 5, 100)]);
+        let (own, generic) = (
+            [(CreatureId(1), (5, 5), 100)],
+            [(CreatureId(2), (5, 5), 100)],
+        );
         let odds = Odds {
             out_of_depth: 0,
             ..ODDS
@@ -712,7 +729,7 @@ mod tests {
             (0..2000).all(|_| draw(&mut rng, &own, &generic, 5, &PLAIN) == Some(CreatureId(1)))
         );
         // A stray that finds nothing of the danger comes from the own folk.
-        let far = [(CreatureId(2), 30, 100)];
+        let far = [(CreatureId(2), (30, 30), 100)];
         let always = Odds { stray: 100, ..odds };
         assert_eq!(draw(&mut rng, &own, &far, 5, &always), Some(CreatureId(1)));
     }
@@ -741,8 +758,11 @@ mod tests {
 
     #[test]
     fn a_population_too_weak_for_the_depth_falls_back_to_the_generic_list() {
-        let own = [(CreatureId(1), 5, 100)];
-        let generic = [(CreatureId(2), 14, 100), (CreatureId(3), 30, 100)];
+        let own = [(CreatureId(1), (5, 5), 100)];
+        let generic = [
+            (CreatureId(2), (14, 14), 100),
+            (CreatureId(3), (30, 30), 100),
+        ];
         let mut rng = Rng::stream(4, "test");
         // One deeper: the own type of level 5 still weighs at 6, so it is drawn.
         let one = Odds {
@@ -760,7 +780,7 @@ mod tests {
         };
         assert!((0..500).all(|_| draw(&mut rng, &own, &generic, 5, &nine) == Some(CreatureId(2))));
         // Nothing anywhere that deep: the draw is made at the danger.
-        let bare = [(CreatureId(3), 30, 100)];
+        let bare = [(CreatureId(3), (30, 30), 100)];
         assert_eq!(draw(&mut rng, &own, &bare, 5, &nine), Some(CreatureId(1)));
     }
 
@@ -768,9 +788,11 @@ mod tests {
     fn spawns_from_the_shipped_odds_are_mostly_own_folk_at_the_danger() {
         // Seeded statistics with the shipped odds: the own folk at the danger, a generic list
         // of other kinds at every level.
-        let own: Vec<Candidate> = (3..=6).map(|l| (CreatureId(l.into()), l, 100)).collect();
+        let own: Vec<Candidate> = (3..=6)
+            .map(|l| (CreatureId(l.into()), (l, l), 100))
+            .collect();
         let generic: Vec<Candidate> = (1..=30)
-            .map(|l| (CreatureId(100 + u16::from(l)), l, 100))
+            .map(|l| (CreatureId(100 + u16::from(l)), (l, l), 100))
             .collect();
         let mut rng = Rng::stream(21, "test");
         let (mut strays, mut deep) = (0, 0);
@@ -786,6 +808,47 @@ mod tests {
         assert!(deep < 40, "{deep}");
     }
 
+    /// A family (spec §8 "Animated objects": `animated_blade`, levels 5 to 20, numbered from 10)
+    /// is one candidate: it weighs as its member at the danger, kept within its levels, and
+    /// gives that member, out of depth too.
+    #[test]
+    fn a_family_weighs_and_gives_its_member_at_the_danger() {
+        let blades: Candidate = (CreatureId(10), (5, 20), 100);
+        let kobold: Candidate = (CreatureId(1), (15, 15), 100);
+        let mut rng = Rng::stream(3, "test");
+        // At 15 it weighs as a level-15 type: as much as the kobold, and it is the 15th blade.
+        let mut blades_at_15 = 0;
+        for _ in 0..2000 {
+            match draw(&mut rng, &[kobold, blades], &[], 15, &PLAIN) {
+                Some(CreatureId(20)) => blades_at_15 += 1,
+                Some(CreatureId(1)) => {}
+                other => panic!("{other:?}"),
+            }
+        }
+        assert!((850..=1150).contains(&blades_at_15), "{blades_at_15}");
+        // Below its least level it weighs nothing; above its most it weighs as that one, fading.
+        assert_eq!(draw(&mut rng, &[blades], &[], 3, &PLAIN), None);
+        assert_eq!(member(blades, 3), CreatureId(10));
+        assert_eq!(
+            draw(&mut rng, &[blades], &[], 26, &PLAIN),
+            Some(CreatureId(25))
+        );
+        assert_eq!(draw(&mut rng, &[blades], &[], 30, &PLAIN), None);
+        // Out of depth: two deeper, the member two levels up.
+        for _ in 0..50 {
+            assert_eq!(
+                draw(&mut rng, &[blades], &[], 8, &TWO_DEEPER),
+                Some(CreatureId(15))
+            );
+        }
+        // Out of depth past its most: its last member.
+        assert_eq!(
+            draw(&mut rng, &[blades], &[], 20, &TWO_DEEPER),
+            Some(CreatureId(25))
+        );
+        assert_eq!(weight(level_at((5, 20), 30), 100, 30), 0);
+    }
+
     #[test]
     fn a_rarity_multiplies_the_level_weight() {
         assert_eq!(weight(10, 100, 10), 400);
@@ -797,7 +860,7 @@ mod tests {
     #[test]
     fn a_rare_type_is_drawn_far_less_often() {
         // Two types of one level: a common one and a rare one (a quarter of the weight).
-        let kinds = [(CreatureId(1), 4, 100), (CreatureId(2), 4, 25)];
+        let kinds = [(CreatureId(1), (4, 4), 100), (CreatureId(2), (4, 4), 25)];
         let mut rng = Rng::stream(11, "test");
         let mut rare = 0;
         for _ in 0..4000 {
@@ -816,9 +879,9 @@ mod tests {
     fn out_of_depth_draws_weigh_rarity_too() {
         // Nothing at the danger but a common type; deeper, a common and a very rare one.
         let kinds = [
-            (CreatureId(1), 3, 100),
-            (CreatureId(2), 5, 100),
-            (CreatureId(3), 5, 10),
+            (CreatureId(1), (3, 3), 100),
+            (CreatureId(2), (5, 5), 100),
+            (CreatureId(3), (5, 5), 10),
         ];
         let mut rng = Rng::stream(5, "test");
         let (mut deep, mut very_rare) = (0, 0);

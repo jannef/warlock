@@ -3,9 +3,9 @@ id = "archmage"
 name = "Archmage"
 tree = "class"
 granted = true
-description = "Your spells and spell scrolls strike much harder (a spell never past its most), and your spells cost half the mana."
+description = "Your spells cost half the mana and reach their most much sooner, and your spell scrolls strike much harder; nothing lifts a spell past its most."
 effects = [
     { kind = "spell_power", per_die = 2 },
     { kind = "spell_mana_percent", value = -50 },
 ]
-systems = ["mana", "scrolls"]
+systems = ["spells", "mana", "scrolls"]

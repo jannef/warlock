@@ -193,10 +193,11 @@ pub enum KillTarget {
 }
 
 impl KillTarget {
-    /// Whether a kill of a `creature` is one of these.
+    /// Whether a kill of a `creature` is one of these: of the type, or of any member of its
+    /// family (spec §8 "Animated objects": `animated_blade` counts every blade).
     pub fn has(&self, content: &Content, creature: CreatureId) -> bool {
         match self {
-            KillTarget::Creature(c) => *c == creature,
+            KillTarget::Creature(c) => content.family(*c) == content.family(creature),
             KillTarget::Tag(tag) => content.has_tag(creature, tag),
         }
     }
@@ -372,9 +373,10 @@ impl QuestDef {
     }
 
     /// The types carrying tag `tag` that its run can meet, by their plurals: "goblins, goblin
-    /// archers, and goblin chiefs".
+    /// archers, and goblin chiefs". A family (animated blades) is named once.
     pub fn members(&self, content: &Content, tag: &str) -> String {
         let plurals: Vec<&str> = (content.tagged_in(tag, self.campaign.as_deref()))
+            .filter(|&c| content.family(c) == c)
             .map(|c| content.creature(c).plural.as_str())
             .collect();
         super::and_list(&plurals)

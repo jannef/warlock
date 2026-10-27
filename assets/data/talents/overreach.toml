@@ -1,0 +1,10 @@
+# Overreach (the magic design §10; #400): the Spellcraft tree. A spell above the tier the
+# caster's level has reached costs a third less over its price.
+[[talent]]
+id = "overreach"
+name = "Overreach"
+tree = "spellcraft"
+description = "You are at home beyond your depth: a spell above your mastery costs you much less of the extra mana it asks."
+needs = { level = 6 }
+effects = [{ kind = "overreach_cost_percent", value = -33 }]
+systems = ["spells", "mana"]

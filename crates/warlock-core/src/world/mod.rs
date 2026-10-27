@@ -1238,6 +1238,8 @@ mod ai_tests;
 #[cfg(test)]
 mod alignment_tests;
 #[cfg(test)]
+mod animated_blade_tests;
+#[cfg(test)]
 mod animated_tests;
 #[cfg(test)]
 mod ascmearc_tests;
@@ -1429,6 +1431,8 @@ mod spawn_tests;
 mod speed_tests;
 #[cfg(test)]
 mod spell_list_tests;
+#[cfg(test)]
+mod spell_talent_tests;
 #[cfg(test)]
 mod stars_roc_tests;
 #[cfg(test)]

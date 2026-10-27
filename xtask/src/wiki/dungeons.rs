@@ -33,16 +33,20 @@ fn count_text(count: Count) -> String {
     }
 }
 
-/// The types that live there, by level then name: `giant rat (1)`, with `unique` marked.
+/// The types that live there, by level then name: `giant rat (1)`, with `unique` marked, a
+/// family by its levels: `animated blade (5 to 20)`.
 fn population_text(content: &Content, s: &Spawning) -> String {
     let mut kinds: Vec<_> = (s.population.iter())
-        .map(|&c| content.creature(c))
+        .map(|&c| (content.creature(c), content.family_levels(c)))
         .collect();
-    kinds.sort_by(|a, b| (a.level, &a.name).cmp(&(b.level, &b.name)));
+    kinds.sort_by(|(a, _), (b, _)| (a.level, &a.name).cmp(&(b.level, &b.name)));
     let names: Vec<String> = (kinds.iter())
-        .map(|d| {
+        .map(|(d, family)| {
             let once = if d.unique { ", once a run" } else { "" };
-            format!("{} ({}{once})", d.name, d.level)
+            match family {
+                Some((from, to)) => format!("{} ({from} to {to})", d.name),
+                None => format!("{} ({}{once})", d.name, d.level),
+            }
         })
         .collect();
     names.join(", ")
@@ -140,10 +144,13 @@ pub(super) fn dungeon_floors(content: &Content) -> String {
                 Generator::Caves => "caves",
             };
             let mut kinds: Vec<_> = (s.population.iter())
-                .map(|&c| content.creature(c))
-                .map(|def| {
+                .map(|&c| {
+                    let def = content.creature(c);
                     let factor = content.creature_rarity(def.rarity).factor;
-                    (danger::weight(def.level, factor, danger), def)
+                    // A family weighs as its member at the danger.
+                    let level = (content.family_levels(c))
+                        .map_or(def.level, |(from, to)| danger.clamp(from, to));
+                    (danger::weight(level, factor, danger), def)
                 })
                 .filter(|(w, _)| *w > 0)
                 .collect();

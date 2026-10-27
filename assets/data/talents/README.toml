@@ -17,7 +17,8 @@
 #   ranks         how many times it can be taken (1 to max_ranks, default 1): "Hardy 2/3"
 #   choice        what it is chosen for, if it takes a choice: "weapon_skill", "style", "skill"
 #                 (any skill, trained or not), "element" (a damage type that is no physical
-#                 kind), or "tag" (a creature tag some type carries); replays write it
+#                 kind), "school" (a school of magic, `evocation`, or an element: a spell
+#                 tag), or "tag" (a creature tag some type carries); replays write it
 #                 `talent:weapon_focus:long_blades`, and each choice is a pick of its own
 #   needs         what taking any rank asks, all of which must hold at the pick (nothing is
 #                 checked again later):
@@ -341,6 +342,16 @@
 #                                 past its cap (../spells.toml)
 #   spell_mana_percent { value }  its spells cost that percent more mana (negative: less; at
 #                                 least 1)
+#   The Spellcraft tree's (the magic design §10, docs/dev/spells.md):
+#   caster_level { value, per_levels }   caster level that much higher (-20 to 20); with
+#                                 per_levels (1 to 20), value per that many character levels
+#   overreach_cost_percent { value }   what a spell above its caster level's tier costs over its
+#                                 price, that percent more (negative: less)
+#   school_focus { cost, reach }  (choice school) its spells of the chosen school or element cost
+#                                 that percent more mana (negative: less) and reach that many
+#                                 cells farther (0 to 5), never past the spell's own caps
+#   study { bonus, percent }      studying a spell: bonus points off the check's difficulty, and
+#                                 that percent more time (negative: less)
 #   deflection_unarmoured { value }   Deflection, only while nothing is worn in a body armour slot
 #   purify                        rotten food neither sickens it nor exposes it to a disease
 #   corpse_harmless               a fresh corpse's own harm (on_eat sickness, vomiting) never
