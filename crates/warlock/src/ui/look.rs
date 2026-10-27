@@ -18,11 +18,20 @@ pub const CURSOR_BG: Rgb = Rgb::new(0xe0, 0xc0, 0x70);
 /// special room (once they have been in it), and what was heard there. Blood they know of there
 /// reads before the terrain ("on blood-stained stone floor") if `blood` is shown. A named place
 /// with a note adds it after: "A mountain pass, Beorggeat. The way you came; snow has closed it
-/// behind you."
+/// behind you."; so does terrain with a description (a forgotten altar's).
 pub fn describe(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
     let text = describe_cell(view, p, blood);
-    match view.place(p).and_then(|place| place.note.as_deref()) {
+    let text = match view.place(p).and_then(|place| place.note.as_deref()) {
         Some(note) => format!("{text} {note}"),
+        None => text,
+    };
+    // Terrain with a description of its own (a forgotten altar) adds it after.
+    let terrain = match view.cell(p) {
+        CellView::Visible(t) | CellView::Remembered(t) => Some(t),
+        CellView::Unknown => None,
+    };
+    match terrain.and_then(|t| view.content().terrain(t).description.as_deref()) {
+        Some(description) => format!("{text} {description}"),
         None => text,
     }
 }
@@ -311,6 +320,32 @@ mod tests {
         assert_eq!(
             describe(&w.perception(), pass, true),
             "A mountain pass, Beorggeat. The way you came; snow has closed it behind you."
+        );
+    }
+
+    #[test]
+    fn a_forgotten_altar_says_what_it_is_and_a_spent_one_too() {
+        let content = Arc::new(Content::builtin().expect("content"));
+        let mut w = World::new(content, "shrine", None).expect("the shrine");
+        let walk = "move:N open:N move:N*3";
+        for action in warlock_core::action::parse_actions(walk).expect("actions") {
+            w.apply(&action);
+        }
+        let altar = Pos::new(13, 3);
+        assert_eq!(
+            describe(&w.perception(), altar, true),
+            "A forgotten altar. An altar of worn stone. Its carvings have been rubbed smooth by \
+             hands or by time, and whatever god it served has no name left. Something here still \
+             listens."
+        );
+        for _ in 0..8 {
+            w.apply(&Action::Pray);
+        }
+        assert_eq!(
+            describe(&w.perception(), altar, true),
+            "A spent altar. An altar of worn stone, cold and dark. Whatever listened here has \
+             stopped.",
+            "eight prayers at one altar spend it, but for one chance in 256"
         );
     }
 

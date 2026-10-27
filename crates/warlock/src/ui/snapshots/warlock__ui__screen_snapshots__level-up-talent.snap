@@ -24,21 +24,21 @@ expression: "render(case, content.clone())"
             │   l  Keen ears                   1/2  You hear fainter sounds, fainter … │
             │   m  Lamplighter                      You tend your lantern well: it bu… │
             │ Wayfarer                                                                 │
-            │   n  Long strider                     Your journeys across the overworl… │
-            │   o  Pilgrim                          You have knelt in many temples: t… │
-            │   p  Sun-blessed                      The sun mends you: under the open… │
-            │   q  Swimmer                          Water does not slow you: you wade… │
-            │   r  Weather-wise                     You read the sky: under it you kn… │
+            │   n  Devout                           You pray as one who means it: an … │
+            │   o  Long strider                     Your journeys across the overworl… │
+            │   p  Sense of place                   You read a place at a glance: a s… │
+            │   q  Sun-blessed                      The sun mends you: under the open… │
+            │   r  Swimmer                          Water does not slow you: you wade… │
+            │   s  Weather-wise                     You read the sky: under it you kn… │
             │ Scholar                                                                  │
-            │   s  Anchored mind                    Your power is moored fast: no pla… │
-            │   t  Apprentice                  1/3  You take up a skill you lack, or … │
-            │   u  Clear mind                       A mind at peace gathers its stren… │
-            │   v  Deep well                   1/3  Your power runs deep: more mana f… │
+            │   t  Anchored mind                    Your power is moored fast: no pla… │
+            │   u  Apprentice                  1/3  You take up a skill you lack, or … │
+            │   v  Clear mind                       A mind at peace gathers its stren… │
+            │   w  Deep well                   1/3  Your power runs deep: more mana f… │
             │                                                                          │
             │ Tougher than most: more hit points for each rank, and more as you level. │
             │                                                                          │
             │                                                                          │
             │                                                                          │
-            │ a-v or Enter choose   > < page                                           │
-            └──────────────────────────────────────────────────────────────────────────┘
- The Hub  ·  HP 28/28  ·  MP 4/4  ·  Lv 3  ·  08:00  ·  11 Darkening, Year 1444          ? controls
+            │ a-w or Enter choose   > < page                                           │
+ The Hub  · └──────────────────────────────────────────────────────────────────────────┘ ? controls

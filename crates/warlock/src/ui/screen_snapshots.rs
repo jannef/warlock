@@ -303,6 +303,14 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // Beside a forgotten altar (spec §7 "Special rooms"): Pray in the Here group, last.
+    Case {
+        name: "abilities-menu-here",
+        scenario: "shrine",
+        actions: "move:N open:N move:N*3",
+        screen: Some("abilities"),
+        ..BASE
+    },
     // A paladin of some level: the Class group, Lay on hands drained, Smite ready.
     Case {
         name: "abilities-menu-class",

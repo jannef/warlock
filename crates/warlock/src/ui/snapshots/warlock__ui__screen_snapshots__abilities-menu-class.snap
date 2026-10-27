@@ -18,17 +18,17 @@ expression: "render(case, content.clone())"
                     │   e  Handle animal      not usable yet                   │
                     │   f  Heal               not usable yet                   │
                     │   g  Intimidate         not usable yet                   │
-                    │   h  Knowledge          not usable yet                   │
                     │ Weapon skills                                            │
-                    │   i  Shield bash        in a direction                   │
+                    │   h  Shield bash        in a direction                   │
                     │ Items                                                    │
-                    │   j  Hood your lantern                                   │
+                    │   i  Hood your lantern                                   │
                     │                                                          │
                     │ The unicorn's grace: your bleeding and poison end, and a │
                     │ disease is shaken off; then it rests a day.              │
                     │                                                          │
-                    │ a-j or Enter use   Esc close                             │
+                    │ a-i or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
+
 
 
  The Hub  ·  HP 43/43  ·  MP 18/18  ·  Drained  ·  Lv 13  ·  08:00  ·  11 Darkening      ? controls

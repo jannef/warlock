@@ -29,12 +29,11 @@ expression: "render(case, content.clone())"
               │   p  Night eyes       Your eyes grow used to the dark: you see by h… │
               │   q  Silent feet      Your footsteps are a fifth quieter for each r… │
               │ Wayfarer                                                             │
-              │   r  Long strider     Your journeys across the overworld go quicker. │
-              │   s  Pilgrim          You have knelt in many temples: their cures a… │
-              │   t  Sense of place   You read a place at a glance: a special room'… │
-              │   u  Sun-blessed      The sun mends you: under the open sun your wo… │
-              │ Scholar                                                              │
-              │   v  Apprentice       You take up a skill you lack, or get better a… │
+              │   r  Devout           You pray as one who means it: an altar of you… │
+              │   s  Long strider     Your journeys across the overworld go quicker. │
+              │   t  Pilgrim          You have knelt in many temples: their cures a… │
+              │   u  Sense of place   You read a place at a glance: a special room'… │
+              │   v  Sun-blessed      The sun mends you: under the open sun your wo… │
               │                                                                      │
               │ Let chance pick your talents.                                        │
               │                                                                      │
