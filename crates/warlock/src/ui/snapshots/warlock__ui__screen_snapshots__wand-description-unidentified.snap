@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ There are several objects here. (×2)
+ You pick up a willow wand and a holly wand.
+
+
+
+
+
+
+                  ┌─ Item ───────────────────────────────────────────────────────┐
+                  │                                                              │
+                  │ - Willow wand                                                │
+                  │                                                              │
+                  │ Willow wand · wood · 200 g                                   │
+                  │                                                              │
+                  │ Readied: missile weapon                                      │
+                  │                                                              │
+                  │ Unidentified: the spell it holds is unknown until it is used │
+                  │ or identified.                                               │
+                  │ Its charges are unknown until it is identified.              │
+                  │                                                              │
+                  │ Esc close                                                    │
+                  └──────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+ The Trap Hall  ·  HP 22/22  ·  MP 2/2  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444    ? controls

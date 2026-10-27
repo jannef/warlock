@@ -531,7 +531,7 @@ fn draw_messages(
                 let ammo = view.ready_to_fire().map(|(_, item, _)| item);
                 (KeyCommand::Missile, ammo)
             }
-            AimKind::Throw(item) => (KeyCommand::Missile, Some(item)),
+            AimKind::Throw(item) | AimKind::Zap(item) => (KeyCommand::Missile, Some(item)),
             AimKind::Read(item) => (KeyCommand::Read, Some(item)),
             AimKind::Ability(_) => (KeyCommand::Loose, None),
         };
