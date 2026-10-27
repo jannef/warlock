@@ -205,6 +205,19 @@ charnel titan, the deathless king, and last the demilich, of which a world holds
 Their touch and bite take two points of a stat for good (three for the eldest vampire and the
 demilich) unless the check holds; a temple's mending gives them back.
 
+**The outlaws** of the Ascmearc are people (`@`) hostile to you alone: no faction fights them,
+so they hide among whatever lives in the old places they have gone to ground in. **Footpads**
+carry short swords, **footpad archers** short bows. Above them are four wanted criminals, each
+one of a kind and met at most once: **Mother Sallow**, the Fennhām Poisoner, quick and quiet,
+whom poison cannot touch, with the stiletto Widowmaker; **Black Wystan**, the Gentleman of the
+Road, an archer with the long bow High Toby, forty arrows, and a short sword; **Brother
+Osrick**, the Resurrection Man, with a mace, who sees in the dark through the Unhalwed Bedes and
+shrugs off half of any cold or poison; and **Sergeant Herrick**, the Deserter, with a great axe
+(a magic one half the time) and the Turncoat, the mail that keeps fear from him. Each always
+carries their own [unique item](magic-items.md), and drops it where they die. Named monsters
+go by their names in what the game tells you ("Black Wystan shoots you."), with no "the".
+None of them is in a dungeon yet: their lairs are still to come.
+
 **Demons** come up from below: the lesser ones (`u`) from the dretch to the chasme, the greater
 (`U`) from the hezrou to the balor. None of them leaves a body behind, poison does nothing to
 them, and fire does them less harm than it should (the balor none at all). Only the dretch and

@@ -67,7 +67,12 @@ the item's id (saved, hashed; `skip_serializing_if` none, so other items' saves 
   set while `Content::load` runs: every placement is parsed then, once per legend cell that
   names it) and refuses a second placement and a count. `level::equip_ids` takes `unique:ID` in
   `wield`/`wear` for the carried stack of that unique (not a placement). Gear (`gear::make`)
-  and kits keep a unique as it is, and `kit::check_kept` refuses a `magic` chance on one.
+  and kits keep a unique as it is, and `kit::check_kept` refuses a `magic` chance on one. The
+  Ascmearc's four are placed by their owners' gear lines (the criminals, #424,
+  `docs/dev/creatures/outlaws.md`), so no other content may name them: a test that needs a
+  placement defines a unique of its own (`world/unique_tests.rs`), and a test that drops the
+  uniques table puts the base items in their place (`character.rs`'s `skill_free_content`). The
+  wiki's table names who carries each (`xtask/src/wiki/uniques.rs`, from the gear lines).
 - **Powers**, a variant each, read in one place each: `Power::Inflict(OnHit)` rides
   `Mods::local` of the weapon into `Profile::on_hit` (`sharpen`), which `World::resolve` hands
   to `after_blow` after the natural attack's `on_hit` (`Mods::worn` never carries it: it is the

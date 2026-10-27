@@ -111,7 +111,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
   rest of what it carried. Others see what it wears and wields, never what else it carries.
   Gear adds no state: it is the creature's inventory and equipment. **Scavenger** (Delver
   talent, the `creature_gear` system): what a creature the player kills drops is identified as
-  it lands. The wiki's creatures table states each type's gear exactly.
+  it lands. The wiki's creatures table states each type's gear exactly. A gear line may name a
+  unique item (`unique:ID`, §8 "Magic items"): the Ascmearc's four wanted criminals (the
+  `outlaws` faction, hostile to the player only and to no one else, with the footpads and
+  footpad archers; #424, the guild design §8) each wield or wear their own this way.
+- **Named monsters** (#424): a creature type whose `name` starts upper-case is a proper name
+  ("Black Wystan"), said without an article wherever the game names a seen creature (combat,
+  deaths, falls, waking, refusals, look mode: "Black Wystan (hostile, unhurt), ..."), as quest
+  texts already do. Every other type's name is lower-case.
 - **Dialogue** (`warlock-core/src/content/dialogue.rs`, the data; `world/talk.rs`, the rules;
   M28, #146): NPCs are creatures with a dialogue (§7), by their type or by the unique `npc` id
   their level gave them (which wins). A unique character with a proper name (the dialogue's
