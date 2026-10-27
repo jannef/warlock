@@ -59,6 +59,7 @@
   - [Animated objects](animated.md)
   - [People and talk](npcs.md)
   - [Quests](quests.md)
+    - [The Weyfarers' Gilde](guild.md)
 - [Traps](traps.md)
   - [Searching](searching.md)
 - [Your lantern](lantern.md)

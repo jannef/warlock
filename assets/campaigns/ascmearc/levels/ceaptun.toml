@@ -19,8 +19,10 @@
 # South of the square: the Mynster (stone), the temple, a sanctuary (the [[room]] table: wounds
 # heal faster and nothing hostile steps in) where Sister Hild (H) cures and mends for gold; the
 # Gæsthūs (the inn), where Godgifu (G) has news of the march and bread on the table for
-# travellers; Reeve Leofric's house (L); and Factor Wulfrun's office (F). A shrine stone stands
-# by the Mynster's door.
+# travellers; Reeve Leofric's house (L); Factor Wulfrun's office (F); and in the south-east corner
+# the Gildhalle, the hall of the Weyfarers' Gilde (docs/design/adventurers-guild.md §4), where
+# Wat One-Eye (M) gives the guild's work, its bounty board (N) beside the door. A shrine stone
+# stands by the Mynster's door.
 #
 # Texture: the granary by the wall, fields inside the wall, the pond north-east, and outside
 # the gate the gallows hill (a dead tree on rocky ground) beside the road from the pass.
@@ -50,14 +52,14 @@ TTTTTT#TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 .bbb..#..........:...............T:::::B:::::::::::B:::::...T.............T...........↓↓..
 .bbb..#."""""""".:................:2:::::::::::::::::::::**...........................↓↓..
 ......#."""""""".:................:::::::::::::::::::::::.............................↓↓..
-..T...#."""""""".:::5::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::.....↓↓..
-......#.""T"""""...######t+t######....WWWWWWt+tWWWWWW...WWWW+WWWW...WWWW+WWWW.........↓↓.T
-......#.""""""""...#ppppppppppppp#.O..WpppppppppppppW...WpppppppW...WpppppppW.....T...↓↓..
-......#.""""""""...#pplppppppplpp#....WpppppppppppppW...WpppppppW...WpppppppW.........↓↓..
-....T.#.""""""""T..#pppppppHppppp#.**.WpplppppppplppW.T.WplpppppW.T.WppppplpW.........↓↓..
-......#.""""""""...#ppppppppppppp#.*..WpppppppGpppppW...WpppLpppW...WpppFpppW.........↓↓..
-......#.""""""""...#pplppp_ppplpp#....WpppppppppppppW...WpppppppW...WpppppppW...T.....↓↓T.
-.T....#.""""""""T..#ppppppppppppp#....WpppppppppppppW...WWWWWWWWW...WWWWWWWWW.........↓↓..
+..T...#."""""""".:::5:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::....↓↓..
+......#.""T"""""...######t+t######....WWWWWWt+tWWWWWW...WWWW+WWWW...WWWW+WWWWWWWW+WNWW↓↓.T
+......#.""""""""...#ppppppppppppp#.O..WpppppppppppppW...WpppppppW...WpppppppWWpppppppW↓↓..
+......#.""""""""...#pplppppppplpp#....WpppppppppppppW...WpppppppW...WpppppppWWplpppplW↓↓..
+....T.#.""""""""T..#pppppppHppppp#.**.WpplppppppplppW.T.WplpppppW.T.WppppplpWWpppppppW↓↓..
+......#.""""""""...#ppppppppppppp#.*..WpppppppGpppppW...WpppLpppW...WpppFpppWWpppppppW↓↓..
+......#.""""""""...#pplppp_ppplpp#....WpppppppppppppW...WpppppppW...WpppppppWWpppMpppW↓↓T.
+.T....#.""""""""T..#ppppppppppppp#....WpppppppppppppW...WWWWWWWWW...WWWWWWWWWWWWWWWWWW↓↓..
 ......#.""""""""...###############..T.WWWWWWWWWWWWWWW..T..............................↓↓..
 ......#...............................................................................↓↓..
 TTTTTT#TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT↓↓TT
@@ -92,6 +94,9 @@ TTTTTT#TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 "G" = { terrain = "plank_floor", creature = "innkeeper", npc = "godgifu" }
 "L" = { terrain = "plank_floor", creature = "reeve", npc = "leofric" }
 "F" = { terrain = "plank_floor", creature = "mine_factor", npc = "wulfrun" }
+"M" = { terrain = "plank_floor", creature = "guildmaster", npc = "wat" }
+# The Gildhalle's bounty board, nailed up beside its door (a named place: look mode reads it).
+"N" = { terrain = "timber_wall", name = "the bounty board", note = "Bills nailed up three deep, most of them years old." }
 
 # The Mynster, walls and door included, is a sanctuary (data/room_effects.toml).
 [[room]]

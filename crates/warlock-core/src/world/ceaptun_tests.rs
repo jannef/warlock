@@ -148,8 +148,8 @@ fn everyone_in_town_is_at_peace_with_the_player() {
     let others: Vec<&Actor> = (w.state.actors.values())
         .filter(|a| a.level == "ceaptun" && a.id != player)
         .collect();
-    // Six townsfolk, four people, four keepers.
-    assert_eq!(others.len(), 14);
+    // Six townsfolk, five people, four keepers.
+    assert_eq!(others.len(), 15);
     for actor in others {
         assert_ne!(
             w.stance(actor.id, player),

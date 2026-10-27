@@ -693,6 +693,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
   10, and 10). The gardener's "Words for the beds" is the test world's rolled quest (bring a
   scroll loot can hold, drawn as it is given; 15 gold, 20 XP). The Ascmearc's quests are §3b
   "Quests".
+- **Guilds** (`data/guilds/` and a campaign's `data/guilds/`, one file per guild; optional; §8
+  "Quests", "Guilds"): `[[guild]]` with `id`, `name` (in a sentence, with its article; at most
+  32 characters), `master` (who names the player to a rank: a speaker with a dialogue), and
+  `ranks`, lowest first, 1 to 16: `title` (1 to 16 characters, each once), `material` (a
+  material: the title shows in its colour), and `given` or `done`, a quest of the guild's
+  campaign whose giving or completion reaches the rank, or neither (a rank kept for later,
+  allowed only after every rank that has one). An unknown material, quest, or master is a
+  content error.
 - **Plurals** (`data/plurals.toml`, and a campaign's `data/plurals.toml`; optional; without it
   every plural is the word and an `s`): the plural dictionary, one `singular = "plural"` line
   per word that does not take a plain `s` (`wolf = "wolves"`, `undead = "undead"`,
