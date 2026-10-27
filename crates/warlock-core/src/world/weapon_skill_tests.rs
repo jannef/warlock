@@ -575,24 +575,24 @@ fn ranks_change_to_hit_damage_threat_defence_and_cost() {
     let me = |w: &World| w.state.player().clone();
     let untrained = me(&w).melee(&content);
     let defence = w.perception().own_defence();
-    // Long blades 8: +4 to hit, +3 damage, threat 20 → 19, and +3 parry with the sword.
+    // Long blades 8: +5 to hit, +5 damage, threat 20 → 19, and +4 parry with the sword.
     set(&mut w, "long_blades", 8, 0);
     let trained = me(&w).melee(&content);
-    assert_eq!(trained.to_hit, untrained.to_hit + 4);
-    assert_eq!(trained.bonus, untrained.bonus + 3);
+    assert_eq!(trained.to_hit, untrained.to_hit + 5);
+    assert_eq!(trained.bonus, untrained.bonus + 5);
     assert_eq!((untrained.threat, trained.threat), (20, 19));
     assert_eq!(
         trained.damage, untrained.damage,
         "the dice are the weapon's"
     );
-    assert_eq!(w.perception().own_defence(), defence + 3);
+    assert_eq!(w.perception().own_defence(), defence + 4);
     // Shield blocking 2 adds 1 to the buckler's Shield bonus.
     set(&mut w, "shield_block", 2, 0);
-    assert_eq!(w.perception().own_defence(), defence + 4);
+    assert_eq!(w.perception().own_defence(), defence + 5);
     let dv = w.defence_of(w.player_id());
     assert_eq!(
         (dv.bonus(Category::Shield), dv.bonus(Category::Parry)),
-        (3, 3)
+        (3, 4)
     );
     // Crossbows 2: shots hit better and reloading takes a tenth less.
     let shot = me(&w).ranged(&content).expect("a crossbow");

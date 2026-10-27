@@ -25,12 +25,13 @@ Some skills work by themselves, all the time (**passive**); some will be used as
 them (athletics when you kick a door). For now only the passive skills, Appraise, Athletics
 (quicker in everything, and kicking doors in, see [Doors](doors.md)), Search (see [Searching](searching.md)), Disable
 device (disarming traps, see [Traps](traps.md#disarming-traps)), Open lock (picking locks,
-see [Doors](doors.md#picking-locks)), Steal (see [Stealing](#stealing) below), and Heal (see
-[Treating yourself](#treating-yourself) below) do something: the others are there to be trained,
-and get their uses as the game grows. The skills used as actions are in the [abilities
+see [Doors](doors.md#picking-locks)), Steal (see [Stealing](#stealing) below), Heal (see
+[Treating yourself](#treating-yourself) below), and Survival (foraging, see
+[Foraging](#foraging) below) do something: the others are there to be trained, and get their uses
+as the game grows. The skills used as actions are in the [abilities
 menu](abilities.md) once you are trained in them, greyed out until their uses come; Disable
 device's use is there as **Disarm a trap**, Open lock's as **Pick lock**, Steal's as **Steal**,
-Heal's as **Heal**.
+Heal's as **Heal**, and Survival's, though it is a passive skill, as **Forage**.
 
 {{#include generated/skills.md}}
 
@@ -51,8 +52,9 @@ The passive skills help you more the higher they are:
   [Burden](burden.md) for the load, which slows you on top of it). It also helps you kick doors
   in (see [Doors](doors.md)). Besides kicks, it is trained now and then by acting under a load
   that slows you and by journeys on the overworld.
-- **Survival** makes your journeys on the [overworld](overworld.md) quicker. It does nothing in a
-  local area or a dungeon.
+- **Survival** makes your journeys on the [overworld](overworld.md) quicker (it does nothing for
+  your steps in a local area or a dungeon), and lets you forage in the wild, finding food more
+  often the higher it is (see [Foraging](#foraging)).
 - **Appraise** gets you better prices in [shops](shops.md): you pay less and are offered more.
 - **Search** helps you find secret doors and hidden traps when you search (`s`, `S`), and a
   master's search reaches a cell farther (see [Searching](searching.md)).
@@ -189,3 +191,26 @@ always fails and a roll of 24 always works.
   you may try again. Its difficulty is the disease's own.
 
 {{#include generated/heal-targets.md}}
+
+## Foraging
+
+If you are trained in **Survival** (barbarians, druids, rangers, and lizardfolk are),
+**Forage** is in your [abilities menu](abilities.md): choose it, and you spend a while searching
+the land around you for something to eat. You can forage only in the wild: on the
+[overworld](overworld.md), on open land, in woods, on the hills, or in the marshes, or in the
+local area of such a cell (an area forages as its cell on the overworld does). Not on a road, not
+in water or on ice, not in a town or a dungeon: there the menu greys Forage out ("not usable
+here").
+
+A forage takes ten minutes. Something coming into view, or anything else that would wake you
+from a rest, stops it, and a forage cut short finds nothing. One that runs its time finds food
+with the land's chance below, plus what your Survival gives (the benefits table above: up to 30
+more); then one of the land's finds is picked by the shares shown, and you gather a few of it
+("You gather 2 handfuls of berries."), fresh, into your pack. Otherwise "You find nothing worth
+eating." Either way your Survival may earn a training mark.
+
+{{#include generated/foraging.md}}
+
+What you find is ordinary food (see [Hunger](hunger.md)): berries and mushrooms spoil within days,
+hazelnuts keep for months, and an angelica root cures diseases. Forage as often as you like, in
+the same spot too: the time is the price.
