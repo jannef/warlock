@@ -109,6 +109,13 @@ pub(super) fn special_rooms(content: &Content) -> String {
                 ),
             ));
         }
+        if e.warp > 0 {
+            does.push(format!(
+                "Every step inside, yours or a creature's, has a {}% chance to move the stepper \
+                 to a free spot elsewhere on the level, as a teleport trap does.",
+                e.warp
+            ));
+        }
         let mut said = format!("\"{}\"", e.enter);
         if let Some(near) = &e.near {
             let _ = write!(said, " From outside: \"{near}\"");

@@ -60,17 +60,22 @@ const OVERSHOOT: usize = 8;
 impl World {
     /// Actor `victim` has just stepped onto `at`: a trap there goes off ([`World::spring_trap`]),
     /// unless it is on a door, which only opening or kicking the door sets off (spec §8 "Trapped
-    /// doors"). Returns the energy a pit's climb costs on top of the step.
+    /// doors"). Returns the energy a pit's climb costs on top of the step. Last, an unstable
+    /// room may move the stepper ([`World::warp_step`]).
     pub(super) fn step_onto_trap(
         &mut self,
         at: Pos,
         victim: ActorId,
         events: &mut Vec<Event>,
     ) -> i64 {
-        if self.state.current().is_door(&self.content, at) || self.steps_lightly(at, victim) {
-            return 0;
-        }
-        self.spring_trap(at, victim, events)
+        let climb =
+            if self.state.current().is_door(&self.content, at) || self.steps_lightly(at, victim) {
+                0
+            } else {
+                self.spring_trap(at, victim, events)
+            };
+        self.warp_step(at, victim, events);
+        climb
     }
 
     /// Whether the player, `victim`, steps onto the trap at `at` without setting it off (Light
