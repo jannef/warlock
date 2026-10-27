@@ -19,16 +19,17 @@ takes the statuses' lookup, `parse` in tests none), `swarm` (a teeming den's num
 `noise::MAX_LOUDNESS`), `loot_level`, `themes = { kind, faction }` (percents, at most 100
 together; it needs `needs_danger` and can never pervade), `temperature` (degrees Celsius added to
 the level's, -40 to 40, default 0), `burden` (percent of the carrying limit, `BURDEN` 10 to
-1000, default 100), and `warp` (percent a step inside warps the stepper, 0 to 100, default 0). An effect with `level_chance` must have
-a `pervade` line and be neither `shunned` nor lay a `floor` (`RoomEffectDef::can_pervade`); a level
-file's `effect` is held to the same.
+1000, default 100), `mirrors` (`{ images = N }`, 1 to 8, `content::Mirrors`), and `warp` (percent a
+step inside warps the stepper, 0 to 100, default 0). An effect with `level_chance` must have a
+`pervade` line and be neither `shunned` nor lay a `floor` nor hold `mirrors`
+(`RoomEffectDef::can_pervade`); a level file's `effect` is held to the same.
 
 Features today: shadowed (10), echoing (8), hushed (8), sanctuary (6), flooded (8), black chamber
 (5, `light = 0`), draining (6, `status = "ebbing"`, `level_chance` 5, #403), teeming den (8,
 `needs_danger`, `min_cells` 16, `swarm`, #405), hot (5, "sweltering chamber", `temperature = 25`,
 #404), cold (5, "frigid hall", `temperature = -25`), silent vault
 (5, `silent`, `noise = 1`, `status = "silenced"`, #409), heavy (4, "heavy hall", `burden = 50`,
-#412), unstable (4, "unstable room", `warp = 10`, `max_cells = 60`, #411). Draining is the
+#412), mirrors (3, "hall of mirrors", `max_cells = 80`, `mirrors = { images = 2 }`, #419), unstable (4, "unstable room", `warp = 10`, `max_cells = 60`, #411). Draining is the
 first with a `level_chance` (cursed rooms bring theirs).
 
 A dungeon's `room_effects` (on a branch or a `[[dungeon.levels]]` range; `content/dungeon.rs`,
@@ -190,6 +191,42 @@ when they are Overloaded where they stand too), so a step in is refused rather t
 stuck, and a step out of a hall they overloaded themselves in is allowed. Edge exits, stairs, and
 creatures keep the load where they stand (`can_move`, `ai.rs`).
 
+## Halls of mirrors
+
+`world/mirrors.rs` (#419). `WorldState::images(content, level)` is the one place images are
+decided (ground truth, `World::images` for the current level): for each room whose effect has
+`mirrors`, in the level's room order, the free cells (`cells()` that are walkable, no door, no
+actor standing there) are listed in cell order, and each actor inside, in id order, takes
+`images` of them, the `index`th at `fnv1a(level id, turn, actor id, index) % free.len()`, removed
+from the list (so images never share a cell; a full hall shows fewer). No stream is drawn, so
+asking twice, or in perception and the rules alike, gives the same images; they move with
+`WorldState::turn`.
+
+Perception (`Perception::compute`) adds an image of each actor it sees, on a cell it sees
+(`Sight::Seen`), unless Mirror-wise (`TalentMods::sees_reflections`) puts it within that many
+cells (Chebyshev) of the player: a copy of the real `SeenActor` but for `id` (`image_id`: from
+2^31, by actor, turn parity, and index, so never a real id and new each turn) and `pos`, with the
+real one's gear and showing statuses under the image's id too; `actors` stays sorted by id.
+`Perception::shows_image_at` (private `images` cells) is what the rules read of it. Anything that
+looks up a perceived id in `WorldState::actors` must expect images to be missing there
+(`World::creatures_in_view` leaves them out, so a rest is never disturbed by one).
+
+The rules: `World::meets_glass` (one line in `travel.rs::player_moves`, where no real actor
+stands): a move into a cell where the player sees an image says "Your blow meets only glass." and
+costs the melee attack's price. `World::reflected` (in `shoot.rs::fly`): a missile aimed at an
+image (the player's: one they see; a creature's: any) does not stop at the aimed cell. Bolts and
+rays (`cast.rs`, `spell.rs`) already fly to the first real actor, so they need nothing.
+`World::aim_at` (one line each in `shoot.rs::creature_shoots` and `hurl.rs::creature_hurls`):
+a creature outside the hall shooting or throwing at the player inside picks the player or one of
+their images with `rng.below(images + 1)` from the gameplay stream; inside the hall, or at a
+creature, it aims true (no draw, so other fights keep their rolls). Creatures' sight and AI read
+ground truth and never see images.
+
+Look mode names the player's own image "Your reflection" (it is plain which one is the player);
+any other image reads as its creature does. The `actors` dev layer adds `; images (x, y) (x, y)`
+to each actor's row; `view` and the JSON dump show images as the player does (their ids are
+large: a dev can tell, the game screen cannot).
+
 ## Unstable rooms
 
 `world/warp.rs`: `World::warp_step(at, who)` runs after every step lands, last in
@@ -221,9 +258,10 @@ not name it. The `rooms` dev layer marks each room's plain ground, lists each ro
 
 System `special_rooms` (`data/talents.toml`): Sense of place (wayfarer, `sense_of_place`; hook
 `PerceptionView::room` and `pervade_line`), Hallowed rest (grit, `room_pace_percent` 50; hook
-`World::room_pace`), and Anchored mind (scholar, `room_status_immune` `ebbing`, also system
-`mana`; hook `World::dwell`), and Hush-foot (shadow, Stealth 10, `wake_percent` 100, also system
-`stealth`; hook `World::spread_noise`'s wake check).
+`World::room_pace`), Anchored mind (scholar, `room_status_immune` `ebbing`, also system
+`mana`; hook `World::dwell`), Hush-foot (shadow, Stealth 10, `wake_percent` 100, also system
+`stealth`; hook `World::spread_noise`'s wake check), and Mirror-wise (scholar, `sees_reflections` 2; hook
+`Perception::compute`'s images, which the glass reads too).
 
 ## Tests
 
@@ -246,7 +284,9 @@ melting in a hot room in a frost, the pre-roll only with such a room, alike howe
 a year's catch-up), `content/room_burden_tests.rs` (the `burden` field, its range,
 `Here::burden`), `world/heavy_hall_tests.rs` (the heavy hall: the limit halved inside for the
 player and creatures, the messages in and out, perception agreeing, the step refused into
-Overloaded but always allowed out), `content/room_warp_tests.rs` (the `warp` field, its range,
+Overloaded but always allowed out), `content/room_mirrors_tests.rs` (`mirrors` parses, its range, never over a whole level), `world/mirrors_tests.rs` (images on free floor, the same however asked
+and moving with the turns, none outside, the player's own, the glass, a missile flying on, the
+creatures' aim, Mirror-wise, the dumps, a rest among reflections), `content/room_warp_tests.rs` (the `warp` field, its range,
 `Here::warp`), `world/unstable_room_tests.rs` (the unstable room: about one step in ten inside
 warps the player and a creature, never outside, no draw outside, the messages, a free landing
 cell, saving).

@@ -57,6 +57,9 @@ pub const DWELL_EASES: u32 = 10;
 pub const BURDEN: RangeInclusive<u16> = 10..=1000;
 /// The degrees Celsius an effect may add to the level's temperature (spec §7 "Special rooms").
 pub const TEMPERATURE: RangeInclusive<i8> = -40..=40;
+/// How many reflections a hall of mirrors may show of each actor inside (spec §7 "Special
+/// rooms").
+pub const IMAGES: RangeInclusive<u8> = 1..=8;
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -122,8 +125,23 @@ struct RoomEffectSpec {
     temperature: i8,
     #[serde(default = "hundred")]
     burden: u16,
+    mirrors: Option<MirrorsSpec>,
     #[serde(default)]
     warp: u8,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct MirrorsSpec {
+    images: u8,
+}
+
+/// A hall of mirrors' reflections (spec §7 "Special rooms"; `world/mirrors.rs`): every actor
+/// inside is shown to the player with this many images of it on free floor of the room.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Mirrors {
+    /// Reflections of each actor inside.
+    pub images: u8,
 }
 
 /// A teeming den's numbers (`swarm = { per_cells = 4, ... }`, spec §7 "Special rooms"): the
@@ -264,6 +282,8 @@ pub struct RoomEffectDef {
     /// Percent of everyone's carrying limit inside (a heavy hall's 50 halves it; spec §8
     /// "Burden"); `WorldState::load` is the one place it is read.
     pub burden: u16,
+    /// The reflections a hall of mirrors shows of everyone inside (`World::images`).
+    pub mirrors: Option<Mirrors>,
     /// Percent chance, every step onto a cell inside, that the stepper is moved to a free cell
     /// of the level as a teleport trap moves its victim (an unstable room's 10; `World::warp_step`).
     pub warp: u8,
@@ -292,7 +312,11 @@ impl RoomEffectDef {
     /// Whether it may cover a whole level: neither creatures shun it (a level hostiles shun is
     /// broken) nor does it lay a floor of its own, and it has its `pervade` line.
     pub fn can_pervade(&self) -> bool {
-        !self.shunned && self.floor.is_none() && self.swarm.is_none() && self.pervade.is_some()
+        !self.shunned
+            && self.floor.is_none()
+            && self.swarm.is_none()
+            && self.mirrors.is_none()
+            && self.pervade.is_some()
     }
 }
 
@@ -552,6 +576,17 @@ impl RoomEffects {
                 }
                 None => None,
             };
+            if let Some(m) = &spec.mirrors
+                && !IMAGES.contains(&m.images)
+            {
+                return Err(bad(format!(
+                    "mirrors.images {} is out of range ({} to {})",
+                    m.images,
+                    IMAGES.start(),
+                    IMAGES.end()
+                )));
+            }
+            let mirrors = spec.mirrors.as_ref().map(|m| Mirrors { images: m.images });
             if let Some(swarm) = &spec.swarm {
                 swarm.check().map_err(bad)?;
                 if !spec.needs_danger {
@@ -582,12 +617,13 @@ impl RoomEffects {
                 swarm: spec.swarm,
                 temperature: spec.temperature,
                 burden: spec.burden,
+                mirrors,
                 warp: spec.warp,
             };
             if def.level_chance > 0 && !def.can_pervade() {
                 return Err(err(format!(
                     "effect `{}`: a `level_chance` needs a `pervade` line, and no effect that \
-                     creatures shun or that lays a floor covers a whole level",
+                     creatures shun, that lays a floor, or that holds mirrors covers a whole level",
                     def.id
                 )));
             }

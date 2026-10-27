@@ -60,6 +60,10 @@
 #            (ice today) is the environment's (spec §5 "Temperature"); the status bar shows it
 #   burden   percent of everyone's carrying limit inside, 10 to 1000; default 100 (a heavy
 #            hall's 50 halves it: what is carried weighs on one as if it were twice as heavy)
+#   mirrors  a hall of mirrors: `{ images = N }` (1 to 8) reflections of everyone inside the player
+#            sees, on free floor of the room, moving each turn; they look just like what they
+#            reflect. A blow or a step into one meets only glass; a missile aimed at one flies on;
+#            creatures outside shooting at the player inside may aim at one. Never the whole level
 #   warp     percent chance, every step onto a cell inside (the player's or a creature's), that
 #            the stepper is moved to a free cell of the level as a teleport trap moves its victim;
 #            default 0
@@ -176,6 +180,15 @@ mark = "w"
 enter = "Your pack drags at you, as if the stones pulled it down."
 weight = 4
 burden = 50
+
+[[effect]]
+id = "mirrors"
+name = "hall of mirrors"
+mark = "m"
+enter = "Your reflection stares back at you from every side."
+weight = 3
+max_cells = 80
+mirrors = { images = 2 }
 
 [[effect]]
 id = "unstable"

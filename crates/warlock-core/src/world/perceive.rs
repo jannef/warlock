@@ -28,12 +28,12 @@ impl World {
         self.weather_now() != self.perception.weather()
     }
 
-    /// Creatures (not the player) the player sees.
+    /// Creatures (not the player) the player sees, not their images in a hall of mirrors.
     pub(super) fn creatures_in_view(&self) -> Vec<ActorId> {
         self.perception()
             .actors()
             .iter()
-            .filter(|a| a.kind == ActorKind::Creature)
+            .filter(|a| a.kind == ActorKind::Creature && self.state.actors.contains_key(&a.id))
             .map(|a| a.id)
             .collect()
     }

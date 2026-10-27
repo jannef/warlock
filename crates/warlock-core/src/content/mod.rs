@@ -67,6 +67,8 @@ mod resource;
 mod room_burden_tests;
 mod room_effect;
 #[cfg(test)]
+mod room_mirrors_tests;
+#[cfg(test)]
 mod room_temperature_tests;
 #[cfg(test)]
 mod room_warp_tests;
@@ -175,7 +177,9 @@ pub(crate) use quest_roll::roll_known;
 pub use quest_roll::{Candidate, MAX_VARIANTS, MAX_WEIGHT, Pick, Roll, Rolled, Variant, one_of};
 pub use race::{HUNGER, LightBlind, RaceDef, Races};
 pub use resource::{Build, MAX_EVERY, MAX_RESOURCE, MAX_SHORT, OverTime, ResourceDef, ResourceId};
-pub use room_effect::{Here, RoomEffectDef, RoomEffectId, RoomEffects, SpecialRoom, Swarm, Themes};
+pub use room_effect::{
+    Here, Mirrors, RoomEffectDef, RoomEffectId, RoomEffects, SpecialRoom, Swarm, Themes,
+};
 pub use scenario::ScenarioDef;
 pub use scroll::{Cast, Reading, ScrollSpell, SpellScroll};
 pub use scroll_label::ScrollLabelDef;

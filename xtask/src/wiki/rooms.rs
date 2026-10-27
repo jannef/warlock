@@ -109,6 +109,17 @@ pub(super) fn special_rooms(content: &Content) -> String {
                 ),
             ));
         }
+        if let Some(m) = e.mirrors {
+            does.push(format!(
+                "Everyone inside you see is shown with {} reflections of them on free floor of \
+                 the room, moving every turn and looking just like them (Mirror-wise: none \
+                 within 2 cells of you). A blow or a step into one meets only glass and takes a \
+                 blow's time; a missile aimed at one flies on through it. A creature outside \
+                 shooting or throwing at you inside aims at you or one of your reflections, \
+                 each alike; creatures inside are not fooled.",
+                m.images
+            ));
+        }
         if e.warp > 0 {
             does.push(format!(
                 "Every step inside, yours or a creature's, has a {}% chance to move the stepper \

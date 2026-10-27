@@ -177,9 +177,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   degree, the longest single action, so it never lapses while one stays), `swarm` (a
   teeming den's numbers, below; needs `needs_danger`), `temperature` (degrees Celsius added
   to the level's inside, −40 to 40, default 0; below), `burden` (percent of everyone's
-  carrying limit inside, 10 to 1000, default 100; below), and `warp` (percent chance a step
-  inside moves the stepper elsewhere, 0 to 100, default 0; below). An effect with a
-  `level_chance` needs its `pervade` line and is neither `shunned`, nor lays a `floor`, nor is a den.
+  carrying limit inside, 10 to 1000, default 100; below), `mirrors` (`{ images = N }`, 1
+  to 8: a hall of mirrors' reflections, below), and `warp` (percent chance a step inside moves
+  the stepper elsewhere, 0 to 100, default 0; below). An effect with a `level_chance` needs its
+  `pervade` line and is neither `shunned`, nor lays a `floor`, nor is a den, nor holds
+  `mirrors`.
   - **The effects** (weights in brackets): a *shadowed room* (10) keeps 30 % of the light ("The
     light seems to drain away here."); an *echoing hall* (8) doubles noise ("Your footsteps echo
     loudly."); a *hushed chamber* (8) leaves two fifths of it ("A deep hush fills this room."); a
@@ -202,7 +204,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     everyone inside **Silenced** (§8 "Status effects": no casting, reading, or throwing one's
     voice; "Your footsteps make no sound at all."); a *heavy hall*
     (4, #412) halves everyone's carrying limit ("Your pack drags at you, as if the stones pulled
-    it down."); an *unstable room* (4, #411, only in a room of at most 60 floor cells) warps
+    it down."); a *hall of mirrors* (3, #419; only in a room of 80 floor cells or fewer) shows
+    everyone inside with two reflections ("Your reflection stares back at you from every side.";
+    below); an *unstable room* (4, #411, only in a room of at most 60 floor cells) warps
     one step in ten ("The floor shimmers under your feet."). Blood washing
     away in a flooded room waits for blood (#127).
   - **Hot and cold rooms** (`temperature`, #404): a room sets its cells' temperature and
@@ -228,6 +232,25 @@ developer notes (CLAUDE.md, `docs/dev/`).
     and be stuck, and one overloaded inside (who picked something up there) can still step out
     to where they are not. It is saved as nothing new: the burden follows from where one stands.
     It never covers a whole level.
+  - **Halls of mirrors** (`mirrors`, #419; `world/mirrors.rs`): every actor inside the room has
+    `images` (2) **images**, reflections on free floor of the room (walkable, no door, no one on
+    it, no other image). Where they stand is no draw: a hash (FNV-1a) of the level, the turn, the
+    actor, and the image's index picks among the free cells, hall by hall and actor by actor in
+    id order (`WorldState::images`), so the rules and perception compute the same images and no
+    random stream moves; they move every turn, and vanish once the actor leaves. Perception
+    shows the images of the actors the player sees, on cells the player sees, as those actors
+    (kind, type, faction, how hurt, what they wear and wield, the statuses that show) under ids
+    of their own, above every real actor's: nothing on the screen tells them from the real one,
+    the player's own reflections too (look mode calls those "Your reflection"). Mirror-wise
+    (§8 "Talents") sees those within 2 cells of the player for what they are: they are not
+    shown. A step or a blow into an image the player sees meets only glass ("Your blow meets
+    only glass.", a melee blow's time, no step); a missile the player aims at an image they see
+    (a creature at any image) flies on through its cell instead of coming down there; bolts
+    always fly to the first real creature. A creature outside the hall shooting or throwing at
+    the player inside aims at the player or one of their images, each alike (a gameplay draw);
+    creatures inside know the hall and aim true, and creatures never see images at all (their
+    sight and AI read ground truth). Never over a whole level. The `actors` dev layer lists each
+    actor's images (`; images (x, y) (x, y)`); `view` shows them as the player does.
   - **An unstable room** (`warp`, #411): every step onto a cell inside, the player's or a
     creature's (a move, a step made way for, a known trap sidestepped; never an incorporeal
     creature passing through), has `warp` percent (one draw of the gameplay stream, made only on
@@ -336,5 +359,6 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Talents** (system `special_rooms`, §8 "Talents"): Sense of place (a room known from a
     glimpse; a whole level's effect named on arrival), Hallowed rest (a room's quickening of
     healing and mana half again more), Anchored mind (a room's or a level's Ebbing
-    never takes them; #403), and Hush-foot (shadow; sleepers need twice the noise to wake from
-    anything the player does; #405).
+    never takes them; #403), Hush-foot (shadow; sleepers need twice the noise to wake from
+    anything the player does; #405), and Mirror-wise (a hall of mirrors' images within 2 cells
+    seen for what they are; #419).

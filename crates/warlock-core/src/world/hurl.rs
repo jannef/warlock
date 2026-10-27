@@ -56,6 +56,7 @@ impl World {
         let skills = self.skills_of(id, AttackKind::Thrown, Some(throw.object));
         let price = self.attack_price(id, ActionKind::Throw, None, skills);
         self.make_noise(id, Act::Attack(AttackKind::Thrown));
+        let at = self.aim_at(id, target, at);
         let flight = Flight {
             kind: AttackKind::Thrown,
             with: throw.object,

@@ -96,6 +96,15 @@ gets where a dungeon favours or bans nothing. "Only" says where it can come at a
   and if you overload yourself inside by picking something up, you can still step back out.
 - **Teeming den.** A room full of sleeping creatures and the things they have gathered. You may
   smell it before you see it, and you hear it when you step in. See below.
+- **Hall of mirrors.** Glass on every side: everyone in it, you too, is shown with two
+  reflections that look exactly like them, standing elsewhere in the room and shifting every
+  turn. Nothing on the screen tells a reflection from the real thing (look mode only knows your
+  own: "Your reflection"). Swing at or walk into a reflection and your blow meets only glass,
+  which costs you the blow's time; an arrow or a thrown dagger aimed at one flies on through it.
+  An archer outside the hall shooting at you while you are inside aims at you or at one of your
+  reflections, each as likely; creatures inside the hall know it and are never fooled. Spells
+  that fly to the first creature in their way pass the reflections by. Only rooms of 80 floor
+  cells or fewer can be one.
 - **Unstable room.** A small room (60 floor cells at most) whose floor shimmers: every step
   you take inside has a one in ten chance to fling you somewhere else on the level, as a
   teleport trap does ("You are wrenched elsewhere."). Creatures stepping in are flung just the
@@ -103,7 +112,9 @@ gets where a dungeon favours or bans nothing. "Only" says where it can come at a
 
 The talent *Hallowed rest* (Grit) makes a room that quickens healing or mana quicken it half
 again more for you: a sanctuary's three times as fast becomes four times. The talent *Anchored
-mind* (Scholar) keeps your power moored: Ebbing never takes you.
+mind* (Scholar) keeps your power moored: Ebbing never takes you. The talent *Mirror-wise*
+(Scholar) sees through reflections within 2 cells of you: they are not shown, and nothing stops
+your step there.
 
 Only what happens inside counts: a sound made in an echoing hall is loud wherever it is heard,
 while one made outside and heard inside is not changed. Light outside a shadowed room is as

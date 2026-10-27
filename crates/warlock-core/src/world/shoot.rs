@@ -294,6 +294,7 @@ impl World {
             range: me.launcher_range(&content).unwrap_or(1),
         };
         let price = self.shot_price(id, launcher);
+        let at = self.aim_at(id, target, at);
         self.loose(id, at, loose, events);
         price
     }
@@ -363,6 +364,8 @@ impl World {
         let mut path = Vec::new();
         let mut attacks = Vec::new();
         let mut struck = false;
+        // Aimed at a reflection in a hall of mirrors (`mirrors.rs`), it flies on through it.
+        let through = self.reflected(shooter, at);
         for cell in from.ray(at) {
             let level = self.state.current();
             if cell.dist2(from) > reach {
@@ -397,7 +400,7 @@ impl World {
                         break;
                     }
                 }
-                None if cell == at => break,
+                None if cell == at && !through => break,
                 None => {}
             }
         }

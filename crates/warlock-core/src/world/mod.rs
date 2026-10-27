@@ -131,6 +131,7 @@ mod lockpick;
 mod loot;
 mod lucky;
 mod mana;
+pub(crate) mod mirrors;
 mod openings;
 mod path;
 mod perceive;
@@ -187,6 +188,7 @@ pub use lantern::Lantern;
 pub use learn::{Odds, study_odds, study_turns};
 pub use level::{Fire, LevelState};
 pub use loot::Identified;
+pub use mirrors::Image;
 pub use quest::{QuestRecord, QuestView, Quests, Stage, asks as quest_asks, wants as quest_wants};
 use rest::Ended;
 pub use shop::{Shop, ShopStatus, count_of, favour, part_of, unpaid_parts};
@@ -1346,6 +1348,8 @@ mod magic_tests;
 mod mana_talent_tests;
 #[cfg(test)]
 mod mana_tests;
+#[cfg(test)]
+mod mirrors_tests;
 #[cfg(test)]
 mod moon_tests;
 #[cfg(test)]

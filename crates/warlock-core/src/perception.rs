@@ -99,6 +99,7 @@ use crate::temperature::Temperature;
 use crate::time::GameTime;
 use crate::weapon_skills::WeaponSkills;
 use crate::weather::{self, Weather};
+use crate::world::mirrors::image_id;
 use crate::world::{
     Actor, ActorId, ActorKind, Death, Due, LevelState, Shop, WorldState, count_of, favour, part_of,
     unpaid_parts,
@@ -424,6 +425,8 @@ pub(crate) struct Perception {
     sounds: Vec<PerceivedSound>,
     /// Cells whose blood the player sees, in position order.
     blood: Vec<Pos>,
+    /// Cells where the player sees an image of a hall of mirrors (shown among `actors`).
+    images: Vec<Pos>,
     /// Whether strong light dazzles the player's light-blind eyes (their race's `light_blind`).
     dazzled: bool,
 }
@@ -715,7 +718,7 @@ impl Perception {
             .values()
             .filter(|a| a.level == level.id && sight.get(a.pos) == Some(&Sight::Seen))
             .collect();
-        let actors = (seen.iter())
+        let mut actors: Vec<SeenActor> = (seen.iter())
             .map(|a| SeenActor {
                 id: a.id,
                 kind: a.kind,
@@ -727,16 +730,38 @@ impl Perception {
                 shape: shape(a, content),
             })
             .collect();
+        // A hall of mirrors' images of those seen (`world/mirrors.rs`), where the player sees
+        // their cells, each shown as what it reflects under an id of its own; Mirror-wise sees
+        // those near for what they are.
+        let near = talents.sees_reflections;
+        let images: Vec<(ActorId, ActorId, Pos)> = (state.images(content, level).into_iter())
+            .filter(|i| sight.get(i.pos) == Some(&Sight::Seen))
+            .filter(|i| near <= 0 || i.pos.chebyshev(viewer) > near)
+            .filter(|i| seen.iter().any(|a| a.id == i.of))
+            .map(|i| (i.of, image_id(i.of, i.index, state.turn), i.pos))
+            .collect();
+        for &(of, id, pos) in &images {
+            if let Some(real) = actors.iter().find(|a| a.id == of).copied() {
+                actors.push(SeenActor { id, pos, ..real });
+            }
+        }
+        let shown = |a: &Actor| {
+            std::iter::once(a.id)
+                .chain(images.iter().filter(|i| i.0 == a.id).map(|i| i.1))
+                .collect::<Vec<_>>()
+        };
         // What creatures wear and wield is in plain sight; the rest of what they carry is not.
         let gear = (seen.iter())
             .filter(|a| a.kind == ActorKind::Creature)
             .flat_map(|a| {
-                (a.equipment.items().into_iter()).filter_map(|(slot, item)| {
-                    let stack = a.inventory.get(item)?.clone();
-                    Some(SeenGear {
-                        actor: a.id,
-                        slot,
-                        stack,
+                shown(a).into_iter().flat_map(move |id| {
+                    (a.equipment.items().into_iter()).filter_map(move |(slot, item)| {
+                        let stack = a.inventory.get(item)?.clone();
+                        Some(SeenGear {
+                            actor: id,
+                            slot,
+                            stack,
+                        })
                     })
                 })
             })
@@ -745,11 +770,15 @@ impl Perception {
         let effects = (seen.iter())
             .filter(|a| a.kind == ActorKind::Creature)
             .flat_map(|a| {
-                (a.effects.iter())
-                    .filter(|e| content.status(e.status).seen.is_some())
-                    .map(|e| (a.id, e.status))
+                shown(a).into_iter().flat_map(move |id| {
+                    (a.effects.iter())
+                        .filter(|e| content.status(e.status).seen.is_some())
+                        .map(move |e| (id, e.status))
+                })
             })
             .collect();
+        actors.sort_by_key(|a| a.id);
+        let images = images.into_iter().map(|(_, _, p)| p).collect();
 
         // Blood: on an open cell in sight; on a wall, where a stained face is seen.
         let blood = (level.blood.iter())
@@ -818,8 +847,15 @@ impl Perception {
             effects,
             sounds,
             blood,
+            images,
             dazzled: dazzled.is_some(),
         }
+    }
+
+    /// Whether the player sees an image of a hall of mirrors at `p` (`world/mirrors.rs`): a
+    /// step or a blow there meets only glass.
+    pub(crate) fn shows_image_at(&self, p: Pos) -> bool {
+        self.images.contains(&p)
     }
 
     /// Whether strong light dazzles the player's light-blind eyes.

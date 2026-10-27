@@ -136,6 +136,9 @@ impl World {
                 return Spent::Nothing;
             }
             swap = Some((target, seen));
+        } else if let Some(price) = self.meets_glass(to) {
+            // An image in a hall of mirrors (`mirrors.rs`).
+            return Spent::Turn(price);
         }
         if !self.can_step_to(to) {
             return Spent::Nothing;
