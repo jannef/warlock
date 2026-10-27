@@ -10,18 +10,18 @@ expression: "render(case, content.clone())"
 
 
 
+
                   ┌─ Factor Wulfrun ─────────────────────────────────────────────┐
                   │                                                              │
                   │ "Yes? I am frightfully busy. Well, no, but I like to look    │
                   │ it."                                                         │
                   │                                                              │
-                  │ > 1  The foreman's ledger                                    │
-                  │   2  The old diggings                                        │
-                  │   3  Trade                                                   │
-                  │   4  Appraisals                                              │
-                  │   5  An appraisal of your goods (100 gold each)              │
+                  │ > 1  The old diggings                                        │
+                  │   2  Trade                                                   │
+                  │   3  Appraisals                                              │
+                  │   4  An appraisal of your goods (100 gold each)              │
                   │                                                              │
-                  │ 1-5 or Enter  ask    Esc  leave                              │
+                  │ 1-4 or Enter  ask    Esc  leave                              │
                   └──────────────────────────────────────────────────────────────┘
 
 

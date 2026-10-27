@@ -98,11 +98,13 @@ no limit on how many you may be on at once. Opening the log takes no time.
 
 ## Who gives quests
 
-In Cēaptūn, three people have work for you, each a chain of three quests offered one after the
-other: **Reeve Leofric** sends you into Cealdhlāw, the barrow east of town; **Sister Hild** at
+In Cēaptūn, three people have work for you, each a chain of quests offered one after the other:
+**Reeve Leofric** sends you into Cealdhlāw, the barrow east of town; **Sister Hild** at
 the Mynster wants back what the barrow and the drowned minster keep, and marks Fennmynster on
-your map; **Factor Wulfrun** starts you with an errand in town, and once you have been deep in
-the barrow she marks the old mine, Fyrdelf. The table lists every quest in its chain's order,
-what it asks, what it pays, what must be done first, and the hidden place it shows you.
+your map; once you have been deep in the barrow and reached level 5, **Factor Wulfrun** marks
+the old mine, Fyrdelf (ask her sooner and she tells you you are not ready, and gives you
+nothing). The table lists every quest in its chain's order, what it asks, what it pays, what
+must be done first, the level you must have reached for it to be given, and the hidden place it
+shows you.
 
 {{#include generated/quests.md}}

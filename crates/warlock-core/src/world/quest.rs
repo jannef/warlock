@@ -10,7 +10,8 @@
 //! completes it: what it asks for leaves the pack, they say their thanks, and the reward
 //! follows (gold coins and items into the pack, or at the player's feet if it is full; XP).
 //! A repeatable quest is offered again once done; a quest that `requires` others is offered
-//! once they are all done. There is no abandoning a quest and no cap on how many are active (the
+//! once they are all done. A quest with a `min_level` is listed before the player reaches it,
+//! but asked about then the giver says its `early` line and gives nothing. There is no abandoning a quest and no cap on how many are active (the
 //! owner's decision).
 //!
 //! **Goals**, and how far they have got ([`progress`]):
@@ -622,6 +623,13 @@ impl World {
         let content = self.content.clone();
         let def = content.quest(q);
         if !self.state.quests.is_active(def) {
+            // Too green for it yet: the giver says so, and gives nothing.
+            if let Some((level, early)) = &def.min_level
+                && self.player_level() < *level
+            {
+                self.answer(id, early.clone(), Some(topic.into()), events);
+                return Some(Spent::Nothing);
+            }
             self.give(id, q, topic, events);
             return Some(Spent::NoTime);
         }

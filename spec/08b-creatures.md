@@ -256,7 +256,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     rolled quest draws its target (below), and the quest is active at once, on the log with its
     first breadcrumb; a delivery's giver hands the item over ("The wandering bard gives you a
     sealed letter."; the pack has room for anything, §6 "Item lists"). The topics `accept-ID`
-    and `decline-ID` of older replays are no one's and refused. An
+    and `decline-ID` of older replays are no one's and refused. A quest with a `min_level` (a
+    character level, 1 to 100) is a topic before the player reaches it, but asked about then the
+    giver says its `early` line (in words, never the number: "come and see me when you are
+    rather more seasoned") and gives nothing, reveals nothing, and takes no time. An
     active quest stays a topic of its giver, who says the `reminder` until its goal is met; it is
     also a topic of whoever it is handed in to (the recipient of a delivery or of a bring with
     `to`) while its goal is met. Asking the one it is handed in to once the goal is met completes

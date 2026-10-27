@@ -21,7 +21,9 @@
 //! else the giver). The `reward` is `gold` (gold coins), `items` (placement strings, `"apple*2"`),
 //! and `xp`, each optional. `requires` names a quest, or a list of them (loaded before this
 //! one), that must all be done before this one is offered, and `requires_alignment` the bands the player must be in for it
-//! to be offered (spec §8 "Alignment"); `alignment` moves their score as it is completed;
+//! to be offered (spec §8 "Alignment"); `min_level` the character level the player must have
+//! reached for it to be given, with `early`, what the giver says asked about it before then (the
+//! topic is listed; the quest is not given); `alignment` moves their score as it is completed;
 //! `repeatable` quests are offered again once done (never a reach). `reveals` names a hidden
 //! location of the overworld revealed as the quest is given (the default) or done (spec §7
 //! "Hidden locations"), and `where` says where its goal lies after the objective.
@@ -46,6 +48,8 @@ pub const MAX_NAME: usize = 32;
 pub const MAX_COUNT: u32 = 99;
 /// The most kills a tag's kill quest asks for.
 pub const MAX_TAG_COUNT: u32 = 999;
+/// The highest `min_level` a quest may ask for.
+pub const MAX_MIN_LEVEL: u8 = 100;
 /// The most experience a quest gives.
 pub const MAX_QUEST_XP: u32 = 1_000_000;
 /// The object a reward's `gold` is paid in.
@@ -108,6 +112,8 @@ struct QuestSpec {
     done: Option<String>,
     requires: Option<Requires>,
     requires_alignment: Option<Requirement>,
+    min_level: Option<u8>,
+    early: Option<String>,
     #[serde(default)]
     alignment: i32,
     #[serde(default)]
@@ -117,7 +123,7 @@ struct QuestSpec {
     where_: Option<String>,
 }
 
-/// A quest's `requires`: one quest id, or a list of them (`["ledger", "barrow_heart"]`).
+/// A quest's `requires`: one quest id, or a list of them (`["barrow_rats", "barrow_heart"]`).
 #[derive(Deserialize)]
 #[serde(untagged)]
 enum Requires {
@@ -285,6 +291,9 @@ pub struct QuestDef {
     pub requires: Vec<QuestId>,
     /// The alignment the player must be of for it to be offered (spec §8 "Alignment").
     pub requires_alignment: Option<Requirement>,
+    /// The character level the player must have reached for it to be given, and what the giver
+    /// says, asked about it before then (`early`): the topic is listed, the quest not given.
+    pub min_level: Option<(u8, String)>,
     /// How far completing it moves the player's alignment score (spec §8 "Alignment"):
     /// helping quests good, dark ones evil.
     pub alignment: i32,
@@ -660,6 +669,21 @@ fn resolve(
     if let Some(r) = spec.requires_alignment {
         r.check()?;
     }
+    let min_level = match (spec.min_level, &spec.early) {
+        (None, None) => None,
+        (Some(level), Some(early)) => {
+            if !(1..=MAX_MIN_LEVEL).contains(&level) {
+                return Err(format!("`min_level` is 1 to {MAX_MIN_LEVEL}"));
+            }
+            if quest_roll::has_placeholder(early) {
+                return Err("`early` holds no placeholders".into());
+            }
+            check_lines([early], MAX_REPLY)?;
+            Some((level, early.clone()))
+        }
+        (Some(_), None) => return Err("`min_level` needs `early`, the giver's refusal".into()),
+        (None, Some(_)) => return Err("`early` is for a quest with a `min_level`".into()),
+    };
     if spec.alignment.abs() > ALIGNMENT_MAX {
         return Err(format!(
             "`alignment` is -{ALIGNMENT_MAX} to {ALIGNMENT_MAX}"
@@ -692,6 +716,7 @@ fn resolve(
         texts,
         requires,
         requires_alignment: spec.requires_alignment,
+        min_level,
         alignment: spec.alignment,
         repeatable: spec.repeatable,
         campaign: None,

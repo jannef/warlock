@@ -692,10 +692,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `{a_target}`, `{count}`, `{members}`, `{branch}`, `{where}`, and capitalised forms); each is
   checked filled with every target its pool can hold; a quest that is not rolled has none. A
   kill of a unique type asks for 1. Optional `requires` (a quest loaded before this
-  one, or a list of them, `["foremans_ledger", "barrow_heart"]`, all done before this one is
+  one, or a list of them, `["barrow_rats", "barrow_heart"]`, all done before this one is
   offered), `requires_alignment` (the bands it is offered to, §8
   "Alignment": `{ min = "kind" }` Kind or better, `{ max = "callous" }` Callous or worse, or
-  both; never neither, nor a `min` above the `max`), `alignment` (how far completing it moves the
+  both; never neither, nor a `min` above the `max`), `min_level` with `early` (the character
+  level, 1 to 100, the player must have reached for it to be given, and what the giver says
+  asked about it before then; one never without the other), `alignment` (how far completing it moves the
   player's alignment, −1000 to 1000, default 0), `repeatable` (default false), `reveals = {
   location = "ID", when = "given" }` (a hidden location of the overworld it reveals, §7
   "Hidden locations", as it is `given` (the default) or `done`; several quests
