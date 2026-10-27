@@ -52,8 +52,8 @@ presence = 3
 # single door, not locked, nothing lying in it), so about one level in six has one.
 chance = 70
 names = [
-    "Grimbold", "Hilda", "Orvald", "Berengar", "Mirelle", "Tobias", "Ysolde", "Dunstan",
-    "Gerda", "Aldric", "Brannoc", "Wilhelmina", "Corwin", "Ottilie", "Fenwick", "Isolde",
+    "Grimbold", "Hilda", "Osmund", "Berengar", "Mildrith", "Tobias", "Ysolde", "Dunstan",
+    "Wulfgar", "Leofwine", "Brannoc", "Wilfrida", "Cuthbert", "Eadgyth", "Fenwick", "Isolde",
 ]
 bundle = [6, 15]
 
@@ -70,12 +70,13 @@ title = "{keeper}'s General Store"
 stock = [
     "melee_weapons", "missile_weapons", "missiles", "shields", "body_armour", "helmets",
     "cloaks", "gloves", "boots", "light_sources", "tools", "food", "potions", "scrolls", "wands",
+    "rods",
 ]
 always = ["scroll_of_identify"]
 buys = [
     "melee_weapons", "missile_weapons", "missiles", "shields", "body_armour", "helmets",
     "cloaks", "gloves", "boots", "light_sources", "tools", "household", "food", "potions",
-    "scrolls", "wands", "gems",
+    "scrolls", "wands", "rods", "gems",
 ]
 items = [6, 10]
 markup = 150

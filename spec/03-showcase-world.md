@@ -134,6 +134,12 @@ lies a sealed chamber with a lamp, rubies, and gold, and no way in but through a
 spills into the pit once the wall gives way. The rock around (solid rock) shows as stone walls as
 it is bared. The `quarry` scenario starts there, beside the pick-axe.
 
+**Summoning hall (41×10, #520)**: reached by no stairs; the `summoners` scenario (a human warrior,
+Hild) starts in the middle of its dimly lit south hall. Three rooms open onto the hall by closed
+doors, each holding a summoner (§8 "Summoning"): west a goblin wizard, middle a necromancer, east a
+dark wizard. Open a door and the summoner behind it sees the player and calls forth its kind; a
+first-level warrior does not live long there, which is the point.
+
 **Level 2 — Vast (≥ 400×300)**: scrolling camera, many light sources, performance budget check.
 Introduced in M2, lit in M3. Beside its stairs up to the hub, stairs down lead into the depths and
 stairs up lead out to the overworld (the cavern mouth). A river of running water winds through it

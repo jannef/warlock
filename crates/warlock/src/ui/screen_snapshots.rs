@@ -639,6 +639,22 @@ const CASES: &[Case] = &[
         keys: Some("t"),
         ..BASE
     },
+    // Rods (spec §8 "Magic items": "Rods"): the trap hall's two, identified; aiming one from the
+    // missile weapon slot shows its reach.
+    Case {
+        name: "rod-description",
+        scenario: "traps",
+        actions: "move:E move:E move:E pickup identify",
+        screen: Some("describe"),
+        ..BASE
+    },
+    Case {
+        name: "rod-aim",
+        scenario: "traps",
+        actions: "move:E move:E move:E pickup identify equip:missile_weapon:a",
+        keys: Some("t"),
+        ..BASE
+    },
     // Talk, quests, messages.
     Case {
         name: "dialogue-screen",

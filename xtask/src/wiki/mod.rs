@@ -151,6 +151,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("creature-defences.md", creatures::creature_defences),
         ("creature-attacks.md", creatures::creature_attacks),
         ("creature-throws.md", creatures::creature_throws),
+        ("creature-summons.md", creatures::creature_summons),
         ("creature-senses.md", creatures::creature_senses),
         ("animated-tiers.md", animated::animated_tiers),
         ("animated-numbers.md", animated::animated_numbers),
@@ -256,6 +257,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("spell-armour.md", spells::armour),
         ("wands.md", spells::wands),
         ("wand-charges.md", spells::wand_charges),
+        ("rods.md", spells::rods),
         ("study-chances.md", learning::chances),
         ("study-times.md", learning::times),
         ("study-affinities.md", learning::affinities),
@@ -656,7 +658,8 @@ mod tests {
              composite bow (shoots arrows), crossbow (shoots crossbow bolts), heavy crossbow \
              (shoots crossbow bolts), sling (shoots sling stones), wand of burning hands, wand of \
              magic missile, wand of scorching ray, wand of sleep, wand of web, wand of fireball, \
-             wand of lightning bolt, any other weapon, and anything made for throwing |"
+             wand of lightning bolt, rod of terror, rod of digging, rod of sleep, rod of teleport \
+             other, any other weapon, and anything made for throwing |"
         ));
         assert!(equipment.contains(
             "| `l` | Missiles | Sling stone, arrow, crossbow bolt, flaming arrow | 6 seconds |"

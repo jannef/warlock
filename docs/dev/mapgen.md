@@ -37,7 +37,10 @@ pinned vaults out, so a branch without named vaults draws exactly what it did (n
 the Depths' snapshots are unchanged). Fyrdelf names the foreman's cabin on 1 to 4 and the
 drake's hoard on 12 (`mapgen/fyrdelf_tests.rs`, with the branch's first-level snapshot);
 Fennmynster names the sunken crypt on its bottom, 8 (`mapgen/fennmynster_tests.rs`, which also
-checks the branch's raised room odds and its lack of shops).
+checks the branch's raised room odds and its lack of shops). The four lairs of the wanted (#426:
+Wyrtholm and Wulfeshol caves 100×40, Bānfeld and Brocenburg rooms 80×21, four floors each)
+name their criminal's vault on floor 4 (`mapgen/lairs_tests.rs`, with a snapshot of each bottom
+floor and a check over four seeds that the criminal is there once and on no floor above).
 
 Special rooms (spec §7 "Special rooms") have their own topic file, `docs/dev/special-rooms.md`:
 the effects' data, the draw (`mapgen/special.rs`, last, from the level's map stream), the whole-level

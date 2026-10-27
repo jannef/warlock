@@ -115,7 +115,7 @@ pub enum Near {
 
 /// Hostile creatures an outcome brings: `count` of them, of the floor's danger plus `danger`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct Summon {
+pub struct OutcomeSummon {
     pub danger: u8,
     pub near: Near,
     pub count: Dice,
@@ -167,7 +167,7 @@ pub struct OutcomeEffect {
     /// The player's lantern goes out.
     pub snuff: bool,
     /// Hostile creatures come.
-    pub summon: Option<Summon>,
+    pub summon: Option<OutcomeSummon>,
     /// A random disease is caught.
     pub disease: bool,
     /// Stat damage to a random stat.
@@ -570,7 +570,7 @@ fn resolve_effect(e: EffectSpec, content: &Content) -> Result<OutcomeEffect, Str
             if count.min() < 1 || count.max() > 12 {
                 return Err("summon: `count` gives 1 to 12".into());
             }
-            Some(Summon {
+            Some(OutcomeSummon {
                 danger: s.danger,
                 near: s.near,
                 count,

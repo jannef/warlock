@@ -17,7 +17,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
      creature with nothing to shoot (no missile weapon ready, or no ammunition for it left) fights
      as a `melee` one. A creature with a throw (§8 "Ranged combat": "Creatures' throws", the
      giants' boulders) that is not next to its target throws first whenever the target is within
-     the throw's range with a clear line of fire.
+     the throw's range with a clear line of fire. A summoner ("Summoning" below) summons before
+     all of this whenever it may.
      Leaving its routine it remembers where it was (its post) and where it saw the target.
   3. **Search**: with no hostile in sight, it goes to where it last saw one (next to the spot if
      someone it cannot see stands there, or no one can stand there: a door shut or kicked at).
@@ -75,6 +76,30 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Not yet: immunity to weapons that are not magical (the hook is `World::resolve` in
   `fight.rs`); bolts and bursts stop at walls, so spells do not reach one inside. The example is
   the stone haunt (`stone_haunt`), which no level places yet.
+- **Summoning** (`warlock-core/src/world/summon.rs`, the rules; `content/summon.rs`, the data;
+  #520): an enemy-only creature ability; the player has none. A creature type's
+  `[creature.summon]` names its pool (creature ids, each as likely, or a tag within a level
+  window, uniques and itself left out; a shared type calls only shared types), `count` (dice, 1
+  to 12), `cooldown` (6 to 600 s), `mana` (its cost; the type must have mana), and optionally
+  `range` (default 8), `spread` (default 2), `most` (default 6), and `verb` (default
+  "summons"). As step 2 begins, a creature with one summons when it sees a hostile within
+  `range`, its casting is not blocked (a status that blocks `cast`: Silenced), its cooldown
+  status `summoning` is off, it has the mana (`World::spend_mana`, its cut included), fewer than
+  `most` of those it summoned live (on any level), and a free cell lies within `spread`; deciding
+  draws nothing. It then pays the mana, takes `ceil(cooldown / eases)` degrees of `summoning`
+  (the house rule: an ability's limit is a cooldown status), makes a spell's noise, and rolls
+  `count` on the gameplay stream, capped by the room `most` leaves; each creature is one
+  `below(pool.len())` draw, made like a spawn (gear rolled from `gear/<actor id>`) on the next
+  free cell: within `spread` (Chebyshev) in its line of sight, walkable, no one there, not a
+  sanctuary it would shun, nearest first (Chebyshev distance, squared distance, row order). Fewer
+  cells, fewer come. The summoned take the summoner's faction (a `faction_override` when it is
+  not their type's) and remember who called them (`Actor::summoner`, saved, left out while
+  `None`); they act from their next turn, and nothing else sets them apart: they stay when the
+  summoner dies, and their kills pay full experience. The action costs a `cast`. Words: the
+  player who sees the summoner is told what they see come ("The goblin wizard calls forth 2
+  goblins and a warg!", "something" when they see none of it); an unseen summoner's creatures
+  only as they appear in sight ("A skeleton appears!"); nothing seen, nothing said. Sight is the
+  last turn's perception, so a summoning in the turn a door opens may go unseen.
 - **Animated objects** (`warlock-core/src/content/animated.rs`, the types; `animated.rs`, what
   one is made of; `world/animated.rs`, the drops and the talents; #483, design
   `docs/design/animated-objects.md`): things a will set moving, each an **ordinary creature

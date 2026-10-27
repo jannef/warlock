@@ -1,0 +1,19 @@
+# Unidentified rods (spec §8 "Magic items": "Rods"), as unidentified wands are (the format of
+# scroll_labels.toml): a rod type the player has not yet used or identified shows as "a pewter
+# rod" (and in one plain colour) until they do. Every rod type gets its own label at the start of
+# a run, drawn after the wands' labels from the same stream, so this file never changes a
+# scroll's or a wand's label nor a run's rolls.
+#
+#   name, plural  what an unknown rod is called, `{label}` its label
+#   fg            the colour every unknown rod shows in
+#   syllables     [least, most] parts a label is made of (1 to 6): one word here
+#   parts         the words (at least 8, distinct; at least as many as there are rod types)
+
+name = "{label} rod"
+plural = "{label} rods"
+fg = "#a8b0b8"
+syllables = [1, 1]
+parts = [
+    "agate", "basalt", "bronze", "chalk", "cobalt", "flint", "gilded", "jade", "jet", "lead",
+    "marble", "nickel", "obsidian", "onyx", "pewter", "quartz", "slate", "steel", "tin", "zinc",
+]

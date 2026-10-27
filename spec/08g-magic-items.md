@@ -243,3 +243,43 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `frequency`, never magic), general stores (they sell and buy the wands class), and the trap
     hall's pile beside its arrival (a wand of magic missile and one of fireball).
   - **Talents**: Wand mastery (Weaponcraft, system `spells`): wands cast at caster level +2.
+- **Rods** (`warlock-core/src/world/rod.rs`, data `rod` in `data/objects/` §7 and
+  `data/rod_effects/`, `content/rod.rs`; the magic design §9; #399): objects (`-`, the rods
+  class, one at a time) whose `[object.rod]` holds an **effect no spell has** (`effect`, an id of
+  `data/rod_effects/`) and the `mana` a use costs (1 to 100). A rod goes in the **missile weapon
+  slot** and is used as a wand is (`t`, `AimKind::Zap`; `fire:X,Y`); the aiming mode shows its
+  reach once its type is known.
+  - **Mana, not charges**: a use costs the user the rod's `mana`, less Channeler's quarter
+    (rounded to the nearest, at least 1), spent through the one mana spend (Frugal caster's cut,
+    a Willpower training mark). Without it the rod does nothing ("You have not the mana to use
+    it.", no time), nor while a status blocks casting (Raging: "You cannot use a rod while
+    raging."). A rod never runs out and has nothing of its own to save.
+  - **Caster level**: the **user's** (§8 "Spells"), never the rod's: an effect's reach is its
+    `range` plus a cell per `per_levels` caster levels, at most its `max_range`; a status
+    effect with `up_to_caster_level` takes only creatures whose level is at most it ("The ogre
+    shrugs it off."). No skill applies: there is no Use magic device skill (the owner).
+  - **Effects** (`data/rod_effects/`, one `[[rod_effect]]` a file: `shape` line, bolt, or burst,
+    its reach, and a `kind` on existing code): `dig` (a line toward the cell aimed at: every wall
+    of hardness below its `power` breaks as if dug through, `World::break_wall`; the first that
+    does not, a door, or the level's edge stops it), `teleport` (a bolt: the first creature on it
+    is moved as by a teleport trap, an attack on it as a blow is: a shopkeeper is provoked),
+    `status` (a burst at the cell aimed at, within reach: its status on everyone in it but the
+    user, as an area hex's). The first four: **Digging** (line, power 1000: stone and packed
+    earth, never granite), **Teleport other** (bolt), **Sleep** (burst radius 1, Asleep, up to
+    the caster level: a true sleep that a noise or a blow ends, unlike the Sleep spell's
+    drowsiness), **Terror** (burst radius 1, Frightened 3, up to the caster level).
+  - **Use**: refused, taking no time and no mana, at oneself, a burst out of reach, without the
+    mana; otherwise "You zap the pewter rod.", the effect, and the `cast` action's time. A bolt
+    that meets no one still costs its mana and time ("The bolt strikes nothing.").
+  - **Identification**: a rod type is unknown on sight, "a pewter rod" (`data/rod_labels.toml`,
+    the scroll labels' format, drawn after the wands' from the same stream, so no scroll's or
+    wand's label changes), until one is used ("It is a rod of digging.") or identified. The item
+    description then says the effect in words and its cost before the user's talents ("Holds
+    Digging: ...", "Costs 6 mana a use, before your talents; it never runs out").
+  - **The rods**: terror (item level 3, frequency 6, 5 mana, 450 gold), digging (4, 6, 6 mana,
+    500 gold), sleep (6, 5, 9 mana, 700 gold), teleport other (10, 3, 12 mana, 900 gold).
+    **Where**: loot (by `level` and `frequency`, never magic), general stores (they sell and buy
+    the rods class), and the trap hall's pile beside the wands (a rod of digging and one of
+    sleep).
+  - **Talents**: Channeler (Spellcraft, from level 5, systems `spells` and `mana`): rods cost a
+    quarter less mana, before Frugal caster.

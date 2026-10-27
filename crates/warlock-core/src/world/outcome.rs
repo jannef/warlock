@@ -20,7 +20,7 @@ use crate::alignment::Alignment;
 use crate::combat::Blow;
 use crate::content::{
     Amount, CreatureSpawn, Harmful, Near, OutcomeDef, OutcomeEffect, OutcomeKind, OutcomeTable,
-    Stance, Summon, danger,
+    Stance, OutcomeSummon, danger,
 };
 use crate::damage::Damage;
 use crate::geom::{Dir, Pos};
@@ -486,7 +486,7 @@ impl World {
     /// `summon.count` hostile creatures of the floor's danger plus `summon.danger` come, awake,
     /// where `summon.near` says (module docs; spec §7 "Special rooms"). Nothing comes on a level
     /// without a danger, or where no cell is free.
-    fn summon_hostiles(&mut self, summon: Summon, feature: Pos) {
+    fn summon_hostiles(&mut self, summon: OutcomeSummon, feature: Pos) {
         let id = self.state.current_level.clone();
         let Some((_, _, spawning)) = self.content.spawning(&id) else {
             return;

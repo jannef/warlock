@@ -23,9 +23,10 @@ plus one naming rule (below).
     (the one placement in all content: a test that needs a placement of its own defines a test
     unique, `world/unique_tests.rs`). `osrick.toml` opens with the design's TODO note on his
     spells (§8.2, §15); `outlaw_tests` checks it is there.
-- **Where**: in no population. The footpads and the criminals come with the four lairs (G6,
-  #426): pinned vaults on each lair branch's fourth floor place the criminals, the branches'
-  populations the footpads. Until then nothing places them.
+- **Where**: the four lairs (#426, `docs/dev/guild.md`): pinned vaults on each lair branch's
+  fourth floor place the criminals (and two footpads in Wulfeshol's hoard); the lairs'
+  populations hold the footpads (Wyrtholm), the footpads and their archers (Wulfeshol,
+  Brocenburg). The criminals are in no population.
 - **Proper names**: a creature type whose `name` starts upper-case is a proper name
   (`content::is_proper`), said without an article: `content::the` ("the kobold", "Black
   Wystan") and `content::the_start` ("The kobold") build every message that names a seen

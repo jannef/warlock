@@ -22,13 +22,14 @@ together), `factions` (faction ids, checked once the factions load,
 `Hoard::Corpses`); it needs `needs_danger` and can never pervade), `temperature` (degrees Celsius added to
 the level's, -40 to 40, default 0), `burden` (percent of the carrying limit, `BURDEN` 10 to
 1000, default 100), `mirrors` (`{ images = N }`, 1 to 8, `content::Mirrors`), `warp` (percent a
-step inside warps the stepper, 0 to 100, default 0), `feature` (a terrain id, transparent and
-not walkable, not stairs or a door), `sides` (`{ good = LIGHT, evil = LIGHT }`: the room draws a
-hidden side, its feature a light per side; the lights are resolved after they load,
+step inside warps the stepper, 0 to 100, default 0), `collapse` (`{ chance, damage }`,
+`content::Collapse`: chance 0 to 100, damage dice; needs `needs_below`), `feature` (a terrain id,
+transparent and not walkable, not stairs or a door), `sides` (`{ good = LIGHT, evil = LIGHT }`: the
+room draws a hidden side, its feature a light per side; the lights are resolved after they load,
 `RoomEffects::resolve_places`), and `offers` (`{ pray = TABLE }`, `Offer::Pray` and an outcome
 table id, checked in `resolve_places` once `data/outcomes/` is loaded; `offers` and `sides` need
 a `feature`). An effect with `level_chance` must have a
-`pervade` line and be neither `shunned` nor lay a `floor` nor hold `mirrors`
+`pervade` line and be neither `shunned` nor lay a `floor` nor hold `mirrors` nor `collapse`
 (`RoomEffectDef::can_pervade`; nor one with a `feature`); a level file's `effect` is held to the
 same.
 
@@ -38,7 +39,9 @@ Features today: shadowed (10), echoing (8), hushed (8), sanctuary (6), flooded (
 #404), cold (5, "frigid hall", `temperature = -25`), silent vault
 (5, `silent`, `noise = 1`, `status = "silenced"`, #409), heavy (4, "heavy hall", `burden = 50`,
 #412), mirrors (3, "hall of mirrors", `max_cells = 80`, `mirrors = { images = 2 }`, #419), unstable (4, "unstable room", `warp = 10`, `max_cells = 60`, #411), beast den (5, mark `n`, `needs_danger`, `min_cells` 16, `swarm` with
-`factions = ["wildlife", "vermin", "marsh"]` and `hoard = "corpses"`, #410), altar (8, "altar room",
+`factions = ["wildlife", "vermin", "marsh"]` and `hoard = "corpses"`, #410), collapsed (3, "collapsed
+floor", mark `k` (`c` is the cold room's), `needs_below`, `floor = "cracked_floor"`, `collapse =
+{ chance = 15, damage = "2d6" }`, #420), altar (8, "altar room",
 `min_cells = 9`, `feature = "forgotten_altar"`, `sides`, `offers = { pray = "forgotten_altar" }`,
 #406). Draining is the
 first with a `level_chance` (cursed rooms bring theirs).
@@ -323,6 +326,33 @@ before. An incorporeal creature (`ai.rs`, `phases`) never calls `step_onto_trap`
 warped. A creature's coarse strides in a rest (`stride.rs`) stop before a cell that warps, as
 before a trap, so it takes those steps turn by turn and may warp. Nothing is saved.
 
+## Collapsed floors
+
+`world/collapse.rs` (#420). `World::collapse_step(at)` is one line at the end of
+`travel.rs::player_moves`, after the step's trap and warp (`step_willingly`/`step_onto_trap`):
+only the player's moves, so creatures never fall and draw nothing. It returns at once, drawing
+nothing, unless `Here::collapse` (the room's only, never a pervading effect) holds at `at`, the
+player still stands there, the cell is the room's laid `floor` (cracked floor; a room's other
+cells never give way), the level has a down staircase whose `to` is set (`level_below`), and
+the player lacks Light tread (`TalentMods::collapse_proof`). Then one gameplay draw at
+`chance`, doubled while `load_of(player).penalty() >= Burdened` (capped at 100). On a fall:
+`World::visit` makes the level below (as stairs would, with the visit's luck and level),
+`landing` lists its cells (a flood fill from `start`, else the first staircase, through
+walkable cells and doors without a lock; then walkable, no door, stairs, trap, ice, actor, or
+shop floor), a second gameplay draw picks one, "The floor gives way beneath you!",
+`World::travel(below, Some(cell))` (arrival lines, pervading line, `settle_in`, as stairs), an
+`Event::LevelChanged`, "You fall to <name>.", `collapse.damage` through `World::hurt` with
+`Harm::Fall` (#523: it can kill; the player's death then has `Cause::Fall`, "Fell through a
+collapsed floor" on the death screen and in the JSON dump's `cause`), and, if they live,
+Staggered (`status.toml`) at one degree. The generator (`mapgen/special.rs::make`) lays an
+effect's `floor` that has a `collapse` only on the room's middle (`special::middle`: each of the
+eight neighbours a walkable cell of the room and no door), so a sound rim runs round it from
+every door and a way across always exists (a cave chamber's open edge counts as its rim); a room
+too narrow for a middle gets no cracks, and the draws are the same as before, so only the
+cracked cells of generated levels change. The
+design's `Arrival::Fell` is not needed: `travel` already takes the arrival cell. Nothing is
+saved beyond the level change; the cracked floor stays.
+
 ## What the player is told
 
 `world/rooms.rs`: `glimpse_rooms` (in `perceive`, before `enter_room`) marks each room of which
@@ -342,8 +372,9 @@ System `special_rooms` (`data/talents.toml`): Sense of place (wayfarer, `sense_o
 `World::room_pace`), Anchored mind (scholar, `room_status_immune` `ebbing`, also system
 `mana`; hook `World::dwell`), Hush-foot (shadow, Stealth 10, `wake_percent` 100, also system
 `stealth`; hook `World::spread_noise`'s wake check), and Mirror-wise (scholar, `sees_reflections` 2; hook
-`Perception::compute`'s images, which the glass reads too). System `prayer`: Devout (wayfarer,
-`devout`; hook `world/outcome.rs::leaned_kinds`).
+`Perception::compute`'s images, which the glass reads too), and Light tread (delver, Dexterity 12,
+`collapse_proof`; hook `World::collapse_step`, which then draws nothing). System `prayer`: Devout
+(wayfarer, `devout`; hook `world/outcome.rs::leaned_kinds`).
 
 ## Tests
 
@@ -379,4 +410,10 @@ altar not spent, a minute, a broken prayer, the lean and Devout, the draw's shar
 lines, each hook, the explosion, the deed, exhaustion near half and a spent altar after a save
 and load), `world/unstable_room_tests.rs` (the unstable room: about one step in ten inside
 warps the player and a creature, never outside, no draw outside, the messages, a free landing
-cell, saving).
+cell, saving), `content/room_collapse_tests.rs` (the `collapse` field, its refusals, never
+over a whole level, `Here::collapse`), `world/collapse_tests.rs` (the collapsed floor: its data,
+about 15 % of steps on cracked floor fall and none on sound floor or outside, twice as often
+Burdened, Light tread and the other no-draw cases, creatures never fall, the landing, hurt and
+Staggered, a fall that kills and its `Cause::Fall`, the messages, a walk through `World::apply`,
+and over a fixture branch of rooms and caves every generated collapsed floor's sound rim and a
+sound way between its ways in).

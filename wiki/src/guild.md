@@ -24,15 +24,36 @@ and stands until it is done. Kills count only from the giving on.
 3. **A scroll for the Gilde**: bring Wat a scroll of a kind drawn from those found as loot. It
    leaves your pack when you hand it in; one taken from a shop unpaid stays on that shop's bill.
    200 gold, 150 experience.
+4. **Wanted**: kill one of four wanted criminals, drawn as Wat gives it. Each has gone to ground
+   at the bottom of a lair of four floors, a hidden place that Wat marks on your map as he gives
+   the job; the other three lairs stay hidden for the rest of your life. A named monster: only
+   their death counts, however it came and whoever dealt it. 500 gold, 800 experience. Good.
 
 The chain goes on: more jobs are to come.
+
+## The wanted
+
+The four are people of the town's own day, known by what the broadsheets call them. Each lair
+is four floors deep, of danger 6 on its first floor to 9 on its last (see
+[Dungeons and danger](dungeons.md#the-lairs-of-the-wanted)), and the criminal waits in a room of
+their own on the fourth, asleep until something wakes them. Each carries a unique item of their
+own (see [Magic items](magic-items.md)), and drops it where they fall.
+
+| Criminal | Crime | Lair | Where | Carries |
+|---|---|---|---|---|
+| Mother Sallow, the Fennhām Poisoner | sold poison to heirs; three dead at one wedding feast | Wyrtholm, the herb islet: caves under an islet | Micelfenn, east of the river | Widowmaker |
+| Black Wystan, the Gentleman of the Road | highwayman of the Fennhām road; killed a carter for his boots | Wulfeshol, the wolf's hole: caves | Deorcholt, in Lindwudu | High Toby |
+| Brother Osrick, the Resurrection Man | robbed graves for the anatomists, then raised the dead | Bānfeld, the bone field: grave passages under a barrow field | Hlāwdūn, south of the road | the Unhalwed Bedes |
+| Sergeant Herrick, the Deserter | killed his captain and ran; hires out to goblins | Brocenburg, the broken fort: cellars under the ruined tower | Holegnwudu, east of the deep wood | the Turncoat |
+
+Their numbers are in [Creatures](creatures.md).
 
 {{#include generated/guild-draws.md}}
 
 ## Ranks
 
 Being given the first job makes you a member: a **Tin** of the Gilde. Finishing the hundred makes
-you a **Pewter**. Wat names you each time ("Wat One-Eye names you a Pewter of the Weyfarers'
+you a **Pewter**, and bringing down your wanted criminal an **Iron**. Wat names you each time ("Wat One-Eye names you a Pewter of the Weyfarers'
 Gilde."), and the character screen ([Your character](character.md)) shows the rank in the colour of its metal. A
 rank is a title: the town calls you by it, and nothing else changes. There are seven, each
 named after a metal and each a dearer metal than the last; the later ones wait for the jobs to

@@ -96,6 +96,10 @@ impl World {
         if let Some(item) = me.wand_item(&content) {
             return self.zap(item, at, events);
         }
+        // A rod there does its effect for the user's mana (spec §8 "Magic items": "Rods").
+        if let Some(item) = me.rod_item(&content) {
+            return self.use_rod(item, at, events);
+        }
         let (Some((launcher, _)), Some(profile)) = (me.launcher(&content), me.ranged(&content))
         else {
             self.say("You have nothing ready to throw or shoot.");

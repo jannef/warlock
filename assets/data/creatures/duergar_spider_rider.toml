@@ -1,0 +1,32 @@
+# The duergar (#518; content::duergar_roster_tests checks the numbers). A skirmisher of the deep
+# roads on a great cave spider: quick, and it is the spider that fights, its venom sickening
+# whoever it bites (a natural attack: the rider carries no weapon).
+[[creature]]
+id = "duergar_spider_rider"
+level = 25
+xp = 135
+rarity = "uncommon"
+loot = 30
+name = "duergar spider rider"
+glyph = "h"
+fg = "#60c0a0"
+faction = "duergar"
+tags = ["duergar"]
+alignment = "evil"
+race = "duergar"
+vision = "darkvision"
+speed = 1300
+sight = 12
+opens_doors = true
+footsteps = 70
+hearing = 14
+weight = 180000
+stats = { strength = 22, dexterity = 21, toughness = 21, intelligence = 14, willpower = 19, presence = 12 }
+base_hp = 56
+attack = { damage = "4d6", damage_type = "piercing", name = "spider's bite", verb = "bites", to_hit = 2, on_hit = [{ status = "poisoned", chance = 25, severity = 2 }] }
+resist = { poison = 25, cold = 10 }
+on_eat = { message = "Tough and sour, and it tastes of the spider.", vomit = 40 }
+[[creature.gear]]
+chance = 60
+one_of = ["studded_leather"]
+magic = 10

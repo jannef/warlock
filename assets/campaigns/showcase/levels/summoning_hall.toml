@@ -1,0 +1,30 @@
+# The summoning hall (spec §3, §8 "Summoning", #520): the summoners, one to a room, to watch
+# what they call forth. You arrive in the lit hall to the south; each room opens onto it by a
+# door. West: a goblin wizard (G), who calls forth goblins, goblin archers, hobgoblins, and
+# wargs. Middle: a necromancer (N), who raises the lesser dead. East: a dark wizard (D), who
+# calls forth devils. Open a door and the summoner behind it sees you: it summons at once, and
+# again every half a minute while its mana lasts. What comes is of its side, fights you, and pays
+# its experience when you kill it. The `summoners` scenario starts here; no stairs lead in or out.
+# What the fallen drop is rolled at this item level (spec §8 "Magic items").
+item_level = 10
+name = "The Summoning Hall"
+ambient = [48, 46, 42, 0]
+map = '''
+#########################################
+#...........#.............#.............#
+#.....G.....#......N......#......D......#
+#...........#.............#.............#
+#t.........t#t...........t#t...........t#
+######+#############+#############+######
+#.......................................#
+#t..................@..................t#
+#.......................................#
+#########################################
+'''
+
+[legend]
+"@" = { terrain = "floor", spawn = "player" }
+"t" = "sconce"
+"G" = { terrain = "floor", creature = "goblin_wizard" }
+"N" = { terrain = "floor", creature = "necromancer" }
+"D" = { terrain = "floor", creature = "dark_wizard" }

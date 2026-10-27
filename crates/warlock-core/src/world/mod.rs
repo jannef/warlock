@@ -97,6 +97,7 @@ mod caster;
 mod caster_level;
 mod class;
 mod class_ability;
+mod collapse;
 mod court;
 mod creation;
 mod den;
@@ -147,6 +148,7 @@ mod read;
 mod resource;
 mod rest;
 mod reveal;
+mod rod;
 mod rooms;
 mod rot;
 mod schedule;
@@ -165,6 +167,7 @@ mod stat_training;
 mod status;
 mod steal;
 mod stride;
+mod summon;
 mod talent;
 mod talk;
 mod train;
@@ -713,6 +716,7 @@ impl World {
             drained: Default::default(),
             weapon_skills,
             faction_override: None,
+            summoner: None,
             alignment: content.alignment().map(|_| alignment),
             alignment_override: None,
             npc: None,
@@ -1278,6 +1282,8 @@ mod class_rogue_tests;
 #[cfg(test)]
 mod class_tests;
 #[cfg(test)]
+mod collapse_tests;
+#[cfg(test)]
 mod cost_tests;
 #[cfg(test)]
 mod court_tests;
@@ -1327,6 +1333,8 @@ mod gem_tests;
 mod gifts_tests;
 #[cfg(test)]
 mod guild_tests;
+#[cfg(test)]
+mod guild_wanted_tests;
 #[cfg(test)]
 mod hearing_tests;
 #[cfg(test)]
@@ -1400,6 +1408,8 @@ mod resource_tests;
 #[cfg(test)]
 mod reveal_tests;
 #[cfg(test)]
+mod rod_tests;
+#[cfg(test)]
 mod room_temperature_tests;
 #[cfg(test)]
 mod room_tests;
@@ -1449,6 +1459,8 @@ mod steal_tests;
 mod stride_tests;
 #[cfg(test)]
 mod style_tests;
+#[cfg(test)]
+mod summon_tests;
 #[cfg(test)]
 mod sun_tests;
 #[cfg(test)]
