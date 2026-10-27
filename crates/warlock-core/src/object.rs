@@ -34,6 +34,8 @@ use crate::magic::{Effect, Magic, Mods, name};
 use crate::scroll_label::Lore;
 use crate::time::GameTime;
 use crate::variant;
+
+pub use crate::piece::break_up;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
@@ -254,9 +256,13 @@ impl Stack {
     /// What it is called as it is made, singular and plural, without an article, a count, or
     /// magic: its object's name ("long sword", "gold and ruby amulet"), named from what its file
     /// writes with its own parts if it has any ("emerald-pommelled long sword", "bronze long
-    /// sword"; [`part::names`]), or a loose gem's ("large fine emerald", [`crate::gem::names`]).
+    /// sword"; [`part::names`]), a loose gem's ("large fine emerald", [`crate::gem::names`]), or
+    /// a piece's by its material ("piece of tin", [`crate::piece::names`]).
     pub fn names(&self, content: &Content) -> (String, String) {
         let def = content.object(self.object);
+        if def.id == crate::piece::ID {
+            return crate::piece::names(content, def, self.parts(content)[0].material);
+        }
         if self.parts.is_none() {
             return (def.name.clone(), def.plural.clone());
         }

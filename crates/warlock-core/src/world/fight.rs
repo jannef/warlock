@@ -935,6 +935,8 @@ impl World {
                 cause: None,
             });
         } else {
+            // The break lines are said with the death, before what the kill earned.
+            let earned = self.news.len();
             // A kill builds the killer's resources (spec §8 "Resources").
             if let Some(by) = by {
                 self.gain_resource(by, Build::Kill);
@@ -945,17 +947,19 @@ impl World {
                 self.tally_kill(creature, &level);
                 self.judge_kill(id);
             }
-            self.creature_dies(id, by == Some(self.state.player));
+            let lines = self.creature_dies(id, by == Some(self.state.player));
+            self.news.splice(earned..earned, lines);
         }
     }
 
     /// Creature `id` dies: it leaves the world, and what it carried (worn and wielded things
     /// too) falls on its cell, on top of what lies there, in the order it carried them, and its
     /// corpse on top of that (spec §8 "Hunger"); identified, when the player killed it
-    /// (`by_player`) with Scavenger.
-    fn creature_dies(&mut self, id: ActorId, by_player: bool) {
+    /// (`by_player`) with Scavenger. Returns the lines for an animated thing's components that
+    /// broke as they fell, if the player saw it ([`World::break_lines`]).
+    fn creature_dies(&mut self, id: ActorId, by_player: bool) -> Vec<String> {
         let Some(actor) = self.state.actors.remove(&id) else {
-            return;
+            return Vec::new();
         };
         // A named monster's death meets every quest after it, whoever caused it (design §8.4).
         let def = self.content.creature(actor.creature);
@@ -964,7 +968,8 @@ impl World {
             self.state.quests.slay(&slain);
         }
         // An animated thing's body falls whole or not at all (spec §8 "Animated objects").
-        let mut dropped = self.remains(&actor);
+        let (mut dropped, broken) = self.remains(&actor);
+        let lines = self.break_lines(&actor.level, actor.pos, &broken);
         dropped.extend(self.loot_of(&actor));
         // Scavenger (spec §8 "Creature gear"): what the player's kill drops is known at once.
         if by_player && self.state.player().talent_mods(&self.content).scavenger {
@@ -984,6 +989,7 @@ impl World {
         // A dead shopkeeper's goods are free to take (spec §7 "Shops").
         self.keeper_died(id, &actor.level);
         self.fallen.push(actor);
+        lines
     }
 
     /// The player attacks `target`, which they `seen` or not, in melee: a blow, and the blows
