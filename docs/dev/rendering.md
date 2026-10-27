@@ -21,6 +21,18 @@ Rendering (spec §4.2) is three layers, bottom to top, all positioned in framebu
    Glyphs at rest read the 1:1 atlas; moving, scaled, slanted, or turned ones sample a
    supersampled (2×, linear) atlas whose slots are exactly 2× the 1:1 slots. Creatures,
    particles, missiles, the aiming line's dots, and `pulse` terrain live here.
+   **Colour bands** (#463): `FreeGlyphs::push_banded` draws a glyph in up to four horizontal
+   bands (`free_glyph::Bands`: the glyph's colour first, then `more`, a `count`, and a `drift`).
+   The vertex's glyph data is `[slot, flags, count, drift bits]` and the other three colours are
+   flat vertex attributes, so plain glyphs cost nothing more in the shader than a branch. The
+   bands lie over the rows a capital letter covers (`GlyphAtlas::cap`, the params' `ink`), band
+   k's middle at k + ½ band heights, with a soft border (`SEAM`, 0.35 of a band) between
+   neighbours; `drift` (band heights) moves the borders, clamped so the top and bottom bands
+   always stay. `ui/glyphs.rs` uses it for a creature whose `Shape::bands()` has two or more
+   colours (a composite animated thing, `docs/dev/animated.md`): each band is palette-mapped,
+   lit, and glows as the glyph does, and the drift is a slow sway (`band_drift`: ±0.3 band, 7 s,
+   the creature's own phase), 0 without glyph animation (reduced effects). A sliding creature is
+   banded too: it is always on this layer.
 3. **UI console**: the same console material over the whole window; unwritten cells are
    transparent.
 
