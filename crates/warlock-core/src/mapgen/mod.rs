@@ -37,6 +37,7 @@ mod den;
 mod hoard;
 pub mod local;
 mod population;
+mod room_loot;
 mod rooms;
 mod shop;
 mod special;
@@ -532,6 +533,7 @@ pub fn generate_for(
                 den::fill(&mut template, content, seed, (pal, danger, spawning), visit);
                 hoard::fill(&mut template, content, seed, (pal, danger), visit);
             }
+            room_loot::fill(&mut template, content, seed, pal);
             crate::gear::arm(&mut template, content, seed);
             crate::animated::arm(&mut template, content, seed);
             return Ok(template);
@@ -797,6 +799,8 @@ mod fennmynster_tests;
 mod fyrdelf_tests;
 #[cfg(test)]
 mod lairs_tests;
+#[cfg(test)]
+mod scriptorium_tests;
 #[cfg(test)]
 mod special_tests;
 #[cfg(test)]

@@ -30,6 +30,9 @@
 //! An effect may raise the dead killed inside ([`RoomEffectDef::rise`]: a cursed room;
 //! `world/curse.rs`), and Consecrate may lift an unholy one for good ([`RoomEffectDef::unholy`]).
 //!
+//! An effect may lay items of one class on its floor ([`RoomEffectDef::loot`]: a scriptorium's
+//! scrolls) and train some skills faster inside ([`RoomEffectDef::train`]; `content/room_lore.rs`).
+//!
 //! An effect may give everyone inside a status while they stay ([`RoomEffectDef::status`]: a
 //! draining room's Ebbing; `World::dwell`), which eases by its own pace once they leave.
 //!
@@ -39,11 +42,15 @@
 //!
 //! Without the file there are no special rooms.
 
-use super::{ContentError, LightId, OutcomeTables, StatusDef, StatusId, TerrainDef, TerrainId};
+use super::room_lore::{LootSpec, LoreNames, RoomLoot};
+use super::{
+    ContentError, ItemClassId, LightId, OutcomeTables, StatusDef, StatusId, TerrainDef, TerrainId,
+};
 use crate::alignment::Alignment;
 use crate::dice::Dice;
 use crate::geom::Pos;
 use crate::light::Light;
+use crate::skills::SkillId;
 use crate::temperature::Temperature;
 use crate::time::Duration;
 use serde::{Deserialize, Serialize};
@@ -151,6 +158,9 @@ struct RoomEffectSpec {
     sides: Option<BTreeMap<Alignment, String>>,
     offers: Option<OffersSpec>,
     collapse: Option<Collapse>,
+    loot: Option<LootSpec>,
+    #[serde(default)]
+    train: BTreeMap<String, u16>,
 }
 
 #[derive(Deserialize)]
@@ -438,6 +448,14 @@ pub struct RoomEffectDef {
     pub rise: Option<Rise>,
     /// Consecrate lifts it for good (a cursed and a draining room).
     pub unholy: bool,
+    /// The items generators lay on its floor (a scriptorium's scrolls; `mapgen/room_loot.rs`).
+    /// Resolved after the objects ([`RoomEffects::resolve_lore`]).
+    pub loot: Option<RoomLoot>,
+    /// Skills whose training marks come more often inside: percent of each mark's chance (a
+    /// scriptorium's 200 for Decipher script; `World::train`). Resolved with `loot`.
+    pub train: Vec<(SkillId, u16)>,
+    /// `loot` and `train` as data names them, until resolved.
+    lore: LoreNames,
 }
 
 impl RoomEffectDef {
@@ -470,6 +488,7 @@ impl RoomEffectDef {
             && self.hoard.is_none()
             && self.feature.is_none()
             && self.collapse.is_none()
+            && self.lore.loot.is_none()
             && self.pervade.is_some()
     }
 
@@ -580,6 +599,16 @@ impl<'c> Here<'c> {
         self.each().find_map(|e| e.rise.as_ref())
     }
 
+    /// Percent of the chance of a training mark of `skill` here: the effects' `train`
+    /// percents, multiplied (100: as it is).
+    pub fn train(&self, skill: SkillId) -> u32 {
+        self.percent(|e| {
+            (e.train.iter())
+                .find(|(id, _)| *id == skill)
+                .map_or(100, |&(_, p)| p)
+        })
+    }
+
     /// The statuses held here, the room's first: both apply.
     pub fn statuses(self) -> impl Iterator<Item = StatusId> + 'c {
         (self.room.into_iter().chain(self.level)).filter_map(|e| e.status)
@@ -638,6 +667,26 @@ impl RoomEffects {
                     lights[i] = Some(id);
                 }
             }
+        }
+        Ok(())
+    }
+
+    /// Resolves the effects' `loot` and `train` names (`room_lore.rs`): `class` an item class,
+    /// `skill` a skill (`skills` false: there are no skills, and `train` is dropped).
+    pub(super) fn resolve_lore(
+        &mut self,
+        class: impl Fn(&str) -> Option<ItemClassId>,
+        (skill, skills): (impl Fn(&str) -> Option<SkillId>, bool),
+    ) -> Result<(), ContentError> {
+        for def in &mut self.defs {
+            let (loot, train) = (def.lore.resolve(&class, (&skill, skills))).map_err(|m| {
+                ContentError::new(
+                    "data/room_effects.toml",
+                    format!("effect `{}`: {m}", def.id),
+                )
+            })?;
+            def.loot = loot;
+            def.train = train;
         }
         Ok(())
     }
@@ -883,6 +932,7 @@ impl RoomEffects {
                     return Err(bad("a `swarm` needs `needs_danger`".into()));
                 }
             }
+            let lore = LoreNames::check(spec.loot, spec.train).map_err(bad)?;
             if let Some(hoard) = &spec.hoard {
                 hoard.check().map_err(bad)?;
                 if !spec.needs_danger {
@@ -923,11 +973,14 @@ impl RoomEffects {
                 collapse: spec.collapse,
                 rise,
                 unholy: spec.unholy,
+                loot: None,
+                train: Vec::new(),
+                lore,
             };
             if def.level_chance > 0 && !def.can_pervade() {
                 return Err(err(format!(
                     "effect `{}`: a `level_chance` needs a `pervade` line, and no effect that \
-                     creatures shun, that lays a floor, that holds mirrors or a hoard, or that has a \
+                     creatures shun, that lays a floor, that holds mirrors, a hoard, or loot, or that has a \
                      feature covers a whole level",
                     def.id
                 )));
