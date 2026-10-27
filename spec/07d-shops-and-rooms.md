@@ -274,8 +274,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     go. Where it lands is never a step, so it is never warped again on landing. Nothing is
     saved. Its `max_cells` keeps it to small rooms; it never covers a whole level.
   - **A collapsed floor** (`collapse`, #420; `world/collapse.rs`): the room's floor is
-    `cracked_floor` (a walkable terrain, "cracked floor", `:`), laid by the generator; a
-    hand-made level draws its own. Every step of the **player** onto a cracked cell of it (a
+    `cracked_floor` (a walkable terrain, "cracked floor", `:`), laid by the generator over the
+    room's middle only: a cell cracks only when its eight neighbours are all walkable cells of
+    the room and none is a door, so no cell next to a wall or a door cracks, nor a door, and a
+    ring of sound floor runs from every door round the room (#523; a room too narrow to have a
+    middle gets no cracks at all). A hand-made level draws its own. Every step of the **player** onto a cracked cell of it (a
     move; the room's cells without cracks never give way) has `collapse.chance` percent (15,
     doubled while Burdened or worse; one draw of the gameplay stream, made only on such a cell,
     after any trap and warp there, and only while the level has a way down that leads
@@ -285,7 +288,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     draw) that is walkable, no door, stairs, trap, or ice, where no one stands, outside every
     shop, and reachable from where the level is entered without passing a locked door (so never
     inside a vault behind one, nor behind a secret door, which is wall until found). They take
-    `collapse.damage` (2d6, never their last hit point) and are Staggered. The cracked floor
+    `collapse.damage` (2d6), which can kill them (#523: there is always a sound way round, so
+    the last hit point is not spared): the death is put down to the fall ("Fell through a
+    collapsed floor" on the death screen, the dumps' `cause`). A survivor is Staggered. The cracked floor
     stays as it was. Creatures never fall (no draw for them). Nothing new is saved: the fall
     is a level change like the stairs'. Light tread (§8 "Talents") never falls. It never
     covers a whole level.

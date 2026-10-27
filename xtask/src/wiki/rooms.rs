@@ -76,10 +76,15 @@ pub(super) fn special_rooms(content: &Content) -> String {
             does.push("Creatures hostile to you do not step in.".into());
         }
         if let Some(floor) = e.floor {
-            does.push(format!(
-                "Its floor is {}.",
-                content.terrain(floor).name.to_lowercase()
-            ));
+            let name = content.terrain(floor).name.to_lowercase();
+            does.push(if e.collapse.is_some() {
+                format!(
+                    "Its middle is {name}; the floor beside its walls and doors is sound, so \
+                     there is always a way round."
+                )
+            } else {
+                format!("Its floor is {name}.")
+            });
         }
         if e.swarm.is_some() {
             does.push("Full of sleeping creatures and their hoard (see Teeming dens).".into());
@@ -125,8 +130,8 @@ pub(super) fn special_rooms(content: &Content) -> String {
             does.push(format!(
                 "Every step of yours onto its cracked floor has a {}% chance ({}% while you are \
                  Burdened or worse) to give way: you fall to the level below, landing somewhere \
-                 open on it (never behind a locked door, never in a shop), take {} damage (never \
-                 your last hit point), and are Staggered. Creatures never fall (Light tread: \
+                 open on it (never behind a locked door, never in a shop), take {} damage (it can \
+                 kill you), and are Staggered. Creatures never fall (Light tread: \
                  you never do).",
                 c.chance,
                 (u32::from(c.chance) * 2).min(100),

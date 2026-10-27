@@ -74,7 +74,8 @@
 #   collapse a collapsed floor (needs `needs_below`; never the whole level): `{ chance, damage }`,
 #            the percent chance (0 to 100) that a step of the player onto a cell inside gives
 #            way, doubled while they are Burdened or worse, and the dice they take as they land
-#            on the level below (never their last hit point); they land Staggered
+#            on the level below (they can kill); they land Staggered. A generator cracks only
+#            the room's middle (`floor` there, never beside a wall, door, or its edge)
 #   rise     a cursed room: `{ faction, after }`: a creature that dies inside, is not of
 #            `faction` (factions.toml), and leaves a corpse rises from its corpse `after` (a
 #            duration, 1s to 1h) as a creature of `faction` of its level (else the nearest level,

@@ -111,10 +111,12 @@ gets where a dungeon favours or bans nothing. "Only" says where it can come at a
   teleport trap does ("You are wrenched elsewhere."). Creatures stepping in are flung just the
   same, so fleeing through one is a gamble, and so is chasing someone into it.
 - **Collapsed floor.** A room whose floor is cracked and sagging (shown as `:`, "cracked
-  floor"), found only on a level with another below it. Every step you take onto the cracked
+  floor"), found only on a level with another below it. Only the middle of the room is
+  cracked: the floor next to its walls and doors is always sound, so you can always walk round
+  the cracks from one door to another. Every step you take onto the cracked
   stone has a 15 % chance to give way, 30 % while you are burdened or worse ("The floor gives way
   beneath you!"). You fall to the level below, land somewhere open on it (never behind a locked
-  door or in a shop), take 2d6 damage, though the fall never kills you, and are Staggered. A
+  door or in a shop), take 2d6 damage, which can kill you, and are Staggered. A
   quick way down, if you can take the bruises; creatures never fall through.
 - **Cursed room.** The dead do not rest in it: see below. Only on a level with a danger. One
   floor in twenty that draws a cursed room is cursed throughout instead.

@@ -46,7 +46,7 @@ Game flags (`cargo run -p warlock -- --help`):
   the sunlit courtyard at 06:30, `world` on the overworld beside the Hall, `forest` in the glade
   of a generated forest area of the overworld at 06:30, `arena` in the dark corner of the arena
   where kobolds and giant rats fight, `quarry` in the quarry beside a pick-axe, `traps` in the
-  trap hall, `cealdhlaw` on the first floor of Cealdhlāw, the Ascmearc's first dungeon, `fennmynster` on
+  trap hall, `summoners` in the summoning hall's south hall (three summoners behind doors), `cealdhlaw` on the first floor of Cealdhlāw, the Ascmearc's first dungeon, `fennmynster` on
   the first floor of Fennmynster, the drowned minster's cellars, `fyrdelf` on the first floor of Fyrdelf,
   its deepest), `--seed S`
   (default: the scenario's seed; a number, or a word hashed with FNV-1a, e.g. `--seed warlock`),
@@ -320,6 +320,7 @@ file). Topics:
 - `docs/dev/resources.md` — alternative resources: the data, `Actor::resources`, grant, gain, spend, and end, time in the status loop, ability costs, the dev grant
 - `docs/dev/blood.md` — wounds and stains, bleeding, how blood is drawn
 - `docs/dev/creatures.md` — factions and stance, the AI, paths, creature sight, spawning, gear (a stable index: roster PRs edit only their own `docs/dev/creatures/<tribe>.md`, e.g. `undead.md`, never this file)
+- `docs/dev/summoning.md` — creatures' summoning (enemy-only): the `summon` table, the cooldown status, who summoned whom, the AI hook, the words
 - `docs/dev/animated.md` — animated objects: creature types generated at load, their bodies and streams, drops, immunities, the look
 - `docs/dev/npcs.md` — unique characters, chat and ask, rotation lines and mutters, displacement
 - `docs/dev/quests.md` — quest data and stages, hooks in kills, travel, and talk, the quest log

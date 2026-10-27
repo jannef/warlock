@@ -1,7 +1,7 @@
 //! The collapsed floor (spec §7 "Special rooms", design §9.13; `world/collapse.rs`): a step of the
 //! player onto its cracked floor gives way with 15 % (doubled while Burdened), and they fall to
-//! the level below, hurt but never killed, and Staggered; Light tread never falls; creatures
-//! never do; no draw anywhere else.
+//! the level below, hurt (a fall can kill) and Staggered; Light tread never falls; creatures
+//! never do; no draw anywhere else. A generated one keeps a sound rim round its cracks.
 
 use super::*;
 use crate::burden::Burden;
@@ -223,18 +223,123 @@ fn a_fall_lands_on_open_floor_below_hurt_and_staggered() {
 }
 
 #[test]
-fn a_fall_never_kills() {
+fn a_fall_can_kill_and_records_its_cause() {
     let mut w = world();
     for _ in 0..400 {
         back(&mut w, CRACKED);
         w.player_mut().hp = 1;
         if w.collapse_step(CRACKED, &mut Vec::new()) {
-            assert_eq!(w.state.player().hp, 1);
-            assert!(w.state.death.is_none());
+            // The 2d6 is at least 2: the last hit point is not spared.
+            let death = w.state.death.as_ref().expect("dead");
+            assert_eq!(death.cause, Some(Cause::Fall));
+            assert_eq!((death.by, death.of), (None, None));
+            assert_eq!(death.place, "Cellar");
+            assert_eq!(
+                Cause::Fall.epitaph(w.content()),
+                "Fell through a collapsed floor"
+            );
+            let staggered = w.content().status_id("staggered").expect("staggered");
+            assert!(!w.state.player().effects.has(staggered));
             return;
         }
     }
     panic!("no fall in 400 steps");
+}
+
+/// A branch whose every special room is a collapsed floor where one fits: rooms on top, caves
+/// below, and a last level under them both.
+const CRUMBLING: &str = r#"
+[[dungeon]]
+id = "test_crumbling"
+name = "Crumbling"
+generator = "rooms"
+depth = 3
+size = [80, 21]
+room_effects = { chance = 100, per_level = 3, favoured = { collapsed = 100 } }
+[[dungeon.levels]]
+from = 2
+generator = "caves"
+size = [100, 40]
+"#;
+
+/// Whether `p` is a door, open or closed.
+fn door(content: &Content, level: &crate::content::LevelTemplate, p: Pos) -> bool {
+    let def = content.terrain(level.terrain[p]);
+    def.is_closed_door() || def.is_open_door()
+}
+
+/// Every generated collapsed floor cracks only in its middle: no cell next to a wall, a door, or
+/// the room's edge cracks, nor a door; and its ways in (doors, doorways, a cave chamber's open
+/// edge) are joined to each other across sound floor.
+#[test]
+fn a_generated_collapsed_floor_keeps_a_sound_rim_and_a_way_across() {
+    let mut files = ContentFiles::builtin();
+    files.insert("data/dungeons/test_crumbling.toml", CRUMBLING);
+    let content = Content::load(&files).expect("content");
+    let collapsed = content.room_effects().id("collapsed").expect("collapsed");
+    let cracked = content.terrain_id("cracked_floor").expect("cracked floor");
+    let (mut rooms, mut with_cracks, mut by_depth) = (0, 0, [0; 2]);
+    for seed in 0..60 {
+        for depth in 1..=2 {
+            let id = format!("test_crumbling:{depth}");
+            let level =
+                crate::mapgen::generate(&content, ("showcase", seed), &id, None).expect("level");
+            let walkable =
+                |p: Pos| level.terrain.in_bounds(p) && content.terrain(level.terrain[p]).walkable;
+            let passable =
+                |p: Pos| level.terrain.in_bounds(p) && (walkable(p) || door(&content, &level, p));
+            for room in level.rooms.iter().filter(|r| r.effect == collapsed) {
+                rooms += 1;
+                by_depth[depth as usize - 1] += 1;
+                let cells = room.cells();
+                let crack = |p: Pos| level.terrain[p] == cracked;
+                if cells.iter().any(|&p| crack(p)) {
+                    with_cracks += 1;
+                }
+                for &p in cells.iter().filter(|&&p| crack(p)) {
+                    for q in Dir::ALL.map(|d| p.step(d)) {
+                        assert!(
+                            room.contains(q) && walkable(q) && !door(&content, &level, q),
+                            "seed {seed} {id}: {p:?} cracks beside {q:?}"
+                        );
+                    }
+                }
+                // The ways in: cells of the room one can pass with a passable cell outside it.
+                let ways: Vec<Pos> = (cells.iter().copied())
+                    .filter(|&p| passable(p))
+                    .filter(|&p| {
+                        (Dir::ALL.map(|d| p.step(d)).into_iter())
+                            .any(|q| !room.contains(q) && passable(q))
+                    })
+                    .collect();
+                let Some(&first) = ways.first() else {
+                    continue;
+                };
+                let sound = |p: Pos| room.contains(p) && passable(p) && !crack(p);
+                let mut seen = std::collections::BTreeSet::from([first]);
+                let mut next = vec![first];
+                while let Some(p) = next.pop() {
+                    for q in [Dir::N, Dir::E, Dir::S, Dir::W].map(|d| p.step(d)) {
+                        if sound(q) && seen.insert(q) {
+                            next.push(q);
+                        }
+                    }
+                }
+                for way in &ways {
+                    assert!(
+                        seen.contains(way),
+                        "seed {seed} {id}: no sound way from {first:?} to {way:?}"
+                    );
+                }
+            }
+        }
+    }
+    assert!(rooms > 60, "{rooms} collapsed floors");
+    assert!(with_cracks * 2 > rooms, "{with_cracks} of {rooms} crack");
+    assert!(
+        by_depth.iter().all(|n| *n > 10),
+        "rooms and caves: {by_depth:?}"
+    );
 }
 
 #[test]

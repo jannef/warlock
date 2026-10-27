@@ -1094,6 +1094,11 @@ fn actor_rows(world: &World) -> Vec<String> {
                 }
                 _ => String::new(),
             };
+            // Who summoned it (spec §8 "Summoning"), and so whose side it took.
+            let court = match a.summoner {
+                Some(by) => format!("{court}; summoned by {by}"),
+                None => court,
+            };
             let talk = if a.talk.is_new() {
                 String::new()
             } else {

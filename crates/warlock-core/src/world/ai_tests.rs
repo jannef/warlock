@@ -763,6 +763,7 @@ fn search_the_last_seen_spot_then_go_back_and_patrol_on() {
             drained: Default::default(),
             weapon_skills: Default::default(),
             faction_override: None,
+            summoner: None,
             alignment: None,
             alignment_override: None,
             npc: None,

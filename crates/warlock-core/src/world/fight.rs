@@ -103,6 +103,8 @@ pub enum Cause {
     Trap(TrapId),
     /// The spell of a scroll of this kind they read caught them (spec §8 "Scrolls").
     Scroll(ObjectId),
+    /// They fell through a collapsed floor (spec §7 "Special rooms").
+    Fall,
     /// A spell of their own caught them (spec §8 "Class abilities").
     Spell(crate::content::SpellId),
 }
@@ -114,6 +116,7 @@ impl Cause {
         let what = |o: ObjectId| content.object(o).describe(1);
         match self {
             Cause::Starvation => "Starved to death".into(),
+            Cause::Fall => "Fell through a collapsed floor".into(),
             Cause::Choked(o) => format!("Choked to death on {}", what(o)),
             Cause::Trap(t) => {
                 let name = &content.trap(t).name;
@@ -135,7 +138,9 @@ impl Cause {
         match self {
             Cause::Starvation => "You starve to death...".into(),
             Cause::Choked(o) => format!("You choke to death on the {}...", name(o)),
-            Cause::Trap(_) | Cause::Scroll(_) | Cause::Spell(_) => "You die...".into(),
+            Cause::Trap(_) | Cause::Scroll(_) | Cause::Spell(_) | Cause::Fall => {
+                "You die...".into()
+            }
         }
     }
 }
@@ -162,6 +167,9 @@ pub(super) enum Harm {
     },
     /// Starving at the moment `when` (spec §8 "Hunger").
     Starving(GameTime),
+    /// A fall through a collapsed floor (spec §7 "Special rooms"): no one killed, and no one
+    /// earns anything.
+    Fall,
     /// What never kills: it leaves the last hit point (the plunge into freezing water, spec §5
     /// "Ice"; a disease that does not kill).
     Spared,
@@ -890,6 +898,14 @@ impl World {
             }
             Harm::Starving(when) => self.dies(id, None, None, when, events),
             Harm::Barbs => self.dies(id, None, None, self.state.time, events),
+            Harm::Fall => {
+                self.dies(id, None, None, self.state.time, events);
+                if id == self.state.player
+                    && let Some(death) = &mut self.state.death
+                {
+                    death.cause = Some(Cause::Fall);
+                }
+            }
             Harm::Trap(trap) => {
                 // No creature and no status: the trap is what killed them (spec §8 "Traps"),
                 // and a trap's kill earns no one anything.

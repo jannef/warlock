@@ -308,7 +308,14 @@ walkable cells and doors without a lock; then walkable, no door, stairs, trap, i
 shop floor), a second gameplay draw picks one, "The floor gives way beneath you!",
 `World::travel(below, Some(cell))` (arrival lines, pervading line, `settle_in`, as stairs), an
 `Event::LevelChanged`, "You fall to <name>.", `collapse.damage` through `World::hurt` with
-`Harm::Spared` (never the last hit point), and Staggered (`status.toml`) at one degree. The
+`Harm::Fall` (#523: it can kill; the player's death then has `Cause::Fall`, "Fell through a
+collapsed floor" on the death screen and in the JSON dump's `cause`), and, if they live,
+Staggered (`status.toml`) at one degree. The generator (`mapgen/special.rs::make`) lays an
+effect's `floor` that has a `collapse` only on the room's middle (`special::middle`: each of the
+eight neighbours a walkable cell of the room and no door), so a sound rim runs round it from
+every door and a way across always exists (a cave chamber's open edge counts as its rim); a room
+too narrow for a middle gets no cracks, and the draws are the same as before, so only the
+cracked cells of generated levels change. The
 design's `Arrival::Fell` is not needed: `travel` already takes the arrival cell. Nothing is
 saved beyond the level change; the cracked floor stays.
 
@@ -368,8 +375,10 @@ warps the player and a creature, never outside, no draw outside, the messages, a
 cell, saving), `content/room_collapse_tests.rs` (the `collapse` field, its refusals, never
 over a whole level, `Here::collapse`), `world/collapse_tests.rs` (the collapsed floor: its data,
 about 15 % of steps on cracked floor fall and none on sound floor or outside, twice as often
-Burdened, Light tread and the other no-draw cases, creatures never fall, the landing, hurt but
-never killed, Staggered, the messages, a walk through `World::apply`), `world/curse_tests.rs` (the cursed room's data and refusals, rising after two
+Burdened, Light tread and the other no-draw cases, creatures never fall, the landing, hurt and
+Staggered, a fall that kills and its `Cause::Fall`, the messages, a walk through `World::apply`,
+and over a fixture branch of rooms and caves every generated collapsed floor's sound rim and a
+sound way between its ways in), `world/curse_tests.rs` (the cursed room's data and refusals, rising after two
 minutes as undead of the dead's level, the twitch and rising lines, not when the corpse is gone or
 carried out, not outside, never the undead, the nearest-level fallback and the campaign's own,
 Grave warden, a cursed level, a frozen level catching up, saving and the dump; Consecrate lifting a

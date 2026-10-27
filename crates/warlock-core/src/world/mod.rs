@@ -167,6 +167,7 @@ mod stat_training;
 mod status;
 mod steal;
 mod stride;
+mod summon;
 mod talent;
 mod talk;
 mod train;
@@ -716,6 +717,7 @@ impl World {
             drained: Default::default(),
             weapon_skills,
             faction_override: None,
+            summoner: None,
             alignment: content.alignment().map(|_| alignment),
             alignment_override: None,
             npc: None,
@@ -1457,6 +1459,8 @@ mod steal_tests;
 mod stride_tests;
 #[cfg(test)]
 mod style_tests;
+#[cfg(test)]
+mod summon_tests;
 #[cfg(test)]
 mod sun_tests;
 #[cfg(test)]
