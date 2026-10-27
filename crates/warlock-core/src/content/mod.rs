@@ -208,8 +208,8 @@ pub use room_effect::{
     Collapse, Here, Hoard, Mirrors, Offer, RoomEffectDef, RoomEffectId, RoomEffects, SpecialRoom,
     Swarm, Themes, Treasure,
 };
-pub use room_shrine::{Regard, Shrine};
 pub use room_lore::RoomLoot;
+pub use room_shrine::{Regard, Shrine};
 pub use scenario::ScenarioDef;
 pub use scroll::{Cast, Reading, ScrollSpell, SpellScroll};
 pub use scroll_label::ScrollLabelDef;
