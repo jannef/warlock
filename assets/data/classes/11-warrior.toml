@@ -26,6 +26,7 @@ bonus_talents = { levels = [4, 10, 16, 22, 28, 34, 46, 58], trees = ["weaponcraf
 # The level table (spec §8 "Class abilities").
 abilities = [
     { level = 1, talent = "weapon_drill" },
+    { level = 1, talent = "trained_wind" },
     { level = 6, talent = "shield_line" },
     { level = 12, talent = "veterans_wind" },
     { level = 18, talent = "cleaving_strike" },

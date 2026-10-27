@@ -52,7 +52,9 @@ its caster may be, `spell_def` refusing a hex's or a damage spell's, so creature
 hastened and `World::out_of_view_for` stays exact), `blocks` (`Vec<ActionKind>`, ids from `data/actions.toml`),
 and `follows` (`Option<StatusId>`, resolved after the whole file, `resolve_follows`: no chain back
 to itself; a status with it must end; nothing follows into or out of the disease status,
-checked in `Content::load_diseases`). `penalty` takes positive numbers too (a raise). Each field
+checked in `Content::load_diseases`), and `light` (`Option<LightId>`, a light of
+`data/lights.toml` its bearer sheds while it lasts, the brightest of several: Lit, the Light
+spell's, #589; read by `LightCache` sources in `light/cache.rs`). `penalty` takes positive numbers too (a raise). Each field
 has one reader: `Effects::sharpen` in `Actor::stanced` (every attack profile, after the stance),
 `Effects::defence` in `Actor::defence`, `Effects::slow` in `World::burdened` (after the burden
 and Bloated), and `Effects::blocking` in `World::refuse_blocked` (`world/buff.rs`, the first line

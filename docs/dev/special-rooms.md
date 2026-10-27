@@ -348,10 +348,10 @@ south of its altars.
 share the bane, so the lean moves weight from both in proportion.
 
 `Ability::Temper` (`Source::Place`, had by no one, listed by `Ability::here` beside an anvil) is
-the first ability with `Aim::Item`: the abilities menu (`input.rs::use_ability`) opens
+an ability with `Aim::Item` (as the Identify spell is): the abilities menu (`input.rs::use_ability`) opens
 `ScreenName::Temper` (`ObjectList::Temper`, the stacks `world::temperable` accepts: an item kind
-of weapon, launcher, shield, or armour), and choosing one applies `Ability::action_on(item)`,
-`Action::Temper { item }`. The dump's aim word is `an item`.
+of weapon, launcher, shield, or armour), and choosing one applies `Ability::action_on(content, item)`,
+`Action::Temper { item }`. The dump's aim word is `an item you carry`.
 
 `world/temper.rs`: `start_temper` (refused with no time: no anvil beside, no such stack, not
 temperable), `Spent::Temper(Tempering)`, `World::temper` (`keep_at` for `seconds`, as a prayer),

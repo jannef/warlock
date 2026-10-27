@@ -176,6 +176,7 @@ fn gifts_are_granted_afresh_on_restore_and_picks_are_kept() {
     let actor = state.actors.get_mut(&state.player).expect("player");
     actor.talents = Default::default();
     actor.talents.take("weapon_drill", None); // the warrior's own ability, held before the pick
+    actor.talents.take("trained_wind", None); // and its pool's
     actor.talents.take("hardy", None);
     let restored = World::from_state(w.content().clone(), state).expect("restores");
     assert_eq!(

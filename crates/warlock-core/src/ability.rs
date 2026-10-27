@@ -188,12 +188,13 @@ pub enum Aim {
     Direction,
     /// A cell, in the aiming mode, as a shot does ([`Ability::action_at`]).
     Cell,
-    /// A stack the player carries, from a list of those it may work on (Temper: a weapon or
-    /// armour, [`crate::world::temperable`]; [`Ability::action_on`]).
-    Item,
     /// What to treat, of what the player may treat now ([`crate::heal::treatable`]): asked
     /// only when there is more than one (the Heal ability).
     Ailment,
+    /// A stack the player carries, from a list of those it may work on (the Identify spell on
+    /// the identify list; Temper: a weapon or armour, [`crate::world::temperable`];
+    /// [`Ability::action_on`]).
+    Item,
 }
 
 /// Why an ability cannot be used now: the abilities menu shows it beside the greyed-out row.
@@ -522,6 +523,7 @@ impl Ability {
             Ability::Sign(active) if active.aimed() => Aim::Cell,
             Ability::Sign(_) => Aim::Nothing,
             Ability::Class(active) if active.aimed() => Aim::Direction,
+            Ability::Spell(spell) if aims_item(content, spell) => Aim::Item,
             Ability::Spell(spell) if aimed(content, spell) => Aim::Cell,
             Ability::Spell(_) => Aim::Nothing,
             Ability::Class(active) if active.aims_cell() => Aim::Cell,
@@ -622,7 +624,9 @@ impl Ability {
             (Ability::Class(active), _) => Some(Action::Use(active, None)),
             (Ability::Sign(active), _) if active.aimed() => None,
             (Ability::Sign(active), _) => Some(Action::Gift(active, None)),
-            (Ability::Spell(spell), _) if aimed(content, spell) => None,
+            (Ability::Spell(spell), _) if aimed(content, spell) || aims_item(content, spell) => {
+                None
+            }
             (Ability::Spell(spell), _) => Some(Action::Cast(spell_name(content, spell)?, None)),
             (Ability::Skill(_) | Ability::ThrowVoice, _) => None,
             // The first thing there is to treat; the menu names one when there are several.
@@ -644,11 +648,14 @@ impl Ability {
         }
     }
 
-    /// The action it is, worked on the carried stack at position `item`, for one that asks for
-    /// an item; `None` for any other.
-    pub fn action_on(self, item: usize) -> Option<Action> {
+    /// The action it is, worked or cast on inventory stack `item`, for one that asks for a stack
+    /// the player carries (Identify, Temper); `None` for any other.
+    pub fn action_on(self, content: &Content, item: usize) -> Option<Action> {
         match self {
             Ability::Temper => Some(Action::Temper { item }),
+            Ability::Spell(spell) if aims_item(content, spell) => {
+                Some(Action::CastOn(spell_name(content, spell)?, item))
+            }
             _ => None,
         }
     }
@@ -775,6 +782,11 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
 /// Whether `spell` asks for a cell before it is cast: anything but a spell on oneself.
 fn aimed(content: &Content, spell: SpellId) -> bool {
     content.spell_of(spell).is_some_and(|s| s.aimed())
+}
+
+/// Whether `spell` is cast on a stack the caster carries (Identify).
+fn aims_item(content: &Content, spell: SpellId) -> bool {
+    content.spell_of(spell).is_some_and(|s| s.aims_item())
 }
 
 /// The id `spell` is cast by (`use:ID`), if the content has it.

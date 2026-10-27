@@ -58,11 +58,16 @@ to open, read keys for, or draw one:
   `ScreenAction`: stay, close, open, a
   `MenuChoice`, or `Act(Action)`: close and apply a gameplay action, e.g. `pickup:ac`,
   `equip:body:b`; the screens beneath stay, and `screens::refresh`, after `SimSet`, shows the
-  equipment screen the result, as in ADOM); otherwise
+  equipment screen the result, as in ADOM, and reads every open object list again
+  (`ObjectScreen::refresh`: the study list stays beneath the dialog that studies, and a scroll
+  used up moves the stacks after it, so a row kept from before would name another stack, #591));
+  otherwise
   it is a gameplay command in the current `InputMode`. Opens and closes apply at once, so the next
   press in the same frame goes to the new top; menu choices (start, resume, save-and-quit to menu,
   quit) are messages applied by `screens::apply_choice`, and the rest of that frame's presses are
-  dropped. Held-key repeats never open, close, choose, or act.
+  dropped, as they are after a screen's `Act` while an object list stays open
+  (`ScreenStack::shows_objects`: the list is read again only once the action is applied; tests
+  `ui/stale_list_tests.rs`). Held-key repeats never open, close, choose, or act.
 - **Draw**: `ui::draw` is the one system that writes the UI console: when anything it shows
   changed, it clears the console, draws the gameplay UI if a run exists, then the top screen.
   Footers name the menu keys as bound (`ui::menu::Hints`: `↑↓` and Enter with the defaults).

@@ -23,7 +23,12 @@ with, and its mana at its tier's comfortable caster level, without armour:
 {{#include generated/spell-list.md}}
 
 The abilities menu shows a spell's tier and what it costs you now, with your caster level,
-talents, and armour counted.
+talents, and armour counted. **Identify** asks which of your things to cast it on: the list of
+what you carry unidentified opens, as for the scroll of identify (see
+[Scrolls](scrolls.md#the-scroll-of-identify)).
+
+Every scroll is a spell: each one you can read casts a spell, and each teaches its spell if you
+study it, the scroll of identify Identify and the scroll of light Light.
 
 ## Caster level
 
@@ -66,6 +71,11 @@ nearest point once at the end and never below 1. Then your talents, their percen
 rounded down, never below 1: *School focus* takes 10 % off the spells of its school or element,
 *Archmage* 50 %, and *Empower* 10 %; and then *Frugal caster* takes a fifth off (see
 [Mana](mana.md)).
+
+A few spells have a cost of their own instead, whatever their tier: **Identify** costs 60 mana
+(before your armour and talents), so no caster can cast it in their first levels. A wizard has
+the mana for it from about level 7, a priest or a druid from about level 8. Its tier (2) says only
+how hard it is to learn.
 
 Heavy armour and big shields hinder casting: while worn, each makes every spell dearer, and what
 you wear adds up.

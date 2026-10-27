@@ -247,9 +247,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   abilities") are spells of `data/spells/` cast by it, and so are the spells learned from
   scrolls and the spells scrolls cast. `docs/dev/spells.md` has the details.
   - **The first list** (#397, design §7; names left for the world-language review, #378):
-    tier 0 Evil eye, Mend, Ray of frost, Spark; tier 1 Barkskin, Blessing, Burning hands, Cause
+    tier 0 Evil eye, Light (#589: the scroll of light's; Lit, its status, sheds a light about the
+    caster, `light` on a status), Mend, Ray of frost, Spark; tier 1 Barkskin, Blessing, Burning hands, Cause
     wounds, Cure wounds, Curse of sloth, Hex of weakness, Magic missile; tier 2 Arcane bolt,
-    Blight, Frost, Scorching ray, Sleep, Web; tier 3 Call lightning, Fireball (the wizard's Fire
+    Blight, Frost, Identify, Scorching ray, Sleep, Web; tier 3 Call lightning, Fireball (the wizard's Fire
     burst folded into it), Flame, Haste, Lightning bolt, Remove disease. A spell is cast by its
     data id (`use:magic_missile:12,5`, any `use:ID` that is no class or birth sign ability);
     the abilities menu lists the spells known by tier, then path order. Sleep and Web are
@@ -257,6 +258,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
     foe (`World::cast_area_hex`). Haste is the one status that hastens (`cost` 75; statuses may
     cost 50 to 1000 percent, and only a buff, on its caster, may hasten: a hex's or a damage
     spell's status that would is refused when the content loads).
+  - **Identify** (#592): a divination `utility` spell on oneself that learns the truth of one
+    stack the caster carries, as the scroll of identify does (§8 "Magic items"): cast as
+    `use:identify:c` (an aim that is no cell names a stack by position, `Action::CastOn`), from
+    the abilities menu through the identify list. Its cost is given outright, `mana = 60`, not
+    by its tier (a spell's `mana` replaces the tier table's price: no tier cost, overreach,
+    shape, or resolution; armour and the talents still count), so a caster of the first levels
+    cannot cast it at all; its tier, 2, is how hard it is to learn. Refused, no time and no mana,
+    without the mana, without a stack, or on one already known.
   - **Guaranteed spells** (design §8): a class's level table (`abilities`, §8 "Class
     abilities") gives its spells as class abilities with a `spell` effect, at the level each
     comes at, never above the tier the class's caster level has then reached. Wizard: Ray of
@@ -298,7 +307,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     or hex's `status` and `severity`, a cleanse's `cures` and `diseases`, a damage spell's
     `status` suffered by everyone it harms); its reach before Willpower (`range`, `radius`,
     `length`, each at most its cap, default the cap); `casts` (its time in `cast` actions, 1 to
-    10); `open_sky`; `[spell.cast]` (the `effect` drawn, `noun`, `verb`, `message`, `noise`, and a
+    10); `open_sky`; `mana`, a cost given outright in place of the tier table's (Identify);
+    `[spell.effect] identify` (a `utility` spell on `self` that asks for a stack); `[spell.cast]` (the `effect` drawn, `noun`, `verb`, `message`, `noise`, and a
     burst's `blast`, `heat`, `frost`, as a scroll's); `[spell.scroll]` with the caster level a
     read casts at (default the tier's comfortable level); `[spell.scales]` (the combat
     progression design §7, #556), what it grows with: `damage`, `to_hit`, `reach`, `duration`,
@@ -380,7 +390,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (`Actor::spells`, saved by id, left out of the JSON while empty). Either kind is cast from
     the abilities menu's *Spells* group. A spell scroll **teaches** a spell (a `spell`
     reading its own; `teaches` in a burst's or bolt's `read` table: fireball Fireball, lightning
-    Lightning bolt, frost Frost).
+    Lightning bolt, frost Frost). Every scroll is a real spell (#592): each teaches one, the
+    scroll of identify Identify and the scroll of light Light.
     - **Study** (`Action::Study`, `study:b`; the `Study` key command, `L`, next to Read):
       refused with no time, the scroll kept, for no such stack, a thing that teaches nothing
       ("There is no spell in a dagger to learn."), a scroll still under its label ("You do not
@@ -470,8 +481,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     ticks), so it makes no difference how time is cut up, and an end comes at its exact moment.
     The pace (`World::resource_rate`, the one place that decides it) is 100 % plus what the
     holder's talents add (`resource_rate`, never below 0), and none while the player rests for a
-    resource with `resting = false`; the maximum (`Actor::resource_max`) is the data's plus the
-    talents' `resource_max`. Both are hooks the resource talents read (R5). Actors on other levels are
+    resource with `resting = false`; the maximum (`Actor::resource_max(content, resource,
+    level)`) is the data's, with what its `max_from` adds (the holder's modifier in that stat,
+    of the scores as the rules read them, and a point per so many character levels, at least
+    `least`), plus the talents' `resource_max`. Both are hooks the resource talents read (R5). Actors on other levels are
     frozen, and the dev time skip passes none.
   - **Ending at zero**: spent or decayed to 0, a resource that ends at zero is gone, and its bar
     with it, until something grants it again. A rest goes on through it (the end is only
@@ -504,6 +517,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
     held. Inspire spends 3 inspiration **in place of** its 3 mana while the bard holds 3 (then
     no mana is spent, and nothing blocks it as casting), else its mana as before; Virtuoso's
     song costs neither.
+  - **Stamina** (#560, the combat progression design §4.5): the pool weapon actives will pay
+    from (W3 spends it; nothing does yet). The granted talent **Trained wind**
+    (`grants_resource`) is in the level-1 row of the warrior's, barbarian's, paladin's,
+    ranger's, monk's, thief's, and bard's tables, so those hold it from creation, full; a saved
+    character of those classes is granted it on load (`World::grant_class`). Its maximum is 10
+    + the Toughness modifier + a point per 10 levels, at least 5 (`max_from`), so Toughness 14
+    holds 12 at level 1; it comes back a point every 12 s (2 base turns), resting too, and sits
+    at 0. A barbarian holds Rage and Stamina at once. Shown as `Sta 7/12`. Talents (the
+    `stamina` system): **Deep lungs** (Vigour): +4 at most; **Steady breathing**
+    (Weaponcraft, a weapon skill at 5): back at 150 %; **Second breath** (Might): a kill
+    credited to the holder builds a point. The grant to anyone else on the first weapon rank that
+    unlocks an active (`World::rank_up`, the third grant place) comes with W3, which brings
+    those actives.
   - **Shown**: the player's own resources (`PerceptionView::own_resources`: each held, its value
     and maximum, in resource order): the status bar after `MP` (`Rage 11`, `Focus 7/10`), each
     with the hit points' priority after the mana, so they give way before it (§6); a row each on

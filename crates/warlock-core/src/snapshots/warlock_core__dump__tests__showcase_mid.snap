@@ -2,7 +2,7 @@
 source: crates/warlock-core/src/dump.rs
 expression: "snapshot(&world, &layers)"
 ---
-turn 4 time 1444-11-11 08:00:24 level hub viewer (7, 12) hp 18/18 mp 2/2 temperature 10.0 °C hash [redacted]
+turn 4 time 1444-11-11 08:00:24 level hub viewer (7, 12) hp 18/18 mp 2/2 stamina 10/10 temperature 10.0 °C hash [redacted]
 == view ==
 
 

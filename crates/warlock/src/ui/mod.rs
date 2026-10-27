@@ -60,6 +60,8 @@ mod sign_screen;
 mod skills_screen;
 mod sounds;
 mod spells;
+#[cfg(test)]
+mod stale_list_tests;
 mod talents_screen;
 mod target;
 mod weapon_skills_screen;
@@ -943,9 +945,9 @@ mod tests {
                 .collect()
         };
         assert_eq!(
-            texts(&world_as("blind"))[3],
+            texts(&world_as("blind"))[4],
             "Dazzled",
-            "after the hit points and the mana"
+            "after the hit points, the mana, and a warrior's stamina"
         );
         assert!(!texts(&world_as("human")).contains(&"Dazzled".to_string()));
     }

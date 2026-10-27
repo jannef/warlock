@@ -5,12 +5,20 @@ spec/08g-magic-items.md ("Scrolls") and spec/06-input-and-ui.md. Keep it current
 as CLAUDE.md says.
 
 Scrolls (spec §8 "Scrolls") are objects with a `read` table (`content/scroll.rs`: `ReadSpec` →
-`Reading::{Spell(ScrollSpell), Cast(SpellScroll), Identify}`; `ScrollSpell { cast:
+`Reading::{Spell(ScrollSpell), Cast(SpellScroll)}`; `ScrollSpell { cast:
 Cast::{Burst, Bolt}, range, noun, verb, message, noise, teaches }`), one file each in
 `data/objects/`: a scroll of every spell of `data/spells/` (`scroll_of_ID`, kind `spell`,
 `Reading::Cast`, "Scrolls of spells" below), the three older ones whose readings are the traps'
 bursts and bolts (`scroll_of_fireball`, `scroll_of_lightning`, `scroll_of_frost`,
-`Reading::Spell`), and `scroll_of_identify`; `scroll_of_light` has no `read` yet. The older
+`Reading::Spell`). **Every scroll is a real spell** (#592): each teaches a spell of
+`data/spells/` (`read_tests.rs::every_builtin_scroll_can_be_read` holds every `scroll_of_*` to
+it); the `identify` reading kind is gone, and `scroll_of_identify` is a `spell` scroll of
+Identify (below). `scroll_of_light` casts the cantrip Light (#589:
+until then it had no `read` and could not be read at all): a buff whose status, Lit, has a
+`light` (`StatusDef::light`), which the light cache sheds about its bearer while it lasts
+(`light/cache.rs`, the brightest of several, as Holy radiance's). `read_tests.rs`
+`every_builtin_scroll_can_be_read` reads every `scroll_of_*` in the content, so a scroll left
+without a reading fails it. The older
 three's spells are the traps' own data types (`content/spell.rs`: `Burst`, `Bolt`,
 `BurstIce`, `SpellFields`, with `Burst::new`/`Bolt::new` the one place their fields are
 checked, and `check_effect`, the effect-shape check, run for scrolls once `data/effects.toml`
@@ -40,8 +48,10 @@ along the ray after the reader (`bolt_line`). `say_spell` says the reader's blow
 `player_looses` does for shots (`End::Trap(noun)`: "The fireball burns the kobold."), keeps the
 seen ones' events, and leaves the reader's own death to `perceive_events`; a reader killed by
 their own scroll gets `Death::cause = Cause::Scroll(object)` ("Killed by their own scroll of
-fireball"). The scroll of identify calls `World::identify` on the stack named before using the
-scroll up (positions shift after).
+fireball"). The scroll of identify casts Identify through the cast path
+(`World::cast_identify`: refused without the stack or for one already known; then paid, the
+scroll used up, and `World::identify` on the stack named, one place up if the used-up scroll
+stack was before it).
 
 **Unidentified scrolls** (#393, `scroll_label.rs`): every readable object type (`read`) has a
 label for the run, "a scroll labelled ZUNBAR". `content/scroll_label.rs` reads
@@ -72,7 +82,7 @@ learned its spell, a labelled one by nobody), `label(object)`. Use it, never
 `equipment`, the JSON's `name` and `identified`). `Lore::plain(content)` names everything as it
 is (tests, starting-kit summaries). Dev dumps (`actors`) keep `describe_truth`. Prices are true
 (a shop's price can hint at a label, as in ADOM). The read list still dispatches on the true
-`read` (a spell is aimed, identify opens the identify list), so the prompt that follows tells a
+`read` (a spell is aimed, identify's opens the identify list: `Reading::on_item`), so the prompt that follows tells a
 spell from identify; the design's "no cancelling once the target is known" belongs to the spells
 work (#395/#396). The identify list (`ObjectList::Identify`) lists the stacks `Lore::knows`
 is false for. Tests: `world/scroll_label_tests.rs`.
@@ -85,26 +95,29 @@ key confirming; `Aim::catches_reader` predicts, from perception only, whether a 
 the player, and `input::burst_dialog` then asks in the one dialog (Read it / Aim again / Don't
 read it). The scroll of identify answers `ScreenAction::Replace(ScreenName::Identify)` after
 noting the scroll (`ObjectScreen::looked`; `Screens::replace` reads it before closing), and the
-identify list (`ObjectList::Identify(scroll)`, the unidentified stacks) acts
-`Action::Read { item: scroll, target: Item(i) }`. Spell visuals are the traps' (`ui/spells.rs`
+identify list (`ObjectList::Identify(IdentifyBy::Scroll(scroll))`, the unidentified stacks) acts
+`Action::Read { item: scroll, target: Item(i) }`; cast from the abilities menu, Identify opens the
+same list (`IdentifyBy::Spell`, `Screens::open_identify_spell`), which acts
+`Action::CastOn("identify", i)`. Spell visuals are the traps' (`ui/spells.rs`
 draws `Event::Spell`; a burst's origin is the reader, so it flies there first).
 
 **Scrolls of spells** (#397): a `read` table of kind `spell` names a spell of `data/spells/`
-(`Reading::Cast(SpellScroll { spell, level, reach })`, resolved as objects load, spells loading
+(`Reading::Cast(SpellScroll { spell, level, reach, on_item })`, resolved as objects load, spells loading
 first; only `spell` may be given). Reading one is `World::read_cast` (`world/cast.rs`): the one
 cast path with `Pay::Scroll(item)` instead of mana, at `level` (the spell's `[spell.scroll]
 level`, else its tier's comfortable level), never asking whether the reader knows the spell or
 has the mana; the scroll is used up (`use_up`, Spell recall's chance) and said read
 (`say_read`, which identifies its type) only once the cast is sure to go off, so a refusal
-keeps it and takes no time. An aimed spell needs its cell (`read:b:12,5`); a spell on oneself
+keeps it and takes no time. An aimed spell needs its cell (`read:b:12,5`), a spell on a stack
+(Identify, `SpellScroll::on_item`) its stack (`read:b:c`); a spell on oneself
 is read with none (`read:b`; the read list acts at once, `ObjectScreen`'s `identify` flag
 telling it from the scroll of identify). A death by it is `Cause::Scroll`. The aiming mode
 aims it as the spell (`ui/target.rs::spell_of`, the player's own reach).
 
 **Study** (#396, docs/dev/spells.md "Learning"): a scroll teaches what `Reading::teaches` says:
 a `spell` reading its own spell; a burst's or bolt's the spell its `teaches` names
-(`ScrollSpell::teaches`: fireball Fireball, lightning Lightning bolt, frost Frost); the scroll of
-identify nothing. `Action::Study` uses the scroll
+(`ScrollSpell::teaches`: fireball Fireball, lightning Lightning bolt, frost Frost). Every scroll
+teaches one (#592). `Action::Study` uses the scroll
 up its own way (`World::use_scroll` in `world/learn.rs`: no Spell recall, no Read training), and
 a mishap's backfire casts the scroll's own `Cast` on its reader with `say_spell` (a `spell`
 reading's damage spell as a burst around the reader, its own radius or 1, at the scroll's

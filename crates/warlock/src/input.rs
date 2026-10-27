@@ -683,7 +683,8 @@ impl Plugin for InputPlugin {
 /// open, every press goes to the top screen and gameplay sees none; otherwise presses are
 /// gameplay commands. Screens open and close at once, so the next press in the same frame
 /// already goes to the new top. A menu choice (starting or leaving a run) is applied after this
-/// system, so the rest of that frame's presses are dropped.
+/// system, so the rest of that frame's presses are dropped, and so are they after a screen's
+/// gameplay action while an object list stays open (#591).
 pub fn route_keys(
     mut keys: MessageReader<KeyboardInput>,
     mut screens: Screens,
@@ -738,6 +739,11 @@ pub fn route_keys(
                 if let Some(dialog) = play.act(action) {
                     screens.ask(dialog);
                 }
+                // A screen's action is applied after this system, and the screens left open
+                // read the run again after that (`screens::refresh`): until then an object list
+                // left open names stacks by positions the action may have changed (#591), so
+                // while one is, the rest of this frame's presses are dropped.
+                chosen |= screens.stack.shows_objects();
             }
             ScreenAction::Aim(kind) => {
                 screens.stack.close();
@@ -747,10 +753,14 @@ pub fn route_keys(
                 // From the abilities menu, or from play (its key, the quick repeat).
                 screens.stack.close();
                 screens.stack.remember_ability(ability);
-                match play.use_ability(ability) {
-                    Some(ScreenAction::Open(name)) => screens.open(name),
-                    Some(ScreenAction::Dialog(dialog)) => screens.ask(*dialog),
-                    _ => {}
+                if let Some(spell) = play.item_spell(ability) {
+                    screens.open_identify_spell(spell);
+                } else {
+                    match play.use_ability(ability) {
+                        Some(ScreenAction::Open(name)) => screens.open(name),
+                        Some(ScreenAction::Dialog(dialog)) => screens.ask(*dialog),
+                        _ => {}
+                    }
                 }
             }
             ScreenAction::Open(name) => screens.open(name),
@@ -1190,6 +1200,18 @@ impl Gameplay<'_> {
         None
     }
 
+    /// The spell `ability` casts on a stack the player carries, when they can cast it now
+    /// (Identify): the identify list asks which stack.
+    fn item_spell(&self, ability: Ability) -> Option<warlock_core::content::SpellId> {
+        let game = self.game.as_ref()?;
+        let Ability::Spell(spell) = ability else {
+            return None;
+        };
+        let usable = (game.world.perception().abilities().iter())
+            .any(|own| own.ability == ability && own.unavailable.is_none());
+        (usable && ability.aim(game.world.content()) == ability::Aim::Item).then_some(spell)
+    }
+
     /// Uses `ability`: asks for what it needs (a direction in the message line, a cell in the
     /// aiming mode, an item from the list returned to open), then applies its action. One the
     /// player cannot use now is applied at once all the same, so the rules say why, taking no
@@ -1203,8 +1225,12 @@ impl Gameplay<'_> {
         match (usable, ability.aim(&content)) {
             (true, ability::Aim::Direction) => *self.mode = InputMode::Ability(ability),
             (true, ability::Aim::Cell) => self.aim(AimKind::Ability(ability)),
-            // The one that asks for an item: Temper's list.
-            (true, ability::Aim::Item) => return Some(ScreenAction::Open(ScreenName::Temper)),
+            // Temper's list; the identify list asks which stack (`item_spell`, before this).
+            (true, ability::Aim::Item) => {
+                if ability == Ability::Temper {
+                    return Some(ScreenAction::Open(ScreenName::Temper));
+                }
+            }
             (true, ability::Aim::Nothing) => {
                 if let Some(action) = ability.action(&content, None) {
                     self.actions.write(PlayerAction(action));
@@ -1224,7 +1250,7 @@ impl Gameplay<'_> {
                 let here = game.world.player_pos();
                 let action = (ability.action(&content, Some(Dir::N)))
                     .or_else(|| ability.action_at(&content, here))
-                    .or_else(|| ability.action_on(0));
+                    .or_else(|| ability.action_on(&content, 0));
                 if let Some(action) = action {
                     self.actions.write(PlayerAction(action));
                 }
@@ -1653,12 +1679,15 @@ mod tests {
         assert!(leaving_dialog(&view, Dir::E).is_none(), "a step inside");
         // Selling the scroll asks; putting back the dagger does not.
         let offer = view.sale(&Positions::of([1])).expect("an offer").offer;
+        // Unread, the scroll goes by its label.
+        let scroll = view.lore().describe(&view.inventory()[1]);
+        assert!(scroll.starts_with("a scroll labelled "), "{scroll}");
         assert_eq!(
             sale_dialog(&view, &Positions::of([1])),
             Some(
                 Dialog::new(
                     "Grimbold's General Store",
-                    format!("Grimbold offers {offer} gold for a scroll of light.")
+                    format!("Grimbold offers {offer} gold for {scroll}.")
                 )
                 .accept(
                     format!("Sell for {offer} gold"),

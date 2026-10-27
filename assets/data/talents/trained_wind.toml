@@ -1,0 +1,8 @@
+[[talent]]
+id = "trained_wind"
+name = "Trained wind"
+tree = "class"
+granted = true
+description = "You have learned to fight without running out of breath: you have stamina for weapon feats, and it comes back as you catch your breath."
+effects = [{ kind = "grants_resource", resource = "stamina" }]
+systems = ["stamina"]

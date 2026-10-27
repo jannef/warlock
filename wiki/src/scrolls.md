@@ -27,8 +27,8 @@ You learn what a kind of scroll is, for good, in one of four ways:
 
 Knowing what a scroll is does not teach you its spell: a scroll you know by name is still only a
 scroll, but once you know it you may study it to learn its spell for good (see
-[Magic](magic.md#learning-spells-from-scrolls)). The scroll of light cannot be read, and is known
-on sight. A shop's price for an unknown scroll is its true price.
+[Magic](magic.md#learning-spells-from-scrolls)). A scroll that cannot be read (a sealed letter) has
+no label and is known on sight. A shop's price for an unknown scroll is its true price.
 
 ## Spell scrolls
 
@@ -82,6 +82,11 @@ and rods you do not know (a wand's charges too; see [Magic](magic.md#wands)). Ch
 know what it is from then on: "This is a Sharp dagger of the Lynx!", "This is 2 scrolls of
 lightning!" (and every scroll of lightning shows by its name). With nothing unidentified, the
 list says so, and the scroll is kept.
+
+Reading it casts the spell **Identify** for you, free of mana, and studying it may teach you the
+spell for good (see [Magic](magic.md#learning-spells-from-scrolls)); cast for mana, Identify is
+dear (60 mana), so only an experienced caster can afford it (see
+[Magic](magic.md#what-a-spell-costs)).
 
 The scroll of identify is the commonest scroll: it turns up more often than any other in loot,
 and every general store in the dungeons has a stack of them.

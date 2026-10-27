@@ -249,8 +249,8 @@ fn needs(aim: Aim) -> &'static str {
         Aim::Nothing => "",
         Aim::Direction => "in a direction",
         Aim::Cell => "at a place you see",
-        Aim::Item => "on something you carry",
         Aim::Ailment => "on yourself",
+        Aim::Item => "on something you carry",
     }
 }
 

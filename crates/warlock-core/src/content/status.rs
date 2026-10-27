@@ -9,7 +9,8 @@
 //! fighting while it lasts ([`CombatBonus`]), how much slower it makes every action (`cost`),
 //! which actions it refuses (`blocks`), the status that follows it as it ends (`follows`), what
 //! causes it (big hits and criticals, [`Wound`]; a creature's attack, [`OnHit`]), what cures it
-//! (`cured_by`), and its messages. A status with a `hold` table ([`Hold`]) is a hold: one actor
+//! (`cured_by`), the light its bearer sheds while it lasts (`light`: Lit), and its messages. A
+//! status with a `hold` table ([`Hold`]) is a hold: one actor
 //! holding another fast (Held). So a status may be a harm (bleeding), a buff (raging), a hex
 //! on a creature, or a cooldown (a status with `eases` and no tick, during which an ability
 //! cannot be used: Exhausted). The rules that apply them live in `crate::status`,
@@ -21,7 +22,7 @@
 use super::action::ActionKind;
 use super::disease::DiseaseId;
 use super::stance::BONUS;
-use super::{ContentError, DamageTypeId};
+use super::{ContentError, DamageTypeId, LightId};
 use crate::dice::Dice;
 use crate::stats::{ADJUSTMENTS, PerStat, Stat};
 use serde::{Deserialize, Serialize};
@@ -466,6 +467,7 @@ struct StatusSpec {
     death: Option<String>,
     hold: Option<Hold>,
     treat: Option<Treat>,
+    light: Option<String>,
 }
 
 fn normal_regen() -> u16 {
@@ -552,6 +554,8 @@ pub struct StatusDef {
     pub hold: Option<Hold>,
     /// How the Heal skill treats it, if it can (bleeding, poison).
     pub treat: Option<Treat>,
+    /// The light its bearer sheds while it lasts (Lit, the Light spell's; spec §5), if any.
+    pub light: Option<LightId>,
 }
 
 impl StatusDef {
@@ -578,15 +582,17 @@ impl StatusDef {
             && self.follows.is_none()
             && self.wound.is_none()
             && self.hold.is_none()
+            && self.light.is_none()
     }
 }
 
 /// Parses `data/status.toml`: the healing rules and the statuses in file order; `damage`
-/// resolves damage type ids (`damage_type`, a wound's `from`).
+/// resolves damage type ids (`damage_type`, a wound's `from`), `light` light ids (`light`).
 pub(super) fn parse(
     file: &str,
     text: &str,
     damage: impl Fn(&str) -> Option<DamageTypeId>,
+    light: impl Fn(&str) -> Option<LightId>,
 ) -> Result<(Healing, Vec<StatusDef>), ContentError> {
     let err = |m: String| ContentError::new(file, m);
     let parsed: StatusFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
@@ -608,7 +614,8 @@ pub(super) fn parse(
             return Err(err(format!("duplicate status id `{id}`")));
         }
         follows.push(spec.follows.clone());
-        let def = resolve(spec, &damage).map_err(|m| err(format!("status `{id}`: {m}")))?;
+        let def =
+            resolve(spec, (&damage, &light)).map_err(|m| err(format!("status `{id}`: {m}")))?;
         list.push(def);
     }
     resolve_follows(&mut list, &follows).map_err(err)?;
@@ -648,7 +655,10 @@ fn resolve_follows(list: &mut [StatusDef], names: &[Option<String>]) -> Result<(
 
 fn resolve(
     spec: StatusSpec,
-    damage: &impl Fn(&str) -> Option<DamageTypeId>,
+    (damage, light): (
+        &impl Fn(&str) -> Option<DamageTypeId>,
+        &impl Fn(&str) -> Option<LightId>,
+    ),
 ) -> Result<StatusDef, String> {
     if spec.id.trim().is_empty() || spec.name.trim().is_empty() {
         return Err("`id` and `name` must not be empty".into());
@@ -742,6 +752,9 @@ fn resolve(
                 .into(),
         );
     }
+    let light = (spec.light.as_deref())
+        .map(|name| light(name).ok_or_else(|| format!("light: unknown light `{name}`")))
+        .transpose()?;
     Ok(StatusDef {
         id: spec.id,
         name: spec.name,
@@ -770,6 +783,7 @@ fn resolve(
         death: spec.death,
         hold: spec.hold,
         treat: spec.treat,
+        light,
     })
 }
 
@@ -868,7 +882,7 @@ mod tests {
              [[status]]\nid = \"poisoned\"\nname = \"Poisoned\"\nmax = 10\nstacking = \"refresh\"\n\
              penalty = {{ from = 4, strength = -1, dexterity = -1 }}\n"
         );
-        let (healing, list) = parse("status.toml", &text, |_| None).expect("valid");
+        let (healing, list) = parse("status.toml", &text, |_| None, |_| None).expect("valid");
         assert_eq!(healing.resting, 300);
         assert_eq!(list.len(), 2);
         let (bleeding, poison) = (&list[0], &list[1]);
@@ -895,7 +909,7 @@ mod tests {
             (-1, -1, 0)
         );
         // Without statuses: none, and resting heals twice as fast.
-        let (healing, list) = parse("status.toml", "", |_| None).expect("empty is valid");
+        let (healing, list) = parse("status.toml", "", |_| None, |_| None).expect("empty is valid");
         assert_eq!((healing, list.len()), (Healing::default(), 0));
         assert_eq!(Healing::default().resting, 200);
     }
@@ -972,7 +986,7 @@ mod tests {
                 "resting must be 0 to 1000",
             ),
         ] {
-            let e = parse("status.toml", &text, |_| None).unwrap_err();
+            let e = parse("status.toml", &text, |_| None, |_| None).unwrap_err();
             assert!(e.message.contains(why), "{why}: {}", e.message);
         }
     }
@@ -988,7 +1002,7 @@ mod tests {
     fn buffs_and_cooldowns_parse() {
         // Raging follows into a status further down the file.
         let text = format!("{BLEEDING}{RAGING}{EXHAUSTED}");
-        let (_, list) = parse("status.toml", &text, |_| None).expect("valid");
+        let (_, list) = parse("status.toml", &text, |_| None, |_| None).expect("valid");
         let (bleeding, raging, exhausted) = (&list[0], &list[1], &list[2]);
         // Left out: nothing.
         assert!(bleeding.combat.is_none());
@@ -1050,12 +1064,12 @@ mod tests {
                 "status `raging`: follows: it leads back to itself",
             ),
         ] {
-            let e = parse("status.toml", &text, |_| None).unwrap_err();
+            let e = parse("status.toml", &text, |_| None, |_| None).unwrap_err();
             assert!(e.message.contains(why), "{why}: {}", e.message);
         }
         // One that is cured ends too, so something may follow it.
         let cured = raging("eases = 300\n", "cured_by = [\"calm\"]\n");
-        assert!(parse("status.toml", &cured, |_| None).is_ok());
+        assert!(parse("status.toml", &cured, |_| None, |_| None).is_ok());
     }
 
     #[test]
@@ -1170,7 +1184,7 @@ mod tests {
                  hold = {{ difficulty = 13, turns = \"3d4\" }}\n"
             )
         };
-        let (_, list) = parse("status.toml", &held(12), |_| None).expect("valid");
+        let (_, list) = parse("status.toml", &held(12), |_| None, |_| None).expect("valid");
         let hold = list[0].hold.expect("a hold");
         assert_eq!((hold.check, hold.difficulty), (Stat::Strength, 13));
         assert_eq!((hold.turns.min(), hold.turns.max()), (3, 12));
@@ -1190,7 +1204,7 @@ mod tests {
                 "difficulty must be 1 to 40",
             ),
         ] {
-            let e = parse("status.toml", &text, |_| None).unwrap_err();
+            let e = parse("status.toml", &text, |_| None, |_| None).unwrap_err();
             assert!(e.message.contains(why), "{why}: {}", e.message);
         }
     }
@@ -1263,10 +1277,10 @@ mod tests {
             "[healing]\nresting = 200\nmana_resting = 400\n{BLEEDING}mana_regen = 50\n\
              mana_damage = 2\n"
         );
-        let (healing, list) = parse("status.toml", &text, |_| None).expect("valid");
+        let (healing, list) = parse("status.toml", &text, |_| None, |_| None).expect("valid");
         assert_eq!((healing.mana_resting, list[0].mana_regen), (400, 50));
         assert_eq!(list[0].mana_damage, 2);
-        let (healing, list) = parse("status.toml", BLEEDING, |_| None).expect("valid");
+        let (healing, list) = parse("status.toml", BLEEDING, |_| None, |_| None).expect("valid");
         assert_eq!(healing.mana_resting, 200, "twice as fast resting");
         assert_eq!(
             (list[0].mana_regen, list[0].mana_damage),
@@ -1294,7 +1308,7 @@ mod tests {
                 "mana_resting must be 0 to 1000",
             ),
         ] {
-            let e = parse("status.toml", &text, |_| None).unwrap_err();
+            let e = parse("status.toml", &text, |_| None, |_| None).unwrap_err();
             assert!(e.message.contains(why), "{why}: {}", e.message);
         }
     }

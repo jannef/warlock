@@ -132,12 +132,13 @@ fn beside(world: &mut World, creature: &str, hp: i32, dir: Dir) -> ActorId {
 #[test]
 fn the_three_tables_come_with_the_levels() {
     let mut w = world("ranger");
-    assert_eq!(class_rows(&w), ["Favoured prey"]);
+    assert_eq!(class_rows(&w), ["Favoured prey", "Trained wind"]);
     reach(&mut w, 60);
     assert_eq!(
         class_rows(&w),
         [
             "Favoured prey",
+            "Trained wind",
             "Tracker",
             "Barkskin",
             "Rapid shot",
@@ -150,19 +151,19 @@ fn the_three_tables_come_with_the_levels() {
         ]
     );
     let mut t = world("thief");
-    assert_eq!(class_rows(&t), ["Sneak attack"]);
+    assert_eq!(class_rows(&t), ["Sneak attack", "Trained wind"]);
     reach(&mut t, 18);
     assert!(said(&t).contains(&"You gain Evasion.".to_string()));
     let mut b = world("bard");
     assert_eq!(
         class_rows(&b),
-        ["Lore", "Mend"],
+        ["Lore", "Mend", "Trained wind"],
         "the Scholar's Lore, given"
     );
     reach(&mut b, 6);
     assert_eq!(
         class_rows(&b),
-        ["Lore", "Mend", "Wide learning", "Blessing"]
+        ["Lore", "Mend", "Trained wind", "Wide learning", "Blessing"]
     );
     let restored = World::from_state(b.content().clone(), b.state().clone()).expect("restored");
     assert_eq!(class_rows(&restored), class_rows(&b));
@@ -385,10 +386,13 @@ fn uncanny_dodge_wide_learning_song_of_rest_and_jack_of_all_trades() {
     reach(&mut b, 6);
     assert_eq!(b.level_rolls(), rolls + 1, "Wide learning");
     // Song of rest: resting's pace half again (`healing_rate` reads it, as Fast healer's).
-    reach(&mut b, 11);
-    let before = b.state.player().talent_mods(&content).resting_percent;
     reach(&mut b, 12);
     let after = b.state.player().talent_mods(&content).resting_percent;
+    // Measured against a twin without it (the level's own pick may move the pace too).
+    let mut twin = b.state().clone();
+    let player = twin.player;
+    (twin.actors.get_mut(&player).expect("player").talents).forget("song_of_rest");
+    let before = (twin.actors[&player].talent_mods(&content)).resting_percent;
     assert_eq!(after, before + 50, "Song of rest");
     // Jack of all trades: every trained skill's benefits read 5 higher.
     let id = content.skill_id("tumble").expect("tumble");

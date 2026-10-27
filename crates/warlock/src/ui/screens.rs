@@ -44,7 +44,7 @@ use super::messages_screen::MessagesScreen;
 use super::motion::Motion;
 use super::name_screen::NameScreen;
 use super::new_run_screen::{self, NewRunScreen};
-use super::object_screen::{ObjectList, ObjectScreen};
+use super::object_screen::{IdentifyBy, ObjectList, ObjectScreen};
 use super::quest_screen::QuestScreen;
 use super::settings_screen::SettingsScreen;
 use super::sign_screen::SignScreen;
@@ -398,7 +398,9 @@ impl Screen {
             ScreenName::Eat => objects(ObjectList::Eat),
             ScreenName::Read => objects(ObjectList::Read),
             ScreenName::Study => objects(ObjectList::Study),
-            ScreenName::Identify => objects(ObjectList::Identify(beneath.item.unwrap_or(0))),
+            ScreenName::Identify => objects(ObjectList::Identify(IdentifyBy::Scroll(
+                beneath.item.unwrap_or(0),
+            ))),
             ScreenName::Temper => objects(ObjectList::Temper),
             ScreenName::Abilities => Screen::Abilities(AbilitiesScreen::new(run, beneath.ability)),
             ScreenName::Dialogue => Screen::Dialogue(DialogueScreen::new(talk, run)),
@@ -578,7 +580,6 @@ impl ScreenStack {
         })
     }
 
-    /// Whether an equipment screen is open (it shows the run as it changes, [`refresh`]).
     /// Shows what an import from the browser's file picker did on the controls screen, if it
     /// is open.
     pub(super) fn keymap_imported(&mut self, lines: Vec<String>) {
@@ -589,16 +590,28 @@ impl ScreenStack {
         }
     }
 
-    fn shows_equipment(&self) -> bool {
-        (self.screens.iter()).any(|s| matches!(s, Screen::Equipment(_)))
+    /// Whether a screen is open that shows the run as it changes ([`refresh`]): the equipment
+    /// screen, or an object list.
+    fn shows_run(&self) -> bool {
+        (self.screens.iter()).any(|s| matches!(s, Screen::Equipment(_) | Screen::Objects(_)))
+    }
+
+    /// Whether an object list is open: one left open beneath a dialog that acted names stacks
+    /// by position until [`refresh`] reads the run again after the action.
+    pub fn shows_objects(&self) -> bool {
+        (self.screens.iter()).any(|s| matches!(s, Screen::Objects(_)))
     }
 
     /// Reads the run again into the screens that stay open while it changes: the equipment
-    /// screen, beneath a choice that was just done.
+    /// screen beneath a choice that was just done, and any object list, which names stacks by
+    /// position (the study list beneath the dialog that studied: the scroll used up moves the
+    /// stacks after it, #591).
     fn refresh(&mut self, view: &PerceptionView<'_>) {
         for screen in &mut self.screens {
-            if let Screen::Equipment(screen) = screen {
-                screen.refresh(view);
+            match screen {
+                Screen::Equipment(screen) => screen.refresh(view),
+                Screen::Objects(screen) => screen.refresh(view),
+                _ => {}
             }
         }
     }
@@ -824,6 +837,15 @@ impl Screens<'_> {
         }
     }
 
+    /// Opens the identify list for a spell cast on a stack the player carries (Identify, chosen
+    /// in the abilities menu): choosing a stack casts it there.
+    pub fn open_identify_spell(&mut self, spell: warlock_core::content::SpellId) {
+        let view = self.game.as_ref().map(|game| game.world.perception());
+        let list = ObjectList::Identify(IdentifyBy::Spell(spell));
+        let screen = Screen::Objects(ObjectScreen::new(list, view.as_ref()));
+        self.stack.screens.push(screen);
+    }
+
     /// Replaces the top screen with screen `name`: the same stack depth, so closing it returns
     /// to where the one it replaced was opened from. It reads what was looked at or chosen on
     /// the screen it replaces (the scroll of identify chosen on the read list).
@@ -846,10 +868,10 @@ impl Screens<'_> {
     }
 }
 
-/// Shows the screens that stay open while the run changes what they show (the equipment screen,
-/// beneath a choice that was just done) the run as it is now.
+/// Shows the screens that stay open while the run changes what they show (the equipment screen
+/// beneath a choice that was just done, an object list beneath a dialog) the run as it is now.
 pub(super) fn refresh(game: Res<Game>, mut stack: ResMut<ScreenStack>) {
-    if game.is_changed() && stack.shows_equipment() {
+    if game.is_changed() && stack.shows_run() {
         stack.refresh(&game.world.perception());
     }
 }

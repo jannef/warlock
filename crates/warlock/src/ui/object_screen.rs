@@ -15,8 +15,10 @@
 //! marks its row, and Enter picks up or drops the marked stacks (the cursor's row if none is
 //! marked); marks belong to stacks, so they stay as the pages turn. That is one action, recorded
 //! like any other, naming the stacks by position. Esc cancels. The list is read from the
-//! perception snapshot when the screen opens; no game time passes while it is open, so it cannot
-//! go stale.
+//! perception snapshot when the screen opens, and read again whenever the run changes while it
+//! is open ([`ObjectScreen::refresh`]): the study list stays beneath the dialog that studies, and
+//! a scroll used up shifts the positions of the stacks after it, so a row kept from before would
+//! name another stack (#591).
 //!
 //! The eat screen (`E`, spec §8 "Hunger") lists what can be eaten: first what lies here
 //! ("lying here"; the cursor starts on it, as ADOM asks about the floor first), then what the
@@ -44,7 +46,7 @@ use crate::input::{Bindings, KeyCommand};
 use crate::render::console::Console;
 use warlock_core::burden::{Burden, Load};
 use warlock_core::color::Rgb;
-use warlock_core::content::{Rarity, Reading};
+use warlock_core::content::{Rarity, SpellId};
 use warlock_core::equipment;
 use warlock_core::object::{Stack, Weight, format_weight};
 use warlock_core::perception::PerceptionView;
@@ -67,11 +69,20 @@ pub enum ObjectList {
     Read,
     /// The scrolls the player could study: choose one to learn its spell.
     Study,
-    /// The unidentified stacks in the pack: choose one to read the scroll of identify at this
-    /// position on.
-    Identify(usize),
+    /// The unidentified stacks in the pack: choose one to read the scroll of identify on, or to
+    /// cast Identify on.
+    Identify(IdentifyBy),
     /// The weapons and armour in the pack: choose one to temper at the anvil beside the player.
     Temper,
+}
+
+/// What the identify list identifies with.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum IdentifyBy {
+    /// The scroll of identify at this inventory position, read.
+    Scroll(usize),
+    /// A spell cast on a stack the player carries (Identify), paid in mana.
+    Spell(SpellId),
 }
 
 impl ObjectList {
@@ -189,6 +200,8 @@ pub struct ObjectScreen {
     /// The inventory stack the player last asked to look at (its position): what the item
     /// description opened from here describes.
     looked: Option<usize>,
+    /// The identify list's spell, by the id it is cast by (`use:identify:c`).
+    cast: Option<String>,
 }
 
 impl ObjectScreen {
@@ -203,6 +216,7 @@ impl ObjectScreen {
                 weight: Weight::default(),
                 load: None,
                 looked: None,
+                cast: None,
             };
         };
         let content = view.content();
@@ -232,8 +246,8 @@ impl ObjectScreen {
                 .collect(),
             ObjectList::Study => studies.iter().map(|s| Item::Pack(s.item)).collect(),
             // The scroll read is not among them: reading it names its own kind anyway.
-            ObjectList::Identify(scroll) => (0..pack.len())
-                .filter(|&i| i != scroll && !view.lore().knows(&pack[i]))
+            ObjectList::Identify(by) => (0..pack.len())
+                .filter(|&i| by != IdentifyBy::Scroll(i) && !view.lore().knows(&pack[i]))
                 .map(Item::Pack)
                 .collect(),
             ObjectList::Temper => (0..pack.len())
@@ -296,7 +310,7 @@ impl ObjectScreen {
                     weight: s.weight(content),
                     rarity: s.rarity(),
                     aimed: reading(s).is_some_and(|r| r.range().is_some()),
-                    identify: matches!(reading(s), Some(Reading::Identify)),
+                    identify: reading(s).is_some_and(|r| r.on_item()),
                     study,
                 };
                 (view.item_class(s), entry)
@@ -309,7 +323,25 @@ impl ObjectScreen {
             weight: view.own_weight(),
             load: Some(view.own_load()),
             looked: None,
+            cast: match list {
+                ObjectList::Identify(IdentifyBy::Spell(spell)) => {
+                    content.spell_of(spell).map(|s| s.id.clone())
+                }
+                _ => None,
+            },
         }
+    }
+
+    /// Reads the list again from what the player perceives now: an action taken from it (a
+    /// study chosen in the dialog over it) may have used up or moved the stacks it named by
+    /// position, so a row kept from before would name another stack. The cursor stays on its
+    /// row (or the last one); marks, which name positions, are dropped.
+    pub fn refresh(&mut self, view: &PerceptionView<'_>) {
+        let (cursor, looked) = (self.entries.cursor(), self.looked);
+        *self = Self::new(self.list, Some(view));
+        self.entries
+            .select(cursor.min(self.entries.iter().count().saturating_sub(1)));
+        self.looked = looked.filter(|&i| i < view.inventory().len());
     }
 
     /// What choosing `item` does on a screen of one pick: aim it to throw, eat it, aim the
@@ -350,10 +382,16 @@ impl ObjectScreen {
                         .cancel("Don't study it", ScreenAction::Close),
                 ))
             }
-            (ObjectList::Identify(scroll), item) => ScreenAction::Act(Action::Read {
-                item: scroll,
-                target: Some(ReadTarget::Item(item.position())),
-            }),
+            (ObjectList::Identify(IdentifyBy::Scroll(scroll)), item) => {
+                ScreenAction::Act(Action::Read {
+                    item: scroll,
+                    target: Some(ReadTarget::Item(item.position())),
+                })
+            }
+            (ObjectList::Identify(IdentifyBy::Spell(_)), item) => match &self.cast {
+                Some(spell) => ScreenAction::Act(Action::CastOn(spell.clone(), item.position())),
+                None => ScreenAction::Stay,
+            },
             (ObjectList::Temper, item) => ScreenAction::Act(Action::Temper {
                 item: item.position(),
             }),
@@ -835,7 +873,10 @@ mod tests {
         assert_eq!(screen.looked(), Some(4));
         // What it is read on: the unidentified stacks only, the labelled scrolls among them, not
         // the scroll read.
-        let mut screen = ObjectScreen::new(ObjectList::Identify(4), Some(&world.perception()));
+        let mut screen = ObjectScreen::new(
+            ObjectList::Identify(IdentifyBy::Scroll(4)),
+            Some(&world.perception()),
+        );
         let names: Vec<&str> = screen.entries.iter().map(|e| e.name.as_str()).collect();
         let mut unknown = vec!["a dagger (magic) (+0 hit, 1d4, range 5)"];
         unknown.extend(labelled[..3].iter().map(String::as_str));
@@ -846,6 +887,18 @@ mod tests {
                 item: 4,
                 target: Some(ReadTarget::Item(0))
             })
+        );
+        // Identify, the spell (#592): the same list, the scrolls of identify among it too, and
+        // choosing a stack casts the spell on it.
+        let spell = world.content().spell_id("identify").expect("Identify");
+        let mut screen = ObjectScreen::new(
+            ObjectList::Identify(IdentifyBy::Spell(spell)),
+            Some(&world.perception()),
+        );
+        assert_eq!(screen.entries.iter().count(), unknown.len() + 1);
+        assert_eq!(
+            screen.handle(&typed('a'), &b),
+            ScreenAction::Act(Action::CastOn("identify".into(), 0))
         );
         // Nothing to read: it says so.
         let empty = on_the_pile();

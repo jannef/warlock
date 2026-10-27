@@ -218,3 +218,11 @@ radius = 3
 id = "item_glow_bright"
 color = [125, 135, 175, 0]
 radius = 4
+
+# The Light spell's (spells/light.toml, the scroll of light): its caster sheds a pale, steady light
+# about them while Lit lasts, as bright as a lantern and a little farther; magic, so it never
+# flickers.
+[[light]]
+id = "spell_light"
+color = [235, 235, 250, 0]
+radius = 6
