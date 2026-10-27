@@ -141,11 +141,7 @@ impl Cause {
         match self {
             Cause::Starvation => "You starve to death...".into(),
             Cause::Choked(o) => format!("You choke to death on the {}...", name(o)),
-            Cause::Trap(_)
-            | Cause::Scroll(_)
-            | Cause::Spell(_)
-            | Cause::Altar
-            | Cause::Fall => {
+            Cause::Trap(_) | Cause::Scroll(_) | Cause::Spell(_) | Cause::Altar | Cause::Fall => {
                 "You die...".into()
             }
         }

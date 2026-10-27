@@ -19,8 +19,8 @@ use crate::action::{Event, Positions};
 use crate::alignment::Alignment;
 use crate::combat::Blow;
 use crate::content::{
-    Amount, CreatureSpawn, Harmful, Near, OutcomeDef, OutcomeEffect, OutcomeKind, OutcomeTable,
-    Stance, OutcomeSummon, danger,
+    Amount, CreatureSpawn, Harmful, Near, OutcomeDef, OutcomeEffect, OutcomeKind, OutcomeSummon,
+    OutcomeTable, Stance, danger,
 };
 use crate::damage::Damage;
 use crate::geom::{Dir, Pos};
