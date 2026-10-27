@@ -13,8 +13,8 @@ target = "ledger"
 to = "godgifu"
 reward = { gold = 10, xp = 20 }
 alignment = 5
-offer = "This is the last foreman's ledger from the diggings. His widow wants it, and she lives over the hills. Take it to Godgifu at the Gæsthūs: she sends it on with the next cart. I would go myself, but the books won't keep themselves."
-accept = "Here. Mind it: it is the only copy. Godgifu, at the inn, south of the square."
+offer = "This is the last foreman's ledger from the diggings. His widow wants it, and she lives over the hills. Take it to Godgifu at the Gæsthūs: she sends it on with the next cart. I would go myself, but the books will not keep themselves."
+accept = "Do mind it: it is the only copy. Godgifu, at the inn, south of the square."
 reminder = "The ledger goes to Godgifu, at the Gæsthūs. She sends it on with the cart."
 done = "The foreman's ledger, from Wulfrun? I'll see it goes wiv the next cart, love. 'Ere, a little somethin' for the walk."
 where = "The Gæsthūs is south of the square."
@@ -29,7 +29,7 @@ target = "fyrdelf:2"
 reward = { gold = 100, xp = 220 }
 alignment = 10
 reveals = { location = "fyrdelf" }
-offer = "You've been down in the barrow and come back. That's more than most. The old diggings are called Fyrdelf, and the shaft is on the ledgers if you know how to read them. Go down two levels and tell me whether the galleries still stand."
+offer = "You have been down in the barrow and come back. That is more than most manage. The old diggings are called Fyrdelf, and the shaft is on the ledgers if you know how to read them. Go down two levels and tell me whether the galleries still stand."
 accept = "I'll mark it on your map. No road goes there: follow the river north past the ford and climb into the ash hills."
 reminder = "Fyrdelf, two levels down. It lies in Ascdūn, in the hills under Fyrbeorg."
 done = "They stand, then, and something walks them. That explains the men who never came back. Here, as agreed."
@@ -45,8 +45,8 @@ target = "fire_drake"
 level = "fyrdelf"
 reward = { gold = 500, xp = 900 }
 alignment = 25
-offer = "The last foreman wrote it down before the ledger ends: fire in the deepest working, and something in it that moved. A drake, I'd say, under the mountain. Kill it, and the town might dig again. Kill it, and I'll pay you what the mines owe me."
+offer = "The last foreman wrote it down before the ledger ends: fire in the deepest working, and something in it that moved. A drake, I'd say, under the mountain. Slay it, and the town might dig again. Slay it, and I shall pay you what the mines owe me."
 accept = "It lies at the bottom of the workings, twelve levels down. Take water. Take more than you think."
 reminder = "The fire drake, at the bottom of Fyrdelf."
-done = "Dead? Truly? Then I'll write a new page in the ledger, the first in years. Here. The mines owe me more, but this is what I have."
+done = "Dead? Truly? Then I shall write a new page in the ledger, the first in years. Here. The mines owe me more, but this is what I have."
 where = "It lies on Fyrdelf's twelfth and lowest level."

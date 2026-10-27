@@ -110,7 +110,8 @@ are waiting for theirs.
 This is a promise about the future too: **every new part of the game arrives with its
 talents**, so no system is ever left with nothing that makes it better at it. That holds for
 new resources as well: mana came with talents for a deeper pool, a quicker refill, and cheaper
-casting, and the same goes for each class's own pool later (a barbarian's
+casting, spells with the Spellcraft tree (Quick study, Overreach, School focus) and talents for
+wands and rods (Wand mastery, Channeler), and the same goes for each class's own pool later (a barbarian's
 rage, a ranger's focus). Abilities that cost such a resource have no waiting time on top: the
 resource coming back with time is the limit.
 

@@ -1,0 +1,38 @@
+# The duergar (#518; content::duergar_roster_tests checks the numbers). A warrior grown grey in
+# the delf's wars with the goblins' kin: a battle axe (its racial weapon), scale mail, an iron
+# helm, and a shield, now and then of a better make than they look.
+[[creature]]
+id = "duergar_veteran"
+level = 17
+xp = 95
+rarity = "uncommon"
+loot = 35
+name = "duergar veteran"
+glyph = "h"
+fg = "#7090c8"
+faction = "duergar"
+tags = ["duergar"]
+alignment = "evil"
+race = "duergar"
+vision = "darkvision"
+opens_doors = true
+footsteps = 120
+hearing = 12
+weight = 75000
+stats = { strength = 19, dexterity = 14, toughness = 19, intelligence = 12, willpower = 17, presence = 10 }
+base_hp = 43
+resist = { poison = 25, cold = 10 }
+on_eat = { message = "Tough and sour, like old leather.", vomit = 25 }
+weapon_skills = { axes = 3, shield_block = 2, sword_and_board = 1 }
+racial_weapon = "battle_axe"
+[[creature.gear]]
+chance = 80
+one_of = ["scale_mail"]
+magic = 10
+[[creature.gear]]
+chance = 70
+one_of = ["iron_helm"]
+magic = 5
+[[creature.gear]]
+chance = 60
+one_of = ["small_shield"]

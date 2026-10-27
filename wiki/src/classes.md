@@ -38,8 +38,8 @@ nothing in its place.
 {{#include generated/class-levels.md}}
 
 A paladin's abilities used from the menu answer only while the paladin is Good or better (see
-[Alignment](alignment.md)); the passives do not ask. Lay on hands drains instead of costing mana
-until mana comes to the game. The barbarian's rage runs on a pool of its own, Rage, and the
+[Alignment](alignment.md)); the passives do not ask. Lay on hands drains you instead of costing
+mana. The barbarian's rage runs on a pool of its own, Rage, and the
 ranger's rapid shot and volley on [focus](resources.md) (see [Resources](resources.md)); the
 thief's sneak attacks build [openings](resources.md), which master thief's finisher spends; the
 monk's flurry and quivering palm run on [ki](resources.md), and the bard's inspire spends

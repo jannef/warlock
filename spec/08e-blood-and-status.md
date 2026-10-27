@@ -156,9 +156,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   affixes of what the actor wears and wields multiply the rate by (100 + their percent) / 100 (§8
   "Magic items"). `World::healing_rate` is the one place that decides the pace.
 - **Mana** (`warlock-core/src/mana.rs`, the pure rules; `world/mana.rs`, applying them; #223):
-  a second pool beside hit points, built the same way. Nothing spends it yet: magic will (the
-  class abilities and talents of the progression design, #220, are its first users). Every
-  future system says in its issue how it interacts with mana, if at all.
+  a second pool beside hit points, built the same way. Spells spend it ("Spells" below: the
+  casters' class spells and those learned from scrolls), as do rods (§8 "Rods"), the bard's
+  inspire when short of inspiration, and a summoner's summons (§8 "Creatures"); Blood magic
+  refills it. Every
+  new system says in its issue how it interacts with mana, if at all.
   - **The maximum** (`Actor::max_mana`): `mana_base` (the race's and the class's `mana`, §7; a
     creature type's `mana`, default 0; a scenario without a character gives the player's) plus
     what magic items add (`max_mana` affixes, §8 "Magic items") plus the modifiers of the three

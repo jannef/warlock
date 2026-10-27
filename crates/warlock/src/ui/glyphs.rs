@@ -8,7 +8,7 @@
 use super::motion::Motion;
 use crate::game::Game;
 use crate::render::anim::{self, AnimFrame};
-use crate::render::free_glyph::{FreeGlyph, FreeGlyphs};
+use crate::render::free_glyph::{Bands, FreeGlyph, FreeGlyphs};
 use crate::render::grid::MapGrid;
 use crate::render::lighting::{self, ACTOR_FLOOR, TERRAIN_FLOOR, VisualLight};
 use crate::render::post::{emissive, in_range};
@@ -55,16 +55,44 @@ pub(super) fn emit(
         };
         let at = motion.actor_pos(actor.id, actor.pos, time);
         let home = Vec2::new(actor.pos.x as f32, actor.pos.y as f32);
-        let mut g = glyph(
-            &grid,
-            at,
-            actor.glyph(content),
-            palette(actor.fg(content)),
-            frame,
-        );
-        g.color = lit(g.color, &light, at, home, ACTOR_FLOOR);
-        free.push(glow(g, def.glow, &effects));
+        let colours = actor.shape.as_ref().map_or(&[][..], |s| s.bands());
+        let fg = colours.first().copied().unwrap_or(actor.fg(content));
+        let mut g = glyph(&grid, at, actor.glyph(content), palette(fg), frame);
+        // Each band is lit and glows as the glyph does: they share its light.
+        let finish = |color| {
+            let color = lit(color, &light, at, home, ACTOR_FLOOR);
+            glow(FreeGlyph { color, ..g }, def.glow, &effects).color
+        };
+        if colours.len() < 2 {
+            g.color = finish(g.color);
+            free.push(g);
+            continue;
+        }
+        let mut bands = Bands {
+            count: colours.len() as u8,
+            drift: band_drift(actor.id, time, effects.glyph_animation),
+            ..Bands::NONE
+        };
+        for (band, &c) in bands.more.iter_mut().zip(&colours[1..]) {
+            *band = finish(glyph(&grid, at, ' ', palette(c), frame).color);
+        }
+        g.color = finish(g.color);
+        free.push_banded(g, bands);
     }
+}
+
+/// How far, in band heights, the borders between a composite's colour bands have drifted at
+/// `time`: a slow sway up and down, a creature's own phase, still with glyph animation off.
+fn band_drift(id: ActorId, time: f32, animate: bool) -> f32 {
+    /// The most the borders move either way.
+    const SWAY: f32 = 0.3;
+    /// Seconds for one sway down and back.
+    const PERIOD: f32 = 7.0;
+    if !animate {
+        return 0.0;
+    }
+    let turn = time / PERIOD + creature_phase(id);
+    SWAY * (turn * std::f32::consts::TAU).sin()
 }
 
 /// `frame` with its shimmer tint color run through the active palette, like every other color.
@@ -218,6 +246,16 @@ mod tests {
     fn creature_phases_differ() {
         assert_ne!(creature_phase(ActorId(1)), creature_phase(ActorId(2)));
         assert!((0.0..1.0).contains(&creature_phase(ActorId(7))));
+    }
+
+    #[test]
+    fn band_borders_sway_a_little_and_stand_still_without_animation() {
+        let drifts: Vec<f32> = (0..40)
+            .map(|i| band_drift(ActorId(3), i as f32 * 0.5, true))
+            .collect();
+        assert!(drifts.iter().all(|d| d.abs() <= 0.3 + 1e-6), "{drifts:?}");
+        assert!(drifts.iter().any(|&d| d > 0.2) && drifts.iter().any(|&d| d < -0.2));
+        assert_eq!(band_drift(ActorId(3), 12.3, false), 0.0);
     }
 
     #[test]

@@ -22,7 +22,7 @@ zombie at (22, 7) route N E E E W W W S
 barrow_ghoul at (73, 4) route W W N N E E S S N N W W S S E E
 zombie at (46, 14) route E W E W E W E W E W E W E W E W E W
 ghost at (22, 6) route E E E E W W W W
-dretch at (41, 17) route W W N N N S S S E E
+drowned at (41, 17) route W W N N N S S S E E
 zombie at (5, 7) route E E S W N N N N N E W S S S S S E N W W
 ghost at (36, 9) route N S S S S S N N N N N S
 ghost at (55, 14) route W W E E W E W W E E
@@ -54,6 +54,6 @@ special room hushed at (41, 2)-(50, 9)
       #......#           ###########.##.(.)..#z.+...+..GS....#
       #..G.z.#           #....^..¡##.##.z....S.##...#####....#
       #####+##############<.......'G..+......########   #....#
-          #.z....G..^....+..^.....#####..u...#          ######
+          #.z....G..^....+..^.....#####..z...#          ######
           ################¡.......#   #......#
                          ##########   ########

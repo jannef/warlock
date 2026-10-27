@@ -276,3 +276,39 @@ fn a_blade_survives_a_save() {
         w.state.actors[&blade].weapon_skills
     );
 }
+
+#[test]
+fn a_composite_shows_its_materials_in_bands() {
+    // A fixture until composites come (#486): a blade that also wears a helm and boots of other
+    // colours shows them, head to feet; alone it shows its weapon's colour only.
+    let mut w = hall();
+    let blade = at(&w, Pos::new(4, 2));
+    let content = w.content().clone();
+    let seen = |w: &World| {
+        (w.perception().actor_at(Pos::new(4, 2)))
+            .and_then(|a| a.shape)
+            .expect("a shape")
+    };
+    assert!(seen(&w).bands().is_empty(), "one colour");
+    let weapon = w.state.actors[&blade].inventory[0].fg(&content);
+    let actor = w.state.actors.get_mut(&blade).expect("the blade");
+    for (id, slot) in [("leather_boots", "feet"), ("iron_helm", "head")] {
+        let object = content.object_id(id).expect(id);
+        actor.inventory.push(Stack::one(object));
+        let slot = content.slot_id(slot).expect(slot);
+        actor.equipment.put(&[slot], actor.inventory.len() - 1);
+    }
+    w.perceive(&mut Vec::new());
+    let fg = |id: &str| content.object(content.object_id(id).expect(id)).fg;
+    let shape = seen(&w);
+    assert_eq!(shape.fg, weapon, "still shown by its weapon's colour");
+    let mut want = vec![fg("iron_helm"), weapon, fg("leather_boots")];
+    want.dedup();
+    assert!(want.len() >= 2);
+    assert_eq!(shape.bands(), &want[..], "head, hand, feet");
+    let json = crate::dump::json(&w, &[], false);
+    let shown = (json["seen_actors"].as_array().into_iter().flatten())
+        .find(|a| a["id"] == serde_json::json!(blade))
+        .expect("in the dump");
+    assert_eq!(shown["bands"].as_array().map(Vec::len), Some(want.len()));
+}

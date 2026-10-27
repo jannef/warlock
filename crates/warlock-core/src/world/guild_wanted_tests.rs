@@ -293,7 +293,8 @@ fn hunt(w: &mut World) -> Vec<Action> {
 
 #[test]
 fn black_wystan_hunted_down_makes_the_player_an_iron_and_replays_exactly() {
-    let mut w = town(None);
+    // A fixed seed: the hunt is a bot that fights its way down, and a roster change moves the draws.
+    let mut w = town(Some(4));
     beside_wat(&mut w);
     let start = w.state_hash();
     let log = hunt(&mut w);
@@ -309,7 +310,7 @@ fn black_wystan_hunted_down_makes_the_player_an_iron_and_replays_exactly() {
         "{lines:?}"
     );
     // The same actions from the same start come to the same end.
-    let mut again = town(None);
+    let mut again = town(Some(4));
     beside_wat(&mut again);
     assert_eq!(again.state_hash(), start);
     for action in &log {

@@ -1,0 +1,48 @@
+# The duergar (#518; content::duergar_roster_tests checks the numbers). One of the grey dwarves
+# whose will has grown heavier than their hands: it chants from a few cells off (announced only,
+# as every creature caster's), and its touch is a lash of will that frightens and holds the eye.
+# A pale violet flicker where its will lands.
+[[creature]]
+id = "duergar_mindbreaker"
+level = 29
+xp = 155
+rarity = "rare"
+loot = 60
+name = "duergar mindbreaker"
+glyph = "h"
+fg = "#b890d8"
+faction = "duergar"
+tags = ["duergar", "caster"]
+alignment = "evil"
+race = "duergar"
+vision = "darkvision"
+combat = "caster"
+range = 6
+opens_doors = true
+footsteps = 90
+hearing = 12
+weight = 65000
+stats = { strength = 21, dexterity = 17, toughness = 24, intelligence = 19, willpower = 25, presence = 13 }
+base_hp = 58
+skills = { concentration = 97, spellcraft = 102 }
+attack = { damage = "3d8", damage_type = "force", name = "mind-lash", verb = "lashes", to_hit = 2, on_hit = [
+    { status = "frightened", chance = 15, severity = 1 },
+    { status = "transfixed", chance = 15, severity = 1 },
+] }
+resist = { poison = 25, cold = 10 }
+on_eat = { message = "Tough and sour, and your head aches.", vomit = 25, stat = { willpower = 3 } }
+[[creature.gear]]
+chance = 60
+one_of = ["gold_amulet"]
+magic = 30
+[[creature.particles]]
+on = "attack"
+glyphs = "·~+"
+colors = ["#f0e0ff", "#b890d8", "#5a3878"]
+count = 5
+life = 0.4
+spread = [0.9, 0.9]
+area = [0.15, 0.15]
+scale = 0.5
+fade = 0.6
+glow = 0.5

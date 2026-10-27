@@ -177,7 +177,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     scroll level, free of mana: aimed as the spell is (`read:b:12,5`), or at once for a spell on
     oneself (`read:b`; refused, no time, for an aimed one without its cell). Its blows are the
     reader's; one that kills them is the scroll's (`Cause::Scroll`); Spell recall may keep it.
-  - **Spell scrolls** cast a trap's spell (§8 "Traps") with the same rules, data, and code
+  - **The three older spell scrolls** (fireball, frost, lightning; M29) cast a trap's spell
+    (§8 "Traps") rather than their spell's, with the same rules, data, and code
     (`World::cast_burst`, `World::cast_bolt`), aimed by the reader (§6 "Targeting"): the scroll
     of **fireball** and of **frost** a burst (the fireball and frost traps': 3d6 and 2d6 in
     radius 2, the fireball breaking earth and stone and melting ice, the frost freezing water to
@@ -199,14 +200,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
     explodes!"), then its blows in its `noun` and `verb` and combat's words ("The fireball burns
     the kobold.") and deaths ("The kobold dies.").
   - **The scroll of identify** identifies one unidentified stack the player carries: a magic
-    item's affixes, or a labelled scroll's type (`World::identify`: "This is a Sharp dagger of
-    the Lynx!"); a stronger "identify all" can come later. It is the commonest scroll in loot
-    (`frequency` 300 against the spell scrolls' 50 to 60) and a regular general-store item.
+    item's affixes, a labelled scroll's, wand's, or rod's type, or a wand's charges
+    (`World::identify`: "This is a Sharp dagger of the Lynx!"); a stronger "identify all" can
+    come later. It is the commonest scroll in loot (`frequency` 300 against the spell scrolls'
+    20 to 60, by tier) and a regular general-store item.
   - **Where**: loot (by `level` and `frequency`, never magic), general stores' stock (they sell
     and buy the scrolls class, and a generated one always lays out scrolls of identify, §7
-    "Shops"; Cēaptūn's has three), and the trap hall beside its arrival (two of each spell, three
-    scrolls of identify, and an unidentified dagger). The showcase has none. Later:
-    Spellcraft and Decipher Script (§8 "Skills") may change reading.
+    "Shops"; Cēaptūn's has three), and the trap hall beside its arrival (two each of fireball,
+    lightning, and frost, three scrolls of identify, and an unidentified dagger). The showcase
+    has none. Spellcraft and Decipher script (§8 "Skills") help studying a scroll (§8 "Spells":
+    "Learning"), not reading one.
 
 - **Wands** (`warlock-core/src/world/zap.rs`, data `wand` in `data/objects/` §7, `content/wand.rs`;
   the magic design §9; #398): objects (`-`, the wands class, one at a time) whose `[object.wand]`

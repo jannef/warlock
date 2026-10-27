@@ -821,7 +821,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Resources**: Rage, Blood frenzy, Mighty rage, and Unstoppable run on the Rage resource
     (§8 "Resources", R1); Flurry and Quivering palm on the Ki resource (R4, #252).
   - **Coverage**: `min_class` stays 0 until every class has its table.
-- **The casters' class tables, and their spells** (`content/class_spell.rs`: `ClassSpell`;
+- **The casters' class tables, and their spells** (`content/spell_def.rs`: `SpellId`;
   `data/spells/`; `world/cast.rs`, `world/caster.rs`; M30, #245, #395; design §4.9–4.12, §3.7):
   the priest, druid, wizard,
   and witch have level tables as the others do (bonus picks at 10, 20, 30, 45, 55: priest Vigour
