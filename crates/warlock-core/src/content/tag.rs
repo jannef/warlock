@@ -109,6 +109,7 @@ mod tests {
                 "goblin",
                 "goblin_archer",
                 "goblin_chief",
+                "goblin_wizard",
                 "hobgoblin",
                 "hobgoblin_archer",
                 "hobgoblin_captain",
@@ -130,6 +131,12 @@ mod tests {
         assert!(members("fire-thing").contains(&"fire_drake".to_string()));
         assert!(members("caster").contains(&"kobold_shaman".to_string()));
         assert!(members("archer").contains(&"goblin_archer".to_string()));
+        for summoner in ["goblin_wizard", "necromancer", "dark_wizard"] {
+            assert!(
+                members("summoner").contains(&summoner.to_string()),
+                "{summoner}"
+            );
+        }
         // Every troll: the tribe's, the fen's, and the risen one.
         for troll in ["troll", "marsh_troll", "rotting_troll", "elder_troll"] {
             assert!(members("troll").contains(&troll.to_string()), "{troll}");

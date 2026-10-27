@@ -1,0 +1,63 @@
+# The summoners (#520; content::summoner_roster_tests checks the numbers): a wizard who has
+# bargained with the hells, of the cult's kind (faction "cult"), calling devils up through the
+# floor (a summoner: `[creature.summon]`). Its other spells are announced only. It keeps a
+# quarterstaff (its racial weapon).
+[[creature]]
+id = "dark_wizard"
+level = 24
+xp = 130
+rarity = "rare"
+loot = 60
+name = "dark wizard"
+glyph = "@"
+fg = "#9a50d8"
+faction = "cult"
+tags = ["cultist", "caster", "summoner"]
+alignment = "evil"
+race = "human"
+combat = "caster"
+range = 7
+opens_doors = true
+footsteps = 80
+hearing = 14
+weight = 70000
+stats = { strength = 18, dexterity = 16, toughness = 22, intelligence = 18, willpower = 21, presence = 14 }
+base_hp = 48
+mana = 36
+skills = { concentration = 88, spellcraft = 98 }
+weapon_skills = { staves = 3 }
+racial_weapon = "quarterstaff"
+[[creature.gear]]
+chance = 70
+one_of = ["wool_cloak", "travelling_cloak"]
+magic = 30
+[[creature.gear]]
+chance = 60
+one_of = ["gold_amulet", "jade_amulet"]
+magic = 40
+[[creature.gear]]
+chance = 50
+one_of = ["copper_coin*30", "copper_coin*60"]
+
+# Devils (every devil type of level 5 to 20: the lemure, the imp, the bearded devil), one to
+# three at a time, every half a minute while its mana lasts, five of them at most.
+[creature.summon]
+tag = "devil"
+levels = [5, 20]
+count = "1d3"
+cooldown = 30
+mana = 12
+most = 5
+verb = "calls forth"
+
+[[creature.particles]]
+on = "attack"
+glyphs = "·*+"
+colors = ["#f0c0ff", "#9a50d8", "#401860"]
+count = 5
+life = 0.4
+spread = [0.9, 0.9]
+area = [0.15, 0.15]
+scale = 0.5
+fade = 0.6
+glow = 0.5

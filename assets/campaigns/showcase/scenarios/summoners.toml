@@ -1,0 +1,6 @@
+name = "Summoners"
+description = "Three summoners behind three doors: a goblin wizard, a necromancer, and a dark wizard. Open a door and watch what it calls forth."
+start_level = "summoning_hall"
+seed = 1
+character = { race = "human", gender = "female", class = "warrior", name = "Hild" }
+lantern = "lantern"

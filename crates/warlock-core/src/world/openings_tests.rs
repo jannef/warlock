@@ -98,6 +98,7 @@ fn beside(world: &mut World, creature: &str, hp: i32, dir: Dir) -> ActorId {
         patrol: None,
         npc: None,
         faction_override: None,
+        summoner: None,
         alignment_override: None,
         inventory: Vec::new(),
         equipment: Default::default(),
