@@ -215,7 +215,7 @@ impl World {
             maker: None,
         };
         if noise.loudness > 0 {
-            noise::make(&mut self.state, &self.content, noise);
+            self.spread_noise(noise);
         }
     }
 

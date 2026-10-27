@@ -395,6 +395,9 @@ pub struct CreatureSpawn {
     /// true for a creature placed without a fixed kit (`carry`, `wield`, or `wear`), until a
     /// generated level rolls it ([`crate::gear::arm`]) or the creature is placed in play.
     pub rolls_gear: bool,
+    /// Whether it is placed asleep (a teeming den's sleeper, spec §7 "Special rooms": the
+    /// `asleep` status).
+    pub asleep: bool,
 }
 
 /// A staircase cell and where it leads.
@@ -737,6 +740,7 @@ pub(super) fn parse_level(
                     carry,
                     equipment,
                     rolls_gear: !fixed,
+                    asleep: false,
                 });
             } else if detail.route.is_some()
                 || detail.faction.is_some()

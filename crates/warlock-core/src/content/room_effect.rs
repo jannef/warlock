@@ -117,6 +117,7 @@ struct RoomEffectSpec {
     shunned: bool,
     floor: Option<String>,
     status: Option<String>,
+    swarm: Option<Swarm>,
     #[serde(default)]
     temperature: i8,
     #[serde(default = "hundred")]
@@ -136,6 +137,92 @@ struct MirrorsSpec {
 pub struct Mirrors {
     /// Reflections of each actor inside.
     pub images: u8,
+}
+
+/// A teeming den's numbers (`swarm = { per_cells = 4, ... }`, spec §7 "Special rooms"): the
+/// generator fills such a room with sleepers of the floor's danger and their hoard
+/// (`mapgen/den.rs`); they wake by noise, a blow, or a cry (`world/den.rs`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Swarm {
+    /// One sleeper for this many floor cells of the room...
+    pub per_cells: u16,
+    /// ...but at least this many...
+    pub min: u16,
+    /// ...and at most this many.
+    pub max: u16,
+    /// A noise wakes a sleeper when it is this percent of its hearing threshold where it lies.
+    pub wake: u16,
+    /// How loud a waking sleeper's cry is where it lies.
+    pub cry: u16,
+    /// The hoard's items are this many item levels above the floor's.
+    pub loot_level: u8,
+    /// Percent chances that a den is themed: all of one creature type, or all of one faction.
+    #[serde(default)]
+    pub themes: Themes,
+}
+
+/// A den's themes (`themes = { kind = 10, faction = 20 }`): percents, at most 100 together.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Themes {
+    /// A warren: every sleeper of one type.
+    #[serde(default)]
+    pub kind: u8,
+    /// A tribe: every sleeper of one faction.
+    #[serde(default)]
+    pub faction: u8,
+}
+
+/// The most sleepers a den may hold.
+pub const MAX_SLEEPERS: u16 = 64;
+/// The percents of the hearing threshold a den's `wake` may be.
+pub const WAKE: RangeInclusive<u16> = 100..=1000;
+
+impl Swarm {
+    /// The fault in these numbers, if any.
+    fn check(&self) -> Result<(), String> {
+        if self.per_cells == 0 {
+            return Err("swarm: per_cells must be at least 1".into());
+        }
+        if self.min == 0 || self.min > self.max || self.max > MAX_SLEEPERS {
+            return Err(format!(
+                "swarm: min and max are 1 to {MAX_SLEEPERS}, min at most max"
+            ));
+        }
+        if !WAKE.contains(&self.wake) {
+            return Err(format!(
+                "swarm: wake {} is out of range ({} to {})",
+                self.wake,
+                WAKE.start(),
+                WAKE.end()
+            ));
+        }
+        if self.cry > crate::noise::MAX_LOUDNESS {
+            return Err(format!(
+                "swarm: cry is at most {}",
+                crate::noise::MAX_LOUDNESS
+            ));
+        }
+        if u16::from(self.themes.kind) + u16::from(self.themes.faction) > 100 {
+            return Err("swarm: themes' percents add up to at most 100".into());
+        }
+        Ok(())
+    }
+
+    /// How many sleepers a den of `cells` free floor cells holds: one per `per_cells`, within
+    /// `min` and `max`, and never more than the cells.
+    pub fn sleepers(&self, cells: usize) -> usize {
+        let wanted = cells / usize::from(self.per_cells);
+        wanted
+            .clamp(usize::from(self.min), usize::from(self.max))
+            .min(cells)
+    }
+
+    /// How many items the hoard of `sleepers` sleepers holds: one per four, at least one.
+    pub fn hoard(sleepers: usize) -> usize {
+        (sleepers / 4).max(1)
+    }
 }
 
 /// What a special room does while one is inside it.
@@ -182,6 +269,8 @@ pub struct RoomEffectDef {
     /// The status everyone inside holds, at least at one degree, while they stay (a draining
     /// room's Ebbing; `World::dwell`); it eases by its own `eases` once they leave.
     pub status: Option<StatusId>,
+    /// A teeming den's numbers: generators fill such a room with sleepers and their hoard.
+    pub swarm: Option<Swarm>,
     /// Degrees Celsius added to the level's temperature inside (a hot room's +25, a cold room's
     /// -25); `WorldState::temperature_at` is the one place it is read.
     pub temperature: i8,
@@ -215,7 +304,11 @@ impl RoomEffectDef {
     /// Whether it may cover a whole level: neither creatures shun it (a level hostiles shun is
     /// broken) nor does it lay a floor of its own, and it has its `pervade` line.
     pub fn can_pervade(&self) -> bool {
-        !self.shunned && self.floor.is_none() && self.mirrors.is_none() && self.pervade.is_some()
+        !self.shunned
+            && self.floor.is_none()
+            && self.swarm.is_none()
+            && self.mirrors.is_none()
+            && self.pervade.is_some()
     }
 }
 
@@ -283,6 +376,11 @@ impl<'c> Here<'c> {
     /// Whether creatures hostile to the player keep out.
     pub fn shunned(&self) -> bool {
         self.each().any(|e| e.shunned)
+    }
+
+    /// The den's numbers here, if a teeming den is here (the room's, never a whole level's).
+    pub fn swarm(&self) -> Option<&'c Swarm> {
+        self.room.and_then(|e| e.swarm.as_ref())
     }
 
     /// What the effects here add to the level's temperature: their degrees, added up.
@@ -470,6 +568,12 @@ impl RoomEffects {
                 )));
             }
             let mirrors = spec.mirrors.as_ref().map(|m| Mirrors { images: m.images });
+            if let Some(swarm) = &spec.swarm {
+                swarm.check().map_err(bad)?;
+                if !spec.needs_danger {
+                    return Err(bad("a `swarm` needs `needs_danger`".into()));
+                }
+            }
             let def = RoomEffectDef {
                 id: spec.id,
                 name: spec.name,
@@ -491,6 +595,7 @@ impl RoomEffects {
                 shunned: spec.shunned,
                 floor,
                 status,
+                swarm: spec.swarm,
                 temperature: spec.temperature,
                 burden: spec.burden,
                 mirrors,

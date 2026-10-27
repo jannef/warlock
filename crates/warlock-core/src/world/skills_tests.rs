@@ -300,10 +300,10 @@ fn listen_lowers_the_hearing_threshold() {
         maker: Some(rat),
     };
     set(&mut w, "listen", None);
-    noise::make(&mut w.state, &w.content, faint);
+    w.spread_noise(faint);
     assert!(w.state.player().heard.is_empty());
     set(&mut w, "listen", Some(50));
-    noise::make(&mut w.state, &w.content, faint);
+    w.spread_noise(faint);
     assert_eq!(w.state.player().heard.len(), 1);
     // The deer lists listen 30: it hears 3 fainter than its type's 5.
     let content = content(false);

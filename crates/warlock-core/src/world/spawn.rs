@@ -182,6 +182,7 @@ impl World {
             carry: Vec::new(),
             equipment: Default::default(),
             rolls_gear: true,
+            asleep: false,
         };
         let actor = travel::make_creature(&mut self.state, &self.content, &id, &spawn);
         self.spawned += 1;
@@ -264,6 +265,7 @@ impl World {
         }
         let feels = feeling(self.danger(id), self.player_level());
         self.note(format!("This place feels {feels}."));
+        self.sense_sleepers();
     }
 }
 

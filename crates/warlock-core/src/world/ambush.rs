@@ -106,6 +106,10 @@ impl World {
         let Some(me) = self.state.actors.get(&id) else {
             return false;
         };
+        // Asleep, it has seen no one (`den.rs`).
+        if me.kind == ActorKind::Creature && self.asleep(id) {
+            return self.state.actors.contains_key(&other);
+        }
         if me.kind != ActorKind::Creature || me.mind.last_seen.is_some() {
             return false;
         }

@@ -356,6 +356,8 @@ pub struct TalentMods {
     /// Within this many cells it sees a hall of mirrors' reflections for what they are
     /// (Mirror-wise; 0: none).
     pub sees_reflections: i32,
+    /// Percent more noise sleepers need to wake from what it does (Hush-foot).
+    pub wake_percent: i32,
     /// Cells more its searching reaches.
     pub search_reach: i32,
     /// How much higher some skills count, by skill.
@@ -1107,6 +1109,7 @@ impl TalentMods {
                 }
             }
             TalentEffect::SeesReflections { value } => self.sees_reflections += value,
+            TalentEffect::WakePercent { value } => self.wake_percent += value,
             TalentEffect::SearchReach { value } => self.search_reach += value,
             TalentEffect::Skill { skill, value } => {
                 if let Some(id) = content.skill_id(&skill) {

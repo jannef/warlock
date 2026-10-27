@@ -395,6 +395,9 @@ pub enum TalentEffect {
     /// A hall of mirrors' reflections within this many cells are seen for what they are, and not
     /// shown (Mirror-wise; `world/mirrors.rs`).
     SeesReflections { value: i32 },
+    /// Sleepers need this percent more noise to wake from what it does (Hush-foot; the wake
+    /// check in `World::spread_noise`, `world/den.rs`).
+    WakePercent { value: i32 },
     /// Searching reaches this many cells farther.
     SearchReach { value: i32 },
     /// A skill counts this much higher wherever its value is read (an untrained one from 0).
@@ -1474,6 +1477,7 @@ impl TalentEffect {
             | TalentEffect::DigPercent { value }
             | TalentEffect::SpawnEveryPercent { value }
             | TalentEffect::RoomPacePercent { value }
+            | TalentEffect::WakePercent { value }
             | TalentEffect::TwoHandedPrice { value }
             | TalentEffect::SpeedPercent { value }
             | TalentEffect::SpellDamagePercent { value }

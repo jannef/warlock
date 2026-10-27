@@ -80,6 +80,9 @@ pub(super) fn special_rooms(content: &Content) -> String {
                 content.terrain(floor).name.to_lowercase()
             ));
         }
+        if e.swarm.is_some() {
+            does.push("Full of sleeping creatures and their hoard (see Teeming dens).".into());
+        }
         if let Some(status) = e.status {
             does.push(held(content, status));
         }
@@ -198,6 +201,36 @@ fn held(content: &Content, status: StatusId) -> String {
         def.name,
         what.join(", ")
     )
+}
+
+/// The numbers of each teeming den (spec §7 "Special rooms": an effect with a `swarm`), by name:
+/// how many sleepers, what wakes them, their cry, the hoard, and the themes.
+pub(super) fn teeming_dens(content: &Content) -> String {
+    let mut out = String::from(
+        "| Den | Sleepers | Wakes at | Cry | Hoard | Warren | Tribe |\n\
+         |---|---|:---:|:---:|---|:---:|:---:|\n",
+    );
+    let mut dens: Vec<_> = (content.room_effects().defs().iter())
+        .filter_map(|e| e.swarm.map(|s| (e, s)))
+        .collect();
+    dens.sort_by(|a, b| a.0.name.cmp(&b.0.name));
+    for (e, s) in dens {
+        let _ = writeln!(
+            out,
+            "| {} | one per {} floor cells, {} to {} | {}% of the hearing threshold | {} | one \
+             item per 4 sleepers (at least 1), item level +{} | {}% | {}% |",
+            capital(&e.name),
+            s.per_cells,
+            s.min,
+            s.max,
+            s.wake,
+            s.cry,
+            s.loot_level,
+            s.themes.kind,
+            s.themes.faction,
+        );
+    }
+    out
 }
 
 /// Each branch's special-room and shop odds (spec §7 "Special rooms", "Shops"), its depths with
