@@ -74,7 +74,8 @@
 #   collapse a collapsed floor (needs `needs_below`; never the whole level): `{ chance, damage }`,
 #            the percent chance (0 to 100) that a step of the player onto a cell inside gives
 #            way, doubled while they are Burdened or worse, and the dice they take as they land
-#            on the level below (never their last hit point); they land Staggered
+#            on the level below (they can kill); they land Staggered. A generator cracks only
+#            the room's middle (`floor` there, never beside a wall, door, or its edge)
 
 chance = 12
 per_level = 1
