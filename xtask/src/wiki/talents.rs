@@ -1232,9 +1232,9 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "damage from bursts and bolts (traps, scrolls) {} (rounded down)",
             percent(value)
         ),
-        TalentEffect::Spell { spell } => content
-            .class_spell(spell)
-            .map_or_else(|| spell.id().to_string(), |def| spell_text(content, def)),
+        TalentEffect::Spell { spell } => (content.spell_id(&spell))
+            .map(|id| content.spell(id))
+            .map_or_else(|| spell.clone(), |def| spell_text(content, def)),
         TalentEffect::SpellPower { per_die, dice } => {
             let mut parts = Vec::new();
             if dice > 0 {

@@ -808,10 +808,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
   and witch have level tables as the others do (bonus picks at 10, 20, 30, 45, 55: priest Vigour
   or Grit, druid Wayfarer or Vigour, wizard Scholar, witch Scholar or Grit).
   - **Spells**: the casters' actives are **spells** (§8 "Spells"; the placeholders of #245,
-    migrated by #395): a class ability's talent effect `{ kind = "spell", spell = "ID" }` gives
-    the spell ability `ID` (one of twelve, `ClassSpell`, each given once), the spell of that id
-    in `data/spells/` (its shape aimed exactly when the ability is, checked at load), cast by
-    the one cast path: tier, cost, reach, dice, and resolution are the spell's.
+    migrated by #395; the guaranteed lists of #397): a class ability's talent effect
+    `{ kind = "spell", spell = "ID" }` gives the spell of that id in `data/spells/` (each
+    given by one talent, which several classes may share: Blessing, Mend, Barkskin), cast by
+    the one cast path: tier, cost, reach, dice, and resolution are the spell's. A full caster
+    has a cantrip at level 1 and about four spells in all; the bard, the paladin, and the
+    ranger a cantrip or a boon (§8 "Spells", "Guaranteed spells").
     `Ability::Spell` in the menu's own **Spells** group (`Source::Spell`, after Class) with its
     tier and what it costs the player now ("tier 2, 11 mana"; short of mana "tier 2, 11 mana:
     too little", `ability::spell_unavailable`, which needs the caster level), `Action::Cast`
@@ -821,35 +823,41 @@ developer notes (CLAUDE.md, `docs/dev/`).
     hurt, or (Call lightning) under a roof or below ground. Their kills are the caster's, and
     one that kills its caster is `Cause::Spell` ("Killed by their own fireball"). Too close a
     burst asks first, as a scroll's does ("Cast it anyway?").
-  - **Priest**: Blessing (tier 0: Blessed 10 min a degree: +1 to hit, Willpower +1; 1 mana),
-    Cure wounds (tier 2: 2d6, at most 13; 2 casts; 6 mana), Remove disease (tier 3: every
-    disease and Poisoned; 11 mana),
+  - **Priest**: Mend (tier 0, at 1: a touch, 1d3 back; 1 mana), Blessing (tier 1, at 3:
+    Blessed 10 min a degree: +1 to hit, Willpower +1; 3 mana), Cure wounds (tier 1, at 3: a
+    touch, 2d6; 2 casts; 2 mana), Remove disease (tier 3, at 12: every disease and Poisoned;
+    11 mana),
     Ward of faith (Deflection +1; the design's "Shield of faith", renamed: that id is the
     paladin's), Purify (rotten food never sickens nor exposes; no draw), Divine health and
     Smite (the paladin's own talents, so Smite answers only a Good priest), Miracle, Saint
     (healing +100 %).
-  - **Druid**: Wild empathy (`beast_friend`), Woodland stride (the ranger's: forest floor,
+  - **Druid**: Wild empathy (`beast_friend`), Spark (tier 0, at 1: a bolt, 1d4 electricity;
+    1 mana), Barkskin (tier 1, at 3: Dodge +2 a minute a degree; 3 mana), Woodland stride (the ranger's: forest floor,
     bush, reeds, tall grass, marsh as grass), Weather sense (a 3-hour forecast), Nature's ward
     (wading never sickens; poison eases twice as fast), Winter's friend (ice holds the body's
-    weight alone, plunges never hurt, climbing out is free), Call lightning (tier 4: a line of
-    8 cells, to 10, 4d6 electricity, a thunderclap; open sky only; 29 mana), Sun and moon (sun
+    weight alone, plunges never hurt, climbing out is free), Call lightning (at 12; tier 3: a line of
+    8 cells, to 10, 2d6 electricity, a die more per 4 caster levels to 3d6, a thunderclap; open
+    sky only; 20 mana), Sun and moon (sun
     healing +50 %, night sight +1), Flame and frost (two spells, Flame: tier 3, the fireball's
     burst, 3d6 fire, radius 2, blast, 26 mana; Frost: tier 2, 2d6 cold, freezes water, 14
     mana), Timeless body (hunger −50 %; a
     failed disease check does nothing, so a disease never progresses).
   - **Wizard**: Scroll adept (reading −50 %; +1 on every die of spells and spell scrolls),
-    Arcane lore (a magic item carried an hour is identified), Spell recall (the Scholar
-    talent, handed out), Arcane bolt (tier 2: a line of 6 cells, to 8, 2d6 force; 11 mana),
-    Mage armour (Deflection +2 in no body armour), Empower (spells and spell scrolls a die
-    more), Fire burst (tier 3: the fireball's burst; 26 mana), Arcane mastery (mana +100 %),
+    Ray of frost (tier 0, at 1: a ray that rolls to hit, 1d6 cold; 1 mana), Magic missile
+    (tier 1, at 3: never misses, 1d4 force, to 2d4; 3 mana), Arcane lore (a magic item carried
+    an hour is identified), Spell recall (the Scholar talent, handed out), Burning hands (tier
+    1, at 12: a cone of 3 cells, 1d4 fire, to 2d4; 5 mana), Arcane bolt (tier 2, at 18: a line
+    of 6 cells, to 8, 2d6 force; 11 mana), Mage armour (Deflection +2 in no body armour),
+    Empower (spells and spell scrolls a die more), Arcane mastery (mana +100 %),
     Archmage (+2 on every die; spells' mana −50 %, at least 1). `spell_power` reads in
     `TalentMods::spell_damage` for spells and `read_spell` alike; a spell's roll is then held to
     its cap (Empower and Archmage bring it to the cap sooner, never past it).
   - **Witch**: Herb lore (rotten food −50 %, a corpse's `on_eat` harm and vomiting never, the
-    angelica root heals 1d6), Evil eye (tier 1: Hexed 1 min a degree: −2 to hit; 3 mana),
-    Poison lore (poison
-    eases twice as fast; +2 damage on hits at a Poisoned creature, `World::lore_blow`), Hex of
-    weakness (tier 1: Weakened 2 min a degree: St −2, Dx −2; 3 mana), Second sight (noticing
+    angelica root heals 1d6), Evil eye (tier 0, at 1: Hexed 1 min a degree: −2 to hit; 1 mana),
+    Hex of weakness (tier 1, at 3: Weakened 2 min a degree: St −2, Dx −2; 3 mana), Poison lore
+    (poison eases twice as fast; +2 damage on hits at a Poisoned creature, `World::lore_blow`),
+    Cause wounds (tier 1, at 12: a touch that rolls to hit, 1d6 necrotic, to 2d6; 2 mana),
+    Second sight (noticing
     as Spot +2, searching +2), Curse of sloth (tier 1: Sluggish 1 min a degree: every action
     costs 150 %; 3 mana), Blight (tier 2: a burst of 2d6 poison, radius 2, and two degrees of
     Poisoned on everyone it harms; 14 mana), Cauldron (a corpse's harm never; its stat chances doubled; a fresh one heals 1d4),

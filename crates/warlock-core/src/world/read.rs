@@ -41,7 +41,7 @@ use crate::geom::Pos;
 use crate::object::Stack;
 
 /// What the player is told when Spell recall keeps a scroll they read.
-const KEPT: &str = "The writing does not fade from the scroll.";
+pub(super) const KEPT: &str = "The writing does not fade from the scroll.";
 
 impl World {
     /// The player reads one of inventory stack `item` at `target` (module docs).
@@ -74,6 +74,24 @@ impl World {
             (Reading::Spell(_), _) => {
                 self.say("Read it at what? Name a cell to aim at: `read:a:12,5`.");
                 Spent::Nothing
+            }
+            (Reading::Cast(_), Some(ReadTarget::Item(_))) => {
+                self.say("Read it at what? Name a cell to aim at: `read:a:12,5`.");
+                Spent::Nothing
+            }
+            (Reading::Cast(scroll), target) => {
+                let at = match target {
+                    Some(ReadTarget::Cell(at)) => Some(at),
+                    _ => None,
+                };
+                // Priced as the reading begins, with the scroll still in the pack.
+                let price = self.read_price();
+                let cast = (scroll.spell, scroll.level);
+                if self.read_cast(item, cast, at, events) {
+                    Spent::Turn(price)
+                } else {
+                    Spent::Nothing
+                }
             }
         }
     }
@@ -159,7 +177,7 @@ impl World {
     /// Says that the player reads `scroll`, by what they knew it as ("You read the scroll
     /// labelled ZUNBAR."), and, if they did not know its type, what it turned out to be ("It is
     /// a scroll of fireball."): reading a scroll identifies its type (spec §8 "Scrolls").
-    fn say_read(&mut self, scroll: &Stack) {
+    pub(super) fn say_read(&mut self, scroll: &Stack) {
         let title = self.lore().title(scroll);
         self.say(format!("You read the {title}."));
         if self.learn_scroll(scroll.object) {
@@ -265,7 +283,7 @@ impl World {
     /// follows its letters); returns it, and whether it was kept instead: with Spell recall
     /// (spec §8 "Talents") a read keeps its scroll by the talent's chance, one draw of the
     /// gameplay stream a read (none without it).
-    fn use_up(&mut self, item: usize) -> Option<(Stack, bool)> {
+    pub(super) fn use_up(&mut self, item: usize) -> Option<(Stack, bool)> {
         self.train_stat(StatUse::Read);
         let one = self.state.player().inventory.get(item)?.single();
         let keep = self.state.player().talent_mods(&self.content).scroll_kept;

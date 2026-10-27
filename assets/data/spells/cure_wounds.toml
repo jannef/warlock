@@ -2,11 +2,11 @@
 [[spell]]
 id = "cure_wounds"
 name = "Cure wounds"
-description = "A prayer that closes wounds: hit points back; it takes a while to say."
-tier = 2
+description = "A prayer and a touch that close wounds: hit points back, yours or another's beside you; it takes a while to say."
+tier = 1
 school = "restoration"
 kind = "heal"
-shape = "self"
-resolution = "auto"
+shape = "touch"
+resolution = "touch"
 casts = 2
 effect = { heal = { dice = "2d6" } }

@@ -1,0 +1,21 @@
+# Magic missile (spec §8 "Spells", the first spell list): a dart of force that never misses, a
+# die more every three caster levels, never more than two.
+[[spell]]
+id = "magic_missile"
+name = "Magic missile"
+description = "A dart of force toward a place you aim at: it never misses the first creature in its way."
+tier = 1
+school = "evocation"
+kind = "damage"
+shape = "bolt"
+resolution = "auto"
+damage_type = "force"
+range = 8
+max_range = 10
+damage = { dice = "1d4", per_levels = 3, max_dice = 2 }
+
+[spell.cast]
+effect = "arcane_bolt"
+noun = "magic missile"
+verb = "strikes"
+noise = { sound = "chanting", loudness = 30 }

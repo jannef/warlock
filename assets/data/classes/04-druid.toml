@@ -30,11 +30,13 @@ bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["wayfarer", "vigour"] 
 # spell system); Woodland stride is the ranger's too.
 abilities = [
     { level = 1, talent = "wild_empathy" },
+    { level = 1, talent = "spark" },
+    { level = 3, talent = "barkskin" },
     { level = 6, talent = "woodland_stride" },
     { level = 12, talent = "weather_sense" },
+    { level = 12, talent = "call_lightning" },
     { level = 18, talent = "natures_ward" },
     { level = 25, talent = "winters_friend" },
-    { level = 32, talent = "call_lightning" },
     { level = 40, talent = "sun_and_moon" },
     { level = 50, talent = "flame_and_frost" },
     { level = 60, talent = "timeless_body" },

@@ -1,0 +1,8 @@
+[[talent]]
+id = "mend"
+name = "Mend"
+tree = "class"
+granted = true
+description = "A touch that closes a scratch (a cantrip, paid in mana): a few hit points back, yours or another's beside you."
+effects = [{ kind = "spell", spell = "mend" }]
+systems = ["spells", "mana", "hit_points"]

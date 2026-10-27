@@ -525,7 +525,7 @@ pub struct TalentMods {
     /// Its rising brings it back whole (Reborn whole).
     pub reborn_whole: bool,
     /// The caster's spells it has (design §4.1 B2), in the order taken.
-    pub spells: Vec<crate::content::ClassSpell>,
+    pub spells: Vec<crate::content::SpellId>,
     /// Added to every die of its spells and spell scrolls.
     pub spell_per_die: i32,
     /// Dice more its spells and spell scrolls roll.
@@ -839,7 +839,7 @@ impl TalentMods {
     }
 
     /// Whether it has the caster's spell `spell` (spec §8 "Class abilities").
-    pub fn has_spell(&self, spell: crate::content::ClassSpell) -> bool {
+    pub fn has_spell(&self, spell: crate::content::SpellId) -> bool {
         self.spells.contains(&spell)
     }
 
@@ -1273,7 +1273,9 @@ impl TalentMods {
             TalentEffect::SmallTarget { value } => self.small_target += value,
             TalentEffect::SpellDamagePercent { value } => self.spell_damage_percent += value,
             TalentEffect::Spell { spell } => {
-                if !self.spells.contains(&spell) {
+                if let Some(spell) = content.spell_id(&spell)
+                    && !self.spells.contains(&spell)
+                {
                     self.spells.push(spell);
                 }
             }

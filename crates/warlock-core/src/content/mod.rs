@@ -14,7 +14,6 @@ mod animated_tests;
 mod calendar;
 mod campaign;
 mod class;
-mod class_spell;
 mod creature;
 mod creature_rarity;
 mod damage_type;
@@ -116,7 +115,6 @@ pub use campaign::{CAMPAIGNS, CampaignDef, CampaignKind};
 #[cfg(test)]
 pub(crate) use class::strip_tables as strip_class_tables;
 pub use class::{BonusTalents, CASTING, ClassActive, ClassDef};
-pub use class_spell::ClassSpell;
 pub use creature::{
     Budge, Combat, CreatureDef, CreatureId, DEFAULT_SIGHT, Hide, Incorporeal, NORMAL_SPEED,
     NaturalAttack, OnEat, SPEEDS,
@@ -179,7 +177,7 @@ pub use race::{HUNGER, LightBlind, RaceDef, Races};
 pub use resource::{Build, MAX_EVERY, MAX_RESOURCE, MAX_SHORT, OverTime, ResourceDef, ResourceId};
 pub use room_effect::{Here, RoomEffectDef, RoomEffectId, RoomEffects, SpecialRoom, Swarm, Themes};
 pub use scenario::ScenarioDef;
-pub use scroll::{Cast, Reading, ScrollSpell};
+pub use scroll::{Cast, Reading, ScrollSpell, SpellScroll};
 pub use scroll_label::ScrollLabelDef;
 pub use search::{
     PASSIVE_PENALTIES, PassiveSearch, SEARCH_TURNS, SearchRules, Secret, secret_look,
@@ -2927,23 +2925,26 @@ impl Content {
     /// The caster's spell `spell` (spec §8 "Class abilities", "Spells"): the spell of its id in
     /// `data/spells/`, when a class ability gives it (its `spell` effect names it); `None`
     /// otherwise.
-    pub fn class_spell(&self, spell: ClassSpell) -> Option<&SpellData> {
+    pub fn class_spell(&self, spell: SpellId) -> Option<&SpellData> {
         self.spell_of(spell).filter(|_| self.class_gives(spell))
     }
 
     /// The spell `spell` names in `data/spells/`, whoever has it (a class ability, or study:
     /// spec §8 "Spells"); `None` without its file.
-    pub fn spell_of(&self, spell: ClassSpell) -> Option<&SpellData> {
-        self.spell_id(spell.id()).map(|id| self.spell(id))
+    pub fn spell_of(&self, spell: SpellId) -> Option<&SpellData> {
+        self.spells.get(usize::from(spell.0))
     }
 
     /// Whether a class ability gives `spell` (its `spell` effect names it).
-    fn class_gives(&self, spell: ClassSpell) -> bool {
+    fn class_gives(&self, spell: SpellId) -> bool {
+        let Some(name) = self.spell_of(spell).map(|s| s.id.as_str()) else {
+            return false;
+        };
         (self.talents.iter()).any(|(_, def)| {
             (def.effects
                 .iter()
                 .chain(def.ranks.iter().flat_map(|r| r.effects.iter())))
-            .any(|e| matches!(e, TalentEffect::Spell { spell: s } if *s == spell))
+            .any(|e| matches!(e, TalentEffect::Spell { spell: s } if s == name))
         })
     }
 
@@ -3030,6 +3031,15 @@ impl Content {
 
     pub fn spell(&self, id: SpellId) -> &SpellData {
         &self.spells[usize::from(id.0)]
+    }
+
+    /// Every spell, lowest tier first, each tier in path order (the abilities menu's order).
+    pub fn spells_by_tier(&self) -> Vec<SpellId> {
+        let mut ids: Vec<SpellId> = (0..self.spells.len())
+            .filter_map(|i| u16::try_from(i).ok().map(SpellId))
+            .collect();
+        ids.sort_by_key(|&id| (self.spell(id).tier, id));
+        ids
     }
 
     pub fn spell_id(&self, name: &str) -> Option<SpellId> {
@@ -3460,18 +3470,14 @@ mod tests {
         // Spells enter it: saves will name them by index (spec §8 "Spells").
         let mut files = ContentFiles::builtin();
         files.insert(
-            "data/spells/spark.toml",
-            "[[spell]]\nid = \"spark\"\nname = \"Spark\"\ndescription = \"x\"\ntier = 0\n\
+            "data/spells/zzz_zap.toml",
+            "[[spell]]\nid = \"zap\"\nname = \"Zap\"\ndescription = \"x\"\ntier = 0\n\
              school = \"evocation\"\nkind = \"damage\"\nshape = \"bolt\"\nresolution = \"auto\"\n\
              damage_type = \"electricity\"\nmax_range = 5\ndamage = { dice = \"1d4\" }\n",
         );
         let with_spell = Content::load(&files).expect("loads");
         let last = SpellId(u16::try_from(with_spell.spells().len() - 1).expect("few"));
-        assert_eq!(
-            with_spell.spell_id("spark"),
-            Some(last),
-            "last in path order"
-        );
+        assert_eq!(with_spell.spell_id("zap"), Some(last), "last in path order");
         assert_ne!(a, with_spell.fingerprint_for("showcase"));
     }
 

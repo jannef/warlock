@@ -32,6 +32,15 @@ on sight. A shop's price for an unknown scroll is its true price.
 
 ## Spell scrolls
 
+Every [spell](magic.md#the-spells) comes on a scroll of its own: a scroll of magic missile, of
+haste, of web. Reading one casts its spell once, as if you cast it yourself (its shape, its
+resolution, its damage), but at the scroll's own caster level (its tier's comfortable level) and
+**free of mana**: anyone can read one, a warrior too. A spell on yourself (Haste, Barkskin,
+Blessing) is read at once; any other is aimed first, as below; Mend and Cure wounds are aimed at
+the creature beside you to heal, or at yourself. A lower tier's scrolls are found sooner and more
+often: cantrips from the first floors, tier 3 from item level 6 (the table above), and general
+stores lay out low tiers more often than high ones.
+
 The scrolls of fireball, lightning, and frost cast the same spells as the
 [fireball, lightning, and frost traps](traps.md), with the same rules and damage, but **you
 aim them**. After choosing the scroll a cursor appears on the map, as for a shot (see

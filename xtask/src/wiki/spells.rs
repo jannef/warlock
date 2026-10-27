@@ -1,10 +1,10 @@
 //! Spells (spec §8 "Spells"): the tier table (comfortable caster level, base cost, damage
 //! ceiling), the shapes' and resolutions' multipliers, the classes' casting percents, the spell
-//! list, and the armour that makes casting dearer.
+//! list, the classes' guaranteed spells, and the armour that makes casting dearer.
 
 use std::fmt::Write as _;
 use warlock_core::content::{
-    Content, Resolution, Shape, SpellData, SpellDice, SpellPurpose, TIERS,
+    Content, Resolution, Shape, SpellData, SpellDice, SpellPurpose, TIERS, TalentEffect,
 };
 
 /// Each tier's comfortable caster level, base mana cost, and damage ceiling, tier 0 first.
@@ -125,6 +125,44 @@ pub(super) fn list(content: &Content) -> String {
     out
 }
 
+/// Each class's guaranteed spells (its level table's spell abilities), by class name: each
+/// spell with its tier and the level it comes at, lowest first; every other spell is learned
+/// from scrolls.
+pub(super) fn class_spells(content: &Content) -> String {
+    let book = content.talents();
+    let mut classes: Vec<_> = content.classes().iter().collect();
+    classes.sort_by(|a, b| a.name.cmp(&b.name));
+    let mut out = String::from(
+        "| Class | Casting | Guaranteed spells (tier, from level) |\n|---|:---:|---|\n",
+    );
+    for class in classes {
+        let mut given: Vec<(u8, &str, u8)> = Vec::new();
+        for (level, talent) in &class.abilities {
+            let Some(id) = book.id(talent) else {
+                continue;
+            };
+            for effect in book.get(id).effects_at(1) {
+                let TalentEffect::Spell { spell } = effect else {
+                    continue;
+                };
+                if let Some(s) = content.spell_id(&spell).map(|s| content.spell(s)) {
+                    given.push((*level, s.name.as_str(), s.tier));
+                }
+            }
+        }
+        let spells = if given.is_empty() {
+            "none".to_string()
+        } else {
+            (given.iter())
+                .map(|(level, name, tier)| format!("{name} ({tier}, {level})"))
+                .collect::<Vec<_>>()
+                .join(", ")
+        };
+        let _ = writeln!(out, "| {} | {} % | {spells} |", class.name, class.casting);
+    }
+    out
+}
+
 /// How far `spell` reaches, and how far Willpower may take it: "6 (to 8)", a burst's "range 10,
 /// radius 2", "—" on oneself.
 fn reach(spell: &SpellData) -> String {
@@ -181,6 +219,8 @@ pub(super) fn does(content: &Content, spell: &SpellData) -> String {
             Some((s, n)) => {
                 let who = if spell.kind == SpellPurpose::Buff {
                     "you are"
+                } else if spell.shape == Shape::Burst {
+                    "everyone it reaches but you, friend or foe, suffers"
                 } else {
                     "a hostile you see suffers"
                 };

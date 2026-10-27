@@ -3,7 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  The gardener says: "My old master swore that the words of a spell, said over a bed, kept the slugs
- off. Bring me a scroll of lightning, would you? I'll only read the first line. Probably."
+ off. Bring me a scroll of spark, would you? I'll only read the first line. Probably."
 
 
 
@@ -15,11 +15,11 @@ expression: "render(case, content.clone())"
     │ Active                                                                                  │
     │ > Words for the beds                                                                    │
     │                                                                                         │
-    │ The gardener wants you to bring a scroll of lightning.                                  │
+    │ The gardener wants you to bring a scroll of spark.                                      │
     │ You carry 0 / 1.                                                                        │
     │                                                                                         │
     │ The gardener: "My old master swore that the words of a spell, said over a bed, kept the │
-    │ slugs off. Bring me a scroll of lightning, would you? I'll only read the first line.    │
+    │ slugs off. Bring me a scroll of spark, would you? I'll only read the first line.        │
     │ Probably."                                                                              │
     │                                                                                         │
     │ ↑↓ choose   q or Esc close                                                              │

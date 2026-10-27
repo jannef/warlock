@@ -440,13 +440,13 @@ fn gifts_are_action_text_and_the_menus_birth_sign_group() {
         ))
     );
     let stare = Ability::Sign(SignActive::TransfixingStare);
-    assert_eq!(stare.aim(), crate::ability::Aim::Cell);
+    assert_eq!(stare.aim(&BUILTIN), crate::ability::Aim::Cell);
     assert_eq!(stare.source(), crate::ability::Source::Sign);
-    assert_eq!(stare.action(None), None, "not without a cell");
+    assert_eq!(stare.action(&BUILTIN, None), None, "not without a cell");
     let grace = Ability::Sign(SignActive::HornsGrace);
-    assert_eq!(grace.aim(), crate::ability::Aim::Nothing);
+    assert_eq!(grace.aim(&BUILTIN), crate::ability::Aim::Nothing);
     assert_eq!(
-        grace.action(None),
+        grace.action(&BUILTIN, None),
         Some(Action::Gift(SignActive::HornsGrace, None))
     );
     assert_eq!(grace.name(&BUILTIN), "Horn's grace");

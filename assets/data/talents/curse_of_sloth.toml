@@ -5,4 +5,4 @@ tree = "class"
 granted = true
 description = "Curse a foe you see nearby (a spell, paid in mana): sluggish a minute, all it does takes half again as long."
 effects = [{ kind = "spell", spell = "curse_of_sloth" }]
-systems = ["mana", "speed"]
+systems = ["spells", "mana", "speed"]

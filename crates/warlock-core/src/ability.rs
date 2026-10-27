@@ -26,7 +26,7 @@
 use crate::action::Action;
 use crate::alignment::Requirement;
 use crate::content::{
-    ActionKind, ClassActive, ClassSpell, Content, ResourceCost, ResourceId, SignActive, SkillDef,
+    ActionKind, ClassActive, Content, ResourceCost, ResourceId, SignActive, SkillDef, SpellId,
     StatusId, TalentEffect,
 };
 use crate::geom::{Dir, Pos};
@@ -51,7 +51,7 @@ pub enum Ability {
     /// A caster's spell (spec §8 "Class abilities", "Spells"): [`Action::Cast`], had by
     /// whoever's class gives the ability that names it; unavailable without the mana it costs
     /// (that check needs the caster level: [`spell_unavailable`]).
-    Spell(ClassSpell),
+    Spell(SpellId),
     /// A skill used as an action (`kind = "action"` in `data/skills.toml`) that the actor is
     /// trained in, whose use is not in the game yet: listed, never available (spec §8
     /// "Skills"). A use, when it comes, is a variant of its own with its action, and its skill
@@ -251,10 +251,8 @@ impl Ability {
         let classes = (ClassActive::ALL.iter())
             .filter(|&&a| content.class_active(a).is_some())
             .map(|&a| Ability::Class(a));
-        // The casters' spells some class's table has, in their order.
-        let spells = (ClassSpell::ALL.iter())
-            .filter(|&&s| content.spell_of(s).is_some())
-            .map(|&s| Ability::Spell(s));
+        // Every spell, by tier, then in path order: any may be learned.
+        let spells = content.spells_by_tier().into_iter().map(Ability::Spell);
         // Weapon skills and fighting styles: the shield bash.
         let weapon_skills = [Ability::ShieldBash];
         // Items: the lantern's hood.
@@ -330,7 +328,7 @@ impl Ability {
         match self {
             Ability::Sign(active) => active.id(),
             Ability::Class(active) => active.id(),
-            Ability::Spell(spell) => spell.id(),
+            Ability::Spell(spell) => content.spell_of(spell).map_or("", |s| &s.id),
             Ability::Skill(id) => &content.skill(id).id,
             Ability::ThrowVoice => "throw_voice",
             Ability::Disarm => "disarm",
@@ -411,13 +409,13 @@ impl Ability {
         }
     }
 
-    /// What it asks for before it is used.
-    pub const fn aim(self) -> Aim {
+    /// What it asks for before it is used (a spell: by its shape in `content`).
+    pub fn aim(self, content: &Content) -> Aim {
         match self {
             Ability::Sign(active) if active.aimed() => Aim::Cell,
             Ability::Sign(_) => Aim::Nothing,
             Ability::Class(active) if active.aimed() => Aim::Direction,
-            Ability::Spell(spell) if spell.aimed() => Aim::Cell,
+            Ability::Spell(spell) if aimed(content, spell) => Aim::Cell,
             Ability::Spell(_) => Aim::Nothing,
             Ability::Class(active) if active.aims_cell() => Aim::Cell,
             Ability::Class(_)
@@ -496,18 +494,17 @@ impl Ability {
     /// The action it is, aimed `dir` when it asks for a direction; `None` for one with no use
     /// yet, one that asks for a direction without it, or one that asks for a cell
     /// ([`Ability::action_at`]).
-    pub const fn action(self, dir: Option<Dir>) -> Option<Action> {
+    pub fn action(self, content: &Content, dir: Option<Dir>) -> Option<Action> {
         match (self, dir) {
-            (Ability::Class(active), dir) if active.aimed() => match dir {
-                Some(dir) => Some(Action::Use(active, Some(dir))),
-                None => None,
-            },
+            (Ability::Class(active), dir) if active.aimed() => {
+                dir.map(|dir| Action::Use(active, Some(dir)))
+            }
             (Ability::Class(active), _) if active.aims_cell() => None,
             (Ability::Class(active), _) => Some(Action::Use(active, None)),
             (Ability::Sign(active), _) if active.aimed() => None,
             (Ability::Sign(active), _) => Some(Action::Gift(active, None)),
-            (Ability::Spell(spell), _) if spell.aimed() => None,
-            (Ability::Spell(spell), _) => Some(Action::Cast(spell, None)),
+            (Ability::Spell(spell), _) if aimed(content, spell) => None,
+            (Ability::Spell(spell), _) => Some(Action::Cast(spell_name(content, spell)?, None)),
             (Ability::Skill(_) | Ability::ThrowVoice, _) => None,
             (Ability::SecondWind, _) => Some(Action::SecondWind),
             (Ability::BloodMagic, _) => Some(Action::BloodMagic),
@@ -524,11 +521,13 @@ impl Ability {
 
     /// The action it is, aimed at level cell `at`, for one that asks for a cell; `None` for any
     /// other.
-    pub const fn action_at(self, at: Pos) -> Option<Action> {
+    pub fn action_at(self, content: &Content, at: Pos) -> Option<Action> {
         match self {
             Ability::ThrowVoice => Some(Action::ThrowVoice(at)),
             Ability::Sign(active) if active.aimed() => Some(Action::Gift(active, Some(at))),
-            Ability::Spell(spell) if spell.aimed() => Some(Action::Cast(spell, Some(at))),
+            Ability::Spell(spell) if aimed(content, spell) => {
+                Some(Action::Cast(spell_name(content, spell)?, Some(at)))
+            }
             Ability::Class(active) if active.aims_cell() => Some(Action::UseAt(active, at)),
             Ability::Sign(_)
             | Ability::Spell(_)
@@ -624,13 +623,23 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
     cooldowns.into_iter().find(|&s| actor.effects.has(s))
 }
 
+/// Whether `spell` asks for a cell before it is cast: anything but a spell on oneself.
+fn aimed(content: &Content, spell: SpellId) -> bool {
+    content.spell_of(spell).is_some_and(|s| s.aimed())
+}
+
+/// The id `spell` is cast by (`use:ID`), if the content has it.
+fn spell_name(content: &Content, spell: SpellId) -> Option<String> {
+    content.spell_of(spell).map(|s| s.id.clone())
+}
+
 /// Why `actor`, of caster level `caster_level`, cannot cast `spell` now: what
 /// [`Ability::unavailable`] says, else [`Unavailable::NoMana`] while it has less mana than the
 /// spell costs it ([`Actor::spell_cost`]).
 pub fn spell_unavailable(
     actor: &Actor,
     content: &Content,
-    spell: ClassSpell,
+    spell: SpellId,
     caster_level: i32,
 ) -> Option<Unavailable> {
     let ability = Ability::Spell(spell);
@@ -741,11 +750,18 @@ mod tests {
     fn stealing_asks_for_a_direction_and_is_had_by_those_trained_in_it() {
         let content = std::sync::Arc::new(Content::builtin().expect("content"));
         let steal = Ability::Steal;
-        assert_eq!(steal.aim(), Aim::Direction);
+        assert_eq!(steal.aim(&content), Aim::Direction);
         assert_eq!(steal.source(), Source::Skill);
         assert_eq!(steal.cost(), Some(ActionKind::Steal));
-        assert_eq!(steal.action(Some(Dir::N)), Some(Action::Steal(Dir::N)));
-        assert_eq!(steal.action(None), None, "not without a direction");
+        assert_eq!(
+            steal.action(&content, Some(Dir::N)),
+            Some(Action::Steal(Dir::N))
+        );
+        assert_eq!(
+            steal.action(&content, None),
+            None,
+            "not without a direction"
+        );
         assert_eq!(steal.id(&content), "steal");
         // The showcase's thief is trained in Steal; a warrior is not.
         let thief = crate::World::new(content.clone(), "showcase", None).expect("thief");
@@ -800,31 +816,45 @@ mod tests {
 
     #[test]
     fn a_shield_bash_asks_for_a_direction_and_is_a_bash() {
+        let content = Content::builtin().expect("content");
         let bash = Ability::ShieldBash;
-        assert_eq!(bash.aim(), Aim::Direction);
+        assert_eq!(bash.aim(&content), Aim::Direction);
         assert_eq!(bash.source(), Source::WeaponSkill);
         assert_eq!(bash.cost(), Some(ActionKind::Melee));
-        assert_eq!(bash.action(Some(Dir::E)), Some(Action::Bash(Dir::E)));
-        assert_eq!(bash.action(None), None, "not without a direction");
-        assert_eq!(Ability::Skill(SkillId(0)).action(Some(Dir::E)), None);
+        assert_eq!(
+            bash.action(&content, Some(Dir::E)),
+            Some(Action::Bash(Dir::E))
+        );
+        assert_eq!(bash.action(&content, None), None, "not without a direction");
+        assert_eq!(
+            Ability::Skill(SkillId(0)).action(&content, Some(Dir::E)),
+            None
+        );
         assert_eq!(bash.range(), None);
-        assert_eq!(bash.action_at(Pos::new(3, 4)), None);
+        assert_eq!(bash.action_at(&content, Pos::new(3, 4)), None);
     }
 
     #[test]
     fn throwing_a_voice_aims_at_a_cell_and_the_hood_at_nothing() {
+        let content = Content::builtin().expect("content");
         let voice = Ability::ThrowVoice;
-        assert_eq!((voice.aim(), voice.source()), (Aim::Cell, Source::Class));
+        assert_eq!(
+            (voice.aim(&content), voice.source()),
+            (Aim::Cell, Source::Class)
+        );
         assert_eq!(voice.cost(), Some(ActionKind::ThrowVoice));
         assert_eq!(voice.range(), Some(VOICE_RANGE));
-        assert_eq!(voice.action(None), None, "not without a cell");
+        assert_eq!(voice.action(&content, None), None, "not without a cell");
         let at = Pos::new(3, 4);
-        assert_eq!(voice.action_at(at), Some(Action::ThrowVoice(at)));
+        assert_eq!(voice.action_at(&content, at), Some(Action::ThrowVoice(at)));
         let hood = Ability::HoodLantern;
-        assert_eq!((hood.aim(), hood.source()), (Aim::Nothing, Source::Item));
+        assert_eq!(
+            (hood.aim(&content), hood.source()),
+            (Aim::Nothing, Source::Item)
+        );
         assert_eq!(hood.cost(), Some(ActionKind::Hood));
-        assert_eq!(hood.action(None), Some(Action::HoodLantern));
-        assert_eq!((hood.range(), hood.action_at(at)), (None, None));
+        assert_eq!(hood.action(&content, None), Some(Action::HoodLantern));
+        assert_eq!((hood.range(), hood.action_at(&content, at)), (None, None));
     }
 
     #[test]
@@ -835,11 +865,18 @@ mod tests {
             .expect("Disable device");
         assert_eq!(Ability::use_of(disable, &content), Some(Ability::Disarm));
         let disarm = Ability::Disarm;
-        assert_eq!(disarm.aim(), Aim::Direction);
+        assert_eq!(disarm.aim(&content), Aim::Direction);
         assert_eq!(disarm.source(), Source::Skill);
         assert_eq!(disarm.cost(), Some(ActionKind::Disarm));
-        assert_eq!(disarm.action(Some(Dir::W)), Some(Action::Disarm(Dir::W)));
-        assert_eq!(disarm.action(None), None, "not without a direction");
+        assert_eq!(
+            disarm.action(&content, Some(Dir::W)),
+            Some(Action::Disarm(Dir::W))
+        );
+        assert_eq!(
+            disarm.action(&content, None),
+            None,
+            "not without a direction"
+        );
         // Its skill is listed as it, not as a skill with no use yet.
         let every = Ability::every(&content);
         assert!(every.contains(&Ability::Disarm));
@@ -860,10 +897,13 @@ mod tests {
             Some(Ability::PickLock)
         );
         let pick = Ability::PickLock;
-        assert_eq!(pick.aim(), Aim::Direction);
+        assert_eq!(pick.aim(&content), Aim::Direction);
         assert_eq!(pick.source(), Source::Skill);
         assert_eq!(pick.cost(), Some(ActionKind::PickLock));
-        assert_eq!(pick.action(Some(Dir::W)), Some(Action::PickLock(Dir::W)));
-        assert_eq!(pick.action(None), None, "not without a direction");
+        assert_eq!(
+            pick.action(&content, Some(Dir::W)),
+            Some(Action::PickLock(Dir::W))
+        );
+        assert_eq!(pick.action(&content, None), None, "not without a direction");
     }
 }

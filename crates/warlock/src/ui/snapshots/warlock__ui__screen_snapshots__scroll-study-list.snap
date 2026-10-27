@@ -15,8 +15,8 @@ expression: "render(case, content.clone())"
           ┌─ Study ──────────────────────────────────────────────────────────────────────┐
           │                                                                              │
           │ Scrolls                                                                      │
-          │ > a - ? 2 scrolls of fireball (Fire burst: far beyond you)            100 g  │
-          │   b - ? 2 scrolls of lightning (Call lightning: far beyond you)       100 g  │
+          │ > a - ? 2 scrolls of fireball (Fireball: far beyond you)              100 g  │
+          │   b - ? 2 scrolls of lightning (Lightning bolt: far beyond you)       100 g  │
           │   c - ? 2 scrolls of frost (Frost: far beyond you)                    100 g  │
           │                                                                              │
           │ a-c or Enter study   Esc cancel                                              │
@@ -31,4 +31,4 @@ expression: "render(case, content.clone())"
 
 
 
- The Trap Hall  ·  HP 22/22  ·  MP 1/1  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444    ? controls
+ The Trap Hall  ·  HP 22/22  ·  MP 2/2  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444    ? controls

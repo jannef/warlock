@@ -493,9 +493,12 @@ fn a_shield_bash_is_a_blow_with_the_shield_that_trains_shield_bashing() {
     arm(&mut w, &["sword", "buckler"]);
     // With one, the abilities menu (#156) lists it available, and it asks for a direction.
     assert_eq!(listed(&w), [bash(None)]);
-    assert_eq!(Ability::ShieldBash.aim(), crate::ability::Aim::Direction);
     assert_eq!(
-        Ability::ShieldBash.action(Some(Dir::E)),
+        Ability::ShieldBash.aim(w.content()),
+        crate::ability::Aim::Direction
+    );
+    assert_eq!(
+        Ability::ShieldBash.action(w.content(), Some(Dir::E)),
         Some(Action::Bash(Dir::E))
     );
     for (dir, said) in [

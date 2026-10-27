@@ -1176,7 +1176,7 @@ impl World {
             Action::Use(active, dir) => return self.use_class(*active, *dir, events),
             Action::UseAt(active, at) => return self.use_class_at(*active, *at, events),
             Action::Gift(active, at) => return self.use_gift(*active, *at, events),
-            Action::Cast(spell, at) => return self.cast_spell(*spell, *at, events),
+            Action::Cast(spell, at) => return self.cast_spell(spell, *at, events),
             Action::Talent { id, choice } => return self.take_talent(id, choice.as_deref()),
             Action::Advance(skill) => return self.advance_skill(skill),
             Action::SetVision(id) => return self.set_vision(id),
@@ -1406,6 +1406,8 @@ mod skills_tests;
 mod spawn_tests;
 #[cfg(test)]
 mod speed_tests;
+#[cfg(test)]
+mod spell_list_tests;
 #[cfg(test)]
 mod stars_roc_tests;
 #[cfg(test)]

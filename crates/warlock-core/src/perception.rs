@@ -136,7 +136,7 @@ pub struct OwnResource {
 pub struct OwnStudy {
     /// The inventory stack, by position.
     pub item: usize,
-    pub spell: crate::content::ClassSpell,
+    pub spell: crate::content::SpellId,
     pub chance: &'static str,
 }
 
@@ -1312,7 +1312,7 @@ impl<'a> PerceptionView<'a> {
 
     /// The spells the player knows (spec §8 "Spells": learned, or their class gives them), in
     /// menu order.
-    pub fn own_spells(&self) -> Vec<crate::content::ClassSpell> {
+    pub fn own_spells(&self) -> Vec<crate::content::SpellId> {
         self.player.known_spells(self.content)
     }
 
@@ -1327,7 +1327,7 @@ impl<'a> PerceptionView<'a> {
         (self.player.inventory.iter().enumerate())
             .filter_map(|(item, stack)| {
                 let reading = self.content.object(stack.object).read.as_ref()?;
-                let spell = reading.spell()?.teaches?;
+                let spell = reading.teaches()?;
                 if !self.lore.is_identified(stack.object)
                     || self.player.knows_spell(self.content, spell)
                 {
@@ -1351,17 +1351,14 @@ impl<'a> PerceptionView<'a> {
 
     /// What the player's spell `spell` costs them now, in mana (spec §8 "Spells": they know
     /// what their own spells cost); `None` for a spell they cannot cast.
-    pub fn own_spell_cost(&self, spell: crate::content::ClassSpell) -> Option<i32> {
+    pub fn own_spell_cost(&self, spell: crate::content::SpellId) -> Option<i32> {
         let def = self.content.spell_of(spell)?;
         Some((self.player).spell_cost(self.content, def, self.own_caster_level()))
     }
 
     /// How far the player's spell `spell` reaches now, Willpower counted: the farthest cell it
     /// may be aimed at, and a burst's radius. They know their own spells.
-    pub fn own_spell_reach(
-        &self,
-        spell: crate::content::ClassSpell,
-    ) -> Option<crate::world::Reach> {
+    pub fn own_spell_reach(&self, spell: crate::content::SpellId) -> Option<crate::world::Reach> {
         let def = self.content.spell_of(spell)?;
         Some(self.player.spell_reach(self.content, def))
     }

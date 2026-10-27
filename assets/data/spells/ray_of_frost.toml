@@ -1,0 +1,20 @@
+# Ray of frost (spec §8 "Spells", the first spell list): the wizard's cantrip, a thin ray of cold
+# that must hit like a missile; a poor weapon beside a crossbow, which is the point.
+[[spell]]
+id = "ray_of_frost"
+name = "Ray of frost"
+description = "A thin ray of cold toward a place you aim at: it strikes the first creature in its way, if it hits."
+tier = 0
+school = "evocation"
+kind = "damage"
+shape = "ray"
+resolution = "attack"
+damage_type = "cold"
+range = 6
+max_range = 8
+damage = { dice = "1d6" }
+
+[spell.cast]
+effect = "frost_ray"
+noun = "ray of frost"
+noise = { sound = "chanting", loudness = 20 }

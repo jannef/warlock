@@ -34,7 +34,7 @@ use bevy::prelude::*;
 use warlock_core::ability::Ability;
 use warlock_core::color::Rgb;
 use warlock_core::content::{
-    Cast, ClassActive, ScrollSpell, Shape, SpellData, SpellPurpose, Stance,
+    Cast, ClassActive, Reading, ScrollSpell, Shape, SpellData, SpellId, SpellPurpose, Stance,
 };
 use warlock_core::fov::radius2;
 use warlock_core::perception::{CellView, PerceptionView};
@@ -166,7 +166,11 @@ impl Aim {
         match self.kind {
             AimKind::Fire => view.ready_to_fire().map(|(_, _, range)| range),
             AimKind::Throw(item) => view.throw_range(item),
-            AimKind::Read(item) => scroll_spell(view, item).map(|s| s.range),
+            AimKind::Read(item) => match spell_of(view, self.kind) {
+                // A scroll of a spell reaches as far as the player casts it.
+                Some(spell) => view.own_spell_reach(spell).and_then(|r| r.range),
+                None => scroll_spell(view, item).map(|s| s.range),
+            },
             // A volley flies as far as a shot.
             AimKind::Ability(VOLLEY) => view.ready_to_fire().map(|(_, _, range)| range),
             // A spell reaches as far as the player casts it, Willpower counted.
@@ -178,7 +182,7 @@ impl Aim {
     }
 
     /// The action that looses it at the cursor (`None`: an ability that aims at no cell).
-    pub fn action(&self) -> Option<Action> {
+    pub fn action(&self, content: &warlock_core::content::Content) -> Option<Action> {
         Some(match self.kind {
             AimKind::Fire => Action::Fire(self.at),
             AimKind::Throw(item) => Action::Throw { item, at: self.at },
@@ -186,7 +190,7 @@ impl Aim {
                 item,
                 target: Some(ReadTarget::Cell(self.at)),
             },
-            AimKind::Ability(ability) => return ability.action_at(self.at),
+            AimKind::Ability(ability) => return ability.action_at(content, self.at),
         })
     }
 
@@ -254,7 +258,8 @@ impl Aim {
                 };
                 (burst.radius, spell.range, spell.noun.clone())
             }
-            (None, AimKind::Ability(Ability::Spell(id))) => {
+            (None, AimKind::Ability(_) | AimKind::Read(_)) => {
+                let id = spell_of(view, self.kind)?;
                 let spell = cast_spell(view, self.kind).filter(|s| s.shape == Shape::Burst)?;
                 let reach = view.own_spell_reach(id)?;
                 (reach.radius?, reach.range?, spell.look.noun.clone())
@@ -344,12 +349,25 @@ fn aimed_spell<'v>(view: &PerceptionView<'v>, kind: AimKind) -> Option<&'v Scrol
     }
 }
 
-/// The spell `kind` casts when it is one of the player's spells (spec §8 "Spells").
-fn cast_spell<'v>(view: &PerceptionView<'v>, kind: AimKind) -> Option<&'v SpellData> {
+/// The spell of `data/spells/` `kind` casts: one of the player's spells, or a scroll of one
+/// read (spec §8 "Spells").
+fn spell_of(view: &PerceptionView<'_>, kind: AimKind) -> Option<SpellId> {
     match kind {
-        AimKind::Ability(Ability::Spell(spell)) => view.content().spell_of(spell),
+        AimKind::Ability(Ability::Spell(spell)) => Some(spell),
+        AimKind::Read(item) => {
+            let stack = view.inventory().get(item)?;
+            match view.content().object(stack.object).read.as_ref()? {
+                Reading::Cast(scroll) => Some(scroll.spell),
+                _ => None,
+            }
+        }
         _ => None,
     }
+}
+
+/// The spell `kind` casts when it is one of the player's spells or a scroll of one.
+fn cast_spell<'v>(view: &PerceptionView<'v>, kind: AimKind) -> Option<&'v SpellData> {
+    view.content().spell_of(spell_of(view, kind)?)
 }
 
 fn scroll_spell<'v>(view: &PerceptionView<'v>, item: usize) -> Option<&'v ScrollSpell> {
@@ -608,7 +626,7 @@ mod tests {
         };
         assert_eq!(fireball.range(&view), Some(10));
         assert_eq!(
-            fireball.action(),
+            fireball.action(view.content()),
             Some(Action::Read {
                 item: 1,
                 target: Some(ReadTarget::Cell(fireball.at))
@@ -633,11 +651,11 @@ mod tests {
         assert!(text.contains("Enter or r reads"), "{text}");
     }
 
-    /// A wizard of level 40 in the showcase's first room (Arcane bolt, Fire burst), with
-    /// `content`.
-    fn wizard(content: Arc<Content>) -> World {
+    /// A caster of `class` of a high level in the showcase's first room (a wizard's Arcane
+    /// bolt, a druid's Flame), with `content`.
+    fn caster(content: Arc<Content>, class: &str) -> World {
         let spec: warlock_core::character::CharacterSpec =
-            "human,female,wizard".parse().expect("a wizard");
+            format!("human,female,{class}").parse().expect("a caster");
         let mut w =
             World::start_run(content, "showcase", Some(7), Some(&spec), None, true).expect("a run");
         for action in warlock_core::action::parse_actions("xp:2000000 levelup:auto").expect("ok") {
@@ -648,25 +666,28 @@ mod tests {
 
     #[test]
     fn a_spell_is_aimed_by_its_shape_at_the_players_own_reach() {
-        let w = wizard(Arc::new(Content::builtin().expect("content")));
+        let content = Arc::new(Content::builtin().expect("content"));
+        let spell = |id: &str| content.spell_id(id).expect("a spell");
+        let w = caster(content.clone(), "druid");
         let view = w.perception();
         let me = view.viewer();
-        use warlock_core::content::ClassSpell;
-        // Fire burst: as far as the wizard casts it; close by, it may catch them.
+        // Flame: as far as the druid casts it; close by, it may catch them.
         let burst = Aim {
-            kind: AimKind::Ability(Ability::Spell(ClassSpell::FireBurst)),
+            kind: AimKind::Ability(Ability::Spell(spell("flame"))),
             at: Pos::new(me.x + 1, me.y),
         };
-        let reach = view.own_spell_reach(ClassSpell::FireBurst).expect("cast");
+        let reach = view.own_spell_reach(spell("flame")).expect("cast");
         assert_eq!(burst.range(&view), reach.range);
-        assert_eq!(burst.catches_reader(&view).as_deref(), Some("fireball"));
+        assert_eq!(burst.catches_reader(&view).as_deref(), Some("flame"));
         assert_eq!(
-            burst.action(),
-            Some(Action::Cast(ClassSpell::FireBurst, Some(burst.at)))
+            burst.action(&content),
+            Some(Action::Cast("flame".into(), Some(burst.at)))
         );
-        // Arcane bolt, a line: dots along its way, as a scroll's bolt.
+        // Arcane bolt, a wizard's line: dots along its way, as a scroll's bolt.
+        let w = caster(content.clone(), "wizard");
+        let view = w.perception();
         let line = Aim {
-            kind: AimKind::Ability(Ability::Spell(ClassSpell::ArcaneBolt)),
+            kind: AimKind::Ability(Ability::Spell(spell("arcane_bolt"))),
             at: Pos::new(me.x + 4, me.y),
         };
         let cells = line.line(&view).cells;
@@ -680,7 +701,7 @@ mod tests {
              tier = 2\nschool = \"evocation\"\nkind = \"damage\"\ndamage_type = \"force\"\n\
              shape = \"cone\"\nresolution = \"area\"\nmax_length = 3\ndamage = { dice = \"2d6\" }\n",
         );
-        let w = wizard(Arc::new(Content::load(&files).expect("loads")));
+        let w = caster(Arc::new(Content::load(&files).expect("loads")), "wizard");
         let view = w.perception();
         let cone = line.line(&view);
         assert!(!cone.blocked && !cone.out_of_range && !cone.unseen);
@@ -721,13 +742,14 @@ mod tests {
         let text = throw.prompt("a dagger", ("Enter", "t", "Tab"));
         assert!(text.starts_with("Throw a dagger:"), "{text}");
         assert!(text.contains("Enter or t throws"), "{text}");
+        let content = Content::builtin().expect("content");
         assert_eq!(
-            throw.action(),
+            throw.action(&content),
             Some(Action::Throw {
                 item: 0,
                 at: Pos::new(1, 1)
             })
         );
-        assert_eq!(aim.action(), Some(Action::Fire(Pos::new(1, 1))));
+        assert_eq!(aim.action(&content), Some(Action::Fire(Pos::new(1, 1))));
     }
 }

@@ -29,6 +29,7 @@ bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["weaponcraft", "wayfar
 abilities = [
     { level = 1, talent = "favoured_prey" },
     { level = 6, talent = "tracker" },
+    { level = 6, talent = "barkskin" },
     { level = 12, talent = "rapid_shot" },
     { level = 18, talent = "woodland_stride" },
     { level = 25, talent = "swift_tracker" },

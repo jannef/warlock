@@ -34,10 +34,11 @@ pub const MAX_SEVERITY: u16 = 100;
 pub const MAX_REGEN: u16 = 1000;
 /// The most hit points one tick may cost.
 pub const MAX_TICK_DAMAGE: u16 = 1000;
-/// What a status may make every action cost, in percent: as much as usual (100) to ten times as
-/// much. Statuses slow and never hasten, so a creature's quickest step is what it always was (a
+/// What a status may make every action cost, in percent: half as much (Hasted) to ten times as
+/// much. Only a spell's buff on its caster, the player, may hasten (`spell_def` refuses a hex's
+/// or a damage spell's that would), so a creature's quickest step is what it always was (a
 /// rest's batching counts on it, `World::out_of_view_for`).
-pub const COST_PERCENT: RangeInclusive<u32> = 100..=1000;
+pub const COST_PERCENT: RangeInclusive<u32> = 50..=1000;
 
 /// What makes a status a **hold** (`hold` in data; Held, spec §8 "Status effects"): the actor
 /// that caused it (its effect's `by`) holds the sufferer, and the hold ends when the holder dies,
@@ -968,13 +969,10 @@ mod tests {
                 "combat: to_hit 21 is out of range (-20 to 20)",
             ),
             (raging("dodge = -2", "luck = 1"), "unknown field `luck`"),
-            (
-                raging("cost = 150", "cost = 99"),
-                "cost must be 100 to 1000",
-            ),
+            (raging("cost = 150", "cost = 49"), "cost must be 50 to 1000"),
             (
                 raging("cost = 150", "cost = 1001"),
-                "cost must be 100 to 1000",
+                "cost must be 50 to 1000",
             ),
             (
                 raging("\"cast\"", "\"sleep\""),

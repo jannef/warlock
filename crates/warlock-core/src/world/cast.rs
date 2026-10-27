@@ -37,20 +37,23 @@
 //!
 //! [`Action::Cast`]: crate::action::Action::Cast
 
-use super::spell::{Caster, capped, cone_cells};
+use super::spell::{Caster, burst_cells, capped, cone_cells};
 use super::talk::capitalized;
 use super::{Actor, ActorId, Cause, Spent, World};
 use crate::ability::{Ability, Unavailable};
+use crate::action::position_text;
 use crate::action::{AttackKind, Event, SpellShape};
 use crate::combat::{self, Attack, Profile, Strike};
 use crate::content::{
-    ActionKind, Bolt, Burst, ClassSpell, Content, Resolution, Shape, SpellData, SpellPurpose,
-    SpellRules, Stance,
+    ActionKind, Bolt, Burst, Content, Resolution, Shape, SpellData, SpellPurpose, SpellRules,
+    Stance,
 };
+use crate::content::{ObjectId, SpellId};
 use crate::damage::{Damage, Kinds};
 use crate::dice::Dice;
 use crate::geom::Pos;
 use crate::stats::Stat;
+use std::cell::Cell;
 
 /// How far a spell reaches as one actor casts it, Willpower counted (each `None` where the
 /// spell has no such reach).
@@ -131,22 +134,24 @@ fn damage_dice(
 }
 
 impl World {
-    /// `use:ID[:X,Y]` ([`crate::action::Action::Cast`]): the player casts `spell`, at cell `at`
-    /// if it asks for one (module docs).
+    /// `use:ID[:X,Y]` ([`crate::action::Action::Cast`]): the player casts the spell of id
+    /// `name`, at cell `at` if it asks for one (module docs).
     pub(super) fn cast_spell(
         &mut self,
-        spell: ClassSpell,
+        name: &str,
         at: Option<Pos>,
         events: &mut Vec<Event>,
     ) -> Spent {
         let content = self.content.clone();
-        let ability = Ability::Spell(spell);
         let player = self.state.player;
         let me = self.state.player();
-        let (Some(def), Some(rules)) = (content.spell_of(spell), content.spell_rules()) else {
+        let spell = content.spell_id(name);
+        let (Some(spell), Some(rules)) = (spell, content.spell_rules()) else {
             self.say("You have no such ability.");
             return Spent::Nothing;
         };
+        let def = content.spell(spell);
+        let ability = Ability::Spell(spell);
         if !ability.had_by(me, &content) {
             self.say("You have no such ability.");
             return Spent::Nothing;
@@ -167,41 +172,112 @@ impl World {
             self.say("You have too little mana.");
             return Spent::Nothing;
         }
-        let at = match (def.aimed(), at) {
-            (true, None) => {
-                let id = spell.id();
-                self.say(format!("Cast it where? Name a cell: `use:{id}:12,5`."));
-                return Spent::Nothing;
-            }
-            (true, at) => at,
-            (false, _) => None,
+        let Some(at) = self.cast_aim(def, at, &format!("use:{name}")) else {
+            return Spent::Nothing;
         };
-        let mana = me.spell_base(&content, def, level);
-        let reach = me.spell_reach(&content, def);
-        let price = self.price_of(player, ActionKind::Cast) * i64::from(def.casts);
+        let me = self.state.player();
         let cast = Cast {
             spell,
             def,
             rules,
             level,
-            mana,
-            reach,
+            pay: Pay::Mana(me.spell_base(&content, def, level)),
+            reach: me.spell_reach(&content, def),
+            read: Cell::new(None),
         };
-        let done = match def.kind {
-            SpellPurpose::Buff => self.cast_buff(&cast, events),
-            SpellPurpose::Heal => self.cast_heal(&cast, at),
-            SpellPurpose::Cleanse => self.cleanse(&cast, events),
-            SpellPurpose::Hex => self.cast_hex(&cast, at, events),
-            SpellPurpose::Damage => self.cast_damage(&cast, at, events),
+        let price = self.price_of(player, ActionKind::Cast) * i64::from(def.casts);
+        if self.perform(&cast, at, events) {
+            Spent::Turn(price)
+        } else {
+            Spent::Nothing
+        }
+    }
+
+    /// The cell a cast of `def` goes to: `Some(None)` for a spell on oneself, `Some(at)` for an
+    /// aimed one given its cell; `None` (said, with `usage` the action text that would name
+    /// one) for an aimed spell without it.
+    fn cast_aim(&mut self, def: &SpellData, at: Option<Pos>, usage: &str) -> Option<Option<Pos>> {
+        match (def.aimed(), at) {
+            (true, None) => {
+                self.say(format!("Cast it where? Name a cell: `{usage}:12,5`."));
+                None
+            }
+            (true, at) => Some(at),
+            (false, _) => Some(None),
+        }
+    }
+
+    /// The player reads the scroll in inventory stack `item`, which casts `spell` at caster
+    /// level `level` (spec §8 "Scrolls"): the cast path's, but paid by the scroll, not mana,
+    /// and never refused for what the player knows or holds. Whether it went off (`false`: the
+    /// scroll is kept, no time).
+    pub(super) fn read_cast(
+        &mut self,
+        item: usize,
+        (spell, level): (SpellId, u8),
+        at: Option<Pos>,
+        events: &mut Vec<Event>,
+    ) -> bool {
+        let content = self.content.clone();
+        let (def, Some(rules)) = (content.spell(spell), content.spell_rules()) else {
+            self.say("Nothing happens.");
+            return false;
+        };
+        let Some(at) = self.cast_aim(def, at, &format!("read:{}", position_text(item))) else {
+            return false;
+        };
+        let cast = Cast {
+            spell,
+            def,
+            rules,
+            level: i32::from(level),
+            pay: Pay::Scroll(item),
+            reach: self.state.player().spell_reach(&content, def),
+            read: Cell::new(None),
+        };
+        self.perform(&cast, at, events)
+    }
+
+    /// Casts `cast` at `at` by its kind (module docs); whether it went off. A scroll read is
+    /// said kept by Spell recall afterwards, and a death by it is put down to the scroll.
+    fn perform(&mut self, cast: &Cast<'_>, at: Option<Pos>, events: &mut Vec<Event>) -> bool {
+        let done = match cast.def.kind {
+            SpellPurpose::Buff => self.cast_buff(cast, events),
+            SpellPurpose::Heal => self.cast_heal(cast, at),
+            SpellPurpose::Cleanse => self.cleanse(cast, events),
+            SpellPurpose::Hex => self.cast_hex(cast, at, events),
+            SpellPurpose::Damage => self.cast_damage(cast, at, events),
             SpellPurpose::Utility => {
                 self.say("Nothing happens.");
                 false
             }
         };
-        if done {
-            Spent::Turn(price)
-        } else {
-            Spent::Nothing
+        if let Some((object, kept)) = cast.read.get() {
+            if kept && self.state.death.is_none() {
+                self.say(super::read::KEPT);
+            }
+            if let Some(death) = &mut self.state.death {
+                death.by = None;
+                death.cause = Some(Cause::Scroll(object));
+            }
+        }
+        done
+    }
+
+    /// Pays for `cast` as it is sure to go off: the caster's mana, or the scroll read (used
+    /// up, unless Spell recall keeps it, and said as read).
+    fn pay_cast(&mut self, cast: &Cast<'_>) {
+        match cast.pay {
+            Pay::Mana(mana) => {
+                self.spend_mana(self.state.player, mana);
+            }
+            Pay::Scroll(item) => {
+                let Some((scroll, kept)) = self.use_up(item) else {
+                    return;
+                };
+                self.say_read(&scroll);
+                cast.read.set(Some((scroll.object, kept)));
+            }
         }
     }
 
@@ -220,7 +296,7 @@ impl World {
         };
         let player = self.state.player;
         let severity = self.lengthened(cast.rules, severity);
-        self.spend_mana(player, cast.mana);
+        self.pay_cast(cast);
         self.afflict(player, status, severity, Some(player), events);
         true
     }
@@ -262,7 +338,7 @@ impl World {
             return false;
         };
         let comfortable = cast.rules.comfortable[usize::from(cast.def.tier)];
-        self.spend_mana(player, cast.mana);
+        self.pay_cast(cast);
         let rolled = heal
             .at(cast.level, comfortable)
             .roll(&mut self.state.rng)
@@ -300,7 +376,7 @@ impl World {
             self.say("There is nothing to cure.");
             return false;
         }
-        self.spend_mana(player, cast.mana);
+        self.pay_cast(cast);
         self.say("A cleansing warmth runs through you.");
         let from = events.len();
         for e in &ended {
@@ -338,17 +414,76 @@ impl World {
         let (Some(at), Some((status, severity))) = (at, cast.def.effect.status) else {
             return false;
         };
+        if cast.def.shape == Shape::Burst {
+            return self.cast_area_hex(cast, at, (status, severity), events);
+        }
         let Some(target) = self.hex_target(at, cast.reach.range.unwrap_or(1)) else {
             return false;
         };
         let player = self.state.player;
         let severity = self.lengthened(cast.rules, severity);
-        self.spend_mana(player, cast.mana);
+        self.pay_cast(cast);
         self.afflict(target, status, severity, Some(player), events);
         let who = capitalized(&self.called(&self.state.actors[&target]));
         let content = self.content.clone();
         let word = (content.status(status).seen.clone()).unwrap_or_else(|| "hexed".into());
         self.say(format!("{who} is {word}."));
+        true
+    }
+
+    /// A hex over an area (Sleep, Web): it flies as a burst does and goes off around the
+    /// first creature in its way or the cell aimed at, and its status, lengthened by Presence,
+    /// falls on everyone it reaches but the caster, friend or foe; each the player sees is
+    /// named. It goes off whether or not it finds anyone.
+    fn cast_area_hex(
+        &mut self,
+        cast: &Cast<'_>,
+        at: Pos,
+        (status, severity): (crate::content::StatusId, u16),
+        events: &mut Vec<Event>,
+    ) -> bool {
+        let range = cast.reach.range.unwrap_or(1);
+        if !self.can_loose_here() || !self.within_reach(at, range, "cast") {
+            return false;
+        }
+        let player = self.state.player;
+        let here = self.player_pos();
+        let severity = self.lengthened(cast.rules, severity);
+        self.pay_cast(cast);
+        if let Some(text) = &cast.def.look.message {
+            self.say(text.clone());
+        }
+        let center = self.burst_center(here, at, range);
+        self.sound_at(cast.def.look.noise, center);
+        let level = self.state.current();
+        let opaque = |p: Pos| p != center && level.is_opaque(&self.content, p);
+        let cells = burst_cells(center, cast.reach.radius.unwrap_or(1), opaque);
+        if let Some(effect) = &cast.def.look.effect {
+            events.push(Event::Spell {
+                effect: effect.clone(),
+                origin: here,
+                shape: SpellShape::Burst {
+                    center,
+                    radius: cast.reach.radius.unwrap_or(1),
+                },
+                cells: cells.clone(),
+            });
+        }
+        let level = self.state.current_level.clone();
+        let caught: Vec<ActorId> = (self.state.actors.values())
+            .filter(|a| a.level == level && a.id != player && cells.contains(&a.pos))
+            .map(|a| a.id)
+            .collect();
+        let content = self.content.clone();
+        let word = (content.status(status).seen.clone()).unwrap_or_else(|| "hexed".into());
+        for id in caught {
+            self.afflict(id, status, severity, Some(player), events);
+            let pos = self.state.actors[&id].pos;
+            if self.perception.sees_actors_at(pos) {
+                let who = capitalized(&self.called(&self.state.actors[&id]));
+                self.say(format!("{who} is {word}."));
+            }
+        }
         true
     }
 
@@ -410,7 +545,7 @@ impl World {
             return false;
         }
         let player = self.state.player;
-        self.spend_mana(player, cast.mana);
+        self.pay_cast(cast);
         let mods = self.state.player().talent_mods(&self.content).into_owned();
         let dice = damage_dice(cast.rules, def, cast.level, &mods).unwrap_or(Dice::of(0, 1));
         let cap = cast.rules.cap_of(def);
@@ -477,7 +612,9 @@ impl World {
                 }
             }
         }
-        if let Some(death) = &mut self.state.death {
+        if let Some(death) = &mut self.state.death
+            && matches!(cast.pay, Pay::Mana(_))
+        {
             death.by = None;
             death.cause = Some(Cause::Spell(cast.spell));
         }
@@ -589,14 +726,24 @@ impl World {
     }
 }
 
+/// Who pays for a cast.
+#[derive(Clone, Copy, Debug)]
+enum Pay {
+    /// The caster's mana: what it gives [`World::spend_mana`].
+    Mana(i32),
+    /// The scroll read from this inventory stack.
+    Scroll(usize),
+}
+
 /// One cast's settled facts, handed to each kind's code.
 struct Cast<'c> {
-    spell: ClassSpell,
+    spell: SpellId,
     def: &'c SpellData,
     rules: &'c SpellRules,
-    /// The caster's caster level.
+    /// The caster's caster level (a scroll's own, read).
     level: i32,
-    /// What it gives [`World::spend_mana`].
-    mana: i32,
+    pay: Pay,
     reach: Reach,
+    /// A scroll read, once paid: its object, and whether Spell recall kept it.
+    read: Cell<Option<(ObjectId, bool)>>,
 }

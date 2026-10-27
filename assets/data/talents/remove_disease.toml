@@ -5,4 +5,4 @@ tree = "class"
 granted = true
 description = "A rite of cleansing (a spell, paid in mana): every disease you carry and any poison in you are gone."
 effects = [{ kind = "spell", spell = "remove_disease" }]
-systems = ["mana", "diseases", "status"]
+systems = ["spells", "mana", "diseases", "status"]

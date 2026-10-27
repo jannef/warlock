@@ -5,4 +5,4 @@ tree = "class"
 granted = true
 description = "A bolt of raw force from your hand toward a place you aim at (a spell, paid in mana), through everyone on its line."
 effects = [{ kind = "spell", spell = "arcane_bolt" }]
-systems = ["mana", "combat"]
+systems = ["spells", "mana", "combat"]

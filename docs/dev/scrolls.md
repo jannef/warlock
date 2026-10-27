@@ -84,11 +84,26 @@ identify list (`ObjectList::Identify(scroll)`, the unidentified stacks) acts
 `Action::Read { item: scroll, target: Item(i) }`. Spell visuals are the traps' (`ui/spells.rs`
 draws `Event::Spell`; a burst's origin is the reader, so it flies there first).
 
-**Study** (#396, docs/dev/spells.md "Learning"): a spell scroll's `read` table may name the
-spell studying it `teaches` (`ScrollSpell::teaches`: fireball Fire burst, lightning Call
-lightning, frost Frost; the scroll of identify teaches nothing). `Action::Study` uses the scroll
+**Scrolls of spells** (#397): a `read` table of kind `spell` names a spell of `data/spells/`
+(`Reading::Cast(SpellScroll { spell, level, reach })`, resolved as objects load, spells loading
+first; only `spell` may be given). Reading one is `World::read_cast` (`world/cast.rs`): the one
+cast path with `Pay::Scroll(item)` instead of mana, at `level` (the spell's `[spell.scroll]
+level`, else its tier's comfortable level), never asking whether the reader knows the spell or
+has the mana; the scroll is used up (`use_up`, Spell recall's chance) and said read
+(`say_read`, which identifies its type) only once the cast is sure to go off, so a refusal
+keeps it and takes no time. An aimed spell needs its cell (`read:b:12,5`); a spell on oneself
+is read with none (`read:b`; the read list acts at once, `ObjectScreen`'s `identify` flag
+telling it from the scroll of identify). A death by it is `Cause::Scroll`. The aiming mode
+aims it as the spell (`ui/target.rs::spell_of`, the player's own reach).
+
+**Study** (#396, docs/dev/spells.md "Learning"): a scroll teaches what `Reading::teaches` says:
+a `spell` reading its own spell; a burst's or bolt's the spell its `teaches` names
+(`ScrollSpell::teaches`: fireball Fireball, lightning Lightning bolt, frost Frost); the scroll of
+identify nothing. `Action::Study` uses the scroll
 up its own way (`World::use_scroll` in `world/learn.rs`: no Spell recall, no Read training), and
-a mishap's backfire casts the scroll's own `Cast` on its reader with `say_spell`.
+a mishap's backfire casts the scroll's own `Cast` on its reader with `say_spell` (a `spell`
+reading's damage spell as a burst around the reader, its own radius or 1, at the scroll's
+level, held to its cap; any other kind fizzles).
 
 Spells (the one cast path, `world/cast.rs`, docs/dev/spells.md) share this code: a burst spell
 goes through `burst_center` and `cast_burst`, a line through `bolt_line` and `cast_bolt`, and

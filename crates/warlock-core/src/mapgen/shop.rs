@@ -11,12 +11,14 @@
 //! door, so the way in stays free; a lamp hangs in the middle of the room; and its floor
 //! is laid with stock: between the kind's least and most stacks (as many as there are free
 //! cells), one a cell, first what its kind always lays out (`always`: the general store's
-//! scrolls of identify), then each drawn uniformly from what it stocks, a stackable one in a
-//! bundle.
+//! scrolls of identify), then each drawn from what it stocks by its loot `frequency` (100 for
+//! what is never loot), so a spell scroll of a low tier lies there more often than one of a high
+//! tier, a stackable one in a bundle.
 
 use super::Canvas;
 use crate::content::{ObjectId, ShopPlan};
 use crate::geom::{Dir, Pos};
+use crate::magic::loot::pick_weighted;
 use crate::object::Stack;
 use crate::rng::Rng;
 
@@ -81,6 +83,13 @@ pub(super) fn place(canvas: &mut Canvas, rng: &mut Rng, candidates: &[Candidate]
         .filter(|&o| shops.stocks(content, kind, o))
         .collect();
     goods.sort_by(|a, b| content.object(*a).id.cmp(&content.object(*b).id));
+    // Weighed by loot frequency: a low tier's spell scroll lies there more often.
+    let goods: Vec<(ObjectId, u32)> = (goods.into_iter())
+        .map(|o| match content.object(o).frequency {
+            0 => (o, 100),
+            f => (o, f),
+        })
+        .collect();
     let mut cells: Vec<Pos> = (room.cells())
         .filter(|&p| p != front && p != post && canvas.is_free_floor(p))
         .filter(|p| !canvas.objects.contains_key(p))
@@ -93,7 +102,7 @@ pub(super) fn place(canvas: &mut Canvas, rng: &mut Rng, candidates: &[Candidate]
     for (i, &p) in cells.iter().take(count).enumerate() {
         let object = match always.get(i) {
             Some(&object) => object,
-            None => match rng.pick(&goods) {
+            None => match pick_weighted(rng, &goods) {
                 Some(&object) => object,
                 None => break,
             },
