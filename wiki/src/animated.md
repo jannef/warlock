@@ -14,8 +14,11 @@ silver (hostile, unhurt), rocking". A clatter of cutlery is three to six pieces 
 once.
 
 When one is destroyed, what it was made of falls **whole** half the time, as the object it was
-(a silver candlestick you can sell); otherwise nothing of it is left. The **Salvager** talent
-raises that share. They leave no corpse and never bleed.
+(a silver candlestick you can sell). Otherwise it **breaks into the parts it was made of**: a
+gem set in it falls loose, every other part falls as pieces of its material (a silver
+candlestick as pieces of silver, still worth something), and paper and wax are lost. Whatever
+magic it had is gone with it. The **Salvager** talent raises the share that falls whole. They
+leave no corpse and never bleed.
 
 ## What they are
 
@@ -60,3 +63,11 @@ brass kind) changes its colour and worth, never its numbers.
 ### By material
 
 {{#include generated/animated-groups.md}}
+
+### What they break into
+
+What each household thing falls to when it breaks, by the material it is made of. The pieces
+are half a part's weight, counted in pieces of that material (see
+[pieces](objects.md#pieces)), one at least.
+
+{{#include generated/animated-parts.md}}

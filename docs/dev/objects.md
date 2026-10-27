@@ -159,3 +159,19 @@ Loot, drops, and the item description are in `docs/dev/magic-items.md`. Tests:
 `world/gem_tests.rs` (data, value, names, naming order, colour, stacking, placements, loot
 frequency across seeds, drops, saves and a replay, the general store).
 
+**Pieces and breaking** (spec §7 "Pieces and breaking", #484; `piece.rs`): `objects/piece.toml`
+(`piece::ID`) is the one object for raw material, `made_of = ["any"]`, its own material steel. A
+piece of another material is a stack with that material as its main part (`piece::make`, `None`
+for a material without a group); a piece of steel has no own parts. `Stack::names` names any
+piece by `piece::names` ("piece of tin"), checked before the plain-object shortcut since a steel
+piece has no parts; colour, weight, and value come from the existing variant code and
+`value_with`, and same-material pieces join as any stacks made the same way. `object::break_up`
+(re-exported from `piece::break_up`; `(stack, content, percent)`, no draws) walks
+`Stack::parts`: a gem part gives a loose gem (`Gems::object`, the part's cutting or the plain
+one, `count` of them), a grouped material its grams (the base part's share of `def.weight`,
+scaled by material weight as `variant::weight` scales it, times the count) summed per material
+in first-seen order, then `max(1, round(grams × percent / 100 / one piece's grams))` pieces; a
+material without a group and a non-gem part beyond the base parts give nothing. No magic
+survives. Tests: `piece.rs` (names, weight, value, colour, stacking, the dagger with a ruby, the
+long sword, a stack, paper, the one-piece floor).
+

@@ -1,0 +1,7 @@
+[[talent]]
+id = "wand_mastery"
+name = "Wand mastery"
+tree = "weaponcraft"
+description = "You draw more from a wand than its maker put in: the spells your wands cast are stronger, as if a more practised hand had cast them."
+effects = [{ kind = "wand_level", value = 2 }]
+systems = ["spells"]

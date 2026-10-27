@@ -1,0 +1,17 @@
+# A piece of some material (spec §7 "Objects and materials"; the design:
+# docs/design/animated-objects.md §9.2): what a broken item falls to, by the parts it was made of
+# (crate::piece::break_up). One object for every material with a group, as the loose gem is one
+# object for every gem: its material names it ("a piece of tin", "3 pieces of silk"), colours it,
+# weighs it (its `weight` % of these 100 g of steel), and prices it (its `value` % of this coin).
+# A piece of steel is drawn in steel's colour, here.
+[[object]]
+id = "piece"
+name = "piece"
+glyph = ","
+fg = "#a8b0b8"
+class = "miscellaneous"
+materials = ["steel"]
+made_of = ["any"]
+weight = 100
+value = 1
+stackable = true

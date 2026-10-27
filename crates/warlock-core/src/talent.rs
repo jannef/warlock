@@ -220,6 +220,8 @@ pub struct TalentMods {
     /// School focus: `(tag, cost percent, reach)` per choice and rank held
     /// ([`TalentMods::focus`]).
     pub school_focus: Vec<(String, i32, i32)>,
+    /// Added to the caster level of the wands it uses (spec §8 "Magic items": "Wands").
+    pub wand_level: i32,
     /// The active Blood magic, if it has it.
     pub blood_magic: Option<BloodMagic>,
     /// Percent louder footsteps (negative: quieter).
@@ -1051,6 +1053,7 @@ impl TalentMods {
             TalentEffect::CasterLevel { value, per_levels } => {
                 self.caster_per_levels.push((per_levels, value));
             }
+            TalentEffect::WandLevel { value } => self.wand_level += value,
             TalentEffect::BloodMagic { hp, mana } => {
                 self.blood_magic = Some(BloodMagic { hp, mana });
             }

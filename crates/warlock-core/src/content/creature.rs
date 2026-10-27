@@ -26,6 +26,31 @@ use std::ops::RangeInclusive;
 
 /// The speed of a normal creature, and of the player (spec §8 "Speed").
 pub const NORMAL_SPEED: u32 = 1000;
+
+/// Whether a creature type's `name` is a proper name, said without an article: one that starts
+/// upper-case ("Black Wystan", a named monster's), where every other is lower-case ("kobold").
+pub fn is_proper(name: &str) -> bool {
+    name.chars().next().is_some_and(char::is_uppercase)
+}
+
+/// A creature called `name` as the player hears of one they know: "the kobold", or a proper
+/// name alone ("Black Wystan").
+pub fn the(name: &str) -> String {
+    if is_proper(name) {
+        name.to_string()
+    } else {
+        format!("the {name}")
+    }
+}
+
+/// [`the`] at the start of a sentence: "The kobold", "Black Wystan".
+pub fn the_start(name: &str) -> String {
+    if is_proper(name) {
+        name.to_string()
+    } else {
+        format!("The {name}")
+    }
+}
 /// The speeds a creature type may have: a tenth of normal to ten times normal.
 pub const SPEEDS: RangeInclusive<u32> = 100..=10_000;
 /// How far a creature sees unless its type says otherwise, in cells (spec §5 "Creature sight").

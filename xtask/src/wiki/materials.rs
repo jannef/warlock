@@ -230,3 +230,26 @@ pub(super) fn variants(content: &Content) -> String {
     }
     out
 }
+
+/// What a piece of each material with a group weighs and is worth (`objects/piece.toml`: what a
+/// broken item falls to), metals first, then by group and name.
+pub(super) fn pieces(content: &Content) -> String {
+    let mut out = String::from("| Piece of | Group | Weight | Worth |\n|---|---|---:|---:|\n");
+    for (id, m) in by_group(content) {
+        let (Some(group), Some(piece)) = (&m.group, warlock_core::piece::make(content, id, 1))
+        else {
+            continue;
+        };
+        let worth = match piece.value(content) {
+            0 => "nothing".to_string(),
+            n => format!("{n} gold"),
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {group} | {} | {worth} |",
+            capital(&m.name),
+            format_weight(piece.weight(content)),
+        );
+    }
+    out
+}

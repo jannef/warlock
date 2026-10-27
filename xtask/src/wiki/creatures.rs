@@ -120,7 +120,14 @@ fn gear(content: &Content, c: &CreatureDef) -> String {
         .map(|line| {
             let alternatives: Vec<String> = (line.one_of.iter())
                 .map(|(stacks, _)| {
-                    let names: Vec<String> = stacks.iter().map(|s| s.describe(content)).collect();
+                    // A unique item by its name, then what it looks like: "Widowmaker (a
+                    // stiletto (rare))".
+                    let names: Vec<String> = (stacks.iter())
+                        .map(|s| match content.uniques().find(|u| u.stack == *s) {
+                            Some(u) => format!("{} ({})", u.name, s.describe(content)),
+                            None => s.describe(content),
+                        })
+                        .collect();
                     names.join(" and ")
                 })
                 .collect();

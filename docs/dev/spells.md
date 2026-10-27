@@ -8,8 +8,9 @@ The spell system is built in waves (design §13). This file covers what is built
 foundation** (#394: the tier table, the spell files with their load-time cap check, the tags,
 caster level), the **one cast path** (#395: cost, reach, dice, resolution, the shapes, and
 the casters' placeholder spells migrated onto it), **learning** (#396: the learned set,
-study, the check, mishaps; "Learning" below), and the **first spell list** (#397: the spells,
-their scrolls, the classes' guaranteed spells; "The first list" below). Not to be confused
+study, the check, mishaps; "Learning" below), the **first spell list** (#397: the spells,
+their scrolls, the classes' guaranteed spells; "The first list" below), and **wands** (#398;
+"Wands" below). Not to be confused
 with `content/spell.rs`, the bursts and bolts scrolls and traps cast, whose code the cast path
 shares.
 
@@ -252,6 +253,45 @@ shares.
     scrolls".
   - **Talents**: Quick study (`quick_study`, the new Spellcraft tree's first talent:
     `TalentEffect::Study { bonus, percent }`, +2 and −50 %), systems `spells` and `scrolls`.
+- **Wands** (#398; design §9; `content/wand.rs`, `world/zap.rs`, tests `world/zap_tests.rs`):
+  - **Data**: `[object.wand]` (`WandSpec` → `Wand { spell, charges, caster_level }` on
+    `ObjectDef::wand`): an aimed spell (`SpellData::aimed`), `charges` 1 to `MAX_WAND_CHARGES`
+    (99; default `SpellRules::wand_charges[tier]`, the new `[tiers] wand_charges` array, never
+    ascending), `caster_level` 1 to `MAX_LEVEL` (default the tier's comfortable level). A wand
+    has a `slot`, is not `stackable`, and has no attack, `launches`, range, food, `read`, or
+    `kind`; it may have `level` and `frequency` (loot). Class `wands` (`item_classes.toml`).
+    Seven wands in `data/objects/wand_of_*.toml`; general stores stock and buy them.
+  - **Instances**: `Stack::charges` (private `Charges { used, known, carried }`; `None` = as
+    made: full, unknown; saved and hashed, left out while `None`, so other stacks save as
+    before; saves change). `charges_left` (rules, dev), `known_charges` / `charges_known`
+    (presentation), `use_charge`, `identify_charges`; `carry_for` (Connoisseur) counts a
+    wand's unknown charges too; `is_valid_for` holds `used` within the wand's charges.
+  - **Use**: `World::fire` hands a wand in a `ready` slot (`Actor::wand_item`) to
+    `World::zap`: empty → "Nothing happens.", no time, charges then known; else
+    `World::wand_cast` (the cast path, `Pay::Wand(item)`: `pay_cast` → `World::use_charge`,
+    "You zap the oak wand.", and the type learned through `learn_scroll`, "It is a wand of
+    fireball.") at `Actor::wand_caster_level` (the wand's level + `TalentMods::wand_level`,
+    at least 1), the player's reach; priced as `cast` × `casts`. A death by it is
+    `Cause::Spell`, as a mana cast's.
+  - **Labels**: `scroll_label::Labels::draw` draws wand labels (`data/wand_labels.toml`,
+    `Content::wand_labels`, the `ScrollLabelDef` format) after the scrolls', from the same
+    `identification` stream, so scrolls keep their labels; `Lore` names and colours a wand by
+    its type's def (`label_def`), `Lore::knows` asks `charges_known` too, and `Lore::describe`
+    adds "(7 charges)" / "(empty)" once known. `WorldState::known_scrolls` holds known wand
+    types as well.
+  - **Presentation**: `PerceptionView::ready_wand`; the aiming mode's `AimKind::Zap(item)`
+    (`t` with a wand ready; the spell's line and reach once the type is known, a plain line
+    before; sends `Action::Fire`); `describe::appraised`'s wand lines (the spell in words once
+    the type is known, the charges once identified). Snapshot `wand-description`.
+  - **Choices** (design §14 and the issue): the attack roll aims with Dexterity, as every
+    spell's (there is no Missile skill); only aimed spells may be wands; a wand type is
+    identified by use (as a scroll by reading), its charges only by identification; an empty
+    wand's emptiness is learned by trying it; the zap takes the `cast` action's time; reach is
+    the user's (Willpower), as a scroll's; Wand mastery is in Weaponcraft (system `spells`).
+  - **Talents**: Wand mastery (`wand_mastery`, `TalentEffect::WandLevel { value }` →
+    `TalentMods::wand_level`, +2).
+  - **Wiki**: `xtask/src/wiki/spells.rs` `wands.md` (wand, spell, tier, charges, caster level,
+    item level, frequency, value) on `wiki/src/magic.md`'s "Wands".
 - **Talents** (#400; design §10; tests `world/spell_talent_tests.rs`): the `spells` system in
   `data/talents.toml`, held to the bar. The Spellcraft tree: Quick study (#396), Overreach
   (level 6, `overreach_cost_percent` −33), School focus (`choice = "school"`, `Choice::School`:
@@ -260,8 +300,8 @@ shares.
   at 1: `caster_level` +1 per 5 levels; the other casters have none of their own yet) and its
   bonus talents from Scholar and Spellcraft. Empower, Archmage, Scroll adept, Frugal caster name
   `spells` beside `mana`/`scrolls`; Spell recall, Scroll savant, Careful reader stay `scrolls`
-  only (reading, not casting). Not shipped here: Wand mastery (`wand_level`, #398 ships it with
-  wands) and Channeler (`rod_cost_percent`, with rods, #399), which have no hook yet.
+  only (reading, not casting). Wand mastery is in #398's wands; Channeler (`rod_cost_percent`) is not
+  shipped, it waits for rods (#399).
 - **Wiki**: `xtask/src/wiki/spells.rs` (`spell-tiers.md`, `spell-shapes.md`,
   `spell-resolutions.md`, `spell-casting.md`, `spell-list.md`, `spell-armour.md`; `does` is
   shared with the talents' table) for `wiki/src/magic.md`.

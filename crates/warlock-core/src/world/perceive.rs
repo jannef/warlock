@@ -248,7 +248,10 @@ impl World {
                 let seen = perception.sees_actors_at(at);
                 if let Some(me) = self.actor_or_fallen(actor).filter(|_| seen) {
                     let name = &content.creature(me.creature).name;
-                    reports.push((format!("The {name} falls through the ice!"), true));
+                    reports.push((
+                        format!("{} falls through the ice!", crate::content::the_start(name)),
+                        true,
+                    ));
                 }
                 seen
             }
@@ -306,7 +309,7 @@ impl World {
                 if let (true, Some(dead)) = (seen, self.actor_or_fallen(actor)) {
                     let name = &content.creature(dead.creature).name;
                     let dies = content.status(status).dies.as_deref().unwrap_or("dies");
-                    reports.push((format!("The {name} {dies}."), true));
+                    reports.push((format!("{} {dies}.", crate::content::the_start(name)), true));
                 }
                 seen
             }
@@ -346,14 +349,15 @@ impl World {
                     let creature = name.filter(|_| perception.sees_actors_at(at));
                     let text = match (&def.effect, victim == player, creature) {
                         (TrapEffect::Pit { .. }, true, _) => Some("You fall into a pit.".into()),
-                        (TrapEffect::Pit { .. }, false, Some(name)) => {
-                            Some(format!("The {name} falls into a pit."))
-                        }
+                        (TrapEffect::Pit { .. }, false, Some(name)) => Some(format!(
+                            "{} falls into a pit.",
+                            crate::content::the_start(name)
+                        )),
                         (TrapEffect::Teleport, true, _) => {
                             Some("You are wrenched elsewhere.".into())
                         }
                         (TrapEffect::Teleport, false, Some(name)) => {
-                            Some(format!("The {name} vanishes!"))
+                            Some(format!("{} vanishes!", crate::content::the_start(name)))
                         }
                         _ => None,
                     };

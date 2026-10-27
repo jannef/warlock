@@ -163,3 +163,31 @@ the spell may come your way again.
 {{#include generated/mishaps.md}}
 
 Studying trains *Spellcraft*, *Decipher script*, and your Intelligence, whatever comes of it.
+
+## Wands
+
+A wand holds one spell and a number of charges. Ready it in the **missile weapon slot** (it takes
+a launcher's place, and a launcher takes its place) and use it as you would shoot: `t`, aim, and
+it casts its spell. Each cast uses a charge instead of your mana, and the spell is cast at the
+**wand's own caster level**, never yours, so a warrior with no magic fires a wand as well as a
+wizard does. The spell is otherwise its own: a ray rolls to hit as any spell attack does (with
+your Dexterity), magic missile never misses, an area catches whoever is in it, and its reach
+grows with your Willpower as your own spells' does. Its damage still stops at the spell's cap.
+A cast that cannot go off (aimed at yourself, out of reach) uses no charge and takes no time;
+one that goes off takes a cast's time.
+
+An empty wand does nothing ("Nothing happens.") and takes no time; it stays a wand, to sell or
+to keep. Wands are **never recharged**.
+
+Wands are found unknown, each kind with a look of its own for the whole game ("an oak wand").
+Using one tells you what kind it is, and from then on every wand of that kind shows by its name;
+its **charges** stay unknown until you identify that wand (the scroll of identify, or carrying
+it long enough as a *Connoisseur*). Wands lie in the dungeon and in general stores.
+
+*Wand mastery* (Weaponcraft) makes every wand you use cast at a caster level 2 higher.
+
+{{#include generated/wands.md}}
+
+The charges a wand is made with go by its spell's tier:
+
+{{#include generated/wand-charges.md}}

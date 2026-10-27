@@ -1,6 +1,6 @@
 //! Spells (spec §8 "Spells"): the tier table (comfortable caster level, base cost, damage
 //! ceiling), the shapes' and resolutions' multipliers, the classes' casting percents, the spell
-//! list, the classes' guaranteed spells, and the armour that makes casting dearer.
+//! list, the classes' guaranteed spells, the armour that makes casting dearer, and the wands.
 
 use std::fmt::Write as _;
 use warlock_core::content::{
@@ -269,6 +269,50 @@ pub(super) fn armour(content: &Content) -> String {
     let mut out = String::from("| Worn | Spells cost more |\n|---|:---:|\n");
     for (name, percent) in worn {
         let _ = writeln!(out, "| {name} | {percent} % |");
+    }
+    out
+}
+
+/// The wands (spec §8 "Magic items": "Wands"): each one's spell, tier, charges, the caster level
+/// it casts at, and where loot finds it; by tier, then name.
+pub(super) fn wands(content: &Content) -> String {
+    let mut wands: Vec<_> = (content.object_defs().iter())
+        .filter_map(|o| Some((o, o.wand?)))
+        .collect();
+    wands.sort_by(|(a, x), (b, y)| {
+        let tier = |w: &warlock_core::content::Wand| content.spell(w.spell).tier;
+        tier(x).cmp(&tier(y)).then(a.name.cmp(&b.name))
+    });
+    let mut out = String::from(
+        "| Wand | Spell | Tier | Charges | Caster level | Item level | Frequency | Value |\n\
+         |---|---|:---:|:---:|:---:|:---:|:---:|:---:|\n",
+    );
+    for (object, wand) in wands {
+        let spell = content.spell(wand.spell);
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} | {} | {} | {} | {} | {} gold |",
+            object.name,
+            spell.name,
+            spell.tier,
+            wand.charges,
+            wand.caster_level,
+            object.level,
+            object.frequency,
+            object.value
+        );
+    }
+    out
+}
+
+/// The charges a wand is made with by its spell's tier, unless it says otherwise.
+pub(super) fn wand_charges(content: &Content) -> String {
+    let Some(rules) = content.spell_rules() else {
+        return String::new();
+    };
+    let mut out = String::from("| Tier | Charges |\n|:---:|:---:|\n");
+    for tier in 0..TIERS {
+        let _ = writeln!(out, "| {tier} | {} |", rules.wand_charges[tier]);
     }
     out
 }

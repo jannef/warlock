@@ -24,7 +24,8 @@ a `variant::Source`, and creature drops pass `Source::Gear(creature level)`); it
 the material first, then the gem. Creature drops try `gem::find` before the magic item
 (`docs/dev/objects.md`, "Gems" and "Materials and variants").
 `world/loot.rs` has `World::identify` (the API the scroll of identify calls from its read action,
-`docs/dev/scrolls.md`; it identifies a labelled scroll's type too, `World::learn_scroll`),
+`docs/dev/scrolls.md`; it identifies a labelled scroll's or wand's type too, `World::learn_scroll`,
+and a wand's charges, `Stack::identify_charges`; wands are docs/dev/spells.md "Wands"),
 creature drops (`drop/<actor id>` stream), and the hit-point clamp after equipment changes
 (to `Actor::lasting_max_hp`: a penalty's lower maximum passes). Stats raised by magic are
 `Actor::effective_stats` (the stored scores, raised by `Mods::worn`, then lowered by status
@@ -67,7 +68,12 @@ the item's id (saved, hashed; `skip_serializing_if` none, so other items' saves 
   set while `Content::load` runs: every placement is parsed then, once per legend cell that
   names it) and refuses a second placement and a count. `level::equip_ids` takes `unique:ID` in
   `wield`/`wear` for the carried stack of that unique (not a placement). Gear (`gear::make`)
-  and kits keep a unique as it is, and `kit::check_kept` refuses a `magic` chance on one.
+  and kits keep a unique as it is, and `kit::check_kept` refuses a `magic` chance on one. The
+  Ascmearc's four are placed by their owners' gear lines (the criminals, #424,
+  `docs/dev/creatures/outlaws.md`), so no other content may name them: a test that needs a
+  placement defines a unique of its own (`world/unique_tests.rs`), and a test that drops the
+  uniques table puts the base items in their place (`character.rs`'s `skill_free_content`). The
+  wiki's table names who carries each (`xtask/src/wiki/uniques.rs`, from the gear lines).
 - **Powers**, a variant each, read in one place each: `Power::Inflict(OnHit)` rides
   `Mods::local` of the weapon into `Profile::on_hit` (`sharpen`), which `World::resolve` hands
   to `after_blow` after the natural attack's `on_hit` (`Mods::worn` never carries it: it is the

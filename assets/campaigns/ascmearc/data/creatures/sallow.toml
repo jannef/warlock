@@ -1,0 +1,37 @@
+# Campaign-owned (docs/design/campaign.md §3.6): the Ascmearc's own type, which only its files
+# may name.
+#
+# The wanted (docs/design/adventurers-guild.md §8.2, #424): Mother Sallow, the Fennhām
+# Poisoner, the herb-wife who sold death to heirs (three dead at one wedding feast). A commoner;
+# her name is a byname. Once a run (`unique`), in no population: only her lair's pinned vault on
+# Wyrtholm's fourth floor places her. Quick and quiet, she wields Widowmaker, whose every cut
+# poisons; poison cannot touch her. Her name is a proper name: messages say it without "the".
+[[creature]]
+id = "sallow"
+level = 12
+xp = 70
+rarity = "very_rare"
+loot = 50
+unique = true
+name = "Mother Sallow"
+glyph = "@"
+fg = "#b8d8a0"
+faction = "outlaws"
+tags = ["outlaw"]
+alignment = "evil"
+race = "human"
+vision = "low_light"
+speed = 1100
+opens_doors = true
+footsteps = 10
+hearing = 14
+weight = 55000
+stats = { strength = 11, dexterity = 17, toughness = 13, intelligence = 16, willpower = 14, presence = 12 }
+base_hp = 24
+skills = { stealth = 60, heal = 50 }
+resist = { poison = 100 }
+weapon_skills = { daggers = 3 }
+[[creature.gear]]
+chance = 100
+one_of = ["unique:widowmaker"]
+keep = "wield"

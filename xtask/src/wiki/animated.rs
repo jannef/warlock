@@ -6,6 +6,8 @@ use super::creatures::on_hit;
 use super::text::{capital, glyph, signed};
 use std::fmt::Write as _;
 use warlock_core::content::{Content, CreatureDef, Numbers};
+use warlock_core::item_parts::ItemPart;
+use warlock_core::object::{Stack, break_up};
 use warlock_core::stats::Stat;
 
 /// The tiers: their levels, what they add to the base stats, their hit point factor and dice
@@ -50,7 +52,8 @@ pub(super) fn animated_tiers(content: &Content) -> String {
         out,
         "\nEvery animated type: faction **{}**, tags {}, {} eyes (sight {} cells), hearing {}, \
          immune to {}; no corpse and no blood. What it is made of falls whole with **{} %**, \
-         else nothing of it.\n",
+         else it breaks into its parts: gems loose, **{} %** of each other part's weight in \
+         pieces of its material (one at least), nothing of paper or wax.\n",
         content
             .factions()
             .id(&common.faction)
@@ -70,6 +73,7 @@ pub(super) fn animated_tiers(content: &Content) -> String {
         common.hearing,
         immune.join(", ").to_lowercase(),
         animated.drops.intact,
+        animated.drops.pieces,
     );
     out
 }
@@ -163,6 +167,48 @@ pub(super) fn animated_bodies(content: &Content) -> String {
             },
             def.death_verb()
         );
+    }
+    out
+}
+
+/// What each household body breaks into when it does not fall whole, for each material it may
+/// be made of (by level then name, as the bodies table): `object::break_up` at the drop rule's
+/// `pieces` percent.
+pub(super) fn animated_parts(content: &Content) -> String {
+    let mut out = String::from("| Creature | Made of | Breaks into |\n|---|---|---|\n");
+    let percent = content.animated().drops.pieces;
+    let mut bodies: Vec<(&CreatureDef, &warlock_core::content::Body)> = (content.creature_defs())
+        .iter()
+        .filter_map(|d| {
+            content
+                .animated()
+                .body_of(d.animated.as_ref())
+                .map(|b| (d, b))
+        })
+        .collect();
+    bodies.sort_by(|a, b| (a.0.level, &a.0.name).cmp(&(b.0.level, &b.0.name)));
+    for (def, body) in bodies {
+        let object = content.object(body.object);
+        for &material in object.made_of(0) {
+            let mut stack = Stack::one(body.object);
+            if material != object.material() {
+                stack = stack.with_parts(vec![ItemPart::material(content, None, material)]);
+            }
+            let fell: Vec<String> = (break_up(&stack, content, percent).iter())
+                .map(|s| s.describe(content))
+                .collect();
+            let _ = writeln!(
+                out,
+                "| {} | {} | {} |",
+                capital(&def.name),
+                content.material(material).name,
+                if fell.is_empty() {
+                    "nothing".into()
+                } else {
+                    fell.join(", ")
+                },
+            );
+        }
     }
     out
 }

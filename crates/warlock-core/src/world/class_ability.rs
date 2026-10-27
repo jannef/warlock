@@ -307,7 +307,7 @@ impl World {
         if self.stance(self.state.player, target) != Stance::Hostile {
             self.say(if seen {
                 let name = &self.content.creature(creature).name;
-                format!("You have no quarrel with the {name}.")
+                format!("You have no quarrel with {}.", crate::content::the(name))
             } else {
                 "Something is in the way.".into()
             });

@@ -14,8 +14,8 @@ pub(super) fn uniques(content: &Content) -> String {
         .collect();
     all.sort_by_cached_key(|u| u.name.to_lowercase());
     let mut out = String::from(
-        "| Item | Base | Item level | Affixes (tier: what it does) | Power | Lore |\n\
-         |---|---|:---:|---|---|---|\n",
+        "| Item | Base | Item level | Affixes (tier: what it does) | Power | Carried by | Lore |\n\
+         |---|---|:---:|---|---|---|---|\n",
     );
     for u in all {
         let def = content.object(u.object);
@@ -29,16 +29,37 @@ pub(super) fn uniques(content: &Content) -> String {
             .collect();
         let _ = writeln!(
             out,
-            "| {} | {} | {} | {} | {} | {} |",
+            "| {} | {} | {} | {} | {} | {} | {} |",
             u.name,
             capital(&def.name),
             magic.level,
             affixes.join("; "),
             power_text(content, u),
+            carried_by(content, u),
             u.lore.as_deref().unwrap_or("-"),
         );
     }
     out
+}
+
+/// The creature types whose gear always or sometimes gives them unique `u` ("Black Wystan"), or
+/// "-" when it lies elsewhere (a level's pile or legend).
+fn carried_by(content: &Content, u: &UniqueDef) -> String {
+    let who: Vec<&str> = (content.creature_defs().iter())
+        .filter(|c| order::described(content, c.campaign.as_deref()))
+        .filter(|c| {
+            (c.gear.lines.iter())
+                .flat_map(|line| line.one_of.iter())
+                .flat_map(|(stacks, _)| stacks.iter())
+                .any(|s| *s == u.stack)
+        })
+        .map(|c| c.name.as_str())
+        .collect();
+    if who.is_empty() {
+        "-".into()
+    } else {
+        who.join(", ")
+    }
 }
 
 /// What a unique's power does, exactly.

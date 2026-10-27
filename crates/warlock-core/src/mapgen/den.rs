@@ -15,6 +15,13 @@
 //! floor's item level + `loot_level`, with the finder's luck, each on a plain floor cell of the
 //! room drawn anew.
 //!
+//! A den kind may name `swarm.factions` (a beast den's `wildlife`, `vermin`, and `marsh`): its
+//! sleepers are then drawn only among the types of those factions, hostile or not, and the kind
+//! is eligible only on a branch whose own population holds one ([`peopled`], asked by
+//! `special::pick`). Its hoard may be `corpses` instead of items: per piece, a fresh corpse of a
+//! type drawn from the branch's population at large (its prey, any faction, by the same draw;
+//! a type that leaves none leaves nothing) and a pile of bones, each on a cell drawn anew.
+//!
 //! Everything comes from the level's own stream [`Rng::swarm`] (`swarm/<level id>`), drawn after
 //! its population, so the rest of the level is the same with or without a den; the sleepers roll
 //! their gear after the population's, with the rest ([`crate::gear::arm`]). The population and
@@ -22,10 +29,10 @@
 
 use super::{Palette, Visit};
 use crate::content::danger::{self, Candidate, Spawning};
-use crate::content::{Content, CreatureId, CreatureSpawn, LevelTemplate, Stance, Swarm};
+use crate::content::{Content, CreatureId, CreatureSpawn, Hoard, LevelTemplate, Stance, Swarm};
 use crate::geom::Pos;
 use crate::magic::{LootGrade, loot};
-use crate::object::add_to_pile;
+use crate::object::{Stack, add_to_pile};
 use crate::rng::Rng;
 use crate::variant::Source;
 
@@ -38,17 +45,19 @@ pub(super) fn fill(
     (pal, danger, spawning): (Palette, u8, &Spawning),
     visit: &Visit,
 ) {
-    let dens: Vec<(usize, Swarm)> = (template.rooms.iter().enumerate())
-        .filter_map(|(i, r)| content.room_effect(r.effect).swarm.map(|s| (i, s)))
+    let dens: Vec<(usize, &Swarm)> = (template.rooms.iter().enumerate())
+        .filter_map(|(i, r)| content.room_effect(r.effect).swarm.as_ref().map(|s| (i, s)))
         .collect();
     if danger == 0 || dens.is_empty() {
         return;
     }
     let mut rng = Rng::swarm(seed, &template.id);
     let none = Default::default();
-    let own = sleepers(content, content.candidates(&spawning.population, &none));
-    let generic = sleepers(content, content.candidates(&spawning.generic, &none));
+    let all_own = plain(content, content.candidates(&spawning.population, &none));
+    let all_generic = plain(content, content.candidates(&spawning.generic, &none));
     for (i, swarm) in dens {
+        let own = sleepers(content, swarm, &all_own);
+        let generic = sleepers(content, swarm, &all_generic);
         let room = template.rooms[i].clone();
         let floor: Vec<Pos> = (room.cells().into_iter())
             .filter(|&p| template.terrain.get(p) == Some(&pal.floor))
@@ -87,6 +96,17 @@ pub(super) fn fill(
         if placed == 0 || floor.is_empty() {
             continue;
         }
+        if swarm.hoard == Hoard::Corpses {
+            let prey = (all_own.as_slice(), all_generic.as_slice());
+            corpses(
+                template,
+                content,
+                &mut rng,
+                &floor,
+                (placed, prey, danger, spawning),
+            );
+            continue;
+        }
         let level = template.item_level.saturating_add(swarm.loot_level);
         for _ in 0..Swarm::hoard(placed) {
             let p = floor[rng.index(floor.len())];
@@ -105,13 +125,79 @@ pub(super) fn fill(
     }
 }
 
-/// The candidates of `candidates` that may sleep in a den: hostile to the player, not unique.
-fn sleepers(content: &Content, candidates: Vec<Candidate>) -> Vec<Candidate> {
-    let player = content.creature_id("player");
+/// The candidates of `candidates` that are not unique.
+fn plain(content: &Content, candidates: Vec<Candidate>) -> Vec<Candidate> {
     (candidates.into_iter())
         .filter(|&(c, _, _)| !content.creature(c).unique)
-        .filter(|&(c, _, _)| player.is_some_and(|p| content.stance(c, p) == Stance::Hostile))
         .collect()
+}
+
+/// The candidates of `candidates` (no uniques) that may sleep in a den of `swarm`: those of its
+/// `factions` if it names any, else those hostile to the player.
+fn sleepers(content: &Content, swarm: &Swarm, candidates: &[Candidate]) -> Vec<Candidate> {
+    let player = content.creature_id("player");
+    (candidates.iter().copied())
+        .filter(|&(c, _, _)| {
+            if swarm.factions.is_empty() {
+                player.is_some_and(|p| content.stance(c, p) == Stance::Hostile)
+            } else {
+                of_factions(content, swarm, c)
+            }
+        })
+        .collect()
+}
+
+/// Whether type `c` is of one of `swarm`'s factions.
+fn of_factions(content: &Content, swarm: &Swarm, c: CreatureId) -> bool {
+    let faction = content.creature(c).faction;
+    (swarm.factions.iter()).any(|name| faction.is_some() && content.factions().id(name) == faction)
+}
+
+/// Whether a den of `swarm` may be made on a level whose branch's own population is
+/// `population`: always for one that names no factions, else when a type of the population that
+/// is not unique is of one of them.
+pub(super) fn peopled(content: &Content, swarm: &Swarm, population: &[CreatureId]) -> bool {
+    swarm.factions.is_empty()
+        || (population.iter())
+            .any(|&c| !content.creature(c).unique && of_factions(content, swarm, c))
+}
+
+/// A den's corpse hoard (`hoard = "corpses"`) of `placed` sleepers on `floor`: per piece
+/// ([`Swarm::hoard`]), a fresh corpse of prey drawn from `prey` (the branch's population and
+/// strays, any faction) and a pile of bones, each on a floor cell drawn anew.
+fn corpses(
+    template: &mut LevelTemplate,
+    content: &Content,
+    rng: &mut Rng,
+    floor: &[Pos],
+    (placed, (own, generic), danger, spawning): (
+        usize,
+        (&[Candidate], &[Candidate]),
+        u8,
+        &Spawning,
+    ),
+) {
+    let bones = content.object_id("bones");
+    for _ in 0..Swarm::hoard(placed) {
+        let kill = danger::draw(rng, own, generic, danger, &spawning.odds);
+        if let Some(corpse) = kill.and_then(|c| content.corpse_of(c)) {
+            let p = floor[rng.index(floor.len())];
+            // Made when the level is first entered (`rot::made_at`): fresh then.
+            add_to_pile(
+                template.objects.entry(p).or_default(),
+                &[Stack::one(corpse)],
+                content,
+            );
+        }
+        if let Some(bones) = bones {
+            let p = floor[rng.index(floor.len())];
+            add_to_pile(
+                template.objects.entry(p).or_default(),
+                &[Stack::one(bones)],
+                content,
+            );
+        }
+    }
 }
 
 /// What a den is drawn from.
@@ -133,7 +219,7 @@ impl Theme {
         (own, generic): (&[Candidate], &[Candidate]),
         danger: u8,
         spawning: &Spawning,
-        swarm: Swarm,
+        swarm: &Swarm,
     ) -> Self {
         let themes = swarm.themes;
         if themes.kind == 0 && themes.faction == 0 {

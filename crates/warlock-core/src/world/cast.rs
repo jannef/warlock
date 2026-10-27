@@ -27,6 +27,9 @@
 //!   creature on its line; a touch reaches one cell; a hex falls on the creature the caster sees
 //!   at the cell aimed at; self is the caster.
 //!
+//! A scroll read and a wand used cast through the same path at their own caster level, paid by
+//! the scroll or a charge instead of mana ([`World::read_cast`], [`World::wand_cast`]).
+//!
 //! A cast is refused, taking no time and no mana, without the spell, without the mana, without
 //! the cell it asks, and where it cannot go (out of range, no one there to hex or touch, a
 //! lightning call under a roof, nothing to cure, not hurt). Its blows are the caster's: its
@@ -250,6 +253,34 @@ impl World {
         self.perform(&cast, at, events)
     }
 
+    /// The player uses the wand in inventory stack `item`, which casts `spell` at caster level
+    /// `level` at cell `at` (spec §8 "Magic items": "Wands"): the cast path's, paid by a
+    /// charge, not mana, and never refused for what the player knows or holds. Whether it went
+    /// off (`false`: no charge used, no time).
+    pub(super) fn wand_cast(
+        &mut self,
+        item: usize,
+        (spell, level): (SpellId, i32),
+        at: Pos,
+        events: &mut Vec<Event>,
+    ) -> bool {
+        let content = self.content.clone();
+        let (def, Some(rules)) = (content.spell(spell), content.spell_rules()) else {
+            self.say("Nothing happens.");
+            return false;
+        };
+        let cast = Cast {
+            spell,
+            def,
+            rules,
+            level,
+            pay: Pay::Wand(item),
+            reach: self.state.player().spell_reach(&content, def),
+            read: Cell::new(None),
+        };
+        self.perform(&cast, Some(at), events)
+    }
+
     /// Casts `cast` at `at` by its kind (module docs); whether it went off. A scroll read is
     /// said kept by Spell recall afterwards, and a death by it is put down to the scroll.
     fn perform(&mut self, cast: &Cast<'_>, at: Option<Pos>, events: &mut Vec<Event>) -> bool {
@@ -290,6 +321,7 @@ impl World {
                 self.say_read(&scroll);
                 cast.read.set(Some((scroll.object, kept)));
             }
+            Pay::Wand(item) => self.use_charge(item),
         }
     }
 
@@ -625,7 +657,7 @@ impl World {
             }
         }
         if let Some(death) = &mut self.state.death
-            && matches!(cast.pay, Pay::Mana(_))
+            && !matches!(cast.pay, Pay::Scroll(_))
         {
             death.by = None;
             death.cause = Some(Cause::Spell(cast.spell));
@@ -745,6 +777,8 @@ enum Pay {
     Mana(i32),
     /// The scroll read from this inventory stack.
     Scroll(usize),
+    /// A charge of the wand in this inventory stack.
+    Wand(usize),
 }
 
 /// One cast's settled facts, handed to each kind's code.
@@ -752,7 +786,7 @@ struct Cast<'c> {
     spell: SpellId,
     def: &'c SpellData,
     rules: &'c SpellRules,
-    /// The caster's caster level (a scroll's own, read).
+    /// The caster's caster level (a scroll's own, read; a wand's own, used).
     level: i32,
     pay: Pay,
     reach: Reach,
