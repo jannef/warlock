@@ -1192,6 +1192,8 @@ impl Actor {
             let softened = talents.stance_to_hit(self.stance, stance.to_hit);
             profile.to_hit += softened - stance.to_hit;
             profile.confirm += talents.critical_confirm;
+            // Armour-breaker: a confirmed critical ignores more Protection.
+            profile.critical_penetration += talents.critical_penetration;
             // Ferocity (a half-orc's): every attack hits harder below a third of its hit points.
             if talents.ferocity != 0 && self.hp.saturating_mul(3) < self.max_hp(content) {
                 profile.bonus += talents.ferocity;

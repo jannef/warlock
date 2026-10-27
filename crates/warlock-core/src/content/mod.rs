@@ -15,6 +15,8 @@ mod calendar;
 mod campaign;
 mod class;
 mod creature;
+#[cfg(test)]
+mod creature_body_tests;
 mod creature_rarity;
 mod damage_type;
 pub mod danger;

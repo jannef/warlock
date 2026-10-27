@@ -20,7 +20,7 @@ hearing = 10
 weight = 1200000
 stats = { strength = 26, dexterity = 14, toughness = 27, intelligence = 20, willpower = 24, presence = 20 }
 base_hp = 96
-natural = { defence = 1, protection = 5, name = "stone body" }
+natural = { defence = 1, protection = 7, name = "stone body" }
 incorporeal = { wall_defence = 2 }
 resist = { slashing = 25, piercing = 50, electricity = 100, poison = 100 }
 corpse = false

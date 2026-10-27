@@ -764,6 +764,8 @@ pub enum TalentEffect {
     Grip { status: String },
     /// Added to the roll that confirms its criticals (every attack).
     CriticalConfirm { value: i32 },
+    /// Its confirmed criticals ignore this much more Protection (every attack; Armour-breaker).
+    CriticalPenetration { value: i32 },
     /// Its blows that can do damage of kind `damage` (an id in `data/damage_types.toml`) ignore this
     /// much more Protection.
     Penetration { damage: String, value: i32 },
@@ -1072,6 +1074,7 @@ impl TalentEffect {
             | TalentEffect::CarryKg { value }
             | TalentEffect::Checks { value, .. }
             | TalentEffect::CriticalConfirm { value }
+            | TalentEffect::CriticalPenetration { value }
             | TalentEffect::OffHandDamage { value }
             | TalentEffect::BestSkillThreat { value }
             | TalentEffect::TrapEase { value }

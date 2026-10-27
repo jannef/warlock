@@ -130,7 +130,11 @@
 #   natural   its natural armour: { defence = 1, protection = 3, name = "shell" }: defence in
 #             the Natural category of Defence, protection the damage it soaks off every hit
 #             (adding up with what it wears; each 0 to 20, not both 0); "Your sword glances off
-#             the cave beetle's shell."
+#             the cave beetle's shell." Its protection follows the body its name names, by
+#             level (#563, spec §8 "Natural Protection by body and level"): none 0, hide
+#             (L − 10) ÷ 8, bony (bones, scales, chitin, shell) L ÷ 6, armoured (stone, ice,
+#             iron-hard skin) L ÷ 4 + 1; the peoples and types that may roll armour have none;
+#             content::creature_body_tests checks it, and lists the exceptions.
 #   throw     a natural ranged attack that needs no ammunition (spec §8 "Ranged combat":
 #             "Creatures' throws"; the giants' boulders): [creature.throw] with object (what
 #             flies, for its look: "boulder"; it never lands), damage, damage_type, range (cells,
@@ -319,6 +323,6 @@
 # base: St 13 + 0.4 L, Dx 8 + 0.25 L, To 16 + 0.4 L (4 over the undead's: a troll heals by its
 # Toughness, so it heals fast), within ±35 % of max HP and dice average. Fire hurts every troll
 # (resist fire −50, the stone troll −25) but the fire troll. A hide of Defence 1 and Protection 2
-# or more; a corpse with on_eat vomit 50 and a 5 % chance of Toughness. Glyph T, each in a colour
+# or more (the body rule's when higher; the chieftain, in armour, none); a corpse with on_eat vomit 50 and a 5 % chance of Toughness. Glyph T, each in a colour
 # of its own. Only the troll and the hill troll live in a population
 # (Fyrdelf); the rest wait for deeper places.

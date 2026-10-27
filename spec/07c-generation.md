@@ -191,8 +191,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   campaign's branches; and a vault whose file gives `dungeons` (branch ids, or branch levels such
   as `"cealdhlaw:2"`, of its own campaign) only there. A `[[dungeon.levels]]` range
   may name vaults (`vaults = ["drakes_hoard"]`, #339): each is stamped on every level of the range
-  for certain (a generation attempt that cannot fit one is made again), before any vault drawn at
-  random, and a vault a branch level names is never drawn at random anywhere (a quest's target
+  for certain (in a cave level with no rock left big enough to hold one, the generator first
+  fills the spot that takes the least of the cave with rock; an attempt that still cannot fit one
+  is made again), before any vault drawn at random, and a vault a branch level names is never drawn at random anywhere (a quest's target
   is where the branch says, once). A named vault is a dungeon vault, shared or of the branch's
   own campaign, and named once a level.
 - **Fennmynster** (#338; `campaigns/ascmearc/data/dungeons/fennmynster.toml`; the design is

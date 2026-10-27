@@ -60,13 +60,6 @@ struct Scheduled {
     energy: i64,
 }
 
-/// `price` paid by an actor `percent` quicker (as if its speed were that much higher), rounded
-/// up, at least 1.
-fn quicker(price: i64, percent: i32) -> i64 {
-    let pace = i64::from((100 + percent).max(1));
-    ((price * 100 + pace - 1) / pace).max(1)
-}
-
 impl World {
     /// The energy price of action `kind` for actor `id`: what it costs it ([`World::cost_of`])
     /// over the 6-second base, slowed by its burden ([`World::burdened`]). Steps are priced by
@@ -264,12 +257,9 @@ impl World {
             self.load_of(id).penalty().slow_eased(price, ease),
             slowdown,
         );
-        let price = actor.effects.slow(&self.content, price);
-        // Quick (spec §8 "Talents"): a little quicker in everything, as a higher speed would be.
-        match talents.speed_percent {
-            0 => price,
-            quick => quicker(price, quick),
-        }
+        // A talent's `speed_percent` (Quick, Fleet-footed) is not read here: `Actor::speed` counts
+        // it, once.
+        actor.effects.slow(&self.content, price)
     }
 
     /// The price that leaves the player ready to act exactly at `until` (the last turn of a

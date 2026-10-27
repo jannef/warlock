@@ -18,7 +18,7 @@ hearing = 12
 weight = 200000
 stats = { strength = 18, dexterity = 9, toughness = 16, intelligence = 2, willpower = 10, presence = 3 }
 base_hp = 12
-natural = { defence = 2, protection = 3, name = "scales" }
+natural = { defence = 2, protection = 1, name = "scales" }
 on_eat = { message = "Tough, but there is a lot of it.", satiation = 1000 }
 [creature.attack]
 damage = "2d6"

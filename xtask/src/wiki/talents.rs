@@ -1245,6 +1245,9 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::CriticalConfirm { value } => {
             format!("the roll confirming your criticals {}", signed(value))
         }
+        TalentEffect::CriticalPenetration { value } => {
+            format!("your confirmed criticals: penetration {}", signed(value))
+        }
         TalentEffect::Penetration { damage, value } => {
             let name = (content.damage_type_id(&damage)).map_or(damage.clone(), |d| {
                 content.damage_type(d).name.to_lowercase()

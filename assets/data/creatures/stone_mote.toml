@@ -20,7 +20,7 @@ weight = 20000
 size = "small"
 stats = { strength = 7, dexterity = 14, toughness = 8, intelligence = 2, willpower = 16, presence = 2 }
 base_hp = 1
-natural = { defence = 0, protection = 2, name = "stone body" }
+natural = { protection = 1, name = "stone body" }
 resist = { slashing = 25, piercing = 50, electricity = 100, poison = 100 }
 corpse = false
 blood = "none"

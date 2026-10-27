@@ -60,6 +60,19 @@ messages built in `World::perceive_events` (unseen ends are "something"). The ap
 behavior may use randomness (combat rolls are the rules', from the gameplay stream); tie-breaks
 are by distance, direction order, and actor id.
 
+Natural Protection by body and level (spec §8 "Natural Protection by body and level", #563,
+`docs/design/combat-progression.md` §8): data only. Every type's `natural.protection` is the
+body's at its level, the hide's `name` picking the body: none 0, hide (L − 10) ÷ 8, bony L ÷ 6,
+armoured L ÷ 4 + 1. `content/creature_body_tests.rs` holds the rule: `Body::of` (the name table:
+**a new hide name goes there**, or the test panics), `EXCEPTIONS` (hand-tuned: beetle, ember
+beetle, stone troll, mud golem, balor, pit fiend), `PEOPLES` (tags whose types wear their
+Protection: 0), the armed rule (gear that may roll a piece with Protection or armour: 0), the
+hags who cast (half a hide's), the living trolls' floor of 2, and `BODILESS` (types past level
+17 with no `natural` and a body of none; any other type with no `natural` must be under level 18
+or a hag). A hide of Protection 0 needs a Defence or it is left out (`Hide::check`: not both 0).
+Animated objects (tag `animated`) keep their own table. A new creature type: give it the hide
+its body asks at its level, or the test names it.
+
 Incorporeal creatures (spec §8 "Incorporeal creatures", #381): the data is a creature type's
 `incorporeal = { wall_defence }` (`content/creature.rs::Incorporeal`, checked in `Content::load`
 beside `natural`; `Content::incorporeal(type)`). The rules are `world/incorporeal.rs`:

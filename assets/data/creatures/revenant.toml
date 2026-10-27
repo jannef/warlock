@@ -20,6 +20,7 @@ hearing = 12
 weight = 70000
 stats = { strength = 19, dexterity = 15, toughness = 25, intelligence = 18, willpower = 23, presence = 18 }
 base_hp = 48
+natural = { protection = 1, name = "dead flesh" }
 attack = { damage = "3d8", damage_type = "bludgeoning", name = "slam", verb = "slams" }
 resist = { poison = 100 }
 weapon_skills = { long_blades = 3 }

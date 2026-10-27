@@ -27,7 +27,7 @@ weight = 80000
 stats = { strength = 29, dexterity = 23, toughness = 33, intelligence = 35, willpower = 38, presence = 35 }
 base_hp = 104
 skills = { concentration = 166, spellcraft = 171 }
-natural = { defence = 4, protection = 0, name = "hide" }
+natural = { defence = 4, protection = 5, name = "hide" }
 resist = { piercing = 50 }
 on_eat = { message = "It tastes of lies.", vomit = 70, harm = "1d4" }
 blood = "#6a2a10"
