@@ -66,6 +66,8 @@ mod race;
 mod resource;
 #[cfg(test)]
 mod room_burden_tests;
+#[cfg(test)]
+mod room_collapse_tests;
 mod room_effect;
 #[cfg(test)]
 mod room_mirrors_tests;
@@ -181,7 +183,8 @@ pub use quest_roll::{Candidate, MAX_VARIANTS, MAX_WEIGHT, Pick, Roll, Rolled, Va
 pub use race::{HUNGER, LightBlind, RaceDef, Races};
 pub use resource::{Build, MAX_EVERY, MAX_RESOURCE, MAX_SHORT, OverTime, ResourceDef, ResourceId};
 pub use room_effect::{
-    Here, Hoard, Mirrors, RoomEffectDef, RoomEffectId, RoomEffects, SpecialRoom, Swarm, Themes,
+    Collapse, Here, Hoard, Mirrors, RoomEffectDef, RoomEffectId, RoomEffects, SpecialRoom, Swarm,
+    Themes,
 };
 pub use scenario::ScenarioDef;
 pub use scroll::{Cast, Reading, ScrollSpell, SpellScroll};

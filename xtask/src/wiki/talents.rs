@@ -616,6 +616,7 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             format!("{} to every check to find hidden things", signed(value))
         }
         TalentEffect::Searching { value } => format!("searching {}", signed(value)),
+        TalentEffect::CollapseProof => "a collapsed floor never gives way under you".to_string(),
         TalentEffect::SeesReflections { value } => format!(
             "sees a hall of mirrors' reflections within {value} cell{} for what they are: they \
              are not shown",
