@@ -24,6 +24,7 @@ The glyph hints at what kind of thing it is, as in ADOM:
 | `?` | scroll |
 | `%` | food |
 | `*` | stone or gem |
+| `,` | a piece of some material |
 | `$` | coins |
 | `=` | ring |
 | `"` | amulet |
@@ -219,3 +220,18 @@ placed as.
 A long sword and a chain mail shirt in each metal:
 
 {{#include generated/variants.md}}
+
+### Pieces
+
+Nothing lies about as raw material but **pieces**: what a broken thing falls to (an animated
+thing that does not fall whole, see [Animated objects](animated.md)). A piece is a piece of one
+material (*a piece of tin*, *3 pieces of silk*), shown as `,` in its material's colour, weighs
+what 100 g of steel would in that material, and is worth what a piece of steel (1 gold) would,
+by the material's worth (rounded: a piece of tin is worth nothing, one of gold 20 gold).
+Pieces of one material stack; they are miscellaneous goods, which no shop buys yet. A broken thing falls as the parts it was made of: a gem set in it falls loose (its size
+and cut kept), each other part as pieces of its material, half the part's weight in pieces
+(one at least; parts of one material counted together), and paper, wax, and the like as
+nothing. Its magic is lost. A tin dagger with a ruby pommel breaks into 2 pieces of tin and
+the ruby; a steel long sword into 8 pieces of steel and 3 of leather.
+
+{{#include generated/pieces.md}}
