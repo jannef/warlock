@@ -219,6 +219,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("talents-racial.md", talents::racial),
         ("talents-by-system.md", talents::by_system),
         ("class-levels.md", talents::class_levels),
+        ("foraging.md", skills::foraging),
         ("skills.md", skills::skills),
         ("skill-benefits.md", skills::skill_benefits),
         ("skill-grants.md", skills::skill_grants),
@@ -612,9 +613,12 @@ mod tests {
         );
         let benefits = text("style-benefits.md");
         assert!(benefits.contains("main hand strikes at **−4** to hit and the off hand at **−8**"));
-        assert!(benefits.contains("| 1 | −3 | −7 |") && benefits.contains("| 10 | none | none |"));
         assert!(
-            benefits.contains("| 8 | +4 | +1 roll | 10% less |"),
+            benefits.contains("| 1 | - | −3 | −7 |")
+                && benefits.contains("| 9 | +2 | none | none |")
+        );
+        assert!(
+            benefits.contains("| 8 | +6 | +1 roll | 15% less |"),
             "{benefits}"
         );
         assert!(text("classes.md").contains("| Twin Blades 1 or Duelist 1 |"));
@@ -829,17 +833,30 @@ mod tests {
                  Balance: Burdened / Strained | Decipher script: study check | Disable device: disarming traps | \
                  Heal: treating | Listen: hears fainter by | Open lock: picking locks | Search: searching | \
                  Search: search reaches | Spellcraft: study check | Spot: noticing | Steal: \
-                 stealing | Stealth: noise | Survival: journeys | Tumble: Dodge |"
+                 stealing | Stealth: noise | Survival: journeys | Survival: foraging | Tumble: \
+                 Dodge |"
             ),
             "{benefits}"
         );
+        let foraging = text("foraging.md");
+        assert!(
+            foraging.contains("A forage takes 10 minutes."),
+            "{foraging}"
+        );
+        assert!(
+            foraging.contains(
+                "| forest | 40% | `1d3` | handful of berries 27%, handful of hazelnuts 27%, \
+                 mushroom 27%, angelica root 9.1%, apple 9.1% |"
+            ),
+            "{foraging}"
+        );
         assert!(benefits.contains(
             "| 100 | 20% better | +8 Strength | +5% | ×1.1 / ×1.2 | +10 | +8 | +8 | 10 | +8 | +8 | +1 cell | +10 \
-             | +8 | +8 | \u{2212}60% | \u{2212}20% | +5 |"
+             | +8 | +8 | \u{2212}60% | \u{2212}20% | +15% | +5 |"
         ));
         assert!(benefits.contains(
             "| 150 | 25% better | +10 Strength | +7% | ×1.08 / ×1.15 | +15 | +10 | +10 | 15 | +10 | +10 | +1 cell \
-             | +15 | +10 | +10 | \u{2212}75% | \u{2212}20% | +7 |"
+             | +15 | +10 | +10 | \u{2212}75% | \u{2212}20% | +22% | +7 |"
         ));
         // Treating oneself: the difficulty and odds of each ailment.
         let heal = text("heal-targets.md");
@@ -1221,8 +1238,9 @@ mod tests {
         );
         assert!(
             classes.contains(
-                "| Food | Angelica roots, apples, food rations, loaves of bread, strips of dried \
-                 meat, turnips, wafers of waybread, corpses |"
+                "| Food | Angelica roots, apples, food rations, handfuls of berries, handfuls of \
+                 hazelnuts, loaves of bread, mushrooms, strips of dried meat, turnips, wafers of \
+                 waybread, corpses |"
             ),
             "{classes}"
         );

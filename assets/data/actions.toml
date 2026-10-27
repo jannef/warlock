@@ -69,6 +69,10 @@ pray = 1000
 # A turn of drinking at a healing spring (the Drink ability; spec §7 "Special rooms"): a drink
 # takes its outcome table's `seconds` (data/outcomes/spring.toml), a turn of this after another.
 drink = 1000
+
+# A turn of foraging in the wild (the Forage ability; spec §8 "Foraging"): a forage takes
+# forage.toml's `seconds` (10 minutes), a turn of this after another.
+forage = 1000
 # Trying to disarm a trap you know of next to you (the Disarm ability; spec §8 "Disarming traps"):
 # careful work, whether it comes off, fails, or sets the trap off.
 disarm = 2000

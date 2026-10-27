@@ -164,6 +164,11 @@ pub enum Action {
     /// then one outcome drawn from the spring's table. A spring never runs dry. Interrupted, it
     /// gives nothing. Refused (no time) with no spring next to the player.
     Drink,
+    /// Forage for food in the wild (spec §8 "Foraging"; the Forage ability, Survival's use): turns
+    /// of the `forage` action for `data/forage.toml`'s time, then a chance of food by the
+    /// landscape and Survival. Interrupted, it finds nothing. Refused (no time) untrained, or
+    /// anywhere but on land of the overworld or a local area of it.
+    Forage,
     /// Catch a second wind (spec §8 "Talents"; the Second wind ability): hit points back at
     /// once, then Winded for a while. Takes the time of `wait`; refused (no time) without the
     /// talent or while winded.
@@ -740,6 +745,7 @@ impl fmt::Display for Action {
             Action::Heal(Some(id)) => write!(f, "heal:{id}"),
             Action::Pray => f.write_str("pray"),
             Action::Drink => f.write_str("drink"),
+            Action::Forage => f.write_str("forage"),
             Action::SecondWind => f.write_str("second_wind"),
             Action::BloodMagic => f.write_str("blood_magic"),
             Action::Use(active, None) => write!(f, "use:{}", active.id()),
@@ -842,6 +848,7 @@ impl FromStr for Action {
             "wait" => bare(Action::Wait),
             "pray" => bare(Action::Pray),
             "drink" => bare(Action::Drink),
+            "forage" => bare(Action::Forage),
             "second_wind" => bare(Action::SecondWind),
             "blood_magic" => bare(Action::BloodMagic),
             "use" => {
@@ -1324,6 +1331,7 @@ mod tests {
             },
             Action::Advance("stealth".into()),
             Action::Pray,
+            Action::Forage,
             Action::Heal(None),
             Action::Heal(Some("bleeding".into())),
             Action::Drink,

@@ -387,6 +387,18 @@ fg = "#c8c0b0"
 bg = "#0d0d10"
 glow = 0.2
 
+# A scriptorium's shelves (spec §7 "Special rooms"): the feature of the room, scenery the player
+# cannot pass. Its own terrain, so look mode tells it from a wall.
+[[terrain]]
+id = "shelves"
+name = "shelves"
+description = "Shelves of rotting scrolls, sagging under the weight of old writing. Most of it has crumbled to dust; some may still be read."
+stone = true
+walkable = false
+glyph = "≡"
+fg = "#a08458"
+bg = "#0d0d10"
+
 # Light sources (spec §5). Emitting terrain must be transparent so light cannot leak through it.
 
 [[terrain]]

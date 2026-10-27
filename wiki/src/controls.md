@@ -33,7 +33,7 @@ The in-game `?` screen is authoritative: it is generated from your current key b
 | Info page 1 to 9 (while an info screen is open) | `1` to `9` |
 | Next / previous info page (wraps) | `Tab` / `Shift`+`Tab` |
 | Rest | `b` |
-| Eat | `e` |
+| Consume (eat) | `e` |
 | Read a scroll | `r`, choose it, then aim a spell (see [Scrolls](scrolls.md)) |
 | Look around | `l` |
 | Shoot or throw what is in your Missile weapon slot | `t`, then aim (see below) |
@@ -213,7 +213,7 @@ takes no time. See [Objects and your pack](objects.md).
 
 `T` opens a list of what you carry that can be thrown: choose one by its letter and aim it.
 
-`e` opens a list of what you can eat: food lying where you stand first, then the food you carry.
+`e` (Consume) opens a list of what you can eat, titled "Consume what?": food lying where you stand first, then the food you carry.
 A letter, or `Enter` on the marked row, eats it. See
 [Food and corpses](food.md).
 

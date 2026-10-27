@@ -39,6 +39,7 @@ mod fey_roster_tests;
 #[cfg(test)]
 mod fiend_roster_tests;
 mod flow;
+mod forage;
 mod gear;
 mod gem;
 #[cfg(test)]
@@ -75,6 +76,9 @@ mod room_burden_tests;
 #[cfg(test)]
 mod room_collapse_tests;
 mod room_effect;
+mod room_lore;
+#[cfg(test)]
+mod room_lore_tests;
 #[cfg(test)]
 mod room_mirrors_tests;
 mod room_shrine;
@@ -155,6 +159,7 @@ pub use experience::{
 };
 pub use faction::{FactionDef, FactionId, Factions, PLAYER_FACTION, Stance};
 pub use flow::{FLOW_SPEEDS, Flow};
+pub use forage::{ForageGround, ForageRules};
 pub use gear::{Gear, GearLine, RACIAL_CHANCE};
 pub use gem::{
     Cut, CutId, Cutting, GemDef, GemSize, GemSizeId, Gems, MAX_GEM_VALUE, MAX_GEM_WEIGHT,
@@ -205,6 +210,7 @@ pub use room_effect::{
     Collapse, Here, Hoard, Mirrors, Offer, RoomEffectDef, RoomEffectId, RoomEffects, SpecialRoom,
     Swarm, Themes, Treasure,
 };
+pub use room_lore::RoomLoot;
 pub use room_shrine::{Regard, Shrine};
 pub use scenario::ScenarioDef;
 pub use scroll::{Cast, Reading, ScrollSpell, SpellScroll};
@@ -556,6 +562,9 @@ pub struct Content {
     /// What becomes of a creature that catches the player stealing (`data/steal.toml`, spec §8
     /// "Stealing"); none without the file.
     steal: Option<StealRules>,
+    /// What foraging in the wild gives (`data/forage.toml`, spec §8 "Foraging"); none without
+    /// the file.
+    forage: Option<ForageRules>,
     /// The rules of stat training (`data/stats.toml`, spec §8 "Stats").
     stat_training: StatTraining,
     factions: Factions,
@@ -681,6 +690,7 @@ impl Content {
             trap_avoid: TrapAvoid::default(),
             search: SearchRules::default(),
             steal: None,
+            forage: None,
             stat_training: StatTraining::default(),
             factions: Factions::default(),
             lights: Vec::new(),
@@ -926,6 +936,10 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             content.steal = Some(StealRules::parse(path, text, &content.factions)?);
         }
+        let path = "data/forage.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.forage = Some(ForageRules::parse(path, text, &content)?);
+        }
         let path = "data/stats.toml";
         if let Some(text) = files.get_optional(path) {
             content.stat_training = StatTraining::parse(path, text)?;
@@ -938,6 +952,14 @@ impl Content {
         let lights = content.light_ids.clone();
         let outcomes = content.outcomes.clone();
         (content.room_effects).resolve_places(&outcomes, |name| lights.get(name).copied())?;
+        // A scriptorium's loot and training name item classes (loaded with the objects) and skills.
+        let mut rooms = std::mem::take(&mut content.room_effects);
+        let skills = !content.skills().is_empty();
+        rooms.resolve_lore(
+            |n| content.item_class_id(n),
+            (|n| content.skill_id(n), skills),
+        )?;
+        content.room_effects = rooms;
 
         let path = "data/legend.toml";
         let legend_file: LegendFile =
@@ -2701,6 +2723,12 @@ impl Content {
     /// without the file, when nobody steals.
     pub fn steal(&self) -> Option<&StealRules> {
         self.steal.as_ref()
+    }
+
+    /// What foraging in the wild gives (spec §8 "Foraging"; `data/forage.toml`); `None` without
+    /// the file, when nobody forages.
+    pub fn forage(&self) -> Option<&ForageRules> {
+        self.forage.as_ref()
     }
 
     /// The rules of stat training (spec §8 "Stats"; `data/stats.toml`, else

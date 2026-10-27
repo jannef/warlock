@@ -461,18 +461,18 @@ fn styles_train_only_in_their_configuration() {
 #[test]
 fn style_ranks_add_to_attacks_defence_and_prices() {
     let player = |w: &World| w.state.player().clone();
-    // Duelist 10: +4 to hit and +5 parry with a sword alone.
+    // Duelist 10: +5 to hit and +7 parry with a sword alone.
     let mut w = yard();
     arm(&mut w, &["sword"]);
     let content = w.content().clone();
     let (blow, dv) = (player(&w).melee(&content), w.perception().own_defence());
     set(&mut w, "duelist", 10);
     let trained = player(&w).melee(&content);
-    assert_eq!(trained.to_hit, blow.to_hit + 4);
-    assert_eq!(w.perception().own_defence(), dv + 5);
+    assert_eq!(trained.to_hit, blow.to_hit + 5);
+    assert_eq!(w.perception().own_defence(), dv + 7);
     let parry = w.defence_of(w.player_id()).bonus(Category::Parry);
-    assert_eq!(parry, 5);
-    // Sword and Board 10: +4 to the buckler's Shield; Duelist's parry is gone with it.
+    assert_eq!(parry, 7);
+    // Sword and Board 10: +6 to the buckler's Shield; Duelist's parry is gone with it.
     let mut w = yard();
     arm(&mut w, &["sword", "buckler"]);
     set(&mut w, "duelist", 10);
@@ -480,9 +480,9 @@ fn style_ranks_add_to_attacks_defence_and_prices() {
     let dv = w.defence_of(w.player_id());
     assert_eq!(
         (dv.bonus(Category::Shield), dv.bonus(Category::Parry)),
-        (6, 0)
+        (8, 0)
     );
-    // Great Weapon 10: +6 damage, a critical one more time (×3), and blows 15 % quicker.
+    // Great Weapon 10: +10 damage, a critical two more times (×4), and blows 20 % quicker.
     let mut w = yard();
     arm(&mut w, &["greatsword"]);
     let plain = player(&w).melee(&content);
@@ -492,10 +492,13 @@ fn style_ranks_add_to_attacks_defence_and_prices() {
     let price = w.attack_price(me, ActionKind::Melee, sword, blow);
     set(&mut w, "great_weapon", 10);
     let great = player(&w).melee(&content);
-    assert_eq!((great.bonus, great.crit), (plain.bonus + 6, plain.crit + 1));
+    assert_eq!(
+        (great.bonus, great.crit),
+        (plain.bonus + 10, plain.crit + 2)
+    );
     let quicker = w.attack_price(me, ActionKind::Melee, sword, blow);
-    assert_eq!((price, quicker), (6000, 5100));
-    // Staff Fighter 10 with the staff: +4 to hit, +4 parry. Great Weapon 10 gives it nothing of
+    assert_eq!((price, quicker), (6000, 4800));
+    // Staff Fighter 10 with the staff: +5 to hit, +7 parry. Great Weapon 10 gives it nothing of
     // its own (no damage, no critical), only Staff Fighter 7 by default: +3 to hit.
     let mut w = yard();
     arm(&mut w, &["staff"]);
@@ -509,29 +512,29 @@ fn style_ranks_add_to_attacks_defence_and_prices() {
         "the staff is no great weapon"
     );
     set(&mut w, "staff_fighter", 10);
-    assert_eq!(player(&w).melee(&content).to_hit, plain.to_hit + 4);
-    assert_eq!(w.defence_of(w.player_id()).bonus(Category::Parry), 4);
-    // Brawler 10: +4 to hit, +6 damage with bare hands.
+    assert_eq!(player(&w).melee(&content).to_hit, plain.to_hit + 5);
+    assert_eq!(w.defence_of(w.player_id()).bonus(Category::Parry), 7);
+    // Brawler 10: +5 to hit, +10 damage with bare hands.
     let mut w = yard();
     let plain = player(&w).melee(&content);
     set(&mut w, "brawler", 10);
     let fists = player(&w).melee(&content);
     assert_eq!(
         (fists.to_hit, fists.bonus),
-        (plain.to_hit + 4, plain.bonus + 6)
+        (plain.to_hit + 5, plain.bonus + 10)
     );
-    // Marksman 10: +4 to hit, shots 15 % and reloading 30 % quicker.
+    // Marksman 10: +6 to hit, shots 25 % and reloading 40 % quicker.
     let mut w = yard();
     arm(&mut w, &["crossbow", "bolt"]);
     let shot = player(&w).ranged(&content).expect("a crossbow");
     set(&mut w, "marksman", 10);
     let aimed = player(&w).ranged(&content).expect("a crossbow");
-    assert_eq!(aimed.to_hit, shot.to_hit + 4);
+    assert_eq!(aimed.to_hit, shot.to_hit + 6);
     let shoot = player(&w).attack_skills(&content, AttackKind::Ranged, None);
     let crossbow = player(&w).launcher_item(&content);
-    assert_eq!(w.attack_price(me, ActionKind::Shoot, crossbow, shoot), 5100);
-    assert_eq!(w.reload_price(me, shoot), 4200);
-    // Skirmisher 10: +3 to hit and damage on throws, 20 % quicker.
+    assert_eq!(w.attack_price(me, ActionKind::Shoot, crossbow, shoot), 4500);
+    assert_eq!(w.reload_price(me, shoot), 3600);
+    // Skirmisher 10: +4 to hit and +5 damage on throws, 30 % quicker.
     let mut w = yard();
     arm(&mut w, &["rock"]);
     let rock = object(&w, "rock");
@@ -550,9 +553,9 @@ fn style_ranks_add_to_attacks_defence_and_prices() {
         .expect("a throwing weapon");
     assert_eq!(
         (skirmish.to_hit, skirmish.bonus),
-        (throw.to_hit + 3, throw.bonus + 3)
+        (throw.to_hit + 4, throw.bonus + 5)
     );
-    assert_eq!(w.attack_price(me, ActionKind::Throw, None, thrown), 6000);
+    assert_eq!(w.attack_price(me, ActionKind::Throw, None, thrown), 5250);
     // A style's rank never helps another configuration: Duelist 10 with nothing in hand.
     let mut w = yard();
     let plain = player(&w).melee(&content);
@@ -583,7 +586,7 @@ fn two_weapons_strike_twice_at_penalties_twin_blades_eases() {
     };
     assert_eq!(off_blow.to_hit, dagger_alone.to_hit - 8);
     assert_eq!(off_blow.damage, dagger_alone.damage);
-    // Twin Blades eases them: rank 4 by 2 and 3, rank 10 to nothing at all.
+    // Twin Blades eases them: rank 4 by 2 and 3, rank 10 to nothing at all, and adds +2 to hit.
     set(&mut w, "twin_blades", 4);
     let me = w.state.player().clone();
     assert_eq!(me.melee(&content).to_hit, single.to_hit - 2);
@@ -591,9 +594,9 @@ fn two_weapons_strike_twice_at_penalties_twin_blades_eases() {
     assert_eq!(eased.to_hit, dagger_alone.to_hit - 5);
     set(&mut w, "twin_blades", 10);
     let me = w.state.player().clone();
-    assert_eq!(me.melee(&content).to_hit, single.to_hit);
+    assert_eq!(me.melee(&content).to_hit, single.to_hit + 2);
     let (_, full) = me.off_hand_blow(&content).expect("an off hand");
-    assert_eq!(full.to_hit, dagger_alone.to_hit);
+    assert_eq!(full.to_hit, dagger_alone.to_hit + 2);
     // Every attack is two blows, the main hand's first; one action's time.
     let outcome = w.apply(&Action::Move(Dir::E));
     assert_eq!(players_attacks(&w, &outcome), [None, Some(dagger)]);

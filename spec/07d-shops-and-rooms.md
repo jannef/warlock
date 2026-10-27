@@ -232,7 +232,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     a room of at least 9 floor cells) is a shrine of a side (below: "You feel welcome here.",
     "Something here wants you gone.", or "An old shrine. It ignores you." on entering); a *spring*
     (4, #416; only in a room of at least 9 floor cells) holds a healing spring to drink at ("Clear
-    water wells up in an old stone basin." on entering; below). Blood washing
+    water wells up in an old stone basin." on entering; below); a
+    *scriptorium* (5, #414; only in a room of at least 9 floor cells) holds shelves of rotting
+    scrolls and a few scrolls, and trains Decipher script faster ("You smell dust and old vellum."
+    when glimpsed, "Shelves of rotting scrolls line the walls." on entering; below). Blood washing
     away in a flooded room waits for blood (#127).
   - **Hot and cold rooms** (`temperature`, #404): a room sets its cells' temperature and
     nothing else: no status, no damage, nothing done to items or food. The temperature at a cell
@@ -464,6 +467,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
       half the maximum, `Amount::Half`) and `catch = DISEASE` (that disease caught).
     - **No limit**: the table's `exhaust` is 0, so a spring never runs dry (the owner's
       no-anti-farming rule; the foul water is the price). Nothing is saved.
+  - **A scriptorium** (`feature = "shelves"`, `loot = { class = "scrolls", count = [2, 4] }`,
+    `train = { decipher_script = 200 }`, #414; `mapgen/room_loot.rs`, `world/train.rs`). Its
+    feature is `shelves` (stone, not walkable, `≡`, "shelves", a description look mode adds),
+    placed as an altar is. A generated floor's scriptorium gets `count` items (least to most,
+    one draw), each a base item of item class `class` that is loot at the floor's item level (by
+    `frequency`, the base items of `roll`), made as loot (a scroll's label unknown until read or
+    identified), on a plain floor cell of the room drawn anew (no stairs, light, or trap), all
+    from the level's stream `swarm/<level id>`, so the rest of the level is the same; it needs
+    no danger. While the player stands inside, each training mark of a skill the effect names
+    in `train` comes with that percent of its usual chance (at most certain): Decipher script's
+    mark for studying a spell (§8 "Spells", 50 %) is certain. Effects at a cell multiply, as
+    other percents do. Nothing is saved. A room with `loot` never covers a whole level.
   - **A status while inside** (`status`, #403): as time passes, at the start of each stretch of
     it (`World::pass_time`: so after every action, the player's and each creature's, at every
     turn of a rest or another long action, and through a creature's coarse turns while the

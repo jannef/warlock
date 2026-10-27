@@ -14,12 +14,14 @@ use warlock_core::stats::{self, DRAIN_FLOOR, Stat};
 pub(super) fn stat_training(content: &Content) -> String {
     let rules = content.stat_training();
     let mut out = String::from("| Stat | Trained by | Chance of a mark |\n|---|---|---:|\n");
-    for stat in Stat::ALL {
+    // Stat by stat, then the uses that name their own stat (a potion's).
+    let stats = Stat::ALL.into_iter().map(Some).chain([None]);
+    for stat in stats {
         for rule in rules.uses.iter().filter(|r| r.stat == stat) {
             let _ = writeln!(
                 out,
                 "| {} | {} | {} % |",
-                stat.name(),
+                stat.map_or("Any", Stat::name),
                 rule.on.describe(),
                 rule.chance
             );

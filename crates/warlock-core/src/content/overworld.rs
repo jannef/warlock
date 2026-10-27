@@ -66,6 +66,21 @@ impl Landscape {
     pub const fn is_land(self) -> bool {
         !matches!(self, Landscape::Road | Landscape::River | Landscape::Lake)
     }
+
+    /// Its id in data: `dense_forest`.
+    pub const fn id(self) -> &'static str {
+        match self {
+            Landscape::Plains => "plains",
+            Landscape::Grassland => "grassland",
+            Landscape::Forest => "forest",
+            Landscape::DenseForest => "dense_forest",
+            Landscape::Hills => "hills",
+            Landscape::Swamp => "swamp",
+            Landscape::Road => "road",
+            Landscape::River => "river",
+            Landscape::Lake => "lake",
+        }
+    }
 }
 
 /// A local area: the overworld it belongs to, its cell, and the terrain there.
