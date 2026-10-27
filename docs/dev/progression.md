@@ -128,7 +128,7 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `spell_power`, `spell_mana_percent` | `TalentMods::spell_damage` in `World::strike` and `read_spell` (a scroll held to the cap of the spell it teaches once talents change its dice); `Actor::spell_cost` (the cast and `Unavailable::NoMana`) |
 | `caster_level` (`per_levels`: Arcane training) | `Actor::caster_level` (`TalentMods::caster_level_at`, at the character level) |
 | `overreach_cost_percent` | `Actor::spell_base` → `SpellRules::mana_with` (Overreach) |
-| `school_focus` (choice `school`) | `Actor::spell_base` (`TalentMods::spell_mana_with`) and `Actor::spell_reach`, by `TalentMods::focus(spell.tags)` |
+| `school_focus` (choice `school`; `cost`, `reach`, `lift`) | `Actor::spell_base` (`TalentMods::spell_mana_with`) and `Actor::spell_reach`, by `TalentMods::focus(spell.tags)`; `lift` (Keen mind) in `Actor::spell_lift`, by `TalentMods::focus_lift(spell.tags)` |
 | `study` | `World::start_study` (time), `study_odds` (bonus) |
 | `deflection_unarmoured` | `Actor::defence` (Deflection, no body armour: Mage armour) |
 | `purify`, `corpse_harmless`, `meal_heals` | `eat.rs`: `eat_rotten` (no sickness, no exposure, no draw), `eat_fresh` (no `on_eat` harm or vomiting, no draw), `meal_heals` from `finish` (an object, or a fresh corpse) |

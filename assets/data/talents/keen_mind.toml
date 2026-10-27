@@ -1,0 +1,11 @@
+# Keen mind (the combat progression design §7, §11; #556): the Spellcraft tree, chosen for a school
+# of magic or an element (a spell tag). A caster's stats may lift those spells' damage cap 10
+# points further than their tier's `max_lift` (../spells.toml); the stats still have to be there.
+[[talent]]
+id = "keen_mind"
+name = "Keen mind"
+tree = "spellcraft"
+choice = "school"
+description = "One school of magic, or one element, answers your wits more than most: a sharp mind drives its spells harder than it could any other's."
+effects = [{ kind = "school_focus", lift = 10 }]
+systems = ["spells"]
