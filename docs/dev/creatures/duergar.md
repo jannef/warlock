@@ -42,7 +42,8 @@ gold), and the duergar king 40 (very rare: war hammer, plate, great helm, large 
 ## Populations
 
 Fyrdelf, the duergar's own mine (danger 8 to 19): the slinger, crossbowman, veteran, and priest
-join the miner, warrior, and smith. The hulk and everything above are in no population yet.
+join the miner, warrior, and smith. The hulk and everything above are in no population yet: met only as strays
+(docs/dev/creatures.md).
 
 Follow-ups: enlarging and invisibility as abilities used in a fight, creature spells for the
 priest and the mindbreaker, a mount as a creature of its own.

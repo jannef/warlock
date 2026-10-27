@@ -60,11 +60,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
   level 20, fading out by the same weights); out-of-depth draws clamp the deeper danger the
   same way. **Strays and out-of-depth draws** (#375; both spawns and initial
   populations): with `stray` % a draw is made from the area's **generic creature list** instead
-  of its population: every type that lives in some area with a danger (a branch's or a
-  hand-made level's `population`) of the area's campaign or of none, uniques left out
-  (`Spawning::generic`, derived at load, `Content::fill_generic`; hand-placed people,
-  shopkeepers, guardians, quest creatures, and test types live in no campaign population, so
-  none strays; the list may hold the area's own types); `stray = 0` keeps an area to its own.
+  of its population: every creature type of the area's campaign or of none that is hostile
+  to the player, no unique, no animated object, and not marked `stray = false` (a type only
+  placed by hand or by its own rules), whether a population names it or not, together with every
+  type that lives in some area with a danger (a branch's or a hand-made level's `population`)
+  of that campaign or of none, uniques left out (`Spawning::generic`, derived at load,
+  `Content::fill_generic`; people, shopkeepers, and guardians are neutral or unique, so none
+  strays; the list may hold the area's own types). So anything the campaign knows may come to
+  any floor: a type in no population is met only as a stray, and the exploding out-of-depth
+  draw below brings even the deepest to a first floor, at astronomical odds (the owner,
+  2026-10-27). `stray_pool = "populations"` keeps an area's strays to the populations' types
+  (the guild's four lairs, whose folk are the design's table); `stray = 0` keeps an area to its
+  own.
   With `out_of_depth` % the draw is made at `D + 1`, then with `deeper` % again and again one
   deeper still, at most `deeper_cap` times (an exploding tail: at the defaults `D + 1` 4.75 % of
   all draws, `D + 2` 0.24 %, `D + 3` 0.012 %); where the drawn pool weighs nothing that deep (its

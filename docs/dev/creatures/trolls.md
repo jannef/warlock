@@ -20,7 +20,7 @@ dice average) and the span's ends.
 ## Roster
 
 The troll 13 (above), the hill troll 15 (slow, claws that stagger, a maul half the time;
-Fyrdelf's), and in no population yet, waiting for places of the middle levels: the forest troll
+Fyrdelf's), and in no population yet (met only as strays, docs/dev/creatures.md), waiting for places of the middle levels: the forest troll
 18 (quick, opens doors, claws that leave bleeding wounds, a spear half the time), the troll
 shaman 21 (a caster with a staff half the time, sometimes something worth taking), the ice troll
 24 (resists cold, claws that leave one Sluggish), the stone troll 27 (slow, a stony hide of
