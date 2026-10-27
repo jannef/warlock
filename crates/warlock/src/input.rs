@@ -853,7 +853,7 @@ impl Gameplay<'_> {
             (InputMode::Aim(aim), _) => InputMode::Aim(aim),
             (InputMode::Normal, KeyCommand::Missile) => {
                 let view = game.world.perception();
-                if let Some(item) = view.ready_wand() {
+                if let Some(item) = view.ready_wand().or(view.ready_rod()) {
                     InputMode::Aim(Aim::start(AimKind::Zap(item), &view, &self.last))
                 } else if view.ready_to_fire().is_some() {
                     InputMode::Aim(Aim::start(AimKind::Fire, &view, &self.last))

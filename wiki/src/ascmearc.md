@@ -32,8 +32,10 @@ Three dungeons lie nearest the town, deeper and more dangerous one after another
 see from the road; **Fennmynster**, the cellars of a minster drowned in the great fen; and
 **Fyrdelf**, the fire diggings under the hills below the volcano. The last two are
 **hidden**: until a quest tells you where one lies, its cell is just the swamp or the hills it
-looks like (see [Hidden locations](overworld.md#hidden-locations)). The map below shows them
-anyway. Places that lead "nowhere yet" are still being built: for now `>` there says so.
+looks like (see [Hidden locations](overworld.md#hidden-locations)). So are the four lairs of
+the criminals the [Weyfarers' Gilde](guild.md#the-wanted) wants dead: Wyrtholm in the fen,
+Wulfeshol in Deorcholt, Bānfeld on the downs, and Brocenburg in the holly wood; you are shown
+only one of them. The map below shows them all anyway. Places that lead "nowhere yet" are still being built: for now `>` there says so.
 
 ## The places
 
@@ -67,6 +69,10 @@ have names of the same kind. Creatures keep their plain English names.
 | Ascdūn | *asce* + *dūn* | the ash downs | the hills under the volcano |
 | Fyrdelf | *fȳr* "fire" + *gedelf* "digging, mine" | the fire diggings | the third dungeon |
 | Fyrbeorg | *fȳr* + *beorg* | the fire mountain | the volcano |
+| Wyrtholm | *wyrt* "herb, root" + *holm* "islet" | the herb islet | Mother Sallow's lair |
+| Wulfeshol | *wulfes* "wolf's" + *hol* "hole, den" | the wolf's hole | Black Wystan's lair |
+| Bānfeld | *bān* "bone" + *feld* "field" | the bone field | Brother Osrick's lair |
+| Brocenburg | *brocen* "broken" + *burg* "fort" | the broken fort | Sergeant Herrick's lair |
 | Rēcbeorgas | *rēc* "smoke, reek" + *beorgas* "mountains" | the smoking mountains | the volcano's range |
 | Fordwīc | *ford* + *wīc* "dwelling, trading place" | the ford village | the village at the ford |
 | Ēastmearc | *ēast* + *mearc* | the east march | the eastern grassland |

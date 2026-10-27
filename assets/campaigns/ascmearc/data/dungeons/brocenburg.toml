@@ -1,0 +1,33 @@
+# Brocenburg, "the broken fort" (docs/design/adventurers-guild.md §8; the fields:
+# data/dungeons.toml): the ruined tower in Holegnwudu and the cellars and vaults under it, where
+# Sergeant Herrick, the Deserter, sells his axe to the goblins. Its way in on the overworld is
+# hidden until Wat One-Eye's "Wanted" names him (the quest's variant reveals it); the other three
+# lairs stay hidden for that run. Four floors, the captain's hall at the bottom.
+
+[[dungeon]]
+id = "brocenburg"
+name = "Brocenburg"
+arrival = "Goblin marks on the old fort's stones, and a soldier's boot-prints among them."
+generator = "rooms"
+depth = 4
+size = [80, 21]
+traps = ["arrow", "spear", "alarm"]
+secret_doors = [0, 1]
+hidden_per_depth = 1
+locks_per_depth = 1
+loot = [2, 4]
+key = "iron_key"
+# Danger 6 on the first floor to 9 on the fourth (spec §7 "Danger levels"): the goblins he hires
+# out to and their chiefs, footpads who ran with him, bats in the broken roof, and the ogres he
+# brings in, which come only out of depth (level 12): that is the point of hiring them.
+danger = 6
+population = [
+    "bat", "goblin", "goblin_archer", "footpad", "goblin_chief", "footpad_archer", "ogre",
+]
+# No one trades in the broken fort (spec §7 "Shops").
+shops = { chance = 0 }
+
+# The bottom: the captain's hall.
+[[dungeon.levels]]
+from = 4
+vaults = ["captains_hall"]

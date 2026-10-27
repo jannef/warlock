@@ -1,0 +1,29 @@
+# Wulfeshol, "the wolf's hole" (docs/design/adventurers-guild.md §8; the fields:
+# data/dungeons.toml): a cave under Deorcholt, the dark heart of Lindwudu, where Black Wystan, the
+# Gentleman of the Road, keeps his band and what they took on the Fennhām road. Its way in on the
+# overworld is hidden until Wat One-Eye's "Wanted" names him (the quest's variant reveals it); the
+# other three lairs stay hidden for that run. Four floors, the robbers' hoard at the bottom.
+
+[[dungeon]]
+id = "wulfeshol"
+name = "Wulfeshol"
+arrival = "Somebody has swept the cave mouth. Somebody keeps a watch."
+generator = "caves"
+depth = 4
+size = [100, 40]
+traps = ["pit", "arrow", "alarm"]
+hidden_per_depth = 1
+loot = [2, 4]
+# Danger 6 on the first floor to 9 on the fourth (spec §7 "Danger levels"): his footpads and their
+# archers, the goblin bowmen he hires, and what lives in the dark under the roots.
+danger = 6
+population = [
+    "bat", "giant_centipede", "footpad", "goblin_archer", "barrow_spider", "footpad_archer",
+]
+# Robbers keep no shop (spec §7 "Shops").
+shops = { chance = 0 }
+
+# The bottom: the robbers' hoard.
+[[dungeon.levels]]
+from = 4
+vaults = ["robbers_hoard"]

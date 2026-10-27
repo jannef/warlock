@@ -40,7 +40,7 @@ fn tally(content: &Content, odds: &RoomOdds, n: u32) -> Vec<u32> {
 fn features_are_drawn_by_their_weights() {
     let effects = CONTENT.room_effects();
     let total: u32 = effects.defs().iter().map(|e| u32::from(e.weight)).sum();
-    let n = 40_000;
+    let n = 60_000;
     let by = tally(&CONTENT, &RoomOdds::shared(effects), n);
     for (e, got) in effects.defs().iter().zip(&by) {
         let want = n * u32::from(e.weight) / total;

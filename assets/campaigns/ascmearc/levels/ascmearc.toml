@@ -13,7 +13,10 @@
 # Blæcwæter from the foot of Rēcbeorgas south through Micelfenn into Grægsæ (w), and Beorhtburna
 # from the western wall east into Blæcwæter. The volcano, Fyrbeorg (^), smokes on the south face
 # of Rēcbeorgas. Two dungeons are hidden until a quest reveals them: Fennmynster (2) in the
-# swamp of Micelfenn and Fyrdelf (3) in the hills of Ascdūn; no road leads to either.
+# swamp of Micelfenn and Fyrdelf (3) in the hills of Ascdūn; no road leads to either. So are the
+# four lairs of the wanted (the adventurers' guild's link 4): Wyrtholm (4), an islet out in
+# Micelfenn; Wulfeshol (5), a cave in Deorcholt; Bānfeld (6), a barrow field on Hlāwdūn; and
+# Brocenburg (7), the ruined fort in Holegnwudu.
 #
 # The town leads into Cēaptūn (levels/ceaptun.toml). The locations that lead nowhere yet (the
 # barrow, the hidden two) get their levels from later work (the dungeon branches); the rest of
@@ -37,7 +40,7 @@ MMMMMMMMMMMMMMMMMM.....f.f.ffffFFFFFFFFFFFFFFFFFFFFFFFFFFfFfffffffff...........M
 MMMMMMMMMMMMMMMMMMM...ffffffffffFFFFFFFFFFFFFFFFFFFFFFFFFFFfffffffff.f........MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 MMMMMMMMMMMMMMMMM....ffffffffffFFFFFFFFFFFFFFFFFFFFFFFFFFFFFffffffffff..........MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 MMMMMMMMMMMM.MMMMM..ffffffffffFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFffFffffffff.........MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
-MMMMMMMMMMM..M......ffffffffFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFfffffffff...........M.MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+MMMMMMMMMMM..M......ffffffffFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFfffff7fff...........M.MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 MMMMMMMMMMM.........ffffffffFFfFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFffffffffff...........M..MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 MMMMMMMMMM........fffffffffffFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFfffffffffff............MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 MMMMMMMMMM........ffffffffffffFFFFFFFFFFFFFFFFFFFFFFFFFFFFFfffffffffff.f.............M.MMMMMM↓↓MMMMM^^MMMMMM.MMMMMMMMMMM
@@ -56,7 +59,7 @@ MMMMMMMMMMMMMM""""="""hhhhhhhhhhhhhhhhhhhhhhh"hh"""""""""""""""""""""""""""""hhh
 MMMMMMMMMMMMP=====T==================================================================%%========"""h"""""""""""""""""....
 MMMMMMMMMMMMMM""""="""""hhhhhhhhhhhhhhhhhhhhhhh"""""""""""""""""""""""""""""""hhhhhh↓↓hh""""""""""""""""""""""""""""....
 MMMMMMMMMMMMMM""""=""""""hhhhhhhhhhhhhhhhhhh"h""""""""""""""""""""""""""""""""""....↓↓""""""""""""""""""""""""""""""""..
-MMMMMMMMMMMM""""""=""""""""hh"hhhhhhhhhhhhhh""""""""""""""""""""""""""""""""""""....↙↙"""""""""""""""""""""""""""""""...
+MMMMMMMMMMMM""""""=""""""""hh"hhhhhhhhhhhh6h""""""""""""""""""""""""""""""""""""....↙↙"""""""""""""""""""""""""""""""...
 MMMMMMMMMM"""""hh"="""""""""h""""hhh""hh"".."""""""""""""""""""""""""""""""""".....↙↙.""""""""""""""""""""""""""""""....
 MMMMMMMMMMh"""hhhh="h"""""""""""""h"""""""".""""""""""""""""""""""""""""""""""....↓↓..""""""""""""""""""""""""""""""....
 MMMMMMMMMMhhh""hhh="hhhhhh""""""""""""""""..""""""""""""""""""""""""""""""""""....↓↓....""""""""""""""""""""""""".......
@@ -71,10 +74,10 @@ MMMMMMMMMMffffffffF=ffffffffffffffff".............".......→→→→→→→�
 MMMMMMMMMMMffffFfFFf===========================================..."sssss→→→→→→→→s↓↓sssssssssssfff.ff......wwwwwwwwwwwwww
 MMMMMMMMMMffFFFFFFFFFFFFFFFFFfffffff..............................sssssssssssssss↘↘sssssssssssfssf....wwwwwwwwwwwwwwwwww
 MMMMMMMMMMffFFFFFFFFFFFFFFFFfffffffff..........................".sssssssssssssssss↓↓ssssssssssssff...wwwwwwwwwwwwwwwwwww
-MMMMMMMMMMfFFFFFFFFFFFFFFFFFffffffffff..................""".."."ssssssssssssssssss↘↘ssssssssssssssf..wwwwwwwwwwwwwwwwwww
+MMMMMMMMMMfFFFFFFFFFFFFFFFFFffffffffff..................""".."."ssssssssssssssssss↘↘ssss4sssssssssf..wwwwwwwwwwwwwwwwwww
 MMMMMMMMMMFFFFFFFFFFFFFFFFFFffffffffff......"..".."...."""..""""sssssssssssssssssss↘↘sssssssssssss..wwwwwwwwwwwwwwwwwwww
 MMMMMMMMMMFFFFFFFFFFFFFFFFFFFFfffffff.ff...""""""""""""".""""""""sssss2sssssssssssss↘↘sssssssssss...wwwwwwwwwwwwwwwwwwww
-MMMMMMMMMMFFFFFFFFFFFFFFFFFFFFfffffffff."."""""""""""""""""""""""s"ssssssssssssssssss↘↘sssssssss.....wwwwwwwwwwwwwwwwwww
+MMMMMMMMMMFFFFFFFF5FFFFFFFFFFFfffffffff."."""""""""""""""""""""""s"ssssssssssssssssss↘↘sssssssss.....wwwwwwwwwwwwwwwwwww
 MMMMMMMMMMMFFFFFFFFFFFFFFFFFfffffffff"""""""""""""""""""""""""""""""ssssssssssssssssss↘↘ssssss..s...wwwwwwwwwwwwwwwwwwww
 MMMMMMMMMMFMFFFFFFFFFFFFFFFFffffffffff"""""""""""""""""""""""""""""""sssssssssssssssssss↘↘ssss......wwwwwwwwwwwwwwwwwwww
 MMMMMMMMMMMMMMMMMFFFFFFFFFfffffffffff""""""""""""""""""""""""""""""""ssssssssssssssssssss↘↘wwwwwwwwwwwwwwwwwwwwwwwwwwwww
@@ -111,6 +114,12 @@ MMMMMMMMMMMMMMMMMMM.ff..................................."......................
 "1" = { terrain = "barrow", name = "Cealdhlāw", to = "cealdhlaw:1" }
 "2" = { terrain = "swamp", hidden = { id = "fennmynster", terrain = "dungeon_entrance", to = "fennmynster:1", name = "Fennmynster" } }
 "3" = { terrain = "hills", hidden = { id = "fyrdelf", terrain = "mine", to = "fyrdelf:1", name = "Fyrdelf" } }
+# The four lairs of the wanted (docs/design/adventurers-guild.md §8), on reserved sites: Wat
+# One-Eye's "Wanted" reveals the one whose criminal it names, and the other three stay hidden.
+"4" = { terrain = "swamp", hidden = { id = "wyrtholm", terrain = "cave_mouth", to = "wyrtholm:1", name = "Wyrtholm" } }
+"5" = { terrain = "dense_forest", hidden = { id = "wulfeshol", terrain = "cave_mouth", to = "wulfeshol:1", name = "Wulfeshol" } }
+"6" = { terrain = "hills", hidden = { id = "banfeld", terrain = "barrow", to = "banfeld:1", name = "Bānfeld" } }
+"7" = { terrain = "forest", hidden = { id = "brocenburg", terrain = "dungeon_entrance", to = "brocenburg:1", name = "Brocenburg" } }
 
 # Named regions, shown in the status bar: `area = [x0, y0, x1, y1]`, inclusive, first match wins
 # (the forests' deep hearts before the forests, the downs before the vale around them).

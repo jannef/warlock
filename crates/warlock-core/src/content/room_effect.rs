@@ -24,6 +24,8 @@
 //!
 //! An effect may hold a tempting hoard ([`RoomEffectDef::hoard`]: a treasure room's items, which
 //! seal it with locked doors and guardians once lifted; `World::lift_in_hoard`).
+//! An effect may give way under the player now and then ([`RoomEffectDef::collapse`]: a
+//! collapsed floor; `World::collapse_step`, a fall to the level below).
 //!
 //! An effect may give everyone inside a status while they stay ([`RoomEffectDef::status`]: a
 //! draining room's Ebbing; `World::dwell`), which eases by its own pace once they leave.
@@ -35,6 +37,7 @@
 //! Without the file there are no special rooms.
 
 use super::{ContentError, StatusDef, StatusId, TerrainDef, TerrainId};
+use crate::dice::Dice;
 use crate::geom::Pos;
 use crate::light::Light;
 use crate::temperature::Temperature;
@@ -132,6 +135,19 @@ struct RoomEffectSpec {
     #[serde(default)]
     warp: u8,
     hoard: Option<Treasure>,
+    collapse: Option<Collapse>,
+}
+
+/// A collapsed floor's numbers (`collapse = { chance = 15, damage = "2d6" }`, spec §7 "Special
+/// rooms"; `world/collapse.rs`): a step of the player onto a cell inside may give way, and they
+/// fall to the level below.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Collapse {
+    /// Percent chance a step gives way (doubled while Burdened or worse).
+    pub chance: u8,
+    /// The hit points the fall takes (never the last one).
+    pub damage: Dice,
 }
 
 #[derive(Deserialize)]
@@ -347,6 +363,8 @@ pub struct RoomEffectDef {
     pub warp: u8,
     /// A tempting hoard's numbers: generators lay its items, and lifting them seals the room.
     pub hoard: Option<Treasure>,
+    /// A collapsed floor's: a step of the player inside may give way (`World::collapse_step`).
+    pub collapse: Option<Collapse>,
 }
 
 impl RoomEffectDef {
@@ -377,6 +395,7 @@ impl RoomEffectDef {
             && self.swarm.is_none()
             && self.mirrors.is_none()
             && self.hoard.is_none()
+            && self.collapse.is_none()
             && self.pervade.is_some()
     }
 }
@@ -468,6 +487,11 @@ impl<'c> Here<'c> {
             .each()
             .fold(100, |p, e| p * (100 - u32::from(e.warp.min(100))) / 100);
         u8::try_from(100 - stays).unwrap_or(100)
+    }
+
+    /// A collapsed floor's numbers here, if one is here (the room's, never a whole level's).
+    pub fn collapse(&self) -> Option<Collapse> {
+        self.room.and_then(|e| e.collapse)
     }
 
     /// The statuses held here, the room's first: both apply.
@@ -596,6 +620,17 @@ impl RoomEffects {
             if spec.warp > 100 {
                 return Err(bad(format!("warp {} is a percent: 0 to 100", spec.warp)));
             }
+            if let Some(c) = &spec.collapse {
+                if c.chance > 100 {
+                    return Err(bad(format!(
+                        "collapse.chance {} is a percent: 0 to 100",
+                        c.chance
+                    )));
+                }
+                if !spec.needs_below {
+                    return Err(bad("a `collapse` needs `needs_below`".into()));
+                }
+            }
             if spec.max_cells.is_some_and(|most| most < spec.min_cells) {
                 return Err(bad("max_cells is below min_cells".into()));
             }
@@ -709,6 +744,7 @@ impl RoomEffects {
                 mirrors,
                 warp: spec.warp,
                 hoard: spec.hoard,
+                collapse: spec.collapse,
             };
             if def.level_chance > 0 && !def.can_pervade() {
                 return Err(err(format!(

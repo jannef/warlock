@@ -80,16 +80,20 @@ impl Actor {
     }
 
     /// What `spell` asks of it at `caster_level` before its talents cut the price: the tier
-    /// table's price ([`SpellRules::mana`], with its armour), then Archmage's
-    /// `spell_mana_percent`, at least 1. What a cast gives [`World::spend_mana`], which takes
+    /// table's price ([`SpellRules::mana_with`], with its armour and Overreach's cut of the
+    /// overreach), then School focus's and Archmage's and Empower's percents
+    /// (`spell_mana_percent`), at least 1. What a cast gives [`World::spend_mana`], which takes
     /// [`Actor::mana_cost`] (Frugal caster) off it.
     pub fn spell_base(&self, content: &Content, spell: &SpellData, caster_level: i32) -> i32 {
         let Some(rules) = content.spell_rules() else {
             return 1;
         };
-        let price = rules.mana(spell, caster_level, self.armour_spell_cost(content));
+        let mods = self.talent_mods(content);
+        let armour = self.armour_spell_cost(content);
+        let price = rules.mana_with(spell, caster_level, armour, mods.overreach_cost_percent);
         let price = u16::try_from(price).unwrap_or(u16::MAX);
-        self.talent_mods(content).spell_mana(price)
+        let (focus, _) = mods.focus(&spell.tags(content));
+        mods.spell_mana_with(price, focus)
     }
 
     /// What `spell` costs it at `caster_level` (the one hook, spec §8 "Spells"):
@@ -106,19 +110,27 @@ impl Actor {
             return Reach::default();
         };
         let will = self.effective_stats(content).modifier(Stat::Willpower);
-        let grow = |base: Option<u8>, cap: Option<u8>| {
+        let grow = |base: Option<u8>, cap: Option<u8>, more: i32| {
             let base = i32::from(base?);
-            Some(rules.grown(base, cap.map_or(base, i32::from), will))
+            let cap = cap.map_or(base, i32::from);
+            Some(
+                rules
+                    .grown(base, cap, will)
+                    .saturating_add(more)
+                    .min(cap.max(base)),
+            )
         };
+        // School focus (magic design §10): a step farther, never past the spell's own cap.
+        let (_, focus) = self.talent_mods(content).focus(&spell.tags(content));
         let range = match spell.shape {
             Shape::Touch => Some(1),
             Shape::Myself => None,
-            Shape::Cone | Shape::Line => grow(spell.length, spell.max_length),
-            Shape::Ray | Shape::Bolt | Shape::Burst => grow(spell.range, spell.max_range),
+            Shape::Cone | Shape::Line => grow(spell.length, spell.max_length, focus),
+            Shape::Ray | Shape::Bolt | Shape::Burst => grow(spell.range, spell.max_range, focus),
         };
         Reach {
             range,
-            radius: grow(spell.radius, spell.max_radius),
+            radius: grow(spell.radius, spell.max_radius, 0),
         }
     }
 }

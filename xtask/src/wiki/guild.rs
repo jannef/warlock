@@ -87,8 +87,18 @@ pub(super) fn guild_draws(content: &Content) -> String {
                         (capital(&content.object(id).name), "—".into(), "—".into())
                     }
                     Rolled::Variants(variants) => {
+                        // An authored option: a creature by its name, and where it lives the
+                        // place the variant reveals (a criminal's lair), if any.
                         let v = &variants[c.variant.unwrap_or(0)];
-                        (capital(&v.target), "—".into(), "—".into())
+                        let name = match content.creature_id(&v.target) {
+                            Some(id) => content.creature(id).name.clone(),
+                            None => v.target.clone(),
+                        };
+                        let campaign = q.campaign.as_deref().unwrap_or_default();
+                        let lair = (v.reveals.as_ref())
+                            .and_then(|r| content.hidden_location(campaign, &r.location))
+                            .map_or_else(|| "—".to_string(), |(_, h)| h.name.clone());
+                        (capital(&name), "—".into(), lair)
                     }
                 };
                 rows.push(row);

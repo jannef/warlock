@@ -3,6 +3,9 @@ id = "empower"
 name = "Empower"
 tree = "class"
 granted = true
-description = "Your spells and your spell scrolls roll one die more: your spells reach their most sooner, never past it."
-effects = [{ kind = "spell_power", dice = 1 }]
-systems = ["scrolls", "mana"]
+description = "Your spells cost a little less and reach their most sooner, and your spell scrolls strike harder; nothing lifts a spell past its most."
+effects = [
+    { kind = "spell_power", dice = 1 },
+    { kind = "spell_mana_percent", value = -10 },
+]
+systems = ["spells", "mana", "scrolls"]

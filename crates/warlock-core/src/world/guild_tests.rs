@@ -102,6 +102,14 @@ fn wats_topics_give_the_chain_one_link_at_a_time() {
     done(&mut w, &["guild_quarry", "guild_hundred"]);
     assert_eq!(topics(&w), ["quest-guild_scroll", "guild", "board"]);
     done(&mut w, &["guild_quarry", "guild_hundred", "guild_scroll"]);
+    assert_eq!(topics(&w), ["quest-guild_wanted", "guild", "board"]);
+    let chain = [
+        "guild_quarry",
+        "guild_hundred",
+        "guild_scroll",
+        "guild_wanted",
+    ];
+    done(&mut w, &chain);
     assert_eq!(topics(&w), ["guild", "board"]);
     // No gate but the chain's own: a Wicked character at level 1 is given every link.
     let mut w = town();

@@ -28,9 +28,19 @@ talents, and armour counted.
 ## Caster level
 
 Your caster level is how strong a caster you are. It is your level times your class's **casting**
-share, rounded down, plus what talents and magic items may one day add; anyone with any mana has
-at least caster level 1. Everyone casts a little: a level-30 warrior is a caster of level 7, a
-level-30 wizard of level 30.
+share, rounded down, plus what talents and magic items add; anyone with any mana has at least
+caster level 1. Everyone casts a little: a level-30 warrior is a caster of level 7. A wizard's
+*Arcane training* adds a caster level for every 5 character levels, so a level-30 wizard casts at
+level 36.
+
+## Spellcraft talents
+
+The Spellcraft tree is for casters (the wizard takes its bonus talents from it, beside Scholar):
+*Quick study* (learning, below), *Overreach* (a spell above your caster level's tier costs a
+third less over its price), and *School focus*, taken for a school of magic or an element (a
+spell's tags, in the list above), once per choice: those spells cost 10 % less and reach a cell
+farther, never past their limit and never harder. See [Talents](talents.md) for every talent
+that touches spells.
 
 {{#include generated/spell-casting.md}}
 
@@ -47,9 +57,12 @@ tier can ever do in one cast at its highest roll.
 ## What a spell costs
 
 A spell's mana is its tier's base cost, times the overreach (half again per tier above your
-caster level's), times its shape's share (below), times its resolution's (a touch is cheaper),
-times what your armour adds, rounded to the nearest point once at the end and never below 1. Then
-your talents: *Archmage* halves it, and *Frugal caster* takes a fifth off (see [Mana](mana.md)).
+caster level's; with *Overreach*, a third less of that: 33.5 % a tier), times its shape's share
+(below), times its resolution's (a touch is cheaper), times what your armour adds, rounded to the
+nearest point once at the end and never below 1. Then your talents, their percents added up and
+rounded down, never below 1: *School focus* takes 10 % off the spells of its school or element,
+*Archmage* 50 %, and *Empower* 10 %; and then *Frugal caster* takes a fifth off (see
+[Mana](mana.md)).
 
 Heavy armour and big shields hinder casting: while worn, each makes every spell dearer, and what
 you wear adds up.
@@ -74,7 +87,9 @@ burst). Areas cost more mana: the base cost is multiplied by the shape's.
 
 Your **Willpower** lets a spell reach farther: a cell more of range or length, and a cell more of
 a burst's radius, for every 2 points of its modifier, but never past the spell's own limit (the
-"to" in the list). A burst costs by its own radius, however far your Willpower spreads it. Your
+"to" in the list). *School focus* adds a cell of range or length (not of a burst's radius) to
+the spells of its school or element, again never past the spell's limit. A burst costs by its
+own radius, however far your Willpower spreads it. Your
 **Presence** makes a blessing or a hex last longer: a degree more of it for every 2 points of its
 modifier, up to the most the status has (each degree lasts as long again).
 
@@ -97,9 +112,11 @@ The most a spell may do to one target is its tier's ceiling times its resolution
 Spell damage is always rolled dice, with a small fixed bonus at most a quarter of the ceiling,
 and rarely any. A spell's dice may grow with your caster level (a die more every few levels
 above its tier's comfortable level), up to its own most. Talents add to the roll: *Scroll adept*
-adds 1 to every die, *Empower* rolls a die more, *Archmage* adds 2 to every die. Nothing lifts a
-spell past its cap: whatever the dice, the talents, or a critical, one cast never does more to
-one target than the "never more than" in the list. Two kinds of damage only magic does, **force**
+adds 1 to every die, *Empower* rolls a die more, *Archmage* adds 2 to every die; they bring a
+spell to its most sooner, and nothing lifts it past: whatever the dice, the talents, or a
+critical, one cast never does more to one target than the "never more than" in the list. The
+same talents strengthen a spell scroll you read, held to the most of the spell it teaches (or to
+the scroll's own most, if it rolls more of itself: the scroll of lightning's 4d6). Two kinds of damage only magic does, **force**
 and **necrotic**, join the [damage types](damage-types.md).
 
 Spells you cast are yours: what they kill earns you its experience, and a spell of your own that
@@ -174,3 +191,35 @@ it long enough as a *Connoisseur*). Wands lie in the dungeon and in general stor
 The charges a wand is made with go by its spell's tier:
 
 {{#include generated/wand-charges.md}}
+
+## Rods
+
+A rod holds an **effect no spell has**: digging, sleep, terror, sending a creature away. Like a
+wand it goes in the **missile weapon slot** and is used as you would shoot (`t`, aim), but it has
+no charges: each use costs **your own mana**, the rod's cost, and it never runs out while you
+have the mana to feed it. Without enough mana it does nothing and takes no time ("You have not
+the mana to use it."), and nor can you use one while a state that stops casting holds you
+(raging). A use takes a cast's time.
+
+What a rod does grows with **your caster level**: its reach (how far a line digs, how far a bolt
+flies, how far away a burst may land) grows by a cell per so many caster levels, up to its
+limit, and sleep and terror take only creatures whose level is at most your caster level; the
+others shrug it off. No skill makes a rod better or cheaper: what it costs and how far it
+reaches are the same in anyone's hands at the same caster level.
+
+- **Digging** breaks every wall on a straight line toward where you aim, as if dug through,
+  until a wall too hard for it (granite), a door, or the level's edge stops it.
+- **Teleport other** sends the first creature its bolt meets to a random free cell of the
+  level. It counts as an attack: a shopkeeper will not forgive it.
+- **Sleep** puts the creatures in its burst into a true sleep (not the Sleep spell's
+  drowsiness): they take no turns until a noise, a blow, or a cry wakes them.
+- **Terror** makes the creatures in its burst flee from you a few turns.
+
+Rods are found unknown, each kind with a look of its own for the whole game ("a pewter rod");
+using one or identifying it tells you what it is, and its cost and reach then show when you
+look at it and aim it. Rods lie in the dungeon and in general stores.
+
+*Channeler* (Spellcraft) makes every rod cost a quarter less mana (rounded to the nearest, at
+least 1); *Frugal caster* then takes its fifth off what is left.
+
+{{#include generated/rods.md}}

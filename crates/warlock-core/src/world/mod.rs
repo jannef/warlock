@@ -97,6 +97,7 @@ mod caster;
 mod caster_level;
 mod class;
 mod class_ability;
+mod collapse;
 mod court;
 mod creation;
 mod den;
@@ -146,6 +147,7 @@ mod read;
 mod resource;
 mod rest;
 mod reveal;
+mod rod;
 mod rooms;
 mod rot;
 mod schedule;
@@ -1273,6 +1275,8 @@ mod class_rogue_tests;
 #[cfg(test)]
 mod class_tests;
 #[cfg(test)]
+mod collapse_tests;
+#[cfg(test)]
 mod cost_tests;
 #[cfg(test)]
 mod court_tests;
@@ -1322,6 +1326,8 @@ mod gem_tests;
 mod gifts_tests;
 #[cfg(test)]
 mod guild_tests;
+#[cfg(test)]
+mod guild_wanted_tests;
 #[cfg(test)]
 mod hearing_tests;
 #[cfg(test)]
@@ -1395,6 +1401,8 @@ mod resource_tests;
 #[cfg(test)]
 mod reveal_tests;
 #[cfg(test)]
+mod rod_tests;
+#[cfg(test)]
 mod room_temperature_tests;
 #[cfg(test)]
 mod room_tests;
@@ -1426,6 +1434,8 @@ mod spawn_tests;
 mod speed_tests;
 #[cfg(test)]
 mod spell_list_tests;
+#[cfg(test)]
+mod spell_talent_tests;
 #[cfg(test)]
 mod stars_roc_tests;
 #[cfg(test)]
