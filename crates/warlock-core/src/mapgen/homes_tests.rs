@@ -185,12 +185,8 @@ fn fyrdelf_bottom_armouries_hold_panoplies() {
     let panoply = content.creature_id("animated_panoply").expect("panoply");
     let (mut rooms, mut panoplies) = (0, 0);
     for seed in 1..=60 {
-        // A seed whose bottom floor finds no valid map (seed 0 already did before #487) is
-        // left out.
-        let Ok(level) = generate(content, ("ascmearc", seed), "fyrdelf:12", Some("ascmearc"))
-        else {
-            continue;
-        };
+        let level = generate(content, ("ascmearc", seed), "fyrdelf:12", Some("ascmearc"))
+            .expect("generates");
         for (effect, kinds) in check_homes(content, &level) {
             if effect != armoury {
                 continue;

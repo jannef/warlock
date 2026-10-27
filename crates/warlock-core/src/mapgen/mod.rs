@@ -812,6 +812,8 @@ mod lairs_tests;
 #[cfg(test)]
 mod scriptorium_tests;
 #[cfg(test)]
+mod seeds_tests;
+#[cfg(test)]
 mod shrine_tests;
 #[cfg(test)]
 mod special_tests;
