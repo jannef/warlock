@@ -395,6 +395,8 @@ pub enum TalentEffect {
     /// A special room's (or a whole level's) `status` never takes it (Anchored mind: Ebbing;
     /// `World::dwell`).
     RoomStatusImmune { status: String },
+    /// A collapsed floor never gives way under it (Light tread; `World::collapse_step`).
+    CollapseProof,
     /// A hall of mirrors' reflections within this many cells are seen for what they are, and not
     /// shown (Mirror-wise; `world/mirrors.rs`).
     SeesReflections { value: i32 },
@@ -1666,6 +1668,7 @@ impl TalentEffect {
             | TalentEffect::SparesSelf
             | TalentEffect::SeesUv
             | TalentEffect::SenseOfPlace
+            | TalentEffect::CollapseProof
             | TalentEffect::ExactFootsteps
             | TalentEffect::SmellRot
             | TalentEffect::StanceCosts

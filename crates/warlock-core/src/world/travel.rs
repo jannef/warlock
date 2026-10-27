@@ -238,6 +238,8 @@ impl World {
         } else {
             self.step_onto_trap(to, player, events)
         };
+        // A collapsed floor may give way under them (`collapse.rs`).
+        self.collapse_step(to, events);
         Spent::Turn(step + climb)
     }
 

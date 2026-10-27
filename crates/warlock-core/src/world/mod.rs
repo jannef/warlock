@@ -97,6 +97,7 @@ mod caster;
 mod caster_level;
 mod class;
 mod class_ability;
+mod collapse;
 mod court;
 mod creation;
 mod den;
@@ -1264,6 +1265,8 @@ mod class_active_tests;
 mod class_rogue_tests;
 #[cfg(test)]
 mod class_tests;
+#[cfg(test)]
+mod collapse_tests;
 #[cfg(test)]
 mod cost_tests;
 #[cfg(test)]

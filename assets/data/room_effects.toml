@@ -67,6 +67,10 @@
 #   warp     percent chance, every step onto a cell inside (the player's or a creature's), that
 #            the stepper is moved to a free cell of the level as a teleport trap moves its victim;
 #            default 0
+#   collapse a collapsed floor (needs `needs_below`; never the whole level): `{ chance, damage }`,
+#            the percent chance (0 to 100) that a step of the player onto a cell inside gives
+#            way, doubled while they are Burdened or worse, and the dice they take as they land
+#            on the level below (never their last hit point); they land Staggered
 
 chance = 12
 per_level = 1
@@ -198,3 +202,14 @@ enter = "The floor shimmers under your feet."
 weight = 4
 max_cells = 60
 warp = 10
+
+[[effect]]
+id = "collapsed"
+name = "collapsed floor"
+mark = "k"
+near = "The floor ahead is cracked and sagging."
+enter = "The floor creaks under your weight."
+weight = 3
+needs_below = true
+floor = "cracked_floor"
+collapse = { chance = 15, damage = "2d6" }

@@ -353,6 +353,8 @@ pub struct TalentMods {
     pub sense_of_place: bool,
     /// Percent more a special room's quickening of healing and mana (Hallowed rest).
     pub room_pace_percent: i32,
+    /// A collapsed floor never gives way under it (Light tread).
+    pub collapse_proof: bool,
     /// The statuses of special rooms that never take it (Anchored mind).
     pub room_status_immune: Vec<StatusId>,
     /// Within this many cells it sees a hall of mirrors' reflections for what they are
@@ -1114,6 +1116,7 @@ impl TalentMods {
                 }
             }
             TalentEffect::SeesReflections { value } => self.sees_reflections += value,
+            TalentEffect::CollapseProof => self.collapse_proof = true,
             TalentEffect::WakePercent { value } => self.wake_percent += value,
             TalentEffect::SearchReach { value } => self.search_reach += value,
             TalentEffect::Skill { skill, value } => {

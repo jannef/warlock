@@ -495,6 +495,17 @@ sway = 0.3
 scale = 0.5
 fade = 0.4
 
+# A collapsed floor's (spec §7 "Special rooms"): stone split and sagging over the level below.
+# A step onto it may give way under the player.
+[[terrain]]
+id = "cracked_floor"
+name = "cracked floor"
+stone = true
+glyph = ":"
+fg = "#6e665c"
+bg = "#0b0a09"
+step_noise = 110
+
 # Under the open sky (spec §5 "Sunlight"): outdoor levels are lit by the sun and the sky by day.
 # Tall terrain casts shadows that turn and stretch with the sun (`height`); roofed floor never
 # gets sun or sky light.
