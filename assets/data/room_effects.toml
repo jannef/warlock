@@ -60,6 +60,9 @@
 #            (ice today) is the environment's (spec §5 "Temperature"); the status bar shows it
 #   burden   percent of everyone's carrying limit inside, 10 to 1000; default 100 (a heavy
 #            hall's 50 halves it: what is carried weighs on one as if it were twice as heavy)
+#   warp     percent chance, every step onto a cell inside (the player's or a creature's), that
+#            the stepper is moved to a free cell of the level as a teleport trap moves its victim;
+#            default 0
 
 chance = 12
 per_level = 1
@@ -173,3 +176,12 @@ mark = "w"
 enter = "Your pack drags at you, as if the stones pulled it down."
 weight = 4
 burden = 50
+
+[[effect]]
+id = "unstable"
+name = "unstable room"
+mark = "u"
+enter = "The floor shimmers under your feet."
+weight = 4
+max_cells = 60
+warp = 10

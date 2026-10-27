@@ -168,6 +168,7 @@ mod trap;
 mod travel;
 mod voice;
 mod volley;
+mod warp;
 
 pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
 pub use alignment::Deed;
@@ -1443,6 +1444,8 @@ mod time_tests;
 mod trap_tests;
 #[cfg(test)]
 mod unique_tests;
+#[cfg(test)]
+mod unstable_room_tests;
 #[cfg(test)]
 mod variant_tests;
 #[cfg(test)]

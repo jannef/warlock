@@ -176,9 +176,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (a status everyone inside holds while they stay, below; it must ease, at least 10 seconds a
   degree, the longest single action, so it never lapses while one stays), `swarm` (a
   teeming den's numbers, below; needs `needs_danger`), `temperature` (degrees Celsius added
-  to the level's inside, −40 to 40, default 0; below), and `burden` (percent of everyone's
-  carrying limit inside, 10 to 1000, default 100; below). An effect with a `level_chance`
-  needs its `pervade` line and is neither `shunned`, nor lays a `floor`, nor is a den.
+  to the level's inside, −40 to 40, default 0; below), `burden` (percent of everyone's
+  carrying limit inside, 10 to 1000, default 100; below), and `warp` (percent chance a step
+  inside moves the stepper elsewhere, 0 to 100, default 0; below). An effect with a
+  `level_chance` needs its `pervade` line and is neither `shunned`, nor lays a `floor`, nor is a den.
   - **The effects** (weights in brackets): a *shadowed room* (10) keeps 30 % of the light ("The
     light seems to drain away here."); an *echoing hall* (8) doubles noise ("Your footsteps echo
     loudly."); a *hushed chamber* (8) leaves two fifths of it ("A deep hush fills this room."); a
@@ -201,7 +202,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     everyone inside **Silenced** (§8 "Status effects": no casting, reading, or throwing one's
     voice; "Your footsteps make no sound at all."); a *heavy hall*
     (4, #412) halves everyone's carrying limit ("Your pack drags at you, as if the stones pulled
-    it down."). Blood washing
+    it down."); an *unstable room* (4, #411, only in a room of at most 60 floor cells) warps
+    one step in ten ("The floor shimmers under your feet."). Blood washing
     away in a flooded room waits for blood (#127).
   - **Hot and cold rooms** (`temperature`, #404): a room sets its cells' temperature and
     nothing else: no status, no damage, nothing done to items or food. The temperature at a cell
@@ -226,6 +228,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
     and be stuck, and one overloaded inside (who picked something up there) can still step out
     to where they are not. It is saved as nothing new: the burden follows from where one stands.
     It never covers a whole level.
+  - **An unstable room** (`warp`, #411): every step onto a cell inside, the player's or a
+    creature's (a move, a step made way for, a known trap sidestepped; never an incorporeal
+    creature passing through), has `warp` percent (one draw of the gameplay stream, made only on
+    such a cell, after any trap there has gone off and only if it left the stepper there) to
+    move the stepper to a free cell of the level exactly as a teleport trap does (§8 "Traps":
+    walkable, no one there, no trap, no ice, picked by a hash). The trap's lines say it: "You
+    are wrenched elsewhere." for the player, "The giant rat vanishes!" for a creature they saw
+    go. Where it lands is never a step, so it is never warped again on landing. Nothing is
+    saved. Its `max_cells` keeps it to small rooms; it never covers a whole level.
   - **A status while inside** (`status`, #403): as time passes, at the start of each stretch of
     it (`World::pass_time`: so after every action, the player's and each creature's, at every
     turn of a rest or another long action, and through a creature's coarse turns while the

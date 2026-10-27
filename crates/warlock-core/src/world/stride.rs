@@ -12,7 +12,8 @@
 //!   since it last acted that it would go to look into (it has enemies), no status effects, able
 //!   to move, and no hostile actor within its sight radius. Instead of one action it takes up to
 //!   [`STRIDE`] steps of its patrol route at once, priced as those steps are, each onto a plain
-//!   cell (walkable, no door, no ice, no trap, nobody there, not one it shuns) from which no
+//!   cell (walkable, no door, no ice, no trap, not in an unstable room, nobody there, not one
+//!   it shuns) from which no
 //!   hostile actor is within its sight radius, stopping before the first that is not, and
 //!   makes one step's noise where it ends. Without a route it waits [`STRIDE`] waits at once.
 //!   Its pace is its own (the same energy for the same steps), so a patrol still walks into
@@ -121,8 +122,8 @@ impl World {
     }
 
     /// The cells creature `id` strides over along `route` and what the steps cost: up to
-    /// [`STRIDE`] steps, each onto a plain cell (walkable, no door, ice, or trap, nobody there,
-    /// not one it shuns) from which it sees none of `foes` (as far as its sight reaches).
+    /// [`STRIDE`] steps, each onto a plain cell (walkable, no door, ice, trap, or warp, nobody
+    /// there, not one it shuns) from which it sees none of `foes` (as far as its sight reaches).
     fn stride_path(&self, id: ActorId, route: &Patrol, foes: &[Pos]) -> (Vec<Pos>, i64) {
         let (level, content) = (self.state.current(), &self.content);
         let me = &self.state.actors[&id];
@@ -137,6 +138,8 @@ impl World {
                 && !level.is_door(content, to)
                 && level.ice_at(to).is_none()
                 && !level.traps.contains_key(&to)
+                // An unstable room's step may warp it (`warp.rs`): taken turn by turn.
+                && level.effects_at(content, to).warp() == 0
                 && !others.contains(&to)
                 && !shuns(to)
                 // Where the player saw creatures as they last looked, it goes turn by turn.

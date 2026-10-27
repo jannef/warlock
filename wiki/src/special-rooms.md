@@ -96,6 +96,10 @@ gets where a dungeon favours or bans nothing. "Only" says where it can come at a
   and if you overload yourself inside by picking something up, you can still step back out.
 - **Teeming den.** A room full of sleeping creatures and the things they have gathered. You may
   smell it before you see it, and you hear it when you step in. See below.
+- **Unstable room.** A small room (60 floor cells at most) whose floor shimmers: every step
+  you take inside has a one in ten chance to fling you somewhere else on the level, as a
+  teleport trap does ("You are wrenched elsewhere."). Creatures stepping in are flung just the
+  same, so fleeing through one is a gamble, and so is chasing someone into it.
 
 The talent *Hallowed rest* (Grit) makes a room that quickens healing or mana quicken it half
 again more for you: a sanctuary's three times as fast becomes four times. The talent *Anchored
