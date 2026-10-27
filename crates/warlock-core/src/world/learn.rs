@@ -454,6 +454,7 @@ impl World {
             carry: Vec::new(),
             equipment: Default::default(),
             rolls_gear: true,
+            asleep: false,
         };
         super::travel::make_creature(&mut self.state, &self.content, &id, &spawn);
         self.spawned += 1;

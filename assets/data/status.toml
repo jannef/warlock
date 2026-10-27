@@ -50,6 +50,9 @@
 #   start, end what the player is told as it begins and ends ("end" lets a rest go on)
 #   dies       what a creature you see does when it kills it ("The giant rat bleeds to death.")
 #   death      the death screen's line when it kills you
+#   sleeps     true: a creature suffering it sleeps: it takes no turn and has seen no one (a
+#              sneak attack lands); noise at its hearing threshold times its den's `wake`, a
+#              blow, or a cry wakes it, which ends the status (spec §7 "Special rooms")
 #   hold       makes it a hold: whoever caused it holds the sufferer, and it ends when the holder
 #              dies, leaves the sufferer's side, or is held or slowed (a cost above 100) itself.
 #              { check = "strength", difficulty = 13, turns = "3d4" }: the held player's step is
@@ -131,6 +134,29 @@ mana_regen = 0
 eases = 30
 start = "Your power ebbs away."
 end = "Your power stops ebbing."
+
+# A teeming den's sleepers (room_effects.toml `swarm`): asleep, a creature takes no turn and has
+# seen no one, until a noise loud enough, a blow, or a waking neighbour's cry wakes it. Never by
+# time: it lasts until something wakes it.
+[[status]]
+id = "asleep"
+name = "Asleep"
+seen = "asleep"
+max = 1
+sleeps = true
+
+# Silenced, a silent vault's: no spell is cast, no scroll read, and no voice thrown while it
+# lasts, creatures' spells too; ten seconds after leaving.
+[[status]]
+id = "silenced"
+name = "Silenced"
+seen = "silenced"
+max = 1
+stacking = "refresh"
+eases = 10
+blocks = ["cast", "read", "throw_voice"]
+start = "The silence closes around you."
+end = "Sound returns."
 
 # Buffs and cooldowns (a class's abilities give them; the dev action `afflict:raging` too).
 # A barbarian's rage: stronger and tougher, too wild to read or to cast; it lasts while their

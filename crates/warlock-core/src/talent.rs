@@ -353,6 +353,8 @@ pub struct TalentMods {
     pub room_pace_percent: i32,
     /// The statuses of special rooms that never take it (Anchored mind).
     pub room_status_immune: Vec<StatusId>,
+    /// Percent more noise sleepers need to wake from what it does (Hush-foot).
+    pub wake_percent: i32,
     /// Cells more its searching reaches.
     pub search_reach: i32,
     /// How much higher some skills count, by skill.
@@ -1103,6 +1105,7 @@ impl TalentMods {
                     self.room_status_immune.push(status);
                 }
             }
+            TalentEffect::WakePercent { value } => self.wake_percent += value,
             TalentEffect::SearchReach { value } => self.search_reach += value,
             TalentEffect::Skill { skill, value } => {
                 if let Some(id) = content.skill_id(&skill) {

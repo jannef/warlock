@@ -91,9 +91,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   its `population_count` for the floor's walkable cells (by default 35 per 1000, 25 to 80; on
   top of the generator's own patrols), each creature drawn by the weights above, a unique type
   not if the run has met it, then placed on plain floor free of creatures, lights, traps, and
-  shops, outside a sanctuary, and at least 8 cells (Chebyshev) from every staircase, with a short
-  out-and-back route over cells as free (no door, no trap) where one fits, else a post. The draws
-  come from the level's own stream `population/<level id>` after its loot and before its
+  shops, outside a sanctuary or a teeming den, and at least 8 cells (Chebyshev) from every
+  staircase, with a short out-and-back route over cells as free (no door, no trap) where one
+  fits, else a post. The draws come from the level's own stream `population/<level id>` after
+  its loot and before its teeming dens' sleepers (`swarm/<level id>`, §7 "Special rooms") and its
   creatures' gear (which they roll like every creature without a fixed kit), so its map, traps,
   secrets, and loot are the same with any population. A hand-made level with a danger starts as
   its file lays it out; its `population_count` is only the cap its spawns refill toward. A unique

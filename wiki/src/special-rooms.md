@@ -84,11 +84,18 @@ gets where a dungeon favours or bans nothing. "Only" says where it can come at a
 - **Frigid hall.** Bitter cold: 25 °C colder than the level around it, with a faint blue glow.
   Its water freezes even on a mild level, so a pool in it is usually solid ice. The cold does
   nothing to you yet.
+- **Silent vault.** A dead silence: every noise made inside is a hundredth as loud, so a fight
+  there is barely heard even next door (see [Hearing](hearing.md)). Everyone inside, you and
+  creatures alike, is *Silenced* (see [Status effects](status-effects.md)) for as long as they
+  stay and ten seconds after they leave: no spell can be cast, no scroll read, and no voice
+  thrown. A wizard and a kobold shaman fight with sticks in it; a thief walks through unheard.
 - **Heavy hall.** The stones pull at whatever you carry: inside, your carrying limit is half
   what it is anywhere else, so a load that was light makes you burdened, and armour that only
   burdened you strains you (see [Burden](burden.md)). Creatures carry less inside too. If what
   you carry would overload you inside, you cannot go in ("You carry too much to go in there."),
   and if you overload yourself inside by picking something up, you can still step back out.
+- **Teeming den.** A room full of sleeping creatures and the things they have gathered. You may
+  smell it before you see it, and you hear it when you step in. See below.
 
 The talent *Hallowed rest* (Grit) makes a room that quickens healing or mana quicken it half
 again more for you: a sanctuary's three times as fast becomes four times. The talent *Anchored
@@ -97,3 +104,35 @@ mind* (Scholar) keeps your power moored: Ebbing never takes you.
 Only what happens inside counts: a sound made in an echoing hall is loud wherever it is heard,
 while one made outside and heard inside is not changed. Light outside a shadowed room is as
 bright as ever, even right at its door.
+
+## Teeming dens
+
+A teeming den comes only on a level with a danger (see [Dungeons and danger](dungeons.md)), in a room
+of 16 floor cells or more. Its sleepers are the level's own kind of creatures: each is drawn just
+as the level's other creatures are (by the level's danger, how rare each kind is, now and then a
+weaker stray or one from deeper down), only creatures hostile to you and never a unique one.
+Sometimes the whole den is of one kind (a *warren*: a nest of rats, say) or of one faction (a
+*tribe*: a goblin camp). They lie on the floor among their hoard, a few items a little better
+than the level's own.
+
+{{#include generated/teeming-dens.md}}
+
+"Wakes at" is how loud a noise must be where a sleeper lies, in percent of the loudness it can
+just hear (see [Hearing](hearing.md)): sleepers hear a whisper but wake only to twice that.
+Sleepers never wake by themselves, however long you wait or rest nearby. They wake when
+
+- a noise is loud enough where they lie: your footsteps, a door, a fight, a kick, digging;
+- something hurts them, a blow, a missile, a spell, even poison; or
+- a neighbour wakes: every sleeper that wakes cries out at once ("Cry" is its loudness), and the
+  cry may wake those near it, and theirs the next, until the whole den is up.
+
+Light does not wake them: carrying your lantern in is safe. Your plain footsteps (60) wake a
+kobold (which hears 15, so wakes at 30) up to three cells away; with some Stealth, or the
+talent *Hush-foot* (Shadow, Stealth 10: sleepers need twice the noise to wake from anything you
+do), you can walk right past. A sleeper has seen no one, so *sneak attacks* land on it every
+time; but every blow is noise, and a kill is a fight its neighbours may hear. A sleeper you see
+shows as "asleep" in look mode, and you are told when one wakes. The talent *Sixth sense* tells
+you on arrival when something sleeps on the level.
+
+Sleepers count among the level's creatures: while the den is full, fewer newcomers find their
+way to the level. Killing a sleeper is like killing any other foe.

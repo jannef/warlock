@@ -101,6 +101,10 @@ impl World {
     /// the player perceive (events, noise) starts here too. What the creature heard since it
     /// last acted ([`super::Actor::heard`]) is read here and spent.
     pub(super) fn creature_turn(&mut self, id: ActorId, events: &mut Vec<Event>) -> i64 {
+        // Asleep (a teeming den's sleeper, `den.rs`), it takes no turn.
+        if let Some(price) = self.slumbers(id) {
+            return price;
+        }
         // Away from a resting player, it takes coarse turns (`stride.rs`).
         let slow = match self.coarse_turn(id, events) {
             Coarse::Strode(price) => return price,
@@ -271,9 +275,11 @@ impl World {
         let shoots = (me.launcher(&self.content))
             .filter(|_| me.ammunition_item(&self.content).is_some())
             .and_then(|(launcher, _)| self.content.object(launcher).range);
+        // A caster whose casting is blocked (Silenced, in a silent vault) fights in melee.
+        let casts = (me.effects.blocking(&self.content, ActionKind::Cast)).is_none();
         let (kind, range) = match (def.combat, shoots) {
             (Combat::Ranged, Some(reach)) => (AttackKind::Ranged, def.range.min(reach)),
-            (Combat::Caster, _) => (AttackKind::Spell, def.range),
+            (Combat::Caster, _) if casts => (AttackKind::Spell, def.range),
             _ if me.pos.chebyshev(at) <= 1 => return attack(AttackKind::Melee),
             _ => return close_in(),
         };
