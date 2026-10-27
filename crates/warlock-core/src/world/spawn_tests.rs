@@ -427,8 +427,10 @@ fn a_generated_floor_is_laid_down_full_and_nothing_else_moves() {
         let with = barrow_floor(&content, seed);
         let without = barrow_floor(&plain, seed);
         // The special room's draw weighs the effects that need a danger, so with one the draws
-        // after it, a shop's among them, may differ: such a seed is another level.
-        if with.shops.len() != without.shops.len() {
+        // after it, a shop's among them, may differ: such a seed is another level, as is one
+        // whose rooms drew other effects.
+        let effects = |l: &LevelTemplate| l.rooms.iter().map(|r| r.effect).collect::<Vec<_>>();
+        if with.shops.len() != without.shops.len() || effects(&with) != effects(&without) {
             continue;
         }
         assert_eq!(with.terrain, without.terrain, "seed {seed}");
