@@ -36,9 +36,9 @@ goblin_archer at (44, 33) route W E S S S W W W E E E N N N W E carrying a hardw
 footpad at (26, 4) route S S N N N N W E S S S S N N carrying a leather jerkin (being worn)
 giant_centipede at (23, 14) route S S S S W W W W N S E E E E N N N N
 bat at (55, 10) route W W W N N N N S S S S E E E
-orc_runt at (44, 9) route S S W W W E E E N N carrying a bone dagger (wielded)
-footpad at (38, 13) route N N N N N N N N S S S S S S S S carrying a leather jerkin (being worn)
-footpad_archer at (26, 9) route W E E E E E N S W W W W W E carrying a short bow (readied), 15 flint arrows (quivered), a tin dagger (wielded)
+orc_raider at (44, 9) route S S W W W E E E N N carrying a chromium battle axe (wielded)
+footpad at (38, 13) route N N N N N N N N S S S S S S S S carrying a copper short sword (wielded), a leather jerkin (being worn)
+footpad_archer at (26, 9) route W E E E E E N S W W W W W E carrying 15 flint arrows (quivered)
 footpad at (60, 19) route N N N S W W N S E E N S S S carrying a copper short sword (wielded)
 footpad_archer at (54, 11) route E E E E E W W W W W carrying a hardwood short bow (readied), a leather jerkin (being worn)
 footpad at (4, 4) route N E E E E W W W W S carrying a gold short sword (wielded), a hardened leather jerkin (being worn)
