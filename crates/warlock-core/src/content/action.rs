@@ -88,6 +88,8 @@ pub enum ActionKind {
     /// A turn of searching for hidden features (spec §8 "Searching"): searching for a while
     /// takes several.
     Search,
+    /// A turn of praying at a forgotten altar (spec §7 "Special rooms"): a prayer takes several.
+    Pray,
     /// Trying to disarm a trap (spec §8 "Disarming traps"), whatever comes of it.
     Disarm,
     /// Chatting with a creature (spec §8 "Dialogue"): a short action.
@@ -129,6 +131,7 @@ impl ActionKind {
         ActionKind::Study,
         ActionKind::Dig,
         ActionKind::Search,
+        ActionKind::Pray,
         ActionKind::Disarm,
         ActionKind::Chat,
         ActionKind::Steal,
@@ -165,6 +168,7 @@ impl ActionKind {
             ActionKind::Study => "study",
             ActionKind::Dig => "dig",
             ActionKind::Search => "search",
+            ActionKind::Pray => "pray",
             ActionKind::Disarm => "disarm",
             ActionKind::Chat => "chat",
             ActionKind::Steal => "steal",
@@ -220,6 +224,7 @@ impl ActionKind {
             ActionKind::Study => "study",
             ActionKind::Dig => "dig",
             ActionKind::Search => "search",
+            ActionKind::Pray => "pray",
             ActionKind::Disarm => "disarm traps",
             ActionKind::Chat => "talk",
             ActionKind::Steal => "steal",

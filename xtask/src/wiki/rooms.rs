@@ -126,6 +126,16 @@ pub(super) fn special_rooms(content: &Content) -> String {
                 m.images
             ));
         }
+        if let Some(feature) = e.feature {
+            let offers = match &e.offers {
+                Some((_, _)) => ": pray beside it (see Forgotten altars)",
+                None => "",
+            };
+            does.push(format!(
+                "A {} stands in it{offers}.",
+                content.terrain(feature).name.to_lowercase()
+            ));
+        }
         if let Some(c) = e.collapse {
             does.push(format!(
                 "Every step of yours onto its cracked floor has a {}% chance ({}% while you are \

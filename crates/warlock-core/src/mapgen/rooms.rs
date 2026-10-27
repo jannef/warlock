@@ -235,7 +235,7 @@ fn special_rooms(canvas: &mut Canvas, rng: &mut Rng, rooms: &[Room], up_room: us
         let Some((effect, whole)) = special::pick(canvas, rng, floor) else {
             continue;
         };
-        special::place(canvas, SpecialRoom::rect(effect, min, max), whole);
+        special::place(canvas, rng, SpecialRoom::rect(effect, min, max), whole);
     }
 }
 

@@ -33,6 +33,8 @@
 #   eat_kin            eating the corpse of one of your own race (a creature's `race`), or of a
 #                      creature who talks (has a dialogue) and is not hostile to you
 #   consecrate         consecrating an unholy place (the class ability Consecrate); default 0
+#   prayed_good        praying at a good forgotten altar (spec §7 "Special rooms"; a neutral
+#   prayed_evil        altar's prayer moves nothing), and at an evil one
 #
 # [shops]  favour: how much better a good shopkeeper's prices are for a customer of each band,
 #          in percent (negative: worse), added to what Presence and Appraise give (shops.toml);
@@ -94,6 +96,8 @@ theft = -100
 pay_debt = 5
 eat_kin = -200
 consecrate = 20
+prayed_good = 5
+prayed_evil = -10
 
 [shops]
 favour = { saintly = 10, evil = -10, wicked = -20 }

@@ -108,6 +108,24 @@ id = "altar_glow"
 color = [220, 180, 90, 0]
 radius = 5
 
+# Forgotten altars (spec §7 "Special rooms"): steady like every magical light; the colour shows
+# the altar's hidden side (gold good, grey neutral, red evil). The terrain gives the neutral one;
+# a good or an evil altar's cell carries its own as a placed light.
+[[light]]
+id = "altar_good"
+color = [240, 190, 80, 0]
+radius = 4
+
+[[light]]
+id = "altar_neutral"
+color = [180, 180, 190, 0]
+radius = 4
+
+[[light]]
+id = "altar_evil"
+color = [240, 50, 40, 0]
+radius = 4
+
 # Light hall crystals: steady colored light.
 [[light]]
 id = "crystal_red"

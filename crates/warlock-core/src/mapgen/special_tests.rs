@@ -159,7 +159,7 @@ fn features_are_drawn_only_where_they_are_eligible() {
     let only = |extra: &str, campaign: &str, id: &str| {
         let content = with_feature(&format!("weight = 100\n{extra}"), 100);
         let glittering = content.room_effects().id("glittering").expect("glittering");
-        (0..30)
+        (0..60)
             .filter(|seed| {
                 let level = generate(&content, (campaign, *seed), id, None).expect("generates");
                 level.rooms.iter().any(|r| r.effect == glittering)

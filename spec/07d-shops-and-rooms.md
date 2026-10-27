@@ -181,10 +181,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
   to 8: a hall of mirrors' reflections, below), `warp` (percent chance a step inside moves
   the stepper elsewhere, 0 to 100, default 0; below), `collapse` (`{ chance, damage }`: a
   collapsed floor, below; needs `needs_below`), `rise` (`{ faction, after }`: a cursed
-  room's risings, below; needs `needs_danger`), and `unholy` (Consecrate lifts it, below). An
-  effect with a `level_chance` needs its
-  `pervade` line and is neither `shunned`, nor lays a `floor`, nor is a den, nor holds
-  `mirrors`, nor collapses.
+  room's risings, below; needs `needs_danger`), `unholy` (Consecrate lifts it, below), `feature` (a
+  terrain, transparent and not walkable, generators place in the room; below), `sides` (the room
+  has a hidden side, and its feature a light per side: `{ good = LIGHT, evil = LIGHT }`), and
+  `offers` (what the player may do beside the feature: `{ pray = TABLE }`, an outcome table in
+  `data/outcomes/`). An effect with a `level_chance` needs its `pervade` line and is neither
+  `shunned`, nor lays a `floor`, nor is a den, nor holds `mirrors`, nor collapses, nor has a
+  `feature`.
   - **The effects** (weights in brackets): a *shadowed room* (10) keeps 30 % of the light ("The
     light seems to drain away here."); an *echoing hall* (8) doubles noise ("Your footsteps echo
     loudly."); a *hushed chamber* (8) leaves two fifths of it ("A deep hush fills this room."); a
@@ -220,7 +223,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     draining room) raises the dead killed inside (below; "A cold draught smells of the grave."
     when glimpsed, "The air is cold and the dead are near." on entering) and covers a whole
     level with `level_chance` 5 ("The dead do not rest on this level."). Fennmynster favours it
-    at 15. Blood washing
+    at 15; an *altar room* (8, #406; only in a room of at least 9 floor cells) holds a
+    forgotten altar to pray at ("A faint glow rises from an altar ahead." when glimpsed, "An old
+    altar stands here, its god long forgotten." on entering; below). Blood washing
     away in a flooded room waits for blood (#127).
   - **Hot and cold rooms** (`temperature`, #404): a room sets its cells' temperature and
     nothing else: no status, no damage, nothing done to items or food. The temperature at a cell
@@ -325,6 +330,59 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Risings no longer under a curse are dropped, and it is a good deed (`consecrate` in
     `data/alignment.toml`, 20). Elsewhere it is refused with no time ("There is nothing here
     to consecrate.").
+  - **Forgotten altars and prayer** (`feature`, `sides`, `offers`, #406; `world/pray.rs`,
+    `world/outcome.rs`; the design's §7): ADOM's pool with another flavour, not its gods: no god
+    to name or serve, no sacrifice, no conversion. A room whose effect has a `feature` gets that
+    terrain at the free plain floor cell nearest the middle of its box (ties by cell order) that
+    holds nothing else (no stamp, light, creature or patrol, trap, or object), is no door's
+    neighbour, and without which the room's walkable cells stay joined (4-connected); a room
+    with no such cell is not made special. A room whose effect has `sides` draws its side from
+    the map stream as it is made (one more draw, only for such an effect): good one time in
+    four, neutral two, evil one; a hand-made level gives it (`[[room]] side = "evil"`, default
+    neutral). The side is kept in the room (`SpecialRoom::side`, saved and hashed only when set)
+    and never said in words; the feature shows it by its light, a placed light on its cell (the
+    `sides` light; a side without one keeps the terrain's own): gold good, grey neutral, red
+    evil. The altar is its own terrain, `forgotten_altar` ("forgotten altar"; look mode adds its
+    description), never the showcase's or a temple's altar.
+    - **Pray** (`Action::Pray`, `pray` in action text) is offered in the abilities menu's *Here*
+      group (`Source::Place`, §6) while the player stands next to a cell whose terrain an
+      effect's `feature` names and that `offers` pray (`Content::offer_at`; the first such cell
+      in direction order), and nowhere else; refused there, taking no time ("There is no altar
+      here to pray at."). A prayer is the outcome table's `seconds` (60) of turns of the `pray`
+      action (the last cut short to end on time), through the rest's machinery: whatever stops a
+      rest breaks it, and a broken prayer ("Your prayer is broken.") draws nothing, moves no
+      alignment, and never spends the altar; the time is spent.
+    - **The answer**: the deed first (`Deed::Prayed(side)`: `[shift] prayed_good` 5 at a good
+      altar, `prayed_evil` −10 at an evil one, nothing at a neutral one; §8 "Alignment"), then one
+      gameplay draw of the table's `kinds` (boon 35, nothing 30, bane 35), leaned by the side
+      against the player's band's side: agreement (good and good, evil and evil) moves `lean`
+      (15) from bane to boon, opposition from boon to bane, a neutral altar or a neutral player
+      nothing (Devout, §8 "Talents": an agreeing lean doubled, an opposed one none); then one
+      draw by weight among that kind's outcomes, its line said (one of its `messages`, drawn),
+      and its hooks (`OutcomeEffect`, one existing system each: healing, cures, mending, mana,
+      statuses (told by the outcome's line, not the status's own), hunger by states, objects
+      and loot at the altar's foot (the walkable cell beside it nearest the player, not their
+      own), known traps, identifying and forgetting (`Stack::forget`), harm that spares the
+      last hit point and harm that can kill (`Harm::Place`: a place's kill earns no one
+      anything; a death by it is "Struck down at a forgotten altar"), coins lost, the lantern
+      snuffed, hostile creatures drawn as the spawner draws them (by the floor's danger, plus
+      `danger`; none on a level without a danger), a random disease, stat damage, experience,
+      the most valuable stack gone, the teleport trap's move, the burst spell code, terrain).
+      A hook that finds nothing to do says the outcome's `otherwise` line instead (Glimpse with
+      nothing unidentified: "You feel you understand a little."). The table
+      (`data/outcomes/forgotten_altar.toml`, the wiki's "Forgotten altars") has six "nothing
+      happens" lines and the minor and moderate boons and banes; the great ones come with #407.
+    - **The altar explodes** (the bane `burst`, 5 of the banes): "The altar bursts apart in
+      fire!", then a fireball (3d6 fire, radius 2, `Caster::Place`) centred on the altar through
+      the burst spell code: everyone in it is hurt, the player too, and it can kill ("The altar's
+      fire burns you."); the explosion noise (150); ice melts. Then the altar's cell becomes
+      `rubble` and its light is gone.
+    - **Exhaustion**: after a completed prayer, unless the altar is gone, one gameplay draw of
+      the table's `exhaust` (50 %, the same whatever the prayer gave): the altar is **spent**, its
+      cell `spent_altar` (dark, no light, no glow) and its placed light gone ("The altar's glow
+      gutters and dies."); Pray is offered there no more. Nothing new is saved: the terrain
+      grid is the record, and the `rooms` dev layer marks such a room `spent` (or `destroyed`).
+      No other place offers prayer (the design's decision 14).
   - **A status while inside** (`status`, #403): as time passes, at the start of each stretch of
     it (`World::pass_time`: so after every action, the player's and each creature's, at every
     turn of a rest or another long action, and through a creature's coarse turns while the
@@ -437,4 +495,5 @@ developer notes (CLAUDE.md, `docs/dev/`).
     never takes them; #403), Hush-foot (shadow; sleepers need twice the noise to wake from
     anything the player does; #405), Mirror-wise (a hall of mirrors' images within 2 cells
     seen for what they are; #419), Light tread (a collapsed floor never gives way under
-    them; #420), and Grave warden (guard; nothing the player kills rises; #408). The class ability Consecrate (above) lifts an unholy room or level.
+    them; #420), and Grave warden (guard; nothing the player kills rises; #408). The class ability Consecrate (above) lifts an unholy room or level. System `prayer`: Devout (wayfarer; an altar of the player's
+    side leans twice as far, an opposed one not at all; #406).

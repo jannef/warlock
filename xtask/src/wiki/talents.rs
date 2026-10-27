@@ -596,6 +596,10 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "the time between attempts to bring a creature to your level {}",
             percent(value)
         ),
+        TalentEffect::Devout => "at a forgotten altar of their own side the side's lean counts \
+                                  double (30 points from bane to boon), and an opposed one leans \
+                                  as a neutral one"
+            .into(),
         TalentEffect::SenseOfPlace => "knows a special room's nature from a glimpse of it, \
             and the effect covering a whole level by name on arrival"
             .into(),

@@ -25,9 +25,15 @@ the level's, -40 to 40, default 0), `burden` (percent of the carrying limit, `BU
 step inside warps the stepper, 0 to 100, default 0), `collapse` (`{ chance, damage }`,
 `content::Collapse`: chance 0 to 100, damage dice; needs `needs_below`), `rise` (`{ faction, after }`, `content::Rise`:
 `after` a duration, `RISE_AFTER` 1 s to 1 h; needs `needs_danger`; the faction checked in
-`RoomEffects::check_factions`), and `unholy` (Consecrate lifts it). An effect with `level_chance` must have a
+`RoomEffects::check_factions`), `unholy` (Consecrate lifts it), `feature` (a terrain id,
+transparent and not walkable, not stairs or a door), `sides` (`{ good = LIGHT, evil = LIGHT }`: the
+room draws a hidden side, its feature a light per side; the lights are resolved after they load,
+`RoomEffects::resolve_places`), and `offers` (`{ pray = TABLE }`, `Offer::Pray` and an outcome
+table id, checked in `resolve_places` once `data/outcomes/` is loaded; `offers` and `sides` need
+a `feature`). An effect with `level_chance` must have a
 `pervade` line and be neither `shunned` nor lay a `floor` nor hold `mirrors` nor `collapse`
-(`RoomEffectDef::can_pervade`); a level file's `effect` is held to the same.
+(`RoomEffectDef::can_pervade`; nor one with a `feature`); a level file's `effect` is held to the
+same.
 
 Features today: shadowed (10), echoing (8), hushed (8), sanctuary (6), flooded (8), black chamber
 (5, `light = 0`), draining (6, `status = "ebbing"`, `level_chance` 5, #403), teeming den (8,
@@ -39,7 +45,9 @@ Features today: shadowed (10), echoing (8), hushed (8), sanctuary (6), flooded (
 floor", mark `k` (`c` is the cold room's), `needs_below`, `floor = "cracked_floor"`, `collapse =
 { chance = 15, damage = "2d6" }`, #420), cursed (6, mark
 `g`, `needs_danger`, `level_chance` 5, `rise = { faction = "undead", after = "2m" }`, `unholy`,
-#408). Draining (also `unholy`) and cursed are the ones with a `level_chance`.
+#408), altar (8, "altar room",
+`min_cells = 9`, `feature = "forgotten_altar"`, `sides`, `offers = { pray = "forgotten_altar" }`,
+#406). Draining (also `unholy`) and cursed are the ones with a `level_chance`.
 
 A dungeon's `room_effects` (on a branch or a `[[dungeon.levels]]` range; `content/dungeon.rs`,
 `RoomOddsSpec::layer`/`resolve`, field by field: the range's, the branch's, the shared file's)
@@ -127,6 +135,65 @@ Sleep (`world/den.rs`): a creature whose effects include a status with `sleeps` 
 Sleepers are ordinary hostile actors otherwise: `hostiles_here` counts them toward the spawn cap,
 a kill is `kill_hostile`, the status is saved and hashed with the actor. The `bench-turns` `delf`
 fixture branch favours teeming dens (`xtask/src/bench.rs`).
+
+## Forgotten altars and prayer
+
+#406, the design's §7. Data: the `altar` effect, the terrains `forgotten_altar` (glyph `_`,
+light `altar_neutral`, a `description` look mode adds after its name) and `spent_altar` (dark,
+no light), the lights `altar_good`, `altar_neutral`, `altar_evil` (`data/lights.toml`), the
+`pray` action cost (1000 a turn), `[shift] prayed_good`/`prayed_evil` (`data/alignment.toml`),
+and the outcome table `data/outcomes/forgotten_altar.toml`.
+
+Outcome tables (`content/outcome.rs`, `Content::outcomes`, one file each, the id its name):
+`seconds`, `kinds` (boon, nothing, bane weights), `lean`, `exhaust` (default 50), `spent`
+(needed while `exhaust` is above 0), and `[[outcome]]` (`kind`, `tier` minor/moderate/great,
+`id`, `weight` within its kind, `message` or `messages`, `otherwise`, and `effect`, an
+`OutcomeEffect`: each field one hook, applied in the struct's order). `OutcomeTable::leaned`
+moves the lean; `Content::offer_at(terrain)` is what a feature cell offers (the first effect
+whose `feature` it is), so a spent altar, another terrain, offers nothing.
+
+Generation (`mapgen/special.rs`): `place` draws the side (one `below(4)` from the map stream:
+0 good, 3 evil, else neutral) only for an effect with `sides`, then `make` finds the feature's
+cell (`feature_cell`: plain free floor nearest the box's middle, nothing on it or on a patrol,
+no door among its eight neighbours, and the room's walkable cells still 4-connected without it;
+none, and the room is not made), lays it, and puts the side's light on it (`canvas.lights`).
+Level files: `[[room]] side = "..."` (only for an effect with `sides`; default neutral), and the
+side's light on each feature cell the level draws in the room (`content/level.rs`).
+
+Prayer (`world/pray.rs`): `Ability::Pray` (`Source::Place`, *Here*; had by no one,
+`Ability::here(level, content, pos)` lists it beside a feature that offers it, and
+`PerceptionView::abilities` appends it). `Action::Pray` (`start_prayer`: refused with no altar
+beside the player; `Spent::Pray`), `World::pray`: `keep_at` until the table's `seconds` have
+passed (each turn the `pray` price, the last cut to `price_until`), a broken prayer says so and
+nothing else; done, `prayer_answered`: `Deed::Prayed(side)`, `leaned_kinds(table, side, band,
+devout)` (`world/outcome.rs`), `draw_outcome` (kind, then outcome, gameplay stream),
+`befall`, then, while the altar's cell is still the feature and the player lives, the exhaustion
+draw (`exhaust` above 0 only): `set_terrain(spent)` with the placed light removed.
+
+Outcomes (`world/outcome.rs`, `World::befall`): the line first (drawn among `messages`; for an
+outcome with `otherwise`, only once a hook found something to do, else `otherwise`), then the
+hooks: `heal`/`mana` (dice or `full`, capped), `cure` (statuses, `ended`), `cure_by`
+(`World::cure` with the means: `prayer` cures diseases), `mend` (`World::mend`), `drain`,
+`status` (afflicted with a scratch event list, so the status's own start line is not said),
+`hunger` (to the least nutrition of the state `hunger` states away, Satiated to Fainting),
+`objects` and `loot` (at `foot_of`: the walkable cell beside the feature nearest the player and
+not theirs, else theirs), `know_traps`, `identify`, `forget` (`Stack::forget`), `burn`
+(`Harm::Spared`), `smite` (`Harm::Place`, can kill: `Cause::Altar`), `lose_coins`
+(item class `coins`), `snuff`, `summon` (`danger::draw` over the branch's hostile non-unique
+candidates at the floor's danger plus `danger`, else its deepest; at `Near::Feature` the nearest
+free cell within 3, at `Near::Edge` a free cell of the room farthest from the feature, out of
+the player's view if any; none on a level without a danger), `disease`, `wither`, `xp` (a share
+of the span to the next level, `grant_xp`), `tithe` (the most valuable stack, worn and wielded
+too), `teleport` (the trap's move), `explode` (`sound_at`, then `cast_burst` with
+`Caster::Place`, whose harm is `World::place_hurts`: resisted, "The altar's fire burns you.", a
+seen creature's line, `Harm::Place`), and `becomes` (the placed light removed, `set_terrain`).
+
+Nothing new is saved but `SpecialRoom::side` (left out while `None`): the terrain is the record
+of a spent or blown altar. The `rooms` dev layer adds `, side good` and `, spent`/`, destroyed`
+(`dump.rs::feature_state`). The showcase's `shrine` scenario has a good, a neutral, and an evil
+altar side by side. Talent: Devout (system `prayer`, `TalentMods::devout`; hook
+`leaned_kinds`). The great outcomes (`Actor::boons`, `World::lose_level`, the rarity floor) and
+Penitent come with #407.
 
 ## State and the one question
 
@@ -341,7 +408,7 @@ System `special_rooms` (`data/talents.toml`): Sense of place (wayfarer, `sense_o
 `Perception::compute`'s images, which the glass reads too), Light tread (delver, Dexterity 12,
 `collapse_proof`; hook `World::collapse_step`, which then draws nothing), and Grave warden (guard, Willpower 12,
 `grave_warden`; hook `World::curse_corpse`). The class ability Consecrate (above) carries the
-system too.
+system too. System `prayer`: Devout (wayfarer, `devout`; hook `world/outcome.rs::leaned_kinds`).
 
 ## Tests
 
@@ -370,7 +437,12 @@ player and creatures, the messages in and out, perception agreeing, the step ref
 Overloaded but always allowed out), `content/room_mirrors_tests.rs` (`mirrors` parses, its range, never over a whole level), `world/mirrors_tests.rs` (images on free floor, the same however asked
 and moving with the turns, none outside, the player's own, the glass, a missile flying on, the
 creatures' aim, Mirror-wise, the dumps, a rest among reflections), `content/room_warp_tests.rs` (the `warp` field, its range,
-`Here::warp`), `world/unstable_room_tests.rs` (the unstable room: about one step in ten inside
+`Here::warp`), `content/outcome_tests.rs` (the altar's table, `offer_at`, defaults, the lean,
+refusals), `mapgen/altar_tests.rs` (one altar a room, never by a door, its side's light, the
+level still joined, the sides one to two to one), `world/outcome_tests.rs` (Pray only beside an
+altar not spent, a minute, a broken prayer, the lean and Devout, the draw's shares, the nothing
+lines, each hook, the explosion, the deed, exhaustion near half and a spent altar after a save
+and load), `world/unstable_room_tests.rs` (the unstable room: about one step in ten inside
 warps the player and a creature, never outside, no draw outside, the messages, a free landing
 cell, saving), `content/room_collapse_tests.rs` (the `collapse` field, its refusals, never
 over a whole level, `Here::collapse`), `world/collapse_tests.rs` (the collapsed floor: its data,

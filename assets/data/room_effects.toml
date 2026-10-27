@@ -83,6 +83,14 @@
 #            `needs_danger`
 #   unholy   Consecrate (the priest's and the paladin's) lifts it for good: the room becomes
 #            plain, or the whole level does; default false
+#   feature  a terrain (not walkable, transparent) generators place at the free floor cell nearest
+#            the room's middle, never where it would cut the room's floor apart; a hand-made level
+#            draws its own. Never the whole level
+#   sides    the room has a hidden side, good, neutral, or evil (drawn one to two to one; a level
+#            file's `[[room]]` gives it: `side = "evil"`), which its feature shows by its light:
+#            { good = LIGHT, evil = LIGHT } (lights.toml; a side left out keeps the terrain's)
+#   offers   what the player may do beside the feature, in the abilities menu's Here group:
+#            { pray = TABLE }, an outcome table in data/outcomes/ (Pray: spec §7 "Special rooms")
 
 chance = 12
 per_level = 1
@@ -240,6 +248,7 @@ weight = 3
 needs_below = true
 floor = "cracked_floor"
 collapse = { chance = 15, damage = "2d6" }
+
 # A cursed room: the dead killed inside rise two minutes later as undead of their level, unless
 # their corpse is taken or eaten first. Consecrate lifts it, and the draining room.
 [[effect]]
@@ -254,3 +263,17 @@ level_chance = 5
 pervade = "The dead do not rest on this level."
 rise = { faction = "undead", after = "2m" }
 unholy = true
+
+# A forgotten altar (spec §7 "Special rooms"): ADOM's pool with another flavour. Pray beside it;
+# its glow's colour is its hidden side. data/outcomes/forgotten_altar.toml has what a prayer draws.
+[[effect]]
+id = "altar"
+name = "altar room"
+mark = "a"
+enter = "An old altar stands here, its god long forgotten."
+near = "A faint glow rises from an altar ahead."
+weight = 8
+min_cells = 9
+feature = "forgotten_altar"
+sides = { good = "altar_good", evil = "altar_evil" }
+offers = { pray = "forgotten_altar" }

@@ -238,6 +238,19 @@ impl Stack {
         }
     }
 
+    /// Forgets what it is (spec §7 "Special rooms": a prayer's Muddled): an identified magic
+    /// item is unidentified again, and what carrying it taught is lost. Whether it was known.
+    pub(crate) fn forget(&mut self) -> bool {
+        match self.magic.as_mut() {
+            Some(m) if m.identified => {
+                m.identified = false;
+                m.carried = 0;
+                true
+            }
+            _ => false,
+        }
+    }
+
     /// Grams: its object's weight (a loose gem: its size's; made of other materials, scaled by
     /// them, [`variant::weight`]), less what a weight affix takes off, times the count.
     pub fn weight(&self, content: &Content) -> u64 {

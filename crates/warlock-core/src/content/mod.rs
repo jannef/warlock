@@ -60,6 +60,7 @@ mod names;
 mod object;
 #[cfg(test)]
 mod orc_roster_tests;
+mod outcome;
 mod overworld;
 pub(crate) mod part;
 mod particles;
@@ -178,6 +179,10 @@ pub use names::{NameLists, Names};
 pub use object::{
     MAX_BONUS, MAX_DIG, MAX_PLACED, MAX_VALUE, ObjectDef, ObjectId, article, counted, weapon_noun,
 };
+pub use outcome::{
+    Amount, Explosion, Harmful, Near, OutcomeDef, OutcomeEffect, OutcomeKind, OutcomeSummon,
+    OutcomeTable, OutcomeTables, OutcomeTier,
+};
 pub use overworld::{Landscape, LocalArea, local_area_id, parse_local_area};
 pub use part::{MAX_OBJECT_PARTS, MAX_PARTS, Part, PartDef, PartId, PartRole, and_list};
 pub use particles::{ParticleEmitter, ParticleTrigger};
@@ -194,8 +199,8 @@ pub use rod::{
     MAX_ROD_MANA, MAX_ROD_POWER, MAX_ROD_RADIUS, MAX_ROD_REACH, Rod, RodDoes, RodEffect, RodShape,
 };
 pub use room_effect::{
-    Collapse, Here, Hoard, Mirrors, RoomEffectDef, RoomEffectId, RoomEffects, SpecialRoom, Swarm,
-    Themes,
+    Collapse, Here, Hoard, Mirrors, Offer, RoomEffectDef, RoomEffectId, RoomEffects, SpecialRoom,
+    Swarm, Themes,
 };
 pub use scenario::ScenarioDef;
 pub use scroll::{Cast, Reading, ScrollSpell, SpellScroll};
@@ -605,6 +610,8 @@ pub struct Content {
     talents: TalentBook,
     /// Special rooms' effects (`data/room_effects.toml`).
     room_effects: RoomEffects,
+    /// What a place's ability draws (`data/outcomes/`, spec §7 "Special rooms"), by id.
+    outcomes: OutcomeTables,
     /// Prefixes, suffixes, and how loot rolls them (`data/affixes.toml`).
     affixes: Affixes,
     stances: Stances,
@@ -701,6 +708,7 @@ impl Content {
             corpses: Vec::new(),
             weapon_skills: WeaponSkillTable::default(),
             room_effects: RoomEffects::default(),
+            outcomes: OutcomeTables::default(),
             spell_rules: None,
             study: None,
             mishaps: Vec::new(),
@@ -920,6 +928,12 @@ impl Content {
         }
         content.dialogues = dialogue::parse(files.table("dialogue"), &content)?;
         content.load_hunger(files)?;
+        // Outcome tables (spec §7 "Special rooms") last of the rules' data: they name terrain,
+        // statuses, objects, damage types, and spell effects; then the rooms that offer them.
+        content.outcomes = OutcomeTables::parse(files.table("outcomes"), &content)?;
+        let lights = content.light_ids.clone();
+        let outcomes = content.outcomes.clone();
+        (content.room_effects).resolve_places(&outcomes, |name| lights.get(name).copied())?;
 
         let path = "data/legend.toml";
         let legend_file: LegendFile =
@@ -1095,6 +1109,7 @@ impl Content {
             defs.push(TerrainDef {
                 id: spec.id.clone(),
                 name: spec.name.clone(),
+                description: spec.description.clone(),
                 glyph: spec.glyph,
                 variants: spec.variants.chars().collect(),
                 fg: spec.fg,
@@ -3129,6 +3144,24 @@ impl Content {
     /// The index of rod effect `id`, if there is one.
     pub fn rod_effect_index(&self, id: &str) -> Option<usize> {
         self.rod_effects.iter().position(|e| e.id == id)
+    }
+
+    /// The outcome tables (`data/outcomes/`, spec §7 "Special rooms"): what a place's ability
+    /// draws.
+    pub fn outcomes(&self) -> &OutcomeTables {
+        &self.outcomes
+    }
+
+    /// What a place offers beside a cell of terrain `terrain` (spec §7 "Special rooms": Pray at
+    /// a forgotten altar), and the outcome table it draws on: the first effect whose `feature`
+    /// it is and that `offers` something. `None` for any other terrain (a spent altar).
+    pub fn offer_at(&self, terrain: TerrainId) -> Option<(Offer, &OutcomeTable)> {
+        (self.room_effects.defs().iter())
+            .filter(|e| e.feature == Some(terrain))
+            .find_map(|e| {
+                let (offer, table) = e.offers.as_ref()?;
+                Some((*offer, self.outcomes.get(table)?))
+            })
     }
 
     /// The spells (`data/spells/`, spec §8 "Spells"), in path order: a [`SpellId`] is an index.
