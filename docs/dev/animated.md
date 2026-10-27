@@ -7,8 +7,8 @@ the code, as CLAUDE.md says.
 
 A1 (#483) is the household tier: brooms, stools, candlesticks, teapots, the rug of smothering;
 A2 (#484) breaks what does not fall whole into its parts; A3 (#485) adds families and the first
-of them, blades. Hollow armour and panoplies (A4, #486), their homes (A5, #487), and the
-chromatic look of composites (A6, #463) come after.
+of them, blades; A4 (#486) the composites, hollow armour and panoplies. Their homes (A5, #487)
+and the chromatic look of composites (A6, #463) come after.
 
 ## Generated creature types (`content/animated.rs`)
 
@@ -46,9 +46,13 @@ reads it as it reads a kobold, and the guideline and roster tests cover it with 
   types (tiers in file order). Its name, glyph, colour, rarity, speed and Defence by level
   (`Ramp`: nothing below `from`, else `base + per_level × (L − from)` floored, at most `most`;
   a hair over before the floor so 0.1 × 30 is 3), resistances, and death verb are the tier's;
-  no attack (it wields). What every generated type shares is `Animated::common`. The tier's
+  no attack (it wields) unless the tier has its own `attack` (hollow armour's gauntlets: the
+  tier's damage type, name, and verb, the dice `Numbers::at` gives at L), and `opens_doors`
+  when the tier says. What every generated type shares is `Animated::common`. The tier's
   slot lines are resolved at parse (`Animated::lines`, by tier; slot and classes must exist,
-  `shown_by` must be one of the lines' slots). `Tier::family` is its id, `animated_<tier>`;
+  `shown_by` must be one of the lines' slots; `count` 1 to 4, and a line tried more than once
+  gets `Line::slots`, its slot and every other of the same `fits`, as many as its `count` at
+  least). `Tier::family` is its id, `animated_<tier>`;
   `Content::name_families` registers it in `creature_ids` for the first member (a creature
   file of that id is an error), so populations, quests, and legends can name it.
 - **`AnimatedDef`** on `CreatureDef::animated` (`#[serde(skip)]` on the spec): its tier, its
@@ -75,16 +79,21 @@ places must not move), in no slot, unless the creature carries its body already.
   its body at the least count of that material (else its object's own), a fixed kit: nothing is
   drawn.
 
-A family's creature: `animated::compose_slots` goes through its tier's lines in order: one
-draw for `chance`; one for the base item (`loot::base_in`: the loot objects of the line's
+A family's creature: `animated::compose_slots` goes through its tier's lines in order, those
+whose `from` its level reaches, each `count` times; a try whose `Line::slots` are all taken
+(the off hand beside a two-handed weapon, both ring slots) ends the line with nothing drawn (so
+A3's blade streams are unchanged). A try (`animated::piece`): one draw for `chance`; one for the base item (`loot::base_in`: the loot objects of the line's
 classes with `level ≤ L` and a `frequency`, by frequency, ordered by object id); one `below(100)`
 for the grade (under `rare` rare, under `max(rare, magic)` at least magic, else plain); then
 `loot::make_as` at item level L with `Source::Gear(L)` (or, plain, one `variant::draw` for the
-material), put in the pack and in the line's slot. `animated::kit` is the one entry (household
+material), put in the pack and in the first free slot of the line's (a two-handed weapon in
+every hand). `animated::kit` is the one entry (household
 body or family pieces; a family creature that carries anything already is not rolled), called
 by `arm` and `travel::make_creature`. `animated::weapon_skills` (no draws) gives it the tier's
-`weapon_rank` at L in the skill of each wielded weapon (`WeaponSkills::from_ranks`), set as
-`Actor::weapon_skills` in `make_creature`.
+`weapon_rank` at L in the skill of each wielded weapon, and, holding a weapon and a shield
+(`shield > 0`), the tier's `shield_rank` at L in the style `style_for(WeaponAndShield, ..)`
+gives (Sword and Board) (`WeaponSkills::from_ranks`), set as `Actor::weapon_skills` in
+`make_creature`. None without ranks (hollow armour wields nothing).
 
 No new save state: the body and the pieces are ordinary inventory stacks, the ranks ordinary
 weapon skills.
@@ -140,15 +149,37 @@ candlestick of silver (hostile, unhurt), rocking, on stone floor." A family's cr
 shaped by the piece in its tier's `shown_by` slot: its colour, and with `item_glyph` its glyph
 (a blade shows as its weapon, `)`); without that piece, the type's own. Look mode adds no
 material word for it: the gear line names what it wields ("An animated blade (hostile,
-unhurt), wielding an iron great sword, on stone floor.").
+unhurt), wielding an iron great sword, on stone floor."). Hollow armour and panoplies are shown
+by their `body` piece, as `A` in its colour (no `item_glyph`).
+
+**Appraiser's eye** (`TalentEffect::AppraiseAnimated`, `TalentMods::appraise_animated`):
+perception sets `SeenActor::hums` for an animated creature any of whose stacks is magic or rare
+(ground truth, read in perception only, with the talent), and look mode ends its line with " It
+hums with power.".
+
+## Inherited powers
+
+Nothing is built for them: what a composite wears and wields works through `Mods::worn` and the
+gear paths as for any actor (riders in `Actor::melee`, stats in `effective_stats`, resistances,
+Protection, `max_hp` set after equipping, light in `light/cache.rs`). Held but unread for a
+creature: max mana, mana regeneration, caster level (until creatures cast), carry (no burden),
+missile-only effects (they wield melee weapons). The wiki's page lists them.
+
+## Performance
+
+`cargo xtask bench-turns`'s `panop` row: a 120×60 cave floor of a fixture branch at danger 40
+whose population is `animated_panoply` alone, at full population (16 ms a turn, the vast
+level's budget). It measured about 1 ms a turn on average, 2 ms at most, on an M-series Mac,
+so there is no `Mods::worn` cache.
 
 ## Content
 
 The household objects are `data/objects/<body>.toml`, class `household` (the general store buys
 them). Populations: Cealdhlāw (candlestick, cutlery, teapot, cooking pot), Fennmynster
-(candlestick, book, lantern, rug), and `animated_blade` in Cealdhlāw and Fyrdelf; the stray list
-follows. Talents: system `animated` with
-Salvager (delver) and Unbinder (weaponcraft).
+(candlestick, book, lantern, rug), `animated_blade` in Cealdhlāw and Fyrdelf, and
+`animated_armour` in Fyrdelf; the stray list follows. `animated_panoply` is in no population
+(legends and the dev `spawn` only) until a deeper branch lists it (#487). Talents: system
+`animated` with Salvager (delver), Unbinder (weaponcraft), and Appraiser's eye (scholar).
 
 ## Tests
 
@@ -158,6 +189,10 @@ stream, material weights, the cutlery's count, immunities, stealing, the drop ru
 Salvager, broken bodies as their parts with the break line, a loose gem and a book's leather,
 Unbinder, saves and a replay), `world/animated_blade_tests.rs` (the family's ids and numbers, a
 blade's weapon, rank, stream, odds, and fight, first kills, quests, and the tag objective
-counting the family once, saves), `content/danger.rs` (a family candidate's weight and member,
-out of depth too), `ui/look.rs` (the look lines, a blade's as an insta snapshot). The wiki's
+counting the family once, saves), `world/animated_panoply_tests.rs` (the composites' ids and
+numbers, slot lines by `from` and `count`, the two-handed rule, ranks, shape, stream, the
+inherited powers by `fight`: a Flaming sword, rings of the Bear and the Ox, a resistance, a
+glowing ring; Appraiser's eye, populations, saves), `content/danger.rs` (a family candidate's weight and member,
+out of depth too), `ui/look.rs` (the look lines, a blade's and the composites', with and without Appraiser's eye,
+as insta snapshots). The wiki's
 tables are `xtask/src/wiki/animated.rs`.
