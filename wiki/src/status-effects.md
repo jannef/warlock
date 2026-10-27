@@ -103,6 +103,14 @@ Out of the vault sound comes back: "Sound returns." Creatures inside are silence
 are, and you can see it on them ("silenced"): a caster that cannot cast closes in to fight
 hand to hand.
 
+## Unwelcome
+
+A [shrine](special-rooms.md) of the other side from yours does not want you. While you stand in
+one, and half a minute after you leave, you are **Unwelcome** ("You feel unwelcome."): your
+wounds heal at half the pace and you are a little less likely to hit (−1 to hit). Creatures of
+the other side are unwelcome in it too, and you can see it on them ("unwelcome"). "You no
+longer feel unwelcome." once it passes.
+
 ## Buffs and cooldowns
 
 A status effect can also help, or hinder, in other ways while it lasts (the table's last

@@ -205,6 +205,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     fights in melee instead of casting (`ai.rs::fight`). Everyone on a level that gives a status
     takes it as the player arrives (and as a run starts), so one standing in the vault is silenced
     before its first action.
+  - **Unwelcome** (#413): a shrine of a side's status (§7 "Special rooms") on everyone of the
+    other side inside it, creatures too: one degree, renewed while one stays, eased half a minute
+    after leaving ("You feel unwelcome.", "You no longer feel unwelcome."; on creatures
+    "unwelcome"). Wounds heal at half the pace (`regen` 50) and blows land a little less often
+    (`combat = { to_hit = -1 }`).
   - **Spending**: `World::spend_mana(actor, base)` is the one way to spend it, refused (nothing
     spent) when the actor has less than the cost: `base` as its talents make it
     (`Actor::mana_cost`, `TalentMods::mana_cost`: Frugal caster's −20 %, rounded to the nearest,
