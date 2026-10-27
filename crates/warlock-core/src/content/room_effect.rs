@@ -153,6 +153,7 @@ struct RoomEffectSpec {
     warp: u8,
     hoard: Option<Treasure>,
     rise: Option<RiseSpec>,
+    haunt: Option<super::room_haunt::HauntSpec>,
     #[serde(default)]
     unholy: bool,
     feature: Option<String>,
@@ -500,6 +501,8 @@ pub struct RoomEffectDef {
     pub collapse: Option<Collapse>,
     /// The dead killed inside rise (a cursed room's).
     pub rise: Option<Rise>,
+    /// A rest inside is haunted (a haunted room's; `world/haunt.rs`).
+    pub haunt: Option<super::room_haunt::Haunt>,
     /// Terrain generators stand along its walls (an armoury's racks).
     pub dressing: Option<Dressing>,
     /// Consecrate lifts it for good (a cursed and a draining room).
@@ -547,6 +550,7 @@ impl RoomEffectDef {
             && self.hoard.is_none()
             && self.feature.is_none()
             && self.collapse.is_none()
+            && self.haunt.is_none()
             && self.dressing.is_none()
             && self.lore.loot.is_none()
             && self.pervade.is_some()
@@ -659,6 +663,11 @@ impl<'c> Here<'c> {
         self.each().find_map(|e| e.rise.as_ref())
     }
 
+    /// A haunted room's hauntings here, if one is here (the room's, never a whole level's).
+    pub fn haunt(&self) -> Option<&'c super::room_haunt::Haunt> {
+        self.room.and_then(|e| e.haunt.as_ref())
+    }
+
     /// Percent of the chance of a training mark of `skill` here: the effects' `train`
     /// percents, multiplied (100: as it is).
     pub fn train(&self, skill: SkillId) -> u32 {
@@ -760,6 +769,17 @@ impl RoomEffects {
     /// one, named once.
     pub(super) fn check_factions(&self, factions: &super::Factions) -> Result<(), ContentError> {
         for def in &self.defs {
+            if let Some(haunt) = &def.haunt
+                && factions.id(&haunt.faction).is_none()
+            {
+                return Err(ContentError::new(
+                    "data/room_effects.toml",
+                    format!(
+                        "effect `{}`: haunt faction `{}` is unknown",
+                        def.id, haunt.faction
+                    ),
+                ));
+            }
             if let Some(rise) = &def.rise
                 && factions.id(&rise.faction).is_none()
             {
@@ -998,6 +1018,10 @@ impl RoomEffects {
                 }
                 None => None,
             };
+            let haunt = (spec.haunt.as_ref())
+                .map(|h| h.resolve(spec.needs_danger))
+                .transpose()
+                .map_err(bad)?;
             let feature = match &spec.feature {
                 Some(name) => {
                     let (id, def) =
@@ -1091,6 +1115,7 @@ impl RoomEffects {
                 side_lights: spec.sides.unwrap_or_default(),
                 collapse: spec.collapse,
                 rise,
+                haunt,
                 unholy: spec.unholy,
                 dressing,
                 shrine,

@@ -423,14 +423,24 @@ fn a_generated_floor_is_laid_down_full_and_nothing_else_moves() {
     files.edit_table("creatures", super::gear_tests::without_gear);
     let ungeared = Content::load(&files).expect("valid without gear");
     let floor = content.terrain_id("floor").expect("floor");
+    let mut compared = 0;
     for seed in 0..10 {
         let with = barrow_floor(&content, seed);
         let without = barrow_floor(&plain, seed);
         // The special room's draw weighs the effects that need a danger, so with one the draws
         // after it, a shop's among them, may differ: such a seed is another level.
-        if with.shops.len() != without.shops.len() {
+        // So may the terrain, where one draws a room that lays its own (a floor, a feature).
+        let laid = |t: &LevelTemplate| {
+            (t.rooms.iter())
+                .map(|r| (r.effect, content.room_effect(r.effect)))
+                .filter(|(_, e)| e.floor.is_some() || e.feature.is_some())
+                .map(|(id, _)| id)
+                .collect::<Vec<_>>()
+        };
+        if with.shops.len() != without.shops.len() || laid(&with) != laid(&without) {
             continue;
         }
+        compared += 1;
         assert_eq!(with.terrain, without.terrain, "seed {seed}");
         assert_eq!(with.traps, without.traps, "seed {seed}");
         assert_eq!(with.secrets, without.secrets, "seed {seed}");
@@ -499,6 +509,7 @@ fn a_generated_floor_is_laid_down_full_and_nothing_else_moves() {
         // The same seed lays down the same population.
         assert_eq!(barrow_floor(&content, seed).creatures, with.creatures);
     }
+    assert!(compared >= 5, "only {compared} seeds compared");
 }
 
 /// A unique type comes once a run: once on a floor, never on a floor made after it was met.

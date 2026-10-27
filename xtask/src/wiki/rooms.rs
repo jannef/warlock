@@ -205,6 +205,16 @@ pub(super) fn special_rooms(content: &Content) -> String {
                 rise.after.spoken()
             ));
         }
+        if let Some(haunt) = &e.haunt {
+            does.push(format!(
+                "While you rest inside, each time the clock passes a full {} one of the {} of \
+                 the level's danger comes inside (as the dead rise in a cursed room: of that \
+                 level, else the nearest), out of your sight where it can, and comes for you. It \
+                 never comes while you do anything else (see Haunted rooms).",
+                haunt.every.spoken().trim_start_matches("1 "),
+                faction_name(content, &haunt.faction),
+            ));
+        }
         if e.unholy {
             does.push("Consecrate lifts it for good.".into());
         }

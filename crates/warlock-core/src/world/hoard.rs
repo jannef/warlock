@@ -159,7 +159,7 @@ impl World {
 
     /// The cells of `room` a guardian may come on (walkable, free, no door or stairs), in cell
     /// order, and of them those on its edge: next to a cell that is outside it or not walkable.
-    fn guard_cells(&self, room: &SpecialRoom) -> (Vec<Pos>, Vec<Pos>) {
+    pub(super) fn guard_cells(&self, room: &SpecialRoom) -> (Vec<Pos>, Vec<Pos>) {
         let level = self.state.current();
         let content = &self.content;
         let walkable = |p: Pos| room.contains(p) && level.is_walkable(content, p);
