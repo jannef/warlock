@@ -484,7 +484,7 @@ mod tests {
         );
         assert!(
             scrolls.contains(
-                "| 3d6 fire | 10 cells | Explosion, very loud (150) | item level 6, frequency 20 | 150 gold |"
+                "| 3d6 fire | 10 cells | Explosion, very loud (150) | item level 6, frequency 20 | 200 gold |"
             ),
             "{scrolls}"
         );

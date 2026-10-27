@@ -9,8 +9,9 @@ for players. It describes the game as it is today, which is an early build. You 
 explore, travel the overworld, watch the days, the moon, and the weather change, hear what you
 cannot see, talk to the people you meet, and pick up, carry, wear, and wield objects. Creatures go about their business,
 notice you, and fight each other and you: blows and arrows are rolled against your Defence, hurt,
-and kill, and death is final (spells are only announced so far). Your stats, your weapon, and
-your armour decide how well you fight.
+and kill, and death is final (a creature's spells are only announced so far; yours are cast
+for mana, see [Magic](magic.md)). Your stats, your weapon, and your armour decide how well you
+fight.
 
 **The numbers here are exact.** The game keeps many of them to itself and tells you in words: a
 creature looks "badly wounded", you "feel more skilled", boots make you "move faster". The wiki
