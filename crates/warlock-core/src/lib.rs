@@ -30,6 +30,7 @@ pub mod gear;
 pub mod gem;
 pub mod geom;
 pub mod grid;
+pub mod heal;
 pub mod hunger;
 pub mod ice;
 pub mod item_parts;

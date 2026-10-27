@@ -67,6 +67,7 @@ pub(super) fn action_costs(content: &Content) -> String {
             ActionKind::Search => "A turn of searching (searching for a while takes several)",
             ActionKind::Pray => "A turn of praying at a forgotten altar (a prayer takes a minute)",
             ActionKind::Disarm => "Trying to disarm a trap (whatever comes of it)",
+            ActionKind::Heal => "Treating yourself with the Heal skill (whatever comes of it)",
             ActionKind::Chat => "Chatting with someone (asking about a topic takes no time)",
             ActionKind::Steal => "Trying to steal from someone, whatever comes of it",
             ActionKind::ThrowVoice => "Throwing your voice",

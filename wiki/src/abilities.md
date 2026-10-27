@@ -54,7 +54,11 @@ menu).
 - **Steal**: anyone trained in the Steal skill has it, in the skill's place among the Skills.
   It asks for a direction and tries to lift something from whoever stands there, if they are
   not hostile to you (see [Stealing](skills.md#stealing)).
-- **Other skills used as actions** (Heal, ...): each is in the menu once you are trained
+- **Heal**: anyone trained in the Heal skill has it, in the skill's place among the Skills. It
+  treats you: your bleeding, a poison, or a disease that shows, asking which when there is more
+  than one; greyed out "nothing to treat" otherwise (see
+  [Treating yourself](skills.md#treating-yourself)).
+- **Other skills used as actions** (Handle animal, ...): each is in the menu once you are trained
   in it (see [Skills](skills.md)), greyed out until its use comes to the game.
 - **Class abilities** (Rage, Veteran's wind, Whirlwind, Lay on hands, Smite, Holy radiance,
   Quivering palm, Consecrate): your class's level table gives them (see [Classes](classes.md#what-each-level-gives)),
