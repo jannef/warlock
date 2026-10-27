@@ -165,6 +165,17 @@ impl<'a> Lore<'a> {
         }
     }
 
+    /// `stack` as the item lists name it: [`Lore::describe`] with what it gives in numbers
+    /// after it, as the player knows it (`magic::numbers`): "a long sword (+0 hit, 1d8)", "a
+    /// leather jerkin (Dv +1, Pv 1)".
+    pub fn listed(&self, stack: &Stack) -> String {
+        let name = self.describe(stack);
+        match crate::magic::Numbers::of(stack, self.content).text(self.content) {
+            Some(numbers) => format!("{name} ({numbers})"),
+            None => name,
+        }
+    }
+
     /// What `stack` is called as the player knows it, without an article or count: "scroll
     /// labelled ZUNBAR", else [`Stack::title`].
     pub fn title(&self, stack: &Stack) -> String {

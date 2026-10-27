@@ -75,8 +75,9 @@ shell.", "Something hits you but does no harm." when an end is unseen. Penetrati
 kicks, and traps have none. Data: objects `protection` (armour worn, never a hand slot or a
 shield; `check_protection`) and `penetration`; creatures `natural = { defence, protection,
 name }`. Presentation: `PerceptionView::own_protection` (the character screen's `Pv` beside `Dv`, the
-JSON dump's `protection`), the item description ("Protection 3", "Pierces armour": never a
-penetration number); the dev `actors` layer shows every actor's `pv`.
+equipment screen's totals line, the JSON dump's `protection`), the item description
+("Protection 3", "Pierces armour": never a penetration number) and every item's numbers (`Dv +2,
+Pv 3`, `magic::numbers`, #552); the dev `actors` layer shows every actor's `pv`.
 Tests: `combat.rs` (soak distribution, draw order, criticals before the soak, penetration),
 `world/protection_tests.rs` (sums, soaked hits, messages, penetration, replay).
 

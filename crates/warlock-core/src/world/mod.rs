@@ -1395,6 +1395,8 @@ mod mirrors_tests;
 #[cfg(test)]
 mod moon_tests;
 #[cfg(test)]
+mod numbers_tests;
+#[cfg(test)]
 mod object_tests;
 #[cfg(test)]
 mod openings_tests;

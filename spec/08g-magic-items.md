@@ -29,7 +29,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     [ornament] [material] base [suffix]: "a Sharp emerald-pommelled bronze long sword of the
     Bear"; a rare item keeps its two-word name and its gem and material follow in the base, "Grim
     Bite, an emerald-pommelled long sword", and in its description. Rarity colors the name (§6).
-    Combat messages name the base ("The kobold's spear glances off your armour.").
+    Combat messages name the base ("The kobold's spear glances off your armour."). The item
+    lists add what it gives in numbers after the name (§6 "Item lists": "a Sharp long sword
+    (+0 hit, 1d8+2)"), counting its affixes only once it is identified.
   - **Unidentified**: magic and rare items are found unidentified. The rarity shows, the affixes
     and a rare name do not, and their effects apply all the same while worn or wielded (as in
     ADOM and Path of Exile; so an attentive player may notice them: a stat on the character
