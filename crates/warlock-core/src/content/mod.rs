@@ -4395,9 +4395,13 @@ mod tests {
                 "stone_circle",
                 // The campaigns' own, after the shared ones.
                 "barrow_chamber",
+                "captains_hall",
                 "drakes_hoard",
                 "foremans_cabin",
-                "sunken_crypt"
+                "robbers_hoard",
+                "still_room",
+                "sunken_crypt",
+                "unhallowed_chapel"
             ]
         );
         assert_eq!(content.vaults()[4].entrances.len(), 3);

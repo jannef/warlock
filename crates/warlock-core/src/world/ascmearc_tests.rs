@@ -18,6 +18,13 @@ const TOWN: Pos = Pos::new(18, 28);
 const BARROW: Pos = Pos::new(34, 25);
 const FENNMYNSTER: Pos = Pos::new(70, 48);
 const FYRDELF: Pos = Pos::new(97, 21);
+/// The four lairs of the wanted (the guild design §8), hidden on reserved sites.
+const LAIRS: [(&str, Pos); 4] = [
+    ("wyrtholm", Pos::new(88, 46)),
+    ("wulfeshol", Pos::new(18, 49)),
+    ("banfeld", Pos::new(42, 31)),
+    ("brocenburg", Pos::new(66, 12)),
+];
 
 /// Built-in content with nobody hungering (the journeys here take days).
 static CONTENT: LazyLock<Arc<Content>> = LazyLock::new(|| {
@@ -227,14 +234,22 @@ fn the_locations_are_named_and_six_cells_apart() {
         (CONTENT.terrain(fyr.terrain).id.as_str(), fyr.name.as_str()),
         ("mine", "Fyrdelf")
     );
-    let all = [PASS, TOWN, BARROW, FENNMYNSTER, FYRDELF];
+    let mut all = vec![PASS, TOWN, BARROW, FENNMYNSTER, FYRDELF];
+    for (id, at) in LAIRS {
+        let (pos, _) = CONTENT.hidden_location("ascmearc", id).expect(id);
+        assert_eq!(pos, at, "{id}");
+        all.push(at);
+    }
     for (i, a) in all.iter().enumerate() {
         for b in &all[i + 1..] {
             assert!(a.chebyshev(*b) >= 6, "{a} and {b} are too close");
         }
     }
     // No road leads to a hidden dungeon.
-    for hidden in [FENNMYNSTER, FYRDELF] {
+    for hidden in [FENNMYNSTER, FYRDELF]
+        .into_iter()
+        .chain(LAIRS.map(|(_, at)| at))
+    {
         for d in Dir::ALL {
             assert_ne!(terrain_at(hidden.step(d)), "road", "a road beside {hidden}");
         }
@@ -287,7 +302,14 @@ fn nothing_of_the_hidden_dungeons_reaches_perception_or_the_dumps() {
     assert_eq!(seen, Some(swamp));
     let json = dump::json(&w, &[Layer::View, Layer::Memory, Layer::Locations], false).to_string();
     let text = (dump::layer_rows(&w, Layer::Locations)).join("\n");
-    for leak in ["ennmynster", "yrdelf"] {
+    for leak in [
+        "ennmynster",
+        "yrdelf",
+        "yrtholm",
+        "ulfeshol",
+        "nfeld",
+        "rocenburg",
+    ] {
         assert!(!json.contains(leak), "{leak} in the JSON dump");
         assert!(!text.contains(leak), "{leak} in the locations");
     }

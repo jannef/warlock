@@ -1,0 +1,59 @@
+---
+source: crates/warlock-core/src/mapgen/lairs_tests.rs
+expression: "describe(&level(\"banfeld\", 1, 4))"
+---
+Bānfeld 4 (banfeld:4) 80x21
+stairs Up at (26, 16) -> banfeld:3
+osrick at (23, 8) route  carrying a chromium mace (wielded), a bone amulet (rare) (being worn)
+zombie at (26, 8) route 
+zombie at (30, 8) route 
+ghost at (35, 16) route E E W W E E W W E E W W E E W W E E W W
+drowned at (58, 8) route E E E E W W W W E E E E W W W W
+grave_worm at (34, 8) route W S S W E N N E
+ghost at (42, 5) route S S N N N N S S S S N N
+grave_worm at (24, 7) route E E E E E W W E E W W W W W
+barrow_spider at (49, 7) route W W S W N N N S S W E N N S S S E N E E
+ghost at (17, 17) route E W E E W W W W E E W W E E E E W W E W
+skeleton at (57, 13) route E E E S N W W W carrying a tin spear (wielded)
+drowned at (12, 17) route E W W E E E E E E W W W W W W E E W
+zombie at (64, 8) route E E E E W W E W E E W W W W
+zombie at (45, 6) route N N E N E W S W S S
+zombie at (22, 7) route N E E E W W W S
+barrow_ghoul at (73, 4) route W W N N E E S S N N W W S S E E
+zombie at (46, 14) route E W E W E W E W E W E W E W E W E W
+ghost at (22, 6) route E E E E W W W W
+dretch at (41, 17) route W W N N N S S S E E
+zombie at (5, 7) route E E S W N N N N N E W S S S S S E N W W
+ghost at (36, 9) route N S S S S S N N N N N S
+ghost at (55, 14) route W W E E W E W W E E
+ghost at (7, 8) route W N N N N S S S S N S N N N N S S S S E
+ghost at (46, 6) route N N N S S S S S W W E E N N N N N S S S
+skeleton at (51, 8) route N S N S N S N S
+skeleton at (40, 15) route S S S E W N N N
+ghost at (9, 15) route W W N E E E E W W W W S E E
+skeleton at (11, 15) route W W W W N E W S E E E E
+arrow trap at (20, 17)
+spear trap at (28, 17)
+pit trap at (30, 15)
+0 placed lights
+special room hushed at (41, 2)-(50, 9)
+
+                                                                     ######
+    #####                                ##########                  #....#
+    #...#                                #hhhhhhh¡#                  #....#
+    #...#                                #hhhhhhhh#                  #...z#
+    #...#            ###############     #Ghhhhhhh#                  #....#
+    #...###          #G"%"%"%"%"%"%#     #hhhzGhhh###              ###....#
+    #z..&.#          #z.w..........###   #hhhhhhhsh.################.&....#
+    #¡.G#.#          #%@..z...z...w+.#   #¡hhhhhhh#z[.....z.....z....#..).#
+    #####.#          #.............#G#   ######'###########+###############
+        #.#          #%"%"%"%"%"%"%#.#        #.#       #....#
+        #.#          ###############.##########.#       #....#
+      ###+####                     #............#####   #....#
+      #¡.....#                     #.##########.#...#####z...#
+      #......#           ###########.##.(.)..#z.+...+..GS....#
+      #..G.z.#           #....^..¡##.##.z....S.##...#####....#
+      #####+##############<.......'G..+......########   #....#
+          #.z....G..^....+..^.....#####..u...#          ######
+          ################¡.......#   #......#
+                         ##########   ########

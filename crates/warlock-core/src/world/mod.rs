@@ -1320,6 +1320,8 @@ mod gifts_tests;
 #[cfg(test)]
 mod guild_tests;
 #[cfg(test)]
+mod guild_wanted_tests;
+#[cfg(test)]
 mod hearing_tests;
 #[cfg(test)]
 mod heavy_hall_tests;

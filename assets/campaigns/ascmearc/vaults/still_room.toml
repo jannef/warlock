@@ -1,0 +1,26 @@
+# Vault of the Ascmearc (docs/design/adventurers-guild.md §8): Mother Sallow's still-room at the
+# bottom of Wyrtholm. A dry cave room where she brews: her pot on the hearth, jars along the walls
+# (potions, roots, and what she gathered in the fen), drying herbs, and her at her work. Wyrtholm
+# names it for its fourth floor (`vaults` in its `[[dungeon.levels]]`), so it is stamped there and
+# nowhere else, and she (unique) is met only there.
+name = "Still-room"
+map = '''
+###############
+#,p,..a.a..,p,#
+#.............#
+#....k.S.k....+
+#.............#
+#,p,..a.a..,p,#
+###############
+'''
+
+[legend]
+"," = "fungus"
+# Mother Sallow at her pots: she wakes to what she sees or hears.
+"S" = { terrain = "floor", creature = "sallow" }
+# Her stills.
+"k" = { terrain = "floor", objects = ["cooking_pot"] }
+# Her jars: the cures she sells the living ...
+"p" = { terrain = "floor", objects = ["red_potion"] }
+# ... and the roots she cuts them with.
+"a" = { terrain = "floor", objects = ["angelica_root*2"] }
