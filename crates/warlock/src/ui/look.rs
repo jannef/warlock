@@ -5,6 +5,7 @@ use crate::render::console::{Cell, Console};
 use warlock_core::Pos;
 use warlock_core::color::Rgb;
 use warlock_core::content::{ActionKind, Content, ServiceKind, Stance};
+use warlock_core::magic::Numbers;
 use warlock_core::object::{Stack, phrase, phrase_with};
 use warlock_core::perception::{CellView, PerceptionView, SeenActor};
 use warlock_core::world::{ActorId, ActorKind};
@@ -100,8 +101,15 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
     let heard = view.sound_at(p).map(|s| s.you_hear());
     // "a dagger", "a dagger and 12 arrows", "17 objects".
     let objects = view.objects(p);
-    // Goods for sale in a shop say their price (spec §7 "Shops"): "a dagger (for sale, 45 gold)".
-    let tag = |i: usize| (view.price_tag(p, &objects[i])).map(|g| format!("for sale, {g} gold"));
+    // Each says what it gives in numbers (spec §6 "Item lists", `magic::numbers`), and goods for
+    // sale in a shop their price (spec §7 "Shops"): "a dagger (+0 hit, 1d4, range 5; for sale,
+    // 45 gold)".
+    let tag = |i: usize| {
+        let numbers = Numbers::of(&objects[i], view.content()).text(view.content());
+        let price = (view.price_tag(p, &objects[i])).map(|g| format!("for sale, {g} gold"));
+        let tags: Vec<String> = numbers.into_iter().chain(price).collect();
+        (!tags.is_empty()).then(|| tags.join("; "))
+    };
     let things = (!objects.is_empty()).then(|| phrase_with(objects, view.lore(), tag));
     let here = things
         .as_ref()
@@ -516,13 +524,15 @@ mod tests {
         );
         assert_eq!(
             describe(&w.perception(), pile, true),
-            "A leather jerkin, a dagger, and 2 wax candles, on stone floor."
+            "A leather jerkin (Dv +1, Pv 1), a dagger (+0 hit, 1d4, range 5), and 2 wax candles, \
+             on stone floor."
         );
         w.apply(&Action::Move(Dir::SW));
         w.apply(&Action::Move(Dir::SW));
         assert_eq!(
             describe(&w.perception(), pile, true),
-            "You, on stone floor; here: a leather jerkin, a dagger, and 2 wax candles."
+            "You, on stone floor; here: a leather jerkin (Dv +1, Pv 1), a dagger (+0 hit, 1d4, \
+             range 5), and 2 wax candles."
         );
         // Out of the room, the gold is remembered.
         for dir in [Dir::NE, Dir::NE, Dir::N, Dir::N, Dir::N] {
