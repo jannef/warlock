@@ -207,6 +207,20 @@ teach them (they are coming with character levels); no one fights this way yet.
 A free blow is a blow like any other: it can miss, wound, and kill, and it trains your weapon
 skill. It never brings another free blow, except a cleave after a cleave.
 
+## Stamina
+
+**Stamina** is the breath a fighter has for weapon feats (a [resource](resources.md), shown as
+`Sta 7/12` on the status bar). Every warrior, barbarian, paladin, ranger, monk, thief, and bard
+holds it from level 1. Its most is
+
+> 10 + your Toughness modifier + 1 per 10 levels, at least 5
+
+with talents adding on top (Deep lungs: +4). Toughness 14 (modifier +2) at level 1 holds 12;
+Toughness 18 (+4) at level 60 holds 20. Damage to your Toughness lowers it, as it lowers your hit
+points. It comes back a point every 12 seconds (2 base turns), resting too, half again as fast
+with Steady breathing; Second breath gives a point back for every kill of yours. Spent, it sits
+at 0 and comes back. Creatures never hold it. The weapon feats that spend it are still to come.
+
 ## Hit points
 
 Your **hit points** are your Toughness plus what your [race](races.md) and your

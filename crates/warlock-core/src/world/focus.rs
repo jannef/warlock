@@ -18,11 +18,12 @@ use crate::action::Event;
 use crate::content::{Content, ResourceId, percent_of};
 
 /// `actor` holds each of `resources` it does not hold yet, at its `start` (capped at its
-/// maximum); one it holds keeps its value. Says nothing: the talent's news does.
-pub(super) fn hold(content: &Content, actor: &mut Actor, resources: &[ResourceId]) {
+/// maximum at character `level`); one it holds keeps its value. Says nothing: the talent's
+/// news does.
+pub(super) fn hold(content: &Content, actor: &mut Actor, resources: &[ResourceId], level: u8) {
     for &resource in resources {
         if actor.resources.get(resource).is_none() {
-            let start = actor.resource_start(content, resource);
+            let start = actor.resource_start(content, resource, level);
             actor.resources.set(resource, start);
         }
     }

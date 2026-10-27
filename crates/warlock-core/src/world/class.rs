@@ -29,7 +29,7 @@ pub(super) fn hand_out(content: &Content, actor: &mut Actor, def: &TalentDef, ra
     actor.hp += hp;
     actor.mana_base += mods.mana_at(level);
     actor.mana += mods.mana_at(level);
-    focus::hold(content, actor, &mods.grants);
+    focus::hold(content, actor, &mods.grants, level);
 }
 
 /// Gives `actor` the talents `class` (an id; none without a class) gives up to `level` that it
@@ -76,7 +76,7 @@ impl World {
             .talent_mods(&content)
             .into_owned()
             .grants;
-        focus::hold(&content, self.player_mut(), &grants);
+        focus::hold(&content, self.player_mut(), &grants, level);
         if news {
             for id in given {
                 self.news

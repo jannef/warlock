@@ -26,6 +26,7 @@ bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["finesse", "vigour"] }
 # the alternative resources (#225).
 abilities = [
     { level = 1, talent = "martial_arts" },
+    { level = 1, talent = "trained_wind" },
     { level = 6, talent = "fleet" },
     { level = 12, talent = "deflect_missiles" },
     { level = 18, talent = "flurry" },

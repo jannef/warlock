@@ -1059,7 +1059,11 @@ mod tests {
             "{resources}"
         );
         assert!(resources.contains(
-            "| Focus | 10 | 10 | a point back every 6 seconds, not while resting | - | stays, empty |"
+            "| Focus | 10 | full | a point back every 6 seconds, not while resting | - | stays, empty |"
+        ));
+        assert!(resources.contains(
+            "| Stamina | 10 + the Toughness modifier + 1 per 10 levels (at least 5) | full | a point \
+             back every 12 seconds | - | stays, empty |"
         ));
         assert!(resources.contains("| +1 for a kill |"));
         let healing = text("healing.md");

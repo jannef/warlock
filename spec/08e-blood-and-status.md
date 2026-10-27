@@ -470,8 +470,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     ticks), so it makes no difference how time is cut up, and an end comes at its exact moment.
     The pace (`World::resource_rate`, the one place that decides it) is 100 % plus what the
     holder's talents add (`resource_rate`, never below 0), and none while the player rests for a
-    resource with `resting = false`; the maximum (`Actor::resource_max`) is the data's plus the
-    talents' `resource_max`. Both are hooks the resource talents read (R5). Actors on other levels are
+    resource with `resting = false`; the maximum (`Actor::resource_max(content, resource,
+    level)`) is the data's, with what its `max_from` adds (the holder's modifier in that stat,
+    of the scores as the rules read them, and a point per so many character levels, at least
+    `least`), plus the talents' `resource_max`. Both are hooks the resource talents read (R5). Actors on other levels are
     frozen, and the dev time skip passes none.
   - **Ending at zero**: spent or decayed to 0, a resource that ends at zero is gone, and its bar
     with it, until something grants it again. A rest goes on through it (the end is only
@@ -504,6 +506,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
     held. Inspire spends 3 inspiration **in place of** its 3 mana while the bard holds 3 (then
     no mana is spent, and nothing blocks it as casting), else its mana as before; Virtuoso's
     song costs neither.
+  - **Stamina** (#560, the combat progression design §4.5): the pool weapon actives will pay
+    from (W3 spends it; nothing does yet). The granted talent **Trained wind**
+    (`grants_resource`) is in the level-1 row of the warrior's, barbarian's, paladin's,
+    ranger's, monk's, thief's, and bard's tables, so those hold it from creation, full; a saved
+    character of those classes is granted it on load (`World::grant_class`). Its maximum is 10
+    + the Toughness modifier + a point per 10 levels, at least 5 (`max_from`), so Toughness 14
+    holds 12 at level 1; it comes back a point every 12 s (2 base turns), resting too, and sits
+    at 0. A barbarian holds Rage and Stamina at once. Shown as `Sta 7/12`. Talents (the
+    `stamina` system): **Deep lungs** (Vigour): +4 at most; **Steady breathing**
+    (Weaponcraft, a weapon skill at 5): back at 150 %; **Second breath** (Might): a kill
+    credited to the holder builds a point. The grant to anyone else on the first weapon rank that
+    unlocks an active (`World::rank_up`, the third grant place) comes with W3, which brings
+    those actives.
   - **Shown**: the player's own resources (`PerceptionView::own_resources`: each held, its value
     and maximum, in resource order): the status bar after `MP` (`Rage 11`, `Focus 7/10`), each
     with the hit points' priority after the mana, so they give way before it (§6); a row each on

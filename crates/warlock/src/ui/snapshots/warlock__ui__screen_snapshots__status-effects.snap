@@ -27,6 +27,7 @@ expression: "render(case, content.clone())"
     │ HP  Hit points    18/18   MP  Mana       2/2                                            │
     │ Dv  Defence       11      Pv  Protection  0                                             │
     │     Stance        Neutral                                                               │
+    │     Stamina       10/10                                                                 │
     │     Alignment     Callous                                                               │
     │     Status        Bleeding, Poisoned                                                    │
     │                                                                                         │
@@ -36,5 +37,4 @@ expression: "render(case, content.clone())"
     │ @ or Esc close   A skills                                                               │
     └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘
 
-
- The Hub  ·  HP 18/18  ·  MP 2/2  ·  Bleeding  ·  Poisoned  ·  Lv 1  ·  08:00            ? controls
+ The Hub  ·  HP 18/18  ·  MP 2/2  ·  Sta 10/10  ·  Bleeding  ·  Poisoned  ·  Lv 1        ? controls

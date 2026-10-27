@@ -32,6 +32,7 @@ bonus_talents = { levels = [4, 10, 16, 22, 28, 34, 46, 58], trees = ["shadow", "
 # Master thief's finisher spends it.
 abilities = [
     { level = 1, talent = "sneak_attack" },
+    { level = 1, talent = "trained_wind" },
     { level = 6, talent = "trapfinding" },
     { level = 12, talent = "pick_lock" },
     { level = 18, talent = "evasion" },
