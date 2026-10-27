@@ -1294,12 +1294,28 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
              table's percent per tier over)",
             percent(value)
         ),
-        TalentEffect::SchoolFocus { cost, reach } => format!(
-            "spells of the chosen school or element: mana {}, reach (range or length) {} cells, \
-             never past the spell's own cap; no more damage",
-            percent(cost),
-            signed(reach)
-        ),
+        TalentEffect::SchoolFocus { cost, reach, lift } => {
+            let mut parts = Vec::new();
+            if cost != 0 {
+                parts.push(format!("mana {}", percent(cost)));
+            }
+            if reach != 0 {
+                parts.push(format!(
+                    "reach (range or length) {} cells, never past the spell's own cap",
+                    signed(reach)
+                ));
+            }
+            if lift != 0 {
+                parts.push(format!(
+                    "the tier's maximum lift of its damage cap {} points",
+                    signed(lift)
+                ));
+            }
+            format!(
+                "spells of the chosen school or element: {}",
+                parts.join("; ")
+            )
+        }
         TalentEffect::DeflectionUnarmoured { value } => {
             format!("Deflection {} while you wear no body armour", signed(value))
         }

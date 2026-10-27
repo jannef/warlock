@@ -17,8 +17,8 @@ scrolls stays a modest one. No spell a class gives costs more when it comes than
 
 ## The spells
 
-What each spell does, how far it reaches (and how far your Willpower can take it), and its mana at
-its tier's comfortable caster level, without armour:
+What each spell does, how far it reaches (and how far your stats can take it), what it grows
+with, and its mana at its tier's comfortable caster level, without armour:
 
 {{#include generated/spell-list.md}}
 
@@ -39,7 +39,9 @@ The Spellcraft tree is for casters (the wizard takes its bonus talents from it, 
 *Quick study* (learning, below), *Overreach* (a spell above your caster level's tier costs a
 third less over its price), and *School focus*, taken for a school of magic or an element (a
 spell's tags, in the list above), once per choice: those spells cost 10 % less and reach a cell
-farther, never past their limit and never harder. See [Talents](talents.md) for every talent
+farther, never past their limit and never harder. *Keen mind*, taken the same way, lets your stats lift
+that school's or element's spells 10 points higher than their tier's most lift (see
+[The lifted cap](#the-lifted-cap)). See [Talents](talents.md) for every talent
 that touches spells.
 
 {{#include generated/spell-casting.md}}
@@ -50,7 +52,8 @@ Every spell has a **tier**, from 0 (a *cantrip*) to 9. Each tier has a **comfort
 level**: at or above it, learning a spell of the tier is certain and casting it costs its base
 mana cost. A spell above your caster level's tier costs more mana to cast, half again for each
 tier too high. Each tier also has a **damage ceiling**: the most a single-target spell of that
-tier can ever do in one cast at its highest roll.
+tier can do in one cast at its highest roll, and a **most lift**: how far a caster's stats may
+raise a spell's ceiling (see [The lifted cap](#the-lifted-cap)).
 
 {{#include generated/spell-tiers.md}}
 
@@ -87,16 +90,21 @@ burst). Areas cost more mana: the base cost is multiplied by the shape's.
 
 Your **Willpower** lets a spell reach farther: a cell more of range or length, and a cell more of
 a burst's radius, for every 2 points of its modifier, but never past the spell's own limit (the
-"to" in the list). *School focus* adds a cell of range or length (not of a burst's radius) to
+"to" in the list). (A spell may name other stats for its reach: its "Grows with" says so; none
+does yet.) *School focus* adds a cell of range or length (not of a burst's radius) to
 the spells of its school or element, again never past the spell's limit. A burst costs by its
 own radius, however far your Willpower spreads it. Your
 **Presence** makes a blessing or a hex last longer: a degree more of it for every 2 points of its
-modifier, up to the most the status has (each degree lasts as long again).
+modifier, up to the most the status has (each degree lasts as long again). The hexes also grow
+with your **Willpower**: their degrees are half your Presence modifier plus a quarter of your
+Willpower modifier, added up and rounded to the nearest, a half down ("Grows with" in the list:
+each stat's percent of its modifier).
 
 ## How a spell finds its target
 
 Each spell resolves one way. An **attack** rolls to hit like a missile (2d12 plus your Dexterity's
-modifier against the target's Defence), can miss, and can be a critical hit, and does full damage.
+modifier, or the modifiers its "Grows with" names for to-hit, against the target's Defence; a
+spell scroll or a wand always aims with Dexterity), can miss, and can be a critical hit, and does full damage.
 An **auto** spell always hits, for less. An **area** spell hits everyone in its shape with no
 roll, for less again per target, and *Evasion* halves what it does. A **touch** spell rolls to hit
 at arm's length and does the most, for less mana. Only attack and touch spells can be critical
@@ -121,6 +129,30 @@ and **necrotic**, join the [damage types](damage-types.md).
 
 Spells you cast are yours: what they kill earns you its experience, and a spell of your own that
 catches you can kill you.
+
+### The lifted cap
+
+A sharp mind and a strong will make some spells hit harder than their tier allows anyone else.
+A spell's "Grows with" names the stats that **lift its cap**, each by a percent of the cap per
+point of its modifier: the evocations (but the cantrips) by 10 % per point of your Intelligence
+modifier and 5 % per point of your Willpower's, *Cure wounds* by 15 % per point of your
+Willpower's. Your lift is those added up, never below 0 and never more than the tier's **most
+lift** (40 % at tier 0, 50 % at 1, 60 % at 2, 70 % at 3, 80 % from tier 4 on; the tier table
+above). Your cap for that spell is its own times (100 % + your lift), rounded down, and the spell
+rolls as many more dice as the lift makes room for: a die more for each whole die's worth the
+cap rose (for a d6 spell, the lifted cap divided by 6, rounded down, less the unlifted cap
+divided by 6, rounded down). Its dice still grow with your caster level as before. Criticals,
+*Empower*, and *Archmage* are held to your lifted cap as they are held to the cap. *Keen mind*
+(Spellcraft, chosen for a school or an element) raises the most lift of that school's spells by
+10 points.
+
+For example, a wizard with Intelligence 18 (+4) and Willpower 14 (+2) lifts *Scorching ray*
+(tier 2, cap 18) by 4 × 10 + 2 × 5 = 50 %, to 27: 3d6 becomes 4d6. With Intelligence 22 (+6) and
+Willpower 16 (+3) *Fireball* (tier 3, cap 19) would lift 75 %, held to the tier's 70 %: 19
+becomes 32, and 3d6 becomes 5d6.
+
+Only your own spells are lifted: a spell scroll read and a wand used strike with the spell's own
+cap. A spell with no stats for its cap ("Grows with" says nothing of the cap) is never lifted.
 
 ## Learning spells from scrolls
 

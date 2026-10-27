@@ -300,11 +300,29 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `length`, each at most its cap, default the cap); `casts` (its time in `cast` actions, 1 to
     10); `open_sky`; `[spell.cast]` (the `effect` drawn, `noun`, `verb`, `message`, `noise`, and a
     burst's `blast`, `heat`, `frost`, as a scroll's); `[spell.scroll]` with the caster level a
-    read casts at (default the tier's comfortable level).
+    read casts at (default the tier's comfortable level); `[spell.scales]` (the combat
+    progression design §7, #556), what it grows with: `damage`, `to_hit`, `reach`, `duration`,
+    each a table of stats to weights (1 to 200, a percent of the stat's modifier, summed), each
+    optional, defaulting to the old rule (`reach = { willpower = 50 }`, `duration = { presence
+    = 50 }`, `to_hit = { dexterity = 100 }`, `damage = {}`); a dimension the spell does not have
+    is refused (`damage` needs a damage or heal roll, `to_hit` an attack or touch roll, `reach`
+    a range or length, `duration` a buff or a hex), and so is an unknown stat. The first
+    authoring pass: the evocation damage spells but the cantrips `damage = { intelligence = 10,
+    willpower = 5 }`, the hexes `duration = { presence = 50, willpower = 25 }`, Cure wounds
+    `damage = { willpower = 15 }`.
   - **The cap** (checked when the content loads, a `ContentError`): a spell whose most in one
     cast (`max_dice` × the dice's sides + `bonus`), harm or healing, passes its tier's ceiling
     times its resolution's percent is refused, and so is a static bonus above a quarter of the
-    ceiling. Nothing in the rules lifts a spell over its cap: every roll is held to it.
+    ceiling. Only the caster's stats lift it (below), and every roll is held to the lifted cap.
+  - **The lift** (`SpellRules::lift`, `Actor::spell_lift`, `Actor::spell_cap`): a caster's
+    `damage` scales' sum (Σ weight × modifier) is the percent its cap for the spell is lifted
+    by, never below 0, at most the tier's `max_lift` (`[tiers]`, tier 0 first, 40, 50, 60, 70,
+    then 80; ascending or flat, 0 to 200), plus Keen mind's 10 for its school or element; the
+    caster's cap is `cap_of × (100 + lift) / 100`, rounded down. Its dice gain as many as the
+    lift's room holds (`SpellDice::lifted`: `(lifted − bonus) / sides − (cap − bonus) / sides`,
+    each rounded down), so the unlifted dice under the cap stay under the lifted one. Only the
+    caster's own casts (paid in mana) are lifted: a scroll read and a wand used cast with the
+    unlifted cap. Derived at cast time; nothing saved.
   - **Casting** (`World::cast_spell`, `world/cast.rs`; `Action::Cast`, `use:arcane_bolt:12,5`):
     - **Cost** (the one hook, `Actor::spell_cost`): `SpellRules::mana_with`: the tier's base
       cost × (1 + `overreach_cost` % per tier above the caster level's tier, that percent cut by
@@ -316,22 +334,27 @@ developer notes (CLAUDE.md, `docs/dev/`).
       Empower's −10 % (`spell_mana_percent`), summed, at least 1 (`Actor::spell_base`, what
       `World::spend_mana` is given), and Frugal caster's cut there. Spent once the cast is sure
       to go off; refused, with no time and no mana, without it ("You have too little mana.").
-    - **Reach**: Willpower adds a cell of range, a burst's radius, or a cone's or a line's
-      length per `reach_step` (2) points of its positive modifier, and School focus a cell of
-      range or length per focus on one of the spell's tags (a radius never), never past the
-      spell's caps (`Actor::spell_reach`); Presence adds a degree of a buff's or a hex's status per
-      `presence_step` (2) points (`SpellRules::lengthened`; the status's `max` holds it: Blessed,
-      Hexed, Weakened, and Sluggish go to 3, each degree its `eases` again).
-    - **Dice**: the spell's at the caster level (`SpellDice::at`), then the talents' (Scroll
-      adept's and Archmage's per die, Empower's die), and every roll held to the cap
-      (`SpellRules::cap_of`; a critical's too). A spell scroll read with those talents
+    - **Reach**: the spell's `reach` scales add cells of range, a burst's radius, or a cone's or
+      a line's length (the sum, never below 0, over 100, a half rounded down: by default a cell
+      per 2 points of Willpower's positive modifier), and School focus a cell of range or length
+      per focus on one of the spell's tags (a radius never), never past the spell's caps
+      (`Actor::spell_reach`); its `duration` scales add degrees of a buff's or a hex's status the
+      same way (by default Presence, a degree per 2 points; the hexes Presence and Willpower,
+      `SpellRules::lengthened`; the status's `max` holds it: Blessed, Hexed, Weakened, and
+      Sluggish go to 3, each degree its `eases` again).
+    - **Dice**: the spell's at the caster level with the dice its lift holds
+      (`SpellDice::lifted`), then the talents' (Scroll adept's and Archmage's per die, Empower's
+      die), and every roll held to the caster's lifted cap (`Actor::spell_cap`; a critical's
+      too). A spell scroll read with those talents
       (`read_spell`) is held the same way, to the cap of the spell it teaches, or to its own
       most if the scroll rolls more of itself (the scroll of lightning's 4d6): the talents lift
       a roll toward a cap, never past it.
     - **Resolution**: `area` (burst, cone, line) strikes everyone in it with one roll, in
       ascending actor id order, no roll to hit, Evasion halving (`World::spell_hurts`),
       resistances taking their share, no armour; `auto` (ray, bolt) strikes the first creature
-      on its line, never missing; `attack` rolls 2d12 + the caster's Dexterity modifier against
+      on its line, never missing; `attack` rolls 2d12 + the spell's `to_hit` scales (the sum over
+      100, a half rounded toward zero; by default the Dexterity modifier; a scroll's or a wand's
+      always Dexterity's) against
       the target's Defence (Deflect missiles counts), threat 22 and critical ×2 as a blow's
       (`combat::strike`); `touch` the same against a creature next to the caster. Only attack
       and touch can critical. A hex falls on the hostile the caster sees at the cell aimed at.
