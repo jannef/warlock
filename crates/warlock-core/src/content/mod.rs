@@ -175,7 +175,7 @@ pub(crate) use quest_roll::roll_known;
 pub use quest_roll::{Candidate, MAX_VARIANTS, MAX_WEIGHT, Pick, Roll, Rolled, Variant, one_of};
 pub use race::{HUNGER, LightBlind, RaceDef, Races};
 pub use resource::{Build, MAX_EVERY, MAX_RESOURCE, MAX_SHORT, OverTime, ResourceDef, ResourceId};
-pub use room_effect::{Here, RoomEffectDef, RoomEffectId, RoomEffects, SpecialRoom};
+pub use room_effect::{Here, RoomEffectDef, RoomEffectId, RoomEffects, SpecialRoom, Swarm, Themes};
 pub use scenario::ScenarioDef;
 pub use scroll::{Cast, Reading, ScrollSpell};
 pub use scroll_label::ScrollLabelDef;
@@ -2757,6 +2757,12 @@ impl Content {
 
     pub fn status_id(&self, name: &str) -> Option<StatusId> {
         self.status_ids.get(name).copied()
+    }
+
+    /// The first status that makes its sufferer sleep (`sleeps`: Asleep), if any: the one a
+    /// teeming den's sleepers are placed with.
+    pub fn sleep_status(&self) -> Option<StatusId> {
+        (self.status_ids()).find_map(|(id, def)| def.sleeps.then_some(id))
     }
 
     /// Every status with its id, most important first.

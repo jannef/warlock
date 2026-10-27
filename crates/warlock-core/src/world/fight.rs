@@ -865,10 +865,13 @@ impl World {
         };
         if harm == Harm::Spared {
             actor.hp = (actor.hp - damage).max(actor.hp.min(1));
+            self.wake(id);
             return false;
         }
         actor.hp -= damage;
         if actor.hp > 0 {
+            // A blow, or any harm, wakes a sleeper (`den.rs`).
+            self.wake(id);
             return false;
         }
         // Rise from the ashes (spec §8 "Birth sign"): once in a life, but never from starving.

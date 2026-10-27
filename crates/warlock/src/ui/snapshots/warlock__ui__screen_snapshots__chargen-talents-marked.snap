@@ -18,11 +18,11 @@ expression: "render(case, content.clone())"
               │ Weaponcraft                                                          │
               │   h  Far shot         Your shots fly 2 cells farther, and what you … │
               │   i  Sworn foe        You have sworn yourself against one kind of c… │
-              │   j  Unbinder         You strike at the binding, not the thing: you… │
-              │   k  Weapon focus     You have drilled with one kind of weapon unti… │
+              │   j  Weapon focus     You have drilled with one kind of weapon unti… │
               │ Guard                                                                │
-              │   l  Armour training  You move freely in armour: it hampers your De… │
+              │   k  Armour training  You move freely in armour: it hampers your De… │
               │ Shadow                                                               │
+              │   l  Hush-foot        You move among sleepers as a breath of air: i… │
               │   m  Keen ears        You hear fainter sounds, fainter still at the… │
               │   n  Lamplighter      You tend your lantern well: it burns brighter… │
               │   o  Night eyes       Your eyes grow used to the dark: you see by h… │

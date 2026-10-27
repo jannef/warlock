@@ -172,10 +172,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   player do not step in; §8 "Creature behavior"), `floor` (terrain generators lay over the
   room's plain floor: walkable, transparent, not stairs, a door, or running water), and `status`
   (a status everyone inside holds while they stay, below; it must ease, at least 10 seconds a
-  degree, the longest single action, so it never lapses while one stays), and `temperature`
-  (degrees Celsius added to the level's inside, −40 to 40, default 0; below), and `burden`
-  (percent of everyone's carrying limit inside, 10 to 1000, default 100; below). An effect
-  with a `level_chance` needs its `pervade` line and is neither `shunned` nor lays a `floor`.
+  degree, the longest single action, so it never lapses while one stays), `swarm` (a
+  teeming den's numbers, below; needs `needs_danger`), `temperature` (degrees Celsius added
+  to the level's inside, −40 to 40, default 0; below), and `burden` (percent of everyone's
+  carrying limit inside, 10 to 1000, default 100; below). An effect with a `level_chance`
+  needs its `pervade` line and is neither `shunned`, nor lays a `floor`, nor is a den.
   - **The effects** (weights in brackets): a *shadowed room* (10) keeps 30 % of the light ("The
     light seems to drain away here."); an *echoing hall* (8) doubles noise ("Your footsteps echo
     loudly."); a *hushed chamber* (8) leaves two fifths of it ("A deep hush fills this room."); a
@@ -188,7 +189,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     "Status effects": a point of mana drained every 20 seconds and none coming back), glows a
     faint cold violet (`[10, 6, 24, 8]`), and covers a whole level with `level_chance` 5 ("You
     feel your power seeping out of you."; over a level: "Something here drinks at your
-    power."); a *sweltering chamber* (5, #404) is 25 °C warmer than the level and glows a faint
+    power."); a *teeming den* (8, #405; only on a level with a danger, in a room of at least 16
+    floor cells) is full of sleeping creatures and their hoard (below; "A warm, rank smell
+    drifts out of the dark ahead." when glimpsed, "You hear slow breathing all around you." on
+    entering); a *sweltering chamber* (5, #404) is 25 °C warmer than the level and glows a faint
     red (`[30, 10, 0]`; "A wave of heat meets you."); a *frigid hall* (5) is 25 °C colder and
     glows a faint blue (`[0, 8, 22]`; "Your breath mists in the bitter cold."); a *silent
     vault* (5, #409) keeps a hundredth of every noise made inside (`noise = 1`) and gives
@@ -233,6 +237,41 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (Anchored mind). The player is told as it begins and ends (the status's `start` and
     `end`), and it shows on the status bar; look mode shows it on creatures by its `seen`
     word.
+  - **Teeming dens** (`swarm = { per_cells = 4, min = 4, max = 16, wake = 200, cry = 60,
+    loot_level = 1, themes = { kind = 10, faction = 20 } }`, #405; `mapgen/den.rs`,
+    `world/den.rs`). Nothing about a den is hand-made: a generated floor's den is filled after
+    its population, from the level's own stream `swarm/<level id>` (so the rest of the level is
+    the same with or without one). **Sleepers**: one per `per_cells` free plain floor cells of
+    the room (no creature, stairs, light, or trap), `min` to `max` (1 to 64; never more than the
+    cells), each drawn by the floor's danger from the branch's population by the draw that lays
+    down its creatures (§7 "Danger levels": level weights, rarity, strays, out of depth), of the
+    types hostile to the player and never unique, on a free cell drawn among the rest, with no
+    post or route, its gear rolled with the population's (from the gear stream, after theirs),
+    placed **asleep**. **Themes**: one draw in 0..100: under `kind` the den is a *warren*, every
+    sleeper of one type (drawn first by the same draw); under `kind` + `faction` a *tribe*, every
+    sleeper drawn from the population and strays of one faction (that of a type drawn first; it
+    again should none weigh anything at the danger); else mixed. **The hoard**: one item per four
+    sleepers (at least one), each rolled at the floor's item level + `loot_level` with the
+    finder's luck and laid on a plain floor cell of the room drawn anew. The floor's population
+    and the generator's patrols keep out of a den (a den is never made where a creature
+    patrols); the sleepers come on top of the population and **count** toward the spawning cap
+    (§7 "Danger levels"), so a floor with a den brings nothing new until enough of it is dead.
+    A hand-made level may mark a den (`[[room]] effect = "teeming"`) but fills it itself.
+  - **Sleep** (the status *Asleep*, §8 "Status effects": `sleeps = true`, no easing): a sleeper
+    takes no turn (its turn is a wait, a stride's waits at once while the player rests; what it
+    heard is forgotten) and is unaware of everyone (§8 "Class abilities": a sneak attack lands
+    on it). Nothing wakes it with time. It **wakes** (the status ends) when (1) a noise reaches
+    it at least at its hearing threshold × its den's `wake` percent (100 to 1000; 100 outside a
+    den) where it lies (`World::spread_noise`, where every noise is heard; a noise the player
+    makes needs Hush-foot's percent more); (2) a blow or any harm leaves it alive
+    (`World::hurt`); or (3) a neighbour **cries**: a sleeper that wakes cries out at once, a
+    voice of its den's `cry` loudness where it lies (0 to 300; none outside a den), which may
+    wake the next, and so on: a cascade, deterministic, each sleeper waking once. Light and
+    sight never wake one. A plain step (60) beside a kobold (hearing 15) wakes it; one three
+    cells off, 30 there, too; the stealthy cross. The player is told "The kobold wakes up." when
+    they see it; look mode shows *asleep* on a sleeper; Sixth sense adds "Something sleeps on
+    this level." to its arrival note. Killing a sleeper is a hostile kill like any other (no
+    alignment of its own).
   - **Generation** (`mapgen/special.rs`): last of all, from the level's map stream, each room of
     a rooms level but the arrival room and vaults, and each of eight chambers a caves level
     tries, is special with `chance` until the level has `per_level`. A rooms level's special room
@@ -246,7 +285,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     favoured, over the favoured ones by their shares). For an effect with a `level_chance`, one
     more draw: with that chance it covers the **whole level** and the room stays plain (it
     counts toward `per_level`; at most one a level). The effect's `floor` replaces plain floor in
-    the room (doorways too). A shunned effect never goes where a creature patrols. About 60 % of
+    the room (doorways too). A shunned effect or a den never goes where a creature patrols. About 60 % of
     generated levels get a special room (a test keeps it between half and seven tenths over 1200
     levels).
   - **A dungeon's own special rooms** (`room_effects` on a branch in a campaign's
@@ -283,5 +322,6 @@ developer notes (CLAUDE.md, `docs/dev/`).
     The light it changes is seen like any light, before and after.
   - **Talents** (system `special_rooms`, §8 "Talents"): Sense of place (a room known from a
     glimpse; a whole level's effect named on arrival), Hallowed rest (a room's quickening of
-    healing and mana half again more), and Anchored mind (a room's or a level's Ebbing
-    never takes them; #403).
+    healing and mana half again more), Anchored mind (a room's or a level's Ebbing
+    never takes them; #403), and Hush-foot (shadow; sleepers need twice the noise to wake from
+    anything the player does; #405).

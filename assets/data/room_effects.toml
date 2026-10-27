@@ -46,6 +46,15 @@
 #            stay, creatures too; it eases by its own `eases` once they leave (at least 10
 #            seconds a degree). One immune to its kind of damage never holds it; one with no mana
 #            never holds a status that only touches mana
+#   swarm    a teeming den (needs `needs_danger`; never a whole level): generators fill the room
+#            with sleepers (status.toml `sleeps`: Asleep) drawn by the floor's danger from the
+#            branch's population (hostile types, no uniques), and their hoard.
+#            { per_cells, min, max }: one sleeper per `per_cells` floor cells, `min` to `max`
+#            (1 to 64); `wake`: a noise wakes a sleeper at this percent of its hearing threshold
+#            (100 to 1000); `cry`: how loud a waking sleeper cries out, which may wake the next
+#            (0 to 300); `loot_level`: the hoard (an item per four sleepers, at least one) is
+#            this many item levels above the floor's; `themes = { kind, faction }`: percent
+#            chances that every sleeper is of one type (a warren) or of one faction (a tribe)
 #   temperature  degrees Celsius added to the level's temperature inside, -40 to 40; default 0.
 #            The room sets its cells' temperature and nothing else: what the temperature does
 #            (ice today) is the environment's (spec §5 "Temperature"); the status bar shows it
@@ -116,6 +125,19 @@ level_chance = 5
 pervade = "Something here drinks at your power."
 glow = [10, 6, 24, 8]
 status = "ebbing"
+
+# A teeming den: a room full of sleeping creatures of the floor's danger, and their hoard. They
+# wake to noise, a blow, or a waking neighbour's cry, never by themselves.
+[[effect]]
+id = "teeming"
+name = "teeming den"
+mark = "t"
+near = "A warm, rank smell drifts out of the dark ahead."
+enter = "You hear slow breathing all around you."
+weight = 8
+needs_danger = true
+min_cells = 16
+swarm = { per_cells = 4, min = 4, max = 16, wake = 200, cry = 60, loot_level = 1, themes = { kind = 10, faction = 20 } }
 
 [[effect]]
 id = "hot"

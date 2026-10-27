@@ -88,6 +88,12 @@ Out of the room it passes: "Your power stops ebbing." Creatures with mana ebb in
 you do, and you can see it on them ("ebbing"); those without mana are left alone. The talent
 *Anchored mind* keeps it from ever taking you.
 
+## Asleep
+
+The creatures of a [teeming den](special-rooms.md#teeming-dens) lie **asleep** ("asleep" in look
+mode): a sleeper does nothing at all and has seen no one, so a sneak attack always lands on it.
+Time never wakes it; noise loud enough, any harm, or a waking neighbour's cry does.
+
 ## Silenced
 
 A [silent vault](special-rooms.md) swallows every sound. While you stand in one, and ten seconds

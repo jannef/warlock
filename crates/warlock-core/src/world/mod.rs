@@ -99,6 +99,7 @@ mod class;
 mod class_ability;
 mod court;
 mod creation;
+mod den;
 mod dev;
 mod dig;
 mod disarm;
@@ -1270,6 +1271,8 @@ mod creation_tests;
 mod damage_talent_tests;
 #[cfg(test)]
 mod damage_tests;
+#[cfg(test)]
+mod den_tests;
 #[cfg(test)]
 mod dig_tests;
 #[cfg(test)]
