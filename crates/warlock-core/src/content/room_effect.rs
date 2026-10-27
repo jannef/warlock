@@ -37,13 +37,15 @@
 //!
 //! Without the file there are no special rooms.
 
-use super::{ContentError, StatusDef, StatusId, TerrainDef, TerrainId};
+use super::{ContentError, LightId, OutcomeTables, StatusDef, StatusId, TerrainDef, TerrainId};
+use crate::alignment::Alignment;
 use crate::dice::Dice;
 use crate::geom::Pos;
 use crate::light::Light;
 use crate::temperature::Temperature;
 use crate::time::Duration;
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 use std::ops::RangeInclusive;
 
 /// Index of an effect in [`RoomEffects::defs`]; assigned in file order.
@@ -142,7 +144,33 @@ struct RoomEffectSpec {
     rise: Option<RiseSpec>,
     #[serde(default)]
     unholy: bool,
+    feature: Option<String>,
+    sides: Option<BTreeMap<Alignment, String>>,
+    offers: Option<OffersSpec>,
     collapse: Option<Collapse>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct OffersSpec {
+    pray: Option<String>,
+}
+
+/// An ability a place offers beside its feature (spec §7 "Special rooms": the abilities menu's
+/// *Here* group, [`crate::ability::Ability::Pray`]).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub enum Offer {
+    /// Pray at a forgotten altar.
+    Pray,
+}
+
+impl Offer {
+    /// Its id in data (`offers = { pray = "..." }`).
+    pub const fn id(self) -> &'static str {
+        match self {
+            Offer::Pray => "pray",
+        }
+    }
 }
 
 #[derive(Deserialize)]
@@ -352,6 +380,18 @@ pub struct RoomEffectDef {
     /// Percent chance, every step onto a cell inside, that the stepper is moved to a free cell
     /// of the level as a teleport trap moves its victim (an unstable room's 10; `World::warp_step`).
     pub warp: u8,
+    /// The one cell of terrain generators place in such a room (a forgotten altar), at the free
+    /// floor cell nearest its middle; not walkable.
+    pub feature: Option<TerrainId>,
+    /// Whether such a room has a hidden side (good, neutral, or evil; drawn at generation), and
+    /// the light its feature gives for each (`None`: the feature terrain's own). Resolved after
+    /// the lights ([`RoomEffects::resolve_places`]).
+    pub sides: Option<[Option<LightId>; 3]>,
+    /// What it offers beside its feature, and the outcome table that draws it (an id in
+    /// `data/outcomes/`, checked once those are loaded).
+    pub offers: Option<(Offer, String)>,
+    /// The `sides` lights as data names them, until resolved.
+    side_lights: BTreeMap<Alignment, String>,
     /// A collapsed floor's: a step of the player inside may give way (`World::collapse_step`).
     pub collapse: Option<Collapse>,
     /// The dead killed inside rise (a cursed room's).
@@ -387,8 +427,16 @@ impl RoomEffectDef {
             && self.floor.is_none()
             && self.swarm.is_none()
             && self.mirrors.is_none()
+            && self.feature.is_none()
             && self.collapse.is_none()
             && self.pervade.is_some()
+    }
+
+    /// The light the feature of a room of side `side` gives in place of its terrain's own, if
+    /// it has one of its own.
+    pub fn side_light(&self, side: Alignment) -> Option<LightId> {
+        let i = Alignment::ALL.iter().position(|&a| a == side)?;
+        self.sides.and_then(|lights| lights[i])
     }
 }
 
@@ -520,6 +568,37 @@ impl RoomEffects {
     pub fn id(&self, name: &str) -> Option<RoomEffectId> {
         let i = self.defs.iter().position(|d| d.id == name)?;
         Some(RoomEffectId(u8::try_from(i).ok()?))
+    }
+
+    /// Resolves what effects with a feature need of content loaded after them: the lights of
+    /// their `sides` (by `light`), and the outcome tables they `offer` (in `outcomes`).
+    pub(super) fn resolve_places(
+        &mut self,
+        outcomes: &OutcomeTables,
+        light: impl Fn(&str) -> Option<LightId>,
+    ) -> Result<(), ContentError> {
+        let err = |m: String| ContentError::new("data/room_effects.toml", m);
+        for def in &mut self.defs {
+            if let Some((offer, table)) = &def.offers
+                && outcomes.get(table).is_none()
+            {
+                return Err(err(format!(
+                    "effect `{}`: `offers.{}` names no outcome table `{table}` (data/outcomes/)",
+                    def.id,
+                    offer.id()
+                )));
+            }
+            if let Some(lights) = &mut def.sides {
+                for (side, name) in &def.side_lights {
+                    let id = light(name).ok_or_else(|| {
+                        err(format!("effect `{}`: unknown light `{name}`", def.id))
+                    })?;
+                    let i = Alignment::ALL.iter().position(|a| a == side).unwrap_or(0);
+                    lights[i] = Some(id);
+                }
+            }
+        }
+        Ok(())
     }
 
     /// Whether generated levels get special rooms at all.
@@ -733,6 +812,30 @@ impl RoomEffects {
                 }
                 None => None,
             };
+            let feature = match &spec.feature {
+                Some(name) => {
+                    let (id, def) =
+                        terrain(name).ok_or_else(|| bad(format!("unknown terrain `{name}`")))?;
+                    if def.walkable || !def.transparent || def.stairs.is_some() || def.is_door() {
+                        return Err(bad(format!(
+                            "feature `{name}` must be transparent and not walkable, stairs, or a \
+                             door"
+                        )));
+                    }
+                    Some(id)
+                }
+                None => None,
+            };
+            let offers = match &spec.offers {
+                Some(OffersSpec { pray: Some(table) }) => Some((Offer::Pray, table.clone())),
+                Some(OffersSpec { pray: None }) => {
+                    return Err(bad("`offers` names nothing".into()));
+                }
+                None => None,
+            };
+            if (offers.is_some() || spec.sides.is_some()) && feature.is_none() {
+                return Err(bad("`offers` and `sides` need a `feature`".into()));
+            }
             if let Some(swarm) = &spec.swarm {
                 swarm.check().map_err(bad)?;
                 if !spec.needs_danger {
@@ -765,6 +868,10 @@ impl RoomEffects {
                 burden: spec.burden,
                 mirrors,
                 warp: spec.warp,
+                feature,
+                sides: spec.sides.as_ref().map(|_| [None; 3]),
+                offers,
+                side_lights: spec.sides.unwrap_or_default(),
                 collapse: spec.collapse,
                 rise,
                 unholy: spec.unholy,
@@ -772,7 +879,8 @@ impl RoomEffects {
             if def.level_chance > 0 && !def.can_pervade() {
                 return Err(err(format!(
                     "effect `{}`: a `level_chance` needs a `pervade` line, and no effect that \
-                     creatures shun, that lays a floor, or that holds mirrors covers a whole level",
+                     creatures shun, that lays a floor, that holds mirrors, or that has a feature \
+                     covers a whole level",
                     def.id
                 )));
             }
@@ -804,6 +912,10 @@ pub struct SpecialRoom {
     /// Whether the player has seen a cell of it (its `near` line was said, if it has one).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub glimpsed: bool,
+    /// Its hidden side, for a room whose effect has `sides` (a forgotten altar's): good,
+    /// neutral, or evil. Never told in words.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub side: Option<Alignment>,
 }
 
 impl SpecialRoom {
@@ -816,6 +928,7 @@ impl SpecialRoom {
             cells: Vec::new(),
             entered: false,
             glimpsed: false,
+            side: None,
         }
     }
 
@@ -839,6 +952,7 @@ impl SpecialRoom {
             cells,
             entered: false,
             glimpsed: false,
+            side: None,
         }
     }
 

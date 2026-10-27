@@ -148,6 +148,11 @@ pub enum Action {
     /// it away; a bad failure sets it off at the player. Takes the time of `disarm`, whatever
     /// comes of it; refused (no time) without the skill or a known trap there.
     Disarm(Dir),
+    /// Pray at the forgotten altar next to the player (spec §7 "Special rooms"; the Pray
+    /// ability, the abilities menu's Here group): a minute of turns of the `pray` action, then one
+    /// outcome drawn from the altar's table, and perhaps the altar spent. Interrupted, it gives
+    /// nothing. Refused (no time) with no altar next to the player.
+    Pray,
     /// Catch a second wind (spec §8 "Talents"; the Second wind ability): hit points back at
     /// once, then Winded for a while. Takes the time of `wait`; refused (no time) without the
     /// talent or while winded.
@@ -720,6 +725,7 @@ impl fmt::Display for Action {
             Action::Search(1) => f.write_str("search"),
             Action::Search(turns) => write!(f, "search:{turns}"),
             Action::Disarm(d) => write!(f, "disarm:{d}"),
+            Action::Pray => f.write_str("pray"),
             Action::SecondWind => f.write_str("second_wind"),
             Action::BloodMagic => f.write_str("blood_magic"),
             Action::Use(active, None) => write!(f, "use:{}", active.id()),
@@ -810,6 +816,7 @@ impl FromStr for Action {
                 )),
             },
             "wait" => bare(Action::Wait),
+            "pray" => bare(Action::Pray),
             "second_wind" => bare(Action::SecondWind),
             "blood_magic" => bare(Action::BloodMagic),
             "use" => {
@@ -1098,7 +1105,7 @@ impl FromStr for Action {
                  sell[:LETTERS], pay[:DIR], equip:SLOT:LETTER, remove:SLOT, bash:DIR, fire:X,Y, \
                  throw:LETTER:X,Y, dig:DIR, eat:LETTER, eat:floor:LETTER, \
                  read:LETTER[:X,Y|:LETTER], chat:DIR, \
-                 ask:DIR:TOPIC, steal:DIR, throw_voice:X,Y, stance:NAME, vision:ID, skip:DURATION, \
+                 ask:DIR:TOPIC, steal:DIR, throw_voice:X,Y, pray, stance:NAME, vision:ID, skip:DURATION, \
                  weather:clear|overcast|rain|heavy, effect:ID@X,Y[>X,Y], identify[:LETTERS], \
                  afflict:STATUS, drain:N, infect:DISEASE, reveal:ID, quest_roll:ID:TARGET, \
                  freeze:X,Y,R, thaw:X,Y,R)"
@@ -1291,6 +1298,7 @@ mod tests {
                 choice: Some("Mixed".into()),
             },
             Action::Advance("stealth".into()),
+            Action::Pray,
             Action::SecondWind,
             Action::BloodMagic,
             Action::Use(ClassActive::Rage, None),

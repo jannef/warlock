@@ -115,8 +115,9 @@ floor and nowhere else.
 
 **Fyrdelf**, the fire delving, is the duergar's mine under the hills of Ascdūn, below the
 volcano. No road leads there and its way in cannot be found by looking: Factor Wulfrun marks it
-on your map as you take up her quest **The lost shaft**, which she offers once you have carried
-her ledger to Godgifu and been four floors down into Cealdhlāw for the reeve. Its first four floors are the galleries, rooms and passages at 10 °C; the eight
+on your map as you take up her quest **The lost shaft**, which she offers once you have been four
+floors down into Cealdhlāw for the reeve, and gives you only once you have reached level 5. Its
+first four floors are the galleries, rooms and passages at 10 °C; the eight
 below are the deep workings, wide caves that grow hotter toward the volcano's heart (16 °C,
 then 20 °C, and 24 °C at the bottom). Its traps are arrows, spears, fireballs, lightning, and
 alarms, few of its doors are hidden, and its locks are the hardest to pick of the three

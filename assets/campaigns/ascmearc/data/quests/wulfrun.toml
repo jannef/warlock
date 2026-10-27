@@ -1,36 +1,23 @@
 # Factor Wulfrun's quests (docs/design/campaign.md §6.2; the fields: data/quests.toml): the
-# Fyrdelf chain. A ledger carried across the town, then the lost shaft under Fyrbeorg, which she
-# marks on the player's map as they take the errand up (the reveal, §8), offered only to someone
-# who has been four levels down into Cealdhlāw (Fyrdelf starts deeper than that), and what woke in
-# its deep workings.
-
-[[quest]]
-id = "foremans_ledger"
-name = "The foreman's ledger"
-giver = "wulfrun"
-type = "deliver"
-target = "ledger"
-to = "godgifu"
-reward = { gold = 10, xp = 20 }
-alignment = 5
-offer = "This is the last foreman's ledger from the diggings. His widow wants it, and she lives over the hills. Take it to Godgifu at the Gæsthūs: she sends it on with the next cart. I would go myself, but the books will not keep themselves."
-accept = "Do mind it: it is the only copy. Godgifu, at the inn, south of the square."
-reminder = "The ledger goes to Godgifu, at the Gæsthūs. She sends it on with the cart."
-done = "The foreman's ledger, from Wulfrun? I'll see it goes wiv the next cart, love. 'Ere, a little somethin' for the walk."
-where = "The Gæsthūs is south of the square."
+# Fyrdelf chain. The lost shaft under Fyrbeorg, which she marks on the player's map as they take it
+# up (the reveal, §8), offered only to someone who has been four levels down into Cealdhlāw
+# (Fyrdelf starts deeper than that) and given only from level 5 (asked before, she says `early`),
+# and what woke in its deep workings.
 
 [[quest]]
 id = "lost_shaft"
 name = "The lost shaft"
 giver = "wulfrun"
-requires = ["foremans_ledger", "barrow_heart"]
+requires = "barrow_heart"
+min_level = 5
 type = "reach"
 target = "fyrdelf:2"
 reward = { gold = 100, xp = 220 }
 alignment = 10
 reveals = { location = "fyrdelf" }
-offer = "You have been down in the barrow and come back. That is more than most manage. The old diggings are called Fyrdelf, and the shaft is on the ledgers if you know how to read them. Go down two levels and tell me whether the galleries still stand."
-accept = "I'll mark it on your map. No road goes there: follow the river north past the ford and climb into the ash hills."
+offer = "You have been down in the barrow and come back, I hear. Precisely the sort of person I have been waiting for. The old diggings are called Fyrdelf, and the shaft is on the ledgers if one knows how to read them. Go down two levels and tell me whether the galleries still stand."
+accept = "Splendid. I shall mark it on your map. No road goes there: follow the river north past the ford and climb into the ash hills."
+early = "The old diggings? Oh, I think not, not yet. You came back from the barrow, which is very much to your credit, but what lives under Fyrbeorg would make a short meal of you. Come and see me when you are rather more seasoned."
 reminder = "Fyrdelf, two levels down. It lies in Ascdūn, in the hills under Fyrbeorg."
 done = "They stand, then, and something walks them. That explains the men who never came back. Here, as agreed."
 where = "The shaft lies in Ascdūn, in the hills under Fyrbeorg, north of the ford."
