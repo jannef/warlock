@@ -9,6 +9,9 @@
 #   need = need_base + need_per_point × the stat's score; at or above the stat's potential the
 #   chance is divided by `over_potential_divisor`, and a rise there lifts the potential with the
 #   score. A rise uses up all the stat's marks; a failed check keeps them.
+# - Once a game day, at 06:00, each stat gets the same check again with the need multiplied by
+#   `daily_factor` (a draw of the training stream, six a day whatever the marks): stats grow
+#   between levels too, slower. A rise there uses up the marks the same way.
 #
 # - A use that names its own stat (`drank`, `elixir`: the stat the potion names) has no `stat`;
 #   every other use has one. Such a use may give several marks at once (a potion's `marks`), each
@@ -24,6 +27,9 @@
 need_base = 20
 need_per_point = 3
 over_potential_divisor = 4
+# The daily check's need, this many times a level's (first guess, the design §9.2: 2 doubles the
+# rises between levels, 5 halves them).
+daily_factor = 3
 
 # Strength: carrying, fighting, digging, kicking.
 [[training.use]]

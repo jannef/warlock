@@ -232,8 +232,8 @@ fn a_pick_nothing_can_be_spent_on_is_dropped() {
     // (any skill, three ranks each) would keep a pick open to the last level, and so would Sworn
     // foe (any creature tag) and School focus (any school or element): here they are an
     // elf's, and Apprentice's tree waits for a free talent; Salvager, Unbinder, Overreach, Wand
-    // mastery, Channeler, Appraiser's eye, Devout, Deep lungs, and Second breath are held back the
-    // same way so the picks fit in the levels there are.
+    // mastery, Channeler, Appraiser's eye, Devout, Deep lungs, Second breath, Hard training, and
+    // Quick study of the body are held back the same way so the picks fit in the levels there are.
     let mut files = ContentFiles::builtin();
     files.edit_table("talents", |text| {
         text.replace(
@@ -283,6 +283,14 @@ fn a_pick_nothing_can_be_spent_on_is_dropped() {
         .replace(
             "tree = \"might\"\ndescription = \"Every kill of yours gives you back",
             "tree = \"might\"\nneeds = { race = \"elf\" }\ndescription = \"Every kill of yours gives you back",
+        )
+        .replace(
+            "tree = \"vigour\"\ndescription = \"You drill every day",
+            "tree = \"vigour\"\nneeds = { race = \"elf\" }\ndescription = \"You drill every day",
+        )
+        .replace(
+            "tree = \"scholar\"\ndescription = \"What you drink teaches",
+            "tree = \"scholar\"\nneeds = { race = \"elf\" }\ndescription = \"What you drink teaches",
         )
         .replace(
             "description = \"Items, scrolls, gems, and learning.\"",
@@ -544,7 +552,7 @@ fn perception_and_dumps_show_talents_in_words_only() {
         assert!(progress.contains(free), "{progress}");
     }
     assert!(
-        progress.contains("takeable deep_lungs, healthy, "),
+        progress.contains("takeable deep_lungs, hard_training, healthy, "),
         "{progress}"
     );
     let view = w.perception();

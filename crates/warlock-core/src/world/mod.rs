@@ -321,6 +321,11 @@ pub struct WorldState {
     /// draw ([`Rng::levels`]), so a run that never drew from it hashes as before.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) levels_rng: Option<Rng>,
+    /// When the daily stat check comes next (spec §8 "Stats": 06:00 game time;
+    /// `world/stat_training.rs`). `None` while the content has no training rules (so content
+    /// without them hashes as before) and in a save made before it: scheduled on load.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) next_stat_check: Option<GameTime>,
     /// Dev: the weather set by hand (`weather:rain`), until it runs out.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) weather_override: Option<weather::Override>,
@@ -689,6 +694,7 @@ impl World {
             rng: Rng::gameplay(seed),
             training: Rng::training(seed),
             levels_rng: None,
+            next_stat_check: None,
             turn: 0,
             time: def.start,
             current_level: start.id.clone(),
@@ -893,6 +899,7 @@ impl World {
     }
 
     fn assemble(content: Arc<Content>, mut state: WorldState) -> Self {
+        stat_training::schedule(&mut state, &content);
         let mut lights = LightCache::default();
         let perception = Box::new(Perception::compute(&state, &content, &mut lights));
         perception.remember(state.current_mut());

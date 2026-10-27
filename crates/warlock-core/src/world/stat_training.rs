@@ -1,6 +1,6 @@
 //! Stat training in the world (spec §8 "Stats"; the rules are
 //! [`crate::content::StatTraining`]): the player's uses of their stats earn marks, and each level
-//! gained checks every stat once.
+//! gained, and every day at 06:00, checks every stat once.
 //!
 //! - **Marks**: a use ([`StatUse`]) is reported where it happens, through `World::train` for the
 //!   uses skills share (a dodge, a kick, a step within earshot, a burdened action, a spot) and
@@ -14,14 +14,20 @@
 //!   and says "You feel stronger.", nothing more. A Toughness rise brings the hit point it adds
 //!   at once, as a level's do. Content without training rules checks nothing (and draws
 //!   nothing).
+//! - **The daily check** ([`World::daily_stat_check`], #562): once a game day at 06:00, a
+//!   moment of `World::live` ([`World::until_stat_check`]), each stat gets the same check with
+//!   the need times `daily_factor` (or Hard training's), on the **training** stream, six draws
+//!   always. A rise is said at once, so it stops a rest. `WorldState::next_stat_check` holds
+//!   the moment ([`schedule`]).
 
-use super::{ActorId, World};
+use super::{ActorId, World, WorldState};
 use crate::action::AttackKind;
 use crate::combat::{Blow, Category, Strike};
-use crate::content::StatUse;
+use crate::content::{Content, StatUse};
 use crate::hunger::Hunger;
 use crate::rng::Rng;
 use crate::stats::Stat;
+use crate::time::{DAWN, GameTime};
 
 /// What a rise in `stat` says.
 fn rise_news(stat: Stat) -> &'static str {
@@ -56,6 +62,23 @@ impl World {
             return;
         }
         let content = self.content.clone();
+        // Quick study of the body: a potion's marks, more of them.
+        let count = match used.names_stat() {
+            true => {
+                let percent = self
+                    .state
+                    .player()
+                    .talent_mods(&content)
+                    .potion_marks_percent;
+                let more = (u32::from(count) * percent.clamp(-100, 1000) as u32 / 100) as u16;
+                if percent >= 0 {
+                    count.saturating_add(more)
+                } else {
+                    count
+                }
+            }
+            false => count,
+        };
         for rule in content.stat_training().rules(used) {
             let Some(stat) = rule.stat.or(named) else {
                 continue;
@@ -154,28 +177,84 @@ impl World {
     /// A level came: each stat in display order gets its check (module docs). Draws six times
     /// from the levels stream whatever the marks, none without training rules.
     pub(super) fn check_stats(&mut self) {
+        for stat in self.stat_checks(Check::Level) {
+            self.news.push(rise_news(stat).into());
+        }
+    }
+
+    /// Seconds from `now` until the player's daily stat check, if one is scheduled (a moment of
+    /// [`World::live`]; 0 when it is due).
+    pub(super) fn until_stat_check(&self, id: ActorId, now: GameTime) -> Option<u64> {
+        let next = self
+            .state
+            .next_stat_check
+            .filter(|_| id == self.state.player)?;
+        Some(next.seconds().saturating_sub(now.seconds()))
+    }
+
+    /// The daily stat check, if it is due at `when` (module docs): each stat in display order
+    /// gets its check on the training stream, six draws whatever the marks, and a rise is said
+    /// at once (it stops a rest). The next comes at the next 06:00.
+    pub(super) fn daily_stat_check(&mut self, id: ActorId, when: GameTime) {
+        let Some(next) = self.state.next_stat_check else {
+            return;
+        };
+        if id != self.state.player || next > when {
+            return;
+        }
+        self.state.next_stat_check = Some(next.max(when).next_at(DAWN));
+        for stat in self.stat_checks(Check::Daily) {
+            self.say(rise_news(stat));
+        }
+    }
+
+    /// The dev skip to `to` passes no moment ([`World::skip_time_dev`]): a daily check it jumps
+    /// over or lands on is not made, and the next comes at the first 06:00 after `to`.
+    pub(super) fn skip_stat_check(&mut self, to: GameTime) {
+        if let Some(next) = &mut self.state.next_stat_check
+            && *next <= to
+        {
+            *next = to.next_at(DAWN);
+        }
+    }
+
+    /// Checks each stat in display order (module docs): `check`'s stream, six draws whatever
+    /// the marks, none without training rules. Returns the stats that rose.
+    fn stat_checks(&mut self, check: Check) -> Vec<Stat> {
         let content = self.content.clone();
         let rules = content.stat_training();
+        let mut risen = Vec::new();
         if !rules.is_active() {
-            return;
+            return risen;
         }
         let seed = self.state.seed;
         let player = self.state.player;
         for stat in Stat::ALL {
             let Some(actor) = self.state.actors.get(&player) else {
-                return;
+                return risen;
             };
             let (score, potential) = (actor.stats.score(stat), actor.stats.potential(stat));
-            let (marks, out_of) = rules.odds(actor.stat_marks[stat], score, potential);
-            let rng = self
-                .state
-                .levels_rng
-                .get_or_insert_with(|| Rng::levels(seed));
-            if rng.below(out_of) >= marks {
+            let marks = actor.stat_marks[stat];
+            let (marks, out_of) = match check {
+                Check::Level => rules.odds(marks, score, potential),
+                Check::Daily => {
+                    let talents = actor.talent_mods(&content);
+                    let factor = (talents.daily_factor)
+                        .map_or(rules.daily_factor, |f| f.min(rules.daily_factor));
+                    rules.odds_by(marks, score, potential, factor)
+                }
+            };
+            let draw = match check {
+                Check::Level => (self.state.levels_rng)
+                    .get_or_insert_with(|| Rng::levels(seed))
+                    .below(out_of),
+                Check::Daily => self.state.training.below(out_of),
+            };
+            if draw >= marks {
                 continue;
             }
-            let before = actor.max_hp(&content);
             let actor = self.state.actors.get_mut(&player).expect("the player");
+            let before = actor.max_hp(&content);
             if !actor.stats.train(stat) {
                 continue;
             }
@@ -185,7 +264,27 @@ impl World {
             if grown > 0 {
                 actor.hp += grown;
             }
-            self.news.push(rise_news(stat).into());
+            risen.push(stat);
         }
+        risen
+    }
+}
+
+/// Which check a stat gets: a level's (the levels stream, the plain need) or the daily one at
+/// 06:00 (the training stream, the need times `daily_factor`).
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Check {
+    Level,
+    Daily,
+}
+
+/// Schedules the daily stat check for a new or loaded run: the next 06:00 after now when the
+/// content has training rules and none is scheduled (a run just begun, a save made before the
+/// check), none without the rules.
+pub(super) fn schedule(state: &mut WorldState, content: &Content) {
+    if !content.stat_training().is_active() {
+        state.next_stat_check = None;
+    } else if state.next_stat_check.is_none() {
+        state.next_stat_check = Some(state.time.next_at(DAWN));
     }
 }

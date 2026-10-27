@@ -25,6 +25,7 @@ impl World {
     /// ahead `duration`; nobody acts.
     pub(super) fn skip_time_dev(&mut self, duration: Duration) -> Spent {
         self.say(format!("Time skips ahead {} (dev).", duration.spoken()));
+        self.skip_stat_check(self.state.time + duration);
         Spent::Skip(duration)
     }
 

@@ -11,6 +11,7 @@ use crate::content::{ContentFiles, Factor, StatUse};
 use crate::dump::{self, Layer};
 use crate::skills::Use;
 use crate::stats::{PerStat, Stat, Stats};
+use crate::time::{DAWN, DAY};
 use std::sync::LazyLock;
 
 static BUILTIN: LazyLock<Arc<Content>> =
@@ -379,7 +380,7 @@ fn a_critical_up_close_a_shield_block_and_a_parry_train_their_stats() {
 /// The built-in content with one training rule: a kill up close of a foe of the player's level
 /// or above, a sure Toughness mark.
 static KILLS: LazyLock<Arc<Content>> = LazyLock::new(|| {
-    let text = "[training]\nneed_base = 20\nneed_per_point = 3\nover_potential_divisor = 4\n\n\
+    let text = "[training]\nneed_base = 20\nneed_per_point = 3\nover_potential_divisor = 4\ndaily_factor = 3\n\n\
                 [[training.use]]\nstat = \"toughness\"\non = \"killed\"\nchance = 100\n";
     let mut files = ContentFiles::builtin();
     files.insert("data/stats.toml", text);
@@ -464,4 +465,250 @@ fn a_count_below_a_sure_chance_draws_once_a_mark() {
     assert_eq!(w.state.training, expected, "a draw a mark");
     assert_eq!(marks(&w)[Stat::Strength], won);
     assert!((10..60).contains(&won), "about 15 % of 200: {won}");
+}
+
+/// The built-in content with one training rule that nothing in these tests reaches: the daily
+/// checks are the only draws of the training stream.
+static DAILY: LazyLock<Arc<Content>> = LazyLock::new(|| {
+    let text = "[training]\nneed_base = 20\nneed_per_point = 3\nover_potential_divisor = 4\n\
+                daily_factor = 3\n\n[[training.use]]\nstat = \"strength\"\non = \"quest\"\n\
+                chance = 50\n";
+    let mut files = ContentFiles::builtin();
+    files.insert("data/stats.toml", text);
+    Arc::new(Content::load(&files).expect("content"))
+});
+
+/// A world on `DAILY` whose player never hungers (days pass in these tests).
+fn daily_world() -> World {
+    let mut w = world_with(DAILY.clone());
+    w.player_mut().satiation = None;
+    w
+}
+
+/// Lives `seconds` of the player's time from now, in pieces of `piece` seconds, and moves the
+/// clock on.
+fn live_for(w: &mut World, seconds: u64, piece: u64) {
+    let player = w.state.player;
+    let mut passed = 0;
+    while passed < seconds {
+        let step = piece.min(seconds - passed);
+        let start = w.state.time;
+        w.pass_time(std::iter::once(player), start, step, &mut Vec::new());
+        w.state.time += Duration::seconds(step);
+        passed += step;
+    }
+}
+
+/// What one daily check does to `w` (its training stream, then the stats and marks), worked
+/// out apart: the stats that rise. `factor` is the need's.
+fn expected_daily(w: &mut World, factor: u16) -> Vec<Stat> {
+    let rules = w.content.stat_training().clone();
+    let mut risen = Vec::new();
+    for stat in Stat::ALL {
+        let actor = w.player_mut();
+        let (score, potential) = (actor.stats.score(stat), actor.stats.potential(stat));
+        let marks = actor.stat_marks[stat];
+        let (marks, out_of) = rules.odds_by(marks, score, potential, factor);
+        if w.state.training.below(out_of) < marks {
+            let actor = w.player_mut();
+            actor.stats.train(stat);
+            actor.stat_marks[stat] = 0;
+            risen.push(stat);
+        }
+    }
+    risen
+}
+
+fn seconds_to_check(w: &World) -> u64 {
+    let next = w.state.next_stat_check.expect("a check scheduled");
+    assert_eq!(u64::from(next.second_of_day()), DAWN, "at 06:00");
+    next.seconds() - w.state.time.seconds()
+}
+
+/// What a rise in `stat` says.
+fn rise_said(stat: Stat) -> String {
+    let word = match stat {
+        Stat::Strength => "stronger",
+        Stat::Dexterity => "quicker",
+        Stat::Toughness => "tougher",
+        Stat::Intelligence => "sharper",
+        Stat::Willpower => "more resolute",
+        Stat::Presence => "more confident",
+    };
+    format!("You feel {word}.")
+}
+
+#[test]
+fn the_daily_check_comes_at_six_and_only_then() {
+    let mut w = daily_world();
+    set_stats(&mut w, 20);
+    for stat in Stat::ALL {
+        set_marks(&mut w, stat, 200);
+    }
+    let first = w.state.next_stat_check.expect("scheduled at the start");
+    assert_eq!(first, w.state.time.next_at(DAWN));
+    let to = seconds_to_check(&w);
+    let training = w.state.training.clone();
+    live_for(&mut w, to - 1, to);
+    assert_eq!(w.state.training, training, "nothing drawn before 06:00");
+    assert_eq!(marks(&w), PerStat::splat(200));
+    let mut expected = w.clone();
+    let risen = expected_daily(&mut expected, 3);
+    live_for(&mut w, 1, 1);
+    assert_eq!(
+        w.state.training, expected.state.training,
+        "six draws at 06:00"
+    );
+    assert_eq!(w.state.player().stats, expected.state.player().stats);
+    assert_eq!(
+        marks(&w),
+        marks(&expected),
+        "a rise uses up its marks, a failure keeps them"
+    );
+    assert!(
+        !risen.is_empty() && risen.len() < 6,
+        "some rose, some did not: {risen:?}"
+    );
+    let news: Vec<_> = risen.iter().map(|&s| rise_said(s)).collect();
+    assert!(said(&w).ends_with(&news), "{:?}", said(&w));
+    assert_eq!(
+        w.state.next_stat_check,
+        Some(first + Duration::seconds(DAY)),
+        "the next a day later"
+    );
+    // The rest of the day draws nothing.
+    let training = w.state.training.clone();
+    live_for(&mut w, DAY - 1, 3600);
+    assert_eq!(w.state.training, training);
+}
+
+#[test]
+fn a_week_makes_seven_checks_in_order_however_the_time_is_cut() {
+    let mut whole = daily_world();
+    set_stats(&mut whole, 12);
+    for stat in Stat::ALL {
+        set_marks(&mut whole, stat, 150);
+    }
+    let mut cut = whole.clone();
+    let mut expected = whole.clone();
+    let week = 7 * DAY;
+    live_for(&mut whole, week, week);
+    live_for(&mut cut, week, 3 * 3600 + 17 * 60 + 5);
+    let mut risen = 0;
+    for _ in 0..7 {
+        risen += expected_daily(&mut expected, 3).len();
+    }
+    assert!(risen > 0);
+    for w in [&whole, &cut] {
+        assert_eq!(w.state.training, expected.state.training, "42 draws");
+        assert_eq!(w.state.player().stats, expected.state.player().stats);
+        assert_eq!(marks(w), marks(&expected));
+    }
+    assert_eq!(whole.state_hash(), cut.state_hash());
+}
+
+#[test]
+fn the_daily_factor_and_the_potential_set_the_odds_and_hard_training_lowers_it() {
+    // At the potential the chance is divided as at a level.
+    let mut w = daily_world();
+    set_stats(&mut w, 10);
+    for stat in Stat::ALL {
+        set_marks(&mut w, stat, 600);
+    }
+    let mut expected = w.clone();
+    let to = seconds_to_check(&w);
+    live_for(&mut w, to, to);
+    expected_daily(&mut expected, 3);
+    assert_eq!(w.state.player().stats, expected.state.player().stats);
+    assert_eq!(w.state.training, expected.state.training);
+    // Hard training: the need twice a level's, not three times.
+    let mut w = daily_world();
+    w.player_mut().talents.take("hard_training", None);
+    let mods = w.state.player().talent_mods(&w.content);
+    assert_eq!(mods.daily_factor, Some(2));
+    set_stats(&mut w, 20);
+    for stat in Stat::ALL {
+        set_marks(&mut w, stat, 100);
+    }
+    let mut expected = w.clone();
+    let to = seconds_to_check(&w);
+    live_for(&mut w, to, to);
+    expected_daily(&mut expected, 2);
+    assert_eq!(w.state.player().stats, expected.state.player().stats);
+    assert_eq!(marks(&w), marks(&expected));
+}
+
+#[test]
+fn a_rise_at_six_stops_a_rest() {
+    let mut w = daily_world();
+    set_stats(&mut w, 20);
+    set_marks(&mut w, Stat::Strength, u16::MAX);
+    let next = w.state.next_stat_check.expect("scheduled");
+    let mut expected = w.clone();
+    let risen = expected_daily(&mut expected, 3);
+    assert_eq!(risen, [Stat::Strength], "near certain");
+    run(&mut w, "rest:24h");
+    let log = said(&w);
+    let rose = log.iter().position(|m| m == "You feel stronger.");
+    let stopped = log
+        .iter()
+        .position(|m| m.starts_with("You stop resting after"));
+    assert!(rose.is_some() && rose < stopped, "{log:?}");
+    assert!(w.state.time >= next && w.state.time < next + Duration::minutes(1));
+    assert_eq!(w.state.player().stats.score(Stat::Strength), 11);
+}
+
+#[test]
+fn the_next_check_is_saved_scheduled_on_load_and_absent_without_the_data() {
+    let w = daily_world();
+    let json = serde_json::to_string(&w.state).expect("json");
+    assert!(json.contains("next_stat_check"));
+    let restored: WorldState = serde_json::from_str(&json).expect("state");
+    assert_eq!(restored.next_stat_check, w.state.next_stat_check);
+    // A save from before the check: the next 06:00 is scheduled on load.
+    let mut old = w.state.as_ref().clone();
+    old.next_stat_check = None;
+    let loaded = World::from_state(w.content.clone(), old).expect("loads");
+    assert_eq!(
+        loaded.state.next_stat_check,
+        Some(w.state.time.next_at(DAWN))
+    );
+    // Without stats.toml nothing is scheduled, saved, or drawn.
+    let mut files = ContentFiles::builtin();
+    files.remove("data/stats.toml");
+    let content = Arc::new(Content::load(&files).expect("content without stats.toml"));
+    let mut w = world_with(content);
+    assert_eq!(w.state.next_stat_check, None);
+    let json = serde_json::to_string(&w.state).expect("json");
+    assert!(!json.contains("next_stat_check"));
+    w.player_mut().satiation = None;
+    let training = w.state.training.clone();
+    live_for(&mut w, 2 * DAY, 3600);
+    assert_eq!(w.state.training, training);
+}
+
+#[test]
+fn a_dev_skip_passes_no_check() {
+    let mut w = daily_world();
+    let next = w.state.next_stat_check.expect("scheduled");
+    let training = w.state.training.clone();
+    run(&mut w, "skip:24h");
+    assert_eq!(w.state.training, training);
+    assert_eq!(w.state.next_stat_check, Some(w.state.time.next_at(DAWN)));
+    assert!(w.state.next_stat_check > Some(next));
+}
+
+#[test]
+fn quick_study_of_the_body_doubles_a_potions_marks() {
+    let mut w = world_with(BUILTIN.clone());
+    w.player_mut().talents.take("quick_study_of_the_body", None);
+    w.train_stat_times(StatUse::Drank, Some(Stat::Strength), 5);
+    w.train_stat_times(StatUse::Elixir, Some(Stat::Presence), 20);
+    let m = marks(&w);
+    assert_eq!((m[Stat::Strength], m[Stat::Presence]), (10, 40));
+    // Other uses are not potions.
+    let mut w = world_with(SURE.clone());
+    w.player_mut().talents.take("quick_study_of_the_body", None);
+    w.train_stat_times(StatUse::Blow, None, 3);
+    assert_eq!(marks(&w)[Stat::Strength], 3);
 }
