@@ -172,6 +172,23 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Their homes (#487) are two special rooms with populations of their own (§7 "Special rooms"):
   the **armoury** (blades, hollow armour, panoplies, among weapon racks) and the **workshop**
   (household things, among workbenches); the chromatic look of composites follows (#463).
+- **Natural Protection by body and level** (#563, `docs/design/combat-progression.md` §8): a
+  creature type's `natural.protection` is set by its **body**, which the hide's `name` decides,
+  and its level L (rounded down): none (insubstantial form, rushing wind, crackling form,
+  flickering flame or form, flowing body, fey grace, mud, and no hide) 0; hide (hide and its
+  adjectives, skin, fur, feathers, dead flesh, wrappings, rotting scales) (L − 10) ÷ 8, at least
+  0; bony (bones, dry bones, bone, skull, scales, chitin, shell, carapace, plates) L ÷ 6;
+  armoured (stone body, stony hide, iron-hard skin, frost-hard skin, ice, slag hide, cinder
+  hide) L ÷ 4 + 1. A type of the peoples (tags kobold, goblin, hobgoblin, orc, drow, duergar,
+  cultist, outlaw; the peaceful and merchants factions) or one whose gear may roll armour has
+  none of its own (its race's: the armour supplies the rest; never both). Exceptions, kept in
+  data: the cave beetle and ember beetle 3, the stone troll 5, the mud golem 5, the balor and the
+  pit fiend 10 (bosses held to the bony line), a hag who casts half a hide's, every living troll
+  at least 2 (the tribe's hide); the animated objects keep their own table. Data only, nothing
+  saved; `content::creature_body_tests` checks every type. The player's answer is penetration
+  (the war hammer, the stiletto, crossbow bolts) and criticals, soaked once after they multiply;
+  **Armour-breaker** (Might, needs axes, maces, or polearms 7; the `protection` system): its
+  confirmed criticals ignore 2 more Protection (`critical_penetration`).
 - **Creature gear** (`warlock-core/src/gear.rs`, the rolls; `content/gear.rs`, the data; #328,
   campaign design §10.3): a creature type may have a `racial_weapon` (a weapon it must have a
   rank in: the affinity is the rank, which combat applies) and `[[creature.gear]]` lines

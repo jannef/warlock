@@ -25,7 +25,7 @@ weight = 72000
 stats = { strength = 27, dexterity = 22, toughness = 31, intelligence = 33, willpower = 36, presence = 33 }
 base_hp = 94
 skills = { concentration = 151, spellcraft = 156 }
-natural = { defence = 3, protection = 0, name = "dead flesh" }
+natural = { defence = 3, protection = 4, name = "dead flesh" }
 resist = { poison = 100 }
 on_eat = { message = "It is all moving inside.", vomit = 90, harm = "1d6" }
 blood = "#3a4020"

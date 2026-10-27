@@ -276,6 +276,8 @@
 #                                 (one that `blocks` steps: held), until it misses that creature,
 #                                 strikes another, or moves
 #   critical_confirm { value }    added to the roll that confirms its criticals
+#   critical_penetration { value } its confirmed criticals (every attack) ignore that much more
+#                                 Protection, on top of the attack's penetration
 #   penetration { damage, value } its blows that can do damage of that kind ignore that much
 #                                 more Protection
 #   burden_dex { value }          the burden's cap on its Dexterity in Defence, that much higher

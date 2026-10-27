@@ -22,7 +22,7 @@ weight = 1200000
 stats = { strength = 36, dexterity = 20, toughness = 37, intelligence = 30, willpower = 33, presence = 30 }
 base_hp = 200
 loot = 75
-natural = { defence = 4, name = "hide" }
+natural = { defence = 4, protection = 5, name = "hide" }
 resist = { fire = 75, cold = 25, electricity = 25, poison = 100 }
 corpse = false
 blood = "#2a0a1a"

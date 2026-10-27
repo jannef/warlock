@@ -22,7 +22,7 @@ hearing = 12
 weight = 85000
 stats = { strength = 23, dexterity = 17, toughness = 24, intelligence = 22, willpower = 26, presence = 22 }
 base_hp = 72
-natural = { defence = 1, protection = 0, name = "dead flesh" }
+natural = { defence = 1, protection = 2, name = "dead flesh" }
 resist = { poison = 100 }
 weapon_skills = { long_blades = 4, polearms = 4 }
 on_eat = { message = "Cold meat, and no head to it.", vomit = 80, harm = "1d4" }

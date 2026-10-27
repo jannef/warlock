@@ -27,7 +27,7 @@ weight = 60000
 stats = { strength = 21, dexterity = 18, toughness = 25, intelligence = 27, willpower = 32, presence = 27 }
 base_hp = 66
 skills = { concentration = 109, spellcraft = 114 }
-natural = { defence = 2, protection = 0, name = "hide" }
+natural = { defence = 2, protection = 1, name = "hide" }
 resist = { fire = 50, cold = 50 }
 on_eat = { message = "Bitter as a bad dream.", vomit = 70, harm = "1d4" }
 blood = "#3a2a4a"

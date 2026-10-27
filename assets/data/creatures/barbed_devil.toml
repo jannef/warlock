@@ -19,7 +19,7 @@ hearing = 8
 weight = 110000
 stats = { strength = 21, dexterity = 16, toughness = 22, intelligence = 20, willpower = 25, presence = 20 }
 base_hp = 65
-natural = { defence = 1, protection = 0, name = "barbed hide" }
+natural = { defence = 1, protection = 2, name = "barbed hide" }
 resist = { fire = 100, poison = 50, cold = 50 }
 corpse = false
 blood = "#4a1010"

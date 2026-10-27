@@ -19,7 +19,7 @@ hearing = 10
 weight = 200000
 stats = { strength = 20, dexterity = 11, toughness = 21, intelligence = 2, willpower = 20, presence = 2 }
 base_hp = 44
-natural = { defence = 0, protection = 1, name = "ice" }
+natural = { protection = 3, name = "ice" }
 resist = { piercing = 25, cold = 100, fire = -50, poison = 100 }
 corpse = false
 blood = "none"

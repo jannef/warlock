@@ -541,7 +541,8 @@ fn the_fen_dead_and_the_mud_shrug_off_blows() {
     assert_eq!(resist("drowned", "poison"), 100);
     let hide = |id: &str| def(id).natural.as_ref().map(|h| (h.defence, h.protection));
     assert_eq!(hide("mud_golem"), Some((0, 5)));
-    assert_eq!(hide("crocodile"), Some((2, 3)));
+    // Scales are a bony body: level 6 ÷ 6 (#563).
+    assert_eq!(hide("crocodile"), Some((2, 1)));
     for id in ["ghost", "mud_golem", "will_o_wisp"] {
         assert!(!def(id).corpse && def(id).blood.is_none(), "{id}");
     }

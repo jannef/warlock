@@ -20,7 +20,7 @@ hearing = 18
 weight = 90000
 stats = { strength = 22, dexterity = 22, toughness = 22, intelligence = 21, willpower = 25, presence = 21 }
 base_hp = 63
-natural = { defence = 1, name = "chitin" }
+natural = { defence = 1, protection = 4, name = "chitin" }
 resist = { fire = 50, cold = 25, electricity = 25, poison = 100 }
 corpse = false
 blood = "#2a2a3a"

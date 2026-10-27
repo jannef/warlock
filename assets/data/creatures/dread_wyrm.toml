@@ -20,7 +20,7 @@ hearing = 10
 weight = 1200000
 stats = { strength = 40, dexterity = 24, toughness = 40, intelligence = 38, willpower = 2, presence = 2 }
 base_hp = 248
-natural = { defence = 5, protection = 9, name = "bones" }
+natural = { defence = 5, protection = 10, name = "bones" }
 resist = { piercing = 50, bludgeoning = -50, poison = 100 }
 corpse = false
 blood = "none"

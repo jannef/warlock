@@ -476,6 +476,8 @@ pub struct TalentMods {
     pub grip: Option<StatusId>,
     /// Added to the roll that confirms its criticals.
     pub critical_confirm: i32,
+    /// The Protection its confirmed criticals ignore, on top of the attack's penetration.
+    pub critical_penetration: i32,
     /// More penetration for blows that can do damage of a kind: `(kind, value)`.
     pub penetration: Vec<(DamageTypeId, i32)>,
     /// How much higher the burden's cap on its Dexterity in Defence is.
@@ -1348,6 +1350,7 @@ impl TalentMods {
                 self.critical_status = content.status_id(&status).or(self.critical_status);
             }
             TalentEffect::CriticalConfirm { value } => self.critical_confirm += value,
+            TalentEffect::CriticalPenetration { value } => self.critical_penetration += value,
             TalentEffect::Penetration {
                 damage: kind,
                 value,

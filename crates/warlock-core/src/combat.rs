@@ -262,6 +262,8 @@ pub struct Profile {
     /// How much of the target's Protection it ignores (a weapon's or a missile's
     /// `penetration`: a war hammer, a crossbow bolt).
     pub penetration: i32,
+    /// How much more of the target's Protection a confirmed critical ignores (Armour-breaker).
+    pub critical_penetration: i32,
     /// The kinds of damage its own dice do (spec §8 "Damage types"): a blow does whichever is
     /// better against its target; none for an untyped attack.
     pub kinds: Kinds,
@@ -382,6 +384,7 @@ impl Profile {
             sure_critical: false,
             extra: None,
             penetration: 0,
+            critical_penetration: 0,
             kinds: attack.kinds,
             riders: Vec::new(),
             on_hit: Vec::new(),
@@ -538,7 +541,13 @@ pub fn strike_with(profile: &Profile, target: &Target, rng: &mut Rng, reroll_fum
     // The critical multiplied the damage first; the soak comes off once, so criticals punch
     // through armour. An element meets no armour: the Protection against it is 0.
     let pv = target.protection.against(kind);
-    let main = damage.max(1) - soak(pv - profile.penetration, rng);
+    let penetration = profile.penetration
+        + if critical {
+            profile.critical_penetration
+        } else {
+            0
+        };
+    let main = damage.max(1) - soak(pv - penetration, rng);
     let added: i32 = riders.iter().map(|(_, d)| d).sum();
     if main <= 0 && added <= 0 {
         return Blow {
@@ -675,6 +684,7 @@ mod tests {
             sure_critical: false,
             extra: None,
             penetration: 0,
+            critical_penetration: 0,
             kinds: Kinds::NONE,
             riders: Vec::new(),
             on_hit: Vec::new(),
@@ -1088,6 +1098,34 @@ mod tests {
             let past = strike(&fixed(2, 9), &Target::protected(dv, 4), &mut rng);
             assert_ne!(past.strike, Strike::Soaked);
         }
+    }
+
+    #[test]
+    fn a_criticals_own_penetration_counts_only_on_a_critical() {
+        // Armour-breaker: critical penetration 4 against Pv 4 makes a critical draw as against
+        // an unprotected target, while a normal hit is soaked as before.
+        let dv = Defence::from_bonuses([(Category::Dexterity, -10)]);
+        let breaker = Profile {
+            bonus: 3,
+            critical_penetration: 4,
+            ..profile(0, "+0", 2, 3)
+        };
+        let mut rng = Rng::stream(9, "combat-test");
+        let mut seen = std::collections::BTreeSet::new();
+        for _ in 0..2000 {
+            let blow = strike(&breaker, &Target::protected(dv, 4), &mut rng);
+            seen.insert((blow.strike, blow.damage));
+        }
+        let outcomes: Vec<_> = seen.into_iter().collect();
+        assert_eq!(
+            outcomes,
+            [
+                (Strike::Missed { by: None }, 0),
+                (Strike::Hit { critical: false }, 1),
+                (Strike::Hit { critical: true }, 9),
+                (Strike::Soaked, 0),
+            ]
+        );
     }
 
     /// A target that resists `resist` (kind, percent) with `pv` against the physical kinds 0

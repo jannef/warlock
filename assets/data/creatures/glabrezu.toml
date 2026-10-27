@@ -21,7 +21,7 @@ weight = 1000000
 stats = { strength = 33, dexterity = 19, toughness = 34, intelligence = 27, willpower = 31, presence = 27 }
 base_hp = 176
 loot = 50
-natural = { defence = 3, protection = 3, name = "carapace" }
+natural = { defence = 3, protection = 7, name = "carapace" }
 resist = { fire = 50, cold = 25, electricity = 25, poison = 100 }
 corpse = false
 blood = "#3a0a0a"

@@ -23,7 +23,7 @@ hearing = 15
 weight = 70000
 stats = { strength = 21, dexterity = 16, toughness = 22, intelligence = 20, willpower = 25, presence = 20 }
 base_hp = 65
-natural = { defence = 1, protection = 0, name = "barnacled hide" }
+natural = { defence = 1, protection = 2, name = "barnacled hide" }
 resist = { cold = 25 }
 on_eat = { message = "Salt, rot, and worse.", vomit = 70, harm = "1d4" }
 blood = "#2a4a4a"

@@ -23,7 +23,7 @@ hearing = 15
 weight = 60000
 stats = { strength = 22, dexterity = 17, toughness = 23, intelligence = 21, willpower = 25, presence = 28 }
 base_hp = 68
-natural = { defence = 1, protection = 0, name = "skin" }
+natural = { defence = 1, protection = 2, name = "skin" }
 resist = { fire = 50, cold = 50, poison = 50 }
 on_eat = { message = "It tastes of nothing you can name.", vomit = 60, harm = "1d3" }
 blood = "#6a1a3a"
