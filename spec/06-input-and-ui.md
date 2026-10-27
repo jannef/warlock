@@ -390,7 +390,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `throw_voice:X,Y`, the `throw_voice` action, a cell, §5 "Hearing"), the bard's (Throw
     your voice, level 32: a talent with the `throw_voice` effect gives it); and hooding the lantern
     (Items: the lantern; `hood`, nothing to aim, §5 "Light sources"), which the Hooded light
-    talent will give and everyone has until then. No race gives one yet.
+    talent will give and everyone has until then; and what a place offers, last, under **Here**
+    (`Source::Place`): Pray (`Ability::Pray`, `pray`, nothing to aim), listed only while the
+    player stands beside a forgotten altar not yet spent (`Ability::here`, §7 "Special rooms"),
+    absent elsewhere. No race gives one yet.
   - **The menu** (a screen on the stack) lists them as the one paged list (§6 "Item lists"),
     grouped by source under a header each, lettered down each page from `a`: each row the
     ability's name and what it asks for ("in a direction"), or greyed out with why it cannot be

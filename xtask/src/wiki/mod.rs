@@ -38,6 +38,7 @@ mod materials;
 mod moons;
 mod objects;
 mod order;
+mod outcomes;
 mod overworld;
 mod resources;
 mod rooms;
@@ -276,6 +277,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("special-rooms.md", rooms::special_rooms),
         ("branch-odds.md", rooms::branch_odds),
         ("teeming-dens.md", rooms::teeming_dens),
+        ("altar-outcomes.md", outcomes::altar_outcomes),
+        ("altar-shares.md", outcomes::altar_shares),
         ("magic-rarity.md", magic::magic_rarity),
         ("magic-bases.md", magic::magic_bases),
         ("magic-prefixes.md", magic::prefixes),

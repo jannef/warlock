@@ -120,6 +120,16 @@ pub(super) fn special_rooms(content: &Content) -> String {
                 m.images
             ));
         }
+        if let Some(feature) = e.feature {
+            let offers = match &e.offers {
+                Some((_, _)) => ": pray beside it (see Forgotten altars)",
+                None => "",
+            };
+            does.push(format!(
+                "A {} stands in it{offers}.",
+                content.terrain(feature).name.to_lowercase()
+            ));
+        }
         if e.warp > 0 {
             does.push(format!(
                 "Every step inside, yours or a creature's, has a {}% chance to move the stepper \
