@@ -1,5 +1,7 @@
 # Terrain types. Colors are the fully lit appearance; lighting darkens and tints them.
-# Fields: id, name, description (what look mode adds after the name; optional), glyph, fg, bg (default black), walkable (default true),
+# Fields: id, name, description (what look mode adds after the name; optional), announce (a special
+# feature of the ground, an altar: arriving on it says so, "There is an altar here."; walkable
+# terrain only; default false), glyph, fg, bg (default black), walkable (default true),
 # transparent (default true), move_cost (what a step onto it costs, in percent of a normal step,
 # the `step` cost in actions.toml; default 100; local levels only), opens_to / closes_to (doors),
 # breaks_to and sturdiness (closed doors, spec §8 "Doors": a kick breaks the door into this
@@ -325,6 +327,7 @@ fade = 0.4
 [[terrain]]
 id = "altar"
 name = "altar"
+announce = true
 stone = true
 glyph = "_"
 fg = "#e0c060"
@@ -463,6 +466,7 @@ glow = 0.25
 [[terrain]]
 id = "uv_rune"
 name = "faint rune"
+announce = true
 stone = true
 glyph = "ᛟ"
 fg = "#c890ff"

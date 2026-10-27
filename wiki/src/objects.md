@@ -54,7 +54,9 @@ the floor, lit by the light around it like the floor would be, and under any cre
 there. The last thing dropped on a pile goes on top. Objects lie only where you can walk.
 
 When you step onto a pile, the message line says what is there: `You see here a dagger.` for a
-single stack, `There are several objects here.` for more. [Look mode](controls.md#look-mode)
+single stack, `There are several objects here.` for more. If you arrive on a special feature of
+the ground, an altar or a faint rune, it is named first, once each time you come to it:
+`There is an altar here.` [Look mode](controls.md#look-mode)
 (`l`) names what lies on any cell you see or remember: up to three stacks by name ("a dagger and
 12 arrows"), more as a count ("17 objects").
 
