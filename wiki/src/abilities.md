@@ -54,6 +54,10 @@ menu).
 - **Steal**: anyone trained in the Steal skill has it, in the skill's place among the Skills.
   It asks for a direction and tries to lift something from whoever stands there, if they are
   not hostile to you (see [Stealing](skills.md#stealing)).
+- **Forage**: anyone trained in Survival has it, in the skill's place among the Skills. It asks
+  for nothing: you spend ten minutes searching the wild around you for food. Only in the wild,
+  on the overworld and in its local areas; elsewhere it is greyed out, "not usable here" (see
+  [Foraging](skills.md#foraging)).
 - **Other skills used as actions** (Heal, ...): each is in the menu once you are trained
   in it (see [Skills](skills.md)), greyed out until its use comes to the game.
 - **Class abilities** (Rage, Veteran's wind, Whirlwind, Lay on hands, Smite, Holy radiance,

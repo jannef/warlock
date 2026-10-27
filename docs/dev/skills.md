@@ -40,12 +40,13 @@ search, search reach, and spot in `world/search.rs` (`search_modifier`, `search_
 trained at all lets the player notice in passing, `Skills::trains_effect`), disarm in
 `world/disarm.rs` (`disarm_modifier`; trained at all, Disable device gives the Disarm ability,
 `Ability::had_by`), steal in `world/steal.rs` (trained at all lets the player steal,
-`docs/dev/stealing.md`), study (Spellcraft and Decipher script: points off the study check) in
+`docs/dev/stealing.md`), forage (Survival: percent added to a forage's chance; trained at all,
+the Forage ability) in `world/forage.rs`, study (Spellcraft and Decipher script: points off the study check) in
 `world/learn.rs::study_odds` (docs/dev/spells.md "Learning"; its use `Use::Study`, reported
 when a study ends, is also `StatUse::Study`); each use
 is reported where it happens (`make_noise`, `hear`, `fight.rs::resolve`, `apply`, `player_moves`,
 `kick_door`, `search_turn` for `search`, `notice_hidden` for `spot`, `World::disarm` for
-`disarm`, `pick_lock` for `pick`, `World::steal` for `steal`, and `World::sidesteps` for a
+`disarm`, `pick_lock` for `pick`, `World::steal` for `steal`, `World::forage_done` for `forage` (a forage that ran its time), and `World::sidesteps` for a
 known trap avoided, `dodge`, besides `fight.rs::resolve`). A new
 effect or use is a variant there plus its one hook. The player sees values only
 (`PerceptionView::own_skills`, the Skills screen `ui/skills_screen.rs`, `A`); never marks or
@@ -54,6 +55,24 @@ menu (#156, `docs/dev/screens.md`): each trained skill of kind `action` is an `A
 there (`warlock_core::ability`), unavailable ("not usable yet") until its use exists, when it
 becomes an ability of its own in the skill's place (`Ability::use_of`): Disable device is
 `Ability::Disarm` (`docs/dev/traps.md`), Open lock `Ability::PickLock` (`docs/dev/doors.md`),
-Steal `Ability::Steal` (`docs/dev/stealing.md`).
+Steal `Ability::Steal` (`docs/dev/stealing.md`). A passive skill with a use of its own is
+listed as that use too (`Ability::every` asks `Ability::use_of` of every skill): Survival is
+`Ability::Forage` (below).
+
+**Foraging** (spec §8 "Foraging", #547): `Action::Forage` (replay text `forage`, cost `forage`
+a turn, `ActionKind::Forage`), dispatched by one arm in `World::player_acts` to
+`World::start_forage` in `world/forage.rs` (`Spent::Forage(seconds)`, then `World::forage`, a
+`keep_at` loop like a prayer's; tests `world/forage_tests.rs`). Data `data/forage.toml`
+(`content/forage.rs`, `ForageRules`, `Content::forage`; optional: without it nobody forages):
+`seconds`, and a `[[ground]]` per `Landscape` (land only) with `chance`, `count` dice, and
+weighted food `finds`. `world::forage_ground(content, level, pos)` is the one place that says
+where: the overworld by the terrain underfoot's `landscape`, a `local:x,y` area by its edge
+exit's overworld cell, never on water or ice (`LevelState::water_at`); the rule and the
+abilities menu (`PerceptionView::abilities`: `Unavailable::NotHere`, "not usable here") both
+ask it. Draws: the chance (one gameplay draw), the find (`magic::loot::pick_weighted`, one), and
+the count's dice; the food is made then (`rot::made_at`) and joins the pack; then
+`train(Use::Forage)`. Nothing is stored, so saves change only by content (the new
+`ActionKind`, the new food objects). The wiki's table is `generated/foraging.md`
+(`xtask/src/wiki/skills.rs::foraging`).
 Pending hooks:
 athletics (climbing out of pits, #128) and escape artist (pits, #128).
