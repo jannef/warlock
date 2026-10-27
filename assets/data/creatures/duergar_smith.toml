@@ -23,7 +23,7 @@ weight = 80000
 stats = { strength = 20, dexterity = 11, toughness = 18, intelligence = 12, willpower = 14, presence = 9 }
 base_hp = 30
 weapon_skills = { maces = 3 }
-resist = { fire = 25 }
+resist = { poison = 25, cold = 10, fire = 25 }
 on_eat = { message = "Tough and sour, and it smells of the forge.", vomit = 25 }
 racial_weapon = "war_hammer"
 [[creature.gear]]

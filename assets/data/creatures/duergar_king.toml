@@ -1,0 +1,43 @@
+# The duergar (#518; content::duergar_roster_tests checks the numbers). A king of the grey
+# dwarves under the mountains, to whom the thanes bend the knee: a war hammer (its racial
+# weapon), plate armour, a great helm, and a large shield, all often of a better make than they
+# look, and a king's gold.
+[[creature]]
+id = "duergar_king"
+level = 40
+xp = 210
+rarity = "very_rare"
+loot = 100
+name = "duergar king"
+glyph = "h"
+fg = "#f0d040"
+faction = "duergar"
+tags = ["duergar"]
+alignment = "evil"
+race = "duergar"
+vision = "darkvision"
+opens_doors = true
+footsteps = 140
+hearing = 12
+weight = 90000
+stats = { strength = 28, dexterity = 20, toughness = 28, intelligence = 17, willpower = 24, presence = 16 }
+base_hp = 110
+resist = { poison = 25, cold = 10, fire = 25 }
+on_eat = { message = "Tough and sour, and it tastes of iron.", vomit = 25, stat = { toughness = 3 } }
+weapon_skills = { maces = 6, shield_block = 4, sword_and_board = 4 }
+racial_weapon = "war_hammer"
+[[creature.gear]]
+chance = 90
+one_of = ["plate_armour"]
+magic = 50
+[[creature.gear]]
+chance = 80
+one_of = ["great_helm"]
+magic = 30
+[[creature.gear]]
+chance = 70
+one_of = ["large_shield"]
+magic = 30
+[[creature.gear]]
+chance = 100
+one_of = ["gold_coin*15", "gold_coin*30"]

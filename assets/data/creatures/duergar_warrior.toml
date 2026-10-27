@@ -21,6 +21,7 @@ hearing = 12
 weight = 70000
 stats = { strength = 17, dexterity = 12, toughness = 17, intelligence = 10, willpower = 13, presence = 8 }
 base_hp = 22
+resist = { poison = 25, cold = 10 }
 weapon_skills = { axes = 2, shield_block = 1 }
 on_eat = { message = "Tough and sour, like old leather.", vomit = 25 }
 racial_weapon = "hand_axe"

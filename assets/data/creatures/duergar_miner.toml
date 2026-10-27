@@ -22,6 +22,7 @@ hearing = 12
 weight = 65000
 stats = { strength = 16, dexterity = 11, toughness = 16, intelligence = 10, willpower = 12, presence = 7 }
 base_hp = 16
+resist = { poison = 25, cold = 10 }
 weapon_skills = { axes = 1, maces = 1 }
 attack = { damage = "1d4", damage_type = "bludgeoning", name = "fist", verb = "punches" }
 on_eat = { message = "Tough and sour, like old leather.", vomit = 25 }

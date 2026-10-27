@@ -140,6 +140,12 @@ weapon skills.
 
 ## Presentation
 
+A composite's colours (#463): `Shape::bands()` lists the distinct `Stack::fg` colours of what
+it wears and wields, in slot order (helm, body armour, hands, feet), at most four; a one-item
+thing has none and shows `fg` alone (still the `shown_by` piece's colour). The map draws them as
+horizontal bands (`docs/dev/rendering.md`, "Colour bands"), and a JSON dump's seen actor carries
+them as `bands`, top first.
+
 `SeenActor::shape` (`perception.rs::shape`): an animated creature's body's glyph, its colour
 (`Stack::fg`: the drawn material's), and its main material. `SeenActor::glyph`/`fg` read it,
 else the type's; the map (`ui/glyphs.rs`), the look cursor, and the `view` dump use them, and a
