@@ -327,6 +327,8 @@ pub struct TalentMods {
     pub scavenger: bool,
     /// Percent more often what an animated thing is made of falls whole (Salvager).
     pub salvage_percent: i32,
+    /// Look mode tells a magic animated thing (Appraiser's eye).
+    pub appraise_animated: bool,
     /// Item descriptions show its things' worth.
     pub item_worth: bool,
     /// Item descriptions show its gems' worth.
@@ -1094,6 +1096,7 @@ impl TalentMods {
             TalentEffect::Pilgrim => self.services = true,
             TalentEffect::Scavenger => self.scavenger = true,
             TalentEffect::SalvagePercent { value } => self.salvage_percent += value,
+            TalentEffect::AppraiseAnimated => self.appraise_animated = true,
             TalentEffect::ItemWorth => self.item_worth = true,
             TalentEffect::GemWorth => self.gem_worth = true,
             TalentEffect::IdentifyCarried { hours } => {

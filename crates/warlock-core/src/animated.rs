@@ -19,7 +19,7 @@
 //! creature placed with its body already (a legend's `animated = { material }`), or wielding or
 //! wearing something already, is not rolled.
 
-use crate::content::{Content, CreatureId, LevelTemplate};
+use crate::content::{Content, CreatureId, Grip, LevelTemplate, ObjectDef, WeaponSkillId};
 use crate::equipment::{self, Equipment};
 use crate::kit::Pack;
 use crate::magic::{LootGrade, loot};
@@ -71,41 +71,61 @@ pub fn compose_slots(content: &Content, rng: &mut Rng, creature: CreatureId) -> 
         u32::try_from(ramp.map_or(0, |r| r.at(level)).clamp(0, 100)).unwrap_or(0)
     };
     let (magic, rare) = (chance(tier.magic), chance(tier.rare));
-    for line in lines {
-        if !rng.chance(u32::from(line.chance)) {
-            continue;
-        }
-        let Some(object) = loot::base_in(content, rng, &line.classes, level) else {
-            continue;
-        };
-        let roll = rng.below(100);
-        let grade = if roll < rare {
-            Some(LootGrade::Rare)
-        } else if roll < rare.max(magic) {
-            Some(LootGrade::Magic)
-        } else {
-            None
-        };
-        let piece = match grade {
-            Some(grade) => {
-                loot::make_as(content, rng, object, 1, (level, grade), Source::Gear(level))
-            }
-            None => {
-                let stack = Stack::new(object, 1);
-                let def = content.object(object);
-                match variant::draw(content, rng, def, Source::Gear(level), level) {
-                    Some(part) => stack.with_parts(vec![part]),
-                    None => stack,
-                }
-            }
-        };
-        let at = pack.put(piece, content);
-        if pack.equipment.get(line.slot).is_none() && content.fits(object, line.slot) {
-            let slots = equipment::slots_taken(content, object, line.slot);
-            pack.equipment.put(&slots, at);
+    for line in lines.iter().filter(|l| level >= l.from) {
+        for _ in 0..line.count {
+            // A slot already taken (the off hand beside a two-handed weapon, both ring slots) is
+            // passed over with nothing drawn.
+            let Some(slot) = (line.slots.iter()).find(|&&s| pack.equipment.get(s).is_none()) else {
+                break;
+            };
+            piece(content, rng, line, *slot, level, (magic, rare), &mut pack);
         }
     }
     pack
+}
+
+/// One try of `line` for `slot` (free) of a family's creature of level `level`: its chance, its
+/// base item, its grade by the `(magic, rare)` odds, the piece made, put in `pack` and worn or
+/// wielded.
+fn piece(
+    content: &Content,
+    rng: &mut Rng,
+    line: &crate::content::Line,
+    slot: crate::content::SlotId,
+    level: u8,
+    (magic, rare): (u32, u32),
+    pack: &mut Pack,
+) {
+    if !rng.chance(u32::from(line.chance)) {
+        return;
+    }
+    let Some(object) = loot::base_in(content, rng, &line.classes, level) else {
+        return;
+    };
+    let roll = rng.below(100);
+    let grade = if roll < rare {
+        Some(LootGrade::Rare)
+    } else if roll < rare.max(magic) {
+        Some(LootGrade::Magic)
+    } else {
+        None
+    };
+    let piece = match grade {
+        Some(grade) => loot::make_as(content, rng, object, 1, (level, grade), Source::Gear(level)),
+        None => {
+            let stack = Stack::new(object, 1);
+            let def = content.object(object);
+            match variant::draw(content, rng, def, Source::Gear(level), level) {
+                Some(part) => stack.with_parts(vec![part]),
+                None => stack,
+            }
+        }
+    };
+    let at = pack.put(piece, content);
+    let slots = equipment::slots_taken(content, object, slot);
+    if content.fits(object, slot) && slots.iter().all(|&s| pack.equipment.get(s).is_none()) {
+        pack.equipment.put(&slots, at);
+    }
 }
 
 /// `carry` and `equipment` of a creature of type `creature` with what an animated type is made
@@ -158,14 +178,31 @@ pub fn weapon_skills(
 ) -> Option<WeaponSkills> {
     let def = content.creature(creature);
     let tier = content.animated().family_tier(def.animated.as_ref())?;
-    let rank = u8::try_from(tier.weapon_rank?.at(def.level).clamp(0, 255)).unwrap_or(0);
-    let ranks: Vec<_> = (equipment.iter())
+    let rank = |ramp: Option<crate::content::Ramp>| {
+        u8::try_from(ramp.map_or(0, |r| r.at(def.level)).clamp(0, 255)).unwrap_or(0)
+    };
+    let weapon_rank = rank(tier.weapon_rank);
+    let held: Vec<&ObjectDef> = (equipment.iter())
         .filter_map(|(_, item)| carry.get(item))
-        .filter_map(|stack| content.object(stack.object).skill)
-        .map(|skill| (skill, rank))
+        .map(|stack| content.object(stack.object))
         .collect();
-    (rank > 0 && !ranks.is_empty())
-        .then(|| WeaponSkills::from_ranks(content.weapon_skills(), ranks))
+    let weapons: Vec<WeaponSkillId> = held.iter().filter_map(|o| o.skill).collect();
+    let mut ranks: Vec<_> = (weapons.iter())
+        .map(|&skill| (skill, weapon_rank))
+        .filter(|&(_, r)| r > 0)
+        .collect();
+    // Beside a shield, the style of weapon and shield (Sword and board).
+    let shield_rank = rank(tier.shield_rank);
+    let shield = held.iter().any(|o| o.shield > 0);
+    let weapon = held.iter().any(|o| o.attack.is_some());
+    if shield_rank > 0
+        && shield
+        && weapon
+        && let Some(style) = (content.weapon_skills()).style_for(Grip::WeaponAndShield, &weapons)
+    {
+        ranks.push((style, shield_rank));
+    }
+    (!ranks.is_empty()).then(|| WeaponSkills::from_ranks(content.weapon_skills(), ranks))
 }
 
 /// Composes every animated spawn of generated level `template` from the level's own stream
