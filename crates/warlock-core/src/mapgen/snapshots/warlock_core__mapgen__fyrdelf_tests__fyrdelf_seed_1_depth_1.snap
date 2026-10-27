@@ -32,23 +32,19 @@ duergar_slinger at (32, 17) route E E N N S S W W W E E E N N S S W W carrying a
 bat at (37, 10) route W W W N S E E E
 duergar_slinger at (36, 7) route S S S W W W N S E E E N N N carrying a sling (readied), 20 sling stones (quivered)
 dretch at (50, 9) route S E E E E E W W W W W N
-bat at (4, 4) route 
-giant_centipede at (5, 3) route 
-giant_centipede at (3, 5) route 
-giant_centipede at (4, 3) route 
 spear trap at (19, 16)
 alarm trap at (46, 10)
 arrow trap at (50, 11)
 2 placed lights
-special room beast_den at (2, 1)-(6, 8)
+special room hoard at (2, 1)-(6, 8)
 
   #####
-  #nnn#
-  #ncc#
-  #nbn#         ###########
-  #cnn#         #(..#.....###                #######
-  #nnn#         #...+...h.+.#   #######      #u...¡#        #################
-  #¡n%#         #..(#.....#.#   #...h¡#      #...[a#        #¡....?.........#
+  #$}$#
+  #)$$#
+  #$$$#         ###########
+  #$[$#         #(..#.....###                #######
+  #$$$#         #...+...h.+.#   #######      #u...¡#        #################
+  #¡$$#         #..(#.....#.#   #...h¡#      #...[a#        #¡....?.........#
   ##+##         ###########.#####.....########ka...#        #..aa..........h#
    #.#                    #..b........'......+....u##########...............#
    #.#                    #.#####.kk.b########^.............+.......a....a..#
