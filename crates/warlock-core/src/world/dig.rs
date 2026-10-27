@@ -219,6 +219,9 @@ impl World {
     pub(super) fn creature_called(&self, id: super::ActorId) -> String {
         let creature = self.state.actors[&id].creature;
         let name = &self.content.creature(creature).name;
+        if crate::content::is_proper(name) {
+            return name.clone();
+        }
         format!("{} {name}", article(name))
     }
 }

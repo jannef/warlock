@@ -160,7 +160,7 @@ impl World {
         match (keeper, proper) {
             (Some(shop), _) => shop.name.clone(),
             (None, Some(name)) => name.to_string(),
-            (None, None) => format!("the {}", self.content.creature(actor.creature).name),
+            (None, None) => crate::content::the(&self.content.creature(actor.creature).name),
         }
     }
 

@@ -270,7 +270,7 @@ impl End<'_> {
     fn subject(self) -> String {
         match self {
             End::You => "You".into(),
-            End::Seen(name) | End::Trap(name) => format!("The {name}"),
+            End::Seen(name) | End::Trap(name) => crate::content::the_start(name),
             End::Unseen => "Something".into(),
         }
     }
@@ -279,7 +279,7 @@ impl End<'_> {
     fn object(self) -> String {
         match self {
             End::You => "you".into(),
-            End::Seen(name) | End::Trap(name) => format!("the {name}"),
+            End::Seen(name) | End::Trap(name) => crate::content::the(name),
             End::Unseen => "something".into(),
         }
     }
@@ -288,7 +288,7 @@ impl End<'_> {
     fn whose(self) -> String {
         match self {
             End::You => "your".into(),
-            End::Seen(name) => format!("the {name}'s"),
+            End::Seen(name) => format!("{}'s", crate::content::the(name)),
             End::Unseen => "something's".into(),
             End::Trap(_) => "the".into(),
         }
@@ -455,7 +455,7 @@ pub(super) fn attack_message(
 pub(super) fn death_message(who: End<'_>, dies: &str) -> String {
     match who {
         End::You => "You die...".into(),
-        End::Seen(name) => format!("The {name} {dies}."),
+        End::Seen(name) => format!("{} {dies}.", crate::content::the_start(name)),
         End::Unseen | End::Trap(_) => "Something dies.".into(),
     }
 }
@@ -1092,7 +1092,7 @@ impl World {
         if self.stance(player, target) != Stance::Hostile {
             self.say(if seen {
                 let name = &content.creature(creature).name;
-                format!("You have no quarrel with the {name}.")
+                format!("You have no quarrel with {}.", crate::content::the(name))
             } else {
                 "Something is in the way.".into()
             });
