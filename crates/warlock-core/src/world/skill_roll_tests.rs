@@ -111,6 +111,59 @@ fn a_level_gives_the_classs_the_races_and_intelligences_rolls() {
     assert_eq!(w.due(), None, "nothing due");
 }
 
+/// The roll the level-up screen shows for `id` at `value` with `marks` (#543).
+fn shown(character: &str, id: &str, value: u16, marks: u32) -> SkillRoll {
+    let mut w = world(character);
+    set(&mut w, id, value, marks);
+    let skill = skill(&w, id);
+    w.perception().skill_roll(skill).expect("trained")
+}
+
+#[test]
+fn the_screen_shows_the_dice_the_rule_rolls_and_where_the_rolls_come_from() {
+    let dice = |c: &str, id: &str, value: u16, marks: u32| {
+        let roll = shown(c, id, value, marks);
+        (roll.dice().to_string(), roll.bonus, roll.halved)
+    };
+    let w = "human,male,warrior";
+    assert_eq!(dice(w, "stealth", 10, 0), ("+1".into(), None, false));
+    assert_eq!(dice(w, "athletics", 10, 0), ("1d3".into(), None, false));
+    let balance = dice(w, "balance", 10, 0);
+    assert_eq!(balance, ("+2".into(), Some(RollBonus::Class), false));
+    let search = dice("dwarf,male,warrior", "search", 10, 0);
+    assert_eq!(search, ("+2".into(), Some(RollBonus::Race), false));
+    let stealth = dice("halfling,female,thief", "stealth", 10, 0);
+    assert_eq!(stealth, ("1d3+1".into(), Some(RollBonus::Race), false));
+    assert_eq!(dice(w, "stealth", 10, 50), ("3d3".into(), None, false));
+    let athletics = shown(w, "athletics", 10, 50);
+    assert_eq!(
+        (athletics.practice, athletics.known),
+        ("3d3".parse().unwrap(), true)
+    );
+    assert_eq!(athletics.die.to_string(), "3d4");
+    assert_eq!(dice(w, "stealth", 100, 800), ("4d5".into(), None, true));
+    // What the rule rolls stays within the dice shown (halved past the soft cap).
+    for (id, value, marks) in [("athletics", 10, 50), ("stealth", 100, 800)] {
+        let roll = shown(w, id, value, marks);
+        let (mut low, mut high) = (roll.dice().min(), roll.dice().max());
+        if roll.halved {
+            (low, high) = ((low + 1) / 2, (high + 1) / 2);
+        }
+        let (got_low, got_high) = gains(w, id, value, marks, 12);
+        assert!(
+            i32::from(got_low) >= low && i32::from(got_high) <= high,
+            "{id}: {got_low}..{got_high} outside {low}..{high}"
+        );
+    }
+    // The count's parts add up to what a level gives.
+    let mut w = world("human,male,warrior");
+    set_intelligence(&mut w, 18);
+    let count = w.perception().roll_count();
+    let parts = (count.class, count.race, count.intelligence, count.talents);
+    assert_eq!(parts, (2, 1, 2, 0));
+    assert_eq!(count.total(), w.level_rolls());
+}
+
 #[test]
 fn rolls_are_due_until_spent_on_trained_skills() {
     let mut w = world("human,male,warrior");

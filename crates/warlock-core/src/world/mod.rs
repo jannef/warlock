@@ -205,6 +205,7 @@ pub use quest::{QuestRecord, QuestView, Quests, Stage, asks as quest_asks, wants
 use rest::Ended;
 pub use shop::{Shop, ShopStatus, count_of, favour, part_of, unpaid_parts};
 pub use sign_picks::BREATH_RANGE;
+pub use skill_roll::{RollBonus, RollCount, SkillRoll, roll_count, skill_roll};
 pub use spell::cone_cells;
 pub(crate) use stars::{RISEN, RISEN_TWICE};
 pub use talent::Due;
