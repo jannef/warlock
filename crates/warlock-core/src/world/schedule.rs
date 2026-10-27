@@ -293,6 +293,7 @@ impl World {
     /// pays for the turns lost too ([`World::faint`]). A creature that dies leaves the schedule;
     /// the player's death ends the turn there and then.
     pub(super) fn run_turn(&mut self, price: i64, events: &mut Vec<Event>) {
+        let began = self.state.time;
         self.state.turn += 1;
         // The player has acted: what they heard before is spent, and they hear afresh (lines
         // muttered too: said only if heard this turn).
@@ -366,6 +367,8 @@ impl World {
         self.spawn_tick();
         // The dead that rise meanwhile (spec §7 "Special rooms": a cursed room).
         self.rise_tick();
+        // What haunts a rest (spec §7 "Special rooms": a haunted room).
+        self.haunt_tick(began);
     }
 
     /// How long from now no creature on the current level that disturbs a rest

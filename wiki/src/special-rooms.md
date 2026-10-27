@@ -128,6 +128,8 @@ gets where a dungeon favours or bans nothing. "Only" says where it can come at a
   chamber has no doors, so there only the guardians come. A room seals once.
 - **Cursed room.** The dead do not rest in it: see below. Only on a level with a danger. One
   floor in twenty that draws a cursed room is cursed throughout instead.
+- **Haunted room.** A fine camp spot that is not: rest in it and the dead come, once every
+  hour (see Haunted rooms below). Only on a level with a danger.
 
 - **Altar room.** An old altar stands in the middle of the room, its god long forgotten, and a
   faint glow rises from it: you notice it from the doorway. Stand beside it and you may pray
@@ -234,12 +236,25 @@ leave stays as it was until you come back, and whatever was due to rise meanwhil
 return.
 
 **Consecrate.** A Good priest (from level 9) or paladin (from level 12) can lift the curse:
-standing inside a cursed or a draining room, they spend 15 mana and pray for a minute (from the
+standing inside a cursed, a draining, or a haunted room, they spend 15 mana and pray for a minute (from the
 abilities menu). If nothing disturbs the prayer (anything that would stop a rest stops it, and
 then the mana and the time are lost), the room becomes a plain room for good: the dead no longer
-rise there, nor does mana drain. On a level a curse or a drain covers whole, it lifts the whole
+rise there, nor does mana drain, nor does anything come while you rest. On a level a curse or a drain covers whole, it lifts the whole
 level's instead. It is a good deed (see [Alignment](alignment.md)). Anywhere else it is refused
 ("There is nothing here to consecrate."), costing nothing.
+
+## Haunted rooms
+
+Whispers are all you notice from outside ("You hear a whisper, and then nothing."), and inside
+it is too quiet ("It is very quiet here. Too quiet to sleep."). Nothing happens while you walk,
+fight, or search in it. But rest in it, and each time the clock strikes a full hour while you
+rest (at 1:00, 2:00, and so on, however long or short each of your rests is), one of the undead
+comes into the room: drawn as a cursed room's dead rise, among the undead of the level's danger
+(or of the nearest level that has some), each alike. It appears where you cannot see it if the
+room has such a place, else anywhere free in the room, and it comes straight for you. Your rest
+stops as soon as it comes into view, as it would for anyone. It carries nothing and is worth its
+own experience. Rest outside the room, even just beside its door, and nothing comes. Consecrate
+(above) lifts the haunting for good.
 
 ## Forgotten altars
 

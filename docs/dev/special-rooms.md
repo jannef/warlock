@@ -27,7 +27,10 @@ the level's, -40 to 40, default 0), `burden` (percent of the carrying limit, `BU
 step inside warps the stepper, 0 to 100, default 0), `collapse` (`{ chance, damage }`,
 `content::Collapse`: chance 0 to 100, damage dice; needs `needs_below`), `rise` (`{ faction, after }`, `content::Rise`:
 `after` a duration, `RISE_AFTER` 1 s to 1 h; needs `needs_danger`; the faction checked in
-`RoomEffects::check_factions`), `unholy` (Consecrate lifts it), `feature` (a terrain id,
+`RoomEffects::check_factions`), `haunt` (`{ faction, every }`, `content::Haunt`,
+`content/room_haunt.rs`: `every` a duration, `HAUNT_EVERY` 10 minutes to a day; needs
+`needs_danger`; never over a whole level; the faction checked in `check_factions`), `unholy`
+(Consecrate lifts it), `feature` (a terrain id,
 transparent and not walkable, not stairs or a door), `sides` (`{ good = LIGHT, evil = LIGHT }`: the
 room draws a hidden side, its feature a light per side; the lights are resolved after they load,
 `RoomEffects::resolve_places`), `dressing` (`{ terrain, per_cells, most }`, `content::Dressing`:
@@ -63,7 +66,8 @@ guardians = [2, 4], danger = 1 }`, #415), cursed (6, mark
 #408), altar (8, "altar room",
 `min_cells = 9`, `feature = "forgotten_altar"`, `sides`, `offers = { pray = "forgotten_altar" }`,
 #406), shrine (4, mark `i`, `min_cells = 9`, `feature = "shrine_stone"`, `sides` with the
-altar's lights, `shrine = { regen = 200, status = "unwelcome", ... }`, #413), scriptorium (5, mark
+altar's lights, `shrine = { regen = 200, status = "unwelcome", ... }`, #413), haunted (5, mark
+`q`, `needs_danger`, `haunt = { faction = "undead", every = "1h" }`, `unholy`, #417), scriptorium (5, mark
 `r`, `min_cells = 9`, `feature = "shelves"`, `loot = { class = "scrolls", count = [2, 4] }`,
 `train = { decipher_script = 200 }`, #414), armoury (4, mark `R`, `needs_danger`, `min_cells` 16,
 `dressing` of `weapon_rack`, `swarm` with its own `population` of the three animated families and
@@ -402,6 +406,22 @@ so, and `player_did(Deed::Consecrated)` (`[shift] consecrate`, 20). Interrupted:
 prayer." (or who came into view), nothing lifted. The abilities menu greys it out without its
 mana or while strayed (`Ability::unavailable`'s class branch: Consecrate's mana with Inspire's).
 
+## Haunted rooms
+
+`world/haunt.rs` (#417, design §9.8). `World::haunt_tick(began)` is the one hook, one line at the
+end of `schedule.rs::run_turn` (after `rise_tick`; `began` is the time the turn began). Only while
+`World::resting` (a rest, not the other `keep_at` users), with `Here::haunt` (the room's only) at
+the player's cell, when the turn passed a full multiple of `every` on the clock (`began / every !=
+now / every`, in seconds: stateless, so nothing is saved and rests strung together are haunted
+alike; a 59-minute rest crossing the hour is haunted too), and on a level with a danger: the type
+is `curse::rises_as` with the level's danger as the dead's level (one gameplay draw, none for a
+single candidate), the cell one `rng.index` among `World::guard_cells` (the hoard's: the room's
+free walkable cells, no door or stairs) the last perception does not see, else among all of
+them. The creature is made with no gear (`travel::make_creature`), its `mind.last_seen` set to
+the player's cell (it comes for the sleeper), and bumps `spawned`, so the rest looks up at once
+and stops when it comes into view (the usual "comes into view; you stop resting" line); nothing
+is said otherwise. Consecrate lifts it (`unholy`).
+
 ## Statuses while inside
 
 `World::dwell(id)` (`world/rooms.rs`): every status `Here::statuses` gives at the actor's cell (the
@@ -640,4 +660,7 @@ minutes as undead of the dead's level, the twitch and rising lines, not when the
 carried out, not outside, never the undead, the nearest-level fallback and the campaign's own,
 Grave warden, a cursed level, a frozen level catching up, saving and the dump; Consecrate lifting a
 room and a level, refused elsewhere with no time, asking goodness and mana, an interrupted
-prayer).
+prayer), `content/room_haunt_tests.rs` (the `haunt` field, its refusals, never over a whole
+level, `Here::haunt`), `world/haunt_tests.rs` (the haunted room's data, a rest haunted on the hour
+and stopped, out of view where it can, in view where not, never outside, while waiting, within
+the hour, or without a danger, every hour of rests strung together, Consecrate lifting it).
