@@ -230,14 +230,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
     forgotten altar to pray at ("A faint glow rises from an altar ahead." when glimpsed, "An old
     altar stands here, its god long forgotten." on entering; below); a *shrine* (4, #413; only in
     a room of at least 9 floor cells) is a shrine of a side (below: "You feel welcome here.",
-    "Something here wants you gone.", or "An old shrine. It ignores you." on entering); an
-    *armoury* (4, #487;
-    as a teeming den) has weapon racks along its walls and hollow armour, blades, and panoplies
-    asleep among them ("Racks of old arms line the walls. Not everything here is hanging up." on
-    entering; Fyrdelf favours it at 20); a *workshop* (4, #487; as a teeming den) has
-    workbenches along its walls and household things asleep about them ("Benches line the
-    walls, littered with tools and pots. Something shifts on one of them."; both below, "Homes of
-    animated things"). Blood washing
+    "Something here wants you gone.", or "An old shrine. It ignores you." on entering); a
+    *scriptorium* (5, #414; only in a room of at least 9 floor cells) holds shelves of rotting
+    scrolls and a few scrolls, and trains Decipher script faster ("You smell dust and old vellum."
+    when glimpsed, "Shelves of rotting scrolls line the walls." on entering; below); an
+    *armoury* (4, #487; as a teeming den) has weapon racks along its walls and hollow armour,
+    blades, and panoplies asleep among them ("Racks of old arms line the walls. Not everything
+    here is hanging up." on entering; Fyrdelf favours it at 20); a *workshop* (4, #487; as a
+    teeming den) has workbenches along its walls and household things asleep about them
+    ("Benches line the walls, littered with tools and pots. Something shifts on one of them.";
+    both below, "Homes of animated things"). Blood washing
     away in a flooded room waits for blood (#127).
   - **Hot and cold rooms** (`temperature`, #404): a room sets its cells' temperature and
     nothing else: no status, no damage, nothing done to items or food. The temperature at a cell
@@ -420,7 +422,24 @@ developer notes (CLAUDE.md, `docs/dev/`).
       A hook that finds nothing to do says the outcome's `otherwise` line instead (Glimpse with
       nothing unidentified: "You feel you understand a little."). The table
       (`data/outcomes/forgotten_altar.toml`, the wiki's "Forgotten altars") has six "nothing
-      happens" lines and the minor and moderate boons and banes; the great ones come with #407.
+      happens" lines and 40 boons and banes in three tiers (minor, moderate, great; weights
+      within each kind sum to 100, the great tier 6 of each).
+    - **The great boons and banes** (#407; `world/boons.rs`): *Gift of the forgotten* (+1d3 to a
+      random stat's score and potential, for good), *Exalted* (experience to the next level's
+      threshold, the level and its choices with it), *Chosen* (a talent the player may take and
+      does not hold, drawn, given free at rank 1 and kept for life: `Actor::boons`, put back with
+      the race's and the sign's gifts on every load, never a level's pick), *Relic* (an item at
+      item level + 10, at least rare, at the altar's foot: `loot` with `rarity = "rare"`); and
+      *Wrath of the forgotten* (−1d3 to a random stat's potential and score, for good, never
+      below 3), *Unmade* (one level lost: experience to the threshold of the level below, the
+      level's hit points and mana taken back, never the last hit point, its choices still due
+      dropped; choices already made stay, so the level gained again gives back its hit points
+      and mana but no choices and no stat checks, `Progress::peak`; at level 1 the experience
+      toward level 2 is lost), *Forsaken* (a flaw talent of the birth signs the player lacks,
+      kept for life in `Actor::boons`), *Damned* (2d4 hostiles of the floor's danger + 3, awake,
+      around the altar). Talents an altar gave are shown "(altar)" (a flaw "(altar, flaw)").
+      Penitent (§8 "Talents") turns a great bane drawn into one of the nothing outcomes, drawn
+      in its place; the explosion is moderate and still comes. No outcome grants a wish.
     - **The altar explodes** (the bane `burst`, 5 of the banes): "The altar bursts apart in
       fire!", then a fireball (3d6 fire, radius 2, `Caster::Place`) centred on the altar through
       the burst spell code: everyone in it is hurt, the player too, and it can kill ("The altar's
@@ -432,6 +451,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
       gutters and dies."); Pray is offered there no more. Nothing new is saved: the terrain
       grid is the record, and the `rooms` dev layer marks such a room `spent` (or `destroyed`).
       No other place offers prayer (the design's decision 14).
+  - **A scriptorium** (`feature = "shelves"`, `loot = { class = "scrolls", count = [2, 4] }`,
+    `train = { decipher_script = 200 }`, #414; `mapgen/room_loot.rs`, `world/train.rs`). Its
+    feature is `shelves` (stone, not walkable, `≡`, "shelves", a description look mode adds),
+    placed as an altar is. A generated floor's scriptorium gets `count` items (least to most,
+    one draw), each a base item of item class `class` that is loot at the floor's item level (by
+    `frequency`, the base items of `roll`), made as loot (a scroll's label unknown until read or
+    identified), on a plain floor cell of the room drawn anew (no stairs, light, or trap), all
+    from the level's stream `swarm/<level id>`, so the rest of the level is the same; it needs
+    no danger. While the player stands inside, each training mark of a skill the effect names
+    in `train` comes with that percent of its usual chance (at most certain): Decipher script's
+    mark for studying a spell (§8 "Spells", 50 %) is certain. Effects at a cell multiply, as
+    other percents do. Nothing is saved. A room with `loot` never covers a whole level.
   - **A status while inside** (`status`, #403): as time passes, at the start of each stretch of
     it (`World::pass_time`: so after every action, the player's and each creature's, at every
     turn of a rest or another long action, and through a creature's coarse turns while the
@@ -564,4 +595,5 @@ developer notes (CLAUDE.md, `docs/dev/`).
     anything the player does; #405), Mirror-wise (a hall of mirrors' images within 2 cells
     seen for what they are; #419), Light tread (a collapsed floor never gives way under
     them; #420), and Grave warden (guard; nothing the player kills rises; #408). The class ability Consecrate (above) lifts an unholy room or level. System `prayer`: Devout (wayfarer; an altar of the player's
-    side leans twice as far, an opposed one not at all; #406).
+    side leans twice as far, an opposed one not at all; #406) and Penitent (grit, Willpower 12;
+    a great bane becomes nothing; #407).

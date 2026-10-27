@@ -158,7 +158,7 @@ to open, read keys for, or draw one:
   `ui/controls_screen.rs` (commands grouped by `Context` under headings, notes on Esc and list
   letters, Reset all keys, Export keys…, Import keys…; also the `?` help: the same list,
   read-only, the developer keys only where they work), `ui/object_screen.rs` (inventory, pick up,
-  drop, throw, eat; in the choices letters always name stacks, even `h j k l`; the eat choice
+  drop, throw, consume (the eat command renamed, key and id `eat` unchanged); in the choices letters always name stacks, even `h j k l`; the consume choice
   lists food lying here first ("lying here"), then the pack's; in the inventory a letter opens
   the stack's description, and `I` closes it; marks belong to stacks
   (positions), so they stay as pages turn),

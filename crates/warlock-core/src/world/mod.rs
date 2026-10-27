@@ -90,6 +90,7 @@ mod animated;
 mod attacks;
 mod beast_friend;
 mod bleed;
+mod boons;
 mod buff;
 mod carry;
 mod cast;
@@ -737,9 +738,10 @@ impl World {
             stance: CombatStance::Neutral,
             free_blows: FreeBlows::default(),
             talents: Default::default(),
+            boons: Vec::new(),
             stat_marks: Default::default(),
         };
-        stars::grant(&content, state.character.as_ref(), &mut player.talents);
+        stars::grant(&content, state.character.as_ref(), &[], &mut player.talents);
         // The class abilities of level 1 (spec §8 "Class abilities").
         let class = (state.character.as_ref()).map(|c| c.spec.class.clone());
         class::grant(&content, class.as_deref(), &mut player, 1);
@@ -860,7 +862,14 @@ impl World {
         // What the class gives up to the player's level, if its table grew since (spec §8
         // "Class abilities"); a birth sign's gifts first (spec §8 "Birth sign").
         if let Some(player) = state.actors.get_mut(&state.player) {
-            stars::grant(&content, state.character.as_ref(), &mut player.talents);
+            let boons = std::mem::take(&mut player.boons);
+            stars::grant(
+                &content,
+                state.character.as_ref(),
+                &boons,
+                &mut player.talents,
+            );
+            player.boons = boons;
         }
         let mut world = Self::assemble(content, state);
         world.grant_class(world.player_level(), false);
@@ -1441,6 +1450,8 @@ mod room_tests;
 mod rot_tests;
 #[cfg(test)]
 mod rumour_tests;
+#[cfg(test)]
+mod scriptorium_tests;
 #[cfg(test)]
 mod scroll_label_tests;
 #[cfg(test)]

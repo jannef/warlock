@@ -34,7 +34,9 @@ other roll, so they never move a score. Rules read a benefit through `Actor::ski
 `Skills::effect` directly. Each effect is read in one place: Dodge in
 `Actor::defence`, quiet in `noise::noise`, hearing in `Actor::hearing`, burden in
 `World::burdened` (`Burden::slow_eased`), travel in `World::step_price`, bargain in
-`world/shop.rs`, kick (athletics: Strength for kicking a door in) in `World::kick_door`, pick
+`world/shop.rs`, kick (athletics: Strength for kicking a door in) in `World::kick_door`, speed
+(athletics, #548: percent quicker, added to the talents' `speed_percent`, the skills never
+taking the sum past `MAX_SPEED`) in `Actor::speed`, pick
 (Open lock: picking a lock, and trained at all, the Pick lock ability) in `World::pick_lock`,
 search, search reach, and spot in `world/search.rs` (`search_modifier`, `search_turn`; Spot
 trained at all lets the player notice in passing, `Skills::trains_effect`), disarm in

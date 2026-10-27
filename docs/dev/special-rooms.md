@@ -36,8 +36,13 @@ a terrain as a feature's, `per_cells` at least 1, `most` 1 to `MAX_DRESSING` 16;
 table id, checked in `resolve_places` once `data/outcomes/` is loaded; `offers` and `sides` need
 a `feature`), `shrine` (`{ regen, status, welcome, unwelcome }`, `content::Shrine`,
 `content/room_shrine.rs`: a shrine of a side; needs `sides`; `status` resolved and held to a
-room status's easing), and `hoard` (a tempting hoard, `content::Treasure`: `items` 1 to 16, `loot_level`,
-`guardians = [least, most]` at most 16, `danger`; it needs `needs_danger` and can never pervade).
+room status's easing), `hoard` (a tempting hoard, `content::Treasure`: `items` 1 to 16, `loot_level`,
+`guardians = [least, most]` at most 16, `danger`; it needs `needs_danger` and can never pervade),
+`loot` (`{ class, count = [least, most] }`, `content::RoomLoot`: an item class id, 1 to 16 items;
+can never pervade) and `train` (`{ skill = percent }`, 1 to 1000, a mark's chance inside); both
+name content loaded after the effects, so `content/room_lore.rs` keeps the names until
+`RoomEffects::resolve_lore` (after `resolve_places`) resolves them, refusing unknown ones
+(`train` is dropped when the content has no skills at all).
 An effect with `level_chance` must have a
 `pervade` line and be neither `shunned` nor lay a `floor` nor hold `mirrors` nor `collapse`
 (`RoomEffectDef::can_pervade`; nor one with a `feature`); a level file's `effect` is held to the
@@ -58,11 +63,13 @@ guardians = [2, 4], danger = 1 }`, #415), cursed (6, mark
 #408), altar (8, "altar room",
 `min_cells = 9`, `feature = "forgotten_altar"`, `sides`, `offers = { pray = "forgotten_altar" }`,
 #406), shrine (4, mark `i`, `min_cells = 9`, `feature = "shrine_stone"`, `sides` with the
-altar's lights, `shrine = { regen = 200, status = "unwelcome", ... }`, #413), armoury (4, mark
-`R`, `needs_danger`, `min_cells` 16, `dressing` of `weapon_rack`, `swarm` with its own
-`population` of the three animated families and `danger = 4`, #487), workshop (4, mark `W`, as the
-armoury with `workbench` and ten household types, #487). Draining (also `unholy`) and cursed are
-the ones with a `level_chance`. Fyrdelf favours the armoury at 20.
+altar's lights, `shrine = { regen = 200, status = "unwelcome", ... }`, #413), scriptorium (5, mark
+`r`, `min_cells = 9`, `feature = "shelves"`, `loot = { class = "scrolls", count = [2, 4] }`,
+`train = { decipher_script = 200 }`, #414), armoury (4, mark `R`, `needs_danger`, `min_cells` 16,
+`dressing` of `weapon_rack`, `swarm` with its own `population` of the three animated families and
+`danger = 4`, #487), workshop (4, mark `W`, as the armoury with `workbench` and ten household
+types, #487). Draining (also `unholy`) and cursed are the ones with a `level_chance`. Fyrdelf
+favours the armoury at 20.
 
 A dungeon's `room_effects` (on a branch or a `[[dungeon.levels]]` range; `content/dungeon.rs`,
 `RoomOddsSpec::layer`/`resolve`, field by field: the range's, the branch's, the shared file's)
@@ -213,6 +220,22 @@ the inner cells; each cell taken once. Saved: `lifted` and `sealed` on `SpecialR
 out while 0/false, so other rooms hash as before. The `rooms` dev layer adds `, lifted N` and
 `, sealed`.
 
+## Scriptoria
+
+#414, the design's §9.4. Data: the `scriptorium` effect and the terrain `shelves` (`≡`, stone, not
+walkable, transparent, a `description`), placed by `special.rs` as any `feature` is (no side, no
+light). Loot (`mapgen/room_loot.rs`, `room_loot::fill`, called in `mapgen::generate_with` after
+the danger block, so on every generated branch level): every special room whose effect has a
+`loot` gets `rng.range(least, most)` items, each `loot::base_in` of the class at the floor's
+item level then `loot::make_as` (`LootGrade::Any`, `Source::Loot`), on a cell of the room's plain
+floor (no stairs, light, or trap) drawn after it, all from `Rng::swarm` started afresh (as the den
+and the hoard do). The test `mapgen/scriptorium_tests.rs` checks the level is otherwise the same
+without the loot.
+
+Training (`world/train.rs`, the one hook): `World::train` scales each mark rule's chance by
+`Here::train(skill)` at the player's cell (percents multiply, room and level; capped at 100), so
+Decipher script's 50 % mark for a study is certain inside. Nothing is saved; no action, no ability.
+
 ## Forgotten altars and prayer
 
 #406, the design's §7. Data: the `altar` effect, the terrains `forgotten_altar` (glyph `_`,
@@ -269,8 +292,28 @@ Nothing new is saved but `SpecialRoom::side` (left out while `None`): the terrai
 of a spent or blown altar. The `rooms` dev layer adds `, side good` and `, spent`/`, destroyed`
 (`dump.rs::feature_state`). The showcase's `shrine` scenario has a good, a neutral, and an evil
 altar side by side. Talent: Devout (system `prayer`, `TalentMods::devout`; hook
-`leaned_kinds`). The great outcomes (`Actor::boons`, `World::lose_level`, the rarity floor) and
-Penitent come with #407.
+`leaned_kinds`).
+
+The great outcomes (#407, `world/boons.rs`; tests `world/boons_tests.rs`) are five more hooks,
+applied after `becomes`: `gift` (`Stats::gift` on a random stat), `wrath` (`Stats::lessen`,
+floor `DRAIN_FLOOR`, then stat damage clamped and `keep_hp_within_max`), `levels` (positive:
+`gain_level`, `add_xp` to the next threshold exactly, unscaled by Good learner; negative:
+`World::lose_level`), `talent` (Chosen: `talent::offers` flattened to the ways not held, one
+drawn, `bestow`: `Talents::take`, `class::hand_out`, `train_chosen`, and pushed to
+`Actor::boons`), and `flaw` (Forsaken: the `flaw` talents not held, by id, one drawn, given
+likewise); `rarity` (`magic`/`rare`, only with `loot`) is the relic's floor, the `LootGrade`
+`loot::roll_with` takes. `Actor::boons` (saved, left out while empty) is read by
+`stars::grant`, which passes its ids to `Talents::regrant` beside the race's and the sign's
+(the flaws, being granted, are dropped and put back there) and `Talents::hold`s the rest.
+`World::lose_level` takes the experience to `threshold_for(level - 1)`, the level's
+`level_hp` (up to `hp_level`), the talents' `hp_at`/`mana_at` growth, Hardened's, and
+`level_mana` (up to `mana_level`) off the bases (hit points never below 1), drops `Due`s of
+that level and above, and raises `Progress::peak` (saved, left out at 0): `level_up` gives a
+level up to `peak` its hit points and mana again but no `Due`, no stat checks, and no class
+news. Penitent (`TalentMods::penitent`) is read in `prayer_answered`: a drawn outcome of kind
+bane and tier great is replaced by `draw_in(table, nothing)`. Perception's `OwnTalent::boon`
+marks them: `(altar)`/`(altar, flaw)` in the talents dump, "altar" on the Talents page, left
+out of the character screen's sign gifts; JSON adds `boon: true` only then.
 
 ## Shrines of a side
 
@@ -507,7 +550,8 @@ System `special_rooms` (`data/talents.toml`): Sense of place (wayfarer, `sense_o
 `collapse_proof`; hook `World::collapse_step`, which then draws nothing), Hoard-wise (delver,
 Intelligence 11, `hoard_grace` 1; hook `World::lift_in_hoard`), and Grave warden (guard, Willpower 12,
 `grave_warden`; hook `World::curse_corpse`). The class ability Consecrate (above) carries the
-system too. System `prayer`: Devout (wayfarer, `devout`; hook `world/outcome.rs::leaned_kinds`).
+system too. System `prayer`: Devout (wayfarer, `devout`; hook `world/outcome.rs::leaned_kinds`) and Penitent
+(grit, Willpower 12, `penitent`; hook `world/pray.rs::prayer_answered`).
 
 ## Tests
 
@@ -546,7 +590,12 @@ refusals), `mapgen/altar_tests.rs` (one altar a room, never by a door, its side'
 level still joined, the sides one to two to one), `world/outcome_tests.rs` (Pray only beside an
 altar not spent, a minute, a broken prayer, the lean and Devout, the draw's shares, the nothing
 lines, each hook, the explosion, the deed, exhaustion near half and a spent altar after a save
-and load), `world/unstable_room_tests.rs` (the unstable room: about one step in ten inside
+and load), `content/room_lore_tests.rs` (`loot` and `train`: parsed, checked, resolved, unknown names
+refused, never over a whole level, `Here::train` folding, the built-in scriptorium),
+`mapgen/scriptorium_tests.rs` (one shelf a room, two to four scrolls, the rest of the level
+unchanged), `world/scriptorium_tests.rs` (Decipher script's marks certain inside and about half
+outside, other skills as anywhere, a study inside marking, the near and enter lines and look
+mode's shelves), `world/unstable_room_tests.rs` (the unstable room: about one step in ten inside
 warps the player and a creature, never outside, no draw outside, the messages, a free landing
 cell, saving), `content/room_collapse_tests.rs` (the `collapse` field, its refusals, never
 over a whole level, `Here::collapse`), `world/collapse_tests.rs` (the collapsed floor: its data,

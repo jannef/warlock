@@ -76,7 +76,7 @@ impl ObjectList {
             ObjectList::PickUp => " Pick up ",
             ObjectList::Drop => " Drop ",
             ObjectList::Throw => " Throw ",
-            ObjectList::Eat => " Eat ",
+            ObjectList::Eat => " Consume what? ",
             ObjectList::Read => " Read ",
             ObjectList::Study => " Study ",
             ObjectList::Identify(_) => " Identify ",
@@ -88,7 +88,7 @@ impl ObjectList {
             ObjectList::Inventory | ObjectList::Drop => "You are not carrying anything.",
             ObjectList::PickUp => "There is nothing here.",
             ObjectList::Throw => "You have nothing to throw.",
-            ObjectList::Eat => "You have nothing to eat.",
+            ObjectList::Eat => "You have nothing to consume.",
             ObjectList::Read => "You have nothing to read.",
             ObjectList::Study => "You carry no scroll whose spell you could learn.",
             ObjectList::Identify(_) => "You carry nothing unidentified.",
@@ -607,7 +607,7 @@ impl ObjectScreen {
                 };
                 format!("{page}{}{close}", with("look"))
             }
-            ObjectList::Eat => format!("{}   {page}Esc cancel", either("eat")),
+            ObjectList::Eat => format!("{}   {page}Esc cancel", either("consume")),
             ObjectList::Throw => format!("{}   {page}Esc cancel", either("choose")),
             ObjectList::Read => format!("{}   {page}Esc cancel", either("read")),
             ObjectList::Study => format!("{}   {page}Esc cancel", either("study")),
@@ -703,7 +703,7 @@ mod tests {
             at("│ Food").map(|y| y + 1)
         );
         assert!(at("b - % an apple").is_some());
-        assert!(at("a-b or Enter eat   Esc cancel").is_some());
+        assert!(at("a-b or Enter consume   Esc cancel").is_some());
         // Enter eats what lies here (the cursor starts on it); a pack letter eats from the pack.
         assert_eq!(
             screen.handle(&Press::nav(Nav::Enter), &b),
@@ -723,14 +723,14 @@ mod tests {
             screen.handle(&Press::nav(Nav::Enter), &b),
             ScreenAction::Act(Action::Eat(Meal::Pack(1)))
         );
-        // Nothing to eat: it says so, and Enter or Esc closes it.
+        // Nothing to consume: it says so, and Enter or Esc closes it.
         let empty = on_the_pile();
         let mut screen = ObjectScreen::new(ObjectList::Eat, Some(&empty.perception()));
         screen.draw(&mut console, &b);
         assert!(
             text(&console)
                 .iter()
-                .any(|l| l.contains("You have nothing to eat."))
+                .any(|l| l.contains("You have nothing to consume."))
         );
         assert_eq!(
             screen.handle(&Press::nav(Nav::Enter), &b),

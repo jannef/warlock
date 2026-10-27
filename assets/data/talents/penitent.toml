@@ -1,0 +1,8 @@
+[[talent]]
+id = "penitent"
+name = "Penitent"
+tree = "grit"
+description = "You kneel as one who knows their debts: whatever would curse you for good at a forgotten altar passes over you."
+needs = { stats = { willpower = 12 } }
+effects = [{ kind = "penitent" }]
+systems = ["prayer"]

@@ -157,6 +157,12 @@ mod tests {
         assert_eq!(stealth.benefits[0].at(50), 30);
         assert_eq!(book.id("stealth"), Some(SkillId(0)));
         assert_eq!(book.id("listen"), None);
+        // Speed (Athletics, #548): a percent, up to the cap on speed.
+        let speed =
+            format!("{ONE}benefit = [{{ effect = \"speed\", curve = [[0, 0], [100, 50]] }}]\n");
+        let speed = parse(&speed).expect("valid");
+        assert_eq!(speed.list[0].benefits[0].effect, Effect::Speed);
+        assert_eq!(speed.list[0].benefits[0].at(200), 50);
         // Without `[ladder]` and `[rolls]`, ADOM's ladder and the default rules.
         let plain = parse(ONE).expect("valid");
         assert_eq!(
@@ -202,6 +208,10 @@ mod tests {
                 "`name` must not be empty",
             ),
             (format!("{ONE}level = 3\n"), "unknown field `level`"),
+            (
+                format!("{ONE}benefit = [{{ effect = \"speed\", curve = [[0, 0], [100, 51]] }}]\n"),
+                "a `speed` benefit must stay within 0 to 50",
+            ),
         ] {
             let e = parse(&text).unwrap_err();
             assert!(e.message.contains(why), "{why}: {}", e.message);
