@@ -389,7 +389,7 @@ mod tests {
         let spec = "human,male,warrior".parse().expect("a character");
         let mut world =
             World::start_run(content, "showcase", Some(1), Some(&spec), None, true).expect("world");
-        for action in parse_actions("xp:2431").expect("actions") {
+        for action in parse_actions("xp:691").expect("actions") {
             world.apply(&action);
         }
         world

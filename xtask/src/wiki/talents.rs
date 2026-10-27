@@ -637,6 +637,11 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
              are not shown",
             if value == 1 { "" } else { "s" }
         ),
+        TalentEffect::HoardGrace { value } => format!(
+            "a tempting hoard seals only once you have lifted {} stack{} inside it",
+            1 + value,
+            if value == 0 { "" } else { "s" }
+        ),
         TalentEffect::SearchReach { value } => format!(
             "searching reaches {value} cell{} farther",
             if value == 1 { "" } else { "s" }

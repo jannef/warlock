@@ -34,6 +34,7 @@
 mod caves;
 mod connect;
 mod den;
+mod hoard;
 pub mod local;
 mod population;
 mod rooms;
@@ -529,6 +530,7 @@ pub fn generate_for(
                 let danger = rule.at(depth, visit.player_level);
                 population::populate(&mut template, content, seed, (pal, danger, spawning), visit);
                 den::fill(&mut template, content, seed, (pal, danger, spawning), visit);
+                hoard::fill(&mut template, content, seed, (pal, danger), visit);
             }
             crate::gear::arm(&mut template, content, seed);
             crate::animated::arm(&mut template, content, seed);

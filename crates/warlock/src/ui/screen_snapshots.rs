@@ -335,7 +335,7 @@ const CASES: &[Case] = &[
     Case {
         name: "abilities-menu-spells",
         character: Some("human,female,priest"),
-        actions: "xp:100000 levelup:auto use:blessing drain:94",
+        actions: "xp:100000 levelup:auto use:blessing drain:101",
         screen: Some("abilities"),
         ..BASE
     },
@@ -353,21 +353,21 @@ const CASES: &[Case] = &[
     Case {
         name: "level-up-rolls",
         character: Some("human,male,warrior"),
-        actions: "xp:2431",
+        actions: "xp:691",
         size: (100, 40),
         ..BASE
     },
     Case {
         name: "level-up-talent",
         character: Some("human,male,warrior"),
-        actions: "xp:2431 advance:athletics*6",
+        actions: "xp:691 advance:athletics*6",
         size: (100, 40),
         ..BASE
     },
     Case {
         name: "level-up-choice",
         character: Some("human,male,warrior"),
-        actions: "xp:2431 advance:athletics*6",
+        actions: "xp:691 advance:athletics*6",
         // Apprentice's letter on the talent list.
         keys: Some("s"),
         size: (100, 40),
@@ -386,7 +386,7 @@ const CASES: &[Case] = &[
     Case {
         name: "talents-screen-spellcraft",
         character: Some("human,male,wizard"),
-        actions: "xp:3100 talent:school_focus:evocation advance:spellcraft*8",
+        actions: "xp:880 talent:school_focus:evocation advance:spellcraft*8",
         screen: Some("talents"),
         size: (100, 40),
         ..BASE

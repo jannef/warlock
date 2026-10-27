@@ -22,9 +22,9 @@ expression: "render(case, content.clone())"
     │ Pr  Presence       8              +3 to hit, 1d6 piercing, range 10                     │
     │                                                                                         │
     │ Lv  Level         1                                                                     │
-    │ XP  Experience    0 / 805                                                               │
+    │ XP  Experience    0 / 202                                                               │
     │     Talents       9                                                                     │
-    │ HP  Hit points    20/20   MP  Mana       4/4                                            │
+    │ HP  Hit points    20/20   MP  Mana       6/6                                            │
     │ Dv  Defence       12      Pv  Protection  1                                             │
     │     Stance        Neutral                                                               │
     │     Alignment     Neutral                                                               │
@@ -37,4 +37,4 @@ expression: "render(case, content.clone())"
     └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘
 
 
- The Hub  ·  HP 20/20  ·  MP 4/4  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444          ? controls
+ The Hub  ·  HP 20/20  ·  MP 6/6  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444          ? controls

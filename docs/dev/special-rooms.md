@@ -28,9 +28,11 @@ step inside warps the stepper, 0 to 100, default 0), `collapse` (`{ chance, dama
 `RoomEffects::check_factions`), `unholy` (Consecrate lifts it), `feature` (a terrain id,
 transparent and not walkable, not stairs or a door), `sides` (`{ good = LIGHT, evil = LIGHT }`: the
 room draws a hidden side, its feature a light per side; the lights are resolved after they load,
-`RoomEffects::resolve_places`), and `offers` (`{ pray = TABLE }`, `Offer::Pray` and an outcome
+`RoomEffects::resolve_places`), `offers` (`{ pray = TABLE }`, `Offer::Pray` and an outcome
 table id, checked in `resolve_places` once `data/outcomes/` is loaded; `offers` and `sides` need
-a `feature`). An effect with `level_chance` must have a
+a `feature`), and `hoard` (a tempting hoard, `content::Treasure`: `items` 1 to 16, `loot_level`,
+`guardians = [least, most]` at most 16, `danger`; it needs `needs_danger` and can never pervade).
+An effect with `level_chance` must have a
 `pervade` line and be neither `shunned` nor lay a `floor` nor hold `mirrors` nor `collapse`
 (`RoomEffectDef::can_pervade`; nor one with a `feature`); a level file's `effect` is held to the
 same.
@@ -43,7 +45,9 @@ Features today: shadowed (10), echoing (8), hushed (8), sanctuary (6), flooded (
 #412), mirrors (3, "hall of mirrors", `max_cells = 80`, `mirrors = { images = 2 }`, #419), unstable (4, "unstable room", `warp = 10`, `max_cells = 60`, #411), beast den (5, mark `n`, `needs_danger`, `min_cells` 16, `swarm` with
 `factions = ["wildlife", "vermin", "marsh"]` and `hoard = "corpses"`, #410), collapsed (3, "collapsed
 floor", mark `k` (`c` is the cold room's), `needs_below`, `floor = "cracked_floor"`, `collapse =
-{ chance = 15, damage = "2d6" }`, #420), cursed (6, mark
+{ chance = 15, damage = "2d6" }`, #420), tempting hoard (5,
+`hoard`, "treasure room", mark `$`, `needs_danger`, `hoard = { items = 3, loot_level = 3,
+guardians = [2, 4], danger = 1 }`, #415), cursed (6, mark
 `g`, `needs_danger`, `level_chance` 5, `rise = { faction = "undead", after = "2m" }`, `unholy`,
 #408), altar (8, "altar room",
 `min_cells = 9`, `feature = "forgotten_altar"`, `sides`, `offers = { pray = "forgotten_altar" }`,
@@ -135,6 +139,38 @@ Sleep (`world/den.rs`): a creature whose effects include a status with `sleeps` 
 Sleepers are ordinary hostile actors otherwise: `hostiles_here` counts them toward the spawn cap,
 a kill is `kill_hostile`, the status is saved and hashed with the actor. The `bench-turns` `delf`
 fixture branch favours teeming dens (`xtask/src/bench.rs`).
+
+## Tempting hoards
+
+Items (`mapgen/hoard.rs`, `hoard::fill`, called in `mapgen::generate_with` right after
+`den::fill`, only on a branch level with a danger): every special room whose effect has a
+`hoard` gets `hoard.items` items, `loot::roll_with` at the item level + `loot_level`
+(`LootGrade::Any`, the visit's luck), each on a plain floor cell of the room (the palette's floor,
+no stairs, light, or trap) drawn anew, from `Rng::swarm` (`swarm/<level id>`; a level with a den
+and a hoard starts the stream afresh for each, which only happens with `per_level` above 1).
+`population.rs` keeps its creatures out of a hoard and `special::make` refuses one where a
+generator patrol walks, as for a den: it lies unguarded.
+
+Sealing (`world/hoard.rs`): `World::lift_in_hoard(at, stacks)` is the one line in
+`carry.rs::pick_up`, after the pick-up is said. Inside a room with a `hoard` that has not sealed,
+`SpecialRoom::lifted` grows by the stacks lifted; once it passes the player's
+`TalentMods::hoard_grace` (Hoard-wise: 1) the room is `sealed` and `seal` runs: every cell of the
+room (`cells()`: a rooms level's rectangle holds its walls and doors) that is an open door with
+nothing in the doorway is shut (`set_terrain` to its `closes_to`), every closed door there then
+gets `Lock::new(None)` unless it is locked already (only a skeleton key fits; `lock_difficulty`
+adds the branch's depth), and each makes a slam through `sound_at` (`Banging`, `KICK_NOISE`, no
+maker: sleepers and creatures hear it as a trap's noise); "The doors slam shut!" (`hoard::SLAM`)
+when any. No `Event::DoorClosed` is sent (the pick-up has no event list; the screen follows the
+terrain). Then `guard`: on a level with a danger rule (`Content::spawning`) and a danger,
+`rng.range(least, most)` guardians from the **gameplay** stream, each `danger::draw` at the
+danger + `hoard.danger` over the branch's population and generic list (`Content::candidates`,
+hostile to the player, not unique), placed by `travel::make_creature` (`rolls_gear: true`, awake,
+no route) on a cell from `guard_cells`: the room's walkable cells with no actor, door, or stairs,
+those on its edge (a neighbour outside the room or not walkable) first, among them first the
+cells the last perception does not see (`Perception::sees_actors_at`), then the seen ones, then
+the inner cells; each cell taken once. Saved: `lifted` and `sealed` on `SpecialRoom`, each left
+out while 0/false, so other rooms hash as before. The `rooms` dev layer adds `, lifted N` and
+`, sealed`.
 
 ## Forgotten altars and prayer
 
@@ -406,7 +442,8 @@ System `special_rooms` (`data/talents.toml`): Sense of place (wayfarer, `sense_o
 `mana`; hook `World::dwell`), Hush-foot (shadow, Stealth 10, `wake_percent` 100, also system
 `stealth`; hook `World::spread_noise`'s wake check), Mirror-wise (scholar, `sees_reflections` 2; hook
 `Perception::compute`'s images, which the glass reads too), Light tread (delver, Dexterity 12,
-`collapse_proof`; hook `World::collapse_step`, which then draws nothing), and Grave warden (guard, Willpower 12,
+`collapse_proof`; hook `World::collapse_step`, which then draws nothing), Hoard-wise (delver,
+Intelligence 11, `hoard_grace` 1; hook `World::lift_in_hoard`), and Grave warden (guard, Willpower 12,
 `grave_warden`; hook `World::curse_corpse`). The class ability Consecrate (above) carries the
 system too. System `prayer`: Devout (wayfarer, `devout`; hook `world/outcome.rs::leaned_kinds`).
 
@@ -450,7 +487,11 @@ about 15 % of steps on cracked floor fall and none on sound floor or outside, tw
 Burdened, Light tread and the other no-draw cases, creatures never fall, the landing, hurt and
 Staggered, a fall that kills and its `Cause::Fall`, the messages, a walk through `World::apply`,
 and over a fixture branch of rooms and caves every generated collapsed floor's sound rim and a
-sound way between its ways in), `world/curse_tests.rs` (the cursed room's data and refusals, rising after two
+sound way between its ways in), `world/hoard_tests.rs` (the
+tempting hoard: its data and refusals, the first stack sealing it with both doors shut and locked
+and two to four hostile guardians, the guardians on the edge and out of view, nothing lifted
+outside counting, Hoard-wise, sealing once, an open door with something in it left open, a
+doorless room, no danger, the dump, saving, and a generated hoard's items with no one inside), `world/curse_tests.rs` (the cursed room's data and refusals, rising after two
 minutes as undead of the dead's level, the twitch and rising lines, not when the corpse is gone or
 carried out, not outside, never the undead, the nearest-level fallback and the campaign's own,
 Grave warden, a cursed level, a frozen level catching up, saving and the dump; Consecrate lifting a

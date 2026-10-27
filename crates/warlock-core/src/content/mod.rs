@@ -200,7 +200,7 @@ pub use rod::{
 };
 pub use room_effect::{
     Collapse, Here, Hoard, Mirrors, Offer, RoomEffectDef, RoomEffectId, RoomEffects, SpecialRoom,
-    Swarm, Themes,
+    Swarm, Themes, Treasure,
 };
 pub use scenario::ScenarioDef;
 pub use scroll::{Cast, Reading, ScrollSpell, SpellScroll};

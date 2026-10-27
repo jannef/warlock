@@ -219,7 +219,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     entering); a *collapsed floor* (3, #420; only
     on a level with another below it) has a floor of cracked stone that may give way under the
     player ("The floor ahead is cracked and sagging." when glimpsed, "The floor creaks under your
-    weight." on entering; below); a *cursed room* (6, #408; only on a level with a danger; unholy, as is the
+    weight." on entering; below); a *treasure room* (5, #415; only on a level with a danger) is a
+    tempting hoard (below; "Something glitters ahead." when glimpsed, "Treasure lies here,
+    unguarded." on entering); a *cursed room* (6, #408; only on a level with a danger; unholy, as is the
     draining room) raises the dead killed inside (below; "A cold draught smells of the grave."
     when glimpsed, "The air is cold and the dead are near." on entering) and covers a whole
     level with `level_chance` 5 ("The dead do not rest on this level."). Fennmynster favours it
@@ -299,6 +301,28 @@ developer notes (CLAUDE.md, `docs/dev/`).
     stays as it was. Creatures never fall (no draw for them). Nothing new is saved: the fall
     is a level change like the stairs'. Light tread (§8 "Talents") never falls. It never
     covers a whole level.
+  - **A tempting hoard** (`hoard = { items = 3, loot_level = 3, guardians = [2, 4], danger = 1
+    }`, #415; `mapgen/hoard.rs`, `world/hoard.rs`). A generated floor's treasure room gets
+    `items` items (1 to 16), each rolled at the floor's item level + `loot_level` with the
+    finder's luck and laid on a plain floor cell of the room drawn anew (no stairs, light, or
+    trap), from the level's stream `swarm/<level id>` after its population; the floor's
+    population and the generator's patrols keep out of it, so it lies unguarded. The first
+    stack the player lifts inside it (`pick_up`; every stack of a pick-up counts) **seals** it:
+    every door of it shuts (an open one unless someone or something is in the doorway; a broken
+    one stays broken) and locks with a lock of the floor's level (no id: only a skeleton key
+    fits; picked against the usual difficulty plus the branch's per depth, or kicked, §8
+    "Doors"), each slamming as loud as a kick (banging, 100), and "The doors slam shut!" is
+    said when any did; then `guardians` creatures (least to most, one gameplay draw) come, each
+    drawn by the level's danger + `danger` from the branch's population and strays by the draw
+    of §7 "Danger levels" (hostile to the player, never unique), awake, with gear rolled as a
+    creature that comes, on a walkable free cell of the room on its **edge** (next to a cell
+    outside it or not walkable): first those the player does not see, then those they see,
+    then any free cell of the room. A level without a danger rule gets no guardians. A cave
+    chamber has no doors: only the guardians come. A room seals once; the stacks lifted and
+    whether it sealed are saved with the room (`SpecialRoom::lifted`, `sealed`; left out while
+    nothing was lifted, so other rooms save and hash as before), and the `rooms` dev layer
+    lists them (`, lifted 1, sealed`). Hoard-wise (§8 "Talents") lets one stack go first.
+    Never over a whole level.
   - **Cursed rooms** (`rise = { faction = "undead", after = "2m" }`, #408; `world/curse.rs`):
     a creature that dies on a cell whose effects raise the dead (the room's, else the whole
     level's), is not of the rise's `faction`, and leaves a corpse is marked to rise, whoever
@@ -454,7 +478,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     favoured, over the favoured ones by their shares). For an effect with a `level_chance`, one
     more draw: with that chance it covers the **whole level** and the room stays plain (it
     counts toward `per_level`; at most one a level). The effect's `floor` replaces plain floor in
-    the room (doorways too). A shunned effect or a den never goes where a creature patrols. About 60 % of
+    the room (doorways too). A shunned effect, a den, or a hoard never goes where a creature patrols. About 60 % of
     generated levels get a special room (a test keeps it between half and seven tenths over 1200
     levels).
   - **A dungeon's own special rooms** (`room_effects` on a branch in a campaign's

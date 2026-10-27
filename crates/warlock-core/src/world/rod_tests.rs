@@ -132,7 +132,7 @@ fn reach_grows_with_the_users_caster_level() {
     run(&mut w, "identify:a");
     assert_eq!(w.perception().own_rod(0), Some((6, 3)));
     // Level 3, caster level 3: a cell more for digging (one per 3 levels).
-    run(&mut w, "xp:2431");
+    run(&mut w, "xp:691");
     assert_eq!(w.caster_level(w.state.player), 3);
     assert_eq!(w.perception().own_rod(0), Some((6, 4)));
     let digging = w

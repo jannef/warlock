@@ -2,7 +2,7 @@
 
 Killing monsters earns **experience points** (XP), and enough of them make you a higher **level**.
 Your level (`Lv`) is in the status bar, and the [character screen](character.md) (`@`) shows it
-with your XP and the XP at which the next level comes, like `XP  85 / 767`. Dying shows the level
+with your XP and the XP at which the next level comes, like `XP  85 / 192`. Dying shows the level
 you had reached.
 
 ## What counts
@@ -16,7 +16,8 @@ you merely watched.
 
 Every kind of creature has a **level** and an **XP value**. A creature is worth about 5 XP per
 level plus 10 (the guideline the level curve is written in; the vermin are worth less, and some
-are not meant to be fought):
+are not meant to be fought). A few may be set to pay more or less than that by hand: the table
+then shows what a kill pays and how, `45 (30 × 150 %)`:
 
 {{#include generated/experience-creatures.md}}
 
@@ -54,8 +55,10 @@ So a kobold shaman is worth less every level you gain:
 
 The highest level is 60, and the road there is long. Each level costs a number of kills of
 creatures of your own level: 38 for level 2, about 160 a level by level 10, and more for every
-level after that, up to 365 for level 60. That is about 3,000 such kills to reach level 20 and
-15,000 to reach level 60 (real counts run higher: weaker monsters are worth less, and grey ones
+level after that, up to 365 for level 60. The first levels come faster: level 2 costs only 25 %
+of that (10 kills), level 3 30 %, then 35, 40, 50, 60, 70, 80, 90, and 95 % for level 11; from
+level 12 on a level costs its full price. That is about 2,600 such kills to reach level 20 and
+14,600 to reach level 60 (real counts run higher: weaker monsters are worth less, and grey ones
 nothing). Gaining a level says "You feel more experienced." and "Welcome to level N."; one kill
 can bring several levels at once.
 

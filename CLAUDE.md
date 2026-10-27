@@ -151,7 +151,7 @@ throws the player's voice to level cell (X, Y) (one they see, within 6; the bard
 with its choice) when a level's pick is due (every third level; until it is made every other
 action is refused), `advance:stealth` spends a level's skill roll (none yet, #230), `levelup:auto`
 is the dev action that spends every choice due with the first the player may take, and `xp:2500`
-the dev experience grant (no time; `xp:2431` brings a 100 % character to level 3);
+the dev experience grant (no time; `xp:691` brings a 100 % character to level 3);
 
 `PROFILE` = an id in
 `assets/data/vision.toml`; `GOAL` = `dawn`, `dusk`, or a duration up to `24h`; durations are

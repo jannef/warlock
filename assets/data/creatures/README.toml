@@ -84,8 +84,10 @@
 #
 # Experience (spec §8 "Experience"; the player sees only the XP and level they earn): level (1 to 99,
 # default 1) and xp (what a kill by the player is worth when the player is at that level, default 0;
-# the player's own entry has neither). Kills of lower-level monsters give less and less
-# (data/experience.toml). The level is also its danger (spec §7 "Danger levels"): a dungeon
+# the player's own entry has neither). xp_percent (optional, any whole number from 0 up, default
+# 100) is a hand-set modifier of xp in percent, no formula: a kill and the first-kill bonus start
+# from xp × xp_percent ÷ 100, so xp itself can stay on the guideline. Kills of lower-level
+# monsters give less and less (data/experience.toml). The level is also its danger (spec §7 "Danger levels"): a dungeon
 # branch's or a level's `population` draws it on floors of about that danger.
 #
 # Uniques (spec §7 "Danger levels"): unique = true (default false) for a type a population draws

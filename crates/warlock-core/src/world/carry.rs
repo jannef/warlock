@@ -81,6 +81,7 @@ impl World {
             text.push_str(&format!(" You owe {name} {owed} gold."));
         }
         self.say(text);
+        self.lift_in_hoard(here, got.len());
         true
     }
 

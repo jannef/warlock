@@ -155,6 +155,18 @@ pub(super) fn special_rooms(content: &Content) -> String {
                 e.warp
             ));
         }
+        if let Some(h) = e.hoard {
+            let [least, most] = h.guardians;
+            does.push(format!(
+                "{} items lie on its floor, {} item levels above the level's. The first stack \
+                 you lift inside seals it: every door of it shuts (unless something is in the \
+                 doorway) and locks with a lock of the level's depth that only a skeleton key \
+                 opens, and {least} to {most} creatures hostile to you of the level's danger + \
+                 {} come on its edge, out of your sight where they can (Hoard-wise: the second \
+                 stack). It seals once.",
+                h.items, h.loot_level, h.danger
+            ));
+        }
         if let Some(rise) = &e.rise {
             does.push(format!(
                 "A creature that dies in it (not one of the {}) rises from its corpse {} later \

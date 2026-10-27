@@ -118,6 +118,14 @@ gets where a dungeon favours or bans nothing. "Only" says where it can come at a
   beneath you!"). You fall to the level below, land somewhere open on it (never behind a locked
   door or in a shop), take 2d6 damage, which can kill you, and are Staggered. A
   quick way down, if you can take the bruises; creatures never fall through.
+- **Treasure room.** A tempting hoard, only on a level with a danger: three items lie on its
+  floor, better than the level's own (three item levels above it), and no one guards them. The
+  moment you pick anything up inside, the room seals: every door of it slams shut and locks
+  ("The doors slam shut!"; a door with something in the doorway stays open), and two to four
+  creatures hostile to you, a step more dangerous than the level's own, come at the room's
+  edges, where you cannot see them if there is such a place. The locks are of the level's
+  depth and no key but a skeleton key fits; pick them, kick the doors in, or fight. A cave
+  chamber has no doors, so there only the guardians come. A room seals once.
 - **Cursed room.** The dead do not rest in it: see below. Only on a level with a danger. One
   floor in twenty that draws a cursed room is cursed throughout instead.
 
@@ -132,6 +140,8 @@ mind* (Scholar) keeps your power moored: Ebbing never takes you. The talent *Mir
 your step there. The talent *Light tread* (Delver) carries you over a collapsed floor as if it
 were sound rock: it never gives way under you. The talent *Grave warden* (Guard) keeps what you
 kill down: nothing you kill ever rises in a cursed room.
+The talent *Hoard-wise* (Delver) knows how a treasure room is baited: you
+can lift one thing from it before it seals; the second seals it.
 
 Only what happens inside counts: a sound made in an echoing hall is loud wherever it is heard,
 while one made outside and heard inside is not changed. Light outside a shadowed room is as

@@ -123,6 +123,7 @@ mod glare;
 mod guild;
 mod hash;
 mod hearing;
+mod hoard;
 mod hold;
 mod hunger;
 mod hurl;
@@ -1349,6 +1350,8 @@ mod guild_wanted_tests;
 mod hearing_tests;
 #[cfg(test)]
 mod heavy_hall_tests;
+#[cfg(test)]
+mod hoard_tests;
 #[cfg(test)]
 mod hold_tests;
 #[cfg(test)]
