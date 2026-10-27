@@ -18,23 +18,23 @@ expression: "render(case, content.clone())"
               │ Weaponcraft                                                          │
               │   h  Far shot         Your shots fly 2 cells farther, and what you … │
               │   i  Sworn foe        You have sworn yourself against one kind of c… │
-              │   j  Weapon focus     You have drilled with one kind of weapon unti… │
+              │   j  Unbinder         You strike at the binding, not the thing: you… │
+              │   k  Weapon focus     You have drilled with one kind of weapon unti… │
               │ Guard                                                                │
-              │   k  Armour training  You move freely in armour: it hampers your De… │
+              │   l  Armour training  You move freely in armour: it hampers your De… │
               │ Shadow                                                               │
-              │   l  Hush-foot        You move among sleepers as a breath of air: i… │
-              │   m  Keen ears        You hear fainter sounds, fainter still at the… │
-              │   n  Lamplighter      You tend your lantern well: it burns brighter… │
-              │   o  Night eyes       Your eyes grow used to the dark: you see by h… │
-              │   p  Silent feet      Your footsteps are a fifth quieter for each r… │
+              │   m  Hush-foot        You move among sleepers as a breath of air: i… │
+              │   n  Keen ears        You hear fainter sounds, fainter still at the… │
+              │   o  Lamplighter      You tend your lantern well: it burns brighter… │
+              │   p  Night eyes       Your eyes grow used to the dark: you see by h… │
+              │   q  Silent feet      Your footsteps are a fifth quieter for each r… │
               │ Wayfarer                                                             │
-              │   q  Long strider     Your journeys across the overworld go quicker. │
-              │   r  Pilgrim          You have knelt in many temples: their cures a… │
-              │   s  Sense of place   You read a place at a glance: a special room'… │
-              │   t  Sun-blessed      The sun mends you: under the open sun your wo… │
+              │   r  Long strider     Your journeys across the overworld go quicker. │
+              │   s  Pilgrim          You have knelt in many temples: their cures a… │
+              │   t  Sense of place   You read a place at a glance: a special room'… │
+              │   u  Sun-blessed      The sun mends you: under the open sun your wo… │
               │ Scholar                                                              │
-              │   u  Apprentice       You take up a skill you lack, or get better a… │
-              │   v  Deep well        Your power runs deep: more mana for each rank… │
+              │   v  Apprentice       You take up a skill you lack, or get better a… │
               │                                                                      │
               │ Let chance pick your talents.                                        │
               │                                                                      │

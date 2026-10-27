@@ -53,6 +53,15 @@ impl World {
             return Spent::Nothing;
         };
         let name = capitalized(&self.called(&self.state.actors[&victim]));
+        // An animated thing (spec §8 "Animated objects"): what it carries is what it is.
+        if (content
+            .creature(self.state.actors[&victim].creature)
+            .animated)
+            .is_some()
+        {
+            self.say("It is all of a piece.");
+            return Spent::Nothing;
+        }
         if self.stance(player, victim) == Stance::Hostile {
             self.say(format!(
                 "{name} is hostile: it would never let you near enough."

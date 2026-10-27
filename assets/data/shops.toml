@@ -72,7 +72,8 @@ stock = [
 always = ["scroll_of_identify"]
 buys = [
     "melee_weapons", "missile_weapons", "missiles", "shields", "body_armour", "helmets",
-    "cloaks", "gloves", "boots", "light_sources", "tools", "food", "potions", "scrolls", "gems",
+    "cloaks", "gloves", "boots", "light_sources", "tools", "household", "food", "potions",
+    "scrolls", "gems",
 ]
 items = [6, 10]
 markup = 150

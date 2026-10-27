@@ -1,0 +1,11 @@
+# A three-legged wooden stool.
+# Household goods (#483): what an animated household thing (data/animated/) is made of.
+[[object]]
+id = "stool"
+name = "stool"
+glyph = "("
+fg = "#9c6b3c"
+class = "household"
+materials = ["wood"]
+weight = 2500
+value = 2

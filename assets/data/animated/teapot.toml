@@ -1,0 +1,8 @@
+# A teapot that scalds: trivial fire damage.
+[[body]]
+id = "teapot"
+object = "teapot"
+level = 4
+rarity = "uncommon"
+speed = 900
+attack = { damage_type = "fire", name = "spout", verb = "scalds" }

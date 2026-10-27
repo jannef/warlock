@@ -1,0 +1,8 @@
+# A warming pan, its embers long cold but its pan hot.
+[[body]]
+id = "warming_pan"
+object = "warming_pan"
+level = 5
+rarity = "uncommon"
+speed = 1000
+attack = { damage_type = "fire", name = "pan", verb = "sears" }

@@ -535,6 +535,10 @@ pub(super) fn make_creature(
         state.progress.uniques.insert(def.id.clone());
     }
     let (carry, equipment) = placed_gear(content, state.seed, id, actor_id, spawn);
+    // An animated thing is made of its body (spec §8 "Animated objects").
+    let mut rng = crate::animated::stream(state.seed, &actor_id.0.to_string());
+    let (carry, equipment) =
+        crate::animated::with_body(content, &mut rng, spawn.creature, (carry, equipment));
     let mut actor = Actor {
         id: actor_id,
         kind: ActorKind::Creature,

@@ -1,0 +1,9 @@
+# A lantern that carries a dim light: it is seen coming.
+[[body]]
+id = "lantern"
+object = "lantern"
+level = 6
+rarity = "uncommon"
+speed = 1000
+attack = { damage_type = "fire", name = "flame", verb = "sears" }
+light = "lantern_hooded"

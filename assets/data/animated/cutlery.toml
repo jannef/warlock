@@ -1,0 +1,14 @@
+# A clatter of cutlery: three to six pieces as one, quick and jabbing. Silver ones are
+# worth it.
+[[body]]
+id = "cutlery"
+object = "cutlery"
+level = 2
+rarity = "uncommon"
+speed = 1300
+attack = { damage_type = "piercing", name = "points", verb = "jabs" }
+name = "clatter of cutlery"
+plural = "clatters of cutlery"
+count = [3, 6]
+moves = "clattering"
+dies = "falls in a jangle"

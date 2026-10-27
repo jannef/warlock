@@ -355,7 +355,7 @@ pub(super) fn creature_defences(content: &Content) -> String {
 
 /// What a hit with `attack` may cause: each status with its degrees and each disease, with its
 /// chance.
-fn on_hit(content: &Content, attack: &NaturalAttack) -> Vec<String> {
+pub(super) fn on_hit(content: &Content, attack: &NaturalAttack) -> Vec<String> {
     (attack.on_hit.iter())
         .map(|o| match o.what {
             Affliction::Status { status, severity } => {

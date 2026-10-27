@@ -181,8 +181,8 @@ fn messages_say_what_came_of_an_attack_without_numbers() {
         ),
         None
     );
-    assert_eq!(death_message(rat), "The giant rat dies.");
-    assert_eq!(death_message(End::You), "You die...");
+    assert_eq!(death_message(rat, "dies"), "The giant rat dies.");
+    assert_eq!(death_message(End::You, ""), "You die...");
 }
 
 const TERRAIN: &str = r##"

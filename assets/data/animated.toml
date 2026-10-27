@@ -1,0 +1,83 @@
+# Animated objects (spec §8 "Animated objects"; docs/dev/animated.md; the design:
+# docs/design/animated-objects.md): things a will set moving and left. Each of them is an ordinary
+# creature type, generated when content loads from this file and data/animated/, and made of real
+# objects: a household thing of its body (data/animated/<id>.toml).
+#
+# Numbers by level L (the undead roster's formulas, #383), rounded down part by part:
+#   Strength 11 + 0.4 L, Toughness 12 + 0.4 L, Dexterity 10 + 0.25 L, Willpower 16 + 0.35 L,
+#   Intelligence and Presence 2 (mindless); then the tier's `stats`
+#   hit points beyond Toughness 2.5 × L × `hp_factor`
+#   damage dice: the ladder's nearest (1d2, 1d3 ... 5d12) to 2 + 0.55 L (to L20, then
+#   13 + 0.25 (L − 20)), moved `dice_steps` along it
+#   experience: the guideline's (data/experience.toml)
+
+# What becomes of what an animated thing is made of when it falls.
+[drops]
+intact = 50            # percent each component (its body) falls whole; else it falls as nothing
+
+# What every animated type is.
+[creature]
+faction = "animated"
+tags = ["animated", "construct"]
+vision = "darkvision"
+sight = 8
+hearing = 10
+# Nothing lives in it to sicken, no blood or breath to carry poison, no blood to bleed.
+immune = ["diseased", "poisoned", "bleeding"]
+
+# A household body's base material (its object's first) by its group: what it resists, its
+# natural Protection (a hide by the group's name), and the verb of its death line. A material of
+# no group (paper) takes none of it, and dies by the tier's `dies`.
+[[group]]
+id = "metal"
+resist = { electricity = -25 }
+protection = 2
+dies = "clatters to the floor"
+
+[[group]]
+id = "wood"
+resist = { fire = -50 }
+protection = 1
+dies = "splinters"
+
+[[group]]
+id = "cloth"
+resist = { fire = -50, slashing = -25 }
+dies = "falls in a heap"
+
+[[group]]
+id = "hide"
+resist = { fire = -25 }
+dies = "falls in a heap"
+
+[[group]]
+id = "glass"
+resist = { bludgeoning = -25 }
+protection = 1
+dies = "shatters"
+
+[[group]]
+id = "stone"
+resist = { bludgeoning = -25 }
+protection = 1
+dies = "shatters"
+
+[[group]]
+id = "bone"
+resist = { bludgeoning = -25 }
+protection = 1
+dies = "shatters"
+
+# The household tier: one type per body file in data/animated/, at the body's level. Small and
+# almost harmless: two dice steps under the curve.
+[[tier]]
+id = "household"
+name = "Household"
+bodies = true          # one type per body file
+levels = [1, 8]        # the bodies' levels lie within these
+stats = { strength = -4, dexterity = 4, toughness = -4 }
+hp_factor = 0.5
+dice_steps = -2
+size = "small"
+footsteps = 20
+dies = "falls still"

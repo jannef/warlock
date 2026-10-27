@@ -1,0 +1,12 @@
+# A ladle with a wooden handle.
+# Household goods (#483): what an animated household thing (data/animated/) is made of.
+[[object]]
+id = "ladle"
+name = "ladle"
+glyph = "("
+fg = "#7a7d80"
+class = "household"
+materials = ["iron", { part = "haft", of = "wood", share = 30 }]
+made_of = ["iron", "brass"]
+weight = 300
+value = 2

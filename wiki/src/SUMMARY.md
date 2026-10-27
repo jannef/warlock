@@ -56,6 +56,7 @@
   - [Resources](resources.md)
 - [Creatures](creatures.md)
   - [Creatures in numbers](creature-numbers.md)
+  - [Animated objects](animated.md)
   - [People and talk](npcs.md)
   - [Quests](quests.md)
 - [Traps](traps.md)
