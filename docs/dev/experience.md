@@ -13,7 +13,7 @@ pays `percent[0]` % of its curve XP, level 3 `percent[1]`, and so on, levels pas
 folded into `kills_fraction`, so `xp_for`, `threshold`, and `kills_for` all see it; refused when
 longer than levels 2 to `max_level`, outside 1 to 100, or decreasing; the test
 `early_levels_are_discounted` pins the owner's totals and checks that levels 12 and up cost what
-they would undiscounted), `hp_level`, `mana_level` (mana per level: `World::level_up_mana`,
+they would undiscounted), `hp_level` (50, #557: levels 51 to 60 add no hit points but Hardened's; the thief's class `hp` is 4), `mana_level` (mana per level: `World::level_up_mana`,
 `docs/dev/mana.md`), the WoW-style `kill_xp` scaling with its zero difference
 bands, and `[discovery]` (`first_kill_xp`, `arrival_xp`). A character's thresholds are scaled
 by their race's and their class's `experience` percents (`Factor`, `threshold_for`,
