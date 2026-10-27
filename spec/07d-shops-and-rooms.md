@@ -178,10 +178,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   teeming den's numbers, below; needs `needs_danger`), `temperature` (degrees Celsius added
   to the level's inside, −40 to 40, default 0; below), `burden` (percent of everyone's
   carrying limit inside, 10 to 1000, default 100; below), `mirrors` (`{ images = N }`, 1
-  to 8: a hall of mirrors' reflections, below), and `warp` (percent chance a step inside moves
-  the stepper elsewhere, 0 to 100, default 0; below). An effect with a `level_chance` needs its
+  to 8: a hall of mirrors' reflections, below), `warp` (percent chance a step inside moves
+  the stepper elsewhere, 0 to 100, default 0; below), and `collapse` (`{ chance, damage }`: a
+  collapsed floor, below; needs `needs_below`). An effect with a `level_chance` needs its
   `pervade` line and is neither `shunned`, nor lays a `floor`, nor is a den, nor holds
-  `mirrors`.
+  `mirrors`, nor collapses.
   - **The effects** (weights in brackets): a *shadowed room* (10) keeps 30 % of the light ("The
     light seems to drain away here."); an *echoing hall* (8) doubles noise ("Your footsteps echo
     loudly."); a *hushed chamber* (8) leaves two fifths of it ("A deep hush fills this room."); a
@@ -207,7 +208,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     it down."); a *hall of mirrors* (3, #419; only in a room of 80 floor cells or fewer) shows
     everyone inside with two reflections ("Your reflection stares back at you from every side.";
     below); an *unstable room* (4, #411, only in a room of at most 60 floor cells) warps
-    one step in ten ("The floor shimmers under your feet."). Blood washing
+    one step in ten ("The floor shimmers under your feet."); a *collapsed floor* (3, #420; only
+    on a level with another below it) has a floor of cracked stone that may give way under the
+    player ("The floor ahead is cracked and sagging." when glimpsed, "The floor creaks under your
+    weight." on entering; below). Blood washing
     away in a flooded room waits for blood (#127).
   - **Hot and cold rooms** (`temperature`, #404): a room sets its cells' temperature and
     nothing else: no status, no damage, nothing done to items or food. The temperature at a cell
@@ -260,6 +264,22 @@ developer notes (CLAUDE.md, `docs/dev/`).
     are wrenched elsewhere." for the player, "The giant rat vanishes!" for a creature they saw
     go. Where it lands is never a step, so it is never warped again on landing. Nothing is
     saved. Its `max_cells` keeps it to small rooms; it never covers a whole level.
+  - **A collapsed floor** (`collapse`, #420; `world/collapse.rs`): the room's floor is
+    `cracked_floor` (a walkable terrain, "cracked floor", `:`), laid by the generator; a
+    hand-made level draws its own. Every step of the **player** onto a cracked cell of it (a
+    move; the room's cells without cracks never give way) has `collapse.chance` percent (15,
+    doubled while Burdened or worse; one draw of the gameplay stream, made only on such a cell,
+    after any trap and warp there, and only while the level has a way down that leads
+    somewhere) to give way: "The floor gives way beneath you!" The player falls to the level
+    that way leads to (generated as usual on a first visit, as by the stairs; the step's time
+    is all it costs), "You fall to <level>.", landing on a random cell of it (a second gameplay
+    draw) that is walkable, no door, stairs, trap, or ice, where no one stands, outside every
+    shop, and reachable from where the level is entered without passing a locked door (so never
+    inside a vault behind one, nor behind a secret door, which is wall until found). They take
+    `collapse.damage` (2d6, never their last hit point) and are Staggered. The cracked floor
+    stays as it was. Creatures never fall (no draw for them). Nothing new is saved: the fall
+    is a level change like the stairs'. Light tread (§8 "Talents") never falls. It never
+    covers a whole level.
   - **A status while inside** (`status`, #403): as time passes, at the start of each stretch of
     it (`World::pass_time`: so after every action, the player's and each creature's, at every
     turn of a rest or another long action, and through a creature's coarse turns while the
@@ -360,5 +380,6 @@ developer notes (CLAUDE.md, `docs/dev/`).
     glimpse; a whole level's effect named on arrival), Hallowed rest (a room's quickening of
     healing and mana half again more), Anchored mind (a room's or a level's Ebbing
     never takes them; #403), Hush-foot (shadow; sleepers need twice the noise to wake from
-    anything the player does; #405), and Mirror-wise (a hall of mirrors' images within 2 cells
-    seen for what they are; #419).
+    anything the player does; #405), Mirror-wise (a hall of mirrors' images within 2 cells
+    seen for what they are; #419), and Light tread (a collapsed floor never gives way under
+    them; #420).

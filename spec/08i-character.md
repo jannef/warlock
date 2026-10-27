@@ -696,7 +696,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the wake check in `World::spread_noise`;
     Mirror-wise (Scholar, Intelligence 12, `sees_reflections` 2, #419): a hall of mirrors' images
     within 2 cells are seen for what they are and not shown, so no glass stops a step there
-    (`world/mirrors.rs`, perception).
+    (`world/mirrors.rs`, perception); Light tread (Delver, Dexterity 12, `collapse_proof`, #420):
+    a collapsed floor never gives way under them (`World::collapse_step`, which then draws
+    nothing).
     The Defence by attack kind of the design's B5 landed with Deflect missiles (#237,
     `World::target_against`).
   - **Racial talents** (#241; the design's §7.5 Racial): the `racial` tree (`no_free`), each
