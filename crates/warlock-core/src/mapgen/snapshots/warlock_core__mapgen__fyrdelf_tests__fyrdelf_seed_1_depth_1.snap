@@ -8,53 +8,53 @@ stairs Down at (59, 16) -> fyrdelf:2
 duergar_miner at (24, 6) route  carrying a copper pick-axe (in use)
 kobold at (32, 16) route E E W W carrying a brass key
 giant_centipede at (39, 17) route W W W N N E W E W E W S S E E E
-giant_centipede at (68, 7) route E S N E E W W W W W E E E E E W W S N W
+giant_centipede at (69, 7) route E S N E E W W W W W E E E E E W W S N W
 lemure at (67, 7) route W W W W W E W E E E E E
 giant_centipede at (36, 10) route W N N N W W E E W W E E S S S E
 giant_centipede at (71, 11) route W W W W W W W W W W E E E E E E E E E E
 ember_mote at (33, 19) route W W W W W W W E E E E E E E
 lemure at (9, 14) route S N S S N N S N
-kobold_archer at (50, 10) route W W W N N N N E W S S S S E E E carrying a short bow (readied), 20 horn arrows (quivered), an iron cap (being worn)
+kobold_archer at (51, 10) route W W W N N N N E W S S S S E E E carrying a short bow (readied), 20 horn arrows (quivered), an iron cap (being worn)
 kobold at (4, 12) route N N N S S S N N N S S S N N N S S S carrying a bone spear (wielded)
-kobold at (75, 7) route S S W W W W W E W E E E E E N N carrying a bone spear (wielded)
+kobold at (33, 8) route N E W E E E S E W N W W W E W S carrying a bone spear (wielded)
 lemure at (5, 15) route S S W W N N N E E W W S S S E E N N
-lemure at (70, 9) route E E W W E E W W
+lemure at (71, 9) route E E W W E E W W
 dust_devil at (31, 16) route N E E E S S W E N N W W W S
 dust_devil at (3, 2) route E W E E S S S N N N W W E W
-giant_centipede at (63, 8) route E E E E E W W W W W
+giant_centipede at (64, 8) route E E E E E W W W W W
 lesser_earth_elemental at (4, 16) route N N E E W W S S
 bat at (66, 8) route S S W W W E E E N N
 lemure at (32, 17) route W E W N N E W S S E W E
 kobold at (34, 8) route S S W N N S S E N N carrying a horn spear (wielded), a padded coat (being worn), 9 copper coins
-giant_centipede at (4, 6) route N N N N E S N W S S S S
+giant_centipede at (5, 6) route N N N N S S N N S S S S
 lemure at (36, 17) route N N E E E S N W W W S S
-giant_centipede at (71, 9) route E E N N E E S S S N N N W W S S W W
-barrow_spider at (73, 9) route W W W N S E E E
-ember_mote at (5, 4) route S S S W N N N S S S E N N N
+giant_centipede at (6, 17) route E E N N N E S S S N N N W S S S W W
+barrow_spider at (74, 9) route W W W N S E E E
+ember_mote at (3, 5) route S N N N S S S N N N S S S N
 dust_devil at (40, 9) route W E E E E E W W W W W E
 spear trap at (19, 16)
-alarm trap at (46, 10)
+alarm trap at (47, 10)
 arrow trap at (50, 11)
-2 placed lights
-special room cursed at (2, 1)-(6, 8)
+3 placed lights
+special room altar at (2, 1)-(6, 8)
 
   #####
-  #egg#
-  #ggg#
-  #gge#         ###########
-  #ggg#         #(..#.....###                #######
-  #gcg#         #...+...h.+.#   #######      #....¡#        #################
-  #¡gg#         #..(#.....#.#   #....¡#      #...).#        #¡....?uc..}...k#
-  ##+##         ###########.#####.k.[.########.....#        #..c..b.........#
-   #.#                    #...........'.e....+.....##########.........uc.s..#
-   #.#                    #.#####...c.########^...k.........+...............#
+  #eaa#
+  #aaa#
+  #a_a#         ###########
+  #eaa#         #(..#.....###                #######
+  #aac#         #...+...h.+.#   #######      #....¡#        #################
+  #¡aa#         #..(#.....#.#   #....¡#      #....[#        #¡.....u.c......#
+  ##+##         ###########.#####kk...########.....#        #...c.b.........#
+   #.#                    #...........'.e....+.....##########..........u..s.#
+   #.#                    #.#####...c.########.^...k........+...............#
    #.#                    #.#   #######      #....^#######.##..........c...¡#
    #k#           #######  #.#                #¡....#     #.####'#############
  ###S#######     #...<¡####.#                #######     #.#  #.#
  #.......u¡#     #.....+....# ###########                #.#  #.#
  #...u.....#######.....####.# #....#.)..#               ##+####+###
- #..E......+.....S.^...#  #.# #ek..&..*.#               #..>.....¡#
- #¡........#####.#¡....#  #.# #.u..#u)%c#               #.........#
+ #..E....).+.....S.^...#  #.# #ek..&..*.#               #..>)....¡#
+ #¡...c....#####.#¡....#  #.# #.u..#u)%c#               #.........#
  ###########   #.####+#####.#####+#######               #¡........#
                #.................e#                     ###########
                ####################

@@ -76,6 +76,8 @@ mod room_burden_tests;
 #[cfg(test)]
 mod room_collapse_tests;
 mod room_effect;
+#[cfg(test)]
+mod room_homes_tests;
 mod room_lore;
 #[cfg(test)]
 mod room_lore_tests;
@@ -99,6 +101,7 @@ mod sky;
 mod slot;
 mod spell;
 mod spell_def;
+mod spell_scales;
 mod stance;
 mod stat_training;
 mod status;
@@ -202,13 +205,15 @@ pub use quest::{
 pub(crate) use quest_roll::roll_known;
 pub use quest_roll::{Candidate, MAX_VARIANTS, MAX_WEIGHT, Pick, Roll, Rolled, Variant, one_of};
 pub use race::{HUNGER, LightBlind, RaceDef, Races};
-pub use resource::{Build, MAX_EVERY, MAX_RESOURCE, MAX_SHORT, OverTime, ResourceDef, ResourceId};
+pub use resource::{
+    Build, MAX_EVERY, MAX_RESOURCE, MAX_SHORT, MaxFrom, OverTime, ResourceDef, ResourceId,
+};
 pub use rod::{
     MAX_ROD_MANA, MAX_ROD_POWER, MAX_ROD_RADIUS, MAX_ROD_REACH, Rod, RodDoes, RodEffect, RodShape,
 };
 pub use room_effect::{
-    Collapse, Here, Hoard, Mirrors, Offer, RoomEffectDef, RoomEffectId, RoomEffects, SpecialRoom,
-    Swarm, Themes, Treasure,
+    Collapse, Dressing, Here, Hoard, Mirrors, Offer, RoomEffectDef, RoomEffectId, RoomEffects,
+    SpecialRoom, Swarm, Themes, Treasure,
 };
 pub use room_lore::RoomLoot;
 pub use room_shrine::{Regard, Shrine};
@@ -230,6 +235,7 @@ pub use spell_def::{
     MAX_CASTS, MAX_CONE, MAX_DICE, MAX_PER_LEVELS, MAX_REACH, Ratio, Resolution, School, Shape,
     SpellData, SpellDice, SpellEffect, SpellId, SpellLook, SpellPurpose, SpellRules, TIERS,
 };
+pub use spell_scales::{MAX_SCALE_WEIGHT, SpellScales, Weights};
 pub use stance::{CombatStance, StanceDef, Stances, percent_of};
 pub use stat_training::{StatRule, StatTraining, StatUse};
 pub use status::{
@@ -901,6 +907,12 @@ impl Content {
         content.load_objects(files)?;
         content.animated = Animated::parse(files, &content)?;
         content.load_creatures(files)?;
+        // A den's own population (an armoury's) names creatures.
+        let mut room_effects = std::mem::take(&mut content.room_effects);
+        let creature =
+            |name: &str| (content.creature_id(name)).map(|c| (c, content.creature(c).unique));
+        room_effects.resolve_populations(creature)?;
+        content.room_effects = room_effects;
         content.load_gems(files)?;
         // Unique items before everything that may place one (gear, shops, levels, kits, quests).
         content.uniques = unique::parse(files.table("uniques"), &content)?;
@@ -1103,6 +1115,12 @@ impl Content {
             check_terrain_noise(spec).map_err(|m| err(format!("terrain `{}`: {m}", spec.id)))?;
             check_terrain_ice(spec).map_err(|m| err(format!("terrain `{}`: {m}", spec.id)))?;
             check_kicking(spec).map_err(|m| err(format!("terrain `{}`: {m}", spec.id)))?;
+            if spec.announce && !spec.walkable {
+                return Err(err(format!(
+                    "terrain `{}`: only walkable terrain may `announce`",
+                    spec.id
+                )));
+            }
             let breaks = match (spec.hardness, &spec.becomes) {
                 (None, None) => None,
                 (Some(hardness), Some(_)) if (1..=MAX_HARDNESS).contains(&hardness) => {
@@ -1137,6 +1155,7 @@ impl Content {
                 id: spec.id.clone(),
                 name: spec.name.clone(),
                 description: spec.description.clone(),
+                announce: spec.announce,
                 glyph: spec.glyph,
                 variants: spec.variants.chars().collect(),
                 fg: spec.fg,

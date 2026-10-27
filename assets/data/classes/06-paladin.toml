@@ -29,6 +29,7 @@ bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["guard", "vigour"] }
 # a paladin who is Good or better. Lay on hands waits for its mana (the mana PR) with a cooldown.
 abilities = [
     { level = 1, talent = "lay_on_hands" },
+    { level = 1, talent = "trained_wind" },
     { level = 6, talent = "divine_grace" },
     { level = 6, talent = "blessing" },
     { level = 12, talent = "smite" },

@@ -559,7 +559,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Resources** (`data/resources.toml`, optional; without it there are none; #225, §8
   "Resources"): an ordered list of `[[resource]]`s, each with `id`, `name` (the character
   screen's), `short` (the status bar's label, at most 12 characters), `max` (1 to 1000), `start`
-  (what it holds when granted; default `max`; at most `max`, above 0 for one that ends at zero),
+  (what it holds when granted; default full, its maximum by data with what `max_from` adds;
+  at most `max`, above 0 for one that ends at zero), `max_from` (`{ stat, per_levels, least }`:
+  the holder's modifier in that stat and a point per `per_levels` character levels add to `max`,
+  the sum at least `least`, before talents; a known stat, `per_levels` at least 1, `least` at
+  most `max`),
   `show_max` (the status bar shows `Focus 7/10` rather than `Rage 7`; default true),
   `regenerates` or `decays` (a point back, or lost, every that many seconds of game time, 1 to
   86400; at most one of the two), `resting` (it changes over time while the player rests;
@@ -570,7 +574,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Raging). A status that something `follows` into and that neither eases nor is cured must be
   some resource's status. Ids are indices (in
   the content fingerprint), so a new resource is a new entry. Built in, the progression design's
-  first guesses (§4.18): Rage, Focus, Openings, Ki, Inspiration. A class active (a talent of the
+  first guesses (§4.18): Rage, Focus, Openings, Ki, Inspiration, and Stamina (the combat
+  progression design §4.5, appended last). A class active (a talent of the
   class tree with an active effect) may cost one: `resource = { id = "focus", cost = 6 }` (0
   asks only that it is held; at most its `max`).
 - **Weapon skills** (`data/weapon_skills.toml`, optional; without it nobody has weapon skills and

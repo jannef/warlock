@@ -81,7 +81,7 @@ fn battle_trance_starts_the_rage_higher_and_slows_its_decay() {
     run(&mut twin, "resource:rage");
     assert_eq!(held(&twin, "rage"), Some(12));
     assert_eq!(held(&w, "rage"), Some(18), "six higher");
-    assert_eq!(w.state.player().resource_max(&CONTENT, id("rage")), 20);
+    assert_eq!(w.state.player().resource_max(&CONTENT, id("rage"), 1), 20);
     // A third slower: 6 points in ten base turns, where the plain rage loses 10.
     run(&mut w, "wait*10");
     run(&mut twin, "wait*10");
@@ -98,7 +98,7 @@ fn inner_calm_holds_more_ki_and_brings_it_back_faster() {
     run(&mut twin, "resource:ki");
     assert_eq!(held(&twin, "ki"), Some(5));
     assert_eq!(held(&w, "ki"), Some(5), "it starts at the data's start");
-    assert_eq!(w.state.player().resource_max(&CONTENT, id("ki")), 7);
+    assert_eq!(w.state.player().resource_max(&CONTENT, id("ki"), 1), 7);
     set(&mut w, "ki", 0);
     set(&mut twin, "ki", 0);
     // A point every three base turns, half again as fast: every two.
