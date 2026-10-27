@@ -114,3 +114,74 @@ slots = [{ slot = "main_hand", classes = ["melee_weapons"], chance = 100 }]
 magic = { base = 0, per_level = 2, most = 40 }
 rare = { from = 15, base = 1, per_level = 1, most = 5 }
 weapon_rank = { base = 1, per_level = 0.1, most = 8 }   # ranks in its weapon's skill: 1 + L/10
+
+# Hollow armour: a suit with nobody inside, one type per level (`animated_armour_12` …
+# `animated_armour_35`), the family `animated_armour`. Slow, hard to hurt, and loud; it fights
+# with its gauntlets (its own blow, the curve's dice), while the shield's Defence and the armour's
+# Protection are its pieces'. Shown as `A`, in its body armour's colour. A slot line's `from` is
+# the least level it is tried at (none: every level), and `count` how many times it is tried (a
+# ring for each hand: each further piece goes to a free slot of the same kind). The lines are
+# tried in order, so a slot taken already (the off hand beside a two-handed weapon) is passed
+# over with nothing drawn.
+[[tier]]
+id = "armour"
+name = "Hollow armour"
+creature = "animated armour"
+levels = [12, 35]
+stats = { strength = 5, dexterity = -2, toughness = 5 }
+hp_factor = 1.2
+size = "medium"
+footsteps = 60
+dies = "collapses with a clang"
+glyph = "A"
+fg = "#a8b0b8"
+shown_by = "body"
+rarity = "uncommon"
+speed = { base = 900, per_level = 3, most = 1100 }
+resist = { piercing = 25 }    # blows pass through the hollow
+opens_doors = true            # gauntlets
+attack = { damage_type = "bludgeoning", name = "gauntlets", verb = "slams" }
+slots = [
+  { slot = "body", classes = ["body_armour"] },
+  { slot = "head", classes = ["helmets"], chance = 70 },
+  { slot = "off_hand", classes = ["shields"], chance = 40 },
+  { slot = "hands", classes = ["gloves"], chance = 30 },
+]
+magic = { base = 10, per_level = 1, most = 40 }
+rare = { from = 20, base = 1, per_level = 1, most = 10 }
+
+# The panoply: the full kit of a knight with no knight, one type per level
+# (`animated_panoply_20` … `animated_panoply_70`), the family `animated_panoply`. It wields and
+# wears everything, and everything its pieces' magic does works for it, a ring's and an amulet's
+# too (from level 50). Its shield line is passed over beside a two-handed weapon.
+[[tier]]
+id = "panoply"
+name = "Panoplies"
+creature = "animated panoply"
+levels = [20, 70]
+stats = { toughness = 2 }
+hp_factor = 1.2
+size = "medium"
+footsteps = 60
+dies = "collapses with a clang"
+glyph = "A"
+fg = "#a8b0b8"
+shown_by = "body"
+rarity = "rare"
+speed = { from = 20, base = 1000, per_level = 4, most = 1200 }
+opens_doors = true
+slots = [
+  { slot = "body", classes = ["body_armour"] },
+  { slot = "main_hand", classes = ["melee_weapons"] },
+  { slot = "off_hand", classes = ["shields"], chance = 60 },
+  { slot = "head", classes = ["helmets"], chance = 75 },
+  { slot = "hands", classes = ["gloves"], chance = 50, from = 30 },
+  { slot = "feet", classes = ["boots"], chance = 50, from = 30 },
+  { slot = "cloak", classes = ["cloaks"], chance = 50, from = 40 },
+  { slot = "neck", classes = ["amulets"], chance = 30, from = 50 },
+  { slot = "left_ring", classes = ["rings"], chance = 30, from = 50, count = 2 },
+]
+magic = { base = 20, per_level = 1, most = 80 }
+rare = { from = 20, base = 1, per_level = 0.5, most = 30 }
+weapon_rank = { base = 1, per_level = 0.1, most = 8 }   # 1 + L/10
+shield_rank = { per_level = 0.0667 }                    # L/15 in Sword and board, beside a shield
