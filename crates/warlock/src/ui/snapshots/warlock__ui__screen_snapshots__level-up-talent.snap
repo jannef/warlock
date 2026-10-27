@@ -25,16 +25,16 @@ expression: "render(case, content.clone())"
             │   m  Keen ears                   1/2  You hear fainter sounds, fainter … │
             │   n  Lamplighter                      You tend your lantern well: it bu… │
             │ Wayfarer                                                                 │
-            │   o  Long strider                     Your journeys across the overworl… │
-            │   p  Pilgrim                          You have knelt in many temples: t… │
-            │   q  Sun-blessed                      The sun mends you: under the open… │
-            │   r  Swimmer                          Water does not slow you: you wade… │
-            │   s  Weather-wise                     You read the sky: under it you kn… │
+            │   o  Devout                           You pray as one who means it: an … │
+            │   p  Long strider                     Your journeys across the overworl… │
+            │   q  Pilgrim                          You have knelt in many temples: t… │
+            │   r  Sun-blessed                      The sun mends you: under the open… │
+            │   s  Swimmer                          Water does not slow you: you wade… │
+            │   t  Weather-wise                     You read the sky: under it you kn… │
             │ Scholar                                                                  │
-            │   t  Anchored mind                    Your power is moored fast: no pla… │
-            │   u  Appraiser's eye                  You can tell a bound thing's wort… │
-            │   v  Apprentice                  1/3  You take up a skill you lack, or … │
-            │   w  Clear mind                       A mind at peace gathers its stren… │
+            │   u  Anchored mind                    Your power is moored fast: no pla… │
+            │   v  Appraiser's eye                  You can tell a bound thing's wort… │
+            │   w  Apprentice                  1/3  You take up a skill you lack, or … │
             │                                                                          │
             │ Tougher than most: more hit points for each rank, and more as you level. │
             │                                                                          │
