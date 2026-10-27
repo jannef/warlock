@@ -9,28 +9,28 @@
 # The townsfolk: one-liners and mutters, no topics.
 [[dialogue]]
 creature = "villager"
-greet = "Market day, stranger. Mind your purse in the crowd."
+greet = "Market day, stranger. Mind yer purse in the crowd, innit."
 greet_evil = [
-    "Keep walking. We know your sort here.",
-    "Go on, then. Nobody here wants trouble.",
+    "Keep walkin'. We know yer sort 'ere.",
+    "Go on, then. Nobody 'ere wants trouble.",
 ]
 lines = [
-    "Came down through the pass, did you? Nobody goes back that way.",
-    "Snow on Beorggeat already. Early, this year.",
-    "Fyrbeorg's smoking again. Ash on the washing by noon.",
-    "Sick? Sister Hild will see to you, at the Mynster. For a price.",
-    "Found summat odd? Wulfrun'll tell you what it is. For a fee, mind.",
+    "Came down through the pass, did yer? Nobody goes back that way.",
+    "Snow on Beorggeat already. Early, this year, ain't it.",
+    "Fyrbeorg's smokin' again. Ash on the washin' by noon.",
+    "Poorly? Sister Hild'll see to yer, at the Mynster. For a price.",
+    "Found summat odd? Wulfrun'll tell yer what it is. For a fee, mind.",
     "Godgifu keeps a good fire at the Gæsthūs, and a better ale.",
-    "Don't go poking at the barrows. The dead keep what's theirs.",
-    "The reeve's a fair man. Tight with the town's coin, mind.",
-    "Bread's dear since the mines closed. Everything's dear.",
+    "Don't go pokin' at the barrows. The dead keep what's theirs.",
+    "The reeve's a fair man. Tight wiv the town's coin, mind.",
+    "Bread's dear since the mines closed. Everyfink's dear.",
 ]
 mutter = { chance = 2, lines = [
     "Ash in the well again.",
-    "Who'd pay that for an onion?",
+    "Who'd pay that for an onion, eh?",
     "My knees say snow.",
-    "Lights on the barrows last night. Saw them myself.",
-    "The cart's late. The cart's always late.",
+    "Lights on the barrows last night. Saw 'em meself.",
+    "Cart's late. Cart's always late.",
 ] }
 
 # Sister Hild of the Mynster, Cēaptūn's temple: she heals, for gold.
@@ -87,23 +87,23 @@ nothing = "You are whole, child. Go with my blessing."
 [[dialogue]]
 npc = "godgifu"
 name = "Godgifu"
-greet = "Come in out of the cold! Sit by the fire. You'll want news, I expect."
+greet = "Come in out o' the cold, love! Sit by the fire. Want news, I s'pose?"
 greet_evil = [
-    "I'll serve you, since I must. Drink up and go.",
-    "There's no room for your sort tonight. Nor any night.",
+    "I'll serve yer, since I must. Drink up and hop it.",
+    "No room for yer sort tonight. Nor any night.",
 ]
 lines = [
     "Everyone passes through the Gæsthūs sooner or later. Everyone talks.",
-    "Bread on the table's free to travellers. The ale isn't.",
+    "Bread on the table's free to travellers. The ale ain't.",
     "The carters say the river road's flooded past Fennhām again.",
-    "Keep your boots by the fire. Nobody steals boots here. Mostly.",
-    "The reeve drinks here on market days. Pays, too, more than some do.",
-    "Wulfrun has had no cart of ore in years, and still she keeps the books.",
+    "Keep yer boots by the fire. Nobody nicks boots 'ere. Mostly.",
+    "The reeve drinks 'ere on market days. Pays, too, more than some do.",
+    "Wulfrun's had no ore cart in years, yet she keeps the books.",
 ]
 mutter = { chance = 2, verb = "hums", lines = [
-    "Down by the water, under the hill...",
-    "The fire wants wood. The fire always wants wood.",
-    "Two loaves, three... who took the third?",
+    "Down by the water, under the 'ill...",
+    "The fire wants wood. Fire always wants wood.",
+    "Two loaves, three... who nicked the third?",
 ] }
 
 [[dialogue.topic]]
@@ -135,16 +135,16 @@ reply = "Beorggeat, the mountain gate. You came down it, I expect, like everyone
 [[dialogue]]
 npc = "leofric"
 name = "Reeve Leofric"
-greet = "A newcomer. I'm the reeve here. Keep the peace and we'll get on."
+greet = "A newcomer. I am the reeve here. Keep the peace, and we shall get on."
 greet_evil = [
-    "I know trouble when I see it. Keep the peace, or leave.",
-    "One wrong step in my town and you'll hang on the hill.",
+    "I know trouble when I see it. Keep the peace, or kindly leave.",
+    "One wrong step in my town and you will hang on the hill.",
 ]
 lines = [
-    "The town pays its way. The barrows take their toll.",
-    "Keep your blade sheathed in the square. That's the law here.",
+    "The town pays its way. The barrows, alas, take their toll.",
+    "Kindly keep your blade sheathed in the square. That is the law.",
     "The pass is shut till spring. Whoever's here, stays here.",
-    "We'd more hands once. The barrows took some. The mines took more.",
+    "We had more hands once. The barrows took some. The mines took more.",
     "Market day's the only day the town feels like itself.",
 ]
 
@@ -162,14 +162,14 @@ reply = "The cold barrow, east along the road in the downs. Old as the hills, an
 [[dialogue]]
 npc = "wulfrun"
 name = "Factor Wulfrun"
-greet = "Yes? I'm busy. Well, I'm not, but I like to look it."
+greet = "Yes? I am frightfully busy. Well, no, but I like to look it."
 lines = [
     "Ore by the cartload, once. Now I keep ledgers of carts that never came.",
     "Every mine has its foreman, and every foreman his ledger.",
     "Gold is gold, but iron builds towns.",
     "The diggings didn't run dry. Something stopped the digging.",
-    "Don't trust a map you didn't pay for.",
-    "I can value anything, given a moment and a fee. Mostly the fee.",
+    "One does not trust a map one did not pay for.",
+    "I can value anything, given a moment and a fee. Chiefly the fee.",
 ]
 mutter = { chance = 2, lines = [
     "Twelve carts... no, eleven...",

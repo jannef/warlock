@@ -1,0 +1,39 @@
+# Campaign-owned (docs/design/campaign.md §3.6): the Ascmearc's own type, which only its files
+# may name.
+#
+# The outlaws (docs/design/adventurers-guild.md §8, #424): a footpad with a short bow, who
+# stops a cart from the hedge before the others step out. A dagger for when the arrows are gone.
+[[creature]]
+id = "footpad_archer"
+level = 7
+xp = 45
+rarity = "uncommon"
+loot = 25
+name = "footpad archer"
+glyph = "@"
+fg = "#7a8a5a"
+faction = "outlaws"
+tags = ["outlaw", "archer"]
+alignment = "evil"
+race = "human"
+sight = 12
+combat = "ranged"
+range = 7
+opens_doors = true
+footsteps = 70
+hearing = 13
+weight = 68000
+stats = { strength = 11, dexterity = 16, toughness = 12, intelligence = 10, willpower = 10, presence = 9 }
+base_hp = 11
+skills = { stealth = 20, spot = 25 }
+weapon_skills = { bows = 2, daggers = 1 }
+racial_weapon = "short_bow"
+[[creature.gear]]
+chance = 95
+one_of = ["arrow*15", "arrow*25"]
+[[creature.gear]]
+chance = 50
+one_of = ["dagger"]
+[[creature.gear]]
+chance = 50
+one_of = ["leather_jerkin"]

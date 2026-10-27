@@ -61,8 +61,11 @@ pub struct Animated {
 #[derive(Clone, Copy, Debug, Default, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Drops {
-    /// The chance in percent that a component falls whole; else nothing of it falls (A1).
+    /// The chance in percent that a component falls whole; else it breaks into its parts.
     pub intact: u8,
+    /// The percent of a broken part's weight that falls as pieces of its material
+    /// ([`crate::piece::break_up`]).
+    pub pieces: u8,
 }
 
 /// What every animated type is.
@@ -311,6 +314,9 @@ impl Animated {
             return Err(err(
                 "drops: `intact` is a chance in percent, 0 to 100".into()
             ));
+        }
+        if rules.drops.pieces > 100 {
+            return Err(err("drops: `pieces` is a percent, 0 to 100".into()));
         }
         let mut lines = Vec::new();
         let mut tiers = rules.tier;

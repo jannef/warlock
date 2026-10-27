@@ -47,6 +47,13 @@ const WAVES: &[(&str, Option<&str>)] = &[
     ("basilisk", None),
     ("cinder_elemental", None),
     ("fire_drake", Some("ascmearc")),
+    // The outlaws (the adventurers' guild, #424): footpads and the four wanted criminals.
+    ("footpad", Some("ascmearc")),
+    ("footpad_archer", Some("ascmearc")),
+    ("sallow", Some("ascmearc")),
+    ("wystan", Some("ascmearc")),
+    ("osrick", Some("ascmearc")),
+    ("herrick", Some("ascmearc")),
     // The goblin tribe's second tier (#454): the hobgoblins, all shared.
     ("hobgoblin", None),
     ("hobgoblin_archer", None),

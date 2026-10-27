@@ -5,10 +5,10 @@ spec/08b-creatures.md ("Animated objects"), the approved design in
 `docs/design/animated-objects.md` (its §15 cuts it into issues A1 to A6). Keep it current with
 the code, as CLAUDE.md says.
 
-A1 (#483) is the household tier: brooms, stools, candlesticks, teapots, the rug of smothering.
-A3 (#485) adds families and the first of them, blades. Hollow armour and panoplies (A4, #486),
-breaking into parts (A2, #484), their homes (A5, #487), and the chromatic look of composites
-(A6, #463) come after.
+A1 (#483) is the household tier: brooms, stools, candlesticks, teapots, the rug of smothering;
+A2 (#484) breaks what does not fall whole into its parts; A3 (#485) adds families and the first
+of them, blades. Hollow armour and panoplies (A4, #486), their homes (A5, #487), and the
+chromatic look of composites (A6, #463) come after.
 
 ## Generated creature types (`content/animated.rs`)
 
@@ -109,8 +109,16 @@ weapon skills.
 - **Drops** (`World::remains`, called by `creature_dies` for what a creature leaves): an
   animated creature's body falls whole by `[drops] intact` plus the player's
   `TalentMods::salvage_percent` (Salvager), one draw on `drop/<actor id>` (its `loot` is 0, so
-  `loot_of` draws nothing there); else nothing of it (A2 breaks it into its parts). Anything else
-  it carried falls as anyone's does.
+  `loot_of` draws nothing there); else it breaks into its parts, `object::break_up` at
+  `[drops] pieces` percent (loose gems, pieces of its grouped materials, nothing of paper; no
+  magic; `docs/dev/objects.md` "Pieces and breaking"). One draw per body stack, in inventory
+  order, so the stream is A1's. Anything else it carried falls as anyone's does.
+- **The break line** (`World::break_lines`): "The silver candlestick breaks apart." ("The 4
+  clatters of cutlery break apart."), one per broken stack, only when the dead creature was on
+  the current level at a cell whose actors the player's perception saw. `creature_dies` returns
+  the lines and `World::dies` splices them into `news` where they stood before the kill's
+  earnings, so they come right after the death line (said by each death path) and before "You
+  learn something of ..." and level-ups.
 - **Immunities**: `World::afflict` refuses a status in the type's `immune` before anything else;
   `World::expose` refuses a disease when `immune` holds the diseases' status, nothing rolled.
 - **Stealing**: `World::steal` refuses an animated creature before the hostile check: "It is all
@@ -147,8 +155,9 @@ Salvager (delver) and Unbinder (weaponcraft).
 `content/animated_tests.rs` (ids, order, numbers, group effects, identity, every load the same,
 collisions and bad bodies), `world/animated_tests.rs` (the legend's body, composition and its
 stream, material weights, the cutlery's count, immunities, stealing, the drop rule and
-Salvager, Unbinder, saves and a replay), `world/animated_blade_tests.rs` (the family's ids and
-numbers, a blade's weapon, rank, stream, odds, and fight, first kills, quests, and the tag
-objective counting the family once, saves), `content/danger.rs` (a family candidate's weight
-and member, out of depth too), `ui/look.rs` (the look lines, a blade's as an insta snapshot).
-The wiki's tables are `xtask/src/wiki/animated.rs`.
+Salvager, broken bodies as their parts with the break line, a loose gem and a book's leather,
+Unbinder, saves and a replay), `world/animated_blade_tests.rs` (the family's ids and numbers, a
+blade's weapon, rank, stream, odds, and fight, first kills, quests, and the tag objective
+counting the family once, saves), `content/danger.rs` (a family candidate's weight and member,
+out of depth too), `ui/look.rs` (the look lines, a blade's as an insta snapshot). The wiki's
+tables are `xtask/src/wiki/animated.rs`.

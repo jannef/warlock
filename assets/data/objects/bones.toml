@@ -1,0 +1,13 @@
+# What a beast den's sleepers left of their meals (room_effects.toml `hoard = "corpses"`): junk,
+# never loot, worth nothing.
+[[object]]
+id = "bones"
+name = "pile of bones"
+plural = "piles of bones"
+glyph = "%"
+fg = "#d8d0bc"
+class = "miscellaneous"
+materials = ["bone"]
+weight = 1500
+value = 0
+stackable = true

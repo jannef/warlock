@@ -98,7 +98,7 @@ fn asleep_is_a_status_that_sleeps_and_a_den_is_data() {
     let def = w.content.room_effect(teeming);
     assert!(def.needs_danger);
     assert_eq!(def.min_cells, 16);
-    let swarm = def.swarm.expect("a swarm");
+    let swarm = def.swarm.clone().expect("a swarm");
     assert_eq!((swarm.wake, swarm.cry), (200, 60));
     assert_eq!(swarm.sleepers(36), 9);
     assert_eq!(swarm.sleepers(10), 4, "at least four");
@@ -316,7 +316,7 @@ fn a_generated_den_holds_sleepers_of_the_danger_and_their_hoard() {
     files.insert("data/dungeons.toml", &dungeons);
     let content = Content::load(&files).expect("content");
     let teeming = content.room_effects().id("teeming").expect("teeming");
-    let swarm = content.room_effect(teeming).swarm.expect("swarm");
+    let swarm = content.room_effect(teeming).swarm.clone().expect("swarm");
     let player = content.creature_id("player").expect("player");
     let mut dens = 0;
     for seed in 0..20 {

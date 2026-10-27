@@ -14,9 +14,9 @@ to = "godgifu"
 reward = { gold = 10, xp = 20 }
 alignment = 5
 offer = "This is the last foreman's ledger from the diggings. His widow wants it, and she lives over the hills. Take it to Godgifu at the Gæsthūs: she sends it on with the next cart. I would go myself, but the books won't keep themselves."
-accept = "Here. Mind it: it's the only copy. Godgifu, at the inn, south of the square."
+accept = "Here. Mind it: it is the only copy. Godgifu, at the inn, south of the square."
 reminder = "The ledger goes to Godgifu, at the Gæsthūs. She sends it on with the cart."
-done = "The foreman's ledger, from Wulfrun? I'll see it goes with the next cart. Here, a little something from the house, for the walk."
+done = "The foreman's ledger, from Wulfrun? I'll see it goes wiv the next cart, love. 'Ere, a little somethin' for the walk."
 where = "The Gæsthūs is south of the square."
 
 [[quest]]

@@ -1237,6 +1237,8 @@ mod ascmearc_tests;
 #[cfg(test)]
 mod attacks_tests;
 #[cfg(test)]
+mod beast_den_tests;
+#[cfg(test)]
 mod bestiary_tests;
 #[cfg(test)]
 mod blood_tests;
@@ -1358,6 +1360,8 @@ mod moon_tests;
 mod object_tests;
 #[cfg(test)]
 mod openings_tests;
+#[cfg(test)]
+mod outlaw_tests;
 #[cfg(test)]
 mod overworld_tests;
 #[cfg(test)]

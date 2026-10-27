@@ -13,7 +13,8 @@
 
 # What becomes of what an animated thing is made of when it falls.
 [drops]
-intact = 50            # percent each component (its body) falls whole; else it falls as nothing
+intact = 50            # percent each component (its body) falls whole; else it breaks into its parts
+pieces = 50            # percent of a broken part's weight that falls as pieces of its material
 
 # What every animated type is.
 [creature]

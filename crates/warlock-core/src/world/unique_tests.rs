@@ -201,15 +201,28 @@ fn a_unique_has_one_placement_in_all_content() {
              [[pile]]\nat = [2, 1]\nobjects = {objects}\n"
         )
     };
+    // A unique of the test's own: the shipped ones are placed already (the criminals' gear).
+    let files = || {
+        let mut files = files();
+        files.insert(
+            "data/uniques/test_blade.toml",
+            "[[unique]]\nid = \"test_blade\"\nname = \"Test Blade\"\nobject = \"stiletto\"\n\
+             affixes = [\"of_celerity:1\"]\n",
+        );
+        files
+    };
     let load = |objects: &str| {
         let mut files = files();
         files.insert("levels/twice.toml", &level(objects));
         Content::load(&files).map(|_| ()).map_err(|e| e.to_string())
     };
-    let twice = load(r#"["unique:widowmaker", "unique:widowmaker"]"#).expect_err("twice");
+    let twice = load(r#"["unique:test_blade", "unique:test_blade"]"#).expect_err("twice");
     assert!(twice.contains("placed twice"), "{twice}");
-    let two = load(r#"["unique:widowmaker*2"]"#).expect_err("two at once");
+    let two = load(r#"["unique:test_blade*2"]"#).expect_err("two at once");
     assert!(two.contains("one at a time"), "{two}");
+    // A shipped unique is placed once already: Mother Sallow wields Widowmaker.
+    let shipped = load(r#"["unique:widowmaker"]"#).expect_err("placed by her gear");
+    assert!(shipped.contains("placed twice"), "{shipped}");
     let unknown = load(r#"["unique:nobody"]"#).expect_err("unknown");
     assert!(
         unknown.contains("unknown unique item `nobody`"),
@@ -221,8 +234,8 @@ fn a_unique_has_one_placement_in_all_content() {
         "levels/once.toml",
         "name = \"Once\"\nmap = '''\n#####\n#@.k#\n#####\n'''\n[legend]\n\
          \"@\" = { terrain = \"floor\", spawn = \"player\" }\n\
-         \"k\" = { terrain = \"floor\", creature = \"kobold\", carry = [\"unique:widowmaker\"], \
-         wield = \"unique:widowmaker\" }\n",
+         \"k\" = { terrain = \"floor\", creature = \"kobold\", carry = [\"unique:test_blade\"], \
+         wield = \"unique:test_blade\" }\n",
     );
     let content = Content::load(&files).expect("one placement");
     let spawn = &content.level("once").expect("level").creatures[0];

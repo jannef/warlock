@@ -155,6 +155,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("animated-bodies.md", animated::animated_bodies),
         ("animated-families.md", animated::animated_families),
         ("animated-groups.md", animated::animated_groups),
+        ("animated-parts.md", animated::animated_parts),
         ("dungeons.md", dungeons::dungeons),
         ("dungeon-floors.md", dungeons::dungeon_floors),
         ("danger-weights.md", dungeons::danger_weights),
@@ -175,6 +176,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("material-finds.md", materials::material_finds),
         ("construction.md", materials::construction),
         ("variants.md", materials::variants),
+        ("pieces.md", materials::pieces),
         ("gems.md", gems::gems),
         ("gem-sizes.md", gems::sizes),
         ("gem-cuts.md", gems::cuts),
@@ -959,6 +961,10 @@ mod tests {
         assert!(uniques.contains("| Widowmaker | Stiletto | 12 | Venomous (2: adds 1d4 poison"));
         assert!(uniques.contains("every hit that leaves its target alive: 1 degree of Poisoned"));
         assert!(uniques.contains("| its wearer is never Frightened |"));
+        assert!(
+            uniques.contains("| Mother Sallow |"),
+            "who carries Widowmaker"
+        );
         assert!(!uniques.contains("Stonebiter"));
         assert!(
             text("lights.md")

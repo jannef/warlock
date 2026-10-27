@@ -1,0 +1,39 @@
+# Campaign-owned (docs/design/campaign.md §3.6): the Ascmearc's own type, which only its files
+# may name.
+#
+# The wanted (docs/design/adventurers-guild.md §8.2, #424): Sergeant Herrick, the Deserter, a
+# sergeant of the fort who killed his captain and ran, and now sells his axe to goblins. A
+# commoner. Once a run (`unique`), in no population: only his lair's pinned vault on
+# Brocenburg's fourth floor places him. A great axe (half the time a magic one) and the
+# Turncoat, his mail, which Frightened never takes.
+[[creature]]
+id = "herrick"
+level = 12
+xp = 70
+rarity = "very_rare"
+loot = 50
+unique = true
+name = "Sergeant Herrick"
+glyph = "@"
+fg = "#8a9098"
+faction = "outlaws"
+tags = ["outlaw"]
+alignment = "evil"
+race = "human"
+opens_doors = true
+footsteps = 110
+hearing = 12
+weight = 90000
+stats = { strength = 20, dexterity = 12, toughness = 19, intelligence = 10, willpower = 13, presence = 13 }
+base_hp = 40
+skills = { intimidate = 40 }
+weapon_skills = { axes = 3, great_weapon = 2 }
+[[creature.gear]]
+chance = 100
+one_of = ["great_axe"]
+keep = "wield"
+magic = 50
+[[creature.gear]]
+chance = 100
+one_of = ["unique:turncoat"]
+keep = "wear"
