@@ -307,3 +307,17 @@ min_cells = 9
 feature = "shrine_stone"
 sides = { good = "altar_good", evil = "altar_evil" }
 shrine = { regen = 200, status = "unwelcome", welcome = "You feel welcome here.", unwelcome = "Something here wants you gone." }
+
+# A scriptorium (spec §7 "Special rooms"): shelves at its middle, a few scrolls on its floor, and
+# studying inside earns Decipher script's training marks twice as often.
+[[effect]]
+id = "scriptorium"
+name = "scriptorium"
+mark = "r"
+near = "You smell dust and old vellum."
+enter = "Shelves of rotting scrolls line the walls."
+weight = 5
+min_cells = 9
+feature = "shelves"
+loot = { class = "scrolls", count = [2, 4] }
+train = { decipher_script = 200 }

@@ -23,7 +23,7 @@ expression: "render(case, content.clone())"
     │ Lv  Level         1                                                                     │
     │ XP  Experience    0 / 182                                                               │
     │     Talents       6                                                                     │
-    │ HP  Hit points    17/19   MP  Mana       1/1                                            │
+    │ HP  Hit points    18/20   MP  Mana       1/1                                            │
     │ Dv  Defence       11      Pv  Protection  0                                             │
     │     Stance        Neutral                                                               │
     │     Rage          11/20                                                                 │
@@ -37,4 +37,4 @@ expression: "render(case, content.clone())"
     │ @ or Esc close   A skills                                                               │
     └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘
 
- The Hub  ·  HP 17/19  ·  MP 1/1  ·  Rage 11  ·  Focus 10/10  ·  Raging  ·  Lv 1         ? controls
+ The Hub  ·  HP 18/20  ·  MP 1/1  ·  Rage 11  ·  Focus 10/10  ·  Raging  ·  Lv 1         ? controls

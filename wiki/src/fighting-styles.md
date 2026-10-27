@@ -50,7 +50,8 @@ Both blows are one attack, in the time of one. If the first blow kills, there is
 
 {{#include generated/light-weapons.md}}
 
-Twin Blades eases both penalties, and at rank 10 neither hand has any: a full attack with each.
+Twin Blades eases both penalties, and from rank 9 neither hand has any: a full attack with each.
+From rank 7 it adds to hit as well.
 Creatures that hold two weapons fight with both too.
 
 ## What a rank gives
@@ -61,12 +62,14 @@ rules, exactly. A style's benefits add to those of the weapon skill you fight wi
 - **To hit**, **Damage**, **Time**, **Parry**, **Shield**, and **Reload time** as for
   [weapon skills](weapon-skills.md#what-a-rank-gives).
 - **Critical damage**: a confirmed critical rolls its damage that many more times (×3 instead
-  of ×2; see [Criticals](combat.md#criticals)).
+  of ×2, ×4 at Great Weapon 10; see [Criticals](combat.md#criticals)).
 - **Main hand** and **Off hand**: the penalty to hit of each hand's blow with two weapons.
 - **Shield bash after a hit**: the chance that a blow that hits is followed by a free bash with
   your shield.
 
 {{#include generated/style-benefits.md}}
+
+The first five ranks grow slowly; ranks 6 to 10 grow much faster.
 
 Rank 0 gives nothing. Rank 10 is mastery: later, masters of a style will learn feats of their
 own (a duelist's riposte, a staff fighter's trip), which will be chosen from the one abilities

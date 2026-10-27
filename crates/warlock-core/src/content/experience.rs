@@ -719,7 +719,7 @@ mod tests {
     fn bad_files_are_refused() {
         for (from, to) in [
             ("max_level = 60", "max_level = 0"),
-            ("hp_level = 20", "hp_level = 61"),
+            ("hp_level = 50", "hp_level = 61"),
             ("mana_level = 60", "mana_level = 61"),
             ("from = 1\nzd = 5", "from = 2\nzd = 5"),
             ("zd = 5", "zd = 0"),
@@ -744,7 +744,7 @@ mod tests {
         let capped = |max: u8| {
             SHIPPED
                 .replace("max_level = 60", &format!("max_level = {max}"))
-                .replace("hp_level = 20", "hp_level = 1")
+                .replace("hp_level = 50", "hp_level = 1")
                 .replace("mana_level = 60", "mana_level = 1")
         };
         assert!(Experience::parse("x", &capped(11)).is_ok());

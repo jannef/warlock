@@ -77,7 +77,7 @@ recovered = "The fog lifts."
 "##;
 
 // From level 3 on, levels add no mana.
-const EXPERIENCE: &str = "max_level = 50\nhp_level = 20\nmana_level = 3\nbonus_percent = 5\n\
+const EXPERIENCE: &str = "max_level = 50\nhp_level = 50\nmana_level = 3\nbonus_percent = 5\n\
                           bonus_levels = 4\n[kills]\nplateau = 213\nramp = 5\n\
                           slope_per_100 = 285\nguideline = { per_level = 5, base = 10 }\n\
                           [[zero_difference]]\nfrom = 1\nzd = 5\n";

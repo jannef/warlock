@@ -195,6 +195,8 @@ the spell may come your way again.
 {{#include generated/mishaps.md}}
 
 Studying trains *Spellcraft*, *Decipher script*, and your Intelligence, whatever comes of it.
+In a scriptorium ([Special rooms](special-rooms.md)) Decipher script's mark is twice as likely,
+so certain.
 
 ## Wands
 

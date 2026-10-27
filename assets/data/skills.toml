@@ -24,7 +24,8 @@
 #                 comes of it), "dodge" (an attack that missed because you dodged it, or a known trap you
 #                 stepped past), "burdened"
 #                 (an action, not waiting, while your load slows you), "travel" (a journey: a step
-#                 on the overworld), "steal" (an attempt to steal from someone, whatever comes of
+#                 on the overworld), "forage" (a forage that ran its time, whatever it found),
+#                 "steal" (an attempt to steal from someone, whatever comes of
 #                 it), "heal" (a try at treating yourself, whatever comes of it), "kick" (a kick
 #                 at a closed door), "study" (a spell studied from a scroll,
 #                 whatever comes of it), "pick" (a try at picking a
@@ -43,7 +44,9 @@
 #                 at all), "disarm" (points added to disarming a trap, spec §8 "Disarming
 #                 traps", at most 20; trained, a skill with it lets you disarm traps at all),
 #                 "burden" (percent less of your burden's slowdown), "travel"
-#                 (percent less time a journey on the overworld takes), "bargain" (percent better
+#                 (percent less time a journey on the overworld takes), "forage" (percent added
+#                 to a forage's chance of finding food, at most 30; trained, a skill with it lets
+#                 you forage at all: forage.toml), "bargain" (percent better
 #                 prices in shops, together with Presence at most half; shops.toml), "kick"
 #                 (points added to the Strength a kick at a closed door is rolled against, at most
 #                 40), "steal" (points added to stealing from someone, at most 20; trained, a
@@ -282,9 +285,14 @@ id = "survival"
 name = "Survival"
 description = "Living off the land and finding the easiest way through the wild."
 kind = "passive"
-mark = [{ on = "travel", chance = 10 }]
-# 20% quicker journeys at 100, at most.
-benefit = [{ effect = "travel", curve = [[0, 0], [100, 20]] }]
+mark = [{ on = "travel", chance = 10 }, { on = "forage", chance = 25 }]
+# 20% quicker journeys at 100, at most. Foraging in the wild (spec §8 "Foraging", forage.toml;
+# the Forage ability): trained at all, you can forage; +15 percent to finding food at 100, +30 at
+# 200.
+benefit = [
+    { effect = "travel", curve = [[0, 0], [100, 20]] },
+    { effect = "forage", curve = [[0, 0], [100, 15], [200, 30]] },
+]
 
 [[skill]]
 id = "swim"

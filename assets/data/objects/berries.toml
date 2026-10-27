@@ -1,0 +1,14 @@
+# Wild berries, foraged in meadows, woods, marshes, and on the hills (data/forage.toml): soon
+# eaten, soon spoilt.
+[[object]]
+id = "berries"
+name = "handful of berries"
+plural = "handfuls of berries"
+glyph = "%"
+fg = "#7a3ea8"
+class = "food"
+materials = ["plant"]
+weight = 100
+value = 0
+stackable = true
+food = { nutrition = 60, turns = 1, keeps = "2d", lasts = "4d" }
