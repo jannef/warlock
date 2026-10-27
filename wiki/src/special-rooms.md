@@ -134,6 +134,16 @@ gets where a dungeon favours or bans nothing. "Only" says where it can come at a
 - **Altar room.** An old altar stands in the middle of the room, its god long forgotten, and a
   faint glow rises from it: you notice it from the doorway. Stand beside it and you may pray
   (see Forgotten altars below). Only rooms of 9 floor cells or more can be one.
+- **Shrine.** A squat stone shrine stands in the middle of the room. Like a forgotten altar it
+  has a hidden side, here only **good or evil** (as likely either way), and its stone's light
+  tells which: gold for good, red for evil. It cares only whether you are on its side (see
+  [Alignment](alignment.md)): of its side, you heal twice as fast inside ("You feel welcome
+  here."); of the other side, you are *Unwelcome* (see [Status effects](status-effects.md)) for
+  as long as you stay and half a minute after you leave: wounds heal at half the pace and your
+  blows go a little astray ("Something here wants you gone."). A neutral character is ignored
+  ("An old shrine. It ignores you."). Creatures are treated the same way by their own side, so
+  a good shrine is a poor place for an orc to fight you. There is nothing to pray to. Only rooms
+  of 9 floor cells or more can be one.
 
 The talent *Hallowed rest* (Grit) makes a room that quickens healing or mana quicken it half
 again more for you: a sanctuary's three times as fast becomes four times. The talent *Anchored

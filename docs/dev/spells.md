@@ -189,8 +189,9 @@ shares.
   (`level × casting ÷ 100` rounded down, plus `TalentMods::caster_level` and the worn
   `Effect::CasterLevel`, at least 0, at least 1 while `max_mana` is above 0),
   `World::caster_level(id)` (the player at `player_level` and `casting_percent`: the class's,
-  100 without a class; a creature at its type's level and 100), `casting_percent(content,
-  character)`. Derived, never stored: nothing in saves or the state hash changes.
+  100 without a class; a creature at its type's level and 100, plus what it wears, #525),
+  `casting_percent(content, character)`. Derived, never stored: nothing in saves or the state
+  hash changes. The dev `actors` layer shows each actor's with mana as `cl N`.
 - **Presentation**: `PerceptionView::own_caster_level()`; the dump `stats` layer's
   `Caster level N` after the scores, JSON dumps' `caster_level`; `own_spell_cost(spell)` and
   `own_spell_reach(spell)` (the menu's "tier 2, 11 mana", the aiming mode's reach). The
