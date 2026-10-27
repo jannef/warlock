@@ -1,0 +1,50 @@
+# The drow (#519; content::drow_roster_tests checks the numbers).
+# A noble of a drow house who leads its soldiers: fine mail, a cloak of the house's
+# colours, a venomed long sword, and a voice that cows the weak.
+[[creature]]
+id = "drow_captain"
+level = 37
+xp = 195
+rarity = "rare"
+loot = 60
+name = "drow captain"
+glyph = "e"
+fg = "#d4c8f0"
+speed = 1050
+faction = "drow"
+tags = ["drow"]
+alignment = "evil"
+race = "drow"
+vision = "darkvision"
+opens_doors = true
+footsteps = 80
+hearing = 14
+weight = 65000
+stats = { strength = 28, dexterity = 21, toughness = 28, intelligence = 25, willpower = 25, presence = 25 }
+base_hp = 102
+resist = { poison = 25 }
+on_eat = { message = "Lean and bitter, with an aftertaste of old poisons.", vomit = 40 }
+[creature.attack]
+damage = "3d10"
+damage_type = "slashing"
+name = "envenomed long sword"
+verb = "cuts"
+to_hit = 3
+on_hit = [{ status = "poisoned", chance = 25, severity = 3 }, { status = "frightened", chance = 10, severity = 1 }]
+# Its gear (spec §8 "Creature gear"): armour and coins, never a weapon (its venom rides on
+# its natural attack, which a wielded weapon would replace).
+[[creature.gear]]
+chance = 90
+one_of = ["chain_mail"]
+magic = 40
+[[creature.gear]]
+chance = 70
+one_of = ["wool_cloak"]
+magic = 25
+[[creature.gear]]
+chance = 60
+one_of = ["leather_boots"]
+magic = 15
+[[creature.gear]]
+chance = 80
+one_of = ["copper_coin*200", "gold_coin*6"]

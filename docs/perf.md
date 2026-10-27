@@ -80,6 +80,13 @@ which load does not skew), the `delf` rest went from about 123 billion to about 
 profile of what is left shows ordinary creature turns near the player, `World::live` for every
 actor at every moment the clock stops, and the rest's sight checks, in about equal parts.
 
+Panoplies (#486, 2026-10-27, same machine): the `panop` row is the same 120×60 cave floor at
+danger 40 whose population is `animated_panoply` alone, at full population: creatures that wear
+and wield up to ten things each, whose magic every rule reads through `Mods::worn` (the animated
+objects design's open performance risk, §12). Its turns take 1.0 ms on average and 2.2 ms at
+most (budget 16 ms; `delf` 0.4 ms and 1.2 ms in the same run), so `Mods::worn` stays uncached.
+Its rest is cut short at once (the panoplies see the player), so the row times the walk only.
+
 Frame time is nearly identical across levels and resolutions, which means the loop is CPU or
 submission bound on this machine; the offscreen run at the default 60 Hz pacing is bounded by the
 sleep granularity, not by rendering. All budgets are met with a large margin. Before lighting and

@@ -93,8 +93,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   edits this spec. The animated objects' types are not files there: they are generated from
   `data/animated.toml` (the tiers, the drop rule, what every animated type is, the material
   groups; a tier without bodies is a family, one type per level, with its name, glyph, colour,
-  rarity, speed and Defence by level, resistances, slot lines, and magic, rare, and
-  weapon-rank odds by level) and `data/animated/` (one household body a file: its object, level, rarity, speed,
+  rarity, speed and Defence by level, resistances, its own `attack` (its dice by the formula),
+  `opens_doors`, slot lines (`slot`, `classes`, `chance`, `from`, `count`), and magic, rare,
+  weapon-rank, and `shield_rank` odds by level) and `data/animated/` (one household body a file: its object, level, rarity, speed,
   attack, and how it moves and dies), numbered after the shared creature files and before every
   campaign's (§8 "Animated objects"). A creature may list the statuses it never suffers,
   `immune = ["poisoned", "bleeding"]` (`diseased`: every disease), and its death line's verb,

@@ -1,0 +1,59 @@
+# The drow (#519; content::drow_roster_tests checks the numbers).
+# A wizard of a drow house, robed in a dark cloak and hung with charms: spells from
+# afar (announced only, as every creature caster's) and a poisoned dagger.
+[[creature]]
+id = "drow_mage"
+level = 22
+xp = 120
+rarity = "rare"
+loot = 40
+name = "drow mage"
+glyph = "e"
+fg = "#b070e0"
+faction = "drow"
+tags = ["drow", "caster"]
+alignment = "evil"
+race = "drow"
+vision = "darkvision"
+combat = "caster"
+range = 6
+opens_doors = true
+footsteps = 60
+hearing = 14
+weight = 55000
+stats = { strength = 17, dexterity = 18, toughness = 20, intelligence = 23, willpower = 23, presence = 23 }
+base_hp = 44
+skills = { concentration = 74, spellcraft = 79 }
+resist = { poison = 25 }
+on_eat = { message = "Lean and bitter, with an aftertaste of old poisons.", vomit = 40 }
+[creature.attack]
+damage = "3d6"
+damage_type = "piercing"
+name = "poisoned dagger"
+verb = "stabs"
+to_hit = 2
+on_hit = [{ status = "poisoned", chance = 15, severity = 2 }]
+# Its gear (spec §8 "Creature gear"): armour and coins, never a weapon (its venom rides on
+# its natural attack, which a wielded weapon would replace).
+[[creature.gear]]
+chance = 80
+one_of = ["wool_cloak"]
+magic = 20
+[[creature.gear]]
+chance = 50
+one_of = ["jade_amulet"]
+magic = 40
+[[creature.gear]]
+chance = 60
+one_of = ["copper_coin*80", "gold_coin*2"]
+[[creature.particles]]
+on = "attack"
+glyphs = "·*+"
+colors = ["#f0d0ff", "#b070e0", "#4a2070"]
+count = 6
+life = 0.45
+spread = [1.0, 1.0]
+area = [0.15, 0.15]
+scale = 0.5
+fade = 0.6
+glow = 0.5

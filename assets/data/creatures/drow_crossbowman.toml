@@ -1,0 +1,53 @@
+# The drow (#519; content::drow_roster_tests checks the numbers).
+# A drow who keeps to the shadows behind the blades with a hand crossbow, its bolts
+# tipped with the sleep poison of the deep, and a short sword for close work.
+[[creature]]
+id = "drow_crossbowman"
+level = 16
+xp = 90
+rarity = "common"
+loot = 10
+name = "drow crossbowman"
+glyph = "e"
+fg = "#5a60b8"
+faction = "drow"
+tags = ["drow", "archer"]
+alignment = "evil"
+race = "drow"
+vision = "darkvision"
+sight = 13
+opens_doors = true
+footsteps = 60
+hearing = 15
+weight = 58000
+stats = { strength = 17, dexterity = 19, toughness = 17, intelligence = 16, willpower = 16, presence = 16 }
+base_hp = 36
+weapon_skills = { thrown = 3 }
+resist = { poison = 25 }
+on_eat = { message = "Lean and bitter, with an aftertaste of old poisons.", vomit = 40 }
+[creature.attack]
+damage = "3d6"
+damage_type = "slashing"
+name = "short sword"
+verb = "cuts"
+on_hit = [{ status = "poisoned", chance = 15, severity = 2 }]
+[creature.throw]
+object = "bolt"
+name = "poisoned bolt"
+damage = "3d6"
+damage_type = "piercing"
+range = 8
+verb = "shoots"
+on_hit = [{ status = "drowsy", chance = 20, severity = 1 }, { status = "poisoned", chance = 15, severity = 2 }]
+# Its gear (spec §8 "Creature gear"): armour and coins, never a weapon (its venom rides on
+# its natural attack, which a wielded weapon would replace).
+[[creature.gear]]
+chance = 70
+one_of = ["studded_leather"]
+magic = 5
+[[creature.gear]]
+chance = 60
+one_of = ["wool_cloak"]
+[[creature.gear]]
+chance = 40
+one_of = ["leather_boots"]

@@ -563,6 +563,10 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
              (whoever made the kill)",
             signed(value)
         ),
+        TalentEffect::AppraiseAnimated => "look mode says \"It hums with power.\" of an \
+                                           animated thing when anything it wears or wields is \
+                                           magic or rare"
+            .to_string(),
         TalentEffect::ItemWorth => "item descriptions show what things are worth".to_string(),
         TalentEffect::GemWorth => "item descriptions show what each gem is worth".to_string(),
         TalentEffect::IdentifyCarried { hours } => format!(
