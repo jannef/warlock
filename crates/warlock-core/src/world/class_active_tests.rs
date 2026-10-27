@@ -365,12 +365,6 @@ fn thick_hide_fast_movement_hardened_and_mighty_thews() {
     let before = step(&w);
     reach(&mut w, 12);
     assert_eq!(step(&w), before * 9 / 10, "Fast movement");
-    // Hardened: past level 20 levels add hit points again, one more each.
-    reach(&mut w, 24);
-    let at_24 = w.state.player().max_hp(&content);
-    reach(&mut w, 25);
-    let per_level = w.level_hp(&content);
-    assert_eq!(w.state.player().max_hp(&content), at_24 + per_level + 1);
     // Mighty thews: scores and potentials, once.
     w.player_mut().stats = Stats::new(PerStat::splat(14), PerStat::splat(20));
     let stats = w.state.player().stats;
@@ -383,6 +377,12 @@ fn thick_hide_fast_movement_hardened_and_mighty_thews() {
             "{stat:?}"
         );
     }
+    // Hardened: past level 50 levels add hit points again, three more each.
+    reach(&mut w, 50);
+    let at_50 = w.state.player().max_hp(&content);
+    reach(&mut w, 51);
+    let per_level = w.level_hp(&content);
+    assert_eq!(w.state.player().max_hp(&content), at_50 + per_level + 3);
 }
 
 #[test]

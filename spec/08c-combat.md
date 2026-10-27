@@ -250,7 +250,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   made its state (`World::travel`), so arrivals need no memory. A level
   gained says "You feel more experienced." and "Welcome to level N." (once per kill, naming the
   last level; after the attack's own messages, or as the turn is perceived for a creature that
-  bled to death), and each level gained up to `hp_level` (20)
+  bled to death), and each level gained up to `hp_level` (50)
   raises the player's maximum and current hit points (`Actor::hp_base`, `hp`) by `max(1, class
   hp ÷ 2 + the Toughness modifier)`; without a character the scenario's `hp` stands in for the
   class's. Each level gained up to `mana_level` (60) raises their mana by `max(0, class mana ÷ 2

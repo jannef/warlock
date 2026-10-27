@@ -834,7 +834,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     no body armour: nothing in the Body slot), Fast movement (steps 10 % cheaper Unburdened in
     no body armour, `World::step_price`), Brutal critical (critical multiplier +1 with a
     two-handed weapon), Hardened (each level past `hp_level` adds the level's hit points again
-    and 1 more), Mighty thews, Blood frenzy (a kill while raging builds 5 rage), Mighty rage
+    and 3 more), Mighty thews, Blood frenzy (a kill while raging builds 5 rage), Mighty rage
     (Raging's raises doubled, 10 more rage at most, Exhausted eases twice as fast), Unstoppable
     (while raging bleeding and poison tick nothing, and a blow that would take the last hit point
     leaves it for 10 rage, while that much is held); Divine grace

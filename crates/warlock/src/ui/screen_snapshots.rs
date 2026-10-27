@@ -787,7 +787,7 @@ const CASES: &[Case] = &[
         scenario: "arena",
         // Pip's birth sign has gifts (#265): seed 4 is one where the fight still ends in his death.
         seed: Some(4),
-        actions: "lantern wait*14",
+        actions: "lantern wait*20",
         ..BASE
     },
     Case {
