@@ -8,7 +8,7 @@ use crate::stats::Stat;
 /// How far a type's max HP may lie from the formula, in percent.
 const TOLERANCE: f64 = 35.0;
 
-/// The summoners of #520 by id. Others (the drow priestess) bring their own roster's checks.
+/// The summoners of #520 by id. Others (the drow priestesses) bring their own roster's checks.
 const ROSTER: &[&str] = &["goblin_wizard", "necromancer", "dark_wizard"];
 
 /// #383's caster: Toughness 12 + 0.4 L plus base_hp 2.5 L × 0.8.

@@ -26,5 +26,6 @@ all three. Since #531 Fyrdelf's population has the goblin wizard (with the war b
 floor holds one or two) and the necromancer (rare, met on its deep floors among the mine's dead);
 the dark wizard (24) is in none, no window reaching it. The goblin wizard stays out of
 Brocenburg: that lair's population is the guild design's (§8.2), and at its danger 6 to 9 a
-level-8 summoner would be the strongest thing drawn there, a third of its floors' draws. The drow priestess (the drow roster) gets her `summon` table
-(demons) in a follow-up.
+level-8 summoner would be the strongest thing drawn there, a third of its floors' draws. The three
+drow priestesses (#536) summon demons: their table is in `docs/dev/creatures/drow.md` (the drow
+roster's checks cover them, not this file's `ROSTER`).

@@ -312,6 +312,14 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // Beside a forgotten altar (spec §7 "Special rooms"): Pray in the Here group, last.
+    Case {
+        name: "abilities-menu-here",
+        scenario: "shrine",
+        actions: "move:N open:N move:N*3",
+        screen: Some("abilities"),
+        ..BASE
+    },
     // A paladin of some level: the Class group, Lay on hands drained, Smite ready.
     Case {
         name: "abilities-menu-class",
@@ -765,6 +773,28 @@ fn screens_as_text() {
     for case in CASES {
         insta::assert_snapshot!(case.name, render(case, content.clone()));
     }
+}
+
+/// Factor Wulfrun asked about the lost shaft before level 5: the topic is listed, her reply
+/// says the player is not ready yet, and nothing is given or marked. The content lifts the
+/// quest's prerequisite (the barrow's heart, deep in Cealdhlāw) so a short walk reaches her.
+#[test]
+fn quest_refused_as_too_early() {
+    let mut files = warlock_core::content::ContentFiles::builtin();
+    let path = "campaigns/ascmearc/data/quests/wulfrun.toml";
+    let quests = include_str!("../../../../assets/campaigns/ascmearc/data/quests/wulfrun.toml");
+    let lifted = quests.replacen("requires = \"barrow_heart\"\n", "", 1);
+    assert_ne!(lifted, quests, "the lost shaft requires the barrow's heart");
+    files.insert(path, &lifted);
+    let content = Arc::new(Content::load(&files).expect("content"));
+    let case = Case {
+        name: "quest-refused-early",
+        scenario: "ceaptun",
+        actions: "move:E*26 move:S*4 open:S move:S*4 ask:S:quest-lost_shaft",
+        screen: Some("dialogue"),
+        ..BASE
+    };
+    insta::assert_snapshot!(case.name, render(&case, content));
 }
 
 /// The UI console's text once `case` has started and its keys were pressed: one line a row,

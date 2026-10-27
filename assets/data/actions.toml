@@ -63,6 +63,9 @@ dig = 1000
 # A turn of searching for secret doors and hidden traps around you (`s`; spec §8 "Searching"):
 # searching for a while (`z`) goes on turn after turn until something is found or interrupts it.
 search = 1000
+# A turn of praying at a forgotten altar (the Pray ability; spec §7 "Special rooms"): a prayer
+# takes its outcome table's `seconds` (data/outcomes/), a turn of this after another.
+pray = 1000
 # Trying to disarm a trap you know of next to you (the Disarm ability; spec §8 "Disarming traps"):
 # careful work, whether it comes off, fails, or sets the trap off.
 disarm = 2000

@@ -232,8 +232,8 @@ fn a_pick_nothing_can_be_spent_on_is_dropped() {
     // (any skill, three ranks each) would keep a pick open to the last level, and so would Sworn
     // foe (any creature tag) and School focus (any school or element): here they are an
     // elf's, and Apprentice's tree waits for a free talent; Salvager, Unbinder, Overreach, Wand
-    // mastery, Channeler, and Appraiser's eye are held back the same way so the picks fit in the
-    // levels there are.
+    // mastery, Channeler, Appraiser's eye, and Devout are held back the same way so the picks fit
+    // in the levels there are.
     let mut files = ContentFiles::builtin();
     files.edit_table("talents", |text| {
         text.replace(
@@ -263,6 +263,10 @@ fn a_pick_nothing_can_be_spent_on_is_dropped() {
         .replace(
             "choice = \"tag\"\n",
             "choice = \"tag\"\nneeds = { race = \"elf\" }\n",
+        )
+        .replace(
+            "tree = \"wayfarer\"\ndescription = \"You pray as one",
+            "tree = \"wayfarer\"\nneeds = { race = \"elf\" }\ndescription = \"You pray as one",
         )
         .replace(
             "choice = \"school\"\n",

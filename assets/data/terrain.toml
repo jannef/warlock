@@ -1,5 +1,5 @@
 # Terrain types. Colors are the fully lit appearance; lighting darkens and tints them.
-# Fields: id, name, glyph, fg, bg (default black), walkable (default true),
+# Fields: id, name, description (what look mode adds after the name; optional), glyph, fg, bg (default black), walkable (default true),
 # transparent (default true), move_cost (what a step onto it costs, in percent of a normal step,
 # the `step` cost in actions.toml; default 100; local levels only), opens_to / closes_to (doors),
 # breaks_to and sturdiness (closed doors, spec §8 "Doors": a kick breaks the door into this
@@ -332,6 +332,33 @@ bg = "#0d0d10"
 light = "altar_glow"
 anim = { kind = "pulse", bpm = 54, amount = 0.18 }
 glow = 0.35
+
+# A forgotten altar (spec §7 "Special rooms"): the feature of an altar room, where the player may
+# pray. Its own terrain, so it never reads as a temple's altar. Its light is the neutral grey; a
+# good or an evil altar's cell carries a light of its own (room_effects.toml `sides`). Spent, it
+# becomes the dark spent altar; blown apart, rubble.
+[[terrain]]
+id = "forgotten_altar"
+name = "forgotten altar"
+description = "An altar of worn stone. Its carvings have been rubbed smooth by hands or by time, and whatever god it served has no name left. Something here still listens."
+stone = true
+walkable = false
+glyph = "_"
+fg = "#d8d0b8"
+bg = "#0d0d10"
+light = "altar_neutral"
+anim = { kind = "pulse", bpm = 48, amount = 0.12 }
+glow = 0.25
+
+[[terrain]]
+id = "spent_altar"
+name = "spent altar"
+description = "An altar of worn stone, cold and dark. Whatever listened here has stopped."
+stone = true
+walkable = false
+glyph = "_"
+fg = "#5a5a5e"
+bg = "#0d0d10"
 
 # Light sources (spec §5). Emitting terrain must be transparent so light cannot leak through it.
 

@@ -43,7 +43,8 @@ every new run starts in it.
   reveals it (§7 "Hidden locations"). The rest of the design's forty sites are reserved: plain
   cells today, spaced so a later level drops in without moving anything.
 - **Quests** (#340, design §6.2; `campaigns/ascmearc/data/quests/`): three people in Cēaptūn
-  give a chain of three each, every quest offered once the one before it is done:
+  give a chain each (three quests, Wulfrun's two), every quest offered once the one before it
+  is done:
   - **Reeve Leofric**: "Rats in the barrows" (kill 5 giant rats in Cealdhlāw; 25 gold, 30 XP),
     "The barrow's heart" (reach Cealdhlāw 4; 60 gold, 100 XP), "The wight of the barrow" (kill
     the barrow wight in Cealdhlāw; 150 gold, a chain mail shirt, 250 XP).
@@ -51,10 +52,10 @@ every new run starts in it.
     2; 40 gold, 60 XP), "The fen minster" (reach Fennmynster 3; it **reveals Fennmynster** as it
     is given; 80 gold, 2 angelica roots, 160 XP), "What the water keeps" (bring the minster
     reliquary from the sunken crypt, Fennmynster 8; 250 gold, 450 XP).
-  - **Factor Wulfrun**: "The foreman's ledger" (deliver her ledger to Godgifu at the Gæsthūs; 10
-    gold, 20 XP), "The lost shaft" (reach Fyrdelf 2; offered once the ledger and "The barrow's
-    heart" are both done, since Fyrdelf starts at danger 8; it **reveals Fyrdelf** as it is
-    given; 100 gold, 220 XP), "Fire in the deep" (kill the fire drake in Fyrdelf, a named
+  - **Factor Wulfrun**: "The lost shaft" (reach Fyrdelf 2; offered once "The barrow's heart" is
+    done, since Fyrdelf starts at danger 8, and given only from character level 5 (`min_level`:
+    asked sooner, she says she doesn't think the player ready, and gives and marks nothing); it
+    **reveals Fyrdelf** as it is given; 100 gold, 220 XP), "Fire in the deep" (kill the fire drake in Fyrdelf, a named
     monster: its death counts however it came; 500 gold, 900 XP).
   - **Wat One-Eye** (#425, the guild design §4, §7), guildmaster of **the Weyfarers' Gilde**
     (Middle English: a new organisation) in the **Gildhalle**, a timber hall in the town's
@@ -86,8 +87,8 @@ every new run starts in it.
     The chain is likely a requirement of the story's ending, to come.
   Every quest of the three helps someone and is a little good (`alignment` 5 to 30); of Wat's,
   only "The hundred" is (5). Each reach and bring
-  quest and the delivery say in the log where their goal lies (`where`). The chalice, the
-  reliquary, and the ledger are objects of their own, worth nothing to a shop. The three
+  quest says in the log where its goal lies (`where`). The chalice and the
+  reliquary are objects of their own, worth nothing to a shop. The three
   branches' first levels each have an `arrival` line: "Cold air breathes up from the mound.",
   "The water is up to the third step.", "The galleries smell of sulphur."
 - **The player wiki** describes the Ascmearc and never the test world: a page "The Ascmearc"

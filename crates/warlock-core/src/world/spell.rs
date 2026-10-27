@@ -42,6 +42,9 @@ pub(super) enum Caster {
     /// An actor (the player reading a scroll): its blows are theirs ([`Event::Attacked`], a
     /// spell, with no roll to hit), and so are its kills.
     Actor(ActorId),
+    /// A place (spec §7 "Special rooms": a forgotten altar blowing apart): its kills earn no one
+    /// anything, as a trap's.
+    Place,
 }
 
 /// The cells a burst around `center` of `radius` reaches: within the radius (rounded, like every
@@ -350,6 +353,7 @@ impl World {
                 let hit = Strike::Hit { critical: false };
                 self.spell_strikes(by, target, source, (damage, hit), events);
             }
+            Caster::Place => self.place_hurts(target, damage, events),
         }
     }
 

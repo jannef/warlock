@@ -137,8 +137,10 @@ mod lucky;
 mod mana;
 pub(crate) mod mirrors;
 mod openings;
+mod outcome;
 mod path;
 mod perceive;
+mod pray;
 mod quest;
 mod quest_roll;
 mod quick_leave;
@@ -509,6 +511,8 @@ enum Spent {
     Study(learn::Lesson),
     /// Praying to consecrate a place until this moment (see [`World::consecrate`]).
     Consecrate(GameTime),
+    /// Praying at a forgotten altar (see [`World::pray`]).
+    Pray(pray::Prayer),
     /// Dev: the clock jumps ahead; nobody acts, then perception is recomputed.
     Skip(Duration),
 }
@@ -1072,6 +1076,7 @@ impl World {
             Spent::Search(turns) => self.search(turns, &mut events),
             Spent::Study(lesson) => self.study(lesson, &mut events),
             Spent::Consecrate(until) => self.consecrate(until, &mut events),
+            Spent::Pray(prayer) => self.pray(prayer, &mut events),
             Spent::Skip(duration) => {
                 // Nobody acts or gains energy.
                 self.state.time += duration;
@@ -1186,6 +1191,7 @@ impl World {
             Action::Dig(dir) => return self.start_dig(*dir),
             Action::Search(turns) => return Spent::Search(*turns),
             Action::Disarm(dir) => return self.disarm(*dir, events),
+            Action::Pray => return self.start_prayer(),
             Action::SecondWind => return self.second_wind(events),
             Action::BloodMagic => return self.blood_magic(),
             Action::Use(active, dir) => return self.use_class(*active, *dir, events),
@@ -1383,6 +1389,8 @@ mod moon_tests;
 mod object_tests;
 #[cfg(test)]
 mod openings_tests;
+#[cfg(test)]
+mod outcome_tests;
 #[cfg(test)]
 mod outlaw_tests;
 #[cfg(test)]

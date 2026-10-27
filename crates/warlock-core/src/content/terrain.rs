@@ -39,6 +39,9 @@ pub enum StairsDir {
 pub(super) struct TerrainSpec {
     pub id: String,
     pub name: String,
+    /// What look mode adds after its name (a forgotten altar's), if anything.
+    #[serde(default)]
+    pub description: Option<String>,
     pub glyph: char,
     /// Presentation-only: glyphs the map draws instead of `glyph`, one per cell picked by its
     /// position (a space draws none), e.g. hairline cracks in thin ice.
@@ -185,6 +188,9 @@ fn neutral() -> Rgb {
 pub struct TerrainDef {
     pub id: String,
     pub name: String,
+    /// What look mode says of it after its name, if anything (a forgotten altar's, spec §7
+    /// "Special rooms").
+    pub description: Option<String>,
     pub glyph: char,
     /// Presentation-only: glyphs the map draws in place of `glyph`, one per cell
     /// ([`TerrainDef::glyph_at`]); empty: always `glyph`.

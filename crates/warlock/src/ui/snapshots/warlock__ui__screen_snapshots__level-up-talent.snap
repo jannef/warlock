@@ -26,15 +26,15 @@ expression: "render(case, content.clone())"
             │   n  Keen ears                   1/2  You hear fainter sounds, fainter … │
             │   o  Night eyes                       Your eyes grow used to the dark: … │
             │ Wayfarer                                                                 │
-            │   p  Long strider                     Your journeys across the overworl… │
-            │   q  Pilgrim                          You have knelt in many temples: t… │
-            │   r  Sun-blessed                      The sun mends you: under the open… │
-            │   s  Swimmer                          Water does not slow you: you wade… │
-            │   t  Weather-wise                     You read the sky: under it you kn… │
+            │   p  Devout                           You pray as one who means it: an … │
+            │   q  Long strider                     Your journeys across the overworl… │
+            │   r  Sense of place                   You read a place at a glance: a s… │
+            │   s  Sun-blessed                      The sun mends you: under the open… │
+            │   t  Swimmer                          Water does not slow you: you wade… │
+            │   u  Weather-wise                     You read the sky: under it you kn… │
             │ Scholar                                                                  │
-            │   u  Anchored mind                    Your power is moored fast: no pla… │
-            │   v  Appraiser's eye                  You can tell a bound thing's wort… │
-            │   w  Apprentice                  1/3  You take up a skill you lack, or … │
+            │   v  Anchored mind                    Your power is moored fast: no pla… │
+            │   w  Appraiser's eye                  You can tell a bound thing's wort… │
             │                                                                          │
             │ Tougher than most: more hit points for each rank, and more as you level. │
             │                                                                          │

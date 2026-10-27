@@ -121,6 +121,10 @@ gets where a dungeon favours or bans nothing. "Only" says where it can come at a
 - **Cursed room.** The dead do not rest in it: see below. Only on a level with a danger. One
   floor in twenty that draws a cursed room is cursed throughout instead.
 
+- **Altar room.** An old altar stands in the middle of the room, its god long forgotten, and a
+  faint glow rises from it: you notice it from the doorway. Stand beside it and you may pray
+  (see Forgotten altars below). Only rooms of 9 floor cells or more can be one.
+
 The talent *Hallowed rest* (Grit) makes a room that quickens healing or mana quicken it half
 again more for you: a sanctuary's three times as fast becomes four times. The talent *Anchored
 mind* (Scholar) keeps your power moored: Ebbing never takes you. The talent *Mirror-wise*
@@ -198,3 +202,36 @@ then the mana and the time are lost), the room becomes a plain room for good: th
 rise there, nor does mana drain. On a level a curse or a drain covers whole, it lifts the whole
 level's instead. It is a good deed (see [Alignment](alignment.md)). Anywhere else it is refused
 ("There is nothing here to consecrate."), costing nothing.
+
+## Forgotten altars
+
+An altar room holds a **forgotten altar**: worn stone, its carvings rubbed smooth, its god's name
+long lost, and yet something there still listens. It is not a temple and not a god you serve:
+nothing to sacrifice, nothing to convert. It is a gamble. Stand beside it and choose **Pray**
+from the abilities menu (it is listed under *Here* only while you stand next to such an altar).
+A prayer takes a minute; anything that would stop a rest (a creature coming into view, a blow, a
+noise) breaks it, and a broken prayer gives nothing, though the minute is gone.
+
+At the end of a prayer one outcome is drawn. Most prayers do little: a few coins, a little
+healing, a pang of hunger, a brief hex, a wandering creature, or nothing at all but a line of
+flavour. A few do more, for good or ill, and now and then the altar itself bursts apart in fire,
+hurting everyone near it, you included (it can kill), and leaving rubble.
+
+Every altar has a hidden side, **good, neutral, or evil**. The game never says which, but its
+glow does: gold, grey, or red. The side tilts the odds against your own alignment (see
+[Alignment](alignment.md)): pray at an altar of your own side and the boons come more often,
+at one of the other side the banes. A neutral altar, or a neutral you, leans neither way.
+Praying also moves your alignment a little: toward good at a good altar, toward evil (more) at an
+evil one. The talent *Devout* (Wayfarer) doubles the lean of an altar of your side and takes
+away an opposed one's.
+
+After each completed prayer, there is an even chance the altar is **spent**: its glow gutters and
+dies, it stands cold and dark, and nothing answers there again. So an altar usually gives one or
+two prayers. Seek out the next one: about one generated floor in twenty has one.
+
+{{#include generated/altar-shares.md}}
+
+The outcomes, by kind and tier ("Of its kind" is its share of its kind's draws; the great
+outcomes are still to come, so for now each kind is drawn among its minor and moderate ones):
+
+{{#include generated/altar-outcomes.md}}
