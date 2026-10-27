@@ -359,6 +359,20 @@ feature = "shrine_stone"
 sides = { good = "altar_good", evil = "altar_evil" }
 shrine = { regen = 200, status = "unwelcome", welcome = "You feel welcome here.", unwelcome = "Something here wants you gone." }
 
+# A haunted room (spec §7 "Special rooms"): a fine camp spot that is not. While the player rests
+# inside, at every full hour something undead of the floor's danger comes inside, out of view where
+# it can. Consecrate lifts it.
+[[effect]]
+id = "haunted"
+name = "haunted room"
+mark = "q"
+near = "You hear a whisper, and then nothing."
+enter = "It is very quiet here. Too quiet to sleep."
+weight = 5
+needs_danger = true
+haunt = { faction = "undead", every = "1h" }
+unholy = true
+
 # A scriptorium (spec §7 "Special rooms"): shelves at its middle, a few scrolls on its floor, and
 # studying inside earns Decipher script's training marks twice as often.
 [[effect]]

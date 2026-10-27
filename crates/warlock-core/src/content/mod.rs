@@ -78,6 +78,9 @@ mod room_burden_tests;
 #[cfg(test)]
 mod room_collapse_tests;
 mod room_effect;
+mod room_haunt;
+#[cfg(test)]
+mod room_haunt_tests;
 #[cfg(test)]
 mod room_homes_tests;
 mod room_lore;
@@ -217,6 +220,7 @@ pub use room_effect::{
     Collapse, Dressing, Here, Hoard, Mirrors, Offer, RoomEffectDef, RoomEffectId, RoomEffects,
     SpecialRoom, Swarm, Themes, Treasure,
 };
+pub use room_haunt::{HAUNT_EVERY, Haunt};
 pub use room_lore::RoomLoot;
 pub use room_shrine::{Regard, Shrine};
 pub use scenario::ScenarioDef;

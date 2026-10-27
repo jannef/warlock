@@ -234,9 +234,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     entering; below); a *shrine* (4, #413; only in
     a room of at least 9 floor cells) is a shrine of a side (below: "You feel welcome here.",
     "Something here wants you gone.", or "An old shrine. It ignores you." on entering); a
-    *scriptorium* (5, #414; only in a room of at least 9 floor cells) holds shelves of rotting
-    scrolls and a few scrolls, and trains Decipher script faster ("You smell dust and old vellum."
-    when glimpsed, "Shelves of rotting scrolls line the walls." on entering; below); an
+    *haunted room* (5, #417; only on a level with a danger; unholy) haunts a rest inside (below;
+    "You hear a whisper, and then nothing." when glimpsed, "It is very quiet here. Too quiet to
+    sleep." on entering); a *scriptorium* (5, #414; only in a room of at least 9 floor cells) holds
+    shelves of rotting scrolls and a few scrolls, and trains Decipher script faster ("You smell dust
+    and old vellum." when glimpsed, "Shelves of rotting scrolls line the walls." on entering;
+    below); an
     *armoury* (4, #487; as a teeming den) has weapon racks along its walls and hollow armour,
     blades, and panoplies asleep among them ("Racks of old arms line the walls. Not everything
     here is hanging up." on entering; Fyrdelf favours it at 20); a *workshop* (4, #487; as a
@@ -373,9 +376,22 @@ developer notes (CLAUDE.md, `docs/dev/`).
     rising they see (it stops a rest, as any newcomer does); unseen, the risen groans (a voice
     at its cell). Grave warden (§8 "Talents"): what the player kills never rises. The `actors`
     dev layer lists the pending risings (`rising rat at (11, 2) as skeleton at 08:15:00`).
+  - **Haunted rooms** (`haunt = { faction = "undead", every = "1h" }`, #417; `world/haunt.rs`):
+    while the player rests (only a rest, not digging, eating, or praying) inside a room whose
+    effect haunts (never over a whole level), at the end of each turn of the rest that passes
+    a full multiple of `every` on the clock (every full hour of the day: counted by the clock,
+    not from the rest's start, so nothing is saved and short rests strung together are haunted
+    alike), one creature of the haunt's faction comes inside, on a level with a danger only:
+    its type drawn from the gameplay stream as a cursed room's dead rise, with the level's
+    danger for the dead's level (the nearest level when none has it); its cell drawn among the
+    free cells of the room (walkable, no door or stairs) the player's last perception does not
+    see, else among all of them. It carries nothing, goes for where the player lies (its
+    `last_seen`), and is a newcomer, so the rest looks up at once and stops as soon as it
+    comes into view ("A zombie comes into view; you stop resting after ..."). `every` is 10
+    minutes to a day. Consecrate lifts it.
   - **Consecrate** (`unholy`, #408; `world/consecrate.rs`; the priest's at 9 and the paladin's
     at 12, §8 "Class abilities"): standing inside a special room whose effect is unholy (cursed,
-    draining), or anywhere on a level an unholy effect covers whole, the player spends 15 mana
+    draining, haunted), or anywhere on a level an unholy effect covers whole, the player spends 15 mana
     and prays for a minute, turn after turn as a rest goes (anything that stops a rest stops it;
     an interrupted prayer lifts nothing, its mana and time spent). Done, the room leaves the
     level's special rooms for good, a plain room (look mode no longer names it), or the level's
