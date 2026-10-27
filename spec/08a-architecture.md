@@ -121,7 +121,11 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     ("Costs" above: 6000 for a normal action); an actor may act while its energy is at least 0,
     and leftover energy carries over, so action counts stay exactly proportional to speed and
     cost over any span while the clock keeps whole seconds. The player's speed may differ from
-    1000 too (none of the rules assume it does not). After the player acts, the other actors act
+    1000 too (none of the rules assume it does not): an actor's talents' `speed_percent`
+    (Fleet-footed, Quick, Ponderous) and its skills' `speed` (Athletics, #548: +5 % at 100, +10 %
+    at 200; §8 "Skills") add up, the skills never taking the sum past 50 %, and scale its speed
+    (`Actor::speed`); the burden, Bloated, and status effects then raise each price it pays
+    ("Costs" above), independently of its speed. After the player acts, the other actors act
     in time order until the player may act again: next is whoever reaches 0 soonest, the clock moves to that moment, and ties go to
     the player first, then by ascending actor id. With equal speeds every creature acts once per
     player turn, in id order, right after the player; a speed-2000 creature acts exactly twice
