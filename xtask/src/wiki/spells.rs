@@ -4,7 +4,8 @@
 
 use std::fmt::Write as _;
 use warlock_core::content::{
-    Content, Resolution, Shape, SpellData, SpellDice, SpellPurpose, TIERS, TalentEffect,
+    Content, Resolution, RodDoes, RodShape, Shape, SpellData, SpellDice, SpellPurpose, TIERS,
+    TalentEffect,
 };
 
 /// Each tier's comfortable caster level, base mana cost, and damage ceiling, tier 0 first.
@@ -300,6 +301,60 @@ pub(super) fn wands(content: &Content) -> String {
             object.level,
             object.frequency,
             object.value
+        );
+    }
+    out
+}
+
+/// The rods (spec §8 "Magic items": "Rods"): each one's effect, its shape and reach by the
+/// user's caster level, what it does exactly, its mana cost, and where loot finds it; by item
+/// level, then name.
+pub(super) fn rods(content: &Content) -> String {
+    let mut rods: Vec<_> = (content.object_defs().iter())
+        .filter_map(|o| Some((o, o.rod?)))
+        .collect();
+    rods.sort_by(|(a, _), (b, _)| a.level.cmp(&b.level).then(a.name.cmp(&b.name)));
+    let mut out = String::from(
+        "| Rod | Effect | Shape | Reach | What it does | Mana | Item level | Frequency | Value |\n\
+         |---|---|---|---|---|:---:|:---:|:---:|:---:|\n",
+    );
+    for (object, rod) in rods {
+        let effect = content.rod_effect(rod.effect);
+        let shape = match effect.shape {
+            RodShape::Burst => format!("burst, radius {}", effect.radius),
+            other => other.id().to_string(),
+        };
+        let reach = match effect.per_levels {
+            0 => format!("{}", effect.range),
+            per => format!(
+                "{} + 1 per {per} caster levels, at most {}",
+                effect.range, effect.max_range
+            ),
+        };
+        let does = match effect.does {
+            RodDoes::Dig { power } => {
+                format!("breaks every wall on its line of hardness below {power}")
+            }
+            RodDoes::Teleport => {
+                "moves the first creature it hits to a random free cell of the level".to_string()
+            }
+            RodDoes::Status {
+                status,
+                severity,
+                up_to_caster_level,
+            } => {
+                let who = if up_to_caster_level {
+                    "every creature of a level up to the user's caster level"
+                } else {
+                    "everyone"
+                };
+                format!("{} {severity} on {who} in it", content.status(status).name)
+            }
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {} | {shape} | {reach} | {does} | {} | {} | {} | {} gold |",
+            object.name, effect.name, rod.mana, object.level, object.frequency, object.value
         );
     }
     out

@@ -9,8 +9,8 @@ foundation** (#394: the tier table, the spell files with their load-time cap che
 caster level), the **one cast path** (#395: cost, reach, dice, resolution, the shapes, and
 the casters' placeholder spells migrated onto it), **learning** (#396: the learned set,
 study, the check, mishaps; "Learning" below), the **first spell list** (#397: the spells,
-their scrolls, the classes' guaranteed spells; "The first list" below), and **wands** (#398;
-"Wands" below). Not to be confused
+their scrolls, the classes' guaranteed spells; "The first list" below), **wands** (#398;
+"Wands" below), and **rods** (#399; "Rods" below). Not to be confused
 with `content/spell.rs`, the bursts and bolts scrolls and traps cast, whose code the cast path
 shares.
 
@@ -283,6 +283,55 @@ shares.
     `TalentMods::wand_level`, +2).
   - **Wiki**: `xtask/src/wiki/spells.rs` `wands.md` (wand, spell, tier, charges, caster level,
     item level, frequency, value) on `wiki/src/magic.md`'s "Wands".
+- **Rods** (#399; design §9; `content/rod.rs`, `world/rod.rs`, tests `world/rod_tests.rs` and
+  `content/rod.rs`):
+  - **Effects** (the registry, distinct from spells): `data/rod_effects/` (`RodEffect`, one
+    `[[rod_effect]]` a file, its `README.toml` the format; `Content::rod_effects`, an index is
+    the id, `rod_effect_index`), loaded after spells (they name statuses) and before objects.
+    `shape` (`RodShape`: line, bolt, burst; each kind fixes its shape), `range` 1 to
+    `MAX_ROD_REACH` (20), `max_range` from it to 20, `per_levels` 0 to 20, `radius` 1 to
+    `MAX_ROD_RADIUS` (3) for a burst only, optional `noise`, and `kind` with only its fields
+    (`RodDoes`): `dig` (`power` 1 to `MAX_ROD_POWER`), `teleport`, `status` (`status`,
+    `severity` 1 to its max, `up_to_caster_level`). `RodEffect::reach(caster_level)` = `range` +
+    caster level / `per_levels`, at most `max_range`. No visual effect yet (no `Event::Spell`).
+  - **Rods**: `[object.rod]` (`RodSpec` → `Rod { effect, mana }` on `ObjectDef::rod`): `mana` 1
+    to `MAX_ROD_MANA` (100); a rod has a `slot`, is not `stackable`, and has no attack,
+    `launches`, range, food, `read`, `wand`, or `kind`; it may have `level` and `frequency`
+    (loot). Class `rods`. Four in `data/objects/rod_of_*.toml`; general stores stock and buy
+    them; the trap hall has a pile of two (digging, sleep) at (40, 19).
+  - **Use**: `World::fire` hands a rod in a `ready` slot (`Actor::rod_item`, after a wand) to
+    `World::use_rod`: refused (no time, no mana) on the overworld, at oneself, a burst out of
+    reach (`within_reach`), while a status blocks `cast`, and without the mana; then
+    `World::spend_mana(player, Actor::rod_base)` (`rod_base` = `TalentMods::rod_cost`, Channeler's
+    percent, rounded, at least 1; `spend_mana` applies Frugal caster and trains Willpower;
+    `Actor::rod_cost` is both, what is shown), "You zap the pewter rod." and the type learned
+    through `learn_scroll` ("It is a rod of digging."), then the effect at the user's
+    `World::caster_level`: `rod_dig` (`from.ray(at)` for the reach: `break_wall(p, Breach::Dug)`
+    where the terrain breaks below `power` and `breaks_at`; stops at anything else opaque or off
+    the map), `rod_teleport` (`bolt_line`, the first actor; `World::teleport`, the teleport
+    trap's hash; then `provoke`, `provoke_court`, `break_empathy`; "The bolt strikes nothing."
+    when empty, still paid), `rod_status` (`burst_center` and `burst_cells` as an area hex;
+    `afflict` with the user as the giver; a creature above the caster level with
+    `up_to_caster_level` "shrugs it off"). Priced as one `cast`. No draws.
+  - **Labels**: `data/rod_labels.toml` (`Content::rod_labels`), drawn in `Labels::draw` after the
+    wands' from the same stream; `Lore::label_def` picks a rod's. Nothing is saved on a rod's
+    stack (no charges); a known rod type is in `WorldState::known_scrolls`, as a wand's.
+  - **Presentation**: `PerceptionView::ready_rod`, `own_rod(item)` (cost and reach, once the
+    type is known); the aiming mode's `AimKind::Zap` covers rods (`input.rs` starts it on a
+    ready wand, else a ready rod; `Aim::range` is the rod's reach); `describe::appraised`'s rod
+    lines ("Holds Digging: ...", "Costs 6 mana a use, before your talents; it never runs out").
+    Snapshots `rod-description`, `rod-aim`.
+  - **Choices** (design §14 has none for rods; the issue's open points): four effects (dig,
+    teleport other, sleep, terror) on the dig, teleport, and status hooks; summoning is left out
+    (there are no allies to summon, and a hostile summon is a curse, not a rod); the user's caster
+    level sets reach and, for sleep and terror, which creatures are taken; the cost is fixed per
+    rod, not by caster level; a rod type is identified by use or identification, as a wand's;
+    an unknown rod still costs its mana when used; teleport other provokes as a blow does, the
+    status bursts do not (as an area hex); a use takes the `cast` action's time.
+  - **Talents**: Channeler (`channeler`, Spellcraft, level 5, `TalentEffect::RodCostPercent {
+    value }` → `TalentMods::rod_cost_percent`, −25; systems `spells` and `mana`).
+  - **Wiki**: `xtask/src/wiki/spells.rs` `rods.md` (rod, effect, shape, reach, what it does,
+    mana, item level, frequency, value) on `wiki/src/magic.md`'s "Rods".
 - **Talents**: the `spells` system in `data/talents.toml`, `pending = true` until #400 ships
   the rest of the Spellcraft tree (Quick study, #396, is its first). The cast path extends `mana` and `scrolls`: Frugal caster, Archmage,
   Empower, Scroll adept act on it as above.

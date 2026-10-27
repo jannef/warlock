@@ -25,7 +25,7 @@ the material first, then the gem. Creature drops try `gem::find` before the magi
 (`docs/dev/objects.md`, "Gems" and "Materials and variants").
 `world/loot.rs` has `World::identify` (the API the scroll of identify calls from its read action,
 `docs/dev/scrolls.md`; it identifies a labelled scroll's or wand's type too, `World::learn_scroll`,
-and a wand's charges, `Stack::identify_charges`; wands are docs/dev/spells.md "Wands"),
+and a wand's charges, `Stack::identify_charges`; wands and rods are docs/dev/spells.md "Wands" and "Rods"),
 creature drops (`drop/<actor id>` stream), and the hit-point clamp after equipment changes
 (to `Actor::lasting_max_hp`: a penalty's lower maximum passes). Stats raised by magic are
 `Actor::effective_stats` (the stored scores, raised by `Mods::worn`, then lowered by status
