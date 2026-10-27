@@ -83,6 +83,11 @@ know what it is from then on: "This is a Sharp dagger of the Lynx!", "This is 2 
 lightning!" (and every scroll of lightning shows by its name). With nothing unidentified, the
 list says so, and the scroll is kept.
 
+Reading it casts the spell **Identify** for you, free of mana, and studying it may teach you the
+spell for good (see [Magic](magic.md#learning-spells-from-scrolls)); cast for mana, Identify is
+dear (60 mana), so only an experienced caster can afford it (see
+[Magic](magic.md#what-a-spell-costs)).
+
 The scroll of identify is the commonest scroll: it turns up more often than any other in loot,
 and every general store in the dungeons has a stack of them.
 

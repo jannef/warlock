@@ -496,7 +496,11 @@ mod tests {
             ),
             "{scrolls}"
         );
-        assert!(scrolls.contains("| Scroll of identify `?` | Identifies one unidentified item"));
+        assert!(
+            scrolls.contains("| Scroll of identify `?` | Casts Identify at caster level 6"),
+            "{scrolls}"
+        );
+        assert!(scrolls.contains("| an item you carry |"), "{scrolls}");
         assert!(
             scrolls.contains("| Scroll of light `?` | Casts Light at caster level 1"),
             "{scrolls}"

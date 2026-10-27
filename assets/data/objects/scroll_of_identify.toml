@@ -1,7 +1,8 @@
-# A scroll of identify (spec §8 "Scrolls", "Magic items"): read it (`r`) on an unidentified item
-# you carry, and you know what it is from then on; read on an unknown scroll, you know that kind of
-# scroll from then on. Common (the most frequent scroll in loot), and every generated general store
-# has some (`always` in data/shops.toml).
+# A scroll of identify (spec §8 "Scrolls", "Magic items", "Spells"): read it (`r`) on an
+# unidentified item you carry, and it casts Identify on it, free of mana: you know what it is from
+# then on; read on an unknown scroll, you know that kind of scroll from then on. Study it (`L`), and
+# you may learn the spell for good. Common (the most frequent scroll in loot), and every generated
+# general store has some (`always` in data/shops.toml).
 [[object]]
 id = "scroll_of_identify"
 name = "scroll of identify"
@@ -16,4 +17,5 @@ stackable = true
 frequency = 300
 
 [object.read]
-kind = "identify"
+kind = "spell"
+spell = "identify"

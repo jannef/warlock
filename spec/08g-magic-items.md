@@ -204,7 +204,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **The scroll of identify** identifies one unidentified stack the player carries: a magic
     item's affixes, a labelled scroll's, wand's, or rod's type, or a wand's charges
     (`World::identify`: "This is a Sharp dagger of the Lynx!"); a stronger "identify all" can
-    come later. It is the commonest scroll in loot (`frequency` 300 against the spell scrolls'
+    come later. It is a scroll of the spell Identify (#592, §8 "Spells"): read, it casts it free
+    of mana through the one cast path (`read:b:c`); studied, it teaches it. It is the commonest scroll in loot (`frequency` 300 against the spell scrolls'
     20 to 60, by tier) and a regular general-store item.
   - **Where**: loot (by `level` and `frequency`, never magic), general stores' stock (they sell
     and buy the scrolls class, and a generated one always lays out scrolls of identify, §7

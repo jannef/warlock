@@ -147,5 +147,6 @@ fn aim(aim: Aim) -> &'static str {
         Aim::Direction => "a direction",
         Aim::Cell => "a place you see",
         Aim::Ailment => "what to treat, when there is more than one",
+        Aim::Item => "an item you carry",
     }
 }

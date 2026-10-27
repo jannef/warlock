@@ -121,7 +121,13 @@ fn builtin_scrolls_cast_what_the_traps_do() {
         (Cast::Bolt(scroll), TrapEffect::Bolt(trap)) => assert_eq!(scroll, trap),
         other => panic!("{other:?}"),
     }
-    assert_eq!(reading("scroll_of_identify"), Reading::Identify);
+    // The scroll of identify casts Identify on a stack the reader carries (#592).
+    match reading("scroll_of_identify") {
+        Reading::Cast(scroll) => assert_eq!(content.spell(scroll.spell).id, "identify"),
+        other => panic!("{other:?}"),
+    }
+    assert!(reading("scroll_of_identify").on_item());
+    assert!(!reading("scroll_of_light").on_item());
     // The scroll of light casts the Light spell (#589: it had no reading at all).
     match reading("scroll_of_light") {
         Reading::Cast(scroll) => assert_eq!(content.spell(scroll.spell).id, "light"),
@@ -131,7 +137,8 @@ fn builtin_scrolls_cast_what_the_traps_do() {
 
 /// Every scroll of the content (#589): an object of the scrolls class named `scroll_of_*` has a
 /// reading, and a reader who aims it (at a creature's cell, or on another stack) reads it: a
-/// turn spent and one scroll used up. Read without the target it needs, it says why.
+/// turn spent and one scroll used up. Read without the target it needs, it says why. Every one
+/// is a real spell (#592): it teaches a spell of `data/spells/`, so it may be studied.
 #[test]
 fn every_builtin_scroll_can_be_read() {
     let mut checked = 0;
@@ -147,6 +154,12 @@ fn every_builtin_scroll_can_be_read() {
             continue;
         }
         let reading = (def.read.as_ref()).unwrap_or_else(|| panic!("{} has no reading", def.id));
+        let taught = (reading.teaches()).unwrap_or_else(|| panic!("{} teaches nothing", def.id));
+        assert!(
+            content.spell_of(taught).is_some(),
+            "{}: no such spell",
+            def.id
+        );
         // The fixture's refusals, each with its reason: under a roof, a spell that needs the
         // open sky; at the peaceful dummy, a hex; on a hale reader, a cure.
         let refusal = match reading {
@@ -177,7 +190,7 @@ fn every_builtin_scroll_can_be_read() {
             );
         }
         let target = match reading {
-            Reading::Identify => format!(":{}", letter(0)),
+            _ if reading.on_item() => format!(":{}", letter(0)),
             _ if reading.range().is_some() => ":2,1".to_string(),
             _ => String::new(),
         };
@@ -250,7 +263,14 @@ fn bad_readings_are_reported() {
     let burst = "kind = \"burst\"\nspell = \"fireball\"\nnoun = \"fire\"\ndamage = \"1d6\"\n\
                  radius = 2";
     assert!(bad(burst).contains("`range`"), "{}", bad(burst));
-    let err = bad("kind = \"identify\"\nradius = 2");
+    let err = bad("kind = \"identify\"");
+    assert!(err.contains("unknown variant `identify`"), "{err}");
+    let err = bad("kind = \"spell\"\nspell = \"identify\"\nnoun = \"x\"");
+    assert!(err.contains("names only its `spell`"), "{err}");
+    let err = bad(&format!(
+        "kind = \"bolt\"\n{}",
+        &burst["kind = \"burst\"\n".len()..]
+    ));
     assert!(err.contains("`radius` is not for"), "{err}");
     let err =
         bad("kind = \"bolt\"\nspell = \"fireball\"\nnoun = \"fire\"\ndamage = \"1d6\"\nlength = 5");

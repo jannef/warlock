@@ -110,7 +110,8 @@ shares.
     before). A heal rolls its dice with no talents, held the same way.
   - **Kinds**: buff (its status on the caster), heal (self: the caster, refused when whole;
     touch: the creature at the adjacent cell, or the caster), cleanse (as the placeholder's),
-    hex (the hostile the player sees at the cell, `hex_target`), utility (nothing yet), damage
+    hex (the hostile the player sees at the cell, `hex_target`), utility (Identify, below;
+    any other: nothing yet), damage
     (by shape: `Shape::Burst` → `burst_center` + `cast_burst`; `Line` → `bolt_line` +
     `cast_bolt`; `Cone` → `cast_cone`; `Ray`/`Bolt`/`Touch` → `cast_single`). A damage spell's
     `effect.status` falls on everyone it hit who lives. `Cause::Spell(SpellId)` for a death
@@ -180,24 +181,47 @@ shares.
     `action_at`), as does the aiming mode's `Aim::action`. `TalentEffect::Spell { spell }` holds
     the id string (checked against `data/spells/` at load, resolved in `TalentMods::spells`).
     `Content::spells_by_tier` is the menu's order (tier, then path), `Ability::every`'s too.
-  - **The list** (25 spells): tier 0 Evil eye, Light (self buff: Lit, whose `light` the
+  - **The list** (26 spells): tier 0 Evil eye, Light (self buff: Lit, whose `light` the
     light cache sheds about the caster; #589, the scroll of light's), Mend (touch heal), Ray of frost (ray,
     attack), Spark (bolt, auto); tier 1 Barkskin (buff), Blessing, Burning hands (cone 3),
     Cause wounds (touch, necrotic), Cure wounds (touch heal 2d6), Curse of sloth, Hex of
     weakness, Magic missile (bolt, auto, force, 1d4 to 2d4); tier 2 Arcane bolt, Blight, Frost,
-    Scorching ray (ray, attack, 1d6 to 3d6, the design's "one to three rays" as dice), Sleep and
+    Identify (#592, below), Scorching ray (ray, attack, 1d6 to 3d6, the design's "one to three rays" as dice), Sleep and
     Web (area hexes, burst radius 1); tier 3 Call lightning, Fireball (2d6 to 3d6), Flame, Haste
     (buff), Lightning bolt (line), Remove disease. New statuses: `drowsy` (cost 300), `webbed`
     (blocks `step`), `hasted` (cost 75: `COST_PERCENT` is now 50 to 1000, and `spell_def`
     refuses a status below 100 on anything but a buff, so only the caster is hastened and the
     rest batching stays exact), `barkskin` (Dodge +2). New effects: `frost_ray`, `spark` (bolts).
+  - **Identify** (#592; tests `world/identify_spell_tests.rs`): divination, `utility`, `self`,
+    `[spell.effect] identify = true` (`SpellEffect::identify`, `SpellData::aims_item`; only a
+    `utility` spell on `self` may have it, and a `utility` spell needs it). It asks for a stack,
+    not a cell: `Action::CastOn(id, item)` (`use:identify:c`; a spell's aim without a comma is a
+    stack position), `Ability::aim` → `Aim::Item` ("an item you carry" in dumps, "on something you
+    carry" in the menu), `Ability::action_on`; the cast path's target is a `ReadTarget` (cell or
+    stack), `cast_aim` asking for the one the spell needs. `World::cast_identify` refuses (no
+    time, no mana) without the stack or for one `Lore::knows`, then pays and calls
+    `World::identify` (training Intelligence by `StatUse::Identified`, as the scroll did). The
+    scroll of identify is its scroll (`read:b:c`, docs/dev/scrolls.md), keeping its own loot
+    (frequency 300, no level; `spell_list_tests` leaves it out of the by-tier loot order). In the
+    game the abilities menu opens the identify list (`IdentifyBy::Spell`) on choosing it.
+    - **Its cost is explicit**: `mana` on a spell (`SpellData::mana`, 1 to `MAX_SPELL_MANA`
+      500) replaces the tier table's price in `SpellRules::mana_with` (no tier cost, overreach,
+      shape, or resolution; the armour's percent still added), and the talents' percents and
+      Frugal caster still apply (`Actor::spell_base`, `Actor::mana_cost`). Identify's is **60**
+      (the owner, 2026-10-28: a large cost, not coupled with its difficulty). Measured with
+      `warlock-cli dump --character human,male,CLASS --actions "xp:N levelup:auto"`: a wizard
+      has 47 mana at level 5, 55 at 6, 63 at 7, 71 at 8; a priest 42 at 5, 49 at 6–7, 63 at 8;
+      a druid 47 at 6. So no caster of level 1 to 6 can cast it, a wizard can from level 7
+      and a priest or druid from about 8. Its tier, 2 (comfortable at caster level 6), is how
+      hard it is to learn (study's overreach).
   - **Area hexes** (`World::cast_area_hex`): a hex of shape burst flies as a burst
     (`burst_center`), and its status, lengthened by Presence, falls on every actor in
     `burst_cells` but the caster, friend or foe; each seen is said ("The rat is drowsy."). It
     goes off whether or not anyone is there. No draws.
   - **Scrolls of spells**: one object per spell (`scroll_of_ID`, `read` kind `spell`;
     docs/dev/scrolls.md), except the three older scrolls whose burst and bolt readings stay
-    (fireball teaches Fireball, frost Frost, lightning Lightning bolt). Read: `World::read_cast`,
+    (fireball teaches Fireball, frost Frost, lightning Lightning bolt); every scroll teaches a
+    spell (#592). Read: `World::read_cast`,
     the cast path with `Pay::Scroll(item)` (the `Cast` struct's `pay`; `World::pay_cast` is the
     one place a cast pays, mana or scroll, once it is sure to go off) at the scroll's level.
     Level, frequency, and value by tier: 0 (1, 60, 40 gold), 1 (2, 45, 80), 2 (4, 30, 130), 3

@@ -89,11 +89,10 @@ fn refusals_take_no_time_and_keep_the_scroll() {
     refused(&mut w, "study:z", "You carry no such thing.");
     refused(&mut w, "study:e", "There is no spell in a dagger to learn.");
     let mut w = identified(w);
-    refused(
-        &mut w,
-        "study:d",
-        "There is no spell in a scroll of identify to learn.",
-    );
+    // The scroll of identify teaches Identify (#592).
+    let mut knows = w.clone();
+    knows.player_mut().spells.insert(sp("identify"));
+    refused(&mut knows, "study:d", "You know this spell already.");
     w.player_mut().spells.insert(sp("frost"));
     refused(&mut w, "study:c", "You know this spell already.");
     assert_eq!(count(&w, "scroll_of_frost"), 2, "kept");
@@ -385,8 +384,9 @@ fn the_dumps_say_the_spells_known_and_the_chances_in_words() {
             .any(|r| r.starts_with("study a, a scroll of fireball: Fireball, "))
     );
     assert!(
-        !rows.iter().any(|r| r.contains("identify")),
-        "it teaches nothing"
+        rows.iter()
+            .any(|r| r.starts_with("study d, a scroll of identify: Identify, ")),
+        "it teaches Identify (#592): {rows:?}"
     );
     // The exact odds only in the dev layer.
     let dev = layer_rows(&w, progress);
