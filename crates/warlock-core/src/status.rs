@@ -59,6 +59,15 @@ pub struct Effect {
     /// as killed by them (experience, #133, credits the player's wounds to the player).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub by: Option<ActorId>,
+    /// Whether the Heal skill has been tried on it, for a status that may be tried once
+    /// (`treat` without `stops`: poison; `world/heal.rs`). It goes with the effect: a new dose
+    /// after it ended may be tried again.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub treated: bool,
+}
+
+fn is_false(b: &bool) -> bool {
+    !*b
 }
 
 /// What came of a new dose of a status ([`Effects::add`]).
@@ -176,6 +185,7 @@ impl Effects {
                     tick: 0,
                     wear: 0,
                     by,
+                    treated: false,
                 },
             );
             return Added::Began;
@@ -338,6 +348,7 @@ mod tests {
             tick: 0,
             wear: 0,
             by: None,
+            treated: false,
         };
         let mut three = Effect { severity: 3, ..one };
         assert_eq!(one.until_tick(&bleeding), Some(every));

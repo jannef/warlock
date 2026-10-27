@@ -69,6 +69,9 @@ pray = 1000
 # Trying to disarm a trap you know of next to you (the Disarm ability; spec §8 "Disarming traps"):
 # careful work, whether it comes off, fails, or sets the trap off.
 disarm = 2000
+# Treating yourself (the Heal ability; spec §8 "Skills"): binding a wound, or tending a poison or a
+# disease, about a quarter of a minute, whatever comes of it.
+heal = 2500
 # Chatting with someone (`C`): a few words. Asking about a topic on the dialogue screen takes no
 # time.
 chat = 500
