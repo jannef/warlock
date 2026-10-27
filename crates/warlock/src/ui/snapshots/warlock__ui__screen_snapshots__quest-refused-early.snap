@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(&case, content)"
+---
+ Factor Wulfrun says: "The old diggings? Oh, I think not, not yet. You came back from the barrow,
+ which is very much to your credit, but what lives under Fyrbeorg would make a short meal --more--
+
+
+
+
+
+                  ┌─ Factor Wulfrun ─────────────────────────────────────────────┐
+                  │                                                              │
+                  │ "The old diggings? Oh, I think not, not yet. You came back   │
+                  │ from the barrow, which is very much to your credit, but what │
+                  │ lives under Fyrbeorg would make a short meal of you. Come    │
+                  │ and see me when you are rather more seasoned."               │
+                  │                                                              │
+                  │ > 1  The lost shaft                                          │
+                  │   2  The old diggings                                        │
+                  │   3  Trade                                                   │
+                  │   4  Appraisals                                              │
+                  │   5  An appraisal of your goods (100 gold each)              │
+                  │                                                              │
+                  │ 1-5 or Enter  ask    Esc  leave                              │
+                  └──────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+ Cēaptūn  ·  HP 22/22  ·  MP 1/1  ·  Lv 1  ·  08:03  ·  11 Darkening  ·  Overcast        ? controls

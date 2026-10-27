@@ -94,7 +94,7 @@ dungeons under the barrows, the fen, and the hills.
   gives you the quest; follow it in the quest log (`q`), and come back for gold, things, and
   experience.
   Some quests tell you where a hidden place lies and mark it on your map: in Cēaptūn the reeve,
-  Sister Hild, and the mine-factor each have a chain of three.
+  Sister Hild, and the mine-factor each have a chain of them.
 - **Ranged combat** — bows (drawn by Strength), a crossbow, a sling, and throwing weapons; aim
   ADOM-style with a cursor and a faint line of fire, watch the arrow fly, and pick it up where it
   fell. A flaming arrow flies burning and lights the dark where it lands until it burns out:

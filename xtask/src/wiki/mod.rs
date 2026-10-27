@@ -1218,7 +1218,7 @@ mod tests {
         );
         let at = |row: &str| classes.find(row).unwrap_or_else(|| panic!("{row}"));
         assert!(at("| Melee weapons |") < at("| Gems | Gems |"));
-        assert!(at("| Gems | Gems |") < at("| Miscellaneous | Boulders, foreman's ledgers"));
+        assert!(at("| Gems | Gems |") < at("| Miscellaneous | Boulders, long-stemmed pipes"));
         assert!(
             text("creatures.md")
                 .contains("| Giant rat | `r` | Vermin | hostile | up close | no | no |")

@@ -53,11 +53,12 @@ pub(super) fn dialogue(content: &Content) -> String {
 
 /// Who gives quests (`data/quests.toml` and the campaigns' `data/quests/`, those the wiki
 /// describes, in load order: each chain in its order): each quest's name, its giver, its kind,
-/// what it asks, what it pays, what must be done first, and the hidden location it reveals.
+/// what it asks, what it pays, what must be done first, the character level it is given from,
+/// and the hidden location it reveals.
 pub(super) fn quests(content: &Content) -> String {
     let mut out = String::from(
-        "| Quest | Given by | Kind | Goal | Reward | Offered after | Reveals | Repeatable |\n\
-         |---|---|---|---|---|---|---|:---:|\n",
+        "| Quest | Given by | Kind | Goal | Reward | Offered after | From level | Reveals | Repeatable |\n\
+         |---|---|---|---|---|---|:---:|---|:---:|\n",
     );
     let quests = (content.quests().iter())
         .filter(|q| super::order::described(content, q.campaign.as_deref()));
@@ -70,6 +71,10 @@ pub(super) fn quests(content: &Content) -> String {
         } else {
             after.join(", ")
         };
+        let level = q
+            .min_level
+            .as_ref()
+            .map_or("—".to_string(), |(l, _)| l.to_string());
         let reveals = q.reveals.as_ref().map_or_else(
             || "—".to_string(),
             |r| {
@@ -81,7 +86,7 @@ pub(super) fn quests(content: &Content) -> String {
         );
         let _ = writeln!(
             out,
-            "| {} | {} | {} | {} | {} | {after} | {reveals} | {} |",
+            "| {} | {} | {} | {} | {} | {after} | {level} | {reveals} | {} |",
             q.name,
             capital(&content.speaker_name(q.giver)),
             q.kind().id(),

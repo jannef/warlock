@@ -40,10 +40,13 @@
 #   done       what whoever you hand it in to says: the recipient of a bring with `to` or a
 #              delivery, else the giver
 #   requires   a quest loaded before this one (earlier in the table), or a list of them
-#              (`["ledger", "barrow_heart"]`), that must all be done first (optional)
+#              (`["barrow_rats", "barrow_heart"]`), that must all be done first (optional)
 #   requires_alignment  the alignment bands you must be in for it to be offered (spec §8
 #              "Alignment"; optional): { min = "kind" } is Kind or better, { max = "callous" }
 #              Callous or worse, or both; a quest taken up is done whatever you become
+#   min_level  the character level you must have reached for it to be given (1 to 100;
+#              optional, with `early`): before then it is still a topic, but asked about it the
+#              giver says `early` (a reply) and gives nothing
 #   alignment  how far completing it moves your alignment (alignment.toml; -1000 to 1000,
 #              default 0): helping quests good, dark ones evil. A good giver offers no good one
 #              to an Evil or Wicked character, an evil giver none to a Good or Saintly one

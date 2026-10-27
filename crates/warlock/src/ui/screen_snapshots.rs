@@ -775,6 +775,28 @@ fn screens_as_text() {
     }
 }
 
+/// Factor Wulfrun asked about the lost shaft before level 5: the topic is listed, her reply
+/// says the player is not ready yet, and nothing is given or marked. The content lifts the
+/// quest's prerequisite (the barrow's heart, deep in Cealdhlāw) so a short walk reaches her.
+#[test]
+fn quest_refused_as_too_early() {
+    let mut files = warlock_core::content::ContentFiles::builtin();
+    let path = "campaigns/ascmearc/data/quests/wulfrun.toml";
+    let quests = include_str!("../../../../assets/campaigns/ascmearc/data/quests/wulfrun.toml");
+    let lifted = quests.replacen("requires = \"barrow_heart\"\n", "", 1);
+    assert_ne!(lifted, quests, "the lost shaft requires the barrow's heart");
+    files.insert(path, &lifted);
+    let content = Arc::new(Content::load(&files).expect("content"));
+    let case = Case {
+        name: "quest-refused-early",
+        scenario: "ceaptun",
+        actions: "move:E*26 move:S*4 open:S move:S*4 ask:S:quest-lost_shaft",
+        screen: Some("dialogue"),
+        ..BASE
+    };
+    insta::assert_snapshot!(case.name, render(&case, content));
+}
+
 /// The UI console's text once `case` has started and its keys were pressed: one line a row,
 /// trailing blanks trimmed.
 fn render(case: &Case, content: Arc<Content>) -> String {
