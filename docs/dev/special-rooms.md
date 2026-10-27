@@ -17,7 +17,9 @@ checked at load: it must ease, at least `DWELL_EASES`, 10 s a degree; `RoomEffec
 takes the statuses' lookup, `parse` in tests none), `swarm` (a teeming den's numbers,
 [`Swarm`]: `per_cells`, `min`, `max` (1 to 64), `wake` (100 to 1000), `cry` (0 to
 `noise::MAX_LOUDNESS`), `loot_level`, `themes = { kind, faction }` (percents, at most 100
-together; it needs `needs_danger` and can never pervade), `temperature` (degrees Celsius added to
+together), `factions` (faction ids, checked once the factions load,
+`RoomEffects::check_factions`: known, none twice), `hoard` (`Hoard::Items`, the default, or
+`Hoard::Corpses`); it needs `needs_danger` and can never pervade), `temperature` (degrees Celsius added to
 the level's, -40 to 40, default 0), `burden` (percent of the carrying limit, `BURDEN` 10 to
 1000, default 100), `mirrors` (`{ images = N }`, 1 to 8, `content::Mirrors`), and `warp` (percent a
 step inside warps the stepper, 0 to 100, default 0). An effect with `level_chance` must have a
@@ -29,7 +31,8 @@ Features today: shadowed (10), echoing (8), hushed (8), sanctuary (6), flooded (
 `needs_danger`, `min_cells` 16, `swarm`, #405), hot (5, "sweltering chamber", `temperature = 25`,
 #404), cold (5, "frigid hall", `temperature = -25`), silent vault
 (5, `silent`, `noise = 1`, `status = "silenced"`, #409), heavy (4, "heavy hall", `burden = 50`,
-#412), mirrors (3, "hall of mirrors", `max_cells = 80`, `mirrors = { images = 2 }`, #419), unstable (4, "unstable room", `warp = 10`, `max_cells = 60`, #411). Draining is the
+#412), mirrors (3, "hall of mirrors", `max_cells = 80`, `mirrors = { images = 2 }`, #419), unstable (4, "unstable room", `warp = 10`, `max_cells = 60`, #411), beast den (5, mark `n`, `needs_danger`, `min_cells` 16, `swarm` with
+`factions = ["wildlife", "vermin", "marsh"]` and `hoard = "corpses"`, #410). Draining is the
 first with a `level_chance` (cursed rooms bring theirs).
 
 A dungeon's `room_effects` (on a branch or a `[[dungeon.levels]]` range; `content/dungeon.rs`,
@@ -84,6 +87,17 @@ on a plain floor cell of the room (stairs and lights left out) drawn anew. `popu
 its creatures and their routes out of a den (as out of a sanctuary), and `special::make` refuses a
 den where a generator patrol walks. `travel.rs::make_creature` gives a spawn with `asleep` the
 first status that `sleeps` (`Content::sleep_status`) at one degree.
+
+Beast dens (#410, design §9.5): a `swarm` with `factions` swaps the hostile filter for a faction
+filter (`den::sleepers`: types of those factions, hostile or not, never unique; themes draw within
+them). Such a kind is eligible only where the branch's own `population` holds a non-unique type of
+one of them (`den::peopled`, asked by `special::pick` through `Canvas::population`, the branch's
+population or empty), so a branch without beasts never draws one and a favoured share passes to the
+rest. `hoard = "corpses"` (`den::corpses`): per piece (`Swarm::hoard`), one `danger::draw` over the
+branch's whole population and strays (no uniques, any faction: the prey), its corpse
+(`Content::corpse_of`; none for a type that leaves none) on a cell drawn anew, then one `bones`
+(`data/objects/bones.toml`, junk) on another. Both lie with no `died`, so `rot::made_at` makes them
+when the level is first entered: fresh then. `loot_level` is unused.
 
 Sleep (`world/den.rs`): a creature whose effects include a status with `sleeps` (Asleep:
 `data/status.toml`, `max = 1`, no `eases`, `seen = "asleep"`) — `World::asleep`:
@@ -275,6 +289,9 @@ Anchored mind, saving), `world/den_tests.rs` (the den's data and refusals, sleep
 turn and never wake by time, quiet and loud noises and the cry cascade, a kicked door, a step,
 Hush-foot, a blow, sneak attacks, the waking line and look mode's word, the spawn cap, Sixth
 sense, saving, and a generated den's sleepers and hoard over a fixture branch),
+`world/beast_den_tests.rs` (the beast den's data, unknown or twice-named factions and an unknown
+hoard refused, a generated one's sleepers all beasts with bones and corpses for a hoard, and a
+branch without beasts that never draws one),
 `world/silent_tests.rs` (the silent vault: its data, the player's
 refusals and the easing, the hundredth of noise, creatures silenced and a shaman fighting in
 melee, silenced from the start, saving), `content/room_temperature_tests.rs` (the field, its range, `Here::warmth`),

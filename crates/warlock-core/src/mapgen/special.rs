@@ -89,8 +89,11 @@ pub(crate) fn draw(
 pub(super) fn pick(canvas: &Canvas, rng: &mut Rng, cells: usize) -> Option<(RoomEffectId, bool)> {
     let effects = canvas.content.room_effects();
     let (danger, below) = (canvas.danger, canvas.below);
+    let peopled = |e: &RoomEffectDef| {
+        (e.swarm.as_ref()).is_none_or(|s| super::den::peopled(canvas.content, s, canvas.population))
+    };
     let id = draw(effects, canvas.room_odds, rng, |e| {
-        e.eligible(cells, danger, below)
+        e.eligible(cells, danger, below) && peopled(e)
     })?;
     let chance = effects.get(id).level_chance;
     let whole = chance > 0 && canvas.pervading.is_none() && rng.chance(u32::from(chance));
