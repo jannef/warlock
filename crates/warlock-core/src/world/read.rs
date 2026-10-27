@@ -230,7 +230,7 @@ impl World {
         let words = Words::new(noun, verb);
         let mut said = Vec::new();
         // Whom the last blow struck, as the player saw them (if they did).
-        let mut seen: Option<End<'_>> = None;
+        let mut seen: Option<(End<'_>, &str)> = None;
         for event in made {
             match event {
                 Event::Attacked {
@@ -247,15 +247,16 @@ impl World {
                     let caster = End::Trap(noun);
                     let kind = AttackKind::Spell;
                     said.extend(attack_message(caster, end, &words, kind, strike, guard));
-                    seen = (end != End::Unseen).then_some(end);
+                    seen =
+                        (end != End::Unseen).then(|| (end, def.map_or("dies", |d| d.death_verb())));
                     if seen.is_some() {
                         events.push(event);
                     }
                 }
                 Event::Died { actor, .. } if actor == player => events.push(event),
                 Event::Died { .. } => {
-                    if let Some(end) = seen {
-                        said.push(death_message(end));
+                    if let Some((end, dies)) = seen {
+                        said.push(death_message(end, dies));
                         events.push(event);
                     }
                 }

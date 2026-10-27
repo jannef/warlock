@@ -1,0 +1,12 @@
+# A candlestick; a silver one is worth having.
+# Household goods (#483): what an animated household thing (data/animated/) is made of.
+[[object]]
+id = "candlestick"
+name = "candlestick"
+glyph = "("
+fg = "#d4b04c"
+class = "household"
+materials = ["brass"]
+made_of = ["brass", "iron", "pewter", "silver"]
+weight = 900
+value = 10

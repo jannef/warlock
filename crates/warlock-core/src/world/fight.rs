@@ -450,11 +450,12 @@ pub(super) fn attack_message(
     Some(text)
 }
 
-/// The message for a death the player saw: "The giant rat dies.", or the player's own.
-pub(super) fn death_message(who: End<'_>) -> String {
+/// The message for a death the player saw: "The giant rat dies." (a creature's by the verb of its
+/// type, `dies`: "The animated chair splinters."), or the player's own.
+pub(super) fn death_message(who: End<'_>, dies: &str) -> String {
     match who {
         End::You => "You die...".into(),
-        End::Seen(name) => format!("The {name} dies."),
+        End::Seen(name) => format!("The {name} {dies}."),
         End::Unseen | End::Trap(_) => "Something dies.".into(),
     }
 }
@@ -706,6 +707,8 @@ impl World {
         let profile = profile.map(|p| self.relentless(attacker, target, kind, p));
         // Favoured prey and a sneak attack (spec §8 "Class abilities").
         let profile = profile.map(|p| self.favoured(attacker, target, p));
+        // Unbinder (spec §8 "Animated objects"): against a creature of a tag.
+        let profile = profile.map(|p| self.bane(attacker, target, p));
         let unseen = profile.is_some() && self.sneaking(attacker, target);
         let profile = profile.map(|p| self.sneak_threat(attacker, unseen, p));
         let missile = matches!(kind, AttackKind::Ranged | AttackKind::Thrown);
@@ -960,7 +963,8 @@ impl World {
             let slain = def.id.clone();
             self.state.quests.slay(&slain);
         }
-        let mut dropped = actor.inventory.clone();
+        // An animated thing's body falls whole or not at all (spec §8 "Animated objects").
+        let mut dropped = self.remains(&actor);
         dropped.extend(self.loot_of(&actor));
         // Scavenger (spec §8 "Creature gear"): what the player's kill drops is known at once.
         if by_player && self.state.player().talent_mods(&self.content).scavenger {
@@ -1150,7 +1154,8 @@ impl World {
             guard,
         ));
         if died && seen {
-            said.push(death_message(end));
+            let dies = target_actor.map_or("dies", |a| content.creature(a.creature).death_verb());
+            said.push(death_message(end, dies));
         }
         for text in said {
             self.say(text);

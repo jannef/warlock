@@ -1,0 +1,8 @@
+# A ladle that raps.
+[[body]]
+id = "ladle"
+object = "ladle"
+level = 2
+rarity = "common"
+speed = 1100
+attack = { damage_type = "bludgeoning", name = "bowl", verb = "raps" }

@@ -16,7 +16,9 @@ status in status order; `Effects::add` applies the stacking rule, `penalty`, `re
 status, severity, by, events)` (**the one way to give an actor a status**: food poisoning
 from what the player eats (#137), traps, diseases call it; a status with a `damage_type`
 (poisoned: poison) meets the actor's resistance there as a dose, docs/dev/combat.md "Damage
-types": immune refuses it, else `damage::resist` on the severity), `World::cure(actor, means, events)` (eating
+types": immune refuses it, else `damage::resist` on the severity; a creature type's `immune`
+list refuses its statuses first, nothing drawn: the animated objects' poisoned and bleeding,
+`docs/dev/animated.md`), `World::cure(actor, means, events)` (eating
 a remedy, an object with `cures`, `world/eat.rs::remedy`, which says what ended at once; the Heal
 skill's bandage, #132), `World::after_blow` (wounds by `combat::big_hit` and criticals, of the
 kinds the status's `wound.from` names, `Wound::caused_by(blow.kind)`: bleeding from slashing
@@ -113,7 +115,8 @@ down to its onset, then each progression; known by name once `progressions > 0`)
 `crate::stats::StatDamage` (`Actor::damage`: points off scores, capped so a score stays ≥ 1,
 `take` says when it would not have; `mend` seconds) is read by `Actor::effective_stats` with the
 status penalties, so every rule (and max HP through Toughness) sees it. `world/disease.rs`:
-`World::expose(actor, disease, by)` (**the one way to expose**: a check, then `infect`),
+`World::expose(actor, disease, by)` (**the one way to expose**: a check, then `infect`; never
+for Divine health nor for a type whose `immune` holds the diseases' status, nothing rolled),
 `World::infect` (rolls the incubation; the dev `infect:ID`), `World::expose_to(actor, source)`
 (eating a rotten corpse calls `expose_to(player, "rotten_food")`, `world/eat.rs`),
 `World::wade` (called from `player_moves` with the step's seconds: one draw out of 360 000

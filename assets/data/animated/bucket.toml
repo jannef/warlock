@@ -1,0 +1,9 @@
+# A bucket that rolls and batters.
+[[body]]
+id = "bucket"
+object = "bucket"
+level = 4
+rarity = "common"
+speed = 900
+attack = { damage_type = "bludgeoning", name = "rim", verb = "batters" }
+moves = "rolling"

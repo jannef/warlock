@@ -1,0 +1,14 @@
+# Knives, forks, and spoons: silver ones are worth their weight.
+# Household goods (#483): what an animated household thing (data/animated/) is made of.
+[[object]]
+id = "cutlery"
+name = "piece of cutlery"
+plural = "pieces of cutlery"
+glyph = "("
+fg = "#7a7d80"
+class = "household"
+materials = ["iron"]
+made_of = ["iron", "pewter", "silver"]
+weight = 60
+value = 2
+stackable = true

@@ -294,6 +294,10 @@ pub(super) struct LegendDetail {
     wield: Option<OneOrMany>,
     /// Objects of what it carries that it wears (armor, rings, amulets), by object id.
     wear: Option<OneOrMany>,
+    /// An animated household thing's body (spec §8 "Animated objects"): `animated = { material =
+    /// "silver" }` makes the animated candlestick on this cell of silver (else of its object's
+    /// own material); it carries its body from the start, nothing drawn.
+    animated: Option<AnimatedPlacement>,
     /// A trap on this cell (spec §8 "Traps"): an id in `data/traps.toml`.
     trap: Option<String>,
     /// Whether the player knows the trap from the start (default: hidden).
@@ -320,6 +324,13 @@ pub(super) struct LegendDetail {
     name: Option<String>,
     /// A sentence look mode adds about the named place on this cell; only with `name`.
     note: Option<String>,
+}
+
+/// A legend entry's animated body: its material, if not its object's own.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(super) struct AnimatedPlacement {
+    material: Option<String>,
 }
 
 /// A legend entry's hidden location: the location's `id` (what quests' `reveals` name), the
@@ -721,15 +732,22 @@ pub(super) fn parse_level(
                         )));
                     }
                 }
-                let carry = match &detail.carry {
+                let mut carry = match &detail.carry {
                     Some(specs) => parse_stacks(specs, content)
                         .map_err(|m| err(format!("legend `{ch}`: carry: {m}")))?,
                     None => Vec::new(),
                 };
                 let equipment = equip(detail, &carry, content)
                     .map_err(|m| err(format!("legend `{ch}`: {m}")))?;
-                let fixed =
-                    detail.carry.is_some() || detail.wield.is_some() || detail.wear.is_some();
+                if let Some(placed) = &detail.animated {
+                    let body = animated_body(placed, id, content)
+                        .map_err(|m| err(format!("legend `{ch}`: animated: {m}")))?;
+                    carry.push(body);
+                }
+                let fixed = detail.carry.is_some()
+                    || detail.wield.is_some()
+                    || detail.wear.is_some()
+                    || detail.animated.is_some();
                 creatures.push(CreatureSpawn {
                     creature: id,
                     faction,
@@ -743,6 +761,7 @@ pub(super) fn parse_level(
                     asleep: false,
                 });
             } else if detail.route.is_some()
+                || detail.animated.is_some()
                 || detail.faction.is_some()
                 || detail.alignment.is_some()
                 || detail.npc.is_some()
@@ -751,8 +770,8 @@ pub(super) fn parse_level(
                 || detail.wear.is_some()
             {
                 return Err(err(format!(
-                    "legend `{ch}` has a faction, alignment, npc, route, carry, wield, or wear but no \
-                     creature"
+                    "legend `{ch}` has a faction, alignment, npc, route, animated, carry, wield, \
+                     or wear but no creature"
                 )));
             }
         }
@@ -1390,6 +1409,24 @@ pub fn parse_route(route: &str) -> Result<Vec<Dir>, String> {
         return Err("route is empty".into());
     }
     Ok(steps)
+}
+
+/// The body a legend gives animated household type `creature` (`animated = { material }`): its
+/// body's object, as many as the least of its count, of that material (else its own).
+fn animated_body(
+    placed: &AnimatedPlacement,
+    creature: CreatureId,
+    content: &Content,
+) -> Result<Stack, String> {
+    let body = (content.animated_body(creature))
+        .ok_or("only an animated household type has a body to place")?;
+    let object = &content.object(body.object).id;
+    let spec = match &placed.material {
+        Some(material) => format!("{object}:{material}*{}", body.count.0),
+        None => format!("{object}*{}", body.count.0),
+    };
+    let mut stacks = parse_stacks(&[spec], content)?;
+    stacks.pop().ok_or_else(|| "no body".into())
 }
 
 /// What a creature spawned carrying `carry` wears and wields: its `wield` objects, then its

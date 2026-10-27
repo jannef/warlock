@@ -1,0 +1,9 @@
+# A chair that lurches on its legs.
+[[body]]
+id = "chair"
+object = "chair"
+level = 5
+rarity = "common"
+speed = 900
+attack = { damage_type = "bludgeoning", name = "legs", verb = "batters" }
+moves = "lurching"

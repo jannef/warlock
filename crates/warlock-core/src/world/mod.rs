@@ -86,6 +86,7 @@ mod actor;
 mod ai;
 mod alignment;
 mod ambush;
+mod animated;
 mod attacks;
 mod beast_friend;
 mod bleed;
@@ -1224,6 +1225,8 @@ fn article(noun: &str) -> &'static str {
 mod ai_tests;
 #[cfg(test)]
 mod alignment_tests;
+#[cfg(test)]
+mod animated_tests;
 #[cfg(test)]
 mod ascmearc_tests;
 #[cfg(test)]

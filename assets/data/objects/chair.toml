@@ -1,0 +1,12 @@
+# A plain wooden chair.
+# Household goods (#483): what an animated household thing (data/animated/) is made of.
+[[object]]
+id = "chair"
+name = "chair"
+glyph = "("
+fg = "#9c6b3c"
+class = "household"
+materials = ["wood"]
+made_of = ["wood", "hardwood"]
+weight = 5000
+value = 4

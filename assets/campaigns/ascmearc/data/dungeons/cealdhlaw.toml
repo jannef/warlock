@@ -20,7 +20,8 @@ key = "rusty_key"
 temperature = 8
 # Danger 1 on the first floor to 6 on the sixth (spec §7 "Danger levels"); nothing scales with
 # the player. The barrow wave, and the vermin and kobolds that were there first; in the hill's
-# hollows an orc war band (#455) camps beside the goblins.
+# hollows an orc war band (#455) camps beside the goblins. Among the grave goods, household
+# things that will not lie still (#483: animated objects).
 danger = 1
 population = [
     "rat", "bat", "beetle", "kobold", "kobold_archer", "kobold_shaman",
@@ -28,6 +29,7 @@ population = [
     "goblin_archer", "skeleton", "zombie", "giant_centipede", "barrow_ghoul", "skeleton_archer",
     "goblin_chief", "skeletal_wolf", "barrow_wight", "skeleton_warrior",
     "orc_runt", "orc_warrior", "orc_archer", "warg",
+    "animated_candlestick", "animated_cutlery", "animated_teapot", "animated_cooking_pot",
 ]
 # 30 a thousand walkable cells: the least, 25, on the barrow's passages (about 350 cells), about
 # 70 in the hollows (about 2 300), as the design's population table has them.

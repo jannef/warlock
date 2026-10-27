@@ -54,6 +54,11 @@ impl World {
         if actor.talent_mods(&self.content).disease_immune {
             return false;
         }
+        // Immune by its type (spec §8 "Status effects"): nothing lives in it to sicken.
+        let immune = &self.content.creature(actor.creature).immune;
+        if (self.content.disease_status()).is_some_and(|s| immune.contains(&s)) {
+            return false;
+        }
         let modifier = self.disease_modifier(actor, def.check);
         if check(&mut self.state.rng, modifier, def.difficulty) {
             self.train_resisting(id, def.check);

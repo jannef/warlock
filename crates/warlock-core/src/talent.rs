@@ -323,6 +323,8 @@ pub struct TalentMods {
     pub services: bool,
     /// What a creature it kills drops is identified as it lands (Scavenger).
     pub scavenger: bool,
+    /// Percent more often what an animated thing is made of falls whole (Salvager).
+    pub salvage_percent: i32,
     /// Item descriptions show its things' worth.
     pub item_worth: bool,
     /// Item descriptions show its gems' worth.
@@ -565,6 +567,8 @@ pub struct TalentMods {
     pub hounds_bay: Option<HoundsBay>,
     /// To hit and damage against its favoured prey (Favoured prey, Master hunter).
     pub favoured_prey: (i32, i32),
+    /// To hit and damage against creatures of a tag, by tag in the order taken (Unbinder).
+    pub banes: Vec<(String, i32, i32)>,
     /// To hit and damage against the creature types carrying each tag, by tag (Sworn foe).
     pub sworn_foe: Vec<(String, i32, i32)>,
     /// It is told when its quarry is on a level it arrives on (Quarry sense).
@@ -1083,6 +1087,7 @@ impl TalentMods {
             TalentEffect::IdentifyTrades => self.identify_trades = true,
             TalentEffect::Pilgrim => self.services = true,
             TalentEffect::Scavenger => self.scavenger = true,
+            TalentEffect::SalvagePercent { value } => self.salvage_percent += value,
             TalentEffect::ItemWorth => self.item_worth = true,
             TalentEffect::GemWorth => self.gem_worth = true,
             TalentEffect::IdentifyCarried { hours } => {
@@ -1572,6 +1577,14 @@ impl TalentMods {
                 self.favoured_prey.0 += to_hit;
                 self.favoured_prey.1 += damage;
             }
+            TalentEffect::Bane {
+                tag,
+                to_hit,
+                damage,
+            } => match self.banes.iter_mut().find(|(t, ..)| *t == tag) {
+                Some((_, hit, more)) => (*hit, *more) = (*hit + to_hit, *more + damage),
+                None => self.banes.push((tag, to_hit, damage)),
+            },
             TalentEffect::SwornFoe { to_hit, damage } => {
                 let tag = choice.unwrap_or_default().to_string();
                 self.sworn_foe.push((tag, to_hit, damage));

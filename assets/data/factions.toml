@@ -111,6 +111,13 @@ id = "demon"
 name = "demons"
 hostile = ["player", "kobolds", "goblins", "duergar", "marsh", "devil"]
 
+# Animated objects (#483): things a will set moving and left, from household junk to hollow
+# armour. They set on the living who come near, and leave the rest be: hostile to the player only.
+[[faction]]
+id = "animated"
+name = "animated things"
+hostile = ["player"]
+
 # The elementals (#453): fire, earth, air, water, ice, and lightning given shape, from motes to
 # the eldest. They are hostile to the player and leave everyone else alone, as the delf's fire
 # things do (the cinder elemental, an elemental too, is of that faction).
