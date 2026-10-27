@@ -62,7 +62,8 @@ puts it away unread. A cell out of reach is marked "Out of range.", and the scro
 - **Lightning** runs from you along the line through the cursor and on, striking everyone on
   it, until a wall or the end of its reach. It never strikes you.
 
-No spell rolls to hit: it hurts everyone it reaches. Unlike a trap's, a spell you read is
+These three never roll to hit: they hurt everyone they reach (a spell scroll of a ray, such
+as ray of frost, rolls to hit as the spell does). Unlike a trap's, a spell you read is
 **yours**: what it kills earns you [experience](experience.md) and counts for your
 [quests](quests.md), and a shopkeeper it hurts turns on you. A scroll that kills you is named on
 the death screen ("Killed by their own scroll of fireball"). The explosion and the thunder are
@@ -70,14 +71,16 @@ heard like any noise (see [Hearing](hearing.md)). Spells cannot be read on the o
 
 Reading a scroll uses it up. Scholars do better (see [Talents](talents.md)): Scroll savant reads
 in half the time, and with Spell recall one read in four leaves the scroll as it was ("The
-writing does not fade from the scroll.").
+writing does not fade from the scroll."). A scroll you study is always used up, Spell recall or
+not.
 
 ## The scroll of identify
 
 Choose the scroll of identify and a second list opens: the unidentified items you carry (see
-[Magic items](magic-items.md)) and the scrolls you carry that show only their label. Choose one,
-and you know what it is from then on: "This is a Sharp dagger of the Lynx!", "This is 2 scrolls
-of lightning!" (and every scroll of lightning shows by its name). With nothing unidentified, the
+[Magic items](magic-items.md)), the scrolls you carry that show only their label, and the wands
+and rods you do not know (a wand's charges too; see [Magic](magic.md#wands)). Choose one, and you
+know what it is from then on: "This is a Sharp dagger of the Lynx!", "This is 2 scrolls of
+lightning!" (and every scroll of lightning shows by its name). With nothing unidentified, the
 list says so, and the scroll is kept.
 
 The scroll of identify is the commonest scroll: it turns up more often than any other in loot,

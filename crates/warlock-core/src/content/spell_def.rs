@@ -1235,6 +1235,40 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
         assert_eq!(r.max_bonus(9), 22);
     }
 
+    /// The magic design's §12 check 5 (#401): an area is dearer than a single target and does
+    /// less to each, an auto spell less than an attack, a touch more for less mana.
+    #[test]
+    fn the_shipped_table_makes_areas_dearer_and_weaker_than_single_targets() {
+        let r = rules();
+        let single = r.ratio(Resolution::Attack);
+        for &shape in Shape::ALL {
+            let radii = if shape == Shape::Burst {
+                1..=r.max_radius()
+            } else {
+                0..=0
+            };
+            for radius in radii {
+                let cost = r.shape_cost(shape, radius);
+                if shape.is_area() {
+                    assert!(cost > single.cost, "{shape:?} {radius} costs no more");
+                } else {
+                    assert_eq!(cost, 100, "{shape:?} is a single target");
+                }
+            }
+        }
+        for (weaker, why) in [
+            (Resolution::Area, "an area"),
+            (Resolution::Auto, "an auto spell"),
+        ] {
+            assert!(r.ratio(weaker).damage < single.damage, "{why}");
+        }
+        let touch = r.ratio(Resolution::Touch);
+        assert!(touch.damage > single.damage && touch.cost < single.cost);
+        for tier in 0..10 {
+            assert!(r.cap(tier, Resolution::Area) < r.cap(tier, Resolution::Attack));
+        }
+    }
+
     #[test]
     fn a_caster_level_is_at_the_highest_tier_it_has_reached() {
         let r = rules();

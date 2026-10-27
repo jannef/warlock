@@ -2,8 +2,9 @@
 
 Mana is your second pool beside your [hit points](combat.md#hit-points), and it works the same way:
 you have some, it has a most, and it comes back by itself with time. [Spells](magic.md) spend it
-(the priest's, the druid's, the wizard's, and the witch's, see [Classes](classes.md#levels)):
-each costs its mana, and with too little you cannot cast it until enough has come back.
+(those your class gives, see [Classes](classes.md#levels), and those you learn from scrolls), and
+so do [rods](magic.md#rods): each costs its mana, and with too little you cannot cast it until
+enough has come back.
 
 The status bar shows it right after your hit points, as `MP 5/12`: what you have left of your
 most. The [character screen](character.md) (`@`) shows it beside your hit points. Creatures may
@@ -14,8 +15,8 @@ have mana too, but you never see theirs.
 Your most mana is what your [race](races.md) and your [class](classes.md) give, plus what your
 Intelligence, Willpower, and Presence add: high scores add to it, low ones take from it, and it
 never goes below nothing. Wizards and witches have the most, and aristocrats oddly much;
-warriors and barbarians start with none of their own, and dwarves and half-orcs none of their
-race's.
+every class gives at least 1 (warriors, barbarians, thieves, commoners, and craftspeople no
+more), and only elves, gnomes, half-elves, halflings, and humans have any of their race's.
 
 {{#include generated/mana.md}}
 
@@ -51,7 +52,9 @@ your combat stance.
 Whatever spends mana is refused when you have too little, and spends nothing then. Spending any
 trains your Willpower (a chance at a training mark each time; see
 [Stats](stats.md#training)). The talent *Frugal caster* makes abilities cost a fifth less mana,
-rounded to the nearest point and never below 1: 5 becomes 4, 6 becomes 5, 10 becomes 8.
+rounded to the nearest point and never below 1: 5 becomes 4, 6 becomes 5, 10 becomes 8. It
+comes last, after everything else that changes a spell's or a rod's cost (see
+[What a spell costs](magic.md#what-a-spell-costs)).
 
 The talent *Blood magic* gives you an ability (in the abilities menu) that turns 5 of your hit
 points into 3 mana at once, for the time of a wait. It never takes your last hit point (with 5
