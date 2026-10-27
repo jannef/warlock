@@ -29,7 +29,13 @@ the player trains shield blocking; `World::level_of` weighs the opponent by its 
 `World::news`, said after the attack's own messages (`say_news`, also at the end of
 `perceive` for a block in a creature's turn). Starting ranks roll from
 their own stream (`character/weapon-skills/...`), so stat rolls never move. Presentation reads
-`PerceptionView::own_weapon_skills` only: ranks and a bar, **never a benefit**. Tests:
+`PerceptionView::own_weapon_skills` only: ranks and a bar, **never a benefit**. The rank tables (#554, docs/design/combat-progression.md §3, §5): ranks 1 to 5 keep the first
+tables' values, ranks 6 to 10 grow by family (light blades, precise, heavy, middling, launchers
+and thrown, shield blocking; a pattern for writing the arrays, not a data concept);
+`rank_ten_holds_the_family_tables` holds every skill's and style's rank 10 to the design's table
+and every array to never less at a higher rank. `MAX_SAVING` is 60 (crossbows' `reload` at rank
+10); a saving past 100 % in all (crossbows 10 with Marksman 10) prices the reload at the floor,
+`Benefit::saving`'s 1. Tests:
 `content/weapon_skill.rs`, `weapon_skills.rs`, `world/weapon_skill_tests.rs`; the wiki's tables
 are `xtask/src/wiki/weapon_skills.rs`.
 

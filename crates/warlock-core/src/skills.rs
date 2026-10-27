@@ -70,6 +70,8 @@ pub const MAX_STEAL_BONUS: i32 = 20;
 pub const MAX_HEAL_BONUS: i32 = 20;
 /// The most a skill adds to picking a lock (spec §8 "Doors").
 pub const MAX_PICK_BONUS: i32 = 20;
+/// The most percent a skill adds to the chance of a forage finding food (spec §8 "Foraging").
+pub const MAX_FORAGE_BONUS: i32 = 30;
 
 /// Index of a skill in [`Content::skills`]: in file order.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
@@ -128,6 +130,10 @@ pub enum Effect {
     Burden,
     /// Percent less time a journey on the overworld takes (spec §8 "Time").
     Travel,
+    /// Percent added to the chance of a forage finding food (spec §8 "Foraging";
+    /// `world/forage.rs`); a skill with it, trained, lets the actor forage at all (the abilities
+    /// menu's Forage).
+    Forage,
     /// Percent better prices in shops (spec §7 "Shops"; `world/shop.rs`): less to pay and more
     /// offered, together with Presence at most half.
     Bargain,
@@ -163,6 +169,7 @@ impl Effect {
             Effect::Heal => MAX_HEAL_BONUS,
             Effect::Disarm => MAX_DISARM_BONUS,
             Effect::Pick => MAX_PICK_BONUS,
+            Effect::Forage => MAX_FORAGE_BONUS,
             Effect::SearchReach => MAX_SEARCH_REACH,
             Effect::Speed => crate::content::MAX_SPEED,
         }
@@ -192,6 +199,8 @@ pub enum Use {
     Burdened,
     /// A step on the overworld: a journey.
     Travel,
+    /// A forage that ran its time (spec §8 "Foraging"), whatever it found.
+    Forage,
     /// An attempt to steal from someone (spec §8 "Stealing"), whatever comes of it.
     Steal,
     /// A try at treating oneself (spec §8 "Skills": Heal), whatever comes of it.
@@ -215,6 +224,7 @@ impl Use {
             Use::Dodge => "dodging an attack or a known trap",
             Use::Burdened => "acting (not waiting) while your load slows you",
             Use::Travel => "a journey on the overworld",
+            Use::Forage => "foraging in the wild",
             Use::Steal => "trying to steal from someone",
             Use::Heal => "trying to treat bleeding, poison, or a disease",
             Use::Kick => "kicking at a closed door",
@@ -321,6 +331,7 @@ impl Use {
             Use::Dodge => "dodge",
             Use::Burdened => "burdened",
             Use::Travel => "travel",
+            Use::Forage => "forage",
             Use::Steal => "steal",
             Use::Heal => "heal",
             Use::Kick => "kick",
@@ -343,6 +354,7 @@ impl Effect {
             Effect::Disarm => "disarm",
             Effect::Burden => "burden",
             Effect::Travel => "travel",
+            Effect::Forage => "forage",
             Effect::Bargain => "bargain",
             Effect::Steal => "steal",
             Effect::Heal => "heal",

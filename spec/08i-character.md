@@ -383,7 +383,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     its speed grows with plain play), a turn spent searching, whatever it finds (`search`), noticing
     something hidden in passing (`spot`; §8 "Searching"), an attempt to steal, whatever comes of
     it (`steal`; "Stealing" below), a try at treating oneself, whatever comes of it (`heal`;
-    "Treating oneself" below). Only the player trains for now; creatures keep their type's
+    "Treating oneself" below), a forage that ran its time, whatever it found (`forage`;
+    "Foraging" below). Only the player trains for now; creatures keep their type's
     skills. Marks are a **reservoir**: they raise nothing by
     themselves and nothing is said; they gather until a level-up roll on the skill spends them.
   - **Level-up rolls** (design `docs/design/progression.md` §5): every level gives the player
@@ -415,7 +416,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `PerceptionView::abilities`), greyed out as "not usable yet": the uses come with their
     actions, and one whose use has come is that ability instead (Disable device's is "Disarm a
     trap", §8 "Disarming traps"; Open lock's "Pick lock", §8 "Doors"; Steal's "Steal",
-    "Stealing" below; Heal's "Heal", "Treating oneself" below). Never a benefit's number,
+    "Stealing" below; Heal's "Heal", "Treating oneself" below); a passive skill with a use is listed as it too (Survival's "Forage",
+    "Foraging" below). Never a benefit's number,
     a mark, a
     chance, an untrained skill, or a creature's skills; ground-truth dev dumps (`actors`, the
     world state) show every actor's skills with their marks and the ladder's die for them. The
@@ -480,6 +482,30 @@ developer notes (CLAUDE.md, `docs/dev/`).
     from a keeper takes from its pack: its purse.
   - No limit on trying again (the owner's rule): a victim that caught the player stays angry,
     and that is the price. Presentation shows only what comes of it, never a modifier or a roll.
+- **Foraging** (`world/forage.rs`, data `data/forage.toml`, §7; #547; the owner, 2026-10-27:
+  "survival can be used on wilderness map, some chance to gather food items"): Survival's use,
+  the abilities menu's **Forage** (`Ability::Forage`, in the skill's place among the Skills;
+  nothing to aim; `Action::Forage`, replay text `forage`; no key of its own). Anyone trained in a
+  skill with the `forage` benefit has it, while `data/forage.toml` exists. Survival stays a
+  passive skill (quicker journeys) besides.
+  - **Where**: the wild only, `world::forage_ground`: on the overworld by the landscape of the
+    terrain underfoot, in a local area by its overworld cell's, when the file has a row for that
+    landscape (plains, grassland, forest, dense forest, hills, swamp; roads and water have none),
+    and never standing in water or on ice. Towns, dungeons, and hand-made outdoor levels are not
+    the wild. Elsewhere the menu greys it out ("not usable here") and the rule refuses, taking no
+    time ("There is nothing to forage here."); untrained, "You do not know how to live off the
+    land."
+  - **Time**: the file's `seconds` (600: ten minutes), in turns of the `forage` action, stopped
+    like a rest (something comes into view, a message, a blow: "You stop foraging."); a forage
+    cut short finds nothing. It makes no noise of its own, as a rest makes none.
+  - **The find**: the row's `chance` plus Survival's `forage` benefit (percent, at most 30), at
+    most 100, one gameplay draw; found, one of the row's `finds` by weight (one draw) and its
+    `count` dice. The food is fresh (made now) and goes into the pack: "You gather 2 handfuls of
+    berries."; else "You find nothing worth eating.". Then Survival may earn a mark (`forage`).
+    Nothing is remembered: the same spot may be tried again at once (no anti-farming limit, the
+    time is the price). Presentation shows the outcome only, never the chance.
+  - **Food** found is ordinary food (§8 "Hunger"): berries, mushrooms, and hazelnuts (new), and
+    apples and angelica roots.
 - **Talents** (`warlock-core/src/talent.rs`, the runtime; `content/talent.rs`, the data;
   `world/talent.rs`, the picks; M30, #229; design `docs/design/progression.md` §7, §10): knacks
   a character picks as they level, each a typed effect read where the rules already read what
@@ -1014,7 +1040,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     weapon's own while it is wielded, Shield (shield blocking) added to a held shield's own
     (`Actor::defence`). Benefits of several skills add up (`Benefit::plus`), so a later kind of
     skill (fighting styles, #135) can stack on a weapon's: another role, with the same ranks,
-    marks, curve, and benefits.
+    marks, curve, and benefits. Ranks 1 to 5 grow slowly, ranks 6 to 10 much faster: bigger
+    damage, a wider threat, more speed and Parry, and moderate to-hit (#554; a long-blade
+    fighter's rank 10 is +7 to hit and +8 damage, a great blade's +5 and +12; the wiki's
+    tables have every number). Styles grow the same way.
   - **Shield bash** (`Action::Bash(dir)`, replay text `bash:DIR`; an ability, §6 "Abilities":
     chosen from the abilities menu, or a key once bound, then a direction): a melee blow at whoever stands that way with
     the held shield's `bash` dice (§7; the small shield 1d3) plus the Strength modifier to hit
@@ -1053,9 +1082,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     takes every other weapon (`WeaponSkillTable::style_for`), so one configuration is always at
     most one style. A spell has none.
   - **The eight** (data): **Duelist** (`one_weapon`: to-hit, Parry), **Twin Blades**
-    (`two_weapons`: eases both two-weapon penalties, none left at rank 10), **Great Weapon**
+    (`two_weapons`: eases both two-weapon penalties, none left from rank 9; from rank 7 to-hit too), **Great Weapon**
     (`two_handed`, any weapon but a staff: damage, from rank 8 a critical rolls its damage once
-    more, cheaper blows), **Sword and Board** (`weapon_and_shield`: Shield, from rank 3 a chance
+    more, at rank 10 twice more (×4), cheaper blows), **Sword and Board** (`weapon_and_shield`: Shield, from rank 3 a chance
     of a shield bash after a blow that hits), **Marksman** (`launcher`, bows, crossbows, and
     slings: to-hit, cheaper shots and reloading), **Skirmisher** (`thrown`, anything thrown:
     to-hit, damage, cheaper throws; decided as throwing only: "a light weapon and light armour"
