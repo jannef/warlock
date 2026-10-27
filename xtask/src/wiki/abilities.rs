@@ -42,6 +42,7 @@ pub(super) fn abilities(content: &Content) -> String {
             Ability::Disarm => "everyone trained in Disable device".into(),
             Ability::PickLock => "everyone trained in Open lock".into(),
             Ability::Steal => "everyone trained in Steal".into(),
+            Ability::Heal => "everyone trained in Heal (with something to treat)".into(),
             Ability::SecondWind => "everyone with the Second wind talent (not while winded)".into(),
             Ability::BloodMagic => "everyone with the Blood magic talent".into(),
             Ability::ShieldBash => "everyone (usable with a shield in hand)".into(),
@@ -135,5 +136,6 @@ fn aim(aim: Aim) -> &'static str {
         Aim::Nothing => "nothing",
         Aim::Direction => "a direction",
         Aim::Cell => "a place you see",
+        Aim::Ailment => "what to treat, when there is more than one",
     }
 }
