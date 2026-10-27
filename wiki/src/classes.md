@@ -54,6 +54,10 @@ yours; a hex falls on a hostile you see within its reach. Call lightning answers
 open sky. A priest's
 Smite is the paladin's, and answers only while the priest is Good or better.
 
+**Consecrate** (the priest's at level 9, the paladin's at 12) answers only while you are Good
+or better: a minute's prayer, for 15 mana, that lifts a cursed or draining room's curse for good
+(see [Special rooms](special-rooms.md#cursed-rooms)).
+
 The ranger's **favoured prey** is the kind of creature you have killed most, counted over every
 level; when two are tied, the one that got there first stays favoured until another is killed
 more often. A **volley** looses three shots of your readied missile weapon at the place you aim

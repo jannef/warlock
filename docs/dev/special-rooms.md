@@ -21,8 +21,10 @@ together), `factions` (faction ids, checked once the factions load,
 `RoomEffects::check_factions`: known, none twice), `hoard` (`Hoard::Items`, the default, or
 `Hoard::Corpses`); it needs `needs_danger` and can never pervade), `temperature` (degrees Celsius added to
 the level's, -40 to 40, default 0), `burden` (percent of the carrying limit, `BURDEN` 10 to
-1000, default 100), `mirrors` (`{ images = N }`, 1 to 8, `content::Mirrors`), and `warp` (percent a
-step inside warps the stepper, 0 to 100, default 0). An effect with `level_chance` must have a
+1000, default 100), `mirrors` (`{ images = N }`, 1 to 8, `content::Mirrors`), `warp` (percent a
+step inside warps the stepper, 0 to 100, default 0), `rise` (`{ faction, after }`, `content::Rise`:
+`after` a duration, `RISE_AFTER` 1 s to 1 h; needs `needs_danger`; the faction checked in
+`RoomEffects::check_factions`), and `unholy` (Consecrate lifts it). An effect with `level_chance` must have a
 `pervade` line and be neither `shunned` nor lay a `floor` nor hold `mirrors`
 (`RoomEffectDef::can_pervade`); a level file's `effect` is held to the same.
 
@@ -32,8 +34,9 @@ Features today: shadowed (10), echoing (8), hushed (8), sanctuary (6), flooded (
 #404), cold (5, "frigid hall", `temperature = -25`), silent vault
 (5, `silent`, `noise = 1`, `status = "silenced"`, #409), heavy (4, "heavy hall", `burden = 50`,
 #412), mirrors (3, "hall of mirrors", `max_cells = 80`, `mirrors = { images = 2 }`, #419), unstable (4, "unstable room", `warp = 10`, `max_cells = 60`, #411), beast den (5, mark `n`, `needs_danger`, `min_cells` 16, `swarm` with
-`factions = ["wildlife", "vermin", "marsh"]` and `hoard = "corpses"`, #410). Draining is the
-first with a `level_chance` (cursed rooms bring theirs).
+`factions = ["wildlife", "vermin", "marsh"]` and `hoard = "corpses"`, #410), cursed (6, mark
+`g`, `needs_danger`, `level_chance` 5, `rise = { faction = "undead", after = "2m" }`, `unholy`,
+#408). Draining (also `unholy`) and cursed are the ones with a `level_chance`.
 
 A dungeon's `room_effects` (on a branch or a `[[dungeon.levels]]` range; `content/dungeon.rs`,
 `RoomOddsSpec::layer`/`resolve`, field by field: the range's, the branch's, the shared file's)
@@ -42,8 +45,7 @@ together at most 100) and `banned = [ids]`, resolved into `RoomOdds { chance, pe
 favoured, banned }` (`RoomOdds::shared` has neither list). Content errors: unknown ids, an id both
 favoured and banned, shares over 100, every feature banned while `chance` is above 0, and the
 retired `effects` list (refused, pointing to `favoured` and `banned`). Fennmynster favours flooded
-35, hushed 15, shadowed 15, and bans hot (its cursed share and its ban on forges come with those
-rooms).
+35, cursed 15, hushed 15, shadowed 15, and bans hot (its ban on forges comes with them).
 
 ## Generation
 
@@ -139,6 +141,37 @@ agree), noise (`noise::noise`, `World::sound_at`), `World::healing_rate` and `Wo
 and `World::shuns` (`ai.rs`, by the room only: no pervading effect is shunned). A flooded room's
 slower, louder steps come from its floor terrain. `PerceptionView::light_kept` lets the renderer
 dim its own transient light.
+
+## Cursed rooms
+
+`world/curse.rs` (#408, design §5). `World::curse_corpse(dead, by_player)` is the one hook, one
+line in `fight.rs::creature_dies` right after `leave_corpse` (so at the corpse's cell, after an
+incorporeal creature's landing): with `Here::rise` at the cell (the room's, else the level's), a
+dead type not of the rise's faction, with `corpse` and a corpse object, and not the player's kill
+under Grave warden (`TalentMods::grave_warden`), `rises_as` draws the type from the gameplay
+stream (`rise_candidates`: the faction's non-unique types, shared or the run's campaign's, of the
+nearest level to the dead's, the lower on a tie, in id order; one `below(n)` draw, none for a
+single candidate) and pushes a `Rising { at, pos, from, into }` on the dead's level
+(`LevelState::risings`, saved and hashed, left out while empty; `Rising::is_valid_for` in the
+save guard). The twitch line goes with the death's break lines when the player's last perception
+sees the cell. `World::rise_tick` runs at the end of `run_turn`, after `spawn_tick`: the current
+level's risings with `at` ≤ now, in order; each takes one corpse of `from` (by object, not by
+death time) from the pile at `pos` if there is one, then `travel::make_creature` (no gear, no
+route) on `free_cell_near(pos)`, bumps `spawned` (so a long action looks up at once), and says the
+rising line if seen, else `make_noise_at(risen, Act::Mutter, 100)`. Levels the player is not on
+are never ticked, so their due risings rise on the first turn back. `World::risings` (the current
+level's) feeds the `actors` dev layer's `rising <from> at (x, y) as <into> at hh:mm:ss` rows.
+
+Consecrate (`world/consecrate.rs`): `ClassActive::Consecrate` (`TalentEffect::Consecrate { mana,
+time }`, `TalentMods::consecrate`; the `consecrate` talent, priest 9 and paladin 12, `needs =
+{ requires_alignment = { min = "good" } }`). `use_class` → `begin_consecrate`: `hallowable` (the
+unholy room the player stands in, else an unholy `pervading`), refused with no time when none;
+then `spend_mana` and `Spent::Consecrate(until)`; `World::consecrate` keeps at it through
+`keep_at` with wait prices cut to end at `until` (as a rest); done, `consecrated` removes the room
+from `LevelState::rooms` or clears `pervading`, keeps only the risings still under a `rise`, says
+so, and `player_did(Deed::Consecrated)` (`[shift] consecrate`, 20). Interrupted: "You stop your
+prayer." (or who came into view), nothing lifted. The abilities menu greys it out without its
+mana or while strayed (`Ability::unavailable`'s class branch: Consecrate's mana with Inspire's).
 
 ## Statuses while inside
 
@@ -274,8 +307,10 @@ System `special_rooms` (`data/talents.toml`): Sense of place (wayfarer, `sense_o
 `PerceptionView::room` and `pervade_line`), Hallowed rest (grit, `room_pace_percent` 50; hook
 `World::room_pace`), Anchored mind (scholar, `room_status_immune` `ebbing`, also system
 `mana`; hook `World::dwell`), Hush-foot (shadow, Stealth 10, `wake_percent` 100, also system
-`stealth`; hook `World::spread_noise`'s wake check), and Mirror-wise (scholar, `sees_reflections` 2; hook
-`Perception::compute`'s images, which the glass reads too).
+`stealth`; hook `World::spread_noise`'s wake check), Mirror-wise (scholar, `sees_reflections` 2; hook
+`Perception::compute`'s images, which the glass reads too), and Grave warden (guard, Willpower 12,
+`grave_warden`; hook `World::curse_corpse`). The class ability Consecrate (above) carries the
+system too.
 
 ## Tests
 
@@ -306,4 +341,9 @@ and moving with the turns, none outside, the player's own, the glass, a missile 
 creatures' aim, Mirror-wise, the dumps, a rest among reflections), `content/room_warp_tests.rs` (the `warp` field, its range,
 `Here::warp`), `world/unstable_room_tests.rs` (the unstable room: about one step in ten inside
 warps the player and a creature, never outside, no draw outside, the messages, a free landing
-cell, saving).
+cell, saving), `world/curse_tests.rs` (the cursed room's data and refusals, rising after two
+minutes as undead of the dead's level, the twitch and rising lines, not when the corpse is gone or
+carried out, not outside, never the undead, the nearest-level fallback and the campaign's own,
+Grave warden, a cursed level, a frozen level catching up, saving and the dump; Consecrate lifting a
+room and a level, refused elsewhere with no time, asking goodness and mana, an interrupted
+prayer).
