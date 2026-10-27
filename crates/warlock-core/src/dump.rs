@@ -378,7 +378,7 @@ fn truth_rows(world: &World) -> Vec<String> {
 
 /// The level's special rooms (ground truth): the terrain with each special room's plain ground
 /// ([`crate::content::TerrainDef::is_plain_ground`]) drawn as its effect's mark, then one line
-/// per room (glimpsed, entered); headed by `pervading <id>` when an effect covers the level.
+/// per room (glimpsed, entered, a hoard's stacks lifted and whether it sealed); headed by `pervading <id>` when an effect covers the level.
 fn room_rows(world: &World) -> Vec<String> {
     let content = world.content();
     let (level, _) = world.ground_truth();
@@ -401,8 +401,13 @@ fn room_rows(world: &World) -> Vec<String> {
         let effect = content.room_effect(room.effect);
         let glimpsed = if room.glimpsed { ", glimpsed" } else { "" };
         let entered = if room.entered { ", entered" } else { "" };
+        let lifted = match room.lifted {
+            0 => String::new(),
+            n => format!(", lifted {n}"),
+        };
+        let sealed = if room.sealed { ", sealed" } else { "" };
         out.push(format!(
-            "{} {} at {}-{}{glimpsed}{entered}",
+            "{} {} at {}-{}{glimpsed}{entered}{lifted}{sealed}",
             effect.mark, effect.name, room.min, room.max
         ));
     }

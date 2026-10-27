@@ -22,6 +22,9 @@
 //! An effect may move whoever steps inside elsewhere on the level now and then
 //! ([`RoomEffectDef::warp`]: an unstable room; `World::warp_step`, the teleport trap's move).
 //!
+//! An effect may hold a tempting hoard ([`RoomEffectDef::hoard`]: a treasure room's items, which
+//! seal it with locked doors and guardians once lifted; `World::lift_in_hoard`).
+//!
 //! An effect may give everyone inside a status while they stay ([`RoomEffectDef::status`]: a
 //! draining room's Ebbing; `World::dwell`), which eases by its own pace once they leave.
 //!
@@ -128,6 +131,7 @@ struct RoomEffectSpec {
     mirrors: Option<MirrorsSpec>,
     #[serde(default)]
     warp: u8,
+    hoard: Option<Treasure>,
 }
 
 #[derive(Deserialize)]
@@ -142,6 +146,41 @@ struct MirrorsSpec {
 pub struct Mirrors {
     /// Reflections of each actor inside.
     pub images: u8,
+}
+
+/// A tempting hoard's numbers (`hoard = { items = 3, ... }`, spec §7 "Special rooms"): the
+/// generator lays `items` items on the room's floor (`mapgen/hoard.rs`); the first lifted seals the
+/// room, locking its doors and bringing guardians (`world/hoard.rs`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Treasure {
+    /// How many items lie in it...
+    pub items: u8,
+    /// ...this many item levels above the floor's.
+    pub loot_level: u8,
+    /// The fewest and the most guardians that come when it seals.
+    pub guardians: [u8; 2],
+    /// The guardians are of the level's danger plus this.
+    pub danger: u8,
+}
+
+/// The most items a hoard may hold, and the most guardians it may bring.
+pub const MAX_HOARD: u8 = 16;
+
+impl Treasure {
+    /// The fault in these numbers, if any.
+    fn check(&self) -> Result<(), String> {
+        let [least, most] = self.guardians;
+        if !(1..=MAX_HOARD).contains(&self.items) {
+            return Err(format!("hoard: items are 1 to {MAX_HOARD}"));
+        }
+        if least > most || most > MAX_HOARD {
+            return Err(format!(
+                "hoard: guardians are [least, most], at most {MAX_HOARD}, least at most most"
+            ));
+        }
+        Ok(())
+    }
 }
 
 /// A teeming den's numbers (`swarm = { per_cells = 4, ... }`, spec §7 "Special rooms"): the
@@ -306,6 +345,8 @@ pub struct RoomEffectDef {
     /// Percent chance, every step onto a cell inside, that the stepper is moved to a free cell
     /// of the level as a teleport trap moves its victim (an unstable room's 10; `World::warp_step`).
     pub warp: u8,
+    /// A tempting hoard's numbers: generators lay its items, and lifting them seals the room.
+    pub hoard: Option<Treasure>,
 }
 
 impl RoomEffectDef {
@@ -335,6 +376,7 @@ impl RoomEffectDef {
             && self.floor.is_none()
             && self.swarm.is_none()
             && self.mirrors.is_none()
+            && self.hoard.is_none()
             && self.pervade.is_some()
     }
 }
@@ -634,6 +676,12 @@ impl RoomEffects {
                     return Err(bad("a `swarm` needs `needs_danger`".into()));
                 }
             }
+            if let Some(hoard) = &spec.hoard {
+                hoard.check().map_err(bad)?;
+                if !spec.needs_danger {
+                    return Err(bad("a `hoard` needs `needs_danger`".into()));
+                }
+            }
             let def = RoomEffectDef {
                 id: spec.id,
                 name: spec.name,
@@ -660,11 +708,12 @@ impl RoomEffects {
                 burden: spec.burden,
                 mirrors,
                 warp: spec.warp,
+                hoard: spec.hoard,
             };
             if def.level_chance > 0 && !def.can_pervade() {
                 return Err(err(format!(
                     "effect `{}`: a `level_chance` needs a `pervade` line, and no effect that \
-                     creatures shun, that lays a floor, or that holds mirrors covers a whole level",
+                     creatures shun, that lays a floor, or that holds mirrors or a hoard covers a whole level",
                     def.id
                 )));
             }
@@ -696,6 +745,16 @@ pub struct SpecialRoom {
     /// Whether the player has seen a cell of it (its `near` line was said, if it has one).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub glimpsed: bool,
+    /// How many stacks the player has lifted inside it (a tempting hoard's count toward sealing).
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub lifted: u8,
+    /// Whether a tempting hoard has sealed it: its doors locked, its guardians come.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub sealed: bool,
+}
+
+fn is_zero(n: &u8) -> bool {
+    *n == 0
 }
 
 impl SpecialRoom {
@@ -708,6 +767,8 @@ impl SpecialRoom {
             cells: Vec::new(),
             entered: false,
             glimpsed: false,
+            lifted: 0,
+            sealed: false,
         }
     }
 
@@ -731,6 +792,8 @@ impl SpecialRoom {
             cells,
             entered: false,
             glimpsed: false,
+            lifted: 0,
+            sealed: false,
         }
     }
 

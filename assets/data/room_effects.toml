@@ -71,6 +71,12 @@
 #   warp     percent chance, every step onto a cell inside (the player's or a creature's), that
 #            the stepper is moved to a free cell of the level as a teleport trap moves its victim;
 #            default 0
+#   hoard    a tempting hoard (needs `needs_danger`; never a whole level): generators lay `items`
+#            items (1 to 16) on its floor, `loot_level` item levels above the floor's. The first
+#            stack the player lifts inside seals the room: every door of it shuts and locks (a lock
+#            of the floor's level: picked, kicked, or opened with a skeleton key), and `guardians`
+#            = [least, most] (at most 16) hostiles of the level's danger + `danger` come at the
+#            room's edges, out of the player's view where they can be
 
 chance = 12
 per_level = 1
@@ -216,3 +222,13 @@ weight = 5
 needs_danger = true
 min_cells = 16
 swarm = { per_cells = 4, min = 4, max = 16, wake = 200, cry = 60, loot_level = 0, themes = { kind = 10, faction = 20 }, factions = ["wildlife", "vermin", "marsh"], hoard = "corpses" }
+
+[[effect]]
+id = "hoard"
+name = "treasure room"
+mark = "$"
+near = "Something glitters ahead."
+enter = "Treasure lies here, unguarded."
+weight = 5
+needs_danger = true
+hoard = { items = 3, loot_level = 3, guardians = [2, 4], danger = 1 }

@@ -398,6 +398,9 @@ pub enum TalentEffect {
     /// A hall of mirrors' reflections within this many cells are seen for what they are, and not
     /// shown (Mirror-wise; `world/mirrors.rs`).
     SeesReflections { value: i32 },
+    /// A tempting hoard seals only after this many stacks more are lifted inside it (Hoard-wise;
+    /// `World::lift_in_hoard`, `world/hoard.rs`).
+    HoardGrace { value: i32 },
     /// Sleepers need this percent more noise to wake from what it does (Hush-foot; the wake
     /// check in `World::spread_noise`, `world/den.rs`).
     WakePercent { value: i32 },
@@ -985,6 +988,7 @@ impl TalentEffect {
             | TalentEffect::Search { value }
             | TalentEffect::SearchReach { value }
             | TalentEffect::SeesReflections { value }
+            | TalentEffect::HoardGrace { value }
             | TalentEffect::ThrowRange { value }
             | TalentEffect::MaxDex { value }
             | TalentEffect::Deflection { value }

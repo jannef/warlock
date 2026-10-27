@@ -404,7 +404,16 @@ fn a_generated_floor_is_laid_down_full_and_nothing_else_moves() {
         assert_eq!(with.terrain, without.terrain, "seed {seed}");
         assert_eq!(with.traps, without.traps, "seed {seed}");
         assert_eq!(with.secrets, without.secrets, "seed {seed}");
-        assert_eq!(with.objects, without.objects, "seed {seed}");
+        // A tempting hoard's items come with a danger (`mapgen/hoard.rs`): the rest is the same.
+        let hoards: Vec<_> = (with.rooms.iter())
+            .filter(|r| content.room_effect(r.effect).hoard.is_some())
+            .collect();
+        let loose = |objects: &BTreeMap<Pos, Vec<crate::object::Stack>>| {
+            let mut objects = objects.clone();
+            objects.retain(|p, _| !hoards.iter().any(|r| r.contains(*p)));
+            objects
+        };
+        assert_eq!(loose(&with.objects), loose(&without.objects), "seed {seed}");
         // The generator's own creatures (patrols, a vault's) come first, as they were.
         let (own, population) = with.creatures.split_at(without.creatures.len());
         assert_eq!(own, without.creatures.as_slice(), "seed {seed}");

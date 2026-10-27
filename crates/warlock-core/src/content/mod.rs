@@ -179,6 +179,7 @@ pub use race::{HUNGER, LightBlind, RaceDef, Races};
 pub use resource::{Build, MAX_EVERY, MAX_RESOURCE, MAX_SHORT, OverTime, ResourceDef, ResourceId};
 pub use room_effect::{
     Here, Hoard, Mirrors, RoomEffectDef, RoomEffectId, RoomEffects, SpecialRoom, Swarm, Themes,
+    Treasure,
 };
 pub use scenario::ScenarioDef;
 pub use scroll::{Cast, Reading, ScrollSpell, SpellScroll};

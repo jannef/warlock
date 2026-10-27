@@ -119,6 +119,7 @@ mod gifts;
 mod glare;
 mod hash;
 mod hearing;
+mod hoard;
 mod hold;
 mod hunger;
 mod hurl;
@@ -1318,6 +1319,8 @@ mod gifts_tests;
 mod hearing_tests;
 #[cfg(test)]
 mod heavy_hall_tests;
+#[cfg(test)]
+mod hoard_tests;
 #[cfg(test)]
 mod hold_tests;
 #[cfg(test)]
