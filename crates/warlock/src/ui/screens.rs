@@ -144,6 +144,9 @@ pub enum ScreenName {
     /// the place of the read list where that scroll was chosen (as `--screen`, the first stack's
     /// scroll).
     Identify,
+    /// Choose what to temper at a forge's anvil (the Temper ability, spec §7 "Special rooms"):
+    /// the weapons and armour carried.
+    Temper,
     /// The abilities menu (`a` in play): racial, class, skill, weapon skill, and item
     /// abilities, to choose one to use.
     Abilities,
@@ -188,6 +191,7 @@ impl ScreenName {
                 | ScreenName::Read
                 | ScreenName::Study
                 | ScreenName::Identify
+                | ScreenName::Temper
                 | ScreenName::Abilities
                 | ScreenName::Dialogue
                 | ScreenName::Death
@@ -395,6 +399,7 @@ impl Screen {
             ScreenName::Read => objects(ObjectList::Read),
             ScreenName::Study => objects(ObjectList::Study),
             ScreenName::Identify => objects(ObjectList::Identify(beneath.item.unwrap_or(0))),
+            ScreenName::Temper => objects(ObjectList::Temper),
             ScreenName::Abilities => Screen::Abilities(AbilitiesScreen::new(run, beneath.ability)),
             ScreenName::Dialogue => Screen::Dialogue(DialogueScreen::new(talk, run)),
             ScreenName::Death => Screen::Death(DeathScreen::new(run)),
@@ -427,6 +432,7 @@ impl Screen {
                 ObjectList::Read => ScreenName::Read,
                 ObjectList::Study => ScreenName::Study,
                 ObjectList::Identify(_) => ScreenName::Identify,
+                ObjectList::Temper => ScreenName::Temper,
             },
             Screen::Equipment(_) => ScreenName::Equipment,
             Screen::EquipItem(_) => ScreenName::EquipItem,

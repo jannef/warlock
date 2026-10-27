@@ -747,7 +747,9 @@ pub fn route_keys(
                 // From the abilities menu, or from play (its key, the quick repeat).
                 screens.stack.close();
                 screens.stack.remember_ability(ability);
-                play.use_ability(ability);
+                if let Some(list) = play.use_ability(ability) {
+                    screens.open(list);
+                }
             }
             ScreenAction::Open(name) => screens.open(name),
             ScreenAction::Replace(name) => screens.replace(name),
@@ -1187,16 +1189,19 @@ impl Gameplay<'_> {
     }
 
     /// Uses `ability`: asks for what it needs (a direction in the message line, a cell in the
-    /// aiming mode), then applies its action. One the player cannot use now is applied at once
-    /// all the same, so the rules say why, taking no time (a shield bash without a shield).
-    fn use_ability(&mut self, ability: Ability) {
-        let Some(game) = &self.game else { return };
+    /// aiming mode, an item from the list returned to open), then applies its action. One the
+    /// player cannot use now is applied at once all the same, so the rules say why, taking no
+    /// time (a shield bash without a shield).
+    fn use_ability(&mut self, ability: Ability) -> Option<ScreenName> {
+        let Some(game) = &self.game else { return None };
         let usable = (game.world.perception().abilities().iter())
             .any(|own| own.ability == ability && own.unavailable.is_none());
         let content = game.world.content().clone();
         match (usable, ability.aim(&content)) {
             (true, ability::Aim::Direction) => *self.mode = InputMode::Ability(ability),
             (true, ability::Aim::Cell) => self.aim(AimKind::Ability(ability)),
+            // The one that asks for an item: Temper's list.
+            (true, ability::Aim::Item) => return Some(ScreenName::Temper),
             (true, ability::Aim::Nothing) => {
                 if let Some(action) = ability.action(&content, None) {
                     self.actions.write(PlayerAction(action));
@@ -1205,12 +1210,14 @@ impl Gameplay<'_> {
             (false, _) => {
                 let here = game.world.player_pos();
                 let action = (ability.action(&content, Some(Dir::N)))
-                    .or_else(|| ability.action_at(&content, here));
+                    .or_else(|| ability.action_at(&content, here))
+                    .or_else(|| ability.action_on(0));
                 if let Some(action) = action {
                     self.actions.write(PlayerAction(action));
                 }
             }
         }
+        None
     }
 
     /// Starts aiming `kind` (a throw or a scroll chosen on a screen).

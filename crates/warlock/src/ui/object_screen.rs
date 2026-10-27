@@ -30,6 +30,9 @@
 //! type known, their spell not: `PerceptionView::studies`), each marked with the spell it
 //! teaches and the chance in words; choosing one asks in the one dialog (study it, or not),
 //! and a study is [`Action::Study`].
+//!
+//! The temper screen (the Temper ability beside a forge's anvil, spec §7 "Special rooms") lists
+//! the weapons and armour the player carries; choosing one tempers it ([`Action::Temper`]).
 
 use super::character_screen::{fit_joined, thresholds};
 use super::menu::{Hints, Nav, Panel, Press};
@@ -67,6 +70,8 @@ pub enum ObjectList {
     /// The unidentified stacks in the pack: choose one to read the scroll of identify at this
     /// position on.
     Identify(usize),
+    /// The weapons and armour in the pack: choose one to temper at the anvil beside the player.
+    Temper,
 }
 
 impl ObjectList {
@@ -80,6 +85,7 @@ impl ObjectList {
             ObjectList::Read => " Read ",
             ObjectList::Study => " Study ",
             ObjectList::Identify(_) => " Identify ",
+            ObjectList::Temper => " Temper ",
         }
     }
 
@@ -92,6 +98,7 @@ impl ObjectList {
             ObjectList::Read => "You have nothing to read.",
             ObjectList::Study => "You carry no scroll whose spell you could learn.",
             ObjectList::Identify(_) => "You carry nothing unidentified.",
+            ObjectList::Temper => "You carry no weapon or armour to temper.",
         }
     }
 
@@ -105,7 +112,8 @@ impl ObjectList {
             | ObjectList::Throw
             | ObjectList::Eat
             | ObjectList::Read
-            | ObjectList::Identify(_) => 60,
+            | ObjectList::Identify(_)
+            | ObjectList::Temper => 60,
             // Room for the spell each teaches and the chance.
             ObjectList::Study => 80,
         }
@@ -120,6 +128,7 @@ impl ObjectList {
                 | ObjectList::Read
                 | ObjectList::Study
                 | ObjectList::Identify(_)
+                | ObjectList::Temper
         )
     }
 }
@@ -223,6 +232,10 @@ impl ObjectScreen {
             // The scroll read is not among them: reading it names its own kind anyway.
             ObjectList::Identify(scroll) => (0..pack.len())
                 .filter(|&i| i != scroll && !view.lore().knows(&pack[i]))
+                .map(Item::Pack)
+                .collect(),
+            ObjectList::Temper => (0..pack.len())
+                .filter(|&i| warlock_core::world::temperable(content, &pack[i]))
                 .map(Item::Pack)
                 .collect(),
         };
@@ -339,6 +352,9 @@ impl ObjectScreen {
                 item: scroll,
                 target: Some(ReadTarget::Item(item.position())),
             }),
+            (ObjectList::Temper, item) => ScreenAction::Act(Action::Temper {
+                item: item.position(),
+            }),
             (_, item) => ScreenAction::Aim(AimKind::Throw(item.position())),
         }
     }
@@ -435,7 +451,8 @@ impl ObjectScreen {
                     | ObjectList::Eat
                     | ObjectList::Read
                     | ObjectList::Study
-                    | ObjectList::Identify(_) => Action::Drop(chosen),
+                    | ObjectList::Identify(_)
+                    | ObjectList::Temper => Action::Drop(chosen),
                 });
             }
             nav => {
@@ -610,6 +627,7 @@ impl ObjectScreen {
             ObjectList::Read => format!("{}   {page}Esc cancel", either("read")),
             ObjectList::Study => format!("{}   {page}Esc cancel", either("study")),
             ObjectList::Identify(_) => format!("{}   {page}Esc cancel", either("identify")),
+            ObjectList::Temper => format!("{}   {page}Esc cancel", either("temper")),
             ObjectList::PickUp | ObjectList::Drop => {
                 let verb = if self.list == ObjectList::PickUp {
                     "pick up"
