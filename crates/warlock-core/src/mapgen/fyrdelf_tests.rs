@@ -51,7 +51,7 @@ fn first_level_snapshot() {
 }
 
 #[test]
-fn twelve_floors_of_danger_eight_to_nineteen_hotter_downwards() {
+fn twelve_floors_of_danger_five_to_sixteen_hotter_downwards() {
     let def = CONTENT.dungeon("fyrdelf").expect("Fyrdelf");
     assert_eq!((def.name.as_str(), def.depth), ("Fyrdelf", 12));
     assert_eq!(def.campaign.as_deref(), Some("ascmearc"));
@@ -73,11 +73,36 @@ fn twelve_floors_of_danger_eight_to_nineteen_hotter_downwards() {
         let (rule, at, _) = CONTENT.spawning(&def.level_id(depth)).expect("a danger");
         // Nothing here grows with the player (the design's decision 13).
         for player_level in [1, 10, 30] {
-            assert_eq!(rule.at(at, player_level), depth as u8 + 7, "depth {depth}");
+            assert_eq!(rule.at(at, player_level), depth as u8 + 4, "depth {depth}");
         }
     }
     let key = CONTENT.object_id("brass_key");
     assert_eq!(def.key, key);
+}
+
+/// The squish (#534): every floor of the Ascmearc's three dungeons, the shallowest above all, has
+/// several of its own folk that weigh at its danger, so no floor is left to out-of-depth draws
+/// and strays.
+#[test]
+fn every_floor_of_the_three_dungeons_has_folk_at_its_danger() {
+    for branch in ["cealdhlaw", "fennmynster", "fyrdelf"] {
+        let def = CONTENT.dungeon(branch).expect("a branch");
+        for depth in 1..=def.depth {
+            let (rule, at, spawning) = CONTENT.spawning(&def.level_id(depth)).expect("a danger");
+            let danger = rule.at(at, 1);
+            // A family weighs from its first member's level up (spec §7 "Danger levels").
+            let weighing = (spawning.population.iter())
+                .filter(|&&c| {
+                    let level = CONTENT.creature(c).level.min(danger);
+                    crate::content::danger::level_weight(level, danger) > 0
+                })
+                .count();
+            assert!(
+                weighing >= 2,
+                "{branch}:{depth} at danger {danger}: {weighing}"
+            );
+        }
+    }
 }
 
 #[test]
@@ -234,7 +259,7 @@ fn the_hidden_way_in_on_ascdun_leads_down_once_revealed_and_back() {
     );
     assert_eq!(w.perception().level_id(), "fyrdelf:1");
     assert_eq!(w.perception().level_name(), "Fyrdelf 1");
-    assert_eq!(w.danger("fyrdelf:1"), 8);
+    assert_eq!(w.danger("fyrdelf:1"), 5);
     run(&mut w, "ascend");
     assert_eq!(w.perception().level_id(), "ascmearc");
     assert_eq!(w.player_pos(), MINE);

@@ -20,12 +20,14 @@ loot = [2, 4]
 key = "iron_key"
 # The marsh is mild: its water freezes nowhere.
 temperature = 6
-# Danger 4 on the first floor to 11 on the eighth (spec §7 "Danger levels"); nothing scales with
-# the player. The fen wave: the marsh's beasts and things, the minster's drowned dead, and the
-# cult that came to them (the bog hag, unique, comes once a run). Fey of damp and dark places
-# (#452) haunt its cellars too: the pixie, the boggle, and the darkling, each of either court.
-# The drowned church's candlesticks, books, and lanterns stir too (#483: animated objects).
-danger = 4
+# Danger 3 on the first floor to 10 on the eighth (spec §7 "Danger levels"; squished from 4 to 11,
+# #534); nothing scales with the player. The fen wave: the marsh's beasts and things, the
+# minster's drowned dead, and the cult that came to them (the bog hag, unique, comes once a run).
+# Its types of level 11 (the fen ghoul, the wraith, the bog hag) come only out of depth, at the
+# bottom. Fey of damp and dark places (#452) haunt its cellars too: the pixie, the boggle, and the
+# darkling, each of either court. The drowned church's candlesticks, books, and lanterns stir too
+# (#483: animated objects).
+danger = 3
 population = [
     "corpse_candle", "giant_leech", "giant_frog", "pixie", "drowned", "crocodile", "cultist",
     "lesser_water_elemental", "poltergeist", "will_o_wisp", "boggle", "ghast", "ghost", "shadow",

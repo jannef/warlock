@@ -11,5 +11,6 @@ caster 0.8, officer 1.1); they fight with their gear (racial long sword, long bo
 quarterstaff, great sword), so no natural attack and no `on_hit` rider.
 `content/hobgoblin_roster_tests.rs` holds them to the XP guideline, the HP formula (±20 %),
 the faction and tags, levels above every other goblin's, and a racial weapon. Fyrdelf's
-population has all but the warlord, which no place is deep enough for yet; they and the duergar
+population has all but the captain (19; it left when Fyrdelf's danger was squished to 5–16,
+#534) and the warlord, which no place is deep enough for yet; they and the duergar
 fight on sight (`bestiary_tests`' stances).

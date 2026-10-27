@@ -175,7 +175,7 @@ chain (`grave_goods`: bring the `silver_chalice`; `fen_minster`: reach `fennmyns
 reveals `fennmynster` as it is given; `water_keeps`: bring the `minster_reliquary`), and
 Factor Wulfrun's Fyrdelf chain (`foremans_ledger`: deliver the `ledger` to Godgifu; `lost_shaft`:
 reach `fyrdelf:2`, which `requires` both the ledger and `barrow_heart` (a list: Fyrdelf starts at
-danger 8, so nobody is sent there before danger 4) and reveals `fyrdelf` as it is given;
+danger 5, so nobody is sent there before danger 4) and reveals `fyrdelf` as it is given;
 `fire_deep`: kill the fire drake, a named monster: its death counts however it came). Each reach and bring quest has a `where` for the log. The
 quest objects are shared objects (`data/objects/{silver_chalice,minster_reliquary,ledger}.toml`,
 worth 0: never traded). The chalice lies on the barrow chamber's plinth, which Cealdhlāw names

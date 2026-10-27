@@ -53,7 +53,7 @@ every new run starts in it.
     reliquary from the sunken crypt, Fennmynster 8; 250 gold, 450 XP).
   - **Factor Wulfrun**: "The foreman's ledger" (deliver her ledger to Godgifu at the Gæsthūs; 10
     gold, 20 XP), "The lost shaft" (reach Fyrdelf 2; offered once the ledger and "The barrow's
-    heart" are both done, since Fyrdelf starts at danger 8; it **reveals Fyrdelf** as it is
+    heart" are both done, since Fyrdelf starts at danger 5, deeper than Cealdhlāw 4; it **reveals Fyrdelf** as it is
     given; 100 gold, 220 XP), "Fire in the deep" (kill the fire drake in Fyrdelf, a named
     monster: its death counts however it came; 500 gold, 900 XP).
   - **Wat One-Eye** (#425, the guild design §4, §7), guildmaster of **the Weyfarers' Gilde**

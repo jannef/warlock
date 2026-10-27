@@ -24,7 +24,8 @@ The giants fight with a natural attack named for their giant-sized weapon (no lo
 and throw (`[creature.throw]`, `world/hurl.rs`, `docs/dev/ranged-combat.md`); the ogres carry
 mauls and throw nothing. A creature's throw is `World::hurls_at` in the AI's fight step, before
 the melee/ranged/caster choice, `World::creature_hurls`, said by `hurl::throw_messages`.
-Fyrdelf's population adds the ogre mauler and ogre mage; the giants ship in no population until a
+Fyrdelf's population adds the ogre mauler (the ogre mage, 18, left it when its danger was
+squished to 5–16, #534); the giants ship in no population until a
 deep place takes them. Only small and medium sizes exist, so they are medium with huge weights (a
 large size is a follow-up). The `boulder` object (miscellaneous, no kind) is what flies; it is
 never loot, never in a shop, never placed.

@@ -20,33 +20,35 @@ locks_per_depth = 2
 loot = [3, 5]
 key = "brass_key"
 temperature = 10
-# Danger 8 on the first floor to 19 on the twelfth (spec §7 "Danger levels"); nothing scales with
-# the player. The delf wave (with the lesser fire and the earth elemental, #453), and the bats,
-# kobolds, and centipedes of the upper galleries that the shallow floors draw on too, the lesser
-# demons the volcano's heart lets up (the dretch and the quasit, #449), the hell hound (#450), a
-# fiend at home in the fires, and the war bands that raid the duergar's mine: the orcs' (#455; the
-# war chief, level 20, comes only out of depth) and the hobgoblins' (#454), who come down with the
-# goblins' ogres and trolls. The fire drake is not among them: it lives only on its hoard (the
-# vault at depth 12), so a run meets it there and nowhere else. Its ogres (the ogre, the mauler,
-# and the mage) are the giant tribe's least (#457); the giants live deeper than this.
+# Danger 5 on the first floor to 16 on the twelfth (spec §7 "Danger levels"; squished from 8 to 19,
+# #534); nothing scales with the player. The delf wave (with the lesser fire and the earth
+# elemental, #453), and the bats, kobolds, and centipedes of the upper galleries that the shallow
+# floors draw on most, the lesser demons the volcano's heart lets up (the dretch and the quasit,
+# #449), the hell hound (#450), a fiend at home in the fires, and the war bands that raid the
+# duergar's mine: the orcs' (#455) and the hobgoblins' (#454), who come down with the goblins'
+# ogres and trolls. The fire drake is not among them: it lives only on its hoard (the vault at
+# depth 12), so a run meets it there and nowhere else. Its ogres (the ogre and the mauler) are the
+# giant tribe's least (#457); the giants live deeper than this.
 # The hill trolls (#456) come down from the hills above to the troll's warm deep. The duergar
 # smiths' work wakes: blades that dance alone (#485, the family `animated_blade`) and suits of
 # armour with nobody inside (#486, `animated_armour`, level 12 and more: out of depth at first).
-# The rest of the duergar (#518) up to danger 19 hold their own mine: the slinger, the
-# crossbowman, the veteran, and the priest; the hulk and those above wait for deeper places.
-danger = 8
+# The rest of the duergar (#518) hold their own mine: the slinger, the crossbowman, and the
+# veteran. Types of level 17 (the veteran, the orc bowman, the rotting troll, the cinder
+# elemental) come only out of depth, at the bottom; those above (the duergar priest and hulk, the
+# ogre mage, the hobgoblin captain, the orc war chief) wait for deeper places, so no bounty names
+# what next to never comes here.
+danger = 5
 population = [
     "bat", "kobold", "kobold_archer", "kobold_shaman", "giant_centipede",
     "ember_beetle", "duergar_miner", "ogre_zombie", "lesser_fire_elemental", "grave_hound",
     "dretch", "duergar_warrior", "duergar_smith", "ogre", "burning_skull", "quasit", "troll",
     "earth_elemental", "knocker", "hell_hound", "hill_troll", "fire_salamander",
     "magma_crawler", "spectre", "charred_dead", "ash_wraith", "duergar_skeleton",
-    "duergar_slinger", "duergar_crossbowman", "duergar_veteran", "duergar_priest",
-    "ogre_mauler", "basilisk", "cinder_elemental", "ogre_mage", "rotting_troll",
+    "duergar_slinger", "duergar_crossbowman", "duergar_veteran",
+    "ogre_mauler", "basilisk", "cinder_elemental", "rotting_troll",
     "hobgoblin", "hobgoblin_archer", "hobgoblin_legionnaire", "hobgoblin_warcaster",
-    "hobgoblin_sergeant", "hobgoblin_captain",
+    "hobgoblin_sergeant",
     "warg", "orc_raider", "orc_shaman", "orc_berserker", "orc_veteran", "orc_bowman",
-    "orc_war_chief",
     "animated_blade", "animated_armour",
 ]
 # How many: the default, 35 a thousand walkable cells, 25 to 80. A gallery floor (about 350 cells)
