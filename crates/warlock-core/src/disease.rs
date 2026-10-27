@@ -53,6 +53,10 @@ pub struct Infection {
     /// Who gave it, if anyone did: a creature it kills counts as killed by them.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub by: Option<ActorId>,
+    /// Whether the Heal skill has been tried on it (`world/heal.rs`): one try per disease,
+    /// whatever comes of it. It goes with the infection: caught again, it may be tried again.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub treated: bool,
 }
 
 impl Infection {
@@ -122,6 +126,7 @@ impl Diseases {
                 progressions: 0,
                 streak: 0,
                 by,
+                treated: false,
             },
         );
         true

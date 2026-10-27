@@ -356,6 +356,22 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // A priest bleeding and poisoned (#549): Heal in the Skills group, used on yourself.
+    Case {
+        name: "abilities-menu-heal",
+        character: Some("human,female,priest"),
+        actions: "afflict:bleeding*2 afflict:poisoned*2",
+        screen: Some("abilities"),
+        ..BASE
+    },
+    // The same priest choosing Heal: with two things to treat, the dialog asks which.
+    Case {
+        name: "heal-dialog",
+        character: Some("human,female,priest"),
+        actions: "afflict:bleeding*2 afflict:poisoned*2",
+        keys: Some("a d"),
+        ..BASE
+    },
     // Progression: a warrior gaining levels 2 and 3 at once (the level-up screen opens by
     // itself), their talent pick, and the Talents page.
     Case {

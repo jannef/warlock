@@ -12,8 +12,8 @@ expression: "render(case, content.clone())"
     ┌─ Inventory ─────────────────────────────────────────────────────────────────────────────┐
     │                                                                                         │
     │ Melee weapons                                                                           │
-    │   a - ) a dagger (unpaid, 47 gold)                                               450 g  │
-    │   b - ) a short sword (unpaid, 78 gold)                                         1.1 kg  │
+    │   a - ) a dagger (+0 hit, 1d4, range 5) (unpaid, 47 gold)                        450 g  │
+    │   b - ) a short sword (+0 hit, 1d6) (unpaid, 78 gold)                           1.1 kg  │
     │ Scrolls                                                                                 │
     │   c - ? a scroll of light                                                         50 g  │
     │ Coins                                                                                   │

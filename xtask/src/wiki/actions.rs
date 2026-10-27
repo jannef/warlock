@@ -70,6 +70,7 @@ pub(super) fn action_costs(content: &Content) -> String {
                 "A turn of drinking at a healing spring (a drink takes ten seconds)"
             }
             ActionKind::Disarm => "Trying to disarm a trap (whatever comes of it)",
+            ActionKind::Heal => "Treating yourself with the Heal skill (whatever comes of it)",
             ActionKind::Chat => "Chatting with someone (asking about a topic takes no time)",
             ActionKind::Steal => "Trying to steal from someone, whatever comes of it",
             ActionKind::ThrowVoice => "Throwing your voice",

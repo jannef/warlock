@@ -148,6 +148,12 @@ pub enum Action {
     /// it away; a bad failure sets it off at the player. Takes the time of `disarm`, whatever
     /// comes of it; refused (no time) without the skill or a known trap there.
     Disarm(Dir),
+    /// Treat oneself with the Heal skill (spec §8 "Skills"; the Heal ability): the ailment named
+    /// (a status id, `heal:bleeding`, or a disease id, `heal:filth_fever`), else the first there
+    /// is to treat (`heal`). An Intelligence check plus Heal: bleeding stops, a poison eases a
+    /// degree, a disease is eased. Takes the time of `heal` whatever comes of it; refused (no
+    /// time) without the skill, with nothing to treat, or for a poison or disease already tried.
+    Heal(Option<String>),
     /// Pray at the forgotten altar next to the player (spec §7 "Special rooms"; the Pray
     /// ability, the abilities menu's Here group): a minute of turns of the `pray` action, then one
     /// outcome drawn from the altar's table, and perhaps the altar spent. Interrupted, it gives
@@ -730,6 +736,8 @@ impl fmt::Display for Action {
             Action::Search(1) => f.write_str("search"),
             Action::Search(turns) => write!(f, "search:{turns}"),
             Action::Disarm(d) => write!(f, "disarm:{d}"),
+            Action::Heal(None) => f.write_str("heal"),
+            Action::Heal(Some(id)) => write!(f, "heal:{id}"),
             Action::Pray => f.write_str("pray"),
             Action::Drink => f.write_str("drink"),
             Action::SecondWind => f.write_str("second_wind"),
@@ -814,6 +822,16 @@ impl FromStr for Action {
             "bash" => dir().map(Action::Bash),
             "dig" => dir().map(Action::Dig),
             "disarm" => dir().map(Action::Disarm),
+            "heal" => match arg {
+                None => Ok(Action::Heal(None)),
+                Some(id)
+                    if !id.is_empty()
+                        && id.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') =>
+                {
+                    Ok(Action::Heal(Some(id.to_string())))
+                }
+                Some(_) => Err("`heal:ID` names what to treat, e.g. `heal:bleeding`".to_string()),
+            },
             "search" => match arg.map(str::parse::<u8>) {
                 None => Ok(Action::Search(1)),
                 Some(Ok(turns)) if (1..=MAX_SEARCH).contains(&turns) => Ok(Action::Search(turns)),
@@ -1306,6 +1324,8 @@ mod tests {
             },
             Action::Advance("stealth".into()),
             Action::Pray,
+            Action::Heal(None),
+            Action::Heal(Some("bleeding".into())),
             Action::Drink,
             Action::SecondWind,
             Action::BloodMagic,

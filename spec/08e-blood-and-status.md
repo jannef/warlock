@@ -120,7 +120,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     a status counts as killed by whoever caused it (`Effect::by`): experience (#133) credits the
     player for creatures bleeding to death from wounds they dealt.
   - **Cures**: `World::cure(actor, means)` ends every status that lists the means in its
-    `cured_by` (a `bandage` stops the bleeding); the Heal skill (#132) will apply it.
+    `cured_by` (a `bandage` stops the bleeding). The Heal skill treats a status with a `treat`
+    table instead (#549, §8 "Treating oneself"): bleeding stops on a made check and may be
+    tried again; a poison eases a degree, one try per dose; a disease is eased, one try each.
   - **Causes**: `World::afflict(actor, status, severity, by)` is the one way to give an actor a
     status: wounds and `on_hit` (below), sickness from what the player eats (§8 "Hunger"), and
     later traps and diseases.

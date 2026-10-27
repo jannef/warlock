@@ -14,7 +14,7 @@ use crate::geom::Pos;
 use crate::hunger::Hunger;
 use crate::ice::Ice;
 use crate::noise::{PerceivedSound, SoundKind, Volume};
-use crate::object::format_weight;
+use crate::object::{Stack, format_weight};
 use crate::perception::{CellView, PerceivedLight, PerceptionView};
 use crate::stats::Stat;
 use crate::weather::Weather;
@@ -535,6 +535,26 @@ fn ice_rows(world: &World) -> Vec<String> {
 /// (`Melee weapons:`), each stack by its position as action text names it (`a - a dagger (450
 /// g)`, `b - a leather jerkin (being worn) (3.5 kg)`, `26 - a rock (1 kg)`), then what they
 /// carry and weigh.
+/// What `stack` gives in numbers, as the player knows it (`magic::numbers`), for JSON:
+/// `{"to_hit": 0, "damage": "1d8+2", "range": null, "dv": 1, "pv": 1}` (ammunition's damage is
+/// what it adds, `+1d4 fire`, or empty), each part null where it
+/// has none; null for an item that gives nothing.
+fn numbers_json(stack: &Stack, content: &Content) -> Value {
+    let numbers = crate::magic::Numbers::of(stack, content);
+    if numbers.is_empty() {
+        return Value::Null;
+    }
+    let attack = numbers.attack.as_ref();
+    let defence = numbers.defence;
+    json!({
+        "to_hit": attack.map(|a| a.to_hit),
+        "damage": attack.map(|a| a.damage_text(content)),
+        "range": attack.and_then(|a| a.range),
+        "dv": defence.map(|d| d.dv),
+        "pv": defence.and_then(|d| d.pv),
+    })
+}
+
 fn inventory_rows(view: &PerceptionView<'_>) -> Vec<String> {
     let content = view.content();
     let unpaid = view.unpaid();
@@ -548,7 +568,7 @@ fn inventory_rows(view: &PerceptionView<'_>) -> Vec<String> {
             class = Some(here);
             rows.push(format!("{}:", content.item_class(here).name));
         }
-        let name = view.lore().describe(s);
+        let name = view.lore().listed(s);
         let weight = format_weight(s.weight(content));
         let mark = equipment::mark(content, view.equipment(), i)
             .map_or(String::new(), |m| format!(" ({m})"));
@@ -949,6 +969,7 @@ fn aim_word(aim: Aim) -> &'static str {
         Aim::Nothing => "nothing",
         Aim::Direction => "a direction",
         Aim::Cell => "a cell",
+        Aim::Ailment => "what to treat",
     }
 }
 
@@ -1382,6 +1403,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
                 "rarity": s.rarity(),
                 "identified": view.lore().knows(s),
                 "magic": magic,
+                "numbers": numbers_json(s, content),
             });
             if let Some(price) = unpaid.get(i).copied().flatten() {
                 entry["unpaid"] = json!(price);

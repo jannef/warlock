@@ -176,6 +176,16 @@ impl Mods {
         mods
     }
 
+    /// What `stack`'s affixes do to whoever wears or wields it (its global effects alone: what
+    /// [`Mods::worn`] sums over everything equipped).
+    pub fn global(stack: &Stack, content: &Content) -> Mods {
+        let mut mods = Mods::default();
+        if let Some(magic) = stack.magic() {
+            mods.add_magic(magic, false, stack, content);
+        }
+        mods
+    }
+
     /// What the things in `inventory` that `equipment` holds do to whoever wears and wields
     /// them (their global effects).
     pub fn worn(inventory: &[Stack], equipment: &Equipment, content: &Content) -> Mods {

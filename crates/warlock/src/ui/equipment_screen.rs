@@ -23,15 +23,16 @@ use crate::render::console::Console;
 use warlock_core::Action;
 use warlock_core::action::letter;
 use warlock_core::color::Rgb;
-use warlock_core::content::{ActionKind, Content, Rarity, SlotId};
+use warlock_core::content::{ActionKind, Rarity, SlotId};
 use warlock_core::equipment::{self, verbs};
 use warlock_core::object::{Stack, Weight, format_weight};
 use warlock_core::perception::PerceptionView;
 
 /// Width of the slot name column: the longest name ("Missile weapon") and a space.
 const SLOT_W: i32 = 15;
-/// Panel width, as the inventory's.
-const WIDTH: i32 = 60;
+/// Panel width: room for a name with its numbers and its mark (`a chain mail shirt (Dv +2, Pv 3)
+/// (being worn)`).
+const WIDTH: i32 = 78;
 
 /// One stack as these screens show it.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -46,12 +47,14 @@ struct Item {
 }
 
 impl Item {
-    fn of(stack: &Stack, content: &Content) -> Self {
+    /// `stack` named as the item lists name it, with what it gives in numbers (`Lore::listed`).
+    fn of(stack: &Stack, view: &PerceptionView<'_>) -> Self {
+        let content = view.content();
         let def = content.object(stack.object);
         Self {
             glyph: def.glyph,
             fg: stack.fg(content),
-            name: stack.describe(content),
+            name: view.lore().listed(stack),
             weight: stack.weight(content),
             rarity: stack.rarity(),
         }
@@ -103,6 +106,9 @@ pub struct EquipmentScreen {
     cursor: usize,
     /// The player's weight, worn things included.
     weight: Weight,
+    /// The player's Defence and Protection in all, as the character screen shows them (spec
+    /// §6 "Equipment"; `PerceptionView::own_defence`, `own_protection`).
+    totals: (i32, i32),
 }
 
 impl EquipmentScreen {
@@ -113,6 +119,7 @@ impl EquipmentScreen {
             rows: Vec::new(),
             cursor: 0,
             weight: Weight::default(),
+            totals: (0, 0),
         };
         if let Some(view) = view {
             screen.refresh(view);
@@ -131,8 +138,7 @@ impl EquipmentScreen {
                 let slots = item.map_or(Vec::new(), |i| worn.slots_of(i));
                 SlotRow {
                     name: def.name.clone(),
-                    item: (item.and_then(|i| view.inventory().get(i)))
-                        .map(|s| Item::of(s, content)),
+                    item: (item.and_then(|i| view.inventory().get(i))).map(|s| Item::of(s, view)),
                     held: item,
                     both_hands: slots.len() > 1,
                     listed: slots.first().is_some_and(|&first| first != slot),
@@ -140,6 +146,7 @@ impl EquipmentScreen {
             })
             .collect();
         self.weight = view.own_weight();
+        self.totals = (view.own_defence(), view.own_protection());
         self.cursor = self.cursor.min(self.rows.len().saturating_sub(1));
     }
 
@@ -190,13 +197,13 @@ impl EquipmentScreen {
     }
 
     pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
-        // Rows: margin, the slots, a gap, the weight, a gap, the footer, the frame.
+        // Rows: margin, the slots, a gap, the totals, the weight, a gap, the footer, the frame.
         let count = self.rows.len().max(1) as i32;
         let panel = Panel::new(
             console,
             " Equipment ",
             super::info_tabs::panel_width(WIDTH),
-            count + 7,
+            count + 8,
         );
         super::info_tabs::draw_tabs(console, &panel, bindings, super::ScreenName::Equipment);
         let x = panel.inner_x();
@@ -230,6 +237,14 @@ impl EquipmentScreen {
                     console.print(item_x + 2, y, "—", TEXT_DIM);
                 }
             }
+        }
+        // What it all gives: the player's Dv and Pv in all (each slot's own numbers are after
+        // its item's name).
+        let y = panel.y + panel.h - 5;
+        if fits(y) && y > panel.y + 1 + count {
+            let (dv, pv) = self.totals;
+            let totals = format!("Defence (Dv) {dv}   ·   Protection (Pv) {pv}");
+            console.print(x, y, &totals, TEXT);
         }
         let y = panel.y + panel.h - 4;
         if fits(y) && y > panel.y + 1 + count {
@@ -290,7 +305,8 @@ impl ItemScreen {
         };
         let Some(view) = view else { return screen };
         let content = view.content();
-        screen.rows = content.slots().len();
+        // The slots, and the equipment screen's totals line.
+        screen.rows = content.slots().len() + 1;
         if usize::from(slot.0) >= content.slots().len() {
             return screen;
         }
@@ -306,7 +322,7 @@ impl ItemScreen {
             .map(|(i, s)| {
                 let choice = Choice {
                     item: i,
-                    shown: Item::of(s, content),
+                    shown: Item::of(s, view),
                     mark: equipment::mark(content, worn, i),
                     here: worn.get(slot) == Some(i),
                 };
@@ -437,6 +453,7 @@ mod tests {
     use super::*;
     use crate::input::KeyBinding;
     use std::sync::Arc;
+    use warlock_core::content::Content;
     use warlock_core::{Dir, World};
 
     /// The storeroom's arms and armor picked up, from the doorway: a small shield, a
@@ -496,8 +513,12 @@ mod tests {
         assert!(row(&text, "a  Head").contains("[ an iron helm"));
         assert!(row(&text, "a  Head").contains("1.5 kg"));
         assert!(row(&text, "b  Neck").contains('—'));
-        assert!(row(&text, "e  Main hand").contains(") a quarterstaff (both hands)"));
-        assert!(row(&text, "f  Off hand").contains(") a quarterstaff (both hands)"));
+        // Each item with what it gives in numbers, and the player's totals below.
+        let staff = ") a quarterstaff (+0 hit, 1d6, Dv +1) (both hands)";
+        assert!(row(&text, "e  Main hand").contains(staff));
+        assert!(row(&text, "f  Off hand").contains(staff));
+        assert!(row(&text, "a  Head").contains("an iron helm (Dv +0, Pv 1)"));
+        row(&text, "Defence (Dv) ");
         assert!(row(&text, "l  Missiles").contains('—'));
         assert!(row(&text, "m  Tool").contains('—'));
         assert!(row(&text, "Carrying").contains("Your weight 90.9 kg (you 70 kg)"));
@@ -558,7 +579,9 @@ mod tests {
         // Now it is there: choosing it takes it off.
         let mut screen = ItemScreen::new(Some(&world.perception()), body);
         let text = drawn(|c| screen.draw(c, &b));
-        assert!(row(&text, "a - [ a chain mail shirt (being worn)").contains("11 kg"));
+        assert!(
+            row(&text, "a - [ a chain mail shirt (Dv +2, Pv 3) (being worn)").contains("11 kg")
+        );
         row(&text, "│ Body armour");
         row(&text, "Choose what is there to take it off.");
         row(&text, "a or Enter put on   Esc back");
@@ -576,7 +599,7 @@ mod tests {
         let names: Vec<&str> = (screen.choices.iter())
             .map(|c| c.shown.name.as_str())
             .collect();
-        assert_eq!(names, ["a quarterstaff"]);
+        assert_eq!(names, ["a quarterstaff (+0 hit, 1d6, Dv +1)"]);
         let off = content.slot_id("off_hand").expect("off hand");
         let screen = ItemScreen::new(Some(&world.perception()), off);
         let text = drawn(|c| screen.draw(c, &b));
@@ -591,7 +614,10 @@ mod tests {
         });
         let mut screen = ItemScreen::new(Some(&world.perception()), off);
         let text = drawn(|c| screen.draw(c, &b));
-        row(&text, "> a - ) a quarterstaff (wielded in both hands)");
+        row(
+            &text,
+            "> a - ) a quarterstaff (+0 hit, 1d6, Dv +1) (wielded in both hands)",
+        );
         row(&text, "b - [ a small shield");
         row(&text, "Choose what is there to put it away.");
         assert_eq!(

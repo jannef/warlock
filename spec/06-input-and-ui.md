@@ -231,6 +231,21 @@ developer notes (CLAUDE.md, `docs/dev/`).
   it. There is no scrolling. Letters always name stacks on a list, never commands. Marks belong
   to stacks, not letters, so they stay as the pages turn. Actions name stacks by where they are
   stored (their position), never by a page's letter, and no message names a letter.
+  **Numbers** (#552; the owner's exception to hidden numbers, 2026-10-27: "player just needs to
+  know how much +hit and damage, dv and pv equipment has"): each stack's name is followed by what
+  it gives, in parentheses before its marks (`Lore::listed`, `magic::numbers`): a weapon its
+  to-hit and damage, "a long sword (+0 hit, 1d8)", extra dice and elemental damage as the
+  character screen writes them, "(+0 hit, 1d8+1d4 +1d6 fire)", and a launcher's or a throwing
+  weapon's range, "a short bow (+0 hit, 1d6, range 10)"; ammunition what it adds to a shot, only
+  when it adds something, "12 flaming arrows (+1d4 fire)"; anything else what its affixes add to
+  every attack, "(+1 hit)"; armour its Defence and Protection, both even when 0, "a chain mail
+  shirt (Dv +2, Pv 3)"; a shield, a parrying weapon, or a ring of Dodge only the Defence, "(Dv
+  +1)". They are the item's own (its base, its material, its identified affixes), never what the
+  wearer's Strength, skills, or stance add, and figured on the stack as the player knows it: an
+  unidentified item's affixes count for nothing in them until it is identified. Look mode says
+  them of what lies on a cell, "a dagger (+0 hit, 1d4, range 5; for sale, 45 gold)". The lists
+  are 78 columns wide (the inventory as wide as the info pages) to fit a name, its numbers, and
+  its mark.
 - **Pick up** (`,` or `;`) takes a lone stack at once. Where several lie, the list shows them
   (above) with glyph, name, and weight: a letter marks or unmarks its stack (`+` marked, `-`
   not), `,` marks everything (on every page), the arrows move the `>` cursor and Space marks its
@@ -272,18 +287,23 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Defence while worn", "Breaks on a hit 30% of the time"; damage types (§8): the kinds a
   weapon does on a line of their own, "Slashing or piercing damage", "Adds 1d4 fire damage",
   "Resists cold 20%", "Vulnerable to fire 20%"; affixes once identified, "Flaming: adds 1d4
-  fire damage", "of Warmth: +20% cold resistance"), and for
+  fire damage", "of Warmth: +20% cold resistance"), then what it gives in numbers (the item
+  lists' numbers, above, a line each: "To hit +1, damage 1d8+2, range 15", "Adds to a shot: +1d4
+  fire", "Adds to every attack: +1 to hit", "Dv +2, Pv 3"), and for
   a magic or rare item either "Unidentified: what its magic does is unknown, though it works all
   the same." or its item level and each affix, "Prefix  Sharp: +2 damage", "Suffix  of Celerity:
   attacks faster" (affix magnitudes are item properties and shown; speed only in words; global
   attack effects say "with every attack"); an identified unique item (§8 "Magic items") adds its
   power in words, "Power  Its every cut poisons.", and its lore as the last line. Never the
-  player's own to-hit or a modifier.
+  player's own to-hit or a modifier (the character screen has those).
   Read-only; Esc, Back, or Enter closes it.
 - **Equipment** (`i`, ADOM's; M16), as in ADOM: the slots, lettered `a` to `m` in this order — Head, Neck,
   Body, Cloak, Main hand, Off hand, Hands, Left ring, Right ring, Feet, Missile weapon, Missiles,
   Tool (data, `data/slots.toml`, §7, so more can be added; the Tool slot came with M19) — each with
-  what is in it (glyph, name, weight) or `—`, then what the player carries and weighs. A two-handed
+  what is in it (glyph, name with its numbers as the item lists give them, weight) or `—`, then
+  the player's Defence and Protection in all, `Defence (Dv) 14   ·   Protection (Pv) 4` (the
+  character screen's numbers: the rules' own, counting unidentified magic too, which an attentive
+  player may notice; #552), then what the player carries and weighs. A two-handed
   weapon shows in both hands, "(both hands)". A slot's letter (or Enter on the `>` row; the arrows
   move it) opens the choice of what goes there: the inventory stacks that fit the slot (and what it
   holds, such as a two-handed weapon in the off hand), in the item list (above), marked as in the
