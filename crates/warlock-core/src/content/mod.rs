@@ -1017,6 +1017,7 @@ impl Content {
         content.quests = quest::parse(files.table("quests"), &content)?;
         content.guilds = guild::parse(files.table("guilds"), &content)?;
         content.validate()?;
+        content.check_topic_routes()?;
         content.check_campaigns()?;
         Ok(content)
     }

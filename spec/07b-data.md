@@ -659,7 +659,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   good speaker says to an Evil or Wicked character instead of its greeting and one-liners, in
   turn; `greet_good`, an evil speaker's to a Good or Saintly character; §8 "Alignment"), optional
   `[[dialogue.topic]]`s (at most 9, each
-  with a unique `id` in lower-case letters, digits, and underscores, a `name`, and a `reply`), and
+  with a unique `id` in lower-case letters, digits, and underscores, a `name`, a `reply`, and an
+  optional `route`, the way the topic describes as waypoints `[[x, y], ...]` on the campaign's
+  overworld, joined by straight lines: at least two, every cell walkable, only in a campaign's
+  dialogue; §8 "Dialogue", Rumoured ways), and
   an optional `mutter = { chance, verb, lines }` (`chance` in percent per action, 1 to 100; `verb`
   one lower-case word, default "mutters"; at least one line). Lines, greetings, topic names, and
   muttered lines are one line of at most 72 characters (they fit the message line with the

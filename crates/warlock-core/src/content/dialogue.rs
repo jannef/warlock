@@ -8,7 +8,8 @@
 //! that rotate, an optional `greet` said the first time the player chats with it, optional cold greetings (`greet_evil`, said by a
 //! good speaker to an Evil or Wicked character in place of its greeting and lines, and
 //! `greet_good`, by an evil one to a Good or Saintly character; spec §8 "Alignment"), optional `[[dialogue.topic]]`s (`id`, `name`,
-//! `reply`) asked about on the dialogue screen, optional `[[dialogue.service]]`s (`id`, `name`,
+//! `reply`, and an optional `route`: the way it describes, marked on the player's overworld map
+//! as they ask) asked about on the dialogue screen, optional `[[dialogue.service]]`s (`id`, `name`,
 //! `price`, `does`, `reply`, `nothing`: a cure or a mending for gold, asked for like a topic;
 //! `world/service.rs`), and an optional `mutter`: the percent chance per
 //! action that it mutters one of the mutter's `lines` (with a `verb`, "mutters" by default) while
@@ -16,6 +17,7 @@
 
 use super::creature::CreatureId;
 use super::{Content, ContentError};
+use crate::geom::Pos;
 use serde::Deserialize;
 use std::ops::RangeInclusive;
 
@@ -89,6 +91,27 @@ pub struct Topic {
     pub name: String,
     /// What the speaker answers.
     pub reply: String,
+    /// The way the speaker describes, as waypoints `[x, y]` on the campaign's overworld (spec §8
+    /// "Dialogue", "Rumoured ways"): asking marks on the player's map what they would have seen
+    /// walking it by day ([`crate::world`]'s `world/rumour.rs`). Empty for most topics.
+    #[serde(default)]
+    pub route: Vec<[i32; 2]>,
+}
+
+impl Topic {
+    /// Every cell of the topic's route, in order: its waypoints joined by straight lines
+    /// ([`Pos::line_between`]). Empty without one.
+    pub fn route_cells(&self) -> Vec<Pos> {
+        let mut cells: Vec<Pos> = Vec::new();
+        for &[x, y] in &self.route {
+            let to = Pos::new(x, y);
+            if let Some(&from) = cells.last() {
+                cells.extend(from.line_between(to));
+            }
+            cells.push(to);
+        }
+        cells
+    }
 }
 
 /// What a paid service does (`does`).
@@ -191,6 +214,42 @@ impl Content {
             Some(name) => name.clone(),
             None => format!("the {}", self.speaker_name(id)),
         }
+    }
+
+    /// Checks every topic's `route` (spec §8 "Dialogue", "Rumoured ways"): only in a campaign's
+    /// dialogue, at least two waypoints, and every cell of it on walkable ground of the
+    /// campaign's overworld, so the way it marks is one the player could walk.
+    pub(super) fn check_topic_routes(&self) -> Result<(), ContentError> {
+        for dialogue in &self.dialogues {
+            for topic in dialogue.topics.iter().filter(|t| !t.route.is_empty()) {
+                let campaign = dialogue.campaign.as_deref().unwrap_or("none");
+                let file = format!("campaigns/{campaign}/data/dialogue");
+                let who = match &dialogue.speaker {
+                    Speaker::Creature(c) => format!("creature `{}`", self.creature(*c).id),
+                    Speaker::Npc(npc) => format!("npc `{npc}`"),
+                };
+                let bad = |m: String| {
+                    ContentError::new(
+                        &file,
+                        format!("dialogue of {who}: topic `{}`: {m}", topic.id),
+                    )
+                };
+                let overworld = (dialogue.campaign.as_deref())
+                    .and_then(|c| self.overworld_of(c))
+                    .ok_or_else(|| bad("a `route` needs its campaign's overworld".into()))?;
+                if topic.route.len() < 2 {
+                    return Err(bad("a `route` has at least two waypoints".into()));
+                }
+                for p in topic.route_cells() {
+                    let walkable =
+                        (overworld.terrain.get(p)).is_some_and(|t| self.terrain(*t).walkable);
+                    if !walkable {
+                        return Err(bad(format!("the route leaves walkable ground at {p}")));
+                    }
+                }
+            }
+        }
+        Ok(())
     }
 }
 

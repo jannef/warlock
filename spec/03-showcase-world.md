@@ -36,7 +36,7 @@ square, and has no stairs: it is left by walking off its edge, or with `<` when 
 about (§7 "Leaving an outdoor area"): walled on the pass side and open to the river, it has four shops on the
 square (a general store, the Forge, the Armourer's, the Provisioner's, their goods on their
 floors), the Mynster (the temple, a sanctuary) where Sister Hild cures and mends for gold (§8
-"Dialogue", Services), the Gæsthūs (the inn) where Godgifu tells rumours of the march (never a
+"Dialogue", Services), the Gæsthūs (the inn) where Godgifu tells rumours of the march (each marks the way on the map, §8 "Dialogue", Rumoured ways; never a
 reveal), the houses of Reeve Leofric and Factor Wulfrun (who identifies everything the player
 carries for 100 gold per unidentified stack, §8 "Dialogue", Services), the Gildhalle in the
 south-east corner, the hall of the Weyfarers' Gilde, where Wat One-Eye gives the guild's chain

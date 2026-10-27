@@ -1,7 +1,7 @@
 //! Cēaptūn, the Ascmearc's market town (#336; docs/design/campaign.md §6): entered from its
 //! overworld cell and left by its edge, its four shops and their goods, everyone in it at
 //! peace with the player, the Mynster a sanctuary where Sister Hild cures and mends for gold, the
-//! people known by their proper names, Godgifu's rumours (never a reveal), the dev scenario, and
+//! people known by their proper names, Godgifu's rumours (never a reveal; the ways they mark are `rumour_tests.rs`), the dev scenario, and
 //! a replay.
 
 use super::*;
@@ -254,7 +254,7 @@ fn factor_wulfrun_identifies_what_the_player_carries_for_gold() {
 }
 
 #[test]
-fn godgifu_tells_of_the_march_but_marks_nothing() {
+fn godgifu_tells_of_the_march_but_reveals_nothing() {
     let mut w = town();
     let godgifu = who(&w, GODGIFU);
     let topics: Vec<String> = (w.topics(godgifu).into_iter()).map(|t| t.id).collect();
@@ -262,8 +262,9 @@ fn godgifu_tells_of_the_march_but_marks_nothing() {
     put_player(&mut w, GODGIFU.step(Dir::W));
     act(&mut w, "chat:E");
     for topic in &topics {
+        let before = said(&w).len();
         act(&mut w, &format!("ask:E:{topic}"));
-        assert!(said(&w).last().unwrap().starts_with("Godgifu says: \""));
+        assert!(said(&w)[before].starts_with("Godgifu says: \""));
     }
     assert!(w.state.revealed.is_empty(), "rumours are never a reveal");
 }

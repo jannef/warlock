@@ -1,8 +1,9 @@
 # The people of Cēaptūn, the market town (docs/design/campaign.md §6; the fields:
 # data/dialogue.toml): the townsfolk (the `villager` type), and the town's unique characters,
 # each placed by the town's legend with `npc = "..."` and known by a proper `name`: Sister Hild of
-# the Mynster (who cures and mends for gold, §6.1), Godgifu of the Gæsthūs (rumours of the march,
-# never a reveal: decision 2026-10-25, question 9), Reeve Leofric, Factor Wulfrun (who
+# the Mynster (who cures and mends for gold, §6.1), Godgifu of the Gæsthūs (rumours of the march:
+# the way to each marked on the map, never a hidden place: decisions 2026-10-25, question 9, and
+# 2026-10-27), Reeve Leofric, Factor Wulfrun (who
 # identifies what the player carries for gold, #432), and Wat One-Eye of the Gildhalle, the
 # guildmaster of the Weyfarers' Gilde (docs/design/adventurers-guild.md §4). Their
 # quests are in data/quests/ (§6.2).
@@ -85,7 +86,9 @@ reply = "There. Whole again, as you were made."
 nothing = "You are whole, child. Go with my blessing."
 
 # Godgifu, the innkeeper of the Gæsthūs: rumours of the march. She knows what the quest-givers
-# know, in her own words, and marks nothing on anyone's map.
+# know, in her own words, and tells the way: each topic's `route` (waypoints on the overworld,
+# from the town's gate) marks on the player's map what walking it by day would show (spec §8
+# "Dialogue", "Rumoured ways"). Only terrain: the hidden places along the ways stay hidden.
 [[dialogue]]
 npc = "godgifu"
 name = "Godgifu"
@@ -112,26 +115,31 @@ mutter = { chance = 2, verb = "hums", lines = [
 id = "barrows"
 name = "The barrows"
 reply = "East along the road, the downs are full of them: Hlāwdūn, the barrow downs. The big one, Cealdhlāw, you can see from the road. Shepherds won't graze near it. Lights at night, and cold air breathing out of the ground. The reeve worries about it more than he says."
+route = [[18, 28], [34, 28], [34, 26]]
 
 [[dialogue.topic]]
 id = "marsh"
 name = "The marsh"
 reply = "South and east the land goes soft: Micelfenn, the great fen, where Blæcwæter runs out to the sea. Fevers, mostly, and worse things in the reeds. There was a minster out there once. Sister Hild could tell you more, if she's a mind to."
+route = [[18, 28], [18, 41], [20, 43], [62, 43], [66, 45], [72, 45]]
 
 [[dialogue.topic]]
 id = "mines"
 name = "The mines"
 reply = "Cēaptūn grew rich on ore from the hills under Fyrbeorg, in my grandmother's day. Then the diggings went quiet, and the men who went to see why didn't come back. Wulfrun still keeps the ledgers. Ask her, but don't ask her when she's counting."
+route = [[18, 28], [94, 28], [95, 23]]
 
 [[dialogue.topic]]
 id = "volcano"
 name = "The volcano"
 reply = "Fyrbeorg, the fire mountain, smokes over the north-east of the march, and has since before anyone remembers. That's where the ash comes from: grey on the snow, grey in the river. The old folk say the things under the hills answer to it. I say shut the window."
+route = [[18, 28], [94, 28], [104, 20], [108, 17], [109, 16], [108, 15]]
 
 [[dialogue.topic]]
 id = "pass"
 name = "The pass"
 reply = "Beorggeat, the mountain gate. You came down it, I expect, like everyone. It closes with the first snow and doesn't open till the thaw, and this year the snow came early. You're one of us now, for the winter at least. Welcome."
+route = [[18, 28], [12, 28]]
 
 # Reeve Leofric: the town's peace and its coin.
 [[dialogue]]

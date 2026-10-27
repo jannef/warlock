@@ -95,7 +95,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   `to`, the location goes by `name` (look mode, "The way into Fennmynster is here.", "You enter
   Fennmynster."), and it is **marked on the player's map** (their memory of the overworld holds
   the entrance) wherever they are; revealed before the overworld is made, it is applied as it is
-  made. The id (lower-case letters, digits, and underscores) is unique on the overworld; a hidden
+  made. A rumoured way (§8 "Dialogue") that passes it marks only its plain terrain. The id
+  (lower-case letters, digits, and underscores) is unique on the overworld; a hidden
   location on any other level, on a cell that is not walkable or is a location already, with an
   unknown `terrain` or one that is no way down, an unknown `to`, or no `name` is a content error.
   Without `to` it leads nowhere yet (its level is not built), like stairs without one.

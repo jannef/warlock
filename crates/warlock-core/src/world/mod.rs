@@ -154,6 +154,7 @@ mod reveal;
 mod rod;
 mod rooms;
 mod rot;
+mod rumour;
 mod schedule;
 mod search;
 mod second_wind;
@@ -1428,6 +1429,8 @@ mod room_temperature_tests;
 mod room_tests;
 #[cfg(test)]
 mod rot_tests;
+#[cfg(test)]
+mod rumour_tests;
 #[cfg(test)]
 mod scroll_label_tests;
 #[cfg(test)]
