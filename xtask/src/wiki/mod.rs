@@ -150,12 +150,14 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("creature-defences.md", creatures::creature_defences),
         ("creature-attacks.md", creatures::creature_attacks),
         ("creature-throws.md", creatures::creature_throws),
+        ("creature-summons.md", creatures::creature_summons),
         ("creature-senses.md", creatures::creature_senses),
         ("animated-tiers.md", animated::animated_tiers),
         ("animated-numbers.md", animated::animated_numbers),
         ("animated-bodies.md", animated::animated_bodies),
         ("animated-families.md", animated::animated_families),
         ("animated-groups.md", animated::animated_groups),
+        ("animated-loot.md", animated::animated_loot),
         ("animated-parts.md", animated::animated_parts),
         ("dungeons.md", dungeons::dungeons),
         ("dungeon-floors.md", dungeons::dungeon_floors),
@@ -483,7 +485,7 @@ mod tests {
         );
         assert!(
             scrolls.contains(
-                "| 3d6 fire | 10 cells | Explosion, very loud (150) | item level 6, frequency 20 | 150 gold |"
+                "| 3d6 fire | 10 cells | Explosion, very loud (150) | item level 6, frequency 20 | 200 gold |"
             ),
             "{scrolls}"
         );

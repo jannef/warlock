@@ -23,6 +23,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
    there: a danger shows first; §8 "Traps"), blood stains (§4.8), and in-cell animation.
 2. **Free-glyph layer** — instanced glyph quads from the same atlas for actors, particles, and
    anything that moves between cells or grows beyond its cell. Lit by sampling the light texture.
+   A glyph may be drawn in up to four horizontal colour bands, top first: a composite animated
+   thing (§8 "Animated objects") shows the distinct colours of what it wears and wields, in slot
+   order (a gold helm over steel plate over leather boots), each its material's own colour at the
+   glyph's brightness, with soft borders that sway slowly up and down (still with glyph
+   animation off; never a rainbow, never a cycle through the colours).
 3. **UI layer** — panels, message log, and overlays, drawn in glyphs.
 4. **Post-processing** — glow/bloom, distortion, fades (§4.8).
 

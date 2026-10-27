@@ -5,10 +5,13 @@ spec/08g-magic-items.md ("Scrolls") and spec/06-input-and-ui.md. Keep it current
 as CLAUDE.md says.
 
 Scrolls (spec §8 "Scrolls") are objects with a `read` table (`content/scroll.rs`: `ReadSpec` →
-`Reading::{Spell(ScrollSpell), Identify}`; `ScrollSpell { cast: Cast::{Burst, Bolt}, range,
-noun, verb, message, noise }`), one file each in `data/objects/` (`scroll_of_fireball`,
-`scroll_of_lightning`, `scroll_of_frost`, `scroll_of_identify`; `scroll_of_light` has no `read`
-yet). Their spells are the traps' own data types (`content/spell.rs`: `Burst`, `Bolt`,
+`Reading::{Spell(ScrollSpell), Cast(SpellScroll), Identify}`; `ScrollSpell { cast:
+Cast::{Burst, Bolt}, range, noun, verb, message, noise, teaches }`), one file each in
+`data/objects/`: a scroll of every spell of `data/spells/` (`scroll_of_ID`, kind `spell`,
+`Reading::Cast`, "Scrolls of spells" below), the three older ones whose readings are the traps'
+bursts and bolts (`scroll_of_fireball`, `scroll_of_lightning`, `scroll_of_frost`,
+`Reading::Spell`), and `scroll_of_identify`; `scroll_of_light` has no `read` yet. The older
+three's spells are the traps' own data types (`content/spell.rs`: `Burst`, `Bolt`,
 `BurstIce`, `SpellFields`, with `Burst::new`/`Bolt::new` the one place their fields are
 checked, and `check_effect`, the effect-shape check, run for scrolls once `data/effects.toml`
 is loaded, `scroll::check_spells`); `TrapEffect::Burst(Burst)`/`Bolt(Bolt)` hold the same
@@ -115,11 +118,12 @@ dice first; a spell's roll is then held to its cap (`Burst::cap`, `Bolt::cap`), 
 not (`None`). `spell_def::check_effects` checks spells' effects the way `check_spells` checks
 scrolls'.
 
-Content and places: the trap hall (`levels/trap_hall.toml`) has a pile of scrolls (two of each
-spell, three of identify) and an unidentified dagger beside the arrival; general stores stock and
+Content and places: the trap hall (`levels/trap_hall.toml`) has a pile of scrolls (two each of
+fireball, lightning, and frost, three of identify) and an unidentified dagger beside the arrival; general stores stock and
 buy the `scrolls` class, and a generated one always lays out scrolls of identify (`always` in
 `data/shops.toml`; Cēaptūn's has three by hand). The scroll of identify's `frequency` is 300,
-the spell scrolls' 50 to 60. The
+the spell scrolls' 20 to 60 by tier (level, frequency, and value by tier, the older three
+too: docs/dev/spells.md "The first list"). The
 wiki's table is `xtask/src/wiki/scrolls.rs` (`scrolls.md`), sharing `ice_text`/`sound_text`
 with the traps' table. Tests: `world/read_tests.rs` (the shared casts match the traps', bursts
 and bolts, kills and experience, refusals, identify, death, saves and replays, loot), the read

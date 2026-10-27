@@ -255,6 +255,10 @@ pub struct SeenActor {
     /// "Animated objects"), which anyone sees.
     #[serde(skip)]
     pub shape: Option<Shape>,
+    /// An animated thing that hums with power: something it is made of is magic, and the
+    /// player has Appraiser's eye to tell it (spec §8 "Animated objects").
+    #[serde(skip)]
+    pub hums: bool,
 }
 
 /// How a creature looks by what it is made of (spec §8 "Animated objects"): an animated
@@ -265,6 +269,25 @@ pub struct Shape {
     pub fg: Rgb,
     /// The material its main component is made of (look mode: "of silver").
     pub material: MaterialId,
+    /// A composite's colours (spec §8 "Animated objects"): the distinct material colours of
+    /// what it wears and wields, in slot order, the first [`Shape::BANDS`]; the first `count`
+    /// are used, and fewer than two mean it shows `fg` alone (a one-item thing).
+    pub bands: [Rgb; Shape::BANDS],
+    pub count: u8,
+}
+
+impl Shape {
+    /// The most colours a composite shows on its one cell.
+    pub const BANDS: usize = 4;
+
+    /// The colours it shows in horizontal bands, top first: two or more for a composite of
+    /// several materials, none for a thing of one colour.
+    pub fn bands(&self) -> &[Rgb] {
+        match usize::from(self.count) {
+            n @ 2.. => &self.bands[..n],
+            _ => &[],
+        }
+    }
 }
 
 impl SeenActor {
@@ -728,6 +751,7 @@ impl Perception {
                 pos: a.pos,
                 health: a.health(content),
                 shape: shape(a, content),
+                hums: talents.appraise_animated && hums(a, content),
             })
             .collect();
         // A hall of mirrors' images of those seen (`world/mirrors.rs`), where the player sees
@@ -1980,6 +2004,13 @@ impl<'a> PerceptionView<'a> {
     }
 }
 
+/// Whether actor `a` is an animated thing of which something it is made of is magic or rare
+/// (what Appraiser's eye tells).
+fn hums(a: &Actor, content: &Content) -> bool {
+    content.creature(a.creature).animated.is_some()
+        && (a.inventory.iter()).any(|s| s.rarity() != crate::magic::Rarity::Normal)
+}
+
 /// How actor `a` looks by what it is made of (spec §8 "Animated objects"): a household thing by
 /// its body, its object's glyph in its material's colour; one of a family by the piece in its
 /// tier's `shown_by` slot, in that piece's colour (and by its glyph with `item_glyph`: a blade
@@ -1989,6 +2020,7 @@ fn shape(a: &Actor, content: &Content) -> Option<Shape> {
     if let Some(tier) = content.animated().family_tier(def.animated.as_ref()) {
         let slot = content.slot_id(tier.shown_by.as_deref()?)?;
         let stack = a.inventory.get(a.equipment.get(slot)?)?;
+        let (bands, count) = bands(a, content);
         return Some(Shape {
             glyph: if tier.item_glyph {
                 content.object(stack.object).glyph
@@ -1997,6 +2029,8 @@ fn shape(a: &Actor, content: &Content) -> Option<Shape> {
             },
             fg: stack.fg(content),
             material: stack.parts(content).first()?.material,
+            bands,
+            count,
         });
     }
     let body = content.animated_body(a.creature)?;
@@ -2006,5 +2040,22 @@ fn shape(a: &Actor, content: &Content) -> Option<Shape> {
         glyph: content.object(stack.object).glyph,
         fg: stack.fg(content),
         material,
+        bands: [Rgb::BLACK; Shape::BANDS],
+        count: 0,
     })
+}
+
+/// The distinct colours of what actor `a` wears and wields, in slot order (head to feet, more or
+/// less: a helm over a hauberk over boots), the first [`Shape::BANDS`], and how many there are.
+fn bands(a: &Actor, content: &Content) -> ([Rgb; Shape::BANDS], u8) {
+    let mut bands = [Rgb::BLACK; Shape::BANDS];
+    let mut count = 0;
+    let worn = (a.equipment.iter()).filter_map(|(_, i)| a.inventory.get(i));
+    for fg in worn.map(|s| s.fg(content)) {
+        if count < Shape::BANDS && !bands[..count].contains(&fg) {
+            bands[count] = fg;
+            count += 1;
+        }
+    }
+    (bands, count as u8)
 }

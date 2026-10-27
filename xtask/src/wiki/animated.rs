@@ -124,12 +124,13 @@ pub(super) fn animated_numbers(content: &Content) -> String {
     out
 }
 
-/// The families (blades): what each is made of, slot by slot, how it shows, what it resists,
-/// and by level the chances that a piece is magic or rare and its rank in its weapon's skill.
+/// The families (blades, hollow armour, panoplies): what each is made of, slot by slot, how it
+/// shows and strikes, what it resists, and by level the chances that a piece is magic or rare and
+/// its ranks in its weapon's skill and in the style of weapon and shield.
 pub(super) fn animated_families(content: &Content) -> String {
     let mut out = String::from(
-        "| Family | Levels | Rarity | Made of | Shows as | Resists | Footsteps | Dies |\n\
-         |---|---|---|---|---|---|---:|---|\n",
+        "| Family | Levels | Rarity | Made of | Shows as | Blow | Resists | Footsteps | Doors | \
+         Dies |\n|---|---|---|---|---|---|---|---:|---|---|\n",
     );
     let animated = content.animated();
     let families: Vec<(usize, &warlock_core::content::animated::Tier)> = (animated.tiers.iter())
@@ -142,8 +143,18 @@ pub(super) fn animated_families(content: &Content) -> String {
                 let classes: Vec<String> = (line.classes.iter())
                     .map(|&c| content.item_class(c).name.to_lowercase())
                     .collect();
+                let times = if line.count > 1 {
+                    format!(", tried {} times", line.count)
+                } else {
+                    String::new()
+                };
+                let from = if line.from > tier.levels[0] {
+                    format!(", from level {}", line.from)
+                } else {
+                    String::new()
+                };
                 format!(
-                    "{}: {} ({} %)",
+                    "{}: {} ({} %{times}{from})",
                     content.slot(line.slot).name,
                     classes.join(" or "),
                     line.chance
@@ -165,9 +176,15 @@ pub(super) fn animated_families(content: &Content) -> String {
             .map(|(k, v)| format!("{k} {}", signed(*v)))
             .collect();
         let rarity = tier.rarity.as_deref().unwrap_or("common");
+        let blow = (tier.attack.as_ref()).map_or("wields its weapon".to_string(), |a| {
+            format!(
+                "its {}: {} ({}, the dice by level)",
+                a.name, a.verb, a.damage_type
+            )
+        });
         let _ = writeln!(
             out,
-            "| {} | {} to {} | {} | {} | {shows} | {} | {} | \"{}\" |",
+            "| {} | {} to {} | {} | {} | {shows} | {blow} | {} | {} | {} | \"{}\" |",
             capital(tier.creature.as_deref().unwrap_or_default()),
             tier.levels[0],
             tier.levels[1],
@@ -179,27 +196,105 @@ pub(super) fn animated_families(content: &Content) -> String {
                 resists.join(", ")
             },
             tier.footsteps,
+            if tier.opens_doors { "opens" } else { "-" },
             tier.dies
         );
     }
     out.push_str(
-        "\n| Family | Level | At least magic | Rare | Rank in its weapon's skill |\n\
-         |---|---:|---:|---:|---:|\n",
+        "\n| Family | Level | At least magic | Rare | Rank in its weapon's skill | Sword and \
+         board beside a shield |\n|---|---:|---:|---:|---:|---:|\n",
     );
     for (_, tier) in families {
         let at = |ramp: Option<warlock_core::content::Ramp>, level| ramp.map_or(0, |r| r.at(level));
         for level in tier.levels[0]..=tier.levels[1] {
             let _ = writeln!(
                 out,
-                "| {} | {level} | {} % | {} % | {} |",
+                "| {} | {level} | {} % | {} % | {} | {} |",
                 capital(tier.creature.as_deref().unwrap_or_default()),
                 at(tier.magic, level).max(at(tier.rare, level)),
                 at(tier.rare, level),
-                at(tier.weapon_rank, level)
+                at(tier.weapon_rank, level),
+                at(tier.shield_rank, level)
             );
         }
     }
     out
+}
+
+/// What a family's creature is made of, expected, at its first level, every tenth, and its last:
+/// the pieces (each line's chance by its tries, the off hand's shield only beside a one-handed
+/// weapon, by the weapons' frequencies), those that fall whole by the drop rule, and the chances
+/// that each is magic and rare.
+pub(super) fn animated_loot(content: &Content) -> String {
+    let mut out = String::from(
+        "| Family | Level | Pieces (expected) | Falling whole | At least magic | Rare |\n\
+         |---|---:|---:|---:|---:|---:|\n",
+    );
+    let animated = content.animated();
+    let intact = f64::from(animated.drops.intact) / 100.0;
+    let _ = writeln!(
+        out,
+        "| A household thing | its own | 1 | {intact:.1} | 0 % | 0 % |"
+    );
+    for (t, tier) in animated.tiers.iter().enumerate() {
+        if !tier.is_family() {
+            continue;
+        }
+        let [from, to] = tier.levels;
+        let levels = std::iter::once(from)
+            .chain((from + 1..to).filter(|l| l % 10 == 0))
+            .chain(std::iter::once(to));
+        for level in levels {
+            let mut pieces = 0.0;
+            let mut one_handed = 1.0;
+            for line in &animated.lines[t] {
+                if level < line.from {
+                    continue;
+                }
+                let slot = content.slot(line.slot);
+                let mut odds = f64::from(line.chance) / 100.0 * f64::from(line.count);
+                if slot.id == "main_hand" {
+                    one_handed = 1.0 - two_handed_share(content, &line.classes, level);
+                } else if slot.hand {
+                    odds *= one_handed;
+                }
+                pieces += odds;
+            }
+            let at = |ramp: Option<warlock_core::content::Ramp>| ramp.map_or(0, |r| r.at(level));
+            let _ = writeln!(
+                out,
+                "| {} | {level} | {pieces:.1} | {:.1} | {} % | {} % |",
+                capital(tier.creature.as_deref().unwrap_or_default()),
+                pieces * intact,
+                at(tier.magic).max(at(tier.rare)),
+                at(tier.rare),
+            );
+        }
+    }
+    out
+}
+
+/// The share, by frequency, of the base items of `classes` found at item level `level` that are
+/// two-handed (as `loot::base_in` draws them).
+fn two_handed_share(
+    content: &Content,
+    classes: &[warlock_core::content::ItemClassId],
+    level: u8,
+) -> f64 {
+    let (mut two, mut all) = (0u64, 0u64);
+    for o in content.object_defs() {
+        if o.frequency > 0 && o.level <= level.max(1) && classes.contains(&o.class) {
+            all += u64::from(o.frequency);
+            if o.two_handed {
+                two += u64::from(o.frequency);
+            }
+        }
+    }
+    if all == 0 {
+        0.0
+    } else {
+        two as f64 / all as f64
+    }
 }
 
 /// The household bodies, by level then name: what each is made of, how it moves and strikes,

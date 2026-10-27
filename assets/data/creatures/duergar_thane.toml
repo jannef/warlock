@@ -1,0 +1,38 @@
+# The duergar (#518; content::duergar_roster_tests checks the numbers). A thane (Old English
+# þegn) of the deep king, who holds a delf in his name: a great axe (its racial weapon), banded
+# mail and a great helm often of a better make than they look, and the hold's gold.
+[[creature]]
+id = "duergar_thane"
+level = 34
+xp = 180
+rarity = "rare"
+loot = 75
+name = "duergar thane"
+glyph = "h"
+fg = "#d8d8e0"
+faction = "duergar"
+tags = ["duergar"]
+alignment = "evil"
+race = "duergar"
+vision = "darkvision"
+opens_doors = true
+footsteps = 140
+hearing = 12
+weight = 85000
+stats = { strength = 26, dexterity = 19, toughness = 26, intelligence = 15, willpower = 22, presence = 14 }
+base_hp = 94
+resist = { poison = 25, cold = 10, fire = 25 }
+on_eat = { message = "Tough and sour, like old leather.", vomit = 25, stat = { toughness = 3 } }
+weapon_skills = { axes = 5 }
+racial_weapon = "great_axe"
+[[creature.gear]]
+chance = 85
+one_of = ["banded_mail"]
+magic = 30
+[[creature.gear]]
+chance = 70
+one_of = ["great_helm"]
+magic = 20
+[[creature.gear]]
+chance = 80
+one_of = ["gold_coin*5", "gold_coin*12"]

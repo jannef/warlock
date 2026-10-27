@@ -204,6 +204,16 @@ eases = 300
 start = "You are spent."
 end = "You feel your strength gather again."
 
+# A summoner's cooldown (spec §8 "Summoning", the creatures' `[creature.summon]`): a degree for
+# every six seconds of its `cooldown`; while it lasts the creature summons nothing. Creatures
+# only: no one sees it on them.
+[[status]]
+id = "summoning"
+name = "Summoning spent"
+max = 100
+stacking = "refresh"
+eases = 6
+
 # Blaze's cooldown (the Fire-born's gift, spec §8 "Birth sign"): twelve hours before the fire in
 # them kindles again. Nothing else; time is the penalty.
 [[status]]

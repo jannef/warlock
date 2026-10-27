@@ -17,7 +17,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
      creature with nothing to shoot (no missile weapon ready, or no ammunition for it left) fights
      as a `melee` one. A creature with a throw (§8 "Ranged combat": "Creatures' throws", the
      giants' boulders) that is not next to its target throws first whenever the target is within
-     the throw's range with a clear line of fire.
+     the throw's range with a clear line of fire. A summoner ("Summoning" below) summons before
+     all of this whenever it may.
      Leaving its routine it remembers where it was (its post) and where it saw the target.
   3. **Search**: with no hostile in sight, it goes to where it last saw one (next to the spot if
      someone it cannot see stands there, or no one can stand there: a door shut or kicked at).
@@ -43,8 +44,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   across the threshold or shoot in.
 
   **Attacks** are resolved by the rules of combat ("Combat" below): melee blows and shots hurt
-  and kill (a shot is a missile, "Ranged combat" below); spells stay intents until magic is
-  designed. An attack is an event (`Event::Attacked { attacker, target, kind: Melee | Ranged |
+  and kill (a shot is a missile, "Ranged combat" below); a creature's spells stay intents (the
+  player's go through the one cast path, §8 "Spells"; creatures do not cast through it yet). An attack is an event (`Event::Attacked { attacker, target, kind: Melee | Ranged |
   Thrown | Spell, from, to, strike, with }`, `strike` what came of it, `None` for an intent,
   `with` the missile of a shot or throw), a noise (§5), and a message when the player perceives
   it (§6). The event reaches presentation only
@@ -75,6 +76,30 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Not yet: immunity to weapons that are not magical (the hook is `World::resolve` in
   `fight.rs`); bolts and bursts stop at walls, so spells do not reach one inside. The example is
   the stone haunt (`stone_haunt`), which no level places yet.
+- **Summoning** (`warlock-core/src/world/summon.rs`, the rules; `content/summon.rs`, the data;
+  #520): an enemy-only creature ability; the player has none. A creature type's
+  `[creature.summon]` names its pool (creature ids, each as likely, or a tag within a level
+  window, uniques and itself left out; a shared type calls only shared types), `count` (dice, 1
+  to 12), `cooldown` (6 to 600 s), `mana` (its cost; the type must have mana), and optionally
+  `range` (default 8), `spread` (default 2), `most` (default 6), and `verb` (default
+  "summons"). As step 2 begins, a creature with one summons when it sees a hostile within
+  `range`, its casting is not blocked (a status that blocks `cast`: Silenced), its cooldown
+  status `summoning` is off, it has the mana (`World::spend_mana`, its cut included), fewer than
+  `most` of those it summoned live (on any level), and a free cell lies within `spread`; deciding
+  draws nothing. It then pays the mana, takes `ceil(cooldown / eases)` degrees of `summoning`
+  (the house rule: an ability's limit is a cooldown status), makes a spell's noise, and rolls
+  `count` on the gameplay stream, capped by the room `most` leaves; each creature is one
+  `below(pool.len())` draw, made like a spawn (gear rolled from `gear/<actor id>`) on the next
+  free cell: within `spread` (Chebyshev) in its line of sight, walkable, no one there, not a
+  sanctuary it would shun, nearest first (Chebyshev distance, squared distance, row order). Fewer
+  cells, fewer come. The summoned take the summoner's faction (a `faction_override` when it is
+  not their type's) and remember who called them (`Actor::summoner`, saved, left out while
+  `None`); they act from their next turn, and nothing else sets them apart: they stay when the
+  summoner dies, and their kills pay full experience. The action costs a `cast`. Words: the
+  player who sees the summoner is told what they see come ("The goblin wizard calls forth 2
+  goblins and a warg!", "something" when they see none of it); an unseen summoner's creatures
+  only as they appear in sight ("A skeleton appears!"); nothing seen, nothing said. Sight is the
+  last turn's perception, so a summoning in the turn a door opens may go unseen.
 - **Animated objects** (`warlock-core/src/content/animated.rs`, the types; `animated.rs`, what
   one is made of; `world/animated.rs`, the drops and the talents; #483, design
   `docs/design/animated-objects.md`): things a will set moving, each an **ordinary creature
@@ -118,7 +143,31 @@ developer notes (CLAUDE.md, `docs/dev/`).
   levels"), one first kill ("You learn something of animated blades.", once), the kill tally
   and Favoured prey by the family's id, a kill quest naming `animated_blade` counts every
   member, a `tag:` objective and a rolled kill quest's pool name it once. Cealdhlāw and Fyrdelf
-  list it. Hollow armour and panoplies follow (#486, #487, #463).
+  list it.
+  **Hollow armour and panoplies** (#486) are the composites, two more families:
+  `animated_armour_12` … `_35` ("animated armour", the hollow role: Strength +5, Dexterity −2,
+  Toughness +5, hit points ×1.2, speed 900 + 3L (at most 1100), piercing 25, uncommon) and
+  `animated_panoply_20` … `_70` ("animated panoply", the standard role: Toughness +2, hit points
+  ×1.2, speed 1000, +4 a level past 20 (at most 1200), rare). Both are medium, step loudly
+  (footsteps 60), open doors, "collapse with a clang", and show as `A` in their body armour's
+  material colour (the tier's `shown_by = "body"`; one colour until #463). A slot line may name
+  `from` (the least level it is tried at) and `count` (how many times it is tried, each further
+  piece going to a free slot of the same kind, `fits`: a ring for each hand); the lines are
+  tried in order and a line whose slots are all taken is passed over with nothing drawn, so a
+  panoply's shield never comes beside a two-handed weapon. Hollow armour wears body armour, a
+  helm (70 %), a shield (40 %), gloves (30 %), and fights with its own blow (the tier's
+  `attack`: its gauntlets slam, bludgeoning, the curve's dice at L); a panoply wears body armour
+  and wields a melee weapon always, a shield (60 %) and a helm (75 %), from L30 gloves and boots
+  (50 % each), from L40 a cloak (50 %), from L50 an amulet and two rings (30 % each), and holds
+  `1 + L/10` ranks in its weapon's skill and, beside a shield, `L/15` in the style of weapon and
+  shield (Sword and Board, the tier's `shield_rank`). Pieces are at least magic by 10 + L % (at
+  most 40, armour) and 20 + L % (at most 80, panoply), rare from L20. Everything they wear and
+  wield works for them as for anyone (`Mods::worn`: stats, riders, resistances, light, ...); max
+  mana, mana regeneration, and caster level are held but unread until creatures cast. Fyrdelf
+  lists `animated_armour`; no population lists `animated_panoply` yet (legends and the dev
+  `spawn` only). Talent **Appraiser's eye** (scholar): look mode adds "It hums with power." when
+  anything an animated creature carries is magic or rare (perception's `SeenActor::hums`).
+  Their homes follow (#487), and the chromatic look of composites (#463).
 - **Creature gear** (`warlock-core/src/gear.rs`, the rolls; `content/gear.rs`, the data; #328,
   campaign design §10.3): a creature type may have a `racial_weapon` (a weapon it must have a
   rank in: the affinity is the rank, which combat applies) and `[[creature.gear]]` lines

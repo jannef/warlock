@@ -1,0 +1,40 @@
+# The duergar (#518; content::duergar_roster_tests checks the numbers). A crossbowman of the
+# delf's watch: a crossbow (its racial weapon, slow to load and hard-hitting) and a case of
+# bolts, studded leather, and a hand axe for the last few steps.
+[[creature]]
+id = "duergar_crossbowman"
+level = 15
+xp = 85
+rarity = "uncommon"
+loot = 25
+name = "duergar crossbowman"
+glyph = "h"
+fg = "#909060"
+faction = "duergar"
+tags = ["duergar", "archer"]
+alignment = "evil"
+race = "duergar"
+vision = "darkvision"
+sight = 12
+combat = "ranged"
+range = 10
+opens_doors = true
+footsteps = 100
+hearing = 12
+weight = 70000
+stats = { strength = 18, dexterity = 17, toughness = 18, intelligence = 12, willpower = 16, presence = 10 }
+base_hp = 38
+resist = { poison = 25, cold = 10 }
+on_eat = { message = "Tough and sour, like old leather.", vomit = 25 }
+weapon_skills = { crossbows = 3, axes = 2 }
+racial_weapon = "crossbow"
+[[creature.gear]]
+chance = 95
+one_of = ["bolt*12", "bolt*20"]
+[[creature.gear]]
+chance = 60
+one_of = ["hand_axe"]
+[[creature.gear]]
+chance = 60
+one_of = ["studded_leather"]
+magic = 5

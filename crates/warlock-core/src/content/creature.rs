@@ -11,6 +11,7 @@ use super::light::LightId;
 use super::object::MAX_BONUS;
 use super::particles::ParticleEmitter;
 use super::status::{OnHit, OnHitSpec, StatusId};
+use super::summon::{Summon, SummonSpec};
 use super::throw::{Throw, ThrowSpec};
 use crate::alignment::Alignment;
 use crate::color::Rgb;
@@ -202,6 +203,8 @@ pub(super) struct CreatureSpec {
     pub attack: Option<NaturalAttackSpec>,
     /// Its throw (spec §8 "Ranged combat": "Creatures' throws"): a giant's boulders.
     pub throw: Option<ThrowSpec>,
+    /// Its summoning (spec §8 "Summoning"): the creatures it calls forth.
+    pub summon: Option<SummonSpec>,
     /// Its natural armour: hide, shell, or scales.
     pub natural: Option<Hide>,
     /// Whether it passes through solid terrain, and its Defence inside it (spec §8
@@ -497,6 +500,8 @@ impl CreatureSpec {
             loot: self.loot,
             attack: r.attack,
             throw: r.throw,
+            summon: None,
+            summon_spec: self.summon,
             natural: self.natural,
             incorporeal: self.incorporeal,
             resist: r.resist,
@@ -620,6 +625,12 @@ pub struct CreatureDef {
     /// Gameplay: its throw, a natural ranged attack with no ammunition (spec §8 "Ranged combat":
     /// "Creatures' throws"); `None`: it throws nothing. Rules only (the wiki states it).
     pub throw: Option<Throw>,
+    /// Gameplay: its summoning, the creatures of its side it calls forth (spec §8
+    /// "Summoning"); `None`: it summons nothing. Resolved once every creature type is known.
+    /// Rules only (the wiki states it).
+    pub summon: Option<Summon>,
+    /// Its summoning as written, resolved by `Content::load_summons`.
+    pub(super) summon_spec: Option<SummonSpec>,
     /// Gameplay: its natural armour, if any.
     pub natural: Option<Hide>,
     /// Gameplay: whether it passes through solid terrain and stands inside it, and its Defence

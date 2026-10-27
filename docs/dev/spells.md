@@ -10,7 +10,8 @@ caster level), the **one cast path** (#395: cost, reach, dice, resolution, the s
 the casters' placeholder spells migrated onto it), **learning** (#396: the learned set,
 study, the check, mishaps; "Learning" below), the **first spell list** (#397: the spells,
 their scrolls, the classes' guaranteed spells; "The first list" below), **wands** (#398;
-"Wands" below), and **rods** (#399; "Rods" below). Not to be confused
+"Wands" below), **rods** (#399; "Rods" below), the **Spellcraft talents** (#400; "Talents"
+below), and the cross-checking pass (#401; "Balance" below). Not to be confused
 with `content/spell.rs`, the bursts and bolts scrolls and traps cast, whose code the cast path
 shares.
 
@@ -26,7 +27,7 @@ shares.
     `README.toml` (a comment-only file, like the classes'). Read by `ContentFiles::table("spells")`
     minus `data/spells.toml` itself, so campaigns may add spells; a spell without the tier table
     is an error. Ids are `SpellId` indices in path order and enter the content fingerprint (saves
-    will name them, #396); a spell file changes saves.
+    name them: `Actor::spells`); a spell file changes saves.
   - `casting` on classes (`ClassDef::casting`, 1 to 100, default 25, `content::CASTING`).
   - `caster_level`: the talent effect `TalentEffect::CasterLevel { value, per_levels }` (a bonus,
     ±20; flat into `TalentMods::caster_level`, or with `per_levels` 1 to 20 that much per that
@@ -119,7 +120,7 @@ shares.
 - **Choices** (design §14 and the issue's open points, decided here):
   - The attack roll's skill: there is no Missile skill (weapon skills are per weapon), so rays,
     bolts, and touches aim with the **Dexterity** modifier, threat and critical at the blows'
-    defaults; Spellcraft has no benefit yet (#400 may give it one).
+    defaults; Spellcraft does not aim spells (its benefit is the study check's, #396).
   - A critical rolls the damage again, but the result is still **held to the cap**: nothing
     passes it, criticals included (design §5's strict cap).
   - Empower and Archmage (reworked in #400): their dice and per-die bonus apply, and the roll
@@ -346,6 +347,35 @@ shares.
   bonus talents from Scholar and Spellcraft. Empower, Archmage, Scroll adept, Frugal caster name
   `spells` beside `mana`/`scrolls`; Spell recall, Scroll savant, Careful reader stay `scrolls`
   only (reading, not casting). Wand mastery is in #398's wands; Channeler (`rod_cost_percent`, level 5) is in #399's rods.
+- **Balance** (#401; design §12, run against the data on 2026-10-27; `warlock-cli dump
+  --character human,male,CLASS --actions "xp:N levelup:auto" --format json`, N the human
+  threshold times the class's experience factor):
+  1. **Pools** (the stats the seed rolls, so a +1 or +2 mental modifier; `levelup:auto` may
+     take Deep well): wizard 33 / 106 / 254 / 502 at levels 3 / 12 / 30 / 60 (caster level 3,
+     14, 36, 72), priest, druid, and witch about 27 / 90 / 216 / 426 (caster level = level),
+     bard and aristocrat 17 / 45–53 / 103–125 / 201–246, monk, paladin, and ranger 9–14 /
+     27–50 / 63–122 / 123–242, the 25 % classes 4 / 13 / 31 / 61. A full caster's pool is about
+     ten single-target casts of its tier's base cost at every level (the design's aim): 106
+     against tier 3's 11, 254 against tier 5's 22, 502 against tier 9's 56.
+  2. **Regeneration** (a point per `max(60, 360 − 12 × Willpower)` seconds, resting at 200 %):
+     a rest to full is under an hour at level 3, about 3 hours at level 12, 7 at 30, and 10 to
+     14 at 60 (Willpower 13 to 16). Passes to level 30; at 60 it is a night's sleep, not the
+     design's "a few hours": left for the owner (raising `[healing] mana_resting` would shorten
+     it at every level).
+  3. **Ceilings against hit points** (common and uncommon creatures, levels within each
+     tier's caster levels): the median creature takes 1.3 to 3.1 casts at a tier's ceiling and
+     2.4 to 5.7 at an average roll; none of a tier's median dies to one cast. Passes.
+  4. **Weapon parity**: a level-12 warrior's great axe does 1d12 + Strength + the Axes rank
+     (about 12 on average, 18 at most) a blow; a level-12 wizard's best single target is
+     Scorching ray (2d6 at caster level 14, at most 12) for 6 mana, about 17 casts from the
+     pool, and an area (Fireball, 26 mana) four. Passes: spells cost real mana. No spell
+     above tier 3 exists yet, so a caster past caster level 18 reaches no higher ceiling.
+  5. **Tests**: the cap check at load, `the_shipped_tier_table_reads_as_the_design_has_it`,
+     the ascending checks, and `the_shipped_table_makes_areas_dearer_and_weaker_than_single_targets`.
+  - **Data changed**: the scrolls of fireball and lightning are worth 200 gold (were 150) and
+    frost 130 (was 100), the tier-3 and tier-2 values: #397 gave the three older scrolls their
+    tier's item level and frequency but kept their M29 values, so a scroll of fireball sold for
+    less than a scroll of flame, which does the same.
 - **Wiki**: `xtask/src/wiki/spells.rs` (`spell-tiers.md`, `spell-shapes.md`,
   `spell-resolutions.md`, `spell-casting.md`, `spell-list.md`, `spell-armour.md`; `does` is
   shared with the talents' table) for `wiki/src/magic.md`.

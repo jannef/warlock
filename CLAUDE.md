@@ -32,7 +32,7 @@ Update them together whenever behavior, commands, or architecture change.
 | Player wiki tables | `cargo xtask wiki` (writes `wiki/src/generated/*.md` from the game data; not committed: CI and the release workflow run it before `mdbook build wiki`), `--build` (also runs `mdbook build wiki` into `wiki/book/`; needs `cargo install mdbook --locked`) |
 | Golden screenshots | `cargo xtask golden` (compare; authoritative on Linux only), `--local` (capture to `target/xtask/golden/*.local.png`, no compare), `--update` (rewrite references; see "Golden screenshots") |
 | Frame-time benchmark | `cargo xtask bench-frames [WxH]` (release, offscreen; method and results in `docs/perf.md`) |
-| Turn-time benchmark | `cargo xtask bench-turns` (re-runs itself in release; budgets: hub 5 ms, vast 16 ms, generated depths level 5 ms, sunlit courtyard at dawn 5 ms, overworld 5 ms, generated forest area at dawn 5 ms, courtyard and forest area at full-moon midnight 5 ms, arena 5 ms, a generated 120×60 cave floor at full population (a fixture branch of danger 8 with a teeming den, `delf`) 16 ms per turn; a dusk-to-dawn rest 500 ms (on `delf` too: far creatures take coarse turns while the player rests, `docs/dev/creatures.md`), also beside the arena's fight going on unseen until one side is dead (a walk that gets the player killed starts over, untimed), and rested on to dawn when rain wakes the player) |
+| Turn-time benchmark | `cargo xtask bench-turns` (re-runs itself in release; budgets: hub 5 ms, vast 16 ms, generated depths level 5 ms, sunlit courtyard at dawn 5 ms, overworld 5 ms, generated forest area at dawn 5 ms, courtyard and forest area at full-moon midnight 5 ms, arena 5 ms, a generated 120×60 cave floor at full population (a fixture branch of danger 8 with a teeming den, `delf`) and the same floor of animated panoplies at danger 40 (`panop`) 16 ms per turn; a dusk-to-dawn rest 500 ms (on `delf` too: far creatures take coarse turns while the player rests, `docs/dev/creatures.md`), also beside the arena's fight going on unseen until one side is dead (a walk that gets the player killed starts over, untimed), and rested on to dawn when rain wakes the player) |
 | Light stress benchmark | `cargo test --release -p warlock-core turn_cost -- --ignored --nocapture` (400×300, 825 lights; again outdoors at 06:15) |
 
 `target/` in the xtask rows is Cargo's target directory: xtask follows `CARGO_TARGET_DIR` (else
@@ -46,7 +46,7 @@ Game flags (`cargo run -p warlock -- --help`):
   the sunlit courtyard at 06:30, `world` on the overworld beside the Hall, `forest` in the glade
   of a generated forest area of the overworld at 06:30, `arena` in the dark corner of the arena
   where kobolds and giant rats fight, `quarry` in the quarry beside a pick-axe, `traps` in the
-  trap hall, `cealdhlaw` on the first floor of Cealdhlāw, the Ascmearc's first dungeon, `fennmynster` on
+  trap hall, `summoners` in the summoning hall's south hall (three summoners behind doors), `cealdhlaw` on the first floor of Cealdhlāw, the Ascmearc's first dungeon, `fennmynster` on
   the first floor of Fennmynster, the drowned minster's cellars, `fyrdelf` on the first floor of Fyrdelf,
   its deepest), `--seed S`
   (default: the scenario's seed; a number, or a word hashed with FNV-1a, e.g. `--seed warlock`),
@@ -247,7 +247,7 @@ word: `{"cold": "resistant"}`), `burden` (`level`, `limit`), `alignment` (the ba
 `raised`, `age`, `born`, `sign`, and `lucky`, a lucky day's title, only for one born on it), `due` (the level-up choices due: `level`, `talents`,
 `rolls`, `bonus`, or null), `abilities` (in menu order: `id`, `source`,
 `aim`, and `unavailable`, the reason's id or null), `quests` (the log: `id`, `name`, `kind`, `active`, `completed`, `giver`, `target` (what a rolled quest drew, else null),
-`objective`, `status`), each seen actor's `health` and `effects` (those that show), `room` (the
+`objective`, `status`), each seen actor's `health` and `effects` (those that show) and a composite animated thing's `bands` (its colours, top first), `room` (the
 special room the player stands in, if they know it), and per inventory stack (in position
 order) its `letter` (the position as action text), `class` (item class id), `name`, `rarity`,
 `identified`, and `magic` (affixes only once identified). Replay
@@ -320,6 +320,7 @@ file). Topics:
 - `docs/dev/resources.md` — alternative resources: the data, `Actor::resources`, grant, gain, spend, and end, time in the status loop, ability costs, the dev grant
 - `docs/dev/blood.md` — wounds and stains, bleeding, how blood is drawn
 - `docs/dev/creatures.md` — factions and stance, the AI, paths, creature sight, spawning, gear (a stable index: roster PRs edit only their own `docs/dev/creatures/<tribe>.md`, e.g. `undead.md`, never this file)
+- `docs/dev/summoning.md` — creatures' summoning (enemy-only): the `summon` table, the cooldown status, who summoned whom, the AI hook, the words
 - `docs/dev/animated.md` — animated objects: creature types generated at load, their bodies and streams, drops, immunities, the look
 - `docs/dev/npcs.md` — unique characters, chat and ask, rotation lines and mutters, displacement
 - `docs/dev/quests.md` — quest data and stages, hooks in kills, travel, and talk, the quest log

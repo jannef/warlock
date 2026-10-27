@@ -5,9 +5,10 @@
 //! only while the level has a way down that leads somewhere. Light tread
 //! (`TalentMods::collapse_proof`) skips the draw. The player falls to the level the way down leads
 //! to (generated as usual on a first visit, [`World::travel`]), landing on a random cell of it
-//! (another gameplay draw, [`landing`]), takes the effect's damage (never the last hit point,
-//! `Harm::Spared`), and is Staggered. Creatures never fall. Nothing new is saved: the fall is a
-//! level change like the stairs'.
+//! (another gameplay draw, [`landing`]), takes the effect's damage (`Harm::Fall`: it can kill,
+//! and a death by it is `Cause::Fall`; the generator leaves a sound rim round the cracks, so
+//! there is always a way round), and is Staggered unless it killed. Creatures never fall. Nothing
+//! new is saved: the fall is a level change like the stairs'.
 
 use super::fight::Harm;
 use super::{LevelState, World};
@@ -76,7 +77,9 @@ impl World {
         self.say(format!("You fall to {name}."));
         let id = self.state.player;
         let damage = collapse.damage.roll(&mut self.state.rng).max(0);
-        self.hurt(id, damage, Harm::Spared, events);
+        if self.hurt(id, damage, Harm::Fall, events) {
+            return true;
+        }
         if let Some(stagger) = content.status_id(STAGGER) {
             self.afflict(id, stagger, 1, None, events);
         }

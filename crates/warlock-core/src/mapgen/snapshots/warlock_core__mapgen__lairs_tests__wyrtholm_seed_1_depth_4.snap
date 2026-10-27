@@ -52,7 +52,7 @@ skeleton_warrior at (67, 27) route E E S S S W E N N N W W carrying a copper lon
 giant_leech at (69, 25) route E E E E S S S W W W E E E N N N W W W W
 will_o_wisp at (18, 15) route E E E S N W W W
 mud_golem at (15, 31) route N N S S N S N N S S
-mud_golem at (61, 17) route N S S E W W W E E E W N N S
+marsh_troll at (61, 17) route N S S E W W W E E E W N N S
 footpad at (31, 4) route N N N E S N W S S S carrying a short sword (wielded)
 marsh_troll at (56, 29) route S S S N S N N N
 mud_golem at (63, 31) route S N N N N S S N N S S S S N
@@ -113,7 +113,7 @@ special room teeming at (71, 10)-(77, 17)
  ##..........#####...G.....................## ##.....#    #### #...#   #ttttt# #~~~..............#
   ##..............y.........................###".....#   ##".####..##  #ttXt## #.~~..............#
    ##.......^................................T.......## ##....####..####tttC# ##..~~~...##.......##
-    ####..............................................###.*..X.# #...##.tttt###........####....T..#
+    ####..............................................###.*..T.# #...##.tttt###........####....T..#
        ##........##............................................# #......................##........#
        ##...R...#####.........................................## #..T.........X.......)...........#
        #.X.....##   ##..........<...##......................### ##..........###............###....#

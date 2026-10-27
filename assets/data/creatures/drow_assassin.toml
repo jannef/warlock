@@ -1,0 +1,52 @@
+# The drow (#519; content::drow_roster_tests checks the numbers).
+# The houses' knife in the dark: silent, quick, and patient, with a dagger whose venom
+# sickens and weakens, and a sure eye for the opening that kills.
+[[creature]]
+id = "drow_assassin"
+level = 32
+xp = 170
+rarity = "rare"
+loot = 40
+name = "drow assassin"
+glyph = "e"
+fg = "#9a3a5a"
+speed = 1350
+faction = "drow"
+tags = ["drow"]
+alignment = "evil"
+race = "drow"
+vision = "darkvision"
+opens_doors = true
+footsteps = 30
+hearing = 16
+weight = 55000
+stats = { strength = 24, dexterity = 25, toughness = 23, intelligence = 23, willpower = 23, presence = 23 }
+base_hp = 72
+resist = { poison = 25 }
+on_eat = { message = "Lean and bitter, with an aftertaste of old poisons.", vomit = 40 }
+[creature.attack]
+damage = "3d10"
+damage_type = "piercing"
+name = "envenomed dagger"
+verb = "stabs"
+to_hit = 3
+threat = 19
+crit = 3
+on_hit = [{ status = "poisoned", chance = 40, severity = 4 }, { status = "weakened", chance = 15, severity = 1 }]
+# Its gear (spec §8 "Creature gear"): armour and coins, never a weapon (its venom rides on
+# its natural attack, which a wielded weapon would replace).
+[[creature.gear]]
+chance = 70
+one_of = ["studded_leather"]
+magic = 25
+[[creature.gear]]
+chance = 80
+one_of = ["wool_cloak"]
+magic = 25
+[[creature.gear]]
+chance = 50
+one_of = ["leather_boots"]
+magic = 10
+[[creature.gear]]
+chance = 60
+one_of = ["copper_coin*100", "gold_coin*4"]

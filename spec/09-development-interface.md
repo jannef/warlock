@@ -179,7 +179,7 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   max}]`, in resource order),
   Defence (`defence`, the total), hunger (`hunger`: `bloated` … `starving`, or null when nobody
   hungers), how the run ended (`death: {turn, time, place, by, of, cause, trap}` or null;
-  `cause` "Starved to death", "Killed by a fireball trap", and the like when neither a creature
+  `cause` "Starved to death", "Killed by a fireball trap", "Fell through a collapsed floor", and the like when neither a creature
   nor a status effect killed them; `trap` the id of the trap that did, else null),
   recent messages,
   and optionally the full world state; the ASCII header line has the turn, the time
