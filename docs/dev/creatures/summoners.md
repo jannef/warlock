@@ -22,5 +22,5 @@ kobolds alone while the summoner lives in their ranks.
 `content/summoner_roster_tests.rs` checks every `summoner` against its table, another tribe's
 tag, and mana, and the three above against the XP guideline and the HP formula (±35 %);
 `content::tag`'s test lists them. None is in a population yet: the showcase's summoning hall
-(`summoners` scenario) places them. The drow priestess (the drow roster) gets her `summon` table
-(demons) in a follow-up.
+(`summoners` scenario) places them. The three drow priestesses (#536) summon demons: their table is in
+`docs/dev/creatures/drow.md` (the drow roster's checks cover them, not this file's `ROSTER`).

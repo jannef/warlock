@@ -11,7 +11,7 @@ name = "drow priestess"
 glyph = "e"
 fg = "#c04a9a"
 faction = "drow"
-tags = ["drow", "caster", "priest"]
+tags = ["drow", "caster", "priest", "summoner"]
 alignment = "evil"
 race = "drow"
 vision = "darkvision"
@@ -23,6 +23,7 @@ hearing = 14
 weight = 56000
 stats = { strength = 18, dexterity = 18, toughness = 21, intelligence = 24, willpower = 24, presence = 24 }
 base_hp = 48
+mana = 30
 skills = { concentration = 78, spellcraft = 83 }
 resist = { poison = 25 }
 on_eat = { message = "Lean and bitter, with an aftertaste of old poisons.", vomit = 40 }
@@ -46,6 +47,17 @@ magic = 30
 [[creature.gear]]
 chance = 60
 one_of = ["copper_coin*100", "gold_coin*3"]
+# The lesser demons (every demon of level 8 to 24, uniques left out; the demons it calls
+# join the drow), 1d2 at a time, every 45 seconds while its mana lasts, 4 of them at most.
+[creature.summon]
+tag = "demon"
+levels = [8, 24]
+count = "1d2"
+cooldown = 45
+mana = 10
+most = 4
+verb = "calls forth"
+
 [[creature.particles]]
 on = "attack"
 glyphs = "·*+"

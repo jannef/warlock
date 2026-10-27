@@ -6,11 +6,11 @@ The drow (#519, levels 14 to 50): the dark elves of the deep, twelve shared type
 in `assets/data/creatures/` (`drow_*`). Faction `drow` (after `duergar` in
 `assets/data/factions.toml`): hostile to the player, the kobolds, the goblins (the hobgoblins
 with them), the orcs, and the duergar, their rivals of the deep roads; neutral to the demons (the
-priestesses would call on them), the vermin (the spiders sacred to their goddess), the undead,
+priestesses call on them, and those they call join the drow), the vermin (the spiders sacred to their goddess), the undead,
 the fire things, the giants, the trolls, and everyone else. Not an animal faction. Tags: `drow`
 on every type, `archer` on the crossbowman and the arbalester, `caster` on the mage, the
 archmage, and the three priestesses, `priest` (new) on the priestess, the high priestess, and the
-matron. All `alignment = "evil"`, `race = "drow"` (the playable race: eating one is eating kin to
+matron; `summoner` (#536) on the same three. All `alignment = "evil"`, `race = "drow"` (the playable race: eating one is eating kin to
 a drow character), `vision = "darkvision"`, medium, open doors, quiet footsteps, keen hearing,
 and `resist = { poison = 25 }` (the race's; 50 for the high priestess and the matron). Glyph `e`
 (the deep elves' letter in other roguelikes; before them only the elemental motes used it, in
@@ -49,6 +49,23 @@ captain 37 (rare officer), archmage 40 (rare caster), high priestess 44 (very ra
 matron 50 (very rare, `unique = true`: drawn at most once a run; no proper name, so shared).
 Loot from 10 to 100.
 
+## Summoning (#536)
+
+The three priestesses are summoners (`docs/dev/creatures/summoners.md`): `mana` and a
+`[creature.summon]` with `tag = "demon"` (uniques are left out of the pool), `verb = "calls
+forth"`. A called demon takes the summoner's faction, so it is a drow: the drow are neutral to
+the demon faction, and the called demons do not fight them.
+
+| priestess | mana (cost) | demons called (levels) | count | cooldown | most |
+|---|---|---|---|---|---|
+| drow priestess (24) | 30 (10) | dretch, quasit, balgura (8 to 24) | 1d2 | 45 s | 4 |
+| drow high priestess (44) | 48 (16) | balgura to glabrezu (24 to 44) | 1d2 | 30 s | 4 |
+| drow matron (50) | 60 (20) | hezrou to nalfeshnee (30 to 50) | 1d3 | 30 s | 5 |
+
+The weaker priestess waits 45 s between callings; nothing she calls is above her level.
+`drow_roster_tests` checks the tag, the table, and mana go with `priest`, and
+`a_priestess_calls_forth_demons_that_stand_with_the_drow` the summoning and the faction.
+
 ## Populations
 
 None: their levels overlap only Fyrdelf's (danger 8–19) at the bottom, and a duergar delf is no
@@ -56,6 +73,6 @@ drow place. They wait for a deep place of their own.
 
 ## Follow-ups
 
-The priestesses' demon summoning (the summoning system's summon table), poison on wielded
+Poison on wielded
 weapons, creature light sensitivity (the race's `light_blind`), damaging creature spells, spider
 mounts, and a drow place to give them a population.

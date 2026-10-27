@@ -176,6 +176,26 @@ fn the_drow_keep_to_the_roster() {
         if tagged("priest") {
             assert!(tagged("caster"), "{id}: a priestess casts");
         }
+        // The priestesses call demons (the drow's own, once summoned); no one else summons.
+        assert_eq!(tagged("summoner"), tagged("priest"), "{id}: summoner tag");
+        assert_eq!(def.summon.is_some(), tagged("priest"), "{id}: summoning");
+        assert_eq!(
+            def.base_mana > 0,
+            tagged("priest"),
+            "{id}: only priestesses have mana"
+        );
+        if let Some(summon) = &def.summon {
+            let demons: Vec<_> = summon.pool.iter().map(|&p| content.creature(p)).collect();
+            assert!(!demons.is_empty(), "{id}: a pool");
+            for d in &demons {
+                assert!(
+                    d.tags.iter().any(|t| t == "demon") && !d.unique,
+                    "{id}: {}",
+                    d.id
+                );
+                assert!(d.level <= def.level, "{id}: calls nothing above itself");
+            }
+        }
     }
     for (id, _) in ROLES {
         let def = content.creature_id(id).map(|c| content.creature(c));
@@ -282,6 +302,36 @@ fn a_crossbowman_shoots_venomed_bolts_and_a_warrior_cuts_with_venom() {
         said_any(&said, "You feel sick.") || effects(&w, "poisoned"),
         "{said:?}"
     );
+}
+
+#[test]
+fn a_priestess_calls_forth_demons_that_stand_with_the_drow() {
+    use crate::action::parse_actions;
+    let mut w = range(
+        "##########\n#@.....p.#\n##########\n",
+        "\"p\" = { terrain = \"floor\", creature = \"drow_priestess\" }",
+    );
+    for action in parse_actions("wait*10").expect("actions") {
+        w.apply(&action);
+    }
+    let drow = w.content().factions().id("drow");
+    let priestess = w.content().creature_id("drow_priestess").expect("type");
+    let by = (w.state().actors.values())
+        .find(|a| a.creature == priestess)
+        .expect("the priestess")
+        .id;
+    let called: Vec<_> = (w.state().actors.values())
+        .filter(|a| a.summoner == Some(by))
+        .collect();
+    assert!(!called.is_empty(), "she summoned");
+    assert!(called.len() <= 4, "{} demons", called.len());
+    for a in &called {
+        let def = w.content().creature(a.creature);
+        assert!(def.tags.iter().any(|t| t == "demon"), "{}", def.id);
+        assert_eq!(a.faction(w.content()), drow, "{} joins the drow", def.id);
+    }
+    let said: Vec<String> = w.messages().iter().map(|m| m.display()).collect();
+    assert!(said.iter().any(|m| m.contains("calls forth")), "{said:?}");
 }
 
 #[test]
