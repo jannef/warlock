@@ -334,7 +334,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   "Combat") and Protection beside it on the same row (`Pv  Protection  3`; the total only),
   their combat stance by name (`Stance  Neutral`; §8 "Stances"), a row per alternative resource
   they hold, under it (`Rage  11/20`, in resource order; §8 "Resources"), their alignment band
-  (`Alignment  Kind`; §8 "Alignment"; never the score), the status effects
+  (`Alignment  Kind`; §8 "Alignment"; never the score), a row per guild they belong to with their
+  rank, the title in its metal's colour (`Guild  Tin of the Weyfarers' Gilde`; §8 "Quests",
+  "Guilds"; none before joining one), the status effects
   they suffer, by name, when there are any (`Status  Bleeding, Poisoned`; never how severe or for
   how long), what they resist, in words only, a row per word when there is anything to tell
   (`Immune to  poison`, `Resistant to  fire, cold`, `Vulnerable to  acid`, kinds in damage type

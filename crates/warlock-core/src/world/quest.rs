@@ -663,6 +663,7 @@ impl World {
     fn give(&mut self, id: ActorId, q: QuestId, topic: &str, events: &mut Vec<Event>) {
         let content = self.content.clone();
         let def = content.quest(q);
+        let standing = self.guild_standing();
         let roll = def.is_rolled().then(|| self.roll_quest(def)).flatten();
         let reached = match &def.goal {
             Goal::Reach { level } => self.state.levels.contains_key(level),
@@ -706,6 +707,7 @@ impl World {
             let who = capitalized(&self.called(&self.state.actors[&id]));
             self.say(format!("{who} gives you {}.", letter.describe(&content)));
         }
+        self.promote(&standing);
         let progress = self.progress_of(def);
         if given.kind() != QuestKind::Deliver && progress.0 >= progress.1 {
             self.say(progress_news(&content, &given, progress));
@@ -721,6 +723,7 @@ impl World {
             .given(&content, content.quest(q))
             .into_owned();
         let def = &given;
+        let standing = self.guild_standing();
         if let Some((object, count)) = def.hand_in() {
             let handed = self.take_from_pack(object, count);
             let what = object::phrase(&handed, self.lore());
@@ -763,6 +766,7 @@ impl World {
             self.say_news();
         }
         self.shift_alignment(self.state.player, def.alignment, Deed::Quest);
+        self.promote(&standing);
     }
 
     /// Takes `count` of `object` out of the player's pack (stacks not worn or wielded first, the
