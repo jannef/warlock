@@ -14,7 +14,7 @@ glyph = "e"
 fg = "#f4b0e0"
 speed = 1100
 faction = "drow"
-tags = ["drow", "caster", "priest"]
+tags = ["drow", "caster", "priest", "summoner"]
 alignment = "evil"
 race = "drow"
 vision = "darkvision"
@@ -26,6 +26,7 @@ hearing = 14
 weight = 57000
 stats = { strength = 28, dexterity = 24, toughness = 31, intelligence = 34, willpower = 34, presence = 34 }
 base_hp = 100
+mana = 60
 skills = { concentration = 130, spellcraft = 135 }
 resist = { poison = 50 }
 on_eat = { message = "Lean and bitter, with an aftertaste of old poisons.", vomit = 40 }
@@ -53,6 +54,17 @@ magic = 75
 [[creature.gear]]
 chance = 100
 one_of = ["gold_coin*20"]
+# The mightiest demons (every demon of level 30 to 50, uniques left out; the demons it calls
+# join the drow), 1d3 at a time, every 30 seconds while its mana lasts, 5 of them at most.
+[creature.summon]
+tag = "demon"
+levels = [30, 50]
+count = "1d3"
+cooldown = 30
+mana = 20
+most = 5
+verb = "calls forth"
+
 [[creature.particles]]
 on = "attack"
 glyphs = "·*+"
