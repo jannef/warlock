@@ -52,8 +52,8 @@ presence = 3
 # single door, not locked, nothing lying in it), so about one level in six has one.
 chance = 70
 names = [
-    "Grimbold", "Hilda", "Orvald", "Berengar", "Mirelle", "Tobias", "Ysolde", "Dunstan",
-    "Gerda", "Aldric", "Brannoc", "Wilhelmina", "Corwin", "Ottilie", "Fenwick", "Isolde",
+    "Grimbold", "Hilda", "Osmund", "Berengar", "Mildrith", "Tobias", "Ysolde", "Dunstan",
+    "Wulfgar", "Leofwine", "Brannoc", "Wilfrida", "Cuthbert", "Eadgyth", "Fenwick", "Isolde",
 ]
 bundle = [6, 15]
 
