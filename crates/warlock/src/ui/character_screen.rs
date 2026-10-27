@@ -190,7 +190,7 @@ impl CharacterScreen {
         });
         let birth = (view.character()).map_or(Vec::new(), |c| birth_parts(c, content, view.time()));
         let stars = (view.own_talents().into_iter())
-            .filter(|t| t.granted && !t.race)
+            .filter(|t| t.granted && !t.race && !t.boon)
             .map(|t| match t.spent {
                 true => format!("{} (spent)", t.name),
                 false => t.name,
