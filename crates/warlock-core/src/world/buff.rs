@@ -78,7 +78,7 @@ impl World {
             Action::Heal(_) => ActionKind::Heal,
             Action::Use(active, _) | Action::UseAt(active, _) => active.cost(),
             Action::Gift(active, _) => active.cost(),
-            Action::Cast(..) => ActionKind::Cast,
+            Action::Cast(..) | Action::CastOn(..) => ActionKind::Cast,
             Action::Sell(_)
             | Action::Pay(None)
             | Action::SetStance(_)

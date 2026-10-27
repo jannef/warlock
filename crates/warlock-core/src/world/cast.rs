@@ -25,7 +25,10 @@
 //!   ([`World::cast_bolt`]); a cone fans out from the caster ([`super::spell::cone_cells`],
 //!   drawn as a burst around the caster over its cells); a ray or a bolt flies to the first
 //!   creature on its line; a touch reaches one cell; a hex falls on the creature the caster sees
-//!   at the cell aimed at; self is the caster.
+//!   at the cell aimed at; self is the caster. A spell that identifies (Identify) asks for a
+//!   stack the caster carries instead of a cell (`use:identify:c`, [`Action::CastOn`]).
+//! - **Explicit costs**: a spell with its own `mana` (Identify) costs that, armour and talents
+//!   counted, whatever its tier ([`SpellRules::mana_with`]).
 //!
 //! A scroll read and a wand used cast through the same path at their own caster level, paid by
 //! the scroll or a charge instead of mana ([`World::read_cast`], [`World::wand_cast`]).
@@ -39,13 +42,14 @@
 //! (ascending actor id); a spell with no roll draws nothing.
 //!
 //! [`Action::Cast`]: crate::action::Action::Cast
+//! [`Action::CastOn`]: crate::action::Action::CastOn
 
 use super::spell::{Caster, burst_cells, capped, cone_cells};
 use super::talk::capitalized;
 use super::{Actor, ActorId, Cause, Spent, World};
 use crate::ability::{Ability, Unavailable};
 use crate::action::position_text;
-use crate::action::{AttackKind, Event, SpellShape};
+use crate::action::{AttackKind, Event, ReadTarget, SpellShape};
 use crate::combat::{self, Attack, Profile, Strike};
 use crate::content::{
     ActionKind, Bolt, Burst, Content, Resolution, Shape, SpellData, SpellPurpose, SpellRules,
@@ -149,12 +153,13 @@ fn damage_dice(
 }
 
 impl World {
-    /// `use:ID[:X,Y]` ([`crate::action::Action::Cast`]): the player casts the spell of id
-    /// `name`, at cell `at` if it asks for one (module docs).
+    /// `use:ID[:X,Y]` ([`crate::action::Action::Cast`]) and `use:ID:c`
+    /// ([`crate::action::Action::CastOn`]): the player casts the spell of id `name`, at the cell
+    /// or on the stack `target` if it asks for one (module docs).
     pub(super) fn cast_spell(
         &mut self,
         name: &str,
-        at: Option<Pos>,
+        target: Option<ReadTarget>,
         events: &mut Vec<Event>,
     ) -> Spent {
         let content = self.content.clone();
@@ -187,7 +192,7 @@ impl World {
             self.say("You have too little mana.");
             return Spent::Nothing;
         }
-        let Some(at) = self.cast_aim(def, at, &format!("use:{name}")) else {
+        let Some(target) = self.cast_aim(def, target, &format!("use:{name}")) else {
             return Spent::Nothing;
         };
         let me = self.state.player();
@@ -201,24 +206,36 @@ impl World {
             read: Cell::new(None),
         };
         let price = self.price_of(player, ActionKind::Cast) * i64::from(def.casts);
-        if self.perform(&cast, at, events) {
+        if self.perform(&cast, target, events) {
             Spent::Turn(price)
         } else {
             Spent::Nothing
         }
     }
 
-    /// The cell a cast of `def` goes to: `Some(None)` for a spell on oneself, `Some(at)` for an
-    /// aimed one given its cell; `None` (said, with `usage` the action text that would name
-    /// one) for an aimed spell without it.
-    fn cast_aim(&mut self, def: &SpellData, at: Option<Pos>, usage: &str) -> Option<Option<Pos>> {
-        match (def.aimed(), at) {
-            (true, None) => {
+    /// Where a cast of `def` goes: `Some(None)` for a spell on oneself, `Some(target)` for an
+    /// aimed one given its cell, or one on a stack given its stack; `None` (said, with `usage`
+    /// the action text that would name one) for one without what it asks.
+    fn cast_aim(
+        &mut self,
+        def: &SpellData,
+        target: Option<ReadTarget>,
+        usage: &str,
+    ) -> Option<Option<ReadTarget>> {
+        match (def.aims_item(), def.aimed(), target) {
+            (true, _, Some(ReadTarget::Item(on))) => Some(Some(ReadTarget::Item(on))),
+            (true, _, _) => {
+                self.say(format!(
+                    "Cast it on what? Name a stack you carry: `{usage}:c`."
+                ));
+                None
+            }
+            (false, true, Some(ReadTarget::Cell(at))) => Some(Some(ReadTarget::Cell(at))),
+            (false, true, _) => {
                 self.say(format!("Cast it where? Name a cell: `{usage}:12,5`."));
                 None
             }
-            (true, at) => Some(at),
-            (false, _) => Some(None),
+            (false, false, _) => Some(None),
         }
     }
 
@@ -230,7 +247,7 @@ impl World {
         &mut self,
         item: usize,
         (spell, level): (SpellId, u8),
-        at: Option<Pos>,
+        target: Option<ReadTarget>,
         events: &mut Vec<Event>,
     ) -> bool {
         let content = self.content.clone();
@@ -238,7 +255,8 @@ impl World {
             self.say("Nothing happens.");
             return false;
         };
-        let Some(at) = self.cast_aim(def, at, &format!("read:{}", position_text(item))) else {
+        let usage = format!("read:{}", position_text(item));
+        let Some(target) = self.cast_aim(def, target, &usage) else {
             return false;
         };
         let cast = Cast {
@@ -250,7 +268,7 @@ impl World {
             reach: self.state.player().spell_reach(&content, def),
             read: Cell::new(None),
         };
-        self.perform(&cast, at, events)
+        self.perform(&cast, target, events)
     }
 
     /// The player uses the wand in inventory stack `item`, which casts `spell` at caster level
@@ -278,18 +296,34 @@ impl World {
             reach: self.state.player().spell_reach(&content, def),
             read: Cell::new(None),
         };
-        self.perform(&cast, Some(at), events)
+        self.perform(&cast, Some(ReadTarget::Cell(at)), events)
     }
 
     /// Casts `cast` at `at` by its kind (module docs); whether it went off. A scroll read is
     /// said kept by Spell recall afterwards, and a death by it is put down to the scroll.
-    fn perform(&mut self, cast: &Cast<'_>, at: Option<Pos>, events: &mut Vec<Event>) -> bool {
+    fn perform(
+        &mut self,
+        cast: &Cast<'_>,
+        target: Option<ReadTarget>,
+        events: &mut Vec<Event>,
+    ) -> bool {
+        let at = match target {
+            Some(ReadTarget::Cell(at)) => Some(at),
+            _ => None,
+        };
         let done = match cast.def.kind {
             SpellPurpose::Buff => self.cast_buff(cast, events),
             SpellPurpose::Heal => self.cast_heal(cast, at),
             SpellPurpose::Cleanse => self.cleanse(cast, events),
             SpellPurpose::Hex => self.cast_hex(cast, at, events),
             SpellPurpose::Damage => self.cast_damage(cast, at, events),
+            SpellPurpose::Utility if cast.def.effect.identify => {
+                let on = match target {
+                    Some(ReadTarget::Item(on)) => Some(on),
+                    _ => None,
+                };
+                self.cast_identify(cast, on)
+            }
             SpellPurpose::Utility => {
                 self.say("Nothing happens.");
                 false
@@ -342,6 +376,39 @@ impl World {
         let severity = self.lengthened(cast.rules, severity);
         self.pay_cast(cast);
         self.afflict(player, status, severity, Some(player), events);
+        true
+    }
+
+    /// Identify: the truth of inventory stack `on` (spec §8 "Spells"), as the scroll of identify
+    /// told it ([`World::identify`]). Refused (said, `false`) without such a stack, or for one
+    /// whose truth is known. A scroll read on its own stack identifies nothing more: the read
+    /// named it.
+    fn cast_identify(&mut self, cast: &Cast<'_>, on: Option<usize>) -> bool {
+        let Some(on) = on else {
+            return false;
+        };
+        let Some(stack) = self.state.player().inventory.get(on) else {
+            self.say("You carry no such thing.");
+            return false;
+        };
+        if self.lore().knows(stack) {
+            let what = self.lore().describe(&stack.single());
+            self.say(format!("You already know what {what} is."));
+            return false;
+        }
+        let before = self.state.player().inventory.len();
+        self.pay_cast(cast);
+        // A scroll used up moves the stacks after it a place up.
+        let on = match cast.pay {
+            Pay::Scroll(item) if on == item => return true,
+            Pay::Scroll(item) if on > item && self.state.player().inventory.len() < before => {
+                on - 1
+            }
+            _ => on,
+        };
+        if matches!(self.identify(on), super::Identified::Now(_)) {
+            self.train_stat(crate::content::StatUse::Identified);
+        }
         true
     }
 

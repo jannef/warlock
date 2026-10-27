@@ -18,14 +18,6 @@ pub(super) fn scrolls(content: &Content) -> String {
     scrolls.sort_by_key(|(o, _)| o.name.to_lowercase());
     for (o, reading) in scrolls {
         let (what, damage, reach, sound) = match reading {
-            Reading::Identify => (
-                "Identifies one unidentified item you carry: you know its magic from then on, or \
-                 what kind of scroll an unknown one is"
-                    .to_string(),
-                "—".to_string(),
-                "—".to_string(),
-                "Silent".to_string(),
-            ),
             Reading::Cast(scroll) => {
                 let def = content.spell(scroll.spell);
                 let what = format!(
@@ -42,6 +34,7 @@ pub(super) fn scrolls(content: &Content) -> String {
                     },
                 );
                 let reach = match def.base_reach() {
+                    None if def.aims_item() => "an item you carry".to_string(),
                     None => "yourself".to_string(),
                     Some(1) => "next to you".to_string(),
                     Some(r) => format!("{r} cells"),

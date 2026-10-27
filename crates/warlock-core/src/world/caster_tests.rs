@@ -263,6 +263,7 @@ fn the_spells_are_abilities_by_tier() {
             "Arcane bolt",
             "Blight",
             "Frost",
+            "Identify",
             "Scorching ray",
             "Sleep",
             "Web",

@@ -1,7 +1,7 @@
 //! What reading does (`read` in an object's file, spec §8 "Scrolls"): a scroll casts a spell
-//! of `data/spells/` through the one cast path at its own caster level (`spell`), casts a burst
-//! or a bolt the reader aims with the traps' rules ([`super::spell`]), or identifies an item the
-//! reader carries.
+//! of `data/spells/` through the one cast path at its own caster level (`spell`; the scrolls of
+//! light and identify too), or casts a burst or a bolt the reader aims with the traps' rules
+//! ([`super::spell`]) and teaches a spell. Every scroll teaches a spell.
 //!
 //! ```toml
 //! [object.read]
@@ -11,7 +11,7 @@
 //!
 //! ```toml
 //! [object.read]
-//! kind = "burst"        # burst, bolt, spell, or identify
+//! kind = "burst"        # burst, bolt, or spell
 //! spell = "fireball"    # the effect presentation shows (data/effects.toml)
 //! noun = "fireball"     # what hits, for messages; verb what it does (default "hits")
 //! verb = "burns"
@@ -40,7 +40,6 @@ enum Kind {
     Burst,
     Bolt,
     Spell,
-    Identify,
 }
 
 /// `read` as an object's file writes it.
@@ -89,8 +88,6 @@ pub enum Reading {
     Spell(ScrollSpell),
     /// It casts a spell of `data/spells/` through the one cast path, and teaches it.
     Cast(SpellScroll),
-    /// It identifies one magic item the reader carries (spec §8 "Magic items").
-    Identify,
 }
 
 /// A scroll of a spell of `data/spells/` (spec §8 "Scrolls", "Spells"): read, it casts the
@@ -104,6 +101,9 @@ pub struct SpellScroll {
     /// How far the reader may aim it before Willpower (its data's reach); `None` for a spell on
     /// oneself, read without aiming.
     pub reach: Option<i32>,
+    /// Whether it is read on a stack the reader carries (Identify's scroll): the read list asks
+    /// which.
+    pub on_item: bool,
 }
 
 /// A spell a scroll casts: what, how far it reaches, and its words and noise.
@@ -138,15 +138,19 @@ impl Reading {
         match self {
             Reading::Spell(spell) => Some(spell.range),
             Reading::Cast(scroll) => scroll.reach,
-            Reading::Identify => None,
         }
+    }
+
+    /// Whether it is read on a stack the reader carries (the scroll of identify).
+    pub fn on_item(&self) -> bool {
+        matches!(self, Reading::Cast(scroll) if scroll.on_item)
     }
 
     /// The burst or bolt it casts, if it casts one.
     pub fn spell(&self) -> Option<&ScrollSpell> {
         match self {
             Reading::Spell(spell) => Some(spell),
-            Reading::Cast(_) | Reading::Identify => None,
+            Reading::Cast(_) => None,
         }
     }
 
@@ -155,7 +159,6 @@ impl Reading {
         match self {
             Reading::Spell(spell) => spell.teaches,
             Reading::Cast(scroll) => Some(scroll.spell),
-            Reading::Identify => None,
         }
     }
 }
@@ -167,7 +170,6 @@ impl ReadSpec {
         if kind == Kind::Spell {
             return self.spell_scroll(content);
         }
-        let spelled = matches!(kind, Kind::Burst | Kind::Bolt);
         let allowed = |field: &str, given: bool, ok: bool| {
             if given && !ok {
                 Err(format!("`read`: `{field}` is not for this kind of reading"))
@@ -176,27 +178,14 @@ impl ReadSpec {
             }
         };
         let burst = kind == Kind::Burst;
-        allowed("spell", self.spell.is_some(), spelled)?;
-        allowed("noun", self.noun.is_some(), spelled)?;
-        allowed("verb", self.verb.is_some(), spelled)?;
-        allowed("damage", self.damage.is_some(), spelled)?;
-        allowed("damage_type", self.damage_type.is_some(), spelled)?;
-        allowed("noise", self.noise.is_some(), spelled)?;
         allowed("radius", self.radius.is_some(), burst)?;
         allowed("range", self.range.is_some(), burst)?;
         allowed("blast", self.blast.is_some(), burst)?;
         allowed("heat", self.heat, burst)?;
         allowed("frost", self.frost.is_some(), burst)?;
         allowed("length", self.length.is_some(), kind == Kind::Bolt)?;
-        allowed("teaches", self.teaches.is_some(), spelled)?;
         if self.message.as_ref().is_some_and(|m| m.trim().is_empty()) {
             return Err("`read`: `message` must not be empty".into());
-        }
-        if kind == Kind::Identify {
-            if self.message.is_some() {
-                return Err("`read`: identify says what it found, no `message`".into());
-            }
-            return Ok(Reading::Identify);
         }
         if let Some(noise) = self.noise
             && !(1..=MAX_LOUDNESS).contains(&noise.loudness)
@@ -297,6 +286,7 @@ impl ReadSpec {
             spell,
             level: def.scroll_level.unwrap_or(comfortable),
             reach: def.base_reach(),
+            on_item: def.aims_item(),
         }))
     }
 }

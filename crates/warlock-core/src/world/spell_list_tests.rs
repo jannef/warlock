@@ -194,8 +194,10 @@ fn every_spell_comes_on_one_scroll_and_every_scroll_names_a_spell() {
         // Loot by tier: the lower the tier, the sooner and the commoner.
         assert!(scroll.frequency > 0, "{} is loot", scroll.id);
     }
+    // The scroll of identify keeps its own loot (the commonest scroll, #592), whatever its tier.
     let by_tier = |tier: u8| {
         (content.object_defs().iter())
+            .filter(|o| o.id != "scroll_of_identify")
             .filter_map(|o| Some((o, content.spell(o.read.as_ref()?.teaches()?))))
             .filter(|(_, s)| s.tier == tier)
             .map(|(o, _)| (o.level, o.frequency))
