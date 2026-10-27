@@ -3,7 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  There are several objects here. (×2)
- You pick up a willow wand and a holly wand.
+ You pick up a yew wand and a cedar wand.
 
 
 
@@ -12,9 +12,9 @@ expression: "render(case, content.clone())"
 
                   ┌─ Item ───────────────────────────────────────────────────────┐
                   │                                                              │
-                  │ - Willow wand                                                │
+                  │ - Yew wand                                                   │
                   │                                                              │
-                  │ Willow wand · wood · 200 g                                   │
+                  │ Yew wand · wood · 200 g                                      │
                   │                                                              │
                   │ Readied: missile weapon                                      │
                   │                                                              │

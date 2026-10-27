@@ -15,7 +15,7 @@ expression: "render(case, content.clone())"
     │   a - ) a dagger (+0 hit, 1d4, range 5) (unpaid, 47 gold)                        450 g  │
     │   b - ) a short sword (+0 hit, 1d6) (unpaid, 78 gold)                           1.1 kg  │
     │ Scrolls                                                                                 │
-    │   c - ? a scroll of light                                                         50 g  │
+    │   c - ? a scroll labelled ULVENZIM                                                50 g  │
     │ Coins                                                                                   │
     │   d - $ 60 gold coins                                                            600 g  │
     │                                                                                         │

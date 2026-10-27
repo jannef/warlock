@@ -215,6 +215,9 @@ fn dropping_ones_own_gets_an_offer_and_selling_takes_it() {
     let (player, keeper) = (w.player_id(), keeper(&w));
     let (purse, till) = (gold(&w, player), gold(&w, keeper));
     let scroll = object(&w, "scroll_of_light");
+    // Not yet read, so known by its label (spec §8 "Scrolls").
+    let named = w.lore().describe(&scroll);
+    assert!(named.starts_with("a scroll labelled "), "{named}");
     let f = favour(w.content(), shops(&w), w.state.player());
     let offer = shops(&w).offer(w.content(), shop(&w).kind, &scroll, f);
     assert!(
@@ -233,7 +236,7 @@ fn dropping_ones_own_gets_an_offer_and_selling_takes_it() {
     assert!(!dropped.took_turn);
     assert_eq!(
         last(&w),
-        format!("Grimbold offers {offer} gold for a scroll of light.")
+        format!("Grimbold offers {offer} gold for {named}.")
     );
     assert_eq!(w.perception().inventory().len(), 2);
     // Nobody buys the currency.
@@ -244,7 +247,7 @@ fn dropping_ones_own_gets_an_offer_and_selling_takes_it() {
     assert!(sold.took_turn, "selling takes a drop's time");
     assert_eq!(
         last(&w),
-        format!("You sell a scroll of light to Grimbold for {offer} gold.")
+        format!("You sell {named} to Grimbold for {offer} gold.")
     );
     assert_eq!(gold(&w, player), purse + offer);
     assert_eq!(gold(&w, keeper), till - offer);

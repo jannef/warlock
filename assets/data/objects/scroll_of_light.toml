@@ -1,3 +1,6 @@
+# A scroll of light (spec §8 "Scrolls", "Spells"): read it (`r`), and it casts Light, a
+# cantrip, at its own caster level, free of mana; study it (`L`), and you may learn the spell for
+# good. Level and frequency by its tier: the lower the tier, the commoner the scroll.
 [[object]]
 id = "scroll_of_light"
 name = "scroll of light"
@@ -9,3 +12,9 @@ materials = ["paper"]
 weight = 50
 value = 50
 stackable = true
+level = 1
+frequency = 60
+
+[object.read]
+kind = "spell"
+spell = "light"

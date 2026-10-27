@@ -23,9 +23,10 @@
 //! what the player sees: "You read the scroll of fireball.", the scroll's message ("The fireball
 //! explodes!"), then what it did to whom ("The fireball burns the kobold.", "The kobold dies.").
 //!
-//! **The scroll of identify** identifies one unidentified stack the player carries
-//! ([`World::identify`]): "This is a Sharp long sword of the Bear!", or the type of a scroll
-//! still under its label.
+//! **Scrolls of spells** cast a spell of `data/spells/` through the one cast path
+//! ([`World::read_cast`]), the scrolls of light and identify too: the scroll of identify casts
+//! Identify on one unidentified stack the player carries ([`World::identify`]): "This is a
+//! Sharp long sword of the Bear!", or the type of a scroll still under its label.
 //!
 //! **Unknown scrolls** ([`crate::scroll_label`]) read just as known ones do; the read names the
 //! scroll by its label ("You read the scroll labelled ZUNBAR.") and identifies its type ("It is a
@@ -63,11 +64,6 @@ impl World {
             return Spent::Nothing;
         };
         match (reading, target) {
-            (Reading::Identify, Some(ReadTarget::Item(on))) => self.read_identify(item, on),
-            (Reading::Identify, _) => {
-                self.say("Read it on what? Name a stack you carry: `read:a:b`.");
-                Spent::Nothing
-            }
             (Reading::Spell(spell), Some(ReadTarget::Cell(at))) => {
                 self.read_spell(item, spell, at, events)
             }
@@ -75,49 +71,25 @@ impl World {
                 self.say("Read it at what? Name a cell to aim at: `read:a:12,5`.");
                 Spent::Nothing
             }
-            (Reading::Cast(_), Some(ReadTarget::Item(_))) => {
+            (Reading::Cast(scroll), Some(ReadTarget::Cell(_)) | None) if scroll.on_item => {
+                self.say("Read it on what? Name a stack you carry: `read:a:b`.");
+                Spent::Nothing
+            }
+            (Reading::Cast(_), Some(ReadTarget::Item(_))) if !reading.on_item() => {
                 self.say("Read it at what? Name a cell to aim at: `read:a:12,5`.");
                 Spent::Nothing
             }
             (Reading::Cast(scroll), target) => {
-                let at = match target {
-                    Some(ReadTarget::Cell(at)) => Some(at),
-                    _ => None,
-                };
                 // Priced as the reading begins, with the scroll still in the pack.
                 let price = self.read_price();
                 let cast = (scroll.spell, scroll.level);
-                if self.read_cast(item, cast, at, events) {
+                if self.read_cast(item, cast, target, events) {
                     Spent::Turn(price)
                 } else {
                     Spent::Nothing
                 }
             }
         }
-    }
-
-    /// Reads the scroll of identify in inventory stack `item` on inventory stack `on`.
-    fn read_identify(&mut self, item: usize, on: usize) -> Spent {
-        let Some(stack) = self.state.player().inventory.get(on) else {
-            self.say("You carry no such thing.");
-            return Spent::Nothing;
-        };
-        if self.lore().knows(stack) {
-            let what = self.lore().describe(&stack.single());
-            self.say(format!("You already know what {what} is."));
-            return Spent::Nothing;
-        }
-        let price = self.read_price();
-        let scroll = self.state.player().inventory[item].single();
-        self.say_read(&scroll);
-        // Identified first: using the scroll up may move the stack it was read on.
-        if matches!(self.identify(on), super::Identified::Now(_)) {
-            self.train_stat(StatUse::Identified);
-        }
-        if self.use_up(item).is_some_and(|(_, kept)| kept) {
-            self.say(KEPT);
-        }
-        Spent::Turn(price)
     }
 
     /// Reads the spell scroll in inventory stack `item`, `spell`, at cell `at`.

@@ -497,11 +497,17 @@ mod tests {
             ),
             "{scrolls}"
         );
-        assert!(scrolls.contains("| Scroll of identify `?` | Identifies one unidentified item"));
         assert!(
-            !scrolls.contains("Scroll of light `"),
-            "nothing to read on it yet"
+            scrolls.contains("| Scroll of identify `?` | Casts Identify at caster level 6"),
+            "{scrolls}"
         );
+        assert!(scrolls.contains("| an item you carry |"), "{scrolls}");
+        assert!(
+            scrolls.contains("| Scroll of light `?` | Casts Light at caster level 1"),
+            "{scrolls}"
+        );
+        assert!(text("lights.md").contains("| You, while Lit | 6 cells | visible |"));
+        assert!(text("status-effects.md").contains("You shed light 6 cells around you"));
         assert!(
             text("moons.md").contains(
                 "| Moon | 30 days | standard | about 17% of full light | 1 Frostmere, Year 1 |"

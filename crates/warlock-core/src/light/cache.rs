@@ -22,6 +22,8 @@ const GLOW: u64 = 1 << 61;
 const RADIANCE: u64 = 1 << 60;
 /// Extra key tag for the light an actor always sheds (Inner light).
 const INNER: u64 = 1 << 59;
+/// Extra key tag for the light of a status that sheds one (Lit, the Light spell's).
+const LIT: u64 = 1 << 58;
 /// The sun's key: the lantern tag without the carried tag, which no other source has (static
 /// keys have both tags clear).
 pub(crate) const SUN_KEY: u64 = LANTERN;
@@ -283,6 +285,18 @@ impl LevelLights {
                         preset,
                     });
                 }
+            }
+            // The light of a status that sheds one (Lit, spec §8 "Scrolls"): the brightest.
+            let radius = |id: LightId| content.light(id).radius;
+            let lit = (actor.effects.iter())
+                .filter_map(|e| content.status(e.status).light)
+                .reduce(|best, id| if radius(id) > radius(best) { id } else { best });
+            if let Some(preset) = lit {
+                sources.push(Source {
+                    key: CARRIED | LIT | id,
+                    pos: actor.pos,
+                    preset,
+                });
             }
         }
         sources.retain(|s| !level.is_opaque(content, s.pos));

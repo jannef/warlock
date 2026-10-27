@@ -10,7 +10,7 @@ use crate::magic::LootGrade;
 use crate::replay::Replay;
 
 /// A lit hall, the player carrying: a, three scrolls of fireball; b, two of lightning; c, two of
-/// identify; d, a scroll of light.
+/// identify; d, a sealed letter (no reading).
 fn world(seed: u64) -> World {
     let mut files = ContentFiles::builtin();
     files.insert(
@@ -21,7 +21,7 @@ fn world(seed: u64) -> World {
     files.insert(
         "scenarios/hall.toml",
         "name = \"Hall\"\nstart_level = \"hall\"\nhp = 1000\ncarry = [\"scroll_of_fireball*3\", \
-         \"scroll_of_lightning*2\", \"scroll_of_identify*2\", \"scroll_of_light\"]\n",
+         \"scroll_of_lightning*2\", \"scroll_of_identify*2\", \"sealed_letter\"]\n",
     );
     let content = Arc::new(Content::load(&files).expect("test content is valid"));
     World::new(content, "hall", Some(seed)).expect("world")
@@ -76,8 +76,8 @@ fn every_readable_scroll_has_its_own_label_drawn_from_the_seed() {
     assert_ne!(w.labels, other.labels);
     let loaded = crate::save::decode(&crate::save::encode(&w), w.content.clone()).expect("loads");
     assert_eq!(loaded.labels, w.labels);
-    // A scroll that cannot be read has none: the scroll of light is known on sight.
-    assert_eq!(w.labels.get(id(&w, "scroll_of_light")), None);
+    // A scroll that cannot be read has none: a sealed letter is known on sight.
+    assert_eq!(w.labels.get(id(&w, "sealed_letter")), None);
 }
 
 #[test]
@@ -91,7 +91,7 @@ fn unknown_scrolls_show_by_their_labels_and_colour() {
             format!("3 scrolls labelled {fire}"),
             format!("2 scrolls labelled {}", label(&w, "scroll_of_lightning")),
             format!("2 scrolls labelled {ident}"),
-            "a scroll of light".to_string(),
+            "a sealed letter".to_string(),
         ]
     );
     let view = w.perception();
@@ -181,7 +181,7 @@ fn dev_identify_names_scroll_types_too() {
             "3 scrolls of fireball",
             "2 scrolls of lightning",
             "2 scrolls of identify",
-            "a scroll of light"
+            "a sealed letter"
         ]
     );
 }
