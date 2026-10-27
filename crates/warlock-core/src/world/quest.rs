@@ -802,8 +802,9 @@ impl World {
     /// The player killed a creature of type `creature` on level `level`: tallied, whatever the
     /// type (the design's B6: kill quests and the ranger's Favoured prey read it). The type
     /// killed most becomes the favoured prey once it is killed more often than the one before.
+    /// A family's members (animated blades) are tallied as one type, by the family's id.
     pub(super) fn tally_kill(&mut self, creature: crate::content::CreatureId, level: &str) {
-        let id = self.content.creature(creature).id.clone();
+        let id = self.content.family_key(creature).to_string();
         let quests = &mut self.state.quests;
         let kills = quests.kills.entry(level.to_string()).or_default();
         *kills.entry(id.clone()).or_default() += 1;
