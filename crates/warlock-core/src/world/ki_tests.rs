@@ -3,7 +3,7 @@
 //! five instead of a cooldown, Inspire grants Inspiration and spends three of it in place of its
 //! mana when they are held, and Virtuoso's song costs nothing.
 
-use super::class_active_tests::{beside, last, reach, run, suffers, world};
+use super::class_active_tests::{at_normal_speed, beside, last, reach, run, suffers, world};
 use super::*;
 use crate::ability::{Ability, Unavailable};
 use crate::action::parse_actions;
@@ -46,6 +46,7 @@ fn monk(level: u8) -> World {
     let mut w = world("monk");
     w.player_mut().equipment = Default::default();
     reach(&mut w, level);
+    at_normal_speed(&mut w);
     w
 }
 

@@ -236,8 +236,28 @@ Nothing new is saved but `SpecialRoom::side` (left out while `None`): the terrai
 of a spent or blown altar. The `rooms` dev layer adds `, side good` and `, spent`/`, destroyed`
 (`dump.rs::feature_state`). The showcase's `shrine` scenario has a good, a neutral, and an evil
 altar side by side. Talent: Devout (system `prayer`, `TalentMods::devout`; hook
-`leaned_kinds`). The great outcomes (`Actor::boons`, `World::lose_level`, the rarity floor) and
-Penitent come with #407.
+`leaned_kinds`).
+
+The great outcomes (#407, `world/boons.rs`; tests `world/boons_tests.rs`) are five more hooks,
+applied after `becomes`: `gift` (`Stats::gift` on a random stat), `wrath` (`Stats::lessen`,
+floor `DRAIN_FLOOR`, then stat damage clamped and `keep_hp_within_max`), `levels` (positive:
+`gain_level`, `add_xp` to the next threshold exactly, unscaled by Good learner; negative:
+`World::lose_level`), `talent` (Chosen: `talent::offers` flattened to the ways not held, one
+drawn, `bestow`: `Talents::take`, `class::hand_out`, `train_chosen`, and pushed to
+`Actor::boons`), and `flaw` (Forsaken: the `flaw` talents not held, by id, one drawn, given
+likewise); `rarity` (`magic`/`rare`, only with `loot`) is the relic's floor, the `LootGrade`
+`loot::roll_with` takes. `Actor::boons` (saved, left out while empty) is read by
+`stars::grant`, which passes its ids to `Talents::regrant` beside the race's and the sign's
+(the flaws, being granted, are dropped and put back there) and `Talents::hold`s the rest.
+`World::lose_level` takes the experience to `threshold_for(level - 1)`, the level's
+`level_hp` (up to `hp_level`), the talents' `hp_at`/`mana_at` growth, Hardened's, and
+`level_mana` (up to `mana_level`) off the bases (hit points never below 1), drops `Due`s of
+that level and above, and raises `Progress::peak` (saved, left out at 0): `level_up` gives a
+level up to `peak` its hit points and mana again but no `Due`, no stat checks, and no class
+news. Penitent (`TalentMods::penitent`) is read in `prayer_answered`: a drawn outcome of kind
+bane and tier great is replaced by `draw_in(table, nothing)`. Perception's `OwnTalent::boon`
+marks them: `(altar)`/`(altar, flaw)` in the talents dump, "altar" on the Talents page, left
+out of the character screen's sign gifts; JSON adds `boon: true` only then.
 
 ## Shrines of a side
 
@@ -490,7 +510,8 @@ System `special_rooms` (`data/talents.toml`): Sense of place (wayfarer, `sense_o
 `collapse_proof`; hook `World::collapse_step`, which then draws nothing), Hoard-wise (delver,
 Intelligence 11, `hoard_grace` 1; hook `World::lift_in_hoard`), and Grave warden (guard, Willpower 12,
 `grave_warden`; hook `World::curse_corpse`). The class ability Consecrate (above) carries the
-system too. System `prayer`: Devout (wayfarer, `devout`; hook `world/outcome.rs::leaned_kinds`).
+system too. System `prayer`: Devout (wayfarer, `devout`; hook `world/outcome.rs::leaned_kinds`) and Penitent
+(grit, Willpower 12, `penitent`; hook `world/pray.rs::prayer_answered`).
 
 ## Tests
 

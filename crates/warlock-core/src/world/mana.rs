@@ -125,7 +125,7 @@ impl World {
     /// least 0 (the progression design, `docs/design/progression.md` §3.7). The stats as what
     /// the player wears raises them, not as a status lowers them: the penalty passes, this mana
     /// stays.
-    fn level_mana(&self, content: &Content) -> i32 {
+    pub(super) fn level_mana(&self, content: &Content) -> i32 {
         let class_mana = match &self.state.character {
             Some(c) => c.spec.class(content).map_or(0, |class| class.mana),
             None => content

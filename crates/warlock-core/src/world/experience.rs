@@ -32,6 +32,11 @@ pub struct Progress {
     /// The choices levels still ask for, the lowest level's first (`world/talent.rs`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub(crate) due: Vec<Due>,
+    /// The highest level the player has lost (spec §7 "Special rooms": Unmade,
+    /// `World::lose_level`): a level up to it, gained again, gives back its hit points and mana
+    /// but not its choices, which were made the first time. 0: none lost.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub(crate) peak: u8,
     /// The creature types (by id) of animal factions a Beast-friend has attacked, which stand
     /// toward them as their faction does again (`world/beast_friend.rs`).
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
@@ -50,6 +55,7 @@ impl Progress {
     pub fn is_empty(&self) -> bool {
         self.discovered.is_empty()
             && self.due.is_empty()
+            && self.peak == 0
             && self.empathy_broken.is_empty()
             && self.once.is_empty()
             && self.uniques.is_empty()
@@ -59,6 +65,10 @@ impl Progress {
     pub fn happened(&self, what: &str) -> bool {
         self.once.contains(what)
     }
+}
+
+fn is_zero(n: &u8) -> bool {
+    *n == 0
 }
 
 /// What the player has been rewarded for discovering.
@@ -89,7 +99,7 @@ impl World {
 
     /// The player's experience factor: their race's and their class's (100 % without a
     /// character).
-    fn experience_factor(&self) -> Factor {
+    pub(super) fn experience_factor(&self) -> Factor {
         let spec = self.state.character.as_ref().map(|c| &c.spec);
         Factor::of(&self.content, spec)
     }
@@ -148,14 +158,21 @@ impl World {
     /// ([`World::level_up`]).
     pub(super) fn grant_xp(&mut self, gain: u32) {
         let content = self.content.clone();
-        let rules = content.experience();
-        let before = self.player_level();
         if gain == 0 {
             return;
         }
         let percent = self.state.player().talent_mods(&content).xp_percent;
         let gain = TalentMods::scaled(u64::from(gain), percent);
         let gain = u32::try_from(gain).unwrap_or(u32::MAX).max(1);
+        self.add_xp(gain);
+    }
+
+    /// The player gains exactly `gain` experience, and any levels that earns (no talent
+    /// scales it: [`World::grant_xp`] has).
+    pub(super) fn add_xp(&mut self, gain: u32) {
+        let content = self.content.clone();
+        let rules = content.experience();
+        let before = self.player_level();
         self.state.experience = self.state.experience.saturating_add(gain);
         let after = self.player_level();
         if after == before {
