@@ -17,7 +17,7 @@
 
 use super::{ActorId, World};
 use crate::action::AttackKind;
-use crate::combat::{Blow, Strike};
+use crate::combat::{Blow, Category, Strike};
 use crate::content::StatUse;
 use crate::hunger::Hunger;
 use crate::rng::Rng;
@@ -44,27 +44,57 @@ impl World {
     /// The player made use `used` of their stats: each rule for it gives its stat a mark with
     /// the rule's chance (a draw of the training stream below 100). Nothing is said.
     pub(super) fn train_stat(&mut self, used: StatUse) {
+        self.train_stat_times(used, None, 1);
+    }
+
+    /// [`World::train_stat`] `count` times over (a potion's marks): each rule for `used` gives
+    /// its stat, or `named` for a use that names its own (a potion's), up to `count` marks, each
+    /// with the rule's chance: one draw of the training stream per mark below 100, none at 100
+    /// (as a single use). Marks saturate at `u16::MAX`.
+    pub(super) fn train_stat_times(&mut self, used: StatUse, named: Option<Stat>, count: u16) {
         if self.state.death.is_some() || !self.trains_stat(used) {
             return;
         }
         let content = self.content.clone();
         for rule in content.stat_training().rules(used) {
-            if rule.chance < 100 && !self.state.training.chance(u32::from(rule.chance)) {
+            let Some(stat) = rule.stat.or(named) else {
                 continue;
-            }
+            };
+            let won = match rule.chance {
+                100.. => count,
+                chance => (0..count)
+                    .filter(|_| self.state.training.chance(u32::from(chance)))
+                    .count() as u16,
+            };
             let player = self.state.player;
             if let Some(actor) = self.state.actors.get_mut(&player) {
-                let marks = &mut actor.stat_marks[rule.stat];
-                *marks = marks.saturating_add(1);
+                let marks = &mut actor.stat_marks[stat];
+                *marks = marks.saturating_add(won);
             }
+        }
+    }
+
+    /// Actor `attacker`'s attack of `kind` killed `target`: a kill of the player's in melee of
+    /// a creature of their level or above trains Toughness.
+    pub(super) fn train_kill(&mut self, (attacker, target): (ActorId, ActorId), kind: AttackKind) {
+        let player = self.state.player;
+        if attacker != player || kind != AttackKind::Melee {
+            return;
+        }
+        let creature = self.actor_or_fallen(target).map(|a| a.creature);
+        let level = creature.map(|c| self.content.creature(c).level);
+        if level.is_some_and(|l| l >= self.player_level()) {
+            self.train_stat(StatUse::Killed);
         }
     }
 
     /// An attack by `attacker` on `target` of `kind` came to `blow` (before its damage is
     /// dealt): what it trains of the player's stats. A blow of theirs that hits up close
-    /// trains Strength (a shot or a throw Dexterity), and one that lands while they are Hungry
-    /// or worse Willpower; a blow on them that costs hit points trains Toughness, a big hit or
-    /// a critical more. (A dodge is the skills' report, `World::train`.)
+    /// trains Strength (a shot or a throw Dexterity), a critical up close Strength again, and
+    /// one that lands while they are Hungry or worse Willpower; a blow on them that costs hit
+    /// points trains Toughness, a big hit or a critical more; one their shield blocked
+    /// Strength, one their Parry turned Dexterity. (A dodge is the skills' report,
+    /// `World::train`.)
     pub(super) fn train_fight(
         &mut self,
         (attacker, target): (ActorId, ActorId),
@@ -74,7 +104,12 @@ impl World {
         let player = self.state.player;
         if attacker == player && blow.strike.is_hit() {
             match kind {
-                AttackKind::Melee => self.train_stat(StatUse::Blow),
+                AttackKind::Melee => {
+                    self.train_stat(StatUse::Blow);
+                    if blow.strike == (Strike::Hit { critical: true }) {
+                        self.train_stat(StatUse::Critical);
+                    }
+                }
                 AttackKind::Ranged | AttackKind::Thrown => self.train_stat(StatUse::Shot),
                 AttackKind::Spell => {}
             }
@@ -89,6 +124,17 @@ impl World {
             let critical = matches!(blow.strike, Strike::Hit { critical: true });
             if critical || crate::combat::big_hit(blow.damage, max) {
                 self.train_stat(StatUse::BigHit);
+            }
+        }
+        if target == player {
+            match blow.strike {
+                Strike::Missed {
+                    by: Some(Category::Shield),
+                } => self.train_stat(StatUse::Block),
+                Strike::Missed {
+                    by: Some(Category::Parry),
+                } => self.train_stat(StatUse::Parry),
+                _ => {}
             }
         }
     }

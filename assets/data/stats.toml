@@ -10,9 +10,15 @@
 #   chance is divided by `over_potential_divisor`, and a rise there lifts the potential with the
 #   score. A rise uses up all the stat's marks; a failed check keeps them.
 #
-# The uses (`on`): burdened, blow, dig, kick, dodge, shot, sneak, climb, hurt, big_hit, resisted,
-# plunge, found, read, identified, study, discovered, spot, endured, resisted_will, hungry_fight, chat,
-# trade, quest, swapped (the wiki's Stats page says each in words).
+# - A use that names its own stat (`drank`, `elixir`: the stat the potion names) has no `stat`;
+#   every other use has one. Such a use may give several marks at once (a potion's `marks`), each
+#   with the rule's chance.
+#
+# The uses (`on`): burdened, blow, critical, block, dig, kick, dodge, parry, shot, sneak, climb,
+# hurt, big_hit, killed, resisted, plunge, found, read, identified, study, discovered, spot,
+# endured, resisted_will, hungry_fight, cast, chat, trade, quest, swapped, drank, elixir (the
+# wiki's Stats page says each in words). The chances are first guesses
+# (docs/design/combat-progression.md §9.1).
 
 [training]
 need_base = 20
@@ -23,12 +29,22 @@ over_potential_divisor = 4
 [[training.use]]
 stat = "strength"
 on = "burdened"
-chance = 10
+chance = 15
 
 [[training.use]]
 stat = "strength"
 on = "blow"
-chance = 5
+chance = 15
+
+[[training.use]]
+stat = "strength"
+on = "critical"
+chance = 40
+
+[[training.use]]
+stat = "strength"
+on = "block"
+chance = 20
 
 [[training.use]]
 stat = "strength"
@@ -44,17 +60,22 @@ chance = 20
 [[training.use]]
 stat = "dexterity"
 on = "dodge"
-chance = 20
+chance = 30
+
+[[training.use]]
+stat = "dexterity"
+on = "parry"
+chance = 25
 
 [[training.use]]
 stat = "dexterity"
 on = "shot"
-chance = 10
+chance = 20
 
 [[training.use]]
 stat = "dexterity"
 on = "sneak"
-chance = 5
+chance = 10
 
 [[training.use]]
 stat = "dexterity"
@@ -65,12 +86,17 @@ chance = 50
 [[training.use]]
 stat = "toughness"
 on = "hurt"
-chance = 10
+chance = 20
 
 [[training.use]]
 stat = "toughness"
 on = "big_hit"
-chance = 50
+chance = 60
+
+[[training.use]]
+stat = "toughness"
+on = "killed"
+chance = 30
 
 [[training.use]]
 stat = "toughness"
@@ -91,7 +117,7 @@ chance = 50
 [[training.use]]
 stat = "intelligence"
 on = "read"
-chance = 30
+chance = 40
 
 [[training.use]]
 stat = "intelligence"
@@ -127,18 +153,18 @@ chance = 50
 [[training.use]]
 stat = "willpower"
 on = "hungry_fight"
-chance = 10
+chance = 20
 
 [[training.use]]
 stat = "willpower"
 on = "cast"
-chance = 20
+chance = 30
 
 # Presence: talking, trading, quests, others making way.
 [[training.use]]
 stat = "presence"
 on = "chat"
-chance = 20
+chance = 30
 
 [[training.use]]
 stat = "presence"
@@ -154,3 +180,13 @@ chance = 100
 stat = "presence"
 on = "swapped"
 chance = 10
+
+# Any stat: potions and elixirs (no `stat`: the one the potion names), each mark sure, as many
+# as the potion gives (its `marks`).
+[[training.use]]
+on = "drank"
+chance = 100
+
+[[training.use]]
+on = "elixir"
+chance = 100
