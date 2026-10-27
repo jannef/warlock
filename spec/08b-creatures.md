@@ -97,8 +97,28 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `[drops] pieces`, nothing of paper; its magic lost), with a line if the player sees it ("The
   silver candlestick breaks apart.", after the death line). Nothing can be
   stolen from one ("It is all of a piece.", no time). Talents (system `animated`): Salvager,
-  Unbinder (+1 to hit, +2 damage against a creature tagged `animated`). Blades, hollow armour,
-  and panoplies follow (#484 to #487, #463).
+  Unbinder (+1 to hit, +2 damage against a creature tagged `animated`).
+  **Blades** (#485) are a **family**: a tier with `levels` and no bodies generates one type
+  per level, `animated_blade_5` … `animated_blade_20`, all named "animated blade", numbered in a
+  row after the household types; the family's id `animated_blade` names its first member. Its
+  numbers are the quick role's: Dexterity +5, Toughness −2, hit points ×0.6, speed 1200 + 5L
+  (at most 1600), natural Defence 2 + L/10 ("thin edge"), piercing 50, bludgeoning −25, no
+  attack of its own, silent, uncommon, "falls in pieces". A blade **is** one melee weapon: its
+  tier's slot line (`main_hand`, class `melee_weapons`, 100 %) draws a base item among the
+  class's loot of level at most L by `frequency` (`loot::base_in`), then its grade, one draw:
+  rare by the tier's `rare` (from L15, 1 % a level, at most 5 %), else at least magic by its
+  `magic` (2 % a level, at most 40 %; a magic piece may come out rare by the rarity weights,
+  as loot's "magic or better" does), else plain of a material by the `gear` weights; a magic
+  or rare piece is made by `loot::make_as` at item level L. It is wielded in its slot (no
+  burden check), from the same streams as a household body; its rank in the weapon's skill is
+  `1 + L/10` (at most 8), set as it is placed (`animated::weapon_skills`, no draws). It fights
+  with the weapon as anyone does and is seen by it: the weapon's glyph in its material's colour
+  (the tier's `shown_by` slot and `item_glyph`); look mode's gear line names it unidentified.
+  A family is **one kind** wherever kinds are counted: one danger candidate (§7 "Danger
+  levels"), one first kill ("You learn something of animated blades.", once), the kill tally
+  and Favoured prey by the family's id, a kill quest naming `animated_blade` counts every
+  member, a `tag:` objective and a rolled kill quest's pool name it once. Cealdhlāw and Fyrdelf
+  list it. Hollow armour and panoplies follow (#486, #487, #463).
 - **Creature gear** (`warlock-core/src/gear.rs`, the rolls; `content/gear.rs`, the data; #328,
   campaign design §10.3): a creature type may have a `racial_weapon` (a weapon it must have a
   rank in: the affinity is the rank, which combat applies) and `[[creature.gear]]` lines
@@ -226,6 +246,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
     creatures. Every creature of the `undead` faction carries `undead` (a test sees to it), and
     every `combat = "caster"` type `caster`. Tags are never
     shown in the game; the wiki lists them.
+  - **Guilds** (`content/guild.rs`, the data; `world/guild.rs`, the ranks; #425, the guild
+    design §7.6): a guild (`data/guilds/`, a campaign's own) has a name, a master (who speaks
+    for it), and ranks, lowest first, each a title named by a material and reached as a quest
+    is *given* or *done*. The player's rank is the highest reached, **derived** from the quest
+    records (never saved), and a title only: no rule reads it. As a quest is given or handed in
+    and a rank rises, the master names the player to it, once ("Wat One-Eye names you a Tin of
+    the Weyfarers' Gilde."). The character screen shows it (§6), and the `stats` dump (`Guild
+    Weyfarers' Gilde, Tin`). The Ascmearc's is the Weyfarers' Gilde (§3b "Quests").
   - **Progress** the player's action made is said right after it: "Quest updated: 2 / 3 giant
     rats.", and once the goal is met "Quest updated: 3 / 3 giant rats. Return to the old hermit."
     (bring: "… apples. Return to the gardener." or "Take them to …"; reach: "Quest updated: you

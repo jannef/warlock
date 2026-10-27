@@ -194,7 +194,8 @@ and its thresholds),
 `equipment` (the player's slots), `stats`
 (the player's name, race, gender, and class, age, birth date, and sign with a lucky day's title,
 `Sign Wood Salamander, the Racer`, then their own scores as the rules read them, then
-their caster level, `Caster level 3`, then their alignment band, `Alignment Kind`, then
+their caster level, `Caster level 3`, then their alignment band, `Alignment Kind`, then each guild they belong to with their rank, `Guild
+Weyfarers' Gilde, Tin`, then
 `Effects Bleeding, Diseased` when they suffer any, then `Diseases filth fever`, the diseases they
 know they have, then what they resist in words, `Resistant to cold`, `Vulnerable to fire`,
 `Immune to poison`), `weapon_skills` (the player's
@@ -236,7 +237,7 @@ against 20, 15/144`, **dev-only**),
 strong light dazzles light-blind eyes, and the
 `temperature`; JSON dumps add `hp`, `mana` (`current`, `max`), `caster_level`, `resources` (the
 ones held: `id`, `current`, `max`), `defence`, `protection`, `resistances` (by damage type id, the
-word: `{"cold": "resistant"}`), `burden` (`level`, `limit`), `alignment` (the band's id), `hunger`, `dazzled`, `effects`
+word: `{"cold": "resistant"}`), `burden` (`level`, `limit`), `alignment` (the band's id), `guilds` (`id`, `name`, `rank`; left out before joining one), `hunger`, `dazzled`, `effects`
 (status ids), `diseases` (the known ones' ids), `death` (with `of`, the status that killed,
 `cause`, starving, choking, or a trap, and `trap`, the id of the trap that killed),
 `known_traps`, `known_locations` (`pos`, `name`), `temperature` (°C to a tenth), `weapon_skills` (by skill id:
@@ -322,6 +323,7 @@ file). Topics:
 - `docs/dev/animated.md` — animated objects: creature types generated at load, their bodies and streams, drops, immunities, the look
 - `docs/dev/npcs.md` — unique characters, chat and ask, rotation lines and mutters, displacement
 - `docs/dev/quests.md` — quest data and stages, hooks in kills, travel, and talk, the quest log
+- `docs/dev/guild.md` — guilds and their ranks: the data, the derived rank, the promotion hook, the Weyfarers' Gilde
 - `docs/dev/shops.md` — shop data, keepers, prices, buying, selling, theft, the shop dialogs
 - `docs/dev/stealing.md` — the Steal ability and action, the contest, what is taken, a caught thief, the alignment hook
 - `docs/dev/doors.md` — locks and keys, kicking, breaking, what creatures open

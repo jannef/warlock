@@ -71,8 +71,9 @@ id = "scholar"
 name = "Scholar"
 description = "Items, scrolls, gems, and learning."
 
-# Spells (the magic design, docs/design/magic.md §10): learning and casting them. Quick study is
-# its first talent (#396); #400 brings the rest.
+# Spells (the magic design, docs/design/magic.md §10): learning and casting them. Quick study
+# (#396), Overreach, and School focus (#400); Wand mastery comes with wands (#398), Channeler
+# with rods (#399).
 [[tree]]
 id = "spellcraft"
 name = "Spellcraft"
@@ -158,13 +159,12 @@ name = "Hit points, healing, regeneration"
 id = "mana"
 name = "Mana"
 
-# Spells (the magic design, docs/design/magic.md): tiers, caster level, learning, casting. Its
-# first talent is Quick study (#396); the rest of the Spellcraft tree comes with #400, which
-# removes the flag.
+# Spells (the magic design, docs/design/magic.md): tiers, caster level, learning, casting. The
+# Spellcraft tree (Quick study, Overreach, School focus), the casters' Empower, Archmage, and
+# Arcane training, and every class's spells (#400).
 [[system]]
 id = "spells"
 name = "Spells and caster level"
-pending = true
 
 # Alternative resources (#225): pools beside hit points and mana (Rage, Focus, Openings, Ki,
 # Inspiration); their talents are Battle trance, Inner calm, Steady hand, and Patient blade.

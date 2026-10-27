@@ -52,7 +52,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `spawn = { every, chance, cap }` (default `15m`, 60 %, cap the population). A creature type's
   `level` is its danger; a draw at danger *D* weighs a type of level *L* 4 at `D` and `D − 1`, 2
   at `D − 2` and `D − 3`, 1 down to `D − 8`, else 0 (above *D* too), uniform among equal weights
-  over the types sorted by id. **Strays and out-of-depth draws** (#375; both spawns and initial
+  over the types sorted by id. A **family** of animated types (§8 "Animated objects":
+  `animated_blade`, levels 5 to 20; a population names it by that id, and a member's id stands
+  for its family) is **one** candidate: it weighs as its member of level `clamp(D, from, to)`
+  and, drawn, gives that member (`danger::Candidate` carries the range; at danger 3 the blades
+  weigh nothing, at 15 they weigh as a level-15 type and give `animated_blade_15`, at 26 as
+  level 20, fading out by the same weights); out-of-depth draws clamp the deeper danger the
+  same way. **Strays and out-of-depth draws** (#375; both spawns and initial
   populations): with `stray` % a draw is made from the area's **generic creature list** instead
   of its population: every type that lives in some area with a danger (a branch's or a
   hand-made level's `population`) of the area's campaign or of none, uniques left out
