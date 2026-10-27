@@ -3,8 +3,8 @@
 An overview of what the game does today, feature by feature; the other pages explain the
 rules behind each.
 
-This is the engine and framework phase: creatures hunt you, fight, shoot, and die (spells are only
-announced so far), death is permanent, and you grow by experience levels and by skills that
+This is the engine and framework phase: creatures hunt you, fight, shoot, and die (their spells
+are only announced so far, though yours are real), death is permanent, and you grow by experience levels and by skills that
 improve with use. You come into **the Ascmearc** through a mountain pass that closes behind you
 (see [The Ascmearc](ascmearc.md)): an ADOM-like **overworld** with day and night and weather,
 outdoor areas generated from it, the market town of Cēaptūn, and procedurally generated
@@ -71,10 +71,17 @@ dungeons under the barrows, the fen, and the hills.
   bronze long sword" (heavier, a little weaker, cheaper), "a flint spear", "a dragonbone
   quarterstaff". Copper and bronze are common near the surface, steel deeper; kobolds carry
   bone, flint, and bronze.
-- **Scrolls** — read with `r`: scrolls of fireball, lightning, and frost cast the traps' spells
-  where you aim them (a fireball read too close asks first), and what they kill is yours; a
-  scroll of identify tells you what an unidentified item is. They lie in the dungeons and sell in
-  general stores.
+- **Scrolls** — found under labels ("a scroll labelled ZUNBAR") until you read or identify
+  one; read with `r`: every spell comes on a scroll that casts it once, free of mana, where you
+  aim it (a fireball read too close asks first), and what it kills is yours; studied with `L`, a
+  scroll teaches you its spell for good; a scroll of identify tells you what an unidentified item
+  is. They lie in the dungeons and sell in general stores.
+- **Magic** — spells of tiers 0 (cantrips) to 9, cast from the abilities menu for mana at your
+  caster level: a few come with a casting class, the rest are learned from scrolls, and one far
+  above your tier is hard to learn and can go badly wrong. Rays and bolts, cones, lines, and
+  bursts; every spell's damage is held to its tier's ceiling. Wands cast their spell from their
+  charges at their own caster level, for anyone; rods do what no spell does (digging, sleep,
+  terror, teleport other) for your own mana (see [Magic](magic.md)).
 - **People and talk** — Cēaptūn has folk to talk to: townsfolk on the square, Sister Hild in the
   Mynster, Godgifu at the inn, the reeve and the mine-factor. Chat with `C`: most say a
   one-liner, a different one each time; some have topics to ask about on a small dialogue
@@ -112,7 +119,7 @@ dungeons under the barrows, the fen, and the hills.
   stop healing, and can kill (creatures bleed to death too); strong poison saps Strength and
   Dexterity. The status bar names what ails you, look mode shows a creature bleeding; never a
   number. Hit points come back twice as fast while you rest.
-- **Mana** — a second pool beside your hit points, for the magic to come: from your race and
+- **Mana** — a second pool beside your hit points, for spells and rods: from your race and
   class, your Intelligence, Willpower, and Presence, your levels, and magic items. It comes back
   with time by your Willpower, faster while you rest or in a sanctuary, slower while poisoned or
   diseased, not at all while starving. The status bar shows it (`MP 5/12`).
