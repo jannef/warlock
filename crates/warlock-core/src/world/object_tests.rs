@@ -1,5 +1,6 @@
 //! Objects (spec §5, §6): piles, picking up and dropping, inventories, weights, and memory.
 
+use super::fixture_factions::peaceful_factions;
 use super::*;
 use crate::action::{Positions, parse_actions};
 use crate::content::ContentFiles;
@@ -43,34 +44,7 @@ const DOOR: Pos = Pos::new(6, 2);
 fn content() -> Arc<Content> {
     let mut files = ContentFiles::builtin();
     // At peace: the kobold only carries objects here; it neither hunts the player nor blocks them.
-    files.insert(
-        "data/factions.toml",
-        "[[faction]]\nid = \"player\"\nname = \"you\"\n\
-         [[faction]]\nid = \"vermin\"\nname = \"vermin\"\n\
-         [[faction]]\nid = \"kobolds\"\nname = \"kobolds\"\n\
-         [[faction]]\nid = \"goblins\"\nname = \"goblins\"\n\
-         [[faction]]\nid = \"orcs\"\nname = \"orcs\"\n\
-         [[faction]]\nid = \"undead\"\nname = \"undead\"\n\
-         [[faction]]\nid = \"marsh\"\nname = \"marsh things\"\n\
-         [[faction]]\nid = \"cult\"\nname = \"cultists\"\n\
-         [[faction]]\nid = \"hags\"\nname = \"hags\"\n\
-         [[faction]]\nid = \"duergar\"\nname = \"duergar\"\n\
-         [[faction]]\nid = \"giant\"\nname = \"giants\"\n\
-         [[faction]]\nid = \"troll\"\nname = \"trolls\"\n\
-         [[faction]]\nid = \"fire\"\nname = \"fire things\"\n\
-         [[faction]]\nid = \"demon\"\nname = \"demons\"\n\
-         [[faction]]\nid = \"elemental\"\nname = \"elementals\"\n\
-         [[faction]]\nid = \"animated\"\nname = \"animated things\"\n\
-         [[faction]]\nid = \"seelie\"\nname = \"Seelie court\"\n\
-         [[faction]]\nid = \"unseelie\"\nname = \"Unseelie court\"\n\
-         [[faction]]\nid = \"fiends\"\nname = \"fiends\"\n\
-         [[faction]]\nid = \"devil\"\nname = \"devils\"\n\
-         [[faction]]\nid = \"yugoloth\"\nname = \"yugoloths\"\n\
-         [[faction]]\nid = \"wildlife\"\nname = \"wildlife\"\n\
-         [[faction]]\nid = \"peaceful\"\nname = \"peaceful folk\"\n\
-         [[faction]]\nid = \"merchants\"\nname = \"merchants\"\n\
-         [[faction]]\nid = \"outraged\"\nname = \"outraged\"\nhostile = [\"player\"]\n",
-    );
+    files.insert("data/factions.toml", &peaceful_factions());
     files.insert("levels/store.toml", LEVEL);
     files.insert(
         "scenarios/store.toml",

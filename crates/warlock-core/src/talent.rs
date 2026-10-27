@@ -567,6 +567,10 @@ pub struct TalentMods {
     pub favoured_prey: (i32, i32),
     /// To hit and damage against creatures of a tag, by tag in the order taken (Unbinder).
     pub banes: Vec<(String, i32, i32)>,
+    /// To hit and damage against the creature types carrying each tag, by tag (Sworn foe).
+    pub sworn_foe: Vec<(String, i32, i32)>,
+    /// It is told when its quarry is on a level it arrives on (Quarry sense).
+    pub quarry_sense: bool,
     /// It places every sound it hears exactly (Tracker).
     pub exact_sounds: bool,
     /// Percent more loudness of its footsteps under the open sky (Camouflage).
@@ -1576,6 +1580,11 @@ impl TalentMods {
                 Some((_, hit, more)) => (*hit, *more) = (*hit + to_hit, *more + damage),
                 None => self.banes.push((tag, to_hit, damage)),
             },
+            TalentEffect::SwornFoe { to_hit, damage } => {
+                let tag = choice.unwrap_or_default().to_string();
+                self.sworn_foe.push((tag, to_hit, damage));
+            }
+            TalentEffect::QuarrySense => self.quarry_sense = true,
             TalentEffect::ExactSounds => self.exact_sounds = true,
             TalentEffect::SkyFootstepsPercent { value } => self.sky_footsteps_percent += value,
             TalentEffect::SilentUnburdened => self.silent_unburdened = true,

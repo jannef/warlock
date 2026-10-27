@@ -109,6 +109,12 @@ impl Rng {
         Self::stream(run_seed, &format!("gear/{key}"))
     }
 
+    /// The stream of quest `id`'s roll (spec §8 "Quests", #422): used once, as the quest is
+    /// given, never kept; only what it drew is saved.
+    pub fn quest(run_seed: u64, id: &str) -> Self {
+        Self::stream(run_seed, &format!("quest/{id}"))
+    }
+
     /// The court stream of actor `key` (spec §7 "Factions"): the faction a creature of a type
     /// with several draws when it is made, apart from every other stream, so a level is the
     /// same whichever court its fey joined.

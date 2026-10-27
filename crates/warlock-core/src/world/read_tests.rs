@@ -2,38 +2,12 @@
 //! reader, whose kills are theirs; the scroll of identify; refusals that keep the scroll; deaths
 //! by one's own scroll; loot; saves and replays.
 
+use super::fixture_factions::peaceful_factions;
 use super::*;
 use crate::action::{ReadTarget, SpellShape, parse_actions};
 use crate::content::{Cast, ContentFiles, Reading, TrapEffect};
 use crate::magic::{Affix, LootGrade, Magic, Rarity};
 use crate::replay::Replay;
-
-// At peace: nobody fights, so creatures stand where they spawned.
-const FACTIONS: &str = "[[faction]]\nid = \"player\"\nname = \"you\"\n\
-     [[faction]]\nid = \"vermin\"\nname = \"vermin\"\n\
-     [[faction]]\nid = \"kobolds\"\nname = \"kobolds\"\n\
-     [[faction]]\nid = \"goblins\"\nname = \"goblins\"\n\
-     [[faction]]\nid = \"orcs\"\nname = \"orcs\"\n\
-     [[faction]]\nid = \"undead\"\nname = \"undead\"\n\
-     [[faction]]\nid = \"marsh\"\nname = \"marsh things\"\n\
-     [[faction]]\nid = \"cult\"\nname = \"cultists\"\n\
-     [[faction]]\nid = \"hags\"\nname = \"hags\"\n\
-     [[faction]]\nid = \"duergar\"\nname = \"duergar\"\n\
-     [[faction]]\nid = \"giant\"\nname = \"giants\"\n\
-     [[faction]]\nid = \"troll\"\nname = \"trolls\"\n\
-     [[faction]]\nid = \"fire\"\nname = \"fire things\"\n\
-     [[faction]]\nid = \"demon\"\nname = \"demons\"\n\
-     [[faction]]\nid = \"elemental\"\nname = \"elementals\"\n\
-     [[faction]]\nid = \"animated\"\nname = \"animated things\"\n\
-     [[faction]]\nid = \"seelie\"\nname = \"Seelie court\"\n\
-     [[faction]]\nid = \"unseelie\"\nname = \"Unseelie court\"\n\
-     [[faction]]\nid = \"fiends\"\nname = \"fiends\"\n\
-     [[faction]]\nid = \"devil\"\nname = \"devils\"\n\
-     [[faction]]\nid = \"yugoloth\"\nname = \"yugoloths\"\n\
-     [[faction]]\nid = \"wildlife\"\nname = \"wildlife\"\n\
-     [[faction]]\nid = \"peaceful\"\nname = \"peaceful folk\"\n\
-     [[faction]]\nid = \"merchants\"\nname = \"merchants\"\n\
-     [[faction]]\nid = \"outraged\"\nname = \"outraged\"\nhostile = [\"player\"]\n";
 
 // A training dummy takes a lot and never fights back.
 const DUMMY: &str = "[[creature]]\nid = \"dummy\"\nname = \"training dummy\"\nglyph = \"D\"\n\
@@ -48,7 +22,7 @@ const PACK: &str = "carry = [\"scroll_of_fireball*3\", \"scroll_of_lightning*2\"
 /// hit points beyond their Toughness.
 fn world_with(map: &str, hp: u16) -> World {
     let mut files = ContentFiles::builtin();
-    files.insert("data/factions.toml", FACTIONS);
+    files.insert("data/factions.toml", &peaceful_factions());
     files.insert("data/creatures/dummy.toml", DUMMY);
     files.insert(
         "levels/hall.toml",

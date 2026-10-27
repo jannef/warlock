@@ -17,7 +17,7 @@ expression: "render(case, content.clone())"
               │   g  Opportunist      A foe that turns from you pays for it: one th… │
               │ Weaponcraft                                                          │
               │   h  Far shot         Your shots fly 2 cells farther, and what you … │
-              │   i  Unbinder         You strike at the binding, not the thing: you… │
+              │   i  Sworn foe        You have sworn yourself against one kind of c… │
               │   j  Weapon focus     You have drilled with one kind of weapon unti… │
               │ Guard                                                                │
               │   k  Armour training  You move freely in armour: it hampers your De… │

@@ -661,25 +661,38 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `deliver` (an object type the giver hands over; `to` required, not the giver); a field another
   type has is a content error. `reward = { gold, items, xp }` (each optional: gold coins, at most
   9999, which needs the `gold_coin` object; objects as levels place them; experience, at most
-  1 000 000). Texts, one line each of at most 280 characters, neither empty nor padded: `offer`,
-  `accept`, optional `decline` (default "Another time, then."), `reminder` (the giver's), and
-  `done` (said by whoever it is handed in to). Optional `requires` (a quest loaded before this
+  1 000 000). Texts, one line each of at most 280 characters, neither empty nor padded: `offer`
+  (said as it is given), optional `accept` (said after the offer, in the same reply), `reminder`
+  (the giver's), and `done` (said by whoever it is handed in to); there is no `decline` (#422:
+  quests are given, never declined). Instead of `target`, a kill or bring quest may draw it as
+  it is given (§8 "Quests", rolled quests): `pick = { creatures = [BRANCH, ...] }` (kill; the
+  non-unique types of those branches' populations), `pick = { tags = [TAG, ...] }` (kill),
+  `pick = { objects = { class = "scrolls", loot = true } }` (bring; `loot`: only what loot can
+  hold), or `[[quest.variant]]`s (`id`, `target`, `weight` 1 to 1000, default 1, and optional
+  `reveals`, `where`, `offer`, `accept`, `reminder`, `done`, each replacing the quest's own,
+  which may then be left out; at most 32); exactly one of `target`, `pick`, and variants. A
+  rolled quest's texts but its `name` may hold placeholders (`{target}`, `{targets}`,
+  `{a_target}`, `{count}`, `{members}`, `{branch}`, `{where}`, and capitalised forms); each is
+  checked filled with every target its pool can hold; a quest that is not rolled has none. A
+  kill of a unique type asks for 1. Optional `requires` (a quest loaded before this
   one, or a list of them, `["foremans_ledger", "barrow_heart"]`, all done before this one is
   offered), `requires_alignment` (the bands it is offered to, §8
   "Alignment": `{ min = "kind" }` Kind or better, `{ max = "callous" }` Callous or worse, or
   both; never neither, nor a `min` above the `max`), `alignment` (how far completing it moves the
   player's alignment, −1000 to 1000, default 0), `repeatable` (default false), `reveals = {
-  location = "ID", when = "accepted" }` (a hidden location of the overworld it reveals, §7
-  "Hidden locations", as it is `offered`, `accepted` (the default), or `done`; several quests
+  location = "ID", when = "given" }` (a hidden location of the overworld it reveals, §7
+  "Hidden locations", as it is `given` (the default) or `done`; several quests
   may reveal the same one, the first to get there does), and `where` (where its goal lies, in
   words, after the objective in the quest log; one line of at most 280 characters). Everyone's topics must fit
-  the dialogue screen's nine: their dialogue's own, one per quest they give or take in, and one
-  more for an offer's accept and decline. Built in: the old hermit's "Rats in the arena" (kill 3
+  the dialogue screen's nine: their dialogue's own, and one per quest they give or take in.
+  Built in: the old hermit's "Rats in the arena" (kill 3
   giant rats in the arena; 20 gold, 30 XP) and, after it, "Three levels down" (reach the Depths 3;
   50 gold, a jade amulet, 100 XP), the gardener's "Three apples" (bring 3 apples; 10 gold, 15
   XP), and the wandering bard's "The bard's letter" (deliver a sealed letter, a new object, to the
   old hermit; 5 gold, 15 XP). All four help someone, and are a little good (`alignment` 20, 15,
-  10, and 10). The Ascmearc's quests are §3b "Quests".
+  10, and 10). The gardener's "Words for the beds" is the test world's rolled quest (bring a
+  scroll loot can hold, drawn as it is given; 15 gold, 20 XP). The Ascmearc's quests are §3b
+  "Quests".
 - **Plurals** (`data/plurals.toml`, and a campaign's `data/plurals.toml`; optional; without it
   every plural is the word and an `s`): the plural dictionary, one `singular = "plural"` line
   per word that does not take a plain `s` (`wolf = "wolves"`, `undead = "undead"`,

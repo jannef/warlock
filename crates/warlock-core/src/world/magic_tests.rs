@@ -3,6 +3,7 @@
 //! else leaks them; items survive saves and replays; creatures drop loot and generated levels hold
 //! it, deterministically.
 
+use super::fixture_factions::peaceful_factions;
 use super::*;
 use crate::action::{AttackKind, Positions, parse_actions};
 use crate::combat::{self, Category, Profile};
@@ -32,34 +33,7 @@ map = '''
 fn content() -> Arc<Content> {
     let mut files = ContentFiles::builtin();
     // At peace: the kobold stands by.
-    files.insert(
-        "data/factions.toml",
-        "[[faction]]\nid = \"player\"\nname = \"you\"\n\
-         [[faction]]\nid = \"vermin\"\nname = \"vermin\"\n\
-         [[faction]]\nid = \"kobolds\"\nname = \"kobolds\"\n\
-         [[faction]]\nid = \"goblins\"\nname = \"goblins\"\n\
-         [[faction]]\nid = \"orcs\"\nname = \"orcs\"\n\
-         [[faction]]\nid = \"undead\"\nname = \"undead\"\n\
-         [[faction]]\nid = \"marsh\"\nname = \"marsh things\"\n\
-         [[faction]]\nid = \"cult\"\nname = \"cultists\"\n\
-         [[faction]]\nid = \"hags\"\nname = \"hags\"\n\
-         [[faction]]\nid = \"duergar\"\nname = \"duergar\"\n\
-         [[faction]]\nid = \"giant\"\nname = \"giants\"\n\
-         [[faction]]\nid = \"troll\"\nname = \"trolls\"\n\
-         [[faction]]\nid = \"fire\"\nname = \"fire things\"\n\
-         [[faction]]\nid = \"demon\"\nname = \"demons\"\n\
-         [[faction]]\nid = \"elemental\"\nname = \"elementals\"\n\
-         [[faction]]\nid = \"animated\"\nname = \"animated things\"\n\
-         [[faction]]\nid = \"seelie\"\nname = \"Seelie court\"\n\
-         [[faction]]\nid = \"unseelie\"\nname = \"Unseelie court\"\n\
-         [[faction]]\nid = \"fiends\"\nname = \"fiends\"\n\
-         [[faction]]\nid = \"devil\"\nname = \"devils\"\n\
-         [[faction]]\nid = \"yugoloth\"\nname = \"yugoloths\"\n\
-         [[faction]]\nid = \"wildlife\"\nname = \"wildlife\"\n\
-         [[faction]]\nid = \"peaceful\"\nname = \"peaceful folk\"\n\
-         [[faction]]\nid = \"merchants\"\nname = \"merchants\"\n\
-         [[faction]]\nid = \"outraged\"\nname = \"outraged\"\nhostile = [\"player\"]\n",
-    );
+    files.insert("data/factions.toml", &peaceful_factions());
     files.insert("levels/vault.toml", LEVEL);
     files.insert(
         "scenarios/vault.toml",

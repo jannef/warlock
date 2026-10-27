@@ -145,6 +145,8 @@ impl Burden {
 
 /// What an overloaded player is told when they try to move.
 pub const MOVE_REFUSED: &str = "You carry too much to move.";
+/// What a player is told who could move but would be overloaded where they step (a heavy hall).
+pub const HEAVY_REFUSED: &str = "You carry too much to go in there.";
 
 /// What an actor carries against what it can (spec §8 "Burden").
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
@@ -213,7 +215,9 @@ pub fn limit(strength: u8, toughness: u8, carry: u16) -> u64 {
 
 /// The load of `actor`. `race` is the player's race when the run has a character: it gives their
 /// size and whether Burdened costs them anything. Anyone else goes by its creature type's size.
-pub fn load(actor: &Actor, race: Option<&RaceDef>, content: &Content) -> Load {
+/// `room` is the percent of the limit the special rooms where the actor stands leave (a heavy
+/// hall's 50; `Here::burden`; 100 elsewhere).
+pub fn load(actor: &Actor, race: Option<&RaceDef>, content: &Content, room: u32) -> Load {
     let (size, ignores_burdened) = match race {
         Some(race) => (race.size, race.ignores_burdened),
         None => (content.creature(actor.creature).size, false),
@@ -239,16 +243,26 @@ pub fn load(actor: &Actor, race: Option<&RaceDef>, content: &Content) -> Load {
             .map(|s| s.weight(content))
             .sum(),
     };
+    let limit = with_carry(
+        base,
+        actor.mods(content).get(Effect::Carry) + talents.carry_kg,
+    );
     Load {
         carried,
-        limit: with_carry(
-            base,
-            actor.mods(content).get(Effect::Carry) + talents.carry_kg,
-        ),
+        limit: in_room(limit, room),
         // Porter and Steadfast (spec §8) shrug Burdened off as a dwarf does.
         ignores_burdened: ignores_burdened || talents.ignore_burdened || talents.steadfast,
         // Stout (a dwarf's talent): Strained costs what Burdened costs others.
         stout: talents.stout,
+    }
+}
+
+/// `limit` as a special room leaving `percent` of it leaves it (a heavy hall's 50 halves it),
+/// kept a multiple of 3 grams so the thirds stay exact.
+pub fn in_room(limit: u64, percent: u32) -> u64 {
+    match percent {
+        100 => limit,
+        p => limit * u64::from(p) / 100 / 3 * 3,
     }
 }
 

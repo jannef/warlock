@@ -14,14 +14,17 @@ indices (in the save fingerprint; new effects go at the end). Fields: `id`, `nam
 `needs_below`, `min_cells`, `max_cells` ([`RoomEffectDef::eligible`]), and what it does: `light`,
 `glow`, `noise`, `regen`, `mana_regen`, `shunned`, `floor`, `status` (a status id, resolved and
 checked at load: it must ease, at least `DWELL_EASES`, 10 s a degree; `RoomEffects::parse_with`
-takes the statuses' lookup, `parse` in tests none), and `temperature` (degrees Celsius added to
-the level's, -40 to 40, default 0). An effect with `level_chance` must have
+takes the statuses' lookup, `parse` in tests none), `temperature` (degrees Celsius added to
+the level's, -40 to 40, default 0), and `burden` (percent of the carrying limit, `BURDEN` 10 to
+1000, default 100). An effect with `level_chance` must have
 a `pervade` line and be neither `shunned` nor lay a `floor` (`RoomEffectDef::can_pervade`); a level
 file's `effect` is held to the same.
 
 Features today: shadowed (10), echoing (8), hushed (8), sanctuary (6), flooded (8), black chamber
 (5, `light = 0`), draining (6, `status = "ebbing"`, `level_chance` 5, #403), hot (5, "sweltering
-chamber", `temperature = 25`, #404), cold (5, "frigid hall", `temperature = -25`). Draining is the
+chamber", `temperature = 25`, #404), cold (5, "frigid hall", `temperature = -25`), silent vault
+(5, `silent`, `noise = 1`, `status = "silenced"`, #409), heavy (4, "heavy hall", `burden = 50`,
+#412). Draining is the
 first with a `level_chance` (cursed rooms bring theirs).
 
 A dungeon's `room_effects` (on a branch or a `[[dungeon.levels]]` range; `content/dungeon.rs`,
@@ -87,8 +90,22 @@ effect with a status: so it holds at every stretch, whatever cuts the time (the 
 rest's turns, a creature's coarse turn while the player rests, `stride.rs`, which may cost far
 more than `eases`). The design (§3.3) put it after each action; at the start of each stretch is
 the same for the player and holds through the coarse turns too. Leaving, the status eases by its
-own `eases` (Ebbing: 30 s). A creature holding a status is not idle, so it does not stride
+own `eases` (Ebbing: 30 s). `World::settle_in` (`rooms.rs`) dwells everyone on the current
+level at once as the player arrives there (`World::travel`) and as a run starts (`World::new`), so
+an actor standing in such a room holds its status before its first action (else a shaman standing
+in a silent vault on arrival would get one spell off). A creature holding a status is not idle, so it does not stride
 (`stride.rs`): creatures in a draining room take turn-by-turn (busy, slowed) turns in a rest.
+
+## The silent vault
+
+`silent` (design §9.1): `noise = 1` and `status = "silenced"`. Silenced (`data/status.toml`,
+beside Ebbing) has no tick and `blocks = ["cast", "read", "throw_voice"]`, so the existing block
+rules do the work: `World::refuse_blocked` refuses the player's casts, scrolls, and thrown voice
+with no time, the abilities menu greys out what costs them (`Unavailable::While`), and
+`World::spend_mana` spends nothing while casting is blocked. Creatures: `ai.rs::fight` lets a
+`Combat::Caster` cast only while its statuses do not block `cast`; silenced, it closes in and
+fights in melee like any other. Not a mana-only status, so creatures without mana hold it too
+(and so take turn-by-turn turns in a rest while inside, as with any status).
 
 ## Hot and cold rooms
 
@@ -107,6 +124,23 @@ plus its warmth, so a year's catch-up is still a few groups. A level with a hot 
 under the open sky does, so a cold room's pool is frozen when first seen; other underground
 levels do not, as before. Neither may pervade (no `level_chance`: a hot level is its
 `temperature`).
+
+## Heavy halls
+
+A room's `burden` scales every actor's carrying limit inside (design §9.9). `Here::burden`
+multiplies the effects' percents; `WorldState::load` (the one place the rules ask for a load,
+`docs/dev/burden.md`) passes it to `burden::load` for the actor's cell, and `burden::in_room`
+scales the finished limit (after talents and magic items), rounding down to a multiple of 3 g so
+the thirds stay exact. `PerceptionView::own_load` asks the player's cell the same way, so the
+status bar and the inventory agree with the rules. Every penalty follows from the load, and
+`burden_news` says the change after the step in or out (in `World::apply`, so before the
+room's `enter` line, which `perceive` says). Nothing
+is saved. `WorldState::load_at` is the load as it would be on another cell:
+`World::can_step_to` (`world/travel.rs`, the player's ordinary step) refuses a step onto a cell
+where the player would be Overloaded ("You carry too much to go in there.", or the usual line
+when they are Overloaded where they stand too), so a step in is refused rather than leaving them
+stuck, and a step out of a hall they overloaded themselves in is allowed. Edge exits, stairs, and
+creatures keep the load where they stand (`can_move`, `ai.rs`).
 
 ## What the player is told
 
@@ -135,8 +169,13 @@ System `special_rooms` (`data/talents.toml`): Sense of place (wayfarer, `sense_o
 `mapgen/fennmynster_tests.rs`, `world/room_tests.rs` (each effect in play, messages, pervading
 levels, the talents, saving), `world/dwell_tests.rs` (a room's status: Ebbing on the player and on
 creatures, not on one without mana, through a rest, over a drained level, eased after leaving,
-Anchored mind, saving), `content/room_temperature_tests.rs` (the field, its range, `Here::warmth`),
+Anchored mind, saving), `world/silent_tests.rs` (the silent vault: its data, the player's
+refusals and the easing, the hundredth of noise, creatures silenced and a shaman fighting in
+melee, silenced from the start, saving), `content/room_temperature_tests.rs` (the field, its range, `Here::warmth`),
 `world/room_temperature_tests.rs` (hot and cold rooms: the cells' temperature, the player's and
 the status bar's, no status, a cold room's pool frozen on a mild level and not beside it, ice
 melting in a hot room in a frost, the pre-roll only with such a room, alike however time passes,
-a year's catch-up).
+a year's catch-up), `content/room_burden_tests.rs` (the `burden` field, its range,
+`Here::burden`), `world/heavy_hall_tests.rs` (the heavy hall: the limit halved inside for the
+player and creatures, the messages in and out, perception agreeing, the step refused into
+Overloaded but always allowed out).

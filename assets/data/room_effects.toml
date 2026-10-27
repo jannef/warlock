@@ -49,6 +49,8 @@
 #   temperature  degrees Celsius added to the level's temperature inside, -40 to 40; default 0.
 #            The room sets its cells' temperature and nothing else: what the temperature does
 #            (ice today) is the environment's (spec §5 "Temperature"); the status bar shows it
+#   burden   percent of everyone's carrying limit inside, 10 to 1000; default 100 (a heavy
+#            hall's 50 halves it: what is carried weighs on one as if it were twice as heavy)
 
 chance = 12
 per_level = 1
@@ -132,3 +134,20 @@ enter = "Your breath mists in the bitter cold."
 weight = 5
 glow = [0, 8, 22, 0]
 temperature = -25
+
+[[effect]]
+id = "silent"
+name = "silent vault"
+mark = "v"
+enter = "Your footsteps make no sound at all."
+weight = 5
+noise = 1
+status = "silenced"
+
+[[effect]]
+id = "heavy"
+name = "heavy hall"
+mark = "w"
+enter = "Your pack drags at you, as if the stones pulled it down."
+weight = 4
+burden = 50

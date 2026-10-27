@@ -91,6 +91,7 @@ impl World {
             | Action::Resource(_)
             | Action::Infect(_)
             | Action::Reveal(_)
+            | Action::QuestRoll { .. }
             | Action::Talent { .. }
             | Action::Advance(_)
             | Action::LevelUpAuto

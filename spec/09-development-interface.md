@@ -32,10 +32,11 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   syntax (`move:E wait open:E close:W pick:E ascend descend lantern hood rest:1h rest:dawn rest:dusk
   pickup pickup:ac drop drop:b sell:b pay pay:W equip:body:b remove:body bash:E fire:12,5
   throw:c:12,5 eat:b
-  eat:floor:a dig:E search search:10 chat:E ask:E:rooms ask:E:quest-rats ask:E:accept-rats
+  eat:floor:a dig:E search search:10 chat:E ask:E:rooms ask:E:quest-rats
   throw_voice:12,5 vision:darkvision
   skip:1h weather:rain spawn stance:coward effect:fireball@12,5 effect:lightning_bolt@3,4>12,4
-  identify:a afflict:bleeding drain:5 infect:filth_fever reveal:fennmynster talent:hardy talent:weapon_focus:long_blades
+  identify:a afflict:bleeding drain:5 infect:filth_fever reveal:fennmynster
+  quest_roll:slug_charm:scroll_of_frost talent:hardy talent:weapon_focus:long_blades
   advance:stealth levelup:auto xp:2500 freeze:12,5,3 thaw:12,5,3`; `pick:DIR` tries
   the lock of the door that way (§8 "Doors"), `bash:DIR` bashes with the held shield that way, `dig:DIR` digs toward a direction until the wall gives way or
   something interrupts; `search` searches the cells around the player once, `search:N` for up to
@@ -43,7 +44,8 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   `throw:LETTER:X,Y` throws one of inventory stack LETTER there; `eat:LETTER` eats one of
   inventory stack LETTER, `eat:floor:LETTER` one of stack LETTER of the pile underfoot;
   `chat:DIR` talks to the creature that way, `ask:DIR:TOPIC` asks it about a topic by id (a
-  quest's: `quest-ID`, `accept-ID`, `decline-ID`); `hood` lowers or raises the lantern's hood;
+  quest's: `quest-ID`, which gives it, reminds, or hands it in; there is no accept or decline
+  topic, §8 "Quests"); `hood` lowers or raises the lantern's hood;
   `throw_voice:X,Y` throws the player's voice to level cell (X, Y); the dev
   action `effect:ID@X,Y[>X,Y]` shows spell effect ID (`data/effects.toml`) as the player perceives it, a
   burst around X,Y (around the second cell, flying there from the first) or a bolt from the first
@@ -66,6 +68,10 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   through `World::grant_resource`; no time; §8 "Resources"), and
   `infect:ID` makes them catch disease ID (`data/diseases.toml`); `reveal:ID` reveals hidden location ID
   of the overworld at once, as a quest would, marked on the map (§7 "Hidden locations"; no time);
+  `quest_roll:ID:TARGET` makes active rolled quest ID, while it has no progress, draw TARGET
+  instead (a target its pool can hold, wherever the player can go: a creature, `tag:` a tag, or
+  an object id; or a variant id), its kills counted from then and a variant's reveal made (§8
+  "Quests"; no time; refused otherwise);
   `spawn` makes one attempt to
   bring a creature to the current level now, whatever its cap and chance (§7 "Danger levels";
   refused at danger 0; no time); `talent:ID[:CHOICE]` takes a talent (an id in

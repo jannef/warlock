@@ -1566,7 +1566,8 @@ impl<'a> PerceptionView<'a> {
     /// What the player carries against what they can (spec §8 "Burden"): their burden, and the
     /// weights at which it changes, which follow from scores they know.
     pub fn own_load(&self) -> Load {
-        burden::load(self.player, self.own_race(), self.content)
+        let room = (self.level.effects_at(self.content, self.player.pos)).burden();
+        burden::load(self.player, self.own_race(), self.content, room)
     }
 
     /// The player's race, when the run has a character.

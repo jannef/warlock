@@ -33,6 +33,22 @@ impl World {
         movable
     }
 
+    /// Whether the player can step onto `to` under their load as it would be there: a heavy
+    /// hall halves the limit, so one may be unable to go in, yet always able to step out
+    /// (spec §7 "Special rooms"). If not, says so.
+    fn can_step_to(&mut self, to: Pos) -> bool {
+        let player = &self.state.actors[&self.state.player];
+        let there = self.state.load_at(&self.content, player, to).penalty();
+        if there.can_move() {
+            return true;
+        }
+        match self.load_of(self.state.player).penalty().can_move() {
+            true => self.say(burden::HEAVY_REFUSED),
+            false => self.say(burden::MOVE_REFUSED),
+        }
+        false
+    }
+
     /// Changes terrain on the current level and invalidates light masks it may affect. A lock
     /// stays only on a closed door, a door's trap goes with the door (kicked in), and a secret
     /// door is gone with the wall it looked like.
@@ -121,7 +137,7 @@ impl World {
             }
             swap = Some((target, seen));
         }
-        if !self.can_move() {
+        if !self.can_step_to(to) {
             return Spent::Nothing;
         }
         // Out of a shop's door owing anything: the keeper turns the player back (spec §7
@@ -369,6 +385,7 @@ impl World {
         // sense says how the place feels (spec §7 "Danger levels").
         self.arrive_spawner(to);
         self.sense_danger(to);
+        self.sense_quarry(to);
         // Sounds remembered on the level left say nothing about this one.
         self.state.recent_sounds.clear();
         if let Some(line) = self.content.arrival(to) {
@@ -377,6 +394,7 @@ impl World {
         if let Some(line) = super::rooms::pervade_line(&self.state, &self.content) {
             self.say(line);
         }
+        let _ = self.settle_in();
         Ok(())
     }
 
