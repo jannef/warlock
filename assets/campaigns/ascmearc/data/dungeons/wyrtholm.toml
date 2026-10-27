@@ -1,0 +1,32 @@
+# Wyrtholm, "the herb islet" (docs/design/adventurers-guild.md §8; the fields: data/dungeons.toml):
+# a hummock of firm ground out in Micelfenn, and the caves the water has hollowed under it, where
+# Mother Sallow, the Fennhām Poisoner, has gone to ground. Its way in on the overworld is hidden
+# until Wat One-Eye's "Wanted" names her (the quest's variant reveals it); the other three lairs
+# stay hidden for that run. Four floors, her still-room at the bottom.
+
+[[dungeon]]
+id = "wyrtholm"
+name = "Wyrtholm"
+arrival = "The air under the islet is thick with rot, and with something sweeter."
+generator = "caves"
+depth = 4
+size = [100, 40]
+traps = ["pit", "alarm"]
+hidden_per_depth = 1
+loot = [2, 4]
+# The fen's damp cold.
+temperature = 9
+# Danger 6 on the first floor to 9 on the fourth (spec §7 "Danger levels"): the fen's beasts and
+# things, which leave her be, and the footpads she pays in coin and worse.
+danger = 6
+population = [
+    "giant_leech", "giant_frog", "giant_centipede", "crocodile", "will_o_wisp", "footpad",
+    "mud_golem", "marsh_troll",
+]
+# No one trades on the islet (spec §7 "Shops").
+shops = { chance = 0 }
+
+# The bottom: her still-room.
+[[dungeon.levels]]
+from = 4
+vaults = ["still_room"]

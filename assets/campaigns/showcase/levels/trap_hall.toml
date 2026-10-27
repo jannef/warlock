@@ -101,6 +101,12 @@ objects = [
 at = [39, 19]
 objects = ["wand_of_magic_missile", "wand_of_fireball"]
 
+# Two rods one cell further east (spec §8 "Magic items": "Rods"), unknown until used or
+# identified: ready one in the missile weapon slot and `t` uses it, for mana.
+[[pile]]
+at = [40, 19]
+objects = ["rod_of_digging", "rod_of_sleep"]
+
 [[item]]
 at = [38, 19]
 object = "dagger"

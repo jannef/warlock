@@ -22,10 +22,11 @@ together), `factions` (faction ids, checked once the factions load,
 `Hoard::Corpses`); it needs `needs_danger` and can never pervade), `temperature` (degrees Celsius added to
 the level's, -40 to 40, default 0), `burden` (percent of the carrying limit, `BURDEN` 10 to
 1000, default 100), `mirrors` (`{ images = N }`, 1 to 8, `content::Mirrors`), `warp` (percent a
-step inside warps the stepper, 0 to 100, default 0), `rise` (`{ faction, after }`, `content::Rise`:
+step inside warps the stepper, 0 to 100, default 0), `collapse` (`{ chance, damage }`,
+`content::Collapse`: chance 0 to 100, damage dice; needs `needs_below`), `rise` (`{ faction, after }`, `content::Rise`:
 `after` a duration, `RISE_AFTER` 1 s to 1 h; needs `needs_danger`; the faction checked in
 `RoomEffects::check_factions`), and `unholy` (Consecrate lifts it). An effect with `level_chance` must have a
-`pervade` line and be neither `shunned` nor lay a `floor` nor hold `mirrors`
+`pervade` line and be neither `shunned` nor lay a `floor` nor hold `mirrors` nor `collapse`
 (`RoomEffectDef::can_pervade`); a level file's `effect` is held to the same.
 
 Features today: shadowed (10), echoing (8), hushed (8), sanctuary (6), flooded (8), black chamber
@@ -34,7 +35,9 @@ Features today: shadowed (10), echoing (8), hushed (8), sanctuary (6), flooded (
 #404), cold (5, "frigid hall", `temperature = -25`), silent vault
 (5, `silent`, `noise = 1`, `status = "silenced"`, #409), heavy (4, "heavy hall", `burden = 50`,
 #412), mirrors (3, "hall of mirrors", `max_cells = 80`, `mirrors = { images = 2 }`, #419), unstable (4, "unstable room", `warp = 10`, `max_cells = 60`, #411), beast den (5, mark `n`, `needs_danger`, `min_cells` 16, `swarm` with
-`factions = ["wildlife", "vermin", "marsh"]` and `hoard = "corpses"`, #410), cursed (6, mark
+`factions = ["wildlife", "vermin", "marsh"]` and `hoard = "corpses"`, #410), collapsed (3, "collapsed
+floor", mark `k` (`c` is the cold room's), `needs_below`, `floor = "cracked_floor"`, `collapse =
+{ chance = 15, damage = "2d6" }`, #420), cursed (6, mark
 `g`, `needs_danger`, `level_chance` 5, `rise = { faction = "undead", after = "2m" }`, `unholy`,
 #408). Draining (also `unholy`) and cursed are the ones with a `level_chance`.
 
@@ -289,6 +292,26 @@ before. An incorporeal creature (`ai.rs`, `phases`) never calls `step_onto_trap`
 warped. A creature's coarse strides in a rest (`stride.rs`) stop before a cell that warps, as
 before a trap, so it takes those steps turn by turn and may warp. Nothing is saved.
 
+## Collapsed floors
+
+`world/collapse.rs` (#420). `World::collapse_step(at)` is one line at the end of
+`travel.rs::player_moves`, after the step's trap and warp (`step_willingly`/`step_onto_trap`):
+only the player's moves, so creatures never fall and draw nothing. It returns at once, drawing
+nothing, unless `Here::collapse` (the room's only, never a pervading effect) holds at `at`, the
+player still stands there, the cell is the room's laid `floor` (cracked floor; a room's other
+cells never give way), the level has a down staircase whose `to` is set (`level_below`), and
+the player lacks Light tread (`TalentMods::collapse_proof`). Then one gameplay draw at
+`chance`, doubled while `load_of(player).penalty() >= Burdened` (capped at 100). On a fall:
+`World::visit` makes the level below (as stairs would, with the visit's luck and level),
+`landing` lists its cells (a flood fill from `start`, else the first staircase, through
+walkable cells and doors without a lock; then walkable, no door, stairs, trap, ice, actor, or
+shop floor), a second gameplay draw picks one, "The floor gives way beneath you!",
+`World::travel(below, Some(cell))` (arrival lines, pervading line, `settle_in`, as stairs), an
+`Event::LevelChanged`, "You fall to <name>.", `collapse.damage` through `World::hurt` with
+`Harm::Spared` (never the last hit point), and Staggered (`status.toml`) at one degree. The
+design's `Arrival::Fell` is not needed: `travel` already takes the arrival cell. Nothing is
+saved beyond the level change; the cracked floor stays.
+
 ## What the player is told
 
 `world/rooms.rs`: `glimpse_rooms` (in `perceive`, before `enter_room`) marks each room of which
@@ -308,7 +331,8 @@ System `special_rooms` (`data/talents.toml`): Sense of place (wayfarer, `sense_o
 `World::room_pace`), Anchored mind (scholar, `room_status_immune` `ebbing`, also system
 `mana`; hook `World::dwell`), Hush-foot (shadow, Stealth 10, `wake_percent` 100, also system
 `stealth`; hook `World::spread_noise`'s wake check), Mirror-wise (scholar, `sees_reflections` 2; hook
-`Perception::compute`'s images, which the glass reads too), and Grave warden (guard, Willpower 12,
+`Perception::compute`'s images, which the glass reads too), Light tread (delver, Dexterity 12,
+`collapse_proof`; hook `World::collapse_step`, which then draws nothing), and Grave warden (guard, Willpower 12,
 `grave_warden`; hook `World::curse_corpse`). The class ability Consecrate (above) carries the
 system too.
 
@@ -341,7 +365,11 @@ and moving with the turns, none outside, the player's own, the glass, a missile 
 creatures' aim, Mirror-wise, the dumps, a rest among reflections), `content/room_warp_tests.rs` (the `warp` field, its range,
 `Here::warp`), `world/unstable_room_tests.rs` (the unstable room: about one step in ten inside
 warps the player and a creature, never outside, no draw outside, the messages, a free landing
-cell, saving), `world/curse_tests.rs` (the cursed room's data and refusals, rising after two
+cell, saving), `content/room_collapse_tests.rs` (the `collapse` field, its refusals, never
+over a whole level, `Here::collapse`), `world/collapse_tests.rs` (the collapsed floor: its data,
+about 15 % of steps on cracked floor fall and none on sound floor or outside, twice as often
+Burdened, Light tread and the other no-draw cases, creatures never fall, the landing, hurt but
+never killed, Staggered, the messages, a walk through `World::apply`), `world/curse_tests.rs` (the cursed room's data and refusals, rising after two
 minutes as undead of the dead's level, the twitch and rising lines, not when the corpse is gone or
 carried out, not outside, never the undead, the nearest-level fallback and the campaign's own,
 Grave warden, a cursed level, a frozen level catching up, saving and the dump; Consecrate lifting a

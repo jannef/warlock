@@ -110,6 +110,12 @@ gets where a dungeon favours or bans nothing. "Only" says where it can come at a
   you take inside has a one in ten chance to fling you somewhere else on the level, as a
   teleport trap does ("You are wrenched elsewhere."). Creatures stepping in are flung just the
   same, so fleeing through one is a gamble, and so is chasing someone into it.
+- **Collapsed floor.** A room whose floor is cracked and sagging (shown as `:`, "cracked
+  floor"), found only on a level with another below it. Every step you take onto the cracked
+  stone has a 15 % chance to give way, 30 % while you are burdened or worse ("The floor gives way
+  beneath you!"). You fall to the level below, land somewhere open on it (never behind a locked
+  door or in a shop), take 2d6 damage, though the fall never kills you, and are Staggered. A
+  quick way down, if you can take the bruises; creatures never fall through.
 - **Cursed room.** The dead do not rest in it: see below. Only on a level with a danger. One
   floor in twenty that draws a cursed room is cursed throughout instead.
 
@@ -117,8 +123,9 @@ The talent *Hallowed rest* (Grit) makes a room that quickens healing or mana qui
 again more for you: a sanctuary's three times as fast becomes four times. The talent *Anchored
 mind* (Scholar) keeps your power moored: Ebbing never takes you. The talent *Mirror-wise*
 (Scholar) sees through reflections within 2 cells of you: they are not shown, and nothing stops
-your step there. The talent *Grave warden* (Guard) keeps what you kill down: nothing you kill
-ever rises in a cursed room.
+your step there. The talent *Light tread* (Delver) carries you over a collapsed floor as if it
+were sound rock: it never gives way under you. The talent *Grave warden* (Guard) keeps what you
+kill down: nothing you kill ever rises in a cursed room.
 
 Only what happens inside counts: a sound made in an echoing hall is loud wherever it is heard,
 while one made outside and heard inside is not changed. Light outside a shadowed room is as

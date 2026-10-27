@@ -191,3 +191,35 @@ it long enough as a *Connoisseur*). Wands lie in the dungeon and in general stor
 The charges a wand is made with go by its spell's tier:
 
 {{#include generated/wand-charges.md}}
+
+## Rods
+
+A rod holds an **effect no spell has**: digging, sleep, terror, sending a creature away. Like a
+wand it goes in the **missile weapon slot** and is used as you would shoot (`t`, aim), but it has
+no charges: each use costs **your own mana**, the rod's cost, and it never runs out while you
+have the mana to feed it. Without enough mana it does nothing and takes no time ("You have not
+the mana to use it."), and nor can you use one while a state that stops casting holds you
+(raging). A use takes a cast's time.
+
+What a rod does grows with **your caster level**: its reach (how far a line digs, how far a bolt
+flies, how far away a burst may land) grows by a cell per so many caster levels, up to its
+limit, and sleep and terror take only creatures whose level is at most your caster level; the
+others shrug it off. No skill makes a rod better or cheaper: what it costs and how far it
+reaches are the same in anyone's hands at the same caster level.
+
+- **Digging** breaks every wall on a straight line toward where you aim, as if dug through,
+  until a wall too hard for it (granite), a door, or the level's edge stops it.
+- **Teleport other** sends the first creature its bolt meets to a random free cell of the
+  level. It counts as an attack: a shopkeeper will not forgive it.
+- **Sleep** puts the creatures in its burst into a true sleep (not the Sleep spell's
+  drowsiness): they take no turns until a noise, a blow, or a cry wakes them.
+- **Terror** makes the creatures in its burst flee from you a few turns.
+
+Rods are found unknown, each kind with a look of its own for the whole game ("a pewter rod");
+using one or identifying it tells you what it is, and its cost and reach then show when you
+look at it and aim it. Rods lie in the dungeon and in general stores.
+
+*Channeler* (Spellcraft) makes every rod cost a quarter less mana (rounded to the nearest, at
+least 1); *Frugal caster* then takes its fifth off what is left.
+
+{{#include generated/rods.md}}

@@ -15,8 +15,7 @@ master = "wat"
 ranks = [
     { title = "Tin", material = "tin", given = "guild_quarry" },
     { title = "Pewter", material = "pewter", done = "guild_hundred" },
-    # Link 4, "Wanted", adds `done = "guild_wanted"` with the four lairs (#426).
-    { title = "Iron", material = "iron" },
+    { title = "Iron", material = "iron", done = "guild_wanted" },
     { title = "Steel", material = "steel" },
     { title = "Duralumin", material = "duralumin" },
     { title = "Electrum", material = "electrum" },

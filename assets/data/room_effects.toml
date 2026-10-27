@@ -71,6 +71,10 @@
 #   warp     percent chance, every step onto a cell inside (the player's or a creature's), that
 #            the stepper is moved to a free cell of the level as a teleport trap moves its victim;
 #            default 0
+#   collapse a collapsed floor (needs `needs_below`; never the whole level): `{ chance, damage }`,
+#            the percent chance (0 to 100) that a step of the player onto a cell inside gives
+#            way, doubled while they are Burdened or worse, and the dice they take as they land
+#            on the level below (never their last hit point); they land Staggered
 #   rise     a cursed room: `{ faction, after }`: a creature that dies inside, is not of
 #            `faction` (factions.toml), and leaves a corpse rises from its corpse `after` (a
 #            duration, 1s to 1h) as a creature of `faction` of its level (else the nearest level,
@@ -225,6 +229,16 @@ needs_danger = true
 min_cells = 16
 swarm = { per_cells = 4, min = 4, max = 16, wake = 200, cry = 60, loot_level = 0, themes = { kind = 10, faction = 20 }, factions = ["wildlife", "vermin", "marsh"], hoard = "corpses" }
 
+[[effect]]
+id = "collapsed"
+name = "collapsed floor"
+mark = "k"
+near = "The floor ahead is cracked and sagging."
+enter = "The floor creaks under your weight."
+weight = 3
+needs_below = true
+floor = "cracked_floor"
+collapse = { chance = 15, damage = "2d6" }
 # A cursed room: the dead killed inside rise two minutes later as undead of their level, unless
 # their corpse is taken or eaten first. Consecrate lifts it, and the draining room.
 [[effect]]

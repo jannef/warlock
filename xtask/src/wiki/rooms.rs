@@ -121,6 +121,18 @@ pub(super) fn special_rooms(content: &Content) -> String {
                 m.images
             ));
         }
+        if let Some(c) = e.collapse {
+            does.push(format!(
+                "Every step of yours onto its cracked floor has a {}% chance ({}% while you are \
+                 Burdened or worse) to give way: you fall to the level below, landing somewhere \
+                 open on it (never behind a locked door, never in a shop), take {} damage (never \
+                 your last hit point), and are Staggered. Creatures never fall (Light tread: \
+                 you never do).",
+                c.chance,
+                (u32::from(c.chance) * 2).min(100),
+                c.damage
+            ));
+        }
         if e.warp > 0 {
             does.push(format!(
                 "Every step inside, yours or a creature's, has a {}% chance to move the stepper \

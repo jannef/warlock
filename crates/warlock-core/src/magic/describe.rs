@@ -64,6 +64,7 @@ pub fn appraised(stack: &Stack, lore: Lore<'_>, appraisal: Appraisal) -> Vec<Lin
     let content = lore.content;
     let mut out = lines_named(stack, content, lore.names(stack));
     out.extend(wand_lines(stack, lore));
+    out.extend(rod_lines(stack, lore));
     // The first line says what it is; a line for each gem in it follows.
     let gems_at = 1;
     let parts = stack.parts(content);
@@ -129,6 +130,36 @@ fn wand_lines(stack: &Stack, lore: Lore<'_>) -> Vec<Line> {
         ),
     });
     out
+}
+
+/// What a rod holds, as the player knows it (spec §8 "Magic items": "Rods"): its effect in words
+/// and its cost once its type is known (`Holds Digging: ...`, `Costs 6 mana a use, before your
+/// talents`), else that it is unknown. Nothing for anything else.
+fn rod_lines(stack: &Stack, lore: Lore<'_>) -> Vec<Line> {
+    let content = lore.content;
+    let Some(rod) = content.object(stack.object).rod else {
+        return Vec::new();
+    };
+    if !lore.is_identified(stack.object) {
+        return vec![line(
+            LineKind::Note,
+            "Unidentified: what it does is unknown until it is used or identified.",
+        )];
+    }
+    let effect = content.rod_effect(rod.effect);
+    vec![
+        line(
+            LineKind::Stat,
+            format!("Holds {}: {}", effect.name, effect.description),
+        ),
+        line(
+            LineKind::Stat,
+            format!(
+                "Costs {} mana a use, before your talents; it never runs out",
+                rod.mana
+            ),
+        ),
+    ]
 }
 
 /// The description of `stack`, as the player knows it: what it is (`Magic long sword · steel

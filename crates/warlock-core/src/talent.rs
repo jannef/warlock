@@ -210,6 +210,8 @@ pub struct TalentMods {
     pub mana_resting_percent: i32,
     /// Percent more abilities cost in mana (negative: less; [`TalentMods::mana_cost`]).
     pub mana_cost_percent: i32,
+    /// Percent more mana a rod costs (negative: less; Channeler).
+    pub rod_cost_percent: i32,
     /// Added to its caster level (spec §8 "Spells").
     pub caster_level: i32,
     /// Caster level by character level, one entry per rank held: `(per_levels, value)`
@@ -363,6 +365,8 @@ pub struct TalentMods {
     pub sense_of_place: bool,
     /// Percent more a special room's quickening of healing and mana (Hallowed rest).
     pub room_pace_percent: i32,
+    /// A collapsed floor never gives way under it (Light tread).
+    pub collapse_proof: bool,
     /// The statuses of special rooms that never take it (Anchored mind).
     pub room_status_immune: Vec<StatusId>,
     /// Within this many cells it sees a hall of mirrors' reflections for what they are
@@ -1058,6 +1062,7 @@ impl TalentMods {
             } => self.mana_per_levels.push((per_levels, at_least)),
             TalentEffect::ManaRestingPercent { value } => self.mana_resting_percent += value,
             TalentEffect::ManaCostPercent { value } => self.mana_cost_percent += value,
+            TalentEffect::RodCostPercent { value } => self.rod_cost_percent += value,
             TalentEffect::CasterLevel {
                 value,
                 per_levels: 0,
@@ -1166,6 +1171,7 @@ impl TalentMods {
                 }
             }
             TalentEffect::SeesReflections { value } => self.sees_reflections += value,
+            TalentEffect::CollapseProof => self.collapse_proof = true,
             TalentEffect::WakePercent { value } => self.wake_percent += value,
             TalentEffect::GraveWarden => self.grave_warden = true,
             TalentEffect::SearchReach { value } => self.search_reach += value,
@@ -1820,6 +1826,17 @@ impl TalentMods {
             return base;
         }
         let scaled = (base * (100 + self.mana_cost_percent).max(0) + 50) / 100;
+        scaled.max(1)
+    }
+
+    /// What a rod whose cost is `base` mana costs with these talents, before
+    /// [`TalentMods::mana_cost`]: `rod_cost_percent` more (Channeler's −25: a quarter less),
+    /// rounded to the nearest, never below 1.
+    pub fn rod_cost(&self, base: i32) -> i32 {
+        if base <= 0 || self.rod_cost_percent == 0 {
+            return base;
+        }
+        let scaled = (base * (100 + self.rod_cost_percent).max(0) + 50) / 100;
         scaled.max(1)
     }
 

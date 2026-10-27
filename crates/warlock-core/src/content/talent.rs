@@ -238,6 +238,9 @@ pub enum TalentEffect {
     /// What abilities cost in mana, this percent more (negative: less; never below 1; Frugal
     /// caster), in [`crate::world::World::spend_mana`].
     ManaCostPercent { value: i32 },
+    /// What rods cost in mana, this percent more (negative: less; never below 1; Channeler; spec
+    /// §8 "Magic items": "Rods"), before [`TalentEffect::ManaCostPercent`].
+    RodCostPercent { value: i32 },
     /// Caster level, this much higher (negative: lower; spec §8 "Spells"), in
     /// [`crate::world::World::caster_level`]; with `per_levels`, `value` per that many character
     /// levels (Arcane training: +1 per 5).
@@ -413,6 +416,8 @@ pub enum TalentEffect {
     /// A special room's (or a whole level's) `status` never takes it (Anchored mind: Ebbing;
     /// `World::dwell`).
     RoomStatusImmune { status: String },
+    /// A collapsed floor never gives way under it (Light tread; `World::collapse_step`).
+    CollapseProof,
     /// A hall of mirrors' reflections within this many cells are seen for what they are, and not
     /// shown (Mirror-wise; `world/mirrors.rs`).
     SeesReflections { value: i32 },
@@ -1555,6 +1560,7 @@ impl TalentEffect {
             | TalentEffect::ManaRegenPercent { value }
             | TalentEffect::ManaRestingPercent { value }
             | TalentEffect::ManaCostPercent { value }
+            | TalentEffect::RodCostPercent { value }
             | TalentEffect::FootstepsPercent { value }
             | TalentEffect::CarryPercent { value }
             | TalentEffect::TravelPercent { value }
@@ -1733,6 +1739,7 @@ impl TalentEffect {
             | TalentEffect::SparesSelf
             | TalentEffect::SeesUv
             | TalentEffect::SenseOfPlace
+            | TalentEffect::CollapseProof
             | TalentEffect::ExactFootsteps
             | TalentEffect::SmellRot
             | TalentEffect::StanceCosts

@@ -1,0 +1,11 @@
+# Teleport other: a bolt that sends the first creature it meets elsewhere on the level, as a
+# teleport trap does. An attack on it, as a blow is.
+[[rod_effect]]
+id = "teleport_other"
+name = "Teleport other"
+description = "A bolt that sends the first creature it meets somewhere else on this level."
+shape = "bolt"
+range = 4
+max_range = 12
+per_levels = 3
+kind = "teleport"

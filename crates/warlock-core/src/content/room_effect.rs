@@ -22,6 +22,9 @@
 //! An effect may move whoever steps inside elsewhere on the level now and then
 //! ([`RoomEffectDef::warp`]: an unstable room; `World::warp_step`, the teleport trap's move).
 //!
+//! An effect may give way under the player now and then ([`RoomEffectDef::collapse`]: a
+//! collapsed floor; `World::collapse_step`, a fall to the level below).
+//!
 //! An effect may raise the dead killed inside ([`RoomEffectDef::rise`]: a cursed room;
 //! `world/curse.rs`), and Consecrate may lift an unholy one for good ([`RoomEffectDef::unholy`]).
 //!
@@ -35,6 +38,7 @@
 //! Without the file there are no special rooms.
 
 use super::{ContentError, StatusDef, StatusId, TerrainDef, TerrainId};
+use crate::dice::Dice;
 use crate::geom::Pos;
 use crate::light::Light;
 use crate::temperature::Temperature;
@@ -138,6 +142,7 @@ struct RoomEffectSpec {
     rise: Option<RiseSpec>,
     #[serde(default)]
     unholy: bool,
+    collapse: Option<Collapse>,
 }
 
 #[derive(Deserialize)]
@@ -157,6 +162,18 @@ pub struct Rise {
     pub faction: String,
     /// How long after the death.
     pub after: Duration,
+}
+
+/// A collapsed floor's numbers (`collapse = { chance = 15, damage = "2d6" }`, spec §7 "Special
+/// rooms"; `world/collapse.rs`): a step of the player onto a cell inside may give way, and they
+/// fall to the level below.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Collapse {
+    /// Percent chance a step gives way (doubled while Burdened or worse).
+    pub chance: u8,
+    /// The hit points the fall takes (never the last one).
+    pub damage: Dice,
 }
 
 #[derive(Deserialize)]
@@ -335,6 +352,8 @@ pub struct RoomEffectDef {
     /// Percent chance, every step onto a cell inside, that the stepper is moved to a free cell
     /// of the level as a teleport trap moves its victim (an unstable room's 10; `World::warp_step`).
     pub warp: u8,
+    /// A collapsed floor's: a step of the player inside may give way (`World::collapse_step`).
+    pub collapse: Option<Collapse>,
     /// The dead killed inside rise (a cursed room's).
     pub rise: Option<Rise>,
     /// Consecrate lifts it for good (a cursed and a draining room).
@@ -368,6 +387,7 @@ impl RoomEffectDef {
             && self.floor.is_none()
             && self.swarm.is_none()
             && self.mirrors.is_none()
+            && self.collapse.is_none()
             && self.pervade.is_some()
     }
 }
@@ -459,6 +479,11 @@ impl<'c> Here<'c> {
             .each()
             .fold(100, |p, e| p * (100 - u32::from(e.warp.min(100))) / 100);
         u8::try_from(100 - stays).unwrap_or(100)
+    }
+
+    /// A collapsed floor's numbers here, if one is here (the room's, never a whole level's).
+    pub fn collapse(&self) -> Option<Collapse> {
+        self.room.and_then(|e| e.collapse)
     }
 
     /// The risings here, if the dead rise here: the room's, else the level's.
@@ -603,6 +628,17 @@ impl RoomEffects {
             if spec.warp > 100 {
                 return Err(bad(format!("warp {} is a percent: 0 to 100", spec.warp)));
             }
+            if let Some(c) = &spec.collapse {
+                if c.chance > 100 {
+                    return Err(bad(format!(
+                        "collapse.chance {} is a percent: 0 to 100",
+                        c.chance
+                    )));
+                }
+                if !spec.needs_below {
+                    return Err(bad("a `collapse` needs `needs_below`".into()));
+                }
+            }
             if spec.max_cells.is_some_and(|most| most < spec.min_cells) {
                 return Err(bad("max_cells is below min_cells".into()));
             }
@@ -729,6 +765,7 @@ impl RoomEffects {
                 burden: spec.burden,
                 mirrors,
                 warp: spec.warp,
+                collapse: spec.collapse,
                 rise,
                 unholy: spec.unholy,
             };

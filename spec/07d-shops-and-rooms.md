@@ -179,11 +179,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
   to the level's inside, −40 to 40, default 0; below), `burden` (percent of everyone's
   carrying limit inside, 10 to 1000, default 100; below), `mirrors` (`{ images = N }`, 1
   to 8: a hall of mirrors' reflections, below), `warp` (percent chance a step inside moves
-  the stepper elsewhere, 0 to 100, default 0; below), `rise` (`{ faction, after }`: a cursed
+  the stepper elsewhere, 0 to 100, default 0; below), `collapse` (`{ chance, damage }`: a
+  collapsed floor, below; needs `needs_below`), `rise` (`{ faction, after }`: a cursed
   room's risings, below; needs `needs_danger`), and `unholy` (Consecrate lifts it, below). An
   effect with a `level_chance` needs its
   `pervade` line and is neither `shunned`, nor lays a `floor`, nor is a den, nor holds
-  `mirrors`.
+  `mirrors`, nor collapses.
   - **The effects** (weights in brackets): a *shadowed room* (10) keeps 30 % of the light ("The
     light seems to drain away here."); an *echoing hall* (8) doubles noise ("Your footsteps echo
     loudly."); a *hushed chamber* (8) leaves two fifths of it ("A deep hush fills this room."); a
@@ -212,7 +213,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     one step in ten ("The floor shimmers under your feet."); a *beast den* (5, #410; as a
     teeming den) is a den of beasts with a hoard of bones and fresh corpses (below; "You smell
     musk and old blood." when glimpsed, "Heavy shapes breathe in the dark around you." on
-    entering); a *cursed room* (6, #408; only on a level with a danger; unholy, as is the
+    entering); a *collapsed floor* (3, #420; only
+    on a level with another below it) has a floor of cracked stone that may give way under the
+    player ("The floor ahead is cracked and sagging." when glimpsed, "The floor creaks under your
+    weight." on entering; below); a *cursed room* (6, #408; only on a level with a danger; unholy, as is the
     draining room) raises the dead killed inside (below; "A cold draught smells of the grave."
     when glimpsed, "The air is cold and the dead are near." on entering) and covers a whole
     level with `level_chance` 5 ("The dead do not rest on this level."). Fennmynster favours it
@@ -269,6 +273,22 @@ developer notes (CLAUDE.md, `docs/dev/`).
     are wrenched elsewhere." for the player, "The giant rat vanishes!" for a creature they saw
     go. Where it lands is never a step, so it is never warped again on landing. Nothing is
     saved. Its `max_cells` keeps it to small rooms; it never covers a whole level.
+  - **A collapsed floor** (`collapse`, #420; `world/collapse.rs`): the room's floor is
+    `cracked_floor` (a walkable terrain, "cracked floor", `:`), laid by the generator; a
+    hand-made level draws its own. Every step of the **player** onto a cracked cell of it (a
+    move; the room's cells without cracks never give way) has `collapse.chance` percent (15,
+    doubled while Burdened or worse; one draw of the gameplay stream, made only on such a cell,
+    after any trap and warp there, and only while the level has a way down that leads
+    somewhere) to give way: "The floor gives way beneath you!" The player falls to the level
+    that way leads to (generated as usual on a first visit, as by the stairs; the step's time
+    is all it costs), "You fall to <level>.", landing on a random cell of it (a second gameplay
+    draw) that is walkable, no door, stairs, trap, or ice, where no one stands, outside every
+    shop, and reachable from where the level is entered without passing a locked door (so never
+    inside a vault behind one, nor behind a secret door, which is wall until found). They take
+    `collapse.damage` (2d6, never their last hit point) and are Staggered. The cracked floor
+    stays as it was. Creatures never fall (no draw for them). Nothing new is saved: the fall
+    is a level change like the stairs'. Light tread (§8 "Talents") never falls. It never
+    covers a whole level.
   - **Cursed rooms** (`rise = { faction = "undead", after = "2m" }`, #408; `world/curse.rs`):
     a creature that dies on a cell whose effects raise the dead (the room's, else the whole
     level's), is not of the rise's `faction`, and leaves a corpse is marked to rise, whoever
@@ -411,5 +431,5 @@ developer notes (CLAUDE.md, `docs/dev/`).
     healing and mana half again more), Anchored mind (a room's or a level's Ebbing
     never takes them; #403), Hush-foot (shadow; sleepers need twice the noise to wake from
     anything the player does; #405), Mirror-wise (a hall of mirrors' images within 2 cells
-    seen for what they are; #419), and Grave warden (guard; nothing the player kills rises;
-    #408). The class ability Consecrate (above) lifts an unholy room or level.
+    seen for what they are; #419), Light tread (a collapsed floor never gives way under
+    them; #420), and Grave warden (guard; nothing the player kills rises; #408). The class ability Consecrate (above) lifts an unholy room or level.
