@@ -216,7 +216,8 @@ shrugs off half of any cold or poison; and **Sergeant Herrick**, the Deserter, w
 (a magic one half the time) and the Turncoat, the mail that keeps fear from him. Each always
 carries their own [unique item](magic-items.md), and drops it where they die. Named monsters
 go by their names in what the game tells you ("Black Wystan shoots you."), with no "the".
-None of them is in a dungeon yet: their lairs are still to come.
+Each waits at the bottom of a lair of their own, which the Weyfarers' Gilde sends you to (see
+[The wanted](guild.md#the-wanted)); the footpads run with them there.
 
 **Demons** come up from below: the lesser ones (`u`) from the dretch to the chasme, the greater
 (`U`) from the hezrou to the balor. None of them leaves a body behind, poison does nothing to

@@ -212,7 +212,8 @@ vault names draws exactly what it did. Tests: `mapgen/cealdhlaw_tests.rs`.
 
 A branch level's `vaults` (#339, docs/dev/mapgen.md) keeps the vaults it names to itself
 (`Vault::pinned`, left out of `vault::shuffled`): those may be shared or of the branch's campaign,
-never another's (Fyrdelf's cabin and hoard, Fennmynster's sunken crypt, #338).
+never another's (Fyrdelf's cabin and hoard, Fennmynster's sunken crypt, #338; the four lairs'
+still-room, robbers' hoard, unhallowed chapel, and captain's hall, #426, `docs/dev/guild.md`).
 
 Not yet (the design's later items): `dev = true` scenarios (not needed while a release build lists
 only the campaigns' starts: the dev scenarios `ceaptun`, `fyrdelf`, ... are never listed there).
