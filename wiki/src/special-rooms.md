@@ -44,7 +44,8 @@ Very rarely, a room's effect does not stay in a room: when a level draws a room 
 is a small chance (its "Whole level" chance below) that the effect covers the **whole level**
 instead, and the room is plain. You are told each time you arrive on such a level, and the
 effect holds everywhere on it. Where a room's effect and a whole level's meet, both apply: a
-shadowed room on a gloomy level is darker still. Today only the draining room can do this.
+shadowed room on a gloomy level is darker still. Today the draining room and the cursed room
+can do this.
 
 ## The rooms
 
@@ -125,13 +126,20 @@ gets where a dungeon favours or bans nothing. "Only" says where it can come at a
   edges, where you cannot see them if there is such a place. The locks are of the level's
   depth and no key but a skeleton key fits; pick them, kick the doors in, or fight. A cave
   chamber has no doors, so there only the guardians come. A room seals once.
+- **Cursed room.** The dead do not rest in it: see below. Only on a level with a danger. One
+  floor in twenty that draws a cursed room is cursed throughout instead.
+
+- **Altar room.** An old altar stands in the middle of the room, its god long forgotten, and a
+  faint glow rises from it: you notice it from the doorway. Stand beside it and you may pray
+  (see Forgotten altars below). Only rooms of 9 floor cells or more can be one.
 
 The talent *Hallowed rest* (Grit) makes a room that quickens healing or mana quicken it half
 again more for you: a sanctuary's three times as fast becomes four times. The talent *Anchored
 mind* (Scholar) keeps your power moored: Ebbing never takes you. The talent *Mirror-wise*
 (Scholar) sees through reflections within 2 cells of you: they are not shown, and nothing stops
 your step there. The talent *Light tread* (Delver) carries you over a collapsed floor as if it
-were sound rock: it never gives way under you.
+were sound rock: it never gives way under you. The talent *Grave warden* (Guard) keeps what you
+kill down: nothing you kill ever rises in a cursed room.
 The talent *Hoard-wise* (Delver) knows how a treasure room is baited: you
 can lift one thing from it before it seals; the second seals it.
 
@@ -176,3 +184,64 @@ you on arrival when something sleeps on the level.
 
 Sleepers count among the level's creatures: while the den is full, fewer newcomers find their
 way to the level. Killing a sleeper is like killing any other foe.
+
+## Cursed rooms
+
+A creature that dies in a cursed room (or anywhere on a cursed level), whoever killed it,
+rises from its corpse two minutes later as one of the undead ("The giant rat's corpse rises as
+a skeleton!"). You see its corpse twitch as it dies, if you see it; a rising you do not see you
+may hear, as a groan. The undead never rise again, and creatures that leave no corpse never
+rise at all.
+
+What it rises as is drawn at its death, each alike, among the undead of the dead creature's own
+level, or, when there are none of that level, of the nearest level that has some (the lower one
+on a tie). A risen creature carries nothing (what the dead carried still lies there) and is
+worth its own experience when you kill it.
+
+{{#include generated/risings.md}}
+
+The corpse is what rises: **take it, eat it, or destroy it** within the two minutes, and nothing
+rises. A corpse carried out of the room and dropped elsewhere is not cursed again. A level you
+leave stays as it was until you come back, and whatever was due to rise meanwhile rises as you
+return.
+
+**Consecrate.** A Good priest (from level 9) or paladin (from level 12) can lift the curse:
+standing inside a cursed or a draining room, they spend 15 mana and pray for a minute (from the
+abilities menu). If nothing disturbs the prayer (anything that would stop a rest stops it, and
+then the mana and the time are lost), the room becomes a plain room for good: the dead no longer
+rise there, nor does mana drain. On a level a curse or a drain covers whole, it lifts the whole
+level's instead. It is a good deed (see [Alignment](alignment.md)). Anywhere else it is refused
+("There is nothing here to consecrate."), costing nothing.
+
+## Forgotten altars
+
+An altar room holds a **forgotten altar**: worn stone, its carvings rubbed smooth, its god's name
+long lost, and yet something there still listens. It is not a temple and not a god you serve:
+nothing to sacrifice, nothing to convert. It is a gamble. Stand beside it and choose **Pray**
+from the abilities menu (it is listed under *Here* only while you stand next to such an altar).
+A prayer takes a minute; anything that would stop a rest (a creature coming into view, a blow, a
+noise) breaks it, and a broken prayer gives nothing, though the minute is gone.
+
+At the end of a prayer one outcome is drawn. Most prayers do little: a few coins, a little
+healing, a pang of hunger, a brief hex, a wandering creature, or nothing at all but a line of
+flavour. A few do more, for good or ill, and now and then the altar itself bursts apart in fire,
+hurting everyone near it, you included (it can kill), and leaving rubble.
+
+Every altar has a hidden side, **good, neutral, or evil**. The game never says which, but its
+glow does: gold, grey, or red. The side tilts the odds against your own alignment (see
+[Alignment](alignment.md)): pray at an altar of your own side and the boons come more often,
+at one of the other side the banes. A neutral altar, or a neutral you, leans neither way.
+Praying also moves your alignment a little: toward good at a good altar, toward evil (more) at an
+evil one. The talent *Devout* (Wayfarer) doubles the lean of an altar of your side and takes
+away an opposed one's.
+
+After each completed prayer, there is an even chance the altar is **spent**: its glow gutters and
+dies, it stands cold and dark, and nothing answers there again. So an altar usually gives one or
+two prayers. Seek out the next one: about one generated floor in twenty has one.
+
+{{#include generated/altar-shares.md}}
+
+The outcomes, by kind and tier ("Of its kind" is its share of its kind's draws; the great
+outcomes are still to come, so for now each kind is drawn among its minor and moderate ones):
+
+{{#include generated/altar-outcomes.md}}

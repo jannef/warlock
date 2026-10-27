@@ -107,6 +107,8 @@ pub enum Cause {
     Fall,
     /// A spell of their own caught them (spec §8 "Class abilities").
     Spell(crate::content::SpellId),
+    /// A forgotten altar they prayed at struck them down (spec §7 "Special rooms").
+    Altar,
 }
 
 impl Cause {
@@ -128,6 +130,7 @@ impl Cause {
                     .map_or_else(|| "spell".into(), |s| s.look.noun.clone());
                 format!("Killed by their own {noun}")
             }
+            Cause::Altar => "Struck down at a forgotten altar".into(),
         }
     }
 
@@ -138,7 +141,7 @@ impl Cause {
         match self {
             Cause::Starvation => "You starve to death...".into(),
             Cause::Choked(o) => format!("You choke to death on the {}...", name(o)),
-            Cause::Trap(_) | Cause::Scroll(_) | Cause::Spell(_) | Cause::Fall => {
+            Cause::Trap(_) | Cause::Scroll(_) | Cause::Spell(_) | Cause::Altar | Cause::Fall => {
                 "You die...".into()
             }
         }
@@ -167,6 +170,9 @@ pub(super) enum Harm {
     },
     /// Starving at the moment `when` (spec §8 "Hunger").
     Starving(GameTime),
+    /// A place (spec §7 "Special rooms": a forgotten altar's fire, its bolt from above): no one
+    /// killed, and no one earns anything.
+    Place,
     /// A fall through a collapsed floor (spec §7 "Special rooms"): no one killed, and no one
     /// earns anything.
     Fall,
@@ -858,7 +864,7 @@ impl World {
         // Talents (spec §8 "Talents": Immune to pain): a hit does less after the soak, never
         // below 1; what is not a hit (a status, starving) is not eased.
         let damage = match harm {
-            Harm::Actor(_) | Harm::Trap(_) if damage > 1 => {
+            Harm::Actor(_) | Harm::Trap(_) | Harm::Place if damage > 1 => {
                 let pain =
                     (self.state.actors.get(&id)).map_or(0, |a| a.talent_mods(&self.content).pain);
                 (damage - pain).max(1)
@@ -898,12 +904,16 @@ impl World {
             }
             Harm::Starving(when) => self.dies(id, None, None, when, events),
             Harm::Barbs => self.dies(id, None, None, self.state.time, events),
-            Harm::Fall => {
+            Harm::Place | Harm::Fall => {
                 self.dies(id, None, None, self.state.time, events);
                 if id == self.state.player
                     && let Some(death) = &mut self.state.death
                 {
-                    death.cause = Some(Cause::Fall);
+                    death.cause = Some(if matches!(harm, Harm::Fall) {
+                        Cause::Fall
+                    } else {
+                        Cause::Altar
+                    });
                 }
             }
             Harm::Trap(trap) => {
@@ -985,7 +995,7 @@ impl World {
         }
         // An animated thing's body falls whole or not at all (spec §8 "Animated objects").
         let (mut dropped, broken) = self.remains(&actor);
-        let lines = self.break_lines(&actor.level, actor.pos, &broken);
+        let mut lines = self.break_lines(&actor.level, actor.pos, &broken);
         dropped.extend(self.loot_of(&actor));
         // Scavenger (spec §8 "Creature gear"): what the player's kill drops is known at once.
         if by_player && self.state.player().talent_mods(&self.content).scavenger {
@@ -1002,6 +1012,8 @@ impl World {
             level.set_pile(actor.pos, pile);
         }
         self.leave_corpse(&actor);
+        // In a cursed room the dead rise (spec §7 "Special rooms"; `curse.rs`).
+        lines.extend(self.curse_corpse(&actor, by_player));
         // A dead shopkeeper's goods are free to take (spec §7 "Shops").
         self.keeper_died(id, &actor.level);
         self.fallen.push(actor);

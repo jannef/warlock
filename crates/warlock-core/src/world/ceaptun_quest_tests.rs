@@ -1,8 +1,7 @@
 //! Cēaptūn's quests (#340; docs/design/campaign.md §6.2): the three chains of Reeve Leofric,
 //! Sister Hild, and Factor Wulfrun, each offered one at a time; the two reveals (Fennmynster as
-//! the fen minster is accepted, Fyrdelf as the lost shaft is, which waits for both the ledger
-//! and the barrow's heart); the ledger carried to Godgifu; the chalice handed in; the branches'
-//! arrival lines; and a replay.
+//! the fen minster is accepted, Fyrdelf as the lost shaft is, which waits for the barrow's
+//! heart); the chalice handed in; the branches' arrival lines; and a replay.
 
 use super::*;
 use crate::action::parse_actions;
@@ -66,6 +65,14 @@ fn done(world: &mut World, done: &[&str]) {
     world.state.quests = serde_json::from_str(&json).expect("quests");
 }
 
+/// Grants the player experience, a little at a time, until they reach `level`.
+fn up_to(world: &mut World, level: u8) {
+    while world.player_level() < level {
+        act(world, "xp:10 levelup:auto");
+    }
+    assert_eq!(world.player_level(), level);
+}
+
 #[test]
 fn each_giver_offers_the_first_quest_of_their_chain() {
     let w = town();
@@ -74,17 +81,12 @@ fn each_giver_offers_the_first_quest_of_their_chain() {
         ["quest-grave_goods", "mynster", "fen", "cure", "mend"]
     );
     assert_eq!(topics(&w, LEOFRIC), ["quest-barrow_rats", "town", "barrow"]);
+    // Wulfrun's chain waits for the barrow's heart.
     assert_eq!(
         topics(&w, WULFRUN),
-        [
-            "quest-foremans_ledger",
-            "diggings",
-            "trade",
-            "appraisal",
-            "identify"
-        ]
+        ["diggings", "trade", "appraisal", "identify"]
     );
-    // Godgifu gives none: she takes the ledger in.
+    // Godgifu gives none.
     assert_eq!(
         topics(&w, GODGIFU),
         ["barrows", "marsh", "mines", "volcano", "pass"]
@@ -103,54 +105,43 @@ fn each_giver_offers_the_first_quest_of_their_chain() {
 }
 
 #[test]
-fn the_ledger_is_carried_to_godgifu() {
+fn the_lost_shaft_waits_for_the_barrows_heart_and_reveals_fyrdelf() {
     let mut w = town();
-    beside(&mut w, WULFRUN);
-    act(&mut w, "ask:E:quest-foremans_ledger");
-    assert_eq!(carried(&w, "ledger"), 1, "handed over as it is accepted");
-    let log = &w.perception().quests()[0];
-    assert!(
-        log.objective.starts_with(
-            "Factor Wulfrun wants you to deliver a foreman's ledger to Godgifu. The Gæsthūs"
-        ),
-        "{}",
-        log.objective
-    );
-    assert!(topics(&w, GODGIFU).contains(&"quest-foremans_ledger".to_string()));
-    beside(&mut w, GODGIFU);
-    act(&mut w, "ask:E:quest-foremans_ledger");
-    assert_eq!(carried(&w, "ledger"), 0);
-    assert_eq!(carried(&w, "gold_coin"), 10);
-    assert!(
-        said(&w)
-            .iter()
-            .any(|l| l.starts_with("Godgifu says: \"The foreman's ledger"))
-    );
-}
-
-#[test]
-fn the_lost_shaft_waits_for_the_ledger_and_the_barrows_heart_and_reveals_fyrdelf() {
-    let mut w = town();
-    done(&mut w, &["foremans_ledger"]);
+    done(&mut w, &["barrow_rats"]);
     assert_eq!(
         topics(&w, WULFRUN)[0],
         "diggings",
         "not before the barrow's heart"
     );
     done(&mut w, &["barrow_rats", "barrow_heart"]);
-    assert_eq!(
-        topics(&w, WULFRUN)[0],
-        "quest-foremans_ledger",
-        "not before the ledger"
-    );
-    done(&mut w, &["foremans_ledger", "barrow_rats", "barrow_heart"]);
     assert_eq!(topics(&w, WULFRUN)[0], "quest-lost_shaft");
 
     beside(&mut w, WULFRUN);
+    // Asked before level 5: she thinks the player not ready, and gives and marks nothing.
+    up_to(&mut w, 4);
+    act(&mut w, "ask:E:quest-lost_shaft");
+    assert!(
+        said(&w)
+            .last()
+            .unwrap()
+            .starts_with("Factor Wulfrun says: \"The old diggings? Oh, I think not, not yet.")
+    );
+    assert!(
+        w.perception()
+            .quests()
+            .iter()
+            .all(|q| q.name != "The lost shaft")
+    );
     assert!(
         w.state.revealed.is_empty(),
         "not revealed before it is given"
     );
+    assert_eq!(
+        topics(&w, WULFRUN)[0],
+        "quest-lost_shaft",
+        "still asked about"
+    );
+    up_to(&mut w, 5);
     act(&mut w, "ask:E:quest-lost_shaft");
     assert!(w.state.revealed.contains("fyrdelf"));
     assert_eq!(

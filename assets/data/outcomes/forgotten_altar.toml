@@ -1,0 +1,326 @@
+# A forgotten altar's prayer (spec §7 "Special rooms"; content/outcome.rs has the fields): ADOM's
+# pool with another flavour. A prayer takes a minute; at its end one draw of the kinds (leaned by
+# the altar's hidden side against the player's band: agreement moves `lean` points from bane to
+# boon, opposition from boon to bane), then one by weight among that kind's outcomes. After a
+# completed prayer the altar is spent with `exhaust` percent, unless it blew apart. Weights are
+# within each kind. The great tier (Gift of the forgotten, Exalted, Chosen, Relic; Wrath,
+# Unmade, Forsaken, Damned) comes with #407: until then each kind is drawn among its minor and
+# moderate outcomes. Messages stay vague: never a number, never the side.
+seconds = 60
+kinds = { boon = 35, nothing = 30, bane = 35 }
+lean = 15
+exhaust = 50
+spent = "spent_altar"
+
+# Nothing happens: flavour only, never a hint of anything true.
+
+[[outcome]]
+kind = "nothing"
+tier = "minor"
+id = "silence"
+weight = 25
+message = "Silence answers you."
+
+[[outcome]]
+kind = "nothing"
+tier = "minor"
+id = "echo"
+weight = 15
+message = "Your words echo, and fade."
+
+[[outcome]]
+kind = "nothing"
+tier = "minor"
+id = "dust"
+weight = 15
+message = "Dust sifts down from the ceiling."
+
+[[outcome]]
+kind = "nothing"
+tier = "minor"
+id = "flicker"
+weight = 15
+message = "The altar's glow flickers, then steadies."
+
+[[outcome]]
+kind = "nothing"
+tier = "minor"
+id = "breath"
+weight = 10
+message = "A cold breath brushes your neck, and is gone."
+
+[[outcome]]
+kind = "nothing"
+tier = "minor"
+id = "omen"
+weight = 20
+messages = [
+    "The smoke of your breath bends toward the stairs.",
+    "For a moment you smell rain.",
+    "Somewhere far below, a bell rings once.",
+    "The carvings seem to shift under your eyes, and are still.",
+]
+
+# Boons: minor 65, moderate 29 (great 6 to come).
+
+[[outcome]]
+kind = "boon"
+tier = "minor"
+id = "soothed"
+weight = 13
+effect = { heal = "2d6", cure = ["bleeding"] }
+message = "A little warmth runs through you."
+
+[[outcome]]
+kind = "boon"
+tier = "minor"
+id = "coins"
+weight = 10
+effect = { objects = [{ object = "copper_coin", count = "2d10", weight = 3 }, { object = "gold_coin", count = "1d6", weight = 1 }] }
+message = "Coins lie at the foot of the altar."
+
+[[outcome]]
+kind = "boon"
+tier = "minor"
+id = "sated"
+weight = 8
+effect = { hunger = 1 }
+message = "You feel fed."
+
+[[outcome]]
+kind = "boon"
+tier = "minor"
+id = "trinket"
+weight = 7
+effect = { loot = 0 }
+message = "Something lies at the foot of the altar."
+
+[[outcome]]
+kind = "boon"
+tier = "minor"
+id = "trickle"
+weight = 9
+effect = { mana = "2d4" }
+message = "Your mind stirs."
+
+[[outcome]]
+kind = "boon"
+tier = "minor"
+id = "uplifted"
+weight = 7
+effect = { status = { id = "inspired" } }
+message = "Your heart lifts."
+
+[[outcome]]
+kind = "boon"
+tier = "minor"
+id = "wary"
+weight = 5
+effect = { know_traps = 10 }
+message = "You sense where the floor lies."
+
+[[outcome]]
+kind = "boon"
+tier = "minor"
+id = "glimpse"
+weight = 6
+effect = { identify = true }
+message = "Something you carry becomes clear to you."
+otherwise = "You feel you understand a little."
+
+[[outcome]]
+kind = "boon"
+tier = "moderate"
+id = "mended"
+weight = 6
+effect = { heal = "full", cure = ["bleeding", "poisoned"] }
+message = "Warmth runs through you, and your wounds close."
+
+[[outcome]]
+kind = "boon"
+tier = "moderate"
+id = "replenished"
+weight = 5
+effect = { mana = "full" }
+message = "Your mind feels clear and full."
+
+[[outcome]]
+kind = "boon"
+tier = "moderate"
+id = "cleansed"
+weight = 4
+effect = { cure_by = "prayer" }
+message = "A sickness leaves you."
+otherwise = "You feel clean."
+
+[[outcome]]
+kind = "boon"
+tier = "moderate"
+id = "restored"
+weight = 4
+effect = { mend = true }
+message = "You feel whole again."
+
+[[outcome]]
+kind = "boon"
+tier = "moderate"
+id = "blessed"
+weight = 5
+effect = { status = { id = "blessed", degrees = 3 } }
+message = "You feel watched over."
+
+[[outcome]]
+kind = "boon"
+tier = "moderate"
+id = "offering"
+weight = 3
+effect = { loot = 3 }
+message = "Something lies at the foot of the altar that was not there before."
+
+[[outcome]]
+kind = "boon"
+tier = "moderate"
+id = "favour"
+weight = 2
+effect = { xp = 20 }
+message = "You feel wiser."
+
+# Banes: minor 60, moderate 34 with the explosion (great 6 to come).
+
+[[outcome]]
+kind = "bane"
+tier = "minor"
+id = "scorched"
+weight = 11
+effect = { burn = { damage = "2d6", damage_type = "fire" } }
+message = "The altar's glow flares and burns you."
+
+[[outcome]]
+kind = "bane"
+tier = "minor"
+id = "sapped"
+weight = 7
+effect = { drain = "2d4" }
+message = "Your mind dims a little."
+
+[[outcome]]
+kind = "bane"
+tier = "minor"
+id = "lightened"
+weight = 7
+effect = { lose_coins = 33 }
+message = "Your purse feels lighter."
+
+[[outcome]]
+kind = "bane"
+tier = "minor"
+id = "hungry"
+weight = 8
+effect = { hunger = -1 }
+message = "Your stomach growls."
+
+[[outcome]]
+kind = "bane"
+tier = "minor"
+id = "sluggish"
+weight = 8
+effect = { status = { id = "sluggish" } }
+message = "You feel sluggish."
+
+[[outcome]]
+kind = "bane"
+tier = "minor"
+id = "ill_wished"
+weight = 6
+effect = { status = { id = "ill_wished" } }
+message = "You feel a stranger's ill will."
+
+[[outcome]]
+kind = "bane"
+tier = "minor"
+id = "snuffed"
+weight = 5
+effect = { snuff = true }
+message = "A cold wind blows past you."
+
+[[outcome]]
+kind = "bane"
+tier = "minor"
+id = "drawn"
+weight = 4
+effect = { summon = { near = "edge" } }
+message = "You hear something stir."
+
+[[outcome]]
+kind = "bane"
+tier = "minor"
+id = "muddled"
+weight = 4
+effect = { forget = true }
+message = "Something you carry seems strange to you."
+otherwise = "You feel a moment's confusion."
+
+[[outcome]]
+kind = "bane"
+tier = "moderate"
+id = "sickened"
+weight = 5
+effect = { disease = true }
+message = "A chill settles in your bones."
+
+[[outcome]]
+kind = "bane"
+tier = "moderate"
+id = "withered"
+weight = 5
+effect = { wither = "1d3" }
+message = "Something is taken from you."
+
+[[outcome]]
+kind = "bane"
+tier = "moderate"
+id = "smitten"
+weight = 3
+effect = { smite = { damage = "4d10", damage_type = "electricity" } }
+message = "The altar answers with fire from above!"
+
+[[outcome]]
+kind = "bane"
+tier = "moderate"
+id = "answered"
+weight = 4
+effect = { summon = { near = "feature", danger = 4 } }
+message = "Something answers your prayer."
+
+[[outcome]]
+kind = "bane"
+tier = "moderate"
+id = "hexed"
+weight = 4
+effect = { status = { id = "ill_wished", degrees = 3 } }
+message = "You feel watched with malice."
+
+[[outcome]]
+kind = "bane"
+tier = "moderate"
+id = "tithe"
+weight = 3
+effect = { tithe = true }
+message = "Something precious is gone."
+otherwise = "A hand seems to pass over your pack, and find nothing."
+
+[[outcome]]
+kind = "bane"
+tier = "moderate"
+id = "displaced"
+weight = 5
+effect = { teleport = true }
+message = "The world lurches around you."
+
+[[outcome]]
+kind = "bane"
+tier = "moderate"
+id = "burst"
+weight = 5
+effect = { explode = { spell = "fireball", radius = 2, damage = "3d6", damage_type = "fire", heat = true, noise = { sound = "explosion", loudness = 150 } }, becomes = "rubble" }
+message = "The altar bursts apart in fire!"

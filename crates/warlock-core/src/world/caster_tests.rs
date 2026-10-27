@@ -163,6 +163,7 @@ fn every_caster_has_its_table_by_level_sixty() {
                 "Mend",
                 "Blessing",
                 "Cure wounds",
+                "Consecrate",
                 "Remove disease",
                 "Ward of faith",
                 "Purify",

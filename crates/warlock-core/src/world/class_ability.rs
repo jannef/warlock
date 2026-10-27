@@ -63,6 +63,7 @@ impl World {
             (ClassActive::LayOnHands, _) => self.lay_on_hands(events),
             (ClassActive::HolyRadiance, _) => self.holy_radiance(events),
             (ClassActive::Inspire, _) => self.inspire(events),
+            (ClassActive::Consecrate, _) => self.begin_consecrate(),
             (ClassActive::Smite, Some(dir)) => self.smite(dir, events),
             (ClassActive::QuiveringPalm, Some(dir)) => self.quivering_palm(dir, events),
             (ClassActive::MasterThief, Some(dir)) => self.finisher(dir, events),

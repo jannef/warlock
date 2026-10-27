@@ -440,8 +440,7 @@ fn a_named_monster_dead_before_the_quest_is_given_counts_at_once() {
 fn wulfruns_drake_dead_first_meets_the_quest_as_it_is_given() {
     let mut w = town(1);
     w.state.quests = serde_json::from_str(
-        r#"{"records": {"foremans_ledger": {"stage": "done", "completed": 1},
-            "barrow_rats": {"stage": "done", "completed": 1},
+        r#"{"records": {"barrow_rats": {"stage": "done", "completed": 1},
             "barrow_heart": {"stage": "done", "completed": 1},
             "lost_shaft": {"stage": "done", "completed": 1}},
             "slain": ["fire_drake"]}"#,

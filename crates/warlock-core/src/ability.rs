@@ -26,12 +26,12 @@
 use crate::action::Action;
 use crate::alignment::Requirement;
 use crate::content::{
-    ActionKind, ClassActive, Content, ResourceCost, ResourceId, SignActive, SkillDef, SpellId,
-    StatusId, TalentEffect,
+    ActionKind, ClassActive, Content, Offer, ResourceCost, ResourceId, SignActive, SkillDef,
+    SpellId, StatusId, TalentEffect,
 };
 use crate::geom::{Dir, Pos};
 use crate::skills::{Effect, SkillId};
-use crate::world::{Actor, BREATH_RANGE, STARE_RANGE, VOICE_RANGE};
+use crate::world::{Actor, BREATH_RANGE, LevelState, STARE_RANGE, VOICE_RANGE};
 use std::borrow::Cow;
 
 /// An ability, as the abilities menu lists it.
@@ -88,6 +88,10 @@ pub enum Ability {
     /// Listed with what the player carries, the lantern; the Hooded light talent (design §7.5)
     /// will give it, and until then everyone has it (without a lantern the rules say so).
     HoodLantern,
+    /// Pray at a forgotten altar (spec §7 "Special rooms"): [`Action::Pray`]. A place offers
+    /// it ([`Ability::here`]): listed only while the player stands next to such an altar (never
+    /// a spent one), absent elsewhere.
+    Pray,
 }
 
 /// Where an ability comes from: the abilities menu's groups, in this order.
@@ -110,6 +114,9 @@ pub enum Source {
     WeaponSkill,
     /// Something worn or carried (the lantern's hood).
     Item,
+    /// The place the character stands in (spec §7 "Special rooms"): what a special room's
+    /// feature offers next to it (Pray at a forgotten altar).
+    Place,
 }
 
 impl Source {
@@ -123,6 +130,7 @@ impl Source {
         Source::Skill,
         Source::WeaponSkill,
         Source::Item,
+        Source::Place,
     ];
 
     /// Its group's heading in the abilities menu.
@@ -136,6 +144,7 @@ impl Source {
             Source::Skill => "Skills",
             Source::WeaponSkill => "Weapon skills",
             Source::Item => "Items",
+            Source::Place => "Here",
         }
     }
 
@@ -150,6 +159,7 @@ impl Source {
             Source::Skill => "skill",
             Source::WeaponSkill => "weapon_skill",
             Source::Item => "item",
+            Source::Place => "place",
         }
     }
 }
@@ -257,6 +267,12 @@ impl Ability {
         let weapon_skills = [Ability::ShieldBash];
         // Items: the lantern's hood.
         let items = [Ability::HoodLantern];
+        // Here: what some special room's feature offers.
+        let offers = |offer| {
+            (content.room_effects().defs().iter())
+                .any(|e| e.offers.as_ref().is_some_and(|(o, _)| *o == offer))
+        };
+        let here = offers(Offer::Pray).then_some(Ability::Pray);
         let mut all: Vec<Ability> = (signs.chain(class))
             .chain(classes)
             .chain(spells)
@@ -264,6 +280,7 @@ impl Ability {
             .chain(skills)
             .chain(weapon_skills)
             .chain(items)
+            .chain(here)
             .collect();
         all.sort_by_key(|a| a.source());
         all
@@ -280,6 +297,22 @@ impl Ability {
             .or_else(|| {
                 (gives(Effect::Steal) && content.steal().is_some()).then_some(Ability::Steal)
             })
+    }
+
+    /// The abilities the place offers to whoever stands at `at` on `level` (spec §7 "Special
+    /// rooms"): what the feature on a cell next to it offers (Pray beside a forgotten altar), in
+    /// menu order. A spent altar is another terrain, which offers nothing.
+    pub(crate) fn here(level: &LevelState, content: &Content, at: Pos) -> Vec<Ability> {
+        let mut found: Vec<Ability> = (Dir::ALL.iter().map(|&d| at.step(d)))
+            .filter_map(|p| level.terrain_at(p))
+            .filter_map(|t| content.offer_at(t))
+            .map(|(offer, _)| match offer {
+                Offer::Pray => Ability::Pray,
+            })
+            .collect();
+        found.sort();
+        found.dedup();
+        found
     }
 
     /// Every ability `actor` has, in menu order.
@@ -320,6 +353,8 @@ impl Ability {
             Ability::BloodMagic => actor.talent_mods(content).blood_magic.is_some(),
             Ability::ThrowVoice => actor.talent_mods(content).throw_voice,
             Ability::ShieldBash | Ability::HoodLantern => true,
+            // A place offers it, not who one is ([`Ability::here`]).
+            Ability::Pray => false,
         }
     }
 
@@ -338,6 +373,7 @@ impl Ability {
             Ability::BloodMagic => "blood_magic",
             Ability::ShieldBash => "shield_bash",
             Ability::HoodLantern => "hood_lantern",
+            Ability::Pray => "pray",
         }
     }
 
@@ -356,6 +392,7 @@ impl Ability {
             Ability::BloodMagic => "Blood magic",
             Ability::ShieldBash => "Shield bash",
             Ability::HoodLantern => "Hood your lantern",
+            Ability::Pray => "Pray",
         }
     }
 
@@ -390,6 +427,10 @@ impl Ability {
                 "Lower your lantern's hood, or raise it: hooded, it dimly lights the ground around \
                  you but not you."
             }
+            Ability::Pray => {
+                "Kneel at the forgotten altar beside you and pray for a minute. Something may \
+                 answer, for good or ill."
+            }
         }
     }
 
@@ -406,6 +447,7 @@ impl Ability {
             Ability::SecondWind | Ability::BloodMagic => Source::Talent,
             Ability::ShieldBash => Source::WeaponSkill,
             Ability::HoodLantern => Source::Item,
+            Ability::Pray => Source::Place,
         }
     }
 
@@ -422,7 +464,8 @@ impl Ability {
             | Ability::Skill(_)
             | Ability::SecondWind
             | Ability::BloodMagic
-            | Ability::HoodLantern => Aim::Nothing,
+            | Ability::HoodLantern
+            | Ability::Pray => Aim::Nothing,
             Ability::ThrowVoice => Aim::Cell,
             Ability::Disarm | Ability::PickLock | Ability::Steal | Ability::ShieldBash => {
                 Aim::Direction
@@ -445,6 +488,7 @@ impl Ability {
             Ability::SecondWind | Ability::BloodMagic => Some(ActionKind::Wait),
             Ability::ShieldBash => Some(ActionKind::Melee),
             Ability::HoodLantern => Some(ActionKind::Hood),
+            Ability::Pray => Some(ActionKind::Pray),
         }
     }
 
@@ -467,7 +511,8 @@ impl Ability {
             | Ability::SecondWind
             | Ability::BloodMagic
             | Ability::ShieldBash
-            | Ability::HoodLantern => None,
+            | Ability::HoodLantern
+            | Ability::Pray => None,
         }
     }
 
@@ -516,6 +561,7 @@ impl Ability {
                 None
             }
             (Ability::HoodLantern, _) => Some(Action::HoodLantern),
+            (Ability::Pray, _) => Some(Action::Pray),
         }
     }
 
@@ -539,7 +585,8 @@ impl Ability {
             | Ability::SecondWind
             | Ability::BloodMagic
             | Ability::ShieldBash
-            | Ability::HoodLantern => None,
+            | Ability::HoodLantern
+            | Ability::Pray => None,
         }
     }
 
@@ -563,6 +610,11 @@ impl Ability {
                         let inspired = (inspire.and_then(|i| i.instead))
                             .is_some_and(|c| short_of(actor, c).is_none());
                         let mana = inspire.filter(|_| !inspired).map_or(0, |i| i.mana);
+                        // Consecrate costs its mana.
+                        let consecrate = (active == ClassActive::Consecrate)
+                            .then(|| actor.talent_mods(content).consecrate)
+                            .flatten();
+                        let mana = mana + consecrate.map_or(0, |c| c.mana);
                         let cost = actor.mana_cost(content, mana);
                         let blocked = (cost > 0)
                             .then(|| actor.effects.blocking(content, ActionKind::Cast))
@@ -582,7 +634,8 @@ impl Ability {
             | Ability::Disarm
             | Ability::PickLock
             | Ability::Steal
-            | Ability::BloodMagic => None,
+            | Ability::BloodMagic
+            | Ability::Pray => None,
             Ability::SecondWind => (actor.talent_mods(content).second_wind)
                 .map(|w| w.cooldown)
                 .filter(|&cooldown| actor.effects.has(cooldown))
@@ -618,6 +671,7 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
         | ClassActive::QuiveringPalm
         | ClassActive::MasterThief
         | ClassActive::Inspire
+        | ClassActive::Consecrate
         | ClassActive::Volley => Vec::new(),
     };
     cooldowns.into_iter().find(|&s| actor.effects.has(s))
@@ -697,7 +751,8 @@ mod tests {
                 "Talents",
                 "Skills",
                 "Weapon skills",
-                "Items"
+                "Items",
+                "Here"
             ]
         );
     }
@@ -738,8 +793,12 @@ mod tests {
                 "woodcraft",
             ]
         );
-        let last: Vec<Ability> = every.iter().rev().take(2).rev().copied().collect();
-        assert_eq!(last, [Ability::ShieldBash, Ability::HoodLantern]);
+        let last: Vec<Ability> = every.iter().rev().take(3).rev().copied().collect();
+        assert_eq!(
+            last,
+            [Ability::ShieldBash, Ability::HoodLantern, Ability::Pray],
+            "then what a place offers"
+        );
         // Stealing is in the game: the Steal skill is listed as its use.
         assert!(every.contains(&Ability::Steal));
         let steal = content.skill_id("steal").expect("steal");

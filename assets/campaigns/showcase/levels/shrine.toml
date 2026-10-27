@@ -1,0 +1,39 @@
+# The shrine (spec §7 "Special rooms"): three forgotten altars to pray at (the Pray ability, the
+# abilities menu's Here group, beside one). West the good altar (its glow gold), in the middle a
+# neutral one (grey), east an evil one (red); their sides are hidden, as everywhere, and only the
+# glow tells them. Each prayer takes a minute and may spend its altar; data/outcomes/ has what a
+# prayer draws.
+arrival = "Three old altars stand in a row of shrines, their gods long forgotten."
+name = "The Shrine"
+ambient = [6, 6, 8, 0]
+map = '''
+###########################
+#.......##.......##.......#
+#.......##.......##.......#
+#...A...##...A...##...A...#
+#.......##.......##.......#
+#.......##.......##.......#
+####+########+########+####
+#.........................#
+#t...........@...........t#
+###########################
+'''
+
+[legend]
+"@" = { terrain = "floor", spawn = "player" }
+"A" = "forgotten_altar"
+"t" = "sconce"
+
+[[room]]
+effect = "altar"
+area = [0, 0, 8, 6]
+side = "good"
+
+[[room]]
+effect = "altar"
+area = [9, 0, 17, 6]
+
+[[room]]
+effect = "altar"
+area = [18, 0, 26, 6]
+side = "evil"

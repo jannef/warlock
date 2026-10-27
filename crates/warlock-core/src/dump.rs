@@ -8,7 +8,7 @@ use crate::ability::Aim;
 use crate::action::{letter, position_text};
 use crate::blood::{self, Stain};
 use crate::character::Gender;
-use crate::content::WeaponSkillId;
+use crate::content::{Content, SpecialRoom, WeaponSkillId};
 use crate::equipment;
 use crate::geom::Pos;
 use crate::hunger::Hunger;
@@ -18,7 +18,7 @@ use crate::object::format_weight;
 use crate::perception::{CellView, PerceivedLight, PerceptionView};
 use crate::stats::Stat;
 use crate::weather::Weather;
-use crate::world::{Cause, World};
+use crate::world::{Cause, LevelState, World};
 use serde_json::{Value, json};
 use std::fmt::Write;
 use std::str::FromStr;
@@ -216,7 +216,7 @@ pub fn parse_layers(text: &str) -> Result<Vec<Layer>, String> {
 pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
     match layer {
         Layer::Truth => [spawn_header(world), truth_rows(world)].concat(),
-        Layer::Actors => [spawn_header(world), actor_rows(world)].concat(),
+        Layer::Actors => [spawn_header(world), actor_rows(world), rising_rows(world)].concat(),
         Layer::Progress => progress_rows(world),
         Layer::Rooms => room_rows(world),
         Layer::Ice => ice_rows(world),
@@ -354,6 +354,26 @@ fn spawn_header(world: &World) -> Vec<String> {
     )]
 }
 
+/// Dev: the risings due on the current level (spec §7 "Special rooms": a cursed room), one a
+/// line in the order they died: `rising goblin at (12, 5) as zombie at 08:15:00`.
+fn rising_rows(world: &World) -> Vec<String> {
+    let content = world.content();
+    (world.risings().iter())
+        .map(|r| {
+            let at = r.at();
+            format!(
+                "rising {} at {} as {} at {:02}:{:02}:{:02}",
+                content.creature(r.dead()).id,
+                r.pos(),
+                content.creature(r.risen()).id,
+                at.hour(),
+                at.minute(),
+                at.second()
+            )
+        })
+        .collect()
+}
+
 fn truth_rows(world: &World) -> Vec<String> {
     let content = world.content();
     let (level, actors) = world.ground_truth();
@@ -401,17 +421,44 @@ fn room_rows(world: &World) -> Vec<String> {
         let effect = content.room_effect(room.effect);
         let glimpsed = if room.glimpsed { ", glimpsed" } else { "" };
         let entered = if room.entered { ", entered" } else { "" };
+        let side = room
+            .side
+            .map_or(String::new(), |s| format!(", side {}", s.id()));
         let lifted = match room.lifted {
             0 => String::new(),
             n => format!(", lifted {n}"),
         };
         let sealed = if room.sealed { ", sealed" } else { "" };
         out.push(format!(
-            "{} {} at {}-{}{glimpsed}{entered}{lifted}{sealed}",
-            effect.mark, effect.name, room.min, room.max
+            "{} {} at {}-{}{side}{}{glimpsed}{entered}{lifted}{sealed}",
+            effect.mark,
+            effect.name,
+            room.min,
+            room.max,
+            feature_state(level, content, room)
         ));
     }
     out
+}
+
+/// What became of a special room's feature, for the `rooms` layer: `, spent` once its cell is
+/// the spent terrain of the table it offers, `, destroyed` once it is neither (an altar blown
+/// apart); nothing while it stands, or for a room without one.
+fn feature_state(level: &LevelState, content: &Content, room: &SpecialRoom) -> &'static str {
+    let effect = content.room_effect(room.effect);
+    let (Some(feature), Some((_, table))) = (effect.feature, effect.offers.as_ref()) else {
+        return "";
+    };
+    let spent = content.outcomes().get(table).and_then(|t| t.spent);
+    let cells = room.cells();
+    let terrains: Vec<_> = cells.iter().filter_map(|&p| level.terrain_at(p)).collect();
+    if terrains.contains(&feature) {
+        ""
+    } else if spent.is_some_and(|s| terrains.contains(&s)) {
+        ", spent"
+    } else {
+        ", destroyed"
+    }
 }
 
 /// The overworld locations the player knows, one a line by position: `(45, 23) The Hall`; `no

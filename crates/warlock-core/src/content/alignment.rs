@@ -77,6 +77,15 @@ pub struct Shifts {
     pub pay_debt: i32,
     /// Eating the corpse of one of your own race, or of a peaceful creature who talks.
     pub eat_kin: i32,
+    /// Consecrating an unholy place (Consecrate).
+    #[serde(default)]
+    pub consecrate: i32,
+    /// Praying at a good forgotten altar (spec §7 "Special rooms").
+    #[serde(default)]
+    pub prayed_good: i32,
+    /// Praying at an evil forgotten altar.
+    #[serde(default)]
+    pub prayed_evil: i32,
 }
 
 /// One band as the file gives it.
@@ -149,6 +158,7 @@ impl AlignmentRules {
             s.theft,
             s.pay_debt,
             s.eat_kin,
+            s.consecrate,
         ];
         if amounts.iter().any(|a| a.abs() > MAX) {
             return Err(err(format!("every [shift] is -{MAX} to {MAX}")));

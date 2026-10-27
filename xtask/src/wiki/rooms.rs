@@ -3,6 +3,7 @@
 use super::text::capital;
 use std::fmt::Write as _;
 use warlock_core::content::{Content, Hoard, StatusId};
+use warlock_core::world::rise_candidates;
 
 /// How many times as much `percent` is, in words: "twice", "two fifths", "30% of".
 fn times(percent: u16) -> String {
@@ -125,6 +126,16 @@ pub(super) fn special_rooms(content: &Content) -> String {
                 m.images
             ));
         }
+        if let Some(feature) = e.feature {
+            let offers = match &e.offers {
+                Some((_, _)) => ": pray beside it (see Forgotten altars)",
+                None => "",
+            };
+            does.push(format!(
+                "A {} stands in it{offers}.",
+                content.terrain(feature).name.to_lowercase()
+            ));
+        }
         if let Some(c) = e.collapse {
             does.push(format!(
                 "Every step of yours onto its cracked floor has a {}% chance ({}% while you are \
@@ -155,6 +166,17 @@ pub(super) fn special_rooms(content: &Content) -> String {
                  stack). It seals once.",
                 h.items, h.loot_level, h.danger
             ));
+        }
+        if let Some(rise) = &e.rise {
+            does.push(format!(
+                "A creature that dies in it (not one of the {}) rises from its corpse {} later \
+                 as one of them, unless the corpse is gone by then (see Cursed rooms).",
+                faction_name(content, &rise.faction),
+                rise.after.spoken()
+            ));
+        }
+        if e.unholy {
+            does.push("Consecrate lifts it for good.".into());
         }
         let mut said = format!("\"{}\"", e.enter);
         if let Some(near) = &e.near {
@@ -369,6 +391,50 @@ pub(super) fn branch_odds(content: &Content) -> String {
                 "| {levels} | {chance} | {most} | {effects} | {shop} | {kinds} | {keeper} |"
             );
         }
+    }
+    out
+}
+
+/// A faction's name by its id, lower case ("undead").
+fn faction_name(content: &Content, id: &str) -> String {
+    let factions = content.factions();
+    (factions.id(id)).map_or_else(|| id.to_string(), |f| factions.def(f).name.to_lowercase())
+}
+
+/// What the dead rise as in a cursed room (spec §7 "Special rooms": an effect with a `rise`), by
+/// the dead's level: the shared types of the rise's faction of that level, else of the nearest
+/// level (the lower on a tie), each alike; levels that rise alike share a row.
+pub(super) fn risings(content: &Content) -> String {
+    let Some(rise) = (content.room_effects().defs().iter()).find_map(|e| e.rise.as_ref()) else {
+        return String::new();
+    };
+    let Some(faction) = content.factions().id(&rise.faction) else {
+        return String::new();
+    };
+    let top = (content.creature_defs().iter())
+        .filter(|d| d.corpse && !d.unique)
+        .map(|d| d.level)
+        .max()
+        .unwrap_or(1);
+    let mut rows: Vec<(u8, u8, Vec<String>)> = Vec::new();
+    for level in 1..=top {
+        let mut names: Vec<String> = (rise_candidates(content, faction, "", level).into_iter())
+            .map(|c| content.creature(c).name.clone())
+            .collect();
+        names.sort();
+        match rows.last_mut() {
+            Some((_, to, last)) if *last == names => *to = level,
+            _ => rows.push((level, level, names)),
+        }
+    }
+    let mut out = String::from("| The dead's level | Rise as (each alike) |\n|:---:|---|\n");
+    for (from, to, names) in rows {
+        let levels = if from == to {
+            from.to_string()
+        } else {
+            format!("{from}–{to}")
+        };
+        let _ = writeln!(out, "| {levels} | {} |", names.join(", "));
     }
     out
 }

@@ -98,6 +98,15 @@ pub(super) fn alignment_deeds(content: &Content) -> String {
             "Eating one of your own race, or a peaceful creature who talks",
             s.eat_kin,
         ),
+        ("Consecrating a cursed or draining place", s.consecrate),
+        (
+            "Praying at a good forgotten altar (gold glow)",
+            s.prayed_good,
+        ),
+        (
+            "Praying at an evil forgotten altar (red glow)",
+            s.prayed_evil,
+        ),
     ];
     let mut out = String::from("| Deed | Moves you | Worth |\n|---|---|:---:|\n");
     for (deed, amount) in rows {

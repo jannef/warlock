@@ -641,6 +641,55 @@ fn a_reach_quest_needs_its_prerequisite_and_counts_where_the_player_has_been() {
 }
 
 #[test]
+fn a_quest_requiring_a_list_waits_for_all_of_them() {
+    let quests = QUESTS.replacen(
+        "giver = \"elder\"\ntype = \"deliver\"",
+        "giver = \"elder\"\nrequires = [\"pups\", \"cellar\"]\ntype = \"deliver\"",
+        1,
+    );
+    let content = Content::load(&files_with(YARD, &quests)).expect("valid");
+    let mut w = World::new(Arc::new(content), "yard", None).expect("world");
+    let done = |w: &mut World, ids: &[&str]| {
+        let records: Vec<String> = (ids.iter())
+            .map(|q| format!(r#""{q}": {{"stage": "done", "completed": 1}}"#))
+            .collect();
+        let json = format!(r#"{{"records": {{{}}}}}"#, records.join(", "));
+        w.state.quests = serde_json::from_str(&json).expect("quests");
+    };
+    let listed = |w: &World| topics_of(w, "elder").contains(&"quest-parcel".to_string());
+    assert!(!listed(&w));
+    done(&mut w, &["pups"]);
+    assert!(!listed(&w));
+    done(&mut w, &["cellar"]);
+    assert!(!listed(&w));
+    done(&mut w, &["pups", "cellar"]);
+    assert!(listed(&w));
+}
+
+#[test]
+fn a_quest_with_a_min_level_is_listed_but_refused_until_the_player_reaches_it() {
+    let quests = QUESTS.replacen(
+        "requires = \"pups\"",
+        "requires = \"pups\"\nmin_level = 3\nearly = \"Not yet, dear.\"",
+        1,
+    );
+    let content = Content::load(&files_with(YARD, &quests)).expect("valid");
+    let mut w = World::new(Arc::new(content), "yard", None).expect("world");
+    w.state.quests =
+        serde_json::from_str(r#"{"records": {"pups": {"stage": "done", "completed": 1}}}"#)
+            .expect("quests");
+    assert!(w.player_level() < 3);
+    assert!(topics_of(&w, "elder").contains(&"quest-cellar".to_string()));
+    assert!(!ask(&mut w, Dir::W, "quest-cellar").took_turn);
+    assert_eq!(last(&w, 1), ["The elder says: \"Not yet, dear.\""]);
+    assert_eq!(stage(&w, "cellar"), None, "nothing given");
+    run(&mut w, "xp:2500 levelup:auto");
+    assert!(w.player_level() >= 3);
+    ask(&mut w, Dir::W, "quest-cellar");
+    assert_eq!(stage(&w, "cellar"), Some(Stage::Active));
+}
+
+#[test]
 fn a_bring_quest_takes_from_the_pack_and_repeats() {
     let mut w = world_on(YARD);
     take(&mut w, Dir::E, "apples");
@@ -906,6 +955,22 @@ fn quest_files_are_validated() {
     bad(
         &quest("type = \"bring\"\ntarget = \"apple\"\nto = \"pup\""),
         "no one who talks",
+    );
+    bad(
+        &quest("type = \"bring\"\ntarget = \"apple\"\nmin_level = 2"),
+        "`min_level` needs `early`",
+    );
+    bad(
+        &quest("type = \"bring\"\ntarget = \"apple\"\nearly = \"No.\""),
+        "`early` is for a quest with a `min_level`",
+    );
+    bad(
+        &quest("type = \"bring\"\ntarget = \"apple\"\nmin_level = 0\nearly = \"No.\""),
+        "`min_level` is 1 to 100",
+    );
+    bad(
+        &quest("type = \"bring\"\ntarget = \"apple\"\nmin_level = 101\nearly = \"No.\""),
+        "`min_level` is 1 to 100",
     );
     bad(
         &quest("type = \"bring\"\ntarget = \"apple\"\nrequires = \"later\""),

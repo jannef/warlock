@@ -1383,7 +1383,9 @@ impl<'a> PerceptionView<'a> {
     /// what they can do and what they hold.
     pub fn abilities(&self) -> Vec<OwnAbility> {
         let level = self.own_caster_level();
+        let here = Ability::here(self.level, self.content, self.player.pos);
         (Ability::of(self.player, self.content).into_iter())
+            .chain(here)
             .map(|ability| OwnAbility {
                 ability,
                 unavailable: match ability {

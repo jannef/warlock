@@ -44,7 +44,7 @@ only the player's kills, a status they caused included), `shop.rs` (`provoke`: a
 who trades; `shop_step`: theft; `pay`: paying a debt; `favour`: `keeper_favour`), `eat.rs::finish`
 (`ate_corpse`, rotten or not), `quest.rs` (`complete`: the quest's `alignment`; `quest_topics`
 takes `scorned` and asks `offers`), `talk.rs` (`chat`: `cold_greeting` before the greeting and the
-lines; `topics` passes `scorns`). `steal.rs::got_away_with` (a theft that took something): `player_did(Deed::Theft)`. Nothing else
+lines; `topics` passes `scorns`). `steal.rs::got_away_with` (a theft that took something): `player_did(Deed::Theft)`. `consecrate.rs::consecrated` (Consecrate done): `player_did(Deed::Consecrated)`. Nothing else
 moves a score: a new deed is a `Deed` variant, a `[shift]` field, and one call where it happens.
 
 **Readers.** Presentation reads `PerceptionView::own_alignment()` (the band, `None` without

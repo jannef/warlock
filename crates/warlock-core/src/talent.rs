@@ -365,6 +365,9 @@ pub struct TalentMods {
     pub spawn_every_percent: i32,
     /// It knows a special room's nature from a glimpse (Sense of place).
     pub sense_of_place: bool,
+    /// A forgotten altar's lean counts double when it agrees, and not at all when it opposes
+    /// (Devout).
+    pub devout: bool,
     /// Percent more a special room's quickening of healing and mana (Hallowed rest).
     pub room_pace_percent: i32,
     /// A collapsed floor never gives way under it (Light tread).
@@ -378,6 +381,8 @@ pub struct TalentMods {
     pub hoard_grace: i32,
     /// Percent more noise sleepers need to wake from what it does (Hush-foot).
     pub wake_percent: i32,
+    /// What it kills never rises in a cursed room (Grave warden).
+    pub grave_warden: bool,
     /// Cells more its searching reaches.
     pub search_reach: i32,
     /// How much higher some skills count, by skill.
@@ -629,6 +634,8 @@ pub struct TalentMods {
     pub inspire: Option<Inspire>,
     /// The status Inspire gives instead, for no mana (Virtuoso).
     pub virtuoso: Option<StatusId>,
+    /// The active Consecrate, if it has it.
+    pub consecrate: Option<Consecrate>,
 }
 
 /// A once-in-a-life reprieve from death (Miracle, Hag's bargain): what it is called in
@@ -672,6 +679,13 @@ pub struct HoundsBay {
     pub status: StatusId,
     pub severity: u16,
     pub cooldown: StatusId,
+}
+
+/// The active Consecrate (spec §8 "Class abilities"): its mana and how long the prayer takes.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Consecrate {
+    pub mana: i32,
+    pub time: crate::time::Duration,
 }
 
 /// The active Inspire (spec §8 "Class abilities"): the status it gives, its mana, and what it
@@ -917,6 +931,7 @@ impl TalentMods {
             A::Volley => self.volley.is_some(),
             A::MasterThief => self.finisher,
             A::Inspire => self.inspire.is_some(),
+            A::Consecrate => self.consecrate.is_some(),
         }
     }
 
@@ -1157,6 +1172,7 @@ impl TalentMods {
             TalentEffect::DangerSense { value } => self.danger_sense += value,
             TalentEffect::SpawnEveryPercent { value } => self.spawn_every_percent += value,
             TalentEffect::SenseOfPlace => self.sense_of_place = true,
+            TalentEffect::Devout => self.devout = true,
             TalentEffect::RoomPacePercent { value } => self.room_pace_percent += value,
             TalentEffect::RoomStatusImmune { status } => {
                 if let Some(status) = content.status_id(&status) {
@@ -1167,6 +1183,7 @@ impl TalentMods {
             TalentEffect::HoardGrace { value } => self.hoard_grace += value,
             TalentEffect::CollapseProof => self.collapse_proof = true,
             TalentEffect::WakePercent { value } => self.wake_percent += value,
+            TalentEffect::GraveWarden => self.grave_warden = true,
             TalentEffect::SearchReach { value } => self.search_reach += value,
             TalentEffect::Skill { skill, value } => {
                 if let Some(id) = content.skill_id(&skill) {
@@ -1713,6 +1730,11 @@ impl TalentMods {
                 }
             }
             TalentEffect::Virtuoso { status } => self.virtuoso = content.status_id(&status),
+            TalentEffect::Consecrate { mana, time } => {
+                if let Ok(time) = time.parse() {
+                    self.consecrate = Some(Consecrate { mana, time });
+                }
+            }
         }
     }
 

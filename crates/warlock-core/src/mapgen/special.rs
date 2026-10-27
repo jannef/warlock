@@ -14,6 +14,7 @@
 //! stream, so a level without a special room is exactly what it would be without them.
 
 use super::Canvas;
+use crate::alignment::Alignment;
 use crate::content::{RoomEffectDef, RoomEffectId, RoomEffects, RoomOdds, SpecialRoom};
 use crate::geom::{Dir, Pos};
 use crate::rng::Rng;
@@ -101,11 +102,24 @@ pub(super) fn pick(canvas: &Canvas, rng: &mut Rng, cells: usize) -> Option<(Room
 }
 
 /// Makes `room` special as [`pick`] decided: it covers the level when `whole`, else it is
-/// [`make`].
-pub(super) fn place(canvas: &mut Canvas, room: SpecialRoom, whole: bool) -> bool {
+/// [`make`], with its hidden side drawn first if its effect has `sides` (one good to two neutral
+/// to one evil; one more draw, only for such an effect).
+pub(super) fn place(
+    canvas: &mut Canvas,
+    rng: &mut Rng,
+    mut room: SpecialRoom,
+    whole: bool,
+) -> bool {
     if whole {
         canvas.pervading = Some(room.effect);
         return true;
+    }
+    if canvas.content.room_effect(room.effect).sides.is_some() {
+        room.side = Some(match rng.below(4) {
+            0 => Alignment::Good,
+            3 => Alignment::Evil,
+            _ => Alignment::Neutral,
+        });
     }
     make(canvas, room)
 }
@@ -130,6 +144,13 @@ pub(super) fn make(canvas: &mut Canvas, room: SpecialRoom) -> bool {
     {
         return false;
     }
+    let feature = match effect.feature {
+        Some(terrain) => match feature_cell(canvas, &room) {
+            Some(at) => Some((at, terrain)),
+            None => return false,
+        },
+        None => None,
+    };
     if let Some(floor) = effect.floor {
         let rim = effect.collapse.is_some();
         let cells: Vec<Pos> = (room.cells().into_iter())
@@ -140,8 +161,69 @@ pub(super) fn make(canvas: &mut Canvas, room: SpecialRoom) -> bool {
             canvas.set(p, floor);
         }
     }
+    if let Some((at, terrain)) = feature {
+        canvas.set(at, terrain);
+        let light = room.side.and_then(|side| effect.side_light(side));
+        if let Some(light) = light {
+            canvas.lights.insert(at, light);
+        }
+    }
     canvas.rooms.push(room);
     true
+}
+
+/// Where a room's feature goes (spec §7 "Special rooms"): the cell of plain floor nearest the
+/// middle of its box (ties by cell order) that nothing else holds (no stamp, light, creature or
+/// patrol, trap, or object), that is no door's neighbour, and without which the room's walkable
+/// cells stay joined; `None` when there is none.
+fn feature_cell(canvas: &Canvas, room: &SpecialRoom) -> Option<Pos> {
+    let content = canvas.content;
+    let cells = room.cells();
+    let middle = Pos::new((room.min.x + room.max.x) / 2, (room.min.y + room.max.y) / 2);
+    let walked: Vec<Pos> = (canvas.creatures.iter())
+        .flat_map(|c| {
+            let mut p = c.pos;
+            std::iter::once(p).chain(c.route.iter().map(move |d| {
+                p = p.step(*d);
+                p
+            }))
+        })
+        .collect();
+    let by_door = |p: Pos| {
+        (Dir::ALL.iter()).any(|&d| {
+            let q = p.step(d);
+            canvas.terrain.in_bounds(q) && content.terrain(canvas.get(q)).is_door()
+        })
+    };
+    let mut free: Vec<Pos> = (cells.iter().copied())
+        .filter(|&p| canvas.is_free_floor(p) && !walked.contains(&p))
+        .filter(|p| !canvas.traps.contains_key(p) && !canvas.objects.contains_key(p))
+        .filter(|&p| !by_door(p))
+        .collect();
+    free.sort_by_key(|p| (p.dist2(middle), *p));
+    let walkable: Vec<Pos> = (cells.iter().copied())
+        .filter(|&p| canvas.is_walkable(p))
+        .collect();
+    free.into_iter().find(|&at| joined(&walkable, at))
+}
+
+/// Whether `cells` less `without` are all joined to each other, 4-connected.
+fn joined(cells: &[Pos], without: Pos) -> bool {
+    let open: Vec<Pos> = cells.iter().copied().filter(|&p| p != without).collect();
+    let Some(&first) = open.first() else {
+        return true;
+    };
+    let mut found = vec![first];
+    let mut queue = VecDeque::from([first]);
+    while let Some(p) = queue.pop_front() {
+        for q in super::CARDINALS.map(|d| p.step(d)) {
+            if open.contains(&q) && !found.contains(&q) {
+                found.push(q);
+                queue.push_back(q);
+            }
+        }
+    }
+    found.len() == open.len()
 }
 
 /// Whether `p` lies in the middle of `room`, away from its rim: each of its eight neighbours is a
@@ -187,7 +269,7 @@ pub(super) fn cave_rooms(canvas: &mut Canvas, rng: &mut Rng, up: Pos) {
                 }
             }
         }
-        place(canvas, SpecialRoom::blob(effect, cells), whole);
+        place(canvas, rng, SpecialRoom::blob(effect, cells), whole);
     }
 }
 

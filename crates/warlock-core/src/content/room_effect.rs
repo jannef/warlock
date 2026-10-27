@@ -27,6 +27,9 @@
 //! An effect may give way under the player now and then ([`RoomEffectDef::collapse`]: a
 //! collapsed floor; `World::collapse_step`, a fall to the level below).
 //!
+//! An effect may raise the dead killed inside ([`RoomEffectDef::rise`]: a cursed room;
+//! `world/curse.rs`), and Consecrate may lift an unholy one for good ([`RoomEffectDef::unholy`]).
+//!
 //! An effect may give everyone inside a status while they stay ([`RoomEffectDef::status`]: a
 //! draining room's Ebbing; `World::dwell`), which eases by its own pace once they leave.
 //!
@@ -36,12 +39,15 @@
 //!
 //! Without the file there are no special rooms.
 
-use super::{ContentError, StatusDef, StatusId, TerrainDef, TerrainId};
+use super::{ContentError, LightId, OutcomeTables, StatusDef, StatusId, TerrainDef, TerrainId};
+use crate::alignment::Alignment;
 use crate::dice::Dice;
 use crate::geom::Pos;
 use crate::light::Light;
 use crate::temperature::Temperature;
+use crate::time::Duration;
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 use std::ops::RangeInclusive;
 
 /// Index of an effect in [`RoomEffects::defs`]; assigned in file order.
@@ -66,6 +72,9 @@ pub const TEMPERATURE: RangeInclusive<i8> = -40..=40;
 /// How many reflections a hall of mirrors may show of each actor inside (spec §7 "Special
 /// rooms").
 pub const IMAGES: RangeInclusive<u8> = 1..=8;
+/// How long after a death in a cursed room the dead may rise, in seconds (spec §7 "Special
+/// rooms").
+pub const RISE_AFTER: RangeInclusive<u64> = 1..=3600;
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -135,7 +144,55 @@ struct RoomEffectSpec {
     #[serde(default)]
     warp: u8,
     hoard: Option<Treasure>,
+    rise: Option<RiseSpec>,
+    #[serde(default)]
+    unholy: bool,
+    feature: Option<String>,
+    sides: Option<BTreeMap<Alignment, String>>,
+    offers: Option<OffersSpec>,
     collapse: Option<Collapse>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct OffersSpec {
+    pray: Option<String>,
+}
+
+/// An ability a place offers beside its feature (spec §7 "Special rooms": the abilities menu's
+/// *Here* group, [`crate::ability::Ability::Pray`]).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub enum Offer {
+    /// Pray at a forgotten altar.
+    Pray,
+}
+
+impl Offer {
+    /// Its id in data (`offers = { pray = "..." }`).
+    pub const fn id(self) -> &'static str {
+        match self {
+            Offer::Pray => "pray",
+        }
+    }
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RiseSpec {
+    faction: String,
+    after: String,
+}
+
+/// A cursed room's risings (`rise = { faction = "undead", after = "2m" }`, spec §7 "Special
+/// rooms"; `world/curse.rs`): a creature not of `faction` that dies inside and leaves a corpse
+/// rises from it as a creature of `faction` `after` its death.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Rise {
+    /// The faction (an id in `data/factions.toml`) the dead rise as, and that never rises
+    /// (checked once the factions load, [`RoomEffects::check_factions`]).
+    pub faction: String,
+    /// How long after the death.
+    pub after: Duration,
 }
 
 /// A collapsed floor's numbers (`collapse = { chance = 15, damage = "2d6" }`, spec §7 "Special
@@ -363,8 +420,24 @@ pub struct RoomEffectDef {
     pub warp: u8,
     /// A tempting hoard's numbers: generators lay its items, and lifting them seals the room.
     pub hoard: Option<Treasure>,
+    /// The one cell of terrain generators place in such a room (a forgotten altar), at the free
+    /// floor cell nearest its middle; not walkable.
+    pub feature: Option<TerrainId>,
+    /// Whether such a room has a hidden side (good, neutral, or evil; drawn at generation), and
+    /// the light its feature gives for each (`None`: the feature terrain's own). Resolved after
+    /// the lights ([`RoomEffects::resolve_places`]).
+    pub sides: Option<[Option<LightId>; 3]>,
+    /// What it offers beside its feature, and the outcome table that draws it (an id in
+    /// `data/outcomes/`, checked once those are loaded).
+    pub offers: Option<(Offer, String)>,
+    /// The `sides` lights as data names them, until resolved.
+    side_lights: BTreeMap<Alignment, String>,
     /// A collapsed floor's: a step of the player inside may give way (`World::collapse_step`).
     pub collapse: Option<Collapse>,
+    /// The dead killed inside rise (a cursed room's).
+    pub rise: Option<Rise>,
+    /// Consecrate lifts it for good (a cursed and a draining room).
+    pub unholy: bool,
 }
 
 impl RoomEffectDef {
@@ -395,8 +468,16 @@ impl RoomEffectDef {
             && self.swarm.is_none()
             && self.mirrors.is_none()
             && self.hoard.is_none()
+            && self.feature.is_none()
             && self.collapse.is_none()
             && self.pervade.is_some()
+    }
+
+    /// The light the feature of a room of side `side` gives in place of its terrain's own, if
+    /// it has one of its own.
+    pub fn side_light(&self, side: Alignment) -> Option<LightId> {
+        let i = Alignment::ALL.iter().position(|&a| a == side)?;
+        self.sides.and_then(|lights| lights[i])
     }
 }
 
@@ -494,6 +575,11 @@ impl<'c> Here<'c> {
         self.room.and_then(|e| e.collapse)
     }
 
+    /// The risings here, if the dead rise here: the room's, else the level's.
+    pub fn rise(&self) -> Option<&'c Rise> {
+        self.each().find_map(|e| e.rise.as_ref())
+    }
+
     /// The statuses held here, the room's first: both apply.
     pub fn statuses(self) -> impl Iterator<Item = StatusId> + 'c {
         (self.room.into_iter().chain(self.level)).filter_map(|e| e.status)
@@ -525,6 +611,37 @@ impl RoomEffects {
         Some(RoomEffectId(u8::try_from(i).ok()?))
     }
 
+    /// Resolves what effects with a feature need of content loaded after them: the lights of
+    /// their `sides` (by `light`), and the outcome tables they `offer` (in `outcomes`).
+    pub(super) fn resolve_places(
+        &mut self,
+        outcomes: &OutcomeTables,
+        light: impl Fn(&str) -> Option<LightId>,
+    ) -> Result<(), ContentError> {
+        let err = |m: String| ContentError::new("data/room_effects.toml", m);
+        for def in &mut self.defs {
+            if let Some((offer, table)) = &def.offers
+                && outcomes.get(table).is_none()
+            {
+                return Err(err(format!(
+                    "effect `{}`: `offers.{}` names no outcome table `{table}` (data/outcomes/)",
+                    def.id,
+                    offer.id()
+                )));
+            }
+            if let Some(lights) = &mut def.sides {
+                for (side, name) in &def.side_lights {
+                    let id = light(name).ok_or_else(|| {
+                        err(format!("effect `{}`: unknown light `{name}`", def.id))
+                    })?;
+                    let i = Alignment::ALL.iter().position(|a| a == side).unwrap_or(0);
+                    lights[i] = Some(id);
+                }
+            }
+        }
+        Ok(())
+    }
+
     /// Whether generated levels get special rooms at all.
     pub fn generated(&self) -> bool {
         self.chance > 0 && self.per_level > 0 && !self.defs.is_empty()
@@ -534,6 +651,17 @@ impl RoomEffects {
     /// one, named once.
     pub(super) fn check_factions(&self, factions: &super::Factions) -> Result<(), ContentError> {
         for def in &self.defs {
+            if let Some(rise) = &def.rise
+                && factions.id(&rise.faction).is_none()
+            {
+                return Err(ContentError::new(
+                    "data/room_effects.toml",
+                    format!(
+                        "effect `{}`: rise faction `{}` is unknown",
+                        def.id, rise.faction
+                    ),
+                ));
+            }
             let Some(swarm) = &def.swarm else { continue };
             for (i, name) in swarm.factions.iter().enumerate() {
                 let fault = if factions.id(name).is_none() {
@@ -705,6 +833,50 @@ impl RoomEffects {
                 )));
             }
             let mirrors = spec.mirrors.as_ref().map(|m| Mirrors { images: m.images });
+            let rise = match &spec.rise {
+                Some(r) => {
+                    let after: Duration = r.after.parse().map_err(|e: String| bad(e))?;
+                    if !RISE_AFTER.contains(&after.as_seconds()) {
+                        return Err(bad(format!(
+                            "rise.after is {} to {} seconds",
+                            RISE_AFTER.start(),
+                            RISE_AFTER.end()
+                        )));
+                    }
+                    if !spec.needs_danger {
+                        return Err(bad("a `rise` needs `needs_danger`".into()));
+                    }
+                    Some(Rise {
+                        faction: r.faction.clone(),
+                        after,
+                    })
+                }
+                None => None,
+            };
+            let feature = match &spec.feature {
+                Some(name) => {
+                    let (id, def) =
+                        terrain(name).ok_or_else(|| bad(format!("unknown terrain `{name}`")))?;
+                    if def.walkable || !def.transparent || def.stairs.is_some() || def.is_door() {
+                        return Err(bad(format!(
+                            "feature `{name}` must be transparent and not walkable, stairs, or a \
+                             door"
+                        )));
+                    }
+                    Some(id)
+                }
+                None => None,
+            };
+            let offers = match &spec.offers {
+                Some(OffersSpec { pray: Some(table) }) => Some((Offer::Pray, table.clone())),
+                Some(OffersSpec { pray: None }) => {
+                    return Err(bad("`offers` names nothing".into()));
+                }
+                None => None,
+            };
+            if (offers.is_some() || spec.sides.is_some()) && feature.is_none() {
+                return Err(bad("`offers` and `sides` need a `feature`".into()));
+            }
             if let Some(swarm) = &spec.swarm {
                 swarm.check().map_err(bad)?;
                 if !spec.needs_danger {
@@ -744,12 +916,19 @@ impl RoomEffects {
                 mirrors,
                 warp: spec.warp,
                 hoard: spec.hoard,
+                feature,
+                sides: spec.sides.as_ref().map(|_| [None; 3]),
+                offers,
+                side_lights: spec.sides.unwrap_or_default(),
                 collapse: spec.collapse,
+                rise,
+                unholy: spec.unholy,
             };
             if def.level_chance > 0 && !def.can_pervade() {
                 return Err(err(format!(
                     "effect `{}`: a `level_chance` needs a `pervade` line, and no effect that \
-                     creatures shun, that lays a floor, or that holds mirrors or a hoard covers a whole level",
+                     creatures shun, that lays a floor, that holds mirrors or a hoard, or that has a \
+                     feature covers a whole level",
                     def.id
                 )));
             }
@@ -787,6 +966,10 @@ pub struct SpecialRoom {
     /// Whether a tempting hoard has sealed it: its doors locked, its guardians come.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub sealed: bool,
+    /// Its hidden side, for a room whose effect has `sides` (a forgotten altar's): good,
+    /// neutral, or evil. Never told in words.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub side: Option<Alignment>,
 }
 
 fn is_zero(n: &u8) -> bool {
@@ -805,6 +988,7 @@ impl SpecialRoom {
             glimpsed: false,
             lifted: 0,
             sealed: false,
+            side: None,
         }
     }
 
@@ -830,6 +1014,7 @@ impl SpecialRoom {
             glimpsed: false,
             lifted: 0,
             sealed: false,
+            side: None,
         }
     }
 

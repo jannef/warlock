@@ -217,6 +217,8 @@ struct RoomSpec {
     effect: String,
     /// `[x0, y0, x1, y1]`, inclusive: the room with its walls.
     area: [i32; 4],
+    /// Its hidden side, for an effect with `sides` (a forgotten altar's); default neutral.
+    side: Option<crate::alignment::Alignment>,
 }
 
 /// A named area of a level, e.g. a forest or a range of hills on the overworld.
@@ -802,7 +804,18 @@ pub(super) fn parse_level(
             ))
         })?;
         let [x0, y0, x1, y1] = spec.area;
-        let room = SpecialRoom::rect(effect, Pos::new(x0, y0), Pos::new(x1, y1));
+        let mut room = SpecialRoom::rect(effect, Pos::new(x0, y0), Pos::new(x1, y1));
+        let def = content.room_effect(effect);
+        match (spec.side, def.sides.is_some()) {
+            (Some(_), false) => {
+                return Err(err(format!(
+                    "room `{}` has a `side`, but its effect has no `sides`",
+                    spec.effect
+                )));
+            }
+            (side, true) => room.side = Some(side.unwrap_or_default()),
+            (None, false) => {}
+        }
         if !room.is_valid_within(width, height) {
             return Err(err(format!(
                 "room `{}` area {:?} is not a rectangle inside the {width}x{height} map",
@@ -814,6 +827,16 @@ pub(super) fn parse_level(
                 "room `{}` area {:?} overlaps another room",
                 spec.effect, spec.area
             )));
+        }
+        // Its feature, drawn by the level, shows its side by a light of its own.
+        let light = room.side.and_then(|side| def.side_light(side));
+        if let (Some(feature), Some(light)) = (def.feature, light) {
+            for p in room.cells() {
+                let i = usize::try_from(p.y * width + p.x).unwrap_or(usize::MAX);
+                if cells.get(i) == Some(&feature) {
+                    lights.entry(p).or_insert(light);
+                }
+            }
         }
         rooms.push(room);
     }
