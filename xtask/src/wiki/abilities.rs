@@ -4,7 +4,9 @@
 use super::actions::at_normal_pace;
 use std::fmt::Write as _;
 use warlock_core::ability::{Ability, Aim};
-use warlock_core::content::{BASE_TURN, ClassActive, Content, SignActive, TalentEffect, price};
+use warlock_core::content::{
+    BASE_TURN, ClassActive, Content, Offer, SignActive, TalentEffect, price,
+};
 
 /// Every ability, grouped as the menu groups them (by where they come from) and by name within a
 /// group: who has it, what it asks for, what it does, and how long it takes at a normal pace. A
@@ -58,6 +60,7 @@ pub(super) fn abilities(content: &Content) -> String {
             Ability::Pray => {
                 "everyone beside a forgotten altar not yet spent (a prayer takes a minute)".into()
             }
+            Ability::Drink => "everyone beside a healing spring (a drink takes ten seconds)".into(),
         };
         let (asks, takes) = match a.cost() {
             // A long action: its prayer's time, whatever the pace.
@@ -71,6 +74,11 @@ pub(super) fn abilities(content: &Content) -> String {
                     })
                     .unwrap_or_default();
                 (aim(a.aim(content)), format!("{time} (a prayer)"))
+            }
+            // A place's: its outcome table's time.
+            Some(_) if place_seconds(content, a).is_some() => {
+                let seconds = place_seconds(content, a).unwrap_or_default();
+                (aim(a.aim(content)), format!("{seconds} seconds"))
             }
             // A long action too: the forage's time.
             Some(_) if a == Ability::Forage => {
@@ -92,6 +100,21 @@ pub(super) fn abilities(content: &Content) -> String {
         );
     }
     out
+}
+
+/// How long a place's ability takes: the seconds of the outcome table the place that offers it
+/// draws on. `None` for any other ability.
+fn place_seconds(content: &Content, a: Ability) -> Option<u32> {
+    let offer = match a {
+        Ability::Pray => Offer::Pray,
+        Ability::Drink => Offer::Drink,
+        _ => return None,
+    };
+    (content.room_effects().defs().iter())
+        .filter_map(|e| e.offers.as_ref())
+        .find(|(o, _)| *o == offer)
+        .and_then(|(_, table)| content.outcomes().get(table))
+        .map(|t| t.seconds)
 }
 
 /// Who has class active `active`: the classes whose table gives it, from which level, by name

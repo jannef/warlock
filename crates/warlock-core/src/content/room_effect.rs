@@ -201,14 +201,17 @@ impl Dressing {
 #[serde(deny_unknown_fields)]
 struct OffersSpec {
     pray: Option<String>,
+    drink: Option<String>,
 }
 
 /// An ability a place offers beside its feature (spec §7 "Special rooms": the abilities menu's
-/// *Here* group, [`crate::ability::Ability::Pray`]).
+/// *Here* group, [`crate::ability::Ability::Pray`], [`crate::ability::Ability::Drink`]).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Offer {
     /// Pray at a forgotten altar.
     Pray,
+    /// Drink at a healing spring.
+    Drink,
 }
 
 impl Offer {
@@ -216,6 +219,7 @@ impl Offer {
     pub const fn id(self) -> &'static str {
         match self {
             Offer::Pray => "pray",
+            Offer::Drink => "drink",
         }
     }
 }
@@ -1060,9 +1064,16 @@ impl RoomEffects {
                 None => None,
             };
             let offers = match &spec.offers {
-                Some(OffersSpec { pray: Some(table) }) => Some((Offer::Pray, table.clone())),
-                Some(OffersSpec { pray: None }) => {
-                    return Err(bad("`offers` names nothing".into()));
+                Some(OffersSpec {
+                    pray: Some(table),
+                    drink: None,
+                }) => Some((Offer::Pray, table.clone())),
+                Some(OffersSpec {
+                    pray: None,
+                    drink: Some(table),
+                }) => Some((Offer::Drink, table.clone())),
+                Some(_) => {
+                    return Err(bad("`offers` names one thing".into()));
                 }
                 None => None,
             };

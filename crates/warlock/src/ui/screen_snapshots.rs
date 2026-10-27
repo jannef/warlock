@@ -337,6 +337,14 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // Beside a healing spring (spec §7 "Special rooms"): Drink in the Here group, last.
+    Case {
+        name: "abilities-menu-spring",
+        scenario: "spring",
+        actions: "move:N*5",
+        screen: Some("abilities"),
+        ..BASE
+    },
     // A paladin of some level: the Class group, Lay on hands drained, Smite ready.
     Case {
         name: "abilities-menu-class",

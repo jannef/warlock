@@ -66,6 +66,9 @@ pub(super) fn action_costs(content: &Content) -> String {
             ActionKind::Dig => "A turn of digging (digging through a wall takes many)",
             ActionKind::Search => "A turn of searching (searching for a while takes several)",
             ActionKind::Pray => "A turn of praying at a forgotten altar (a prayer takes a minute)",
+            ActionKind::Drink => {
+                "A turn of drinking at a healing spring (a drink takes ten seconds)"
+            }
             ActionKind::Forage => "A turn of foraging in the wild (a forage takes ten minutes)",
             ActionKind::Disarm => "Trying to disarm a trap (whatever comes of it)",
             ActionKind::Heal => "Treating yourself with the Heal skill (whatever comes of it)",

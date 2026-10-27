@@ -295,3 +295,14 @@ is not great, and still happens.
 The outcomes, by kind and tier ("Of its kind" is its share of its kind's draws):
 
 {{#include generated/altar-outcomes.md}}
+
+## Healing springs
+
+A spring room holds a **healing spring**: clear water welling up in an old stone basin. Stand
+beside it and choose **Drink** from the abilities menu (listed under *Here* only while you stand
+next to a spring). A drink takes ten seconds; anything that would stop a rest breaks it off, and
+a broken drink gives nothing. Most drinks are good, some taste only of stone, and now and then
+the water is foul and gives you marsh ague, which a prayer (a temple's cure) or a remedy cures. A
+spring never runs dry: drink as often as you like, and take the risk each time.
+
+{{#include generated/spring-outcomes.md}}

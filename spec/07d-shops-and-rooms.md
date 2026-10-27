@@ -230,7 +230,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     forgotten altar to pray at ("A faint glow rises from an altar ahead." when glimpsed, "An old
     altar stands here, its god long forgotten." on entering; below); a *shrine* (4, #413; only in
     a room of at least 9 floor cells) is a shrine of a side (below: "You feel welcome here.",
-    "Something here wants you gone.", or "An old shrine. It ignores you." on entering); a
+    "Something here wants you gone.", or "An old shrine. It ignores you." on entering); a *spring*
+    (4, #416; only in a room of at least 9 floor cells) holds a healing spring to drink at ("Clear
+    water wells up in an old stone basin." on entering; below); a
     *haunted room* (5, #417; only on a level with a danger; unholy) haunts a rest inside (below;
     "You hear a whisper, and then nothing." when glimpsed, "It is very quiet here. Too quiet to
     sleep." on entering); a *scriptorium* (5, #414; only in a room of at least 9 floor cells) holds
@@ -467,6 +469,26 @@ developer notes (CLAUDE.md, `docs/dev/`).
       gutters and dies."); Pray is offered there no more. Nothing new is saved: the terrain
       grid is the record, and the `rooms` dev layer marks such a room `spent` (or `destroyed`).
       No other place offers prayer (the design's decision 14).
+  - **Healing springs** (`feature = "spring"`, `offers = { drink = "spring" }`, #416;
+    `world/drink.rs`, the design's §9.10): the spring is its own terrain, `spring` ("spring", a
+    stone basin of water, `{`, not walkable; look mode adds its description), placed as an
+    altar is.
+    - **Drink** (`Action::Drink`, `drink` in action text) is offered in the abilities menu's
+      *Here* group while the player stands beside a spring, and nowhere else; refused there,
+      taking no time ("There is no spring here to drink from."). "You cup your hands and drink
+      from the spring.", then the table's `seconds` (10) in turns of the `drink` action
+      (`data/actions.toml`, 1000) through the rest's machinery: a creature coming into view, a
+      message, or a blow breaks it off ("You stop drinking.", or "A kobold comes into view; you
+      stop drinking."), which gives nothing; the time is spent.
+    - **The answer**: one gameplay draw by the table's kinds (a spring has no side: no lean),
+      then one by weight among that kind's outcomes (`data/outcomes/spring.toml`, the wiki's
+      "Healing springs"): Refreshed (55 %; 2d8 hit points back, "The water is cold and good."),
+      nothing (25 %; "It tastes of stone."), Fouled (15 %; marsh ague caught, which a prayer
+      cures, "The water tastes foul."), and Clear-headed (5 %; half the maximum mana back, "Your
+      head clears."). Two hooks join the outcome effects for it: `mana = "half"` (and `heal`:
+      half the maximum, `Amount::Half`) and `catch = DISEASE` (that disease caught).
+    - **No limit**: the table's `exhaust` is 0, so a spring never runs dry (the owner's
+      no-anti-farming rule; the foul water is the price). Nothing is saved.
   - **A scriptorium** (`feature = "shelves"`, `loot = { class = "scrolls", count = [2, 4] }`,
     `train = { decipher_script = 200 }`, #414; `mapgen/room_loot.rs`, `world/train.rs`). Its
     feature is `shelves` (stone, not walkable, `≡`, "shelves", a description look mode adds),

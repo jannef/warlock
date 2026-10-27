@@ -74,6 +74,7 @@ impl World {
             Action::Dig(_) => ActionKind::Dig,
             Action::Search(_) => ActionKind::Search,
             Action::Pray => ActionKind::Pray,
+            Action::Drink => ActionKind::Drink,
             Action::Forage => ActionKind::Forage,
             Action::Disarm(_) => ActionKind::Disarm,
             Action::Heal(_) => ActionKind::Heal,
