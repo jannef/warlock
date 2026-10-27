@@ -58,7 +58,12 @@ const SEARCH_LIMIT: i32 = 64;
 /// What a creature does with one action.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum Plan {
-    Attack { target: ActorId, kind: AttackKind },
+    Attack {
+        target: ActorId,
+        kind: AttackKind,
+    },
+    /// Call forth creatures of its side (`summon.rs`).
+    Summon,
     Step(Dir),
     Patrol,
     Wait,
@@ -136,6 +141,7 @@ impl World {
                 self.attack(id, target, kind, events);
                 price
             }
+            Plan::Summon => self.creature_summons(id, events),
             Plan::Step(dir) => self.step_or_wait(id, dir, events).1,
             Plan::Patrol => self.patrol(id, events),
             Plan::Wait => self.price_of(id, ActionKind::Wait),
@@ -264,6 +270,10 @@ impl World {
         let me = &self.state.actors[&id];
         let def = self.content.creature(me.creature);
         let attack = |kind| Plan::Attack { target, kind };
+        // A summoner (`summon.rs`) summons whenever it may.
+        if self.summons_at(id, at) {
+            return Plan::Summon;
+        }
         // A creature that throws (`hurl.rs`) throws whenever it can from where it stands.
         if self.hurls_at(id, target, at) {
             return attack(AttackKind::Thrown);

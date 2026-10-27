@@ -229,7 +229,8 @@ fn check(level: &LevelTemplate, depth: u32) -> Result<(), TestCaseError> {
         );
         let effect = content.room_effect(room.effect);
         let floor = content.terrain_id("floor");
-        if let Some(own) = effect.floor {
+        // A collapsed floor cracks only its middle, its rim left plain (`world/collapse_tests.rs`).
+        if let Some(own) = effect.floor.filter(|_| effect.collapse.is_none()) {
             let cells = room.cells();
             prop_assert!(
                 cells.iter().any(|p| terrain[*p] == own),

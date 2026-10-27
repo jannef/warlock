@@ -577,6 +577,7 @@ pub(super) fn make_creature(
         weapon_skills,
         faction_override: (spawn.faction)
             .or_else(|| super::court::join(content, state.seed, actor_id, spawn.creature)),
+        summoner: None,
         alignment: None,
         alignment_override: spawn.alignment,
         npc: spawn.npc.clone(),

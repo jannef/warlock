@@ -71,6 +71,7 @@ fn foe_at(w: &mut World, at: Pos) -> ActorId {
         patrol: None,
         npc: None,
         faction_override: None,
+        summoner: None,
         alignment_override: None,
         inventory: Vec::new(),
         equipment: Default::default(),

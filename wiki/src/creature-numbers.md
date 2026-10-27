@@ -53,6 +53,22 @@ to the damage, as yours do; a boulder of two kinds does whichever hurts its targ
 
 {{#include generated/creature-throws.md}}
 
+### Summoning
+
+Summoners call forth creatures of their side: a goblin wizard its kin and their wargs, a
+necromancer the lesser dead, a dark wizard devils. A summoner that sees a foe within its reach
+(you, or anyone its side fights) summons before it does anything else, and the creatures appear
+on free cells around it that it can see, nearest first. How many come is rolled each time; they
+are real creatures of the summoner's side that fight, carry gear, drop it where they die, and give
+their full experience when you kill them. Killing the summoner does not send them away.
+
+Each summoning costs the summoner mana and a while before it can summon again; it never has more
+of its summoned alive at once than the last column says. Its mana comes back as anyone's does
+(see [Mana](mana.md)), so a summoner that has spent itself summons again only much later. A
+summoner that cannot cast (silenced) cannot summon. You cannot summon.
+
+{{#include generated/creature-summons.md}}
+
 ## Pace, senses, and size
 
 A creature's **speed** says how much time its actions take: 1000 is yours, and twice that does

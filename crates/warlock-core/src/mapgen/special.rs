@@ -9,7 +9,7 @@
 //! stays plain, and it counts toward `per_level`). A rooms level's special room is the room with
 //! its walls and doors; a cave's is a blob of its floor ([`chamber`]) with the rock around it.
 //! The effect's floor, if it has one (a flooded room's shallow water), is laid over the plain
-//! floor in it (doorways too). A room whose effect creatures shun (a sanctuary), or a teeming
+//! floor in it (doorways too); a collapsed floor's cracks only over its middle ([`middle`]). A room whose effect creatures shun (a sanctuary), or a teeming
 //! den, is never one a creature patrols through. Both generators decide this last, from the same
 //! stream, so a level without a special room is exactly what it would be without them.
 
@@ -132,14 +132,31 @@ pub(super) fn make(canvas: &mut Canvas, room: SpecialRoom) -> bool {
         return false;
     }
     if let Some(floor) = effect.floor {
-        for p in room.cells() {
-            if canvas.get(p) == canvas.pal.floor && !canvas.is_stamped(p) {
-                canvas.set(p, floor);
-            }
+        let rim = effect.collapse.is_some();
+        let cells: Vec<Pos> = (room.cells().into_iter())
+            .filter(|&p| canvas.get(p) == canvas.pal.floor && !canvas.is_stamped(p))
+            .filter(|&p| !rim || middle(canvas, &room, p))
+            .collect();
+        for p in cells {
+            canvas.set(p, floor);
         }
     }
     canvas.rooms.push(room);
     true
+}
+
+/// Whether `p` lies in the middle of `room`, away from its rim: each of its eight neighbours is a
+/// walkable cell of the room and no door. A collapsed floor cracks only there, so a ring of sound
+/// floor runs from every door round the room (a room too narrow to have a middle gets no cracks).
+fn middle(canvas: &Canvas, room: &SpecialRoom, p: Pos) -> bool {
+    Dir::ALL.into_iter().map(|d| p.step(d)).all(|q| {
+        room.contains(q)
+            && canvas.is_walkable(q)
+            && canvas.terrain.get(q).is_some_and(|&t| {
+                let def = canvas.content.terrain(t);
+                !def.is_closed_door() && !def.is_open_door()
+            })
+    })
 }
 
 /// A cave's special room: a few of its chambers may be special (see the module docs).
