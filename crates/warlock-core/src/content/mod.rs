@@ -4186,7 +4186,7 @@ mod tests {
             "gardener",
             // Neutral to the player.
             "deer",
-            "sprite",
+            "dryad",
         ] {
             assert!(!barrow.contains(id), "{id} never strays");
         }
